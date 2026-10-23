@@ -121,7 +121,7 @@ test('recruits: ceilings fit their tier, and every lead has a scout opinion', ()
     const r = generateRecruit(s);
     const p = primaryStat(r);
     for (const k of STATS) assert.ok(r.potential[k] >= r.stats[k] && r.potential[k] <= 20, `${r.id} ${k}`);
-    if (r.quality === 'rookie') assert.ok(r.potential[p] >= 14 && r.potential[p] <= 19, `rookie ceiling ${r.potential[p]}`);
+    if (r.quality === 'rookie') assert.ok(r.potential[p] >= 14 && r.potential[p] <= 20, `rookie ceiling ${r.potential[p]}`);
     if (r.quality === 'veteran') assert.ok(r.potential[p] - r.stats[p] <= 1, 'veterans are near their peak');
     assert.ok(r.scoutReport && !/\d/.test(r.scoutReport), 'opinion in words, never a number');
     if (r.scoutError) wrong += 1;
@@ -158,4 +158,30 @@ test('a v3 save upgrades to v4 with development fields', async () => {
   assert.equal(loaded.crew.find((o) => o.id === 'teo').tier, 'veteran');
   for (const op of loaded.crew) for (const k of STATS) assert.ok(op.potential[k] >= op.stats[k]);
   assert.ok(loaded.recruits[0].scoutReport);
+});
+
+test('stats panels show trait bonuses, capped at 20', async () => {
+  const { traitMods, ratedStat, effectiveStat } = await import('../src/core/crew.js');
+  const op = { stats: { combat: 15, stealth: 6, tech: 19, social: 8, driving: 9, medical: 4, cool: 7 }, traits: ['hothead', 'chromed'], condition: { fatigue: 0, injury: 'healthy' } };
+  assert.deepEqual(traitMods(op), { combat: 2, cool: -2, tech: 2 });
+  assert.equal(ratedStat(op, 'combat'), 17);
+  assert.equal(ratedStat(op, 'cool'), 5);
+  assert.equal(ratedStat(op, 'tech'), 20, '19 +2 caps at 20');
+  assert.equal(effectiveStat(op, 'tech').value, ratedStat(op, 'tech'), 'shown = used');
+});
+
+test('a 20 ceiling exists but is rare (about 1 in 50 rookies)', async () => {
+  const { createNewGame } = await import('../src/core/state.js');
+  const { generateRecruit } = await import('../src/core/recruits.js');
+  const { primaryStat } = await import('../src/core/development.js');
+  const s = createNewGame({ seed: 77 });
+  let rookies = 0, twenty = 0;
+  for (let i = 0; i < 6000; i++) {
+    const r = generateRecruit(s);
+    if (r.quality !== 'rookie') continue;
+    rookies += 1;
+    if (r.potential[primaryStat(r)] === 20) twenty += 1;
+  }
+  const share = twenty / rookies;
+  assert.ok(share > 0.005 && share < 0.04, `20-ceiling share ${share}`);
 });

@@ -10,7 +10,7 @@ const COLOR_BY_ID = Object.fromEntries(STARTING_CREW.map((o) => [o.id, o.color])
 import { advanceDay, formatDate, isBlocked } from '../core/time.js';
 import { createNewGame } from '../core/state.js';
 import { templateById } from '../core/jobs.js';
-import { availability, APPROACHES } from '../core/crew.js';
+import { availability, APPROACHES, traitMods, ratedStat } from '../core/crew.js';
 import { assessJob } from '../core/risk.js';
 import {
   startMission, revealBeat, chooseOption, resolveCritical, closeMission,
@@ -146,6 +146,18 @@ const districtName = (key) => NAMES.districts[key] ?? key;
 const initials = (name) => { const w = name.trim().split(/\s+/); return (w[0][0] + (w.length > 1 ? w.at(-1)[0] : '')).toUpperCase(); };
 /** Placeholder portrait: coloured initials. Swap for an <img> when portraits exist. */
 const badge = (op, size = '') => `<span class="badge ${size ? `badge--${size}` : ''} ${op.cause ? 'is-fallen' : ''}" style="--badge:${esc(op.color ?? COLOR_BY_ID[op.id] ?? '#8b93a7')}" aria-hidden="true">${esc(initials(op.name))}</span>`;
+
+/** One stat on a stats panel: the number used on jobs (with trait bonuses), the bonus, and growth since joining. */
+function statCell(op, k, { growth = false } = {}) {
+  const mod = traitMods(op)[k] ?? 0;
+  const diff = growth ? op.stats[k] - (op.startStats?.[k] ?? op.stats[k]) : 0;
+  const traitNames = op.traits.filter((t) => typeof TRAITS[t]?.effects?.[k] === 'number').map((t) => TRAITS[t].name).join(', ');
+  return `<div>
+    <dt>${esc(k)}</dt>
+    <dd>${ratedStat(op, k)}${diff ? ` <span class="growth ${diff < 0 ? 'is-down' : ''}">${diff > 0 ? '+' : ''}${diff}</span>` : ''}</dd>
+    ${mod ? `<span class="statnote ${mod < 0 ? 'is-down' : ''}">${op.stats[k]} ${mod > 0 ? '+' : '−'}${Math.abs(mod)} ${esc(traitNames)}</span>` : ''}
+  </div>`;
+}
 
 // --- rendering ---------------------------------------------------------
 function render() {
@@ -305,7 +317,7 @@ function renderRecruit() {
 
       <h2>Stats</h2>
       <dl class="stats">
-        ${Object.entries(r.stats).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${v}</dd></div>`).join('')}
+        ${Object.keys(r.stats).map((k) => statCell(r, k)).join('')}
       </dl>
 
       <h2>Scout's view</h2>
@@ -370,10 +382,7 @@ function renderOperative() {
 
       <h2>Stats</h2>
       <dl class="stats">
-        ${Object.entries(op.stats).map(([k, v]) => {
-          const diff = v - (op.startStats?.[k] ?? v);
-          return `<div><dt>${esc(k)}</dt><dd>${v}${diff ? ` <span class="growth ${diff < 0 ? 'is-down' : ''}">${diff > 0 ? '+' : ''}${diff}</span>` : ''}</dd></div>`;
-        }).join('')}
+        ${Object.keys(op.stats).map((k) => statCell(op, k, { growth: true })).join('')}
       </dl>
 
       <h2>Development</h2>
@@ -432,13 +441,13 @@ function renderPlan() {
       <p class="body">${esc(t.brief)}</p>
 
       <h2>Crew (${plan.crew.length}/${t.crewSize})</h2>
-      <p class="muted small">Matters most: ${t.keyStats.join(', ')}</p>
+      <p class="muted small">Matters most: ${t.keyStats.join(', ')}. * includes a trait bonus.</p>
       <ul class="list">
         ${state.crew.map((op) => {
           const a = availability(state, op);
           const on = plan.crew.includes(op.id);
           const disabled = !a.ok || (!on && full);
-          const keys = t.keyStats.map((s) => `${s.slice(0, 3)} ${op.stats[s]}`).join(' · ');
+          const keys = t.keyStats.map((s) => `${s.slice(0, 3)} ${ratedStat(op, s)}${traitMods(op)[s] ? '*' : ''}`).join(' · ');
           return `
           <li>
             <button class="row pick ${on ? 'is-on' : ''}" data-action="toggle-crew" data-id="${esc(op.id)}" ${disabled ? 'disabled' : ''} aria-pressed="${on}">
