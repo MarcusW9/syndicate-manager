@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-23 · Heat cools down
+- Heat now drops every Sunday: by 1 normally, or by 3 after a quiet week (no job started since Monday).
+- The Sunday settlement message reports how much heat cooled.
+- New test covers cooling and checks heat never drops below zero (10 tests total).
+
 ## 2026-10-23 · Tests and crew badges
 - **Automated rule tests** (`npm test`, 9 tests). They run on every push, and GitHub won't deploy if one fails. They check:
   - nobody dies unless the player chose "push on" (3,000 simulated missions)

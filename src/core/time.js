@@ -5,6 +5,10 @@ import { refreshJobs } from './jobs.js';
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAYS_PER_SEASON = 364; // 52 weeks
 
+// Heat cools every Sunday; a week with no jobs started cools it faster.
+export const HEAT_COOL_WEEKLY = 1;
+export const HEAT_COOL_QUIET = 3;
+
 export function calendar(day) {
   const d = day - 1;
   return {
@@ -58,12 +62,20 @@ function settleWeek(state) {
   state.cash -= total;
 
   const broke = state.cash < 0;
+
+  // A week is quiet if no job started since last Monday.
+  const quiet = !state.lastJobDay || state.lastJobDay < state.day - 6;
+  const heatBefore = state.heat;
+  state.heat = Math.max(0, state.heat - (quiet ? HEAT_COOL_QUIET : HEAT_COOL_WEEKLY));
+  const cooled = heatBefore - state.heat;
+  const heatLine = cooled ? ` Heat cooled by ${cooled} to ${state.heat}/10${quiet ? ' after a quiet week' : ''}.` : '';
+
   state.inbox.unshift({
     id: `week-${state.day}`,
     type: 'finance',
     day: state.day,
     subject: broke ? 'You missed payments this week' : 'Week settled',
-    body: `Wages ${wages}, rent ${state.rent}. Paid ${total}. Cash now ${state.cash}.` +
+    body: `Wages ${wages}, rent ${state.rent}. Paid ${total}. Cash now ${state.cash}.` + heatLine +
       (broke ? ' The crew noticed. Morale will drop until you are back in the black.' : ''),
     blocking: false,
     read: false,

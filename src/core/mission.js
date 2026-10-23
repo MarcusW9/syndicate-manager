@@ -59,6 +59,7 @@ export function startMission(prev, jobId, crewIds, approach) {
   }
 
   state.jobs = state.jobs.filter((j) => j.id !== jobId);
+  state.lastJobDay = state.day;
   state.activeMission = {
     jobId, templateId: tpl.id, crewIds, approach,
     queue, step: 0, log: [],
