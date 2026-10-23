@@ -43,6 +43,11 @@
  * @property {Object<string, number>} trust  Operative id -> -100..100
  * @property {string} bio         1-2 sentences of personality
  * @property {string[]} history   Log of notable events (story memory)
+ * @property {'rookie'|'pro'|'veteran'} tier  Rookies graduate to pro at 15 in their main stat
+ * @property {Stats} potential     Hidden ceiling per stat (never shown as a number)
+ * @property {Object<string, number>} progress  Growth points banked towards the next +1
+ * @property {Stats} startStats    Stats on the day they joined
+ * @property {number} scoutError   How far off the crew's read of their ceiling is (-2..2)
  */
 
 /**

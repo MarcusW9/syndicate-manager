@@ -5,6 +5,8 @@
 import { SAVE_VERSION } from '../core/state.js';
 import { addOffer } from '../core/jobs.js';
 import { STARTING_ROSTER_CAP } from '../core/recruits.js';
+import { prepareOperative, rollPotential, rollScoutError, scoutFor, potentialRead } from '../core/development.js';
+import { nextRng } from '../core/random.js';
 
 const KEY = 'syndicate-save-v1';
 
@@ -75,6 +77,17 @@ function migrate(state) {
     state.rosterCap = state.rosterCap ?? STARTING_ROSTER_CAP;
     state.safehouseLevel = state.safehouseLevel ?? 1;
     state.version = 3;
+  }
+  if (state.version === 3) {
+    // v4 added development: tier, hidden potential, growth progress.
+    for (const op of state.crew) prepareOperative(op);
+    for (const r of state.recruits) {
+      const rng = nextRng(state);
+      r.potential = rollPotential(rng, r.stats, r.quality, r.role);
+      r.scoutError = rollScoutError(rng);
+      r.scoutReport = potentialRead(r, scoutFor(state.crew, r.role)?.handle, r.name.split(' ')[0]);
+    }
+    state.version = 4;
   }
   return state;
 }

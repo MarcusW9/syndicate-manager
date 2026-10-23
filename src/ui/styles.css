@@ -72,6 +72,9 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .stats div { border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 10px; }
 .stats dt { color: var(--muted); font-size: 0.75rem; text-transform: capitalize; }
 .stats dd { margin: 0; font-size: 1.2rem; font-weight: 600; }
+.growth { font-size: 0.8rem; font-weight: 600; color: var(--accent-2); }
+.growth.is-down { color: var(--danger); }
+.mentor { color: var(--accent-2); margin: 0.5rem 0 0; }
 .meter { display: grid; grid-template-columns: 96px 1fr 32px; align-items: center; gap: 10px; margin: 6px 0; font-size: 0.85rem; }
 .meter__track { height: 8px; background: #262b36; border-radius: 4px; overflow: hidden; }
 .meter__fill { display: block; height: 100%; background: var(--accent-2); }

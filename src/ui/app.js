@@ -18,6 +18,7 @@ import {
 } from '../core/mission.js';
 import { saveGame, exportSave, importSave, deleteSave } from '../save/save.js';
 import { hire, haggle, passRecruit, canHire, signingFee, nextExpansion, expandSafehouse, STARTING_ROSTER_CAP } from '../core/recruits.js';
+import { potentialRead, scoutFor, ageRate, declineChance, mentoring } from '../core/development.js';
 
 let state;
 let screen = 'inbox';
@@ -222,7 +223,7 @@ function renderCrew() {
           <li>
             <button class="row" data-action="open-op" data-id="${esc(op.id)}">
               ${badge(op)}
-              <span class="row__main"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"<br><span class="muted">${esc(op.role)} · ${op.age}</span></span>
+              <span class="row__main"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"<br><span class="muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age}</span></span>
               <span class="row__meta">${esc(availability(state, op).reason)}</span>
             </button>
           </li>`).join('')}
@@ -267,6 +268,12 @@ function renderRecruit() {
         ${Object.entries(r.stats).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${v}</dd></div>`).join('')}
       </dl>
 
+      <h2>Scout's view</h2>
+      <div class="riskcard">
+        <p>${esc(r.scoutReport ?? 'Nobody has a read on them yet.')}</p>
+        <p class="muted small">${esc(growthNote(r.age))} Opinions, not facts: scouts get it wrong sometimes.</p>
+      </div>
+
       <h2>Terms</h2>
       <div class="riskcard">
         <p>Wants <strong>${money(r.wage)}</strong> a week, plus a ${money(signingFee(r))} signing fee now.</p>
@@ -279,6 +286,19 @@ function renderRecruit() {
         <button class="btn btn--ghost" data-action="pass" data-id="${esc(r.id)}">Pass on this one</button>
       </div>
     </section>`;
+}
+
+/** Plain-words growth rate for an age (see core/development.js). */
+function growthNote(age) {
+  if (declineChance(age)) return 'Past 40: slipping a little every season.';
+  const rate = ageRate(age);
+  return rate > 1 ? 'Young: learns fast.' : rate < 1 ? 'Experienced: learns slowly now.' : 'Still learning at a steady pace.';
+}
+
+function renderMentoring(crew) {
+  const pairs = mentoring(crew);
+  if (!pairs.length) return '';
+  return `<p class="small mentor">${pairs.map(({ op, mentors }) => `${esc(op.handle)} learns faster with ${esc(mentors.map((m) => m.handle).join(' and '))} on the job.`).join(' ')}</p>`;
 }
 
 function bar(label, value) {
@@ -297,7 +317,7 @@ function renderOperative() {
         ${badge(op, 'lg')}
         <div>
           <h1>${esc(op.name)} <span class="muted">"${esc(op.handle)}"</span></h1>
-          <p class="muted">${esc(op.role)} · ${op.age} · ${money(op.wage)}/week · ${esc(availability(state, op).reason)}</p>
+          <p class="muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age} · ${money(op.wage)}/week · ${esc(availability(state, op).reason)}</p>
         </div>
       </div>
       <p class="body">${esc(op.bio)}</p>
@@ -310,8 +330,17 @@ function renderOperative() {
 
       <h2>Stats</h2>
       <dl class="stats">
-        ${Object.entries(op.stats).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${v}</dd></div>`).join('')}
+        ${Object.entries(op.stats).map(([k, v]) => {
+          const diff = v - (op.startStats?.[k] ?? v);
+          return `<div><dt>${esc(k)}</dt><dd>${v}${diff ? ` <span class="growth ${diff < 0 ? 'is-down' : ''}">${diff > 0 ? '+' : ''}${diff}</span>` : ''}</dd></div>`;
+        }).join('')}
       </dl>
+
+      <h2>Development</h2>
+      <div class="riskcard">
+        <p>${esc(potentialRead(op, scoutFor(state.crew, op.role, op.id)?.handle))}</p>
+        <p class="muted small">${esc(growthNote(op.age))} Numbers beside stats show change since joining.</p>
+      </div>
 
       <h2>Condition</h2>
       ${bar('Fatigue', c.fatigue)}${bar('Morale', c.morale)}${bar('Neural load', c.neuralLoad)}${bar('Burnout', c.burnout)}
@@ -382,6 +411,8 @@ function renderPlan() {
         }).join('')}
       </ul>
 
+      ${renderMentoring(picked)}
+
       <h2>Approach</h2>
       <div class="segmented">
         ${Object.entries(APPROACHES).map(([k, a]) => `
@@ -431,6 +462,7 @@ function renderMission() {
         <p>Paid ${money(r.pay)} · Heat +${r.heatGain}</p>
         ${r.injuries.length ? `<p>Injured: ${esc(r.injuries.join(', '))}</p>` : '<p>Nobody hurt.</p>'}
         ${r.deaths.length ? `<p><strong>Lost: ${esc(r.deaths.join(', '))}.</strong> Their names go on the wall.</p>` : ''}
+        ${r.growth?.length ? `<p>Improved: ${esc(r.growth.join(', '))}</p>` : ''}
         <button class="btn btn--primary btn--block" data-action="close-mission">Back to the safehouse</button>
       </div>`;
   } else if (am.critical) {

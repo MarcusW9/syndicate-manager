@@ -4,6 +4,18 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-23 · Operatives develop
+- **People get better by working.** Making a roll in a crisis (even a failed one), watching someone else make one, and finishing jobs all build towards +1 in a stat. Each person also practises their own speciality on every job they finish.
+- **Hidden potential:** everyone has a ceiling they can't pass. Rookies have the most room (their main stat can reach 14–19), pros some, veterans almost none.
+- **Age matters:** under 25 learns 1.5x faster, 35+ at half speed. Everyone gets a year older each new season; past 40, stats start to slip.
+- **Mentoring:** a rookie on a job with Teo (or any veteran) learns 1.5x faster. The planning screen tells you who's learning from whom.
+- **Graduation:** a rookie who reaches 15 in their main stat becomes a pro, still on a rookie's wage.
+- **Scout's view** on every recruit, in words ("Wheels reckons Ivy will be better than most pros…"). It's an opinion and is sometimes wrong.
+- **Operative page:** tier (rookie/pro/veteran), a Development read, and green/red numbers beside stats showing change since joining.
+- The job report lists who improved.
+- Save format v4, with automatic upgrade from v3.
+- 13 new tests (34 total), including simulations of a rookie's first season.
+
 ## 2026-10-23 · Recruiting and safehouse expansion
 - **Scout leads every Wednesday:** one generated recruit, or two if you're short-handed (fewer than 4 crew). Leads go cold after 7 days.
 - **Recruit page:** stats, traits, origin, personality and wage demand. **Hire** (pay one week's wage as a signing fee), **Haggle** once (your best talker rolls; success cuts the wage by 15%), or **Pass**.

@@ -15,9 +15,17 @@ Plain-English reference for the game's data. The code version is `src/core/types
 | `trust` | Other operative id -> -100..100 |
 | `bio`, `origin` | Personality and background text |
 | `history` | Notable events, for story memory and the memorial |
+| `tier` | `rookie`, `pro` or `veteran`. Rookies become pros at 15 in their main stat |
+| `potential` | Hidden ceiling per stat. Never shown as a number |
+| `progress` | Growth points banked per stat towards the next +1 |
+| `startStats` | Stats on the day they joined (to show growth) |
+| `scoutError` | How far off (-2..2) the crew's read of their main-stat ceiling is |
+
+## Development (src/core/development.js)
+Growth points: 4 to whoever rolls in a crisis (a failure counts too), 1 to the rest of the crew, plus 2 per key stat and 3 in their own main stat for finishing a job. Points are multiplied by age (under 25 x1.5, 25-34 x1, 35+ x0.5) and by 1.5 for a mentored rookie (crew has a veteran-trait operative or a same-role veteran). The next +1 costs (stat + 4) x 1.7, doubled for the last point below the ceiling. At each new season everyone ages a year; past 40 each stat may drop 1.
 
 ## Recruit (src/core/recruits.js)
-Same shape as an Operative, plus `culture`, `quality` (`rookie`/`pro`/`veteran`), `expiresDay`, `haggled`, `haggleResult`. Pools live in `src/data/recruitPools.js` (cultures and names, handles, origins per role, personalities, badge colours). Hiring strips the recruit-only fields and adds `condition`, `trust` and `history`.
+Same shape as an Operative, plus `culture`, `quality` (`rookie`/`pro`/`veteran`, becomes `tier` on hiring), `expiresDay`, `haggled`, `haggleResult`, `scoutReport` (the scout's opinion in words). Pools live in `src/data/recruitPools.js` (cultures and names, handles, origins per role, personalities, badge colours). Hiring strips the recruit-only fields and adds `condition`, `trust` and `history`.
 
 ## Injury ladder
 `healthy` -> `light` (days) -> `serious` (weeks, may leave a scar trait) -> `critical` (triggers a crisis now) -> `dead`.
@@ -52,4 +60,4 @@ A crisis with `focusRole` centres on that operative: they take the injury if a c
 `type` (`job`, `crew`, `warning`, `rival`, `report`, `scout`, `finance`), `subject`, `body`, `day`, optional `expiresDay`. `blocking: true` stops Continue until resolved.
 
 ## Game state
-`day` (day 1 = Monday, week 1, season 1; 364-day seasons), `cash`, `heat` 0-10, `reputation`, `tier`, `rent`, `crew`, `inbox`, `memorial`, `jobs` (offers on the board), `activeMission` (null or the mission in progress, saved so a reload resumes it), `difficulty`, `seed`, `rngCounter`, `recruits` (open leads), `recruitSeq`, `rosterCap` (beds), `safehouseLevel`, `lastJobDay`, `version` (currently 3).
+`day` (day 1 = Monday, week 1, season 1; 364-day seasons), `cash`, `heat` 0-10, `reputation`, `tier`, `rent`, `crew`, `inbox`, `memorial`, `jobs` (offers on the board), `activeMission` (null or the mission in progress, saved so a reload resumes it), `difficulty`, `seed`, `rngCounter`, `recruits` (open leads), `recruitSeq`, `rosterCap` (beds), `safehouseLevel`, `lastJobDay`, `version` (currently 4).

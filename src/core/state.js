@@ -4,8 +4,9 @@ import { STARTING_CREW, STARTING_TRUST } from '../data/operatives.js';
 import { NAMES } from '../config/names.js';
 import { addOffer } from './jobs.js';
 import { STARTING_ROSTER_CAP } from './recruits.js';
+import { prepareOperative } from './development.js';
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 const freshCondition = () => ({
   fatigue: 10,
@@ -18,7 +19,7 @@ const freshCondition = () => ({
 
 /** @returns {import('./types.js').GameState} */
 export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'standard' } = {}) {
-  const crew = STARTING_CREW.map((op) => ({
+  const crew = STARTING_CREW.map((op) => prepareOperative({
     ...structuredClone(op),
     condition: freshCondition(),
     trust: { ...(STARTING_TRUST[op.id] ?? {}) },
