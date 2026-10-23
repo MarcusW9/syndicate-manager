@@ -25,3 +25,12 @@ export function validateCrew(crew) {
   }
   return problems;
 }
+
+/** Recruits are generated, so check a generated batch rather than fixed data. */
+export function validateRecruit(r) {
+  const problems = [];
+  if (!(r.age >= 18)) problems.push(`${r.id}: recruit under 18`);
+  if (!r.name || !r.handle || !r.role) problems.push(`${r.id}: missing name, handle or role`);
+  if (/\{\w+\}/.test(r.origin + r.bio)) problems.push(`${r.id}: unfilled placeholder`);
+  return problems;
+}

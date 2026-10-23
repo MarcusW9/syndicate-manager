@@ -1,6 +1,7 @@
 // Calendar and the daily tick. Pure logic: takes state, returns new state.
 
 import { refreshJobs } from './jobs.js';
+import { scoutWeek } from './recruits.js';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAYS_PER_SEASON = 364; // 52 weeks
@@ -50,6 +51,8 @@ export function advanceDay(prev) {
 
   if (calendar(state.day).isSunday) settleWeek(state);
   if (calendar(state.day).isMonday) refreshJobs(state);
+  if (calendar(state.day).weekday === 'Wed') scoutWeek(state);
+  state.recruits = (state.recruits ?? []).filter((r) => r.expiresDay >= state.day);
 
   return state;
 }

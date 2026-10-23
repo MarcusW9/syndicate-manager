@@ -38,6 +38,13 @@ Each operative is built to carry one long-running story thread, so the first sea
 
 | Date | Decision | Why | Rejected alternatives |
 | --- | --- | --- | --- |
+| 2026-10-23 | Recruits are fully generated from name, handle, origin and personality pools | Never runs out over an endless game; owner's choice | Hand-written pool of 10-15 (more memorable, but repeats) |
+| 2026-10-23 | Generated cast: about 60% HK Chinese, plus Filipino, South Asian (incl. Nepali), African, Southeast Asian and European pools; always 18+ (enforced by test) | Matches the city's identity; tested across 5,000 recruits | Uniform mix |
+| 2026-10-23 | Roster cap starts at 8 and grows +2 per safehouse expansion (¥10k x level, rent +¥1k/week) | Owner wants to build a bigger squad and an enterprise over time; growth costs money and raises upkeep, so size is a strategic choice | Fixed cap of 6; free growth |
+| 2026-10-23 | One scout lead per week on Wednesdays, two if the crew has fewer than 4; leads last 7 days | Steady trickle keeps hiring a decision; the safety net prevents a lock-out after deaths | Hiring from an always-open market |
+| 2026-10-23 | Hiring costs a signing fee of one week's wage; haggle once with your best social stat for -15% | Keeps hiring a real spend and gives the face role a use outside missions | Free hiring; repeated haggling |
+| 2026-10-23 | Recruit wages ¥450-750 by quality (rookie 50%, pro 38%, veteran 12%) | Sits alongside the starting crew (¥550-650) so recruits don't break the economy | Wages scaled only on stats (came out too high) |
+| 2026-10-23 | Missing roles are weighted to turn up more often among recruits | Helps players rebuild a balanced crew after a loss | Purely random roles |
 | 2026-10-23 | Heat cools 1 every Sunday, or 3 after a quiet week (no job started) | Creates a real choice between taking work and lying low; simulated players working the top job every week still reach heat 9 by week 8, so pressure remains | Cooling only on quiet weeks (careful players would never cool); flat decay with no lie-low bonus |
 | 2026-10-23 | Automated tests for the rules only (death rule, exits, Story mode, content, saves, economy band); they gate every deploy | Endless games with saves break quietly; these promises must never regress | Testing screens automatically (not worth it at this size); no tests |
 | 2026-10-23 | Coloured initial badges as placeholder portraits, one colour per operative | Makes the crew easy to tell apart at a glance, costs nothing, swaps cleanly for portraits later | Generic avatars; waiting for real art |
@@ -83,7 +90,7 @@ Each operative is built to carry one long-running story thread, so the first sea
 ## Open questions
 
 - **Heat does nothing yet.** Cooling was added (see log), but high heat has no consequences. Candidates: police attention events, harder crises, safehouse raids, clients refusing to hire you.
-- **The roster can only shrink.** Max 5 operatives and no recruiting, so two deaths make 4-person jobs impossible. Needs a recruiting path (scout tips, hiring, wage negotiation) and a roster cap.
+- **A bigger crew needs more work.** Recruiting and expansion now exist, but the board still offers at most 4 jobs a week, one crew at a time. Growing past about 8 needs multiple simultaneous jobs, then delegation to captains (the Act II/III plan).
 - **The economy slowly bleeds.** Careful play, measured over 200 simulated runs: median cash ¥10,350 after week 1, ¥6,700 after week 4, ¥1,900 after week 8, with 41% broke by week 8. Pressure is intended, but there is no way to grow yet (no reputation tiers, better jobs or lower costs). Tune together with reputation tiers.
 
 - Tone: confirm "gritty but human" after the first playtest.
