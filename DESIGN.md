@@ -38,6 +38,13 @@ Each operative is built to carry one long-running story thread, so the first sea
 
 | Date | Decision | Why | Rejected alternatives |
 | --- | --- | --- | --- |
+| 2026-10-23 | 3 save slots; the old single save moves into slot 1 | Lets players run several playthroughs (e.g. one Ironman, one Story) without losing a save | One slot; unlimited slots |
+| 2026-10-23 | Difficulty chosen when starting a game in a slot | Story and Ironman existed in the design but could not be selected | Difficulty switchable mid-game (would undermine Ironman) |
+| 2026-10-23 | Automatic backup per slot at the start of each in-game week, restorable (not on Ironman) | Protects against mistakes and bugs without the player doing anything | Backup every save (too many rollback points; easy save-scumming) |
+| 2026-10-23 | Backup reminder after 28 in-game days without an export | Safari can wipe browser storage after about a week away; an exported file is the only safe copy | No reminder; automatic downloads (browsers block them) |
+| 2026-10-23 | Ironman lock: each Ironman run has an id and a save counter; loading a copy older than the newest this browser has seen is refused | Makes deaths stick, which is the point of Ironman | Banning export on Ironman (players need it to back up and move devices) |
+| 2026-10-23 | Known gap: the lock is per browser, so rolling back by copying a file to a second device is still possible, as is clearing site data | Closing it needs accounts or a server; not worth it now | Server-side saves |
+| 2026-10-23 | New optional state fields (`lastBackupDay`, `ironman`) without bumping SAVE_VERSION | They default safely when absent; avoids clashing with development work changing the format in parallel | Bump to v4 |
 | 2026-10-23 | Recruits are fully generated from name, handle, origin and personality pools | Never runs out over an endless game; owner's choice | Hand-written pool of 10-15 (more memorable, but repeats) |
 | 2026-10-23 | Generated cast: about 60% HK Chinese, plus Filipino, South Asian (incl. Nepali), African, Southeast Asian and European pools; always 18+ (enforced by test) | Matches the city's identity; tested across 5,000 recruits | Uniform mix |
 | 2026-10-23 | Roster cap starts at 8 and grows +2 per safehouse expansion (¥10k x level, rent +¥1k/week) | Owner wants to build a bigger squad and an enterprise over time; growth costs money and raises upkeep, so size is a strategic choice | Fixed cap of 6; free growth |
