@@ -38,6 +38,9 @@ Each operative is built to carry one long-running story thread, so the first sea
 
 | Date | Decision | Why | Rejected alternatives |
 | --- | --- | --- | --- |
+| 2026-10-23 | Automated tests for the rules only (death rule, exits, Story mode, content, saves, economy band); they gate every deploy | Endless games with saves break quietly; these promises must never regress | Testing screens automatically (not worth it at this size); no tests |
+| 2026-10-23 | Coloured initial badges as placeholder portraits, one colour per operative | Makes the crew easy to tell apart at a glance, costs nothing, swaps cleanly for portraits later | Generic avatars; waiting for real art |
+| 2026-10-23 | Art order: crew portraits first, then district backdrops, then icons; sprites and animation late or never. Art starts after the first playtest and is required before iOS | Attachment to people is the point, so faces give the most value per asset; App Store listings need visuals | Sprites first; art before the loop is proven |
 | 2026-10-23 | 6 crises per mission type (18 total); 2-3 drawn per run, so 15+ combinations per job | Jobs stop repeating within a few plays; variety is what makes the first playtest land | 2 crises per type; procedurally generated crises (too early) |
 | 2026-10-23 | Crises lean on the city's culture: Signal 8 typhoons, dai pai dongs, Red Lantern road tolls, char siu for the guard dog, sampans, bubble-tea wifi | The setting should be felt in moment-to-moment play, not only in names | Generic cyberpunk set pieces |
 | 2026-10-23 | "Certain" choices (no roll): paying a toll, leaving loot behind | Some decisions are pure trade-offs of money or heat versus risk; a roll would add noise | Every choice rolls |
@@ -77,6 +80,9 @@ Each operative is built to carry one long-running story thread, so the first sea
 ---
 
 ## Open questions
+
+- **Heat only goes up.** There is nothing that lowers it and nothing it does yet. Careful play reaches heat 9-10 by week 4. It needs decay (e.g. -1 per quiet week) and consequences (police attention, harder jobs, raids). Decide before the first playtest.
+- **The economy slowly bleeds.** Careful play, measured over 200 simulated runs: median cash ¥10,350 after week 1, ¥6,700 after week 4, ¥1,900 after week 8, with 41% broke by week 8. Pressure is intended, but there is no way to grow yet (no reputation tiers, better jobs or lower costs). Tune together with reputation tiers.
 
 - Tone: confirm "gritty but human" after the first playtest.
 - Real names for the game, city and districts.

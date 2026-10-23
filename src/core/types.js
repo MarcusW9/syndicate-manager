@@ -32,6 +32,7 @@
  * @property {string} id
  * @property {string} name
  * @property {string} handle      Street name shown in reports
+ * @property {string} [color]     Badge colour (placeholder until portraits)
  * @property {number} age         Always 18+
  * @property {string} origin      Short background line
  * @property {'medic'|'muscle'|'tech'|'driver'|'face'|'infiltrator'} role
