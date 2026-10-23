@@ -106,6 +106,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 
 .risk { display: inline-block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 3px 8px; border-radius: 6px; margin-right: 6px; }
 .risk--safe { background: #173328; color: #5fe0a5; }
+.risk--certain { background: #262b36; color: var(--text); }
 .risk--low { background: #173328; color: #5fe0a5; }
 .risk--moderate { background: #3a3218; color: var(--warn); }
 .risk--high { background: #3d2218; color: #ff9a5a; }

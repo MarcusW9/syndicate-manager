@@ -20,9 +20,11 @@ const crisisById = (tpl, id) => tpl.crises.find((c) => c.id === id);
 /** Replace {driver}, {tech}, {face}, {muscle}, {medic}, {op} with crew handles. */
 export function fill(text, state, am) {
   const crew = crewOf(state, am);
-  return text.replace(/\{(\w+)\}/g, (_, key, offset) => {
+  return text.replace(/\{(\w+)\}/g, (_, key, offset, whole) => {
     const op = key === 'op' ? opById(state, am.focusOp) : crew.find((o) => o.role === key);
-    return op ? op.handle : offset === 0 ? 'Someone' : 'someone';
+    if (op) return op.handle;
+    const startsSentence = offset === 0 || /[.!?:]["']?\s+$/.test(whole.slice(0, offset));
+    return startsSentence ? 'Someone' : 'someone';
   });
 }
 
@@ -127,7 +129,8 @@ function failureTarget(state, am, roller) {
 
 function costText(cost = {}) {
   const parts = [];
-  if (cost.payCut) parts.push(cost.payCut >= 1 ? 'lose all pay' : `lose ${Math.round(cost.payCut * 100)}% of pay`);
+  if (cost.payCut > 0) parts.push(cost.payCut >= 1 ? 'lose all pay' : `lose ${Math.round(cost.payCut * 100)}% of pay`);
+  if (cost.payCut < 0) parts.push(`+${Math.round(-cost.payCut * 100)}% pay`);
   if (cost.heat) parts.push(`+${cost.heat} heat`);
   if (cost.clientTrust) parts.push('client unhappy');
   if (cost.cash) parts.push(`${cost.cash > 0 ? '+' : ''}${cost.cash} cash`);
@@ -147,11 +150,15 @@ export function describeCrisis(state) {
     const view = { id: choice.id, label: fill(choice.label, state, am), kind: choice.kind, available: req.ok, reason: req.reason ?? '', cost: costText(choice.cost) };
     if (EXIT_KINDS.has(choice.kind)) return { ...view, risk: 'safe', riskReason: 'Everyone gets out alive' };
     if (!req.ok) return view;
+    if (choice.sure) return { ...view, risk: 'certain', riskReason: 'No roll needed' };
     const roller = rollerFor(state, am, choice, crew);
     const chance = successChance(roller.value, choice.difficulty);
     const target = failureTarget(state, am, roller.op);
     const bits = [`${roller.op.handle} on ${choice.stat} (${roller.value}${roller.notes.length ? ', ' + roller.notes.join(', ') : ''})`];
-    if (choice.failureInjury && choice.failureInjury !== 'none') bits.push(`If it fails: ${choice.failureInjury} injury to ${target.handle}`);
+    const fails = [];
+    if (choice.failureInjury && choice.failureInjury !== 'none') fails.push(`${choice.failureInjury} injury to ${target.handle}`);
+    if (choice.failureCost) fails.push(costText(choice.failureCost));
+    if (fails.length) bits.push(`If it fails: ${fails.join(', ')}`);
     return { ...view, risk: riskLabel(chance), riskReason: bits.join('. ') + '.' };
   });
   return { text: fill(crisis.text, state, am), choices };
@@ -186,7 +193,7 @@ export function chooseOption(prev, choiceId) {
 
   const roller = rollerFor(state, am, choice, crew);
   const rng = nextRng(state);
-  const success = d20(rng) + roller.value >= 10 + choice.difficulty;
+  const success = choice.sure || d20(rng) + roller.value >= 10 + choice.difficulty;
 
   if (choice.neural) {
     const rate = roller.op.traits.includes('chromed') ? 1.5 : 1;
@@ -197,6 +204,10 @@ export function chooseOption(prev, choiceId) {
     am.log.push({ kind: 'good', text: fill(choice.success, state, am) });
   } else {
     am.log.push({ kind: 'bad', text: fill(choice.failure, state, am) });
+    const fc = choice.failureCost ?? {};
+    am.payCut += fc.payCut ?? 0;
+    am.extraHeat += fc.heat ?? 0;
+    if (fc.cash) state.cash += fc.cash;
     if (choice.failureInjury && choice.failureInjury !== 'none') {
       const target = failureTarget(state, am, roller.op);
       const injury = worsenInjury(target.condition.injury, choice.failureInjury);

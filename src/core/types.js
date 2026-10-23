@@ -68,7 +68,10 @@
  * @property {Requirement} [requires]  Hidden/disabled if crew can't meet it
  * @property {string} stat             Stat tested for success
  * @property {number} difficulty       Target number, 1-20
- * @property {ChoiceCost} [cost]       Paid whether it succeeds or not
+ * @property {ChoiceCost} [cost]       Paid whether it succeeds or not (negative payCut = bonus pay)
+ * @property {ChoiceCost} [failureCost] Extra cost only if the roll fails
+ * @property {boolean} [sure]          No roll: always succeeds (paying a toll, leaving loot)
+ * @property {number} [neural]         Neural load added to whoever rolls
  * @property {string} success          Narration on success
  * @property {string} failure          Narration on failure
  * @property {'none'|'light'|'serious'|'critical'} failureInjury
