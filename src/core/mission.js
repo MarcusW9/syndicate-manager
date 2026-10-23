@@ -9,6 +9,7 @@ import { nextRng } from './random.js';
 import { d20 } from './rng.js';
 import { APPROACHES, bestFor, effectiveStat, findRole, worsenInjury, setInjury } from './crew.js';
 import { successChance, riskLabel } from './risk.js';
+import { XP, applyGrowth, primaryStat } from './development.js';
 
 const EXIT_KINDS = new Set(['abort', 'extract']);
 const STABILISE_DIFFICULTY = 9;
@@ -16,6 +17,13 @@ const STABILISE_DIFFICULTY = 9;
 const crewOf = (state, am) => am.crewIds.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean);
 const opById = (state, id) => state.crew.find((o) => o.id === id);
 const crisisById = (tpl, id) => tpl.crises.find((c) => c.id === id);
+
+/** Bank raw growth points for an operative; applied when the job ends (see development.js). */
+function addXp(am, opId, stat, points) {
+  am.xp = am.xp ?? {};
+  const mine = (am.xp[opId] = am.xp[opId] ?? {});
+  mine[stat] = (mine[stat] ?? 0) + points;
+}
 
 /** Replace {driver}, {tech}, {face}, {muscle}, {medic}, {op} with crew handles. */
 export function fill(text, state, am) {
@@ -65,7 +73,7 @@ export function startMission(prev, jobId, crewIds, approach) {
     queue, step: 0, log: [],
     payCut: 0, extraHeat: 0, clientTrust: 0,
     critical: null, stabiliseFailed: false, untreated: [],
-    focusOp: null, aborted: false, done: false, result: null,
+    focusOp: null, aborted: false, done: false, result: null, xp: {},
   };
   return state;
 }
@@ -196,6 +204,12 @@ export function chooseOption(prev, choiceId) {
   const rng = nextRng(state);
   const success = choice.sure || d20(rng) + roller.value >= 10 + choice.difficulty;
 
+  // Everyone learns from a roll: the roller most (even on a failure), the rest by watching.
+  if (!choice.sure) {
+    addXp(am, roller.op.id, choice.stat, XP.roll);
+    for (const o of crew) if (o.id !== roller.op.id && o.condition.injury !== 'critical') addXp(am, o.id, choice.stat, XP.watch);
+  }
+
   if (choice.neural) {
     const rate = roller.op.traits.includes('chromed') ? 1.5 : 1;
     roller.op.condition.neuralLoad = Math.min(100, roller.op.condition.neuralLoad + Math.round(choice.neural * rate));
@@ -263,6 +277,7 @@ export function resolveCritical(prev, option) {
     const s = effectiveStat(medic, 'medical', { approach: am.approach, crew });
     const value = s.value + (medic.traits.includes('steady_hands') ? 2 : 0);
     am.extraHeat += 1;
+    addXp(am, medic.id, 'medical', XP.roll);
     am.log.push({ kind: 'choice', text: `${medic.handle} works on ${op.handle}.` });
     if (d20(nextRng(state)) + value >= 10 + STABILISE_DIFFICULTY) {
       setInjury(op, 'serious');
@@ -332,8 +347,24 @@ function finish(state) {
     state.memorial.push({ id: op.id, name: op.name, handle: op.handle, role: op.role, color: op.color, day: state.day, cause: `Died of wounds after the ${tpl.name}` });
   }
 
+  // Growth: crisis lessons always count; finishing the job also teaches its key stats.
+  const survivors = crewOf(state, am);
+  if (!am.aborted) {
+    for (const op of survivors) {
+      for (const stat of tpl.keyStats) addXp(am, op.id, stat, XP.job);
+      addXp(am, op.id, primaryStat(op), XP.craft);
+    }
+  }
+  const growth = applyGrowth(survivors, am.xp ?? {});
+  for (const op of growth.graduated) {
+    op.history.push(`Day ${state.day}: graduated from rookie`);
+    state.inbox.unshift({ id: `graduate-${op.id}-${state.day}`, type: 'crew', day: state.day,
+      subject: `${op.handle} isn't a rookie any more`,
+      body: `After the ${tpl.name}, nobody on the crew calls ${op.name} the new kid. A pro now, on a rookie's wage.`, blocking: false, read: false });
+  }
+
   const injuries = [];
-  for (const op of crewOf(state, am)) {
+  for (const op of survivors) {
     const c = op.condition;
     c.fatigue = Math.min(100, c.fatigue + 10 + tpl.threat * 6);
     c.awayUntil = state.day + tpl.days;
@@ -351,7 +382,7 @@ function finish(state) {
   }
 
   const outcome = deaths.length ? 'loss' : am.aborted ? 'aborted' : 'completed';
-  am.result = { outcome, pay, heatGain, injuries, deaths: deaths.map((d) => d.handle) };
+  am.result = { outcome, pay, heatGain, injuries, deaths: deaths.map((d) => d.handle), growth: growth.lines };
   am.done = true;
 
   const subject = deaths.length ? `${deaths.map((d) => d.handle).join(', ')} died on the ${tpl.name}`
@@ -359,7 +390,8 @@ function finish(state) {
   state.inbox.unshift({
     id: `report-${state.day}-${state.rngCounter}`, type: 'report', day: state.day, subject,
     body: `Paid ${pay}. Heat +${heatGain}.` + (injuries.length ? ` Injured: ${injuries.join(', ')}.` : ' Nobody hurt.') +
-      (deaths.length ? ' Their names go on the wall.' : ''),
+      (deaths.length ? ' Their names go on the wall.' : '') +
+      (growth.lines.length ? ` Improved: ${growth.lines.join(', ')}.` : ''),
     blocking: false, read: false,
   });
 }

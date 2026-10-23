@@ -1,5 +1,7 @@
 // The five starting operatives. Sample content: edit freely.
 // Stats 1-20. Traits are ids from data/traits.js.
+// potential: hidden ceiling for the main stat; other stats get a small default
+// headroom by age (see core/development.js).
 // Cast leans Hong Kong Chinese (3 of 5) with a multicultural mix, like the city.
 
 /** @type {import('../core/types.js').Operative[]} */
@@ -14,6 +16,7 @@ export const STARTING_CREW = [
     role: 'medic',
     stats: { combat: 6, stealth: 9, tech: 10, social: 11, driving: 7, medical: 15, cool: 14 },
     traits: ['steady_hands', 'cautious'],
+    potential: { medical: 16 },
     wage: 600,
     bio: 'Dry, unflappable, keeps a running tally of every life she has saved. Hates waste, including wasted people.',
   },
@@ -27,6 +30,7 @@ export const STARTING_CREW = [
     role: 'muscle',
     stats: { combat: 15, stealth: 6, tech: 5, social: 8, driving: 9, medical: 4, cool: 7 },
     traits: ['hothead', 'loyal'],
+    potential: { combat: 16 },
     wage: 550,
     bio: 'Loud, generous and quick to swing. Would walk into fire for the crew and sometimes does without being asked.',
   },
@@ -40,6 +44,7 @@ export const STARTING_CREW = [
     role: 'tech',
     stats: { combat: 4, stealth: 11, tech: 16, social: 7, driving: 6, medical: 5, cool: 9 },
     traits: ['chromed', 'curious'],
+    potential: { tech: 18 }, // still has a lot in her
     wage: 650,
     bio: 'Talks fast, thinks faster, pushes her neural implants harder than she should. Thinks rules are puzzles.',
   },
@@ -53,6 +58,7 @@ export const STARTING_CREW = [
     role: 'driver',
     stats: { combat: 8, stealth: 8, tech: 9, social: 10, driving: 17, medical: 6, cool: 13 },
     traits: ['veteran', 'superstitious'],
+    potential: { driving: 17 }, // at his peak; past 40, so he starts slipping next season
     wage: 600,
     bio: 'Calm, fatherly, keeps a saint on the dashboard and, after twenty years in the city, avoids the number four like a local. Never leaves anyone behind and never talks about the crews he lost.',
   },
@@ -66,6 +72,7 @@ export const STARTING_CREW = [
     role: 'face',
     stats: { combat: 7, stealth: 12, tech: 8, social: 16, driving: 7, medical: 5, cool: 12 },
     traits: ['silver_tongue', 'greedy'],
+    potential: { social: 17 },
     wage: 650,
     bio: 'Charming, ambitious, always half a step from her own exit plan. Loyal while it pays.',
   },

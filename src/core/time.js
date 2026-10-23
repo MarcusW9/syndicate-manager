@@ -2,6 +2,8 @@
 
 import { refreshJobs } from './jobs.js';
 import { scoutWeek } from './recruits.js';
+import { ageCrew } from './development.js';
+import { nextRng } from './random.js';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAYS_PER_SEASON = 364; // 52 weeks
@@ -50,11 +52,24 @@ export function advanceDay(prev) {
   state.inbox = state.inbox.filter((m) => !m.expiresDay || m.expiresDay >= state.day);
 
   if (calendar(state.day).isSunday) settleWeek(state);
+  if (calendar(state.day).isMonday && calendar(state.day).week === 1) newSeason(state);
   if (calendar(state.day).isMonday) refreshJobs(state);
   if (calendar(state.day).weekday === 'Wed') scoutWeek(state);
   state.recruits = (state.recruits ?? []).filter((r) => r.expiresDay >= state.day);
 
   return state;
+}
+
+/** Season turn: everyone a year older; past 40, stats start to slip. */
+function newSeason(state) {
+  const { season } = calendar(state.day);
+  const lines = ageCrew(state.crew, nextRng(state));
+  state.inbox.unshift({
+    id: `season-${season}`, type: 'crew', day: state.day,
+    subject: `Season ${season} begins`,
+    body: 'Another year in the city. Everyone is a year older.' + (lines.length ? ' ' + lines.join(' ') : ''),
+    blocking: false, read: false,
+  });
 }
 
 function settleWeek(state) {

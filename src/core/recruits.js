@@ -7,6 +7,7 @@ import { NAMES } from '../config/names.js';
 import { nextRng } from './random.js';
 import { pick, d20 } from './rng.js';
 import { bestFor } from './crew.js';
+import { rollPotential, rollScoutError, scoutFor, potentialRead, prepareOperative } from './development.js';
 
 export const STARTING_ROSTER_CAP = 8;
 export const LEAD_DAYS = 7;
@@ -69,21 +70,36 @@ export function generateRecruit(state) {
   // Tuned to sit alongside the starting crew (550-650): rookies ~500, veterans ~700.
   const wage = Math.round((150 + total * 5 + stats[profile.primary] * 10) / 50) * 50;
 
+  const name = `${pick(rng, culture.given)} ${pick(rng, culture.surnames)}`;
+  const age = between(rng, quality.age);
+  const traits = [t1, t2];
+  const color = pick(rng, BADGE_COLORS);
+  const bio = pick(rng, PERSONALITIES);
+
+  // Hidden ceiling, plus the crew's (sometimes wrong) read of it.
+  const potential = rollPotential(rng, stats, quality.id, role);
+  const scoutError = rollScoutError(rng);
+  const scout = scoutFor(state.crew, role);
+  const scoutReport = potentialRead({ role, stats, potential, scoutError }, scout?.handle, name.split(' ')[0]);
+
   state.recruitSeq = (state.recruitSeq ?? 0) + 1;
   return {
     id: `r${state.recruitSeq}`,
-    name: `${pick(rng, culture.given)} ${pick(rng, culture.surnames)}`,
+    name,
     handle,
-    age: between(rng, quality.age),
+    age,
     culture: culture.id,
     quality: quality.id,
     origin,
     role,
     stats,
-    traits: [t1, t2],
+    traits,
     wage,
-    color: pick(rng, BADGE_COLORS),
-    bio: pick(rng, PERSONALITIES),
+    color,
+    bio,
+    potential,
+    scoutError,
+    scoutReport,
     expiresDay: state.day + LEAD_DAYS,
     haggled: false,
   };
@@ -122,13 +138,14 @@ export function hire(prev, recruitId) {
   if (!r || !canHire(state, r).ok) return prev;
   state.cash -= signingFee(r);
   state.recruits = state.recruits.filter((x) => x.id !== recruitId);
-  const { expiresDay, haggled, quality, culture, ...op } = r;
-  state.crew.push({
+  const { expiresDay, haggled, haggleResult, quality, culture, ...op } = r;
+  state.crew.push(prepareOperative({
     ...op,
+    tier: quality,
     condition: { fatigue: 0, morale: 60, neuralLoad: 0, burnout: 0, injury: 'healthy', injuryDays: 0 },
     trust: {},
     history: [`Day ${state.day}: joined the crew`],
-  });
+  }));
   state.inbox.unshift({
     id: `hired-${r.id}`, type: 'crew', day: state.day,
     subject: `${r.handle} joins the crew`,
