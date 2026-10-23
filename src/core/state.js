@@ -2,8 +2,9 @@
 
 import { STARTING_CREW, STARTING_TRUST } from '../data/operatives.js';
 import { NAMES } from '../config/names.js';
+import { addOffer } from './jobs.js';
 
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 const freshCondition = () => ({
   fatigue: 10,
@@ -23,7 +24,7 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
     history: [],
   }));
 
-  return {
+  const state = {
     version: SAVE_VERSION,
     seed,
     day: 1,
@@ -40,11 +41,18 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
         type: 'crew',
         day: 1,
         subject: `Welcome to ${NAMES.city}`,
-        body: `Five people, one safehouse, rent due Sunday. Teo says the crew trusts you. Mostly. Press Continue when you're ready.`,
+        body: `Five people, one safehouse, rent due Sunday. Teo says the crew trusts you. Mostly. Three jobs are on the board. The courier run alone won't cover rent.`,
         blocking: false,
         read: false,
       },
     ],
     memorial: [],
+    jobs: [],
+    jobSeq: 0,
+    rngCounter: 0,
+    activeMission: null,
   };
+  // Opening board: one safe job, one mid, one dangerous (see DESIGN.md).
+  for (const id of ['courier', 'data_pull', 'warehouse']) addOffer(state, id);
+  return state;
 }

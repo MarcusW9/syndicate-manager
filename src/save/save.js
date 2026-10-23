@@ -57,6 +57,13 @@ export function importSave(file) {
 function migrate(state) {
   if (typeof state?.version !== 'number') throw new Error('Not a save file');
   if (state.version > SAVE_VERSION) throw new Error('Save is from a newer version');
-  // Future: if (state.version === 1) { ...upgrade to 2...; state.version = 2; }
+  if (state.version === 1) {
+    // v2 added the job board and missions.
+    state.jobs = state.jobs ?? [];
+    state.jobSeq = state.jobSeq ?? 0;
+    state.rngCounter = state.rngCounter ?? 0;
+    state.activeMission = null;
+    state.version = 2;
+  }
   return state;
 }

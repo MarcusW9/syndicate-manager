@@ -38,6 +38,17 @@ Each operative is built to carry one long-running story thread, so the first sea
 
 | Date | Decision | Why | Rejected alternatives |
 | --- | --- | --- | --- |
+| 2026-10-23 | Risk shown as labels (low/moderate/high/extreme) plus a short reason, never percentages | Honest enough to plan with, without turning crises into maths; reasons teach the player what matters | Exact percentages; percentages only on Story mode |
+| 2026-10-23 | Beats revealed one tap at a time | Builds tension and lets the player read at their own pace | Auto-scrolling text |
+| 2026-10-23 | Missions play immediately after planning; crew is then away for the job's days | Keeps the loop tight; the "away" time is the cost | Scheduling a mission for a later day |
+| 2026-10-23 | Critical state: stabilise (needs a medic), extract (job ends, half pay lost, op saved) or push on (op may die) | Death only ever follows "push on"; verified across 3,000 simulated missions | Critical as instant death; no choice at critical |
+| 2026-10-23 | Push on without a medic: about 1 in 3 survive; with a medic about 2 in 3; Story mode always survives | Pushing must be a real gamble; a medic on the crew matters | Fixed death on push |
+| 2026-10-23 | Aborting at any point saves everyone, including anyone left critical earlier | Keeps the promise that an exit always saves lives | Abort only saves the healthy |
+| 2026-10-23 | Failed rolls injure the crisis's focus operative if it has one, otherwise whoever made the attempt | Injuries should follow the story of the crisis, not hit a random bystander | Random crew member |
+| 2026-10-23 | Approaches: Stealth (+stealth/tech, -combat), Loud (+combat, +1 heat), Social (+social, -stealth) | A light planning decision that interacts with the crew's stats | No approach choice |
+| 2026-10-23 | Opening board: courier (safe, 2,500), data pull (mid), warehouse (dangerous, 6,000); rent 4,000 + wages 3,050 weekly | Forces the first real choice: the safe job alone doesn't cover the week | Random opening jobs |
+| 2026-10-23 | New jobs arrive every Monday (up to 4 on the board), each lasts a week | Gives the week a rhythm; scarcity makes choices matter | Endless job list |
+| 2026-10-23 | Superstitious trait: won't start a job on a day number ending in 4 (Teo picked up the city's fear of four) | Shows the city's Cantonese culture shaping a non-Chinese character | Calendar months |
 | 2026-10-23 | Cast leans Hong Kong Chinese (3 of 5), multicultural mix | The city is HK-inspired but a megacity; a mixed cast feels true to a port city and broadens appeal | All-Chinese cast; evenly international mix |
 | 2026-10-23 | Commits authored as marcusw | Owner's preference | - |
 | 2026-10-23 | Placeholder names (title, city, districts) kept in one file, `src/config/names.js` | A better name will come later; one file makes renaming trivial | Naming now |

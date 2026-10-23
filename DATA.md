@@ -35,8 +35,18 @@ Each choice has a `kind`: `push`, `adapt`, `abort`, `stabilise` or `extract`.
 
 A choice tests one `stat` against `difficulty` (d20 + stat vs 10 + difficulty, tuned later), may need a role or trait (`requires`), and may cost cash, heat, client trust or a share of pay. On failure it applies `failureInjury`.
 
+Optional `neural: n` adds neural load to whoever rolls (x1.5 if Chromed).
+
+A crisis with `focusRole` centres on that operative: they take the injury if a choice fails. Without one, whoever made the attempt is hurt.
+
+## Mission flow (src/core/mission.js)
+1. `startMission` draws 2 crises (3 at threat 4+ if the pool has them) and spreads them between beats.
+2. `revealBeat` shows the next beat. `chooseOption` resolves a crisis choice: roll `d20 + stat >= 10 + difficulty`.
+3. If someone goes **critical**, `resolveCritical` must be called first: `stabilise` (medic, difficulty 9), `extract` (job ends, +50% pay cut, op saved) or `push` (op may die at the end: 35% survival, 65% with a medic, 100% on Story or if the job is later aborted).
+4. `finish` pays out, adds heat and fatigue, sets the crew away for `days`, moves the dead to the memorial and posts a report.
+
 ## Inbox message
 `type` (`job`, `crew`, `warning`, `rival`, `report`, `scout`, `finance`), `subject`, `body`, `day`, optional `expiresDay`. `blocking: true` stops Continue until resolved.
 
 ## Game state
-`day` (day 1 = Monday, week 1, season 1; 364-day seasons), `cash`, `heat` 0-10, `reputation`, `tier`, `rent`, `crew`, `inbox`, `memorial`, `difficulty`, `seed`, `version`.
+`day` (day 1 = Monday, week 1, season 1; 364-day seasons), `cash`, `heat` 0-10, `reputation`, `tier`, `rent`, `crew`, `inbox`, `memorial`, `jobs` (offers on the board), `activeMission` (null or the mission in progress, saved so a reload resumes it), `difficulty`, `seed`, `rngCounter`, `version` (currently 2).
