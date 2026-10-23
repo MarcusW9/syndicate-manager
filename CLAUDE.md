@@ -1,0 +1,31 @@
+# Project rules
+
+Text-first crew management game (Football Manager style, endless). Plain JavaScript + Vite. Hosted on GitHub Pages; will be wrapped for iOS later.
+
+## Architecture (do not break)
+- `src/core/` = game logic only. No DOM, no `localStorage`, no `window`. Functions take state and return new state.
+- `src/ui/` = the only code that touches the DOM.
+- `src/save/save.js` = the only code that touches storage. iOS swaps its three storage functions.
+- `src/data/` = content as data (operatives, traits, missions). No game logic here.
+- `src/config/names.js` = all placeholder names (title, city, districts). Rename there only.
+
+## iOS-ready rules
+- No information that only appears on hover. Tap/click to reveal.
+- Design at phone width first (360-430px), then widen.
+- Tap targets at least 44px tall.
+- Respect safe areas (`env(safe-area-inset-*)`).
+- Randomness goes through `core/rng.js` (seeded), never `Math.random()` in core.
+
+## Design rules
+- Every crisis has an `abort` or `extract` choice. Death only follows a choice the player made.
+- Operatives are always 18+.
+- Bump `SAVE_VERSION` in `core/state.js` and add a migration in `save.js` whenever the state shape changes.
+
+## Keep the design log current
+`DESIGN.md` holds the narrative, setting, tone, cast and a dated decision log (decision, why, rejected alternatives). Whenever a design or technical decision is made or changed in a session, add a row to the top of the log in the same change. Never rewrite past entries; supersede them with a new row.
+
+## Commits
+Author: `marcusw`. Big features get their own commit with a clear message.
+
+## Design doc
+Core loop: https://claude.ai/artifact/W38zoiZvsjL9vt78jKXgxN
