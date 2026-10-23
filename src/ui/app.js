@@ -16,7 +16,10 @@ import {
   startMission, revealBeat, chooseOption, resolveCritical, closeMission,
   describeCrisis, describeCritical, currentStep,
 } from '../core/mission.js';
-import { saveGame, exportSave, importSave, deleteSave } from '../save/save.js';
+import {
+  saveGame, loadGame, exportSave, importSave, listSlots, getActiveSlot, setActiveSlot,
+  deleteSlot, loadBackup, backupDue, SLOT_COUNT,
+} from '../save/save.js';
 import { hire, haggle, passRecruit, canHire, signingFee, nextExpansion, expandSafehouse, STARTING_ROSTER_CAP } from '../core/recruits.js';
 
 let state;
@@ -24,6 +27,7 @@ let screen = 'inbox';
 let openMessageId = null;
 let openOperativeId = null;
 let openRecruitId = null;
+let newGameSlot = null; // slot number while picking a difficulty
 let plan = null; // { jobId, crew: [...ids], approach }
 let root;
 
@@ -82,16 +86,45 @@ function onClick(e) {
     case 'choose': return setState(chooseOption(state, id));
     case 'critical': return setState(resolveCritical(state, id));
     case 'close-mission': screen = 'inbox'; return setState(closeMission(state));
-    case 'export': exportSave(state); break;
-    case 'import': root.querySelector('#import-file').click(); break;
-    case 'new-game':
-      if (confirm('Start a new game? Your current save will be replaced.')) {
-        deleteSave();
+    case 'export':
+      state.lastBackupDay = state.day;
+      saveGame(state);
+      exportSave(state);
+      break;
+    case 'import':
+      if (confirm(`Load a save file into slot ${getActiveSlot()}? The game in this slot will be replaced.`)) root.querySelector('#import-file').click();
+      break;
+    case 'slot-load': {
+      const n = Number(id);
+      const loaded = loadGame(n);
+      if (!loaded) { alert(`Slot ${n} could not be loaded.`); break; }
+      setActiveSlot(n);
+      screen = 'inbox'; plan = null; openMessageId = null; openOperativeId = null; openRecruitId = null;
+      return setState(loaded);
+    }
+    case 'slot-new': newGameSlot = Number(id); break;
+    case 'cancel-new': newGameSlot = null; break;
+    case 'difficulty': {
+      const slot = newGameSlot;
+      const taken = !listSlots()[slot - 1].empty;
+      if (taken && !confirm(`Start a new ${id} game in slot ${slot}? The game in that slot will be deleted.`)) break;
+      deleteSlot(slot);
+      setActiveSlot(slot);
+      newGameSlot = null;
+      screen = 'inbox'; plan = null; openMessageId = null; openOperativeId = null; openRecruitId = null;
+      return setState(createNewGame({ difficulty: id }));
+    }
+    case 'slot-delete':
+      if (confirm(`Delete the game in slot ${id}? This can't be undone.`)) deleteSlot(Number(id));
+      break;
+    case 'restore-backup': {
+      const backup = loadBackup();
+      if (backup && confirm(`Go back to the automatic backup from day ${backup.day}? Everything since then will be lost.`)) {
         screen = 'inbox';
-        plan = null;
-        return setState(createNewGame());
+        return setState(backup);
       }
       break;
+    }
   }
   render();
 }
@@ -99,7 +132,7 @@ function onClick(e) {
 function onChange(e) {
   if (e.target.id !== 'import-file' || !e.target.files[0]) return;
   importSave(e.target.files[0])
-    .then((loaded) => { screen = 'inbox'; setState(loaded); })
+    .then((loaded) => { screen = 'inbox'; plan = null; setState(loaded); })
     .catch((err) => alert(`Could not load that file: ${err.message}`));
 }
 
@@ -156,9 +189,16 @@ function renderScreen() {
 }
 
 // --- inbox -------------------------------------------------------------
+function backupBanner() {
+  if (!backupDue(state)) return '';
+  return `<div class="banner"><span>${state.lastBackupDay ? `No backup for ${state.day - state.lastBackupDay} days.` : 'You have never backed up this save.'}</span>
+    <button class="btn" data-action="export">Export now</button></div>`;
+}
+
 function renderInbox() {
   if (!state.inbox.length) return `<section class="panel"><h1>Inbox</h1><p class="muted">Nothing new. Press Continue.</p></section>`;
   return `
+    ${backupBanner()}
     <section class="panel">
       <h1>Inbox</h1>
       <ul class="list">
@@ -465,16 +505,65 @@ function renderMission() {
 }
 
 // --- save --------------------------------------------------------------
+const DIFFICULTIES = {
+  story: { name: 'Story', desc: 'Nobody dies. Critical operatives always pull through.' },
+  standard: { name: 'Standard', desc: 'Death only if you choose "push on". Backups can be restored.' },
+  ironman: { name: 'Ironman', desc: 'As Standard, but no going back: no backups to restore, and older save files are refused.' },
+};
+
 function renderSettings() {
+  const slots = listSlots();
+  const active = getActiveSlot();
+  const backup = state.difficulty === 'ironman' ? null : loadBackup();
+  const lastExport = state.lastBackupDay ? `day ${state.lastBackupDay} (${state.day - state.lastBackupDay} days ago)` : 'never';
+
+  const picker = newGameSlot ? `
+      <div class="riskcard">
+        <h2 class="nomargin">New game in slot ${newGameSlot}</h2>
+        <div class="segmented">
+          ${Object.entries(DIFFICULTIES).map(([k, d]) => `
+            <button class="seg" data-action="difficulty" data-id="${k}"><strong>${esc(d.name)}</strong><span>${esc(d.desc)}</span></button>`).join('')}
+        </div>
+        <button class="btn btn--ghost" data-action="cancel-new">Cancel</button>
+      </div>` : '';
+
   return `
     <section class="panel">
       <h1>Save</h1>
-      <p class="body">The game saves automatically in this browser. Export a backup file now and then: browsers (especially on iPhone) can clear stored data.</p>
-      <div class="stack">
-        <button class="btn" data-action="export">Export save file</button>
-        <button class="btn" data-action="import">Load save file</button>
-        <button class="btn btn--danger" data-action="new-game">New game</button>
+      <p class="body">The game saves automatically after every action, in this browser only.</p>
+
+      <h2>Slots</h2>
+      <ul class="list">
+        ${slots.map((sl) => `
+          <li class="slot ${sl.slot === active ? 'is-active' : ''}">
+            <div class="slot__info">
+              <strong>Slot ${sl.slot}${sl.slot === active ? ' · playing' : ''}</strong>
+              <span class="muted small">${sl.empty ? 'Empty' : `${esc(DIFFICULTIES[sl.difficulty]?.name ?? sl.difficulty)} · day ${sl.day} · ${money(sl.cash)} · ${sl.crew} crew`}</span>
+            </div>
+            <div class="slot__actions">
+              ${!sl.empty && sl.slot !== active ? `<button class="btn" data-action="slot-load" data-id="${sl.slot}">Play</button>` : ''}
+              <button class="btn" data-action="slot-new" data-id="${sl.slot}">New</button>
+              ${!sl.empty && sl.slot !== active ? `<button class="btn btn--danger" data-action="slot-delete" data-id="${sl.slot}">Delete</button>` : ''}
+            </div>
+          </li>`).join('')}
+      </ul>
+      ${picker}
+
+      <h2>Backups</h2>
+      <div class="riskcard">
+        <p>Last exported: <strong>${lastExport}</strong>.${backupDue(state) ? ' <span class="warntext">Time for a backup.</span>' : ''}</p>
+        <p class="muted small">Browsers can clear stored data, especially Safari on iPhone after about a week away. An exported file is the only safe copy.</p>
+        <button class="btn btn--block" data-action="export">Export save file</button>
+        <button class="btn btn--block" data-action="import">Load save file into this slot</button>
       </div>
-      <p class="muted small">Difficulty: ${esc(state.difficulty)} · Save format v${state.version}</p>
+      ${state.difficulty === 'ironman'
+        ? '<p class="muted small">Ironman: no automatic backups, and older copies of this run are refused.</p>'
+        : backup ? `
+      <div class="riskcard">
+        <p>Automatic backup: <strong>day ${backup.day}</strong> (taken at the start of each in-game week).</p>
+        <button class="btn btn--block" data-action="restore-backup" ${backup.day === state.day ? 'disabled' : ''}>Restore backup from day ${backup.day}</button>
+      </div>` : ''}
+
+      <p class="muted small">Playing: ${esc(DIFFICULTIES[state.difficulty]?.name ?? state.difficulty)} · Save format v${state.version} · ${SLOT_COUNT} slots</p>
     </section>`;
 }

@@ -52,4 +52,7 @@ A crisis with `focusRole` centres on that operative: they take the injury if a c
 `type` (`job`, `crew`, `warning`, `rival`, `report`, `scout`, `finance`), `subject`, `body`, `day`, optional `expiresDay`. `blocking: true` stops Continue until resolved.
 
 ## Game state
-`day` (day 1 = Monday, week 1, season 1; 364-day seasons), `cash`, `heat` 0-10, `reputation`, `tier`, `rent`, `crew`, `inbox`, `memorial`, `jobs` (offers on the board), `activeMission` (null or the mission in progress, saved so a reload resumes it), `difficulty`, `seed`, `rngCounter`, `recruits` (open leads), `recruitSeq`, `rosterCap` (beds), `safehouseLevel`, `lastJobDay`, `version` (currently 3).
+`day` (day 1 = Monday, week 1, season 1; 364-day seasons), `cash`, `heat` 0-10, `reputation`, `tier`, `rent`, `crew`, `inbox`, `memorial`, `jobs` (offers on the board), `activeMission` (null or the mission in progress, saved so a reload resumes it), `difficulty`, `seed`, `rngCounter`, `recruits` (open leads), `recruitSeq`, `rosterCap` (beds), `safehouseLevel`, `lastJobDay`, `lastBackupDay` (day of last export), `ironman` (`{ id, seq }`, Ironman runs only), `version` (currently 3).
+
+## Storage (src/save/save.js)
+Keys: `syndicate-active-slot`, `syndicate-slot-N` (N = 1-3), `syndicate-slot-N-backup` (weekly, not Ironman), `syndicate-ironman-progress` (`{ ironmanId: highest seq seen }`). The pre-slots key `syndicate-save-v1` is moved into slot 1 on first load.
