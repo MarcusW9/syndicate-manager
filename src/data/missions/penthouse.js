@@ -1,0 +1,99 @@
+// Penthouse heist: the big one. Infiltrator and tech lead; huge pay, huge risk.
+
+/** @type {import('../../core/types.js').MissionTemplate} */
+export const PENTHOUSE = {
+  id: 'penthouse',
+  name: 'Penthouse Heist',
+  district: 'heights',
+  threat: 5,
+  pay: 12000,
+  days: 3,
+  crewSize: 4,
+  keyStats: ['stealth', 'tech', 'driving'],
+  brief: 'A Glass Heights executive keeps a vault of crypto keys and jade in his penthouse, 71 floors up. He\'s in Singapore for three nights.',
+  beats: [
+    'Glass Heights glitters in the rain. {driver} drops the crew at the service entrance of the tower.',
+    'Up the service lift, past a sleeping concierge, to the 71st floor.',
+    'The penthouse is all glass and white marble. The vault is behind a scroll painting in the study.',
+    'Keys in a drive, jade in a bag. Down the lift, out the loading dock, into the van.',
+    'From the flyover, the tower is just another light in the skyline.',
+  ],
+  crises: [
+    {
+      id: 'facial_scan',
+      text: 'The service lift has a facial scanner nobody mentioned. It wants a registered face.',
+      focusRole: 'tech',
+      choices: [
+        { id: 'spoof', label: '{tech} spoofs the scanner', kind: 'adapt', stat: 'tech', difficulty: 13, requires: { kind: 'role', value: 'tech' }, neural: 15,
+          success: 'The scanner sees a cleaner who retired in 2019. The doors open.', failure: 'The scanner flags an intrusion attempt. Building security is alerted.', failureInjury: 'none', failureCost: { heat: 2 } },
+        { id: 'climb', label: '{infiltrator} climbs the lift shaft', kind: 'push', stat: 'stealth', difficulty: 14, requires: { kind: 'role', value: 'infiltrator' },
+          success: 'Seventy-one floors of cables and grease. {infiltrator} opens the lift from the inside.', failure: 'A hand slips on a greasy cable.', failureInjury: 'serious' },
+        { id: 'abort', label: 'Abort: the job was sold to you wrong', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -10 },
+          success: 'You walk back out past the concierge, who is still asleep.', failure: '', failureInjury: 'none' },
+      ],
+    },
+    {
+      id: 'laser_grid',
+      text: 'The study has a laser grid across the floor, invisible until {tech} sprays the air.',
+      choices: [
+        { id: 'thread', label: 'Thread through the beams', kind: 'push', stat: 'stealth', difficulty: 13,
+          success: 'Slow, twisting, holding breath. Nobody touches a beam.', failure: 'An elbow clips a beam. Alarms start counting down.', failureInjury: 'none', failureCost: { heat: 2, payCut: 0.3 } },
+        { id: 'loop', label: '{tech} loops the sensor feed', kind: 'adapt', stat: 'tech', difficulty: 12, requires: { kind: 'role', value: 'tech' }, neural: 10,
+          success: 'The grid stays on, but it\'s watching a recording now. You walk straight through.', failure: 'The loop glitches and the grid resets louder.', failureInjury: 'none', failureCost: { heat: 2 } },
+        { id: 'abort', label: 'Abort: back out of the study', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -10 },
+          success: 'You leave the vault untouched and the beams unbroken.', failure: '', failureInjury: 'none' },
+      ],
+    },
+    {
+      id: 'owner_home',
+      text: 'The front door opens. The executive is home early, with a bodyguard and a bottle of champagne.',
+      choices: [
+        { id: 'hide', label: 'Everyone hides and waits', kind: 'push', stat: 'stealth', difficulty: 13,
+          success: 'An hour behind the curtains while he drinks. Then he falls asleep on the sofa.', failure: 'The bodyguard sweeps the room and finds someone behind the curtains.', failureInjury: 'serious' },
+        { id: 'pose', label: '{face} poses as the building\'s night manager', kind: 'adapt', stat: 'social', difficulty: 14, requires: { kind: 'role', value: 'face' },
+          success: '"Sir, a water leak upstairs, we needed to check your ceiling." He apologises for the trouble.', failure: 'The bodyguard calls the real night manager.', failureInjury: 'light', failureCost: { heat: 2 } },
+        { id: 'abort', label: 'Abort: out the balcony and down the fire stairs', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -5 },
+          success: 'Seventy-one flights of fire stairs. Legs shaking, everyone alive.', failure: '', failureInjury: 'none' },
+      ],
+    },
+    {
+      id: 'vault_timer',
+      text: 'The vault has a time lock. {tech} can force it, but it will take her brain to its limit.',
+      focusRole: 'tech',
+      choices: [
+        { id: 'force', label: '{tech} forces the time lock', kind: 'push', stat: 'tech', difficulty: 14, neural: 30, requires: { kind: 'role', value: 'tech' },
+          success: 'Ninety seconds of silence, then a click. Her hands are shaking badly.', failure: 'Her implants overload. She drops to the floor, convulsing.', failureInjury: 'critical' },
+        { id: 'jade_only', label: 'Forget the vault, take the jade on display', kind: 'adapt', stat: 'stealth', sure: true, difficulty: 0, cost: { payCut: 0.5 },
+          success: 'Three jade carvings from the shelves. Half the score, none of the risk.', failure: '', failureInjury: 'none' },
+        { id: 'abort', label: 'Abort: leave it all', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -10 },
+          success: 'You leave the penthouse exactly as you found it.', failure: '', failureInjury: 'none' },
+      ],
+    },
+    {
+      id: 'drone',
+      text: 'A security drone rises outside the window, lights sweeping across the glass.',
+      choices: [
+        { id: 'freeze', label: 'Freeze and wait for it to pass', kind: 'push', stat: 'cool', difficulty: 12,
+          success: 'Nobody moves. The lights pass over, and the drone drifts away.', failure: 'Someone flinches. The drone hovers and starts recording.', failureInjury: 'none', failureCost: { heat: 2 } },
+        { id: 'hack', label: '{tech} takes control of the drone', kind: 'adapt', stat: 'tech', difficulty: 13, requires: { kind: 'role', value: 'tech' }, neural: 10,
+          success: 'The drone wobbles, then flies off to film the harbour.', failure: 'The drone\'s owner fights back. It crashes into the glass.', failureInjury: 'none', failureCost: { heat: 2 } },
+        { id: 'abort', label: 'Abort: get out before it calls it in', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -10 },
+          success: 'Down the stairs as the drone hovers at the empty window.', failure: '', failureInjury: 'none' },
+      ],
+    },
+    {
+      id: 'lockdown_tower',
+      text: 'Tower security locks down the lobby. The only way out is the roof, or the loading dock past two guards.',
+      focusRole: 'driver',
+      choices: [
+        { id: 'dock', label: '{driver} rams the loading dock gate', kind: 'push', stat: 'driving', difficulty: 13, cost: { heat: 2 },
+          success: 'The gate folds like paper. You\'re on the flyover before the guards reach their radios.', failure: 'The van takes the gate badly. Glass everywhere.', failureInjury: 'serious' },
+        { id: 'roof', label: 'Out over the roof to the next tower', kind: 'push', stat: 'stealth', difficulty: 14,
+          success: 'A plank between towers, 300 metres up. Nobody looks down.', failure: 'The plank shifts. Someone nearly falls.', failureInjury: 'serious' },
+        { id: 'abort', label: 'Abort: leave the bag, walk out as cleaners', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -10 },
+          success: 'You dump the bag in a laundry chute and walk out in uniforms. Nobody stops you.', failure: '', failureInjury: 'none' },
+      ],
+    },
+  ],
+  heat: 3,
+};

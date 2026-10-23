@@ -178,3 +178,15 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 /* --- Trait bonuses on stats panels --- */
 .statnote { display: block; margin-top: 2px; font-size: 0.68rem; color: var(--accent-2); line-height: 1.3; }
 .statnote.is-down { color: var(--warn); }
+
+/* --- Clients, variations and twists --- */
+.intel { color: var(--warn); font-size: 0.8rem; font-weight: 600; }
+.tag-up { color: #ff9a5a; font-size: 0.75rem; }
+.tag-down { color: #5fe0a5; font-size: 0.75rem; }
+.clientrow { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.clientrow:last-child { border-bottom: 0; }
+.trust { text-align: right; font-size: 0.8rem; font-weight: 600; white-space: nowrap; }
+.trust--good { color: #5fe0a5; }
+.trust--mid { color: var(--muted); }
+.trust--bad { color: var(--danger); }
+.log--twist { color: var(--warn); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.8rem; }

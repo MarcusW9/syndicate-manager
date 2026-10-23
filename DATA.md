@@ -56,11 +56,20 @@ A crisis with `focusRole` centres on that operative: they take the injury if a c
 3. If someone goes **critical**, `resolveCritical` must be called first: `stabilise` (medic, difficulty 9), `extract` (job ends, +50% pay cut, op saved) or `push` (op may die at the end: 35% survival, 65% with a medic, 100% on Story or if the job is later aborted).
 4. `finish` pays out, adds heat and fatigue, sets the crew away for `days`, moves the dead to the memorial and posts a report.
 
+## Job offer (state.jobs)
+`id`, `templateId`, `clientId`, `payMult` (0.75-1.25), `threatDelta` (-1/0/+1), `twist` (twist id or null), `hinted` (shows "Intel unreliable"), `offeredDay`, `expiresDay`. `jobView(state, job)` in `src/core/jobs.js` turns an offer into what the board shows (pay with trust, threat).
+
+## Clients and twists
+- `src/data/clients.js`: `id`, `name`, `desc`, `jobs` (template ids they offer). Trust lives in `state.clients[id]` (0-100, default 50); rules in `src/core/clients.js`.
+- `src/data/twists.js`: crises with an extra `name`, usable on any job.
+- New jobs live one per file in `src/data/missions/`.
+- Choice field `successCost`: like `cost`, but only applied if the roll succeeds (bonus pay).
+
 ## Inbox message
 `type` (`job`, `crew`, `warning`, `rival`, `report`, `scout`, `finance`), `subject`, `body`, `day`, optional `expiresDay`. `blocking: true` stops Continue until resolved.
 
 ## Game state
-`day` (day 1 = Monday, week 1, season 1; 364-day seasons), `cash`, `heat` 0-10, `reputation`, `tier`, `rent`, `crew`, `inbox`, `memorial`, `jobs` (offers on the board), `activeMission` (null or the mission in progress, saved so a reload resumes it), `difficulty`, `seed`, `rngCounter`, `recruits` (open leads), `recruitSeq`, `rosterCap` (beds), `safehouseLevel`, `lastJobDay`, `lastBackupDay` (day of last export), `ironman` (`{ id, seq }`, Ironman runs only), `version` (currently 4).
+`day` (day 1 = Monday, week 1, season 1; 364-day seasons), `cash`, `heat` 0-10, `reputation`, `tier`, `rent`, `crew`, `inbox`, `memorial`, `jobs` (offers on the board), `activeMission` (null or the mission in progress, saved so a reload resumes it), `difficulty`, `seed`, `rngCounter`, `recruits` (open leads), `recruitSeq`, `rosterCap` (beds), `safehouseLevel`, `lastJobDay`, `lastBackupDay` (day of last export), `ironman` (`{ id, seq }`, Ironman runs only), `clients` (trust by client id), `version` (currently 5).
 
 ## Storage (src/save/save.js)
 Keys: `syndicate-active-slot`, `syndicate-slot-N` (N = 1-3), `syndicate-slot-N-backup` (weekly, not Ironman), `syndicate-ironman-progress` (`{ ironmanId: highest seq seen }`). The pre-slots key `syndicate-save-v1` is moved into slot 1 on first load.

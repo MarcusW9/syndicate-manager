@@ -4,7 +4,8 @@
 // Death rule: an operative can only die after the player chooses "Push on"
 // while they are critical. Abort/extract always saves everyone.
 
-import { templateById } from './jobs.js';
+import { templateById, twistById, jobView } from './jobs.js';
+import { adjustTrust, clientById, completionTrust, ABORT_TRUST } from './clients.js';
 import { nextRng } from './random.js';
 import { d20 } from './rng.js';
 import { APPROACHES, bestFor, effectiveStat, findRole, worsenInjury, setInjury } from './crew.js';
@@ -16,7 +17,10 @@ const STABILISE_DIFFICULTY = 9;
 
 const crewOf = (state, am) => am.crewIds.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean);
 const opById = (state, id) => state.crew.find((o) => o.id === id);
-const crisisById = (tpl, id) => tpl.crises.find((c) => c.id === id);
+const crisisById = (tpl, id) => tpl.crises.find((c) => c.id === id) ?? twistById(id);
+
+/** Difficulty of a roll on this job: the offer's threat change shifts every roll by 1 per step. */
+const rollDifficulty = (am, choice) => choice.difficulty + (am.threatDelta ?? 0);
 
 /** Bank raw growth points for an operative; applied when the job ends (see development.js). */
 function addXp(am, opId, stat, points) {
@@ -47,6 +51,7 @@ export function startMission(prev, jobId, crewIds, approach) {
   const job = state.jobs.find((j) => j.id === jobId);
   if (!job) return prev;
   const tpl = templateById(job.templateId);
+  const view = jobView(state, job);
   const rng = nextRng(state);
 
   // Draw 2 crises (3 on threat 4+ if the pool allows), in random order.
@@ -55,7 +60,7 @@ export function startMission(prev, jobId, crewIds, approach) {
     const j = Math.floor(rng() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
-  const crises = pool.slice(0, Math.min(pool.length, tpl.threat >= 4 ? 3 : 2));
+  const crises = pool.slice(0, Math.min(pool.length, view.threat >= 4 ? 3 : 2));
 
   // Spread crises between beats.
   const n = tpl.beats.length;
@@ -65,11 +70,17 @@ export function startMission(prev, jobId, crewIds, approach) {
     queue.push({ type: 'beat', index: b });
     positions.forEach((p, i) => { if (p === b + 1) queue.push({ type: 'crisis', id: crises[i].id }); });
   }
+  // A twist lands somewhere in the middle of the job, never before the first beat.
+  if (job.twist) {
+    const at = 1 + Math.floor(rng() * (queue.length - 1));
+    queue.splice(at, 0, { type: 'crisis', id: job.twist, twist: true });
+  }
 
   state.jobs = state.jobs.filter((j) => j.id !== jobId);
   state.lastJobDay = state.day;
   state.activeMission = {
     jobId, templateId: tpl.id, crewIds, approach,
+    pay: view.pay, threat: view.threat, threatDelta: view.threatDelta, clientId: job.clientId ?? null, twist: job.twist ?? null,
     queue, step: 0, log: [],
     payCut: 0, extraHeat: 0, clientTrust: 0,
     critical: null, stabiliseFailed: false, untreated: [],
@@ -97,6 +108,7 @@ function advance(state) {
   const step = currentStep(am);
   if (step?.type === 'crisis') {
     const crisis = crisisById(templateById(am.templateId), step.id);
+    if (step.twist) am.log.push({ kind: 'twist', text: `Twist: ${crisis.name}` });
     const crew = crewOf(state, am).filter((o) => o.condition.injury !== 'critical');
     const focus = crisis.focusRole ? crew.find((o) => o.role === crisis.focusRole) : null;
     const rng = nextRng(state);
@@ -146,6 +158,13 @@ function costText(cost = {}) {
   return parts.join(', ');
 }
 
+/** Cost line for the choice button: what you pay anyway, plus any bonus if it works. */
+function choiceCostText(choice) {
+  const always = costText(choice.cost);
+  const bonus = choice.successCost ? `if it works: ${costText(choice.successCost)}` : '';
+  return [always, bonus].filter(Boolean).join('; ');
+}
+
 /** Everything the UI needs to show the current crisis. */
 export function describeCrisis(state) {
   const am = state.activeMission;
@@ -156,12 +175,12 @@ export function describeCrisis(state) {
   const crew = crewOf(state, am);
   const choices = crisis.choices.map((choice) => {
     const req = meetsRequirement(crew, choice.requires);
-    const view = { id: choice.id, label: fill(choice.label, state, am), kind: choice.kind, available: req.ok, reason: req.reason ?? '', cost: costText(choice.cost) };
+    const view = { id: choice.id, label: fill(choice.label, state, am), kind: choice.kind, available: req.ok, reason: req.reason ?? '', cost: choiceCostText(choice) };
     if (EXIT_KINDS.has(choice.kind)) return { ...view, risk: 'safe', riskReason: 'Everyone gets out alive' };
     if (!req.ok) return view;
     if (choice.sure) return { ...view, risk: 'certain', riskReason: 'No roll needed' };
     const roller = rollerFor(state, am, choice, crew);
-    const chance = successChance(roller.value, choice.difficulty);
+    const chance = successChance(roller.value, rollDifficulty(am, choice));
     const target = failureTarget(state, am, roller.op);
     const bits = [`${roller.op.handle} on ${choice.stat} (${roller.value}${roller.notes.length ? ', ' + roller.notes.join(', ') : ''})`];
     const fails = [];
@@ -195,6 +214,7 @@ export function chooseOption(prev, choiceId) {
   if (EXIT_KINDS.has(choice.kind)) {
     am.log.push({ kind: 'good', text: fill(choice.success, state, am) });
     am.aborted = true;
+    if (step.twist) am.abortedOnTwist = true; // walking away from a job the client misrepresented isn't held against you
     am.step = am.queue.length - 1;
     advance(state);
     return state;
@@ -202,7 +222,7 @@ export function chooseOption(prev, choiceId) {
 
   const roller = rollerFor(state, am, choice, crew);
   const rng = nextRng(state);
-  const success = choice.sure || d20(rng) + roller.value >= 10 + choice.difficulty;
+  const success = choice.sure || d20(rng) + roller.value >= 10 + rollDifficulty(am, choice);
 
   // Everyone learns from a roll: the roller most (even on a failure), the rest by watching.
   if (!choice.sure) {
@@ -217,6 +237,10 @@ export function chooseOption(prev, choiceId) {
 
   if (success) {
     am.log.push({ kind: 'good', text: fill(choice.success, state, am) });
+    const sc = choice.successCost ?? {};
+    am.payCut += sc.payCut ?? 0;
+    am.extraHeat += sc.heat ?? 0;
+    if (sc.cash) state.cash += sc.cash;
   } else {
     am.log.push({ kind: 'bad', text: fill(choice.failure, state, am) });
     const fc = choice.failureCost ?? {};
@@ -336,11 +360,17 @@ function finish(state) {
     }
   }
 
-  const pay = Math.round((tpl.pay * Math.max(0, 1 - am.payCut)) / 50) * 50;
+  const basePay = am.pay ?? tpl.pay;
+  const threat = am.threat ?? tpl.threat;
+  const pay = Math.round((basePay * Math.max(0, 1 - am.payCut)) / 50) * 50;
   const heatGain = (am.aborted ? 0 : tpl.heat + (APPROACHES[am.approach]?.heat ?? 0)) + am.extraHeat;
   state.cash += pay;
   state.heat = Math.min(10, state.heat + heatGain);
-  state.reputation = Math.max(0, Math.min(100, state.reputation + (am.aborted ? -3 : tpl.threat * 3)));
+  state.reputation = Math.max(0, Math.min(100, state.reputation + (am.aborted ? -3 : threat * 3)));
+
+  // Clients remember: a finished job builds trust; costs marked "client unhappy" take it away.
+  const base = am.aborted ? (am.abortedOnTwist ? 0 : ABORT_TRUST) : completionTrust(threat);
+  const trustChange = adjustTrust(state, am.clientId, base + am.clientTrust);
 
   for (const op of deaths) {
     state.crew = state.crew.filter((o) => o.id !== op.id);
@@ -366,7 +396,7 @@ function finish(state) {
   const injuries = [];
   for (const op of survivors) {
     const c = op.condition;
-    c.fatigue = Math.min(100, c.fatigue + 10 + tpl.threat * 6);
+    c.fatigue = Math.min(100, c.fatigue + 10 + threat * 6);
     c.awayUntil = state.day + tpl.days;
     c.morale = Math.max(0, Math.min(100, c.morale + (deaths.length ? -20 : am.aborted ? -3 : 5)));
     if (c.injury !== 'healthy') injuries.push(`${op.handle} (${c.injury}, ${c.injuryDays}d)`);
@@ -382,7 +412,8 @@ function finish(state) {
   }
 
   const outcome = deaths.length ? 'loss' : am.aborted ? 'aborted' : 'completed';
-  am.result = { outcome, pay, heatGain, injuries, deaths: deaths.map((d) => d.handle), growth: growth.lines };
+  const client = clientById(am.clientId);
+  am.result = { outcome, pay, heatGain, injuries, deaths: deaths.map((d) => d.handle), growth: growth.lines, client: client?.name ?? null, trustChange };
   am.done = true;
 
   const subject = deaths.length ? `${deaths.map((d) => d.handle).join(', ')} died on the ${tpl.name}`
@@ -391,7 +422,8 @@ function finish(state) {
     id: `report-${state.day}-${state.rngCounter}`, type: 'report', day: state.day, subject,
     body: `Paid ${pay}. Heat +${heatGain}.` + (injuries.length ? ` Injured: ${injuries.join(', ')}.` : ' Nobody hurt.') +
       (deaths.length ? ' Their names go on the wall.' : '') +
-      (growth.lines.length ? ` Improved: ${growth.lines.join(', ')}.` : ''),
+      (growth.lines.length ? ` Improved: ${growth.lines.join(', ')}.` : '') +
+      (client && trustChange ? ` ${client.name} ${trustChange > 0 ? 'thinks more of you' : 'is unhappy with you'} (trust ${trustChange > 0 ? '+' : ''}${trustChange}).` : ''),
     blocking: false, read: false,
   });
 }

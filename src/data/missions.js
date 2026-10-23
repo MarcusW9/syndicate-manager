@@ -1,9 +1,15 @@
-// Mission templates: 3 types, 6 crises each (2-3 drawn per run).
+// Mission templates: 7 types, 6 crises each (2-3 drawn per run).
+// The three original jobs live here; newer ones each have a file in ./missions/.
 // Every crisis MUST include at least one exit: an 'abort' or 'extract' choice
 // (enforced by core/validate.js). This is the "no death without a choice" rule.
 
+import { KIDNAP } from './missions/kidnap.js';
+import { CASINO } from './missions/casino.js';
+import { PENTHOUSE } from './missions/penthouse.js';
+import { PROTECTION } from './missions/protection.js';
+
 /** @type {import('../core/types.js').MissionTemplate[]} */
-export const MISSIONS = [
+const BASE_MISSIONS = [
   {
     id: 'courier',
     name: 'Data Courier Run',
@@ -163,7 +169,7 @@ export const MISSIONS = [
         choices: [
           { id: 'newhire', label: '{face} plays the confused new hire', kind: 'adapt', stat: 'social', difficulty: 12, requires: { kind: 'role', value: 'face' }, failureCost: { heat: 1 },
             success: 'Five minutes of apologies and he is giving directions to the mop cupboard.', failure: 'He does not buy it and calls security. You leave in a hurry.', failureInjury: 'none' },
-          { id: 'charm', label: '{face} talks him into opening the server room himself', kind: 'push', stat: 'social', difficulty: 14, requires: { kind: 'trait', value: 'silver_tongue' }, cost: { payCut: -0.2 },
+          { id: 'charm', label: '{face} talks him into opening the server room himself', kind: 'push', stat: 'social', difficulty: 14, requires: { kind: 'trait', value: 'silver_tongue' }, successCost: { payCut: -0.2 },
             success: 'He badges you in, chatting the whole way, and shows you the backup drive. Bonus data for the client.', failure: 'He gets suspicious halfway and grabs for {face}\'s arm. It gets physical.', failureInjury: 'light' },
           { id: 'hide', label: 'Everyone drops behind the desks', kind: 'push', stat: 'stealth', difficulty: 11,
             success: 'He shrugs, takes his coat and leaves.', failure: 'He spots a shoe under a desk. There is a scuffle in the dark.', failureInjury: 'light' },
@@ -299,3 +305,5 @@ export const MISSIONS = [
     heat: 2,
   },
 ];
+
+export const MISSIONS = [...BASE_MISSIONS, KIDNAP, CASINO, PENTHOUSE, PROTECTION];
