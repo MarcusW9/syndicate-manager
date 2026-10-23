@@ -3,6 +3,7 @@
 // nothing else in the game needs to change.
 
 import { SAVE_VERSION } from '../core/state.js';
+import { addOffer } from '../core/jobs.js';
 
 const KEY = 'syndicate-save-v1';
 
@@ -63,6 +64,7 @@ function migrate(state) {
     state.jobSeq = state.jobSeq ?? 0;
     state.rngCounter = state.rngCounter ?? 0;
     state.activeMission = null;
+    if (!state.jobs.length) for (const id of ['courier', 'data_pull', 'warehouse']) addOffer(state, id);
     state.version = 2;
   }
   return state;
