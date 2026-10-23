@@ -4,6 +4,15 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-23 · Recruiting and safehouse expansion
+- **Scout leads every Wednesday:** one generated recruit, or two if you're short-handed (fewer than 4 crew). Leads go cold after 7 days.
+- **Recruit page:** stats, traits, origin, personality and wage demand. **Hire** (pay one week's wage as a signing fee), **Haggle** once (your best talker rolls; success cuts the wage by 15%), or **Pass**.
+- **Roster cap:** 8 beds to start. **Expand the safehouse** for +2 beds: ¥10,000, then ¥20,000, ¥30,000 and so on, with rent +¥1,000/week each time.
+- **Generated recruits:** about 60% Hong Kong Chinese, the rest from five other communities; always 18+; rookie, pro or veteran quality; wages ¥450–750. Roles the crew is missing turn up more often.
+- **New role:** infiltrator (stealth specialist).
+- Save format v3, with automatic upgrade from v2.
+- 11 new tests (21 total).
+
 ## 2026-10-23 · Heat cools down
 - Heat now drops every Sunday: by 1 normally, or by 3 after a quiet week (no job started since Monday).
 - The Sunday settlement message reports how much heat cooled.

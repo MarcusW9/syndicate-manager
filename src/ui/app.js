@@ -17,11 +17,13 @@ import {
   describeCrisis, describeCritical, currentStep,
 } from '../core/mission.js';
 import { saveGame, exportSave, importSave, deleteSave } from '../save/save.js';
+import { hire, haggle, passRecruit, canHire, signingFee, nextExpansion, expandSafehouse, STARTING_ROSTER_CAP } from '../core/recruits.js';
 
 let state;
 let screen = 'inbox';
 let openMessageId = null;
 let openOperativeId = null;
+let openRecruitId = null;
 let plan = null; // { jobId, crew: [...ids], approach }
 let root;
 
@@ -46,7 +48,7 @@ function onClick(e) {
   const { action, id } = t.dataset;
 
   switch (action) {
-    case 'nav': screen = id; openMessageId = null; openOperativeId = null; plan = null; break;
+    case 'nav': screen = id; openMessageId = null; openOperativeId = null; openRecruitId = null; plan = null; break;
     case 'continue': if (!isBlocked(state)) return setState(advanceDay(state)); break;
     case 'open-message': {
       openMessageId = id;
@@ -54,8 +56,15 @@ function onClick(e) {
       if (msg && !msg.read) { msg.read = true; saveGame(state); }
       break;
     }
-    case 'back': openMessageId = null; openOperativeId = null; plan = null; break;
+    case 'back': openMessageId = null; openOperativeId = null; openRecruitId = null; plan = null; break;
     case 'open-op': openOperativeId = id; break;
+    case 'open-recruit': openRecruitId = id; break;
+    case 'hire': openRecruitId = null; return setState(hire(state, id));
+    case 'haggle': return setState(haggle(state, id));
+    case 'pass': openRecruitId = null; return setState(passRecruit(state, id));
+    case 'expand':
+      if (confirm(`Expand the safehouse for ${money(nextExpansion(state).cost)}? Rent goes up by ${money(nextExpansion(state).rentIncrease)} a week.`)) return setState(expandSafehouse(state));
+      break;
     case 'open-job': plan = { jobId: id, crew: [], approach: 'stealth' }; break;
     case 'toggle-crew': {
       const tpl = templateById(state.jobs.find((j) => j.id === plan.jobId).templateId);
@@ -140,7 +149,7 @@ function navButton(id, label) {
 
 function renderScreen() {
   if (screen === 'inbox') return openMessageId ? renderMessage() : renderInbox();
-  if (screen === 'crew') return openOperativeId ? renderOperative() : renderCrew();
+  if (screen === 'crew') return openRecruitId ? renderRecruit() : openOperativeId ? renderOperative() : renderCrew();
   if (screen === 'jobs') return plan ? renderPlan() : renderJobs();
   if (screen === 'settings') return renderSettings();
   return '';
@@ -168,7 +177,8 @@ function renderInbox() {
 function renderMessage() {
   const m = state.inbox.find((x) => x.id === openMessageId);
   if (!m) return renderInbox();
-  const jobLink = m.type === 'job' && state.jobs.length ? `<button class="btn" data-action="nav" data-id="jobs">Open the job board</button>` : '';
+  const jobLink = m.type === 'job' && state.jobs.length ? `<button class="btn" data-action="nav" data-id="jobs">Open the job board</button>`
+    : m.type === 'scout' && (state.recruits ?? []).length ? `<button class="btn" data-action="nav" data-id="crew">See the leads</button>` : '';
   return `
     <section class="panel">
       <button class="btn btn--ghost" data-action="back">← Inbox</button>
@@ -181,14 +191,32 @@ function renderMessage() {
 
 // --- crew --------------------------------------------------------------
 function renderCrew() {
+  const cap = state.rosterCap ?? STARTING_ROSTER_CAP;
+  const x = nextExpansion(state);
+  const recruits = state.recruits ?? [];
   const wall = state.memorial.length ? `
       <h2>The wall</h2>
       <ul class="list list--plain">
         ${state.memorial.map((m) => `<li class="fallen">${badge(m, 'sm')}<span><strong>${esc(m.name)}</strong> "${esc(m.handle)}" <span class="muted">· ${esc(m.role)} · ${esc(m.cause)}, day ${m.day}</span></span></li>`).join('')}
       </ul>` : '';
+  const leads = `
+      <h2>Leads (${recruits.length})</h2>
+      ${recruits.length ? `<ul class="list">
+        ${recruits.map((r) => `
+          <li>
+            <button class="row" data-action="open-recruit" data-id="${esc(r.id)}">
+              ${badge(r)}
+              <span class="row__main"><strong>${esc(r.name)}</strong> "${esc(r.handle)}"<br><span class="muted">${esc(r.quality)} ${esc(r.role)} · ${r.age}</span></span>
+              <span class="row__meta"><strong>${money(r.wage)}</strong>/wk<br>gone day ${r.expiresDay}</span>
+            </button>
+          </li>`).join('')}
+      </ul>` : '<p class="muted small">No leads right now. Scouts report every Wednesday.</p>'}`;
   return `
     <section class="panel">
-      <h1>Crew</h1>
+      <div class="crewhead">
+        <h1>Crew</h1>
+        <span class="muted">${state.crew.length}/${cap} beds</span>
+      </div>
       <ul class="list">
         ${state.crew.map((op) => `
           <li>
@@ -199,7 +227,57 @@ function renderCrew() {
             </button>
           </li>`).join('')}
       </ul>
+      ${leads}
+      <h2>Safehouse</h2>
+      <div class="riskcard">
+        <p class="small">Level ${state.safehouseLevel ?? 1} · ${cap} beds · rent ${money(state.rent)}/wk</p>
+        <button class="btn btn--block" data-action="expand" ${state.cash >= x.cost ? '' : 'disabled'}>
+          Expand: +${x.beds} beds for ${money(x.cost)} (rent +${money(x.rentIncrease)}/wk)
+        </button>
+        ${state.cash < x.cost ? `<p class="muted small">Need ${money(x.cost - state.cash)} more.</p>` : ''}
+      </div>
       ${wall}
+    </section>`;
+}
+
+function renderRecruit() {
+  const r = (state.recruits ?? []).find((x) => x.id === openRecruitId);
+  if (!r) { openRecruitId = null; return renderCrew(); }
+  const can = canHire(state, r);
+  return `
+    <section class="panel">
+      <button class="btn btn--ghost" data-action="back">← Crew</button>
+      <div class="ophead">
+        ${badge(r, 'lg')}
+        <div>
+          <h1>${esc(r.name)} <span class="muted">"${esc(r.handle)}"</span></h1>
+          <p class="muted">${esc(r.quality)} ${esc(r.role)} · ${r.age} · lead goes cold on day ${r.expiresDay}</p>
+        </div>
+      </div>
+      <p class="body">${esc(r.origin)}</p>
+      <p class="body muted">${esc(r.bio)}</p>
+
+      <h2>Traits</h2>
+      <ul class="chips">
+        ${r.traits.map((t) => `<li class="chip"><strong>${esc(TRAITS[t]?.name ?? t)}</strong><span>${esc(TRAITS[t]?.desc ?? '')}</span></li>`).join('')}
+      </ul>
+
+      <h2>Stats</h2>
+      <dl class="stats">
+        ${Object.entries(r.stats).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${v}</dd></div>`).join('')}
+      </dl>
+
+      <h2>Terms</h2>
+      <div class="riskcard">
+        <p>Wants <strong>${money(r.wage)}</strong> a week, plus a ${money(signingFee(r))} signing fee now.</p>
+        ${r.haggleResult ? `<p class="muted">${esc(r.haggleResult)}</p>` : ''}
+      </div>
+      <div class="stack">
+        <button class="btn btn--primary" data-action="hire" data-id="${esc(r.id)}" ${can.ok ? '' : 'disabled'}>Hire for ${money(signingFee(r))}</button>
+        ${can.ok ? '' : `<p class="muted small">${esc(can.reason)}</p>`}
+        <button class="btn" data-action="haggle" data-id="${esc(r.id)}" ${r.haggled ? 'disabled' : ''}>${r.haggled ? 'Already haggled' : 'Haggle (your best talker rolls)'}</button>
+        <button class="btn btn--ghost" data-action="pass" data-id="${esc(r.id)}">Pass on this one</button>
+      </div>
     </section>`;
 }
 

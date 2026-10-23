@@ -4,6 +4,7 @@
 
 import { SAVE_VERSION } from '../core/state.js';
 import { addOffer } from '../core/jobs.js';
+import { STARTING_ROSTER_CAP } from '../core/recruits.js';
 
 const KEY = 'syndicate-save-v1';
 
@@ -66,6 +67,14 @@ function migrate(state) {
     state.activeMission = null;
     if (!state.jobs.length) for (const id of ['courier', 'data_pull', 'warehouse']) addOffer(state, id);
     state.version = 2;
+  }
+  if (state.version === 2) {
+    // v3 added recruiting and safehouse expansion.
+    state.recruits = state.recruits ?? [];
+    state.recruitSeq = state.recruitSeq ?? 0;
+    state.rosterCap = state.rosterCap ?? STARTING_ROSTER_CAP;
+    state.safehouseLevel = state.safehouseLevel ?? 1;
+    state.version = 3;
   }
   return state;
 }

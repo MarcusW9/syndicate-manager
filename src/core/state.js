@@ -3,8 +3,9 @@
 import { STARTING_CREW, STARTING_TRUST } from '../data/operatives.js';
 import { NAMES } from '../config/names.js';
 import { addOffer } from './jobs.js';
+import { STARTING_ROSTER_CAP } from './recruits.js';
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 const freshCondition = () => ({
   fatigue: 10,
@@ -51,6 +52,10 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
     jobSeq: 0,
     rngCounter: 0,
     activeMission: null,
+    recruits: [],
+    recruitSeq: 0,
+    rosterCap: STARTING_ROSTER_CAP,
+    safehouseLevel: 1,
   };
   // Opening board: one safe job, one mid, one dangerous (see DESIGN.md).
   for (const id of ['courier', 'data_pull', 'warehouse']) addOffer(state, id);

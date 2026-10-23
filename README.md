@@ -33,7 +33,9 @@ Output goes to `dist/`. Pushing to `main` deploys to GitHub Pages automatically 
 - [x] Crew badges (placeholder portraits)
 - [x] Heat cools weekly (faster after a quiet week)
 - [ ] Heat consequences; economy tuning
-- [ ] Recruiting new operatives
+- [x] Recruiting: weekly scout leads, hire/haggle/pass, generated recruits
+- [x] Safehouse expansion (roster cap 8, +2 per upgrade)
+- [ ] Running several jobs at once (needed for big crews)
 - [ ] Burnout warnings
 - [ ] First playtest
 - [ ] Crew portraits (after playtest)

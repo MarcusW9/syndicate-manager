@@ -16,6 +16,9 @@ Plain-English reference for the game's data. The code version is `src/core/types
 | `bio`, `origin` | Personality and background text |
 | `history` | Notable events, for story memory and the memorial |
 
+## Recruit (src/core/recruits.js)
+Same shape as an Operative, plus `culture`, `quality` (`rookie`/`pro`/`veteran`), `expiresDay`, `haggled`, `haggleResult`. Pools live in `src/data/recruitPools.js` (cultures and names, handles, origins per role, personalities, badge colours). Hiring strips the recruit-only fields and adds `condition`, `trust` and `history`.
+
 ## Injury ladder
 `healthy` -> `light` (days) -> `serious` (weeks, may leave a scar trait) -> `critical` (triggers a crisis now) -> `dead`.
 
@@ -49,4 +52,4 @@ A crisis with `focusRole` centres on that operative: they take the injury if a c
 `type` (`job`, `crew`, `warning`, `rival`, `report`, `scout`, `finance`), `subject`, `body`, `day`, optional `expiresDay`. `blocking: true` stops Continue until resolved.
 
 ## Game state
-`day` (day 1 = Monday, week 1, season 1; 364-day seasons), `cash`, `heat` 0-10, `reputation`, `tier`, `rent`, `crew`, `inbox`, `memorial`, `jobs` (offers on the board), `activeMission` (null or the mission in progress, saved so a reload resumes it), `difficulty`, `seed`, `rngCounter`, `version` (currently 2).
+`day` (day 1 = Monday, week 1, season 1; 364-day seasons), `cash`, `heat` 0-10, `reputation`, `tier`, `rent`, `crew`, `inbox`, `memorial`, `jobs` (offers on the board), `activeMission` (null or the mission in progress, saved so a reload resumes it), `difficulty`, `seed`, `rngCounter`, `recruits` (open leads), `recruitSeq`, `rosterCap` (beds), `safehouseLevel`, `lastJobDay`, `version` (currently 3).
