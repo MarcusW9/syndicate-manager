@@ -4,6 +4,13 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-23 · Stats show trait bonuses; rare 20s
+- **Stats panels show the number used on jobs.** Trait bonuses are now included, with the breakdown underneath: Jax shows Combat **17** with "15 +2 Hothead"; Static shows Tech **18** with "16 +2 Chromed". Penalties show in amber (Jax's Cool "7 −2 Hothead").
+- **Planning screen** key stats include trait bonuses too, marked with *.
+- **Stats with traits are capped at 20,** the top of the scale.
+- **A 20 is now possible:** about 1 in 50 rookies has a ceiling of 20 in their main stat. Previously 19 was the most anyone could reach.
+- 2 new tests (45 total).
+
 ## 2026-10-23 · Operatives develop
 - **People get better by working.** Making a roll in a crisis (even a failed one), watching someone else make one, and finishing jobs all build towards +1 in a stat. Each person also practises their own speciality on every job they finish.
 - **Hidden potential:** everyone has a ceiling they can't pass. Rookies have the most room (their main stat can reach 14–19), pros some, veterans almost none.

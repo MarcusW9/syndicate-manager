@@ -23,14 +23,26 @@ export function availability(state, op) {
   return { ok: true, reason: c.fatigue > 60 ? 'fatigued' : c.injury === 'light' ? 'light injury' : 'ready' };
 }
 
+/** Flat stat bonuses from traits, e.g. Chromed { tech: 2 }, Hothead { combat: 2, cool: -2 }. */
+export function traitMods(op) {
+  const mods = {};
+  for (const t of op.traits ?? []) {
+    for (const [stat, v] of Object.entries(TRAITS[t]?.effects ?? {})) {
+      if (typeof v === 'number' && v !== 0 && stat in (op.stats ?? {})) mods[stat] = (mods[stat] ?? 0) + v;
+    }
+  }
+  return mods;
+}
+
+/** Stat with trait bonuses, as shown on the stats panel (1-20). */
+export const ratedStat = (op, stat) => Math.max(1, Math.min(20, (op.stats[stat] ?? 0) + (traitMods(op)[stat] ?? 0)));
+
 /** Stat after traits, approach, fatigue and injury. Returns { value, notes }. */
 export function effectiveStat(op, stat, { approach, crew = [] } = {}) {
   let value = op.stats[stat] ?? 0;
   const notes = [];
-  for (const t of op.traits) {
-    const mod = TRAITS[t]?.effects?.[stat];
-    if (typeof mod === 'number' && mod !== 0) value += mod;
-  }
+  // Traits can't push a stat past the 1-20 scale; situational effects below can.
+  value = Math.max(1, Math.min(20, value + (traitMods(op)[stat] ?? 0)));
   if (stat === 'cool' && crew.some((o) => o.id !== op.id && o.traits.includes('veteran'))) value += 1;
   const am = APPROACHES[approach]?.mods?.[stat];
   if (am) value += am;

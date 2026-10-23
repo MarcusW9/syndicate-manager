@@ -59,7 +59,8 @@ export function prepareOperative(op) {
 
 // --- potential for generated recruits --------------------------------------
 
-const ROOKIE_CEILING = [[14, 15], [15, 20], [16, 25], [17, 20], [18, 12], [19, 8]];
+// Main-stat ceiling for rookies, as [ceiling, % chance]. 20 is world-class and very rare (1 in 50).
+const ROOKIE_CEILING = [[14, 15], [15, 20], [16, 25], [17, 20], [18, 12], [19, 6], [20, 2]];
 
 function weightedCeiling(rng) {
   let r = rng() * 100;
