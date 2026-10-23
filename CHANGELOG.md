@@ -14,7 +14,15 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - **Operative page:** tier (rookie/pro/veteran), a Development read, and green/red numbers beside stats showing change since joining.
 - The job report lists who improved.
 - Save format v4, with automatic upgrade from v3.
-- 13 new tests (34 total), including simulations of a rookie's first season.
+- 13 new tests (43 total), including simulations of a rookie's first season.
+
+## 2026-10-23 · Save slots, backups and Ironman lock
+- **3 save slots** on the Save screen: Play, New and Delete. The existing save moves into slot 1 automatically.
+- **Difficulty picker for new games:** Story, Standard or Ironman. These were previously unreachable; every new game was Standard.
+- **Automatic weekly backup** per slot, taken at the start of each in-game week, with a **Restore** button. Not available on Ironman.
+- **Backup reminder:** an Inbox banner and a Save-screen note when you haven't exported for 28 in-game days. Exporting resets it.
+- **Ironman lock:** loading an older copy of an Ironman run is refused, so deaths stick. A run this browser has never seen can still be loaded (to move devices).
+- 9 new tests (30 total).
 
 ## 2026-10-23 · Recruiting and safehouse expansion
 - **Scout leads every Wednesday:** one generated recruit, or two if you're short-handed (fewer than 4 crew). Leads go cold after 7 days.
