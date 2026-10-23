@@ -199,5 +199,11 @@ function migrate(state) {
     }
     state.version = 4;
   }
+  if (state.version === 4) {
+    // v5 added clients (trust) and job variations. Old offers have no client,
+    // no variation and no twist, which the code treats as plain jobs.
+    state.clients = state.clients ?? {};
+    state.version = 5;
+  }
   return state;
 }

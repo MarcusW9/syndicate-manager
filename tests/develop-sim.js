@@ -2,7 +2,7 @@
 import { createNewGame } from '../src/core/state.js';
 import * as M from '../src/core/mission.js';
 import { advanceDay, calendar } from '../src/core/time.js';
-import { templateById } from '../src/core/jobs.js';
+import { templateById, jobView } from '../src/core/jobs.js';
 import { availability } from '../src/core/crew.js';
 import { prepareOperative, STATS } from '../src/core/development.js';
 import { playMission, carefulPolicy } from './play.js';
@@ -35,7 +35,12 @@ export function developRookie(seed, rookieOpts, { jobs = 22, mentor = true } = {
     if (!rookie) break;
     const free = s.crew.filter((op) => availability(s, op).ok && (mentor || op.id !== 'teo'));
     if (free.some((o) => o.id === 'rookie') && (!mentor || free.some((o) => o.id === 'teo')) && calendar(s.day).weekday !== 'Sun') {
-      const job = s.jobs.find((j) => templateById(j.templateId).crewSize <= free.length);
+      // A player developing a rookie picks work that uses the rookie's speciality, safest first
+      // (see DESIGN.md: rookies learn on lower-risk jobs).
+      const fit = (j) => (templateById(j.templateId).keyStats.includes(main) ? 0 : 10) + jobView(s, j).threat;
+      // ...and doesn't drag a rookie onto threat-5 jobs (a careful crew aborts nearly all of those).
+      const job = s.jobs.filter((j) => templateById(j.templateId).crewSize <= free.length && jobView(s, j).threat < 5)
+        .sort((a, b) => fit(a) - fit(b))[0];
       if (job) {
         const tpl = templateById(job.templateId);
         const lead = ['rookie', ...(mentor ? ['teo'] : [])];

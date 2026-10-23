@@ -36,6 +36,7 @@ Output goes to `dist/`. Pushing to `main` deploys to GitHub Pages automatically 
 - [x] Recruiting: weekly scout leads, hire/haggle/pass, generated recruits
 - [x] Safehouse expansion (roster cap 8, +2 per upgrade)
 - [x] Save slots (3), difficulty picker, weekly auto-backups, backup reminder, Ironman lock
+- [x] 7 job types (42 crises), 5 recurring clients with trust, offer variations, hidden twists
 - [ ] Running several jobs at once (needed for big crews)
 - [ ] Burnout warnings
 - [ ] First playtest
@@ -46,3 +47,4 @@ Output goes to `dist/`. Pushing to `main` deploys to GitHub Pages automatically 
 - `DESIGN.md`: narrative, setting, cast, and the decision log (why each choice was made)
 - `DATA.md`: data shapes
 - `CLAUDE.md`: project rules for working on the code
+- `WRITING_GUIDE.md`: how to write new crises and jobs in plain English

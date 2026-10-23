@@ -1,0 +1,97 @@
+// Protection run: keep a client (or their cargo) safe across rival turf.
+
+/** @type {import('../../core/types.js').MissionTemplate} */
+export const PROTECTION = {
+  id: 'protection',
+  name: 'Protection Run',
+  district: 'docks',
+  threat: 3,
+  pay: 4000,
+  days: 1,
+  crewSize: 3,
+  keyStats: ['combat', 'driving', 'cool'],
+  brief: 'A herbalist is moving a van of rare dried goods from the Docks to her shop, straight through Red Lantern streets. She wants it to arrive, and so does she.',
+  beats: [
+    'The herbalist climbs into the passenger seat with a thermos of chrysanthemum tea. {driver} pulls out.',
+    'The Docks give way to narrow streets. Every corner has someone watching.',
+    'Halfway there. The herbalist offers everyone tea and won\'t take no for an answer.',
+    'The shop shutters roll up. Crates go in, the herbalist pays in cash, and the tea is finished.',
+  ],
+  crises: [
+    {
+      id: 'tail_bikes',
+      text: 'Two motorbikes fall in behind the van. The riders aren\'t wearing helmets, and they\'re in no hurry to pass.',
+      focusRole: 'driver',
+      choices: [
+        { id: 'lose', label: '{driver} loses them in the wet market', kind: 'push', stat: 'driving', difficulty: 11,
+          success: 'Through a wet market at speed, fish flying. The bikes slide out.', failure: 'A stall clips the van. Everyone gets thrown around.', failureInjury: 'light' },
+        { id: 'stare', label: '{muscle} leans out and stares them down', kind: 'adapt', stat: 'cool', difficulty: 10,
+          success: 'One long look. They peel off at the next junction.', failure: 'They take it as a challenge and pull alongside.', failureInjury: 'light', failureCost: { heat: 1 } },
+        { id: 'abort', label: 'Abort: turn back to the Docks', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -10 },
+          success: 'You U-turn and take her back. She is not happy.', failure: '', failureInjury: 'none' },
+      ],
+    },
+    {
+      id: 'roadblock',
+      text: 'A cart full of cardboard has been pushed across the road. Men are waiting in the doorways either side.',
+      choices: [
+        { id: 'ram', label: '{driver} drives straight through', kind: 'push', stat: 'driving', difficulty: 12, cost: { heat: 1 },
+          success: 'Cardboard everywhere, but the van is through and moving.', failure: 'The cart catches under the van. It stalls.', failureInjury: 'serious' },
+        { id: 'fight', label: 'Get out and clear it', kind: 'push', stat: 'combat', difficulty: 12,
+          success: 'A short, loud fight. They scatter.', failure: 'There are more of them than you thought.', failureInjury: 'serious' },
+        { id: 'abort', label: 'Abort: reverse out and go home', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -10 },
+          success: 'Reverse gear, all the way back to the main road.', failure: '', failureInjury: 'none' },
+      ],
+    },
+    {
+      id: 'toll_collector',
+      text: 'A polite young man in a suit flags the van down. "Red Lantern road. There\'s a fee."',
+      choices: [
+        { id: 'pay', label: 'Pay the fee', kind: 'adapt', stat: 'cool', sure: true, difficulty: 0, cost: { cash: -800 },
+          success: 'He counts it, thanks you, and wishes the herbalist good health.', failure: '', failureInjury: 'none' },
+        { id: 'talk', label: '{face} negotiates', kind: 'adapt', stat: 'social', difficulty: 12, requires: { kind: 'role', value: 'face' }, cost: { cash: -300 },
+          success: 'Half price, and a promise to buy herbs from her shop.', failure: 'He takes the full fee and adds a bit for wasting his time.', failureInjury: 'none', failureCost: { cash: -800 } },
+        { id: 'abort', label: 'Abort: refuse and turn around', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -10 },
+          success: 'You turn around. He watches you go, still smiling.', failure: '', failureInjury: 'none' },
+      ],
+    },
+    {
+      id: 'client_panic',
+      text: 'The herbalist sees someone she knows on the street and panics. She wants to get out of the van, now.',
+      choices: [
+        { id: 'calm', label: '{face} calms her down', kind: 'adapt', stat: 'social', difficulty: 10,
+          success: 'A long talk about her grandchildren. By the end she is laughing.', failure: 'She opens the door at a red light.', failureInjury: 'none', failureCost: { payCut: 0.3 } },
+        { id: 'drive', label: 'Keep driving, explain later', kind: 'push', stat: 'cool', difficulty: 9,
+          success: 'She shouts for two minutes, then sulks. The van keeps moving.', failure: 'She grabs the wheel.', failureInjury: 'light' },
+        { id: 'abort', label: 'Abort: let her out, call it off', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -10 },
+          success: 'She gets out and walks off with her thermos. The cargo comes back with you.', failure: '', failureInjury: 'none' },
+      ],
+    },
+    {
+      id: 'ambush',
+      text: 'A car pulls across the van at a junction. Doors open. This was planned.',
+      focusRole: 'muscle',
+      choices: [
+        { id: 'fight', label: '{muscle} holds them off while you reverse', kind: 'push', stat: 'combat', difficulty: 13,
+          success: '{muscle} buys ten seconds. Ten seconds is enough.', failure: '{muscle} is outnumbered and goes down.', failureInjury: 'critical' },
+        { id: 'swerve', label: '{driver} swerves through the gap', kind: 'push', stat: 'driving', difficulty: 13,
+          success: 'Mirrors gone, paint gone, but you\'re through.', failure: 'The gap was smaller than it looked.', failureInjury: 'serious' },
+        { id: 'abort', label: 'Abort: give them the cargo', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -15 },
+          success: 'You hand over the van keys. They take the van and leave you on the pavement, alive.', failure: '', failureInjury: 'none' },
+      ],
+    },
+    {
+      id: 'checkpoint_goods',
+      text: 'Customs officers are inspecting vans at the district border. Some of the dried goods are not exactly legal.',
+      choices: [
+        { id: 'papers', label: '{face} shows the herbalist\'s paperwork with confidence', kind: 'adapt', stat: 'social', difficulty: 11,
+          success: '"Traditional medicine, officer." He waves you through with a cough.', failure: 'He opens a crate and starts asking questions.', failureInjury: 'none', failureCost: { heat: 2 } },
+        { id: 'detour', label: 'Take the long way round', kind: 'adapt', stat: 'driving', difficulty: 9, cost: { payCut: 0.15 },
+          success: 'An extra hour through back streets. Late, but clean.', failure: 'The detour runs straight into a Red Lantern street.', failureInjury: 'light' },
+        { id: 'abort', label: 'Abort: turn back before the line', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -5 },
+          success: 'Back to the Docks. The herbalist will have to find another way.', failure: '', failureInjury: 'none' },
+      ],
+    },
+  ],
+  heat: 1,
+};

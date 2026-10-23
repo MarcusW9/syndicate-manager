@@ -4,6 +4,25 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-23 · Four new jobs, clients, variations and twists
+- **4 new job types** with 6 crises each (7 types, 42 crises in total):
+  - **Kidnap Rescue** (Old Town, threat 4, ¥7,000): aborting means leaving the hostage
+  - **Casino Con** (Night Market, threat 2, ¥4,500): face-led; one crisis is an all-in gamble for +40% pay
+  - **Penthouse Heist** (Glass Heights, threat 5, ¥12,000): the big score; the first job that needs an infiltrator
+  - **Protection Run** (The Docks, threat 3, ¥4,000): escort a herbalist and her cargo through Red Lantern streets
+- **5 recurring clients:** Auntie Fung, Mr. Szeto, The Ferryman, Madam Rao and Ruth Okonkwo. Each offers certain jobs and tracks **trust**:
+  - finished jobs build trust; aborts cost a little, and "client unhappy" choices cost more
+  - high trust pays up to 15% more; below 20, a client stops calling
+  - trust drifts back towards neutral each week
+  - the Jobs screen lists every client and their trust
+- **Every offer varies:** pay ±25%, and threat ±1, marked "hotter" or "quieter than usual". A hotter job makes every roll one point harder.
+- **Hidden twists** on about 1 job in 4: the client lied about the guards, a double-cross, a police tip-off, a rival crew, or an unexpected bonus score. The board usually warns "Intel unreliable", but the hint is sometimes wrong. Aborting because of a twist doesn't cost client trust.
+- **Fix:** "bonus pay" choices (the Silver Tongue option on the office job) used to add the bonus even when they failed. Now they only pay out on success.
+- **Economy:** a careful player's median cash after 8 weeks rose from about ¥1,900 to about ¥12,100; the share broke by week 8 fell from 41% to 12%.
+- `WRITING_GUIDE.md`: how to write new crises and jobs in plain English.
+- Save format v5, with automatic upgrade from v4.
+- 12 new tests (57 total).
+
 ## 2026-10-23 · Stats show trait bonuses; rare 20s
 - **Stats panels show the number used on jobs.** Trait bonuses are now included, with the breakdown underneath: Jax shows Combat **17** with "15 +2 Hothead"; Static shows Tech **18** with "16 +2 Chromed". Penalties show in amber (Jax's Cool "7 −2 Hothead").
 - **Planning screen** key stats include trait bonuses too, marked with *.

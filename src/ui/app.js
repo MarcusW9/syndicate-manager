@@ -9,7 +9,9 @@ import { STARTING_CREW } from '../data/operatives.js';
 const COLOR_BY_ID = Object.fromEntries(STARTING_CREW.map((o) => [o.id, o.color]));
 import { advanceDay, formatDate, isBlocked } from '../core/time.js';
 import { createNewGame } from '../core/state.js';
-import { templateById } from '../core/jobs.js';
+import { templateById, jobView } from '../core/jobs.js';
+import { trustLabel, clientById, trustOf } from '../core/clients.js';
+import { CLIENTS } from '../data/clients.js';
 import { availability, APPROACHES, traitMods, ratedStat } from '../core/crew.js';
 import { assessJob } from '../core/risk.js';
 import {
@@ -141,6 +143,9 @@ function onChange(e) {
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const money = (n) => `${n < 0 ? '-' : ''}${NAMES.currency}${Math.abs(n).toLocaleString()}`;
 const threatDots = (n) => '●'.repeat(n) + '○'.repeat(5 - n);
+/** Threat with a marker when this offer is above or below the job's usual level. */
+const threatHtml = (v) => `<span class="threat">${threatDots(v.threat)}</span>${v.threatDelta > 0 ? ' <span class="tag-up">hotter than usual</span>' : v.threatDelta < 0 ? ' <span class="tag-down">quieter than usual</span>' : ''}`;
+const clientLine = (v) => v.client ? `${esc(v.client.name)} <span class="muted">(${esc(trustLabel(v.trust))})</span>` : '<span class="muted">Walk-in job</span>';
 const riskBadge = (level) => `<span class="risk risk--${esc(level)}">${esc(level === 'safe' || level === 'certain' ? level : `${level} risk`)}</span>`;
 const districtName = (key) => NAMES.districts[key] ?? key;
 const initials = (name) => { const w = name.trim().split(/\s+/); return (w[0][0] + (w.length > 1 ? w.at(-1)[0] : '')).toUpperCase(); };
@@ -405,40 +410,63 @@ function renderOperative() {
 
 // --- jobs and planning -----------------------------------------------------
 function renderJobs() {
-  if (!state.jobs.length) return `<section class="panel"><h1>Jobs</h1><p class="muted">No work on the board. New jobs arrive on Mondays.</p></section>`;
+  if (!state.jobs.length) return `<section class="panel"><h1>Jobs</h1><p class="muted">No work on the board. New jobs arrive on Mondays.</p>${renderClients()}</section>`;
   return `
     <section class="panel">
       <h1>Jobs</h1>
       <ul class="list">
         ${state.jobs.map((j) => {
-          const t = templateById(j.templateId);
+          const v = jobView(state, j);
+          const t = v.tpl;
           return `
           <li>
             <button class="row" data-action="open-job" data-id="${esc(j.id)}">
-              <span class="row__main"><strong>${esc(t.name)}</strong><br>
-                <span class="muted">${esc(districtName(t.district))} · threat <span class="threat">${threatDots(t.threat)}</span> · ${t.crewSize} crew · ${t.days}d</span></span>
-              <span class="row__meta"><strong>${money(t.pay)}</strong><br>until day ${j.expiresDay}</span>
+              <span class="row__main"><strong>${esc(t.name)}</strong> · ${clientLine(v)}<br>
+                <span class="muted">${esc(districtName(t.district))} · threat ${threatHtml(v)} · ${t.crewSize} crew · ${t.days}d</span>
+                ${v.hinted ? '<br><span class="intel">Intel unreliable</span>' : ''}</span>
+              <span class="row__meta"><strong>${money(v.pay)}</strong><br>until day ${j.expiresDay}</span>
             </button>
           </li>`;
         }).join('')}
       </ul>
+      ${renderClients()}
     </section>`;
+}
+
+function renderClients() {
+  return `
+      <h2>Clients</h2>
+      <ul class="list list--plain">
+        ${CLIENTS.map((c) => {
+          const t = trustOf(state, c.id);
+          return `<li class="clientrow"><span><strong>${esc(c.name)}</strong><br><span class="muted small">${esc(c.desc)}</span></span>
+            <span class="trust trust--${t >= 60 ? 'good' : t >= 40 ? 'mid' : 'bad'}">${esc(trustLabel(t))}<br><span class="small">${t}/100</span></span></li>`;
+        }).join('')}
+      </ul>
+      <p class="muted small">Finished jobs build trust; aborts and "client unhappy" choices cost it. High trust pays up to 15% more; below 20, a client stops calling. Trust drifts back towards neutral each week.</p>`;
 }
 
 function renderPlan() {
   const job = state.jobs.find((j) => j.id === plan.jobId);
   if (!job) { plan = null; return renderJobs(); }
-  const t = templateById(job.templateId);
+  const v = jobView(state, job);
+  const t = v.tpl;
   const picked = state.crew.filter((o) => plan.crew.includes(o.id));
-  const read = assessJob(t, picked, plan.approach);
+  const read = assessJob({ ...t, threat: v.threat }, picked, plan.approach);
   const full = plan.crew.length >= t.crewSize;
 
   return `
     <section class="panel">
       <button class="btn btn--ghost" data-action="back">← Jobs</button>
       <h1>${esc(t.name)}</h1>
-      <p class="muted">${esc(districtName(t.district))} · threat <span class="threat">${threatDots(t.threat)}</span> · pays ${money(t.pay)} · crew away ${t.days}d · +${t.heat} heat</p>
+      <p class="muted">${esc(districtName(t.district))} · threat ${threatHtml(v)} · pays ${money(v.pay)} · crew away ${t.days}d · +${t.heat} heat</p>
       <p class="body">${esc(t.brief)}</p>
+      <div class="riskcard">
+        <p><strong>Client:</strong> ${clientLine(v)}</p>
+        ${v.client ? `<p class="muted small">${esc(v.client.desc)}</p>` : ''}
+        ${v.threatDelta ? `<p class="muted small">Every roll on this job is ${v.threatDelta > 0 ? 'one point harder' : 'one point easier'} than usual.</p>` : ''}
+        ${v.hinted ? '<p class="intel">Intel unreliable: something about this job may not be what you were told.</p>' : ''}
+      </div>
 
       <h2>Crew (${plan.crew.length}/${t.crewSize})</h2>
       <p class="muted small">Matters most: ${t.keyStats.join(', ')}. * includes a trait bonus.</p>
@@ -512,6 +540,7 @@ function renderMission() {
         ${r.injuries.length ? `<p>Injured: ${esc(r.injuries.join(', '))}</p>` : '<p>Nobody hurt.</p>'}
         ${r.deaths.length ? `<p><strong>Lost: ${esc(r.deaths.join(', '))}.</strong> Their names go on the wall.</p>` : ''}
         ${r.growth?.length ? `<p>Improved: ${esc(r.growth.join(', '))}</p>` : ''}
+        ${r.client && r.trustChange ? `<p>${esc(r.client)}: trust ${r.trustChange > 0 ? '+' : ''}${r.trustChange}</p>` : ''}
         <button class="btn btn--primary btn--block" data-action="close-mission">Back to the safehouse</button>
       </div>`;
   } else if (am.critical) {

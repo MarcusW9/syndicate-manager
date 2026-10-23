@@ -9,7 +9,7 @@ import * as M from '../src/core/mission.js';
 import { MISSIONS } from '../src/data/missions.js';
 import { STARTING_CREW } from '../src/data/operatives.js';
 import { validateMissions, validateCrew } from '../src/core/validate.js';
-import { templateById } from '../src/core/jobs.js';
+import { templateById, addOffer } from '../src/core/jobs.js';
 import { playMission, randomPolicy, playWeeks } from './play.js';
 
 // Saves load through save.js, which touches browser storage; test the migration via a stub.
@@ -64,6 +64,7 @@ test('no crisis text is left with an unfilled {placeholder}', () => {
     for (const crisis of tpl.crises) {
       for (const size of [1, tpl.crewSize]) {
         let s = createNewGame({ seed: 1 });
+        if (!s.jobs.some((j) => j.templateId === tpl.id)) addOffer(s, tpl.id);
         const job = s.jobs.find((j) => j.templateId === tpl.id);
         s = M.startMission(s, job.id, s.crew.slice(0, size).map((o) => o.id), 'stealth');
         Object.assign(s.activeMission, { queue: [{ type: 'crisis', id: crisis.id }], step: 0, focusOp: s.activeMission.crewIds[0] });
