@@ -6,6 +6,7 @@
 export const STARTING_CREW = [
   {
     id: 'mei',
+    color: '#36d6c3', // badge colour until portraits exist
     name: 'Mei Lin Chau',
     handle: 'Stitch',
     age: 34,
@@ -18,6 +19,7 @@ export const STARTING_CREW = [
   },
   {
     id: 'jax',
+    color: '#ff8a4c', // badge colour until portraits exist
     name: 'Jax Okafor',
     handle: 'Jax',
     age: 27,
@@ -30,6 +32,7 @@ export const STARTING_CREW = [
   },
   {
     id: 'wing',
+    color: '#a78bfa', // badge colour until portraits exist
     name: 'Wing Lam',
     handle: 'Static',
     age: 23,
@@ -42,6 +45,7 @@ export const STARTING_CREW = [
   },
   {
     id: 'teo',
+    color: '#f5b942', // badge colour until portraits exist
     name: 'Teo Vargas',
     handle: 'Wheels',
     age: 41,
@@ -54,6 +58,7 @@ export const STARTING_CREW = [
   },
   {
     id: 'cherry',
+    color: '#ff4f7b', // badge colour until portraits exist
     name: 'Cherry Tse',
     handle: 'Velvet',
     age: 30,

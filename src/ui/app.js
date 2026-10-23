@@ -3,6 +3,10 @@
 
 import { NAMES } from '../config/names.js';
 import { TRAITS } from '../data/traits.js';
+import { STARTING_CREW } from '../data/operatives.js';
+
+// Saves made before badges existed have no colour on their operatives.
+const COLOR_BY_ID = Object.fromEntries(STARTING_CREW.map((o) => [o.id, o.color]));
 import { advanceDay, formatDate, isBlocked } from '../core/time.js';
 import { createNewGame } from '../core/state.js';
 import { templateById } from '../core/jobs.js';
@@ -96,6 +100,9 @@ const money = (n) => `${n < 0 ? '-' : ''}${NAMES.currency}${Math.abs(n).toLocale
 const threatDots = (n) => '●'.repeat(n) + '○'.repeat(5 - n);
 const riskBadge = (level) => `<span class="risk risk--${esc(level)}">${esc(level === 'safe' || level === 'certain' ? level : `${level} risk`)}</span>`;
 const districtName = (key) => NAMES.districts[key] ?? key;
+const initials = (name) => { const w = name.trim().split(/\s+/); return (w[0][0] + (w.length > 1 ? w.at(-1)[0] : '')).toUpperCase(); };
+/** Placeholder portrait: coloured initials. Swap for an <img> when portraits exist. */
+const badge = (op, size = '') => `<span class="badge ${size ? `badge--${size}` : ''} ${op.cause ? 'is-fallen' : ''}" style="--badge:${esc(op.color ?? COLOR_BY_ID[op.id] ?? '#8b93a7')}" aria-hidden="true">${esc(initials(op.name))}</span>`;
 
 // --- rendering ---------------------------------------------------------
 function render() {
@@ -177,7 +184,7 @@ function renderCrew() {
   const wall = state.memorial.length ? `
       <h2>The wall</h2>
       <ul class="list list--plain">
-        ${state.memorial.map((m) => `<li><strong>${esc(m.name)}</strong> "${esc(m.handle)}" <span class="muted">· ${esc(m.role)} · ${esc(m.cause)}, day ${m.day}</span></li>`).join('')}
+        ${state.memorial.map((m) => `<li class="fallen">${badge(m, 'sm')}<span><strong>${esc(m.name)}</strong> "${esc(m.handle)}" <span class="muted">· ${esc(m.role)} · ${esc(m.cause)}, day ${m.day}</span></span></li>`).join('')}
       </ul>` : '';
   return `
     <section class="panel">
@@ -186,6 +193,7 @@ function renderCrew() {
         ${state.crew.map((op) => `
           <li>
             <button class="row" data-action="open-op" data-id="${esc(op.id)}">
+              ${badge(op)}
               <span class="row__main"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"<br><span class="muted">${esc(op.role)} · ${op.age}</span></span>
               <span class="row__meta">${esc(availability(state, op).reason)}</span>
             </button>
@@ -207,8 +215,13 @@ function renderOperative() {
   return `
     <section class="panel">
       <button class="btn btn--ghost" data-action="back">← Crew</button>
-      <h1>${esc(op.name)} <span class="muted">"${esc(op.handle)}"</span></h1>
-      <p class="muted">${esc(op.role)} · ${op.age} · ${money(op.wage)}/week · ${esc(availability(state, op).reason)}</p>
+      <div class="ophead">
+        ${badge(op, 'lg')}
+        <div>
+          <h1>${esc(op.name)} <span class="muted">"${esc(op.handle)}"</span></h1>
+          <p class="muted">${esc(op.role)} · ${op.age} · ${money(op.wage)}/week · ${esc(availability(state, op).reason)}</p>
+        </div>
+      </div>
       <p class="body">${esc(op.bio)}</p>
       <p class="body muted">${esc(op.origin)}</p>
 
@@ -283,6 +296,7 @@ function renderPlan() {
           <li>
             <button class="row pick ${on ? 'is-on' : ''}" data-action="toggle-crew" data-id="${esc(op.id)}" ${disabled ? 'disabled' : ''} aria-pressed="${on}">
               <span class="pick__box">${on ? '✓' : ''}</span>
+              ${badge(op, 'sm')}
               <span class="row__main"><strong>${esc(op.handle)}</strong> <span class="muted">${esc(op.role)}</span><br><span class="muted small">${esc(keys)}</span></span>
               <span class="row__meta">${esc(a.reason)}</span>
             </button>
@@ -324,7 +338,8 @@ function choiceButton(c, action) {
 function renderMission() {
   const am = state.activeMission;
   const t = templateById(am.templateId);
-  const crewNames = am.crewIds.map((id) => state.crew.find((o) => o.id === id)?.handle ?? state.memorial.find((o) => o.id === id)?.handle).join(', ');
+  const crewOps = am.crewIds.map((id) => state.crew.find((o) => o.id === id) ?? state.memorial.find((o) => o.id === id)).filter(Boolean);
+  const crewNames = crewOps.map((o) => o.handle).join(', ');
 
   const log = am.log.map((e) => `<p class="log log--${esc(e.kind)}">${esc(e.text)}</p>`).join('');
   let action = '';
@@ -363,6 +378,7 @@ function renderMission() {
   return `
     <section class="panel mission">
       <p class="muted small">On the job · ${esc(APPROACHES[am.approach]?.name ?? '')} approach · ${esc(crewNames)}</p>
+      <div class="crewstrip">${crewOps.map((o) => badge(o, 'sm')).join('')}</div>
       <h1>${esc(t.name)}</h1>
       <div class="mission__log">${log || `<p class="body muted">${esc(t.brief)}</p>`}</div>
       ${action}

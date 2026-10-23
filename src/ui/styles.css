@@ -145,3 +145,14 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 @media (min-width: 900px) {
   .segmented { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* --- Placeholder portraits: coloured initials (swap for images later) --- */
+.badge { --badge: #8b93a7; flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%; display: inline-grid; place-items: center; font-weight: 700; font-size: 0.85rem; letter-spacing: 0.02em; color: var(--badge); background: color-mix(in srgb, var(--badge) 18%, transparent); border: 1.5px solid var(--badge); }
+.badge--sm { width: 30px; height: 30px; font-size: 0.7rem; }
+.badge--lg { width: 64px; height: 64px; font-size: 1.25rem; border-width: 2px; }
+.badge.is-fallen { filter: grayscale(1); opacity: 0.7; }
+.ophead { display: flex; align-items: center; gap: 14px; }
+.ophead h1 { margin-bottom: 0; }
+.ophead p { margin: 4px 0 0; }
+.crewstrip { display: flex; gap: 6px; margin: 6px 0 0; }
+.fallen { display: flex; gap: 10px; align-items: center; }

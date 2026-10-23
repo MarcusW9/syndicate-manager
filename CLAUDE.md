@@ -24,6 +24,12 @@ Text-first crew management game (Football Manager style, endless). Plain JavaScr
 ## Keep the design log current
 `DESIGN.md` holds the narrative, setting, tone, cast and a dated decision log (decision, why, rejected alternatives). Whenever a design or technical decision is made or changed in a session, add a row to the top of the log in the same change. Never rewrite past entries; supersede them with a new row.
 
+## Tests
+Run `npm test` before every push. The tests encode the design promises in DESIGN.md (no death without "push on", exits always save everyone, saves upgrade). Never loosen a test to make a change pass; if a rule changes on purpose, update the test and log the change in DESIGN.md.
+
+## Keep the changelog current
+Every change that ships gets an entry at the top of `CHANGELOG.md` (date, what changed, in plain words). DESIGN.md says why; CHANGELOG.md says what.
+
 ## Commits
 Author: `marcusw`. Big features get their own commit with a clear message.
 
