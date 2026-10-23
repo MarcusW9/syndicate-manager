@@ -5,12 +5,20 @@ import { NAMES } from '../config/names.js';
 import { TRAITS } from '../data/traits.js';
 import { advanceDay, formatDate, isBlocked } from '../core/time.js';
 import { createNewGame } from '../core/state.js';
+import { templateById } from '../core/jobs.js';
+import { availability, APPROACHES } from '../core/crew.js';
+import { assessJob } from '../core/risk.js';
+import {
+  startMission, revealBeat, chooseOption, resolveCritical, closeMission,
+  describeCrisis, describeCritical, currentStep,
+} from '../core/mission.js';
 import { saveGame, exportSave, importSave, deleteSave } from '../save/save.js';
 
 let state;
 let screen = 'inbox';
 let openMessageId = null;
 let openOperativeId = null;
+let plan = null; // { jobId, crew: [...ids], approach }
 let root;
 
 export function mountApp(el, initialState) {
@@ -30,24 +38,47 @@ function setState(next) {
 // --- events ------------------------------------------------------------
 function onClick(e) {
   const t = e.target.closest('[data-action]');
-  if (!t) return;
+  if (!t || t.disabled) return;
   const { action, id } = t.dataset;
 
-  if (action === 'nav') { screen = id; openMessageId = null; openOperativeId = null; }
-  if (action === 'continue' && !isBlocked(state)) return setState(advanceDay(state));
-  if (action === 'open-message') {
-    openMessageId = id;
-    const msg = state.inbox.find((m) => m.id === id);
-    if (msg && !msg.read) { msg.read = true; saveGame(state); }
-  }
-  if (action === 'back') { openMessageId = null; openOperativeId = null; }
-  if (action === 'open-op') openOperativeId = id;
-  if (action === 'export') exportSave(state);
-  if (action === 'import') root.querySelector('#import-file').click();
-  if (action === 'new-game' && confirm('Start a new game? Your current save will be replaced.')) {
-    deleteSave();
-    screen = 'inbox';
-    return setState(createNewGame());
+  switch (action) {
+    case 'nav': screen = id; openMessageId = null; openOperativeId = null; plan = null; break;
+    case 'continue': if (!isBlocked(state)) return setState(advanceDay(state)); break;
+    case 'open-message': {
+      openMessageId = id;
+      const msg = state.inbox.find((m) => m.id === id);
+      if (msg && !msg.read) { msg.read = true; saveGame(state); }
+      break;
+    }
+    case 'back': openMessageId = null; openOperativeId = null; plan = null; break;
+    case 'open-op': openOperativeId = id; break;
+    case 'open-job': plan = { jobId: id, crew: [], approach: 'stealth' }; break;
+    case 'toggle-crew': {
+      const tpl = templateById(state.jobs.find((j) => j.id === plan.jobId).templateId);
+      if (plan.crew.includes(id)) plan.crew = plan.crew.filter((x) => x !== id);
+      else if (plan.crew.length < tpl.crewSize) plan.crew = [...plan.crew, id];
+      break;
+    }
+    case 'approach': plan.approach = id; break;
+    case 'start-job': {
+      const next = startMission(state, plan.jobId, plan.crew, plan.approach);
+      plan = null;
+      return setState(next);
+    }
+    case 'beat': return setState(revealBeat(state));
+    case 'choose': return setState(chooseOption(state, id));
+    case 'critical': return setState(resolveCritical(state, id));
+    case 'close-mission': screen = 'inbox'; return setState(closeMission(state));
+    case 'export': exportSave(state); break;
+    case 'import': root.querySelector('#import-file').click(); break;
+    case 'new-game':
+      if (confirm('Start a new game? Your current save will be replaced.')) {
+        deleteSave();
+        screen = 'inbox';
+        plan = null;
+        return setState(createNewGame());
+      }
+      break;
   }
   render();
 }
@@ -59,37 +90,41 @@ function onChange(e) {
     .catch((err) => alert(`Could not load that file: ${err.message}`));
 }
 
-// --- rendering ---------------------------------------------------------
+// --- helpers -----------------------------------------------------------
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const money = (n) => `${NAMES.currency}${n.toLocaleString()}`;
+const money = (n) => `${n < 0 ? '-' : ''}${NAMES.currency}${Math.abs(n).toLocaleString()}`;
+const threatDots = (n) => '●'.repeat(n) + '○'.repeat(5 - n);
+const riskBadge = (level) => `<span class="risk risk--${esc(level)}">${esc(level === 'safe' ? 'safe' : `${level} risk`)}</span>`;
+const districtName = (key) => NAMES.districts[key] ?? key;
 
+// --- rendering ---------------------------------------------------------
 function render() {
   const blocked = isBlocked(state);
   const unread = state.inbox.filter((m) => !m.read).length;
+  const continueLabel = state.activeMission ? 'On a job' : blocked ? 'Decision needed' : 'Continue';
 
   root.innerHTML = `
     <header class="topbar">
-      <div class="topbar__date">${esc(formatDate(state.day))}</div>
+      <div class="topbar__date">${esc(formatDate(state.day))} <span class="muted small">· Day ${state.day}</span></div>
       <div class="topbar__stats">
         <span class="stat"><span class="stat__label">Cash</span> ${money(state.cash)}</span>
         <span class="stat"><span class="stat__label">Heat</span> ${state.heat}/10</span>
         <span class="stat"><span class="stat__label">Tier</span> ${esc(state.tier)}</span>
       </div>
-      <button class="btn btn--primary topbar__continue" data-action="continue" ${blocked ? 'disabled' : ''}>
-        ${blocked ? 'Decision needed' : 'Continue'}
-      </button>
+      <button class="btn btn--primary topbar__continue" data-action="continue" ${blocked ? 'disabled' : ''}>${continueLabel}</button>
     </header>
 
     <nav class="nav" aria-label="Main">
       ${navButton('inbox', `Inbox${unread ? ` (${unread})` : ''}`)}
       ${navButton('crew', 'Crew')}
-      ${navButton('jobs', 'Jobs')}
+      ${navButton('jobs', `Jobs${state.jobs.length ? ` (${state.jobs.length})` : ''}`)}
       ${navButton('settings', 'Save')}
     </nav>
 
-    <main class="main">${renderScreen()}</main>
+    <main class="main">${state.activeMission ? renderMission() : renderScreen()}</main>
     <input type="file" id="import-file" accept="application/json" hidden />
   `;
+  if (state.activeMission) root.querySelector('.mission-end')?.scrollIntoView({ block: 'end' });
 }
 
 function navButton(id, label) {
@@ -99,11 +134,12 @@ function navButton(id, label) {
 function renderScreen() {
   if (screen === 'inbox') return openMessageId ? renderMessage() : renderInbox();
   if (screen === 'crew') return openOperativeId ? renderOperative() : renderCrew();
-  if (screen === 'jobs') return `<section class="panel"><h1>Jobs</h1><p class="muted">Job board arrives in the next build step.</p></section>`;
+  if (screen === 'jobs') return plan ? renderPlan() : renderJobs();
   if (screen === 'settings') return renderSettings();
   return '';
 }
 
+// --- inbox -------------------------------------------------------------
 function renderInbox() {
   if (!state.inbox.length) return `<section class="panel"><h1>Inbox</h1><p class="muted">Nothing new. Press Continue.</p></section>`;
   return `
@@ -125,23 +161,24 @@ function renderInbox() {
 function renderMessage() {
   const m = state.inbox.find((x) => x.id === openMessageId);
   if (!m) return renderInbox();
+  const jobLink = m.type === 'job' && state.jobs.length ? `<button class="btn" data-action="nav" data-id="jobs">Open the job board</button>` : '';
   return `
     <section class="panel">
       <button class="btn btn--ghost" data-action="back">← Inbox</button>
       <h1>${esc(m.subject)}</h1>
       <p class="muted">${esc(m.type)} · Day ${m.day}</p>
       <p class="body">${esc(m.body)}</p>
+      ${jobLink}
     </section>`;
 }
 
-function conditionLabel(c) {
-  if (c.injury === 'dead') return 'Dead';
-  if (c.injury !== 'healthy') return `${c.injury} injury, ${c.injuryDays}d`;
-  if (c.fatigue > 60) return 'Fatigued';
-  return 'Ready';
-}
-
+// --- crew --------------------------------------------------------------
 function renderCrew() {
+  const wall = state.memorial.length ? `
+      <h2>The wall</h2>
+      <ul class="list list--plain">
+        ${state.memorial.map((m) => `<li><strong>${esc(m.name)}</strong> "${esc(m.handle)}" <span class="muted">· ${esc(m.role)} · ${esc(m.cause)}, day ${m.day}</span></li>`).join('')}
+      </ul>` : '';
   return `
     <section class="panel">
       <h1>Crew</h1>
@@ -150,27 +187,28 @@ function renderCrew() {
           <li>
             <button class="row" data-action="open-op" data-id="${esc(op.id)}">
               <span class="row__main"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"<br><span class="muted">${esc(op.role)} · ${op.age}</span></span>
-              <span class="row__meta">${esc(conditionLabel(op.condition))}</span>
+              <span class="row__meta">${esc(availability(state, op).reason)}</span>
             </button>
           </li>`).join('')}
       </ul>
+      ${wall}
     </section>`;
 }
 
 function bar(label, value) {
-  return `<div class="meter"><span class="meter__label">${label}</span><span class="meter__track"><span class="meter__fill" style="width:${value}%"></span></span><span class="meter__value">${value}</span></div>`;
+  return `<div class="meter"><span class="meter__label">${label}</span><span class="meter__track"><span class="meter__fill ${value > 70 ? 'is-hot' : ''}" style="width:${value}%"></span></span><span class="meter__value">${value}</span></div>`;
 }
 
 function renderOperative() {
   const op = state.crew.find((x) => x.id === openOperativeId);
   if (!op) return renderCrew();
   const c = op.condition;
-  const nameOf = (id) => state.crew.find((x) => x.id === id)?.handle ?? id;
+  const nameOf = (id) => state.crew.find((x) => x.id === id)?.handle ?? state.memorial.find((x) => x.id === id)?.handle ?? id;
   return `
     <section class="panel">
       <button class="btn btn--ghost" data-action="back">← Crew</button>
       <h1>${esc(op.name)} <span class="muted">"${esc(op.handle)}"</span></h1>
-      <p class="muted">${esc(op.role)} · ${op.age} · ${money(op.wage)}/week</p>
+      <p class="muted">${esc(op.role)} · ${op.age} · ${money(op.wage)}/week · ${esc(availability(state, op).reason)}</p>
       <p class="body">${esc(op.bio)}</p>
       <p class="body muted">${esc(op.origin)}</p>
 
@@ -191,9 +229,148 @@ function renderOperative() {
       <ul class="list list--plain">
         ${Object.entries(op.trust).map(([id, v]) => `<li>${esc(nameOf(id))}: ${v > 0 ? '+' : ''}${v}</li>`).join('') || '<li class="muted">No strong feelings yet.</li>'}
       </ul>
+
+      ${op.history.length ? `<h2>History</h2><ul class="list list--plain">${op.history.slice(-8).reverse().map((h) => `<li class="muted">${esc(h)}</li>`).join('')}</ul>` : ''}
     </section>`;
 }
 
+// --- jobs and planning -----------------------------------------------------
+function renderJobs() {
+  if (!state.jobs.length) return `<section class="panel"><h1>Jobs</h1><p class="muted">No work on the board. New jobs arrive on Mondays.</p></section>`;
+  return `
+    <section class="panel">
+      <h1>Jobs</h1>
+      <ul class="list">
+        ${state.jobs.map((j) => {
+          const t = templateById(j.templateId);
+          return `
+          <li>
+            <button class="row" data-action="open-job" data-id="${esc(j.id)}">
+              <span class="row__main"><strong>${esc(t.name)}</strong><br>
+                <span class="muted">${esc(districtName(t.district))} · threat <span class="threat">${threatDots(t.threat)}</span> · ${t.crewSize} crew · ${t.days}d</span></span>
+              <span class="row__meta"><strong>${money(t.pay)}</strong><br>until day ${j.expiresDay}</span>
+            </button>
+          </li>`;
+        }).join('')}
+      </ul>
+    </section>`;
+}
+
+function renderPlan() {
+  const job = state.jobs.find((j) => j.id === plan.jobId);
+  if (!job) { plan = null; return renderJobs(); }
+  const t = templateById(job.templateId);
+  const picked = state.crew.filter((o) => plan.crew.includes(o.id));
+  const read = assessJob(t, picked, plan.approach);
+  const full = plan.crew.length >= t.crewSize;
+
+  return `
+    <section class="panel">
+      <button class="btn btn--ghost" data-action="back">← Jobs</button>
+      <h1>${esc(t.name)}</h1>
+      <p class="muted">${esc(districtName(t.district))} · threat <span class="threat">${threatDots(t.threat)}</span> · pays ${money(t.pay)} · crew away ${t.days}d · +${t.heat} heat</p>
+      <p class="body">${esc(t.brief)}</p>
+
+      <h2>Crew (${plan.crew.length}/${t.crewSize})</h2>
+      <p class="muted small">Matters most: ${t.keyStats.join(', ')}</p>
+      <ul class="list">
+        ${state.crew.map((op) => {
+          const a = availability(state, op);
+          const on = plan.crew.includes(op.id);
+          const disabled = !a.ok || (!on && full);
+          const keys = t.keyStats.map((s) => `${s.slice(0, 3)} ${op.stats[s]}`).join(' · ');
+          return `
+          <li>
+            <button class="row pick ${on ? 'is-on' : ''}" data-action="toggle-crew" data-id="${esc(op.id)}" ${disabled ? 'disabled' : ''} aria-pressed="${on}">
+              <span class="pick__box">${on ? '✓' : ''}</span>
+              <span class="row__main"><strong>${esc(op.handle)}</strong> <span class="muted">${esc(op.role)}</span><br><span class="muted small">${esc(keys)}</span></span>
+              <span class="row__meta">${esc(a.reason)}</span>
+            </button>
+          </li>`;
+        }).join('')}
+      </ul>
+
+      <h2>Approach</h2>
+      <div class="segmented">
+        ${Object.entries(APPROACHES).map(([k, a]) => `
+          <button class="seg ${plan.approach === k ? 'is-on' : ''}" data-action="approach" data-id="${k}" aria-pressed="${plan.approach === k}">
+            <strong>${esc(a.name)}</strong><span>${esc(a.desc)}</span>
+          </button>`).join('')}
+      </div>
+
+      <h2>Risk read</h2>
+      <div class="riskcard">
+        ${riskBadge(read.level)}
+        <ul>${read.reasons.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
+      </div>
+
+      <button class="btn btn--primary btn--block" data-action="start-job" ${plan.crew.length ? '' : 'disabled'}>
+        ${plan.crew.length ? `Start the job with ${plan.crew.length}` : 'Pick at least one operative'}
+      </button>
+    </section>`;
+}
+
+// --- mission -----------------------------------------------------------
+function choiceButton(c, action) {
+  return `
+    <button class="choice" data-action="${action}" data-id="${esc(c.id)}" ${c.available ? '' : 'disabled'}>
+      <span class="choice__label">${esc(c.label)}</span>
+      ${c.available
+        ? `<span class="choice__meta">${riskBadge(c.risk)} ${esc(c.riskReason ?? '')}${c.cost ? ` <span class="choice__cost">Cost: ${esc(c.cost)}</span>` : ''}</span>`
+        : `<span class="choice__meta muted">${esc(c.reason)}</span>`}
+    </button>`;
+}
+
+function renderMission() {
+  const am = state.activeMission;
+  const t = templateById(am.templateId);
+  const crewNames = am.crewIds.map((id) => state.crew.find((o) => o.id === id)?.handle ?? state.memorial.find((o) => o.id === id)?.handle).join(', ');
+
+  const log = am.log.map((e) => `<p class="log log--${esc(e.kind)}">${esc(e.text)}</p>`).join('');
+  let action = '';
+
+  if (am.done) {
+    const r = am.result;
+    const title = r.outcome === 'loss' ? 'Someone didn\'t come home' : r.outcome === 'aborted' ? 'Job aborted' : 'Job done';
+    action = `
+      <div class="resultcard resultcard--${esc(r.outcome)}">
+        <h2>${esc(title)}</h2>
+        <p>Paid ${money(r.pay)} · Heat +${r.heatGain}</p>
+        ${r.injuries.length ? `<p>Injured: ${esc(r.injuries.join(', '))}</p>` : '<p>Nobody hurt.</p>'}
+        ${r.deaths.length ? `<p><strong>Lost: ${esc(r.deaths.join(', '))}.</strong> Their names go on the wall.</p>` : ''}
+        <button class="btn btn--primary btn--block" data-action="close-mission">Back to the safehouse</button>
+      </div>`;
+  } else if (am.critical) {
+    const v = describeCritical(state);
+    action = `
+      <div class="crisis crisis--critical">
+        <p class="crisis__title">${esc(v.op.handle)} is critical</p>
+        <p>${v.stabiliseFailed ? 'Stabilising failed. You have to decide now.' : `${esc(v.op.name)} is bleeding out. What do you do?`}</p>
+        <div class="choices">${v.choices.map((c) => choiceButton(c, 'critical')).join('')}</div>
+      </div>`;
+  } else if (currentStep(am)?.type === 'crisis') {
+    const v = describeCrisis(state);
+    action = `
+      <div class="crisis">
+        <p class="crisis__title">Crisis</p>
+        <p>${esc(v.text)}</p>
+        <div class="choices">${v.choices.map((c) => choiceButton(c, 'choose')).join('')}</div>
+      </div>`;
+  } else {
+    action = `<button class="btn btn--primary btn--block" data-action="beat">${am.log.length ? 'Next' : 'Begin'}</button>`;
+  }
+
+  return `
+    <section class="panel mission">
+      <p class="muted small">On the job · ${esc(APPROACHES[am.approach]?.name ?? '')} approach · ${esc(crewNames)}</p>
+      <h1>${esc(t.name)}</h1>
+      <div class="mission__log">${log || `<p class="body muted">${esc(t.brief)}</p>`}</div>
+      ${action}
+      <div class="mission-end"></div>
+    </section>`;
+}
+
+// --- save --------------------------------------------------------------
 function renderSettings() {
   return `
     <section class="panel">

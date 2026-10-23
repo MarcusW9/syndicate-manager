@@ -85,7 +85,7 @@ export const MISSIONS = [
         text: '{tech} is pushing her implants to crack the last layer. Her nose starts bleeding.',
         focusRole: 'tech',
         choices: [
-          { id: 'push', label: 'Let her finish it', kind: 'push', stat: 'tech', difficulty: 12, cost: {},
+          { id: 'push', label: 'Let her finish it', kind: 'push', stat: 'tech', difficulty: 12, neural: 25,
             success: 'She cracks it, wipes her nose and grins. Neural load spikes.', failure: 'She collapses. Her vitals are bad.', failureInjury: 'critical' },
           { id: 'medic', label: 'Medic steps in, slower approach', kind: 'stabilise', stat: 'medical', difficulty: 9, requires: { kind: 'role', value: 'medic' }, cost: { heat: 1 },
             success: 'The medic dials her down. It takes longer, but she is fine.', failure: 'Too slow. An alarm trips.', failureInjury: 'none' },
@@ -109,7 +109,7 @@ export const MISSIONS = [
     beats: [
       'Fog off the water. {driver} kills the headlights a block out.',
       'The fence is cut. Six crates, two guards, one dog.',
-      'Halfway through loading, a forklift starts up somewhere inside.',
+      'Halfway through loading, the dog starts barking at nothing. Everyone freezes, then keeps going.',
       'The van sits low on its springs. {driver} pulls away slowly.',
     ],
     crises: [
@@ -127,15 +127,15 @@ export const MISSIONS = [
         ],
       },
       {
-        id: 'man_down',
-        text: '{op} is down behind a crate, bleeding badly. The crew is looking at you.',
+        id: 'forklift',
+        text: 'A night-shift forklift driver rounds the corner and stops dead. He has a radio on his belt.',
         choices: [
-          { id: 'stabilise', label: 'Medic stabilises them here', kind: 'stabilise', stat: 'medical', difficulty: 10, requires: { kind: 'role', value: 'medic' }, cost: { heat: 1 },
-            success: 'The bleeding stops. They will live, but they are out for weeks.', failure: 'The medic cannot stop the bleeding in time.', failureInjury: 'critical' },
-          { id: 'extract', label: 'Carry them to the van now', kind: 'extract', stat: 'driving', difficulty: 8, cost: { payCut: 0.5 },
-            success: 'You drop the job and floor it to a street clinic.', failure: 'The road is blocked. Precious minutes lost.', failureInjury: 'serious' },
-          { id: 'push', label: 'Finish the job first', kind: 'push', stat: 'combat', difficulty: 13,
-            success: 'You finish, then rush them out. It was close.', failure: 'By the time you reach them, it is too late.', failureInjury: 'critical' },
+          { id: 'grab', label: '{muscle} grabs him before he can call', kind: 'push', stat: 'combat', difficulty: 9,
+            success: 'He is zip-tied behind a pallet, unharmed and very quiet.', failure: 'He fights back hard and gets a shout out.', failureInjury: 'light' },
+          { id: 'bribe', label: 'Pay him to forget tonight', kind: 'adapt', stat: 'social', difficulty: 10, cost: { cash: -500 },
+            success: 'He pockets the cash and suddenly needs a long cigarette break.', failure: 'He takes the money and calls it in anyway.', failureInjury: 'none' },
+          { id: 'abort', label: 'Abort: leave before he raises the alarm', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -10 },
+            success: 'You slip out through the fence. Nothing taken, nobody hurt.', failure: '', failureInjury: 'none' },
         ],
       },
     ],

@@ -19,9 +19,10 @@ Output goes to `dist/`. Pushing to `main` deploys to GitHub Pages automatically 
 - [x] Project skeleton, mobile-first shell
 - [x] Data shapes, 5 starting operatives, 3 mission templates (2 crises each)
 - [x] Day ticking, weekly wages and rent, save/export/import
-- [ ] Job board and accepting jobs
-- [ ] Mission flow: plan, beats, crisis decisions
-- [ ] Injury, critical state, death, memorial
+- [x] Job board (weekly offers) and planning screen with risk read
+- [x] Mission flow: tap-through beats, crisis decisions
+- [x] Injury ladder, critical state, death, memorial wall
+- [ ] More crises per mission type (target 6)
 - [ ] Burnout warnings
 
 See `DESIGN.md` for the narrative and decision log, `CLAUDE.md` for project rules, and `DATA.md` for the data shapes.
