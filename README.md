@@ -31,7 +31,9 @@ Output goes to `dist/`. Pushing to `main` deploys to GitHub Pages automatically 
 - [x] 6 crises per mission type (18 total)
 - [x] Automated rule tests (run before every deploy)
 - [x] Crew badges (placeholder portraits)
-- [ ] Heat decay and consequences; economy tuning
+- [x] Heat cools weekly (faster after a quiet week)
+- [ ] Heat consequences; economy tuning
+- [ ] Recruiting new operatives
 - [ ] Burnout warnings
 - [ ] First playtest
 - [ ] Crew portraits (after playtest)

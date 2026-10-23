@@ -125,7 +125,8 @@
  * @property {number} seed             RNG seed (deterministic replays)
  * @property {number} day              Day 1 = Monday, week 1, season 1
  * @property {number} cash
- * @property {number} heat             0-10
+ * @property {number} heat             0-10. Cools 1 every Sunday, 3 after a quiet week
+ * @property {number} [lastJobDay]     Day the last job started (for quiet weeks)
  * @property {number} reputation       0-100 within tier
  * @property {'street'|'district'|'city'|'regional'} tier
  * @property {number} rent             Weekly safehouse rent

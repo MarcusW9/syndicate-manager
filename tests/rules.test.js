@@ -102,3 +102,17 @@ test('economy: a careful player survives the first month but is not rich', () =>
   assert.ok(broke < 0.35, `${Math.round(broke * 100)}% of careful players broke after 4 weeks`);
   assert.ok(deathsPerRun < 0.1, `careful play lost ${deathsPerRun} operatives per month`);
 });
+
+test('heat cools by 1 a week while working, and by 3 after a quiet week', async () => {
+  const { advanceDay } = await import('../src/core/time.js');
+  let s = createNewGame({ seed: 9 });
+  s.heat = 8;
+  for (let i = 0; i < 6; i++) s = advanceDay(s); // Mon -> Sun, no jobs
+  assert.equal(s.heat, 5, 'quiet week');
+  s.lastJobDay = s.day + 3; // pretend a job started this coming week
+  for (let i = 0; i < 7; i++) { s = advanceDay(s); if (s.day === s.lastJobDay) s.lastJobDay = s.day; }
+  assert.equal(s.heat, 4, 'working week');
+  s.heat = 1;
+  for (let i = 0; i < 7; i++) s = advanceDay(s);
+  assert.equal(s.heat, 0, 'never below zero');
+});
