@@ -163,3 +163,14 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 /* --- Recruiting --- */
 .crewhead { display: flex; align-items: baseline; justify-content: space-between; }
 .riskcard p { margin: 0 0 6px; }
+
+/* --- Save slots and backups --- */
+.slot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: #1b1f28; }
+.slot.is-active { border-color: var(--accent-2); }
+.slot__info { display: grid; gap: 2px; }
+.slot__actions { display: flex; gap: 6px; }
+.riskcard + .riskcard { margin-top: 10px; }
+.riskcard .btn--block { margin-top: 8px; }
+.nomargin { margin-top: 0; }
+.warntext { color: var(--warn); font-weight: 600; }
+.banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; padding: 10px 12px; border: 1px solid var(--warn); border-radius: var(--radius); background: #1f1c14; font-size: 0.9rem; }

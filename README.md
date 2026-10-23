@@ -35,6 +35,7 @@ Output goes to `dist/`. Pushing to `main` deploys to GitHub Pages automatically 
 - [ ] Heat consequences; economy tuning
 - [x] Recruiting: weekly scout leads, hire/haggle/pass, generated recruits
 - [x] Safehouse expansion (roster cap 8, +2 per upgrade)
+- [x] Save slots (3), difficulty picker, weekly auto-backups, backup reminder, Ironman lock
 - [ ] Running several jobs at once (needed for big crews)
 - [ ] Burnout warnings
 - [ ] First playtest
