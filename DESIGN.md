@@ -38,6 +38,11 @@ Each operative is built to carry one long-running story thread, so the first sea
 
 | Date | Decision | Why | Rejected alternatives |
 | --- | --- | --- | --- |
+| 2026-10-23 | 6 crises per mission type (18 total); 2-3 drawn per run, so 15+ combinations per job | Jobs stop repeating within a few plays; variety is what makes the first playtest land | 2 crises per type; procedurally generated crises (too early) |
+| 2026-10-23 | Crises lean on the city's culture: Signal 8 typhoons, dai pai dongs, Red Lantern road tolls, char siu for the guard dog, sampans, bubble-tea wifi | The setting should be felt in moment-to-moment play, not only in names | Generic cyberpunk set pieces |
+| 2026-10-23 | "Certain" choices (no roll): paying a toll, leaving loot behind | Some decisions are pure trade-offs of money or heat versus risk; a roll would add noise | Every choice rolls |
+| 2026-10-23 | Failure costs: a failed roll can cost heat or pay instead of an injury | Not every failure should hurt someone; heat as a consequence makes the city react | Injury as the only failure consequence |
+| 2026-10-23 | Trait-gated options (Cherry's Silver Tongue unlocks a bonus-pay talk option) | Traits should open choices, not just shift numbers; makes who you bring matter | Traits as stat modifiers only |
 | 2026-10-23 | Risk shown as labels (low/moderate/high/extreme) plus a short reason, never percentages | Honest enough to plan with, without turning crises into maths; reasons teach the player what matters | Exact percentages; percentages only on Story mode |
 | 2026-10-23 | Beats revealed one tap at a time | Builds tension and lets the player read at their own pace | Auto-scrolling text |
 | 2026-10-23 | Missions play immediately after planning; crew is then away for the job's days | Keeps the loop tight; the "away" time is the cost | Scheduling a mission for a later day |

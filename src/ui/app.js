@@ -94,7 +94,7 @@ function onChange(e) {
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const money = (n) => `${n < 0 ? '-' : ''}${NAMES.currency}${Math.abs(n).toLocaleString()}`;
 const threatDots = (n) => '●'.repeat(n) + '○'.repeat(5 - n);
-const riskBadge = (level) => `<span class="risk risk--${esc(level)}">${esc(level === 'safe' ? 'safe' : `${level} risk`)}</span>`;
+const riskBadge = (level) => `<span class="risk risk--${esc(level)}">${esc(level === 'safe' || level === 'certain' ? level : `${level} risk`)}</span>`;
 const districtName = (key) => NAMES.districts[key] ?? key;
 
 // --- rendering ---------------------------------------------------------

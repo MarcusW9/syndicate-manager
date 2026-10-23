@@ -10,6 +10,9 @@ export function validateMissions(missions) {
       if (!c.choices.some((ch) => EXIT_KINDS.has(ch.kind))) {
         problems.push(`${m.id}/${c.id}: no abort or extract choice`);
       }
+      for (const ch of c.choices) {
+        if (!ch.sure && !EXIT_KINDS.has(ch.kind) && !ch.failure) problems.push(`${m.id}/${c.id}/${ch.id}: can fail but has no failure text`);
+      }
     }
   }
   return problems;

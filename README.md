@@ -22,7 +22,7 @@ Output goes to `dist/`. Pushing to `main` deploys to GitHub Pages automatically 
 - [x] Job board (weekly offers) and planning screen with risk read
 - [x] Mission flow: tap-through beats, crisis decisions
 - [x] Injury ladder, critical state, death, memorial wall
-- [ ] More crises per mission type (target 6)
+- [x] 6 crises per mission type (18 total)
 - [ ] Burnout warnings
 
 See `DESIGN.md` for the narrative and decision log, `CLAUDE.md` for project rules, and `DATA.md` for the data shapes.

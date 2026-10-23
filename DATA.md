@@ -35,7 +35,7 @@ Each choice has a `kind`: `push`, `adapt`, `abort`, `stabilise` or `extract`.
 
 A choice tests one `stat` against `difficulty` (d20 + stat vs 10 + difficulty, tuned later), may need a role or trait (`requires`), and may cost cash, heat, client trust or a share of pay. On failure it applies `failureInjury`.
 
-Optional `neural: n` adds neural load to whoever rolls (x1.5 if Chromed).
+Optional fields: `failureCost` (extra heat/pay/cash lost only on a failed roll), `sure: true` (no roll, always succeeds, shown as "certain"), negative `payCut` in `cost` (bonus pay). `neural: n` adds neural load to whoever rolls (x1.5 if Chromed).
 
 A crisis with `focusRole` centres on that operative: they take the injury if a choice fails. Without one, whoever made the attempt is hurt.
 
