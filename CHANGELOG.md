@@ -4,6 +4,12 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-24 · Statuses and loyalty (groundwork)
+- Under the hood: operatives can now carry timed statuses; the first, **Unhappy**, gives −1 on their rolls and shows in the risk read. Nothing applies it yet.
+- The game now counts how many jobs each person has run with the crew; this will set their loyalty discount on contract renewals (1% per job, up to 25% off a raise).
+- Save format v8, with automatic upgrade from v7.
+- 3 new tests (81 total).
+
 ## 2026-10-24 · Renewal plan: loyalty discount reworked
 - Plan only, no game change: when contract renewals arrive, loyalty will shave the size of a raise rather than the whole wage, so a loyal star still asks for a real raise.
 

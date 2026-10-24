@@ -5,6 +5,7 @@ import { scoutWeek } from './recruits.js';
 import { refreshFreelancers } from './freelance.js';
 import { ageCrew } from './development.js';
 import { nextRng } from './random.js';
+import { expireStatuses } from './statuses.js';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAYS_PER_SEASON = 364; // 52 weeks
@@ -43,6 +44,7 @@ export function advanceDay(prev) {
   state.day += 1;
 
   for (const op of state.crew) {
+    expireStatuses(op, state.day);
     const c = op.condition;
     c.fatigue = Math.max(0, c.fatigue - 8); // resting recovers
     c.neuralLoad = Math.max(0, c.neuralLoad - 3);

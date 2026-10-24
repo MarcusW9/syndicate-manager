@@ -35,7 +35,7 @@ Done when: **all existing tests pass unchanged**; no UI change.
 `src/core/pricing.js` with `marketWage(op)`; tunable numbers in `src/data/economy.js`. Recruits use it.
 Update the recruit wage test band and economy band **on purpose** using step 0's numbers, and log why in DESIGN.md. One recruit-board screenshot at 390px.
 
-### Step 3 · Statuses + loyalty function — [ ]
+### Step 3 · Statuses + loyalty function — [x] 2026-10-24
 - `op.status = [{ id, until }]`, definitions in `src/data/statuses.js` (name, roll modifier). First status: `unhappy` (−1 on rolls) as a rule in the step 1 pipeline.
 - `op.jobsWithCrew` (incremented in `finish`), `op.contractMainStat`, `op.lastNoticeDay`.
 - `loyalty(op)` in `src/core/loyalty.js` returning 0–1 (today: `min(0.25, jobs * 0.01) / 0.25`); `loyaltyDiscount(op)` = up to 25%. Callers only use these.

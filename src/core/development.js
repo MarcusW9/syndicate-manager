@@ -56,6 +56,10 @@ export function prepareOperative(op) {
   op.startStats = op.startStats ?? { ...op.stats };
   op.scoutError = op.scoutError ?? 0;
   op.growthLog = op.growthLog ?? [];
+  op.status = op.status ?? [];
+  op.jobsWithCrew = op.jobsWithCrew ?? 0;
+  op.contractMainStat = op.contractMainStat ?? op.stats[primaryStat(op)];
+  op.lastNoticeDay = op.lastNoticeDay ?? null;
   return op;
 }
 

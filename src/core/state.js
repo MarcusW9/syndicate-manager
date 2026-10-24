@@ -7,7 +7,7 @@ import { STARTING_ROSTER_CAP } from './recruits.js';
 import { prepareOperative } from './development.js';
 import { refreshFreelancers } from './freelance.js';
 
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 
 const freshCondition = () => ({
   fatigue: 10,

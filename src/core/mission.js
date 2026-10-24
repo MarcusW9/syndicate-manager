@@ -412,6 +412,7 @@ function finish(state) {
 
   // Growth: crisis lessons already landed during the job; finishing it also teaches its key stats.
   const survivors = crewOf(state, am);
+  for (const op of survivors) if (!isFreelancer(op)) op.jobsWithCrew = (op.jobsWithCrew ?? 0) + 1;
   if (am.xp) { // a job saved mid-way before growth went live still has banked points
     const legacy = applyGrowth(survivors, am.xp, state.day);
     am.growth = [...(am.growth ?? []), ...legacy.events];
