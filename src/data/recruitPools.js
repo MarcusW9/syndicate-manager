@@ -23,6 +23,19 @@ export const HANDLES = [
   'Ghost', 'Mantis', 'Lychee', 'Sparrow', 'Brick', 'Neon', 'Dim Sum', 'Kettle', 'Typhoon', 'Mahjong',
   'Jade', 'Moth', 'Ferry', 'Abacus', 'Tram', 'Rivet', 'Pepper', 'Wire', 'Sampan', 'Lantern',
   'Fishball', 'Minibus', 'Hex', 'Drizzle', 'Pigeon', 'Joss', 'Tofu', 'Crane', 'Signal', 'Bamboo',
+  'Synapse', 'Glitch', 'Bypass', 'Hotwire', 'Cha Siu', 'Optic', 'Solder', 'Pineapple Bun', 'Overclock', 'Star Ferry',
+  'Chrome', 'Milk Tea', 'Patch', 'Salted Fish', 'Uplink', 'Wonton', 'Drone', 'Century Egg', 'Neural', 'Night Market',
+  'Buffer', 'Siu Mai', 'Streetcam', 'Aug', 'Sensor', 'Ginseng', 'Port', 'Jasmine', 'Oolong', 'Harbour',
+  'Terminal', 'Lotus', 'Module', 'Scaffold', 'Cortex', 'Grid', 'Vector', 'Pulse', 'Diode', 'Crow',
+  'Bandwidth', 'Proxy', 'Router', 'Spool', 'Fiber', 'Coax', 'Relay', 'Beacon', 'Dongle', 'Adapter',
+  'Modem', 'Resistor', 'Harddrive', 'Floppy', 'Spectre', 'Parity', 'Bit', 'Byte', 'Raster', 'Silicon',
+  'Phosphor', 'Vapor', 'Smolder', 'Halogen', 'Flicker', 'Subway', 'Skyline', 'Monorail', 'Jumper', 'Coolant',
+  'Exhaust', 'Chassis', 'Solenoid', 'Anode', 'Cathode', 'Trigger', 'Scraper', 'Casing', 'Payload', 'Siphon',
+  'Burner', 'Egg Tart', 'Five Spice', 'Ginger', 'Scallion', 'Peak', 'Star', 'Gale', 'Mist', 'Fog',
+  'Smog', 'Rat', 'Cockroach', 'Centipede', 'Spider', 'Hornet', 'Mosquito', 'Magpie', 'Myna', 'Swallow',
+  'Toad', 'Viper', 'Alleycat', 'Pylon', 'Manhole', 'Drain', 'Padlock', 'Hook', 'Chain', 'Valve',
+  'Razor', 'Blade', 'Needle', 'Thimble', 'Zipper', 'Buckle', 'Stamp', 'Ticket', 'Token', 'Switch',
+  'Plug', 'Meter', 'Cable', 'Cleaver', 'Stray', 'Gecko', 'Scalpel',
 ];
 
 // Primary stat per role, plus what they're decent at.

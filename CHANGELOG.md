@@ -4,6 +4,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-24 · More recruit handles
+- Recruits now draw from 157 handles instead of 30, with far more cyberpunk ones (Synapse, Overclock, Diode, Uplink…) next to the street-food and city ones.
+
 ## 2026-10-24 · Contract renewals
 - When someone graduates from rookie, or their main stat rises 2 since their last pay deal, they ask for a new deal. The notice blocks Continue until you answer.
 - The notice shows their current wage, what they're asking, their market value and how much loyalty takes off the raise.
