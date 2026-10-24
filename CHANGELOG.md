@@ -5,7 +5,7 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 ## 2026-10-24 · Plan: recruits that hang together
-- Plan only, no game change: a recruit's backstory will nudge their personality and traits towards a match, while anything can still turn up on anyone.
+- Plan only, no game change: a recruit's backstory will nudge their personality and traits towards a match, while anything can still turn up on anyone. Lines and traits also get rarity tiers, so rare ones stay rare however many are added.
 
 ## 2026-10-24 · More recruit handles
 - Recruits now draw from 157 handles instead of 30, with far more cyberpunk ones (Synapse, Overclock, Diode, Uplink…) next to the street-food and city ones.
