@@ -122,3 +122,41 @@ test('recruit backstories are finished text from the role\'s list, with rarer ti
   }
   assert.ok(tiers.common > tiers.uncommon && tiers.uncommon > tiers.rare && tiers.rare > 0, JSON.stringify(tiers));
 });
+
+test('temperaments and habits: 1-2 tags, no clashing pair, a common line in each', async () => {
+  const { TEMPERAMENTS, HABITS } = await import('../src/data/recruitPools.js');
+  for (const lines of [TEMPERAMENTS, HABITS]) {
+    assert.ok(lines.some((l) => l.tier === 'common'));
+    for (const l of lines) {
+      assert.ok(l.tags.length >= 1 && l.tags.length <= 2, l.text);
+      for (const [a, b] of CLASHES) assert.ok(!(l.tags.includes(a) && l.tags.includes(b)), `clash ${a}/${b} on ${l.text}`);
+    }
+  }
+});
+
+test('personality: no clashes with the backstory over 5,000 recruits, and matching lines picked more often', async () => {
+  const { ORIGINS, TEMPERAMENTS, HABITS } = await import('../src/data/recruitPools.js');
+  const { createNewGame } = await import('../src/core/state.js');
+  const { generateRecruit } = await import('../src/core/recruits.js');
+  const s = createNewGame({ seed: 11 });
+  const originOf = (r) => ORIGINS[r.role].find((o) => new RegExp('^' + o.text.replace(/[.*+?^$()|[\]\\]/g, '\\$&').replace('{district}', '.+') + '$').test(r.origin));
+  // How often a recruit's temperament shares a tag with their backstory, vs. a random backstory.
+  let matched = 0, baseline = 0;
+  const all = [];
+  for (let i = 0; i < 5000; i++) {
+    const r = generateRecruit(s);
+    const temperament = TEMPERAMENTS.find((t) => r.bio.startsWith(t.text + ' '));
+    const habit = temperament && HABITS.find((h) => r.bio === `${temperament.text} ${h.text}`);
+    assert.ok(habit, `bio is not temperament + habit: ${r.bio}`);
+    const origin = originOf(r);
+    const tags = [...origin.tags, ...temperament.tags, ...habit.tags];
+    for (const [a, b] of CLASHES) assert.ok(!(tags.includes(a) && tags.includes(b)), `clash ${a}/${b}: ${r.origin} ${r.bio}`);
+    all.push({ origin, temperament });
+  }
+  const shares = (o, t) => t.tags.some((x) => o.tags.includes(x));
+  for (let i = 0; i < all.length; i++) {
+    if (shares(all[i].origin, all[i].temperament)) matched++;
+    if (shares(all[(i + 1) % all.length].origin, all[i].temperament)) baseline++;
+  }
+  assert.ok(matched > baseline * 1.5, `matched ${matched} vs baseline ${baseline}`);
+});

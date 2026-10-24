@@ -1,7 +1,7 @@
 // Recruiting: generated operatives, weekly scout leads, hiring, safehouse
 // expansion. Pure logic. All randomness is seeded through nextRng(state).
 
-import { CULTURES, HANDLES, ROLE_PROFILES, ORIGINS, PERSONALITIES, BADGE_COLORS } from '../data/recruitPools.js';
+import { CULTURES, HANDLES, ROLE_PROFILES, ORIGINS, TEMPERAMENTS, HABITS, BADGE_COLORS } from '../data/recruitPools.js';
 import { TRAITS } from '../data/traits.js';
 import { NAMES } from '../config/names.js';
 import { nextRng } from './random.js';
@@ -9,6 +9,7 @@ import { pick, d20 } from './rng.js';
 import { bestFor } from './crew.js';
 import { marketWage } from './pricing.js';
 import { pickTiered } from './tiered.js';
+import { CLASHES } from '../data/tags.js';
 import { rollPotential, rollScoutError, scoutFor, potentialRead, prepareOperative } from './development.js';
 
 export const STARTING_ROSTER_CAP = 8;
@@ -43,6 +44,12 @@ function pickRole(rng, crew) {
 }
 
 /** Generate one recruit. Deterministic for a given state seed + counter. */
+// Lines whose tags don't clash with any of the given tags.
+function withoutClashes(lines, tags) {
+  const banned = CLASHES.flatMap(([a, b]) => (tags.includes(a) ? [b] : tags.includes(b) ? [a] : []));
+  return lines.filter((l) => !l.tags.some((t) => banned.includes(t)));
+}
+
 export function generateRecruit(state) {
   const rng = nextRng(state);
   const culture = weighted(rng, CULTURES);
@@ -66,7 +73,8 @@ export function generateRecruit(state) {
   const handle = freeHandles.length ? pick(rng, freeHandles) : `${pick(rng, HANDLES)} ${between(rng, [2, 9])}`;
 
   const district = pick(rng, Object.values(NAMES.districts));
-  const origin = pickTiered(rng, ORIGINS[role]).text.replace('{district}', district);
+  const originLine = pickTiered(rng, ORIGINS[role]);
+  const origin = originLine.text.replace('{district}', district);
 
   // Market price: rookies ~500 (alongside the starting crew), stars cost more.
   const wage = marketWage({ role, stats });
@@ -75,7 +83,10 @@ export function generateRecruit(state) {
   const age = between(rng, quality.age);
   const traits = [t1, t2];
   const color = pick(rng, BADGE_COLORS);
-  const bio = pick(rng, PERSONALITIES);
+  // Temperament + habit, steered by the backstory's tags, never a clashing pair.
+  const temperament = pickTiered(rng, withoutClashes(TEMPERAMENTS, originLine.tags), originLine.tags);
+  const habit = pickTiered(rng, withoutClashes(HABITS, [...originLine.tags, ...temperament.tags]), originLine.tags);
+  const bio = `${temperament.text} ${habit.text}`;
 
   // Hidden ceiling, plus the crew's (sometimes wrong) read of it.
   const potential = rollPotential(rng, stats, quality.id, role);
