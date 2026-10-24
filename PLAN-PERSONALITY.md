@@ -21,7 +21,7 @@ read CLAUDE.md, this file, and only the code it names. Tick a step off here
 
 ## Steps
 
-### Step 1 · Tag list, tiers and validation — [ ]
+### Step 1 · Tag list, tiers and validation — [x]
 `src/data/tags.js`: the tag list, clash pairs, trait → tags and role → tags maps, and the tier odds table. A shared `pickTiered(rng, items, leanings)` helper in core (tier first, then ×3 steering within the tier, falling back a tier when empty). Tests: every tag used anywhere in data is on the list; every trait and role in the maps exists; tier odds add up to 100%; over 10,000 picks each tier lands within ±2 points of its odds, and adding 50 common lines does not change the rare/exotic rate. No behaviour change in recruits yet.
 
 ### Step 2 · Tagged backstories — [ ]
