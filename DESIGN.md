@@ -24,6 +24,7 @@ You are a fixer in **Lantern Bay** (placeholder name), a Hong Kong-inspired mega
 
 | Operative | Role | Background | Why they're in the crew |
 | --- | --- | --- | --- |
+| 2026-10-24 | Renewal loyalty discount (1%/job, max 25%) now applies to the raise, not the market price: ask = current + (market − current) × (1 − discount). Supersedes the step 0 framing. | Off the market price, the cap is hit in ~25 jobs and the never-below-current floor makes many notices a ¥0 raise, so Accept/Haggle/Refuse stop being choices. On the raise, every notice is a real raise, loyalty still saves money, and the floor holds by construction. | Keep it on market price; 0.5%/job with a 15% cap (still hits the floor once wages climb). |
 | Mei Lin Chau "Stitch" | Medic | HK Chinese, ex-ER nurse, struck off | The calm centre; the medic who makes "stabilise" possible |
 | Wing Lam "Static" | Tech | HK Chinese, grew up above a Night Market electronics stall | Pushes her implants too hard: the built-in neural-load story |
 | Cherry Tse "Velvet" | Face | HK Chinese, raised in a mahjong parlour | Charming and greedy: the built-in buyout-temptation story |

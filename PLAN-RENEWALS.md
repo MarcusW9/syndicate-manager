@@ -9,7 +9,7 @@ read CLAUDE.md, this file, and only the code it names. Tick a step off here
 | Topic | Decision |
 | --- | --- |
 | Market price | `base = 150 + totalStats*5 + mainStat*10` (today's wage formula), times `M = 1 + max(0, (main - 12) / 10) ^ 1.5`, rounded to 50. Applies to **recruits on the board and to renewals**. |
-| Loyalty discount | **1% per job run with the crew, max 25%**, taken off the market price on a renewal. |
+| Loyalty discount | **1% per job run with the crew, max 25%**, taken off the **raise** on a renewal (2026-10-24, supersedes "off the market price"): `ask = round50(current + (market − current) × (1 − loyaltyDiscount))`. Haggle's 10% comes off after this. |
 | Renewal trigger | Graduation, or main stat **+2 since their last pay deal**. At most one notice per person every **8 weeks**. |
 | Options | Accept (wage = ask) · Haggle once: your best talker vs **difficulty 14**, success = **10% off** · Refuse. |
 | Refusal | Operative is **unhappy for 4 weeks: −1 on their rolls** ("head not in it"), then asks again. Leaving the crew stays parked. |
@@ -43,7 +43,7 @@ Update the recruit wage test band and economy band **on purpose** using step 0's
 
 ### Step 4 · Decision messages + renewal notice — [ ]
 - Generic blocking decision message `{ kind, options, payload }` and a registry in core mapping `kind` → resolver. Renewal is the first kind.
-- Trigger checks after growth in `finish` (rules above). Ask = `round50(marketWage × (1 − loyaltyDiscount))`, never below the current wage.
+- Trigger checks after growth in `finish` (rules above). Ask = `round50(current + (marketWage − current) × (1 − loyaltyDiscount))`; if market ≤ current, no notice fires (and the ask can never go below the current wage).
 - UI: notice screen with current wage, ask, market value, loyalty line, Accept / Haggle / Refuse. Screenshots at 390px.
 - Tests: ask never below current wage; discount ≤ 25%; cooldown respected; refusal applies unhappy and the −1 shows in both the risk read and the real roll; "no death without push on" still passes.
 
@@ -89,3 +89,4 @@ Finding: the 25% discount cap is reached after about 25 jobs (about four months)
 - Recruit wage test: per-quality bands: rookie 400–650, pro 500–900, veteran 650–1150 (replacing 400–800).
 - Economy test: keep the current bands (all scenarios pass). Optional hiring variant: median > ¥5,000, broke < 20%.
 - Open question for the owner (not re-opened here): renewals barely cost anything once the loyalty cap is reached; consider a lower cap or a slower discount before step 4.
+- **Resolved 2026-10-24:** the discount now comes off the raise, not the market price (see Decisions). Example: ¥600 star, market ¥900, full discount → asks ¥800 (was ~¥650).
