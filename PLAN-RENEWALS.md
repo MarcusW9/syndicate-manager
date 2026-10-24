@@ -19,7 +19,7 @@ Worked example (good rookie): hired at main 11, total 48 → ¥500. Star at main
 
 ## Steps
 
-### Step 0 · Season simulation (no game code) — [ ] 
+### Step 0 · Season simulation (no game code) — [x] 2026-10-24
 Write a throwaway sim (scratchpad or `tests/` helper) using the formulas above:
 - wage over time for a good rookie, a low-ceiling rookie and a pro; how many notices fire per person per season;
 - recruit board prices with M applied (by quality) vs today's ¥400–800 band;
@@ -54,4 +54,38 @@ Update the recruit wage test band and economy band **on purpose** using step 0's
 
 ## Step 0 results
 
-_(to be filled in by step 0)_
+Run 2026-10-24 (throwaway sim, deleted). Renewals always accepted; the sims use the careful policy from `tests/play.js`.
+
+**Wages over one season** (52 weeks, 10 seeds; the newcomer works almost every day, about 71 jobs)
+
+| Newcomer | Hired at (market) | Main at season end | Wage at season end | Market at season end | Notices per season |
+| --- | --- | --- | --- | --- | --- |
+| Good rookie (11, ceiling 17) | ¥550 | 17 | ¥650 | ¥900 | 2 typical, 3 max |
+| Low-ceiling rookie (11, ceiling 14) | ¥550 | 14 | ¥550 | ¥700 | 1 |
+| Pro (14, ceiling 16) | ¥700 | 16 | ¥700 | ¥850 | 1 |
+| Starting five | – | – | – | – | 0 (at or near their ceilings) |
+
+Example good rookie: day 8, main 13, ¥550→600 · day 65, main 15, ¥600→600 · day 121, main 17, after 25 jobs, ¥600→650.
+Finding: the 25% discount cap is reached after about 25 jobs (about four months), so a ¥900 star asks about ¥650. The "never below current wage" floor often makes a notice a ¥0 raise.
+
+**Recruit board** (5,000 recruits; 5th percentile / median / 95th percentile, min–max in brackets)
+
+| Quality | Today | With M |
+| --- | --- | --- |
+| Rookie | 450/500/550 (450–600) | unchanged |
+| Pro | 600/600/650 (550–700) | 600/700/800 (550–850) |
+| Veteran | 650/700/700 (600–750) | 750/900/1050 (700–1100) |
+| All | 500/550/700 (450–750) | 500/600/950 (450–1100) |
+
+**Economy test** (200 seeds, 4 weeks careful)
+
+| Scenario | Median cash | 10th / 90th percentile | Broke | Deaths per run |
+| --- | --- | --- | --- | --- |
+| Today | ¥10,200 | 2,750 / 21,050 | 3% | 0 |
+| Renewals accepted | same (no notices fire in 4 weeks) | same | 3% | 0 |
+| Renewals + hire one recruit at the M price | ¥7,150 | −350 / 16,950 | 12% | 0 |
+
+**Proposed test bands (step 2)**
+- Recruit wage test: per-quality bands: rookie 400–650, pro 500–900, veteran 650–1150 (replacing 400–800).
+- Economy test: keep the current bands (all scenarios pass). Optional hiring variant: median > ¥5,000, broke < 20%.
+- Open question for the owner (not re-opened here): renewals barely cost anything once the loyalty cap is reached; consider a lower cap or a slower discount before step 4.
