@@ -31,7 +31,7 @@ In `src/core/crew.js`: turn roll modifiers (traits, approach, fatigue, injury, v
 `{ id, applies(op, ctx), value(op, ctx), note }` summed by `effectiveStat`/`crewRoll`. Notes come from the rules, so the risk read and real rolls cannot drift.
 Done when: **all existing tests pass unchanged**; no UI change.
 
-### Step 2 · Pricing module + market prices on recruits — [ ]
+### Step 2 · Pricing module + market prices on recruits — [x] 2026-10-24
 `src/core/pricing.js` with `marketWage(op)`; tunable numbers in `src/data/economy.js`. Recruits use it.
 Update the recruit wage test band and economy band **on purpose** using step 0's numbers, and log why in DESIGN.md. One recruit-board screenshot at 390px.
 
