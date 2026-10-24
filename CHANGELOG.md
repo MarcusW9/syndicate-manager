@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-24 · Plan: reputation tiers
+- Plan only, no game change: reputation will become five tiers your syndicate climbs (Street crew up to Legend), shown as a name and a progress bar. Each tier brings bigger, better-paid versions of jobs, new clients, better recruits and more jobs on the board. The first step up should take about two months.
+- You can slip back: aborts, failed rolls and weeks without work cost reputation. Drop below the line and you get a warning and time to recover before you lose a tier. Losing crew and heat don't affect it.
+- The numbers get simulated before anything is built. See `PLAN-REPUTATION.md`.
+
 ## 2026-10-24 · Heat that means something
 - Taking a job no longer adds heat by itself. Heat now comes from how you play: the Loud approach (+1) and crisis choices or failures that say "+heat". A clean stealth or social job adds nothing.
 - Heat cools by 2 every Sunday, whether or not you worked that week. The "quiet week" bonus is gone.
