@@ -4,6 +4,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-24 · Roll rules refactor
+- Under the hood: roll bonuses and penalties (traits, approach, fatigue, injury, veteran calm, backup, short-handed) are now one list of rules. Nothing plays differently; it makes upcoming contract renewals easier to add.
+
 ## 2026-10-24 · Freelancers
 - **Guns for hire:** two freelancers turn up on the board every Monday, generated like recruits (names, roles, stats, traits). Pick one on the planning screen to fill a slot for that job only.
 - **No wage:** they take a share of what the job actually pays: rookie 15%, pro 20%, veteran 25%. If the job pays nothing, they get nothing. The job report shows what they took.

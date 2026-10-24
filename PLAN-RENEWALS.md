@@ -26,7 +26,7 @@ Write a throwaway sim (scratchpad or `tests/` helper) using the formulas above:
 - the economy test (`tests/rules.test.js`, careful player, 4 weeks) with M on recruits and renewals accepted.
 Output: a short table in this file under "Step 0 results" and proposed new test bands. Stop and report before any build.
 
-### Step 1 · Roll pipeline refactor (no behaviour change) — [ ]
+### Step 1 · Roll pipeline refactor (no behaviour change) — [x]
 In `src/core/crew.js`: turn roll modifiers (traits, approach, fatigue, injury, veteran cool, backup, short-handed) into a list of rules
 `{ id, applies(op, ctx), value(op, ctx), note }` summed by `effectiveStat`/`crewRoll`. Notes come from the rules, so the risk read and real rolls cannot drift.
 Done when: **all existing tests pass unchanged**; no UI change.
