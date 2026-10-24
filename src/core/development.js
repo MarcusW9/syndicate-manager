@@ -107,19 +107,34 @@ export function scoutFor(crew, role, excludeId) {
   return others.find((o) => o.traits.includes('veteran')) ?? [...others].sort((a, b) => b.stats.cool - a.stats.cool)[0] ?? null;
 }
 
-/** The crew's opinion of someone's ceiling. Uses the stored scoutError, so it can be wrong. */
-export function potentialRead(op, scoutName, nameOverride) {
-  const stat = primaryStat(op);
-  const now = op.stats[stat];
-  const seen = clamp((op.potential?.[stat] ?? now) + (op.scoutError ?? 0), now, 20);
+/** Which way the crew reads someone's ceiling: 'peaked' | 'close' | 'special' | 'strong' | 'some'. Uses scoutError, so it can be wrong. */
+function potentialBand(op) {
+  const now = op.stats[primaryStat(op)];
+  const seen = clamp((op.potential?.[primaryStat(op)] ?? now) + (op.scoutError ?? 0), now, 20);
   const room = seen - now;
+  if (room <= 0) return 'peaked';
+  if (room === 1) return 'close';
+  if (seen >= 18) return 'special';
+  if (seen >= 16) return 'strong';
+  return 'some';
+}
+
+/** The crew's opinion of someone's ceiling, as a sentence. */
+export function potentialRead(op, scoutName, nameOverride) {
   const who = scoutName ?? 'Your scout';
   const name = nameOverride ?? op.handle;
-  if (room <= 0) return `${who}: "Already as good as ${name} will get."`;
-  if (room === 1) return `${who} thinks ${name} is close to their best already.`;
-  if (seen >= 18) return `${who} thinks ${name} could be special.`;
-  if (seen >= 16) return `${who} reckons ${name} will be better than most pros you could hire, given the work.`;
-  return `${who} thinks ${name} will come on a bit, but won't be a star.`;
+  return {
+    peaked: `${who}: "Already as good as ${name} will get."`,
+    close: `${who} thinks ${name} is close to their best already.`,
+    special: `${who} thinks ${name} could be special.`,
+    strong: `${who} reckons ${name} will be better than most pros you could hire, given the work.`,
+    some: `${who} thinks ${name} will come on a bit, but won't be a star.`,
+  }[potentialBand(op)];
+}
+
+/** The same read in a few words, for the crew list. */
+export function potentialTag(op) {
+  return { peaked: 'at their peak', close: 'close to their best', special: 'could be special', strong: 'still has a lot to give', some: 'will come on a bit' }[potentialBand(op)];
 }
 
 // --- growth -----------------------------------------------------------------

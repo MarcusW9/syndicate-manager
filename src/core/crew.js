@@ -59,6 +59,18 @@ export const BACKUP_BONUS = 1;
 export const maxCrew = (recommended) => recommended + MAX_EXTRA_CREW;
 
 /**
+ * Crew size against a job's recommendation, for the planning badge.
+ * Returns { level: 'none'|'full'|'short'|'extra', penalty, text } using the same numbers as crewRoll.
+ */
+export function crewSizeRead(picked, recommended) {
+  const missing = recommended - picked;
+  if (!picked) return { level: 'none', penalty: 0, text: `Pick a crew · ${recommended} recommended` };
+  if (missing > 0) return { level: 'short', penalty: missing * SHORT_HANDED_PENALTY, text: `${picked}/${recommended} · short-handed: −${missing * SHORT_HANDED_PENALTY} on every roll` };
+  if (missing < 0) return { level: 'extra', penalty: 0, text: `${picked}/${recommended} · ${-missing} extra: more backup, more people at risk` };
+  return { level: 'full', penalty: 0, text: `${picked}/${recommended} · full crew, no penalty` };
+}
+
+/**
  * The roll a crew makes on a stat. The best person rolls (or `lead`, e.g. the
  * medic stabilising); +1 if someone else is within 3 of them; -1 per person
  * short of the recommended size. Real rolls and the risk read both use this.

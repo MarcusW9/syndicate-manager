@@ -181,3 +181,33 @@ test(`crews can run up to ${MAX_EXTRA_CREW} over the recommended size, no more`,
   assert.equal(M.startMission(s, job.id, ids.slice(0, rec + MAX_EXTRA_CREW + 1), 'stealth'), s, 'refused');
   assert.equal(M.startMission(s, job.id, [], 'stealth'), s, 'empty crew refused');
 });
+
+// --- planning badge and crew-list scout line ----------------------------------------
+
+test('the crew-size badge shows the same penalty the rolls use', async () => {
+  const { crewSizeRead, SHORT_HANDED_PENALTY } = await import('../src/core/crew.js');
+  assert.equal(crewSizeRead(0, 4).level, 'none');
+  assert.equal(crewSizeRead(4, 4).level, 'full');
+  assert.equal(crewSizeRead(5, 4).level, 'extra');
+  const s = createNewGame({ seed: 1 });
+  for (let n = 1; n < 4; n++) {
+    const read = crewSizeRead(n, 4);
+    assert.equal(read.level, 'short');
+    assert.equal(read.penalty, (4 - n) * SHORT_HANDED_PENALTY);
+    assert.equal(crewRoll(s.crew.slice(0, n), 'driving', { recommended: 4 }).missing * SHORT_HANDED_PENALTY, read.penalty);
+    assert.match(read.text, new RegExp(`−${read.penalty} on every roll`));
+  }
+});
+
+test('the crew-list scout tag agrees with the full read, and never shows a number', async () => {
+  const { potentialTag, potentialRead } = await import('../src/core/development.js');
+  const pairs = [['could be special', /special/], ['still has a lot to give', /better than most pros/], ['will come on a bit', /come on a bit/],
+    ['close to their best', /close to their best/], ['at their peak', /Already as good/]];
+  const cases = [{ start: 11, ceiling: 18 }, { start: 11, ceiling: 16 }, { start: 11, ceiling: 14 }, { start: 13, ceiling: 14 }, { start: 14, ceiling: 14 }];
+  cases.forEach((c, i) => {
+    const op = makeRookie(c);
+    assert.equal(potentialTag(op), pairs[i][0]);
+    assert.match(potentialRead(op, 'Teo'), pairs[i][1]);
+  });
+  for (const op of createNewGame({ seed: 4 }).crew) assert.doesNotMatch(potentialTag(op), /\d/);
+});

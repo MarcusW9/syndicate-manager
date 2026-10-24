@@ -206,3 +206,11 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .levelcard--grad { padding: 16px; border: 2px solid var(--warn); background: color-mix(in srgb, var(--warn) 10%, transparent); }
 .levelcard--grad .levelcard__title { font-size: 1.15rem; }
 .levelcard__kicker { color: var(--warn); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.75rem; }
+
+/* Crew-list scout line and the planning crew-size badge */
+.scoutline { display: block; font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+.sizebadge { display: inline-block; margin: 0 0 8px; padding: 6px 10px; border-radius: var(--radius); font-size: 0.85rem; font-weight: 600; background: #262b36; color: var(--text); }
+.sizebadge--full { background: #173328; color: #5fe0a5; }
+.sizebadge--short { background: #3a3218; color: var(--warn); }
+.sizebadge--short.is-severe { background: #401a22; color: var(--danger); }
+.sizebadge--extra { background: #262b36; color: var(--accent-2); }
