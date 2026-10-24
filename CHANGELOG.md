@@ -4,6 +4,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-24 · The city is Hong Kong
+- The game is now set in an alternate-history, cyberpunk Hong Kong instead of the fictional "Lantern Bay". The welcome message names Hong Kong.
+- The design doc has a draft history of how the city's implants came about (1962-79). Districts keep their current names for now.
+
 ## 2026-10-24 · Heat that means something
 - Taking a job no longer adds heat by itself. Heat now comes from how you play: the Loud approach (+1) and crisis choices or failures that say "+heat". A clean stealth or social job adds nothing.
 - Heat cools by 2 every Sunday, whether or not you worked that week. The "quiet week" bonus is gone.

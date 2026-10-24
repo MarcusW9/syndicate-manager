@@ -1,7 +1,7 @@
 // Placeholder names. Rename here and nowhere else.
 export const NAMES = {
   gameTitle: 'Syndicate Manager',
-  city: 'Lantern Bay',
+  city: 'Hong Kong',
   districts: {
     oldTown: 'Old Town',
     docks: 'The Docks',

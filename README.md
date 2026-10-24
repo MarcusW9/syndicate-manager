@@ -1,6 +1,6 @@
 # Syndicate Manager (working title)
 
-A text-first, endless crew management game. You are a fixer in Lantern Bay (placeholder name), building a crew of five into a syndicate. Football Manager meets a heist crew: the story comes from the people you keep alive.
+A text-first, endless crew management game. You are a fixer in an alternate-history, cyberpunk Hong Kong, building a crew of five into a syndicate. Football Manager meets a heist crew: the story comes from the people you keep alive.
 
 ## Run it
 ```
