@@ -31,7 +31,7 @@ Run `npm test` before every push. The tests encode the design promises in DESIGN
 Every change that ships gets an entry at the top of `CHANGELOG.md` (date, what changed, in plain words). DESIGN.md says why; CHANGELOG.md says what.
 
 ## Commits
-Author: `marcusw`. Big features get their own commit with a clear message.
+Author and committer: `marcusw <160358373+MarcusW9@users.noreply.github.com>` (set both, e.g. `git -c user.name=marcusw -c user.email=160358373+MarcusW9@users.noreply.github.com commit`). Never use the personal Gmail address; the repo is public. No `Co-Authored-By`, `Claude-Session` or "Generated with" lines in commit messages or PRs: the owner wants every commit under their name only. Big features get their own commit with a clear message.
 
 ## Design doc
 Core loop: https://claude.ai/artifact/W38zoiZvsjL9vt78jKXgxN
