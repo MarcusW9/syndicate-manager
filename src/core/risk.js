@@ -1,7 +1,7 @@
 // Honest risk reads, shown as labels with a short reason (no percentages).
 // Roll rule: success if d20 + stat >= 10 + difficulty.
 
-import { bestFor } from './crew.js';
+import { crewRoll } from './crew.js';
 
 export function successChance(stat, difficulty) {
   const need = 10 + difficulty - stat; // minimum d20 roll
@@ -15,7 +15,8 @@ export function riskLabel(chance) {
   return 'extreme';
 }
 
-const STAT_FOR_THREAT = (threat) => 6 + threat * 2.5;
+/** Typical roll difficulty at a threat level, used by the planning read. */
+export const STAT_FOR_THREAT = (threat) => 6 + threat * 2.5;
 
 /** Overall read for a planned job. Returns { level, reasons[] }. */
 export function assessJob(template, crew, approach) {
@@ -24,7 +25,7 @@ export function assessJob(template, crew, approach) {
   const target = STAT_FOR_THREAT(template.threat);
   let worst = 1;
   for (const stat of template.keyStats) {
-    const best = bestFor(crew, stat, { approach });
+    const best = crewRoll(crew, stat, { approach, recommended: template.crewSize });
     const chance = successChance(best.value, target);
     worst = Math.min(worst, chance);
     if (chance < 0.5) {
@@ -36,9 +37,11 @@ export function assessJob(template, crew, approach) {
     if (op.condition.injury === 'light') reasons.push(`${op.handle} is carrying an injury`);
   }
   if (!crew.some((o) => o.role === 'medic') && template.threat >= 3) reasons.push('No medic: nobody can stabilise a critical wound');
-  if (crew.length < template.crewSize) reasons.push(`Short-handed: ${crew.length} of ${template.crewSize}`);
-  const penalty = Math.max(0, template.crewSize - crew.length) * 0.1;
-  const level = riskLabel(worst - penalty);
+  // Short-handed is already in every roll above (same rule as the real thing), not a separate fudge.
+  const missing = template.crewSize - crew.length;
+  if (missing > 0) reasons.unshift(`Short-handed: ${crew.length} of ${template.crewSize}, -${missing} on every roll`);
+  if (missing < 0) reasons.push(`${-missing} extra on the crew: more backup, more people away and at risk`);
+  const level = riskLabel(worst);
   if (!reasons.length) reasons.push('Crew matches the job well');
   return { level, reasons: reasons.slice(0, 4) };
 }

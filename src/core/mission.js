@@ -8,9 +8,9 @@ import { templateById, twistById, jobView } from './jobs.js';
 import { adjustTrust, clientById, completionTrust, ABORT_TRUST } from './clients.js';
 import { nextRng } from './random.js';
 import { d20 } from './rng.js';
-import { APPROACHES, bestFor, effectiveStat, findRole, worsenInjury, setInjury } from './crew.js';
+import { APPROACHES, crewRoll, effectiveStat, findRole, worsenInjury, setInjury, maxCrew } from './crew.js';
 import { successChance, riskLabel } from './risk.js';
-import { XP, applyGrowth, primaryStat } from './development.js';
+import { XP, applyGrowth, gainXp, primaryStat } from './development.js';
 
 const EXIT_KINDS = new Set(['abort', 'extract']);
 const STABILISE_DIFFICULTY = 9;
@@ -22,11 +22,22 @@ const crisisById = (tpl, id) => tpl.crises.find((c) => c.id === id) ?? twistById
 /** Difficulty of a roll on this job: the offer's threat change shifts every roll by 1 per step. */
 const rollDifficulty = (am, choice) => choice.difficulty + (am.threatDelta ?? 0);
 
-/** Bank raw growth points for an operative; applied when the job ends (see development.js). */
-function addXp(am, opId, stat, points) {
-  am.xp = am.xp ?? {};
-  const mine = (am.xp[opId] = am.xp[opId] ?? {});
-  mine[stat] = (mine[stat] ?? 0) + points;
+const STAT_NAME = (s) => s[0].toUpperCase() + s.slice(1);
+
+/**
+ * Growth happens the moment it's earned (see development.js). Rises are
+ * flashed in the mission log and collected for the level-up cards at the end.
+ */
+function grow(state, am, op, stat, points) {
+  const { events, graduated } = gainXp(op, crewOf(state, am), stat, points, state.day);
+  for (const e of events) {
+    am.growth = [...(am.growth ?? []), e];
+    am.log.push({ kind: 'growth', text: `▲ ${e.handle}: ${STAT_NAME(e.stat)} ${e.from} → ${e.to}` });
+  }
+  if (graduated) {
+    am.graduated = [...(am.graduated ?? []), op.id];
+    am.log.push({ kind: 'growth', text: `★ ${op.handle} isn't a rookie any more.` });
+  }
 }
 
 /** Replace {driver}, {tech}, {face}, {muscle}, {medic}, {op} with crew handles. */
@@ -51,6 +62,7 @@ export function startMission(prev, jobId, crewIds, approach) {
   const job = state.jobs.find((j) => j.id === jobId);
   if (!job) return prev;
   const tpl = templateById(job.templateId);
+  if (!crewIds.length || crewIds.length > maxCrew(tpl.crewSize)) return prev;
   const view = jobView(state, job);
   const rng = nextRng(state);
 
@@ -84,7 +96,7 @@ export function startMission(prev, jobId, crewIds, approach) {
     queue, step: 0, log: [],
     payCut: 0, extraHeat: 0, clientTrust: 0,
     critical: null, stabiliseFailed: false, untreated: [],
-    focusOp: null, aborted: false, done: false, result: null, xp: {},
+    focusOp: null, aborted: false, done: false, result: null, growth: [], graduated: [],
   };
   return state;
 }
@@ -127,15 +139,26 @@ function meetsRequirement(crew, req) {
   return { ok: true };
 }
 
+/** The medic's own stabilising value (Steady Hands adds 2). */
+function medicLead(medic, am, crew) {
+  const s = effectiveStat(medic, 'medical', { approach: am.approach, crew });
+  return { op: medic, value: s.value + (medic.traits.includes('steady_hands') ? 2 : 0), notes: s.notes };
+}
+
+/** Who rolls and with what: the shared crew rule (backup, short-handed) from crew.js. */
 function rollerFor(state, am, choice, crew) {
-  if (choice.kind === 'stabilise') {
-    const medic = findRole(crew, 'medic');
-    if (medic) {
-      const s = effectiveStat(medic, 'medical', { approach: am.approach, crew });
-      return { op: medic, value: s.value + (medic.traits.includes('steady_hands') ? 2 : 0), notes: s.notes };
-    }
-  }
-  return bestFor(crew, choice.stat, { approach: am.approach });
+  const recommended = templateById(am.templateId).crewSize;
+  const medic = choice.kind === 'stabilise' ? findRole(crew, 'medic') : null;
+  const stat = medic ? 'medical' : choice.stat;
+  return crewRoll(crew, stat, { approach: am.approach, recommended, lead: medic ? medicLead(medic, am, crew) : undefined });
+}
+
+/** Stabilising a critical operative: the medic leads, the same crew rule applies. */
+function stabiliser(state, am, patient) {
+  const crew = crewOf(state, am);
+  const medic = findRole(crew.filter((o) => o.id !== patient.id), 'medic');
+  if (!medic) return null;
+  return crewRoll(crew, 'medical', { approach: am.approach, recommended: templateById(am.templateId).crewSize, lead: medicLead(medic, am, crew) });
 }
 
 // Who gets hurt on a failure: the crisis's focus operative if it has one
@@ -226,8 +249,8 @@ export function chooseOption(prev, choiceId) {
 
   // Everyone learns from a roll: the roller most (even on a failure), the rest by watching.
   if (!choice.sure) {
-    addXp(am, roller.op.id, choice.stat, XP.roll);
-    for (const o of crew) if (o.id !== roller.op.id && o.condition.injury !== 'critical') addXp(am, o.id, choice.stat, XP.watch);
+    grow(state, am, roller.op, choice.stat, XP.roll);
+    for (const o of crew) if (o.id !== roller.op.id && o.condition.injury !== 'critical') grow(state, am, o, choice.stat, XP.watch);
   }
 
   if (choice.neural) {
@@ -273,10 +296,9 @@ export function describeCritical(state) {
   const choices = [];
   if (!am.stabiliseFailed) {
     if (medic) {
-      const s = effectiveStat(medic, 'medical', { approach: am.approach, crew });
-      const value = s.value + (medic.traits.includes('steady_hands') ? 2 : 0);
+      const r = stabiliser(state, am, op);
       choices.push({ id: 'stabilise', label: `${medic.handle} stabilises ${op.handle}`, available: true, cost: '+1 heat',
-        risk: riskLabel(successChance(value, STABILISE_DIFFICULTY)), riskReason: `${medic.handle} on medical (${value}). If it fails you must extract or push on.` });
+        risk: riskLabel(successChance(r.value, STABILISE_DIFFICULTY)), riskReason: `${medic.handle} on medical (${r.value}${r.notes.length ? ', ' + r.notes.join(', ') : ''}). If it fails you must extract or push on.` });
     } else {
       choices.push({ id: 'stabilise', label: `Stabilise ${op.handle}`, available: false, reason: 'Needs a medic on the job' });
     }
@@ -296,14 +318,14 @@ export function resolveCritical(prev, option) {
   const crew = crewOf(state, am);
 
   if (option === 'stabilise' && !am.stabiliseFailed) {
-    const medic = findRole(crew.filter((o) => o.id !== op.id), 'medic');
-    if (!medic) return prev;
-    const s = effectiveStat(medic, 'medical', { approach: am.approach, crew });
-    const value = s.value + (medic.traits.includes('steady_hands') ? 2 : 0);
+    const r = stabiliser(state, am, op);
+    if (!r) return prev;
+    const medic = r.op;
     am.extraHeat += 1;
-    addXp(am, medic.id, 'medical', XP.roll);
     am.log.push({ kind: 'choice', text: `${medic.handle} works on ${op.handle}.` });
-    if (d20(nextRng(state)) + value >= 10 + STABILISE_DIFFICULTY) {
+    const stabilised = d20(nextRng(state)) + r.value >= 10 + STABILISE_DIFFICULTY;
+    grow(state, am, medic, 'medical', XP.roll);
+    if (stabilised) {
       setInjury(op, 'serious');
       am.log.push({ kind: 'good', text: `The bleeding stops. ${op.handle} will live, but is out for weeks.` });
       am.critical = null;
@@ -377,16 +399,24 @@ function finish(state) {
     state.memorial.push({ id: op.id, name: op.name, handle: op.handle, role: op.role, color: op.color, day: state.day, cause: `Died of wounds after the ${tpl.name}` });
   }
 
-  // Growth: crisis lessons always count; finishing the job also teaches its key stats.
+  // Growth: crisis lessons already landed during the job; finishing it also teaches its key stats.
   const survivors = crewOf(state, am);
+  if (am.xp) { // a job saved mid-way before growth went live still has banked points
+    const legacy = applyGrowth(survivors, am.xp, state.day);
+    am.growth = [...(am.growth ?? []), ...legacy.events];
+    am.graduated = [...(am.graduated ?? []), ...legacy.graduated.map((o) => o.id)];
+    delete am.xp;
+  }
   if (!am.aborted) {
     for (const op of survivors) {
-      for (const stat of tpl.keyStats) addXp(am, op.id, stat, XP.job);
-      addXp(am, op.id, primaryStat(op), XP.craft);
+      for (const stat of tpl.keyStats) grow(state, am, op, stat, XP.job);
+      grow(state, am, op, primaryStat(op), XP.craft);
     }
   }
-  const growth = applyGrowth(survivors, am.xp ?? {});
-  for (const op of growth.graduated) {
+  const growthEvents = (am.growth ?? []).filter((e) => survivors.some((o) => o.id === e.opId));
+  const graduatedOps = survivors.filter((o) => (am.graduated ?? []).includes(o.id));
+  const growthLines = growthEvents.map((e) => `${e.handle} ${e.stat} ${e.from}→${e.to}`);
+  for (const op of graduatedOps) {
     op.history.push(`Day ${state.day}: graduated from rookie`);
     state.inbox.unshift({ id: `graduate-${op.id}-${state.day}`, type: 'crew', day: state.day,
       subject: `${op.handle} isn't a rookie any more`,
@@ -413,7 +443,7 @@ function finish(state) {
 
   const outcome = deaths.length ? 'loss' : am.aborted ? 'aborted' : 'completed';
   const client = clientById(am.clientId);
-  am.result = { outcome, pay, heatGain, injuries, deaths: deaths.map((d) => d.handle), growth: growth.lines, client: client?.name ?? null, trustChange };
+  am.result = { outcome, pay, heatGain, injuries, deaths: deaths.map((d) => d.handle), growth: growthEvents, graduated: graduatedOps.map((o) => ({ id: o.id, handle: o.handle, name: o.name, role: o.role, color: o.color })), client: client?.name ?? null, trustChange };
   am.done = true;
 
   const subject = deaths.length ? `${deaths.map((d) => d.handle).join(', ')} died on the ${tpl.name}`
@@ -422,7 +452,7 @@ function finish(state) {
     id: `report-${state.day}-${state.rngCounter}`, type: 'report', day: state.day, subject,
     body: `Paid ${pay}. Heat +${heatGain}.` + (injuries.length ? ` Injured: ${injuries.join(', ')}.` : ' Nobody hurt.') +
       (deaths.length ? ' Their names go on the wall.' : '') +
-      (growth.lines.length ? ` Improved: ${growth.lines.join(', ')}.` : '') +
+      (growthLines.length ? ` Improved: ${growthLines.join(', ')}.` : '') +
       (client && trustChange ? ` ${client.name} ${trustChange > 0 ? 'thinks more of you' : 'is unhappy with you'} (trust ${trustChange > 0 ? '+' : ''}${trustChange}).` : ''),
     blocking: false, read: false,
   });

@@ -7,12 +7,12 @@ import { STARTING_CREW } from '../data/operatives.js';
 
 // Saves made before badges existed have no colour on their operatives.
 const COLOR_BY_ID = Object.fromEntries(STARTING_CREW.map((o) => [o.id, o.color]));
-import { advanceDay, formatDate, isBlocked } from '../core/time.js';
+import { advanceDay, formatDate, isBlocked, seasonStartDay } from '../core/time.js';
 import { createNewGame } from '../core/state.js';
 import { templateById, jobView } from '../core/jobs.js';
 import { trustLabel, clientById, trustOf } from '../core/clients.js';
 import { CLIENTS } from '../data/clients.js';
-import { availability, APPROACHES, traitMods, ratedStat } from '../core/crew.js';
+import { availability, APPROACHES, traitMods, ratedStat, maxCrew } from '../core/crew.js';
 import { assessJob } from '../core/risk.js';
 import {
   startMission, revealBeat, chooseOption, resolveCritical, closeMission,
@@ -23,7 +23,8 @@ import {
   deleteSlot, loadBackup, backupDue, SLOT_COUNT,
 } from '../save/save.js';
 import { hire, haggle, passRecruit, canHire, signingFee, nextExpansion, expandSafehouse, STARTING_ROSTER_CAP } from '../core/recruits.js';
-import { potentialRead, scoutFor, ageRate, declineChance, mentoring } from '../core/development.js';
+import { potentialRead, scoutFor, ageRate, declineChance, mentoring, changesSince } from '../core/development.js';
+import { GROWTH_LINES, GRADUATION_LINES } from '../data/growthLines.js';
 
 let state;
 let screen = 'inbox';
@@ -76,7 +77,7 @@ function onClick(e) {
     case 'toggle-crew': {
       const tpl = templateById(state.jobs.find((j) => j.id === plan.jobId).templateId);
       if (plan.crew.includes(id)) plan.crew = plan.crew.filter((x) => x !== id);
-      else if (plan.crew.length < tpl.crewSize) plan.crew = [...plan.crew, id];
+      else if (plan.crew.length < maxCrew(tpl.crewSize)) plan.crew = [...plan.crew, id];
       break;
     }
     case 'approach': plan.approach = id; break;
@@ -152,15 +153,34 @@ const initials = (name) => { const w = name.trim().split(/\s+/); return (w[0][0]
 /** Placeholder portrait: coloured initials. Swap for an <img> when portraits exist. */
 const badge = (op, size = '') => `<span class="badge ${size ? `badge--${size}` : ''} ${op.cause ? 'is-fallen' : ''}" style="--badge:${esc(op.color ?? COLOR_BY_ID[op.id] ?? '#8b93a7')}" aria-hidden="true">${esc(initials(op.name))}</span>`;
 
-/** One stat on a stats panel: the number used on jobs (with trait bonuses), the bonus, and growth since joining. */
+const signed = (n) => `${n > 0 ? '+' : '−'}${Math.abs(n)}`;
+const statName = (k) => k[0].toUpperCase() + k.slice(1);
+/** This season's net change per stat (rises and age decline), from the growth log. */
+const seasonChanges = (op) => changesSince(op, seasonStartDay(state.day));
+
+/** Crew-list marker: "▲ Tech +2, Combat +1 ▼ Driving −1" for this season. */
+function growthMarker(op) {
+  const net = Object.entries(seasonChanges(op));
+  const up = net.filter(([, n]) => n > 0).map(([k, n]) => `${statName(k)} ${signed(n)}`);
+  const down = net.filter(([, n]) => n < 0).map(([k, n]) => `${statName(k)} ${signed(n)}`);
+  return (up.length ? `<span class="marker">▲ ${esc(up.join(', '))}</span>` : '') +
+    (down.length ? `<span class="marker is-down">▼ ${esc(down.join(', '))}</span>` : '');
+}
+
+/**
+ * One stat on a stats panel: the number used on jobs (with trait bonuses), the bonus,
+ * and (for crew) this season's change in green/red plus a smaller career figure.
+ */
 function statCell(op, k, { growth = false } = {}) {
   const mod = traitMods(op)[k] ?? 0;
-  const diff = growth ? op.stats[k] - (op.startStats?.[k] ?? op.stats[k]) : 0;
+  const season = growth ? seasonChanges(op)[k] ?? 0 : 0;
+  const career = growth ? op.stats[k] - (op.startStats?.[k] ?? op.stats[k]) : 0;
   const traitNames = op.traits.filter((t) => typeof TRAITS[t]?.effects?.[k] === 'number').map((t) => TRAITS[t].name).join(', ');
   return `<div>
     <dt>${esc(k)}</dt>
-    <dd>${ratedStat(op, k)}${diff ? ` <span class="growth ${diff < 0 ? 'is-down' : ''}">${diff > 0 ? '+' : ''}${diff}</span>` : ''}</dd>
+    <dd>${ratedStat(op, k)}${season ? ` <span class="growth ${season < 0 ? 'is-down' : ''}">${signed(season)}</span>` : ''}</dd>
     ${mod ? `<span class="statnote ${mod < 0 ? 'is-down' : ''}">${op.stats[k]} ${mod > 0 ? '+' : '−'}${Math.abs(mod)} ${esc(traitNames)}</span>` : ''}
+    ${career ? `<span class="statnote">career ${signed(career)}</span>` : ''}
   </div>`;
 }
 
@@ -280,7 +300,7 @@ function renderCrew() {
           <li>
             <button class="row" data-action="open-op" data-id="${esc(op.id)}">
               ${badge(op)}
-              <span class="row__main"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"<br><span class="muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age}</span></span>
+              <span class="row__main"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"<br><span class="muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age}</span>${growthMarker(op)}</span>
               <span class="row__meta">${esc(availability(state, op).reason)}</span>
             </button>
           </li>`).join('')}
@@ -393,7 +413,7 @@ function renderOperative() {
       <h2>Development</h2>
       <div class="riskcard">
         <p>${esc(potentialRead(op, scoutFor(state.crew, op.role, op.id)?.handle))}</p>
-        <p class="muted small">${esc(growthNote(op.age))} Numbers beside stats show change since joining.</p>
+        <p class="muted small">${esc(growthNote(op.age))} Green and red numbers are this season's change; "career" is since joining.</p>
       </div>
 
       <h2>Condition</h2>
@@ -453,7 +473,8 @@ function renderPlan() {
   const t = v.tpl;
   const picked = state.crew.filter((o) => plan.crew.includes(o.id));
   const read = assessJob({ ...t, threat: v.threat }, picked, plan.approach);
-  const full = plan.crew.length >= t.crewSize;
+  const most = maxCrew(t.crewSize);
+  const full = plan.crew.length >= most;
 
   return `
     <section class="panel">
@@ -468,8 +489,9 @@ function renderPlan() {
         ${v.hinted ? '<p class="intel">Intel unreliable: something about this job may not be what you were told.</p>' : ''}
       </div>
 
-      <h2>Crew (${plan.crew.length}/${t.crewSize})</h2>
+      <h2>Crew (${plan.crew.length} picked · ${t.crewSize} recommended, up to ${most})</h2>
       <p class="muted small">Matters most: ${t.keyStats.join(', ')}. * includes a trait bonus.</p>
+      <p class="muted small">Each person short of ${t.crewSize}: −1 on every roll. A second person within 3 of whoever rolls backs them up: +1.</p>
       <ul class="list">
         ${state.crew.map((op) => {
           const a = availability(state, op);
@@ -521,6 +543,46 @@ function choiceButton(c, action) {
     </button>`;
 }
 
+/** Stable pick from a list of lines, so the same rise always reads the same. */
+function pickLine(lines, key) {
+  let h = 0;
+  for (const ch of key) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return lines[h % lines.length];
+}
+
+/** Level-up cards for a job report: one per operative who improved, a bigger one for graduations. */
+function levelUpCards(r) {
+  const growth = r.growth ?? [];
+  if (growth.some((g) => typeof g === 'string')) return `<p>Improved: ${esc(growth.join(', '))}</p>`; // reports from older saves
+  const opFor = (id, fallback) => state.crew.find((o) => o.id === id) ?? fallback;
+  const grads = (r.graduated ?? []).map((g) => {
+    const op = opFor(g.id, g);
+    return `
+      <div class="levelcard levelcard--grad">
+        ${badge(op, 'lg')}
+        <div>
+          <p class="levelcard__kicker">★ Graduated</p>
+          <p class="levelcard__title">${esc(op.handle)}: rookie → pro</p>
+          <p class="levelcard__line">${esc(pickLine(GRADUATION_LINES, op.id).replace('{name}', op.handle))}</p>
+        </div>
+      </div>`;
+  }).join('');
+  const byOp = new Map();
+  for (const g of growth) byOp.set(g.opId, [...(byOp.get(g.opId) ?? []), g]);
+  const cards = [...byOp].map(([id, rises]) => {
+    const op = opFor(id, { id, name: rises[0].handle, handle: rises[0].handle });
+    const rows = rises.map((g) => `
+          <li><span class="levelcard__stat">▲ ${esc(statName(g.stat))} ${g.from} → ${g.to}</span>
+          <span class="levelcard__line">${esc(pickLine(GROWTH_LINES[g.stat] ?? ['{name} is improving.'], `${id}${g.stat}${g.to}`).replace('{name}', op.handle))}</span></li>`).join('');
+    return `
+      <div class="levelcard">
+        ${badge(op)}
+        <div><p class="levelcard__title">${esc(op.handle)}</p><ul class="levelcard__rows">${rows}</ul></div>
+      </div>`;
+  }).join('');
+  return grads || cards ? `<div class="levelcards">${grads}${cards}</div>` : '';
+}
+
 function renderMission() {
   const am = state.activeMission;
   const t = templateById(am.templateId);
@@ -539,7 +601,7 @@ function renderMission() {
         <p>Paid ${money(r.pay)} · Heat +${r.heatGain}</p>
         ${r.injuries.length ? `<p>Injured: ${esc(r.injuries.join(', '))}</p>` : '<p>Nobody hurt.</p>'}
         ${r.deaths.length ? `<p><strong>Lost: ${esc(r.deaths.join(', '))}.</strong> Their names go on the wall.</p>` : ''}
-        ${r.growth?.length ? `<p>Improved: ${esc(r.growth.join(', '))}</p>` : ''}
+        ${levelUpCards(r)}
         ${r.client && r.trustChange ? `<p>${esc(r.client)}: trust ${r.trustChange > 0 ? '+' : ''}${r.trustChange}</p>` : ''}
         <button class="btn btn--primary btn--block" data-action="close-mission">Back to the safehouse</button>
       </div>`;

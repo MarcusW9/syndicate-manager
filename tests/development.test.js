@@ -66,12 +66,16 @@ test('a failed roll still teaches the roller', () => {
     s = M.startMission(s, job.id, s.crew.slice(0, 4).map((o) => o.id), 'loud');
     while (M.currentStep(s.activeMission)?.type === 'beat') s = M.revealBeat(s);
     const choice = M.describeCrisis(s).choices.find((c) => c.available && !['abort', 'extract'].includes(c.kind) && c.risk !== 'certain');
+    const [, handle, stat] = choice.riskReason.match(/^(.+?) on (\w+) \(/);
+    const progressOf = (st) => { const o = st.crew.find((x) => x.handle === handle); return o.stats[stat] * 1000 + (o.progress[stat] ?? 0); };
     const before = s.activeMission.log.length;
+    const was = progressOf(s);
     s = M.chooseOption(s, choice.id);
     if (s.activeMission.log.slice(before).some((e) => e.kind === 'bad')) {
       found = true;
-      const banked = Object.values(s.activeMission.xp).map((x) => Math.max(...Object.values(x)));
-      assert.ok(banked.some((n) => n >= XP.roll), 'roller banked roll points on a failure');
+      const op = s.crew.find((x) => x.handle === handle);
+      const atCeiling = op.stats[stat] >= op.potential[stat];
+      assert.ok(atCeiling || progressOf(s) > was, `${handle} learned ${stat} from a failed roll`);
     }
   }
   assert.ok(found, 'found a failed roll to check');
@@ -87,7 +91,7 @@ test('the mission report lists growth and the stats really change', () => {
   const rookie = done.crew.find((o) => o.id === 'rookie');
   if (!done.activeMission.aborted) {
     assert.ok(rookie.stats.driving > 11);
-    assert.ok(done.activeMission.result.growth.some((l) => l.startsWith('Kid driving')));
+    assert.ok(done.activeMission.result.growth.some((e) => e.handle === 'Kid' && e.stat === 'driving' && e.to === e.from + 1));
   }
 });
 

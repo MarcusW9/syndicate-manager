@@ -190,3 +190,19 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .trust--mid { color: var(--muted); }
 .trust--bad { color: var(--danger); }
 .log--twist { color: var(--warn); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.8rem; }
+
+/* Development: live flash, crew-list markers, level-up cards */
+.log--growth { color: var(--accent-2); font-weight: 700; }
+.marker { display: block; font-size: 0.8rem; font-weight: 600; color: var(--accent-2); margin-top: 2px; }
+.marker.is-down { color: var(--danger); }
+.levelcards { display: grid; gap: 10px; margin: 12px 0; }
+.levelcard { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border: 1px solid #2e6b52; border-radius: var(--radius); background: color-mix(in srgb, var(--accent-2) 7%, transparent); }
+.levelcard p { margin: 0; }
+.levelcard__title { font-weight: 700; }
+.levelcard__rows { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 6px; }
+.levelcard__rows li { display: grid; gap: 1px; }
+.levelcard__stat { color: var(--accent-2); font-weight: 700; }
+.levelcard__line { color: var(--muted); font-size: 0.85rem; }
+.levelcard--grad { padding: 16px; border: 2px solid var(--warn); background: color-mix(in srgb, var(--warn) 10%, transparent); }
+.levelcard--grad .levelcard__title { font-size: 1.15rem; }
+.levelcard__kicker { color: var(--warn); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.75rem; }
