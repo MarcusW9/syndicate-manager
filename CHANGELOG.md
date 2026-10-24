@@ -4,6 +4,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-24 · Personality step 2: 113 backstories with rarity
+- Recruit backstories grow from 18 to 113 lines (15–22 per role), each tagged and given a rarity: most are everyday, a few are rare, and about one in fifty recruits gets an exotic one.
+
 ## 2026-10-24 · Personality step 1: tags and rarity tiers
 - Behind the scenes only, no game change yet: a shared list of personality tags, which traits and roles they match, and the rarity odds (common 60%, uncommon 28%, rare 10%, exotic 2%), plus the picker the next steps will use and tests that keep rare lines rare.
 

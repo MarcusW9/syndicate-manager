@@ -93,3 +93,32 @@ test('steering is ×3 within a tier and never changes tier odds', () => {
   assert.ok(Math.abs(match / commonPicks - 3 / 12) < 0.02, `match share ${match / commonPicks}`);
   assert.ok(Math.abs((100 * rare) / n - 12) <= 2, `rare ${(100 * rare) / n}%`);
 });
+
+test('every role has backstories, each with 1-2 tags, no clashing pair, and a common one', async () => {
+  const { ORIGINS } = await import('../src/data/recruitPools.js');
+  for (const role of Object.keys(ROLE_PROFILES)) {
+    const lines = ORIGINS[role];
+    assert.ok(lines?.some((o) => o.tier === 'common'), `${role} has a common backstory`);
+    for (const o of lines) {
+      assert.ok(o.tags.length >= 1 && o.tags.length <= 2, o.text);
+      for (const [a, b] of CLASHES) assert.ok(!(o.tags.includes(a) && o.tags.includes(b)), `clash ${a}/${b} on ${o.text}`);
+    }
+  }
+});
+
+test('recruit backstories are finished text from the role\'s list, with rarer tiers showing up (2,000 recruits)', async () => {
+  const { ORIGINS } = await import('../src/data/recruitPools.js');
+  const { createNewGame } = await import('../src/core/state.js');
+  const { generateRecruit } = await import('../src/core/recruits.js');
+  const s = createNewGame({ seed: 5 });
+  const tiers = {};
+  for (let i = 0; i < 2000; i++) {
+    const r = generateRecruit(s);
+    assert.equal(typeof r.origin, 'string');
+    assert.ok(!r.origin.includes('{district}'), r.origin);
+    const line = ORIGINS[r.role].find((o) => new RegExp('^' + o.text.replace(/[.*+?^$()|[\]\\]/g, '\\$&').replace('{district}', '.+') + '$').test(r.origin));
+    assert.ok(line, `origin not from ${r.role} list: ${r.origin}`);
+    tiers[line.tier] = (tiers[line.tier] ?? 0) + 1;
+  }
+  assert.ok(tiers.common > tiers.uncommon && tiers.uncommon > tiers.rare && tiers.rare > 0, JSON.stringify(tiers));
+});

@@ -8,6 +8,7 @@ import { nextRng } from './random.js';
 import { pick, d20 } from './rng.js';
 import { bestFor } from './crew.js';
 import { marketWage } from './pricing.js';
+import { pickTiered } from './tiered.js';
 import { rollPotential, rollScoutError, scoutFor, potentialRead, prepareOperative } from './development.js';
 
 export const STARTING_ROSTER_CAP = 8;
@@ -65,7 +66,7 @@ export function generateRecruit(state) {
   const handle = freeHandles.length ? pick(rng, freeHandles) : `${pick(rng, HANDLES)} ${between(rng, [2, 9])}`;
 
   const district = pick(rng, Object.values(NAMES.districts));
-  const origin = pick(rng, ORIGINS[role]).replace('{district}', district);
+  const origin = pickTiered(rng, ORIGINS[role]).text.replace('{district}', district);
 
   // Market price: rookies ~500 (alongside the starting crew), stars cost more.
   const wage = marketWage({ role, stats });
