@@ -4,6 +4,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-24 · Renewal plan: loyalty discount reworked
+- Plan only, no game change: when contract renewals arrive, loyalty will shave the size of a raise rather than the whole wage, so a loyal star still asks for a real raise.
+
 ## 2026-10-24 · Market prices for recruits
 - **Stars cost more:** recruits on the board are now priced at market value. Rookies are unchanged (about ¥500); pros run about ¥600–850 and veterans about ¥700–1,100, rising steeply once their main stat passes 12.
 - The pricing numbers live in one place, ready for contract renewals.
