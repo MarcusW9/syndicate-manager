@@ -24,6 +24,7 @@ You are a fixer in **Lantern Bay** (placeholder name), a Hong Kong-inspired mega
 
 | Operative | Role | Background | Why they're in the crew |
 | --- | --- | --- | --- |
+| 2026-10-24 | Renewal step 0 results: proposed recruit wage bands per quality (rookie 400–650, pro 500–900, veteran 650–1150); economy bands unchanged; loyalty cap flagged as possibly too generous (star at ¥900 market asks ~¥650) | Sim of the agreed formulas against the real game (see PLAN-RENEWALS.md, Step 0 results) | One 400–800 band for all recruits (veterans with M go up to 1100) |
 | Mei Lin Chau "Stitch" | Medic | HK Chinese, ex-ER nurse, struck off | The calm centre; the medic who makes "stabilise" possible |
 | Wing Lam "Static" | Tech | HK Chinese, grew up above a Night Market electronics stall | Pushes her implants too hard: the built-in neural-load story |
 | Cherry Tse "Velvet" | Face | HK Chinese, raised in a mahjong parlour | Charming and greedy: the built-in buyout-temptation story |
