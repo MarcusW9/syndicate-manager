@@ -216,5 +216,10 @@ function migrate(state) {
     if (!state.freelancers) refreshFreelancers(state);
     state.version = 7;
   }
+  if (state.version === 7) {
+    // v8 added statuses and contract fields (jobs with the crew, main stat at last pay deal, last notice).
+    for (const op of state.crew) prepareOperative(op);
+    state.version = 8;
+  }
   return state;
 }

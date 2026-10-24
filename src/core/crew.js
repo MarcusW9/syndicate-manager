@@ -1,6 +1,7 @@
 // Crew helpers: availability, effective stats, role lookup. Pure logic.
 
 import { TRAITS } from '../data/traits.js';
+import { statusRollMods } from './statuses.js';
 
 export const APPROACHES = {
   stealth: { name: 'Stealth', desc: '+1 stealth and tech, -1 combat', mods: { stealth: 1, tech: 1, combat: -1 }, heat: 0 },
@@ -50,6 +51,7 @@ export const OPERATIVE_RULES = [
   { id: 'approach', applies: (op, { stat, approach }) => !!APPROACHES[approach]?.mods?.[stat], value: (op, { stat, approach }) => APPROACHES[approach].mods[stat] },
   { id: 'fatigue', applies: (op) => op.condition.fatigue > 60, value: () => -2, note: 'fatigued' },
   { id: 'injury', applies: (op) => op.condition.injury === 'light', value: () => -2, note: 'hurt' },
+  { id: 'status', applies: (op) => statusRollMods(op).length > 0, value: (op) => statusRollMods(op).reduce((n, d) => n + d.rollMod, 0), note: (op) => statusRollMods(op).map((d) => d.note).join(', ') },
 ];
 
 const noteFor = (rule, op, ctx, v) => (typeof rule.note === 'function' ? rule.note(op, ctx, v) : rule.note);
