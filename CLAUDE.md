@@ -22,7 +22,7 @@ Text-first crew management game (Football Manager style, endless). Plain JavaScr
 - Bump `SAVE_VERSION` in `core/state.js` and add a migration in `save.js` whenever the state shape changes.
 
 ## Keep the design log current
-`DESIGN.md` holds the narrative, setting, tone, cast and a dated decision log (decision, why, rejected alternatives). Whenever a design or technical decision is made or changed in a session, add a row to the top of the log in the same change. Never rewrite past entries; supersede them with a new row.
+`DESIGN.md` holds the narrative, setting, tone, cast and a dated decision log (decision, why, rejected alternatives). Whenever a design or technical decision is made or changed in a session, add a row to the top of the log in the same change. Never rewrite past entries; supersede them with a new row. New rows go under `## Decision log`, not the first table in the file (that's the cast table).
 
 ## Tests
 Run `npm test` before every push. The tests encode the design promises in DESIGN.md (no death without "push on", exits always save everyone, saves upgrade). Never loosen a test to make a change pass; if a rule changes on purpose, update the test and log the change in DESIGN.md.
