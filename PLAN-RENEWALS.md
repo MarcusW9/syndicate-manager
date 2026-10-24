@@ -19,7 +19,7 @@ Worked example (good rookie): hired at main 11, total 48 → ¥500. Star at main
 
 ## Steps
 
-### Step 0 · Season simulation (no game code) — [ ] 
+### Step 0 · Season simulation (no game code) — [x] 2026-10-24
 Write a throwaway sim (scratchpad or `tests/` helper) using the formulas above:
 - wage over time for a good rookie, a low-ceiling rookie and a pro; how many notices fire per person per season;
 - recruit board prices with M applied (by quality) vs today's ¥400–800 band;
@@ -54,4 +54,34 @@ Update the recruit wage test band and economy band **on purpose** using step 0's
 
 ## Step 0 results
 
-_(to be filled in by step 0)_
+Run 2026-10-24 with a throwaway sim (not committed). Subjects joined at market price, worked one season (364 days) with Teo mentoring, careful policy, 20 seeds; renewals always accepted.
+
+**Wage over one season**
+
+| Subject | Start | End (median, range) | Main at end | Jobs | Notices per season |
+| --- | --- | --- | --- | --- | --- |
+| Good rookie 11→17 | ¥550 | ¥650 (650–700) | 17 | ~71 | 2 (15 seeds), 3 (5 seeds) |
+| Low-ceiling rookie 11→13 | ¥550 | ¥550 (550–600) | 13 | ~70 | 1 |
+| Pro 14→16, age 28 | ¥600 | ¥650 (600–650) | 16 | ~71 | 1 |
+
+Sample good rookie: day 8 main 13 → ¥600 (market 600, 4 jobs); day 65 main 15 / graduated → ¥600 (market 700, 12 jobs); day 121 main 17 → ¥650 (market 850, 25 jobs). All growth lands in the first ~4 months; the second half of the season has no notices. Loyalty reaches its 25% cap at ~25 jobs, i.e. inside the season, so it nearly cancels M for anyone who stays.
+
+**Recruit board (6000 recruits)**
+
+| Quality | Today min / med / max | With M min / p5 / med / p95 / max |
+| --- | --- | --- |
+| Rookie | 450 / 500 / 600 | 450 / 450 / 500 / 550 / 600 (unchanged) |
+| Pro | 550 / 600 / 700 | 550 / 600 / 700 / 800 / 850 |
+| Veteran | 600 / 700 / 750 | 700 / 750 / 900 / 1050 / 1100 |
+
+**Economy test (200 seeds, careful, 4 weeks)**: median ¥10,200, p10 ¥2,800, broke 3%, deaths 0 — identical with renewals on. Zero notices fire in the first month (the starting crew don't gain +2 in 4 weeks and `playWeeks` never hires). Starting crew are already under market (Stitch 600/750, Jax 550/650, Static 650/750, Wheels 600/900, Velvet 650/800).
+
+**Proposed test bands for step 2**
+- Recruit wage test: replace 400–800 with **450–1100** overall (or per quality: rookie 450–600, pro 550–850, veteran 700–1100).
+- Economy test: **keep** median 0–30,000, broke < 35%, deaths < 0.1 — nothing moves in 4 weeks. Add a separate long-run check (e.g. one season) if renewals should bite.
+
+**Flags for you before building**
+- Renewals barely cost anything: a star costs ~¥100–150/week more after a season, because the 25% loyalty cap is reached by ~25 jobs. If renewals should hurt, slow loyalty (e.g. 0.5%/job) or cap lower.
+- Starting crew sit ¥100–300 under market; if they ever trigger a notice they jump. Decide whether they start with `contractMainStat` = current main (sim assumed yes).
+- Plan's worked example says rookie ¥500 at total 48; a 7-across rookie (total 53) is ¥550 — consistent with the formula.
+
