@@ -27,7 +27,7 @@ read CLAUDE.md, this file, and only the code it names. Tick a step off here
 ### Step 2 · Tagged backstories — [x]
 `ORIGINS` entries become `{ text, tags, tier }`, picked with `pickTiered`. Tag and tier the existing 18 and any new batch. Recruit keeps storing the finished text, so no save change.
 
-### Step 3 · Two-part personality — [ ]
+### Step 3 · Two-part personality — [x]
 `TEMPERAMENTS` and `HABITS` as `{ text, tags, tier }`; split, tag and tier the existing 12 lines. Pick each with `pickTiered`, steered by the backstory's tags, never a clashing pair. Tests: no clashes over 5,000 recruits; matching lines picked noticeably more often.
 
 ### Step 4 · Steered traits — [x]

@@ -9,6 +9,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - A recruit's backstory nudges their traits: an implant-heavy past makes Chromed more likely, a calm one Steady Hands or Veteran, and so on. Any trait can still turn up on anyone, and rare traits stay just as rare.
 - 3 new tests (103 total).
 
+## 2026-10-24 · Personality step 3: two-part personality
+- A recruit's personality is now a temperament plus a habit (e.g. "Quiet and watchful." + one concrete detail), each with a rarity, nudged by their backstory, and never contradicting it (no calm-and-hot, warm-and-cold, charming-and-wary mixes).
+
 ## 2026-10-24 · Personality step 2: 113 backstories with rarity
 - Recruit backstories grow from 18 to 113 lines (15–22 per role), each tagged and given a rarity: most are everyday, a few are rare, and about one in fifty recruits gets an exotic one.
 
