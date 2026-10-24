@@ -7,6 +7,7 @@
 //   progress   stat -> points banked towards the next +1
 //   startStats stats on the day they joined, to show growth
 //   scoutError how far off the crew's read of their ceiling is (fuzzy potential)
+//   growthLog  [{ stat, from, to, day }] for this season's rises and declines
 
 import { ROLE_PROFILES } from '../data/recruitPools.js';
 
@@ -54,6 +55,7 @@ export function prepareOperative(op) {
   op.progress = op.progress ?? {};
   op.startStats = op.startStats ?? { ...op.stats };
   op.scoutError = op.scoutError ?? 0;
+  op.growthLog = op.growthLog ?? [];
   return op;
 }
 
@@ -149,28 +151,61 @@ export function growStat(op, stat, points) {
   return gained;
 }
 
+/** Record a rise or decline in the operative's growth log. */
+function logChange(op, stat, from, to, day) {
+  op.growthLog = op.growthLog ?? [];
+  op.growthLog.push({ stat, from, to, day });
+}
+
 /**
- * Apply a mission's raw growth points to its crew. xp: opId -> stat -> points.
- * Mutates the operatives; returns { lines, graduated } for the report.
+ * Grow one stat from raw points right now (age and mentoring applied).
+ * Mutates op; returns { events: [{ opId, handle, stat, from, to }], graduated }.
  */
-export function applyGrowth(crew, xp) {
-  const lines = [];
+export function gainXp(op, crew, stat, raw, day) {
+  prepareOperative(op);
+  const rate = ageRate(op.age) * (mentorsOf(op, crew).length ? MENTOR_RATE : 1);
+  const from = op.stats[stat];
+  const events = [];
+  if (growStat(op, stat, raw * rate)) {
+    logChange(op, stat, from, op.stats[stat], day);
+    events.push({ opId: op.id, handle: op.handle, stat, from, to: op.stats[stat] });
+  }
+  let graduated = false;
+  if (op.tier === 'rookie' && op.stats[primaryStat(op)] >= GRADUATE_AT) {
+    op.tier = 'pro';
+    graduated = true;
+  }
+  return { events, graduated };
+}
+
+/**
+ * Apply banked raw growth points to a crew. xp: opId -> stat -> points.
+ * Mutates the operatives; returns { events, graduated: [op] }.
+ */
+export function applyGrowth(crew, xp, day = 0) {
+  const events = [];
   const graduated = [];
   for (const op of crew) {
-    prepareOperative(op);
     const raw = xp[op.id];
     if (!raw) continue;
-    const rate = ageRate(op.age) * (mentorsOf(op, crew).length ? MENTOR_RATE : 1);
     for (const stat of STATS) {
-      const before = op.stats[stat];
-      if (growStat(op, stat, (raw[stat] ?? 0) * rate)) lines.push(`${op.handle} ${stat} ${before}→${op.stats[stat]}`);
-    }
-    if (op.tier === 'rookie' && op.stats[primaryStat(op)] >= GRADUATE_AT) {
-      op.tier = 'pro';
-      graduated.push(op);
+      if (!raw[stat]) continue;
+      const r = gainXp(op, crew, stat, raw[stat], day);
+      events.push(...r.events);
+      if (r.graduated) graduated.push(op);
     }
   }
-  return { lines, graduated };
+  return { events, graduated };
+}
+
+/** Net change per stat since a given day, from the growth log: { tech: 2, driving: -1 }. */
+export function changesSince(op, sinceDay) {
+  const net = {};
+  for (const e of op.growthLog ?? []) {
+    if (e.day >= sinceDay) net[e.stat] = (net[e.stat] ?? 0) + e.to - e.from;
+  }
+  for (const k of Object.keys(net)) if (!net[k]) delete net[k];
+  return net;
 }
 
 // --- seasons: birthdays and decline ------------------------------------------
@@ -178,11 +213,16 @@ export function applyGrowth(crew, xp) {
 /** Chance per stat of losing a point at the season turn. Starts past 40. */
 export const declineChance = (age) => (age > 40 ? Math.min(0.5, (age - 40) * 0.1) : 0);
 
-/** New season: everyone ages a year; anyone past 40 may lose points. Mutates; returns report lines. */
-export function ageCrew(crew, rng) {
+/**
+ * New season: everyone ages a year; anyone past 40 may lose points. The growth
+ * log starts fresh for the new season (declines are its first entries).
+ * Mutates; returns report lines.
+ */
+export function ageCrew(crew, rng, day = 0) {
   const lines = [];
   for (const op of crew) {
     prepareOperative(op);
+    op.growthLog = op.growthLog.filter((e) => e.day >= day);
     op.age += 1;
     const chance = declineChance(op.age);
     const lost = [];
@@ -190,6 +230,7 @@ export function ageCrew(crew, rng) {
       if (chance && op.stats[s] > 1 && rng() < chance) {
         op.stats[s] -= 1;
         op.potential[s] = Math.min(op.potential[s], op.stats[s]);
+        logChange(op, s, op.stats[s] + 1, op.stats[s], day);
         lost.push(s);
       }
     }

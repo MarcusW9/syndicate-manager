@@ -51,6 +51,37 @@ export function effectiveStat(op, stat, { approach, crew = [] } = {}) {
   return { value, notes };
 }
 
+// Crew size (see DESIGN.md): a job has a recommended size and room for a few extras.
+export const MAX_EXTRA_CREW = 2;
+export const SHORT_HANDED_PENALTY = 1; // per missing person, on every roll
+export const BACKUP_RANGE = 3; // a second person this close to the best backs them up
+export const BACKUP_BONUS = 1;
+export const maxCrew = (recommended) => recommended + MAX_EXTRA_CREW;
+
+/**
+ * The roll a crew makes on a stat. The best person rolls (or `lead`, e.g. the
+ * medic stabilising); +1 if someone else is within 3 of them; -1 per person
+ * short of the recommended size. Real rolls and the risk read both use this.
+ * Returns { op, value, notes, backup, missing } or null if nobody can roll.
+ */
+export function crewRoll(crew, stat, { approach, recommended = 0, lead } = {}) {
+  const able = crew.filter((o) => o.condition.injury !== 'critical');
+  const top = lead ?? bestFor(able, stat, { approach });
+  if (!top) return null;
+  let value = top.value;
+  const notes = [...top.notes];
+  let backup = null;
+  for (const o of able) {
+    if (o.id === top.op.id) continue;
+    const v = effectiveStat(o, stat, { approach, crew }).value;
+    if (v >= top.value - BACKUP_RANGE && (!backup || v > backup.value)) backup = { op: o, value: v };
+  }
+  if (backup) { value += BACKUP_BONUS; notes.push(`${backup.op.handle} backs up +${BACKUP_BONUS}`); }
+  const missing = Math.max(0, recommended - able.length);
+  if (missing) { value -= missing * SHORT_HANDED_PENALTY; notes.push(`short-handed -${missing * SHORT_HANDED_PENALTY}`); }
+  return { op: top.op, value, notes, backup: backup?.op ?? null, missing };
+}
+
 /** Best operative on the given crew for a stat (skipping anyone critical). */
 export function bestFor(crew, stat, ctx) {
   let best = null;

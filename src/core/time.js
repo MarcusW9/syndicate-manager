@@ -23,6 +23,9 @@ export function calendar(day) {
   };
 }
 
+/** First day of the season that `day` falls in (the window for "this season" growth). */
+export const seasonStartDay = (day) => Math.floor((day - 1) / DAYS_PER_SEASON) * DAYS_PER_SEASON + 1;
+
 export function formatDate(day) {
   const c = calendar(day);
   return `${c.weekday} · Week ${c.week} · Season ${c.season}`;
@@ -63,7 +66,7 @@ export function advanceDay(prev) {
 /** Season turn: everyone a year older; past 40, stats start to slip. */
 function newSeason(state) {
   const { season } = calendar(state.day);
-  const lines = ageCrew(state.crew, nextRng(state));
+  const lines = ageCrew(state.crew, nextRng(state), state.day);
   state.inbox.unshift({
     id: `season-${season}`, type: 'crew', day: state.day,
     subject: `Season ${season} begins`,

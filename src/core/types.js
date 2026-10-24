@@ -48,6 +48,7 @@
  * @property {Object<string, number>} progress  Growth points banked towards the next +1
  * @property {Stats} startStats    Stats on the day they joined
  * @property {number} scoutError   How far off the crew's read of their ceiling is (-2..2)
+ * @property {{stat: string, from: number, to: number, day: number}[]} growthLog  This season's rises and declines
  */
 
 /**

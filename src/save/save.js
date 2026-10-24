@@ -205,5 +205,10 @@ function migrate(state) {
     state.clients = state.clients ?? {};
     state.version = 5;
   }
+  if (state.version === 5) {
+    // v6 added a growth log per operative (this season's rises and declines).
+    for (const op of state.crew) op.growthLog = op.growthLog ?? [];
+    state.version = 6;
+  }
   return state;
 }

@@ -4,6 +4,17 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-24 · Level-ups you can see, and crew size that matters
+- **Level-up cards** at the end of every job: one card per person who improved, with their badge, each stat's old → new number ("Tech 16 → 17") and a line of flavour. Graduating from rookie to pro gets its own bigger gold card.
+- **Live flash during the job:** growth now happens the moment it's earned, so a rise mid-job shows on the spot ("▲ Static: Tech 16 → 17").
+- **This season's growth stays visible:** the crew list shows "▲ Tech +2, Combat +1" under each person, and the stats panel shows this season's change in green. Decline past 40 shows in red ("▼ Cool −1"). Both reset at the start of each season. The operative page still shows the smaller "career" change since joining.
+- **Backup:** if a second person on the job is within 3 of whoever rolls, the roll gets +1 ("Velvet backs up +1").
+- **Short-handed now really hurts:** every roll is −1 for each person short of the job's recommended crew. Before, this only changed the risk label; it was a bug that the rolls ignored it.
+- **Bigger squads:** a job's crew size is now a recommendation, and you can bring up to 2 extra people. More backup, but more people away and at risk.
+- The risk read uses exactly the same rule as the real rolls.
+- Save format v6, with automatic upgrade from v5.
+- 11 new tests (68 total).
+
 ## 2026-10-23 · Four new jobs, clients, variations and twists
 - **4 new job types** with 6 crises each (7 types, 42 crises in total):
   - **Kidnap Rescue** (Old Town, threat 4, ¥7,000): aborting means leaving the hostage

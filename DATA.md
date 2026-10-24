@@ -20,9 +20,14 @@ Plain-English reference for the game's data. The code version is `src/core/types
 | `progress` | Growth points banked per stat towards the next +1 |
 | `startStats` | Stats on the day they joined (to show growth) |
 | `scoutError` | How far off (-2..2) the crew's read of their main-stat ceiling is |
+| `growthLog` | This season's rises and declines: `{ stat, from, to, day }`. Cleared at each new season |
 
 ## Development (src/core/development.js)
 Growth points: 4 to whoever rolls in a crisis (a failure counts too), 1 to the rest of the crew, plus 2 per key stat and 3 in their own main stat for finishing a job. Points are multiplied by age (under 25 x1.5, 25-34 x1, 35+ x0.5) and by 1.5 for a mentored rookie (crew has a veteran-trait operative or a same-role veteran). The next +1 costs (stat + 4) x 1.7, doubled for the last point below the ceiling. At each new season everyone ages a year; past 40 each stat may drop 1.
+
+Growth lands the moment it's earned: crisis rolls during the job (flashed in the mission log as `growth` entries), job and craft points at the end. The job result carries `growth` (`[{ opId, handle, stat, from, to }]`) and `graduated` for the level-up cards.
+
+**Crew rule** (`crewRoll` in `src/core/crew.js`, used by real rolls and the risk read): the best person rolls (the medic when stabilising); +1 if a second person is within 3 of them; −1 per person short of `crewSize`.
 
 ## Recruit (src/core/recruits.js)
 Same shape as an Operative, plus `culture`, `quality` (`rookie`/`pro`/`veteran`, becomes `tier` on hiring), `expiresDay`, `haggled`, `haggleResult`, `scoutReport` (the scout's opinion in words). Pools live in `src/data/recruitPools.js` (cultures and names, handles, origins per role, personalities, badge colours). Hiring strips the recruit-only fields and adds `condition`, `trust` and `history`.
@@ -34,7 +39,7 @@ Same shape as an Operative, plus `culture`, `quality` (`rookie`/`pro`/`veteran`,
 | Field | Meaning |
 | --- | --- |
 | `threat` | 1-5, drives the risk read |
-| `pay`, `days`, `crewSize`, `heat` | Reward, time away, crew needed, heat gained |
+| `pay`, `days`, `crewSize`, `heat` | Reward, time away, recommended crew (up to 2 extra allowed), heat gained |
 | `keyStats` | Stats the risk read compares against the crew |
 | `beats` | Narrated text in order. Placeholders: `{driver}`, `{tech}`, `{face}`, `{muscle}`, `{medic}`, `{op}` |
 | `crises` | Pool of crises; 2-3 are drawn per run |
@@ -69,7 +74,7 @@ A crisis with `focusRole` centres on that operative: they take the injury if a c
 `type` (`job`, `crew`, `warning`, `rival`, `report`, `scout`, `finance`), `subject`, `body`, `day`, optional `expiresDay`. `blocking: true` stops Continue until resolved.
 
 ## Game state
-`day` (day 1 = Monday, week 1, season 1; 364-day seasons), `cash`, `heat` 0-10, `reputation`, `tier`, `rent`, `crew`, `inbox`, `memorial`, `jobs` (offers on the board), `activeMission` (null or the mission in progress, saved so a reload resumes it), `difficulty`, `seed`, `rngCounter`, `recruits` (open leads), `recruitSeq`, `rosterCap` (beds), `safehouseLevel`, `lastJobDay`, `lastBackupDay` (day of last export), `ironman` (`{ id, seq }`, Ironman runs only), `clients` (trust by client id), `version` (currently 5).
+`day` (day 1 = Monday, week 1, season 1; 364-day seasons), `cash`, `heat` 0-10, `reputation`, `tier`, `rent`, `crew`, `inbox`, `memorial`, `jobs` (offers on the board), `activeMission` (null or the mission in progress, saved so a reload resumes it), `difficulty`, `seed`, `rngCounter`, `recruits` (open leads), `recruitSeq`, `rosterCap` (beds), `safehouseLevel`, `lastJobDay`, `lastBackupDay` (day of last export), `ironman` (`{ id, seq }`, Ironman runs only), `clients` (trust by client id), `version` (currently 6).
 
 ## Storage (src/save/save.js)
 Keys: `syndicate-active-slot`, `syndicate-slot-N` (N = 1-3), `syndicate-slot-N-backup` (weekly, not Ironman), `syndicate-ironman-progress` (`{ ironmanId: highest seq seen }`). The pre-slots key `syndicate-save-v1` is moved into slot 1 on first load.
