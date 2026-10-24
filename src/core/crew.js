@@ -97,14 +97,15 @@ export function crewSizeRead(picked, recommended) {
 /**
  * The roll a crew makes on a stat. The best person rolls (or `lead`, e.g. the
  * medic stabilising); +1 if someone else is within 3 of them; -1 per person
- * short of the recommended size. Real rolls and the risk read both use this.
+ * short of the recommended size; -watched on a job started under heat (core/heat.js).
+ * Real rolls and the risk read both use this.
  * Returns { op, value, notes, backup, missing } or null if nobody can roll.
  */
-export function crewRoll(crew, stat, { approach, recommended = 0, lead } = {}) {
+export function crewRoll(crew, stat, { approach, recommended = 0, lead, watched = 0 } = {}) {
   const able = crew.filter((o) => o.condition.injury !== 'critical');
   const top = lead ?? bestFor(able, stat, { approach });
   if (!top) return null;
-  const ctx = { stat, approach, crew, able, top, recommended, backup: findBackup(able, top, stat, { approach, crew }), missing: Math.max(0, recommended - able.length) };
+  const ctx = { stat, approach, crew, able, top, recommended, watched, backup: findBackup(able, top, stat, { approach, crew }), missing: Math.max(0, recommended - able.length) };
   const notes = [...top.notes];
   const value = applyRules(CREW_RULES, top.op, ctx, top.value, notes);
   return { op: top.op, value, notes, backup: ctx.backup?.op ?? null, missing: ctx.missing };
@@ -125,6 +126,8 @@ function findBackup(able, top, stat, ctx) {
 export const CREW_RULES = [
   { id: 'backup', applies: (op, { backup }) => !!backup, value: () => BACKUP_BONUS, note: (op, { backup }) => `${backup.op.handle} backs up +${BACKUP_BONUS}` },
   { id: 'short-handed', applies: (op, { missing }) => missing > 0, value: (op, { missing }) => -missing * SHORT_HANDED_PENALTY, note: (op, ctx, v) => `short-handed -${-v}` },
+  // Letting high heat ride (core/heat.js): the next job's first crisis roll is made under watching eyes.
+  { id: 'watched', applies: (op, { watched }) => watched > 0, value: (op, { watched }) => -watched, note: (op, ctx, v) => `watched -${-v}` },
 ];
 
 /** Best operative on the given crew for a stat (skipping anyone critical). */

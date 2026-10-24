@@ -95,5 +95,5 @@ export const PENTHOUSE = {
       ],
     },
   ],
-  heat: 3,
+  heat: 0,
 };

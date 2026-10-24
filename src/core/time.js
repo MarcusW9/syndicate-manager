@@ -7,13 +7,10 @@ import { ageCrew } from './development.js';
 import { nextRng } from './random.js';
 import { expireStatuses } from './statuses.js';
 import { checkRenewal } from './renewals.js';
+import { HEAT_COOL_WEEKLY, clampHeat, checkHeatNotice } from './heat.js';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAYS_PER_SEASON = 364; // 52 weeks
-
-// Heat cools every Sunday; a week with no jobs started cools it faster.
-export const HEAT_COOL_WEEKLY = 1;
-export const HEAT_COOL_QUIET = 3;
 
 export function calendar(day) {
   const d = day - 1;
@@ -92,12 +89,11 @@ function settleWeek(state) {
 
   const broke = state.cash < 0;
 
-  // A week is quiet if no job started since last Monday.
-  const quiet = !state.lastJobDay || state.lastJobDay < state.day - 6;
+  // Heat cools the same every week, job or no job (core/heat.js).
   const heatBefore = state.heat;
-  state.heat = Math.max(0, state.heat - (quiet ? HEAT_COOL_QUIET : HEAT_COOL_WEEKLY));
+  state.heat = clampHeat(state.heat - HEAT_COOL_WEEKLY);
   const cooled = heatBefore - state.heat;
-  const heatLine = cooled ? ` Heat cooled by ${cooled} to ${state.heat}/10${quiet ? ' after a quiet week' : ''}.` : '';
+  const heatLine = cooled ? ` Heat cooled by ${cooled} to ${state.heat}/10.` : '';
 
   state.inbox.unshift({
     id: `week-${state.day}`,
@@ -113,4 +109,7 @@ function settleWeek(state) {
   if (broke) {
     for (const op of state.crew) op.condition.morale = Math.max(0, op.condition.morale - 10);
   }
+
+  // Still hot after cooling: a fixer gets in touch (never a lockout; see core/heat.js).
+  checkHeatNotice(state);
 }

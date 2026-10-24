@@ -101,3 +101,16 @@ test('backup reminder is due after 28 days without an export', () => {
   s.day = 28; assert.equal(S.backupDue(s), true);
   s.lastBackupDay = 25; assert.equal(S.backupDue(s), false);
 });
+
+test('a v9 save upgrades to v10 with heat notice fields', async () => {
+  const { SAVE_VERSION } = await import('../src/core/state.js');
+  const v9 = createNewGame({ seed: 14 });
+  delete v9.heatNoticeDay; delete v9.heatWatched;
+  v9.version = 9;
+  v9.heat = 7;
+  const loaded = await S.importSave(asFile(v9));
+  assert.equal(loaded.version, SAVE_VERSION);
+  assert.equal(loaded.heatNoticeDay, null);
+  assert.equal(loaded.heatWatched, false);
+  assert.equal(loaded.heat, 7, 'heat itself is untouched');
+});

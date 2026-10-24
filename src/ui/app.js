@@ -15,6 +15,7 @@ import { CLIENTS } from '../data/clients.js';
 import { availability, APPROACHES, traitMods, ratedStat, maxCrew, crewSizeRead } from '../core/crew.js';
 import { assessJob } from '../core/risk.js';
 import { resolveDecision } from '../core/decisions.js';
+import { WATCHED_PENALTY, heatChoices } from '../core/heat.js';
 import {
   startMission, revealBeat, chooseOption, resolveCritical, closeMission,
   describeCrisis, describeCritical, currentStep,
@@ -275,6 +276,7 @@ function renderMessage() {
       <p class="muted">${esc(m.type)} · Day ${m.day}</p>
       <p class="body">${esc(m.body)}</p>
       ${m.kind === 'renewal' ? renderRenewal(m) : ''}
+      ${m.kind === 'heat' ? renderHeatNotice(m) : ''}
       ${jobLink}
     </section>`;
 }
@@ -297,6 +299,26 @@ function renderRenewal(m) {
       ${m.resolved ? '' : `<div class="stack">
         ${m.options.map((o) => `<button class="btn ${o.id === 'accept' ? 'btn--primary' : o.id === 'refuse' ? 'btn--ghost' : ''}" data-action="decide" data-id="${esc(m.id)}" data-option="${esc(o.id)}" ${o.disabled ? 'disabled' : ''}>${esc(o.id === 'accept' ? `Accept ${money(p.ask)} a week` : o.label)}</button>`).join('')}
         <p class="muted small">Refusing: they stay, but their head isn't in it for four weeks (−1 on their rolls), then they ask again.</p>
+      </div>`}`;
+}
+
+/** Fixer notice at high heat: pay to cool it, or let it ride (the next job's first crisis roll is −1). */
+function renderHeatNotice(m) {
+  const p = m.payload;
+  const short = heatChoices(state, m)[0].disabled;
+  return `
+      <div class="riskcard">
+        <dl class="stats">
+          <div><dt>Heat</dt><dd>${state.heat}/10</dd></div>
+          <div><dt>Fixer</dt><dd>${money(p.cost)}</dd></div>
+          <div><dt>Cash</dt><dd>${money(state.cash)}</dd></div>
+        </dl>
+        ${p.outcome ? `<p><strong>${esc(p.outcome)}</strong></p>` : ''}
+      </div>
+      ${m.resolved ? '' : `<div class="stack">
+        <button class="btn btn--primary" data-action="decide" data-id="${esc(m.id)}" data-option="pay" ${short ? 'disabled' : ''}>${esc(short ? `Pay the fixer (${money(p.cost)}: not enough cash)` : `Pay the fixer ${money(p.cost)} · heat −${p.cools}`)}</button>
+        <button class="btn btn--ghost" data-action="decide" data-id="${esc(m.id)}" data-option="ride">Let it ride</button>
+        <p class="muted small">Letting it ride costs nothing now. The next job you start is watched: −${WATCHED_PENALTY} on its first crisis roll, then it's gone. Jobs stay open either way.</p>
       </div>`}`;
 }
 
@@ -529,7 +551,7 @@ function renderPlan() {
   const t = v.tpl;
   const freelancers = state.freelancers ?? [];
   const picked = [...state.crew, ...freelancers.map(freelancerAsCrew)].filter((o) => plan.crew.includes(o.id));
-  const read = assessJob({ ...t, threat: v.threat }, picked, plan.approach);
+  const read = assessJob({ ...t, threat: v.threat }, picked, plan.approach, { watched: state.heatWatched ? WATCHED_PENALTY : 0 });
   const most = maxCrew(t.crewSize);
   const full = plan.crew.length >= most;
 
@@ -537,7 +559,7 @@ function renderPlan() {
     <section class="panel">
       <button class="btn btn--ghost" data-action="back">← Jobs</button>
       <h1>${esc(t.name)}</h1>
-      <p class="muted">${esc(districtName(t.district))} · threat ${threatHtml(v)} · pays ${money(v.pay)} · crew away ${t.days}d · +${t.heat} heat</p>
+      <p class="muted">${esc(districtName(t.district))} · threat ${threatHtml(v)} · pays ${money(v.pay)} · crew away ${t.days}d</p>
       <p class="body">${esc(t.brief)}</p>
       <div class="riskcard">
         <p><strong>Client:</strong> ${clientLine(v)}</p>

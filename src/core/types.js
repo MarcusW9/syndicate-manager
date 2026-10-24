@@ -105,7 +105,7 @@
  * @property {string} brief            Client's pitch
  * @property {string[]} beats          Narrated beats, in order
  * @property {Crisis[]} crises         Pool; 2-3 drawn per run
- * @property {number} heat             Heat gained on completion
+ * @property {number} heat             Heat gained on completion (0 on every job: heat comes from Loud and crisis costs)
  */
 
 /**
@@ -131,8 +131,10 @@
  * @property {number} seed             RNG seed (deterministic replays)
  * @property {number} day              Day 1 = Monday, week 1, season 1
  * @property {number} cash
- * @property {number} heat             0-10. Cools 1 every Sunday, 3 after a quiet week
- * @property {number} [lastJobDay]     Day the last job started (for quiet weeks)
+ * @property {number} heat             0-10. Cools 2 every Sunday (core/heat.js)
+ * @property {?number} heatNoticeDay   Day the last fixer notice fired (14-day cooldown)
+ * @property {boolean} heatWatched     Let the heat ride: the next job's first crisis roll is -1
+ * @property {number} [lastJobDay]     Day the last job started
  * @property {number} reputation       0-100 within tier
  * @property {'street'|'district'|'city'|'regional'} tier
  * @property {number} rent             Weekly safehouse rent

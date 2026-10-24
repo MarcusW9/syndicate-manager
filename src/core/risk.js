@@ -18,14 +18,18 @@ export function riskLabel(chance) {
 /** Typical roll difficulty at a threat level, used by the planning read. */
 export const STAT_FOR_THREAT = (threat) => 6 + threat * 2.5;
 
-/** Overall read for a planned job. Returns { level, reasons[] }. */
-export function assessJob(template, crew, approach) {
+/**
+ * Overall read for a planned job. Returns { level, reasons[] }.
+ * watched: the heat penalty this job will carry on its first crisis roll (state.heatWatched).
+ * Any key stat could be that roll, so it counts in every stat's read, like the real roll.
+ */
+export function assessJob(template, crew, approach, { watched = 0 } = {}) {
   if (!crew.length) return { level: 'extreme', reasons: ['No crew selected'] };
   const reasons = [];
   const target = STAT_FOR_THREAT(template.threat);
   let worst = 1;
   for (const stat of template.keyStats) {
-    const best = crewRoll(crew, stat, { approach, recommended: template.crewSize });
+    const best = crewRoll(crew, stat, { approach, recommended: template.crewSize, watched });
     const chance = successChance(best.value, target);
     worst = Math.min(worst, chance);
     if (chance < 0.5) {
@@ -41,6 +45,7 @@ export function assessJob(template, crew, approach) {
   const missing = template.crewSize - crew.length;
   if (missing > 0) reasons.unshift(`Short-handed: ${crew.length} of ${template.crewSize}, -${missing} on every roll`);
   if (missing < 0) reasons.push(`${-missing} extra on the crew: more backup, more people away and at risk`);
+  if (watched) reasons.unshift(`Watched: you let the heat ride, so the first crisis roll is -${watched}`);
   const level = riskLabel(worst);
   if (!reasons.length) reasons.push('Crew matches the job well');
   return { level, reasons: reasons.slice(0, 4) };

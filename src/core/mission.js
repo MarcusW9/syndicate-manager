@@ -11,6 +11,7 @@ import { d20 } from './rng.js';
 import { checkRenewal } from './renewals.js';
 import { APPROACHES, crewRoll, effectiveStat, findRole, worsenInjury, setInjury, maxCrew } from './crew.js';
 import { successChance, riskLabel } from './risk.js';
+import { clampHeat, WATCHED_PENALTY } from './heat.js';
 import { XP, applyGrowth, gainXp, primaryStat } from './development.js';
 import { freelancerAsCrew, freelanceCut, isFreelancer, MAX_FREELANCERS_PER_JOB } from './freelance.js';
 
@@ -99,11 +100,14 @@ export function startMission(prev, jobId, crewIds, approach) {
 
   state.jobs = state.jobs.filter((j) => j.id !== jobId);
   state.lastJobDay = state.day;
+  // Heat the player let ride lands on this job's first crisis roll, then it's spent.
+  const watched = state.heatWatched ? WATCHED_PENALTY : 0;
+  state.heatWatched = false;
   state.activeMission = {
     jobId, templateId: tpl.id, crewIds, approach,
     pay: view.pay, threat: view.threat, threatDelta: view.threatDelta, clientId: job.clientId ?? null, twist: job.twist ?? null,
     queue, step: 0, log: [],
-    payCut: 0, extraHeat: 0, clientTrust: 0,
+    payCut: 0, extraHeat: 0, clientTrust: 0, watched,
     critical: null, stabiliseFailed: false, untreated: [],
     focusOp: null, aborted: false, done: false, result: null, growth: [], graduated: [],
   };
@@ -159,7 +163,7 @@ function rollerFor(state, am, choice, crew) {
   const recommended = templateById(am.templateId).crewSize;
   const medic = choice.kind === 'stabilise' ? findRole(crew, 'medic') : null;
   const stat = medic ? 'medical' : choice.stat;
-  return crewRoll(crew, stat, { approach: am.approach, recommended, lead: medic ? medicLead(medic, am, crew) : undefined });
+  return crewRoll(crew, stat, { approach: am.approach, recommended, lead: medic ? medicLead(medic, am, crew) : undefined, watched: am.watched ?? 0 });
 }
 
 /** Stabilising a critical operative: the medic leads, the same crew rule applies. */
@@ -255,6 +259,7 @@ export function chooseOption(prev, choiceId) {
   const roller = rollerFor(state, am, choice, crew);
   const rng = nextRng(state);
   const success = choice.sure || d20(rng) + roller.value >= 10 + rollDifficulty(am, choice);
+  if (!choice.sure) am.watched = 0; // the watched penalty covers the first roll only
 
   // Everyone learns from a roll: the roller most (even on a failure), the rest by watching.
   if (!choice.sure) {
@@ -399,7 +404,7 @@ function finish(state) {
   const cuts = freelance.reduce((n, f) => n + f.cut, 0);
   const heatGain = (am.aborted ? 0 : tpl.heat + (APPROACHES[am.approach]?.heat ?? 0)) + am.extraHeat;
   state.cash += pay - cuts;
-  state.heat = Math.min(10, state.heat + heatGain);
+  state.heat = clampHeat(state.heat + heatGain);
   state.reputation = Math.max(0, Math.min(100, state.reputation + (am.aborted ? -3 : threat * 3)));
 
   // Clients remember: a finished job builds trust; costs marked "client unhappy" take it away.

@@ -226,5 +226,11 @@ function migrate(state) {
     for (const op of state.crew) prepareOperative(op);
     state.version = 9;
   }
+  if (state.version === 9) {
+    // v10 added the heat fixer notice: when it last fired, and whether the next job starts watched.
+    state.heatNoticeDay = state.heatNoticeDay ?? null;
+    state.heatWatched = state.heatWatched ?? false;
+    state.version = 10;
+  }
   return state;
 }

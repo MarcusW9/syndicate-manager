@@ -93,5 +93,5 @@ export const PROTECTION = {
       ],
     },
   ],
-  heat: 1,
+  heat: 0,
 };

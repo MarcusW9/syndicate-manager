@@ -7,7 +7,7 @@ import { STARTING_ROSTER_CAP } from './recruits.js';
 import { prepareOperative } from './development.js';
 import { refreshFreelancers } from './freelance.js';
 
-export const SAVE_VERSION = 9;
+export const SAVE_VERSION = 10;
 
 const freshCondition = () => ({
   fatigue: 10,
@@ -33,6 +33,8 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
     day: 1,
     cash: 8000,
     heat: 0,
+    heatNoticeDay: null,
+    heatWatched: false,
     reputation: 0,
     tier: 'street',
     rent: 4000,

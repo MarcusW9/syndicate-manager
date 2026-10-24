@@ -91,5 +91,5 @@ export const KIDNAP = {
       ],
     },
   ],
-  heat: 2,
+  heat: 0,
 };

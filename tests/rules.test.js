@@ -104,16 +104,24 @@ test('economy: a careful player survives the first month but is not rich', () =>
   assert.ok(deathsPerRun < 0.1, `careful play lost ${deathsPerRun} operatives per month`);
 });
 
-test('heat cools by 1 a week while working, and by 3 after a quiet week', async () => {
+test('heat cools by 2 every Sunday, with or without a job, and never leaves 0-10', async () => {
+  // Changed 2026-10-24 (DESIGN.md): was 1 a week, 3 after a quiet week; that rewarded skipping jobs.
   const { advanceDay } = await import('../src/core/time.js');
   let s = createNewGame({ seed: 9 });
-  s.heat = 8;
+  s.heat = 5;
   for (let i = 0; i < 6; i++) s = advanceDay(s); // Mon -> Sun, no jobs
-  assert.equal(s.heat, 5, 'quiet week');
-  s.lastJobDay = s.day + 3; // pretend a job started this coming week
-  for (let i = 0; i < 7; i++) { s = advanceDay(s); if (s.day === s.lastJobDay) s.lastJobDay = s.day; }
-  assert.equal(s.heat, 4, 'working week');
-  s.heat = 1;
+  assert.equal(s.heat, 3, 'week with no job');
+  assert.match(s.inbox.find((m) => m.id === `week-${s.day}`).body, /Heat cooled by 2 to 3\/10\./);
+  s = advanceDay(s); // Monday: take a real job this week
+  const job = s.jobs[0];
+  s = M.startMission(s, job.id, s.crew.slice(0, templateById(job.templateId).crewSize).map((o) => o.id), 'stealth');
+  s = M.closeMission(playMission(s, { critical: () => 'extract', crisis: (c) => c.find((x) => x.kind === 'abort') }).state);
+  s.heat = 3;
+  for (let i = 0; i < 6; i++) s = advanceDay(s);
+  assert.equal(s.heat, 1, 'week with a job cools the same');
   for (let i = 0; i < 7; i++) s = advanceDay(s);
   assert.equal(s.heat, 0, 'never below zero');
+  s.heat = 10;
+  const big = M.closeMission(playMission(M.startMission(s, s.jobs[0].id, s.crew.slice(0, 3).map((o) => o.id), 'loud'), randomPolicy(1)).state);
+  assert.ok(big.heat <= 10, 'never above ten');
 });

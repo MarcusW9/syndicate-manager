@@ -203,7 +203,7 @@ const BASE_MISSIONS = [
         ],
       },
     ],
-    heat: 1,
+    heat: 0,
   },
   {
     id: 'warehouse',
@@ -302,7 +302,7 @@ const BASE_MISSIONS = [
         ],
       },
     ],
-    heat: 2,
+    heat: 0,
   },
 ];
 

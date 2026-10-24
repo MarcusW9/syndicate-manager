@@ -4,6 +4,13 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-24 · Heat that means something
+- Taking a job no longer adds heat by itself. Heat now comes from how you play: the Loud approach (+1) and crisis choices or failures that say "+heat". A clean stealth or social job adds nothing.
+- Heat cools by 2 every Sunday, whether or not you worked that week. The "quiet week" bonus is gone.
+- When heat is 6 or more after Sunday's cooling, a fixer gets in touch: someone has been asking about the crew. Pay ¥1,500 to take 3 heat off, or let it ride for free and the next job you start is watched (−1 on its first crisis roll). The planning screen's risk read shows it. At most one notice every two weeks, and it never stops you taking jobs.
+- The job planning line no longer shows "+N heat" (jobs have none of their own now).
+- Older saves upgrade automatically. 9 new tests (112 total).
+
 ## 2026-10-24 · Personality step 4: traits with rarity, steered by backstory
 - Traits now have a rarity: Cautious, Curious, Superstitious, Loyal, Greedy and Hothead are common; Silver Tongue and Steady Hands uncommon; Chromed and Veteran rare.
 - A recruit's backstory nudges their traits: an implant-heavy past makes Chromed more likely, a calm one Steady Hands or Veteran, and so on. Any trait can still turn up on anyone, and rare traits stay just as rare.

@@ -31,8 +31,9 @@ Output goes to `dist/`. Pushing to `main` deploys to GitHub Pages automatically 
 - [x] 6 crises per mission type (18 total)
 - [x] Automated rule tests (run before every deploy)
 - [x] Crew badges (placeholder portraits)
-- [x] Heat cools weekly (faster after a quiet week)
-- [ ] Heat consequences; economy tuning
+- [x] Heat cools weekly (2 every Sunday)
+- [x] Heat consequences (v1): heat from Loud jobs and crisis mistakes only; a fixer notice at 6+ (pay to cool it, or let it ride)
+- [ ] Economy tuning
 - [x] Recruiting: weekly scout leads, hire/haggle/pass, generated recruits
 - [x] Safehouse expansion (roster cap 8, +2 per upgrade)
 - [x] Save slots (3), difficulty picker, weekly auto-backups, backup reminder, Ironman lock
