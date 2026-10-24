@@ -221,5 +221,10 @@ function migrate(state) {
     for (const op of state.crew) prepareOperative(op);
     state.version = 8;
   }
+  if (state.version === 8) {
+    // v9 added renewal notices (decision messages) and op.renewalAgain after a refused raise.
+    for (const op of state.crew) prepareOperative(op);
+    state.version = 9;
+  }
   return state;
 }

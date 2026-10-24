@@ -4,6 +4,14 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-24 · Contract renewals
+- When someone graduates from rookie, or their main stat rises 2 since their last pay deal, they ask for a new deal. The notice blocks Continue until you answer.
+- The notice shows their current wage, what they're asking, their market value and how much loyalty takes off the raise.
+- **Accept** pays the ask. **Haggle** once: your best talker rolls, and success takes 10% off (never below today's wage). **Refuse**: they stay, but are unhappy for four weeks (−1 on their rolls), then ask again.
+- At most one notice per person every 8 weeks, and no notice if the market wouldn't pay them more.
+- Save format v9, with automatic upgrade from v8.
+- 7 new tests (88 total).
+
 ## 2026-10-24 · Statuses and loyalty (groundwork)
 - Under the hood: operatives can now carry timed statuses; the first, **Unhappy**, gives −1 on their rolls and shows in the risk read. Nothing applies it yet.
 - The game now counts how many jobs each person has run with the crew; this will set their loyalty discount on contract renewals (1% per job, up to 25% off a raise).

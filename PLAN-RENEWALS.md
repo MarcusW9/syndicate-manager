@@ -41,7 +41,7 @@ Update the recruit wage test band and economy band **on purpose** using step 0's
 - `loyalty(op)` in `src/core/loyalty.js` returning 0–1 (today: `min(0.25, jobs * 0.01) / 0.25`); `loyaltyDiscount(op)` = up to 25%. Callers only use these.
 - Bump `SAVE_VERSION` + migration (defaults); tests: discount cap, migration.
 
-### Step 4 · Decision messages + renewal notice — [ ]
+### Step 4 · Decision messages + renewal notice — [x] 2026-10-24
 - Generic blocking decision message `{ kind, options, payload }` and a registry in core mapping `kind` → resolver. Renewal is the first kind.
 - Trigger checks after growth in `finish` (rules above). Ask = `round50(current + (marketWage − current) × (1 − loyaltyDiscount))`; if market ≤ current, no notice fires (and the ask can never go below the current wage).
 - UI: notice screen with current wage, ask, market value, loyalty line, Accept / Haggle / Refuse. Screenshots at 390px.

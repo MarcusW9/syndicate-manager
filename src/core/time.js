@@ -6,6 +6,7 @@ import { refreshFreelancers } from './freelance.js';
 import { ageCrew } from './development.js';
 import { nextRng } from './random.js';
 import { expireStatuses } from './statuses.js';
+import { checkRenewal } from './renewals.js';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAYS_PER_SEASON = 364; // 52 weeks
@@ -53,6 +54,9 @@ export function advanceDay(prev) {
       if (c.injuryDays === 0 && c.injury !== 'dead') c.injury = 'healthy';
     }
   }
+
+  // Someone who was refused a raise asks again once they've cooled off.
+  for (const op of state.crew) if (op.renewalAgain) checkRenewal(state, op);
 
   // Expire old optional messages
   state.inbox = state.inbox.filter((m) => !m.expiresDay || m.expiresDay >= state.day);
