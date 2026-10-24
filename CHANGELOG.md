@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-24 · Crew list scout line and a crew-size badge
+- **Crew list:** each person now has a one-line read under their role: their main stat and where the scout thinks they're heading ("Tech 18 · could be special", "Driving 17 · at their peak"). It's the same opinion as on their page, in a few words, and it can be wrong.
+- **Planning screen:** a badge under the crew heading shows what your crew size does to every roll: "4/4 · full crew, no penalty", "3/4 · short-handed: −1 on every roll" (amber), "1/4 · −3 on every roll" (red), or "5/4 · 1 extra: more backup, more people at risk".
+- 2 new tests (70 total).
+
 ## 2026-10-24 · Level-ups you can see, and crew size that matters
 - **Level-up cards** at the end of every job: one card per person who improved, with their badge, each stat's old → new number ("Tech 16 → 17") and a line of flavour. Graduating from rookie to pro gets its own bigger gold card.
 - **Live flash during the job:** growth now happens the moment it's earned, so a rise mid-job shows on the spot ("▲ Static: Tech 16 → 17").

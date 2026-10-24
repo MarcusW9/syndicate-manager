@@ -12,7 +12,7 @@ import { createNewGame } from '../core/state.js';
 import { templateById, jobView } from '../core/jobs.js';
 import { trustLabel, clientById, trustOf } from '../core/clients.js';
 import { CLIENTS } from '../data/clients.js';
-import { availability, APPROACHES, traitMods, ratedStat, maxCrew } from '../core/crew.js';
+import { availability, APPROACHES, traitMods, ratedStat, maxCrew, crewSizeRead } from '../core/crew.js';
 import { assessJob } from '../core/risk.js';
 import {
   startMission, revealBeat, chooseOption, resolveCritical, closeMission,
@@ -23,7 +23,7 @@ import {
   deleteSlot, loadBackup, backupDue, SLOT_COUNT,
 } from '../save/save.js';
 import { hire, haggle, passRecruit, canHire, signingFee, nextExpansion, expandSafehouse, STARTING_ROSTER_CAP } from '../core/recruits.js';
-import { potentialRead, scoutFor, ageRate, declineChance, mentoring, changesSince } from '../core/development.js';
+import { potentialRead, potentialTag, primaryStat, scoutFor, ageRate, declineChance, mentoring, changesSince } from '../core/development.js';
 import { GROWTH_LINES, GRADUATION_LINES } from '../data/growthLines.js';
 
 let state;
@@ -157,6 +157,12 @@ const signed = (n) => `${n > 0 ? '+' : '−'}${Math.abs(n)}`;
 const statName = (k) => k[0].toUpperCase() + k.slice(1);
 /** This season's net change per stat (rises and age decline), from the growth log. */
 const seasonChanges = (op) => changesSince(op, seasonStartDay(state.day));
+
+/** Crew-list one-liner: their best (main) stat and the scout's read of where they're heading. */
+function scoutLine(op) {
+  const main = primaryStat(op);
+  return `<span class="scoutline">${esc(statName(main))} ${ratedStat(op, main)} · ${esc(potentialTag(op))}</span>`;
+}
 
 /** Crew-list marker: "▲ Tech +2, Combat +1 ▼ Driving −1" for this season. */
 function growthMarker(op) {
@@ -300,7 +306,7 @@ function renderCrew() {
           <li>
             <button class="row" data-action="open-op" data-id="${esc(op.id)}">
               ${badge(op)}
-              <span class="row__main"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"<br><span class="muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age}</span>${growthMarker(op)}</span>
+              <span class="row__main"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"<br><span class="muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age}</span>${scoutLine(op)}${growthMarker(op)}</span>
               <span class="row__meta">${esc(availability(state, op).reason)}</span>
             </button>
           </li>`).join('')}
@@ -490,6 +496,7 @@ function renderPlan() {
       </div>
 
       <h2>Crew (${plan.crew.length} picked · ${t.crewSize} recommended, up to ${most})</h2>
+      ${(() => { const r = crewSizeRead(plan.crew.length, t.crewSize); return `<p class="sizebadge sizebadge--${r.level} ${r.penalty >= 2 ? 'is-severe' : ''}">${esc(r.text)}</p>`; })()}
       <p class="muted small">Matters most: ${t.keyStats.join(', ')}. * includes a trait bonus.</p>
       <p class="muted small">Each person short of ${t.crewSize}: −1 on every roll. A second person within 3 of whoever rolls backs them up: +1.</p>
       <ul class="list">
