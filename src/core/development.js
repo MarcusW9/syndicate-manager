@@ -60,6 +60,7 @@ export function prepareOperative(op) {
   op.jobsWithCrew = op.jobsWithCrew ?? 0;
   op.contractMainStat = op.contractMainStat ?? op.stats[primaryStat(op)];
   op.lastNoticeDay = op.lastNoticeDay ?? null;
+  op.renewalAgain = op.renewalAgain ?? false;
   return op;
 }
 

@@ -14,6 +14,7 @@ import { trustLabel, clientById, trustOf } from '../core/clients.js';
 import { CLIENTS } from '../data/clients.js';
 import { availability, APPROACHES, traitMods, ratedStat, maxCrew, crewSizeRead } from '../core/crew.js';
 import { assessJob } from '../core/risk.js';
+import { resolveDecision } from '../core/decisions.js';
 import {
   startMission, revealBeat, chooseOption, resolveCritical, closeMission,
   describeCrisis, describeCritical, currentStep,
@@ -66,6 +67,7 @@ function onClick(e) {
       break;
     }
     case 'back': openMessageId = null; openOperativeId = null; openRecruitId = null; plan = null; break;
+    case 'decide': return setState(resolveDecision(state, id, t.dataset.option));
     case 'open-op': openOperativeId = id; break;
     case 'open-recruit': openRecruitId = id; break;
     case 'hire': openRecruitId = null; return setState(hire(state, id));
@@ -272,8 +274,30 @@ function renderMessage() {
       <h1>${esc(m.subject)}</h1>
       <p class="muted">${esc(m.type)} · Day ${m.day}</p>
       <p class="body">${esc(m.body)}</p>
+      ${m.kind === 'renewal' ? renderRenewal(m) : ''}
       ${jobLink}
     </section>`;
+}
+
+/** Renewal notice: the numbers, then Accept / Haggle / Refuse (or the outcome once decided). */
+function renderRenewal(m) {
+  const p = m.payload;
+  const pct = Math.round(p.discount * 100);
+  return `
+      <div class="riskcard">
+        <dl class="stats">
+          <div><dt>Current wage</dt><dd>${money(p.current)}</dd></div>
+          <div><dt>Asking</dt><dd>${money(p.ask)}</dd></div>
+          <div><dt>Market value</dt><dd>${money(p.market)}</dd></div>
+        </dl>
+        <p class="muted small">Loyalty: ${p.jobs} job${p.jobs === 1 ? '' : 's'} with the crew, ${pct}% off the raise${pct >= 25 ? ' (the most loyalty buys)' : ''}.</p>
+        ${p.haggleResult ? `<p class="muted">${esc(p.haggleResult)}</p>` : ''}
+        ${p.outcome ? `<p><strong>${esc(p.outcome)}</strong></p>` : ''}
+      </div>
+      ${m.resolved ? '' : `<div class="stack">
+        ${m.options.map((o) => `<button class="btn ${o.id === 'accept' ? 'btn--primary' : o.id === 'refuse' ? 'btn--ghost' : ''}" data-action="decide" data-id="${esc(m.id)}" data-option="${esc(o.id)}" ${o.disabled ? 'disabled' : ''}>${esc(o.id === 'accept' ? `Accept ${money(p.ask)} a week` : o.label)}</button>`).join('')}
+        <p class="muted small">Refusing: they stay, but their head isn't in it for four weeks (−1 on their rolls), then they ask again.</p>
+      </div>`}`;
 }
 
 // --- crew --------------------------------------------------------------

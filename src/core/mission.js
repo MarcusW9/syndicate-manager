@@ -8,6 +8,7 @@ import { templateById, twistById, jobView } from './jobs.js';
 import { adjustTrust, clientById, completionTrust, ABORT_TRUST } from './clients.js';
 import { nextRng } from './random.js';
 import { d20 } from './rng.js';
+import { checkRenewal } from './renewals.js';
 import { APPROACHES, crewRoll, effectiveStat, findRole, worsenInjury, setInjury, maxCrew } from './crew.js';
 import { successChance, riskLabel } from './risk.js';
 import { XP, applyGrowth, gainXp, primaryStat } from './development.js';
@@ -434,6 +435,9 @@ function finish(state) {
       subject: `${op.handle} isn't a rookie any more`,
       body: `After the ${tpl.name}, nobody on the crew calls ${op.name} the new kid. A pro now, on a rookie's wage.`, blocking: false, read: false });
   }
+
+  // Growth can mean a pay rise: graduation or main stat +2 since the last deal (core/renewals.js).
+  for (const op of survivors) if (!isFreelancer(op)) checkRenewal(state, op, graduatedOps.includes(op));
 
   const injuries = [];
   for (const op of survivors) {
