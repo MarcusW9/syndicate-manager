@@ -7,6 +7,7 @@ import { NAMES } from '../config/names.js';
 import { nextRng } from './random.js';
 import { pick, d20 } from './rng.js';
 import { bestFor } from './crew.js';
+import { marketWage } from './pricing.js';
 import { rollPotential, rollScoutError, scoutFor, potentialRead, prepareOperative } from './development.js';
 
 export const STARTING_ROSTER_CAP = 8;
@@ -66,9 +67,8 @@ export function generateRecruit(state) {
   const district = pick(rng, Object.values(NAMES.districts));
   const origin = pick(rng, ORIGINS[role]).replace('{district}', district);
 
-  const total = Object.values(stats).reduce((a, b) => a + b, 0);
-  // Tuned to sit alongside the starting crew (550-650): rookies ~500, veterans ~700.
-  const wage = Math.round((150 + total * 5 + stats[profile.primary] * 10) / 50) * 50;
+  // Market price: rookies ~500 (alongside the starting crew), stars cost more.
+  const wage = marketWage({ role, stats });
 
   const name = `${pick(rng, culture.given)} ${pick(rng, culture.surnames)}`;
   const age = between(rng, quality.age);

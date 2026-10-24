@@ -23,8 +23,12 @@ test('cast leans Hong Kong Chinese but stays multicultural', () => {
   assert.ok(new Set(rs.map((r) => r.culture)).size >= 5, 'at least 5 cultures appear');
 });
 
-test('recruit wages sit alongside the starting crew (400-800)', () => {
-  for (const r of batch(2000, 5)) assert.ok(r.wage >= 400 && r.wage <= 800, `${r.quality} ${r.wage}`);
+test('recruit wages follow market price by quality (rookie 400-650, pro 500-900, veteran 650-1150)', () => {
+  const bands = { rookie: [400, 650], pro: [500, 900], veteran: [650, 1150] };
+  for (const r of batch(2000, 5)) {
+    const [lo, hi] = bands[r.quality];
+    assert.ok(r.wage >= lo && r.wage <= hi, `${r.quality} ${r.wage}`);
+  }
 });
 
 test('generation is deterministic for a seed', () => {
