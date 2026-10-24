@@ -11,6 +11,7 @@ import { d20 } from './rng.js';
 import { APPROACHES, crewRoll, effectiveStat, findRole, worsenInjury, setInjury, maxCrew } from './crew.js';
 import { successChance, riskLabel } from './risk.js';
 import { XP, applyGrowth, gainXp, primaryStat } from './development.js';
+import { freelancerAsCrew, freelanceCut, isFreelancer, MAX_FREELANCERS_PER_JOB } from './freelance.js';
 
 const EXIT_KINDS = new Set(['abort', 'extract']);
 const STABILISE_DIFFICULTY = 9;
@@ -29,6 +30,7 @@ const STAT_NAME = (s) => s[0].toUpperCase() + s.slice(1);
  * flashed in the mission log and collected for the level-up cards at the end.
  */
 function grow(state, am, op, stat, points) {
+  if (isFreelancer(op)) return; // they learn on someone else's payroll
   const { events, graduated } = gainXp(op, crewOf(state, am), stat, points, state.day);
   for (const e of events) {
     am.growth = [...(am.growth ?? []), e];
@@ -63,6 +65,12 @@ export function startMission(prev, jobId, crewIds, approach) {
   if (!job) return prev;
   const tpl = templateById(job.templateId);
   if (!crewIds.length || crewIds.length > maxCrew(tpl.crewSize)) return prev;
+  // Freelancers from the board join the crew for this job only.
+  const hired = (state.freelancers ?? []).filter((f) => crewIds.includes(f.id));
+  if (hired.length > MAX_FREELANCERS_PER_JOB) return prev;
+  if (crewIds.some((id) => !state.crew.some((o) => o.id === id) && !hired.some((f) => f.id === id))) return prev;
+  state.freelancers = (state.freelancers ?? []).filter((f) => !hired.includes(f));
+  for (const f of hired) state.crew.push(freelancerAsCrew(f));
   const view = jobView(state, job);
   const rng = nextRng(state);
 
@@ -385,8 +393,11 @@ function finish(state) {
   const basePay = am.pay ?? tpl.pay;
   const threat = am.threat ?? tpl.threat;
   const pay = Math.round((basePay * Math.max(0, 1 - am.payCut)) / 50) * 50;
+  // Freelancers who make it back take their share of what was actually paid.
+  const freelance = crew.filter((o) => isFreelancer(o) && !deaths.includes(o)).map((o) => ({ handle: o.handle, cut: freelanceCut(o, pay) }));
+  const cuts = freelance.reduce((n, f) => n + f.cut, 0);
   const heatGain = (am.aborted ? 0 : tpl.heat + (APPROACHES[am.approach]?.heat ?? 0)) + am.extraHeat;
-  state.cash += pay;
+  state.cash += pay - cuts;
   state.heat = Math.min(10, state.heat + heatGain);
   state.reputation = Math.max(0, Math.min(100, state.reputation + (am.aborted ? -3 : threat * 3)));
 
@@ -396,7 +407,7 @@ function finish(state) {
 
   for (const op of deaths) {
     state.crew = state.crew.filter((o) => o.id !== op.id);
-    state.memorial.push({ id: op.id, name: op.name, handle: op.handle, role: op.role, color: op.color, day: state.day, cause: `Died of wounds after the ${tpl.name}` });
+    state.memorial.push({ id: op.id, name: op.name, handle: op.handle, role: op.role, color: op.color, day: state.day, cause: `Died of wounds after the ${tpl.name}${isFreelancer(op) ? ' (freelancer)' : ''}` });
   }
 
   // Growth: crisis lessons already landed during the job; finishing it also teaches its key stats.
@@ -443,14 +454,14 @@ function finish(state) {
 
   const outcome = deaths.length ? 'loss' : am.aborted ? 'aborted' : 'completed';
   const client = clientById(am.clientId);
-  am.result = { outcome, pay, heatGain, injuries, deaths: deaths.map((d) => d.handle), growth: growthEvents, graduated: graduatedOps.map((o) => ({ id: o.id, handle: o.handle, name: o.name, role: o.role, color: o.color })), client: client?.name ?? null, trustChange };
+  am.result = { outcome, pay, heatGain, injuries, deaths: deaths.map((d) => d.handle), freelance, growth: growthEvents, graduated: graduatedOps.map((o) => ({ id: o.id, handle: o.handle, name: o.name, role: o.role, color: o.color })), client: client?.name ?? null, trustChange };
   am.done = true;
 
   const subject = deaths.length ? `${deaths.map((d) => d.handle).join(', ')} died on the ${tpl.name}`
     : am.aborted ? `${tpl.name} aborted` : `${tpl.name} completed`;
   state.inbox.unshift({
     id: `report-${state.day}-${state.rngCounter}`, type: 'report', day: state.day, subject,
-    body: `Paid ${pay}. Heat +${heatGain}.` + (injuries.length ? ` Injured: ${injuries.join(', ')}.` : ' Nobody hurt.') +
+    body: `Paid ${pay}.` + (cuts ? ` Freelancers took ${cuts}.` : '') + ` Heat +${heatGain}.` + (injuries.length ? ` Injured: ${injuries.join(', ')}.` : ' Nobody hurt.') +
       (deaths.length ? ' Their names go on the wall.' : '') +
       (growthLines.length ? ` Improved: ${growthLines.join(', ')}.` : '') +
       (client && trustChange ? ` ${client.name} ${trustChange > 0 ? 'thinks more of you' : 'is unhappy with you'} (trust ${trustChange > 0 ? '+' : ''}${trustChange}).` : ''),
@@ -462,5 +473,6 @@ export function closeMission(prev) {
   if (!prev.activeMission?.done) return prev;
   const state = structuredClone(prev);
   state.activeMission = null;
+  state.crew = state.crew.filter((o) => !isFreelancer(o)); // freelancers go home after the job
   return state;
 }

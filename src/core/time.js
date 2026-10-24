@@ -2,6 +2,7 @@
 
 import { refreshJobs } from './jobs.js';
 import { scoutWeek } from './recruits.js';
+import { refreshFreelancers } from './freelance.js';
 import { ageCrew } from './development.js';
 import { nextRng } from './random.js';
 
@@ -57,6 +58,7 @@ export function advanceDay(prev) {
   if (calendar(state.day).isSunday) settleWeek(state);
   if (calendar(state.day).isMonday && calendar(state.day).week === 1) newSeason(state);
   if (calendar(state.day).isMonday) refreshJobs(state);
+  if (calendar(state.day).isMonday) refreshFreelancers(state);
   if (calendar(state.day).weekday === 'Wed') scoutWeek(state);
   state.recruits = (state.recruits ?? []).filter((r) => r.expiresDay >= state.day);
 

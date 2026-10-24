@@ -4,6 +4,14 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-24 · Freelancers
+- **Guns for hire:** two freelancers turn up on the board every Monday, generated like recruits (names, roles, stats, traits). Pick one on the planning screen to fill a slot for that job only.
+- **No wage:** they take a share of what the job actually pays: rookie 15%, pro 20%, veteran 25%. If the job pays nothing, they get nothing. The job report shows what they took.
+- They count toward the crew size (so they cancel a short-handed penalty) and can back someone up. One freelancer per job. They leave after the job, don't use a bed and don't improve.
+- The same rules apply to them as to everyone: nobody dies unless you chose "push on".
+- Save format v7, with automatic upgrade from v6.
+- 8 new tests (78 total).
+
 ## 2026-10-24 · Crew list scout line and a crew-size badge
 - **Crew list:** each person now has a one-line read under their role: their main stat and where the scout thinks they're heading ("Tech 18 · could be special", "Driving 17 · at their peak"). It's the same opinion as on their page, in a few words, and it can be wrong.
 - **Planning screen:** a badge under the crew heading shows what your crew size does to every roll: "4/4 · full crew, no penalty", "3/4 · short-handed: −1 on every roll" (amber), "1/4 · −3 on every roll" (red), or "5/4 · 1 extra: more backup, more people at risk".

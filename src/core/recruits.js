@@ -59,7 +59,7 @@ export function generateRecruit(state) {
   let t2 = pick(rng, traitIds);
   while (t2 === t1) t2 = pick(rng, traitIds);
 
-  const takenHandles = new Set([...state.crew, ...state.memorial, ...(state.recruits ?? [])].map((o) => o.handle));
+  const takenHandles = new Set([...state.crew, ...state.memorial, ...(state.recruits ?? []), ...(state.freelancers ?? [])].map((o) => o.handle));
   const freeHandles = HANDLES.filter((h) => !takenHandles.has(h));
   const handle = freeHandles.length ? pick(rng, freeHandles) : `${pick(rng, HANDLES)} ${between(rng, [2, 9])}`;
 
