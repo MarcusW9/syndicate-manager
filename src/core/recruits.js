@@ -9,12 +9,21 @@ import { pick, d20 } from './rng.js';
 import { bestFor } from './crew.js';
 import { marketWage } from './pricing.js';
 import { pickTiered } from './tiered.js';
-import { CLASHES } from '../data/tags.js';
+import { CLASHES, TRAIT_TAGS } from '../data/tags.js';
 import { rollPotential, rollScoutError, scoutFor, potentialRead, prepareOperative } from './development.js';
 
 export const STARTING_ROSTER_CAP = 8;
 export const LEAD_DAYS = 7;
 export const HAGGLE_DIFFICULTY = 11;
+
+const TRAIT_ITEMS = Object.entries(TRAITS).map(([id, t]) => ({ id, tier: t.tier, tags: TRAIT_TAGS[id] ?? [] }));
+
+/** Two different trait ids, each tier first, then steered by the leanings (a backstory's tags). */
+export function pickTraits(rng, leanings = []) {
+  const first = pickTiered(rng, TRAIT_ITEMS, leanings);
+  const second = pickTiered(rng, TRAIT_ITEMS.filter((t) => t.id !== first.id), leanings);
+  return [first.id, second.id];
+}
 
 /** Cost and effect of the next safehouse expansion. */
 export function nextExpansion(state) {
@@ -63,10 +72,6 @@ export function generateRecruit(state) {
     stats[s] = between(rng, band);
   }
 
-  const traitIds = Object.keys(TRAITS);
-  const t1 = pick(rng, traitIds);
-  let t2 = pick(rng, traitIds);
-  while (t2 === t1) t2 = pick(rng, traitIds);
 
   const takenHandles = new Set([...state.crew, ...state.memorial, ...(state.recruits ?? []), ...(state.freelancers ?? [])].map((o) => o.handle));
   const freeHandles = HANDLES.filter((h) => !takenHandles.has(h));
@@ -75,13 +80,13 @@ export function generateRecruit(state) {
   const district = pick(rng, Object.values(NAMES.districts));
   const originLine = pickTiered(rng, ORIGINS[role]);
   const origin = originLine.text.replace('{district}', district);
+  const traits = pickTraits(rng, originLine.tags);
 
   // Market price: rookies ~500 (alongside the starting crew), stars cost more.
   const wage = marketWage({ role, stats });
 
   const name = `${pick(rng, culture.given)} ${pick(rng, culture.surnames)}`;
   const age = between(rng, quality.age);
-  const traits = [t1, t2];
   const color = pick(rng, BADGE_COLORS);
   // Temperament + habit, steered by the backstory's tags, never a clashing pair.
   const temperament = pickTiered(rng, withoutClashes(TEMPERAMENTS, originLine.tags), originLine.tags);
