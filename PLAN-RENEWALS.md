@@ -15,7 +15,7 @@ read CLAUDE.md, this file, and only the code it names. Tick a step off here
 | Refusal | Operative is **unhappy for 4 weeks: −1 on their rolls** ("head not in it"), then asks again. Leaving the crew stays parked. |
 | Not in scope | Partners, poaching, morale consequences, pay cuts for crew, a stat registry. |
 
-Worked example (good rookie): hired at main 11, total 48 → ¥500. Star at main 17, total ~56 → market ¥800; after ~22 jobs with the crew, ask ≈ ¥650.
+Worked example (good rookie, 7 in every other stat; matches the step 0 sim): hired at main 11, total 53 → ¥550. Star at main 17, total 59 → market ¥850 (base 615 × M 1.35); after 25 jobs with the crew (25% off), ask ≈ ¥650.
 
 ## Steps
 
@@ -83,5 +83,6 @@ Sample good rookie: day 8 main 13 → ¥600 (market 600, 4 jobs); day 65 main 15
 **Flags for you before building**
 - Renewals barely cost anything: a star costs ~¥100–150/week more after a season, because the 25% loyalty cap is reached by ~25 jobs. If renewals should hurt, slow loyalty (e.g. 0.5%/job) or cap lower.
 - Starting crew sit ¥100–300 under market; if they ever trigger a notice they jump. Decide whether they start with `contractMainStat` = current main (sim assumed yes).
-- Plan's worked example says rookie ¥500 at total 48; a 7-across rookie (total 53) is ¥550 — consistent with the formula.
+- Plan's worked example said rookie ¥500 at total 48; a 7-across rookie (total 53) is ¥550 — consistent with the formula. Worked example updated to the sim's numbers.
+- Low renewal cost and starting crew under market: parked for now (2026-10-24); more effects will come via the modular pipeline.
 
