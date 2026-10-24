@@ -25,6 +25,7 @@ import {
 import { hire, haggle, passRecruit, canHire, signingFee, nextExpansion, expandSafehouse, STARTING_ROSTER_CAP } from '../core/recruits.js';
 import { potentialRead, potentialTag, primaryStat, scoutFor, ageRate, declineChance, mentoring, changesSince } from '../core/development.js';
 import { GROWTH_LINES, GRADUATION_LINES } from '../data/growthLines.js';
+import { freelancerAsCrew, shareOf, MAX_FREELANCERS_PER_JOB } from '../core/freelance.js';
 
 let state;
 let screen = 'inbox';
@@ -76,7 +77,9 @@ function onClick(e) {
     case 'open-job': plan = { jobId: id, crew: [], approach: 'stealth' }; break;
     case 'toggle-crew': {
       const tpl = templateById(state.jobs.find((j) => j.id === plan.jobId).templateId);
+      const isF = (x) => (state.freelancers ?? []).some((f) => f.id === x);
       if (plan.crew.includes(id)) plan.crew = plan.crew.filter((x) => x !== id);
+      else if (isF(id) && plan.crew.filter(isF).length >= MAX_FREELANCERS_PER_JOB) plan.crew = [...plan.crew.filter((x) => !isF(x)), id]; // swap freelancers
       else if (plan.crew.length < maxCrew(tpl.crewSize)) plan.crew = [...plan.crew, id];
       break;
     }
@@ -378,6 +381,29 @@ function growthNote(age) {
   return rate > 1 ? 'Young: learns fast.' : rate < 1 ? 'Experienced: learns slowly now.' : 'Still learning at a steady pace.';
 }
 
+/** Guns for hire on the planning screen: one per job, paid a share of what the job pays. */
+function renderFreelancers(t, freelancers, full) {
+  if (!freelancers.length) return '';
+  return `
+      <h2>Freelancers (up to ${MAX_FREELANCERS_PER_JOB})</h2>
+      <p class="muted small">Hired for this job only. No wage: they take a share of what the job pays, and nothing if it pays nothing. They don't learn on your payroll.</p>
+      <ul class="list">
+        ${freelancers.map((f) => {
+          const on = plan.crew.includes(f.id);
+          const keys = t.keyStats.map((s) => `${s.slice(0, 3)} ${ratedStat(f, s)}${traitMods(f)[s] ? '*' : ''}`).join(' · ');
+          return `
+          <li>
+            <button class="row pick ${on ? 'is-on' : ''}" data-action="toggle-crew" data-id="${esc(f.id)}" ${!on && full && !plan.crew.some((x) => freelancers.some((g) => g.id === x)) ? 'disabled' : ''} aria-pressed="${on}">
+              <span class="pick__box">${on ? '✓' : ''}</span>
+              ${badge(f, 'sm')}
+              <span class="row__main"><strong>${esc(f.handle)}</strong> <span class="muted">${esc(f.quality)} ${esc(f.role)}</span><br><span class="muted small">${esc(keys)}</span></span>
+              <span class="row__meta"><strong>${Math.round(shareOf(f) * 100)}%</strong> of pay<br>gone day ${f.expiresDay}</span>
+            </button>
+          </li>`;
+        }).join('')}
+      </ul>`;
+}
+
 function renderMentoring(crew) {
   const pairs = mentoring(crew);
   if (!pairs.length) return '';
@@ -477,7 +503,8 @@ function renderPlan() {
   if (!job) { plan = null; return renderJobs(); }
   const v = jobView(state, job);
   const t = v.tpl;
-  const picked = state.crew.filter((o) => plan.crew.includes(o.id));
+  const freelancers = state.freelancers ?? [];
+  const picked = [...state.crew, ...freelancers.map(freelancerAsCrew)].filter((o) => plan.crew.includes(o.id));
   const read = assessJob({ ...t, threat: v.threat }, picked, plan.approach);
   const most = maxCrew(t.crewSize);
   const full = plan.crew.length >= most;
@@ -516,6 +543,8 @@ function renderPlan() {
           </li>`;
         }).join('')}
       </ul>
+
+      ${renderFreelancers(t, freelancers, full)}
 
       ${renderMentoring(picked)}
 
@@ -609,6 +638,7 @@ function renderMission() {
         ${r.injuries.length ? `<p>Injured: ${esc(r.injuries.join(', '))}</p>` : '<p>Nobody hurt.</p>'}
         ${r.deaths.length ? `<p><strong>Lost: ${esc(r.deaths.join(', '))}.</strong> Their names go on the wall.</p>` : ''}
         ${levelUpCards(r)}
+        ${(r.freelance ?? []).map((f) => `<p class="muted">Freelancer ${esc(f.handle)} took ${money(f.cut)}.</p>`).join('')}
         ${r.client && r.trustChange ? `<p>${esc(r.client)}: trust ${r.trustChange > 0 ? '+' : ''}${r.trustChange}</p>` : ''}
         <button class="btn btn--primary btn--block" data-action="close-mission">Back to the safehouse</button>
       </div>`;

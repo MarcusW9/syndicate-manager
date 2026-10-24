@@ -14,6 +14,7 @@ import { addOffer } from '../core/jobs.js';
 import { STARTING_ROSTER_CAP } from '../core/recruits.js';
 import { prepareOperative, rollPotential, rollScoutError, scoutFor, potentialRead } from '../core/development.js';
 import { nextRng } from '../core/random.js';
+import { refreshFreelancers } from '../core/freelance.js';
 
 export const SLOT_COUNT = 3;
 export const BACKUP_REMINDER_DAYS = 28;
@@ -209,6 +210,11 @@ function migrate(state) {
     // v6 added a growth log per operative (this season's rises and declines).
     for (const op of state.crew) op.growthLog = op.growthLog ?? [];
     state.version = 6;
+  }
+  if (state.version === 6) {
+    // v7 added freelancers: a board of guns for hire, refreshed every Monday.
+    if (!state.freelancers) refreshFreelancers(state);
+    state.version = 7;
   }
   return state;
 }

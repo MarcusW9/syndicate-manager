@@ -22,6 +22,9 @@ Plain-English reference for the game's data. The code version is `src/core/types
 | `scoutError` | How far off (-2..2) the crew's read of their main-stat ceiling is |
 | `growthLog` | This season's rises and declines: `{ stat, from, to, day }`. Cleared at each new season |
 
+## Freelancers (src/core/freelance.js)
+`state.freelancers`: this week's board, refreshed every Monday (2 generated recruits with `freelance: true`). Picking one in `startMission` moves them into `crew` for that job only (max 1); `closeMission` removes them. Their cut is `FREELANCE_SHARE[quality]` of the final pay (rookie 15%, pro 20%, veteran 25%), recorded in the job result as `freelance: [{ handle, cut }]`. They never gain growth.
+
 ## Development (src/core/development.js)
 Growth points: 4 to whoever rolls in a crisis (a failure counts too), 1 to the rest of the crew, plus 2 per key stat and 3 in their own main stat for finishing a job. Points are multiplied by age (under 25 x1.5, 25-34 x1, 35+ x0.5) and by 1.5 for a mentored rookie (crew has a veteran-trait operative or a same-role veteran). The next +1 costs (stat + 4) x 1.7, doubled for the last point below the ceiling. At each new season everyone ages a year; past 40 each stat may drop 1.
 
@@ -74,7 +77,7 @@ A crisis with `focusRole` centres on that operative: they take the injury if a c
 `type` (`job`, `crew`, `warning`, `rival`, `report`, `scout`, `finance`), `subject`, `body`, `day`, optional `expiresDay`. `blocking: true` stops Continue until resolved.
 
 ## Game state
-`day` (day 1 = Monday, week 1, season 1; 364-day seasons), `cash`, `heat` 0-10, `reputation`, `tier`, `rent`, `crew`, `inbox`, `memorial`, `jobs` (offers on the board), `activeMission` (null or the mission in progress, saved so a reload resumes it), `difficulty`, `seed`, `rngCounter`, `recruits` (open leads), `recruitSeq`, `rosterCap` (beds), `safehouseLevel`, `lastJobDay`, `lastBackupDay` (day of last export), `ironman` (`{ id, seq }`, Ironman runs only), `clients` (trust by client id), `version` (currently 6).
+`day` (day 1 = Monday, week 1, season 1; 364-day seasons), `cash`, `heat` 0-10, `reputation`, `tier`, `rent`, `crew`, `inbox`, `memorial`, `jobs` (offers on the board), `activeMission` (null or the mission in progress, saved so a reload resumes it), `difficulty`, `seed`, `rngCounter`, `recruits` (open leads), `recruitSeq`, `rosterCap` (beds), `safehouseLevel`, `lastJobDay`, `lastBackupDay` (day of last export), `ironman` (`{ id, seq }`, Ironman runs only), `clients` (trust by client id), `version` (currently 7).
 
 ## Storage (src/save/save.js)
 Keys: `syndicate-active-slot`, `syndicate-slot-N` (N = 1-3), `syndicate-slot-N-backup` (weekly, not Ironman), `syndicate-ironman-progress` (`{ ironmanId: highest seq seen }`). The pre-slots key `syndicate-save-v1` is moved into slot 1 on first load.

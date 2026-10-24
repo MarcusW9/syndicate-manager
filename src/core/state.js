@@ -5,8 +5,9 @@ import { NAMES } from '../config/names.js';
 import { addOffer } from './jobs.js';
 import { STARTING_ROSTER_CAP } from './recruits.js';
 import { prepareOperative } from './development.js';
+import { refreshFreelancers } from './freelance.js';
 
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
 const freshCondition = () => ({
   fatigue: 10,
@@ -54,6 +55,7 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
     rngCounter: 0,
     activeMission: null,
     recruits: [],
+    freelancers: [],
     recruitSeq: 0,
     rosterCap: STARTING_ROSTER_CAP,
     safehouseLevel: 1,
@@ -61,5 +63,6 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
   };
   // Opening board: one safe job, one mid, one dangerous (see DESIGN.md).
   for (const id of ['courier', 'data_pull', 'warehouse']) addOffer(state, id);
+  refreshFreelancers(state);
   return state;
 }
