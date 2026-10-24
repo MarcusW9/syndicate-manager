@@ -160,3 +160,43 @@ test('personality: no clashes with the backstory over 5,000 recruits, and matchi
   }
   assert.ok(matched > baseline * 1.5, `matched ${matched} vs baseline ${baseline}`);
 });
+
+test('every trait has a known tier', () => {
+  for (const [id, t] of Object.entries(TRAITS)) assert.ok(t.tier in TIER_ODDS, `${id} tier "${t.tier}"`);
+});
+
+test('traits: two different ones, and every trait at least half its unsteered rate (5,000 recruits)', async () => {
+  const { createNewGame } = await import('../src/core/state.js');
+  const { generateRecruit, pickTraits } = await import('../src/core/recruits.js');
+  const n = 5000;
+  const s = createNewGame({ seed: 13 });
+  const rng = makeRng(17);
+  const seen = {}, unsteered = {};
+  for (let i = 0; i < n; i++) {
+    const r = generateRecruit(s);
+    assert.equal(r.traits.length, 2);
+    assert.notEqual(r.traits[0], r.traits[1]);
+    for (const t of r.traits) seen[t] = (seen[t] ?? 0) + 1;
+    for (const t of pickTraits(rng)) unsteered[t] = (unsteered[t] ?? 0) + 1;
+  }
+  for (const id of Object.keys(TRAITS)) assert.ok((seen[id] ?? 0) >= unsteered[id] / 2, `${id} ${seen[id]} vs unsteered ${unsteered[id]}`);
+});
+
+test('a chrome backstory gives Chromed clearly more often, without changing the rare-trait rate', async () => {
+  const { pickTraits } = await import('../src/core/recruits.js');
+  const n = 5000;
+  const count = (leanings, seed) => {
+    const rng = makeRng(seed);
+    let chromed = 0, rare = 0;
+    for (let i = 0; i < n; i++) {
+      const traits = pickTraits(rng, leanings);
+      if (traits.includes('chromed')) chromed++;
+      rare += traits.filter((t) => TRAITS[t].tier === 'rare').length;
+    }
+    return { chromed, rare: (100 * rare) / (2 * n) };
+  };
+  const plain = count([], 21);
+  const chrome = count(['chrome'], 22);
+  assert.ok(chrome.chromed > plain.chromed * 1.3, `chromed ${chrome.chromed} vs ${plain.chromed}`);
+  assert.ok(Math.abs(chrome.rare - plain.rare) <= 2, `rare ${plain.rare}% -> ${chrome.rare}%`);
+});

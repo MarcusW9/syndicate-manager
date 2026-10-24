@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-24 · Personality step 4: traits with rarity, steered by backstory
+- Traits now have a rarity: Cautious, Curious, Superstitious, Loyal, Greedy and Hothead are common; Silver Tongue and Steady Hands uncommon; Chromed and Veteran rare.
+- A recruit's backstory nudges their traits: an implant-heavy past makes Chromed more likely, a calm one Steady Hands or Veteran, and so on. Any trait can still turn up on anyone, and rare traits stay just as rare.
+- 3 new tests (103 total).
+
 ## 2026-10-24 · Personality step 2: 113 backstories with rarity
 - Recruit backstories grow from 18 to 113 lines (15–22 per role), each tagged and given a rarity: most are everyday, a few are rare, and about one in fifty recruits gets an exotic one.
 

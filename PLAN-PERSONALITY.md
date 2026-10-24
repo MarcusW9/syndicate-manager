@@ -30,7 +30,7 @@ read CLAUDE.md, this file, and only the code it names. Tick a step off here
 ### Step 3 · Two-part personality — [ ]
 `TEMPERAMENTS` and `HABITS` as `{ text, tags, tier }`; split, tag and tier the existing 12 lines. Pick each with `pickTiered`, steered by the backstory's tags, never a clashing pair. Tests: no clashes over 5,000 recruits; matching lines picked noticeably more often.
 
-### Step 4 · Steered traits — [ ]
+### Step 4 · Steered traits — [x]
 Traits get a tier and are picked with `pickTiered` (two different traits). Proposed tiers, confirm with the owner at the start of the step: common Cautious, Curious, Superstitious, Loyal, Greedy, Hothead · uncommon Silver Tongue, Steady Hands · rare Chromed, Veteran. Tests: over 5,000 recruits every trait appears at least at half its unsteered tier rate; a backstory tagged `chrome` gives Chromed clearly more often than an untagged one, without changing how often rare traits appear overall. Check the recruit wage bands still pass.
 
 ## Writing prompt (for generating lines in any chat)
