@@ -4,6 +4,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-24 · Roll rules refactor
+- Under the hood: roll bonuses and penalties (traits, approach, fatigue, injury, veteran calm, backup, short-handed) are now one list of rules. Nothing plays differently; it makes upcoming contract renewals easier to add.
+
 ## 2026-10-24 · Renewal numbers simulated
 - Simulated contract renewals and market pricing ahead of building them; results in PLAN-RENEWALS.md. No game change.
 

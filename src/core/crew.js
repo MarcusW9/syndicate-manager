@@ -37,17 +37,39 @@ export function traitMods(op) {
 /** Stat with trait bonuses, as shown on the stats panel (1-20). */
 export const ratedStat = (op, stat) => Math.max(1, Math.min(20, (op.stats[stat] ?? 0) + (traitMods(op)[stat] ?? 0)));
 
+/**
+ * Roll modifier rules: { id, applies(op, ctx), value(op, ctx), note }.
+ * effectiveStat and crewRoll sum these, so the risk read and real rolls share
+ * one source for both numbers and notes. `note` is a string or (op, ctx, v) => string.
+ */
+// Per-operative rules, applied in order to one person's stat. ctx: { stat, approach, crew, base }.
+export const OPERATIVE_RULES = [
+  // Traits can't push a stat past the 1-20 scale; situational effects below can.
+  { id: 'traits', applies: () => true, value: (op, { stat, base }) => Math.max(1, Math.min(20, base + (traitMods(op)[stat] ?? 0))) - base },
+  { id: 'veteran-cool', applies: (op, { stat, crew }) => stat === 'cool' && crew.some((o) => o.id !== op.id && o.traits.includes('veteran')), value: () => 1 },
+  { id: 'approach', applies: (op, { stat, approach }) => !!APPROACHES[approach]?.mods?.[stat], value: (op, { stat, approach }) => APPROACHES[approach].mods[stat] },
+  { id: 'fatigue', applies: (op) => op.condition.fatigue > 60, value: () => -2, note: 'fatigued' },
+  { id: 'injury', applies: (op) => op.condition.injury === 'light', value: () => -2, note: 'hurt' },
+];
+
+const noteFor = (rule, op, ctx, v) => (typeof rule.note === 'function' ? rule.note(op, ctx, v) : rule.note);
+
+function applyRules(rules, op, ctx, value, notes) {
+  for (const rule of rules) {
+    if (!rule.applies(op, ctx)) continue;
+    const v = rule.value(op, ctx);
+    value += v;
+    const note = noteFor(rule, op, ctx, v);
+    if (note) notes.push(note);
+  }
+  return value;
+}
+
 /** Stat after traits, approach, fatigue and injury. Returns { value, notes }. */
 export function effectiveStat(op, stat, { approach, crew = [] } = {}) {
-  let value = op.stats[stat] ?? 0;
+  const base = op.stats[stat] ?? 0;
   const notes = [];
-  // Traits can't push a stat past the 1-20 scale; situational effects below can.
-  value = Math.max(1, Math.min(20, value + (traitMods(op)[stat] ?? 0)));
-  if (stat === 'cool' && crew.some((o) => o.id !== op.id && o.traits.includes('veteran'))) value += 1;
-  const am = APPROACHES[approach]?.mods?.[stat];
-  if (am) value += am;
-  if (op.condition.fatigue > 60) { value -= 2; notes.push('fatigued'); }
-  if (op.condition.injury === 'light') { value -= 2; notes.push('hurt'); }
+  const value = applyRules(OPERATIVE_RULES, op, { stat, approach, crew, base }, base, notes);
   return { value, notes };
 }
 
@@ -80,19 +102,28 @@ export function crewRoll(crew, stat, { approach, recommended = 0, lead } = {}) {
   const able = crew.filter((o) => o.condition.injury !== 'critical');
   const top = lead ?? bestFor(able, stat, { approach });
   if (!top) return null;
-  let value = top.value;
+  const ctx = { stat, approach, crew, able, top, recommended, backup: findBackup(able, top, stat, { approach, crew }), missing: Math.max(0, recommended - able.length) };
   const notes = [...top.notes];
+  const value = applyRules(CREW_RULES, top.op, ctx, top.value, notes);
+  return { op: top.op, value, notes, backup: ctx.backup?.op ?? null, missing: ctx.missing };
+}
+
+/** Highest-rated other crew member within BACKUP_RANGE of the roller, or null. */
+function findBackup(able, top, stat, ctx) {
   let backup = null;
   for (const o of able) {
     if (o.id === top.op.id) continue;
-    const v = effectiveStat(o, stat, { approach, crew }).value;
+    const v = effectiveStat(o, stat, ctx).value;
     if (v >= top.value - BACKUP_RANGE && (!backup || v > backup.value)) backup = { op: o, value: v };
   }
-  if (backup) { value += BACKUP_BONUS; notes.push(`${backup.op.handle} backs up +${BACKUP_BONUS}`); }
-  const missing = Math.max(0, recommended - able.length);
-  if (missing) { value -= missing * SHORT_HANDED_PENALTY; notes.push(`short-handed -${missing * SHORT_HANDED_PENALTY}`); }
-  return { op: top.op, value, notes, backup: backup?.op ?? null, missing };
+  return backup;
 }
+
+// Crew-level rules, applied to the roller after their own stat. ctx adds { able, top, backup, missing, recommended }.
+export const CREW_RULES = [
+  { id: 'backup', applies: (op, { backup }) => !!backup, value: () => BACKUP_BONUS, note: (op, { backup }) => `${backup.op.handle} backs up +${BACKUP_BONUS}` },
+  { id: 'short-handed', applies: (op, { missing }) => missing > 0, value: (op, { missing }) => -missing * SHORT_HANDED_PENALTY, note: (op, ctx, v) => `short-handed -${-v}` },
+];
 
 /** Best operative on the given crew for a stat (skipping anyone critical). */
 export function bestFor(crew, stat, ctx) {
