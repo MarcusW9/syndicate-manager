@@ -48,8 +48,8 @@ export const carefulPolicy = {
 };
 
 /** Play whole weeks: each Monday take the best-paying job the available crew can staff. */
-export function playWeeks(weeks, seed, policy = carefulPolicy) {
-  let s = createNewGame({ seed });
+export function playWeeks(weeks, seed, policy = carefulPolicy, { startCrew = 'classic' } = {}) {
+  let s = createNewGame({ seed, startCrew });
   let deaths = 0;
   for (let day = 0; day < weeks * 7; day++) {
     const free = s.crew.filter((op) => availability(s, op).ok);

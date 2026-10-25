@@ -85,6 +85,7 @@ WHICH CLIENTS OFFER IT: (Auntie Fung / Mr. Szeto / The Ferryman / Madam Rao / Ru
 - **Clients:** name, one-line description, which jobs they offer.
 - **Recruit flavour:** names, street handles, origin lines, personality lines (see `src/data/recruitPools.js` for the current lists).
 - **Twists:** like a crisis, but for "any job".
+- **District crises:** like a crisis, but for "any job in this district" (write `JOB: any job in Old Town`). They live in `src/data/districtCrises.js`.
 
 ## Playtest notes
 

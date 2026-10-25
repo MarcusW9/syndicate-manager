@@ -59,11 +59,13 @@ function withoutClashes(lines, tags) {
   return lines.filter((l) => !l.tags.some((t) => banned.includes(t)));
 }
 
-export function generateRecruit(state) {
+export function generateRecruit(state, { role: forcedRole, quality: forcedQuality } = {}) {
   const rng = nextRng(state);
   const culture = weighted(rng, CULTURES);
-  const quality = weighted(rng, QUALITY);
-  const role = pickRole(rng, state.crew);
+  const rolledQuality = weighted(rng, QUALITY);
+  const quality = QUALITY.find((q) => q.id === forcedQuality) ?? rolledQuality;
+  const rolledRole = pickRole(rng, state.crew);
+  const role = forcedRole ?? rolledRole;
   const profile = ROLE_PROFILES[role];
 
   const stats = {};
@@ -122,6 +124,36 @@ export function generateRecruit(state) {
   };
 }
 
+// A generated starting crew ("Fresh crew"): one of each core role, one veteran,
+// two pros and two rookies, and a wage bill near the authored crew's (¥3,050)
+// so the opening week still forces the same choice. See DESIGN.md.
+export const FRESH_CREW_ROLES = ['medic', 'muscle', 'tech', 'driver', 'face'];
+export const FRESH_CREW_QUALITIES = ['veteran', 'pro', 'pro', 'rookie', 'rookie'];
+export const FRESH_CREW_WAGES = [2700, 3400];
+
+/** Five generated recruits for a new game. Rerolls until the wage bill fits (max 20 tries). */
+export function generateStartingCrew(state) {
+  let best = null;
+  for (let attempt = 0; attempt < 20; attempt++) {
+    // generateRecruit reads the crew (for handles) and advances the counters, so work on a scratch copy.
+    const work = { ...state, crew: [] };
+    const rng = nextRng(work);
+    const qualities = [...FRESH_CREW_QUALITIES];
+    for (let i = qualities.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [qualities[i], qualities[j]] = [qualities[j], qualities[i]];
+    }
+    for (const [i, role] of FRESH_CREW_ROLES.entries()) work.crew.push(generateRecruit(work, { role, quality: qualities[i] }));
+    state.rngCounter = work.rngCounter;
+    state.recruitSeq = work.recruitSeq;
+    const bill = work.crew.reduce((n, r) => n + r.wage, 0);
+    const miss = bill < FRESH_CREW_WAGES[0] ? FRESH_CREW_WAGES[0] - bill : Math.max(0, bill - FRESH_CREW_WAGES[1]);
+    if (!best || miss < best.miss) best = { crew: work.crew, miss };
+    if (miss === 0) break;
+  }
+  return best.crew;
+}
+
 /** Weekly scouting (Wednesdays): 1 lead, or 2 when the crew is short-handed. */
 export function scoutWeek(state) {
   state.recruits = (state.recruits ?? []).filter((r) => r.expiresDay >= state.day);
@@ -149,18 +181,20 @@ export function canHire(state, recruit) {
   return { ok: true };
 }
 
+/** Turn a recruit into a crew member: drop the recruit-only fields. */
+export function recruitToOperative(r, { condition, history }) {
+  const { expiresDay, haggled, haggleResult, quality, culture, ...op } = r;
+  return prepareOperative({ ...op, tier: quality, condition, trust: {}, history });
+}
+
 export function hire(prev, recruitId) {
   const state = structuredClone(prev);
   const r = state.recruits?.find((x) => x.id === recruitId);
   if (!r || !canHire(state, r).ok) return prev;
   state.cash -= signingFee(r);
   state.recruits = state.recruits.filter((x) => x.id !== recruitId);
-  const { expiresDay, haggled, haggleResult, quality, culture, ...op } = r;
-  state.crew.push(prepareOperative({
-    ...op,
-    tier: quality,
+  state.crew.push(recruitToOperative(r, {
     condition: { fatigue: 0, morale: 60, neuralLoad: 0, burnout: 0, injury: 'healthy', injuryDays: 0 },
-    trust: {},
     history: [`Day ${state.day}: joined the crew`],
   }));
   state.inbox.unshift({

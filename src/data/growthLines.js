@@ -7,7 +7,7 @@ export const GROWTH_LINES = {
   stealth: ['{name} moves like a rumour now.', '{name} has stopped stepping on the loud floorboards.'],
   tech: ['{name} is getting quicker on the keys.', '{name} cracked that one without looking it up.'],
   social: ['{name} knows when to smile and when to shut up.', '{name} talked a stranger into a favour this week.'],
-  driving: ['{name} takes corners the way Teo does.', '{name} found a gap in traffic nobody else saw.'],
+  driving: ['{name} takes corners like a twenty-year driver.', '{name} found a gap in traffic nobody else saw.'],
   medical: ['{name} has steadier hands under pressure.', '{name} stitched it closed before the bleeding got going.'],
   cool: ['{name} stayed calm when it went sideways.', 'Sirens don\'t rattle {name} like they used to.'],
 };
