@@ -4,6 +4,14 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · More faces
+- **Masks:** some people wear a respirator with filter cans, a metal jaw plate, or a black mask with an LED line for a mouth that shows their mood.
+- **Conical hats:** a steel war hat, a dark one with a glowing neon rim, and a woven straw hat.
+- **Half-chrome faces:** a rare few have a metal plate over half the face, with a lens for an eye that glows with neural load.
+- **Monks:** shaved heads, prayer beads, and grey, ochre or dark "cyber" robes; some wear the straw hat. More common among Hong Kong names, but anyone can be one.
+- **Facial hair:** pencil moustaches, goatees, long drooping moustaches, soul patches and short beards.
+- Everyone's existing face stays the same; some people just gained a hat, a mask or a beard. A handful who became monks, got a half-chrome face or a mask lost their old hair, earring, chrome or visor to make room. 160 tests.
+
 ## 2026-10-25 · A tidier City tab
 - **The City tab is split into four sections:** Map, Clients, Who's who and Lore, with tabs under the title. It opens on the map.
 - **The map fits on one screen**, phone or desktop, with the turf key underneath.

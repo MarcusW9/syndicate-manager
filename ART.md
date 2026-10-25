@@ -110,6 +110,16 @@ Four (half-width / jaw / chin / chin height): oval 11.5/7.5/3.2/45, round 12.5/9
 | Eyewear | visor 5% (never with a cyber-eye); glasses 12% otherwise |
 | Other | stubble 12%, earring 25% (sodium gold), shirt in one of five dark colours |
 
+**Gear and looks** (added 2026-10-25). Drawn from a **second seed** (`id|name|gear`, in `withGear()`), so adding them left every feature above exactly as it was. New gear goes at the end of that pick list, never in the middle.
+
+| Feature | Options and odds |
+| --- | --- |
+| Monk | 6% of Hong Kong names, 1.5% of everyone else. Shaved head; no earring, dye or facial hair. Robes replace the shirt: **grey** (2 in 4), a Chinese crossed-collar robe `#6b6f78` with a dark collar band; **ochre**, a brown robe `#5e4630` with an ochre kasaya `#b06a24` across the left shoulder, patchwork seams; **cyber**, a dark robe `#22252d` with a collar edged in the chrome colour. All wear a mala of 13 wooden beads `#7a4a2a` round the neck (the cyber monk's every third bead glows in the chrome colour). 35% of monks wear the woven hat. |
+| Half-chrome face | 3%. A gunmetal plate `#58606b` over the lit half of the face, seamed into the skin just right of the nose and mouth, with panel lines, rivets and a cheek vent; the lit-side eye is a lens and the ear a metal disc, both glowing with neural load. It replaces any other chrome, glasses and visor. |
+| Mask | 7%, never with a visor (the face must still show condition). **Respirator**: rounded `#2a2f38` with twin filter cans and a status LED. **Jaw plate**: angular gunmetal `#4a525d` from nose to chin with breathing slots. **LED grille**: black `#101318` with an LED line where the mouth is, drawn to match the real mood (flat, smirk, zigzag when stressed, dotted and dim for the dead stare, drooping when tired). A mask hides facial hair. |
+| Conical hat | 7% (non-monks). **Steel war hat** (2 in 4): a shallow riveted cone `#5b636e` with ribs and a lit rim. **Carbon hat with a neon rim**: dark `#1c2028`, its rim a glowing line in the chrome colour. **Woven hat**: a deeper straw cone `#a8844c` with weave lines and a chin cord. All cast a shadow band across the brow; hair is clipped under the cone and a bun is hidden. |
+| Facial hair | 20%, anyone, in the hair colour: pencil moustache, goatee (2 in 6), long drooping moustache, soul patch, short full beard (follows the jaw, with a chin tuft). |
+
 ### Condition and expression (from game state, never random)
 
 | What the game says | What the face shows |
@@ -162,7 +172,8 @@ Non-negotiables: faces come from a stable hash of id+name (no Math.random, nothi
 stored in the save); expressions and condition marks come from game state only
 (stateOf), never chance; every tone readable (catchlights, neon ink); no "tribal"
 designs; everyone 18+; portraits are aria-hidden and every fact they show is also in
-text; no DOM in src/core. New features: add the choice to faceOf() with its odds, draw
+text; no DOM in src/core. New features: add the choice with its odds at the END of
+withGear()'s picks (never earlier, or existing faces change), draw
 it in portrait(), add a row to ART.md's feature table, add a test in
 tests/art.test.js, log the decision in DESIGN.md, and add a CHANGELOG.md entry.
 Check results by rendering a sheet of real generated crew with Playwright at 48px and
@@ -231,6 +242,9 @@ the cheek / gauze across the brow].
 > - Markings: 4 geometric tattoos, barcode, 2 scars.
 > - Injuries: plaster, gauze.
 > - Glasses, visor, earring, stubble.
+> - Facial hair: pencil moustache, goatee, long drooping moustache, soul patch, short beard.
+> - Gear: 3 masks (respirator, jaw plate, LED grille), 3 conical hats (steel war hat, carbon with neon rim, woven straw), a half-chrome face plate.
+> - Monk robes: grey crossed-collar, ochre kasaya over a brown robe, dark cyber robe; a mala of beads.
 > - 5 shirt or jacket shapes.
 >
 > **Must:** work on every skin tone from very light to very deep; adult proportions (all characters are 18+); no "tribal" tattoo designs; readable at 48px.
