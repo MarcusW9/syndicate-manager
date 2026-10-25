@@ -22,4 +22,5 @@ export const NAMES = {
     ironPeak: 'Iron Peak',
   },
   currency: '¥', // display symbol only
+  partner: 'Joss', // the crew's bootleg AI (WORLD.md); they/them
 };

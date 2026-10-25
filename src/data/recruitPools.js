@@ -22,7 +22,7 @@ export const CULTURES = [
 export const HANDLES = [
   'Ghost', 'Mantis', 'Lychee', 'Sparrow', 'Brick', 'Neon', 'Dim Sum', 'Kettle', 'Typhoon', 'Mahjong',
   'Jade', 'Moth', 'Ferry', 'Abacus', 'Tram', 'Rivet', 'Pepper', 'Wire', 'Sampan', 'Lantern',
-  'Fishball', 'Minibus', 'Hex', 'Drizzle', 'Pigeon', 'Joss', 'Tofu', 'Crane', 'Signal', 'Bamboo',
+  'Fishball', 'Minibus', 'Hex', 'Drizzle', 'Pigeon', 'Tofu', 'Crane', 'Signal', 'Bamboo',
   'Synapse', 'Glitch', 'Bypass', 'Hotwire', 'Cha Siu', 'Optic', 'Solder', 'Pineapple Bun', 'Overclock', 'Night Ferry',
   'Chrome', 'Milk Tea', 'Patch', 'Salted Fish', 'Uplink', 'Wonton', 'Drone', 'Century Egg', 'Neural', 'Night Market',
   'Buffer', 'Siu Mai', 'Streetcam', 'Aug', 'Sensor', 'Ginseng', 'Port', 'Jasmine', 'Oolong', 'Harbour',

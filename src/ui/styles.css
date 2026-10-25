@@ -138,6 +138,18 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 
 /* Today: alert lines only when something needs you; the week ahead under the inbox. */
 .inbox__list h1 { margin-top: 0; }
+/* Joss, the crew's AI partner: one line of briefing at the top of Today. */
+.joss { display: flex; gap: 12px; align-items: flex-start; margin: 4px 0 12px; }
+.joss__badge { flex: 0 0 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--accent-2); background: #14262a; }
+/* Joss blinks now and then, and their antenna light breathes. Still for reduced motion. */
+.joss-eyes { transform-box: fill-box; transform-origin: center; animation: joss-blink 6s infinite; }
+.joss-led { animation: joss-led 3s ease-in-out infinite; }
+@keyframes joss-blink { 0%, 94%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.1); } }
+@keyframes joss-led { 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { .joss-eyes, .joss-led { animation: none; } }
+.joss__body { min-width: 0; }
+.joss__name { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-2); }
+.joss__line { margin: 2px 0 0; line-height: 1.45; }
 .alerts { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 6px; }
 .alert { width: 100%; min-height: var(--tap); padding: 8px 12px; text-align: left; border-radius: var(--radius); font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
 .alert--warn { background: #2a2617; border: 1px solid #5c4a1c; color: var(--warn); }
@@ -390,3 +402,126 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .talk strong { color: var(--accent-2); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; }
 .talk-tag { color: var(--accent-2); font-size: 0.8rem; font-weight: 600; }
 .tag--rumour { color: var(--accent-2); }
+
+/* =====================================================================================
+   Skin: street-terminal (2026-10-25). After Cyberpunk 2077's interface and Citizen
+   Sleeper's calm: sharp panels with a cut corner, a condensed display face for headings,
+   labels and numbers, readable system text for everything you read. Overrides only:
+   delete this block to get the plain look back. Tap targets and focus rings unchanged.
+   ===================================================================================== */
+:root {
+  --bg: #0a0c0f;
+  --panel: #12151b;
+  --panel-2: #161a21;
+  --line: #2a303b;
+  --text: #e9ecf1;
+  --muted: #8a93a6;
+  --accent: #ff3d5f;       /* signal red */
+  --accent-2: #3de8d8;     /* cyan */
+  --warn: #f2d541;         /* sodium-lamp yellow */
+  --danger: #ff4a4a;
+  --radius: 2px;
+  --cut: 10px;
+  --display: 'Rajdhani', 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+}
+
+/* A faint grid on the page and scanlines over everything; neither takes taps. */
+body {
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(rgba(61, 232, 216, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(61, 232, 216, 0.025) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+body::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 50;
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 3px);
+}
+
+/* Type: display face for structure and numbers, system face for reading. */
+h1, h2, .btn, .nav__btn, .row__tag, .tier, .risk, .status, .pill, .stat__label, .tile__label,
+.joss__name, .upcoming__when, .crisis__title, .week__note, .topbar__date, .jobcard__pay,
+.sizebadge, .alert, .seg strong, .choice__label, .stats dt, .stats dd, .topbar__stats {
+  font-family: var(--display);
+}
+h1 { font-size: 1.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+h2 { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; font-weight: 600; letter-spacing: 0.14em; color: var(--accent-2); }
+h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line), transparent); }
+.stats dd { font-size: 1.5rem; font-weight: 700; }
+.stats dt { letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* Panels: sharp, with the top-right corner cut and a hairline drawn across the cut. */
+.panel, .dock, .daycue, .planbar, .banner {
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+}
+.panel, .banner { position: relative; } /* the dock, plan bar and day note keep their sticky/fixed placing */
+.panel { background: linear-gradient(180deg, var(--panel-2), var(--panel)); }
+.panel::before {
+  content: ''; position: absolute; top: 0; right: 0; width: var(--cut); height: var(--cut); pointer-events: none;
+  background: linear-gradient(to bottom left, transparent calc(50% - 0.6px), var(--line) 50%, transparent calc(50% + 0.6px));
+}
+/* A short cyan tab on each panel's top edge, like a labelled readout. */
+.panel::after { content: ''; position: absolute; top: 0; left: 0; width: 36px; height: 2px; background: var(--accent-2); opacity: 0.8; pointer-events: none; }
+.upcoming--pane { clip-path: none; }
+.upcoming--pane::before, .upcoming--pane::after { display: none; }
+
+/* Top bar: a translucent readout strip with a red tick under the date. */
+.topbar { background: rgba(10, 12, 15, 0.92); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); }
+.topbar::after { content: ''; position: absolute; left: 16px; bottom: -1px; width: 48px; height: 2px; background: var(--accent); }
+.topbar__date { font-size: 1.15rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.topbar__stats { font-size: 1.05rem; font-weight: 600; }
+.stat__label, .week__note { text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.7rem; }
+.tier { background: none; border: 1px solid var(--warn); color: var(--warn); letter-spacing: 0.12em; font-size: 0.75rem; }
+.week__day { border-radius: 0; }
+.heat__track, .bar, .meter__track, .nextbar, .minibar__track { border-radius: 0; }
+/* Meters read as segmented gauges. */
+.heat__track span, .meter__fill, .bar span { -webkit-mask: repeating-linear-gradient(90deg, #000 0 4px, transparent 4px 5px); mask: repeating-linear-gradient(90deg, #000 0 4px, transparent 4px 5px); }
+
+/* Buttons: uppercase display face, two corners cut. */
+.btn { font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; font-size: 1rem;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); }
+.btn--ghost { clip-path: none; color: var(--accent-2); }
+.btn--primary { background: var(--accent); border-color: var(--accent); }
+.btn--primary:disabled { background: #2a1a20; border-color: #2a1a20; }
+.continue__label { font-size: 1.1rem; }
+.continue__hint { font-family: var(--display); letter-spacing: 0.06em; font-size: 0.8rem; }
+
+/* Rows and cards: flat, sharp, cyan edge when unread or picked. */
+.row, .seg, .tile, .choice, .chip, .riskcard, .crisis, .resultcard, .slot, .stats div, .citydetails {
+  border-radius: 0;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%);
+}
+.row { background: #141820; }
+.row.is-unread { box-shadow: inset 2px 0 0 var(--accent-2); }
+.row.is-read { background: transparent; }
+.row__tag { font-weight: 600; font-size: 0.78rem; letter-spacing: 0.12em; border-radius: 0; background: transparent; border: 1px solid currentColor; padding: 1px 6px; }
+.dot { border-radius: 0; transform: rotate(45deg); width: 7px; height: 7px; flex-basis: 7px; }
+.alert { text-transform: uppercase; letter-spacing: 0.05em; font-size: 1rem; border-radius: 0; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%); }
+.alert--warn { background: rgba(242, 213, 65, 0.08); border-color: rgba(242, 213, 65, 0.45); }
+.alert--danger { background: rgba(255, 74, 74, 0.1); border-color: rgba(255, 74, 74, 0.5); }
+.risk, .status, .pill, .sizebadge { border-radius: 0; letter-spacing: 0.1em; }
+.status { font-size: 0.8rem; }
+.pill { font-size: 0.8rem; }
+
+/* Tabs: display face; the active one gets a red bar and a small square marker. */
+.nav { background: rgba(10, 12, 15, 0.96); }
+.nav__btn { text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.95rem; font-weight: 600; }
+.nav__btn.is-active { color: var(--text); }
+.nav__btn.is-active::before { content: '■ '; color: var(--accent); font-size: 0.6em; vertical-align: 0.15em; }
+
+/* Joss: a hexagon badge, like a comms channel indicator. */
+.joss__badge { border: 0; border-radius: 0; background: rgba(61, 232, 216, 0.12);
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%); width: 46px; flex-basis: 46px; height: 42px; }
+.joss__name { font-size: 0.85rem; letter-spacing: 0.18em; }
+.joss__name::after { content: ' · online'; color: var(--muted); font-weight: 500; letter-spacing: 0.1em; }
+
+/* Week ahead: day labels as small readouts. */
+.upcoming__when { font-size: 0.95rem; letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* New-day note: sharp, cyan, display face. */
+.daycue { border-radius: 0; background: rgba(10, 30, 32, 0.95); font-family: var(--display); letter-spacing: 0.06em; }
+.daycue strong { text-transform: uppercase; font-size: 1.1rem; }
+
+/* Badges (initials) become squares with a cut corner, matching the panels. */
+.badge { border-radius: 0; clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 0 100%); font-family: var(--display); font-size: 1rem; }
+.badge--sm { font-size: 0.8rem; }

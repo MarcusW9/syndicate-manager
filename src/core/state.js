@@ -83,7 +83,8 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
   if (startCrew === 'fresh') {
     state.rent = ECONOMY.startRent;
     state.jobGates = true; // jobs unlock by reputation (core/jobs.js)
-    state.inbox[0].body = `Five of you, one damp room above a noodle shop, rent due Sunday. Nobody in ${NAMES.city} knows your names yet. The board only has small work. Take it, learn, and get noticed.`;
+    // The welcome comes from Joss, the crew's AI partner (WORLD.md).
+    state.inbox[0].body = `Five on the crew, you, me, and one damp room above a noodle shop. Rent's due Sunday. Nobody in ${NAMES.city} knows our names yet, and the board only has small work. So we take it, learn, and get noticed. I'll keep the numbers honest and wake you if anything's on fire. — ${NAMES.partner}`;
     for (const id of FRESH_OPENING_BOARD) addOffer(state, id);
   } else {
     // The oldest hand vouches for the crew (Teo, in the classic start).

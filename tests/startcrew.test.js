@@ -11,6 +11,7 @@ import * as M from '../src/core/mission.js';
 import { templateById } from '../src/core/jobs.js';
 import { primaryStat } from '../src/core/development.js';
 import { playWeeks, playMission, carefulPolicy } from './play.js';
+import { NAMES } from '../src/config/names.js';
 
 test('the classic start is still the authored five', () => {
   const s = createNewGame({ seed: 1 });
@@ -47,7 +48,9 @@ test('a fresh crew starts small: cheap rent and only small work on the board', (
   const s = createNewGame({ seed: 3, startCrew: 'fresh' });
   assert.equal(s.rent, 1500);
   assert.ok(s.jobs.length && s.jobs.every((j) => templateById(j.templateId).threat === 1), 'threat-1 jobs only');
-  assert.match(s.inbox[0].body, /Nobody in .+ knows your names yet/);
+  // The welcome comes from Joss, the crew's AI partner (DESIGN.md 2026-10-25).
+  assert.match(s.inbox[0].body, /Nobody in .+ knows our names yet/);
+  assert.match(s.inbox[0].body, new RegExp(`— ${NAMES.partner}$`));
 });
 
 test('the same seed gives the same fresh crew', () => {

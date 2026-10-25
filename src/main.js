@@ -1,3 +1,7 @@
+// Display font for headings, labels and numbers; bundled so it works offline (OFL licence).
+import '@fontsource/rajdhani/latin-500.css';
+import '@fontsource/rajdhani/latin-600.css';
+import '@fontsource/rajdhani/latin-700.css';
 import './ui/styles.css';
 import { createNewGame } from './core/state.js';
 import { loadGame, saveGame } from './save/save.js';

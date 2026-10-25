@@ -258,6 +258,18 @@ Smaller people a new crew meets on rookie work (2026-10-25). Their spoken lines 
 - **The old radio man on Block 9's roof.** The last tenant Mr. Szeto wants out, broadcasting pirate radio from a tin shack full of tapes. Block 9 is Doc Siu's building.
 - **The Ferryman's habits:** he chews betel nut as well as the clove cigarettes, and he runs a private line to the Silt under Pier 12.
 
+## Joss, the crew's partner
+
+The fixer's partner and the crew's sixth member (2026-10-25). Their lines live in `src/data/partner.js`; the name is set in `src/config/names.js`.
+
+- **What they are.** A bootleg AI, they/them. Joss runs on a cracked second-hand handset and a shoebox of salvaged Hoi-Sing relay boards wired up under the safehouse sink. The Ghost Circuit flashed them from a pirated assistant model, sold the box at a Night Market stall, and never asked for it back.
+- **The name.** The first thing Joss's camera ever saw was someone burning joss paper on an Old Town doorstep at midnight, for the ghosts of the 2052 blackout. They kept the name.
+- **Where they came from.** Joss doesn't know which build they were before the Ghost Circuit got to them, and doesn't like the question. Some on the street say they're a splinter of the collective mind from the blackout. Joss says that's a rumour, and like every rumour in the city it is never confirmed.
+- **With you from before day 1.** Joss found the five names that became the crew, and the room above the noodle shop. They write the welcome note.
+- **Partner, not servant.** One of the crew: says "we", draws no wage, takes no bed, has no stats, and doesn't go on jobs (yet). They keep the numbers honest and never claim to know more than the board shows. They don't believe in ghosts, but they remind the crew to leave tea on the doorstep at midnight, because the crew does.
+- **Voice.** Dry and warm, with dark humour. Short lines that read well on a phone. Teases the crew, worries about them quietly, and gets plainer when things go wrong.
+- **Not built yet:** Joss on comms during jobs, and Joss's read on the planning screen.
+
 ## Context block for worldbuilding prompts
 
 Paste this at the top of every worldbuilding prompt, in a fresh chat. Keep it in step with the canon above whenever canon changes.
@@ -269,6 +281,11 @@ our chat conflicts with it, this wins.
 GAME: text-first crew management game (Football Manager style, endless, no win state).
 The player is a fixer running a small crew of operatives, starting with 5 people, one
 safehouse and rent due on Sunday.
+
+PARTNER: Joss (they/them), the crew's bootleg AI: pirated assistant code the Ghost
+Circuit flashed onto salvaged hardware, named after joss paper. With the fixer since
+before the crew; a partner and crew member who says "we", dry and warm, and never knows
+more than the board shows. Where they came from is a rumour, never confirmed.
 
 CITY: Lantern Bay (燈籠灣, Dang Lung Wan). FICTIONAL, Hong Kong-inspired, year 2057.
 Cantonese culture is the base layer (typhoon signals, dai pai dongs, mahjong parlours,
