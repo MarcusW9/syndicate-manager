@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createNewGame, SAVE_VERSION } from '../src/core/state.js';
-import { faceOf, portrait, cultureOf } from '../src/ui/art.js';
+import { faceOf, portrait, cultureOf, stateOf } from '../src/ui/art.js';
 
 const crew = () => createNewGame({ seed: 50, startCrew: 'fresh' }).crew;
 const withoutIds = (svg) => svg.replace(/pf\d+/g, 'pf');
@@ -39,4 +39,24 @@ test('a v13 save upgrades to v14', async () => {
   const loaded = await importSave({ text: async () => JSON.stringify(v13) });
   assert.equal(loaded.version, SAVE_VERSION);
   assert.ok(portrait(loaded.memorial[0]).startsWith('<svg'), 'an entry without age still draws');
+});
+
+test('expressions follow condition, never chance', () => {
+  const op = crew()[0];
+  const at = (c) => stateOf({ ...op, condition: { ...op.condition, ...c } }).expression;
+  assert.equal(at({ morale: 65, neuralLoad: 0, burnout: 0 }), 'neutral');
+  assert.equal(at({ morale: 85 }), 'smirk');
+  assert.equal(at({ morale: 25 }), 'stressed');
+  assert.equal(at({ neuralLoad: 71 }), 'dead', "neural load's danger zone, as the game warns");
+  assert.equal(at({ neuralLoad: 70, morale: 65 }), 'neutral');
+  assert.equal(at({ burnout: 60, morale: 85 }), 'dead', 'burnout wins over a good mood');
+});
+
+test('a visor never hides a cyber-eye lens', () => {
+  for (let seed = 1; seed < 200; seed++) {
+    for (const op of createNewGame({ seed, startCrew: 'fresh' }).crew) {
+      const f = faceOf(op);
+      assert.ok(!(f.visor && f.chrome === 'cybereye'));
+    }
+  }
 });
