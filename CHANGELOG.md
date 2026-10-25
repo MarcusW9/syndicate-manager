@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · A new look
+- **Street-terminal style:** sharp panels with cut corners, a condensed display font for headings, numbers and buttons, segmented gauges, and a faint grid and scanlines. Red, cyan and sodium-yellow, after Cyberpunk 2077 and Citizen Sleeper.
+- Everything you read is still in the normal, easy-to-read font. Buttons and tabs are the same size as before.
+- The font comes with the game, so it works offline.
+
 ## 2026-10-25 · Meet Joss
 - **Joss** is the crew's partner: a bootleg AI the Ghost Circuit flashed onto a cracked handset and some salvaged relay boards. They've been with you since before the crew.
 - Joss writes your welcome note in a new game, opens each day on Today with a line of their own, and tells you when something needs you ("Sunday's bills are ¥2,800. We're ¥600 short."). Same facts as before, in their voice.
