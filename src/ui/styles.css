@@ -218,6 +218,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
   /* Desktop: use the width. Lists of cards run two or three across; paired sections sit side by side. */
   .list--cols { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 8px; }
   .cols2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 28px; align-items: start; }
+  .cols2--flow { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
   /* Planning a job: crew on the left; client, approach and risk read beside them, so the risk updates in view as you pick. */
   .plangrid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); grid-template-rows: auto auto 1fr; column-gap: 28px; align-items: start;
     grid-template-areas: "crew client" "crew approach" "crew risk"; }
@@ -284,6 +285,25 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .resultcard--loss { border-color: var(--danger); }
 .resultcard--completed { border-color: #2e6b52; }
 .meter__fill.is-hot { background: var(--danger); }
+
+/* Job report as a timeline: a rail down the left, a numbered node per crisis, the outcome last. */
+.timeline { list-style: none; margin: 1rem 0; padding: 0; }
+.timeline__item { position: relative; display: flex; gap: 12px; padding-bottom: 16px; }
+.timeline__item::before { content: ''; position: absolute; left: 13px; top: 28px; bottom: 0; width: 2px; background: var(--line); }
+.timeline__item:last-child { padding-bottom: 0; }
+.timeline__item:last-child::before { display: none; }
+.timeline__node { flex: 0 0 28px; height: 28px; display: grid; place-items: center; border: 1.5px solid var(--accent-2); background: var(--panel); color: var(--accent-2); font-family: var(--display, inherit); font-weight: 700; font-size: 0.85rem; clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%); }
+.timeline__text { margin: 3px 0 0; line-height: 1.55; min-width: 0; }
+.timeline__item--end .timeline__node { border-color: var(--muted); color: var(--text); }
+.timeline__item--completed .timeline__node { border-color: #5fe0a5; color: #5fe0a5; }
+.timeline__item--aborted .timeline__node { border-color: var(--warn); color: var(--warn); }
+.timeline__item--loss .timeline__node { border-color: var(--danger); color: var(--danger); }
+.timeline__label { margin: 0 0 4px; font-family: var(--display, inherit); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.85rem; }
+.timeline__results { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.tone--good { color: #5fe0a5; }
+.tone--warn { color: var(--warn); }
+.tone--bad { color: var(--danger); }
+
 
 @media (min-width: 900px) {
   .segmented { grid-template-columns: repeat(3, 1fr); }
@@ -371,6 +391,25 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .minibar__track span { display: block; height: 100%; }
 .minibar--fatigue .minibar__track span { background: var(--warn); }
 .minibar--morale .minibar__track span { background: var(--accent-2); }
+/* Crew row: name and codename on one line; the status chip sits beside the short role line
+   and the bars beside the scout line, so a long status never makes one card taller. */
+.crewrow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "face name name" "face info status" "face scout bars"; column-gap: 12px; row-gap: 2px; align-items: center; }
+.crewrow > .face { grid-area: face; align-self: center; }
+.crewrow__name { grid-area: name; line-height: 1.3; }
+.crewrow__info { grid-area: info; line-height: 1.3; }
+.crewrow__status { grid-area: status; justify-self: end; }
+.crewrow__scout { grid-area: scout; align-self: start; }
+.crewrow__scout .scoutline { margin-top: 0; }
+.crewrow__bars { grid-area: bars; display: grid; gap: 4px; justify-items: end; align-self: start; padding-top: 3px; }
+/* Phones: the chip and bars get their own row under the role line, so nothing gets squeezed. */
+@media (max-width: 520px) {
+  .crewrow { grid-template-columns: auto auto minmax(0, 1fr); grid-template-areas: "face name name" "face info info" "face status bars" "face scout scout"; row-gap: 3px; }
+  .crewrow__status { justify-self: start; }
+  .crewrow__bars { padding-top: 0; }
+}
+/* Cards side by side keep the same height. */
+.list--cols > li { display: flex; }
+.list--cols > li > .row { height: 100%; }
 
 .sizebadge { display: inline-block; margin: 0 0 8px; padding: 6px 10px; border-radius: var(--radius); font-size: 0.85rem; font-weight: 600; background: #262b36; color: var(--text); }
 .sizebadge--full { background: #173328; color: #5fe0a5; }
@@ -428,6 +467,18 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .maplegend li { display: flex; align-items: center; gap: 6px; }
 .maplegend__swatch { width: 4px; height: 12px; }
 .maplegend__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warn); }
+/* City sub-tabs: one section at a time so the map screen fits a phone. */
+.cityhead { margin-bottom: 8px; }
+.subtabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid var(--line); margin: 0 0 4px; }
+.subtab { min-height: var(--tap); padding: 0 4px; background: none; border: 0; color: var(--muted); font: inherit; font-family: var(--display, inherit); font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; cursor: pointer; }
+.subtab.is-on { color: var(--accent-2); box-shadow: inset 0 -2px 0 var(--accent-2); }
+.citymap__hint { margin-top: 8px; }
+@media (max-width: 899px) { .citymap__hint { display: none; } }
+.citycard { scroll-margin-top: 88px; }
+/* The map tab fits one screen: the map shrinks to what's left after the header, tabs,
+   legend and (on phones) the Continue dock and tab bar, but never below a readable size. */
+.citymap { max-height: max(300px, calc(100dvh - 400px)); }
+@media (min-width: 900px) { .citymap { max-height: max(360px, calc(100dvh - 300px)); } }
 .citycard ul { margin-top: 0; }
 .citydetails { border: 1px solid var(--line); border-radius: var(--radius); padding: 0 12px; margin-bottom: 6px; }
 .citydetails summary { min-height: var(--tap); display: flex; align-items: center; cursor: pointer; font-weight: 600; }

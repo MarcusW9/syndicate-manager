@@ -60,3 +60,51 @@ test('a visor never hides a cyber-eye lens', () => {
     }
   }
 });
+
+// Gear added 2026-10-25 (masks, conical hats, half-chrome faces, monks, facial hair).
+const sample = (n = 4000) => Array.from({ length: n }, (_, i) => {
+  const name = ['Kelvin Chan', 'Ivy Wong', 'Arjun Singh', 'Amara Mensah', 'Joy Santos', 'Lena Novak'][i % 6];
+  return { op: { id: `g${i}`, name, age: 20 + (i % 40) }, f: faceOf({ id: `g${i}`, name, age: 20 + (i % 40) }) };
+});
+
+test('every new look turns up, and the rules between them hold', () => {
+  const seen = new Set();
+  for (const { f } of sample()) {
+    for (const k of ['headwear', 'mask', 'monk', 'facialHair']) if (f[k]) seen.add(`${k}:${f[k]}`);
+    if (f.halfFace) seen.add('halfFace');
+    if (f.monk) {
+      assert.equal(f.hair, 'bald', 'monks shave their heads');
+      assert.ok(!f.earring && !f.facialHair && !f.splitDye);
+      assert.ok(f.headwear === null || f.headwear === 'douli', 'a monk only wears the woven hat');
+    }
+    if (f.halfFace) assert.ok(f.chrome === 'half' && !f.visor && !f.glasses, 'the half-chrome face is the chrome');
+    if (['goggles', 'faceplate'].includes(f.mask)) assert.ok(!f.visor && !f.glasses, 'a full mask replaces glasses and visors');
+  }
+  for (const k of ['headwear:jingasa', 'headwear:neonhat', 'headwear:douli', 'mask:respirator', 'mask:jawplate', 'mask:grille', 'mask:goggles', 'mask:faceplate', 'halfFace',
+    'monk:grey', 'monk:ochre', 'monk:cyber', 'facialHair:pencil', 'facialHair:goatee', 'facialHair:droop', 'facialHair:soul', 'facialHair:beard']) {
+    assert.ok(seen.has(k), `${k} never appears`);
+  }
+});
+
+test('monks lean Hong Kong but anyone can be one', () => {
+  const s = sample(12000);
+  const rate = (pick) => { const xs = s.filter(pick); return xs.filter(({ f }) => f.monk).length / xs.length; };
+  const hk = rate(({ op }) => cultureOf(op.name) === 'hk');
+  const other = rate(({ op }) => cultureOf(op.name) !== 'hk');
+  assert.ok(hk > other * 2, `hk ${hk} vs others ${other}`);
+  assert.ok(other > 0, 'other cultures can be monks too');
+});
+
+test("an LED mask grille shows the mood the mouth would have", () => {
+  const { op } = sample().find(({ f }) => f.mask === 'grille');
+  const at = (c) => withoutIds(portrait({ ...op, condition: { fatigue: 0, morale: 60, neuralLoad: 0, burnout: 0, injury: 'healthy', ...c } }));
+  assert.notEqual(at({ morale: 20 }), at({}), 'stressed differs from neutral');
+  assert.notEqual(at({ morale: 90 }), at({}), 'smirk differs from neutral');
+});
+
+test('a faceplate shows harm as a crack, and its eyes glow with neural load', () => {
+  const { op } = sample().find(({ f }) => f.mask === 'faceplate');
+  const at = (c) => withoutIds(portrait({ ...op, condition: { fatigue: 0, morale: 60, neuralLoad: 0, burnout: 0, injury: 'healthy', ...c } }));
+  assert.notEqual(at({ injury: 'serious' }), at({}), 'hurt differs from healthy');
+  assert.notEqual(at({ neuralLoad: 85 }), at({}), 'load shows in the eye slits');
+});
