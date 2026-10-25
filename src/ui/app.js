@@ -2,6 +2,7 @@
 // functions, re-renders. Tap/click only; nothing depends on hover.
 
 import { NAMES } from '../config/names.js';
+import { DISTRICTS } from '../data/districts.js';
 import { TRAITS } from '../data/traits.js';
 import { STARTING_CREW } from '../data/operatives.js';
 
@@ -35,6 +36,7 @@ let openMessageId = null;
 let openOperativeId = null;
 let openRecruitId = null;
 let newGameSlot = null; // slot number while picking a difficulty
+let newGameDifficulty = null; // picked difficulty while choosing a starting crew
 let plan = null; // { jobId, crew: [...ids], approach }
 let root;
 
@@ -112,17 +114,19 @@ function onClick(e) {
       screen = 'inbox'; plan = null; openMessageId = null; openOperativeId = null; openRecruitId = null;
       return setState(loaded);
     }
-    case 'slot-new': newGameSlot = Number(id); break;
-    case 'cancel-new': newGameSlot = null; break;
-    case 'difficulty': {
+    case 'slot-new': newGameSlot = Number(id); newGameDifficulty = null; break;
+    case 'cancel-new': newGameSlot = null; newGameDifficulty = null; break;
+    case 'difficulty': newGameDifficulty = id; break;
+    case 'start-crew': {
       const slot = newGameSlot;
+      const difficulty = newGameDifficulty;
       const taken = !listSlots()[slot - 1].empty;
-      if (taken && !confirm(`Start a new ${id} game in slot ${slot}? The game in that slot will be deleted.`)) break;
+      if (taken && !confirm(`Start a new ${difficulty} game in slot ${slot}? The game in that slot will be deleted.`)) break;
       deleteSlot(slot);
       setActiveSlot(slot);
-      newGameSlot = null;
+      newGameSlot = null; newGameDifficulty = null;
       screen = 'inbox'; plan = null; openMessageId = null; openOperativeId = null; openRecruitId = null;
-      return setState(createNewGame({ difficulty: id }));
+      return setState(createNewGame({ difficulty, startCrew: id }));
     }
     case 'slot-delete':
       if (confirm(`Delete the game in slot ${id}? This can't be undone.`)) deleteSlot(Number(id));
@@ -155,6 +159,7 @@ const threatHtml = (v) => `<span class="threat">${threatDots(v.threat)}</span>${
 const clientLine = (v) => v.client ? `${esc(v.client.name)} <span class="muted">(${esc(trustLabel(v.trust))})</span>` : '<span class="muted">Walk-in job</span>';
 const riskBadge = (level) => `<span class="risk risk--${esc(level)}">${esc(level === 'safe' || level === 'certain' ? level : `${level} risk`)}</span>`;
 const districtName = (key) => NAMES.districts[key] ?? key;
+const districtTurf = (key) => DISTRICTS[key]?.turf ? ` · ${esc(DISTRICTS[key].turf)}` : '';
 const initials = (name) => { const w = name.trim().split(/\s+/); return (w[0][0] + (w.length > 1 ? w.at(-1)[0] : '')).toUpperCase(); };
 /** Placeholder portrait: coloured initials. Swap for an <img> when portraits exist. */
 const badge = (op, size = '') => `<span class="badge ${size ? `badge--${size}` : ''} ${op.cause ? 'is-fallen' : ''}" style="--badge:${esc(op.color ?? COLOR_BY_ID[op.id] ?? '#8b93a7')}" aria-hidden="true">${esc(initials(op.name))}</span>`;
@@ -520,7 +525,7 @@ function renderJobs() {
           <li>
             <button class="row" data-action="open-job" data-id="${esc(j.id)}">
               <span class="row__main"><strong>${esc(t.name)}</strong> · ${clientLine(v)}<br>
-                <span class="muted">${esc(districtName(t.district))} · threat ${threatHtml(v)} · ${t.crewSize} crew · ${t.days}d</span>
+                <span class="muted">${esc(districtName(t.district))}${districtTurf(t.district)} · threat ${threatHtml(v)} · ${t.crewSize} crew · ${t.days}d</span>
                 ${v.hinted ? '<br><span class="intel">Intel unreliable</span>' : ''}</span>
               <span class="row__meta"><strong>${money(v.pay)}</strong><br>until day ${j.expiresDay}</span>
             </button>
@@ -560,6 +565,7 @@ function renderPlan() {
       <button class="btn btn--ghost" data-action="back">← Jobs</button>
       <h1>${esc(t.name)}</h1>
       <p class="muted">${esc(districtName(t.district))} · threat ${threatHtml(v)} · pays ${money(v.pay)} · crew away ${t.days}d</p>
+      ${DISTRICTS[t.district] ? `<p class="muted small">${esc(DISTRICTS[t.district].pitch)}</p>` : ''}
       <p class="body">${esc(t.brief)}</p>
       <div class="riskcard">
         <p><strong>Client:</strong> ${clientLine(v)}</p>
@@ -726,6 +732,11 @@ const DIFFICULTIES = {
   ironman: { name: 'Ironman', desc: 'As Standard, but no going back: no backups to restore, and older save files are refused.' },
 };
 
+const START_CREWS = {
+  classic: { name: 'The Lantern Bay Five', desc: 'Stitch, Static, Velvet, Wheels and Jax: the written crew, each with a story already under way.' },
+  fresh: { name: 'Fresh crew', desc: 'Five strangers, one of each role: a veteran, two pros and two rookies. Different every time.' },
+};
+
 function renderSettings() {
   const slots = listSlots();
   const active = getActiveSlot();
@@ -735,10 +746,16 @@ function renderSettings() {
   const picker = newGameSlot ? `
       <div class="riskcard">
         <h2 class="nomargin">New game in slot ${newGameSlot}</h2>
+        ${newGameDifficulty ? `
+        <p class="muted small">${esc(DIFFICULTIES[newGameDifficulty].name)} · now pick your starting crew</p>
+        <div class="segmented">
+          ${Object.entries(START_CREWS).map(([k, c]) => `
+            <button class="seg" data-action="start-crew" data-id="${k}"><strong>${esc(c.name)}</strong><span>${esc(c.desc)}</span></button>`).join('')}
+        </div>` : `
         <div class="segmented">
           ${Object.entries(DIFFICULTIES).map(([k, d]) => `
             <button class="seg" data-action="difficulty" data-id="${k}"><strong>${esc(d.name)}</strong><span>${esc(d.desc)}</span></button>`).join('')}
-        </div>
+        </div>`}
         <button class="btn btn--ghost" data-action="cancel-new">Cancel</button>
       </div>` : '';
 

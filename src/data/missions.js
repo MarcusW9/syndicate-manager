@@ -1,4 +1,5 @@
-// Mission templates: 7 types, 6 crises each (2-3 drawn per run).
+// Mission templates: 7 types, 6 crises each (2-3 drawn per run), plus the
+// district's own crises from ./districtCrises.js mixed into the pool.
 // The three original jobs live here; newer ones each have a file in ./missions/.
 // Every crisis MUST include at least one exit: an 'abort' or 'extract' choice
 // (enforced by core/validate.js). This is the "no death without a choice" rule.
@@ -7,6 +8,7 @@ import { KIDNAP } from './missions/kidnap.js';
 import { CASINO } from './missions/casino.js';
 import { PENTHOUSE } from './missions/penthouse.js';
 import { PROTECTION } from './missions/protection.js';
+import { DISTRICT_CRISES } from './districtCrises.js';
 
 /** @type {import('../core/types.js').MissionTemplate[]} */
 const BASE_MISSIONS = [
@@ -132,22 +134,22 @@ const BASE_MISSIONS = [
           { id: 'distract', label: '{face} distracts him', kind: 'adapt', stat: 'social', difficulty: 11, requires: { kind: 'role', value: 'face' },
             success: 'The guard gets a long story about a broken mop and never reaches the door.', failure: 'He gets suspicious and calls it in.', failureInjury: 'none' },
           { id: 'hide', label: '{tech} hides and keeps copying', kind: 'push', stat: 'stealth', difficulty: 13,
-            success: 'The guard checks the door handle and moves on.', failure: 'He finds her. There is a struggle.', failureInjury: 'serious' },
+            success: 'The guard checks the door handle and moves on.', failure: 'He finds {tech}. There is a struggle.', failureInjury: 'serious' },
           { id: 'abort', label: 'Abort: pull out with a partial copy', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 0.6, clientTrust: -5 },
             success: 'You leave with forty percent. The client is unhappy but pays something.', failure: '', failureInjury: 'none' },
         ],
       },
       {
         id: 'neural_spike',
-        text: '{tech} is pushing her implants to crack the last layer. Her nose starts bleeding.',
+        text: '{tech} is pushing their implants to crack the last layer. A nosebleed starts.',
         focusRole: 'tech',
         choices: [
-          { id: 'push', label: 'Let her finish it', kind: 'push', stat: 'tech', difficulty: 12, neural: 25,
-            success: 'She cracks it, wipes her nose and grins. Neural load spikes.', failure: 'She collapses. Her vitals are bad.', failureInjury: 'critical' },
+          { id: 'push', label: 'Let {tech} finish it', kind: 'push', stat: 'tech', difficulty: 12, neural: 25,
+            success: '{tech} cracks it, wipes the blood away and grins. Neural load spikes.', failure: '{tech} collapses. The vitals are bad.', failureInjury: 'critical' },
           { id: 'medic', label: 'Medic steps in, slower approach', kind: 'stabilise', stat: 'medical', difficulty: 9, requires: { kind: 'role', value: 'medic' }, cost: { heat: 1 },
-            success: 'The medic dials her down. It takes longer, but she is fine.', failure: 'Too slow. An alarm trips.', failureInjury: 'none' },
-          { id: 'abort', label: 'Abort: unplug her now', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 0.6 },
-            success: 'You unplug her mid-crack. She swears at you all the way home, alive.', failure: '', failureInjury: 'none' },
+            success: 'The medic dials {tech} down. It takes longer, but {tech} is fine.', failure: 'Too slow. An alarm trips.', failureInjury: 'none' },
+          { id: 'abort', label: 'Abort: unplug {tech} now', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 0.6 },
+            success: 'You unplug {tech} mid-crack. {tech} swears at you all the way home, alive.', failure: '', failureInjury: 'none' },
         ],
       },
       {
@@ -179,15 +181,15 @@ const BASE_MISSIONS = [
       },
       {
         id: 'trace',
-        text: 'Counter-intrusion software catches {tech}. A trace is crawling back up her connection toward her implants.',
+        text: 'Counter-intrusion software catches {tech}. A trace is crawling back up the connection towards {tech}\'s implants.',
         focusRole: 'tech',
         choices: [
           { id: 'fight', label: '{tech} fights the trace head-on', kind: 'push', stat: 'tech', difficulty: 13, neural: 20, requires: { kind: 'role', value: 'tech' },
-            success: 'She burns the trace out and leaves a mess in their logs. Her hands are shaking.', failure: 'The trace hits her implants. She convulses and falls.', failureInjury: 'serious' },
+            success: '{tech} burns the trace out and leaves a mess in their logs, hands shaking.', failure: 'The trace hits {tech}\'s implants. {tech} convulses and falls.', failureInjury: 'serious' },
           { id: 'reroute', label: 'Reroute through the bubble tea shop\'s wifi downstairs', kind: 'adapt', stat: 'tech', difficulty: 10, neural: 10, cost: { payCut: 0.2 },
-            success: 'Slower, and the copy is partial, but the trace loses her.', failure: 'The reroute stalls and the trace gets a partial lock. Heat rises.', failureInjury: 'none', failureCost: { heat: 1 } },
+            success: 'Slower, and the copy is partial, but the trace loses {tech}.', failure: 'The reroute stalls and the trace gets a partial lock. Heat rises.', failureInjury: 'none', failureCost: { heat: 1 } },
           { id: 'abort', label: 'Abort: rip the cable out', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 0.6 },
-            success: 'You yank the cable. She swears at you, nose bleeding, but she is clean.', failure: '', failureInjury: 'none' },
+            success: 'You yank the cable. {tech} swears at you, nose bleeding, but clean.', failure: '', failureInjury: 'none' },
         ],
       },
       {
@@ -306,4 +308,5 @@ const BASE_MISSIONS = [
   },
 ];
 
-export const MISSIONS = [...BASE_MISSIONS, KIDNAP, CASINO, PENTHOUSE, PROTECTION];
+export const MISSIONS = [...BASE_MISSIONS, KIDNAP, CASINO, PENTHOUSE, PROTECTION]
+  .map((m) => ({ ...m, crises: [...m.crises, ...(DISTRICT_CRISES[m.district] ?? [])] }));

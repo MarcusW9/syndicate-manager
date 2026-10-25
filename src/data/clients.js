@@ -5,13 +5,13 @@ export const CLIENTS = [
   {
     id: 'fung',
     name: 'Auntie Fung',
-    desc: 'Runs three herbal tea shops in Old Town and a quiet fencing business behind them. Pays in cash, remembers everything.',
+    desc: 'Runs three herbal tea shops in Old Town and a quiet fencing business behind them. A senior elder of the Brass Anchor Society. Pays in cash, remembers everything.',
     jobs: ['courier', 'protection', 'kidnap'],
   },
   {
     id: 'szeto',
     name: 'Mr. Szeto',
-    desc: 'Property developer in Glass Heights. Wants his rivals\' secrets and doesn\'t ask how you get them.',
+    desc: 'Property developer in Glass Heights. Wants his rivals\' secrets and doesn\'t ask how you get them. Old tenements near his sites have a habit of catching fire.',
     jobs: ['data_pull', 'penthouse', 'casino'],
   },
   {
@@ -29,7 +29,7 @@ export const CLIENTS = [
   {
     id: 'okonkwo',
     name: 'Ruth Okonkwo',
-    desc: 'Corporate fixer for a megacorp that officially doesn\'t exist. Pays the best and trusts nobody.',
+    desc: 'Broker for Aether-Harbour Logistics\' off-books arm, the part that officially doesn\'t exist. Pays the best and trusts nobody.',
     jobs: ['data_pull', 'penthouse', 'warehouse'],
   },
 ];

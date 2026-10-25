@@ -25,7 +25,7 @@ export const KIDNAP = {
         { id: 'quiet', label: '{muscle} takes him down quietly', kind: 'push', stat: 'stealth', difficulty: 11,
           success: 'One arm round the neck, a soft landing on the bins. Out cold.', failure: 'He gets a shout out before he goes down. Upstairs goes quiet.', failureInjury: 'light', failureCost: { heat: 1 } },
         { id: 'distract', label: '{face} plays a lost tourist asking for directions', kind: 'adapt', stat: 'social', difficulty: 10, requires: { kind: 'role', value: 'face' },
-          success: 'He walks her to the corner to point the way. You slip in behind him.', failure: 'He doesn\'t buy it and calls upstairs.', failureInjury: 'none', failureCost: { heat: 1 } },
+          success: 'He walks {face} to the corner to point the way. You slip in behind him.', failure: 'He doesn\'t buy it and calls upstairs.', failureInjury: 'none', failureCost: { heat: 1 } },
         { id: 'abort', label: 'Abort: pull back and leave him there', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -15 },
           success: 'You drive away. Nobody on the crew says anything for a long time.', failure: '', failureInjury: 'none' },
       ],

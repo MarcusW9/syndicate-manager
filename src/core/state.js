@@ -3,7 +3,7 @@
 import { STARTING_CREW, STARTING_TRUST } from '../data/operatives.js';
 import { NAMES } from '../config/names.js';
 import { addOffer } from './jobs.js';
-import { STARTING_ROSTER_CAP } from './recruits.js';
+import { STARTING_ROSTER_CAP, generateStartingCrew, recruitToOperative } from './recruits.js';
 import { prepareOperative } from './development.js';
 import { refreshFreelancers } from './freelance.js';
 
@@ -19,8 +19,12 @@ const freshCondition = () => ({
 });
 
 /** @returns {import('./types.js').GameState} */
-export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'standard' } = {}) {
-  const crew = STARTING_CREW.map((op) => prepareOperative({
+/**
+ * startCrew: 'classic' (the authored Lantern Bay Five) or 'fresh' (five generated
+ * people, one per core role; see generateStartingCrew).
+ */
+export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'standard', startCrew = 'classic' } = {}) {
+  const crew = startCrew === 'fresh' ? [] : STARTING_CREW.map((op) => prepareOperative({
     ...structuredClone(op),
     condition: freshCondition(),
     trust: { ...(STARTING_TRUST[op.id] ?? {}) },
@@ -46,7 +50,7 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
         type: 'crew',
         day: 1,
         subject: `Welcome to ${NAMES.city}`,
-        body: `Five people, one safehouse, rent due Sunday. Teo says the crew trusts you. Mostly. Three jobs are on the board. The courier run alone won't cover rent.`,
+        body: '', // written below, once the crew exists
         blocking: false,
         read: false,
       },
@@ -63,6 +67,15 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
     safehouseLevel: 1,
     clients: {},
   };
+  if (startCrew === 'fresh') {
+    for (const r of generateStartingCrew(state)) {
+      state.crew.push(recruitToOperative(r, { condition: freshCondition(), history: ['Day 1: one of the founding crew'] }));
+    }
+  }
+  // The oldest hand vouches for the crew (Teo, in the classic start).
+  const elder = [...state.crew].sort((a, b) => b.age - a.age)[0];
+  state.inbox[0].body = `Five people, one safehouse, rent due Sunday. ${elder.handle} says the crew trusts you. Mostly. Three jobs are on the board. The courier run alone won't cover rent.`;
+
   // Opening board: one safe job, one mid, one dangerous (see DESIGN.md).
   for (const id of ['courier', 'data_pull', 'warehouse']) addOffer(state, id);
   refreshFreelancers(state);

@@ -46,6 +46,7 @@ Output goes to `dist/`. Pushing to `main` deploys to GitHub Pages automatically 
 ## Docs
 - `CHANGELOG.md`: what changed in each update
 - `DESIGN.md`: narrative, setting, cast, and the decision log (why each choice was made)
+- `WORLD.md`: the world bible (history, factions, districts) and the context block for worldbuilding prompts
 - `DATA.md`: data shapes
 - `CLAUDE.md`: project rules for working on the code
 - `WRITING_GUIDE.md`: how to write new crises and jobs in plain English

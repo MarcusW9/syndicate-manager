@@ -58,11 +58,11 @@ export const PENTHOUSE = {
     },
     {
       id: 'vault_timer',
-      text: 'The vault has a time lock. {tech} can force it, but it will take her brain to its limit.',
+      text: 'The vault has a time lock. {tech} can force it, but it will push their brain to its limit.',
       focusRole: 'tech',
       choices: [
         { id: 'force', label: '{tech} forces the time lock', kind: 'push', stat: 'tech', difficulty: 14, neural: 30, requires: { kind: 'role', value: 'tech' },
-          success: 'Ninety seconds of silence, then a click. Her hands are shaking badly.', failure: 'Her implants overload. She drops to the floor, convulsing.', failureInjury: 'critical' },
+          success: 'Ninety seconds of silence, then a click. {tech}\'s hands are shaking badly.', failure: '{tech}\'s implants overload. {tech} drops to the floor, convulsing.', failureInjury: 'critical' },
         { id: 'jade_only', label: 'Forget the vault, take the jade on display', kind: 'adapt', stat: 'stealth', sure: true, difficulty: 0, cost: { payCut: 0.5 },
           success: 'Three jade carvings from the shelves. Half the score, none of the risk.', failure: '', failureInjury: 'none' },
         { id: 'abort', label: 'Abort: leave it all', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -10 },

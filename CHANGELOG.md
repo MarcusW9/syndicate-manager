@@ -4,6 +4,18 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · Pick your starting crew
+- Starting a new game now asks who you start with: **The Lantern Bay Five** (Stitch, Static, Velvet, Wheels and Jax) or a **Fresh crew** of five strangers, one of each role (a veteran, two pros and two rookies), different every time. Fresh crews cost about the same in wages but are a tougher start.
+- Crisis text no longer assumes your tech or face is a woman, so it reads right for any crew.
+- 6 new tests (118 total).
+
+## 2026-10-25 · The city starts to show
+- The job board says whose turf each job is on: Old Town is Brass Anchor turf, the Docks Red Lantern turf, the Night Market Silver Fan turf, Glass Heights Veridian-Apex ground.
+- The job planning screen opens with a one-line feel for the district.
+- 12 new crises, three for each district, that can turn up on any job there: a seizure in an Old Town alley, Brass Anchor men at the shrine, a block-wide blackout; waking security drones, a Signal 3 lockdown and a Wet Sleeve "neural-load check" at the Docks; a Silver Fan tracker, an implant-frying pulse and a police commander on a chrome-clinic table in the Night Market; a fired inside contact, a neural demo gone wrong and a sky-bridge lockdown in Glass Heights. Every job now draws from 9 crises instead of 6.
+- Client descriptions now hint at who they really are: Auntie Fung is a Brass Anchor elder, old tenements near Mr. Szeto's sites keep catching fire, and Ruth Okonkwo works for Aether-Harbour Logistics' off-books arm.
+- Behind the scenes: the city's lore (history, factions, districts, Pearl Haven House) now lives in `WORLD.md`.
+
 ## 2026-10-24 · Heat that means something
 - Taking a job no longer adds heat by itself. Heat now comes from how you play: the Loud approach (+1) and crisis choices or failures that say "+heat". A clean stealth or social job adds nothing.
 - Heat cools by 2 every Sunday, whether or not you worked that week. The "quiet week" bonus is gone.
