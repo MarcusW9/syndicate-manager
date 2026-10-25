@@ -12,7 +12,7 @@ import { STARTING_CREW } from '../data/operatives.js';
 const COLOR_BY_ID = Object.fromEntries(STARTING_CREW.map((o) => [o.id, o.color]));
 import { advanceDay, formatDate, isBlocked, seasonStartDay } from '../core/time.js';
 import { createNewGame } from '../core/state.js';
-import { templateById, jobView } from '../core/jobs.js';
+import { templateById, jobView, nextUnlock } from '../core/jobs.js';
 import { trustLabel, clientById, trustOf } from '../core/clients.js';
 import { CLIENTS } from '../data/clients.js';
 import { availability, APPROACHES, traitMods, ratedStat, maxCrew, crewSizeRead } from '../core/crew.js';
@@ -22,14 +22,14 @@ import { WATCHED_PENALTY, heatChoices } from '../core/heat.js';
 import { activeRumour } from '../core/rumours.js';
 import {
   startMission, revealBeat, chooseOption, resolveCritical, closeMission,
-  describeCrisis, describeCritical, currentStep,
+  describeCrisis, describeCritical, currentStep, fillBrief,
 } from '../core/mission.js';
 import {
   saveGame, loadGame, exportSave, importSave, listSlots, getActiveSlot, setActiveSlot,
   deleteSlot, loadBackup, backupDue, SLOT_COUNT,
 } from '../save/save.js';
 import { hire, haggle, passRecruit, canHire, signingFee, nextExpansion, expandSafehouse, STARTING_ROSTER_CAP } from '../core/recruits.js';
-import { potentialRead, potentialTag, primaryStat, scoutFor, ageRate, declineChance, mentoring, changesSince } from '../core/development.js';
+import { potentialRead, potentialTag, primaryStat, scoutFor, ageRate, declineChance, mentoring, changesSince, progressShare } from '../core/development.js';
 import { GROWTH_LINES, GRADUATION_LINES } from '../data/growthLines.js';
 import { freelancerAsCrew, shareOf, MAX_FREELANCERS_PER_JOB } from '../core/freelance.js';
 
@@ -40,7 +40,6 @@ let openMessageId = null;
 let openOperativeId = null;
 let openRecruitId = null;
 let newGameSlot = null; // slot number while picking a difficulty
-let newGameDifficulty = null; // picked difficulty while choosing a starting crew
 let plan = null; // { jobId, crew: [...ids], approach }
 let root;
 
@@ -123,19 +122,19 @@ function onClick(e) {
       screen = 'inbox'; plan = null; openMessageId = null; openOperativeId = null; openRecruitId = null;
       return setState(loaded);
     }
-    case 'slot-new': newGameSlot = Number(id); newGameDifficulty = null; break;
-    case 'cancel-new': newGameSlot = null; newGameDifficulty = null; break;
-    case 'difficulty': newGameDifficulty = id; break;
-    case 'start-crew': {
+    case 'slot-new': newGameSlot = Number(id); break;
+    case 'cancel-new': newGameSlot = null; break;
+    case 'difficulty': {
+      // Every new game starts with five generated rookies (PLAN-PROGRESSION.md).
       const slot = newGameSlot;
-      const difficulty = newGameDifficulty;
+      const difficulty = id;
       const taken = !listSlots()[slot - 1].empty;
       if (taken && !confirm(`Start a new ${difficulty} game in slot ${slot}? The game in that slot will be deleted.`)) break;
       deleteSlot(slot);
       setActiveSlot(slot);
-      newGameSlot = null; newGameDifficulty = null;
+      newGameSlot = null;
       screen = 'inbox'; plan = null; openMessageId = null; openOperativeId = null; openRecruitId = null;
-      return setState(createNewGame({ difficulty, startCrew: id }));
+      return setState(createNewGame({ difficulty, startCrew: 'fresh' }));
     }
     case 'slot-delete':
       if (confirm(`Delete the game in slot ${id}? This can't be undone.`)) deleteSlot(Number(id));
@@ -207,6 +206,7 @@ function statCell(op, k, { growth = false } = {}) {
     <dd>${ratedStat(op, k)}${season ? ` <span class="growth ${season < 0 ? 'is-down' : ''}">${signed(season)}</span>` : ''}</dd>
     ${mod ? `<span class="statnote ${mod < 0 ? 'is-down' : ''}">${op.stats[k]} ${mod > 0 ? '+' : '−'}${Math.abs(mod)} ${esc(traitNames)}</span>` : ''}
     ${career ? `<span class="statnote">career ${signed(career)}</span>` : ''}
+    ${growth ? `<span class="nextbar" role="progressbar" aria-label="${esc(k)}: towards the next point" aria-valuenow="${Math.round(progressShare(op, k) * 100)}" aria-valuemin="0" aria-valuemax="100"><span style="width:${Math.round(progressShare(op, k) * 100)}%"></span></span>` : ''}
   </div>`;
 }
 
@@ -507,7 +507,7 @@ function renderOperative() {
       <h2>Development</h2>
       <div class="riskcard">
         <p>${esc(potentialRead(op, scoutFor(state.crew, op.role, op.id)?.handle))}</p>
-        <p class="muted small">${esc(growthNote(op.age))} Green and red numbers are this season's change; "career" is since joining.</p>
+        <p class="muted small">${esc(growthNote(op.age))} Green and red numbers are this season's change; "career" is since joining. The thin bar under each stat fills towards the next point.</p>
       </div>
 
       <h2>Condition</h2>
@@ -529,12 +529,22 @@ function streetTalk() {
 }
 const talkTag = (v) => v.rumour ? `<span class="talk-tag">Street talk: ${esc(v.rumour.tag)}</span>` : '';
 
+// The climb: how far the crew's name has to travel before bigger work is offered.
+function climbLine() {
+  const next = nextUnlock(state);
+  if (!next) return '';
+  const pct = Math.round(Math.min(1, (state.reputation ?? 0) / next.rep) * 100);
+  return `<div class="climb"><p class="small"><strong>Reputation ${Math.floor(state.reputation ?? 0)}/${next.rep}.</strong> Bigger work opens up once people know your name. Finished jobs build it; aborts cost it.</p>
+    <div class="bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><span style="width:${pct}%"></span></div></div>`;
+}
+
 function renderJobs() {
-  if (!state.jobs.length) return `<section class="panel"><h1>Jobs</h1>${streetTalk()}<p class="muted">No work on the board. New jobs arrive on Mondays.</p>${renderClients()}</section>`;
+  if (!state.jobs.length) return `<section class="panel"><h1>Jobs</h1>${streetTalk()}${climbLine()}<p class="muted">No work on the board. New jobs arrive on Mondays.</p>${renderClients()}</section>`;
   return `
     <section class="panel">
       <h1>Jobs</h1>
       ${streetTalk()}
+      ${climbLine()}
       <ul class="list">
         ${state.jobs.map((j) => {
           const v = jobView(state, j);
@@ -584,7 +594,7 @@ function renderPlan() {
       <h1>${esc(t.name)}</h1>
       <p class="muted">${esc(districtName(t.district))} · threat ${threatHtml(v)} · pays ${money(v.pay)} · crew away ${t.days}d</p>
       ${DISTRICTS[t.district] ? `<p class="muted small">${esc(DISTRICTS[t.district].pitch)}</p>` : ''}
-      <p class="body">${esc(t.brief)}</p>
+      <p class="body">${esc(fillBrief(t))}</p>
       <div class="riskcard">
         <p><strong>Client:</strong> ${clientLine(v)}</p>
         ${v.client ? `<p class="muted small">${esc(v.client.desc)}</p>` : ''}
@@ -738,7 +748,7 @@ function renderMission() {
       <p class="muted small">On the job · ${esc(APPROACHES[am.approach]?.name ?? '')} approach · ${esc(crewNames)}</p>
       <div class="crewstrip">${crewOps.map((o) => badge(o, 'sm')).join('')}</div>
       <h1>${esc(t.name)}</h1>
-      <div class="mission__log">${log || `<p class="body muted">${esc(t.brief)}</p>`}</div>
+      <div class="mission__log">${log || `<p class="body muted">${esc(fillBrief(t))}</p>`}</div>
       ${action}
       <div class="mission-end"></div>
     </section>`;
@@ -749,11 +759,6 @@ const DIFFICULTIES = {
   story: { name: 'Story', desc: 'Nobody dies. Critical operatives always pull through.' },
   standard: { name: 'Standard', desc: 'Death only if you choose "push on". Backups can be restored.' },
   ironman: { name: 'Ironman', desc: 'As Standard, but no going back: no backups to restore, and older save files are refused.' },
-};
-
-const START_CREWS = {
-  classic: { name: 'The Lantern Bay Five', desc: 'Stitch, Static, Velvet, Wheels and Jax: the written crew, each with a story already under way.' },
-  fresh: { name: 'Fresh crew', desc: 'Five strangers, one of each role: a veteran, two pros and two rookies. Different every time.' },
 };
 
 // --- city --------------------------------------------------------------
@@ -855,16 +860,11 @@ function renderSettings() {
   const picker = newGameSlot ? `
       <div class="riskcard">
         <h2 class="nomargin">New game in slot ${newGameSlot}</h2>
-        ${newGameDifficulty ? `
-        <p class="muted small">${esc(DIFFICULTIES[newGameDifficulty].name)} · now pick your starting crew</p>
-        <div class="segmented">
-          ${Object.entries(START_CREWS).map(([k, c]) => `
-            <button class="seg" data-action="start-crew" data-id="${k}"><strong>${esc(c.name)}</strong><span>${esc(c.desc)}</span></button>`).join('')}
-        </div>` : `
+        <p class="muted small">Five nobodies off the street, one of each role. Pick a difficulty to start.</p>
         <div class="segmented">
           ${Object.entries(DIFFICULTIES).map(([k, d]) => `
             <button class="seg" data-action="difficulty" data-id="${k}"><strong>${esc(d.name)}</strong><span>${esc(d.desc)}</span></button>`).join('')}
-        </div>`}
+        </div>
         <button class="btn btn--ghost" data-action="cancel-new">Cancel</button>
       </div>` : '';
 

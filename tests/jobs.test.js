@@ -32,7 +32,8 @@ test('twists follow the same rules as every crisis', () => {
 
 test('every client offers only job types that exist', () => {
   for (const c of CLIENTS) for (const j of c.jobs) assert.ok(templateById(j), `${c.id} offers unknown job ${j}`);
-  for (const m of MISSIONS) assert.ok(CLIENTS.some((c) => c.jobs.includes(m.id)), `no client offers ${m.id}`);
+  // Walk-in work (2026-10-25) is the one exception: it has no client on purpose.
+  for (const m of MISSIONS) assert.ok(m.walkIn ? !CLIENTS.some((c) => c.jobs.includes(m.id)) : CLIENTS.some((c) => c.jobs.includes(m.id)), `${m.id}: client or walk-in, not neither`);
 });
 
 test('offers vary pay by up to 25% and threat by at most 1, staying on the 1-5 scale', () => {
@@ -163,4 +164,50 @@ test('weekly job refresh keeps working for a whole season', () => {
   let s = createNewGame({ seed: 11 });
   for (let d = 0; d < 364; d++) s = advanceDay(s);
   assert.ok(s.jobs.length > 0 && s.jobs.length <= 4);
+});
+
+// Job gates (PLAN-PROGRESSION.md, 2026-10-25): a new crew is only offered work its name has earned.
+test('job gates: a new crew is only offered jobs its reputation has unlocked', async () => {
+  const { JOB_GATES, jobGate, nextUnlock } = await import('../src/core/jobs.js');
+  for (const rep of [0, 9, 10, 15, 40, 79, 80]) {
+    const s = createNewGame({ seed: 11, startCrew: 'fresh' });
+    s.reputation = rep;
+    const seen = new Set();
+    for (let i = 0; i < 40; i++) { s.day += 7; s.jobs = []; refreshJobs(s); for (const j of s.jobs) seen.add(j.templateId); }
+    for (const id of seen) assert.ok(jobGate(id) <= rep, `rep ${rep} was offered ${id}`);
+    assert.ok([...seen].some((id) => templateById(id).rookie), `rep ${rep}: rookie work still turns up`);
+    const top = Math.max(0, ...Object.entries(JOB_GATES).filter(([, g]) => g <= rep).map(([t]) => Number(t)));
+    if (top) assert.ok([...seen].some((id) => !templateById(id).rookie && templateById(id).threat === top), `rep ${rep}: threat ${top} work turns up`);
+    assert.deepEqual(nextUnlock(s), rep >= 80 ? null : { threat: top + 1, rep: JOB_GATES[top + 1] });
+  }
+});
+
+test('job gates: games started before them keep an open board', () => {
+  const s = createNewGame({ seed: 12 });
+  assert.equal(s.jobGates, false);
+  const seen = new Set();
+  for (let i = 0; i < 40; i++) { s.day += 7; s.jobs = []; refreshJobs(s); for (const j of s.jobs) seen.add(templateById(j.templateId).threat); }
+  assert.ok(seen.has(4) && seen.has(5), 'big work is still offered at reputation 0');
+});
+
+test('the board adds up to 3 new jobs a week and holds up to 5', async () => {
+  const { MAX_OFFERS, NEW_PER_WEEK } = await import('../src/core/jobs.js');
+  const s = createNewGame({ seed: 13, startCrew: 'fresh' });
+  s.jobs = [];
+  refreshJobs(s);
+  assert.equal(s.jobs.length, NEW_PER_WEEK);
+  s.day += 1; refreshJobs(s);
+  assert.equal(s.jobs.length, MAX_OFFERS);
+});
+
+test('a finished job earns REP_PER_THREAT per threat level; an abort costs ABORT_REP', async () => {
+  const M = await import('../src/core/mission.js');
+  const { playMission, carefulPolicy } = await import('./play.js');
+  const s = createNewGame({ seed: 21, startCrew: 'fresh' });
+  const job = s.jobs[0];
+  const done = playMission(M.startMission(s, job.id, s.crew.slice(0, 2).map((o) => o.id), 'stealth'), carefulPolicy).state;
+  const threat = done.activeMission.threat;
+  const expected = done.activeMission.aborted ? 0 : threat * M.REP_PER_THREAT;
+  assert.equal(done.reputation, Math.round(expected * 10) / 10);
+  assert.equal(M.REP_PER_THREAT, 0.75, 'tuned 2026-10-25 for the long climb (PLAN-PROGRESSION.md)');
 });

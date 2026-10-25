@@ -1,4 +1,4 @@
-// Mission templates: 7 types, 6 crises each (2-3 drawn per run), plus the
+// Mission templates: 7 main jobs with 6 crises each, plus rookie jobs (missions/*.js) (2-3 drawn per run), plus the
 // district's own crises from ./districtCrises.js mixed into the pool.
 // The three original jobs live here; newer ones each have a file in ./missions/.
 // Every crisis MUST include at least one exit: an 'abort' or 'extract' choice
@@ -8,7 +8,17 @@ import { KIDNAP } from './missions/kidnap.js';
 import { CASINO } from './missions/casino.js';
 import { PENTHOUSE } from './missions/penthouse.js';
 import { PROTECTION } from './missions/protection.js';
+import { CLINIC } from './missions/clinic.js';
+import { HERBAL } from './missions/herbal.js';
+import { LEDGER } from './missions/ledger.js';
+import { CONTAINER } from './missions/container.js';
+import { DELIVERY } from './missions/delivery.js';
+import { EVICTION } from './missions/eviction.js';
+import { CHROME } from './missions/chrome.js';
+import { CABLE } from './missions/cable.js';
+import { SCRUB } from './missions/scrub.js';
 import { DISTRICT_CRISES } from './districtCrises.js';
+import { ROOKIE_CRISES } from './rookieCrises.js';
 
 /** @type {import('../core/types.js').MissionTemplate[]} */
 const BASE_MISSIONS = [
@@ -308,5 +318,7 @@ const BASE_MISSIONS = [
   },
 ];
 
-export const MISSIONS = [...BASE_MISSIONS, KIDNAP, CASINO, PENTHOUSE, PROTECTION]
-  .map((m) => ({ ...m, crises: [...m.crises, ...(DISTRICT_CRISES[m.district] ?? [])] }));
+// Rookie jobs (rookie: true) draw the shared rookie pool instead of the district crises:
+// those are aimed at 9-14, too hard for a new crew.
+export const MISSIONS = [...BASE_MISSIONS, KIDNAP, CASINO, PENTHOUSE, PROTECTION, CLINIC, HERBAL, LEDGER, CONTAINER, DELIVERY, EVICTION, CHROME, CABLE, SCRUB]
+  .map((m) => ({ ...m, crises: [...m.crises, ...(m.rookie ? ROOKIE_CRISES : DISTRICT_CRISES[m.district] ?? [])] }));

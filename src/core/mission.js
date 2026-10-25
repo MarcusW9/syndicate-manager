@@ -15,6 +15,9 @@ import { clampHeat, WATCHED_PENALTY } from './heat.js';
 import { XP, applyGrowth, gainXp, primaryStat } from './development.js';
 import { freelancerAsCrew, freelanceCut, isFreelancer, MAX_FREELANCERS_PER_JOB } from './freelance.js';
 import { reactToJob, RUMOUR_CRISIS_CHANCE } from './rumours.js';
+import { CAST } from '../data/cast.js';
+import { DISTRICTS } from '../data/districts.js';
+import { NAMES } from '../config/names.js';
 
 const EXIT_KINDS = new Set(['abort', 'extract']);
 const STABILISE_DIFFICULTY = 9;
@@ -24,6 +27,9 @@ const opById = (state, id) => state.crew.find((o) => o.id === id);
 const crisisById = (tpl, id) => tpl.crises.find((c) => c.id === id) ?? twistById(id);
 
 /** Difficulty of a roll on this job: the offer's threat change shifts every roll by 1 per step. */
+export const REP_PER_THREAT = 0.75;
+export const ABORT_REP = 3;
+
 const rollDifficulty = (am, choice) => choice.difficulty + (am.threatDelta ?? 0);
 
 const STAT_NAME = (s) => s[0].toUpperCase() + s.slice(1);
@@ -38,6 +44,7 @@ function grow(state, am, op, stat, points) {
   for (const e of events) {
     am.growth = [...(am.growth ?? []), e];
     am.log.push({ kind: 'growth', text: `▲ ${e.handle}: ${STAT_NAME(e.stat)} ${e.from} → ${e.to}` });
+    if (e.wall) am.log.push({ kind: 'growth', text: `${e.handle} has hit a wall in ${e.stat}. It'll come slower from here.` });
   }
   if (graduated) {
     am.graduated = [...(am.graduated ?? []), op.id];
@@ -45,14 +52,46 @@ function grow(state, am, op, stat, points) {
   }
 }
 
-/** Replace {driver}, {tech}, {face}, {muscle}, {medic}, {op} with crew handles. */
+const hash = (str) => { let h = 0; for (const ch of str) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; };
+
+/**
+ * Replace {driver}, {tech}, {face}, {muscle}, {medic}, {op} with crew handles; {district}
+ * and {faction} with the job's district; {siu} with a cast name and {siu:approve} with one
+ * of their lines (data/cast.js), picked the same way every time for this job and step.
+ */
 export function fill(text, state, am) {
   const crew = crewOf(state, am);
-  return text.replace(/\{(\w+)\}/g, (_, key, offset, whole) => {
+  const district = templateById(am.templateId)?.district;
+  return text.replace(/\{(\w+)(?::(\w+))?\}/g, (_, key, sub, offset, whole) => {
+    if (CAST[key]) {
+      const lines = sub ? CAST[key].lines?.[sub] : null;
+      return lines?.length ? lines[hash(`${am.jobId}:${am.step}:${key}:${sub}`) % lines.length] : CAST[key].name;
+    }
+    if (key === 'district') return NAMES.districtsInText[district] ?? 'the city';
+    if (key === 'faction') return DISTRICTS[district]?.faction ?? 'the local crew';
     const op = key === 'op' ? opById(state, am.focusOp) : crew.find((o) => o.role === key);
     if (op) return op.handle;
     const startsSentence = offset === 0 || /[.!?:]["']?\s+$/.test(whole.slice(0, offset));
     return startsSentence ? 'Someone' : 'someone';
+  });
+}
+
+/** The plain one-line version of what happened, for the after-action message (and, later, autonomous runs). */
+function addReport(state, am, choice, success) {
+  const line = choice.report?.[success ? 'success' : 'failure'];
+  if (line) am.report = [...(am.report ?? []), fill(line, state, am)];
+}
+
+/** A job's brief, filled before any crew is picked (planning screen): cast, {district}, {faction}. */
+export function fillBrief(tpl) {
+  return tpl.brief.replace(/\{(\w+)(?::(\w+))?\}/g, (_, key, sub) => {
+    if (CAST[key]) {
+      const lines = sub ? CAST[key].lines?.[sub] : null;
+      return lines?.length ? lines[hash(`${tpl.id}:brief:${key}:${sub}`) % lines.length] : CAST[key].name;
+    }
+    if (key === 'district') return NAMES.districtsInText[tpl.district] ?? 'the city';
+    if (key === 'faction') return DISTRICTS[tpl.district]?.faction ?? 'the local crew';
+    return 'your crew';
   });
 }
 
@@ -86,11 +125,17 @@ export function startMission(prev, jobId, crewIds, approach) {
   // Street talk about a district crisis makes it likely to come up (drawn first most of the time).
   const talk = view.rumour?.crisis ? pool.findIndex((c) => c.id === view.rumour.crisis) : -1;
   if (talk > 0 && rng() < RUMOUR_CRISIS_CHANCE) [pool[0], pool[talk]] = [pool[talk], pool[0]];
-  const crises = pool.slice(0, Math.min(pool.length, view.threat >= 4 ? 3 : 2));
+  // Story order: a crisis's `order` sorts the drawn ones (stable, so equal orders stay random).
+  const crises = pool.slice(0, Math.min(pool.length, view.threat >= 4 ? 3 : 2)).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-  // Spread crises between beats.
+  // Spread crises between beats. A crisis with `after: b` waits until beat b has been told;
+  // none goes after the last beat, and they keep their order.
   const n = tpl.beats.length;
-  const positions = crises.map((_, i) => Math.max(1, Math.floor(((i + 1) * n) / (crises.length + 1))));
+  const positions = [];
+  crises.forEach((c, i) => {
+    const spread = Math.max(1, Math.floor(((i + 1) * n) / (crises.length + 1)));
+    positions.push(Math.min(n - 1, Math.max(spread, (c.after ?? -1) + 1, positions[i - 1] ?? 1)));
+  });
   const queue = [];
   for (let b = 0; b < n; b++) {
     queue.push({ type: 'beat', index: b });
@@ -113,7 +158,7 @@ export function startMission(prev, jobId, crewIds, approach) {
     queue, step: 0, log: [],
     payCut: 0, extraHeat: 0, clientTrust: 0, watched,
     critical: null, stabiliseFailed: false, untreated: [],
-    focusOp: null, aborted: false, done: false, result: null, growth: [], graduated: [],
+    focusOp: null, aborted: false, done: false, result: null, growth: [], graduated: [], report: [],
   };
   return state;
 }
@@ -253,6 +298,7 @@ export function chooseOption(prev, choiceId) {
 
   if (EXIT_KINDS.has(choice.kind)) {
     am.log.push({ kind: 'good', text: fill(choice.success, state, am) });
+    addReport(state, am, choice, true);
     am.aborted = true;
     if (step.twist) am.abortedOnTwist = true; // walking away from a job the client misrepresented isn't held against you
     am.step = am.queue.length - 1;
@@ -276,6 +322,7 @@ export function chooseOption(prev, choiceId) {
     roller.op.condition.neuralLoad = Math.min(100, roller.op.condition.neuralLoad + Math.round(choice.neural * rate));
   }
 
+  addReport(state, am, choice, success);
   if (success) {
     am.log.push({ kind: 'good', text: fill(choice.success, state, am) });
     const sc = choice.successCost ?? {};
@@ -409,7 +456,11 @@ function finish(state) {
   const heatGain = (am.aborted ? 0 : tpl.heat + (APPROACHES[am.approach]?.heat ?? 0)) + am.extraHeat;
   state.cash += pay - cuts;
   state.heat = clampHeat(state.heat + heatGain);
-  state.reputation = Math.max(0, Math.min(100, state.reputation + (am.aborted ? -3 : threat * 3)));
+  // A finished job earns REP_PER_THREAT per threat level (3 until 2026-10-25; x0.4 for
+  // the long climb); an abort costs ABORT_REP (unchanged: scaling it too let crews
+  // reach work they weren't ready for, measured 2026-10-25).
+  const gain = am.aborted ? -ABORT_REP : threat * REP_PER_THREAT;
+  state.reputation = Math.round(Math.max(0, Math.min(100, state.reputation + gain)) * 10) / 10;
 
   // Clients remember: a finished job builds trust; costs marked "client unhappy" take it away.
   const base = am.aborted ? (am.abortedOnTwist ? 0 : ABORT_TRUST) : completionTrust(threat);
@@ -468,14 +519,14 @@ function finish(state) {
 
   const outcome = deaths.length ? 'loss' : am.aborted ? 'aborted' : 'completed';
   const client = clientById(am.clientId);
-  am.result = { outcome, pay, heatGain, injuries, deaths: deaths.map((d) => d.handle), freelance, growth: growthEvents, graduated: graduatedOps.map((o) => ({ id: o.id, handle: o.handle, name: o.name, role: o.role, color: o.color })), client: client?.name ?? null, trustChange };
+  am.result = { report: am.report ?? [], outcome, pay, heatGain, injuries, deaths: deaths.map((d) => d.handle), freelance, growth: growthEvents, graduated: graduatedOps.map((o) => ({ id: o.id, handle: o.handle, name: o.name, role: o.role, color: o.color })), client: client?.name ?? null, trustChange };
   am.done = true;
 
   const subject = deaths.length ? `${deaths.map((d) => d.handle).join(', ')} died on the ${tpl.name}`
     : am.aborted ? `${tpl.name} aborted` : `${tpl.name} completed`;
   state.inbox.unshift({
     id: `report-${state.day}-${state.rngCounter}`, type: 'report', day: state.day, subject,
-    body: `Paid ${pay}.` + (cuts ? ` Freelancers took ${cuts}.` : '') + ` Heat +${heatGain}.` + (injuries.length ? ` Injured: ${injuries.join(', ')}.` : ' Nobody hurt.') +
+    body: (am.report?.length ? am.report.join(' ') + ' ' : '') + `Paid ${pay}.` + (cuts ? ` Freelancers took ${cuts}.` : '') + ` Heat +${heatGain}.` + (injuries.length ? ` Injured: ${injuries.join(', ')}.` : ' Nobody hurt.') +
       (deaths.length ? ' Their names go on the wall.' : '') +
       (growthLines.length ? ` Improved: ${growthLines.join(', ')}.` : '') +
       (client && trustChange ? ` ${client.name} ${trustChange > 0 ? 'thinks more of you' : 'is unhappy with you'} (trust ${trustChange > 0 ? '+' : ''}${trustChange}).` : ''),

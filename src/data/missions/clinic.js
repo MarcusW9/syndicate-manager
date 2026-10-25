@@ -1,0 +1,104 @@
+// Clinic night: a rookie job. Two pairs of hands for Doc Siu's unlicensed clinic in Old Town.
+// Rolls aimed at 4-8 (a new crew's work); no district crises, but the shared rookie pool
+// (see missions.js). Voice: second person, a named character, short dialogue, 1-2 sentences
+// a line; every choice also has a plain `report` line. Doc Siu's lines live in data/cast.js.
+
+/** @type {import('../../core/types.js').MissionTemplate} */
+export const CLINIC = {
+  id: 'clinic',
+  name: 'Clinic Night',
+  district: 'oldTown',
+  threat: 1,
+  rookie: true,
+  pay: 1500,
+  days: 1,
+  crewSize: 2,
+  keyStats: ['medical', 'cool'],
+  brief: '"Doc Siu needs two pairs of hands tonight, and I told her you\'re clean," Auntie Fung says, pouring tea you didn\'t ask for. "Don\'t make me a liar."',
+  beats: [
+    'Tenement Block 9, down a stairwell that smells of bleach and incense. {siu} looks you over once. "{siu:greet}"',
+    'By ten the queue reaches the street: a dockworker with a fried wrist port, a cook with a burnt hand, a man who won\'t say how he cut himself.',
+    'Around three the doc lights a cigarette under the No Smoking sign. "{siu:approve}" From her, that sounds like a medal.',
+    'Dawn comes grey through the vent. {siu} counts your pay out of a biscuit tin. "Come back Thursday."',
+  ],
+  crises: [
+    {
+      id: 'bleeder',
+      text: 'The door bangs open and a man half-falls down the stairs, a towel pressed to his ribs. {siu} doesn\'t look up from the chair. "{op}. He\'s yours."',
+      focusRole: 'medic',
+      choices: [
+        { id: 'stitch', label: '{op} stitches it closed', kind: 'push', stat: 'medical', difficulty: 6,
+          success: 'The doc checks the twelve stitches. "{siu:approve}" He pays her in cigarettes.', failure: 'A stitch tears and he panics, swinging at the nearest face.', failureInjury: 'light',
+          report: { success: 'A stab wound walked in; {op} stitched it and it held.', failure: 'A stab wound walked in; the stitches tore and the patient lashed out.' } },
+        { id: 'pressure', label: 'Hold pressure until the doctor is free', kind: 'adapt', stat: 'cool', difficulty: 4, cost: { payCut: 0.1 },
+          success: 'Twenty long minutes with your weight on the wound. When the doc takes over, she gives {op} a nod.', failure: 'He goes grey and slides to the floor, and the doc has to drop everything. The queue grumbles.', failureInjury: 'none', failureCost: { payCut: 0.2 },
+          report: { success: 'A stab wound walked in; {op} held pressure until the doctor was free.', failure: 'A stab wound walked in; the patient collapsed and the doctor lost an hour.' } },
+        { id: 'abort', label: 'Abort: send him to the public hospital and go home', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -5 },
+          success: 'The doc doesn\'t look up. "{siu:disappoint}"', failure: '', failureInjury: 'none',
+          report: { success: 'A stab wound walked in; the crew sent him to hospital and left.' } },
+      ],
+    },
+    {
+      id: 'collectors',
+      text: 'Two men with Silver Fan pins come down the stairs, polite as bankers. "Mr. Tam owes us money. We know he\'s here."',
+      choices: [
+        { id: 'anchor', label: '{op} points at the brass anchor over the door', kind: 'adapt', stat: 'social', difficulty: 6,
+          success: 'They look at the anchor, then at each other. "Another time," one says, and they go.', failure: 'They go, but the bigger one shoves {op} into the shelves on his way out. "Another time."', failureInjury: 'light',
+          report: { success: 'Silver Fan collectors came for a patient; {op} sent them off Brass Anchor ground.', failure: 'Silver Fan collectors came for a patient; they left, but shoved {op} on the way.' } },
+        { id: 'hide', label: 'Hide him behind the curtain and play dumb', kind: 'adapt', stat: 'cool', difficulty: 5,
+          success: 'They poke behind the boxes, pocket a strip of painkillers and leave. Behind the curtain, Mr. Tam starts breathing again.', failure: 'They find him. He goes with them quietly, and {siu} won\'t forgive you for it.', failureInjury: 'none', failureCost: { payCut: 0.3, clientTrust: -5 },
+          report: { success: 'Silver Fan collectors came for a patient; the crew hid him.', failure: 'Silver Fan collectors found the patient the crew tried to hide.' } },
+        { id: 'abort', label: 'Abort: slip up the back stairs before it turns ugly', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -10 },
+          success: 'You\'re gone before anyone notices. By morning, Old Town knows who ran.', failure: '', failureInjury: 'none',
+          report: { success: 'Silver Fan collectors came; the crew ran.' } },
+      ],
+    },
+    {
+      id: 'power_cut',
+      text: 'The bulb dies mid-stitch. Upstairs, someone swears at a Hoi-Sing meter. In the dark, the doc\'s voice is very calm: "Light. Now."',
+      choices: [
+        { id: 'torch', label: '{op} holds a phone torch steady', kind: 'adapt', stat: 'cool', difficulty: 4,
+          success: '{op}\'s arm aches for half an hour, but the light never moves. "{siu:approve}"', failure: 'The torch shakes, the needle slips, and the patient kicks out.', failureInjury: 'light',
+          report: { success: 'The power went; {op} held a torch for the doctor.', failure: 'The power went; the torch slipped and a patient kicked out.' } },
+        { id: 'battery', label: '{op} rigs the bulb to the car battery', kind: 'push', stat: 'tech', difficulty: 7,
+          success: 'A spark, a fizz, and the bulb glows again. Somebody in the queue claps.', failure: 'A bang, a smell of burnt hair, and a neighbour shouting about fire.', failureInjury: 'light', failureCost: { heat: 1 },
+          report: { success: 'The power went; {op} ran the lights off a car battery.', failure: 'The power went; {op} shorted a car battery. Heat +1.' } },
+        { id: 'abort', label: 'Abort: send the queue home until the power\'s back', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 0.7 },
+          success: 'The doc pays you for the hours you did. It isn\'t many.', failure: '', failureInjury: 'none',
+          report: { success: 'The power went; the clinic closed early.' } },
+      ],
+    },
+    {
+      id: 'screaming_implant',
+      text: 'A delivery rider clutches their ear: the implant is shrieking feedback only they can hear. {siu} slaps pliers into {op}\'s palm. "Slow. If it snaps, it stays in."',
+      focusRole: 'medic',
+      choices: [
+        { id: 'pull', label: '{op} pulls it, slow and careful', kind: 'push', stat: 'medical', difficulty: 8,
+          success: 'It comes out whole, still buzzing in the tray. The rider cries with relief.', failure: 'It snaps. The doc digs out the rest herself, and the rider will hear a hum for a month.', failureInjury: 'none', failureCost: { clientTrust: -5 },
+          report: { success: '{op} pulled a failing ear implant cleanly.', failure: '{op} snapped a failing ear implant; the doctor had to finish.' } },
+        { id: 'tea', label: 'Calm the rider with Auntie Fung\'s bitter tea first', kind: 'adapt', stat: 'cool', difficulty: 5, cost: { payCut: 0.1 },
+          success: 'Half a cup and the shaking stops. The doc does the rest herself.', failure: 'The rider throws the cup and bolts up the stairs, implant and all.', failureInjury: 'none', failureCost: { payCut: 0.2 },
+          report: { success: 'A rider with a failing implant was calmed down for the doctor.', failure: 'A rider with a failing implant panicked and ran.' } },
+        { id: 'abort', label: 'Abort: hand back the pliers and leave', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 0.6 },
+          success: '"{siu:disappoint}" She doesn\'t sound surprised.', failure: '', failureInjury: 'none',
+          report: { success: 'Asked to pull an implant; the crew handed it back and left.' } },
+      ],
+    },
+    {
+      id: 'police_pair',
+      text: 'Two officers come down the stairs, in a pair as always in Old Town. One taps the humming generator with his baton. "Licence?"',
+      choices: [
+        { id: 'pay', label: 'Pay them for the generator', kind: 'adapt', sure: true, stat: 'cool', difficulty: 0, cost: { cash: -300 },
+          success: 'The envelope vanishes. They help themselves to plasters on the way out.', failure: '', failureInjury: 'none',
+          report: { success: 'Police asked about the generator; the crew paid ¥300.' } },
+        { id: 'tea_shop', label: '{op} swears this is a tea shop\'s storeroom', kind: 'adapt', stat: 'social', difficulty: 7,
+          success: '"Smells like a tea shop," one says, deadpan. They leave, and everyone pretends that was normal.', failure: '"Nice try." They write down every face in the queue before they go.', failureInjury: 'none', failureCost: { heat: 1 },
+          report: { success: 'Police asked about the generator; {op} talked them out.', failure: 'Police took down every face in the clinic. Heat +1.' } },
+        { id: 'abort', label: 'Abort: out the back before they ask your names', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -5 },
+          success: 'The doc deals with them. She gets paid tonight; you don\'t.', failure: '', failureInjury: 'none',
+          report: { success: 'Police came; the crew left by the back.' } },
+      ],
+    },
+  ],
+  heat: 0,
+};

@@ -72,6 +72,12 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .stats div { border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 10px; }
 .stats dt { color: var(--muted); font-size: 0.75rem; text-transform: capitalize; }
 .stats dd { margin: 0; font-size: 1.2rem; font-weight: 600; }
+.nextbar { display: block; height: 4px; margin-top: 6px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.nextbar span { display: block; height: 100%; background: var(--accent-2); }
+.climb { margin: 8px 0 12px; }
+.climb p { margin: 0 0 6px; }
+.bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.bar span { display: block; height: 100%; background: var(--accent); }
 .growth { font-size: 0.8rem; font-weight: 600; color: var(--accent-2); }
 .growth.is-down { color: var(--danger); }
 .mentor { color: var(--accent-2); margin: 0.5rem 0 0; }

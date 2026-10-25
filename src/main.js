@@ -13,7 +13,7 @@ if (import.meta.env.DEV) {
 
 let state = loadGame();
 if (!state) {
-  state = createNewGame();
+  state = createNewGame({ startCrew: 'fresh' });
   saveGame(state);
 }
 

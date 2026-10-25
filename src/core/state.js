@@ -6,8 +6,12 @@ import { addOffer } from './jobs.js';
 import { STARTING_ROSTER_CAP, generateStartingCrew, recruitToOperative } from './recruits.js';
 import { prepareOperative } from './development.js';
 import { refreshFreelancers } from './freelance.js';
+import { ECONOMY } from '../data/economy.js';
 
-export const SAVE_VERSION = 11;
+export const SAVE_VERSION = 12;
+
+// A rookie crew's first board: small work only.
+export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];
 
 const freshCondition = () => ({
   fatigue: 10,
@@ -20,8 +24,10 @@ const freshCondition = () => ({
 
 /** @returns {import('./types.js').GameState} */
 /**
- * startCrew: 'classic' (the authored Lantern Bay Five) or 'fresh' (five generated
- * people, one per core role; see generateStartingCrew).
+ * startCrew: 'fresh' (what every new game uses: five generated rookies, one per core
+ * role, in a cheap first safehouse; see generateStartingCrew and PLAN-PROGRESSION.md)
+ * or 'classic' (the authored Lantern Bay Five: no longer offered in the game, kept as
+ * the fixed crew the rule tests are written against).
  */
 export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'standard', startCrew = 'classic' } = {}) {
   const crew = startCrew === 'fresh' ? [] : STARTING_CREW.map((op) => prepareOperative({
@@ -41,6 +47,7 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
     heatWatched: false,
     rumour: null,
     reputation: 0,
+    jobGates: false,
     tier: 'street',
     rent: 4000,
     difficulty,
@@ -73,12 +80,18 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
       state.crew.push(recruitToOperative(r, { condition: freshCondition(), history: ['Day 1: one of the founding crew'] }));
     }
   }
-  // The oldest hand vouches for the crew (Teo, in the classic start).
-  const elder = [...state.crew].sort((a, b) => b.age - a.age)[0];
-  state.inbox[0].body = `Five people, one safehouse, rent due Sunday. ${elder.handle} says the crew trusts you. Mostly. Three jobs are on the board. The courier run alone won't cover rent.`;
-
-  // Opening board: one safe job, one mid, one dangerous (see DESIGN.md).
-  for (const id of ['courier', 'data_pull', 'warehouse']) addOffer(state, id);
+  if (startCrew === 'fresh') {
+    state.rent = ECONOMY.startRent;
+    state.jobGates = true; // jobs unlock by reputation (core/jobs.js)
+    state.inbox[0].body = `Five of you, one damp room above a noodle shop, rent due Sunday. Nobody in ${NAMES.city} knows your names yet. The board only has small work. Take it, learn, and get noticed.`;
+    for (const id of FRESH_OPENING_BOARD) addOffer(state, id);
+  } else {
+    // The oldest hand vouches for the crew (Teo, in the classic start).
+    const elder = [...state.crew].sort((a, b) => b.age - a.age)[0];
+    state.inbox[0].body = `Five people, one safehouse, rent due Sunday. ${elder.handle} says the crew trusts you. Mostly. Three jobs are on the board. The courier run alone won't cover rent.`;
+    // Opening board: one safe job, one mid, one dangerous (see DESIGN.md).
+    for (const id of ['courier', 'data_pull', 'warehouse']) addOffer(state, id);
+  }
   refreshFreelancers(state);
   return state;
 }

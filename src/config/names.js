@@ -8,6 +8,13 @@ export const NAMES = {
     nightMarket: 'Night Market',
     heights: 'Glass Heights',
   },
+  // The same names as they read mid-sentence in job text ("half of the Night Market").
+  districtsInText: {
+    oldTown: 'Old Town',
+    docks: 'the Docks',
+    nightMarket: 'the Night Market',
+    heights: 'Glass Heights',
+  },
   // Districts that unlock later. Kept apart so recruits' backstories only use open ones.
   lockedDistricts: {
     amberReach: 'The Amber Reach',

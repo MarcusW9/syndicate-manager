@@ -1,0 +1,124 @@
+// Herbal Run: a rookie job for Auntie Fung in Old Town. Three crates of herbal medicine
+// up the wet stairs to Block 9 before dawn. Owner's draft (2026-10-25), checked against
+// WORLD.md: Fung is a Brass Anchor elder, so the men after her medicine are Silver Fan
+// runners straying onto Brass Anchor ground. Three crises added from canon (Ghost Circuit
+// tunnels, the Red Incense Shrine, Doc Siu). Rolls aimed at 4-8; draws the shared rookie
+// pool too. Every choice has a plain `report` line.
+
+/** @type {import('../../core/types.js').MissionTemplate} */
+export const HERBAL = {
+  id: 'herbal_run',
+  name: 'Herbal Run',
+  district: 'oldTown',
+  threat: 1,
+  rookie: true,
+  pay: 1400,
+  days: 1,
+  crewSize: 2,
+  keyStats: ['stealth', 'tech'],
+  brief: 'Auntie Fung wipes her counter, the tang of ginseng rising from the clay pots. "The damp is in Block 9\'s lungs again. Three crates of medicine are in the drain cellar by the lower stairs. Bring them up before the sun hits the hillside, and don\'t let the Silver Fan touch them."',
+  beats: [
+    'The drain cellar is ankle-deep and smells of bitter herbs. Three wooden crates, sealed with red wax.',
+    'Rusted iron stairwells snake up the hillside through tenements dripping with condensation.',
+    'Somewhere above, mahjong tiles clack and a pipe drips in time with your footsteps.',
+    'First light hits the hillside as you stack the last crate against {siu}\'s wall. "{siu:approve}"',
+  ],
+  crises: [
+    {
+      id: 'wet_steps',
+      text: 'Black algae coats the stone steps of Alley 4, and each crate weighs forty kilos.',
+      focusRole: 'tech',
+      choices: [
+        { id: 'harness', label: '{op} rigs a shoulder harness to take the weight', kind: 'push', stat: 'tech', difficulty: 6,
+          success: 'Step by aching step, the harness holds the load steady all the way to the landing.', failure: '{op}\'s boot slips on the moss and the crate slams into the iron rail with a crack.', failureInjury: 'light',
+          report: { success: '{op} rigged a harness to carry the crates up the wet steps.', failure: '{op} slipped on the wet steps under a crate.' } },
+        { id: 'drag', label: 'Drag it up step by step along the wall', kind: 'adapt', stat: 'cool', difficulty: 4, cost: { payCut: 0.1 },
+          success: 'It scrapes loudly against the stone, but nothing inside breaks.', failure: 'The bottom splits, and two jars spill dark liquid down the steps.', failureInjury: 'none', failureCost: { payCut: 0.3 },
+          report: { success: 'The crew dragged the crates up the wet steps, slowly.', failure: 'A crate split on the steps and two jars broke.' } },
+        { id: 'abort', label: 'Abort: leave the crates in a dry alcove and go', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 0.7, clientTrust: -5 },
+          success: 'You walk away empty-handed and leave the crates to the tenement scavengers.', failure: '', failureInjury: 'none',
+          report: { success: 'The crew left Auntie Fung\'s crates on the stairs.' } },
+      ],
+    },
+    {
+      id: 'silver_fan_arch',
+      text: 'Two Silver Fan runners in leather jackets lean against the archway, a long way from the Night Market and smoking like they own the place.',
+      choices: [
+        { id: 'vent', label: '{op} hauls the crates through a laundry vent above them', kind: 'adapt', stat: 'stealth', difficulty: 6,
+          success: 'You pass the crates through the dark over their heads, and they never look up.', failure: 'A strap catches on a pipe bracket and screeches. They look up.', failureInjury: 'light', failureCost: { heat: 1 },
+          report: { success: 'Silver Fan runners watched the arch; the crew went over them through a vent.', failure: 'Silver Fan runners heard the crew in the vent. Heat +1.' } },
+        { id: 'scrap', label: 'Walk past saying it\'s kitchen scraps for Fung', kind: 'adapt', stat: 'social', difficulty: 5,
+          success: 'They sniff the bitter herbs, wave their hands in disgust, and tell you to move on.', failure: 'They step into your path and want the lid off, and a cut of whatever\'s inside.', failureInjury: 'none', failureCost: { payCut: 0.2 },
+          report: { success: 'The crew bluffed past Silver Fan runners at the arch.', failure: 'Silver Fan runners took a cut of Auntie Fung\'s medicine.' } },
+        { id: 'abort', label: 'Abort: wait it out in a basement laundry, and miss the dawn', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 0.5 },
+          success: 'Two cold hours in the damp dark. By the time the alley clears, the sun is up and the job is gone.', failure: '', failureInjury: 'none',
+          report: { success: 'Silver Fan runners blocked the arch; the crew waited and missed the dawn.' } },
+      ],
+    },
+    {
+      id: 'cracked_vial',
+      text: 'A vial cracks inside crate two, and a sharp, bitter mist starts hissing out through the joints.',
+      focusRole: 'tech',
+      choices: [
+        { id: 'seal', label: '{op} seals the seam with quick-cure resin', kind: 'push', stat: 'tech', difficulty: 5,
+          success: '{op}\'s fingers move fast, and the seam is sealed before the fumes get out.', failure: 'The fumes hit {op}\'s eyes and throat, and the crate goes down on the steps.', failureInjury: 'light',
+          report: { success: 'A vial cracked; {op} sealed the crate.', failure: 'A vial cracked and the fumes got {op}.' } },
+        { id: 'window', label: 'Kick open a stairwell window to clear the air', kind: 'adapt', stat: 'cool', difficulty: 4, cost: { payCut: 0.05 },
+          success: 'Sea air sweeps through and carries the bitter vapour out over the roofs.', failure: 'The rusted frame tears free and crashes onto a tin roof below. Lights come on.', failureInjury: 'none', failureCost: { heat: 1 },
+          report: { success: 'A vial cracked; the crew aired the stairwell.', failure: 'A window frame fell onto a roof and woke the block. Heat +1.' } },
+        { id: 'abort', label: 'Abort: dump the leaking crate and deliver the other two', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 0.4, clientTrust: -5 },
+          success: 'You leave the spoiled crate in a drain pipe and carry the rest up. Fung counts them twice.', failure: '', failureInjury: 'none',
+          report: { success: 'A vial cracked; the crew dumped one crate and delivered two.' } },
+      ],
+    },
+    {
+      id: 'ghost_tunnel',
+      text: 'A Ghost Circuit runner steps out of a drain mouth. "Tunnels go straight up the hill. Free, if one of you tries our new neural scrubber."',
+      choices: [
+        { id: 'tunnel', label: '{op} tries the scrubber and takes the shortcut', kind: 'adapt', stat: 'cool', difficulty: 5, neural: 10,
+          success: 'A buzz behind the eyes, a taste of copper, and twenty minutes saved. {op} feels oddly clear.', failure: 'The scrubber glitches. {op} spends the climb seeing double and walks into a pipe.', failureInjury: 'light',
+          report: { success: '{op} tested a Ghost Circuit scrubber for a shortcut through the tunnels.', failure: 'A Ghost Circuit scrubber glitched on {op} in the tunnels.' } },
+        { id: 'stairs', label: 'Thank them and stick to the stairs', kind: 'adapt', sure: true, stat: 'cool', difficulty: 0, cost: { payCut: 0.1 },
+          success: '"Suit yourselves." The runner melts back into the dark. The stairs take the long way.', failure: '', failureInjury: 'none',
+          report: { success: 'The crew turned down a Ghost Circuit shortcut and finished late.' } },
+        { id: 'abort', label: 'Abort: something about this is wrong, go home', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 0.7, clientTrust: -5 },
+          success: 'You leave the crates by the drain. The runner watches you go, head tilted.', failure: '', failureInjury: 'none',
+          report: { success: 'Spooked by the Ghost Circuit, the crew left the crates.' } },
+      ],
+    },
+    {
+      id: 'shrine',
+      after: 1,
+      text: 'At the Red Incense Shrine an old woman blocks the stair, holding out a stick of incense. "Nobody carries medicine past To Dei Gung without asking."',
+      choices: [
+        { id: 'bow', label: '{op} lights the incense and bows properly', kind: 'adapt', stat: 'social', difficulty: 4,
+          success: 'Three bows, the incense placed just so. She nods and lets you pass. "Now it\'ll work."', failure: '{op} bows the wrong way round. She tuts, and makes you start again from the bottom of the stair.', failureInjury: 'none', failureCost: { payCut: 0.1 },
+          report: { success: '{op} made an offering at the Red Incense Shrine and the crew passed.', failure: '{op} got the shrine offering wrong and the crew lost time.' } },
+        { id: 'coin', label: 'Leave a coin in the bowl', kind: 'adapt', sure: true, stat: 'cool', difficulty: 0, cost: { cash: -50 },
+          success: 'The coin rings in the bowl. She steps aside without a word.', failure: '', failureInjury: 'none',
+          report: { success: 'The crew left a coin at the Red Incense Shrine.' } },
+        { id: 'abort', label: 'Abort: turn back down the hill', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 0.7, clientTrust: -5 },
+          success: 'You carry the crates back down. Behind you the incense smoke curls up, unlit.', failure: '', failureInjury: 'none',
+          report: { success: 'The crew turned back at the shrine.' } },
+      ],
+    },
+    {
+      id: 'cant_breathe',
+      after: 1, // on the stairs
+      text: '{siu} meets you on the fourth landing, coat over her pyjamas. "Someone upstairs can\'t breathe. Open a crate. Now."',
+      focusRole: 'medic',
+      choices: [
+        { id: 'help', label: '{op} helps her with the patient', kind: 'push', stat: 'medical', difficulty: 6,
+          success: 'A steaming bowl, a mask, a lot of counting breaths together. The wheezing eases. "{siu:approve}"', failure: '{op} spills the brew and scalds a hand. The doc does it herself, swearing.', failureInjury: 'light',
+          report: { success: '{op} helped Doc Siu treat a patient on the stairs.', failure: '{op} was scalded helping Doc Siu with a patient.' } },
+        { id: 'open', label: 'Open a crate for her and keep moving', kind: 'adapt', sure: true, stat: 'cool', difficulty: 0, cost: { payCut: 0.1 },
+          success: 'She takes what she needs and waves you on without looking back.', failure: '', failureInjury: 'none',
+          report: { success: 'Doc Siu took medicine from a crate for a patient.' } },
+        { id: 'abort', label: 'Abort: leave her the crates and go home', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 0.6 },
+          success: '"{siu:disappoint}" She\'s already prising off a lid.', failure: '', failureInjury: 'none',
+          report: { success: 'The crew left the crates with Doc Siu.' } },
+      ],
+    },
+  ],
+  heat: 0,
+};

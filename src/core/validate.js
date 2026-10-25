@@ -7,11 +7,15 @@ export function validateMissions(missions) {
   for (const m of missions) {
     if (!m.beats?.length) problems.push(`${m.id}: no beats`);
     for (const c of m.crises ?? []) {
+      if (c.after != null && !(c.after >= 0 && c.after <= m.beats.length - 2)) problems.push(`${m.id}/${c.id}: after ${c.after} must be a beat before the last`);
       if (!c.choices.some((ch) => EXIT_KINDS.has(ch.kind))) {
         problems.push(`${m.id}/${c.id}: no abort or extract choice`);
       }
       for (const ch of c.choices) {
         if (!ch.sure && !EXIT_KINDS.has(ch.kind) && !ch.failure) problems.push(`${m.id}/${c.id}/${ch.id}: can fail but has no failure text`);
+        // Rookie jobs (and everything written after them) carry a plain report line per outcome.
+        if (m.rookie && !ch.report?.success) problems.push(`${m.id}/${c.id}/${ch.id}: no report line`);
+        if (m.rookie && !ch.sure && !EXIT_KINDS.has(ch.kind) && !ch.report?.failure) problems.push(`${m.id}/${c.id}/${ch.id}: no failure report line`);
       }
     }
   }

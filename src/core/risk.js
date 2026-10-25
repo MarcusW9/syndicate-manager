@@ -18,6 +18,13 @@ export function riskLabel(chance) {
 /** Typical roll difficulty at a threat level, used by the planning read. */
 export const STAT_FOR_THREAT = (threat) => 6 + threat * 2.5;
 
+// Rookie jobs aim their rolls lower (4-8) than other work at the same threat, so the
+// planning read must too, or it calls easy work dangerous.
+export const ROOKIE_EASE = 2.5;
+
+/** Typical roll difficulty for this job, used by the planning read. */
+export const rollTarget = (template) => STAT_FOR_THREAT(template.threat) - (template.rookie ? ROOKIE_EASE : 0);
+
 /**
  * Overall read for a planned job. Returns { level, reasons[] }.
  * watched: the heat penalty this job will carry on its first crisis roll (state.heatWatched).
@@ -26,7 +33,7 @@ export const STAT_FOR_THREAT = (threat) => 6 + threat * 2.5;
 export function assessJob(template, crew, approach, { watched = 0 } = {}) {
   if (!crew.length) return { level: 'extreme', reasons: ['No crew selected'] };
   const reasons = [];
-  const target = STAT_FOR_THREAT(template.threat);
+  const target = rollTarget(template);
   let worst = 1;
   for (const stat of template.keyStats) {
     const best = crewRoll(crew, stat, { approach, recommended: template.crewSize, watched });

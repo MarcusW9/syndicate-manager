@@ -14,7 +14,31 @@ import { rumourFor } from './rumours.js';
 export const templateById = (id) => MISSIONS.find((m) => m.id === id);
 export const twistById = (id) => TWISTS.find((t) => t.id === id) ?? null;
 
-const MAX_OFFERS = 4;
+// A busier board of smaller work (PLAN-PROGRESSION.md step 0: rookies need ~3 jobs a week).
+export const MAX_OFFERS = 5;
+export const NEW_PER_WEEK = 3;
+
+// Reputation needed before a job of this (template) threat is offered; rookie jobs are
+// always open. Even threat-1 work outside the rookie jobs (the courier run) waits a few
+// weeks: its crises are aimed at pros. New games only: state.jobGates is set by
+// createNewGame; older saves keep an open board.
+export const JOB_GATES = { 1: 10, 2: 15, 3: 35, 4: 60, 5: 80 };
+
+/** Reputation a crew needs before this kind of job is offered. */
+export const jobGate = (templateId) => {
+  const tpl = templateById(templateId);
+  return tpl.rookie ? 0 : JOB_GATES[tpl.threat] ?? 0;
+};
+
+/** Can this crew be offered this kind of job yet? */
+export const jobUnlocked = (state, templateId) => !state.jobGates || jobGate(templateId) <= (state.reputation ?? 0);
+
+/** The next job tier still locked: { threat, rep } or null. For the board's teaser. */
+export function nextUnlock(state) {
+  if (!state.jobGates) return null;
+  const next = Object.entries(JOB_GATES).find(([, rep]) => rep > (state.reputation ?? 0));
+  return next ? { threat: Number(next[0]), rep: next[1] } : null;
+}
 export const TWIST_CHANCE = 0.25;
 export const HINT_IF_TWIST = 0.8; // a real twist is hinted 80% of the time
 export const HINT_IF_CLEAN = 0.1; // a clean job is wrongly hinted 10% of the time
@@ -66,19 +90,30 @@ export function jobView(state, job) {
   };
 }
 
-/** Weekly refresh: drop expired offers, clients drift towards neutral, add up to 2 new offers. Mutates the (cloned) state. */
+/** Weekly refresh: drop expired offers, clients drift towards neutral, add up to NEW_PER_WEEK new offers. Mutates the (cloned) state. */
 export function refreshJobs(state) {
   state.jobs = state.jobs.filter((j) => j.expiresDay >= state.day);
   driftTrust(state);
   const rng = nextRng(state);
+  const open = MISSIONS.filter((m) => jobUnlocked(state, m.id));
+  // Walk-in work (walkIn: true, e.g. the market delivery) has no client and turns up on its own.
+  const walkIns = open.filter((m) => m.walkIn);
+  const rookieWork = open.filter((m) => m.rookie);
   let added = 0;
-  while (state.jobs.length < MAX_OFFERS && added < 2) {
-    const clients = callingClients(state);
-    if (clients.length) {
+  while (state.jobs.length < MAX_OFFERS && added < NEW_PER_WEEK) {
+    const clients = callingClients(state).filter((c) => c.jobs.some((id) => jobUnlocked(state, id)));
+    if (state.jobGates && added === 0 && rookieWork.length) {
+      // A gated board always has some small work, so a crew is never priced out of earning.
+      const tpl = pick(rng, rookieWork);
+      const client = clients.filter((c) => c.jobs.includes(tpl.id));
+      addOffer(state, tpl.id, { rng, clientId: client.length ? weighted(rng, client).id : null });
+    } else if (walkIns.length && added <= 1 && rng() < 1 / 3) {
+      addOffer(state, pick(rng, walkIns).id, { rng, clientId: null });
+    } else if (clients.length) {
       const client = weighted(rng, clients);
-      addOffer(state, pick(rng, client.jobs), { rng, clientId: client.id });
+      addOffer(state, pick(rng, client.jobs.filter((id) => jobUnlocked(state, id))), { rng, clientId: client.id });
     } else {
-      addOffer(state, pick(rng, MISSIONS).id, { rng, clientId: null }); // nobody will call: walk-in work
+      addOffer(state, pick(rng, open).id, { rng, clientId: null }); // nobody will call: walk-in work
     }
     added += 1;
   }

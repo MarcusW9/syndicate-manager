@@ -1,0 +1,87 @@
+// Market delivery: a rookie job, walk-in work (no client offers it, see clients.js).
+// One crate for Mrs. Ip, across the Night Market before the rush. Rolls aimed at 4-8;
+// draws the shared rookie pool too. Voice and rules as in clinic.js.
+
+/** @type {import('../../core/types.js').MissionTemplate} */
+export const DELIVERY = {
+  id: 'delivery',
+  name: 'Market Delivery',
+  district: 'nightMarket',
+  threat: 1,
+  rookie: true,
+  walkIn: true, // no client offers it: it turns up as walk-in work
+  pay: 1300,
+  days: 1,
+  crewSize: 2,
+  keyStats: ['driving', 'stealth'],
+  brief: '{ip} runs the fish-ball stall at the Neon Dragon and never stops talking. "One crate, across the market, before the night rush. {ip:greet}"',
+  beats: [
+    'The crate is heavier than it looks and smells faintly of ice. {ip} watches you lift it. "{ip:greet}"',
+    'The night rush hits: dai pai dongs spill into the street, holo-ads flicker, and a thousand people want to be exactly where you are.',
+    '{driver} noses the delivery trike through the crowd at walking pace, bell ringing, crate strapped down with bungee cord.',
+    'The crate goes down in a back room behind a mahjong parlour. {ip} pays in cash and a bag of fish balls. "{ip:approve}"',
+  ],
+  crises: [
+    {
+      id: 'crush',
+      text: 'A mahjong parlour lets out and the alley fills shoulder to shoulder. The crate is slipping.',
+      choices: [
+        { id: 'shoulder', label: '{op} shoulders a path through', kind: 'push', stat: 'combat', difficulty: 5,
+          success: 'Elbows, apologies and a lot of swearing in three languages. You get through.', failure: 'Someone shoves back. The crate tips, and something inside goes crunch.', failureInjury: 'none', failureCost: { payCut: 0.3 },
+          report: { success: 'The crowd closed in; {op} pushed the crate through.', failure: 'The crowd closed in and the crate was knocked over.' } },
+        { id: 'round', label: 'Go round the back of the stalls', kind: 'adapt', stat: 'stealth', difficulty: 5,
+          success: 'Past the bins and the wok burners, and out the other side with the crate dry.', failure: 'A cook flings a pan of scraps out of a back door, straight onto {op}. Hot.', failureInjury: 'light',
+          report: { success: 'The crowd closed in; the crew went round behind the stalls.', failure: 'Going round the back, {op} was scalded by a cook\'s scraps.' } },
+        { id: 'abort', label: 'Abort: take the crate back to the stall', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1 },
+          success: '"{ip:disappoint}" She takes it back without another word, which is worse.', failure: '', failureInjury: 'none',
+          report: { success: 'The crowd was too thick; the crew took the crate back.' } },
+      ],
+    },
+    {
+      id: 'meter_man',
+      text: 'A Hoi-Sing meter inspector in a hi-vis jacket waves the trike down. "That battery charged off a stall? Show me the receipt."',
+      choices: [
+        { id: 'receipt', label: '{op} invents a receipt on the spot', kind: 'adapt', stat: 'social', difficulty: 6,
+          success: 'A crumpled noodle bill, waved with total confidence. He squints, sighs, and lets you go.', failure: 'He reads the noodle bill, very slowly, out loud. Then he writes you a fine.', failureInjury: 'none', failureCost: { cash: -300 },
+          report: { success: 'A Hoi-Sing inspector stopped the trike; {op} bluffed past him.', failure: 'A Hoi-Sing inspector fined the crew ¥300.' } },
+        { id: 'pay', label: 'Pay the "spot fine" in cash', kind: 'adapt', sure: true, stat: 'cool', difficulty: 0, cost: { cash: -200 },
+          success: 'The notes go into his pocket, not his machine. "Drive safe."', failure: '', failureInjury: 'none',
+          report: { success: 'A Hoi-Sing inspector took ¥200 to look away.' } },
+        { id: 'abort', label: 'Abort: leave the trike and walk away', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1 },
+          success: 'You walk off into the crowd. Mrs. Ip can collect her own trike.', failure: '', failureInjury: 'none',
+          report: { success: 'Stopped by a Hoi-Sing inspector; the crew left the trike.' } },
+      ],
+    },
+    {
+      id: 'leak',
+      text: 'The crate starts dripping. It isn\'t water: it smells of ozone and burnt sugar, and it hisses where it lands.',
+      choices: [
+        { id: 'tape', label: '{op} tapes it up and keeps moving', kind: 'adapt', stat: 'tech', difficulty: 6,
+          success: 'Three layers of tape and a prayer. The dripping stops.', failure: 'The tape won\'t hold, and the drips eat little holes in {op}\'s shoes.', failureInjury: 'light',
+          report: { success: 'The crate leaked; {op} sealed it with tape.', failure: 'The crate leaked something that burned {op}\'s feet.' } },
+        { id: 'faster', label: 'Just go faster', kind: 'push', stat: 'driving', difficulty: 6,
+          success: 'Bell ringing, pedals spinning. You arrive with the crate barely damp.', failure: 'You take a corner too fast and the crate splits open across the cobbles.', failureInjury: 'none', failureCost: { payCut: 0.5 },
+          report: { success: 'The crate leaked; {op} got it there fast.', failure: 'The crate split open on a corner.' } },
+        { id: 'abort', label: 'Abort: leave it by a drain and run', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1 },
+          success: 'You run three streets before anyone looks back. Behind you, the drain is steaming.', failure: '', failureInjury: 'none',
+          report: { success: 'The crate leaked; the crew dumped it and ran.' } },
+      ],
+    },
+    {
+      id: 'raincoat',
+      text: 'A man in a raincoat has been three stalls behind you since the Neon Dragon. He stops when you stop.',
+      choices: [
+        { id: 'lose', label: '{op} loses him in the crowd', kind: 'adapt', stat: 'stealth', difficulty: 6,
+          success: 'Under an awning, through a noodle shop, out the back. Gone.', failure: 'You turn a corner and he\'s already there. He takes a long look at the crate and walks off smiling.', failureInjury: 'none', failureCost: { heat: 1 },
+          report: { success: 'Someone followed the crew; {op} lost him.', failure: 'Someone followed the crew and got a good look at the crate. Heat +1.' } },
+        { id: 'face', label: '{op} turns round and asks what he wants', kind: 'adapt', stat: 'cool', difficulty: 6,
+          success: '"Wrong people," he mutters, and melts back into the crowd.', failure: 'He doesn\'t answer. He photographs your faces and goes.', failureInjury: 'none', failureCost: { heat: 1 },
+          report: { success: 'Someone followed the crew; {op} confronted him and he left.', failure: 'Someone followed the crew and photographed them. Heat +1.' } },
+        { id: 'abort', label: 'Abort: drop the crate at the nearest stall and go', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1 },
+          success: 'You leave it with a startled noodle seller and lose yourselves in the market.', failure: '', failureInjury: 'none',
+          report: { success: 'Followed; the crew dropped the crate and left.' } },
+      ],
+    },
+  ],
+  heat: 0,
+};

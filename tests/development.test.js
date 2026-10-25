@@ -7,7 +7,7 @@ import { createNewGame, SAVE_VERSION } from '../src/core/state.js';
 import { advanceDay } from '../src/core/time.js';
 import * as M from '../src/core/mission.js';
 import { generateRecruit, hire } from '../src/core/recruits.js';
-import { XP, ageRate, applyGrowth, mentoring, potentialRead, primaryStat, STATS } from '../src/core/development.js';
+import { XP, ageRate, applyGrowth, mentoring, potentialRead, primaryStat, STATS, pointCost, WALL } from '../src/core/development.js';
 import { developRookie, makeRookie } from './develop-sim.js';
 import { playMission, carefulPolicy } from './play.js';
 
@@ -18,16 +18,29 @@ const median = (a) => [...a].sort((x, y) => x - y)[Math.floor(a.length / 2)];
 const ROLES = ['infiltrator', 'muscle', 'medic'];
 const runs = (opts, cfg) => ROLES.flatMap((role) => [1, 2, 3, 4, 5].map((seed) => developRookie(seed, { ...opts, role }, cfg)));
 
-test('a good rookie with a mentor goes from 11 to 16-17 in about 22 jobs', () => {
-  const r = runs({ ceiling: 18 }, { jobs: 22 });
-  const m = median(r.map((x) => x.main));
-  assert.ok(m >= 15 && m <= 17, `median main stat after 22 jobs: ${m}`);
+// Targets re-derived 2026-10-25 for the slower climb (PLAN-PROGRESSION.md, DESIGN.md):
+// growth costs x2.5 what it did, and the ceiling is a wall, not a stop.
+test('a good rookie with a mentor goes from 11 to 13-14 in 22 jobs, and 15-17 by 60', () => {
+  const m22 = median(runs({ ceiling: 18 }, { jobs: 22 }).map((x) => x.main));
+  assert.ok(m22 >= 13 && m22 <= 14, `median main stat after 22 jobs: ${m22}`);
+  const m60 = median(runs({ ceiling: 18 }, { jobs: 60 }).map((x) => x.main));
+  assert.ok(m60 >= 15 && m60 <= 17, `median main stat after 60 jobs: ${m60}`);
 });
 
-test('a low-ceiling rookie plateaus at 13-14 and never passes the ceiling', () => {
-  const r = runs({ ceiling: 14 }, { jobs: 30 });
-  for (const x of r) assert.ok(x.main >= 12 && x.main <= 14, `main ${x.main}`);
-  for (const x of r) for (const s of STATS) assert.ok(x.rookie.stats[s] <= x.rookie.potential[s], `${s} over ceiling`);
+test('a low-ceiling rookie slows at the wall, creeps past it only slowly, and never passes 20', () => {
+  const r30 = runs({ ceiling: 14 }, { jobs: 30 });
+  for (const x of r30) assert.ok(x.main >= 12 && x.main <= 14, `main ${x.main} after 30 jobs`);
+  const r120 = runs({ ceiling: 14 }, { jobs: 120 });
+  const m = median(r120.map((x) => x.main));
+  assert.ok(m >= 14 && m <= 17, `median main ${m} after 120 jobs: past the wall, but slowly`);
+  for (const x of r120) for (const s of STATS) assert.ok(x.rookie.stats[s] <= 20, `${s} over 20`);
+});
+
+test('past the wall a point costs WALL times more; at 20 growth stops', () => {
+  assert.equal(pointCost(14, 14), pointCost(14, 20) * WALL);
+  const op = makeRookie({ start: 19, ceiling: 15 });
+  applyGrowth([op], { rookie: { stealth: 1e6 } });
+  assert.equal(op.stats.stealth, 20);
 });
 
 test('mentoring is worth about a point and a half over a season of work', () => {
@@ -84,7 +97,7 @@ test('a failed roll still teaches the roller', () => {
 test('the mission report lists growth and the stats really change', () => {
   let s = createNewGame({ seed: 3 });
   s.crew.push(makeRookie({ role: 'driver', ceiling: 19 }));
-  s.crew.find((o) => o.id === 'rookie').progress.driving = 30; // one job away from a point
+  s.crew.find((o) => o.id === 'rookie').progress.driving = pointCost(11, 19) - 1; // one job away from a point
   const job = s.jobs.find((j) => j.templateId === 'courier');
   s = M.startMission(s, job.id, ['rookie', 'teo'], 'stealth');
   const done = playMission(s, carefulPolicy).state;
@@ -137,7 +150,7 @@ test('the read on potential is in words and follows the scout error', () => {
   const op = makeRookie({ start: 11, ceiling: 18 });
   assert.match(potentialRead(op, 'Teo'), /special/);
   assert.match(potentialRead({ ...op, scoutError: -2 }, 'Teo'), /better than most pros/);
-  assert.match(potentialRead({ ...op, stats: { ...op.stats, stealth: 18 } }, 'Teo'), /Already as good/);
+  assert.match(potentialRead({ ...op, stats: { ...op.stats, stealth: 18 } }, 'Teo'), /past the easy gains/);
 });
 
 test('hiring keeps the tier and hidden potential', () => {

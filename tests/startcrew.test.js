@@ -1,5 +1,6 @@
-// The starting-crew choice (DESIGN.md, 2026-10-25): the authored five, or a
-// generated "fresh crew" with guardrails so every run opens fair.
+// The starting crew (DESIGN.md and PLAN-PROGRESSION.md, 2026-10-25): every new game
+// opens with five generated raw rookies in a cheap first safehouse, on small work.
+// The authored five ('classic') stay as the fixed crew the rule tests use.
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -8,6 +9,7 @@ import { FRESH_CREW_ROLES, FRESH_CREW_WAGES } from '../src/core/recruits.js';
 import { validateCrew } from '../src/core/validate.js';
 import * as M from '../src/core/mission.js';
 import { templateById } from '../src/core/jobs.js';
+import { primaryStat } from '../src/core/development.js';
 import { playWeeks, playMission, carefulPolicy } from './play.js';
 
 test('the classic start is still the authored five', () => {
@@ -16,11 +18,16 @@ test('the classic start is still the authored five', () => {
   assert.match(s.inbox[0].body, /Wheels says the crew trusts you/);
 });
 
-test('a fresh crew: one of each core role, a veteran, two pros, two rookies, all 18+', () => {
+test('a fresh crew: five raw rookies aged 18-24, one of each core role, with room to grow', () => {
   for (let seed = 1; seed <= 500; seed++) {
     const s = createNewGame({ seed, startCrew: 'fresh' });
     assert.deepEqual(s.crew.map((o) => o.role).sort(), [...FRESH_CREW_ROLES].sort(), `seed ${seed}`);
-    assert.deepEqual(s.crew.map((o) => o.tier).sort(), ['pro', 'pro', 'rookie', 'rookie', 'veteran'], `seed ${seed}`);
+    assert.ok(s.crew.every((o) => o.tier === 'rookie' && o.age >= 18 && o.age <= 24), `seed ${seed}: rookies 18-24`);
+    for (const o of s.crew) {
+      const main = o.stats[primaryStat(o)];
+      assert.ok(main >= 8 && main <= 11, `seed ${seed}: ${o.handle} main ${main}`);
+      assert.ok(o.potential[primaryStat(o)] >= 14, `seed ${seed}: ${o.handle} ceiling`);
+    }
     assert.deepEqual(validateCrew(s.crew), [], `seed ${seed}`);
     assert.equal(new Set(s.crew.map((o) => o.id)).size, 5, `seed ${seed}: ids`);
     assert.equal(new Set(s.crew.map((o) => o.handle)).size, 5, `seed ${seed}: handles`);
@@ -29,11 +36,18 @@ test('a fresh crew: one of each core role, a veteran, two pros, two rookies, all
   }
 });
 
-test('a fresh crew\'s wage bill stays near the authored crew\'s, so the opening week still bites', () => {
+test('a fresh crew works for street wages, in a band so every run opens fair', () => {
   for (let seed = 1; seed <= 500; seed++) {
     const bill = createNewGame({ seed, startCrew: 'fresh' }).crew.reduce((n, o) => n + o.wage, 0);
     assert.ok(bill >= FRESH_CREW_WAGES[0] && bill <= FRESH_CREW_WAGES[1], `seed ${seed}: wages ${bill}`);
   }
+});
+
+test('a fresh crew starts small: cheap rent and only small work on the board', () => {
+  const s = createNewGame({ seed: 3, startCrew: 'fresh' });
+  assert.equal(s.rent, 1500);
+  assert.ok(s.jobs.length && s.jobs.every((j) => templateById(j.templateId).threat === 1), 'threat-1 jobs only');
+  assert.match(s.inbox[0].body, /Nobody in .+ knows your names yet/);
 });
 
 test('the same seed gives the same fresh crew', () => {

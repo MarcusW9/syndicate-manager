@@ -247,6 +247,17 @@ Ruth Okonkwo brokers the work Aether-Harbour Logistics can't put its name to: fr
 **When your name starts to travel (the Amber Reach opens):**
 > "Your crew has a name now, which is inconvenient for both of us. The Amber Reach is where money changes trains. Meet me on the fifth floor of Pearl Haven House, back booth, and order the milk tea."
 
+## Street characters
+
+Smaller people a new crew meets on rookie work (2026-10-25). Their spoken lines live in `src/data/cast.js`, so any job can use them.
+
+- **Doc Siu** (Old Town). An ex-hospital surgeon who runs an unlicensed clinic in the basement of Tenement Block 9: a dentist's chair, a car battery and a shower curtain for a wall. Smokes under the No Smoking sign. Her praise is dry and rare ("Not bad, new hands"). Auntie Fung sends her people there.
+- **Mrs. Ip** (Night Market). Runs the fish-ball stall at the Neon Dragon, never stops talking, and moves crates that aren't fish balls. Pays in cash and a bag of fish balls.
+- **Ah-Wah** (Night Market). A petty runner who borrowed from Madam Rao and tried to skip town with her ledger.
+- **Dr. Lim** (Night Market). A back-alley implant doc behind the noodle stalls, built his clinic on Madam Rao's money, and sold Silver Fan counterfeit eyes to her debtors.
+- **The old radio man on Block 9's roof.** The last tenant Mr. Szeto wants out, broadcasting pirate radio from a tin shack full of tapes. Block 9 is Doc Siu's building.
+- **The Ferryman's habits:** he chews betel nut as well as the clove cigarettes, and he runs a private line to the Silt under Pier 12.
+
 ## Context block for worldbuilding prompts
 
 Paste this at the top of every worldbuilding prompt, in a fresh chat. Keep it in step with the canon above whenever canon changes.
@@ -317,7 +328,11 @@ CLIENTS (local powers a small crew can reach, below the corps):
   bookkeeper, alive because she kept a copy of their books.
 - Ruth Okonkwo: broker for AHL's off-books arm; trusts nobody; meets in the Spice Route
   Canteen back booth once she trusts you. Secret: keeps a file on every deniable job
-  that could sink AHL, and wants out of the city. Reputation tier promotions open the locked districts,
+  that could sink AHL, and wants out of the city.
+STREET CAST (rookie work): Doc Siu (Old Town; ex-surgeon, unlicensed clinic under
+Tenement Block 9, dry praise); Mrs. Ip (Night Market fish-ball stall at the Neon Dragon,
+moves crates). Currency is cash in ¥; no "credits" or "Bits".
+Reputation tier promotions open the locked districts,
 each introduced by a client: the Silt (the Ferryman), the Amber Reach (Okonkwo), Iron
 Peak (Szeto).
 

@@ -110,3 +110,17 @@ test('a v2 save upgrades to v3 with recruiting fields', async () => {
   assert.equal(loaded.rosterCap, STARTING_ROSTER_CAP);
   assert.deepEqual(loaded.recruits, []);
 });
+
+test('rookies (18-24) only get backstories written for someone young; no real or retired names', async () => {
+  const { ORIGINS } = await import('../src/data/recruitPools.js');
+  const young = new Set(Object.values(ORIGINS).flat().filter((o) => o.young).map((o) => o.text));
+  for (const role of Object.keys(ORIGINS)) assert.ok(ORIGINS[role].filter((o) => o.young && o.tier === 'common').length >= 4, `${role}: enough young lines`);
+  for (let seed = 1; seed <= 100; seed++) {
+    const s = createNewGame({ seed, startCrew: 'fresh' });
+    for (const op of s.crew) {
+      const matches = [...young].some((t) => new RegExp('^' + t.replace(/[.*+?^$()|[\]\\]/g, '\\$&').replace('\\{district\\}', '.+').replace('{district}', '.+') + '$').test(op.origin));
+      assert.ok(matches, `seed ${seed}: ${op.handle} (${op.age}) got "${op.origin}"`);
+    }
+  }
+  for (const o of Object.values(ORIGINS).flat()) assert.doesNotMatch(o.text, /triad|Star Ferry|Kowloon/i, o.text);
+});

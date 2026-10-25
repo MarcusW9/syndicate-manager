@@ -7,7 +7,8 @@ import { NAMES } from '../config/names.js';
 import { nextRng } from './random.js';
 import { pick, d20 } from './rng.js';
 import { bestFor } from './crew.js';
-import { marketWage } from './pricing.js';
+import { marketWage, round50 } from './pricing.js';
+import { ECONOMY } from '../data/economy.js';
 import { pickTiered } from './tiered.js';
 import { CLASHES, TRAIT_TAGS } from '../data/tags.js';
 import { rollPotential, rollScoutError, scoutFor, potentialRead, prepareOperative } from './development.js';
@@ -59,11 +60,14 @@ function withoutClashes(lines, tags) {
   return lines.filter((l) => !l.tags.some((t) => banned.includes(t)));
 }
 
-export function generateRecruit(state, { role: forcedRole, quality: forcedQuality } = {}) {
+// The founding crew: raw rookies, below the rookies you can hire later (PLAN-PROGRESSION.md).
+const FOUNDER = { id: 'rookie', age: [18, 24], primary: [8, 11], secondary: [5, 9], other: [2, 6] };
+
+export function generateRecruit(state, { role: forcedRole, quality: forcedQuality, founder = false } = {}) {
   const rng = nextRng(state);
   const culture = weighted(rng, CULTURES);
   const rolledQuality = weighted(rng, QUALITY);
-  const quality = QUALITY.find((q) => q.id === forcedQuality) ?? rolledQuality;
+  const quality = founder ? FOUNDER : QUALITY.find((q) => q.id === forcedQuality) ?? rolledQuality;
   const rolledRole = pickRole(rng, state.crew);
   const role = forcedRole ?? rolledRole;
   const profile = ROLE_PROFILES[role];
@@ -79,13 +83,15 @@ export function generateRecruit(state, { role: forcedRole, quality: forcedQualit
   const freeHandles = HANDLES.filter((h) => !takenHandles.has(h));
   const handle = freeHandles.length ? pick(rng, freeHandles) : `${pick(rng, HANDLES)} ${between(rng, [2, 9])}`;
 
-  const district = pick(rng, Object.values(NAMES.districts));
-  const originLine = pickTiered(rng, ORIGINS[role]);
+  const district = NAMES.districtsInText[pick(rng, Object.keys(NAMES.districts))]; // reads right mid-sentence
+  // Rookies are 18-24, so their backstory comes from the lines written for someone young.
+  const origins = quality.id === 'rookie' ? ORIGINS[role].filter((o) => o.young) : ORIGINS[role];
+  const originLine = pickTiered(rng, origins);
   const origin = originLine.text.replace('{district}', district);
   const traits = pickTraits(rng, originLine.tags);
 
-  // Market price: rookies ~500 (alongside the starting crew), stars cost more.
-  const wage = marketWage({ role, stats });
+  // Market price: rookies ~500, stars cost more. The founding crew work for street wages.
+  const wage = founder ? round50(marketWage({ role, stats }) * ECONOMY.streetWage) : marketWage({ role, stats });
 
   const name = `${pick(rng, culture.given)} ${pick(rng, culture.surnames)}`;
   const age = between(rng, quality.age);
@@ -124,12 +130,11 @@ export function generateRecruit(state, { role: forcedRole, quality: forcedQualit
   };
 }
 
-// A generated starting crew ("Fresh crew"): one of each core role, one veteran,
-// two pros and two rookies, and a wage bill near the authored crew's (¥3,050)
-// so the opening week still forces the same choice. See DESIGN.md.
+// The generated starting crew: five raw rookies, one of each core role, on street
+// wages, with a wage bill kept in a band so every run opens fair.
+// See PLAN-PROGRESSION.md and DESIGN.md (2026-10-25).
 export const FRESH_CREW_ROLES = ['medic', 'muscle', 'tech', 'driver', 'face'];
-export const FRESH_CREW_QUALITIES = ['veteran', 'pro', 'pro', 'rookie', 'rookie'];
-export const FRESH_CREW_WAGES = [2700, 3400];
+export const FRESH_CREW_WAGES = [1150, 1450];
 
 /** Five generated recruits for a new game. Rerolls until the wage bill fits (max 20 tries). */
 export function generateStartingCrew(state) {
@@ -137,13 +142,7 @@ export function generateStartingCrew(state) {
   for (let attempt = 0; attempt < 20; attempt++) {
     // generateRecruit reads the crew (for handles) and advances the counters, so work on a scratch copy.
     const work = { ...state, crew: [] };
-    const rng = nextRng(work);
-    const qualities = [...FRESH_CREW_QUALITIES];
-    for (let i = qualities.length - 1; i > 0; i--) {
-      const j = Math.floor(rng() * (i + 1));
-      [qualities[i], qualities[j]] = [qualities[j], qualities[i]];
-    }
-    for (const [i, role] of FRESH_CREW_ROLES.entries()) work.crew.push(generateRecruit(work, { role, quality: qualities[i] }));
+    for (const role of FRESH_CREW_ROLES) work.crew.push(generateRecruit(work, { role, founder: true }));
     state.rngCounter = work.rngCounter;
     state.recruitSeq = work.recruitSeq;
     const bill = work.crew.reduce((n, r) => n + r.wage, 0);

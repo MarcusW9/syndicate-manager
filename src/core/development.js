@@ -13,8 +13,8 @@ import { ROLE_PROFILES } from '../data/recruitPools.js';
 
 export const STATS = ['combat', 'stealth', 'tech', 'social', 'driving', 'medical', 'cool'];
 
-// Growth points. Tuned with simulations (tests/development.test.js):
-// a good rookie goes ~11 -> 16-17 in their main stat over ~20-25 jobs.
+// Growth points. Tuned with simulations (tests/development.test.js and
+// PLAN-PROGRESSION.md step 0): a founding rookie goes ~9 -> 15 over season one.
 export const XP = {
   roll: 4, // made the roll in a crisis (success or failure: they learn either way)
   watch: 1, // on the crew when someone else rolled
@@ -24,10 +24,18 @@ export const XP = {
 export const MENTOR_RATE = 1.5;
 export const GRADUATE_AT = 15; // rookie -> pro when their main stat gets here
 
-/** Points needed for the next +1. Higher stats cost more; the last point before the ceiling costs double.
- *  The 1.7 scale is the main tuning knob (see the curve in DESIGN.md). */
+// Cost per point: (stat + 4) × GROWTH_SCALE. The scale is the main tuning knob
+// (1.7 until 2026-10-25; x2.5 for the slower climb). The ceiling is a wall, not a
+// stop: past it every point costs WALL times more, up to 20.
+export const GROWTH_SCALE = 4.25;
+export const WALL = 4;
+export const MAX_STAT = 20;
+
+/** Points needed for the next +1. Higher stats cost more; the last point before the ceiling costs double; past it, WALL times. */
 export function pointCost(value, ceiling) {
-  return (value + 4) * 1.7 * (ceiling - value <= 1 ? 2 : 1);
+  const base = (value + 4) * GROWTH_SCALE;
+  if (value >= ceiling) return base * WALL;
+  return base * (ceiling - value <= 1 ? 2 : 1);
 }
 
 export const ageRate = (age) => (age < 25 ? 1.5 : age < 35 ? 1 : 0.5);
@@ -112,7 +120,7 @@ export function scoutFor(crew, role, excludeId) {
   return others.find((o) => o.traits.includes('veteran')) ?? [...others].sort((a, b) => b.stats.cool - a.stats.cool)[0] ?? null;
 }
 
-/** Which way the crew reads someone's ceiling: 'peaked' | 'close' | 'special' | 'strong' | 'some'. Uses scoutError, so it can be wrong. */
+/** Which way the crew reads someone's ceiling: 'peaked' (at or past it) | 'close' | 'special' | 'strong' | 'some'. Uses scoutError, so it can be wrong. */
 function potentialBand(op) {
   const now = op.stats[primaryStat(op)];
   const seen = clamp((op.potential?.[primaryStat(op)] ?? now) + (op.scoutError ?? 0), now, 20);
@@ -129,7 +137,7 @@ export function potentialRead(op, scoutName, nameOverride) {
   const who = scoutName ?? 'Your scout';
   const name = nameOverride ?? op.handle;
   return {
-    peaked: `${who}: "Already as good as ${name} will get."`,
+    peaked: `${who}: "${name} is past the easy gains. It'll come slowly from here."`,
     close: `${who} thinks ${name} is close to their best already.`,
     special: `${who} thinks ${name} could be special.`,
     strong: `${who} reckons ${name} will be better than most pros you could hire, given the work.`,
@@ -139,7 +147,7 @@ export function potentialRead(op, scoutName, nameOverride) {
 
 /** The same read in a few words, for the crew list. */
 export function potentialTag(op) {
-  return { peaked: 'at their peak', close: 'close to their best', special: 'could be special', strong: 'still has a lot to give', some: 'will come on a bit' }[potentialBand(op)];
+  return { peaked: 'past the easy gains', close: 'close to their best', special: 'could be special', strong: 'still has a lot to give', some: 'will come on a bit' }[potentialBand(op)];
 }
 
 // --- growth -----------------------------------------------------------------
@@ -159,15 +167,16 @@ export function mentoring(crew) {
 /** Bank growth points in one stat. Mutates op; returns how many points the stat went up. */
 export function growStat(op, stat, points) {
   const ceiling = op.potential?.[stat] ?? op.stats[stat];
-  if (op.stats[stat] >= ceiling || points <= 0) { op.progress[stat] = 0; return 0; }
+  if (op.stats[stat] >= MAX_STAT) { op.progress[stat] = 0; return 0; }
+  if (points <= 0) return 0;
   let banked = (op.progress[stat] ?? 0) + points;
   let gained = 0;
-  while (op.stats[stat] < ceiling && banked >= pointCost(op.stats[stat], ceiling)) {
+  while (op.stats[stat] < MAX_STAT && banked >= pointCost(op.stats[stat], ceiling)) {
     banked -= pointCost(op.stats[stat], ceiling);
     op.stats[stat] += 1;
     gained += 1;
   }
-  op.progress[stat] = op.stats[stat] >= ceiling ? 0 : Math.round(banked * 100) / 100;
+  op.progress[stat] = op.stats[stat] >= MAX_STAT ? 0 : Math.round(banked * 100) / 100;
   return gained;
 }
 
@@ -177,9 +186,17 @@ function logChange(op, stat, from, to, day) {
   op.growthLog.push({ stat, from, to, day });
 }
 
+/** How far op is towards the next +1 in a stat, 0-1 (for the progress bars). */
+export function progressShare(op, stat) {
+  if (op.stats[stat] >= MAX_STAT) return 1;
+  const cost = pointCost(op.stats[stat], op.potential?.[stat] ?? op.stats[stat]);
+  return Math.max(0, Math.min(1, (op.progress?.[stat] ?? 0) / cost));
+}
+
 /**
  * Grow one stat from raw points right now (age and mentoring applied).
- * Mutates op; returns { events: [{ opId, handle, stat, from, to }], graduated }.
+ * Mutates op; returns { events: [{ opId, handle, stat, from, to, wall }], graduated }.
+ * wall: this rise reached their ceiling in their main stat (growth slows from here).
  */
 export function gainXp(op, crew, stat, raw, day) {
   prepareOperative(op);
@@ -188,7 +205,9 @@ export function gainXp(op, crew, stat, raw, day) {
   const events = [];
   if (growStat(op, stat, raw * rate)) {
     logChange(op, stat, from, op.stats[stat], day);
-    events.push({ opId: op.id, handle: op.handle, stat, from, to: op.stats[stat] });
+    const ceiling = op.potential?.[stat] ?? 0;
+    const wall = stat === primaryStat(op) && from < ceiling && op.stats[stat] >= ceiling;
+    events.push({ opId: op.id, handle: op.handle, stat, from, to: op.stats[stat], ...(wall ? { wall: true } : {}) });
   }
   let graduated = false;
   if (op.tier === 'rookie' && op.stats[primaryStat(op)] >= GRADUATE_AT) {

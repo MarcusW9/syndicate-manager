@@ -237,5 +237,11 @@ function migrate(state) {
     state.rumour = state.rumour ?? null;
     state.version = 11;
   }
+  if (state.version === 11) {
+    // v12 added job gates for the rookie start: jobs unlock by reputation. Games started
+    // before keep an open board.
+    state.jobGates = state.jobGates ?? false;
+    state.version = 12;
+  }
   return state;
 }

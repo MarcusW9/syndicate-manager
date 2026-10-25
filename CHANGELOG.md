@@ -4,6 +4,21 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · Story order, young backstories, and Ruth Okonkwo's first job
+- **Data Scrub**, a new job for Ruth Okonkwo: steal a prototype chip from a Veridian-Apex lab in Glass Heights. It opens once your crew has a little reputation (threat 2).
+- Crises in the new jobs now happen in story order: no running into Ah-Wah's hired muscle on the landing before you've climbed the stairs.
+- Rookies' backstories now fit someone aged 18 to 24 (no more 20-year-olds who "spent a decade" doing anything), with twelve new ones. District names read properly in them ("the Night Market").
+- Fixed three backstories that used real or off-canon names.
+
+## 2026-10-25 · Start at the bottom
+- **A new crew of nobodies.** Every new game starts with five rookies aged 18 to 24, one of each role, with low stats and real room to grow. They work for street wages (about ¥250 a week each) out of a cheaper first safehouse (rent ¥1,500). The Lantern Bay Five are no longer offered.
+- **Rookie jobs.** Eight small jobs for a new crew, written with named characters and short dialogue: Clinic Night and Herbal Run for Auntie Fung, Mahjong Ledger and Counterfeit Chrome for Madam Rao, Container 409 and Submerged Cable for the Ferryman, Eviction Notice for Mr. Szeto, and Market Delivery for Mrs. Ip as walk-in work. Meet Doc Siu.
+- **Work you've earned.** Bigger jobs only come to a crew people have heard of. A reputation bar on the board shows how far the next step is. The courier run opens first, then each threat level in turn, over about a season. The board is busier: three new jobs a week, up to five at once, always with some small work on it.
+- **Slower, longer growth.** Everyone improves more slowly, and a thin bar under each stat shows progress towards the next point. Hidden ceilings are now walls: past one, growth keeps going, just much more slowly.
+- **After-action reports.** Each job's message now starts with a plain summary of what happened in each crisis.
+- The planning screen's risk read now knows rookie jobs are easier.
+- Games already in progress keep their crew and an open board. Save format v12. 137 tests.
+
 ## 2026-10-25 · Street talk
 - Every Monday a rumour goes round the city, and it's true. Some make every job in one district harder or easier that week ("Silver Fan collectors are out in force in the Night Market"); others warn that a particular trouble is likely there ("the Wet Sleeve are running neural-load checks at the dock gates").
 - The job board shows the week's street talk at the top and marks the jobs it affects.

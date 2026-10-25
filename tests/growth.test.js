@@ -10,7 +10,7 @@ import * as M from '../src/core/mission.js';
 import { templateById, twistById } from '../src/core/jobs.js';
 import { crewRoll, maxCrew, MAX_EXTRA_CREW } from '../src/core/crew.js';
 import { assessJob, successChance, riskLabel, STAT_FOR_THREAT } from '../src/core/risk.js';
-import { gainXp, changesSince, STATS } from '../src/core/development.js';
+import { gainXp, changesSince, STATS, pointCost } from '../src/core/development.js';
 import { nextRng } from '../src/core/random.js';
 import { d20 } from '../src/core/rng.js';
 import { makeRookie } from './develop-sim.js';
@@ -70,7 +70,7 @@ test('a rise during a roll is flashed in the mission log at that moment', () => 
   for (let seed = 1; seed <= 40; seed++) {
     let s = createNewGame({ seed });
     const kid = makeRookie({ role: 'driver', ceiling: 19 });
-    for (const k of STATS) kid.progress[k] = 40; // every stat on the brink
+    for (const k of STATS) kid.progress[k] = pointCost(kid.stats[k], kid.potential[k]) - 1; // every stat on the brink
     s.crew.push(kid);
     const job = s.jobs[0];
     s = M.startMission(s, job.id, ['rookie', 'teo'], 'stealth');
@@ -202,7 +202,7 @@ test('the crew-size badge shows the same penalty the rolls use', async () => {
 test('the crew-list scout tag agrees with the full read, and never shows a number', async () => {
   const { potentialTag, potentialRead } = await import('../src/core/development.js');
   const pairs = [['could be special', /special/], ['still has a lot to give', /better than most pros/], ['will come on a bit', /come on a bit/],
-    ['close to their best', /close to their best/], ['at their peak', /Already as good/]];
+    ['close to their best', /close to their best/], ['past the easy gains', /past the easy gains/]];
   const cases = [{ start: 11, ceiling: 18 }, { start: 11, ceiling: 16 }, { start: 11, ceiling: 14 }, { start: 13, ceiling: 14 }, { start: 14, ceiling: 14 }];
   cases.forEach((c, i) => {
     const op = makeRookie(c);
