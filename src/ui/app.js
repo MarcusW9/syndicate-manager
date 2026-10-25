@@ -6,6 +6,7 @@ import { DISTRICTS } from '../data/districts.js';
 import { DISTRICT_CARDS, FACTIONS, STREET_FACTS, HISTORY } from '../data/city.js';
 import { MISSIONS } from '../data/missions.js';
 import { TRAITS } from '../data/traits.js';
+import { PARTNER } from '../data/partner.js';
 import { STARTING_CREW } from '../data/operatives.js';
 
 // Saves made before badges existed have no colour on their operatives.
@@ -429,7 +430,7 @@ function renderInbox() {
       <div class="inbox__side">
         <section class="panel inbox__list">
           <h1>Today</h1>
-          ${renderAlerts()}
+          ${renderBriefing()}
           ${list}
         </section>
         ${renderUpcoming('upcoming--side')}
@@ -440,31 +441,53 @@ function renderInbox() {
     </div>`;
 }
 
-/** Alert lines: nothing on a quiet day; each one taps through to where it's dealt with. */
-function renderAlerts() {
+/** "A, B and C". */
+const andList = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
+/** Fill a line's {slots}; a slot with no value is left as written so a gap shows up in testing. */
+const fillLine = (line, data) => line.replace(/\{(\w+)\}/g, (m, k) => (data[k] ?? m));
+
+/**
+ * Joss's morning briefing: one line for the day's mood, then the alert lines in their
+ * voice. Alerts only appear when something needs the player, and each taps through to
+ * where it's dealt with. Lines change day to day but stay put across re-renders.
+ */
+function renderBriefing() {
   // Several jobs ending today read as one line, not a stack of them.
   const raw = alerts(state);
   const lastJobs = raw.filter((a) => a.kind === 'job-last');
   const list = lastJobs.length > 1
     ? [...raw.filter((a) => a.kind !== 'job-last'), { kind: 'jobs-last', tone: 'warn', names: lastJobs.map((a) => a.name) }]
     : raw;
-  if (!list.length) return '';
+  const say = (kind, data, key = '') => fillLine(pickLine(PARTNER.alerts[kind], `${state.day}-${kind}-${key}`), data);
   const line = (a) => {
     switch (a.kind) {
-      case 'decision': return [`Decision needed: ${a.subject}`, 'open-message', a.messageId];
-      case 'broke': return [`Cash is below zero (${money(a.cash)}). Morale drops each Sunday you stay in the red.`, 'nav', 'jobs'];
-      case 'bills-short': return [`Sunday's bills are ${money(a.total)}. You're ${money(a.short)} short.`, 'nav', 'jobs'];
-      case 'job-last': return [`Last day to take ${a.name}`, 'open-job', a.jobId];
-      case 'jobs-last': return [`Last day for ${a.names.length} jobs: ${a.names.join(', ')}`, 'nav', 'jobs'];
-      case 'lead-last': return [`Last day to sign ${a.name} (${a.role})`, 'nav', 'crew'];
-      case 'crew-out': return [`Can't work today: ${a.names.join(', ')}`, 'nav', 'crew'];
+      case 'decision': return [say('decision', { subject: a.subject }, a.messageId), 'open-message', a.messageId];
+      case 'broke': return [say('broke', { amount: money(Math.abs(a.cash)) }), 'nav', 'jobs'];
+      case 'bills-short': return [say('bills-short', { total: money(a.total), short: money(a.short) }), 'nav', 'jobs'];
+      case 'job-last': return [say('job-last', { job: a.name }, a.jobId), 'open-job', a.jobId];
+      case 'jobs-last': return [say('jobs-last', { count: a.names.length, jobs: andList(a.names) }), 'nav', 'jobs'];
+      case 'lead-last': return [say('lead-last', { name: a.name, role: a.role }, a.name), 'nav', 'crew'];
+      case 'crew-out': return [say('crew-out', { names: andList(a.names) }), 'nav', 'crew'];
       default: return null;
     }
   };
-  return `<ul class="alerts">${list.map((a) => {
-    const [text, action, id] = line(a) ?? [];
-    return text ? `<li><button class="alert alert--${a.tone}" data-action="${action}" data-id="${esc(id)}">${esc(text)} <span aria-hidden="true">›</span></button></li>` : '';
-  }).join('')}</ul>`;
+  const has = (k) => list.some((a) => a.kind === k);
+  const c = calendar(state.day);
+  const mood = state.day === 1 ? 'first' : has('decision') ? 'decision' : has('broke') ? 'broke'
+    : has('bills-short') ? 'short' : has('crew-out') ? 'hurt' : c.isSunday ? 'sunday' : c.isMonday ? 'monday' : 'quiet';
+  const opener = pickLine(PARTNER.moods[mood], `${state.day}-${mood}`);
+  return `
+    <div class="joss">
+      <span class="joss__badge" aria-hidden="true">${esc(NAMES.partner[0])}</span>
+      <div class="joss__body">
+        <span class="joss__name">${esc(NAMES.partner)}</span>
+        <p class="joss__line">${esc(opener)}</p>
+      </div>
+    </div>
+    ${list.length ? `<ul class="alerts">${list.map((a) => {
+      const [text, action, id] = line(a) ?? [];
+      return text ? `<li><button class="alert alert--${a.tone}" data-action="${action}" data-id="${esc(id)}">${esc(text)} <span aria-hidden="true">›</span></button></li>` : '';
+    }).join('')}</ul>` : ''}`;
 }
 
 /** The week ahead, one line per thing the game will do, grouped by day. */

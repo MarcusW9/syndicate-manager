@@ -5,7 +5,7 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 ## State
 
 - **Live:** `main` at "City tab and street talk", deployed to GitHub Pages. Branch `claude/pensive-pascal-kor55b` matched `main` when this file was written.
-- **Tests:** 148 passing (`npm test`). Save format **v13**.
+- **Tests:** 150 passing (`npm test`). Save format **v13**.
 - **Both older plan files are finished:** `PLAN-PERSONALITY.md` (steps 1-4) and `PLAN-RENEWALS.md` (steps 0-4).
 - **Plan in progress: `PLAN-PROGRESSION.md`.** Steps 0-1 done 2026-10-25 (rookie start, rookie jobs, gated board, slower growth, progress bars, reports). Next: the owner playtests; then step 2. Its follow-ups list has the loose ends.
 - **Working tree clean.** The only pending content is the locked districts' crisis hooks in `drafts/district-hooks.md`.
@@ -28,6 +28,8 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 2. **District unlocks through reputation tiers** (after the progression plan; its job gates live inside Street tier, below these). `state.reputation` (0-100) and `state.tier` already exist, but nothing promotes you. At 100: Street → District opens **the Silt**, District → City opens **the Amber Reach**, City → Regional opens **Iron Peak**. Promotions are permanent; reputation can slip within a tier. Each unlock arrives as an inbox message from a client: the Ferryman (Silt), Ruth Okonkwo (Amber Reach), Mr. Szeto (Iron Peak). The intro texts are in `WORLD.md`. **Prerequisite:** each locked district needs 1-2 job types of its own, and its crises (drafts in `drafts/district-hooks.md`). Tune thresholds by simulation.
 3. **Client trust arcs.** The dossier scenes in `WORLD.md` at trust 60/75/90 (and below 20) become inbox messages, using the decision-message system in `src/core/decisions.js` (as renewals and the heat notice do). Szeto's arc ends in the main choice: keep working for him, or expose him to protect Pearl Haven House. Auntie Fung's secret is the first clue to Szeto's. Some below-20 outcomes (Szeto raising rent, Okonkwo's audits) need new small systems.
 4. **Client dossiers on the City tab.** (The public one-line write-ups moved to City on 2026-10-25; the secrets are still unbuilt.) The owner left these out of the City tab for now, because the secrets need the trust arcs first.
+
+5. **Joss, next steps** (after the owner plays with the Today briefing): Joss's read on the planning screen, a line in after-action reports, then comms during jobs. Lines go in `src/data/partner.js`; canon in `WORLD.md` ("Joss"). Joss only says what the screen already knows.
 
 ## Parked (owner's call; don't start without asking)
 

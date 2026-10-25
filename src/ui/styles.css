@@ -138,6 +138,12 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 
 /* Today: alert lines only when something needs you; the week ahead under the inbox. */
 .inbox__list h1 { margin-top: 0; }
+/* Joss, the crew's AI partner: one line of briefing at the top of Today. */
+.joss { display: flex; gap: 12px; align-items: flex-start; margin: 4px 0 12px; }
+.joss__badge { flex: 0 0 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--accent-2); background: #14262a; color: var(--accent-2); font-weight: 700; }
+.joss__body { min-width: 0; }
+.joss__name { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-2); }
+.joss__line { margin: 2px 0 0; line-height: 1.45; }
 .alerts { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 6px; }
 .alert { width: 100%; min-height: var(--tap); padding: 8px 12px; text-align: left; border-radius: var(--radius); font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
 .alert--warn { background: #2a2617; border: 1px solid #5c4a1c; color: var(--warn); }

@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · Meet Joss
+- **Joss** is the crew's partner: a bootleg AI the Ghost Circuit flashed onto a cracked handset and some salvaged relay boards. They've been with you since before the crew.
+- Joss writes your welcome note in a new game, opens each day on Today with a line of their own, and tells you when something needs you ("Sunday's bills are ¥2,800. We're ¥600 short."). Same facts as before, in their voice.
+- 150 tests.
+
 ## 2026-10-25 · Today, take two
 - **The inbox is back at the top** of Today. The four summary boxes are gone (the top bar already shows that).
 - **Warnings only when they matter:** a short coloured line appears when a decision is waiting, you can't cover Sunday's bills, a job or recruit is on its last day, or someone can't work. Tap it to go and deal with it.
