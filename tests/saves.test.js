@@ -3,7 +3,7 @@
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { createNewGame, SAVE_VERSION } from '../src/core/state.js';
-import { advanceDay } from '../src/core/time.js';
+import { advanceDay, weeklyBill } from '../src/core/time.js';
 
 // In-memory browser storage.
 const store = new Map();
@@ -135,4 +135,12 @@ test('a v12 save upgrades to v13 with today\'s starting cash', async () => {
   const loaded = await S.importSave(asFile(v12));
   assert.equal(loaded.version, SAVE_VERSION);
   assert.equal(loaded.dayStartCash, loaded.cash);
+});
+
+test('the bill shown before Sunday is what Sunday takes', () => {
+  let s = days(createNewGame({ seed: 32 }), 5); // Saturday
+  const { total } = weeklyBill(s);
+  const before = s.cash;
+  s = days(s, 1);
+  assert.equal(before - s.cash, total);
 });

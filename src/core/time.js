@@ -89,11 +89,16 @@ function newSeason(state) {
   });
 }
 
-function settleWeek(state) {
+/** What Sunday will cost: wages for everyone alive, plus rent. */
+export function weeklyBill(state) {
   const wages = state.crew
     .filter((op) => op.condition.injury !== 'dead')
     .reduce((sum, op) => sum + op.wage, 0);
-  const total = wages + state.rent;
+  return { wages, rent: state.rent, total: wages + state.rent };
+}
+
+function settleWeek(state) {
+  const { wages, total } = weeklyBill(state);
   state.cash -= total;
 
   const broke = state.cash < 0;

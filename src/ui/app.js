@@ -10,7 +10,7 @@ import { STARTING_CREW } from '../data/operatives.js';
 
 // Saves made before badges existed have no colour on their operatives.
 const COLOR_BY_ID = Object.fromEntries(STARTING_CREW.map((o) => [o.id, o.color]));
-import { advanceDay, calendar, formatShortDate, isBlocked, seasonStartDay } from '../core/time.js';
+import { advanceDay, calendar, formatShortDate, isBlocked, seasonStartDay, weeklyBill } from '../core/time.js';
 import { createNewGame } from '../core/state.js';
 import { templateById, jobView, nextUnlock } from '../core/jobs.js';
 import { trustLabel, clientById, trustOf } from '../core/clients.js';
@@ -18,7 +18,7 @@ import { CLIENTS } from '../data/clients.js';
 import { availability, APPROACHES, traitMods, ratedStat, maxCrew, crewSizeRead } from '../core/crew.js';
 import { assessJob, rollTarget, successChance, riskLabel } from '../core/risk.js';
 import { resolveDecision } from '../core/decisions.js';
-import { WATCHED_PENALTY, heatChoices } from '../core/heat.js';
+import { WATCHED_PENALTY, HEAT_NOTICE_AT, HEAT_MAX, heatChoices } from '../core/heat.js';
 import { activeRumour } from '../core/rumours.js';
 import {
   startMission, revealBeat, chooseOption, resolveCritical, closeMission,
@@ -180,7 +180,10 @@ const riskBadge = (level) => `<span class="risk risk--${esc(level)}">${esc(level
 /** Availability as a coloured chip: green ready, amber usable but worse off, red can't go, teal away on a job. */
 function statusChip(a) {
   const tone = a.ok ? (a.reason === 'ready' ? 'ready' : 'worn') : a.reason.startsWith('away') ? 'away' : 'out';
-  return `<span class="status status--${tone}">${esc(a.reason)}</span>`;
+  const back = /^away until day (\d+)$/.exec(a.reason);
+  const n = back ? Number(back[1]) - state.day : 0;
+  const text = back ? (n <= 1 ? 'away, back tomorrow' : `away, back in ${n} days`) : a.reason;
+  return `<span class="status status--${tone}">${esc(text)}</span>`;
 }
 /** Fatigue and morale as two small labelled bars for crew rows. */
 const conditionBars = (op) => [['Fatigue', op.condition.fatigue, 'fatigue'], ['Morale', op.condition.morale, 'morale']]
@@ -196,6 +199,14 @@ function keyStatsFor(op, tpl, threat) {
     const fit = { low: 'good', moderate: 'shaky', high: 'weak', extreme: 'weak' }[riskLabel(successChance(v, target))];
     return `<span class="fit fit--${fit}">${esc(statName(k))} ${v}${traitMods(op)[k] ? '*' : ''}</span>`;
   }).join(' · ');
+}
+/** How long something on offer lasts: it's still there on its last day. */
+const daysLeft = (lastDay) => { const n = lastDay - state.day; return n <= 0 ? 'last day' : n === 1 ? '1 day left' : `${n} days left`; };
+/** Heat as a small bar: green while quiet, amber, then red from the level that brings the fixer. */
+function heatMeter() {
+  const h = state.heat;
+  const tone = h >= HEAT_NOTICE_AT ? 'high' : h >= 3 ? 'mid' : 'low';
+  return `<span class="heat heat--${tone}"><span class="heat__track" aria-hidden="true"><span style="width:${(h / HEAT_MAX) * 100}%"></span></span>${h}/${HEAT_MAX}</span>`;
 }
 const districtName = (key) => NAMES.districts[key] ?? key;
 const districtTurf = (key) => DISTRICTS[key]?.turf ? ` · ${esc(DISTRICTS[key].turf)}` : '';
@@ -251,21 +262,24 @@ function render() {
   const unread = state.inbox.filter((m) => !m.read).length;
   const cue = dayCue;
   dayCue = null;
-  const wide = screen === 'inbox' && !state.activeMission;
+  const wide = !state.activeMission && (screen === 'inbox' || (screen === 'crew' && openOperativeId));
+  // Phones: Continue sits above the tab bar, except while planning a job (its own bar
+  // takes that place) and during a job (nothing to continue).
+  const dock = !state.activeMission && !(screen === 'jobs' && plan);
 
   root.innerHTML = `
     <header class="topbar ${cue ? 'is-new-day' : ''}">
       ${renderWhen()}
       <div class="topbar__stats">
-        <span class="stat"><span class="stat__label">Cash</span> ${money(state.cash)}${cashDelta()}</span>
-        <span class="stat"><span class="stat__label">Heat</span> ${state.heat}/10</span>
-        <span class="tier">${esc(statName(state.tier))} tier</span>
+        <span class="stat stat--cash"><span class="stat__label">Cash</span> ${money(state.cash)}${cashDelta()}</span>
+        <span class="stat"><span class="stat__label">Heat</span> ${heatMeter()}</span>
+        <span class="tier">${esc(statName(state.tier))}<span class="tier__word"> tier</span></span>
       </div>
-      ${renderContinue(blocked, resting, unread)}
+      ${renderContinue(blocked, resting, unread, 'topbar__continue')}
     </header>
 
     <nav class="nav" aria-label="Main">
-      ${navButton('inbox', 'Inbox', unread, 'unread')}
+      ${navButton('inbox', 'Today', unread, 'unread')}
       ${navButton('crew', 'Crew')}
       ${navButton('jobs', 'Jobs', state.jobs.length, 'open')}
       ${navButton('city', 'City')}
@@ -273,12 +287,14 @@ function render() {
     </nav>
 
     <main class="main ${wide ? 'main--wide' : ''}">${state.activeMission ? renderMission() : renderScreen()}</main>
+    ${dock ? `<div class="dock">${renderContinue(blocked, resting, unread, 'dock__continue')}</div>` : ''}
     ${cue ? renderDayCue(cue) : ''}
     <input type="file" id="import-file" accept="application/json" hidden />
   `;
   if (state.activeMission) root.querySelector('.mission-end')?.scrollIntoView({ block: 'end' });
   if (refocus) {
-    const same = [...root.querySelectorAll(`[data-action="${refocus.action}"]`)].find((el) => el.dataset.id === refocus.id);
+    // Continue is drawn twice (top bar and phone dock); take whichever one is showing.
+    const same = [...root.querySelectorAll(`[data-action="${refocus.action}"]`)].find((el) => el.dataset.id === refocus.id && el.getClientRects().length);
     same?.focus({ preventScroll: true });
   }
 }
@@ -305,7 +321,7 @@ function cashDelta() {
 }
 
 /** Continue names the next day and lists what's still waiting; it never asks for a second tap. */
-function renderContinue(blocked, resting, unread) {
+function renderContinue(blocked, resting, unread, where) {
   const label = state.activeMission ? 'On a job' : blocked ? 'Decision needed'
     : `Continue → ${calendar(state.day + 1).weekday}`;
   const waiting = [
@@ -313,18 +329,18 @@ function renderContinue(blocked, resting, unread) {
     state.jobs.length ? `${state.jobs.length} job${state.jobs.length === 1 ? '' : 's'} open` : '',
   ].filter(Boolean).join(' · ');
   const hint = !blocked && waiting ? `<span class="continue__hint">${esc(waiting)}</span>` : '';
-  return `<button class="btn btn--primary topbar__continue ${resting && !blocked ? 'is-resting' : ''}" data-action="continue" ${blocked || resting ? 'disabled' : ''}>
+  return `<button class="btn btn--primary continue ${where} ${resting && !blocked ? 'is-resting' : ''}" data-action="continue" ${blocked || resting ? 'disabled' : ''}>
       <span class="continue__label">${esc(label)}</span>${hint}
     </button>`;
 }
 
 /** Re-enable Continue once its rest is over, without a full re-render. */
 function wakeContinue() {
-  const btn = root.querySelector('.topbar__continue');
-  if (!btn || isBlocked(state) || Date.now() < continueRestUntil) return;
-  btn.disabled = false;
-  btn.classList.remove('is-resting');
-  if (document.activeElement === document.body) btn.focus({ preventScroll: true }); // focus was on it before the rest
+  if (isBlocked(state) || Date.now() < continueRestUntil) return;
+  const btns = [...root.querySelectorAll('.continue')];
+  for (const btn of btns) { btn.disabled = false; btn.classList.remove('is-resting'); }
+  const shown = btns.find((b) => b.getClientRects().length);
+  if (shown && document.activeElement === document.body) shown.focus({ preventScroll: true }); // focus was on it before the rest
 }
 
 /** What changed overnight: new messages, new jobs, cash moved by the day's tick. */
@@ -374,33 +390,80 @@ function backupBanner() {
 }
 
 /**
- * Inbox: the list and the open message. Phones show one at a time; wide screens show
- * both side by side (styles.css), so reading mail doesn't mean going back and forth.
+ * Today: a summary of the crew, the board, Sunday's bills and heat, then the inbox.
+ * Phones show the summary and list, or one open message; wide screens put the open
+ * message beside them (styles.css), so reading mail doesn't mean going back and forth.
  */
 function renderInbox() {
-  if (!state.inbox.length) return `<section class="panel"><h1>Inbox</h1><p class="muted">Nothing new. Press Continue.</p></section>`;
   const open = state.inbox.find((m) => m.id === openMessageId);
-  return `
-    ${backupBanner()}
-    <div class="inbox ${open ? 'has-open' : ''}">
-      <section class="panel inbox__list">
-        <h1>Inbox</h1>
+  const list = state.inbox.length ? `
         <ul class="list">
           ${state.inbox.map((m) => `
             <li>
               <button class="row ${m.read ? 'is-read' : 'is-unread'} ${m === open ? 'is-open' : ''}" data-action="open-message" data-id="${esc(m.id)}">
                 ${m.read ? '' : '<span class="dot" aria-label="Unread"></span>'}
                 <span class="row__tag tag--${esc(m.type)}">${esc(m.type)}</span>
-                <span class="row__main">${esc(m.subject)}</span>
+                <span class="row__main row__main--clip">${esc(m.subject)}${m.body ? `<span class="preview">${esc(m.body)}</span>` : ''}</span>
                 <span class="row__meta">Day ${m.day}</span>
               </button>
             </li>`).join('')}
-        </ul>
-      </section>
+        </ul>` : '<p class="muted">Nothing new. Press Continue.</p>';
+  return `
+    ${backupBanner()}
+    <div class="inbox ${open ? 'has-open' : ''}">
+      <div class="inbox__side">
+        ${renderToday()}
+        <section class="panel inbox__list">
+          <h2 class="inbox__title">Inbox</h2>
+          ${list}
+        </section>
+      </div>
       <section class="panel inbox__detail">
         ${open ? renderMessage(open) : '<p class="muted inbox__empty">Pick a message to read it here.</p>'}
       </section>
     </div>`;
+}
+
+/** The four things to check before pressing Continue: crew, board, bills, heat. */
+function renderToday() {
+  const reads = state.crew.map((op) => availability(state, op));
+  const count = (f) => reads.filter(f).length;
+  const isAwayRead = (a) => a.reason.startsWith('away');
+  const crew = [
+    `${count((a) => a.ok)} ready`,
+    count((a) => a.ok && a.reason !== 'ready') ? `${count((a) => a.ok && a.reason !== 'ready')} worn` : '',
+    count((a) => !a.ok && !isAwayRead(a)) ? `${count((a) => !a.ok && !isAwayRead(a))} out` : '',
+    count(isAwayRead) ? `${count(isAwayRead)} away` : '',
+  ].filter(Boolean).join(' · ');
+  const views = state.jobs.map((j) => jobView(state, j));
+  const best = views.length ? Math.max(...views.map((v) => v.pay)) : 0;
+  const lastCall = state.jobs.filter((j) => j.expiresDay === state.day).length;
+  const bill = weeklyBill(state);
+  const toBills = 6 - ((state.day - 1) % 7);
+  const short = state.cash < bill.total;
+  const talk = activeRumour(state);
+  return `
+    <section class="panel today">
+      <h1>Today</h1>
+      <div class="today__grid">
+        <button class="tile" data-action="nav" data-id="crew">
+          <span class="tile__label">Crew</span><strong>${state.crew.length} on the books</strong><span class="tile__sub">${esc(crew)}</span>
+        </button>
+        <button class="tile" data-action="nav" data-id="jobs">
+          <span class="tile__label">Jobs</span><strong>${state.jobs.length ? `${state.jobs.length} open` : 'Board empty'}</strong>
+          <span class="tile__sub">${state.jobs.length ? `best pays ${money(best)}${lastCall ? ` · ${lastCall} on last day` : ''}` : 'new work on Monday'}</span>
+        </button>
+        <div class="tile">
+          <span class="tile__label">Sunday bills</span><strong class="${short && toBills ? 'is-short' : ''}">${money(bill.total)}</strong>
+          <span class="tile__sub">${toBills === 0 ? 'paid today' : short ? `${money(bill.total - state.cash)} short` : 'covered'} · wages ${money(bill.wages)}, rent ${money(bill.rent)}</span>
+        </div>
+        <div class="tile">
+          <span class="tile__label">Heat</span><strong>${heatMeter()}</strong>
+          <span class="tile__sub">${state.heat >= HEAT_NOTICE_AT ? 'people are asking questions' : state.heat >= 3 ? 'warm: cools 2 every Sunday' : 'quiet'}</span>
+        </div>
+      </div>
+      ${talk ? `<p class="today__talk"><strong>Street talk · ${esc(districtName(talk.district))}:</strong> ${esc(talk.text)}</p>` : ''}
+    </section>`;
 }
 
 function renderMessage(m) {
@@ -408,7 +471,7 @@ function renderMessage(m) {
   const jobLink = (m.type === 'job' || m.id === 'welcome') && state.jobs.length ? `<button class="btn" data-action="nav" data-id="jobs">Open the job board</button>`
     : m.type === 'scout' && (state.recruits ?? []).length ? `<button class="btn" data-action="nav" data-id="crew">See the leads</button>` : '';
   return `
-      <button class="btn btn--ghost inbox__back" data-action="back">← Inbox</button>
+      <button class="btn btn--ghost inbox__back" data-action="back">← Today</button>
       <h1>${esc(m.subject)}</h1>
       <p class="muted">${esc(m.type)} · Day ${m.day}</p>
       <p class="body">${esc(m.body)}</p>
@@ -476,7 +539,7 @@ function renderCrew() {
             <button class="row" data-action="open-recruit" data-id="${esc(r.id)}">
               ${badge(r)}
               <span class="row__main"><strong>${esc(r.name)}</strong> "${esc(r.handle)}"<br><span class="muted">${esc(r.quality)} ${esc(r.role)} · ${r.age}</span></span>
-              <span class="row__meta"><strong>${money(r.wage)}</strong>/wk<br>gone day ${r.expiresDay}</span>
+              <span class="row__meta"><strong>${money(r.wage)}</strong>/wk<br>${daysLeft(r.expiresDay)}</span>
             </button>
           </li>`).join('')}
       </ul>` : '<p class="muted small">No leads right now. Scouts report every Wednesday.</p>'}`;
@@ -520,7 +583,7 @@ function renderRecruit() {
         ${badge(r, 'lg')}
         <div>
           <h1>${esc(r.name)} <span class="muted">"${esc(r.handle)}"</span></h1>
-          <p class="muted">${esc(r.quality)} ${esc(r.role)} · ${r.age} · lead goes cold on day ${r.expiresDay}</p>
+          <p class="muted">${esc(r.quality)} ${esc(r.role)} · ${r.age} · lead goes cold: ${daysLeft(r.expiresDay)}</p>
         </div>
       </div>
       <p class="body">${esc(r.origin)}</p>
@@ -578,7 +641,7 @@ function renderFreelancers(t, threat, freelancers, full) {
               <span class="pick__box">${on ? '✓' : ''}</span>
               ${badge(f, 'sm')}
               <span class="row__main"><strong>${esc(f.handle)}</strong> <span class="muted">${esc(f.quality)} ${esc(f.role)}</span><br><span class="small">${keyStatsFor(f, t, threat)}</span></span>
-              <span class="row__meta"><strong>${Math.round(shareOf(f) * 100)}%</strong> of pay<br>gone day ${f.expiresDay}</span>
+              <span class="row__meta"><strong>${Math.round(shareOf(f) * 100)}%</strong> of pay<br>${daysLeft(f.expiresDay)}</span>
             </button>
           </li>`;
         }).join('')}
@@ -607,9 +670,12 @@ function renderOperative() {
         ${badge(op, 'lg')}
         <div>
           <h1>${esc(op.name)} <span class="muted">"${esc(op.handle)}"</span></h1>
-          <p class="muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age} · ${money(op.wage)}/week · ${esc(availability(state, op).reason)}</p>
+          <p class="muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age} · ${money(op.wage)}/week</p>
+          ${statusChip(availability(state, op))}
         </div>
       </div>
+      <div class="opgrid">
+      <div class="opgrid__about">
       <p class="body">${esc(op.bio)}</p>
       <p class="body muted">${esc(op.origin)}</p>
 
@@ -617,12 +683,17 @@ function renderOperative() {
       <ul class="chips">
         ${op.traits.map((t) => `<li class="chip"><strong>${esc(TRAITS[t]?.name ?? t)}</strong><span>${esc(TRAITS[t]?.desc ?? '')}</span></li>`).join('')}
       </ul>
+      </div>
 
+      <div class="opgrid__stats">
       <h2>Stats</h2>
       <dl class="stats">
         ${Object.keys(op.stats).map((k) => statCell(op, k, { growth: true })).join('')}
       </dl>
 
+      </div>
+
+      <div class="opgrid__dev">
       <h2>Development</h2>
       <div class="riskcard">
         <p>${esc(potentialRead(op, scoutFor(state.crew, op.role, op.id)?.handle))}</p>
@@ -631,13 +702,17 @@ function renderOperative() {
 
       <h2>Condition</h2>
       ${bar('Fatigue', c.fatigue)}${bar('Morale', c.morale)}${bar('Neural load', c.neuralLoad)}${bar('Burnout', c.burnout)}
+      </div>
 
+      <div class="opgrid__past">
       <h2>Trust</h2>
       <ul class="list list--plain">
         ${Object.entries(op.trust).map(([id, v]) => `<li>${esc(nameOf(id))}: ${v > 0 ? '+' : ''}${v}</li>`).join('') || '<li class="muted">No strong feelings yet.</li>'}
       </ul>
 
       ${op.history.length ? `<h2>History</h2><ul class="list list--plain">${op.history.slice(-8).reverse().map((h) => `<li class="muted">${esc(h)}</li>`).join('')}</ul>` : ''}
+      </div>
+      </div>
     </section>`;
 }
 
@@ -670,11 +745,11 @@ function renderJobs() {
           const t = v.tpl;
           return `
           <li>
-            <button class="row" data-action="open-job" data-id="${esc(j.id)}">
-              <span class="row__main"><strong>${esc(t.name)}</strong> · ${clientLine(v)}<br>
-                <span class="muted">${esc(districtName(t.district))}${districtTurf(t.district)} · threat ${threatHtml(v)} · ${t.crewSize} crew · ${t.days}d</span>
-                ${v.hinted ? '<br><span class="intel">Intel unreliable</span>' : ''}${v.rumour ? `<br>${talkTag(v)}` : ''}</span>
-              <span class="row__meta"><strong>${money(v.pay)}</strong><br>until day ${j.expiresDay}</span>
+            <button class="row jobcard" data-action="open-job" data-id="${esc(j.id)}">
+              <strong class="jobcard__name">${esc(t.name)}</strong><strong class="jobcard__pay">${money(v.pay)}</strong>
+              <span class="jobcard__client">${clientLine(v)}</span><span class="jobcard__left ${j.expiresDay === state.day ? 'is-last' : ''}">${daysLeft(j.expiresDay)}</span>
+              <span class="jobcard__facts">${esc(districtName(t.district))} · threat ${threatHtml(v)} · ${t.crewSize} crew · ${t.days}d</span>
+              ${v.hinted ? '<span class="jobcard__extra intel">Intel unreliable</span>' : ''}${v.rumour ? `<span class="jobcard__extra">${talkTag(v)}</span>` : ''}
             </button>
           </li>`;
         }).join('')}
@@ -683,17 +758,36 @@ function renderJobs() {
     </section>`;
 }
 
+const trustTone = (t) => (t >= 60 ? 'good' : t >= 40 ? 'mid' : 'bad');
+const TRUST_NOTE = 'Finished jobs build trust; aborts and "client unhappy" choices cost it. High trust pays up to 15% more; below 20, a client stops calling. Trust drifts back towards neutral each week.';
+
+/** Jobs tab: one line per client, folded away under the board. Full write-ups are on City. */
 function renderClients() {
+  return `
+      <details class="citydetails clients">
+        <summary>Clients (${CLIENTS.length})</summary>
+        <ul class="list list--plain">
+          ${CLIENTS.map((c) => {
+            const t = trustOf(state, c.id);
+            return `<li class="clientline"><strong>${esc(c.name)}</strong><span class="trust trust--${trustTone(t)}">${esc(trustLabel(t))} · ${t}/100</span></li>`;
+          }).join('')}
+        </ul>
+        <p class="muted small">${esc(TRUST_NOTE)} Who they are: City tab.</p>
+      </details>`;
+}
+
+/** City tab: who each client is, with where you stand. */
+function renderClientCards() {
   return `
       <h2>Clients</h2>
       <ul class="list list--plain">
         ${CLIENTS.map((c) => {
           const t = trustOf(state, c.id);
           return `<li class="clientrow"><span><strong>${esc(c.name)}</strong><br><span class="muted small">${esc(c.desc)}</span></span>
-            <span class="trust trust--${t >= 60 ? 'good' : t >= 40 ? 'mid' : 'bad'}">${esc(trustLabel(t))}<br><span class="small">${t}/100</span></span></li>`;
+            <span class="trust trust--${trustTone(t)}">${esc(trustLabel(t))}<br><span class="small">${t}/100</span></span></li>`;
         }).join('')}
       </ul>
-      <p class="muted small">Finished jobs build trust; aborts and "client unhappy" choices cost it. High trust pays up to 15% more; below 20, a client stops calling. Trust drifts back towards neutral each week.</p>`;
+      <p class="muted small">${esc(TRUST_NOTE)}</p>`;
 }
 
 function renderPlan() {
@@ -711,7 +805,7 @@ function renderPlan() {
     <section class="panel">
       <button class="btn btn--ghost" data-action="back">← Jobs</button>
       <h1>${esc(t.name)}</h1>
-      <p class="muted">${esc(districtName(t.district))} · threat ${threatHtml(v)} · pays ${money(v.pay)} · crew away ${t.days}d</p>
+      <p class="muted">${esc(districtName(t.district))}${districtTurf(t.district)} · threat ${threatHtml(v)} · pays ${money(v.pay)} · crew away ${t.days}d · ${daysLeft(job.expiresDay)}</p>
       ${DISTRICTS[t.district] ? `<p class="muted small">${esc(DISTRICTS[t.district].pitch)}</p>` : ''}
       <p class="body">${esc(fillBrief(t))}</p>
       <div class="riskcard">
@@ -952,6 +1046,8 @@ function renderCity() {
       <p class="muted small">2057. Tap a district.</p>
       ${cityMap()}
       ${cityDistrict ? districtCard(cityDistrict) : ''}
+
+      ${renderClientCards()}
 
       <h2>Who's who</h2>
       ${groups.map((g) => `

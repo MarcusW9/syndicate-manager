@@ -166,7 +166,7 @@ export function scoutWeek(state) {
   if (!found.length) return;
   state.inbox.unshift({
     id: `scout-${state.day}`, type: 'scout', day: state.day,
-    subject: found.length > 1 ? `${found.length} people want in` : `A ${found[0].role} wants in: "${found[0].handle}"`,
+    subject: found.length > 1 ? `${found.length} people want in` : `${/^[aeiou]/.test(found[0].role) ? 'An' : 'A'} ${found[0].role} wants in: "${found[0].handle}"`,
     body: found.map((r) => `${r.name} "${r.handle}", ${r.age}, ${r.role}. ${r.origin}`).join(' ') + ` Leads go cold in ${LEAD_DAYS} days. See the Crew screen.`,
     blocking: false, read: false,
   });

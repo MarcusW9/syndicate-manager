@@ -30,18 +30,32 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .small { font-size: 0.8rem; }
 .body { line-height: 1.55; }
 
-#app { display: grid; grid-template-rows: auto 1fr auto; min-height: 100dvh; }
+#app { display: grid; grid-template-rows: auto 1fr auto auto; min-height: 100dvh; }
 
 /* Top bar */
-.topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 2; }
-.topbar__when { flex: 1 1 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 12px; }
+.topbar { display: flex; flex-wrap: nowrap; justify-content: space-between; align-items: center; gap: 8px 16px; padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 2; }
+.topbar__when { flex: 1 1 auto; display: grid; gap: 4px; justify-items: start; }
 .topbar__date { font-weight: 600; border-radius: 6px; }
-.topbar__stats { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; flex: 1 1 auto; font-size: 0.9rem; }
+/* Phones: cash on one line, heat and tier under it, right-aligned beside the date. */
+.topbar__stats { display: grid; grid-template-columns: auto auto; justify-items: end; align-items: center; gap: 6px 10px; flex: 0 0 auto; font-size: 0.9rem; }
+.stat--cash { grid-column: 1 / -1; }
+.stat--cash .stat__label, .tier__word { display: none; }
+.heat { display: inline-flex; align-items: center; gap: 5px; }
+.heat__track { width: 36px; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.heat__track span { display: block; height: 100%; }
+.heat--low .heat__track span { background: #5fe0a5; }
+.heat--mid .heat__track span { background: var(--warn); }
+.heat--high .heat__track span { background: var(--danger); }
+.heat--high { color: var(--danger); }
 .stat__label { color: var(--muted); font-size: 0.75rem; margin-right: 4px; }
 .delta { font-size: 0.78rem; font-weight: 600; color: #5fe0a5; }
 .delta.is-down { color: var(--danger); }
 .tier { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 3px 8px; border-radius: 6px; background: #262b36; color: var(--text); }
-.topbar__continue { flex: 0 0 auto; display: grid; justify-items: center; align-content: center; gap: 1px; padding: 4px 16px; }
+.topbar__continue { display: none; flex: 0 0 auto; justify-items: center; align-content: center; gap: 1px; padding: 4px 16px; }
+/* Phones: Continue in a dock just above the tab bar, where the thumb is. */
+.dock { order: 2; position: sticky; bottom: 56px; z-index: 2; padding: 8px 16px; background: var(--bg); border-top: 1px solid var(--line); }
+.dock__continue { width: 100%; display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap; }
+.dock__continue .continue__hint::before { content: '· '; }
 .continue__hint { font-size: 0.72rem; font-weight: 500; opacity: 0.85; }
 /* Resting for a moment after a new day: same pink, just dimmed (not the "decision needed" look). */
 .btn--primary.is-resting:disabled { background: var(--accent); border-color: var(--accent); color: #fff; }
@@ -52,14 +66,14 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .week__day.is-bills { box-shadow: inset 0 0 0 1px var(--warn); }
 .week__day.is-done { background: #2a6b63; }
 .week__day.is-today { background: var(--accent-2); }
-.week__note { flex: 1 1 100%; color: var(--muted); font-size: 0.75rem; }
+.week__note { color: var(--muted); font-size: 0.75rem; }
 
 /* A new day: the date flashes, today's cell fills, and a note says what came in. */
 .is-new-day .topbar__date { animation: day-flash 1.4s ease-out; }
 .is-new-day .week__day.is-today { animation: day-fill 0.5s ease-out; transform-origin: left; }
 @keyframes day-flash { 0%, 35% { background: var(--accent-2); color: #0f1115; box-shadow: 0 0 0 4px var(--accent-2); } 100% { background: transparent; box-shadow: 0 0 0 4px transparent; } }
 @keyframes day-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-.daycue { position: fixed; left: 50%; bottom: calc(72px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 3; display: grid; gap: 2px; justify-items: center; padding: 10px 16px; max-width: calc(100vw - 32px); border: 1px solid var(--accent-2); border-radius: var(--radius); background: #14262a; text-align: center; font-size: 0.9rem; pointer-events: none; animation: cue 2.8s ease-in forwards; }
+.daycue { position: fixed; left: 50%; bottom: calc(136px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 3; display: grid; gap: 2px; justify-items: center; padding: 10px 16px; max-width: calc(100vw - 32px); border: 1px solid var(--accent-2); border-radius: var(--radius); background: #14262a; text-align: center; font-size: 0.9rem; pointer-events: none; animation: cue 2.8s ease-in forwards; }
 .daycue span { color: var(--muted); }
 @keyframes cue { 0% { opacity: 0; } 8%, 75% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
 @media (prefers-reduced-motion: reduce) {
@@ -70,7 +84,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 
 /* Bottom nav on phones */
 .nav { order: 3; display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--line); background: var(--panel); position: sticky; bottom: 0; }
-.nav__btn { min-height: 56px; background: none; border: 0; color: var(--muted); font: inherit; font-size: 0.85rem; cursor: pointer; }
+.nav__btn { white-space: nowrap; min-height: 56px; background: none; border: 0; color: var(--muted); font: inherit; font-size: 0.85rem; cursor: pointer; }
 .nav__btn.is-active { color: var(--accent); box-shadow: inset 0 2px 0 var(--accent); }
 .pill { display: inline-block; min-width: 20px; padding: 1px 6px; border-radius: 10px; background: #262b36; color: var(--text); font-size: 0.72rem; font-weight: 600; text-align: center; }
 .pill--new { background: var(--accent-2); color: #0f1115; }
@@ -109,8 +123,36 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 
 /* Inbox: one pane at a time on phones, list and message side by side when wide. */
 @media (max-width: 899px) {
-  .inbox.has-open .inbox__list, .inbox:not(.has-open) .inbox__detail { display: none; }
+  .inbox.has-open .inbox__side, .inbox:not(.has-open) .inbox__detail { display: none; }
 }
+.inbox__side { display: grid; gap: 12px; align-content: start; }
+/* Grid children shrink to fit, so a long one-line preview clips instead of widening the page. */
+.main, .inbox > *, .inbox__side > *, .list > li, .row__main--clip { min-width: 0; }
+.inbox__title { margin-top: 0; }
+.row__main--clip { min-width: 0; }
+.preview { display: block; font-size: 0.8rem; font-weight: 400; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Today: four tiles to check before pressing Continue. */
+.today h1 { margin-top: 0; }
+.today__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tile { display: grid; gap: 2px; align-content: start; min-height: 72px; padding: 10px 12px; text-align: left; background: #1b1f28; border: 1px solid var(--line); border-radius: var(--radius); color: var(--text); font: inherit; }
+button.tile { cursor: pointer; }
+.tile__label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.tile__sub { font-size: 0.78rem; color: var(--muted); }
+.tile .is-short { color: var(--danger); }
+.today__talk { margin: 10px 0 0; font-size: 0.85rem; color: var(--muted); }
+
+/* Job cards: name and pay, client and time left, then the facts. */
+.row.jobcard { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 3px 12px; }
+.jobcard__pay, .jobcard__left { text-align: right; }
+.jobcard__left { font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+.jobcard__left.is-last { color: var(--warn); font-weight: 600; }
+.jobcard__client { font-size: 0.9rem; }
+.jobcard__facts { grid-column: 1 / -1; font-size: 0.85rem; color: var(--muted); }
+.jobcard__extra { grid-column: 1 / -1; }
+.clients { margin-top: 16px; }
+.clientline { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.clientline:last-child { border-bottom: 0; }
 
 /* Operative detail */
 .chips { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
@@ -145,6 +187,17 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
   .main { grid-column: 2; padding: 24px; }
   .main--wide { max-width: 1200px; }
   .daycue { bottom: 24px; }
+  .dock { display: none; }
+  .topbar__continue { display: grid; }
+  .topbar__when { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 12px; }
+  .week__note { flex: 1 1 100%; }
+  .topbar__stats { display: flex; gap: 14px; flex: 1 1 auto; }
+  .stat--cash .stat__label, .tier__word { display: inline; }
+  .opgrid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; align-items: start; grid-template-areas: "about stats" "about dev" "past dev"; }
+  .opgrid__about { grid-area: about; }
+  .opgrid__stats { grid-area: stats; }
+  .opgrid__dev { grid-area: dev; }
+  .opgrid__past { grid-area: past; }
   .inbox { display: grid; grid-template-columns: minmax(300px, 2fr) 3fr; gap: 16px; align-items: start; }
   .inbox__back { display: none; }
   .inbox__empty { margin: 0; }

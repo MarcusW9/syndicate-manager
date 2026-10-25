@@ -4,6 +4,16 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · Today, and a board you can scan
+- **Today** replaces the Inbox tab. At the top: your crew (how many are ready, worn out, out or away), the job board (how many open, the best pay), Sunday's bills (and whether you can cover them) and heat. Tap Crew or Jobs to go there. The inbox is underneath, and each message shows its first line.
+- **Heat is a bar** that turns from green to amber to red.
+- **On phones, Continue sits just above the tabs**, where your thumb is, and the top bar is two rows instead of three.
+- **Job cards are three tidy lines:** name and pay, client and time left, then district, threat and crew size.
+- **"6 days left" instead of "until day 7"** for jobs, freelancers and recruit leads. Crew away on a job say when they're back.
+- **Clients** fold up under the job board as one line each. Who they are is now on the City tab.
+- **Operative pages** use two columns on a wide screen.
+- Fixed "A infiltrator wants in" (now "An infiltrator"). 142 tests.
+
 ## 2026-10-25 · Small fixes for new and keyboard players
 - The welcome message has an **Open the job board** button, so new players know where to start.
 - **Keyboard play works properly.** The selected button now shows a clear teal outline, and pressing a button no longer sends you back to the top of the page.
