@@ -194,7 +194,8 @@ function statusChip(a) {
   const tone = a.ok ? (a.reason === 'ready' ? 'ready' : 'worn') : a.reason.startsWith('away') ? 'away' : 'out';
   const back = /^away until day (\d+)$/.exec(a.reason);
   const n = back ? Number(back[1]) - state.day : 0;
-  const text = back ? (n <= 1 ? 'away, back tomorrow' : `away, back in ${n} days`) : a.reason;
+  // The teal "away" colour already says they're out; the words say when they're back.
+  const text = back ? (n <= 1 ? 'back tomorrow' : `back in ${n} days`) : a.reason;
   return `<span class="status status--${tone}">${esc(text)}</span>`;
 }
 /** Fatigue and morale as two small labelled bars for crew rows. */
@@ -649,10 +650,13 @@ function renderCrew() {
       <ul class="list list--cols">
         ${state.crew.map((op) => `
           <li>
-            <button class="row" data-action="open-op" data-id="${esc(op.id)}">
+            <button class="row crewrow" data-action="open-op" data-id="${esc(op.id)}">
               ${face(op)}
-              <span class="row__main"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"<br><span class="muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age}</span>${scoutLine(op)}${growthMarker(op)}</span>
-              <span class="row__meta row__meta--stack">${statusChip(availability(state, op))}${conditionBars(op)}</span>
+              <span class="crewrow__name"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"</span>
+              <span class="crewrow__info muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age}</span>
+              <span class="crewrow__status">${statusChip(availability(state, op))}</span>
+              <span class="crewrow__scout">${scoutLine(op)}${growthMarker(op)}</span>
+              <span class="crewrow__bars">${conditionBars(op)}</span>
             </button>
           </li>`).join('')}
       </ul>

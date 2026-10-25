@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · Tidier crew cards
+- **Crew cards line up:** someone who's away no longer has a taller card than the people beside them.
+- The name and codename sit on one line, with the status next to their role and the fatigue and morale bars next to the scout's note. On a phone the status and bars get a row of their own.
+- "Away, back tomorrow" is now just **back tomorrow** (or "back in 3 days"), in the same teal.
+
 ## 2026-10-25 · Masks that cover the eyes
 - **Full masks:** a few people now hide their whole face, behind sealed goggles and a respirator, or a smooth faceplate with glowing eye slits. The slits glow brighter under neural load, and the plate cracks when they're hurt.
 - People in a lower-face mask can now wear a visor as well.
