@@ -4,6 +4,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · Small fixes for new and keyboard players
+- The welcome message has an **Open the job board** button, so new players know where to start.
+- **Keyboard play works properly.** The selected button now shows a clear teal outline, and pressing a button no longer sends you back to the top of the page.
+
 ## 2026-10-25 · Easier crew picks
 - **The risk read follows you.** On the planning screen, a bar at the bottom shows the risk and a Start button, and it changes every time you pick someone. An empty plan says "no crew yet" instead of "extreme risk".
 - **Stats you can read.** Crew rows on the planning screen show "Medical 8 · Cool 5" instead of "med 8 · coo 5", coloured green, amber or red by how that person would do alone on this job.

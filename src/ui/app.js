@@ -243,6 +243,9 @@ function statCell(op, k, { growth = false } = {}) {
 
 // --- rendering ---------------------------------------------------------
 function render() {
+  // Every render replaces the page, so put keyboard focus back on the same control if it survives.
+  const focused = document.activeElement?.closest?.('[data-action]');
+  const refocus = focused && root.contains(focused) ? { action: focused.dataset.action, id: focused.dataset.id } : null;
   const blocked = isBlocked(state);
   const resting = Date.now() < continueRestUntil;
   const unread = state.inbox.filter((m) => !m.read).length;
@@ -274,6 +277,10 @@ function render() {
     <input type="file" id="import-file" accept="application/json" hidden />
   `;
   if (state.activeMission) root.querySelector('.mission-end')?.scrollIntoView({ block: 'end' });
+  if (refocus) {
+    const same = [...root.querySelectorAll(`[data-action="${refocus.action}"]`)].find((el) => el.dataset.id === refocus.id);
+    same?.focus({ preventScroll: true });
+  }
 }
 
 /** Date, a bar that fills across the week, and how long until Sunday's bills. */
@@ -317,6 +324,7 @@ function wakeContinue() {
   if (!btn || isBlocked(state) || Date.now() < continueRestUntil) return;
   btn.disabled = false;
   btn.classList.remove('is-resting');
+  if (document.activeElement === document.body) btn.focus({ preventScroll: true }); // focus was on it before the rest
 }
 
 /** What changed overnight: new messages, new jobs, cash moved by the day's tick. */
@@ -396,7 +404,8 @@ function renderInbox() {
 }
 
 function renderMessage(m) {
-  const jobLink = m.type === 'job' && state.jobs.length ? `<button class="btn" data-action="nav" data-id="jobs">Open the job board</button>`
+  // The welcome message points a new player at their first job.
+  const jobLink = (m.type === 'job' || m.id === 'welcome') && state.jobs.length ? `<button class="btn" data-action="nav" data-id="jobs">Open the job board</button>`
     : m.type === 'scout' && (state.recruits ?? []).length ? `<button class="btn" data-action="nav" data-id="crew">See the leads</button>` : '';
   return `
       <button class="btn btn--ghost inbox__back" data-action="back">← Inbox</button>

@@ -18,6 +18,10 @@
 }
 
 * { box-sizing: border-box; }
+/* Keyboard focus: one clear teal ring everywhere (mouse and touch taps don't show it). */
+:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.nav__btn:focus-visible { outline-offset: -3px; }
+.btn--primary:focus-visible { outline-color: #fff; }
 html, body { margin: 0; background: var(--bg); color: var(--text); }
 body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
 h1 { font-size: 1.35rem; margin: 0.5rem 0; }
