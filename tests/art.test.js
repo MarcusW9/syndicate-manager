@@ -78,9 +78,9 @@ test('every new look turns up, and the rules between them hold', () => {
       assert.ok(f.headwear === null || f.headwear === 'douli', 'a monk only wears the woven hat');
     }
     if (f.halfFace) assert.ok(f.chrome === 'half' && !f.visor && !f.glasses, 'the half-chrome face is the chrome');
-    if (f.mask) assert.ok(!f.visor, 'a mask and a visor would hide the whole face');
+    if (['goggles', 'faceplate'].includes(f.mask)) assert.ok(!f.visor && !f.glasses, 'a full mask replaces glasses and visors');
   }
-  for (const k of ['headwear:jingasa', 'headwear:neonhat', 'headwear:douli', 'mask:respirator', 'mask:jawplate', 'mask:grille', 'halfFace',
+  for (const k of ['headwear:jingasa', 'headwear:neonhat', 'headwear:douli', 'mask:respirator', 'mask:jawplate', 'mask:grille', 'mask:goggles', 'mask:faceplate', 'halfFace',
     'monk:grey', 'monk:ochre', 'monk:cyber', 'facialHair:pencil', 'facialHair:goatee', 'facialHair:droop', 'facialHair:soul', 'facialHair:beard']) {
     assert.ok(seen.has(k), `${k} never appears`);
   }
@@ -100,4 +100,11 @@ test("an LED mask grille shows the mood the mouth would have", () => {
   const at = (c) => withoutIds(portrait({ ...op, condition: { fatigue: 0, morale: 60, neuralLoad: 0, burnout: 0, injury: 'healthy', ...c } }));
   assert.notEqual(at({ morale: 20 }), at({}), 'stressed differs from neutral');
   assert.notEqual(at({ morale: 90 }), at({}), 'smirk differs from neutral');
+});
+
+test('a faceplate shows harm as a crack, and its eyes glow with neural load', () => {
+  const { op } = sample().find(({ f }) => f.mask === 'faceplate');
+  const at = (c) => withoutIds(portrait({ ...op, condition: { fatigue: 0, morale: 60, neuralLoad: 0, burnout: 0, injury: 'healthy', ...c } }));
+  assert.notEqual(at({ injury: 'serious' }), at({}), 'hurt differs from healthy');
+  assert.notEqual(at({ neuralLoad: 85 }), at({}), 'load shows in the eye slits');
 });

@@ -87,6 +87,7 @@ function baseFace(op) {
 // it was; some people simply gained gear on top.
 const HEADWEAR = ['jingasa', 'jingasa', 'neonhat', 'douli']; // steel war hat is the common one
 const MASKS = ['respirator', 'jawplate', 'grille'];
+const FULL_MASKS = ['goggles', 'faceplate'];
 const MONK_ROBES = ['grey', 'grey', 'ochre', 'cyber'];
 const FACIAL_HAIR = ['pencil', 'goatee', 'goatee', 'droop', 'soul', 'beard'];
 
@@ -99,12 +100,14 @@ function withGear(f, op) {
   const headwear = r.chance(0.07) ? r.pick(HEADWEAR) : null;
   const facialHair = r.chance(0.2) ? r.pick(FACIAL_HAIR) : null;
   const monkHat = r.chance(0.35); // a wandering monk's woven hat
+  // Full-cover masks hide the eyes too. That's allowed: every condition is also written as text.
+  const fullMask = r.chance(0.03) ? r.pick(FULL_MASKS) : null;
   const g = { ...f, monk, halfFace, mask, headwear, facialHair };
   if (monk) Object.assign(g, { hair: 'bald', splitDye: null, earring: false, facialHair: null, headwear: monkHat ? 'douli' : null });
   // Half the face is chrome: it replaces any other chrome, and the lens takes the lit eye.
   if (halfFace) Object.assign(g, { chrome: 'half', glasses: false, visor: false });
-  // A mask and a visor together would hide the whole face, and the face has to show condition.
-  if (mask) g.visor = false;
+  // A full mask takes the place of any lower-face mask, glasses and visor; a faceplate covers chrome too.
+  if (fullMask) Object.assign(g, { mask: fullMask, glasses: false, visor: false });
   return g;
 }
 
@@ -344,7 +347,7 @@ function halfFacePlate(f, c, g) {
 }
 
 /** Masks over the nose and mouth. The LED grille shows the mood the mouth would have. */
-function maskMarks(f, c, g, st) {
+function maskMarks(f, c, g, st, id) {
   const L = 32 - g.w, R = 32 + g.w, j = g.j;
   const col = f.chromeColor;
   const straps = `<path d="M${L + 2.2} 34.2 L${L - 0.6} 31.5 M${R - 2.2} 34.2 L${R + 0.6} 31.5" stroke="#15181d" stroke-width="0.9"/>`;
@@ -360,6 +363,28 @@ function maskMarks(f, c, g, st) {
       <path d="M32 33 L${R - 2} 34.6 L${32 + j} 41 L${32 + g.c} ${g.chin - 0.5} L32 ${g.chin - 0.5} Z" fill="${mix('#4a525d', c.light, 0.35)}"/>
       <g stroke="#1b1f25" stroke-width="0.55"><path d="M29.4 38.4 h5.2"/><path d="M29.8 40.1 h4.4"/><path d="M30.3 41.8 h3.4"/></g>
       <path d="M32 33 V${g.chin - 0.5}" stroke="#2b3038" stroke-width="0.35"/>`;
+    case 'goggles': {
+      // Respirator plus sealed goggles: tinted lenses catch the city light; the eyes are hidden.
+      const lens = (x) => `<circle cx="${x}" cy="29" r="3.4" fill="#2b3038"/><circle cx="${x}" cy="29" r="2.6" fill="${mix('#0b0f14', c.light, 0.25)}"/>
+        <path d="M${x - 1.4} 27.4 Q${x} 26.6 ${x + 1.4} 27.4" stroke="#fff" stroke-width="0.5" fill="none" opacity="0.45"/>`;
+      return `<path d="M${L - 0.8} 28.4 H${R + 0.8} V30 H${L - 0.8} Z" fill="#15181d"/>${lens(27.4)}${lens(36.6)}<path d="M30.4 28.8 h3.2" stroke="#2b3038" stroke-width="1"/>
+      ${maskMarks({ ...f, mask: 'respirator' }, c, g, st)}`;
+    }
+    case 'faceplate': {
+      // A smooth plate over the whole face, two LED slits for eyes (they brighten with neural
+      // load, like chrome), a seam down the middle, and a crack when hurt.
+      const glow = 0.55 + st.load * 0.45;
+      return `<g clip-path="url(#${id}h)">
+        <path d="M0 0 H64 V64 H0 Z" fill="#2b3039"/>
+        <path d="M64 0 L${R - 1.8} 12 L${R - 1.3} 30 L${32 + j - 0.3} 40.5 L64 64 Z" fill="${mix('#2b3039', c.light, 0.3)}"/>
+        <path d="M0 0 L${32 - g.w * 0.12} 9 C${32 - g.w * 0.55} 20 ${32 - g.w * 0.48} 31 30.5 48 L0 64 Z" fill="#1d2129"/>
+        <path d="M32 9 V${g.chin + 1}" stroke="#14171c" stroke-width="0.4"/>
+        <g stroke="#14171c" stroke-width="0.5"><path d="M29.4 39.6 h5.2"/><path d="M29.9 41.2 h4.2"/></g>
+        ${st.injured ? `<path d="M${R - 3} 20 L${R - 5.5} 24 L${R - 4.5} 26 L${R - 7} 30" stroke="#0b0d10" stroke-width="0.6" fill="none"/>` : ''}
+      </g>
+      ${st.load > 0.4 ? `<ellipse cx="32" cy="28.8" rx="${8 + st.load * 3}" ry="${2 + st.load * 2}" fill="${f.chromeColor}" opacity="${(st.load - 0.3) * 0.35}"/>` : ''}
+      <path d="M24.4 28 L30.2 29.2 L29.8 30.4 L24.6 29.4 Z M39.6 28 L33.8 29.2 L34.2 30.4 L39.4 29.4 Z" fill="${f.chromeColor}" opacity="${glow}"/>`;
+    }
     case 'grille': {
       // An LED strip where the mouth is, drawn to match the face's real mood.
       const mood = st.tired ? 'M29.8 40.6 Q32 40 34.2 40.6' : {
@@ -508,7 +533,7 @@ export function portrait(op, { size = 44 } = {}) {
   ${f.mask ? '' : facialHairMarks(f, c, g, id)}
   ${markings(f, c, w)}
   ${f.chrome === 'half' ? `<g clip-path="url(#${id}h)">${halfFacePlate(f, c, g)}</g>` : ''}
-  ${f.mask ? maskMarks(f, c, g, st) : ''}
+  ${f.mask ? maskMarks(f, c, g, st, id) : ''}
   ${f.glasses && f.chrome !== 'cybereye' ? `<g fill="${c.light}" fill-opacity="0.12" stroke="#0d0d0f" stroke-width="0.8"><rect x="24.3" y="27" width="6.2" height="4.2" rx="1.2"/><rect x="33.5" y="27" width="6.2" height="4.2" rx="1.2"/></g><path d="M30.5 28.6 h3" stroke="#0d0d0f" stroke-width="0.8"/>` : ''}
 
   <g ${hairClip}>
@@ -522,8 +547,8 @@ export function portrait(op, { size = 44 } = {}) {
   ${hat ? hatMarks(f, c, id) : ''}
 
   ${f.visor ? `<path d="M${L - 1} 26.2 L${R + 1} 25.8 L${R + 0.6} 31.2 L${L - 0.6} 31.6 Z" fill="#0b0f14"/><path d="M${L - 0.4} 27.2 L${R + 0.4} 26.8" stroke="${c.light}" stroke-width="0.6" opacity="${st.tired ? 0.35 : 0.85}"/><path d="M${R - 7} 29.6 h2 M${R - 4.4} 29.6 h1" stroke="${c.light}" stroke-width="0.5" opacity="0.6"/>` : ''}
-  ${chromeMarks(f, st.load, w, st.tired)}
-  ${st.injured ? injuryMarks(severity, w) : ''}
+  ${f.mask === 'faceplate' ? '' : chromeMarks(f, st.load, w, st.tired)}
+  ${st.injured && f.mask !== 'faceplate' ? injuryMarks(severity, w) : ''}
 </svg>`;
 }
 

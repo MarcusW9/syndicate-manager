@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · Masks that cover the eyes
+- **Full masks:** a few people now hide their whole face, behind sealed goggles and a respirator, or a smooth faceplate with glowing eye slits. The slits glow brighter under neural load, and the plate cracks when they're hurt.
+- People in a lower-face mask can now wear a visor as well.
+- You can't always see who's tired behind a mask; the crew list and profiles still say it. 161 tests.
+
 ## 2026-10-25 · More faces
 - **Masks:** some people wear a respirator with filter cans, a metal jaw plate, or a black mask with an LED line for a mouth that shows their mood.
 - **Conical hats:** a steel war hat, a dark one with a glowing neon rim, and a woven straw hat.
