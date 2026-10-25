@@ -8,5 +8,11 @@ export const NAMES = {
     nightMarket: 'Night Market',
     heights: 'Glass Heights',
   },
+  // Districts that unlock later. Kept apart so recruits' backstories only use open ones.
+  lockedDistricts: {
+    amberReach: 'The Amber Reach',
+    silt: 'The Silt',
+    ironPeak: 'Iron Peak',
+  },
   currency: '¥', // display symbol only
 };

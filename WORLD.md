@@ -48,6 +48,8 @@ Rumours are street talk: the game never confirms them (no supernatural, and no p
 | Ghost Circuit | Aether-Harbour | Brass Anchor | Veridian-Apex |
 
 ## Geography and districts
+Layout (canon, 2026-10-25): the harbour splits the city. The island holds Iron Peak on the summit, Glass Heights on the ridge below, and Old Town and the Night Market down to the water. The Amber Reach is the crossing over the harbour. The mainland side holds the Docks and, out on the mudflats, the Silt.
+
 Lantern Bay is a dense, vertical city carved into steep granite hills that drop into a crowded, island-studded deep-water harbour. Height and reclamation divide it: the corps' boards live on the summit of Iron Peak, the corporate towers of Glass Heights sit on the ridge below, Old Town and the Night Market fill the neon concrete canyons further down, and the Docks and the Silt sink into industrial rust and man-made mudflats at the waterline. People get around on rusted overhead monorails, grid-siphoned electric trams, diesel ferries across the bay, and a warren of drainage tunnels, footbridges and escalators that never quite reach the top. The rich ride a maglev; everyone else changes trains at the Amber Reach.
 
 The game shows the **English names**; the Chinese names are flavour for district cards and text (as with Hong Kong's Central / 中環, the two needn't translate each other). Chinese names are suggestions; check them with a Cantonese speaker before they ship.

@@ -14,6 +14,7 @@ import { successChance, riskLabel } from './risk.js';
 import { clampHeat, WATCHED_PENALTY } from './heat.js';
 import { XP, applyGrowth, gainXp, primaryStat } from './development.js';
 import { freelancerAsCrew, freelanceCut, isFreelancer, MAX_FREELANCERS_PER_JOB } from './freelance.js';
+import { reactToJob, RUMOUR_CRISIS_CHANCE } from './rumours.js';
 
 const EXIT_KINDS = new Set(['abort', 'extract']);
 const STABILISE_DIFFICULTY = 9;
@@ -82,6 +83,9 @@ export function startMission(prev, jobId, crewIds, approach) {
     const j = Math.floor(rng() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
+  // Street talk about a district crisis makes it likely to come up (drawn first most of the time).
+  const talk = view.rumour?.crisis ? pool.findIndex((c) => c.id === view.rumour.crisis) : -1;
+  if (talk > 0 && rng() < RUMOUR_CRISIS_CHANCE) [pool[0], pool[talk]] = [pool[talk], pool[0]];
   const crises = pool.slice(0, Math.min(pool.length, view.threat >= 4 ? 3 : 2));
 
   // Spread crises between beats.
@@ -477,6 +481,7 @@ function finish(state) {
       (client && trustChange ? ` ${client.name} ${trustChange > 0 ? 'thinks more of you' : 'is unhappy with you'} (trust ${trustChange > 0 ? '+' : ''}${trustChange}).` : ''),
     blocking: false, read: false,
   });
+  reactToJob(state, am, tpl, { heatGain, injuries, deaths });
 }
 
 export function closeMission(prev) {

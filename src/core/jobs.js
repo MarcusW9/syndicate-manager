@@ -9,6 +9,7 @@ import { CLIENTS } from '../data/clients.js';
 import { pick } from './rng.js';
 import { nextRng } from './random.js';
 import { callingClients, trustOf, trustPay, driftTrust } from './clients.js';
+import { rumourFor } from './rumours.js';
 
 export const templateById = (id) => MISSIONS.find((m) => m.id === id);
 export const twistById = (id) => TWISTS.find((t) => t.id === id) ?? null;
@@ -49,7 +50,9 @@ export function addOffer(state, templateId, { rng = null, clientId = null } = {}
 /** What the board and planning screen show for an offer: template + variations + client trust. */
 export function jobView(state, job) {
   const tpl = templateById(job.templateId);
-  const delta = job.threatDelta ?? 0;
+  // This week's street talk can make every job in a district a step hotter or quieter (always true, always shown).
+  const rumour = rumourFor(state, tpl.district);
+  const delta = Math.max(1 - tpl.threat, Math.min(5 - tpl.threat, (job.threatDelta ?? 0) + (rumour?.threat ?? 0)));
   const trust = job.clientId ? trustOf(state, job.clientId) : null;
   return {
     tpl,
@@ -59,6 +62,7 @@ export function jobView(state, job) {
     threat: tpl.threat + delta,
     threatDelta: delta,
     hinted: Boolean(job.hinted),
+    rumour,
   };
 }
 

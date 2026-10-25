@@ -7,7 +7,7 @@ import { STARTING_ROSTER_CAP, generateStartingCrew, recruitToOperative } from '.
 import { prepareOperative } from './development.js';
 import { refreshFreelancers } from './freelance.js';
 
-export const SAVE_VERSION = 10;
+export const SAVE_VERSION = 11;
 
 const freshCondition = () => ({
   fatigue: 10,
@@ -39,6 +39,7 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
     heat: 0,
     heatNoticeDay: null,
     heatWatched: false,
+    rumour: null,
     reputation: 0,
     tier: 'street',
     rent: 4000,

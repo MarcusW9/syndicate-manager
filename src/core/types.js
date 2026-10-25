@@ -109,7 +109,7 @@
  */
 
 /**
- * @typedef {'job'|'crew'|'warning'|'rival'|'report'|'scout'|'finance'} MessageType
+ * @typedef {'job'|'crew'|'warning'|'rival'|'report'|'scout'|'finance'|'rumour'} MessageType
  */
 
 /**
@@ -134,6 +134,7 @@
  * @property {number} heat             0-10. Cools 2 every Sunday (core/heat.js)
  * @property {?number} heatNoticeDay   Day the last fixer notice fired (14-day cooldown)
  * @property {boolean} heatWatched     Let the heat ride: the next job's first crisis roll is -1
+ * @property {?{id: string, until: number}} rumour  This week's street talk (core/rumours.js)
  * @property {number} [lastJobDay]     Day the last job started
  * @property {number} reputation       0-100 within tier
  * @property {'street'|'district'|'city'|'regional'} tier

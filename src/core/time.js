@@ -8,6 +8,7 @@ import { nextRng } from './random.js';
 import { expireStatuses } from './statuses.js';
 import { checkRenewal } from './renewals.js';
 import { HEAT_COOL_WEEKLY, clampHeat, checkHeatNotice } from './heat.js';
+import { rollRumour } from './rumours.js';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAYS_PER_SEASON = 364; // 52 weeks
@@ -62,6 +63,7 @@ export function advanceDay(prev) {
   if (calendar(state.day).isMonday && calendar(state.day).week === 1) newSeason(state);
   if (calendar(state.day).isMonday) refreshJobs(state);
   if (calendar(state.day).isMonday) refreshFreelancers(state);
+  if (calendar(state.day).isMonday) rollRumour(state);
   if (calendar(state.day).weekday === 'Wed') scoutWeek(state);
   state.recruits = (state.recruits ?? []).filter((r) => r.expiresDay >= state.day);
 

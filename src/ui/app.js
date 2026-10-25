@@ -3,6 +3,8 @@
 
 import { NAMES } from '../config/names.js';
 import { DISTRICTS } from '../data/districts.js';
+import { DISTRICT_CARDS, FACTIONS, STREET_FACTS, HISTORY } from '../data/city.js';
+import { MISSIONS } from '../data/missions.js';
 import { TRAITS } from '../data/traits.js';
 import { STARTING_CREW } from '../data/operatives.js';
 
@@ -17,6 +19,7 @@ import { availability, APPROACHES, traitMods, ratedStat, maxCrew, crewSizeRead }
 import { assessJob } from '../core/risk.js';
 import { resolveDecision } from '../core/decisions.js';
 import { WATCHED_PENALTY, heatChoices } from '../core/heat.js';
+import { activeRumour } from '../core/rumours.js';
 import {
   startMission, revealBeat, chooseOption, resolveCritical, closeMission,
   describeCrisis, describeCritical, currentStep,
@@ -32,6 +35,7 @@ import { freelancerAsCrew, shareOf, MAX_FREELANCERS_PER_JOB } from '../core/free
 
 let state;
 let screen = 'inbox';
+let cityDistrict = null; // district card open on the City screen
 let openMessageId = null;
 let openOperativeId = null;
 let openRecruitId = null;
@@ -44,6 +48,10 @@ export function mountApp(el, initialState) {
   root = el;
   state = initialState;
   root.addEventListener('click', onClick);
+  // Map districts are SVG groups, not buttons: let Enter and Space open them too.
+  root.addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('g[data-action]')) { e.preventDefault(); onClick(e); }
+  });
   root.addEventListener('change', onChange);
   render();
 }
@@ -63,6 +71,7 @@ function onClick(e) {
   switch (action) {
     case 'nav': screen = id; openMessageId = null; openOperativeId = null; openRecruitId = null; plan = null; break;
     case 'continue': if (!isBlocked(state)) return setState(advanceDay(state)); break;
+    case 'city-district': cityDistrict = cityDistrict === id ? null : id; break;
     case 'open-message': {
       openMessageId = id;
       const msg = state.inbox.find((m) => m.id === id);
@@ -222,6 +231,7 @@ function render() {
       ${navButton('inbox', `Inbox${unread ? ` (${unread})` : ''}`)}
       ${navButton('crew', 'Crew')}
       ${navButton('jobs', `Jobs${state.jobs.length ? ` (${state.jobs.length})` : ''}`)}
+      ${navButton('city', 'City')}
       ${navButton('settings', 'Save')}
     </nav>
 
@@ -239,6 +249,7 @@ function renderScreen() {
   if (screen === 'inbox') return openMessageId ? renderMessage() : renderInbox();
   if (screen === 'crew') return openRecruitId ? renderRecruit() : openOperativeId ? renderOperative() : renderCrew();
   if (screen === 'jobs') return plan ? renderPlan() : renderJobs();
+  if (screen === 'city') return renderCity();
   if (screen === 'settings') return renderSettings();
   return '';
 }
@@ -512,11 +523,18 @@ function renderOperative() {
 }
 
 // --- jobs and planning -----------------------------------------------------
+function streetTalk() {
+  const r = activeRumour(state);
+  return r ? `<div class="talk"><strong>Street talk · ${esc(NAMES.districts[r.district] ?? r.district)}</strong><br>${esc(r.text)}</div>` : '';
+}
+const talkTag = (v) => v.rumour ? `<span class="talk-tag">Street talk: ${esc(v.rumour.tag)}</span>` : '';
+
 function renderJobs() {
-  if (!state.jobs.length) return `<section class="panel"><h1>Jobs</h1><p class="muted">No work on the board. New jobs arrive on Mondays.</p>${renderClients()}</section>`;
+  if (!state.jobs.length) return `<section class="panel"><h1>Jobs</h1>${streetTalk()}<p class="muted">No work on the board. New jobs arrive on Mondays.</p>${renderClients()}</section>`;
   return `
     <section class="panel">
       <h1>Jobs</h1>
+      ${streetTalk()}
       <ul class="list">
         ${state.jobs.map((j) => {
           const v = jobView(state, j);
@@ -526,7 +544,7 @@ function renderJobs() {
             <button class="row" data-action="open-job" data-id="${esc(j.id)}">
               <span class="row__main"><strong>${esc(t.name)}</strong> · ${clientLine(v)}<br>
                 <span class="muted">${esc(districtName(t.district))}${districtTurf(t.district)} · threat ${threatHtml(v)} · ${t.crewSize} crew · ${t.days}d</span>
-                ${v.hinted ? '<br><span class="intel">Intel unreliable</span>' : ''}</span>
+                ${v.hinted ? '<br><span class="intel">Intel unreliable</span>' : ''}${v.rumour ? `<br>${talkTag(v)}` : ''}</span>
               <span class="row__meta"><strong>${money(v.pay)}</strong><br>until day ${j.expiresDay}</span>
             </button>
           </li>`;
@@ -570,8 +588,9 @@ function renderPlan() {
       <div class="riskcard">
         <p><strong>Client:</strong> ${clientLine(v)}</p>
         ${v.client ? `<p class="muted small">${esc(v.client.desc)}</p>` : ''}
-        ${v.threatDelta ? `<p class="muted small">Every roll on this job is ${v.threatDelta > 0 ? 'one point harder' : 'one point easier'} than usual.</p>` : ''}
+        ${v.threatDelta ? `<p class="muted small">Every roll on this job is ${Math.abs(v.threatDelta) === 1 ? 'one point' : `${Math.abs(v.threatDelta)} points`} ${v.threatDelta > 0 ? 'harder' : 'easier'} than usual.</p>` : ''}
         ${v.hinted ? '<p class="intel">Intel unreliable: something about this job may not be what you were told.</p>' : ''}
+        ${v.rumour ? `<p class="talk-tag">Street talk: ${esc(v.rumour.text)}</p>` : ''}
       </div>
 
       <h2>Crew (${plan.crew.length} picked · ${t.crewSize} recommended, up to ${most})</h2>
@@ -736,6 +755,96 @@ const START_CREWS = {
   classic: { name: 'The Lantern Bay Five', desc: 'Stitch, Static, Velvet, Wheels and Jax: the written crew, each with a story already under way.' },
   fresh: { name: 'Fresh crew', desc: 'Five strangers, one of each role: a veteran, two pros and two rookies. Different every time.' },
 };
+
+// --- city --------------------------------------------------------------
+
+const cityName = (key) => NAMES.districts[key] ?? NAMES.lockedDistricts?.[key] ?? key;
+
+// Schematic map: the island on top, the harbour with the Amber Reach crossing
+// in the middle, the mainland below. Every district is a tap target (48px+).
+const MAP_SHAPES = [
+  { key: 'ironPeak', x: 116, y: 12, w: 128, h: 58 },
+  { key: 'heights', x: 64, y: 80, w: 232, h: 60 },
+  { key: 'oldTown', x: 14, y: 150, w: 162, h: 66 },
+  { key: 'nightMarket', x: 184, y: 150, w: 162, h: 66 },
+  { key: 'amberReach', x: 100, y: 270, w: 160, h: 60 },
+  { key: 'docks', x: 14, y: 392, w: 198, h: 66 },
+  { key: 'silt', x: 220, y: 396, w: 126, h: 60 },
+];
+
+function cityMap() {
+  const shape = ({ key, x, y, w, h }) => {
+    const card = DISTRICT_CARDS[key];
+    const cls = `map-d${card.locked ? ' is-locked' : ''}${cityDistrict === key ? ' is-selected' : ''}`;
+    return `<g class="${cls}" data-action="city-district" data-id="${key}" role="button" tabindex="0" aria-label="${esc(cityName(key))}${card.locked ? ', locked' : ''}">
+      <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" />
+      <text x="${x + w / 2}" y="${y + h / 2 - (card.locked ? 4 : 0)}" class="map-d__name">${esc(cityName(key).replace(/^The /, ''))}</text>
+      ${card.locked ? `<text x="${x + w / 2}" y="${y + h / 2 + 13}" class="map-d__lock">LOCKED</text>` : ''}
+    </g>`;
+  };
+  const waves = [250, 264, 344, 358].map((y) => `<path class="map-wave" d="M16 ${y} q 10 -5 20 0 t 20 0 t 20 0 t 20 0 M260 ${y} q 10 -5 20 0 t 20 0 t 20 0 t 20 0" />`).join('');
+  return `
+    <svg class="citymap" viewBox="0 0 360 472" role="group" aria-label="Map of the city">
+      <rect class="map-land" x="0" y="0" width="360" height="236" rx="14" />
+      <rect class="map-water" x="0" y="228" width="360" height="146" />
+      <rect class="map-land" x="0" y="366" width="360" height="106" rx="14" />
+      ${waves}
+      <line class="map-crossing" x1="180" y1="216" x2="180" y2="392" />
+      <text x="346" y="244" class="map-label" text-anchor="end">HARBOUR</text>
+      <text x="14" y="383" class="map-label" text-anchor="start">MAINLAND</text>
+      ${MAP_SHAPES.map(shape).join('')}
+    </svg>`;
+}
+
+function districtCard(key) {
+  const c = DISTRICT_CARDS[key];
+  const turf = DISTRICTS[key]?.turf;
+  const jobs = MISSIONS.filter((m) => m.district === key).map((m) => m.name);
+  return `
+    <div class="riskcard citycard">
+      <h2 class="nomargin">${esc(cityName(key))} <span class="muted">${esc(c.chinese)}</span></h2>
+      <p class="muted small">${esc(c.side)}${turf ? ` · ${esc(turf)}` : ''}</p>
+      <p class="body">${esc(c.pitch)}</p>
+      ${c.locked ? `<p class="intel">${esc(c.teaser)}</p>` : `<p class="small"><strong>Jobs here:</strong> ${esc(jobs.join(', '))}</p>`}
+      <p class="small"><strong>Who runs it:</strong> ${esc(c.control)}</p>
+      <p class="small"><strong>Police:</strong> ${esc(c.police)}</p>
+      <p class="small"><strong>At 3am:</strong> ${esc(c.night)}</p>
+      <p class="small"><strong>Local custom:</strong> ${esc(c.custom)}</p>
+      <p class="small"><strong>Landmarks:</strong></p>
+      <ul>${c.landmarks.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>
+    </div>`;
+}
+
+function renderCity() {
+  const groups = [...new Set(FACTIONS.map((f) => f.group))];
+  return `
+    <section class="panel">
+      <h1>${esc(NAMES.city)} <span class="muted">燈籠灣</span></h1>
+      <p class="muted small">2057. Tap a district.</p>
+      ${cityMap()}
+      ${cityDistrict ? districtCard(cityDistrict) : ''}
+
+      <h2>Who's who</h2>
+      ${groups.map((g) => `
+        <details class="citydetails">
+          <summary>${esc(g)}</summary>
+          <ul class="list list--plain">
+            ${FACTIONS.filter((f) => f.group === g).map((f) => `
+              <li><strong>${esc(f.name)}</strong> <span class="muted small">· ${esc(f.where)}</span><br>
+                <span class="small">${esc(f.line)}</span><br>
+                <span class="muted small">Rumour: ${esc(f.rumour)}</span></li>`).join('')}
+          </ul>
+        </details>`).join('')}
+
+      <h2>Everyone knows</h2>
+      <ul class="list list--plain small">${STREET_FACTS.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>
+
+      <details class="citydetails">
+        <summary>A short history</summary>
+        <ul class="list list--plain small">${HISTORY.map((h) => `<li><strong>${esc(h.year)}</strong> ${esc(h.text)}</li>`).join('')}</ul>
+      </details>
+    </section>`;
+}
 
 function renderSettings() {
   const slots = listSlots();

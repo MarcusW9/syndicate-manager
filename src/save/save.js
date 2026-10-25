@@ -232,5 +232,10 @@ function migrate(state) {
     state.heatWatched = state.heatWatched ?? false;
     state.version = 10;
   }
+  if (state.version === 10) {
+    // v11 added street talk: this week's rumour ({ id, until }), rolled every Monday.
+    state.rumour = state.rumour ?? null;
+    state.version = 11;
+  }
   return state;
 }

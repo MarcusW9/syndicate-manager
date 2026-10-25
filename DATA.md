@@ -35,6 +35,9 @@ Growth lands the moment it's earned: crisis rolls during the job (flashed in the
 ## Starting crew
 `createNewGame({ startCrew })`: `'classic'` uses `STARTING_CREW` from `src/data/operatives.js`; `'fresh'` calls `generateStartingCrew` (one recruit per role in `FRESH_CREW_ROLES`, qualities from `FRESH_CREW_QUALITIES`, rerolled until the wage bill sits in `FRESH_CREW_WAGES`) and converts them with `recruitToOperative`.
 
+## Street talk (src/core/rumours.js)
+`state.rumour`: `{ id, until }` or `null`. Rolled every Monday (`rollRumour`) from `RUMOURS` in `src/data/rumours.js`; each has a `district` and either `threat` (+1/−1, folded into `jobView`'s `threatDelta`) or `crisis` (a district crisis id, drawn first 60% of the time in `startMission`). `reactToJob` may add a `rumour` inbox message after a loud or clean job, from `REACTIONS`.
+
 ## Recruit (src/core/recruits.js)
 Same shape as an Operative, plus `culture`, `quality` (`rookie`/`pro`/`veteran`, becomes `tier` on hiring), `expiresDay`, `haggled`, `haggleResult`, `scoutReport` (the scout's opinion in words). Pools live in `src/data/recruitPools.js` (cultures and names, handles, origins per role, personalities, badge colours). Hiring strips the recruit-only fields and adds `condition`, `trust` and `history`.
 

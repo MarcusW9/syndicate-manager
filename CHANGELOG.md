@@ -4,6 +4,17 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · Street talk
+- Every Monday a rumour goes round the city, and it's true. Some make every job in one district harder or easier that week ("Silver Fan collectors are out in force in the Night Market"); others warn that a particular trouble is likely there ("the Wet Sleeve are running neural-load checks at the dock gates").
+- The job board shows the week's street talk at the top and marks the jobs it affects.
+- After a loud job, word sometimes gets round: the gang or corp on that turf starts asking who did it. A clean job sometimes earns a little admiration.
+- Older saves upgrade automatically. 6 new tests (126 total).
+
+## 2026-10-25 · The City tab
+- A new **City** tab with a map of Lantern Bay: the island, the harbour and the mainland. The four open districts are lit; the Amber Reach, the Silt and Iron Peak are shown locked.
+- Tap any district for its card: what it's like, who runs it, the police, the mood at 3am, a local custom, landmarks, and which jobs happen there.
+- Below the map: the city's corps, gangs, police and the Ghost Circuit with their street rumours, the things everyone in the city knows, and a short history.
+
 ## 2026-10-25 · Pick your starting crew
 - Starting a new game now asks who you start with: **The Lantern Bay Five** (Stitch, Static, Velvet, Wheels and Jax) or a **Fresh crew** of five strangers, one of each role (a veteran, two pros and two rookies), different every time. Fresh crews cost about the same in wages but are a tougher start.
 - Crisis text no longer assumes your tech or face is a woman, so it reads right for any crew.
