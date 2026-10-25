@@ -413,6 +413,8 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .cm-d__readout { fill: var(--muted); font-family: var(--display); font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-anchor: middle; paint-order: stroke; stroke: #070a0e; stroke-width: 3.5px; stroke-linejoin: round; pointer-events: none; }
 .cm-d__readout.has-work { fill: var(--accent-2); }
 .cm-d__readout.has-talk { fill: var(--warn); }
+.cm-track { fill: none; stroke: #f7efc8; stroke-width: 1.4; filter: drop-shadow(0 0 3px rgba(247, 239, 200, 0.8)); pointer-events: none; }
+.cm-track--infield { fill: color-mix(in srgb, #5fe0a5 18%, transparent); stroke: none; filter: none; }
 .cm-rail { fill: none; stroke: var(--muted); stroke-width: 3; stroke-opacity: 0.6; pointer-events: none; }
 /* A little life: a ferry light crosses, the picked district breathes. Still for reduced motion. */
 .map-ferry { fill: var(--warn); animation: map-ferry 14s ease-in-out infinite alternate; }
@@ -423,6 +425,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .map-turf--red { background: #ff3d5f; }
 .map-turf--violet { background: #b48cff; }
 .map-turf--cyan { background: #3de8d8; }
+.map-turf--orange { background: #ff9a3d; }
 .map-talk { fill: var(--warn); pointer-events: none; animation: map-talk 1.8s ease-in-out infinite; }
 @keyframes map-talk { 50% { opacity: 0.3; } }
 @media (prefers-reduced-motion: reduce) { .map-talk, .map-ferry, .cm-d.is-selected .cm-d__area { animation: none; } }

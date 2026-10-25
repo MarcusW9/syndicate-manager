@@ -1082,9 +1082,9 @@ const cityName = (key) => NAMES.districts[key] ?? NAMES.lockedDistricts?.[key] ?
 /** Jobs on the board right now, by district. */
 const jobsIn = (key) => state.jobs.map((j) => ({ j, v: jobView(state, j) })).filter(({ v }) => v.tpl.district === key);
 /** Which gang's colour a district's turf stripe takes. */
-const TURF_TONE = { 'Brass Anchor': 'sodium', 'Red Lantern': 'red', 'Silver Fan': 'violet', 'Veridian-Apex': 'cyan' };
+const TURF_TONE = { 'Brass Anchor': 'sodium', 'Red Lantern': 'red', 'Silver Fan': 'violet', 'Veridian-Apex': 'cyan', 'Racing Association': 'orange' };
 
-const TURF_HEX = { sodium: '#f2d541', red: '#ff3d5f', violet: '#b48cff', cyan: '#3de8d8' };
+const TURF_HEX = { sodium: '#f2d541', red: '#ff3d5f', violet: '#b48cff', cyan: '#3de8d8', orange: '#ff9a3d' };
 
 function cityMap() {
   const talk = activeRumour(state)?.district;
@@ -1124,10 +1124,11 @@ function districtCard(key) {
       ${c.locked ? `<p class="intel">${esc(c.teaser)}</p>` : (() => {
         const now = jobsIn(key);
         return now.length ? `<div class="stack">${now.map(({ j, v }) => `<button class="btn" data-action="open-job" data-id="${esc(j.id)}">${esc(v.tpl.name)} · ${money(v.pay)} · ${daysLeft(j.expiresDay)}</button>`).join('')}</div>`
-          : `<p class="small muted">No work on the board here right now. New jobs arrive on Mondays.</p>`;
+          : jobs.length ? `<p class="small muted">No work on the board here right now. New jobs arrive on Mondays.</p>`
+            : '<p class="small muted">Nobody here is hiring crews like yours yet.</p>';
       })()}
       ${activeRumour(state)?.district === key ? `<p class="talk-tag">Street talk: ${esc(activeRumour(state).text)}</p>` : ''}
-      ${c.locked ? '' : `<p class="small"><strong>Kinds of work here:</strong> ${esc(jobs.join(', '))}</p>`}
+      ${c.locked || !jobs.length ? '' : `<p class="small"><strong>Kinds of work here:</strong> ${esc(jobs.join(', '))}</p>`}
       <p class="small"><strong>Who runs it:</strong> ${esc(c.control)}</p>
       <p class="small"><strong>Police:</strong> ${esc(c.police)}</p>
       <p class="small"><strong>At 3am:</strong> ${esc(c.night)}</p>

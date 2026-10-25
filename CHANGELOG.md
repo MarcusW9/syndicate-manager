@@ -4,6 +4,12 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · The Basin and Lantern Course
+- **A new district on the City map: the Basin.** A bowl of towers between Old Town and Glass Heights, round **Lantern Course**, a floodlit racecourse from 1891 that still races real horses, with 2057 telemetry, live odds in everyone's eyes and illegal bookmakers underneath. You can see the course on the map.
+- Tap it for its card: who runs it (the Lantern Bay Racing Association, with the Silver Fan Circle underneath), its landmarks, and its custom about winning tickets. There's no work there yet; jobs are coming.
+- The Racing Association joins "Who's who" on the City tab, Lantern Course joins the history, and there's a new street fact about the unlucky number four.
+- New recruits may now say they grew up in the Basin.
+
 ## 2026-10-25 · Lantern Bay from above
 - **The city map is now a proper map:** the island with Iron Peak in the middle and hills around it, a wild island to the west, the Amber Reach out in the harbour, and the mainland with the Docks' piers and the Silt's mudflats.
 - **Every district has its own streets:** a neat corporate grid in Glass Heights, crooked lanes in Old Town, a tangle in the Night Market, long haul roads at the Docks, switchbacks up the Peak. Locked districts are greyed out.

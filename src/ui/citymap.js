@@ -3,9 +3,9 @@
 // readouts and the district card carry the meaning. Geometry is seeded, so the city
 // draws the same every time, and it's built once per session.
 //
-// Adding a district: one entry in DISTRICT_MAP (its area, streets and label spot). The
-// island has room to grow: the north shore, the valley east of the Peak and the wild
-// island to the west carry no district yet.
+// Adding a district: one entry in DISTRICT_MAP (its area, streets and label spot, and
+// `holes` in whichever districts it's cut out of). The island has room to grow: the north
+// shore, the valley east of the Peak and the wild island to the west carry no district yet.
 
 /** Small seeded generator for decoration only (game randomness stays in core/rng.js). */
 function seeded(seed) {
@@ -79,6 +79,9 @@ const MUDFLAT = [[248, 378], [306, 364], [358, 368], [360, 436], [318, 448], [27
 const ISLETS = [[96, 300, 6], [330, 290, 8], [300, 342, 5], [122, 336, 4], [350, 320, 4], [84, 350, 5], [76, 120, 4]];
 const PIERS = [30, 54, 78, 102, 126, 150].map((x) => [[x, 356], [x + 9, 356], [x + 9, 388], [x, 388]]);
 const PEAK = [[186, 74], [214, 62], [244, 72], [252, 98], [228, 116], [196, 114], [180, 96]];
+// The Basin: a bowl between the ridge's lower slopes and Old Town, round Lantern Course.
+const BASIN = coast(ring(138, 164, 52, 32, 12), 30, 0.12, 2);
+const COURSE = ring(138, 176, 31, 11, 24);
 
 // Each district's streets say what it's like (WORLD.md): switchbacks up the Peak, a
 // corporate grid on the ridge, crooked lanes in Old Town, a dense tangle in the market,
@@ -86,16 +89,23 @@ const PEAK = [[186, 74], [214, 62], [244, 72], [252, 98], [228, 116], [196, 114]
 const DISTRICT_MAP = {
   ironPeak: { area: PEAK, label: [216, 92], streets: 'M180 112C200 104 228 110 240 100S206 92 196 86S226 76 232 70S208 66 204 60' },
   heights: {
-    area: [[76, -20], [380, -20], [380, 166], [300, 160], [248, 172], [205, 162], [160, 172], [110, 160], [76, 170]],
-    hole: PEAK, label: [292, 138], streets: { box: [76, 20, 352, 172], step: 13, angle: -6, keepX: 0.9, keepY: 0.88, seed: 11 },
+    // The ridge's lower edge rides over the top of the Basin's bowl.
+    area: [[76, -20], [380, -20], [380, 166], [300, 160], [248, 172], [205, 162], [196, 126], [160, 118], [110, 116], [76, 122]],
+    holes: [PEAK], label: [292, 138], streets: { box: [76, 20, 352, 172], step: 13, angle: -6, keepX: 0.9, keepY: 0.88, seed: 11 },
   },
   oldTown: {
-    area: [[76, 170], [110, 160], [160, 172], [205, 162], [202, 215], [200, 272], [76, 272]],
-    label: [140, 210], streets: { box: [76, 160, 205, 258], step: 7, angle: 18, jitter: 3.5, keepX: 0.72, keepY: 0.62, seed: 12 },
+    area: [[76, 122], [110, 116], [160, 118], [196, 126], [205, 162], [202, 215], [200, 272], [76, 272]],
+    holes: [BASIN], label: [146, 222], streets: { box: [76, 112, 205, 258], step: 7, angle: 18, jitter: 3.5, keepX: 0.72, keepY: 0.62, seed: 12 },
   },
   nightMarket: {
     area: [[205, 162], [248, 172], [300, 160], [380, 166], [380, 272], [200, 272], [202, 215]],
     label: [276, 210], streets: { box: [200, 160, 352, 256], step: 6, angle: -11, jitter: 1.5, keepX: 0.86, keepY: 0.78, seed: 13 },
+  },
+  basin: {
+    area: BASIN, label: [138, 150],
+    // Dense towers packed round the course; the floodlit oval itself is drawn on top.
+    streets: { box: [84, 130, 192, 198], step: 6, angle: 4, jitter: 1, keepX: 0.8, keepY: 0.8, seed: 17 },
+    feature: COURSE,
   },
   amberReach: {
     area: [[120, 276], [290, 276], [290, 350], [120, 350]],
@@ -114,7 +124,7 @@ export const MAP_DISTRICTS = Object.keys(DISTRICT_MAP);
 
 // Terrain heights: rolling noise everywhere, the Peak rising in the middle of the island,
 // a lower ridge on the west island, the mainland flat.
-const HILLS = [[216, 92, 80, 56, 1.2], [36, 210, 34, 64, 0.7], [300, 110, 40, 30, 0.35]];
+const HILLS = [[216, 92, 80, 56, 1.2], [36, 210, 34, 64, 0.7], [300, 110, 40, 30, 0.35], [138, 166, 44, 26, -0.45]];
 
 /** Smooth value noise, seeded. */
 function noise2(seed) {
@@ -213,8 +223,10 @@ function geometry() {
     contours: [
       ...[18, 30, 44, 60].map((rad, i) => path(coast(ring(216, 92, rad * 1.45, rad), 40 + i, 0.28, 3))),
       ...[14, 26].map((rad, i) => path(coast(ring(36, 210, rad * 0.7, rad * 1.6), 50 + i, 0.3, 3))),
+      // The bowl's rim.
+      path(coast(ring(138, 164, 60, 38, 12), 60, 0.12, 2)),
     ].join(''),
-    areas: Object.fromEntries(Object.entries(DISTRICT_MAP).map(([k, m]) => [k, path(m.area) + (m.hole ? path(m.hole) : '')])),
+    areas: Object.fromEntries(Object.entries(DISTRICT_MAP).map(([k, m]) => [k, path(m.area) + (m.holes ?? []).map(path).join('')])),
     streets: Object.fromEntries(Object.entries(DISTRICT_MAP).map(([k, m]) => [k, typeof m.streets === 'string' ? m.streets : streets(m.streets)])),
   };
   return built;
@@ -237,6 +249,7 @@ export function cityMapSvg(districts, esc) {
         ${x.locked ? `<rect class="cm-d__hatch" width="${MAP_W}" height="${MAP_H}" clip-path="${clip}" />` : ''}
         <path class="cm-d__area" d="${g.areas[x.key]}" clip-path="${clip}" fill-rule="evenodd" />
       </g>
+      ${DISTRICT_MAP[x.key].feature ? `<path class="cm-track cm-track--infield" d="${path(DISTRICT_MAP[x.key].feature)}" /><path class="cm-track" d="${path(DISTRICT_MAP[x.key].feature)}" />` : ''}
       ${x.hot ? `<circle class="map-talk" cx="${lx}" cy="${ly - 21}" r="4" />` : ''}
       <text class="cm-d__name" x="${lx}" y="${ly}">${esc(x.name)}</text>
       <text class="cm-d__readout ${x.tone}" x="${lx}" y="${ly + 14}">${x.readout}</text>

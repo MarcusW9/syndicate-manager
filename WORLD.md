@@ -6,7 +6,8 @@ The setting's canon: history, power, districts and places. Why each piece was ch
 - **Year:** 2057.
 - **Supernatural:** none. People believe in luck, ghosts, gods and unlucky numbers, as they do today; the game never confirms any of it.
 
-## History since 1970
+## History
+- **1891, Lantern Course opens:** a racecourse on marshy ground at the bottom of the island's basin, older than most of the city around it. The Basin grew up around it.
 - **1970, the Reclamation Boom:** the Docks and Old Town are pushed out into the harbour with dynamite and junk-built seawalls, setting up a gritty, community-run maritime merchant culture.
 - **1994, the Great Signal 10:** a super-typhoon wipes out the southern shanty piers and forces an uneasy truce between early street syndicates (the proto-Red Lanterns) and the city's planners.
 - **2018, the Neural Integration Act:** pushed by Veridian-Apex BioTech, megacorps fit early neural implants to dockworkers "for occupational safety", causing the first wave of neural-load burnouts. It's why so many working people carry old, glitchy chrome.
@@ -33,6 +34,9 @@ Rumours are street talk: the game never confirms them (no supernatural, and no p
 **Police**
 - **Municipal Harbour Police, 4th Precinct (the "Wet Sleeve" unit), the Docks and the Night Market borders.** Wants steady protection money, low paperwork and no internal-affairs audits. Earns from cuts of Red Lantern smuggling, shaking down night boats and selling confiscated gear. Small crews are walking cash machines: stopped for "neural-load checks" and fined unless they pay in cash or intel. *Rumour:* the commander's office has a back door straight into a Red Lantern warehouse.
 
+**Institutions**
+- **The Lantern Bay Racing Association, the Basin.** Officially independent: old, wealthy, deep inside the Municipal District Administration and ferociously protective of its name. Runs the racing, licensed betting, the big legal pools, horse registration, jockey licensing and the vets, and presents itself as one of the few things in Lantern Bay that belongs to the whole city, which is roughly true. Wants punters to keep believing a horse can genuinely win or lose, because the betting economy dies the day they stop. Small crews are deniable help when it needs a scandal found, or buried, before race night. *Rumour:* somebody has already crossed the line, and a horse has won a big race running on software.
+
 **Wildcard**
 - **The Ghost Circuit, Old Town** (drainage tunnels and abandoned bomb shelters). Wants free city data streams and free, unmonitored neural-load cleansing for street workers. Earns from siphoned corporate data, black-market firmware flashing and decrypted city security bypasses. Small crews are possible allies, or beta-testers for their glitchy home-made neural scrubbers. *Rumour:* they're led by a collective mind formed when five dockworkers' implants fused during the 2052 blackout.
 
@@ -48,7 +52,7 @@ Rumours are street talk: the game never confirms them (no supernatural, and no p
 | Ghost Circuit | Aether-Harbour | Brass Anchor | Veridian-Apex |
 
 ## Geography and districts
-Layout (canon, 2026-10-25): the harbour splits the city. The island holds Iron Peak on the summit, Glass Heights on the ridge below, and Old Town and the Night Market down to the water. The Amber Reach is the crossing over the harbour. The mainland side holds the Docks and, out on the mudflats, the Silt.
+Layout (canon, 2026-10-25): the harbour splits the city. The island holds Iron Peak on the summit, Glass Heights on the ridge below, the Basin in a bowl between the ridge's lower slopes and Old Town, and Old Town and the Night Market down to the water. The Amber Reach is the crossing over the harbour. The mainland side holds the Docks and, out on the mudflats, the Silt.
 
 Lantern Bay is a dense, vertical city carved into steep granite hills that drop into a crowded, island-studded deep-water harbour. Height and reclamation divide it: the corps' boards live on the summit of Iron Peak, the corporate towers of Glass Heights sit on the ridge below, Old Town and the Night Market fill the neon concrete canyons further down, and the Docks and the Silt sink into industrial rust and man-made mudflats at the waterline. People get around on rusted overhead monorails, grid-siphoned electric trams, diesel ferries across the bay, and a warren of drainage tunnels, footbridges and escalators that never quite reach the top. The rich ride a maglev; everyone else changes trains at the Amber Reach.
 
@@ -59,6 +63,8 @@ The game shows the **English names**; the Chinese names are flavour for district
 - **The Docks** (霧港, Mo Kong, "fog harbour"). A deafening sprawl of automated cranes, diesel and saltwater where freighters unload contraband into the city. *Landmarks:* Pier 12 Gantry Gate; the Ferryman's night-boat landing; the Red Lanterns' Warehouse 7. *Control:* Aether-Harbour Logistics on paper, the Red Lanterns on the tarmac. *Police:* heavy; the Harbour Police "Wet Sleeve" unit runs rackets alongside the gangs. *3am:* amber floodlights in harbour fog, screeching cranes, clanking steel. *Custom:* never whistle past the container stacks, or the water ghosts (水鬼, sui gwai) will trip you into the harbour.
 - **The Night Market** (夜光街, Yeh Kwong Kai, "glow street"). A neon maze of dai pai dongs, counterfeit implant clinics and alleys where fortunes go on one hand of mahjong. *Landmarks:* Madam Rao's sari shop, the Silk & Credit Emporium; the Neon Dragon dai pai dong; the third-floor mahjong parlour. *Control:* the Silver Fan Circle; Hoi-Sing nodes. *Police:* rarely seen and fully complicit; they take their cut at the noodle stalls and never go near the back-alley operating rooms. *3am:* wok smoke, flickering holo-ads, murmuring gamblers. *Custom:* if a neon sign flickers three times over your head, toss a coin over your left shoulder.
 - **Glass Heights** (玻璃山, Po Lei Shan), officially **Apex Ridge** since Veridian-Apex renamed it after the 2035 Annexation; nobody on the street calls it that. Sterile, climate-controlled corporate towers, labs and clinics where the air is filtered and street-level misery is kept out of sight. *Landmarks:* Veridian-Apex Central Tower; the Glass-Bridge Promenade; Executive Spa & Neural Clinic 1. *Control:* Veridian-Apex BioTech. *Police:* none to speak of; security drones and private guards treat anyone without a pass as a biohazard. *3am:* humming air filters, glass monoliths in cold blue light. *Custom:* never press a lift button with a bare index finger, or the lower districts' bad karma rubs off.
+
+- **The Basin** (鑊底, Wok Dai, "bottom of the wok"; Cantonese check pending), around **Lantern Course** (燈籠馬場, Dang Lung Ma Cheung). A natural bowl between Old Town and the lower slopes under Glass Heights, its floodlit oval visible from hundreds of cramped balconies. The neighbourhood grew around gambling. Outside the gates: dai pai dongs, old betting shops, cheap bars, pawn shops, tip sellers, back-alley implant clinics, bookmakers, tack workshops, noodle shops, Silver Fan loan runners, and pensioners studying form over tea. Above it all, the corporate boxes: Glass Heights arrives through a private elevated entrance to watch the same horses as somebody who spent their last ¥50 downstairs. *Landmarks:* Lantern Course; the Old Stand; the Undercroft beneath the betting halls. *Control:* the Lantern Bay Racing Association, officially; the Silver Fan Circle owns everything the Association won't take. *Police:* Association security inside the gates, the Harbour Police outside, both very interested in race nights. *3am:* the racing's done; cleaning drones creep through mountains of paper slips, stable hands hose sweat off the horses, drunk punters argue over the last tram, and bookmakers settle up under amber security lights. *Custom:* nobody throws away a winning ticket inside the course. Even after collecting, you fold it twice and carry it out through the gates first, or you throw tomorrow's luck away with today's. Total nonsense; everyone does it. Open, with no jobs written yet (2026-10-25).
 
 **Lore for now, unlocked later**
 - **Iron Peak** (鐵山頂, Tit Shan Teng). The summit above Glass Heights, where the corps' boards live in walled estates. It was the city's foundry hill until the 2040s; the furnaces were shut, the slag was landscaped, and the name stuck: the richest people in the city live on a hill named after the furnaces they closed. *Landmarks:* the Peak Funicular, the only public way up (last car 10pm); the Slag Garden, manicured lawns over the old slag heaps around Foundry Stack 3, kept as a sculpture; the Peak Gate checkpoint. *Control:* the boards of all three megacorps; neutral ground, guarded by jointly contracted private security. *Police:* the Harbour Police need permission to go up. *3am:* wind, silence, guard dogs, the orange glow of the city far below. *Custom:* household staff still knock three times on a new estate's iron gate before the owners move in, a habit inherited from the foundry men who knocked to drive spirits out of fresh-cast steel.
@@ -86,6 +92,14 @@ The game shows the **English names**; the Chinese names are flavour for district
 - *Customs:* Filipino residents leave a coin or a bright ribbon on the window frame before going back to work on Sunday evening, for *swerte* (good luck) and a safe return. South Asian shopkeepers hang a lime and seven green chillies on a thread over the door against the evil eye (*nazar*), replaced every Saturday.
 
 **Unlocking (planned, not built):** the three reputation promotions open one district each, in order: Street → District opens the Silt (the Ferryman introduces you), District → City opens the Amber Reach (Ruth Okonkwo), City → Regional opens Iron Peak (Mr. Szeto). Promotions are permanent; reputation can slip within a tier but never demotes, so a district never closes again.
+
+**Lantern Course** (燈籠馬場), the Basin. Opened in 1891 on marshland at the bottom of the bowl; by 2057 it's surrounded by towers.
+- *Real horses.* In 2057 the city still races flesh-and-blood horses: not holograms, not robots, not engineered cyber-horses. Everything around the horse has gone cyberpunk. Biometric telemetry streams off every animal (heart rate, blood oxygen, gait, muscle temperature, sectionals), jockeys are allowed legally limited neural assistance, odds change live across people's optic implants, prediction models are sold in stairwells, and corporate owners spend fortunes on bloodlines and gene screening. Plenty of punters still clutch paper slips because they don't trust Hoi-Sing's network, and Uncle Chan in the cheap stand still puts ¥200 on number 6 because his granddaughter turned six yesterday. Sometimes he wins. Half the crowd won't touch number four.
+- *The line racing won't cross:* the jockey can have implants, trainers can model, the horse can carry approved health telemetry, but nothing is allowed to tell the animal how to run. Once that happens you're racing software. The rumours never stop: microstimulators, pain suppression, illegal gene therapies, subdermal pacing hardware, jockey implants feeding rhythm cues. None of it is magic; it's 2057 doping and race fixing, and the Racing Association is terrified of it.
+- *Why it's still there:* the flat land under it is worth an absurd amount, more than half of Old Town, and every attempt to redevelop it causes political uproar. Mr. Szeto looks at it and practically vibrates.
+- *The whole city, stacked:* **track level** (cheap public terraces, food, shouting, paper tickets); the **Old Stand** (ageing concrete boxes families have held for generations); the **Glass Galleries** (climate-controlled corporate hospitality); the **Paddock** (owners, trainers, horses, serious money); the **service level** (stable hands, vets, cleaners, cooks, security); and the **Undercroft** (illegal bookmakers, Silver Fan collectors and information traders under the official betting halls). On race night dockworkers, aunties, executives, gangsters, domestic workers, heirs and street crews all scream at the same horse for three minutes.
+- *Who's in it:* the **Silver Fan Circle** runs the shadow economy (illegal credit, underground odds, bets the Association won't take, inside information, jockey debts, counterfeit hospitality passes); race nights are among their biggest of the week. **Hoi-Sing** runs the race-night infrastructure and data (*rumour:* it delays the public race feed by 0.8 seconds for clients on its premium data line; never confirmed). **Veridian-Apex** is the official veterinary research partner, with access to blood samples, injury data and genetics from the most valuable animals in the city; nobody quite knows what else it's learning.
+- *The horses aren't scenery.* The stable hands love them. A horse worth millions to a corporate owner is "Little Bean" to the 58-year-old who has brushed her every morning for seven years. Upstairs she's Asset Twelve; downstairs her name's Pepper, and she likes pears.
 
 Crisis hooks from the district outline wait in `drafts/district-hooks.md` until they're turned into crises.
 
@@ -121,7 +135,7 @@ She's seventy-one and runs three herbal shops and a fencing operation that has n
 
 **What she doesn't say:** for years, jade, jewellery and family photo albums have crossed her counter from tenements that burned a few days later. She has never asked where they came from. The money goes to the Society's war chest, and some questions cost more than they pay.
 
-**Ties:** knew Mr. Szeto's mother, and gives the mooncakes he sends every Mid-Autumn to the street cats. Plays mahjong with Madam Rao every month; they cheat each other, and neither would trust anyone else at the table. Her goods leave the city on the Ferryman's boats, and she sends him herbal tea for his chest. Calls Ruth Okonkwo "corporate", and serves her tea anyway.
+**Ties:** knew Mr. Szeto's mother, and gives the mooncakes he sends every Mid-Autumn to the street cats. Plays mahjong with Madam Rao every month; they cheat each other, and neither would trust anyone else at the table. Her goods leave the city on the Ferryman's boats, and she sends him herbal tea for his chest. Calls Ruth Okonkwo "corporate", and serves her tea anyway. At Lantern Course she bets on one horse every time it runs; nobody knows why, and she won't say.
 
 **Her briefings:**
 > "It is a small package, so of course it is a big problem."
@@ -147,7 +161,7 @@ He was born down there, in a tenement off Alley 9. When he was nine the building
 
 **What he doesn't say:** a quiet man called Lo, an electrician, goes through each building before it burns. He moves the people out and the valuables with them. Szeto tells himself that makes it clean: nobody is ever inside. Through a web of offshore shells he also owns Pearl Haven House, and the resident council has no idea who their landlord is.
 
-**Ties:** courts Veridian-Apex for a seat among the Iron Peak boards, and pays Hoi-Sing crews to cut the power before a fire. Knows exactly what Auntie Fung does with his mooncakes. Borrowed from Madam Rao when the banks froze in 2052; he paid her back, and she kept the paperwork. His salvage leaves on the Ferryman's boats. All perfect manners with Ruth Okonkwo, his rival for the Pearl Haven site.
+**Ties:** courts Veridian-Apex for a seat among the Iron Peak boards, and pays Hoi-Sing crews to cut the power before a fire. Knows exactly what Auntie Fung does with his mooncakes. Borrowed from Madam Rao when the banks froze in 2052; he paid her back, and she kept the paperwork. His salvage leaves on the Ferryman's boats. All perfect manners with Ruth Okonkwo, his rival for the Pearl Haven site. Wants the land under Lantern Course more than anything in the city.
 
 **His briefings:**
 > "I'm not paying you to understand the job. I'm paying you to finish it."
@@ -176,7 +190,7 @@ Nobody has seen him on dry land in years. He takes Auntie Fung's goods out past 
 
 **What he doesn't say:** he isn't Leung Ka-wai. The real Leung went down with the southern piers in the Great Signal 10 of '94, and the boy he'd taught to steer took his boat, his name and his habits. The backwards cigarette was the old man's luck ritual. He smokes it for him. He stays off the land because in '94 the land is what gave way.
 
-**Ties:** the oldest working partnership on the waterfront is his boats and Auntie Fung's goods. Carries Mr. Szeto's salvage, and has started to wonder where it comes from. Owes Madam Rao for a new engine; she has never asked for it. Has turned down an Aether-Harbour contract from Ruth Okonkwo three times, and they respect each other for it.
+**Ties:** the oldest working partnership on the waterfront is his boats and Auntie Fung's goods. Carries Mr. Szeto's salvage, and has started to wonder where it comes from. Owes Madam Rao for a new engine; she has never asked for it. Has turned down an Aether-Harbour contract from Ruth Okonkwo three times, and they respect each other for it. Doesn't care about racing; knows exactly which night boats bring horses into the city.
 
 **His briefings:**
 > "The harbour doesn't care who you are. Neither do I. Load the crates."
@@ -205,7 +219,7 @@ She lends to people the banks won't touch and the Silver Fan Circle would break.
 
 **What she doesn't say:** twenty years ago she kept the Silver Fan's books, and when she walked out she took a copy. That copy is the only reason she's still alive. Every secret she collects as payment adds to her insurance.
 
-**Ties:** Auntie Fung's mahjong rival and closest friend, though neither would say so. Holds the paperwork on Mr. Szeto's 2052 loan. Her gold travels on the Ferryman's boats. Trades secrets with Ruth Okonkwo instead of taking her chips; neither is sure who's winning. Quietly backs Uncle Tariq's remittance booth at Pearl Haven House.
+**Ties:** Auntie Fung's mahjong rival and closest friend, though neither would say so. Holds the paperwork on Mr. Szeto's 2052 loan. Her gold travels on the Ferryman's boats. Trades secrets with Ruth Okonkwo instead of taking her chips; neither is sure who's winning. Quietly backs Uncle Tariq's remittance booth at Pearl Haven House. Loves the races, and won't lend inside the gates: "A wager is supposed to hurt a little, beta. If you're betting my money, what exactly are you risking?"
 
 **Her briefings:**
 > "I am very generous. On Thursday I will be less generous. Today is Wednesday."
@@ -231,7 +245,7 @@ Ruth Okonkwo brokers the work Aether-Harbour Logistics can't put its name to: fr
 
 **What she doesn't say:** she wants out. She has seen what happens to brokers who know too much. So she has kept a copy of every deniable job she ever arranged, in a file that could sink the company. The Ghost Circuit suspects it exists. Aether-Harbour hasn't noticed yet.
 
-**Ties:** fears the Ghost Circuit and needs them. Rival to Mr. Szeto for the Pearl Haven site. Three refused contracts and mutual respect with the Ferryman. A trade in secrets with Madam Rao. Auntie Fung's tea is the only thing she drinks in the city that she hasn't had tested.
+**Ties:** fears the Ghost Circuit and needs them. Rival to Mr. Szeto for the Pearl Haven site. Three refused contracts and mutual respect with the Ferryman. A trade in secrets with Madam Rao. Auntie Fung's tea is the only thing she drinks in the city that she hasn't had tested. Doesn't gamble; has betting accounts at Lantern Course; declines to explain the distinction.
 
 **Her briefings:**
 > "You have six hours and no friends inside. Plan accordingly."
@@ -268,6 +282,7 @@ The fixer's partner and the crew's sixth member (2026-10-25). Their lines live i
 - **With you from before day 1.** Joss found the five names that became the crew, and the room above the noodle shop. They write the welcome note.
 - **Partner, not servant.** One of the crew: says "we", draws no wage, takes no bed, has no stats, and doesn't go on jobs (yet). They keep the numbers honest and never claim to know more than the board shows. They don't believe in ghosts, but they remind the crew to leave tea on the doorstep at midnight, because the crew does.
 - **Voice.** Dry and warm, with dark humour. Short lines that read well on a phone. Teases the crew, worries about them quietly, and gets plainer when things go wrong.
+- **At the races.** Joss doesn't mind gambling; they hate being asked to predict races from inadequate data. "Sixteen thousand data points and he's betting on the horse with the nicest ears. I don't know why we bother."
 - **Not built yet:** Joss on comms during jobs, and Joss's read on the planning screen.
 
 ## Context block for worldbuilding prompts
@@ -293,7 +308,7 @@ To Dei Gung shrines, joss paper, master-and-apprentice traditions), with Filipin
 Asian, African and European communities on top. Use Cantonese romanisation, not Mandarin.
 NO MAGIC: only everyday superstition (luck, ghosts, unlucky numbers), never confirmed.
 
-HISTORY: 1970 Reclamation Boom (Docks and Old Town built out into the harbour) · 1994
+HISTORY: 1891 Lantern Course racecourse opens on marshland (the Basin grows round it) · 1970 Reclamation Boom (Docks and Old Town built out into the harbour) · 1994
 Great Signal 10 typhoon wipes out the southern piers (truce between proto-Red Lanterns
 and planners) · 2018 Neural Integration Act, pushed by Veridian-Apex: implants fitted to
 dockworkers, first neural-load burnouts · 2035 Glass Heights Annexation (bio-towers on
@@ -309,7 +324,10 @@ DISTRICTS (always use these English names):
   Docks (cranes, containers; Aether-Harbour on paper, Red Lanterns on the tarmac) · the
   Night Market (dai pai dongs, chrome clinics, mahjong; Silver Fan Circle) · Glass
   Heights (corporate towers and labs; Veridian-Apex; officially renamed "Apex Ridge"
-  but nobody on the street calls it that).
+  but nobody on the street calls it that) · the Basin (a bowl below Glass Heights round
+  Lantern Course, a floodlit 1891 racecourse that still races REAL horses, wrapped in
+  2057 telemetry, live odds and illegal betting; Racing Association officially, Silver
+  Fan in the Undercroft; no jobs written yet).
 - Unlocked later, by reputation: the Silt (sinking shanty shelf on the 1994 wreckage,
   floods at high tide, lawless) · the Amber Reach (transit and money hub where the
   maglev meets trams and ferries) · Iron Peak (the summit where the corp boards live in
@@ -326,7 +344,8 @@ therapies; Glass Heights), Hoi-Sing Grid & Cable (the power company; Old Town an
 Market nodes). Gangs: Red Lanterns (Docks road tolls), Silver Fan Circle (Night Market
 loans, gambling, fake implants), Brass Anchor Society (Old Town elders resisting
 buyouts). Police: Harbour Police 4th Precinct, the "Wet Sleeve" unit (corrupt; fines
-crews at "neural-load checks"). Wildcard: Ghost Circuit (data liberators in Old Town's
+crews at "neural-load checks"). Institution: Lantern Bay Racing Association (racing, licensed betting, old and
+well connected; fears race fixing above all). Wildcard: Ghost Circuit (data liberators in Old Town's
 drainage tunnels and bomb shelters).
 
 CLIENTS (local powers a small crew can reach, below the corps):
