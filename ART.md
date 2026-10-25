@@ -51,7 +51,7 @@ A street terminal in a wet neon city, after Cyberpunk 2077's interface and Citiz
 
 ### Frame and grid
 - Drawn on a **64×64 grid**, shown cropped to `9 6 46 46` (head and upper shoulders), in a **square with the top-right corner cut** (7px at 48px size, 12px at 104px).
-- Sizes in the game: 48px (Crew list), 104px (profile), 32px (memorial wall).
+- Sizes in the game: 48px (Crew list, leads, level-up cards), 104px (profiles, a lead's page, graduation cards), 32px (memorial wall, job planning picks, on-the-job crew strip).
 - One pose for everyone: straight on, neutral head angle.
 
 ### Lighting recipe (the core of the style)

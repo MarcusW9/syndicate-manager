@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · Faces everywhere
+- **Faces on the job and leads screens:** when you pick a crew for a job, your crew and the freelancers on offer show their portraits instead of initials. So do new leads on the Crew screen and their profile page.
+- A lead keeps the same face after you hire them.
+- The crew strip on a job in progress and the level-up cards in job reports use faces too. The old coloured initials are gone.
+
 ## 2026-10-25 · Race night: three jobs at Lantern Course
 - **The Favourite** (Auntie Fung): her horse Pepper runs in the sixth, and someone is paying stable hands to make sure she loses. Get into the stables, find the sedative, get past a suspicious vet, and buy or beat the name out of the Undercroft.
 - **Last Ticket** (Ruth Okonkwo): her ¥800,000 paper ticket vanished during an eleven-second blackout in the betting hall. Recover the missing footage, chase a runner through the stands, spot a forgery, and get it paid before midnight.

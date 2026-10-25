@@ -9,10 +9,7 @@ import { TRAITS } from '../data/traits.js';
 import { PARTNER } from '../data/partner.js';
 import { jossIcon, portrait } from './art.js';
 import { cityMapSvg, MAP_DISTRICTS } from './citymap.js';
-import { STARTING_CREW } from '../data/operatives.js';
 
-// Saves made before badges existed have no colour on their operatives.
-const COLOR_BY_ID = Object.fromEntries(STARTING_CREW.map((o) => [o.id, o.color]));
 import { advanceDay, calendar, formatShortDate, isBlocked, seasonStartDay } from '../core/time.js';
 import { createNewGame } from '../core/state.js';
 import { templateById, jobView, nextUnlock } from '../core/jobs.js';
@@ -222,9 +219,6 @@ function heatMeter() {
 }
 const districtName = (key) => NAMES.districts[key] ?? key;
 const districtTurf = (key) => DISTRICTS[key]?.turf ? ` · ${esc(DISTRICTS[key].turf)}` : '';
-const initials = (name) => { const w = name.trim().split(/\s+/); return (w[0][0] + (w.length > 1 ? w.at(-1)[0] : '')).toUpperCase(); };
-/** Placeholder portrait: coloured initials. Swap for an <img> when portraits exist. */
-const badge = (op, size = '') => `<span class="badge ${size ? `badge--${size}` : ''} ${op.cause ? 'is-fallen' : ''}" style="--badge:${esc(op.color ?? COLOR_BY_ID[op.id] ?? '#8b93a7')}" aria-hidden="true">${esc(initials(op.name))}</span>`;
 
 /** Portrait in a cut-corner frame (crew list, profiles, the wall). Fallen faces are greyed. */
 const face = (op, size = '') => `<span class="face ${size ? `face--${size}` : ''} ${op.cause ? 'is-fallen' : ''}">${portrait(op, { size: { sm: 32, lg: 104 }[size] ?? 48 })}</span>`;
@@ -611,7 +605,7 @@ function renderCrew() {
         ${recruits.map((r) => `
           <li>
             <button class="row" data-action="open-recruit" data-id="${esc(r.id)}">
-              ${badge(r)}
+              ${face(r)}
               <span class="row__main"><strong>${esc(r.name)}</strong> "${esc(r.handle)}"<br><span class="muted">${esc(r.quality)} ${esc(r.role)} · ${r.age}</span></span>
               <span class="row__meta"><strong>${money(r.wage)}</strong>/wk<br>${daysLeft(r.expiresDay)}</span>
             </button>
@@ -658,7 +652,7 @@ function renderRecruit() {
     <section class="panel">
       <button class="btn btn--ghost" data-action="back">← Crew</button>
       <div class="ophead">
-        ${badge(r, 'lg')}
+        ${face(r, 'lg')}
         <div>
           <h1>${esc(r.name)} <span class="muted">"${esc(r.handle)}"</span></h1>
           <p class="muted">${esc(r.quality)} ${esc(r.role)} · ${r.age} · lead goes cold: ${daysLeft(r.expiresDay)}</p>
@@ -727,7 +721,7 @@ function renderFreelancers(t, threat, freelancers, full) {
           <li>
             <button class="row pick ${on ? 'is-on' : ''}" data-action="toggle-crew" data-id="${esc(f.id)}" ${!on && full && !plan.crew.some((x) => freelancers.some((g) => g.id === x)) ? 'disabled' : ''} aria-pressed="${on}">
               <span class="pick__box">${on ? '✓' : ''}</span>
-              ${badge(f, 'sm')}
+              ${face(f, 'sm')}
               <span class="row__main"><strong>${esc(f.handle)}</strong> <span class="muted">${esc(f.quality)} ${esc(f.role)}</span><br><span class="small">${keyStatsFor(f, t, threat)}</span></span>
               <span class="row__meta"><strong>${Math.round(shareOf(f) * 100)}%</strong> of pay<br>${daysLeft(f.expiresDay)}</span>
             </button>
@@ -919,7 +913,7 @@ function renderPlan() {
           <li>
             <button class="row pick ${on ? 'is-on' : ''}" data-action="toggle-crew" data-id="${esc(op.id)}" ${disabled ? 'disabled' : ''} aria-pressed="${on}">
               <span class="pick__box">${on ? '✓' : ''}</span>
-              ${badge(op, 'sm')}
+              ${face(op, 'sm')}
               <span class="row__main"><strong>${esc(op.handle)}</strong> <span class="muted">${esc(op.role)}</span><br><span class="small">${keyStatsFor(op, t, v.threat)}</span></span>
               <span class="row__meta">${statusChip(a)}</span>
             </button>
@@ -990,7 +984,7 @@ function levelUpCards(r) {
     const op = opFor(g.id, g);
     return `
       <div class="levelcard levelcard--grad">
-        ${badge(op, 'lg')}
+        ${face(op, 'lg')}
         <div>
           <p class="levelcard__kicker">★ Graduated</p>
           <p class="levelcard__title">${esc(op.handle)}: rookie → pro</p>
@@ -1007,7 +1001,7 @@ function levelUpCards(r) {
           <span class="levelcard__line">${esc(pickLine(GROWTH_LINES[g.stat] ?? ['{name} is improving.'], `${id}${g.stat}${g.to}`).replace('{name}', op.handle))}</span></li>`).join('');
     return `
       <div class="levelcard">
-        ${badge(op)}
+        ${face(op)}
         <div><p class="levelcard__title">${esc(op.handle)}</p><ul class="levelcard__rows">${rows}</ul></div>
       </div>`;
   }).join('');
@@ -1060,7 +1054,7 @@ function renderMission() {
   return `
     <section class="panel mission">
       <p class="muted small">On the job · ${esc(APPROACHES[am.approach]?.name ?? '')} approach · ${esc(crewNames)}</p>
-      <div class="crewstrip">${crewOps.map((o) => badge(o, 'sm')).join('')}</div>
+      <div class="crewstrip">${crewOps.map((o) => face(o, 'sm')).join('')}</div>
       <h1>${esc(t.name)}</h1>
       <div class="mission__log">${log || `<p class="body muted">${esc(fillBrief(t))}</p>`}</div>
       ${action}
