@@ -21,6 +21,7 @@ import { resolveDecision } from '../core/decisions.js';
 import { WATCHED_PENALTY, HEAT_NOTICE_AT, HEAT_MAX, heatChoices } from '../core/heat.js';
 import { activeRumour } from '../core/rumours.js';
 import { alerts, upcoming } from '../core/upcoming.js';
+import { money } from '../core/money.js';
 import {
   startMission, revealBeat, chooseOption, resolveCritical, closeMission,
   describeCrisis, describeCritical, currentStep, fillBrief,
@@ -172,7 +173,6 @@ function onChange(e) {
 
 // --- helpers -----------------------------------------------------------
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const money = (n) => `${n < 0 ? '-' : ''}${NAMES.currency}${Math.abs(n).toLocaleString()}`;
 const threatDots = (n) => '●'.repeat(n) + '○'.repeat(5 - n);
 /** Threat with a marker when this offer is above or below the job's usual level. */
 const threatHtml = (v) => `<span class="threat">${threatDots(v.threat)}</span>${v.threatDelta > 0 ? ' <span class="tag-up">hotter than usual</span>' : v.threatDelta < 0 ? ' <span class="tag-down">quieter than usual</span>' : ''}`;

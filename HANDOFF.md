@@ -5,7 +5,7 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 ## State
 
 - **Live:** `main` at "City tab and street talk", deployed to GitHub Pages. Branch `claude/pensive-pascal-kor55b` matched `main` when this file was written.
-- **Tests:** 147 passing (`npm test`). Save format **v13**.
+- **Tests:** 148 passing (`npm test`). Save format **v13**.
 - **Both older plan files are finished:** `PLAN-PERSONALITY.md` (steps 1-4) and `PLAN-RENEWALS.md` (steps 0-4).
 - **Plan in progress: `PLAN-PROGRESSION.md`.** Steps 0-1 done 2026-10-25 (rookie start, rookie jobs, gated board, slower growth, progress bars, reports). Next: the owner playtests; then step 2. Its follow-ups list has the loose ends.
 - **Working tree clean.** The only pending content is the locked districts' crisis hooks in `drafts/district-hooks.md`.
