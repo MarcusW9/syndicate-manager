@@ -10,7 +10,7 @@ import { STARTING_CREW } from '../data/operatives.js';
 
 // Saves made before badges existed have no colour on their operatives.
 const COLOR_BY_ID = Object.fromEntries(STARTING_CREW.map((o) => [o.id, o.color]));
-import { advanceDay, calendar, formatShortDate, isBlocked, seasonStartDay, weeklyBill } from '../core/time.js';
+import { advanceDay, calendar, formatShortDate, isBlocked, seasonStartDay } from '../core/time.js';
 import { createNewGame } from '../core/state.js';
 import { templateById, jobView, nextUnlock } from '../core/jobs.js';
 import { trustLabel, clientById, trustOf } from '../core/clients.js';
@@ -20,6 +20,7 @@ import { assessJob, rollTarget, successChance, riskLabel } from '../core/risk.js
 import { resolveDecision } from '../core/decisions.js';
 import { WATCHED_PENALTY, HEAT_NOTICE_AT, HEAT_MAX, heatChoices } from '../core/heat.js';
 import { activeRumour } from '../core/rumours.js';
+import { alerts, upcoming } from '../core/upcoming.js';
 import {
   startMission, revealBeat, chooseOption, resolveCritical, closeMission,
   describeCrisis, describeCritical, currentStep, fillBrief,
@@ -98,7 +99,7 @@ function onClick(e) {
     case 'expand':
       if (confirm(`Expand the safehouse for ${money(nextExpansion(state).cost)}? Rent goes up by ${money(nextExpansion(state).rentIncrease)} a week.`)) return setState(expandSafehouse(state));
       break;
-    case 'open-job': plan = { jobId: id, crew: [], approach: 'stealth' }; break;
+    case 'open-job': screen = 'jobs'; plan = { jobId: id, crew: [], approach: 'stealth' }; break; // also from Today's alerts
     case 'toggle-crew': {
       const tpl = templateById(state.jobs.find((j) => j.id === plan.jobId).templateId);
       const isF = (x) => (state.freelancers ?? []).some((f) => f.id === x);
@@ -390,9 +391,9 @@ function backupBanner() {
 }
 
 /**
- * Today: a summary of the crew, the board, Sunday's bills and heat, then the inbox.
- * Phones show the summary and list, or one open message; wide screens put the open
- * message beside them (styles.css), so reading mail doesn't mean going back and forth.
+ * Today: alerts (only when something needs you), the inbox, then the week ahead.
+ * Phones show that, or one open message. Wide screens put the open message beside it,
+ * and with none open, the week ahead takes that pane instead (styles.css).
  */
 function renderInbox() {
   const open = state.inbox.find((m) => m.id === openMessageId);
@@ -412,57 +413,86 @@ function renderInbox() {
     ${backupBanner()}
     <div class="inbox ${open ? 'has-open' : ''}">
       <div class="inbox__side">
-        ${renderToday()}
         <section class="panel inbox__list">
-          <h2 class="inbox__title">Inbox</h2>
+          <h1>Today</h1>
+          ${renderAlerts()}
           ${list}
         </section>
+        ${renderUpcoming('upcoming--side')}
       </div>
       <section class="panel inbox__detail">
-        ${open ? renderMessage(open) : '<p class="muted inbox__empty">Pick a message to read it here.</p>'}
+        ${open ? renderMessage(open) : renderUpcoming('upcoming--pane')}
       </section>
     </div>`;
 }
 
-/** The four things to check before pressing Continue: crew, board, bills, heat. */
-function renderToday() {
-  const reads = state.crew.map((op) => availability(state, op));
-  const count = (f) => reads.filter(f).length;
-  const isAwayRead = (a) => a.reason.startsWith('away');
-  const crew = [
-    `${count((a) => a.ok)} ready`,
-    count((a) => a.ok && a.reason !== 'ready') ? `${count((a) => a.ok && a.reason !== 'ready')} worn` : '',
-    count((a) => !a.ok && !isAwayRead(a)) ? `${count((a) => !a.ok && !isAwayRead(a))} out` : '',
-    count(isAwayRead) ? `${count(isAwayRead)} away` : '',
-  ].filter(Boolean).join(' · ');
-  const views = state.jobs.map((j) => jobView(state, j));
-  const best = views.length ? Math.max(...views.map((v) => v.pay)) : 0;
-  const lastCall = state.jobs.filter((j) => j.expiresDay === state.day).length;
-  const bill = weeklyBill(state);
-  const toBills = 6 - ((state.day - 1) % 7);
-  const short = state.cash < bill.total;
-  const talk = activeRumour(state);
+/** Alert lines: nothing on a quiet day; each one taps through to where it's dealt with. */
+function renderAlerts() {
+  // Several jobs ending today read as one line, not a stack of them.
+  const raw = alerts(state);
+  const lastJobs = raw.filter((a) => a.kind === 'job-last');
+  const list = lastJobs.length > 1
+    ? [...raw.filter((a) => a.kind !== 'job-last'), { kind: 'jobs-last', tone: 'warn', names: lastJobs.map((a) => a.name) }]
+    : raw;
+  if (!list.length) return '';
+  const line = (a) => {
+    switch (a.kind) {
+      case 'decision': return [`Decision needed: ${a.subject}`, 'open-message', a.messageId];
+      case 'broke': return [`Cash is below zero (${money(a.cash)}). Morale drops each Sunday you stay in the red.`, 'nav', 'jobs'];
+      case 'bills-short': return [`Sunday's bills are ${money(a.total)}. You're ${money(a.short)} short.`, 'nav', 'jobs'];
+      case 'job-last': return [`Last day to take ${a.name}`, 'open-job', a.jobId];
+      case 'jobs-last': return [`Last day for ${a.names.length} jobs: ${a.names.join(', ')}`, 'nav', 'jobs'];
+      case 'lead-last': return [`Last day to sign ${a.name} (${a.role})`, 'nav', 'crew'];
+      case 'crew-out': return [`Can't work today: ${a.names.join(', ')}`, 'nav', 'crew'];
+      default: return null;
+    }
+  };
+  return `<ul class="alerts">${list.map((a) => {
+    const [text, action, id] = line(a) ?? [];
+    return text ? `<li><button class="alert alert--${a.tone}" data-action="${action}" data-id="${esc(id)}">${esc(text)} <span aria-hidden="true">›</span></button></li>` : '';
+  }).join('')}</ul>`;
+}
+
+/** The week ahead, one line per thing the game will do, grouped by day. */
+function renderUpcoming(where) {
+  const items = upcoming(state);
+  const when = (day) => {
+    const n = day - state.day;
+    const wd = calendar(day).weekday;
+    return n === 1 ? 'Tomorrow' : n === 7 ? `Next ${wd}` : wd;
+  };
+  const text = (i) => {
+    switch (i.kind) {
+      case 'season': return `Season ${i.season} begins: everyone a year older`;
+      case 'board': return 'New jobs, freelancers and street talk';
+      case 'scout': return 'Scout report: new leads';
+      case 'bills': return `Bills: ${money(i.total)} (wages ${money(i.wages)}, rent ${money(i.rent)})${state.cash < i.total ? `, ${money(i.total - state.cash)} short` : ''}`;
+      case 'job-last': return `Last day for ${i.names.join(', ')}`;
+      case 'lead-last': return `Last day to sign ${i.name} (${i.role})`;
+      case 'back': return `${i.name} back from the job`;
+      case 'healed': return `${i.name} over their ${i.injury} injury`;
+      case 'rested': return `${i.name} rested enough to work`;
+      case 'reask': return `${i.name} asks about their raise again`;
+      default: return '';
+    }
+  };
+  // Jobs ending the same day share one line.
+  for (const d of new Set(items.filter((i) => i.kind === 'job-last').map((i) => i.day))) {
+    const same = items.filter((i) => i.kind === 'job-last' && i.day === d);
+    same[0].names = same.map((i) => i.name);
+    for (const i of same.slice(1)) items.splice(items.indexOf(i), 1);
+  }
+  const days = [...new Set(items.map((i) => i.day))];
   return `
-    <section class="panel today">
-      <h1>Today</h1>
-      <div class="today__grid">
-        <button class="tile" data-action="nav" data-id="crew">
-          <span class="tile__label">Crew</span><strong>${state.crew.length} on the books</strong><span class="tile__sub">${esc(crew)}</span>
-        </button>
-        <button class="tile" data-action="nav" data-id="jobs">
-          <span class="tile__label">Jobs</span><strong>${state.jobs.length ? `${state.jobs.length} open` : 'Board empty'}</strong>
-          <span class="tile__sub">${state.jobs.length ? `best pays ${money(best)}${lastCall ? ` · ${lastCall} on last day` : ''}` : 'new work on Monday'}</span>
-        </button>
-        <div class="tile">
-          <span class="tile__label">Sunday bills</span><strong class="${short && toBills ? 'is-short' : ''}">${money(bill.total)}</strong>
-          <span class="tile__sub">${toBills === 0 ? 'paid today' : short ? `${money(bill.total - state.cash)} short` : 'covered'} · wages ${money(bill.wages)}, rent ${money(bill.rent)}</span>
-        </div>
-        <div class="tile">
-          <span class="tile__label">Heat</span><strong>${heatMeter()}</strong>
-          <span class="tile__sub">${state.heat >= HEAT_NOTICE_AT ? 'people are asking questions' : state.heat >= 3 ? 'warm: cools 2 every Sunday' : 'quiet'}</span>
-        </div>
-      </div>
-      ${talk ? `<p class="today__talk"><strong>Street talk · ${esc(districtName(talk.district))}:</strong> ${esc(talk.text)}</p>` : ''}
+    <section class="panel upcoming ${where}">
+      <h2 class="upcoming__title">Coming up</h2>
+      <ul class="upcoming__days">
+        ${days.map((d) => `
+          <li class="upcoming__day">
+            <span class="upcoming__when">${esc(when(d))}</span>
+            <ul class="upcoming__items">${items.filter((i) => i.day === d).map((i) => `<li class="${i.kind === 'bills' && state.cash < i.total ? 'is-short' : ''}">${esc(text(i))}</li>`).join('')}</ul>
+          </li>`).join('')}
+      </ul>
     </section>`;
 }
 
