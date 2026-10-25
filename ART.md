@@ -1,0 +1,237 @@
+# Art bible
+
+How the game looks, and how to make more of it so it fits. The values here are the ones the code uses (`src/ui/art.js`, the skin block at the end of `src/ui/styles.css`). If you change one, change both, and log the change in `DESIGN.md`.
+
+**Who this is for:** a future coding session extending the art, someone generating reference or promo images, or an illustrator commissioned for portraits. Each has a copy-paste prompt in [Prompts](#prompts).
+
+---
+
+## The look in one paragraph
+
+A street terminal in a wet neon city, after Cyberpunk 2077's interface and Citizen Sleeper's calm. Dark, sharp panels with one corner cut off; a condensed display font for structure and numbers; readable system text for anything you read. Faces are flat-colour vector portraits with hard light and shadow shapes instead of outlines, real skin tones, and one colour of city neon falling across each face from the right. Warm with an edge: friendly faces, cute Joss, but scars, chrome and bandages are part of the city.
+
+## Rules that never change
+
+1. **Text first.** Every picture is decorative to a screen reader (`aria-hidden`). Anything a picture shows (injured, tired, neural load, mood) is also written as text.
+2. **Faces tell the truth.** Expression and condition come from game state, never from chance. A dead-eyed stare means burnout or dangerous neural load.
+3. **Real skin tones for everyone.** The city is Cantonese at its base, with Filipino, South Asian, Southeast Asian, African and European communities. Every face is fully readable on every tone: eyes carry a highlight, lips are a shade of the skin, tattoos are thin neon ink.
+4. **No caricature.** Culture only widens or narrows a broad, overlapping band of skin tones and nudges hair texture. Every style is possible for everyone. No "tribal" tattoos; use geometric line work.
+5. **Everyone is 18 or older**, and drawn with adult proportions.
+6. **No magic.** Chrome is cheap, second-hand, glitchy street hardware (`WORLD.md`, Tech and neural load). Nothing glows that isn't technology or neon.
+7. **One face per person, forever.** Faces are built from a stable hash of the person's ID and name. Nothing about the face is stored in the save; nothing is random at draw time.
+8. **Works offline.** Fonts and art ship with the game (the iOS app has no network guarantee).
+
+---
+
+## UI skin ("street terminal")
+
+| Token | Value | Use |
+| --- | --- | --- |
+| `--bg` | `#0a0c0f` | page, with a faint 32px cyan grid (`rgba(61,232,216,0.025)`) and static scanlines |
+| `--panel` / `--panel-2` | `#12151b` / `#161a21` | panels (vertical gradient 2 → 1) |
+| `--line` | `#2a303b` | borders, hairlines |
+| `--text` / `--muted` | `#e9ecf1` / `#8a93a6` | reading text / secondary |
+| `--accent` | `#ff3d5f` signal red | actions (Continue, Start), the active tab marker |
+| `--accent-2` | `#3de8d8` cyan | structure: section heads, panel tabs, unread, Joss |
+| `--warn` | `#f2d541` sodium yellow | warnings, tier badge |
+| `--danger` | `#ff4a4a` | money short, losses |
+| `--radius` / `--cut` | `2px` / `10px` | everything is sharp; panels lose their top-right corner |
+
+- **Type:** Rajdhani 500/600/700 (bundled, Latin only, OFL) for headings, labels, tabs, buttons, badges and numbers, uppercase with 0.06–0.18em tracking. Body text stays in the system font.
+- **Panels:** top-right corner cut (`clip-path`), a hairline across the cut, a 36×2px cyan tab on the top edge.
+- **Buttons and cards:** two corners cut (8px) or bottom-right cut (7px).
+- **Gauges:** segmented (4px on, 1px off).
+- **Motion:** a blink, a breathing light, a new-day flash. Nothing loops fast; everything stops for reduced motion.
+- **Tap targets** stay at least 44px. **Layout** is phone first (360–430px), with a sidebar from 900px.
+
+---
+
+## Portraits
+
+### Frame and grid
+- Drawn on a **64×64 grid**, shown cropped to `9 6 46 46` (head and upper shoulders), in a **square with the top-right corner cut** (7px at 48px size, 12px at 104px).
+- Sizes in the game: 48px (Crew list), 104px (profile), 32px (memorial wall).
+- One pose for everyone: straight on, neutral head angle.
+
+### Lighting recipe (the core of the style)
+Every face is lit by **one city-light colour from the right**, chosen from the person's ID:
+
+| City light | Hex |
+| --- | --- |
+| Cyan | `#3de8d8` |
+| Signal red | `#ff3d5f` |
+| Sodium | `#f2b544` |
+| Violet neon | `#9b8cff` |
+
+Colours are blends of the skin (or hair, or shirt) with the light or the shadow:
+
+| Part | Recipe |
+| --- | --- |
+| Background | `#0d1016`, with the light as a gradient from the right edge (28% opacity, fading by 65%; 10% when tired) |
+| Shadow side of the face (left, a broad plane) | skin blended 42% toward cool navy `#1b2340` |
+| Mid shadows (eye sockets, under the cheekbone) | skin blended 20% toward `#1b2340` |
+| Lit rim (right edge of face, neck, ear) | skin blended 38% toward the light |
+| Lips and fine lines | skin blended 50% toward `#2a1210` |
+| Brows | hair blended 45% toward `#0d0a09` |
+| Hair highlight band (right side) | hair blended 50% toward the light |
+| Shirt lit side | shirt blended 38% toward the light |
+| Eyes | `#120d0b` almond shapes with a small white catchlight |
+
+No outlines around the head. Depth comes from the planes: shadow side, cheekbone, nose side, lit rim.
+
+### Skin tones
+Twelve tones, light to deep: `#f6d7c3 #efc3a4 #e3b08f #d49a76 #c68863 #b07350 #9a6142 #855236 #6f432b #5c3623 #4a2b1d #3b2218`.
+
+Culture comes from the surname, using the game's own name lists (`src/data/recruitPools.js`). It sets a wide band, and the bands overlap:
+
+| Culture | Tones (index) |
+| --- | --- |
+| Hong Kong / Cantonese | 1–6 |
+| Filipino | 3–8 |
+| South Asian | 3–10 |
+| Southeast Asian | 2–8 |
+| African | 6–11 |
+| European | 0–5 |
+| Unknown | all |
+
+### Head shapes
+Four (half-width / jaw / chin / chin height): oval 11.5/7.5/3.2/45, round 12.5/9/4/44, square 12/10/5/45, long 10.8/7/3/46.5. Eyes sit at y 29, brows around y 25, mouth at y 40, hairline around y 19.
+
+### Features and how often they appear (random, fixed per person)
+
+| Feature | Options and odds |
+| --- | --- |
+| Hair style | crop, buzz, long, bob, bun, curls, locs, undercut (with a geometric tattoo on the shaved side), slick-back (wet shine), fiber-optic dreads (glowing strands and tips), bald. A third of the time the style leans by culture (African: curls, locs, buzz; South Asian: long, crop; European: crop, bob). |
+| Hair colour | natural `#17171b #241c19 #3a291e #563820 #7f5428 #a37540`; 15% dyed `#ff4f7b #36d6c3 #a78bfa #f5b942 #7dd3fc`; grey `#b9bcc4` for 60% of those 45 or older |
+| Split-dye | 12% of people with hair: the left half in a second neon colour |
+| Chrome | temple port (3 in 7; the cheap street standard), circuit lines on the jaw, temple or nose bridge (2 in 7), cyber-eye lens on the lit side (1 in 7), synthetic-skin patch with a clean-cut seam (1 in 7). Chrome colour: cyan (half), red or amber. |
+| Markings | none (3 in 7), geometric neon tattoo, neck barcode, jagged street scar, clean cut |
+| Eyewear | visor 5% (never with a cyber-eye); glasses 12% otherwise |
+| Other | stubble 12%, earring 25% (sodium gold), shirt in one of five dark colours |
+
+### Condition and expression (from game state, never random)
+
+| What the game says | What the face shows |
+| --- | --- |
+| Light injury | a crossed plaster on the lit cheek |
+| Serious or critical injury | gauze band across the brow (small blood spot) plus the plaster |
+| Fatigue over 60 | heavy lids, shadowed eyes, flatter mouth, the city light dims |
+| Neural load | chrome glows brighter, with a halo above 40% |
+| Neural load over 70 or burnout 60+ | dead-eyed stare: flat lids, no catchlight |
+| Morale below 35 | stressed: narrow eyes, inward brows, clenched teeth |
+| Morale 80+ | smirk: one mouth corner up, one brow raised |
+| Fallen (memorial wall) | greyscale at 70% opacity |
+
+Tired eyes override any expression. First match wins: dead stare, then stressed, then smirk, then neutral.
+
+---
+
+## Joss
+
+The crew's bootleg AI (`WORLD.md`, "Joss"). They/them.
+
+- **Current design:** a **cracked second-hand handset**: dark body `#1b1f28` with a cyan outline `#36d6c3`, a screen `#0f2a2c` with a hairline crack across one corner, a strip of sodium-yellow tape across the lower left, a bent antenna top right with a pink-red light that breathes (`#ff4f7b`), a round home button.
+- **Face on the screen:** cyan strokes (2.4 wide, round caps): two short eye strokes and a mouth. Four moods:
+  - **neutral:** straight eyes, flat mouth.
+  - **happy:** arched eyes, smile (quiet days, first day).
+  - **worried:** brows angled up, frown (bills short, broke, crew hurt).
+  - **smug:** one eye squinting, crooked smile (Sunday, bills paid).
+- **Frame on Today:** a hexagon "comms channel" badge with a cyan tint, labelled "JOSS · ONLINE".
+- **Motion:** blinks every 6 seconds; antenna light breathes every 3; both stop for reduced motion.
+- **Still open:** the final design. The owner hasn't committed yet; options tested were the handset, a round droid and a relay box. Any redesign should stay specific to the canon (the cracked handset and salvaged relay boards under the safehouse sink), not a generic robot.
+
+---
+
+## Prompts
+
+### 1. For a coding session (paste at the start of a new chat)
+
+```
+You're extending the art in Syndicate Manager (repo MarcusW9/syndicate-manager).
+Read CLAUDE.md, then ART.md, then src/ui/art.js before changing anything.
+
+The art is inline SVG drawn in code (src/ui/art.js), no image files. Portraits:
+64×64 grid cropped to "9 6 46 46", square frame with the top-right corner cut,
+flat-colour vector, Citizen Sleeper style: real skin tones lit from the right by one
+city-light colour per person (cyan #3de8d8, red #ff3d5f, sodium #f2b544, violet
+#9b8cff), shadow side blended 42% toward navy #1b2340, lit rim 38% toward the light,
+no outlines, depth from light and shadow planes.
+
+Non-negotiables: faces come from a stable hash of id+name (no Math.random, nothing
+stored in the save); expressions and condition marks come from game state only
+(stateOf), never chance; every tone readable (catchlights, neon ink); no "tribal"
+designs; everyone 18+; portraits are aria-hidden and every fact they show is also in
+text; no DOM in src/core. New features: add the choice to faceOf() with its odds, draw
+it in portrait(), add a row to ART.md's feature table, add a test in
+tests/art.test.js, log the decision in DESIGN.md, and add a CHANGELOG.md entry.
+Check results by rendering a sheet of real generated crew with Playwright at 48px and
+104px before committing.
+```
+
+### 2. For an image-generation tool (reference, mood boards, promo)
+
+Using AI-generated images in the game itself is the owner's decision (rights, consistency and how players feel about it). These prompts are for reference and exploration unless the owner says otherwise.
+
+**Style prompt (use as-is, then add a character line):**
+```
+Flat-colour vector portrait, head and upper shoulders, straight-on, neutral pose,
+square crop. Minimalist cyberpunk illustration in the style of Citizen Sleeper:
+bold flat shapes, hard-edged light and shadow planes, no outlines, very little line
+detail, small almond eyes with a tiny highlight, short thick brows. Real natural
+skin tone. One coloured city light falling from the right side of the face (choose:
+cyan #3de8d8 / signal red #ff3d5f / sodium yellow #f2b544 / violet #9b8cff), the left
+half of the face in cool navy shadow (#1b2340). Dark near-black background (#0d1016)
+with a soft glow of the same light colour from the right edge. Muted, grown-up, warm
+with an edge. Adult, 18+.
+```
+
+**Negative prompt:**
+```
+photorealistic, 3D render, painterly brush texture, thick outlines, anime, chibi,
+exaggerated features, caricature, tribal tattoos, magic, glowing eyes without
+hardware, text, watermark, busy background, multiple people, child, teenager
+```
+
+**Character line, fill the brackets:**
+```
+Character: [name], [age], [role]. [skin tone: e.g. deep brown / light olive / tan].
+Hair: [style and colour]. Chrome: [temple port / cyber-eye lens in cyan / glowing
+circuit lines along the jaw / synthetic skin patch with a clean seam]. Marking:
+[none / small geometric neon tattoo on the cheek / barcode on the neck / jagged scar].
+Wearing [dark shirt or jacket]. Expression: [neutral / slight smirk / tired, heavy
+lids / stressed, jaw clenched / blank dead-eyed stare]. Condition: [none / plaster on
+the cheek / gauze across the brow].
+```
+
+**Named cast, ready to use with the style prompt.** Ages, jobs and props come from `WORLD.md`; skin tone, hair and clothing beyond what it says are **suggestions, not canon**. Confirm them with the owner (and add them to `WORLD.md`) before final art.
+- **Auntie Fung:** 71, Old Town tea-shop elder and quiet fence. Light olive skin, deeply lined, grey hair in a low bun, reading glasses pushed down her nose, plain dark high-collared top. Sodium-yellow light. Expression: calm, knowing, unreadable. Chrome: an old, scuffed temple port.
+- **Mr. Szeto:** property developer, Glass Heights. Light tan skin, neat short black hair greying at the temples, expensive charcoal suit, white shirt, no tie. Cold cyan light. Expression: composed, faint smile that doesn't reach the eyes. Chrome: none visible (he's rich: the hardware is hidden).
+- **The Ferryman ("Leung Ka-wai"):** older boatman who never steps ashore. Weathered brown skin, short salt-and-pepper hair, stubble, a clove cigarette held backwards between his lips, salt-stained work jacket. Signal-red light like a harbour lamp. Expression: guarded, tired eyes.
+- **Madam Rao:** Night Market moneylender in a silk shop. Medium brown skin, black hair pulled back, gold earrings, a saffron-and-crimson silk sari border at the shoulder. Sodium-yellow light. Expression: a warm smile that's the dangerous part.
+- **Ruth Okonkwo:** off-books broker for Aether-Harbour. Deep brown skin, short natural hair, grey suit, plain earrings. Violet light. Expression: flat, watchful, gives nothing away. Chrome: a thin circuit line at the temple.
+- **Doc Siu:** ex-hospital surgeon, unlicensed clinic under Tenement Block 9. Light olive skin, hair scraped back, a cigarette, surgical mask pulled under the chin. Cyan light. Expression: dry, unimpressed.
+- **Joss:** not a face. A cracked second-hand smartphone with tape on one corner and a bent antenna, a simple line-drawn face glowing cyan on its screen, dark background, the same flat-vector style.
+
+### 3. For an illustrator (commissioning a parts kit)
+
+> We're making a text-first crew-management game set in a fictional, Hong Kong-inspired cyberpunk city in 2057. Hundreds of characters are generated, so we need portraits as a **kit of vector parts** that code assembles and colours, in the style described in our art bible (ART.md, attached).
+>
+> **Style:** flat colour, hard light and shadow planes, no outlines, minimal line detail, like Citizen Sleeper. Straight-on, head and upper shoulders, one pose.
+>
+> **Format:** SVG, one part per file, on a shared 64×64 grid (head centred at x 32, eyes at y 29). Flat fills only, named by role so code can recolour them: `skin`, `skin-shadow`, `skin-mid`, `skin-lit`, `hair`, `hair-lit`, `brow`, `lip`, `shirt`, `shirt-lit`, `chrome`, `ink`. No gradients, filters or embedded raster.
+>
+> **Parts:**
+> - 4–6 head shapes, each with its shadow, cheek and rim planes.
+> - 12+ hairstyles, each with a back layer, top layer and highlight: crop, buzz, long, bob, bun, curls, locs, undercut, slick-back, fiber dreads, bald.
+> - Eyes in 5 states: neutral, tired, stressed, dead stare, smirk.
+> - Brows and mouths matching those states.
+> - 3 noses, 2 ears.
+> - Chrome: temple port, cyber-eye, 3 circuit routes, synthetic seam.
+> - Markings: 4 geometric tattoos, barcode, 2 scars.
+> - Injuries: plaster, gauze.
+> - Glasses, visor, earring, stubble.
+> - 5 shirt or jacket shapes.
+>
+> **Must:** work on every skin tone from very light to very deep; adult proportions (all characters are 18+); no "tribal" tattoo designs; readable at 48px.
+>
+> **Also wanted, separately:** finished portraits of 6 named characters (see "Named cast" in ART.md), and Joss, the crew's AI, drawn as a cracked handset.
