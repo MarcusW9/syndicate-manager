@@ -123,11 +123,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 
 /* Inbox: one pane at a time on phones, list and message side by side when wide. */
 @media (max-width: 899px) {
-  .inbox.has-open .inbox__side, .inbox:not(.has-open) .inbox__detail { display: none; }
-}
-/* Wide: with no message open, the week ahead fills the right pane instead of sitting under the inbox. */
-@media (min-width: 900px) {
-  .inbox:not(.has-open) .upcoming--side { display: none; }
+  .inbox.has-open .inbox__side, .inbox:not(.has-open) .inbox__detail, .upcoming.has-open { display: none; }
 }
 .inbox__side { display: grid; gap: 12px; align-content: start; }
 /* Grid children shrink to fit, so a long one-line preview clips instead of widening the page. */
@@ -136,7 +132,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .row__main--clip { min-width: 0; }
 .preview { display: block; font-size: 0.8rem; font-weight: 400; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* Today: alert lines only when something needs you; the week ahead under the inbox. */
+/* Today: the week ahead in a strip across the top; alert lines only when something needs you. */
 .inbox__list h1 { margin-top: 0; }
 /* Joss, the crew's AI partner: one line of briefing at the top of Today. */
 .joss { display: flex; gap: 12px; align-items: flex-start; margin: 4px 0 12px; }
@@ -154,14 +150,14 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .alert { width: 100%; min-height: var(--tap); padding: 8px 12px; text-align: left; border-radius: var(--radius); font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
 .alert--warn { background: #2a2617; border: 1px solid #5c4a1c; color: var(--warn); }
 .alert--danger { background: #2e1a1e; border: 1px solid #6b2630; color: #ff8a8a; }
-.upcoming__title { margin-top: 0; }
-.upcoming__days { list-style: none; margin: 0; padding: 0; }
-.upcoming__day { display: grid; grid-template-columns: 84px 1fr; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
-.upcoming__day:last-child { border-bottom: 0; }
-.upcoming__when { font-size: 0.8rem; font-weight: 600; color: var(--accent-2); padding-top: 1px; }
-.upcoming__items { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 0.9rem; }
+.upcoming--strip { margin-bottom: 12px; padding: 10px 16px 12px; }
+.upcoming__title { margin: 0 0 6px; }
+/* One cell per day, side by side; they wrap to two across on a phone. */
+.upcoming__days { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px 16px; }
+.upcoming__day { display: grid; gap: 2px; align-content: start; padding-left: 10px; border-left: 1px solid var(--line); }
+.upcoming__when { font-size: 0.8rem; font-weight: 600; color: var(--accent-2); }
+.upcoming__items { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 0.85rem; line-height: 1.35; }
 .upcoming__items .is-short { color: #ff8a8a; }
-.upcoming--pane { border: 0; padding: 0; background: none; }
 
 /* Job cards: name and pay, client and time left, then the facts. */
 .row.jobcard { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 3px 12px; }
@@ -462,8 +458,6 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 }
 /* A short cyan tab on each panel's top edge, like a labelled readout. */
 .panel::after { content: ''; position: absolute; top: 0; left: 0; width: 36px; height: 2px; background: var(--accent-2); opacity: 0.8; pointer-events: none; }
-.upcoming--pane { clip-path: none; }
-.upcoming--pane::before, .upcoming--pane::after { display: none; }
 
 /* Top bar: a translucent readout strip with a red tick under the date. */
 .topbar { background: rgba(10, 12, 15, 0.92); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); }

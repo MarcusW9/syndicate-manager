@@ -33,7 +33,7 @@ export const PARTNER = {
       'Wages are in. Somebody\'s already spent theirs at the Night Market. I\'m not saying who.',
     ],
     monday: [
-      'New week, new board. Let\'s see who wants something.',
+      'New week. Here\'s what came in overnight, and there\'s fresh work on the board.',
       'Monday. Fresh jobs and fresh gossip. Read the street talk before you pick.',
       'Board\'s been reshuffled overnight. Some of it\'s even worth doing.',
     ],

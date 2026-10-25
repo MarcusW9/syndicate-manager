@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · Coming up, up top
+- **Coming up now sits in a slim strip across the top of Today**, one column per day, so the week ahead is the first thing you see instead of something under the inbox. On a phone the days stack in the same strip, and it steps aside while you read a message.
+- On a wide screen the right-hand side now waits for a message ("Tap a message to read it here") and the week ahead stays put when you open one.
+- Joss's Monday line no longer says "Let's see who wants something": it now points at what came in overnight and the fresh work on the board.
+
 ## 2026-10-25 · Faces
 - **Your crew have faces** on the Crew list and their profile pages, in a painted, Citizen Sleeper-style look: real skin tones, a splash of city neon from one side, light and shadow instead of outlines.
 - You can see how someone's doing at a glance: a plaster or bandage when they're hurt, heavy eyes when they're worn out, an implant that glows with neural load. The fallen are greyed on the wall.

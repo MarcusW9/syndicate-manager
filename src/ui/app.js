@@ -410,9 +410,9 @@ function backupBanner() {
 }
 
 /**
- * Today: alerts (only when something needs you), the inbox, then the week ahead.
- * Phones show that, or one open message. Wide screens put the open message beside it,
- * and with none open, the week ahead takes that pane instead (styles.css).
+ * Today: the week ahead in a slim strip across the top, then alerts (only when something
+ * needs you) and the inbox. Phones show that, or one open message without the strip.
+ * Wide screens keep the strip and put the open message beside the inbox (styles.css).
  */
 function renderInbox() {
   const open = state.inbox.find((m) => m.id === openMessageId);
@@ -430,6 +430,7 @@ function renderInbox() {
         </ul>` : '<p class="muted">Nothing new. Press Continue.</p>';
   return `
     ${backupBanner()}
+    ${renderUpcoming(open ? 'upcoming--strip has-open' : 'upcoming--strip')}
     <div class="inbox ${open ? 'has-open' : ''}">
       <div class="inbox__side">
         <section class="panel inbox__list">
@@ -437,10 +438,9 @@ function renderInbox() {
           ${renderBriefing()}
           ${list}
         </section>
-        ${renderUpcoming('upcoming--side')}
       </div>
       <section class="panel inbox__detail">
-        ${open ? renderMessage(open) : renderUpcoming('upcoming--pane')}
+        ${open ? renderMessage(open) : '<p class="muted inbox__empty">Tap a message to read it here.</p>'}
       </section>
     </div>`;
 }
@@ -495,7 +495,7 @@ function renderBriefing() {
     }).join('')}</ul>` : ''}`;
 }
 
-/** The week ahead, one line per thing the game will do, grouped by day. */
+/** The week ahead, one cell per day with a line per thing the game will do. */
 function renderUpcoming(where) {
   const items = upcoming(state);
   const when = (day) => {
