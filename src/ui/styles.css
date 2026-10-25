@@ -264,6 +264,34 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 
 /* Crew-list scout line and the planning crew-size badge */
 .scoutline { display: block; font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+/* Planning: the risk read and Start stay on screen while you pick (above the phone tab bar). */
+.planbar { position: sticky; bottom: 56px; z-index: 1; display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: #1b1f28; box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.35); }
+.planbar__read { flex: 1; min-width: 0; display: grid; gap: 4px; justify-items: start; }
+.planbar__why { font-size: 0.8rem; color: var(--muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.planbar .btn { flex: 0 0 auto; }
+.risk--none { background: #262b36; color: var(--muted); }
+@media (min-width: 900px) { .planbar { bottom: 16px; } }
+
+/* A stat measured against the job in hand. */
+.fit { font-weight: 600; white-space: nowrap; }
+.fit--good { color: #5fe0a5; }
+.fit--shaky { color: var(--warn); }
+.fit--weak { color: var(--danger); }
+
+/* Crew condition at a glance. */
+.status { display: inline-block; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
+.status--ready { background: #173328; color: #5fe0a5; }
+.status--worn { background: #3a3218; color: var(--warn); }
+.status--out { background: #401a22; color: var(--danger); }
+.status--away { background: #14262a; color: var(--accent-2); }
+.row__meta--stack { display: grid; gap: 5px; justify-items: end; }
+.minibar { display: grid; grid-template-columns: auto 44px; align-items: center; gap: 6px; }
+.minibar__label { font-size: 0.65rem; color: var(--muted); }
+.minibar__track { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.minibar__track span { display: block; height: 100%; }
+.minibar--fatigue .minibar__track span { background: var(--warn); }
+.minibar--morale .minibar__track span { background: var(--accent-2); }
+
 .sizebadge { display: inline-block; margin: 0 0 8px; padding: 6px 10px; border-radius: var(--radius); font-size: 0.85rem; font-weight: 600; background: #262b36; color: var(--text); }
 .sizebadge--full { background: #173328; color: #5fe0a5; }
 .sizebadge--short { background: #3a3218; color: var(--warn); }

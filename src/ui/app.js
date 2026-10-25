@@ -16,7 +16,7 @@ import { templateById, jobView, nextUnlock } from '../core/jobs.js';
 import { trustLabel, clientById, trustOf } from '../core/clients.js';
 import { CLIENTS } from '../data/clients.js';
 import { availability, APPROACHES, traitMods, ratedStat, maxCrew, crewSizeRead } from '../core/crew.js';
-import { assessJob } from '../core/risk.js';
+import { assessJob, rollTarget, successChance, riskLabel } from '../core/risk.js';
 import { resolveDecision } from '../core/decisions.js';
 import { WATCHED_PENALTY, heatChoices } from '../core/heat.js';
 import { activeRumour } from '../core/rumours.js';
@@ -177,6 +177,26 @@ const threatDots = (n) => '●'.repeat(n) + '○'.repeat(5 - n);
 const threatHtml = (v) => `<span class="threat">${threatDots(v.threat)}</span>${v.threatDelta > 0 ? ' <span class="tag-up">hotter than usual</span>' : v.threatDelta < 0 ? ' <span class="tag-down">quieter than usual</span>' : ''}`;
 const clientLine = (v) => v.client ? `${esc(v.client.name)} <span class="muted">(${esc(trustLabel(v.trust))})</span>` : '<span class="muted">Walk-in job</span>';
 const riskBadge = (level) => `<span class="risk risk--${esc(level)}">${esc(level === 'safe' || level === 'certain' ? level : `${level} risk`)}</span>`;
+/** Availability as a coloured chip: green ready, amber usable but worse off, red can't go, teal away on a job. */
+function statusChip(a) {
+  const tone = a.ok ? (a.reason === 'ready' ? 'ready' : 'worn') : a.reason.startsWith('away') ? 'away' : 'out';
+  return `<span class="status status--${tone}">${esc(a.reason)}</span>`;
+}
+/** Fatigue and morale as two small labelled bars for crew rows. */
+const conditionBars = (op) => [['Fatigue', op.condition.fatigue, 'fatigue'], ['Morale', op.condition.morale, 'morale']]
+  .map(([label, v, k]) => `<span class="minibar minibar--${k}" role="img" aria-label="${label} ${v}"><span class="minibar__label">${label}</span><span class="minibar__track"><span style="width:${Math.max(0, Math.min(100, v))}%"></span></span></span>`).join('');
+/**
+ * Key stats for a job, written out ("Medical 8 · Cool 5*"), each coloured by how it
+ * measures up to this job's typical roll: green good, amber shaky, red weak.
+ */
+function keyStatsFor(op, tpl, threat) {
+  const target = rollTarget({ ...tpl, threat });
+  return tpl.keyStats.map((k) => {
+    const v = ratedStat(op, k);
+    const fit = { low: 'good', moderate: 'shaky', high: 'weak', extreme: 'weak' }[riskLabel(successChance(v, target))];
+    return `<span class="fit fit--${fit}">${esc(statName(k))} ${v}${traitMods(op)[k] ? '*' : ''}</span>`;
+  }).join(' · ');
+}
 const districtName = (key) => NAMES.districts[key] ?? key;
 const districtTurf = (key) => DISTRICTS[key]?.turf ? ` · ${esc(DISTRICTS[key].turf)}` : '';
 const initials = (name) => { const w = name.trim().split(/\s+/); return (w[0][0] + (w.length > 1 ? w.at(-1)[0] : '')).toUpperCase(); };
@@ -463,7 +483,7 @@ function renderCrew() {
             <button class="row" data-action="open-op" data-id="${esc(op.id)}">
               ${badge(op)}
               <span class="row__main"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"<br><span class="muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age}</span>${scoutLine(op)}${growthMarker(op)}</span>
-              <span class="row__meta">${esc(availability(state, op).reason)}</span>
+              <span class="row__meta row__meta--stack">${statusChip(availability(state, op))}${conditionBars(op)}</span>
             </button>
           </li>`).join('')}
       </ul>
@@ -535,7 +555,7 @@ function growthNote(age) {
 }
 
 /** Guns for hire on the planning screen: one per job, paid a share of what the job pays. */
-function renderFreelancers(t, freelancers, full) {
+function renderFreelancers(t, threat, freelancers, full) {
   if (!freelancers.length) return '';
   return `
       <h2>Freelancers (up to ${MAX_FREELANCERS_PER_JOB})</h2>
@@ -543,13 +563,12 @@ function renderFreelancers(t, freelancers, full) {
       <ul class="list">
         ${freelancers.map((f) => {
           const on = plan.crew.includes(f.id);
-          const keys = t.keyStats.map((s) => `${s.slice(0, 3)} ${ratedStat(f, s)}${traitMods(f)[s] ? '*' : ''}`).join(' · ');
           return `
           <li>
             <button class="row pick ${on ? 'is-on' : ''}" data-action="toggle-crew" data-id="${esc(f.id)}" ${!on && full && !plan.crew.some((x) => freelancers.some((g) => g.id === x)) ? 'disabled' : ''} aria-pressed="${on}">
               <span class="pick__box">${on ? '✓' : ''}</span>
               ${badge(f, 'sm')}
-              <span class="row__main"><strong>${esc(f.handle)}</strong> <span class="muted">${esc(f.quality)} ${esc(f.role)}</span><br><span class="muted small">${esc(keys)}</span></span>
+              <span class="row__main"><strong>${esc(f.handle)}</strong> <span class="muted">${esc(f.quality)} ${esc(f.role)}</span><br><span class="small">${keyStatsFor(f, t, threat)}</span></span>
               <span class="row__meta"><strong>${Math.round(shareOf(f) * 100)}%</strong> of pay<br>gone day ${f.expiresDay}</span>
             </button>
           </li>`;
@@ -696,27 +715,26 @@ function renderPlan() {
 
       <h2>Crew (${plan.crew.length} picked · ${t.crewSize} recommended, up to ${most})</h2>
       ${(() => { const r = crewSizeRead(plan.crew.length, t.crewSize); return `<p class="sizebadge sizebadge--${r.level} ${r.penalty >= 2 ? 'is-severe' : ''}">${esc(r.text)}</p>`; })()}
-      <p class="muted small">Matters most: ${t.keyStats.join(', ')}. * includes a trait bonus.</p>
+      <p class="muted small">Matters most: ${t.keyStats.join(', ')}. Numbers are coloured by how each person would do alone on this job: <span class="fit fit--good">good</span>, <span class="fit fit--shaky">shaky</span>, <span class="fit fit--weak">weak</span>. On the job your best person rolls. * includes a trait bonus.</p>
       <p class="muted small">Each person short of ${t.crewSize}: −1 on every roll. A second person within 3 of whoever rolls backs them up: +1.</p>
       <ul class="list">
         ${state.crew.map((op) => {
           const a = availability(state, op);
           const on = plan.crew.includes(op.id);
           const disabled = !a.ok || (!on && full);
-          const keys = t.keyStats.map((s) => `${s.slice(0, 3)} ${ratedStat(op, s)}${traitMods(op)[s] ? '*' : ''}`).join(' · ');
           return `
           <li>
             <button class="row pick ${on ? 'is-on' : ''}" data-action="toggle-crew" data-id="${esc(op.id)}" ${disabled ? 'disabled' : ''} aria-pressed="${on}">
               <span class="pick__box">${on ? '✓' : ''}</span>
               ${badge(op, 'sm')}
-              <span class="row__main"><strong>${esc(op.handle)}</strong> <span class="muted">${esc(op.role)}</span><br><span class="muted small">${esc(keys)}</span></span>
-              <span class="row__meta">${esc(a.reason)}</span>
+              <span class="row__main"><strong>${esc(op.handle)}</strong> <span class="muted">${esc(op.role)}</span><br><span class="small">${keyStatsFor(op, t, v.threat)}</span></span>
+              <span class="row__meta">${statusChip(a)}</span>
             </button>
           </li>`;
         }).join('')}
       </ul>
 
-      ${renderFreelancers(t, freelancers, full)}
+      ${renderFreelancers(t, v.threat, freelancers, full)}
 
       ${renderMentoring(picked)}
 
@@ -728,16 +746,22 @@ function renderPlan() {
           </button>`).join('')}
       </div>
 
-      <h2>Risk read</h2>
+      <h2 id="risk-read">Risk read</h2>
       <div class="riskcard">
-        ${riskBadge(read.level)}
-        <ul>${read.reasons.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
+        ${picked.length ? `${riskBadge(read.level)}
+        <ul>${read.reasons.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>` : '<p class="muted">Pick a crew to see the risk.</p>'}
       </div>
+    </section>
 
-      <button class="btn btn--primary btn--block" data-action="start-job" ${plan.crew.length ? '' : 'disabled'}>
-        ${plan.crew.length ? `Start the job with ${plan.crew.length}` : 'Pick at least one operative'}
+    <div class="planbar">
+      <div class="planbar__read">
+        ${picked.length ? riskBadge(read.level) : '<span class="risk risk--none">no crew yet</span>'}
+        <span class="planbar__why">${esc(picked.length ? read.reasons[0] : `Pick up to ${most}; ${t.crewSize} recommended`)}</span>
+      </div>
+      <button class="btn btn--primary" data-action="start-job" ${plan.crew.length ? '' : 'disabled'}>
+        ${plan.crew.length ? `Start with ${plan.crew.length}` : 'Pick a crew'}
       </button>
-    </section>`;
+    </div>`;
 }
 
 // --- mission -----------------------------------------------------------

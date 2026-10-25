@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · Easier crew picks
+- **The risk read follows you.** On the planning screen, a bar at the bottom shows the risk and a Start button, and it changes every time you pick someone. An empty plan says "no crew yet" instead of "extreme risk".
+- **Stats you can read.** Crew rows on the planning screen show "Medical 8 · Cool 5" instead of "med 8 · coo 5", coloured green, amber or red by how that person would do alone on this job.
+- **Crew at a glance.** The crew list shows each person's status as a coloured tag (ready, fatigued, injured, away) with small fatigue and morale bars.
+
 ## 2026-10-25 · Clearer days and a better inbox
 - **You can see the day change.** A bar under the date fills across the week, with Sunday (bills) marked. When a new day starts, the date flashes and a note says what came in: new messages, new jobs, money in or out.
 - **No more skipping a day by accident.** After each Continue the button rests for under a second, so a double click only moves one day.
