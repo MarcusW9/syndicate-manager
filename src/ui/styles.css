@@ -215,6 +215,17 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
   .opgrid__stats { grid-area: stats; }
   .opgrid__dev { grid-area: dev; }
   .opgrid__past { grid-area: past; }
+  /* Desktop: use the width. Lists of cards run two or three across; paired sections sit side by side. */
+  .list--cols { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 8px; }
+  .cols2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 28px; align-items: start; }
+  /* Planning a job: crew on the left; client, approach and risk read beside them, so the risk updates in view as you pick. */
+  .plangrid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); grid-template-rows: auto auto 1fr; column-gap: 28px; align-items: start;
+    grid-template-areas: "crew client" "crew approach" "crew risk"; }
+  .plangrid__client { grid-area: client; margin-top: 1.5rem; }
+  .plangrid__crew { grid-area: crew; }
+  .plangrid__approach { grid-area: approach; }
+  .plangrid__risk { grid-area: risk; }
+  .plangrid__approach .segmented { grid-template-columns: 1fr; }
   .inbox { display: grid; grid-template-columns: minmax(300px, 2fr) 3fr; gap: 16px; align-items: start; }
   .inbox__back { display: none; }
   .inbox__empty { margin: 0; }

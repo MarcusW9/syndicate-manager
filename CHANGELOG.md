@@ -4,6 +4,13 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · Room to breathe on desktop
+- **Every page now uses the full width on a computer**, not just Today and crew profiles. Phones look the same as before.
+- **Crew and Jobs:** cards sit two across. Leads and the safehouse sit side by side under the crew.
+- **Planning a job:** your crew list is on the left; the client, approach and risk read are on the right, so you can watch the risk change as you pick people.
+- **Recruits** get the same two-column page as your own crew. **City:** the map sits beside the clients, and "Who's who" sits beside "Everyone knows". **Save:** slots on the left, backups on the right.
+- A job in progress stays a single column, so the story reads like a page.
+
 ## 2026-10-25 · Coming up, up top
 - **Coming up now sits in a slim strip across the top of Today**, one column per day, so the week ahead is the first thing you see instead of something under the inbox. On a phone the days stack in the same strip, and it steps aside while you read a message.
 - On a wide screen the right-hand side now waits for a message ("Tap a message to read it here") and the week ahead stays put when you open one.

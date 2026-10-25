@@ -276,7 +276,8 @@ function render() {
   const unread = state.inbox.filter((m) => !m.read).length;
   const cue = dayCue;
   dayCue = null;
-  const wide = !state.activeMission && (screen === 'inbox' || (screen === 'crew' && openOperativeId));
+  // Desktop pages use the full width; a running job stays a narrow reading column.
+  const wide = !state.activeMission;
   // Phones: Continue sits above the tab bar, except while planning a job (its own bar
   // takes that place) and during a job (nothing to continue).
   const dock = !state.activeMission && !(screen === 'jobs' && plan);
@@ -621,7 +622,7 @@ function renderCrew() {
         <h1>Crew</h1>
         <span class="muted">${state.crew.length}/${cap} beds</span>
       </div>
-      <ul class="list">
+      <ul class="list list--cols">
         ${state.crew.map((op) => `
           <li>
             <button class="row" data-action="open-op" data-id="${esc(op.id)}">
@@ -631,7 +632,9 @@ function renderCrew() {
             </button>
           </li>`).join('')}
       </ul>
-      ${leads}
+      <div class="cols2">
+      <div>${leads}</div>
+      <div>
       <h2>Safehouse</h2>
       <div class="riskcard">
         <p class="small">Level ${state.safehouseLevel ?? 1} · ${cap} beds · rent ${money(state.rent)}/wk</p>
@@ -639,6 +642,8 @@ function renderCrew() {
           Expand: +${x.beds} beds for ${money(x.cost)} (rent +${money(x.rentIncrease)}/wk)
         </button>
         ${state.cash < x.cost ? `<p class="muted small">Need ${money(x.cost - state.cash)} more.</p>` : ''}
+      </div>
+      </div>
       </div>
       ${wall}
     </section>`;
@@ -658,6 +663,8 @@ function renderRecruit() {
           <p class="muted">${esc(r.quality)} ${esc(r.role)} · ${r.age} · lead goes cold: ${daysLeft(r.expiresDay)}</p>
         </div>
       </div>
+      <div class="opgrid">
+      <div class="opgrid__about">
       <p class="body">${esc(r.origin)}</p>
       <p class="body muted">${esc(r.bio)}</p>
 
@@ -665,18 +672,24 @@ function renderRecruit() {
       <ul class="chips">
         ${r.traits.map((t) => `<li class="chip"><strong>${esc(TRAITS[t]?.name ?? t)}</strong><span>${esc(TRAITS[t]?.desc ?? '')}</span></li>`).join('')}
       </ul>
+      </div>
 
+      <div class="opgrid__stats">
       <h2>Stats</h2>
       <dl class="stats">
         ${Object.keys(r.stats).map((k) => statCell(r, k)).join('')}
       </dl>
+      </div>
 
+      <div class="opgrid__dev">
       <h2>Scout's view</h2>
       <div class="riskcard">
         <p>${esc(r.scoutReport ?? 'Nobody has a read on them yet.')}</p>
         <p class="muted small">${esc(growthNote(r.age))} Opinions, not facts: scouts get it wrong sometimes.</p>
       </div>
+      </div>
 
+      <div class="opgrid__past">
       <h2>Terms</h2>
       <div class="riskcard">
         <p>Wants <strong>${money(r.wage)}</strong> a week, plus a ${money(signingFee(r))} signing fee now.</p>
@@ -687,6 +700,8 @@ function renderRecruit() {
         ${can.ok ? '' : `<p class="muted small">${esc(can.reason)}</p>`}
         <button class="btn" data-action="haggle" data-id="${esc(r.id)}" ${r.haggled ? 'disabled' : ''}>${r.haggled ? 'Already haggled' : 'Haggle (your best talker rolls)'}</button>
         <button class="btn btn--ghost" data-action="pass" data-id="${esc(r.id)}">Pass on this one</button>
+      </div>
+      </div>
       </div>
     </section>`;
 }
@@ -811,7 +826,7 @@ function renderJobs() {
       <h1>Jobs</h1>
       ${streetTalk()}
       ${climbLine()}
-      <ul class="list">
+      <ul class="list list--cols">
         ${state.jobs.map((j) => {
           const v = jobView(state, j);
           const t = v.tpl;
@@ -880,7 +895,8 @@ function renderPlan() {
       <p class="muted">${esc(districtName(t.district))}${districtTurf(t.district)} · threat ${threatHtml(v)} · pays ${money(v.pay)} · crew away ${t.days}d · ${daysLeft(job.expiresDay)}</p>
       ${DISTRICTS[t.district] ? `<p class="muted small">${esc(DISTRICTS[t.district].pitch)}</p>` : ''}
       <p class="body">${esc(fillBrief(t))}</p>
-      <div class="riskcard">
+      <div class="plangrid">
+      <div class="riskcard plangrid__client">
         <p><strong>Client:</strong> ${clientLine(v)}</p>
         ${v.client ? `<p class="muted small">${esc(v.client.desc)}</p>` : ''}
         ${v.threatDelta ? `<p class="muted small">Every roll on this job is ${Math.abs(v.threatDelta) === 1 ? 'one point' : `${Math.abs(v.threatDelta)} points`} ${v.threatDelta > 0 ? 'harder' : 'easier'} than usual.</p>` : ''}
@@ -888,6 +904,7 @@ function renderPlan() {
         ${v.rumour ? `<p class="talk-tag">Street talk: ${esc(v.rumour.text)}</p>` : ''}
       </div>
 
+      <div class="plangrid__crew">
       <h2>Crew (${plan.crew.length} picked · ${t.crewSize} recommended, up to ${most})</h2>
       ${(() => { const r = crewSizeRead(plan.crew.length, t.crewSize); return `<p class="sizebadge sizebadge--${r.level} ${r.penalty >= 2 ? 'is-severe' : ''}">${esc(r.text)}</p>`; })()}
       <p class="muted small">Matters most: ${t.keyStats.join(', ')}. Numbers are coloured by how each person would do alone on this job: <span class="fit fit--good">good</span>, <span class="fit fit--shaky">shaky</span>, <span class="fit fit--weak">weak</span>. On the job your best person rolls. * includes a trait bonus.</p>
@@ -912,7 +929,9 @@ function renderPlan() {
       ${renderFreelancers(t, v.threat, freelancers, full)}
 
       ${renderMentoring(picked)}
+      </div>
 
+      <div class="plangrid__approach">
       <h2>Approach</h2>
       <div class="segmented">
         ${Object.entries(APPROACHES).map(([k, a]) => `
@@ -920,11 +939,15 @@ function renderPlan() {
             <strong>${esc(a.name)}</strong><span>${esc(a.desc)}</span>
           </button>`).join('')}
       </div>
+      </div>
 
+      <div class="plangrid__risk">
       <h2 id="risk-read">Risk read</h2>
       <div class="riskcard">
         ${picked.length ? `${riskBadge(read.level)}
         <ul>${read.reasons.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>` : '<p class="muted">Pick a crew to see the risk.</p>'}
+      </div>
+      </div>
       </div>
     </section>
 
@@ -1116,11 +1139,16 @@ function renderCity() {
     <section class="panel">
       <h1>${esc(NAMES.city)} <span class="muted">燈籠灣</span></h1>
       <p class="muted small">2057. Tap a district.</p>
+      <div class="cols2">
+      <div>
       ${cityMap()}
       ${cityDistrict ? districtCard(cityDistrict) : ''}
+      </div>
+      <div>${renderClientCards()}</div>
+      </div>
 
-      ${renderClientCards()}
-
+      <div class="cols2">
+      <div>
       <h2>Who's who</h2>
       ${groups.map((g) => `
         <details class="citydetails">
@@ -1132,7 +1160,9 @@ function renderCity() {
                 <span class="muted small">Rumour: ${esc(f.rumour)}</span></li>`).join('')}
           </ul>
         </details>`).join('')}
+      </div>
 
+      <div>
       <h2>Everyone knows</h2>
       <ul class="list list--plain small">${STREET_FACTS.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>
 
@@ -1140,6 +1170,8 @@ function renderCity() {
         <summary>A short history</summary>
         <ul class="list list--plain small">${HISTORY.map((h) => `<li><strong>${esc(h.year)}</strong> ${esc(h.text)}</li>`).join('')}</ul>
       </details>
+      </div>
+      </div>
     </section>`;
 }
 
@@ -1165,6 +1197,8 @@ function renderSettings() {
       <h1>Save</h1>
       <p class="body">The game saves automatically after every action, in this browser only.</p>
 
+      <div class="cols2">
+      <div>
       <h2>Slots</h2>
       <ul class="list">
         ${slots.map((sl) => `
@@ -1181,7 +1215,9 @@ function renderSettings() {
           </li>`).join('')}
       </ul>
       ${picker}
+      </div>
 
+      <div>
       <h2>Backups</h2>
       <div class="riskcard">
         <p>Last exported: <strong>${lastExport}</strong>.${backupDue(state) ? ' <span class="warntext">Time for a backup.</span>' : ''}</p>
@@ -1196,6 +1232,8 @@ function renderSettings() {
         <p>Automatic backup: <strong>day ${backup.day}</strong> (taken at the start of each in-game week).</p>
         <button class="btn btn--block" data-action="restore-backup" ${backup.day === state.day ? 'disabled' : ''}>Restore backup from day ${backup.day}</button>
       </div>` : ''}
+      </div>
+      </div>
 
       <p class="muted small">Playing: ${esc(DIFFICULTIES[state.difficulty]?.name ?? state.difficulty)} · Save format v${state.version} · ${SLOT_COUNT} slots</p>
     </section>`;
