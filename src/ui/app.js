@@ -8,6 +8,7 @@ import { MISSIONS } from '../data/missions.js';
 import { TRAITS } from '../data/traits.js';
 import { PARTNER } from '../data/partner.js';
 import { jossIcon, portrait } from './art.js';
+import { cityMapSvg, MAP_DISTRICTS } from './citymap.js';
 import { STARTING_CREW } from '../data/operatives.js';
 
 // Saves made before badges existed have no colour on their operatives.
@@ -1078,40 +1079,37 @@ const DIFFICULTIES = {
 
 const cityName = (key) => NAMES.districts[key] ?? NAMES.lockedDistricts?.[key] ?? key;
 
-// Schematic map: the island on top, the harbour with the Amber Reach crossing
-// in the middle, the mainland below. Every district is a tap target (48px+).
-const MAP_SHAPES = [
-  { key: 'ironPeak', x: 116, y: 12, w: 128, h: 58 },
-  { key: 'heights', x: 64, y: 80, w: 232, h: 60 },
-  { key: 'oldTown', x: 14, y: 150, w: 162, h: 66 },
-  { key: 'nightMarket', x: 184, y: 150, w: 162, h: 66 },
-  { key: 'amberReach', x: 100, y: 270, w: 160, h: 60 },
-  { key: 'docks', x: 14, y: 392, w: 198, h: 66 },
-  { key: 'silt', x: 220, y: 396, w: 126, h: 60 },
-];
+/** Jobs on the board right now, by district. */
+const jobsIn = (key) => state.jobs.map((j) => ({ j, v: jobView(state, j) })).filter(({ v }) => v.tpl.district === key);
+/** Which gang's colour a district's turf stripe takes. */
+const TURF_TONE = { 'Brass Anchor': 'sodium', 'Red Lantern': 'red', 'Silver Fan': 'violet', 'Veridian-Apex': 'cyan' };
+
+const TURF_HEX = { sodium: '#f2d541', red: '#ff3d5f', violet: '#b48cff', cyan: '#3de8d8' };
 
 function cityMap() {
-  const shape = ({ key, x, y, w, h }) => {
+  const talk = activeRumour(state)?.district;
+  const districts = MAP_DISTRICTS.map((key) => {
     const card = DISTRICT_CARDS[key];
-    const cls = `map-d${card.locked ? ' is-locked' : ''}${cityDistrict === key ? ' is-selected' : ''}`;
-    return `<g class="${cls}" data-action="city-district" data-id="${key}" role="button" tabindex="0" aria-label="${esc(cityName(key))}${card.locked ? ', locked' : ''}">
-      <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" />
-      <text x="${x + w / 2}" y="${y + h / 2 - (card.locked ? 4 : 0)}" class="map-d__name">${esc(cityName(key).replace(/^The /, ''))}</text>
-      ${card.locked ? `<text x="${x + w / 2}" y="${y + h / 2 + 13}" class="map-d__lock">LOCKED</text>` : ''}
-    </g>`;
-  };
-  const waves = [250, 264, 344, 358].map((y) => `<path class="map-wave" d="M16 ${y} q 10 -5 20 0 t 20 0 t 20 0 t 20 0 M260 ${y} q 10 -5 20 0 t 20 0 t 20 0 t 20 0" />`).join('');
+    const n = card.locked ? 0 : jobsIn(key).length;
+    const faction = DISTRICTS[key]?.faction;
+    const hot = talk === key;
+    return {
+      key, locked: card.locked, hot, selected: cityDistrict === key,
+      name: cityName(key).replace(/^The /, ''),
+      // The live readout under the name: work on the board here, and whether the street's talking about it.
+      readout: card.locked ? 'LOCKED' : `${n ? `${n} JOB${n === 1 ? '' : 'S'}` : 'NO WORK'}${hot ? ' · TALK' : ''}`,
+      tone: hot ? 'has-talk' : n ? 'has-work' : '',
+      turf: faction ? TURF_HEX[TURF_TONE[faction]] : '#8a93a6',
+      label: [cityName(key), card.locked ? 'locked' : `${n || 'no'} job${n === 1 ? '' : 's'} on the board`, faction && `${faction} turf`, hot && 'street talk about it'].filter(Boolean).join(', '),
+    };
+  });
+  const legend = [...new Set(Object.values(DISTRICTS).map((d) => d.faction).filter(Boolean))];
   return `
-    <svg class="citymap" viewBox="0 0 360 472" role="group" aria-label="Map of the city">
-      <rect class="map-land" x="0" y="0" width="360" height="236" rx="14" />
-      <rect class="map-water" x="0" y="228" width="360" height="146" />
-      <rect class="map-land" x="0" y="366" width="360" height="106" rx="14" />
-      ${waves}
-      <line class="map-crossing" x1="180" y1="216" x2="180" y2="392" />
-      <text x="346" y="244" class="map-label" text-anchor="end">HARBOUR</text>
-      <text x="14" y="383" class="map-label" text-anchor="start">MAINLAND</text>
-      ${MAP_SHAPES.map(shape).join('')}
-    </svg>`;
+    ${cityMapSvg(districts, esc)}
+    <ul class="maplegend">
+      ${legend.map((f) => `<li><span class="maplegend__swatch map-turf--${TURF_TONE[f] ?? 'cyan'}"></span>${esc(f)}</li>`).join('')}
+      ${talk ? '<li><span class="maplegend__dot"></span>Street talk</li>' : ''}
+    </ul>`;
 }
 
 function districtCard(key) {
@@ -1123,7 +1121,13 @@ function districtCard(key) {
       <h2 class="nomargin">${esc(cityName(key))} <span class="muted">${esc(c.chinese)}</span></h2>
       <p class="muted small">${esc(c.side)}${turf ? ` · ${esc(turf)}` : ''}</p>
       <p class="body">${esc(c.pitch)}</p>
-      ${c.locked ? `<p class="intel">${esc(c.teaser)}</p>` : `<p class="small"><strong>Jobs here:</strong> ${esc(jobs.join(', '))}</p>`}
+      ${c.locked ? `<p class="intel">${esc(c.teaser)}</p>` : (() => {
+        const now = jobsIn(key);
+        return now.length ? `<div class="stack">${now.map(({ j, v }) => `<button class="btn" data-action="open-job" data-id="${esc(j.id)}">${esc(v.tpl.name)} · ${money(v.pay)} · ${daysLeft(j.expiresDay)}</button>`).join('')}</div>`
+          : `<p class="small muted">No work on the board here right now. New jobs arrive on Mondays.</p>`;
+      })()}
+      ${activeRumour(state)?.district === key ? `<p class="talk-tag">Street talk: ${esc(activeRumour(state).text)}</p>` : ''}
+      ${c.locked ? '' : `<p class="small"><strong>Kinds of work here:</strong> ${esc(jobs.join(', '))}</p>`}
       <p class="small"><strong>Who runs it:</strong> ${esc(c.control)}</p>
       <p class="small"><strong>Police:</strong> ${esc(c.police)}</p>
       <p class="small"><strong>At 3am:</strong> ${esc(c.night)}</p>

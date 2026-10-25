@@ -4,6 +4,20 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · Lantern Bay from above
+- **The city map is now a proper map:** the island with Iron Peak in the middle and hills around it, a wild island to the west, the Amber Reach out in the harbour, and the mainland with the Docks' piers and the Silt's mudflats.
+- **Every district has its own streets:** a neat corporate grid in Glass Heights, crooked lanes in Old Town, a tangle in the Night Market, long haul roads at the Docks, switchbacks up the Peak. Locked districts are greyed out.
+- Borders show whose turf it is, and the job counts and street-talk markers from before are still there, in bigger text that's easier to read on a phone. Tap anywhere in a district to open it.
+- The ferry still crosses the harbour; the old swaying waves are gone (the sea has a wave pattern now).
+- Built so new districts can be added later without redrawing the city.
+
+## 2026-10-25 · A livelier city map
+- **The map shows what's happening now.** Each district says how many jobs are on the board there ("2 JOBS", "NO WORK"), and a blinking yellow dot plus "TALK" marks the district this week's street talk is about.
+- **Whose turf is it:** a coloured stripe on each district's edge (Brass Anchor yellow, Red Lantern red, Silver Fan violet, Veridian-Apex cyan), with a key under the map.
+- **Tap a district** to see its jobs on the board as buttons that go straight to planning, plus the street talk if it's about there. The list of work you can get there is now called "Kinds of work here".
+- **A new look to match the rest of the game:** sharp blocks with a cut corner, names in the display font with their Chinese names, and a rough coastline.
+- **A little life:** the harbour swells, a ferry light crosses the water, and the district you picked gently pulses. It all stays still if your device asks for reduced motion.
+
 ## 2026-10-25 · Room to breathe on desktop
 - **Every page now uses the full width on a computer**, not just Today and crew profiles. Phones look the same as before.
 - **Crew and Jobs:** cards sit two across. Leads and the safehouse sit side by side under the crew.
