@@ -48,6 +48,7 @@ let root;
 const CONTINUE_REST_MS = 800;
 let continueRestUntil = 0;
 let dayCue = null; // what the day that just started brought; shown once, on the next render
+let focusNext = null; // { action, id }: the control to focus after the next render (going back to a list)
 
 export function mountApp(el, initialState) {
   root = el;
@@ -90,7 +91,14 @@ function onClick(e) {
       if (msg && !msg.read) { msg.read = true; saveGame(state); }
       break;
     }
-    case 'back': openMessageId = null; openOperativeId = null; openRecruitId = null; plan = null; break;
+    case 'back':
+      // Land keyboard focus back on the row that was opened.
+      focusNext = openMessageId ? { action: 'open-message', id: openMessageId }
+        : openRecruitId ? { action: 'open-recruit', id: openRecruitId }
+        : openOperativeId ? { action: 'open-op', id: openOperativeId }
+        : plan ? { action: 'open-job', id: plan.jobId } : null;
+      openMessageId = null; openOperativeId = null; openRecruitId = null; plan = null;
+      break;
     case 'decide': return setState(resolveDecision(state, id, t.dataset.option));
     case 'open-op': openOperativeId = id; break;
     case 'open-recruit': openRecruitId = id; break;
@@ -293,10 +301,16 @@ function render() {
     <input type="file" id="import-file" accept="application/json" hidden />
   `;
   if (state.activeMission) root.querySelector('.mission-end')?.scrollIntoView({ block: 'end' });
-  if (refocus) {
+  const want = focusNext ?? refocus;
+  focusNext = null;
+  if (want) {
     // Continue is drawn twice (top bar and phone dock); take whichever one is showing.
-    const same = [...root.querySelectorAll(`[data-action="${refocus.action}"]`)].find((el) => el.dataset.id === refocus.id && el.getClientRects().length);
-    same?.focus({ preventScroll: true });
+    const shown = (el) => el.getClientRects().length > 0;
+    const same = [...root.querySelectorAll(`[data-action="${want.action}"]`)].find((el) => el.dataset.id === want.id && shown(el));
+    // The control is gone or hidden (a detail view replaced the list, as on phones):
+    // start from that view's back button instead of losing focus to the top of the page.
+    const back = same ? null : [...root.querySelectorAll('[data-action="back"]')].find(shown);
+    (same ?? back)?.focus({ preventScroll: true });
   }
 }
 

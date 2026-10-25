@@ -9,6 +9,7 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - **Warnings only when they matter:** a short coloured line appears when a decision is waiting, you can't cover Sunday's bills, a job or recruit is on its last day, or someone can't work. Tap it to go and deal with it.
 - **Coming up:** the next seven days at a glance: bills, new jobs on Monday, the scout report, offers running out, and when crew are back from a job or an injury. On a wide screen it fills the right-hand side until you open a message.
 - Money in messages now reads like money ("Wages ¥1,250, rent ¥1,500"), in the weekly settlement, job reports and signings.
+- Keyboard: opening a message, a crew member, a recruit or a job puts you on its back button, and going back returns you to the row you opened.
 - 148 tests.
 
 ## 2026-10-25 · Today, and a board you can scan
