@@ -16,16 +16,24 @@ export const PARTNER = {
     broke: [
       'We\'re in the red. I keep refreshing the number. It keeps being true.',
       'Cash is below zero. The crew can count too.',
+      'We\'re below zero. There\'s nothing left to move around.',
+      'Account\'s empty and the rent isn\'t.',
+      'No reserve. No cushion. We need work.',
+      'The number\'s red. I checked whether staring at it helps. It doesn\'t.',
     ],
     short: [
       'We need money before Sunday. I\'m not saying panic. I\'m saying soon.',
       'Bills on Sunday and we\'re short. I\'ve done the sums three times. They don\'t change.',
       'Rent wants feeding and we can\'t feed it yet. The board\'s where the money is.',
+      'We\'re short for Sunday. We need paying work.',
+      'Rent\'s coming. We don\'t have it yet.',
+      'Not enough cash for the week. There\'s work on the board.',
     ],
     hurt: [
       'Not everyone\'s fit today. Pick work that doesn\'t need them.',
       'Someone\'s laid up. I\'ve told them to rest. They listen to me about as well as they listen to you.',
       'We\'re a body short. Plan around it, not through it.',
+      'We need money. We also need everyone breathing. Plan accordingly.',
     ],
     sunday: [
       'Bills are paid. We live another week.',
@@ -43,6 +51,11 @@ export const PARTNER = {
       'Board\'s up, crew\'s fed. Your move.',
       'I\'d put the kettle on if I had hands.',
       'All quiet. Somebody burned joss paper on the doorstep again. Doesn\'t hurt.',
+      'Nothing moving yet. Take the quiet while we have it.',
+      'Power dipped twice overnight. Battery held.',
+      'Someone left tea by the relay box again. I don\'t drink. Still appreciated.',
+      'Board\'s quiet. Street isn\'t.',
+      'The pipes are knocking again. Landlord says they\'re meant to do that.',
     ],
   },
 

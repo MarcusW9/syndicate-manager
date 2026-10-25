@@ -6,7 +6,7 @@ export const CLIENTS = [
     id: 'fung',
     name: 'Auntie Fung',
     desc: 'Runs three herbal tea shops in Old Town and a quiet fencing business behind them. A senior elder of the Brass Anchor Society. Pays in cash, remembers everything.',
-    jobs: ['clinic', 'herbal_run', 'courier', 'protection', 'kidnap'],
+    jobs: ['clinic', 'herbal_run', 'protection_run', 'courier', 'protection', 'kidnap'],
   },
   {
     id: 'szeto',

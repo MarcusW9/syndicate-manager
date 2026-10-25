@@ -4,6 +4,15 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · More from Joss
+- **Joss has more to say** at the top of Today: new lines for quiet days, for when money's short or below zero, and for when someone can't work.
+- 156 tests.
+
+## 2026-10-25 · Pier 12 Escort
+- **A new rookie job for Auntie Fung:** walk Mr. Lau and his chained case from her Old Town tea shop to the Ferryman's boat at Pier 12. Six things can go wrong on the way: a chained underpass, a courier on the run from the Red Lanterns, a driver's implant that loops, a crooked Wet Sleeve checkpoint, a lane marked with joss paper, and three cars boxing you in at the end.
+- Every one of them has a way out that gets the crew home safe, and none of them means handing Mr. Lau over. The worst a failure does here is a serious injury.
+- 156 tests.
+
 ## 2026-10-25 · Faces
 - **Your crew have faces** on the Crew list and their profile pages, in a painted, Citizen Sleeper-style look: real skin tones, a splash of city neon from one side, light and shadow instead of outlines.
 - You can see how someone's doing at a glance: a plaster or bandage when they're hurt, heavy eyes when they're worn out, an implant that glows with neural load. The fallen are greyed on the wall.

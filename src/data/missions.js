@@ -17,6 +17,7 @@ import { EVICTION } from './missions/eviction.js';
 import { CHROME } from './missions/chrome.js';
 import { CABLE } from './missions/cable.js';
 import { SCRUB } from './missions/scrub.js';
+import { ESCORT } from './missions/escort.js';
 import { DISTRICT_CRISES } from './districtCrises.js';
 import { ROOKIE_CRISES } from './rookieCrises.js';
 
@@ -320,5 +321,5 @@ const BASE_MISSIONS = [
 
 // Rookie jobs (rookie: true) draw the shared rookie pool instead of the district crises:
 // those are aimed at 9-14, too hard for a new crew.
-export const MISSIONS = [...BASE_MISSIONS, KIDNAP, CASINO, PENTHOUSE, PROTECTION, CLINIC, HERBAL, LEDGER, CONTAINER, DELIVERY, EVICTION, CHROME, CABLE, SCRUB]
+export const MISSIONS = [...BASE_MISSIONS, KIDNAP, CASINO, PENTHOUSE, PROTECTION, CLINIC, HERBAL, LEDGER, CONTAINER, DELIVERY, EVICTION, CHROME, CABLE, SCRUB, ESCORT]
   .map((m) => ({ ...m, crises: [...m.crises, ...(m.rookie ? ROOKIE_CRISES : DISTRICT_CRISES[m.district] ?? [])] }));
