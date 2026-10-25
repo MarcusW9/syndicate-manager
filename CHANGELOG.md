@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · Faces everywhere
+- **Faces on the job and leads screens:** when you pick a crew for a job, your crew and the freelancers on offer show their portraits instead of initials. So do new leads on the Crew screen and their profile page.
+- A lead keeps the same face after you hire them.
+- The crew strip on a job in progress and the level-up cards in job reports use faces too. The old coloured initials are gone.
+
 ## 2026-10-25 · Faces
 - **Your crew have faces** on the Crew list and their profile pages, in a painted, Citizen Sleeper-style look: real skin tones, a splash of city neon from one side, light and shadow instead of outlines.
 - You can see how someone's doing at a glance: a plaster or bandage when they're hurt, heavy eyes when they're worn out, an implant that glows with neural load. The fallen are greyed on the wall.

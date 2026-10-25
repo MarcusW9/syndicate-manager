@@ -282,11 +282,6 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
   .segmented { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* --- Placeholder portraits: coloured initials (swap for images later) --- */
-.badge { --badge: #8b93a7; flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%; display: inline-grid; place-items: center; font-weight: 700; font-size: 0.85rem; letter-spacing: 0.02em; color: var(--badge); background: color-mix(in srgb, var(--badge) 18%, transparent); border: 1.5px solid var(--badge); }
-.badge--sm { width: 30px; height: 30px; font-size: 0.7rem; }
-.badge--lg { width: 64px; height: 64px; font-size: 1.25rem; border-width: 2px; }
-.badge.is-fallen { filter: grayscale(1); opacity: 0.7; }
 .ophead { display: flex; align-items: center; gap: 14px; }
 .ophead h1 { margin-bottom: 0; }
 .ophead p { margin: 4px 0 0; }
@@ -521,10 +516,6 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 /* New-day note: sharp, cyan, display face. */
 .daycue { border-radius: 0; background: rgba(10, 30, 32, 0.95); font-family: var(--display); letter-spacing: 0.06em; }
 .daycue strong { text-transform: uppercase; font-size: 1.1rem; }
-
-/* Badges (initials) become squares with a cut corner, matching the panels. */
-.badge { border-radius: 0; clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 0 100%); font-family: var(--display); font-size: 1rem; }
-.badge--sm { font-size: 0.8rem; }
 
 /* Portraits (ui/art.js): a square with the top-right corner cut, like the panels. */
 .face { flex: 0 0 auto; display: block; width: 48px; height: 48px; line-height: 0; background: #0d1016; box-shadow: inset 0 0 0 1px var(--line);
