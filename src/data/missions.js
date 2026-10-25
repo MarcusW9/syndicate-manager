@@ -1,4 +1,4 @@
-// Mission templates: 7 main jobs with 6 crises each, plus rookie jobs (missions/*.js) (2-3 drawn per run), plus the
+// Mission templates: 10 main jobs with 6 crises each, plus rookie jobs (missions/*.js) (2-3 drawn per run), plus the
 // district's own crises from ./districtCrises.js mixed into the pool.
 // The three original jobs live here; newer ones each have a file in ./missions/.
 // Every crisis MUST include at least one exit: an 'abort' or 'extract' choice
@@ -17,6 +17,9 @@ import { EVICTION } from './missions/eviction.js';
 import { CHROME } from './missions/chrome.js';
 import { CABLE } from './missions/cable.js';
 import { SCRUB } from './missions/scrub.js';
+import { FAVOURITE } from './missions/favourite.js';
+import { LAST_TICKET } from './missions/lastticket.js';
+import { WRONG_HORSE } from './missions/wronghorse.js';
 import { DISTRICT_CRISES } from './districtCrises.js';
 import { ROOKIE_CRISES } from './rookieCrises.js';
 
@@ -320,5 +323,5 @@ const BASE_MISSIONS = [
 
 // Rookie jobs (rookie: true) draw the shared rookie pool instead of the district crises:
 // those are aimed at 9-14, too hard for a new crew.
-export const MISSIONS = [...BASE_MISSIONS, KIDNAP, CASINO, PENTHOUSE, PROTECTION, CLINIC, HERBAL, LEDGER, CONTAINER, DELIVERY, EVICTION, CHROME, CABLE, SCRUB]
+export const MISSIONS = [...BASE_MISSIONS, KIDNAP, CASINO, PENTHOUSE, PROTECTION, CLINIC, HERBAL, LEDGER, CONTAINER, DELIVERY, EVICTION, CHROME, CABLE, SCRUB, FAVOURITE, LAST_TICKET, WRONG_HORSE]
   .map((m) => ({ ...m, crises: [...m.crises, ...(m.rookie ? ROOKIE_CRISES : DISTRICT_CRISES[m.district] ?? [])] }));

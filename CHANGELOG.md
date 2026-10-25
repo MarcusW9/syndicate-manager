@@ -4,6 +4,12 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · Race night: three jobs at Lantern Course
+- **The Favourite** (Auntie Fung): her horse Pepper runs in the sixth, and someone is paying stable hands to make sure she loses. Get into the stables, find the sedative, get past a suspicious vet, and buy or beat the name out of the Undercroft.
+- **Last Ticket** (Ruth Okonkwo): her ¥800,000 paper ticket vanished during an eleven-second blackout in the betting hall. Recover the missing footage, chase a runner through the stands, spot a forgery, and get it paid before midnight.
+- **Wrong Horse** (the Ferryman): the horse he carried has the right chip and the wrong markings. Get to stall nine, read the re-flashed chip, find what's under the scar, and get out before the owner's people catch you. Harder, and better paid.
+- Six crises each, every one with a way out. The Basin now shows jobs on the map when they're on the board. Fung and Okonkwo's jobs open from reputation 15, the Ferryman's from 35.
+
 ## 2026-10-25 · The Basin and Lantern Course
 - **A new district on the City map: the Basin.** A bowl of towers between Old Town and Glass Heights, round **Lantern Course**, a floodlit racecourse from 1891 that still races real horses, with 2057 telemetry, live odds in everyone's eyes and illegal bookmakers underneath. You can see the course on the map.
 - Tap it for its card: who runs it (the Lantern Bay Racing Association, with the Silver Fan Circle underneath), its landmarks, and its custom about winning tickets. There's no work there yet; jobs are coming.

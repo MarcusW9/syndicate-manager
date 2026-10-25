@@ -4,14 +4,14 @@ From the owner's district outline (worldbuilding prompt 3), lightly edited to th
 
 ## The Basin and Lantern Course (open, no jobs yet)
 From the owner's Lantern Course pitch (2026-10-25); canon in WORLD.md. Job ideas, each to become a full template with crises, an abort and failure costs:
-- **The Favourite.** Someone is paying stable hands to interfere with the favourite. Find out who before post time.
+- ~~**The Favourite.**~~ Shipped 2026-10-25 as a job. Someone is paying stable hands to interfere with the favourite. Find out who before post time.
 - **Dead Heat.** Two bookmakers hold contradictory biometric records proving different horses won an underground race.
 - **The Long Shot.** An indebted jockey says someone will hurt his family unless he loses the fourth race.
 - **Bloodline.** Veridian-Apex wants a champion's blood sample. The owner absolutely does not want Veridian-Apex to have it.
-- **Last Ticket.** A winning paper ticket worth ¥800,000 disappeared during a micro-blackout.
+- ~~**Last Ticket.**~~ Shipped 2026-10-25 as a job. A winning paper ticket worth ¥800,000 disappeared during a micro-blackout.
 - **Eight to One.** Madam Rao wants a debtor found among 40,000 racegoers before the final race.
 - **Photo Finish.** The official finish camera and the trackside eyewitnesses disagree. Hoi-Sing insists its system didn't fail.
-- **Wrong Horse.** A horse arrives at the paddock with the right registration chip and completely wrong markings.
+- ~~**Wrong Horse.**~~ Shipped 2026-10-25 as a job. A horse arrives at the paddock with the right registration chip and completely wrong markings.
 
 Crisis beats to keep: the stable hands who love the horses ("They call her Asset Twelve upstairs. Her name's Pepper. She likes pears."), so tampering with a horse has stakes beyond money; the class levels from track to Undercroft as places a job moves through; Joss refusing to call a race. The Racing Association as a possible client.
 
