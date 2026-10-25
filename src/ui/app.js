@@ -7,7 +7,7 @@ import { DISTRICT_CARDS, FACTIONS, STREET_FACTS, HISTORY } from '../data/city.js
 import { MISSIONS } from '../data/missions.js';
 import { TRAITS } from '../data/traits.js';
 import { PARTNER } from '../data/partner.js';
-import { jossIcon } from './art.js';
+import { jossIcon, portrait } from './art.js';
 import { STARTING_CREW } from '../data/operatives.js';
 
 // Saves made before badges existed have no colour on their operatives.
@@ -224,6 +224,9 @@ const districtTurf = (key) => DISTRICTS[key]?.turf ? ` · ${esc(DISTRICTS[key].t
 const initials = (name) => { const w = name.trim().split(/\s+/); return (w[0][0] + (w.length > 1 ? w.at(-1)[0] : '')).toUpperCase(); };
 /** Placeholder portrait: coloured initials. Swap for an <img> when portraits exist. */
 const badge = (op, size = '') => `<span class="badge ${size ? `badge--${size}` : ''} ${op.cause ? 'is-fallen' : ''}" style="--badge:${esc(op.color ?? COLOR_BY_ID[op.id] ?? '#8b93a7')}" aria-hidden="true">${esc(initials(op.name))}</span>`;
+
+/** Portrait in a cut-corner frame (crew list, profiles, the wall). Fallen faces are greyed. */
+const face = (op, size = '') => `<span class="face ${size ? `face--${size}` : ''} ${op.cause ? 'is-fallen' : ''}">${portrait(op, { size: { sm: 32, lg: 104 }[size] ?? 48 })}</span>`;
 
 const signed = (n) => `${n > 0 ? '+' : '−'}${Math.abs(n)}`;
 const statName = (k) => k[0].toUpperCase() + k.slice(1);
@@ -598,7 +601,7 @@ function renderCrew() {
   const wall = state.memorial.length ? `
       <h2>The wall</h2>
       <ul class="list list--plain">
-        ${state.memorial.map((m) => `<li class="fallen">${badge(m, 'sm')}<span><strong>${esc(m.name)}</strong> "${esc(m.handle)}" <span class="muted">· ${esc(m.role)} · ${esc(m.cause)}, day ${m.day}</span></span></li>`).join('')}
+        ${state.memorial.map((m) => `<li class="fallen">${face(m, 'sm')}<span><strong>${esc(m.name)}</strong> "${esc(m.handle)}" <span class="muted">· ${esc(m.role)} · ${esc(m.cause)}, day ${m.day}</span></span></li>`).join('')}
       </ul>` : '';
   const leads = `
       <h2>Leads (${recruits.length})</h2>
@@ -622,7 +625,7 @@ function renderCrew() {
         ${state.crew.map((op) => `
           <li>
             <button class="row" data-action="open-op" data-id="${esc(op.id)}">
-              ${badge(op)}
+              ${face(op)}
               <span class="row__main"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"<br><span class="muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age}</span>${scoutLine(op)}${growthMarker(op)}</span>
               <span class="row__meta row__meta--stack">${statusChip(availability(state, op))}${conditionBars(op)}</span>
             </button>
@@ -736,7 +739,7 @@ function renderOperative() {
     <section class="panel">
       <button class="btn btn--ghost" data-action="back">← Crew</button>
       <div class="ophead">
-        ${badge(op, 'lg')}
+        ${face(op, 'lg')}
         <div>
           <h1>${esc(op.name)} <span class="muted">"${esc(op.handle)}"</span></h1>
           <p class="muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age} · ${money(op.wage)}/week</p>

@@ -469,7 +469,7 @@ function finish(state) {
 
   for (const op of deaths) {
     state.crew = state.crew.filter((o) => o.id !== op.id);
-    state.memorial.push({ id: op.id, name: op.name, handle: op.handle, role: op.role, color: op.color, day: state.day, cause: `Died of wounds after the ${tpl.name}${isFreelancer(op) ? ' (freelancer)' : ''}` });
+    state.memorial.push({ id: op.id, name: op.name, handle: op.handle, role: op.role, color: op.color, age: op.age, day: state.day, cause: `Died of wounds after the ${tpl.name}${isFreelancer(op) ? ' (freelancer)' : ''}` });
   }
 
   // Growth: crisis lessons already landed during the job; finishing it also teaches its key stats.

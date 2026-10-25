@@ -8,7 +8,7 @@ import { prepareOperative } from './development.js';
 import { refreshFreelancers } from './freelance.js';
 import { ECONOMY } from '../data/economy.js';
 
-export const SAVE_VERSION = 13;
+export const SAVE_VERSION = 14;
 
 // A rookie crew's first board: small work only.
 export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];
