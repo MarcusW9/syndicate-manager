@@ -38,6 +38,8 @@ import { freelancerAsCrew, shareOf, MAX_FREELANCERS_PER_JOB } from '../core/free
 let state;
 let screen = 'inbox';
 let cityDistrict = null; // district card open on the City screen
+let cityTab = 'map'; // which City section is showing (CITY_TABS)
+let cityCardDue = false; // scroll a newly opened district card into view after drawing
 let openMessageId = null;
 let openOperativeId = null;
 let openRecruitId = null;
@@ -84,7 +86,8 @@ function onClick(e) {
       setTimeout(wakeContinue, CONTINUE_REST_MS);
       return setState(next);
     }
-    case 'city-district': cityDistrict = cityDistrict === id ? null : id; break;
+    case 'city-district': cityDistrict = cityDistrict === id ? null : id; cityCardDue = !!cityDistrict; break;
+    case 'city-tab': cityTab = id; break;
     case 'open-message': {
       openMessageId = id;
       const msg = state.inbox.find((m) => m.id === id);
@@ -302,6 +305,7 @@ function render() {
     <input type="file" id="import-file" accept="application/json" hidden />
   `;
   if (state.activeMission) root.querySelector('.mission-end')?.scrollIntoView({ block: 'end' });
+  if (cityCardDue) { cityCardDue = false; root.querySelector('.citycard')?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
   const want = focusNext ?? refocus;
   focusNext = null;
   if (want) {
@@ -886,7 +890,6 @@ function renderClients() {
 /** City tab: who each client is, with where you stand. */
 function renderClientCards() {
   return `
-      <h2>Clients</h2>
       <ul class="list list--plain">
         ${CLIENTS.map((c) => {
           const t = trustOf(state, c.id);
@@ -1147,55 +1150,64 @@ function districtCard(key) {
             : '<p class="small muted">Nobody here is hiring crews like yours yet.</p>';
       })()}
       ${activeRumour(state)?.district === key ? `<p class="talk-tag">Street talk: ${esc(activeRumour(state).text)}</p>` : ''}
-      ${c.locked || !jobs.length ? '' : `<p class="small"><strong>Kinds of work here:</strong> ${esc(jobs.join(', '))}</p>`}
-      <p class="small"><strong>Who runs it:</strong> ${esc(c.control)}</p>
-      <p class="small"><strong>Police:</strong> ${esc(c.police)}</p>
-      <p class="small"><strong>At 3am:</strong> ${esc(c.night)}</p>
-      <p class="small"><strong>Local custom:</strong> ${esc(c.custom)}</p>
-      <p class="small"><strong>Landmarks:</strong></p>
-      <ul>${c.landmarks.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>
+      <details class="citydetails">
+        <summary>More about ${esc(cityName(key))}</summary>
+        ${c.locked || !jobs.length ? '' : `<p class="small"><strong>Kinds of work here:</strong> ${esc(jobs.join(', '))}</p>`}
+        <p class="small"><strong>Who runs it:</strong> ${esc(c.control)}</p>
+        <p class="small"><strong>Police:</strong> ${esc(c.police)}</p>
+        <p class="small"><strong>At 3am:</strong> ${esc(c.night)}</p>
+        <p class="small"><strong>Local custom:</strong> ${esc(c.custom)}</p>
+        <p class="small"><strong>Landmarks:</strong></p>
+        <ul>${c.landmarks.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>
+      </details>
     </div>`;
 }
 
-function renderCity() {
-  const groups = [...new Set(FACTIONS.map((f) => f.group))];
-  return `
-    <section class="panel">
-      <h1>${esc(NAMES.city)} <span class="muted">燈籠灣</span></h1>
-      <p class="muted small">2057. Tap a district.</p>
-      <div class="cols2">
-      <div>
-      ${cityMap()}
-      ${cityDistrict ? districtCard(cityDistrict) : ''}
-      </div>
-      <div>${renderClientCards()}</div>
-      </div>
+/** City sections, one at a time, so the map screen fits a phone. */
+const CITY_TABS = { map: 'Map', clients: 'Clients', factions: "Who's who", lore: 'Lore' };
 
+function renderCity() {
+  const tab = CITY_TABS[cityTab] ? cityTab : 'map';
+  const groups = [...new Set(FACTIONS.map((f) => f.group))];
+  const body = {
+    map: () => `
       <div class="cols2">
-      <div>
-      <h2>Who's who</h2>
+        <div>${cityMap()}</div>
+        <div>${cityDistrict ? districtCard(cityDistrict) : '<p class="muted small citymap__hint">Tap a district for its jobs, street talk and who runs it.</p>'}</div>
+      </div>`,
+    clients: () => renderClientCards(),
+    factions: () => `
+      <div class="cols2 cols2--flow">
       ${groups.map((g) => `
-        <details class="citydetails">
-          <summary>${esc(g)}</summary>
+        <div>
+          <h2>${esc(g)}</h2>
           <ul class="list list--plain">
             ${FACTIONS.filter((f) => f.group === g).map((f) => `
               <li><strong>${esc(f.name)}</strong> <span class="muted small">· ${esc(f.where)}</span><br>
                 <span class="small">${esc(f.line)}</span><br>
                 <span class="muted small">Rumour: ${esc(f.rumour)}</span></li>`).join('')}
           </ul>
-        </details>`).join('')}
-      </div>
-
+        </div>`).join('')}
+      </div>`,
+    lore: () => `
+      <div class="cols2">
       <div>
       <h2>Everyone knows</h2>
       <ul class="list list--plain small">${STREET_FACTS.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>
-
-      <details class="citydetails">
-        <summary>A short history</summary>
-        <ul class="list list--plain small">${HISTORY.map((h) => `<li><strong>${esc(h.year)}</strong> ${esc(h.text)}</li>`).join('')}</ul>
-      </details>
       </div>
+      <div>
+      <h2>A short history</h2>
+      <ul class="list list--plain small">${HISTORY.map((h) => `<li><strong>${esc(h.year)}</strong> ${esc(h.text)}</li>`).join('')}</ul>
       </div>
+      </div>`,
+  }[tab]();
+  return `
+    <section class="panel">
+      <h1 class="cityhead">${esc(NAMES.city)} <span class="muted">燈籠灣</span> <span class="muted small">2057</span></h1>
+      <div class="subtabs" role="group" aria-label="City sections">
+        ${Object.entries(CITY_TABS).map(([k, label]) => `<button class="subtab ${k === tab ? 'is-on' : ''}" data-action="city-tab" data-id="${k}" aria-pressed="${k === tab}">${esc(label)}</button>`).join('')}
+      </div>
+      ${body}
     </section>`;
 }
 

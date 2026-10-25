@@ -4,6 +4,12 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · A tidier City tab
+- **The City tab is split into four sections:** Map, Clients, Who's who and Lore, with tabs under the title. It opens on the map.
+- **The map fits on one screen**, phone or desktop, with the turf key underneath.
+- **Tap a district** for the short version: what it's like, any jobs on the board there and the street talk. Tap "More about…" for who runs it, the police, landmarks and the rest.
+- **Who's who** lists the megacorps, gangs, police, institutions and wildcards under their own headings. **Lore** has "Everyone knows" and the short history.
+
 ## 2026-10-25 · Job reports as a timeline
 - **Job reports are easier to read:** open one in the inbox and each thing that happened on the job is its own numbered step, top to bottom, joined by a line.
 - **The result comes last**, under ✓ Job done, ↩ Aborted or ✕ Someone didn't come home: pay, heat, injuries, who improved and what the client thinks, one per line. Good news is green, heat is amber, bad news is red.

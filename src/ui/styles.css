@@ -218,6 +218,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
   /* Desktop: use the width. Lists of cards run two or three across; paired sections sit side by side. */
   .list--cols { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 8px; }
   .cols2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 28px; align-items: start; }
+  .cols2--flow { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
   /* Planning a job: crew on the left; client, approach and risk read beside them, so the risk updates in view as you pick. */
   .plangrid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); grid-template-rows: auto auto 1fr; column-gap: 28px; align-items: start;
     grid-template-areas: "crew client" "crew approach" "crew risk"; }
@@ -447,6 +448,18 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .maplegend li { display: flex; align-items: center; gap: 6px; }
 .maplegend__swatch { width: 4px; height: 12px; }
 .maplegend__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warn); }
+/* City sub-tabs: one section at a time so the map screen fits a phone. */
+.cityhead { margin-bottom: 8px; }
+.subtabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid var(--line); margin: 0 0 4px; }
+.subtab { min-height: var(--tap); padding: 0 4px; background: none; border: 0; color: var(--muted); font: inherit; font-family: var(--display, inherit); font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; cursor: pointer; }
+.subtab.is-on { color: var(--accent-2); box-shadow: inset 0 -2px 0 var(--accent-2); }
+.citymap__hint { margin-top: 8px; }
+@media (max-width: 899px) { .citymap__hint { display: none; } }
+.citycard { scroll-margin-top: 88px; }
+/* The map tab fits one screen: the map shrinks to what's left after the header, tabs,
+   legend and (on phones) the Continue dock and tab bar, but never below a readable size. */
+.citymap { max-height: max(300px, calc(100dvh - 400px)); }
+@media (min-width: 900px) { .citymap { max-height: max(360px, calc(100dvh - 300px)); } }
 .citycard ul { margin-top: 0; }
 .citydetails { border: 1px solid var(--line); border-radius: var(--radius); padding: 0 12px; margin-bottom: 6px; }
 .citydetails summary { min-height: var(--tap); display: flex; align-items: center; cursor: pointer; font-weight: 600; }
