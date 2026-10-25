@@ -12,6 +12,7 @@ import { ECONOMY } from '../data/economy.js';
 import { pickTiered } from './tiered.js';
 import { CLASHES, TRAIT_TAGS } from '../data/tags.js';
 import { rollPotential, rollScoutError, scoutFor, potentialRead, prepareOperative } from './development.js';
+import { money } from './money.js';
 
 export const STARTING_ROSTER_CAP = 8;
 export const LEAD_DAYS = 7;
@@ -199,7 +200,7 @@ export function hire(prev, recruitId) {
   state.inbox.unshift({
     id: `hired-${r.id}`, type: 'crew', day: state.day,
     subject: `${r.handle} joins the crew`,
-    body: `${r.name} signed for ${r.wage} a week. Paid a ${signingFee(r)} signing fee.`, blocking: false, read: false,
+    body: `${r.name} signed for ${money(r.wage)} a week. Paid a ${money(signingFee(r))} signing fee.`, blocking: false, read: false,
   });
   return state;
 }

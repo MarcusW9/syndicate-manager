@@ -9,6 +9,7 @@ import { expireStatuses } from './statuses.js';
 import { checkRenewal } from './renewals.js';
 import { HEAT_COOL_WEEKLY, clampHeat, checkHeatNotice } from './heat.js';
 import { rollRumour } from './rumours.js';
+import { money } from './money.js';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAYS_PER_SEASON = 364; // 52 weeks
@@ -114,7 +115,7 @@ function settleWeek(state) {
     type: 'finance',
     day: state.day,
     subject: broke ? 'You missed payments this week' : 'Week settled',
-    body: `Wages ${wages}, rent ${state.rent}. Paid ${total}. Cash now ${state.cash}.` + heatLine +
+    body: `Wages ${money(wages)}, rent ${money(state.rent)}. Paid ${money(total)}. Cash now ${money(state.cash)}.` + heatLine +
       (broke ? ' The crew noticed. Morale will drop until you are back in the black.' : ''),
     blocking: false,
     read: false,

@@ -18,6 +18,7 @@ import { reactToJob, RUMOUR_CRISIS_CHANCE } from './rumours.js';
 import { CAST } from '../data/cast.js';
 import { DISTRICTS } from '../data/districts.js';
 import { NAMES } from '../config/names.js';
+import { money } from './money.js';
 
 const EXIT_KINDS = new Set(['abort', 'extract']);
 const STABILISE_DIFFICULTY = 9;
@@ -526,7 +527,7 @@ function finish(state) {
     : am.aborted ? `${tpl.name} aborted` : `${tpl.name} completed`;
   state.inbox.unshift({
     id: `report-${state.day}-${state.rngCounter}`, type: 'report', day: state.day, subject,
-    body: (am.report?.length ? am.report.join(' ') + ' ' : '') + `Paid ${pay}.` + (cuts ? ` Freelancers took ${cuts}.` : '') + ` Heat +${heatGain}.` + (injuries.length ? ` Injured: ${injuries.join(', ')}.` : ' Nobody hurt.') +
+    body: (am.report?.length ? am.report.join(' ') + ' ' : '') + `Paid ${money(pay)}.` + (cuts ? ` Freelancers took ${money(cuts)}.` : '') + ` Heat +${heatGain}.` + (injuries.length ? ` Injured: ${injuries.join(', ')}.` : ' Nobody hurt.') +
       (deaths.length ? ' Their names go on the wall.' : '') +
       (growthLines.length ? ` Improved: ${growthLines.join(', ')}.` : '') +
       (client && trustChange ? ` ${client.name} ${trustChange > 0 ? 'thinks more of you' : 'is unhappy with you'} (trust ${trustChange > 0 ? '+' : ''}${trustChange}).` : ''),

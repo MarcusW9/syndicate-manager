@@ -4,6 +4,14 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · Today, take two
+- **The inbox is back at the top** of Today. The four summary boxes are gone (the top bar already shows that).
+- **Warnings only when they matter:** a short coloured line appears when a decision is waiting, you can't cover Sunday's bills, a job or recruit is on its last day, or someone can't work. Tap it to go and deal with it.
+- **Coming up:** the next seven days at a glance: bills, new jobs on Monday, the scout report, offers running out, and when crew are back from a job or an injury. On a wide screen it fills the right-hand side until you open a message.
+- Money in messages now reads like money ("Wages ¥1,250, rent ¥1,500"), in the weekly settlement, job reports and signings.
+- Keyboard: opening a message, a crew member, a recruit or a job puts you on its back button, and going back returns you to the row you opened.
+- 148 tests.
+
 ## 2026-10-25 · Today, and a board you can scan
 - **Today** replaces the Inbox tab. At the top: your crew (how many are ready, worn out, out or away), the job board (how many open, the best pay), Sunday's bills (and whether you can cover them) and heat. Tap Crew or Jobs to go there. The inbox is underneath, and each message shows its first line.
 - **Heat is a bar** that turns from green to amber to red.

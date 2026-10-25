@@ -144,3 +144,9 @@ test('the bill shown before Sunday is what Sunday takes', () => {
   s = days(s, 1);
   assert.equal(before - s.cash, total);
 });
+
+test('money in messages reads like money', () => {
+  const s = days(createNewGame({ seed: 33 }), 6); // Sunday: the week settles
+  const week = s.inbox.find((m) => m.type === 'finance');
+  assert.match(week.body, /Wages ¥[\d,]+, rent ¥[\d,]+\. Paid ¥[\d,]+\. Cash now -?¥[\d,]+\./);
+});
