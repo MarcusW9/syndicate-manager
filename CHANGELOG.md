@@ -7,6 +7,8 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 ## 2026-10-25 · Meet Joss
 - **Joss** is the crew's partner: a bootleg AI the Ghost Circuit flashed onto a cracked handset and some salvaged relay boards. They've been with you since before the crew.
 - Joss writes your welcome note in a new game, opens each day on Today with a line of their own, and tells you when something needs you ("Sunday's bills are ¥2,800. We're ¥600 short."). Same facts as before, in their voice.
+- **Joss has a face:** a taped-up old handset with a bent antenna, which looks worried when money's tight and smug on payday. It blinks.
+- No crew member is called "Joss" any more (that name belongs to your partner).
 - 150 tests.
 
 ## 2026-10-25 · Today, take two

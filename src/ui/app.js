@@ -7,6 +7,7 @@ import { DISTRICT_CARDS, FACTIONS, STREET_FACTS, HISTORY } from '../data/city.js
 import { MISSIONS } from '../data/missions.js';
 import { TRAITS } from '../data/traits.js';
 import { PARTNER } from '../data/partner.js';
+import { jossIcon } from './art.js';
 import { STARTING_CREW } from '../data/operatives.js';
 
 // Saves made before badges existed have no colour on their operatives.
@@ -476,9 +477,10 @@ function renderBriefing() {
   const mood = state.day === 1 ? 'first' : has('decision') ? 'decision' : has('broke') ? 'broke'
     : has('bills-short') ? 'short' : has('crew-out') ? 'hurt' : c.isSunday ? 'sunday' : c.isMonday ? 'monday' : 'quiet';
   const opener = pickLine(PARTNER.moods[mood], `${state.day}-${mood}`);
+  const face = { broke: 'worried', short: 'worried', hurt: 'worried', sunday: 'smug', first: 'happy', quiet: 'happy' }[mood] ?? 'neutral';
   return `
     <div class="joss">
-      <span class="joss__badge" aria-hidden="true">${esc(NAMES.partner[0])}</span>
+      <span class="joss__badge">${jossIcon({ mood: face, size: 32 })}</span>
       <div class="joss__body">
         <span class="joss__name">${esc(NAMES.partner)}</span>
         <p class="joss__line">${esc(opener)}</p>

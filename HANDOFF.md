@@ -31,6 +31,8 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 
 5. **Joss, next steps** (after the owner plays with the Today briefing): Joss's read on the planning screen, a line in after-action reports, then comms during jobs. Lines go in `src/data/partner.js`; canon in `WORLD.md` ("Joss"). Joss only says what the screen already knows.
 
+6. **Visual system** (DESIGN.md 2026-10-25): steps 1-2 done (shared style and Joss's icon in `src/ui/art.js`; a style test of three portrait styles and three Joss designs). Waiting on the owner's pick. Step 3: generated portraits in the chosen style replace the initials badges, with states (injured, tired, neural load). Step 4: hand-drawn faces for the named cast.
+
 ## Parked (owner's call; don't start without asking)
 
 - The fixer's backstory, rival crews, festivals calendar, street-language glossary.
