@@ -6,7 +6,7 @@ export const CLIENTS = [
     id: 'fung',
     name: 'Auntie Fung',
     desc: 'Runs three herbal tea shops in Old Town and a quiet fencing business behind them. A senior elder of the Brass Anchor Society. Pays in cash, remembers everything.',
-    jobs: ['clinic', 'herbal_run', 'courier', 'protection', 'kidnap'],
+    jobs: ['clinic', 'herbal_run', 'courier', 'protection', 'kidnap', 'favourite'],
   },
   {
     id: 'szeto',
@@ -18,7 +18,7 @@ export const CLIENTS = [
     id: 'ferryman',
     name: 'The Ferryman',
     desc: 'Leung Ka-wai runs boats in and out of the Docks at night. Nobody has seen him on dry land in years.',
-    jobs: ['container409', 'cable', 'warehouse', 'protection', 'courier'],
+    jobs: ['container409', 'cable', 'warehouse', 'protection', 'courier', 'wrong_horse'],
   },
   {
     id: 'rao',
@@ -30,6 +30,6 @@ export const CLIENTS = [
     id: 'okonkwo',
     name: 'Ruth Okonkwo',
     desc: 'Broker for Aether-Harbour Logistics\' off-books arm, the part that officially doesn\'t exist. Pays the best and trusts nobody.',
-    jobs: ['data_scrub', 'data_pull', 'penthouse', 'warehouse'],
+    jobs: ['data_scrub', 'data_pull', 'penthouse', 'warehouse', 'last_ticket'],
   },
 ];

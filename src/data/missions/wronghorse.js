@@ -1,0 +1,126 @@
+// Wrong Horse: the Ferryman brought a horse into the city for the Racing Association, and
+// it has the right chip and the wrong markings. From the owner's Basin pitch (2026-10-25);
+// canon in WORLD.md (he doesn't care about racing, but knows which night boats carry
+// horses; nothing may tell a horse how to run). No magic: it's 2057 race fixing. Rolls
+// aimed at 11-14. Every choice has a `report` line.
+
+/** @type {import('../../core/types.js').MissionTemplate} */
+export const WRONG_HORSE = {
+  id: 'wrong_horse',
+  name: 'Wrong Horse',
+  district: 'basin',
+  threat: 3,
+  pay: 5500,
+  days: 1,
+  crewSize: 3,
+  keyStats: ['medical', 'tech', 'stealth'],
+  brief: '{ferryman} holds the boat off the landing with one foot. "Last tide I carried a horse for the Racing Association. Right chip. Clean papers. The stable hand says the markings are wrong. If that horse runs on Saturday and somebody looks, it\'s my boat they burn. Find out what I carried."',
+  beats: [
+    'Under the Paddock, the stables smell of straw, rain and disinfectant.',
+    'The horse in stall nine has a white blaze its registration swears it doesn\'t have.',
+    'Its chip reads clean. Everything else about it is somebody else\'s horse.',
+    'Upstairs in the Glass Galleries, an owner is drinking to a horse that isn\'t his.',
+    'On the boat, {ferryman} hears it all and spits into the harbour. "{ferryman:approve}"',
+  ],
+  crises: [
+    {
+      id: 'stall_nine',
+      after: 0, order: -1, // getting to the stall
+      text: 'Private security in Glass Galleries colours is standing on stall nine. The Association doesn\'t hire them.',
+      choices: [
+        { id: 'sneak', label: '{op} goes in over the hayloft', kind: 'push', stat: 'stealth', difficulty: 13,
+          success: 'Along a beam, down a rope, and into the stall behind their backs.', failure: 'A rotten board gives way and {op} drops into the next stall with a very large horse.', failureInjury: 'serious',
+          report: { success: '{op} got into stall nine over the hayloft.', failure: '{op} fell through the hayloft into a horse\'s stall.' } },
+        { id: 'vets', label: '{face} walks up as the Association\'s duty vet', kind: 'adapt', stat: 'social', difficulty: 13, requires: { kind: 'role', value: 'face' },
+          success: '"Pre-race welfare check. Do you want to be the one who says no?" They don\'t.', failure: 'They let you in, and photograph your face for their boss.', failureInjury: 'none', failureCost: { heat: 1 },
+          report: { success: '{face} bluffed past the private guards as a vet.', failure: 'The private guards photographed {face}. Heat +1.' } },
+        { id: 'abort', label: 'Abort: tell the Ferryman you couldn\'t get near it', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -5 },
+          success: 'He looks at the water a long time, then pushes off.', failure: '', failureInjury: 'none',
+          report: { success: 'The crew couldn\'t get near stall nine.' } },
+      ],
+    },
+    {
+      id: 'chip',
+      after: 1,
+      text: 'The registration chip under the horse\'s neck reads perfectly. Too perfectly: no wear on the log at all.',
+      focusRole: 'tech',
+      choices: [
+        { id: 'dig', label: '{tech} digs under the flash for the chip\'s first record', kind: 'adapt', stat: 'tech', difficulty: 13, requires: { kind: 'role', value: 'tech' }, neural: 15,
+          success: 'Re-flashed nine days ago. The first record names a different horse, and a gene lab in Glass Heights.', failure: 'The chip wipes itself when you touch the old layer. So much for proof.', failureInjury: 'none', failureCost: { payCut: 0.3 },
+          report: { success: '{tech} found the chip had been re-flashed, and the horse\'s real name.', failure: 'The chip wiped itself when {tech} dug for its history.' } },
+        { id: 'teeth', label: '{op} reads its age from its teeth', kind: 'adapt', stat: 'medical', difficulty: 12,
+          success: 'Two years older than its papers. Whatever this is, it isn\'t the horse they registered.', failure: 'It throws its head and catches {op} on the cheekbone.', failureInjury: 'light',
+          report: { success: '{op} proved the horse was older than its papers.', failure: 'The horse threw its head into {op}\'s face.' } },
+        { id: 'abort', label: 'Abort: leave before the chip logs the scan', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -5 },
+          success: 'You leave without a scan, and without an answer.', failure: '', failureInjury: 'none',
+          report: { success: 'The crew left stall nine without checking the chip.' } },
+      ],
+    },
+    {
+      id: 'scar',
+      after: 2,
+      text: 'Under the mane there\'s a neat surgical scar, three days old. Racing\'s one line: nothing tells a horse how to run.',
+      focusRole: 'medic',
+      choices: [
+        { id: 'examine', label: '{medic} feels for hardware under the scar', kind: 'push', stat: 'medical', difficulty: 14, requires: { kind: 'role', value: 'medic' },
+          success: 'A pacing implant the size of a grain of rice. Somebody crossed the line.', failure: 'The horse rears and comes down hard on {op}.', failureInjury: 'serious',
+          report: { success: '{medic} found a pacing implant under the horse\'s mane.', failure: 'The horse reared and came down on {op}.' } },
+        { id: 'listen', label: 'Scan for a signal from outside the stall', kind: 'adapt', stat: 'tech', difficulty: 12, neural: 10,
+          success: 'A faint pulse, synced to a transmitter somewhere upstairs. Enough to prove it, not enough to find it.', failure: 'Nothing but stadium noise and somebody\'s optic feed.', failureInjury: 'none', failureCost: { payCut: 0.2 },
+          report: { success: 'The crew picked up a pacing signal from the horse.', failure: 'The crew couldn\'t pick out a signal over the stadium noise.' } },
+        { id: 'abort', label: 'Abort: leave the scar alone', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 0.8, clientTrust: -5 },
+          success: 'You have the markings and a scar. You leave before it becomes your scar.', failure: '', failureInjury: 'none',
+          report: { success: 'The crew left with only the scar to report.' } },
+      ],
+    },
+    {
+      id: 'apex_vet',
+      after: 2,
+      text: 'A Veridian-Apex vet arrives with a cold box for blood samples from stall nine. He is in a hurry.',
+      choices: [
+        { id: 'block', label: '{muscle} fills the doorway', kind: 'push', stat: 'combat', difficulty: 12, cost: { heat: 1 }, requires: { kind: 'role', value: 'muscle' },
+          success: 'He looks up at {muscle} and decides the samples can wait.', failure: 'He has two orderlies, and they have stun batons.', failureInjury: 'light',
+          report: { success: '{muscle} kept a Veridian-Apex vet out of stall nine. Heat +1.', failure: 'Veridian-Apex orderlies stunned {op}. Heat +1.' } },
+        { id: 'misdirect', label: 'Tell him stall nine was moved to quarantine', kind: 'adapt', stat: 'social', difficulty: 13,
+          success: 'He swears, checks nothing, and goes the wrong way at speed.', failure: 'He checks. Then he calls someone, and looks at you while he does.', failureInjury: 'none', failureCost: { heat: 1, payCut: 0.2 },
+          report: { success: 'The crew sent the Veridian-Apex vet the wrong way.', failure: 'The Veridian-Apex vet saw through the story. Heat +1.' } },
+        { id: 'abort', label: 'Abort: let him take his samples and go', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -5 },
+          success: 'Whatever is in that blood, Veridian-Apex has it now. You leave.', failure: '', failureInjury: 'none',
+          report: { success: 'The crew let Veridian-Apex take the horse\'s blood.' } },
+      ],
+    },
+    {
+      id: 'real_horse',
+      after: 2, order: 1,
+      text: 'An old stable hand pulls you aside. "The real one\'s in the old ice store under the Undercroft. She\'s not eating."',
+      choices: [
+        { id: 'find', label: 'Go down and find her', kind: 'push', stat: 'stealth', difficulty: 13,
+          success: 'A thin bay mare in the dark, with the right markings. A photograph is worth more than a chip.', failure: 'Two bookmakers\' men are already down there with her.', failureInjury: 'serious',
+          report: { success: 'The crew found and photographed the real horse.', failure: 'Bookmakers\' men caught {op} by the real horse.' } },
+        { id: 'pay', label: 'Pay the old hand ¥600 to take the photo himself', kind: 'adapt', sure: true, stat: 'cool', difficulty: 0, cost: { cash: -600 },
+          success: 'He comes back with the picture and tears in his eyes. "Feed her for me, someone."', failure: '', failureInjury: 'none',
+          report: { success: 'The crew paid a stable hand ¥600 to photograph the real horse.' } },
+        { id: 'abort', label: 'Abort: thank him and leave', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 0.6 },
+          success: 'You leave her in the dark. You\'ll think about that.', failure: '', failureInjury: 'none',
+          report: { success: 'The crew left the real horse in the ice store.' } },
+      ],
+    },
+    {
+      id: 'gallery',
+      after: 3,
+      text: 'The owner\'s people come down from the Glass Galleries. "You\'ve been very curious about our horse."',
+      choices: [
+        { id: 'leverage', label: '{face} shows them what you found, and names a price for silence', kind: 'adapt', stat: 'social', difficulty: 14, cost: { payCut: -0.3, heat: 1 }, requires: { kind: 'role', value: 'face' },
+          success: 'They pay to make it go away. The Ferryman gets his proof, and you get their money too.', failure: 'They don\'t negotiate. They call security and say you drugged the horse.', failureInjury: 'none', failureCost: { heat: 2, payCut: 0.5 },
+          report: { success: '{face} made the owner\'s people pay for silence. Bonus pay; heat +1.', failure: 'The owner\'s people framed the crew. Heat +3.' } },
+        { id: 'slip', label: 'Slip out through the wash bay with the evidence', kind: 'push', stat: 'stealth', difficulty: 12,
+          success: 'Out with the horses\' hose water, and into the rain.', failure: 'They corner {op} by the drains before the others get there.', failureInjury: 'light',
+          report: { success: 'The crew slipped out with the evidence.', failure: 'The owner\'s people cornered {op} on the way out.' } },
+        { id: 'abort', label: 'Abort: hand over what you found and walk out', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -10 },
+          success: 'They take the photos and the chip readings and let you go. The Ferryman gets nothing.', failure: '', failureInjury: 'none',
+          report: { success: 'The crew handed the evidence to the owner\'s people.' } },
+      ],
+    },
+  ],
+  heat: 0,
+};
