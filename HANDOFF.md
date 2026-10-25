@@ -5,7 +5,7 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 ## State
 
 - **Live:** `main` at "City tab and street talk", deployed to GitHub Pages. Branch `claude/pensive-pascal-kor55b` matched `main` when this file was written.
-- **Tests:** 150 passing (`npm test`). Save format **v13**.
+- **Tests:** 154 passing (`npm test`). Save format **v14**.
 - **Both older plan files are finished:** `PLAN-PERSONALITY.md` (steps 1-4) and `PLAN-RENEWALS.md` (steps 0-4).
 - **Plan in progress: `PLAN-PROGRESSION.md`.** Steps 0-1 done 2026-10-25 (rookie start, rookie jobs, gated board, slower growth, progress bars, reports). Next: the owner playtests; then step 2. Its follow-ups list has the loose ends.
 - **Working tree clean.** The only pending content is the locked districts' crisis hooks in `drafts/district-hooks.md`.
@@ -31,7 +31,7 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 
 5. **Joss, next steps** (after the owner plays with the Today briefing): Joss's read on the planning screen, a line in after-action reports, then comms during jobs. Lines go in `src/data/partner.js`; canon in `WORLD.md` ("Joss"). Joss only says what the screen already knows.
 
-6. **Visual system** (DESIGN.md 2026-10-25): steps 1-2 done (shared style and Joss's icon in `src/ui/art.js`; a style test of three portrait styles and three Joss designs). Waiting on the owner's pick. Step 3: generated portraits in the chosen style replace the initials badges, with states (injured, tired, neural load). Step 4: hand-drawn faces for the named cast.
+6. **Visual system** (DESIGN.md 2026-10-25): step 3 done (Citizen Sleeper-style portraits on the Crew list, profiles and wall). Next: faces on recruits, freelancers and planning if the owner wants; Joss's final design; step 4, hand-drawn faces for the named cast. Earlier: steps 1-2 done (shared style and Joss's icon in `src/ui/art.js`; a style test of three portrait styles and three Joss designs). Waiting on the owner's pick. Step 3: generated portraits in the chosen style replace the initials badges, with states (injured, tired, neural load). Step 4: hand-drawn faces for the named cast.
 
 ## Parked (owner's call; don't start without asking)
 

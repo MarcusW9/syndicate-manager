@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · Faces
+- **Your crew have faces** on the Crew list and their profile pages, in a painted, Citizen Sleeper-style look: real skin tones, a splash of city neon from one side, light and shadow instead of outlines.
+- You can see how someone's doing at a glance: a plaster or bandage when they're hurt, heavy eyes when they're worn out, an implant that glows with neural load. The fallen are greyed on the wall.
+- Everyone's face is their own and never changes. Older saves upgrade automatically (save format v14). 154 tests.
+
 ## 2026-10-25 · A new look
 - **Street-terminal style:** sharp panels with cut corners, a condensed display font for headings, numbers and buttons, segmented gauges, and a faint grid and scanlines. Red, cyan and sodium-yellow, after Cyberpunk 2077 and Citizen Sleeper.
 - Everything you read is still in the normal, easy-to-read font. Buttons and tabs are the same size as before.

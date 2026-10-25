@@ -248,5 +248,10 @@ function migrate(state) {
     state.dayStartCash = state.dayStartCash ?? state.cash;
     state.version = 13;
   }
+  if (state.version === 13) {
+    // v14 records age on memorial entries (portraits use it for grey hair). Older entries
+    // have no age; their portraits draw as if under 45.
+    state.version = 14;
+  }
   return state;
 }
