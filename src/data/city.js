@@ -34,6 +34,16 @@ export const DISTRICT_CARDS = {
     night: 'Humming air filters and glass towers in cold blue light.',
     custom: 'Never press a lift button with a bare index finger, or the lower districts\' bad karma rubs off.',
   },
+  basin: {
+    chinese: '鑊底',
+    side: 'Island side, in the bowl below Glass Heights',
+    pitch: 'Towers packed round Lantern Course, a floodlit racecourse from 1891 that still races real horses. Everything around the horses has gone 2057.',
+    landmarks: ['Lantern Course and its paddock', 'The Old Stand, boxes held by the same families for generations', 'The Undercroft, where the bets the Association won\'t take get taken'],
+    control: 'The Lantern Bay Racing Association, officially. The Silver Fan Circle owns the shadow economy underneath.',
+    police: 'Association security inside the gates, the Harbour Police outside. Both very interested in race nights.',
+    night: 'Cleaning drones in drifts of paper slips, stable hands hosing down the horses, bookmakers settling up under amber lights.',
+    custom: 'Never throw away a winning ticket inside the course: fold it twice and carry it out through the gates first.',
+  },
   docks: {
     chinese: '霧港',
     side: 'Mainland side',
@@ -90,6 +100,7 @@ export const FACTIONS = [
   { group: 'Gangs', name: 'The Silver Fan Circle', where: 'The Night Market', line: 'Street loans, gambling and fake designer implants.', rumour: 'Lose at mahjong on the third floor and you pay with your biometric keys.' },
   { group: 'Gangs', name: 'The Brass Anchor Society', where: 'Old Town', line: 'Old Town\'s elders, keeping the developers out. Prove yourself over beef chow fun.', rumour: 'They hold debt ledgers from the blackout that could ruin any developer.' },
   { group: 'Police', name: 'Harbour Police, 4th Precinct', where: 'The Docks, the Night Market', line: 'The "Wet Sleeve" unit. Neural-load checks that end in a fine or a bribe.', rumour: 'The commander\'s office has a back door into a Red Lantern warehouse.' },
+  { group: 'Institutions', name: 'Lantern Bay Racing Association', where: 'The Basin', line: 'Racing, licensed betting and the big pools. Says it belongs to the whole city, which is roughly true.', rumour: 'A horse has already won a big race running on software.' },
   { group: 'Wildcard', name: 'The Ghost Circuit', where: 'Under Old Town', line: 'Data liberators in the drainage tunnels, handing out free neural scrubbers.', rumour: 'Led by a single mind, five dockworkers whose implants fused in the blackout.' },
 ];
 
@@ -98,10 +109,12 @@ export const STREET_FACTS = [
   'If Auntie Fung\'s tea is sweeter than usual, someone just cleared a debt, or a body went through her back room.',
   'During a Signal 8, the Glass Heights towers ground their delivery drones, and corporate supplies move by road.',
   'Madam Rao takes cash, gold or verified secrets. Pay in corporate chips and she adds a 30% bad-luck tax.',
+  'Half the crowd at Lantern Course won\'t bet on number four, whatever the telemetry says.',
   'Mr. Szeto\'s permits come through two days before another old tenement has an "electrical fire".',
 ];
 
 export const HISTORY = [
+  { year: '1891', text: 'Lantern Course opens on marshland at the bottom of the Basin.' },
   { year: '1970', text: 'The Reclamation Boom pushes the Docks and Old Town out into the harbour.' },
   { year: '1994', text: 'The Great Signal 10 typhoon wipes out the southern piers.' },
   { year: '2018', text: 'The Neural Integration Act puts implants into dockworkers. The first burnouts follow.' },

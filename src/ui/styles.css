@@ -123,11 +123,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 
 /* Inbox: one pane at a time on phones, list and message side by side when wide. */
 @media (max-width: 899px) {
-  .inbox.has-open .inbox__side, .inbox:not(.has-open) .inbox__detail { display: none; }
-}
-/* Wide: with no message open, the week ahead fills the right pane instead of sitting under the inbox. */
-@media (min-width: 900px) {
-  .inbox:not(.has-open) .upcoming--side { display: none; }
+  .inbox.has-open .inbox__side, .inbox:not(.has-open) .inbox__detail, .upcoming.has-open { display: none; }
 }
 .inbox__side { display: grid; gap: 12px; align-content: start; }
 /* Grid children shrink to fit, so a long one-line preview clips instead of widening the page. */
@@ -136,7 +132,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .row__main--clip { min-width: 0; }
 .preview { display: block; font-size: 0.8rem; font-weight: 400; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* Today: alert lines only when something needs you; the week ahead under the inbox. */
+/* Today: the week ahead in a strip across the top; alert lines only when something needs you. */
 .inbox__list h1 { margin-top: 0; }
 /* Joss, the crew's AI partner: one line of briefing at the top of Today. */
 .joss { display: flex; gap: 12px; align-items: flex-start; margin: 4px 0 12px; }
@@ -154,14 +150,14 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .alert { width: 100%; min-height: var(--tap); padding: 8px 12px; text-align: left; border-radius: var(--radius); font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
 .alert--warn { background: #2a2617; border: 1px solid #5c4a1c; color: var(--warn); }
 .alert--danger { background: #2e1a1e; border: 1px solid #6b2630; color: #ff8a8a; }
-.upcoming__title { margin-top: 0; }
-.upcoming__days { list-style: none; margin: 0; padding: 0; }
-.upcoming__day { display: grid; grid-template-columns: 84px 1fr; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
-.upcoming__day:last-child { border-bottom: 0; }
-.upcoming__when { font-size: 0.8rem; font-weight: 600; color: var(--accent-2); padding-top: 1px; }
-.upcoming__items { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 0.9rem; }
+.upcoming--strip { margin-bottom: 12px; padding: 10px 16px 12px; }
+.upcoming__title { margin: 0 0 6px; }
+/* One cell per day, side by side; they wrap to two across on a phone. */
+.upcoming__days { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px 16px; }
+.upcoming__day { display: grid; gap: 2px; align-content: start; padding-left: 10px; border-left: 1px solid var(--line); }
+.upcoming__when { font-size: 0.8rem; font-weight: 600; color: var(--accent-2); }
+.upcoming__items { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 0.85rem; line-height: 1.35; }
 .upcoming__items .is-short { color: #ff8a8a; }
-.upcoming--pane { border: 0; padding: 0; background: none; }
 
 /* Job cards: name and pay, client and time left, then the facts. */
 .row.jobcard { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 3px 12px; }
@@ -219,6 +215,17 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
   .opgrid__stats { grid-area: stats; }
   .opgrid__dev { grid-area: dev; }
   .opgrid__past { grid-area: past; }
+  /* Desktop: use the width. Lists of cards run two or three across; paired sections sit side by side. */
+  .list--cols { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 8px; }
+  .cols2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 28px; align-items: start; }
+  /* Planning a job: crew on the left; client, approach and risk read beside them, so the risk updates in view as you pick. */
+  .plangrid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); grid-template-rows: auto auto 1fr; column-gap: 28px; align-items: start;
+    grid-template-areas: "crew client" "crew approach" "crew risk"; }
+  .plangrid__client { grid-area: client; margin-top: 1.5rem; }
+  .plangrid__crew { grid-area: crew; }
+  .plangrid__approach { grid-area: approach; }
+  .plangrid__risk { grid-area: risk; }
+  .plangrid__approach .segmented { grid-template-columns: 1fr; }
   .inbox { display: grid; grid-template-columns: minmax(300px, 2fr) 3fr; gap: 16px; align-items: start; }
   .inbox__back { display: none; }
   .inbox__empty { margin: 0; }
@@ -377,21 +384,55 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .sizebadge--extra { background: #262b36; color: var(--accent-2); }
 
 /* City screen: schematic map. Districts are tap targets; locked ones are dashed. */
-.citymap { display: block; width: 100%; max-width: 440px; margin: 8px auto 12px; }
-.map-land { fill: color-mix(in srgb, var(--text) 5%, var(--panel)); }
-.map-water { fill: color-mix(in srgb, var(--accent-2) 10%, var(--bg)); }
-.map-wave { fill: none; stroke: color-mix(in srgb, var(--accent-2) 35%, transparent); stroke-width: 1.2; }
-.map-crossing { stroke: var(--muted); stroke-width: 2; stroke-dasharray: 4 5; }
-.map-label { fill: var(--muted); font-size: 10px; letter-spacing: 0.12em; }
-.map-d { cursor: pointer; }
-.map-d rect { fill: color-mix(in srgb, var(--accent-2) 16%, var(--panel)); stroke: var(--accent-2); stroke-width: 1.5; }
-.map-d.is-locked rect { fill: var(--panel); stroke: var(--muted); stroke-dasharray: 5 4; }
-.map-d.is-selected rect { stroke: var(--accent); stroke-width: 2.5; }
-.map-d:focus-visible { outline: none; }
-.map-d:focus-visible rect { stroke: var(--accent); stroke-width: 2.5; }
-.map-d__name { fill: var(--text); font-size: 15px; font-weight: 600; text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
-.map-d.is-locked .map-d__name { fill: var(--muted); }
-.map-d__lock { fill: var(--muted); font-size: 9.5px; letter-spacing: 0.14em; text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+.map-crossing { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 3 4; pointer-events: none; }
+.map-label { fill: var(--muted); font-size: 10px; letter-spacing: 0.16em; font-family: var(--display); pointer-events: none; }
+/* Lantern Bay from above (citymap.js). Names and readouts stay 11px+ on a 360px phone. */
+.citymap { display: block; width: 100%; max-width: 460px; margin: 8px auto 12px; }
+.cm-sea { fill: #070a0e; }
+.cm-sea__scales g circle { fill: #070a0e; stroke: color-mix(in srgb, var(--accent-2) 24%, transparent); stroke-width: 0.6; }
+.cm-land { fill: #0b1317; }
+.cm-mud { fill: url(#cm-mud); }
+#cm-mud circle { fill: color-mix(in srgb, var(--warn) 30%, transparent); }
+.cm-relief { opacity: 0.55; pointer-events: none; }
+.cm-contours { fill: none; stroke: color-mix(in srgb, var(--accent-2) 20%, transparent); stroke-width: 0.6; pointer-events: none; }
+.cm-coast { fill: none; stroke: color-mix(in srgb, var(--accent-2) 80%, transparent); stroke-width: 0.9; stroke-linejoin: round; filter: drop-shadow(0 0 2px color-mix(in srgb, var(--accent-2) 60%, transparent)); pointer-events: none; }
+.cm-coast--pier { stroke: color-mix(in srgb, var(--accent-2) 35%, transparent); filter: none; }
+.cm-coast--mud { stroke: color-mix(in srgb, var(--warn) 45%, transparent); stroke-dasharray: 2 2; filter: none; }
+.cm-d { cursor: pointer; }
+.cm-d:focus { outline: none; }
+.cm-d__streets { fill: none; stroke: color-mix(in srgb, var(--accent) 34%, transparent); stroke-width: 0.6; pointer-events: none; }
+.cm-d.is-locked .cm-d__streets { stroke: color-mix(in srgb, var(--muted) 22%, transparent); }
+.cm-d__hatch { fill: url(#cm-hatch); pointer-events: none; }
+#cm-hatch path { stroke: color-mix(in srgb, var(--muted) 30%, transparent); stroke-width: 1; }
+.cm-d__area { fill: transparent; stroke: var(--turf); stroke-width: 1.6; stroke-opacity: 0.8; }
+.cm-d.is-locked .cm-d__area { stroke-dasharray: 4 3; stroke-opacity: 0.5; }
+.cm-d.is-selected .cm-d__area, .cm-d:focus-visible .cm-d__area { fill: color-mix(in srgb, var(--turf) 14%, transparent); stroke-width: 3; stroke-opacity: 1; }
+.cm-d.is-selected .cm-d__area { animation: map-pick 2.4s ease-in-out infinite; }
+.cm-d__name { fill: var(--warn); font-family: var(--display); font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; text-anchor: middle; paint-order: stroke; stroke: #070a0e; stroke-width: 3.5px; stroke-linejoin: round; pointer-events: none; }
+.cm-d.is-locked .cm-d__name { fill: var(--muted); }
+.cm-d__readout { fill: var(--muted); font-family: var(--display); font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-anchor: middle; paint-order: stroke; stroke: #070a0e; stroke-width: 3.5px; stroke-linejoin: round; pointer-events: none; }
+.cm-d__readout.has-work { fill: var(--accent-2); }
+.cm-d__readout.has-talk { fill: var(--warn); }
+.cm-track { fill: none; stroke: #f7efc8; stroke-width: 1.4; filter: drop-shadow(0 0 3px rgba(247, 239, 200, 0.8)); pointer-events: none; }
+.cm-track--infield { fill: color-mix(in srgb, #5fe0a5 18%, transparent); stroke: none; filter: none; }
+.cm-rail { fill: none; stroke: var(--muted); stroke-width: 3; stroke-opacity: 0.6; pointer-events: none; }
+/* A little life: a ferry light crosses, the picked district breathes. Still for reduced motion. */
+.map-ferry { fill: var(--warn); animation: map-ferry 14s ease-in-out infinite alternate; }
+@keyframes map-ferry { 0%, 8% { transform: translateY(0); } 92%, 100% { transform: translateY(90px); } }
+@keyframes map-pick { 50% { stroke-opacity: 0.45; } }
+/* Turf colours, for the key under the map. */
+.map-turf--sodium { background: #f2d541; }
+.map-turf--red { background: #ff3d5f; }
+.map-turf--violet { background: #b48cff; }
+.map-turf--cyan { background: #3de8d8; }
+.map-turf--orange { background: #ff9a3d; }
+.map-talk { fill: var(--warn); pointer-events: none; animation: map-talk 1.8s ease-in-out infinite; }
+@keyframes map-talk { 50% { opacity: 0.3; } }
+@media (prefers-reduced-motion: reduce) { .map-talk, .map-ferry, .cm-d.is-selected .cm-d__area { animation: none; } }
+.maplegend { list-style: none; margin: 0 auto 12px; padding: 0; max-width: 440px; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.78rem; color: var(--muted); }
+.maplegend li { display: flex; align-items: center; gap: 6px; }
+.maplegend__swatch { width: 4px; height: 12px; }
+.maplegend__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warn); }
 .citycard ul { margin-top: 0; }
 .citydetails { border: 1px solid var(--line); border-radius: var(--radius); padding: 0 12px; margin-bottom: 6px; }
 .citydetails summary { min-height: var(--tap); display: flex; align-items: center; cursor: pointer; font-weight: 600; }
@@ -462,8 +503,6 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 }
 /* A short cyan tab on each panel's top edge, like a labelled readout. */
 .panel::after { content: ''; position: absolute; top: 0; left: 0; width: 36px; height: 2px; background: var(--accent-2); opacity: 0.8; pointer-events: none; }
-.upcoming--pane { clip-path: none; }
-.upcoming--pane::before, .upcoming--pane::after { display: none; }
 
 /* Top bar: a translucent readout strip with a red tick under the date. */
 .topbar { background: rgba(10, 12, 15, 0.92); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); }

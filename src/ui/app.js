@@ -8,6 +8,7 @@ import { MISSIONS } from '../data/missions.js';
 import { TRAITS } from '../data/traits.js';
 import { PARTNER } from '../data/partner.js';
 import { jossIcon, portrait } from './art.js';
+import { cityMapSvg, MAP_DISTRICTS } from './citymap.js';
 import { STARTING_CREW } from '../data/operatives.js';
 
 // Saves made before badges existed have no colour on their operatives.
@@ -276,7 +277,8 @@ function render() {
   const unread = state.inbox.filter((m) => !m.read).length;
   const cue = dayCue;
   dayCue = null;
-  const wide = !state.activeMission && (screen === 'inbox' || (screen === 'crew' && openOperativeId));
+  // Desktop pages use the full width; a running job stays a narrow reading column.
+  const wide = !state.activeMission;
   // Phones: Continue sits above the tab bar, except while planning a job (its own bar
   // takes that place) and during a job (nothing to continue).
   const dock = !state.activeMission && !(screen === 'jobs' && plan);
@@ -410,9 +412,9 @@ function backupBanner() {
 }
 
 /**
- * Today: alerts (only when something needs you), the inbox, then the week ahead.
- * Phones show that, or one open message. Wide screens put the open message beside it,
- * and with none open, the week ahead takes that pane instead (styles.css).
+ * Today: the week ahead in a slim strip across the top, then alerts (only when something
+ * needs you) and the inbox. Phones show that, or one open message without the strip.
+ * Wide screens keep the strip and put the open message beside the inbox (styles.css).
  */
 function renderInbox() {
   const open = state.inbox.find((m) => m.id === openMessageId);
@@ -430,6 +432,7 @@ function renderInbox() {
         </ul>` : '<p class="muted">Nothing new. Press Continue.</p>';
   return `
     ${backupBanner()}
+    ${renderUpcoming(open ? 'upcoming--strip has-open' : 'upcoming--strip')}
     <div class="inbox ${open ? 'has-open' : ''}">
       <div class="inbox__side">
         <section class="panel inbox__list">
@@ -437,10 +440,9 @@ function renderInbox() {
           ${renderBriefing()}
           ${list}
         </section>
-        ${renderUpcoming('upcoming--side')}
       </div>
       <section class="panel inbox__detail">
-        ${open ? renderMessage(open) : renderUpcoming('upcoming--pane')}
+        ${open ? renderMessage(open) : '<p class="muted inbox__empty">Tap a message to read it here.</p>'}
       </section>
     </div>`;
 }
@@ -495,7 +497,7 @@ function renderBriefing() {
     }).join('')}</ul>` : ''}`;
 }
 
-/** The week ahead, one line per thing the game will do, grouped by day. */
+/** The week ahead, one cell per day with a line per thing the game will do. */
 function renderUpcoming(where) {
   const items = upcoming(state);
   const when = (day) => {
@@ -621,7 +623,7 @@ function renderCrew() {
         <h1>Crew</h1>
         <span class="muted">${state.crew.length}/${cap} beds</span>
       </div>
-      <ul class="list">
+      <ul class="list list--cols">
         ${state.crew.map((op) => `
           <li>
             <button class="row" data-action="open-op" data-id="${esc(op.id)}">
@@ -631,7 +633,9 @@ function renderCrew() {
             </button>
           </li>`).join('')}
       </ul>
-      ${leads}
+      <div class="cols2">
+      <div>${leads}</div>
+      <div>
       <h2>Safehouse</h2>
       <div class="riskcard">
         <p class="small">Level ${state.safehouseLevel ?? 1} · ${cap} beds · rent ${money(state.rent)}/wk</p>
@@ -639,6 +643,8 @@ function renderCrew() {
           Expand: +${x.beds} beds for ${money(x.cost)} (rent +${money(x.rentIncrease)}/wk)
         </button>
         ${state.cash < x.cost ? `<p class="muted small">Need ${money(x.cost - state.cash)} more.</p>` : ''}
+      </div>
+      </div>
       </div>
       ${wall}
     </section>`;
@@ -658,6 +664,8 @@ function renderRecruit() {
           <p class="muted">${esc(r.quality)} ${esc(r.role)} · ${r.age} · lead goes cold: ${daysLeft(r.expiresDay)}</p>
         </div>
       </div>
+      <div class="opgrid">
+      <div class="opgrid__about">
       <p class="body">${esc(r.origin)}</p>
       <p class="body muted">${esc(r.bio)}</p>
 
@@ -665,18 +673,24 @@ function renderRecruit() {
       <ul class="chips">
         ${r.traits.map((t) => `<li class="chip"><strong>${esc(TRAITS[t]?.name ?? t)}</strong><span>${esc(TRAITS[t]?.desc ?? '')}</span></li>`).join('')}
       </ul>
+      </div>
 
+      <div class="opgrid__stats">
       <h2>Stats</h2>
       <dl class="stats">
         ${Object.keys(r.stats).map((k) => statCell(r, k)).join('')}
       </dl>
+      </div>
 
+      <div class="opgrid__dev">
       <h2>Scout's view</h2>
       <div class="riskcard">
         <p>${esc(r.scoutReport ?? 'Nobody has a read on them yet.')}</p>
         <p class="muted small">${esc(growthNote(r.age))} Opinions, not facts: scouts get it wrong sometimes.</p>
       </div>
+      </div>
 
+      <div class="opgrid__past">
       <h2>Terms</h2>
       <div class="riskcard">
         <p>Wants <strong>${money(r.wage)}</strong> a week, plus a ${money(signingFee(r))} signing fee now.</p>
@@ -687,6 +701,8 @@ function renderRecruit() {
         ${can.ok ? '' : `<p class="muted small">${esc(can.reason)}</p>`}
         <button class="btn" data-action="haggle" data-id="${esc(r.id)}" ${r.haggled ? 'disabled' : ''}>${r.haggled ? 'Already haggled' : 'Haggle (your best talker rolls)'}</button>
         <button class="btn btn--ghost" data-action="pass" data-id="${esc(r.id)}">Pass on this one</button>
+      </div>
+      </div>
       </div>
     </section>`;
 }
@@ -811,7 +827,7 @@ function renderJobs() {
       <h1>Jobs</h1>
       ${streetTalk()}
       ${climbLine()}
-      <ul class="list">
+      <ul class="list list--cols">
         ${state.jobs.map((j) => {
           const v = jobView(state, j);
           const t = v.tpl;
@@ -880,7 +896,8 @@ function renderPlan() {
       <p class="muted">${esc(districtName(t.district))}${districtTurf(t.district)} · threat ${threatHtml(v)} · pays ${money(v.pay)} · crew away ${t.days}d · ${daysLeft(job.expiresDay)}</p>
       ${DISTRICTS[t.district] ? `<p class="muted small">${esc(DISTRICTS[t.district].pitch)}</p>` : ''}
       <p class="body">${esc(fillBrief(t))}</p>
-      <div class="riskcard">
+      <div class="plangrid">
+      <div class="riskcard plangrid__client">
         <p><strong>Client:</strong> ${clientLine(v)}</p>
         ${v.client ? `<p class="muted small">${esc(v.client.desc)}</p>` : ''}
         ${v.threatDelta ? `<p class="muted small">Every roll on this job is ${Math.abs(v.threatDelta) === 1 ? 'one point' : `${Math.abs(v.threatDelta)} points`} ${v.threatDelta > 0 ? 'harder' : 'easier'} than usual.</p>` : ''}
@@ -888,6 +905,7 @@ function renderPlan() {
         ${v.rumour ? `<p class="talk-tag">Street talk: ${esc(v.rumour.text)}</p>` : ''}
       </div>
 
+      <div class="plangrid__crew">
       <h2>Crew (${plan.crew.length} picked · ${t.crewSize} recommended, up to ${most})</h2>
       ${(() => { const r = crewSizeRead(plan.crew.length, t.crewSize); return `<p class="sizebadge sizebadge--${r.level} ${r.penalty >= 2 ? 'is-severe' : ''}">${esc(r.text)}</p>`; })()}
       <p class="muted small">Matters most: ${t.keyStats.join(', ')}. Numbers are coloured by how each person would do alone on this job: <span class="fit fit--good">good</span>, <span class="fit fit--shaky">shaky</span>, <span class="fit fit--weak">weak</span>. On the job your best person rolls. * includes a trait bonus.</p>
@@ -912,7 +930,9 @@ function renderPlan() {
       ${renderFreelancers(t, v.threat, freelancers, full)}
 
       ${renderMentoring(picked)}
+      </div>
 
+      <div class="plangrid__approach">
       <h2>Approach</h2>
       <div class="segmented">
         ${Object.entries(APPROACHES).map(([k, a]) => `
@@ -920,11 +940,15 @@ function renderPlan() {
             <strong>${esc(a.name)}</strong><span>${esc(a.desc)}</span>
           </button>`).join('')}
       </div>
+      </div>
 
+      <div class="plangrid__risk">
       <h2 id="risk-read">Risk read</h2>
       <div class="riskcard">
         ${picked.length ? `${riskBadge(read.level)}
         <ul>${read.reasons.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>` : '<p class="muted">Pick a crew to see the risk.</p>'}
+      </div>
+      </div>
       </div>
     </section>
 
@@ -1055,40 +1079,37 @@ const DIFFICULTIES = {
 
 const cityName = (key) => NAMES.districts[key] ?? NAMES.lockedDistricts?.[key] ?? key;
 
-// Schematic map: the island on top, the harbour with the Amber Reach crossing
-// in the middle, the mainland below. Every district is a tap target (48px+).
-const MAP_SHAPES = [
-  { key: 'ironPeak', x: 116, y: 12, w: 128, h: 58 },
-  { key: 'heights', x: 64, y: 80, w: 232, h: 60 },
-  { key: 'oldTown', x: 14, y: 150, w: 162, h: 66 },
-  { key: 'nightMarket', x: 184, y: 150, w: 162, h: 66 },
-  { key: 'amberReach', x: 100, y: 270, w: 160, h: 60 },
-  { key: 'docks', x: 14, y: 392, w: 198, h: 66 },
-  { key: 'silt', x: 220, y: 396, w: 126, h: 60 },
-];
+/** Jobs on the board right now, by district. */
+const jobsIn = (key) => state.jobs.map((j) => ({ j, v: jobView(state, j) })).filter(({ v }) => v.tpl.district === key);
+/** Which gang's colour a district's turf stripe takes. */
+const TURF_TONE = { 'Brass Anchor': 'sodium', 'Red Lantern': 'red', 'Silver Fan': 'violet', 'Veridian-Apex': 'cyan', 'Racing Association': 'orange' };
+
+const TURF_HEX = { sodium: '#f2d541', red: '#ff3d5f', violet: '#b48cff', cyan: '#3de8d8', orange: '#ff9a3d' };
 
 function cityMap() {
-  const shape = ({ key, x, y, w, h }) => {
+  const talk = activeRumour(state)?.district;
+  const districts = MAP_DISTRICTS.map((key) => {
     const card = DISTRICT_CARDS[key];
-    const cls = `map-d${card.locked ? ' is-locked' : ''}${cityDistrict === key ? ' is-selected' : ''}`;
-    return `<g class="${cls}" data-action="city-district" data-id="${key}" role="button" tabindex="0" aria-label="${esc(cityName(key))}${card.locked ? ', locked' : ''}">
-      <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" />
-      <text x="${x + w / 2}" y="${y + h / 2 - (card.locked ? 4 : 0)}" class="map-d__name">${esc(cityName(key).replace(/^The /, ''))}</text>
-      ${card.locked ? `<text x="${x + w / 2}" y="${y + h / 2 + 13}" class="map-d__lock">LOCKED</text>` : ''}
-    </g>`;
-  };
-  const waves = [250, 264, 344, 358].map((y) => `<path class="map-wave" d="M16 ${y} q 10 -5 20 0 t 20 0 t 20 0 t 20 0 M260 ${y} q 10 -5 20 0 t 20 0 t 20 0 t 20 0" />`).join('');
+    const n = card.locked ? 0 : jobsIn(key).length;
+    const faction = DISTRICTS[key]?.faction;
+    const hot = talk === key;
+    return {
+      key, locked: card.locked, hot, selected: cityDistrict === key,
+      name: cityName(key).replace(/^The /, ''),
+      // The live readout under the name: work on the board here, and whether the street's talking about it.
+      readout: card.locked ? 'LOCKED' : `${n ? `${n} JOB${n === 1 ? '' : 'S'}` : 'NO WORK'}${hot ? ' · TALK' : ''}`,
+      tone: hot ? 'has-talk' : n ? 'has-work' : '',
+      turf: faction ? TURF_HEX[TURF_TONE[faction]] : '#8a93a6',
+      label: [cityName(key), card.locked ? 'locked' : `${n || 'no'} job${n === 1 ? '' : 's'} on the board`, faction && `${faction} turf`, hot && 'street talk about it'].filter(Boolean).join(', '),
+    };
+  });
+  const legend = [...new Set(Object.values(DISTRICTS).map((d) => d.faction).filter(Boolean))];
   return `
-    <svg class="citymap" viewBox="0 0 360 472" role="group" aria-label="Map of the city">
-      <rect class="map-land" x="0" y="0" width="360" height="236" rx="14" />
-      <rect class="map-water" x="0" y="228" width="360" height="146" />
-      <rect class="map-land" x="0" y="366" width="360" height="106" rx="14" />
-      ${waves}
-      <line class="map-crossing" x1="180" y1="216" x2="180" y2="392" />
-      <text x="346" y="244" class="map-label" text-anchor="end">HARBOUR</text>
-      <text x="14" y="383" class="map-label" text-anchor="start">MAINLAND</text>
-      ${MAP_SHAPES.map(shape).join('')}
-    </svg>`;
+    ${cityMapSvg(districts, esc)}
+    <ul class="maplegend">
+      ${legend.map((f) => `<li><span class="maplegend__swatch map-turf--${TURF_TONE[f] ?? 'cyan'}"></span>${esc(f)}</li>`).join('')}
+      ${talk ? '<li><span class="maplegend__dot"></span>Street talk</li>' : ''}
+    </ul>`;
 }
 
 function districtCard(key) {
@@ -1100,7 +1121,14 @@ function districtCard(key) {
       <h2 class="nomargin">${esc(cityName(key))} <span class="muted">${esc(c.chinese)}</span></h2>
       <p class="muted small">${esc(c.side)}${turf ? ` · ${esc(turf)}` : ''}</p>
       <p class="body">${esc(c.pitch)}</p>
-      ${c.locked ? `<p class="intel">${esc(c.teaser)}</p>` : `<p class="small"><strong>Jobs here:</strong> ${esc(jobs.join(', '))}</p>`}
+      ${c.locked ? `<p class="intel">${esc(c.teaser)}</p>` : (() => {
+        const now = jobsIn(key);
+        return now.length ? `<div class="stack">${now.map(({ j, v }) => `<button class="btn" data-action="open-job" data-id="${esc(j.id)}">${esc(v.tpl.name)} · ${money(v.pay)} · ${daysLeft(j.expiresDay)}</button>`).join('')}</div>`
+          : jobs.length ? `<p class="small muted">No work on the board here right now. New jobs arrive on Mondays.</p>`
+            : '<p class="small muted">Nobody here is hiring crews like yours yet.</p>';
+      })()}
+      ${activeRumour(state)?.district === key ? `<p class="talk-tag">Street talk: ${esc(activeRumour(state).text)}</p>` : ''}
+      ${c.locked || !jobs.length ? '' : `<p class="small"><strong>Kinds of work here:</strong> ${esc(jobs.join(', '))}</p>`}
       <p class="small"><strong>Who runs it:</strong> ${esc(c.control)}</p>
       <p class="small"><strong>Police:</strong> ${esc(c.police)}</p>
       <p class="small"><strong>At 3am:</strong> ${esc(c.night)}</p>
@@ -1116,11 +1144,16 @@ function renderCity() {
     <section class="panel">
       <h1>${esc(NAMES.city)} <span class="muted">燈籠灣</span></h1>
       <p class="muted small">2057. Tap a district.</p>
+      <div class="cols2">
+      <div>
       ${cityMap()}
       ${cityDistrict ? districtCard(cityDistrict) : ''}
+      </div>
+      <div>${renderClientCards()}</div>
+      </div>
 
-      ${renderClientCards()}
-
+      <div class="cols2">
+      <div>
       <h2>Who's who</h2>
       ${groups.map((g) => `
         <details class="citydetails">
@@ -1132,7 +1165,9 @@ function renderCity() {
                 <span class="muted small">Rumour: ${esc(f.rumour)}</span></li>`).join('')}
           </ul>
         </details>`).join('')}
+      </div>
 
+      <div>
       <h2>Everyone knows</h2>
       <ul class="list list--plain small">${STREET_FACTS.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>
 
@@ -1140,6 +1175,8 @@ function renderCity() {
         <summary>A short history</summary>
         <ul class="list list--plain small">${HISTORY.map((h) => `<li><strong>${esc(h.year)}</strong> ${esc(h.text)}</li>`).join('')}</ul>
       </details>
+      </div>
+      </div>
     </section>`;
 }
 
@@ -1165,6 +1202,8 @@ function renderSettings() {
       <h1>Save</h1>
       <p class="body">The game saves automatically after every action, in this browser only.</p>
 
+      <div class="cols2">
+      <div>
       <h2>Slots</h2>
       <ul class="list">
         ${slots.map((sl) => `
@@ -1181,7 +1220,9 @@ function renderSettings() {
           </li>`).join('')}
       </ul>
       ${picker}
+      </div>
 
+      <div>
       <h2>Backups</h2>
       <div class="riskcard">
         <p>Last exported: <strong>${lastExport}</strong>.${backupDue(state) ? ' <span class="warntext">Time for a backup.</span>' : ''}</p>
@@ -1196,6 +1237,8 @@ function renderSettings() {
         <p>Automatic backup: <strong>day ${backup.day}</strong> (taken at the start of each in-game week).</p>
         <button class="btn btn--block" data-action="restore-backup" ${backup.day === state.day ? 'disabled' : ''}>Restore backup from day ${backup.day}</button>
       </div>` : ''}
+      </div>
+      </div>
 
       <p class="muted small">Playing: ${esc(DIFFICULTIES[state.difficulty]?.name ?? state.difficulty)} · Save format v${state.version} · ${SLOT_COUNT} slots</p>
     </section>`;

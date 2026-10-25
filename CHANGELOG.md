@@ -4,6 +4,44 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · Race night: three jobs at Lantern Course
+- **The Favourite** (Auntie Fung): her horse Pepper runs in the sixth, and someone is paying stable hands to make sure she loses. Get into the stables, find the sedative, get past a suspicious vet, and buy or beat the name out of the Undercroft.
+- **Last Ticket** (Ruth Okonkwo): her ¥800,000 paper ticket vanished during an eleven-second blackout in the betting hall. Recover the missing footage, chase a runner through the stands, spot a forgery, and get it paid before midnight.
+- **Wrong Horse** (the Ferryman): the horse he carried has the right chip and the wrong markings. Get to stall nine, read the re-flashed chip, find what's under the scar, and get out before the owner's people catch you. Harder, and better paid.
+- Six crises each, every one with a way out. The Basin now shows jobs on the map when they're on the board. Fung and Okonkwo's jobs open from reputation 15, the Ferryman's from 35.
+
+## 2026-10-25 · The Basin and Lantern Course
+- **A new district on the City map: the Basin.** A bowl of towers between Old Town and Glass Heights, round **Lantern Course**, a floodlit racecourse from 1891 that still races real horses, with 2057 telemetry, live odds in everyone's eyes and illegal bookmakers underneath. You can see the course on the map.
+- Tap it for its card: who runs it (the Lantern Bay Racing Association, with the Silver Fan Circle underneath), its landmarks, and its custom about winning tickets. There's no work there yet; jobs are coming.
+- The Racing Association joins "Who's who" on the City tab, Lantern Course joins the history, and there's a new street fact about the unlucky number four.
+- New recruits may now say they grew up in the Basin.
+
+## 2026-10-25 · Lantern Bay from above
+- **The city map is now a proper map:** the island with Iron Peak in the middle and hills around it, a wild island to the west, the Amber Reach out in the harbour, and the mainland with the Docks' piers and the Silt's mudflats.
+- **Every district has its own streets:** a neat corporate grid in Glass Heights, crooked lanes in Old Town, a tangle in the Night Market, long haul roads at the Docks, switchbacks up the Peak. Locked districts are greyed out.
+- Borders show whose turf it is, and the job counts and street-talk markers from before are still there, in bigger text that's easier to read on a phone. Tap anywhere in a district to open it.
+- The ferry still crosses the harbour; the old swaying waves are gone (the sea has a wave pattern now).
+- Built so new districts can be added later without redrawing the city.
+
+## 2026-10-25 · A livelier city map
+- **The map shows what's happening now.** Each district says how many jobs are on the board there ("2 JOBS", "NO WORK"), and a blinking yellow dot plus "TALK" marks the district this week's street talk is about.
+- **Whose turf is it:** a coloured stripe on each district's edge (Brass Anchor yellow, Red Lantern red, Silver Fan violet, Veridian-Apex cyan), with a key under the map.
+- **Tap a district** to see its jobs on the board as buttons that go straight to planning, plus the street talk if it's about there. The list of work you can get there is now called "Kinds of work here".
+- **A new look to match the rest of the game:** sharp blocks with a cut corner, names in the display font with their Chinese names, and a rough coastline.
+- **A little life:** the harbour swells, a ferry light crosses the water, and the district you picked gently pulses. It all stays still if your device asks for reduced motion.
+
+## 2026-10-25 · Room to breathe on desktop
+- **Every page now uses the full width on a computer**, not just Today and crew profiles. Phones look the same as before.
+- **Crew and Jobs:** cards sit two across. Leads and the safehouse sit side by side under the crew.
+- **Planning a job:** your crew list is on the left; the client, approach and risk read are on the right, so you can watch the risk change as you pick people.
+- **Recruits** get the same two-column page as your own crew. **City:** the map sits beside the clients, and "Who's who" sits beside "Everyone knows". **Save:** slots on the left, backups on the right.
+- A job in progress stays a single column, so the story reads like a page.
+
+## 2026-10-25 · Coming up, up top
+- **Coming up now sits in a slim strip across the top of Today**, one column per day, so the week ahead is the first thing you see instead of something under the inbox. On a phone the days stack in the same strip, and it steps aside while you read a message.
+- On a wide screen the right-hand side now waits for a message ("Tap a message to read it here") and the week ahead stays put when you open one.
+- Joss's Monday line no longer says "Let's see who wants something": it now points at what came in overnight and the fresh work on the board.
+
 ## 2026-10-25 · Faces
 - **Your crew have faces** on the Crew list and their profile pages, in a painted, Citizen Sleeper-style look: real skin tones, a splash of city neon from one side, light and shadow instead of outlines.
 - You can see how someone's doing at a glance: a plaster or bandage when they're hurt, heavy eyes when they're worn out, an implant that glows with neural load. The fallen are greyed on the wall.
