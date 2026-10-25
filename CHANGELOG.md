@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · Job reports as a timeline
+- **Job reports are easier to read:** open one in the inbox and each thing that happened on the job is its own numbered step, top to bottom, joined by a line.
+- **The result comes last**, under ✓ Job done, ↩ Aborted or ✕ Someone didn't come home: pay, heat, injuries, who improved and what the client thinks, one per line. Good news is green, heat is amber, bad news is red.
+- Reports from older saves are split into lines too (without the colours). Save format v15. 157 tests.
+
 ## 2026-10-25 · Faces everywhere
 - **Faces on the job and leads screens:** when you pick a crew for a job, your crew and the freelancers on offer show their portraits instead of initials. So do new leads on the Crew screen and their profile page.
 - A lead keeps the same face after you hire them.

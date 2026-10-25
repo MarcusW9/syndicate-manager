@@ -542,10 +542,35 @@ function renderMessage(m) {
       <button class="btn btn--ghost inbox__back" data-action="back">← Today</button>
       <h1>${esc(m.subject)}</h1>
       <p class="muted">${esc(m.type)} · Day ${m.day}</p>
-      <p class="body">${esc(m.body)}</p>
+      ${m.type === 'report' ? renderReportTimeline(m) : `<p class="body">${esc(m.body)}</p>`}
       ${m.kind === 'renewal' ? renderRenewal(m) : ''}
       ${m.kind === 'heat' ? renderHeatNotice(m) : ''}
       ${jobLink}`;
+}
+
+/**
+ * A job report as a timeline, top to bottom: each crisis in the order it happened, then
+ * what the job came to. Reports from before save v15 have only a paragraph: split it into
+ * sentences, with the outcome starting at "Paid".
+ */
+function renderReportTimeline(m) {
+  let { result, steps, outcome } = m.timeline ?? {};
+  if (!m.timeline) {
+    const lines = (m.body ?? '').split(/(?<=[.!?]["'”]?)\s+(?=["“A-Z¥])/);
+    const at = lines.findLastIndex((l) => l.startsWith('Paid '));
+    steps = at < 0 ? lines : lines.slice(0, at);
+    outcome = at < 0 ? [] : lines.slice(at).map((text) => ({ tone: 'plain', text }));
+  }
+  const end = { completed: ['✓', 'Job done'], aborted: ['↩', 'Aborted'], loss: ['✕', 'Someone didn\'t come home'] }[result] ?? ['■', 'How it ended'];
+  return `
+      <ol class="timeline">
+        ${steps.map((text, i) => `<li class="timeline__item"><span class="timeline__node" aria-hidden="true">${i + 1}</span><p class="timeline__text">${esc(text)}</p></li>`).join('')}
+        ${outcome.length ? `<li class="timeline__item timeline__item--end timeline__item--${esc(result ?? 'plain')}">
+          <span class="timeline__node" aria-hidden="true">${end[0]}</span>
+          <div class="timeline__text"><p class="timeline__label">${esc(end[1])}</p>
+            <ul class="timeline__results">${outcome.map((o) => `<li class="tone--${esc(o.tone)}">${esc(o.text)}</li>`).join('')}</ul></div>
+        </li>` : ''}
+      </ol>`;
 }
 
 /** Renewal notice: the numbers, then Accept / Haggle / Refuse (or the outcome once decided). */

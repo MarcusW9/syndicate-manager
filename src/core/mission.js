@@ -525,12 +525,22 @@ function finish(state) {
 
   const subject = deaths.length ? `${deaths.map((d) => d.handle).join(', ')} died on the ${tpl.name}`
     : am.aborted ? `${tpl.name} aborted` : `${tpl.name} completed`;
+  // The report reads as a timeline: what happened, in order, then what it came to.
+  // Each outcome line has a tone so the screen can colour it (good, bad, warn, plain).
+  const steps = [...(am.report ?? [])];
+  const results = [
+    { tone: pay > 0 ? 'good' : 'plain', text: `Paid ${money(pay)}.` },
+    ...(cuts ? [{ tone: 'plain', text: `Freelancers took ${money(cuts)}.` }] : []),
+    { tone: heatGain > 0 ? 'warn' : 'plain', text: `Heat +${heatGain}.` },
+    injuries.length ? { tone: 'bad', text: `Injured: ${injuries.join(', ')}.` } : { tone: 'good', text: 'Nobody hurt.' },
+    ...(deaths.length ? [{ tone: 'bad', text: 'Their names go on the wall.' }] : []),
+    ...(growthLines.length ? [{ tone: 'good', text: `Improved: ${growthLines.join(', ')}.` }] : []),
+    ...(client && trustChange ? [{ tone: trustChange > 0 ? 'good' : 'bad', text: `${client.name} ${trustChange > 0 ? 'thinks more of you' : 'is unhappy with you'} (trust ${trustChange > 0 ? '+' : ''}${trustChange}).` }] : []),
+  ];
   state.inbox.unshift({
     id: `report-${state.day}-${state.rngCounter}`, type: 'report', day: state.day, subject,
-    body: (am.report?.length ? am.report.join(' ') + ' ' : '') + `Paid ${money(pay)}.` + (cuts ? ` Freelancers took ${money(cuts)}.` : '') + ` Heat +${heatGain}.` + (injuries.length ? ` Injured: ${injuries.join(', ')}.` : ' Nobody hurt.') +
-      (deaths.length ? ' Their names go on the wall.' : '') +
-      (growthLines.length ? ` Improved: ${growthLines.join(', ')}.` : '') +
-      (client && trustChange ? ` ${client.name} ${trustChange > 0 ? 'thinks more of you' : 'is unhappy with you'} (trust ${trustChange > 0 ? '+' : ''}${trustChange}).` : ''),
+    body: [...steps, ...results.map((o) => o.text)].join(' '),
+    timeline: { result: outcome, steps, outcome: results },
     blocking: false, read: false,
   });
   reactToJob(state, am, tpl, { heatGain, injuries, deaths });

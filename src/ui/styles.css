@@ -285,6 +285,25 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .resultcard--completed { border-color: #2e6b52; }
 .meter__fill.is-hot { background: var(--danger); }
 
+/* Job report as a timeline: a rail down the left, a numbered node per crisis, the outcome last. */
+.timeline { list-style: none; margin: 1rem 0; padding: 0; }
+.timeline__item { position: relative; display: flex; gap: 12px; padding-bottom: 16px; }
+.timeline__item::before { content: ''; position: absolute; left: 13px; top: 28px; bottom: 0; width: 2px; background: var(--line); }
+.timeline__item:last-child { padding-bottom: 0; }
+.timeline__item:last-child::before { display: none; }
+.timeline__node { flex: 0 0 28px; height: 28px; display: grid; place-items: center; border: 1.5px solid var(--accent-2); background: var(--panel); color: var(--accent-2); font-family: var(--display, inherit); font-weight: 700; font-size: 0.85rem; clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%); }
+.timeline__text { margin: 3px 0 0; line-height: 1.55; min-width: 0; }
+.timeline__item--end .timeline__node { border-color: var(--muted); color: var(--text); }
+.timeline__item--completed .timeline__node { border-color: #5fe0a5; color: #5fe0a5; }
+.timeline__item--aborted .timeline__node { border-color: var(--warn); color: var(--warn); }
+.timeline__item--loss .timeline__node { border-color: var(--danger); color: var(--danger); }
+.timeline__label { margin: 0 0 4px; font-family: var(--display, inherit); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.85rem; }
+.timeline__results { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.tone--good { color: #5fe0a5; }
+.tone--warn { color: var(--warn); }
+.tone--bad { color: var(--danger); }
+
+
 @media (min-width: 900px) {
   .segmented { grid-template-columns: repeat(3, 1fr); }
 }

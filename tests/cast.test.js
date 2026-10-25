@@ -58,6 +58,21 @@ test('a rookie job\'s after-action message carries a plain line for each crisis'
   assert.equal(seen, 20, 'the report leads the after-action message');
 });
 
+test('the after-action message is a timeline: each crisis in order, then the outcome', () => {
+  for (let seed = 1; seed <= 10; seed++) {
+    const s = createNewGame({ seed, startCrew: 'fresh' });
+    const job = s.jobs.find((j) => j.templateId === 'clinic');
+    const done = playMission(M.startMission(s, job.id, s.crew.slice(0, 2).map((o) => o.id), 'stealth'), carefulPolicy).state;
+    const msg = done.inbox.find((m) => m.type === 'report');
+    const { result, steps, outcome } = msg.timeline;
+    assert.equal(result, done.activeMission.result.outcome, `seed ${seed}: result`);
+    assert.deepEqual(steps, done.activeMission.result.report, `seed ${seed}: steps in order`);
+    assert.match(outcome[0].text, /^Paid ¥/, `seed ${seed}: outcome starts with pay`);
+    for (const o of outcome) assert.ok(['good', 'bad', 'warn', 'plain'].includes(o.tone), `seed ${seed}: tone ${o.tone}`);
+    assert.equal(msg.body, [...steps, ...outcome.map((o) => o.text)].join(' '), `seed ${seed}: preview text matches`);
+  }
+});
+
 test('briefs fill their cast and district slots before a crew is picked', () => {
   for (const m of MISSIONS) {
     const b = M.fillBrief(m);

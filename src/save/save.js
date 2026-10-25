@@ -253,5 +253,10 @@ function migrate(state) {
     // have no age; their portraits draw as if under 45.
     state.version = 14;
   }
+  if (state.version === 14) {
+    // v15 gives new job reports a timeline ({ result, steps, outcome }) so the message reads
+    // top to bottom. Older reports keep their single paragraph; the screen splits it into lines.
+    state.version = 15;
+  }
   return state;
 }
