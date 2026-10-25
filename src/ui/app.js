@@ -10,7 +10,7 @@ import { STARTING_CREW } from '../data/operatives.js';
 
 // Saves made before badges existed have no colour on their operatives.
 const COLOR_BY_ID = Object.fromEntries(STARTING_CREW.map((o) => [o.id, o.color]));
-import { advanceDay, formatDate, isBlocked, seasonStartDay } from '../core/time.js';
+import { advanceDay, calendar, formatShortDate, isBlocked, seasonStartDay } from '../core/time.js';
 import { createNewGame } from '../core/state.js';
 import { templateById, jobView, nextUnlock } from '../core/jobs.js';
 import { trustLabel, clientById, trustOf } from '../core/clients.js';
@@ -42,6 +42,10 @@ let openRecruitId = null;
 let newGameSlot = null; // slot number while picking a difficulty
 let plan = null; // { jobId, crew: [...ids], approach }
 let root;
+// Continue rests briefly after each new day, so a double click can't skip one.
+const CONTINUE_REST_MS = 800;
+let continueRestUntil = 0;
+let dayCue = null; // what the day that just started brought; shown once, on the next render
 
 export function mountApp(el, initialState) {
   root = el;
@@ -69,7 +73,14 @@ function onClick(e) {
 
   switch (action) {
     case 'nav': screen = id; openMessageId = null; openOperativeId = null; openRecruitId = null; plan = null; break;
-    case 'continue': if (!isBlocked(state)) return setState(advanceDay(state)); break;
+    case 'continue': {
+      if (isBlocked(state) || Date.now() < continueRestUntil) return;
+      const next = advanceDay(state);
+      dayCue = dayCueFor(state, next);
+      continueRestUntil = Date.now() + CONTINUE_REST_MS;
+      setTimeout(wakeContinue, CONTINUE_REST_MS);
+      return setState(next);
+    }
     case 'city-district': cityDistrict = cityDistrict === id ? null : id; break;
     case 'open-message': {
       openMessageId = id;
@@ -213,40 +224,113 @@ function statCell(op, k, { growth = false } = {}) {
 // --- rendering ---------------------------------------------------------
 function render() {
   const blocked = isBlocked(state);
+  const resting = Date.now() < continueRestUntil;
   const unread = state.inbox.filter((m) => !m.read).length;
-  const continueLabel = state.activeMission ? 'On a job' : blocked ? 'Decision needed' : 'Continue';
+  const cue = dayCue;
+  dayCue = null;
+  const wide = screen === 'inbox' && !state.activeMission;
 
   root.innerHTML = `
-    <header class="topbar">
-      <div class="topbar__date">${esc(formatDate(state.day))} <span class="muted small">· Day ${state.day}</span></div>
+    <header class="topbar ${cue ? 'is-new-day' : ''}">
+      ${renderWhen()}
       <div class="topbar__stats">
-        <span class="stat"><span class="stat__label">Cash</span> ${money(state.cash)}</span>
+        <span class="stat"><span class="stat__label">Cash</span> ${money(state.cash)}${cashDelta()}</span>
         <span class="stat"><span class="stat__label">Heat</span> ${state.heat}/10</span>
-        <span class="stat"><span class="stat__label">Tier</span> ${esc(state.tier)}</span>
+        <span class="tier">${esc(statName(state.tier))} tier</span>
       </div>
-      <button class="btn btn--primary topbar__continue" data-action="continue" ${blocked ? 'disabled' : ''}>${continueLabel}</button>
+      ${renderContinue(blocked, resting, unread)}
     </header>
 
     <nav class="nav" aria-label="Main">
-      ${navButton('inbox', `Inbox${unread ? ` (${unread})` : ''}`)}
+      ${navButton('inbox', 'Inbox', unread, 'unread')}
       ${navButton('crew', 'Crew')}
-      ${navButton('jobs', `Jobs${state.jobs.length ? ` (${state.jobs.length})` : ''}`)}
+      ${navButton('jobs', 'Jobs', state.jobs.length, 'open')}
       ${navButton('city', 'City')}
       ${navButton('settings', 'Save')}
     </nav>
 
-    <main class="main">${state.activeMission ? renderMission() : renderScreen()}</main>
+    <main class="main ${wide ? 'main--wide' : ''}">${state.activeMission ? renderMission() : renderScreen()}</main>
+    ${cue ? renderDayCue(cue) : ''}
     <input type="file" id="import-file" accept="application/json" hidden />
   `;
   if (state.activeMission) root.querySelector('.mission-end')?.scrollIntoView({ block: 'end' });
 }
 
-function navButton(id, label) {
-  return `<button class="nav__btn ${screen === id ? 'is-active' : ''}" data-action="nav" data-id="${id}">${esc(label)}</button>`;
+/** Date, a bar that fills across the week, and how long until Sunday's bills. */
+function renderWhen() {
+  const today = (state.day - 1) % 7; // 0 = Monday, 6 = Sunday (bills)
+  const toBills = 6 - today;
+  const bills = toBills === 0 ? 'bills paid today' : toBills === 1 ? 'bills tomorrow' : `bills in ${toBills} days`;
+  const cells = Array.from({ length: 7 }, (_, i) =>
+    `<span class="week__day ${i < today ? 'is-done' : i === today ? 'is-today' : ''} ${i === 6 ? 'is-bills' : ''}"></span>`).join('');
+  return `<div class="topbar__when">
+      <div class="topbar__date">${esc(formatShortDate(state.day))}</div>
+      <div class="week" role="img" aria-label="Day ${today + 1} of 7 this week">${cells}</div>
+      <div class="week__note">Day ${state.day} · ${bills}</div>
+    </div>`;
+}
+
+/** Today's cash change, e.g. "▲¥1,050". Nothing on a day the cash hasn't moved. */
+function cashDelta() {
+  const d = state.cash - (state.dayStartCash ?? state.cash);
+  if (!d) return '';
+  return ` <span class="delta ${d < 0 ? 'is-down' : ''}" aria-label="${d < 0 ? 'down' : 'up'} ${money(Math.abs(d))} today">${d < 0 ? '▼' : '▲'}${money(Math.abs(d))}</span>`;
+}
+
+/** Continue names the next day and lists what's still waiting; it never asks for a second tap. */
+function renderContinue(blocked, resting, unread) {
+  const label = state.activeMission ? 'On a job' : blocked ? 'Decision needed'
+    : `Continue → ${calendar(state.day + 1).weekday}`;
+  const waiting = [
+    unread ? `${unread} unread` : '',
+    state.jobs.length ? `${state.jobs.length} job${state.jobs.length === 1 ? '' : 's'} open` : '',
+  ].filter(Boolean).join(' · ');
+  const hint = !blocked && waiting ? `<span class="continue__hint">${esc(waiting)}</span>` : '';
+  return `<button class="btn btn--primary topbar__continue ${resting && !blocked ? 'is-resting' : ''}" data-action="continue" ${blocked || resting ? 'disabled' : ''}>
+      <span class="continue__label">${esc(label)}</span>${hint}
+    </button>`;
+}
+
+/** Re-enable Continue once its rest is over, without a full re-render. */
+function wakeContinue() {
+  const btn = root.querySelector('.topbar__continue');
+  if (!btn || isBlocked(state) || Date.now() < continueRestUntil) return;
+  btn.disabled = false;
+  btn.classList.remove('is-resting');
+}
+
+/** What changed overnight: new messages, new jobs, cash moved by the day's tick. */
+function dayCueFor(before, after) {
+  const known = new Set(before.inbox.map((m) => m.id));
+  const knownJobs = new Set(before.jobs.map((j) => j.id));
+  return {
+    day: after.day,
+    messages: after.inbox.filter((m) => !known.has(m.id)).length,
+    jobs: after.jobs.filter((j) => !knownJobs.has(j.id)).length,
+    cash: after.cash - before.cash,
+  };
+}
+
+function renderDayCue(cue) {
+  const plural = (n, word) => `${n} new ${word}${n === 1 ? '' : 's'}`;
+  const parts = [
+    cue.messages ? plural(cue.messages, 'message') : '',
+    cue.jobs ? plural(cue.jobs, 'job') : '',
+    cue.cash ? `cash ${cue.cash < 0 ? '▼' : '▲'}${money(Math.abs(cue.cash))}` : '',
+  ].filter(Boolean);
+  return `<div class="daycue" role="status">
+      <strong>${esc(calendar(cue.day).weekday)} · Day ${cue.day}</strong>
+      <span>${esc(parts.length ? parts.join(' · ') : 'A quiet day.')}</span>
+    </div>`;
+}
+
+function navButton(id, label, count = 0, countWord = '') {
+  const pill = count ? ` <span class="pill ${id === 'inbox' ? 'pill--new' : ''}" aria-label="${count} ${countWord}">${count}</span>` : '';
+  return `<button class="nav__btn ${screen === id ? 'is-active' : ''}" data-action="nav" data-id="${id}">${esc(label)}${pill}</button>`;
 }
 
 function renderScreen() {
-  if (screen === 'inbox') return openMessageId ? renderMessage() : renderInbox();
+  if (screen === 'inbox') return renderInbox();
   if (screen === 'crew') return openRecruitId ? renderRecruit() : openOperativeId ? renderOperative() : renderCrew();
   if (screen === 'jobs') return plan ? renderPlan() : renderJobs();
   if (screen === 'city') return renderCity();
@@ -261,40 +345,47 @@ function backupBanner() {
     <button class="btn" data-action="export">Export now</button></div>`;
 }
 
+/**
+ * Inbox: the list and the open message. Phones show one at a time; wide screens show
+ * both side by side (styles.css), so reading mail doesn't mean going back and forth.
+ */
 function renderInbox() {
   if (!state.inbox.length) return `<section class="panel"><h1>Inbox</h1><p class="muted">Nothing new. Press Continue.</p></section>`;
+  const open = state.inbox.find((m) => m.id === openMessageId);
   return `
     ${backupBanner()}
-    <section class="panel">
-      <h1>Inbox</h1>
-      <ul class="list">
-        ${state.inbox.map((m) => `
-          <li>
-            <button class="row ${m.read ? '' : 'is-unread'}" data-action="open-message" data-id="${esc(m.id)}">
-              <span class="row__tag tag--${esc(m.type)}">${esc(m.type)}</span>
-              <span class="row__main">${esc(m.subject)}</span>
-              <span class="row__meta">Day ${m.day}</span>
-            </button>
-          </li>`).join('')}
-      </ul>
-    </section>`;
+    <div class="inbox ${open ? 'has-open' : ''}">
+      <section class="panel inbox__list">
+        <h1>Inbox</h1>
+        <ul class="list">
+          ${state.inbox.map((m) => `
+            <li>
+              <button class="row ${m.read ? 'is-read' : 'is-unread'} ${m === open ? 'is-open' : ''}" data-action="open-message" data-id="${esc(m.id)}">
+                ${m.read ? '' : '<span class="dot" aria-label="Unread"></span>'}
+                <span class="row__tag tag--${esc(m.type)}">${esc(m.type)}</span>
+                <span class="row__main">${esc(m.subject)}</span>
+                <span class="row__meta">Day ${m.day}</span>
+              </button>
+            </li>`).join('')}
+        </ul>
+      </section>
+      <section class="panel inbox__detail">
+        ${open ? renderMessage(open) : '<p class="muted inbox__empty">Pick a message to read it here.</p>'}
+      </section>
+    </div>`;
 }
 
-function renderMessage() {
-  const m = state.inbox.find((x) => x.id === openMessageId);
-  if (!m) return renderInbox();
+function renderMessage(m) {
   const jobLink = m.type === 'job' && state.jobs.length ? `<button class="btn" data-action="nav" data-id="jobs">Open the job board</button>`
     : m.type === 'scout' && (state.recruits ?? []).length ? `<button class="btn" data-action="nav" data-id="crew">See the leads</button>` : '';
   return `
-    <section class="panel">
-      <button class="btn btn--ghost" data-action="back">← Inbox</button>
+      <button class="btn btn--ghost inbox__back" data-action="back">← Inbox</button>
       <h1>${esc(m.subject)}</h1>
       <p class="muted">${esc(m.type)} · Day ${m.day}</p>
       <p class="body">${esc(m.body)}</p>
       ${m.kind === 'renewal' ? renderRenewal(m) : ''}
       ${m.kind === 'heat' ? renderHeatNotice(m) : ''}
-      ${jobLink}
-    </section>`;
+      ${jobLink}`;
 }
 
 /** Renewal notice: the numbers, then Accept / Haggle / Refuse (or the outcome once decided). */

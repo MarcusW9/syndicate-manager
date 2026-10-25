@@ -131,6 +131,7 @@
  * @property {number} seed             RNG seed (deterministic replays)
  * @property {number} day              Day 1 = Monday, week 1, season 1
  * @property {number} cash
+ * @property {number} dayStartCash   Cash when the day began (the top bar shows the change)
  * @property {number} heat             0-10. Cools 2 every Sunday (core/heat.js)
  * @property {?number} heatNoticeDay   Day the last fixer notice fired (14-day cooldown)
  * @property {boolean} heatWatched     Let the heat ride: the next job's first crisis roll is -1

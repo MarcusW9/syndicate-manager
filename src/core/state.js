@@ -8,7 +8,7 @@ import { prepareOperative } from './development.js';
 import { refreshFreelancers } from './freelance.js';
 import { ECONOMY } from '../data/economy.js';
 
-export const SAVE_VERSION = 12;
+export const SAVE_VERSION = 13;
 
 // A rookie crew's first board: small work only.
 export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];
@@ -93,5 +93,6 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
     for (const id of ['courier', 'data_pull', 'warehouse']) addOffer(state, id);
   }
   refreshFreelancers(state);
+  state.dayStartCash = state.cash;
   return state;
 }

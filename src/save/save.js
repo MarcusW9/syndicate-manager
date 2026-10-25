@@ -243,5 +243,10 @@ function migrate(state) {
     state.jobGates = state.jobGates ?? false;
     state.version = 12;
   }
+  if (state.version === 12) {
+    // v13 added dayStartCash: cash at the start of the day, for the top bar's daily change.
+    state.dayStartCash = state.dayStartCash ?? state.cash;
+    state.version = 13;
+  }
   return state;
 }

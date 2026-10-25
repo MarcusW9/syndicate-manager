@@ -4,6 +4,14 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-25 · Clearer days and a better inbox
+- **You can see the day change.** A bar under the date fills across the week, with Sunday (bills) marked. When a new day starts, the date flashes and a note says what came in: new messages, new jobs, money in or out.
+- **No more skipping a day by accident.** After each Continue the button rests for under a second, so a double click only moves one day.
+- **Continue says where it goes** ("Continue → Tue") and what's still waiting ("1 unread · 3 jobs open").
+- **Cash shows today's change** (▲¥1,050 after a paid job, ▼ on Sundays when bills go out). The tier is now a badge, and the date is shorter.
+- **Inbox:** unread messages have a teal dot, read ones look quieter, and each type (report, crew, finance, scout…) has its own colour. On a wide screen the message opens next to the list instead of replacing it.
+- Older saves upgrade automatically. Save format v13. 141 tests.
+
 ## 2026-10-25 · Story order, young backstories, and Ruth Okonkwo's first job
 - **Data Scrub**, a new job for Ruth Okonkwo: steal a prototype chip from a Veridian-Apex lab in Glass Heights. It opens once your crew has a little reputation (threat 2).
 - Crises in the new jobs now happen in story order: no running into Ah-Wah's hired muscle on the landing before you've climbed the stairs.

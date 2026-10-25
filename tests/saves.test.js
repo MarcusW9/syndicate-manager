@@ -2,7 +2,7 @@
 
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { createNewGame } from '../src/core/state.js';
+import { createNewGame, SAVE_VERSION } from '../src/core/state.js';
 import { advanceDay } from '../src/core/time.js';
 
 // In-memory browser storage.
@@ -113,4 +113,26 @@ test('a v9 save upgrades to v10 with heat notice fields', async () => {
   assert.equal(loaded.heatNoticeDay, null);
   assert.equal(loaded.heatWatched, false);
   assert.equal(loaded.heat, 7, 'heat itself is untouched');
+});
+
+test('cash at the start of the day is recorded for the daily change', () => {
+  let s = createNewGame({ seed: 30 });
+  assert.equal(s.dayStartCash, s.cash, 'a new game starts with no change');
+  s.cash += 500; // a job paid out today
+  s = days(s, 1);
+  assert.equal(s.dayStartCash, s.cash, 'a new day starts from what you had');
+  s = days(s, 4); // day 6 -> day 7 is Sunday: wages and rent go out that morning
+  const before = s.cash;
+  s = days(s, 1);
+  assert.equal(s.dayStartCash, before);
+  assert.ok(s.cash < s.dayStartCash, "Sunday's bills show as today's change");
+});
+
+test('a v12 save upgrades to v13 with today\'s starting cash', async () => {
+  const v12 = createNewGame({ seed: 31 });
+  delete v12.dayStartCash;
+  v12.version = 12;
+  const loaded = await S.importSave(asFile(v12));
+  assert.equal(loaded.version, SAVE_VERSION);
+  assert.equal(loaded.dayStartCash, loaded.cash);
 });

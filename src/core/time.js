@@ -32,6 +32,12 @@ export function formatDate(day) {
   return `${c.weekday} · Week ${c.week} · Season ${c.season}`;
 }
 
+/** Top-bar date: "Mon · Wk 1 · S1". */
+export function formatShortDate(day) {
+  const c = calendar(day);
+  return `${c.weekday} · Wk ${c.week} · S${c.season}`;
+}
+
 /** True when a blocking message is waiting, so Continue should not tick. */
 export function isBlocked(state) {
   return Boolean(state.activeMission) || state.inbox.some((m) => m.blocking && !m.resolved);
@@ -41,6 +47,7 @@ export function isBlocked(state) {
 export function advanceDay(prev) {
   const state = structuredClone(prev);
   state.day += 1;
+  state.dayStartCash = state.cash; // the top bar shows today's change against this
 
   for (const op of state.crew) {
     expireStatuses(op, state.day);
