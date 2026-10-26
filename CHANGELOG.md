@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-26 · Screenshot log
+- **How the game looked, version by version:** `docs/screenshots/` now holds phone screenshots of 11 versions, from the first playable build on 23 Oct to the current one, plus the owner's own screenshots from 24 Oct. Its README lists each version with what changed on screen.
+- Every set shows the same screens with the same file names (job board, planning, a crisis, the report, crew and so on), so old and new are easy to put side by side.
+- `npm run screenshots -- <name>` adds a new set; `--commit <sha>` captures an older version.
+
 ## 2026-10-25 · Tidier crew cards
 - **Crew cards line up:** someone who's away no longer has a taller card than the people beside them.
 - The name and codename sit on one line, with the status next to their role and the fatigue and morale bars next to the scout's note. On a phone the status and bars get a row of their own.
