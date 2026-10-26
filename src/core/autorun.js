@@ -63,7 +63,8 @@ export function decide(state, ordersId) {
   }
   const c = pick.choice;
   if (!pick.roller) return { id: c.id, why: 'No roll needed.' };
-  const who = `${pick.roller.op.handle} took it: the best ${c.stat} on the crew (${pick.roller.value}).`;
+  const who = pick.named ? `It was on ${pick.roller.op.handle} to handle (${c.stat} ${pick.roller.value}).`
+    : `${pick.roller.op.handle} took it: the best ${c.stat} on the crew (${pick.roller.value}).`;
   const bestOdds = Math.max(...tries.map((o) => o.chance));
   const reason = pick.chance >= bestOdds ? 'The best odds of the options.'
     : (c.successCost?.payCut ?? 0) < 0 ? 'Worth the risk for the extra pay.'
