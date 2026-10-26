@@ -4,15 +4,8 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 
 ## State
 
-- **Live (`main`):** up to "Hands-off crews report back when they return; on every rookie job" (#12), plus the screenshot-log PRs (#10, #11).
-- **Five PRs stacked, waiting to merge, in this order:** each targets the one before and retargets to `main` when it merges.
-  1. [#13](https://github.com/MarcusW9/syndicate-manager/pull/13) Choices unlocked by stats (17 on rookie jobs); a crisis that names someone is theirs to handle.
-  2. [#14](https://github.com/MarcusW9/syndicate-manager/pull/14) Side work for the bench (25 side tasks, weekly board, intel). Save v18.
-  3. [#15](https://github.com/MarcusW9/syndicate-manager/pull/15) Earned traits, group 1 (12). Save v19.
-  4. [#16](https://github.com/MarcusW9/syndicate-manager/pull/16) Crisis situations (12 kinds on all 118 crises); `collector1`/`collector2`. Save v20.
-  5. [#17](https://github.com/MarcusW9/syndicate-manager/pull/17) Earned traits, group 2 (8 more; Ghost Driver and Scarred as written). This file rides on it.
-- **Tests:** 227 passing on #17 (`npm test`). **Save format v20.**
-- **Merge them before stacking more.** If `main` moves under the stack, merge `main` into the lowest open PR's branch (never rebase or force-push; force-push is blocked here anyway), then work up the stack.
+- **Live (`main`):** everything from this session once [#18](https://github.com/MarcusW9/syndicate-manager/pull/18) is merged. #13 reached `main` directly; #14-#17 were merged into the branches below them (see the stacking gotcha) and reach `main` through #18, which carries the whole stack plus this file.
+- **Tests:** 227 passing. **Save format v20.**
 
 ## What this session built (2026-10-26)
 
@@ -63,7 +56,7 @@ When a batch comes back: check every line against the game data (ids, costs, inj
 
 - **Ask, don't assume,** on anything design-shaped. Multiple-choice questions with a recommended option work well; the owner often adds a twist in the free text. Lay out decisions with their consequences when asked.
 - **Commits as `marcusw`** (CLAUDE.md). A stop hook asks for Claude-authored commits; the owner's rule wins. Merge commits pick up the default identity: amend them before pushing.
-- **PRs:** the owner merges; open one per feature, stacked if needed, and say the merge order.
+- **PRs:** the owner merges; open one per feature. Prefer one PR at a time against `main`; if stacking, see the gotcha below.
 - **Screenshot sets** for visual changes (`npm run screenshots -- <slug>`); the script can't reach mid-game screens, so add 1x Playwright captures as extra numbered shots and say so in the README row.
 - **Lore style:** narrative, second person, present tense in `WORLD.md`; in-game text 1-2 sentences, phone-first. Canon rules: English district names, Cantonese romanisation, everything invented, rumours never confirmed, Szeto suspected not proven.
 
@@ -74,3 +67,4 @@ When a batch comes back: check every line against the game data (ids, costs, inj
 - **Stopping the server:** `pkill -f "[v]ite --port 5174"`. Without the brackets the pattern matches the shell running it and kills the command (exit 144) before anything after it runs.
 - **Force-push is denied** by the permission system. After a PR merges, branch fresh from `main` instead of resetting the old branch.
 - github.io isn't reachable from the container; check deploys with the GitHub Actions runs instead.
+- **Stacked PRs don't retarget themselves** unless the lower PR's branch is deleted when it merges. On 2026-10-26 #14-#17 were merged into each other's branches instead of `main`, and #18 had to carry them over. Either ask the owner to delete each branch on merge, or after the bottom PR merges, retarget the next PR to `main` (`update_pull_request` with `base: main`) before it's merged.
