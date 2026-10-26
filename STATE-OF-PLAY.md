@@ -72,4 +72,5 @@ Record the owner's calls here as they come; decisions also get `DESIGN.md` log r
 - **Morale (2026-10-26):** cut, superseding the item 2 call. The meter goes in v21 with burnout; mood comes from three temporary traits (Restless, Sore about pay, Settled) built with money pressure. See the `DESIGN.md` row.
 - **Item 3, approaches and heat (2026-10-26):** approaches weight the crisis draw by situation (keeping the +1s) and cost time, heat or money (stealth +1 day; loud −1 day and +1 heat; social a bribe); heat becomes per district. See the `DESIGN.md` row.
 - **Item 4, competing clients (2026-10-26):** parked for now; revisit after district heat and promotions.
+- **Item 5, relationships (2026-10-26):** hybrid: one-cause bonds and rifts as events (Owes one, Blames), slow ones from a hidden pair score (Old hands, Rubs the wrong way); rifts mendable; grief by personality; built with the career page. See the `DESIGN.md` row.
 - Other items: pending.
