@@ -20,6 +20,7 @@ export const KIDNAP = {
   crises: [
     {
       id: 'lookout',
+      situations: ['entry', 'fight'],
       text: 'A lookout is smoking in the alley by the back door. If he sees you, the hostage gets moved, or worse.',
       choices: [
         { id: 'quiet', label: '{muscle} takes him down quietly', kind: 'push', stat: 'stealth', difficulty: 11,
@@ -35,6 +36,7 @@ export const KIDNAP = {
     },
     {
       id: 'moving',
+      situations: ['fight'],
       text: 'Footsteps on the stairs. The kidnappers are moving the hostage to a car, right now.',
       choices: [
         { id: 'ambush', label: 'Hit them on the stairs', kind: 'push', stat: 'combat', difficulty: 13,
@@ -50,6 +52,7 @@ export const KIDNAP = {
     },
     {
       id: 'hostage_hurt',
+      situations: ['injury', 'escape'],
       text: 'The accountant has been beaten badly. He can barely stand, and the stairs are steep.',
       choices: [
         { id: 'patch', label: '{medic} patches him up first', kind: 'adapt', stat: 'medical', difficulty: 10, requires: { kind: 'role', value: 'medic' },
@@ -65,6 +68,7 @@ export const KIDNAP = {
     },
     {
       id: 'ransom_call',
+      situations: ['threat'],
       text: 'The kidnappers\' phone rings. It\'s their boss. If nobody answers, he\'ll send more people.',
       choices: [
         { id: 'voice', label: '{face} answers and fakes a kidnapper\'s voice', kind: 'adapt', stat: 'social', difficulty: 12, requires: { kind: 'role', value: 'face' },
@@ -80,6 +84,7 @@ export const KIDNAP = {
     },
     {
       id: 'wrong_floor',
+      situations: ['entry', 'threat'],
       text: 'The floor plan was wrong. There\'s a mahjong game going in the next room: six men, and they\'re all armed.',
       choices: [
         { id: 'sneak', label: 'Slip past while the tiles are loud', kind: 'push', stat: 'stealth', difficulty: 13,
@@ -95,6 +100,7 @@ export const KIDNAP = {
     },
     {
       id: 'police_sirens',
+      situations: ['police', 'escape'],
       text: 'Sirens. Someone called the police about the noise. They\'ll be here in minutes, and the hostage is a witness.',
       choices: [
         { id: 'leave_him', label: 'Leave the hostage for the police to find', kind: 'adapt', stat: 'cool', sure: true, difficulty: 0, cost: { payCut: 0.5, clientTrust: -5 },

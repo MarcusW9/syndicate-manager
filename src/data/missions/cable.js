@@ -24,6 +24,7 @@ export const CABLE = {
   crises: [
     {
       id: 'catwalk',
+      situations: [],
       order: -1,
       text: 'The maintenance catwalk is slick with weed, and the water underneath is pulling hard.',
       focusRole: 'tech',
@@ -41,6 +42,7 @@ export const CABLE = {
     },
     {
       id: 'frayed_core',
+      situations: ['street-tech'],
       after: 2, order: 1, // the cable has been found
       text: 'The core is frayed in three places, and the salt is already eating into the copper.',
       focusRole: 'tech',
@@ -58,6 +60,7 @@ export const CABLE = {
     },
     {
       id: 'sonar',
+      situations: ['corp-tech'],
       after: 1, // under the pier
       text: 'An Aether-Harbour survey drone glides under the pier, its sonar pinging off the pylons.',
       choices: [

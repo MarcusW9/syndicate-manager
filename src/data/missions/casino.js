@@ -20,6 +20,7 @@ export const CASINO = {
   crises: [
     {
       id: 'pit_boss',
+      situations: [],
       text: 'The pit boss is watching {face}\'s hands closely. He signals for the dealer to change the shoe.',
       focusRole: 'face',
       choices: [
@@ -36,6 +37,7 @@ export const CASINO = {
     },
     {
       id: 'signal_lost',
+      situations: ['corp-tech'],
       text: 'The casino\'s jammer kicks in. {tech}\'s link to {face}\'s earpiece drops to static.',
       focusRole: 'tech',
       choices: [
@@ -52,6 +54,7 @@ export const CASINO = {
     },
     {
       id: 'recognised',
+      situations: ['crowd'],
       text: 'A regular at the table squints at {face}. "Don\'t I know you? You were at the Macau tables last year."',
       focusRole: 'face',
       choices: [
@@ -68,6 +71,7 @@ export const CASINO = {
     },
     {
       id: 'back_room',
+      situations: ['threat', 'fight'],
       text: 'Security asks {face} to come to the back room "for a chat". Two of them, both big.',
       focusRole: 'face',
       choices: [
@@ -84,6 +88,7 @@ export const CASINO = {
     },
     {
       id: 'triad_owner',
+      situations: ['threat'],
       text: 'The owner comes down to watch. He has a Red Lantern tattoo on his wrist. This is their room.',
       choices: [
         { id: 'respect', label: '{face} pays respect: a share of the winnings', kind: 'adapt', stat: 'cool', sure: true, difficulty: 0, cost: { payCut: 0.25 },
@@ -99,6 +104,7 @@ export const CASINO = {
     },
     {
       id: 'big_hand',
+      situations: [],
       text: 'One last hand. The whole stack on the table. {tech} says the signal is good, but not certain.',
       choices: [
         { id: 'all_in', label: 'Go all in', kind: 'push', stat: 'tech', difficulty: 11, successCost: { payCut: -0.4 },

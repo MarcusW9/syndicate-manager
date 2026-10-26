@@ -89,6 +89,7 @@
  * @property {string} id
  * @property {string} text             Situation, may use {op} for the operative involved
  * @property {string} [focusRole]      Who the crisis centres on, if anyone
+ * @property {string[]} [situations]  What kind of situation it is (data/situations.js)
  * @property {CrisisChoice[]} choices  Always includes at least one abort
  */
 

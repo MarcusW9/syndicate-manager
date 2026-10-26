@@ -20,6 +20,7 @@ export const PROTECTION = {
   crises: [
     {
       id: 'tail_bikes',
+      situations: ['escape', 'threat'],
       text: 'Two motorbikes fall in behind the van. The riders aren\'t wearing helmets, and they\'re in no hurry to pass.',
       focusRole: 'driver',
       choices: [
@@ -36,6 +37,7 @@ export const PROTECTION = {
     },
     {
       id: 'roadblock',
+      situations: ['fight', 'threat', 'escape'],
       text: 'A cart full of cardboard has been pushed across the road. Men are waiting in the doorways either side.',
       choices: [
         { id: 'ram', label: '{driver} drives straight through', kind: 'push', stat: 'driving', difficulty: 12, cost: { heat: 1 },
@@ -51,6 +53,7 @@ export const PROTECTION = {
     },
     {
       id: 'toll_collector',
+      situations: ['threat'],
       text: 'A polite young man in a suit flags the van down. "Red Lantern road. There\'s a fee."',
       choices: [
         { id: 'pay', label: 'Pay the fee', kind: 'adapt', stat: 'cool', sure: true, difficulty: 0, cost: { cash: -800 },
@@ -66,6 +69,7 @@ export const PROTECTION = {
     },
     {
       id: 'client_panic',
+      situations: ['crowd'],
       text: 'The herbalist sees someone she knows on the street and panics. She wants to get out of the van, now.',
       choices: [
         { id: 'calm', label: '{face} calms her down', kind: 'adapt', stat: 'social', difficulty: 10,
@@ -81,6 +85,7 @@ export const PROTECTION = {
     },
     {
       id: 'ambush',
+      situations: ['fight', 'escape'],
       text: 'A car pulls across the van at a junction. Doors open. This was planned.',
       focusRole: 'muscle',
       choices: [
@@ -97,6 +102,7 @@ export const PROTECTION = {
     },
     {
       id: 'checkpoint_goods',
+      situations: [],
       text: 'Customs officers are inspecting vans at the district border. Some of the dried goods are not exactly legal.',
       choices: [
         { id: 'papers', label: '{face} shows the herbalist\'s paperwork with confidence', kind: 'adapt', stat: 'social', difficulty: 11,

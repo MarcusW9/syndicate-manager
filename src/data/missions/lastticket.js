@@ -25,6 +25,7 @@ export const LAST_TICKET = {
   crises: [
     {
       id: 'eleven_seconds',
+      situations: ['street-tech'],
       after: 0,
       text: 'The hall\'s security footage skips exactly eleven seconds. Hoi-Sing\'s log calls it a routine fault.',
       focusRole: 'tech',
@@ -42,6 +43,7 @@ export const LAST_TICKET = {
     },
     {
       id: 'sweepers',
+      situations: ['corp-tech'],
       after: 0,
       text: 'Cleaning drones are already vacuuming the hall\'s slips into a compactor. The ticket might be in there.',
       choices: [
@@ -58,6 +60,7 @@ export const LAST_TICKET = {
     },
     {
       id: 'runner',
+      situations: ['crowd'],
       after: 1,
       text: 'A young runner in cleaner\'s gloves sees you coming and bolts up the terrace steps into the crowd.',
       choices: [
@@ -74,6 +77,7 @@ export const LAST_TICKET = {
     },
     {
       id: 'forger',
+      situations: [],
       after: 2,
       text: 'An Undercroft forger offers you "your ticket" for ¥2,000. It looks perfect. That\'s the problem.',
       focusRole: 'tech',
@@ -91,6 +95,7 @@ export const LAST_TICKET = {
     },
     {
       id: 'collector',
+      situations: ['threat', 'fight'],
       after: 2, order: 1,
       text: 'A Silver Fan collector has the ticket pinned to his board against a jockey\'s debt. "Possession is the whole law, down here."',
       choices: [
@@ -107,6 +112,7 @@ export const LAST_TICKET = {
     },
     {
       id: 'window',
+      situations: ['corp-tech'],
       after: 3,
       text: 'At the payout window the clerk frowns. "Big ticket. I need the holder\'s biometrics." The holder is in Glass Heights.',
       choices: [

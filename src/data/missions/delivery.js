@@ -24,6 +24,7 @@ export const DELIVERY = {
   crises: [
     {
       id: 'crush',
+      situations: ['crowd'],
       text: 'A mahjong parlour lets out and the alley fills shoulder to shoulder. The crate is slipping.',
       choices: [
         { id: 'shoulder', label: '{op} shoulders a path through', kind: 'push', stat: 'combat', difficulty: 5,
@@ -42,6 +43,7 @@ export const DELIVERY = {
     },
     {
       id: 'meter_man',
+      situations: ['threat'],
       text: 'A Hoi-Sing meter inspector in a hi-vis jacket waves the trike down. "That battery charged off a stall? Show me the receipt."',
       choices: [
         { id: 'receipt', label: '{op} invents a receipt on the spot', kind: 'adapt', stat: 'social', difficulty: 6,
@@ -57,6 +59,7 @@ export const DELIVERY = {
     },
     {
       id: 'leak',
+      situations: [],
       text: 'The crate starts dripping. It isn\'t water: it smells of ozone and burnt sugar, and it hisses where it lands.',
       choices: [
         { id: 'tape', label: '{op} tapes it up and keeps moving', kind: 'adapt', stat: 'tech', difficulty: 6,
@@ -75,6 +78,7 @@ export const DELIVERY = {
     },
     {
       id: 'raincoat',
+      situations: ['crowd'],
       text: 'A man in a raincoat has been three stalls behind you since the Neon Dragon. He stops when you stop.',
       choices: [
         { id: 'lose', label: '{op} loses him in the crowd', kind: 'adapt', stat: 'stealth', difficulty: 6,

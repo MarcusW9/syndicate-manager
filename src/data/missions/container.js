@@ -24,6 +24,7 @@ export const CONTAINER = {
   crises: [
     {
       id: 'cutter',
+      situations: ['police'],
       text: 'A Wet Sleeve cutter cuts its engine and drifts blind through the fog towards your stack.',
       choices: [
         { id: 'shadow', label: '{op} melts into the shadow of a container wall', kind: 'adapt', stat: 'stealth', difficulty: 6,
@@ -39,6 +40,7 @@ export const CONTAINER = {
     },
     {
       id: 'groaning_stack',
+      situations: ['street-tech'],
       text: 'The wind shifts off the bay. A stack of rusted containers above you groans and starts to creep.',
       focusRole: 'tech',
       choices: [
@@ -55,6 +57,7 @@ export const CONTAINER = {
     },
     {
       id: 'dock_dog',
+      situations: ['fight'],
       text: 'A feral dock dog, ribs showing through wet fur, snarls at the hum of your earpieces.',
       choices: [
         { id: 'feed', label: 'Toss it a strip of salted pork', kind: 'adapt', stat: 'social', difficulty: 4,
@@ -70,6 +73,7 @@ export const CONTAINER = {
     },
     {
       id: 'whistler',
+      situations: [],
       text: 'An Aether-Harbour night-shift forklift comes down your row, headlights on. The driver is whistling.',
       choices: [
         { id: 'duck', label: 'Duck behind the stacks', kind: 'adapt', stat: 'stealth', difficulty: 5,
@@ -85,6 +89,7 @@ export const CONTAINER = {
     },
     {
       id: 'boxed_in',
+      situations: ['escape'],
       text: 'A container truck has parked across the only road out. The driver is asleep in the cab.',
       focusRole: 'driver',
       choices: [
@@ -104,6 +109,7 @@ export const CONTAINER = {
     },
     {
       id: 'backwards',
+      situations: [],
       text: 'On the boat, the Ferryman lights a clove cigarette and turns it to face backwards. Everyone on the waterfront knows what that means.',
       choices: [
         { id: 'watch', label: 'Don\'t ask. Keep watching.', kind: 'push', stat: 'cool', difficulty: 6,

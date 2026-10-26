@@ -24,6 +24,7 @@ export const EVICTION = {
   crises: [
     {
       id: 'capacitor',
+      situations: ['street-tech', 'entry'],
       text: 'The relay box is shut with an army-surplus padlock, wired to a high-voltage capacitor.',
       focusRole: 'tech',
       choices: [
@@ -43,6 +44,7 @@ export const EVICTION = {
     },
     {
       id: 'live_mic',
+      situations: ['crowd', 'threat'],
       after: 1, // the shack has been seen
       text: 'The old man bolts the shack door and grabs his microphone. "One more step and all of Old Town hears Szeto\'s name."',
       choices: [
@@ -62,6 +64,7 @@ export const EVICTION = {
     },
     {
       id: 'neighbours',
+      situations: ['crowd', 'threat'],
       text: 'Tenants gather on the landing below, some holding iron pipes. Nobody says anything. They just watch.',
       choices: [
         { id: 'level', label: '{op} tells them straight: Szeto wants the building, and he\'ll get it', kind: 'adapt', stat: 'social', difficulty: 6,

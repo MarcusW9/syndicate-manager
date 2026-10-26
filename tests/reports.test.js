@@ -52,3 +52,12 @@ test('the risk read names every bonus: traits, a veteran on the crew, the approa
   const cool = read('cutter', 'splash');
   if (cool.startsWith(tech.handle)) assert.match(cool, new RegExp(`${face.handle} steadies them \\+1`));
 });
+
+// Situations (2026-10-26): every crisis says what kind of situation it is, from the known list.
+test('every crisis lists its situations, only known ones', async () => {
+  const { SITUATIONS } = await import('../src/data/situations.js');
+  for (const c of [...MISSIONS.flatMap((m) => m.crises), ...TWISTS]) {
+    assert.ok(Array.isArray(c.situations), `${c.id} lists situations (an empty list is fine)`);
+    for (const t of c.situations) assert.ok(SITUATIONS[t], `${c.id}: unknown situation ${t}`);
+  }
+});

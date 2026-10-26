@@ -24,6 +24,7 @@ export const SCRUB = {
   crises: [
     {
       id: 'ceiling_drone',
+      situations: ['corp-tech', 'entry'],
       after: 1, // inside the lab
       text: 'A security drone glides along its ceiling track, sweeping a blue sensor across the terminal desk.',
       focusRole: 'tech',
@@ -41,6 +42,7 @@ export const SCRUB = {
     },
     {
       id: 'handprint',
+      situations: ['corp-tech', 'entry'],
       after: 1,
       text: 'The terminal wants a biometric handprint before it will release the chip.',
       focusRole: 'tech',
@@ -58,6 +60,7 @@ export const SCRUB = {
     },
     {
       id: 'early_guard',
+      situations: ['entry', 'corp-tech'],
       after: 1,
       text: 'A Veridian-Apex guard comes back early from his break, whistling, his footsteps loud on the glass floor.',
       choices: [
