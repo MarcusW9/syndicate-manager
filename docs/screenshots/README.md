@@ -4,6 +4,7 @@ How the game looked over time, newest first. Each folder is one version, named `
 
 - **Captured sets** come from `npm run screenshots`. The script plays a fresh game at phone width (390×844, 2x), takes the same screens every time and adds one desktop view. Same file names in every set, so `03-job-board.png` in one folder matches `03-job-board.png` in another. A screen the version didn't have yet (City, Today) is just missing.
 - **Owner captures** are screenshots the owner took while playing. They're kept as they were, with names describing what they show.
+- **Design-session captures** are screenshots taken in a working session while building or reviewing a change: before-and-after shots, iterations and style tests that never shipped. Kept as captured (often 1x), numbered in the order they were taken, with a README in the folder captioning each one and naming the commit it shipped in.
 
 Missing screens and versions can be filled in later from git history: `npm run screenshots -- <slug> --commit <sha>`.
 
@@ -23,6 +24,7 @@ Then add a row to the top of the table below and commit the folder with the chan
 | --- | --- | --- | --- | --- |
 | 2026-10-26 | Hands-off runs and mission logs | `8da7680` | Job reports open with Joss's line, a turning point, standout and what hurt us, with a foldable full log and dice on tap; Container 409 can be sent hands-off under standing orders; the risk read names every bonus; the City map's district card sits beside the map; jobs trickle in through the week; new scout reads. | [2026-10-26-hands-off-and-mission-logs](2026-10-26-hands-off-and-mission-logs/) |
 | 2026-10-25 | Report timelines, City tab sections | `56a6083` | Job reports as a numbered timeline; City tab split into Map, Clients, Who's who and Lore; tidier crew cards. | [2026-10-25-timelines-and-city-sections](2026-10-25-timelines-and-city-sections/) |
+| 2026-10-25 | Design session: UX, Joss, skin, portraits | `d3e6975`–`16e78f3` | Session captures in order: the owner's starting screenshot, the clearer-days and inbox pass, crew picks before and after, Today's two versions, Joss's briefing, the first (unshipped) style test, the street-terminal skin, and the portraits with their variety and condition sheets. Captioned in the folder's README. | [2026-10-25-design-session](2026-10-25-design-session/) |
 | 2026-10-25 | Portraits | `16e78f3` | Citizen Sleeper-style faces on the crew list and profiles. | [2026-10-25-portraits](2026-10-25-portraits/) |
 | 2026-10-25 | Joss and the street-terminal skin | `386c9b3` | The whole look changes: Rajdhani display font, terminal panels, the week bar, Joss's messages on Today. | [2026-10-25-joss-street-terminal-skin](2026-10-25-joss-street-terminal-skin/) |
 | 2026-10-25 | Today home screen | `b806940` | Today replaces Inbox as the home tab; Continue docks to the bottom on phones; scannable job board. | [2026-10-25-today-home-screen](2026-10-25-today-home-screen/) |
