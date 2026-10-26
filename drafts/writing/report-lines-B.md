@@ -1,6 +1,6 @@
 # Report lines, batch B
 
-18 crises that need a plain `report` line for every choice. Source text, generated from the game data on 2026-10-26. Paste this whole file after the prompt for task 1 in `drafts/writing-tasks.md`.
+18 crises that need a plain `report` line for every choice. Source text, generated from the game data on 2026-10-26 (updated the same day to show success-only bonuses). Paste this whole file after the prompt for task 1 in `drafts/writing-tasks.md`.
 
 ### Data Courier Run
 
@@ -103,7 +103,7 @@ CRISIS executive: An executive working late walks onto the floor and stares at {
   - success: Five minutes of apologies and he is giving directions to the mop cupboard.
   - failure: He does not buy it and calls security. You leave in a hurry. [injury: none, heat +1]
 - charm (push, social): {face} talks him into opening the server room himself
-  - success: He badges you in, chatting the whole way, and shows you the backup drive. Bonus data for the client.
+  - success: He badges you in, chatting the whole way, and shows you the backup drive. Bonus data for the client. [pay +20%]
   - failure: He gets suspicious halfway and grabs for {face}'s arm. It gets physical. [injury: light]
 - hide (push, stealth): Everyone drops behind the desks
   - success: He shrugs, takes his coat and leaves.

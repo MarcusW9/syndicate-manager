@@ -1,6 +1,6 @@
 # Report lines, batch C
 
-12 crises that need a plain `report` line for every choice. Source text, generated from the game data on 2026-10-26. Paste this whole file after the prompt for task 1 in `drafts/writing-tasks.md`.
+12 crises that need a plain `report` line for every choice. Source text, generated from the game data on 2026-10-26 (updated the same day to show success-only bonuses). Paste this whole file after the prompt for task 1 in `drafts/writing-tasks.md`.
 
 ### Kidnap Rescue
 
@@ -115,7 +115,7 @@ CRISIS triad_owner: The owner comes down to watch. He has a Red Lantern tattoo o
 
 CRISIS big_hand: One last hand. The whole stack on the table. {tech} says the signal is good, but not certain.
 - all_in (push, tech): Go all in
-  - success: Natural nine. The table goes silent. The job pays 40% more.
+  - success: Natural nine. The table goes silent. The job pays 40% more. [pay +40%]
   - failure: The cards turn the wrong way. You lose the stack. [injury: none, loses 80% of pay]
 - walk (adapt, cool): Walk away with what you have
   - success: You stand, stretch and cash out. A good night.

@@ -1,6 +1,6 @@
 # Report lines, batch D
 
-12 crises that need a plain `report` line for every choice. Source text, generated from the game data on 2026-10-26. Paste this whole file after the prompt for task 1 in `drafts/writing-tasks.md`.
+12 crises that need a plain `report` line for every choice. Source text, generated from the game data on 2026-10-26 (updated the same day to show success-only bonuses). Paste this whole file after the prompt for task 1 in `drafts/writing-tasks.md`.
 
 ### Penthouse Heist
 
