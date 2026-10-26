@@ -56,4 +56,31 @@ export const PARTNER = {
     'lead-last': ['{name} the {role} walks tomorrow if we don\'t sign them.', 'Last chance on {name} ({role}). After today they\'ll find another crew.'],
     'crew-out': ['Can\'t work today: {names}. Plan around them.', '{names} sitting this one out. Doctor\'s orders, or mine.'],
   },
+  // The first line of a job report, picked by how it went (core/report.js). Only what the
+  // report itself shows: no guessing at who was behind anything.
+  reports: {
+    clean: [
+      'Full pay, no bandages. Write it down somewhere.',
+      'That\'s how it\'s meant to go. I\'ll pretend I wasn\'t worried.',
+      'Clean. Nobody hurt, and the money\'s all there.',
+    ],
+    messy: [
+      'We got paid. Not quietly, and not all of it, but we got paid.',
+      'Done, with dents. The log says where.',
+      'It went sideways in places. It still went.',
+    ],
+    aborted: [
+      'We walked. Everyone\'s home, which is the part that counts.',
+      'No pay tonight. Everyone\'s back, so I\'m calling it a draw.',
+      'We pulled out. The log says why. I\'d have made the same call.',
+    ],
+    hurt: [
+      'Someone came back hurt. Read the log before you send them out again.',
+      'We finished, but someone\'s paying for it. I\'ve found a clinic that doesn\'t ask.',
+    ],
+    loss: [
+      'We lost someone. I don\'t have a line for this.',
+      'Not everyone came home. The rest of it can wait.',
+    ],
+  },
 };

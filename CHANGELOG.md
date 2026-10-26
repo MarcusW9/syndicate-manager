@@ -4,6 +4,12 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-26 · Send a crew hands-off, and reports that show their working
+- **Hands-off jobs:** Container 409 can now be sent hands-off. Pick a crew and their orders (Cautious, Steady or Committed); they run it on their own and you go straight to the report. A hands-off crew never pushes on with a critical wound, so nobody can die on one.
+- **Better job reports, for every job:** Joss opens with a line on how it went, then the turning point, who stood out and what hurt us (only when there's something to say). Tap **Full log** to read the whole job step by step: who took each moment, why, and, on tap, the dice ("Die 12 + tech 6 = 18 · needed 17").
+- **Choices name the right person:** "X steps forward" now always names whoever actually makes the roll and takes the risk. Before, it could name someone else on the crew.
+- Older reports keep their timeline; only new jobs have the full log. Save format v16. 177 tests.
+
 ## 2026-10-26 · Work through the week, new scout reads
 - **New jobs trickle in:** instead of three jobs landing every Monday, one comes in early in the week, one midweek and one late in the week, each with its own inbox message. Every job stays on the board for a week from the day it arrived.
 - Freelancers and street talk still change on Mondays.

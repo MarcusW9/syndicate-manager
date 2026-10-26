@@ -19,6 +19,7 @@ import { CAST } from '../data/cast.js';
 import { DISTRICTS } from '../data/districts.js';
 import { NAMES } from '../config/names.js';
 import { money } from './money.js';
+import { summariseRun, REPORT_LOGS_KEPT } from './report.js';
 
 const EXIT_KINDS = new Set(['abort', 'extract']);
 const STABILISE_DIFFICULTY = 9;
@@ -78,9 +79,35 @@ export function fill(text, state, am) {
 }
 
 /** The plain one-line version of what happened, for the after-action message (and, later, autonomous runs). */
-function addReport(state, am, choice, success) {
+function addReport(state, am, choice, success, voice = am) {
+  const line = reportLine(state, voice, choice, success);
+  if (line) am.report = [...(am.report ?? []), line];
+}
+
+/**
+ * Who a choice's own text calls {op}: whoever makes its roll, so "{op} steps forward"
+ * names the person who rolls (and, with no focus role, gets hurt). A crisis with a focus
+ * role keeps its focus person: the text is about them, and they take the injury.
+ */
+function choiceVoice(am, crisis, roller) {
+  return roller && !crisis.focusRole ? { ...am, focusOp: roller.op.id } : am;
+}
+
+function reportLine(state, am, choice, success) {
   const line = choice.report?.[success ? 'success' : 'failure'];
-  if (line) am.report = [...(am.report ?? []), fill(line, state, am)];
+  return line ? fill(line, state, am) : null;
+}
+
+/** Add a fact to the run's record (am.events, save v16; a job saved mid-way before then starts one). */
+function record(am, event) {
+  (am.events ??= []).push(event);
+}
+
+/** A hands-off run's reason for its next pick (core/autorun.js), used once. */
+function takeWhy(am) {
+  const why = am.nextWhy ?? null;
+  delete am.nextWhy;
+  return why;
 }
 
 /** A job's brief, filled before any crew is picked (planning screen): cast, {district}, {faction}. */
@@ -160,6 +187,7 @@ export function startMission(prev, jobId, crewIds, approach) {
     payCut: 0, extraHeat: 0, clientTrust: 0, watched,
     critical: null, stabiliseFailed: false, untreated: [],
     focusOp: null, aborted: false, done: false, result: null, growth: [], graduated: [], report: [],
+    events: [], // the run as recorded facts, for the report's full log (save v16)
   };
   return state;
 }
@@ -172,7 +200,9 @@ export function revealBeat(prev) {
   const step = currentStep(am);
   if (!am || am.critical || step?.type !== 'beat') return prev;
   const tpl = templateById(am.templateId);
-  am.log.push({ kind: 'beat', text: fill(tpl.beats[step.index], state, am) });
+  const text = fill(tpl.beats[step.index], state, am);
+  am.log.push({ kind: 'beat', text });
+  record(am, { kind: 'beat', text, first: step.index === 0, last: step.index === tpl.beats.length - 1 });
   advance(state);
   return state;
 }
@@ -183,7 +213,10 @@ function advance(state) {
   const step = currentStep(am);
   if (step?.type === 'crisis') {
     const crisis = crisisById(templateById(am.templateId), step.id);
-    if (step.twist) am.log.push({ kind: 'twist', text: `Twist: ${crisis.name}` });
+    if (step.twist) {
+      am.log.push({ kind: 'twist', text: `Twist: ${crisis.name}` });
+      record(am, { kind: 'twist', text: crisis.name });
+    }
     const crew = crewOf(state, am).filter((o) => o.condition.injury !== 'critical');
     const focus = crisis.focusRole ? crew.find((o) => o.role === crisis.focusRole) : null;
     const rng = nextRng(state);
@@ -261,7 +294,9 @@ export function describeCrisis(state) {
   const crew = crewOf(state, am);
   const choices = crisis.choices.map((choice) => {
     const req = meetsRequirement(crew, choice.requires);
-    const view = { id: choice.id, label: fill(choice.label, state, am), kind: choice.kind, available: req.ok, reason: req.reason ?? '', cost: choiceCostText(choice) };
+    const rolls = req.ok && !EXIT_KINDS.has(choice.kind) && !choice.sure;
+    const voice = choiceVoice(am, crisis, rolls ? rollerFor(state, am, choice, crew) : null);
+    const view = { id: choice.id, label: fill(choice.label, state, voice), kind: choice.kind, available: req.ok, reason: req.reason ?? '', cost: choiceCostText(choice) };
     if (EXIT_KINDS.has(choice.kind)) return { ...view, risk: 'safe', riskReason: 'Everyone gets out alive' };
     if (!req.ok) return view;
     if (choice.sure) return { ...view, risk: 'certain', riskReason: 'No roll needed' };
@@ -278,6 +313,23 @@ export function describeCrisis(state) {
   return { text: fill(crisis.text, state, am), choices };
 }
 
+/**
+ * The current crisis's choices as numbers, for a hands-off crew deciding (core/autorun.js):
+ * each available choice with its chance (the same one the risk read shows) and who would roll.
+ */
+export function crisisOdds(state) {
+  const am = state.activeMission;
+  const step = currentStep(am);
+  if (!am || am.critical || step?.type !== 'crisis') return null;
+  const crisis = crisisById(templateById(am.templateId), step.id);
+  const crew = crewOf(state, am);
+  return crisis.choices.filter((c) => meetsRequirement(crew, c.requires).ok).map((choice) => {
+    if (EXIT_KINDS.has(choice.kind) || choice.sure) return { choice, exit: EXIT_KINDS.has(choice.kind), chance: 1, roller: null };
+    const roller = rollerFor(state, am, choice, crew);
+    return { choice, exit: false, chance: successChance(roller.value, rollDifficulty(am, choice)), roller };
+  });
+}
+
 export function chooseOption(prev, choiceId) {
   const state = structuredClone(prev);
   const am = state.activeMission;
@@ -289,17 +341,29 @@ export function chooseOption(prev, choiceId) {
   const crew = crewOf(state, am);
   if (!choice || !meetsRequirement(crew, choice.requires).ok) return prev;
 
+  const rolls = !EXIT_KINDS.has(choice.kind) && !choice.sure;
+  const roller = rolls || choice.sure ? rollerFor(state, am, choice, crew) : null;
+  const voice = choiceVoice(am, crisis, rolls ? roller : null);
   am.log.push({ kind: 'crisis', text: fill(crisis.text, state, am) });
-  am.log.push({ kind: 'choice', text: fill(choice.label, state, am) });
+  am.log.push({ kind: 'choice', text: fill(choice.label, state, voice) });
   const cost = choice.cost ?? {};
   am.payCut += cost.payCut ?? 0;
   am.extraHeat += cost.heat ?? 0;
   am.clientTrust += cost.clientTrust ?? 0;
   if (cost.cash) state.cash += cost.cash;
 
+  // What gets recorded for the full log: the facts of this choice, filled in below.
+  const event = {
+    kind: EXIT_KINDS.has(choice.kind) ? 'exit' : choice.sure ? 'sure' : 'roll',
+    crisis: crisis.id, choiceId: choice.id, twist: !!step.twist, text: fill(crisis.text, state, am), choice: fill(choice.label, state, voice),
+    why: am.nextWhy ?? null, choiceCost: { ...(choice.cost ?? {}) }, report: reportLine(state, voice, choice, true),
+  };
+  delete am.nextWhy;
+
   if (EXIT_KINDS.has(choice.kind)) {
     am.log.push({ kind: 'good', text: fill(choice.success, state, am) });
     addReport(state, am, choice, true);
+    record(am, event);
     am.aborted = true;
     if (step.twist) am.abortedOnTwist = true; // walking away from a job the client misrepresented isn't held against you
     am.step = am.queue.length - 1;
@@ -307,9 +371,15 @@ export function chooseOption(prev, choiceId) {
     return state;
   }
 
-  const roller = rollerFor(state, am, choice, crew);
   const rng = nextRng(state);
-  const success = choice.sure || d20(rng) + roller.value >= 10 + rollDifficulty(am, choice);
+  const die = choice.sure ? null : d20(rng);
+  const need = 10 + rollDifficulty(am, choice);
+  const success = choice.sure || die + roller.value >= need;
+  Object.assign(event, {
+    stat: choice.stat, actor: { id: roller.op.id, handle: roller.op.handle }, value: roller.value, notes: roller.notes,
+    die, need, success, outcomeCost: { ...((success ? choice.successCost : choice.failureCost) ?? {}) }, injury: null,
+    report: reportLine(state, voice, choice, success),
+  });
   if (!choice.sure) am.watched = 0; // the watched penalty covers the first roll only
 
   // Everyone learns from a roll: the roller most (even on a failure), the rest by watching.
@@ -323,15 +393,15 @@ export function chooseOption(prev, choiceId) {
     roller.op.condition.neuralLoad = Math.min(100, roller.op.condition.neuralLoad + Math.round(choice.neural * rate));
   }
 
-  addReport(state, am, choice, success);
+  addReport(state, am, choice, success, voice);
   if (success) {
-    am.log.push({ kind: 'good', text: fill(choice.success, state, am) });
+    am.log.push({ kind: 'good', text: fill(choice.success, state, voice) });
     const sc = choice.successCost ?? {};
     am.payCut += sc.payCut ?? 0;
     am.extraHeat += sc.heat ?? 0;
     if (sc.cash) state.cash += sc.cash;
   } else {
-    am.log.push({ kind: 'bad', text: fill(choice.failure, state, am) });
+    am.log.push({ kind: 'bad', text: fill(choice.failure, state, voice) });
     const fc = choice.failureCost ?? {};
     am.payCut += fc.payCut ?? 0;
     am.extraHeat += fc.heat ?? 0;
@@ -341,12 +411,14 @@ export function chooseOption(prev, choiceId) {
       const injury = worsenInjury(target.condition.injury, choice.failureInjury);
       setInjury(target, injury);
       am.log.push({ kind: 'injury', text: `${target.handle}: ${injury} injury.` });
+      event.injury = { id: target.id, handle: target.handle, severity: injury };
       if (injury === 'critical') {
         am.critical = target.id;
         am.stabiliseFailed = false;
       }
     }
   }
+  record(am, event);
   advance(state);
   return state;
 }
@@ -389,7 +461,11 @@ export function resolveCritical(prev, option) {
     const medic = r.op;
     am.extraHeat += 1;
     am.log.push({ kind: 'choice', text: `${medic.handle} works on ${op.handle}.` });
-    const stabilised = d20(nextRng(state)) + r.value >= 10 + STABILISE_DIFFICULTY;
+    const die = d20(nextRng(state));
+    const stabilised = die + r.value >= 10 + STABILISE_DIFFICULTY;
+    record(am, { kind: 'critical', action: 'stabilise', patient: op.handle, actor: { id: medic.id, handle: medic.handle }, stat: 'medical',
+      value: r.value, notes: r.notes, die, need: 10 + STABILISE_DIFFICULTY, success: stabilised, why: takeWhy(am),
+      report: stabilised ? `${medic.handle} stabilised ${op.handle}.` : `${medic.handle} couldn't stop ${op.handle}'s bleeding.` });
     grow(state, am, medic, 'medical', XP.roll);
     if (stabilised) {
       setInjury(op, 'serious');
@@ -407,6 +483,7 @@ export function resolveCritical(prev, option) {
     am.aborted = true;
     am.critical = null;
     am.log.push({ kind: 'choice', text: `You drop the job and get ${op.handle} out.` });
+    record(am, { kind: 'critical', action: 'extract', patient: op.handle, why: takeWhy(am), report: `The crew dropped the job to get ${op.handle} to a clinic. Pay -50%.` });
     am.log.push({ kind: 'good', text: `${op.handle} makes it to a clinic. Alive.` });
     am.step = am.queue.length;
     finish(state);
@@ -415,6 +492,7 @@ export function resolveCritical(prev, option) {
     am.untreated.push(op.id);
     am.critical = null;
     am.log.push({ kind: 'choice', text: 'You push on.' });
+    record(am, { kind: 'critical', action: 'push', patient: op.handle, why: takeWhy(am), report: `The crew pushed on with ${op.handle} untreated in the van.` });
     am.log.push({ kind: 'bad', text: `${op.handle} is left in the back of the van, bleeding. Every minute counts.` });
   } else {
     return prev;
@@ -442,9 +520,11 @@ function finish(state) {
       setInjury(op, 'serious');
       op.condition.injuryDays = 21;
       am.log.push({ kind: 'good', text: `${op.handle} pulls through. Barely.` });
+      record(am, { kind: 'aftermath', text: `${op.handle} pulled through. Barely.` });
     } else {
       deaths.push(op);
       am.log.push({ kind: 'death', text: `${op.name} "${op.handle}" dies on the way back.` });
+      record(am, { kind: 'aftermath', death: true, text: `${op.name} "${op.handle}" died on the way back.` });
     }
   }
 
@@ -537,12 +617,20 @@ function finish(state) {
     ...(growthLines.length ? [{ tone: 'good', text: `Improved: ${growthLines.join(', ')}.` }] : []),
     ...(client && trustChange ? [{ tone: trustChange > 0 ? 'good' : 'bad', text: `${client.name} ${trustChange > 0 ? 'thinks more of you' : 'is unhappy with you'} (trust ${trustChange > 0 ? '+' : ''}${trustChange}).` }] : []),
   ];
+  const id = `report-${state.day}-${state.rngCounter}`;
+  const events = am.events ?? [];
   state.inbox.unshift({
-    id: `report-${state.day}-${state.rngCounter}`, type: 'report', day: state.day, subject,
+    id, type: 'report', day: state.day, subject,
     body: [...steps, ...results.map((o) => o.text)].join(' '),
-    timeline: { result: outcome, steps, outcome: results },
+    timeline: {
+      result: outcome, steps, outcome: results,
+      // The full log and its summary (save v16). Hands-off runs also name their orders.
+      events, summary: summariseRun(events, { id, outcome, deaths: deaths.length }), orders: am.orders ?? null,
+    },
     blocking: false, read: false,
   });
+  // Full logs are kept for the most recent jobs; older reports keep their timeline and summary.
+  state.inbox.filter((m) => m.type === 'report' && m.timeline?.events).slice(REPORT_LOGS_KEPT).forEach((m) => { delete m.timeline.events; });
   reactToJob(state, am, tpl, { heatGain, injuries, deaths });
 }
 

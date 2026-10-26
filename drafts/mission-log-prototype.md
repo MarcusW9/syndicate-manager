@@ -4,7 +4,8 @@ The owner hand-wrote three Container 409 mission logs (2026-10-26) as the go / n
 for mission logs (task 2 in `writing-tasks.md`): a well-suited crew on Steady orders
 (Egg Tart and Alleycat), a less-suited crew on Steady (Rat and Hotwire), and the suited
 crew on Committed. This file keeps what the test settled, checked against the real engine.
-It is the brief for building the first slice. Delete it once that ships.
+It was the brief for the first slice (built 2026-10-26). Keep it until the questions
+below have been checked against real play; then delete it.
 
 ## The verdict
 Build a small simulation-and-report slice. The value is not more rolls; it's making the
@@ -51,7 +52,7 @@ approach and backup (stealth approach for the suited and less-suited runs):
   names every bonus ("Egg Tart on tech (14, Chromed +2, stealth approach +1)"), and the log
   will reuse the same notes, so "Chromed helped" is recorded fact, not flavour.
 
-## First slice (agreed 2026-10-26)
+## First slice (agreed 2026-10-26; built the same day, see DESIGN.md)
 1. **Record the chain in the shared engine,** so every job report gets it, played or not:
    who acted and why (the choice, and the roller's notes), the roll, success or failure, the
    choice's own cost vs the failure's, and exactly who was hurt (today `{op}` and the injured

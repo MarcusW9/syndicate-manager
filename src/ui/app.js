@@ -26,6 +26,7 @@ import {
   startMission, revealBeat, chooseOption, resolveCritical, closeMission,
   describeCrisis, describeCritical, currentStep, fillBrief,
 } from '../core/mission.js';
+import { autoRun, ORDERS } from '../core/autorun.js';
 import {
   saveGame, loadGame, exportSave, importSave, listSlots, getActiveSlot, setActiveSlot,
   deleteSlot, loadBackup, backupDue, SLOT_COUNT,
@@ -111,7 +112,7 @@ function onClick(e) {
     case 'expand':
       if (confirm(`Expand the safehouse for ${money(nextExpansion(state).cost)}? Rent goes up by ${money(nextExpansion(state).rentIncrease)} a week.`)) return setState(expandSafehouse(state));
       break;
-    case 'open-job': screen = 'jobs'; plan = { jobId: id, crew: [], approach: 'stealth' }; break; // also from Today's alerts
+    case 'open-job': screen = 'jobs'; plan = { jobId: id, crew: [], approach: 'stealth', orders: 'steady' }; break; // also from Today's alerts
     case 'toggle-crew': {
       const tpl = templateById(state.jobs.find((j) => j.id === plan.jobId).templateId);
       const isF = (x) => (state.freelancers ?? []).some((f) => f.id === x);
@@ -121,6 +122,17 @@ function onClick(e) {
       break;
     }
     case 'approach': plan.approach = id; break;
+    case 'orders': plan.orders = id; break;
+    case 'send-job': {
+      // Hands-off: the crew runs the whole job now; the player lands on its report.
+      const done = autoRun(startMission(state, plan.jobId, plan.crew, plan.approach), plan.orders ?? 'steady');
+      const report = done.inbox.find((m) => m.type === 'report');
+      if (report) report.read = true; // it opens straight away
+      plan = null;
+      screen = 'inbox';
+      openMessageId = report?.id ?? null;
+      return setState(closeMission(done));
+    }
     case 'start-job': {
       const next = startMission(state, plan.jobId, plan.crew, plan.approach);
       plan = null;
@@ -568,6 +580,7 @@ function renderReportTimeline(m) {
   }
   const end = { completed: ['✓', 'Job done'], aborted: ['↩', 'Aborted'], loss: ['✕', 'Someone didn\'t come home'] }[result] ?? ['■', 'How it ended'];
   return `
+      ${renderReportSummary(m.timeline)}
       <ol class="timeline">
         ${steps.map((text, i) => `<li class="timeline__item"><span class="timeline__node" aria-hidden="true">${i + 1}</span><p class="timeline__text">${esc(text)}</p></li>`).join('')}
         ${outcome.length ? `<li class="timeline__item timeline__item--end timeline__item--${esc(result ?? 'plain')}">
@@ -575,7 +588,77 @@ function renderReportTimeline(m) {
           <div class="timeline__text"><p class="timeline__label">${esc(end[1])}</p>
             <ul class="timeline__results">${outcome.map((o) => `<li class="tone--${esc(o.tone)}">${esc(o.text)}</li>`).join('')}</ul></div>
         </li>` : ''}
-      </ol>`;
+      </ol>
+      ${renderFullLog(m.timeline)}`;
+}
+
+/** Joss's opener and what the run came down to (core/report.js). Headings with nothing behind them are left out. */
+function renderReportSummary(t) {
+  const sum = t?.summary;
+  if (!sum) return '';
+  const orders = t.orders && ORDERS[t.orders] ? `<p class="muted small">Hands-off · ${esc(ORDERS[t.orders].name)} orders</p>` : '';
+  const rows = [
+    sum.turning && ['Turning point', sum.turning.text],
+    sum.standout && ['Standout', sum.standout.text],
+    sum.hurt?.length && ['What hurt us', sum.hurt.join(' ')],
+  ].filter(Boolean);
+  return `
+      ${orders}
+      ${sum.intro ? `<p class="reportjoss"><span class="reportjoss__name">${esc(NAMES.partner)}</span> ${esc(sum.intro)}</p>` : ''}
+      ${rows.length ? `<dl class="reportsum">${rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>` : ''}`;
+}
+
+const STAT_LABEL = (s) => (s ? s[0].toUpperCase() + s.slice(1) : '');
+
+/** The roll behind a line, shown on tap: die + stat = total, what it needed, and where the bonuses came from. */
+function rollDetail(e) {
+  if (e.die == null) return '';
+  const total = e.die + e.value;
+  return `
+        <details class="flog__roll">
+          <summary>${esc(STAT_LABEL(e.stat))} ${e.success ? '✓' : '✗'}</summary>
+          <p class="small">Die ${e.die} + ${esc(e.stat)} ${e.value} = ${total} · needed ${e.need}${e.notes?.length ? `<br><span class="muted">${esc(e.stat)} ${e.value}: ${esc(e.notes.join(', '))}</span>` : ''}</p>
+        </details>`;
+}
+
+/** Everything that happened, in order, folded away under the summary (save v16 reports only). */
+function renderFullLog(t) {
+  const events = t?.events;
+  if (!events?.length) return '';
+  const lastBeat = events.map((e) => e.kind).lastIndexOf('beat');
+  let onJob = false;
+  const items = events.map((e, i) => {
+    let head = '';
+    if (e.kind === 'beat' && e.first) head = '<h3 class="flog__phase">Approach</h3>';
+    else if (e.kind === 'beat' && e.last && i === lastBeat) head = '<h3 class="flog__phase">Getting out</h3>';
+    else if (!onJob && e.kind !== 'beat') { onJob = true; head = '<h3 class="flog__phase">On the job</h3>'; }
+    if (e.kind !== 'beat') onJob = true;
+    const body = {
+      beat: () => `<p class="flog__beat">${esc(e.text)}</p>`,
+      twist: () => `<p class="flog__twist">Twist: ${esc(e.text)}</p>`,
+      aftermath: () => `<p class="flog__line ${e.death ? 'tone--bad' : 'tone--good'}">${esc(e.text)}</p>`,
+      critical: () => `
+        <div class="flog__step">
+          <p class="flog__crisis">${esc(e.patient)} is critical.</p>
+          ${e.why ? `<p class="flog__why">${esc(e.why)}</p>` : ''}
+          <p class="flog__line ${e.action === 'push' || e.success === false ? 'tone--bad' : 'tone--good'}">${esc(e.report)}</p>
+          ${rollDetail(e)}
+        </div>`,
+    }[e.kind] ?? (() => `
+        <div class="flog__step">
+          <p class="flog__crisis">${esc(e.text)}</p>
+          <p class="flog__choice">${e.actor && !e.choice.startsWith(e.actor.handle) ? `<strong>${esc(e.actor.handle)}</strong> · ` : ''}${esc(e.choice)}</p>
+          ${e.why ? `<p class="flog__why">${esc(e.why)}</p>` : ''}
+          ${e.report ? `<p class="flog__line ${e.kind === 'exit' ? 'tone--warn' : e.success === false ? 'tone--bad' : 'tone--good'}">${esc(e.report)}</p>` : ''}
+          ${rollDetail(e)}
+        </div>`);
+    return head + body();
+  }).join('');
+  return `
+      <details class="flog">
+        <summary>Full log</summary>
+        <div class="flog__body">${items}</div>
+      </details>`;
 }
 
 /** Renewal notice: the numbers, then Accept / Haggle / Refuse (or the outcome once decided). */
@@ -966,6 +1049,7 @@ function renderPlan() {
             <strong>${esc(a.name)}</strong><span>${esc(a.desc)}</span>
           </button>`).join('')}
       </div>
+      ${t.handsOff ? renderHandsOff() : ''}
       </div>
 
       <div class="plangrid__risk">
@@ -987,6 +1071,23 @@ function renderPlan() {
         ${plan.crew.length ? `Start with ${plan.crew.length}` : 'Pick a crew'}
       </button>
     </div>`;
+}
+
+/** Sending a job hands-off: standing orders, and the button. The crew decides; you read the report. */
+function renderHandsOff() {
+  const orders = ORDERS[plan.orders] ? plan.orders : 'steady';
+  return `
+      <h2>Or send them hands-off</h2>
+      <p class="muted small">The crew runs it on their own and you read what happened. Their orders decide each call. A hands-off crew never pushes on with a critical wound: at worst, they pull out.</p>
+      <div class="segmented">
+        ${Object.entries(ORDERS).map(([k, o]) => `
+          <button class="seg ${orders === k ? 'is-on' : ''}" data-action="orders" data-id="${k}" aria-pressed="${orders === k}">
+            <strong>${esc(o.name)}</strong><span>${esc(o.desc)}</span>
+          </button>`).join('')}
+      </div>
+      <button class="btn btn--block handsoff__go" data-action="send-job" ${plan.crew.length ? '' : 'disabled'}>
+        ${plan.crew.length ? `Send ${plan.crew.length} on ${esc(ORDERS[orders].name)} orders` : 'Pick a crew to send'}
+      </button>`;
 }
 
 // --- mission -----------------------------------------------------------
