@@ -16,14 +16,14 @@ files. Rough lines are fine; anything off gets flagged, not silently changed.
 | 4 | District pack: the Docks (vocabulary and faction overlays) | Mission logs | ~120 short entries | none |
 | 5 | Joss's framing lines | Mission logs | ~45 lines | none |
 | 6 | Authored lines for Container 409's key beats | Mission logs | ~12 lines | `drafts/writing/container409-source.md` |
-| 7 | **Stat-unlock choices (next)** | Choices unlocked by stats | ~16 choices | `drafts/writing/stat-unlocks-source.md` |
+| 7 | ~~Stat-unlock choices~~ **Done 2026-10-26** (17 in the game) | Choices unlocked by stats | — | — |
 | 8 | One-off side tasks | Side tasks | ~20 tasks | none |
 | 9 | Earned traits | Progression step 2 | ~10 traits | none |
 | 10 | Jobs for the locked districts | Promotions and districts | 1-2 jobs per district | `drafts/district-hooks.md` |
 
 Tasks 1 and 2 first: 1 is a prerequisite for everything hands-off, and 2 decides whether
 mission logs get built at all. Tasks 3-6 wait until the first mission-log slice is built and shows where words are missing (decided 2026-10-26).
-The slice is built (2026-10-26); play some runs before writing 3-6. **Task 7 is next.**
+The slice is built (2026-10-26); play some runs before writing 3-6. Task 7 is done.
 
 **How a log is assembled (2026-10-26, owner's feedback):** the crisis report lines are the
 factual record and are never contradicted. Around them the log is built from (1) universal
@@ -283,9 +283,10 @@ SOURCE:
 
 ---
 
-## Task 7 · Stat-unlock choices (next, 2026-10-26)
+## Task 7 · Stat-unlock choices (done 2026-10-26)
 
-Paste the context block, this prompt, then `drafts/writing/stat-unlocks-source.md`.
+Done: 17 unlocks on rookie jobs. The prompt stays for bigger jobs later; regenerate a source file
+for those jobs' crises the same way.
 
 ```
 TASK: Rookie jobs in this game are a series of crises; each crisis offers 2-3 choices,

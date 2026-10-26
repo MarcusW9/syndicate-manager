@@ -246,7 +246,24 @@ function rollerFor(state, am, choice, crew) {
   const recommended = templateById(am.templateId).crewSize;
   const medic = choice.kind === 'stabilise' ? findRole(crew, 'medic') : null;
   const stat = medic ? 'medical' : choice.stat;
-  return crewRoll(crew, stat, { approach: am.approach, recommended, lead: medic ? medicLead(medic, am, crew) : undefined, watched: am.watched ?? 0 });
+  return crewRoll(crew, stat, { approach: am.approach, recommended, lead: medic ? medicLead(medic, am, crew) : namedLead(state, am, crew, stat), watched: am.watched ?? 0 });
+}
+
+/**
+ * A crisis whose own text names {op} ("Someone squints at {op}") is about that person, so
+ * they handle it: they roll (backup still helps) and take any knock. Focus-role crises keep
+ * their own rule (the best at the stat rolls; the focus person is the one at risk).
+ */
+const namesOp = (crisis) => Boolean(crisis && !crisis.focusRole && crisis.text.includes('{op}'));
+
+function namedLead(state, am, crew, stat) {
+  const step = currentStep(am);
+  const crisis = step?.type === 'crisis' ? crisisById(templateById(am.templateId), step.id) : null;
+  if (!namesOp(crisis)) return undefined;
+  const op = crew.find((o) => o.id === am.focusOp && o.condition.injury !== 'critical');
+  if (!op) return undefined;
+  const own = effectiveStat(op, stat, { approach: am.approach, crew });
+  return { op, value: own.value, notes: own.notes };
 }
 
 /** Stabilising a critical operative: the medic leads, the same crew rule applies. */
@@ -262,7 +279,7 @@ function stabiliser(state, am, patient) {
 function failureTarget(state, am, roller) {
   const step = currentStep(am);
   const crisis = step?.type === 'crisis' ? crisisById(templateById(am.templateId), step.id) : null;
-  const focus = crisis?.focusRole ? opById(state, am.focusOp) : null;
+  const focus = crisis?.focusRole || namesOp(crisis) ? opById(state, am.focusOp) : null;
   if (focus && focus.condition.injury !== 'critical' && am.crewIds.includes(focus.id)) return focus;
   return roller;
 }
@@ -326,7 +343,7 @@ export function crisisOdds(state) {
   return crisis.choices.filter((c) => meetsRequirement(crew, c.requires).ok).map((choice) => {
     if (EXIT_KINDS.has(choice.kind) || choice.sure) return { choice, exit: EXIT_KINDS.has(choice.kind), chance: 1, roller: null };
     const roller = rollerFor(state, am, choice, crew);
-    return { choice, exit: false, chance: successChance(roller.value, rollDifficulty(am, choice)), roller };
+    return { choice, exit: false, chance: successChance(roller.value, rollDifficulty(am, choice)), roller, named: namesOp(crisis) };
   });
 }
 

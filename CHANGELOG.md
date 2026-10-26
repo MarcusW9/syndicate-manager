@@ -4,6 +4,12 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-26 · Moves your crew grows into
+- **17 new choices that unlock as your crew grows** (written by the owner), one in a crisis on each rookie job and in the shared rookie crises. A medic at medical 13 can clear a wound before stitching it; a driver at driving 13 can fold the mirrors and clear a parked truck in one pass; muscle at combat 11 can walk the Silver Fan collectors back upstairs without a punch. They're easier, pay a bonus or dodge a cost.
+- Until someone has the stat, the choice still shows, greyed out, with what it needs ("Needs driving 13+"): something to grow towards. Hands-off crews use them too.
+- **The person a crisis is about handles it:** when someone on the crew is recognised by an old classmate, or a gang runner falls into step beside them, they deal with it themselves (and the choice names them).
+- 188 tests.
+
 ## 2026-10-26 · Hands-off crews report back when they return
 - **Sending a crew off takes time now:** they leave, and their report comes back when they do (the next day for Container 409). Until then the pay, heat and any injuries don't show; Today has a note saying who's out, and Coming up says when the report is due.
 - **The report plays out the first time you open it:** each step lands in turn down the timeline, then the result lands with a flash, then Joss's verdict. Tap to skip. If your phone is set to reduce motion, it all shows at once.
