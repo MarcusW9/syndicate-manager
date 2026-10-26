@@ -75,6 +75,10 @@ Maps could be reusable building types (warehouse, tower, clinic, street, dock) r
 
 Before committing: a clickable prototype of one job (Container 409, already prototyped as a log), run as plan, then route map, then feed, then call-in, then report.
 
+## Prototype (2026-10-26)
+
+`drafts/prototypes/container409-plan.html`: the most basic version, to feel whether planning plus watching beats crisis-by-crisis play. Container 409's real crises and the game's roll rule, on a heist-board map. Plan: way in (3 routes, each a +1 and a likely crisis), way out (van needs Wheels; boat costs 15%), role slots (Point handles the way in, Watch the post, Wheels the road out; the other walker backs up), prep (5 items, each only pays off if its trouble turns up), orders (call-in rule, what to do if someone's hurt). Watch: a timed feed, tokens moving on the map, small checks, the crew's own calls with a reason, call-ins with every option's risk and an abort. Report: Joss, net, heat, hurt, and "did the plan work?" (which prep came into play, who passed what). Not in the prototype: traits, relationships, gear, fatigue, growth.
+
 ## Open questions
 
 1. How many decisions per job, and when? (For example: 4-6 in planning, 0-2 call-ins.)
