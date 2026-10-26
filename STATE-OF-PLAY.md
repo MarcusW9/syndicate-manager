@@ -74,4 +74,4 @@ Record the owner's calls here as they come; decisions also get `DESIGN.md` log r
 - **Item 4, competing clients (2026-10-26):** parked for now; revisit after district heat and promotions.
 - **Item 5, relationships (2026-10-26):** hybrid: one-cause bonds and rifts as events (Owes one, Blames), slow ones from a hidden pair score (Old hands, Rubs the wrong way); rifts mendable; grief by personality; built with the career page. See the `DESIGN.md` row.
 - **Item 6, repetition (2026-10-26):** all four layers, cheapest first: beat pools with slots, callbacks on repeats, crisis variants by slot, then generated crises as a prototype held to the validator's rules. Hand-writing continues, rookie phase first. See the `DESIGN.md` row.
-- Other items: pending.
+- **Item 7, danger (2026-10-26):** parked for now.
