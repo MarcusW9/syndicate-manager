@@ -21,7 +21,7 @@ import { adjustTrust } from './clients.js';
 import { clampHeat } from './heat.js';
 import { money } from './money.js';
 import { pick, makeRng } from './rng.js';
-import { noteInjury } from './earned.js';
+import { noteInjury, earn } from './earned.js';
 
 export const SIDE_BOARD_SIZE = 5;
 export const SIDE_DIFFICULTY = 6; // rookie-job level: a 9 in the stat needs a 7 on the die
@@ -171,12 +171,14 @@ function resolve(state, { taskId, crewIds }) {
     }
     if (f.held) {
       roll.op.condition.awayUntil = state.day + f.held;
+      earn(state, roll.op, 'rattled_by_sirens'); // a night in the cells stays with you
       results.push({ tone: 'warn', text: `${roll.op.handle} held by the police until day ${state.day + f.held}.` });
     }
   }
   for (const op of crew) {
     op.condition.fatigue = Math.min(100, op.condition.fatigue + SIDE_FATIGUE_PER_DAY * task.days);
     op.history.push(`Day ${state.day}: ${task.name}${success ? '' : ' (went badly)'}`);
+    (op.track ??= {}).lastWorked = state.day; // side work is work: no rest for Burned Out
   }
 
   const line = success ? task.success : task.failure;

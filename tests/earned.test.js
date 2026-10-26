@@ -62,16 +62,18 @@ test('Clean Professional: ten clean jobs; then a failed roll of theirs draws one
   assert.ok(saved, 'saw a failed roll');
 });
 
-test('Ghost Driver: five clean driving passes; +1 driving', () => {
+test('Ghost Driver: five clean driving passes in escapes; +1 driving in escapes only, as written', () => {
   const s = game(4); const d = s.crew.find((o) => o.role === 'driver');
-  const before = effectiveStat(d, 'driving').value;
   for (let i = 0; i < 5; i++) job(s, [roll(d, 'driving', true)], [d]);
+  assert.ok(!has(d, 'ghost_driver'), 'driving that was not an escape does not count');
+  for (let i = 0; i < 5; i++) job(s, [roll(d, 'driving', true, { situations: ['escape'] })], [d]);
   assert.ok(has(d, 'ghost_driver'));
-  assert.equal(effectiveStat(d, 'driving').value, before + 1);
-  assert.match(effectiveStat(d, 'driving').notes.join(), /Ghost Driver \+1/);
+  const at = (situations) => crewRoll([d], 'driving', { job: { district: 'docks', injured: [], rolled: [d.id], situations } });
+  assert.equal(at(['escape']).value, at([]).value + 1);
+  assert.match(notes(at(['escape'])), /Ghost Driver \+1/);
 });
 
-test('Scarred: a critical wound, healed; +1 cool while hurt, and wounds take a day longer', () => {
+test('Scarred: a critical wound, healed; +1 cool when someone is hurt or squaring up, and wounds take a day longer', () => {
   const s = game(5); const op = s.crew[0];
   setInjury(op, 'critical'); E.noteInjury(s, op, 'critical');
   assert.ok(has(op, 'shaky'), 'a near-fatal wound leaves them shaky');
@@ -82,7 +84,9 @@ test('Scarred: a critical wound, healed; +1 cool while hurt, and wounds take a d
   assert.ok(has(op, 'scarred'));
   setInjury(op, 'light');
   assert.equal(op.condition.injuryDays, INJURY_DAYS.light + 1);
-  assert.match(effectiveStat(op, 'cool').notes.join(), /Scarred \+1/);
+  const at = (situations) => crewRoll([op], 'cool', { job: { district: 'docks', injured: [], rolled: [op.id], situations } });
+  for (const sit of ['injury', 'threat']) assert.match(notes(at([sit])), /Scarred \+1/);
+  assert.doesNotMatch(notes(at(['crowd'])), /Scarred/);
 });
 
 test('Shaky: two injuries in a week; −1 cool (−1 more alone on side work); settles after three clean jobs', () => {
@@ -179,11 +183,11 @@ test('progress is hidden: nothing says anything until a trait is earned, then Jo
   const s = game(14); const d = s.crew.find((o) => o.role === 'driver');
   const inbox = s.inbox.length;
   const names = Object.values(EARNED_TRAITS).map((t) => t.name);
-  for (let i = 0; i < 4; i++) job(s, [roll(d, 'driving', true)], [d]);
+  for (let i = 0; i < 4; i++) job(s, [roll(d, 'driving', true, { situations: ['escape'] })], [d]);
   const extra = s.inbox.slice(0, s.inbox.length - inbox);
   assert.ok(!has(d, 'ghost_driver'));
   assert.ok(extra.every((m) => names.some((n) => m.subject === `${d.handle}: ${n}`)), 'only earned notes (here Riding High), no "4/5" progress');
-  job(s, [roll(d, 'driving', true)], [d]);
+  job(s, [roll(d, 'driving', true, { situations: ['escape'] })], [d]);
   const note = s.inbox.find((m) => m.subject.endsWith('Ghost Driver'));
   assert.equal(note.subject, `${d.handle}: Ghost Driver`);
   assert.match(note.body, /Five clean exits/);
@@ -216,4 +220,129 @@ test('a v18 save upgrades with no earned traits yet', async () => {
   const loaded = await importSave({ text: async () => JSON.stringify(s) });
   assert.equal(loaded.version, SAVE_VERSION);
   for (const op of loaded.crew) { assert.deepEqual(op.earned, []); assert.deepEqual(op.track, {}); }
+});
+
+// --- group 2: situations ---------------------------------------------------------
+
+const at = (op, stat, situations, more = {}) => crewRoll([op], stat, { job: { district: 'docks', injured: [], rolled: [op.id], situations, ...more } });
+
+test('Light-Fingered: four stealth passes getting in somewhere; +1 stealth on entry, not in a chase', () => {
+  const s = game(30); const op = s.crew[0];
+  for (let i = 0; i < 4; i++) job(s, [roll(op, 'stealth', true, { situations: ['entry'] })], [op]);
+  assert.ok(has(op, 'light_fingered'));
+  assert.equal(at(op, 'stealth', ['entry']).value, at(op, 'stealth', []).value + 1);
+  assert.equal(at(op, 'stealth', ['entry', 'escape']).value, at(op, 'stealth', []).value, 'not in a chase');
+});
+
+test('Crowd Reader: four social or cool passes with a crowd around; +1 social there', () => {
+  const s = game(31); const op = s.crew[0];
+  for (let i = 0; i < 4; i++) job(s, [roll(op, i % 2 ? 'social' : 'cool', true, { situations: ['crowd'] })], [op]);
+  assert.ok(has(op, 'crowd_reader'));
+  assert.match(notes(at(op, 'social', ['crowd'])), /Crowd Reader \+1/);
+});
+
+test('Wirewise: four tech passes on street hardware; +1 tech there, not on corporate systems', () => {
+  const s = game(32); const op = s.crew[0];
+  for (let i = 0; i < 4; i++) job(s, [roll(op, 'tech', true, { situations: ['street-tech'] })], [op]);
+  assert.ok(has(op, 'wirewise'));
+  assert.match(notes(at(op, 'tech', ['street-tech'])), /Wirewise \+1/);
+  assert.doesNotMatch(notes(at(op, 'tech', ['street-tech', 'corp-tech'])), /Wirewise/);
+});
+
+test('Corner Fighter: three combat passes in fights; +1 combat in a fight once someone is hurt', () => {
+  const s = game(33); const [op, mate] = s.crew;
+  for (let i = 0; i < 3; i++) job(s, [roll(op, 'combat', true, { situations: ['fight'] })], [op]);
+  assert.ok(has(op, 'corner_fighter'));
+  assert.doesNotMatch(notes(at(op, 'combat', ['fight'])), /Corner Fighter/);
+  assert.match(notes(at(op, 'combat', ['fight'], { injured: [mate.id] })), /Corner Fighter \+1/);
+});
+
+test('Rattled by Sirens: two failures in front of the police, or a night in the cells; −1 cool there; fades after facing them twice', () => {
+  const s = game(34); const op = s.crew[0];
+  for (let i = 0; i < 2; i++) job(s, [roll(op, 'social', false, { situations: ['police', 'law'] })], [op]);
+  assert.ok(has(op, 'rattled_by_sirens'));
+  assert.match(notes(at(op, 'cool', ['police'])), /Rattled by Sirens −1/);
+  assert.doesNotMatch(notes(at(op, 'cool', ['law'])), /Rattled/, 'customs are the law, not the sirens');
+  job(s, [roll(op, 'cool', true, { situations: ['police'] }), roll(op, 'social', true, { situations: ['police'] })], [op]);
+  assert.ok(!has(op, 'rattled_by_sirens'));
+});
+
+test('a side task that ends with someone held by the police leaves them Rattled by Sirens', async () => {
+  const S = await import('../src/core/sidetasks.js');
+  const { advanceDay } = await import('../src/core/time.js');
+  let rattled = false;
+  for (let seed = 1; seed <= 80 && !rattled; seed++) {
+    let s = game(seed);
+    s.sideBoard = ['forklift_relief'];
+    const op = s.crew[0]; op.stats.driving = 1;
+    s = advanceDay(advanceDay(S.sendOnSideTask(s, 'forklift_relief', [op.id])));
+    const back = s.crew.find((o) => o.id === op.id);
+    if (s.inbox.some((m) => /held by the police/.test(m.body))) { assert.ok(E.earnedOf(back, 'rattled_by_sirens')); rattled = true; }
+  }
+  assert.ok(rattled, 'saw someone held');
+});
+
+test('Short Fuse: two failures keeping the peace under threat; +1 combat, −1 social there; a third time and they become a Hothead', () => {
+  const s = game(35); const op = s.crew.find((o) => !o.traits.includes('hothead'));
+  const flare = () => job(s, [roll(op, 'social', false, { situations: ['threat'] }), roll(op, 'cool', false, { situations: ['threat'] })], [op]);
+  flare();
+  assert.ok(has(op, 'short_fuse'));
+  assert.match(notes(at(op, 'combat', ['threat'])), /Short Fuse \+1/);
+  assert.match(notes(at(op, 'social', ['threat'])), /Short Fuse −1/);
+  for (let i = 0; i < 3; i++) job(s, [roll(op, 'stealth', true)], [op]);
+  assert.ok(!has(op, 'short_fuse'), 'three calm jobs settle it');
+  flare(); for (let i = 0; i < 3; i++) job(s, [roll(op, 'stealth', true)], [op]);
+  flare();
+  assert.ok(op.traits.includes('hothead'), 'the third time it sticks');
+  assert.ok(!has(op, 'short_fuse'));
+});
+
+test('Burned Out: tech or neural work failing them twice within three jobs; −1 tech and cool, −1 more on neural work; three days of rest', () => {
+  const s = game(36); const op = s.crew[0];
+  job(s, [roll(op, 'tech', false)], [op]);
+  job(s, [roll(op, 'cool', false, { situations: ['neural'] })], [op]);
+  assert.ok(has(op, 'burned_out'));
+  assert.match(effectiveStat(op, 'tech').notes.join(), /Burned Out −1/);
+  assert.match(notes(at(op, 'tech', ['neural'])), /Burned Out \(neural work\) −1/);
+  s.day += 2; E.dailyTraits(s);
+  assert.ok(has(op, 'burned_out'), 'not rested enough yet');
+  s.day += 1; E.dailyTraits(s);
+  assert.ok(!has(op, 'burned_out'));
+});
+
+test('Overconfident: four hard rolls in a row; +1 on hard rolls, −1 on the safest option; gone after a failure', () => {
+  const s = game(37); const op = s.crew[0];
+  for (let i = 0; i < 4; i++) job(s, [roll(op, 'cool', true, { need: 16 })], [op]);
+  assert.ok(has(op, 'overconfident'));
+  assert.match(notes(at(op, 'cool', [], { difficulty: 7 })), /Overconfident \+1/);
+  assert.match(notes(at(op, 'cool', [], { difficulty: 4, safest: true })), /beneath them/);
+  job(s, [roll(op, 'cool', false, { need: 12 })], [op]);
+  assert.ok(!has(op, 'overconfident'));
+});
+
+test('Overconfident marks only the easiest option of a real crisis as beneath them', () => {
+  let s = game(38);
+  s.jobs = []; addOffer(s, 'clinic');
+  s = M.startMission(s, s.jobs[0].id, s.crew.slice(0, 2).map((o) => o.id), 'stealth');
+  for (const op of s.crew) op.earned = [{ id: 'overconfident', day: 1 }];
+  s.activeMission.queue = [{ type: 'crisis', id: 'collectors' }, { type: 'beat', index: 0 }]; s.activeMission.step = 0;
+  const reasons = Object.fromEntries(M.describeCrisis(s).choices.filter((c) => c.available && c.riskReason).map((c) => [c.id, c.riskReason]));
+  assert.match(reasons.hide, /beneath them/, 'hide (difficulty 5) is the easy way');
+  assert.doesNotMatch(reasons.anchor, /beneath them/);
+});
+
+test('Ghost Driver sheds a point of heat on a clean getaway that costs heat', () => {
+  let shed = 0;
+  for (let seed = 1; seed <= 40; seed++) {
+    let s = game(seed);
+    s.jobs = []; addOffer(s, 'warehouse');
+    const d = s.crew.find((o) => o.role === 'driver');
+    d.earned = [{ id: 'ghost_driver', day: 1 }]; d.stats.driving = 20;
+    s = M.startMission(s, s.jobs[0].id, [d.id], 'stealth');
+    s.activeMission.queue = [{ type: 'crisis', id: 'toll' }, { type: 'beat', index: 0 }]; s.activeMission.step = 0;
+    s = M.chooseOption(s, 'ram'); // costs heat +2 whatever the roll
+    const e = s.activeMission.events.find((x) => x.choiceId === 'ram');
+    if (e.success) { assert.equal(e.saved, 'Ghost Driver: one less heat'); shed++; }
+  }
+  assert.ok(shed > 20);
 });

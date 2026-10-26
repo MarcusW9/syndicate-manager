@@ -249,13 +249,21 @@ function rollerFor(state, am, choice, crew) {
   const medic = choice.kind === 'stabilise' ? findRole(crew, 'medic') : null;
   const stat = medic ? 'medical' : choice.stat;
   const intel = intelFor(state, templateById(am.templateId).district);
-  return crewRoll(crew, stat, { approach: am.approach, recommended, lead: medic ? medicLead(medic, am, crew) : namedLead(state, am, crew, stat), watched: am.watched ?? 0, intel, job: jobContext(am) });
+  return crewRoll(crew, stat, { approach: am.approach, recommended, lead: medic ? medicLead(medic, am, crew) : namedLead(state, am, crew, stat), watched: am.watched ?? 0, intel, job: jobContext(am, choice, crew) });
 }
 
-/** What earned traits need to know about the job so far (core/earned.js). */
-function jobContext(am) {
+/** What earned traits need to know about the job so far, and this choice (core/earned.js). */
+function jobContext(am, choice, crew = []) {
   const events = am.events ?? [];
+  const step = currentStep(am);
+  const crisis = step?.type === 'crisis' ? crisisById(templateById(am.templateId), step.id) : null;
+  // The safest option: the lowest difficulty among the rolls this crew can take (by the book, not by who's rolling).
+  const rolls = (crisis?.choices ?? []).filter((c) => !EXIT_KINDS.has(c.kind) && !c.sure && meetsRequirement(crew, c.requires).ok);
+  const easiest = Math.min(...rolls.map((c) => c.difficulty));
   return {
+    situations: crisis?.situations ?? [],
+    difficulty: choice ? rollDifficulty(am, choice) : 0,
+    safest: Boolean(choice && rolls.length > 1 && rolls.includes(choice) && choice.difficulty === easiest),
     district: templateById(am.templateId).district,
     injured: events.filter((e) => e.injury).map((e) => e.injury.id),
     rolled: events.filter((e) => e.kind === 'roll' && e.actor).map((e) => e.actor.id),
@@ -386,7 +394,7 @@ export function chooseOption(prev, choiceId) {
   // What gets recorded for the full log: the facts of this choice, filled in below.
   const event = {
     kind: EXIT_KINDS.has(choice.kind) ? 'exit' : choice.sure ? 'sure' : 'roll',
-    crisis: crisis.id, choiceId: choice.id, twist: !!step.twist, text: fill(crisis.text, state, am), choice: fill(choice.label, state, voice),
+    crisis: crisis.id, choiceId: choice.id, situations: [...(crisis.situations ?? [])], twist: !!step.twist, text: fill(crisis.text, state, am), choice: fill(choice.label, state, voice),
     why: am.nextWhy ?? null, choiceCost: { ...(choice.cost ?? {}) }, report: reportLine(state, voice, choice, true),
   };
   delete am.nextWhy;
@@ -431,6 +439,12 @@ export function chooseOption(prev, choiceId) {
   addReport(state, am, choice, success, voice);
   if (success) {
     am.log.push({ kind: 'good', text: fill(choice.success, state, voice) });
+    // Ghost Driver (earned): a clean getaway at the wheel sheds a point of the heat the move costs.
+    if (choice.stat === 'driving' && (crisis.situations ?? []).includes('escape') && (choice.cost?.heat ?? 0) > 0 && earnedOf(roller.op, 'ghost_driver')) {
+      am.extraHeat -= 1;
+      am.log.push({ kind: 'good', text: `${roller.op.handle} leaves no plate to remember (Ghost Driver): one less heat.` });
+      event.saved = 'Ghost Driver: one less heat';
+    }
     const sc = choice.successCost ?? {};
     am.payCut += sc.payCut ?? 0;
     am.extraHeat += sc.heat ?? 0;

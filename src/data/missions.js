@@ -360,7 +360,7 @@ const BASE_MISSIONS = [
       },
       {
         id: 'toll',
-        situations: ['threat', 'fight'],
+        situations: ['threat', 'fight', 'escape'],
         text: 'Three cars block the dock road out. Red Lantern enforcers. This is their road, and they want a toll for using it.',
         choices: [
           { id: 'pay', label: 'Pay the toll', kind: 'adapt', sure: true, stat: 'cool', difficulty: 0, cost: { cash: -1000 },

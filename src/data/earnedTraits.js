@@ -1,6 +1,6 @@
 // Earned traits: what happens to people on the job changes them (core/earned.js). The owner's
-// list, 2026-10-26; the first 12 (the ones the game can already detect and apply). The rest are
-// in drafts/earned-traits-backlog.md, waiting on crisis tags or new systems.
+// list, 2026-10-26: group 1 (12, from the job record) and group 2 (8, from crisis situations,
+// data/situations.js). The rest are in drafts/earned-traits-backlog.md, waiting on new systems.
 //
 // kind: 'lasting' (kept for good) | 'temporary' (fades; at most two at once, the newest
 // replacing the oldest). desc is what the profile shows; {district}, {client} and {partner}
@@ -27,13 +27,13 @@ export const EARNED_TRAITS = {
   },
   ghost_driver: {
     name: 'Ghost Driver', kind: 'lasting',
-    desc: '+1 driving.',
+    desc: '+1 driving in escapes; a clean getaway at the wheel sheds a point of the heat it would cost.',
     note: 'Five clean exits, no scraped paint and nobody remembering the plate. We might be getting good at this.',
     history: 'Built a reputation for leaving trouble without a trace.',
   },
   scarred: {
     name: 'Scarred', kind: 'lasting',
-    desc: '+1 cool while hurt; injuries take a day longer to heal.',
+    desc: '+1 cool when someone is hurt or squaring up; injuries take a day longer to heal.',
     note: 'They made it through. We should remember that surviving something and escaping it are not the same.',
     history: 'Survived a critical wound and carried the scars forward.',
   },
@@ -78,5 +78,55 @@ export const EARNED_TRAITS = {
     desc: '+1 trust from {client}\'s jobs they work. Fades if one of those jobs goes wrong, or after five jobs for others.',
     note: 'The client asked whether they were coming. Not the crew. Them. That can open doors and close others.',
     history: 'Became a preferred operative of {client}.',
+  },
+
+  // Group 2: these read what kind of situation a crisis is (crisis.situations).
+  light_fingered: {
+    name: 'Light-Fingered', kind: 'lasting',
+    desc: '+1 stealth getting into or out of somewhere secured (not in a chase).',
+    note: 'Four locked places, four quiet exits. We have stopped asking how they opened the doors.',
+    history: 'Learned to enter secured places without leaving a story behind.',
+  },
+  crowd_reader: {
+    name: 'Crowd Reader', kind: 'lasting',
+    desc: '+1 social with a crowd or witnesses around.',
+    note: 'They are learning that a crowd moves before it speaks. Watching the shoulders helps.',
+    history: 'Learned to read a crowd before it turned.',
+  },
+  wirewise: {
+    name: 'Wirewise', kind: 'lasting',
+    desc: '+1 tech on street hardware (not corporate systems).',
+    note: 'Give them burnt wiring and three incompatible parts, and apparently we have a working machine.',
+    history: 'Became skilled at repairing cheap and salvaged technology.',
+  },
+  corner_fighter: {
+    name: 'Corner Fighter', kind: 'lasting',
+    desc: '+1 combat in a fight once someone on the crew is hurt.',
+    note: 'They fight better when someone is standing behind them. We know where to put them now.',
+    history: 'Learned to hold ground while others escaped.',
+  },
+  rattled_by_sirens: {
+    name: 'Rattled by Sirens', kind: 'temporary',
+    desc: '−1 cool when the Harbour Police are involved. Fades after facing them down twice.',
+    note: 'A siren went past the safehouse and they stopped talking. We have heard louder silences.',
+    history: 'Struggled around Harbour Police after being detained.',
+  },
+  short_fuse: {
+    name: 'Short Fuse', kind: 'temporary',
+    desc: '+1 combat once it turns ugly, −1 social trying to stop it. Fades after three jobs without a fight. A third time, and it sticks: they become a Hothead.',
+    note: 'They are arriving angry and waiting for events to justify it. That order concerns us.',
+    history: 'Became quick to escalate after repeated confrontations.',
+  },
+  burned_out: {
+    name: 'Burned Out', kind: 'temporary',
+    desc: '−1 tech and cool, and −1 more on neural work. Fades after three days of proper rest.',
+    note: 'Memory stutter, flat voice, headache behind the eyes. We are calling this downtime before they call it normal.',
+    history: 'Pushed failing hardware until their own nerves pushed back.',
+  },
+  overconfident: {
+    name: 'Overconfident', kind: 'temporary',
+    desc: '+1 on hard rolls (difficulty 6+), −1 on the safest option, which they think beneath them. Fades after a failed roll or an injury.',
+    note: 'Four hard calls went their way. They have started treating caution like a personal insult.',
+    history: 'Mistook a run of difficult successes for invulnerability.',
   },
 };
