@@ -6,6 +6,7 @@ import { availability, isAway } from './crew.js';
 import { templateById } from './jobs.js';
 import { NOTICE_COOLDOWN_DAYS } from './renewals.js';
 import { awayJobs } from './autorun.js';
+import { sideTasksOut } from './sidetasks.js';
 
 export const HORIZON_DAYS = 7;
 const EXHAUSTED_AT = 85; // availability(): above this, nobody works
@@ -65,7 +66,7 @@ export function upcoming(state, horizon = HORIZON_DAYS) {
 
   // A hands-off crew coming back is one line with its report, not one line per person.
   const reporting = new Set();
-  for (const j of awayJobs(state)) {
+  for (const j of [...awayJobs(state), ...sideTasksOut(state)]) {
     if (!within(j.returnDay)) continue;
     const names = j.crewIds.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean).map((o) => o.handle);
     j.crewIds.forEach((id) => reporting.add(`${id}@${j.returnDay}`));

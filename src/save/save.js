@@ -9,6 +9,7 @@
 //   syndicate-ironman-progress     { [ironmanId]: highest save counter seen }
 //   syndicate-save-v1              legacy single save, moved into slot 1 on first load
 
+import { refreshSideBoard } from '../core/sidetasks.js';
 import { SAVE_VERSION } from '../core/state.js';
 import { addOffer } from '../core/jobs.js';
 import { STARTING_ROSTER_CAP } from '../core/recruits.js';
@@ -269,6 +270,13 @@ function migrate(state) {
     // v17: hands-off jobs come back when the crew does (state.awayJobs), not the moment they're sent.
     state.awayJobs ??= [];
     state.version = 17;
+  }
+  if (state.version === 17) {
+    // v18 added side tasks: this week's board, people out on them, and intel on districts.
+    state.sideOut ??= [];
+    state.intel ??= {};
+    if (!state.sideBoard) refreshSideBoard(state);
+    state.version = 18;
   }
   return state;
 }
