@@ -507,7 +507,7 @@ function renderUpcoming(where) {
   const text = (i) => {
     switch (i.kind) {
       case 'season': return `Season ${i.season} begins: everyone a year older`;
-      case 'board': return 'New jobs, freelancers and street talk';
+      case 'board': return 'New freelancers and street talk';
       case 'scout': return 'Scout report: new leads';
       case 'bills': return `Bills: ${money(i.total)} (wages ${money(i.wages)}, rent ${money(i.rent)})${state.cash < i.total ? `, ${money(i.total - state.cash)} short` : ''}`;
       case 'job-last': return `Last day for ${i.names.join(', ')}`;
@@ -848,7 +848,7 @@ function climbLine() {
 }
 
 function renderJobs() {
-  if (!state.jobs.length) return `<section class="panel"><h1>Jobs</h1>${streetTalk()}${climbLine()}<p class="muted">No work on the board. New jobs arrive on Mondays.</p>${renderClients()}</section>`;
+  if (!state.jobs.length) return `<section class="panel"><h1>Jobs</h1>${streetTalk()}${climbLine()}<p class="muted">No work on the board. New work comes in through the week.</p>${renderClients()}</section>`;
   return `
     <section class="panel">
       <h1>Jobs</h1>
@@ -1150,7 +1150,7 @@ function districtCard(key) {
       ${c.locked ? `<p class="intel">${esc(c.teaser)}</p>` : (() => {
         const now = jobsIn(key);
         return now.length ? `<div class="stack">${now.map(({ j, v }) => `<button class="btn" data-action="open-job" data-id="${esc(j.id)}">${esc(v.tpl.name)} · ${money(v.pay)} · ${daysLeft(j.expiresDay)}</button>`).join('')}</div>`
-          : jobs.length ? `<p class="small muted">No work on the board here right now. New jobs arrive on Mondays.</p>`
+          : jobs.length ? `<p class="small muted">No work on the board here right now. New work comes in through the week.</p>`
             : '<p class="small muted">Nobody here is hiring crews like yours yet.</p>';
       })()}
       ${activeRumour(state)?.district === key ? `<p class="talk-tag">Street talk: ${esc(activeRumour(state).text)}</p>` : ''}
