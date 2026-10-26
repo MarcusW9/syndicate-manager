@@ -4,6 +4,12 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-26 · Earned traits
+- **What happens on the job changes people** (12 traits, written by the owner). Some are for good: a medic who keeps patching people up becomes **Clinic Hands**; someone who survives a critical wound comes back **Scarred**; two people who keep coming home together become a **Crew Anchor**. Some come and go: **Shaky** after a bad week, **Riding High** after a clean run, a **Known Face** in a district where they keep causing trouble.
+- Joss tells you when someone earns or loses one, and it goes on their profile under "Earned on the job". Nobody is told they're "2 out of 3" of the way there: it happens when it happens.
+- Traits never stop you choosing anything; their effects show in the roll breakdown like every other bonus. Someone holds at most two of the come-and-go kind at once.
+- Save format v19. 213 tests.
+
 ## 2026-10-26 · Side work for the bench
 - **Side work this week:** under the job board, 5 small one-off tasks, one per district, new every Monday (25 written by the owner). Send one or two people who aren't busy; they're away a day or three and the result comes back with them.
 - **Four kinds:** money (about ¥250 a day each), training (they get better at the task's skill), client trust (+3), and intel: a week of +1 on every roll in that district's jobs, shown on the planning screen.

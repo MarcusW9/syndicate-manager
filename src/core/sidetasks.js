@@ -21,6 +21,7 @@ import { adjustTrust } from './clients.js';
 import { clampHeat } from './heat.js';
 import { money } from './money.js';
 import { pick, makeRng } from './rng.js';
+import { noteInjury } from './earned.js';
 
 export const SIDE_BOARD_SIZE = 5;
 export const SIDE_DIFFICULTY = 6; // rookie-job level: a 9 in the stat needs a 7 on the die
@@ -79,7 +80,7 @@ export function refreshSideBoard(state) {
 export function sideOdds(state, task, crewIds) {
   const crew = crewIds.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean);
   if (!crew.length) return null;
-  const r = crewRoll(crew, task.stat, { recommended: task.crew });
+  const r = crewRoll(crew, task.stat, { recommended: task.crew, job: { side: true, solo: crew.length === 1, district: task.district } });
   const chance = successChance(r.value, SIDE_DIFFICULTY);
   return { ...r, chance, risk: riskLabel(chance) };
 }
@@ -124,7 +125,7 @@ function resolve(state, { taskId, crewIds }) {
   const task = sideTaskById(taskId);
   const crew = crewIds.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean);
   if (!task || !crew.length) return;
-  const roll = crewRoll(crew, task.stat, { recommended: task.crew });
+  const roll = crewRoll(crew, task.stat, { recommended: task.crew, job: { side: true, solo: crew.length === 1, district: task.district } });
   const die = d20(nextRng(state));
   const need = 10 + SIDE_DIFFICULTY;
   const success = die + roll.value >= need;
@@ -165,6 +166,7 @@ function resolve(state, { taskId, crewIds }) {
     if (f.heat) { state.heat = clampHeat(state.heat + f.heat); results.push({ tone: 'warn', text: `Heat +${f.heat}.` }); }
     if (f.injury) {
       setInjury(roll.op, worsenInjury(roll.op.condition.injury, f.injury));
+      noteInjury(state, roll.op, roll.op.condition.injury);
       results.push({ tone: 'bad', text: `${roll.op.handle}: ${roll.op.condition.injury} injury.` });
     }
     if (f.held) {

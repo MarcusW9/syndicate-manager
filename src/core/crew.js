@@ -2,6 +2,7 @@
 
 import { TRAITS } from '../data/traits.js';
 import { statusRollMods } from './statuses.js';
+import { ownMods, jobMods } from './earned.js';
 
 export const APPROACHES = {
   stealth: { name: 'Stealth', desc: '+1 stealth and tech, -1 combat', mods: { stealth: 1, tech: 1, combat: -1 }, heat: 0 },
@@ -55,6 +56,8 @@ export const OPERATIVE_RULES = [
     note: (op, { approach }, v) => `${APPROACHES[approach].name.toLowerCase()} approach ${v > 0 ? '+' : '−'}${Math.abs(v)}` },
   { id: 'fatigue', applies: (op) => op.condition.fatigue > 60, value: () => -2, note: 'fatigued' },
   { id: 'injury', applies: (op) => op.condition.injury === 'light', value: () => -2, note: 'hurt' },
+  // Earned traits that are about the person alone (core/earned.js): Ghost Driver, Shaky, Scarred, Crew Anchor.
+  { id: 'earned', applies: (op, ctx) => ownMods(op, ctx).length > 0, value: (op, ctx) => ownMods(op, ctx).reduce((n, m) => n + m.value, 0), note: (op, ctx) => ownMods(op, ctx).map((m) => m.note).join(', ') },
   { id: 'status', applies: (op) => statusRollMods(op).length > 0, value: (op) => statusRollMods(op).reduce((n, d) => n + d.rollMod, 0), note: (op) => statusRollMods(op).map((d) => d.note).join(', ') },
 ];
 
@@ -112,11 +115,11 @@ export function crewSizeRead(picked, recommended) {
  * Real rolls and the risk read both use this.
  * Returns { op, value, notes, backup, missing } or null if nobody can roll.
  */
-export function crewRoll(crew, stat, { approach, recommended = 0, lead, watched = 0, intel = null } = {}) {
+export function crewRoll(crew, stat, { approach, recommended = 0, lead, watched = 0, intel = null, job = null } = {}) {
   const able = crew.filter((o) => o.condition.injury !== 'critical');
   const top = lead ?? bestFor(able, stat, { approach });
   if (!top) return null;
-  const ctx = { stat, approach, crew, able, top, recommended, watched, intel, backup: findBackup(able, top, stat, { approach, crew }), missing: Math.max(0, recommended - able.length) };
+  const ctx = { stat, approach, crew, able, top, recommended, watched, intel, job, backup: findBackup(able, top, stat, { approach, crew }), missing: Math.max(0, recommended - able.length) };
   const notes = [...top.notes];
   const value = applyRules(CREW_RULES, top.op, ctx, top.value, notes);
   return { op: top.op, value, notes, backup: ctx.backup?.op ?? null, missing: ctx.missing };
@@ -140,6 +143,8 @@ export const CREW_RULES = [
   // Letting high heat ride (core/heat.js): the next job's first crisis roll is made under watching eyes.
   { id: 'watched', applies: (op, { watched }) => watched > 0, value: (op, { watched }) => -watched, note: (op, ctx, v) => `watched -${-v}` },
   // Intel from an info side task on this district (core/sidetasks.js): every roll a little easier for a week.
+  // Earned traits that depend on the job (core/earned.js): first rolls, the district, a hurt crewmate.
+  { id: 'earned-job', applies: (op, ctx) => jobMods(op, ctx).length > 0, value: (op, ctx) => jobMods(op, ctx).reduce((n, m) => n + m.value, 0), note: (op, ctx) => jobMods(op, ctx).map((m) => m.note).join(', ') },
   { id: 'intel', applies: (op, { intel }) => !!intel, value: (op, { intel }) => intel.bonus, note: (op, { intel }) => `intel from ${intel.source} +${intel.bonus}` },
 ];
 
@@ -167,5 +172,7 @@ export function worsenInjury(current, incoming) {
 
 export function setInjury(op, injury) {
   op.condition.injury = injury;
-  op.condition.injuryDays = INJURY_DAYS[injury] ?? 0;
+  // Scarred (an earned trait): wounds take a day longer to heal.
+  const scarred = injury !== 'healthy' && (op.earned ?? []).some((e) => e.id === 'scarred');
+  op.condition.injuryDays = (INJURY_DAYS[injury] ?? 0) + (scarred && INJURY_DAYS[injury] ? 1 : 0);
 }
