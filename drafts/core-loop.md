@@ -66,6 +66,17 @@ Maps could be reusable building types (warehouse, tower, clinic, street, dock) r
 - **Writing load:** route maps, contingency outcomes and feed lines all need text. Reusable building types and slots keep it bounded.
 - **Two modes to keep in sync:** played and hands-off already share one engine, so keep it that way.
 
+## Option: a generated top-down run (owner, 2026-10-26)
+
+The owner's idea: each run generates a floor plan (a top-down building like a tabletop battle map), and you watch the crew's portraits move through it room by room.
+
+- **Theatre, not physics (Claude's recommendation).** The map shows the same dice engine at work: the route goes through rooms, the crisis rooms are where crises happen, a failed stealth roll brings a guard token walking over. Rolls still decide everything, so shown risk stays equal to used risk, the authored crises still fit, and hands-off still works. Football Manager's 2D match view does the same job for its engine.
+- **A living simulation** (patrols, line of sight, noise, crises emerging from it) is a much bigger build. It turns the game into a tactics game, is hard to read at phone width, and breaks the link between the risk read and what happens. Not recommended.
+- **Generation:** each site type (warehouse, docks, tower, clinic, tenement) becomes a generator with a kit of rooms (warehouse: loading bay, office, storage, yard, server room). It places them on a grid, joins them with doors, offers 2-3 ways in (front door, window, roof hatch, loading dock), marks the target room, and tags each room with situations so crises draw from the existing pool. A new building every run also helps with repetition.
+- **Look:** a stylised generated plan in the street-terminal skin (dark floors, neon room tints, simple furniture shapes, portraits as tokens), not painted tabletop art. The reference image is someone else's commercial map (BirdieMaps), so it's for mood only.
+- **Fits with the heist board:** plan on the board (the blueprint of tonight's building), then watch the run on the plan itself.
+- **Phone:** the camera follows the crew with a zoomed view; tap to see the whole plan.
+
 ## Possible path (each step stands alone)
 
 - **A.** A timed feed and call-ins for all jobs, with richer standing orders (mostly existing engine).
