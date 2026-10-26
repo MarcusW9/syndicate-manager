@@ -20,6 +20,7 @@ import { DISTRICTS } from '../data/districts.js';
 import { NAMES } from '../config/names.js';
 import { money } from './money.js';
 import { summariseRun, REPORT_LOGS_KEPT } from './report.js';
+import { intelFor } from './sidetasks.js';
 
 const EXIT_KINDS = new Set(['abort', 'extract']);
 const STABILISE_DIFFICULTY = 9;
@@ -246,7 +247,8 @@ function rollerFor(state, am, choice, crew) {
   const recommended = templateById(am.templateId).crewSize;
   const medic = choice.kind === 'stabilise' ? findRole(crew, 'medic') : null;
   const stat = medic ? 'medical' : choice.stat;
-  return crewRoll(crew, stat, { approach: am.approach, recommended, lead: medic ? medicLead(medic, am, crew) : namedLead(state, am, crew, stat), watched: am.watched ?? 0 });
+  const intel = intelFor(state, templateById(am.templateId).district);
+  return crewRoll(crew, stat, { approach: am.approach, recommended, lead: medic ? medicLead(medic, am, crew) : namedLead(state, am, crew, stat), watched: am.watched ?? 0, intel });
 }
 
 /**

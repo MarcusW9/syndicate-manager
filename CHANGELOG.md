@@ -4,6 +4,12 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-26 · Side work for the bench
+- **Side work this week:** under the job board, 5 small one-off tasks, one per district, new every Monday (25 written by the owner). Send one or two people who aren't busy; they're away a day or three and the result comes back with them.
+- **Four kinds:** money (about ¥250 a day each), training (they get better at the task's skill), client trust (+3), and intel: a week of +1 on every roll in that district's jobs, shown on the planning screen.
+- If it goes badly the cost is small and stated up front: a light injury, a bit of heat, or a day held by the police. Nobody can die on side work.
+- Save format v18. 196 tests.
+
 ## 2026-10-26 · Moves your crew grows into
 - **17 new choices that unlock as your crew grows** (written by the owner), one in a crisis on each rookie job and in the shared rookie crises. A medic at medical 13 can clear a wound before stitching it; a driver at driving 13 can fold the mirrors and clear a parked truck in one pass; muscle at combat 11 can walk the Silver Fan collectors back upstairs without a punch. They're easier, pay a bonus or dodge a cost.
 - Until someone has the stat, the choice still shows, greyed out, with what it needs ("Needs driving 13+"): something to grow towards. Hands-off crews use them too.

@@ -112,11 +112,11 @@ export function crewSizeRead(picked, recommended) {
  * Real rolls and the risk read both use this.
  * Returns { op, value, notes, backup, missing } or null if nobody can roll.
  */
-export function crewRoll(crew, stat, { approach, recommended = 0, lead, watched = 0 } = {}) {
+export function crewRoll(crew, stat, { approach, recommended = 0, lead, watched = 0, intel = null } = {}) {
   const able = crew.filter((o) => o.condition.injury !== 'critical');
   const top = lead ?? bestFor(able, stat, { approach });
   if (!top) return null;
-  const ctx = { stat, approach, crew, able, top, recommended, watched, backup: findBackup(able, top, stat, { approach, crew }), missing: Math.max(0, recommended - able.length) };
+  const ctx = { stat, approach, crew, able, top, recommended, watched, intel, backup: findBackup(able, top, stat, { approach, crew }), missing: Math.max(0, recommended - able.length) };
   const notes = [...top.notes];
   const value = applyRules(CREW_RULES, top.op, ctx, top.value, notes);
   return { op: top.op, value, notes, backup: ctx.backup?.op ?? null, missing: ctx.missing };
@@ -139,6 +139,8 @@ export const CREW_RULES = [
   { id: 'short-handed', applies: (op, { missing }) => missing > 0, value: (op, { missing }) => -missing * SHORT_HANDED_PENALTY, note: (op, ctx, v) => `short-handed -${-v}` },
   // Letting high heat ride (core/heat.js): the next job's first crisis roll is made under watching eyes.
   { id: 'watched', applies: (op, { watched }) => watched > 0, value: (op, { watched }) => -watched, note: (op, ctx, v) => `watched -${-v}` },
+  // Intel from an info side task on this district (core/sidetasks.js): every roll a little easier for a week.
+  { id: 'intel', applies: (op, { intel }) => !!intel, value: (op, { intel }) => intel.bonus, note: (op, { intel }) => `intel from ${intel.source} +${intel.bonus}` },
 ];
 
 /** Best operative on the given crew for a stat (skipping anyone critical). */

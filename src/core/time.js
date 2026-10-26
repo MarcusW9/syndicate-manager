@@ -12,6 +12,7 @@ import { HEAT_COOL_WEEKLY, clampHeat, checkHeatNotice } from './heat.js';
 import { rollRumour } from './rumours.js';
 import { money } from './money.js';
 import { returnCrews } from './autorun.js';
+import { refreshSideBoard, returnSideTasks } from './sidetasks.js';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAYS_PER_SEASON = 364; // 52 weeks
@@ -73,11 +74,13 @@ export function advanceDay(prev) {
   if (calendar(state.day).isMonday && calendar(state.day).week === 1) newSeason(state);
   if (calendar(state.day).isMonday) driftTrust(state); // clients drift back towards neutral
   if (calendar(state.day).isMonday) refreshFreelancers(state);
+  if (calendar(state.day).isMonday) refreshSideBoard(state); // a fresh board of side tasks
   if (calendar(state.day).isMonday) rollRumour(state);
   tickJobs(state); // offers expire; new work trickles in through the week
   if (calendar(state.day).weekday === 'Wed') scoutWeek(state);
   state.recruits = (state.recruits ?? []).filter((r) => r.expiresDay >= state.day);
 
+  returnSideTasks(state); // side tasks whose crew is back today resolve
   return returnCrews(state); // hands-off crews back today file their reports
 }
 

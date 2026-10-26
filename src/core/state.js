@@ -7,8 +7,9 @@ import { STARTING_ROSTER_CAP, generateStartingCrew, recruitToOperative } from '.
 import { prepareOperative } from './development.js';
 import { refreshFreelancers } from './freelance.js';
 import { ECONOMY } from '../data/economy.js';
+import { refreshSideBoard } from './sidetasks.js';
 
-export const SAVE_VERSION = 17;
+export const SAVE_VERSION = 18;
 
 // A rookie crew's first board: small work only.
 export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];
@@ -69,6 +70,7 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
     rngCounter: 0,
     activeMission: null,
     awayJobs: [], // hands-off jobs out, finished when the crew is back (core/autorun.js)
+    sideBoard: [], sideOut: [], intel: {}, // side tasks (core/sidetasks.js)
     recruits: [],
     freelancers: [],
     recruitSeq: 0,
@@ -95,6 +97,7 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
     for (const id of ['courier', 'data_pull', 'warehouse']) addOffer(state, id);
   }
   refreshFreelancers(state);
+  refreshSideBoard(state);
   state.dayStartCash = state.cash;
   return state;
 }
