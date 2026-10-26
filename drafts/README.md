@@ -7,3 +7,4 @@ Generated text waiting to go into `src/data/`. Not imported by the game. Delete 
 - `mission-log-prototype.md`: what the owner's Container 409 logs settled, checked against the engine; the brief for the first mission-log slice.
 - `earned-traits-backlog.md`: the owner's earned traits not built yet, and what each waits on.
 - `crisis-situations-review.md`: Claude's draft of each crisis's situations, for the owner to skim.
+- `core-loop.md`: the first-principles discussion of the core loop (planning, feed, call-ins, route maps), started 2026-10-26.
