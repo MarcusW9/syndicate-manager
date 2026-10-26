@@ -1175,7 +1175,7 @@ function renderCity() {
   const groups = [...new Set(FACTIONS.map((f) => f.group))];
   const body = {
     map: () => `
-      <div class="cols2">
+      <div class="cols2 cols2--map">
         <div>${cityMap()}</div>
         <div>${cityDistrict ? districtCard(cityDistrict) : '<p class="muted small citymap__hint">Tap a district for its jobs, street talk and who runs it.</p>'}</div>
       </div>`,

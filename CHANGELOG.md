@@ -9,6 +9,7 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - Freelancers and street talk still change on Mondays.
 - **Scout reads in our own words:** the crew now judges a recruit by the jobs they could handle one day ("built for the big jobs", "grows into hard jobs", "a steady pair of hands") and how close they are to their wall ("nearly at their wall", "at their wall"), instead of football-scout talk. 164 tests.
 - **Once in a generation:** the rarest recruits now get their own read: "could be one of the greats" ("Teo has never seen anything like Kit. Could be one of the best Lantern Bay has ever had."). Scouts can still be over-hopeful.
+- **City map:** on a computer screen, the district card now sits right next to the map instead of across a wide gap.
 
 ## 2026-10-25 · Tidier crew cards
 - **Crew cards line up:** someone who's away no longer has a taller card than the people beside them.

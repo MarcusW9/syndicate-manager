@@ -219,6 +219,9 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
   .list--cols { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 8px; }
   .cols2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 28px; align-items: start; }
   .cols2--flow { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+  /* City map: the map's column is only as wide as the map draws (its height cap × 360/520,
+     see .citymap below), so the district card sits right beside it instead of across a gap. */
+  .cols2--map { grid-template-columns: min(460px, calc(max(360px, 100dvh - 300px) * 360 / 520)) minmax(0, 1fr); }
   /* Planning a job: crew on the left; client, approach and risk read beside them, so the risk updates in view as you pick. */
   .plangrid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); grid-template-rows: auto auto 1fr; column-gap: 28px; align-items: start;
     grid-template-areas: "crew client" "crew approach" "crew risk"; }
