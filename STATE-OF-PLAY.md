@@ -68,5 +68,6 @@ Heists need money pressure first, or the cut split won't matter. Promotions fix 
 Record the owner's calls here as they come; decisions also get `DESIGN.md` log rows.
 
 - **Item 2, inert values (2026-10-26):** wire neural load as proposed (−1 on `neural` rolls over 70, a failed one earns Burned Out); remove burnout (save v21); morale affects raises and loyalty only, designed with money pressure. See the `DESIGN.md` row. Not built yet.
-- **Item 1, money pressure (2026-10-26):** mostly positive. In: gear (never lost or broken), base rooms with upkeep, clinic bills, tea money. Out for now: the cut. See the `DESIGN.md` row. Open: what pulls morale down without the cut; details of gear and rooms.
+- **Item 1, money pressure (2026-10-26):** mostly positive. In: gear (never lost or broken), base rooms with upkeep, clinic bills, tea money. Out for now: the cut. See the `DESIGN.md` row. Gear stays worth buying by being per person, tiered by promotion, and limited to what each person can carry on a job. Open: details of gear and rooms.
+- **Morale (2026-10-26):** cut, superseding the item 2 call. The meter goes in v21 with burnout; mood comes from three temporary traits (Restless, Sore about pay, Settled) built with money pressure. See the `DESIGN.md` row.
 - Other items: pending.
