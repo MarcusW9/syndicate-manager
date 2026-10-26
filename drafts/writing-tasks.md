@@ -10,7 +10,7 @@ files. Rough lines are fine; anything off gets flagged, not silently changed.
 
 | # | Task | Needed for | Size | Source to paste |
 |---|---|---|---|---|
-| 1 | Report lines for older crises (4 batches; **A done 2026-10-26**) | Mission logs, auto-run, side tasks | 42 crises left | `drafts/writing/report-lines-B.md` … `D.md` |
+| 1 | Report lines for older crises (4 batches; **A and B done 2026-10-26**) | Mission logs, auto-run, side tasks | 24 crises left | `drafts/writing/report-lines-C.md`, `D.md` |
 | 2 | Hand-written Container 409 mission log | The go / no-go test for mission logs | One log | `drafts/writing/container409-source.md` |
 | 3 | Action templates by stat and phase (any district) | Mission logs | ~85 templates | none |
 | 4 | District pack: the Docks (vocabulary and faction overlays) | Mission logs | ~120 short entries | none |
@@ -66,8 +66,8 @@ experienced. Templates times packs gives variety without writing every combinati
 
 ## Task 1 · Report lines for older crises
 
-Batches B: Courier/Data Pull/Warehouse, C: Kidnap/Casino, D: Penthouse/Protection (A, the
-district crises and twists, is in the game). One chat per batch is fine. Bracketed tags in
+Batches C: Kidnap/Casino and D: Penthouse/Protection (A, the district crises and twists,
+and B, Courier/Data Pull/Warehouse, are in the game). One chat per batch is fine. Bracketed tags in
 the source show every mechanical effect, including bonuses that only apply on success
 ("[pay +40%]"); a line should end with the ones that apply to it, and a cost marked
 "costs anyway" applies to both success and failure.
@@ -97,7 +97,7 @@ CRISIS cutter
 - abort | success: A Wet Sleeve cutter came close; the crew left their post.
 
 SOURCE:
-(paste drafts/writing/report-lines-B.md here)
+(paste drafts/writing/report-lines-C.md here)
 ```
 
 ---

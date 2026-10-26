@@ -22,8 +22,13 @@ test('district crises and twists have a report line for every outcome', () => {
   assert.deepEqual(missing(TWISTS), []);
 });
 
-test('rookie jobs have a report line for every outcome', () => {
-  assert.deepEqual(missing(MISSIONS.filter((m) => m.rookie).flatMap((m) => m.crises)), []);
+// Older jobs still waiting for their lines (drafts/writing-tasks.md, task 1). Take a job
+// off this list when its lines go in; the second check makes sure nobody forgets to.
+const STILL_TO_WRITE = ['kidnap', 'casino', 'penthouse', 'protection'];
+
+test('every job has a report line for every outcome (except those still being written)', () => {
+  for (const m of MISSIONS.filter((x) => !STILL_TO_WRITE.includes(x.id))) assert.deepEqual(missing(m.crises), [], m.id);
+  for (const id of STILL_TO_WRITE) assert.ok(missing(MISSIONS.find((m) => m.id === id).crises).length, `${id} is done: take it off STILL_TO_WRITE`);
 });
 
 test('report lines only use slots the game can fill', () => {
