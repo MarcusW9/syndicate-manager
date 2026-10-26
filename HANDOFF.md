@@ -4,7 +4,8 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 
 ## State
 
-- **Live (`main`):** everything from this session once [#18](https://github.com/MarcusW9/syndicate-manager/pull/18) is merged. #13 reached `main` directly; #14-#17 were merged into the branches below them (see the stacking gotcha) and reach `main` through #18, which carries the whole stack plus this file.
+- **Live (`main`):** everything from this session; [#18](https://github.com/MarcusW9/syndicate-manager/pull/18) is merged (`4ada93b`). #13 reached `main` directly; #14-#17 were merged into the branches below them (see the stacking gotcha) and reached `main` through #18.
+- **Design review:** `STATE-OF-PLAY.md` (2026-10-26) assesses the whole game: a season simulation, what would add depth, a suggested order and a cleanup list. Read it instead of re-assessing; the owner's response to it is pending.
 - **Tests:** 227 passing. **Save format v20.**
 
 ## What this session built (2026-10-26)
@@ -26,6 +27,8 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 - **Crisis ids are unique** (a test checks). Renaming one needs a save migration (see v20).
 
 ## Next: what adds depth (recommendation)
+
+`STATE-OF-PLAY.md` suggests a slightly different order (inert values, then career page with relationships, then money pressure, then heists); the owner hasn't chosen yet.
 
 1. **Career page** (small, high value now). Earned traits, the job log and growth give each person a real story: firsts, scars, traits earned and lost, best moments, stats then vs now. Mostly UI over data that already exists (`op.history`, `op.earned`, `op.growthLog`, report events); a lifetime growth log needs a small save change. It turns traits into attachment.
 2. **Heists with team assembly** (the big depth step). Named role slots tested by specific crises, set-up jobs (could be side tasks), the cut split as a loyalty decision, and extended multi-round crises for the finale. Works with five people; a Street-tier heist can be the first promotion. Needs a short design pass with the owner first (slots, cut split, how prep feeds the finale).
