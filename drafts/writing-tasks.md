@@ -16,13 +16,14 @@ files. Rough lines are fine; anything off gets flagged, not silently changed.
 | 4 | District pack: the Docks (vocabulary and faction overlays) | Mission logs | ~120 short entries | none |
 | 5 | Joss's framing lines | Mission logs | ~45 lines | none |
 | 6 | Authored lines for Container 409's key beats | Mission logs | ~12 lines | `drafts/writing/container409-source.md` |
-| 7 | Stat-unlock choices | Choices unlocked by stats | ~15 choices | a report-lines batch, or `container409-source.md` |
+| 7 | ~~Stat-unlock choices~~ **Done 2026-10-26** (17 in the game) | Choices unlocked by stats | — | — |
 | 8 | One-off side tasks | Side tasks | ~20 tasks | none |
 | 9 | Earned traits | Progression step 2 | ~10 traits | none |
 | 10 | Jobs for the locked districts | Promotions and districts | 1-2 jobs per district | `drafts/district-hooks.md` |
 
 Tasks 1 and 2 first: 1 is a prerequisite for everything hands-off, and 2 decides whether
 mission logs get built at all. Tasks 3-6 wait until the first mission-log slice is built and shows where words are missing (decided 2026-10-26).
+The slice is built (2026-10-26); play some runs before writing 3-6. Task 7 is done.
 
 **How a log is assembled (2026-10-26, owner's feedback):** the crisis report lines are the
 factual record and are never contradicted. Around them the log is built from (1) universal
@@ -282,28 +283,59 @@ SOURCE:
 
 ---
 
-## Task 7 · Stat-unlock choices
+## Task 7 · Stat-unlock choices (done 2026-10-26)
+
+Done: 17 unlocks on rookie jobs. The prompt stays for bigger jobs later; regenerate a source file
+for those jobs' crises the same way.
 
 ```
-TASK: For each crisis below, write ONE extra choice that only appears if someone on the
-crew has a high enough stat. It should feel like a reward for growth: a cleaner, cleverer
-way through that a weaker crew can't attempt. It's still a roll, just a good one.
+TASK: Rookie jobs in this game are a series of crises; each crisis offers 2-3 choices,
+each tested on one stat (d20 + stat must reach 10 + difficulty), plus an abort. I want
+EXTRA choices that only unlock once someone on the crew has grown a stat high enough:
+a cleaner, cleverer way through that a greener crew can't attempt. The player sees
+them greyed out ("Needs driving 12+") until then, so each one is a small goal to grow
+towards. The numbers, and every crisis to choose from, are in the SOURCE below.
 
-Pick the stat that makes sense and a threshold: 10 (a decent rookie), 12 (a solid pro),
-14 (a specialist). Rookie jobs should use 10-12.
+WRITE about 16 unlock choices, at most one per crisis:
+- 3 each for combat, driving and medical (rookie jobs barely use them, so the crew's
+  muscle, driver and medic rarely get a moment), and 2 each for tech, stealth, social
+  and cool.
+- Spread them over all 8 jobs and the shared pool.
 
-RULES: same style as the existing choices (label as an action, "{op} ..."); success and
-failure lines 1-2 sentences; failure no worse than the existing choices'. Add a plain
-report line for each (see task 1's style).
+THRESHOLD (on the person's own stat): 11 or 13 for a stat that is a role's main stat
+(see "Main stat by role" in the source); 9 or 10 for a stat that isn't.
 
-FORMAT:
+MAKE THEM WORTH IT: better than the crisis's existing choices in at least one way:
+- lower difficulty (2-5 on rookie jobs), or
+- a bonus on success (pay +10% or +20%), or
+- avoiding a cost the existing choices carry (heat, a pay cut, client unhappy).
+The failure is never worse than the existing choices' (on rookie jobs, at most a light
+injury or heat +1).
+
+WHO: {op} means the person who makes the roll (whoever is best on the crew at that stat),
+and on a failure they're the one hurt. Use {op} in the label ("{op} takes the van down the
+fish-market lane"). EXCEPT in a crisis marked "(about the X)": there {op} means that X, so
+phrase the label without a name ("Floor it to the clinic on Pitt Street"), and use
+"someone" for any injury.
+
+REPORT LINES: every choice also needs a plain report line for success and failure: past
+tense, ONE sentence under ~20 words, {op} for the person (or "someone", as above), the
+consequence at the end once ("Heat +1." "Pay +10%." "{op} was hurt."). A crew's account,
+not a police report.
+
+STYLE: Lantern Bay only (no new factions, places or tech); nothing supernatural; gender-
+neutral; labels are short actions; success and failure text 1-2 sentences in the game's
+present-tense voice.
+
+FORMAT (exactly, one block per unlock):
 CRISIS <crisis id>
-- <new choice id> | needs: <stat> <threshold> | label: <label> | difficulty: easy/normal/hard |
-  success: <line> | failure: <line> [injury: none/light/serious] [cost: heat +1 / none] |
+- id: <new choice id, one word> | needs: <stat> <threshold> | stat rolled: <stat> |
+  difficulty: <number> | bonus: <pay +10% / pay +20% / none> | label: <label>
+  success: <text> | failure: <text> [injury: none/light] [cost: heat +1 / none]
   report success: <line> | report failure: <line>
 
 SOURCE:
-(paste drafts/writing/container409-source.md, or a batch from task 1)
+(paste drafts/writing/stat-unlocks-source.md here)
 ```
 
 ---
