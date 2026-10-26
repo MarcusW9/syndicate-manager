@@ -278,5 +278,11 @@ function migrate(state) {
     if (!state.sideBoard) refreshSideBoard(state);
     state.version = 18;
   }
+  if (state.version === 18) {
+    // v19 added earned traits (core/earned.js): op.earned (what they've become) and op.track
+    // (hidden counters). Everyone starts with none; history from before can't be replayed.
+    for (const op of state.crew) { op.earned ??= []; op.track ??= {}; }
+    state.version = 19;
+  }
   return state;
 }

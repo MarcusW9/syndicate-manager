@@ -27,6 +27,8 @@ import {
   describeCrisis, describeCritical, currentStep, fillBrief,
 } from '../core/mission.js';
 import { sendOff, ORDERS, handsOffAllowed } from '../core/autorun.js';
+import { EARNED_TRAITS } from '../data/earnedTraits.js';
+import { earnedText } from '../core/earned.js';
 import { sideTaskById, sideOdds, sendOnSideTask, sideReward, sideCost, sidePitch, intelFor } from '../core/sidetasks.js';
 import {
   saveGame, loadGame, exportSave, importSave, listSlots, getActiveSlot, setActiveSlot,
@@ -910,6 +912,11 @@ function renderOperative() {
       <ul class="chips">
         ${op.traits.map((t) => `<li class="chip"><strong>${esc(TRAITS[t]?.name ?? t)}</strong><span>${esc(TRAITS[t]?.desc ?? '')}</span></li>`).join('')}
       </ul>
+      ${(op.earned ?? []).length ? `
+      <h2>Earned on the job</h2>
+      <ul class="chips">
+        ${op.earned.map((e) => `<li class="chip chip--earned ${EARNED_TRAITS[e.id].kind === 'temporary' ? 'chip--temporary' : ''}"><strong>${esc(EARNED_TRAITS[e.id].name)}</strong><span>${esc(earnedText(state, e))}</span><span class="chip__when">${EARNED_TRAITS[e.id].kind === 'temporary' ? 'For now' : 'For good'} · since day ${e.day}</span></li>`).join('')}
+      </ul>` : ''}
       </div>
 
       <div class="opgrid__stats">

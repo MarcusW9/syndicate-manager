@@ -13,6 +13,7 @@ import { rollRumour } from './rumours.js';
 import { money } from './money.js';
 import { returnCrews } from './autorun.js';
 import { refreshSideBoard, returnSideTasks } from './sidetasks.js';
+import { dailyTraits } from './earned.js';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAYS_PER_SEASON = 364; // 52 weeks
@@ -63,6 +64,8 @@ export function advanceDay(prev) {
       if (c.injuryDays === 0 && c.injury !== 'dead') c.injury = 'healthy';
     }
   }
+
+  dailyTraits(state); // scars set once a critical wound heals; idle spells end temporary traits
 
   // Someone who was refused a raise asks again once they've cooled off.
   for (const op of state.crew) if (op.renewalAgain) checkRenewal(state, op);
