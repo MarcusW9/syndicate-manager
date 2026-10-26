@@ -27,6 +27,9 @@ import {
   describeCrisis, describeCritical, currentStep, fillBrief,
 } from '../core/mission.js';
 import { sendOff, ORDERS, handsOffAllowed } from '../core/autorun.js';
+import { EARNED_TRAITS } from '../data/earnedTraits.js';
+import { earnedText } from '../core/earned.js';
+import { sideTaskById, sideOdds, sendOnSideTask, sideReward, sideCost, sidePitch, intelFor } from '../core/sidetasks.js';
 import {
   saveGame, loadGame, exportSave, importSave, listSlots, getActiveSlot, setActiveSlot,
   deleteSlot, loadBackup, backupDue, SLOT_COUNT,
@@ -42,6 +45,7 @@ let cityDistrict = null; // district card open on the City screen
 let cityTab = 'map'; // which City section is showing (CITY_TABS)
 let cityCardDue = false; // scroll a newly opened district card into view after drawing
 let openMessageId = null;
+let sidePlan = null; // { taskId, crew: [] } while planning a side task (Jobs tab)
 let playReportId = null; // a hands-off report playing out on its first open (renderReportTimeline)
 let openOperativeId = null;
 let openRecruitId = null;
@@ -79,7 +83,7 @@ function onClick(e) {
   const { action, id } = t.dataset;
 
   switch (action) {
-    case 'nav': screen = id; openMessageId = null; openOperativeId = null; openRecruitId = null; plan = null; break;
+    case 'nav': screen = id; openMessageId = null; openOperativeId = null; openRecruitId = null; plan = null; sidePlan = null; break;
     case 'continue': {
       if (isBlocked(state) || Date.now() < continueRestUntil) return;
       const next = advanceDay(state);
@@ -103,8 +107,9 @@ function onClick(e) {
       focusNext = openMessageId ? { action: 'open-message', id: openMessageId }
         : openRecruitId ? { action: 'open-recruit', id: openRecruitId }
         : openOperativeId ? { action: 'open-op', id: openOperativeId }
-        : plan ? { action: 'open-job', id: plan.jobId } : null;
-      openMessageId = null; openOperativeId = null; openRecruitId = null; plan = null;
+        : plan ? { action: 'open-job', id: plan.jobId }
+        : sidePlan ? { action: 'open-side', id: sidePlan.taskId } : null;
+      openMessageId = null; openOperativeId = null; openRecruitId = null; plan = null; sidePlan = null;
       break;
     case 'decide': return setState(resolveDecision(state, id, t.dataset.option));
     case 'open-op': openOperativeId = id; break;
@@ -126,6 +131,20 @@ function onClick(e) {
     }
     case 'approach': plan.approach = id; break;
     case 'orders': plan.orders = id; break;
+    case 'open-side': sidePlan = { taskId: id, crew: [] }; break;
+    case 'toggle-side-crew': {
+      const task = sideTaskById(sidePlan.taskId);
+      if (sidePlan.crew.includes(id)) sidePlan.crew = sidePlan.crew.filter((x) => x !== id);
+      else if (sidePlan.crew.length < task.crew) sidePlan.crew = [...sidePlan.crew, id];
+      else sidePlan.crew = [...sidePlan.crew.slice(1), id]; // full: swap the first pick out
+      break;
+    }
+    case 'send-side': {
+      const next = sendOnSideTask(state, sidePlan.taskId, sidePlan.crew);
+      sidePlan = null;
+      screen = 'inbox';
+      return setState(next);
+    }
     case 'send-job': {
       // Hands-off: the crew leaves now; their report comes back when they do (core/autorun.js).
       const next = sendOff(state, plan.jobId, plan.crew, plan.approach, plan.orders ?? 'steady');
@@ -411,7 +430,7 @@ function navButton(id, label, count = 0, countWord = '') {
 function renderScreen() {
   if (screen === 'inbox') return renderInbox();
   if (screen === 'crew') return openRecruitId ? renderRecruit() : openOperativeId ? renderOperative() : renderCrew();
-  if (screen === 'jobs') return plan ? renderPlan() : renderJobs();
+  if (screen === 'jobs') return plan ? renderPlan() : sidePlan ? renderSidePlan() : renderJobs();
   if (screen === 'city') return renderCity();
   if (screen === 'settings') return renderSettings();
   return '';
@@ -581,7 +600,7 @@ function renderReportTimeline(m) {
     steps = at < 0 ? lines : lines.slice(0, at);
     outcome = at < 0 ? [] : lines.slice(at).map((text) => ({ tone: 'plain', text }));
   }
-  const end = { completed: ['✓', 'Job done'], aborted: ['↩', 'Aborted'], loss: ['✕', 'Someone didn\'t come home'] }[result] ?? ['■', 'How it ended'];
+  const end = { completed: ['✓', 'Job done'], aborted: ['↩', 'Aborted'], loss: ['✕', 'Someone didn\'t come home'], setback: ['✗', 'Went badly'] }[result] ?? ['■', 'How it ended'];
   // Played once: each step lands in turn down the rail, then the result, then Joss and the summary.
   const play = m.id === playReportId;
   if (play) playReportId = null;
@@ -597,6 +616,7 @@ function renderReportTimeline(m) {
             <ul class="timeline__results">${outcome.map((o, i) => `<li class="tone--${esc(o.tone)}" style="--r:${i}">${esc(o.text)}</li>`).join('')}</ul></div>
         </li>` : ''}
       </ol>
+      ${m.timeline?.side ? rollDetail(m.timeline.side) : ''}
       ${renderFullLog(m.timeline)}
     </div>`;
 }
@@ -892,6 +912,11 @@ function renderOperative() {
       <ul class="chips">
         ${op.traits.map((t) => `<li class="chip"><strong>${esc(TRAITS[t]?.name ?? t)}</strong><span>${esc(TRAITS[t]?.desc ?? '')}</span></li>`).join('')}
       </ul>
+      ${(op.earned ?? []).length ? `
+      <h2>Earned on the job</h2>
+      <ul class="chips">
+        ${op.earned.map((e) => `<li class="chip chip--earned ${EARNED_TRAITS[e.id].kind === 'temporary' ? 'chip--temporary' : ''}"><strong>${esc(EARNED_TRAITS[e.id].name)}</strong><span>${esc(earnedText(state, e))}</span><span class="chip__when">${EARNED_TRAITS[e.id].kind === 'temporary' ? 'For now' : 'For good'} · since day ${e.day}</span></li>`).join('')}
+      </ul>` : ''}
       </div>
 
       <div class="opgrid__stats">
@@ -942,7 +967,7 @@ function climbLine() {
 }
 
 function renderJobs() {
-  if (!state.jobs.length) return `<section class="panel"><h1>Jobs</h1>${streetTalk()}${climbLine()}<p class="muted">No work on the board. New work comes in through the week.</p>${renderClients()}</section>`;
+  if (!state.jobs.length) return `<section class="panel"><h1>Jobs</h1>${streetTalk()}${climbLine()}<p class="muted">No work on the board. New work comes in through the week.</p>${renderSideBoard()}${renderClients()}</section>`;
   return `
     <section class="panel">
       <h1>Jobs</h1>
@@ -963,8 +988,71 @@ function renderJobs() {
           </li>`;
         }).join('')}
       </ul>
+      ${renderSideBoard()}
       ${renderClients()}
     </section>`;
+}
+
+const PURPOSE = { money: 'Money', training: 'Training', trust: 'Client trust', info: 'Intel' };
+
+/** This week's side tasks, under the job board. */
+function renderSideBoard() {
+  const board = (state.sideBoard ?? []).map(sideTaskById).filter(Boolean);
+  return `
+      <h2>Side work this week</h2>
+      <p class="muted small">Small one-off jobs for whoever isn't on the main work. They're away for the days shown and the result comes back with them. A new board every Monday.</p>
+      ${board.length ? `<ul class="list list--cols">
+        ${board.map((t) => `
+          <li>
+            <button class="row jobcard" data-action="open-side" data-id="${esc(t.id)}">
+              <strong class="jobcard__name">${esc(t.name)}</strong><strong class="jobcard__pay">${esc(PURPOSE[t.purpose])}</strong>
+              <span class="jobcard__client">${esc(sideReward(t))}</span><span class="jobcard__left">${t.days}d</span>
+              <span class="jobcard__facts">${esc(districtName(t.district))} · ${esc(t.stat)} · up to ${t.crew}</span>
+            </button>
+          </li>`).join('')}
+      </ul>` : '<p class="muted">Nothing left this week. More on Monday.</p>'}`;
+}
+
+/** Planning a side task: who goes, how likely it goes well, what it gives and costs. */
+function renderSidePlan() {
+  const t = sideTaskById(sidePlan.taskId);
+  if (!t || !(state.sideBoard ?? []).includes(t.id)) { sidePlan = null; return renderJobs(); }
+  const odds = sidePlan.crew.length ? sideOdds(state, t, sidePlan.crew) : null;
+  return `
+    <section class="panel">
+      <button class="btn btn--ghost" data-action="back">← Jobs</button>
+      <h1>${esc(t.name)}</h1>
+      <p class="muted">${esc(districtName(t.district))} · ${esc(PURPOSE[t.purpose])} · ${t.days} day${t.days > 1 ? 's' : ''} away · up to ${t.crew}</p>
+      <p class="body">${esc(sidePitch(t))}</p>
+      <div class="riskcard">
+        <p><strong>If it goes well:</strong> ${esc(sideReward(t, Math.max(1, sidePlan.crew.length)))}.</p>
+        <p><strong>If it goes badly:</strong> ${esc(sideCost(t))}.</p>
+        <p class="muted small">One roll on ${esc(t.stat)}. Everyone sent learns a little ${esc(t.stat)}${t.purpose === 'training' ? ', more if it goes well' : ''}.</p>
+      </div>
+      <h2>Who goes (up to ${t.crew})</h2>
+      <ul class="list">
+        ${state.crew.filter((op) => !op.freelance).map((op) => {
+          const a = availability(state, op);
+          const on = sidePlan.crew.includes(op.id);
+          return `
+          <li>
+            <button class="row pick ${on ? 'is-on' : ''}" data-action="toggle-side-crew" data-id="${esc(op.id)}" ${a.ok ? '' : 'disabled'} aria-pressed="${on}">
+              <span class="pick__box">${on ? '✓' : ''}</span>
+              ${face(op, 'sm')}
+              <span class="row__main"><strong>${esc(op.handle)}</strong> <span class="muted">${esc(op.role)}</span><br><span class="small">${esc(statName(t.stat))} ${op.stats[t.stat]}</span></span>
+              <span class="row__meta">${statusChip(a)}</span>
+            </button>
+          </li>`;
+        }).join('')}
+      </ul>
+    </section>
+    <div class="planbar">
+      <div class="planbar__read">
+        ${odds ? riskBadge(odds.risk) : '<span class="risk risk--none">nobody yet</span>'}
+        <span class="planbar__why">${esc(odds ? `${odds.op.handle} on ${t.stat} (${odds.value}${odds.notes.length ? ', ' + odds.notes.join(', ') : ''})` : `Pick up to ${t.crew}`)}</span>
+      </div>
+      <button class="btn btn--primary" data-action="send-side" ${sidePlan.crew.length ? '' : 'disabled'}>${sidePlan.crew.length ? `Send ${sidePlan.crew.length}` : 'Pick someone'}</button>
+    </div>`;
 }
 
 const trustTone = (t) => (t >= 60 ? 'good' : t >= 40 ? 'mid' : 'bad');
@@ -1005,7 +1093,7 @@ function renderPlan() {
   const t = v.tpl;
   const freelancers = state.freelancers ?? [];
   const picked = [...state.crew, ...freelancers.map(freelancerAsCrew)].filter((o) => plan.crew.includes(o.id));
-  const read = assessJob({ ...t, threat: v.threat }, picked, plan.approach, { watched: state.heatWatched ? WATCHED_PENALTY : 0 });
+  const read = assessJob({ ...t, threat: v.threat }, picked, plan.approach, { watched: state.heatWatched ? WATCHED_PENALTY : 0, intel: intelFor(state, t.district) });
   const most = maxCrew(t.crewSize);
   const full = plan.crew.length >= most;
 
@@ -1023,6 +1111,7 @@ function renderPlan() {
         ${v.threatDelta ? `<p class="muted small">Every roll on this job is ${Math.abs(v.threatDelta) === 1 ? 'one point' : `${Math.abs(v.threatDelta)} points`} ${v.threatDelta > 0 ? 'harder' : 'easier'} than usual.</p>` : ''}
         ${v.hinted ? '<p class="intel">Intel unreliable: something about this job may not be what you were told.</p>' : ''}
         ${v.rumour ? `<p class="talk-tag">Street talk: ${esc(v.rumour.text)}</p>` : ''}
+        ${(() => { const i = intelFor(state, t.district); return i ? `<p class="talk-tag">Intel from ${esc(i.source)}: +${i.bonus} on every roll here until day ${state.intel[t.district].until}.</p>` : ''; })()}
       </div>
 
       <div class="plangrid__crew">

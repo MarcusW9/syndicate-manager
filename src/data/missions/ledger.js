@@ -24,6 +24,7 @@ export const LEDGER = {
   crises: [
     {
       id: 'gate',
+      situations: ['entry', 'street-tech'],
       after: 2, order: -1, // at Ah-Wah's door
       text: 'Behind a rusted security gate you can hear Ah-Wah panicking: drawers slamming, a suitcase zip straining.',
       focusRole: 'tech',
@@ -41,6 +42,7 @@ export const LEDGER = {
     },
     {
       id: 'doorway',
+      situations: ['entry'],
       after: 2,
       text: 'A woman blocks the bedroom doorway, eyes red, swearing through tears that Ah-Wah left town yesterday.',
       choices: [
@@ -60,6 +62,7 @@ export const LEDGER = {
     },
     {
       id: 'short',
+      situations: ['threat'],
       after: 2, order: 1, // the ledger is found last
       text: 'The ledger is in a black leather bag. The cash pouch with it is three hundred short.',
       choices: [
@@ -76,6 +79,7 @@ export const LEDGER = {
     },
     {
       id: 'bolt',
+      situations: ['crowd', 'fight'],
       after: 1, order: -1, // on the stairs
       text: 'Ah-Wah sees you on the stairs and bolts past, a cash box under his arm, down into the Glow Street crowd.',
       focusRole: 'muscle',
@@ -93,6 +97,7 @@ export const LEDGER = {
     },
     {
       id: 'first_claim',
+      situations: ['threat'],
       after: 2,
       text: 'Two Silver Fan collectors are already on Ah-Wah\'s landing. "Ours first," one says. "Rao can have what\'s left."',
       choices: [
@@ -109,6 +114,7 @@ export const LEDGER = {
     },
     {
       id: 'hired_help',
+      situations: ['fight', 'threat'],
       after: 2,
       text: 'Ah-Wah has spent some of Rao\'s money on help: a big man in a vest, cracking his knuckles on the landing.',
       choices: [

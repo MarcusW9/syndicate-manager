@@ -8,6 +8,7 @@ export const DISTRICT_CRISES = {
   oldTown: [
     {
       id: 'ot_seizure',
+      situations: ['crowd', 'injury', 'neural'],
       text: 'A man drops in the alley outside a tea shop, shaking, his neural port smoking. A crowd closes in around him, and around you.',
       choices: [
         { id: 'help', label: '{medic} kneels and talks him down', kind: 'adapt', stat: 'medical', difficulty: 10,
@@ -23,6 +24,7 @@ export const DISTRICT_CRISES = {
     },
     {
       id: 'ot_shrine',
+      situations: ['threat'],
       text: 'Three Brass Anchor men step out of the incense smoke by the To Dei Gung shrine. They think you\'re the people measuring buildings for a developer.',
       choices: [
         { id: 'talk', label: '{face} explains, politely', kind: 'adapt', stat: 'social', difficulty: 11,
@@ -38,6 +40,7 @@ export const DISTRICT_CRISES = {
     },
     {
       id: 'ot_blackout',
+      situations: ['street-tech'],
       text: 'Somebody\'s illegal grid splice blows in a basement. The whole block goes black: stairwells, streetlights, everything.',
       choices: [
         { id: 'fix', label: '{tech} patches the splice', kind: 'adapt', stat: 'tech', difficulty: 11, requires: { kind: 'role', value: 'tech' }, neural: 10,
@@ -56,6 +59,7 @@ export const DISTRICT_CRISES = {
   docks: [
     {
       id: 'dk_drones',
+      situations: ['corp-tech', 'fight'],
       text: 'A crate seal splits and something inside starts to hum. Corporate security drones, packed in foam, are waking up one at a time.',
       choices: [
         { id: 'jam', label: '{tech} jams them before they lift', kind: 'adapt', stat: 'tech', difficulty: 12, requires: { kind: 'role', value: 'tech' },
@@ -71,6 +75,7 @@ export const DISTRICT_CRISES = {
     },
     {
       id: 'dk_gale',
+      situations: ['weather', 'escape'],
       text: 'The Signal 3 goes up. The dock gates lock themselves for the gale, and Aether-Harbour security starts sweeping the yard.',
       choices: [
         { id: 'fence', label: '{driver} finds a gap in the fence', kind: 'push', stat: 'driving', difficulty: 12,
@@ -86,6 +91,7 @@ export const DISTRICT_CRISES = {
     },
     {
       id: 'dk_wet_sleeve',
+      situations: ['police', 'law', 'threat', 'neural'],
       text: 'Harbour Police at the gate: a "neural-load check". The Wet Sleeve unit wants to scan everyone\'s implants, and they want to be paid for the trouble.',
       choices: [
         { id: 'pay', label: 'Pay them', kind: 'adapt', sure: true, stat: 'cool', difficulty: 0, cost: { cash: -400 },
@@ -107,6 +113,7 @@ export const DISTRICT_CRISES = {
   nightMarket: [
     {
       id: 'nm_tracker',
+      situations: ['street-tech'],
       text: 'The cash card the client gave you for expenses is pinging. Someone has planted a Silver Fan tracker in your money.',
       choices: [
         { id: 'spoof', label: '{tech} spoofs the signal', kind: 'adapt', stat: 'tech', difficulty: 11, requires: { kind: 'role', value: 'tech' },
@@ -122,6 +129,7 @@ export const DISTRICT_CRISES = {
     },
     {
       id: 'nm_pulse',
+      situations: ['neural', 'street-tech', 'crowd'],
       text: 'A data-broker feud spills into the street. Someone fires a pulse that fries every cheap implant on the block, and {tech} grabs their temple.',
       focusRole: 'tech',
       choices: [
@@ -138,6 +146,7 @@ export const DISTRICT_CRISES = {
     },
     {
       id: 'nm_clinic',
+      situations: ['police', 'law', 'threat'],
       text: 'The fastest way through is a back-alley chrome clinic. On the table, under the lamp, a senior Harbour Police commander is getting illegal implants. He sees you.',
       choices: [
         { id: 'promise', label: '{face} promises you saw nothing', kind: 'adapt', stat: 'social', difficulty: 12, failureCost: { heat: 2 },
@@ -156,6 +165,7 @@ export const DISTRICT_CRISES = {
   heights: [
     {
       id: 'gh_wiped',
+      situations: ['corp-tech', 'escape'],
       text: 'Your inside contact\'s badge stops working mid-job. They\'ve just been fired and wiped from the directory, and you\'re forty floors up on their credentials.',
       choices: [
         { id: 'forge', label: '{tech} forges a fresh badge', kind: 'adapt', stat: 'tech', difficulty: 12, requires: { kind: 'role', value: 'tech' },
@@ -171,6 +181,7 @@ export const DISTRICT_CRISES = {
     },
     {
       id: 'gh_trial',
+      situations: ['neural', 'corp-tech', 'crowd'],
       text: 'A neural-enhancement demo in the lobby goes wrong. The broadcast leaks into every implant nearby, and {tech} starts reciting corporate telemetry under their breath.',
       focusRole: 'tech',
       choices: [
@@ -187,6 +198,7 @@ export const DISTRICT_CRISES = {
     },
     {
       id: 'gh_skybridge',
+      situations: ['escape', 'corp-tech'],
       text: 'Lockdown. The sky-bridge doors seal at both ends with you in the middle, sixty floors over the city. The only other way out is a maintenance hatch, and the wind is howling.',
       choices: [
         { id: 'climb', label: 'Climb out through the hatch', kind: 'push', stat: 'cool', difficulty: 12,

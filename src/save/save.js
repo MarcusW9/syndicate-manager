@@ -9,6 +9,7 @@
 //   syndicate-ironman-progress     { [ironmanId]: highest save counter seen }
 //   syndicate-save-v1              legacy single save, moved into slot 1 on first load
 
+import { refreshSideBoard } from '../core/sidetasks.js';
 import { SAVE_VERSION } from '../core/state.js';
 import { addOffer } from '../core/jobs.js';
 import { STARTING_ROSTER_CAP } from '../core/recruits.js';
@@ -269,6 +270,33 @@ function migrate(state) {
     // v17: hands-off jobs come back when the crew does (state.awayJobs), not the moment they're sent.
     state.awayJobs ??= [];
     state.version = 17;
+  }
+  if (state.version === 17) {
+    // v18 added side tasks: this week's board, people out on them, and intel on districts.
+    state.sideOut ??= [];
+    state.intel ??= {};
+    if (!state.sideBoard) refreshSideBoard(state);
+    state.version = 18;
+  }
+  if (state.version === 18) {
+    // v19 added earned traits (core/earned.js): op.earned (what they've become) and op.track
+    // (hidden counters). Everyone starts with none; history from before can't be replayed.
+    for (const op of state.crew) { op.earned ??= []; op.track ??= {}; }
+    state.version = 19;
+  }
+  if (state.version === 19) {
+    // v20: two crises shared the id 'collector'; The Favourite's is now collector1 and Last
+    // Ticket's collector2. A job saved mid-way (played or hands-off) keeps its place.
+    const renamed = { favourite: 'collector1', last_ticket: 'collector2' };
+    const fix = (am) => {
+      const to = am && renamed[am.templateId];
+      if (!to) return;
+      for (const q of am.queue ?? []) if (q.type === 'crisis' && q.id === 'collector') q.id = to;
+      for (const e of am.events ?? []) if (e.crisis === 'collector') e.crisis = to;
+    };
+    fix(state.activeMission);
+    for (const j of state.awayJobs ?? []) fix(j.mission);
+    state.version = 20;
   }
   return state;
 }

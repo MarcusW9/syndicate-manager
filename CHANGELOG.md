@@ -4,6 +4,27 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-26 · More earned traits
+- **Eight more ways people change** (written by the owner): **Light-Fingered** after quiet break-ins, a **Crowd Reader**, **Wirewise** with street hardware, a **Corner Fighter**; and for a while, **Rattled by Sirens**, a **Short Fuse** (the third time, they become a Hothead for good), **Burned Out** after neural work goes wrong, or **Overconfident** after a run of hard calls going their way (they find the safe option beneath them).
+- **Ghost Driver** now works as written: better in getaways, and a clean getaway sheds some of the heat. **Scarred** steadies them when someone's hurt or squaring up.
+- 227 tests.
+
+## 2026-10-26 · Crises know what kind of moment they are
+- Behind the scenes: every crisis now says what kind of situation it is (a chase, a break-in, a crowd, the police or other officials, a fight...). Nothing changes on screen yet; the next batch of earned traits uses it, and later mission logs and gear.
+- Save format v20. 216 tests.
+
+## 2026-10-26 · Earned traits
+- **What happens on the job changes people** (12 traits, written by the owner). Some are for good: a medic who keeps patching people up becomes **Clinic Hands**; someone who survives a critical wound comes back **Scarred**; two people who keep coming home together become a **Crew Anchor**. Some come and go: **Shaky** after a bad week, **Riding High** after a clean run, a **Known Face** in a district where they keep causing trouble.
+- Joss tells you when someone earns or loses one, and it goes on their profile under "Earned on the job". Nobody is told they're "2 out of 3" of the way there: it happens when it happens.
+- Traits never stop you choosing anything; their effects show in the roll breakdown like every other bonus. Someone holds at most two of the come-and-go kind at once.
+- Save format v19. 213 tests.
+
+## 2026-10-26 · Side work for the bench
+- **Side work this week:** under the job board, 5 small one-off tasks, one per district, new every Monday (25 written by the owner). Send one or two people who aren't busy; they're away a day or three and the result comes back with them.
+- **Four kinds:** money (about ¥250 a day each), training (they get better at the task's skill), client trust (+3), and intel: a week of +1 on every roll in that district's jobs, shown on the planning screen.
+- If it goes badly the cost is small and stated up front: a light injury, a bit of heat, or a day held by the police. Nobody can die on side work.
+- Save format v18. 196 tests.
+
 ## 2026-10-26 · Moves your crew grows into
 - **17 new choices that unlock as your crew grows** (written by the owner), one in a crisis on each rookie job and in the shared rookie crises. A medic at medical 13 can clear a wound before stitching it; a driver at driving 13 can fold the mirrors and clear a parked truck in one pass; muscle at combat 11 can walk the Silver Fan collectors back upstairs without a punch. They're easier, pay a bonus or dodge a cost.
 - Until someone has the stat, the choice still shows, greyed out, with what it needs ("Needs driving 13+"): something to grow towards. Hands-off crews use them too.

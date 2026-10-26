@@ -301,6 +301,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .timeline__item--completed .timeline__node { border-color: #5fe0a5; color: #5fe0a5; }
 .timeline__item--aborted .timeline__node { border-color: var(--warn); color: var(--warn); }
 .timeline__item--loss .timeline__node { border-color: var(--danger); color: var(--danger); }
+.timeline__item--setback .timeline__node { border-color: var(--warn); color: var(--warn); }
 .timeline__label { margin: 0 0 4px; font-family: var(--display, inherit); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.85rem; }
 .timeline__results { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 /* Job report summary and full log (core/report.js, save v16). Tap to expand; nothing on hover. */
@@ -654,3 +655,8 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .face--sm { width: 32px; height: 32px; clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 0 100%); }
 .face--lg { width: 104px; height: 104px; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
 .face.is-fallen { filter: grayscale(1); opacity: 0.7; }
+
+/* Earned traits on the profile (core/earned.js): lasting ones solid, temporary ones dashed. */
+.chip--earned { border-color: color-mix(in srgb, var(--accent-2) 60%, var(--line)); }
+.chip--temporary { border-style: dashed; }
+.chip__when { color: var(--muted); font-size: 0.75rem; }

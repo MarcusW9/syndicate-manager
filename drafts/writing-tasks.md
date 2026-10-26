@@ -17,8 +17,8 @@ files. Rough lines are fine; anything off gets flagged, not silently changed.
 | 5 | Joss's framing lines | Mission logs | ~45 lines | none |
 | 6 | Authored lines for Container 409's key beats | Mission logs | ~12 lines | `drafts/writing/container409-source.md` |
 | 7 | ~~Stat-unlock choices~~ **Done 2026-10-26** (17 in the game) | Choices unlocked by stats | — | — |
-| 8 | One-off side tasks | Side tasks | ~20 tasks | none |
-| 9 | Earned traits | Progression step 2 | ~10 traits | none |
+| 8 | ~~One-off side tasks~~ **Done 2026-10-26** (25 in the game) | Side tasks | — | — |
+| 9 | ~~Earned traits~~ **20 of 26 in the game 2026-10-26**; the rest in `drafts/earned-traits-backlog.md` | Progression step 2 | — | — |
 | 10 | Jobs for the locked districts | Promotions and districts | 1-2 jobs per district | `drafts/district-hooks.md` |
 
 Tasks 1 and 2 first: 1 is a prerequisite for everything hands-off, and 2 decides whether

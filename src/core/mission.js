@@ -20,6 +20,8 @@ import { DISTRICTS } from '../data/districts.js';
 import { NAMES } from '../config/names.js';
 import { money } from './money.js';
 import { summariseRun, REPORT_LOGS_KEPT } from './report.js';
+import { intelFor } from './sidetasks.js';
+import { afterJob, noteInjury, spendSecondWind, earnedOf } from './earned.js';
 
 const EXIT_KINDS = new Set(['abort', 'extract']);
 const STABILISE_DIFFICULTY = 9;
@@ -246,7 +248,27 @@ function rollerFor(state, am, choice, crew) {
   const recommended = templateById(am.templateId).crewSize;
   const medic = choice.kind === 'stabilise' ? findRole(crew, 'medic') : null;
   const stat = medic ? 'medical' : choice.stat;
-  return crewRoll(crew, stat, { approach: am.approach, recommended, lead: medic ? medicLead(medic, am, crew) : namedLead(state, am, crew, stat), watched: am.watched ?? 0 });
+  const intel = intelFor(state, templateById(am.templateId).district);
+  return crewRoll(crew, stat, { approach: am.approach, recommended, lead: medic ? medicLead(medic, am, crew) : namedLead(state, am, crew, stat), watched: am.watched ?? 0, intel, job: jobContext(am, choice, crew) });
+}
+
+/** What earned traits need to know about the job so far, and this choice (core/earned.js). */
+function jobContext(am, choice, crew = []) {
+  const events = am.events ?? [];
+  const step = currentStep(am);
+  const crisis = step?.type === 'crisis' ? crisisById(templateById(am.templateId), step.id) : null;
+  // The safest option: the lowest difficulty among the rolls this crew can take (by the book, not by who's rolling).
+  const rolls = (crisis?.choices ?? []).filter((c) => !EXIT_KINDS.has(c.kind) && !c.sure && meetsRequirement(crew, c.requires).ok);
+  const easiest = Math.min(...rolls.map((c) => c.difficulty));
+  return {
+    situations: crisis?.situations ?? [],
+    difficulty: choice ? rollDifficulty(am, choice) : 0,
+    safest: Boolean(choice && rolls.length > 1 && rolls.includes(choice) && choice.difficulty === easiest),
+    district: templateById(am.templateId).district,
+    injured: events.filter((e) => e.injury).map((e) => e.injury.id),
+    rolled: events.filter((e) => e.kind === 'roll' && e.actor).map((e) => e.actor.id),
+    secondWindUsed: am.secondWind ?? [],
+  };
 }
 
 /**
@@ -372,7 +394,7 @@ export function chooseOption(prev, choiceId) {
   // What gets recorded for the full log: the facts of this choice, filled in below.
   const event = {
     kind: EXIT_KINDS.has(choice.kind) ? 'exit' : choice.sure ? 'sure' : 'roll',
-    crisis: crisis.id, choiceId: choice.id, twist: !!step.twist, text: fill(crisis.text, state, am), choice: fill(choice.label, state, voice),
+    crisis: crisis.id, choiceId: choice.id, situations: [...(crisis.situations ?? [])], twist: !!step.twist, text: fill(crisis.text, state, am), choice: fill(choice.label, state, voice),
     why: am.nextWhy ?? null, choiceCost: { ...(choice.cost ?? {}) }, report: reportLine(state, voice, choice, true),
   };
   delete am.nextWhy;
@@ -392,6 +414,10 @@ export function chooseOption(prev, choiceId) {
   const die = choice.sure ? null : d20(rng);
   const need = 10 + rollDifficulty(am, choice);
   const success = choice.sure || die + roller.value >= need;
+  if (roller.notes.some((n) => n.startsWith('Second Wind'))) { // used once a job, spent after three
+    am.secondWind = [...(am.secondWind ?? []), roller.op.id];
+    spendSecondWind(state, roller.op);
+  }
   Object.assign(event, {
     stat: choice.stat, actor: { id: roller.op.id, handle: roller.op.handle }, value: roller.value, notes: roller.notes,
     die, need, success, outcomeCost: { ...((success ? choice.successCost : choice.failureCost) ?? {}) }, injury: null,
@@ -413,6 +439,12 @@ export function chooseOption(prev, choiceId) {
   addReport(state, am, choice, success, voice);
   if (success) {
     am.log.push({ kind: 'good', text: fill(choice.success, state, voice) });
+    // Ghost Driver (earned): a clean getaway at the wheel sheds a point of the heat the move costs.
+    if (choice.stat === 'driving' && (crisis.situations ?? []).includes('escape') && (choice.cost?.heat ?? 0) > 0 && earnedOf(roller.op, 'ghost_driver')) {
+      am.extraHeat -= 1;
+      am.log.push({ kind: 'good', text: `${roller.op.handle} leaves no plate to remember (Ghost Driver): one less heat.` });
+      event.saved = 'Ghost Driver: one less heat';
+    }
     const sc = choice.successCost ?? {};
     am.payCut += sc.payCut ?? 0;
     am.extraHeat += sc.heat ?? 0;
@@ -422,11 +454,19 @@ export function chooseOption(prev, choiceId) {
     const fc = choice.failureCost ?? {};
     am.payCut += fc.payCut ?? 0;
     am.extraHeat += fc.heat ?? 0;
+    // Clean Professional (earned): once a job, a failed roll of theirs draws one less heat.
+    if (fc.heat && !am.cleanUsed && earnedOf(roller.op, 'clean_professional')) {
+      am.extraHeat -= 1;
+      am.cleanUsed = true;
+      am.log.push({ kind: 'good', text: `${roller.op.handle} keeps it quieter than it could have been (Clean Professional): one less heat.` });
+      event.saved = 'Clean Professional: one less heat';
+    }
     if (fc.cash) state.cash += fc.cash;
     if (choice.failureInjury && choice.failureInjury !== 'none') {
       const target = failureTarget(state, am, roller.op);
       const injury = worsenInjury(target.condition.injury, choice.failureInjury);
       setInjury(target, injury);
+      noteInjury(state, target, injury);
       am.log.push({ kind: 'injury', text: `${target.handle}: ${injury} injury.` });
       event.injury = { id: target.id, handle: target.handle, severity: injury };
       if (injury === 'critical') {
@@ -562,7 +602,9 @@ function finish(state) {
 
   // Clients remember: a finished job builds trust; costs marked "client unhappy" take it away.
   const base = am.aborted ? (am.abortedOnTwist ? 0 : ABORT_TRUST) : completionTrust(threat);
-  const trustChange = adjustTrust(state, am.clientId, base + am.clientTrust);
+  // Client's Favourite (earned): a job they worked for that client, done well, counts for a little more.
+  const favourite = !am.aborted && am.clientId && crew.some((o) => earnedOf(o, 'client_favourite', { client: am.clientId })) ? 1 : 0;
+  const trustChange = adjustTrust(state, am.clientId, base + am.clientTrust + favourite);
 
   for (const op of deaths) {
     state.crew = state.crew.filter((o) => o.id !== op.id);
@@ -596,6 +638,15 @@ function finish(state) {
 
   // Growth can mean a pay rise: graduation or main stat +2 since the last deal (core/renewals.js).
   for (const op of survivors) if (!isFreelancer(op)) checkRenewal(state, op, graduatedOps.includes(op));
+
+  // Clinic Hands (earned): once a job, gets a lightly hurt crewmate back a day sooner.
+  const patched = [];
+  for (const op of survivors.filter((o) => earnedOf(o, 'clinic_hands'))) {
+    const patient = survivors.find((o) => o !== op && o.condition.injury === 'light' && o.condition.injuryDays > 1 && !patched.some((p) => p.patient === o));
+    if (!patient) continue;
+    patient.condition.injuryDays -= 1;
+    patched.push({ medic: op, patient });
+  }
 
   const injuries = [];
   for (const op of survivors) {
@@ -632,6 +683,7 @@ function finish(state) {
     injuries.length ? { tone: 'bad', text: `Injured: ${injuries.join(', ')}.` } : { tone: 'good', text: 'Nobody hurt.' },
     ...(deaths.length ? [{ tone: 'bad', text: 'Their names go on the wall.' }] : []),
     ...(growthLines.length ? [{ tone: 'good', text: `Improved: ${growthLines.join(', ')}.` }] : []),
+    ...patched.map((p) => ({ tone: 'good', text: `${p.medic.handle} patched up ${p.patient.handle} (Clinic Hands): back a day sooner.` })),
     ...(client && trustChange ? [{ tone: trustChange > 0 ? 'good' : 'bad', text: `${client.name} ${trustChange > 0 ? 'thinks more of you' : 'is unhappy with you'} (trust ${trustChange > 0 ? '+' : ''}${trustChange}).` }] : []),
   ];
   const id = `report-${state.day}-${state.rngCounter}`;
@@ -649,6 +701,7 @@ function finish(state) {
   // Full logs are kept for the most recent jobs; older reports keep their timeline and summary.
   state.inbox.filter((m) => m.type === 'report' && m.timeline?.events).slice(REPORT_LOGS_KEPT).forEach((m) => { delete m.timeline.events; });
   reactToJob(state, am, tpl, { heatGain, injuries, deaths });
+  afterJob(state, { events, district: tpl.district, clientId: am.clientId, outcome, crewIds: am.crewIds });
 }
 
 export function closeMission(prev) {

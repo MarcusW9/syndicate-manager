@@ -21,6 +21,7 @@ export const PENTHOUSE = {
   crises: [
     {
       id: 'facial_scan',
+      situations: ['entry', 'corp-tech'],
       text: 'The service lift has a facial scanner nobody mentioned. It wants a registered face.',
       focusRole: 'tech',
       choices: [
@@ -37,6 +38,7 @@ export const PENTHOUSE = {
     },
     {
       id: 'laser_grid',
+      situations: ['entry', 'corp-tech'],
       text: 'The study has a laser grid across the floor, invisible until {tech} sprays the air.',
       choices: [
         { id: 'thread', label: 'Thread through the beams', kind: 'push', stat: 'stealth', difficulty: 13,
@@ -52,6 +54,7 @@ export const PENTHOUSE = {
     },
     {
       id: 'owner_home',
+      situations: ['entry', 'threat'],
       text: 'The front door opens. The executive is home early, with a bodyguard and a bottle of champagne.',
       choices: [
         { id: 'hide', label: 'Everyone hides and waits', kind: 'push', stat: 'stealth', difficulty: 13,
@@ -67,6 +70,7 @@ export const PENTHOUSE = {
     },
     {
       id: 'vault_timer',
+      situations: ['entry', 'corp-tech', 'neural'],
       text: 'The vault has a time lock. {tech} can force it, but it will push their brain to its limit.',
       focusRole: 'tech',
       choices: [
@@ -83,6 +87,7 @@ export const PENTHOUSE = {
     },
     {
       id: 'drone',
+      situations: ['corp-tech'],
       text: 'A security drone rises outside the window, lights sweeping across the glass.',
       choices: [
         { id: 'freeze', label: 'Freeze and wait for it to pass', kind: 'push', stat: 'cool', difficulty: 12,
@@ -98,6 +103,7 @@ export const PENTHOUSE = {
     },
     {
       id: 'lockdown_tower',
+      situations: ['escape', 'corp-tech'],
       text: 'Tower security locks down the lobby. The only way out is the roof, or the loading dock past two guards.',
       focusRole: 'driver',
       choices: [

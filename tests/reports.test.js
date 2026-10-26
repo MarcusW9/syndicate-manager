@@ -52,3 +52,32 @@ test('the risk read names every bonus: traits, a veteran on the crew, the approa
   const cool = read('cutter', 'splash');
   if (cool.startsWith(tech.handle)) assert.match(cool, new RegExp(`${face.handle} steadies them \\+1`));
 });
+
+// Situations (2026-10-26): every crisis says what kind of situation it is, from the known list.
+test('every crisis lists its situations, only known ones', async () => {
+  const { SITUATIONS } = await import('../src/data/situations.js');
+  for (const c of [...MISSIONS.flatMap((m) => m.crises), ...TWISTS]) {
+    assert.ok(Array.isArray(c.situations), `${c.id} lists situations (an empty list is fine)`);
+    for (const t of c.situations) assert.ok(SITUATIONS[t], `${c.id}: unknown situation ${t}`);
+  }
+});
+
+test('no two different crises share an id (2026-10-26: the two "collector" crises were renamed)', () => {
+  const byId = new Map();
+  for (const c of [...MISSIONS.flatMap((m) => m.crises), ...TWISTS]) {
+    if (byId.has(c.id)) assert.equal(byId.get(c.id), c, `two different crises called ${c.id}`);
+    byId.set(c.id, c);
+  }
+});
+
+test('a v19 save with a job mid-way on the old "collector" crisis picks up the new id', async () => {
+  globalThis.localStorage ??= { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+  const { importSave } = await import('../src/save/save.js');
+  const { createNewGame } = await import('../src/core/state.js');
+  const s = createNewGame({ seed: 1, startCrew: 'fresh' });
+  s.activeMission = { templateId: 'favourite', queue: [{ type: 'crisis', id: 'collector' }], events: [{ kind: 'roll', crisis: 'collector' }] };
+  s.version = 19;
+  const loaded = await importSave({ text: async () => JSON.stringify(s) });
+  assert.equal(loaded.activeMission.queue[0].id, 'collector1');
+  assert.equal(loaded.activeMission.events[0].crisis, 'collector1');
+});

@@ -24,6 +24,7 @@ export const CHROME = {
   crises: [
     {
       id: 'bone_drill',
+      situations: ['fight', 'threat'],
       after: 1, // inside the clinic
       text: 'Dr. Lim snatches a pneumatic bone drill off the rack. His hands are shaking so hard the bit rattles.',
       choices: [
@@ -40,6 +41,7 @@ export const CHROME = {
     },
     {
       id: 'laser_rig',
+      situations: ['street-tech'],
       after: 2, // the rig has been seen
       text: 'The calibration rig is still running, its unshielded laser humming over the tray.',
       focusRole: 'tech',
@@ -57,6 +59,7 @@ export const CHROME = {
     },
     {
       id: 'patient',
+      situations: ['injury'],
       after: 1,
       text: 'A man with a bandaged eye is still in the chair. He begs you not to take his new lens.',
       choices: [
