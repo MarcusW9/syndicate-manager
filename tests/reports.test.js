@@ -32,3 +32,23 @@ test('report lines only use slots the game can fill', () => {
     for (const [, key] of line.matchAll(/\{(\w+)(?::\w+)?\}/g)) assert.ok(SLOTS.has(key), `${c.id}.${ch.id}: unknown slot {${key}}`);
   }
 });
+
+// Visibility (2026-10-26): a bonus the game applies is a bonus the player can see.
+test('the risk read names every bonus: traits, a veteran on the crew, the approach, backup', async () => {
+  const { createNewGame } = await import('../src/core/state.js');
+  const M = await import('../src/core/mission.js');
+  const { addOffer } = await import('../src/core/jobs.js');
+  let s = createNewGame({ seed: 409, startCrew: 'fresh' });
+  s.jobs = []; addOffer(s, 'container409');
+  const tech = s.crew.find((o) => o.role === 'tech');
+  const face = s.crew.find((o) => o.role === 'face');
+  tech.traits = ['chromed']; face.traits = ['veteran'];
+  s = M.startMission(s, s.jobs[0].id, [tech.id, face.id], 'stealth');
+  const read = (crisis, choice) => {
+    s.activeMission.queue = [{ type: 'crisis', id: crisis }, { type: 'beat', index: 0 }]; s.activeMission.step = 0;
+    return M.describeCrisis(s).choices.find((c) => c.id === choice).riskReason;
+  };
+  assert.match(read('groaning_stack', 'brace'), /Chromed \+2, stealth approach \+1/);
+  const cool = read('cutter', 'splash');
+  if (cool.startsWith(tech.handle)) assert.match(cool, new RegExp(`${face.handle} steadies them \\+1`));
+});

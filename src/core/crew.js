@@ -46,13 +46,24 @@ export const ratedStat = (op, stat) => Math.max(1, Math.min(20, (op.stats[stat] 
 // Per-operative rules, applied in order to one person's stat. ctx: { stat, approach, crew, base }.
 export const OPERATIVE_RULES = [
   // Traits can't push a stat past the 1-20 scale; situational effects below can.
-  { id: 'traits', applies: () => true, value: (op, { stat, base }) => Math.max(1, Math.min(20, base + (traitMods(op)[stat] ?? 0))) - base },
-  { id: 'veteran-cool', applies: (op, { stat, crew }) => stat === 'cool' && crew.some((o) => o.id !== op.id && o.traits.includes('veteran')), value: () => 1 },
-  { id: 'approach', applies: (op, { stat, approach }) => !!APPROACHES[approach]?.mods?.[stat], value: (op, { stat, approach }) => APPROACHES[approach].mods[stat] },
+  // Every bonus says where it came from, so the risk read (and job reports) can show why a number is what it is.
+  { id: 'traits', applies: (op, { stat }) => !!traitMods(op)[stat], value: (op, { stat, base }) => Math.max(1, Math.min(20, base + traitMods(op)[stat])) - base,
+    note: (op, { stat, base }, v) => traitNotes(op, stat) + (v !== traitMods(op)[stat] ? ` (capped at ${v > 0 ? 20 : 1})` : '') },
+  { id: 'veteran-cool', applies: (op, { stat, crew }) => stat === 'cool' && crew.some((o) => o.id !== op.id && o.traits.includes('veteran')), value: () => 1,
+    note: (op, { crew }) => `${crew.find((o) => o.id !== op.id && o.traits.includes('veteran')).handle} steadies them +1` },
+  { id: 'approach', applies: (op, { stat, approach }) => !!APPROACHES[approach]?.mods?.[stat], value: (op, { stat, approach }) => APPROACHES[approach].mods[stat],
+    note: (op, { approach }, v) => `${APPROACHES[approach].name.toLowerCase()} approach ${v > 0 ? '+' : '−'}${Math.abs(v)}` },
   { id: 'fatigue', applies: (op) => op.condition.fatigue > 60, value: () => -2, note: 'fatigued' },
   { id: 'injury', applies: (op) => op.condition.injury === 'light', value: () => -2, note: 'hurt' },
   { id: 'status', applies: (op) => statusRollMods(op).length > 0, value: (op) => statusRollMods(op).reduce((n, d) => n + d.rollMod, 0), note: (op) => statusRollMods(op).map((d) => d.note).join(', ') },
 ];
+
+/** "Chromed +2" for each trait that changes this stat. */
+function traitNotes(op, stat) {
+  return (op.traits ?? []).map((t) => [TRAITS[t], TRAITS[t]?.effects?.[stat]])
+    .filter(([tr, v]) => tr && typeof v === 'number' && v !== 0)
+    .map(([tr, v]) => `${tr.name} ${v > 0 ? '+' : '−'}${Math.abs(v)}`).join(', ');
+}
 
 const noteFor = (rule, op, ctx, v) => (typeof rule.note === 'function' ? rule.note(op, ctx, v) : rule.note);
 

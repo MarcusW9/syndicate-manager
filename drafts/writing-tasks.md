@@ -11,7 +11,7 @@ files. Rough lines are fine; anything off gets flagged, not silently changed.
 | # | Task | Needed for | Size | Source to paste |
 |---|---|---|---|---|
 | 1 | ~~Report lines for older crises~~ **Done 2026-10-26** (all 4 batches in the game) | Mission logs, auto-run, side tasks | — | — |
-| 2 | Hand-written Container 409 mission log | The go / no-go test for mission logs | One log | `drafts/writing/container409-source.md` |
+| 2 | ~~Hand-written Container 409 mission log~~ **Done 2026-10-26: go** (see `mission-log-prototype.md`) | The go / no-go test for mission logs | — | — |
 | 3 | Action templates by stat and phase (any district) | Mission logs | ~85 templates | none |
 | 4 | District pack: the Docks (vocabulary and faction overlays) | Mission logs | ~120 short entries | none |
 | 5 | Joss's framing lines | Mission logs | ~45 lines | none |
@@ -22,7 +22,7 @@ files. Rough lines are fine; anything off gets flagged, not silently changed.
 | 10 | Jobs for the locked districts | Promotions and districts | 1-2 jobs per district | `drafts/district-hooks.md` |
 
 Tasks 1 and 2 first: 1 is a prerequisite for everything hands-off, and 2 decides whether
-mission logs get built at all. Do 3-6 only if the log in task 2 reads well.
+mission logs get built at all. Tasks 3-6 wait until the first mission-log slice is built and shows where words are missing (decided 2026-10-26).
 
 **How a log is assembled (2026-10-26, owner's feedback):** the crisis report lines are the
 factual record and are never contradicted. Around them the log is built from (1) universal

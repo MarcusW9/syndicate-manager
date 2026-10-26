@@ -9,6 +9,7 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - Freelancers and street talk still change on Mondays.
 - **Scout reads in our own words:** the crew now judges a recruit by the jobs they could handle one day ("built for the big jobs", "grows into hard jobs", "a steady pair of hands") and how close they are to their wall ("nearly at their wall", "at their wall"), instead of football-scout talk. 164 tests.
 - **Once in a generation:** the rarest recruits now get their own read: "could be one of the greats" ("Teo has never seen anything like Kit. Could be one of the best Lantern Bay has ever had."). Scouts can still be over-hopeful.
+- **See why a number is what it is:** when you pick a choice, the risk read now names every bonus behind the number, e.g. "Egg Tart on tech (14, Chromed +2, stealth approach +1)". Traits, a veteran on the crew and your approach were already counted, just never shown.
 - **Clearer job reports:** every crisis in the game now gets a plain line in the job report saying what happened. Until now only the newer jobs had them; the district crises, the twists and the seven older jobs are done too (183 lines, written by the owner).
 - **City map:** on a computer screen, the district card now sits right next to the map instead of across a wide gap.
 
