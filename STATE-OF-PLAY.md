@@ -65,4 +65,7 @@ Heists need money pressure first, or the cut split won't matter. Promotions fix 
 
 ## Owner's response
 
-Pending: the owner is reviewing this. Record their calls here (or as `DESIGN.md` log rows if they become decisions).
+Record the owner's calls here as they come; decisions also get `DESIGN.md` log rows.
+
+- **Item 2, inert values (2026-10-26):** wire neural load as proposed (−1 on `neural` rolls over 70, a failed one earns Burned Out); remove burnout (save v21); morale affects raises and loyalty only, designed with money pressure. See the `DESIGN.md` row. Not built yet.
+- Other items: pending.
