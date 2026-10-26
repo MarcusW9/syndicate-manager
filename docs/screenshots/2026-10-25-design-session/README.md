@@ -4,7 +4,7 @@ Screenshots from the session that reworked the UX, added Joss, the street-termin
 
 | File | What it shows | Shipped in |
 | --- | --- | --- |
-| `00-owner-inbox-before-ux-review.webp` | The owner's screenshot that started the review: a mostly empty desktop inbox | before `d3e6975` |
+| (owner's) | The owner's screenshot that started the review, a mostly empty desktop inbox, is in [2026-10-25-owner-captures](../2026-10-25-owner-captures/) | before `d3e6975` |
 | **Clearer days and a better inbox** | | `d3e6975` |
 | `01-days-desktop-inbox-side-by-side` | Message open beside the list; short date, week bar, "Continue → Tue" with what's waiting | |
 | `02-days-new-day-cue-desktop` | A new day: the date flashes, a note says what came in, Continue rests | |
