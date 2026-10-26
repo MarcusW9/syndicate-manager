@@ -5,22 +5,13 @@ built (`src/data/earnedTraits.js`, `src/core/earned.js`). These wait. The rules 
 traits apply here too: no trait takes a choice away (downsides are penalties plus a Joss
 warning), at most two temporary traits at once, progress hidden until earned.
 
-## Group 2: ready once the owner has skimmed the situations
-Every crisis now lists its situations (`src/data/situations.js`, 2026-10-26; review in
-`drafts/crisis-situations-review.md`). "intimidation" became part of `threat`, and `injury`
-covers Scarred's "rolls involving injury".
-
-| Trait | Kind | Needs | Notes |
-|---|---|---|---|
-| Light-Fingered | lasting | `entry` | +1 stealth entering or leaving a restricted place, not in chases. |
-| Crowd Reader | lasting | `crowd` | +1 social calming a crowd or keeping witnesses out of it. |
-| Wirewise | lasting | `street-tech` | +1 tech on street hardware, not corporate systems. |
-| Corner Fighter | lasting | `fight` (+ outnumbered / protecting) | +1 combat protecting a hurt crewmate or a non-combatant. |
-| Rattled by Sirens | temporary | `police` | −1 cool when the Harbour Police appear. "Won't take solo police-facing tasks" becomes a penalty + warning. Also earned when held by the police on side work (that exists now). |
-| Short Fuse | temporary | `threat` | +1 combat once a confrontation starts, −1 social trying to prevent one. Agreed: if it comes a third time they become a permanent **Hothead** (the existing trait). |
-| Burned Out | temporary | `neural` | −1 tech and cool. "Refuses neural-hardware jobs" becomes a penalty + warning. Fades after three days of full rest. |
-| Scarred (upgrade) | lasting | `intimidation` | Today: +1 cool while hurt. With tags: +1 cool in injury and intimidation crises, as written. |
-| Ghost Driver (upgrade) | lasting | `escape` | Today: +1 on all driving. With tags: +1 driving in escapes, and a clean escape cancels that crisis's first heat, as written. |
+## Group 2: built 2026-10-26
+Light-Fingered, Crowd Reader, Wirewise, Corner Fighter, Rattled by Sirens, Short Fuse (a third
+time and they become a Hothead), Burned Out and Overconfident are in the game, reading crisis
+situations. Ghost Driver and Scarred now work as written (escapes; injury and threat crises).
+Refusals became penalties: Burned Out is −1 more on neural work, Overconfident −1 on the safest
+option. Rattled by Sirens' "won't take solo police-facing tasks" was dropped: side tasks don't
+say whether the police are involved.
 
 ## Group 3: waiting on systems that don't exist yet
 | Trait | Waits for | Notes |
@@ -29,7 +20,6 @@ covers Scarred's "rolls involving injury".
 | Back-Street Medic | clinic costs | Treats light injuries at the safehouse for free. |
 | Owes a Favour | a client rescuing the crew | +1 trust with that client; "can't refuse their next task" becomes a penalty + warning. |
 | Hard Exit | a rethink | An abort ends the job, so "first roll after the abort" never comes. Candidate: +1 on the stabilise roll in a critical. |
-| Overconfident | (could be built now) | +1 on hard rolls; "refuses the safest choice" becomes −1 on the safest choice and a Joss warning. Held back with group 2 so the refusal rework lands together. |
 
 ## Partial in group 1 (to finish later)
 - **Second Wind** shrugs off only the injury penalty; neural load has no roll penalty yet.

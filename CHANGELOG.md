@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-26 · More earned traits
+- **Eight more ways people change** (written by the owner): **Light-Fingered** after quiet break-ins, a **Crowd Reader**, **Wirewise** with street hardware, a **Corner Fighter**; and for a while, **Rattled by Sirens**, a **Short Fuse** (the third time, they become a Hothead for good), **Burned Out** after neural work goes wrong, or **Overconfident** after a run of hard calls going their way (they find the safe option beneath them).
+- **Ghost Driver** now works as written: better in getaways, and a clean getaway sheds some of the heat. **Scarred** steadies them when someone's hurt or squaring up.
+- 227 tests.
+
 ## 2026-10-26 · Crises know what kind of moment they are
 - Behind the scenes: every crisis now says what kind of situation it is (a chase, a break-in, a crowd, the police or other officials, a fight...). Nothing changes on screen yet; the next batch of earned traits uses it, and later mission logs and gear.
 - Save format v20. 216 tests.

@@ -28,6 +28,12 @@ export const NEEDS = {
   knownFaceJobs: 3, knownFaceDays: 14,
   secondWind: 2, secondWindUses: 3,
   favouriteJobs: 3, favouriteAway: 5,
+  // group 2 (situations)
+  lightFingered: 4, crowdReader: 4, wirewise: 4, cornerFighter: 3,
+  rattledFails: 2, rattledFaced: 2,
+  fuseFails: 2, fuseCalmJobs: 3, fuseToHothead: 3,
+  burnoutFails: 2, burnoutJobs: 3, burnoutRestDays: 3,
+  overconfident: 4,
 };
 
 const track = (op) => (op.track ??= {});
@@ -54,12 +60,21 @@ const RESTART = {
   district_rhythm: (t) => { t.jobs = []; },
   known_face: (t, { district }) => { t.heatJobs = { ...t.heatJobs, [district]: 0 }; },
   second_wind: (t) => { t.secondWind = 0; },
+  rattled_by_sirens: (t) => { t.policeFails = 0; },
+  short_fuse: (t) => { t.threatFails = 0; },
+  burned_out: (t) => { t.techFails = []; },
+  overconfident: (t) => { t.hardStreak = 0; },
   client_favourite: (t, { client }) => { t.clientJobs = { ...t.clientJobs, [client]: 0 }; },
 };
 
 /** They become something. Mutates the (cloned) state. */
 export function earn(state, op, id, extra = {}) {
   if (earnedOf(op, id, extra)) return;
+  if (id === 'short_fuse') {
+    const t = track(op);
+    t.fuseCount = (t.fuseCount ?? 0) + 1;
+    if (t.fuseCount >= NEEDS.fuseToHothead) return becomeHothead(state, op);
+  }
   const def = EARNED_TRAITS[id];
   if (def.kind === 'temporary') {
     const temps = (op.earned ?? []).filter((e) => EARNED_TRAITS[e.id].kind === 'temporary');
@@ -73,6 +88,19 @@ export function earn(state, op, id, extra = {}) {
     id: `earned-${op.id}-${id}-${state.day}`, type: 'crew', day: state.day,
     subject: `${op.handle}: ${def.name}`,
     body: `${def.note} (${op.handle}: ${earnedText(state, entry)})`,
+    blocking: false, read: false,
+  });
+}
+
+/** Short Fuse a third time: it sticks. They take the Hothead trait for good. */
+function becomeHothead(state, op) {
+  if (op.traits.includes('hothead')) return;
+  op.traits = [...op.traits, 'hothead'];
+  op.history.push(`Day ${state.day}: Hothead. The short fuse stopped being a phase.`);
+  state.inbox.unshift({
+    id: `hothead-${op.id}-${state.day}`, type: 'crew', day: state.day,
+    subject: `${op.handle}: Hothead`,
+    body: `Third time. It isn't a bad week any more; it's who they are now. (${op.handle}: +2 combat, −2 cool, for good.)`,
     blocking: false, read: false,
   });
 }
@@ -99,9 +127,8 @@ export function fade(state, op, entry, why = '') {
 export function ownMods(op, { stat, crew = [] }) {
   const out = [];
   const t = op.track ?? {};
-  if (stat === 'driving' && earnedOf(op, 'ghost_driver')) out.push({ value: 1, note: 'Ghost Driver +1' });
   if (stat === 'cool' && earnedOf(op, 'shaky')) out.push({ value: -1, note: 'Shaky −1' });
-  if (stat === 'cool' && op.condition?.injury === 'light' && earnedOf(op, 'scarred')) out.push({ value: 1, note: 'Scarred +1' });
+  if ((stat === 'tech' || stat === 'cool') && earnedOf(op, 'burned_out')) out.push({ value: -1, note: 'Burned Out −1' });
   if (stat === 'cool') {
     for (const e of (op.earned ?? []).filter((x) => x.id === 'crew_anchor')) {
       const mate = crew.find((o) => o.id === e.partner);
@@ -114,7 +141,8 @@ export function ownMods(op, { stat, crew = [] }) {
 
 /**
  * Modifiers that depend on the job: [{ value, note }].
- * job: { district, injured: ids hurt so far, rolled: ids who've rolled, secondWindUsed: ids, side?, solo? }
+ * job: { district, injured: ids hurt so far, rolled: ids who've rolled, secondWindUsed: ids,
+ *        situations: the crisis's (data/situations.js), difficulty, safest: the easiest option?, side?, solo? }
  */
 export function jobMods(op, { stat, job }) {
   if (!job) return [];
@@ -127,6 +155,24 @@ export function jobMods(op, { stat, job }) {
   const face = earnedOf(op, 'known_face', { district: job.district });
   if (face && stat === 'stealth') out.push({ value: -1, note: 'Known Face −1' });
   if (face && stat === 'social') out.push({ value: 1, note: 'Known Face +1' });
+  // Group 2: what kind of situation this is.
+  const sit = new Set(job.situations ?? []);
+  if (stat === 'driving' && sit.has('escape') && earnedOf(op, 'ghost_driver')) out.push({ value: 1, note: 'Ghost Driver +1' });
+  if (stat === 'cool' && (sit.has('injury') || sit.has('threat')) && earnedOf(op, 'scarred')) out.push({ value: 1, note: 'Scarred +1' });
+  if (stat === 'stealth' && sit.has('entry') && !sit.has('escape') && earnedOf(op, 'light_fingered')) out.push({ value: 1, note: 'Light-Fingered +1' });
+  if (stat === 'social' && sit.has('crowd') && earnedOf(op, 'crowd_reader')) out.push({ value: 1, note: 'Crowd Reader +1' });
+  if (stat === 'tech' && sit.has('street-tech') && !sit.has('corp-tech') && earnedOf(op, 'wirewise')) out.push({ value: 1, note: 'Wirewise +1' });
+  if (stat === 'combat' && sit.has('fight') && (job.injured ?? []).length && earnedOf(op, 'corner_fighter')) out.push({ value: 1, note: 'Corner Fighter +1' });
+  if (stat === 'cool' && sit.has('police') && earnedOf(op, 'rattled_by_sirens')) out.push({ value: -1, note: 'Rattled by Sirens −1' });
+  if (earnedOf(op, 'short_fuse')) {
+    if (stat === 'combat' && (sit.has('threat') || sit.has('fight'))) out.push({ value: 1, note: 'Short Fuse +1' });
+    if (stat === 'social' && sit.has('threat')) out.push({ value: -1, note: 'Short Fuse −1' });
+  }
+  if (sit.has('neural') && earnedOf(op, 'burned_out')) out.push({ value: -1, note: 'Burned Out (neural work) −1' });
+  if (earnedOf(op, 'overconfident')) {
+    if ((job.difficulty ?? 0) >= 6) out.push({ value: 1, note: 'Overconfident +1' });
+    if (job.safest) out.push({ value: -1, note: 'Overconfident (thinks this beneath them) −1' });
+  }
   if (!job.side && op.condition?.injury === 'light' && earnedOf(op, 'second_wind') && !(job.secondWindUsed ?? []).includes(op.id)) out.push({ value: 2, note: 'Second Wind (shrugs off the hurt) +2' });
   if (job.side && job.solo && earnedOf(op, 'shaky')) out.push({ value: -1, note: 'Shaky, alone −1' });
   return out;
@@ -177,7 +223,8 @@ export function afterJob(state, { events, district, clientId, outcome, crewIds }
     t.medPasses = (t.medPasses ?? 0) + mine.filter((e) => e.stat === 'medical' && e.success).length;
     if (t.medPasses >= NEEDS.clinicHands) earn(state, op, 'clinic_hands');
 
-    t.cleanDrives = (t.cleanDrives ?? 0) + mine.filter((e) => e.stat === 'driving' && e.success && !heatOf(e) && !e.injury).length;
+    const sitOf = (e) => new Set(e.situations ?? []);
+    t.cleanDrives = (t.cleanDrives ?? 0) + mine.filter((e) => e.stat === 'driving' && e.success && sitOf(e).has('escape') && !heatOf(e) && !e.injury).length;
     if (t.cleanDrives >= NEEDS.ghostDriver) earn(state, op, 'ghost_driver');
 
     if (done && !causedHeat) t.cleanJobs = (t.cleanJobs ?? 0) + 1;
@@ -225,6 +272,53 @@ export function afterJob(state, { events, district, clientId, outcome, crewIds }
       if (t.heatJobs[district] >= NEEDS.knownFaceJobs) earn(state, op, 'known_face', { district });
     }
 
+    // Group 2: what they did in which kind of situation.
+    const passes = (stats, sit) => mine.filter((e) => e.success && stats.includes(e.stat) && sitOf(e).has(sit)).length;
+    const fails = (stats, sit) => mine.filter((e) => !e.success && stats.includes(e.stat) && sitOf(e).has(sit)).length;
+    t.entryPasses = (t.entryPasses ?? 0) + mine.filter((e) => e.success && e.stat === 'stealth' && sitOf(e).has('entry') && !sitOf(e).has('escape')).length;
+    if (t.entryPasses >= NEEDS.lightFingered) earn(state, op, 'light_fingered');
+    t.crowdPasses = (t.crowdPasses ?? 0) + passes(['social', 'cool'], 'crowd');
+    if (t.crowdPasses >= NEEDS.crowdReader) earn(state, op, 'crowd_reader');
+    t.streetTechPasses = (t.streetTechPasses ?? 0) + mine.filter((e) => e.success && e.stat === 'tech' && sitOf(e).has('street-tech') && !sitOf(e).has('corp-tech')).length;
+    if (t.streetTechPasses >= NEEDS.wirewise) earn(state, op, 'wirewise');
+    t.fightPasses = (t.fightPasses ?? 0) + passes(['combat'], 'fight');
+    if (t.fightPasses >= NEEDS.cornerFighter) earn(state, op, 'corner_fighter');
+
+    // Rattled by Sirens: comes from failing in front of the police, goes from facing them down.
+    const rattled = earnedOf(op, 'rattled_by_sirens');
+    if (rattled) {
+      rattled.faced = (rattled.faced ?? 0) + mine.filter((e) => e.success && sitOf(e).has('police')).length;
+      if (rattled.faced >= NEEDS.rattledFaced) fade(state, op, rattled, 'faced the police down');
+    } else {
+      t.policeFails = (t.policeFails ?? 0) + mine.filter((e) => !e.success && sitOf(e).has('police')).length;
+      if (t.policeFails >= NEEDS.rattledFails) earn(state, op, 'rattled_by_sirens');
+    }
+
+    // Short Fuse: talking or keeping cool failed when someone squared up; calm jobs settle it.
+    const fuse = earnedOf(op, 'short_fuse');
+    if (fuse) {
+      if (done && !mine.some((e) => e.stat === 'combat')) {
+        fuse.calm = (fuse.calm ?? 0) + 1;
+        if (fuse.calm >= NEEDS.fuseCalmJobs) fade(state, op, fuse, 'three jobs without a fight');
+      }
+    } else {
+      t.threatFails = (t.threatFails ?? 0) + fails(['social', 'cool'], 'threat');
+      if (t.threatFails >= NEEDS.fuseFails) earn(state, op, 'short_fuse');
+    }
+
+    // Burned Out: tech or neural work failing them, within three jobs.
+    t.techFails = [...(t.techFails ?? []), mine.filter((e) => !e.success && (e.stat === 'tech' || sitOf(e).has('neural'))).length].slice(-NEEDS.burnoutJobs);
+    if (t.techFails.reduce((n, x) => n + x, 0) >= NEEDS.burnoutFails) earn(state, op, 'burned_out');
+
+    // Overconfident: hard rolls going their way, one after another; any failure resets.
+    for (const e of mine.filter((x) => x.kind === 'roll')) {
+      if (!e.success) t.hardStreak = 0;
+      else if (e.need - 10 >= 6) t.hardStreak = (t.hardStreak ?? 0) + 1;
+    }
+    const over = earnedOf(op, 'overconfident');
+    if (over && (failed || wasHurt)) fade(state, op, over, failed ? 'a roll went wrong' : 'got hurt');
+    else if ((t.hardStreak ?? 0) >= NEEDS.overconfident && !over) earn(state, op, 'overconfident');
+
     // Second Wind: made the last roll of the job count while hurt.
     const last = rolls.filter((e) => e.kind === 'roll').at(-1);
     if (last && last.actor.id === op.id && last.success && (last.notes ?? []).includes('hurt')) {
@@ -260,6 +354,8 @@ export function dailyTraits(state) {
     }
     const riding = earnedOf(op, 'riding_high');
     if (riding && state.day - (t.lastWorked ?? riding.day) >= NEEDS.ridingIdleDays) fade(state, op, riding, 'a week without work');
+    const burned = earnedOf(op, 'burned_out');
+    if (burned && state.day - Math.max(t.lastWorked ?? burned.day, burned.day) >= NEEDS.burnoutRestDays) fade(state, op, burned, 'three days of proper rest');
     for (const face of (op.earned ?? []).filter((e) => e.id === 'known_face')) {
       if (state.day - (t.lastHeat?.[face.district] ?? face.day) >= NEEDS.knownFaceDays) fade(state, op, face, 'quiet for two weeks');
     }

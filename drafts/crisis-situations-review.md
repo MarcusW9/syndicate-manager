@@ -73,7 +73,7 @@ game data as `situations` (not yet used by anything the player sees). The owner 
 - **forklift** `fight`: A night-shift forklift driver rounds the corner and stops dead. He has a radio on his belt.
 - **dog** `fight`: The guard dog slips its chain and comes straight at the crew, barking loud enough to wake the whole dock.
 - **tracked_crate** `street-tech`: One of the crates has a blinking light under the lid. Someone has put a tracker on the shipment.
-- **toll** `threat` `fight`: Three cars block the dock road out. Red Lantern enforcers. This is their road, and they want a toll for using it.
+- **toll** `threat` `fight` `escape`: Three cars block the dock road out. Red Lantern enforcers. This is their road, and they want a toll for using it.
 - **sampan** _(none)_: Two crates are already on a sampan pulling away from the pier. The tide is going out fast.
 
 ## Kidnap Rescue
