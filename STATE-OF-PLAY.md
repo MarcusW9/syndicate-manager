@@ -71,4 +71,5 @@ Record the owner's calls here as they come; decisions also get `DESIGN.md` log r
 - **Item 1, money pressure (2026-10-26):** mostly positive. In: gear (never lost or broken), base rooms with upkeep, clinic bills, tea money. Out for now: the cut. See the `DESIGN.md` row. Gear stays worth buying by being per person, tiered by promotion, and limited to what each person can carry on a job. Open: details of gear and rooms.
 - **Morale (2026-10-26):** cut, superseding the item 2 call. The meter goes in v21 with burnout; mood comes from three temporary traits (Restless, Sore about pay, Settled) built with money pressure. See the `DESIGN.md` row.
 - **Item 3, approaches and heat (2026-10-26):** approaches weight the crisis draw by situation (keeping the +1s) and cost time, heat or money (stealth +1 day; loud −1 day and +1 heat; social a bribe); heat becomes per district. See the `DESIGN.md` row.
+- **Item 4, competing clients (2026-10-26):** parked for now; revisit after district heat and promotions.
 - Other items: pending.
