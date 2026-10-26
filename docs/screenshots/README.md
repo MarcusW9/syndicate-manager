@@ -21,6 +21,7 @@ Then add a row to the top of the table below and commit the folder with the chan
 
 | Date | Version | Commit | What's new on screen | Folder |
 | --- | --- | --- | --- | --- |
+| 2026-10-26 | Hands-off runs and mission logs | `8da7680` | Job reports open with Joss's line, a turning point, standout and what hurt us, with a foldable full log and dice on tap; Container 409 can be sent hands-off under standing orders; the risk read names every bonus; the City map's district card sits beside the map; jobs trickle in through the week; new scout reads. | [2026-10-26-hands-off-and-mission-logs](2026-10-26-hands-off-and-mission-logs/) |
 | 2026-10-25 | Report timelines, City tab sections | `56a6083` | Job reports as a numbered timeline; City tab split into Map, Clients, Who's who and Lore; tidier crew cards. | [2026-10-25-timelines-and-city-sections](2026-10-25-timelines-and-city-sections/) |
 | 2026-10-25 | Portraits | `16e78f3` | Citizen Sleeper-style faces on the crew list and profiles. | [2026-10-25-portraits](2026-10-25-portraits/) |
 | 2026-10-25 | Joss and the street-terminal skin | `386c9b3` | The whole look changes: Rajdhani display font, terminal panels, the week bar, Joss's messages on Today. | [2026-10-25-joss-street-terminal-skin](2026-10-25-joss-street-terminal-skin/) |
