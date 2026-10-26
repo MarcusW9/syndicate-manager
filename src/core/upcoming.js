@@ -63,14 +63,19 @@ export function upcoming(state, horizon = HORIZON_DAYS) {
     if (within(r.expiresDay)) items.push({ day: r.expiresDay, kind: 'lead-last', name: r.handle, role: r.role });
   }
 
+  // A hands-off crew coming back is one line with its report, not one line per person.
+  const reporting = new Set();
   for (const j of awayJobs(state)) {
-    if (within(j.returnDay)) items.push({ day: j.returnDay, kind: 'report', name: j.name });
+    if (!within(j.returnDay)) continue;
+    const names = j.crewIds.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean).map((o) => o.handle);
+    j.crewIds.forEach((id) => reporting.add(`${id}@${j.returnDay}`));
+    items.push({ day: j.returnDay, kind: 'report', name: j.name, names });
   }
 
   for (const op of state.crew) {
     const c = op.condition;
     if (c.injury === 'dead') continue;
-    if (isAway(state, op) && within(c.awayUntil)) items.push({ day: c.awayUntil, kind: 'back', name: op.handle });
+    if (isAway(state, op) && within(c.awayUntil) && !reporting.has(`${op.id}@${c.awayUntil}`)) items.push({ day: c.awayUntil, kind: 'back', name: op.handle });
     if (c.injury !== 'healthy' && c.injuryDays > 0 && within(state.day + c.injuryDays)) {
       items.push({ day: state.day + c.injuryDays, kind: 'healed', name: op.handle, injury: c.injury });
     }

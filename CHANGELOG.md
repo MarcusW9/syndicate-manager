@@ -7,7 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 ## 2026-10-26 · Hands-off crews report back when they return
 - **Sending a crew off takes time now:** they leave, and their report comes back when they do (the next day for Container 409). Until then the pay, heat and any injuries don't show; Today has a note saying who's out, and Coming up says when the report is due.
 - **The report plays out the first time you open it:** each step lands in turn down the timeline, then the result lands with a flash, then Joss's verdict. Tap to skip. If your phone is set to reduce motion, it all shows at once.
-- Save format v17. 182 tests.
+- **Every rookie job can be sent hands-off now**, not just Container 409. The bigger jobs stay hands-on for now.
+- Coming up shows a returning crew as one line: "Hook and Typhoon back with the Clinic Night report".
+- Save format v17. 183 tests.
 
 ## 2026-10-26 · Send a crew hands-off, and reports that show their working
 - **Hands-off jobs:** Container 409 can now be sent hands-off. Pick a crew and their orders (Cautious, Steady or Committed); they run it on their own and you go straight to the report. A hands-off crew never pushes on with a critical wound, so nobody can die on one.

@@ -26,7 +26,7 @@ import {
   startMission, revealBeat, chooseOption, resolveCritical, closeMission,
   describeCrisis, describeCritical, currentStep, fillBrief,
 } from '../core/mission.js';
-import { sendOff, ORDERS } from '../core/autorun.js';
+import { sendOff, ORDERS, handsOffAllowed } from '../core/autorun.js';
 import {
   saveGame, loadGame, exportSave, importSave, listSlots, getActiveSlot, setActiveSlot,
   deleteSlot, loadBackup, backupDue, SLOT_COUNT,
@@ -527,7 +527,7 @@ function renderUpcoming(where) {
       case 'job-last': return `Last day for ${i.names.join(', ')}`;
       case 'lead-last': return `Last day to sign ${i.name} (${i.role})`;
       case 'back': return `${i.name} back from the job`;
-      case 'report': return `Report from ${i.name}`;
+      case 'report': return i.names.length ? `${i.names.join(' and ')} back with the ${i.name} report` : `Report from ${i.name}`;
       case 'healed': return `${i.name} over their ${i.injury} injury`;
       case 'rested': return `${i.name} rested enough to work`;
       case 'reask': return `${i.name} asks about their raise again`;
@@ -1060,7 +1060,7 @@ function renderPlan() {
             <strong>${esc(a.name)}</strong><span>${esc(a.desc)}</span>
           </button>`).join('')}
       </div>
-      ${t.handsOff ? renderHandsOff() : ''}
+      ${handsOffAllowed(t) ? renderHandsOff() : ''}
       </div>
 
       <div class="plangrid__risk">

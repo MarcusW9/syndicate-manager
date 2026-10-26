@@ -96,10 +96,15 @@ export function autoRun(prev, ordersId) {
   return s;
 }
 
+/** Can this job be sent hands-off? Every rookie job can; others only if marked handsOff (DESIGN.md, 2026-10-26). */
+export const handsOffAllowed = (tpl) => Boolean(tpl?.handsOff ?? tpl?.rookie);
+
 const crewNames = (handles) => (handles.length > 1 ? `${handles.slice(0, -1).join(', ')} and ${handles.at(-1)}` : handles[0]);
 
 /** Send a crew off on a job hands-off. They're away until it ends; the report comes back then. */
 export function sendOff(prev, jobId, crewIds, approach, ordersId) {
+  const job = prev.jobs.find((j) => j.id === jobId);
+  if (!job || !handsOffAllowed(templateById(job.templateId))) return prev;
   const s = startMission(prev, jobId, crewIds, approach);
   if (s === prev) return prev;
   const am = s.activeMission;

@@ -162,7 +162,11 @@ test('sending a crew off changes nothing yet: no pay, no heat, no report; they a
     assert.ok(!after.jobs.some((j) => j.id === jobId), 'the offer is taken');
     for (const id of crew) assert.equal(after.crew.find((o) => o.id === id).condition.awayUntil, after.day + 1);
     assert.equal(awayJobs(after).length, 1);
-    assert.ok(upcoming(after).some((i) => i.kind === 'report' && i.day === after.day + 1), 'the week ahead says when the report comes');
+    const up = upcoming(after);
+    const due = up.find((i) => i.kind === 'report' && i.day === after.day + 1);
+    assert.ok(due, 'the week ahead says when the report comes');
+    assert.equal(due.names.length, 2, 'with who is bringing it');
+    assert.ok(!up.some((i) => i.kind === 'back' && due.names.includes(i.name)), 'one line, not one per person');
   }
 });
 
@@ -212,4 +216,12 @@ test('a crew out on a hands-off job comes back with its report after a save and 
   const { after } = sentGame(33);
   const loaded = await importSave({ text: async () => JSON.stringify(after) });
   assert.ok(advanceDay(loaded).inbox.some((m) => m.type === 'report'));
+});
+
+test('every rookie job can be sent hands-off; bigger jobs not yet', async () => {
+  const { handsOffAllowed } = await import('../src/core/autorun.js');
+  for (const m of MISSIONS) assert.equal(handsOffAllowed(m), !!m.rookie, m.id);
+  const s = createNewGame({ seed: 34, startCrew: 'fresh' });
+  s.jobs = []; addOffer(s, 'warehouse');
+  assert.equal(send(s, s.jobs[0].id, s.crew.slice(0, 3).map((o) => o.id), 'stealth', 'steady'), s, 'a big job stays hands-on');
 });
