@@ -4,11 +4,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: one phone-width column (plan, then watch, then report), the game's street-terminal skin.
-   A deliberately single dark theme, matching the game (src/ui/styles.css). */
+/* Layout: one phone-width column. Plan = map, then steps with their risk shown in place, and a sticky
+   action bar. Watch = sticky compact map + live tallies over a phased feed. Report = verdict first.
+   Deliberately single dark theme: the game's street-terminal skin (src/ui/styles.css). */
 :root {
   --bg: #0f1115;
   --panel: #171a21;
+  --panel-2: #1c2029;
   --line: #262b36;
   --text: #e7e9ee;
   --muted: #8b93a7;
@@ -17,6 +19,7 @@
   --warn: #f5b942;
   --danger: #ff5a5a;
   --good: #5fe0a5;
+  --sel: #13221f;
   --display: 'Rajdhani', 'Arial Narrow', system-ui, sans-serif;
   --body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
@@ -25,129 +28,186 @@
 }
 * { box-sizing: border-box; }
 html, body { background: var(--bg); color: var(--text); }
-body { font-family: var(--body); font-size: 15px; line-height: 1.5; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 16px 48px; }
+body { font-family: var(--body); font-size: 15px; line-height: 1.45; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 12px 24px; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
 :focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
-.wrap { max-width: 560px; margin: 0 auto; display: grid; gap: 20px; }
-h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; }
-h1 { font-size: 1.9rem; font-weight: 700; letter-spacing: 0.02em; }
-h2 { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+button { font: inherit; color: inherit; }
+.wrap { max-width: 520px; margin: 0 auto; display: grid; gap: 18px; padding-bottom: 96px; }
+.wrap.no-bar { padding-bottom: 24px; }
+h1, h2 { font-family: var(--display); margin: 0; text-wrap: balance; }
+h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: 0.02em; line-height: 1.1; }
+h2 { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+h2 small { font: 400 0.75rem var(--body); letter-spacing: 0; text-transform: none; }
 p { margin: 0; }
 .muted { color: var(--muted); }
-.small { font-size: 0.82rem; }
-.eyebrow { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-2); }
-.brief { border-left: 2px solid var(--accent); padding-left: 12px; font-style: italic; color: #c9cdd8; }
-.proto { background: var(--panel); border: 1px dashed var(--line); border-radius: 10px; padding: 12px 14px; font-size: 0.85rem; color: var(--muted); }
-section { display: grid; gap: 10px; }
+.small { font-size: 0.8rem; }
+.eyebrow { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-2); display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+.tag { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; border: 1px dashed var(--muted); color: var(--muted); border-radius: 4px; padding: 1px 6px; }
+.brief { color: #c9cdd8; font-style: italic; font-size: 0.92rem; border-left: 2px solid var(--accent); padding-left: 10px; }
+details.how { font-size: 0.82rem; color: var(--muted); }
+details.how summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; color: var(--accent-2); }
+section { display: grid; gap: 8px; }
 
 /* Map */
-.map { background: #0b0d11; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.map { position: relative; background: #0b0d11; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
 .map svg { display: block; width: 100%; height: auto; }
-.map .route { fill: none; stroke: #2c3240; stroke-width: 3; stroke-dasharray: 2 6; stroke-linecap: round; }
+.map .route { fill: none; stroke: #2c3240; stroke-width: 3; stroke-dasharray: 2 6; stroke-linecap: round; stroke-linejoin: round; }
 .map .route.on { stroke: var(--accent-2); stroke-dasharray: none; }
-.map .exit { fill: none; stroke: #2c3240; stroke-width: 2; stroke-dasharray: 4 5; }
+.map .exit { fill: none; stroke: #2c3240; stroke-width: 2; stroke-dasharray: 4 5; stroke-linejoin: round; }
 .map .exit.on { stroke: var(--warn); stroke-dasharray: none; }
+.map .hit { fill: none; stroke: transparent; stroke-width: 20; pointer-events: stroke; cursor: pointer; }
 .map .node { fill: #171a21; stroke: #3a4254; stroke-width: 1.5; }
-.map .node.post { stroke: var(--accent); }
-.map .label { fill: var(--muted); font-family: var(--mono); font-size: 9px; }
+.map .node.post { stroke: var(--accent); fill: #2a1520; }
+.map .label { fill: var(--muted); font-family: var(--mono); font-size: 9px; letter-spacing: 0.04em; }
 .map .label.hi { fill: var(--text); }
 .map .token circle { stroke: var(--bg); stroke-width: 2; }
-.map .token text { fill: var(--bg); font-family: var(--display); font-weight: 700; font-size: 10px; text-anchor: middle; dominant-baseline: central; }
-.map .token { transition: transform 0.9s ease-in-out; }
+.map .token text { fill: var(--bg); font-family: var(--display); font-weight: 700; font-size: 9px; text-anchor: middle; dominant-baseline: central; }
+.map .token { transition: transform 0.8s ease-in-out; }
 .map .water { fill: #0d1620; }
 .map .stack { fill: #141821; stroke: #232937; }
-@media (prefers-reduced-motion: reduce) { .map .token { transition: none; } }
+.map .alarm { fill: none; stroke: var(--accent); stroke-width: 2; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.map .alarm.on { animation: pulse 1.2s ease-out infinite; }
+@keyframes pulse { from { transform: scale(1); opacity: 0.9; } to { transform: scale(3.5); opacity: 0; } }
+.map__hint { position: absolute; left: 10px; top: 8px; font-family: var(--mono); font-size: 0.66rem; color: var(--muted); pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .map .token { transition: none; } .map .alarm.on { animation: none; opacity: 0.8; transform: scale(2); } }
 
-/* Option cards */
-.opts { display: grid; gap: 8px; }
-.opt { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; align-items: start; min-height: var(--tap); padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); cursor: pointer; }
-.opt input { margin: 3px 0 0; accent-color: var(--accent); width: 18px; height: 18px; grid-row: span 2; }
-.opt b { font-family: var(--display); font-size: 1.05rem; font-weight: 600; letter-spacing: 0.02em; }
-.opt > span { grid-column: 2; font-size: 0.82rem; color: var(--muted); }
-.opt:has(input:checked) { border-color: var(--accent-2); background: #152024; }
-.cost { font-family: var(--mono); font-size: 0.8rem; color: var(--warn); }
+/* Choice cards (route, exit) */
+.cards { display: grid; gap: 8px; }
+.card { width: 100%; text-align: left; display: grid; gap: 4px; min-height: var(--tap); padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); cursor: pointer; }
+.card[aria-pressed="true"] { border-color: var(--accent-2); background: var(--sel); box-shadow: inset 3px 0 0 var(--accent-2); }
+.card__top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.card__top b { font-family: var(--display); font-size: 1.08rem; font-weight: 600; letter-spacing: 0.02em; min-width: 0; }
+.card__body { font-size: 0.84rem; color: var(--muted); }
+.card__meta { font-family: var(--mono); font-size: 0.72rem; color: #a9b0c2; }
 
-/* Slots */
-.slot { display: grid; gap: 4px; }
-.slot label { font-family: var(--display); font-weight: 600; font-size: 1rem; }
-.slot .why { font-size: 0.8rem; color: var(--muted); }
-select { min-height: var(--tap); width: 100%; background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 0 10px; font: inherit; }
-.seg { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 6px; }
-.seg button { min-height: var(--tap); background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 8px; font: 600 0.95rem var(--display); letter-spacing: 0.02em; cursor: pointer; padding: 4px 8px; }
-.seg button[aria-pressed="true"] { border-color: var(--accent-2); background: #152024; color: var(--accent-2); }
+/* Risk pills */
+.pill { font-family: var(--mono); font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 7px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; flex: none; }
+.r-low { color: var(--good); } .r-moderate { color: var(--accent-2); } .r-high { color: var(--warn); } .r-extreme { color: var(--danger); } .r-certain, .r-safe { color: var(--muted); }
 
-/* Risk read */
-.read { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 8px; }
-.read__row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: baseline; }
-.read__row > div { min-width: 0; }
-.read__row .small { display: block; }
-.pill { font-family: var(--mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
-.r-low { color: var(--good); } .r-moderate { color: var(--accent-2); } .r-high { color: var(--warn); } .r-extreme { color: var(--danger); } .r-certain { color: var(--muted); }
-.net { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 0.85rem; border-top: 1px solid var(--line); padding-top: 8px; }
+/* Crew slots */
+.slot { display: grid; gap: 6px; padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+.slot__head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.slot__head b { font-family: var(--display); font-size: 1.05rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.slot__head span { font-size: 0.78rem; color: var(--muted); text-align: right; min-width: 0; }
+.chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 6px; }
+.chip { min-width: 0; display: grid; grid-template-columns: auto auto; grid-template-rows: auto auto; column-gap: 7px; align-items: center; min-height: var(--tap); padding: 5px 9px 5px 5px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel-2); cursor: pointer; }
+.chip .av { grid-row: span 2; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font: 700 0.72rem var(--display); color: var(--bg); background: var(--c, var(--muted)); }
+.chip .nm { font-family: var(--display); font-weight: 600; font-size: 0.92rem; line-height: 1.1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chip .pill { justify-self: start; font-size: 0.6rem; padding: 0 6px; }
+.chip[aria-pressed="true"] { border-color: var(--accent-2); background: var(--sel); }
+.chip.elsewhere { opacity: 0.55; }
+.chip .where { font-family: var(--mono); font-size: 0.58rem; color: var(--muted); text-transform: uppercase; }
 
-.btn { min-height: 48px; width: 100%; border: 0; border-radius: 10px; background: var(--accent); color: #fff; font: 700 1.1rem var(--display); letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
-.btn:disabled { background: var(--line); color: var(--muted); cursor: not-allowed; }
+/* Prep */
+.prep { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.prepbtn { text-align: left; display: grid; gap: 3px; align-content: start; min-height: var(--tap); padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); cursor: pointer; }
+.prepbtn[aria-pressed="true"] { border-color: var(--warn); background: #211d12; }
+.prepbtn b { font-family: var(--display); font-weight: 600; font-size: 0.98rem; display: flex; justify-content: space-between; gap: 6px; }
+.prepbtn b span { font-family: var(--mono); font-size: 0.74rem; color: var(--warn); font-weight: 500; }
+.prepbtn small { font-size: 0.75rem; color: var(--muted); }
+.prepbtn .odds { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.05em; text-transform: uppercase; }
+.odds.will { color: var(--good); } .odds.might { color: var(--accent-2); } .odds.wont { color: var(--muted); }
+.prepbtn.dim:not([aria-pressed="true"]) { opacity: 0.55; }
+
+/* Orders */
+.order { display: grid; gap: 6px; }
+.order p { font-size: 0.84rem; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+.seg button { min-height: 40px; background: transparent; border: 0; border-radius: 7px; font: 600 0.92rem var(--display); letter-spacing: 0.02em; cursor: pointer; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--sel); color: var(--accent-2); box-shadow: inset 0 0 0 1px var(--accent-2); }
+.order .muted { font-size: 0.76rem; }
+
+/* Sticky action bar */
+.bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: rgba(15, 17, 21, 0.96); border-top: 1px solid var(--line); padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.bar__in { max-width: 520px; margin: 0 auto; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+.bar__sum { display: grid; gap: 2px; min-width: 0; }
+.bar__sum b { font-family: var(--display); font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.bar__sum span { font-size: 0.74rem; color: var(--muted); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.btn { min-height: 48px; padding: 0 22px; border: 0; border-radius: 10px; background: var(--accent); color: #fff; font: 700 1.05rem var(--display); letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
 .btn--ghost { background: transparent; border: 1px solid var(--line); color: var(--text); }
-.btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btn--wide { width: 100%; }
 
-/* Feed */
-.feed { display: grid; gap: 8px; }
-.line { padding: 8px 0 8px 12px; border-left: 2px solid var(--line); font-size: 0.92rem; animation: in 0.35s ease-out; }
+/* Watch */
+.live { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 4; background: var(--bg); padding-block: 4px 8px; display: grid; gap: 6px; }
+.live .map svg { height: min(24vh, 190px); }
+.tally { display: flex; gap: 6px; flex-wrap: wrap; font-family: var(--mono); font-size: 0.72rem; }
+.tally span { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; }
+.tally .phase { color: var(--accent-2); border-color: #1f4440; }
+.tally .bad { color: var(--danger); border-color: #4a2224; }
+.feed { display: grid; gap: 6px; }
+.feed > * { scroll-margin-bottom: 96px; }
+.phasehead { font: 700 0.75rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-2); padding-top: 8px; display: flex; gap: 8px; align-items: center; }
+.phasehead::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.line { padding: 6px 0 6px 12px; border-left: 2px solid var(--line); font-size: 0.92rem; animation: in 0.35s ease-out; }
 .line.beat { color: #c9cdd8; font-style: italic; }
-.line.check { font-family: var(--mono); font-size: 0.8rem; color: var(--muted); }
+.line.check { font-size: 0.84rem; color: #b4bacb; }
+.line.check .res { font-family: var(--mono); font-size: 0.72rem; }
 .line.good { border-color: var(--good); }
 .line.bad { border-color: var(--danger); }
-.line.crisis { border-color: var(--accent); font-weight: 500; }
+.line.crisis { border-color: var(--accent); background: #1a1418; border-radius: 0 8px 8px 0; padding: 8px 10px 8px 12px; font-weight: 500; }
 .line.why { font-size: 0.82rem; color: var(--muted); }
-.dice { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); background: none; border: 0; padding: 0 0 0 4px; cursor: pointer; text-decoration: underline dotted; }
-.dice-detail { display: block; font-family: var(--mono); font-size: 0.75rem; color: var(--muted); }
+.who { font-family: var(--display); font-weight: 700; letter-spacing: 0.02em; }
+.dice { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); background: none; border: 0; padding: 0 0 0 4px; cursor: pointer; text-decoration: underline dotted; min-height: 24px; }
+.dice-detail { display: block; font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
 @keyframes in { from { opacity: 0.2; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .line { animation: none; } }
-.callin { border: 1px solid var(--accent); background: #1d1418; border-radius: 10px; padding: 12px; display: grid; gap: 8px; }
+.callin { border: 1px solid var(--accent); background: #1d1418; border-radius: 12px; padding: 12px; display: grid; gap: 8px; animation: in 0.35s ease-out; }
+.callin__q { font-size: 0.95rem; }
 .callin .eyebrow { color: var(--accent); }
-.choice { min-height: var(--tap); text-align: left; background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font: inherit; cursor: pointer; display: grid; gap: 2px; }
-.choice:hover { border-color: var(--accent-2); }
-.choice .top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
-.choice .top > span:first-child { min-width: 0; }
-.choice .sub { font-size: 0.78rem; color: var(--muted); }
-.choice.rec { border-color: #3a4254; }
-.sticky { position: sticky; bottom: max(8px, env(safe-area-inset-bottom, 0px)); }
+.choice { min-height: var(--tap); text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 9px 10px; cursor: pointer; display: grid; gap: 3px; }
+.choice:hover:not(:disabled) { border-color: var(--accent-2); }
+.choice:disabled { cursor: default; opacity: 0.5; }
+.choice.picked { opacity: 1; border-color: var(--accent-2); }
+.choice__top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.choice__top > span:first-child { min-width: 0; }
+.choice__sub { font-size: 0.75rem; color: var(--muted); }
+.crewpick { font-family: var(--mono); font-size: 0.6rem; color: var(--accent-2); text-transform: uppercase; letter-spacing: 0.06em; }
 
 /* Report */
-.report { display: grid; gap: 14px; }
-.joss { font-size: 1.05rem; border-left: 2px solid var(--accent-2); padding-left: 12px; }
+.verdict { display: grid; gap: 10px; }
+.joss { font-size: 1.02rem; border-left: 2px solid var(--accent-2); padding-left: 12px; }
 .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .fact { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: grid; gap: 2px; }
-.fact b { font-family: var(--display); font-size: 1.4rem; font-variant-numeric: tabular-nums; }
-.fact span { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.fact b { font-family: var(--display); font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+.fact span { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.planline { display: flex; flex-wrap: wrap; gap: 6px; }
+.planline span { font-family: var(--mono); font-size: 0.7rem; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; color: #b4bacb; }
 ul.check { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
-ul.check li { padding-left: 18px; position: relative; font-size: 0.9rem; }
-ul.check li::before { content: '›'; position: absolute; left: 4px; color: var(--accent-2); }
+ul.check li { display: grid; grid-template-columns: 18px 1fr; gap: 6px; font-size: 0.9rem; }
+ul.check li i { font-style: normal; font-family: var(--mono); text-align: center; }
+ul.check li.ok i { color: var(--good); } ul.check li.no i { color: var(--danger); } ul.check li.meh i { color: var(--muted); }
 .money { font-family: var(--mono); font-size: 0.82rem; display: grid; gap: 2px; }
 .money div { display: flex; justify-content: space-between; gap: 8px; }
 .money div:last-child { border-top: 1px solid var(--line); padding-top: 4px; color: var(--text); font-weight: 500; }
-.seed { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); text-align: center; }
+.btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.seed { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); text-align: center; }
 </style>
 
 <div class="wrap" id="app"></div>
+<div class="bar" id="bar" hidden></div>
 
 <script>
 // ---------- Rules (the game's own: success if d20 + stat >= 10 + difficulty) ----------
 function mulberry32(a) { return function () { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const chanceOf = (stat, diff) => Math.min(0.95, Math.max(0.05, (21 - (10 + diff - stat)) / 20));
 const riskOf = (c) => (c >= 0.75 ? 'low' : c >= 0.5 ? 'moderate' : c >= 0.3 ? 'high' : 'extreme');
+const RISK_ORDER = ['safe', 'low', 'moderate', 'high', 'extreme'];
+const worst = (list) => list.reduce((a, b) => (RISK_ORDER.indexOf(b) > RISK_ORDER.indexOf(a) ? b : a), 'safe');
 const yen = (n) => (n < 0 ? '-¥' : '¥') + Math.abs(Math.round(n)).toLocaleString();
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const lowerFirst = (s) => s.charAt(0).toLowerCase() + s.slice(1);
+const pill = (risk) => `<span class="pill r-${risk}">${risk}</span>`;
 
 // ---------- The crew: five founding rookies (main stat 10-11, the game's founder band) ----------
 const CREW = [
-  { id: 'eggtart', handle: 'Egg Tart', role: 'tech', stats: { combat: 4, stealth: 7, tech: 11, social: 5, driving: 4, medical: 3, cool: 7 } },
-  { id: 'hotwire', handle: 'Hotwire', role: 'driver', stats: { combat: 5, stealth: 6, tech: 6, social: 4, driving: 11, medical: 2, cool: 8 } },
-  { id: 'kit', handle: 'Kit', role: 'face', stats: { combat: 3, stealth: 6, tech: 3, social: 10, driving: 4, medical: 4, cool: 8 } },
-  { id: 'rat', handle: 'Rat', role: 'muscle', stats: { combat: 10, stealth: 8, tech: 3, social: 4, driving: 5, medical: 2, cool: 6 } },
-  { id: 'mop', handle: 'Mop', role: 'medic', stats: { combat: 3, stealth: 5, tech: 5, social: 7, driving: 3, medical: 10, cool: 9 } },
+  { id: 'eggtart', handle: 'Egg Tart', role: 'tech', color: '#36d6c3', stats: { combat: 4, stealth: 7, tech: 11, social: 5, driving: 4, medical: 3, cool: 7 } },
+  { id: 'hotwire', handle: 'Hotwire', role: 'driver', color: '#f5b942', stats: { combat: 5, stealth: 6, tech: 6, social: 4, driving: 11, medical: 2, cool: 8 } },
+  { id: 'kit', handle: 'Kit', role: 'face', color: '#ff4f7b', stats: { combat: 3, stealth: 6, tech: 3, social: 10, driving: 4, medical: 4, cool: 8 } },
+  { id: 'rat', handle: 'Rat', role: 'muscle', color: '#9d8cff', stats: { combat: 10, stealth: 8, tech: 3, social: 4, driving: 5, medical: 2, cool: 6 } },
+  { id: 'mop', handle: 'Mop', role: 'medic', color: '#5fe0a5', stats: { combat: 3, stealth: 5, tech: 5, social: 7, driving: 3, medical: 10, cool: 9 } },
 ];
 const byId = (id) => CREW.find((o) => o.id === id);
-const MAIN = { tech: 'tech', driver: 'driving', face: 'social', muscle: 'combat', medic: 'medical' };
+const initials = (op) => op.handle.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 
 // ---------- Container 409: the owner's crises (src/data/missions/container.js), placed on a map ----------
 const C = {
@@ -180,26 +240,31 @@ const C = {
 };
 
 const ROUTES = {
-  seawall: { name: 'The seawall path', tests: 'stealth', bonus: 'stealth', crisis: 'cutter', blurb: 'Along the water under the fog. Quiet, but the police boats patrol here.',
+  seawall: { name: 'The seawall path', bonus: 'stealth', crisis: 'cutter', blurb: 'Along the water under the fog. Quiet, but the police boats patrol here.',
     check: { stat: 'stealth', diff: 3, ok: '{op} finds the gap in the seawall fence and slips through.', bad: '{op} snags a sleeve on the fence wire. Noisy, but nobody comes.' } },
-  gate: { name: 'The front gate', tests: 'social', bonus: 'social', crisis: 'whistler', blurb: 'Walk in on a borrowed dock pass. Fast, but the night shift is about.',
+  gate: { name: 'The front gate', bonus: 'social', crisis: 'whistler', blurb: 'Walk in on a borrowed dock pass. Fast, but the night shift is about.',
     check: { stat: 'social', diff: 3, ok: '{op} flashes the pass at the gatehouse. The guard doesn\'t look up.', bad: 'The guard squints at the pass for a long time, then waves {op} through anyway.' } },
-  stacks: { name: 'Over the stacks', tests: 'tech', bonus: 'tech', crisis: 'stack', blurb: 'Up a rigged ladder and across the container tops. Nobody looks up, but the stacks are old.',
+  stacks: { name: 'Over the stacks', bonus: 'tech', crisis: 'stack', blurb: 'Up a rigged ladder and across the container tops. Nobody looks up, but the stacks are old.',
     check: { stat: 'tech', diff: 3, ok: '{op} rigs a cable ladder up the first stack in under a minute.', bad: 'The first ladder hook slips. {op} gets it on the second try, hands shaking.' } },
 };
 const EXITS = {
-  van: { name: 'Van on the service road', blurb: 'Needs someone on Wheels. Quick, but the road out is narrow.' },
-  boat: { name: 'Out with the Ferryman', blurb: 'No driver needed. He takes 15% of the pay for the ride.' },
+  van: { name: 'Van on the service road', blurb: 'Quick, but the road out is narrow. Needs someone on Wheels.' },
+  boat: { name: 'Out with the Ferryman', blurb: 'No trouble expected, no driver needed. He takes 15% of the pay.' },
 };
 const PREP = [
-  { id: 'scanner', name: 'Police-band scanner', cost: 150, helps: 'cutter', does: 'Hear the police boat coming: −2 difficulty against it.', mods: { shadow: 2, splash: 2 } },
-  { id: 'roster', name: 'Night-shift roster', cost: 200, helps: 'whistler', does: 'Know who\'s on and when: −2 against the forklift.', mods: { duck: 2, light: 2 } },
-  { id: 'bar', name: 'A proper pry bar', cost: 100, helps: 'stack', does: 'Brace a slipping stack: −2 on bracing it.', mods: { brace: 2 } },
-  { id: 'pork', name: 'Salted pork', cost: 50, helps: 'dog', does: 'For any dog on the pier: −3 on feeding it.', mods: { feed: 3 } },
-  { id: 'tide', name: 'Tide chart', cost: 100, helps: 'backwards', does: 'Opens "watch the tide" for anyone, not just cool 10+.', mods: {} },
+  { id: 'scanner', name: 'Police scanner', cost: 150, helps: 'cutter', does: '−2 against the police boat.', mods: { shadow: 2, splash: 2 } },
+  { id: 'roster', name: 'Shift roster', cost: 200, helps: 'whistler', does: '−2 against the forklift.', mods: { duck: 2, light: 2 } },
+  { id: 'bar', name: 'Pry bar', cost: 100, helps: 'stack', does: '−2 bracing a slipping stack.', mods: { brace: 2 } },
+  { id: 'pork', name: 'Salted pork', cost: 50, helps: 'dog', does: '−3 feeding a dock dog.', mods: { feed: 3 } },
+  { id: 'tide', name: 'Tide chart', cost: 100, helps: 'backwards', does: 'Anyone can "watch the tide".', mods: {} },
 ];
 const POST_CRISES = ['dog', 'backwards'];
 const PAY = 1600;
+const SLOTS = {
+  point: { name: 'Point', does: 'Goes first. Handles the way in.' },
+  watch: { name: 'Watch', does: 'Holds Stack 409. Handles the post.' },
+  wheels: { name: 'Wheels', does: 'Waits in the van. Handles the road out.' },
+};
 
 // ---------- Map geometry ----------
 const P = { drop: [46, 226], seawall: [40, 96], gate: [196, 226], stacks: [150, 120], post: [292, 66], boat: [326, 176] };
@@ -211,217 +276,247 @@ const PATHS = {
 const EXIT_PATHS = { van: [P.post, [250, 150], [120, 200], P.drop], boat: [P.post, [318, 120], P.boat] };
 const pts = (list) => list.map((p) => p.join(',')).join(' ');
 
-function mapSvg(plan) {
+function mapSvg(plan, { interactive = false } = {}) {
   const stacks = [[110, 30, 30, 22], [70, 140, 26, 40], [190, 150, 40, 26], [230, 30, 36, 20], [240, 170, 30, 30], [120, 80, 20, 26]];
-  return `<svg viewBox="0 0 360 260" role="img" aria-label="Pier 12 map with routes in and out">
+  const lbl = (pt, text, dx, dy, hi) => `<text class="label ${hi ? 'hi' : ''}" x="${pt[0] + dx}" y="${pt[1] + dy}">${text}</text>`;
+  return `<svg viewBox="0 0 360 260" role="img" aria-label="Map of Pier 12: three ways in to Stack 409, two ways out">
     <rect width="360" height="260" fill="#0b0d11"/>
     <path class="water" d="M0 0 H22 V260 H0 Z M340 0 H360 V260 H340 Z M300 196 Q340 200 360 196 V260 H300 Z"/>
     ${stacks.map(([x, y, w, h]) => `<rect class="stack" x="${x}" y="${y}" width="${w}" height="${h}" rx="2"/>`).join('')}
-    ${Object.entries(PATHS).map(([k, l]) => `<polyline class="route ${plan.route === k ? 'on' : ''}" points="${pts(l)}"/>`).join('')}
     ${Object.entries(EXIT_PATHS).map(([k, l]) => `<polyline class="exit ${plan.exit === k ? 'on' : ''}" points="${pts(l)}"/>`).join('')}
-    <circle class="node" cx="${P.drop[0]}" cy="${P.drop[1]}" r="7"/><text class="label ${plan.exit === 'van' ? 'hi' : ''}" x="${P.drop[0] - 12}" y="${P.drop[1] + 20}">DROP-OFF · VAN</text>
-    <circle class="node" cx="${P.seawall[0]}" cy="${P.seawall[1]}" r="5"/><text class="label ${plan.route === 'seawall' ? 'hi' : ''}" x="${P.seawall[0] + 9}" y="${P.seawall[1] + 3}">SEAWALL</text>
-    <circle class="node" cx="${P.gate[0]}" cy="${P.gate[1]}" r="5"/><text class="label ${plan.route === 'gate' ? 'hi' : ''}" x="${P.gate[0] - 14}" y="${P.gate[1] + 18}">GATE</text>
-    <circle class="node" cx="${P.stacks[0]}" cy="${P.stacks[1]}" r="5"/><text class="label ${plan.route === 'stacks' ? 'hi' : ''}" x="${P.stacks[0] + 9}" y="${P.stacks[1] + 3}">STACKS</text>
-    <circle class="node post" cx="${P.post[0]}" cy="${P.post[1]}" r="8"/><text class="label hi" x="${P.post[0] - 34}" y="${P.post[1] - 14}">STACK 409</text>
-    <circle class="node" cx="${P.boat[0]}" cy="${P.boat[1]}" r="6"/><text class="label ${plan.exit === 'boat' ? 'hi' : ''}" x="${P.boat[0] - 46}" y="${P.boat[1] + 20}">FERRY LANDING</text>
+    ${Object.entries(PATHS).map(([k, l]) => `<polyline class="route ${plan.route === k ? 'on' : ''}" points="${pts(l)}"/>`).join('')}
+    ${interactive ? Object.entries(PATHS).map(([k, l]) => `<polyline class="hit" data-route="${k}" points="${pts(l)}"><title>${ROUTES[k].name}</title></polyline>`).join('') : ''}
+    ${interactive ? Object.entries(EXIT_PATHS).map(([k, l]) => `<polyline class="hit" data-exit="${k}" points="${pts(l)}"><title>${EXITS[k].name}</title></polyline>`).join('') : ''}
+    <circle class="node" cx="${P.drop[0]}" cy="${P.drop[1]}" r="7"/>${lbl(P.drop, 'DROP-OFF · VAN', -12, 20, plan.exit === 'van')}
+    <circle class="node" cx="${P.seawall[0]}" cy="${P.seawall[1]}" r="5"/>${lbl(P.seawall, 'SEAWALL', 9, 3, plan.route === 'seawall')}
+    <circle class="node" cx="${P.gate[0]}" cy="${P.gate[1]}" r="5"/>${lbl(P.gate, 'GATE', -10, 18, plan.route === 'gate')}
+    <circle class="node" cx="${P.stacks[0]}" cy="${P.stacks[1]}" r="5"/>${lbl(P.stacks, 'STACKS', 9, 3, plan.route === 'stacks')}
+    <circle class="node post" cx="${P.post[0]}" cy="${P.post[1]}" r="8"/>${lbl(P.post, 'STACK 409', -34, -14, true)}
+    <circle class="node" cx="${P.boat[0]}" cy="${P.boat[1]}" r="6"/>${lbl(P.boat, 'FERRY LANDING', -50, 20, plan.exit === 'boat')}
+    <circle class="alarm" id="alarm" cx="0" cy="0" r="6"/>
     <g id="tokens"></g>
   </svg>`;
 }
-const TOKEN_COLORS = ['#36d6c3', '#ff4f7b', '#f5b942'];
-function drawTokens(people) {
+function drawTokens(list) {
   const g = document.getElementById('tokens');
-  if (!g) return;
-  g.innerHTML = people.map((p, i) => `<g class="token" id="tok-${p.op.id}" style="transform: translate(${p.at[0] + i * 9 - 9}px, ${p.at[1] - 12}px)"><circle r="8" fill="${TOKEN_COLORS[i]}"/><text>${esc(p.op.handle.slice(0, 2).toUpperCase())}</text></g>`).join('');
+  g.innerHTML = list.map(({ op, at }, i) => `<g class="token" id="tok-${op.id}" style="transform: translate(${at[0] + i * 10 - 10}px, ${at[1] - 13}px)"><circle r="8.5" fill="${op.color}"/><text>${esc(initials(op))}</text></g>`).join('');
 }
 function moveToken(op, i, at) {
   const t = document.getElementById(`tok-${op.id}`);
-  if (t) t.style.transform = `translate(${at[0] + i * 9 - 9}px, ${at[1] - 12}px)`;
+  if (t) t.style.transform = `translate(${at[0] + i * 10 - 10}px, ${at[1] - 13}px)`;
+}
+function alarm(at) {
+  const a = document.getElementById('alarm');
+  if (!a) return;
+  if (!at) { a.classList.remove('on'); return; }
+  a.setAttribute('cx', at[0]); a.setAttribute('cy', at[1]); a.classList.add('on');
 }
 
-// ---------- Plan state ----------
+// ---------- Plan state and the shared odds (the read and the run use the same numbers) ----------
 const plan = { route: 'seawall', exit: 'van', point: 'rat', watch: 'mop', wheels: 'hotwire', prep: new Set(), callIn: 'risky', ifHurt: 'out' };
 let seed = (Date.now() % 2147483647) | 0;
+const slotsNeeded = () => (plan.exit === 'van' ? ['point', 'watch', 'wheels'] : ['point', 'watch']);
+const fill = (t, op) => t.replaceAll('{op}', op.handle);
 
-// Who handles each kind of trouble: Point on the way in, Watch at the post, Wheels on the way out.
-// The other person walking in backs them up (+1 if they have 7+ in the stat), as in the game.
-function rollFor(slotId, choice, crisisId) {
-  const op = byId(plan[slotId]);
-  const partnerId = slotId === 'point' ? plan.watch : slotId === 'watch' ? plan.point : null;
+// Point handles the way in, Watch the post, Wheels the road out. The other person walking in
+// backs them up (+1 if they have 7+ in the stat), as in the game.
+function rollFor(slotId, choice, who = plan) {
+  const op = byId(who[slotId]);
+  const partnerId = slotId === 'point' ? who.watch : slotId === 'watch' ? who.point : null;
   const partner = partnerId ? byId(partnerId) : null;
   let value = op.stats[choice.stat];
   const notes = [`${choice.stat} ${op.stats[choice.stat]}`];
-  if (slotId === 'point' && ROUTES[plan.route].bonus === choice.stat) { value += 1; notes.push(`${ROUTES[plan.route].name.toLowerCase()} +1`); }
-  if (partner && partner.stats[choice.stat] >= 7) { value += 1; notes.push(`${partner.handle} backs up +1`); }
+  if (slotId === 'point' && ROUTES[who.route].bonus === choice.stat) { value += 1; notes.push('route +1'); }
+  if (partner && partner.id !== op.id && partner.stats[choice.stat] >= 7) { value += 1; notes.push(`${partner.handle} backs up +1`); }
   let diff = choice.diff;
-  for (const p of PREP) if (plan.prep.has(p.id) && p.mods[choice.id]) { diff -= p.mods[choice.id]; notes.push(`${p.name.toLowerCase()} −${p.mods[choice.id]}`); }
+  for (const p of PREP) if (who.prep.has(p.id) && p.mods[choice.id]) { diff -= p.mods[choice.id]; notes.push(`${lowerFirst(p.name)} −${p.mods[choice.id]}`); }
   const chance = chanceOf(value, diff);
   return { op, value, diff, need: 10 + diff, chance, risk: riskOf(chance), notes };
 }
-function available(choice, slotId) {
+function available(choice, slotId, who = plan) {
   if (!choice.needs) return true;
-  if (choice.needs.prep && plan.prep.has(choice.needs.prep)) return true;
-  return byId(plan[slotId]).stats[choice.needs.stat] >= choice.needs.min;
+  if (choice.needs.prep && who.prep.has(choice.needs.prep)) return true;
+  return byId(who[slotId]).stats[choice.needs.stat] >= choice.needs.min;
 }
 // The crew's own call: the best odds; on a tie, the option that costs nothing.
-function crewPick(crisisId, slotId) {
-  const opts = C[crisisId].choices.filter((c) => available(c, slotId)).map((c) => ({ c, r: rollFor(slotId, c, crisisId) }));
-  opts.sort((a, b) => b.r.chance - a.r.chance || (a.c.payCut ?? 0) - (b.c.payCut ?? 0));
-  return opts;
+function crewPick(crisisId, slotId, who = plan) {
+  return C[crisisId].choices.filter((c) => available(c, slotId, who)).map((c) => ({ c, r: rollFor(slotId, c, who) }))
+    .sort((a, b) => b.r.chance - a.r.chance || (a.c.payCut ?? 0) - (b.c.payCut ?? 0));
 }
-const slotsNeeded = () => (plan.exit === 'van' ? ['point', 'watch', 'wheels'] : ['point', 'watch']);
-const fill = (t, op) => t.replaceAll('{op}', op.handle);
+// What a slot faces under a plan: its crises and the worst best-option risk among them.
+function slotRisk(slotId, who = plan) {
+  const crises = slotId === 'point' ? [ROUTES[who.route].crisis] : slotId === 'watch' ? POST_CRISES : who.exit === 'van' ? ['boxed'] : [];
+  return worst(crises.map((cid) => crewPick(cid, slotId, who)[0].r.risk));
+}
+const withPlan = (changes) => ({ ...plan, prep: plan.prep, ...changes });
+const prepOdds = (p) => (p.helps === ROUTES[plan.route].crisis || (p.helps === 'boxed' && plan.exit === 'van') ? 'will' : POST_CRISES.includes(p.helps) ? 'might' : 'wont');
+const prepCost = () => [...plan.prep].reduce((n, id) => n + PREP.find((p) => p.id === id).cost, 0);
 
 // ---------- Planning screen ----------
 function renderPlan() {
   const app = document.getElementById('app');
-  const crewOpts = (slot) => CREW.map((o) => {
-    const taken = slotsNeeded().some((s) => s !== slot && plan[s] === o.id);
-    return `<option value="${o.id}" ${plan[slot] === o.id ? 'selected' : ''} ${taken ? 'disabled' : ''}>${esc(o.handle)} · ${o.role} · ${MAIN[o.role]} ${o.stats[MAIN[o.role]]}</option>`;
-  }).join('');
-  const prepCost = [...plan.prep].reduce((n, id) => n + PREP.find((p) => p.id === id).cost, 0);
+  app.className = 'wrap';
   const fare = plan.exit === 'boat' ? PAY * 0.15 : 0;
-
-  // The read uses the same numbers as the run (shown risk = used risk).
-  const best = (cid, slot) => crewPick(cid, slot)[0];
-  const routeBest = best(ROUTES[plan.route].crisis, 'point');
-  const postReads = POST_CRISES.map((cid) => ({ cid, b: best(cid, 'watch') }));
-  const exitBest = plan.exit === 'van' ? best('boxed', 'wheels') : null;
-  const readRow = (title, sub, b) => `<div class="read__row"><div><b>${esc(title)}</b><span class="muted small">${esc(sub)}</span></div><span class="pill r-${b.r.risk}">${b.r.risk}</span></div>`;
+  const routeCard = (k, r) => {
+    const risk = slotRisk('point', withPlan({ route: k }));
+    return `<button type="button" class="card" data-route="${k}" aria-pressed="${plan.route === k}">
+      <span class="card__top"><b>${esc(r.name)}</b>${pill(risk)}</span>
+      <span class="card__body">${esc(r.blurb)}</span>
+      <span class="card__meta">Point ${r.bonus} +1 · trouble: ${esc(lowerFirst(C[r.crisis].name))}</span></button>`;
+  };
+  const exitCard = (k, e) => {
+    const risk = k === 'van' ? slotRisk('wheels', withPlan({ exit: 'van', wheels: plan.exit === 'van' ? plan.wheels : freeFor('wheels') })) : 'safe';
+    return `<button type="button" class="card" data-exit="${k}" aria-pressed="${plan.exit === k}">
+      <span class="card__top"><b>${esc(e.name)}</b>${pill(risk)}</span>
+      <span class="card__body">${esc(e.blurb)}</span>
+      <span class="card__meta">${k === 'van' ? 'trouble: boxed in' : `fare −${yen(PAY * 0.15)}`}</span></button>`;
+  };
+  const slotRow = (slotId) => {
+    const where = (o) => slotsNeeded().find((s) => s !== slotId && plan[s] === o.id);
+    const chips = CREW.map((o) => {
+      const r = slotRisk(slotId, withPlan(swapIn(slotId, o.id)));
+      const w = where(o);
+      return `<button type="button" class="chip ${w ? 'elsewhere' : ''}" data-slot="${slotId}" data-op="${o.id}" aria-pressed="${plan[slotId] === o.id}" style="--c:${o.color}" aria-label="${esc(o.handle)} as ${SLOTS[slotId].name}: ${r} risk${w ? `, now on ${SLOTS[w].name}, tap to swap` : ''}">
+        <span class="av">${esc(initials(o))}</span><span class="nm">${esc(o.handle)}</span>${w ? `<span class="where">on ${SLOTS[w].name}</span>` : pill(r)}</button>`;
+    }).join('');
+    return `<div class="slot"><div class="slot__head"><b>${SLOTS[slotId].name}</b><span>${SLOTS[slotId].does}</span></div><div class="chips">${chips}</div></div>`;
+  };
+  const prepBtn = (p) => {
+    const odds = prepOdds(p);
+    return `<button type="button" class="prepbtn ${odds === 'wont' ? 'dim' : ''}" data-prep="${p.id}" aria-pressed="${plan.prep.has(p.id)}">
+      <b>${esc(p.name)}<span>${yen(p.cost)}</span></b><small>${esc(p.does)}</small>
+      <span class="odds ${odds}">${odds === 'will' ? 'Will come up' : odds === 'might' ? 'Might come up' : 'Not on this plan'}</span></button>`;
+  };
+  const seg = (key, opts) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button type="button" data-order="${key}" data-v="${v}" aria-pressed="${plan[key] === v}">${l}</button>`).join('')}</div>`;
 
   app.innerHTML = `
-    <header style="display:grid;gap:6px">
-      <span class="eyebrow">Docks · Pier 12 · for the Ferryman · ${yen(PAY)}</span>
+    <header style="display:grid;gap:8px">
+      <span class="eyebrow">Docks · Pier 12 · the Ferryman · ${yen(PAY)} <span class="tag">Prototype</span></span>
       <h1>Container 409</h1>
-      <p class="brief">"Aether-Harbour dropped a crate on the gantry that isn't on their manifest. Container 409. Keep your eyes open, keep your mouths shut, and don't whistle."</p>
+      <p class="brief">"An off-manifest crate on the gantry. Keep your eyes open, keep your mouths shut, and don't whistle."</p>
+      <details class="how"><summary>How this prototype works</summary><p>Plan the job, then watch it play out. The crew make their own calls and only call you in when your orders say so. Same roll rule and crises as the game; the map, slots and prep are new. Every risk shown here is the one the run uses.</p></details>
     </header>
-    <p class="proto">Prototype: plan the job, then watch it play out. The crew only calls you in when the orders say so. Same roll rule and crises as the game; the map, slots and prep are new.</p>
-    <div class="map">${mapSvg(plan)}</div>
+    <div class="map">${mapSvg(plan, { interactive: true })}<span class="map__hint">Tap a route</span></div>
+    <section><h2>Way in <small>Point's risk</small></h2><div class="cards">${Object.entries(ROUTES).map(([k, r]) => routeCard(k, r)).join('')}</div></section>
+    <section><h2>Way out</h2><div class="cards">${Object.entries(EXITS).map(([k, e]) => exitCard(k, e)).join('')}</div></section>
+    <section><h2>Crew <small>risk in that slot</small></h2>${slotsNeeded().map(slotRow).join('')}</section>
+    <section><h2>Prep <small>paid up front</small></h2><div class="prep">${PREP.map(prepBtn).join('')}</div></section>
+    <section><h2>Orders</h2>
+      <div class="order"><p>Call me in…</p>${seg('callIn', [['every', 'Every time'], ['risky', 'If risky'], ['never', 'Never']])}
+        <p class="muted">${plan.callIn === 'every' ? 'You make every call.' : plan.callIn === 'risky' ? 'They call you when their best option is high risk or worse.' : 'They decide everything, and pull out if every option is extreme.'}</p></div>
+      <div class="order"><p>If someone gets hurt…</p>${seg('ifHurt', [['out', 'Get them out'], ['finish', 'Finish the job']])}</div>
+    </section>`;
 
-    <section><h2>1 · Way in</h2><div class="opts">
-      ${Object.entries(ROUTES).map(([k, r]) => `<label class="opt"><input type="radio" name="route" value="${k}" ${plan.route === k ? 'checked' : ''}><b>${esc(r.name)}</b><span>${esc(r.blurb)} Point gets ${r.bonus} +1. Likely trouble: ${esc(C[r.crisis].name.toLowerCase())}.</span></label>`).join('')}
-    </div></section>
+  const toughest = worst(slotsNeeded().map((s) => slotRisk(s)));
+  const bar = document.getElementById('bar');
+  bar.hidden = false;
+  bar.innerHTML = `<div class="bar__in"><div class="bar__sum"><b>${yen(PAY - fare - prepCost())}</b><span>if it runs clean · toughest moment ${pill(toughest)}</span></div><button class="btn" id="go">Send them</button></div>`;
 
-    <section><h2>2 · Way out</h2><div class="opts">
-      ${Object.entries(EXITS).map(([k, e]) => `<label class="opt"><input type="radio" name="exit" value="${k}" ${plan.exit === k ? 'checked' : ''}><b>${esc(e.name)}</b><span>${esc(e.blurb)}</span></label>`).join('')}
-    </div></section>
-
-    <section><h2>3 · Who does what</h2>
-      <div class="slot"><label for="s-point">Point</label><span class="why">Goes first. Handles trouble on the way in.</span><select id="s-point" data-slot="point">${crewOpts('point')}</select></div>
-      <div class="slot"><label for="s-watch">Watch</label><span class="why">Holds the post at Stack 409. Handles whatever turns up there.</span><select id="s-watch" data-slot="watch">${crewOpts('watch')}</select></div>
-      ${plan.exit === 'van' ? `<div class="slot"><label for="s-wheels">Wheels</label><span class="why">Waits in the van. Handles the road out.</span><select id="s-wheels" data-slot="wheels">${crewOpts('wheels')}</select></div>` : ''}
-    </section>
-
-    <section><h2>4 · Prep</h2><p class="muted small">Bought before the job. Only pays off if that trouble turns up.</p><div class="opts">
-      ${PREP.map((p) => `<label class="opt"><input type="checkbox" name="prep" value="${p.id}" ${plan.prep.has(p.id) ? 'checked' : ''}><b>${esc(p.name)} <span class="cost">${yen(p.cost)}</span></b><span>${esc(p.does)}</span></label>`).join('')}
-    </div></section>
-
-    <section><h2>5 · Orders</h2>
-      <p class="small">Call me in…</p>
-      <div class="seg" data-order="callIn">
-        ${[['every', 'Every time'], ['risky', 'When it\'s risky'], ['never', 'Never']].map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${plan.callIn === v}">${l}</button>`).join('')}
-      </div>
-      <p class="muted small">"Risky" means the crew's best option is high risk or worse. On "never", they pull out themselves if every option is extreme.</p>
-      <p class="small">If someone gets hurt…</p>
-      <div class="seg" data-order="ifHurt">
-        ${[['out', 'Get them out'], ['finish', 'Finish the job']].map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${plan.ifHurt === v}">${l}</button>`).join('')}
-      </div>
-    </section>
-
-    <section><h2>Risk read</h2><div class="read">
-      ${readRow(`Way in: ${C[ROUTES[plan.route].crisis].name}`, `${routeBest.r.op.handle}, best option: ${routeBest.c.id === 'abort' ? 'abort' : fill(routeBest.c.label, routeBest.r.op).toLowerCase()} (${routeBest.r.notes.join(', ')})`, routeBest)}
-      ${postReads.map(({ cid, b }) => readRow(`At the post, maybe: ${C[cid].name}`, `${b.r.op.handle} (${b.r.notes.join(', ')})`, b)).join('')}
-      ${exitBest ? readRow('Way out: the service road', `${exitBest.r.op.handle} (${exitBest.r.notes.join(', ')})`, exitBest) : `<div class="read__row"><div><b>Way out: the Ferryman's boat</b><span class="muted small">No trouble expected. He takes 15%.</span></div><span class="pill r-certain">safe</span></div>`}
-      <div class="net"><span>If it runs clean</span><span>${yen(PAY - fare - prepCost)}</span></div>
-    </div></section>
-
-    <button class="btn sticky" id="go">Send them</button>
-    <p class="seed">Run seed ${seed}</p>`;
-
-  app.querySelectorAll('input[name=route]').forEach((i) => i.addEventListener('change', () => { plan.route = i.value; renderPlan(); }));
-  app.querySelectorAll('input[name=exit]').forEach((i) => i.addEventListener('change', () => { plan.exit = i.value; fixSlots(); renderPlan(); }));
-  app.querySelectorAll('input[name=prep]').forEach((i) => i.addEventListener('change', () => { i.checked ? plan.prep.add(i.value) : plan.prep.delete(i.value); renderPlan(); }));
-  app.querySelectorAll('select[data-slot]').forEach((s) => s.addEventListener('change', () => { plan[s.dataset.slot] = s.value; renderPlan(); document.getElementById(s.id)?.focus(); }));
-  app.querySelectorAll('.seg').forEach((seg) => seg.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { plan[seg.dataset.order] = b.dataset.v; renderPlan(); })));
+  app.querySelectorAll('[data-route]').forEach((el) => el.addEventListener('click', () => { plan.route = el.dataset.route; rerender(el); }));
+  app.querySelectorAll('[data-exit]').forEach((el) => el.addEventListener('click', () => { plan.exit = el.dataset.exit; fixSlots(); rerender(el); }));
+  app.querySelectorAll('[data-prep]').forEach((el) => el.addEventListener('click', () => { const id = el.dataset.prep; plan.prep.has(id) ? plan.prep.delete(id) : plan.prep.add(id); rerender(el); }));
+  app.querySelectorAll('.chip').forEach((el) => el.addEventListener('click', () => { Object.assign(plan, swapIn(el.dataset.slot, el.dataset.op)); rerender(el); }));
+  app.querySelectorAll('[data-order]').forEach((el) => el.addEventListener('click', () => { plan[el.dataset.order] = el.dataset.v; rerender(el); }));
   document.getElementById('go').addEventListener('click', run);
 }
-function fixSlots() {
-  const used = new Set();
-  for (const s of slotsNeeded()) {
-    if (used.has(plan[s])) plan[s] = CREW.find((o) => !used.has(o.id)).id;
-    used.add(plan[s]);
-  }
+// Re-render and keep focus on the same control (keyboard users keep their place).
+function rerender(el) {
+  const sel = el.dataset.route ? `.card[data-route="${el.dataset.route}"]` : el.dataset.exit ? `.card[data-exit="${el.dataset.exit}"]` : el.dataset.prep ? `[data-prep="${el.dataset.prep}"]` : el.dataset.op ? `.chip[data-slot="${el.dataset.slot}"][data-op="${el.dataset.op}"]` : `[data-order="${el.dataset.order}"][data-v="${el.dataset.v}"]`;
+  const hadFocus = document.activeElement === el;
+  const y = window.scrollY;
+  renderPlan();
+  window.scrollTo(0, y);
+  if (hadFocus) document.querySelector(sel)?.focus({ preventScroll: true });
 }
+// Put someone in a slot; if they're already in another slot, the two swap.
+function swapIn(slotId, opId) {
+  const from = slotsNeeded().find((s) => s !== slotId && plan[s] === opId);
+  return from ? { [slotId]: opId, [from]: plan[slotId] } : { [slotId]: opId };
+}
+function freeFor(slotId) {
+  const used = slotsNeeded().filter((s) => s !== slotId).map((s) => plan[s]);
+  return used.includes(plan[slotId]) ? CREW.find((o) => !used.includes(o.id)).id : plan[slotId];
+}
+function fixSlots() { for (const s of slotsNeeded()) plan[s] = freeFor(s); }
 
-// ---------- The run: a timed feed, tokens on the map, call-ins ----------
+// ---------- The run: a phased feed, tokens on the map, call-ins ----------
 let fast = false;
-const wait = (ms) => new Promise((r) => setTimeout(r, fast ? 60 : ms));
+const wait = (ms) => new Promise((r) => setTimeout(r, fast ? 50 : ms));
 
 async function run() {
   const rng = mulberry32(seed);
   const d20 = () => 1 + Math.floor(rng() * 20);
-  const slots = slotsNeeded();
-  const people = slots.filter((s) => s !== 'wheels').map((s) => ({ op: byId(plan[s]), at: P.drop }));
+  const walkers = ['point', 'watch'].map((s) => byId(plan[s]));
   const wheels = plan.exit === 'van' ? byId(plan.wheels) : null;
   const log = { heat: 0, payCut: 0, payBonus: 0, hurt: [], aborted: false, pulledOut: false, callIns: 0, met: [], used: new Set(), postDone: false, events: [] };
   fast = false;
+  window.scrollTo(0, 0);
 
   const app = document.getElementById('app');
+  app.className = 'wrap';
   app.innerHTML = `
-    <header style="display:grid;gap:4px"><span class="eyebrow">Live · Pier 12</span><h1>Container 409</h1></header>
-    <div class="map">${mapSvg(plan)}</div>
-    <div class="feed" id="feed" aria-live="polite"></div>
-    <button class="btn btn--ghost sticky" id="skip">Speed up</button>`;
-  drawTokens(people.concat(wheels ? [{ op: wheels, at: P.drop }] : []));
-  document.getElementById('skip').addEventListener('click', () => { fast = true; });
+    <div class="live"><div class="map">${mapSvg(plan)}</div><div class="tally" id="tally"></div></div>
+    <div class="feed" id="feed" aria-live="polite"></div>`;
+  drawTokens(walkers.map((op) => ({ op, at: P.drop })).concat(wheels ? [{ op: wheels, at: P.drop }] : []));
+  const bar = document.getElementById('bar');
+  bar.innerHTML = `<div class="bar__in"><div class="bar__sum"><b>Live</b><span>${esc(walkers.map((o) => o.handle).join(' & '))}${wheels ? ` · ${esc(wheels.handle)} driving` : ''}</span></div><button class="btn btn--ghost" id="skip">Speed up</button></div>`;
+  document.getElementById('skip').addEventListener('click', (e) => { fast = !fast; e.target.textContent = fast ? 'Normal speed' : 'Speed up'; });
+
+  let phase = 'Way in';
+  const tally = () => {
+    document.getElementById('tally').innerHTML = `<span class="phase">${phase}</span><span class="${log.heat ? 'bad' : ''}">Heat +${log.heat}</span><span class="${log.hurt.length ? 'bad' : ''}">Hurt ${log.hurt.length}</span>${log.callIns ? `<span>Calls ${log.callIns}</span>` : ''}`;
+  };
+  tally();
   const feed = document.getElementById('feed');
+  const add = (node) => { feed.appendChild(node); node.scrollIntoView({ block: 'end', behavior: fast ? 'auto' : 'smooth' }); };
   const say = async (html, cls = '', ms = 1100) => {
     const div = document.createElement('div');
     div.className = `line ${cls}`;
     div.innerHTML = html;
-    feed.appendChild(div);
-    div.querySelectorAll('.dice').forEach((b) => b.addEventListener('click', () => { b.nextElementSibling.hidden = !b.nextElementSibling.hidden; }));
-    div.scrollIntoView({ block: 'nearest', behavior: fast ? 'auto' : 'smooth' });
+    div.querySelectorAll('.dice').forEach((b) => b.addEventListener('click', () => { const d = b.nextElementSibling; d.hidden = !d.hidden; b.setAttribute('aria-expanded', String(!d.hidden)); }));
+    add(div);
     await wait(ms);
   };
-  const diceHtml = (roll, die) => `<button class="dice" type="button">dice</button><span class="dice-detail" hidden>die ${die} + ${roll.value} (${esc(roll.notes.join(', '))}) = ${die + roll.value} · needs ${roll.need}</span>`;
-  const walk = async (pathPoints, who) => {
-    for (const pt of pathPoints.slice(1)) { who.forEach((p, i) => moveToken(p.op, people.includes(p) ? i : 2, pt)); await wait(500); }
+  const newPhase = async (name) => {
+    phase = name; tally();
+    const h = document.createElement('div'); h.className = 'phasehead'; h.textContent = name; add(h);
+    await wait(400);
   };
-
+  const who = (op) => `<span class="who" style="color:${op.color}">${esc(op.handle)}</span>`;
+  const fillWho = (t, op) => esc(t).replaceAll('{op}', who(op));
+  const diceHtml = (r, die) => `<button class="dice" type="button" aria-expanded="false">${die + r.value >= r.need ? '✓' : '✗'} dice</button><span class="dice-detail" hidden>die ${die} + ${r.value} (${esc(r.notes.join(', '))}) = ${die + r.value} · needs ${r.need}</span>`;
+  const walk = async (path, ops) => { for (const pt of path.slice(1)) { ops.forEach((op, i) => moveToken(op, i, pt)); await wait(450); } };
   const smallCheck = async (chk, op, stat) => {
-    const v = op.stats[stat];
     const die = d20();
-    const ok = die + v >= 10 + chk.diff;
-    await say(`${esc(fill(ok ? chk.ok : chk.bad, op))} <span class="muted">(${stat} ${ok ? '✓' : '✗'})</span>`, 'check', 1000);
+    const ok = die + op.stats[stat] >= 10 + chk.diff;
+    await say(`${fillWho(ok ? chk.ok : chk.bad, op)} <span class="res muted">${stat} ${ok ? '✓' : '✗'}</span>`, 'check', 1000);
   };
 
-  // One crisis: the crew decides under the orders, or calls you in. Returns false if the job ends here.
-  const crisis = async (cid, slotId) => {
+  // One crisis: the crew decides under the orders, or calls you in. Returns false if the job stops here.
+  const crisis = async (cid, slotId, at) => {
     const cr = C[cid];
+    const op = byId(plan[slotId]);
     log.met.push(cid);
     for (const p of PREP) if (p.helps === cid && plan.prep.has(p.id)) log.used.add(p.id);
-    await say(esc(cr.text), 'crisis', 1300);
+    alarm(at);
+    await say(esc(cr.text), 'crisis', 1400);
     const opts = crewPick(cid, slotId);
-    const bestOpt = opts[0];
-    const op = byId(plan[slotId]);
+    const best = opts[0];
     let picked;
-    const callNow = plan.callIn === 'every' || (plan.callIn === 'risky' && bestOpt.r.chance < 0.5);
-    if (callNow) {
-      log.callIns++;
+    if (plan.callIn === 'every' || (plan.callIn === 'risky' && best.r.chance < 0.5)) {
+      log.callIns++; tally();
       picked = await callIn(cr, opts, op);
-    } else if (plan.callIn === 'never' && bestOpt.r.chance < 0.3) {
+    } else if (plan.callIn === 'never' && best.r.chance < 0.3) {
       picked = { abort: true };
-      await say(`${esc(op.handle)} doesn't like any of it. Under your orders, they pull out.`, 'why', 900);
+      await say(`${who(op)} doesn't like any of it. Under your orders, they pull out.`, 'why', 900);
     } else {
-      picked = bestOpt;
-      const why = opts.length > 1 && opts[1].r.chance === bestOpt.r.chance ? 'the same odds, and it costs nothing' : 'the best odds they had';
-      await say(`${esc(op.handle)}'s call: ${esc(fill(bestOpt.c.label, op).toLowerCase())}. ${why[0].toUpperCase() + why.slice(1)} (${bestOpt.r.risk}).`, 'why', 900);
+      picked = best;
+      await say(`${who(op)}'s call: ${fillWho(lowerFirst(best.c.label), op)}. The best odds they had (${best.r.risk}).`, 'why', 900);
     }
+    alarm(null);
     if (picked.abort) {
       log.aborted = true;
-      log.payCut = 1;
-      if (cr.abort.payCut != null && log.postDone) log.payCut = cr.abort.payCut;
+      log.payCut = cr.abort.payCut != null && log.postDone ? cr.abort.payCut : 1;
       log.events.push({ cid, abort: true });
       await say(esc(cr.abort.ok), 'bad', 1100);
       return false;
@@ -433,11 +528,12 @@ async function run() {
     if (ok && c.payBonus) log.payBonus += c.payBonus;
     if (!ok) { log.heat += c.failHeat ?? 0; log.payCut += c.failPay ?? 0; if (c.failHurt) log.hurt.push(op.handle); }
     if (c.id === 'tidewatch' && plan.prep.has('tide') && op.stats.cool < 10) log.used.add('tide');
-    log.events.push({ cid, c, op: op.handle, ok, die, r });
-    await say(`${esc(fill(ok ? c.ok : c.bad, op))} ${diceHtml(r, die)}`, ok ? 'good' : 'bad', 1300);
+    log.events.push({ cid, c, op, ok, die, r });
+    tally();
+    await say(`${fillWho(ok ? c.ok : c.bad, op)} ${diceHtml(r, die)}`, ok ? 'good' : 'bad', 1300);
     if (!ok && c.failHeat) await say(`Heat +${c.failHeat}.`, 'check', 700);
     if (!ok && c.failHurt) {
-      await say(`${esc(op.handle)} is hurt. Light: they can walk.`, 'bad', 900);
+      await say(`${who(op)} is hurt. Light: they can walk.`, 'bad', 900);
       if (plan.ifHurt === 'out') {
         log.pulledOut = true;
         await say(`Your orders: get them out. The crew pulls back${log.postDone ? '. The crate is already off the gantry' : ' before the drop'}.`, 'why', 1100);
@@ -448,71 +544,66 @@ async function run() {
     return true;
   };
 
-  // A call-in: the feed waits for the player. Every call-in has an exit.
+  // A call-in: the feed waits for you. Every call-in has an exit.
   const callIn = (cr, opts, op) => new Promise((resolve) => {
     const box = document.createElement('div');
     box.className = 'callin';
-    const crewChoice = opts[0];
     box.innerHTML = `<span class="eyebrow">${esc(op.handle)} is calling in</span>
-      <p>"${esc(cr.name)}. What do we do?" <span class="muted small">They'd go for: ${esc(fill(crewChoice.c.label, op).toLowerCase())}.</span></p>
-      ${opts.map((o, i) => `<button class="choice" data-i="${i}"><span class="top"><span>${esc(fill(o.c.label, op))}</span><span class="pill r-${o.r.risk}">${o.r.risk}</span></span><span class="sub">${esc(o.r.notes.join(', '))}${o.c.payCut ? ` · pay −${o.c.payCut * 100}%` : ''}${o.c.failHurt ? ' · can hurt' : ''}${o.c.failHeat ? ' · heat if it fails' : ''}</span></button>`).join('')}
-      <button class="choice" data-i="abort"><span class="top"><span>${esc(cr.abort.label)}</span><span class="pill r-certain">certain</span></span><span class="sub">Nobody's hurt. You lose the pay.</span></button>`;
-    feed.appendChild(box);
-    box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      <p class="callin__q">"${esc(cr.name)}. What do we do?"</p>
+      ${opts.map((o, i) => `<button class="choice" data-i="${i}"><span class="choice__top"><span>${fillWho(o.c.label, op)}</span>${pill(o.r.risk)}</span><span class="choice__sub">${i === 0 ? '<span class="crewpick">Crew\'s pick · </span>' : ''}${esc(o.r.notes.join(', '))}${o.c.payCut ? ` · pay −${o.c.payCut * 100}%` : ''}${o.c.failHurt ? ' · can hurt' : ''}${o.c.failHeat ? ' · heat if it fails' : ''}</span></button>`).join('')}
+      <button class="choice" data-i="abort"><span class="choice__top"><span>${esc(cr.abort.label)}</span>${pill('certain')}</span><span class="choice__sub">Nobody's hurt. You lose the pay.</span></button>`;
+    add(box);
     box.querySelector('button').focus({ preventScroll: true });
     box.querySelectorAll('button.choice').forEach((b) => b.addEventListener('click', () => {
-      const i = b.dataset.i;
       box.querySelectorAll('button').forEach((x) => { x.disabled = true; });
-      b.style.borderColor = 'var(--accent-2)';
-      resolve(i === 'abort' ? { abort: true } : opts[Number(i)]);
+      b.classList.add('picked');
+      resolve(b.dataset.i === 'abort' ? { abort: true } : opts[Number(b.dataset.i)]);
     }));
   });
 
-  // Approach
+  // Way in
+  await newPhase('Way in');
   await say('Pier 12 at midnight. Amber floodlights burn through the salt fog, turning the container stacks into canyons.', 'beat', 1500);
-  if (wheels) await say(`${esc(wheels.handle)} parks the van on the service road with the lights off.`, 'check', 900);
+  if (wheels) await say(`${who(wheels)} parks the van on the service road with the lights off.`, 'check', 900);
   const route = ROUTES[plan.route];
-  const point = byId(plan.point);
   const path = PATHS[plan.route];
-  await walk(path.slice(0, 3), people);
-  await smallCheck(route.check, point, route.check.stat);
-  let going = await crisis(route.crisis, 'point');
+  await walk(path.slice(0, 3), walkers);
+  await smallCheck(route.check, byId(plan.point), route.check.stat);
+  let going = await crisis(route.crisis, 'point', path[2]);
 
   // The post
   if (going) {
-    await walk(path.slice(2), people);
+    await walk(path.slice(2), walkers);
+    await newPhase('At the post');
     await say('Cranes screech overhead and diesel fumes roll across the wet tarmac. Nobody whistles.', 'beat', 1300);
     await smallCheck({ diff: 2, ok: '{op} settles in at the corner of Stack 409 with a clear view of the gantry.', bad: '{op} can\'t settle; keeps checking over a shoulder.' }, byId(plan.watch), 'cool');
     const postCrisis = POST_CRISES[Math.floor(rng() * POST_CRISES.length)];
-    going = await crisis(postCrisis, 'watch');
-    if (going) { log.postDone = true; await say('Out past the breakwater, a police cutter\'s searchlight slices the mist and moves on. The crate comes down and goes into the Ferryman\'s boat.', 'beat', 1300); }
+    going = await crisis(postCrisis, 'watch', P.post);
+    if (going) { log.postDone = true; await say('The crate comes down off the gantry and into the Ferryman\'s boat.', 'beat', 1300); }
   }
 
-  // The way out (always walked, even after a pull-out)
+  // Way out (always walked, even after a pull-out)
+  await newPhase('Way out');
   if (plan.exit === 'van') {
-    await walk(EXIT_PATHS.van, people);
-    if (going) {
-      people.forEach((p, i) => moveToken(p.op, i, P.drop));
-      going = await crisis('boxed', 'wheels');
-    }
+    await walk(EXIT_PATHS.van, walkers);
+    if (going) going = await crisis('boxed', 'wheels', P.drop);
   } else {
-    await walk(EXIT_PATHS.boat, people);
+    await walk(EXIT_PATHS.boat, walkers);
     if (going) await say('The Ferryman rows you out with the crate under a tarp. He doesn\'t say a word the whole way.', 'beat', 1200);
   }
-  if (log.pulledOut && log.postDone) log.payCut = Math.max(log.payCut, 0.5);
-  else if (log.pulledOut) log.payCut = 1;
-  await wait(600);
+  if (log.pulledOut) log.payCut = log.postDone ? Math.max(log.payCut, 0.5) : 1;
+  await wait(700);
   renderReport(log);
 }
 
-// ---------- Report: what happened, and whether the plan was right ----------
+// ---------- Report: verdict first, then whether the plan was right ----------
 function renderReport(log) {
-  const prepCost = [...plan.prep].reduce((n, id) => n + PREP.find((p) => p.id === id).cost, 0);
   const cut = Math.min(1, log.payCut - log.payBonus);
   const gross = Math.round((PAY * (1 - cut)) / 50) * 50;
   const fare = plan.exit === 'boat' && !log.aborted ? Math.round((gross * 0.15) / 50) * 50 : 0;
-  const net = gross - fare - prepCost;
+  const net = gross - fare - prepCost();
   const clean = !log.aborted && !log.pulledOut && !log.heat && !log.hurt.length;
+  const title = clean ? 'Clean job' : log.aborted ? 'Aborted' : log.pulledOut ? 'Pulled out' : 'Done, with costs';
   const joss = log.aborted ? 'Nobody hurt, nobody paid. Some nights are like that.'
     : log.pulledOut ? `${log.hurt[0]} is hurt, and you pulled them out like you said you would. ${log.postDone ? 'The Ferryman paid half.' : 'No pay tonight.'}`
     : log.hurt.length ? `We got paid. ${log.hurt.join(' and ')} got hurt doing it. Light, they'll live.`
@@ -520,39 +611,49 @@ function renderReport(log) {
     : 'Clean. The Ferryman paid and didn\'t even count it.';
 
   const checks = [];
-  checks.push(`${ROUTES[plan.route].name}: ${log.met.includes(ROUTES[plan.route].crisis) ? `the ${C[ROUTES[plan.route].crisis].name.toLowerCase()} came, as expected.` : 'never reached.'}`);
-  for (const p of PREP.filter((x) => plan.prep.has(x.id))) {
-    checks.push(log.used.has(p.id) ? `${p.name}: it came into play.` : `${p.name}: never needed (${yen(-p.cost)}).`);
+  for (const e of log.events) {
+    if (e.abort) checks.push(['no', `${C[e.cid].name}: you pulled out.`]);
+    else checks.push([e.ok ? 'ok' : 'no', `${e.op.handle} on ${lowerFirst(C[e.cid].name)}: ${e.ok ? 'passed' : 'failed'} at ${e.r.risk} risk.`]);
   }
-  for (const e of log.events.filter((x) => !x.abort)) checks.push(`${e.op} on ${C[e.cid].name.toLowerCase()}: ${e.ok ? 'passed' : 'failed'} (${e.r.risk} risk).`);
-  checks.push(log.callIns ? `You were called in ${log.callIns} time${log.callIns > 1 ? 's' : ''}.` : 'The crew never called you in.');
-  if (log.pulledOut) checks.push('Your "if someone gets hurt" order was used.');
+  for (const p of PREP.filter((x) => plan.prep.has(x.id))) {
+    checks.push(log.used.has(p.id) ? ['ok', `${p.name} came into play.`] : ['meh', `${p.name} never came up (${yen(-p.cost)}).`]);
+  }
+  checks.push(['meh', log.callIns ? `You were called in ${log.callIns} time${log.callIns > 1 ? 's' : ''}.` : 'The crew never called you in.']);
+  if (log.pulledOut) checks.push(['meh', 'Your "get them out" order was used.']);
 
-  document.getElementById('app').innerHTML = `
-    <header style="display:grid;gap:4px"><span class="eyebrow">Report · Container 409</span><h1>${clean ? 'Clean job' : log.aborted ? 'Aborted' : log.pulledOut ? 'Pulled out' : 'Done, with costs'}</h1></header>
-    <div class="report">
+  const app = document.getElementById('app');
+  app.className = 'wrap no-bar';
+  document.getElementById('bar').hidden = true;
+  app.innerHTML = `
+    <header style="display:grid;gap:6px"><span class="eyebrow">Report · Container 409</span><h1>${title}</h1></header>
+    <div class="verdict">
       <p class="joss">${esc(joss)} <span class="muted">— Joss</span></p>
       <div class="facts">
         <div class="fact"><b>${yen(net)}</b><span>Net</span></div>
         <div class="fact"><b>+${log.heat}</b><span>Heat</span></div>
         <div class="fact"><b>${log.hurt.length}</b><span>Hurt</span></div>
       </div>
-      <section><h2>Did the plan work?</h2><ul class="check">${checks.map((c) => `<li>${esc(c)}</li>`).join('')}</ul></section>
-      <section><h2>Money</h2><div class="money">
-        <div><span>Job pays</span><span>${yen(PAY)}</span></div>
-        ${gross !== PAY ? `<div><span>Cuts and bonuses</span><span>${yen(gross - PAY)}</span></div>` : ''}
-        ${fare ? `<div><span>Ferryman's fare</span><span>${yen(-fare)}</span></div>` : ''}
-        ${prepCost ? `<div><span>Prep</span><span>${yen(-prepCost)}</span></div>` : ''}
-        <div><span>Net</span><span>${yen(net)}</span></div>
-      </div></section>
-      <div class="btns">
-        <button class="btn" id="again">Same plan again</button>
-        <button class="btn btn--ghost" id="change">Change plan</button>
-      </div>
-      <p class="seed">Seed ${seed}. "Same plan again" rolls new dice.</p>
-    </div>`;
+    </div>
+    <section><h2>The plan</h2><div class="planline">
+      <span>${esc(ROUTES[plan.route].name)}</span><span>${esc(EXITS[plan.exit].name)}</span>
+      ${slotsNeeded().map((s) => `<span>${SLOTS[s].name}: ${esc(byId(plan[s]).handle)}</span>`).join('')}
+      <span>Calls: ${{ every: 'every time', risky: 'if risky', never: 'never' }[plan.callIn]}</span>
+    </div></section>
+    <section><h2>Did it work?</h2><ul class="check">${checks.map(([k, t]) => `<li class="${k}"><i>${k === 'ok' ? '✓' : k === 'no' ? '✗' : '·'}</i><span>${esc(t)}</span></li>`).join('')}</ul></section>
+    <section><h2>Money</h2><div class="money">
+      <div><span>Job pays</span><span>${yen(PAY)}</span></div>
+      ${gross !== PAY ? `<div><span>Cuts and bonuses</span><span>${yen(gross - PAY)}</span></div>` : ''}
+      ${fare ? `<div><span>Ferryman's fare</span><span>${yen(-fare)}</span></div>` : ''}
+      ${prepCost() ? `<div><span>Prep</span><span>${yen(-prepCost())}</span></div>` : ''}
+      <div><span>Net</span><span>${yen(net)}</span></div>
+    </div></section>
+    <div class="btns">
+      <button class="btn" id="again">Same plan again</button>
+      <button class="btn btn--ghost" id="change">Change plan</button>
+    </div>
+    <p class="seed">Seed ${seed}. "Same plan again" rolls new dice.</p>`;
   document.getElementById('again').addEventListener('click', () => { seed = (seed * 48271) % 2147483647; run(); });
-  document.getElementById('change').addEventListener('click', () => { seed = (seed * 48271) % 2147483647; renderPlan(); window.scrollTo(0, 0); });
+  document.getElementById('change').addEventListener('click', () => { seed = (seed * 48271) % 2147483647; window.scrollTo(0, 0); renderPlan(); });
   window.scrollTo(0, 0);
 }
 
