@@ -584,7 +584,7 @@ function finish(state) {
   for (const op of survivors) {
     const c = op.condition;
     c.fatigue = Math.min(100, c.fatigue + 10 + threat * 6);
-    c.awayUntil = state.day + tpl.days;
+    c.awayUntil = (am.startedDay ?? state.day) + tpl.days; // a hands-off job finishes on the day they're back
     c.morale = Math.max(0, Math.min(100, c.morale + (deaths.length ? -20 : am.aborted ? -3 : 5)));
     if (c.injury !== 'healthy') injuries.push(`${op.handle} (${c.injury}, ${c.injuryDays}d)`);
     op.history.push(`Day ${state.day}: ${tpl.name}, ${am.aborted ? 'aborted' : 'completed'}`);
@@ -637,7 +637,9 @@ function finish(state) {
 export function closeMission(prev) {
   if (!prev.activeMission?.done) return prev;
   const state = structuredClone(prev);
+  const am = state.activeMission;
   state.activeMission = null;
-  state.crew = state.crew.filter((o) => !isFreelancer(o)); // freelancers go home after the job
+  // Freelancers go home after the job; one hired for a hands-off job still out stays with it.
+  state.crew = state.crew.filter((o) => !isFreelancer(o) || !am.crewIds.includes(o.id));
   return state;
 }

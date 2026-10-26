@@ -5,6 +5,7 @@ import { calendar, weeklyBill } from './time.js';
 import { availability, isAway } from './crew.js';
 import { templateById } from './jobs.js';
 import { NOTICE_COOLDOWN_DAYS } from './renewals.js';
+import { awayJobs } from './autorun.js';
 
 export const HORIZON_DAYS = 7;
 const EXHAUSTED_AT = 85; // availability(): above this, nobody works
@@ -62,6 +63,10 @@ export function upcoming(state, horizon = HORIZON_DAYS) {
     if (within(r.expiresDay)) items.push({ day: r.expiresDay, kind: 'lead-last', name: r.handle, role: r.role });
   }
 
+  for (const j of awayJobs(state)) {
+    if (within(j.returnDay)) items.push({ day: j.returnDay, kind: 'report', name: j.name });
+  }
+
   for (const op of state.crew) {
     const c = op.condition;
     if (c.injury === 'dead') continue;
@@ -79,6 +84,6 @@ export function upcoming(state, horizon = HORIZON_DAYS) {
     }
   }
 
-  const ORDER = ['season', 'board', 'back', 'healed', 'rested', 'scout', 'job-last', 'lead-last', 'reask', 'bills'];
+  const ORDER = ['season', 'board', 'report', 'back', 'healed', 'rested', 'scout', 'job-last', 'lead-last', 'reask', 'bills'];
   return items.sort((a, b) => a.day - b.day || ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind));
 }

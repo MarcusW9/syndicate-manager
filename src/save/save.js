@@ -265,5 +265,10 @@ function migrate(state) {
     if (state.activeMission) state.activeMission.events ??= [];
     state.version = 16;
   }
+  if (state.version === 16) {
+    // v17: hands-off jobs come back when the crew does (state.awayJobs), not the moment they're sent.
+    state.awayJobs ??= [];
+    state.version = 17;
+  }
   return state;
 }

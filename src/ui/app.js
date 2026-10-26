@@ -26,7 +26,7 @@ import {
   startMission, revealBeat, chooseOption, resolveCritical, closeMission,
   describeCrisis, describeCritical, currentStep, fillBrief,
 } from '../core/mission.js';
-import { autoRun, ORDERS } from '../core/autorun.js';
+import { sendOff, ORDERS } from '../core/autorun.js';
 import {
   saveGame, loadGame, exportSave, importSave, listSlots, getActiveSlot, setActiveSlot,
   deleteSlot, loadBackup, backupDue, SLOT_COUNT,
@@ -42,6 +42,7 @@ let cityDistrict = null; // district card open on the City screen
 let cityTab = 'map'; // which City section is showing (CITY_TABS)
 let cityCardDue = false; // scroll a newly opened district card into view after drawing
 let openMessageId = null;
+let playReportId = null; // a hands-off report playing out on its first open (renderReportTimeline)
 let openOperativeId = null;
 let openRecruitId = null;
 let newGameSlot = null; // slot number while picking a difficulty
@@ -92,6 +93,8 @@ function onClick(e) {
     case 'open-message': {
       openMessageId = id;
       const msg = state.inbox.find((m) => m.id === id);
+      // A hands-off report you haven't read plays out once: you didn't watch that job.
+      if (msg?.type === 'report' && !msg.read && msg.timeline?.orders) playReportId = id;
       if (msg && !msg.read) { msg.read = true; saveGame(state); }
       break;
     }
@@ -124,15 +127,14 @@ function onClick(e) {
     case 'approach': plan.approach = id; break;
     case 'orders': plan.orders = id; break;
     case 'send-job': {
-      // Hands-off: the crew runs the whole job now; the player lands on its report.
-      const done = autoRun(startMission(state, plan.jobId, plan.crew, plan.approach), plan.orders ?? 'steady');
-      const report = done.inbox.find((m) => m.type === 'report');
-      if (report) report.read = true; // it opens straight away
+      // Hands-off: the crew leaves now; their report comes back when they do (core/autorun.js).
+      const next = sendOff(state, plan.jobId, plan.crew, plan.approach, plan.orders ?? 'steady');
       plan = null;
       screen = 'inbox';
-      openMessageId = report?.id ?? null;
-      return setState(closeMission(done));
+      openMessageId = null;
+      return setState(next);
     }
+    case 'skip-report': break; // tapping a report as it plays shows the end at once
     case 'start-job': {
       const next = startMission(state, plan.jobId, plan.crew, plan.approach);
       plan = null;
@@ -525,6 +527,7 @@ function renderUpcoming(where) {
       case 'job-last': return `Last day for ${i.names.join(', ')}`;
       case 'lead-last': return `Last day to sign ${i.name} (${i.role})`;
       case 'back': return `${i.name} back from the job`;
+      case 'report': return `Report from ${i.name}`;
       case 'healed': return `${i.name} over their ${i.injury} injury`;
       case 'rested': return `${i.name} rested enough to work`;
       case 'reask': return `${i.name} asks about their raise again`;
@@ -579,17 +582,23 @@ function renderReportTimeline(m) {
     outcome = at < 0 ? [] : lines.slice(at).map((text) => ({ tone: 'plain', text }));
   }
   const end = { completed: ['✓', 'Job done'], aborted: ['↩', 'Aborted'], loss: ['✕', 'Someone didn\'t come home'] }[result] ?? ['■', 'How it ended'];
+  // Played once: each step lands in turn down the rail, then the result, then Joss and the summary.
+  const play = m.id === playReportId;
+  if (play) playReportId = null;
+  const STEP = 0.8; // seconds per step
   return `
+    <div class="report ${play ? 'report--play' : ''}" ${play ? `data-action="skip-report" style="--step:${STEP}s; --end:${(steps.length + 1) * STEP + 0.6}s"` : ''}>
       ${renderReportSummary(m.timeline)}
       <ol class="timeline">
-        ${steps.map((text, i) => `<li class="timeline__item"><span class="timeline__node" aria-hidden="true">${i + 1}</span><p class="timeline__text">${esc(text)}</p></li>`).join('')}
-        ${outcome.length ? `<li class="timeline__item timeline__item--end timeline__item--${esc(result ?? 'plain')}">
+        ${steps.map((text, i) => `<li class="timeline__item" style="--i:${i}"><span class="timeline__node" aria-hidden="true">${i + 1}</span><p class="timeline__text">${esc(text)}</p></li>`).join('')}
+        ${outcome.length ? `<li class="timeline__item timeline__item--end timeline__item--${esc(result ?? 'plain')}" style="--i:${steps.length}">
           <span class="timeline__node" aria-hidden="true">${end[0]}</span>
           <div class="timeline__text"><p class="timeline__label">${esc(end[1])}</p>
-            <ul class="timeline__results">${outcome.map((o) => `<li class="tone--${esc(o.tone)}">${esc(o.text)}</li>`).join('')}</ul></div>
+            <ul class="timeline__results">${outcome.map((o, i) => `<li class="tone--${esc(o.tone)}" style="--r:${i}">${esc(o.text)}</li>`).join('')}</ul></div>
         </li>` : ''}
       </ol>
-      ${renderFullLog(m.timeline)}`;
+      ${renderFullLog(m.timeline)}
+    </div>`;
 }
 
 /** Joss's opener and what the run came down to (core/report.js). Headings with nothing behind them are left out. */
@@ -603,9 +612,11 @@ function renderReportSummary(t) {
     sum.hurt?.length && ['What hurt us', sum.hurt.join(' ')],
   ].filter(Boolean);
   return `
+      <div class="reporthead">
       ${orders}
       ${sum.intro ? `<p class="reportjoss"><span class="reportjoss__name">${esc(NAMES.partner)}</span> ${esc(sum.intro)}</p>` : ''}
-      ${rows.length ? `<dl class="reportsum">${rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>` : ''}`;
+      ${rows.length ? `<dl class="reportsum">${rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>` : ''}
+      </div>`;
 }
 
 const STAT_LABEL = (s) => (s ? s[0].toUpperCase() + s.slice(1) : '');
