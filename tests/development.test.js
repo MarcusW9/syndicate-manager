@@ -148,9 +148,9 @@ test('recruits: ceilings fit their tier, and every lead has a scout opinion', ()
 
 test('the read on potential is in words and follows the scout error', () => {
   const op = makeRookie({ start: 11, ceiling: 18 });
-  assert.match(potentialRead(op, 'Teo'), /special/);
-  assert.match(potentialRead({ ...op, scoutError: -2 }, 'Teo'), /better than most pros/);
-  assert.match(potentialRead({ ...op, stats: { ...op.stats, stealth: 18 } }, 'Teo'), /past the easy gains/);
+  assert.match(potentialRead(op, 'Teo'), /one of the best in the city/);
+  assert.match(potentialRead({ ...op, scoutError: -2 }, 'Teo'), /grow into the hard jobs/);
+  assert.match(potentialRead({ ...op, stats: { ...op.stats, stealth: 18 } }, 'Teo'), /hit their wall/);
 });
 
 test('hiring keeps the tier and hidden potential', () => {

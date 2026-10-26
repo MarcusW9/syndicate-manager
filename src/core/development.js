@@ -132,22 +132,27 @@ function potentialBand(op) {
   return 'some';
 }
 
+// The read is in the crew's terms, not a sports-style "star" rating: what kind of job
+// someone could carry one day, and how near their wall (the soft ceiling in pointCost)
+// they are. Bands line up with job threat (STAT_FOR_THREAT in risk.js): 'special' ~ the
+// threat-5 work, 'strong' ~ threat 4, 'some' tops out around threat 3.
+
 /** The crew's opinion of someone's ceiling, as a sentence. */
 export function potentialRead(op, scoutName, nameOverride) {
   const who = scoutName ?? 'Your scout';
   const name = nameOverride ?? op.handle;
   return {
-    peaked: `${who}: "${name} is past the easy gains. It'll come slowly from here."`,
-    close: `${who} thinks ${name} is close to their best already.`,
-    special: `${who} thinks ${name} could be special.`,
-    strong: `${who} reckons ${name} will be better than most pros you could hire, given the work.`,
-    some: `${who} thinks ${name} will come on a bit, but won't be a star.`,
+    peaked: `${who}: "${name}'s hit their wall. More comes slow from here."`,
+    close: `${who} thinks ${name} is nearly at their wall.`,
+    special: `${who} reckons ${name} could be one of the best in the city, the kind a crew builds its biggest jobs around.`,
+    strong: `${who} reckons ${name} will grow into the hard jobs, given the work.`,
+    some: `${who} thinks ${name} will be a steady pair of hands, but the big jobs will always be a stretch.`,
   }[potentialBand(op)];
 }
 
 /** The same read in a few words, for the crew list. */
 export function potentialTag(op) {
-  return { peaked: 'past the easy gains', close: 'close to their best', special: 'could be special', strong: 'still has a lot to give', some: 'will come on a bit' }[potentialBand(op)];
+  return { peaked: 'at their wall', close: 'nearly at their wall', special: 'built for the big jobs', strong: 'grows into hard jobs', some: 'a steady pair of hands' }[potentialBand(op)];
 }
 
 // --- growth -----------------------------------------------------------------

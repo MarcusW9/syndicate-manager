@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-26 · Work through the week, new scout reads
+- **New jobs trickle in:** instead of three jobs landing every Monday, one comes in early in the week, one midweek and one late in the week, each with its own inbox message. Every job stays on the board for a week from the day it arrived.
+- Freelancers and street talk still change on Mondays.
+- **Scout reads in our own words:** the crew now judges a recruit by the jobs they could handle one day ("built for the big jobs", "grows into hard jobs", "a steady pair of hands") and how close they are to their wall ("nearly at their wall", "at their wall"), instead of football-scout talk. 164 tests.
+
 ## 2026-10-25 · Tidier crew cards
 - **Crew cards line up:** someone who's away no longer has a taller card than the people beside them.
 - The name and codename sit on one line, with the status next to their role and the fatigue and morale bars next to the scout's note. On a phone the status and bars get a row of their own.

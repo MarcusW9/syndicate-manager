@@ -201,8 +201,8 @@ test('the crew-size badge shows the same penalty the rolls use', async () => {
 
 test('the crew-list scout tag agrees with the full read, and never shows a number', async () => {
   const { potentialTag, potentialRead } = await import('../src/core/development.js');
-  const pairs = [['could be special', /special/], ['still has a lot to give', /better than most pros/], ['will come on a bit', /come on a bit/],
-    ['close to their best', /close to their best/], ['past the easy gains', /past the easy gains/]];
+  const pairs = [['built for the big jobs', /one of the best in the city/], ['grows into hard jobs', /grow into the hard jobs/], ['a steady pair of hands', /always be a stretch/],
+    ['nearly at their wall', /nearly at their wall/], ['at their wall', /hit their wall/]];
   const cases = [{ start: 11, ceiling: 18 }, { start: 11, ceiling: 16 }, { start: 11, ceiling: 14 }, { start: 13, ceiling: 14 }, { start: 14, ceiling: 14 }];
   cases.forEach((c, i) => {
     const op = makeRookie(c);
