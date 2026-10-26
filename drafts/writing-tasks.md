@@ -10,7 +10,7 @@ files. Rough lines are fine; anything off gets flagged, not silently changed.
 
 | # | Task | Needed for | Size | Source to paste |
 |---|---|---|---|---|
-| 1 | Report lines for older crises (4 batches; **A, B and C done 2026-10-26**) | Mission logs, auto-run, side tasks | 12 crises left | `drafts/writing/report-lines-D.md` |
+| 1 | ~~Report lines for older crises~~ **Done 2026-10-26** (all 4 batches in the game) | Mission logs, auto-run, side tasks | — | — |
 | 2 | Hand-written Container 409 mission log | The go / no-go test for mission logs | One log | `drafts/writing/container409-source.md` |
 | 3 | Action templates by stat and phase (any district) | Mission logs | ~85 templates | none |
 | 4 | District pack: the Docks (vocabulary and faction overlays) | Mission logs | ~120 short entries | none |
@@ -66,10 +66,9 @@ experienced. Templates times packs gives variety without writing every combinati
 
 ## Task 1 · Report lines for older crises
 
-Batch D: Penthouse/Protection is the last one (A, B and C are in the game). One chat per batch is fine. Bracketed tags in
-the source show every mechanical effect, including bonuses that only apply on success
-("[pay +40%]"); a line should end with the ones that apply to it, and a cost marked
-"costs anyway" applies to both success and failure.
+**Done 2026-10-26:** every crisis in the game has its report lines, and `tests/reports.test.js`
+keeps it that way. New jobs and crises need them from the start; this prompt still works
+for any new crisis written without them (paste the crisis text where it says SOURCE).
 
 ```
 TASK: For each crisis below, write a plain one-line `report` for every choice: a success
@@ -96,7 +95,7 @@ CRISIS cutter
 - abort | success: A Wet Sleeve cutter came close; the crew left their post.
 
 SOURCE:
-(paste drafts/writing/report-lines-D.md here)
+(paste the crises here)
 ```
 
 ---
