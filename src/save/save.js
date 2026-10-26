@@ -258,5 +258,12 @@ function migrate(state) {
     // top to bottom. Older reports keep their single paragraph; the screen splits it into lines.
     state.version = 15;
   }
+  if (state.version === 15) {
+    // v16 records each job as events ({ kind, actor, stat, die, need, success, costs, why })
+    // for the report's full log, and hands-off runs keep their standing orders. A job saved
+    // mid-way starts its record now; older reports have no full log and show without one.
+    if (state.activeMission) state.activeMission.events ??= [];
+    state.version = 16;
+  }
   return state;
 }

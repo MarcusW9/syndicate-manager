@@ -1,0 +1,141 @@
+// Hands-off runs and the recorded job (mission logs, first slice, 2026-10-26). Run with: npm test
+
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { createNewGame, SAVE_VERSION } from '../src/core/state.js';
+import * as M from '../src/core/mission.js';
+import { addOffer, templateById } from '../src/core/jobs.js';
+import { autoRun, ORDERS } from '../src/core/autorun.js';
+import { REPORT_LOGS_KEPT } from '../src/core/report.js';
+import { MISSIONS } from '../src/data/missions.js';
+import { playMission, carefulPolicy } from './play.js';
+
+globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+const { importSave } = await import('../src/save/save.js');
+
+/** A fresh game with one offer of this job, crewed by the first n people, sent hands-off. */
+function sendOff(seed, templateId, orders, { n } = {}) {
+  let s = createNewGame({ seed, startCrew: 'fresh' });
+  s.jobs = [];
+  addOffer(s, templateId);
+  const size = n ?? templateById(templateId).crewSize;
+  s = M.startMission(s, s.jobs[0].id, s.crew.slice(0, size).map((o) => o.id), 'stealth');
+  const done = autoRun(s, orders);
+  return { done, report: done.inbox.find((m) => m.type === 'report') };
+}
+
+const rookieJobs = MISSIONS.filter((m) => m.rookie).map((m) => m.id);
+
+test('a hands-off crew never pushes on and never loses anyone, under any orders', () => {
+  for (let seed = 1; seed <= 120; seed++) {
+    for (const orders of Object.keys(ORDERS)) {
+      const { done, report } = sendOff(seed, rookieJobs[seed % rookieJobs.length], orders, { n: 1 }); // short-handed: more failures
+      assert.equal(done.activeMission.done, true);
+      assert.deepEqual(done.activeMission.result.deaths, [], `seed ${seed} ${orders}`);
+      assert.ok(!report.timeline.events.some((e) => e.kind === 'critical' && e.action === 'push'), 'never pushes on');
+      assert.equal(report.timeline.orders, orders);
+      // The numbered timeline is the report lines, one per choice taken: none may go missing.
+      const taken = report.timeline.events.filter((e) => ['roll', 'sure', 'exit'].includes(e.kind) && e.report).map((e) => e.report);
+      assert.deepEqual(report.timeline.steps, taken, `seed ${seed} ${orders}: timeline matches the record`);
+    }
+  }
+});
+
+test('even the harder jobs, short-handed and on Committed orders, bring everyone home', () => {
+  for (let seed = 1; seed <= 60; seed++) {
+    for (const id of ['kidnap', 'penthouse', 'warehouse']) {
+      const { done } = sendOff(seed, id, 'committed', { n: 1 });
+      assert.deepEqual(done.activeMission.result.deaths, [], `${id} seed ${seed}`);
+    }
+  }
+});
+
+test('every pick on a hands-off run says why', () => {
+  for (let seed = 1; seed <= 40; seed++) {
+    const { report } = sendOff(seed, 'container409', 'steady');
+    for (const e of report.timeline.events.filter((x) => ['roll', 'sure', 'exit', 'critical'].includes(x.kind))) {
+      assert.ok(e.why, `seed ${seed}: ${e.kind} ${e.choice ?? e.action} has no reason`);
+    }
+  }
+});
+
+test('the record matches the dice: die + value against need decides every roll', () => {
+  for (let seed = 1; seed <= 80; seed++) {
+    const { report } = sendOff(seed, rookieJobs[seed % rookieJobs.length], 'committed');
+    for (const e of report.timeline.events.filter((x) => x.kind === 'roll')) {
+      assert.equal(e.die + e.value >= e.need, e.success, `seed ${seed} ${e.crisis}`);
+      assert.ok(e.die >= 1 && e.die <= 20);
+    }
+  }
+});
+
+test('a choice names the person who actually rolls (and who gets hurt)', () => {
+  let checked = 0;
+  for (let seed = 1; seed <= 150; seed++) {
+    const { done, report } = sendOff(seed, rookieJobs[seed % rookieJobs.length], 'committed');
+    const tpl = templateById(done.activeMission.templateId);
+    for (const e of report.timeline.events.filter((x) => x.kind === 'roll')) {
+      const crisis = tpl.crises.find((c) => c.id === e.crisis);
+      if (!crisis || crisis.focusRole) continue; // a focus role's text is about the focus person
+      if (crisis.choices.find((c) => c.id === e.choiceId).label.includes('{op}')) {
+        assert.ok(e.choice.includes(e.actor.handle), `${e.crisis}: "${e.choice}" should name ${e.actor.handle}`);
+        checked += 1;
+      }
+      if (e.injury) assert.equal(e.injury.id, e.actor.id, `${e.crisis}: the roller takes the hurt`);
+    }
+  }
+  assert.ok(checked > 50, `checked ${checked} choices`);
+});
+
+test('the summary only claims what the record shows', () => {
+  for (let seed = 1; seed <= 100; seed++) {
+    const { report } = sendOff(seed, rookieJobs[seed % rookieJobs.length], ['cautious', 'steady', 'committed'][seed % 3], { n: 1 + (seed % 2) });
+    const { events, summary } = report.timeline;
+    if (summary.turning) assert.ok(events[summary.turning.event], 'turning point is a recorded event');
+    if (summary.standout) {
+      const who = summary.standout.text.split(':')[0];
+      assert.ok(events.some((e) => e.kind === 'roll' && e.success && e.actor.handle === who), `standout ${who} made a roll work`);
+    }
+    const failed = events.some((e) => e.kind === 'roll' && !e.success);
+    const paid = events.some((e) => e.kind !== 'exit' && (e.choiceCost?.payCut ?? 0) > 0);
+    if (!failed && !paid) assert.deepEqual(summary.hurt.filter((h) => !h.includes('whatever the roll')), [], 'nothing hurt, nothing listed');
+    if (summary.introKind === 'clean') assert.ok(!failed && !paid);
+    assert.ok(summary.intro, 'Joss always opens the report');
+  }
+});
+
+test('Cautious walks away more often than Committed', () => {
+  const aborts = (orders) => {
+    let n = 0;
+    for (let seed = 1; seed <= 150; seed++) if (sendOff(seed, rookieJobs[seed % rookieJobs.length], orders, { n: 1 }).done.activeMission.aborted) n += 1;
+    return n;
+  };
+  assert.ok(aborts('cautious') > aborts('committed'));
+});
+
+test('a played job keeps its full log too, and old ones are trimmed to the last few', () => {
+  let s = createNewGame({ seed: 7, startCrew: 'fresh' });
+  for (let i = 0; i < REPORT_LOGS_KEPT + 3; i++) {
+    s.jobs = []; addOffer(s, 'container409');
+    s = M.startMission(s, s.jobs[0].id, s.crew.slice(0, 2).map((o) => o.id), 'stealth');
+    s = M.closeMission(playMission(s, carefulPolicy).state);
+    for (const op of s.crew) { op.condition.awayUntil = 0; op.condition.fatigue = 0; op.condition.injury = 'healthy'; op.condition.injuryDays = 0; }
+  }
+  const reports = s.inbox.filter((m) => m.type === 'report');
+  assert.ok(reports[0].timeline.events.length, 'the newest played report has its log');
+  assert.equal(reports.filter((m) => m.timeline.events).length, REPORT_LOGS_KEPT);
+  assert.ok(reports.every((m) => m.timeline.summary), 'every report keeps its summary');
+});
+
+test('a v15 save with a job in progress upgrades and the job finishes with a log', async () => {
+  let s = createNewGame({ seed: 8, startCrew: 'fresh' });
+  s.jobs = []; addOffer(s, 'container409');
+  s = M.startMission(s, s.jobs[0].id, s.crew.slice(0, 2).map((o) => o.id), 'stealth');
+  delete s.activeMission.events;
+  s.version = 15;
+  const loaded = await importSave({ text: async () => JSON.stringify(s) });
+  assert.equal(loaded.version, SAVE_VERSION);
+  assert.deepEqual(loaded.activeMission.events, []);
+  const done = playMission(loaded, carefulPolicy).state;
+  assert.ok(done.inbox.find((m) => m.type === 'report').timeline.events.length);
+});

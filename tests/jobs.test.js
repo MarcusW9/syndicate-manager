@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { createNewGame, SAVE_VERSION } from '../src/core/state.js';
 import { advanceDay } from '../src/core/time.js';
 import * as M from '../src/core/mission.js';
-import { addOffer, jobView, refreshJobs, templateById, TWIST_CHANCE } from '../src/core/jobs.js';
+import { addOffer, jobView, postJobs, templateById, TWIST_CHANCE } from '../src/core/jobs.js';
 import { adjustTrust, trustOf, driftTrust, WONT_CALL } from '../src/core/clients.js';
 import { makeRng } from '../src/core/rng.js';
 import { MISSIONS } from '../src/data/missions.js';
@@ -126,12 +126,12 @@ test('trust changes pay, and a client below 20 stops calling', () => {
   for (const c of CLIENTS) adjustTrust(s, c.id, c.id === 'fung' ? 0 : -100);
   adjustTrust(s, 'fung', 50 - trustOf(s, 'fung'));
   s.jobs = [];
-  for (let i = 0; i < 20; i++) { s.day += 7; refreshJobs(s); s.jobs = []; }
+  for (let i = 0; i < 20; i++) { s.day += 7; driftTrust(s); postJobs(s); s.jobs = []; }
   // Others drifted up a little but stay below WONT_CALL for a while; only fung should be calling at first.
   const t = createNewGame({ seed: 8 });
   for (const c of CLIENTS) if (c.id !== 'okonkwo') adjustTrust(t, c.id, -100);
   t.jobs = [];
-  refreshJobs(t);
+  postJobs(t);
   for (const j of t.jobs) assert.equal(j.clientId, 'okonkwo');
   assert.ok(trustOf(t, 'fung') < WONT_CALL);
 });
@@ -173,7 +173,7 @@ test('job gates: a new crew is only offered jobs its reputation has unlocked', a
     const s = createNewGame({ seed: 11, startCrew: 'fresh' });
     s.reputation = rep;
     const seen = new Set();
-    for (let i = 0; i < 40; i++) { s.day += 7; s.jobs = []; refreshJobs(s); for (const j of s.jobs) seen.add(j.templateId); }
+    for (let i = 0; i < 40; i++) { s.day += 7; s.jobs = []; postJobs(s); for (const j of s.jobs) seen.add(j.templateId); }
     for (const id of seen) assert.ok(jobGate(id) <= rep, `rep ${rep} was offered ${id}`);
     assert.ok([...seen].some((id) => templateById(id).rookie), `rep ${rep}: rookie work still turns up`);
     const top = Math.max(0, ...Object.entries(JOB_GATES).filter(([, g]) => g <= rep).map(([t]) => Number(t)));
@@ -186,7 +186,7 @@ test('job gates: games started before them keep an open board', () => {
   const s = createNewGame({ seed: 12 });
   assert.equal(s.jobGates, false);
   const seen = new Set();
-  for (let i = 0; i < 40; i++) { s.day += 7; s.jobs = []; refreshJobs(s); for (const j of s.jobs) seen.add(templateById(j.templateId).threat); }
+  for (let i = 0; i < 40; i++) { s.day += 7; s.jobs = []; postJobs(s); for (const j of s.jobs) seen.add(templateById(j.templateId).threat); }
   assert.ok(seen.has(4) && seen.has(5), 'big work is still offered at reputation 0');
 });
 
@@ -194,9 +194,9 @@ test('the board adds up to 3 new jobs a week and holds up to 5', async () => {
   const { MAX_OFFERS, NEW_PER_WEEK } = await import('../src/core/jobs.js');
   const s = createNewGame({ seed: 13, startCrew: 'fresh' });
   s.jobs = [];
-  refreshJobs(s);
+  postJobs(s);
   assert.equal(s.jobs.length, NEW_PER_WEEK);
-  s.day += 1; refreshJobs(s);
+  s.day += 1; postJobs(s);
   assert.equal(s.jobs.length, MAX_OFFERS);
 });
 
@@ -210,4 +210,47 @@ test('a finished job earns REP_PER_THREAT per threat level; an abort costs ABORT
   const expected = done.activeMission.aborted ? 0 : threat * M.REP_PER_THREAT;
   assert.equal(done.reputation, Math.round(expected * 10) / 10);
   assert.equal(M.REP_PER_THREAT, 0.75, 'tuned 2026-10-25 for the long climb (PLAN-PROGRESSION.md)');
+});
+
+// Trickle (2026-10-26): new work comes in through the week, not all on Monday.
+test('new work trickles in: one job in each part of the week, never all on one day', async () => {
+  const { arrivalDays, ARRIVAL_WINDOWS } = await import('../src/core/jobs.js');
+  let s = createNewGame({ seed: 14, startCrew: 'fresh' });
+  const arrivals = new Map(); // day -> new offers that day
+  let seq = s.jobSeq;
+  for (let d = 0; d < 7 * 20; d++) {
+    s.jobs = []; // keep the board clear so every arrival has room
+    s = advanceDay(s);
+    if (s.jobSeq > seq) arrivals.set(s.day, s.jobSeq - seq);
+    seq = s.jobSeq;
+  }
+  for (const n of arrivals.values()) assert.equal(n, 1, 'one job at a time');
+  for (let week = 1; week < 20; week++) {
+    const monday = week * 7 + 1;
+    const days = [...arrivals.keys()].filter((d) => d >= monday && d < monday + 7);
+    assert.deepEqual(days, arrivalDays(s, monday), `week ${week + 1}`);
+    days.forEach((d, i) => assert.ok(ARRIVAL_WINDOWS[i].includes(d - monday), `week ${week + 1}: arrival ${i} in its window`));
+  }
+  const weekdays = new Set([...arrivals.keys()].map((d) => (d - 1) % 7));
+  assert.ok(weekdays.size >= 6, 'arrivals land on most days of the week over a season');
+});
+
+test('each offer stays a week from the day it came in, and says so in the inbox', () => {
+  let s = createNewGame({ seed: 15, startCrew: 'fresh' });
+  for (let d = 0; d < 14; d++) s = advanceDay(s);
+  for (const j of s.jobs) assert.equal(j.expiresDay, j.offeredDay + 6);
+  const msg = s.inbox.find((m) => m.type === 'job');
+  assert.match(msg.subject, /^New job: /);
+});
+
+test('a gated board still gets small work every week', () => {
+  let s = createNewGame({ seed: 16, startCrew: 'fresh' });
+  s.reputation = 40;
+  const weeks = new Map();
+  for (let d = 0; d < 7 * 12; d++) {
+    s.jobs = [];
+    s = advanceDay(s);
+    for (const j of s.jobs) if (templateById(j.templateId).rookie) weeks.set(Math.floor((s.day - 1) / 7), true);
+  }
+  for (let w = 1; w < 12; w++) assert.ok(weeks.get(w), `week ${w + 1} had rookie work`);
 });

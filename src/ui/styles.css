@@ -219,6 +219,9 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
   .list--cols { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 8px; }
   .cols2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 28px; align-items: start; }
   .cols2--flow { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+  /* City map: the map's column is only as wide as the map draws (its height cap × 360/520,
+     see .citymap below), so the district card sits right beside it instead of across a gap. */
+  .cols2--map { grid-template-columns: min(460px, calc(max(360px, 100dvh - 300px) * 360 / 520)) minmax(0, 1fr); }
   /* Planning a job: crew on the left; client, approach and risk read beside them, so the risk updates in view as you pick. */
   .plangrid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); grid-template-rows: auto auto 1fr; column-gap: 28px; align-items: start;
     grid-template-areas: "crew client" "crew approach" "crew risk"; }
@@ -300,6 +303,25 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .timeline__item--loss .timeline__node { border-color: var(--danger); color: var(--danger); }
 .timeline__label { margin: 0 0 4px; font-family: var(--display, inherit); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.85rem; }
 .timeline__results { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+/* Job report summary and full log (core/report.js, save v16). Tap to expand; nothing on hover. */
+.reportjoss { margin: 1rem 0 0.5rem; padding: 10px 12px; border-left: 3px solid var(--accent-2); background: color-mix(in srgb, var(--accent-2) 8%, transparent); line-height: 1.5; }
+.reportjoss__name { display: block; color: var(--accent-2); font-family: var(--display, inherit); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.reportsum { margin: 0 0 0.5rem; display: grid; gap: 8px; }
+.reportsum div { display: grid; gap: 2px; }
+.reportsum dt { color: var(--muted); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.reportsum dd { margin: 0; line-height: 1.5; }
+.flog { border: 1px solid var(--line); border-radius: var(--radius); margin: 1rem 0; }
+.flog > summary { min-height: var(--tap); display: flex; align-items: center; padding: 0 12px; cursor: pointer; font-weight: 600; }
+.flog__body { padding: 0 12px 12px; }
+.flog__phase { margin: 12px 0 6px; color: var(--muted); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.flog__beat { margin: 0 0 8px; color: var(--muted); font-style: italic; line-height: 1.5; }
+.flog__twist { margin: 0 0 8px; color: var(--warn); font-weight: 600; }
+.flog__step { margin: 0 0 12px; padding-left: 10px; border-left: 2px solid var(--line); display: grid; gap: 4px; }
+.flog__step p { margin: 0; line-height: 1.5; }
+.flog__why { color: var(--muted); font-size: 0.85rem; }
+.flog__roll > summary { min-height: var(--tap); display: inline-flex; align-items: center; cursor: pointer; font-family: var(--display, inherit); font-weight: 700; letter-spacing: 0.04em; }
+.flog__roll p { margin: 0 0 4px; }
+.handsoff__go { margin-top: 8px; }
 .tone--good { color: #5fe0a5; }
 .tone--warn { color: var(--warn); }
 .tone--bad { color: var(--danger); }

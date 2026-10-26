@@ -1,4 +1,4 @@
-// Job board: offers appear on Mondays and expire after a week. Pure logic.
+// Job board: new work trickles in through the week and each offer stays a week. Pure logic.
 //
 // An offer is a mission template plus variations: a client, pay +/-25%,
 // threat +/-1, and sometimes a hidden twist (usually hinted on the board).
@@ -6,9 +6,9 @@
 import { MISSIONS } from '../data/missions.js';
 import { TWISTS } from '../data/twists.js';
 import { CLIENTS } from '../data/clients.js';
-import { pick } from './rng.js';
+import { pick, makeRng } from './rng.js';
 import { nextRng } from './random.js';
-import { callingClients, trustOf, trustPay, driftTrust } from './clients.js';
+import { callingClients, trustOf, trustPay } from './clients.js';
 import { rumourFor } from './rumours.js';
 
 export const templateById = (id) => MISSIONS.find((m) => m.id === id);
@@ -16,7 +16,19 @@ export const twistById = (id) => TWISTS.find((t) => t.id === id) ?? null;
 
 // A busier board of smaller work (PLAN-PROGRESSION.md step 0: rookies need ~3 jobs a week).
 export const MAX_OFFERS = 5;
-export const NEW_PER_WEEK = 3;
+
+// New work trickles in rather than landing all at once: one offer in each window
+// (Mon-Tue, Wed-Thu, Fri-Sun), on a day picked from the save's seed and the week, so
+// it's the same on reload without storing anything and never uses up the game's rng.
+export const ARRIVAL_WINDOWS = [[0, 1], [2, 3], [4, 5, 6]];
+export const NEW_PER_WEEK = ARRIVAL_WINDOWS.length;
+
+/** The days new work comes in during the week that `day` falls in. */
+export function arrivalDays(state, day) {
+  const monday = day - ((day - 1) % 7);
+  const rng = makeRng((state.seed ^ Math.imul(monday, 2654435761)) >>> 0);
+  return ARRIVAL_WINDOWS.map((w) => monday + pick(rng, w));
+}
 
 // Reputation needed before a job of this (template) threat is offered; rookie jobs are
 // always open. Even threat-1 work outside the rookie jobs (the courier run) waits a few
@@ -90,24 +102,34 @@ export function jobView(state, job) {
   };
 }
 
-/** Weekly refresh: drop expired offers, clients drift towards neutral, add up to NEW_PER_WEEK new offers. Mutates the (cloned) state. */
-export function refreshJobs(state) {
+/** Daily: offers past their last day leave the board, and on an arrival day new work comes in. Mutates the (cloned) state. */
+export function tickJobs(state) {
   state.jobs = state.jobs.filter((j) => j.expiresDay >= state.day);
-  driftTrust(state);
+  const slot = arrivalDays(state, state.day).indexOf(state.day);
+  if (slot >= 0) postJobs(state, 1, { slot });
+}
+
+/**
+ * Add up to `count` new offers, while the board has room. `slot` is the first one's place
+ * in the week's arrivals: on a gated board the week's first is always small work, and only
+ * the first two can be walk-ins. Mutates the (cloned) state; returns how many were added.
+ */
+export function postJobs(state, count = NEW_PER_WEEK, { slot = 0 } = {}) {
   const rng = nextRng(state);
   const open = MISSIONS.filter((m) => jobUnlocked(state, m.id));
   // Walk-in work (walkIn: true, e.g. the market delivery) has no client and turns up on its own.
   const walkIns = open.filter((m) => m.walkIn);
   const rookieWork = open.filter((m) => m.rookie);
   let added = 0;
-  while (state.jobs.length < MAX_OFFERS && added < NEW_PER_WEEK) {
+  while (state.jobs.length < MAX_OFFERS && added < count) {
+    const n = slot + added;
     const clients = callingClients(state).filter((c) => c.jobs.some((id) => jobUnlocked(state, id)));
-    if (state.jobGates && added === 0 && rookieWork.length) {
+    if (state.jobGates && n === 0 && rookieWork.length) {
       // A gated board always has some small work, so a crew is never priced out of earning.
       const tpl = pick(rng, rookieWork);
       const client = clients.filter((c) => c.jobs.includes(tpl.id));
       addOffer(state, tpl.id, { rng, clientId: client.length ? weighted(rng, client).id : null });
-    } else if (walkIns.length && added <= 1 && rng() < 1 / 3) {
+    } else if (walkIns.length && n <= 1 && rng() < 1 / 3) {
       addOffer(state, pick(rng, walkIns).id, { rng, clientId: null });
     } else if (clients.length) {
       const client = weighted(rng, clients);
@@ -117,12 +139,22 @@ export function refreshJobs(state) {
     }
     added += 1;
   }
-  if (added) {
+  if (added === 1) {
+    const job = state.jobs.at(-1);
+    const client = CLIENTS.find((c) => c.id === job.clientId);
     state.inbox.unshift({
       id: `jobs-${state.day}`, type: 'job', day: state.day,
-      subject: `${added} new job${added > 1 ? 's' : ''} on the board`,
-      body: 'Fresh work came in over the weekend. Check the Jobs screen.',
+      subject: `New job: ${templateById(job.templateId).name}`,
+      body: `${client ? `${client.name} has work for the crew.` : 'Walk-in work, no client attached.'} It's on the board for a week.`,
+      blocking: false, read: false,
+    });
+  } else if (added) {
+    state.inbox.unshift({
+      id: `jobs-${state.day}`, type: 'job', day: state.day,
+      subject: `${added} new jobs on the board`,
+      body: 'Fresh work came in. Check the Jobs screen.',
       blocking: false, read: false,
     });
   }
+  return added;
 }

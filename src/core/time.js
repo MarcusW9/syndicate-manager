@@ -1,6 +1,7 @@
 // Calendar and the daily tick. Pure logic: takes state, returns new state.
 
-import { refreshJobs } from './jobs.js';
+import { tickJobs } from './jobs.js';
+import { driftTrust } from './clients.js';
 import { scoutWeek } from './recruits.js';
 import { refreshFreelancers } from './freelance.js';
 import { ageCrew } from './development.js';
@@ -69,9 +70,10 @@ export function advanceDay(prev) {
 
   if (calendar(state.day).isSunday) settleWeek(state);
   if (calendar(state.day).isMonday && calendar(state.day).week === 1) newSeason(state);
-  if (calendar(state.day).isMonday) refreshJobs(state);
+  if (calendar(state.day).isMonday) driftTrust(state); // clients drift back towards neutral
   if (calendar(state.day).isMonday) refreshFreelancers(state);
   if (calendar(state.day).isMonday) rollRumour(state);
+  tickJobs(state); // offers expire; new work trickles in through the week
   if (calendar(state.day).weekday === 'Wed') scoutWeek(state);
   state.recruits = (state.recruits ?? []).filter((r) => r.expiresDay >= state.day);
 

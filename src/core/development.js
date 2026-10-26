@@ -10,6 +10,7 @@
 //   growthLog  [{ stat, from, to, day }] for this season's rises and declines
 
 import { ROLE_PROFILES } from '../data/recruitPools.js';
+import { NAMES } from '../config/names.js';
 
 export const STATS = ['combat', 'stealth', 'tech', 'social', 'driving', 'medical', 'cool'];
 
@@ -120,34 +121,41 @@ export function scoutFor(crew, role, excludeId) {
   return others.find((o) => o.traits.includes('veteran')) ?? [...others].sort((a, b) => b.stats.cool - a.stats.cool)[0] ?? null;
 }
 
-/** Which way the crew reads someone's ceiling: 'peaked' (at or past it) | 'close' | 'special' | 'strong' | 'some'. Uses scoutError, so it can be wrong. */
+/** Which way the crew reads someone's ceiling: 'peaked' (at or past it) | 'close' | 'legend' | 'special' | 'strong' | 'some'. Uses scoutError, so it can be wrong. */
 function potentialBand(op) {
   const now = op.stats[primaryStat(op)];
   const seen = clamp((op.potential?.[primaryStat(op)] ?? now) + (op.scoutError ?? 0), now, 20);
   const room = seen - now;
   if (room <= 0) return 'peaked';
   if (room === 1) return 'close';
+  if (seen >= MAX_STAT) return 'legend'; // a ceiling of 20: about 1 rookie in 50, or a scout who's too hopeful
   if (seen >= 18) return 'special';
   if (seen >= 16) return 'strong';
   return 'some';
 }
+
+// The read is in the crew's terms, not a sports-style "star" rating: what kind of job
+// someone could carry one day, and how near their wall (the soft ceiling in pointCost)
+// they are. Bands line up with job threat (STAT_FOR_THREAT in risk.js): 'legend' is the
+// best there is, 'special' ~ the threat-5 work, 'strong' ~ threat 4, 'some' tops out around threat 3.
 
 /** The crew's opinion of someone's ceiling, as a sentence. */
 export function potentialRead(op, scoutName, nameOverride) {
   const who = scoutName ?? 'Your scout';
   const name = nameOverride ?? op.handle;
   return {
-    peaked: `${who}: "${name} is past the easy gains. It'll come slowly from here."`,
-    close: `${who} thinks ${name} is close to their best already.`,
-    special: `${who} thinks ${name} could be special.`,
-    strong: `${who} reckons ${name} will be better than most pros you could hire, given the work.`,
-    some: `${who} thinks ${name} will come on a bit, but won't be a star.`,
+    peaked: `${who}: "${name}'s hit their wall. More comes slow from here."`,
+    close: `${who} thinks ${name} is nearly at their wall.`,
+    legend: `${who} has never seen anything like ${name}. Could be one of the best ${NAMES.city} has ever had.`,
+    special: `${who} reckons ${name} could be top-tier, the kind a crew builds its biggest jobs around.`,
+    strong: `${who} reckons ${name} will grow into the hard jobs, given the work.`,
+    some: `${who} thinks ${name} will be a steady pair of hands, but the big jobs will always be a stretch.`,
   }[potentialBand(op)];
 }
 
 /** The same read in a few words, for the crew list. */
 export function potentialTag(op) {
-  return { peaked: 'past the easy gains', close: 'close to their best', special: 'could be special', strong: 'still has a lot to give', some: 'will come on a bit' }[potentialBand(op)];
+  return { peaked: 'at their wall', close: 'nearly at their wall', legend: 'could be one of the greats', special: 'built for the big jobs', strong: 'grows into hard jobs', some: 'a steady pair of hands' }[potentialBand(op)];
 }
 
 // --- growth -----------------------------------------------------------------

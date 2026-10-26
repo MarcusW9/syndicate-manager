@@ -106,6 +106,27 @@
  * @property {string[]} beats          Narrated beats, in order
  * @property {Crisis[]} crises         Pool; 2-3 drawn per run
  * @property {number} heat             Heat gained on completion (0 on every job: heat comes from Loud and crisis costs)
+ * @property {boolean} [handsOff]      Can be sent hands-off under standing orders (core/autorun.js)
+ */
+
+/**
+ * One recorded moment of a job, for the report's full log (mission.js; save v16).
+ * @typedef {Object} RunEvent
+ * @property {'beat'|'twist'|'roll'|'sure'|'exit'|'critical'|'aftermath'} kind
+ * @property {string} [text]           Beat or crisis text, filled in
+ * @property {string} [choice]         The choice taken, filled in
+ * @property {string|null} [why]       Hands-off runs: why the orders picked it
+ * @property {{id: string, handle: string}} [actor]  Who rolled
+ * @property {string} [stat]
+ * @property {number} [value]          The roller's number after every bonus
+ * @property {string[]} [notes]        Where the bonuses came from
+ * @property {number|null} [die]       The d20 (null when no roll)
+ * @property {number} [need]           Total needed: 10 + difficulty
+ * @property {boolean} [success]
+ * @property {Object} [choiceCost]     Paid whatever the roll
+ * @property {Object} [outcomeCost]    Paid because of how the roll went
+ * @property {{id: string, handle: string, severity: string}|null} [injury]  Exactly who was hurt
+ * @property {string|null} [report]    The plain report line
  */
 
 /**
