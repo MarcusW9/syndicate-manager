@@ -1,8 +1,8 @@
 # Crisis situations: review
 
 Claude's draft (2026-10-26) of what kind of situation each crisis is. They're already in the
-game data as `situations` (not yet used by anything the player sees). Skim, and say which to
-change; an empty list is fine. Earned traits from the backlog will use them next.
+game data as `situations` (not yet used by anything the player sees). The owner skimmed it on
+2026-10-26; say if anything else should change. Earned traits group 2 use them next.
 
 ## The list
 - `escape`: Getting away under pressure: a pursuit, a lockdown, a cordon.
@@ -14,23 +14,26 @@ change; an empty list is fine. Earned traits from the backlog will use them next
 - `threat`: Someone threatens, squeezes or blocks the crew.
 - `injury`: Someone badly hurt, or a medical emergency.
 - `police`: Harbour Police or the Wet Sleeve.
+- `law`: Any authority: police, customs officers, inspectors (every police crisis is law too).
 - `neural`: Implants, neural load, work that pushes the brain.
 - `weather`: Typhoon signals and gales.
 
-## Calls worth a second look
-- **checkpoint_goods** (customs officers at the district border): left without `police`, since
-  Rattled by Sirens is about the Harbour Police. Customs could count too.
+## Settled with the owner (2026-10-26)
+- **law**: added as the umbrella for any authority. Every `police` crisis is `law` too; customs
+  officers (checkpoint_goods) and the Hoi-Sing meter inspector (meter_man) are `law` but not `police`
+  (Rattled by Sirens stays about the Harbour Police).
+- **Dogs count as a `fight`** (dock_dog, dog): Corner Fighter counts them.
+- **The two "collector" crises** are now collector1 (The Favourite) and collector2 (Last Ticket).
+
+## Still worth a second look
 - **cutter** (a Wet Sleeve cutter drifting at the stack): `police` only, not `escape`: the crew
   hides or distracts, they don't run.
 - **ot_seizure** (a man's neural port smoking in a crowd): `crowd`, `injury` and `neural`, all three.
-- **dock_dog**, **dog**: `fight`: a dog, not a person. Corner Fighter would count them.
-- **beacon**, **tracked_crate**, **nm_tracker**: trackers called `street-tech` (planted by people
-  on the street), not `corp-tech`.
+- **beacon**, **tracked_crate**, **nm_tracker**: trackers called `street-tech`, not `corp-tech`.
 - **client_panic** (the herbalist sees someone she knows): `crowd`, as a street with eyes on it.
 - **gallery** (the owner's people "very curious about our horse"): `threat` and `escape`.
-- **Untagged on purpose**: sampan, pit_boss, big_hand, checkpoint_goods, shrine, cracked_vial,
-  whistler, backwards, leak, catwalk, new_chrome, feed_bucket, forger, twist_bonus. None fits a
-  trait cleanly.
+- **Untagged on purpose**: sampan, pit_boss, big_hand, shrine, cracked_vial, whistler, backwards,
+  leak, catwalk, new_chrome, feed_bucket, forger, twist_bonus. None fits a trait cleanly.
 
 ## Shared crises (any job in a district, or any rookie job)
 - **ot_seizure** `crowd` `injury` `neural`: A man drops in the alley outside a tea shop, shaking, his neural port smoking. A crowd closes in around him, and around …
@@ -38,10 +41,10 @@ change; an empty list is fine. Earned traits from the backlog will use them next
 - **ot_blackout** `street-tech`: Somebody's illegal grid splice blows in a basement. The whole block goes black: stairwells, streetlights, everything.
 - **dk_drones** `corp-tech` `fight`: A crate seal splits and something inside starts to hum. Corporate security drones, packed in foam, are waking up one at …
 - **dk_gale** `weather` `escape`: The Signal 3 goes up. The dock gates lock themselves for the gale, and Aether-Harbour security starts sweeping the yard.
-- **dk_wet_sleeve** `police` `threat` `neural`: Harbour Police at the gate: a "neural-load check". The Wet Sleeve unit wants to scan everyone's implants, and they want …
+- **dk_wet_sleeve** `police` `law` `threat` `neural`: Harbour Police at the gate: a "neural-load check". The Wet Sleeve unit wants to scan everyone's implants, and they want …
 - **nm_tracker** `street-tech`: The cash card the client gave you for expenses is pinging. Someone has planted a Silver Fan tracker in your money.
 - **nm_pulse** `neural` `street-tech` `crowd`: A data-broker feud spills into the street. Someone fires a pulse that fries every cheap implant on the block, and {tech}…
-- **nm_clinic** `police` `threat`: The fastest way through is a back-alley chrome clinic. On the table, under the lamp, a senior Harbour Police commander i…
+- **nm_clinic** `police` `law` `threat`: The fastest way through is a back-alley chrome clinic. On the table, under the lamp, a senior Harbour Police commander i…
 - **gh_wiped** `corp-tech` `escape`: Your inside contact's badge stops working mid-job. They've just been fired and wiped from the directory, and you're fort…
 - **gh_trial** `neural` `corp-tech` `crowd`: A neural-enhancement demo in the lobby goes wrong. The broadcast leaks into every implant nearby, and {tech} starts reci…
 - **gh_skybridge** `escape` `corp-tech`: Lockdown. The sky-bridge doors seal at both ends with you in the middle, sixty floors over the city. The only other way …
@@ -52,7 +55,7 @@ change; an empty list is fine. Earned traits from the backlog will use them next
 ## Data Courier Run
 - **tail** `escape`: The van is still on you. {driver} glances in the mirror: "Lose them or lead them in?"
 - **contact_nervous** `threat`: The laundromat contact is sweating. He wants to "check the drive" in the back room.
-- **checkpoint** `police` `escape`: Police have thrown up a checkpoint on the flyover. They are scanning every car. {driver} has maybe ten seconds to decide…
+- **checkpoint** `police` `law` `escape`: Police have thrown up a checkpoint on the flyover. They are scanning every car. {driver} has maybe ten seconds to decide…
 - **typhoon** `weather`: The Signal 8 typhoon warning goes up mid-run. Rain comes sideways and the underpass ahead is already flooding.
 - **beacon** `street-tech`: The drive starts pinging. Somebody built a tracker into it, and it just switched on.
 - **shakedown** `threat`: At a red light, a man taps on the window. He knows the crew, knows the job, and wants a cut to keep quiet.
@@ -79,7 +82,7 @@ change; an empty list is fine. Earned traits from the backlog will use them next
 - **hostage_hurt** `injury` `escape`: The accountant has been beaten badly. He can barely stand, and the stairs are steep.
 - **ransom_call** `threat`: The kidnappers' phone rings. It's their boss. If nobody answers, he'll send more people.
 - **wrong_floor** `entry` `threat`: The floor plan was wrong. There's a mahjong game going in the next room: six men, and they're all armed.
-- **police_sirens** `police` `escape`: Sirens. Someone called the police about the noise. They'll be here in minutes, and the hostage is a witness.
+- **police_sirens** `police` `law` `escape`: Sirens. Someone called the police about the noise. They'll be here in minutes, and the hostage is a witness.
 
 ## Casino Con
 - **pit_boss** _(none)_: The pit boss is watching {face}'s hands closely. He signals for the dealer to change the shoe.
@@ -103,14 +106,14 @@ change; an empty list is fine. Earned traits from the backlog will use them next
 - **toll_collector** `threat`: A polite young man in a suit flags the van down. "Red Lantern road. There's a fee."
 - **client_panic** `crowd`: The herbalist sees someone she knows on the street and panics. She wants to get out of the van, now.
 - **ambush** `fight` `escape`: A car pulls across the van at a junction. Doors open. This was planned.
-- **checkpoint_goods** _(none)_: Customs officers are inspecting vans at the district border. Some of the dried goods are not exactly legal.
+- **checkpoint_goods** `law`: Customs officers are inspecting vans at the district border. Some of the dried goods are not exactly legal.
 
 ## Clinic Night
 - **bleeder** `injury`: The door bangs open and a man half-falls down the stairs, a towel pressed to his ribs. {siu} doesn't look up from the ch…
 - **collectors** `threat` `fight`: Two men with Silver Fan pins come down the stairs, polite as bankers. "Mr. Tam owes us money. We know he's here."
 - **power_cut** `street-tech`: The bulb dies mid-stitch. Upstairs, someone swears at a Hoi-Sing meter. In the dark, the doc's voice is very calm: "Ligh…
 - **screaming_implant** `neural` `street-tech` `injury`: A delivery rider clutches their ear: the implant is shrieking feedback only they can hear. {siu} slaps pliers into {op}'…
-- **police_pair** `police` `threat`: Two officers come down the stairs, in a pair as always in Old Town. One taps the humming generator with his baton. "Lice…
+- **police_pair** `police` `law` `threat`: Two officers come down the stairs, in a pair as always in Old Town. One taps the humming generator with his baton. "Lice…
 
 ## Herbal Run
 - **wet_steps** `street-tech`: Black algae coats the stone steps of Alley 4, and each crate weighs forty kilos.
@@ -129,7 +132,7 @@ change; an empty list is fine. Earned traits from the backlog will use them next
 - **hired_help** `fight` `threat`: Ah-Wah has spent some of Rao's money on help: a big man in a vest, cracking his knuckles on the landing.
 
 ## Container 409
-- **cutter** `police`: A Wet Sleeve cutter cuts its engine and drifts blind through the fog towards your stack.
+- **cutter** `police` `law`: A Wet Sleeve cutter cuts its engine and drifts blind through the fog towards your stack.
 - **groaning_stack** `street-tech`: The wind shifts off the bay. A stack of rusted containers above you groans and starts to creep.
 - **dock_dog** `fight`: A feral dock dog, ribs showing through wet fur, snarls at the hum of your earpieces.
 - **whistler** _(none)_: An Aether-Harbour night-shift forklift comes down your row, headlights on. The driver is whistling.
@@ -138,7 +141,7 @@ change; an empty list is fine. Earned traits from the backlog will use them next
 
 ## Market Delivery
 - **crush** `crowd`: A mahjong parlour lets out and the alley fills shoulder to shoulder. The crate is slipping.
-- **meter_man** `threat`: A Hoi-Sing meter inspector in a hi-vis jacket waves the trike down. "That battery charged off a stall? Show me the recei…
+- **meter_man** `threat` `law`: A Hoi-Sing meter inspector in a hi-vis jacket waves the trike down. "That battery charged off a stall? Show me the recei…
 - **leak** _(none)_: The crate starts dripping. It isn't water: it smells of ozone and burnt sugar, and it hisses where it lands.
 - **raincoat** `crowd`: A man in a raincoat has been three stalls behind you since the Neon Dragon. He stops when you stop.
 
@@ -168,14 +171,14 @@ change; an empty list is fine. Earned traits from the backlog will use them next
 - **old_hand** `threat`: A grey-haired stable hand steps out of Pepper's stall with a pitchfork. "Seven years I've brushed her. Nobody touches he…
 - **feed_bucket** _(none)_: There's a smell in Pepper's feed bucket that isn't oats. Somebody has already been here.
 - **vet** `corp-tech`: A vet in a Veridian-Apex lab coat arrives with a case. "Routine pre-race scan." Nobody booked one.
-- **collector** `threat` `fight`: Under the betting hall, a Silver Fan collector says he knows who paid the stable hands. Information costs.
+- **collector1** `threat` `fight`: Under the betting hall, a Silver Fan collector says he knows who paid the stable hands. Information costs.
 
 ## Last Ticket
 - **eleven_seconds** `street-tech`: The hall's security footage skips exactly eleven seconds. Hoi-Sing's log calls it a routine fault.
 - **sweepers** `corp-tech`: Cleaning drones are already vacuuming the hall's slips into a compactor. The ticket might be in there.
 - **runner** `crowd`: A young runner in cleaner's gloves sees you coming and bolts up the terrace steps into the crowd.
 - **forger** _(none)_: An Undercroft forger offers you "your ticket" for ¥2,000. It looks perfect. That's the problem.
-- **collector** `threat` `fight`: A Silver Fan collector has the ticket pinned to his board against a jockey's debt. "Possession is the whole law, down he…
+- **collector2** `threat` `fight`: A Silver Fan collector has the ticket pinned to his board against a jockey's debt. "Possession is the whole law, down he…
 - **window** `corp-tech`: At the payout window the clerk frowns. "Big ticket. I need the holder's biometrics." The holder is in Glass Heights.
 
 ## Wrong Horse
@@ -189,7 +192,7 @@ change; an empty list is fine. Earned traits from the backlog will use them next
 ## Twists (any job)
 - **twist_more_guards** `fight` `entry`: There are twice as many guards as the client said. Somebody either didn't know or didn't want you to.
 - **twist_double_cross** `threat` `fight`: At the handover, the client's people try to take everything without paying. Hands are already inside jackets.
-- **twist_tipoff** `police` `escape`: Unmarked cars at both ends of the street. Somebody tipped off the police about this job.
+- **twist_tipoff** `police` `law` `escape`: Unmarked cars at both ends of the street. Somebody tipped off the police about this job.
 - **twist_rival_crew** `threat` `fight`: Another crew is here for the same job. Masks, guns, and they look as surprised as you are.
 - **twist_bonus** _(none)_: Something the client didn't mention: a safe, an unlocked office, a second crate. Nobody would know if you took it.
 

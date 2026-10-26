@@ -94,7 +94,7 @@ export const LAST_TICKET = {
       ],
     },
     {
-      id: 'collector',
+      id: 'collector2',
       situations: ['threat', 'fight'],
       after: 2, order: 1,
       text: 'A Silver Fan collector has the ticket pinned to his board against a jockey\'s debt. "Possession is the whole law, down here."',

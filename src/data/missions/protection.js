@@ -102,7 +102,7 @@ export const PROTECTION = {
     },
     {
       id: 'checkpoint_goods',
-      situations: [],
+      situations: ['law'],
       text: 'Customs officers are inspecting vans at the district border. Some of the dried goods are not exactly legal.',
       choices: [
         { id: 'papers', label: '{face} shows the herbalist\'s paperwork with confidence', kind: 'adapt', stat: 'social', difficulty: 11,

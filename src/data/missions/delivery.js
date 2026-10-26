@@ -43,7 +43,7 @@ export const DELIVERY = {
     },
     {
       id: 'meter_man',
-      situations: ['threat'],
+      situations: ['threat', 'law'],
       text: 'A Hoi-Sing meter inspector in a hi-vis jacket waves the trike down. "That battery charged off a stall? Show me the receipt."',
       choices: [
         { id: 'receipt', label: '{op} invents a receipt on the spot', kind: 'adapt', stat: 'social', difficulty: 6,

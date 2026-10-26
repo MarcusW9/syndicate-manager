@@ -100,7 +100,7 @@ export const KIDNAP = {
     },
     {
       id: 'police_sirens',
-      situations: ['police', 'escape'],
+      situations: ['police', 'law', 'escape'],
       text: 'Sirens. Someone called the police about the noise. They\'ll be here in minutes, and the hostage is a witness.',
       choices: [
         { id: 'leave_him', label: 'Leave the hostage for the police to find', kind: 'adapt', stat: 'cool', sure: true, difficulty: 0, cost: { payCut: 0.5, clientTrust: -5 },

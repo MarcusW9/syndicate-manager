@@ -91,7 +91,7 @@ export const DISTRICT_CRISES = {
     },
     {
       id: 'dk_wet_sleeve',
-      situations: ['police', 'threat', 'neural'],
+      situations: ['police', 'law', 'threat', 'neural'],
       text: 'Harbour Police at the gate: a "neural-load check". The Wet Sleeve unit wants to scan everyone\'s implants, and they want to be paid for the trouble.',
       choices: [
         { id: 'pay', label: 'Pay them', kind: 'adapt', sure: true, stat: 'cool', difficulty: 0, cost: { cash: -400 },
@@ -146,7 +146,7 @@ export const DISTRICT_CRISES = {
     },
     {
       id: 'nm_clinic',
-      situations: ['police', 'threat'],
+      situations: ['police', 'law', 'threat'],
       text: 'The fastest way through is a back-alley chrome clinic. On the table, under the lamp, a senior Harbour Police commander is getting illegal implants. He sees you.',
       choices: [
         { id: 'promise', label: '{face} promises you saw nothing', kind: 'adapt', stat: 'social', difficulty: 12, failureCost: { heat: 2 },

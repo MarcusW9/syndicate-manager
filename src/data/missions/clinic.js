@@ -99,7 +99,7 @@ export const CLINIC = {
     },
     {
       id: 'police_pair',
-      situations: ['police', 'threat'],
+      situations: ['police', 'law', 'threat'],
       text: 'Two officers come down the stairs, in a pair as always in Old Town. One taps the humming generator with his baton. "Licence?"',
       choices: [
         { id: 'pay', label: 'Pay them for the generator', kind: 'adapt', sure: true, stat: 'cool', difficulty: 0, cost: { cash: -300 },

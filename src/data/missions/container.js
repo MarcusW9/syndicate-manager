@@ -24,7 +24,7 @@ export const CONTAINER = {
   crises: [
     {
       id: 'cutter',
-      situations: ['police'],
+      situations: ['police', 'law'],
       text: 'A Wet Sleeve cutter cuts its engine and drifts blind through the fog towards your stack.',
       choices: [
         { id: 'shadow', label: '{op} melts into the shadow of a container wall', kind: 'adapt', stat: 'stealth', difficulty: 6,

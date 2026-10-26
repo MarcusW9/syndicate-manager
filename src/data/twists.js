@@ -40,7 +40,7 @@ export const TWISTS = [
   },
   {
     id: 'twist_tipoff',
-    situations: ['police', 'escape'],
+    situations: ['police', 'law', 'escape'],
     name: 'Police tip-off',
     text: 'Unmarked cars at both ends of the street. Somebody tipped off the police about this job.',
     choices: [

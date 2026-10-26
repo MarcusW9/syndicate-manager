@@ -13,6 +13,7 @@ export const SITUATIONS = {
   threat: 'Someone threatens, squeezes or blocks the crew.',
   injury: 'Someone badly hurt, or a medical emergency.',
   police: 'Harbour Police or the Wet Sleeve.',
+  law: 'Any authority: police, customs officers, inspectors (every police crisis is law too).',
   neural: 'Implants, neural load, work that pushes the brain.',
   weather: 'Typhoon signals and gales.',
 };

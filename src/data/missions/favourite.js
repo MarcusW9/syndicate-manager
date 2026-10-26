@@ -109,7 +109,7 @@ export const FAVOURITE = {
       ],
     },
     {
-      id: 'collector',
+      id: 'collector1',
       situations: ['threat', 'fight'],
       after: 2, order: 1, // the name, before post time
       text: 'Under the betting hall, a Silver Fan collector says he knows who paid the stable hands. Information costs.',

@@ -77,7 +77,7 @@ const BASE_MISSIONS = [
       },
       {
         id: 'checkpoint',
-        situations: ['police', 'escape'],
+        situations: ['police', 'law', 'escape'],
         text: 'Police have thrown up a checkpoint on the flyover. They are scanning every car. {driver} has maybe ten seconds to decide.',
         focusRole: 'driver',
         choices: [

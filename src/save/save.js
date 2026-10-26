@@ -284,5 +284,19 @@ function migrate(state) {
     for (const op of state.crew) { op.earned ??= []; op.track ??= {}; }
     state.version = 19;
   }
+  if (state.version === 19) {
+    // v20: two crises shared the id 'collector'; The Favourite's is now collector1 and Last
+    // Ticket's collector2. A job saved mid-way (played or hands-off) keeps its place.
+    const renamed = { favourite: 'collector1', last_ticket: 'collector2' };
+    const fix = (am) => {
+      const to = am && renamed[am.templateId];
+      if (!to) return;
+      for (const q of am.queue ?? []) if (q.type === 'crisis' && q.id === 'collector') q.id = to;
+      for (const e of am.events ?? []) if (e.crisis === 'collector') e.crisis = to;
+    };
+    fix(state.activeMission);
+    for (const j of state.awayJobs ?? []) fix(j.mission);
+    state.version = 20;
+  }
   return state;
 }
