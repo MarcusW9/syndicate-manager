@@ -11,6 +11,7 @@ import { checkRenewal } from './renewals.js';
 import { HEAT_COOL_WEEKLY, clampHeat, checkHeatNotice } from './heat.js';
 import { rollRumour } from './rumours.js';
 import { money } from './money.js';
+import { returnCrews } from './autorun.js';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAYS_PER_SEASON = 364; // 52 weeks
@@ -77,7 +78,7 @@ export function advanceDay(prev) {
   if (calendar(state.day).weekday === 'Wed') scoutWeek(state);
   state.recruits = (state.recruits ?? []).filter((r) => r.expiresDay >= state.day);
 
-  return state;
+  return returnCrews(state); // hands-off crews back today file their reports
 }
 
 /** Season turn: everyone a year older; past 40, stats start to slip. */

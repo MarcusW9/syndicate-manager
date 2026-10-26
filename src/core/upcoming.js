@@ -5,6 +5,7 @@ import { calendar, weeklyBill } from './time.js';
 import { availability, isAway } from './crew.js';
 import { templateById } from './jobs.js';
 import { NOTICE_COOLDOWN_DAYS } from './renewals.js';
+import { awayJobs } from './autorun.js';
 
 export const HORIZON_DAYS = 7;
 const EXHAUSTED_AT = 85; // availability(): above this, nobody works
@@ -62,10 +63,19 @@ export function upcoming(state, horizon = HORIZON_DAYS) {
     if (within(r.expiresDay)) items.push({ day: r.expiresDay, kind: 'lead-last', name: r.handle, role: r.role });
   }
 
+  // A hands-off crew coming back is one line with its report, not one line per person.
+  const reporting = new Set();
+  for (const j of awayJobs(state)) {
+    if (!within(j.returnDay)) continue;
+    const names = j.crewIds.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean).map((o) => o.handle);
+    j.crewIds.forEach((id) => reporting.add(`${id}@${j.returnDay}`));
+    items.push({ day: j.returnDay, kind: 'report', name: j.name, names });
+  }
+
   for (const op of state.crew) {
     const c = op.condition;
     if (c.injury === 'dead') continue;
-    if (isAway(state, op) && within(c.awayUntil)) items.push({ day: c.awayUntil, kind: 'back', name: op.handle });
+    if (isAway(state, op) && within(c.awayUntil) && !reporting.has(`${op.id}@${c.awayUntil}`)) items.push({ day: c.awayUntil, kind: 'back', name: op.handle });
     if (c.injury !== 'healthy' && c.injuryDays > 0 && within(state.day + c.injuryDays)) {
       items.push({ day: state.day + c.injuryDays, kind: 'healed', name: op.handle, injury: c.injury });
     }
@@ -79,6 +89,6 @@ export function upcoming(state, horizon = HORIZON_DAYS) {
     }
   }
 
-  const ORDER = ['season', 'board', 'back', 'healed', 'rested', 'scout', 'job-last', 'lead-last', 'reask', 'bills'];
+  const ORDER = ['season', 'board', 'report', 'back', 'healed', 'rested', 'scout', 'job-last', 'lead-last', 'reask', 'bills'];
   return items.sort((a, b) => a.day - b.day || ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind));
 }

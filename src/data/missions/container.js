@@ -10,7 +10,6 @@ export const CONTAINER = {
   district: 'docks',
   threat: 1,
   rookie: true,
-  handsOff: true, // can be sent hands-off under standing orders (core/autorun.js); the first job to offer it
   pay: 1600,
   days: 1,
   crewSize: 2,

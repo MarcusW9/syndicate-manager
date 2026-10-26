@@ -139,3 +139,89 @@ test('a v15 save with a job in progress upgrades and the job finishes with a log
   const done = playMission(loaded, carefulPolicy).state;
   assert.ok(done.inbox.find((m) => m.type === 'report').timeline.events.length);
 });
+
+// Timing (2026-10-26): a hands-off crew reports back when it returns, not when it's sent.
+const { sendOff: send, awayJobs } = await import('../src/core/autorun.js');
+const { advanceDay } = await import('../src/core/time.js');
+const { upcoming } = await import('../src/core/upcoming.js');
+
+function sentGame(seed) {
+  const s = createNewGame({ seed, startCrew: 'fresh' });
+  const job = s.jobs.find((j) => j.templateId === 'container409');
+  const crew = s.crew.slice(0, 2).map((o) => o.id);
+  return { before: s, after: send(s, job.id, crew, 'stealth', 'steady'), crew, jobId: job.id };
+}
+
+test('sending a crew off changes nothing yet: no pay, no heat, no report; they are away and the job is gone', () => {
+  for (let seed = 1; seed <= 30; seed++) {
+    const { before, after, crew, jobId } = sentGame(seed);
+    assert.equal(after.cash, before.cash);
+    assert.equal(after.heat, before.heat);
+    assert.equal(after.activeMission, null);
+    assert.ok(!after.inbox.some((m) => m.type === 'report'));
+    assert.ok(!after.jobs.some((j) => j.id === jobId), 'the offer is taken');
+    for (const id of crew) assert.equal(after.crew.find((o) => o.id === id).condition.awayUntil, after.day + 1);
+    assert.equal(awayJobs(after).length, 1);
+    const up = upcoming(after);
+    const due = up.find((i) => i.kind === 'report' && i.day === after.day + 1);
+    assert.ok(due, 'the week ahead says when the report comes');
+    assert.equal(due.names.length, 2, 'with who is bringing it');
+    assert.ok(!up.some((i) => i.kind === 'back' && due.names.includes(i.name)), 'one line, not one per person');
+  }
+});
+
+test('the next day the crew is back and the report, pay and heat land together', () => {
+  for (let seed = 1; seed <= 30; seed++) {
+    const { after, crew } = sentGame(seed);
+    const next = advanceDay(after);
+    const report = next.inbox.find((m) => m.type === 'report');
+    assert.ok(report, `seed ${seed}: report arrived`);
+    assert.equal(report.day, after.day + 1);
+    assert.equal(report.read, false, 'it waits to be opened');
+    assert.equal(report.timeline.orders, 'steady');
+    assert.deepEqual(next.awayJobs, []);
+    assert.equal(next.activeMission, null);
+    for (const id of crew) {
+      const op = next.crew.find((o) => o.id === id);
+      assert.ok(op, 'nobody lost');
+      assert.ok(op.condition.awayUntil <= next.day, 'back today, not away another day');
+    }
+  }
+});
+
+test('a freelancer out on a hands-off job stays with it when another job ends first', () => {
+  let s = createNewGame({ seed: 31, startCrew: 'fresh' });
+  const f = s.freelancers[0];
+  const job = s.jobs.find((j) => j.templateId === 'container409');
+  s = send(s, job.id, [s.crew[0].id, f.id], 'stealth', 'steady');
+  const other = s.jobs[0];
+  s = M.startMission(s, other.id, s.crew.filter((o) => !o.freelance && (o.condition.awayUntil ?? 0) <= s.day).slice(0, 2).map((o) => o.id), 'stealth');
+  s = M.closeMission(playMission(s, carefulPolicy).state);
+  assert.ok(s.crew.some((o) => o.id === f.id), 'still on the hands-off job');
+  s = advanceDay(s);
+  assert.ok(!s.crew.some((o) => o.id === f.id), 'goes home once that job is done');
+  assert.ok(s.inbox.find((m) => m.type === 'report' && m.timeline.orders));
+});
+
+test('a v16 save upgrades with no crews out', async () => {
+  const s = createNewGame({ seed: 32, startCrew: 'fresh' });
+  delete s.awayJobs;
+  s.version = 16;
+  const loaded = await importSave({ text: async () => JSON.stringify(s) });
+  assert.equal(loaded.version, SAVE_VERSION);
+  assert.deepEqual(loaded.awayJobs, []);
+});
+
+test('a crew out on a hands-off job comes back with its report after a save and load', async () => {
+  const { after } = sentGame(33);
+  const loaded = await importSave({ text: async () => JSON.stringify(after) });
+  assert.ok(advanceDay(loaded).inbox.some((m) => m.type === 'report'));
+});
+
+test('every rookie job can be sent hands-off; bigger jobs not yet', async () => {
+  const { handsOffAllowed } = await import('../src/core/autorun.js');
+  for (const m of MISSIONS) assert.equal(handsOffAllowed(m), !!m.rookie, m.id);
+  const s = createNewGame({ seed: 34, startCrew: 'fresh' });
+  s.jobs = []; addOffer(s, 'warehouse');
+  assert.equal(send(s, s.jobs[0].id, s.crew.slice(0, 3).map((o) => o.id), 'stealth', 'steady'), s, 'a big job stays hands-on');
+});

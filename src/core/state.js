@@ -8,7 +8,7 @@ import { prepareOperative } from './development.js';
 import { refreshFreelancers } from './freelance.js';
 import { ECONOMY } from '../data/economy.js';
 
-export const SAVE_VERSION = 16;
+export const SAVE_VERSION = 17;
 
 // A rookie crew's first board: small work only.
 export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];
@@ -68,6 +68,7 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
     jobSeq: 0,
     rngCounter: 0,
     activeMission: null,
+    awayJobs: [], // hands-off jobs out, finished when the crew is back (core/autorun.js)
     recruits: [],
     freelancers: [],
     recruitSeq: 0,

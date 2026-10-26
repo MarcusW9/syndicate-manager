@@ -4,9 +4,13 @@
 //
 // Death rule: a hands-off crew never pushes on. At any critical state it extracts, so a
 // hands-off job can't kill anyone (DESIGN.md, 2026-10-26).
+//
+// Timing: sendOff starts the job and sets it aside (state.awayJobs, save v17) with the crew
+// away; returnCrews plays it out on the day they get back, so pay, heat and injuries land
+// with the report and nothing shows early.
 
 import { templateById } from './jobs.js';
-import { crisisOdds, chooseOption, revealBeat, resolveCritical, currentStep } from './mission.js';
+import { crisisOdds, chooseOption, revealBeat, resolveCritical, currentStep, startMission, closeMission } from './mission.js';
 
 const pct = (n) => `${Math.round(n * 100)}%`;
 
@@ -90,4 +94,52 @@ export function autoRun(prev, ordersId) {
   }
   if (!s.activeMission.done) throw new Error('Hands-off run did not finish');
   return s;
+}
+
+/** Can this job be sent hands-off? Every rookie job can; others only if marked handsOff (DESIGN.md, 2026-10-26). */
+export const handsOffAllowed = (tpl) => Boolean(tpl?.handsOff ?? tpl?.rookie);
+
+const crewNames = (handles) => (handles.length > 1 ? `${handles.slice(0, -1).join(', ')} and ${handles.at(-1)}` : handles[0]);
+
+/** Send a crew off on a job hands-off. They're away until it ends; the report comes back then. */
+export function sendOff(prev, jobId, crewIds, approach, ordersId) {
+  const job = prev.jobs.find((j) => j.id === jobId);
+  if (!job || !handsOffAllowed(templateById(job.templateId))) return prev;
+  const s = startMission(prev, jobId, crewIds, approach);
+  if (s === prev) return prev;
+  const am = s.activeMission;
+  const tpl = templateById(am.templateId);
+  am.orders = ORDERS[ordersId] ? ordersId : 'steady';
+  am.startedDay = s.day;
+  const returnDay = s.day + tpl.days;
+  const crew = am.crewIds.map((id) => s.crew.find((o) => o.id === id)).filter(Boolean);
+  for (const op of crew) op.condition.awayUntil = returnDay;
+  s.awayJobs = [...(s.awayJobs ?? []), { returnDay, mission: am }];
+  s.activeMission = null;
+  const who = crewNames(crew.map((o) => o.handle));
+  s.inbox.unshift({
+    id: `sent-${am.jobId}`, type: 'job', day: s.day,
+    subject: `${who} ${crew.length > 1 ? 'are' : 'is'} out on ${tpl.name}`,
+    body: `Sent hands-off on ${ORDERS[am.orders].name} orders. The report comes back ${tpl.days === 1 ? 'tomorrow' : `in ${tpl.days} days`}, when they do.`,
+    blocking: false, read: true,
+  });
+  return s;
+}
+
+/** Daily: crews back from hands-off jobs play them out and file their reports. Returns the new state. */
+export function returnCrews(prev) {
+  const due = (prev.awayJobs ?? []).filter((j) => j.returnDay <= prev.day);
+  if (!due.length || prev.activeMission) return prev;
+  let s = structuredClone(prev);
+  s.awayJobs = s.awayJobs.filter((j) => j.returnDay > s.day);
+  for (const j of due) {
+    s.activeMission = j.mission;
+    s = closeMission(autoRun(s, j.mission.orders));
+  }
+  return s;
+}
+
+/** Hands-off jobs still out: [{ returnDay, name, crewIds }]. */
+export function awayJobs(state) {
+  return (state.awayJobs ?? []).map((j) => ({ returnDay: j.returnDay, name: templateById(j.mission.templateId)?.name ?? j.mission.templateId, crewIds: j.mission.crewIds }));
 }
