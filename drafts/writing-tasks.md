@@ -12,10 +12,10 @@ files. Rough lines are fine; anything off gets flagged, not silently changed.
 |---|---|---|---|---|
 | 1 | Report lines for older crises (4 batches) | Mission logs, auto-run, side tasks | 59 crises, ~180 lines | `drafts/writing/report-lines-A.md` … `D.md` |
 | 2 | Hand-written Container 409 mission log | The go / no-go test for mission logs | One log | `drafts/writing/container409-source.md` |
-| 3 | Minor-check lines, the Docks | Mission logs | ~85 lines | none |
-| 4 | Track lines, the Docks | Mission logs | ~30 lines | none |
-| 5 | Phase lines, the Docks | Mission logs | ~20 lines | none |
-| 6 | Summary lines (any district) | Mission logs | ~40 lines | none |
+| 3 | Action templates by stat and phase (any district) | Mission logs | ~85 templates | none |
+| 4 | District pack: the Docks (vocabulary and faction overlays) | Mission logs | ~120 short entries | none |
+| 5 | Joss's framing lines | Mission logs | ~45 lines | none |
+| 6 | Authored lines for Container 409's key beats | Mission logs | ~12 lines | `drafts/writing/container409-source.md` |
 | 7 | Stat-unlock choices | Choices unlocked by stats | ~15 choices | a report-lines batch, or `container409-source.md` |
 | 8 | One-off side tasks | Side tasks | ~20 tasks | none |
 | 9 | Earned traits | Progression step 2 | ~10 traits | none |
@@ -23,6 +23,14 @@ files. Rough lines are fine; anything off gets flagged, not silently changed.
 
 Tasks 1 and 2 first: 1 is a prerequisite for everything hands-off, and 2 decides whether
 mission logs get built at all. Do 3-6 only if the log in task 2 reads well.
+
+**How a log is assembled (2026-10-26, owner's feedback):** the crisis report lines are the
+factual record and are never contradicted. Around them the log is built from (1) universal
+action templates by stat and phase, (2) a district pack of places, obstacles, sounds and
+objects, (3) faction overlays used only when that faction is actually in the job,
+(4) authored lines for a job's most important beats, and (5) callbacks assembled from events
+recorded earlier in the same run. Joss frames the report; the log itself is what the crew
+experienced. Templates times packs gives variety without writing every combination by hand.
 
 ---
 
@@ -36,6 +44,23 @@ mission logs get built at all. Do 3-6 only if the log in task 2 reads well.
 - Say consequences plainly at the end of a line: `Heat +1.` / `{op} was hurt.` (light) /
   `{op} was badly hurt.` (serious) / `{op} was critically hurt.` (critical).
 - 1 sentence, under ~20 words. Phone-first.
+- **Lantern Bay only.** Draw from the context block's districts, factions, clients and tech.
+  Never invent a new faction, place, technology, or a supernatural cause. No generic
+  "cyberpunk action".
+- **The crew only knows what it saw.** No hidden motives, no naming an unseen enemy, no
+  explaining who's really behind something. "A Wet Sleeve cutter drifts in without lights",
+  not "a cutter working for the Red Lanterns".
+- **Rumours stay rumours.** Superstition (whistling by the water, incense, unlucky numbers)
+  can shape how people act and the mood, but never causes anything. Something odd can be
+  seen ("an unlit lighter that doesn't show on the scanner"), never explained.
+- **Show what the stat did,** in the prose, not as a tag:
+  - combat: force, confrontation, physical control
+  - stealth: concealment, quiet movement, getting in unnoticed
+  - tech: manipulating, repairing or bypassing machines and systems
+  - social: persuasion, deception, negotiation, rapport
+  - driving: handling vehicles, pursuit, escape, moving cargo
+  - medical: diagnosis, stabilising, managing neural-load symptoms
+  - cool: composure, nerve, timing, functioning under pressure
 
 ---
 
@@ -97,7 +122,15 @@ HOW A RUN WORKS:
   the stat after the roll ("Stealth ✓" / "Cool ✗"), at least one callback to an earlier
   event, a trait helping or hurting, and the cost of a gap in the crew.
 
+- Joss frames the report (intro, turning point, standout, what hurt us); the LOG is the
+  crew's own account. Neither claims to know more than the crew saw: no hidden motives,
+  no unseen enemies named, no rumours confirmed, nothing supernatural.
+- Keep it in the Docks: fog, floodlights, cranes, diesel, Aether-Harbour, Red Lantern
+  roads, Wet Sleeve cutters, Pier 12, no whistling by the water. Show what each stat did
+  in the prose, not only as a tag.
+
 FORMAT:
+JOSS: <one-line intro>
 SUMMARY
 - Turning point: <the roll that decided it>
 - Standout: <who, and with what stat>
@@ -118,95 +151,132 @@ SOURCE:
 
 ---
 
-## Task 3 · Minor-check lines, the Docks
+## Task 3 · Action templates by stat and phase (any district)
 
 ```
-TASK: Write short "minor check" lines for jobs in the Docks. A minor check is a small
-moment between the big crises: one crew member, one stat, a quick roll. The success line
-and failure line each nudge a track: ALERT (being noticed), TIME (schedule) or CONDITION
-(fatigue, knocks).
+TASK: Write short action templates for a mission log. A template is a small moment between
+the big crises: one crew member, one stat, a quick roll. Templates are used in EVERY
+district, so the place details are slots filled from a district pack:
+  {place}    a spot ("the container stacks", "the stairwell of Block 9")
+  {obstacle} something in the way ("a locked gate", "a security drone")
+  {sound}    a noise ("a crane's screech", "mahjong tiles slapping")
+  {object}   a thing to use or lose ("a loose strap", "a crate of fish balls")
+  {watcher}  someone who might notice ("a night-shift forklift driver", "a stall owner")
+and {op} / {op2} for crew. Every slot's text is written to work after "the" being
+included, e.g. "{op} slips past {obstacle}" → "Kit slips past a locked gate".
 
-For EACH of the 7 stats (combat, stealth, tech, social, driving, medical, cool), write 6
-moments. Each moment has a success line and a failure line. Spread them over the four
-phases (approach, position, objective, exit) and over the three tracks.
+For EACH of the 7 stats, write 6 moments, spread over the four phases (approach, position,
+objective, exit) and the three tracks: ALERT (being noticed), TIME (schedule), CONDITION
+(fatigue, knocks). Each moment has a success and a failure line. The line must SHOW what
+the stat did (see the stat meanings in the rules).
 
-RULES: present tense (this is a live log), one sentence, under ~18 words. {op} for the
-person rolling; {op2} for a second crew member if needed. Gender-neutral. Docks texture:
-cranes, containers, gantries, salt fog, forklifts, Red Lantern toll booths, Wet Sleeve
-cutters, AHL night shift, feral dogs, diesel. Nothing that needs a reply or a choice.
-The failure is small: noise, delay, a scrape. Never an injury worse than a knock.
+RULES: present tense (a live log), one sentence, under ~18 words, gender-neutral. The
+failure is small: noise, delay, a scrape; never an injury worse than a knock. No district,
+faction or client names: those come from the packs.
 
-FORMAT (exactly, one line per moment):
+FORMAT (exactly):
 <stat> | <phase> | <track> | success: <line> | failure: <line>
 
 EXAMPLE:
-stealth | approach | alert | success: {op} times the gantry lights and slips between the stacks unseen. | failure: {op}'s boot rings on a loose deck plate. Somewhere a radio crackles.
+stealth | approach | alert | success: {op} waits for {sound} to cover each step past {watcher}. | failure: {op} knocks {object}; {watcher} looks up.
 ```
 
 ---
 
-## Task 4 · Track lines, the Docks
+## Task 4 · District pack: the Docks
+
+One chat per district later (Old Town, the Night Market, Glass Heights, the Basin); the
+Docks first, to test with Container 409.
 
 ```
-TASK: Write lines that show a mission's tracks building up, for jobs in the Docks, and
-lines that call back to that build-up later. Tracks: ALERT (how close the crew is to
-being noticed), TIME (behind schedule), CONDITION (tired, knocked about).
+TASK: Write the vocabulary pack for the Docks. Everything here gets dropped into slots in
+mission-log templates, so each entry must read naturally on its own and stay specific to
+this district (harbour fog, amber floodlights, wet tarmac, cranes, diesel, salt water,
+clanking steel, Aether-Harbour infrastructure, Pier 12, night boats, the custom against
+whistling near the water).
 
-For EACH track write:
-- 3 "rising" lines (the track just went up a step),
-- 3 "high" lines (it's now high, and the next big moment will be harder),
-- 4 "callback" lines that refer back to when it started, using {time} for the moment it
-  first rose (e.g. "Since the clang at {time}, the guards have been checking every row.").
+WRITE:
+- place: 12 spots, each a short noun phrase ("the shadow of a gantry crane")
+- obstacle: 12 things in the way
+- sound: 10 noises
+- object: 10 things a crew could use, drop or knock over
+- watcher: 8 people who might notice the crew (no names)
+- phase: 5 atmosphere lines per phase (approach, position, objective, exit), present
+  tense, one sentence, using "the crew", some at night, some at dawn or in rain
+- track: for each track (alert, time, condition) 3 "rising" lines and 3 "high" lines
+- callback: 6 lines that refer back to an earlier event, using {time} for when it
+  happened and {earlier} for a 2-4 word reminder of it ("the dropped strap"):
+  "Since {earlier} at {time}, the night shift has been walking every row."
 
-RULES: present tense, one sentence, under ~18 words, gender-neutral, {op} if a person is
-needed. Docks texture. No new events that would need a roll.
+FACTION OVERLAYS: for each faction with a presence in the Docks (Aether-Harbour Logistics,
+the Red Lanterns, the Wet Sleeve), 4 obstacles, 3 watchers and 3 phase lines that only
+appear when that faction is part of the job. Only what the crew could see or hear.
+
+RULES: everything in the context block's canon; no new factions, places or tech; nothing
+supernatural (people may still avoid whistling); entries under ~12 words, phase and
+track lines under ~20.
 
 FORMAT:
-<track> | rising | <line>
-<track> | high | <line>
-<track> | callback | <line>
+<slot> | <entry>                    e.g.  sound | a crane's screech overhead
+<faction> | <slot> | <entry>         e.g.  Red Lanterns | obstacle | a toll booth with its shutter half down
+phase | <phase> | <line>
+track | <track> | rising/high | <line>
+callback | <line>
 ```
 
 ---
 
-## Task 5 · Phase lines, the Docks
+## Task 5 · Joss's framing lines
 
 ```
-TASK: Write atmosphere lines that open each phase of a job in the Docks. No rolls, no
-events: just where the crew is and what it feels like.
+TASK: Write Joss's lines that frame a mission report. Joss (they/them) introduces the
+report and names the turning point and the standout; the log underneath is the crew's
+own account. Dry and warm, says "we", never claims to know more than the crew saw: no
+hidden motives, no naming unseen enemies, no confirming rumours.
 
-Phases: APPROACH (getting there), POSITION (in place, waiting), OBJECTIVE (doing the
-thing), EXIT (getting out). 5 lines per phase, some at night, some at dawn or in rain.
+WRITE:
+- intro: 4 lines each for: clean success, messy success, aborted, someone badly hurt
+- turning point: 2 per stat (7 stats), naming {op} and showing what the stat did
+- standout: 2 per stat, naming {op}
+- what hurt us: 1 per stat for a failed roll, 1 per stat for a GAP (nobody on the crew
+  had it): "Nobody could talk us past the gate. A face would have saved the bonus."
 
-RULES: present tense, one sentence, under ~20 words. Docks texture. Gender-neutral; use
-"the crew" rather than names.
+RULES: one sentence, under ~18 words, gender-neutral, no district or faction names
+(these are used everywhere).
+
+EXAMPLE (intro, messy success): "They got the crate out. The Wet Sleeve nearly made that
+someone else's problem."
+(That one names the Wet Sleeve, so it would live in a Docks pack instead: keep yours
+generic.)
 
 FORMAT:
-<phase> | <line>
-```
-
----
-
-## Task 6 · Summary lines (any district)
-
-```
-TASK: Write the short lines that open a mission report's summary. Each names a stat so
-the player can see what it did.
-
-Write, for EACH of the 7 stats (combat, stealth, tech, social, driving, medical, cool):
-- 2 TURNING POINT lines: the roll that decided the job ("{op}'s nerve at the gate decided it.")
-- 2 STANDOUT lines: the person who carried it ("{op} carried it on stealth: three clean checks.")
-- 2 WHAT HURT US lines, one for a failed roll and one for a GAP (nobody on the crew had the
-  stat): "Nobody could talk their way past; a face would have saved the bonus."
-
-RULES: past tense, one sentence, under ~18 words, gender-neutral, {op} for the person.
-No district-specific details: these are used everywhere.
-
-FORMAT:
+intro | <clean/messy/aborted/hurt> | <line>
 <stat> | turning | <line>
 <stat> | standout | <line>
 <stat> | hurt-fail | <line>
 <stat> | hurt-gap | <line>
+```
+
+---
+
+## Task 6 · Authored lines for Container 409's key beats
+
+```
+TASK: Write the hand-authored lines for the moments in Container 409 that templates
+shouldn't handle: the arrival at Pier 12, the crate coming off the gantry, the
+Ferryman's handover at dawn, and one lead-in line before each of the job's 6 crises
+(what the crew notices just before it happens).
+
+RULES: present tense, one sentence, under ~22 words, the job's own voice (see its beats);
+the Ferryman's dialogue only from what's in the context block; nothing that contradicts
+the crisis text.
+
+FORMAT:
+beat | <arrival/crate/handover> | <line>
+leadin | <crisis id> | <line>
+
+SOURCE:
+(paste drafts/writing/container409-source.md here)
 ```
 
 ---
