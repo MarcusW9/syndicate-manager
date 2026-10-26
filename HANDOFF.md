@@ -31,7 +31,7 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 
 5. **Joss, next steps** (after the owner plays with the Today briefing): Joss's read on the planning screen, a line in after-action reports, then comms during jobs. Lines go in `src/data/partner.js`; canon in `WORLD.md` ("Joss"). Joss only says what the screen already knows.
 
-6. **Visual system** (DESIGN.md 2026-10-25): step 3 done (Citizen Sleeper-style portraits on the Crew list, profiles and wall). Next: faces on recruits, freelancers and planning if the owner wants; Joss's final design; step 4, hand-drawn faces for the named cast. Earlier: steps 1-2 done (shared style and Joss's icon in `src/ui/art.js`; a style test of three portrait styles and three Joss designs). Waiting on the owner's pick. Step 3: generated portraits in the chosen style replace the initials badges, with states (injured, tired, neural load). Step 4: hand-drawn faces for the named cast.
+6. **Visual system** (DESIGN.md 2026-10-25): step 3 done (Citizen Sleeper-style portraits on the Crew list, profiles and wall). Next: faces on recruits, freelancers and planning if the owner wants; Joss's final design. (Step 4, hand-drawn faces for the named cast, dropped by the owner 2026-10-26.) Earlier: steps 1-2 done (shared style and Joss's icon in `src/ui/art.js`; a style test of three portrait styles and three Joss designs). Waiting on the owner's pick. Step 3: generated portraits in the chosen style replace the initials badges, with states (injured, tired, neural load).
 
 ## Parked (owner's call; don't start without asking)
 
