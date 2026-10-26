@@ -25,6 +25,7 @@ export const WRONG_HORSE = {
   crises: [
     {
       id: 'stall_nine',
+      situations: ['entry', 'threat'],
       after: 0, order: -1, // getting to the stall
       text: 'Private security in Glass Galleries colours is standing on stall nine. The Association doesn\'t hire them.',
       choices: [
@@ -41,6 +42,7 @@ export const WRONG_HORSE = {
     },
     {
       id: 'chip',
+      situations: ['corp-tech'],
       after: 1,
       text: 'The registration chip under the horse\'s neck reads perfectly. Too perfectly: no wear on the log at all.',
       focusRole: 'tech',
@@ -58,6 +60,7 @@ export const WRONG_HORSE = {
     },
     {
       id: 'scar',
+      situations: ['corp-tech'],
       after: 2,
       text: 'Under the mane there\'s a neat surgical scar, three days old. Racing\'s one line: nothing tells a horse how to run.',
       focusRole: 'medic',
@@ -75,6 +78,7 @@ export const WRONG_HORSE = {
     },
     {
       id: 'apex_vet',
+      situations: ['fight'],
       after: 2,
       text: 'A Veridian-Apex vet arrives with a cold box for blood samples from stall nine. He is in a hurry.',
       choices: [
@@ -91,6 +95,7 @@ export const WRONG_HORSE = {
     },
     {
       id: 'real_horse',
+      situations: ['entry'],
       after: 2, order: 1,
       text: 'An old stable hand pulls you aside. "The real one\'s in the old ice store under the Undercroft. She\'s not eating."',
       choices: [
@@ -107,6 +112,7 @@ export const WRONG_HORSE = {
     },
     {
       id: 'gallery',
+      situations: ['threat', 'escape'],
       after: 3,
       text: 'The owner\'s people come down from the Glass Galleries. "You\'ve been very curious about our horse."',
       choices: [

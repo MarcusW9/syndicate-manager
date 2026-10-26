@@ -6,6 +6,7 @@
 export const TWISTS = [
   {
     id: 'twist_more_guards',
+    situations: ['fight', 'entry'],
     name: 'The client lied',
     text: 'There are twice as many guards as the client said. Somebody either didn\'t know or didn\'t want you to.',
     choices: [
@@ -22,6 +23,7 @@ export const TWISTS = [
   },
   {
     id: 'twist_double_cross',
+    situations: ['threat', 'fight'],
     name: 'Double-cross',
     text: 'At the handover, the client\'s people try to take everything without paying. Hands are already inside jackets.',
     choices: [
@@ -38,6 +40,7 @@ export const TWISTS = [
   },
   {
     id: 'twist_tipoff',
+    situations: ['police', 'law', 'escape'],
     name: 'Police tip-off',
     text: 'Unmarked cars at both ends of the street. Somebody tipped off the police about this job.',
     choices: [
@@ -54,6 +57,7 @@ export const TWISTS = [
   },
   {
     id: 'twist_rival_crew',
+    situations: ['threat', 'fight'],
     name: 'Rival crew',
     text: 'Another crew is here for the same job. Masks, guns, and they look as surprised as you are.',
     choices: [
@@ -70,6 +74,7 @@ export const TWISTS = [
   },
   {
     id: 'twist_bonus',
+    situations: [],
     name: 'Unexpected score',
     text: 'Something the client didn\'t mention: a safe, an unlocked office, a second crate. Nobody would know if you took it.',
     choices: [

@@ -26,6 +26,7 @@ export const HERBAL = {
   crises: [
     {
       id: 'wet_steps',
+      situations: ['street-tech'],
       text: 'Black algae coats the stone steps of Alley 4, and each crate weighs forty kilos.',
       focusRole: 'tech',
       choices: [
@@ -42,6 +43,7 @@ export const HERBAL = {
     },
     {
       id: 'silver_fan_arch',
+      situations: ['threat'],
       text: 'Two Silver Fan runners in leather jackets lean against the archway, a long way from the Night Market and smoking like they own the place.',
       choices: [
         { id: 'vent', label: '{op} hauls the crates through a laundry vent above them', kind: 'adapt', stat: 'stealth', difficulty: 6,
@@ -60,6 +62,7 @@ export const HERBAL = {
     },
     {
       id: 'cracked_vial',
+      situations: [],
       text: 'A vial cracks inside crate two, and a sharp, bitter mist starts hissing out through the joints.',
       focusRole: 'tech',
       choices: [
@@ -76,6 +79,7 @@ export const HERBAL = {
     },
     {
       id: 'ghost_tunnel',
+      situations: ['neural', 'street-tech'],
       text: 'A Ghost Circuit runner steps out of a drain mouth. "Tunnels go straight up the hill. Free, if one of you tries our new neural scrubber."',
       choices: [
         { id: 'tunnel', label: '{op} tries the scrubber and takes the shortcut', kind: 'adapt', stat: 'cool', difficulty: 5, neural: 10,
@@ -91,6 +95,7 @@ export const HERBAL = {
     },
     {
       id: 'shrine',
+      situations: [],
       after: 1,
       text: 'At the Red Incense Shrine an old woman blocks the stair, holding out a stick of incense. "Nobody carries medicine past To Dei Gung without asking."',
       choices: [
@@ -107,6 +112,7 @@ export const HERBAL = {
     },
     {
       id: 'cant_breathe',
+      situations: ['injury'],
       after: 1, // on the stairs
       text: '{siu} meets you on the fourth landing, coat over her pyjamas. "Someone upstairs can\'t breathe. Open a crate. Now."',
       focusRole: 'medic',

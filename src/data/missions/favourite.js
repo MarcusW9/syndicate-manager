@@ -24,6 +24,7 @@ export const FAVOURITE = {
   crises: [
     {
       id: 'service_gate',
+      situations: ['entry'],
       after: 0, order: -1, // getting in
       text: 'Racing Association security at the service gate is scanning every pass twice tonight. Yours are borrowed.',
       choices: [
@@ -40,6 +41,7 @@ export const FAVOURITE = {
     },
     {
       id: 'new_chrome',
+      situations: [],
       after: 1,
       text: 'A young stable hand is showing off a brand-new wrist port and more cash than a month\'s wages.',
       choices: [
@@ -56,6 +58,7 @@ export const FAVOURITE = {
     },
     {
       id: 'old_hand',
+      situations: ['threat'],
       after: 2, order: -1, // at Pepper's stall
       text: 'A grey-haired stable hand steps out of Pepper\'s stall with a pitchfork. "Seven years I\'ve brushed her. Nobody touches her tonight."',
       choices: [
@@ -72,6 +75,7 @@ export const FAVOURITE = {
     },
     {
       id: 'feed_bucket',
+      situations: [],
       after: 2,
       text: 'There\'s a smell in Pepper\'s feed bucket that isn\'t oats. Somebody has already been here.',
       focusRole: 'medic',
@@ -89,6 +93,7 @@ export const FAVOURITE = {
     },
     {
       id: 'vet',
+      situations: ['corp-tech'],
       after: 2,
       text: 'A vet in a Veridian-Apex lab coat arrives with a case. "Routine pre-race scan." Nobody booked one.',
       choices: [
@@ -104,7 +109,8 @@ export const FAVOURITE = {
       ],
     },
     {
-      id: 'collector',
+      id: 'collector1',
+      situations: ['threat', 'fight'],
       after: 2, order: 1, // the name, before post time
       text: 'Under the betting hall, a Silver Fan collector says he knows who paid the stable hands. Information costs.',
       choices: [

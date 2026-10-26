@@ -44,6 +44,7 @@ const BASE_MISSIONS = [
     crises: [
       {
         id: 'tail',
+        situations: ['escape'],
         text: 'The van is still on you. {driver} glances in the mirror: "Lose them or lead them in?"',
         focusRole: 'driver',
         choices: [
@@ -60,6 +61,7 @@ const BASE_MISSIONS = [
       },
       {
         id: 'contact_nervous',
+        situations: ['threat'],
         text: 'The laundromat contact is sweating. He wants to "check the drive" in the back room.',
         choices: [
           { id: 'talk', label: 'Talk him down', kind: 'adapt', stat: 'social', difficulty: 11,
@@ -75,6 +77,7 @@ const BASE_MISSIONS = [
       },
       {
         id: 'checkpoint',
+        situations: ['police', 'law', 'escape'],
         text: 'Police have thrown up a checkpoint on the flyover. They are scanning every car. {driver} has maybe ten seconds to decide.',
         focusRole: 'driver',
         choices: [
@@ -91,6 +94,7 @@ const BASE_MISSIONS = [
       },
       {
         id: 'typhoon',
+        situations: ['weather'],
         text: 'The Signal 8 typhoon warning goes up mid-run. Rain comes sideways and the underpass ahead is already flooding.',
         focusRole: 'driver',
         choices: [
@@ -107,6 +111,7 @@ const BASE_MISSIONS = [
       },
       {
         id: 'beacon',
+        situations: ['street-tech'],
         text: 'The drive starts pinging. Somebody built a tracker into it, and it just switched on.',
         choices: [
           { id: 'kill', label: '{tech} kills the beacon', kind: 'adapt', stat: 'tech', difficulty: 10, requires: { kind: 'role', value: 'tech' },
@@ -122,6 +127,7 @@ const BASE_MISSIONS = [
       },
       {
         id: 'shakedown',
+        situations: ['threat'],
         text: 'At a red light, a man taps on the window. He knows the crew, knows the job, and wants a cut to keep quiet.',
         choices: [
           { id: 'pay', label: 'Pay him off', kind: 'adapt', sure: true, stat: 'cool', difficulty: 0, cost: { cash: -500 },
@@ -160,6 +166,7 @@ const BASE_MISSIONS = [
     crises: [
       {
         id: 'guard_round',
+        situations: ['entry'],
         text: 'A guard is early on his round. He is heading for the server room with {tech} still inside.',
         focusRole: 'tech',
         choices: [
@@ -176,6 +183,7 @@ const BASE_MISSIONS = [
       },
       {
         id: 'neural_spike',
+        situations: ['neural', 'corp-tech'],
         text: '{tech} is pushing their implants to crack the last layer. A nosebleed starts.',
         focusRole: 'tech',
         choices: [
@@ -192,6 +200,7 @@ const BASE_MISSIONS = [
       },
       {
         id: 'lockdown',
+        situations: ['escape', 'corp-tech'],
         text: 'Building security locks the lifts. You are on the thirty-first floor and the stairwell doors are on a timer.',
         choices: [
           { id: 'override', label: '{tech} overrides the lift controls', kind: 'adapt', stat: 'tech', difficulty: 12, requires: { kind: 'role', value: 'tech' }, failureCost: { heat: 2 },
@@ -207,6 +216,7 @@ const BASE_MISSIONS = [
       },
       {
         id: 'executive',
+        situations: ['entry'],
         text: 'An executive working late walks onto the floor and stares at {face}. "You\'re not on the cleaning rota."',
         focusRole: 'face',
         choices: [
@@ -226,6 +236,7 @@ const BASE_MISSIONS = [
       },
       {
         id: 'trace',
+        situations: ['corp-tech', 'neural'],
         text: 'Counter-intrusion software catches {tech}. A trace is crawling back up the connection towards {tech}\'s implants.',
         focusRole: 'tech',
         choices: [
@@ -242,6 +253,7 @@ const BASE_MISSIONS = [
       },
       {
         id: 'fire_alarm',
+        situations: ['crowd', 'escape'],
         text: 'Someone on another floor pulls the fire alarm. Sprinklers start up and the stairwells fill with staff heading out.',
         choices: [
           { id: 'blend', label: 'Blend in with the evacuation', kind: 'adapt', stat: 'social', difficulty: 9, cost: { payCut: 0.3 },
@@ -277,6 +289,7 @@ const BASE_MISSIONS = [
     crises: [
       {
         id: 'guards_return',
+        situations: ['fight', 'threat', 'escape'],
         text: 'Headlights. The rival crew is back early: four of them, armed. {muscle} is already reaching for a weapon.',
         focusRole: 'muscle',
         choices: [
@@ -293,6 +306,7 @@ const BASE_MISSIONS = [
       },
       {
         id: 'forklift',
+        situations: ['fight'],
         text: 'A night-shift forklift driver rounds the corner and stops dead. He has a radio on his belt.',
         choices: [
           { id: 'grab', label: '{muscle} grabs him before he can call', kind: 'push', stat: 'combat', difficulty: 9,
@@ -308,6 +322,7 @@ const BASE_MISSIONS = [
       },
       {
         id: 'dog',
+        situations: ['fight'],
         text: 'The guard dog slips its chain and comes straight at the crew, barking loud enough to wake the whole dock.',
         choices: [
           { id: 'hold', label: '{muscle} holds it off', kind: 'push', stat: 'combat', difficulty: 11,
@@ -326,6 +341,7 @@ const BASE_MISSIONS = [
       },
       {
         id: 'tracked_crate',
+        situations: ['street-tech'],
         text: 'One of the crates has a blinking light under the lid. Someone has put a tracker on the shipment.',
         choices: [
           { id: 'disable', label: '{tech} disables the tracker', kind: 'adapt', stat: 'tech', difficulty: 12, requires: { kind: 'role', value: 'tech' }, failureCost: { heat: 2 },
@@ -344,6 +360,7 @@ const BASE_MISSIONS = [
       },
       {
         id: 'toll',
+        situations: ['threat', 'fight'],
         text: 'Three cars block the dock road out. Red Lantern enforcers. This is their road, and they want a toll for using it.',
         choices: [
           { id: 'pay', label: 'Pay the toll', kind: 'adapt', sure: true, stat: 'cool', difficulty: 0, cost: { cash: -1000 },
@@ -362,6 +379,7 @@ const BASE_MISSIONS = [
       },
       {
         id: 'sampan',
+        situations: [],
         text: 'Two crates are already on a sampan pulling away from the pier. The tide is going out fast.',
         choices: [
           { id: 'board', label: 'Jump for the boat', kind: 'push', stat: 'stealth', difficulty: 12,

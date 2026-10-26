@@ -24,6 +24,7 @@ export const CLINIC = {
   crises: [
     {
       id: 'bleeder',
+      situations: ['injury'],
       text: 'The door bangs open and a man half-falls down the stairs, a towel pressed to his ribs. {siu} doesn\'t look up from the chair. "{op}. He\'s yours."',
       focusRole: 'medic',
       choices: [
@@ -43,6 +44,7 @@ export const CLINIC = {
     },
     {
       id: 'collectors',
+      situations: ['threat', 'fight'],
       text: 'Two men with Silver Fan pins come down the stairs, polite as bankers. "Mr. Tam owes us money. We know he\'s here."',
       choices: [
         { id: 'anchor', label: '{op} points at the brass anchor over the door', kind: 'adapt', stat: 'social', difficulty: 6,
@@ -61,6 +63,7 @@ export const CLINIC = {
     },
     {
       id: 'power_cut',
+      situations: ['street-tech'],
       text: 'The bulb dies mid-stitch. Upstairs, someone swears at a Hoi-Sing meter. In the dark, the doc\'s voice is very calm: "Light. Now."',
       choices: [
         { id: 'torch', label: '{op} holds a phone torch steady', kind: 'adapt', stat: 'cool', difficulty: 4,
@@ -79,6 +82,7 @@ export const CLINIC = {
     },
     {
       id: 'screaming_implant',
+      situations: ['neural', 'street-tech', 'injury'],
       text: 'A delivery rider clutches their ear: the implant is shrieking feedback only they can hear. {siu} slaps pliers into {op}\'s palm. "Slow. If it snaps, it stays in."',
       focusRole: 'medic',
       choices: [
@@ -95,6 +99,7 @@ export const CLINIC = {
     },
     {
       id: 'police_pair',
+      situations: ['police', 'law', 'threat'],
       text: 'Two officers come down the stairs, in a pair as always in Old Town. One taps the humming generator with his baton. "Licence?"',
       choices: [
         { id: 'pay', label: 'Pay them for the generator', kind: 'adapt', sure: true, stat: 'cool', difficulty: 0, cost: { cash: -300 },

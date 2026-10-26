@@ -4,6 +4,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-26 · Crises know what kind of moment they are
+- Behind the scenes: every crisis now says what kind of situation it is (a chase, a break-in, a crowd, the police or other officials, a fight...). Nothing changes on screen yet; the next batch of earned traits uses it, and later mission logs and gear.
+- Save format v20. 216 tests.
+
 ## 2026-10-26 · Earned traits
 - **What happens on the job changes people** (12 traits, written by the owner). Some are for good: a medic who keeps patching people up becomes **Clinic Hands**; someone who survives a critical wound comes back **Scarred**; two people who keep coming home together become a **Crew Anchor**. Some come and go: **Shaky** after a bad week, **Riding High** after a clean run, a **Known Face** in a district where they keep causing trouble.
 - Joss tells you when someone earns or loses one, and it goes on their profile under "Earned on the job". Nobody is told they're "2 out of 3" of the way there: it happens when it happens.

@@ -5,10 +5,10 @@ built (`src/data/earnedTraits.js`, `src/core/earned.js`). These wait. The rules 
 traits apply here too: no trait takes a choice away (downsides are penalties plus a Joss
 warning), at most two temporary traits at once, progress hidden until earned.
 
-## Group 2: waiting on crisis tags
-Crises don't yet say what kind of situation they are. Next step: tag every crisis (`escape`,
-`crowd`, `police`, `entry`, `street-tech`, `fight`, `threat`, `intimidation`, `neural`).
-Claude drafts the tags, the owner skims. Tags also feed mission logs and gear later.
+## Group 2: ready once the owner has skimmed the situations
+Every crisis now lists its situations (`src/data/situations.js`, 2026-10-26; review in
+`drafts/crisis-situations-review.md`). "intimidation" became part of `threat`, and `injury`
+covers Scarred's "rolls involving injury".
 
 | Trait | Kind | Needs | Notes |
 |---|---|---|---|

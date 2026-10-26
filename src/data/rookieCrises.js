@@ -5,6 +5,7 @@
 export const ROOKIE_CRISES = [
   {
     id: 'old_classmate',
+    situations: ['crowd'],
     text: 'Someone squints at {op}. "No way. Form Four, Miss Chan\'s class?" By tomorrow half of {district} could know what {op} does at night.',
     choices: [
       { id: 'ask', label: '{op} asks them to keep it quiet', kind: 'adapt', stat: 'social', difficulty: 5,
@@ -23,6 +24,7 @@ export const ROOKIE_CRISES = [
   },
   {
     id: 'faction_toll',
+    situations: ['threat'],
     text: 'A {faction} runner falls into step beside {op}, all smiles. "New faces on our streets pay a little something. First time, it\'s cheap."',
     choices: [
       { id: 'pay', label: 'Pay the toll', kind: 'adapt', sure: true, stat: 'cool', difficulty: 0, cost: { cash: -200 },
@@ -38,6 +40,7 @@ export const ROOKIE_CRISES = [
   },
   {
     id: 'signal_three',
+    situations: ['weather'],
     text: 'The sky opens. Typhoon Signal 3 goes up over {district}, shutters slam, and the street empties in a minute.',
     choices: [
       { id: 'push', label: 'Keep going through the rain', kind: 'push', stat: 'cool', difficulty: 5,
