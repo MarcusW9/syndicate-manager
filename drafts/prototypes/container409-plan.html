@@ -84,19 +84,56 @@ section { display: grid; gap: 8px; }
 .pill { font-family: var(--mono); font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 7px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; flex: none; }
 .r-low { color: var(--good); } .r-moderate { color: var(--accent-2); } .r-high { color: var(--warn); } .r-extreme { color: var(--danger); } .r-certain, .r-safe { color: var(--muted); }
 
-/* Crew slots */
-.slot { display: grid; gap: 6px; padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
-.slot__head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
-.slot__head b { font-family: var(--display); font-size: 1.05rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
-.slot__head span { font-size: 0.78rem; color: var(--muted); text-align: right; min-width: 0; }
-.chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 6px; }
-.chip { min-width: 0; display: grid; grid-template-columns: auto auto; grid-template-rows: auto auto; column-gap: 7px; align-items: center; min-height: var(--tap); padding: 5px 9px 5px 5px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel-2); cursor: pointer; }
-.chip .av { grid-row: span 2; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font: 700 0.72rem var(--display); color: var(--bg); background: var(--c, var(--muted)); }
-.chip .nm { font-family: var(--display); font-weight: 600; font-size: 0.92rem; line-height: 1.1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.chip .pill { justify-self: start; font-size: 0.6rem; padding: 0 6px; }
-.chip[aria-pressed="true"] { border-color: var(--accent-2); background: var(--sel); }
-.chip.elsewhere { opacity: 0.55; }
-.chip .where { font-family: var(--mono); font-size: 0.58rem; color: var(--muted); text-transform: uppercase; }
+/* Crew: a heist board of pinned dossiers */
+.board { position: relative; display: grid; gap: 10px; padding: 14px 12px 12px; border-radius: 12px; border: 1px solid #2a2f3b; background:
+  radial-gradient(circle at 20% 10%, rgba(54, 214, 195, 0.06), transparent 40%),
+  repeating-linear-gradient(0deg, transparent 0 19px, rgba(139, 147, 167, 0.07) 19px 20px),
+  repeating-linear-gradient(90deg, transparent 0 19px, rgba(139, 147, 167, 0.07) 19px 20px), #12151b; }
+.board__head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.board__head p { font-size: 0.78rem; color: var(--muted); min-width: 0; }
+.jossbtn { min-height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #1f4440; background: #10201e; color: var(--accent-2); font: 600 0.88rem var(--display); letter-spacing: 0.04em; cursor: pointer; white-space: nowrap; }
+.dossiers { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 8px; }
+.dossier > * { max-width: 100%; }
+.dossier { position: relative; display: grid; justify-items: center; align-content: start; gap: 4px; padding: 16px 6px 8px; min-height: 196px; text-align: center; border-radius: 4px; cursor: pointer;
+  background: #e9e4d8; color: #1b1d22; border: 0; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45); transform: rotate(var(--tilt, 0deg)); transition: transform 0.15s; }
+.dossier:hover { transform: rotate(0deg) translateY(-2px); }
+.dossier::before { content: ""; position: absolute; top: 5px; left: 50%; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: var(--pin, var(--accent)); box-shadow: 0 2px 2px rgba(0, 0, 0, 0.5); }
+.dossier__tab { font: 700 0.72rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: #5a5f6c; }
+.dossier__photo { width: 64px; height: 64px; border-radius: 2px; overflow: hidden; background: #1b1f28; outline: 3px solid #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); }
+.dossier__photo svg { width: 100%; height: 100%; display: block; }
+.dossier__name { font: 700 1rem var(--display); line-height: 1.05; }
+.dossier__real { font-size: 0.66rem; color: #5a5f6c; line-height: 1.1; }
+.dossier .pill { font-size: 0.58rem; padding: 0 6px; background: #1b1d22; }
+.dossier__stats { width: 100%; display: grid; gap: 3px; padding: 2px 4px 0; }
+.stat { display: grid; grid-template-columns: 1fr auto; gap: 0 6px; font: 500 0.62rem var(--mono); text-transform: uppercase; color: #4a4f5c; text-align: left; }
+.stat i { grid-column: 1 / -1; height: 4px; background: #cfc8b8; border-radius: 2px; overflow: hidden; }
+.stat i b { display: block; height: 100%; background: #1b1d22; }
+.dossier__pick { font: 600 0.58rem var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: #0f7c70; }
+.dossier.empty { background: transparent; color: var(--muted); border: 2px dashed #3a4254; box-shadow: none; justify-content: center; align-content: center; }
+.dossier.empty .dossier__tab { color: var(--muted); }
+.dossier.empty .sil { width: 56px; height: 56px; border-radius: 50%; border: 2px dashed #3a4254; display: grid; place-items: center; font: 600 1.6rem var(--display); color: #4a5266; }
+.dossier.empty .dossier__does { font-size: 0.7rem; padding: 0 4px; }
+
+/* Picker sheet */
+.scrim { position: fixed; inset: 0; z-index: 20; background: rgba(5, 6, 9, 0.6); }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 21; max-height: 82vh; overflow-y: auto; background: var(--panel); border-top: 1px solid var(--line); border-radius: 16px 16px 0 0;
+  padding: 14px max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); animation: up 0.22s ease-out; }
+@keyframes up { from { transform: translateY(30%); opacity: 0.4; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .sheet { animation: none; } .dossier { transition: none; } }
+.sheet__in { max-width: 520px; margin: 0 auto; display: grid; gap: 10px; }
+.sheet__head { display: flex; justify-content: space-between; align-items: start; gap: 8px; }
+.sheet__head h3 { font: 700 1.3rem var(--display); margin: 0; }
+.sheet__head p { font-size: 0.8rem; color: var(--muted); }
+.x { min-width: var(--tap); min-height: var(--tap); background: none; border: 1px solid var(--line); border-radius: 10px; color: var(--muted); font-size: 1.1rem; cursor: pointer; }
+.cand { display: grid; grid-template-columns: 48px 1fr auto; gap: 10px; align-items: center; min-height: 60px; padding: 6px 10px 6px 6px; text-align: left; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
+.cand[aria-pressed="true"] { border-color: var(--accent-2); background: var(--sel); }
+.cand__ph { width: 48px; height: 48px; border-radius: 6px; overflow: hidden; background: #0b0d11; }
+.cand__ph svg { width: 100%; height: 100%; display: block; }
+.cand__txt { display: grid; gap: 1px; min-width: 0; }
+.cand__txt b { font: 700 1.02rem var(--display); }
+.cand__txt span { font-size: 0.74rem; color: var(--muted); }
+.cand__side { display: grid; justify-items: end; gap: 3px; }
+.cand__side small { font: 500 0.6rem var(--mono); text-transform: uppercase; color: var(--muted); }
 
 /* Prep */
 .prep { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
@@ -124,6 +161,7 @@ section { display: grid; gap: 8px; }
 .bar__sum b { font-family: var(--display); font-size: 1.25rem; font-variant-numeric: tabular-nums; }
 .bar__sum span { font-size: 0.74rem; color: var(--muted); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .btn { min-height: 48px; padding: 0 22px; border: 0; border-radius: 10px; background: var(--accent); color: #fff; font: 700 1.05rem var(--display); letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
+.btn:disabled { background: var(--line); color: var(--muted); cursor: not-allowed; }
 .btn--ghost { background: transparent; border: 1px solid var(--line); color: var(--text); }
 .btn--wide { width: 100%; }
 
@@ -200,13 +238,17 @@ const pill = (risk) => `<span class="pill r-${risk}">${risk}</span>`;
 
 // ---------- The crew: five founding rookies (main stat 10-11, the game's founder band) ----------
 const CREW = [
-  { id: 'eggtart', handle: 'Egg Tart', role: 'tech', color: '#36d6c3', stats: { combat: 4, stealth: 7, tech: 11, social: 5, driving: 4, medical: 3, cool: 7 } },
-  { id: 'hotwire', handle: 'Hotwire', role: 'driver', color: '#f5b942', stats: { combat: 5, stealth: 6, tech: 6, social: 4, driving: 11, medical: 2, cool: 8 } },
-  { id: 'kit', handle: 'Kit', role: 'face', color: '#ff4f7b', stats: { combat: 3, stealth: 6, tech: 3, social: 10, driving: 4, medical: 4, cool: 8 } },
-  { id: 'rat', handle: 'Rat', role: 'muscle', color: '#9d8cff', stats: { combat: 10, stealth: 8, tech: 3, social: 4, driving: 5, medical: 2, cool: 6 } },
-  { id: 'mop', handle: 'Mop', role: 'medic', color: '#5fe0a5', stats: { combat: 3, stealth: 5, tech: 5, social: 7, driving: 3, medical: 10, cool: 9 } },
+  { id: 'eggtart', handle: 'Egg Tart', name: 'Ivy Chan', role: 'tech', color: '#36d6c3', stats: { combat: 4, stealth: 7, tech: 11, social: 5, driving: 4, medical: 3, cool: 7 } },
+  { id: 'hotwire', handle: 'Hotwire', name: 'Paolo Reyes', role: 'driver', color: '#f5b942', stats: { combat: 5, stealth: 6, tech: 6, social: 4, driving: 11, medical: 2, cool: 8 } },
+  { id: 'kit', handle: 'Kit', name: 'Winnie Lau', role: 'face', color: '#ff4f7b', stats: { combat: 3, stealth: 6, tech: 3, social: 10, driving: 4, medical: 4, cool: 8 } },
+  { id: 'rat', handle: 'Rat', name: 'Tunde Okoro', role: 'muscle', color: '#9d8cff', stats: { combat: 10, stealth: 8, tech: 3, social: 4, driving: 5, medical: 2, cool: 6 } },
+  { id: 'mop', handle: 'Mop', name: 'Kelvin Cheung', role: 'medic', color: '#5fe0a5', stats: { combat: 3, stealth: 5, tech: 5, social: 7, driving: 3, medical: 10, cool: 9 } },
 ];
 const byId = (id) => CREW.find((o) => o.id === id);
+// Portraits from the game's own generator (src/ui/art.js), rendered once with Node and embedded.
+const FACES = {"eggtart": "<svg class=\"art portrait\" viewBox=\"9 6 46 46\" width=\"64\" height=\"64\" aria-hidden=\"true\" focusable=\"false\">\n  <defs>\n    <linearGradient id=\"pf1bg\" x1=\"1\" x2=\"0\"><stop offset=\"0\" stop-color=\"#9b8cff\" stop-opacity=\"0.28\"/><stop offset=\"0.65\" stop-color=\"#9b8cff\" stop-opacity=\"0\"/></linearGradient>\n    <clipPath id=\"pf1h\"><path d=\"M32 11 C40.625 11 43.5 16 43.5 24 C43.5 30 42.9 33 41 38 L35.2 44.5 Q32 46.2 28.8 44.5 L23 38 C21.1 33 20.5 30 20.5 24 C20.5 16 23.375 11 32 11 Z\"/></clipPath>\n    <clipPath id=\"pf1s\"><path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\"/></clipPath>\n    <clipPath id=\"pf1t\"><path d=\"M19.7 27 C18.7 17 21.5 7 32 6.5 C42.5 7 45.3 16 44.3 26 C42.9 22 41.5 19.5 39.5 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.5 20.5 19.7 27 Z\"/></clipPath>\n    <clipPath id=\"pf1b\"><path d=\"M19 24 C18 7 46 7 45 24 L46.5 54 L40 52 L41.5 35 L22.5 35 L24 52 L17.5 54 Z\"/></clipPath>\n    \n  </defs>\n  <rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#0d1016\"/><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"url(#pf1bg)\"/>\n\n  <g >\n  <path d=\"M19 24 C18 7 46 7 45 24 L46.5 54 L40 52 L41.5 35 L22.5 35 L24 52 L17.5 54 Z\" fill=\"#3a291e\"/>\n  \n  </g>\n\n  <path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\" fill=\"#232838\"/>\n  <g clip-path=\"url(#pf1s)\"><path d=\"M64 44 L40 47 L46 64 L64 64 Z\" fill=\"#514e84\"/><path d=\"M27 46 L32 54 L37 46 Z\" fill=\"#171a24\"/></g>\n  <path d=\"M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z\" fill=\"#86685f\"/><path d=\"M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z\" fill=\"#be95aa\" opacity=\"0.8\"/>\n  \n\n  <ellipse cx=\"20.8\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#86685f\"/>\n  <ellipse cx=\"43.2\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#d49a76\"/><path d=\"M44.1 27.5 Q45 30 43.9 33\" stroke=\"#be95aa\" stroke-width=\"0.9\" fill=\"none\"/>\n  \n\n  <path d=\"M32 11 C40.625 11 43.5 16 43.5 24 C43.5 30 42.9 33 41 38 L35.2 44.5 Q32 46.2 28.8 44.5 L23 38 C21.1 33 20.5 30 20.5 24 C20.5 16 23.375 11 32 11 Z\" fill=\"#d49a76\"/>\n  <g clip-path=\"url(#pf1h)\">\n    <path d=\"M0 0 L30.62 9 C25.675 20 26.48 31 30.5 48 L0 64 Z\" fill=\"#86685f\"/>\n    <path d=\"M35.45 34.5 L42.7 31.5 L40.5 39 Z\" fill=\"#af826b\" opacity=\"0.55\"/>\n    <path d=\"M64 0 L41.7 12 L42.2 30 L39.2 40.5 L64 64 Z\" fill=\"#be95aa\"/>\n        \n    \n    <path d=\"M22.5 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z\" fill=\"#af826b\"/>\n  </g>\n\n  <path d=\"M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z\" fill=\"#86685f\"/>\n  <path d=\"M32.9 33.6 L33.5 35.6 L32.7 36.2 Z\" fill=\"#be95aa\" opacity=\"0.7\"/>\n  <path d=\"M30.6 36.3 h2.6\" stroke=\"#7f5643\" stroke-width=\"0.7\" stroke-linecap=\"round\"/>\n  <path d=\"M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"28\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/><path d=\"M34.5 29 Q36.6 27.3 38.7 29 Q36.6 30.1 34.5 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"37.2\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/>\n  <path d=\"M24.9 25.6 L29.7 25.1\" stroke=\"#261b15\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M34.3 25.1 L39.1 25.6\" stroke=\"#261b15\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M29.4 40 Q32 40.9 34.6 40\" stroke=\"#7f5643\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/>\n      <path d=\"M30.2 40.7 Q32 42.2 33.8 40.7 Z\" fill=\"#c48769\"/>\n  \n  \n  \n  \n  \n\n  <g >\n  <path d=\"M19.7 27 C18.7 17 21.5 7 32 6.5 C42.5 7 45.3 16 44.3 26 C42.9 22 41.5 19.5 39.5 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.5 20.5 19.7 27 Z\" fill=\"#3a291e\" />\n    <g clip-path=\"url(#pf1t)\"><path d=\"M34.875 0 L64 0 L64 30 L38.9 30 Z\" fill=\"#6b5b8f\" opacity=\"0.75\"/>\n    </g>\n  \n  \n  \n  </g>\n  \n\n  \n  <path d=\"M40.9 19 V27\" stroke=\"#ff3d5f\" stroke-width=\"1.1\" stroke-linecap=\"round\" opacity=\"0.5\"/><circle cx=\"40.9\" cy=\"27.5\" r=\"0.9\" fill=\"#ff3d5f\" opacity=\"0.5\"/>\n  \n</svg>", "hotwire": "<svg class=\"art portrait\" viewBox=\"9 6 46 46\" width=\"64\" height=\"64\" aria-hidden=\"true\" focusable=\"false\">\n  <defs>\n    <linearGradient id=\"pf2bg\" x1=\"1\" x2=\"0\"><stop offset=\"0\" stop-color=\"#ff3d5f\" stop-opacity=\"0.28\"/><stop offset=\"0.65\" stop-color=\"#ff3d5f\" stop-opacity=\"0\"/></linearGradient>\n    <clipPath id=\"pf2h\"><path d=\"M32 11 C40.1 11 42.8 16 42.8 24 C42.8 30 42.199999999999996 33 40.5 38 L35 46 Q32 47.7 29 46 L23.5 38 C21.8 33 21.2 30 21.2 24 C21.2 16 23.9 11 32 11 Z\"/></clipPath>\n    <clipPath id=\"pf2s\"><path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\"/></clipPath>\n    <clipPath id=\"pf2t\"><path d=\"M20.4 27 C19.4 17 22.2 7.5 32 7 C41.8 7.5 44.599999999999994 16 43.599999999999994 26 C42.199999999999996 22 40.8 19.5 38.8 18.6 C33 18 30 20 28 19 C25 18.5 23.2 20 20.4 27 Z\"/></clipPath>\n    \n    \n  </defs>\n  <rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#0d1016\"/><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"url(#pf2bg)\"/>\n\n  <g >\n  \n  \n  </g>\n\n  <path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\" fill=\"#262b36\"/>\n  <g clip-path=\"url(#pf2s)\"><path d=\"M64 44 L40 47 L46 64 L64 64 Z\" fill=\"#783246\"/><path d=\"M27 46 L32 54 L37 46 Z\" fill=\"#191c23\"/></g>\n  <path d=\"M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z\" fill=\"#7e5e54\"/><path d=\"M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z\" fill=\"#dc6c61\" opacity=\"0.8\"/>\n  \n\n  <ellipse cx=\"21.5\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#7e5e54\"/>\n  <ellipse cx=\"42.5\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#c68863\"/><path d=\"M43.4 27.5 Q44.3 30 43.199999999999996 33\" stroke=\"#dc6c61\" stroke-width=\"0.9\" fill=\"none\"/>\n  \n\n  <path d=\"M32 11 C40.1 11 42.8 16 42.8 24 C42.8 30 42.199999999999996 33 40.5 38 L35 46 Q32 47.7 29 46 L23.5 38 C21.8 33 21.2 30 21.2 24 C21.2 16 23.9 11 32 11 Z\" fill=\"#c68863\"/>\n  <g clip-path=\"url(#pf2h)\">\n    <path d=\"M0 0 L30.704 9 C26.06 20 26.816 31 30.5 48 L0 64 Z\" fill=\"#7e5e54\"/>\n    <path d=\"M35.24 34.5 L42 31.5 L40 39 Z\" fill=\"#a4745c\" opacity=\"0.55\"/>\n    <path d=\"M64 0 L41 12 L41.5 30 L38.7 40.5 L64 64 Z\" fill=\"#dc6c61\"/>\n        \n    \n    <path d=\"M23.2 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z\" fill=\"#a4745c\"/>\n  </g>\n\n  <path d=\"M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z\" fill=\"#7e5e54\"/>\n  <path d=\"M32.9 33.6 L33.5 35.6 L32.7 36.2 Z\" fill=\"#dc6c61\" opacity=\"0.7\"/>\n  <path d=\"M30.6 36.3 h2.6\" stroke=\"#784d3a\" stroke-width=\"0.7\" stroke-linecap=\"round\"/>\n  <path d=\"M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"28\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/>\n  <path d=\"M24.9 25.6 L29.7 25.1\" stroke=\"#8d6a28\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M34.3 25.1 L39.1 25.6\" stroke=\"#8d6a28\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M29.4 40 Q32 40.9 34.6 40\" stroke=\"#784d3a\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/>\n      <path d=\"M30.2 40.7 Q32 42.2 33.8 40.7 Z\" fill=\"#b8785a\"/>\n  \n  \n  <g clip-path=\"url(#pf2h)\"><path d=\"M32.6 9 L33.6 22 L34.4 27.5 L35.4 33 L35.7 37.5 L35.6 41.5 L34.4 47 L34.4 64 L64 64 L64 0 L32.6 0 Z\" fill=\"#58606b\"/>\n    <path d=\"M64 0 L41 12 L41.5 30 L38.7 40.5 L64 64 Z\" fill=\"#925467\"/>\n    <path d=\"M32.6 9 L33.6 22 L34.4 27.5 L35.4 33 L35.7 37.5 L35.6 41.5 L34.4 47\" stroke=\"#704735\" stroke-width=\"0.9\" fill=\"none\"/>\n    <g stroke=\"#2b3038\" stroke-width=\"0.45\" fill=\"none\">\n      <path d=\"M35.4 18 L41.8 19.5\"/><path d=\"M36.6 33.6 L41.8 31.5\"/><path d=\"M36.3 40.6 L40.199999999999996 37\"/>\n      <path d=\"M38.5 36.2 h2.6 M38.8 37.4 h2.2\"/>\n    </g>\n    <circle cx=\"36.4\" cy=\"19.6\" r=\"0.35\" fill=\"#2b3038\"/><circle cx=\"40.8\" cy=\"31.8\" r=\"0.35\" fill=\"#2b3038\"/></g>\n  \n  \n\n  <g >\n  <path d=\"M20.4 27 C19.4 17 22.2 7.5 32 7 C41.8 7.5 44.599999999999994 16 43.599999999999994 26 C42.199999999999996 22 40.8 19.5 38.8 18.6 C33 18 30 20 28 19 C25 18.5 23.2 20 20.4 27 Z\" fill=\"#f5b942\" />\n    <g clip-path=\"url(#pf2t)\"><rect x=\"0\" y=\"0\" width=\"32\" height=\"64\" fill=\"#7dd3fc\" /><path d=\"M34.7 0 L64 0 L64 30 L38.480000000000004 30 Z\" fill=\"#fa7b51\" opacity=\"0.75\"/>\n    </g>\n  \n  \n  \n  </g>\n  \n\n  \n  <circle cx=\"42.5\" cy=\"30\" r=\"2.3\" fill=\"#4a515b\" stroke=\"#2b3038\" stroke-width=\"0.4\"/><circle cx=\"42.5\" cy=\"30\" r=\"0.8\" fill=\"#3de8d8\" opacity=\"0.5\"/>\n        <circle cx=\"36.6\" cy=\"29\" r=\"2.9\" fill=\"#1a1d22\"/><circle cx=\"36.6\" cy=\"29\" r=\"2.2\" fill=\"#0b0f12\" stroke=\"#9aa3ad\" stroke-width=\"0.5\"/>\n        <circle cx=\"36.6\" cy=\"29\" r=\"1.3\" fill=\"#3de8d8\" opacity=\"0.5\"/><circle cx=\"36.6\" cy=\"29\" r=\"0.4\" fill=\"#0b0f12\"/>\n  \n</svg>", "kit": "<svg class=\"art portrait\" viewBox=\"9 6 46 46\" width=\"64\" height=\"64\" aria-hidden=\"true\" focusable=\"false\">\n  <defs>\n    <linearGradient id=\"pf3bg\" x1=\"1\" x2=\"0\"><stop offset=\"0\" stop-color=\"#9b8cff\" stop-opacity=\"0.28\"/><stop offset=\"0.65\" stop-color=\"#9b8cff\" stop-opacity=\"0\"/></linearGradient>\n    <clipPath id=\"pf3h\"><path d=\"M32 11 C41.375 11 44.5 16 44.5 24 C44.5 30 43.9 33 42.5 38 L36 43.5 Q32 45.2 28 43.5 L21.5 38 C20.1 33 19.5 30 19.5 24 C19.5 16 22.625 11 32 11 Z\"/></clipPath>\n    <clipPath id=\"pf3s\"><path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\"/></clipPath>\n    \n    \n    \n  </defs>\n  <rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#0d1016\"/><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"url(#pf3bg)\"/>\n\n  <g >\n  \n  \n  </g>\n\n  <path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\" fill=\"#1f2b2a\"/>\n  <g clip-path=\"url(#pf3s)\"><path d=\"M64 44 L40 47 L46 64 L64 64 Z\" fill=\"#4e507b\"/><path d=\"M27 46 L32 54 L37 46 Z\" fill=\"#141c1b\"/></g>\n  <path d=\"M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z\" fill=\"#654741\"/><path d=\"M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z\" fill=\"#9a718a\" opacity=\"0.8\"/>\n  \n\n  <ellipse cx=\"19.8\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#654741\"/>\n  <ellipse cx=\"44.2\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#9a6142\"/><path d=\"M45.1 27.5 Q46 30 44.9 33\" stroke=\"#9a718a\" stroke-width=\"0.9\" fill=\"none\"/>\n  \n\n  <path d=\"M32 11 C41.375 11 44.5 16 44.5 24 C44.5 30 43.9 33 42.5 38 L36 43.5 Q32 45.2 28 43.5 L21.5 38 C20.1 33 19.5 30 19.5 24 C19.5 16 22.625 11 32 11 Z\" fill=\"#9a6142\"/>\n  <g clip-path=\"url(#pf3h)\">\n    <path d=\"M0 0 L30.5 9 C25.125 20 26 31 30.5 48 L0 64 Z\" fill=\"#654741\"/>\n    <path d=\"M35.75 34.5 L43.7 31.5 L42 39 Z\" fill=\"#815542\" opacity=\"0.55\"/>\n    <path d=\"M64 0 L42.7 12 L43.2 30 L40.7 40.5 L64 64 Z\" fill=\"#9a718a\"/>\n        \n    \n    <path d=\"M21.5 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z\" fill=\"#815542\"/>\n  </g>\n\n  <path d=\"M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z\" fill=\"#654741\"/>\n  <path d=\"M32.9 33.6 L33.5 35.6 L32.7 36.2 Z\" fill=\"#9a718a\" opacity=\"0.7\"/>\n  <path d=\"M30.6 36.3 h2.6\" stroke=\"#623a29\" stroke-width=\"0.7\" stroke-linecap=\"round\"/>\n  <path d=\"M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"28\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/><path d=\"M34.5 29 Q36.6 27.3 38.7 29 Q36.6 30.1 34.5 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"37.2\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/>\n  <path d=\"M24.9 25.6 L29.7 25.1\" stroke=\"#604527\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M34.3 25.1 L39.1 25.6\" stroke=\"#604527\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M29.4 40 Q32 40.9 34.6 40\" stroke=\"#623a29\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/>\n      <path d=\"M30.2 40.7 Q32 42.2 33.8 40.7 Z\" fill=\"#94583f\"/>\n  \n  \n  \n  \n  \n\n  <g >\n  \n  \n  \n  <path d=\"M34.5 12.5 Q43.5 14 43.9 21\" stroke=\"#9a718a\" stroke-width=\"1\" fill=\"none\" opacity=\"0.6\"/>\n  </g>\n  \n\n  \n  <path d=\"M41.9 19 V27\" stroke=\"#3de8d8\" stroke-width=\"1.1\" stroke-linecap=\"round\" opacity=\"0.5\"/><circle cx=\"41.9\" cy=\"27.5\" r=\"0.9\" fill=\"#3de8d8\" opacity=\"0.5\"/>\n  \n</svg>", "rat": "<svg class=\"art portrait\" viewBox=\"9 6 46 46\" width=\"64\" height=\"64\" aria-hidden=\"true\" focusable=\"false\">\n  <defs>\n    <linearGradient id=\"pf4bg\" x1=\"1\" x2=\"0\"><stop offset=\"0\" stop-color=\"#3de8d8\" stop-opacity=\"0.28\"/><stop offset=\"0.65\" stop-color=\"#3de8d8\" stop-opacity=\"0\"/></linearGradient>\n    <clipPath id=\"pf4h\"><path d=\"M32 11 C40.625 11 43.5 16 43.5 24 C43.5 30 42.9 33 41 38 L35.2 44.5 Q32 46.2 28.8 44.5 L23 38 C21.1 33 20.5 30 20.5 24 C20.5 16 23.375 11 32 11 Z\"/></clipPath>\n    <clipPath id=\"pf4s\"><path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\"/></clipPath>\n    <clipPath id=\"pf4t\"><path d=\"M20.1 25 C19.5 13 22.5 8.6 32 8.4 C41.5 8.6 44.5 13 43.9 25 C42.5 20 40.5 17.2 32 16.8 C23.5 17.2 21.5 20 20.1 25 Z\"/></clipPath>\n    \n    \n  </defs>\n  <rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#0d1016\"/><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"url(#pf4bg)\"/>\n\n  <g >\n  \n  \n  </g>\n\n  <path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\" fill=\"#262b36\"/>\n  <g clip-path=\"url(#pf4s)\"><path d=\"M64 44 L40 47 L46 64 L64 64 Z\" fill=\"#2f7374\"/><path d=\"M27 46 L32 54 L37 46 Z\" fill=\"#191c23\"/></g>\n  <path d=\"M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z\" fill=\"#583e3a\"/><path d=\"M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z\" fill=\"#6a8b74\" opacity=\"0.8\"/>\n  \n\n  <ellipse cx=\"20.8\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#583e3a\"/>\n  <ellipse cx=\"43.2\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#855236\"/><path d=\"M44.1 27.5 Q45 30 43.9 33\" stroke=\"#6a8b74\" stroke-width=\"0.9\" fill=\"none\"/>\n  <circle cx=\"43.5\" cy=\"34\" r=\"0.9\" fill=\"#f2b544\"/>\n\n  <path d=\"M32 11 C40.625 11 43.5 16 43.5 24 C43.5 30 42.9 33 41 38 L35.2 44.5 Q32 46.2 28.8 44.5 L23 38 C21.1 33 20.5 30 20.5 24 C20.5 16 23.375 11 32 11 Z\" fill=\"#855236\"/>\n  <g clip-path=\"url(#pf4h)\">\n    <path d=\"M0 0 L30.62 9 C25.675 20 26.48 31 30.5 48 L0 64 Z\" fill=\"#583e3a\"/>\n    <path d=\"M35.45 34.5 L42.7 31.5 L40.5 39 Z\" fill=\"#704938\" opacity=\"0.55\"/>\n    <path d=\"M64 0 L41.7 12 L42.2 30 L39.2 40.5 L64 64 Z\" fill=\"#6a8b74\"/>\n        \n    \n    <path d=\"M22.5 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z\" fill=\"#704938\"/>\n  </g>\n\n  <path d=\"M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z\" fill=\"#583e3a\"/>\n  <path d=\"M32.9 33.6 L33.5 35.6 L32.7 36.2 Z\" fill=\"#6a8b74\" opacity=\"0.7\"/>\n  <path d=\"M30.6 36.3 h2.6\" stroke=\"#583223\" stroke-width=\"0.7\" stroke-linecap=\"round\"/>\n  <path d=\"M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"28\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/><path d=\"M34.5 29 Q36.6 27.3 38.7 29 Q36.6 30.1 34.5 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"37.2\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/>\n  <path d=\"M24.9 25.6 L29.7 25.1\" stroke=\"#247a6f\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M34.3 25.1 L39.1 25.6\" stroke=\"#247a6f\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M29.4 40 Q32 40.9 34.6 40\" stroke=\"#583223\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/>\n      <path d=\"M30.2 40.7 Q32 42.2 33.8 40.7 Z\" fill=\"#834c35\"/>\n  \n  <path d=\"M23 22 L24.5 24 L23.7 25.2 L25.5 28\" stroke=\"#b0806e\" stroke-width=\"0.75\" fill=\"none\" stroke-linejoin=\"bevel\"/>\n  \n  \n  <g fill=\"#3de8d8\" fill-opacity=\"0.12\" stroke=\"#0d0d0f\" stroke-width=\"0.8\"><rect x=\"24.3\" y=\"27\" width=\"6.2\" height=\"4.2\" rx=\"1.2\"/><rect x=\"33.5\" y=\"27\" width=\"6.2\" height=\"4.2\" rx=\"1.2\"/></g><path d=\"M30.5 28.6 h3\" stroke=\"#0d0d0f\" stroke-width=\"0.8\"/>\n\n  <g >\n  <path d=\"M20.1 25 C19.5 13 22.5 8.6 32 8.4 C41.5 8.6 44.5 13 43.9 25 C42.5 20 40.5 17.2 32 16.8 C23.5 17.2 21.5 20 20.1 25 Z\" fill=\"#36d6c3\" />\n    <g clip-path=\"url(#pf4t)\"><path d=\"M34.875 0 L64 0 L64 30 L38.9 30 Z\" fill=\"#3adfce\" opacity=\"0.75\"/>\n    <g stroke=\"#238b7f\" stroke-width=\"0.5\" fill=\"none\"><path d=\"M22.5 21 Q30 11 41.5 13\"/><path d=\"M24.5 19 Q32 12 42.5 17\"/></g><path d=\"M33.725 11 Q41.5 12 42.7 19\" stroke=\"#fff\" stroke-width=\"0.9\" fill=\"none\" opacity=\"0.35\"/></g>\n  \n  \n  \n  </g>\n  \n\n  \n  <path d=\"M43 23 L38 24.5 L37.5 31.5 L41 35 L42.9 33 Z\" fill=\"#997868\" opacity=\"0.85\"/>\n        <path d=\"M43 23 L38 24.5 L37.5 31.5 L41 35\" stroke=\"#43291b\" stroke-width=\"0.45\" fill=\"none\"/>\n        <circle cx=\"38\" cy=\"24.5\" r=\"0.65\" fill=\"#ff3d5f\" opacity=\"0.5\"/>\n  \n</svg>", "mop": "<svg class=\"art portrait\" viewBox=\"9 6 46 46\" width=\"64\" height=\"64\" aria-hidden=\"true\" focusable=\"false\">\n  <defs>\n    <linearGradient id=\"pf5bg\" x1=\"1\" x2=\"0\"><stop offset=\"0\" stop-color=\"#9b8cff\" stop-opacity=\"0.28\"/><stop offset=\"0.65\" stop-color=\"#9b8cff\" stop-opacity=\"0\"/></linearGradient>\n    <clipPath id=\"pf5h\"><path d=\"M32 11 C41 11 44 16 44 24 C44 30 43.4 33 43.5 38 L37 44.5 Q32 46.2 27 44.5 L20.5 38 C20.6 33 20 30 20 24 C20 16 23 11 32 11 Z\"/></clipPath>\n    <clipPath id=\"pf5s\"><path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\"/></clipPath>\n    <clipPath id=\"pf5t\"><path d=\"M19.2 27 C18.2 17 21 7.5 32 7 C43 7.5 45.8 16 44.8 26 C43.4 22 42 19.5 40 18.6 C33 18 30 20 28 19 C25 18.5 22 20 19.2 27 Z\"/></clipPath>\n    \n    \n  </defs>\n  <rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#0d1016\"/><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"url(#pf5bg)\"/>\n\n  <g >\n  \n  \n  </g>\n\n  <path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\" fill=\"#262b36\"/>\n  <g clip-path=\"url(#pf5s)\"><path d=\"M64 44 L40 47 L46 64 L64 64 Z\" fill=\"#525082\"/><path d=\"M27 46 L32 54 L37 46 Z\" fill=\"#191c23\"/></g>\n  <path d=\"M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z\" fill=\"#654741\"/><path d=\"M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z\" fill=\"#9a718a\" opacity=\"0.8\"/>\n  \n\n  <ellipse cx=\"20.3\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#654741\"/>\n  <ellipse cx=\"43.7\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#9a6142\"/><path d=\"M44.6 27.5 Q45.5 30 44.4 33\" stroke=\"#9a718a\" stroke-width=\"0.9\" fill=\"none\"/>\n  \n\n  <path d=\"M32 11 C41 11 44 16 44 24 C44 30 43.4 33 43.5 38 L37 44.5 Q32 46.2 27 44.5 L20.5 38 C20.6 33 20 30 20 24 C20 16 23 11 32 11 Z\" fill=\"#9a6142\"/>\n  <g clip-path=\"url(#pf5h)\">\n    <path d=\"M0 0 L30.56 9 C25.4 20 26.240000000000002 31 30.5 48 L0 64 Z\" fill=\"#654741\"/>\n    <path d=\"M35.6 34.5 L43.2 31.5 L43 39 Z\" fill=\"#815542\" opacity=\"0.55\"/>\n    <path d=\"M64 0 L42.2 12 L42.7 30 L41.7 40.5 L64 64 Z\" fill=\"#9a718a\"/>\n        \n    \n    <path d=\"M22 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z\" fill=\"#815542\"/>\n  </g>\n\n  <path d=\"M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z\" fill=\"#654741\"/>\n  <path d=\"M32.9 33.6 L33.5 35.6 L32.7 36.2 Z\" fill=\"#9a718a\" opacity=\"0.7\"/>\n  <path d=\"M30.6 36.3 h2.6\" stroke=\"#623a29\" stroke-width=\"0.7\" stroke-linecap=\"round\"/>\n  <path d=\"M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"28\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/><path d=\"M34.5 29 Q36.6 27.3 38.7 29 Q36.6 30.1 34.5 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"37.2\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/>\n  <path d=\"M24.9 25.6 L29.7 25.1\" stroke=\"#261b15\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M34.3 25.1 L39.1 25.6\" stroke=\"#261b15\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M29.4 40 Q32 40.9 34.6 40\" stroke=\"#623a29\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/>\n      <path d=\"M30.2 40.7 Q32 42.2 33.8 40.7 Z\" fill=\"#94583f\"/>\n  \n  \n  \n  \n  <g fill=\"#9b8cff\" fill-opacity=\"0.12\" stroke=\"#0d0d0f\" stroke-width=\"0.8\"><rect x=\"24.3\" y=\"27\" width=\"6.2\" height=\"4.2\" rx=\"1.2\"/><rect x=\"33.5\" y=\"27\" width=\"6.2\" height=\"4.2\" rx=\"1.2\"/></g><path d=\"M30.5 28.6 h3\" stroke=\"#0d0d0f\" stroke-width=\"0.8\"/>\n\n  <g >\n  <path d=\"M19.2 27 C18.2 17 21 7.5 32 7 C43 7.5 45.8 16 44.8 26 C43.4 22 42 19.5 40 18.6 C33 18 30 20 28 19 C25 18.5 22 20 19.2 27 Z\" fill=\"#3a291e\" />\n    <g clip-path=\"url(#pf5t)\"><path d=\"M35 0 L64 0 L64 30 L39.2 30 Z\" fill=\"#6b5b8f\" opacity=\"0.75\"/>\n    </g>\n  \n  \n  \n  </g>\n  \n\n  \n  <path d=\"M42.4 19 L40.5 21.5 L40.5 24.5 L39.8 25.2 M40.5 22.6 L42.6 23.6\" stroke=\"#3de8d8\" stroke-width=\"0.55\" fill=\"none\" stroke-linejoin=\"round\" opacity=\"0.5\"/>\n        <circle cx=\"39.8\" cy=\"25.2\" r=\"0.6\" fill=\"#3de8d8\" opacity=\"0.5\"/>\n  \n</svg>"};
+let faceSeq = 0;
+const face = (op) => FACES[op.id].replace(/pf\d+/g, () => `pf${op.id}${++faceSeq}`).replace(/ width="64" height="64"/, '');
 const initials = (op) => op.handle.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 
 // ---------- Container 409: the owner's crises (src/data/missions/container.js), placed on a map ----------
@@ -261,9 +303,9 @@ const PREP = [
 const POST_CRISES = ['dog', 'backwards'];
 const PAY = 1600;
 const SLOTS = {
-  point: { name: 'Point', does: 'Goes first. Handles the way in.' },
-  watch: { name: 'Watch', does: 'Holds Stack 409. Handles the post.' },
-  wheels: { name: 'Wheels', does: 'Waits in the van. Handles the road out.' },
+  point: { name: 'Point', does: 'Goes first. Handles the way in.', tilt: '-1.5deg', pin: '#ff4f7b' },
+  watch: { name: 'Watch', does: 'Holds Stack 409. Handles the post.', tilt: '1deg', pin: '#36d6c3' },
+  wheels: { name: 'Wheels', does: 'Waits in the van. Handles the road out.', tilt: '-0.5deg', pin: '#f5b942' },
 };
 
 // ---------- Map geometry ----------
@@ -313,7 +355,7 @@ function alarm(at) {
 }
 
 // ---------- Plan state and the shared odds (the read and the run use the same numbers) ----------
-const plan = { route: 'seawall', exit: 'van', point: 'rat', watch: 'mop', wheels: 'hotwire', prep: new Set(), callIn: 'risky', ifHurt: 'out' };
+const plan = { route: 'seawall', exit: 'van', point: null, watch: null, wheels: null, prep: new Set(), callIn: 'risky', ifHurt: 'out' };
 let seed = (Date.now() % 2147483647) | 0;
 const slotsNeeded = () => (plan.exit === 'van' ? ['point', 'watch', 'wheels'] : ['point', 'watch']);
 const fill = (t, op) => t.replaceAll('{op}', op.handle);
@@ -345,8 +387,28 @@ function crewPick(crisisId, slotId, who = plan) {
 }
 // What a slot faces under a plan: its crises and the worst best-option risk among them.
 function slotRisk(slotId, who = plan) {
+  if (!who[slotId]) return null;
   const crises = slotId === 'point' ? [ROUTES[who.route].crisis] : slotId === 'watch' ? POST_CRISES : who.exit === 'van' ? ['boxed'] : [];
   return worst(crises.map((cid) => crewPick(cid, slotId, who)[0].r.risk));
+}
+// The stats each slot leans on under this plan (shown on the dossier).
+const slotStats = (slotId, who = plan) => {
+  const crises = slotId === 'point' ? [ROUTES[who.route].crisis] : slotId === 'watch' ? POST_CRISES : ['boxed'];
+  return [...new Set(crises.flatMap((cid) => C[cid].choices.map((c) => c.stat)))].slice(0, 3);
+};
+// Joss's picks: fill the slots in order, each with the free person who faces the least risk there.
+function jossPicks() {
+  const who = { ...plan, point: null, watch: null, wheels: null };
+  const order = slotsNeeded();
+  const best = {};
+  for (const s of order) {
+    const free = CREW.filter((o) => !order.some((t) => who[t] === o.id));
+    free.sort((a, b) => RISK_ORDER.indexOf(slotRisk(s, { ...who, [s]: a.id })) - RISK_ORDER.indexOf(slotRisk(s, { ...who, [s]: b.id }))
+      || slotStats(s, who).reduce((n, st) => n + b.stats[st] - a.stats[st], 0));
+    who[s] = free[0].id;
+    best[s] = free[0].id;
+  }
+  return best;
 }
 const withPlan = (changes) => ({ ...plan, prep: plan.prep, ...changes });
 const prepOdds = (p) => (p.helps === ROUTES[plan.route].crisis || (p.helps === 'boxed' && plan.exit === 'van') ? 'will' : POST_CRISES.includes(p.helps) ? 'might' : 'wont');
@@ -359,27 +421,33 @@ function renderPlan() {
   const fare = plan.exit === 'boat' ? PAY * 0.15 : 0;
   const routeCard = (k, r) => {
     const risk = slotRisk('point', withPlan({ route: k }));
+    const riskPill = risk ? pill(risk) : '<span class="pill r-safe">pick Point</span>';
     return `<button type="button" class="card" data-route="${k}" aria-pressed="${plan.route === k}">
-      <span class="card__top"><b>${esc(r.name)}</b>${pill(risk)}</span>
+      <span class="card__top"><b>${esc(r.name)}</b>${riskPill}</span>
       <span class="card__body">${esc(r.blurb)}</span>
       <span class="card__meta">Point ${r.bonus} +1 · trouble: ${esc(lowerFirst(C[r.crisis].name))}</span></button>`;
   };
   const exitCard = (k, e) => {
-    const risk = k === 'van' ? slotRisk('wheels', withPlan({ exit: 'van', wheels: plan.exit === 'van' ? plan.wheels : freeFor('wheels') })) : 'safe';
+    const risk = k === 'van' ? (plan.exit === 'van' ? slotRisk('wheels') : null) : 'safe';
     return `<button type="button" class="card" data-exit="${k}" aria-pressed="${plan.exit === k}">
-      <span class="card__top"><b>${esc(e.name)}</b>${pill(risk)}</span>
+      <span class="card__top"><b>${esc(e.name)}</b>${risk ? pill(risk) : `<span class="pill r-safe">${k === 'van' && plan.exit === 'van' ? 'pick Wheels' : 'needs Wheels'}</span>`}</span>
       <span class="card__body">${esc(e.blurb)}</span>
       <span class="card__meta">${k === 'van' ? 'trouble: boxed in' : `fare −${yen(PAY * 0.15)}`}</span></button>`;
   };
-  const slotRow = (slotId) => {
-    const where = (o) => slotsNeeded().find((s) => s !== slotId && plan[s] === o.id);
-    const chips = CREW.map((o) => {
-      const r = slotRisk(slotId, withPlan(swapIn(slotId, o.id)));
-      const w = where(o);
-      return `<button type="button" class="chip ${w ? 'elsewhere' : ''}" data-slot="${slotId}" data-op="${o.id}" aria-pressed="${plan[slotId] === o.id}" style="--c:${o.color}" aria-label="${esc(o.handle)} as ${SLOTS[slotId].name}: ${r} risk${w ? `, now on ${SLOTS[w].name}, tap to swap` : ''}">
-        <span class="av">${esc(initials(o))}</span><span class="nm">${esc(o.handle)}</span>${w ? `<span class="where">on ${SLOTS[w].name}</span>` : pill(r)}</button>`;
-    }).join('');
-    return `<div class="slot"><div class="slot__head"><b>${SLOTS[slotId].name}</b><span>${SLOTS[slotId].does}</span></div><div class="chips">${chips}</div></div>`;
+  const picks = jossPicks();
+  const dossier = (slotId) => {
+    const sl = SLOTS[slotId];
+    const op = plan[slotId] ? byId(plan[slotId]) : null;
+    if (!op) return `<button type="button" class="dossier empty" data-dossier="${slotId}" style="--tilt:0deg" aria-label="${sl.name}: empty. ${sl.does} Tap to assign.">
+      <span class="dossier__tab">${sl.name}</span><span class="sil" aria-hidden="true">+</span><span class="dossier__does">${sl.does}</span></button>`;
+    const risk = slotRisk(slotId);
+    return `<button type="button" class="dossier" data-dossier="${slotId}" style="--tilt:${sl.tilt};--pin:${sl.pin}" aria-label="${sl.name}: ${esc(op.handle)}, ${risk} risk. Tap to change.">
+      <span class="dossier__tab">${sl.name}</span>
+      <span class="dossier__photo">${face(op)}</span>
+      <span class="dossier__name">${esc(op.handle)}</span><span class="dossier__real">${esc(op.name)} · ${op.role}</span>
+      ${pill(risk)}
+      <span class="dossier__stats">${slotStats(slotId).map((st) => `<span class="stat">${st}<span>${op.stats[st]}</span><i><b style="width:${op.stats[st] * 5}%"></b></i></span>`).join('')}</span>
+      ${picks[slotId] === op.id ? '<span class="dossier__pick">Joss\'s pick</span>' : ''}</button>`;
   };
   const prepBtn = (p) => {
     const odds = prepOdds(p);
@@ -399,7 +467,9 @@ function renderPlan() {
     <div class="map">${mapSvg(plan, { interactive: true })}<span class="map__hint">Tap a route</span></div>
     <section><h2>Way in <small>Point's risk</small></h2><div class="cards">${Object.entries(ROUTES).map(([k, r]) => routeCard(k, r)).join('')}</div></section>
     <section><h2>Way out</h2><div class="cards">${Object.entries(EXITS).map(([k, e]) => exitCard(k, e)).join('')}</div></section>
-    <section><h2>Crew <small>risk in that slot</small></h2>${slotsNeeded().map(slotRow).join('')}</section>
+    <section><h2>Crew <small>tap a card to assign</small></h2><div class="board">
+      <div class="board__head"><p>${slotsNeeded().every((s) => plan[s]) ? 'Tap a card to change who does it.' : 'Pin someone to each job.'}</p><button type="button" class="jossbtn" id="joss">Joss's picks</button></div>
+      <div class="dossiers" style="--n:${slotsNeeded().length}">${slotsNeeded().map(dossier).join('')}</div></div></section>
     <section><h2>Prep <small>paid up front</small></h2><div class="prep">${PREP.map(prepBtn).join('')}</div></section>
     <section><h2>Orders</h2>
       <div class="order"><p>Call me in…</p>${seg('callIn', [['every', 'Every time'], ['risky', 'If risky'], ['never', 'Never']])}
@@ -407,21 +477,23 @@ function renderPlan() {
       <div class="order"><p>If someone gets hurt…</p>${seg('ifHurt', [['out', 'Get them out'], ['finish', 'Finish the job']])}</div>
     </section>`;
 
-  const toughest = worst(slotsNeeded().map((s) => slotRisk(s)));
+  const missing = slotsNeeded().filter((s) => !plan[s]);
+  const toughest = worst(slotsNeeded().filter((s) => plan[s]).map((s) => slotRisk(s)));
   const bar = document.getElementById('bar');
   bar.hidden = false;
-  bar.innerHTML = `<div class="bar__in"><div class="bar__sum"><b>${yen(PAY - fare - prepCost())}</b><span>if it runs clean · toughest moment ${pill(toughest)}</span></div><button class="btn" id="go">Send them</button></div>`;
+  bar.innerHTML = `<div class="bar__in"><div class="bar__sum"><b>${yen(PAY - fare - prepCost())}</b><span>${missing.length ? `Still to assign: ${missing.map((s) => SLOTS[s].name).join(', ')}` : `if it runs clean · toughest moment ${pill(toughest)}`}</span></div><button class="btn" id="go" ${missing.length ? 'disabled' : ''}>Send them</button></div>`;
 
   app.querySelectorAll('[data-route]').forEach((el) => el.addEventListener('click', () => { plan.route = el.dataset.route; rerender(el); }));
   app.querySelectorAll('[data-exit]').forEach((el) => el.addEventListener('click', () => { plan.exit = el.dataset.exit; fixSlots(); rerender(el); }));
   app.querySelectorAll('[data-prep]').forEach((el) => el.addEventListener('click', () => { const id = el.dataset.prep; plan.prep.has(id) ? plan.prep.delete(id) : plan.prep.add(id); rerender(el); }));
-  app.querySelectorAll('.chip').forEach((el) => el.addEventListener('click', () => { Object.assign(plan, swapIn(el.dataset.slot, el.dataset.op)); rerender(el); }));
+  app.querySelectorAll('[data-dossier]').forEach((el) => el.addEventListener('click', () => openPicker(el.dataset.dossier)));
+  document.getElementById('joss').addEventListener('click', () => { Object.assign(plan, jossPicks()); rerender(document.getElementById('joss')); });
   app.querySelectorAll('[data-order]').forEach((el) => el.addEventListener('click', () => { plan[el.dataset.order] = el.dataset.v; rerender(el); }));
   document.getElementById('go').addEventListener('click', run);
 }
 // Re-render and keep focus on the same control (keyboard users keep their place).
 function rerender(el) {
-  const sel = el.dataset.route ? `.card[data-route="${el.dataset.route}"]` : el.dataset.exit ? `.card[data-exit="${el.dataset.exit}"]` : el.dataset.prep ? `[data-prep="${el.dataset.prep}"]` : el.dataset.op ? `.chip[data-slot="${el.dataset.slot}"][data-op="${el.dataset.op}"]` : `[data-order="${el.dataset.order}"][data-v="${el.dataset.v}"]`;
+  const sel = el.id === 'joss' ? '#joss' : el.dataset.dossier ? `[data-dossier="${el.dataset.dossier}"]` : el.dataset.route ? `.card[data-route="${el.dataset.route}"]` : el.dataset.exit ? `.card[data-exit="${el.dataset.exit}"]` : el.dataset.prep ? `[data-prep="${el.dataset.prep}"]` : el.dataset.op ? `.chip[data-slot="${el.dataset.slot}"][data-op="${el.dataset.op}"]` : `[data-order="${el.dataset.order}"][data-v="${el.dataset.v}"]`;
   const hadFocus = document.activeElement === el;
   const y = window.scrollY;
   renderPlan();
@@ -433,11 +505,40 @@ function swapIn(slotId, opId) {
   const from = slotsNeeded().find((s) => s !== slotId && plan[s] === opId);
   return from ? { [slotId]: opId, [from]: plan[slotId] } : { [slotId]: opId };
 }
-function freeFor(slotId) {
-  const used = slotsNeeded().filter((s) => s !== slotId).map((s) => plan[s]);
-  return used.includes(plan[slotId]) ? CREW.find((o) => !used.includes(o.id)).id : plan[slotId];
+function fixSlots() {
+  // Leaving the van frees Wheels; coming back, Wheels starts empty unless they're still free.
+  if (plan.exit !== 'van') return;
+  if (plan.wheels && (plan.wheels === plan.point || plan.wheels === plan.watch)) plan.wheels = null;
 }
-function fixSlots() { for (const s of slotsNeeded()) plan[s] = freeFor(s); }
+
+// The picker: a sheet listing the crew, best fit first, each with their risk in this slot.
+function openPicker(slotId) {
+  const sl = SLOTS[slotId];
+  const rows = CREW.map((o) => ({ o, risk: slotRisk(slotId, withPlan(swapIn(slotId, o.id))), where: slotsNeeded().find((s) => s !== slotId && plan[s] === o.id) }))
+    .sort((a, b) => RISK_ORDER.indexOf(a.risk) - RISK_ORDER.indexOf(b.risk) || slotStats(slotId).reduce((n, st) => n + b.o.stats[st] - a.o.stats[st], 0));
+  const scrim = document.createElement('div'); scrim.className = 'scrim';
+  const sheet = document.createElement('div'); sheet.className = 'sheet'; sheet.setAttribute('role', 'dialog'); sheet.setAttribute('aria-modal', 'true'); sheet.setAttribute('aria-label', `Who's on ${sl.name}?`);
+  sheet.innerHTML = `<div class="sheet__in">
+    <div class="sheet__head"><div><h3>Who's on ${sl.name}?</h3><p>${sl.does} Leans on ${slotStats(slotId).join(', ')}.</p></div><button type="button" class="x" aria-label="Close">✕</button></div>
+    ${rows.map(({ o, risk, where }) => `<button type="button" class="cand" data-op="${o.id}" aria-pressed="${plan[slotId] === o.id}">
+      <span class="cand__ph">${face(o)}</span>
+      <span class="cand__txt"><b>${esc(o.handle)}</b><span>${o.role} · ${slotStats(slotId).map((st) => `${st} ${o.stats[st]}`).join(' · ')}</span></span>
+      <span class="cand__side">${pill(risk)}${where ? `<small>on ${SLOTS[where].name} · swaps</small>` : plan[slotId] === o.id ? '<small>assigned</small>' : ''}</span></button>`).join('')}
+  </div>`;
+  document.body.append(scrim, sheet);
+  const close = (focusBack = true) => { scrim.remove(); sheet.remove(); document.removeEventListener('keydown', onKey); if (focusBack) document.querySelector(`[data-dossier="${slotId}"]`)?.focus({ preventScroll: true }); };
+  const onKey = (e) => { if (e.key === 'Escape') close(); };
+  document.addEventListener('keydown', onKey);
+  scrim.addEventListener('click', () => close());
+  sheet.querySelector('.x').addEventListener('click', () => close());
+  sheet.querySelectorAll('.cand').forEach((b) => b.addEventListener('click', () => {
+    Object.assign(plan, swapIn(slotId, b.dataset.op));
+    close(false);
+    rerender(document.querySelector(`[data-dossier="${slotId}"]`));
+    document.querySelector(`[data-dossier="${slotId}"]`)?.focus({ preventScroll: true });
+  }));
+  (sheet.querySelector('.cand[aria-pressed="true"]') ?? sheet.querySelector('.cand')).focus({ preventScroll: true });
+}
 
 // ---------- The run: a phased feed, tokens on the map, call-ins ----------
 let fast = false;
