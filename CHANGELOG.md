@@ -18,6 +18,10 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - **See why a number is what it is:** when you pick a choice, the risk read now names every bonus behind the number, e.g. "Egg Tart on tech (14, Chromed +2, stealth approach +1)". Traits, a veteran on the crew and your approach were already counted, just never shown.
 - **Clearer job reports:** every crisis in the game now gets a plain line in the job report saying what happened. Until now only the newer jobs had them; the district crises, the twists and the seven older jobs are done too (183 lines, written by the owner).
 - **City map:** on a computer screen, the district card now sits right next to the map instead of across a wide gap.
+## 2026-10-26 · Screenshot log
+- **How the game looked, version by version:** `docs/screenshots/` now holds phone screenshots of 11 versions, from the first playable build on 23 Oct to the current one, plus the owner's own screenshots from 24 Oct. Its README lists each version with what changed on screen.
+- Every set shows the same screens with the same file names (job board, planning, a crisis, the report, crew and so on), so old and new are easy to put side by side.
+- `npm run screenshots -- <name>` adds a new set; `--commit <sha>` captures an older version.
 
 ## 2026-10-25 · Tidier crew cards
 - **Crew cards line up:** someone who's away no longer has a taller card than the people beside them.
