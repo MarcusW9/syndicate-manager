@@ -194,18 +194,32 @@ export function noteInjury(state, op, severity) {
 }
 
 /**
+ * How much a moment counts towards a trait (the squad run, retuned 2026-10-27, the owner's ratio):
+ * a crisis roll 1, a save or patch-up a half, a small incident a quarter. Counts below are weighted
+ * sums; a threshold of 4 is four crisis rolls, or sixteen incidents.
+ */
+export const WEIGHT = { crisis: 1, save: 0.5, incident: 0.25 };
+export const weightOf = (e) => (e.incident ? WEIGHT.incident : e.kind === 'save' ? WEIGHT.save : WEIGHT.crisis);
+const weigh = (xs) => xs.reduce((n, e) => n + weightOf(e), 0);
+
+/**
  * After a job: count what each of the crew did, earn and fade. Mutates the (cloned) state.
  * events: the run's record (mission.js); outcome: 'completed' | 'aborted' | 'loss'.
+ * crewIds: everyone on the job, outside (overwatch, Wheels, standby) included.
+ * Counts are weighted (weightOf); whether a job was clean, failed or theirs (streaks, Client's
+ * Favourite, Clean Professional, Overconfident, Second Wind) still reads the crisis rolls only.
  */
 export function afterJob(state, { events, district, clientId, outcome, crewIds }) {
   const crew = crewIds.map((id) => state.crew.find((o) => o.id === id)).filter((o) => o && !o.freelance);
   const done = outcome === 'completed';
-  const rolls = events.filter((e) => (e.kind === 'roll' || (e.kind === 'critical' && e.action === 'stabilise')) && e.actor);
+  const all = events.filter((e) => (e.kind === 'roll' || e.kind === 'save' || (e.kind === 'critical' && e.action === 'stabilise')) && e.actor);
+  const rolls = all.filter((e) => !e.incident && e.kind !== 'save');
   const hurt = new Set(events.filter((e) => e.injury).map((e) => e.injury.id));
 
   for (const op of crew) {
     const t = track(op);
-    const mine = rolls.filter((e) => e.actor.id === op.id);
+    const mine = rolls.filter((e) => e.actor.id === op.id); // crisis rolls: what makes a job clean, failed or theirs
+    const every = all.filter((e) => e.actor.id === op.id); // with incidents and saves, for the weighted counts
     const heatOf = (e) => (e.outcomeCost?.heat ?? 0) + (e.choiceCost?.heat ?? 0);
     const causedHeat = mine.some((e) => heatOf(e) > 0);
     const failed = mine.some((e) => !e.success);
@@ -215,16 +229,16 @@ export function afterJob(state, { events, district, clientId, outcome, crewIds }
     // Steady Under Fire: cool or combat rolls passed once someone else was already hurt.
     let hurtSoFar = false;
     for (const e of events) {
-      if (e.actor?.id === op.id && e.kind === 'roll' && e.success && ['cool', 'combat'].includes(e.stat) && hurtSoFar) t.steadyFire = (t.steadyFire ?? 0) + 1;
+      if (e.actor?.id === op.id && (e.kind === 'roll' || e.kind === 'save') && e.success && ['cool', 'combat'].includes(e.stat) && hurtSoFar) t.steadyFire = (t.steadyFire ?? 0) + weightOf(e);
       if (e.injury && e.injury.id !== op.id) hurtSoFar = true;
     }
     if ((t.steadyFire ?? 0) >= NEEDS.steadyUnderFire) earn(state, op, 'steady_under_fire');
 
-    t.medPasses = (t.medPasses ?? 0) + mine.filter((e) => e.stat === 'medical' && e.success).length;
+    t.medPasses = (t.medPasses ?? 0) + weigh(every.filter((e) => e.stat === 'medical' && e.success));
     if (t.medPasses >= NEEDS.clinicHands) earn(state, op, 'clinic_hands');
 
     const sitOf = (e) => new Set(e.situations ?? []);
-    t.cleanDrives = (t.cleanDrives ?? 0) + mine.filter((e) => e.stat === 'driving' && e.success && sitOf(e).has('escape') && !heatOf(e) && !e.injury).length;
+    t.cleanDrives = (t.cleanDrives ?? 0) + weigh(every.filter((e) => e.stat === 'driving' && e.success && sitOf(e).has('escape') && !heatOf(e) && !e.injury));
     if (t.cleanDrives >= NEEDS.ghostDriver) earn(state, op, 'ghost_driver');
 
     if (done && !causedHeat) t.cleanJobs = (t.cleanJobs ?? 0) + 1;
@@ -273,13 +287,13 @@ export function afterJob(state, { events, district, clientId, outcome, crewIds }
     }
 
     // Group 2: what they did in which kind of situation.
-    const passes = (stats, sit) => mine.filter((e) => e.success && stats.includes(e.stat) && sitOf(e).has(sit)).length;
-    const fails = (stats, sit) => mine.filter((e) => !e.success && stats.includes(e.stat) && sitOf(e).has(sit)).length;
-    t.entryPasses = (t.entryPasses ?? 0) + mine.filter((e) => e.success && e.stat === 'stealth' && sitOf(e).has('entry') && !sitOf(e).has('escape')).length;
+    const passes = (stats, sit) => weigh(every.filter((e) => e.success && stats.includes(e.stat) && sitOf(e).has(sit)));
+    const fails = (stats, sit) => weigh(every.filter((e) => !e.success && stats.includes(e.stat) && sitOf(e).has(sit)));
+    t.entryPasses = (t.entryPasses ?? 0) + weigh(every.filter((e) => e.success && e.stat === 'stealth' && sitOf(e).has('entry') && !sitOf(e).has('escape')));
     if (t.entryPasses >= NEEDS.lightFingered) earn(state, op, 'light_fingered');
     t.crowdPasses = (t.crowdPasses ?? 0) + passes(['social', 'cool'], 'crowd');
     if (t.crowdPasses >= NEEDS.crowdReader) earn(state, op, 'crowd_reader');
-    t.streetTechPasses = (t.streetTechPasses ?? 0) + mine.filter((e) => e.success && e.stat === 'tech' && sitOf(e).has('street-tech') && !sitOf(e).has('corp-tech')).length;
+    t.streetTechPasses = (t.streetTechPasses ?? 0) + weigh(every.filter((e) => e.success && e.stat === 'tech' && sitOf(e).has('street-tech') && !sitOf(e).has('corp-tech')));
     if (t.streetTechPasses >= NEEDS.wirewise) earn(state, op, 'wirewise');
     t.fightPasses = (t.fightPasses ?? 0) + passes(['combat'], 'fight');
     if (t.fightPasses >= NEEDS.cornerFighter) earn(state, op, 'corner_fighter');
@@ -287,10 +301,10 @@ export function afterJob(state, { events, district, clientId, outcome, crewIds }
     // Rattled by Sirens: comes from failing in front of the police, goes from facing them down.
     const rattled = earnedOf(op, 'rattled_by_sirens');
     if (rattled) {
-      rattled.faced = (rattled.faced ?? 0) + mine.filter((e) => e.success && sitOf(e).has('police')).length;
+      rattled.faced = (rattled.faced ?? 0) + weigh(every.filter((e) => e.success && sitOf(e).has('police')));
       if (rattled.faced >= NEEDS.rattledFaced) fade(state, op, rattled, 'faced the police down');
     } else {
-      t.policeFails = (t.policeFails ?? 0) + mine.filter((e) => !e.success && sitOf(e).has('police')).length;
+      t.policeFails = (t.policeFails ?? 0) + weigh(every.filter((e) => !e.success && sitOf(e).has('police')));
       if (t.policeFails >= NEEDS.rattledFails) earn(state, op, 'rattled_by_sirens');
     }
 
@@ -307,7 +321,7 @@ export function afterJob(state, { events, district, clientId, outcome, crewIds }
     }
 
     // Burned Out: tech or neural work failing them, within three jobs.
-    t.techFails = [...(t.techFails ?? []), mine.filter((e) => !e.success && (e.stat === 'tech' || sitOf(e).has('neural'))).length].slice(-NEEDS.burnoutJobs);
+    t.techFails = [...(t.techFails ?? []), weigh(every.filter((e) => !e.success && (e.stat === 'tech' || sitOf(e).has('neural'))))].slice(-NEEDS.burnoutJobs);
     if (t.techFails.reduce((n, x) => n + x, 0) >= NEEDS.burnoutFails) earn(state, op, 'burned_out');
 
     // Overconfident: hard rolls going their way, one after another; any failure resets.

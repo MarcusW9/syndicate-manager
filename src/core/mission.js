@@ -389,7 +389,7 @@ export function runIncident(prev) {
         am.extraHeat += kit.heat;
         if (kit.neural) addNeural(save.op, kit.neural);
       }
-      grow(state, am, save.op, save.stat, XP.incident);
+      grow(state, am, save.op, save.stat, XP.save);
       const how = kit ? (save.kit === 'rifle' ? (saved ? `${save.op.handle} takes the shot from overwatch.` : `${save.op.handle}'s shot goes wide.`) : (saved ? `${save.op.handle}'s drone drops in and puts them down.` : `${save.op.handle}'s drone can't get there in time.`))
         : (saved ? `${save.op.handle} gets there and pulls ${op.handle} clear.` : `${save.op.handle} can't reach ${op.handle} in time.`);
       record(am, {
@@ -428,7 +428,7 @@ export function runIncident(prev) {
           why: `${medic.o.handle} had the best hands on the crew (medical ${medic.s.value}).`,
         });
         am.report = [...(am.report ?? []), patched ? `${medic.o.handle} patched ${op.handle} up: bad, but they could walk.` : `${medic.o.handle} couldn't stop the bleeding.`];
-        grow(state, am, medic.o, 'medical', XP.incident);
+        grow(state, am, medic.o, 'medical', XP.save);
         if (patched) severity = 'light';
       }
     }
@@ -1004,9 +1004,9 @@ function finish(state) {
   // Full logs are kept for the most recent jobs; older reports keep their timeline and summary.
   state.inbox.filter((m) => m.type === 'report' && m.timeline?.events).slice(REPORT_LOGS_KEPT).forEach((m) => { delete m.timeline.events; });
   reactToJob(state, am, tpl, { heatGain, injuries, deaths });
-  // Incidents and saves don't count towards earning traits yet: the traits were tuned to about one
-  // moment a week, and counting them doubled it (2026-10-27). Injuries from incidents still count (noteInjury).
-  afterJob(state, { events: events.filter((e) => !e.incident && e.kind !== 'save'), district: tpl.district, clientId: am.clientId, outcome, crewIds: am.crewIds });
+  // Everyone on the job counts towards traits, outside too; incidents and saves count for less
+  // than a crisis roll (core/earned.js weightOf, retuned 2026-10-27).
+  afterJob(state, { events, district: tpl.district, clientId: am.clientId, outcome, crewIds: onJob(state, am).map((o) => o.id) });
 }
 
 export function closeMission(prev) {

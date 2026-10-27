@@ -4,6 +4,14 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-27 · Incidents teach, and count towards traits
+- **What your crew does on the watch screen now shapes them.** Whoever handles an incident learns a little from it (a quarter of what a crisis roll teaches); a save or patching someone up teaches half. Nobody learns just by watching an incident. Overwatch, Wheels and standby learn from what they actually do.
+- **Incidents and saves count towards earned traits** at the same rates, so the situation traits now come from real work: slipping past patrols and opening locks builds **Light-Fingered**, talking through checkpoints **Crowd Reader**, saves in a fight **Steady Under Fire**. How often traits come up overall is unchanged. Whether a job was clean (for Riding High or Client's Favourite) still depends on the crisis rolls only, so a squawking lock doesn't break a good run.
+- Everyone on the job, outside the inside team too, now counts for traits like Crew Anchor.
+- **Mentoring is worth a full point a season again**, and growth stays on the same curve: about +2-3 in a season, more by the end of the second.
+- Past their ceiling, people now grow even more slowly (each point costs six times as much instead of four), so a specialist who handles every incident in their line still hits their wall.
+- 267 tests.
+
 ## 2026-10-27 · The squad run, part 3: Wheels and standby
 - **Wheels:** a new slot on the squad board. Whoever you put in the van takes **every driving roll** on the job, alone at the wheel, out of harm's way inside. Leave it empty and the team drives as before. The crisis read uses their driving.
 - **Standby:** someone waiting at the van until it goes wrong. At **max alert** the crew can call them in: they join the team, back up rolls and get **a try of their own at saving anyone in trouble** (after overwatch or a teammate). The alert stays up, so the next slip calls you again, and standby comes once. When someone is **badly hurt**, standby can go in, **get them out and take their place**.

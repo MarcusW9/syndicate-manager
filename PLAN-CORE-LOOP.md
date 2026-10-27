@@ -101,7 +101,7 @@ cards will); the way out has no zone heading.
 Built as `core/squad.js` (coverage read, Joss's picks; not `risk.js`, to avoid an import cycle), `core/feed.js`
 (events as watch cards), `ui/board.js`, `ui/siteplan.js` and `ui/watch.js`; tests in `tests/squad.test.js` and
 `tests/feed.test.js`. Done from slice 1's follow-ups: the crew's reason on cards they decided, the way out's heading.
-Still open: retune growth and earned traits for the loop. Found while building: the planning screen is long on
+Retuned since (DESIGN.md, 2026-10-27): incidents teach and count towards traits. Found while building: the planning screen is long on
 phones (approach, board, two reads, call-ins); the generic site plan doesn't match every job (slice 4).
 
 ### Slice 3 · Wheels and standby — [x] 2026-10-27 (owner's calls and build calls in DESIGN.md)
