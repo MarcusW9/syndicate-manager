@@ -4,6 +4,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-27 · Easier squad picking, a calmer feed (owner's feedback)
+- **Picking the squad:** the picker lists free crew first. Everyone already on the squad sits in their own "Already on the squad" section below, greyed, with a tag saying where they are (Inside, Overwatch, Wheels, Standby, or "In this slot"), so you're much less likely to tap the same person again by accident. Tapping one still moves them to the slot you're filling.
+- **Watching a run:** each moment is now a single line, an icon and a short headline ("✓ Raster slips the patrol", "✗ The lock squawks", "★ Buffer saves Drone"). Tap a line for the setup, the detail, the crew's reason and the dice. Story beats are smaller and quieter. Call-ins still show in full.
+
 ## 2026-10-27 · Incidents teach, and count towards traits
 - **What your crew does on the watch screen now shapes them.** Whoever handles an incident learns a little from it (a quarter of what a crisis roll teaches); a save or patching someone up teaches half. Nobody learns just by watching an incident. Overwatch, Wheels and standby learn from what they actually do.
 - **Incidents and saves count towards earned traits** at the same rates, so the situation traits now come from real work: slipping past patrols and opening locks builds **Light-Fingered**, talking through checkpoints **Crowd Reader**, saves in a fight **Steady Under Fire**. How often traits come up overall is unchanged. Whether a job was clean (for Riding High or Client's Favourite) still depends on the crisis rolls only, so a squawking lock doesn't break a good run.

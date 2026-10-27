@@ -31,9 +31,10 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 
 ## Next
 
-1. **Merge the retune PR** when the owner's happy with it, then play: the owner is play-testing slices 1-3.
-2. **Squad run slice 4** (`PLAN-CORE-LOOP.md`): a site plan per district as data, and the incident text per district (writing task 11).
-3. Then slices 3-5 (Wheels and standby, sites and district text, gear and specialisations), and the agreed review items: the neural load and burnout cleanup, mood traits, money pressure, relationships with the career page.
+1. **Merge the retune and feedback PR** when the owner's happy with it; the owner is play-testing slices 1-3 and sending feedback.
+2. **Focus-role crisis labels** (DESIGN.md, 2026-10-27, owner's feedback): in 39 crises with `focusRole`, `{op}` in a choice label names the person at risk (`am.focusOp`, `mission.js` `choiceVoice`) while the best at the stat rolls, so the line can name the wrong person. Review those labels, then have `{op}` name the roller in labels and reports of rolls (keeping the person at risk for failure injuries), or ask the owner.
+3. **Squad run slice 4** (`PLAN-CORE-LOOP.md`): a site plan per district as data, and the incident text per district (writing task 11).
+4. Then slice 5 (gear and specialisations), and the agreed review items: the neural load and burnout cleanup, mood traits, money pressure, relationships with the career page.
 
 ## Writing pipeline (owner writes in other chats, pastes back)
 

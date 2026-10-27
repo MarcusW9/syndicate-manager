@@ -122,6 +122,22 @@ export function renderPicker(ui, { plan, tpl, threat, slot, people, freelancersF
     .map((p) => ({ ...p, score: p.status.ok ? FIT.score(p.op) : -99 }))
     .sort((a, b) => b.score - a.score);
   const where = (id) => (plan.crew.includes(id) ? 'inside' : Object.keys(OUTSIDE).find((k) => plan[OUTSIDE[k]] === id)?.replace('over', 'overwatch') ?? null);
+  // Free crew first; anyone already on the squad goes below, greyed and tagged with where they are,
+  // so tapping the same person again by accident is hard (owner's feedback, 2026-10-27).
+  const free = rows.filter(({ op }) => !where(op.id));
+  const placed = rows.filter(({ op }) => where(op.id));
+  const cand = ({ op, status, freelance }) => {
+    const w = where(op.id);
+    const here = current === op.id;
+    const blocked = !status.ok || (freelance && freelancersFull && !plan.crew.includes(op.id));
+    return `
+          <li><button class="cand ${here ? 'is-on' : w ? 'is-placed' : ''}" data-action="assign" data-id="${esc(op.id)}" ${blocked ? 'disabled' : ''} aria-pressed="${here}">
+            ${face(op, 'sm')}
+            <span class="cand__txt"><strong>${esc(op.handle)}</strong> <span class="muted">${esc(freelance ? `freelance ${op.role}` : op.role)}</span><br>
+              <span class="small">${FIT.line ? esc(FIT.line(op)) : keyStats(op, tpl, threat)}</span></span>
+            <span class="cand__side">${here ? '<span class="cand__where cand__where--here">In this slot</span>' : w ? `<span class="cand__where">${esc(w)}</span>` : freelance ? `<strong>${Math.round(freelance.share * 100)}%</strong> of pay` : statusChip(status)}</span>
+          </button></li>`;
+  };
   return `
     <div class="scrim" data-action="close-picker"></div>
     <div class="sheet" role="dialog" aria-modal="true" aria-label="Who's on ${esc(FIT.name)}?">
@@ -130,19 +146,10 @@ export function renderPicker(ui, { plan, tpl, threat, slot, people, freelancersF
         <p class="muted small">${esc(FIT.note)}</p></div>
         <button class="btn btn--ghost sheet__x" data-action="close-picker" aria-label="Close">✕</button>
       </div>
-      <ul class="list">
-        ${rows.map(({ op, status, freelance }) => {
-          const w = where(op.id);
-          const blocked = !status.ok || (freelance && freelancersFull && !plan.crew.includes(op.id));
-          return `
-          <li><button class="cand ${current === op.id ? 'is-on' : ''}" data-action="assign" data-id="${esc(op.id)}" ${blocked ? 'disabled' : ''} aria-pressed="${current === op.id}">
-            ${face(op, 'sm')}
-            <span class="cand__txt"><strong>${esc(op.handle)}</strong> <span class="muted">${esc(freelance ? `freelance ${op.role}` : op.role)}</span><br>
-              <span class="small">${FIT.line ? esc(FIT.line(op)) : keyStats(op, tpl, threat)}</span></span>
-            <span class="cand__side">${freelance ? `<strong>${Math.round(freelance.share * 100)}%</strong> of pay` : statusChip(status)}${w && current !== op.id ? `<br><span class="small muted">${esc(w)} · swaps</span>` : ''}</span>
-          </button></li>`;
-        }).join('')}
-      </ul>
+      <ul class="list">${free.length ? free.map(cand).join('') : '<li class="muted small">Everyone free is already on the squad.</li>'}</ul>
+      ${placed.length ? `
+      <h3 class="sheet__group">Already on the squad <span>tap to move them here${current ? ' (they swap places)' : ''}</span></h3>
+      <ul class="list">${placed.map(cand).join('')}</ul>` : ''}
       ${current ? '<button class="btn btn--ghost btn--block" data-action="assign" data-id="">Leave this empty</button>' : ''}
     </div>`;
 }

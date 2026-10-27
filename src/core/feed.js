@@ -32,7 +32,7 @@ export function feedItems(events = [], { kit = null } = {}) {
   };
   for (const e of events) {
     if (e.kind === 'save' && open) {
-      open.card.results.push({ headline: e.success ? `★ ${e.choice}` : e.choice, detail: e.report, tone: e.success ? 'save' : 'bad', roll: roll(e), why: e.why ?? null });
+      open.card.results.push({ headline: e.choice, detail: e.report, tone: e.success ? 'save' : 'bad', roll: roll(e), why: e.why ?? null });
       if (e.via !== 'patch') open.card.cue.save = { via: e.via, kit: e.kit ?? kit, success: e.success, by: e.actor?.id ?? null };
       continue;
     }
@@ -53,7 +53,7 @@ export function feedItems(events = [], { kit = null } = {}) {
     } else if (e.kind === 'roll') {
       items.push({
         type: 'card', kind: 'crisis', label: 'Crisis', setup: e.text,
-        results: [{ headline: `${e.choice} ${e.success ? '✓' : '✗'}`, detail: [e.report, injuryLine(e)?.headline].filter(Boolean).join(' '), tone: tone(e), roll: roll(e), why: e.why ?? null }],
+        results: [{ headline: e.choice, detail: [e.report, injuryLine(e)?.headline].filter(Boolean).join(' '), tone: tone(e), roll: roll(e), why: e.why ?? null }],
         cue: { crisis: true, success: e.success, actor: e.actor?.id ?? null },
       });
     } else if (e.kind === 'decision' || e.kind === 'exit') {
