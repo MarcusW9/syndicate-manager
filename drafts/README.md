@@ -9,3 +9,4 @@ Generated text waiting to go into `src/data/`. Not imported by the game. Delete 
 - `crisis-situations-review.md`: Claude's draft of each crisis's situations, for the owner to skim.
 - `core-loop.md`: the first-principles discussion of the core loop (planning, feed, call-ins, route maps), started 2026-10-26.
 - `prototypes/container409-plan.html`: the most basic plan → watch → call-in → report prototype of Container 409 (2026-10-26), standalone, not part of the game. Delete once the core-loop discussion has settled what to build.
+- `prototypes/container409-squad.html`: prototype v2 (2026-10-27): four approaches, a squad of 2-4 inside plus overwatch (rifle or drone), Wheels and standby; a coverage read that counts saves; incidents rolled by whoever is best placed, saves, an alert track, rescues; the job's crises as call-ins. Standalone, not part of the game.

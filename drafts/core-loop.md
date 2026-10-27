@@ -113,6 +113,10 @@ Before committing: a clickable prototype of one job (Container 409, already prot
 
 `drafts/prototypes/container409-plan.html`: the most basic version, to feel whether planning plus watching beats crisis-by-crisis play. Container 409's real crises and the game's roll rule, on a heist-board map. Plan: way in (3 routes, each a +1 and a likely crisis), way out (van needs Wheels; boat costs 15%), role slots (Point handles the way in, Watch the post, Wheels the road out; the other walker backs up), prep (5 items, each only pays off if its trouble turns up), orders (call-in rule, what to do if someone's hurt). Watch: a timed feed, tokens moving on the map, small checks, the crew's own calls with a reason, call-ins with every option's risk and an abort. Report: Joss, net, heat, hurt, and "did the plan work?" (which prep came into play, who passed what). Not in the prototype: traits, relationships, gear, fatigue, growth.
 
+## Prototype v2 (2026-10-27)
+
+`drafts/prototypes/container409-squad.html`. Container 409 becomes "pull the real manifest from the yard office", so there's a building. Zones: fence, yard, office (the sniper can't see indoors; the drone can). Incidents by approach and zone (difficulty 8, hard ones 9, so a specialist fails about 1 in 4), a 25% off-approach guard in the yard, the job's crisis by approach plus Boxed in for Wheels. Saves: overwatch (3 shots for a Marksman, 2 for an amateur; 3 drone actions) or the best fighter inside, +1 if bonded (one demo bond: Rat owes Egg Tart one). Unsaved failures raise alert (+1 difficulty each); max alert calls you in (go loud, call standby, pull out). Serious injuries: a medic inside can patch to light; otherwise a call-in (standby rescue, keep going, pull out). Seven crew (the five founders plus Hawk, a Marksman, and Wren, an infiltrator) so there's a bench. Not in it: prep, gear beyond the rifle and drone, relationships beyond the one bond, growth.
+
 ## Open questions
 
 1. How many decisions per job, and when? (For example: 4-6 in planning, 0-2 call-ins.)

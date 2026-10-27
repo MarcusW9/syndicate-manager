@@ -560,6 +560,7 @@ async function run() {
     <div class="feed" id="feed" aria-live="polite"></div>`;
   drawTokens(walkers.map((op) => ({ op, at: P.drop })).concat(wheels ? [{ op: wheels, at: P.drop }] : []));
   const bar = document.getElementById('bar');
+  bar.hidden = false;
   bar.innerHTML = `<div class="bar__in"><div class="bar__sum"><b>Live</b><span>${esc(walkers.map((o) => o.handle).join(' & '))}${wheels ? ` · ${esc(wheels.handle)} driving` : ''}</span></div><button class="btn btn--ghost" id="skip">Speed up</button></div>`;
   document.getElementById('skip').addEventListener('click', (e) => { fast = !fast; e.target.textContent = fast ? 'Normal speed' : 'Speed up'; });
 

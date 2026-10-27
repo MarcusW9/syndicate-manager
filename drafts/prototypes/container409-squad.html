@@ -1,0 +1,949 @@
+<title>Container 409 Squad</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one phone-width column. Plan = approach, then the squad board, then the coverage read, with a
+   sticky action bar. Watch = sticky map + alert track over a phased feed. Report = verdict first.
+   Deliberately single dark theme: the game's street-terminal skin (src/ui/styles.css). */
+:root {
+  --bg: #0f1115;
+  --panel: #171a21;
+  --panel-2: #1c2029;
+  --line: #262b36;
+  --text: #e7e9ee;
+  --muted: #8b93a7;
+  --accent: #ff4f7b;
+  --accent-2: #36d6c3;
+  --warn: #f5b942;
+  --danger: #ff5a5a;
+  --good: #5fe0a5;
+  --sel: #13221f;
+  --paper: #e9e4d8;
+  --ink: #1b1d22;
+  --display: 'Rajdhani', 'Arial Narrow', system-ui, sans-serif;
+  --body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --tap: 44px;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--text); }
+body { font-family: var(--body); font-size: 15px; line-height: 1.45; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 12px 24px; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+button { font: inherit; color: inherit; }
+.wrap { max-width: 540px; margin: 0 auto; display: grid; gap: 18px; padding-bottom: 96px; }
+.wrap.no-bar { padding-bottom: 24px; }
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; }
+h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: 0.02em; line-height: 1.1; }
+h2 { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+h2 small { font: 400 0.75rem var(--body); letter-spacing: 0; text-transform: none; text-align: right; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.eyebrow { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-2); display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+.tag { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; border: 1px dashed var(--muted); color: var(--muted); border-radius: 4px; padding: 1px 6px; }
+.brief { color: #c9cdd8; font-style: italic; font-size: 0.92rem; border-left: 2px solid var(--accent); padding-left: 10px; }
+details.how { font-size: 0.82rem; color: var(--muted); }
+details.how summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; color: var(--accent-2); }
+details.how ul { margin: 4px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+section { display: grid; gap: 8px; }
+
+/* Map */
+.map { position: relative; background: #0b0d11; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.map svg { display: block; width: 100%; height: auto; }
+.map .route { fill: none; stroke: var(--accent-2); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.map .exit { fill: none; stroke: #2c3240; stroke-width: 2; stroke-dasharray: 4 5; stroke-linejoin: round; }
+.map .exit.on { stroke: var(--warn); stroke-dasharray: none; }
+.map .sight { fill: rgba(255, 79, 123, 0.06); stroke: rgba(255, 79, 123, 0.25); stroke-dasharray: 3 4; }
+.map .node { fill: #171a21; stroke: #3a4254; stroke-width: 1.5; }
+.map .node.post { stroke: var(--accent); fill: #2a1520; }
+.map .node.crane { stroke: var(--warn); }
+.map .label { fill: var(--muted); font-family: var(--mono); font-size: 9px; letter-spacing: 0.04em; }
+.map .label.hi { fill: var(--text); }
+.map .token circle { stroke: var(--bg); stroke-width: 2; }
+.map .token text { fill: var(--bg); font-family: var(--display); font-weight: 700; font-size: 9px; text-anchor: middle; dominant-baseline: central; }
+.map .token { transition: transform 0.8s ease-in-out, opacity 0.4s; }
+.map .token.down circle { stroke: var(--danger); stroke-width: 3; }
+.map .water { fill: #0d1620; }
+.map .stack { fill: #141821; stroke: #232937; }
+.map .office { fill: #191c25; stroke: #3a4254; }
+.map .alarm { fill: none; stroke: var(--accent); stroke-width: 2; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.map .alarm.on { animation: pulse 1.2s ease-out infinite; }
+.map .shot { stroke: var(--warn); stroke-width: 2; stroke-linecap: round; animation: shot 0.7s ease-out forwards; }
+.map .dronefx { fill: var(--accent-2); }
+@keyframes pulse { from { transform: scale(1); opacity: 0.9; } to { transform: scale(3.5); opacity: 0; } }
+@keyframes shot { from { opacity: 1; } to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .map .token { transition: none; } .map .alarm.on { animation: none; opacity: 0.8; transform: scale(2); } }
+
+/* Approach cards */
+.approaches { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.card { width: 100%; text-align: left; display: grid; gap: 4px; align-content: start; min-height: var(--tap); padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); cursor: pointer; }
+.card[aria-pressed="true"] { border-color: var(--accent-2); background: var(--sel); box-shadow: inset 3px 0 0 var(--accent-2); }
+.card b { font-family: var(--display); font-size: 1.1rem; font-weight: 700; letter-spacing: 0.03em; }
+.card__body { font-size: 0.8rem; color: var(--muted); }
+.card__meta { font-family: var(--mono); font-size: 0.68rem; color: #a9b0c2; }
+.card__cost { font-family: var(--mono); font-size: 0.68rem; color: var(--warn); }
+.exits { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* Risk pills */
+.pill { font-family: var(--mono); font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 7px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; flex: none; }
+.r-low { color: var(--good); } .r-moderate { color: var(--accent-2); } .r-high { color: var(--warn); } .r-extreme, .r-gap { color: var(--danger); } .r-certain, .r-safe, .r-none { color: var(--muted); }
+
+/* Squad board */
+.board { display: grid; gap: 12px; padding: 14px 12px 12px; border-radius: 12px; border: 1px solid #2a2f3b; background:
+  radial-gradient(circle at 20% 10%, rgba(54, 214, 195, 0.06), transparent 40%),
+  repeating-linear-gradient(0deg, transparent 0 19px, rgba(139, 147, 167, 0.07) 19px 20px),
+  repeating-linear-gradient(90deg, transparent 0 19px, rgba(139, 147, 167, 0.07) 19px 20px), #12151b; }
+.board__head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.board__head p { font-size: 0.78rem; color: var(--muted); min-width: 0; }
+.jossbtn { min-height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #1f4440; background: #10201e; color: var(--accent-2); font: 600 0.88rem var(--display); letter-spacing: 0.04em; cursor: pointer; white-space: nowrap; }
+.group { display: grid; gap: 6px; }
+.group__label { font: 700 0.72rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+.group__label span { font: 400 0.72rem var(--body); letter-spacing: 0; text-transform: none; }
+.dossiers { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 8px; }
+.dossier { position: relative; display: grid; justify-items: center; align-content: start; gap: 3px; padding: 15px 5px 8px; min-height: 172px; text-align: center; border-radius: 4px; cursor: pointer;
+  background: var(--paper); color: var(--ink); border: 0; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45); transform: rotate(var(--tilt, 0deg)); transition: transform 0.15s; }
+.dossier > * { max-width: 100%; }
+.dossier:hover { transform: rotate(0deg) translateY(-2px); }
+.dossier::before { content: ""; position: absolute; top: 5px; left: 50%; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: var(--pin, var(--accent)); box-shadow: 0 2px 2px rgba(0, 0, 0, 0.5); }
+.dossier__photo { width: 56px; height: 56px; border-radius: 2px; overflow: hidden; background: #1b1f28; outline: 3px solid #fff; }
+.dossier__photo svg { width: 100%; height: 100%; display: block; }
+.dossier__name { font: 700 0.98rem var(--display); line-height: 1.05; }
+.dossier__real { font-size: 0.62rem; color: #5a5f6c; line-height: 1.15; }
+.dossier .pill { font-size: 0.56rem; padding: 0 6px; background: var(--ink); }
+.dossier__spec { font: 600 0.56rem var(--mono); text-transform: uppercase; letter-spacing: 0.05em; color: #fff; background: #7a4b0c; border-radius: 3px; padding: 1px 5px; }
+.dossier__note { font: 500 0.58rem var(--mono); text-transform: uppercase; letter-spacing: 0.04em; color: #4a4f5c; }
+.dossier.empty { background: transparent; color: var(--muted); border: 2px dashed #3a4254; box-shadow: none; align-content: center; min-height: 120px; }
+.dossier.empty .sil { width: 44px; height: 44px; border-radius: 50%; border: 2px dashed #3a4254; display: grid; place-items: center; font: 600 1.4rem var(--display); color: #4a5266; }
+.dossier.empty small { font-size: 0.66rem; padding: 0 4px; }
+.dossier.empty b { font: 700 0.7rem var(--display); letter-spacing: 0.12em; text-transform: uppercase; }
+.kit { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+.kit button { min-height: 36px; background: transparent; border: 0; border-radius: 7px; font: 600 0.88rem var(--display); cursor: pointer; color: var(--muted); }
+.kit button[aria-pressed="true"] { background: var(--sel); color: var(--accent-2); box-shadow: inset 0 0 0 1px var(--accent-2); }
+
+/* Coverage read */
+.cover { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.cover__row { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 9px 12px; border-top: 1px solid var(--line); align-items: center; }
+.cover__row:first-child { border-top: 0; }
+.cover__row b { font-weight: 600; font-size: 0.9rem; }
+.cover__row small { grid-column: 1; font-size: 0.75rem; color: var(--muted); }
+.cover__row .risk { grid-row: span 2; display: grid; justify-items: end; gap: 3px; }
+.cover__row .with { font-family: var(--mono); font-size: 0.6rem; color: var(--muted); text-transform: uppercase; }
+.cover__row.gap { background: #1e1416; }
+.cover__note { padding: 9px 12px; border-top: 1px solid var(--line); font-size: 0.78rem; color: var(--warn); }
+
+/* Orders */
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+.seg button { min-height: 40px; background: transparent; border: 0; border-radius: 7px; font: 600 0.92rem var(--display); letter-spacing: 0.02em; cursor: pointer; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--sel); color: var(--accent-2); box-shadow: inset 0 0 0 1px var(--accent-2); }
+.order { display: grid; gap: 6px; }
+.order p { font-size: 0.84rem; }
+.order .muted { font-size: 0.76rem; }
+
+/* Sticky action bar */
+.bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: rgba(15, 17, 21, 0.96); border-top: 1px solid var(--line); padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.bar__in { max-width: 540px; margin: 0 auto; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+.bar__sum { display: grid; gap: 2px; min-width: 0; }
+.bar__sum b { font-family: var(--display); font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+.bar__sum span { font-size: 0.74rem; color: var(--muted); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.btn { min-height: 48px; padding: 0 22px; border: 0; border-radius: 10px; background: var(--accent); color: #fff; font: 700 1.05rem var(--display); letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
+.btn:disabled { background: var(--line); color: var(--muted); cursor: not-allowed; }
+.btn--ghost { background: transparent; border: 1px solid var(--line); color: var(--text); }
+
+/* Picker sheet */
+.scrim { position: fixed; inset: 0; z-index: 20; background: rgba(5, 6, 9, 0.6); }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 21; max-height: 82vh; overflow-y: auto; background: var(--panel); border-top: 1px solid var(--line); border-radius: 16px 16px 0 0;
+  padding: 14px max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); animation: up 0.22s ease-out; }
+@keyframes up { from { transform: translateY(30%); opacity: 0.4; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .sheet { animation: none; } .dossier { transition: none; } }
+.sheet__in { max-width: 540px; margin: 0 auto; display: grid; gap: 8px; }
+.sheet__head { display: flex; justify-content: space-between; align-items: start; gap: 8px; }
+.sheet__head h3 { font: 700 1.3rem var(--display); }
+.sheet__head p { font-size: 0.8rem; color: var(--muted); }
+.x { min-width: var(--tap); min-height: var(--tap); background: none; border: 1px solid var(--line); border-radius: 10px; color: var(--muted); font-size: 1.1rem; cursor: pointer; }
+.cand { display: grid; grid-template-columns: 48px 1fr auto; gap: 10px; align-items: center; min-height: 60px; padding: 6px 10px 6px 6px; text-align: left; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
+.cand[aria-pressed="true"] { border-color: var(--accent-2); background: var(--sel); }
+.cand.remove { grid-template-columns: 1fr; min-height: var(--tap); color: var(--muted); }
+.cand__ph { width: 48px; height: 48px; border-radius: 6px; overflow: hidden; background: #0b0d11; }
+.cand__ph svg { width: 100%; height: 100%; display: block; }
+.cand__txt { display: grid; gap: 1px; min-width: 0; }
+.cand__txt b { font: 700 1.02rem var(--display); }
+.cand__txt span { font-size: 0.74rem; color: var(--muted); }
+.cand__side { display: grid; justify-items: end; gap: 3px; }
+.cand__side small { font: 500 0.6rem var(--mono); text-transform: uppercase; color: var(--muted); }
+
+/* Watch */
+.live { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 4; background: var(--bg); padding-block: 4px 8px; display: grid; gap: 6px; }
+.live .map svg { height: min(24vh, 190px); }
+.tally { display: flex; gap: 6px; flex-wrap: wrap; font-family: var(--mono); font-size: 0.72rem; align-items: center; }
+.tally > span { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; }
+.tally .phase { color: var(--accent-2); border-color: #1f4440; }
+.tally .bad { color: var(--danger); border-color: #4a2224; }
+.alert { display: inline-flex; gap: 3px; align-items: center; }
+.alert i { width: 9px; height: 9px; border-radius: 2px; background: var(--line); display: inline-block; }
+.alert i.on { background: var(--danger); }
+.feed { display: grid; gap: 6px; }
+.feed > * { scroll-margin-bottom: 96px; }
+.phasehead { font: 700 0.75rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-2); padding-top: 8px; display: flex; gap: 8px; align-items: center; }
+.phasehead::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.line { padding: 6px 0 6px 12px; border-left: 2px solid var(--line); font-size: 0.92rem; animation: in 0.35s ease-out; }
+.line.beat { color: #c9cdd8; font-style: italic; }
+.line.inc { border-color: #3a4254; }
+.line.good { border-color: var(--good); }
+.line.bad { border-color: var(--danger); }
+.line.save { border-color: var(--warn); background: #1f1b12; border-radius: 0 8px 8px 0; padding: 7px 10px 7px 12px; }
+.line.crisis { border-color: var(--accent); background: #1a1418; border-radius: 0 8px 8px 0; padding: 8px 10px 8px 12px; font-weight: 500; }
+.line.why { font-size: 0.8rem; color: var(--muted); }
+.line .kind { display: block; font: 600 0.6rem var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 2px; }
+.who { font-family: var(--display); font-weight: 700; letter-spacing: 0.02em; }
+.dice { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); background: none; border: 0; padding: 0 0 0 4px; cursor: pointer; text-decoration: underline dotted; min-height: 24px; }
+.dice-detail { display: block; font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+@keyframes in { from { opacity: 0.2; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .line { animation: none; } }
+.callin { border: 1px solid var(--accent); background: #1d1418; border-radius: 12px; padding: 12px; display: grid; gap: 8px; animation: in 0.35s ease-out; }
+.callin__q { font-size: 0.95rem; }
+.callin .eyebrow { color: var(--accent); }
+.choice { min-height: var(--tap); text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 9px 10px; cursor: pointer; display: grid; gap: 3px; }
+.choice:hover:not(:disabled) { border-color: var(--accent-2); }
+.choice:disabled { cursor: default; opacity: 0.5; }
+.choice.picked { opacity: 1; border-color: var(--accent-2); }
+.choice__top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.choice__top > span:first-child { min-width: 0; }
+.choice__sub { font-size: 0.75rem; color: var(--muted); }
+.crewpick { font-family: var(--mono); font-size: 0.6rem; color: var(--accent-2); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* Report */
+.joss { font-size: 1.02rem; border-left: 2px solid var(--accent-2); padding-left: 12px; }
+.facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.fact { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 9px 8px; display: grid; gap: 2px; }
+.fact b { font-family: var(--display); font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.fact span { font-size: 0.66rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.planline { display: flex; flex-wrap: wrap; gap: 6px; }
+.planline span { font-family: var(--mono); font-size: 0.7rem; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; color: #b4bacb; }
+ul.check { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+ul.check li { display: grid; grid-template-columns: 18px 1fr; gap: 6px; font-size: 0.9rem; }
+ul.check li i { font-style: normal; font-family: var(--mono); text-align: center; }
+ul.check li.ok i { color: var(--good); } ul.check li.no i { color: var(--danger); } ul.check li.meh i { color: var(--muted); } ul.check li.sv i { color: var(--warn); }
+.money { font-family: var(--mono); font-size: 0.82rem; display: grid; gap: 2px; }
+.money div { display: flex; justify-content: space-between; gap: 8px; }
+.money div:last-child { border-top: 1px solid var(--line); padding-top: 4px; color: var(--text); font-weight: 500; }
+.btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.seed { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); text-align: center; }
+</style>
+
+<div class="wrap" id="app"></div>
+<div class="bar" id="bar" hidden></div>
+
+<script>
+// ---------- Rules (the game's own: success if d20 + stat >= 10 + difficulty) ----------
+function mulberry32(a) { return function () { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const chanceOf = (stat, diff) => Math.min(0.95, Math.max(0.05, (21 - (10 + diff - stat)) / 20));
+const riskOf = (c) => (c >= 0.75 ? 'low' : c >= 0.5 ? 'moderate' : c >= 0.3 ? 'high' : 'extreme');
+const RISK_ORDER = ['safe', 'low', 'moderate', 'high', 'extreme'];
+const worst = (list) => list.reduce((a, b) => (RISK_ORDER.indexOf(b) > RISK_ORDER.indexOf(a) ? b : a), 'safe');
+const yen = (n) => (n < 0 ? '-¥' : '¥') + Math.abs(Math.round(n)).toLocaleString();
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const lowerFirst = (s) => s.charAt(0).toLowerCase() + s.slice(1);
+const pill = (risk, text = risk) => `<span class="pill r-${risk}">${text}</span>`;
+
+// ---------- The crew: the five founders, plus two hires so there's a bench ----------
+const CREW = [
+  { id: 'eggtart', handle: 'Egg Tart', name: 'Ivy Chan', role: 'tech', color: '#36d6c3', stats: { combat: 4, stealth: 7, tech: 11, social: 5, driving: 4, medical: 3, cool: 7 } },
+  { id: 'hotwire', handle: 'Hotwire', name: 'Paolo Reyes', role: 'driver', color: '#f5b942', stats: { combat: 5, stealth: 6, tech: 6, social: 4, driving: 11, medical: 2, cool: 8 } },
+  { id: 'kit', handle: 'Kit', name: 'Winnie Lau', role: 'face', color: '#ff4f7b', stats: { combat: 3, stealth: 6, tech: 3, social: 10, driving: 4, medical: 4, cool: 8 } },
+  { id: 'rat', handle: 'Rat', name: 'Tunde Okoro', role: 'muscle', color: '#9d8cff', stats: { combat: 10, stealth: 8, tech: 3, social: 4, driving: 5, medical: 2, cool: 6 } },
+  { id: 'mop', handle: 'Mop', name: 'Kelvin Cheung', role: 'medic', color: '#5fe0a5', stats: { combat: 3, stealth: 5, tech: 5, social: 7, driving: 3, medical: 10, cool: 9 } },
+  { id: 'hawk', handle: 'Hawk', name: 'Arjun Singh', role: 'muscle', spec: 'marksman', color: '#e8875c', stats: { combat: 11, stealth: 7, tech: 4, social: 3, driving: 5, medical: 3, cool: 10 } },
+  { id: 'wren', handle: 'Wren', name: 'Mai Nguyen', role: 'infiltrator', color: '#7dd3fc', stats: { combat: 4, stealth: 11, tech: 6, social: 6, driving: 4, medical: 2, cool: 7 } },
+];
+const byId = (id) => CREW.find((o) => o.id === id);
+const initials = (op) => op.handle.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+const SPEC = { marksman: 'Marksman', jockey: 'Drone Jockey' };
+// One bond to show how relationships feed saves (agreed design: bonded partners save each other more often).
+const BONDS = [['rat', 'eggtart', 'Rat owes Egg Tart one']];
+const bonded = (a, b) => BONDS.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
+// Portraits from the game's own generator (src/ui/art.js), rendered once with Node and embedded.
+const FACES = {"eggtart":"<svg class=\"art portrait\" viewBox=\"9 6 46 46\" width=\"64\" height=\"64\" aria-hidden=\"true\" focusable=\"false\">\n  <defs>\n    <linearGradient id=\"pf1bg\" x1=\"1\" x2=\"0\"><stop offset=\"0\" stop-color=\"#9b8cff\" stop-opacity=\"0.28\"/><stop offset=\"0.65\" stop-color=\"#9b8cff\" stop-opacity=\"0\"/></linearGradient>\n    <clipPath id=\"pf1h\"><path d=\"M32 11 C40.625 11 43.5 16 43.5 24 C43.5 30 42.9 33 41 38 L35.2 44.5 Q32 46.2 28.8 44.5 L23 38 C21.1 33 20.5 30 20.5 24 C20.5 16 23.375 11 32 11 Z\"/></clipPath>\n    <clipPath id=\"pf1s\"><path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\"/></clipPath>\n    <clipPath id=\"pf1t\"><path d=\"M19.7 27 C18.7 17 21.5 7 32 6.5 C42.5 7 45.3 16 44.3 26 C42.9 22 41.5 19.5 39.5 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.5 20.5 19.7 27 Z\"/></clipPath>\n    <clipPath id=\"pf1b\"><path d=\"M19 24 C18 7 46 7 45 24 L46.5 54 L40 52 L41.5 35 L22.5 35 L24 52 L17.5 54 Z\"/></clipPath>\n    \n  </defs>\n  <rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#0d1016\"/><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"url(#pf1bg)\"/>\n\n  <g >\n  <path d=\"M19 24 C18 7 46 7 45 24 L46.5 54 L40 52 L41.5 35 L22.5 35 L24 52 L17.5 54 Z\" fill=\"#3a291e\"/>\n  \n  </g>\n\n  <path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\" fill=\"#232838\"/>\n  <g clip-path=\"url(#pf1s)\"><path d=\"M64 44 L40 47 L46 64 L64 64 Z\" fill=\"#514e84\"/><path d=\"M27 46 L32 54 L37 46 Z\" fill=\"#171a24\"/></g>\n  <path d=\"M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z\" fill=\"#86685f\"/><path d=\"M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z\" fill=\"#be95aa\" opacity=\"0.8\"/>\n  \n\n  <ellipse cx=\"20.8\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#86685f\"/>\n  <ellipse cx=\"43.2\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#d49a76\"/><path d=\"M44.1 27.5 Q45 30 43.9 33\" stroke=\"#be95aa\" stroke-width=\"0.9\" fill=\"none\"/>\n  \n\n  <path d=\"M32 11 C40.625 11 43.5 16 43.5 24 C43.5 30 42.9 33 41 38 L35.2 44.5 Q32 46.2 28.8 44.5 L23 38 C21.1 33 20.5 30 20.5 24 C20.5 16 23.375 11 32 11 Z\" fill=\"#d49a76\"/>\n  <g clip-path=\"url(#pf1h)\">\n    <path d=\"M0 0 L30.62 9 C25.675 20 26.48 31 30.5 48 L0 64 Z\" fill=\"#86685f\"/>\n    <path d=\"M35.45 34.5 L42.7 31.5 L40.5 39 Z\" fill=\"#af826b\" opacity=\"0.55\"/>\n    <path d=\"M64 0 L41.7 12 L42.2 30 L39.2 40.5 L64 64 Z\" fill=\"#be95aa\"/>\n        \n    \n    <path d=\"M22.5 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z\" fill=\"#af826b\"/>\n  </g>\n\n  <path d=\"M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z\" fill=\"#86685f\"/>\n  <path d=\"M32.9 33.6 L33.5 35.6 L32.7 36.2 Z\" fill=\"#be95aa\" opacity=\"0.7\"/>\n  <path d=\"M30.6 36.3 h2.6\" stroke=\"#7f5643\" stroke-width=\"0.7\" stroke-linecap=\"round\"/>\n  <path d=\"M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"28\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/><path d=\"M34.5 29 Q36.6 27.3 38.7 29 Q36.6 30.1 34.5 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"37.2\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/>\n  <path d=\"M24.9 25.6 L29.7 25.1\" stroke=\"#261b15\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M34.3 25.1 L39.1 25.6\" stroke=\"#261b15\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M29.4 40 Q32 40.9 34.6 40\" stroke=\"#7f5643\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/>\n      <path d=\"M30.2 40.7 Q32 42.2 33.8 40.7 Z\" fill=\"#c48769\"/>\n  \n  \n  \n  \n  \n\n  <g >\n  <path d=\"M19.7 27 C18.7 17 21.5 7 32 6.5 C42.5 7 45.3 16 44.3 26 C42.9 22 41.5 19.5 39.5 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.5 20.5 19.7 27 Z\" fill=\"#3a291e\" />\n    <g clip-path=\"url(#pf1t)\"><path d=\"M34.875 0 L64 0 L64 30 L38.9 30 Z\" fill=\"#6b5b8f\" opacity=\"0.75\"/>\n    </g>\n  \n  \n  \n  </g>\n  \n\n  \n  <path d=\"M40.9 19 V27\" stroke=\"#ff3d5f\" stroke-width=\"1.1\" stroke-linecap=\"round\" opacity=\"0.5\"/><circle cx=\"40.9\" cy=\"27.5\" r=\"0.9\" fill=\"#ff3d5f\" opacity=\"0.5\"/>\n  \n</svg>","hotwire":"<svg class=\"art portrait\" viewBox=\"9 6 46 46\" width=\"64\" height=\"64\" aria-hidden=\"true\" focusable=\"false\">\n  <defs>\n    <linearGradient id=\"pf2bg\" x1=\"1\" x2=\"0\"><stop offset=\"0\" stop-color=\"#ff3d5f\" stop-opacity=\"0.28\"/><stop offset=\"0.65\" stop-color=\"#ff3d5f\" stop-opacity=\"0\"/></linearGradient>\n    <clipPath id=\"pf2h\"><path d=\"M32 11 C40.1 11 42.8 16 42.8 24 C42.8 30 42.199999999999996 33 40.5 38 L35 46 Q32 47.7 29 46 L23.5 38 C21.8 33 21.2 30 21.2 24 C21.2 16 23.9 11 32 11 Z\"/></clipPath>\n    <clipPath id=\"pf2s\"><path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\"/></clipPath>\n    <clipPath id=\"pf2t\"><path d=\"M20.4 27 C19.4 17 22.2 7.5 32 7 C41.8 7.5 44.599999999999994 16 43.599999999999994 26 C42.199999999999996 22 40.8 19.5 38.8 18.6 C33 18 30 20 28 19 C25 18.5 23.2 20 20.4 27 Z\"/></clipPath>\n    \n    \n  </defs>\n  <rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#0d1016\"/><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"url(#pf2bg)\"/>\n\n  <g >\n  \n  \n  </g>\n\n  <path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\" fill=\"#262b36\"/>\n  <g clip-path=\"url(#pf2s)\"><path d=\"M64 44 L40 47 L46 64 L64 64 Z\" fill=\"#783246\"/><path d=\"M27 46 L32 54 L37 46 Z\" fill=\"#191c23\"/></g>\n  <path d=\"M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z\" fill=\"#7e5e54\"/><path d=\"M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z\" fill=\"#dc6c61\" opacity=\"0.8\"/>\n  \n\n  <ellipse cx=\"21.5\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#7e5e54\"/>\n  <ellipse cx=\"42.5\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#c68863\"/><path d=\"M43.4 27.5 Q44.3 30 43.199999999999996 33\" stroke=\"#dc6c61\" stroke-width=\"0.9\" fill=\"none\"/>\n  \n\n  <path d=\"M32 11 C40.1 11 42.8 16 42.8 24 C42.8 30 42.199999999999996 33 40.5 38 L35 46 Q32 47.7 29 46 L23.5 38 C21.8 33 21.2 30 21.2 24 C21.2 16 23.9 11 32 11 Z\" fill=\"#c68863\"/>\n  <g clip-path=\"url(#pf2h)\">\n    <path d=\"M0 0 L30.704 9 C26.06 20 26.816 31 30.5 48 L0 64 Z\" fill=\"#7e5e54\"/>\n    <path d=\"M35.24 34.5 L42 31.5 L40 39 Z\" fill=\"#a4745c\" opacity=\"0.55\"/>\n    <path d=\"M64 0 L41 12 L41.5 30 L38.7 40.5 L64 64 Z\" fill=\"#dc6c61\"/>\n        \n    \n    <path d=\"M23.2 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z\" fill=\"#a4745c\"/>\n  </g>\n\n  <path d=\"M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z\" fill=\"#7e5e54\"/>\n  <path d=\"M32.9 33.6 L33.5 35.6 L32.7 36.2 Z\" fill=\"#dc6c61\" opacity=\"0.7\"/>\n  <path d=\"M30.6 36.3 h2.6\" stroke=\"#784d3a\" stroke-width=\"0.7\" stroke-linecap=\"round\"/>\n  <path d=\"M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"28\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/>\n  <path d=\"M24.9 25.6 L29.7 25.1\" stroke=\"#8d6a28\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M34.3 25.1 L39.1 25.6\" stroke=\"#8d6a28\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M29.4 40 Q32 40.9 34.6 40\" stroke=\"#784d3a\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/>\n      <path d=\"M30.2 40.7 Q32 42.2 33.8 40.7 Z\" fill=\"#b8785a\"/>\n  \n  \n  <g clip-path=\"url(#pf2h)\"><path d=\"M32.6 9 L33.6 22 L34.4 27.5 L35.4 33 L35.7 37.5 L35.6 41.5 L34.4 47 L34.4 64 L64 64 L64 0 L32.6 0 Z\" fill=\"#58606b\"/>\n    <path d=\"M64 0 L41 12 L41.5 30 L38.7 40.5 L64 64 Z\" fill=\"#925467\"/>\n    <path d=\"M32.6 9 L33.6 22 L34.4 27.5 L35.4 33 L35.7 37.5 L35.6 41.5 L34.4 47\" stroke=\"#704735\" stroke-width=\"0.9\" fill=\"none\"/>\n    <g stroke=\"#2b3038\" stroke-width=\"0.45\" fill=\"none\">\n      <path d=\"M35.4 18 L41.8 19.5\"/><path d=\"M36.6 33.6 L41.8 31.5\"/><path d=\"M36.3 40.6 L40.199999999999996 37\"/>\n      <path d=\"M38.5 36.2 h2.6 M38.8 37.4 h2.2\"/>\n    </g>\n    <circle cx=\"36.4\" cy=\"19.6\" r=\"0.35\" fill=\"#2b3038\"/><circle cx=\"40.8\" cy=\"31.8\" r=\"0.35\" fill=\"#2b3038\"/></g>\n  \n  \n\n  <g >\n  <path d=\"M20.4 27 C19.4 17 22.2 7.5 32 7 C41.8 7.5 44.599999999999994 16 43.599999999999994 26 C42.199999999999996 22 40.8 19.5 38.8 18.6 C33 18 30 20 28 19 C25 18.5 23.2 20 20.4 27 Z\" fill=\"#f5b942\" />\n    <g clip-path=\"url(#pf2t)\"><rect x=\"0\" y=\"0\" width=\"32\" height=\"64\" fill=\"#7dd3fc\" /><path d=\"M34.7 0 L64 0 L64 30 L38.480000000000004 30 Z\" fill=\"#fa7b51\" opacity=\"0.75\"/>\n    </g>\n  \n  \n  \n  </g>\n  \n\n  \n  <circle cx=\"42.5\" cy=\"30\" r=\"2.3\" fill=\"#4a515b\" stroke=\"#2b3038\" stroke-width=\"0.4\"/><circle cx=\"42.5\" cy=\"30\" r=\"0.8\" fill=\"#3de8d8\" opacity=\"0.5\"/>\n        <circle cx=\"36.6\" cy=\"29\" r=\"2.9\" fill=\"#1a1d22\"/><circle cx=\"36.6\" cy=\"29\" r=\"2.2\" fill=\"#0b0f12\" stroke=\"#9aa3ad\" stroke-width=\"0.5\"/>\n        <circle cx=\"36.6\" cy=\"29\" r=\"1.3\" fill=\"#3de8d8\" opacity=\"0.5\"/><circle cx=\"36.6\" cy=\"29\" r=\"0.4\" fill=\"#0b0f12\"/>\n  \n</svg>","kit":"<svg class=\"art portrait\" viewBox=\"9 6 46 46\" width=\"64\" height=\"64\" aria-hidden=\"true\" focusable=\"false\">\n  <defs>\n    <linearGradient id=\"pf3bg\" x1=\"1\" x2=\"0\"><stop offset=\"0\" stop-color=\"#9b8cff\" stop-opacity=\"0.28\"/><stop offset=\"0.65\" stop-color=\"#9b8cff\" stop-opacity=\"0\"/></linearGradient>\n    <clipPath id=\"pf3h\"><path d=\"M32 11 C41.375 11 44.5 16 44.5 24 C44.5 30 43.9 33 42.5 38 L36 43.5 Q32 45.2 28 43.5 L21.5 38 C20.1 33 19.5 30 19.5 24 C19.5 16 22.625 11 32 11 Z\"/></clipPath>\n    <clipPath id=\"pf3s\"><path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\"/></clipPath>\n    \n    \n    \n  </defs>\n  <rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#0d1016\"/><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"url(#pf3bg)\"/>\n\n  <g >\n  \n  \n  </g>\n\n  <path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\" fill=\"#1f2b2a\"/>\n  <g clip-path=\"url(#pf3s)\"><path d=\"M64 44 L40 47 L46 64 L64 64 Z\" fill=\"#4e507b\"/><path d=\"M27 46 L32 54 L37 46 Z\" fill=\"#141c1b\"/></g>\n  <path d=\"M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z\" fill=\"#654741\"/><path d=\"M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z\" fill=\"#9a718a\" opacity=\"0.8\"/>\n  \n\n  <ellipse cx=\"19.8\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#654741\"/>\n  <ellipse cx=\"44.2\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#9a6142\"/><path d=\"M45.1 27.5 Q46 30 44.9 33\" stroke=\"#9a718a\" stroke-width=\"0.9\" fill=\"none\"/>\n  \n\n  <path d=\"M32 11 C41.375 11 44.5 16 44.5 24 C44.5 30 43.9 33 42.5 38 L36 43.5 Q32 45.2 28 43.5 L21.5 38 C20.1 33 19.5 30 19.5 24 C19.5 16 22.625 11 32 11 Z\" fill=\"#9a6142\"/>\n  <g clip-path=\"url(#pf3h)\">\n    <path d=\"M0 0 L30.5 9 C25.125 20 26 31 30.5 48 L0 64 Z\" fill=\"#654741\"/>\n    <path d=\"M35.75 34.5 L43.7 31.5 L42 39 Z\" fill=\"#815542\" opacity=\"0.55\"/>\n    <path d=\"M64 0 L42.7 12 L43.2 30 L40.7 40.5 L64 64 Z\" fill=\"#9a718a\"/>\n        \n    \n    <path d=\"M21.5 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z\" fill=\"#815542\"/>\n  </g>\n\n  <path d=\"M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z\" fill=\"#654741\"/>\n  <path d=\"M32.9 33.6 L33.5 35.6 L32.7 36.2 Z\" fill=\"#9a718a\" opacity=\"0.7\"/>\n  <path d=\"M30.6 36.3 h2.6\" stroke=\"#623a29\" stroke-width=\"0.7\" stroke-linecap=\"round\"/>\n  <path d=\"M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"28\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/><path d=\"M34.5 29 Q36.6 27.3 38.7 29 Q36.6 30.1 34.5 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"37.2\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/>\n  <path d=\"M24.9 25.6 L29.7 25.1\" stroke=\"#604527\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M34.3 25.1 L39.1 25.6\" stroke=\"#604527\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M29.4 40 Q32 40.9 34.6 40\" stroke=\"#623a29\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/>\n      <path d=\"M30.2 40.7 Q32 42.2 33.8 40.7 Z\" fill=\"#94583f\"/>\n  \n  \n  \n  \n  \n\n  <g >\n  \n  \n  \n  <path d=\"M34.5 12.5 Q43.5 14 43.9 21\" stroke=\"#9a718a\" stroke-width=\"1\" fill=\"none\" opacity=\"0.6\"/>\n  </g>\n  \n\n  \n  <path d=\"M41.9 19 V27\" stroke=\"#3de8d8\" stroke-width=\"1.1\" stroke-linecap=\"round\" opacity=\"0.5\"/><circle cx=\"41.9\" cy=\"27.5\" r=\"0.9\" fill=\"#3de8d8\" opacity=\"0.5\"/>\n  \n</svg>","rat":"<svg class=\"art portrait\" viewBox=\"9 6 46 46\" width=\"64\" height=\"64\" aria-hidden=\"true\" focusable=\"false\">\n  <defs>\n    <linearGradient id=\"pf4bg\" x1=\"1\" x2=\"0\"><stop offset=\"0\" stop-color=\"#3de8d8\" stop-opacity=\"0.28\"/><stop offset=\"0.65\" stop-color=\"#3de8d8\" stop-opacity=\"0\"/></linearGradient>\n    <clipPath id=\"pf4h\"><path d=\"M32 11 C40.625 11 43.5 16 43.5 24 C43.5 30 42.9 33 41 38 L35.2 44.5 Q32 46.2 28.8 44.5 L23 38 C21.1 33 20.5 30 20.5 24 C20.5 16 23.375 11 32 11 Z\"/></clipPath>\n    <clipPath id=\"pf4s\"><path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\"/></clipPath>\n    <clipPath id=\"pf4t\"><path d=\"M20.1 25 C19.5 13 22.5 8.6 32 8.4 C41.5 8.6 44.5 13 43.9 25 C42.5 20 40.5 17.2 32 16.8 C23.5 17.2 21.5 20 20.1 25 Z\"/></clipPath>\n    \n    \n  </defs>\n  <rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#0d1016\"/><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"url(#pf4bg)\"/>\n\n  <g >\n  \n  \n  </g>\n\n  <path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\" fill=\"#262b36\"/>\n  <g clip-path=\"url(#pf4s)\"><path d=\"M64 44 L40 47 L46 64 L64 64 Z\" fill=\"#2f7374\"/><path d=\"M27 46 L32 54 L37 46 Z\" fill=\"#191c23\"/></g>\n  <path d=\"M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z\" fill=\"#583e3a\"/><path d=\"M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z\" fill=\"#6a8b74\" opacity=\"0.8\"/>\n  \n\n  <ellipse cx=\"20.8\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#583e3a\"/>\n  <ellipse cx=\"43.2\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#855236\"/><path d=\"M44.1 27.5 Q45 30 43.9 33\" stroke=\"#6a8b74\" stroke-width=\"0.9\" fill=\"none\"/>\n  <circle cx=\"43.5\" cy=\"34\" r=\"0.9\" fill=\"#f2b544\"/>\n\n  <path d=\"M32 11 C40.625 11 43.5 16 43.5 24 C43.5 30 42.9 33 41 38 L35.2 44.5 Q32 46.2 28.8 44.5 L23 38 C21.1 33 20.5 30 20.5 24 C20.5 16 23.375 11 32 11 Z\" fill=\"#855236\"/>\n  <g clip-path=\"url(#pf4h)\">\n    <path d=\"M0 0 L30.62 9 C25.675 20 26.48 31 30.5 48 L0 64 Z\" fill=\"#583e3a\"/>\n    <path d=\"M35.45 34.5 L42.7 31.5 L40.5 39 Z\" fill=\"#704938\" opacity=\"0.55\"/>\n    <path d=\"M64 0 L41.7 12 L42.2 30 L39.2 40.5 L64 64 Z\" fill=\"#6a8b74\"/>\n        \n    \n    <path d=\"M22.5 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z\" fill=\"#704938\"/>\n  </g>\n\n  <path d=\"M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z\" fill=\"#583e3a\"/>\n  <path d=\"M32.9 33.6 L33.5 35.6 L32.7 36.2 Z\" fill=\"#6a8b74\" opacity=\"0.7\"/>\n  <path d=\"M30.6 36.3 h2.6\" stroke=\"#583223\" stroke-width=\"0.7\" stroke-linecap=\"round\"/>\n  <path d=\"M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"28\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/><path d=\"M34.5 29 Q36.6 27.3 38.7 29 Q36.6 30.1 34.5 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"37.2\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/>\n  <path d=\"M24.9 25.6 L29.7 25.1\" stroke=\"#247a6f\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M34.3 25.1 L39.1 25.6\" stroke=\"#247a6f\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M29.4 40 Q32 40.9 34.6 40\" stroke=\"#583223\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/>\n      <path d=\"M30.2 40.7 Q32 42.2 33.8 40.7 Z\" fill=\"#834c35\"/>\n  \n  <path d=\"M23 22 L24.5 24 L23.7 25.2 L25.5 28\" stroke=\"#b0806e\" stroke-width=\"0.75\" fill=\"none\" stroke-linejoin=\"bevel\"/>\n  \n  \n  <g fill=\"#3de8d8\" fill-opacity=\"0.12\" stroke=\"#0d0d0f\" stroke-width=\"0.8\"><rect x=\"24.3\" y=\"27\" width=\"6.2\" height=\"4.2\" rx=\"1.2\"/><rect x=\"33.5\" y=\"27\" width=\"6.2\" height=\"4.2\" rx=\"1.2\"/></g><path d=\"M30.5 28.6 h3\" stroke=\"#0d0d0f\" stroke-width=\"0.8\"/>\n\n  <g >\n  <path d=\"M20.1 25 C19.5 13 22.5 8.6 32 8.4 C41.5 8.6 44.5 13 43.9 25 C42.5 20 40.5 17.2 32 16.8 C23.5 17.2 21.5 20 20.1 25 Z\" fill=\"#36d6c3\" />\n    <g clip-path=\"url(#pf4t)\"><path d=\"M34.875 0 L64 0 L64 30 L38.9 30 Z\" fill=\"#3adfce\" opacity=\"0.75\"/>\n    <g stroke=\"#238b7f\" stroke-width=\"0.5\" fill=\"none\"><path d=\"M22.5 21 Q30 11 41.5 13\"/><path d=\"M24.5 19 Q32 12 42.5 17\"/></g><path d=\"M33.725 11 Q41.5 12 42.7 19\" stroke=\"#fff\" stroke-width=\"0.9\" fill=\"none\" opacity=\"0.35\"/></g>\n  \n  \n  \n  </g>\n  \n\n  \n  <path d=\"M43 23 L38 24.5 L37.5 31.5 L41 35 L42.9 33 Z\" fill=\"#997868\" opacity=\"0.85\"/>\n        <path d=\"M43 23 L38 24.5 L37.5 31.5 L41 35\" stroke=\"#43291b\" stroke-width=\"0.45\" fill=\"none\"/>\n        <circle cx=\"38\" cy=\"24.5\" r=\"0.65\" fill=\"#ff3d5f\" opacity=\"0.5\"/>\n  \n</svg>","mop":"<svg class=\"art portrait\" viewBox=\"9 6 46 46\" width=\"64\" height=\"64\" aria-hidden=\"true\" focusable=\"false\">\n  <defs>\n    <linearGradient id=\"pf5bg\" x1=\"1\" x2=\"0\"><stop offset=\"0\" stop-color=\"#9b8cff\" stop-opacity=\"0.28\"/><stop offset=\"0.65\" stop-color=\"#9b8cff\" stop-opacity=\"0\"/></linearGradient>\n    <clipPath id=\"pf5h\"><path d=\"M32 11 C41 11 44 16 44 24 C44 30 43.4 33 43.5 38 L37 44.5 Q32 46.2 27 44.5 L20.5 38 C20.6 33 20 30 20 24 C20 16 23 11 32 11 Z\"/></clipPath>\n    <clipPath id=\"pf5s\"><path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\"/></clipPath>\n    <clipPath id=\"pf5t\"><path d=\"M19.2 27 C18.2 17 21 7.5 32 7 C43 7.5 45.8 16 44.8 26 C43.4 22 42 19.5 40 18.6 C33 18 30 20 28 19 C25 18.5 22 20 19.2 27 Z\"/></clipPath>\n    \n    \n  </defs>\n  <rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#0d1016\"/><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"url(#pf5bg)\"/>\n\n  <g >\n  \n  \n  </g>\n\n  <path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\" fill=\"#262b36\"/>\n  <g clip-path=\"url(#pf5s)\"><path d=\"M64 44 L40 47 L46 64 L64 64 Z\" fill=\"#525082\"/><path d=\"M27 46 L32 54 L37 46 Z\" fill=\"#191c23\"/></g>\n  <path d=\"M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z\" fill=\"#654741\"/><path d=\"M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z\" fill=\"#9a718a\" opacity=\"0.8\"/>\n  \n\n  <ellipse cx=\"20.3\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#654741\"/>\n  <ellipse cx=\"43.7\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#9a6142\"/><path d=\"M44.6 27.5 Q45.5 30 44.4 33\" stroke=\"#9a718a\" stroke-width=\"0.9\" fill=\"none\"/>\n  \n\n  <path d=\"M32 11 C41 11 44 16 44 24 C44 30 43.4 33 43.5 38 L37 44.5 Q32 46.2 27 44.5 L20.5 38 C20.6 33 20 30 20 24 C20 16 23 11 32 11 Z\" fill=\"#9a6142\"/>\n  <g clip-path=\"url(#pf5h)\">\n    <path d=\"M0 0 L30.56 9 C25.4 20 26.240000000000002 31 30.5 48 L0 64 Z\" fill=\"#654741\"/>\n    <path d=\"M35.6 34.5 L43.2 31.5 L43 39 Z\" fill=\"#815542\" opacity=\"0.55\"/>\n    <path d=\"M64 0 L42.2 12 L42.7 30 L41.7 40.5 L64 64 Z\" fill=\"#9a718a\"/>\n        \n    \n    <path d=\"M22 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z\" fill=\"#815542\"/>\n  </g>\n\n  <path d=\"M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z\" fill=\"#654741\"/>\n  <path d=\"M32.9 33.6 L33.5 35.6 L32.7 36.2 Z\" fill=\"#9a718a\" opacity=\"0.7\"/>\n  <path d=\"M30.6 36.3 h2.6\" stroke=\"#623a29\" stroke-width=\"0.7\" stroke-linecap=\"round\"/>\n  <path d=\"M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"28\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/><path d=\"M34.5 29 Q36.6 27.3 38.7 29 Q36.6 30.1 34.5 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"37.2\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/>\n  <path d=\"M24.9 25.6 L29.7 25.1\" stroke=\"#261b15\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M34.3 25.1 L39.1 25.6\" stroke=\"#261b15\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M29.4 40 Q32 40.9 34.6 40\" stroke=\"#623a29\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/>\n      <path d=\"M30.2 40.7 Q32 42.2 33.8 40.7 Z\" fill=\"#94583f\"/>\n  \n  \n  \n  \n  <g fill=\"#9b8cff\" fill-opacity=\"0.12\" stroke=\"#0d0d0f\" stroke-width=\"0.8\"><rect x=\"24.3\" y=\"27\" width=\"6.2\" height=\"4.2\" rx=\"1.2\"/><rect x=\"33.5\" y=\"27\" width=\"6.2\" height=\"4.2\" rx=\"1.2\"/></g><path d=\"M30.5 28.6 h3\" stroke=\"#0d0d0f\" stroke-width=\"0.8\"/>\n\n  <g >\n  <path d=\"M19.2 27 C18.2 17 21 7.5 32 7 C43 7.5 45.8 16 44.8 26 C43.4 22 42 19.5 40 18.6 C33 18 30 20 28 19 C25 18.5 22 20 19.2 27 Z\" fill=\"#3a291e\" />\n    <g clip-path=\"url(#pf5t)\"><path d=\"M35 0 L64 0 L64 30 L39.2 30 Z\" fill=\"#6b5b8f\" opacity=\"0.75\"/>\n    </g>\n  \n  \n  \n  </g>\n  \n\n  \n  <path d=\"M42.4 19 L40.5 21.5 L40.5 24.5 L39.8 25.2 M40.5 22.6 L42.6 23.6\" stroke=\"#3de8d8\" stroke-width=\"0.55\" fill=\"none\" stroke-linejoin=\"round\" opacity=\"0.5\"/>\n        <circle cx=\"39.8\" cy=\"25.2\" r=\"0.6\" fill=\"#3de8d8\" opacity=\"0.5\"/>\n  \n</svg>","hawk":"<svg class=\"art portrait\" viewBox=\"9 6 46 46\" width=\"64\" height=\"64\" aria-hidden=\"true\" focusable=\"false\">\n  <defs>\n    <linearGradient id=\"pf6bg\" x1=\"1\" x2=\"0\"><stop offset=\"0\" stop-color=\"#3de8d8\" stop-opacity=\"0.28\"/><stop offset=\"0.65\" stop-color=\"#3de8d8\" stop-opacity=\"0\"/></linearGradient>\n    <clipPath id=\"pf6h\"><path d=\"M32 11 C40.625 11 43.5 16 43.5 24 C43.5 30 42.9 33 41 38 L35.2 44.5 Q32 46.2 28.8 44.5 L23 38 C21.1 33 20.5 30 20.5 24 C20.5 16 23.375 11 32 11 Z\"/></clipPath>\n    <clipPath id=\"pf6s\"><path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\"/></clipPath>\n    <clipPath id=\"pf6t\"><path d=\"M23.5 21 C22 9 24.5 4.5 32 4.5 C42.5 5 45.5 15 44.3 26 C42.9 22 41.5 19.5 39.5 18.6 C33 18 30 19.5 23.5 21 Z\"/></clipPath>\n    \n    \n  </defs>\n  <rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#0d1016\"/><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"url(#pf6bg)\"/>\n\n  <g >\n  \n  \n  </g>\n\n  <path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\" fill=\"#232838\"/>\n  <g clip-path=\"url(#pf6s)\"><path d=\"M64 44 L40 47 L46 64 L64 64 Z\" fill=\"#2d7175\"/><path d=\"M27 46 L32 54 L37 46 Z\" fill=\"#171a24\"/></g>\n  <path d=\"M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z\" fill=\"#583e3a\"/><path d=\"M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z\" fill=\"#6a8b74\" opacity=\"0.8\"/>\n  \n\n  <ellipse cx=\"20.8\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#583e3a\"/>\n  <ellipse cx=\"43.2\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#855236\"/><path d=\"M44.1 27.5 Q45 30 43.9 33\" stroke=\"#6a8b74\" stroke-width=\"0.9\" fill=\"none\"/>\n  \n\n  <path d=\"M32 11 C40.625 11 43.5 16 43.5 24 C43.5 30 42.9 33 41 38 L35.2 44.5 Q32 46.2 28.8 44.5 L23 38 C21.1 33 20.5 30 20.5 24 C20.5 16 23.375 11 32 11 Z\" fill=\"#855236\"/>\n  <g clip-path=\"url(#pf6h)\">\n    <path d=\"M0 0 L30.62 9 C25.675 20 26.48 31 30.5 48 L0 64 Z\" fill=\"#583e3a\"/>\n    <path d=\"M35.45 34.5 L42.7 31.5 L40.5 39 Z\" fill=\"#704938\" opacity=\"0.55\"/>\n    <path d=\"M64 0 L41.7 12 L42.2 30 L39.2 40.5 L64 64 Z\" fill=\"#6a8b74\"/>\n        \n    <path d=\"M19.5 15 L24.5 15 L23.5 27 L19.5 27 Z\" fill=\"#563820\" opacity=\"0.3\"/><path d=\"M20.3 17.5 l2.4 2.4 l-2.4 2.4 M21.9 23.6 h2.2\" stroke=\"#3de8d8\" stroke-width=\"0.5\" fill=\"none\" opacity=\"0.7\"/>\n    <path d=\"M22.5 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z\" fill=\"#704938\"/>\n  </g>\n\n  <path d=\"M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z\" fill=\"#583e3a\"/>\n  <path d=\"M32.9 33.6 L33.5 35.6 L32.7 36.2 Z\" fill=\"#6a8b74\" opacity=\"0.7\"/>\n  <path d=\"M30.6 36.3 h2.6\" stroke=\"#583223\" stroke-width=\"0.7\" stroke-linecap=\"round\"/>\n  <path d=\"M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"28\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/><path d=\"M34.5 29 Q36.6 27.3 38.7 29 Q36.6 30.1 34.5 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"37.2\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/>\n  <path d=\"M24.9 25.6 L29.7 25.1\" stroke=\"#352316\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M34.3 25.1 L39.1 25.6\" stroke=\"#352316\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M29.4 40 Q32 40.9 34.6 40\" stroke=\"#583223\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/>\n      <path d=\"M30.2 40.7 Q32 42.2 33.8 40.7 Z\" fill=\"#834c35\"/>\n  \n  <g fill=\"#2b1e19\" opacity=\"0.85\"><rect x=\"33.4\" y=\"42.5\" width=\"0.55\" height=\"3.6\"/><rect x=\"34.3\" y=\"42.5\" width=\"0.35\" height=\"3.6\"/><rect x=\"34.8\" y=\"42.5\" width=\"0.55\" height=\"3.6\"/><rect x=\"35.9\" y=\"42.5\" width=\"0.35\" height=\"3.6\"/><rect x=\"36.4\" y=\"42.5\" width=\"0.55\" height=\"3.6\"/><rect x=\"37.199999999999996\" y=\"42.5\" width=\"0.35\" height=\"3.6\"/></g>\n  \n  \n  \n\n  <g >\n  <path d=\"M23.5 21 C22 9 24.5 4.5 32 4.5 C42.5 5 45.5 15 44.3 26 C42.9 22 41.5 19.5 39.5 18.6 C33 18 30 19.5 23.5 21 Z\" fill=\"#563820\" />\n    <g clip-path=\"url(#pf6t)\"><path d=\"M34.875 0 L64 0 L64 30 L38.9 30 Z\" fill=\"#4a907c\" opacity=\"0.75\"/>\n    </g>\n  \n  \n  \n  </g>\n  \n\n  <path d=\"M19.5 26.2 L44.5 25.8 L44.1 31.2 L19.9 31.6 Z\" fill=\"#0b0f14\"/><path d=\"M20.1 27.2 L43.9 26.8\" stroke=\"#3de8d8\" stroke-width=\"0.6\" opacity=\"0.85\"/><path d=\"M36.5 29.6 h2 M39.1 29.6 h1\" stroke=\"#3de8d8\" stroke-width=\"0.5\" opacity=\"0.6\"/>\n  <path d=\"M42 31 L40.5 35 L37.5 38.5 L35.5 41.5 M40.5 35 L42.5 37\" stroke=\"#ff3d5f\" stroke-width=\"0.55\" fill=\"none\" stroke-linejoin=\"round\" opacity=\"0.5\"/>\n        <circle cx=\"35.5\" cy=\"41.5\" r=\"0.6\" fill=\"#ff3d5f\" opacity=\"0.5\"/>\n  \n</svg>","wren":"<svg class=\"art portrait\" viewBox=\"9 6 46 46\" width=\"64\" height=\"64\" aria-hidden=\"true\" focusable=\"false\">\n  <defs>\n    <linearGradient id=\"pf7bg\" x1=\"1\" x2=\"0\"><stop offset=\"0\" stop-color=\"#9b8cff\" stop-opacity=\"0.28\"/><stop offset=\"0.65\" stop-color=\"#9b8cff\" stop-opacity=\"0\"/></linearGradient>\n    <clipPath id=\"pf7h\"><path d=\"M32 11 C40.625 11 43.5 16 43.5 24 C43.5 30 42.9 33 41 38 L35.2 44.5 Q32 46.2 28.8 44.5 L23 38 C21.1 33 20.5 30 20.5 24 C20.5 16 23.375 11 32 11 Z\"/></clipPath>\n    <clipPath id=\"pf7s\"><path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\"/></clipPath>\n    <clipPath id=\"pf7t\"><path d=\"M19.7 27 C18.7 17 21.5 7 32 6.5 C42.5 7 45.3 16 44.3 26 C42.9 22 41.5 19.5 39.5 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.5 20.5 19.7 27 Z\"/></clipPath>\n    <clipPath id=\"pf7b\"><path d=\"M19 24 C18 7 46 7 45 24 L45.5 42 L41 41 L41.5 34 L22.5 34 L23 41 L18.5 42 Z\"/></clipPath>\n    \n  </defs>\n  <rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#0d1016\"/><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"url(#pf7bg)\"/>\n\n  <g >\n  <path d=\"M19 24 C18 7 46 7 45 24 L45.5 42 L41 41 L41.5 34 L22.5 34 L23 41 L18.5 42 Z\" fill=\"#241c19\"/>\n  \n  </g>\n\n  <path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\" fill=\"#232838\"/>\n  <g clip-path=\"url(#pf7s)\"><path d=\"M64 44 L40 47 L46 64 L64 64 Z\" fill=\"#514e84\"/><path d=\"M27 46 L32 54 L37 46 Z\" fill=\"#171a24\"/></g>\n  <path d=\"M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z\" fill=\"#715149\"/><path d=\"M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z\" fill=\"#a87d93\" opacity=\"0.8\"/>\n  \n\n  <ellipse cx=\"20.8\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#715149\"/>\n  <ellipse cx=\"43.2\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#b07350\"/><path d=\"M44.1 27.5 Q45 30 43.9 33\" stroke=\"#a87d93\" stroke-width=\"0.9\" fill=\"none\"/>\n  <circle cx=\"43.5\" cy=\"34\" r=\"0.9\" fill=\"#f2b544\"/>\n\n  <path d=\"M32 11 C40.625 11 43.5 16 43.5 24 C43.5 30 42.9 33 41 38 L35.2 44.5 Q32 46.2 28.8 44.5 L23 38 C21.1 33 20.5 30 20.5 24 C20.5 16 23.375 11 32 11 Z\" fill=\"#b07350\"/>\n  <g clip-path=\"url(#pf7h)\">\n    <path d=\"M0 0 L30.62 9 C25.675 20 26.48 31 30.5 48 L0 64 Z\" fill=\"#715149\"/>\n    <path d=\"M35.45 34.5 L42.7 31.5 L40.5 39 Z\" fill=\"#92634d\" opacity=\"0.55\"/>\n    <path d=\"M64 0 L41.7 12 L42.2 30 L39.2 40.5 L64 64 Z\" fill=\"#a87d93\"/>\n        \n    \n    <path d=\"M22.5 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z\" fill=\"#92634d\"/>\n  </g>\n\n  <path d=\"M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z\" fill=\"#715149\"/>\n  <path d=\"M32.9 33.6 L33.5 35.6 L32.7 36.2 Z\" fill=\"#a87d93\" opacity=\"0.7\"/>\n  <path d=\"M30.6 36.3 h2.6\" stroke=\"#6d4330\" stroke-width=\"0.7\" stroke-linecap=\"round\"/>\n  <path d=\"M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"28\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/>\n  <path d=\"M24.9 25.6 L29.7 25.1\" stroke=\"#1a1412\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M34.3 25.1 L39.1 25.6\" stroke=\"#1a1412\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M29.4 40 Q32 40.9 34.6 40\" stroke=\"#6d4330\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/>\n      <path d=\"M30.2 40.7 Q32 42.2 33.8 40.7 Z\" fill=\"#a6674a\"/>\n  \n  <g stroke=\"#9b8cff\" stroke-width=\"0.5\" fill=\"none\" opacity=\"0.75\"><path d=\"M23.5 31 L26 35.5 L21.3 35.5 Z\"/><path d=\"M22.9 37.3 h4 M23.7 38.6 h2.4\"/></g>\n  \n  \n  \n\n  <g >\n  <path d=\"M19.7 27 C18.7 17 21.5 7 32 6.5 C42.5 7 45.3 16 44.3 26 C42.9 22 41.5 19.5 39.5 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.5 20.5 19.7 27 Z\" fill=\"#241c19\" />\n    <g clip-path=\"url(#pf7t)\"><path d=\"M34.875 0 L64 0 L64 30 L38.9 30 Z\" fill=\"#60548c\" opacity=\"0.75\"/>\n    </g>\n  \n  \n  \n  </g>\n  \n\n  \n  <path d=\"M33.3 26.2 Q36.6 24.6 39.9 26.6 L40.2 31.4 Q36.6 33.2 33.2 31.6 Z\" fill=\"none\" stroke=\"#613f2c\" stroke-width=\"0.4\"/>\n        <circle cx=\"36.6\" cy=\"29\" r=\"2.4\" fill=\"#0b0f12\" stroke=\"#9aa3ad\" stroke-width=\"0.6\"/>\n        <circle cx=\"36.6\" cy=\"29\" r=\"1.25\" fill=\"#ff3d5f\" opacity=\"0.5\"/><circle cx=\"36.6\" cy=\"29\" r=\"0.45\" fill=\"#0b0f12\"/>\n        \n  \n</svg>"};
+let faceSeq = 0;
+const face = (op) => FACES[op.id].replace(/pf\d+/g, () => `pf${op.id}${++faceSeq}`).replace(/ width="64" height="64"/, '');
+
+// ---------- The job ----------
+const PAY = 2000;
+const APPROACHES = {
+  stealth: { name: 'Stealth', blurb: 'Slip past people.', lean: ['stealth', 'cool'], cost: 'Takes longer: everyone +10 fatigue', detect: true },
+  tech: { name: 'Tech', blurb: 'Machines do the work.', lean: ['tech', 'cool'], cost: 'Hacker takes neural load', detect: false },
+  loud: { name: 'Loud', blurb: 'Through the guards.', lean: ['combat', 'cool'], cost: 'Heat +1 whatever happens', detect: false },
+  con: { name: 'Con', blurb: 'Talk your way in.', lean: ['social', 'cool'], cost: '¥200 on props and bribes', detect: true, money: 200 },
+};
+const ZONES = [
+  { id: 'fence', name: 'The fence', sniper: true },
+  { id: 'yard', name: 'The yard', sniper: true },
+  { id: 'office', name: 'The yard office', sniper: false },
+];
+// Incidents: automatic rolls handled by whoever is best placed. Danger incidents put a person at risk and can be saved.
+const INC = {
+  lock: { name: 'Locked gate', stats: ['tech', 'stealth'], diff: 8, text: 'The yard gate has a new mag-lock.', ok: '{op} gets it open without a sound.', bad: 'The lock chirps an error at {op}. Somewhere, a light comes on.', conseq: { alert: 1 } },
+  camera: { name: 'Cameras', stats: ['tech', 'stealth'], diff: 8, text: 'A camera sweeps the row.', ok: '{op} loops the feed. The camera watches an empty row on repeat.', bad: 'The camera catches {op}\'s shoulder for half a second.', conseq: { alert: 1 } },
+  patrol: { name: 'Patrols', stats: ['stealth'], diff: 8, danger: true, text: 'A guard on patrol, torch low, coming this way.', ok: '{op} waits in the shadow of a reefer unit until the torch passes.', bad: 'The torch finds {op}.', comp: '"Oi!" The guard is on {op} before they can move.', conseq: { alert: 1, heat: 1 } },
+  guard: { name: 'Guard up close', stats: ['combat'], diff: 8, danger: true, text: 'A security guard steps round a container, right in front of {op}.', ok: '{op} drops him quietly and zip-ties his wrists.', bad: 'He\'s bigger than he looked, and he\'s got {op} against the steel.', comp: '{op} is cornered.', conseq: { alert: 1, injury: true } },
+  backup: { name: 'More guards', stats: ['combat'], diff: 9, danger: true, text: 'Two more guards come running from the gatehouse.', ok: '{op} meets them in the gap between stacks and ends it fast.', bad: 'They split up and one gets behind {op}.', comp: '{op} is pinned down.', conseq: { alert: 1, injury: true } },
+  checkpoint: { name: 'Checkpoint', stats: ['social'], diff: 8, text: 'A customs officer checks passes at the inner gate.', ok: '{op} hands over the pass and complains about the night shift. Waved through.', bad: 'The officer wants to call {op}\'s supervisor.', conseq: { alert: 1 } },
+  staff: { name: 'Night staff', stats: ['social', 'stealth'], diff: 7, text: 'Two clerks on a smoke break, right by the office door.', ok: '{op} bums a light and walks in behind them.', bad: '{op} gets a long, curious look.', conseq: { alert: 1 } },
+  sweep: { name: 'Drone sweep', stats: ['tech', 'stealth'], diff: 8, text: 'An Aether-Harbour drone comes over the stacks, scanning.', ok: '{op} spoofs its scanner. It drifts off.', bad: 'The drone pings {op} and circles back.', conseq: { alert: 1 } },
+  firewall: { name: 'Firewall', stats: ['tech'], diff: 9, text: 'The office terminal sits behind a corporate firewall.', ok: '{op} is through in ninety seconds.', bad: 'Black ICE bites. {op} jerks back from the jack, nose bleeding.', conseq: { alert: 1, neural: 15 } },
+  safe: { name: 'The manifest', stats: ['tech', 'stealth'], diff: 8, text: 'The real manifest for Container 409 is in a locked cabinet.', ok: '{op} has it photographed and back in the drawer.', bad: '{op} only gets half the pages before footsteps.', conseq: { alert: 1, payCut: 0.15 } },
+};
+// What each approach tends to meet in each zone. A small chance of an off-approach guard keeps a fighter worth bringing.
+const POOLS = {
+  fence: { stealth: ['patrol', 'lock'], tech: ['camera', 'lock'], loud: ['guard', 'lock'], con: ['checkpoint'] },
+  yard: { stealth: ['patrol', 'sweep'], tech: ['sweep', 'camera'], loud: ['backup', 'guard'], con: ['staff', 'checkpoint'] },
+  office: { stealth: ['camera'], tech: ['firewall'], loud: ['guard'], con: ['staff'] },
+};
+const OFFBEAT = 0.25; // chance a non-loud run meets a guard up close in the yard
+const COUNT = { fence: 1, yard: 2, office: 1 }; // then the manifest itself
+const SAVE_DIFF = { overwatch: 7, inside: 8 };
+
+// The owner's crises (src/data/missions/container.js), now call-ins inside the run.
+const C = {
+  cutter: { name: 'Police boat', text: 'A Wet Sleeve cutter cuts its engine and drifts blind through the fog towards the yard.', choices: [
+    { id: 'shadow', label: '{op} melts into the shadow of a container wall', stat: 'stealth', diff: 6, ok: 'The spotlight sweeps the steel a hand above your heads, and moves on.', bad: 'A loose strap clinks against the steel. The light snaps back and holds on {op}.', failHeat: 1 },
+    { id: 'splash', label: 'Throw an iron coupler into the water to draw them off', stat: 'cool', diff: 5, ok: 'A heavy splash off the far pylon. The cutter throttles up towards the noise.', bad: 'It clangs off a beam before it hits the water, and points them straight at you.', failHurt: true },
+  ], abort: { label: 'Abort: up the gantry ladder and away', ok: 'You vanish up into the fog among the crane girders.' } },
+  whistler: { name: 'Night-shift forklift', text: 'An Aether-Harbour night-shift forklift comes down your row, headlights on. The driver is whistling.', choices: [
+    { id: 'duck', label: 'Duck behind the stacks', stat: 'stealth', diff: 5, ok: 'He passes three metres away, still whistling.', bad: 'He sees {op}, shouts, and reaches for his radio.', failHeat: 1 },
+    { id: 'light', label: '{op} walks up and asks for a light', stat: 'social', diff: 6, ok: 'Two cigarettes and a moan about the night shift later, he drives off none the wiser.', bad: 'He doesn\'t buy it, and drives off fast with his radio at his mouth.', failHeat: 1 },
+  ], abort: { label: 'Abort: back out before he gets closer', ok: 'You slip away between the containers.' } },
+  stack: { name: 'Groaning stack', text: 'The wind shifts off the bay. A stack of rusted containers above the crew groans and starts to creep.', choices: [
+    { id: 'brace', label: '{op} wedges a pry bar into the slipping corner', stat: 'tech', diff: 7, ok: 'Metal grinds on metal with a sharp pop, and the corner locks back in place.', bad: 'The bar snaps. A rusted panel shears off and clips {op}\'s shoulder.', failHurt: true },
+    { id: 'clear', label: 'Get clear and let it settle', stat: 'stealth', diff: 4, payCut: 0.1, ok: 'A dull shudder runs through the pier, but the stack holds.', bad: 'A panel hits the deck with a boom, and a security drone comes to look.', failHeat: 1 },
+  ], abort: { label: 'Abort: get out before it comes down', ok: 'You leave the yard to the groaning steel.' } },
+  dog: { name: 'Dock dog', text: 'A feral dock dog, ribs showing through wet fur, snarls at the hum of your earpieces.', choices: [
+    { id: 'feed', label: 'Toss it a strip of salted pork', stat: 'social', diff: 4, ok: 'It snaps the meat out of the air and trots off between the pallets.', bad: 'It ignores the meat and goes for {op}\'s forearm.', failHurt: true },
+    { id: 'hiss', label: '{op} steps forward with a low hiss', stat: 'cool', diff: 5, ok: 'It cowers, turns tail and slinks off under a row of trailers.', bad: 'It yelps, loud, and a watchman\'s torch swings down your row.', failHeat: 1 },
+  ], abort: { label: 'Abort: pack up and leave', ok: 'You leave the dog the pier. It seems to think that\'s fair.' } },
+  boxed: { name: 'Boxed in', text: 'A container truck has parked across the only road out. The driver is asleep in the cab.', choices: [
+    { id: 'thread', label: '{op} threads the van past it', stat: 'driving', diff: 6, ok: 'Wing mirror folded in, two centimetres to spare. The truck driver snores on.', bad: 'Metal screams on metal. The driver wakes up shouting.', failHeat: 1, failPay: 0.1 },
+    { id: 'knock', label: 'Knock on the cab and ask nicely', stat: 'social', diff: 4, ok: 'He grumbles, moves the truck, and asks nothing. It\'s the Docks.', bad: 'He tells you exactly where to go, and doesn\'t move. You wait an hour.', failPay: 0.2 },
+  ], abort: { label: 'Abort: leave the van and walk out', ok: 'You walk home along the seawall and come back for the van at dawn.', payCut: 0.6 } },
+};
+const CRISIS_BY_APPROACH = { stealth: 'cutter', tech: 'stack', loud: 'dog', con: 'whistler' };
+const EXITS = {
+  van: { name: 'Van', blurb: 'Quick. Needs Wheels; the road out is narrow.' },
+  boat: { name: 'Ferryman\'s boat', blurb: 'No driver needed. He takes 15%.' },
+};
+
+// ---------- Map ----------
+const P = { drop: [46, 226], gate: [120, 214], yard: [170, 130], office: [292, 66], crane: [196, 34], boat: [326, 176] };
+const PATH = [P.drop, P.gate, [140, 170], P.yard, [240, 96], P.office];
+const EXIT_PATHS = { van: [P.office, [250, 150], [120, 200], P.drop], boat: [P.office, [318, 120], P.boat] };
+const ZONE_AT = { fence: P.gate, yard: P.yard, office: P.office };
+const pts = (list) => list.map((p) => p.join(',')).join(' ');
+function mapSvg(plan) {
+  const stacks = [[110, 30, 30, 22], [70, 140, 26, 40], [190, 150, 40, 26], [240, 170, 30, 30], [120, 80, 20, 26], [205, 110, 24, 16]];
+  const lbl = (pt, text, dx, dy, hi) => `<text class="label ${hi ? 'hi' : ''}" x="${pt[0] + dx}" y="${pt[1] + dy}">${text}</text>`;
+  const sniper = plan.slots.over && plan.kit === 'rifle';
+  return `<svg viewBox="0 0 360 260" role="img" aria-label="Map of Pier 12: the fence, the yard and the yard office, with a crane for overwatch">
+    <rect width="360" height="260" fill="#0b0d11"/>
+    <path class="water" d="M0 0 H22 V260 H0 Z M340 0 H360 V260 H340 Z M300 196 Q340 200 360 196 V260 H300 Z"/>
+    ${plan.slots.over ? `<path class="sight" d="M${P.crane[0]} ${P.crane[1]} L60 240 L250 240 L262 92 Z"/>` : ''}
+    ${stacks.map(([x, y, w, h]) => `<rect class="stack" x="${x}" y="${y}" width="${w}" height="${h}" rx="2"/>`).join('')}
+    <rect class="office" x="270" y="44" width="48" height="40" rx="3"/>
+    ${Object.entries(EXIT_PATHS).map(([k, l]) => `<polyline class="exit ${plan.exit === k ? 'on' : ''}" points="${pts(l)}"/>`).join('')}
+    <polyline class="route" points="${pts(PATH)}"/>
+    <circle class="node" cx="${P.drop[0]}" cy="${P.drop[1]}" r="7"/>${lbl(P.drop, 'DROP-OFF · VAN', -12, 20, plan.exit === 'van')}
+    <circle class="node" cx="${P.gate[0]}" cy="${P.gate[1]}" r="5"/>${lbl(P.gate, 'FENCE', -6, 20, true)}
+    <circle class="node" cx="${P.yard[0]}" cy="${P.yard[1]}" r="5"/>${lbl(P.yard, 'YARD', 9, 3, true)}
+    <circle class="node post" cx="${P.office[0]}" cy="${P.office[1]}" r="7"/>${lbl(P.office, 'YARD OFFICE', -30, -26, true)}
+    <circle class="node crane" cx="${P.crane[0]}" cy="${P.crane[1]}" r="6"/>${lbl(P.crane, sniper ? 'CRANE · NO SIGHT INDOORS' : 'CRANE', sniper ? -132 : -40, 3, !!plan.slots.over)}
+    <circle class="node" cx="${P.boat[0]}" cy="${P.boat[1]}" r="6"/>${lbl(P.boat, 'FERRY LANDING', -50, 20, plan.exit === 'boat')}
+    <circle class="alarm" id="alarm" cx="0" cy="0" r="6"/>
+    <g id="fx"></g>
+    <g id="tokens"></g>
+  </svg>`;
+}
+
+// ---------- Plan state ----------
+// Slots: up to four inside, one overwatch (rifle or drone), Wheels for the van, one on standby.
+const INSIDE = ['in0', 'in1', 'in2', 'in3'];
+const SLOT_INFO = {
+  in0: { name: 'Inside', does: 'Required.', pin: '#ff4f7b', tilt: '-1.5deg' },
+  in1: { name: 'Inside', does: 'Required.', pin: '#ff4f7b', tilt: '1deg' },
+  in2: { name: 'Inside', does: 'Optional. More cover, easier to spot on stealth and con.', pin: '#ff4f7b', tilt: '-0.5deg' },
+  in3: { name: 'Inside', does: 'Optional. More cover, easier to spot on stealth and con.', pin: '#ff4f7b', tilt: '1.2deg' },
+  over: { name: 'Overwatch', does: 'On the crane. Saves people in trouble.', pin: '#f5b942', tilt: '0.8deg' },
+  wheels: { name: 'Wheels', does: 'Waits in the van. Handles the road out.', pin: '#36d6c3', tilt: '-1deg' },
+  standby: { name: 'Standby', does: 'At the van. Call them in mid-run.', pin: '#8b93a7', tilt: '0.5deg' },
+};
+const plan = { approach: 'stealth', exit: 'van', kit: 'rifle', callIn: 'risky', slots: { in0: null, in1: null, in2: null, in3: null, over: null, wheels: null, standby: null } };
+let seed = (Date.now() % 2147483647) | 0;
+const activeSlots = () => [...INSIDE, 'over', ...(plan.exit === 'van' ? ['wheels'] : []), 'standby'];
+const insideOps = (slots = plan.slots) => INSIDE.map((s) => slots[s]).filter(Boolean).map(byId);
+const fill = (t, op) => t.replaceAll('{op}', op.handle);
+
+// ---------- Odds (the read and the run use the same functions) ----------
+// An inside roll: stat, +1 if the approach leans on it, −1 per extra inside body on stealth and con
+// runs when the stat is stealth or social, + alert, −2 if lightly hurt.
+function insideRoll(op, stat, diff, { approach = plan.approach, team = insideOps(), alert = 0, hurt = {} } = {}) {
+  let value = op.stats[stat];
+  const notes = [`${stat} ${op.stats[stat]}`];
+  if (APPROACHES[approach].lean.includes(stat)) { value += 1; notes.push(`${APPROACHES[approach].name.toLowerCase()} approach +1`); }
+  const extra = Math.max(0, team.length - 2);
+  if (extra && APPROACHES[approach].detect && (stat === 'stealth' || stat === 'social')) { value -= extra; notes.push(`${team.length} inside −${extra}`); }
+  if (hurt[op.id] === 'light') { value -= 2; notes.push('hurt −2'); }
+  const d = diff + alert;
+  if (alert) notes.push(`alert +${alert} difficulty`);
+  const chance = chanceOf(value, d);
+  return { op, stat, value, diff: d, need: 10 + d, chance, risk: riskOf(chance), notes };
+}
+// Who handles an incident: whoever on the inside team has the best odds with any stat it allows.
+function handler(inc, ctx = {}) {
+  const team = (ctx.team ?? insideOps()).filter((o) => !(ctx.out ?? new Set()).has(o.id));
+  let best = null;
+  for (const op of team) for (const st of inc.stats) {
+    const r = insideRoll(op, st, inc.diff, { ...ctx, team: ctx.team ?? insideOps() });
+    if (!best || r.chance > best.chance) best = r;
+  }
+  return best;
+}
+// The best save for a person in trouble: overwatch (if they can see the spot and have shots/battery left),
+// or the best fighter inside with them (+1 if bonded to the person in trouble).
+function bestSave(victim, zoneId, { team = insideOps(), out = new Set(), overLeft = shotsFor(), slots = plan.slots, kit = plan.kit } = {}) {
+  const options = [];
+  const over = slots.over ? byId(slots.over) : null;
+  if (over && overLeft > 0 && (kit === 'drone' || ZONES.find((z) => z.id === zoneId).sniper)) {
+    const stat = kit === 'rifle' ? 'combat' : 'tech';
+    let value = over.stats[stat];
+    const notes = [`${stat} ${value}`];
+    if ((kit === 'rifle' && over.spec === 'marksman') || (kit === 'drone' && over.spec === 'jockey')) { value += 1; notes.push(`${SPEC[over.spec]} +1`); }
+    if (bonded(over.id, victim.id)) { value += 1; notes.push('bond +1'); }
+    options.push({ kind: 'overwatch', op: over, stat, value, need: 10 + SAVE_DIFF.overwatch, chance: chanceOf(value, SAVE_DIFF.overwatch), notes });
+  }
+  for (const op of team) {
+    if (op.id === victim.id || out.has(op.id)) continue;
+    let value = op.stats.combat;
+    const notes = [`combat ${value}`];
+    if (bonded(op.id, victim.id)) { value += 1; notes.push('bond +1'); }
+    options.push({ kind: 'inside', op, stat: 'combat', value, need: 10 + SAVE_DIFF.inside, chance: chanceOf(value, SAVE_DIFF.inside), notes });
+  }
+  options.sort((a, b) => b.chance - a.chance);
+  return options[0] ?? null;
+}
+function shotsFor(slots = plan.slots, kit = plan.kit) {
+  const over = slots.over ? byId(slots.over) : null;
+  if (!over) return 0;
+  if (kit === 'rifle') return over.spec === 'marksman' ? 3 : 2;
+  return over.spec === 'jockey' ? 4 : 3;
+}
+
+// The coverage read: every incident this approach tends to meet, who handles it, and what a save adds.
+function coverage() {
+  const team = insideOps();
+  const rows = [];
+  const seen = new Set();
+  const add = (id, zoneId, note) => {
+    if (seen.has(id)) return;
+    seen.add(id);
+    const inc = INC[id];
+    const h = team.length ? handler(inc, { team }) : null;
+    if (!h) { rows.push({ id, inc, zoneId, note, risk: 'gap', who: 'nobody' }); return; }
+    let eff = h.chance;
+    let save = null;
+    if (inc.danger) {
+      save = bestSave(h.op, zoneId, { team });
+      if (save) eff = h.chance + (1 - h.chance) * save.chance;
+    }
+    rows.push({ id, inc, zoneId, note, risk: h.risk, eff: riskOf(eff), who: `${h.op.handle} (${h.stat} ${h.value})`, save, gap: riskOf(eff) === 'extreme' });
+  };
+  for (const z of ZONES) for (const id of POOLS[z.id][plan.approach]) add(id, z.id, z.name);
+  if (plan.approach !== 'loud') add('guard', 'yard', 'Off-approach, sometimes');
+  add('safe', 'office', 'The target');
+  return rows;
+}
+function jossPicks() {
+  const lean = APPROACHES[plan.approach].lean[0];
+  const used = new Set();
+  const take = (score) => { const op = [...CREW].filter((o) => !used.has(o.id)).sort((a, b) => score(b) - score(a))[0]; used.add(op.id); return op.id; };
+  const slots = { in0: null, in1: null, in2: null, in3: null, over: null, wheels: null, standby: null };
+  if (plan.exit === 'van') slots.wheels = take((o) => o.stats.driving);
+  slots.over = take((o) => (plan.kit === 'rifle' ? o.stats.combat + (o.spec === 'marksman' ? 3 : 0) : o.stats.tech + (o.spec === 'jockey' ? 3 : 0)) - (o.stats[lean] >= 10 ? 4 : 0));
+  slots.in0 = take((o) => o.stats[lean]);
+  slots.in1 = take((o) => Math.max(o.stats.tech, o.stats.stealth, o.stats.social));
+  if (!APPROACHES[plan.approach].detect) slots.in2 = take((o) => o.stats.combat);
+  slots.standby = take((o) => o.stats.combat + o.stats.medical / 2);
+  return slots;
+}
+// Put someone in a slot; if they're in another slot, the two swap (an empty slot just empties).
+function swapIn(slotId, opId) {
+  const from = activeSlots().find((s) => s !== slotId && plan.slots[s] === opId);
+  const next = { ...plan.slots, [slotId]: opId };
+  if (from) next[from] = plan.slots[slotId];
+  return next;
+}
+
+// ---------- Planning screen ----------
+function renderPlan() {
+  const app = document.getElementById('app');
+  app.className = 'wrap';
+  const team = insideOps();
+  const card = (slotId) => {
+    const sl = SLOT_INFO[slotId];
+    const op = plan.slots[slotId] ? byId(plan.slots[slotId]) : null;
+    if (!op) return `<button type="button" class="dossier empty" data-slot="${slotId}" style="--tilt:0deg" aria-label="${sl.name}: empty. ${sl.does} Tap to assign."><b>${sl.name}</b><span class="sil" aria-hidden="true">+</span><small>${sl.does}</small></button>`;
+    let line = '';
+    if (INSIDE.includes(slotId)) { const st = [...APPROACHES[plan.approach].lean, 'combat'].sort((a, b) => op.stats[b] - op.stats[a])[0]; line = `${st} ${op.stats[st]}`; }
+    if (slotId === 'over') line = `${plan.kit === 'rifle' ? 'combat' : 'tech'} ${op.stats[plan.kit === 'rifle' ? 'combat' : 'tech']} · ${shotsFor()} ${plan.kit === 'rifle' ? 'shots' : 'actions'}`;
+    if (slotId === 'wheels') line = `driving ${op.stats.driving}`;
+    if (slotId === 'standby') line = `combat ${op.stats.combat} · on call`;
+    const spec = op.spec && ((slotId === 'over' && plan.kit === 'rifle' && op.spec === 'marksman') || (slotId === 'over' && plan.kit === 'drone' && op.spec === 'jockey')) ? `<span class="dossier__spec">${SPEC[op.spec]}</span>` : slotId === 'over' ? '<span class="dossier__note">Amateur</span>' : '';
+    return `<button type="button" class="dossier" data-slot="${slotId}" style="--tilt:${sl.tilt};--pin:${sl.pin}" aria-label="${sl.name}: ${esc(op.handle)}. Tap to change.">
+      <span class="dossier__photo">${face(op)}</span><span class="dossier__name">${esc(op.handle)}</span><span class="dossier__real">${op.role}</span>
+      <span class="dossier__note">${line}</span>${spec}</button>`;
+  };
+  const rows = coverage();
+  const exitRisk = plan.exit === 'van' && plan.slots.wheels ? riskOf(Math.max(...C.boxed.choices.map((c) => chanceOf(byId(plan.slots.wheels).stats[c.stat], c.diff)))) : null;
+  const shown = INSIDE.filter((s, i) => i < 2 || plan.slots[INSIDE[i - 1]] || plan.slots[s]);
+
+  app.innerHTML = `
+    <header style="display:grid;gap:8px">
+      <span class="eyebrow">Docks · Pier 12 · the Ferryman · ${yen(PAY)} <span class="tag">Prototype v2</span></span>
+      <h1>Container 409</h1>
+      <p class="brief">"Aether-Harbour say 409 is machine parts. Get me the real manifest from the yard office, and don't let them know you read it."</p>
+      <details class="how"><summary>How this prototype works</summary><ul>
+        <li>Pick an approach, then build the squad for it. The coverage read shows what you'll likely meet, who handles it, and the gaps.</li>
+        <li>Incidents resolve on their own: whoever is best placed rolls. If someone in danger fails, overwatch or a fighter inside gets one roll to save them.</li>
+        <li>Unsaved failures raise the alert. Higher alert makes everything harder; at the top the crew calls you in.</li>
+        <li>The Ferryman's crises from the real game are call-ins. Same roll rule as the game: d20 + stat against 10 + difficulty.</li>
+      </ul></details>
+    </header>
+    <div class="map">${mapSvg(plan)}</div>
+    <section><h2>Approach <small>what gets you past the yard</small></h2><div class="approaches">
+      ${Object.entries(APPROACHES).map(([k, a]) => `<button type="button" class="card" data-approach="${k}" aria-pressed="${plan.approach === k}"><b>${a.name}</b><span class="card__body">${a.blurb}</span><span class="card__meta">${a.lean.join(' · ')}</span><span class="card__cost">${a.cost}</span></button>`).join('')}
+    </div></section>
+    <section><h2>Squad <small>tap a card to assign</small></h2><div class="board">
+      <div class="board__head"><p>${team.length < 2 ? 'At least two inside.' : `${team.length} inside${APPROACHES[plan.approach].detect && team.length > 2 ? ', easier to spot' : ''}.`}</p><button type="button" class="jossbtn" id="joss">Joss's picks</button></div>
+      <div class="group"><div class="group__label">Inside team <span>moves as one group</span></div><div class="dossiers" style="--n:${Math.min(4, shown.length)}">${shown.map(card).join('')}</div></div>
+      <div class="group"><div class="group__label">Outside <span>crane, van, standby</span></div>
+        <div class="kit" role="group" aria-label="Overwatch kit">${[['rifle', 'Rifle: sees outdoors'], ['drone', 'Drone: sees everywhere']].map(([v, l]) => `<button type="button" data-kit="${v}" aria-pressed="${plan.kit === v}">${l}</button>`).join('')}</div>
+        <div class="dossiers" style="--n:3">${card('over')}${plan.exit === 'van' ? card('wheels') : ''}${card('standby')}</div>
+      </div>
+    </div></section>
+    <section><h2>Coverage read <small>${plan.slots.over ? 'counts saves' : 'no overwatch: no saves from the crane'}</small></h2><div class="cover">
+      ${rows.map((r) => `<div class="cover__row ${r.gap || r.risk === 'gap' ? 'gap' : ''}"><b>${esc(r.inc.name)}${r.inc.danger ? ' <span class="muted" style="font-weight:400">· danger</span>' : ''}</b>
+        <span class="risk">${r.risk === 'gap' ? pill('gap', 'gap') : `${pill(r.risk)}${r.save && r.eff !== r.risk ? `<span class="with">→ ${r.eff} with ${esc(r.save.op.handle)}</span>` : ''}`}</span>
+        <small>${esc(r.note)} · ${esc(r.who)}</small></div>`).join('')}
+      <div class="cover__row"><b>Way out</b><span class="risk">${plan.exit === 'van' ? (exitRisk ? pill(exitRisk) : pill('gap', 'no wheels')) : pill('safe')}</span><small>${plan.exit === 'van' ? 'The service road · a crisis for Wheels' : 'The Ferryman rows you out · −15%'}</small></div>
+      ${APPROACHES[plan.approach].detect && team.length > 2 ? `<div class="cover__note">${team.length} inside on a ${plan.approach} run: −${team.length - 2} on stealth and social rolls.</div>` : ''}
+    </div></section>
+    <section><h2>Way out</h2><div class="exits">
+      ${Object.entries(EXITS).map(([k, e]) => `<button type="button" class="card" data-exit="${k}" aria-pressed="${plan.exit === k}"><b>${e.name}</b><span class="card__body">${e.blurb}</span></button>`).join('')}
+    </div></section>
+    <section><h2>Orders</h2>
+      <div class="order"><p>Call me in at a crisis…</p><div class="seg" role="group">${[['every', 'Every time'], ['risky', 'If risky'], ['never', 'Never']].map(([v, l]) => `<button type="button" data-order="${v}" aria-pressed="${plan.callIn === v}">${l}</button>`).join('')}</div>
+      <p class="muted">Incidents never call you; the crew handles them. Max alert and serious injuries always call you, unless you choose "never".</p></div>
+    </section>`;
+
+  const missing = [...INSIDE.slice(0, 2), ...(plan.exit === 'van' ? ['wheels'] : [])].filter((s) => !plan.slots[s]);
+  const toughest = worst([...rows.map((r) => (r.risk === 'gap' ? 'extreme' : r.eff)), ...(exitRisk ? [exitRisk] : [])]);
+  const cost = (APPROACHES[plan.approach].money ?? 0);
+  const fare = plan.exit === 'boat' ? PAY * 0.15 : 0;
+  const bar = document.getElementById('bar');
+  bar.hidden = false;
+  bar.innerHTML = `<div class="bar__in"><div class="bar__sum"><b>${yen(PAY - cost - fare)}</b><span>${missing.length ? `Still to assign: ${missing.map((s) => (s === 'wheels' ? 'Wheels' : 'Inside')).filter((v, i, a) => a.indexOf(v) === i).join(', ')}` : `if it runs clean · toughest ${pill(toughest)}`}</span></div><button class="btn" id="go" ${missing.length ? 'disabled' : ''}>Send them</button></div>`;
+
+  app.querySelectorAll('[data-approach]').forEach((el) => el.addEventListener('click', () => { plan.approach = el.dataset.approach; rerender(`[data-approach="${el.dataset.approach}"]`); }));
+  app.querySelectorAll('[data-exit]').forEach((el) => el.addEventListener('click', () => { plan.exit = el.dataset.exit; if (plan.exit === 'boat') plan.slots.wheels = null; rerender(`[data-exit="${el.dataset.exit}"]`); }));
+  app.querySelectorAll('[data-kit]').forEach((el) => el.addEventListener('click', () => { plan.kit = el.dataset.kit; rerender(`[data-kit="${el.dataset.kit}"]`); }));
+  app.querySelectorAll('[data-order]').forEach((el) => el.addEventListener('click', () => { plan.callIn = el.dataset.order; rerender(`[data-order="${el.dataset.order}"]`); }));
+  app.querySelectorAll('.dossier').forEach((el) => el.addEventListener('click', () => openPicker(el.dataset.slot)));
+  document.getElementById('joss').addEventListener('click', () => { plan.slots = jossPicks(); rerender('#joss'); });
+  document.getElementById('go').addEventListener('click', run);
+}
+function rerender(sel) {
+  const y = window.scrollY;
+  renderPlan();
+  window.scrollTo(0, y);
+  document.querySelector(sel)?.focus({ preventScroll: true });
+}
+
+// The picker: the crew sorted by fit for this slot, with what they'd bring.
+function openPicker(slotId) {
+  const sl = SLOT_INFO[slotId];
+  const fit = (o) => {
+    if (INSIDE.includes(slotId)) { const st = [...APPROACHES[plan.approach].lean, 'combat'].sort((a, b) => o.stats[b] - o.stats[a])[0]; return { score: o.stats[st], text: `${st} ${o.stats[st]} · ${APPROACHES[plan.approach].lean.map((s) => `${s} ${o.stats[s]}`).join(' · ')}` }; }
+    if (slotId === 'over') { const st = plan.kit === 'rifle' ? 'combat' : 'tech'; const sp = (plan.kit === 'rifle' && o.spec === 'marksman') || (plan.kit === 'drone' && o.spec === 'jockey'); return { score: o.stats[st] + (sp ? 2 : 0), text: `${st} ${o.stats[st]}${sp ? ` · ${SPEC[o.spec]}` : ' · amateur'}` }; }
+    if (slotId === 'wheels') return { score: o.stats.driving, text: `driving ${o.stats.driving}` };
+    return { score: o.stats.combat + o.stats.medical / 2, text: `combat ${o.stats.combat} · medical ${o.stats.medical}` };
+  };
+  const rows = CREW.map((o) => ({ o, f: fit(o), where: activeSlots().find((s) => s !== slotId && plan.slots[s] === o.id) })).sort((a, b) => b.f.score - a.f.score);
+  const scrim = document.createElement('div'); scrim.className = 'scrim';
+  const sheet = document.createElement('div'); sheet.className = 'sheet'; sheet.setAttribute('role', 'dialog'); sheet.setAttribute('aria-modal', 'true'); sheet.setAttribute('aria-label', `Who's on ${sl.name}?`);
+  const required = ['in0', 'in1'].includes(slotId) || (slotId === 'wheels');
+  sheet.innerHTML = `<div class="sheet__in">
+    <div class="sheet__head"><div><h3>Who's on ${sl.name}?</h3><p>${sl.does}</p></div><button type="button" class="x" aria-label="Close">✕</button></div>
+    ${rows.map(({ o, f, where }) => `<button type="button" class="cand" data-op="${o.id}" aria-pressed="${plan.slots[slotId] === o.id}">
+      <span class="cand__ph">${face(o)}</span><span class="cand__txt"><b>${esc(o.handle)}</b><span>${o.role} · ${esc(f.text)}</span></span>
+      <span class="cand__side">${where ? `<small>${SLOT_INFO[where].name} · swaps</small>` : plan.slots[slotId] === o.id ? '<small>assigned</small>' : ''}</span></button>`).join('')}
+    ${!required && plan.slots[slotId] ? '<button type="button" class="cand remove" data-op="">Leave this empty</button>' : ''}
+  </div>`;
+  document.body.append(scrim, sheet);
+  const close = () => { scrim.remove(); sheet.remove(); document.removeEventListener('keydown', onKey); document.querySelector(`.dossier[data-slot="${slotId}"]`)?.focus({ preventScroll: true }); };
+  const onKey = (e) => { if (e.key === 'Escape') close(); };
+  document.addEventListener('keydown', onKey);
+  scrim.addEventListener('click', close);
+  sheet.querySelector('.x').addEventListener('click', close);
+  sheet.querySelectorAll('.cand').forEach((b) => b.addEventListener('click', () => {
+    plan.slots = b.dataset.op ? swapIn(slotId, b.dataset.op) : { ...plan.slots, [slotId]: null };
+    // Keep the inside team packed to the front.
+    const ins = INSIDE.map((s) => plan.slots[s]).filter(Boolean);
+    INSIDE.forEach((s, i) => { plan.slots[s] = ins[i] ?? null; });
+    scrim.remove(); sheet.remove(); document.removeEventListener('keydown', onKey);
+    rerender(`.dossier[data-slot="${slotId}"]`);
+  }));
+  (sheet.querySelector('.cand[aria-pressed="true"]') ?? sheet.querySelector('.cand')).focus({ preventScroll: true });
+}
+
+// ---------- The run ----------
+let fast = false;
+const wait = (ms) => new Promise((r) => setTimeout(r, fast ? 50 : ms));
+
+async function run() {
+  const rng = mulberry32(seed);
+  const d20 = () => 1 + Math.floor(rng() * 20);
+  const S = structuredClone(plan.slots);
+  const kit = plan.kit;
+  const approach = plan.approach;
+  let team = insideOps(S);
+  const over = S.over ? byId(S.over) : null;
+  const wheels = S.wheels ? byId(S.wheels) : null;
+  let standby = S.standby ? byId(S.standby) : null;
+  const log = { alert: 0, heat: approach === 'loud' ? 1 : 0, neural: {}, payCut: 0, hurt: {}, out: new Set(), saves: [], fails: [], passes: [], aborted: false, callIns: 0, standbyIn: false, rescued: null, wentLoud: false, events: [] };
+  let overLeft = shotsFor(S, kit);
+  let arriving = null; // { op, in: incidents left }
+  fast = false;
+  window.scrollTo(0, 0);
+
+  const app = document.getElementById('app');
+  app.className = 'wrap';
+  app.innerHTML = `<div class="live"><div class="map">${mapSvg({ ...plan, slots: S })}</div><div class="tally" id="tally"></div></div><div class="feed" id="feed" aria-live="polite"></div>`;
+  const tokens = () => {
+    const g = document.getElementById('tokens');
+    const list = [...team.map((op, i) => ({ op, at: P.drop, i })), ...(over ? [{ op: over, at: P.crane, i: 0 }] : []), ...(wheels ? [{ op: wheels, at: P.drop, i: 1 }] : []), ...(standby ? [{ op: standby, at: [P.drop[0] + 18, P.drop[1] + 2], i: 0 }] : [])];
+    g.innerHTML = list.map(({ op, at, i }) => `<g class="token" id="tok-${op.id}" style="transform: translate(${at[0] + i * 9 - 9}px, ${at[1] - 12}px)"><circle r="8" fill="${op.color}"/><text>${esc(initials(op))}</text></g>`).join('');
+  };
+  tokens();
+  let here = P.drop;
+  const moveGroup = (pt) => { here = pt; team.forEach((op, i) => { const t = document.getElementById(`tok-${op.id}`); if (t) t.style.transform = `translate(${pt[0] + i * 9 - 9}px, ${pt[1] - 12}px)`; }); };
+  const markDown = (op) => document.getElementById(`tok-${op.id}`)?.classList.add('down');
+  const fx = async (kind, to) => {
+    const g = document.getElementById('fx');
+    if (!g) return;
+    if (kind === 'shot') g.innerHTML = `<line class="shot" x1="${P.crane[0]}" y1="${P.crane[1]}" x2="${to[0]}" y2="${to[1]}"/>`;
+    else g.innerHTML = `<circle class="dronefx" r="4" cx="${P.crane[0]}" cy="${P.crane[1]}"><animate attributeName="cx" to="${to[0]}" dur="0.6s" fill="freeze"/><animate attributeName="cy" to="${to[1]}" dur="0.6s" fill="freeze"/></circle>`;
+    await wait(700);
+    g.innerHTML = '';
+  };
+  const alarm = (at) => { const a = document.getElementById('alarm'); if (!a) return; if (!at) { a.classList.remove('on'); return; } a.setAttribute('cx', at[0]); a.setAttribute('cy', at[1]); a.classList.add('on'); };
+
+  const bar = document.getElementById('bar');
+  bar.hidden = false;
+  bar.innerHTML = `<div class="bar__in"><div class="bar__sum"><b>${APPROACHES[approach].name} run</b><span>${esc(team.map((o) => o.handle).join(', '))}${over ? ` · ${esc(over.handle)} on the crane` : ''}</span></div><button class="btn btn--ghost" id="skip">Speed up</button></div>`;
+  document.getElementById('skip').addEventListener('click', (e) => { fast = !fast; e.target.textContent = fast ? 'Normal speed' : 'Speed up'; });
+
+  let phase = 'Way in';
+  const tally = () => {
+    const hurtN = Object.keys(log.hurt).length;
+    document.getElementById('tally').innerHTML = `<span class="phase">${phase}</span><span class="alert ${log.alert ? 'bad' : ''}" aria-label="Alert ${log.alert} of 3">Alert <i class="${log.alert > 0 ? 'on' : ''}"></i><i class="${log.alert > 1 ? 'on' : ''}"></i><i class="${log.alert > 2 ? 'on' : ''}"></i></span><span class="${log.heat ? 'bad' : ''}">Heat +${log.heat}</span><span class="${hurtN ? 'bad' : ''}">Hurt ${hurtN}</span>${over ? `<span>${kit === 'rifle' ? 'Shots' : 'Drone'} ${overLeft}</span>` : ''}`;
+  };
+  tally();
+  const feed = document.getElementById('feed');
+  const add = (node) => { feed.appendChild(node); node.scrollIntoView({ block: 'end', behavior: fast ? 'auto' : 'smooth' }); };
+  const say = async (html, cls = '', ms = 1100, kind = '') => {
+    const div = document.createElement('div');
+    div.className = `line ${cls}`;
+    div.innerHTML = (kind ? `<span class="kind">${kind}</span>` : '') + html;
+    div.querySelectorAll('.dice').forEach((b) => b.addEventListener('click', () => { const d = b.nextElementSibling; d.hidden = !d.hidden; b.setAttribute('aria-expanded', String(!d.hidden)); }));
+    add(div);
+    await wait(ms);
+  };
+  const newPhase = async (name) => { phase = name; tally(); const h = document.createElement('div'); h.className = 'phasehead'; h.textContent = name; add(h); await wait(350); };
+  const who = (op) => `<span class="who" style="color:${op.color}">${esc(op.handle)}</span>`;
+  const fillWho = (t, op) => esc(t).replaceAll('{op}', who(op));
+  const diceHtml = (r, die) => `<button class="dice" type="button" aria-expanded="false">${die + r.value >= r.need ? '✓' : '✗'} dice</button><span class="dice-detail" hidden>die ${die} + ${r.value} (${esc(r.notes.join(', '))}) = ${die + r.value} · needs ${r.need}</span>`;
+  const able = () => team.filter((o) => !log.out.has(o.id));
+
+  // A call-in: the feed waits for you. Every call-in has a way out.
+  const callIn = (title, q, options) => new Promise((resolve) => {
+    log.callIns++;
+    const box = document.createElement('div');
+    box.className = 'callin';
+    box.innerHTML = `<span class="eyebrow">${esc(title)}</span><p class="callin__q">${q}</p>
+      ${options.map((o, i) => `<button class="choice" data-i="${i}"><span class="choice__top"><span>${o.label}</span>${o.risk ? pill(o.risk) : ''}</span>${o.sub ? `<span class="choice__sub">${o.sub}</span>` : ''}</button>`).join('')}`;
+    add(box);
+    box.querySelector('button').focus({ preventScroll: true });
+    box.querySelectorAll('button.choice').forEach((b) => b.addEventListener('click', () => {
+      box.querySelectorAll('button').forEach((x) => { x.disabled = true; });
+      b.classList.add('picked');
+      resolve(options[Number(b.dataset.i)].value);
+    }));
+  });
+
+  const arrive = async () => {
+    if (!arriving) return;
+    arriving.in -= 1;
+    if (arriving.in > 0) return;
+    team = [...team, arriving.op];
+    standby = null;
+    await say(`${who(arriving.op)} comes over the fence at a run and falls in with the group.`, 'good', 1000, 'Standby arrives');
+    arriving = null;
+    tokens(); moveGroup(here);
+  };
+
+  // Max alert: always a call-in (unless orders say never): go loud, call standby, or pull out.
+  const alertCall = async (zoneAt) => {
+    alarm(zoneAt);
+    await say('Floodlights snap on across the yard. Somebody is shouting into a radio.', 'crisis', 1300, 'Alert maxed');
+    let pick;
+    const opts = [
+      { label: 'Go loud: finish it fast', sub: 'Heat +2. Later incidents become fights.', value: 'loud' },
+      ...(standby && !arriving ? [{ label: `Call ${esc(standby.handle)} in from standby`, sub: 'Arrives after the next incident. Alert drops one.', value: 'standby' }] : []),
+      { label: 'Pull out', sub: 'Nobody else gets hurt. No pay.', value: 'out', risk: 'certain' },
+    ];
+    if (plan.callIn === 'never') {
+      pick = standby && !arriving ? 'standby' : 'out';
+      await say(`Under your orders, the crew ${pick === 'standby' ? `call ${who(standby)} in` : 'pull out'}.`, 'why', 900);
+    } else pick = await callIn('The crew is calling in', '"They know we\'re here. What now?"', opts);
+    alarm(null);
+    if (pick === 'out') { log.aborted = true; await say('The crew go back the way they came, fast and low.', 'bad', 1000); return false; }
+    if (pick === 'loud') { log.wentLoud = true; log.heat += 2; log.alert = 2; tally(); await say('No more sneaking. The crew moves fast and stops pretending.', 'why', 900); return true; }
+    arriving = { op: standby, in: 1 }; log.standbyIn = true; log.alert = 2; tally();
+    await say(`${who(standby)} is on the way from the van.`, 'why', 900);
+    return true;
+  };
+
+  // A serious injury: rescue with standby, keep going, or pull out.
+  const injuryCall = async (op) => {
+    let pick;
+    const opts = [
+      ...(standby && !arriving ? [{ label: `Send ${esc(standby.handle)} in to get ${esc(op.handle)} out`, sub: `${esc(standby.handle)} takes their place.`, value: 'rescue' }] : []),
+      { label: `Keep going without ${esc(op.handle)}`, sub: 'They stay with the group but can\'t act.', value: 'keep' },
+      { label: 'Pull everyone out', sub: 'No pay.', value: 'out', risk: 'certain' },
+    ];
+    if (plan.callIn === 'never') { pick = opts[0].value; await say(`Under your orders, the crew ${pick === 'rescue' ? `send for ${who(standby)}` : pick === 'keep' ? 'keep going' : 'pull out'}.`, 'why', 900); }
+    else pick = await callIn(`${op.handle} is down`, `"${esc(op.handle)}'s badly hurt. Your call."`, opts);
+    if (pick === 'out') { log.aborted = true; await say('The crew carry them out between them.', 'bad', 1000); return false; }
+    if (pick === 'rescue') {
+      log.rescued = { by: standby.handle, who: op.handle };
+      await say(`${who(standby)} comes in fast, gets an arm under ${who(op)} and walks them back to the van.`, 'save', 1300, 'Rescue');
+      team = [...team.filter((o) => o.id !== op.id), standby];
+      standby = null; log.standbyIn = true;
+      tokens(); moveGroup(here);
+    }
+    return true;
+  };
+
+  // One incident: the best-placed person rolls; a danger failure can be saved; unsaved failures raise the alert.
+  const incident = async (id, zoneId) => {
+    let inc = INC[id];
+    if (log.wentLoud && !inc.danger && id !== 'safe') inc = INC.guard;
+    const h = handler(inc, { approach, team, alert: log.alert, hurt: log.hurt, out: log.out });
+    if (!h) { await say('Nobody is fit to deal with it.', 'bad', 800); log.alert += 1; tally(); return; }
+    const op = h.op;
+    await say(fillWho(inc.text, op), 'inc', 1000, inc.name);
+    const die = d20();
+    const ok = die + h.value >= h.need;
+    log.events.push({ name: inc.name, op: op.handle, ok, risk: h.risk });
+    if (ok) { log.passes.push(inc.name); await say(`${fillWho(inc.ok, op)} ${diceHtml(h, die)}`, 'good', 1100); await arrive(); return; }
+    await say(`${fillWho(inc.bad, op)} ${diceHtml(h, die)}`, 'bad', 1100);
+    if (inc.conseq.neural) { log.neural[op.handle] = (log.neural[op.handle] ?? 0) + inc.conseq.neural; await say(`${who(op)} takes neural load (+${inc.conseq.neural}).`, 'why', 700); }
+    if (inc.danger) {
+      await say(fillWho(inc.comp, op), 'bad', 900);
+      const sv = bestSave(op, zoneId, { team, out: log.out, overLeft, slots: S, kit });
+      if (sv) {
+        const sdie = d20();
+        const saved = sdie + sv.value >= sv.need;
+        const sr = { value: sv.value, need: sv.need, notes: sv.notes };
+        if (sv.kind === 'overwatch') {
+          overLeft -= 1;
+          await fx(kit === 'rifle' ? 'shot' : 'drone', ZONE_AT[zoneId]);
+          if (kit === 'rifle') log.heat += over.spec === 'marksman' && saved ? 0 : 1;
+          else log.neural[sv.op.handle] = (log.neural[sv.op.handle] ?? 0) + (over.spec === 'jockey' ? 5 : 10);
+        }
+        tally();
+        const line = sv.kind === 'overwatch'
+          ? (kit === 'rifle' ? (saved ? `${who(sv.op)} takes the shot from the crane. The threat drops.` : `${who(sv.op)}'s shot sparks off steel. Too high.`) : (saved ? `${who(sv.op)}'s drone drops in and tases the guard.` : `${who(sv.op)}'s drone clips a cable and spins away.`))
+          : (saved ? `${who(sv.op)} comes round the stack and pulls ${who(op)} clear.` : `${who(sv.op)} goes for it, but can't get there in time.`);
+        await say(`${line} ${diceHtml(sr, sdie)}`, saved ? 'save' : 'bad', 1300, saved ? 'Saved' : 'Save failed');
+        if (saved) { log.saves.push({ by: sv.op.handle, who: op.handle, how: sv.kind === 'overwatch' ? (kit === 'rifle' ? 'shot' : 'drone') : 'hands' }); await arrive(); return; }
+      } else {
+        await say('Nobody is in a position to help.', 'why', 800);
+      }
+    }
+    // Unsaved: the consequence lands.
+    log.fails.push(inc.name);
+    log.alert = Math.min(3, log.alert + (inc.conseq.alert ?? 0));
+    log.heat += inc.conseq.heat ?? 0;
+    log.payCut += inc.conseq.payCut ?? 0;
+    tally();
+    if (inc.conseq.injury) {
+      const serious = rng() < 0.25 + 0.15 * log.alert;
+      if (serious) {
+        const medic = able().filter((o) => o.id !== op.id).sort((a, b) => b.stats.medical - a.stats.medical)[0];
+        let patched = false;
+        if (medic && medic.stats.medical >= 7) {
+          const mr = { value: medic.stats.medical, need: 17, notes: [`medical ${medic.stats.medical}`] };
+          const mdie = d20();
+          patched = mdie + mr.value >= mr.need;
+          await say(`${who(medic)} gets to ${who(op)} and works fast. ${patched ? 'Bad, but they can walk.' : 'It\'s worse than it looks.'} ${diceHtml(mr, mdie)}`, patched ? 'save' : 'bad', 1200, 'Patch-up');
+        }
+        if (!patched) {
+          log.hurt[op.id] = 'serious'; log.out.add(op.id); markDown(op); tally();
+          await say(`${who(op)} is seriously hurt and out of the job.`, 'bad', 1000);
+          if (!(await injuryCall(op))) return 'stop';
+          await arrive();
+          return log.alert >= 3 ? 'alert' : undefined;
+        }
+      }
+      log.hurt[op.id] = 'light'; tally();
+      await say(`${who(op)} is hurt. Light: −2 for the rest of the run.`, 'bad', 900);
+    }
+    await arrive();
+    if (!able().length) { log.aborted = true; await say('Nobody left standing to finish it. The crew pull out.', 'bad', 1000); return 'stop'; }
+    return log.alert >= 3 ? 'alert' : undefined;
+  };
+
+  // A crisis from the real game: a call-in when the orders say so.
+  const crisis = async (cid, roller = null) => {
+    const cr = C[cid];
+    const opts = cr.choices.map((c) => {
+      const op = roller ?? able().sort((a, b) => b.stats[c.stat] - a.stats[c.stat])[0];
+      const r = roller ? { op, value: op.stats[c.stat], diff: c.diff, need: 10 + c.diff, chance: chanceOf(op.stats[c.stat], c.diff), notes: [`${c.stat} ${op.stats[c.stat]}`] } : insideRoll(op, c.stat, c.diff, { approach, team, alert: log.alert, hurt: log.hurt });
+      r.risk = riskOf(r.chance);
+      return { c, r };
+    }).sort((a, b) => b.r.chance - a.r.chance);
+    await say(esc(cr.text), 'crisis', 1300, cr.name);
+    let picked;
+    if (plan.callIn === 'every' || (plan.callIn === 'risky' && opts[0].r.chance < 0.5)) {
+      picked = await callIn(`${opts[0].r.op.handle} is calling in`, `"${esc(cr.name)}. What do we do?"`, [
+        ...opts.map((o, i) => ({ label: fillWho(o.c.label, o.r.op), risk: o.r.risk, value: o, sub: `${i === 0 ? '<span class="crewpick">Crew\'s pick · </span>' : ''}${esc(o.r.op.handle)}: ${esc(o.r.notes.join(', '))}${o.c.failHurt ? ' · can hurt' : ''}${o.c.failHeat ? ' · heat if it fails' : ''}` })),
+        { label: esc(cr.abort.label), risk: 'certain', value: 'abort', sub: 'Nobody\'s hurt. You lose the pay.' },
+      ]);
+    } else {
+      picked = opts[0];
+      await say(`${who(picked.r.op)}'s call: ${fillWho(lowerFirst(picked.c.label), picked.r.op)}. The best odds they had (${picked.r.risk}).`, 'why', 900);
+    }
+    if (picked === 'abort') { log.aborted = true; log.payCut = cr.abort.payCut ?? 1; await say(esc(cr.abort.ok), 'bad', 1000); return false; }
+    const { c, r } = picked;
+    const die = d20();
+    const ok = die + r.value >= r.need;
+    log.events.push({ name: cr.name, op: r.op.handle, ok, risk: r.risk });
+    if (c.payCut) log.payCut += c.payCut;
+    if (!ok) { log.heat += c.failHeat ?? 0; log.payCut += c.failPay ?? 0; if (c.failHurt) log.hurt[r.op.id] = log.hurt[r.op.id] ?? 'light'; }
+    tally();
+    await say(`${fillWho(ok ? c.ok : c.bad, r.op)} ${diceHtml(r, die)}`, ok ? 'good' : 'bad', 1200);
+    if (!ok && c.failHurt) await say(`${who(r.op)} is hurt. Light: −2 for the rest of the run.`, 'bad', 800);
+    return true;
+  };
+
+  // ---- The run itself ----
+  let going = true;
+  const step = async (res) => {
+    if (res === 'stop') going = false;
+    else if (res === 'alert') going = await alertCall(team.length ? ZONE_AT[phaseZone] : null);
+  };
+  let phaseZone = 'fence';
+  await newPhase('Way in');
+  await say('Pier 12 at midnight. Amber floodlights burn through the salt fog, turning the container stacks into canyons.', 'beat', 1400);
+  if (approach === 'con') await say('Hi-vis vests, a clipboard and two borrowed passes: ¥200 well spent, hopefully.', 'why', 900);
+  if (over) await say(`${who(over)} climbs the crane with ${kit === 'rifle' ? 'a rifle across their back' : 'a drone case'}. ${kit === 'rifle' ? 'From up there, the whole yard. Not the office.' : 'The drone sees everywhere, for a while.'}`, 'why', 1000);
+  for (const z of ZONES) {
+    if (!going) break;
+    phaseZone = z.id;
+    if (z.id !== 'fence') await newPhase(z.name);
+    const pathTo = { fence: PATH.slice(0, 2), yard: PATH.slice(1, 4), office: PATH.slice(3) }[z.id];
+    for (const pt of pathTo.slice(1)) { moveGroup(pt); await wait(420); }
+    const pool = POOLS[z.id][approach];
+    const picks = [];
+    for (let i = 0; i < COUNT[z.id]; i++) picks.push(pool[Math.floor(rng() * pool.length)]);
+    if (z.id === 'yard' && approach !== 'loud' && rng() < OFFBEAT) picks[1] = 'guard';
+    for (let i = 0; i < picks.length && going; i++) {
+      await step(await incident(picks[i], z.id));
+      if (going && z.id === 'yard' && i === 0) going = await crisis(CRISIS_BY_APPROACH[approach]);
+    }
+    if (going && z.id === 'office') {
+      await step(await incident('safe', 'office'));
+      if (going) await say('Manifest in hand. Time to leave the way you came.', 'beat', 1100);
+    }
+  }
+  await newPhase('Way out');
+  phaseZone = 'yard';
+  for (const pt of EXIT_PATHS[plan.exit].slice(1)) { moveGroup(pt); await wait(420); }
+  if (going) {
+    if (plan.exit === 'van') going = await crisis('boxed', wheels);
+    else await say('The Ferryman rows you out under a tarp. He doesn\'t say a word the whole way.', 'beat', 1100);
+  }
+  await wait(600);
+  renderReport(log, { S, kit, approach, over, team });
+}
+
+// ---------- Report ----------
+function renderReport(log, { S, kit, approach, over, team }) {
+  const cut = log.aborted ? 1 : Math.min(1, log.payCut);
+  const gross = Math.round((PAY * (1 - cut)) / 50) * 50;
+  const fare = plan.exit === 'boat' && !log.aborted ? Math.round((gross * 0.15) / 50) * 50 : 0;
+  const cost = APPROACHES[approach].money ?? 0;
+  const net = gross - fare - cost;
+  const hurt = Object.entries(log.hurt);
+  const serious = hurt.filter(([, v]) => v === 'serious').map(([id]) => byId(id).handle);
+  const clean = !log.aborted && !log.fails.length && !hurt.length;
+  const title = log.aborted ? 'Pulled out' : clean ? 'Clean job' : 'Done, with costs';
+  const joss = log.aborted ? (serious.length ? `${serious.join(' and ')} is in a bad way. We got everyone home, and that's the job tonight.` : 'Nobody paid us, but everyone came home.')
+    : log.saves.length && !hurt.length ? `Clean on paper. ${log.saves[0].by} pulled ${log.saves[0].who} out of trouble${log.saves.length > 1 ? ', and not just the once' : ''}, so buy them a drink.`
+    : serious.length ? `We got the manifest. ${serious.join(' and ')} paid for it. Two weeks, the clinic says.`
+    : hurt.length ? 'We got the manifest. A few bruises on the way.'
+    : clean ? 'In and out. The Ferryman won\'t even know how close it wasn\'t.' : 'Got it done. Noisier than I\'d like.';
+  const checks = [
+    ...log.events.map((e) => [e.ok ? 'ok' : 'no', `${e.op} on ${lowerFirst(e.name)}: ${e.ok ? 'passed' : 'failed'} at ${e.risk} risk.`]),
+    ...log.saves.map((s) => ['sv', `${s.by} saved ${s.who} (${s.how === 'shot' ? 'a shot from the crane' : s.how === 'drone' ? 'the drone' : 'by hand'}).`]),
+    ...(log.rescued ? [['sv', `${log.rescued.by} came in from standby and got ${log.rescued.who} out.`]] : []),
+    ...(log.standbyIn && !log.rescued ? [['meh', 'Standby was called in.']] : []),
+    ...(log.wentLoud ? [['meh', 'You went loud at max alert.']] : []),
+    ['meh', `Alert reached ${log.alert} of 3.`],
+    ...Object.entries(log.neural).map(([h, n]) => ['meh', `${h} took ${n} neural load.`]),
+    ['meh', log.callIns ? `You were called in ${log.callIns} time${log.callIns > 1 ? 's' : ''}.` : 'The crew never called you in.'],
+  ];
+  const app = document.getElementById('app');
+  app.className = 'wrap no-bar';
+  document.getElementById('bar').hidden = true;
+  app.innerHTML = `
+    <header style="display:grid;gap:6px"><span class="eyebrow">Report · Container 409 · ${APPROACHES[approach].name}</span><h1>${title}</h1></header>
+    <p class="joss">${esc(joss)} <span class="muted">— Joss</span></p>
+    <div class="facts">
+      <div class="fact"><b>${yen(net)}</b><span>Net</span></div>
+      <div class="fact"><b>+${log.heat}</b><span>Heat</span></div>
+      <div class="fact"><b>${hurt.length}</b><span>Hurt</span></div>
+      <div class="fact"><b>${log.saves.length}</b><span>Saves</span></div>
+    </div>
+    <section><h2>The squad</h2><div class="planline">
+      ${INSIDE.filter((s) => S[s]).map((s) => `<span>Inside: ${esc(byId(S[s]).handle)}</span>`).join('')}
+      ${S.over ? `<span>Overwatch: ${esc(byId(S.over).handle)} (${kit})</span>` : '<span>No overwatch</span>'}
+      ${S.wheels ? `<span>Wheels: ${esc(byId(S.wheels).handle)}</span>` : ''}${S.standby ? `<span>Standby: ${esc(byId(S.standby).handle)}</span>` : ''}
+    </div></section>
+    <section><h2>What happened</h2><ul class="check">${checks.map(([k, t]) => `<li class="${k}"><i>${k === 'ok' ? '✓' : k === 'no' ? '✗' : k === 'sv' ? '★' : '·'}</i><span>${esc(t)}</span></li>`).join('')}</ul></section>
+    <section><h2>Money</h2><div class="money">
+      <div><span>Job pays</span><span>${yen(PAY)}</span></div>
+      ${gross !== PAY ? `<div><span>${log.aborted ? 'Pulled out' : 'Cuts'}</span><span>${yen(gross - PAY)}</span></div>` : ''}
+      ${fare ? `<div><span>Ferryman's fare</span><span>${yen(-fare)}</span></div>` : ''}
+      ${cost ? `<div><span>Props and bribes</span><span>${yen(-cost)}</span></div>` : ''}
+      <div><span>Net</span><span>${yen(net)}</span></div>
+    </div></section>
+    <div class="btns"><button class="btn" id="again">Same squad again</button><button class="btn btn--ghost" id="change">Change plan</button></div>
+    <p class="seed">Seed ${seed}. "Same squad again" rolls new dice.</p>`;
+  document.getElementById('again').addEventListener('click', () => { seed = (seed * 48271) % 2147483647; run(); });
+  document.getElementById('change').addEventListener('click', () => { seed = (seed * 48271) % 2147483647; window.scrollTo(0, 0); renderPlan(); });
+  window.scrollTo(0, 0);
+}
+
+renderPlan();
+</script>
