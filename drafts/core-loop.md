@@ -77,6 +77,18 @@ The owner's idea: each run generates a floor plan (a top-down building like a ta
 - **Fits with the heist board:** plan on the board (the blueprint of tonight's building), then watch the run on the plan itself.
 - **Phone:** the camera follows the crew with a zoomed view; tap to see the whole plan.
 
+## Direction: build the squad for the approach, then watch them solve it (owner, 2026-10-27)
+
+The owner's model, refined over two messages. Not yet a DESIGN.md decision.
+
+- **The approach sets which skills the run tests.** Stealth runs lean on stealth, social and tech; loud runs on combat and driving; and so on. This extends the agreed rule that the approach weights the crisis draw by situation.
+- **You build the squad for that approach** (a loud run: combat-heavy plus a tech for the doors; a tech run: hackers plus a lookout), then watch them handle what comes up.
+- **Incidents vs crises.** Incidents are many, automatic, a stat check plus the d20, handled by the best-suited squad member who is close enough (the sniper drops the guard, the brawler takes the one in the room, the hacker opens the door). Small consequences. Crises are the few authored moments with choices; they're what call you in.
+- **The approach shifts the mix; it doesn't remove anything.** A stealth run can still meet a fight, so one generalist or a muscle is insurance. "The stealth run went loud" is a story in itself, and could be a call-in that changes the run's mode.
+- **The site pushes back,** so the answer isn't always "the approach that suits my best people": a camera-heavy building makes stealth hard, a guarded one makes loud bloody. Approaches keep their agreed costs (stealth: time; loud: heat; social: money).
+- **Coverage read at planning:** the incidents this site and approach tend to throw at you, who covers each, and the gaps. Intel can reveal more of it.
+- **Open:** a sniper means ranged and close combat differ. Gear (a rifle lets combat reach across a room, at a noise and heat cost) is Claude's suggestion; a new stat is the alternative. Lethal force costing heat, quiet answers costing time or risk. Squad size limits per job.
+
 ## Possible path (each step stands alone)
 
 - **A.** A timed feed and call-ins for all jobs, with richer standing orders (mostly existing engine).
