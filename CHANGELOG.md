@@ -4,6 +4,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-27 · A tidier reputation line
+- The job board's reputation is one compact line: "Reputation 2/10", a short gauge of ten blocks (each a tenth of the way to the next unlock) and an (i). The (i) explains how reputation works and, new, what opens when: rookie jobs from the start, then threat 1 at 10, threat 2 at 15, threat 3 at 35, threat 4 at 60 and threat 5 at 80. The old full-width bar read like a big scale.
+
 ## 2026-10-27 · Stat icons everywhere you scan for a stat
 - The line icons now sit beside the stat everywhere it's a label: **job cards** (what the job needs, and the crew size as figures), the **squad dossiers and picker**, each person's main stat on the **crew list**, and the seven stats on a **profile**. Sentences (crisis reasons, the run feed, reports) stay words only.
 

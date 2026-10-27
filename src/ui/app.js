@@ -13,7 +13,7 @@ import { cityMapSvg, MAP_DISTRICTS } from './citymap.js';
 
 import { advanceDay, calendar, formatShortDate, isBlocked, seasonStartDay } from '../core/time.js';
 import { createNewGame } from '../core/state.js';
-import { templateById, jobView, nextUnlock } from '../core/jobs.js';
+import { templateById, jobView, nextUnlock, JOB_GATES } from '../core/jobs.js';
 import { trustLabel, clientById, trustOf } from '../core/clients.js';
 import { CLIENTS } from '../data/clients.js';
 import { availability, APPROACHES, traitMods, ratedStat, maxCrew, crewSizeRead } from '../core/crew.js';
@@ -983,9 +983,17 @@ const talkTag = (v) => v.rumour ? `<span class="talk-tag">Street talk: ${esc(v.r
 function climbLine() {
   const next = nextUnlock(state);
   if (!next) return '';
-  const pct = Math.round(Math.min(1, (state.reputation ?? 0) / next.rep) * 100);
-  return `<div class="climb"><p class="small"><strong>Reputation ${Math.floor(state.reputation ?? 0)}/${next.rep}.</strong> Bigger work opens up once people know your name. Finished jobs build it; aborts cost it.</p>
-    <div class="bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><span style="width:${pct}%"></span></div></div>`;
+  // One compact line: the number, a short ten-block gauge to the next unlock, and the rest behind
+  // an (i) (owner's feedback, 2026-10-27: the full-width bar read as a big scale).
+  const rep = state.reputation ?? 0;
+  const share = Math.min(1, rep / next.rep);
+  const blocks = Array.from({ length: 10 }, (_, i) => `<i class="${share * 10 >= i + 1 ? 'is-on' : share * 10 > i ? 'is-part' : ''}"></i>`).join('');
+  const ladder = Object.entries(JOB_GATES).map(([threat, need]) => `${need} (threat ${threat})`).join(', ');
+  return `<div class="climb infoline">
+    <span class="climb__label">Reputation <strong>${Math.floor(rep)}/${next.rep}</strong></span>
+    <span class="climb__gauge" role="progressbar" aria-label="Reputation towards the next unlock" aria-valuenow="${Math.floor(rep)}" aria-valuemin="0" aria-valuemax="${next.rep}">${blocks}</span>
+    ${infoTip('About reputation', `Bigger work opens up once people know your name. Finished jobs build it; aborts cost it. Rookie jobs are open from the start; the rest open at ${ladder}.`)}
+  </div>`;
 }
 
 function renderJobs() {

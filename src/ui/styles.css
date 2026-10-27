@@ -181,8 +181,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .stats dd { margin: 0; font-size: 1.2rem; font-weight: 600; }
 .nextbar { display: block; height: 4px; margin-top: 6px; background: var(--line); border-radius: 2px; overflow: hidden; }
 .nextbar span { display: block; height: 100%; background: var(--accent-2); }
-.climb { margin: 8px 0 12px; }
-.climb p { margin: 0 0 6px; }
+.climb { margin: 8px 0 12px; align-items: center; flex-wrap: wrap; }
 .bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
 .bar span { display: block; height: 100%; background: var(--accent); }
 .growth { font-size: 0.8rem; font-weight: 600; color: var(--accent-2); }
@@ -837,3 +836,11 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .upcoming__group > span { display: block; }
 .jobcard__stats { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 0.8rem; color: var(--muted); }
 .stats dt.iconword { display: flex; }
+/* Reputation: a compact line with a short ten-block gauge (owner's feedback, 2026-10-27). */
+.climb__label { font-size: 0.85rem; color: var(--muted); }
+.climb__label strong { color: var(--text); }
+.climb__gauge { display: inline-flex; gap: 2px; }
+.climb__gauge i { width: 8px; height: 10px; background: var(--line); }
+.climb__gauge i.is-on { background: var(--accent); }
+.climb__gauge i.is-part { background: linear-gradient(90deg, var(--accent) 50%, var(--line) 50%); }
+.climb .infotip[open] { flex-basis: 100%; }
