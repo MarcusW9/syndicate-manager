@@ -8,6 +8,7 @@ import { MISSIONS } from '../data/missions.js';
 import { TRAITS } from '../data/traits.js';
 import { PARTNER } from '../data/partner.js';
 import { jossIcon, portrait } from './art.js';
+import { statIcon, crewIcons } from './icons.js';
 import { cityMapSvg, MAP_DISTRICTS } from './citymap.js';
 
 import { advanceDay, calendar, formatShortDate, isBlocked, seasonStartDay } from '../core/time.js';
@@ -581,6 +582,20 @@ function renderUpcoming(where) {
     same[0].names = same.map((i) => i.name);
     for (const i of same.slice(1)) items.splice(items.indexOf(i), 1);
   }
+  // Several people on the same day (back, healed, rested) share one line: "5 back from the job",
+  // with the names a tap away (owner's feedback, 2026-10-27: imagine ten coming back).
+  const GROUPS = { back: 'back from the job', healed: 'over their injuries', rested: 'rested enough to work' };
+  for (const kind of Object.keys(GROUPS)) {
+    for (const d of new Set(items.filter((i) => i.kind === kind).map((i) => i.day))) {
+      const same = items.filter((i) => i.kind === kind && i.day === d);
+      if (same.length < 3) continue;
+      items.splice(items.indexOf(same[0]), 1, { day: d, kind: 'group', text: `${same.length} ${GROUPS[kind]}`, names: same.map((i) => i.name) });
+      for (const i of same.slice(1)) items.splice(items.indexOf(i), 1);
+    }
+  }
+  const line = (i) => (i.kind === 'group'
+    ? `<li><details class="upcoming__group"><summary>${esc(i.text)}</summary><span class="small muted">${esc(i.names.join(', '))}</span></details></li>`
+    : `<li class="${i.kind === 'bills' && state.cash < i.total ? 'is-short' : ''}">${esc(text(i))}</li>`);
   const days = [...new Set(items.map((i) => i.day))];
   return `
     <section class="panel upcoming ${where}">
@@ -589,7 +604,7 @@ function renderUpcoming(where) {
         ${days.map((d) => `
           <li class="upcoming__day">
             <span class="upcoming__when">${esc(when(d))}</span>
-            <ul class="upcoming__items">${items.filter((i) => i.day === d).map((i) => `<li class="${i.kind === 'bills' && state.cash < i.total ? 'is-short' : ''}">${esc(text(i))}</li>`).join('')}</ul>
+            <ul class="upcoming__items">${items.filter((i) => i.day === d).map(line).join('')}</ul>
           </li>`).join('')}
       </ul>
     </section>`;
@@ -1007,18 +1022,21 @@ function renderSideBoard() {
   const board = (state.sideBoard ?? []).map(sideTaskById).filter(Boolean);
   return `
       <h2>Side work this week</h2>
-      <p class="muted small">Small one-off jobs for whoever isn't on the main work. They're away for the days shown and the result comes back with them. A new board every Monday.</p>
+      <div class="infoline"><p class="muted small">Small jobs for whoever's free.</p>${infoTip('About side work', 'One-off jobs for whoever isn\'t on the main work. They\'re away for the days shown, and the result comes back with them. A new board every Monday.')}</div>
       ${board.length ? `<ul class="list list--cols">
         ${board.map((t) => `
           <li>
             <button class="row jobcard" data-action="open-side" data-id="${esc(t.id)}">
               <strong class="jobcard__name">${esc(t.name)}</strong><strong class="jobcard__pay">${esc(PURPOSE[t.purpose])}</strong>
               <span class="jobcard__client">${esc(sideReward(t))}</span><span class="jobcard__left">${t.days}d</span>
-              <span class="jobcard__facts">${esc(districtName(t.district))} · ${esc(t.stat)} · up to ${t.crew}</span>
+              <span class="jobcard__facts">${esc(districtName(t.district))} · ${statIcon(t.stat)} · ${crewIcons(t.crew)}</span>
             </button>
           </li>`).join('')}
       </ul>` : '<p class="muted">Nothing left this week. More on Monday.</p>'}`;
 }
+
+/** A small (i) that opens an explanation on tap (no hover: iOS rules in CLAUDE.md). */
+const infoTip = (label, text) => `<details class="infotip"><summary aria-label="${esc(label)}">i</summary><p class="small">${esc(text)}</p></details>`;
 
 /** Planning a side task: who goes, how likely it goes well, what it gives and costs. */
 function renderSidePlan() {

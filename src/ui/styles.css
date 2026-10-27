@@ -815,3 +815,23 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .wf-more { padding: 0 12px 8px; display: grid; gap: 4px; }
 .wf-line.is-new .wf-hl { animation: wf-in 0.35s ease-out both; animation-delay: calc((0.5s + var(--d) * 0.8s) * var(--speed)); }
 @media (prefers-reduced-motion: reduce) { .wf-line.is-new .wf-hl { animation: none; } }
+
+/* Owner's feedback (2026-10-27): icons, a tap-to-read (i), grouped "coming up" lines. */
+.icon { width: 1.05em; height: 1.05em; vertical-align: -0.17em; flex: none; }
+.iconword { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.iconcrew { display: inline-flex; gap: 1px; vertical-align: -0.2em; }
+.iconcrew .icon { width: 1.2em; height: 1.2em; }
+.infoline { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 12px; }
+.infoline > p { margin: 0; }
+.infotip { position: relative; }
+.infotip > summary { list-style: none; cursor: pointer; width: 22px; height: 22px; border: 1px solid var(--muted); border-radius: 50%; display: grid; place-items: center; font-size: 0.75rem; font-weight: 700; color: var(--muted); font-style: italic; }
+.infotip > summary::-webkit-details-marker { display: none; }
+.infotip > summary::before { content: ''; position: absolute; inset: -11px; } /* a 44px tap area round the small (i) */
+.infotip[open] > summary { color: var(--accent-2); border-color: var(--accent-2); }
+.infotip > p { margin: 6px 0 0; color: var(--muted); max-width: 60ch; }
+.infoline:has(.infotip[open]) { flex-wrap: wrap; }
+.upcoming__group > summary { cursor: pointer; list-style: none; }
+.upcoming__group > summary::-webkit-details-marker { display: none; }
+.upcoming__group > summary::after { content: ' ▸'; color: var(--muted); font-size: 0.8em; }
+.upcoming__group[open] > summary::after { content: ' ▾'; }
+.upcoming__group > span { display: block; }

@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-27 · Less to read on Today and the job board (owner's feedback)
+- **Coming up:** when three or more people come back from jobs (or heal, or rest up) on the same day, it's one line, "5 back from the job". Tap it to see who.
+- **Side work:** the explanation is one short line, "Small jobs for whoever's free", with an (i) to tap for the rest.
+- **Icons:** side-work cards show their stat with a small line icon (a steering wheel for driving, a chip for tech, a cross for medical...) and how many can go as little figures instead of "up to 2".
+
 ## 2026-10-27 · Easier squad picking, a calmer feed (owner's feedback)
 - **Picking the squad:** the picker lists free crew first. Everyone already on the squad sits in their own "Already on the squad" section below, greyed, with a tag saying where they are (Inside, Overwatch, Wheels, Standby, or "In this slot"), so you're much less likely to tap the same person again by accident. Tapping one still moves them to the slot you're filling.
 - **Watching a run:** each moment is now a single line, an icon and a short headline ("✓ Raster slips the patrol", "✗ The lock squawks", "★ Buffer saves Drone"). Tap a line for the setup, the detail, the crew's reason and the dice. Story beats are smaller and quieter. Call-ins still show in full.
