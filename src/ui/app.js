@@ -8,7 +8,7 @@ import { MISSIONS } from '../data/missions.js';
 import { TRAITS } from '../data/traits.js';
 import { PARTNER } from '../data/partner.js';
 import { jossIcon, portrait } from './art.js';
-import { statIcon, crewIcons } from './icons.js';
+import { statIcon, statGlyph, crewIcons } from './icons.js';
 import { cityMapSvg, MAP_DISTRICTS } from './citymap.js';
 
 import { advanceDay, calendar, formatShortDate, isBlocked, seasonStartDay } from '../core/time.js';
@@ -261,7 +261,7 @@ function keyStatsFor(op, tpl, threat) {
   return tpl.keyStats.map((k) => {
     const v = ratedStat(op, k);
     const fit = { low: 'good', moderate: 'shaky', high: 'weak', extreme: 'weak' }[riskLabel(successChance(v, target))];
-    return `<span class="fit fit--${fit}">${esc(statName(k))} ${v}${traitMods(op)[k] ? '*' : ''}</span>`;
+    return `<span class="fit fit--${fit} iconword">${statGlyph(k)}${esc(statName(k))} ${v}${traitMods(op)[k] ? '*' : ''}</span>`;
   }).join(' · ');
 }
 /** How long something on offer lasts: it's still there on its last day. */
@@ -286,7 +286,7 @@ const seasonChanges = (op) => changesSince(op, seasonStartDay(state.day));
 /** Crew-list one-liner: their best (main) stat and the scout's read of where they're heading. */
 function scoutLine(op) {
   const main = primaryStat(op);
-  return `<span class="scoutline">${esc(statName(main))} ${ratedStat(op, main)} · ${esc(potentialTag(op))}</span>`;
+  return `<span class="scoutline"><span class="iconword">${statGlyph(main)}${esc(statName(main))} ${ratedStat(op, main)}</span> · ${esc(potentialTag(op))}</span>`;
 }
 
 /** Crew-list marker: "▲ Tech +2, Combat +1 ▼ Driving −1" for this season. */
@@ -308,7 +308,7 @@ function statCell(op, k, { growth = false } = {}) {
   const career = growth ? op.stats[k] - (op.startStats?.[k] ?? op.stats[k]) : 0;
   const traitNames = op.traits.filter((t) => typeof TRAITS[t]?.effects?.[k] === 'number').map((t) => TRAITS[t].name).join(', ');
   return `<div>
-    <dt>${esc(k)}</dt>
+    <dt class="iconword">${statGlyph(k)}${esc(k)}</dt>
     <dd>${ratedStat(op, k)}${season ? ` <span class="growth ${season < 0 ? 'is-down' : ''}">${signed(season)}</span>` : ''}</dd>
     ${mod ? `<span class="statnote ${mod < 0 ? 'is-down' : ''}">${op.stats[k]} ${mod > 0 ? '+' : '−'}${Math.abs(mod)} ${esc(traitNames)}</span>` : ''}
     ${career ? `<span class="statnote">career ${signed(career)}</span>` : ''}
@@ -1004,7 +1004,8 @@ function renderJobs() {
             <button class="row jobcard" data-action="open-job" data-id="${esc(j.id)}">
               <strong class="jobcard__name">${esc(t.name)}</strong><strong class="jobcard__pay">${money(v.pay)}</strong>
               <span class="jobcard__client">${clientLine(v)}</span><span class="jobcard__left ${j.expiresDay === state.day ? 'is-last' : ''}">${daysLeft(j.expiresDay)}</span>
-              <span class="jobcard__facts">${esc(districtName(t.district))} · threat ${threatHtml(v)} · ${t.crewSize} crew · ${t.days}d</span>
+              <span class="jobcard__facts">${esc(districtName(t.district))} · threat ${threatHtml(v)} · ${crewIcons(t.crewSize, `crew of ${t.crewSize}`)} · ${t.days}d</span>
+              <span class="jobcard__stats">${t.keyStats.map(statIcon).join(' ')}</span>
               ${v.hinted ? '<span class="jobcard__extra intel">Intel unreliable</span>' : ''}${v.rumour ? `<span class="jobcard__extra">${talkTag(v)}</span>` : ''}
             </button>
           </li>`;

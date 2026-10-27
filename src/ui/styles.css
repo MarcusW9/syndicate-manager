@@ -835,3 +835,5 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .upcoming__group > summary::after { content: ' ▸'; color: var(--muted); font-size: 0.8em; }
 .upcoming__group[open] > summary::after { content: ' ▾'; }
 .upcoming__group > span { display: block; }
+.jobcard__stats { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 0.8rem; color: var(--muted); }
+.stats dt.iconword { display: flex; }

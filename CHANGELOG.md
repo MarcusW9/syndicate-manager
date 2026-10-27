@@ -4,6 +4,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-27 · Stat icons everywhere you scan for a stat
+- The line icons now sit beside the stat everywhere it's a label: **job cards** (what the job needs, and the crew size as figures), the **squad dossiers and picker**, each person's main stat on the **crew list**, and the seven stats on a **profile**. Sentences (crisis reasons, the run feed, reports) stay words only.
+
 ## 2026-10-27 · Less to read on Today and the job board (owner's feedback)
 - **Coming up:** when three or more people come back from jobs (or heal, or rest up) on the same day, it's one line, "5 back from the job". Tap it to see who.
 - **Side work:** the explanation is one short line, "Small jobs for whoever's free", with an (i) to tap for the rest.

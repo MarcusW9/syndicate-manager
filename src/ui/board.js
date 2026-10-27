@@ -8,6 +8,7 @@
 import { OVERWATCH_KIT } from '../core/incidents.js';
 import { bestLine } from '../core/squad.js';
 import { effectiveStat, maxCrew } from '../core/crew.js';
+import { statValue } from './icons.js';
 
 /** Slots on the board: the inside team (recommended, plus one spare card until the most), then overwatch. */
 export function insideSlots(plan, tpl) {
@@ -50,7 +51,7 @@ function dossier(ui, slot, op, { name, does, line = '', note = '', i = 0 }) {
       <span class="dossier__photo">${face(op)}</span>
       <span class="dossier__name">${esc(op.handle)}</span>
       <span class="dossier__real">${esc(op.freelance ? `freelance ${op.role}` : op.role)}</span>
-      ${line ? `<span class="dossier__note">${esc(line)}</span>` : ''}
+      ${line ? `<span class="dossier__note">${line}</span>` : ''}
       ${note ? `<span class="dossier__tag">${esc(note)}</span>` : ''}
     </button>`;
 }
@@ -67,19 +68,19 @@ export function renderBoard(ui, { plan, tpl, people, crewSize }) {
     const b = op ? bestLine(op, plan.approach) : null;
     return dossier(ui, `in:${i}`, op, {
       name: extra ? 'Extra' : 'Inside', does: extra ? 'Optional: more backup, more at risk.' : i < 1 ? 'Required.' : 'Recommended.',
-      line: b ? `${b.stat} ${b.value}` : '', i,
+      line: b ? statValue(b.stat, b.value) : '', i,
     });
   }).join('');
   const ow = byId(plan.overwatch);
   const owStat = OVERWATCH_KIT[kit].stat;
   const overCard = dossier(ui, 'over', ow, {
     name: 'Overwatch', does: 'Optional: saves people in trouble.',
-    line: ow ? `${owStat} ${effectiveStat(ow, owStat).value} · ${OVERWATCH_KIT[kit].uses} ${kit === 'rifle' ? 'shots' : 'actions'}` : '', note: ow ? kit : '', i: 5,
+    line: ow ? `${statValue(owStat, effectiveStat(ow, owStat).value)} · ${OVERWATCH_KIT[kit].uses} ${kit === 'rifle' ? 'shots' : 'actions'}` : '', note: ow ? kit : '', i: 5,
   });
   const wh = byId(plan.wheels);
-  const wheelsCard = dossier(ui, 'wheels', wh, { name: 'Wheels', does: 'Optional: takes every driving roll from the van.', line: wh ? `driving ${effectiveStat(wh, 'driving').value}` : '', note: wh ? 'in the van' : '', i: 2 });
+  const wheelsCard = dossier(ui, 'wheels', wh, { name: 'Wheels', does: 'Optional: takes every driving roll from the van.', line: wh ? statValue('driving', effectiveStat(wh, 'driving').value) : '', note: wh ? 'in the van' : '', i: 2 });
   const sb = byId(plan.standby);
-  const standbyCard = dossier(ui, 'standby', sb, { name: 'Standby', does: 'Optional: called in when it goes wrong.', line: sb ? `combat ${effectiveStat(sb, 'combat').value} · medical ${effectiveStat(sb, 'medical').value}` : '', note: sb ? 'on call' : '', i: 3 });
+  const standbyCard = dossier(ui, 'standby', sb, { name: 'Standby', does: 'Optional: called in when it goes wrong.', line: sb ? `${statValue('combat', effectiveStat(sb, 'combat').value)} ${statValue('medical', effectiveStat(sb, 'medical').value)}` : '', note: sb ? 'on call' : '', i: 3 });
   const count = plan.crew.length;
   return `
       <div class="board">
@@ -113,9 +114,9 @@ export function renderPicker(ui, { plan, tpl, threat, slot, people, freelancersF
   const current = outside ? plan[OUTSIDE[slot]] ?? null : plan.crew[Number(slot.split(':')[1])] ?? null;
   // What counts for this slot, best first.
   const FIT = {
-    over: { name: 'overwatch', note: `With the ${OVERWATCH_KIT[kit].name.toLowerCase()}: ${OVERWATCH_KIT[kit].stat} counts.`, score: (op) => effectiveStat(op, OVERWATCH_KIT[kit].stat).value, line: (op) => `${OVERWATCH_KIT[kit].stat} ${effectiveStat(op, OVERWATCH_KIT[kit].stat).value}` },
-    wheels: { name: 'Wheels', note: 'In the van: they take every driving roll, alone.', score: (op) => effectiveStat(op, 'driving').value, line: (op) => `driving ${effectiveStat(op, 'driving').value}` },
-    standby: { name: 'standby', note: 'At the van until called: they can save someone in trouble or get the wounded out.', score: (op) => effectiveStat(op, 'combat').value + effectiveStat(op, 'medical').value / 2, line: (op) => `combat ${effectiveStat(op, 'combat').value} · medical ${effectiveStat(op, 'medical').value}` },
+    over: { name: 'overwatch', note: `With the ${OVERWATCH_KIT[kit].name.toLowerCase()}: ${OVERWATCH_KIT[kit].stat} counts.`, score: (op) => effectiveStat(op, OVERWATCH_KIT[kit].stat).value, line: (op) => statValue(OVERWATCH_KIT[kit].stat, effectiveStat(op, OVERWATCH_KIT[kit].stat).value) },
+    wheels: { name: 'Wheels', note: 'In the van: they take every driving roll, alone.', score: (op) => effectiveStat(op, 'driving').value, line: (op) => statValue('driving', effectiveStat(op, 'driving').value) },
+    standby: { name: 'standby', note: 'At the van until called: they can save someone in trouble or get the wounded out.', score: (op) => effectiveStat(op, 'combat').value + effectiveStat(op, 'medical').value / 2, line: (op) => `${statValue('combat', effectiveStat(op, 'combat').value)} · ${statValue('medical', effectiveStat(op, 'medical').value)}` },
   }[slot] ?? { name: 'the inside team', note: `Numbers are for this job: ${tpl.keyStats.join(', ')} matter most.`, score: (op) => bestLine(op, plan.approach).value, line: null };
   const rows = people
     .filter(({ freelance }) => !(outside && freelance))
@@ -134,7 +135,7 @@ export function renderPicker(ui, { plan, tpl, threat, slot, people, freelancersF
           <li><button class="cand ${here ? 'is-on' : w ? 'is-placed' : ''}" data-action="assign" data-id="${esc(op.id)}" ${blocked ? 'disabled' : ''} aria-pressed="${here}">
             ${face(op, 'sm')}
             <span class="cand__txt"><strong>${esc(op.handle)}</strong> <span class="muted">${esc(freelance ? `freelance ${op.role}` : op.role)}</span><br>
-              <span class="small">${FIT.line ? esc(FIT.line(op)) : keyStats(op, tpl, threat)}</span></span>
+              <span class="small">${FIT.line ? FIT.line(op) : keyStats(op, tpl, threat)}</span></span>
             <span class="cand__side">${here ? '<span class="cand__where cand__where--here">In this slot</span>' : w ? `<span class="cand__where">${esc(w)}</span>` : freelance ? `<strong>${Math.round(freelance.share * 100)}%</strong> of pay` : statusChip(status)}</span>
           </button></li>`;
   };
