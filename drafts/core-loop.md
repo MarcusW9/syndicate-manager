@@ -97,6 +97,7 @@ The owner's model, refined over two messages. Not yet a DESIGN.md decision.
 - **Squads of 2-4, more on big jobs**; heists split into teams (inside, overwatch, wheels).
 - **Incidents are rolls; teammates can save a failure:** incident → roll → complication → one save roll by the best-placed teammate (overwatch with sight, combat nearby, a bonded partner with a bonus) → close call or full consequence, which may escalate to a crisis. Saves are limited (shots, battery, exposure), build bonds, and count in the coverage read.
 - **How a run holds together (2026-10-27):** one inside group (overwatch at a vantage, van and standby outside); an alert track that unsaved failures raise; incidents can cause a serious injury but never critical or death; extra inside people raise detection on stealth and con runs (not overwatch or standby), and everyone on the job takes fatigue. Defaults listed in the DESIGN.md row.
+- **Specialisations (2026-10-27):** gear lets anyone try a role as an amateur; experience unlocks an offer of two directions and the player picks; one per person (a second for veterans); two per stat, built in batches, Marksman and Drone Jockey first.
 - **Bench on standby:** marked when planning (no side work that day, a little fatigue); a call-in option brings them in a beat or two later; rescues of someone caught or pinned. Details to design.
 
 ## Possible path (each step stands alone)
