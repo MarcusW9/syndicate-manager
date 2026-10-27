@@ -58,9 +58,9 @@ export function feedItems(events = [], { kit = null } = {}) {
       });
     } else if (e.kind === 'decision' || e.kind === 'exit') {
       items.push({
-        type: 'card', kind: e.kind, label: e.kind === 'exit' ? 'Pulling out' : 'Call-in', setup: e.text,
+        type: 'card', kind: e.kind, label: e.kind === 'exit' ? 'Pulling out' : e.rescued ? 'Rescue' : e.standby ? 'Standby comes in' : 'Call-in', setup: e.text,
         results: [{ headline: e.choice, detail: e.report, tone: e.kind === 'exit' ? 'warn' : 'save', roll: null, why: e.why ?? null }],
-        cue: { decision: true },
+        cue: e.standby ? { standby: e.standby.id, rescued: e.rescued?.id ?? null } : { decision: true },
       });
     } else if (e.kind === 'critical') {
       items.push({

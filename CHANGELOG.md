@@ -4,6 +4,15 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-27 · The squad run, part 3: Wheels and standby
+- **Wheels:** a new slot on the squad board. Whoever you put in the van takes **every driving roll** on the job, alone at the wheel, out of harm's way inside. Leave it empty and the team drives as before. The crisis read uses their driving.
+- **Standby:** someone waiting at the van until it goes wrong. At **max alert** the crew can call them in: they join the team, back up rolls and get **a try of their own at saving anyone in trouble** (after overwatch or a teammate). The alert stays up, so the next slip calls you again, and standby comes once. When someone is **badly hurt**, standby can go in, **get them out and take their place**.
+- When the crew decides for itself, **Steady** and **Committed** orders use standby; **Cautious** still pulls out.
+- On stealth and con runs, extra bodies stop counting against you once the alert is maxed: nothing left to hide.
+- **Joss's picks** now fill Wheels (when the job can need driving and someone out-drives the team) and standby too.
+- On the watch screen, Wheels and standby wait at the van; you see standby run in, and a rescue walk the wounded back. While the crew is calling you in, the map scrolls away so the choices have the screen.
+- Save format v22: jobs in progress carry on without either. 263 tests.
+
 ## 2026-10-27 · The squad run, part 2: the squad board and the watch screen
 - **The squad board:** planning a job now pins dossier cards to a board. Tap an inside slot or the overwatch slot to pick who goes; anyone already placed swaps places. **Joss's picks** fills the board for you: the best team for the approach from whoever's free, plus overwatch if it would help. Freelancers are in the picker too.
 - **What they'll likely meet:** a new read lists every incident the approach can run into (the way in, inside, the target, and the guard who sometimes turns up), who would handle it with which stat, how risky it is, and how much safer a save makes it ("moderate → low with Tofu"). Gaps show in red. The crises keep their own read below it, and the bar at the bottom shows the worse of the two.

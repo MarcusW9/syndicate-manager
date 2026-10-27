@@ -63,9 +63,15 @@ export function stopWatch() {
 export function mountWatch(el, state, { onAuto, ui }) {
   if (!el) return;
   const am = state.activeMission;
-  const team = opsOf(state, am.crewIds);
+  const out = am.out ?? [];
+  const team = opsOf(state, am.crewIds.filter((id) => !out.includes(id)));
   const ow = am.overwatch ? { op: state.crew.find((o) => o.id === am.overwatch.id), kit: am.overwatch.kit } : null;
-  const plan = bindSitePlan(el.querySelector('.siteplan'), { team, overwatch: ow?.op ? ow : null, zone: am.done ? 'full' : am.zone ?? 'start', speed: () => speed });
+  const plan = bindSitePlan(el.querySelector('.siteplan'), {
+    team, overwatch: ow?.op ? ow : null, zone: am.done ? 'full' : am.zone ?? 'start', speed: () => speed,
+    wheels: am.wheels ? opsOf(state, [am.wheels])[0] : null,
+    standby: am.standby && !am.standby.joined ? opsOf(state, [am.standby.id])[0] : null,
+    out: opsOf(state, out),
+  });
   live = { key: am.jobId, el, plan, shown: 0, timer: null, chain: Promise.resolve(), onAuto, ui, callKey: null };
   // The plan sticks just under the top bar (its height changes with the screen width).
   el.style.setProperty('--live-top', `${document.querySelector('.topbar')?.offsetHeight ?? 0}px`);
@@ -114,7 +120,8 @@ function sync(state, { animate }) {
     wait += paceOf(item);
     if (animate) {
       const plan = live.plan;
-      live.chain = live.chain.then(() => (item.type === 'phase' ? plan.enter(item.zone) : item.type === 'card' ? plan.play(item.cue) : null)).catch(() => {});
+      const cue = item.cue?.standby ? { ...item.cue, standbyOp: opsOf(state, [item.cue.standby])[0] } : item.cue;
+      live.chain = live.chain.then(() => (item.type === 'phase' ? plan.enter(item.zone) : item.type === 'card' ? plan.play(cue) : null)).catch(() => {});
     }
   }
   for (const e of am.events ?? []) if (e.injury) live.plan.hurt(e.injury.id, e.injury.severity);
@@ -165,10 +172,12 @@ function callIn(state) {
   if (html === live.callKey) return;
   live.callKey = html;
   slot.innerHTML = html;
+  // While you're called in, the decision gets the screen: the plan scrolls with the page and the clock controls go.
+  el.classList.toggle('is-calling', !!html);
   const first = slot.querySelector('button:not([disabled])');
   if (first) {
     first.focus({ preventScroll: true });
-    slot.scrollIntoView?.({ block: 'nearest' });
+    slot.scrollIntoView?.({ block: 'start' });
   }
 }
 

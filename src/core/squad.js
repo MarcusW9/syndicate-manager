@@ -65,7 +65,8 @@ function squadScore(template, crew, approach, overwatch, threat) {
 /**
  * Joss's picks: an inside team of the recommended size and an overwatch, chosen one at a time
  * for the best coverage, from the operatives given (free crew; freelancers cost a cut, so Joss
- * leaves them to you). Overwatch only if it helps. Returns { crew: [ids], overwatch: id|null, kit }.
+ * leaves them to you). Overwatch only if it helps; Wheels if the job can need driving and they'd
+ * out-drive the team; standby from whoever's left. Returns { crew, overwatch, kit, wheels, standby }.
  */
 export function jossPicks(template, candidates, approach, { threat = template.threat } = {}) {
   const team = [];
@@ -87,7 +88,16 @@ export function jossPicks(template, candidates, approach, { threat = template.th
       if (s > without + 0.005 && (!over || s > over.s)) over = { op, kit, s };
     }
   }
-  return { crew: team.map((o) => o.id), overwatch: over?.op.id ?? null, kit: over?.kit ?? null };
+  if (over) pool.splice(pool.indexOf(over.op), 1);
+  // Wheels: the best driver left, on jobs where driving can come up and they'd beat the team at it.
+  const drives = template.crises?.some((c) => c.choices.some((ch) => ch.stat === 'driving'));
+  const teamDriving = Math.max(0, ...team.map((o) => effectiveStat(o, 'driving', { approach }).value));
+  const driver = drives ? [...pool].sort((a, b) => b.stats.driving - a.stats.driving)[0] : null;
+  const wheels = driver && effectiveStat(driver, 'driving', { approach }).value > teamDriving ? driver : null;
+  if (wheels) pool.splice(pool.indexOf(wheels), 1);
+  // Standby: whoever left would be most use coming in at a bad moment (a fighter, then a medic).
+  const standby = [...pool].sort((a, b) => (b.stats.combat + b.stats.medical / 2) - (a.stats.combat + a.stats.medical / 2))[0] ?? null;
+  return { crew: team.map((o) => o.id), overwatch: over?.op.id ?? null, kit: over?.kit ?? null, wheels: wheels?.id ?? null, standby: standby?.id ?? null };
 }
 
 /** The line a dossier card shows: the stat this person brings to this approach. */

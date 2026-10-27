@@ -54,7 +54,7 @@ let playReportId = null; // a hands-off report playing out on its first open (re
 let openOperativeId = null;
 let openRecruitId = null;
 let newGameSlot = null; // slot number while picking a difficulty
-let plan = null; // { jobId, crew: [...ids], approach, orders, callIn, overwatch: id|null, kit } (core/mission.js startMission)
+let plan = null; // { jobId, crew: [...ids], approach, orders, callIn, overwatch: id|null, kit, wheels: id|null, standby: id|null } (core/mission.js startMission)
 let pickSlot = null; // the squad-board slot being filled ('in:<n>' or 'over'), while its picker is open
 let root;
 // Continue rests briefly after each new day, so a double click can't skip one.
@@ -126,7 +126,7 @@ function onClick(e) {
     case 'expand':
       if (confirm(`Expand the safehouse for ${money(nextExpansion(state).cost)}? Rent goes up by ${money(nextExpansion(state).rentIncrease)} a week.`)) return setState(expandSafehouse(state));
       break;
-    case 'open-job': screen = 'jobs'; plan = { jobId: id, crew: [], approach: 'stealth', orders: 'steady', callIn: 'risky', overwatch: null, kit: 'rifle' }; break; // also from Today's alerts
+    case 'open-job': screen = 'jobs'; plan = { jobId: id, crew: [], approach: 'stealth', orders: 'steady', callIn: 'risky', overwatch: null, kit: 'rifle', wheels: null, standby: null }; break; // also from Today's alerts
     // The squad board (ui/board.js): tap a card, pick who goes there; anyone already placed swaps.
     case 'pick-slot': pickSlot = id; break;
     case 'close-picker': focusNext = { action: 'pick-slot', id: pickSlot }; pickSlot = null; break;
@@ -135,7 +135,7 @@ function onClick(e) {
       const tpl = templateById(state.jobs.find((j) => j.id === plan.jobId).templateId);
       const v = jobView(state, state.jobs.find((j) => j.id === plan.jobId));
       const p = jossPicks({ ...tpl, threat: v.threat }, state.crew.filter((op) => availability(state, op).ok), plan.approach, { threat: v.threat });
-      plan.crew = p.crew; plan.overwatch = p.overwatch; if (p.kit) plan.kit = p.kit;
+      Object.assign(plan, { crew: p.crew, overwatch: p.overwatch, wheels: p.wheels, standby: p.standby }); if (p.kit) plan.kit = p.kit;
       break;
     }
     case 'approach': plan.approach = id; break;
@@ -223,7 +223,7 @@ function onClick(e) {
 }
 
 /** The planning screen's squad options for startMission / sendOff. */
-const planOpts = () => ({ overwatch: plan.overwatch ? { id: plan.overwatch, kit: plan.kit } : null, callIn: plan.callIn ?? 'risky', orders: plan.orders ?? 'steady' });
+const planOpts = () => ({ overwatch: plan.overwatch ? { id: plan.overwatch, kit: plan.kit } : null, wheels: plan.wheels ?? null, standby: plan.standby ?? null, callIn: plan.callIn ?? 'risky', orders: plan.orders ?? 'steady' });
 
 function onChange(e) {
   if (e.target.id !== 'import-file' || !e.target.files[0]) return;
@@ -1102,7 +1102,8 @@ function renderPlan() {
   const people = [...state.crew, ...freelancers.map(freelancerAsCrew)];
   const picked = plan.crew.map((id) => people.find((o) => o.id === id)).filter(Boolean);
   const intel = intelFor(state, t.district);
-  const read = assessJob({ ...t, threat: v.threat }, picked, plan.approach, { watched: state.heatWatched ? WATCHED_PENALTY : 0, intel });
+  const wheelsOp = state.crew.find((o) => o.id === plan.wheels) ?? null;
+  const read = assessJob({ ...t, threat: v.threat }, picked, plan.approach, { watched: state.heatWatched ? WATCHED_PENALTY : 0, intel, wheels: wheelsOp });
   const owOp = state.crew.find((o) => o.id === plan.overwatch) ?? null;
   const cov = coverage({ ...t, threat: v.threat }, picked, plan.approach, { threat: v.threat, overwatch: owOp ? { op: owOp, kit: plan.kit } : null, intel });
   // The bar shows the worse of the two reads: the crises (risk read) and the incidents (coverage).
@@ -1148,7 +1149,7 @@ function renderPlan() {
 
       <div class="plangrid__risk">
       <h2 id="risk-read">What they'll likely meet</h2>
-      ${renderCoverage(boardUi, cov, { overwatch: owOp, approachName: APPROACHES[plan.approach].name })}
+      ${renderCoverage(boardUi, cov, { overwatch: owOp, approachName: APPROACHES[plan.approach].name, standby: state.crew.find((o) => o.id === plan.standby) ?? null })}
       <h2>The crises</h2>
       <div class="riskcard">
         ${picked.length ? `${riskBadge(read.level)}
@@ -1170,7 +1171,7 @@ function renderPlan() {
       ${(() => {
         const away = plan.callIn === 'never' && handsOffAllowed(t);
         return `<button class="btn btn--primary" data-action="${away ? 'send-job' : 'start-job'}" ${plan.crew.length ? '' : 'disabled'}>
-        ${plan.crew.length ? `${away ? 'Send' : 'Start with'} ${plan.crew.length + (plan.overwatch ? 1 : 0)}` : 'Pick a crew'}
+        ${plan.crew.length ? `${away ? 'Send' : 'Start with'} ${plan.crew.length + [plan.overwatch, plan.wheels, plan.standby].filter(Boolean).length}` : 'Pick a crew'}
       </button>`;
       })()}
     </div>
@@ -1292,12 +1293,15 @@ function renderMission() {
   }
   return `
     <section class="panel mission">
-      <p class="muted small">On the job · ${esc(APPROACHES[am.approach]?.name ?? '')} approach · ${esc(crewNames)}${ow ? ` · ${esc(ow.handle)} on overwatch (${esc(OVERWATCH_KIT[am.overwatch.kit].name.toLowerCase())})` : ''}</p>
+      <p class="muted small">On the job · ${esc(APPROACHES[am.approach]?.name ?? '')} approach · ${esc(crewNames)}${ow ? ` · ${esc(ow.handle)} on overwatch (${esc(OVERWATCH_KIT[am.overwatch.kit].name.toLowerCase())})` : ''}${outsider(am.wheels, 'at the wheel')}${am.standby && !am.standby.joined ? outsider(am.standby.id, 'on standby') : ''}</p>
       <h1>${esc(t.name)}</h1>
       ${renderWatch(watchUi, state)}
       ${result}
     </section>`;
 }
+
+/** " · Hotwire at the wheel" for someone outside the inside team, or nothing. */
+const outsider = (id, what) => { const op = id ? state.crew.find((o) => o.id === id) : null; return op ? ` · ${esc(op.handle)} ${what}` : ''; };
 
 /** The card for whatever the crew is calling you in for, if anything (shown inline in the watch feed). */
 function renderCallIn(s) {
