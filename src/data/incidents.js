@@ -101,6 +101,7 @@ export const ZONES = {
   in: { name: 'The way in', open: true },
   inside: { name: 'Inside', open: true },
   target: { name: 'The target', open: false },
+  out: { name: 'The way out', open: true },
 };
 
 // What each approach tends to meet in each zone (incident ids, drawn at random).

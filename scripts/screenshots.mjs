@@ -51,6 +51,7 @@ await new Promise((ok, fail) => {
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+page.on('pageerror', (e) => console.error(`page error: ${e.message}`));
 await page.addInitScript(() => {
   let s = 20261023;
   Math.random = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 2 ** 32; };
@@ -95,14 +96,26 @@ try {
     await top(); await shot('job-board');
     if (await click('[data-action="open-job"]')) {
       await top(); await shot('planning');
-      for (let i = 0; i < 4; i++) await click('[data-action="toggle-crew"]:not(.is-on):not([disabled])');
-      // The squad run (2026-10-27): someone on overwatch, and call-ins at every crisis so one shows up.
-      await click('[data-action="overwatch"]');
-      await click('[data-action="callin"][data-id="every"]');
+      // The squad board (2026-10-27, slice 2): Joss fills it; a look at the picker sheet.
+      if (await click('[data-action="joss"]')) {
+        await click('[data-action="callin"][data-id="every"]');
+        await page.evaluate(() => document.querySelector('.board')?.scrollIntoView({ block: 'center' }));
+        await shot('squad-board');
+        await page.evaluate(() => document.querySelector('#risk-read')?.scrollIntoView({ block: 'center' }));
+        await shot('coverage-read');
+        if (await click('[data-action="pick-slot"]')) { await shot('squad-picker'); await click('.sheet [data-action="close-picker"]'); }
+      } else {
+        for (let i = 0; i < 4; i++) await click('[data-action="toggle-crew"]:not(.is-on):not([disabled])');
+        // The squad run (2026-10-27): someone on overwatch, and call-ins at every crisis so one shows up.
+        await click('[data-action="overwatch"]');
+        await click('[data-action="callin"][data-id="every"]');
+      }
       await shot('planning-crew-picked');
       if (await click('[data-action="start-job"]')) {
         let crisisShot = false;
-        for (let i = 0; i < 80; i++) {
+        let watchShots = 0;
+        let waits = 0;
+        for (let i = 0; i < 400; i++) {
           if (await visible('[data-action="close-mission"]').count()) break;
           if (await visible('[data-action="choose"], [data-action="critical"]').count()) {
             if (!crisisShot) { await shot('crisis'); crisisShot = true; }
@@ -124,7 +137,12 @@ try {
             if (!(await click('[data-action="pending"]:not([data-id="out"])'))) await click('[data-action="pending"]');
             continue;
           }
-          if (!(await click('[data-action="step"], [data-action="beat"]'))) break;
+          if (await click('[data-action="step"], [data-action="beat"]')) continue;
+          // The watch screen (slice 2) plays on its own: wait, and catch it mid-run twice.
+          if (!(await visible('.watch').count())) break;
+          await page.waitForTimeout(500);
+          waits++;
+          if ((waits === 4 && watchShots === 0) || (waits === 14 && watchShots === 1)) await shot(`watch-${++watchShots}`);
         }
         await shot('mission-end');
         if (await click('[data-action="close-mission"]')) {

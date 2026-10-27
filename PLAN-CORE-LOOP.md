@@ -57,8 +57,9 @@ moments. Plan → watch → call-ins → report.
 - `src/core/autorun.js`: `autoStep(state)` advances one step the crew can take on its own
   (beats, incidents, crises and decisions under orders when the call-in rule allows);
   `needsPlayer(state)` says when to stop. `autoRun` and the live UI both use them.
-- `src/ui/`: the planning screen and the mission screen. Slice 1 adapts today's screens;
-  slice 2 replaces them with the squad board and the watch screen.
+- `src/ui/`: the planning screen and the mission screen. Slice 1 adapted today's screens;
+  slice 2 replaced them with the squad board (`ui/board.js`) and the watch screen (`ui/watch.js`,
+  `ui/siteplan.js`), fed by `core/squad.js` and `core/feed.js`.
 
 ## Slices
 
@@ -88,7 +89,7 @@ Follow-ups found while building slice 1: retune growth and earned traits for the
 and count for no traits yet; mentoring's edge fell to ~0.75; trait moments ~0.9 a week); the mission log doesn't yet show the crew's reason for a crisis they decided themselves (slice 2's
 cards will); the way out has no zone heading.
 
-### Slice 2 · The watch screen and the squad board — [ ]
+### Slice 2 · The watch screen and the squad board — [x] 2026-10-27 (see DESIGN.md for the calls made while building)
 - Planning: the dossier board (inside team, overwatch), Joss's picks, the coverage read
   (`core/risk.js` `coverage()`: each likely incident, who handles it, risk with and without
   a save).
@@ -96,6 +97,12 @@ cards will); the way out has no zone heading.
   pans and the map animations from the prototype; call-ins inline.
 - Report: saves and alert in the summary and full log.
 - Screenshot script reaches the new screens; a screenshot set.
+
+Built as `core/squad.js` (coverage read, Joss's picks; not `risk.js`, to avoid an import cycle), `core/feed.js`
+(events as watch cards), `ui/board.js`, `ui/siteplan.js` and `ui/watch.js`; tests in `tests/squad.test.js` and
+`tests/feed.test.js`. Done from slice 1's follow-ups: the crew's reason on cards they decided, the way out's heading.
+Still open: retune growth and earned traits for the loop. Found while building: the planning screen is long on
+phones (approach, board, two reads, call-ins); the generic site plan doesn't match every job (slice 4).
 
 ### Slice 3 · Wheels and standby — [ ]
 - Wheels: the person in the van rolls the driving crises on the way out.

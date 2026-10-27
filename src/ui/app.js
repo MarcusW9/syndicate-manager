@@ -28,6 +28,9 @@ import {
 } from '../core/mission.js';
 import { sendOff, ORDERS, handsOffAllowed, autoStep, needsPlayer } from '../core/autorun.js';
 import { OVERWATCH_KIT, ALERT_MAX } from '../core/incidents.js';
+import { coverage, jossPicks } from '../core/squad.js';
+import { renderBoard, renderPicker, renderCoverage, assignSlot } from './board.js';
+import { renderWatch, mountWatch, syncWatch, isWatching, stopWatch, togglePause, toggleSpeed } from './watch.js';
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
 import { earnedText } from '../core/earned.js';
 import { sideTaskById, sideOdds, sendOnSideTask, sideReward, sideCost, sidePitch, intelFor } from '../core/sidetasks.js';
@@ -52,6 +55,7 @@ let openOperativeId = null;
 let openRecruitId = null;
 let newGameSlot = null; // slot number while picking a difficulty
 let plan = null; // { jobId, crew: [...ids], approach, orders, callIn, overwatch: id|null, kit } (core/mission.js startMission)
+let pickSlot = null; // the squad-board slot being filled ('in:<n>' or 'over'), while its picker is open
 let root;
 // Continue rests briefly after each new day, so a double click can't skip one.
 const CONTINUE_REST_MS = 800;
@@ -66,6 +70,7 @@ export function mountApp(el, initialState) {
   // Map districts are SVG groups, not buttons: let Enter and Space open them too.
   root.addEventListener('keydown', (e) => {
     if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('g[data-action]')) { e.preventDefault(); onClick(e); }
+    if (e.key === 'Escape' && pickSlot) { focusNext = { action: 'pick-slot', id: pickSlot }; pickSlot = null; render(); }
   });
   root.addEventListener('change', onChange);
   render();
@@ -84,7 +89,7 @@ function onClick(e) {
   const { action, id } = t.dataset;
 
   switch (action) {
-    case 'nav': screen = id; openMessageId = null; openOperativeId = null; openRecruitId = null; plan = null; sidePlan = null; break;
+    case 'nav': screen = id; openMessageId = null; openOperativeId = null; openRecruitId = null; plan = null; sidePlan = null; pickSlot = null; break;
     case 'continue': {
       if (isBlocked(state) || Date.now() < continueRestUntil) return;
       const next = advanceDay(state);
@@ -110,7 +115,7 @@ function onClick(e) {
         : openOperativeId ? { action: 'open-op', id: openOperativeId }
         : plan ? { action: 'open-job', id: plan.jobId }
         : sidePlan ? { action: 'open-side', id: sidePlan.taskId } : null;
-      openMessageId = null; openOperativeId = null; openRecruitId = null; plan = null; sidePlan = null;
+      openMessageId = null; openOperativeId = null; openRecruitId = null; plan = null; sidePlan = null; pickSlot = null;
       break;
     case 'decide': return setState(resolveDecision(state, id, t.dataset.option));
     case 'open-op': openOperativeId = id; break;
@@ -122,19 +127,20 @@ function onClick(e) {
       if (confirm(`Expand the safehouse for ${money(nextExpansion(state).cost)}? Rent goes up by ${money(nextExpansion(state).rentIncrease)} a week.`)) return setState(expandSafehouse(state));
       break;
     case 'open-job': screen = 'jobs'; plan = { jobId: id, crew: [], approach: 'stealth', orders: 'steady', callIn: 'risky', overwatch: null, kit: 'rifle' }; break; // also from Today's alerts
-    case 'toggle-crew': {
+    // The squad board (ui/board.js): tap a card, pick who goes there; anyone already placed swaps.
+    case 'pick-slot': pickSlot = id; break;
+    case 'close-picker': focusNext = { action: 'pick-slot', id: pickSlot }; pickSlot = null; break;
+    case 'assign': Object.assign(plan, assignSlot(plan, pickSlot, id || null)); focusNext = { action: 'pick-slot', id: pickSlot }; pickSlot = null; break;
+    case 'joss': {
       const tpl = templateById(state.jobs.find((j) => j.id === plan.jobId).templateId);
-      const isF = (x) => (state.freelancers ?? []).some((f) => f.id === x);
-      if (plan.overwatch === id) plan.overwatch = null; // inside or on overwatch, not both
-      if (plan.crew.includes(id)) plan.crew = plan.crew.filter((x) => x !== id);
-      else if (isF(id) && plan.crew.filter(isF).length >= MAX_FREELANCERS_PER_JOB) plan.crew = [...plan.crew.filter((x) => !isF(x)), id]; // swap freelancers
-      else if (plan.crew.length < maxCrew(tpl.crewSize)) plan.crew = [...plan.crew, id];
+      const v = jobView(state, state.jobs.find((j) => j.id === plan.jobId));
+      const p = jossPicks({ ...tpl, threat: v.threat }, state.crew.filter((op) => availability(state, op).ok), plan.approach, { threat: v.threat });
+      plan.crew = p.crew; plan.overwatch = p.overwatch; if (p.kit) plan.kit = p.kit;
       break;
     }
     case 'approach': plan.approach = id; break;
     case 'orders': plan.orders = id; break;
     case 'callin': plan.callIn = id; break;
-    case 'overwatch': plan.overwatch = plan.overwatch === id ? null : id; plan.crew = plan.crew.filter((x) => x !== id); break;
     case 'kit': plan.kit = id; break;
     case 'open-side': sidePlan = { taskId: id, crew: [] }; break;
     case 'toggle-side-crew': {
@@ -165,6 +171,8 @@ function onClick(e) {
       return setState(next);
     }
     case 'step': return setState(autoStep(state)); // the next thing the crew does on its own (core/autorun.js)
+    case 'watch-pause': return togglePause(state);
+    case 'watch-speed': return toggleSpeed(state);
     case 'pending': return setState(resolvePending(state, id));
     case 'choose': return setState(chooseOption(state, id));
     case 'critical': return setState(resolveCritical(state, id));
@@ -309,6 +317,10 @@ function statCell(op, k, { growth = false } = {}) {
 
 // --- rendering ---------------------------------------------------------
 function render() {
+  // A running job's watch screen updates in place, so its animations and timer carry on (ui/watch.js).
+  const am = state.activeMission;
+  if (am && isWatching(root, am)) return syncWatch(state);
+  stopWatch();
   // Every render replaces the page, so put keyboard focus back on the same control if it survives.
   const focused = document.activeElement?.closest?.('[data-action]');
   const refocus = focused && root.contains(focused) ? { action: focused.dataset.action, id: focused.dataset.id } : null;
@@ -347,7 +359,8 @@ function render() {
     ${cue ? renderDayCue(cue) : ''}
     <input type="file" id="import-file" accept="application/json" hidden />
   `;
-  if (state.activeMission) root.querySelector('.mission-end')?.scrollIntoView({ block: 'end' });
+  if (am) mountWatch(root.querySelector('.watch'), state, { ui: watchUi, onAuto: () => setState(autoStep(state)) });
+  if (pickSlot) (root.querySelector('.sheet .cand.is-on') ?? root.querySelector('.sheet .cand:not([disabled])'))?.focus({ preventScroll: true });
   if (cityCardDue) { cityCardDue = false; root.querySelector('.citycard')?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
   const want = focusNext ?? refocus;
   focusNext = null;
@@ -640,6 +653,8 @@ function renderReportSummary(t) {
     sum.turning && ['Turning point', sum.turning.text],
     sum.standout && ['Standout', sum.standout.text],
     sum.hurt?.length && ['What hurt us', sum.hurt.join(' ')],
+    sum.saves?.length && ['Saves', sum.saves.map((v) => `${v.by} got ${v.who} out of trouble${v.via === 'overwatch' ? ` (${v.kit ?? 'overwatch'})` : ''}.`).join(' ')],
+    sum.alert != null && ['Alert', `Reached ${sum.alert} of ${ALERT_MAX}.`],
   ].filter(Boolean);
   return `
       <div class="reporthead">
@@ -667,14 +682,18 @@ function renderFullLog(t) {
   const events = t?.events;
   if (!events?.length) return '';
   const lastBeat = events.map((e) => e.kind).lastIndexOf('beat');
+  // Squad runs (slice 2) mark each zone; older logs get the three headings they always had.
+  const zoned = events.some((e) => e.kind === 'zone');
   let onJob = false;
   const items = events.map((e, i) => {
     let head = '';
-    if (e.kind === 'beat' && e.first) head = '<h3 class="flog__phase">Approach</h3>';
+    if (zoned) head = e.kind === 'beat' && e.first ? '<h3 class="flog__phase">Getting there</h3>' : '';
+    else if (e.kind === 'beat' && e.first) head = '<h3 class="flog__phase">Approach</h3>';
     else if (e.kind === 'beat' && e.last && i === lastBeat) head = '<h3 class="flog__phase">Getting out</h3>';
     else if (!onJob && e.kind !== 'beat') { onJob = true; head = '<h3 class="flog__phase">On the job</h3>'; }
     if (e.kind !== 'beat') onJob = true;
     const body = {
+      zone: () => `<h3 class="flog__phase">${esc(e.text)}</h3>`,
       beat: () => `<p class="flog__beat">${esc(e.text)}</p>`,
       twist: () => `<p class="flog__twist">Twist: ${esc(e.text)}</p>`,
       aftermath: () => `<p class="flog__line ${e.death ? 'tone--bad' : 'tone--good'}">${esc(e.text)}</p>`,
@@ -863,28 +882,6 @@ function growthNote(age) {
   if (declineChance(age)) return 'Past 40: slipping a little every season.';
   const rate = ageRate(age);
   return rate > 1 ? 'Young: learns fast.' : rate < 1 ? 'Experienced: learns slowly now.' : 'Still learning at a steady pace.';
-}
-
-/** Guns for hire on the planning screen: one per job, paid a share of what the job pays. */
-function renderFreelancers(t, threat, freelancers, full) {
-  if (!freelancers.length) return '';
-  return `
-      <h2>Freelancers (up to ${MAX_FREELANCERS_PER_JOB})</h2>
-      <p class="muted small">Hired for this job only. No wage: they take a share of what the job pays, and nothing if it pays nothing. They don't learn on your payroll.</p>
-      <ul class="list">
-        ${freelancers.map((f) => {
-          const on = plan.crew.includes(f.id);
-          return `
-          <li>
-            <button class="row pick ${on ? 'is-on' : ''}" data-action="toggle-crew" data-id="${esc(f.id)}" ${!on && full && !plan.crew.some((x) => freelancers.some((g) => g.id === x)) ? 'disabled' : ''} aria-pressed="${on}">
-              <span class="pick__box">${on ? '✓' : ''}</span>
-              ${face(f, 'sm')}
-              <span class="row__main"><strong>${esc(f.handle)}</strong> <span class="muted">${esc(f.quality)} ${esc(f.role)}</span><br><span class="small">${keyStatsFor(f, t, threat)}</span></span>
-              <span class="row__meta"><strong>${Math.round(shareOf(f) * 100)}%</strong> of pay<br>${daysLeft(f.expiresDay)}</span>
-            </button>
-          </li>`;
-        }).join('')}
-      </ul>`;
 }
 
 function renderMentoring(crew) {
@@ -1102,10 +1099,17 @@ function renderPlan() {
   const v = jobView(state, job);
   const t = v.tpl;
   const freelancers = state.freelancers ?? [];
-  const picked = [...state.crew, ...freelancers.map(freelancerAsCrew)].filter((o) => plan.crew.includes(o.id));
-  const read = assessJob({ ...t, threat: v.threat }, picked, plan.approach, { watched: state.heatWatched ? WATCHED_PENALTY : 0, intel: intelFor(state, t.district) });
+  const people = [...state.crew, ...freelancers.map(freelancerAsCrew)];
+  const picked = plan.crew.map((id) => people.find((o) => o.id === id)).filter(Boolean);
+  const intel = intelFor(state, t.district);
+  const read = assessJob({ ...t, threat: v.threat }, picked, plan.approach, { watched: state.heatWatched ? WATCHED_PENALTY : 0, intel });
+  const owOp = state.crew.find((o) => o.id === plan.overwatch) ?? null;
+  const cov = coverage({ ...t, threat: v.threat }, picked, plan.approach, { threat: v.threat, overwatch: owOp ? { op: owOp, kit: plan.kit } : null, intel });
+  // The bar shows the worse of the two reads: the crises (risk read) and the incidents (coverage).
+  const RANK = ['low', 'moderate', 'high', 'extreme'];
+  const toughest = picked.length && RANK.indexOf(cov.toughest) > RANK.indexOf(read.level) ? cov.toughest : read.level;
+  const toughWhy = toughest !== read.level ? (() => { const r = cov.rows.find((x) => x.effective === toughest); return `${r.name}: ${r.handler ? `${r.handler.op.handle} on ${r.handler.stat}` : 'nobody can handle it'}`; })() : read.reasons[0];
   const most = maxCrew(t.crewSize);
-  const full = plan.crew.length >= most;
 
   return `
     <section class="panel">
@@ -1121,34 +1125,7 @@ function renderPlan() {
         ${v.threatDelta ? `<p class="muted small">Every roll on this job is ${Math.abs(v.threatDelta) === 1 ? 'one point' : `${Math.abs(v.threatDelta)} points`} ${v.threatDelta > 0 ? 'harder' : 'easier'} than usual.</p>` : ''}
         ${v.hinted ? '<p class="intel">Intel unreliable: something about this job may not be what you were told.</p>' : ''}
         ${v.rumour ? `<p class="talk-tag">Street talk: ${esc(v.rumour.text)}</p>` : ''}
-        ${(() => { const i = intelFor(state, t.district); return i ? `<p class="talk-tag">Intel from ${esc(i.source)}: +${i.bonus} on every roll here until day ${state.intel[t.district].until}.</p>` : ''; })()}
-      </div>
-
-      <div class="plangrid__crew">
-      <h2>Crew (${plan.crew.length} picked · ${t.crewSize} recommended, up to ${most})</h2>
-      ${(() => { const r = crewSizeRead(plan.crew.length, t.crewSize); return `<p class="sizebadge sizebadge--${r.level} ${r.penalty >= 2 ? 'is-severe' : ''}">${esc(r.text)}</p>`; })()}
-      <p class="muted small">Matters most: ${t.keyStats.join(', ')}. Numbers are coloured by how each person would do alone on this job: <span class="fit fit--good">good</span>, <span class="fit fit--shaky">shaky</span>, <span class="fit fit--weak">weak</span>. On the job your best person rolls. * includes a trait bonus.</p>
-      <p class="muted small">Each person short of ${t.crewSize}: −1 on every roll. A second person within 3 of whoever rolls backs them up: +1.</p>
-      <ul class="list">
-        ${state.crew.map((op) => {
-          const a = availability(state, op);
-          const on = plan.crew.includes(op.id);
-          const disabled = !a.ok || (!on && full);
-          return `
-          <li>
-            <button class="row pick ${on ? 'is-on' : ''}" data-action="toggle-crew" data-id="${esc(op.id)}" ${disabled ? 'disabled' : ''} aria-pressed="${on}">
-              <span class="pick__box">${on ? '✓' : ''}</span>
-              ${face(op, 'sm')}
-              <span class="row__main"><strong>${esc(op.handle)}</strong> <span class="muted">${esc(op.role)}</span><br><span class="small">${keyStatsFor(op, t, v.threat)}</span></span>
-              <span class="row__meta">${statusChip(a)}</span>
-            </button>
-          </li>`;
-        }).join('')}
-      </ul>
-
-      ${renderFreelancers(t, v.threat, freelancers, full)}
-
-      ${renderMentoring(picked)}
+        ${intel ? `<p class="talk-tag">Intel from ${esc(intel.source)}: +${intel.bonus} on every roll here until day ${state.intel[t.district].until}.</p>` : ''}
       </div>
 
       <div class="plangrid__approach">
@@ -1159,51 +1136,63 @@ function renderPlan() {
             <strong>${esc(a.name)}</strong><span>${esc(a.desc)}</span>
           </button>`).join('')}
       </div>
-      ${renderOverwatch()}
-      ${renderCallIns(t)}
+      </div>
+
+      <div class="plangrid__crew">
+      <h2>Squad</h2>
+      ${(() => { const r = crewSizeRead(plan.crew.length, t.crewSize); return `<p class="sizebadge sizebadge--${r.level} ${r.penalty >= 2 ? 'is-severe' : ''}">${esc(r.text)}</p>`; })()}
+      ${renderBoard(boardUi, { plan, tpl: t, people, crewSize: t.crewSize })}
+      <p class="muted small">Tap a card to pick who goes. Each person short of ${t.crewSize}: −1 on every roll. A second person within 3 of whoever rolls backs them up: +1.${freelancers.length ? ` Freelancers (up to ${MAX_FREELANCERS_PER_JOB}) take a share of the pay instead of a wage.` : ''}</p>
+      ${renderMentoring(picked)}
       </div>
 
       <div class="plangrid__risk">
-      <h2 id="risk-read">Risk read</h2>
+      <h2 id="risk-read">What they'll likely meet</h2>
+      ${renderCoverage(boardUi, cov, { overwatch: owOp, approachName: APPROACHES[plan.approach].name })}
+      <h2>The crises</h2>
       <div class="riskcard">
         ${picked.length ? `${riskBadge(read.level)}
         <ul>${read.reasons.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>` : '<p class="muted">Pick a crew to see the risk.</p>'}
       </div>
+      </div>
+
+      <div class="plangrid__orders">
+      ${renderCallIns(t)}
       </div>
       </div>
     </section>
 
     <div class="planbar">
       <div class="planbar__read">
-        ${picked.length ? riskBadge(read.level) : '<span class="risk risk--none">no crew yet</span>'}
-        <span class="planbar__why">${esc(picked.length ? read.reasons[0] : `Pick up to ${most}; ${t.crewSize} recommended`)}</span>
+        ${picked.length ? riskBadge(toughest) : '<span class="risk risk--none">no crew yet</span>'}
+        <span class="planbar__why">${esc(picked.length ? toughWhy : `Pick up to ${most}; ${t.crewSize} recommended`)}</span>
       </div>
       ${(() => {
         const away = plan.callIn === 'never' && handsOffAllowed(t);
         return `<button class="btn btn--primary" data-action="${away ? 'send-job' : 'start-job'}" ${plan.crew.length ? '' : 'disabled'}>
-        ${plan.crew.length ? (away ? `Send ${plan.crew.length}${plan.overwatch ? ' + overwatch' : ''}` : `Start with ${plan.crew.length}${plan.overwatch ? ' + overwatch' : ''}`) : 'Pick a crew'}
+        ${plan.crew.length ? `${away ? 'Send' : 'Start with'} ${plan.crew.length + (plan.overwatch ? 1 : 0)}` : 'Pick a crew'}
       </button>`;
       })()}
-    </div>`;
+    </div>
+    ${pickSlot ? renderPicker(boardUi, { plan, tpl: t, threat: v.threat, slot: pickSlot, people: pickerPeople(), freelancersFull: freelancersFull() }) : ''}`;
 }
 
-/** Overwatch: one person outside the crew with the safehouse's shared rifle or drone (core/incidents.js). */
-function renderOverwatch() {
-  const free = state.crew.filter((op) => availability(state, op).ok && !plan.crew.includes(op.id));
-  const kit = OVERWATCH_KIT[plan.kit] ?? OVERWATCH_KIT.rifle;
-  return `
-      <h2>Overwatch <span class="muted small">(optional)</span></h2>
-      <p class="muted small">Someone outside with the safehouse's ${esc(kit.name.toLowerCase())}. When someone inside gets into trouble, overwatch can save them: ${kit.uses} ${plan.kit === 'rifle' ? 'shots' : 'drone actions'} a job. ${esc(kit.desc)}</p>
-      <div class="segmented">
-        ${Object.entries(OVERWATCH_KIT).map(([k, o]) => `
-          <button class="seg ${plan.kit === k ? 'is-on' : ''}" data-action="kit" data-id="${k}" aria-pressed="${plan.kit === k}"><strong>${esc(o.name)}</strong><span>${esc(o.stat)}</span></button>`).join('')}
-      </div>
-      <div class="owpicks">
-        ${free.length ? free.map((op) => `
-          <button class="owpick ${plan.overwatch === op.id ? 'is-on' : ''}" data-action="overwatch" data-id="${esc(op.id)}" aria-pressed="${plan.overwatch === op.id}">
-            ${face(op, 'sm')}<span><strong>${esc(op.handle)}</strong> <span class="muted">${esc(kit.stat)} ${ratedStat(op, kit.stat)}</span></span>
-          </button>`).join('') : '<p class="muted small">Nobody free who isn\'t already inside.</p>'}
-      </div>`;
+/** Helpers the squad board borrows (ui/board.js), so it looks like the rest of the game. */
+const boardUi = { esc, face: (op, size) => face(op, size), riskBadge: (l) => riskBadge(l), statusChip: (a) => statusChip(a), keyStats: (op, tpl, threat) => keyStatsFor(op, tpl, threat) };
+
+/** Everyone the picker can offer: the crew with their availability, and freelancers with their cut. */
+function pickerPeople() {
+  return [
+    ...state.crew.map((op) => ({ op, status: availability(state, op), freelance: null })),
+    ...(state.freelancers ?? []).map((f) => ({ op: freelancerAsCrew(f), status: { ok: true, reason: 'ready' }, freelance: { share: shareOf(f) } })),
+  ];
+}
+
+/** Freelancers are capped per job; the slot being changed doesn't count if it already holds one. */
+function freelancersFull() {
+  const isF = (id) => (state.freelancers ?? []).some((f) => f.id === id);
+  const here = pickSlot?.startsWith('in:') ? plan.crew[Number(pickSlot.split(':')[1])] : null;
+  return plan.crew.filter((id) => isF(id) && id !== here).length >= MAX_FREELANCERS_PER_JOB;
 }
 
 /** When the crew calls you in, and how they decide when they don't (core/autorun.js ORDERS). */
@@ -1283,16 +1272,13 @@ function levelUpCards(r) {
 function renderMission() {
   const am = state.activeMission;
   const t = templateById(am.templateId);
-  const crewOps = am.crewIds.map((id) => state.crew.find((o) => o.id === id) ?? state.memorial.find((o) => o.id === id)).filter(Boolean);
-  const crewNames = crewOps.map((o) => o.handle).join(', ');
-
-  const log = am.log.map((e) => `<p class="log log--${esc(e.kind)}">${esc(e.text)}</p>`).join('');
-  let action = '';
-
+  const crewNames = am.crewIds.map((id) => state.crew.find((o) => o.id === id) ?? state.memorial.find((o) => o.id === id)).filter(Boolean).map((o) => o.handle).join(', ');
+  const ow = am.overwatch ? state.crew.find((o) => o.id === am.overwatch.id) : null;
+  let result = '';
   if (am.done) {
     const r = am.result;
     const title = r.outcome === 'loss' ? 'Someone didn\'t come home' : r.outcome === 'aborted' ? 'Job aborted' : 'Job done';
-    action = `
+    result = `
       <div class="resultcard resultcard--${esc(r.outcome)}">
         <h2>${esc(title)}</h2>
         <p>Paid ${money(r.pay)} · Heat +${r.heatGain}</p>
@@ -1303,45 +1289,60 @@ function renderMission() {
         ${r.client && r.trustChange ? `<p>${esc(r.client)}: trust ${r.trustChange > 0 ? '+' : ''}${r.trustChange}</p>` : ''}
         <button class="btn btn--primary btn--block" data-action="close-mission">Back to the safehouse</button>
       </div>`;
-  } else if (am.critical) {
-    const v = describeCritical(state);
-    action = `
+  }
+  return `
+    <section class="panel mission">
+      <p class="muted small">On the job · ${esc(APPROACHES[am.approach]?.name ?? '')} approach · ${esc(crewNames)}${ow ? ` · ${esc(ow.handle)} on overwatch (${esc(OVERWATCH_KIT[am.overwatch.kit].name.toLowerCase())})` : ''}</p>
+      <h1>${esc(t.name)}</h1>
+      ${renderWatch(watchUi, state)}
+      ${result}
+    </section>`;
+}
+
+/** The card for whatever the crew is calling you in for, if anything (shown inline in the watch feed). */
+function renderCallIn(s) {
+  const am = s.activeMission;
+  if (am.critical) {
+    const v = describeCritical(s);
+    return `
       <div class="crisis crisis--critical">
         <p class="crisis__title">${esc(v.op.handle)} is critical</p>
         <p>${v.stabiliseFailed ? 'Stabilising failed. You have to decide now.' : `${esc(v.op.name)} is bleeding out. What do you do?`}</p>
         <div class="choices">${v.choices.map((c) => choiceButton(c, 'critical')).join('')}</div>
       </div>`;
-  } else if (am.pending) {
-    const v = describePending(state);
-    action = `
+  }
+  if (am.pending) {
+    const v = describePending(s);
+    return `
       <div class="crisis">
         <p class="crisis__title">${v.kind === 'alert' ? 'The crew is calling in: you\'ve been spotted' : 'The crew is calling in: someone is down'}</p>
         <p>${esc(v.text)}</p>
         <div class="choices">${v.choices.map((c) => choiceButton({ ...c, risk: c.exit ? 'safe' : 'moderate', riskReason: c.cost, cost: '' }, 'pending')).join('')}</div>
       </div>`;
-  } else if (currentStep(am)?.type === 'crisis' && needsPlayer(state)) {
-    const v = describeCrisis(state);
-    action = `
+  }
+  if (currentStep(am)?.type === 'crisis' && needsPlayer(s)) {
+    const v = describeCrisis(s);
+    return `
       <div class="crisis">
-        <p class="crisis__title">Crisis</p>
+        <p class="crisis__title">The crew is calling in</p>
         <p>${esc(v.text)}</p>
         <div class="choices">${v.choices.map((c) => choiceButton(c, 'choose')).join('')}</div>
       </div>`;
-  } else {
-    action = `<button class="btn btn--primary btn--block" data-action="step">${am.log.length ? 'Next' : 'Begin'}</button>`;
   }
-
-  return `
-    <section class="panel mission">
-      <p class="muted small">On the job · ${esc(APPROACHES[am.approach]?.name ?? '')} approach · ${esc(crewNames)}${am.overwatch ? ` · ${esc(state.crew.find((o) => o.id === am.overwatch.id)?.handle ?? '')} on overwatch (${esc(OVERWATCH_KIT[am.overwatch.kit].name.toLowerCase())}: ${am.overwatch.left} left)` : ''}</p>
-      <div class="crewstrip">${crewOps.map((o) => face(o, 'sm')).join('')}</div>
-      <p class="alertline" aria-label="Alert ${am.alert ?? 0} of ${ALERT_MAX}">Alert ${Array.from({ length: ALERT_MAX }, (_, i) => `<span class="alertpip ${i < (am.alert ?? 0) ? 'is-on' : ''}"></span>`).join('')}${am.wentLoud ? ' <span class="muted small">gone loud</span>' : ''}</p>
-      <h1>${esc(t.name)}</h1>
-      <div class="mission__log">${log || `<p class="body muted">${esc(fillBrief(t))}</p>`}</div>
-      ${action}
-      <div class="mission-end"></div>
-    </section>`;
+  return '';
 }
+
+/** What the watch screen borrows from here (ui/watch.js). */
+const watchUi = {
+  esc,
+  callIn: (s) => renderCallIn(s),
+  brief: (s) => fillBrief(templateById(s.activeMission.templateId)),
+  dice: (r) => `
+        <details class="flog__roll">
+          <summary>Dice</summary>
+          <p class="small">Die ${r.die} + ${esc(r.stat)} ${r.value} = ${r.die + r.value} · needed ${r.need}${r.notes?.length ? `<br><span class="muted">${esc(r.stat)} ${r.value}: ${esc(r.notes.join(', '))}</span>` : ''}</p>
+        </details>`,
+};
 
 // --- save --------------------------------------------------------------
 const DIFFICULTIES = {

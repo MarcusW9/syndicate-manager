@@ -39,8 +39,9 @@ export function introKind(events, { outcome, deaths = 0 }) {
 }
 
 /**
- * The summary at the top of a report. Returns { intro, introKind, turning, standout, hurt[] };
- * turning and standout are null when the run gives them nothing to point at.
+ * The summary at the top of a report. Returns { intro, introKind, turning, standout, hurt[], saves[], alert };
+ * turning and standout are null when the run gives them nothing to point at; alert is null on runs
+ * with no incidents (reports from before the squad run).
  */
 export function summariseRun(events, { id = '', outcome, deaths = 0 }) {
   const kind = introKind(events, { outcome, deaths });
@@ -80,5 +81,10 @@ export function summariseRun(events, { id = '', outcome, deaths = 0 }) {
     ...events.filter((e) => e.kind !== 'exit').map(choiceCostText).filter(Boolean),
   ];
 
-  return { intro, introKind: kind, turning, standout, hurt };
+  // The squad run (slice 2): who got whom out of trouble, and how hot the alert ran.
+  const saves = events.filter((e) => e.kind === 'save' && e.success && e.via !== 'patch').map((e) => ({ by: e.actor.handle, who: e.patient, via: e.via, kit: e.kit ?? null }));
+  const alerts = events.filter((e) => typeof e.alert === 'number').map((e) => e.alert);
+  const alert = alerts.length ? Math.max(...alerts) : null;
+
+  return { intro, introKind: kind, turning, standout, hurt, saves, alert };
 }

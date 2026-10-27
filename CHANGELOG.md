@@ -4,6 +4,14 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-27 · The squad run, part 2: the squad board and the watch screen
+- **The squad board:** planning a job now pins dossier cards to a board. Tap an inside slot or the overwatch slot to pick who goes; anyone already placed swaps places. **Joss's picks** fills the board for you: the best team for the approach from whoever's free, plus overwatch if it would help. Freelancers are in the picker too.
+- **What they'll likely meet:** a new read lists every incident the approach can run into (the way in, inside, the target, and the guard who sometimes turns up), who would handle it with which stat, how risky it is, and how much safer a save makes it ("moderate → low with Tofu"). Gaps show in red. The crises keep their own read below it, and the bar at the bottom shows the worse of the two.
+- **The watch screen:** a job now plays out on its own. A site plan stays at the top of the screen: the crew walk from the van through the gate to the target and back out, the camera follows them, and you see guards, patrols with torches, cameras, rifle shots and the drone. Underneath, each moment lands as a card with a short headline and the detail and dice under it. **Pause** holds the clock (and gives you **Next**); **Faster** speeds it up.
+- **Call-ins sit in the feed:** when the crew calls you, the run stops on that card until you choose. When they decided a crisis themselves, the card says why ("Crew's call: …").
+- **The way out** now has its own heading, and the report adds **saves** (who got whom out of trouble) and **how high the alert got**. The full log has a heading for each part of the job.
+- 253 tests. No save change: jobs in progress pick up the new screen.
+
 ## 2026-10-27 · The squad run, part 1: approaches, incidents, overwatch
 - **Four approaches**, each +1 to one stat and with its own cost: **Stealth** (slip past people; takes a day longer), **Tech** (machines do the work; every tech roll loads the hacker's implants), **Loud** (through the guards; quicker, heat +1) and **Con** (talk your way in, replacing Social; props and bribes up front, ¥100 per threat). The approach also changes which crises come up: stealth meets more break-ins, loud more fights.
 - **Incidents:** every job now has small moments on the way in, inside and at the target: a locked door, a patrol, cameras, a checkpoint, a guard up close. Whoever on the crew is best placed deals with them on their own. On stealth and con runs, every person past the job's recommended crew size makes the crew easier to spot (−1 on stealth and social).

@@ -271,7 +271,10 @@ export function enterZone(prev) {
   const am = state.activeMission;
   const zone = currentStep(am).zone;
   am.zone = zone;
-  if (ZONES[zone]) am.log.push({ kind: 'zone', text: ZONES[zone].name });
+  if (ZONES[zone]) {
+    am.log.push({ kind: 'zone', text: ZONES[zone].name });
+    record(am, { kind: 'zone', zone, text: ZONES[zone].name });
+  }
   advance(state);
   return state;
 }
@@ -351,6 +354,7 @@ export function runIncident(prev) {
   // The tech approach's cost: every tech roll loads the hacker's implants.
   const load = APPROACHES[am.approach]?.neural ?? 0;
   if (load && h.stat === 'tech') addNeural(op, load);
+  event.alert = am.alert ?? 0; // the alert after this moment (the report's peak); updated below if it fails
   record(am, event);
   if (success) { advance(state); return state; }
 
@@ -385,6 +389,7 @@ export function runIncident(prev) {
 
   // Unsaved: the cost lands, the alert rises.
   am.alert = Math.min(ALERT_MAX, (am.alert ?? 0) + (inc.fail.alert ?? 0));
+  event.alert = am.alert;
   am.extraHeat += inc.fail.heat ?? 0;
   am.payCut += inc.fail.payCut ?? 0;
   if (inc.fail.neural) addNeural(op, inc.fail.neural);
