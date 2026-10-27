@@ -95,6 +95,7 @@ The owner's model, refined over two messages. Not yet a DESIGN.md decision.
 - **Guns and tech are standard for mercs** (canon, `WORLD.md`); gunfire costs heat.
 - **Overwatch role:** sniper (combat, lethal, sightlines, heat) or drone operator (tech, non-lethal, indoors, neural load). Gear-based is the working assumption.
 - **Squads of 2-4, more on big jobs**; heists split into teams (inside, overwatch, wheels).
+- **Incidents are rolls; teammates can save a failure:** incident → roll → complication → one save roll by the best-placed teammate (overwatch with sight, combat nearby, a bonded partner with a bonus) → close call or full consequence, which may escalate to a crisis. Saves are limited (shots, battery, exposure), build bonds, and count in the coverage read.
 - **Bench on standby:** marked when planning (no side work that day, a little fatigue); a call-in option brings them in a beat or two later; rescues of someone caught or pinned. Details to design.
 
 ## Possible path (each step stands alone)
