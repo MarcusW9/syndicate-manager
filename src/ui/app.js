@@ -23,10 +23,11 @@ import { activeRumour } from '../core/rumours.js';
 import { alerts, upcoming } from '../core/upcoming.js';
 import { money } from '../core/money.js';
 import {
-  startMission, revealBeat, chooseOption, resolveCritical, closeMission,
-  describeCrisis, describeCritical, currentStep, fillBrief,
+  startMission, chooseOption, resolveCritical, closeMission,
+  describeCrisis, describeCritical, currentStep, fillBrief, describePending, resolvePending, CALL_IN,
 } from '../core/mission.js';
-import { sendOff, ORDERS, handsOffAllowed } from '../core/autorun.js';
+import { sendOff, ORDERS, handsOffAllowed, autoStep, needsPlayer } from '../core/autorun.js';
+import { OVERWATCH_KIT, ALERT_MAX } from '../core/incidents.js';
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
 import { earnedText } from '../core/earned.js';
 import { sideTaskById, sideOdds, sendOnSideTask, sideReward, sideCost, sidePitch, intelFor } from '../core/sidetasks.js';
@@ -50,7 +51,7 @@ let playReportId = null; // a hands-off report playing out on its first open (re
 let openOperativeId = null;
 let openRecruitId = null;
 let newGameSlot = null; // slot number while picking a difficulty
-let plan = null; // { jobId, crew: [...ids], approach }
+let plan = null; // { jobId, crew: [...ids], approach, orders, callIn, overwatch: id|null, kit } (core/mission.js startMission)
 let root;
 // Continue rests briefly after each new day, so a double click can't skip one.
 const CONTINUE_REST_MS = 800;
@@ -120,10 +121,11 @@ function onClick(e) {
     case 'expand':
       if (confirm(`Expand the safehouse for ${money(nextExpansion(state).cost)}? Rent goes up by ${money(nextExpansion(state).rentIncrease)} a week.`)) return setState(expandSafehouse(state));
       break;
-    case 'open-job': screen = 'jobs'; plan = { jobId: id, crew: [], approach: 'stealth', orders: 'steady' }; break; // also from Today's alerts
+    case 'open-job': screen = 'jobs'; plan = { jobId: id, crew: [], approach: 'stealth', orders: 'steady', callIn: 'risky', overwatch: null, kit: 'rifle' }; break; // also from Today's alerts
     case 'toggle-crew': {
       const tpl = templateById(state.jobs.find((j) => j.id === plan.jobId).templateId);
       const isF = (x) => (state.freelancers ?? []).some((f) => f.id === x);
+      if (plan.overwatch === id) plan.overwatch = null; // inside or on overwatch, not both
       if (plan.crew.includes(id)) plan.crew = plan.crew.filter((x) => x !== id);
       else if (isF(id) && plan.crew.filter(isF).length >= MAX_FREELANCERS_PER_JOB) plan.crew = [...plan.crew.filter((x) => !isF(x)), id]; // swap freelancers
       else if (plan.crew.length < maxCrew(tpl.crewSize)) plan.crew = [...plan.crew, id];
@@ -131,6 +133,9 @@ function onClick(e) {
     }
     case 'approach': plan.approach = id; break;
     case 'orders': plan.orders = id; break;
+    case 'callin': plan.callIn = id; break;
+    case 'overwatch': plan.overwatch = plan.overwatch === id ? null : id; plan.crew = plan.crew.filter((x) => x !== id); break;
+    case 'kit': plan.kit = id; break;
     case 'open-side': sidePlan = { taskId: id, crew: [] }; break;
     case 'toggle-side-crew': {
       const task = sideTaskById(sidePlan.taskId);
@@ -147,7 +152,7 @@ function onClick(e) {
     }
     case 'send-job': {
       // Hands-off: the crew leaves now; their report comes back when they do (core/autorun.js).
-      const next = sendOff(state, plan.jobId, plan.crew, plan.approach, plan.orders ?? 'steady');
+      const next = sendOff(state, plan.jobId, plan.crew, plan.approach, plan.orders ?? 'steady', planOpts());
       plan = null;
       screen = 'inbox';
       openMessageId = null;
@@ -155,11 +160,12 @@ function onClick(e) {
     }
     case 'skip-report': break; // tapping a report as it plays shows the end at once
     case 'start-job': {
-      const next = startMission(state, plan.jobId, plan.crew, plan.approach);
+      const next = startMission(state, plan.jobId, plan.crew, plan.approach, planOpts());
       plan = null;
       return setState(next);
     }
-    case 'beat': return setState(revealBeat(state));
+    case 'step': return setState(autoStep(state)); // the next thing the crew does on its own (core/autorun.js)
+    case 'pending': return setState(resolvePending(state, id));
     case 'choose': return setState(chooseOption(state, id));
     case 'critical': return setState(resolveCritical(state, id));
     case 'close-mission': screen = 'inbox'; return setState(closeMission(state));
@@ -207,6 +213,9 @@ function onClick(e) {
   }
   render();
 }
+
+/** The planning screen's squad options for startMission / sendOff. */
+const planOpts = () => ({ overwatch: plan.overwatch ? { id: plan.overwatch, kit: plan.kit } : null, callIn: plan.callIn ?? 'risky', orders: plan.orders ?? 'steady' });
 
 function onChange(e) {
   if (e.target.id !== 'import-file' || !e.target.files[0]) return;
@@ -625,7 +634,8 @@ function renderReportTimeline(m) {
 function renderReportSummary(t) {
   const sum = t?.summary;
   if (!sum) return '';
-  const orders = t.orders && ORDERS[t.orders] ? `<p class="muted small">Hands-off · ${esc(ORDERS[t.orders].name)} orders</p>` : '';
+  const orders = t.orders && ORDERS[t.orders] ? `<p class="muted small">Hands-off · ${esc(ORDERS[t.orders].name)} orders</p>`
+    : t.callIn && t.callIn !== 'every' && ORDERS[t.liveOrders] ? `<p class="muted small">Called in ${esc(CALL_IN[t.callIn].name.toLowerCase())} · ${esc(ORDERS[t.liveOrders].name)} orders decided the rest</p>` : '';
   const rows = [
     sum.turning && ['Turning point', sum.turning.text],
     sum.standout && ['Standout', sum.standout.text],
@@ -1143,13 +1153,14 @@ function renderPlan() {
 
       <div class="plangrid__approach">
       <h2>Approach</h2>
-      <div class="segmented">
+      <div class="segmented segmented--grid">
         ${Object.entries(APPROACHES).map(([k, a]) => `
           <button class="seg ${plan.approach === k ? 'is-on' : ''}" data-action="approach" data-id="${k}" aria-pressed="${plan.approach === k}">
             <strong>${esc(a.name)}</strong><span>${esc(a.desc)}</span>
           </button>`).join('')}
       </div>
-      ${handsOffAllowed(t) ? renderHandsOff() : ''}
+      ${renderOverwatch()}
+      ${renderCallIns(t)}
       </div>
 
       <div class="plangrid__risk">
@@ -1167,27 +1178,55 @@ function renderPlan() {
         ${picked.length ? riskBadge(read.level) : '<span class="risk risk--none">no crew yet</span>'}
         <span class="planbar__why">${esc(picked.length ? read.reasons[0] : `Pick up to ${most}; ${t.crewSize} recommended`)}</span>
       </div>
-      <button class="btn btn--primary" data-action="start-job" ${plan.crew.length ? '' : 'disabled'}>
-        ${plan.crew.length ? `Start with ${plan.crew.length}` : 'Pick a crew'}
-      </button>
+      ${(() => {
+        const away = plan.callIn === 'never' && handsOffAllowed(t);
+        return `<button class="btn btn--primary" data-action="${away ? 'send-job' : 'start-job'}" ${plan.crew.length ? '' : 'disabled'}>
+        ${plan.crew.length ? (away ? `Send ${plan.crew.length}${plan.overwatch ? ' + overwatch' : ''}` : `Start with ${plan.crew.length}${plan.overwatch ? ' + overwatch' : ''}`) : 'Pick a crew'}
+      </button>`;
+      })()}
     </div>`;
 }
 
-/** Sending a job hands-off: standing orders, and the button. The crew decides; you read the report. */
-function renderHandsOff() {
-  const orders = ORDERS[plan.orders] ? plan.orders : 'steady';
+/** Overwatch: one person outside the crew with the safehouse's shared rifle or drone (core/incidents.js). */
+function renderOverwatch() {
+  const free = state.crew.filter((op) => availability(state, op).ok && !plan.crew.includes(op.id));
+  const kit = OVERWATCH_KIT[plan.kit] ?? OVERWATCH_KIT.rifle;
   return `
-      <h2>Or send them hands-off</h2>
-      <p class="muted small">The crew runs it on their own and you read what happened. Their orders decide each call. A hands-off crew never pushes on with a critical wound: at worst, they pull out.</p>
+      <h2>Overwatch <span class="muted small">(optional)</span></h2>
+      <p class="muted small">Someone outside with the safehouse's ${esc(kit.name.toLowerCase())}. When someone inside gets into trouble, overwatch can save them: ${kit.uses} ${plan.kit === 'rifle' ? 'shots' : 'drone actions'} a job. ${esc(kit.desc)}</p>
+      <div class="segmented">
+        ${Object.entries(OVERWATCH_KIT).map(([k, o]) => `
+          <button class="seg ${plan.kit === k ? 'is-on' : ''}" data-action="kit" data-id="${k}" aria-pressed="${plan.kit === k}"><strong>${esc(o.name)}</strong><span>${esc(o.stat)}</span></button>`).join('')}
+      </div>
+      <div class="owpicks">
+        ${free.length ? free.map((op) => `
+          <button class="owpick ${plan.overwatch === op.id ? 'is-on' : ''}" data-action="overwatch" data-id="${esc(op.id)}" aria-pressed="${plan.overwatch === op.id}">
+            ${face(op, 'sm')}<span><strong>${esc(op.handle)}</strong> <span class="muted">${esc(kit.stat)} ${ratedStat(op, kit.stat)}</span></span>
+          </button>`).join('') : '<p class="muted small">Nobody free who isn\'t already inside.</p>'}
+      </div>`;
+}
+
+/** When the crew calls you in, and how they decide when they don't (core/autorun.js ORDERS). */
+function renderCallIns(t) {
+  const orders = ORDERS[plan.orders] ? plan.orders : 'steady';
+  const callIn = CALL_IN[plan.callIn] ? plan.callIn : 'risky';
+  const away = handsOffAllowed(t);
+  return `
+      <h2>Call me in…</h2>
+      <div class="segmented">
+        ${Object.entries(CALL_IN).filter(([k]) => k !== 'never' || away).map(([k, c]) => `
+          <button class="seg ${callIn === k ? 'is-on' : ''}" data-action="callin" data-id="${k}" aria-pressed="${callIn === k}"><strong>${esc(c.name)}</strong><span>${esc(c.desc)}</span></button>`).join('')}
+      </div>
+      ${away ? '' : '<p class="muted small">Bigger jobs can\'t be sent off on their own yet: you\'ll watch this one.</p>'}
+      ${callIn === 'every' ? '' : `
+      <h2>When they decide themselves</h2>
+      <p class="muted small">Their orders decide each call they don't bring to you. They never push on with a critical wound: at worst, they pull out.</p>
       <div class="segmented">
         ${Object.entries(ORDERS).map(([k, o]) => `
           <button class="seg ${orders === k ? 'is-on' : ''}" data-action="orders" data-id="${k}" aria-pressed="${orders === k}">
             <strong>${esc(o.name)}</strong><span>${esc(o.desc)}</span>
           </button>`).join('')}
-      </div>
-      <button class="btn btn--block handsoff__go" data-action="send-job" ${plan.crew.length ? '' : 'disabled'}>
-        ${plan.crew.length ? `Send ${plan.crew.length} on ${esc(ORDERS[orders].name)} orders` : 'Pick a crew to send'}
-      </button>`;
+      </div>`}`;
 }
 
 // --- mission -----------------------------------------------------------
@@ -1272,7 +1311,15 @@ function renderMission() {
         <p>${v.stabiliseFailed ? 'Stabilising failed. You have to decide now.' : `${esc(v.op.name)} is bleeding out. What do you do?`}</p>
         <div class="choices">${v.choices.map((c) => choiceButton(c, 'critical')).join('')}</div>
       </div>`;
-  } else if (currentStep(am)?.type === 'crisis') {
+  } else if (am.pending) {
+    const v = describePending(state);
+    action = `
+      <div class="crisis">
+        <p class="crisis__title">${v.kind === 'alert' ? 'The crew is calling in: you\'ve been spotted' : 'The crew is calling in: someone is down'}</p>
+        <p>${esc(v.text)}</p>
+        <div class="choices">${v.choices.map((c) => choiceButton({ ...c, risk: c.exit ? 'safe' : 'moderate', riskReason: c.cost, cost: '' }, 'pending')).join('')}</div>
+      </div>`;
+  } else if (currentStep(am)?.type === 'crisis' && needsPlayer(state)) {
     const v = describeCrisis(state);
     action = `
       <div class="crisis">
@@ -1281,13 +1328,14 @@ function renderMission() {
         <div class="choices">${v.choices.map((c) => choiceButton(c, 'choose')).join('')}</div>
       </div>`;
   } else {
-    action = `<button class="btn btn--primary btn--block" data-action="beat">${am.log.length ? 'Next' : 'Begin'}</button>`;
+    action = `<button class="btn btn--primary btn--block" data-action="step">${am.log.length ? 'Next' : 'Begin'}</button>`;
   }
 
   return `
     <section class="panel mission">
-      <p class="muted small">On the job · ${esc(APPROACHES[am.approach]?.name ?? '')} approach · ${esc(crewNames)}</p>
+      <p class="muted small">On the job · ${esc(APPROACHES[am.approach]?.name ?? '')} approach · ${esc(crewNames)}${am.overwatch ? ` · ${esc(state.crew.find((o) => o.id === am.overwatch.id)?.handle ?? '')} on overwatch (${esc(OVERWATCH_KIT[am.overwatch.kit].name.toLowerCase())}: ${am.overwatch.left} left)` : ''}</p>
       <div class="crewstrip">${crewOps.map((o) => face(o, 'sm')).join('')}</div>
+      <p class="alertline" aria-label="Alert ${am.alert ?? 0} of ${ALERT_MAX}">Alert ${Array.from({ length: ALERT_MAX }, (_, i) => `<span class="alertpip ${i < (am.alert ?? 0) ? 'is-on' : ''}"></span>`).join('')}${am.wentLoud ? ' <span class="muted small">gone loud</span>' : ''}</p>
       <h1>${esc(t.name)}</h1>
       <div class="mission__log">${log || `<p class="body muted">${esc(fillBrief(t))}</p>`}</div>
       ${action}

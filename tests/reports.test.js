@@ -43,12 +43,12 @@ test('the risk read names every bonus: traits, a veteran on the crew, the approa
   const tech = s.crew.find((o) => o.role === 'tech');
   const face = s.crew.find((o) => o.role === 'face');
   tech.traits = ['chromed']; face.traits = ['veteran'];
-  s = M.startMission(s, s.jobs[0].id, [tech.id, face.id], 'stealth');
+  s = M.startMission(s, s.jobs[0].id, [tech.id, face.id], 'tech'); // the tech approach: +1 tech (2026-10-27)
   const read = (crisis, choice) => {
     s.activeMission.queue = [{ type: 'crisis', id: crisis }, { type: 'beat', index: 0 }]; s.activeMission.step = 0;
     return M.describeCrisis(s).choices.find((c) => c.id === choice).riskReason;
   };
-  assert.match(read('groaning_stack', 'brace'), /Chromed \+2, stealth approach \+1/);
+  assert.match(read('groaning_stack', 'brace'), /Chromed \+2, tech approach \+1/);
   const cool = read('cutter', 'splash');
   if (cool.startsWith(tech.handle)) assert.match(cool, new RegExp(`${face.handle} steadies them \\+1`));
 });

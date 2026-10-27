@@ -9,7 +9,7 @@ import * as M from '../src/core/mission.js';
 import { generateRecruit, hire } from '../src/core/recruits.js';
 import { XP, ageRate, applyGrowth, mentoring, potentialRead, primaryStat, STATS, pointCost, WALL } from '../src/core/development.js';
 import { developRookie, makeRookie } from './develop-sim.js';
-import { playMission, carefulPolicy } from './play.js';
+import { playMission, toCrisis, carefulPolicy } from './play.js';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 const { importSave } = await import('../src/save/save.js');
@@ -47,7 +47,9 @@ test('mentoring is worth about a point and a half over a season of work', () => 
   const mean = (r) => r.reduce((n, x) => n + x.main, 0) / r.length;
   const mentored = mean(runs({ ceiling: 19 }, { jobs: 22 }));
   const solo = mean(runs({ ceiling: 19 }, { jobs: 22, mentor: false }));
-  assert.ok(mentored >= solo + 0.75, `mentored ${mentored} vs solo ${solo}`);
+  // Was +0.75 (measured ~1.0). Since the squad run (2026-10-27) a careful crew pulls out at max alert
+  // in ~7% of jobs and loses that job's growth; measured over 90 runs the edge is now ~0.75. DESIGN.md.
+  assert.ok(mentored >= solo + 0.5, `mentored ${mentored} vs solo ${solo}`);
 });
 
 test('mentors: a veteran-trait operative, or a veteran of the same role; rookies only', () => {
@@ -77,7 +79,7 @@ test('a failed roll still teaches the roller', () => {
     let s = createNewGame({ seed });
     const job = s.jobs.find((j) => j.templateId === 'warehouse');
     s = M.startMission(s, job.id, s.crew.slice(0, 4).map((o) => o.id), 'loud');
-    while (M.currentStep(s.activeMission)?.type === 'beat') s = M.revealBeat(s);
+    s = toCrisis(s);
     const choice = M.describeCrisis(s).choices.find((c) => c.available && !['abort', 'extract'].includes(c.kind) && c.risk !== 'certain');
     const [, handle, stat] = choice.riskReason.match(/^(.+?) on (\w+) \(/);
     const progressOf = (st) => { const o = st.crew.find((x) => x.handle === handle); return o.stats[stat] * 1000 + (o.progress[stat] ?? 0); };

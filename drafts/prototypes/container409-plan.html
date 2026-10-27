@@ -1,0 +1,763 @@
+<title>Container 409 Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one phone-width column. Plan = map, then steps with their risk shown in place, and a sticky
+   action bar. Watch = sticky compact map + live tallies over a phased feed. Report = verdict first.
+   Deliberately single dark theme: the game's street-terminal skin (src/ui/styles.css). */
+:root {
+  --bg: #0f1115;
+  --panel: #171a21;
+  --panel-2: #1c2029;
+  --line: #262b36;
+  --text: #e7e9ee;
+  --muted: #8b93a7;
+  --accent: #ff4f7b;
+  --accent-2: #36d6c3;
+  --warn: #f5b942;
+  --danger: #ff5a5a;
+  --good: #5fe0a5;
+  --sel: #13221f;
+  --display: 'Rajdhani', 'Arial Narrow', system-ui, sans-serif;
+  --body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --tap: 44px;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--text); }
+body { font-family: var(--body); font-size: 15px; line-height: 1.45; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 12px 24px; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+button { font: inherit; color: inherit; }
+.wrap { max-width: 520px; margin: 0 auto; display: grid; gap: 18px; padding-bottom: 96px; }
+.wrap.no-bar { padding-bottom: 24px; }
+h1, h2 { font-family: var(--display); margin: 0; text-wrap: balance; }
+h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: 0.02em; line-height: 1.1; }
+h2 { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+h2 small { font: 400 0.75rem var(--body); letter-spacing: 0; text-transform: none; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.small { font-size: 0.8rem; }
+.eyebrow { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-2); display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+.tag { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; border: 1px dashed var(--muted); color: var(--muted); border-radius: 4px; padding: 1px 6px; }
+.brief { color: #c9cdd8; font-style: italic; font-size: 0.92rem; border-left: 2px solid var(--accent); padding-left: 10px; }
+details.how { font-size: 0.82rem; color: var(--muted); }
+details.how summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; color: var(--accent-2); }
+section { display: grid; gap: 8px; }
+
+/* Map */
+.map { position: relative; background: #0b0d11; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.map svg { display: block; width: 100%; height: auto; }
+.map .route { fill: none; stroke: #2c3240; stroke-width: 3; stroke-dasharray: 2 6; stroke-linecap: round; stroke-linejoin: round; }
+.map .route.on { stroke: var(--accent-2); stroke-dasharray: none; }
+.map .exit { fill: none; stroke: #2c3240; stroke-width: 2; stroke-dasharray: 4 5; stroke-linejoin: round; }
+.map .exit.on { stroke: var(--warn); stroke-dasharray: none; }
+.map .hit { fill: none; stroke: transparent; stroke-width: 20; pointer-events: stroke; cursor: pointer; }
+.map .node { fill: #171a21; stroke: #3a4254; stroke-width: 1.5; }
+.map .node.post { stroke: var(--accent); fill: #2a1520; }
+.map .label { fill: var(--muted); font-family: var(--mono); font-size: 9px; letter-spacing: 0.04em; }
+.map .label.hi { fill: var(--text); }
+.map .token circle { stroke: var(--bg); stroke-width: 2; }
+.map .token text { fill: var(--bg); font-family: var(--display); font-weight: 700; font-size: 9px; text-anchor: middle; dominant-baseline: central; }
+.map .token { transition: transform 0.8s ease-in-out; }
+.map .water { fill: #0d1620; }
+.map .stack { fill: #141821; stroke: #232937; }
+.map .alarm { fill: none; stroke: var(--accent); stroke-width: 2; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.map .alarm.on { animation: pulse 1.2s ease-out infinite; }
+@keyframes pulse { from { transform: scale(1); opacity: 0.9; } to { transform: scale(3.5); opacity: 0; } }
+.map__hint { position: absolute; left: 10px; top: 8px; font-family: var(--mono); font-size: 0.66rem; color: var(--muted); pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .map .token { transition: none; } .map .alarm.on { animation: none; opacity: 0.8; transform: scale(2); } }
+
+/* Choice cards (route, exit) */
+.cards { display: grid; gap: 8px; }
+.card { width: 100%; text-align: left; display: grid; gap: 4px; min-height: var(--tap); padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); cursor: pointer; }
+.card[aria-pressed="true"] { border-color: var(--accent-2); background: var(--sel); box-shadow: inset 3px 0 0 var(--accent-2); }
+.card__top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.card__top b { font-family: var(--display); font-size: 1.08rem; font-weight: 600; letter-spacing: 0.02em; min-width: 0; }
+.card__body { font-size: 0.84rem; color: var(--muted); }
+.card__meta { font-family: var(--mono); font-size: 0.72rem; color: #a9b0c2; }
+
+/* Risk pills */
+.pill { font-family: var(--mono); font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 7px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; flex: none; }
+.r-low { color: var(--good); } .r-moderate { color: var(--accent-2); } .r-high { color: var(--warn); } .r-extreme { color: var(--danger); } .r-certain, .r-safe { color: var(--muted); }
+
+/* Crew: a heist board of pinned dossiers */
+.board { position: relative; display: grid; gap: 10px; padding: 14px 12px 12px; border-radius: 12px; border: 1px solid #2a2f3b; background:
+  radial-gradient(circle at 20% 10%, rgba(54, 214, 195, 0.06), transparent 40%),
+  repeating-linear-gradient(0deg, transparent 0 19px, rgba(139, 147, 167, 0.07) 19px 20px),
+  repeating-linear-gradient(90deg, transparent 0 19px, rgba(139, 147, 167, 0.07) 19px 20px), #12151b; }
+.board__head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.board__head p { font-size: 0.78rem; color: var(--muted); min-width: 0; }
+.jossbtn { min-height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #1f4440; background: #10201e; color: var(--accent-2); font: 600 0.88rem var(--display); letter-spacing: 0.04em; cursor: pointer; white-space: nowrap; }
+.dossiers { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 8px; }
+.dossier > * { max-width: 100%; }
+.dossier { position: relative; display: grid; justify-items: center; align-content: start; gap: 4px; padding: 16px 6px 8px; min-height: 196px; text-align: center; border-radius: 4px; cursor: pointer;
+  background: #e9e4d8; color: #1b1d22; border: 0; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45); transform: rotate(var(--tilt, 0deg)); transition: transform 0.15s; }
+.dossier:hover { transform: rotate(0deg) translateY(-2px); }
+.dossier::before { content: ""; position: absolute; top: 5px; left: 50%; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: var(--pin, var(--accent)); box-shadow: 0 2px 2px rgba(0, 0, 0, 0.5); }
+.dossier__tab { font: 700 0.72rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: #5a5f6c; }
+.dossier__photo { width: 64px; height: 64px; border-radius: 2px; overflow: hidden; background: #1b1f28; outline: 3px solid #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); }
+.dossier__photo svg { width: 100%; height: 100%; display: block; }
+.dossier__name { font: 700 1rem var(--display); line-height: 1.05; }
+.dossier__real { font-size: 0.66rem; color: #5a5f6c; line-height: 1.1; }
+.dossier .pill { font-size: 0.58rem; padding: 0 6px; background: #1b1d22; }
+.dossier__stats { width: 100%; display: grid; gap: 3px; padding: 2px 4px 0; }
+.stat { display: grid; grid-template-columns: 1fr auto; gap: 0 6px; font: 500 0.62rem var(--mono); text-transform: uppercase; color: #4a4f5c; text-align: left; }
+.stat i { grid-column: 1 / -1; height: 4px; background: #cfc8b8; border-radius: 2px; overflow: hidden; }
+.stat i b { display: block; height: 100%; background: #1b1d22; }
+.dossier__pick { font: 600 0.58rem var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: #0f7c70; }
+.dossier.empty { background: transparent; color: var(--muted); border: 2px dashed #3a4254; box-shadow: none; justify-content: center; align-content: center; }
+.dossier.empty .dossier__tab { color: var(--muted); }
+.dossier.empty .sil { width: 56px; height: 56px; border-radius: 50%; border: 2px dashed #3a4254; display: grid; place-items: center; font: 600 1.6rem var(--display); color: #4a5266; }
+.dossier.empty .dossier__does { font-size: 0.7rem; padding: 0 4px; }
+
+/* Picker sheet */
+.scrim { position: fixed; inset: 0; z-index: 20; background: rgba(5, 6, 9, 0.6); }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 21; max-height: 82vh; overflow-y: auto; background: var(--panel); border-top: 1px solid var(--line); border-radius: 16px 16px 0 0;
+  padding: 14px max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); animation: up 0.22s ease-out; }
+@keyframes up { from { transform: translateY(30%); opacity: 0.4; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .sheet { animation: none; } .dossier { transition: none; } }
+.sheet__in { max-width: 520px; margin: 0 auto; display: grid; gap: 10px; }
+.sheet__head { display: flex; justify-content: space-between; align-items: start; gap: 8px; }
+.sheet__head h3 { font: 700 1.3rem var(--display); margin: 0; }
+.sheet__head p { font-size: 0.8rem; color: var(--muted); }
+.x { min-width: var(--tap); min-height: var(--tap); background: none; border: 1px solid var(--line); border-radius: 10px; color: var(--muted); font-size: 1.1rem; cursor: pointer; }
+.cand { display: grid; grid-template-columns: 48px 1fr auto; gap: 10px; align-items: center; min-height: 60px; padding: 6px 10px 6px 6px; text-align: left; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
+.cand[aria-pressed="true"] { border-color: var(--accent-2); background: var(--sel); }
+.cand__ph { width: 48px; height: 48px; border-radius: 6px; overflow: hidden; background: #0b0d11; }
+.cand__ph svg { width: 100%; height: 100%; display: block; }
+.cand__txt { display: grid; gap: 1px; min-width: 0; }
+.cand__txt b { font: 700 1.02rem var(--display); }
+.cand__txt span { font-size: 0.74rem; color: var(--muted); }
+.cand__side { display: grid; justify-items: end; gap: 3px; }
+.cand__side small { font: 500 0.6rem var(--mono); text-transform: uppercase; color: var(--muted); }
+
+/* Prep */
+.prep { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.prepbtn { text-align: left; display: grid; gap: 3px; align-content: start; min-height: var(--tap); padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); cursor: pointer; }
+.prepbtn[aria-pressed="true"] { border-color: var(--warn); background: #211d12; }
+.prepbtn b { font-family: var(--display); font-weight: 600; font-size: 0.98rem; display: flex; justify-content: space-between; gap: 6px; }
+.prepbtn b span { font-family: var(--mono); font-size: 0.74rem; color: var(--warn); font-weight: 500; }
+.prepbtn small { font-size: 0.75rem; color: var(--muted); }
+.prepbtn .odds { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.05em; text-transform: uppercase; }
+.odds.will { color: var(--good); } .odds.might { color: var(--accent-2); } .odds.wont { color: var(--muted); }
+.prepbtn.dim:not([aria-pressed="true"]) { opacity: 0.55; }
+
+/* Orders */
+.order { display: grid; gap: 6px; }
+.order p { font-size: 0.84rem; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+.seg button { min-height: 40px; background: transparent; border: 0; border-radius: 7px; font: 600 0.92rem var(--display); letter-spacing: 0.02em; cursor: pointer; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--sel); color: var(--accent-2); box-shadow: inset 0 0 0 1px var(--accent-2); }
+.order .muted { font-size: 0.76rem; }
+
+/* Sticky action bar */
+.bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: rgba(15, 17, 21, 0.96); border-top: 1px solid var(--line); padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.bar__in { max-width: 520px; margin: 0 auto; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+.bar__sum { display: grid; gap: 2px; min-width: 0; }
+.bar__sum b { font-family: var(--display); font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.bar__sum span { font-size: 0.74rem; color: var(--muted); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.btn { min-height: 48px; padding: 0 22px; border: 0; border-radius: 10px; background: var(--accent); color: #fff; font: 700 1.05rem var(--display); letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
+.btn:disabled { background: var(--line); color: var(--muted); cursor: not-allowed; }
+.btn--ghost { background: transparent; border: 1px solid var(--line); color: var(--text); }
+.btn--wide { width: 100%; }
+
+/* Watch */
+.live { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 4; background: var(--bg); padding-block: 4px 8px; display: grid; gap: 6px; }
+.live .map svg { height: min(24vh, 190px); }
+.tally { display: flex; gap: 6px; flex-wrap: wrap; font-family: var(--mono); font-size: 0.72rem; }
+.tally span { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; }
+.tally .phase { color: var(--accent-2); border-color: #1f4440; }
+.tally .bad { color: var(--danger); border-color: #4a2224; }
+.feed { display: grid; gap: 6px; }
+.feed > * { scroll-margin-bottom: 96px; }
+.phasehead { font: 700 0.75rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-2); padding-top: 8px; display: flex; gap: 8px; align-items: center; }
+.phasehead::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.line { padding: 6px 0 6px 12px; border-left: 2px solid var(--line); font-size: 0.92rem; animation: in 0.35s ease-out; }
+.line.beat { color: #c9cdd8; font-style: italic; }
+.line.check { font-size: 0.84rem; color: #b4bacb; }
+.line.check .res { font-family: var(--mono); font-size: 0.72rem; }
+.line.good { border-color: var(--good); }
+.line.bad { border-color: var(--danger); }
+.line.crisis { border-color: var(--accent); background: #1a1418; border-radius: 0 8px 8px 0; padding: 8px 10px 8px 12px; font-weight: 500; }
+.line.why { font-size: 0.82rem; color: var(--muted); }
+.who { font-family: var(--display); font-weight: 700; letter-spacing: 0.02em; }
+.dice { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); background: none; border: 0; padding: 0 0 0 4px; cursor: pointer; text-decoration: underline dotted; min-height: 24px; }
+.dice-detail { display: block; font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+@keyframes in { from { opacity: 0.2; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .line { animation: none; } }
+.callin { border: 1px solid var(--accent); background: #1d1418; border-radius: 12px; padding: 12px; display: grid; gap: 8px; animation: in 0.35s ease-out; }
+.callin__q { font-size: 0.95rem; }
+.callin .eyebrow { color: var(--accent); }
+.choice { min-height: var(--tap); text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 9px 10px; cursor: pointer; display: grid; gap: 3px; }
+.choice:hover:not(:disabled) { border-color: var(--accent-2); }
+.choice:disabled { cursor: default; opacity: 0.5; }
+.choice.picked { opacity: 1; border-color: var(--accent-2); }
+.choice__top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.choice__top > span:first-child { min-width: 0; }
+.choice__sub { font-size: 0.75rem; color: var(--muted); }
+.crewpick { font-family: var(--mono); font-size: 0.6rem; color: var(--accent-2); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* Report */
+.verdict { display: grid; gap: 10px; }
+.joss { font-size: 1.02rem; border-left: 2px solid var(--accent-2); padding-left: 12px; }
+.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.fact { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: grid; gap: 2px; }
+.fact b { font-family: var(--display); font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+.fact span { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.planline { display: flex; flex-wrap: wrap; gap: 6px; }
+.planline span { font-family: var(--mono); font-size: 0.7rem; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; color: #b4bacb; }
+ul.check { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+ul.check li { display: grid; grid-template-columns: 18px 1fr; gap: 6px; font-size: 0.9rem; }
+ul.check li i { font-style: normal; font-family: var(--mono); text-align: center; }
+ul.check li.ok i { color: var(--good); } ul.check li.no i { color: var(--danger); } ul.check li.meh i { color: var(--muted); }
+.money { font-family: var(--mono); font-size: 0.82rem; display: grid; gap: 2px; }
+.money div { display: flex; justify-content: space-between; gap: 8px; }
+.money div:last-child { border-top: 1px solid var(--line); padding-top: 4px; color: var(--text); font-weight: 500; }
+.btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.seed { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); text-align: center; }
+</style>
+
+<div class="wrap" id="app"></div>
+<div class="bar" id="bar" hidden></div>
+
+<script>
+// ---------- Rules (the game's own: success if d20 + stat >= 10 + difficulty) ----------
+function mulberry32(a) { return function () { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const chanceOf = (stat, diff) => Math.min(0.95, Math.max(0.05, (21 - (10 + diff - stat)) / 20));
+const riskOf = (c) => (c >= 0.75 ? 'low' : c >= 0.5 ? 'moderate' : c >= 0.3 ? 'high' : 'extreme');
+const RISK_ORDER = ['safe', 'low', 'moderate', 'high', 'extreme'];
+const worst = (list) => list.reduce((a, b) => (RISK_ORDER.indexOf(b) > RISK_ORDER.indexOf(a) ? b : a), 'safe');
+const yen = (n) => (n < 0 ? '-¥' : '¥') + Math.abs(Math.round(n)).toLocaleString();
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const lowerFirst = (s) => s.charAt(0).toLowerCase() + s.slice(1);
+const pill = (risk) => `<span class="pill r-${risk}">${risk}</span>`;
+
+// ---------- The crew: five founding rookies (main stat 10-11, the game's founder band) ----------
+const CREW = [
+  { id: 'eggtart', handle: 'Egg Tart', name: 'Ivy Chan', role: 'tech', color: '#36d6c3', stats: { combat: 4, stealth: 7, tech: 11, social: 5, driving: 4, medical: 3, cool: 7 } },
+  { id: 'hotwire', handle: 'Hotwire', name: 'Paolo Reyes', role: 'driver', color: '#f5b942', stats: { combat: 5, stealth: 6, tech: 6, social: 4, driving: 11, medical: 2, cool: 8 } },
+  { id: 'kit', handle: 'Kit', name: 'Winnie Lau', role: 'face', color: '#ff4f7b', stats: { combat: 3, stealth: 6, tech: 3, social: 10, driving: 4, medical: 4, cool: 8 } },
+  { id: 'rat', handle: 'Rat', name: 'Tunde Okoro', role: 'muscle', color: '#9d8cff', stats: { combat: 10, stealth: 8, tech: 3, social: 4, driving: 5, medical: 2, cool: 6 } },
+  { id: 'mop', handle: 'Mop', name: 'Kelvin Cheung', role: 'medic', color: '#5fe0a5', stats: { combat: 3, stealth: 5, tech: 5, social: 7, driving: 3, medical: 10, cool: 9 } },
+];
+const byId = (id) => CREW.find((o) => o.id === id);
+// Portraits from the game's own generator (src/ui/art.js), rendered once with Node and embedded.
+const FACES = {"eggtart": "<svg class=\"art portrait\" viewBox=\"9 6 46 46\" width=\"64\" height=\"64\" aria-hidden=\"true\" focusable=\"false\">\n  <defs>\n    <linearGradient id=\"pf1bg\" x1=\"1\" x2=\"0\"><stop offset=\"0\" stop-color=\"#9b8cff\" stop-opacity=\"0.28\"/><stop offset=\"0.65\" stop-color=\"#9b8cff\" stop-opacity=\"0\"/></linearGradient>\n    <clipPath id=\"pf1h\"><path d=\"M32 11 C40.625 11 43.5 16 43.5 24 C43.5 30 42.9 33 41 38 L35.2 44.5 Q32 46.2 28.8 44.5 L23 38 C21.1 33 20.5 30 20.5 24 C20.5 16 23.375 11 32 11 Z\"/></clipPath>\n    <clipPath id=\"pf1s\"><path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\"/></clipPath>\n    <clipPath id=\"pf1t\"><path d=\"M19.7 27 C18.7 17 21.5 7 32 6.5 C42.5 7 45.3 16 44.3 26 C42.9 22 41.5 19.5 39.5 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.5 20.5 19.7 27 Z\"/></clipPath>\n    <clipPath id=\"pf1b\"><path d=\"M19 24 C18 7 46 7 45 24 L46.5 54 L40 52 L41.5 35 L22.5 35 L24 52 L17.5 54 Z\"/></clipPath>\n    \n  </defs>\n  <rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#0d1016\"/><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"url(#pf1bg)\"/>\n\n  <g >\n  <path d=\"M19 24 C18 7 46 7 45 24 L46.5 54 L40 52 L41.5 35 L22.5 35 L24 52 L17.5 54 Z\" fill=\"#3a291e\"/>\n  \n  </g>\n\n  <path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\" fill=\"#232838\"/>\n  <g clip-path=\"url(#pf1s)\"><path d=\"M64 44 L40 47 L46 64 L64 64 Z\" fill=\"#514e84\"/><path d=\"M27 46 L32 54 L37 46 Z\" fill=\"#171a24\"/></g>\n  <path d=\"M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z\" fill=\"#86685f\"/><path d=\"M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z\" fill=\"#be95aa\" opacity=\"0.8\"/>\n  \n\n  <ellipse cx=\"20.8\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#86685f\"/>\n  <ellipse cx=\"43.2\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#d49a76\"/><path d=\"M44.1 27.5 Q45 30 43.9 33\" stroke=\"#be95aa\" stroke-width=\"0.9\" fill=\"none\"/>\n  \n\n  <path d=\"M32 11 C40.625 11 43.5 16 43.5 24 C43.5 30 42.9 33 41 38 L35.2 44.5 Q32 46.2 28.8 44.5 L23 38 C21.1 33 20.5 30 20.5 24 C20.5 16 23.375 11 32 11 Z\" fill=\"#d49a76\"/>\n  <g clip-path=\"url(#pf1h)\">\n    <path d=\"M0 0 L30.62 9 C25.675 20 26.48 31 30.5 48 L0 64 Z\" fill=\"#86685f\"/>\n    <path d=\"M35.45 34.5 L42.7 31.5 L40.5 39 Z\" fill=\"#af826b\" opacity=\"0.55\"/>\n    <path d=\"M64 0 L41.7 12 L42.2 30 L39.2 40.5 L64 64 Z\" fill=\"#be95aa\"/>\n        \n    \n    <path d=\"M22.5 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z\" fill=\"#af826b\"/>\n  </g>\n\n  <path d=\"M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z\" fill=\"#86685f\"/>\n  <path d=\"M32.9 33.6 L33.5 35.6 L32.7 36.2 Z\" fill=\"#be95aa\" opacity=\"0.7\"/>\n  <path d=\"M30.6 36.3 h2.6\" stroke=\"#7f5643\" stroke-width=\"0.7\" stroke-linecap=\"round\"/>\n  <path d=\"M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"28\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/><path d=\"M34.5 29 Q36.6 27.3 38.7 29 Q36.6 30.1 34.5 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"37.2\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/>\n  <path d=\"M24.9 25.6 L29.7 25.1\" stroke=\"#261b15\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M34.3 25.1 L39.1 25.6\" stroke=\"#261b15\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M29.4 40 Q32 40.9 34.6 40\" stroke=\"#7f5643\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/>\n      <path d=\"M30.2 40.7 Q32 42.2 33.8 40.7 Z\" fill=\"#c48769\"/>\n  \n  \n  \n  \n  \n\n  <g >\n  <path d=\"M19.7 27 C18.7 17 21.5 7 32 6.5 C42.5 7 45.3 16 44.3 26 C42.9 22 41.5 19.5 39.5 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.5 20.5 19.7 27 Z\" fill=\"#3a291e\" />\n    <g clip-path=\"url(#pf1t)\"><path d=\"M34.875 0 L64 0 L64 30 L38.9 30 Z\" fill=\"#6b5b8f\" opacity=\"0.75\"/>\n    </g>\n  \n  \n  \n  </g>\n  \n\n  \n  <path d=\"M40.9 19 V27\" stroke=\"#ff3d5f\" stroke-width=\"1.1\" stroke-linecap=\"round\" opacity=\"0.5\"/><circle cx=\"40.9\" cy=\"27.5\" r=\"0.9\" fill=\"#ff3d5f\" opacity=\"0.5\"/>\n  \n</svg>", "hotwire": "<svg class=\"art portrait\" viewBox=\"9 6 46 46\" width=\"64\" height=\"64\" aria-hidden=\"true\" focusable=\"false\">\n  <defs>\n    <linearGradient id=\"pf2bg\" x1=\"1\" x2=\"0\"><stop offset=\"0\" stop-color=\"#ff3d5f\" stop-opacity=\"0.28\"/><stop offset=\"0.65\" stop-color=\"#ff3d5f\" stop-opacity=\"0\"/></linearGradient>\n    <clipPath id=\"pf2h\"><path d=\"M32 11 C40.1 11 42.8 16 42.8 24 C42.8 30 42.199999999999996 33 40.5 38 L35 46 Q32 47.7 29 46 L23.5 38 C21.8 33 21.2 30 21.2 24 C21.2 16 23.9 11 32 11 Z\"/></clipPath>\n    <clipPath id=\"pf2s\"><path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\"/></clipPath>\n    <clipPath id=\"pf2t\"><path d=\"M20.4 27 C19.4 17 22.2 7.5 32 7 C41.8 7.5 44.599999999999994 16 43.599999999999994 26 C42.199999999999996 22 40.8 19.5 38.8 18.6 C33 18 30 20 28 19 C25 18.5 23.2 20 20.4 27 Z\"/></clipPath>\n    \n    \n  </defs>\n  <rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#0d1016\"/><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"url(#pf2bg)\"/>\n\n  <g >\n  \n  \n  </g>\n\n  <path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\" fill=\"#262b36\"/>\n  <g clip-path=\"url(#pf2s)\"><path d=\"M64 44 L40 47 L46 64 L64 64 Z\" fill=\"#783246\"/><path d=\"M27 46 L32 54 L37 46 Z\" fill=\"#191c23\"/></g>\n  <path d=\"M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z\" fill=\"#7e5e54\"/><path d=\"M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z\" fill=\"#dc6c61\" opacity=\"0.8\"/>\n  \n\n  <ellipse cx=\"21.5\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#7e5e54\"/>\n  <ellipse cx=\"42.5\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#c68863\"/><path d=\"M43.4 27.5 Q44.3 30 43.199999999999996 33\" stroke=\"#dc6c61\" stroke-width=\"0.9\" fill=\"none\"/>\n  \n\n  <path d=\"M32 11 C40.1 11 42.8 16 42.8 24 C42.8 30 42.199999999999996 33 40.5 38 L35 46 Q32 47.7 29 46 L23.5 38 C21.8 33 21.2 30 21.2 24 C21.2 16 23.9 11 32 11 Z\" fill=\"#c68863\"/>\n  <g clip-path=\"url(#pf2h)\">\n    <path d=\"M0 0 L30.704 9 C26.06 20 26.816 31 30.5 48 L0 64 Z\" fill=\"#7e5e54\"/>\n    <path d=\"M35.24 34.5 L42 31.5 L40 39 Z\" fill=\"#a4745c\" opacity=\"0.55\"/>\n    <path d=\"M64 0 L41 12 L41.5 30 L38.7 40.5 L64 64 Z\" fill=\"#dc6c61\"/>\n        \n    \n    <path d=\"M23.2 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z\" fill=\"#a4745c\"/>\n  </g>\n\n  <path d=\"M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z\" fill=\"#7e5e54\"/>\n  <path d=\"M32.9 33.6 L33.5 35.6 L32.7 36.2 Z\" fill=\"#dc6c61\" opacity=\"0.7\"/>\n  <path d=\"M30.6 36.3 h2.6\" stroke=\"#784d3a\" stroke-width=\"0.7\" stroke-linecap=\"round\"/>\n  <path d=\"M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"28\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/>\n  <path d=\"M24.9 25.6 L29.7 25.1\" stroke=\"#8d6a28\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M34.3 25.1 L39.1 25.6\" stroke=\"#8d6a28\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M29.4 40 Q32 40.9 34.6 40\" stroke=\"#784d3a\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/>\n      <path d=\"M30.2 40.7 Q32 42.2 33.8 40.7 Z\" fill=\"#b8785a\"/>\n  \n  \n  <g clip-path=\"url(#pf2h)\"><path d=\"M32.6 9 L33.6 22 L34.4 27.5 L35.4 33 L35.7 37.5 L35.6 41.5 L34.4 47 L34.4 64 L64 64 L64 0 L32.6 0 Z\" fill=\"#58606b\"/>\n    <path d=\"M64 0 L41 12 L41.5 30 L38.7 40.5 L64 64 Z\" fill=\"#925467\"/>\n    <path d=\"M32.6 9 L33.6 22 L34.4 27.5 L35.4 33 L35.7 37.5 L35.6 41.5 L34.4 47\" stroke=\"#704735\" stroke-width=\"0.9\" fill=\"none\"/>\n    <g stroke=\"#2b3038\" stroke-width=\"0.45\" fill=\"none\">\n      <path d=\"M35.4 18 L41.8 19.5\"/><path d=\"M36.6 33.6 L41.8 31.5\"/><path d=\"M36.3 40.6 L40.199999999999996 37\"/>\n      <path d=\"M38.5 36.2 h2.6 M38.8 37.4 h2.2\"/>\n    </g>\n    <circle cx=\"36.4\" cy=\"19.6\" r=\"0.35\" fill=\"#2b3038\"/><circle cx=\"40.8\" cy=\"31.8\" r=\"0.35\" fill=\"#2b3038\"/></g>\n  \n  \n\n  <g >\n  <path d=\"M20.4 27 C19.4 17 22.2 7.5 32 7 C41.8 7.5 44.599999999999994 16 43.599999999999994 26 C42.199999999999996 22 40.8 19.5 38.8 18.6 C33 18 30 20 28 19 C25 18.5 23.2 20 20.4 27 Z\" fill=\"#f5b942\" />\n    <g clip-path=\"url(#pf2t)\"><rect x=\"0\" y=\"0\" width=\"32\" height=\"64\" fill=\"#7dd3fc\" /><path d=\"M34.7 0 L64 0 L64 30 L38.480000000000004 30 Z\" fill=\"#fa7b51\" opacity=\"0.75\"/>\n    </g>\n  \n  \n  \n  </g>\n  \n\n  \n  <circle cx=\"42.5\" cy=\"30\" r=\"2.3\" fill=\"#4a515b\" stroke=\"#2b3038\" stroke-width=\"0.4\"/><circle cx=\"42.5\" cy=\"30\" r=\"0.8\" fill=\"#3de8d8\" opacity=\"0.5\"/>\n        <circle cx=\"36.6\" cy=\"29\" r=\"2.9\" fill=\"#1a1d22\"/><circle cx=\"36.6\" cy=\"29\" r=\"2.2\" fill=\"#0b0f12\" stroke=\"#9aa3ad\" stroke-width=\"0.5\"/>\n        <circle cx=\"36.6\" cy=\"29\" r=\"1.3\" fill=\"#3de8d8\" opacity=\"0.5\"/><circle cx=\"36.6\" cy=\"29\" r=\"0.4\" fill=\"#0b0f12\"/>\n  \n</svg>", "kit": "<svg class=\"art portrait\" viewBox=\"9 6 46 46\" width=\"64\" height=\"64\" aria-hidden=\"true\" focusable=\"false\">\n  <defs>\n    <linearGradient id=\"pf3bg\" x1=\"1\" x2=\"0\"><stop offset=\"0\" stop-color=\"#9b8cff\" stop-opacity=\"0.28\"/><stop offset=\"0.65\" stop-color=\"#9b8cff\" stop-opacity=\"0\"/></linearGradient>\n    <clipPath id=\"pf3h\"><path d=\"M32 11 C41.375 11 44.5 16 44.5 24 C44.5 30 43.9 33 42.5 38 L36 43.5 Q32 45.2 28 43.5 L21.5 38 C20.1 33 19.5 30 19.5 24 C19.5 16 22.625 11 32 11 Z\"/></clipPath>\n    <clipPath id=\"pf3s\"><path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\"/></clipPath>\n    \n    \n    \n  </defs>\n  <rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#0d1016\"/><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"url(#pf3bg)\"/>\n\n  <g >\n  \n  \n  </g>\n\n  <path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\" fill=\"#1f2b2a\"/>\n  <g clip-path=\"url(#pf3s)\"><path d=\"M64 44 L40 47 L46 64 L64 64 Z\" fill=\"#4e507b\"/><path d=\"M27 46 L32 54 L37 46 Z\" fill=\"#141c1b\"/></g>\n  <path d=\"M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z\" fill=\"#654741\"/><path d=\"M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z\" fill=\"#9a718a\" opacity=\"0.8\"/>\n  \n\n  <ellipse cx=\"19.8\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#654741\"/>\n  <ellipse cx=\"44.2\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#9a6142\"/><path d=\"M45.1 27.5 Q46 30 44.9 33\" stroke=\"#9a718a\" stroke-width=\"0.9\" fill=\"none\"/>\n  \n\n  <path d=\"M32 11 C41.375 11 44.5 16 44.5 24 C44.5 30 43.9 33 42.5 38 L36 43.5 Q32 45.2 28 43.5 L21.5 38 C20.1 33 19.5 30 19.5 24 C19.5 16 22.625 11 32 11 Z\" fill=\"#9a6142\"/>\n  <g clip-path=\"url(#pf3h)\">\n    <path d=\"M0 0 L30.5 9 C25.125 20 26 31 30.5 48 L0 64 Z\" fill=\"#654741\"/>\n    <path d=\"M35.75 34.5 L43.7 31.5 L42 39 Z\" fill=\"#815542\" opacity=\"0.55\"/>\n    <path d=\"M64 0 L42.7 12 L43.2 30 L40.7 40.5 L64 64 Z\" fill=\"#9a718a\"/>\n        \n    \n    <path d=\"M21.5 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z\" fill=\"#815542\"/>\n  </g>\n\n  <path d=\"M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z\" fill=\"#654741\"/>\n  <path d=\"M32.9 33.6 L33.5 35.6 L32.7 36.2 Z\" fill=\"#9a718a\" opacity=\"0.7\"/>\n  <path d=\"M30.6 36.3 h2.6\" stroke=\"#623a29\" stroke-width=\"0.7\" stroke-linecap=\"round\"/>\n  <path d=\"M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"28\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/><path d=\"M34.5 29 Q36.6 27.3 38.7 29 Q36.6 30.1 34.5 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"37.2\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/>\n  <path d=\"M24.9 25.6 L29.7 25.1\" stroke=\"#604527\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M34.3 25.1 L39.1 25.6\" stroke=\"#604527\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M29.4 40 Q32 40.9 34.6 40\" stroke=\"#623a29\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/>\n      <path d=\"M30.2 40.7 Q32 42.2 33.8 40.7 Z\" fill=\"#94583f\"/>\n  \n  \n  \n  \n  \n\n  <g >\n  \n  \n  \n  <path d=\"M34.5 12.5 Q43.5 14 43.9 21\" stroke=\"#9a718a\" stroke-width=\"1\" fill=\"none\" opacity=\"0.6\"/>\n  </g>\n  \n\n  \n  <path d=\"M41.9 19 V27\" stroke=\"#3de8d8\" stroke-width=\"1.1\" stroke-linecap=\"round\" opacity=\"0.5\"/><circle cx=\"41.9\" cy=\"27.5\" r=\"0.9\" fill=\"#3de8d8\" opacity=\"0.5\"/>\n  \n</svg>", "rat": "<svg class=\"art portrait\" viewBox=\"9 6 46 46\" width=\"64\" height=\"64\" aria-hidden=\"true\" focusable=\"false\">\n  <defs>\n    <linearGradient id=\"pf4bg\" x1=\"1\" x2=\"0\"><stop offset=\"0\" stop-color=\"#3de8d8\" stop-opacity=\"0.28\"/><stop offset=\"0.65\" stop-color=\"#3de8d8\" stop-opacity=\"0\"/></linearGradient>\n    <clipPath id=\"pf4h\"><path d=\"M32 11 C40.625 11 43.5 16 43.5 24 C43.5 30 42.9 33 41 38 L35.2 44.5 Q32 46.2 28.8 44.5 L23 38 C21.1 33 20.5 30 20.5 24 C20.5 16 23.375 11 32 11 Z\"/></clipPath>\n    <clipPath id=\"pf4s\"><path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\"/></clipPath>\n    <clipPath id=\"pf4t\"><path d=\"M20.1 25 C19.5 13 22.5 8.6 32 8.4 C41.5 8.6 44.5 13 43.9 25 C42.5 20 40.5 17.2 32 16.8 C23.5 17.2 21.5 20 20.1 25 Z\"/></clipPath>\n    \n    \n  </defs>\n  <rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#0d1016\"/><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"url(#pf4bg)\"/>\n\n  <g >\n  \n  \n  </g>\n\n  <path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\" fill=\"#262b36\"/>\n  <g clip-path=\"url(#pf4s)\"><path d=\"M64 44 L40 47 L46 64 L64 64 Z\" fill=\"#2f7374\"/><path d=\"M27 46 L32 54 L37 46 Z\" fill=\"#191c23\"/></g>\n  <path d=\"M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z\" fill=\"#583e3a\"/><path d=\"M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z\" fill=\"#6a8b74\" opacity=\"0.8\"/>\n  \n\n  <ellipse cx=\"20.8\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#583e3a\"/>\n  <ellipse cx=\"43.2\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#855236\"/><path d=\"M44.1 27.5 Q45 30 43.9 33\" stroke=\"#6a8b74\" stroke-width=\"0.9\" fill=\"none\"/>\n  <circle cx=\"43.5\" cy=\"34\" r=\"0.9\" fill=\"#f2b544\"/>\n\n  <path d=\"M32 11 C40.625 11 43.5 16 43.5 24 C43.5 30 42.9 33 41 38 L35.2 44.5 Q32 46.2 28.8 44.5 L23 38 C21.1 33 20.5 30 20.5 24 C20.5 16 23.375 11 32 11 Z\" fill=\"#855236\"/>\n  <g clip-path=\"url(#pf4h)\">\n    <path d=\"M0 0 L30.62 9 C25.675 20 26.48 31 30.5 48 L0 64 Z\" fill=\"#583e3a\"/>\n    <path d=\"M35.45 34.5 L42.7 31.5 L40.5 39 Z\" fill=\"#704938\" opacity=\"0.55\"/>\n    <path d=\"M64 0 L41.7 12 L42.2 30 L39.2 40.5 L64 64 Z\" fill=\"#6a8b74\"/>\n        \n    \n    <path d=\"M22.5 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z\" fill=\"#704938\"/>\n  </g>\n\n  <path d=\"M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z\" fill=\"#583e3a\"/>\n  <path d=\"M32.9 33.6 L33.5 35.6 L32.7 36.2 Z\" fill=\"#6a8b74\" opacity=\"0.7\"/>\n  <path d=\"M30.6 36.3 h2.6\" stroke=\"#583223\" stroke-width=\"0.7\" stroke-linecap=\"round\"/>\n  <path d=\"M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"28\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/><path d=\"M34.5 29 Q36.6 27.3 38.7 29 Q36.6 30.1 34.5 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"37.2\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/>\n  <path d=\"M24.9 25.6 L29.7 25.1\" stroke=\"#247a6f\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M34.3 25.1 L39.1 25.6\" stroke=\"#247a6f\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M29.4 40 Q32 40.9 34.6 40\" stroke=\"#583223\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/>\n      <path d=\"M30.2 40.7 Q32 42.2 33.8 40.7 Z\" fill=\"#834c35\"/>\n  \n  <path d=\"M23 22 L24.5 24 L23.7 25.2 L25.5 28\" stroke=\"#b0806e\" stroke-width=\"0.75\" fill=\"none\" stroke-linejoin=\"bevel\"/>\n  \n  \n  <g fill=\"#3de8d8\" fill-opacity=\"0.12\" stroke=\"#0d0d0f\" stroke-width=\"0.8\"><rect x=\"24.3\" y=\"27\" width=\"6.2\" height=\"4.2\" rx=\"1.2\"/><rect x=\"33.5\" y=\"27\" width=\"6.2\" height=\"4.2\" rx=\"1.2\"/></g><path d=\"M30.5 28.6 h3\" stroke=\"#0d0d0f\" stroke-width=\"0.8\"/>\n\n  <g >\n  <path d=\"M20.1 25 C19.5 13 22.5 8.6 32 8.4 C41.5 8.6 44.5 13 43.9 25 C42.5 20 40.5 17.2 32 16.8 C23.5 17.2 21.5 20 20.1 25 Z\" fill=\"#36d6c3\" />\n    <g clip-path=\"url(#pf4t)\"><path d=\"M34.875 0 L64 0 L64 30 L38.9 30 Z\" fill=\"#3adfce\" opacity=\"0.75\"/>\n    <g stroke=\"#238b7f\" stroke-width=\"0.5\" fill=\"none\"><path d=\"M22.5 21 Q30 11 41.5 13\"/><path d=\"M24.5 19 Q32 12 42.5 17\"/></g><path d=\"M33.725 11 Q41.5 12 42.7 19\" stroke=\"#fff\" stroke-width=\"0.9\" fill=\"none\" opacity=\"0.35\"/></g>\n  \n  \n  \n  </g>\n  \n\n  \n  <path d=\"M43 23 L38 24.5 L37.5 31.5 L41 35 L42.9 33 Z\" fill=\"#997868\" opacity=\"0.85\"/>\n        <path d=\"M43 23 L38 24.5 L37.5 31.5 L41 35\" stroke=\"#43291b\" stroke-width=\"0.45\" fill=\"none\"/>\n        <circle cx=\"38\" cy=\"24.5\" r=\"0.65\" fill=\"#ff3d5f\" opacity=\"0.5\"/>\n  \n</svg>", "mop": "<svg class=\"art portrait\" viewBox=\"9 6 46 46\" width=\"64\" height=\"64\" aria-hidden=\"true\" focusable=\"false\">\n  <defs>\n    <linearGradient id=\"pf5bg\" x1=\"1\" x2=\"0\"><stop offset=\"0\" stop-color=\"#9b8cff\" stop-opacity=\"0.28\"/><stop offset=\"0.65\" stop-color=\"#9b8cff\" stop-opacity=\"0\"/></linearGradient>\n    <clipPath id=\"pf5h\"><path d=\"M32 11 C41 11 44 16 44 24 C44 30 43.4 33 43.5 38 L37 44.5 Q32 46.2 27 44.5 L20.5 38 C20.6 33 20 30 20 24 C20 16 23 11 32 11 Z\"/></clipPath>\n    <clipPath id=\"pf5s\"><path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\"/></clipPath>\n    <clipPath id=\"pf5t\"><path d=\"M19.2 27 C18.2 17 21 7.5 32 7 C43 7.5 45.8 16 44.8 26 C43.4 22 42 19.5 40 18.6 C33 18 30 20 28 19 C25 18.5 22 20 19.2 27 Z\"/></clipPath>\n    \n    \n  </defs>\n  <rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#0d1016\"/><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"url(#pf5bg)\"/>\n\n  <g >\n  \n  \n  </g>\n\n  <path d=\"M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z\" fill=\"#262b36\"/>\n  <g clip-path=\"url(#pf5s)\"><path d=\"M64 44 L40 47 L46 64 L64 64 Z\" fill=\"#525082\"/><path d=\"M27 46 L32 54 L37 46 Z\" fill=\"#191c23\"/></g>\n  <path d=\"M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z\" fill=\"#654741\"/><path d=\"M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z\" fill=\"#9a718a\" opacity=\"0.8\"/>\n  \n\n  <ellipse cx=\"20.3\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#654741\"/>\n  <ellipse cx=\"43.7\" cy=\"30\" rx=\"1.9\" ry=\"3.4\" fill=\"#9a6142\"/><path d=\"M44.6 27.5 Q45.5 30 44.4 33\" stroke=\"#9a718a\" stroke-width=\"0.9\" fill=\"none\"/>\n  \n\n  <path d=\"M32 11 C41 11 44 16 44 24 C44 30 43.4 33 43.5 38 L37 44.5 Q32 46.2 27 44.5 L20.5 38 C20.6 33 20 30 20 24 C20 16 23 11 32 11 Z\" fill=\"#9a6142\"/>\n  <g clip-path=\"url(#pf5h)\">\n    <path d=\"M0 0 L30.56 9 C25.4 20 26.240000000000002 31 30.5 48 L0 64 Z\" fill=\"#654741\"/>\n    <path d=\"M35.6 34.5 L43.2 31.5 L43 39 Z\" fill=\"#815542\" opacity=\"0.55\"/>\n    <path d=\"M64 0 L42.2 12 L42.7 30 L41.7 40.5 L64 64 Z\" fill=\"#9a718a\"/>\n        \n    \n    <path d=\"M22 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z\" fill=\"#815542\"/>\n  </g>\n\n  <path d=\"M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z\" fill=\"#654741\"/>\n  <path d=\"M32.9 33.6 L33.5 35.6 L32.7 36.2 Z\" fill=\"#9a718a\" opacity=\"0.7\"/>\n  <path d=\"M30.6 36.3 h2.6\" stroke=\"#623a29\" stroke-width=\"0.7\" stroke-linecap=\"round\"/>\n  <path d=\"M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"28\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/><path d=\"M34.5 29 Q36.6 27.3 38.7 29 Q36.6 30.1 34.5 29 Z\" fill=\"#120d0b\"/>\n    <circle cx=\"37.2\" cy=\"28.55\" r=\"0.45\" fill=\"#fff\" opacity=\"0.85\"/>\n  <path d=\"M24.9 25.6 L29.7 25.1\" stroke=\"#261b15\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M34.3 25.1 L39.1 25.6\" stroke=\"#261b15\" stroke-width=\"1.5\" stroke-linecap=\"round\"/><path d=\"M29.4 40 Q32 40.9 34.6 40\" stroke=\"#623a29\" stroke-width=\"1.1\" fill=\"none\" stroke-linecap=\"round\"/>\n      <path d=\"M30.2 40.7 Q32 42.2 33.8 40.7 Z\" fill=\"#94583f\"/>\n  \n  \n  \n  \n  <g fill=\"#9b8cff\" fill-opacity=\"0.12\" stroke=\"#0d0d0f\" stroke-width=\"0.8\"><rect x=\"24.3\" y=\"27\" width=\"6.2\" height=\"4.2\" rx=\"1.2\"/><rect x=\"33.5\" y=\"27\" width=\"6.2\" height=\"4.2\" rx=\"1.2\"/></g><path d=\"M30.5 28.6 h3\" stroke=\"#0d0d0f\" stroke-width=\"0.8\"/>\n\n  <g >\n  <path d=\"M19.2 27 C18.2 17 21 7.5 32 7 C43 7.5 45.8 16 44.8 26 C43.4 22 42 19.5 40 18.6 C33 18 30 20 28 19 C25 18.5 22 20 19.2 27 Z\" fill=\"#3a291e\" />\n    <g clip-path=\"url(#pf5t)\"><path d=\"M35 0 L64 0 L64 30 L39.2 30 Z\" fill=\"#6b5b8f\" opacity=\"0.75\"/>\n    </g>\n  \n  \n  \n  </g>\n  \n\n  \n  <path d=\"M42.4 19 L40.5 21.5 L40.5 24.5 L39.8 25.2 M40.5 22.6 L42.6 23.6\" stroke=\"#3de8d8\" stroke-width=\"0.55\" fill=\"none\" stroke-linejoin=\"round\" opacity=\"0.5\"/>\n        <circle cx=\"39.8\" cy=\"25.2\" r=\"0.6\" fill=\"#3de8d8\" opacity=\"0.5\"/>\n  \n</svg>"};
+let faceSeq = 0;
+const face = (op) => FACES[op.id].replace(/pf\d+/g, () => `pf${op.id}${++faceSeq}`).replace(/ width="64" height="64"/, '');
+const initials = (op) => op.handle.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+
+// ---------- Container 409: the owner's crises (src/data/missions/container.js), placed on a map ----------
+const C = {
+  cutter: { name: 'Police boat', text: 'A Wet Sleeve cutter cuts its engine and drifts blind through the fog towards your stack.', choices: [
+    { id: 'shadow', label: '{op} melts into the shadow of a container wall', stat: 'stealth', diff: 6, ok: 'The spotlight sweeps the steel a hand above your heads, and moves on.', bad: 'A loose strap clinks against the steel. The light snaps back and holds on {op}.', failHeat: 1 },
+    { id: 'splash', label: 'Throw an iron coupler into the water to draw them off', stat: 'cool', diff: 5, ok: 'A heavy splash off the far pylon. The cutter throttles up towards the noise.', bad: 'It clangs off a beam before it hits the water, and points them straight at you.', failHurt: true },
+  ], abort: { label: 'Abort: up the gantry ladder and away', ok: 'You vanish up into the fog among the crane girders.' } },
+  whistler: { name: 'Night-shift forklift', text: 'An Aether-Harbour night-shift forklift comes down your row, headlights on. The driver is whistling.', choices: [
+    { id: 'duck', label: 'Duck behind the stacks', stat: 'stealth', diff: 5, ok: 'He passes three metres away, still whistling.', bad: 'He sees {op}, shouts, and reaches for his radio.', failHeat: 1 },
+    { id: 'light', label: '{op} walks up and asks for a light', stat: 'social', diff: 6, ok: 'Two cigarettes and a moan about the night shift later, he drives off none the wiser.', bad: 'He doesn\'t buy it, and drives off fast with his radio at his mouth.', failHeat: 1 },
+  ], abort: { label: 'Abort: back out before he gets closer', ok: 'You slip away between the containers.' } },
+  stack: { name: 'Groaning stack', text: 'The wind shifts off the bay. A stack of rusted containers under you groans and starts to creep.', choices: [
+    { id: 'brace', label: '{op} wedges a pry bar into the slipping corner', stat: 'tech', diff: 7, ok: 'Metal grinds on metal with a sharp pop, and the corner locks back in place.', bad: 'The bar snaps. A rusted panel shears off and clips {op}\'s shoulder.', failHurt: true },
+    { id: 'clear', label: 'Get clear and let it settle', stat: 'stealth', diff: 4, payCut: 0.1, ok: 'A dull shudder runs through the pier, but the stack holds.', bad: 'A panel hits the deck with a boom, and a security drone comes to look.', failHeat: 1 },
+  ], abort: { label: 'Abort: climb down and miss the drop', ok: 'You wait out the groaning on the ground. By the time it stops, so has the drop.' } },
+  dog: { name: 'Dock dog', text: 'A feral dock dog, ribs showing through wet fur, snarls at the hum of your earpieces.', choices: [
+    { id: 'feed', label: 'Toss it a strip of salted pork', stat: 'social', diff: 4, ok: 'It snaps the meat out of the air and trots off between the pallets.', bad: 'It ignores the meat and goes for {op}\'s forearm.', failHurt: true },
+    { id: 'hiss', label: '{op} steps forward with a low hiss', stat: 'cool', diff: 5, ok: 'It cowers, turns tail and slinks off under a row of trailers.', bad: 'It yelps, loud, and a watchman\'s torch swings down your row.', failHeat: 1 },
+  ], abort: { label: 'Abort: pack up and leave the post', ok: 'You leave the dog the pier. It seems to think that\'s fair.' } },
+  backwards: { name: 'The Ferryman\'s cigarette', text: 'On the boat, the Ferryman lights a clove cigarette and turns it to face backwards. Everyone on the waterfront knows what that means.', choices: [
+    { id: 'watch', label: 'Don\'t ask. Keep watching.', stat: 'cool', diff: 6, ok: 'Nothing comes. Maybe the cigarette is why.', bad: 'Something comes: a Red Lantern scooter, headlights off, rolling down the pier.', failHurt: true },
+    { id: 'ask', label: '{op} asks him what\'s wrong', stat: 'social', diff: 7, ok: 'He looks at {op} for a long moment. "Nothing, now." He almost smiles.', bad: '"Don\'t ask," he says. "Just row." The rest of the night is colder.' },
+    { id: 'tidewatch', label: '{op} watches the tide instead', stat: 'cool', diff: 4, needs: { stat: 'cool', min: 10, prep: 'tide' }, payBonus: 0.1, ok: '{op} spots drifting debris before it reaches the propeller, and the Ferryman quietly adds to the fee.', bad: '{op} reads it wrong, but keeps quiet enough not to offend him.' },
+  ], abort: { label: 'Abort: if he\'s worried, you\'re leaving', ok: 'You back off the landing. "Cowards row slow," comes across the water.' } },
+  boxed: { name: 'Boxed in', text: 'A container truck has parked across the only road out. The driver is asleep in the cab.', choices: [
+    { id: 'thread', label: '{op} threads the van past it', stat: 'driving', diff: 6, ok: 'Wing mirror folded in, two centimetres to spare. The truck driver snores on.', bad: 'Metal screams on metal. The driver wakes up shouting.', failHeat: 1, failPay: 0.1 },
+    { id: 'knock', label: 'Knock on the cab and ask nicely', stat: 'social', diff: 4, ok: 'He grumbles, moves the truck, and asks nothing. It\'s the Docks.', bad: 'He tells you exactly where to go, and doesn\'t move. You wait an hour.', failPay: 0.2 },
+    { id: 'mirrors', label: 'Fold the mirrors and clear it in one pass', stat: 'driving', diff: 4, needs: { stat: 'driving', min: 13 }, payBonus: 0.1, ok: 'The van slips through with paint to spare.', bad: 'A mirror clips the truck on the way through.', failHeat: 1 },
+  ], abort: { label: 'Abort: leave the van and walk out', ok: 'You walk home along the seawall and come back for the van at dawn.', payCut: 0.6 } },
+};
+
+const ROUTES = {
+  seawall: { name: 'The seawall path', bonus: 'stealth', crisis: 'cutter', blurb: 'Along the water under the fog. Quiet, but the police boats patrol here.',
+    check: { stat: 'stealth', diff: 3, ok: '{op} finds the gap in the seawall fence and slips through.', bad: '{op} snags a sleeve on the fence wire. Noisy, but nobody comes.' } },
+  gate: { name: 'The front gate', bonus: 'social', crisis: 'whistler', blurb: 'Walk in on a borrowed dock pass. Fast, but the night shift is about.',
+    check: { stat: 'social', diff: 3, ok: '{op} flashes the pass at the gatehouse. The guard doesn\'t look up.', bad: 'The guard squints at the pass for a long time, then waves {op} through anyway.' } },
+  stacks: { name: 'Over the stacks', bonus: 'tech', crisis: 'stack', blurb: 'Up a rigged ladder and across the container tops. Nobody looks up, but the stacks are old.',
+    check: { stat: 'tech', diff: 3, ok: '{op} rigs a cable ladder up the first stack in under a minute.', bad: 'The first ladder hook slips. {op} gets it on the second try, hands shaking.' } },
+};
+const EXITS = {
+  van: { name: 'Van on the service road', blurb: 'Quick, but the road out is narrow. Needs someone on Wheels.' },
+  boat: { name: 'Out with the Ferryman', blurb: 'No trouble expected, no driver needed. He takes 15% of the pay.' },
+};
+const PREP = [
+  { id: 'scanner', name: 'Police scanner', cost: 150, helps: 'cutter', does: '−2 against the police boat.', mods: { shadow: 2, splash: 2 } },
+  { id: 'roster', name: 'Shift roster', cost: 200, helps: 'whistler', does: '−2 against the forklift.', mods: { duck: 2, light: 2 } },
+  { id: 'bar', name: 'Pry bar', cost: 100, helps: 'stack', does: '−2 bracing a slipping stack.', mods: { brace: 2 } },
+  { id: 'pork', name: 'Salted pork', cost: 50, helps: 'dog', does: '−3 feeding a dock dog.', mods: { feed: 3 } },
+  { id: 'tide', name: 'Tide chart', cost: 100, helps: 'backwards', does: 'Anyone can "watch the tide".', mods: {} },
+];
+const POST_CRISES = ['dog', 'backwards'];
+const PAY = 1600;
+const SLOTS = {
+  point: { name: 'Point', does: 'Goes first. Handles the way in.', tilt: '-1.5deg', pin: '#ff4f7b' },
+  watch: { name: 'Watch', does: 'Holds Stack 409. Handles the post.', tilt: '1deg', pin: '#36d6c3' },
+  wheels: { name: 'Wheels', does: 'Waits in the van. Handles the road out.', tilt: '-0.5deg', pin: '#f5b942' },
+};
+
+// ---------- Map geometry ----------
+const P = { drop: [46, 226], seawall: [40, 96], gate: [196, 226], stacks: [150, 120], post: [292, 66], boat: [326, 176] };
+const PATHS = {
+  seawall: [P.drop, [30, 160], P.seawall, [150, 48], P.post],
+  gate: [P.drop, P.gate, [282, 210], [300, 130], P.post],
+  stacks: [P.drop, [100, 170], P.stacks, [230, 90], P.post],
+};
+const EXIT_PATHS = { van: [P.post, [250, 150], [120, 200], P.drop], boat: [P.post, [318, 120], P.boat] };
+const pts = (list) => list.map((p) => p.join(',')).join(' ');
+
+function mapSvg(plan, { interactive = false } = {}) {
+  const stacks = [[110, 30, 30, 22], [70, 140, 26, 40], [190, 150, 40, 26], [230, 30, 36, 20], [240, 170, 30, 30], [120, 80, 20, 26]];
+  const lbl = (pt, text, dx, dy, hi) => `<text class="label ${hi ? 'hi' : ''}" x="${pt[0] + dx}" y="${pt[1] + dy}">${text}</text>`;
+  return `<svg viewBox="0 0 360 260" role="img" aria-label="Map of Pier 12: three ways in to Stack 409, two ways out">
+    <rect width="360" height="260" fill="#0b0d11"/>
+    <path class="water" d="M0 0 H22 V260 H0 Z M340 0 H360 V260 H340 Z M300 196 Q340 200 360 196 V260 H300 Z"/>
+    ${stacks.map(([x, y, w, h]) => `<rect class="stack" x="${x}" y="${y}" width="${w}" height="${h}" rx="2"/>`).join('')}
+    ${Object.entries(EXIT_PATHS).map(([k, l]) => `<polyline class="exit ${plan.exit === k ? 'on' : ''}" points="${pts(l)}"/>`).join('')}
+    ${Object.entries(PATHS).map(([k, l]) => `<polyline class="route ${plan.route === k ? 'on' : ''}" points="${pts(l)}"/>`).join('')}
+    ${interactive ? Object.entries(PATHS).map(([k, l]) => `<polyline class="hit" data-route="${k}" points="${pts(l)}"><title>${ROUTES[k].name}</title></polyline>`).join('') : ''}
+    ${interactive ? Object.entries(EXIT_PATHS).map(([k, l]) => `<polyline class="hit" data-exit="${k}" points="${pts(l)}"><title>${EXITS[k].name}</title></polyline>`).join('') : ''}
+    <circle class="node" cx="${P.drop[0]}" cy="${P.drop[1]}" r="7"/>${lbl(P.drop, 'DROP-OFF · VAN', -12, 20, plan.exit === 'van')}
+    <circle class="node" cx="${P.seawall[0]}" cy="${P.seawall[1]}" r="5"/>${lbl(P.seawall, 'SEAWALL', 9, 3, plan.route === 'seawall')}
+    <circle class="node" cx="${P.gate[0]}" cy="${P.gate[1]}" r="5"/>${lbl(P.gate, 'GATE', -10, 18, plan.route === 'gate')}
+    <circle class="node" cx="${P.stacks[0]}" cy="${P.stacks[1]}" r="5"/>${lbl(P.stacks, 'STACKS', 9, 3, plan.route === 'stacks')}
+    <circle class="node post" cx="${P.post[0]}" cy="${P.post[1]}" r="8"/>${lbl(P.post, 'STACK 409', -34, -14, true)}
+    <circle class="node" cx="${P.boat[0]}" cy="${P.boat[1]}" r="6"/>${lbl(P.boat, 'FERRY LANDING', -50, 20, plan.exit === 'boat')}
+    <circle class="alarm" id="alarm" cx="0" cy="0" r="6"/>
+    <g id="tokens"></g>
+  </svg>`;
+}
+function drawTokens(list) {
+  const g = document.getElementById('tokens');
+  g.innerHTML = list.map(({ op, at }, i) => `<g class="token" id="tok-${op.id}" style="transform: translate(${at[0] + i * 10 - 10}px, ${at[1] - 13}px)"><circle r="8.5" fill="${op.color}"/><text>${esc(initials(op))}</text></g>`).join('');
+}
+function moveToken(op, i, at) {
+  const t = document.getElementById(`tok-${op.id}`);
+  if (t) t.style.transform = `translate(${at[0] + i * 10 - 10}px, ${at[1] - 13}px)`;
+}
+function alarm(at) {
+  const a = document.getElementById('alarm');
+  if (!a) return;
+  if (!at) { a.classList.remove('on'); return; }
+  a.setAttribute('cx', at[0]); a.setAttribute('cy', at[1]); a.classList.add('on');
+}
+
+// ---------- Plan state and the shared odds (the read and the run use the same numbers) ----------
+const plan = { route: 'seawall', exit: 'van', point: null, watch: null, wheels: null, prep: new Set(), callIn: 'risky', ifHurt: 'out' };
+let seed = (Date.now() % 2147483647) | 0;
+const slotsNeeded = () => (plan.exit === 'van' ? ['point', 'watch', 'wheels'] : ['point', 'watch']);
+const fill = (t, op) => t.replaceAll('{op}', op.handle);
+
+// Point handles the way in, Watch the post, Wheels the road out. The other person walking in
+// backs them up (+1 if they have 7+ in the stat), as in the game.
+function rollFor(slotId, choice, who = plan) {
+  const op = byId(who[slotId]);
+  const partnerId = slotId === 'point' ? who.watch : slotId === 'watch' ? who.point : null;
+  const partner = partnerId ? byId(partnerId) : null;
+  let value = op.stats[choice.stat];
+  const notes = [`${choice.stat} ${op.stats[choice.stat]}`];
+  if (slotId === 'point' && ROUTES[who.route].bonus === choice.stat) { value += 1; notes.push('route +1'); }
+  if (partner && partner.id !== op.id && partner.stats[choice.stat] >= 7) { value += 1; notes.push(`${partner.handle} backs up +1`); }
+  let diff = choice.diff;
+  for (const p of PREP) if (who.prep.has(p.id) && p.mods[choice.id]) { diff -= p.mods[choice.id]; notes.push(`${lowerFirst(p.name)} −${p.mods[choice.id]}`); }
+  const chance = chanceOf(value, diff);
+  return { op, value, diff, need: 10 + diff, chance, risk: riskOf(chance), notes };
+}
+function available(choice, slotId, who = plan) {
+  if (!choice.needs) return true;
+  if (choice.needs.prep && who.prep.has(choice.needs.prep)) return true;
+  return byId(who[slotId]).stats[choice.needs.stat] >= choice.needs.min;
+}
+// The crew's own call: the best odds; on a tie, the option that costs nothing.
+function crewPick(crisisId, slotId, who = plan) {
+  return C[crisisId].choices.filter((c) => available(c, slotId, who)).map((c) => ({ c, r: rollFor(slotId, c, who) }))
+    .sort((a, b) => b.r.chance - a.r.chance || (a.c.payCut ?? 0) - (b.c.payCut ?? 0));
+}
+// What a slot faces under a plan: its crises and the worst best-option risk among them.
+function slotRisk(slotId, who = plan) {
+  if (!who[slotId]) return null;
+  const crises = slotId === 'point' ? [ROUTES[who.route].crisis] : slotId === 'watch' ? POST_CRISES : who.exit === 'van' ? ['boxed'] : [];
+  return worst(crises.map((cid) => crewPick(cid, slotId, who)[0].r.risk));
+}
+// The stats each slot leans on under this plan (shown on the dossier).
+const slotStats = (slotId, who = plan) => {
+  const crises = slotId === 'point' ? [ROUTES[who.route].crisis] : slotId === 'watch' ? POST_CRISES : ['boxed'];
+  return [...new Set(crises.flatMap((cid) => C[cid].choices.map((c) => c.stat)))].slice(0, 3);
+};
+// Joss's picks: fill the slots in order, each with the free person who faces the least risk there.
+function jossPicks() {
+  const who = { ...plan, point: null, watch: null, wheels: null };
+  const order = slotsNeeded();
+  const best = {};
+  for (const s of order) {
+    const free = CREW.filter((o) => !order.some((t) => who[t] === o.id));
+    free.sort((a, b) => RISK_ORDER.indexOf(slotRisk(s, { ...who, [s]: a.id })) - RISK_ORDER.indexOf(slotRisk(s, { ...who, [s]: b.id }))
+      || slotStats(s, who).reduce((n, st) => n + b.stats[st] - a.stats[st], 0));
+    who[s] = free[0].id;
+    best[s] = free[0].id;
+  }
+  return best;
+}
+const withPlan = (changes) => ({ ...plan, prep: plan.prep, ...changes });
+const prepOdds = (p) => (p.helps === ROUTES[plan.route].crisis || (p.helps === 'boxed' && plan.exit === 'van') ? 'will' : POST_CRISES.includes(p.helps) ? 'might' : 'wont');
+const prepCost = () => [...plan.prep].reduce((n, id) => n + PREP.find((p) => p.id === id).cost, 0);
+
+// ---------- Planning screen ----------
+function renderPlan() {
+  const app = document.getElementById('app');
+  app.className = 'wrap';
+  const fare = plan.exit === 'boat' ? PAY * 0.15 : 0;
+  const routeCard = (k, r) => {
+    const risk = slotRisk('point', withPlan({ route: k }));
+    const riskPill = risk ? pill(risk) : '<span class="pill r-safe">pick Point</span>';
+    return `<button type="button" class="card" data-route="${k}" aria-pressed="${plan.route === k}">
+      <span class="card__top"><b>${esc(r.name)}</b>${riskPill}</span>
+      <span class="card__body">${esc(r.blurb)}</span>
+      <span class="card__meta">Point ${r.bonus} +1 · trouble: ${esc(lowerFirst(C[r.crisis].name))}</span></button>`;
+  };
+  const exitCard = (k, e) => {
+    const risk = k === 'van' ? (plan.exit === 'van' ? slotRisk('wheels') : null) : 'safe';
+    return `<button type="button" class="card" data-exit="${k}" aria-pressed="${plan.exit === k}">
+      <span class="card__top"><b>${esc(e.name)}</b>${risk ? pill(risk) : `<span class="pill r-safe">${k === 'van' && plan.exit === 'van' ? 'pick Wheels' : 'needs Wheels'}</span>`}</span>
+      <span class="card__body">${esc(e.blurb)}</span>
+      <span class="card__meta">${k === 'van' ? 'trouble: boxed in' : `fare −${yen(PAY * 0.15)}`}</span></button>`;
+  };
+  const picks = jossPicks();
+  const dossier = (slotId) => {
+    const sl = SLOTS[slotId];
+    const op = plan[slotId] ? byId(plan[slotId]) : null;
+    if (!op) return `<button type="button" class="dossier empty" data-dossier="${slotId}" style="--tilt:0deg" aria-label="${sl.name}: empty. ${sl.does} Tap to assign.">
+      <span class="dossier__tab">${sl.name}</span><span class="sil" aria-hidden="true">+</span><span class="dossier__does">${sl.does}</span></button>`;
+    const risk = slotRisk(slotId);
+    return `<button type="button" class="dossier" data-dossier="${slotId}" style="--tilt:${sl.tilt};--pin:${sl.pin}" aria-label="${sl.name}: ${esc(op.handle)}, ${risk} risk. Tap to change.">
+      <span class="dossier__tab">${sl.name}</span>
+      <span class="dossier__photo">${face(op)}</span>
+      <span class="dossier__name">${esc(op.handle)}</span><span class="dossier__real">${esc(op.name)} · ${op.role}</span>
+      ${pill(risk)}
+      <span class="dossier__stats">${slotStats(slotId).map((st) => `<span class="stat">${st}<span>${op.stats[st]}</span><i><b style="width:${op.stats[st] * 5}%"></b></i></span>`).join('')}</span>
+      ${picks[slotId] === op.id ? '<span class="dossier__pick">Joss\'s pick</span>' : ''}</button>`;
+  };
+  const prepBtn = (p) => {
+    const odds = prepOdds(p);
+    return `<button type="button" class="prepbtn ${odds === 'wont' ? 'dim' : ''}" data-prep="${p.id}" aria-pressed="${plan.prep.has(p.id)}">
+      <b>${esc(p.name)}<span>${yen(p.cost)}</span></b><small>${esc(p.does)}</small>
+      <span class="odds ${odds}">${odds === 'will' ? 'Will come up' : odds === 'might' ? 'Might come up' : 'Not on this plan'}</span></button>`;
+  };
+  const seg = (key, opts) => `<div class="seg" role="group">${opts.map(([v, l]) => `<button type="button" data-order="${key}" data-v="${v}" aria-pressed="${plan[key] === v}">${l}</button>`).join('')}</div>`;
+
+  app.innerHTML = `
+    <header style="display:grid;gap:8px">
+      <span class="eyebrow">Docks · Pier 12 · the Ferryman · ${yen(PAY)} <span class="tag">Prototype</span></span>
+      <h1>Container 409</h1>
+      <p class="brief">"An off-manifest crate on the gantry. Keep your eyes open, keep your mouths shut, and don't whistle."</p>
+      <details class="how"><summary>How this prototype works</summary><p>Plan the job, then watch it play out. The crew make their own calls and only call you in when your orders say so. Same roll rule and crises as the game; the map, slots and prep are new. Every risk shown here is the one the run uses.</p></details>
+    </header>
+    <div class="map">${mapSvg(plan, { interactive: true })}<span class="map__hint">Tap a route</span></div>
+    <section><h2>Way in <small>Point's risk</small></h2><div class="cards">${Object.entries(ROUTES).map(([k, r]) => routeCard(k, r)).join('')}</div></section>
+    <section><h2>Way out</h2><div class="cards">${Object.entries(EXITS).map(([k, e]) => exitCard(k, e)).join('')}</div></section>
+    <section><h2>Crew <small>tap a card to assign</small></h2><div class="board">
+      <div class="board__head"><p>${slotsNeeded().every((s) => plan[s]) ? 'Tap a card to change who does it.' : 'Pin someone to each job.'}</p><button type="button" class="jossbtn" id="joss">Joss's picks</button></div>
+      <div class="dossiers" style="--n:${slotsNeeded().length}">${slotsNeeded().map(dossier).join('')}</div></div></section>
+    <section><h2>Prep <small>paid up front</small></h2><div class="prep">${PREP.map(prepBtn).join('')}</div></section>
+    <section><h2>Orders</h2>
+      <div class="order"><p>Call me in…</p>${seg('callIn', [['every', 'Every time'], ['risky', 'If risky'], ['never', 'Never']])}
+        <p class="muted">${plan.callIn === 'every' ? 'You make every call.' : plan.callIn === 'risky' ? 'They call you when their best option is high risk or worse.' : 'They decide everything, and pull out if every option is extreme.'}</p></div>
+      <div class="order"><p>If someone gets hurt…</p>${seg('ifHurt', [['out', 'Get them out'], ['finish', 'Finish the job']])}</div>
+    </section>`;
+
+  const missing = slotsNeeded().filter((s) => !plan[s]);
+  const toughest = worst(slotsNeeded().filter((s) => plan[s]).map((s) => slotRisk(s)));
+  const bar = document.getElementById('bar');
+  bar.hidden = false;
+  bar.innerHTML = `<div class="bar__in"><div class="bar__sum"><b>${yen(PAY - fare - prepCost())}</b><span>${missing.length ? `Still to assign: ${missing.map((s) => SLOTS[s].name).join(', ')}` : `if it runs clean · toughest moment ${pill(toughest)}`}</span></div><button class="btn" id="go" ${missing.length ? 'disabled' : ''}>Send them</button></div>`;
+
+  app.querySelectorAll('[data-route]').forEach((el) => el.addEventListener('click', () => { plan.route = el.dataset.route; rerender(el); }));
+  app.querySelectorAll('[data-exit]').forEach((el) => el.addEventListener('click', () => { plan.exit = el.dataset.exit; fixSlots(); rerender(el); }));
+  app.querySelectorAll('[data-prep]').forEach((el) => el.addEventListener('click', () => { const id = el.dataset.prep; plan.prep.has(id) ? plan.prep.delete(id) : plan.prep.add(id); rerender(el); }));
+  app.querySelectorAll('[data-dossier]').forEach((el) => el.addEventListener('click', () => openPicker(el.dataset.dossier)));
+  document.getElementById('joss').addEventListener('click', () => { Object.assign(plan, jossPicks()); rerender(document.getElementById('joss')); });
+  app.querySelectorAll('[data-order]').forEach((el) => el.addEventListener('click', () => { plan[el.dataset.order] = el.dataset.v; rerender(el); }));
+  document.getElementById('go').addEventListener('click', run);
+}
+// Re-render and keep focus on the same control (keyboard users keep their place).
+function rerender(el) {
+  const sel = el.id === 'joss' ? '#joss' : el.dataset.dossier ? `[data-dossier="${el.dataset.dossier}"]` : el.dataset.route ? `.card[data-route="${el.dataset.route}"]` : el.dataset.exit ? `.card[data-exit="${el.dataset.exit}"]` : el.dataset.prep ? `[data-prep="${el.dataset.prep}"]` : el.dataset.op ? `.chip[data-slot="${el.dataset.slot}"][data-op="${el.dataset.op}"]` : `[data-order="${el.dataset.order}"][data-v="${el.dataset.v}"]`;
+  const hadFocus = document.activeElement === el;
+  const y = window.scrollY;
+  renderPlan();
+  window.scrollTo(0, y);
+  if (hadFocus) document.querySelector(sel)?.focus({ preventScroll: true });
+}
+// Put someone in a slot; if they're already in another slot, the two swap.
+function swapIn(slotId, opId) {
+  const from = slotsNeeded().find((s) => s !== slotId && plan[s] === opId);
+  return from ? { [slotId]: opId, [from]: plan[slotId] } : { [slotId]: opId };
+}
+function fixSlots() {
+  // Leaving the van frees Wheels; coming back, Wheels starts empty unless they're still free.
+  if (plan.exit !== 'van') return;
+  if (plan.wheels && (plan.wheels === plan.point || plan.wheels === plan.watch)) plan.wheels = null;
+}
+
+// The picker: a sheet listing the crew, best fit first, each with their risk in this slot.
+function openPicker(slotId) {
+  const sl = SLOTS[slotId];
+  const rows = CREW.map((o) => ({ o, risk: slotRisk(slotId, withPlan(swapIn(slotId, o.id))), where: slotsNeeded().find((s) => s !== slotId && plan[s] === o.id) }))
+    .sort((a, b) => RISK_ORDER.indexOf(a.risk) - RISK_ORDER.indexOf(b.risk) || slotStats(slotId).reduce((n, st) => n + b.o.stats[st] - a.o.stats[st], 0));
+  const scrim = document.createElement('div'); scrim.className = 'scrim';
+  const sheet = document.createElement('div'); sheet.className = 'sheet'; sheet.setAttribute('role', 'dialog'); sheet.setAttribute('aria-modal', 'true'); sheet.setAttribute('aria-label', `Who's on ${sl.name}?`);
+  sheet.innerHTML = `<div class="sheet__in">
+    <div class="sheet__head"><div><h3>Who's on ${sl.name}?</h3><p>${sl.does} Leans on ${slotStats(slotId).join(', ')}.</p></div><button type="button" class="x" aria-label="Close">✕</button></div>
+    ${rows.map(({ o, risk, where }) => `<button type="button" class="cand" data-op="${o.id}" aria-pressed="${plan[slotId] === o.id}">
+      <span class="cand__ph">${face(o)}</span>
+      <span class="cand__txt"><b>${esc(o.handle)}</b><span>${o.role} · ${slotStats(slotId).map((st) => `${st} ${o.stats[st]}`).join(' · ')}</span></span>
+      <span class="cand__side">${pill(risk)}${where ? `<small>on ${SLOTS[where].name} · swaps</small>` : plan[slotId] === o.id ? '<small>assigned</small>' : ''}</span></button>`).join('')}
+  </div>`;
+  document.body.append(scrim, sheet);
+  const close = (focusBack = true) => { scrim.remove(); sheet.remove(); document.removeEventListener('keydown', onKey); if (focusBack) document.querySelector(`[data-dossier="${slotId}"]`)?.focus({ preventScroll: true }); };
+  const onKey = (e) => { if (e.key === 'Escape') close(); };
+  document.addEventListener('keydown', onKey);
+  scrim.addEventListener('click', () => close());
+  sheet.querySelector('.x').addEventListener('click', () => close());
+  sheet.querySelectorAll('.cand').forEach((b) => b.addEventListener('click', () => {
+    Object.assign(plan, swapIn(slotId, b.dataset.op));
+    close(false);
+    rerender(document.querySelector(`[data-dossier="${slotId}"]`));
+    document.querySelector(`[data-dossier="${slotId}"]`)?.focus({ preventScroll: true });
+  }));
+  (sheet.querySelector('.cand[aria-pressed="true"]') ?? sheet.querySelector('.cand')).focus({ preventScroll: true });
+}
+
+// ---------- The run: a phased feed, tokens on the map, call-ins ----------
+let fast = false;
+const wait = (ms) => new Promise((r) => setTimeout(r, fast ? 50 : ms));
+
+async function run() {
+  const rng = mulberry32(seed);
+  const d20 = () => 1 + Math.floor(rng() * 20);
+  const walkers = ['point', 'watch'].map((s) => byId(plan[s]));
+  const wheels = plan.exit === 'van' ? byId(plan.wheels) : null;
+  const log = { heat: 0, payCut: 0, payBonus: 0, hurt: [], aborted: false, pulledOut: false, callIns: 0, met: [], used: new Set(), postDone: false, events: [] };
+  fast = false;
+  window.scrollTo(0, 0);
+
+  const app = document.getElementById('app');
+  app.className = 'wrap';
+  app.innerHTML = `
+    <div class="live"><div class="map">${mapSvg(plan)}</div><div class="tally" id="tally"></div></div>
+    <div class="feed" id="feed" aria-live="polite"></div>`;
+  drawTokens(walkers.map((op) => ({ op, at: P.drop })).concat(wheels ? [{ op: wheels, at: P.drop }] : []));
+  const bar = document.getElementById('bar');
+  bar.hidden = false;
+  bar.innerHTML = `<div class="bar__in"><div class="bar__sum"><b>Live</b><span>${esc(walkers.map((o) => o.handle).join(' & '))}${wheels ? ` · ${esc(wheels.handle)} driving` : ''}</span></div><button class="btn btn--ghost" id="skip">Speed up</button></div>`;
+  document.getElementById('skip').addEventListener('click', (e) => { fast = !fast; e.target.textContent = fast ? 'Normal speed' : 'Speed up'; });
+
+  let phase = 'Way in';
+  const tally = () => {
+    document.getElementById('tally').innerHTML = `<span class="phase">${phase}</span><span class="${log.heat ? 'bad' : ''}">Heat +${log.heat}</span><span class="${log.hurt.length ? 'bad' : ''}">Hurt ${log.hurt.length}</span>${log.callIns ? `<span>Calls ${log.callIns}</span>` : ''}`;
+  };
+  tally();
+  const feed = document.getElementById('feed');
+  const add = (node) => { feed.appendChild(node); node.scrollIntoView({ block: 'end', behavior: fast ? 'auto' : 'smooth' }); };
+  const say = async (html, cls = '', ms = 1100) => {
+    const div = document.createElement('div');
+    div.className = `line ${cls}`;
+    div.innerHTML = html;
+    div.querySelectorAll('.dice').forEach((b) => b.addEventListener('click', () => { const d = b.nextElementSibling; d.hidden = !d.hidden; b.setAttribute('aria-expanded', String(!d.hidden)); }));
+    add(div);
+    await wait(ms);
+  };
+  const newPhase = async (name) => {
+    phase = name; tally();
+    const h = document.createElement('div'); h.className = 'phasehead'; h.textContent = name; add(h);
+    await wait(400);
+  };
+  const who = (op) => `<span class="who" style="color:${op.color}">${esc(op.handle)}</span>`;
+  const fillWho = (t, op) => esc(t).replaceAll('{op}', who(op));
+  const diceHtml = (r, die) => `<button class="dice" type="button" aria-expanded="false">${die + r.value >= r.need ? '✓' : '✗'} dice</button><span class="dice-detail" hidden>die ${die} + ${r.value} (${esc(r.notes.join(', '))}) = ${die + r.value} · needs ${r.need}</span>`;
+  const walk = async (path, ops) => { for (const pt of path.slice(1)) { ops.forEach((op, i) => moveToken(op, i, pt)); await wait(450); } };
+  const smallCheck = async (chk, op, stat) => {
+    const die = d20();
+    const ok = die + op.stats[stat] >= 10 + chk.diff;
+    await say(`${fillWho(ok ? chk.ok : chk.bad, op)} <span class="res muted">${stat} ${ok ? '✓' : '✗'}</span>`, 'check', 1000);
+  };
+
+  // One crisis: the crew decides under the orders, or calls you in. Returns false if the job stops here.
+  const crisis = async (cid, slotId, at) => {
+    const cr = C[cid];
+    const op = byId(plan[slotId]);
+    log.met.push(cid);
+    for (const p of PREP) if (p.helps === cid && plan.prep.has(p.id)) log.used.add(p.id);
+    alarm(at);
+    await say(esc(cr.text), 'crisis', 1400);
+    const opts = crewPick(cid, slotId);
+    const best = opts[0];
+    let picked;
+    if (plan.callIn === 'every' || (plan.callIn === 'risky' && best.r.chance < 0.5)) {
+      log.callIns++; tally();
+      picked = await callIn(cr, opts, op);
+    } else if (plan.callIn === 'never' && best.r.chance < 0.3) {
+      picked = { abort: true };
+      await say(`${who(op)} doesn't like any of it. Under your orders, they pull out.`, 'why', 900);
+    } else {
+      picked = best;
+      await say(`${who(op)}'s call: ${fillWho(lowerFirst(best.c.label), op)}. The best odds they had (${best.r.risk}).`, 'why', 900);
+    }
+    alarm(null);
+    if (picked.abort) {
+      log.aborted = true;
+      log.payCut = cr.abort.payCut != null && log.postDone ? cr.abort.payCut : 1;
+      log.events.push({ cid, abort: true });
+      await say(esc(cr.abort.ok), 'bad', 1100);
+      return false;
+    }
+    const { c, r } = picked;
+    const die = d20();
+    const ok = die + r.value >= r.need;
+    if (c.payCut) log.payCut += c.payCut;
+    if (ok && c.payBonus) log.payBonus += c.payBonus;
+    if (!ok) { log.heat += c.failHeat ?? 0; log.payCut += c.failPay ?? 0; if (c.failHurt) log.hurt.push(op.handle); }
+    if (c.id === 'tidewatch' && plan.prep.has('tide') && op.stats.cool < 10) log.used.add('tide');
+    log.events.push({ cid, c, op, ok, die, r });
+    tally();
+    await say(`${fillWho(ok ? c.ok : c.bad, op)} ${diceHtml(r, die)}`, ok ? 'good' : 'bad', 1300);
+    if (!ok && c.failHeat) await say(`Heat +${c.failHeat}.`, 'check', 700);
+    if (!ok && c.failHurt) {
+      await say(`${who(op)} is hurt. Light: they can walk.`, 'bad', 900);
+      if (plan.ifHurt === 'out') {
+        log.pulledOut = true;
+        await say(`Your orders: get them out. The crew pulls back${log.postDone ? '. The crate is already off the gantry' : ' before the drop'}.`, 'why', 1100);
+        return false;
+      }
+      await say('Your orders: finish the job. They keep going.', 'why', 900);
+    }
+    return true;
+  };
+
+  // A call-in: the feed waits for you. Every call-in has an exit.
+  const callIn = (cr, opts, op) => new Promise((resolve) => {
+    const box = document.createElement('div');
+    box.className = 'callin';
+    box.innerHTML = `<span class="eyebrow">${esc(op.handle)} is calling in</span>
+      <p class="callin__q">"${esc(cr.name)}. What do we do?"</p>
+      ${opts.map((o, i) => `<button class="choice" data-i="${i}"><span class="choice__top"><span>${fillWho(o.c.label, op)}</span>${pill(o.r.risk)}</span><span class="choice__sub">${i === 0 ? '<span class="crewpick">Crew\'s pick · </span>' : ''}${esc(o.r.notes.join(', '))}${o.c.payCut ? ` · pay −${o.c.payCut * 100}%` : ''}${o.c.failHurt ? ' · can hurt' : ''}${o.c.failHeat ? ' · heat if it fails' : ''}</span></button>`).join('')}
+      <button class="choice" data-i="abort"><span class="choice__top"><span>${esc(cr.abort.label)}</span>${pill('certain')}</span><span class="choice__sub">Nobody's hurt. You lose the pay.</span></button>`;
+    add(box);
+    box.querySelector('button').focus({ preventScroll: true });
+    box.querySelectorAll('button.choice').forEach((b) => b.addEventListener('click', () => {
+      box.querySelectorAll('button').forEach((x) => { x.disabled = true; });
+      b.classList.add('picked');
+      resolve(b.dataset.i === 'abort' ? { abort: true } : opts[Number(b.dataset.i)]);
+    }));
+  });
+
+  // Way in
+  await newPhase('Way in');
+  await say('Pier 12 at midnight. Amber floodlights burn through the salt fog, turning the container stacks into canyons.', 'beat', 1500);
+  if (wheels) await say(`${who(wheels)} parks the van on the service road with the lights off.`, 'check', 900);
+  const route = ROUTES[plan.route];
+  const path = PATHS[plan.route];
+  await walk(path.slice(0, 3), walkers);
+  await smallCheck(route.check, byId(plan.point), route.check.stat);
+  let going = await crisis(route.crisis, 'point', path[2]);
+
+  // The post
+  if (going) {
+    await walk(path.slice(2), walkers);
+    await newPhase('At the post');
+    await say('Cranes screech overhead and diesel fumes roll across the wet tarmac. Nobody whistles.', 'beat', 1300);
+    await smallCheck({ diff: 2, ok: '{op} settles in at the corner of Stack 409 with a clear view of the gantry.', bad: '{op} can\'t settle; keeps checking over a shoulder.' }, byId(plan.watch), 'cool');
+    const postCrisis = POST_CRISES[Math.floor(rng() * POST_CRISES.length)];
+    going = await crisis(postCrisis, 'watch', P.post);
+    if (going) { log.postDone = true; await say('The crate comes down off the gantry and into the Ferryman\'s boat.', 'beat', 1300); }
+  }
+
+  // Way out (always walked, even after a pull-out)
+  await newPhase('Way out');
+  if (plan.exit === 'van') {
+    await walk(EXIT_PATHS.van, walkers);
+    if (going) going = await crisis('boxed', 'wheels', P.drop);
+  } else {
+    await walk(EXIT_PATHS.boat, walkers);
+    if (going) await say('The Ferryman rows you out with the crate under a tarp. He doesn\'t say a word the whole way.', 'beat', 1200);
+  }
+  if (log.pulledOut) log.payCut = log.postDone ? Math.max(log.payCut, 0.5) : 1;
+  await wait(700);
+  renderReport(log);
+}
+
+// ---------- Report: verdict first, then whether the plan was right ----------
+function renderReport(log) {
+  const cut = Math.min(1, log.payCut - log.payBonus);
+  const gross = Math.round((PAY * (1 - cut)) / 50) * 50;
+  const fare = plan.exit === 'boat' && !log.aborted ? Math.round((gross * 0.15) / 50) * 50 : 0;
+  const net = gross - fare - prepCost();
+  const clean = !log.aborted && !log.pulledOut && !log.heat && !log.hurt.length;
+  const title = clean ? 'Clean job' : log.aborted ? 'Aborted' : log.pulledOut ? 'Pulled out' : 'Done, with costs';
+  const joss = log.aborted ? 'Nobody hurt, nobody paid. Some nights are like that.'
+    : log.pulledOut ? `${log.hurt[0]} is hurt, and you pulled them out like you said you would. ${log.postDone ? 'The Ferryman paid half.' : 'No pay tonight.'}`
+    : log.hurt.length ? `We got paid. ${log.hurt.join(' and ')} got hurt doing it. Light, they'll live.`
+    : log.heat ? 'We got paid. We also got noticed.'
+    : 'Clean. The Ferryman paid and didn\'t even count it.';
+
+  const checks = [];
+  for (const e of log.events) {
+    if (e.abort) checks.push(['no', `${C[e.cid].name}: you pulled out.`]);
+    else checks.push([e.ok ? 'ok' : 'no', `${e.op.handle} on ${lowerFirst(C[e.cid].name)}: ${e.ok ? 'passed' : 'failed'} at ${e.r.risk} risk.`]);
+  }
+  for (const p of PREP.filter((x) => plan.prep.has(x.id))) {
+    checks.push(log.used.has(p.id) ? ['ok', `${p.name} came into play.`] : ['meh', `${p.name} never came up (${yen(-p.cost)}).`]);
+  }
+  checks.push(['meh', log.callIns ? `You were called in ${log.callIns} time${log.callIns > 1 ? 's' : ''}.` : 'The crew never called you in.']);
+  if (log.pulledOut) checks.push(['meh', 'Your "get them out" order was used.']);
+
+  const app = document.getElementById('app');
+  app.className = 'wrap no-bar';
+  document.getElementById('bar').hidden = true;
+  app.innerHTML = `
+    <header style="display:grid;gap:6px"><span class="eyebrow">Report · Container 409</span><h1>${title}</h1></header>
+    <div class="verdict">
+      <p class="joss">${esc(joss)} <span class="muted">— Joss</span></p>
+      <div class="facts">
+        <div class="fact"><b>${yen(net)}</b><span>Net</span></div>
+        <div class="fact"><b>+${log.heat}</b><span>Heat</span></div>
+        <div class="fact"><b>${log.hurt.length}</b><span>Hurt</span></div>
+      </div>
+    </div>
+    <section><h2>The plan</h2><div class="planline">
+      <span>${esc(ROUTES[plan.route].name)}</span><span>${esc(EXITS[plan.exit].name)}</span>
+      ${slotsNeeded().map((s) => `<span>${SLOTS[s].name}: ${esc(byId(plan[s]).handle)}</span>`).join('')}
+      <span>Calls: ${{ every: 'every time', risky: 'if risky', never: 'never' }[plan.callIn]}</span>
+    </div></section>
+    <section><h2>Did it work?</h2><ul class="check">${checks.map(([k, t]) => `<li class="${k}"><i>${k === 'ok' ? '✓' : k === 'no' ? '✗' : '·'}</i><span>${esc(t)}</span></li>`).join('')}</ul></section>
+    <section><h2>Money</h2><div class="money">
+      <div><span>Job pays</span><span>${yen(PAY)}</span></div>
+      ${gross !== PAY ? `<div><span>Cuts and bonuses</span><span>${yen(gross - PAY)}</span></div>` : ''}
+      ${fare ? `<div><span>Ferryman's fare</span><span>${yen(-fare)}</span></div>` : ''}
+      ${prepCost() ? `<div><span>Prep</span><span>${yen(-prepCost())}</span></div>` : ''}
+      <div><span>Net</span><span>${yen(net)}</span></div>
+    </div></section>
+    <div class="btns">
+      <button class="btn" id="again">Same plan again</button>
+      <button class="btn btn--ghost" id="change">Change plan</button>
+    </div>
+    <p class="seed">Seed ${seed}. "Same plan again" rolls new dice.</p>`;
+  document.getElementById('again').addEventListener('click', () => { seed = (seed * 48271) % 2147483647; run(); });
+  document.getElementById('change').addEventListener('click', () => { seed = (seed * 48271) % 2147483647; window.scrollTo(0, 0); renderPlan(); });
+  window.scrollTo(0, 0);
+}
+
+renderPlan();
+</script>

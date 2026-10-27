@@ -8,11 +8,11 @@ import { availability } from '../src/core/crew.js';
 import { resolveDecision } from '../src/core/decisions.js';
 import { playMission, carefulPolicy, randomPolicy } from './play.js';
 
-const MIX = ['stealth', 'loud', 'social'];
+const MIX = ['stealth', 'loud', 'con'];
 
 /**
  * Play `weeks` weeks taking up to `perWeek` jobs a week (Mon-Sat, best-paying job the free crew can staff).
- * approach: 'mix' rotates stealth/loud/social, or a fixed approach id.
+ * approach: 'mix' rotates stealth/loud/con, or a fixed approach id.
  * onNotice: option id picked on a heat notice ('ride' by default, so the sim never spends cash on heat).
  * Returns { state, heatByWeek (after each Sunday), daily (heat each morning), peak (highest heat seen), notices, jobs }.
  */

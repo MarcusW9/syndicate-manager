@@ -1,8 +1,13 @@
-// Mission engine: plan -> tap-through beats -> crisis decisions -> outcome.
+// Mission engine: plan -> beats, incidents and crisis decisions -> outcome.
 // Pure logic. Every function takes state and returns a new state.
 //
+// A run (PLAN-CORE-LOOP.md): the queue holds beats, zone markers, incidents (automatic rolls,
+// core/incidents.js) and crises (the player's or the orders' call). Unsaved incident failures
+// raise the alert; max alert and a serious injury stop the run for a decision (am.pending).
+//
 // Death rule: an operative can only die after the player chooses "Push on"
-// while they are critical. Abort/extract always saves everyone.
+// while they are critical. Abort/extract always saves everyone. Incidents never go past a
+// serious injury, and every decision they raise has an exit.
 
 import { templateById, twistById, jobView } from './jobs.js';
 import { adjustTrust, clientById, completionTrust, ABORT_TRUST } from './clients.js';
@@ -22,11 +27,17 @@ import { money } from './money.js';
 import { summariseRun, REPORT_LOGS_KEPT } from './report.js';
 import { intelFor } from './sidetasks.js';
 import { afterJob, noteInjury, spendSecondWind, earnedOf } from './earned.js';
+import { planIncidents, weaveIncidents, incidentById, incidentDifficulty, handlerFor, bestSave, decisionChoices, OVERWATCH_KIT, ALERT_MAX, SERIOUS_CHANCE, SERIOUS_PER_ALERT, PATCH_MIN_MEDICAL, ZONES } from './incidents.js';
 
 const EXIT_KINDS = new Set(['abort', 'extract']);
 const STABILISE_DIFFICULTY = 9;
 
 const crewOf = (state, am) => am.crewIds.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean);
+// Who can still act: the inside crew minus anyone an incident has put out of the job.
+const actors = (state, am) => crewOf(state, am).filter((o) => !(am.out ?? []).includes(o.id) && o.condition.injury !== 'critical');
+const overwatchOp = (state, am) => (am.overwatch ? state.crew.find((o) => o.id === am.overwatch.id) ?? null : null);
+// Everyone on the job: the inside crew and overwatch (away, tired and learning together).
+const onJob = (state, am) => [...crewOf(state, am), ...[overwatchOp(state, am)].filter(Boolean)];
 const opById = (state, id) => state.crew.find((o) => o.id === id);
 const crisisById = (tpl, id) => tpl.crises.find((c) => c.id === id) ?? twistById(id);
 
@@ -34,7 +45,15 @@ const crisisById = (tpl, id) => tpl.crises.find((c) => c.id === id) ?? twistById
 export const REP_PER_THREAT = 0.75;
 export const ABORT_REP = 3;
 
-const rollDifficulty = (am, choice) => choice.difficulty + (am.threatDelta ?? 0);
+const rollDifficulty = (am, choice) => choice.difficulty + (am.threatDelta ?? 0) + (am.alert ?? 0);
+
+/** Call-in rules (who decides at a crisis): the player every time, only when it's risky, or never (hands-off). */
+export const CALL_IN = {
+  every: { name: 'Every crisis', desc: 'You make every call.' },
+  risky: { name: 'When it\'s risky', desc: 'They call you when their best option is less than even odds. Otherwise their orders decide.' },
+  never: { name: 'Never', desc: 'They go and do it. The report comes back when they do.' },
+};
+export const RISKY_BELOW = 0.5;
 
 const STAT_NAME = (s) => s[0].toUpperCase() + s.slice(1);
 
@@ -131,12 +150,20 @@ export function currentStep(am) {
 
 // --- starting ------------------------------------------------------------
 
-export function startMission(prev, jobId, crewIds, approach) {
+/**
+ * Start a job. opts: { overwatch: { id, kit } (one crew member outside the inside crew, with the
+ * shared rifle or drone), callIn ('every' | 'risky' | 'never'), orders (how the crew decides when
+ * it doesn't call you: core/autorun.js ORDERS) }.
+ */
+export function startMission(prev, jobId, crewIds, approach, opts = {}) {
   const state = structuredClone(prev);
   const job = state.jobs.find((j) => j.id === jobId);
   if (!job) return prev;
   const tpl = templateById(job.templateId);
+  if (!APPROACHES[approach]) return prev;
   if (!crewIds.length || crewIds.length > maxCrew(tpl.crewSize)) return prev;
+  const ow = opts.overwatch?.id ? opts.overwatch : null;
+  if (ow && (!OVERWATCH_KIT[ow.kit] || crewIds.includes(ow.id) || !state.crew.some((o) => o.id === ow.id))) return prev;
   // Freelancers from the board join the crew for this job only.
   const hired = (state.freelancers ?? []).filter((f) => crewIds.includes(f.id));
   if (hired.length > MAX_FREELANCERS_PER_JOB) return prev;
@@ -146,12 +173,11 @@ export function startMission(prev, jobId, crewIds, approach) {
   const view = jobView(state, job);
   const rng = nextRng(state);
 
-  // Draw 2 crises (3 on threat 4+ if the pool allows), in random order.
-  const pool = [...tpl.crises];
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
+  // Draw 2 crises (3 on threat 4+ if the pool allows) in a random order weighted by the approach:
+  // crises in situations it favours come up more, ones it avoids less (data/approaches.js).
+  const ap = APPROACHES[approach];
+  const weight = (c) => { const sit = c.situations ?? []; return sit.some((x) => ap.favours?.includes(x)) ? 2 : sit.some((x) => ap.avoids?.includes(x)) ? 0.5 : 1; };
+  const pool = tpl.crises.map((c) => ({ c, key: rng() ** (1 / weight(c)) })).sort((a, b) => b.key - a.key).map((x) => x.c);
   // Street talk about a district crisis makes it likely to come up (drawn first most of the time).
   const talk = view.rumour?.crisis ? pool.findIndex((c) => c.id === view.rumour.crisis) : -1;
   if (talk > 0 && rng() < RUMOUR_CRISIS_CHANCE) [pool[0], pool[talk]] = [pool[talk], pool[0]];
@@ -171,6 +197,8 @@ export function startMission(prev, jobId, crewIds, approach) {
     queue.push({ type: 'beat', index: b });
     positions.forEach((p, i) => { if (p === b + 1) queue.push({ type: 'crisis', id: crises[i].id }); });
   }
+  // Incidents: the way in, inside, the target (core/incidents.js).
+  queue.splice(0, queue.length, ...weaveIncidents(queue, planIncidents(rng, approach, view.threat)));
   // A twist lands somewhere in the middle of the job, never before the first beat.
   if (job.twist) {
     const at = 1 + Math.floor(rng() * (queue.length - 1));
@@ -182,8 +210,15 @@ export function startMission(prev, jobId, crewIds, approach) {
   // Heat the player let ride lands on this job's first crisis roll, then it's spent.
   const watched = state.heatWatched ? WATCHED_PENALTY : 0;
   state.heatWatched = false;
+  // The approach's costs: time away, and props and bribes paid up front (data/approaches.js).
+  const days = Math.max(1, tpl.days + (ap.days ?? 0));
+  const bribe = (ap.bribePerThreat ?? 0) * view.threat;
+  state.cash -= bribe;
   state.activeMission = {
-    jobId, templateId: tpl.id, crewIds, approach,
+    jobId, templateId: tpl.id, crewIds, approach, days, bribe,
+    overwatch: ow ? { id: ow.id, kit: ow.kit, left: OVERWATCH_KIT[ow.kit].uses } : null,
+    callIn: CALL_IN[opts.callIn] ? opts.callIn : 'every', orders: opts.orders ?? null,
+    alert: 0, out: [], pending: null, wentLoud: false,
     pay: view.pay, threat: view.threat, threatDelta: view.threatDelta, clientId: job.clientId ?? null, twist: job.twist ?? null,
     queue, step: 0, log: [],
     payCut: 0, extraHeat: 0, clientTrust: 0, watched,
@@ -200,7 +235,7 @@ export function revealBeat(prev) {
   const state = structuredClone(prev);
   const am = state.activeMission;
   const step = currentStep(am);
-  if (!am || am.critical || step?.type !== 'beat') return prev;
+  if (!am || am.critical || am.pending || step?.type !== 'beat') return prev;
   const tpl = templateById(am.templateId);
   const text = fill(tpl.beats[step.index], state, am);
   am.log.push({ kind: 'beat', text });
@@ -219,12 +254,235 @@ function advance(state) {
       am.log.push({ kind: 'twist', text: `Twist: ${crisis.name}` });
       record(am, { kind: 'twist', text: crisis.name });
     }
-    const crew = crewOf(state, am).filter((o) => o.condition.injury !== 'critical');
+    const crew = actors(state, am).filter((o) => o.condition.injury !== 'critical');
     const focus = crisis.focusRole ? crew.find((o) => o.role === crisis.focusRole) : null;
     const rng = nextRng(state);
     am.focusOp = (focus ?? crew[Math.floor(rng() * crew.length)])?.id ?? null;
   }
+  if (am.step >= am.queue.length && !am.critical && !am.pending) finish(state);
+}
+
+// --- zones and incidents -------------------------------------------------------
+
+/** Step past a zone marker (the run moves on: the way in, inside, the target, the way out). */
+export function enterZone(prev) {
+  if (currentStep(prev.activeMission)?.type !== 'zone' || prev.activeMission.pending || prev.activeMission.critical) return prev;
+  const state = structuredClone(prev);
+  const am = state.activeMission;
+  const zone = currentStep(am).zone;
+  am.zone = zone;
+  if (ZONES[zone]) am.log.push({ kind: 'zone', text: ZONES[zone].name });
+  advance(state);
+  return state;
+}
+
+/** What earned traits need to know about an incident roll (the same shape as a crisis's, core/earned.js). */
+function incidentContext(state, am, inc, diff) {
+  const events = am.events ?? [];
+  return {
+    situations: inc.situations ?? [], difficulty: diff, safest: false, district: templateById(am.templateId).district,
+    injured: events.filter((e) => e.injury).map((e) => e.injury.id),
+    rolled: events.filter((e) => e.kind === 'roll' && e.actor).map((e) => e.actor.id),
+    secondWindUsed: am.secondWind ?? [],
+  };
+}
+
+/** Exit the job from a decision: everyone comes home (the death rule), the job ends. */
+function exitRun(state, am, { text, choice, report, why }) {
+  am.aborted = true;
+  am.pending = null;
+  am.log.push({ kind: 'choice', text: choice });
+  record(am, { kind: 'exit', text, choice, why: why ?? null, report, choiceCost: {} });
+  am.report = [...(am.report ?? []), report];
+  am.step = am.queue.length;
+  finish(state);
+}
+
+/**
+ * Resolve the incident at the current step: whoever inside has the best odds rolls; a person in
+ * danger who fails gets one save from a teammate or overwatch; an unsaved failure lands its cost and
+ * raises the alert. A serious injury or max alert stops the run for a decision (am.pending).
+ */
+export function runIncident(prev) {
+  const step = currentStep(prev.activeMission);
+  if (step?.type !== 'incident' || prev.activeMission.pending || prev.activeMission.critical) return prev;
+  const state = structuredClone(prev);
+  const am = state.activeMission;
+  const tpl = templateById(am.templateId);
+  // Once the crew has gone loud, what's left (short of the target) is a fight.
+  const id = am.wentLoud && step.zone !== 'target' && !incidentById(step.id).danger ? 'guard' : step.id;
+  const inc = incidentById(id);
+  const able = actors(state, am);
+  if (!able.length) {
+    exitRun(state, am, { text: 'Nobody left who can carry on.', choice: 'The crew pull out', report: 'With nobody left standing to finish it, the crew pulled out.' });
+    return state;
+  }
+  const diff = incidentDifficulty(tpl, am, inc);
+  // The heat penalty for letting it ride is on the first crisis roll (core/heat.js), so incidents leave it alone.
+  const rollCtx = { approach: am.approach, recommended: tpl.crewSize, intel: intelFor(state, tpl.district), job: incidentContext(state, am, inc, diff) };
+  const h = handlerFor(able, inc, diff, rollCtx);
+  if (!h) {
+    exitRun(state, am, { text: 'Nobody left who can carry on.', choice: 'The crew pull out', report: 'With nobody left standing to finish it, the crew pulled out.' });
+    return state;
+  }
+  const op = h.roll.op;
+  const voice = { ...am, focusOp: op.id };
+  const rng = nextRng(state);
+  const die = d20(rng);
+  const need = 10 + diff;
+  const success = die + h.roll.value >= need;
+  if (h.roll.notes.some((n) => n.startsWith('Second Wind'))) {
+    am.secondWind = [...(am.secondWind ?? []), op.id];
+    spendSecondWind(state, op);
+  }
+  const notes = am.alert ? [...h.roll.notes, `alert +${am.alert} difficulty`] : h.roll.notes;
+  const event = {
+    kind: 'roll', incident: id, zone: step.zone, crisis: `incident:${id}`, choiceId: null, situations: [...(inc.situations ?? [])],
+    text: fill(inc.text, state, voice), choice: fill(success ? inc.hOk : inc.hBad, state, voice),
+    stat: h.stat, actor: { id: op.id, handle: op.handle }, value: h.roll.value, notes, die, need, success,
+    choiceCost: {}, outcomeCost: success ? {} : { heat: inc.fail.heat ?? 0, payCut: inc.fail.payCut ?? 0 }, injury: null,
+    report: fill(success ? inc.ok : inc.bad, state, voice),
+    why: `Best placed: ${op.handle} (${h.stat} ${h.roll.value}).`,
+  };
+  am.log.push({ kind: 'incident', text: event.text });
+  am.log.push({ kind: success ? 'good' : 'bad', text: event.report });
+  grow(state, am, op, h.stat, XP.incident);
+  am.report = [...(am.report ?? []), event.report];
+  // The tech approach's cost: every tech roll loads the hacker's implants.
+  const load = APPROACHES[am.approach]?.neural ?? 0;
+  if (load && h.stat === 'tech') addNeural(op, load);
+  record(am, event);
+  if (success) { advance(state); return state; }
+
+  // In danger: one save, from overwatch (if it can see) or the best fighter inside.
+  if (inc.danger) {
+    const ow = overwatchOp(state, am);
+    const save = bestSave({ victim: op, able, overwatch: am.overwatch, overwatchOp: ow, zone: step.zone, diff });
+    if (save) {
+      const sdie = d20(nextRng(state));
+      const saved = sdie + save.value >= save.need;
+      const kit = save.via === 'overwatch' ? OVERWATCH_KIT[save.kit] : null;
+      if (kit) {
+        am.overwatch.left -= 1;
+        am.extraHeat += kit.heat;
+        if (kit.neural) addNeural(save.op, kit.neural);
+      }
+      grow(state, am, save.op, save.stat, XP.incident);
+      const how = kit ? (save.kit === 'rifle' ? (saved ? `${save.op.handle} takes the shot from overwatch.` : `${save.op.handle}'s shot goes wide.`) : (saved ? `${save.op.handle}'s drone drops in and puts them down.` : `${save.op.handle}'s drone can't get there in time.`))
+        : (saved ? `${save.op.handle} gets there and pulls ${op.handle} clear.` : `${save.op.handle} can't reach ${op.handle} in time.`);
+      record(am, {
+        kind: 'save', via: save.via, kit: save.kit ?? null, patient: op.handle, text: fill(inc.comp ?? '{op} is in trouble.', state, voice),
+        choice: saved ? `${save.op.handle} saves ${op.handle}` : `${save.op.handle} can't save ${op.handle}`,
+        stat: save.stat, actor: { id: save.op.id, handle: save.op.handle }, value: save.value, notes: save.notes, die: sdie, need: save.need, success: saved,
+        choiceCost: {}, outcomeCost: kit?.heat ? { heat: kit.heat } : {}, report: how,
+        why: kit ? `${save.op.handle} had the ${save.kit} on overwatch, and the best shot at helping.` : `${save.op.handle} was the best fighter close enough to help.`,
+      });
+      am.log.push({ kind: saved ? 'good' : 'bad', text: how });
+      am.report = [...(am.report ?? []), how];
+      if (saved) { advance(state); return state; }
+    }
+  }
+
+  // Unsaved: the cost lands, the alert rises.
+  am.alert = Math.min(ALERT_MAX, (am.alert ?? 0) + (inc.fail.alert ?? 0));
+  am.extraHeat += inc.fail.heat ?? 0;
+  am.payCut += inc.fail.payCut ?? 0;
+  if (inc.fail.neural) addNeural(op, inc.fail.neural);
+  if (inc.fail.injury) {
+    let severity = rng() < SERIOUS_CHANCE + SERIOUS_PER_ALERT * am.alert ? 'serious' : 'light';
+    if (severity === 'serious') {
+      // A teammate with the hands for it can patch it down to a light wound on the spot.
+      const medic = able.filter((o) => o.id !== op.id).map((o) => ({ o, s: effectiveStat(o, 'medical') })).sort((a, b) => b.s.value - a.s.value)[0];
+      if (medic && medic.o.stats.medical >= PATCH_MIN_MEDICAL) {
+        const pdie = d20(nextRng(state));
+        const patched = pdie + medic.s.value >= need;
+        record(am, {
+          kind: 'save', via: 'patch', patient: op.handle, text: `${op.handle} is badly hurt.`,
+          choice: patched ? `${medic.o.handle} patches ${op.handle} up` : `${medic.o.handle} can't stop the bleeding`,
+          stat: 'medical', actor: { id: medic.o.id, handle: medic.o.handle }, value: medic.s.value, notes: medic.s.notes, die: pdie, need, success: patched,
+          choiceCost: {}, outcomeCost: {}, report: patched ? `${medic.o.handle} patched ${op.handle} up: bad, but they could walk.` : `${medic.o.handle} couldn't stop the bleeding.`,
+          why: `${medic.o.handle} had the best hands on the crew (medical ${medic.s.value}).`,
+        });
+        am.report = [...(am.report ?? []), patched ? `${medic.o.handle} patched ${op.handle} up: bad, but they could walk.` : `${medic.o.handle} couldn't stop the bleeding.`];
+        grow(state, am, medic.o, 'medical', XP.incident);
+        if (patched) severity = 'light';
+      }
+    }
+    // Never past serious from an incident (criticals only follow a crisis, and the player's call).
+    const injury = worsenInjury(op.condition.injury, severity) === 'critical' ? 'serious' : worsenInjury(op.condition.injury, severity);
+    setInjury(op, injury);
+    noteInjury(state, op, injury);
+    event.injury = { id: op.id, handle: op.handle, severity: injury };
+    am.log.push({ kind: 'injury', text: `${op.handle}: ${injury} injury.` });
+    if (injury === 'serious') {
+      am.out = [...(am.out ?? []), op.id];
+      am.pending = { kind: 'injury', opId: op.id };
+    }
+  }
+  if (am.alert >= ALERT_MAX && !am.wentLoud) {
+    if (am.pending) am.alertDue = true;
+    else am.pending = { kind: 'alert' };
+  }
+  if (!am.pending && !actors(state, am).length) {
+    exitRun(state, am, { text: 'Nobody left who can carry on.', choice: 'The crew pull out', report: 'With nobody left standing to finish it, the crew pulled out.' });
+    return state;
+  }
+  advance(state);
+  return state;
+}
+
+function addNeural(op, n) {
+  const rate = op.traits?.includes('chromed') ? 1.5 : 1;
+  op.condition.neuralLoad = Math.min(100, (op.condition.neuralLoad ?? 0) + Math.round(n * rate));
+}
+
+/** The decision a run is stopped for (max alert, a serious injury), for the UI and the orders. */
+export function describePending(state) {
+  const am = state.activeMission;
+  if (!am?.pending) return null;
+  const patient = am.pending.opId ? opById(state, am.pending.opId) : null;
+  const text = am.pending.kind === 'alert'
+    ? 'They know you\'re here. Lights are coming on and someone is shouting into a radio.'
+    : `${patient?.handle ?? 'Someone'} is badly hurt and out of the job.`;
+  const choices = decisionChoices(am.pending, { patient }).map((c) => ({ ...c, available: true, risk: c.exit ? 'safe' : null }));
+  return { kind: am.pending.kind, text, choices };
+}
+
+/** Answer the decision: go loud or keep going, or take the exit (everyone comes home). */
+export function resolvePending(prev, optionId) {
+  const am0 = prev.activeMission;
+  if (!am0?.pending) return prev;
+  const choice = decisionChoices(am0.pending, { patient: am0.pending.opId ? opById(prev, am0.pending.opId) : null }).find((c) => c.id === optionId);
+  if (!choice) return prev;
+  const state = structuredClone(prev);
+  const am = state.activeMission;
+  const view = describePending(state);
+  const why = takeWhy(am);
+  if (choice.exit) {
+    exitRun(state, am, { text: view.text, choice: choice.label, why, report: am.pending.kind === 'alert' ? 'The alarm went up and the crew pulled out.' : 'With someone badly hurt, the crew pulled out.' });
+    return state;
+  }
+  if (choice.id === 'loud') {
+    am.wentLoud = true;
+    am.extraHeat += 2;
+    am.alert = ALERT_MAX - 1;
+    const report = 'The crew went loud to finish it. Heat +2.';
+    record(am, { kind: 'decision', text: view.text, choice: choice.label, why, report, choiceCost: { heat: 2 } });
+    am.report = [...(am.report ?? []), report];
+  } else {
+    const report = `The crew carried on without ${opById(state, am.pending.opId)?.handle ?? 'them'}.`;
+    record(am, { kind: 'decision', text: view.text, choice: choice.label, why, report, choiceCost: {} });
+    am.report = [...(am.report ?? []), report];
+  }
+  am.log.push({ kind: 'choice', text: choice.label });
+  am.pending = null;
+  if (am.alertDue) { delete am.alertDue; am.pending = { kind: 'alert' }; return state; }
+  if (!actors(state, am).length) {
+    exitRun(state, am, { text: 'Nobody left who can carry on.', choice: 'The crew pull out', report: 'With nobody left standing to finish it, the crew pulled out.' });
+    return state;
+  }
   if (am.step >= am.queue.length && !am.critical) finish(state);
+  return state;
 }
 
 // --- crisis choices ----------------------------------------------------------
@@ -290,7 +548,7 @@ function namedLead(state, am, crew, stat) {
 
 /** Stabilising a critical operative: the medic leads, the same crew rule applies. */
 function stabiliser(state, am, patient) {
-  const crew = crewOf(state, am);
+  const crew = actors(state, am);
   const medic = findRole(crew.filter((o) => o.id !== patient.id), 'medic');
   if (!medic) return null;
   return crewRoll(crew, 'medical', { approach: am.approach, recommended: templateById(am.templateId).crewSize, lead: medicLead(medic, am, crew) });
@@ -327,10 +585,10 @@ function choiceCostText(choice) {
 export function describeCrisis(state) {
   const am = state.activeMission;
   const step = currentStep(am);
-  if (!am || am.critical || step?.type !== 'crisis') return null;
+  if (!am || am.critical || am.pending || step?.type !== 'crisis') return null;
   const tpl = templateById(am.templateId);
   const crisis = crisisById(tpl, step.id);
-  const crew = crewOf(state, am);
+  const crew = actors(state, am);
   const choices = crisis.choices.map((choice) => {
     const req = meetsRequirement(crew, choice.requires);
     const rolls = req.ok && !EXIT_KINDS.has(choice.kind) && !choice.sure;
@@ -342,7 +600,7 @@ export function describeCrisis(state) {
     const roller = rollerFor(state, am, choice, crew);
     const chance = successChance(roller.value, rollDifficulty(am, choice));
     const target = failureTarget(state, am, roller.op);
-    const bits = [`${roller.op.handle} on ${choice.stat} (${roller.value}${roller.notes.length ? ', ' + roller.notes.join(', ') : ''})`];
+    const bits = [`${roller.op.handle} on ${choice.stat} (${roller.value}${roller.notes.length ? ', ' + roller.notes.join(', ') : ''})${am.alert ? `, alert +${am.alert} difficulty` : ''}`];
     const fails = [];
     if (choice.failureInjury && choice.failureInjury !== 'none') fails.push(`${choice.failureInjury} injury to ${target.handle}`);
     if (choice.failureCost) fails.push(costText(choice.failureCost));
@@ -361,7 +619,7 @@ export function crisisOdds(state) {
   const step = currentStep(am);
   if (!am || am.critical || step?.type !== 'crisis') return null;
   const crisis = crisisById(templateById(am.templateId), step.id);
-  const crew = crewOf(state, am);
+  const crew = actors(state, am);
   return crisis.choices.filter((c) => meetsRequirement(crew, c.requires).ok).map((choice) => {
     if (EXIT_KINDS.has(choice.kind) || choice.sure) return { choice, exit: EXIT_KINDS.has(choice.kind), chance: 1, roller: null };
     const roller = rollerFor(state, am, choice, crew);
@@ -373,11 +631,11 @@ export function chooseOption(prev, choiceId) {
   const state = structuredClone(prev);
   const am = state.activeMission;
   const step = currentStep(am);
-  if (!am || am.critical || step?.type !== 'crisis') return prev;
+  if (!am || am.critical || am.pending || step?.type !== 'crisis') return prev;
   const tpl = templateById(am.templateId);
   const crisis = crisisById(tpl, step.id);
   const choice = crisis.choices.find((c) => c.id === choiceId);
-  const crew = crewOf(state, am);
+  const crew = actors(state, am);
   if (!choice || !meetsRequirement(crew, choice.requires).ok) return prev;
 
   const rolls = !EXIT_KINDS.has(choice.kind) && !choice.sure;
@@ -431,10 +689,8 @@ export function chooseOption(prev, choiceId) {
     for (const o of crew) if (o.id !== roller.op.id && o.condition.injury !== 'critical') grow(state, am, o, choice.stat, XP.watch);
   }
 
-  if (choice.neural) {
-    const rate = roller.op.traits.includes('chromed') ? 1.5 : 1;
-    roller.op.condition.neuralLoad = Math.min(100, roller.op.condition.neuralLoad + Math.round(choice.neural * rate));
-  }
+  if (choice.neural) addNeural(roller.op, choice.neural);
+  if (!choice.sure && choice.stat === 'tech' && APPROACHES[am.approach]?.neural) addNeural(roller.op, APPROACHES[am.approach].neural);
 
   addReport(state, am, choice, success, voice);
   if (success) {
@@ -486,7 +742,7 @@ export function describeCritical(state) {
   const am = state.activeMission;
   if (!am?.critical) return null;
   const op = opById(state, am.critical);
-  const crew = crewOf(state, am);
+  const crew = actors(state, am);
   const medic = findRole(crew.filter((o) => o.id !== op.id), 'medic');
   const choices = [];
   if (!am.stabiliseFailed) {
@@ -612,7 +868,7 @@ function finish(state) {
   }
 
   // Growth: crisis lessons already landed during the job; finishing it also teaches its key stats.
-  const survivors = crewOf(state, am);
+  const survivors = onJob(state, am).filter((o) => !deaths.includes(o));
   for (const op of survivors) if (!isFreelancer(op)) op.jobsWithCrew = (op.jobsWithCrew ?? 0) + 1;
   if (am.xp) { // a job saved mid-way before growth went live still has banked points
     const legacy = applyGrowth(survivors, am.xp, state.day);
@@ -652,7 +908,7 @@ function finish(state) {
   for (const op of survivors) {
     const c = op.condition;
     c.fatigue = Math.min(100, c.fatigue + 10 + threat * 6);
-    c.awayUntil = (am.startedDay ?? state.day) + tpl.days; // a hands-off job finishes on the day they're back
+    c.awayUntil = (am.startedDay ?? state.day) + (am.days ?? tpl.days); // a hands-off job finishes on the day they're back
     c.morale = Math.max(0, Math.min(100, c.morale + (deaths.length ? -20 : am.aborted ? -3 : 5)));
     if (c.injury !== 'healthy') injuries.push(`${op.handle} (${c.injury}, ${c.injuryDays}d)`);
     op.history.push(`Day ${state.day}: ${tpl.name}, ${am.aborted ? 'aborted' : 'completed'}`);
@@ -679,6 +935,7 @@ function finish(state) {
   const results = [
     { tone: pay > 0 ? 'good' : 'plain', text: `Paid ${money(pay)}.` },
     ...(cuts ? [{ tone: 'plain', text: `Freelancers took ${money(cuts)}.` }] : []),
+    ...(am.bribe ? [{ tone: 'plain', text: `Props and bribes cost ${money(am.bribe)} up front.` }] : []),
     { tone: heatGain > 0 ? 'warn' : 'plain', text: `Heat +${heatGain}.` },
     injuries.length ? { tone: 'bad', text: `Injured: ${injuries.join(', ')}.` } : { tone: 'good', text: 'Nobody hurt.' },
     ...(deaths.length ? [{ tone: 'bad', text: 'Their names go on the wall.' }] : []),
@@ -694,14 +951,18 @@ function finish(state) {
     timeline: {
       result: outcome, steps, outcome: results,
       // The full log and its summary (save v16). Hands-off runs also name their orders.
-      events, summary: summariseRun(events, { id, outcome, deaths: deaths.length }), orders: am.orders ?? null,
+      events, summary: summariseRun(events, { id, outcome, deaths: deaths.length }),
+      // Hands-off runs name their orders (the report plays out on first open); a live run says how it was called.
+      orders: am.callIn === 'never' || !am.callIn ? am.orders ?? null : null, callIn: am.callIn ?? null, liveOrders: am.callIn && am.callIn !== 'never' ? am.orders ?? null : null,
     },
     blocking: false, read: false,
   });
   // Full logs are kept for the most recent jobs; older reports keep their timeline and summary.
   state.inbox.filter((m) => m.type === 'report' && m.timeline?.events).slice(REPORT_LOGS_KEPT).forEach((m) => { delete m.timeline.events; });
   reactToJob(state, am, tpl, { heatGain, injuries, deaths });
-  afterJob(state, { events, district: tpl.district, clientId: am.clientId, outcome, crewIds: am.crewIds });
+  // Incidents and saves don't count towards earning traits yet: the traits were tuned to about one
+  // moment a week, and counting them doubled it (2026-10-27). Injuries from incidents still count (noteInjury).
+  afterJob(state, { events: events.filter((e) => !e.incident && e.kind !== 'save'), district: tpl.district, clientId: am.clientId, outcome, crewIds: am.crewIds });
 }
 
 export function closeMission(prev) {

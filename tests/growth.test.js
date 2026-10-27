@@ -14,6 +14,7 @@ import { gainXp, changesSince, STATS, pointCost } from '../src/core/development.
 import { nextRng } from '../src/core/random.js';
 import { d20 } from '../src/core/rng.js';
 import { makeRookie } from './develop-sim.js';
+import { toCrisis } from './play.js';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 const { importSave } = await import('../src/save/save.js');
@@ -74,7 +75,7 @@ test('a rise during a roll is flashed in the mission log at that moment', () => 
     s.crew.push(kid);
     const job = s.jobs[0];
     s = M.startMission(s, job.id, ['rookie', 'teo'], 'stealth');
-    while (M.currentStep(s.activeMission)?.type === 'beat') s = M.revealBeat(s);
+    s = toCrisis(s);
     if (!M.describeCrisis(s)) continue;
     const choice = M.describeCrisis(s).choices.find((c) => c.available && !['abort', 'extract'].includes(c.kind) && c.risk !== 'certain');
     if (!choice) continue;
@@ -98,7 +99,7 @@ test('growth is deterministic for a seed', () => {
     while (!s.activeMission.done) {
       const am = s.activeMission;
       if (am.critical) s = M.resolveCritical(s, 'extract');
-      else if (M.currentStep(am)?.type === 'beat') s = M.revealBeat(s);
+      else if (M.currentStep(am)?.type !== 'crisis' || am.pending) s = toCrisis(s);
       else s = M.chooseOption(s, M.describeCrisis(s).choices.find((c) => c.available && c.kind !== 'abort')?.id ?? 'abort');
     }
     return s.crew.map((o) => [o.id, o.stats, o.growthLog]);
@@ -150,7 +151,7 @@ test('real crisis rolls succeed exactly when d20 + the shown value beats the tar
     const tpl = templateById(job.templateId);
     const size = 1 + (seed % maxCrew(tpl.crewSize)); // short, full and over-size crews
     s = M.startMission(s, job.id, s.crew.slice(0, Math.min(size, s.crew.length)).map((o) => o.id), 'stealth');
-    while (M.currentStep(s.activeMission)?.type === 'beat') s = M.revealBeat(s);
+    s = toCrisis(s);
     const view = M.describeCrisis(s);
     if (!view) continue;
     const step = M.currentStep(s.activeMission);
@@ -159,7 +160,7 @@ test('real crisis rolls succeed exactly when d20 + the shown value beats the tar
     if (!choice) continue;
     const shown = Number(choice.riskReason.match(/ \((-?\d+)/)[1]);
     const data = crisis.choices.find((c) => c.id === choice.id);
-    const target = 10 + data.difficulty + (s.activeMission.threatDelta ?? 0);
+    const target = 10 + data.difficulty + (s.activeMission.threatDelta ?? 0) + (s.activeMission.alert ?? 0); // the alert (squad run) raises every later roll
     const expected = d20(nextRng(structuredClone(s))) + shown >= target;
     const before = s.activeMission.log.length;
     const after = M.chooseOption(s, choice.id);

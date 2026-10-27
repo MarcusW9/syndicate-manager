@@ -6,19 +6,48 @@ import { advanceDay, calendar } from '../src/core/time.js';
 import { templateById } from '../src/core/jobs.js';
 import { availability } from '../src/core/crew.js';
 
+/**
+ * Walk the active mission up to its next crisis (or a critical, or the end): beats, zones,
+ * incidents, and any decision a run stops for (decided by the policy, carefully by default).
+ * For tests that look at a crisis itself. Returns the new state.
+ */
+export function toCrisis(state, policy = carefulPolicy) {
+  let s = state;
+  for (let guard = 0; guard < 160; guard++) {
+    const am = s.activeMission;
+    if (!am || am.done || am.critical) return s;
+    const type = M.currentStep(am)?.type;
+    if (am.pending) s = M.resolvePending(s, policy.pending(M.describePending(s).choices.map((c) => c.id), guard));
+    else if (type === 'beat') s = M.revealBeat(s);
+    else if (type === 'zone') s = M.enterZone(s);
+    else if (type === 'incident') s = M.runIncident(s);
+    else return s;
+  }
+  throw new Error('toCrisis got stuck');
+}
+
 /** Play the active mission to the end. policy decides each choice. Returns { state, pushed }. */
 export function playMission(state, policy) {
   let s = state;
   let pushed = false;
-  for (let guard = 0; guard < 60 && !s.activeMission.done; guard++) {
+  for (let guard = 0; guard < 160 && !s.activeMission.done; guard++) {
     const am = s.activeMission;
+    const type = M.currentStep(am)?.type;
     if (am.critical) {
       const options = M.describeCritical(s).choices.filter((c) => c.available).map((c) => c.id);
       const pick = policy.critical(options, guard);
       if (pick === 'push') pushed = true;
       s = M.resolveCritical(s, pick);
-    } else if (M.currentStep(am)?.type === 'beat') {
+    } else if (am.pending) {
+      // Decisions a run stops for (max alert, a serious injury): the policy picks, or the first option.
+      const options = M.describePending(s).choices.map((c) => c.id);
+      s = M.resolvePending(s, (policy.pending ?? ((o) => o[0]))(options, guard));
+    } else if (type === 'beat') {
       s = M.revealBeat(s);
+    } else if (type === 'zone') {
+      s = M.enterZone(s);
+    } else if (type === 'incident') {
+      s = M.runIncident(s);
     } else {
       const choices = M.describeCrisis(s).choices.filter((c) => c.available);
       s = M.chooseOption(s, policy.crisis(choices, guard).id);
@@ -30,6 +59,7 @@ export function playMission(state, policy) {
 
 export const randomPolicy = (seed) => ({
   critical: (opts, g) => opts[(seed + g) % opts.length],
+  pending: (opts, g) => opts[(seed + g) % opts.length],
   crisis: (choices, g) => {
     if (seed % 5 === 0) return choices.find((c) => c.kind === 'abort') ?? choices[0];
     const go = choices.filter((c) => c.kind !== 'abort');
@@ -41,6 +71,7 @@ export const randomPolicy = (seed) => ({
 const RANK = { certain: 0, low: 1, moderate: 2, high: 3, extreme: 4 };
 export const carefulPolicy = {
   critical: (opts) => (opts.includes('stabilise') ? 'stabilise' : 'extract'),
+  pending: (opts) => (opts.includes('keep') ? 'keep' : 'out'), // carry on without the wounded; walk away when blown
   crisis: (choices) => {
     const go = choices.filter((c) => c.kind !== 'abort').sort((a, b) => (RANK[a.risk] ?? 9) - (RANK[b.risk] ?? 9));
     return go[0] && (RANK[go[0].risk] ?? 9) <= 2 ? go[0] : choices.find((c) => c.kind === 'abort');

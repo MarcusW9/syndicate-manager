@@ -21,6 +21,9 @@ export const XP = {
   watch: 1, // on the crew when someone else rolled
   job: 2, // per key stat, for finishing a job
   craft: 3, // in their own main stat, for finishing a job (medics patch people up, muscle keeps watch...)
+  // Incidents and saves (the squad run, 2026-10-27) don't teach stats yet: the growth pace was tuned
+  // by simulation without them (PLAN-PROGRESSION.md) and even 1 a roll outran it. Retune before raising this.
+  incident: 0,
 };
 export const MENTOR_RATE = 1.5;
 export const GRADUATE_AT = 15; // rookie -> pro when their main stat gets here

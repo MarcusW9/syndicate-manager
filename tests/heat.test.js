@@ -12,7 +12,7 @@ import { ECONOMY } from '../src/data/economy.js';
 import { resolveDecision } from '../src/core/decisions.js';
 import { assessJob } from '../src/core/risk.js';
 import { checkHeatNotice, heatChoices, HEAT_NOTICE_AT, WATCHED_PENALTY } from '../src/core/heat.js';
-import { playMission, carefulPolicy } from './play.js';
+import { playMission, toCrisis, carefulPolicy } from './play.js';
 import { playHeat, median } from './heat-sim.js';
 
 const notice = (s) => s.inbox.find((m) => m.kind === 'heat' && !m.resolved);
@@ -32,10 +32,10 @@ test('no job template carries base heat', () => {
   for (const m of MISSIONS) assert.equal(m.heat, 0, m.id);
 });
 
-test('a clean stealth or social job adds 0 heat; Loud adds exactly +1', () => {
-  const clean = { stealth: 0, social: 0, loud: 0 };
+test('a clean stealth or con job adds 0 heat; Loud adds exactly +1', () => {
+  const clean = { stealth: 0, con: 0, loud: 0 };
   for (let seed = 1; seed <= 150; seed++) {
-    for (const approach of ['stealth', 'social', 'loud']) {
+    for (const approach of ['stealth', 'con', 'loud']) {
       const s = runJob(seed, approach);
       const am = s.activeMission;
       if (am.aborted) { assert.equal(am.result.heatGain, am.extraHeat, 'aborts add no approach heat'); continue; }
@@ -135,7 +135,8 @@ test('letting it ride: the next job is -1 on its first crisis roll only, and the
   s = M.startMission(s, job.id, crew.map((o) => o.id), 'stealth');
   assert.equal(s.heatWatched, false, 'spent on the job it lands on');
   assert.equal(s.activeMission.watched, WATCHED_PENALTY);
-  while (M.currentStep(s.activeMission)?.type === 'beat') s = M.revealBeat(s);
+  s = toCrisis(s); // incidents don't spend it: it's the first crisis roll's
+  assert.equal(s.activeMission.watched, WATCHED_PENALTY);
 
   // The crisis read shows the same -1 the roll will use.
   const rolled = (d) => d.choices.filter((c) => c.available && /\(-?\d+/.test(c.riskReason ?? ''));

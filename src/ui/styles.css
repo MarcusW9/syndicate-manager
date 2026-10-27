@@ -660,3 +660,14 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .chip--earned { border-color: color-mix(in srgb, var(--accent-2) 60%, var(--line)); }
 .chip--temporary { border-style: dashed; }
 .chip__when { color: var(--muted); font-size: 0.75rem; }
+
+/* The squad run (PLAN-CORE-LOOP.md, slice 1): four approaches, overwatch, the alert, incidents in the log. */
+.segmented--grid { grid-template-columns: 1fr 1fr; }
+.owpicks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.owpick { min-height: var(--tap); display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px 4px 4px; border: 1px solid var(--line); border-radius: 999px; background: #1b1f28; color: var(--text); font: inherit; cursor: pointer; }
+.owpick.is-on { border-color: var(--accent-2); background: color-mix(in srgb, var(--accent-2) 12%, #1b1f28); }
+.alertline { display: flex; align-items: center; gap: 4px; font-size: 0.8rem; color: var(--muted); margin: 4px 0 0; }
+.alertpip { width: 10px; height: 10px; border-radius: 2px; background: var(--line); display: inline-block; }
+.alertpip.is-on { background: var(--danger); }
+.log--zone { color: var(--accent-2); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.75rem; margin-top: 10px; }
+.log--incident { color: var(--muted); }

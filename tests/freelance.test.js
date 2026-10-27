@@ -8,7 +8,7 @@ import * as M from '../src/core/mission.js';
 import { templateById } from '../src/core/jobs.js';
 import { FREELANCERS_PER_WEEK, freelanceCut, shareOf } from '../src/core/freelance.js';
 import { validateRecruit } from '../src/core/validate.js';
-import { playMission, randomPolicy, carefulPolicy } from './play.js';
+import { playMission, toCrisis, randomPolicy, carefulPolicy } from './play.js';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 const { importSave } = await import('../src/save/save.js');
@@ -45,7 +45,7 @@ test('a freelancer fills a slot for one job, takes their share, then leaves', ()
     last = cur;
     const am = cur.activeMission;
     if (am.critical) cur = M.resolveCritical(cur, 'extract');
-    else if (M.currentStep(am)?.type === 'beat') cur = M.revealBeat(cur);
+    else if (M.currentStep(am)?.type !== 'crisis' || am.pending) cur = toCrisis(cur);
     else cur = M.chooseOption(cur, carefulPolicy.crisis(M.describeCrisis(cur).choices.filter((c) => c.available)).id);
   }
   const done = cur;
@@ -67,7 +67,7 @@ test('freelancers take a share by quality and nothing from a job that pays nothi
 
 test('a freelancer counts toward crew size (no short-handed penalty for their slot)', () => {
   const { s } = withFreelancer(3, 1);
-  while (M.currentStep(s.activeMission)?.type === 'beat') Object.assign(s, M.revealBeat(s));
+  Object.assign(s, toCrisis(s));
   const view = M.describeCrisis(s);
   if (!view) return;
   const tpl = templateById(s.activeMission.templateId);
