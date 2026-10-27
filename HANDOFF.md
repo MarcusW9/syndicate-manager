@@ -4,10 +4,10 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 
 ## State
 
-- **`main`:** up to [#20](https://github.com/MarcusW9/syndicate-manager/pull/20) (`6fbbb55`, squash-merged): squad-run slices 1 and 2. **Branch `claude/jolly-keller-6eqry7`** was restarted from `main` and carries slice 3.
+- **`main`:** up to [#21](https://github.com/MarcusW9/syndicate-manager/pull/21) (`aa79373`, squash-merged): squad-run slices 1-3. **Branch `claude/jolly-keller-6eqry7`** was restarted from `main` and carries the growth and trait retune.
 - **The game is becoming the squad run** (`PLAN-CORE-LOOP.md`, the build order; `drafts/core-loop.md`, how we got there). **Slices 1-3 are built** (the engine; the squad board and the watch screen; Wheels and standby); slice 4 (sites and district text) is next.
 - **Design review:** `STATE-OF-PLAY.md` (2026-10-26) and the owner's calls on it (in the file and in DESIGN.md). Read it instead of re-assessing.
-- **Tests:** 263 passing. **Save format v22.**
+- **Tests:** 267 passing. **Save format v22.**
 
 ## What the 2026-10-26/27 session did
 
@@ -25,14 +25,14 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 - **Shown risk equals used risk:** any new modifier must appear in the risk read and the crisis read (as notes on `crewRoll`), as intel, traits, extra bodies and the alert do.
 - **Randomness that shouldn't shift other dice** (weekly boards, arrivals) comes from `makeRng(seed ^ week)`, not `nextRng(state)`.
 - **Crisis ids are unique** (a test checks). Renaming one needs a save migration (see v20).
-- **Incidents teach nothing yet** (`XP.incident` 0) so the tuned growth pace holds; retune before raising it.
+- **Growth and trait pace are measured, not guessed:** `node scripts/sim-growth.mjs` and `node scripts/sim-traits.mjs` print the targets. Re-run them after any change to XP, the wall, trait counts or what happens on a job. Incidents teach a quarter of a crisis roll and saves half (owner's ratio), and count the same towards traits.
 - **The planning reads use the run's own functions** (`coverage()` calls `handlerFor`/`bestSave`); add new incident modifiers there, never as a separate estimate.
 - **The watch is UI-only pacing:** core still steps one move at a time (`autoStep`); never put timers or animation state in `src/core`.
 
 ## Next
 
-1. **Merge the slice 3 PR** when the owner's happy with it.
-2. **Squad run slice 4** (`PLAN-CORE-LOOP.md`): a site plan per district as data, and the incident text per district (writing task 11). Still open from slice 1: retune growth and earned traits for the loop.
+1. **Merge the retune PR** when the owner's happy with it, then play: the owner is play-testing slices 1-3.
+2. **Squad run slice 4** (`PLAN-CORE-LOOP.md`): a site plan per district as data, and the incident text per district (writing task 11).
 3. Then slices 3-5 (Wheels and standby, sites and district text, gear and specialisations), and the agreed review items: the neural load and burnout cleanup, mood traits, money pressure, relationships with the career page.
 
 ## Writing pipeline (owner writes in other chats, pastes back)

@@ -21,18 +21,21 @@ export const XP = {
   watch: 1, // on the crew when someone else rolled
   job: 2, // per key stat, for finishing a job
   craft: 3, // in their own main stat, for finishing a job (medics patch people up, muscle keeps watch...)
-  // Incidents and saves (the squad run, 2026-10-27) don't teach stats yet: the growth pace was tuned
-  // by simulation without them (PLAN-PROGRESSION.md) and even 1 a roll outran it. Retune before raising this.
-  incident: 0,
+  // The squad run (retuned 2026-10-27, owner's ratio): a small incident teaches a quarter of a
+  // crisis roll, a save (or patching someone up on the spot) half. Nobody learns by watching an incident.
+  incident: 1,
+  save: 2,
 };
 export const MENTOR_RATE = 1.5;
 export const GRADUATE_AT = 15; // rookie -> pro when their main stat gets here
 
 // Cost per point: (stat + 4) × GROWTH_SCALE. The scale is the main tuning knob
 // (1.7 until 2026-10-25; x2.5 for the slower climb). The ceiling is a wall, not a
-// stop: past it every point costs WALL times more, up to 20.
+// stop: past it every point costs WALL times more, up to 20. WALL was 4 until the squad-run
+// retune (2026-10-27): incidents teach the person who handles them, and an infiltrator on
+// stealth runs handles most of them, so a low ceiling needed a steeper wall (scripts/sim-growth.mjs).
 export const GROWTH_SCALE = 4.25;
-export const WALL = 4;
+export const WALL = 6;
 export const MAX_STAT = 20;
 
 /** Points needed for the next +1. Higher stats cost more; the last point before the ceiling costs double; past it, WALL times. */

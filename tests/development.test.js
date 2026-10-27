@@ -47,9 +47,9 @@ test('mentoring is worth about a point and a half over a season of work', () => 
   const mean = (r) => r.reduce((n, x) => n + x.main, 0) / r.length;
   const mentored = mean(runs({ ceiling: 19 }, { jobs: 22 }));
   const solo = mean(runs({ ceiling: 19 }, { jobs: 22, mentor: false }));
-  // Was +0.75 (measured ~1.0). Since the squad run (2026-10-27) a careful crew pulls out at max alert
-  // in ~7% of jobs and loses that job's growth; measured over 90 runs the edge is now ~0.75. DESIGN.md.
-  assert.ok(mentored >= solo + 0.5, `mentored ${mentored} vs solo ${solo}`);
+  // Back at +0.75 since the retune (2026-10-27): incidents teach again, and mentoring speeds that up too
+  // (measured ~0.9 over 120 runs). It was lowered to +0.5 for slice 1, when incidents taught nothing. DESIGN.md.
+  assert.ok(mentored >= solo + 0.75, `mentored ${mentored} vs solo ${solo}`);
 });
 
 test('mentors: a veteran-trait operative, or a veteran of the same role; rookies only', () => {
@@ -71,6 +71,30 @@ test('age sets the growth rate: under 25 x1.5, 25-34 x1, 35+ x0.5', () => {
   applyGrowth([young], { rookie: { stealth: 60 } });
   applyGrowth([old], { old: { stealth: 60 } });
   assert.ok(young.stats.stealth > old.stats.stealth);
+});
+
+test('incidents teach whoever handles them a little: a quarter of a crisis roll; a save, half', () => {
+  assert.equal(XP.incident * 4, XP.roll);
+  assert.equal(XP.save * 2, XP.roll);
+  let checked = 0;
+  for (let seed = 1; seed <= 20; seed++) {
+    let s = createNewGame({ seed, startCrew: 'fresh' });
+    const job = s.jobs[0];
+    s = M.startMission(s, job.id, s.crew.slice(0, 2).map((o) => o.id), 'stealth');
+    while (M.currentStep(s.activeMission)?.type !== 'incident') s = M.currentStep(s.activeMission).type === 'zone' ? M.enterZone(s) : M.revealBeat(s);
+    const progress = (st) => Object.fromEntries(st.crew.map((o) => [o.id, { ...o.progress }]));
+    const was = progress(s);
+    s = M.runIncident(s);
+    const e = s.activeMission.events.find((x) => x.incident);
+    const op = s.crew.find((o) => o.id === e.actor.id);
+    const grew = (op.progress[e.stat] ?? 0) > (was[op.id][e.stat] ?? 0) || s.activeMission.growth.some((g) => g.opId === op.id);
+    assert.ok(grew, `seed ${seed}: ${op.handle} learned ${e.stat}`);
+    for (const o of s.crew.filter((x) => x.id !== op.id && !s.activeMission.events.some((v) => v.kind === 'save' && v.actor.id === x.id))) {
+      assert.deepEqual(o.progress, was[o.id], `seed ${seed}: nobody learns by watching an incident`);
+    }
+    checked++;
+  }
+  assert.equal(checked, 20);
 });
 
 test('a failed roll still teaches the roller', () => {

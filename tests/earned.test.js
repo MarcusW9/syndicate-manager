@@ -346,3 +346,35 @@ test('Ghost Driver sheds a point of heat on a clean getaway that costs heat', ()
   }
   assert.ok(shed > 20);
 });
+
+// --- the squad run (retuned 2026-10-27): incidents and saves count, for less ---------------------
+
+test('incidents count a quarter of a crisis roll towards a trait, saves a half', () => {
+  assert.deepEqual(E.WEIGHT, { crisis: 1, save: 0.5, incident: 0.25 });
+  const s = game(3); const [a, b] = s.crew;
+  const lock = (op) => roll(op, 'stealth', true, { incident: 'lock', situations: ['entry', 'street-tech'] });
+  for (let i = 0; i < 15; i++) job(s, [lock(a)], [a]);
+  assert.ok(!has(a, 'light_fingered'), 'fifteen locks are not quite four break-ins');
+  job(s, [lock(a)], [a]);
+  assert.ok(has(a, 'light_fingered'), 'sixteen are');
+  const patch = (op) => ({ kind: 'save', via: 'patch', actor: { id: op.id, handle: op.handle }, stat: 'medical', success: true, notes: [] });
+  for (let i = 0; i < 5; i++) job(s, [patch(b)], [b]);
+  assert.ok(!has(b, 'clinic_hands'));
+  job(s, [patch(b)], [b]);
+  assert.ok(has(b, 'clinic_hands'), 'six patch-ups make Clinic Hands');
+});
+
+test('an incident failure does not break a run of clean jobs; only crisis rolls decide that', () => {
+  const s = game(4); const [a] = s.crew;
+  for (let i = 0; i < 3; i++) job(s, [roll(a, 'stealth', true), roll(a, 'tech', false, { incident: 'camera', situations: ['corp-tech'] })], [a]);
+  assert.ok(has(a, 'riding_high'));
+});
+
+test('everyone on the job counts towards traits, outside the inside team too', () => {
+  let s = game(5);
+  s.jobs = []; addOffer(s, 'container409');
+  const [a, b, c, d] = s.crew.map((o) => o.id);
+  s = M.startMission(s, s.jobs[0].id, [a, b], 'stealth', { overwatch: { id: c, kit: 'drone' }, wheels: d });
+  s = M.closeMission(playMission(s, carefulPolicy).state);
+  for (const id of [c, d]) assert.ok(Object.keys(s.crew.find((o) => o.id === id).track?.together ?? {}).length > 0, `${id} worked the job with the others`);
+});
