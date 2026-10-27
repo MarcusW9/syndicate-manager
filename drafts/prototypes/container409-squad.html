@@ -50,33 +50,60 @@ details.how summary { cursor: pointer; min-height: 32px; display: flex; align-it
 details.how ul { margin: 4px 0 0; padding-left: 18px; display: grid; gap: 4px; }
 section { display: grid; gap: 8px; }
 
-/* Map */
+/* Map: a site plan in the street-terminal style */
 .map { position: relative; background: #0b0d11; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
 .map svg { display: block; width: 100%; height: auto; }
-.map .route { fill: none; stroke: var(--accent-2); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-.map .exit { fill: none; stroke: #2c3240; stroke-width: 2; stroke-dasharray: 4 5; stroke-linejoin: round; }
-.map .exit.on { stroke: var(--warn); stroke-dasharray: none; }
-.map .sight { fill: rgba(255, 79, 123, 0.06); stroke: rgba(255, 79, 123, 0.25); stroke-dasharray: 3 4; }
-.map .node { fill: #171a21; stroke: #3a4254; stroke-width: 1.5; }
-.map .node.post { stroke: var(--accent); fill: #2a1520; }
-.map .node.crane { stroke: var(--warn); }
-.map .label { fill: var(--muted); font-family: var(--mono); font-size: 9px; letter-spacing: 0.04em; }
-.map .label.hi { fill: var(--text); }
-.map .token circle { stroke: var(--bg); stroke-width: 2; }
-.map .token text { fill: var(--bg); font-family: var(--display); font-weight: 700; font-size: 9px; text-anchor: middle; dominant-baseline: central; }
-.map .token { transition: transform 0.8s ease-in-out, opacity 0.4s; }
-.map .token.down circle { stroke: var(--danger); stroke-width: 3; }
-.map .water { fill: #0d1620; }
-.map .stack { fill: #141821; stroke: #232937; }
-.map .office { fill: #191c25; stroke: #3a4254; }
-.map .alarm { fill: none; stroke: var(--accent); stroke-width: 2; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.map .road { fill: #12141a; } .map .road__line { stroke: #2a2f3b; stroke-dasharray: 6 6; }
+.map .water { fill: #0d1620; } .map .jetty { fill: #2a2f3b; }
+.map .fence { fill: none; stroke: #4a5266; stroke-width: 1.5; stroke-dasharray: 1.5 2; } .map .post { fill: #6b7385; }
+.map .box { stroke: #2b3240; stroke-width: 0.8; } .map .box__rib { stroke: rgba(255, 255, 255, 0.05); }
+.map .building { fill: #171b24; stroke: #4a5266; stroke-width: 1.5; } .map .door { fill: #ff4f7b; opacity: 0.6; } .map .desk { fill: #222837; }
+.map .gantry { stroke: #7a6430; stroke-width: 2.5; stroke-linecap: round; }
+.map .sight { fill: rgba(245, 185, 66, 0.06); stroke: rgba(245, 185, 66, 0.3); stroke-dasharray: 3 4; }
+.map .sight--drone { fill: rgba(54, 214, 195, 0.05); stroke: rgba(54, 214, 195, 0.3); }
+.map .route { fill: none; stroke: var(--accent-2); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: 0.75; }
+.map .exit { fill: none; stroke: var(--warn); stroke-width: 1.5; stroke-dasharray: 4 4; stroke-linejoin: round; opacity: 0.7; }
+.map .node { fill: #0b0d11; stroke: var(--accent-2); stroke-width: 1.2; } .map .node--target { stroke: var(--accent); fill: #2a1520; } .map .node--crane { stroke: var(--warn); }
+.map .label { fill: #6b7385; font-family: var(--mono); font-size: 7.5px; letter-spacing: 0.08em; } .map .label.hi { fill: var(--text); }
+.map .token { transition: transform 0.45s ease-in-out; }
+.map .token circle { stroke: #0b0d11; stroke-width: 1.5; }
+.map .token text { fill: #0b0d11; font-family: var(--display); font-weight: 700; font-size: 6.5px; text-anchor: middle; dominant-baseline: central; }
+.map .token.hit circle { stroke: var(--warn); stroke-width: 2; }
+.map .token.down circle { stroke: var(--danger); stroke-width: 2.5; opacity: 0.6; }
+.map .token.cornered circle { stroke: var(--danger); stroke-width: 2; animation: blink 0.5s steps(2) infinite; }
+.map .alarm { fill: none; stroke: var(--accent); stroke-width: 1.5; opacity: 0; transform-box: fill-box; transform-origin: center; }
 .map .alarm.on { animation: pulse 1.2s ease-out infinite; }
-.map .shot { stroke: var(--warn); stroke-width: 2; stroke-linecap: round; animation: shot 0.7s ease-out forwards; }
-.map .dronefx { fill: var(--accent-2); }
+.map .enemy, .map .npc, .map .cam, .map .drone { transition: transform 0.6s ease-in-out, opacity 0.5s; }
+.map .enemy circle { fill: var(--danger); stroke: #0b0d11; stroke-width: 1.5; }
+.map .enemy text, .map .npc text, .map .cam text { fill: #0b0d11; font: 700 7px var(--display); text-anchor: middle; dominant-baseline: central; }
+.map .enemy--patrol circle { fill: #c9772f; }
+.map .npc circle { fill: #8b93a7; stroke: #0b0d11; stroke-width: 1.5; } .map .npc.alarmed circle { fill: var(--warn); }
+.map .cam circle { fill: #2a2f3b; stroke: var(--accent-2); stroke-width: 1; } .map .cam text { fill: var(--accent-2); }
+.map .cam.alarmed circle { stroke: var(--danger); } .map .cam.alarmed text { fill: var(--danger); }
+.map .dead { opacity: 0; } .map .dead circle { fill: #4a5266; }
+.map .gone { opacity: 0; }
+.map .torch { transition: transform 0.5s ease-out, opacity 0.5s; } .map .torch path { fill: rgba(245, 185, 66, 0.22); }
+.map .torch.caught path { fill: rgba(255, 90, 90, 0.35); }
+.map .work { fill: none; stroke: var(--muted); stroke-width: 1.5; transform-box: fill-box; transform-origin: center; animation: ring 0.7s ease-out forwards; }
+.map .work--ok { stroke: var(--good); } .map .work--bad { stroke: var(--danger); }
+.map .flash { fill: #fff; transform-box: fill-box; transform-origin: center; animation: burst 0.45s ease-out forwards; }
+.map .flash--zap { fill: var(--accent-2); } .map .flash--miss { fill: #6b7385; }
+.map .shot { stroke: var(--warn); stroke-width: 1.2; stroke-linecap: round; }
+.map .drone circle { fill: var(--accent-2); } .map .drone .drone__rotor { fill: none; stroke: var(--accent-2); stroke-width: 0.8; opacity: 0.6; }
+.map__phase { position: absolute; left: 8px; top: 8px; font: 700 0.72rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-2); background: rgba(11, 13, 17, 0.8); border: 1px solid #1f4440; border-radius: 6px; padding: 2px 8px; }
+.map__alert { position: absolute; right: 8px; top: 8px; display: inline-flex; gap: 3px; align-items: center; font: 600 0.62rem var(--mono); letter-spacing: 0.08em; color: var(--muted); background: rgba(11, 13, 17, 0.8); border: 1px solid var(--line); border-radius: 6px; padding: 3px 7px; }
+.map__alert i { width: 9px; height: 9px; border-radius: 2px; background: var(--line); display: inline-block; }
+.map__alert i.on { background: var(--danger); }
 @keyframes pulse { from { transform: scale(1); opacity: 0.9; } to { transform: scale(3.5); opacity: 0; } }
-@keyframes shot { from { opacity: 1; } to { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .map .token { transition: none; } .map .alarm.on { animation: none; opacity: 0.8; transform: scale(2); } }
+@keyframes burst { from { transform: scale(0.4); opacity: 1; } to { transform: scale(2.2); opacity: 0; } }
+@keyframes ring { from { transform: scale(0.6); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
+@keyframes blink { to { stroke-opacity: 0.2; } }
+@media (prefers-reduced-motion: reduce) { .map .token, .map .enemy, .map .npc, .map .cam, .map .drone, .map .torch { transition: none; } .map .alarm.on { animation: none; opacity: 0.8; transform: scale(2); } .map .token.cornered circle { animation: none; } }
 
+.legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 0.74rem; color: var(--muted); margin-top: -10px; }
+.lg { display: inline-block; width: 16px; height: 0; border-top: 2px solid var(--accent-2); margin-right: -4px; vertical-align: middle; }
+.lg--out { border-top: 2px dashed var(--warn); } .lg--sight { height: 10px; border: 1px dashed rgba(245, 185, 66, 0.6); background: rgba(245, 185, 66, 0.12); }
+.lg--drone { border-color: rgba(54, 214, 195, 0.6); background: rgba(54, 214, 195, 0.1); }
 /* Approach cards */
 .approaches { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .card { width: 100%; text-align: left; display: grid; gap: 4px; align-content: start; min-height: var(--tap); padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); cursor: pointer; }
@@ -176,32 +203,33 @@ section { display: grid; gap: 8px; }
 
 /* Watch */
 .live { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 4; background: var(--bg); padding-block: 4px 8px; display: grid; gap: 6px; }
-.live .map svg { height: min(24vh, 190px); }
-.tally { display: flex; gap: 6px; flex-wrap: wrap; font-family: var(--mono); font-size: 0.72rem; align-items: center; }
-.tally > span { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; }
-.tally .phase { color: var(--accent-2); border-color: #1f4440; }
-.tally .bad { color: var(--danger); border-color: #4a2224; }
-.alert { display: inline-flex; gap: 3px; align-items: center; }
-.alert i { width: 9px; height: 9px; border-radius: 2px; background: var(--line); display: inline-block; }
-.alert i.on { background: var(--danger); }
-.feed { display: grid; gap: 6px; }
+.live .map svg { height: min(36vh, 300px); }
+.tally { display: flex; gap: 6px; flex-wrap: wrap; font-family: var(--mono); font-size: 0.7rem; align-items: center; }
+.tally > span { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; }
+.tally .bad { color: var(--danger); border-color: #4a2224; } .tally .good { color: var(--warn); border-color: #4a3c1a; }
+.feed { display: grid; gap: 8px; }
 .feed > * { scroll-margin-bottom: 96px; }
-.phasehead { font: 700 0.75rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-2); padding-top: 8px; display: flex; gap: 8px; align-items: center; }
+.phasehead { font: 700 0.75rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-2); padding-top: 6px; display: flex; gap: 8px; align-items: center; }
 .phasehead::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-.line { padding: 6px 0 6px 12px; border-left: 2px solid var(--line); font-size: 0.92rem; animation: in 0.35s ease-out; }
-.line.beat { color: #c9cdd8; font-style: italic; }
-.line.inc { border-color: #3a4254; }
-.line.good { border-color: var(--good); }
-.line.bad { border-color: var(--danger); }
-.line.save { border-color: var(--warn); background: #1f1b12; border-radius: 0 8px 8px 0; padding: 7px 10px 7px 12px; }
-.line.crisis { border-color: var(--accent); background: #1a1418; border-radius: 0 8px 8px 0; padding: 8px 10px 8px 12px; font-weight: 500; }
-.line.why { font-size: 0.8rem; color: var(--muted); }
-.line .kind { display: block; font: 600 0.6rem var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 2px; }
+.beatline { color: #aab0c0; font-style: italic; font-size: 0.86rem; padding-left: 12px; border-left: 2px solid var(--line); animation: in 0.35s ease-out; }
+.note { font-size: 0.8rem; color: var(--muted); padding-left: 12px; animation: in 0.35s ease-out; }
+.ev { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid #3a4254; border-radius: 4px 10px 10px 4px; padding: 8px 12px; display: grid; gap: 4px; animation: in 0.35s ease-out; }
+.ev .kind { font: 600 0.6rem var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.ev .setup { font-size: 0.84rem; color: #b4bacb; }
+.ev--good { border-left-color: var(--good); } .ev--bad { border-left-color: var(--danger); } .ev--save { border-left-color: var(--warn); }
+.ev.ev--crisis { border-color: #4a2232; border-left-color: var(--accent); background: #1a1418; }
+.res { display: grid; gap: 1px; padding-top: 4px; border-top: 1px dashed var(--line); animation: in 0.35s ease-out; }
+.res, .ev, .callin { scroll-margin-bottom: 104px; }
+.dice-detail[hidden] { display: none; }
+.hl { font: 700 1.08rem var(--display); letter-spacing: 0.01em; line-height: 1.2; }
+.res--good .hl { color: var(--good); } .res--bad .hl { color: #ff8a8a; } .res--save .hl { color: var(--warn); }
+.res .hl .who { color: inherit !important; text-decoration: underline; text-decoration-color: rgba(255, 255, 255, 0.25); text-underline-offset: 2px; }
+.det { font-size: 0.8rem; color: var(--muted); }
 .who { font-family: var(--display); font-weight: 700; letter-spacing: 0.02em; }
-.dice { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); background: none; border: 0; padding: 0 0 0 4px; cursor: pointer; text-decoration: underline dotted; min-height: 24px; }
-.dice-detail { display: block; font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+.dice { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); background: none; border: 0; padding: 0 0 0 4px; cursor: pointer; text-decoration: underline dotted; min-height: 24px; }
+.dice-detail { display: block; font-family: var(--mono); font-size: 0.7rem; color: var(--muted); }
 @keyframes in { from { opacity: 0.2; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .line { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .ev, .res, .beatline, .note { animation: none; } }
 .callin { border: 1px solid var(--accent); background: #1d1418; border-radius: 12px; padding: 12px; display: grid; gap: 8px; animation: in 0.35s ease-out; }
 .callin__q { font-size: 0.95rem; }
 .callin .eyebrow { color: var(--accent); }
@@ -213,6 +241,9 @@ section { display: grid; gap: 8px; }
 .choice__top > span:first-child { min-width: 0; }
 .choice__sub { font-size: 0.75rem; color: var(--muted); }
 .crewpick { font-family: var(--mono); font-size: 0.6rem; color: var(--accent-2); text-transform: uppercase; letter-spacing: 0.06em; }
+.bar__in--run { grid-template-columns: 1fr auto auto; gap: 8px; }
+.btn--sm { min-height: 44px; padding: 0 14px; font-size: 0.92rem; }
+.btn--ghost[aria-pressed="true"] { border-color: var(--warn); color: var(--warn); }
 
 /* Report */
 .joss { font-size: 1.02rem; border-left: 2px solid var(--accent-2); padding-left: 12px; }
@@ -284,16 +315,16 @@ const ZONES = [
 ];
 // Incidents: automatic rolls handled by whoever is best placed. Danger incidents put a person at risk and can be saved.
 const INC = {
-  lock: { name: 'Locked gate', stats: ['tech', 'stealth'], diff: 8, text: 'The yard gate has a new mag-lock.', ok: '{op} gets it open without a sound.', bad: 'The lock chirps an error at {op}. Somewhere, a light comes on.', conseq: { alert: 1 } },
-  camera: { name: 'Cameras', stats: ['tech', 'stealth'], diff: 8, text: 'A camera sweeps the row.', ok: '{op} loops the feed. The camera watches an empty row on repeat.', bad: 'The camera catches {op}\'s shoulder for half a second.', conseq: { alert: 1 } },
-  patrol: { name: 'Patrols', stats: ['stealth'], diff: 8, danger: true, text: 'A guard on patrol, torch low, coming this way.', ok: '{op} waits in the shadow of a reefer unit until the torch passes.', bad: 'The torch finds {op}.', comp: '"Oi!" The guard is on {op} before they can move.', conseq: { alert: 1, heat: 1 } },
-  guard: { name: 'Guard up close', stats: ['combat'], diff: 8, danger: true, text: 'A security guard steps round a container, right in front of {op}.', ok: '{op} drops him quietly and zip-ties his wrists.', bad: 'He\'s bigger than he looked, and he\'s got {op} against the steel.', comp: '{op} is cornered.', conseq: { alert: 1, injury: true } },
-  backup: { name: 'More guards', stats: ['combat'], diff: 9, danger: true, text: 'Two more guards come running from the gatehouse.', ok: '{op} meets them in the gap between stacks and ends it fast.', bad: 'They split up and one gets behind {op}.', comp: '{op} is pinned down.', conseq: { alert: 1, injury: true } },
-  checkpoint: { name: 'Checkpoint', stats: ['social'], diff: 8, text: 'A customs officer checks passes at the inner gate.', ok: '{op} hands over the pass and complains about the night shift. Waved through.', bad: 'The officer wants to call {op}\'s supervisor.', conseq: { alert: 1 } },
-  staff: { name: 'Night staff', stats: ['social', 'stealth'], diff: 7, text: 'Two clerks on a smoke break, right by the office door.', ok: '{op} bums a light and walks in behind them.', bad: '{op} gets a long, curious look.', conseq: { alert: 1 } },
-  sweep: { name: 'Drone sweep', stats: ['tech', 'stealth'], diff: 8, text: 'An Aether-Harbour drone comes over the stacks, scanning.', ok: '{op} spoofs its scanner. It drifts off.', bad: 'The drone pings {op} and circles back.', conseq: { alert: 1 } },
-  firewall: { name: 'Firewall', stats: ['tech'], diff: 9, text: 'The office terminal sits behind a corporate firewall.', ok: '{op} is through in ninety seconds.', bad: 'Black ICE bites. {op} jerks back from the jack, nose bleeding.', conseq: { alert: 1, neural: 15 } },
-  safe: { name: 'The manifest', stats: ['tech', 'stealth'], diff: 8, text: 'The real manifest for Container 409 is in a locked cabinet.', ok: '{op} has it photographed and back in the drawer.', bad: '{op} only gets half the pages before footsteps.', conseq: { alert: 1, payCut: 0.15 } },
+  lock: { hOk: '{op} opens the gate', hBad: 'The lock squawks', name: 'Locked gate', stats: ['tech', 'stealth'], diff: 8, text: 'The yard gate has a new mag-lock.', ok: '{op} gets it open without a sound.', bad: 'The lock chirps an error at {op}. Somewhere, a light comes on.', conseq: { alert: 1 } },
+  camera: { hOk: '{op} loops the camera', hBad: 'Caught on camera', name: 'Cameras', stats: ['tech', 'stealth'], diff: 8, text: 'A camera sweeps the row.', ok: '{op} loops the feed. The camera watches an empty row on repeat.', bad: 'The camera catches {op}\'s shoulder for half a second.', conseq: { alert: 1 } },
+  patrol: { hOk: '{op} slips the patrol', hBad: 'Spotted by a patrol', name: 'Patrols', stats: ['stealth'], diff: 8, danger: true, text: 'A guard on patrol, torch low, coming this way.', ok: '{op} waits in the shadow of a reefer unit until the torch passes.', bad: 'The torch finds {op}.', comp: '"Oi!" The guard is on {op} before they can move.', conseq: { alert: 1, heat: 1 } },
+  guard: { hOk: '{op} drops the guard', hBad: '{op} is cornered', name: 'Guard up close', stats: ['combat'], diff: 8, danger: true, text: 'A security guard steps round a container, right in front of {op}.', ok: '{op} drops him quietly and zip-ties his wrists.', bad: 'He\'s bigger than he looked, and he\'s got {op} against the steel.', comp: '{op} is cornered.', conseq: { alert: 1, injury: true } },
+  backup: { hOk: '{op} handles the guards', hBad: '{op} is pinned down', name: 'More guards', stats: ['combat'], diff: 9, danger: true, text: 'Two more guards come running from the gatehouse.', ok: '{op} meets them in the gap between stacks and ends it fast.', bad: 'They split up and one gets behind {op}.', comp: '{op} is pinned down.', conseq: { alert: 1, injury: true } },
+  checkpoint: { hOk: '{op} talks through', hBad: 'The officer wants a supervisor', name: 'Checkpoint', stats: ['social'], diff: 8, text: 'A customs officer checks passes at the inner gate.', ok: '{op} hands over the pass and complains about the night shift. Waved through.', bad: 'The officer wants to call {op}\'s supervisor.', conseq: { alert: 1 } },
+  staff: { hOk: '{op} blends in', hBad: 'The clerks get curious', name: 'Night staff', stats: ['social', 'stealth'], diff: 7, text: 'Two clerks on a smoke break, right by the office door.', ok: '{op} bums a light and walks in behind them.', bad: '{op} gets a long, curious look.', conseq: { alert: 1 } },
+  sweep: { hOk: '{op} fools the drone', hBad: 'The drone pings them', name: 'Drone sweep', stats: ['tech', 'stealth'], diff: 8, text: 'An Aether-Harbour drone comes over the stacks, scanning.', ok: '{op} spoofs its scanner. It drifts off.', bad: 'The drone pings {op} and circles back.', conseq: { alert: 1 } },
+  firewall: { hOk: '{op} is through the firewall', hBad: 'Black ICE bites {op}', name: 'Firewall', stats: ['tech'], diff: 9, text: 'The office terminal sits behind a corporate firewall.', ok: '{op} is through in ninety seconds.', bad: 'Black ICE bites. {op} jerks back from the jack, nose bleeding.', conseq: { alert: 1, neural: 15 } },
+  safe: { hOk: '{op} copies the manifest', hBad: 'Only half the manifest', name: 'The manifest', stats: ['tech', 'stealth'], diff: 8, text: 'The real manifest for Container 409 is in a locked cabinet.', ok: '{op} has it photographed and back in the drawer.', bad: '{op} only gets half the pages before footsteps.', conseq: { alert: 1, payCut: 0.15 } },
 };
 // What each approach tends to meet in each zone. A small chance of an off-approach guard keeps a fighter worth bringing.
 const POOLS = {
@@ -334,36 +365,74 @@ const EXITS = {
   boat: { name: 'Ferryman\'s boat', blurb: 'No driver needed. He takes 15%.' },
 };
 
-// ---------- Map ----------
-const P = { drop: [46, 226], gate: [120, 214], yard: [170, 130], office: [292, 66], crane: [196, 34], boat: [326, 176] };
-const PATH = [P.drop, P.gate, [140, 170], P.yard, [240, 96], P.office];
-const EXIT_PATHS = { van: [P.office, [250, 150], [120, 200], P.drop], boat: [P.office, [318, 120], P.boat] };
+// ---------- Map: a site plan of Pier 12. During the run the camera pans to each zone. ----------
+const P = { van: [40, 224], road: [106, 224], gate: [106, 196], yard: [106, 135], lane: [186, 135], door: [236, 100], office: [272, 74], crane: [176, 24], east: [306, 74], quay: [318, 130], jetty: [324, 192] };
+const PATHS = {
+  fence: [P.van, P.road, P.gate],
+  yard: [P.gate, P.yard],
+  office: [P.yard, P.lane, P.door, P.office],
+  van: [P.office, P.door, P.lane, P.yard, P.gate, P.road, P.van],
+  boat: [P.office, P.east, P.quay, P.jetty],
+};
 const ZONE_AT = { fence: P.gate, yard: P.yard, office: P.office };
+// Camera boxes, all 3:2 like the full view.
+const VB = { full: [0, 0, 360, 240], fence: [6, 126, 171, 114], yard: [0, 46, 249, 166], office: [150, 4, 204, 136], van: [0, 112, 192, 128], boat: [168, 60, 192, 128] };
 const pts = (list) => list.map((p) => p.join(',')).join(' ');
-function mapSvg(plan) {
-  const stacks = [[110, 30, 30, 22], [70, 140, 26, 40], [190, 150, 40, 26], [240, 170, 30, 30], [120, 80, 20, 26], [205, 110, 24, 16]];
-  const lbl = (pt, text, dx, dy, hi) => `<text class="label ${hi ? 'hi' : ''}" x="${pt[0] + dx}" y="${pt[1] + dy}">${text}</text>`;
-  const sniper = plan.slots.over && plan.kit === 'rifle';
-  return `<svg viewBox="0 0 360 260" role="img" aria-label="Map of Pier 12: the fence, the yard and the yard office, with a crane for overwatch">
-    <rect width="360" height="260" fill="#0b0d11"/>
-    <path class="water" d="M0 0 H22 V260 H0 Z M340 0 H360 V260 H340 Z M300 196 Q340 200 360 196 V260 H300 Z"/>
-    ${plan.slots.over ? `<path class="sight" d="M${P.crane[0]} ${P.crane[1]} L60 240 L250 240 L262 92 Z"/>` : ''}
-    ${stacks.map(([x, y, w, h]) => `<rect class="stack" x="${x}" y="${y}" width="${w}" height="${h}" rx="2"/>`).join('')}
-    <rect class="office" x="270" y="44" width="48" height="40" rx="3"/>
-    ${Object.entries(EXIT_PATHS).map(([k, l]) => `<polyline class="exit ${plan.exit === k ? 'on' : ''}" points="${pts(l)}"/>`).join('')}
-    <polyline class="route" points="${pts(PATH)}"/>
-    <circle class="node" cx="${P.drop[0]}" cy="${P.drop[1]}" r="7"/>${lbl(P.drop, 'DROP-OFF · VAN', -12, 20, plan.exit === 'van')}
-    <circle class="node" cx="${P.gate[0]}" cy="${P.gate[1]}" r="5"/>${lbl(P.gate, 'FENCE', -6, 20, true)}
-    <circle class="node" cx="${P.yard[0]}" cy="${P.yard[1]}" r="5"/>${lbl(P.yard, 'YARD', 9, 3, true)}
-    <circle class="node post" cx="${P.office[0]}" cy="${P.office[1]}" r="7"/>${lbl(P.office, 'YARD OFFICE', -30, -26, true)}
-    <circle class="node crane" cx="${P.crane[0]}" cy="${P.crane[1]}" r="6"/>${lbl(P.crane, sniper ? 'CRANE · NO SIGHT INDOORS' : 'CRANE', sniper ? -132 : -40, 3, !!plan.slots.over)}
-    <circle class="node" cx="${P.boat[0]}" cy="${P.boat[1]}" r="6"/>${lbl(P.boat, 'FERRY LANDING', -50, 20, plan.exit === 'boat')}
+function mapSvg(plan, { live = false } = {}) {
+  const rows = [];
+  const colours = ['#1b2433', '#2a1d26', '#1d2a24', '#2b2618'];
+  // Three rows of containers; rows B and C leave the gate lane open, and the lane east runs between B and C.
+  [[56, false], [96, true], [150, true]].forEach(([y, gap], r) => {
+    for (let i = 0; i < 7; i++) {
+      const x = 16 + i * 31;
+      if (gap && x + 26 > 94 && x < 120) continue;
+      rows.push(`<rect class="box" x="${x}" y="${y}" width="27" height="14" rx="1.5" fill="${colours[(i + r) % 4]}"/><line class="box__rib" x1="${x + 9}" y1="${y + 2}" x2="${x + 9}" y2="${y + 12}"/><line class="box__rib" x1="${x + 18}" y1="${y + 2}" x2="${x + 18}" y2="${y + 12}"/>`);
+    }
+  });
+  const over = plan.slots.over;
+  const cone = !over ? '' : plan.kit === 'rifle'
+    ? `<polygon class="sight" points="${P.crane.join(',')} 12,194 232,194 232,40"/>`
+    : `<polygon class="sight sight--drone" points="${P.crane.join(',')} 12,194 310,194 310,36"/>`;
+  return `<svg viewBox="${VB.full.join(' ')}" id="mapsvg" role="img" aria-label="Site plan of Pier 12: the fence and gate, the container yard, the yard office, a crane for overwatch, the van on the service road and the ferry jetty">
+    <rect width="360" height="240" fill="#0b0d11"/>
+    <rect class="road" x="0" y="212" width="318" height="28"/><line class="road__line" x1="0" y1="226" x2="318" y2="226"/>
+    <rect class="water" x="318" y="0" width="42" height="240"/><rect class="jetty" x="310" y="186" width="24" height="9"/>
+    <polyline class="fence" points="8,196 94,196"/><polyline class="fence" points="118,196 312,196"/>
+    <rect class="post" x="92" y="193" width="3" height="6"/><rect class="post" x="117" y="193" width="3" height="6"/>
+    ${rows.join('')}
+    <rect class="building" x="236" y="38" width="72" height="72" rx="2"/><rect class="door" x="233" y="94" width="5" height="12"/>
+    <rect class="desk" x="252" y="52" width="20" height="8"/><rect class="desk" x="282" y="80" width="16" height="16"/>
+    ${cone}
+    <line class="gantry" x1="146" y1="24" x2="206" y2="24"/><line class="gantry" x1="150" y1="24" x2="150" y2="40"/><line class="gantry" x1="202" y1="24" x2="202" y2="40"/>
+    <polyline class="route" points="${pts([...PATHS.fence, ...PATHS.yard.slice(1), ...PATHS.office.slice(1)])}"/>
+    <polyline class="exit" points="${pts(plan.exit === 'boat' ? PATHS.boat : [P.office, P.door, P.lane])}"/>
+    <circle class="node" cx="${P.gate[0]}" cy="${P.gate[1]}" r="3"/><circle class="node" cx="${P.yard[0]}" cy="${P.yard[1]}" r="3"/><circle class="node node--target" cx="${P.office[0]}" cy="${P.office[1]}" r="4"/>
+    <circle class="node node--crane" cx="${P.crane[0]}" cy="${P.crane[1]}" r="4"/>
+    <text class="label" x="124" y="206">THE FENCE</text><text class="label" x="18" y="140">THE YARD</text>
+    <text class="label hi" x="246" y="32">YARD OFFICE</text><text class="label" x="212" y="20">CRANE</text>
+    <text class="label" x="8" y="236">VAN</text><text class="label" x="276" y="182">FERRY</text>
     <circle class="alarm" id="alarm" cx="0" cy="0" r="6"/>
-    <g id="fx"></g>
-    <g id="tokens"></g>
+    <g id="fx"></g><g id="tokens"></g>
   </svg>`;
 }
-
+// Pan the camera smoothly to a box (instant with reduced motion or at speed).
+let currentVB = [...VB.full];
+function panTo(name, ms = 700) {
+  const svg = document.getElementById('mapsvg');
+  if (!svg) return;
+  const to = VB[name];
+  const from = [...currentVB];
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || ms <= 0) { currentVB = [...to]; svg.setAttribute('viewBox', to.join(' ')); return; }
+  const t0 = performance.now();
+  const step = (t) => {
+    const k = Math.min(1, (t - t0) / ms);
+    const e = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
+    currentVB = from.map((v, i) => v + (to[i] - v) * e);
+    svg.setAttribute('viewBox', currentVB.join(' '));
+    if (k < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
 // ---------- Plan state ----------
 // Slots: up to four inside, one overwatch (rifle or drone), Wheels for the van, one on standby.
 const INSIDE = ['in0', 'in1', 'in2', 'in3'];
@@ -518,6 +587,7 @@ function renderPlan() {
       </ul></details>
     </header>
     <div class="map">${mapSvg(plan)}</div>
+    <p class="legend"><span class="lg lg--in"></span>Way in <span class="lg lg--out"></span>Way out ${plan.slots.over ? `<span class="lg lg--sight${plan.kit === 'drone' ? ' lg--drone' : ''}"></span>${plan.kit === 'rifle' ? 'Rifle sight: not inside the office' : 'Drone: sees everywhere'}` : '<span class="muted">No overwatch</span>'}</p>
     <section><h2>Approach <small>what gets you past the yard</small></h2><div class="approaches">
       ${Object.entries(APPROACHES).map(([k, a]) => `<button type="button" class="card" data-approach="${k}" aria-pressed="${plan.approach === k}"><b>${a.name}</b><span class="card__body">${a.blurb}</span><span class="card__meta">${a.lean.join(' · ')}</span><span class="card__cost">${a.cost}</span></button>`).join('')}
     </div></section>
@@ -605,8 +675,14 @@ function openPicker(slotId) {
 }
 
 // ---------- The run ----------
-let fast = false;
-const wait = (ms) => new Promise((r) => setTimeout(r, fast ? 50 : ms));
+// Pacing: routine moments pass quickly, failures and saves linger, call-ins wait. Pause holds the clock.
+let speed = 1;
+let paused = false;
+const PACE = { quick: 1100, setup: 1400, beat: 1900, big: 2600 };
+const wait = async (ms) => { let left = ms * speed; while (left > 0) { await new Promise((r) => setTimeout(r, 50)); if (!paused) left -= 50; } };
+const SVGNS = 'http://www.w3.org/2000/svg';
+const svgEl = (tag, attrs = {}, text = '') => { const e = document.createElementNS(SVGNS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); if (text) e.textContent = text; return e; };
+const place = (el, [x, y]) => { el.style.transform = `translate(${x}px, ${y}px)`; };
 
 async function run() {
   const rng = mulberry32(seed);
@@ -620,57 +696,117 @@ async function run() {
   let standby = S.standby ? byId(S.standby) : null;
   const log = { alert: 0, heat: approach === 'loud' ? 1 : 0, neural: {}, payCut: 0, hurt: {}, out: new Set(), saves: [], fails: [], passes: [], aborted: false, callIns: 0, standbyIn: false, rescued: null, wentLoud: false, events: [] };
   let overLeft = shotsFor(S, kit);
-  let arriving = null; // { op, in: incidents left }
-  fast = false;
+  let arriving = null;
+  speed = 1; paused = false;
+  currentVB = [...VB.full];
   window.scrollTo(0, 0);
 
   const app = document.getElementById('app');
   app.className = 'wrap';
-  app.innerHTML = `<div class="live"><div class="map">${mapSvg({ ...plan, slots: S })}</div><div class="tally" id="tally"></div></div><div class="feed" id="feed" aria-live="polite"></div>`;
-  const tokens = () => {
-    const g = document.getElementById('tokens');
-    const list = [...team.map((op, i) => ({ op, at: P.drop, i })), ...(over ? [{ op: over, at: P.crane, i: 0 }] : []), ...(wheels ? [{ op: wheels, at: P.drop, i: 1 }] : []), ...(standby ? [{ op: standby, at: [P.drop[0] + 18, P.drop[1] + 2], i: 0 }] : [])];
-    g.innerHTML = list.map(({ op, at, i }) => `<g class="token" id="tok-${op.id}" style="transform: translate(${at[0] + i * 9 - 9}px, ${at[1] - 12}px)"><circle r="8" fill="${op.color}"/><text>${esc(initials(op))}</text></g>`).join('');
-  };
-  tokens();
-  let here = P.drop;
-  const moveGroup = (pt) => { here = pt; team.forEach((op, i) => { const t = document.getElementById(`tok-${op.id}`); if (t) t.style.transform = `translate(${pt[0] + i * 9 - 9}px, ${pt[1] - 12}px)`; }); };
-  const markDown = (op) => document.getElementById(`tok-${op.id}`)?.classList.add('down');
-  const fx = async (kind, to) => {
-    const g = document.getElementById('fx');
-    if (!g) return;
-    if (kind === 'shot') g.innerHTML = `<line class="shot" x1="${P.crane[0]}" y1="${P.crane[1]}" x2="${to[0]}" y2="${to[1]}"/>`;
-    else g.innerHTML = `<circle class="dronefx" r="4" cx="${P.crane[0]}" cy="${P.crane[1]}"><animate attributeName="cx" to="${to[0]}" dur="0.6s" fill="freeze"/><animate attributeName="cy" to="${to[1]}" dur="0.6s" fill="freeze"/></circle>`;
-    await wait(700);
-    g.innerHTML = '';
-  };
-  const alarm = (at) => { const a = document.getElementById('alarm'); if (!a) return; if (!at) { a.classList.remove('on'); return; } a.setAttribute('cx', at[0]); a.setAttribute('cy', at[1]); a.classList.add('on'); };
+  app.innerHTML = `<div class="live"><div class="map">${mapSvg({ ...plan, slots: S })}<span class="map__phase" id="phase">Way in</span><span class="map__alert" id="alertpips" aria-label="Alert"></span></div><div class="tally" id="tally"></div></div><div class="feed" id="feed" aria-live="polite"></div>`;
 
+  // ---- Tokens ----
+  let here = P.van;
+  const slotPos = (i, pt) => [pt[0] + (i % 2) * 11 - 5, pt[1] + Math.floor(i / 2) * 11 - 5];
+  const tokPos = (op) => slotPos(Math.max(0, team.indexOf(op)), here);
+  const drawTokens = () => {
+    const g = document.getElementById('tokens');
+    g.innerHTML = '';
+    const add = (op, at) => {
+      const t = svgEl('g', { class: 'token', id: `tok-${op.id}` });
+      t.append(svgEl('circle', { r: 6.5, fill: op.color }), svgEl('text', {}, initials(op)));
+      place(t, at); g.append(t);
+    };
+    team.forEach((op, i) => add(op, slotPos(i, here)));
+    if (over) add(over, P.crane);
+    if (wheels) add(wheels, [P.van[0] + 2, P.van[1] - 2]);
+    if (standby) add(standby, [P.van[0] + 16, P.van[1] - 2]);
+    for (const [id, v] of Object.entries(log.hurt)) document.getElementById(`tok-${id}`)?.classList.add(v === 'serious' ? 'down' : 'hit');
+  };
+  drawTokens();
+  const moveGroup = (pt) => { here = pt; team.forEach((op, i) => { const t = document.getElementById(`tok-${op.id}`); if (t) place(t, slotPos(i, pt)); }); };
+  const walk = async (path) => { for (const pt of path.slice(1)) { moveGroup(pt); await wait(480); } };
+  const tokClass = (op, cls) => document.getElementById(`tok-${op.id}`)?.classList.add(cls);
+
+  // ---- Map effects ----
+  const fx = () => document.getElementById('fx');
+  const flash = async (at, tone = 'hit') => { const c = svgEl('circle', { class: `flash flash--${tone}`, cx: at[0], cy: at[1], r: 5 }); fx().append(c); await wait(450); c.remove(); };
+  const spawn = (at, { cls = 'enemy', mark = '!' } = {}) => {
+    const g = svgEl('g', { class: cls });
+    g.append(svgEl('circle', { r: 6 }), svgEl('text', {}, mark));
+    place(g, at); fx().append(g);
+    return g;
+  };
+  const torch = (from, to) => {
+    const a = Math.atan2(to[1] - from[1], to[0] - from[0]) * 180 / Math.PI;
+    const g = svgEl('g', { class: 'torch' });
+    g.append(svgEl('path', { d: 'M0 0 L34 -9 L34 9 Z' }));
+    g.style.transform = `translate(${from[0]}px, ${from[1]}px) rotate(${a + 35}deg)`;
+    fx().append(g);
+    return { el: g, aim: () => { g.style.transform = `translate(${from[0]}px, ${from[1]}px) rotate(${a}deg)`; g.classList.add('caught'); } };
+  };
+  const ring = async (at, ok) => { const c = svgEl('circle', { class: `work ${ok == null ? '' : ok ? 'work--ok' : 'work--bad'}`, cx: at[0], cy: at[1], r: 9 }); fx().append(c); await wait(700); c.remove(); };
+  const shot = async (to, hit) => {
+    const end = hit ? to : [to[0] + 9, to[1] - 7];
+    const l = svgEl('line', { class: 'shot', x1: P.crane[0], y1: P.crane[1], x2: end[0], y2: end[1] });
+    fx().append(l); await wait(350); await flash(end, hit ? 'hit' : 'miss'); l.remove();
+  };
+  const droneTo = async (to, hit) => {
+    const d = svgEl('g', { class: 'drone' });
+    d.append(svgEl('circle', { r: 3.5 }), svgEl('circle', { r: 7, class: 'drone__rotor' }));
+    place(d, P.crane); fx().append(d);
+    await wait(60); place(d, hit ? to : [to[0] + 14, to[1] - 12]); await wait(700);
+    await flash(to, hit ? 'zap' : 'miss');
+    place(d, P.crane); await wait(500); d.remove();
+  };
+  const near = (pt, dx = 22, dy = -16) => [pt[0] + dx, pt[1] + dy];
+
+  // ---- Bar, tally, phase ----
   const bar = document.getElementById('bar');
   bar.hidden = false;
-  bar.innerHTML = `<div class="bar__in"><div class="bar__sum"><b>${APPROACHES[approach].name} run</b><span>${esc(team.map((o) => o.handle).join(', '))}${over ? ` · ${esc(over.handle)} on the crane` : ''}</span></div><button class="btn btn--ghost" id="skip">Speed up</button></div>`;
-  document.getElementById('skip').addEventListener('click', (e) => { fast = !fast; e.target.textContent = fast ? 'Normal speed' : 'Speed up'; });
-
-  let phase = 'Way in';
+  bar.innerHTML = `<div class="bar__in bar__in--run"><div class="bar__sum"><b>${APPROACHES[approach].name} run</b><span>${esc(team.map((o) => o.handle).join(', '))}${over ? ` · ${esc(over.handle)} on the crane` : ''}</span></div><button class="btn btn--ghost btn--sm" id="pause">Pause</button><button class="btn btn--ghost btn--sm" id="skip">Faster</button></div>`;
+  document.getElementById('pause').addEventListener('click', (e) => { paused = !paused; e.target.textContent = paused ? 'Resume' : 'Pause'; e.target.setAttribute('aria-pressed', String(paused)); });
+  document.getElementById('skip').addEventListener('click', (e) => { speed = speed === 1 ? 0.35 : 1; e.target.textContent = speed === 1 ? 'Faster' : 'Normal'; });
   const tally = () => {
     const hurtN = Object.keys(log.hurt).length;
-    document.getElementById('tally').innerHTML = `<span class="phase">${phase}</span><span class="alert ${log.alert ? 'bad' : ''}" aria-label="Alert ${log.alert} of 3">Alert <i class="${log.alert > 0 ? 'on' : ''}"></i><i class="${log.alert > 1 ? 'on' : ''}"></i><i class="${log.alert > 2 ? 'on' : ''}"></i></span><span class="${log.heat ? 'bad' : ''}">Heat +${log.heat}</span><span class="${hurtN ? 'bad' : ''}">Hurt ${hurtN}</span>${over ? `<span>${kit === 'rifle' ? 'Shots' : 'Drone'} ${overLeft}</span>` : ''}`;
+    document.getElementById('alertpips').innerHTML = `ALERT ${[0, 1, 2].map((i) => `<i class="${log.alert > i ? 'on' : ''}"></i>`).join('')}`;
+    document.getElementById('alertpips').setAttribute('aria-label', `Alert ${log.alert} of 3`);
+    document.getElementById('tally').innerHTML = `<span class="${log.heat ? 'bad' : ''}">Heat +${log.heat}</span><span class="${hurtN ? 'bad' : ''}">Hurt ${hurtN}</span><span class="${log.saves.length ? 'good' : ''}">Saves ${log.saves.length}</span>${over ? `<span>${kit === 'rifle' ? 'Shots' : 'Drone'} ${'●'.repeat(overLeft)}${'○'.repeat(Math.max(0, shotsFor(S, kit) - overLeft))}</span>` : ''}`;
   };
   tally();
+
+  // ---- Feed: one card per moment, a headline you can follow at a glance, detail underneath ----
   const feed = document.getElementById('feed');
-  const add = (node) => { feed.appendChild(node); node.scrollIntoView({ block: 'end', behavior: fast ? 'auto' : 'smooth' }); };
-  const say = async (html, cls = '', ms = 1100, kind = '') => {
-    const div = document.createElement('div');
-    div.className = `line ${cls}`;
-    div.innerHTML = (kind ? `<span class="kind">${kind}</span>` : '') + html;
-    div.querySelectorAll('.dice').forEach((b) => b.addEventListener('click', () => { const d = b.nextElementSibling; d.hidden = !d.hidden; b.setAttribute('aria-expanded', String(!d.hidden)); }));
-    add(div);
-    await wait(ms);
-  };
-  const newPhase = async (name) => { phase = name; tally(); const h = document.createElement('div'); h.className = 'phasehead'; h.textContent = name; add(h); await wait(350); };
+  const add = (node) => { feed.appendChild(node); node.scrollIntoView({ block: 'end', behavior: speed < 1 ? 'auto' : 'smooth' }); };
   const who = (op) => `<span class="who" style="color:${op.color}">${esc(op.handle)}</span>`;
   const fillWho = (t, op) => esc(t).replaceAll('{op}', who(op));
-  const diceHtml = (r, die) => `<button class="dice" type="button" aria-expanded="false">${die + r.value >= r.need ? '✓' : '✗'} dice</button><span class="dice-detail" hidden>die ${die} + ${r.value} (${esc(r.notes.join(', '))}) = ${die + r.value} · needs ${r.need}</span>`;
+  const diceHtml = (r, die) => `<button class="dice" type="button" aria-expanded="false">dice</button><span class="dice-detail" hidden>die ${die} + ${r.value} (${esc(r.notes.join(', '))}) = ${die + r.value} · needs ${r.need}</span>`;
+  const wireDice = (el) => el.querySelectorAll('.dice').forEach((b) => b.addEventListener('click', () => { const d = b.nextElementSibling; d.hidden = !d.hidden; b.setAttribute('aria-expanded', String(!d.hidden)); }));
+  const card = (kind, setup, tone = '') => {
+    const el = document.createElement('div');
+    el.className = `ev ${tone}`;
+    el.innerHTML = `<span class="kind">${kind}</span>${setup ? `<p class="setup">${setup}</p>` : ''}`;
+    add(el);
+    return {
+      el,
+      res: async (headline, detail, cls, ms) => {
+        const r = document.createElement('div');
+        r.className = `res res--${cls}`;
+        r.innerHTML = `<p class="hl">${headline}</p>${detail ? `<p class="det">${detail}</p>` : ''}`;
+        wireDice(r); el.append(r); el.classList.add(`ev--${cls}`);
+        r.scrollIntoView({ block: 'end', behavior: speed < 1 ? 'auto' : 'smooth' });
+        await wait(ms);
+      },
+    };
+  };
+  const beat = async (text, ms = PACE.beat) => { const p = document.createElement('p'); p.className = 'beatline'; p.textContent = text; add(p); await wait(ms); };
+  const note = async (html, ms = PACE.quick) => { const p = document.createElement('p'); p.className = 'note'; p.innerHTML = html; add(p); await wait(ms); };
+  const newPhase = async (name, box) => {
+    document.getElementById('phase').textContent = name;
+    const h = document.createElement('div'); h.className = 'phasehead'; h.textContent = name; add(h);
+    if (box) panTo(box);
+    await wait(500);
+  };
   const able = () => team.filter((o) => !log.out.has(o.id));
 
   // A call-in: the feed waits for you. Every call-in has a way out.
@@ -695,30 +831,30 @@ async function run() {
     if (arriving.in > 0) return;
     team = [...team, arriving.op];
     standby = null;
-    await say(`${who(arriving.op)} comes over the fence at a run and falls in with the group.`, 'good', 1000, 'Standby arrives');
     arriving = null;
-    tokens(); moveGroup(here);
+    drawTokens(); moveGroup(here);
+    const c = card('Standby arrives', '');
+    await c.res(`${who(team.at(-1))} joins the group`, 'Over the fence at a run.', 'good', PACE.quick);
   };
 
-  // Max alert: always a call-in (unless orders say never): go loud, call standby, or pull out.
-  const alertCall = async (zoneAt) => {
-    alarm(zoneAt);
-    await say('Floodlights snap on across the yard. Somebody is shouting into a radio.', 'crisis', 1300, 'Alert maxed');
+  // Max alert: always a call-in (unless the orders say never): go loud, call standby, or pull out.
+  const alertCall = async () => {
+    const a = document.getElementById('alarm'); a.setAttribute('cx', here[0]); a.setAttribute('cy', here[1]); a.classList.add('on');
+    const c = card('Alert maxed', 'Floodlights snap on across the yard. Somebody is shouting into a radio.', 'ev--crisis');
+    await wait(PACE.setup);
     let pick;
     const opts = [
       { label: 'Go loud: finish it fast', sub: 'Heat +2. Later incidents become fights.', value: 'loud' },
       ...(standby && !arriving ? [{ label: `Call ${esc(standby.handle)} in from standby`, sub: 'Arrives after the next incident. Alert drops one.', value: 'standby' }] : []),
       { label: 'Pull out', sub: 'Nobody else gets hurt. No pay.', value: 'out', risk: 'certain' },
     ];
-    if (plan.callIn === 'never') {
-      pick = standby && !arriving ? 'standby' : 'out';
-      await say(`Under your orders, the crew ${pick === 'standby' ? `call ${who(standby)} in` : 'pull out'}.`, 'why', 900);
-    } else pick = await callIn('The crew is calling in', '"They know we\'re here. What now?"', opts);
-    alarm(null);
-    if (pick === 'out') { log.aborted = true; await say('The crew go back the way they came, fast and low.', 'bad', 1000); return false; }
-    if (pick === 'loud') { log.wentLoud = true; log.heat += 2; log.alert = 2; tally(); await say('No more sneaking. The crew moves fast and stops pretending.', 'why', 900); return true; }
+    if (plan.callIn === 'never') pick = standby && !arriving ? 'standby' : 'out';
+    else pick = await callIn('The crew is calling in', '"They know we\'re here. What now?"', opts);
+    a.classList.remove('on');
+    if (pick === 'out') { log.aborted = true; await c.res('The crew pull out', 'Back the way they came, fast and low.', 'bad', PACE.big); return false; }
+    if (pick === 'loud') { log.wentLoud = true; log.heat += 2; log.alert = 2; tally(); await c.res('Going loud', 'No more sneaking. Heat +2.', 'bad', PACE.big); return true; }
     arriving = { op: standby, in: 1 }; log.standbyIn = true; log.alert = 2; tally();
-    await say(`${who(standby)} is on the way from the van.`, 'why', 900);
+    await c.res(`${who(standby)} is on the way`, 'From the van. Alert drops one.', 'save', PACE.big);
     return true;
   };
 
@@ -730,56 +866,105 @@ async function run() {
       { label: `Keep going without ${esc(op.handle)}`, sub: 'They stay with the group but can\'t act.', value: 'keep' },
       { label: 'Pull everyone out', sub: 'No pay.', value: 'out', risk: 'certain' },
     ];
-    if (plan.callIn === 'never') { pick = opts[0].value; await say(`Under your orders, the crew ${pick === 'rescue' ? `send for ${who(standby)}` : pick === 'keep' ? 'keep going' : 'pull out'}.`, 'why', 900); }
+    if (plan.callIn === 'never') pick = opts[0].value;
     else pick = await callIn(`${op.handle} is down`, `"${esc(op.handle)}'s badly hurt. Your call."`, opts);
-    if (pick === 'out') { log.aborted = true; await say('The crew carry them out between them.', 'bad', 1000); return false; }
+    if (pick === 'out') { log.aborted = true; await note('The crew carry them out between them.', PACE.big); return false; }
     if (pick === 'rescue') {
       log.rescued = { by: standby.handle, who: op.handle };
-      await say(`${who(standby)} comes in fast, gets an arm under ${who(op)} and walks them back to the van.`, 'save', 1300, 'Rescue');
-      team = [...team.filter((o) => o.id !== op.id), standby];
+      const c = card('Rescue', '');
+      const s = standby;
+      team = [...team.filter((o) => o.id !== op.id), s];
       standby = null; log.standbyIn = true;
-      tokens(); moveGroup(here);
+      const t = document.getElementById(`tok-${s.id}`); if (t) place(t, here);
+      await wait(700);
+      document.getElementById(`tok-${op.id}`)?.remove();
+      drawTokens(); moveGroup(here);
+      await c.res(`${who(s)} gets ${who(op)} out`, `An arm under them, back to the van. ${esc(s.handle)} takes their place.`, 'save', PACE.big);
     }
     return true;
   };
 
-  // One incident: the best-placed person rolls; a danger failure can be saved; unsaved failures raise the alert.
+  // The save: one reaction roll by the best-placed teammate, shown on the map.
+  const trySave = async (c, op, zoneId, enemy) => {
+    const sv = bestSave(op, zoneId, { team, out: log.out, overLeft, slots: S, kit });
+    if (!sv) { await c.res('Nobody can help', 'Nobody is in a position to reach them.', 'bad', PACE.quick); return false; }
+    const sdie = d20();
+    const saved = sdie + sv.value >= sv.need;
+    const sr = { value: sv.value, need: sv.need, notes: sv.notes };
+    const target = enemy ? JSON.parse(enemy.dataset.at) : tokPos(op);
+    if (sv.kind === 'overwatch') {
+      overLeft -= 1;
+      if (kit === 'rifle') { await shot(target, saved); log.heat += over.spec === 'marksman' && saved ? 0 : 1; }
+      else { await droneTo(target, saved); log.neural[sv.op.handle] = (log.neural[sv.op.handle] ?? 0) + (over.spec === 'jockey' ? 5 : 10); }
+    } else {
+      const t = document.getElementById(`tok-${sv.op.id}`);
+      const home = tokPos(sv.op);
+      if (t) place(t, saved ? near(target, -6, 4) : near(target, -16, 10));
+      await wait(600);
+      await flash(target, saved ? 'hit' : 'miss');
+      if (t) place(t, home);
+    }
+    if (saved && enemy) { enemy.classList.add('dead'); }
+    tally();
+    const head = saved
+      ? `★ ${who(sv.op)} saves ${who(op)}`
+      : `${who(sv.op)} can't save ${who(op)}`;
+    const how = sv.kind === 'overwatch'
+      ? (kit === 'rifle' ? (saved ? 'One shot from the crane.' : 'The shot sparks off steel. Too high.') : (saved ? 'The drone drops in and tases him.' : 'The drone clips a cable and spins away.'))
+      : (saved ? `${esc(sv.op.handle)} comes round the stack and pulls them clear.` : `${esc(sv.op.handle)} can't get there in time.`);
+    await c.res(head, `${how} ${diceHtml(sr, sdie)}`, saved ? 'save' : 'bad', PACE.big);
+    if (saved) log.saves.push({ by: sv.op.handle, who: op.handle, how: sv.kind === 'overwatch' ? (kit === 'rifle' ? 'shot' : 'drone') : 'hands' });
+    return saved;
+  };
+
+  // One incident: the best-placed person rolls, the map shows it, a danger failure can be saved,
+  // unsaved failures raise the alert.
   const incident = async (id, zoneId) => {
     let inc = INC[id];
     if (log.wentLoud && !inc.danger && id !== 'safe') inc = INC.guard;
     const h = handler(inc, { approach, team, alert: log.alert, hurt: log.hurt, out: log.out });
-    if (!h) { await say('Nobody is fit to deal with it.', 'bad', 800); log.alert += 1; tally(); return; }
+    if (!h) { log.alert += 1; tally(); await note('Nobody is fit to deal with it.'); return; }
     const op = h.op;
-    await say(fillWho(inc.text, op), 'inc', 1000, inc.name);
+    const me = tokPos(op);
+    const c = card(`${esc(inc.name)} · ${ZONES.find((z) => z.id === zoneId).name.toLowerCase()}`, fillWho(inc.text, op));
+    // Set the scene on the map.
+    let enemy = null; let lamp = null; let npc = null;
+    if (['guard', 'backup'].includes(id) || (inc === INC.guard)) { enemy = spawn(near(me)); enemy.dataset.at = JSON.stringify(near(me, 8, -5)); await wait(80); place(enemy, near(me, 8, -5)); }
+    else if (id === 'patrol') { const g = near(me, 30, -20); enemy = spawn(g, { cls: 'enemy enemy--patrol', mark: '•' }); enemy.dataset.at = JSON.stringify(g); lamp = torch(g, me); }
+    else if (['checkpoint', 'staff'].includes(id)) { npc = spawn(near(me, 16, -10), { cls: 'npc', mark: '?' }); }
+    else if (id === 'camera') { npc = spawn(near(me, 26, -18), { cls: 'cam', mark: '◉' }); }
+    else if (id === 'sweep') { npc = spawn(near(me, 30, -22), { cls: 'cam', mark: '✦' }); await wait(60); place(npc, near(me, 14, -12)); }
+    await wait(PACE.setup);
     const die = d20();
     const ok = die + h.value >= h.need;
     log.events.push({ name: inc.name, op: op.handle, ok, risk: h.risk });
-    if (ok) { log.passes.push(inc.name); await say(`${fillWho(inc.ok, op)} ${diceHtml(h, die)}`, 'good', 1100); await arrive(); return; }
-    await say(`${fillWho(inc.bad, op)} ${diceHtml(h, die)}`, 'bad', 1100);
-    if (inc.conseq.neural) { log.neural[op.handle] = (log.neural[op.handle] ?? 0) + inc.conseq.neural; await say(`${who(op)} takes neural load (+${inc.conseq.neural}).`, 'why', 700); }
-    if (inc.danger) {
-      await say(fillWho(inc.comp, op), 'bad', 900);
-      const sv = bestSave(op, zoneId, { team, out: log.out, overLeft, slots: S, kit });
-      if (sv) {
-        const sdie = d20();
-        const saved = sdie + sv.value >= sv.need;
-        const sr = { value: sv.value, need: sv.need, notes: sv.notes };
-        if (sv.kind === 'overwatch') {
-          overLeft -= 1;
-          await fx(kit === 'rifle' ? 'shot' : 'drone', ZONE_AT[zoneId]);
-          if (kit === 'rifle') log.heat += over.spec === 'marksman' && saved ? 0 : 1;
-          else log.neural[sv.op.handle] = (log.neural[sv.op.handle] ?? 0) + (over.spec === 'jockey' ? 5 : 10);
-        }
-        tally();
-        const line = sv.kind === 'overwatch'
-          ? (kit === 'rifle' ? (saved ? `${who(sv.op)} takes the shot from the crane. The threat drops.` : `${who(sv.op)}'s shot sparks off steel. Too high.`) : (saved ? `${who(sv.op)}'s drone drops in and tases the guard.` : `${who(sv.op)}'s drone clips a cable and spins away.`))
-          : (saved ? `${who(sv.op)} comes round the stack and pulls ${who(op)} clear.` : `${who(sv.op)} goes for it, but can't get there in time.`);
-        await say(`${line} ${diceHtml(sr, sdie)}`, saved ? 'save' : 'bad', 1300, saved ? 'Saved' : 'Save failed');
-        if (saved) { log.saves.push({ by: sv.op.handle, who: op.handle, how: sv.kind === 'overwatch' ? (kit === 'rifle' ? 'shot' : 'drone') : 'hands' }); await arrive(); return; }
-      } else {
-        await say('Nobody is in a position to help.', 'why', 800);
-      }
+    // Play the outcome on the map.
+    if (enemy && id !== 'patrol') { await flash(near(me, 4, -2)); }
+    if (ok) {
+      if (enemy) { if (id === 'patrol') { place(enemy, near(me, 60, -40)); enemy.classList.add('gone'); } else enemy.classList.add('dead'); }
+      if (lamp) lamp.el.classList.add('gone');
+      if (npc) npc.classList.add('gone');
+      if (!enemy) ring(me, true);
+      log.passes.push(inc.name);
+      await c.res(fillWho(inc.hOk, op), `${fillWho(inc.ok, op)} ${diceHtml(h, die)}`, 'good', PACE.quick);
+      setTimeout(() => { enemy?.remove(); lamp?.el.remove(); npc?.remove(); }, 900);
+      await arrive();
+      return;
     }
+    if (lamp) lamp.aim();
+    if (npc) npc.classList.add('alarmed');
+    if (!enemy) ring(me, false);
+    tokClass(op, 'cornered');
+    await c.res(fillWho(inc.hBad, op), `${fillWho(inc.bad, op)} ${diceHtml(h, die)}`, 'bad', PACE.big);
+    if (inc.conseq.neural) { log.neural[op.handle] = (log.neural[op.handle] ?? 0) + inc.conseq.neural; }
+    let saved = false;
+    if (inc.danger) {
+      if (id === 'patrol' && enemy) { place(enemy, near(me, 8, -5)); enemy.dataset.at = JSON.stringify(near(me, 8, -5)); await wait(500); }
+      saved = await trySave(c, op, zoneId, enemy);
+    }
+    document.getElementById(`tok-${op.id}`)?.classList.remove('cornered');
+    setTimeout(() => { enemy?.remove(); lamp?.el.remove(); npc?.remove(); }, 900);
+    if (saved) { await arrive(); return; }
     // Unsaved: the consequence lands.
     log.fails.push(inc.name);
     log.alert = Math.min(3, log.alert + (inc.conseq.alert ?? 0));
@@ -795,21 +980,23 @@ async function run() {
           const mr = { value: medic.stats.medical, need: 17, notes: [`medical ${medic.stats.medical}`] };
           const mdie = d20();
           patched = mdie + mr.value >= mr.need;
-          await say(`${who(medic)} gets to ${who(op)} and works fast. ${patched ? 'Bad, but they can walk.' : 'It\'s worse than it looks.'} ${diceHtml(mr, mdie)}`, patched ? 'save' : 'bad', 1200, 'Patch-up');
+          await c.res(patched ? `${who(medic)} patches ${who(op)} up` : `${who(medic)} can't stop the bleeding`, `${patched ? 'Bad, but they can walk.' : 'It\'s worse than it looks.'} ${diceHtml(mr, mdie)}`, patched ? 'save' : 'bad', PACE.big);
         }
         if (!patched) {
-          log.hurt[op.id] = 'serious'; log.out.add(op.id); markDown(op); tally();
-          await say(`${who(op)} is seriously hurt and out of the job.`, 'bad', 1000);
+          log.hurt[op.id] = 'serious'; log.out.add(op.id); tokClass(op, 'down'); tally();
+          await c.res(`${who(op)} is badly hurt and out`, 'Two weeks in the clinic, at least.', 'bad', PACE.big);
           if (!(await injuryCall(op))) return 'stop';
           await arrive();
           return log.alert >= 3 ? 'alert' : undefined;
         }
       }
-      log.hurt[op.id] = 'light'; tally();
-      await say(`${who(op)} is hurt. Light: −2 for the rest of the run.`, 'bad', 900);
+      log.hurt[op.id] = 'light'; tokClass(op, 'hit'); tally();
+      await c.res(`${who(op)} is hurt`, 'Light: −2 for the rest of the run.', 'bad', PACE.quick);
+    } else {
+      await note(`Alert ${log.alert} of 3.${inc.conseq.heat ? ` Heat +${inc.conseq.heat}.` : ''}${inc.conseq.neural ? ` ${esc(op.handle)} takes ${inc.conseq.neural} neural load.` : ''}${inc.conseq.payCut ? ' Pay −15%.' : ''}`, PACE.quick);
     }
     await arrive();
-    if (!able().length) { log.aborted = true; await say('Nobody left standing to finish it. The crew pull out.', 'bad', 1000); return 'stop'; }
+    if (!able().length) { log.aborted = true; await note('Nobody left standing to finish it. The crew pull out.', PACE.big); return 'stop'; }
     return log.alert >= 3 ? 'alert' : undefined;
   };
 
@@ -822,47 +1009,42 @@ async function run() {
       r.risk = riskOf(r.chance);
       return { c, r };
     }).sort((a, b) => b.r.chance - a.r.chance);
-    await say(esc(cr.text), 'crisis', 1300, cr.name);
+    const card1 = card(`Crisis · ${esc(cr.name)}`, esc(cr.text), 'ev--crisis');
+    const at = roller ? [P.van[0] + 2, P.van[1] - 2] : here;
+    const a = document.getElementById('alarm'); a.setAttribute('cx', at[0]); a.setAttribute('cy', at[1]); a.classList.add('on');
+    await wait(PACE.setup);
     let picked;
     if (plan.callIn === 'every' || (plan.callIn === 'risky' && opts[0].r.chance < 0.5)) {
       picked = await callIn(`${opts[0].r.op.handle} is calling in`, `"${esc(cr.name)}. What do we do?"`, [
         ...opts.map((o, i) => ({ label: fillWho(o.c.label, o.r.op), risk: o.r.risk, value: o, sub: `${i === 0 ? '<span class="crewpick">Crew\'s pick · </span>' : ''}${esc(o.r.op.handle)}: ${esc(o.r.notes.join(', '))}${o.c.failHurt ? ' · can hurt' : ''}${o.c.failHeat ? ' · heat if it fails' : ''}` })),
         { label: esc(cr.abort.label), risk: 'certain', value: 'abort', sub: 'Nobody\'s hurt. You lose the pay.' },
       ]);
-    } else {
-      picked = opts[0];
-      await say(`${who(picked.r.op)}'s call: ${fillWho(lowerFirst(picked.c.label), picked.r.op)}. The best odds they had (${picked.r.risk}).`, 'why', 900);
-    }
-    if (picked === 'abort') { log.aborted = true; log.payCut = cr.abort.payCut ?? 1; await say(esc(cr.abort.ok), 'bad', 1000); return false; }
+    } else picked = opts[0];
+    a.classList.remove('on');
+    if (picked === 'abort') { log.aborted = true; log.payCut = cr.abort.payCut ?? 1; await card1.res('You pulled out', esc(cr.abort.ok), 'bad', PACE.big); return false; }
     const { c, r } = picked;
     const die = d20();
     const ok = die + r.value >= r.need;
     log.events.push({ name: cr.name, op: r.op.handle, ok, risk: r.risk });
     if (c.payCut) log.payCut += c.payCut;
-    if (!ok) { log.heat += c.failHeat ?? 0; log.payCut += c.failPay ?? 0; if (c.failHurt) log.hurt[r.op.id] = log.hurt[r.op.id] ?? 'light'; }
+    if (!ok) { log.heat += c.failHeat ?? 0; log.payCut += c.failPay ?? 0; if (c.failHurt) { log.hurt[r.op.id] = log.hurt[r.op.id] ?? 'light'; tokClass(r.op, 'hit'); } }
     tally();
-    await say(`${fillWho(ok ? c.ok : c.bad, r.op)} ${diceHtml(r, die)}`, ok ? 'good' : 'bad', 1200);
-    if (!ok && c.failHurt) await say(`${who(r.op)} is hurt. Light: −2 for the rest of the run.`, 'bad', 800);
+    ring(roller ? at : tokPos(r.op), ok);
+    await card1.res(`${fillWho(c.label, r.op)} ${ok ? '✓' : '✗'}`, `${fillWho(ok ? c.ok : c.bad, r.op)} ${diceHtml(r, die)}${!ok && c.failHurt ? ` ${esc(r.op.handle)} is hurt.` : ''}${!ok && c.failHeat ? ' Heat +1.' : ''}`, ok ? 'good' : 'bad', ok ? PACE.quick : PACE.big);
     return true;
   };
 
   // ---- The run itself ----
   let going = true;
-  const step = async (res) => {
-    if (res === 'stop') going = false;
-    else if (res === 'alert') going = await alertCall(team.length ? ZONE_AT[phaseZone] : null);
-  };
-  let phaseZone = 'fence';
-  await newPhase('Way in');
-  await say('Pier 12 at midnight. Amber floodlights burn through the salt fog, turning the container stacks into canyons.', 'beat', 1400);
-  if (approach === 'con') await say('Hi-vis vests, a clipboard and two borrowed passes: ¥200 well spent, hopefully.', 'why', 900);
-  if (over) await say(`${who(over)} climbs the crane with ${kit === 'rifle' ? 'a rifle across their back' : 'a drone case'}. ${kit === 'rifle' ? 'From up there, the whole yard. Not the office.' : 'The drone sees everywhere, for a while.'}`, 'why', 1000);
+  const step = async (res) => { if (res === 'stop') going = false; else if (res === 'alert') going = await alertCall(); };
+  await newPhase('Way in', 'fence');
+  await beat('Pier 12 at midnight. Amber floodlights burn through the salt fog, turning the container stacks into canyons.');
+  if (approach === 'con') await note('Hi-vis vests, a clipboard and two borrowed passes: ¥200 well spent, hopefully.');
+  if (over) await note(`${who(over)} is up the crane with ${kit === 'rifle' ? 'a rifle: the whole yard in sight, but not inside the office' : 'a drone: it can follow the crew anywhere, for a while'}.`);
   for (const z of ZONES) {
     if (!going) break;
-    phaseZone = z.id;
-    if (z.id !== 'fence') await newPhase(z.name);
-    const pathTo = { fence: PATH.slice(0, 2), yard: PATH.slice(1, 4), office: PATH.slice(3) }[z.id];
-    for (const pt of pathTo.slice(1)) { moveGroup(pt); await wait(420); }
+    if (z.id !== 'fence') await newPhase(z.name, z.id);
+    await walk(PATHS[z.id]);
     const pool = POOLS[z.id][approach];
     const picks = [];
     for (let i = 0; i < COUNT[z.id]; i++) picks.push(pool[Math.floor(rng() * pool.length)]);
@@ -873,17 +1055,17 @@ async function run() {
     }
     if (going && z.id === 'office') {
       await step(await incident('safe', 'office'));
-      if (going) await say('Manifest in hand. Time to leave the way you came.', 'beat', 1100);
+      if (going) await beat('Manifest in hand. Time to leave the way you came.', PACE.quick);
     }
   }
-  await newPhase('Way out');
-  phaseZone = 'yard';
-  for (const pt of EXIT_PATHS[plan.exit].slice(1)) { moveGroup(pt); await wait(420); }
+  await newPhase('Way out', plan.exit === 'van' ? 'van' : 'boat');
+  await walk(PATHS[plan.exit]);
   if (going) {
     if (plan.exit === 'van') going = await crisis('boxed', wheels);
-    else await say('The Ferryman rows you out under a tarp. He doesn\'t say a word the whole way.', 'beat', 1100);
+    else await beat('The Ferryman rows you out under a tarp. He doesn\'t say a word the whole way.');
   }
-  await wait(600);
+  panTo('full');
+  await wait(800);
   renderReport(log, { S, kit, approach, over, team });
 }
 
