@@ -20,6 +20,7 @@ files. Rough lines are fine; anything off gets flagged, not silently changed.
 | 8 | ~~One-off side tasks~~ **Done 2026-10-26** (25 in the game) | Side tasks | — | — |
 | 9 | ~~Earned traits~~ **20 of 26 in the game 2026-10-26**; the rest in `drafts/earned-traits-backlog.md` | Progression step 2 | — | — |
 | 10 | Jobs for the locked districts | Promotions and districts | 1-2 jobs per district | `drafts/district-hooks.md` |
+| 11 | Incident lines per district (the squad run) | `PLAN-CORE-LOOP.md` slice 4 | 12 incidents × 1 district a batch | `src/data/incidents.js` |
 
 Tasks 1 and 2 first: 1 is a prerequisite for everything hands-off, and 2 decides whether
 mission logs get built at all. Tasks 3-6 wait until the first mission-log slice is built and shows where words are missing (decided 2026-10-26).
@@ -394,3 +395,27 @@ HISTORY LINE: <1 short line for the operative's history, past tense>
 Use the "new job type" template in `WRITING_GUIDE.md`. One or two jobs each for the Silt,
 the Amber Reach and Iron Peak, built from the hooks in `drafts/district-hooks.md`. Paste
 the context block, the template and the hooks for that district into one chat per district.
+
+## Task 11 · Incident lines per district (the squad run)
+
+Incidents are the small automatic moments of a run (a locked door, a patrol, a guard up close),
+added 2026-10-27 (`PLAN-CORE-LOOP.md`). Their text in `src/data/incidents.js` is Claude's generic
+draft and reads the same in every district. This task gives each district its own version. One
+district a batch; the Docks and Old Town first (most rookie jobs are there).
+
+Prompt (after the context block):
+
+```
+The crew is on a job in [DISTRICT]. Below are 12 "incidents": small moments that happen
+during a job and are resolved by a dice roll. Rewrite each one for [DISTRICT], keeping
+its meaning and its outcome. For each, give exactly these lines, one sentence each:
+- text: what happens (present tense; {op} is whoever deals with it)
+- hOk: a 3-6 word headline when it goes well ("{op} opens the lock")
+- ok: the detail when it goes well
+- hBad: a 3-6 word headline when it goes wrong
+- bad: the detail when it goes wrong
+- comp (only for patrol, guard, backup, hold): the moment {op} is in trouble
+Keep {op} where a person is meant. No new injuries or costs: the game decides those.
+```
+
+Then paste the list of incident ids and names from `src/data/incidents.js`.

@@ -4,6 +4,14 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-10-27 · The squad run, part 1: approaches, incidents, overwatch
+- **Four approaches**, each +1 to one stat and with its own cost: **Stealth** (slip past people; takes a day longer), **Tech** (machines do the work; every tech roll loads the hacker's implants), **Loud** (through the guards; quicker, heat +1) and **Con** (talk your way in, replacing Social; props and bribes up front, ¥100 per threat). The approach also changes which crises come up: stealth meets more break-ins, loud more fights.
+- **Incidents:** every job now has small moments on the way in, inside and at the target: a locked door, a patrol, cameras, a checkpoint, a guard up close. Whoever on the crew is best placed deals with them on their own. On stealth and con runs, every person past the job's recommended crew size makes the crew easier to spot (−1 on stealth and social).
+- **Saves and overwatch:** pick someone to stay outside on **overwatch** with the safehouse's shared **rifle** (2 shots a job, sees the open ground but not inside, heat +1 a shot) or **drone** (3 actions, sees everywhere, neural load for the pilot). When someone inside gets into trouble, overwatch or the best fighter with them gets one try at saving them.
+- **Alert:** mistakes nobody saves raise the alert, and every point makes later rolls harder. At the top, the crew calls you in: go loud or pull out. If someone is badly hurt, they call you too: carry on without them or pull everyone out. An incident can badly hurt someone, but never worse; deaths still only follow "push on".
+- **"Call me in…":** choose whether the crew calls you at every crisis, only when it's risky, or never (on rookie jobs, "never" sends them off and the report comes back when they do). When they don't call, their standing orders decide.
+- Reports from live runs say how they were called. Save format v21: games in progress carry on, with any Social job becoming Con. 243 tests.
+
 ## 2026-10-26 · More earned traits
 - **Eight more ways people change** (written by the owner): **Light-Fingered** after quiet break-ins, a **Crowd Reader**, **Wirewise** with street hardware, a **Corner Fighter**; and for a while, **Rattled by Sirens**, a **Short Fuse** (the third time, they become a Hothead for good), **Burned Out** after neural work goes wrong, or **Overconfident** after a run of hard calls going their way (they find the safe option beneath them).
 - **Ghost Driver** now works as written: better in getaways, and a clean getaway sheds some of the heat. **Scarred** steadies them when someone's hurt or squaring up.

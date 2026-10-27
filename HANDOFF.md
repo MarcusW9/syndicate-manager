@@ -1,44 +1,39 @@
-# Handoff · 2026-10-26
+# Handoff · 2026-10-27
 
 Where the project stands and what to pick up next. Read `CLAUDE.md` first: its rules (architecture, tests, design log, changelog, screenshot log, commit author) are not repeated here. `DESIGN.md`'s decision log has the why for everything below, newest first.
 
 ## State
 
-- **Live (`main`):** everything from this session; [#18](https://github.com/MarcusW9/syndicate-manager/pull/18) is merged (`4ada93b`). #13 reached `main` directly; #14-#17 were merged into the branches below them (see the stacking gotcha) and reached `main` through #18.
-- **Design review:** `STATE-OF-PLAY.md` (2026-10-26) assesses the whole game: a season simulation, what would add depth, a suggested order and a cleanup list. Read it instead of re-assessing; the owner's response to it is pending.
-- **Tests:** 227 passing. **Save format v20.**
+- **`main`:** up to [#18](https://github.com/MarcusW9/syndicate-manager/pull/18) (`4ada93b`). **Branch `claude/jolly-keller-6eqry7`** (not yet in a PR) carries the 2026-10-26/27 session: the design review, the core-loop decisions, two prototypes and squad-run slice 1.
+- **The game is becoming the squad run** (`PLAN-CORE-LOOP.md`, the build order; `drafts/core-loop.md`, how we got there). **Slice 1 (the engine) is built**; slice 2 (the watch screen and squad board) is next.
+- **Design review:** `STATE-OF-PLAY.md` (2026-10-26) and the owner's calls on it (in the file and in DESIGN.md). Read it instead of re-assessing.
+- **Tests:** 243 passing. **Save format v21.**
 
-## What this session built (2026-10-26)
+## What the 2026-10-26/27 session did
 
-- **Jobs trickle in** through the week (three windows, from the seed). **Scout reads** in the game's own terms, with a top band "could be one of the greats".
-- **Report lines for every crisis** (183, written by the owner; `tests/reports.test.js` keeps it so).
-- **The risk read names every bonus** ("tech 14: Chromed +2, stealth approach +1").
-- **Mission logs, first slice:** every job records its run as events (`am.events`: who rolled, stat, notes, die, need, costs kept apart, who was hurt, situations). Reports open with Joss's line, turning point, standout and what hurt us (`core/report.js`), then a "Full log" fold with the dice on tap.
-- **Hands-off runs** (`core/autorun.js`): every rookie job can be sent under Cautious / Steady / Committed orders; the crew is away and the job resolves the day they return; the report plays out on first open. A hands-off crew always extracts at a critical, so it can't lose anyone.
-- **A choice's `{op}` names whoever rolls**, except where the crisis is about someone (focus role, or the crisis text names `{op}`: then that person handles it).
-- **Stat unlocks** (17), **side tasks** (25), **earned traits** (20 of the owner's 26), **crisis situations** (`src/data/situations.js`, field `situations`, not `tags`).
+- **Design review** (`STATE-OF-PLAY.md`) and the owner's calls: money pressure mostly positive (gear, rooms, clinic bills, tea money); morale cut for mood traits; burnout removed; neural load wired; approaches cost different things; heat per district; relationships as bonds and rifts with grief by personality; repetition layers; competing clients and danger parked. **None of these is built yet** except what slice 1 needed.
+- **The core loop rethought:** manager first, with call-ins; build a squad for one of four approaches; incidents handled by the team; saves (overwatch, teammates); alert; specialisations (gear to try, experience to unlock, the player picks); guns standard in the canon (`WORLD.md`).
+- **Prototypes** (`drafts/prototypes/`, published as artifacts): v1 plan-watch-report, then v2 with the squad board, coverage read, incidents, saves, alert, standby and an animated site-plan watch screen. The owner called v2 "pretty damn cool".
+- **Slice 1 in the game:** `src/data/approaches.js`, `src/data/incidents.js`, `src/core/incidents.js`; `core/mission.js` gains zone and incident steps and `am.pending` decisions; `core/autorun.js` gains `autoStep` and `needsPlayer` (one stepper for live and hands-off runs); planning has four approaches, overwatch and "Call me in…"; the mission screen steps with Next. `tests/incidents.test.js` guards the rules.
 
 ## Agreed rules worth remembering
 
-- **No death without the player's choice**, now also: hands-off crews always extract; side tasks cost at most a light injury, heat or a day held.
+- **No death without the player's choice**, now also: hands-off crews always extract; side tasks cost at most a light injury, heat or a day held; **incidents never go past a serious injury**; every decision a run stops for has an exit.
 - **Traits never take a choice away:** downsides are penalties shown in the roll breakdown. At most **two temporary traits**; progress **hidden** until earned. Earning a temporary trait restarts its count (it can't flicker back).
-- **Shown risk equals used risk:** any new modifier must appear in the risk read and the crisis read (as notes on `crewRoll`), as intel and traits do.
+- **Shown risk equals used risk:** any new modifier must appear in the risk read and the crisis read (as notes on `crewRoll`), as intel, traits, extra bodies and the alert do.
 - **Randomness that shouldn't shift other dice** (weekly boards, arrivals) comes from `makeRng(seed ^ week)`, not `nextRng(state)`.
 - **Crisis ids are unique** (a test checks). Renaming one needs a save migration (see v20).
+- **Incidents teach nothing yet** (`XP.incident` 0) so the tuned growth pace holds; retune before raising it.
 
-## Next: what adds depth (recommendation)
+## Next
 
-`STATE-OF-PLAY.md` suggests a slightly different order (inert values, then career page with relationships, then money pressure, then heists); the owner hasn't chosen yet.
-
-1. **Career page** (small, high value now). Earned traits, the job log and growth give each person a real story: firsts, scars, traits earned and lost, best moments, stats then vs now. Mostly UI over data that already exists (`op.history`, `op.earned`, `op.growthLog`, report events); a lifetime growth log needs a small save change. It turns traits into attachment.
-2. **Heists with team assembly** (the big depth step). Named role slots tested by specific crises, set-up jobs (could be side tasks), the cut split as a loyalty decision, and extended multi-round crises for the finale. Works with five people; a Street-tier heist can be the first promotion. Needs a short design pass with the owner first (slots, cut split, how prep feeds the finale).
-3. **Promotions and districts.** Tier promotions open the Silt, the Amber Reach and Iron Peak. Prerequisite: 1-2 job types per locked district (writing task 10, hooks in `drafts/district-hooks.md`), which the owner can write in parallel.
-
-After those: safehouse rooms (with base tasks), gear (opens choices like stat unlocks; can key on situations), hands-off on bigger jobs, squads, client storylines.
+1. **Squad run slice 2** (`PLAN-CORE-LOOP.md`): the squad board, coverage read and watch screen from prototype v2, built on slice 1's engine. Also the slice 1 follow-ups listed there.
+2. **Open a PR** for this branch when the owner wants slice 1 on `main` (it's shippable on its own).
+3. Then slices 3-5 (Wheels and standby, sites and district text, gear and specialisations), and the agreed review items: the neural load and burnout cleanup, mood traits, money pressure, relationships with the career page.
 
 ## Writing pipeline (owner writes in other chats, pastes back)
 
-`drafts/writing-tasks.md` holds a prompt per task; paste the `WORLD.md` context block first. Done: 1 (report lines), 2 (Container 409 log: go), 7 (stat unlocks), 8 (side tasks), 9 (traits). Waiting: 3-6 (log templates, district packs, Joss lines, authored beats) until real hands-off reports show what's missing; **10 (locked-district jobs) is the next useful one.**
+`drafts/writing-tasks.md` holds a prompt per task; paste the `WORLD.md` context block first. Done: 1 (report lines), 2 (Container 409 log: go), 7 (stat unlocks), 8 (side tasks), 9 (traits). Waiting: 3-6 (log templates, district packs, Joss lines, authored beats) until real hands-off reports show what's missing; **10 (locked-district jobs) is the next useful one.** New: **11 (incident lines per district)** for the squad run; the Docks and Old Town first.
 
 When a batch comes back: check every line against the game data (ids, costs, injury severity, success-only bonuses: the source dumps show them in brackets), house style ("badly hurt", "Pay -20%, heat +1.", one sentence, "someone" for injuries in focus crises), merge with a script, add a test, then report what was edited.
 

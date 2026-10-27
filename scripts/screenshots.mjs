@@ -96,10 +96,13 @@ try {
     if (await click('[data-action="open-job"]')) {
       await top(); await shot('planning');
       for (let i = 0; i < 4; i++) await click('[data-action="toggle-crew"]:not(.is-on):not([disabled])');
+      // The squad run (2026-10-27): someone on overwatch, and call-ins at every crisis so one shows up.
+      await click('[data-action="overwatch"]');
+      await click('[data-action="callin"][data-id="every"]');
       await shot('planning-crew-picked');
       if (await click('[data-action="start-job"]')) {
         let crisisShot = false;
-        for (let i = 0; i < 40; i++) {
+        for (let i = 0; i < 80; i++) {
           if (await visible('[data-action="close-mission"]').count()) break;
           if (await visible('[data-action="choose"], [data-action="critical"]').count()) {
             if (!crisisShot) { await shot('crisis'); crisisShot = true; }
@@ -116,7 +119,12 @@ try {
             await page.waitForTimeout(150);
             continue;
           }
-          if (!(await click('[data-action="beat"]'))) break;
+          // A decision the run stops for (max alert, someone down): carry on rather than pull out.
+          if (await visible('[data-action="pending"]').count()) {
+            if (!(await click('[data-action="pending"]:not([data-id="out"])'))) await click('[data-action="pending"]');
+            continue;
+          }
+          if (!(await click('[data-action="step"], [data-action="beat"]'))) break;
         }
         await shot('mission-end');
         if (await click('[data-action="close-mission"]')) {

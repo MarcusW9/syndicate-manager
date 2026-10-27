@@ -35,7 +35,8 @@ test('a hands-off crew never pushes on and never loses anyone, under any orders'
       assert.ok(!report.timeline.events.some((e) => e.kind === 'critical' && e.action === 'push'), 'never pushes on');
       assert.equal(report.timeline.orders, orders);
       // The numbered timeline is the report lines, one per choice taken: none may go missing.
-      const taken = report.timeline.events.filter((e) => ['roll', 'sure', 'exit'].includes(e.kind) && e.report).map((e) => e.report);
+      // Incidents, saves and decisions are taken too (the squad run, 2026-10-27).
+      const taken = report.timeline.events.filter((e) => ['roll', 'sure', 'exit', 'save', 'decision'].includes(e.kind) && e.report).map((e) => e.report);
       assert.deepEqual(report.timeline.steps, taken, `seed ${seed} ${orders}: timeline matches the record`);
     }
   }
@@ -53,7 +54,7 @@ test('even the harder jobs, short-handed and on Committed orders, bring everyone
 test('every pick on a hands-off run says why', () => {
   for (let seed = 1; seed <= 40; seed++) {
     const { report } = sendOff(seed, 'container409', 'steady');
-    for (const e of report.timeline.events.filter((x) => ['roll', 'sure', 'exit', 'critical'].includes(x.kind))) {
+    for (const e of report.timeline.events.filter((x) => ['roll', 'sure', 'exit', 'critical', 'save', 'decision'].includes(x.kind))) {
       assert.ok(e.why, `seed ${seed}: ${e.kind} ${e.choice ?? e.action} has no reason`);
     }
   }
@@ -149,7 +150,8 @@ function sentGame(seed) {
   const s = createNewGame({ seed, startCrew: 'fresh' });
   const job = s.jobs.find((j) => j.templateId === 'container409');
   const crew = s.crew.slice(0, 2).map((o) => o.id);
-  return { before: s, after: send(s, job.id, crew, 'stealth', 'steady'), crew, jobId: job.id };
+  // Tech: a one-day job stays one day (stealth takes a day longer; tests/incidents.test.js).
+  return { before: s, after: send(s, job.id, crew, 'tech', 'steady'), crew, jobId: job.id };
 }
 
 test('sending a crew off changes nothing yet: no pay, no heat, no report; they are away and the job is gone', () => {
@@ -193,7 +195,7 @@ test('a freelancer out on a hands-off job stays with it when another job ends fi
   let s = createNewGame({ seed: 31, startCrew: 'fresh' });
   const f = s.freelancers[0];
   const job = s.jobs.find((j) => j.templateId === 'container409');
-  s = send(s, job.id, [s.crew[0].id, f.id], 'stealth', 'steady');
+  s = send(s, job.id, [s.crew[0].id, f.id], 'tech', 'steady');
   const other = s.jobs[0];
   s = M.startMission(s, other.id, s.crew.filter((o) => !o.freelance && (o.condition.awayUntil ?? 0) <= s.day).slice(0, 2).map((o) => o.id), 'stealth');
   s = M.closeMission(playMission(s, carefulPolicy).state);

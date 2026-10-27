@@ -30,7 +30,7 @@ test('nobody ever dies unless the player chose "push on" (3,000 random missions)
     let s = createNewGame({ seed });
     const job = s.jobs[seed % s.jobs.length];
     const tpl = templateById(job.templateId);
-    s = M.startMission(s, job.id, s.crew.slice(0, tpl.crewSize).map((o) => o.id), ['stealth', 'loud', 'social'][seed % 3]);
+    s = M.startMission(s, job.id, s.crew.slice(0, tpl.crewSize).map((o) => o.id), ['stealth', 'loud', 'con', 'tech'][seed % 4]);
     const { state, pushed } = playMission(s, randomPolicy(seed));
     if (!pushed) assert.equal(state.activeMission.result.deaths.length, 0, `death without push on, seed ${seed}`);
   }

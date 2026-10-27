@@ -298,5 +298,23 @@ function migrate(state) {
     for (const j of state.awayJobs ?? []) fix(j.mission);
     state.version = 20;
   }
+  if (state.version === 20) {
+    // v21: the squad run (PLAN-CORE-LOOP.md). The social approach is now con; a job saved mid-way
+    // keeps today's flow (no incidents in its queue) and gets the run's new fields: a played job
+    // calls the player at every crisis, as before; a hands-off job never does.
+    const fix = (am, callIn) => {
+      if (!am) return;
+      if (am.approach === 'social') am.approach = 'con';
+      am.callIn = am.callIn ?? callIn;
+      am.alert = am.alert ?? 0;
+      am.out = am.out ?? [];
+      am.pending = am.pending ?? null;
+      am.overwatch = am.overwatch ?? null;
+      am.wentLoud = am.wentLoud ?? false;
+    };
+    fix(state.activeMission, 'every');
+    for (const j of state.awayJobs ?? []) fix(j.mission, 'never');
+    state.version = 21;
+  }
   return state;
 }

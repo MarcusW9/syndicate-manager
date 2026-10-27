@@ -62,7 +62,7 @@ moments. Plan → watch → call-ins → report.
 
 ## Slices
 
-### Slice 1 · The engine (and a playable minimal UI) — [ ]
+### Slice 1 · The engine (and a playable minimal UI) — [x] 2026-10-27 (see DESIGN.md for the calls made while building)
 - Approaches as data: stealth / tech / loud / con (con replaces social). Weighted crisis draw
   by situation. Costs: stealth +1 day away; loud −1 day (min 1) and +1 heat; con ¥100 per
   threat up front; tech +5 neural load per tech roll.
@@ -83,6 +83,10 @@ moments. Plan → watch → call-ins → report.
   mission screen steps with "Next" and shows incidents, saves and decisions in the log.
 - Tests: `tests/incidents.test.js` (the rules above, saves, alert, overwatch sight, costs,
   extra bodies, migration) and existing tests updated where a rule changed on purpose.
+
+Follow-ups found while building slice 1: retune growth and earned traits for the new loop (incidents teach nothing
+and count for no traits yet; mentoring's edge fell to ~0.75; trait moments ~0.9 a week); the mission log doesn't yet show the crew's reason for a crisis they decided themselves (slice 2's
+cards will); the way out has no zone heading.
 
 ### Slice 2 · The watch screen and the squad board — [ ]
 - Planning: the dossier board (inside team, overwatch), Joss's picks, the coverage read

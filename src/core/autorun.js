@@ -8,9 +8,13 @@
 // Timing: sendOff starts the job and sets it aside (state.awayJobs, save v17) with the crew
 // away; returnCrews plays it out on the day they get back, so pay, heat and injuries land
 // with the report and nothing shows early.
+//
+// Live runs (PLAN-CORE-LOOP.md) use the same stepper: autoStep takes one step the crew can take
+// on its own; needsPlayer says when the run waits for the player (a call-in).
 
 import { templateById } from './jobs.js';
-import { crisisOdds, chooseOption, revealBeat, resolveCritical, currentStep, startMission, closeMission } from './mission.js';
+import { crisisOdds, chooseOption, revealBeat, resolveCritical, currentStep, startMission, closeMission, enterZone, runIncident, resolvePending, RISKY_BELOW } from './mission.js';
+import { ordersDecision } from './incidents.js';
 
 const pct = (n) => `${Math.round(n * 100)}%`;
 
@@ -73,23 +77,63 @@ export function decide(state, ordersId) {
   return { id: c.id, why: `${who} ${reason}${paid}` };
 }
 
+/**
+ * Does the run wait for the player now? A critical always does on a live run (the player's call;
+ * the death rule). A crisis or a decision does unless the call-in rule says the crew decides:
+ * 'every' calls you at every crisis; 'risky' when the best roll on offer is under even odds;
+ * 'never' never (hands-off).
+ */
+export function needsPlayer(state) {
+  const am = state.activeMission;
+  if (!am || am.done) return false;
+  if (am.callIn === 'never') return false;
+  if (am.critical || am.pending) return true;
+  if (currentStep(am)?.type !== 'crisis') return false;
+  if (am.callIn !== 'risky') return true;
+  const tries = (crisisOdds(state) ?? []).filter((o) => !o.exit);
+  return !tries.length || Math.max(...tries.map((o) => o.chance)) < RISKY_BELOW;
+}
+
+/**
+ * Take one step the crew can take on its own: a beat, a zone, an incident, or (when the player
+ * isn't called) a crisis or decision under the standing orders. A hands-off crew always extracts
+ * from a critical. Returns the same state when the run is waiting for the player or done.
+ * force: decide everything (hands-off runs).
+ */
+export function autoStep(prev, { force = false } = {}) {
+  const am0 = prev.activeMission;
+  if (!am0 || am0.done || (!force && needsPlayer(prev))) return prev;
+  const s = structuredClone(prev);
+  const am = s.activeMission;
+  const orders = ORDERS[am.orders] ? am.orders : 'steady';
+  if (am.critical) {
+    am.nextWhy = 'Hands-off crews always get the wounded out.';
+    return resolveCritical(s, 'extract');
+  }
+  if (am.pending) {
+    const { id, why } = ordersDecision(am.pending.kind, orders);
+    am.nextWhy = why;
+    return resolvePending(s, id);
+  }
+  const type = currentStep(am)?.type;
+  if (type === 'beat') return revealBeat(s);
+  if (type === 'zone') return enterZone(s);
+  if (type === 'incident') return runIncident(s);
+  if (type === 'crisis') {
+    const { id, why } = decide(s, orders);
+    am.nextWhy = why;
+    return chooseOption(s, id);
+  }
+  return prev;
+}
+
 /** Play the active job to the end under standing orders. Returns the new state (job done). */
 export function autoRun(prev, ordersId) {
   let s = structuredClone(prev);
   s.activeMission.orders = ORDERS[ordersId] ? ordersId : 'steady';
-  for (let guard = 0; guard < 80 && !s.activeMission.done; guard++) {
-    const am = s.activeMission;
-    let next;
-    if (am.critical) {
-      am.nextWhy = 'Hands-off crews always get the wounded out.';
-      next = resolveCritical(s, 'extract');
-    } else if (currentStep(am)?.type === 'beat') {
-      next = revealBeat(s);
-    } else {
-      const { id, why } = decide(s, am.orders);
-      am.nextWhy = why;
-      next = chooseOption(s, id);
-    }
+  s.activeMission.callIn = 'never'; // nobody to call: the orders decide everything
+  for (let guard = 0; guard < 160 && !s.activeMission.done; guard++) {
+    const next = autoStep(s, { force: true });
     if (next === s) throw new Error('Hands-off run got stuck');
     s = next;
   }
@@ -103,17 +147,18 @@ export const handsOffAllowed = (tpl) => Boolean(tpl?.handsOff ?? tpl?.rookie);
 const crewNames = (handles) => (handles.length > 1 ? `${handles.slice(0, -1).join(', ')} and ${handles.at(-1)}` : handles[0]);
 
 /** Send a crew off on a job hands-off. They're away until it ends; the report comes back then. */
-export function sendOff(prev, jobId, crewIds, approach, ordersId) {
+export function sendOff(prev, jobId, crewIds, approach, ordersId, opts = {}) {
   const job = prev.jobs.find((j) => j.id === jobId);
   if (!job || !handsOffAllowed(templateById(job.templateId))) return prev;
-  const s = startMission(prev, jobId, crewIds, approach);
+  const s = startMission(prev, jobId, crewIds, approach, { ...opts, callIn: 'never', orders: ordersId });
   if (s === prev) return prev;
   const am = s.activeMission;
   const tpl = templateById(am.templateId);
   am.orders = ORDERS[ordersId] ? ordersId : 'steady';
   am.startedDay = s.day;
-  const returnDay = s.day + tpl.days;
-  const crew = am.crewIds.map((id) => s.crew.find((o) => o.id === id)).filter(Boolean);
+  const days = am.days ?? tpl.days;
+  const returnDay = s.day + days;
+  const crew = [...am.crewIds, ...(am.overwatch ? [am.overwatch.id] : [])].map((id) => s.crew.find((o) => o.id === id)).filter(Boolean);
   for (const op of crew) op.condition.awayUntil = returnDay;
   s.awayJobs = [...(s.awayJobs ?? []), { returnDay, mission: am }];
   s.activeMission = null;
@@ -121,7 +166,7 @@ export function sendOff(prev, jobId, crewIds, approach, ordersId) {
   s.inbox.unshift({
     id: `sent-${am.jobId}`, type: 'job', day: s.day,
     subject: `${who} ${crew.length > 1 ? 'are' : 'is'} out on ${tpl.name}`,
-    body: `Sent hands-off on ${ORDERS[am.orders].name} orders. The report comes back ${tpl.days === 1 ? 'tomorrow' : `in ${tpl.days} days`}, when they do.`,
+    body: `Sent hands-off on ${ORDERS[am.orders].name} orders. The report comes back ${days === 1 ? 'tomorrow' : `in ${days} days`}, when they do.`,
     blocking: false, read: true,
   });
   return s;

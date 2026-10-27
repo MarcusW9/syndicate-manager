@@ -3,12 +3,9 @@
 import { TRAITS } from '../data/traits.js';
 import { statusRollMods } from './statuses.js';
 import { ownMods, jobMods } from './earned.js';
+import { APPROACHES } from '../data/approaches.js';
 
-export const APPROACHES = {
-  stealth: { name: 'Stealth', desc: '+1 stealth and tech, -1 combat', mods: { stealth: 1, tech: 1, combat: -1 }, heat: 0 },
-  loud: { name: 'Loud', desc: '+1 combat, +1 heat on completion', mods: { combat: 1 }, heat: 1 },
-  social: { name: 'Social', desc: '+1 social, -1 stealth', mods: { social: 1, stealth: -1 }, heat: 0 },
-};
+export { APPROACHES };
 
 export const INJURY_DAYS = { light: 3, serious: 14, critical: 21 };
 const INJURY_ORDER = ['healthy', 'light', 'serious', 'critical', 'dead'];
@@ -139,6 +136,9 @@ function findBackup(able, top, stat, ctx) {
 // Crew-level rules, applied to the roller after their own stat. ctx adds { able, top, backup, missing, recommended }.
 export const CREW_RULES = [
   { id: 'backup', applies: (op, { backup }) => !!backup, value: () => BACKUP_BONUS, note: (op, { backup }) => `${backup.op.handle} backs up +${BACKUP_BONUS}` },
+  // Stealth and con runs (data/approaches.js): every body past the job's recommended size is one more to spot.
+  { id: 'spotted', applies: (op, { stat, approach, able, recommended }) => !!APPROACHES[approach]?.detect && ['stealth', 'social'].includes(stat) && recommended > 0 && able.length > recommended,
+    value: (op, { able, recommended }) => -(able.length - recommended), note: (op, { able }, v) => `${able.length} inside −${-v}` },
   { id: 'short-handed', applies: (op, { missing }) => missing > 0, value: (op, { missing }) => -missing * SHORT_HANDED_PENALTY, note: (op, ctx, v) => `short-handed -${-v}` },
   // Letting high heat ride (core/heat.js): the next job's first crisis roll is made under watching eyes.
   { id: 'watched', applies: (op, { watched }) => watched > 0, value: (op, { watched }) => -watched, note: (op, ctx, v) => `watched -${-v}` },
