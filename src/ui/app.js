@@ -14,7 +14,7 @@ import { cityMapSvg, MAP_DISTRICTS } from './citymap.js';
 import { advanceDay, calendar, formatShortDate, isBlocked, seasonStartDay } from '../core/time.js';
 import { createNewGame } from '../core/state.js';
 import { templateById, jobView, nextUnlock, JOB_GATES } from '../core/jobs.js';
-import { trustLabel, clientById, trustOf } from '../core/clients.js';
+import { trustLabel, trustOf } from '../core/clients.js';
 import { CLIENTS } from '../data/clients.js';
 import { availability, APPROACHES, traitMods, ratedStat, maxCrew, crewSizeRead } from '../core/crew.js';
 import { assessJob, rollTarget, successChance, riskLabel } from '../core/risk.js';
