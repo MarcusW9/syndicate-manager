@@ -15,28 +15,26 @@ export function insideSlots(plan, tpl) {
   return Math.min(most, Math.max(tpl.crewSize, plan.crew.length + 1));
 }
 
+// The outside slots and the plan field each one fills (slice 3 added Wheels and standby).
+export const OUTSIDE = { over: 'overwatch', wheels: 'wheels', standby: 'standby' };
+
 /**
- * Put someone in a slot ('in:<n>' or 'over'), or empty it (opId null). Anyone already in
- * another slot swaps with whoever was here. Returns { crew, overwatch } (the plan's own fields).
+ * Put someone in a slot ('in:<n>', 'over', 'wheels' or 'standby'), or empty it (opId null).
+ * Anyone already in another slot swaps with whoever was here. Returns the plan's fields
+ * { crew, overwatch, wheels, standby }.
  */
 export function assignSlot(plan, slot, opId) {
-  let crew = [...plan.crew];
-  let over = plan.overwatch;
-  const here = slot === 'over' ? over : crew[Number(slot.split(':')[1])] ?? null;
-  if (opId === here) return { crew, overwatch: over };
-  const fromInside = opId ? crew.indexOf(opId) : -1;
-  const fromOver = opId && over === opId;
-  if (slot === 'over') {
-    over = opId;
-    if (fromInside >= 0) { if (here) crew[fromInside] = here; else crew.splice(fromInside, 1); }
-  } else {
-    const n = Number(slot.split(':')[1]);
-    if (fromInside >= 0) { crew[fromInside] = here; crew[n] = opId; }
-    else if (n < crew.length) crew[n] = opId;
-    else if (opId) crew.push(opId);
-    if (fromOver) over = here;
-  }
-  return { crew: crew.filter(Boolean), overwatch: over ?? null };
+  const crew = [...plan.crew];
+  const out = { overwatch: plan.overwatch ?? null, wheels: plan.wheels ?? null, standby: plan.standby ?? null };
+  const get = (sl) => (OUTSIDE[sl] ? out[OUTSIDE[sl]] : crew[Number(sl.split(':')[1])] ?? null);
+  const set = (sl, id) => { if (OUTSIDE[sl]) out[OUTSIDE[sl]] = id; else { const n = Number(sl.split(':')[1]); if (n < crew.length) crew[n] = id; else if (id) crew.push(id); } };
+  const here = get(slot);
+  if (opId === here) return { crew, ...out };
+  // Where the incoming person is now, if anywhere.
+  const from = !opId ? null : crew.includes(opId) ? `in:${crew.indexOf(opId)}` : Object.keys(OUTSIDE).find((k) => out[OUTSIDE[k]] === opId) ?? null;
+  set(slot, opId);
+  if (from) set(from, here);
+  return { crew: crew.filter(Boolean), ...out };
 }
 
 const PINS = ['#ff4f7b', '#36d6c3', '#f5b942', '#b48cff', '#5fe0a5', '#ff9a5a'];
@@ -78,6 +76,10 @@ export function renderBoard(ui, { plan, tpl, people, crewSize }) {
     name: 'Overwatch', does: 'Optional: saves people in trouble.',
     line: ow ? `${owStat} ${effectiveStat(ow, owStat).value} · ${OVERWATCH_KIT[kit].uses} ${kit === 'rifle' ? 'shots' : 'actions'}` : '', note: ow ? kit : '', i: 5,
   });
+  const wh = byId(plan.wheels);
+  const wheelsCard = dossier(ui, 'wheels', wh, { name: 'Wheels', does: 'Optional: takes every driving roll from the van.', line: wh ? `driving ${effectiveStat(wh, 'driving').value}` : '', note: wh ? 'in the van' : '', i: 2 });
+  const sb = byId(plan.standby);
+  const standbyCard = dossier(ui, 'standby', sb, { name: 'Standby', does: 'Optional: called in when it goes wrong.', line: sb ? `combat ${effectiveStat(sb, 'combat').value} · medical ${effectiveStat(sb, 'medical').value}` : '', note: sb ? 'on call' : '', i: 3 });
   const count = plan.crew.length;
   return `
       <div class="board">
@@ -90,11 +92,12 @@ export function renderBoard(ui, { plan, tpl, people, crewSize }) {
           <div class="dossiers" style="--n:${Math.min(4, n)}">${inside}</div>
         </div>
         <div class="board__group">
-          <p class="board__label">Outside <span>${esc(OVERWATCH_KIT[kit].desc)}</span></p>
+          <p class="board__label">Outside <span>overwatch, the van, standby</span></p>
           <div class="kitpick" role="group" aria-label="Overwatch kit">
             ${Object.entries(OVERWATCH_KIT).map(([k, o]) => `<button class="kitpick__btn ${kit === k ? 'is-on' : ''}" data-action="kit" data-id="${k}" aria-pressed="${kit === k}">${esc(o.name)}: ${k === 'rifle' ? 'sees outdoors' : 'sees everywhere'}</button>`).join('')}
           </div>
-          <div class="dossiers dossiers--over">${overCard}</div>
+          <p class="small muted board__kitdesc">${esc(OVERWATCH_KIT[kit].desc)}</p>
+          <div class="dossiers" style="--n:3">${overCard}${wheelsCard}${standbyCard}</div>
         </div>
       </div>`;
 }
@@ -105,22 +108,26 @@ export function renderBoard(ui, { plan, tpl, people, crewSize }) {
  */
 export function renderPicker(ui, { plan, tpl, threat, slot, people, freelancersFull }) {
   const { esc, face, statusChip, keyStats } = ui;
-  const over = slot === 'over';
+  const outside = !!OUTSIDE[slot];
   const kit = OVERWATCH_KIT[plan.kit] ? plan.kit : 'rifle';
-  const current = over ? plan.overwatch : plan.crew[Number(slot.split(':')[1])] ?? null;
-  const fit = (op) => (over ? effectiveStat(op, OVERWATCH_KIT[kit].stat).value : bestLine(op, plan.approach).value);
+  const current = outside ? plan[OUTSIDE[slot]] ?? null : plan.crew[Number(slot.split(':')[1])] ?? null;
+  // What counts for this slot, best first.
+  const FIT = {
+    over: { name: 'overwatch', note: `With the ${OVERWATCH_KIT[kit].name.toLowerCase()}: ${OVERWATCH_KIT[kit].stat} counts.`, score: (op) => effectiveStat(op, OVERWATCH_KIT[kit].stat).value, line: (op) => `${OVERWATCH_KIT[kit].stat} ${effectiveStat(op, OVERWATCH_KIT[kit].stat).value}` },
+    wheels: { name: 'Wheels', note: 'In the van: they take every driving roll, alone.', score: (op) => effectiveStat(op, 'driving').value, line: (op) => `driving ${effectiveStat(op, 'driving').value}` },
+    standby: { name: 'standby', note: 'At the van until called: they can save someone in trouble or get the wounded out.', score: (op) => effectiveStat(op, 'combat').value + effectiveStat(op, 'medical').value / 2, line: (op) => `combat ${effectiveStat(op, 'combat').value} · medical ${effectiveStat(op, 'medical').value}` },
+  }[slot] ?? { name: 'the inside team', note: `Numbers are for this job: ${tpl.keyStats.join(', ')} matter most.`, score: (op) => bestLine(op, plan.approach).value, line: null };
   const rows = people
-    .filter(({ freelance }) => !(over && freelance))
-    .map((p) => ({ ...p, score: p.status.ok ? fit(p.op) : -99 }))
+    .filter(({ freelance }) => !(outside && freelance))
+    .map((p) => ({ ...p, score: p.status.ok ? FIT.score(p.op) : -99 }))
     .sort((a, b) => b.score - a.score);
-  const where = (id) => (plan.overwatch === id ? 'overwatch' : plan.crew.includes(id) ? 'inside' : null);
-  const name = over ? 'overwatch' : 'the inside team';
+  const where = (id) => (plan.crew.includes(id) ? 'inside' : Object.keys(OUTSIDE).find((k) => plan[OUTSIDE[k]] === id)?.replace('over', 'overwatch') ?? null);
   return `
     <div class="scrim" data-action="close-picker"></div>
-    <div class="sheet" role="dialog" aria-modal="true" aria-label="Who's on ${name}?">
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="Who's on ${esc(FIT.name)}?">
       <div class="sheet__head">
-        <div><h2 class="sheet__title">Who's on ${name}?</h2>
-        <p class="muted small">${over ? `With the ${esc(OVERWATCH_KIT[kit].name.toLowerCase())}: ${esc(OVERWATCH_KIT[kit].stat)} counts.` : `Numbers are for this job: ${esc(tpl.keyStats.join(', '))} matter most.`}</p></div>
+        <div><h2 class="sheet__title">Who's on ${esc(FIT.name)}?</h2>
+        <p class="muted small">${esc(FIT.note)}</p></div>
         <button class="btn btn--ghost sheet__x" data-action="close-picker" aria-label="Close">✕</button>
       </div>
       <ul class="list">
@@ -131,8 +138,8 @@ export function renderPicker(ui, { plan, tpl, threat, slot, people, freelancersF
           <li><button class="cand ${current === op.id ? 'is-on' : ''}" data-action="assign" data-id="${esc(op.id)}" ${blocked ? 'disabled' : ''} aria-pressed="${current === op.id}">
             ${face(op, 'sm')}
             <span class="cand__txt"><strong>${esc(op.handle)}</strong> <span class="muted">${esc(freelance ? `freelance ${op.role}` : op.role)}</span><br>
-              <span class="small">${over ? `${esc(OVERWATCH_KIT[kit].stat)} ${fit(op)}` : keyStats(op, tpl, threat)}</span></span>
-            <span class="cand__side">${freelance ? `<strong>${Math.round(freelance.share * 100)}%</strong> of pay` : statusChip(status)}${w && current !== op.id ? `<br><span class="small muted">${w} · swaps</span>` : ''}</span>
+              <span class="small">${FIT.line ? esc(FIT.line(op)) : keyStats(op, tpl, threat)}</span></span>
+            <span class="cand__side">${freelance ? `<strong>${Math.round(freelance.share * 100)}%</strong> of pay` : statusChip(status)}${w && current !== op.id ? `<br><span class="small muted">${esc(w)} · swaps</span>` : ''}</span>
           </button></li>`;
         }).join('')}
       </ul>
@@ -141,7 +148,7 @@ export function renderPicker(ui, { plan, tpl, threat, slot, people, freelancersF
 }
 
 /** The coverage read (core/squad.js coverage): what the crew will likely meet, who handles it, the gaps. */
-export function renderCoverage(ui, cov, { overwatch, approachName }) {
+export function renderCoverage(ui, cov, { overwatch, approachName, standby = null }) {
   const { esc, riskBadge } = ui;
   if (!cov.rows.some((r) => r.handler)) return '<div class="riskcard"><p class="muted">Pick a crew to see what they\'d face.</p></div>';
   return `
@@ -154,5 +161,6 @@ export function renderCoverage(ui, cov, { overwatch, approachName }) {
         </div>`).join('')}
         ${cov.spotted ? `<p class="cover__note">${cov.spotted} more than recommended inside on a ${esc(approachName.toLowerCase())} run: −${cov.spotted} on stealth and social rolls.</p>` : ''}
         ${overwatch ? '' : '<p class="cover__note cover__note--muted">No overwatch: only a teammate inside can save someone in trouble.</p>'}
+        ${standby ? `<p class="cover__note cover__note--muted">${esc(standby.handle)} is on standby: they can come in at max alert (the alert stays up, but they back up rolls and get a try at saving anyone in trouble) or to get someone badly hurt out.</p>` : ''}
       </div>`;
 }

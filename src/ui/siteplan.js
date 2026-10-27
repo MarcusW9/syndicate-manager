@@ -66,11 +66,15 @@ const place = (node, [x, y]) => { node.style.transform = `translate(${x}px, ${y}
 const near = (pt, dx = 22, dy = -16) => [pt[0] + dx, pt[1] + dy];
 const later = (ms) => new Promise((r) => setTimeout(r, reduced() ? 0 : ms));
 
+const VAN_SPOT = { wheels: [P.van[0] + 22, P.van[1] + 8], standby: [P.van[0] + 34, P.van[1] + 8], out: [P.van[0] + 46, P.van[1] + 8] }; // beside the van, clear of the group
+
 /**
  * A live plan bound to an <svg> from sitePlanSvg. team: the inside crew [{ id, handle, color }];
- * overwatch: { op, kit } or null. speed: a function giving the current pace (1 normal, lower faster).
+ * overwatch: { op, kit } or null; wheels and standby: operatives waiting at the van (slice 3);
+ * out: people already back at the van hurt. speed: a function giving the current pace (1 normal, lower faster).
  */
-export function bindSitePlan(svg, { team, overwatch = null, zone = 'start', speed = () => 1 }) {
+export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = null, standby = null, out = [], zone = 'start', speed = () => 1 }) {
+  const team = [...inside];
   const fx = svg.querySelector('.sp-fx');
   const tokens = svg.querySelector('.sp-tokens');
   const alarm = svg.querySelector('.sp-alarm');
@@ -88,6 +92,9 @@ export function bindSitePlan(svg, { team, overwatch = null, zone = 'start', spee
   };
   team.forEach((op, i) => addToken(op, slot(i, here)));
   if (overwatch?.op) addToken(overwatch.op, P.perch);
+  if (wheels) addToken(wheels, VAN_SPOT.wheels);
+  if (standby) addToken(standby, VAN_SPOT.standby);
+  for (const op of out) { addToken(op, VAN_SPOT.out); tok(op.id)?.classList.add('is-down'); }
   const posOf = (id) => slot(Math.max(0, team.findIndex((o) => o.id === id)), here);
 
   function moveGroup(pt) { here = pt; team.forEach((op, i) => { const t = tok(op.id); if (t) place(t, slot(i, pt)); }); }
@@ -146,6 +153,7 @@ export function bindSitePlan(svg, { team, overwatch = null, zone = 'start', spee
     /** Play one feed card's moment (core/feed.js cue). */
     async play(cue) {
       if (!cue) return;
+      if (cue.standby) { if (cue.rescued) await this.leave(cue.rescued); await this.join(cue.standbyOp); return; }
       if (cue.crisis || cue.decision || cue.critical) { const at = here; if (cue.actor) ring(posOf(cue.actor), cue.success !== false); await pulse(at); return; }
       if (!cue.incident) return;
       const me = cue.actor ? posOf(cue.actor) : here;
@@ -189,6 +197,25 @@ export function bindSitePlan(svg, { team, overwatch = null, zone = 'start', spee
       if (cue.hurt) t?.classList.add(cue.hurt === 'serious' ? 'is-down' : 'is-hit');
       else if (!cue.save?.success && cue.danger) await pulse(here, 900);
       cleanup();
+    },
+    /** Standby comes in from the van and joins the group (slice 3). */
+    async join(op) {
+      if (!op || team.some((o) => o.id === op.id)) return;
+      if (!tok(op.id)) addToken(op, VAN_SPOT.standby);
+      team.push(op);
+      await wait(60);
+      moveGroup(here);
+      await wait(500);
+    },
+    /** Someone is taken back to the van (a rescue). */
+    async leave(id) {
+      const i = team.findIndex((o) => o.id === id);
+      if (i < 0) return;
+      team.splice(i, 1);
+      const t = tok(id);
+      if (t) place(t, VAN_SPOT.out);
+      moveGroup(here);
+      await wait(500);
     },
     /** Mark someone hurt (drawn on mount from the state). */
     hurt(id, severity) { tok(id)?.classList.add(severity === 'serious' ? 'is-down' : 'is-hit'); },

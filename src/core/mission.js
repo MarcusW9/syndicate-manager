@@ -27,7 +27,7 @@ import { money } from './money.js';
 import { summariseRun, REPORT_LOGS_KEPT } from './report.js';
 import { intelFor } from './sidetasks.js';
 import { afterJob, noteInjury, spendSecondWind, earnedOf } from './earned.js';
-import { planIncidents, weaveIncidents, incidentById, incidentDifficulty, handlerFor, bestSave, decisionChoices, OVERWATCH_KIT, ALERT_MAX, SERIOUS_CHANCE, SERIOUS_PER_ALERT, PATCH_MIN_MEDICAL, ZONES } from './incidents.js';
+import { planIncidents, weaveIncidents, incidentById, incidentDifficulty, handlerFor, bestSave, standbySave, decisionChoices, OVERWATCH_KIT, ALERT_MAX, SERIOUS_CHANCE, SERIOUS_PER_ALERT, PATCH_MIN_MEDICAL, ZONES } from './incidents.js';
 
 const EXIT_KINDS = new Set(['abort', 'extract']);
 const STABILISE_DIFFICULTY = 9;
@@ -36,8 +36,15 @@ const crewOf = (state, am) => am.crewIds.map((id) => state.crew.find((o) => o.id
 // Who can still act: the inside crew minus anyone an incident has put out of the job.
 const actors = (state, am) => crewOf(state, am).filter((o) => !(am.out ?? []).includes(o.id) && o.condition.injury !== 'critical');
 const overwatchOp = (state, am) => (am.overwatch ? state.crew.find((o) => o.id === am.overwatch.id) ?? null : null);
-// Everyone on the job: the inside crew and overwatch (away, tired and learning together).
-const onJob = (state, am) => [...crewOf(state, am), ...[overwatchOp(state, am)].filter(Boolean)];
+// Wheels waits in the van and takes every driving roll; standby waits at the van until called in (slice 3).
+const wheelsOp = (state, am) => (am.wheels ? state.crew.find((o) => o.id === am.wheels) ?? null : null);
+const standbyOp = (state, am) => (am.standby ? state.crew.find((o) => o.id === am.standby.id) ?? null : null);
+/** Standby, if they're still waiting at the van and fit to go in. */
+const standbyReady = (state, am) => { const op = standbyOp(state, am); return op && !am.standby.used && op.condition.injury !== 'critical' ? op : null; };
+/** Wheels, if they can drive (not critical). */
+const driver = (state, am) => { const op = wheelsOp(state, am); return op && op.condition.injury !== 'critical' ? op : null; };
+// Everyone on the job: the inside crew, overwatch, Wheels and standby (away, tired and learning together).
+const onJob = (state, am) => [...new Set([...crewOf(state, am), overwatchOp(state, am), wheelsOp(state, am), standbyOp(state, am)].filter(Boolean))];
 const opById = (state, id) => state.crew.find((o) => o.id === id);
 const crisisById = (tpl, id) => tpl.crises.find((c) => c.id === id) ?? twistById(id);
 
@@ -152,7 +159,8 @@ export function currentStep(am) {
 
 /**
  * Start a job. opts: { overwatch: { id, kit } (one crew member outside the inside crew, with the
- * shared rifle or drone), callIn ('every' | 'risky' | 'never'), orders (how the crew decides when
+ * shared rifle or drone), wheels: id (in the van: takes every driving roll), standby: id (at the
+ * van until called in), callIn ('every' | 'risky' | 'never'), orders (how the crew decides when
  * it doesn't call you: core/autorun.js ORDERS) }.
  */
 export function startMission(prev, jobId, crewIds, approach, opts = {}) {
@@ -164,6 +172,12 @@ export function startMission(prev, jobId, crewIds, approach, opts = {}) {
   if (!crewIds.length || crewIds.length > maxCrew(tpl.crewSize)) return prev;
   const ow = opts.overwatch?.id ? opts.overwatch : null;
   if (ow && (!OVERWATCH_KIT[ow.kit] || crewIds.includes(ow.id) || !state.crew.some((o) => o.id === ow.id))) return prev;
+  // Wheels and standby (slice 3): crew of your own, one place each.
+  const wheels = opts.wheels ?? null;
+  const standby = opts.standby ?? null;
+  const placed = [...crewIds, ow?.id, wheels, standby].filter(Boolean);
+  if (new Set(placed).size !== placed.length) return prev;
+  if ([wheels, standby].some((id) => id && !state.crew.some((o) => o.id === id))) return prev;
   // Freelancers from the board join the crew for this job only.
   const hired = (state.freelancers ?? []).filter((f) => crewIds.includes(f.id));
   if (hired.length > MAX_FREELANCERS_PER_JOB) return prev;
@@ -217,6 +231,7 @@ export function startMission(prev, jobId, crewIds, approach, opts = {}) {
   state.activeMission = {
     jobId, templateId: tpl.id, crewIds, approach, days, bribe,
     overwatch: ow ? { id: ow.id, kit: ow.kit, left: OVERWATCH_KIT[ow.kit].uses } : null,
+    wheels: wheels ?? null, standby: standby ? { id: standby, used: false } : null,
     callIn: CALL_IN[opts.callIn] ? opts.callIn : 'every', orders: opts.orders ?? null,
     alert: 0, out: [], pending: null, wentLoud: false,
     pay: view.pay, threat: view.threat, threatDelta: view.threatDelta, clientId: job.clientId ?? null, twist: job.twist ?? null,
@@ -322,7 +337,7 @@ export function runIncident(prev) {
   }
   const diff = incidentDifficulty(tpl, am, inc);
   // The heat penalty for letting it ride is on the first crisis roll (core/heat.js), so incidents leave it alone.
-  const rollCtx = { approach: am.approach, recommended: tpl.crewSize, intel: intelFor(state, tpl.district), job: incidentContext(state, am, inc, diff) };
+  const rollCtx = { approach: am.approach, recommended: tpl.crewSize, intel: intelFor(state, tpl.district), job: incidentContext(state, am, inc, diff), alert: am.alert ?? 0 };
   const h = handlerFor(able, inc, diff, rollCtx);
   if (!h) {
     exitRun(state, am, { text: 'Nobody left who can carry on.', choice: 'The crew pull out', report: 'With nobody left standing to finish it, the crew pulled out.' });
@@ -358,11 +373,14 @@ export function runIncident(prev) {
   record(am, event);
   if (success) { advance(state); return state; }
 
-  // In danger: one save, from overwatch (if it can see) or the best fighter inside.
+  // In danger: one save, from overwatch (if it can see) or the best fighter inside; once standby
+  // has come in, they get a try of their own if that misses (slice 3).
   if (inc.danger) {
     const ow = overwatchOp(state, am);
-    const save = bestSave({ victim: op, able, overwatch: am.overwatch, overwatchOp: ow, zone: step.zone, diff });
-    if (save) {
+    const sb = am.standby?.joined ? able.find((o) => o.id === am.standby.id) ?? null : null;
+    const first = bestSave({ victim: op, able: able.filter((o) => o !== sb), overwatch: am.overwatch, overwatchOp: ow, zone: step.zone, diff });
+    const tries = [first, standbySave({ standbyOp: sb, victim: op, first, diff })].filter(Boolean);
+    for (const save of tries) {
       const sdie = d20(nextRng(state));
       const saved = sdie + save.value >= save.need;
       const kit = save.via === 'overwatch' ? OVERWATCH_KIT[save.kit] : null;
@@ -379,7 +397,8 @@ export function runIncident(prev) {
         choice: saved ? `${save.op.handle} saves ${op.handle}` : `${save.op.handle} can't save ${op.handle}`,
         stat: save.stat, actor: { id: save.op.id, handle: save.op.handle }, value: save.value, notes: save.notes, die: sdie, need: save.need, success: saved,
         choiceCost: {}, outcomeCost: kit?.heat ? { heat: kit.heat } : {}, report: how,
-        why: kit ? `${save.op.handle} had the ${save.kit} on overwatch, and the best shot at helping.` : `${save.op.handle} was the best fighter close enough to help.`,
+        why: kit ? `${save.op.handle} had the ${save.kit} on overwatch, and the best shot at helping.`
+          : save.via === 'standby' ? `${save.op.handle} came in from standby to cover the team.` : `${save.op.handle} was the best fighter close enough to help.`,
       });
       am.log.push({ kind: saved ? 'good' : 'bad', text: how });
       am.report = [...(am.report ?? []), how];
@@ -449,15 +468,15 @@ export function describePending(state) {
   const text = am.pending.kind === 'alert'
     ? 'They know you\'re here. Lights are coming on and someone is shouting into a radio.'
     : `${patient?.handle ?? 'Someone'} is badly hurt and out of the job.`;
-  const choices = decisionChoices(am.pending, { patient }).map((c) => ({ ...c, available: true, risk: c.exit ? 'safe' : null }));
-  return { kind: am.pending.kind, text, choices };
+  const choices = decisionChoices(am.pending, { patient, standby: standbyReady(state, am) }).map((c) => ({ ...c, available: true, risk: c.exit ? 'safe' : null }));
+  return { kind: am.pending.kind, text, choices, standby: standbyReady(state, am)?.handle ?? null };
 }
 
 /** Answer the decision: go loud or keep going, or take the exit (everyone comes home). */
 export function resolvePending(prev, optionId) {
   const am0 = prev.activeMission;
   if (!am0?.pending) return prev;
-  const choice = decisionChoices(am0.pending, { patient: am0.pending.opId ? opById(prev, am0.pending.opId) : null }).find((c) => c.id === optionId);
+  const choice = decisionChoices(am0.pending, { patient: am0.pending.opId ? opById(prev, am0.pending.opId) : null, standby: standbyReady(prev, am0) }).find((c) => c.id === optionId);
   if (!choice) return prev;
   const state = structuredClone(prev);
   const am = state.activeMission;
@@ -473,6 +492,17 @@ export function resolvePending(prev, optionId) {
     am.alert = ALERT_MAX - 1;
     const report = 'The crew went loud to finish it. Heat +2.';
     record(am, { kind: 'decision', text: view.text, choice: choice.label, why, report, choiceCost: { heat: 2 } });
+    am.report = [...(am.report ?? []), report];
+  } else if (choice.id === 'standby' || choice.id === 'rescue') {
+    // Standby comes in from the van and joins the inside team; on a rescue they get the wounded
+    // out first and take their place. The alert stays where it is (owner's call, 2026-10-27).
+    const sb = standbyReady(state, am);
+    am.standby.used = true;
+    am.standby.joined = true;
+    am.crewIds = [...am.crewIds, sb.id];
+    const patient = choice.id === 'rescue' ? opById(state, am.pending.opId) : null;
+    const report = patient ? `${sb.handle} came in from standby, got ${patient.handle} out and took their place.` : `${sb.handle} came in from standby. The alert stayed up.`;
+    record(am, { kind: 'decision', standby: { id: sb.id, handle: sb.handle }, rescued: patient ? { id: patient.id, handle: patient.handle } : null, text: view.text, choice: choice.label, why, report, choiceCost: {} });
     am.report = [...(am.report ?? []), report];
   } else {
     const report = `The crew carried on without ${opById(state, am.pending.opId)?.handle ?? 'them'}.`;
@@ -491,6 +521,9 @@ export function resolvePending(prev, optionId) {
 }
 
 // --- crisis choices ----------------------------------------------------------
+
+/** Who counts for a choice's requirement: the inside crew, and Wheels for a driving one. */
+const reqCrew = (state, am, crew, req) => (req?.kind === 'stat' && req.value === 'driving' && driver(state, am) ? [...crew, driver(state, am)] : crew);
 
 function meetsRequirement(crew, req) {
   if (!req) return { ok: true };
@@ -512,7 +545,13 @@ function rollerFor(state, am, choice, crew) {
   const medic = choice.kind === 'stabilise' ? findRole(crew, 'medic') : null;
   const stat = medic ? 'medical' : choice.stat;
   const intel = intelFor(state, templateById(am.templateId).district);
-  return crewRoll(crew, stat, { approach: am.approach, recommended, lead: medic ? medicLead(medic, am, crew) : namedLead(state, am, crew, stat), watched: am.watched ?? 0, intel, job: jobContext(am, choice, crew) });
+  // Wheels takes every driving roll, alone at the wheel: no backup, no short-handed penalty (slice 3).
+  const wheels = stat === 'driving' ? driver(state, am) : null;
+  if (wheels) {
+    const own = effectiveStat(wheels, 'driving', { approach: am.approach, crew: [wheels] });
+    return crewRoll([wheels], 'driving', { approach: am.approach, lead: { op: wheels, value: own.value, notes: ['Wheels', ...own.notes] }, watched: am.watched ?? 0, intel, job: jobContext(am, choice, crew), alert: am.alert ?? 0 });
+  }
+  return crewRoll(crew, stat, { approach: am.approach, recommended, lead: medic ? medicLead(medic, am, crew) : namedLead(state, am, crew, stat), watched: am.watched ?? 0, intel, job: jobContext(am, choice, crew), alert: am.alert ?? 0 });
 }
 
 /** What earned traits need to know about the job so far, and this choice (core/earned.js). */
@@ -595,7 +634,7 @@ export function describeCrisis(state) {
   const crisis = crisisById(tpl, step.id);
   const crew = actors(state, am);
   const choices = crisis.choices.map((choice) => {
-    const req = meetsRequirement(crew, choice.requires);
+    const req = meetsRequirement(reqCrew(state, am, crew, choice.requires), choice.requires);
     const rolls = req.ok && !EXIT_KINDS.has(choice.kind) && !choice.sure;
     const voice = choiceVoice(am, crisis, rolls ? rollerFor(state, am, choice, crew) : null);
     const view = { id: choice.id, label: fill(choice.label, state, voice), kind: choice.kind, available: req.ok, reason: req.reason ?? '', cost: choiceCostText(choice) };
@@ -625,7 +664,7 @@ export function crisisOdds(state) {
   if (!am || am.critical || step?.type !== 'crisis') return null;
   const crisis = crisisById(templateById(am.templateId), step.id);
   const crew = actors(state, am);
-  return crisis.choices.filter((c) => meetsRequirement(crew, c.requires).ok).map((choice) => {
+  return crisis.choices.filter((c) => meetsRequirement(reqCrew(state, am, crew, c.requires), c.requires).ok).map((choice) => {
     if (EXIT_KINDS.has(choice.kind) || choice.sure) return { choice, exit: EXIT_KINDS.has(choice.kind), chance: 1, roller: null };
     const roller = rollerFor(state, am, choice, crew);
     return { choice, exit: false, chance: successChance(roller.value, rollDifficulty(am, choice)), roller, named: namesOp(crisis) };
@@ -641,7 +680,7 @@ export function chooseOption(prev, choiceId) {
   const crisis = crisisById(tpl, step.id);
   const choice = crisis.choices.find((c) => c.id === choiceId);
   const crew = actors(state, am);
-  if (!choice || !meetsRequirement(crew, choice.requires).ok) return prev;
+  if (!choice || !meetsRequirement(reqCrew(state, am, crew, choice.requires), choice.requires).ok) return prev;
 
   const rolls = !EXIT_KINDS.has(choice.kind) && !choice.sure;
   const roller = rolls || choice.sure ? rollerFor(state, am, choice, crew) : null;

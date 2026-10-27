@@ -13,7 +13,7 @@
 // on its own; needsPlayer says when the run waits for the player (a call-in).
 
 import { templateById } from './jobs.js';
-import { crisisOdds, chooseOption, revealBeat, resolveCritical, currentStep, startMission, closeMission, enterZone, runIncident, resolvePending, RISKY_BELOW } from './mission.js';
+import { crisisOdds, chooseOption, revealBeat, resolveCritical, currentStep, startMission, closeMission, enterZone, runIncident, resolvePending, describePending, RISKY_BELOW } from './mission.js';
 import { ordersDecision } from './incidents.js';
 
 const pct = (n) => `${Math.round(n * 100)}%`;
@@ -111,7 +111,7 @@ export function autoStep(prev, { force = false } = {}) {
     return resolveCritical(s, 'extract');
   }
   if (am.pending) {
-    const { id, why } = ordersDecision(am.pending.kind, orders);
+    const { id, why } = ordersDecision(am.pending.kind, orders, { standby: !!describePending(s).standby });
     am.nextWhy = why;
     return resolvePending(s, id);
   }
@@ -158,7 +158,7 @@ export function sendOff(prev, jobId, crewIds, approach, ordersId, opts = {}) {
   am.startedDay = s.day;
   const days = am.days ?? tpl.days;
   const returnDay = s.day + days;
-  const crew = [...am.crewIds, ...(am.overwatch ? [am.overwatch.id] : [])].map((id) => s.crew.find((o) => o.id === id)).filter(Boolean);
+  const crew = [...am.crewIds, am.overwatch?.id, am.wheels, am.standby?.id].filter(Boolean).map((id) => s.crew.find((o) => o.id === id)).filter(Boolean);
   for (const op of crew) op.condition.awayUntil = returnDay;
   s.awayJobs = [...(s.awayJobs ?? []), { returnDay, mission: am }];
   s.activeMission = null;

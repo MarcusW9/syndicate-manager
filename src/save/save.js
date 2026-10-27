@@ -316,5 +316,14 @@ function migrate(state) {
     for (const j of state.awayJobs ?? []) fix(j.mission, 'never');
     state.version = 21;
   }
+  if (state.version === 21) {
+    // v22: Wheels and standby (PLAN-CORE-LOOP.md, slice 3). A job saved mid-way had neither.
+    for (const am of [state.activeMission, ...(state.awayJobs ?? []).map((j) => j.mission)]) {
+      if (!am) continue;
+      am.wheels = am.wheels ?? null;
+      am.standby = am.standby ?? null;
+    }
+    state.version = 22;
+  }
   return state;
 }

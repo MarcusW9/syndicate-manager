@@ -104,10 +104,16 @@ Built as `core/squad.js` (coverage read, Joss's picks; not `risk.js`, to avoid a
 Still open: retune growth and earned traits for the loop. Found while building: the planning screen is long on
 phones (approach, board, two reads, call-ins); the generic site plan doesn't match every job (slice 4).
 
-### Slice 3 · Wheels and standby — [ ]
-- Wheels: the person in the van rolls the driving crises on the way out.
-- Standby: one person at the van; called in at max alert or to rescue someone seriously
-  hurt (they take the hurt person's place).
+### Slice 3 · Wheels and standby — [x] 2026-10-27 (owner's calls and build calls in DESIGN.md)
+- Wheels (optional): the person in the van takes every driving roll, alone.
+- Standby: one person at the van; called in at max alert (they join; the alert stays up; once
+  in, they get their own save attempt after overwatch or a teammate) or to rescue someone
+  seriously hurt (they take the hurt person's place). Cautious orders never use them.
+
+Built in `core/mission.js` (Wheels in `rollerFor`, standby in `resolvePending` and the save
+loop in `runIncident`), `core/incidents.js` (`decisionChoices`, `ordersDecision`,
+`standbySave`), `core/squad.js` (Joss), `ui/board.js` (two more outside slots) and the watch.
+Save v22. Tests: `tests/standby.test.js`.
 
 ### Slice 4 · Sites and district text — [ ]
 - A site plan per district (Docks yard, Old Town tenement, Night Market, Glass Heights

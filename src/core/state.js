@@ -9,7 +9,7 @@ import { refreshFreelancers } from './freelance.js';
 import { ECONOMY } from '../data/economy.js';
 import { refreshSideBoard } from './sidetasks.js';
 
-export const SAVE_VERSION = 21;
+export const SAVE_VERSION = 22;
 
 // A rookie crew's first board: small work only.
 export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];

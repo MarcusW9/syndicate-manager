@@ -4,10 +4,10 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 
 ## State
 
-- **`main`:** up to [#19](https://github.com/MarcusW9/syndicate-manager/pull/19) (`48a38f0`): the design review, the core-loop decisions, two prototypes and squad-run slice 1. **Branch `claude/jolly-keller-6eqry7`** was restarted from `main` and carries slice 2 (not yet in a PR).
-- **The game is becoming the squad run** (`PLAN-CORE-LOOP.md`, the build order; `drafts/core-loop.md`, how we got there). **Slices 1 (the engine) and 2 (the squad board and the watch screen) are built**; slice 3 (Wheels and standby) is next.
+- **`main`:** up to [#20](https://github.com/MarcusW9/syndicate-manager/pull/20) (`6fbbb55`, squash-merged): squad-run slices 1 and 2. **Branch `claude/jolly-keller-6eqry7`** was restarted from `main` and carries slice 3.
+- **The game is becoming the squad run** (`PLAN-CORE-LOOP.md`, the build order; `drafts/core-loop.md`, how we got there). **Slices 1-3 are built** (the engine; the squad board and the watch screen; Wheels and standby); slice 4 (sites and district text) is next.
 - **Design review:** `STATE-OF-PLAY.md` (2026-10-26) and the owner's calls on it (in the file and in DESIGN.md). Read it instead of re-assessing.
-- **Tests:** 253 passing. **Save format v21.**
+- **Tests:** 263 passing. **Save format v22.**
 
 ## What the 2026-10-26/27 session did
 
@@ -16,6 +16,7 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 - **Prototypes** (`drafts/prototypes/`, published as artifacts): v1 plan-watch-report, then v2 with the squad board, coverage read, incidents, saves, alert, standby and an animated site-plan watch screen. The owner called v2 "pretty damn cool".
 - **Slice 1 in the game:** `src/data/approaches.js`, `src/data/incidents.js`, `src/core/incidents.js`; `core/mission.js` gains zone and incident steps and `am.pending` decisions; `core/autorun.js` gains `autoStep` and `needsPlayer` (one stepper for live and hands-off runs); planning has four approaches, overwatch and "Call me in…"; the mission screen steps with Next. `tests/incidents.test.js` guards the rules.
 - **Slice 2 in the game:** `core/squad.js` (coverage read, Joss's picks), `core/feed.js` (a run's events as watch cards), `ui/board.js` (dossier board, picker sheet, coverage), `ui/siteplan.js` (generic site plan and its animations) and `ui/watch.js` (the timed feed; while a job runs, `app.js` hands it each new state instead of re-rendering). Zones are recorded as events. Tests: `tests/squad.test.js`, `tests/feed.test.js`.
+- **Slice 3 in the game:** Wheels (optional; takes every driving roll from the van) and standby (called in at max alert, where the alert stays up and they get a second save, or to rescue the badly hurt). Standby joins by being added to `am.crewIds`. Tests: `tests/standby.test.js`.
 
 ## Agreed rules worth remembering
 
@@ -30,8 +31,8 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 
 ## Next
 
-1. **Open a PR** for slice 2 when the owner wants it on `main`.
-2. **Squad run slice 3** (`PLAN-CORE-LOOP.md`): Wheels (driving crises on the way out) and standby (called in at max alert or to rescue someone badly hurt), as board slots. Still open from slice 1: retune growth and earned traits for the loop.
+1. **Merge the slice 3 PR** when the owner's happy with it.
+2. **Squad run slice 4** (`PLAN-CORE-LOOP.md`): a site plan per district as data, and the incident text per district (writing task 11). Still open from slice 1: retune growth and earned traits for the loop.
 3. Then slices 3-5 (Wheels and standby, sites and district text, gear and specialisations), and the agreed review items: the neural load and burnout cleanup, mood traits, money pressure, relationships with the career page.
 
 ## Writing pipeline (owner writes in other chats, pastes back)
@@ -66,6 +67,6 @@ When a batch comes back: check every line against the game data (ids, costs, inj
 - `npm run build` needs `npm ci` first in a fresh container. `npm test` needs nothing.
 - Browser checks: `npx vite --port 5174` in the background (`setsid`), then Playwright (pre-installed). Phone width 390.
 - **Stopping the server:** `pkill -f "[v]ite --port 5174"`. Without the brackets the pattern matches the shell running it and kills the command (exit 144) before anything after it runs.
-- **Force-push is denied** by the permission system. After a PR merges, branch fresh from `main` instead of resetting the old branch.
+- **Force-push is denied** by the permission system. After a PR merges, branch fresh from `main` instead of resetting the old branch. When the session must reuse the same branch name (PRs here are squash-merged, so the old remote branch isn't an ancestor of `main`): restart from `main`, commit, then `git merge origin/<branch>` and keep your side (`git checkout --ours -- .`; check first that `git diff origin/main origin/<branch>` is empty), then push normally (done for slice 3).
 - github.io isn't reachable from the container; check deploys with the GitHub Actions runs instead.
 - **Stacked PRs don't retarget themselves** unless the lower PR's branch is deleted when it merges. On 2026-10-26 #14-#17 were merged into each other's branches instead of `main`, and #18 had to carry them over. Either ask the owner to delete each branch on merge, or after the bottom PR merges, retarget the next PR to `main` (`update_pull_request` with `base: main`) before it's merged.

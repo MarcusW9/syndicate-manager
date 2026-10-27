@@ -4,6 +4,7 @@ import { TRAITS } from '../data/traits.js';
 import { statusRollMods } from './statuses.js';
 import { ownMods, jobMods } from './earned.js';
 import { APPROACHES } from '../data/approaches.js';
+import { ALERT_MAX } from '../data/incidents.js';
 
 export { APPROACHES };
 
@@ -112,11 +113,11 @@ export function crewSizeRead(picked, recommended) {
  * Real rolls and the risk read both use this.
  * Returns { op, value, notes, backup, missing } or null if nobody can roll.
  */
-export function crewRoll(crew, stat, { approach, recommended = 0, lead, watched = 0, intel = null, job = null } = {}) {
+export function crewRoll(crew, stat, { approach, recommended = 0, lead, watched = 0, intel = null, job = null, alert = 0 } = {}) {
   const able = crew.filter((o) => o.condition.injury !== 'critical');
   const top = lead ?? bestFor(able, stat, { approach });
   if (!top) return null;
-  const ctx = { stat, approach, crew, able, top, recommended, watched, intel, job, backup: findBackup(able, top, stat, { approach, crew }), missing: Math.max(0, recommended - able.length) };
+  const ctx = { stat, approach, crew, able, top, recommended, watched, intel, job, alert, backup: findBackup(able, top, stat, { approach, crew }), missing: Math.max(0, recommended - able.length) };
   const notes = [...top.notes];
   const value = applyRules(CREW_RULES, top.op, ctx, top.value, notes);
   return { op: top.op, value, notes, backup: ctx.backup?.op ?? null, missing: ctx.missing };
@@ -137,7 +138,8 @@ function findBackup(able, top, stat, ctx) {
 export const CREW_RULES = [
   { id: 'backup', applies: (op, { backup }) => !!backup, value: () => BACKUP_BONUS, note: (op, { backup }) => `${backup.op.handle} backs up +${BACKUP_BONUS}` },
   // Stealth and con runs (data/approaches.js): every body past the job's recommended size is one more to spot.
-  { id: 'spotted', applies: (op, { stat, approach, able, recommended }) => !!APPROACHES[approach]?.detect && ['stealth', 'social'].includes(stat) && recommended > 0 && able.length > recommended,
+  // Not once they've been spotted for good (max alert): there's nothing left to hide (slice 3).
+  { id: 'spotted', applies: (op, { stat, approach, able, recommended, alert }) => !!APPROACHES[approach]?.detect && ['stealth', 'social'].includes(stat) && recommended > 0 && able.length > recommended && (alert ?? 0) < ALERT_MAX,
     value: (op, { able, recommended }) => -(able.length - recommended), note: (op, { able }, v) => `${able.length} inside −${-v}` },
   { id: 'short-handed', applies: (op, { missing }) => missing > 0, value: (op, { missing }) => -missing * SHORT_HANDED_PENALTY, note: (op, ctx, v) => `short-handed -${-v}` },
   // Letting high heat ride (core/heat.js): the next job's first crisis roll is made under watching eyes.

@@ -86,7 +86,7 @@ test('an empty squad is all gaps; extra bodies on a stealth run are flagged', ()
   assert.equal(coverage(tpl, s.crew.slice(0, tpl.crewSize + 1), 'loud').spotted, 0, 'loud runs don\'t care');
 });
 
-test('Joss picks a full inside team from free crew, never doubles anyone up, and overwatch only if it helps', () => {
+test('Joss picks a full inside team from free crew, never doubles anyone up, overwatch only if it helps, then Wheels and standby', () => {
   for (let seed = 1; seed <= 20; seed++) {
     const s = offer(seed, 'container409');
     const tpl = templateById('container409');
@@ -96,8 +96,11 @@ test('Joss picks a full inside team from free crew, never doubles anyone up, and
       assert.equal(p.crew.length, Math.min(tpl.crewSize, free.length));
       assert.equal(new Set(p.crew).size, p.crew.length);
       if (p.overwatch) { assert.ok(!p.crew.includes(p.overwatch)); assert.ok(['rifle', 'drone'].includes(p.kit)); }
+      // Wheels and standby (slice 3): everyone in one place only.
+      const placed = [...p.crew, p.overwatch, p.wheels, p.standby].filter(Boolean);
+      assert.equal(new Set(placed).size, placed.length, 'one place each');
       // The picks start a real job.
-      const st = M.startMission(s, s.jobs[0].id, p.crew, a, { overwatch: p.overwatch ? { id: p.overwatch, kit: p.kit } : null });
+      const st = M.startMission(s, s.jobs[0].id, p.crew, a, { overwatch: p.overwatch ? { id: p.overwatch, kit: p.kit } : null, wheels: p.wheels, standby: p.standby });
       assert.ok(st.activeMission, `seed ${seed} ${a}: the job starts`);
     }
   }

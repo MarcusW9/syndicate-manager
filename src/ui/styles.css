@@ -715,7 +715,9 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 /* The watch screen (ui/watch.js): the site plan stays in view over the feed. */
 .watch { display: grid; gap: 10px; margin-top: 8px; --speed: 1; }
 .watch__live { position: sticky; top: var(--live-top, 0); z-index: 1; background: var(--bg); padding-block: 4px 6px; display: grid; gap: 6px; }
-.watch.is-done .watch__live { position: static; }
+.watch.is-done .watch__live, .watch.is-calling .watch__live { position: static; }
+.watch.is-calling .watch__bar { display: none; }
+.watch__callin { scroll-margin-top: calc(var(--live-top, 0px) + 8px); }
 .watch__map { position: relative; background: #0b0d11; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
 .siteplan { display: block; width: 100%; height: min(34dvh, 280px); }
 .watch__phase { position: absolute; left: 8px; top: 8px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-2); background: rgba(11, 13, 17, 0.85); border: 1px solid #1f4440; border-radius: 6px; padding: 2px 8px; }
@@ -795,3 +797,4 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
   .sp-alarm.is-on { animation: none; opacity: 0.8; transform: scale(2); }
   .sp-token.is-cornered circle { animation: none; }
 }
+.board__kitdesc { margin: 0; }

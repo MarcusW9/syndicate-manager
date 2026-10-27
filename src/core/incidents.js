@@ -92,22 +92,47 @@ export function bestSave({ victim, able, overwatch, overwatchOp, zone, diff }) {
   return options[0] ?? null;
 }
 
-/** The decision options a run can stop for. Every list has an exit (`exit: true`) that brings everyone home. */
-export function decisionChoices(pending, { patient = null } = {}) {
+/**
+ * The decision options a run can stop for. Every list has an exit (`exit: true`) that brings
+ * everyone home. standby: the operative waiting at the van, if they haven't been called yet
+ * (slice 3): at max alert they can join the inside team (the alert stays up); for someone badly
+ * hurt they can go in, get them out and take their place.
+ */
+export function decisionChoices(pending, { patient = null, standby = null } = {}) {
   if (pending.kind === 'alert') {
     return [
+      ...(standby ? [{ id: 'standby', label: `Call ${standby.handle} in from standby`, cost: 'They join the team: one more to back up rolls and pull someone out of trouble. The alert stays up.' }] : []),
       { id: 'loud', label: 'Go loud and finish it fast', cost: 'Heat +2. What\'s left becomes a fight.' },
       { id: 'out', label: 'Pull out', cost: 'Everyone comes home. No pay.', exit: true },
     ];
   }
   return [
+    ...(standby ? [{ id: 'rescue', label: `Send ${standby.handle} in to get ${patient?.handle ?? 'them'} out`, cost: `${standby.handle} takes their place on the team.` }] : []),
     { id: 'keep', label: `Keep going without ${patient?.handle ?? 'them'}`, cost: 'They sit the rest out; the others carry on.' },
     { id: 'out', label: 'Pull everyone out', cost: 'Everyone comes home. No pay.', exit: true },
   ];
 }
 
-/** What standing orders do at a decision when the crew doesn't call you (core/autorun.js ORDERS). */
-export function ordersDecision(kind, ordersId) {
-  if (kind === 'alert') return ordersId === 'committed' ? { id: 'loud', why: 'Committed orders: they went loud to finish it.' } : { id: 'out', why: 'They were blown, and the orders said not to force it.' };
-  return ordersId === 'cautious' ? { id: 'out', why: 'Cautious orders: someone badly hurt means everyone goes home.' } : { id: 'keep', why: 'They got their wounded somewhere safe and carried on.' };
+/**
+ * What standing orders do at a decision when the crew doesn't call you (core/autorun.js ORDERS).
+ * Steady and Committed crews use standby when they have one; Cautious crews pull out (owner, 2026-10-27).
+ */
+export function ordersDecision(kind, ordersId, { standby = false } = {}) {
+  const cautious = ordersId === 'cautious';
+  if (kind === 'alert') {
+    if (standby && !cautious) return { id: 'standby', why: 'They were blown, so they called standby in from the van.' };
+    return ordersId === 'committed' ? { id: 'loud', why: 'Committed orders: they went loud to finish it.' } : { id: 'out', why: 'They were blown, and the orders said not to force it.' };
+  }
+  if (cautious) return { id: 'out', why: 'Cautious orders: someone badly hurt means everyone goes home.' };
+  return standby ? { id: 'rescue', why: 'They sent standby in to get their wounded out.' } : { id: 'keep', why: 'They got their wounded somewhere safe and carried on.' };
+}
+
+/**
+ * Standby's own save, once they've joined the inside team: a second try when the first save
+ * missed or nobody could make one (slice 3, option B). Combat at the incident's difficulty.
+ */
+export function standbySave({ standbyOp, victim, first, diff }) {
+  if (!standbyOp || standbyOp.id === victim.id || first?.op.id === standbyOp.id) return null;
+  const s = effectiveStat(standbyOp, 'combat');
+  return { via: 'standby', op: standbyOp, stat: 'combat', value: s.value, notes: ['standby', ...s.notes], need: 10 + diff, chance: successChance(s.value, diff) };
 }
