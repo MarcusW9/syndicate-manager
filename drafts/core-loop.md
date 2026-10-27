@@ -89,6 +89,14 @@ The owner's model, refined over two messages. Not yet a DESIGN.md decision.
 - **Coverage read at planning:** the incidents this site and approach tend to throw at you, who covers each, and the gaps. Intel can reveal more of it.
 - **Open:** a sniper means ranged and close combat differ. Gear (a rifle lets combat reach across a room, at a noise and heat cost) is Claude's suggestion; a new stat is the alternative. Lethal force costing heat, quiet answers costing time or risk. Squad size limits per job.
 
+## Agreed 2026-10-27 (see DESIGN.md)
+
+- **Four approaches:** stealth (time), tech (neural load; the hacker can stay in the van), loud (heat), con (money). Driving on every way out.
+- **Guns and tech are standard for mercs** (canon, `WORLD.md`); gunfire costs heat.
+- **Overwatch role:** sniper (combat, lethal, sightlines, heat) or drone operator (tech, non-lethal, indoors, neural load). Gear-based is the working assumption.
+- **Squads of 2-4, more on big jobs**; heists split into teams (inside, overwatch, wheels).
+- **Bench on standby:** marked when planning (no side work that day, a little fatigue); a call-in option brings them in a beat or two later; rescues of someone caught or pinned. Details to design.
+
 ## Possible path (each step stands alone)
 
 - **A.** A timed feed and call-ins for all jobs, with richer standing orders (mostly existing engine).
