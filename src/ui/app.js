@@ -8,12 +8,13 @@ import { MISSIONS } from '../data/missions.js';
 import { TRAITS } from '../data/traits.js';
 import { PARTNER } from '../data/partner.js';
 import { jossIcon, portrait } from './art.js';
+import { statIcon, statGlyph, crewIcons } from './icons.js';
 import { cityMapSvg, MAP_DISTRICTS } from './citymap.js';
 
 import { advanceDay, calendar, formatShortDate, isBlocked, seasonStartDay } from '../core/time.js';
 import { createNewGame } from '../core/state.js';
-import { templateById, jobView, nextUnlock } from '../core/jobs.js';
-import { trustLabel, clientById, trustOf } from '../core/clients.js';
+import { templateById, jobView, nextUnlock, JOB_GATES } from '../core/jobs.js';
+import { trustLabel, trustOf } from '../core/clients.js';
 import { CLIENTS } from '../data/clients.js';
 import { availability, APPROACHES, traitMods, ratedStat, maxCrew, crewSizeRead } from '../core/crew.js';
 import { assessJob, rollTarget, successChance, riskLabel } from '../core/risk.js';
@@ -260,7 +261,7 @@ function keyStatsFor(op, tpl, threat) {
   return tpl.keyStats.map((k) => {
     const v = ratedStat(op, k);
     const fit = { low: 'good', moderate: 'shaky', high: 'weak', extreme: 'weak' }[riskLabel(successChance(v, target))];
-    return `<span class="fit fit--${fit}">${esc(statName(k))} ${v}${traitMods(op)[k] ? '*' : ''}</span>`;
+    return `<span class="fit fit--${fit} iconword">${statGlyph(k)}${esc(statName(k))} ${v}${traitMods(op)[k] ? '*' : ''}</span>`;
   }).join(' · ');
 }
 /** How long something on offer lasts: it's still there on its last day. */
@@ -285,7 +286,7 @@ const seasonChanges = (op) => changesSince(op, seasonStartDay(state.day));
 /** Crew-list one-liner: their best (main) stat and the scout's read of where they're heading. */
 function scoutLine(op) {
   const main = primaryStat(op);
-  return `<span class="scoutline">${esc(statName(main))} ${ratedStat(op, main)} · ${esc(potentialTag(op))}</span>`;
+  return `<span class="scoutline"><span class="iconword">${statGlyph(main)}${esc(statName(main))} ${ratedStat(op, main)}</span> · ${esc(potentialTag(op))}</span>`;
 }
 
 /** Crew-list marker: "▲ Tech +2, Combat +1 ▼ Driving −1" for this season. */
@@ -307,7 +308,7 @@ function statCell(op, k, { growth = false } = {}) {
   const career = growth ? op.stats[k] - (op.startStats?.[k] ?? op.stats[k]) : 0;
   const traitNames = op.traits.filter((t) => typeof TRAITS[t]?.effects?.[k] === 'number').map((t) => TRAITS[t].name).join(', ');
   return `<div>
-    <dt>${esc(k)}</dt>
+    <dt class="iconword">${statGlyph(k)}${esc(k)}</dt>
     <dd>${ratedStat(op, k)}${season ? ` <span class="growth ${season < 0 ? 'is-down' : ''}">${signed(season)}</span>` : ''}</dd>
     ${mod ? `<span class="statnote ${mod < 0 ? 'is-down' : ''}">${op.stats[k]} ${mod > 0 ? '+' : '−'}${Math.abs(mod)} ${esc(traitNames)}</span>` : ''}
     ${career ? `<span class="statnote">career ${signed(career)}</span>` : ''}
@@ -581,6 +582,20 @@ function renderUpcoming(where) {
     same[0].names = same.map((i) => i.name);
     for (const i of same.slice(1)) items.splice(items.indexOf(i), 1);
   }
+  // Several people on the same day (back, healed, rested) share one line: "5 back from the job",
+  // with the names a tap away (owner's feedback, 2026-10-27: imagine ten coming back).
+  const GROUPS = { back: 'back from the job', healed: 'over their injuries', rested: 'rested enough to work' };
+  for (const kind of Object.keys(GROUPS)) {
+    for (const d of new Set(items.filter((i) => i.kind === kind).map((i) => i.day))) {
+      const same = items.filter((i) => i.kind === kind && i.day === d);
+      if (same.length < 3) continue;
+      items.splice(items.indexOf(same[0]), 1, { day: d, kind: 'group', text: `${same.length} ${GROUPS[kind]}`, names: same.map((i) => i.name) });
+      for (const i of same.slice(1)) items.splice(items.indexOf(i), 1);
+    }
+  }
+  const line = (i) => (i.kind === 'group'
+    ? `<li><details class="upcoming__group"><summary>${esc(i.text)}</summary><span class="small muted">${esc(i.names.join(', '))}</span></details></li>`
+    : `<li class="${i.kind === 'bills' && state.cash < i.total ? 'is-short' : ''}">${esc(text(i))}</li>`);
   const days = [...new Set(items.map((i) => i.day))];
   return `
     <section class="panel upcoming ${where}">
@@ -589,7 +604,7 @@ function renderUpcoming(where) {
         ${days.map((d) => `
           <li class="upcoming__day">
             <span class="upcoming__when">${esc(when(d))}</span>
-            <ul class="upcoming__items">${items.filter((i) => i.day === d).map((i) => `<li class="${i.kind === 'bills' && state.cash < i.total ? 'is-short' : ''}">${esc(text(i))}</li>`).join('')}</ul>
+            <ul class="upcoming__items">${items.filter((i) => i.day === d).map(line).join('')}</ul>
           </li>`).join('')}
       </ul>
     </section>`;
@@ -968,9 +983,17 @@ const talkTag = (v) => v.rumour ? `<span class="talk-tag">Street talk: ${esc(v.r
 function climbLine() {
   const next = nextUnlock(state);
   if (!next) return '';
-  const pct = Math.round(Math.min(1, (state.reputation ?? 0) / next.rep) * 100);
-  return `<div class="climb"><p class="small"><strong>Reputation ${Math.floor(state.reputation ?? 0)}/${next.rep}.</strong> Bigger work opens up once people know your name. Finished jobs build it; aborts cost it.</p>
-    <div class="bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><span style="width:${pct}%"></span></div></div>`;
+  // One compact line: the number, a short ten-block gauge to the next unlock, and the rest behind
+  // an (i) (owner's feedback, 2026-10-27: the full-width bar read as a big scale).
+  const rep = state.reputation ?? 0;
+  const share = Math.min(1, rep / next.rep);
+  const blocks = Array.from({ length: 10 }, (_, i) => `<i class="${share * 10 >= i + 1 ? 'is-on' : share * 10 > i ? 'is-part' : ''}"></i>`).join('');
+  const ladder = Object.entries(JOB_GATES).map(([threat, need]) => `${need} (threat ${threat})`).join(', ');
+  return `<div class="climb infoline">
+    <span class="climb__label">Reputation <strong>${Math.floor(rep)}/${next.rep}</strong></span>
+    <span class="climb__gauge" role="progressbar" aria-label="Reputation towards the next unlock" aria-valuenow="${Math.floor(rep)}" aria-valuemin="0" aria-valuemax="${next.rep}">${blocks}</span>
+    ${infoTip('About reputation', `Bigger work opens up once people know your name. Finished jobs build it; aborts cost it. Rookie jobs are open from the start; the rest open at ${ladder}.`)}
+  </div>`;
 }
 
 function renderJobs() {
@@ -989,7 +1012,8 @@ function renderJobs() {
             <button class="row jobcard" data-action="open-job" data-id="${esc(j.id)}">
               <strong class="jobcard__name">${esc(t.name)}</strong><strong class="jobcard__pay">${money(v.pay)}</strong>
               <span class="jobcard__client">${clientLine(v)}</span><span class="jobcard__left ${j.expiresDay === state.day ? 'is-last' : ''}">${daysLeft(j.expiresDay)}</span>
-              <span class="jobcard__facts">${esc(districtName(t.district))} · threat ${threatHtml(v)} · ${t.crewSize} crew · ${t.days}d</span>
+              <span class="jobcard__facts">${esc(districtName(t.district))} · threat ${threatHtml(v)} · ${crewIcons(t.crewSize, `crew of ${t.crewSize}`)} · ${t.days}d</span>
+              <span class="jobcard__stats">${t.keyStats.map(statIcon).join(' ')}</span>
               ${v.hinted ? '<span class="jobcard__extra intel">Intel unreliable</span>' : ''}${v.rumour ? `<span class="jobcard__extra">${talkTag(v)}</span>` : ''}
             </button>
           </li>`;
@@ -1007,18 +1031,21 @@ function renderSideBoard() {
   const board = (state.sideBoard ?? []).map(sideTaskById).filter(Boolean);
   return `
       <h2>Side work this week</h2>
-      <p class="muted small">Small one-off jobs for whoever isn't on the main work. They're away for the days shown and the result comes back with them. A new board every Monday.</p>
+      <div class="infoline"><p class="muted small">Small jobs for whoever's free.</p>${infoTip('About side work', 'One-off jobs for whoever isn\'t on the main work. They\'re away for the days shown, and the result comes back with them. A new board every Monday.')}</div>
       ${board.length ? `<ul class="list list--cols">
         ${board.map((t) => `
           <li>
             <button class="row jobcard" data-action="open-side" data-id="${esc(t.id)}">
               <strong class="jobcard__name">${esc(t.name)}</strong><strong class="jobcard__pay">${esc(PURPOSE[t.purpose])}</strong>
               <span class="jobcard__client">${esc(sideReward(t))}</span><span class="jobcard__left">${t.days}d</span>
-              <span class="jobcard__facts">${esc(districtName(t.district))} · ${esc(t.stat)} · up to ${t.crew}</span>
+              <span class="jobcard__facts">${esc(districtName(t.district))} · ${statIcon(t.stat)} · ${crewIcons(t.crew)}</span>
             </button>
           </li>`).join('')}
       </ul>` : '<p class="muted">Nothing left this week. More on Monday.</p>'}`;
 }
+
+/** A small (i) that opens an explanation on tap (no hover: iOS rules in CLAUDE.md). */
+const infoTip = (label, text) => `<details class="infotip"><summary aria-label="${esc(label)}">i</summary><p class="small">${esc(text)}</p></details>`;
 
 /** Planning a side task: who goes, how likely it goes well, what it gives and costs. */
 function renderSidePlan() {

@@ -181,10 +181,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .stats dd { margin: 0; font-size: 1.2rem; font-weight: 600; }
 .nextbar { display: block; height: 4px; margin-top: 6px; background: var(--line); border-radius: 2px; overflow: hidden; }
 .nextbar span { display: block; height: 100%; background: var(--accent-2); }
-.climb { margin: 8px 0 12px; }
-.climb p { margin: 0 0 6px; }
-.bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
-.bar span { display: block; height: 100%; background: var(--accent); }
+.climb { margin: 8px 0 12px; align-items: center; flex-wrap: wrap; }
 .growth { font-size: 0.8rem; font-weight: 600; color: var(--accent-2); }
 .growth.is-down { color: var(--danger); }
 .mentor { color: var(--accent-2); margin: 0.5rem 0 0; }
@@ -738,24 +735,16 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .wf-brief { margin: 0; color: var(--muted); line-height: 1.55; }
 .wf-phase { margin: 6px 0 0; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-2); display: flex; gap: 8px; align-items: center; }
 .wf-phase::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-.wf-beat { margin: 0; color: #aab0c0; font-style: italic; font-size: 0.9rem; line-height: 1.5; padding-left: 12px; border-left: 2px solid var(--line); }
+.wf-beat { margin: 0; color: #8b93a7; font-style: italic; font-size: 0.8rem; line-height: 1.5; padding-left: 12px; border-left: 1px solid var(--line); } /* story beats sit back */
 .wf-note { margin: 0; font-size: 0.82rem; padding-left: 12px; }
-.wf-card { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid #3a4254; border-radius: 4px var(--radius) var(--radius) 4px; padding: 8px 12px; display: grid; gap: 4px; }
-.wf-card--good { border-left-color: #5fe0a5; } .wf-card--bad { border-left-color: var(--danger); } .wf-card--save { border-left-color: var(--warn); } .wf-card--warn { border-left-color: var(--warn); }
-.wf-card--crisis { border-color: #4a2232; background: #1a1418; }
 .wf-kind { font-size: 0.64rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
 .wf-setup { margin: 0; font-size: 0.86rem; color: #b4bacb; line-height: 1.45; }
-.wf-res { display: grid; gap: 2px; padding-top: 4px; border-top: 1px dashed var(--line); }
-.wf-hl { margin: 0; font-weight: 700; font-size: 0.98rem; }
-.wf-res--good .wf-hl { color: #9fe8c7; } .wf-res--bad .wf-hl { color: #ffb38a; } .wf-res--save .wf-hl, .wf-res--warn .wf-hl { color: var(--warn); }
 .wf-det { margin: 0; font-size: 0.84rem; color: #c9cdd8; line-height: 1.45; }
 .wf-why { margin: 0; font-size: 0.78rem; color: var(--accent-2); }
-.wf-card .flog__roll summary { min-height: 32px; }
-/* New moments slide in; each result lands a beat after the one before (slower when paced, quicker at Faster). */
+/* New moments slide in; each headline lands a beat after the one before (slower when paced, quicker at Faster). */
 .is-new { animation: wf-in 0.35s ease-out both; }
-.wf-card.is-new .wf-res { animation: wf-in 0.35s ease-out both; animation-delay: calc((0.8s + var(--d) * 0.9s) * var(--speed)); }
 @keyframes wf-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .is-new, .wf-card.is-new .wf-res { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .is-new { animation: none; } }
 
 /* Site plan (ui/siteplan.js) in the street-terminal style. */
 .sp-road { fill: #12141a; } .sp-road__line { stroke: #2a2f3b; stroke-dasharray: 6 6; }
@@ -798,3 +787,58 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
   .sp-token.is-cornered circle { animation: none; }
 }
 .board__kitdesc { margin: 0; }
+
+/* Owner's feedback (2026-10-27). The picker: who's already on the squad is set apart, greyed and tagged. */
+.sheet__group { margin: 14px 0 6px; font-size: 0.72rem; letter-spacing: 0.12em; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.sheet__group span { font-weight: 400; letter-spacing: 0; text-transform: none; }
+.cand.is-placed { opacity: 0.55; background: transparent; border-style: dashed; }
+.cand__where { display: inline-block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; background: #262b36; color: var(--text); }
+.cand__where--here { background: #16262a; color: var(--accent-2); box-shadow: inset 0 0 0 1px var(--accent-2); }
+
+/* The watch feed: one line per moment, tap for the detail. */
+.wf-line { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid #3a4254; border-radius: 4px var(--radius) var(--radius) 4px; }
+.wf-line--good { border-left-color: #5fe0a5; } .wf-line--bad { border-left-color: var(--danger); } .wf-line--save, .wf-line--warn { border-left-color: var(--warn); }
+.wf-line--crisis, .wf-line--decision, .wf-line--exit, .wf-line--critical { background: #1a1418; border-color: #4a2232; }
+.wf-line > summary { list-style: none; cursor: pointer; min-height: var(--tap); padding: 7px 12px; display: grid; gap: 2px; align-content: center; }
+.wf-line > summary::-webkit-details-marker { display: none; }
+.wf-line > summary::after { content: '▸'; position: absolute; right: 12px; color: var(--muted); font-size: 0.8rem; }
+.wf-line { position: relative; }
+.wf-line[open] > summary::after { content: '▾'; }
+.wf-line .wf-kind { font-size: 0.6rem; }
+.wf-hls { display: grid; gap: 1px; padding-right: 16px; }
+.wf-hl { font-weight: 700; font-size: 0.92rem; }
+.wf-hl--good { color: #9fe8c7; } .wf-hl--bad { color: #ffb38a; } .wf-hl--save, .wf-hl--warn { color: var(--warn); }
+.wf-line .wf-why { font-size: 0.74rem; }
+.wf-more { padding: 0 12px 8px; display: grid; gap: 4px; }
+.wf-line.is-new .wf-hl { animation: wf-in 0.35s ease-out both; animation-delay: calc((0.5s + var(--d) * 0.8s) * var(--speed)); }
+@media (prefers-reduced-motion: reduce) { .wf-line.is-new .wf-hl { animation: none; } }
+
+/* Owner's feedback (2026-10-27): icons, a tap-to-read (i), grouped "coming up" lines. */
+.icon { width: 1.05em; height: 1.05em; vertical-align: -0.17em; flex: none; }
+.iconword { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.iconcrew { display: inline-flex; gap: 1px; vertical-align: -0.2em; }
+.iconcrew .icon { width: 1.2em; height: 1.2em; }
+.infoline { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 12px; }
+.infoline > p { margin: 0; }
+.infotip { position: relative; }
+.infotip > summary { list-style: none; cursor: pointer; width: 22px; height: 22px; border: 1px solid var(--muted); border-radius: 50%; display: grid; place-items: center; font-size: 0.75rem; font-weight: 700; color: var(--muted); font-style: italic; }
+.infotip > summary::-webkit-details-marker { display: none; }
+.infotip > summary::before { content: ''; position: absolute; inset: -11px; } /* a 44px tap area round the small (i) */
+.infotip[open] > summary { color: var(--accent-2); border-color: var(--accent-2); }
+.infotip > p { margin: 6px 0 0; color: var(--muted); max-width: 60ch; }
+.infoline:has(.infotip[open]) { flex-wrap: wrap; }
+.upcoming__group > summary { cursor: pointer; list-style: none; }
+.upcoming__group > summary::-webkit-details-marker { display: none; }
+.upcoming__group > summary::after { content: ' ▸'; color: var(--muted); font-size: 0.8em; }
+.upcoming__group[open] > summary::after { content: ' ▾'; }
+.upcoming__group > span { display: block; }
+.jobcard__stats { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 0.8rem; color: var(--muted); }
+.stats dt.iconword { display: flex; }
+/* Reputation: a compact line with a short ten-block gauge (owner's feedback, 2026-10-27). */
+.climb__label { font-size: 0.85rem; color: var(--muted); }
+.climb__label strong { color: var(--text); }
+.climb__gauge { display: inline-flex; gap: 2px; }
+.climb__gauge i { width: 8px; height: 10px; background: var(--line); }
+.climb__gauge i.is-on { background: var(--accent); }
+.climb__gauge i.is-part { background: linear-gradient(90deg, var(--accent) 50%, var(--line) 50%); }
+.climb .infotip[open] { flex-basis: 100%; }

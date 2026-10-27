@@ -182,6 +182,7 @@ function callIn(state) {
 }
 
 const TONE = { good: 'good', bad: 'bad', save: 'save', warn: 'warn' };
+const ICON = { good: '✓', bad: '✗', save: '★', warn: '↩' };
 
 function itemHtml(ui, item, animate) {
   const { esc } = ui;
@@ -189,17 +190,26 @@ function itemHtml(ui, item, animate) {
   if (item.type === 'phase') return `<h3 class="wf-phase ${n}">${esc(item.title)}</h3>`;
   if (item.type === 'beat') return `<p class="wf-beat ${n}">${esc(item.text)}</p>`;
   if (item.type === 'note') return `<p class="wf-note tone--${TONE[item.tone] ?? 'plain'} ${n}">${esc(item.text)}</p>`;
+  // One line per moment: an icon and the headlines, so the run can be followed at a glance; tap
+  // the line for the setup, the crew's reason, the detail and the dice (owner's feedback,
+  // 2026-10-27: too much text; the reason and the detail lines weren't needed as it plays).
   const last = item.results.at(-1)?.tone;
+  const icon = (t) => ICON[t] ?? '·';
+  const why = item.kind !== 'incident' ? item.results.find((r) => r.why)?.why : null;
   return `
-    <div class="wf-card wf-card--${esc(item.kind)} wf-card--${TONE[last] ?? 'plain'} ${n}">
-      <span class="wf-kind">${esc(item.label)}</span>
-      ${item.setup ? `<p class="wf-setup">${esc(item.setup)}</p>` : ''}
-      ${item.results.map((r, i) => `
-      <div class="wf-res wf-res--${TONE[r.tone] ?? 'plain'}" style="--d:${i}">
-        <p class="wf-hl">${esc(r.headline)}</p>
-        ${r.detail ? `<p class="wf-det">${esc(r.detail)}</p>` : ''}
-        ${r.why && item.kind !== 'incident' ? `<p class="wf-why">Crew's call: ${esc(r.why)}</p>` : ''}
-        ${r.roll ? ui.dice(r.roll) : ''}
-      </div>`).join('')}
-    </div>`;
+    <details class="wf-line wf-line--${esc(item.kind)} wf-line--${TONE[last] ?? 'plain'} ${n}">
+      <summary>
+        <span class="wf-kind">${esc(item.label)}</span>
+        <span class="wf-hls">${item.results.map((r, i) => `<span class="wf-hl wf-hl--${TONE[r.tone] ?? 'plain'}" style="--d:${i}">${icon(r.tone)} ${esc(r.headline)}</span>`).join('')}</span>
+      </summary>
+      <div class="wf-more">
+        ${item.setup ? `<p class="wf-setup">${esc(item.setup)}</p>` : ''}
+        ${why ? `<p class="wf-why">Crew's call: ${esc(why)}</p>` : ''}
+        ${item.results.map((r) => `
+        <div class="wf-res">
+          ${r.detail ? `<p class="wf-det">${esc(r.detail)}</p>` : ''}
+          ${r.roll ? ui.dice(r.roll) : ''}
+        </div>`).join('')}
+      </div>
+    </details>`;
 }
