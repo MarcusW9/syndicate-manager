@@ -56,7 +56,8 @@ let openOperativeId = null;
 let openRecruitId = null;
 let newGameSlot = null; // slot number while picking a difficulty
 let plan = null; // { jobId, crew: [...ids], approach, orders, callIn, overwatch: id|null, kit, wheels: id|null, standby: id|null } (core/mission.js startMission)
-let pickSlot = null; // the squad-board slot being filled ('in:<n>' or 'over'), while its picker is open
+let pickSlot = null;
+const openInfo = new Set(); // which (i) explanations are open (infoButton) // the squad-board slot being filled ('in:<n>' or 'over'), while its picker is open
 let root;
 // Continue rests briefly after each new day, so a double click can't skip one.
 const CONTINUE_REST_MS = 800;
@@ -139,6 +140,7 @@ function onClick(e) {
     }
     case 'toggle-runners': runnersHidden = !runnersHidden; break;
     // The squad board (ui/board.js): tap a card, pick who goes there; anyone already placed swaps.
+    case 'info': if (openInfo.has(id)) openInfo.delete(id); else openInfo.add(id); break;
     case 'pick-slot': pickSlot = id; break;
     case 'close-picker': focusNext = { action: 'pick-slot', id: pickSlot }; pickSlot = null; break;
     case 'assign': Object.assign(plan, assignSlot(plan, pickSlot, id || null)); focusNext = { action: 'pick-slot', id: pickSlot }; pickSlot = null; break;
@@ -994,19 +996,21 @@ function streetTalk() {
 function climbLine() {
   const next = nextUnlock(state);
   if (!next) return '';
-  // One compact line: what's left to the next unlock, a short ten-block gauge, and the rest behind
-  // an (i) (owner's feedback, 2026-10-27: the full-width bar read as a big scale). The (i) also holds
-  // the key to the stat icons on job cards, which show without words (2026-10-28).
+  // One compact line in the Heat meter's style (option B of five, owner's pick 2026-10-28; the
+  // others are in drafts/prototypes/reputation-gauge-options.html): a label, a small segmented
+  // track to the next unlock, the number, and the rest behind an (i). The (i) also holds the key
+  // to the stat icons on job cards, which show there without words (2026-10-28).
   const rep = state.reputation ?? 0;
-  const share = Math.min(1, rep / next.rep);
-  const blocks = Array.from({ length: 10 }, (_, i) => `<i class="${share * 10 >= i + 1 ? 'is-on' : share * 10 > i ? 'is-part' : ''}"></i>`).join('');
+  const pct = Math.round(Math.min(1, rep / next.rep) * 100);
   const ladder = Object.entries(JOB_GATES).map(([threat, need]) => `${need} (threat ${threat})`).join(', ');
   return `<div class="climb infoline">
-    <span class="climb__label"><strong>${Math.ceil(next.rep - rep)} rep</strong> to bigger jobs</span>
-    <span class="climb__gauge" role="progressbar" aria-label="Reputation towards the next unlock" aria-valuenow="${Math.floor(rep)}" aria-valuemin="0" aria-valuemax="${next.rep}">${blocks}</span>
-    ${infoTipHtml('About reputation and job cards', `<p class="small">${esc(`Reputation ${Math.floor(rep)}/${next.rep}. Bigger work opens up once people know your name. Finished jobs build it; aborts cost it. Rookie jobs are open from the start; the rest open at ${ladder}.`)}</p>
-      <p class="small">On job cards: the corner is Joss's read of the risk (bigger and redder is riskier), then how many runners the job takes and its key stats: ${STATS.map(statIcon).join(' ')}</p>`)}
-  </div>`;
+    <span class="climb__label">Rep</span>
+    <span class="heat__track climb__track" role="progressbar" aria-label="Reputation towards the next unlock" aria-valuenow="${Math.floor(rep)}" aria-valuemin="0" aria-valuemax="${next.rep}"><span style="width:${pct}%"></span></span>
+    <strong class="climb__value">${Math.floor(rep)}/${next.rep}</strong>
+    ${infoButton('reputation', 'About reputation and job cards')}
+  </div>
+  ${infoHtml('reputation', `<p class="infotext small">${esc(`Bigger work opens up once people know your name. Finished jobs build it; aborts cost it. Rookie jobs are open from the start; the rest open at ${ladder}.`)}</p>
+  <p class="infotext small">On job cards, the corner is Joss's read of the risk (bigger and redder is riskier), then how many runners Joss would send and the job's key stats: ${STATS.map(statIcon).join(' ')}</p>`)}`;
 }
 
 /** Joss's read of one job for the board (core/squad.js jobRead), worked out once per state. */
@@ -1111,8 +1115,9 @@ function sideHeadline(t) {
 function renderSideBoard() {
   const board = (state.sideBoard ?? []).map(sideTaskById).filter(Boolean);
   return `
-      <h2>Side work</h2>
-      <div class="infoline"><p class="muted small">Small jobs for whoever's free.</p>${infoTip('About side work', 'One-off jobs for whoever isn\'t on the main work. They\'re away for the days shown, and the result comes back with them. A new board every Monday.')}</div>
+      <h2>Side work this week</h2>
+      <div class="infoline"><p class="muted small">Small jobs for whoever's free.</p>${infoButton('side-work', 'About side work')}</div>
+      ${infoText('side-work', 'One-off jobs for whoever isn\'t on the main work. They\'re away for the days shown, and the result comes back with them. A new board every Monday.')}
       ${board.length ? `<ul class="list list--cols sidelist">
         ${board.map((t) => `
           <li>
@@ -1125,10 +1130,12 @@ function renderSideBoard() {
       </ul>` : '<p class="muted">Nothing left this week. More on Monday.</p>'}`;
 }
 
-/** A small (i) that opens an explanation on tap (no hover: iOS rules in CLAUDE.md). */
-const infoTip = (label, text) => `<details class="infotip"><summary aria-label="${esc(label)}">i</summary><p class="small">${esc(text)}</p></details>`;
+// A small (i) that opens an explanation under its line on tap (no hover: iOS rules in CLAUDE.md).
+// The button stays put and the text appears below, so nothing jumps (owner's feedback, 2026-10-28).
+const infoButton = (id, label) => `<button class="infobtn ${openInfo.has(id) ? 'is-on' : ''}" data-action="info" data-id="${esc(id)}" aria-label="${esc(label)}" aria-expanded="${openInfo.has(id)}">i</button>`;
+const infoText = (id, text) => (openInfo.has(id) ? `<p class="infotext small">${esc(text)}</p>` : '');
 /** The same, for an explanation that needs markup (icons); `html` must already be escaped. */
-const infoTipHtml = (label, html) => `<details class="infotip"><summary aria-label="${esc(label)}">i</summary>${html}</details>`;
+const infoHtml = (id, html) => (openInfo.has(id) ? html : '');
 
 /** Planning a side task: who goes, how likely it goes well, what it gives and costs. */
 function renderSidePlan() {
@@ -1179,7 +1186,8 @@ const TRUST_NOTE = 'Finished jobs build trust; aborts and "client unhappy" choic
 function renderClients() {
   return `
       <h2>Clients</h2>
-      <div class="infoline"><p class="muted small">Where you stand with each.</p>${infoTip('About client trust', `${TRUST_NOTE} Who they are: City tab.`)}</div>
+      <div class="infoline"><p class="muted small">Where you stand with each.</p>${infoButton('clients', 'About client trust')}</div>
+      ${infoText('clients', `${TRUST_NOTE} Who they are: City tab.`)}
       <ul class="clientstrip">
         ${CLIENTS.map((c) => {
           const t = trustOf(state, c.id);

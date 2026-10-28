@@ -16,11 +16,24 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - **Opening a job starts on Joss's plan:** the approach and squad behind the card's risk are already picked, so the risk you saw is the risk you get. Change anything as before.
 - **On a computer, the board stays beside the job** you're planning, so you can switch jobs without going back.
 - **Side work leads with the reward** ("Medical ↑", "+3 trust · Madam Rao"), and intel jobs say which job on the board they'd help.
-- **"Mid risk"** replaces "moderate risk" everywhere. Clients show as a row of chips under side work. The reputation line says how much is left to bigger jobs.
+- **"Mid risk"** replaces "moderate risk" everywhere. Clients show as a row of chips under side work. The (i) by reputation now also holds the key to the job-card icons.
 
 ## 2026-10-28 · Notes for future UI work
 - Behind the scenes only, nothing changes in the game: the project rules now say to check the art bible and the latest screenshots before any screen design work, so mockups start from today's look rather than the old one.
 
+## 2026-10-28 · The Docks and Old Town in their own words
+- The small moments of a run (a locked gate, a patrol, a guard, a firewall...) now read differently in the Docks and Old Town: torches between the container stacks and an Aether-Harbour firewall in the yard office; a watchman on the alley steps, guards under the laundry lines and a security chain on the tenement flat's door. All 12 moments, written by the owner. 290 tests.
+- The Night Market, Glass Heights and the Basin still use the general wording until theirs is written.
+
+## 2026-10-28 · Every district has its own map (the squad run, part 4)
+- The watch screen's site plan now matches where the job is: a **container yard** by the harbour in the Docks (with the crane for overwatch), a **tenement** up an alley of steps in Old Town (overwatch by a rooftop water tank), **market stalls** under a footbridge in the Night Market with a mahjong parlour's back room, a **plaza and glass tower** in Glass Heights with the server room at the top, and the **racecourse stables** in the Basin, under a floodlight tower, with the vet block as the target.
+- Behind the scenes, each district can now have its own wording for the small moments of a run (a locked door, a patrol...). Until that's written they read as before.
+- 289 tests.
+## 2026-10-28 · A neater (i) and reputation line (owner's feedback)
+- The (i) is smaller and lines up with its text; tapping it opens the explanation under the line, and the (i) stays put (on phones it used to jump).
+- Reputation now looks like the Heat meter in the top bar: "REP", a small segmented cyan track to the next unlock, then "2/10" and the (i).
+- The bottom line of job and side-work cards lines its icons up with the words.
+- Crew sizes on job and side-work cards are one figure and a number ("[figure] 4") instead of a figure per person, which didn't scale to the four-person jobs.
 ## 2026-10-28 · Crises name the right person
 - In crises that are about one role (the tech when a container stack slips, the driver at a roadblock), the choice now names whoever actually does it, and if it goes wrong they're the one hurt. Before, it could say "Flicker braced it" when Thimble, the better hand, made the roll.
 - When Doc Siu hands a patient to someone by name, that medic now does the stitching (backup still helps), like other crises that name someone.

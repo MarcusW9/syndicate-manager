@@ -27,7 +27,7 @@ import { money } from './money.js';
 import { summariseRun, REPORT_LOGS_KEPT } from './report.js';
 import { intelFor } from './sidetasks.js';
 import { afterJob, noteInjury, spendSecondWind, earnedOf } from './earned.js';
-import { planIncidents, weaveIncidents, incidentById, incidentDifficulty, handlerFor, bestSave, standbySave, decisionChoices, OVERWATCH_KIT, ALERT_MAX, SERIOUS_CHANCE, SERIOUS_PER_ALERT, PATCH_MIN_MEDICAL, ZONES } from './incidents.js';
+import { planIncidents, weaveIncidents, incidentById, incidentIn, incidentDifficulty, handlerFor, bestSave, standbySave, decisionChoices, OVERWATCH_KIT, ALERT_MAX, SERIOUS_CHANCE, SERIOUS_PER_ALERT, PATCH_MIN_MEDICAL, ZONES } from './incidents.js';
 
 const EXIT_KINDS = new Set(['abort', 'extract']);
 const STABILISE_DIFFICULTY = 9;
@@ -332,7 +332,7 @@ export function runIncident(prev) {
   const tpl = templateById(am.templateId);
   // Once the crew has gone loud, what's left (short of the target) is a fight.
   const id = am.wentLoud && step.zone !== 'target' && !incidentById(step.id).danger ? 'guard' : step.id;
-  const inc = incidentById(id);
+  const inc = incidentIn(id, tpl.district); // the district's own lines where written (slice 4)
   const able = actors(state, am);
   if (!able.length) {
     exitRun(state, am, { text: 'Nobody left who can carry on.', choice: 'The crew pull out', report: 'With nobody left standing to finish it, the crew pulled out.' });

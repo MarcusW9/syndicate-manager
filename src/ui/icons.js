@@ -27,5 +27,9 @@ export const statIcon = (stat) => `<span class="iconword">${svg(stat)}${stat[0].
 /** A stat's icon, name and value: "[chip] Tech 11". */
 export const statValue = (stat, value) => `<span class="iconword">${svg(stat)}${stat[0].toUpperCase()}${stat.slice(1)} ${value}</span>`;
 
-/** How many can go, as figures: one per person, with the words for screen readers. */
-export const crewIcons = (n, words = `up to ${n} ${n === 1 ? 'person' : 'people'}`) => `<span class="iconcrew" role="img" aria-label="${words}">${Array.from({ length: n }, () => svg('person')).join('')}</span>`;
+/**
+ * How many people: one figure and the number ("[figure] 4"), the same width whatever the
+ * size (owner's feedback, 2026-10-28: a figure per person didn't scale to four and up).
+ * words: what a screen reader hears.
+ */
+export const crewIcons = (n, words = `up to ${n} ${n === 1 ? 'person' : 'people'}`) => `<span class="iconcrew" role="img" aria-label="${words}">${svg('person')}<span aria-hidden="true">${n}</span></span>`;

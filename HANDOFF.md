@@ -4,10 +4,10 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 
 ## State
 
-- **`main`:** up to [#23](https://github.com/MarcusW9/syndicate-manager/pull/23) (`e64abdc`, squash-merged): squad-run slices 1-3 and the growth and trait retune. **`main`** also has the owner's playtest feedback (#23). **Branch `claude/jolly-keller-6eqry7`** carries the focus-crisis fix. Pushes after a PR is merged stay on the branch: check a PR is still open before adding to it.
-- **The game is becoming the squad run** (`PLAN-CORE-LOOP.md`, the build order; `drafts/core-loop.md`, how we got there). **Slices 1-3 are built** (the engine; the squad board and the watch screen; Wheels and standby); slice 4 (sites and district text) is next.
+- **`main`:** up to [#24](https://github.com/MarcusW9/syndicate-manager/pull/24) (squash-merged, the focus-crisis fix): squad-run slices 1-3 and the growth and trait retune. **Branch `claude/jolly-keller-6eqry7`** carries PR #25: job-board polish and slice 4. Pushes after a PR is merged stay on the branch: check a PR is still open before adding to it.
+- **The game is becoming the squad run** (`PLAN-CORE-LOOP.md`, the build order; `drafts/core-loop.md`, how we got there). **Slices 1-4 are built** (the engine; the squad board and the watch screen; Wheels and standby; a site plan per district). District incident text is in for the Docks and Old Town (writing task 11; three districts to go); slice 5 (gear and specialisations) is next.
 - **Design review:** `STATE-OF-PLAY.md` (2026-10-26) and the owner's calls on it (in the file and in DESIGN.md). Read it instead of re-assessing.
-- **Tests:** 268 passing. **Save format v22.**
+- **Tests:** 290 passing. **Save format v22.**
 
 ## What the 2026-10-26/27 session did
 
@@ -31,10 +31,10 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 
 ## Next
 
-1. **Merge the focus-crisis fix** (this branch, after #23). The owner is play-testing slices 1-3 and sending feedback.
-2. **Small polish:** the (i) jumps to its own line when opened on a phone; reloading while the crew calls you in doesn't scroll to the call-in. The phone planning screen is long (owner to decide after more play).
-3. **Squad run slice 4** (`PLAN-CORE-LOOP.md`): a site plan per district as data, and the incident text per district (writing task 11).
-4. Then slice 5 (gear and specialisations), and the agreed review items: the neural load and burnout cleanup, mood traits, money pressure, relationships with the career page.
+1. **Merge [#25](https://github.com/MarcusW9/syndicate-manager/pull/25)** (job-board polish and slice 4). The owner is play-testing and sending feedback.
+2. **Small polish:** reloading while the crew calls you in doesn't scroll to the call-in. The reputation gauge is B of five (DESIGN.md, 2026-10-28); the owner wants to revisit it, options in `drafts/prototypes/reputation-gauge-options.html`. The phone planning screen is long (owner to decide after more play).
+3. **Writing task 11** (owner): the Docks and Old Town are in; the Night Market, Glass Heights and the Basin to go, into `src/data/districtIncidents.js`. **Slice 5** next (gear and specialisations).
+4. Then the agreed review items: the neural load and burnout cleanup, mood traits, money pressure, relationships with the career page.
 
 ## Writing pipeline (owner writes in other chats, pastes back)
 

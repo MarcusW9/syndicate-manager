@@ -1,56 +1,59 @@
-// The site plan on the watch screen (PLAN-CORE-LOOP.md, slice 2): a generic job site drawn as
-// SVG, the crew as tokens that walk zone to zone, and short effects for what happens there
-// (guards, patrols, cameras, saves). One plan for every job until districts get their own
-// (slice 4). Decoration only: everything shown here is also in the feed as text.
+// The site plan on the watch screen (PLAN-CORE-LOOP.md, slices 2 and 4): the job's district site
+// (data/sites.js) drawn as SVG, the crew as tokens that walk zone to zone, and short effects for
+// what happens there (guards, patrols, cameras, saves). Decoration only: everything shown here is
+// also in the feed as text.
+
+import { SITES } from '../data/sites.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const W = 360;
 const H = 240;
-
-// Points on the plan, and the walk through each zone (core/incidents.js zones: in, inside, target, out).
-export const P = { van: [40, 224], road: [106, 224], gate: [106, 196], yard: [106, 135], lane: [186, 135], door: [236, 100], target: [272, 74], perch: [176, 24] };
-const PATHS = {
-  in: [P.van, P.road, P.gate],
-  inside: [P.gate, P.yard, P.lane],
-  target: [P.lane, P.door, P.target],
-  out: [P.target, P.door, P.lane, P.yard, P.gate, P.road, P.van],
-};
-const ZONE_END = { start: P.van, in: P.gate, inside: P.lane, target: P.target, out: P.van };
-// Camera boxes, all 3:2 like the full view.
-const VB = { full: [0, 0, W, H], in: [6, 126, 171, 114], inside: [0, 46, 249, 166], target: [150, 4, 204, 136], out: [0, 0, W, H] };
+const FULL = [0, 0, W, H];
 const pts = (list) => list.map((p) => p.join(',')).join(' ');
 const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const initials = (op) => (op.handle ?? '?').split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+const escAttr = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-/** The plan's markup. kit: the overwatch kit (its sight is drawn) or null. */
-export function sitePlanSvg({ kit = null } = {}) {
-  const cover = [];
-  const tones = ['#1b2433', '#2a1d26', '#1d2a24', '#2b2618'];
-  // Three rows of cover in the grounds; the middle rows leave the lane from the gate open.
-  [[56, false], [96, true], [150, true]].forEach(([y, gap], r) => {
-    for (let i = 0; i < 7; i++) {
-      const x = 16 + i * 31;
-      if (gap && x + 26 > 94 && x < 120) continue;
-      cover.push(`<rect class="sp-cover" x="${x}" y="${y}" width="27" height="14" rx="1.5" fill="${tones[(i + r) % 4]}"/>`);
+/** The site for a district, or the generic one. */
+export const siteFor = (district) => SITES[district] ?? SITES.generic;
+
+/** One shape from a site's data as SVG. */
+function shapeSvg(s) {
+  const cls = `class="${escAttr(s.cls ?? '')}"`;
+  const fill = s.fill ? ` fill="${escAttr(s.fill)}"` : '';
+  if (s.t === 'rect') return `<rect ${cls} x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="${s.rx ?? 1.5}"${fill}/>`;
+  if (s.t === 'line') return `<line ${cls} x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}"/>`;
+  if (s.t === 'poly') return s.closed ? `<polygon ${cls} points="${pts(s.points)}"${fill}/>` : `<polyline ${cls} points="${pts(s.points)}"/>`;
+  if (s.t === 'circle') return `<circle ${cls} cx="${s.cx}" cy="${s.cy}" r="${s.r}"${fill}/>`;
+  if (s.t === 'ellipse') return `<ellipse ${cls} cx="${s.cx}" cy="${s.cy}" rx="${s.rx}" ry="${s.ry}"${fill}/>`;
+  if (s.t === 'row') {
+    // n copies of a rect, `step` apart along x (or y), skipping some, filled from `tones` in turn.
+    const out = [];
+    for (let i = 0; i < s.n; i++) {
+      if (s.skip?.includes(i)) continue;
+      const x = s.axis === 'y' ? s.x : s.x + i * s.step;
+      const y = s.axis === 'y' ? s.y + i * s.step : s.y;
+      const tone = s.tones ? ` fill="${escAttr(s.tones[(i + (s.shift ?? 0)) % s.tones.length])}"` : '';
+      out.push(`<rect ${cls} x="${x}" y="${y}" width="${s.w}" height="${s.h}" rx="${Math.min(1.5, s.w / 3, s.h / 3)}"${tone}/>`);
     }
-  });
-  const sight = !kit ? '' : kit === 'drone'
-    ? `<polygon class="sp-sight sp-sight--drone" points="${P.perch.join(',')} 12,194 310,194 310,36"/>`
-    : `<polygon class="sp-sight" points="${P.perch.join(',')} 12,194 232,194 232,40"/>`;
-  return `<svg class="siteplan" viewBox="${VB.full.join(' ')}" role="img" aria-label="Site plan: the way in through the gate, the grounds inside, the target building, the overwatch perch and the van">
+    return out.join('');
+  }
+  return '';
+}
+
+/** The plan's markup for a site. kit: the overwatch kit (its sight is drawn) or null. */
+export function sitePlanSvg({ kit = null, site = SITES.generic } = {}) {
+  const P = site.points;
+  const nodes = [site.paths.in.at(-1), site.paths.inside.at(-1)];
+  const sight = !kit ? '' : `<polygon class="sp-sight ${kit === 'drone' ? 'sp-sight--drone' : ''}" points="${pts(site.sight[kit === 'drone' ? 'drone' : 'rifle'])}"/>`;
+  return `<svg class="siteplan" viewBox="${FULL.join(' ')}" role="img" aria-label="${escAttr(site.aria)}">
     <rect width="${W}" height="${H}" fill="#0b0d11"/>
-    <rect class="sp-road" x="0" y="212" width="${W}" height="28"/><line class="sp-road__line" x1="0" y1="226" x2="${W}" y2="226"/>
-    <polyline class="sp-fence" points="8,196 94,196"/><polyline class="sp-fence" points="118,196 352,196"/>
-    ${cover.join('')}
-    <rect class="sp-building" x="236" y="38" width="72" height="72" rx="2"/><rect class="sp-door" x="233" y="94" width="5" height="12"/>
+    ${site.shapes.map(shapeSvg).join('')}
     ${sight}
-    <line class="sp-perch" x1="146" y1="24" x2="206" y2="24"/><line class="sp-perch" x1="150" y1="24" x2="150" y2="40"/><line class="sp-perch" x1="202" y1="24" x2="202" y2="40"/>
-    <polyline class="sp-route" points="${pts([...PATHS.in, ...PATHS.inside.slice(1), ...PATHS.target.slice(1)])}"/>
-    <circle class="sp-node" cx="${P.gate[0]}" cy="${P.gate[1]}" r="3"/><circle class="sp-node" cx="${P.lane[0]}" cy="${P.lane[1]}" r="3"/>
+    <polyline class="sp-route" points="${pts([...site.paths.in, ...site.paths.inside.slice(1), ...site.paths.target.slice(1)])}"/>
+    ${nodes.map(([x, y]) => `<circle class="sp-node" cx="${x}" cy="${y}" r="3"/>`).join('')}
     <circle class="sp-node sp-node--target" cx="${P.target[0]}" cy="${P.target[1]}" r="4"/><circle class="sp-node sp-node--perch" cx="${P.perch[0]}" cy="${P.perch[1]}" r="4"/>
-    <text class="sp-label" x="124" y="206">WAY IN</text><text class="sp-label" x="18" y="140">INSIDE</text>
-    <text class="sp-label sp-label--hi" x="252" y="32">TARGET</text><text class="sp-label" x="212" y="20">OVERWATCH</text>
-    <text class="sp-label" x="8" y="236">VAN</text>
+    ${site.labels.map((l) => `<text class="sp-label ${l.hi ? 'sp-label--hi' : ''}" x="${l.x}" y="${l.y}">${escAttr(l.text)}</text>`).join('')}
     <circle class="sp-alarm" cx="0" cy="0" r="6"/>
     <g class="sp-fx"></g><g class="sp-tokens"></g>
   </svg>`;
@@ -66,15 +69,22 @@ const place = (node, [x, y]) => { node.style.transform = `translate(${x}px, ${y}
 const near = (pt, dx = 22, dy = -16) => [pt[0] + dx, pt[1] + dy];
 const later = (ms) => new Promise((r) => setTimeout(r, reduced() ? 0 : ms));
 
-const VAN_SPOT = { wheels: [P.van[0] + 22, P.van[1] + 8], standby: [P.van[0] + 34, P.van[1] + 8], out: [P.van[0] + 46, P.van[1] + 8] }; // beside the van, clear of the group
 
 /**
  * A live plan bound to an <svg> from sitePlanSvg. team: the inside crew [{ id, handle, color }];
  * overwatch: { op, kit } or null; wheels and standby: operatives waiting at the van (slice 3);
  * out: people already back at the van hurt. speed: a function giving the current pace (1 normal, lower faster).
+ * site: the district's site plan (data/sites.js).
  */
-export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = null, standby = null, out = [], zone = 'start', speed = () => 1 }) {
+export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = null, standby = null, out = [], zone = 'start', speed = () => 1, site = SITES.generic }) {
   const team = [...inside];
+  const P = site.points;
+  const PATHS = site.paths;
+  const ZONE_END = { start: P.van, in: PATHS.in.at(-1), inside: PATHS.inside.at(-1), target: P.target, out: P.van };
+  const VB = { full: FULL, ...site.views, out: FULL };
+  // Beside the van, clear of the group, towards the middle of the map.
+  const side = P.van[0] < W / 2 ? 1 : -1;
+  const VAN_SPOT = { wheels: [P.van[0] + 22 * side, P.van[1] + 8], standby: [P.van[0] + 34 * side, P.van[1] + 8], out: [P.van[0] + 46 * side, P.van[1] + 8] };
   const fx = svg.querySelector('.sp-fx');
   const tokens = svg.querySelector('.sp-tokens');
   const alarm = svg.querySelector('.sp-alarm');
