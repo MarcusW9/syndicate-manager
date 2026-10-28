@@ -91,26 +91,31 @@ test('district incident lines only replace words, for known incidents, and keep 
   }
 });
 
-test('a district\'s own incident lines are used on its jobs, and the generic ones everywhere else', () => {
-  assert.equal(incidentIn('lock', 'docks').text, INCIDENTS.lock.text, 'nothing written yet: the generic line');
-  DISTRICT_INCIDENTS.docks.lock = { text: 'The yard gate has a new mag-lock, salt crusting the keypad.' };
-  try {
-    assert.equal(incidentIn('lock', 'docks').text, DISTRICT_INCIDENTS.docks.lock.text);
-    assert.equal(incidentIn('lock', 'docks').stats, INCIDENTS.lock.stats, 'the rules stay');
-    assert.equal(incidentIn('lock', 'oldTown').text, INCIDENTS.lock.text);
-    let seen = 0;
-    for (let seed = 1; seed <= 60 && !seen; seed++) {
-      let s = createNewGame({ seed, startCrew: 'fresh' });
-      s.jobs = []; addOffer(s, 'container409');
-      s = M.startMission(s, s.jobs[0].id, s.crew.slice(0, 2).map((o) => o.id), 'stealth');
-      while (M.currentStep(s.activeMission)?.type !== 'incident') s = M.currentStep(s.activeMission).type === 'zone' ? M.enterZone(s) : M.revealBeat(s);
-      if (M.currentStep(s.activeMission).id !== 'lock') continue;
-      s = M.runIncident(s);
-      assert.equal(s.activeMission.events.find((e) => e.incident).text, DISTRICT_INCIDENTS.docks.lock.text);
-      seen += 1;
+test('Docks and Old Town have every incident written out, every line', () => {
+  for (const district of ['docks', 'oldTown']) {
+    for (const [id, base] of Object.entries(INCIDENTS)) {
+      const local = DISTRICT_INCIDENTS[district][id];
+      assert.ok(local, `${district}: ${id} is written`);
+      for (const k of LINES) if (base[k]) assert.ok(local[k], `${district}.${id}.${k} is written`);
     }
-    assert.equal(seen, 1, 'found a Docks job that starts with a lock');
-  } finally {
-    delete DISTRICT_INCIDENTS.docks.lock;
   }
+});
+
+test('a district\'s own incident lines are used on its jobs, and the generic ones everywhere else', () => {
+  assert.equal(incidentIn('lock', 'docks').text, DISTRICT_INCIDENTS.docks.lock.text);
+  assert.equal(incidentIn('lock', 'docks').stats, INCIDENTS.lock.stats, 'the rules stay');
+  assert.equal(incidentIn('lock', 'nightMarket').text, INCIDENTS.lock.text, 'nothing written there yet: the generic line');
+  assert.equal(incidentIn('lock', 'nowhere').text, INCIDENTS.lock.text);
+  let seen = 0;
+  for (let seed = 1; seed <= 60 && !seen; seed++) {
+    let s = createNewGame({ seed, startCrew: 'fresh' });
+    s.jobs = []; addOffer(s, 'container409');
+    s = M.startMission(s, s.jobs[0].id, s.crew.slice(0, 2).map((o) => o.id), 'stealth');
+    while (M.currentStep(s.activeMission)?.type !== 'incident') s = M.currentStep(s.activeMission).type === 'zone' ? M.enterZone(s) : M.revealBeat(s);
+    if (M.currentStep(s.activeMission).id !== 'lock') continue;
+    s = M.runIncident(s);
+    assert.equal(s.activeMission.events.find((e) => e.incident).text, DISTRICT_INCIDENTS.docks.lock.text);
+    seen += 1;
+  }
+  assert.equal(seen, 1, 'found a Docks job that starts with a lock');
 });

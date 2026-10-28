@@ -5,7 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
-
+## 2026-10-28 · The Docks and Old Town in their own words
+- The small moments of a run (a locked gate, a patrol, a guard, a firewall...) now read differently in the Docks and Old Town: torches between the container stacks and an Aether-Harbour firewall in the yard office; a watchman on the alley steps, guards under the laundry lines and a security chain on the tenement flat's door. All 12 moments, written by the owner. 290 tests.
+- The Night Market, Glass Heights and the Basin still use the general wording until theirs is written.
 
 ## 2026-10-28 · Every district has its own map (the squad run, part 4)
 - The watch screen's site plan now matches where the job is: a **container yard** by the harbour in the Docks (with the crane for overwatch), a **tenement** up an alley of steps in Old Town (overwatch by a rooftop water tank), **market stalls** under a footbridge in the Night Market with a mahjong parlour's back room, a **plaza and glass tower** in Glass Heights with the server room at the top, and the **racecourse stables** in the Basin, under a floodlight tower, with the vet block as the target.
