@@ -135,3 +135,13 @@ test('item drawings: the rifle has one, lit by whoever carries it; others fall b
   assert.ok(stash.startsWith('<svg') && stash.includes('aria-hidden="true"'));
   assert.ok(carried.includes(lightOf(op)), 'their own city light');
 });
+
+test('anatomy draft: a face is fixed per person, varies between people, and is off unless asked for', async () => {
+  const { anatomyOf } = await import('../src/ui/art.js');
+  const op = { id: 'op_anat', name: 'Kelvin Chan', age: 30 };
+  assert.deepEqual(anatomyOf(op), anatomyOf({ ...op }), 'same person, same face');
+  const shapes = new Set(Array.from({ length: 40 }, (_, i) => anatomyOf({ id: `p${i}`, name: 'Kelvin Chan' }).eyeW.toFixed(2)));
+  assert.ok(shapes.size > 20, 'eyes differ between people');
+  assert.notEqual(withoutIds(portrait(op, { anatomy: true })), withoutIds(portrait(op)), 'the draft draws a different face');
+  assert.equal(withoutIds(portrait(op, { anatomy: true })), withoutIds(portrait(op, { anatomy: true })), 'and draws it the same every time');
+});

@@ -111,6 +111,155 @@ function withGear(f, op) {
   return g;
 }
 
+// Anatomy (design draft, 2026-10-28): the face itself varies, not just what's around it.
+// Eyes, brows, nose, mouth, jaw, ears and neck come from continuous measurements on a third
+// seed (`id|name|face`), so hair, chrome and gear keep their picks. Off unless asked for
+// (portrait(op, { anatomy: true })) until the owner signs off on the draft sheet.
+const LIDS = ['mono', 'crease', 'hooded', 'deep'];
+// Lids lean with culture the way hair does; every shape is possible for everyone.
+const LID_LEAN = { hk: ['mono', 'mono', 'hooded'], southeast_asian: ['mono', 'hooded'], filipino: ['mono', 'crease'], african: ['crease', 'deep'], south_asian: ['crease', 'deep', 'hooded'], european: ['crease', 'deep', 'hooded'] };
+
+export function anatomyOf(op) {
+  const r = picker(hash(`${op.id}|${op.name}|face`));
+  const span = (lo, hi) => lo + ((hi - lo) * r.int(1001)) / 1000;
+  const lean = LID_LEAN[cultureOf(op.name)] ?? [];
+  // Order of picks is fixed: new measurements go at the end.
+  return {
+    headW: span(-1.3, 1.1),
+    jawW: span(-2.2, 1.8),
+    chinW: span(-1, 1.6),
+    chinY: span(-1.2, 1.8),
+    eyeGap: span(4.1, 5.2),    // eye centre from the middle of the face (was 4.6)
+    eyeY: span(28.5, 29.6),
+    eyeW: span(1.6, 2.6),
+    eyeH: span(0.45, 1.4),      // how far the upper lid arcs (was 0.85)
+    eyeTilt: span(-0.8, 1),   // outer corners up (+) or down (-)
+    lid: r.chance(0.5) && lean.length ? r.pick(lean) : r.pick(LIDS),
+    browT: span(0.7, 2.6),
+    browArch: span(-0.2, 1.5),
+    browY: span(-0.6, 0.5),
+    noseTip: span(34.6, 37.3),
+    noseW: span(1.1, 2.8),
+    bridge: r.pick(['straight', 'straight', 'straight', 'hooked', 'button', 'broad']),
+    mouthW: span(1.9, 3.4),
+    mouthY: span(39.4, 40.9),
+    upper: span(0.15, 1),
+    lower: span(0.7, 2.6),
+    cheek: r.pick(['low', 'low', 'high', 'soft']),
+    ear: span(0.85, 1.2),
+    earOut: span(0, 0.8),
+    neck: span(3.7, 5.1),
+    freckles: r.chance(0.1),
+    mole: r.chance(0.12) ? r.pick([[35.8, 37.6], [28.2, 38.6], [30.2, 42.8], [38.4, 33.2], [26, 34], [34.8, 22.5]]) : null,
+  };
+}
+
+/** The base head shape with this person's jaw, chin and width. */
+function reshape(g, a) {
+  const w = g.w + a.headW;
+  return { w, j: Math.min(w - 1.2, g.j + a.jawW), c: Math.max(2.4, Math.min(6, g.c + a.chinW)), chin: g.chin + a.chinY };
+}
+
+/** One eye: lid shape, tilt and expression. side -1 is the shadow-side eye, +1 the lit one. */
+function eyeShape(side, a, st, c, id) {
+  const cx = 32 + side * a.eyeGap, y = a.eyeY, W = a.eyeW;
+  const outer = [cx + side * W, y - a.eyeTilt * 0.6], inner = [cx - side * W, y + a.eyeTilt * 0.2];
+  const [p, q] = side < 0 ? [outer, inner] : [inner, outer];
+  const mid = (p[1] + q[1]) / 2;
+  const tired = st.tired, dead = !tired && st.expression === 'dead', stressed = !tired && st.expression === 'stressed';
+  const h = tired ? a.eyeH * 0.3 : dead ? 0.1 : stressed ? a.eyeH * 0.6 : a.eyeH;
+  const l = (0.35 + a.eyeH * 0.25) * (stressed ? 0.75 : 1);
+  const almond = (hh, ll) => `M${p[0]} ${p[1]} Q${cx} ${mid - 2 * hh} ${q[0]} ${q[1]} Q${cx} ${mid + 2 * ll} ${p[0]} ${p[1]} Z`;
+  // Lids and sockets go under the eye; age adds bags.
+  let under = '';
+  if (a.lid === 'deep') under += `<ellipse cx="${cx}" cy="${y - 0.4}" rx="${W + 1}" ry="${a.eyeH + 1.4}" fill="${c.midShade}" opacity="0.75"/>`;
+  if (tired) under += `<path d="M${p[0] - side * 0.2} ${p[1] + 0.6} Q${cx} ${mid + 3.2} ${q[0]} ${q[1] + 0.6} Q${cx} ${mid + 1.6} ${p[0]} ${p[1] + 0.6} Z" fill="${c.shade}"/>`;
+  let over = '';
+  if (!tired && !dead) {
+    if (a.lid === 'crease') over = `<path d="M${p[0] + 0.5} ${p[1] - 0.5} Q${cx} ${mid - 2 * h - 1.6} ${q[0] - 0.5} ${q[1] - 0.5}" stroke="${c.lip}" stroke-width="0.4" fill="none" opacity="0.55"/>`;
+    // Hooded: a fold of skin over the outer half of the lid.
+    if (a.lid === 'hooded') over = `<path d="M${cx - side * W * 0.5} ${y - h - 0.9} Q${cx + side * W * 0.6} ${y - h - 1.1} ${outer[0] + side * 0.4} ${outer[1] + 0.2} Q${cx + side * W * 0.4} ${y - h * 0.9} ${cx - side * W * 0.5} ${y - h - 0.9} Z" fill="${c.midShade}"/>`;
+  }
+  const iris = dead ? '#26292f' : '#120d0b';
+  // Wide-open eyes show their whites, with the iris looking slightly towards the light.
+  const whites = !tired && !dead && h > 0.85;
+  let eye = whites
+    ? `<clipPath id="${id}e${side}"><path d="${almond(h, l)}"/></clipPath><path d="${almond(h, l)}" fill="${mix('#e8e2d8', c.skin, 0.25)}"/><circle cx="${cx + 0.3}" cy="${y - h * 0.15}" r="${Math.min(W * 0.62, h + l * 0.7)}" fill="${iris}" clip-path="url(#${id}e${side})"/><path d="M${p[0]} ${p[1]} Q${cx} ${mid - 2 * h} ${q[0]} ${q[1]}" stroke="${iris}" stroke-width="0.55" fill="none"/>`
+    : `<path d="${almond(h, dead ? 0.55 : l)}" fill="${iris}"/>`;
+  if (tired) eye += `<path d="M${p[0] - side * 0.2} ${p[1] - 0.4} Q${cx} ${mid - 1.3} ${q[0]} ${q[1] - 0.4}" stroke="${c.lip}" stroke-width="0.8" fill="none"/>`;
+  if (dead) eye = `<path d="M${p[0] - side * 0.4} ${p[1] + 1.2} Q${cx} ${mid + 2.6} ${q[0]} ${q[1] + 1.2} Q${cx} ${mid + 1.8} ${p[0]} ${p[1] + 1.2} Z" fill="${c.midShade}"/>${eye}`;
+  if (!tired && !dead) eye += `<circle cx="${cx + 0.55}" cy="${y - h * 0.45}" r="${stressed ? 0.35 : 0.45}" fill="#fff" opacity="${stressed ? 0.7 : 0.85}"/>`;
+  return under + eye + over;
+}
+
+/** Brows as tapered shapes: thickness, arch and height vary; expression moves the ends. */
+function browShape(side, a, st, c) {
+  const cx = 32 + side * a.eyeGap;
+  const ix = cx - side * 2.3, ox = cx + side * (a.eyeW + 0.45);
+  const base = a.eyeY - 3.65 + a.browY;
+  const [di, dO, arch] = st.tired ? [0.9, 0.9, a.browArch * 0.3]
+    : st.expression === 'stressed' ? [0.8, -0.4, a.browArch * 0.6]
+    : st.expression === 'dead' ? [0.5, 0.5, 0]
+    : st.expression === 'smirk' && side > 0 ? [-0.6, -0.5, a.browArch + 0.3]
+    : [0, 0.1, a.browArch];
+  const iy = base + di, oy = base + dO, mx = ix + (ox - ix) * 0.55, my = (iy + oy) / 2 - arch;
+  const t = a.browT;
+  return `<path d="M${ix} ${iy - t / 2} Q${mx} ${my - t * 0.45} ${ox} ${oy - t * 0.2} L${ox} ${oy + t * 0.2} Q${mx} ${my + t * 0.45} ${ix} ${iy + t / 2} Z" fill="${c.brow}"/>`;
+}
+
+function noseShape(a, c) {
+  const top = a.eyeY + 1, tip = a.noseTip, nw = a.noseW;
+  let d = `<path d="M31.5 ${top} L${32 - nw * 1.2} ${tip - 0.5} L32.7 ${tip + 0.3} L31.6 ${tip - 1} Z" fill="${c.shade}"/>
+    <path d="M32.9 ${tip - 2.4} L33.5 ${tip - 0.4} L32.7 ${tip + 0.3} Z" fill="${c.lit}" opacity="0.7"/>
+    <path d="M${32.1 - nw} ${tip + 0.4} Q32 ${tip + 0.75} ${32.1 + nw * 0.8} ${tip + 0.4}" stroke="${c.lip}" stroke-width="0.7" fill="none" stroke-linecap="round"/>`;
+  if (a.bridge === 'hooked') d += `<path d="M32.6 ${top + 1.6} Q33.9 ${(top + tip) / 2 - 0.4} 33.1 ${tip - 1.2}" stroke="${c.midShade}" stroke-width="0.5" fill="none"/>`;
+  if (a.bridge === 'button') d += `<circle cx="32.9" cy="${tip - 0.4}" r="0.75" fill="${c.lit}" opacity="0.6"/>`;
+  if (a.bridge === 'broad') d += `<path d="M${32 - nw - 0.2} ${tip - 0.9} Q${32 - nw - 1.1} ${tip} ${32 - nw + 0.2} ${tip + 0.5} M${32 + nw * 0.8 + 0.2} ${tip - 0.9} Q${32 + nw * 0.8 + 1.1} ${tip} ${32 + nw * 0.8 - 0.2} ${tip + 0.5}" stroke="${c.midShade}" stroke-width="0.55" fill="none"/>`;
+  return d;
+}
+
+function mouthShape(a, st, c) {
+  const mw = a.mouthW, y = a.mouthY;
+  const lipFill = mix(c.skin, '#7a3030', 0.18);
+  const lowerLip = (dy = 0.7) => `<path d="M${32 - mw + 0.8} ${y + dy} Q32 ${y + dy + a.lower} ${32 + mw - 0.8} ${y + dy} Z" fill="${lipFill}"/>`;
+  const upperLip = a.upper > 0.45 ? `<path d="M${32 - mw + 0.5} ${y} Q31 ${y - a.upper} 32 ${y - a.upper * 0.55} Q33 ${y - a.upper} ${32 + mw - 0.5} ${y} Z" fill="${mix(c.skin, '#7a3030', 0.26)}" opacity="0.8"/>` : '';
+  if (!st.tired && st.expression === 'stressed') {
+    const x = 32 - mw + 0.4, tw = 2 * (mw - 0.4);
+    return `<rect x="${x}" y="${y - 0.6}" width="${tw}" height="1.5" rx="0.4" fill="#e9e2d6"/>
+      <path d="M${32 - tw / 4} ${y - 0.6} v1.5 M32 ${y - 0.6} v1.5 M${32 + tw / 4} ${y - 0.6} v1.5" stroke="#b9b2a6" stroke-width="0.3"/>
+      <rect x="${x}" y="${y - 0.6}" width="${tw}" height="1.5" rx="0.4" fill="none" stroke="${c.lip}" stroke-width="0.7"/>
+      <path d="M${x - 0.8} ${y - 0.4} l-0.6 1 M${x + tw + 0.8} ${y - 0.4} l0.6 1" stroke="${c.lip}" stroke-width="0.5"/>`;
+  }
+  if (!st.tired && st.expression === 'smirk') {
+    return `${upperLip}<path d="M${32 - mw} ${y + 0.4} Q32 ${y + 1} ${32 + mw + 0.3} ${y - 0.8}" stroke="${c.lip}" stroke-width="1.1" fill="none" stroke-linecap="round"/>${lowerLip(0.9)}`;
+  }
+  const flat = st.tired || st.expression === 'dead';
+  return `${upperLip}<path d="M${32 - mw} ${y + (flat ? 0.4 : 0)} Q32 ${y + (flat ? 0.2 : 0.9)} ${32 + mw} ${y + (flat ? 0.4 : 0)}" stroke="${c.lip}" stroke-width="1.1" fill="none" stroke-linecap="round"/>${lowerLip()}`;
+}
+
+/** Age lines, freckles and a mole: the details that make a face someone's. */
+function skinMarks(a, c, age) {
+  let d = '';
+  if (age >= 33) {
+    const o = Math.min(0.75, (age - 28) / 30);
+    const wing = 32 - a.noseW - 0.5, lw = 32 + a.noseW * 0.8 + 0.5;
+    d += `<g stroke="${c.midShade}" stroke-width="0.5" fill="none" opacity="${o}">
+      <path d="M${wing} ${a.noseTip - 0.2} Q${32 - a.mouthW - 1.5} ${a.mouthY - 1} ${32 - a.mouthW - 0.9} ${a.mouthY + 1.8}"/>
+      <path d="M${lw} ${a.noseTip - 0.2} Q${32 + a.mouthW + 1.5} ${a.mouthY - 1} ${32 + a.mouthW + 0.9} ${a.mouthY + 1.8}"/></g>`;
+  }
+  if (age >= 45) {
+    const bag = (cx) => `<path d="M${cx - a.eyeW * 0.8} ${a.eyeY + 1.7} Q${cx} ${a.eyeY + 2.9} ${cx + a.eyeW * 0.8} ${a.eyeY + 1.7}"/>`;
+    d += `<g stroke="${c.midShade}" stroke-width="0.45" fill="none" opacity="0.7">${bag(32 - a.eyeGap)}${bag(32 + a.eyeGap)}
+      <path d="M27 ${a.eyeY - 7.4} Q32 ${a.eyeY - 8} 37 ${a.eyeY - 7.4}"/></g>`;
+  }
+  if (a.freckles) {
+    const dots = [[28.6, 33.2], [29.8, 32.4], [30.9, 33.6], [33.2, 32.6], [34.4, 33.4], [35.6, 32.5], [27.5, 34.3], [36.6, 34], [31.8, 31.6]];
+    d += `<g fill="${mix(c.skin, '#4a2412', 0.38)}">${dots.map(([x, y]) => `<circle cx="${x}" cy="${y + a.eyeY - 29}" r="0.32"/>`).join('')}</g>`;
+  }
+  if (a.mole) d += `<circle cx="${a.mole[0]}" cy="${a.mole[1]}" r="0.45" fill="${mix(c.skin, '#2a1408', 0.55)}"/>`;
+  return d;
+}
+
 /**
  * What the portrait shows about someone's condition today (the same facts the screen
  * writes out). Expression, first match wins: a dead-eyed stare in neural load's danger
@@ -263,7 +412,9 @@ function browsAndMouth(st, c) {
 }
 
 /** Chrome, glowing brighter as neural load rises (the one place the face shows load). */
-function chromeMarks(f, load, w, tired) {
+function chromeMarks(f, load, w, tired, eyeAt = [36.6, 29]) {
+  // The lens sits where the lit eye is (it moves with the anatomy draft; the old face never moves it).
+  const shift = (s) => (eyeAt[0] === 36.6 && eyeAt[1] === 29 ? s : `<g transform="translate(${eyeAt[0] - 36.6} ${eyeAt[1] - 29})">${s}</g>`);
   const col = f.chromeColor;
   const glow = 0.5 + load * 0.5;
   const halo = (x, y) => (load > 0.4 ? `<circle cx="${x}" cy="${y}" r="${3 + load * 5}" fill="${col}" opacity="${(load - 0.3) * 0.45}"/>` : '');
@@ -272,14 +423,14 @@ function chromeMarks(f, load, w, tired) {
     case 'half':
       // The half-chrome face: a lens set in the plate, and a metal disc where the ear was.
       return `<circle cx="${R - 0.3}" cy="30" r="2.3" fill="#4a515b" stroke="#2b3038" stroke-width="0.4"/><circle cx="${R - 0.3}" cy="30" r="0.8" fill="${col}" opacity="${glow}"/>
-        ${halo(36.6, 29)}<circle cx="36.6" cy="29" r="2.9" fill="#1a1d22"/><circle cx="36.6" cy="29" r="2.2" fill="#0b0f12" stroke="#9aa3ad" stroke-width="0.5"/>
-        <circle cx="36.6" cy="29" r="1.3" fill="${col}" opacity="${glow}"/><circle cx="36.6" cy="29" r="0.4" fill="#0b0f12"/>`;
+        ${shift(`${halo(36.6, 29)}<circle cx="36.6" cy="29" r="2.9" fill="#1a1d22"/><circle cx="36.6" cy="29" r="2.2" fill="#0b0f12" stroke="#9aa3ad" stroke-width="0.5"/>
+        <circle cx="36.6" cy="29" r="1.3" fill="${col}" opacity="${glow}"/><circle cx="36.6" cy="29" r="0.4" fill="#0b0f12"/>`)}`;
     case 'cybereye':
       // The lit-side eye is a lens: metal rim, glowing iris, a fine seam round the socket.
-      return `${halo(36.6, 29)}<path d="M33.3 26.2 Q36.6 24.6 39.9 26.6 L40.2 31.4 Q36.6 33.2 33.2 31.6 Z" fill="none" stroke="${mix(f.skin, '#000', 0.45)}" stroke-width="0.4"/>
+      return shift(`${halo(36.6, 29)}<path d="M33.3 26.2 Q36.6 24.6 39.9 26.6 L40.2 31.4 Q36.6 33.2 33.2 31.6 Z" fill="none" stroke="${mix(f.skin, '#000', 0.45)}" stroke-width="0.4"/>
         <circle cx="36.6" cy="29" r="2.4" fill="#0b0f12" stroke="#9aa3ad" stroke-width="0.6"/>
         <circle cx="36.6" cy="29" r="1.25" fill="${col}" opacity="${glow}"/><circle cx="36.6" cy="29" r="0.45" fill="#0b0f12"/>
-        ${tired ? `<path d="M34 28 Q36.6 26.6 39.2 28 L39.2 26.4 L34 26.4 Z" fill="${mix(f.skin, SHADOW, 0.2)}"/>` : ''}`;
+        ${tired ? `<path d="M34 28 Q36.6 26.6 39.2 28 L39.2 26.4 L34 26.4 Z" fill="${mix(f.skin, SHADOW, 0.2)}"/>` : ''}`);
     case 'circuit': {
       const paths = {
         jaw: `M${R - 1.5} 31 L${R - 3} 35 L${R - 6} 38.5 L35.5 41.5 M${R - 3} 35 L${R - 1} 37`,
@@ -452,6 +603,13 @@ function hatMarks(f, c, id) {
     ${f.headwear === 'jingasa' ? `<path d="M${L} ${brim} Q32 ${brim + sag} ${R} ${brim}" stroke="${mix(base, c.light, 0.6)}" stroke-width="0.4" fill="none"/>` : ''}`;
 }
 
+/** Glasses sized to this person's eyes (anatomy draft). */
+function glassesAt(a, c) {
+  const lw = Math.max(5.6, 2 * a.eyeW + 1.6), y = a.eyeY - 2;
+  const l = 32 - a.eyeGap - lw / 2, r = 32 + a.eyeGap - lw / 2;
+  return `<g fill="${c.light}" fill-opacity="0.12" stroke="#0d0d0f" stroke-width="0.8"><rect x="${l}" y="${y}" width="${lw}" height="4.2" rx="1.2"/><rect x="${r}" y="${y}" width="${lw}" height="4.2" rx="1.2"/></g><path d="M${l + lw} ${y + 1.6} H${r}" stroke="#0d0d0f" stroke-width="0.8"/>`;
+}
+
 function injuryMarks(severity, w) {
   const plaster = `<g transform="rotate(-32 ${32 + w * 0.55} 34)"><rect x="${32 + w * 0.55 - 3.5}" y="33" width="7" height="2.2" fill="#ece3d3"/></g>
     <g transform="rotate(28 ${32 + w * 0.55} 34)"><rect x="${32 + w * 0.55 - 3.5}" y="33" width="7" height="2.2" fill="#ece3d3" opacity="0.9"/></g>`;
@@ -467,12 +625,15 @@ function injuryMarks(severity, w) {
  * tiredness (heavy lids, shadowed eyes) and neural load (the implant glows). Fallen
  * operatives are greyed by the frame (CSS), not here.
  */
-export function portrait(op, { size = 44 } = {}) {
+export function portrait(op, { size = 44, anatomy = false } = {}) {
   const f = faceOf(op);
   const st = stateOf(op);
   const severity = op.condition?.injury;
   const c = palette(f, op);
-  const g = HEAD_SHAPES[f.shape];
+  const a = anatomy ? anatomyOf(op) : null;
+  const g = a ? reshape(HEAD_SHAPES[f.shape], a) : HEAD_SHAPES[f.shape];
+  const eyeAt = a ? [32 + a.eyeGap, a.eyeY] : [36.6, 29];
+  const nk = a ? a.neck : 4.4, ear = a ? a.ear : 1, earOut = a ? a.earOut : 0;
   const w = g.w;
   const id = `pf${++uid}`;
   const head = headPath(g);
@@ -511,33 +672,37 @@ export function portrait(op, { size = 44 } = {}) {
   ${f.monk ? monkRobe(f, c, id) : `<path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="${c.shirt}"/>
   <g clip-path="url(#${id}s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="${c.shirtLit}"/><path d="M27 46 L32 54 L37 46 Z" fill="${mix(c.shirt, '#000', 0.35)}"/></g>`}
   ${gear.front}
-  <path d="M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z" fill="${c.shade}"/><path d="M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z" fill="${c.lit}" opacity="0.8"/>
+  <path d="M${32 - nk} 37 L${32 - nk} 48 Q32 51 ${32 + nk} 48 L${32 + nk} 37 Z" fill="${c.shade}"/><path d="M${32 + nk - 1.8} 38 L${32 + nk} 37 L${32 + nk} 48 L${32 + nk - 1.8} 49 Z" fill="${c.lit}" opacity="0.8"/>
   ${f.monk ? monkCollar(f, c) : ''}
 
-  <ellipse cx="${L + 0.3}" cy="30" rx="1.9" ry="3.4" fill="${c.shade}"/>
-  <ellipse cx="${R - 0.3}" cy="30" rx="1.9" ry="3.4" fill="${c.skin}"/><path d="M${R + 0.6} 27.5 Q${R + 1.5} 30 ${R + 0.4} 33" stroke="${c.lit}" stroke-width="0.9" fill="none"/>
+  <ellipse cx="${L + 0.3 - earOut}" cy="30" rx="${1.9 * ear}" ry="${3.4 * ear}" fill="${c.shade}"/>
+  <ellipse cx="${R - 0.3 + earOut}" cy="30" rx="${1.9 * ear}" ry="${3.4 * ear}" fill="${c.skin}"/><path d="M${R + 0.6 + earOut} ${30 - 2.5 * ear} Q${R + 1.5 * ear + earOut} 30 ${R + 0.4 + earOut} ${30 + 3 * ear}" stroke="${c.lit}" stroke-width="0.9" fill="none"/>
   ${f.earring ? `<circle cx="${R}" cy="34" r="0.9" fill="#f2b544"/>` : ''}
 
   <path d="${head}" fill="${c.skin}"/>
   <g clip-path="url(#${id}h)">
     <path d="M0 0 L${32 - w * 0.12} 9 C${32 - w * 0.55} 20 ${32 - w * 0.48} 31 ${30.5} 48 L0 64 Z" fill="${c.shade}"/>
-    <path d="M${32 + w * 0.3} 34.5 L${R - 0.8} 31.5 L${32 + g.j + 1} 39 Z" fill="${c.midShade}" opacity="0.55"/>
+    ${a?.cheek === 'high' ? `<path d="M${32 + w * 0.25} 33 L${R - 0.8} 29.8 L${32 + g.j + 1} 37.6 Z" fill="${c.midShade}" opacity="0.75"/>`
+      : `<path d="M${32 + w * 0.3} 34.5 L${R - 0.8} 31.5 L${32 + g.j + 1} 39 Z" fill="${c.midShade}" opacity="${a?.cheek === 'soft' ? 0.3 : 0.55}"/>`}
     <path d="M64 0 L${R - 1.8} 12 L${R - 1.3} 30 L${32 + g.j - 0.3} 40.5 L64 64 Z" fill="${c.lit}"/>
         ${f.stubble ? `<path d="M${L} 36 Q32 50 ${R} 36 L${R} 50 L${L} 50 Z" fill="${c.hair}" opacity="0.28"/>` : ''}
     ${hair.shaved ? `<path d="M${L - 1} 15 L${L + 4} 15 L${L + 3} 27 L${L - 1} 27 Z" fill="${c.hair}" opacity="0.3"/>${shavedInk}` : ''}
-    <path d="M${L + 2} 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="${c.midShade}"/>
+    <path d="M${L + 2} ${26.5 + eyeAt[1] - 29} Q28 ${25.6 + eyeAt[1] - 29} 30.4 ${27.6 + eyeAt[1] - 29} L28 ${28.2 + eyeAt[1] - 29} Z" fill="${c.midShade}"/>
+    ${a ? skinMarks(a, c, op.age ?? 25) : ''}
   </g>
 
-  <path d="M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z" fill="${c.shade}"/>
+  ${a ? `${noseShape(a, c)}${eyeShape(-1, a, st, c, id)}${f.chrome === 'cybereye' || f.chrome === 'half' ? '' : eyeShape(1, a, st, c, id)}
+  ${browShape(-1, a, st, c)}${browShape(1, a, st, c)}${mouthShape(a, st, c)}`
+  : `<path d="M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z" fill="${c.shade}"/>
   <path d="M32.9 33.6 L33.5 35.6 L32.7 36.2 Z" fill="${c.lit}" opacity="0.7"/>
   <path d="M30.6 36.3 h2.6" stroke="${c.lip}" stroke-width="0.7" stroke-linecap="round"/>
   ${eye(27.4, st.tired, c, st.expression)}${f.chrome === 'cybereye' || f.chrome === 'half' ? '' : eye(36.6, st.tired, c, st.expression)}
-  ${browsAndMouth(st, c)}
-  ${f.mask ? '' : facialHairMarks(f, c, g, id)}
+  ${browsAndMouth(st, c)}`}
+  ${f.mask ? '' : a ? `<g transform="translate(0 ${(a.mouthY - 40).toFixed(2)})">${facialHairMarks(f, c, g, id)}</g>` : facialHairMarks(f, c, g, id)}
   ${markings(f, c, w)}
   ${f.chrome === 'half' ? `<g clip-path="url(#${id}h)">${halfFacePlate(f, c, g)}</g>` : ''}
   ${f.mask ? maskMarks(f, c, g, st, id) : ''}
-  ${f.glasses && f.chrome !== 'cybereye' ? `<g fill="${c.light}" fill-opacity="0.12" stroke="#0d0d0f" stroke-width="0.8"><rect x="24.3" y="27" width="6.2" height="4.2" rx="1.2"/><rect x="33.5" y="27" width="6.2" height="4.2" rx="1.2"/></g><path d="M30.5 28.6 h3" stroke="#0d0d0f" stroke-width="0.8"/>` : ''}
+  ${f.glasses && f.chrome !== 'cybereye' ? (a ? glassesAt(a, c) : `<g fill="${c.light}" fill-opacity="0.12" stroke="#0d0d0f" stroke-width="0.8"><rect x="24.3" y="27" width="6.2" height="4.2" rx="1.2"/><rect x="33.5" y="27" width="6.2" height="4.2" rx="1.2"/></g><path d="M30.5 28.6 h3" stroke="#0d0d0f" stroke-width="0.8"/>`) : ''}
 
   <g ${hairClip}>
   ${hair.top ? `<path d="${hair.top}" fill="${c.hair}" ${hair.thin ? 'opacity="0.6"' : ''}/>
@@ -550,7 +715,7 @@ export function portrait(op, { size = 44 } = {}) {
   ${hat ? hatMarks(f, c, id) : ''}
 
   ${f.visor ? `<path d="M${L - 1} 26.2 L${R + 1} 25.8 L${R + 0.6} 31.2 L${L - 0.6} 31.6 Z" fill="#0b0f14"/><path d="M${L - 0.4} 27.2 L${R + 0.4} 26.8" stroke="${c.light}" stroke-width="0.6" opacity="${st.tired ? 0.35 : 0.85}"/><path d="M${R - 7} 29.6 h2 M${R - 4.4} 29.6 h1" stroke="${c.light}" stroke-width="0.5" opacity="0.6"/>` : ''}
-  ${f.mask === 'faceplate' ? '' : chromeMarks(f, st.load, w, st.tired)}
+  ${f.mask === 'faceplate' ? '' : chromeMarks(f, st.load, w, st.tired, eyeAt)}
   ${st.injured && f.mask !== 'faceplate' ? injuryMarks(severity, w) : ''}
 </svg>`;
 }
