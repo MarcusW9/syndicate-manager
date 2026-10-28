@@ -5,6 +5,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-28 · Duplicate messages fixed; freelancers stand out
+- When someone formed two Crew Anchor partnerships on the same day, the two messages looked identical and the second wouldn't open. Each message now opens, and its title names the partner ("Buffer: Crew Anchor with Drone"). Old saves are repaired when loaded (save version 24).
+- Freelancers in the squad picker now have a violet stripe and a "Freelance" tag over their cut of the pay, and their card on the squad board has a violet bar along the bottom.
+
 ## 2026-10-28 · Two fixes from the owner's play
 - Joss no longer says "doctor's orders" about someone who can't work for another reason: Today's line gives each person's real reason ("Sitting today out: Byte (unlucky day)").
 - On a computer, the squad picker's "Already on the squad" heading and "Leave this empty" button sat at the far left of the screen; they're centred with the rest of the list now.

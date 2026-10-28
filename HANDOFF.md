@@ -7,7 +7,7 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 - **`main`:** up to [#24](https://github.com/MarcusW9/syndicate-manager/pull/24) (squash-merged, the focus-crisis fix): squad-run slices 1-3 and the growth and trait retune. **Branch `claude/jolly-keller-6eqry7`** carries PR #25: job-board polish and slice 4. Pushes after a PR is merged stay on the branch: check a PR is still open before adding to it.
 - **The game is becoming the squad run** (`PLAN-CORE-LOOP.md`, the build order; `drafts/core-loop.md`, how we got there). **Slices 1-5 are built** (the engine; the squad board and the watch screen; Wheels and standby; a site plan per district, with district incident text; gear and the first specialisations). Slice 6, battles, is to design.
 - **Design review:** `STATE-OF-PLAY.md` (2026-10-26) and the owner's calls on it (in the file and in DESIGN.md). Read it instead of re-assessing.
-- **Tests:** 312 passing. **Save format v23.**
+- **Tests:** 314 passing. **Save format v24.**
 
 ## What the 2026-10-26/27 session did
 

@@ -342,5 +342,20 @@ function migrate(state) {
     for (const kit of kits) state.stash.push(loadoutOf(state, [kit])[GEAR[kit].slot]);
     state.version = 23;
   }
+  if (state.version === 23) {
+    // v24: inbox messages open by id, and two traits earned the same way on the same day (Crew
+    // Anchor with two partners) shared one, so the second couldn't be opened. Give each its own.
+    const seen = new Set();
+    for (const m of state.inbox ?? []) {
+      let id = m.id;
+      for (let n = 2; seen.has(id); n++) id = `${m.id}-${n}`;
+      m.id = id;
+      seen.add(id);
+      // Old Crew Anchor messages: name the partner in the subject, as new ones do.
+      const partner = /crew_anchor/.test(m.id) && !/ with /.test(m.subject ?? '') ? /on jobs with ([^;]+);/.exec(m.body ?? '')?.[1] : null;
+      if (partner) m.subject = `${m.subject} with ${partner}`;
+    }
+    state.version = 24;
+  }
   return state;
 }
