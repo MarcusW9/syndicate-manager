@@ -163,13 +163,65 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .upcoming__items .is-short { color: #ff8a8a; }
 
 /* Job cards: name and pay, client and time left, then the facts. */
-.row.jobcard { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 3px 12px; }
+/* Job cards (2026-10-28): name and pay, client and "ends today", flags only when there's news,
+   runners and key-stat icons; the risk is the top-right corner, sized and coloured by level. */
+.row.jobcard { position: relative; display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 4px 12px; padding-right: 28px; }
+.row.jobcard.is-selected { background: rgba(61, 232, 216, 0.07); box-shadow: inset 0 0 0 1px var(--accent-2); }
 .jobcard__pay, .jobcard__left { text-align: right; }
-.jobcard__left { font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
-.jobcard__left.is-last { color: var(--warn); font-weight: 600; }
-.jobcard__client { font-size: 0.9rem; }
-.jobcard__facts { grid-column: 1 / -1; font-size: 0.85rem; color: var(--muted); }
-.jobcard__extra { grid-column: 1 / -1; }
+.jobcard__left { font-size: 0.8rem; color: var(--text); font-weight: 600; white-space: nowrap; }
+.jobcard__client { grid-column: 1; font-size: 0.9rem; color: var(--muted); }
+.jobcard__flags { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
+.jobcard__facts { grid-column: 1 / -1; display: flex; align-items: center; flex-wrap: wrap; gap: 0 6px; font-size: 0.85rem; color: var(--muted); }
+.jobcard__note { color: #ff9a5a; }
+.keyglyphs { display: inline-flex; gap: 6px; color: var(--text); }
+.keyglyph { display: inline-flex; }
+.keyglyph .icon { width: 18px; height: 18px; }
+.flag { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 7px; border: 1px solid currentColor; }
+.flag--hot { color: #ff9a5a; }
+.flag--bad { color: var(--danger); }
+.flag--good { color: #5fe0a5; }
+.flag--info { color: var(--muted); }
+/* Risk corner: grows with the level, so it reads without the colour (ART.md rule 1). */
+.riskcorner { position: absolute; top: 0; right: 0; clip-path: polygon(0 0, 100% 0, 100% 100%); pointer-events: none; }
+.riskcorner--low { width: 14px; height: 14px; background: #5fe0a5; }
+.riskcorner--moderate { width: 20px; height: 20px; background: var(--warn); }
+.riskcorner--high { width: 26px; height: 26px; background: #ff9a5a; }
+.riskcorner--extreme { width: 32px; height: 32px; background: var(--danger); }
+/* Who can run a job today: open by default, folds to one line. */
+.runners { border: 1px solid var(--line); background: #141820; margin: 4px 0 12px; }
+.runners__head { width: 100%; min-height: var(--tap); display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 12px; background: none; border: 0; color: var(--muted); font: inherit; font-size: 0.9rem; text-align: left; cursor: pointer; }
+.runners__free { color: #5fe0a5; }
+.runners__toggle { font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.75rem; color: var(--accent-2); }
+.runners__list { list-style: none; margin: 0; padding: 0 12px 12px; display: flex; gap: 8px; overflow-x: auto; }
+.runner { flex: 0 0 76px; display: grid; justify-items: center; gap: 2px; text-align: center; padding: 6px 2px; border: 1px solid var(--line); }
+.runner strong { font-size: 0.8rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.runner span { font-size: 0.7rem; color: var(--muted); line-height: 1.2; }
+.runner.is-free span { color: #5fe0a5; font-weight: 700; }
+.runner.is-worn span { color: #ff9a5a; font-weight: 700; }
+.runner.is-out { opacity: 0.5; }
+/* Side work: the reward first. */
+.row.siderow { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center; width: 100%; text-align: left; }
+.siderow__reward { font-size: 1rem; }
+.siderow__reward--trust { color: #c9a6ff; }
+.siderow__reward--training { color: var(--accent-2); }
+.siderow__reward--money { color: #5fe0a5; }
+.siderow__reward--info { color: var(--warn); }
+.siderow__meta { grid-row: 1 / 3; grid-column: 2; font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+.siderow__sub { font-size: 0.8rem; color: var(--muted); }
+/* Clients: a strip of chips. */
+.clientstrip { list-style: none; margin: 0; padding: 0 0 4px; display: flex; gap: 8px; overflow-x: auto; }
+.clientchip { flex: 0 0 auto; display: grid; gap: 2px; padding: 8px 12px; border: 1px solid var(--line); font-size: 0.85rem; }
+.clientchip .trust { font-size: 0.75rem; }
+/* Wide screens: the board stays beside the job being planned. Phones: the plan replaces it. */
+.jobsplit__list { display: none; }
+@media (min-width: 1100px) {
+  .main--wide.main--split { max-width: 1440px; }
+  .jobsplit { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 20px; align-items: start; }
+  .jobsplit__list { display: block; position: sticky; top: 84px; max-height: calc(100dvh - 100px); overflow-y: auto; }
+  .jobsplit__list .jobslist { grid-template-columns: 1fr; }
+  .jobsplit__list .sidelist, .jobsplit__list .clientstrip, .jobsplit__list h2, .jobsplit__list .infoline:not(.climb), .jobsplit__list .talk { display: none; }
+  .jobsplit__plan [data-action="back"] { display: none; }
+}
 .clients { margin-top: 16px; }
 .clientline { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
 .clientline:last-child { border-bottom: 0; }
@@ -556,7 +608,7 @@ body::after {
 
 /* Type: display face for structure and numbers, system face for reading. */
 h1, h2, .btn, .nav__btn, .row__tag, .tier, .risk, .status, .pill, .stat__label, .tile__label,
-.joss__name, .upcoming__when, .crisis__title, .week__note, .topbar__date, .jobcard__pay,
+.joss__name, .upcoming__when, .crisis__title, .week__note, .topbar__date, .jobcard__pay, .flag, .runners__toggle, .siderow__reward,
 .sizebadge, .alert, .seg strong, .choice__label, .stats dt, .stats dd, .topbar__stats {
   font-family: var(--display);
 }
@@ -835,7 +887,6 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .upcoming__group > summary::after { content: ' ▸'; color: var(--muted); font-size: 0.8em; }
 .upcoming__group[open] > summary::after { content: ' ▾'; }
 .upcoming__group > span { display: block; }
-.jobcard__stats { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 0.8rem; color: var(--muted); }
 .stats dt.iconword { display: flex; }
 /* Reputation: a compact line with a short ten-block gauge (owner's feedback, 2026-10-27). */
 .climb__label { font-size: 0.85rem; color: var(--muted); }

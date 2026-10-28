@@ -22,6 +22,8 @@ Then add a row to the top of the table below and commit the folder with the chan
 
 | Date | Version | Commit | What's new on screen | Folder |
 | --- | --- | --- | --- | --- |
+| 2026-10-28 | Job board redesign | this branch | Job cards trimmed to name, pay, client, "N runners" and key-stat icons, with Joss's risk as the top-right corner and flags only for news; "N runners free today" above the jobs; side work led by the reward; clients as chips; the planner opens on Joss's plan (04, with the risk the card showed). | [2026-10-28-job-board-redesign](2026-10-28-job-board-redesign/) |
+| 2026-10-28 | Owner captures | (`ae1e223`) | The owner's desktop job board before the redesign: day 1 (three jobs, side work, clients folded) and day 7 (street talk on a job, intel side work). | [2026-10-28-owner-captures](2026-10-28-owner-captures/) |
 | 2026-10-27 | Reputation line | PR #23 | The job board's reputation as one line with a ten-block gauge and an (i); capture 18 has the (i) open with the unlock ladder (from a test save). | [2026-10-27-reputation-line](2026-10-27-reputation-line/) |
 | 2026-10-27 | Stat icons rolled out | PR #23 | Line icons beside stats on job cards (with the crew size as figures), squad dossiers and the picker; plus two extra captures from a test save: the profile's stats panel (18) and the crew list's main stats (19). | [2026-10-27-stat-icons](2026-10-27-stat-icons/) |
 | 2026-10-27 | Owner's feedback: "Coming up" and side work | PR #23 | Side work explains itself in one line with an (i) to tap; its cards show the stat as a line icon and the crew count as figures. Grouped "5 back from the job" lines only show in the design-session set below. | [2026-10-27-coming-up-and-side-work](2026-10-27-coming-up-and-side-work/) |

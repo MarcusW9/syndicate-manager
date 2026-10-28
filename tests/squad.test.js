@@ -7,7 +7,7 @@ import { createNewGame } from '../src/core/state.js';
 import * as M from '../src/core/mission.js';
 import { addOffer, templateById, jobView } from '../src/core/jobs.js';
 import { availability } from '../src/core/crew.js';
-import { coverage, jossPicks, likelyIncidents } from '../src/core/squad.js';
+import { coverage, jossPicks, likelyIncidents, jobRead, planRead } from '../src/core/squad.js';
 import { ZONE_POOLS } from '../src/data/incidents.js';
 import { APPROACHES } from '../src/data/approaches.js';
 
@@ -121,4 +121,30 @@ test('Joss covers the approach: his team handles its incidents at least as well 
     }
   }
   assert.ok(better / total >= 0.9, `Joss at least matches a naive pick ${better}/${total}`);
+});
+
+test('the job board read is the planner read: same squad, same approach, same risk, the least risky approach', () => {
+  const RANK = ['low', 'moderate', 'high', 'extreme'];
+  for (let seed = 1; seed <= 20; seed++) {
+    const s = createNewGame({ seed, startCrew: 'fresh' });
+    // Someone away, so the read has to leave them out.
+    s.crew[0].condition.awayUntil = s.day + 2;
+    for (const job of s.jobs) {
+      const r = jobRead(s, job);
+      assert.ok(r.crew.every((op) => availability(s, op).ok), `seed ${seed}: only free crew`);
+      assert.ok(!r.crew.includes(s.crew[0]), `seed ${seed}: not the one who's away`);
+      const v = jobView(s, job);
+      const byId = (id) => s.crew.find((o) => o.id === id) ?? null;
+      // What the planner shows when it opens on the card's plan.
+      const shown = planRead(s, job, { crew: r.picks.crew.map(byId), approach: r.approach, overwatch: byId(r.picks.overwatch), kit: r.picks.kit ?? 'rifle', wheels: byId(r.picks.wheels) });
+      assert.equal(shown.level, r.level, `seed ${seed} ${job.id}: card and planner agree`);
+      // No approach with Joss's picks would read safer.
+      for (const a of APPROACH_IDS) {
+        const free = s.crew.filter((o) => availability(s, o).ok);
+        const p = jossPicks({ ...v.tpl, threat: v.threat }, free, a, { threat: v.threat });
+        const other = planRead(s, job, { crew: p.crew.map(byId), approach: a, overwatch: byId(p.overwatch), kit: p.kit ?? 'rifle', wheels: byId(p.wheels) });
+        assert.ok(RANK.indexOf(r.level) <= RANK.indexOf(other.level), `seed ${seed}: ${a} isn't safer`);
+      }
+    }
+  }
 });

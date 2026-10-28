@@ -5,7 +5,11 @@
 import { ZONE_POOLS, OFF_APPROACH } from '../data/incidents.js';
 import { incidentById, incidentDifficulty, handlerFor, bestSave, OVERWATCH_KIT } from './incidents.js';
 import { crewRoll, effectiveStat, APPROACHES } from './crew.js';
-import { successChance, riskLabel, rollTarget } from './risk.js';
+import { successChance, riskLabel, rollTarget, assessJob } from './risk.js';
+import { availability } from './crew.js';
+import { jobView } from './jobs.js';
+import { intelFor } from './sidetasks.js';
+import { WATCHED_PENALTY } from './heat.js';
 
 const ZONE_NOTE = { in: 'The way in', inside: 'Inside', target: 'The target' };
 const RISK_ORDER = ['low', 'moderate', 'high', 'extreme'];
@@ -106,4 +110,42 @@ export function bestLine(op, approach) {
   const stats = [...new Set([...lean, 'combat', 'tech', 'stealth', 'social'])];
   const best = stats.map((k) => ({ k, v: effectiveStat(op, k, { approach }).value })).sort((a, b) => b.v - a.v)[0];
   return { stat: best.k, value: best.v };
+}
+
+/**
+ * The read the planning screen shows for a plan: the worse of the crises read (assessJob) and the
+ * incidents (coverage). One function for the planner and the job board, so they always agree.
+ * plan: { crew: [op], approach, overwatch: op | null, kit, wheels: op | null }.
+ * Returns { level, read, cov }.
+ */
+export function planRead(state, job, { crew, approach, overwatch = null, kit = 'rifle', wheels = null }) {
+  const v = jobView(state, job);
+  const tpl = { ...v.tpl, threat: v.threat };
+  const intel = intelFor(state, v.tpl.district);
+  const read = assessJob(tpl, crew, approach, { watched: state.heatWatched ? WATCHED_PENALTY : 0, intel, wheels });
+  const cov = coverage(tpl, crew, approach, { threat: v.threat, overwatch: overwatch ? { op: overwatch, kit } : null, intel });
+  const level = crew.length && RISK_ORDER.indexOf(cov.toughest) > RISK_ORDER.indexOf(read.level) ? cov.toughest : read.level;
+  return { level, read, cov };
+}
+
+/**
+ * Joss's read for the job board: if this job went today, with whoever is free, which approach and
+ * squad would Joss pick, and how risky is it? Tries every approach and keeps the least risky
+ * (ties go to the first in APPROACHES order). Each job is read on its own: crew aren't held back
+ * for other jobs, since most jobs take a day and the same people can run them back to back.
+ * Returns { approach, picks, crew: [op], level, short }.
+ */
+export function jobRead(state, job) {
+  const v = jobView(state, job);
+  const tpl = { ...v.tpl, threat: v.threat };
+  const free = state.crew.filter((op) => availability(state, op).ok);
+  const byId = (id) => free.find((o) => o.id === id) ?? null;
+  let best = null;
+  for (const approach of Object.keys(APPROACHES)) {
+    const picks = jossPicks(tpl, free, approach, { threat: v.threat });
+    const crew = picks.crew.map(byId);
+    const { level } = planRead(state, job, { crew, approach, overwatch: byId(picks.overwatch), kit: picks.kit ?? 'rifle', wheels: byId(picks.wheels) });
+    if (!best || RISK_ORDER.indexOf(level) < RISK_ORDER.indexOf(best.level)) best = { approach, picks, crew, level, short: Math.max(0, tpl.crewSize - crew.length) };
+  }
+  return best;
 }

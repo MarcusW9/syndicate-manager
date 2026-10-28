@@ -5,6 +5,15 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-28 · A cleaner job board
+- **Job cards say less and mean more:** name and pay, the client, then "2 runners" and the job's key stats as small icons. The coloured corner is Joss's read of the risk if you sent it today: a small green corner is low, a bigger yellow one mid, then orange, then red. Tap the (i) by your reputation for the icon key; on a computer, hover an icon or corner for its name.
+- **Only news gets a tag:** street talk, unreliable intel, intel you've gathered there, or a job that takes more than a day. "Ends today" shows under the pay on a job's last day. Threat, district, client mood and days left are on the job's own screen.
+- **Runners free today:** everyone's face above the jobs, with who's free, tired, hurt or back when. Hide folds it away.
+- **Opening a job starts on Joss's plan:** the approach and squad behind the card's risk are already picked, so the risk you saw is the risk you get. Change anything as before.
+- **On a computer, the board stays beside the job** you're planning, so you can switch jobs without going back.
+- **Side work leads with the reward** ("Medical ↑", "+3 trust · Madam Rao"), and intel jobs say which job on the board they'd help.
+- **"Mid risk"** replaces "moderate risk" everywhere. Clients show as a row of chips under side work. The reputation line says how much is left to bigger jobs.
+
 ## 2026-10-28 · Notes for future UI work
 - Behind the scenes only, nothing changes in the game: the project rules now say to check the art bible and the latest screenshots before any screen design work, so mockups start from today's look rather than the old one.
 

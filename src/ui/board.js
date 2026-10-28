@@ -164,7 +164,7 @@ export function renderCoverage(ui, cov, { overwatch, approachName, standby = nul
         ${cov.rows.map((r) => `
         <div class="cover__row ${r.gap ? 'is-gap' : ''}">
           <p class="cover__name">${esc(r.name)}${r.danger ? ' <span class="muted">· danger</span>' : ''}</p>
-          <span class="cover__risk">${riskBadge(r.handler ? r.risk : 'extreme')}${r.withSave && r.effective !== r.risk ? `<span class="cover__with">→ ${esc(r.effective)} with ${esc(r.withSave.op.handle)}</span>` : ''}</span>
+          <span class="cover__risk">${riskBadge(r.handler ? r.risk : 'extreme')}${r.withSave && r.effective !== r.risk ? `<span class="cover__with">→ ${esc(ui.riskWord(r.effective))} with ${esc(r.withSave.op.handle)}</span>` : ''}</span>
           <p class="cover__who">${esc(r.where)} · ${r.handler ? `${esc(r.handler.op.handle)} (${esc(r.handler.stat)} ${r.handler.value})` : 'nobody can'}</p>
         </div>`).join('')}
         ${cov.spotted ? `<p class="cover__note">${cov.spotted} more than recommended inside on a ${esc(approachName.toLowerCase())} run: −${cov.spotted} on stealth and social rolls.</p>` : ''}
