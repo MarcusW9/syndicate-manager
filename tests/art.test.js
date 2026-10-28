@@ -108,3 +108,30 @@ test('a faceplate shows harm as a crack, and its eyes glow with neural load', ()
   assert.notEqual(at({ injury: 'serious' }), at({}), 'hurt differs from healthy');
   assert.notEqual(at({ neuralLoad: 85 }), at({}), 'load shows in the eye slits');
 });
+
+// --- gear on portraits and as items (2026-10-28) ----------------------------------------------
+import { gearArt, hasGearArt, lightOf } from '../src/ui/art.js';
+
+test('a rifle carried shows on the portrait, the same every time; nothing else changes the face', () => {
+  const op = { id: 'g7', name: 'Mei Chan', age: 24, condition: { fatigue: 0, morale: 60, neuralLoad: 0, burnout: 0, injury: 'healthy' } };
+  const bare = withoutIds(portrait(op));
+  const empty = { weapon: null, armour: null, tool: null, implant: null };
+  assert.equal(withoutIds(portrait({ ...op, gear: empty })), bare, 'an empty loadout draws the same face');
+  assert.equal(withoutIds(portrait({ ...op, gear: { ...empty, weapon: { uid: 'x', type: 'pistol', tier: 'street' } } })), bare, 'gear without a drawing shows nothing yet');
+  const armed = { ...op, gear: { ...empty, weapon: { uid: 'x', type: 'rifle', tier: 'street' } } };
+  const withRifle = withoutIds(portrait(armed));
+  assert.ok(withRifle.includes('gear-rifle') && !bare.includes('gear-rifle'));
+  assert.equal(withoutIds(portrait(armed)), withRifle, 'stable');
+  const pro = withoutIds(portrait({ ...op, gear: { ...empty, weapon: { uid: 'x', type: 'rifle', tier: 'pro' } } }));
+  assert.notEqual(pro, withRifle, 'a pro rifle looks different');
+});
+
+test('item drawings: the rifle has one, lit by whoever carries it; others fall back to icons', () => {
+  assert.ok(hasGearArt('rifle'));
+  assert.equal(gearArt({ type: 'drone', tier: 'street' }), null);
+  const op = { id: 'g9', name: 'Kit Lau' };
+  const stash = gearArt({ type: 'rifle', tier: 'street' });
+  const carried = gearArt({ type: 'rifle', tier: 'street' }, { carrier: op });
+  assert.ok(stash.startsWith('<svg') && stash.includes('aria-hidden="true"'));
+  assert.ok(carried.includes(lightOf(op)), 'their own city light');
+});

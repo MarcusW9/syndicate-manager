@@ -915,3 +915,40 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .sp-stable { fill: #1a1712; stroke: #4a3f2a; stroke-width: 1; }
 .sp-pole { stroke: #4a5266; stroke-width: 2; }
 .sp-lamp { fill: #f7efc8; opacity: 0.9; }
+
+/* Gear (ui/gear.js, slice 5): the armoury's rows and a runner's four slots. Sharp, bottom-right cut. */
+.gearlist { display: grid; gap: 6px; }
+.gearrow { display: grid; grid-template-columns: 24px 1fr auto; gap: 10px; align-items: center; min-height: var(--tap); padding: 6px 8px 6px 10px; background: var(--panel-2); border: 1px solid var(--line);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%); }
+.gearrow__icon { color: var(--accent-2); display: grid; place-items: center; }
+.gearrow__icon svg, .loadout__item svg { width: 18px; height: 18px; }
+.gearrow__main { display: grid; gap: 1px; min-width: 0; }
+.gearrow__main strong { font-family: var(--display); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.95rem; }
+.gearrow__eff { font-size: 0.78rem; color: var(--accent-2); }
+.gearrow__sub { line-height: 1.3; }
+.gearrow__btn { min-height: var(--tap); padding: 0 12px; font-size: 0.8rem; white-space: nowrap; }
+.gear__slot { margin: 14px 0 6px; font: 600 0.72rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.loadout { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.loadout__tile { width: 100%; height: 100%; display: grid; align-content: start; gap: 4px; min-height: var(--tap); padding: 8px; text-align: left; background: var(--panel-2); border: 1px solid var(--line); color: var(--text); font: inherit; cursor: pointer;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%); }
+.loadout__tile.is-empty { background: transparent; border-style: dashed; color: var(--muted); }
+.loadout__tile:disabled { cursor: not-allowed; opacity: 0.6; }
+.loadout__name { font: 600 0.68rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.loadout__pic { display: grid; place-items: center; aspect-ratio: 3 / 1; background: #0d1016; clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%); }
+.loadout__pic svg { width: 100%; height: 100%; display: block; }
+.loadout__pic--icon svg { width: 26px; height: 26px; color: var(--accent-2); }
+.loadout__tile.is-empty .loadout__pic { background: transparent; border: 1px dashed #3a4254; font-size: 1.2rem; color: #4a5266; }
+.loadout__item { font-family: var(--display); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.9rem; line-height: 1.1; }
+.loadout__eff { font-size: 0.74rem; color: var(--accent-2); line-height: 1.25; }
+.gearrow__art { display: block; width: 96px; }
+.gearrow__art svg { display: block; width: 96px; height: 32px; clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 0 100%); }
+.gearrow--buy { align-items: start; }
+.gearrow__buy { display: grid; gap: 4px; justify-items: stretch; }
+/* A row with a drawing: the picture on its own line above the words, so the words keep their width. */
+.gearrow:has(.gearrow__art) { grid-template-columns: 1fr auto; }
+.gearrow:has(.gearrow__art) .gearrow__art { grid-column: 1 / -1; width: 100%; max-width: 288px; }
+.gearrow:has(.gearrow__art) .gearrow__art svg { width: 100%; height: auto; }
+/* The armoury's rows are list items: keep their own padding over the plain list's (owner's capture, 2026-10-28). */
+.gearlist > .gearrow { padding: 8px 8px 8px 10px; }
+/* The crew list's stat line: the icon, the stat and the words share one centre line. */
+.scoutline { display: inline-flex; flex-wrap: wrap; align-items: center; column-gap: 4px; }

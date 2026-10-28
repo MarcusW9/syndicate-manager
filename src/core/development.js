@@ -11,6 +11,7 @@
 
 import { ROLE_PROFILES } from '../data/recruitPools.js';
 import { NAMES } from '../config/names.js';
+import { emptyLoadout } from './gear.js';
 
 export const STATS = ['combat', 'stealth', 'tech', 'social', 'driving', 'medical', 'cool'];
 
@@ -76,6 +77,7 @@ export function prepareOperative(op) {
   op.contractMainStat = op.contractMainStat ?? op.stats[primaryStat(op)];
   op.lastNoticeDay = op.lastNoticeDay ?? null;
   op.renewalAgain = op.renewalAgain ?? false;
+  op.gear = op.gear ?? emptyLoadout();
   return op;
 }
 

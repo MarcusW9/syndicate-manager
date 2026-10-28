@@ -14,7 +14,7 @@ import { INCIDENTS, ZONE_POOLS } from '../src/data/incidents.js';
 import { SITUATIONS } from '../src/data/situations.js';
 import { MISSIONS } from '../src/data/missions.js';
 import { makeRng } from '../src/core/rng.js';
-import { playMission, toCrisis, randomPolicy, carefulPolicy } from './play.js';
+import { playMission, toCrisis, randomPolicy, carefulPolicy, arm } from './play.js';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 const { importSave } = await import('../src/save/save.js');
@@ -164,9 +164,11 @@ test('extra bodies on stealth and con runs: −1 a head on stealth and social pa
 
 // --- saves and overwatch ------------------------------------------------------------------------
 
-test('overwatch: one person outside the crew with the shared kit; the rifle can\'t see inside the target, the drone can', () => {
+test('overwatch: one person outside the crew carrying a rifle or a drone; the rifle can\'t see inside the target, the drone can', () => {
   const g = createNewGame({ seed: 9, startCrew: 'fresh' });
   g.jobs = []; addOffer(g, 'container409');
+  assert.equal(M.startMission(g, g.jobs[0].id, [g.crew[0].id, g.crew[1].id], 'stealth', { overwatch: { id: g.crew[2].id, kit: 'rifle' } }), g, 'not without a rifle (slice 5: a new crew has no gear)');
+  arm(g, g.crew[2].id, 'rifle', 'drone');
   const [a, b, c] = g.crew;
   const ok = M.startMission(g, g.jobs[0].id, [a.id, b.id], 'stealth', { overwatch: { id: c.id, kit: 'rifle' } });
   assert.deepEqual(ok.activeMission.overwatch, { id: c.id, kit: 'rifle', left: OVERWATCH_KIT.rifle.uses });
@@ -187,7 +189,7 @@ test('saves happen, use up the kit, and the overwatch person is on the job: away
   for (let seed = 1; seed <= 300 && saves < 10; seed++) {
     const g = createNewGame({ seed, startCrew: 'fresh' });
     g.jobs = []; addOffer(g, 'container409');
-    const ow = g.crew[2];
+    const ow = arm(g, g.crew[2].id, 'rifle', 'drone').crew[2];
     const s = M.startMission(g, g.jobs[0].id, [g.crew[0].id], 'loud', { overwatch: { id: ow.id, kit: seed % 2 ? 'rifle' : 'drone' } });
     const { state } = playMission(s, carefulPolicy);
     const am = state.activeMission;

@@ -5,6 +5,26 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-28 · The rifle, drawn
+- **The rifle has its own picture**, in the same style as the faces: a street rifle with a worn wooden stock and taped grip, or a pro one in carbon with a neon line. It catches the city light of whoever carries it.
+- **You can see who carries one**: a runner with a rifle has it slung across their back in their portrait, everywhere their face appears.
+- **A runner's gear is four tiles** on their page, each item drawn big; the armoury shows the rifle's picture too. Other gear keeps its small icon until it gets a drawing of its own.
+- Fixed (owner's captures): the armoury's rows kept their text against the box's edge, and the crew list's stat line had the icon and number sitting higher than the words after them.
+
+## 2026-10-28 · Marksman and Drone Jockey (the squad run, part 5b)
+- **Overwatch can become a career.** Someone who has done three jobs on overwatch with a rifle, with combat 10 and cool 8, gets an offer from Joss to train as a **Marksman**: one more shot, +1 to hit, and a miss costs no heat. Three jobs with a drone and tech 10 brings **Drone Jockey**: one more action, +1, and half the neural load.
+- You decide: train them, or "Not yet" (Joss asks again in two weeks). One specialisation each, for good. It shows on their page, on the squad board ("rifle · Marksman") and in the roll breakdown. 309 tests.
+
+## 2026-10-28 · Gear: an armoury, and what each runner carries (the squad run, part 5a)
+- **The armoury** (Crew screen): buy gear into the stash, sell it back for half. Rifles and drones, a sidearm, an armoured vest, a cyberdeck, a trauma kit, lockpicks and two implants, each in a street or a pro version (pro is one better and costs 2.5×).
+- **Every runner has four slots**: weapon, armour, tool and implant. Tap a slot on their page to put something on them; it stays with them job after job. Gear can't change while they're on a job or away.
+- **Gear shows in the numbers**: a sidearm is "Sidearm +1" in the roll breakdown. A vest makes a serious wound less likely, a trauma kit lets someone patch a wound with less training, and implants help two stats but keep neural load from resting below 10.
+- **Overwatch needs a rifle or a drone now.** The shared kit is gone: a new crew starts with nothing, and only someone carrying one can take overwatch (Joss too). An old save keeps its rifle and drone in the stash.
+- **Some recruits bring their own kit**, and their page says so: a muscle might turn up with a rifle.
+
+## 2026-10-28 · Every district in its own words
+- The small moments of a run now read differently in the last three districts too: smoke and holo-ads between the Night Market stalls and a mahjong back room counting money; planters, private guards and a humming server room in Glass Heights; Association guards, feed sacks and the vet block in the Basin. Written by the owner; every district now has all 12. 292 tests.
+
 ## 2026-10-28 · Joss sends only who's needed
 - **Joss's picks are now the smallest squad with the best odds.** The job's recommended number goes in; overwatch, the van or an extra person inside join only if they make the risk lower. A job card shows how many Joss would send ("3 runners").
 - **Standby is your call.** Joss no longer puts someone on standby by default, so one small job doesn't tie up your whole crew. Add someone in the planner if you want the insurance.

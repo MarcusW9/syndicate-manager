@@ -5,6 +5,7 @@ import { statusRollMods } from './statuses.js';
 import { ownMods, jobMods } from './earned.js';
 import { APPROACHES } from '../data/approaches.js';
 import { ALERT_MAX } from '../data/incidents.js';
+import { gearMods } from './gear.js';
 
 export { APPROACHES };
 
@@ -52,6 +53,8 @@ export const OPERATIVE_RULES = [
     note: (op, { crew }) => `${crew.find((o) => o.id !== op.id && o.traits.includes('veteran')).handle} steadies them +1` },
   { id: 'approach', applies: (op, { stat, approach }) => !!APPROACHES[approach]?.mods?.[stat], value: (op, { stat, approach }) => APPROACHES[approach].mods[stat],
     note: (op, { approach }, v) => `${APPROACHES[approach].name.toLowerCase()} approach ${v > 0 ? '+' : '−'}${Math.abs(v)}` },
+  // Gear they carry (core/gear.js, slice 5): a sidearm, a deck, an implant.
+  { id: 'gear', applies: (op, { stat }) => gearMods(op, stat).length > 0, value: (op, { stat }) => gearMods(op, stat).reduce((n, m) => n + m.value, 0), note: (op, { stat }) => gearMods(op, stat).map((m) => m.note).join(', ') },
   { id: 'fatigue', applies: (op) => op.condition.fatigue > 60, value: () => -2, note: 'fatigued' },
   { id: 'injury', applies: (op) => op.condition.injury === 'light', value: () => -2, note: 'hurt' },
   // Earned traits that are about the person alone (core/earned.js): Ghost Driver, Shaky, Scarred, Crew Anchor.

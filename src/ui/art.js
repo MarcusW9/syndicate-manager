@@ -480,6 +480,7 @@ export function portrait(op, { size = 44 } = {}) {
   const hat = f.headwear ? HAT_SHAPES[f.headwear] : null;
   const hairClip = hat ? `clip-path="url(#${id}u)"` : '';
   const L = 32 - w, R = 32 + w;
+  const gear = portraitGear(op, c, f); // the rifle on their back, if they carry one
 
   const curlBlobs = hair.curls ? [[L + 1, 18, 5.2], [L + 6, 12.5, 5.6], [32, 10.5, 5.8], [R - 6, 12, 5.6], [R - 1, 17.5, 5.2], [L - 1, 25, 4], [R + 1, 24, 4]]
     .map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}"/>`).join('') : '';
@@ -500,6 +501,7 @@ export function portrait(op, { size = 44 } = {}) {
     ${hat ? `<clipPath id="${id}u"><path d="${underHat(hat)}"/></clipPath>` : ''}
   </defs>
   <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#${id}bg)"/>
+  ${gear.back}
 
   <g ${hairClip}>
   ${hair.back ? `<path d="${hair.back}" fill="${c.hair}"/>${f.splitDye ? `<g clip-path="url(#${id}b)"><rect x="0" y="0" width="32" height="64" fill="${f.splitDye}"/></g>` : ''}${fiberLines}` : ''}
@@ -508,6 +510,7 @@ export function portrait(op, { size = 44 } = {}) {
 
   ${f.monk ? monkRobe(f, c, id) : `<path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="${c.shirt}"/>
   <g clip-path="url(#${id}s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="${c.shirtLit}"/><path d="M27 46 L32 54 L37 46 Z" fill="${mix(c.shirt, '#000', 0.35)}"/></g>`}
+  ${gear.front}
   <path d="M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z" fill="${c.shade}"/><path d="M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z" fill="${c.lit}" opacity="0.8"/>
   ${f.monk ? monkCollar(f, c) : ''}
 
@@ -602,4 +605,99 @@ export function jossIcon({ variant = 'handset', mood = 'neutral', size = 36 } = 
     <rect x="10" y="40" width="14" height="5" rx="1" transform="rotate(-28 17 42)" fill="${ART.warn}" opacity="0.85"/>
     <circle cx="32" cy="55" r="2.2" fill="none" stroke="${ART.muted}" stroke-width="1.2"/>
     ${jossFace(mood, 4, 0, 1.3)}`, { size });
+}
+
+// --- Gear ---------------------------------------------------------------------------------
+// Items drawn like the faces (2026-10-28, owner's design session): flat colour, hard light from
+// the right, no outlines, the city light on the top edges. One drawing per item type, in a 96×32
+// frame, muzzle or front to the right; only the tier, the light and the neon accent change. The
+// same drawing goes in the armoury, in a gear slot and on the portrait. Items without a drawing
+// yet keep their line icon (ui/icons.js). See ART.md, Gear.
+
+/** The city light that falls on this person (their portrait's, and their gear's). */
+export const lightOf = (op) => CITY_LIGHT[hash(`${op.id}|light`) % CITY_LIGHT.length];
+
+const STASH_LIGHT = '#f2b544'; // sodium: the safehouse's own lamp, for gear nobody carries
+
+/** The rifle's shapes in its 96×32 frame. pro: carbon with a neon line; street: gunmetal and wood. */
+function rifleShapes({ tier, light, neon }) {
+  const pro = tier === 'pro';
+  const metal = pro ? '#1d2129' : '#454c57';
+  const dark = pro ? '#121519' : '#2b3038';
+  const lit = (c, t = 0.45) => mix(c, light, t);
+  const shade = (c) => mix(c, SHADOW, 0.45);
+  const stock = pro ? '#272c35' : '#6b4a2e';
+  const sling = pro ? '#1a1d24' : '#3a3125';
+  return [
+    // Stock: old wood on the street rifle (with grain), skeleton polymer with a thumbhole on the pro.
+    `<path d="M6 12.6 L12 12 L25 13.6 L25 19.4 L19 19.8 L13 21.4 L6 21.8 Z" fill="${stock}"/>`,
+    `<path d="M6 12.6 L12 12 L25 13.6 L25 14.4 L12 12.9 L6 13.5 Z" fill="${lit(stock, 0.5)}"/>`,
+    `<path d="M6 21.8 L13 21.4 L19 19.8 L25 19.4 L25 18.6 L19 19 L13 20.6 L6 21 Z" fill="${shade(stock)}"/>`,
+    pro ? '<path d="M12.5 15.2 Q16 14.6 19.5 15.6 L19 18.2 Q15.8 18.4 13 18.8 Z" fill="#0d1016" opacity="0.85"/>'
+      : `<path d="M8 15 Q15 14.2 23 15.4 M8 17.6 Q15 17 22 18" stroke="${shade(stock)}" stroke-width="0.35" fill="none" opacity="0.8"/>`,
+    `<rect x="5.2" y="12.4" width="1.6" height="9.6" rx="0.4" fill="${dark}"/>`,
+    `<rect x="12.5" y="10.6" width="8.5" height="2" rx="0.8" fill="${pro ? dark : stock}"/><rect x="12.5" y="10.6" width="8.5" height="0.6" rx="0.3" fill="${lit(pro ? dark : stock, 0.5)}"/>`,
+    // Grip (taped on the street rifle), trigger guard, magazine.
+    `<path d="M29.6 19 L34 19 L32.4 25.4 L28.6 25.2 Z" fill="${dark}"/>`,
+    pro ? '' : '<path d="M29.4 21 L33.4 21.2 M29 22.6 L33 22.8 M28.8 24.2 L32.6 24.3" stroke="#f2b544" stroke-width="0.5" opacity="0.55"/>',
+    `<path d="M34.4 19.2 Q35 21.8 37.6 21.6" stroke="${dark}" stroke-width="0.7" fill="none"/>`,
+    `<path d="M37.6 19 L41.4 19 L42 24.6 L38.2 25 Z" fill="${dark}"/><path d="M41.4 19 L42 24.6 L41.2 24.7 L40.7 19 Z" fill="${lit(dark, 0.4)}"/>`,
+    // Receiver and bolt.
+    `<rect x="25" y="13.2" width="19" height="6" fill="${metal}"/><rect x="25" y="13.2" width="19" height="1" fill="${lit(metal)}"/><rect x="25" y="18.2" width="19" height="1" fill="${shade(metal)}"/>`,
+    `<path d="M28 16 h7 M37 16 h5" stroke="${shade(metal)}" stroke-width="0.4"/>`,
+    `<path d="M40.6 14 L43 11.4" stroke="${metal}" stroke-width="0.9" stroke-linecap="round"/><circle cx="43.2" cy="11.2" r="1" fill="${lit(metal, 0.5)}"/>`,
+    // Vented handguard, barrel, suppressor, folded bipod.
+    `<rect x="44" y="13.8" width="18" height="4.6" fill="${pro ? metal : dark}"/><rect x="44" y="13.8" width="18" height="0.8" fill="${lit(pro ? metal : dark)}"/>`,
+    [46, 49.5, 53, 56.5].map((x) => `<rect x="${x}" y="15.3" width="2.2" height="1.4" rx="0.5" fill="#0d1016" opacity="0.8"/>`).join(''),
+    `<rect x="62" y="15.2" width="19" height="1.8" fill="${metal}"/><rect x="62" y="15.2" width="19" height="0.55" fill="${lit(metal)}"/>`,
+    `<rect x="81" y="14.3" width="11" height="3.6" rx="0.7" fill="${dark}"/><rect x="81" y="14.3" width="11" height="0.9" rx="0.45" fill="${lit(dark, 0.5)}"/>`,
+    `<path d="M83 16.6 h7" stroke="${shade(dark)}" stroke-width="0.4"/>`,
+    `<path d="M52 18.4 L61.5 19.6 M52 18.9 L61 20.3" stroke="${dark}" stroke-width="0.6"/>`,
+    // Scope: rings, tube, objective bell, eyepiece, and the lens catching the light.
+    `<rect x="29.6" y="10.8" width="1.6" height="2.6" fill="${dark}"/><rect x="38.4" y="10.8" width="1.6" height="2.6" fill="${dark}"/>`,
+    `<rect x="26.4" y="7.8" width="17.6" height="3.2" rx="1.5" fill="${dark}"/><rect x="26.4" y="7.8" width="17.6" height="0.9" rx="0.45" fill="${lit(dark, 0.55)}"/>`,
+    `<path d="M44 7.4 L48.6 6.6 L48.6 12.2 L44 11.4 Z" fill="${dark}"/><path d="M44 7.4 L48.6 6.6 L48.6 7.5 L44 8.1 Z" fill="${lit(dark, 0.55)}"/>`,
+    `<rect x="24.4" y="8" width="2.4" height="2.8" rx="0.6" fill="${dark}"/>`,
+    `<rect x="48" y="6.9" width="0.9" height="5" rx="0.4" fill="${light}"/>`,
+    pro ? `<path d="M25.6 17.6 H43.4 M44.6 17.6 H61.4" stroke="${neon}" stroke-width="0.5"/><rect x="32" y="8.9" width="5" height="0.7" fill="${neon}"/><circle cx="27.4" cy="16" r="0.7" fill="${neon}"/>` : '',
+    // The sling, hanging below.
+    `<path d="M15 21.4 Q34 31 54 18.6" stroke="${sling}" stroke-width="1.4" fill="none"/><path d="M15 21 Q34 30.4 54 18.2" stroke="${lit(sling, 0.3)}" stroke-width="0.35" fill="none"/>`,
+  ].join('');
+}
+
+const GEAR_SHAPES = { rifle: rifleShapes };
+
+/** True when this item type has a drawing (otherwise the UI shows its line icon). */
+export const hasGearArt = (type) => !!GEAR_SHAPES[type];
+
+/**
+ * An item's drawing as an SVG string, or null if it has none yet. carrier: the person carrying
+ * it (their light and chrome colour); without one it sits under the safehouse's sodium lamp.
+ */
+export function gearArt(item, { carrier = null, width = 96 } = {}) {
+  const shapes = GEAR_SHAPES[item.type];
+  if (!shapes) return null;
+  const light = carrier ? lightOf(carrier) : STASH_LIGHT;
+  const neon = carrier ? faceOf(carrier).chromeColor : '#3de8d8';
+  const id = `ga${++uid}`;
+  return `<svg class="art gearart" viewBox="0 0 96 32" width="${width}" height="${Math.round((width * 32) / 96)}" aria-hidden="true" focusable="false">
+  <defs><linearGradient id="${id}" x1="1" x2="0"><stop offset="0" stop-color="${light}" stop-opacity="0.2"/><stop offset="0.35" stop-color="${light}" stop-opacity="0.09"/><stop offset="0.75" stop-color="${light}" stop-opacity="0.02"/><stop offset="1" stop-color="${light}" stop-opacity="0"/></linearGradient></defs>
+  <rect width="96" height="32" fill="#0d1016"/><rect width="96" height="32" fill="url(#${id})"/>
+  ${shapes({ tier: item.tier ?? 'street', light, neon })}</svg>`;
+}
+
+// What shows on a portrait: one item at a time (owner's call), the most telling first. Only the
+// rifle has a drawing so far; it hangs across the back, stock low on the left, muzzle up behind
+// the right shoulder, with its sling across the chest.
+const ON_PORTRAIT = ['rifle'];
+
+function portraitGear(op, c, f) {
+  const item = Object.values(op.gear ?? {}).filter(Boolean).find((i) => ON_PORTRAIT.includes(i.type));
+  if (!item) return { back: '', front: '' };
+  const tier = item.tier ?? 'street';
+  const sling = tier === 'pro' ? '#1a1d24' : '#3a3125';
+  return {
+    back: `<g class="gear-rifle" transform="translate(4 72) rotate(-44) scale(0.9) translate(0 -16)">${rifleShapes({ tier, light: c.light, neon: f.chromeColor })}</g>`,
+    front: `<path d="M46 48.5 L18 57" stroke="${sling}" stroke-width="1.8"/><path d="M46 47.8 L18 56.3" stroke="${mix(sling, c.light, 0.35)}" stroke-width="0.4"/>`,
+  };
 }

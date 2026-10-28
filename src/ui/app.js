@@ -30,10 +30,13 @@ import {
 import { sendOff, ORDERS, handsOffAllowed, autoStep, needsPlayer } from '../core/autorun.js';
 import { OVERWATCH_KIT, ALERT_MAX } from '../core/incidents.js';
 import { leanPicks, jobRead, planRead } from '../core/squad.js';
-import { renderBoard, renderPicker, renderCoverage, assignSlot } from './board.js';
+import { renderBoard, renderPicker, renderCoverage, assignSlot, planKit } from './board.js';
+import { armouryCard, renderArmoury, renderLoadout, renderGearSheet } from './gear.js';
+import { buyGear, sellGear, equip, unequip, itemName, sellPrice } from '../core/gear.js';
 import { renderWatch, mountWatch, syncWatch, isWatching, stopWatch, togglePause, toggleSpeed } from './watch.js';
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
 import { earnedText } from '../core/earned.js';
+import { SPECIALISATIONS, specOf } from '../core/specialisations.js';
 import { sideTaskById, sideOdds, sendOnSideTask, sideReward, sideCost, sidePitch, intelFor, SIDE_TRUST } from '../core/sidetasks.js';
 import {
   saveGame, loadGame, exportSave, importSave, listSlots, getActiveSlot, setActiveSlot,
@@ -54,6 +57,8 @@ let sidePlan = null; // { taskId, crew: [] } while planning a side task (Jobs ta
 let playReportId = null; // a hands-off report playing out on its first open (renderReportTimeline)
 let openOperativeId = null;
 let openRecruitId = null;
+let openArmoury = false; // the armoury, from the Crew screen (ui/gear.js)
+let gearSlot = null; // the loadout slot being filled on a runner's page
 let newGameSlot = null; // slot number while picking a difficulty
 let plan = null; // { jobId, crew: [...ids], approach, orders, callIn, overwatch: id|null, kit, wheels: id|null, standby: id|null } (core/mission.js startMission)
 let pickSlot = null;
@@ -92,7 +97,7 @@ function onClick(e) {
   const { action, id } = t.dataset;
 
   switch (action) {
-    case 'nav': screen = id; openMessageId = null; openOperativeId = null; openRecruitId = null; plan = null; sidePlan = null; pickSlot = null; break;
+    case 'nav': screen = id; openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; gearSlot = null; plan = null; sidePlan = null; pickSlot = null; break;
     case 'continue': {
       if (isBlocked(state) || Date.now() < continueRestUntil) return;
       const next = advanceDay(state);
@@ -116,12 +121,25 @@ function onClick(e) {
       focusNext = openMessageId ? { action: 'open-message', id: openMessageId }
         : openRecruitId ? { action: 'open-recruit', id: openRecruitId }
         : openOperativeId ? { action: 'open-op', id: openOperativeId }
+        : openArmoury ? { action: 'open-armoury' }
         : plan ? { action: 'open-job', id: plan.jobId }
         : sidePlan ? { action: 'open-side', id: sidePlan.taskId } : null;
-      openMessageId = null; openOperativeId = null; openRecruitId = null; plan = null; sidePlan = null; pickSlot = null;
+      openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; gearSlot = null; plan = null; sidePlan = null; pickSlot = null;
       break;
     case 'decide': return setState(resolveDecision(state, id, t.dataset.option));
-    case 'open-op': openOperativeId = id; break;
+    case 'open-op': screen = 'crew'; openArmoury = false; openOperativeId = id; break;
+    // Gear (ui/gear.js, core/gear.js): the armoury, and a runner's slots.
+    case 'open-armoury': screen = 'crew'; openArmoury = true; openOperativeId = null; gearSlot = null; break;
+    case 'buy': return setState(buyGear(state, id, t.dataset.tier || 'street'));
+    case 'sell': {
+      const item = (state.stash ?? []).find((i) => i.uid === id);
+      if (item && confirm(`Sell the ${itemName(item).toLowerCase()} for ${money(sellPrice(item))}?`)) return setState(sellGear(state, id));
+      break;
+    }
+    case 'gear-slot': gearSlot = id; break;
+    case 'close-gear': focusNext = { action: 'gear-slot', id: gearSlot }; gearSlot = null; break;
+    case 'equip': focusNext = { action: 'gear-slot', id: gearSlot }; gearSlot = null; return setState(equip(state, id, openOperativeId));
+    case 'unequip': focusNext = { action: 'gear-slot', id: gearSlot }; gearSlot = null; return setState(unequip(state, openOperativeId, id));
     case 'open-recruit': openRecruitId = id; break;
     case 'hire': openRecruitId = null; return setState(hire(state, id));
     case 'haggle': return setState(haggle(state, id));
@@ -135,7 +153,7 @@ function onClick(e) {
       const job = state.jobs.find((j) => j.id === id);
       const r = job ? boardRead(job) : null;
       plan = { jobId: id, crew: r ? r.picks.crew : [], approach: r ? r.approach : 'stealth', orders: 'steady', callIn: 'risky',
-        overwatch: r?.picks.overwatch ?? null, kit: r?.picks.kit ?? 'rifle', wheels: r?.picks.wheels ?? null, standby: r?.picks.standby ?? null };
+        overwatch: r?.picks.overwatch ?? null, kit: r?.picks.kit ?? null, wheels: r?.picks.wheels ?? null, standby: r?.picks.standby ?? null };
       break;
     }
     case 'toggle-runners': runnersHidden = !runnersHidden; break;
@@ -235,7 +253,7 @@ function onClick(e) {
 }
 
 /** The planning screen's squad options for startMission / sendOff. */
-const planOpts = () => ({ overwatch: plan.overwatch ? { id: plan.overwatch, kit: plan.kit } : null, wheels: plan.wheels ?? null, standby: plan.standby ?? null, callIn: plan.callIn ?? 'risky', orders: plan.orders ?? 'steady' });
+const planOpts = () => ({ overwatch: plan.overwatch ? { id: plan.overwatch, kit: planKit(plan, state.crew.find((o) => o.id === plan.overwatch)) } : null, wheels: plan.wheels ?? null, standby: plan.standby ?? null, callIn: plan.callIn ?? 'risky', orders: plan.orders ?? 'steady' });
 
 function onChange(e) {
   if (e.target.id !== 'import-file' || !e.target.files[0]) return;
@@ -299,7 +317,7 @@ const seasonChanges = (op) => changesSince(op, seasonStartDay(state.day));
 /** Crew-list one-liner: their best (main) stat and the scout's read of where they're heading. */
 function scoutLine(op) {
   const main = primaryStat(op);
-  return `<span class="scoutline"><span class="iconword">${statGlyph(main)}${esc(statName(main))} ${ratedStat(op, main)}</span> · ${esc(potentialTag(op))}</span>`;
+  return `<span class="scoutline"><span class="iconword">${statGlyph(main)}${esc(statName(main))} ${ratedStat(op, main)}</span><span>· ${esc(potentialTag(op))}</span></span>`;
 }
 
 /** Crew-list marker: "▲ Tech +2, Combat +1 ▼ Driving −1" for this season. */
@@ -465,7 +483,7 @@ function navButton(id, label, count = 0, countWord = '') {
 
 function renderScreen() {
   if (screen === 'inbox') return renderInbox();
-  if (screen === 'crew') return openRecruitId ? renderRecruit() : openOperativeId ? renderOperative() : renderCrew();
+  if (screen === 'crew') return openRecruitId ? renderRecruit() : openOperativeId ? renderOperative() : openArmoury ? renderArmoury(gearUi, state) : renderCrew();
   // Jobs: on wide screens the board stays beside the job being planned (styles.css hides it on phones).
   if (screen === 'jobs') return plan ? `<div class="jobsplit"><div class="jobsplit__list">${renderJobs()}</div><div class="jobsplit__plan">${renderPlan()}</div></div>` : sidePlan ? renderSidePlan() : renderJobs();
   if (screen === 'city') return renderCity();
@@ -635,6 +653,7 @@ function renderMessage(m) {
       ${m.type === 'report' ? renderReportTimeline(m) : `<p class="body">${esc(m.body)}</p>`}
       ${m.kind === 'renewal' ? renderRenewal(m) : ''}
       ${m.kind === 'heat' ? renderHeatNotice(m) : ''}
+      ${m.kind === 'spec' ? renderSpecOffer(m) : ''}
       ${jobLink}`;
 }
 
@@ -771,6 +790,19 @@ function renderRenewal(m) {
       </div>`}`;
 }
 
+/** Joss's specialisation offer (core/specialisations.js): what each one does, then take it or not yet. */
+function renderSpecOffer(m) {
+  const p = m.payload;
+  return `
+      <div class="riskcard">
+        ${p.ids.map((id) => `<p><strong>${esc(SPECIALISATIONS[id].name)}</strong> · ${esc(SPECIALISATIONS[id].desc)}</p>`).join('')}
+        ${p.outcome ? `<p><strong>${esc(p.outcome)}</strong></p>` : '<p class="muted small">One specialisation each, for good. "Not yet" and Joss asks again in two weeks.</p>'}
+      </div>
+      ${m.resolved ? '' : `<div class="stack">
+        ${m.options.map((o) => `<button class="btn ${o.id === 'later' ? 'btn--ghost' : 'btn--primary'}" data-action="decide" data-id="${esc(m.id)}" data-option="${esc(o.id)}">${esc(o.label)}</button>`).join('')}
+      </div>`}`;
+}
+
 /** Fixer notice at high heat: pay to cool it, or let it ride (the next job's first crisis roll is −1). */
 function renderHeatNotice(m) {
   const p = m.payload;
@@ -843,6 +875,7 @@ function renderCrew() {
         </button>
         ${state.cash < x.cost ? `<p class="muted small">Need ${money(x.cost - state.cash)} more.</p>` : ''}
       </div>
+      ${armouryCard(gearUi, state)}
       </div>
       </div>
       ${wall}
@@ -868,6 +901,7 @@ function renderRecruit() {
       <p class="body">${esc(r.origin)}</p>
       <p class="body muted">${esc(r.bio)}</p>
 
+      ${r.brings?.length ? `<p class="body"><strong>Brings their own:</strong> ${esc(r.brings.map((type) => itemName({ type, tier: 'street' }).toLowerCase()).join(', '))}.</p>` : ''}
       <h2>Traits</h2>
       <ul class="chips">
         ${r.traits.map((t) => `<li class="chip"><strong>${esc(TRAITS[t]?.name ?? t)}</strong><span>${esc(TRAITS[t]?.desc ?? '')}</span></li>`).join('')}
@@ -944,6 +978,11 @@ function renderOperative() {
       <p class="body">${esc(op.bio)}</p>
       <p class="body muted">${esc(op.origin)}</p>
 
+      ${specOf(op) ? `
+      <h2>Specialisation</h2>
+      <ul class="chips">
+        <li class="chip chip--earned"><strong>${esc(specOf(op).name)}</strong><span>${esc(specOf(op).desc)}</span><span class="chip__when">Since day ${op.spec.day}</span></li>
+      </ul>` : ''}
       <h2>Traits</h2>
       <ul class="chips">
         ${op.traits.map((t) => `<li class="chip"><strong>${esc(TRAITS[t]?.name ?? t)}</strong><span>${esc(TRAITS[t]?.desc ?? '')}</span></li>`).join('')}
@@ -960,6 +999,7 @@ function renderOperative() {
       <dl class="stats">
         ${Object.keys(op.stats).map((k) => statCell(op, k, { growth: true })).join('')}
       </dl>
+      ${renderLoadout(gearUi, state, op)}
 
       </div>
 
@@ -983,7 +1023,8 @@ function renderOperative() {
       ${op.history.length ? `<h2>History</h2><ul class="list list--plain">${op.history.slice(-8).reverse().map((h) => `<li class="muted">${esc(h)}</li>`).join('')}</ul>` : ''}
       </div>
       </div>
-    </section>`;
+    </section>
+    ${gearSlot ? renderGearSheet(gearUi, state, op, gearSlot) : ''}`;
 }
 
 // --- jobs and planning -----------------------------------------------------
@@ -1293,6 +1334,7 @@ function renderPlan() {
 }
 
 /** Helpers the squad board borrows (ui/board.js), so it looks like the rest of the game. */
+const gearUi = { esc, money };
 const boardUi = { esc, face: (op, size) => face(op, size), riskBadge: (l) => riskBadge(l), riskWord, statusChip: (a) => statusChip(a), keyStats: (op, tpl, threat) => keyStatsFor(op, tpl, threat) };
 
 /** Everyone the picker can offer: the crew with their availability, and freelancers with their cut. */

@@ -13,6 +13,8 @@ import { pickTiered } from './tiered.js';
 import { CLASHES, TRAIT_TAGS } from '../data/tags.js';
 import { rollPotential, rollScoutError, scoutFor, potentialRead, prepareOperative } from './development.js';
 import { money } from './money.js';
+import { RECRUIT_GEAR } from '../data/gear.js';
+import { loadoutOf } from './gear.js';
 
 export const STARTING_ROSTER_CAP = 8;
 export const LEAD_DAYS = 7;
@@ -108,6 +110,13 @@ export function generateRecruit(state, { role: forcedRole, quality: forcedQualit
   const scout = scoutFor(state.crew, role);
   const scoutReport = potentialRead({ role, stats, potential, scoutError }, scout?.handle, name.split(' ')[0]);
 
+  // Some leads bring their own kit (data/gear.js RECRUIT_GEAR): a muscle with a rifle can take
+  // overwatch from day one. Rolled last, so it doesn't shift anything above. Founders bring nothing.
+  const offer = founder ? [] : (RECRUIT_GEAR[role] ?? []);
+  const roll = offer.length ? rng() : 1;
+  let edge = 0;
+  const brings = offer.filter(([chance]) => { const hit = roll >= edge && roll < edge + chance; edge += chance; return hit; }).map(([, type]) => type);
+
   state.recruitSeq = (state.recruitSeq ?? 0) + 1;
   return {
     id: `r${state.recruitSeq}`,
@@ -128,6 +137,7 @@ export function generateRecruit(state, { role: forcedRole, quality: forcedQualit
     scoutReport,
     expiresDay: state.day + LEAD_DAYS,
     haggled: false,
+    brings,
   };
 }
 
@@ -182,9 +192,9 @@ export function canHire(state, recruit) {
 }
 
 /** Turn a recruit into a crew member: drop the recruit-only fields. */
-export function recruitToOperative(r, { condition, history }) {
-  const { expiresDay, haggled, haggleResult, quality, culture, ...op } = r;
-  return prepareOperative({ ...op, tier: quality, condition, trust: {}, history });
+export function recruitToOperative(r, { condition, history, gear = null }) {
+  const { expiresDay, haggled, haggleResult, quality, culture, brings, ...op } = r;
+  return prepareOperative({ ...op, tier: quality, condition, trust: {}, history, ...(gear ? { gear } : {}) });
 }
 
 export function hire(prev, recruitId) {
@@ -196,6 +206,7 @@ export function hire(prev, recruitId) {
   state.crew.push(recruitToOperative(r, {
     condition: { fatigue: 0, morale: 60, neuralLoad: 0, burnout: 0, injury: 'healthy', injuryDays: 0 },
     history: [`Day ${state.day}: joined the crew`],
+    gear: loadoutOf(state, r.brings ?? []),
   }));
   state.inbox.unshift({
     id: `hired-${r.id}`, type: 'crew', day: state.day,

@@ -5,7 +5,10 @@
 // ui: helpers from app.js { esc, face, riskBadge, statusChip, keyStats } so the board looks
 // like the rest of the game without copying them.
 
-import { OVERWATCH_KIT } from '../core/incidents.js';
+import { overwatchKit, kitsFor } from '../core/gear.js';
+import { SPECIALISATIONS } from '../data/specialisations.js';
+
+const SPEC_NAME = Object.fromEntries(Object.entries(SPECIALISATIONS).map(([id, s]) => [id, s.name]));
 import { bestLine } from '../core/squad.js';
 import { effectiveStat, maxCrew } from '../core/crew.js';
 import { statValue } from './icons.js';
@@ -38,6 +41,18 @@ export function assignSlot(plan, slot, opId) {
   return { crew: crew.filter(Boolean), ...out };
 }
 
+/** The kit overwatch takes: the one picked, if they carry it, or the first they do (null: none). */
+export function planKit(plan, op) {
+  const kits = kitsFor(op);
+  return kits.includes(plan.kit) ? plan.kit : kits[0] ?? null;
+}
+
+/** "combat 9 · 2 shots" for someone on overwatch with this kit. */
+function kitLine(op, kitId) {
+  const k = overwatchKit(op, kitId);
+  return `${statValue(k.stat, effectiveStat(op, k.stat).value + k.bonus)} · ${k.uses} ${kitId === 'rifle' ? 'shots' : 'actions'}`;
+}
+
 const PINS = ['#ff4f7b', '#36d6c3', '#f5b942', '#b48cff', '#5fe0a5', '#ff9a5a'];
 const TILTS = ['-1.5deg', '1deg', '-0.5deg', '1.5deg', '-1deg', '0.5deg'];
 
@@ -59,7 +74,6 @@ function dossier(ui, slot, op, { name, does, line = '', note = '', i = 0 }) {
 /** The board: who's inside, who's on overwatch with which kit, and Joss's picks. */
 export function renderBoard(ui, { plan, tpl, people, crewSize }) {
   const { esc } = ui;
-  const kit = OVERWATCH_KIT[plan.kit] ? plan.kit : 'rifle';
   const byId = (id) => people.find((o) => o.id === id);
   const n = insideSlots(plan, tpl);
   const inside = Array.from({ length: n }, (_, i) => {
@@ -72,10 +86,12 @@ export function renderBoard(ui, { plan, tpl, people, crewSize }) {
     });
   }).join('');
   const ow = byId(plan.overwatch);
-  const owStat = OVERWATCH_KIT[kit].stat;
+  const kit = ow ? planKit(plan, ow) : null;
+  // Overwatch needs someone carrying a rifle or a drone (slice 5: gear).
+  const armed = people.some((o) => kitsFor(o).length);
   const overCard = dossier(ui, 'over', ow, {
-    name: 'Overwatch', does: 'Optional: saves people in trouble.',
-    line: ow ? `${statValue(owStat, effectiveStat(ow, owStat).value)} · ${OVERWATCH_KIT[kit].uses} ${kit === 'rifle' ? 'shots' : 'actions'}` : '', note: ow ? kit : '', i: 5,
+    name: 'Overwatch', does: armed ? 'Optional: saves people in trouble. Needs a rifle or a drone.' : 'Nobody carries a rifle or a drone. Buy one in the armoury (Crew).',
+    line: ow && kit ? kitLine(ow, kit) : '', note: kit ? (overwatchKit(ow, kit).spec ? `${kit} · ${SPEC_NAME[overwatchKit(ow, kit).spec]}` : kit) : '', i: 5,
   });
   const wh = byId(plan.wheels);
   const wheelsCard = dossier(ui, 'wheels', wh, { name: 'Wheels', does: 'Optional: takes every driving roll from the van.', line: wh ? statValue('driving', effectiveStat(wh, 'driving').value) : '', note: wh ? 'in the van' : '', i: 2 });
@@ -94,10 +110,10 @@ export function renderBoard(ui, { plan, tpl, people, crewSize }) {
         </div>
         <div class="board__group">
           <p class="board__label">Outside <span>overwatch, the van, standby</span></p>
-          <div class="kitpick" role="group" aria-label="Overwatch kit">
-            ${Object.entries(OVERWATCH_KIT).map(([k, o]) => `<button class="kitpick__btn ${kit === k ? 'is-on' : ''}" data-action="kit" data-id="${k}" aria-pressed="${kit === k}">${esc(o.name)}: ${k === 'rifle' ? 'sees outdoors' : 'sees everywhere'}</button>`).join('')}
-          </div>
-          <p class="small muted board__kitdesc">${esc(OVERWATCH_KIT[kit].desc)}</p>
+          ${ow && kitsFor(ow).length > 1 ? `<div class="kitpick" role="group" aria-label="Overwatch kit">
+            ${kitsFor(ow).map((k) => `<button class="kitpick__btn ${kit === k ? 'is-on' : ''}" data-action="kit" data-id="${k}" aria-pressed="${kit === k}">${esc(overwatchKit(ow, k).name)}: ${k === 'rifle' ? 'sees outdoors' : 'sees everywhere'}</button>`).join('')}
+          </div>` : ''}
+          ${kit ? `<p class="small muted board__kitdesc">${esc(ow.handle)} has the ${esc(overwatchKit(ow, kit).name.toLowerCase())}. ${esc(overwatchKit(ow, kit).desc.replace(/^Lets them take overwatch with the \w+ stat\. /, ''))}${overwatchKit(ow, kit).spec ? ` ${esc(SPECIALISATIONS[overwatchKit(ow, kit).spec].name)}: ${esc(SPECIALISATIONS[overwatchKit(ow, kit).spec].desc.replace(/^On overwatch with an? \w+: /, ''))}` : ''}</p>` : ''}
           <div class="dossiers" style="--n:3">${overCard}${wheelsCard}${standbyCard}</div>
         </div>
       </div>`;
@@ -110,11 +126,12 @@ export function renderBoard(ui, { plan, tpl, people, crewSize }) {
 export function renderPicker(ui, { plan, tpl, threat, slot, people, freelancersFull }) {
   const { esc, face, statusChip, keyStats } = ui;
   const outside = !!OUTSIDE[slot];
-  const kit = OVERWATCH_KIT[plan.kit] ? plan.kit : 'rifle';
   const current = outside ? plan[OUTSIDE[slot]] ?? null : plan.crew[Number(slot.split(':')[1])] ?? null;
   // What counts for this slot, best first.
   const FIT = {
-    over: { name: 'overwatch', note: `With the ${OVERWATCH_KIT[kit].name.toLowerCase()}: ${OVERWATCH_KIT[kit].stat} counts.`, score: (op) => effectiveStat(op, OVERWATCH_KIT[kit].stat).value, line: (op) => statValue(OVERWATCH_KIT[kit].stat, effectiveStat(op, OVERWATCH_KIT[kit].stat).value) },
+    over: { name: 'overwatch', note: 'Only someone carrying a rifle (combat counts) or a drone (tech counts). Gear goes on from their page on the Crew screen.',
+      score: (op) => (planKit(plan, op) ? effectiveStat(op, overwatchKit(op, planKit(plan, op)).stat).value : -50),
+      line: (op) => (planKit(plan, op) ? kitLine(op, planKit(plan, op)) : 'no rifle or drone'), needs: (op) => !!planKit(plan, op) },
     wheels: { name: 'Wheels', note: 'In the van: they take every driving roll, alone.', score: (op) => effectiveStat(op, 'driving').value, line: (op) => statValue('driving', effectiveStat(op, 'driving').value) },
     standby: { name: 'standby', note: 'At the van until called: they can save someone in trouble or get the wounded out.', score: (op) => effectiveStat(op, 'combat').value + effectiveStat(op, 'medical').value / 2, line: (op) => `${statValue('combat', effectiveStat(op, 'combat').value)} · ${statValue('medical', effectiveStat(op, 'medical').value)}` },
   }[slot] ?? { name: 'the inside team', note: `Numbers are for this job: ${tpl.keyStats.join(', ')} matter most.`, score: (op) => bestLine(op, plan.approach).value, line: null };
@@ -130,7 +147,7 @@ export function renderPicker(ui, { plan, tpl, threat, slot, people, freelancersF
   const cand = ({ op, status, freelance }) => {
     const w = where(op.id);
     const here = current === op.id;
-    const blocked = !status.ok || (freelance && freelancersFull && !plan.crew.includes(op.id));
+    const blocked = !status.ok || (freelance && freelancersFull && !plan.crew.includes(op.id)) || (FIT.needs && !FIT.needs(op));
     return `
           <li><button class="cand ${here ? 'is-on' : w ? 'is-placed' : ''}" data-action="assign" data-id="${esc(op.id)}" ${blocked ? 'disabled' : ''} aria-pressed="${here}">
             ${face(op, 'sm')}

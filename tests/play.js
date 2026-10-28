@@ -5,6 +5,18 @@ import * as M from '../src/core/mission.js';
 import { advanceDay, calendar } from '../src/core/time.js';
 import { templateById } from '../src/core/jobs.js';
 import { availability } from '../src/core/crew.js';
+import { GEAR } from '../src/data/gear.js';
+
+/** Put gear on someone for a test (no cost, no stash): arm(state, opId, 'rifle', 'drone'). Returns state. */
+export function arm(state, opId, ...types) {
+  const op = state.crew.find((o) => o.id === opId);
+  for (const type of types) {
+    const [t, tier = 'street'] = type.split(':');
+    state.gearSeq = (state.gearSeq ?? 0) + 1;
+    op.gear[GEAR[t].slot] = { uid: `t${state.gearSeq}`, type: t, tier };
+  }
+  return state;
+}
 
 /**
  * Walk the active mission up to its next crisis (or a critical, or the end): beats, zones,

@@ -27,6 +27,8 @@ import { money } from './money.js';
 import { summariseRun, REPORT_LOGS_KEPT } from './report.js';
 import { intelFor } from './sidetasks.js';
 import { afterJob, noteInjury, spendSecondWind, earnedOf } from './earned.js';
+import { overwatchKit, seriousGuard, patchBonus } from './gear.js';
+import { noteOverwatchJob, checkSpecialisations } from './specialisations.js';
 import { planIncidents, weaveIncidents, incidentById, incidentIn, incidentDifficulty, handlerFor, bestSave, standbySave, decisionChoices, OVERWATCH_KIT, ALERT_MAX, SERIOUS_CHANCE, SERIOUS_PER_ALERT, PATCH_MIN_MEDICAL, ZONES } from './incidents.js';
 
 const EXIT_KINDS = new Set(['abort', 'extract']);
@@ -161,8 +163,8 @@ export function currentStep(am) {
 // --- starting ------------------------------------------------------------
 
 /**
- * Start a job. opts: { overwatch: { id, kit } (one crew member outside the inside crew, with the
- * shared rifle or drone), wheels: id (in the van: takes every driving roll), standby: id (at the
+ * Start a job. opts: { overwatch: { id, kit } (one crew member outside the inside crew, carrying
+ * that rifle or drone: core/gear.js), wheels: id (in the van: takes every driving roll), standby: id (at the
  * van until called in), callIn ('every' | 'risky' | 'never'), orders (how the crew decides when
  * it doesn't call you: core/autorun.js ORDERS) }.
  */
@@ -174,7 +176,8 @@ export function startMission(prev, jobId, crewIds, approach, opts = {}) {
   if (!APPROACHES[approach]) return prev;
   if (!crewIds.length || crewIds.length > maxCrew(tpl.crewSize)) return prev;
   const ow = opts.overwatch?.id ? opts.overwatch : null;
-  if (ow && (!OVERWATCH_KIT[ow.kit] || crewIds.includes(ow.id) || !state.crew.some((o) => o.id === ow.id))) return prev;
+  const owOp = ow ? state.crew.find((o) => o.id === ow.id) : null;
+  if (ow && (!owOp || !overwatchKit(owOp, ow.kit) || crewIds.includes(ow.id))) return prev;
   // Wheels and standby (slice 3): crew of your own, one place each.
   const wheels = opts.wheels ?? null;
   const standby = opts.standby ?? null;
@@ -233,7 +236,7 @@ export function startMission(prev, jobId, crewIds, approach, opts = {}) {
   state.cash -= bribe;
   state.activeMission = {
     jobId, templateId: tpl.id, crewIds, approach, days, bribe,
-    overwatch: ow ? { id: ow.id, kit: ow.kit, left: OVERWATCH_KIT[ow.kit].uses } : null,
+    overwatch: ow ? { id: ow.id, kit: ow.kit, left: overwatchKit(owOp, ow.kit).uses } : null,
     wheels: wheels ?? null, standby: standby ? { id: standby, used: false } : null,
     callIn: CALL_IN[opts.callIn] ? opts.callIn : 'every', orders: opts.orders ?? null,
     alert: 0, out: [], pending: null, wentLoud: false,
@@ -386,10 +389,11 @@ export function runIncident(prev) {
     for (const save of tries) {
       const sdie = d20(nextRng(state));
       const saved = sdie + save.value >= save.need;
-      const kit = save.via === 'overwatch' ? OVERWATCH_KIT[save.kit] : null;
+      const kit = save.via === 'overwatch' ? overwatchKit(save.op, save.kit) : null;
+      const shotHeat = kit && (!kit.heatOnHit || saved) ? kit.heat : 0;
       if (kit) {
         am.overwatch.left -= 1;
-        am.extraHeat += kit.heat;
+        am.extraHeat += shotHeat;
         if (kit.neural) addNeural(save.op, kit.neural);
       }
       grow(state, am, save.op, save.stat, XP.save);
@@ -399,7 +403,7 @@ export function runIncident(prev) {
         kind: 'save', via: save.via, kit: save.kit ?? null, patient: op.handle, text: fill(inc.comp ?? '{op} is in trouble.', state, voice),
         choice: saved ? `${save.op.handle} saves ${op.handle}` : `${save.op.handle} can't save ${op.handle}`,
         stat: save.stat, actor: { id: save.op.id, handle: save.op.handle }, value: save.value, notes: save.notes, die: sdie, need: save.need, success: saved,
-        choiceCost: {}, outcomeCost: kit?.heat ? { heat: kit.heat } : {}, report: how,
+        choiceCost: {}, outcomeCost: shotHeat ? { heat: shotHeat } : {}, report: how,
         why: kit ? `${save.op.handle} had the ${save.kit} on overwatch, and the best shot at helping.`
           : save.via === 'standby' ? `${save.op.handle} came in from standby to cover the team.` : `${save.op.handle} was the best fighter close enough to help.`,
       });
@@ -416,11 +420,12 @@ export function runIncident(prev) {
   am.payCut += inc.fail.payCut ?? 0;
   if (inc.fail.neural) addNeural(op, inc.fail.neural);
   if (inc.fail.injury) {
-    let severity = rng() < SERIOUS_CHANCE + SERIOUS_PER_ALERT * am.alert ? 'serious' : 'light';
+    // Armour (core/gear.js) takes some of the chance off.
+    let severity = rng() < Math.max(0, SERIOUS_CHANCE + SERIOUS_PER_ALERT * am.alert - seriousGuard(op)) ? 'serious' : 'light';
     if (severity === 'serious') {
       // A teammate with the hands for it can patch it down to a light wound on the spot.
       const medic = able.filter((o) => o.id !== op.id).map((o) => ({ o, s: effectiveStat(o, 'medical') })).sort((a, b) => b.s.value - a.s.value)[0];
-      if (medic && medic.o.stats.medical >= PATCH_MIN_MEDICAL) {
+      if (medic && medic.o.stats.medical + patchBonus(medic.o) >= PATCH_MIN_MEDICAL) {
         const pdie = d20(nextRng(state));
         const patched = pdie + medic.s.value >= need;
         record(am, {
@@ -946,6 +951,11 @@ function finish(state) {
 
   // Growth can mean a pay rise: graduation or main stat +2 since the last deal (core/renewals.js).
   for (const op of survivors) if (!isFreelancer(op)) checkRenewal(state, op, graduatedOps.includes(op));
+
+  // A job on overwatch counts towards a specialisation; Joss offers one once the stats are there too.
+  const sniper = am.overwatch && survivors.find((o) => o.id === am.overwatch.id);
+  if (sniper) noteOverwatchJob(sniper, am.overwatch.kit);
+  checkSpecialisations(state);
 
   // Clinic Hands (earned): once a job, gets a lightly hurt crewmate back a day sooner.
   const patched = [];

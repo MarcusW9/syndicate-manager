@@ -13,7 +13,7 @@ import { autoStep, autoRun, sendOff } from '../src/core/autorun.js';
 import { ordersDecision, ALERT_MAX } from '../src/core/incidents.js';
 import { APPROACHES } from '../src/data/approaches.js';
 import { MISSIONS } from '../src/data/missions.js';
-import { playMission, toCrisis, randomPolicy, carefulPolicy } from './play.js';
+import { playMission, toCrisis, randomPolicy, carefulPolicy, arm } from './play.js';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 const { importSave } = await import('../src/save/save.js');
@@ -52,6 +52,7 @@ test('Wheels and standby are crew of your own, one place each', () => {
   s.jobs = [];
   addOffer(s, 'container409');
   const [a, b, c, d] = s.crew.map((o) => o.id);
+  arm(s, c, 'rifle');
   const job = s.jobs[0].id;
   assert.notEqual(M.startMission(s, job, [a, b], 'stealth', { wheels: c, standby: d }), s, 'a full squad starts');
   assert.equal(M.startMission(s, job, [a, b], 'stealth', { wheels: a }), s, 'not inside and in the van');

@@ -10,6 +10,7 @@ import { INCIDENTS, ZONES, ZONE_POOLS, OFF_APPROACH, ALERT_MAX } from '../data/i
 import { DISTRICT_INCIDENTS } from '../data/districtIncidents.js';
 import { crewRoll, effectiveStat } from './crew.js';
 import { successChance, rollTarget } from './risk.js';
+import { overwatchKit, baseKit } from './gear.js';
 
 export { ZONES, ALERT_MAX };
 export const incidentById = (id) => INCIDENTS[id] ?? null;
@@ -22,12 +23,9 @@ export const incidentIn = (id, district) => {
   return local ? { ...base, ...local } : base;
 };
 
-// The safehouse's shared kit for overwatch until gear exists (DESIGN.md, 2026-10-27).
-// uses: shots or drone actions a job. sees: which zones it can help in.
-export const OVERWATCH_KIT = {
-  rifle: { name: 'Rifle', stat: 'combat', uses: 2, heat: 1, neural: 0, indoors: false, desc: 'Sees the open ground, not inside. Every shot is heat +1.' },
-  drone: { name: 'Drone', stat: 'tech', uses: 3, heat: 0, neural: 10, indoors: true, desc: 'Sees everywhere. Every action is neural load +10 for the pilot.' },
-};
+// Overwatch kits: the rifle and the drone are gear now (slice 5; data/gear.js), carried by
+// whoever takes overwatch. This is the street version of each, for reads before anyone's picked.
+export const OVERWATCH_KIT = { rifle: baseKit('rifle'), drone: baseKit('drone') };
 
 // A serious injury from an unsaved danger incident: this chance, plus more as the alert rises.
 export const SERIOUS_CHANCE = 0.25;
@@ -86,11 +84,12 @@ export function handlerFor(able, inc, diff, rollCtx) {
  */
 export function bestSave({ victim, able, overwatch, overwatchOp, zone, diff }) {
   const options = [];
-  const kit = overwatch ? OVERWATCH_KIT[overwatch.kit] : null;
-  if (kit && overwatchOp && overwatch.left > 0 && (kit.indoors || ZONES[zone]?.open)) {
+  const kit = overwatch && overwatchOp ? overwatchKit(overwatchOp, overwatch.kit) : null;
+  if (kit && overwatch.left > 0 && (kit.indoors || ZONES[zone]?.open)) {
     const s = effectiveStat(overwatchOp, kit.stat);
     const d = diff - 1;
-    options.push({ via: 'overwatch', kit: overwatch.kit, op: overwatchOp, stat: kit.stat, value: s.value, notes: [`${kit.name.toLowerCase()} from overwatch`, ...s.notes], need: 10 + d, chance: successChance(s.value, d) });
+    const value = s.value + kit.bonus;
+    options.push({ via: 'overwatch', kit: overwatch.kit, op: overwatchOp, stat: kit.stat, value, notes: [`${kit.name.toLowerCase()} from overwatch`, ...kit.notes, ...s.notes], need: 10 + d, chance: successChance(value, d) });
   }
   for (const op of able) {
     if (op.id === victim.id) continue;
