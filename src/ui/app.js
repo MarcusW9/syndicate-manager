@@ -33,7 +33,7 @@ import { leanPicks, jobRead, planRead } from '../core/squad.js';
 import { renderBoard, renderPicker, renderCoverage, assignSlot, planKit } from './board.js';
 import { armouryCard, renderArmoury, renderLoadout, renderGearSheet } from './gear.js';
 import { buyGear, sellGear, equip, unequip, itemName, sellPrice } from '../core/gear.js';
-import { renderWatch, mountWatch, syncWatch, isWatching, stopWatch, togglePause, toggleSpeed } from './watch.js';
+import { renderWatch, mountWatch, syncWatch, isWatching, stopWatch, togglePause, toggleSpeed, showLatest } from './watch.js';
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
 import { earnedText } from '../core/earned.js';
 import { SPECIALISATIONS, specOf } from '../core/specialisations.js';
@@ -203,6 +203,7 @@ function onClick(e) {
     case 'step': return setState(autoStep(state)); // the next thing the crew does on its own (core/autorun.js)
     case 'watch-pause': return togglePause(state);
     case 'watch-speed': return toggleSpeed(state);
+    case 'watch-latest': return showLatest();
     case 'pending': return setState(resolvePending(state, id));
     case 'choose': return setState(chooseOption(state, id));
     case 'critical': return setState(resolveCritical(state, id));
@@ -362,10 +363,12 @@ function render() {
   const cue = dayCue;
   dayCue = null;
   // Desktop pages use the full width; a running job stays a narrow reading column.
-  const wide = !state.activeMission;
-  // Phones: Continue sits above the tab bar, except while planning a job (its own bar
-  // takes that place) and during a job (nothing to continue).
-  const dock = !state.activeMission && !(screen === 'jobs' && plan);
+  const wide = !state.activeMission || !state.activeMission.done; // a running job gets the width for map and feed side by side
+  // While a job is being planned its own Start button is the way on, so Continue steps aside
+  // everywhere (owner, 2026-10-28: on desktop the top-bar Continue was easy to hit by mistake).
+  const planning = !state.activeMission && screen === 'jobs' && !!(plan || sidePlan);
+  // Phones: Continue sits above the tab bar, except while planning and during a job (nothing to continue).
+  const dock = !state.activeMission && !planning;
 
   root.innerHTML = `
     <header class="topbar ${cue ? 'is-new-day' : ''}">
@@ -375,7 +378,7 @@ function render() {
         <span class="stat"><span class="stat__label">Heat</span> ${heatMeter()}</span>
         <span class="tier">${esc(statName(state.tier))}<span class="tier__word"> tier</span></span>
       </div>
-      ${renderContinue(blocked, resting, unread, 'topbar__continue')}
+      ${planning ? '' : renderContinue(blocked, resting, unread, 'topbar__continue')}
     </header>
 
     <nav class="nav" aria-label="Main">
@@ -560,7 +563,7 @@ function renderBriefing() {
       case 'job-last': return [say('job-last', { job: a.name }, a.jobId), 'open-job', a.jobId];
       case 'jobs-last': return [say('jobs-last', { count: a.names.length, jobs: andList(a.names) }), 'nav', 'jobs'];
       case 'lead-last': return [say('lead-last', { name: a.name, role: a.role }, a.name), 'nav', 'crew'];
-      case 'crew-out': return [say('crew-out', { names: andList(a.names) }), 'nav', 'crew'];
+      case 'crew-out': return [say('crew-out', { names: andList(a.why ?? a.names) }), 'nav', 'crew'];
       default: return null;
     }
   };

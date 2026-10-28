@@ -54,7 +54,7 @@ export const PARTNER = {
     'job-last': ['Last day for {job}. Tomorrow it goes to someone else.', '{job} comes off the board after today.'],
     'jobs-last': ['{count} jobs come off the board after today: {jobs}.', 'Last day for {jobs}.'],
     'lead-last': ['{name} the {role} walks tomorrow if we don\'t sign them.', 'Last chance on {name} ({role}). After today they\'ll find another crew.'],
-    'crew-out': ['Can\'t work today: {names}. Plan around them.', '{names} sitting this one out. Doctor\'s orders, or mine.'],
+    'crew-out': ['Can\'t work today: {names}. Plan around them.', 'Sitting today out: {names}. We work with who\'s left.'],
   },
   // The first line of a job report, picked by how it went (core/report.js). Only what the
   // report itself shows: no guessing at who was behind anything.

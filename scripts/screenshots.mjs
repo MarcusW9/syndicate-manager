@@ -180,6 +180,8 @@ try {
   await page.setViewportSize({ width: 1440, height: 900 });
   await click('[data-action="nav"][data-id="today"]') || await click('[data-action="nav"][data-id="inbox"]');
   await top(); await shot('desktop');
+  // Planning a job on desktop: the top bar drops Continue so only Start moves on (2026-10-28).
+  if (await click('[data-action="nav"][data-id="jobs"]') && await click('[data-action="open-job"]')) { await top(); await shot('desktop-planning'); }
 } finally {
   await browser.close();
   server.kill();

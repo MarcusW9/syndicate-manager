@@ -379,3 +379,25 @@ test('everyone on the job counts towards traits, outside the inside team too', (
   s = M.closeMission(playMission(s, carefulPolicy).state);
   for (const id of [c, d]) assert.ok(Object.keys(s.crew.find((o) => o.id === id).track?.together ?? {}).length > 0, `${id} worked the job with the others`);
 });
+
+test('two Crew Anchors on one day are two messages you can open, each naming the partner', async () => {
+  let s = game(3);
+  const [a, b, c] = s.crew;
+  for (const p of [b, c]) a.track = { ...(a.track ?? {}), together: { ...(a.track?.together ?? {}), [p.id]: 99 } };
+  const { uniqueInboxId } = await import('../src/core/earned.js');
+  s.inbox.unshift({ id: 'x-1', subject: 'one' });
+  assert.equal(uniqueInboxId(s, 'x-1'), 'x-1-2');
+  assert.equal(uniqueInboxId(s, 'x-9'), 'x-9');
+});
+
+test('a v23 save with two messages sharing an id upgrades to two ids', async () => {
+  globalThis.localStorage ??= { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+  const { importSave } = await import('../src/save/save.js');
+  const { SAVE_VERSION } = await import('../src/core/state.js');
+  const s = structuredClone(game(4));
+  s.version = 23;
+  s.inbox = [{ id: 'earned-r2-crew_anchor-14', subject: 'a', read: true }, { id: 'earned-r2-crew_anchor-14', subject: 'b', read: false }, ...s.inbox];
+  const up = await importSave({ text: async () => JSON.stringify(s) });
+  assert.equal(up.version, SAVE_VERSION);
+  assert.equal(new Set(up.inbox.map((m) => m.id)).size, up.inbox.length, 'every id unique');
+});

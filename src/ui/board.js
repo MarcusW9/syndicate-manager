@@ -62,7 +62,7 @@ function dossier(ui, slot, op, { name, does, line = '', note = '', i = 0 }) {
     return `<button class="dossier is-empty" data-action="pick-slot" data-id="${slot}" aria-label="${esc(name)}: empty. ${esc(does)} Tap to assign.">
       <b>${esc(name)}</b><span class="dossier__sil" aria-hidden="true">+</span><small>${esc(does)}</small></button>`;
   }
-  return `<button class="dossier" data-action="pick-slot" data-id="${slot}" style="--tilt:${TILTS[i % TILTS.length]};--pin:${PINS[i % PINS.length]}" aria-label="${esc(name)}: ${esc(op.handle)}. Tap to change.">
+  return `<button class="dossier ${op.freelance ? 'dossier--freelance' : ''}" data-action="pick-slot" data-id="${slot}" style="--tilt:${TILTS[i % TILTS.length]};--pin:${PINS[i % PINS.length]}" aria-label="${esc(name)}: ${esc(op.handle)}. Tap to change.">
       <span class="dossier__photo">${face(op)}</span>
       <span class="dossier__name">${esc(op.handle)}</span>
       <span class="dossier__real">${esc(op.freelance ? `freelance ${op.role}` : op.role)}</span>
@@ -149,11 +149,11 @@ export function renderPicker(ui, { plan, tpl, threat, slot, people, freelancersF
     const here = current === op.id;
     const blocked = !status.ok || (freelance && freelancersFull && !plan.crew.includes(op.id)) || (FIT.needs && !FIT.needs(op));
     return `
-          <li><button class="cand ${here ? 'is-on' : w ? 'is-placed' : ''}" data-action="assign" data-id="${esc(op.id)}" ${blocked ? 'disabled' : ''} aria-pressed="${here}">
+          <li><button class="cand ${freelance ? 'cand--freelance' : ''} ${here ? 'is-on' : w ? 'is-placed' : ''}" data-action="assign" data-id="${esc(op.id)}" ${blocked ? 'disabled' : ''} aria-pressed="${here}">
             ${face(op, 'sm')}
             <span class="cand__txt"><strong>${esc(op.handle)}</strong> <span class="muted">${esc(freelance ? `freelance ${op.role}` : op.role)}</span><br>
               <span class="small">${FIT.line ? FIT.line(op) : keyStats(op, tpl, threat)}</span></span>
-            <span class="cand__side">${here ? '<span class="cand__where cand__where--here">In this slot</span>' : w ? `<span class="cand__where">${esc(w)}</span>` : freelance ? `<strong>${Math.round(freelance.share * 100)}%</strong> of pay` : statusChip(status)}</span>
+            <span class="cand__side">${here ? '<span class="cand__where cand__where--here">In this slot</span>' : w ? `<span class="cand__where">${esc(w)}</span>` : freelance ? `<span class="cand__hire">Freelance</span><strong>${Math.round(freelance.share * 100)}%</strong> of pay` : statusChip(status)}</span>
           </button></li>`;
   };
   return `

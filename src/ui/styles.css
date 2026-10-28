@@ -181,11 +181,11 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .flag--good { color: #5fe0a5; }
 .flag--info { color: var(--muted); }
 /* Risk corner: grows with the level, so it reads without the colour (ART.md rule 1). */
-.riskcorner { position: absolute; top: 0; right: 0; clip-path: polygon(0 0, 100% 0, 100% 100%); pointer-events: none; }
-.riskcorner--low { width: 14px; height: 14px; background: #5fe0a5; }
-.riskcorner--moderate { width: 20px; height: 20px; background: var(--warn); }
-.riskcorner--high { width: 26px; height: 26px; background: #ff9a5a; }
-.riskcorner--extreme { width: 32px; height: 32px; background: var(--danger); }
+.riskcorner { position: absolute; top: 4px; right: 4px; width: 14px; height: 14px; border-top: 1.5px solid; border-right: 1.5px solid; opacity: 0.7; pointer-events: none; }
+.riskcorner--low { border-color: #5fe0a5; }
+.riskcorner--moderate { border-color: var(--warn); }
+.riskcorner--high { border-color: #ff9a5a; }
+.riskcorner--extreme { border-color: var(--danger); }
 /* Who can run a job today: open by default, folds to one line. */
 .runners { border: 1px solid var(--line); background: #141820; margin: 4px 0 12px; }
 .runners__head { width: 100%; min-height: var(--tap); display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 12px; background: none; border: 0; color: var(--muted); font: inherit; font-size: 0.9rem; text-align: left; cursor: pointer; }
@@ -738,7 +738,7 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .scrim { position: fixed; inset: 0; z-index: 20; background: rgba(5, 6, 9, 0.6); }
 .sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 21; max-height: 82dvh; overflow-y: auto; background: var(--panel); border-top: 1px solid var(--line); border-radius: 16px 16px 0 0;
   padding: 14px max(16px, env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); animation: sheet-up 0.22s ease-out; }
-.sheet > * { max-width: 560px; margin-left: auto; margin-right: auto; }
+.sheet > * { max-width: 560px; margin-left: auto !important; margin-right: auto !important; } /* centred on wide screens, whatever margins the child has */
 .sheet__head { display: flex; justify-content: space-between; align-items: start; gap: 8px; }
 .sheet__title { margin: 0 0 4px; color: var(--text); font-size: 1.05rem; letter-spacing: 0.04em; }
 .sheet__head p { margin: 0; }
@@ -780,7 +780,7 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .watch__tally .is-bad { color: var(--danger); border-color: #4a2224; }
 .watch__tally .is-good { color: var(--warn); border-color: #4a3c1a; }
 .watch__feed { display: grid; gap: 8px; }
-.watch__feed > * { scroll-margin-bottom: 140px; }
+@media (max-width: 1099px) { .watch__feed > * { scroll-margin-bottom: 140px; } }
 .watch__callin:empty { display: none; }
 .watch__bar { position: sticky; bottom: 56px; z-index: 1; display: flex; gap: 8px; justify-content: flex-end; padding: 8px 0; background: var(--bg); border-top: 1px solid var(--line); }
 .watch__btn { min-height: var(--tap); padding: 0 16px; border: 1px solid var(--line); border-radius: var(--radius); }
@@ -952,3 +952,23 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .gearlist > .gearrow { padding: 8px 8px 8px 10px; }
 /* The crew list's stat line: the icon, the stat and the words share one centre line. */
 .scoutline { display: inline-flex; flex-wrap: wrap; align-items: center; column-gap: 4px; }
+
+/* The watch: follow new moments only while you're at the bottom (owner, 2026-10-28). */
+.watch__side { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.watch__new { position: sticky; bottom: calc(56px + 64px); justify-self: center; z-index: 2; min-height: var(--tap); padding: 0 16px; background: #16262a; color: var(--accent-2); border: 1px solid var(--accent-2); font-family: var(--display); letter-spacing: 0.08em; }
+.watch__new[hidden] { display: none; }
+/* Wide screens: the map on the left stays put; the feed scrolls in its own column on the right. */
+@media (min-width: 1100px) {
+  .watch:not(.is-done) { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; }
+  .watch:not(.is-done) .watch__live { position: sticky; top: var(--live-top, 0); }
+  .watch:not(.is-done) .watch__side { overflow-y: auto; max-height: calc(100vh - var(--live-top, 0px) - 96px); padding-right: 4px; overscroll-behavior: contain; }
+  .watch:not(.is-done) .watch__bar { grid-column: 1 / -1; }
+  .watch__new { bottom: 8px; }
+  .watch.is-calling .watch__live { position: sticky; }
+}
+.sheet > .btn { display: flex; width: 100%; justify-content: center; }
+/* Freelancers in the picker and on the board: a violet stripe and tint, and a tag (owner, 2026-10-28). */
+.cand--freelance { border-left: 3px solid #b48cff; background: #1c1928; }
+.cand__hire { display: block; margin-bottom: 2px; font: 600 0.66rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: #b48cff; }
+.dossier--freelance { box-shadow: inset 0 -4px 0 #b48cff, 0 2px 6px rgba(0, 0, 0, 0.4); }
+.dossier--freelance .dossier__real { color: #7a5fc0; font-weight: 600; }
