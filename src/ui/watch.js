@@ -6,6 +6,10 @@
 // app.js re-renders the whole page on every change, which would restart every animation, so
 // while a job runs it hands the new state to syncWatch instead: new feed items are appended,
 // the rest of the page stays put.
+//
+// Wide screens put the map and the feed side by side, the feed scrolling in its own column; on
+// phones the feed runs under the map. Either way the feed only follows new moments while you're
+// at its bottom; scroll up to read and it stays put, with a "↓ N new" button (owner, 2026-10-28).
 
 import { feedItems } from '../core/feed.js';
 import { needsPlayer } from '../core/autorun.js';
@@ -18,7 +22,7 @@ const FAST = 0.35;
 // pass quickly, failures and saves linger, call-ins wait for you.
 const PACE = { phase: 1000, beat: 2000, note: 1300, card: 1300, result: 1000, bad: 700 };
 
-let live = null; // { key, el, plan, shown, timer, chain, onAuto, ui, callKey }
+let live = null; // { key, el, plan, shown, timer, chain, onAuto, ui, callKey, unseen }
 let paused = false;
 let speed = 1;
 
@@ -37,8 +41,11 @@ export function renderWatch(ui, state) {
         </div>
         <div class="watch__tally"></div>
       </div>
-      <div class="watch__feed" aria-live="polite"></div>
-      <div class="watch__callin"></div>
+      <div class="watch__side">
+        <div class="watch__feed" aria-live="polite"></div>
+        <div class="watch__callin"></div>
+        <button class="btn watch__new" data-action="watch-latest" hidden></button>
+      </div>
       ${done ? '' : `
       <div class="watch__bar">
         <button class="btn btn--ghost watch__btn" data-action="watch-pause" aria-pressed="${paused}">${paused ? 'Resume' : 'Pause'}</button>
@@ -73,7 +80,11 @@ export function mountWatch(el, state, { onAuto, ui }) {
     standby: am.standby && !am.standby.joined ? opsOf(state, [am.standby.id])[0] : null,
     out: opsOf(state, out),
   });
-  live = { key: am.jobId, el, plan, shown: 0, timer: null, chain: Promise.resolve(), onAuto, ui, callKey: null };
+  live = { key: am.jobId, el, plan, shown: 0, timer: null, chain: Promise.resolve(), onAuto, ui, callKey: null, unseen: 0 };
+  // Reaching the bottom by hand clears the "new" button.
+  const seen = () => { if (live?.el === el && atBottom(el)) markSeen(); };
+  el.querySelector('.watch__side').addEventListener('scroll', seen, { passive: true });
+  window.addEventListener('scroll', seen, { passive: true });
   // The plan sticks just under the top bar (its height changes with the screen width).
   el.style.setProperty('--live-top', `${document.querySelector('.topbar')?.offsetHeight ?? 0}px`);
   if (am.done) plan.full();
@@ -101,9 +112,40 @@ export function toggleSpeed(state) {
   if (live) schedule(state, PACE.result);
 }
 
+/** Where the feed scrolls: its own column on wide screens, else the page. */
+function scroller(el) {
+  const side = el.querySelector('.watch__side');
+  return side && getComputedStyle(side).overflowY === 'auto' ? side : null;
+}
+
+/** Is the reader at the bottom of the feed (give or take a line)? */
+function atBottom(el) {
+  const box = scroller(el);
+  if (box) return box.scrollHeight - box.scrollTop - box.clientHeight < 48;
+  const bar = el.querySelector('.watch__bar')?.offsetHeight ?? 0;
+  const feed = el.querySelector('.watch__side').getBoundingClientRect();
+  return feed.bottom <= window.innerHeight - bar + 48;
+}
+
+/** Take the reader to the newest moment and clear the "new" button. */
+export function showLatest() {
+  if (!live) return;
+  const last = live.el.querySelector('.watch__feed').lastElementChild;
+  last?.scrollIntoView?.({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  markSeen();
+}
+
+function markSeen() {
+  live.unseen = 0;
+  const b = live.el.querySelector('.watch__new');
+  if (b) b.hidden = true;
+}
+
 function sync(state, { animate }) {
   const am = state.activeMission;
   const { el, ui } = live;
+  // Follow only if they were already watching the newest moment (or this is the first draw).
+  const follow = !animate || atBottom(el);
   el.style.setProperty('--speed', speed);
   const items = feedItems(am.events ?? [], { kit: am.overwatch?.kit ?? null });
   const fresh = items.slice(live.shown);
@@ -126,7 +168,14 @@ function sync(state, { animate }) {
     }
   }
   for (const e of am.events ?? []) if (e.injury) live.plan.hurt(e.injury.id, e.injury.severity);
-  if (fresh.length) feed.lastElementChild?.scrollIntoView?.({ block: 'nearest', behavior: animate && speed === 1 && !matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto' });
+  if (fresh.length && follow) feed.lastElementChild?.scrollIntoView?.({ block: 'nearest', behavior: animate && speed === 1 && !matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto' });
+  else if (fresh.length) {
+    live.unseen += fresh.length;
+    const b = el.querySelector('.watch__new');
+    b.textContent = `↓ ${live.unseen} new`;
+    b.setAttribute('aria-label', `${live.unseen} new ${live.unseen === 1 ? 'moment' : 'moments'}: show the latest`);
+    b.hidden = false;
+  }
   tally(state);
   callIn(state);
   schedule(state, wait || PACE.result);

@@ -5,6 +5,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-28 · Watching a job without the page jumping
+- On a computer, a running job shows the map and the story side by side: the map stays put on the left, and the story scrolls in its own column on the right.
+- The story only follows new moments while you're at the bottom. Scroll up to reread something and it stays put, with a "↓ 3 new" button to jump back. Same on phones.
+
 ## 2026-10-28 · A quieter risk corner on job cards
 - Joss's read of a job's risk is now a thin bracket inside the card's top-right corner, the same size on every card, in the level's colour, instead of a filled triangle that grew with the risk. The word is still on the planning screen.
 

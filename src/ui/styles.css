@@ -780,7 +780,7 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .watch__tally .is-bad { color: var(--danger); border-color: #4a2224; }
 .watch__tally .is-good { color: var(--warn); border-color: #4a3c1a; }
 .watch__feed { display: grid; gap: 8px; }
-.watch__feed > * { scroll-margin-bottom: 140px; }
+@media (max-width: 1099px) { .watch__feed > * { scroll-margin-bottom: 140px; } }
 .watch__callin:empty { display: none; }
 .watch__bar { position: sticky; bottom: 56px; z-index: 1; display: flex; gap: 8px; justify-content: flex-end; padding: 8px 0; background: var(--bg); border-top: 1px solid var(--line); }
 .watch__btn { min-height: var(--tap); padding: 0 16px; border: 1px solid var(--line); border-radius: var(--radius); }
@@ -952,3 +952,17 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .gearlist > .gearrow { padding: 8px 8px 8px 10px; }
 /* The crew list's stat line: the icon, the stat and the words share one centre line. */
 .scoutline { display: inline-flex; flex-wrap: wrap; align-items: center; column-gap: 4px; }
+
+/* The watch: follow new moments only while you're at the bottom (owner, 2026-10-28). */
+.watch__side { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.watch__new { position: sticky; bottom: calc(56px + 64px); justify-self: center; z-index: 2; min-height: var(--tap); padding: 0 16px; background: #16262a; color: var(--accent-2); border: 1px solid var(--accent-2); font-family: var(--display); letter-spacing: 0.08em; }
+.watch__new[hidden] { display: none; }
+/* Wide screens: the map on the left stays put; the feed scrolls in its own column on the right. */
+@media (min-width: 1100px) {
+  .watch:not(.is-done) { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; }
+  .watch:not(.is-done) .watch__live { position: sticky; top: var(--live-top, 0); }
+  .watch:not(.is-done) .watch__side { overflow-y: auto; max-height: calc(100vh - var(--live-top, 0px) - 96px); padding-right: 4px; overscroll-behavior: contain; }
+  .watch:not(.is-done) .watch__bar { grid-column: 1 / -1; }
+  .watch__new { bottom: 8px; }
+  .watch.is-calling .watch__live { position: sticky; }
+}

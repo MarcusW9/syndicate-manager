@@ -33,7 +33,7 @@ import { leanPicks, jobRead, planRead } from '../core/squad.js';
 import { renderBoard, renderPicker, renderCoverage, assignSlot, planKit } from './board.js';
 import { armouryCard, renderArmoury, renderLoadout, renderGearSheet } from './gear.js';
 import { buyGear, sellGear, equip, unequip, itemName, sellPrice } from '../core/gear.js';
-import { renderWatch, mountWatch, syncWatch, isWatching, stopWatch, togglePause, toggleSpeed } from './watch.js';
+import { renderWatch, mountWatch, syncWatch, isWatching, stopWatch, togglePause, toggleSpeed, showLatest } from './watch.js';
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
 import { earnedText } from '../core/earned.js';
 import { SPECIALISATIONS, specOf } from '../core/specialisations.js';
@@ -203,6 +203,7 @@ function onClick(e) {
     case 'step': return setState(autoStep(state)); // the next thing the crew does on its own (core/autorun.js)
     case 'watch-pause': return togglePause(state);
     case 'watch-speed': return toggleSpeed(state);
+    case 'watch-latest': return showLatest();
     case 'pending': return setState(resolvePending(state, id));
     case 'choose': return setState(chooseOption(state, id));
     case 'critical': return setState(resolveCritical(state, id));
@@ -362,7 +363,7 @@ function render() {
   const cue = dayCue;
   dayCue = null;
   // Desktop pages use the full width; a running job stays a narrow reading column.
-  const wide = !state.activeMission;
+  const wide = !state.activeMission || !state.activeMission.done; // a running job gets the width for map and feed side by side
   // Phones: Continue sits above the tab bar, except while planning a job (its own bar
   // takes that place) and during a job (nothing to continue).
   const dock = !state.activeMission && !(screen === 'jobs' && plan);
