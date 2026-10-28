@@ -5,6 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-28 · No more Continue by mistake while planning
+- While you're planning a job, the Continue button in the top bar is hidden, so the only button that moves things on is Start. Back out of the plan (or change tabs) and Continue returns. Phones already worked this way for main jobs; now desktop and side tasks do too.
+
 ## 2026-10-28 · Duplicate messages fixed; freelancers stand out
 - When someone formed two Crew Anchor partnerships on the same day, the two messages looked identical and the second wouldn't open. Each message now opens, and its title names the partner ("Buffer: Crew Anchor with Drone"). Old saves are repaired when loaded (save version 24).
 - Freelancers in the squad picker now have a violet stripe and a "Freelance" tag over their cut of the pay, and their card on the squad board has a violet bar along the bottom.

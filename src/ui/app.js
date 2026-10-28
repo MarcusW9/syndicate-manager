@@ -364,9 +364,11 @@ function render() {
   dayCue = null;
   // Desktop pages use the full width; a running job stays a narrow reading column.
   const wide = !state.activeMission || !state.activeMission.done; // a running job gets the width for map and feed side by side
-  // Phones: Continue sits above the tab bar, except while planning a job (its own bar
-  // takes that place) and during a job (nothing to continue).
-  const dock = !state.activeMission && !(screen === 'jobs' && plan);
+  // While a job is being planned its own Start button is the way on, so Continue steps aside
+  // everywhere (owner, 2026-10-28: on desktop the top-bar Continue was easy to hit by mistake).
+  const planning = !state.activeMission && screen === 'jobs' && !!(plan || sidePlan);
+  // Phones: Continue sits above the tab bar, except while planning and during a job (nothing to continue).
+  const dock = !state.activeMission && !planning;
 
   root.innerHTML = `
     <header class="topbar ${cue ? 'is-new-day' : ''}">
@@ -376,7 +378,7 @@ function render() {
         <span class="stat"><span class="stat__label">Heat</span> ${heatMeter()}</span>
         <span class="tier">${esc(statName(state.tier))}<span class="tier__word"> tier</span></span>
       </div>
-      ${renderContinue(blocked, resting, unread, 'topbar__continue')}
+      ${planning ? '' : renderContinue(blocked, resting, unread, 'topbar__continue')}
     </header>
 
     <nav class="nav" aria-label="Main">
