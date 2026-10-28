@@ -28,6 +28,7 @@ import { summariseRun, REPORT_LOGS_KEPT } from './report.js';
 import { intelFor } from './sidetasks.js';
 import { afterJob, noteInjury, spendSecondWind, earnedOf } from './earned.js';
 import { overwatchKit, seriousGuard, patchBonus } from './gear.js';
+import { noteOverwatchJob, checkSpecialisations } from './specialisations.js';
 import { planIncidents, weaveIncidents, incidentById, incidentIn, incidentDifficulty, handlerFor, bestSave, standbySave, decisionChoices, OVERWATCH_KIT, ALERT_MAX, SERIOUS_CHANCE, SERIOUS_PER_ALERT, PATCH_MIN_MEDICAL, ZONES } from './incidents.js';
 
 const EXIT_KINDS = new Set(['abort', 'extract']);
@@ -950,6 +951,11 @@ function finish(state) {
 
   // Growth can mean a pay rise: graduation or main stat +2 since the last deal (core/renewals.js).
   for (const op of survivors) if (!isFreelancer(op)) checkRenewal(state, op, graduatedOps.includes(op));
+
+  // A job on overwatch counts towards a specialisation; Joss offers one once the stats are there too.
+  const sniper = am.overwatch && survivors.find((o) => o.id === am.overwatch.id);
+  if (sniper) noteOverwatchJob(sniper, am.overwatch.kit);
+  checkSpecialisations(state);
 
   // Clinic Hands (earned): once a job, gets a lightly hurt crewmate back a day sooner.
   const patched = [];

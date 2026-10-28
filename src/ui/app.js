@@ -36,6 +36,7 @@ import { buyGear, sellGear, equip, unequip, itemName, sellPrice } from '../core/
 import { renderWatch, mountWatch, syncWatch, isWatching, stopWatch, togglePause, toggleSpeed } from './watch.js';
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
 import { earnedText } from '../core/earned.js';
+import { SPECIALISATIONS, specOf } from '../core/specialisations.js';
 import { sideTaskById, sideOdds, sendOnSideTask, sideReward, sideCost, sidePitch, intelFor, SIDE_TRUST } from '../core/sidetasks.js';
 import {
   saveGame, loadGame, exportSave, importSave, listSlots, getActiveSlot, setActiveSlot,
@@ -652,6 +653,7 @@ function renderMessage(m) {
       ${m.type === 'report' ? renderReportTimeline(m) : `<p class="body">${esc(m.body)}</p>`}
       ${m.kind === 'renewal' ? renderRenewal(m) : ''}
       ${m.kind === 'heat' ? renderHeatNotice(m) : ''}
+      ${m.kind === 'spec' ? renderSpecOffer(m) : ''}
       ${jobLink}`;
 }
 
@@ -785,6 +787,19 @@ function renderRenewal(m) {
       ${m.resolved ? '' : `<div class="stack">
         ${m.options.map((o) => `<button class="btn ${o.id === 'accept' ? 'btn--primary' : o.id === 'refuse' ? 'btn--ghost' : ''}" data-action="decide" data-id="${esc(m.id)}" data-option="${esc(o.id)}" ${o.disabled ? 'disabled' : ''}>${esc(o.id === 'accept' ? `Accept ${money(p.ask)} a week` : o.label)}</button>`).join('')}
         <p class="muted small">Refusing: they stay, but their head isn't in it for four weeks (−1 on their rolls), then they ask again.</p>
+      </div>`}`;
+}
+
+/** Joss's specialisation offer (core/specialisations.js): what each one does, then take it or not yet. */
+function renderSpecOffer(m) {
+  const p = m.payload;
+  return `
+      <div class="riskcard">
+        ${p.ids.map((id) => `<p><strong>${esc(SPECIALISATIONS[id].name)}</strong> · ${esc(SPECIALISATIONS[id].desc)}</p>`).join('')}
+        ${p.outcome ? `<p><strong>${esc(p.outcome)}</strong></p>` : '<p class="muted small">One specialisation each, for good. "Not yet" and Joss asks again in two weeks.</p>'}
+      </div>
+      ${m.resolved ? '' : `<div class="stack">
+        ${m.options.map((o) => `<button class="btn ${o.id === 'later' ? 'btn--ghost' : 'btn--primary'}" data-action="decide" data-id="${esc(m.id)}" data-option="${esc(o.id)}">${esc(o.label)}</button>`).join('')}
       </div>`}`;
 }
 
@@ -963,6 +978,11 @@ function renderOperative() {
       <p class="body">${esc(op.bio)}</p>
       <p class="body muted">${esc(op.origin)}</p>
 
+      ${specOf(op) ? `
+      <h2>Specialisation</h2>
+      <ul class="chips">
+        <li class="chip chip--earned"><strong>${esc(specOf(op).name)}</strong><span>${esc(specOf(op).desc)}</span><span class="chip__when">Since day ${op.spec.day}</span></li>
+      </ul>` : ''}
       <h2>Traits</h2>
       <ul class="chips">
         ${op.traits.map((t) => `<li class="chip"><strong>${esc(TRAITS[t]?.name ?? t)}</strong><span>${esc(TRAITS[t]?.desc ?? '')}</span></li>`).join('')}

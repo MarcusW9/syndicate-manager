@@ -6,6 +6,9 @@
 // like the rest of the game without copying them.
 
 import { overwatchKit, kitsFor } from '../core/gear.js';
+import { SPECIALISATIONS } from '../data/specialisations.js';
+
+const SPEC_NAME = Object.fromEntries(Object.entries(SPECIALISATIONS).map(([id, s]) => [id, s.name]));
 import { bestLine } from '../core/squad.js';
 import { effectiveStat, maxCrew } from '../core/crew.js';
 import { statValue } from './icons.js';
@@ -88,7 +91,7 @@ export function renderBoard(ui, { plan, tpl, people, crewSize }) {
   const armed = people.some((o) => kitsFor(o).length);
   const overCard = dossier(ui, 'over', ow, {
     name: 'Overwatch', does: armed ? 'Optional: saves people in trouble. Needs a rifle or a drone.' : 'Nobody carries a rifle or a drone. Buy one in the armoury (Crew).',
-    line: ow && kit ? kitLine(ow, kit) : '', note: kit ?? '', i: 5,
+    line: ow && kit ? kitLine(ow, kit) : '', note: kit ? (overwatchKit(ow, kit).spec ? `${kit} · ${SPEC_NAME[overwatchKit(ow, kit).spec]}` : kit) : '', i: 5,
   });
   const wh = byId(plan.wheels);
   const wheelsCard = dossier(ui, 'wheels', wh, { name: 'Wheels', does: 'Optional: takes every driving roll from the van.', line: wh ? statValue('driving', effectiveStat(wh, 'driving').value) : '', note: wh ? 'in the van' : '', i: 2 });
@@ -110,7 +113,7 @@ export function renderBoard(ui, { plan, tpl, people, crewSize }) {
           ${ow && kitsFor(ow).length > 1 ? `<div class="kitpick" role="group" aria-label="Overwatch kit">
             ${kitsFor(ow).map((k) => `<button class="kitpick__btn ${kit === k ? 'is-on' : ''}" data-action="kit" data-id="${k}" aria-pressed="${kit === k}">${esc(overwatchKit(ow, k).name)}: ${k === 'rifle' ? 'sees outdoors' : 'sees everywhere'}</button>`).join('')}
           </div>` : ''}
-          ${kit ? `<p class="small muted board__kitdesc">${esc(ow.handle)} has the ${esc(overwatchKit(ow, kit).name.toLowerCase())}. ${esc(overwatchKit(ow, kit).desc.replace(/^Lets them take overwatch with the \w+ stat\. /, ''))}</p>` : ''}
+          ${kit ? `<p class="small muted board__kitdesc">${esc(ow.handle)} has the ${esc(overwatchKit(ow, kit).name.toLowerCase())}. ${esc(overwatchKit(ow, kit).desc.replace(/^Lets them take overwatch with the \w+ stat\. /, ''))}${overwatchKit(ow, kit).spec ? ` ${esc(SPECIALISATIONS[overwatchKit(ow, kit).spec].name)}: ${esc(SPECIALISATIONS[overwatchKit(ow, kit).spec].desc.replace(/^On overwatch with an? \w+: /, ''))}` : ''}</p>` : ''}
           <div class="dossiers" style="--n:3">${overCard}${wheelsCard}${standbyCard}</div>
         </div>
       </div>`;

@@ -8,6 +8,7 @@
 // needed the kit). A runner who dies takes their gear with them.
 
 import { GEAR, SLOTS, TIERS } from '../data/gear.js';
+import { SPECIALISATIONS } from '../data/specialisations.js';
 
 export { GEAR, SLOTS, TIERS };
 
@@ -45,15 +46,27 @@ export const kitsFor = (op) => carried(op).filter((i) => GEAR[i.type]?.overwatch
 
 /**
  * What they can do from overwatch with this kit, or null if they don't carry it:
- * { id, name, stat, uses, heat, neural, indoors, bonus, notes, desc }. The item's tier adds to
- * the roll (bonus); specialisations (slice 5b) change the rest.
+ * { id, name, stat, uses, heat, neural, indoors, bonus, notes, desc, heatOnHit, spec }. The item's
+ * tier adds to the roll (bonus); a specialisation for this kit (slice 5b) adds uses, bonus and more.
  */
 export function overwatchKit(op, kitId) {
   const item = carried(op).find((i) => i.type === kitId && GEAR[i.type]?.overwatch);
   if (!item) return null;
   const g = GEAR[item.type];
   const step = TIERS[item.tier]?.step ?? 0;
-  return { id: kitId, name: g.name, ...g.overwatch, bonus: step, notes: step ? [`${itemName(item)} +${step}`] : [], desc: g.desc };
+  const kit = { id: kitId, name: g.name, ...g.overwatch, bonus: step, notes: step ? [`${itemName(item)} +${step}`] : [], desc: g.desc, heatOnHit: false, spec: null };
+  // Their specialisation, if it's for this kit (slice 5b; data/specialisations.js).
+  const spec = op.spec && SPECIALISATIONS[op.spec.id];
+  if (spec?.kit === kitId) {
+    const e = spec.effect;
+    kit.uses += e.uses ?? 0;
+    kit.bonus += e.bonus ?? 0;
+    if (e.bonus) kit.notes.push(`${spec.name} +${e.bonus}`);
+    if (e.heatOnHit) kit.heatOnHit = true;
+    if (e.neural != null) kit.neural = e.neural;
+    kit.spec = op.spec.id;
+  }
+  return kit;
 }
 
 /** The base kit (street, no specialist), for reads that need a number before anyone's picked. */

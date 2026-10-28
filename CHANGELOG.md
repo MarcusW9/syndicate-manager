@@ -5,6 +5,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-28 · Marksman and Drone Jockey (the squad run, part 5b)
+- **Overwatch can become a career.** Someone who has done three jobs on overwatch with a rifle, with combat 10 and cool 8, gets an offer from Joss to train as a **Marksman**: one more shot, +1 to hit, and a miss costs no heat. Three jobs with a drone and tech 10 brings **Drone Jockey**: one more action, +1, and half the neural load.
+- You decide: train them, or "Not yet" (Joss asks again in two weeks). One specialisation each, for good. It shows on their page, on the squad board ("rifle · Marksman") and in the roll breakdown. 309 tests.
+
 ## 2026-10-28 · Gear: an armoury, and what each runner carries (the squad run, part 5a)
 - **The armoury** (Crew screen): buy gear into the stash, sell it back for half. Rifles and drones, a sidearm, an armoured vest, a cyberdeck, a trauma kit, lockpicks and two implants, each in a street or a pro version (pro is one better and costs 2.5×).
 - **Every runner has four slots**: weapon, armour, tool and implant. Tap a slot on their page to put something on them; it stays with them job after job. Gear can't change while they're on a job or away.
