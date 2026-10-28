@@ -29,7 +29,7 @@ import {
 } from '../core/mission.js';
 import { sendOff, ORDERS, handsOffAllowed, autoStep, needsPlayer } from '../core/autorun.js';
 import { OVERWATCH_KIT, ALERT_MAX } from '../core/incidents.js';
-import { jossPicks, jobRead, planRead } from '../core/squad.js';
+import { leanPicks, jobRead, planRead } from '../core/squad.js';
 import { renderBoard, renderPicker, renderCoverage, assignSlot } from './board.js';
 import { renderWatch, mountWatch, syncWatch, isWatching, stopWatch, togglePause, toggleSpeed } from './watch.js';
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
@@ -143,9 +143,8 @@ function onClick(e) {
     case 'close-picker': focusNext = { action: 'pick-slot', id: pickSlot }; pickSlot = null; break;
     case 'assign': Object.assign(plan, assignSlot(plan, pickSlot, id || null)); focusNext = { action: 'pick-slot', id: pickSlot }; pickSlot = null; break;
     case 'joss': {
-      const tpl = templateById(state.jobs.find((j) => j.id === plan.jobId).templateId);
-      const v = jobView(state, state.jobs.find((j) => j.id === plan.jobId));
-      const p = jossPicks({ ...tpl, threat: v.threat }, state.crew.filter((op) => availability(state, op).ok), plan.approach, { threat: v.threat });
+      // The smallest squad that gets the best risk for this approach (core/squad.js leanPicks); standby is the player's call.
+      const p = leanPicks(state, state.jobs.find((j) => j.id === plan.jobId), plan.approach);
       Object.assign(plan, { crew: p.crew, overwatch: p.overwatch, wheels: p.wheels, standby: p.standby }); if (p.kit) plan.kit = p.kit;
       break;
     }
@@ -1076,7 +1075,7 @@ function jobCard(j) {
           <strong class="jobcard__name">${esc(t.name)}</strong><strong class="jobcard__pay">${money(v.pay)}</strong>
           <span class="jobcard__client">${esc(v.client?.name ?? 'Walk-in job')}</span>${j.expiresDay === state.day ? '<span class="jobcard__left">ends today</span>' : ''}
           ${flags.length ? `<span class="jobcard__flags">${flags.map(([tone, text]) => `<span class="flag flag--${tone}">${esc(text)}</span>`).join('')}</span>` : ''}
-          <span class="jobcard__facts">${t.crewSize} runners · <span class="keyglyphs">${stats}</span>${note ? ` · <span class="jobcard__note">${esc(note)}</span>` : ''}</span>
+          <span class="jobcard__facts">${r.size || t.crewSize} ${(r.size || t.crewSize) === 1 ? 'runner' : 'runners'} · <span class="keyglyphs">${stats}</span>${note ? ` · <span class="jobcard__note">${esc(note)}</span>` : ''}</span>
           <span class="riskcorner riskcorner--${esc(r.level)}" role="img" aria-label="${esc(risk)} risk" title="${esc(risk[0].toUpperCase() + risk.slice(1))} risk"></span>
         </button>
       </li>`;

@@ -7,7 +7,7 @@ import { createNewGame } from '../src/core/state.js';
 import * as M from '../src/core/mission.js';
 import { addOffer, templateById, jobView } from '../src/core/jobs.js';
 import { availability } from '../src/core/crew.js';
-import { coverage, jossPicks, likelyIncidents, jobRead, planRead } from '../src/core/squad.js';
+import { coverage, jossPicks, likelyIncidents, jobRead, planRead, leanPicks } from '../src/core/squad.js';
 import { ZONE_POOLS } from '../src/data/incidents.js';
 import { APPROACHES } from '../src/data/approaches.js';
 
@@ -133,18 +133,40 @@ test('the job board read is the planner read: same squad, same approach, same ri
       const r = jobRead(s, job);
       assert.ok(r.crew.every((op) => availability(s, op).ok), `seed ${seed}: only free crew`);
       assert.ok(!r.crew.includes(s.crew[0]), `seed ${seed}: not the one who's away`);
-      const v = jobView(s, job);
       const byId = (id) => s.crew.find((o) => o.id === id) ?? null;
       // What the planner shows when it opens on the card's plan.
       const shown = planRead(s, job, { crew: r.picks.crew.map(byId), approach: r.approach, overwatch: byId(r.picks.overwatch), kit: r.picks.kit ?? 'rifle', wheels: byId(r.picks.wheels) });
       assert.equal(shown.level, r.level, `seed ${seed} ${job.id}: card and planner agree`);
-      // No approach with Joss's picks would read safer.
+      // No other approach with Joss's squad for it would read safer.
+      for (const a of APPROACH_IDS) assert.ok(RANK.indexOf(r.level) <= RANK.indexOf(leanPicks(s, job, a).level), `seed ${seed}: ${a} isn't safer`);
+      assert.equal(r.size, r.picks.crew.length + (r.picks.overwatch ? 1 : 0) + (r.picks.wheels ? 1 : 0), 'the card counts everyone Joss sends');
+    }
+  }
+});
+
+test('Joss sends the smallest squad that gets the best risk: everyone beyond the recommended team earns their place', () => {
+  const RANK = ['low', 'moderate', 'high', 'extreme'];
+  let extras = 0;
+  for (let seed = 1; seed <= 20; seed++) {
+    const s = createNewGame({ seed, startCrew: 'fresh' });
+    const byId = (id) => s.crew.find((o) => o.id === id) ?? null;
+    for (const job of s.jobs) {
+      const tpl = templateById(job.templateId);
       for (const a of APPROACH_IDS) {
-        const free = s.crew.filter((o) => availability(s, o).ok);
-        const p = jossPicks({ ...v.tpl, threat: v.threat }, free, a, { threat: v.threat });
-        const other = planRead(s, job, { crew: p.crew.map(byId), approach: a, overwatch: byId(p.overwatch), kit: p.kit ?? 'rifle', wheels: byId(p.wheels) });
-        assert.ok(RANK.indexOf(r.level) <= RANK.indexOf(other.level), `seed ${seed}: ${a} isn't safer`);
+        const p = leanPicks(s, job, a);
+        const squad = { crew: p.crew.map(byId), approach: a, overwatch: byId(p.overwatch), kit: p.kit, wheels: byId(p.wheels) };
+        assert.equal(planRead(s, job, squad).level, p.level, 'the level is the planner\'s');
+        assert.equal(p.standby, null, 'standby is the player\'s call');
+        assert.ok(p.crew.length <= tpl.crewSize + 2, 'at most two extras');
+        const placed = [...p.crew, p.overwatch, p.wheels].filter(Boolean);
+        assert.equal(new Set(placed).size, placed.length, 'one place each');
+        // Take any one of them away and the risk goes up.
+        const worse = (sq) => RANK.indexOf(planRead(s, job, sq).level) > RANK.indexOf(p.level);
+        if (p.overwatch) { extras++; assert.ok(worse({ ...squad, overwatch: null }), `seed ${seed} ${a}: overwatch earns it`); }
+        if (p.wheels) { extras++; assert.ok(worse({ ...squad, wheels: null }), `seed ${seed} ${a}: Wheels earns it`); }
+        if (p.crew.length > tpl.crewSize) { extras++; assert.ok(worse({ ...squad, crew: squad.crew.slice(0, -1) }), `seed ${seed} ${a}: the last extra earns it`); }
       }
     }
   }
+  assert.ok(extras > 0, 'some jobs are worth an extra person');
 });

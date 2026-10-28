@@ -5,6 +5,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-28 · Joss sends only who's needed
+- **Joss's picks are now the smallest squad with the best odds.** The job's recommended number goes in; overwatch, the van or an extra person inside join only if they make the risk lower. A job card shows how many Joss would send ("3 runners").
+- **Standby is your call.** Joss no longer puts someone on standby by default, so one small job doesn't tie up your whole crew. Add someone in the planner if you want the insurance.
+
 ## 2026-10-28 · A cleaner job board
 - **Job cards say less and mean more:** name and pay, the client, then "2 runners" and the job's key stats as small icons. The coloured corner is Joss's read of the risk if you sent it today: a small green corner is low, a bigger yellow one mid, then orange, then red. Tap the (i) by your reputation for the icon key; on a computer, hover an icon or corner for its name.
 - **Only news gets a tag:** street talk, unreliable intel, intel you've gathered there, or a job that takes more than a day. "Ends today" shows under the pay on a job's last day. Threat, district, client mood and days left are on the job's own screen.

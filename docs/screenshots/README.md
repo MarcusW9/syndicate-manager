@@ -22,6 +22,7 @@ Then add a row to the top of the table below and commit the folder with the chan
 
 | Date | Version | Commit | What's new on screen | Folder |
 | --- | --- | --- | --- | --- |
+| 2026-10-28 | Joss sends only who's needed | this branch | Job cards count the squad Joss would send ("3 runners" on two jobs, where an extra lowers the risk to low); the planner opens on that squad with no standby ("Start with 3", 04). Each capture run is a fresh game, so the crew differs from the set before. | [2026-10-28-lean-squads](2026-10-28-lean-squads/) |
 | 2026-10-28 | Job board redesign | this branch | Job cards trimmed to name, pay, client, "N runners" and key-stat icons, with Joss's risk as the top-right corner and flags only for news; "N runners free today" above the jobs; side work led by the reward; clients as chips; the planner opens on Joss's plan (04, with the risk the card showed). | [2026-10-28-job-board-redesign](2026-10-28-job-board-redesign/) |
 | 2026-10-28 | Owner captures | (`ae1e223`) | The owner's desktop job board before the redesign: day 1 (three jobs, side work, clients folded) and day 7 (street talk on a job, intel side work). | [2026-10-28-owner-captures](2026-10-28-owner-captures/) |
 | 2026-10-27 | Reputation line | PR #23 | The job board's reputation as one line with a ten-block gauge and an (i); capture 18 has the (i) open with the unlock ladder (from a test save). | [2026-10-27-reputation-line](2026-10-27-reputation-line/) |
