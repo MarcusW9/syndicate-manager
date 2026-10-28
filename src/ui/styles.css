@@ -948,3 +948,7 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .gearrow:has(.gearrow__art) { grid-template-columns: 1fr auto; }
 .gearrow:has(.gearrow__art) .gearrow__art { grid-column: 1 / -1; width: 100%; max-width: 288px; }
 .gearrow:has(.gearrow__art) .gearrow__art svg { width: 100%; height: auto; }
+/* The armoury's rows are list items: keep their own padding over the plain list's (owner's capture, 2026-10-28). */
+.gearlist > .gearrow { padding: 8px 8px 8px 10px; }
+/* The crew list's stat line: the icon, the stat and the words share one centre line. */
+.scoutline { display: inline-flex; flex-wrap: wrap; align-items: center; column-gap: 4px; }

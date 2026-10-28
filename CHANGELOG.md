@@ -9,6 +9,7 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - **The rifle has its own picture**, in the same style as the faces: a street rifle with a worn wooden stock and taped grip, or a pro one in carbon with a neon line. It catches the city light of whoever carries it.
 - **You can see who carries one**: a runner with a rifle has it slung across their back in their portrait, everywhere their face appears.
 - **A runner's gear is four tiles** on their page, each item drawn big; the armoury shows the rifle's picture too. Other gear keeps its small icon until it gets a drawing of its own.
+- Fixed (owner's captures): the armoury's rows kept their text against the box's edge, and the crew list's stat line had the icon and number sitting higher than the words after them.
 
 ## 2026-10-28 · Marksman and Drone Jockey (the squad run, part 5b)
 - **Overwatch can become a career.** Someone who has done three jobs on overwatch with a rifle, with combat 10 and cool 8, gets an offer from Joss to train as a **Marksman**: one more shot, +1 to hit, and a miss costs no heat. Three jobs with a drone and tech 10 brings **Drone Jockey**: one more action, +1, and half the neural load.

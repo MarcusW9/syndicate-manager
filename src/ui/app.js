@@ -317,7 +317,7 @@ const seasonChanges = (op) => changesSince(op, seasonStartDay(state.day));
 /** Crew-list one-liner: their best (main) stat and the scout's read of where they're heading. */
 function scoutLine(op) {
   const main = primaryStat(op);
-  return `<span class="scoutline"><span class="iconword">${statGlyph(main)}${esc(statName(main))} ${ratedStat(op, main)}</span> · ${esc(potentialTag(op))}</span>`;
+  return `<span class="scoutline"><span class="iconword">${statGlyph(main)}${esc(statName(main))} ${ratedStat(op, main)}</span><span>· ${esc(potentialTag(op))}</span></span>`;
 }
 
 /** Crew-list marker: "▲ Tech +2, Combat +1 ▼ Driving −1" for this season. */
