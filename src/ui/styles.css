@@ -181,11 +181,11 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .flag--good { color: #5fe0a5; }
 .flag--info { color: var(--muted); }
 /* Risk corner: grows with the level, so it reads without the colour (ART.md rule 1). */
-.riskcorner { position: absolute; top: 0; right: 0; clip-path: polygon(0 0, 100% 0, 100% 100%); pointer-events: none; }
-.riskcorner--low { width: 14px; height: 14px; background: #5fe0a5; }
-.riskcorner--moderate { width: 20px; height: 20px; background: var(--warn); }
-.riskcorner--high { width: 26px; height: 26px; background: #ff9a5a; }
-.riskcorner--extreme { width: 32px; height: 32px; background: var(--danger); }
+.riskcorner { position: absolute; top: 4px; right: 4px; width: 14px; height: 14px; border-top: 1.5px solid; border-right: 1.5px solid; opacity: 0.7; pointer-events: none; }
+.riskcorner--low { border-color: #5fe0a5; }
+.riskcorner--moderate { border-color: var(--warn); }
+.riskcorner--high { border-color: #ff9a5a; }
+.riskcorner--extreme { border-color: var(--danger); }
 /* Who can run a job today: open by default, folds to one line. */
 .runners { border: 1px solid var(--line); background: #141820; margin: 4px 0 12px; }
 .runners__head { width: 100%; min-height: var(--tap); display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 12px; background: none; border: 0; color: var(--muted); font: inherit; font-size: 0.9rem; text-align: left; cursor: pointer; }

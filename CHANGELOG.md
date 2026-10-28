@@ -5,6 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-28 · A quieter risk corner on job cards
+- Joss's read of a job's risk is now a thin bracket inside the card's top-right corner, the same size on every card, in the level's colour, instead of a filled triangle that grew with the risk. The word is still on the planning screen.
+
 ## 2026-10-28 · The rifle, drawn
 - **The rifle has its own picture**, in the same style as the faces: a street rifle with a worn wooden stock and taped grip, or a pro one in carbon with a neon line. It catches the city light of whoever carries it.
 - **You can see who carries one**: a runner with a rifle has it slung across their back in their portrait, everywhere their face appears.
