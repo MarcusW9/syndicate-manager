@@ -5,6 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-28 · Notes for future UI work
+- Behind the scenes only, nothing changes in the game: the project rules now say to check the art bible and the latest screenshots before any screen design work, so mockups start from today's look rather than the old one.
+
 ## 2026-10-28 · Crises name the right person
 - In crises that are about one role (the tech when a container stack slips, the driver at a roadblock), the choice now names whoever actually does it, and if it goes wrong they're the one hurt. Before, it could say "Flicker braced it" when Thimble, the better hand, made the roll.
 - When Doc Siu hands a patient to someone by name, that medic now does the stitching (backup still helps), like other crises that name someone.

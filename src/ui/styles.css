@@ -1,5 +1,8 @@
 /* Mobile-first. Base styles are for phones; wider screens get a sidebar.
    Tap targets are at least 44px. No information is hover-only. */
+/* Heads-up: this first :root block is the old plain look. The street-terminal skin near the
+   end of this file ("Skin: street-terminal") overrides these colours, the radius and the shapes,
+   so read it before borrowing a token. What the game looks like now: ART.md, "UI skin". */
 
 :root {
   --bg: #0f1115;
