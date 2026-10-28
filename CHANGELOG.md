@@ -9,6 +9,7 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 ## 2026-10-28 · A neater (i) and reputation line (owner's feedback)
 - The (i) is smaller and lines up with its text; tapping it opens the explanation under the line, and the (i) stays put (on phones it used to jump).
 - Reputation now looks like the Heat meter in the top bar: "REP", a small segmented cyan track to the next unlock, then "2/10" and the (i).
+- The bottom line of job and side-work cards lines its icons up with the words.
 - Crew sizes on job and side-work cards are one figure and a number ("[figure] 4") instead of a figure per person, which didn't scale to the four-person jobs.
 ## 2026-10-28 · Crises name the right person
 - In crises that are about one role (the tech when a container stack slips, the driver at a roadblock), the choice now names whoever actually does it, and if it goes wrong they're the one hurt. Before, it could say "Flicker braced it" when Thimble, the better hand, made the roll.

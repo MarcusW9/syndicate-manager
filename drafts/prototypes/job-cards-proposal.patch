@@ -1,0 +1,133 @@
+diff --git a/src/ui/app.js b/src/ui/app.js
+index c686759..f4c75ab 100644
+--- a/src/ui/app.js
++++ b/src/ui/app.js
+@@ -8,13 +8,13 @@ import { MISSIONS } from '../data/missions.js';
+ import { TRAITS } from '../data/traits.js';
+ import { PARTNER } from '../data/partner.js';
+ import { jossIcon, portrait } from './art.js';
+-import { statIcon, statGlyph, crewIcons } from './icons.js';
++import { statIcon, statGlyph, crewIcons, glyph } from './icons.js';
+ import { cityMapSvg, MAP_DISTRICTS } from './citymap.js';
+ 
+ import { advanceDay, calendar, formatShortDate, isBlocked, seasonStartDay } from '../core/time.js';
+ import { createNewGame } from '../core/state.js';
+ import { templateById, jobView, nextUnlock, JOB_GATES } from '../core/jobs.js';
+-import { trustLabel, trustOf } from '../core/clients.js';
++import { trustLabel, trustOf, clientById } from '../core/clients.js';
+ import { CLIENTS } from '../data/clients.js';
+ import { availability, APPROACHES, traitMods, ratedStat, maxCrew, crewSizeRead } from '../core/crew.js';
+ import { assessJob, rollTarget, successChance, riskLabel } from '../core/risk.js';
+@@ -34,7 +34,7 @@ import { renderBoard, renderPicker, renderCoverage, assignSlot } from './board.j
+ import { renderWatch, mountWatch, syncWatch, isWatching, stopWatch, togglePause, toggleSpeed } from './watch.js';
+ import { EARNED_TRAITS } from '../data/earnedTraits.js';
+ import { earnedText } from '../core/earned.js';
+-import { sideTaskById, sideOdds, sendOnSideTask, sideReward, sideCost, sidePitch, intelFor } from '../core/sidetasks.js';
++import { sideTaskById, sideOdds, sendOnSideTask, sideReward, sideCost, sidePitch, intelFor, SIDE_TRUST } from '../core/sidetasks.js';
+ import {
+   saveGame, loadGame, exportSave, importSave, listSlots, getActiveSlot, setActiveSlot,
+   deleteSlot, loadBackup, backupDue, SLOT_COUNT,
+@@ -1015,9 +1015,8 @@ function renderJobs() {
+           <li>
+             <button class="row jobcard" data-action="open-job" data-id="${esc(j.id)}">
+               <strong class="jobcard__name">${esc(t.name)}</strong><strong class="jobcard__pay">${money(v.pay)}</strong>
+-              <span class="jobcard__client">${clientLine(v)}</span><span class="jobcard__left ${j.expiresDay === state.day ? 'is-last' : ''}">${daysLeft(j.expiresDay)}</span>
+-              <span class="jobcard__facts">${esc(districtName(t.district))} · threat ${threatHtml(v)} · ${crewIcons(t.crewSize, `crew of ${t.crewSize}`)} · ${t.days}d</span>
+-              <span class="jobcard__stats">${t.keyStats.map(statIcon).join(' ')}</span>
++              <span class="jobcard__needs"><span class="threat" role="img" aria-label="threat ${v.threat} of 5">${threatDots(v.threat)}</span>${v.threatDelta > 0 ? '<span class="tag-up">hotter</span>' : v.threatDelta < 0 ? '<span class="tag-down">quieter</span>' : ''}${t.keyStats.map(statIcon).join('')}${crewIcons(t.crewSize, `crew of ${t.crewSize}`)}</span>
++              <span class="jobcard__facts">${esc(districtName(t.district))} · ${v.client ? `${esc(v.client.name)}${trustMark(v.trust)} · ` : ''}${t.days === 1 ? '1 day away' : `${t.days} days away`} · <span class="iconword ${j.expiresDay === state.day ? 'is-last' : ''}">${glyph('clock')}${esc(daysLeft(j.expiresDay))}</span></span>
+               ${v.hinted ? '<span class="jobcard__extra intel">Intel unreliable</span>' : ''}${v.rumour ? `<span class="jobcard__extra">${talkTag(v)}</span>` : ''}
+             </button>
+           </li>`;
+@@ -1041,9 +1040,8 @@ function renderSideBoard() {
+         ${board.map((t) => `
+           <li>
+             <button class="row jobcard" data-action="open-side" data-id="${esc(t.id)}">
+-              <strong class="jobcard__name">${esc(t.name)}</strong><strong class="jobcard__pay">${esc(PURPOSE[t.purpose])}</strong>
+-              <span class="jobcard__client">${esc(sideReward(t))}</span><span class="jobcard__left">${t.days}d</span>
+-              <span class="jobcard__facts">${esc(districtName(t.district))} · ${statIcon(t.stat)} · ${crewIcons(t.crew)}</span>
++              <strong class="jobcard__name">${esc(t.name)}</strong>${sideChip(t)}
++              <span class="jobcard__facts">${esc(districtName(t.district))} · ${t.purpose === 'training' ? '' : `${statIcon(t.stat)} · `}${crewIcons(t.crew)} · ${t.days === 1 ? '1 day' : `${t.days} days`}</span>
+             </button>
+           </li>`).join('')}
+       </ul>` : '<p class="muted">Nothing left this week. More on Monday.</p>'}`;
+@@ -1054,6 +1052,18 @@ function renderSideBoard() {
+ const infoButton = (id, label) => `<button class="infobtn ${openInfo.has(id) ? 'is-on' : ''}" data-action="info" data-id="${esc(id)}" aria-label="${esc(label)}" aria-expanded="${openInfo.has(id)}">i</button>`;
+ const infoText = (id, text) => (openInfo.has(id) ? `<p class="infotext small">${esc(text)}</p>` : '');
+ 
++/** A client's trust, only when it matters: ♥ trusted (pays more), ! wary (may stop calling). */
++const trustMark = (t) => (t >= 60 ? ' <span class="trustmark trustmark--good" role="img" aria-label="trusts you">♥</span>' : t < 40 ? ' <span class="trustmark trustmark--bad" role="img" aria-label="wary of you">!</span>' : '');
++
++/** A side task's reward as one chip, coloured by kind: training, money, intel, trust. */
++function sideChip(t) {
++  const text = t.purpose === 'training' ? `▲ ${statIcon(t.stat)}`
++    : t.purpose === 'money' ? esc(sideReward(t))
++    : t.purpose === 'trust' ? `${esc(clientById(t.client)?.name ?? '')} +${SIDE_TRUST}`
++    : `Intel · ${esc(districtName(t.district))}`;
++  return `<span class="chip-reward chip-reward--${esc(t.purpose)}" aria-label="${esc(PURPOSE[t.purpose])}: ${esc(sideReward(t))}">${text}</span>`;
++}
++
+ /** Planning a side task: who goes, how likely it goes well, what it gives and costs. */
+ function renderSidePlan() {
+   const t = sideTaskById(sidePlan.taskId);
+diff --git a/src/ui/icons.js b/src/ui/icons.js
+index 13b98ed..0df8e37 100644
+--- a/src/ui/icons.js
++++ b/src/ui/icons.js
+@@ -13,6 +13,7 @@ const PATHS = {
+   driving: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2"/><path d="M4.5 10.5l5.6 1M19.5 10.5l-5.6 1M12 14v6"/>', // a steering wheel
+   medical: '<path d="M9 4h6v5h5v6h-5v5H9v-5H4V9h5z"/>', // a cross
+   cool: '<path d="M3 12h4l2-4 3 8 2-4h7"/>', // a steady pulse
++  clock: '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>',
+   person: '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.8 3.6-6 7-6s6.2 2.2 7 6"/>',
+ };
+ 
+@@ -21,6 +22,9 @@ const svg = (key, cls = '') => `<svg class="icon ${cls}" viewBox="0 0 24 24" wid
+ /** A stat's icon alone, to sit right before its word (the word carries the meaning). */
+ export const statGlyph = (stat) => svg(stat);
+ 
++/** Any icon by name, beside its own words. */
++export const glyph = (key) => svg(key);
++
+ /** A stat's icon followed by its name: "[wheel] Driving". */
+ export const statIcon = (stat) => `<span class="iconword">${svg(stat)}${stat[0].toUpperCase()}${stat.slice(1)}</span>`;
+ 
+diff --git a/src/ui/styles.css b/src/ui/styles.css
+index c686466..4d9d46f 100644
+--- a/src/ui/styles.css
++++ b/src/ui/styles.css
+@@ -165,7 +165,8 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
+ .jobcard__left { font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+ .jobcard__left.is-last { color: var(--warn); font-weight: 600; }
+ .jobcard__client { font-size: 0.9rem; }
+-.jobcard__facts { grid-column: 1 / -1; font-size: 0.85rem; color: var(--muted); }
++.jobcard__facts { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 5px; font-size: 0.78rem; color: #6b7385; }
++.jobcard__facts .is-last { color: var(--warn); font-weight: 600; }
+ .jobcard__extra { grid-column: 1 / -1; }
+ .clients { margin-top: 16px; }
+ .clientline { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+@@ -830,10 +831,23 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
+ .upcoming__group > summary::after { content: ' ▸'; color: var(--muted); font-size: 0.8em; }
+ .upcoming__group[open] > summary::after { content: ' ▾'; }
+ .upcoming__group > span { display: block; }
+-.jobcard__stats { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 0.8rem; color: var(--muted); }
++.jobcard__needs { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; font-size: 0.88rem; color: var(--text); }
++.jobcard__needs .threat { font-size: 0.75rem; letter-spacing: 1px; }
++.jobcard__needs .iconcrew { color: var(--muted); }
+ .stats dt.iconword { display: flex; }
+ /* Reputation in the Heat meter's style (owner's pick of five, 2026-10-28): label, track, number. */
+ .climb__label { font-family: var(--display); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+ .climb__track { width: 56px; }
+ .climb__track span { background: var(--accent-2); }
+ .climb__value { font-family: var(--display); font-weight: 700; font-size: 1rem; letter-spacing: 0.04em; }
++
++/* Job and side-work cards (owner's feedback, 2026-10-28): name and pay bright, what it takes in normal
++   text, details small and muted; side work's reward as one chip coloured by kind. */
++.trustmark { font-weight: 700; }
++.trustmark--good { color: #5fe0a5; } .trustmark--bad { color: var(--danger); }
++.chip-reward { justify-self: end; align-self: center; display: inline-flex; align-items: center; gap: 4px; font-family: var(--display); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 8px; border: 1px solid currentColor; white-space: nowrap; }
++.chip-reward .iconword { gap: 3px; }
++.chip-reward--training { color: var(--accent-2); }
++.chip-reward--money { color: var(--warn); }
++.chip-reward--info { color: #5fe0a5; }
++.chip-reward--trust { color: #b48cff; }

@@ -22,6 +22,7 @@ Then add a row to the top of the table below and commit the folder with the chan
 
 | Date | Version | Commit | What's new on screen | Folder |
 | --- | --- | --- | --- | --- |
+| 2026-10-28 | Design session: job cards (parked) | (this change) | A parked redesign of the job and side-work cards (three tiers, quiet client with trust marks, coloured reward chips), mocked and then built into the real board for captures, now against proposed, phone and desktop. Not shipped; README explains. | [2026-10-28-design-session-job-cards](2026-10-28-design-session-job-cards/) |
 | 2026-10-28 | Reputation in the Heat meter's style, smaller (i) | (this change) | The job board's reputation as "REP", a small cyan segmented track and "2/10"; the (i) is small and lines up with its text. | [2026-10-28-reputation-heat-style](2026-10-28-reputation-heat-style/) |
 | 2026-10-28 | Design session: reputation gauge | (this change) | The five mocked gauge options (A blocks, B Heat-meter style, chosen, C pips, D words only, E hairline) and B on the job board with the smaller (i). README captions each. | [2026-10-28-design-session-reputation-gauge](2026-10-28-design-session-reputation-gauge/) |
 | 2026-10-27 | Reputation line | PR #23 | The job board's reputation as one line with a ten-block gauge and an (i); capture 18 has the (i) open with the unlock ladder (from a test save). | [2026-10-27-reputation-line](2026-10-27-reputation-line/) |

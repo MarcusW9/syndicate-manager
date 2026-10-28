@@ -165,7 +165,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .jobcard__left { font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
 .jobcard__left.is-last { color: var(--warn); font-weight: 600; }
 .jobcard__client { font-size: 0.9rem; }
-.jobcard__facts { grid-column: 1 / -1; font-size: 0.85rem; color: var(--muted); }
+.jobcard__facts { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 5px; font-size: 0.85rem; color: var(--muted); } /* icons line up with the words (owner's feedback, 2026-10-28) */
 .jobcard__extra { grid-column: 1 / -1; }
 .clients { margin-top: 16px; }
 .clientline { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
