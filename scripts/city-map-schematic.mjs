@@ -102,7 +102,6 @@ function map({ rough = false } = {}) {
     <!-- Selected district: the cyan edge every selected card has. -->
     <path d="${area(SELECTED)}" clip-path="url(#${id}-land)" fill="none" stroke="${T.cyan}" stroke-width="2" />
     <!-- Landmarks and routes as thin lines. -->
-    <path d="${d(S.COURSE)}" fill="none" stroke="#f7efc8" stroke-opacity="0.55" stroke-width="1" />
     <path d="M114 254V352" stroke="${T.muted}" stroke-opacity="0.6" stroke-dasharray="2 3" />
     <path d="M202 252V292M202 334V380" stroke="${T.line}" stroke-width="1.5" />
     <rect x="111" y="296" width="6" height="6" fill="${T.cyan}" />
