@@ -116,7 +116,8 @@ function liveLayer(key, [x, y], { scale = 1 } = {}) {
 }
 
 // --- A: flat-lit top-down ---------------------------------------------------------------
-function optionA() {
+/** A; `plain` drops the blocks: the districts are just land lit in their turf's colour. */
+function optionA({ plain = false } = {}) {
   const land = '#151a22';
   const defs = KEYS.map((k) => `<clipPath id="a-${k}"><path d="${d(S.DISTRICT_MAP[k].area)}${(S.DISTRICT_MAP[k].holes ?? []).map(d).join('')}" clip-rule="evenodd" /></clipPath>
     <linearGradient id="a-glow-${k}" x1="1" x2="0" y1="0" y2="0"><stop offset="0" stop-color="${lightOf(k)}" stop-opacity="${LOCKED.has(k) ? 0 : 0.2}" /><stop offset="0.7" stop-color="${lightOf(k)}" stop-opacity="0" /></linearGradient>`).join('');
@@ -125,7 +126,7 @@ function optionA() {
     const L = lightOf(key);
     const top = mix(LOCKED.has(key) ? '#2a2f38' : '#2b3140', L, LOCKED.has(key) ? 0 : 0.14);
     const rnd = seeded(key.length * 7);
-    const bx = bs.map((b) => {
+    const bx = plain ? '' : bs.map((b) => {
       const s = Math.min(4, 1 + b.h / 10); // taller blocks throw longer shadows
       const win = !LOCKED.has(key) && b.w > 5 && rnd() < 0.5 ? `<rect x="${(b.x + b.w * 0.3).toFixed(1)}" y="${(b.y + b.l * 0.4).toFixed(1)}" width="1.2" height="1.2" fill="${L}" opacity="0.9" />` : '';
       return `<rect x="${(b.x - s).toFixed(1)}" y="${(b.y + s * 0.6).toFixed(1)}" width="${b.w.toFixed(1)}" height="${b.l.toFixed(1)}" fill="${mix(land, SHADOW, 0.6)}" />
@@ -133,7 +134,7 @@ function optionA() {
         <rect x="${(b.x + b.w - 1.3).toFixed(1)}" y="${b.y.toFixed(1)}" width="1.3" height="${b.l.toFixed(1)}" fill="${mix(top, L, 0.6)}" />${win}`;
     }).join('');
     return `<g clip-path="url(#a-${key})"><g clip-path="url(#a-land)">
-      <rect width="${MAP_W}" height="${MAP_H}" fill="${mix(land, L, LOCKED.has(key) ? 0 : 0.05)}" />
+      <rect width="${MAP_W}" height="${MAP_H}" fill="${mix(land, L, LOCKED.has(key) ? 0 : plain ? 0.13 : 0.05)}" />
       <rect width="${MAP_W}" height="${MAP_H}" fill="url(#a-glow-${key})" />${bx}</g></g>`;
   }).join('');
   const course = d(S.COURSE);
@@ -150,6 +151,7 @@ function optionA() {
     <path d="${course}" fill="#2d4a2a" /><path d="${d(S.ring(138, 176, 27, 8, 24))}" fill="${BG}" opacity="0.5" />
     <path d="${course}" fill="none" stroke="#f7efc8" stroke-width="1.6" />
     ${S.PIERS.map((p) => `<path d="${d(p)}" fill="#20252e" /><rect x="${p[1][0] - 1.2}" y="${p[0][1]}" width="1.2" height="32" fill="${mix('#20252e', '#ff3d5f', 0.5)}" />`).join('')}
+    ${plain ? `<g clip-path="url(#a-land)" fill="none" stroke="#070a0e" stroke-width="1.6">${KEYS.map((k) => `<path d="${d(S.DISTRICT_MAP[k].area)}" />`).join('')}</g>` : ''}
     ${KEYS.map((k) => liveLayer(k, S.DISTRICT_MAP[k].label)).join('')}
   </svg>`;
 }
@@ -329,6 +331,10 @@ p{color:var(--muted);margin:0 0 10px}.muted{color:var(--muted)}
 <p>The same map, redrawn like the portraits: no outlines, the coast is a lit edge on the right and a shadow cliff on the left; blocks are flat tops with a lit right side and a shadow cast down-left; each district glows from the right in its turf's colour (so turf reads as light, not a border). Locked districts go dead grey. Tapping works as today.</p>
 <div class="desk">${optionA()}${summary}</div>
 <p class="cap">Desktop: the map on the left, the city tonight on the right instead of "Tap a district".</p></section>
+
+<section id="optA2"><h2>A, no buildings</h2>
+<p>The owner's follow-up: the map is for reading turf, heat and where people are, so drop the blocks. Each district is land washed in its turf's light from the right, with a dark seam between districts (a gap, not a glowing line). The quietest version; labels and pins carry everything.</p>
+<div class="desk">${optionA({ plain: true })}${summary}</div></section>
 
 <section id="optB"><h2>B · Slanted 3D</h2>
 <p>The city turned 15° and tilted: blocks stand up with a lit face on the right and a shadow face on the left, windows in the turf's light. Closest to the portraits and the site plans. It's wider than tall, so on a phone the whole city is smaller and the districts are smaller to tap.</p>
