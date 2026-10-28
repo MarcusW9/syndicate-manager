@@ -283,3 +283,6 @@ export function cityMapSvg(districts, esc) {
       <text x="10" y="510" class="map-label">MAINLAND</text>
     </svg>`;
 }
+
+/** The raw shapes, for design drafts that redraw the city (scripts/city-map-options.mjs). */
+export const MAP_SHAPES = { coast, ring, ISLAND, WEST, AMBER, MAINLAND, MUDFLAT, PEAK, BASIN, COURSE, PIERS, ISLETS, DISTRICT_MAP };

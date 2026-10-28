@@ -8,6 +8,13 @@ import { NOTICE_COOLDOWN_DAYS } from './renewals.js';
 import { awayJobs } from './autorun.js';
 import { sideTasksOut } from './sidetasks.js';
 
+/** Why someone can't work today, in a few words: "hurt", "exhausted", "unlucky day". */
+export function outReason(reason = '') {
+  if (/injury/.test(reason)) return reason.startsWith('critical') ? 'badly hurt' : 'hurt';
+  if (/unlucky/.test(reason)) return 'unlucky day';
+  return reason;
+}
+
 export const HORIZON_DAYS = 7;
 const EXHAUSTED_AT = 85; // availability(): above this, nobody works
 const FATIGUE_RECOVERY = 8; // per day, in advanceDay
@@ -36,7 +43,9 @@ export function alerts(state) {
     if (r.expiresDay === state.day) out.push({ kind: 'lead-last', tone: 'warn', name: r.handle, role: r.role });
   }
   const benched = state.crew.filter((op) => !isAway(state, op) && !availability(state, op).ok);
-  if (benched.length) out.push({ kind: 'crew-out', tone: 'warn', names: benched.map((op) => op.handle) });
+  // Each with their own reason, so Joss never guesses one (owner, 2026-10-28: "doctor's orders"
+  // was said of someone out for an unlucky day).
+  if (benched.length) out.push({ kind: 'crew-out', tone: 'warn', names: benched.map((op) => op.handle), why: benched.map((op) => `${op.handle} (${outReason(availability(state, op).reason)})`) });
   return out;
 }
 

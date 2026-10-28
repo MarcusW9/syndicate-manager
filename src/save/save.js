@@ -344,7 +344,22 @@ function migrate(state) {
     state.version = 23;
   }
   if (state.version === 23) {
-    // v24: career marks (core/marks.js). Nobody has scars or chrome on record yet; anyone who
+    // v24: inbox messages open by id, and two traits earned the same way on the same day (Crew
+    // Anchor with two partners) shared one, so the second couldn't be opened. Give each its own.
+    const seen = new Set();
+    for (const m of state.inbox ?? []) {
+      let id = m.id;
+      for (let n = 2; seen.has(id); n++) id = `${m.id}-${n}`;
+      m.id = id;
+      seen.add(id);
+      // Old Crew Anchor messages: name the partner in the subject, as new ones do.
+      const partner = /crew_anchor/.test(m.id) && !/ with /.test(m.subject ?? '') ? /on jobs with ([^;]+);/.exec(m.body ?? '')?.[1] : null;
+      if (partner) m.subject = `${m.subject} with ${partner}`;
+    }
+    state.version = 24;
+  }
+  if (state.version === 24) {
+    // v25: career marks (core/marks.js). Nobody has scars or chrome on record yet; anyone who
     // has already worked ten jobs with the crew gets the crew's mark now, with a line saying so.
     for (const op of state.crew) {
       op.marks = op.marks ?? [];
@@ -354,7 +369,7 @@ function migrate(state) {
       }
     }
     for (const entry of state.memorial ?? []) entry.marks = entry.marks ?? [];
-    state.version = 24;
+    state.version = 25;
   }
   return state;
 }

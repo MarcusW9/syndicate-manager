@@ -38,6 +38,15 @@ export const NEEDS = {
 };
 
 const track = (op) => (op.track ??= {});
+
+/** An inbox id nobody else has: the base, or the base with -2, -3... Messages open by id. */
+export function uniqueInboxId(state, base) {
+  const taken = new Set(state.inbox.map((m) => m.id));
+  if (!taken.has(base)) return base;
+  let n = 2;
+  while (taken.has(`${base}-${n}`)) n++;
+  return `${base}-${n}`;
+}
 const districtText = (d) => NAMES.districtsInText?.[d] ?? NAMES.districts?.[d] ?? d;
 const clientName = (id) => CLIENTS.find((c) => c.id === id)?.name ?? id;
 
@@ -85,9 +94,13 @@ export function earn(state, op, id, extra = {}) {
   op.earned = [...(op.earned ?? []), entry];
   RESTART[id]?.(track(op), extra); // a temporary trait comes back only after a fresh run of the same
   op.history.push(`Day ${state.day}: ${def.name}. ${earnedText(state, entry, 'history')}`);
+  // One message per trait earned, even two of the same on one day (Crew Anchor with two
+  // partners): the id and the subject name who or where it's about (owner's save, 2026-10-28).
+  const about = extra.partner ? ` with ${state.crew.find((o) => o.id === extra.partner)?.handle ?? 'a partner'}`
+    : extra.district ? ` (${districtText(extra.district)})` : extra.client ? ` (${clientName(extra.client)})` : '';
   state.inbox.unshift({
-    id: `earned-${op.id}-${id}-${state.day}`, type: 'crew', day: state.day,
-    subject: `${op.handle}: ${def.name}`,
+    id: uniqueInboxId(state, ['earned', op.id, id, ...Object.values(extra), state.day].join('-')), type: 'crew', day: state.day,
+    subject: `${op.handle}: ${def.name}${about}`,
     body: `${def.note} (${op.handle}: ${earnedText(state, entry)})`,
     blocking: false, read: false,
   });

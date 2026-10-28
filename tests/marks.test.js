@@ -67,15 +67,15 @@ test('the face shows marks only when the game recorded them, the same every time
   }
 });
 
-test('a v23 save upgrades to v24: no marks yet, but veterans get the crew mark with a line saying so', async () => {
+test('a v24 save upgrades to v25: no marks yet, but veterans get the crew mark with a line saying so', async () => {
   globalThis.localStorage ??= { getItem: () => null, setItem: () => {}, removeItem: () => {} };
   const { importSave } = await import('../src/save/save.js');
-  const v23 = createNewGame({ seed: 78 });
-  v23.version = 23;
-  for (const op of v23.crew) delete op.marks;
-  v23.crew[0].jobsWithCrew = 12;
-  v23.memorial = [{ id: 'x', name: 'Old Hand', handle: 'Old', role: 'driver', age: 40, day: 3, cause: 'Died of wounds' }];
-  const loaded = await importSave({ text: async () => JSON.stringify(v23) });
+  const v24 = createNewGame({ seed: 78 });
+  v24.version = 24;
+  for (const op of v24.crew) delete op.marks;
+  v24.crew[0].jobsWithCrew = 12;
+  v24.memorial = [{ id: 'x', name: 'Old Hand', handle: 'Old', role: 'driver', age: 40, day: 3, cause: 'Died of wounds' }];
+  const loaded = await importSave({ text: async () => JSON.stringify(v24) });
   assert.equal(loaded.version, SAVE_VERSION);
   assert.equal(loaded.crew[0].marks.filter((m) => m.kind === 'tattoo').length, 1);
   assert.match(loaded.crew[0].history.at(-1), /crew's mark/);

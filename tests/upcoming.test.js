@@ -63,3 +63,13 @@ test('alerts: bills short, a job on its last day, a decision waiting', () => {
   s.inbox.unshift({ id: 'd1', type: 'crew', day: s.day, subject: 'A choice', body: '', blocking: true, resolved: false, read: false });
   assert.ok(alerts(s).some((a) => a.kind === 'decision' && a.messageId === 'd1'));
 });
+
+test('Joss says why each person is out, never a reason they don\'t have', async () => {
+  const { outReason } = await import('../src/core/upcoming.js');
+  assert.equal(outReason('serious injury, 5d'), 'hurt');
+  assert.equal(outReason('critical injury, 12d'), 'badly hurt');
+  assert.equal(outReason('unlucky day (ends in 4)'), 'unlucky day');
+  assert.equal(outReason('exhausted'), 'exhausted');
+  const { PARTNER } = await import('../src/data/partner.js');
+  for (const line of PARTNER.alerts['crew-out']) assert.ok(!/doctor/i.test(line), 'no reason in the line itself');
+});
