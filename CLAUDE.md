@@ -21,6 +21,11 @@ Text-first crew management game (Football Manager style, endless). Plain JavaScr
 - Operatives are always 18+.
 - Bump `SAVE_VERSION` in `core/state.js` and add a migration in `save.js` whenever the state shape changes.
 
+## Before any UI work or mockup
+- Read the "UI skin" section of `ART.md` and look at the newest set in `docs/screenshots/` (its README lists them, newest first). That is the current look: sharp panels with a cut corner, Rajdhani for structure, no rounded cards.
+- In `src/ui/styles.css` the first `:root` block is the old plain look; the street-terminal skin further down (search "Skin: street-terminal") overrides its colours and shapes. Read both before borrowing a token.
+- Main jobs are planned on the squad board (`src/ui/board.js`: approach, inside team, outside, Joss's picks, the coverage read). The checkbox picker in `renderSidePlan` is only for side work; don't model new screens on it.
+
 ## Keep the design log current
 `DESIGN.md` holds the narrative, tone, cast and a dated decision log (decision, why, rejected alternatives). The world's lore and the context block for worldbuilding prompts live in `WORLD.md`; the visual style, art rules and art prompts live in `ART.md`; canon changes there still get a DESIGN.md log row. Whenever a design or technical decision is made or changed in a session, add a row to the top of the log in the same change. Never rewrite past entries; supersede them with a new row. New rows go under `## Decision log`, not the first table in the file (that's the cast table).
 

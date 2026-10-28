@@ -17,7 +17,7 @@ import { templateById, jobView, nextUnlock, JOB_GATES } from '../core/jobs.js';
 import { trustLabel, trustOf } from '../core/clients.js';
 import { CLIENTS } from '../data/clients.js';
 import { availability, APPROACHES, traitMods, ratedStat, maxCrew, crewSizeRead } from '../core/crew.js';
-import { assessJob, rollTarget, successChance, riskLabel } from '../core/risk.js';
+import { rollTarget, successChance, riskLabel } from '../core/risk.js';
 import { resolveDecision } from '../core/decisions.js';
 import { WATCHED_PENALTY, HEAT_NOTICE_AT, HEAT_MAX, heatChoices } from '../core/heat.js';
 import { activeRumour } from '../core/rumours.js';
@@ -29,18 +29,18 @@ import {
 } from '../core/mission.js';
 import { sendOff, ORDERS, handsOffAllowed, autoStep, needsPlayer } from '../core/autorun.js';
 import { OVERWATCH_KIT, ALERT_MAX } from '../core/incidents.js';
-import { coverage, jossPicks } from '../core/squad.js';
+import { leanPicks, jobRead, planRead } from '../core/squad.js';
 import { renderBoard, renderPicker, renderCoverage, assignSlot } from './board.js';
 import { renderWatch, mountWatch, syncWatch, isWatching, stopWatch, togglePause, toggleSpeed } from './watch.js';
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
 import { earnedText } from '../core/earned.js';
-import { sideTaskById, sideOdds, sendOnSideTask, sideReward, sideCost, sidePitch, intelFor } from '../core/sidetasks.js';
+import { sideTaskById, sideOdds, sendOnSideTask, sideReward, sideCost, sidePitch, intelFor, SIDE_TRUST } from '../core/sidetasks.js';
 import {
   saveGame, loadGame, exportSave, importSave, listSlots, getActiveSlot, setActiveSlot,
   deleteSlot, loadBackup, backupDue, SLOT_COUNT,
 } from '../save/save.js';
 import { hire, haggle, passRecruit, canHire, signingFee, nextExpansion, expandSafehouse, STARTING_ROSTER_CAP } from '../core/recruits.js';
-import { potentialRead, potentialTag, primaryStat, scoutFor, ageRate, declineChance, mentoring, changesSince, progressShare } from '../core/development.js';
+import { potentialRead, potentialTag, primaryStat, scoutFor, ageRate, declineChance, mentoring, changesSince, progressShare, STATS } from '../core/development.js';
 import { GROWTH_LINES, GRADUATION_LINES } from '../data/growthLines.js';
 import { freelancerAsCrew, shareOf, MAX_FREELANCERS_PER_JOB } from '../core/freelance.js';
 
@@ -64,6 +64,7 @@ const CONTINUE_REST_MS = 800;
 let continueRestUntil = 0;
 let dayCue = null; // what the day that just started brought; shown once, on the next render
 let focusNext = null; // { action, id }: the control to focus after the next render (going back to a list)
+let runnersHidden = false; // the job board's runners panel, folded away for this session
 
 export function mountApp(el, initialState) {
   root = el;
@@ -128,16 +129,24 @@ function onClick(e) {
     case 'expand':
       if (confirm(`Expand the safehouse for ${money(nextExpansion(state).cost)}? Rent goes up by ${money(nextExpansion(state).rentIncrease)} a week.`)) return setState(expandSafehouse(state));
       break;
-    case 'open-job': screen = 'jobs'; plan = { jobId: id, crew: [], approach: 'stealth', orders: 'steady', callIn: 'risky', overwatch: null, kit: 'rifle', wheels: null, standby: null }; break; // also from Today's alerts
+    case 'open-job': { // also from Today's alerts
+      // The plan starts as Joss's read from the board card, so the risk the card showed is the risk here.
+      screen = 'jobs';
+      const job = state.jobs.find((j) => j.id === id);
+      const r = job ? boardRead(job) : null;
+      plan = { jobId: id, crew: r ? r.picks.crew : [], approach: r ? r.approach : 'stealth', orders: 'steady', callIn: 'risky',
+        overwatch: r?.picks.overwatch ?? null, kit: r?.picks.kit ?? 'rifle', wheels: r?.picks.wheels ?? null, standby: r?.picks.standby ?? null };
+      break;
+    }
+    case 'toggle-runners': runnersHidden = !runnersHidden; break;
     // The squad board (ui/board.js): tap a card, pick who goes there; anyone already placed swaps.
     case 'info': if (openInfo.has(id)) openInfo.delete(id); else openInfo.add(id); break;
     case 'pick-slot': pickSlot = id; break;
     case 'close-picker': focusNext = { action: 'pick-slot', id: pickSlot }; pickSlot = null; break;
     case 'assign': Object.assign(plan, assignSlot(plan, pickSlot, id || null)); focusNext = { action: 'pick-slot', id: pickSlot }; pickSlot = null; break;
     case 'joss': {
-      const tpl = templateById(state.jobs.find((j) => j.id === plan.jobId).templateId);
-      const v = jobView(state, state.jobs.find((j) => j.id === plan.jobId));
-      const p = jossPicks({ ...tpl, threat: v.threat }, state.crew.filter((op) => availability(state, op).ok), plan.approach, { threat: v.threat });
+      // The smallest squad that gets the best risk for this approach (core/squad.js leanPicks); standby is the player's call.
+      const p = leanPicks(state, state.jobs.find((j) => j.id === plan.jobId), plan.approach);
       Object.assign(plan, { crew: p.crew, overwatch: p.overwatch, wheels: p.wheels, standby: p.standby }); if (p.kit) plan.kit = p.kit;
       break;
     }
@@ -241,7 +250,9 @@ const threatDots = (n) => '●'.repeat(n) + '○'.repeat(5 - n);
 /** Threat with a marker when this offer is above or below the job's usual level. */
 const threatHtml = (v) => `<span class="threat">${threatDots(v.threat)}</span>${v.threatDelta > 0 ? ' <span class="tag-up">hotter than usual</span>' : v.threatDelta < 0 ? ' <span class="tag-down">quieter than usual</span>' : ''}`;
 const clientLine = (v) => v.client ? `${esc(v.client.name)} <span class="muted">(${esc(trustLabel(v.trust))})</span>` : '<span class="muted">Walk-in job</span>';
-const riskBadge = (level) => `<span class="risk risk--${esc(level)}">${esc(level === 'safe' || level === 'certain' ? level : `${level} risk`)}</span>`;
+/** The word a risk level shows as: "moderate" reads as "mid" (shorter; owner's call, 2026-10-28). */
+const riskWord = (level) => (level === 'moderate' ? 'mid' : level);
+const riskBadge = (level) => `<span class="risk risk--${esc(level)}">${esc(level === 'safe' || level === 'certain' ? level : `${riskWord(level)} risk`)}</span>`;
 /** Availability as a coloured chip: green ready, amber usable but worse off, red can't go, teal away on a job. */
 function statusChip(a) {
   const tone = a.ok ? (a.reason === 'ready' ? 'ready' : 'worn') : a.reason.startsWith('away') ? 'away' : 'out';
@@ -357,7 +368,7 @@ function render() {
       ${navButton('settings', 'Save')}
     </nav>
 
-    <main class="main ${wide ? 'main--wide' : ''}">${state.activeMission ? renderMission() : renderScreen()}</main>
+    <main class="main ${wide ? 'main--wide' : ''} ${!state.activeMission && screen === 'jobs' && plan ? 'main--split' : ''}">${state.activeMission ? renderMission() : renderScreen()}</main>
     ${dock ? `<div class="dock">${renderContinue(blocked, resting, unread, 'dock__continue')}</div>` : ''}
     ${cue ? renderDayCue(cue) : ''}
     <input type="file" id="import-file" accept="application/json" hidden />
@@ -455,7 +466,8 @@ function navButton(id, label, count = 0, countWord = '') {
 function renderScreen() {
   if (screen === 'inbox') return renderInbox();
   if (screen === 'crew') return openRecruitId ? renderRecruit() : openOperativeId ? renderOperative() : renderCrew();
-  if (screen === 'jobs') return plan ? renderPlan() : sidePlan ? renderSidePlan() : renderJobs();
+  // Jobs: on wide screens the board stays beside the job being planned (styles.css hides it on phones).
+  if (screen === 'jobs') return plan ? `<div class="jobsplit"><div class="jobsplit__list">${renderJobs()}</div><div class="jobsplit__plan">${renderPlan()}</div></div>` : sidePlan ? renderSidePlan() : renderJobs();
   if (screen === 'city') return renderCity();
   if (screen === 'settings') return renderSettings();
   return '';
@@ -979,7 +991,6 @@ function streetTalk() {
   const r = activeRumour(state);
   return r ? `<div class="talk"><strong>Street talk · ${esc(NAMES.districts[r.district] ?? r.district)}</strong><br>${esc(r.text)}</div>` : '';
 }
-const talkTag = (v) => v.rumour ? `<span class="talk-tag">Street talk: ${esc(v.rumour.tag)}</span>` : '';
 
 // The climb: how far the crew's name has to travel before bigger work is offered.
 function climbLine() {
@@ -987,7 +998,8 @@ function climbLine() {
   if (!next) return '';
   // One compact line in the Heat meter's style (option B of five, owner's pick 2026-10-28; the
   // others are in drafts/prototypes/reputation-gauge-options.html): a label, a small segmented
-  // track to the next unlock, the number, and the rest behind an (i).
+  // track to the next unlock, the number, and the rest behind an (i). The (i) also holds the key
+  // to the stat icons on job cards, which show there without words (2026-10-28).
   const rep = state.reputation ?? 0;
   const pct = Math.round(Math.min(1, rep / next.rep) * 100);
   const ladder = Object.entries(JOB_GATES).map(([threat, need]) => `${need} (threat ${threat})`).join(', ');
@@ -995,34 +1007,94 @@ function climbLine() {
     <span class="climb__label">Rep</span>
     <span class="heat__track climb__track" role="progressbar" aria-label="Reputation towards the next unlock" aria-valuenow="${Math.floor(rep)}" aria-valuemin="0" aria-valuemax="${next.rep}"><span style="width:${pct}%"></span></span>
     <strong class="climb__value">${Math.floor(rep)}/${next.rep}</strong>
-    ${infoButton('reputation', 'About reputation')}
+    ${infoButton('reputation', 'About reputation and job cards')}
   </div>
-  ${infoText('reputation', `Bigger work opens up once people know your name. Finished jobs build it; aborts cost it. Rookie jobs are open from the start; the rest open at ${ladder}.`)}`;
+  ${infoHtml('reputation', `<p class="infotext small">${esc(`Bigger work opens up once people know your name. Finished jobs build it; aborts cost it. Rookie jobs are open from the start; the rest open at ${ladder}.`)}</p>
+  <p class="infotext small">On job cards, the corner is Joss's read of the risk (bigger and redder is riskier), then how many runners Joss would send and the job's key stats: ${STATS.map(statIcon).join(' ')}</p>`)}`;
+}
+
+/** Joss's read of one job for the board (core/squad.js jobRead), worked out once per state. */
+const readCache = new WeakMap();
+function boardRead(job) {
+  let reads = readCache.get(state);
+  if (!reads) readCache.set(state, (reads = new Map()));
+  if (!reads.has(job.id)) reads.set(job.id, jobRead(state, job));
+  return reads.get(job.id);
+}
+
+/**
+ * What's unusual about an offer, most important first, at most two. Usual facts (district, threat,
+ * client mood, days left) stay on the planning screen: the card only speaks up when there's news.
+ */
+function jobFlags(v) {
+  const flags = [];
+  if (v.hinted) flags.push(['bad', 'Intel unreliable']);
+  if (v.rumour) flags.push([v.threatDelta > 0 ? 'hot' : v.threatDelta < 0 ? 'good' : 'info', `Street talk: ${v.rumour.tag}`]);
+  else if (v.threatDelta > 0) flags.push(['hot', 'Hotter than usual']);
+  else if (v.threatDelta < 0) flags.push(['good', 'Quieter than usual']);
+  if (intelFor(state, v.tpl.district)) flags.push(['good', 'Intel here']);
+  if (v.tpl.days > 1) flags.push(['info', `${v.tpl.days}-day job`]);
+  return flags.slice(0, 2);
+}
+
+/** A runner's tile word: free, tired or hurt (but able), or when they're back. */
+function runnerWord(a) {
+  if (a.ok) return a.reason === 'fatigued' ? 'Tired' : a.reason === 'light injury' ? 'Hurt' : 'Free';
+  const back = /^away until day (\d+)$/.exec(a.reason);
+  if (back) return Number(back[1]) - state.day <= 1 ? 'Back tomorrow' : `Back in ${Number(back[1]) - state.day}d`;
+  return a.reason[0].toUpperCase() + a.reason.slice(1);
+}
+
+/** Who can run a job today, open by default; faces first, free people first. */
+function renderRunners() {
+  const people = state.crew.filter((o) => !o.freelance).map((op) => ({ op, a: availability(state, op) }))
+    .sort((x, y) => Number(y.a.ok) - Number(x.a.ok));
+  const free = people.filter((x) => x.a.ok).length;
+  const out = people.length - free;
+  return `
+      <div class="runners">
+        <button class="runners__head" data-action="toggle-runners" aria-expanded="${!runnersHidden}">
+          <span><strong class="runners__free">${free} ${free === 1 ? 'runner' : 'runners'} free today</strong>${out ? ` · ${out} out` : ''}</span>
+          <span class="runners__toggle">${runnersHidden ? 'Show' : 'Hide'}</span>
+        </button>
+        ${runnersHidden ? '' : `<ul class="runners__list">
+          ${people.map(({ op, a }) => `<li class="runner ${a.ok ? (a.reason === 'ready' ? 'is-free' : 'is-worn') : 'is-out'}">${face(op)}<strong>${esc(op.handle)}</strong><span>${esc(runnerWord(a))}</span></li>`).join('')}
+        </ul>`}
+      </div>`;
+}
+
+function jobCard(j) {
+  const v = jobView(state, j);
+  const t = v.tpl;
+  const r = boardRead(j);
+  const flags = jobFlags(v);
+  // A note only when Joss's squad has a catch: someone missing, or someone tired or hurt.
+  const worn = r.crew.map((op) => ({ op, a: availability(state, op) })).find((x) => x.a.reason === 'fatigued' || x.a.reason === 'light injury');
+  const note = r.short ? `short ${r.short}` : worn ? `${worn.op.handle} is ${worn.a.reason === 'fatigued' ? 'tired' : 'hurt'}` : '';
+  const stats = t.keyStats.map((k) => `<span class="keyglyph" role="img" aria-label="${esc(statName(k))}" title="${esc(statName(k))}">${statGlyph(k)}</span>`).join('');
+  const risk = riskWord(r.level);
+  return `
+      <li>
+        <button class="row jobcard ${plan?.jobId === j.id ? 'is-selected' : ''}" data-action="open-job" data-id="${esc(j.id)}">
+          <strong class="jobcard__name">${esc(t.name)}</strong><strong class="jobcard__pay">${money(v.pay)}</strong>
+          <span class="jobcard__client">${esc(v.client?.name ?? 'Walk-in job')}</span>${j.expiresDay === state.day ? '<span class="jobcard__left">ends today</span>' : ''}
+          ${flags.length ? `<span class="jobcard__flags">${flags.map(([tone, text]) => `<span class="flag flag--${tone}">${esc(text)}</span>`).join('')}</span>` : ''}
+          <span class="jobcard__facts">${r.size || t.crewSize} ${(r.size || t.crewSize) === 1 ? 'runner' : 'runners'} · <span class="keyglyphs">${stats}</span>${note ? ` · <span class="jobcard__note">${esc(note)}</span>` : ''}</span>
+          <span class="riskcorner riskcorner--${esc(r.level)}" role="img" aria-label="${esc(risk)} risk" title="${esc(risk[0].toUpperCase() + risk.slice(1))} risk"></span>
+        </button>
+      </li>`;
 }
 
 function renderJobs() {
-  if (!state.jobs.length) return `<section class="panel"><h1>Jobs</h1>${streetTalk()}${climbLine()}<p class="muted">No work on the board. New work comes in through the week.</p>${renderSideBoard()}${renderClients()}</section>`;
+  // Ending soonest first, then the better pay.
+  const jobs = [...state.jobs].sort((a, b) => a.expiresDay - b.expiresDay || jobView(state, b).pay - jobView(state, a).pay);
   return `
-    <section class="panel">
+    <section class="panel jobsboard">
       <h1>Jobs</h1>
       ${streetTalk()}
       ${climbLine()}
-      <ul class="list list--cols">
-        ${state.jobs.map((j) => {
-          const v = jobView(state, j);
-          const t = v.tpl;
-          return `
-          <li>
-            <button class="row jobcard" data-action="open-job" data-id="${esc(j.id)}">
-              <strong class="jobcard__name">${esc(t.name)}</strong><strong class="jobcard__pay">${money(v.pay)}</strong>
-              <span class="jobcard__client">${clientLine(v)}</span><span class="jobcard__left ${j.expiresDay === state.day ? 'is-last' : ''}">${daysLeft(j.expiresDay)}</span>
-              <span class="jobcard__facts">${esc(districtName(t.district))} · threat ${threatHtml(v)} · ${crewIcons(t.crewSize, `crew of ${t.crewSize}`)} · ${t.days}d</span>
-              <span class="jobcard__stats">${t.keyStats.map(statIcon).join(' ')}</span>
-              ${v.hinted ? '<span class="jobcard__extra intel">Intel unreliable</span>' : ''}${v.rumour ? `<span class="jobcard__extra">${talkTag(v)}</span>` : ''}
-            </button>
-          </li>`;
-        }).join('')}
-      </ul>
+      ${renderRunners()}
+      ${jobs.length ? `<ul class="list list--cols jobslist">${jobs.map(jobCard).join('')}</ul>` : '<p class="muted">No work on the board. New work comes in through the week.</p>'}
       ${renderSideBoard()}
       ${renderClients()}
     </section>`;
@@ -1030,20 +1102,29 @@ function renderJobs() {
 
 const PURPOSE = { money: 'Money', training: 'Training', trust: 'Client trust', info: 'Intel' };
 
-/** This week's side tasks, under the job board. */
+/** A side task's headline is its reward; an intel task names the board jobs it would help. */
+function sideHeadline(t) {
+  if (t.purpose === 'training') return `${statName(t.stat)} ↑`;
+  if (t.purpose === 'trust') return `+${SIDE_TRUST} trust · ${CLIENTS.find((c) => c.id === t.client)?.name ?? t.client}`;
+  if (t.purpose === 'money') return sideReward(t);
+  const helped = state.jobs.map((j) => templateById(j.templateId)).filter((tpl) => tpl.district === t.district).map((tpl) => tpl.name);
+  return `Intel · ${helped.length ? `helps ${helped.join(', ')}` : 'helps nothing on the board'}`;
+}
+
+/** This week's side tasks, under the job board: compact rows, the reward first. */
 function renderSideBoard() {
   const board = (state.sideBoard ?? []).map(sideTaskById).filter(Boolean);
   return `
       <h2>Side work this week</h2>
       <div class="infoline"><p class="muted small">Small jobs for whoever's free.</p>${infoButton('side-work', 'About side work')}</div>
       ${infoText('side-work', 'One-off jobs for whoever isn\'t on the main work. They\'re away for the days shown, and the result comes back with them. A new board every Monday.')}
-      ${board.length ? `<ul class="list list--cols">
+      ${board.length ? `<ul class="list list--cols sidelist">
         ${board.map((t) => `
           <li>
-            <button class="row jobcard" data-action="open-side" data-id="${esc(t.id)}">
-              <strong class="jobcard__name">${esc(t.name)}</strong><strong class="jobcard__pay">${esc(PURPOSE[t.purpose])}</strong>
-              <span class="jobcard__client">${esc(sideReward(t))}</span><span class="jobcard__left">${t.days}d</span>
-              <span class="jobcard__facts">${esc(districtName(t.district))} · ${statIcon(t.stat)} · ${crewIcons(t.crew)}</span>
+            <button class="row siderow" data-action="open-side" data-id="${esc(t.id)}">
+              <strong class="siderow__reward siderow__reward--${esc(t.purpose)}">${esc(sideHeadline(t))}</strong>
+              <span class="siderow__meta">${t.days}d · ${crewIcons(t.crew)}</span>
+              <span class="siderow__sub">${esc(t.name)} · ${esc(districtName(t.district))} · ${statIcon(t.stat)}</span>
             </button>
           </li>`).join('')}
       </ul>` : '<p class="muted">Nothing left this week. More on Monday.</p>'}`;
@@ -1053,6 +1134,8 @@ function renderSideBoard() {
 // The button stays put and the text appears below, so nothing jumps (owner's feedback, 2026-10-28).
 const infoButton = (id, label) => `<button class="infobtn ${openInfo.has(id) ? 'is-on' : ''}" data-action="info" data-id="${esc(id)}" aria-label="${esc(label)}" aria-expanded="${openInfo.has(id)}">i</button>`;
 const infoText = (id, text) => (openInfo.has(id) ? `<p class="infotext small">${esc(text)}</p>` : '');
+/** The same, for an explanation that needs markup (icons); `html` must already be escaped. */
+const infoHtml = (id, html) => (openInfo.has(id) ? html : '');
 
 /** Planning a side task: who goes, how likely it goes well, what it gives and costs. */
 function renderSidePlan() {
@@ -1099,19 +1182,18 @@ function renderSidePlan() {
 const trustTone = (t) => (t >= 60 ? 'good' : t >= 40 ? 'mid' : 'bad');
 const TRUST_NOTE = 'Finished jobs build trust; aborts and "client unhappy" choices cost it. High trust pays up to 15% more; below 20, a client stops calling. Trust drifts back towards neutral each week.';
 
-/** Jobs tab: one line per client, folded away under the board. Full write-ups are on City. */
+/** Jobs tab: the clients as a strip of chips under the board. Full write-ups are on City. */
 function renderClients() {
   return `
-      <details class="citydetails clients">
-        <summary>Clients (${CLIENTS.length})</summary>
-        <ul class="list list--plain">
-          ${CLIENTS.map((c) => {
-            const t = trustOf(state, c.id);
-            return `<li class="clientline"><strong>${esc(c.name)}</strong><span class="trust trust--${trustTone(t)}">${esc(trustLabel(t))} · ${t}/100</span></li>`;
-          }).join('')}
-        </ul>
-        <p class="muted small">${esc(TRUST_NOTE)} Who they are: City tab.</p>
-      </details>`;
+      <h2>Clients</h2>
+      <div class="infoline"><p class="muted small">Where you stand with each.</p>${infoButton('clients', 'About client trust')}</div>
+      ${infoText('clients', `${TRUST_NOTE} Who they are: City tab.`)}
+      <ul class="clientstrip">
+        ${CLIENTS.map((c) => {
+          const t = trustOf(state, c.id);
+          return `<li class="clientchip"><strong>${esc(c.name)}</strong><span class="trust trust--${trustTone(t)}">${esc(trustLabel(t))} · ${t}</span></li>`;
+        }).join('')}
+      </ul>`;
 }
 
 /** City tab: who each client is, with where you stand. */
@@ -1137,12 +1219,10 @@ function renderPlan() {
   const picked = plan.crew.map((id) => people.find((o) => o.id === id)).filter(Boolean);
   const intel = intelFor(state, t.district);
   const wheelsOp = state.crew.find((o) => o.id === plan.wheels) ?? null;
-  const read = assessJob({ ...t, threat: v.threat }, picked, plan.approach, { watched: state.heatWatched ? WATCHED_PENALTY : 0, intel, wheels: wheelsOp });
   const owOp = state.crew.find((o) => o.id === plan.overwatch) ?? null;
-  const cov = coverage({ ...t, threat: v.threat }, picked, plan.approach, { threat: v.threat, overwatch: owOp ? { op: owOp, kit: plan.kit } : null, intel });
   // The bar shows the worse of the two reads: the crises (risk read) and the incidents (coverage).
-  const RANK = ['low', 'moderate', 'high', 'extreme'];
-  const toughest = picked.length && RANK.indexOf(cov.toughest) > RANK.indexOf(read.level) ? cov.toughest : read.level;
+  // core/squad.js planRead is shared with the job board, so the card and this screen agree.
+  const { level: toughest, read, cov } = planRead(state, job, { crew: picked, approach: plan.approach, overwatch: owOp, kit: plan.kit, wheels: wheelsOp });
   const toughWhy = toughest !== read.level ? (() => { const r = cov.rows.find((x) => x.effective === toughest); return `${r.name}: ${r.handler ? `${r.handler.op.handle} on ${r.handler.stat}` : 'nobody can handle it'}`; })() : read.reasons[0];
   const most = maxCrew(t.crewSize);
 
@@ -1213,7 +1293,7 @@ function renderPlan() {
 }
 
 /** Helpers the squad board borrows (ui/board.js), so it looks like the rest of the game. */
-const boardUi = { esc, face: (op, size) => face(op, size), riskBadge: (l) => riskBadge(l), statusChip: (a) => statusChip(a), keyStats: (op, tpl, threat) => keyStatsFor(op, tpl, threat) };
+const boardUi = { esc, face: (op, size) => face(op, size), riskBadge: (l) => riskBadge(l), riskWord, statusChip: (a) => statusChip(a), keyStats: (op, tpl, threat) => keyStatsFor(op, tpl, threat) };
 
 /** Everyone the picker can offer: the crew with their availability, and freelancers with their cut. */
 function pickerPeople() {
