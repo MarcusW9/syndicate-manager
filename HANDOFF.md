@@ -4,10 +4,10 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 
 ## State
 
-- **`main`:** up to [#22](https://github.com/MarcusW9/syndicate-manager/pull/22) (`096adee`, squash-merged): squad-run slices 1-3 and the growth and trait retune. **Branch `claude/jolly-keller-6eqry7`** carries the owner's playtest feedback (PR #23). Pushes after a PR is merged stay on the branch: check a PR is still open before adding to it.
+- **`main`:** up to [#23](https://github.com/MarcusW9/syndicate-manager/pull/23) (`e64abdc`, squash-merged): squad-run slices 1-3 and the growth and trait retune. **`main`** also has the owner's playtest feedback (#23). **Branch `claude/jolly-keller-6eqry7`** carries the focus-crisis fix. Pushes after a PR is merged stay on the branch: check a PR is still open before adding to it.
 - **The game is becoming the squad run** (`PLAN-CORE-LOOP.md`, the build order; `drafts/core-loop.md`, how we got there). **Slices 1-3 are built** (the engine; the squad board and the watch screen; Wheels and standby); slice 4 (sites and district text) is next.
 - **Design review:** `STATE-OF-PLAY.md` (2026-10-26) and the owner's calls on it (in the file and in DESIGN.md). Read it instead of re-assessing.
-- **Tests:** 267 passing. **Save format v22.**
+- **Tests:** 268 passing. **Save format v22.**
 
 ## What the 2026-10-26/27 session did
 
@@ -31,8 +31,8 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 
 ## Next
 
-1. **Merge the feedback PR** ([#23](https://github.com/MarcusW9/syndicate-manager/pull/23)); the retune is on `main` (#22). The owner is play-testing slices 1-3 and sending feedback.
-2. **Focus-role crisis labels** (DESIGN.md, 2026-10-27, owner's feedback): in 39 crises with `focusRole`, `{op}` in a choice label names the person at risk (`am.focusOp`, `mission.js` `choiceVoice`) while the best at the stat rolls, so the line can name the wrong person. Review those labels, then have `{op}` name the roller in labels and reports of rolls (keeping the person at risk for failure injuries), or ask the owner.
+1. **Merge the focus-crisis fix** (this branch, after #23). The owner is play-testing slices 1-3 and sending feedback.
+2. **Small polish:** the (i) jumps to its own line when opened on a phone; reloading while the crew calls you in doesn't scroll to the call-in. The phone planning screen is long (owner to decide after more play).
 3. **Squad run slice 4** (`PLAN-CORE-LOOP.md`): a site plan per district as data, and the incident text per district (writing task 11).
 4. Then slice 5 (gear and specialisations), and the agreed review items: the neural load and burnout cleanup, mood traits, money pressure, relationships with the career page.
 

@@ -91,3 +91,35 @@ test('a hands-off crew can take an unlock when it has the stat', () => {
   }
   assert.ok(took > 20, `unlocks taken ${took}`);
 });
+
+test('a focus crisis names whoever acts, and they take the knock; Doc Siu hands the patient to the named medic', () => {
+  // Owner's feedback (2026-10-27): the groaning stack said "Flicker braced it" when Thimble rolled.
+  let stack = 0; let clinic = 0;
+  for (let seed = 1; seed <= 120 && (stack < 15 || clinic < 15); seed++) {
+    let s = createNewGame({ seed, startCrew: 'fresh' });
+    s.jobs = []; addOffer(s, 'container409');
+    s = M.startMission(s, s.jobs[0].id, s.crew.slice(0, 3).map((o) => o.id), 'stealth');
+    const t = structuredClone(s);
+    t.activeMission.focusOp = t.crew[seed % 3].id; // whoever the stack is "about"
+    at(t, 'groaning_stack');
+    const roll = M.describeCrisis(t).choices.find((x) => x.id === 'brace');
+    const roller = roll.riskReason.match(/^(.+?) on /)[1];
+    assert.ok(roll.label.startsWith(roller), `"${roll.label}" names ${roller}`);
+    const after = M.chooseOption(t, 'brace').activeMission.events.at(-1);
+    assert.equal(after.actor.handle, roller);
+    assert.ok(after.choice.includes(roller) && (after.report ?? '').includes(roller));
+    if (after.injury) assert.equal(after.injury.handle, roller, 'the one who braced it takes the knock');
+    stack += 1;
+
+    let c = createNewGame({ seed, startCrew: 'fresh' });
+    c.jobs = []; addOffer(c, 'clinic');
+    c = M.startMission(c, c.jobs[0].id, c.crew.slice(0, 3).map((o) => o.id), 'stealth');
+    c.activeMission.focusOp = c.crew[seed % 3].id;
+    at(c, 'bleeder');
+    const named = c.crew.find((o) => o.id === c.activeMission.focusOp).handle;
+    const stitch = M.describeCrisis(c).choices.find((x) => x.id === 'stitch');
+    assert.ok(stitch.riskReason.startsWith(`${named} on `), `Doc Siu hands ${named} the patient: ${stitch.riskReason}`);
+    clinic += 1;
+  }
+  assert.ok(stack >= 15 && clinic >= 15);
+});

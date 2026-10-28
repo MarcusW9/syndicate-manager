@@ -77,12 +77,16 @@ test('a choice names the person who actually rolls (and who gets hurt)', () => {
     const tpl = templateById(done.activeMission.templateId);
     for (const e of report.timeline.events.filter((x) => x.kind === 'roll')) {
       const crisis = tpl.crises.find((c) => c.id === e.crisis);
-      if (!crisis || crisis.focusRole) continue; // a focus role's text is about the focus person
-      if (crisis.choices.find((c) => c.id === e.choiceId).label.includes('{op}')) {
+      if (!crisis) continue;
+      const choice = crisis.choices.find((c) => c.id === e.choiceId);
+      // Focus-role crises too, since 2026-10-27 (owner's feedback: "Flicker braced it" when Thimble rolled).
+      if (choice.label.includes('{op}')) {
         assert.ok(e.choice.includes(e.actor.handle), `${e.crisis}: "${e.choice}" should name ${e.actor.handle}`);
         checked += 1;
       }
-      if (e.injury) assert.equal(e.injury.id, e.actor.id, `${e.crisis}: the roller takes the hurt`);
+      // A focus crisis whose choice never names anyone hurts the person it's about (the tech with the nosebleed).
+      const aboutFocus = crisis.focusRole && ![choice.label, choice.success, choice.failure, choice.report?.success, choice.report?.failure].some((t) => t?.includes('{op}'));
+      if (e.injury && !aboutFocus) assert.equal(e.injury.id, e.actor.id, `${e.crisis}: the roller takes the hurt`);
     }
   }
   assert.ok(checked > 50, `checked ${checked} choices`);

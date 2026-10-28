@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+
+## 2026-10-28 · Crises name the right person
+- In crises that are about one role (the tech when a container stack slips, the driver at a roadblock), the choice now names whoever actually does it, and if it goes wrong they're the one hurt. Before, it could say "Flicker braced it" when Thimble, the better hand, made the roll.
+- When Doc Siu hands a patient to someone by name, that medic now does the stitching (backup still helps), like other crises that name someone.
+- Crises about one person's own trouble (the tech's nosebleed) still hurt that person if the attempt fails.
 ## 2026-10-27 · A tidier reputation line
 - The job board's reputation is one compact line: "Reputation 2/10", a short gauge of ten blocks (each a tenth of the way to the next unlock) and an (i). The (i) explains how reputation works and, new, what opens when: rookie jobs from the start, then threat 1 at 10, threat 2 at 15, threat 3 at 35, threat 4 at 60 and threat 5 at 80. The old full-width bar read like a big scale.
 

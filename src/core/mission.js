@@ -117,8 +117,11 @@ function addReport(state, am, choice, success, voice = am) {
  * names the person who rolls (and, with no focus role, gets hurt). A crisis with a focus
  * role keeps its focus person: the text is about them, and they take the injury.
  */
+// {op} in a choice's lines is whoever acts: the roller (owner's feedback, 2026-10-27: a focus
+// crisis said "Flicker braced it" when Thimble rolled). A crisis whose own text names {op} is
+// handled by that person, so the roller is them anyway (namesOp).
 function choiceVoice(am, crisis, roller) {
-  return roller && !crisis.focusRole ? { ...am, focusOp: roller.op.id } : am;
+  return roller ? { ...am, focusOp: roller.op.id } : am;
 }
 
 function reportLine(state, am, choice, success) {
@@ -574,11 +577,14 @@ function jobContext(am, choice, crew = []) {
 }
 
 /**
- * A crisis whose own text names {op} ("Someone squints at {op}") is about that person, so
- * they handle it: they roll (backup still helps) and take any knock. Focus-role crises keep
- * their own rule (the best at the stat rolls; the focus person is the one at risk).
+ * A crisis whose own text names {op} ("Someone squints at {op}", or Doc Siu's "{op}. He's
+ * yours.") is about that person, so they handle it: they roll (backup still helps) and take any
+ * knock. Since 2026-10-27 this covers focus-role crises too (it used to skip them).
  */
-const namesOp = (crisis) => Boolean(crisis && !crisis.focusRole && crisis.text.includes('{op}'));
+const namesOp = (crisis) => Boolean(crisis && crisis.text.includes('{op}'));
+
+/** Does a choice's own wording put someone in it ("{op} wedges a pry bar...")? Then that's the roller. */
+const choiceNamesOp = (choice) => [choice?.label, choice?.success, choice?.failure, choice?.report?.success, choice?.report?.failure].some((t) => t?.includes('{op}'));
 
 function namedLead(state, am, crew, stat) {
   const step = currentStep(am);
@@ -598,12 +604,14 @@ function stabiliser(state, am, patient) {
   return crewRoll(crew, 'medical', { approach: am.approach, recommended: templateById(am.templateId).crewSize, lead: medicLead(medic, am, crew) });
 }
 
-// Who gets hurt on a failure: the crisis's focus operative if it has one
-// (e.g. the tech in the server room), otherwise whoever made the attempt.
-function failureTarget(state, am, roller) {
+// Who gets hurt on a failure: the person the crisis is about (named in its text, or the focus
+// role, e.g. the tech with the nosebleed), unless the choice's own lines put the roller in it
+// ("...clips {op}'s shoulder"): then whoever acted takes the knock, as the line says.
+function failureTarget(state, am, roller, choice) {
   const step = currentStep(am);
   const crisis = step?.type === 'crisis' ? crisisById(templateById(am.templateId), step.id) : null;
-  const focus = crisis?.focusRole || namesOp(crisis) ? opById(state, am.focusOp) : null;
+  const aboutFocus = namesOp(crisis) || (crisis?.focusRole && !choiceNamesOp(choice));
+  const focus = aboutFocus ? opById(state, am.focusOp) : null;
   if (focus && focus.condition.injury !== 'critical' && am.crewIds.includes(focus.id)) return focus;
   return roller;
 }
@@ -643,7 +651,7 @@ export function describeCrisis(state) {
     if (choice.sure) return { ...view, risk: 'certain', riskReason: 'No roll needed' };
     const roller = rollerFor(state, am, choice, crew);
     const chance = successChance(roller.value, rollDifficulty(am, choice));
-    const target = failureTarget(state, am, roller.op);
+    const target = failureTarget(state, am, roller.op, choice);
     const bits = [`${roller.op.handle} on ${choice.stat} (${roller.value}${roller.notes.length ? ', ' + roller.notes.join(', ') : ''})${am.alert ? `, alert +${am.alert} difficulty` : ''}`];
     const fails = [];
     if (choice.failureInjury && choice.failureInjury !== 'none') fails.push(`${choice.failureInjury} injury to ${target.handle}`);
@@ -763,7 +771,7 @@ export function chooseOption(prev, choiceId) {
     }
     if (fc.cash) state.cash += fc.cash;
     if (choice.failureInjury && choice.failureInjury !== 'none') {
-      const target = failureTarget(state, am, roller.op);
+      const target = failureTarget(state, am, roller.op, choice);
       const injury = worsenInjury(target.condition.injury, choice.failureInjury);
       setInjury(target, injury);
       noteInjury(state, target, injury);
