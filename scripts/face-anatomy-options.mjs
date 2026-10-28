@@ -1,5 +1,5 @@
 // Design session (2026-10-28): faces that vary in the face itself (eyes, lids, brows, nose,
-// mouth, jaw, ears, neck, age lines), drawn with portrait(op, { anatomy: true }).
+// mouth, jaw, ears, neck, age lines), drawn with portrait(op) (on in the game since 2026-10-28); the earlier face is portrait(op, { anatomy: false }).
 // Writes drafts/prototypes/face-anatomy-options.html (static). Run: node scripts/face-anatomy-options.mjs
 
 import { writeFileSync } from 'node:fs';
@@ -52,8 +52,8 @@ for (let n = 0; shaolin.length < 8; n++) {
 
 const frame = (svg) => `<span class="pf">${svg}</span>`;
 const pair = (op, label) => `<figure>
-  <div class="pairrow">${frame(portrait(op, { size: 104 }))}${frame(portrait(op, { size: 104, anatomy: true }))}</div>
-  <div class="pairrow small">${frame(portrait(op, { size: 48 }))}${frame(portrait(op, { size: 48, anatomy: true }))}<span class="sp"></span>${frame(portrait(op, { size: 32, anatomy: true }))}</div>
+  <div class="pairrow">${frame(portrait(op, { size: 104, anatomy: false }))}${frame(portrait(op, { size: 104, anatomy: true }))}</div>
+  <div class="pairrow small">${frame(portrait(op, { size: 48, anatomy: false }))}${frame(portrait(op, { size: 48, anatomy: true }))}<span class="sp"></span>${frame(portrait(op, { size: 32, anatomy: true }))}</div>
   <figcaption>${label}</figcaption></figure>`;
 const who = (op) => `${op.name} · ${op.age}`;
 const describe = (op) => { const a = anatomyOf(op); return `${a.lid} lids, ${a.bridge} nose, ${a.cheek} cheeks${a.freckles ? ', freckles' : ''}${a.mole ? ', mole' : ''}`; };
@@ -84,10 +84,10 @@ figcaption{font-size:.78rem;color:var(--muted);max-width:216px}
 p{color:var(--muted);margin:0 0 10px;max-width:70ch}
 .key{font:600 .72rem Rajdhani,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 </style></head><body>
-<h1>Faces with their own anatomy: draft</h1>
-<p>Each pair is the same person: <b>today's face on the left, the new face on the right</b>, at 104px and 48px, plus the new face at 32px. Hair, skin, chrome, light and gear are untouched; only the face itself changes. Eye spacing, size, tilt and lid (monolid, crease, hooded, deep-set), brow weight and arch, nose length, width and bridge, mouth width and lips, jaw, chin, ears and neck all vary, from a third seed, so the face is still fixed per person.</p>
+<h1>Faces with their own anatomy</h1>
+<p>Approved by the owner and on in the game (2026-10-28). Each pair is the same person: <b>the earlier face on the left, the new face on the right</b>, at 104px and 48px, plus the new face at 32px. Hair, skin, chrome, light and gear are untouched; only the face itself changes. Eye spacing, size, tilt and lid (monolid, crease, hooded, deep-set), brow weight and arch, nose length, width and bridge, mouth width and lips, jaw, chin, ears and neck all vary, from a third seed, so the face is still fixed per person.</p>
 
-<section><h2>Founding crew and a season of recruits</h2><p class="key">Left: today · Right: new</p><div class="grid">
+<section><h2>Founding crew and a season of recruits</h2><p class="key">Left: earlier · Right: new</p><div class="grid">
 ${people.map((op) => pair(op, `${who(op)}<br>${describe(op)}`)).join('')}
 </div></section>
 
@@ -99,13 +99,13 @@ ${moodPeople.map((op) => `<div class="key" style="margin:10px 0 6px">${who(op)}<
 ${agePeople.map((op) => `<div class="grid" style="margin-bottom:10px">${[22, 38, 54].map((age) => `<figure>${frame(portrait({ ...op, age }, { size: 104, anatomy: true }))}<figcaption>${op.name} at ${age}</figcaption></figure>`).join('')}</div>`).join('')}
 </section>
 
-<section><h2>Shaolin warrior monks</h2><p>A new kind of monk, in the game now on today's faces: saffron robe with a dark crossed collar, a heavy mala of big dark beads, and nine ordination dots on the shaved crown. Bare-faced (no mask, hat or glasses). About 4% of Hong Kong names and 3% of Southeast Asian ones; anyone else rarely. A new pick at the end of the gear seed, so nobody else's look changed.</p><p class="key">Left: today · Right: new</p><div class="grid">
+<section><h2>Shaolin warrior monks</h2><p>A new kind of monk: saffron robe with a dark crossed collar, a heavy mala of big dark beads, and nine ordination dots on the shaved crown. Bare-faced (no mask, hat or glasses). About 4% of Hong Kong names and 3% of Southeast Asian ones; anyone else rarely. A new pick at the end of the gear seed, so nobody else's look changed.</p><p class="key">Left: earlier · Right: new</p><div class="grid">
 ${shaolin.map((op) => pair(op, who(op))).join('')}
 </div>
 <div class="key" style="margin:12px 0 6px">${who(shaolin[0])}, new face, every condition</div><div class="grid">${CONDITIONS.map(([label, cond]) => `<figure>${frame(portrait(at(shaolin[0], cond), { size: 104, anatomy: true }))}<figcaption>${label}</figcaption></figure>`).join('')}</div>
 </section>
 
-<section><h2>Masks, lenses and hats still line up</h2><p>One person per look. Lenses, glasses and moustaches follow the eyes and mouth to wherever they now sit.</p><p class="key">Left: today · Right: new</p><div class="grid">
+<section><h2>Masks, lenses and hats still line up</h2><p>One person per look. Lenses, glasses and moustaches follow the eyes and mouth to wherever they now sit.</p><p class="key">Left: earlier · Right: new</p><div class="grid">
 ${looks.map(({ label, op }) => pair(op, label)).join('')}
 </div></section>
 </body></html>`;

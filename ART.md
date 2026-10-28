@@ -102,7 +102,24 @@ Culture comes from the surname, using the game's own name lists (`src/data/recru
 | Unknown | all |
 
 ### Head shapes
-Four (half-width / jaw / chin / chin height): oval 11.5/7.5/3.2/45, round 12.5/9/4/44, square 12/10/5/45, long 10.8/7/3/46.5. Eyes sit at y 29, brows around y 25, mouth at y 40, hairline around y 19.
+Four (half-width / jaw / chin / chin height): oval 11.5/7.5/3.2/45, round 12.5/9/4/44, square 12/10/5/45, long 10.8/7/3/46.5. Eyes sit around y 29, brows around y 25, mouth around y 40, hairline around y 19. Each person's anatomy (below) then adjusts width, jaw and chin.
+
+### Face anatomy (since 2026-10-28)
+Everyone used to share one set of eyes, brows, nose and mouth. Now each face has its own, from continuous measurements on a **third seed** (`id|name|face`, `anatomyOf()`), so hair, chrome and gear keep their picks. New measurements go at the end of `anatomyOf()`, never earlier. `portrait(op, { anatomy: false })` still draws the earlier shared face for comparison sheets.
+
+| Part | Range (64-grid) |
+| --- | --- |
+| Head | half-width ±1.2, jaw −2.2 to +1.8 (never wider than the head less 1.2), chin width −1 to +1.6, chin height −1.2 to +1.8 |
+| Eyes | centre 4.1–5.2 from the midline, height y 28.5–29.6, half-width 1.6–2.6, upper-lid arc 0.45–1.4, tilt −0.8 (outer corners down) to +1 (up). Lids: **monolid**, **crease** (a fine line above), **hooded** (a fold of skin over the outer lid), **deep-set** (a shadowed socket); half the time the lid leans by culture (Hong Kong: mono, hooded; Southeast Asian: mono, hooded; Filipino: mono, crease; African: crease, deep; South Asian and European: crease, deep, hooded). **Eyes with an arc over 0.85 show their whites** (`#e8e2d8` blended 25% toward the skin) with a dark iris looking slightly toward the light. |
+| Brows | tapered shapes, thick at the inner end: thickness 0.7–2.6, arch −0.2 to 1.5, height ±0.5. Expressions move the ends from each person's own line. |
+| Nose | tip at y 34.6–37.3, width 1.1–2.8; bridge straight (3 in 6), **hooked** (a line down the lit side), **button** (a round highlight on the tip) or **broad** (shaded nostril wings). |
+| Mouth | half-width 1.9–3.4, at y 39.4–40.9; an upper lip shows when its fullness is over 0.45; lower lip 0.7–2.6. Moustaches and beards move with the mouth. |
+| Cheeks | low (as before, 2 in 4), **high** (the cheekbone plane higher and darker) or **soft** (faint). |
+| Ears, neck | ears 0.85–1.2× and up to 0.8 further out; neck half-width 3.7–5.1. |
+| Skin | freckles 10% (nine dots over the nose and cheeks), a mole 12% (one of six spots). |
+| Age | lines from nose to mouth from 33 (stronger with age), eye bags and a forehead line from 45. |
+
+Lenses (cyber-eye, half-chrome), glasses and moustaches follow the eyes and mouth to wherever they sit.
 
 ### Features and how often they appear (random, fixed per person)
 
@@ -181,7 +198,8 @@ stored in the save); expressions and condition marks come from game state only
 (stateOf), never chance; every tone readable (catchlights, neon ink); no "tribal"
 designs; everyone 18+; portraits are aria-hidden and every fact they show is also in
 text; no DOM in src/core. New features: add the choice with its odds at the END of
-withGear()'s picks (never earlier, or existing faces change), draw
+withGear()'s picks, or a new face measurement at the END of anatomyOf() (never
+earlier, or existing faces change), draw
 it in portrait(), add a row to ART.md's feature table, add a test in
 tests/art.test.js, log the decision in DESIGN.md, and add a CHANGELOG.md entry.
 Check results by rendering a sheet of real generated crew with Playwright at 48px and

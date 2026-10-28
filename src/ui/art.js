@@ -116,10 +116,10 @@ function withGear(f, op) {
   return g;
 }
 
-// Anatomy (design draft, 2026-10-28): the face itself varies, not just what's around it.
-// Eyes, brows, nose, mouth, jaw, ears and neck come from continuous measurements on a third
-// seed (`id|name|face`), so hair, chrome and gear keep their picks. Off unless asked for
-// (portrait(op, { anatomy: true })) until the owner signs off on the draft sheet.
+// Anatomy (2026-10-28): the face itself varies, not just what's around it. Eyes, brows,
+// nose, mouth, jaw, ears and neck come from continuous measurements on a third seed
+// (`id|name|face`), so hair, chrome and gear keep their picks. portrait(op, { anatomy: false })
+// still draws the earlier shared face, for comparison sheets.
 const LIDS = ['mono', 'crease', 'hooded', 'deep'];
 // Lids lean with culture the way hair does; every shape is possible for everyone.
 const LID_LEAN = { hk: ['mono', 'mono', 'hooded'], southeast_asian: ['mono', 'hooded'], filipino: ['mono', 'crease'], african: ['crease', 'deep'], south_asian: ['crease', 'deep', 'hooded'], european: ['crease', 'deep', 'hooded'] };
@@ -418,7 +418,7 @@ function browsAndMouth(st, c) {
 
 /** Chrome, glowing brighter as neural load rises (the one place the face shows load). */
 function chromeMarks(f, load, w, tired, eyeAt = [36.6, 29]) {
-  // The lens sits where the lit eye is (it moves with the anatomy draft; the old face never moves it).
+  // The lens sits where the lit eye is (anatomy moves it; the earlier shared face never does).
   const shift = (s) => (eyeAt[0] === 36.6 && eyeAt[1] === 29 ? s : `<g transform="translate(${eyeAt[0] - 36.6} ${eyeAt[1] - 29})">${s}</g>`);
   const col = f.chromeColor;
   const glow = 0.5 + load * 0.5;
@@ -617,7 +617,7 @@ function hatMarks(f, c, id) {
     ${f.headwear === 'jingasa' ? `<path d="M${L} ${brim} Q32 ${brim + sag} ${R} ${brim}" stroke="${mix(base, c.light, 0.6)}" stroke-width="0.4" fill="none"/>` : ''}`;
 }
 
-/** Glasses sized to this person's eyes (anatomy draft). */
+/** Glasses sized to this person's eyes. */
 function glassesAt(a, c) {
   const lw = Math.max(5.6, 2 * a.eyeW + 1.6), y = a.eyeY - 2;
   const l = 32 - a.eyeGap - lw / 2, r = 32 + a.eyeGap - lw / 2;
@@ -639,7 +639,7 @@ function injuryMarks(severity, w) {
  * tiredness (heavy lids, shadowed eyes) and neural load (the implant glows). Fallen
  * operatives are greyed by the frame (CSS), not here.
  */
-export function portrait(op, { size = 44, anatomy = false } = {}) {
+export function portrait(op, { size = 44, anatomy = true } = {}) {
   const f = faceOf(op);
   const st = stateOf(op);
   const severity = op.condition?.injury;
