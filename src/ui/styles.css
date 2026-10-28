@@ -181,7 +181,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .stats dd { margin: 0; font-size: 1.2rem; font-weight: 600; }
 .nextbar { display: block; height: 4px; margin-top: 6px; background: var(--line); border-radius: 2px; overflow: hidden; }
 .nextbar span { display: block; height: 100%; background: var(--accent-2); }
-.climb { margin: 8px 0 12px; align-items: center; flex-wrap: wrap; }
+.climb { margin: 8px 0 12px; }
 .growth { font-size: 0.8rem; font-weight: 600; color: var(--accent-2); }
 .growth.is-down { color: var(--danger); }
 .mentor { color: var(--accent-2); margin: 0.5rem 0 0; }
@@ -818,15 +818,13 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .iconword { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
 .iconcrew { display: inline-flex; gap: 1px; vertical-align: -0.2em; }
 .iconcrew .icon { width: 1.2em; height: 1.2em; }
-.infoline { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 12px; }
+.infoline { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .infoline > p { margin: 0; }
-.infotip { position: relative; }
-.infotip > summary { list-style: none; cursor: pointer; width: 22px; height: 22px; border: 1px solid var(--muted); border-radius: 50%; display: grid; place-items: center; font-size: 0.75rem; font-weight: 700; color: var(--muted); font-style: italic; }
-.infotip > summary::-webkit-details-marker { display: none; }
-.infotip > summary::before { content: ''; position: absolute; inset: -11px; } /* a 44px tap area round the small (i) */
-.infotip[open] > summary { color: var(--accent-2); border-color: var(--accent-2); }
-.infotip > p { margin: 6px 0 0; color: var(--muted); max-width: 60ch; }
-.infoline:has(.infotip[open]) { flex-wrap: wrap; }
+/* The (i): small and quiet, centred on its line, with a 44px tap area round it. */
+.infobtn { position: relative; flex: none; width: 16px; height: 16px; padding: 0; border: 1px solid var(--muted); border-radius: 50%; background: none; color: var(--muted); font: italic 700 0.62rem/1 Georgia, serif; display: grid; place-items: center; cursor: pointer; }
+.infobtn::before { content: ''; position: absolute; inset: -14px; }
+.infobtn.is-on { color: var(--accent-2); border-color: var(--accent-2); }
+.infotext { margin: -6px 0 12px; color: var(--muted); max-width: 60ch; }
 .upcoming__group > summary { cursor: pointer; list-style: none; }
 .upcoming__group > summary::-webkit-details-marker { display: none; }
 .upcoming__group > summary::after { content: ' ▸'; color: var(--muted); font-size: 0.8em; }
@@ -837,8 +835,7 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 /* Reputation: a compact line with a short ten-block gauge (owner's feedback, 2026-10-27). */
 .climb__label { font-size: 0.85rem; color: var(--muted); }
 .climb__label strong { color: var(--text); }
-.climb__gauge { display: inline-flex; gap: 2px; }
-.climb__gauge i { width: 8px; height: 10px; background: var(--line); }
+.climb__gauge { display: inline-flex; gap: 2px; align-items: center; }
+.climb__gauge i { width: 6px; height: 8px; background: var(--line); }
 .climb__gauge i.is-on { background: var(--accent); }
 .climb__gauge i.is-part { background: linear-gradient(90deg, var(--accent) 50%, var(--line) 50%); }
-.climb .infotip[open] { flex-basis: 100%; }
