@@ -6,6 +6,7 @@
 
 import { GEAR, SLOTS, TIERS, carried, itemName, priceOf, sellPrice, canChangeGear, kitsFor } from '../core/gear.js';
 import { gearGlyph } from './icons.js';
+import { gearArt } from './art.js';
 
 /** What an item does, in a few words: "Combat +1", "Overwatch: combat · 2 shots". */
 export function itemEffect(item) {
@@ -19,12 +20,18 @@ export function itemEffect(item) {
 
 const glyphFor = (item) => gearGlyph(item.type, GEAR[item.type].slot);
 
+/** The item's picture for a row: its drawing (ui/art.js) where it has one, else its line icon. */
+const thumb = (item, carrier = null) => {
+  const art = gearArt(item, { carrier, width: 96 });
+  return art ? `<span class="gearrow__art" aria-hidden="true">${art}</span>` : `<span class="gearrow__icon" aria-hidden="true">${glyphFor(item)}</span>`;
+};
+
 /** One item as a row: name, what it does, and an action button. */
-function itemRow(ui, item, { action, label, sub = '', disabled = false, id = item.uid }) {
+function itemRow(ui, item, { action, label, sub = '', disabled = false, id = item.uid, carrier = null }) {
   const { esc } = ui;
   return `
     <li class="gearrow">
-      <span class="gearrow__icon" aria-hidden="true">${glyphFor(item)}</span>
+      ${thumb(item, carrier)}
       <span class="gearrow__main"><strong>${esc(itemName(item))}</strong>
         <span class="gearrow__eff">${esc(itemEffect(item))}</span>
         ${sub ? `<span class="gearrow__sub muted small">${sub}</span>` : ''}</span>
@@ -38,7 +45,7 @@ function buyRow(ui, state, type) {
   const g = GEAR[type];
   return `
     <li class="gearrow gearrow--buy">
-      <span class="gearrow__icon" aria-hidden="true">${glyphFor({ type })}</span>
+      ${thumb({ type, tier: 'street' })}
       <span class="gearrow__main"><strong>${esc(g.name)}</strong>
         <span class="gearrow__eff">${esc(itemEffect({ type, tier: 'street' }))}</span>
         <span class="gearrow__sub muted small">${esc(g.desc)}</span></span>
@@ -76,7 +83,7 @@ export function renderArmoury(ui, state) {
       <h2>In the stash (${stash.length})</h2>
       ${stash.length ? `<ul class="list list--plain gearlist">${stash.map((item) => itemRow(ui, item, { action: 'sell', label: `Sell ${money(sellPrice(item))}` })).join('')}</ul>`
         : '<p class="muted small">Nothing here. What you buy waits here until someone carries it.</p>'}
-      ${worn.length ? `<h2>Carried</h2><ul class="list list--plain gearlist">${worn.map(({ item, op }) => itemRow(ui, item, { action: 'open-op', label: op.handle, id: op.id })).join('')}</ul>` : ''}
+      ${worn.length ? `<h2>Carried</h2><ul class="list list--plain gearlist">${worn.map(({ item, op }) => itemRow(ui, item, { action: 'open-op', label: op.handle, id: op.id, carrier: op })).join('')}</ul>` : ''}
       </div>
       <div>
       <h2>Buy <span class="muted small">· ${money(state.cash)} in hand</span></h2>
@@ -88,7 +95,10 @@ export function renderArmoury(ui, state) {
     </section>`;
 }
 
-/** A runner's four slots on their page. */
+/**
+ * A runner's four slots on their page, as a 2×2 grid of tiles with each item drawn big (owner's
+ * call, 2026-10-28), lit by the runner's own city light. Items without a drawing show their icon.
+ */
 export function renderLoadout(ui, state, op) {
   const { esc } = ui;
   const can = canChangeGear(state, op);
@@ -97,9 +107,12 @@ export function renderLoadout(ui, state, op) {
       <ul class="list list--plain loadout">
         ${Object.entries(SLOTS).map(([slot, s]) => {
           const item = op.gear?.[slot] ?? null;
-          return `<li><button class="loadout__slot ${item ? '' : 'is-empty'}" data-action="gear-slot" data-id="${slot}" ${can.ok ? '' : 'disabled'}>
+          const art = item ? gearArt(item, { carrier: op, width: 192 }) : null;
+          return `<li><button class="loadout__tile ${item ? '' : 'is-empty'}" data-action="gear-slot" data-id="${slot}" ${can.ok ? '' : 'disabled'} aria-label="${esc(s.name)}: ${esc(item ? itemName(item) : 'empty')}. Tap to change.">
             <span class="loadout__name">${esc(s.name)}</span>
-            <span class="loadout__item">${item ? `${glyphFor(item)}<strong>${esc(itemName(item))}</strong> <span class="muted small">${esc(itemEffect(item))}</span>` : '<span class="muted">Empty</span>'}</span>
+            <span class="loadout__pic ${art ? '' : 'loadout__pic--icon'}" aria-hidden="true">${item ? art ?? glyphFor(item) : '+'}</span>
+            <strong class="loadout__item">${item ? esc(itemName(item)) : 'Empty'}</strong>
+            ${item ? `<span class="loadout__eff">${esc(itemEffect(item))}</span>` : ''}
           </button></li>`;
         }).join('')}
       </ul>
@@ -123,7 +136,7 @@ export function renderGearSheet(ui, state, op, slot) {
       </div>
       <ul class="list list--plain gearlist">${stash.length ? stash.map((item) => itemRow(ui, item, { action: 'equip', label: 'Carry' })).join('') : '<li class="muted small">Nothing for this slot in the stash. Buy it in the armoury.</li>'}</ul>
       ${others.length ? `<h3 class="sheet__group">Carried by others <span>takes it off them</span></h3>
-      <ul class="list list--plain gearlist">${others.map(({ item, o }) => itemRow(ui, item, { action: 'equip', label: `From ${o.handle}`, disabled: !canChangeGear(state, o).ok })).join('')}</ul>` : ''}
+      <ul class="list list--plain gearlist">${others.map(({ item, o }) => itemRow(ui, item, { action: 'equip', label: `From ${o.handle}`, disabled: !canChangeGear(state, o).ok, carrier: o })).join('')}</ul>` : ''}
       ${current ? `<button class="btn btn--ghost btn--block" data-action="unequip" data-id="${slot}">Put it back in the stash</button>` : ''}
       <button class="btn btn--block" data-action="open-armoury">Go to the armoury</button>
     </div>`;
