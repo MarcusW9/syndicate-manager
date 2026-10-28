@@ -22,6 +22,8 @@ Then add a row to the top of the table below and commit the folder with the chan
 
 | Date | Version | Commit | What's new on screen | Folder |
 | --- | --- | --- | --- | --- |
+| 2026-10-28 | Reputation in the Heat meter's style, smaller (i) | (this change) | The job board's reputation as "REP", a small cyan segmented track and "2/10"; the (i) is small and lines up with its text. | [2026-10-28-reputation-heat-style](2026-10-28-reputation-heat-style/) |
+| 2026-10-28 | Design session: reputation gauge | (this change) | The five mocked gauge options (A blocks, B Heat-meter style, chosen, C pips, D words only, E hairline) and B on the job board with the smaller (i). README captions each. | [2026-10-28-design-session-reputation-gauge](2026-10-28-design-session-reputation-gauge/) |
 | 2026-10-27 | Reputation line | PR #23 | The job board's reputation as one line with a ten-block gauge and an (i); capture 18 has the (i) open with the unlock ladder (from a test save). | [2026-10-27-reputation-line](2026-10-27-reputation-line/) |
 | 2026-10-27 | Stat icons rolled out | PR #23 | Line icons beside stats on job cards (with the crew size as figures), squad dossiers and the picker; plus two extra captures from a test save: the profile's stats panel (18) and the crew list's main stats (19). | [2026-10-27-stat-icons](2026-10-27-stat-icons/) |
 | 2026-10-27 | Owner's feedback: "Coming up" and side work | PR #23 | Side work explains itself in one line with an (i) to tap; its cards show the stat as a line icon and the crew count as figures. Grouped "5 back from the job" lines only show in the design-session set below. | [2026-10-27-coming-up-and-side-work](2026-10-27-coming-up-and-side-work/) |

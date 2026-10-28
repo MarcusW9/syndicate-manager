@@ -32,7 +32,7 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 ## Next
 
 1. **Merge the focus-crisis fix** (this branch, after #23). The owner is play-testing slices 1-3 and sending feedback.
-2. **Small polish:** the (i) jumps to its own line when opened on a phone; reloading while the crew calls you in doesn't scroll to the call-in. The phone planning screen is long (owner to decide after more play).
+2. **Small polish:** reloading while the crew calls you in doesn't scroll to the call-in. The reputation gauge is B of five (DESIGN.md, 2026-10-28); the owner wants to revisit it, options in `drafts/prototypes/reputation-gauge-options.html`. The phone planning screen is long (owner to decide after more play).
 3. **Squad run slice 4** (`PLAN-CORE-LOOP.md`): a site plan per district as data, and the incident text per district (writing task 11).
 4. Then slice 5 (gear and specialisations), and the agreed review items: the neural load and burnout cleanup, mood traits, money pressure, relationships with the career page.
 

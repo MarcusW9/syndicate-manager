@@ -985,15 +985,16 @@ const talkTag = (v) => v.rumour ? `<span class="talk-tag">Street talk: ${esc(v.r
 function climbLine() {
   const next = nextUnlock(state);
   if (!next) return '';
-  // One compact line: the number, a short ten-block gauge to the next unlock, and the rest behind
-  // an (i) (owner's feedback, 2026-10-27: the full-width bar read as a big scale).
+  // One compact line in the Heat meter's style (option B of five, owner's pick 2026-10-28; the
+  // others are in drafts/prototypes/reputation-gauge-options.html): a label, a small segmented
+  // track to the next unlock, the number, and the rest behind an (i).
   const rep = state.reputation ?? 0;
-  const share = Math.min(1, rep / next.rep);
-  const blocks = Array.from({ length: 10 }, (_, i) => `<i class="${share * 10 >= i + 1 ? 'is-on' : share * 10 > i ? 'is-part' : ''}"></i>`).join('');
+  const pct = Math.round(Math.min(1, rep / next.rep) * 100);
   const ladder = Object.entries(JOB_GATES).map(([threat, need]) => `${need} (threat ${threat})`).join(', ');
   return `<div class="climb infoline">
-    <span class="climb__label">Reputation <strong>${Math.floor(rep)}/${next.rep}</strong></span>
-    <span class="climb__gauge" role="progressbar" aria-label="Reputation towards the next unlock" aria-valuenow="${Math.floor(rep)}" aria-valuemin="0" aria-valuemax="${next.rep}">${blocks}</span>
+    <span class="climb__label">Rep</span>
+    <span class="heat__track climb__track" role="progressbar" aria-label="Reputation towards the next unlock" aria-valuenow="${Math.floor(rep)}" aria-valuemin="0" aria-valuemax="${next.rep}"><span style="width:${pct}%"></span></span>
+    <strong class="climb__value">${Math.floor(rep)}/${next.rep}</strong>
     ${infoButton('reputation', 'About reputation')}
   </div>
   ${infoText('reputation', `Bigger work opens up once people know your name. Finished jobs build it; aborts cost it. Rookie jobs are open from the start; the rest open at ${ladder}.`)}`;

@@ -832,10 +832,8 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .upcoming__group > span { display: block; }
 .jobcard__stats { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 0.8rem; color: var(--muted); }
 .stats dt.iconword { display: flex; }
-/* Reputation: a compact line with a short ten-block gauge (owner's feedback, 2026-10-27). */
-.climb__label { font-size: 0.85rem; color: var(--muted); }
-.climb__label strong { color: var(--text); }
-.climb__gauge { display: inline-flex; gap: 2px; align-items: center; }
-.climb__gauge i { width: 6px; height: 8px; background: var(--line); }
-.climb__gauge i.is-on { background: var(--accent); }
-.climb__gauge i.is-part { background: linear-gradient(90deg, var(--accent) 50%, var(--line) 50%); }
+/* Reputation in the Heat meter's style (owner's pick of five, 2026-10-28): label, track, number. */
+.climb__label { font-family: var(--display); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.climb__track { width: 56px; }
+.climb__track span { background: var(--accent-2); }
+.climb__value { font-family: var(--display); font-weight: 700; font-size: 1rem; letter-spacing: 0.04em; }

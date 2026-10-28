@@ -5,6 +5,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+
+## 2026-10-28 · A neater (i) and reputation line (owner's feedback)
+- The (i) is smaller and lines up with its text; tapping it opens the explanation under the line, and the (i) stays put (on phones it used to jump).
+- Reputation now looks like the Heat meter in the top bar: "REP", a small segmented cyan track to the next unlock, then "2/10" and the (i).
 ## 2026-10-28 · Crises name the right person
 - In crises that are about one role (the tech when a container stack slips, the driver at a roadblock), the choice now names whoever actually does it, and if it goes wrong they're the one hurt. Before, it could say "Flicker braced it" when Thimble, the better hand, made the roll.
 - When Doc Siu hands a patient to someone by name, that medic now does the stitching (backup still helps), like other crises that name someone.
