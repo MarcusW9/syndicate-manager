@@ -121,6 +121,15 @@ Everyone used to share one set of eyes, brows, nose and mouth. Now each face has
 
 Lenses (cyber-eye, half-chrome), glasses and moustaches follow the eyes and mouth to wherever they sit.
 
+### Career marks (since 2026-10-28, from game state)
+What the job leaves on a face, for good. `src/core/marks.js` records each one in `op.marks` (with a history line, and "Marked: ..." on the profile); `art.js` draws them and places them from the person's own seed (`id|name|scarN`), so a mark never moves. Drawn on the anatomy face; hidden under a faceplate (the text still says so).
+
+| Mark | When | What the face shows |
+| --- | --- | --- |
+| Scar (up to 3) | a serious or critical wound, at most one a day | a raised pale line (skin blended 50% toward `#ffe0dc`) over a dark edge (skin 45% toward `#2a1210`), with stitch marks across it. Sites, from the seed: shadow cheek, through the shadow-side brow (the brow keeps a gap; skipped if the face already has a random scar or cut there), through the lip, the chin, across the nose, the lit cheek (skipped under a half-chrome plate). |
+| Extra chrome (up to 2) | a job that ends with neural load over 70 (the line the game warns at) | on the **shadow side**, so it never clashes with bought chrome on the lit side, in the chrome colour, glowing and haloing with load like other chrome: first a port at the temple with a trace to a node by the eye; second, three ringed ports along the jaw. |
+| The crew's mark (once) | ten jobs with the crew | a small neon **lantern** (the city is Lantern Bay) in the city-light colour, under the shadow-side eye. |
+
 ### Features and how often they appear (random, fixed per person)
 
 | Feature | Options and odds |
@@ -199,7 +208,8 @@ stored in the save); expressions and condition marks come from game state only
 designs; everyone 18+; portraits are aria-hidden and every fact they show is also in
 text; no DOM in src/core. New features: add the choice with its odds at the END of
 withGear()'s picks, or a new face measurement at the END of anatomyOf() (never
-earlier, or existing faces change), draw
+earlier, or existing faces change); marks that come from play are recorded in
+src/core/marks.js and only drawn in art.js. Draw
 it in portrait(), add a row to ART.md's feature table, add a test in
 tests/art.test.js, log the decision in DESIGN.md, and add a CHANGELOG.md entry.
 Check results by rendering a sheet of real generated crew with Playwright at 48px and

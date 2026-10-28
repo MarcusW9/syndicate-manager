@@ -11,6 +11,7 @@
 
 import { refreshSideBoard } from '../core/sidetasks.js';
 import { SAVE_VERSION } from '../core/state.js';
+import { TATTOO_JOBS } from '../core/marks.js';
 import { addOffer } from '../core/jobs.js';
 import { STARTING_ROSTER_CAP } from '../core/recruits.js';
 import { prepareOperative, rollPotential, rollScoutError, scoutFor, potentialRead } from '../core/development.js';
@@ -341,6 +342,19 @@ function migrate(state) {
     }
     for (const kit of kits) state.stash.push(loadoutOf(state, [kit])[GEAR[kit].slot]);
     state.version = 23;
+  }
+  if (state.version === 23) {
+    // v24: career marks (core/marks.js). Nobody has scars or chrome on record yet; anyone who
+    // has already worked ten jobs with the crew gets the crew's mark now, with a line saying so.
+    for (const op of state.crew) {
+      op.marks = op.marks ?? [];
+      if (!op.freelance && (op.jobsWithCrew ?? 0) >= TATTOO_JOBS && !op.marks.some((m) => m.kind === 'tattoo')) {
+        op.marks.push({ kind: 'tattoo', day: state.day });
+        op.history = [...(op.history ?? []), `Day ${state.day}: got the crew's mark (${TATTOO_JOBS} jobs together)`];
+      }
+    }
+    for (const entry of state.memorial ?? []) entry.marks = entry.marks ?? [];
+    state.version = 24;
   }
   return state;
 }

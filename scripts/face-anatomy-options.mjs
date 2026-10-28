@@ -64,8 +64,19 @@ const CONDITIONS = [
 ];
 // Bare faces only for these rows: masks and visors would hide what's being checked.
 const bare = people.filter((op) => { const f = faceOf(op); return !f.mask && !f.visor && !f.halfFace; });
+const mk = (kind, n) => Array.from({ length: n }, () => ({ kind, day: 1 }));
+const MARK_STEPS = [
+  ['No marks', [], {}],
+  ['A scar', mk('scar', 1), {}],
+  ['Three scars', mk('scar', 3), {}],
+  ['Extra chrome', mk('implant', 1), {}],
+  ['Chrome twice, load 80', mk('implant', 2), { neuralLoad: 80 }],
+  ["The crew's mark", mk('tattoo', 1), {}],
+  ['A veteran: all of it', [...mk('scar', 2), ...mk('implant', 2), ...mk('tattoo', 1)], {}],
+];
 const moodPeople = [bare[0], bare[3], bare[6], bare[9]];
 const agePeople = [bare[2], bare[5], bare[8]];
+const markPeople = [bare[1], bare[4], bare[7], bare[10]];
 
 const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Face anatomy draft</title>
@@ -97,6 +108,10 @@ ${moodPeople.map((op) => `<div class="key" style="margin:10px 0 6px">${who(op)}<
 
 <section><h2>Age shows in the face, not just the hair</h2><p>Lines from nose to mouth from 33, eye bags and a forehead line from 45. Same person drawn at 22, 38 and 54.</p>
 ${agePeople.map((op) => `<div class="grid" style="margin-bottom:10px">${[22, 38, 54].map((age) => `<figure>${frame(portrait({ ...op, age }, { size: 104, anatomy: true }))}<figcaption>${op.name} at ${age}</figcaption></figure>`).join('')}</div>`).join('')}
+</section>
+
+<section><h2>Career marks</h2><p>What the job leaves on a face, for good (core/marks.js). Scars from serious or critical wounds (up to three, each in the person's own spots), chrome added when a job ends in the neural-load danger zone (up to two, on the shadow side, glowing with load like other chrome), and the crew's mark after ten jobs together: a small neon lantern under the eye. Each is also written in their history and on their profile.</p>
+${markPeople.map((op) => `<div class="key" style="margin:10px 0 6px">${who(op)}</div><div class="grid">${MARK_STEPS.map(([label, marks, cond]) => `<figure>${frame(portrait(at({ ...op, marks }, cond), { size: 104 }))}<span class="pairrow small">${frame(portrait(at({ ...op, marks }, cond), { size: 48 }))}</span><figcaption>${label}</figcaption></figure>`).join('')}</div>`).join('')}
 </section>
 
 <section><h2>Shaolin warrior monks</h2><p>A new kind of monk: saffron robe with a dark crossed collar, a heavy mala of big dark beads, and nine ordination dots on the shaved crown. Bare-faced (no mask, hat or glasses). About 4% of Hong Kong names and 3% of Southeast Asian ones; anyone else rarely. A new pick at the end of the gear seed, so nobody else's look changed.</p><p class="key">Left: earlier · Right: new</p><div class="grid">

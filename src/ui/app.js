@@ -13,6 +13,7 @@ import { cityMapSvg, MAP_DISTRICTS } from './citymap.js';
 
 import { advanceDay, calendar, formatShortDate, isBlocked, seasonStartDay } from '../core/time.js';
 import { createNewGame } from '../core/state.js';
+import { marksText } from '../core/marks.js';
 import { templateById, jobView, nextUnlock, JOB_GATES } from '../core/jobs.js';
 import { trustLabel, trustOf } from '../core/clients.js';
 import { CLIENTS } from '../data/clients.js';
@@ -970,6 +971,7 @@ function renderOperative() {
         <div>
           <h1>${esc(op.name)} <span class="muted">"${esc(op.handle)}"</span></h1>
           <p class="muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age} · ${money(op.wage)}/week</p>
+          ${marksText(op) ? `<p class="muted small">Marked: ${esc(marksText(op))}</p>` : ''}
           ${statusChip(availability(state, op))}
         </div>
       </div>

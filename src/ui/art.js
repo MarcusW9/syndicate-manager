@@ -265,6 +265,73 @@ function skinMarks(a, c, age) {
   return d;
 }
 
+// --- career marks (core/marks.js) ---------------------------------------------------------
+// The game records that a mark happened; where it sits comes from the person's own seed, so
+// a scar never moves. Drawn on the anatomy face only.
+const SCAR_SITES = ['cheek', 'brow', 'lip', 'chin', 'nose', 'litcheek'];
+
+function scarSites(op, f, n) {
+  const sites = [];
+  for (let i = 0; sites.length < n; i++) {
+    const s = SCAR_SITES[hash(`${op.id}|${op.name}|scar${i}`) % SCAR_SITES.length];
+    // Not under the half-chrome plate, and not beside the scar some faces start with.
+    const clash = (s === 'litcheek' && f.chrome === 'half') || (s === 'brow' && ['scar', 'cut'].includes(f.marking));
+    if (i > 40 || (!sites.includes(s) && !clash)) sites.push(s);
+  }
+  return sites;
+}
+
+/** Healed scars: a pale raised line with stitch marks, at each person's own spots. */
+function scarMarks(sites, a, g, c) {
+  const L = 32 - g.w, R = 32 + g.w;
+  const scar = mix(c.skin, '#ffe0dc', 0.5), edge = mix(c.skin, '#2a1210', 0.45), stitch = edge;
+  // A raised line: a dark edge below, the pale scar on top, stitch marks across it.
+  const line = (x1, y1, x2, y2, ticks = 2) => {
+    let d = `<path d="M${x1 + 0.3} ${y1 + 0.4} L${x2 + 0.3} ${y2 + 0.4}" stroke="${edge}" stroke-width="1" stroke-linecap="round" opacity="0.8"/>
+      <path d="M${x1} ${y1} L${x2} ${y2}" stroke="${scar}" stroke-width="1.05" stroke-linecap="round"/>`;
+    const nx = -(y2 - y1), ny = x2 - x1, len = Math.hypot(nx, ny) || 1;
+    for (let k = 1; k <= ticks; k++) {
+      const t = k / (ticks + 1), x = x1 + (x2 - x1) * t, y = y1 + (y2 - y1) * t;
+      d += `<path d="M${x - (nx / len) * 0.85} ${y - (ny / len) * 0.85} L${x + (nx / len) * 0.85} ${y + (ny / len) * 0.85}" stroke="${stitch}" stroke-width="0.3" opacity="0.8"/>`;
+    }
+    return d;
+  };
+  const ex = 32 - a.eyeGap;
+  return sites.map((s) => {
+    switch (s) {
+      // Through the brow: the hair doesn't grow back, so the brow has a gap.
+      case 'brow': return `<path d="M${ex - 0.2} ${a.eyeY - 6} L${ex + 0.5} ${a.eyeY - 1.6}" stroke="${c.shade}" stroke-width="1.1"/>${line(ex - 0.2, a.eyeY - 6.2, ex + 0.5, a.eyeY - 1.6, 1)}`;
+      case 'lip': return line(32.9, a.mouthY - 3, 33.5, a.mouthY + 1.3, 1);
+      case 'chin': return line(30.2, g.chin - 2.4, 33.4, g.chin - 1.5, 2);
+      case 'nose': return line(30.4, a.eyeY + 1.9, 33.6, a.eyeY + 3, 1);
+      case 'litcheek': return line(R - 5, a.eyeY + 2.4, R - 2.2, a.eyeY + 7, 2);
+      default: return line(L + 2.6, a.eyeY + 2.2, L + 6.4, a.eyeY + 6.8, 3);
+    }
+  }).join('');
+}
+
+/** Chrome added on the job, on the shadow side (bought chrome sits on the lit side). */
+function implantMarks(n, f, g, a, load) {
+  const L = 32 - g.w, col = f.chromeColor, glow = 0.5 + load * 0.5;
+  const halo = (x, y) => (load > 0.4 ? `<circle cx="${x}" cy="${y}" r="${2.5 + load * 4}" fill="${col}" opacity="${(load - 0.3) * 0.4}"/>` : '');
+  let d = `${halo(L + 3.6, 25.4)}<rect x="${L + 0.2}" y="19.2" width="1.6" height="1.6" fill="#2b3038" stroke="${col}" stroke-width="0.3" opacity="${glow}"/>
+    <path d="M${L + 1} 20.8 L${L + 1.6} 24 L${L + 3.6} 25.4" stroke="${col}" stroke-width="0.5" fill="none" stroke-linejoin="round" opacity="${glow}"/>
+    <circle cx="${L + 3.6}" cy="25.4" r="0.55" fill="${col}" opacity="${glow}"/>`;
+  if (n > 1) {
+    const [x1, y1, x2, y2] = [L + 1.4, a.eyeY + 4.5, 32 - g.j - 0.6, 38.4];
+    d += [0.15, 0.5, 0.85].map((t) => `<circle cx="${x1 + (x2 - x1) * t}" cy="${y1 + (y2 - y1) * t}" r="0.55" fill="#2b3038" stroke="${col}" stroke-width="0.3"/><circle cx="${x1 + (x2 - x1) * t}" cy="${y1 + (y2 - y1) * t}" r="0.22" fill="${col}" opacity="${glow}"/>`).join('');
+  }
+  return d;
+}
+
+/** The crew's mark: a small neon lantern (the city is Lantern Bay) under the shadow-side eye. */
+function crewMark(a, c) {
+  const x = 32 - a.eyeGap + 0.4, y = a.eyeY + 4.2;
+  return `<g stroke="${c.light}" stroke-width="0.4" fill="none" opacity="0.9" stroke-linecap="round">
+    <path d="M${x - 0.5} ${y - 1.4} h1 M${x - 0.5} ${y + 1.4} h1 M${x} ${y + 1.4} v0.9"/>
+    <rect x="${x - 0.85}" y="${y - 1.1}" width="1.7" height="2.2" rx="0.7"/></g>`;
+}
+
 /**
  * What the portrait shows about someone's condition today (the same facts the screen
  * writes out). Expression, first match wins: a dead-eyed stare in neural load's danger
@@ -648,6 +715,9 @@ export function portrait(op, { size = 44, anatomy = true } = {}) {
   const g = a ? reshape(HEAD_SHAPES[f.shape], a) : HEAD_SHAPES[f.shape];
   const eyeAt = a ? [32 + a.eyeGap, a.eyeY] : [36.6, 29];
   const nk = a?.neck, ear = a?.ear, earOut = a?.earOut;
+  const markCount = (kind) => (op.marks ?? []).filter((m) => m.kind === kind).length;
+  const scars = a ? scarSites(op, f, Math.min(3, markCount('scar'))) : [];
+  const implants = Math.min(2, markCount('implant')), tattooed = markCount('tattoo') > 0;
   const w = g.w;
   const id = `pf${++uid}`;
   const head = headPath(g);
@@ -705,6 +775,7 @@ export function portrait(op, { size = 44, anatomy = true } = {}) {
     ${hair.shaved ? `<path d="M${L - 1} 15 L${L + 4} 15 L${L + 3} 27 L${L - 1} 27 Z" fill="${c.hair}" opacity="0.3"/>${shavedInk}` : ''}
     <g ${a ? `transform="translate(0 ${eyeAt[1] - 29})"` : ''}><path d="M${L + 2} 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="${c.midShade}"/></g>
     ${a ? skinMarks(a, c, op.age ?? 25) : ''}
+    ${a && scars.length && f.mask !== 'faceplate' ? scarMarks(scars, a, g, c) : ''}
   </g>
 
   ${a ? `${noseShape(a, c)}${eyeShape(-1, a, st, c, id)}${f.chrome === 'cybereye' || f.chrome === 'half' ? '' : eyeShape(1, a, st, c, id)}
@@ -716,6 +787,7 @@ export function portrait(op, { size = 44, anatomy = true } = {}) {
   ${browsAndMouth(st, c)}`}
   ${f.mask ? '' : a ? `<g transform="translate(0 ${(a.mouthY - 40).toFixed(2)})">${facialHairMarks(f, c, g, id)}</g>` : facialHairMarks(f, c, g, id)}
   ${markings(f, c, w)}
+  ${a && tattooed && f.mask !== 'faceplate' ? crewMark(a, c) : ''}
   ${f.chrome === 'half' ? `<g clip-path="url(#${id}h)">${halfFacePlate(f, c, g)}</g>` : ''}
   ${f.mask ? maskMarks(f, c, g, st, id) : ''}
   ${f.glasses && f.chrome !== 'cybereye' ? (a ? glassesAt(a, c) : `<g fill="${c.light}" fill-opacity="0.12" stroke="#0d0d0f" stroke-width="0.8"><rect x="24.3" y="27" width="6.2" height="4.2" rx="1.2"/><rect x="33.5" y="27" width="6.2" height="4.2" rx="1.2"/></g><path d="M30.5 28.6 h3" stroke="#0d0d0f" stroke-width="0.8"/>`) : ''}
@@ -732,6 +804,7 @@ export function portrait(op, { size = 44, anatomy = true } = {}) {
 
   ${f.visor ? `<path d="M${L - 1} 26.2 L${R + 1} 25.8 L${R + 0.6} 31.2 L${L - 0.6} 31.6 Z" fill="#0b0f14"/><path d="M${L - 0.4} 27.2 L${R + 0.4} 26.8" stroke="${c.light}" stroke-width="0.6" opacity="${st.tired ? 0.35 : 0.85}"/><path d="M${R - 7} 29.6 h2 M${R - 4.4} 29.6 h1" stroke="${c.light}" stroke-width="0.5" opacity="0.6"/>` : ''}
   ${f.mask === 'faceplate' ? '' : chromeMarks(f, st.load, w, st.tired, eyeAt)}
+  ${a && implants && f.mask !== 'faceplate' ? implantMarks(implants, f, g, a, st.load) : ''}
   ${st.injured && f.mask !== 'faceplate' ? injuryMarks(severity, w) : ''}
 </svg>`;
 }

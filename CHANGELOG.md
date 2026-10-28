@@ -5,6 +5,13 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-28 · Career marks
+- **A bad wound leaves a scar.** A serious or critical injury leaves a permanent scar on their face, up to three. Light wounds heal clean.
+- **Pushing neural load leaves chrome.** A job that ends with someone in the danger zone (over 70) adds a visible implant, up to two.
+- **The crew's mark.** After ten jobs with the crew, someone gets a small neon lantern under the eye.
+- Each mark is written in their history, and the profile lists them under their name ("Marked: a scar, the crew's mark"). The memorial wall keeps them.
+- Saves upgrade on their own: nobody has scars on record yet, but anyone already past ten jobs gets the crew's mark straight away.
+
 ## 2026-10-28 · Every face is its own
 - **Faces now differ in the face itself**, not just the hair and gear: eyes (spacing, size, tilt, and monolid, creased, hooded or deep-set lids), brows, nose, mouth and lips, jaw, chin, ears and neck. Wide-open eyes show their whites. Some people have freckles or a mole.
 - **Age shows**: lines from nose to mouth from the mid-thirties, eye bags and a forehead line from 45.
