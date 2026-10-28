@@ -919,6 +919,265 @@ function rifleShapes({ tier, light, neon }) {
   ].join('');
 }
 
+// --- rifle looks (design draft, 2026-10-28) ---------------------------------------------
+// A kit of parts: a frame (the silhouette), a finish (materials and colours), an engraving and
+// a charm. An item with a `look` draws from the kit; items without one (every item in the game
+// today) keep the drawing above. Same 96×32 frame, muzzle right, lit from the right.
+
+export const RIFLE_FINISHES = {
+  street: { name: 'Gunmetal and old wood', stock: '#6b4a2e', metal: '#454c57', dark: '#2b3038', guard: 'dark', grain: true, tape: true },
+  carbon: { name: 'Carbon', stock: '#272c35', metal: '#1d2129', dark: '#121519', guard: 'metal', skeleton: true, neonLine: true },
+  rosewood: { name: 'Rosewood and brass', stock: '#5a2a1c', metal: '#a07c44', dark: '#2e2420', guard: 'stock', grain: true, inlay: '#e9e1cc' },
+  cinnabar: { name: 'Cinnabar lacquer', stock: '#a8261e', metal: '#1b1b20', dark: '#121216', guard: 'stock', gloss: true, trim: '#d9a441' },
+  jade: { name: 'Jade and bronze', stock: '#3d8a68', metal: '#7a5c34', dark: '#2a2620', guard: 'stock', gloss: true, veins: '#9ad8b8' },
+  bamboo: { name: 'Bamboo', stock: '#b8995a', metal: '#3a3f47', dark: '#24282e', guard: 'stock', nodes: true },
+  bronze: { name: 'Temple bronze', stock: '#4a3a2a', metal: '#8a6a3c', dark: '#3a3024', guard: 'metal', patina: '#6fa08a', trim: '#c9a24a' },
+  blackgold: { name: 'Black and gold', stock: '#16171b', metal: '#202127', dark: '#0f1013', guard: 'metal', gloss: true, trim: '#c9a24a' },
+  ceramic: { name: 'White ceramic', stock: '#d8dce2', metal: '#aeb5bf', dark: '#353a43', guard: 'stock', neonLine: true },
+  candy: { name: 'Candy neon', stock: '#ff4f7b', metal: '#2a2d36', dark: '#191b21', guard: 'stock', gloss: true },
+  urban: { name: 'Urban camo', stock: '#5b616b', metal: '#3a3f47', dark: '#24282e', guard: 'stock', camo: ['#7b818b', '#3e434c', '#9aa0a8'] },
+  rust: { name: 'Rust bucket', stock: '#4b4f3b', metal: '#6b4733', dark: '#3a2a22', guard: 'dark', chips: true, tape: true },
+};
+
+/**
+ * Frames: the parts of each silhouette. role picks the colour (stock, guard, metal, dark);
+ * box is [x0, y0, x1, y1] for the lit top edge and shaded bottom edge. Anchors place charms:
+ * tail (the back of the stock, for things that hang), face (flat on the stock), swivel (the
+ * front sling swivel).
+ */
+const rect = (x, y, w, h) => ({ d: `M${x} ${y} H${x + w} V${y + h} H${x} Z`, box: [x, y, x + w, y + h] });
+export const RIFLE_FRAMES = {
+  marksman: {
+    name: 'Marksman (scope, suppressor)',
+    parts: [
+      { role: 'stock', d: 'M6 12.6 L12 12 L25 13.6 L25 19.4 L19 19.8 L13 21.4 L6 21.8 Z', box: [6, 12, 25, 21.8] },
+      { role: 'dark', ...rect(5.2, 12.4, 1.6, 9.6) },
+      { role: 'stock', ...rect(12.5, 10.6, 8.5, 2) },
+      { role: 'dark', d: 'M29.6 19 L34 19 L32.4 25.4 L28.6 25.2 Z', box: [28.6, 19, 34, 25.4], grip: true },
+      { role: 'dark', d: 'M37.6 19 L41.4 19 L42 24.6 L38.2 25 Z', box: [37.6, 19, 42, 25] },
+      { role: 'metal', ...rect(25, 13.2, 19, 6), receiver: true },
+      { role: 'guard', ...rect(44, 13.8, 18, 4.6), handguard: true },
+      { role: 'metal', ...rect(62, 15.2, 19, 1.8) },
+      { role: 'dark', ...rect(81, 14.3, 11, 3.6) },
+      { role: 'dark', ...rect(26.4, 7.8, 17.6, 3.2) },
+      { role: 'dark', d: 'M44 7.4 L48.6 6.6 L48.6 12.2 L44 11.4 Z', box: [44, 6.6, 48.6, 12.2] },
+      { role: 'dark', ...rect(24.4, 8, 2.4, 2.8) },
+    ],
+    extra: (c) => `<path d="M34.4 19.2 Q35 21.8 37.6 21.6" stroke="${c.dark}" stroke-width="0.7" fill="none"/>
+      <path d="M40.6 14 L43 11.4" stroke="${c.metal}" stroke-width="0.9" stroke-linecap="round"/><circle cx="43.2" cy="11.2" r="1" fill="${c.lit(c.metal, 0.5)}"/>
+      ${[46, 49.5, 53, 56.5].map((x) => `<rect x="${x}" y="15.3" width="2.2" height="1.4" rx="0.5" fill="#0d1016" opacity="0.8"/>`).join('')}
+      <path d="M83 16.6 h7" stroke="${c.shade(c.dark)}" stroke-width="0.4"/><path d="M52 18.4 L61.5 19.6 M52 18.9 L61 20.3" stroke="${c.dark}" stroke-width="0.6"/>
+      <rect x="29.6" y="10.8" width="1.6" height="2.6" fill="${c.dark}"/><rect x="38.4" y="10.8" width="1.6" height="2.6" fill="${c.dark}"/>
+      <rect x="48" y="6.9" width="0.9" height="5" rx="0.4" fill="${c.light}"/>`,
+    sling: [15, 21.4, 54, 18.6], neon: 'M25.6 17.6 H43.4 M44.6 17.6 H61.4',
+    anchors: { tail: [6.4, 21.6], face: [17, 16.4], swivel: [52.6, 19] },
+  },
+  carbine: {
+    name: 'Carbine (short, red dot)',
+    parts: [
+      { role: 'metal', ...rect(16, 14, 10, 2.4) },
+      { role: 'stock', d: 'M12 12.8 L17 12.4 L17 21.2 L12 21.6 Z', box: [12, 12.4, 17, 21.6] },
+      { role: 'stock', d: 'M17 12.4 L24 13.2 L24 15 L17 14.6 Z', box: [17, 12.4, 24, 15] },
+      { role: 'dark', d: 'M30 19.2 L34.2 19.2 L32.6 25.6 L28.8 25.4 Z', box: [28.8, 19.2, 34.2, 25.6], grip: true },
+      { role: 'dark', d: 'M37.4 19.2 L41.6 19.2 Q42.6 23 44.6 26.4 L40.6 27.4 Q38.8 23.6 37.4 19.2 Z', box: [37.4, 19.2, 44.6, 27.4] },
+      { role: 'metal', ...rect(26, 13, 18, 6.2), receiver: true },
+      { role: 'guard', ...rect(44, 13.4, 16, 5), handguard: true },
+      { role: 'metal', ...rect(60, 15.2, 10, 1.8) },
+      { role: 'dark', ...rect(70, 14.6, 5, 3) },
+      { role: 'dark', ...rect(30, 10.8, 8, 2.4) },
+      { role: 'dark', d: 'M31 10.8 L31 7.6 Q34 6.4 37 7.6 L37 10.8 Z', box: [31, 6.6, 37, 10.8] },
+    ],
+    extra: (c) => `<path d="M34.6 19.4 Q35.2 22 37.6 21.8" stroke="${c.dark}" stroke-width="0.7" fill="none"/>
+      ${[46, 50, 54].map((x) => `<rect x="${x}" y="15.4" width="3" height="1.1" rx="0.5" fill="#0d1016" opacity="0.8"/>`).join('')}
+      ${[71, 72.6, 74].map((x) => `<rect x="${x}" y="15.4" width="0.5" height="1.4" fill="#0d1016"/>`).join('')}
+      <rect x="57.4" y="11" width="0.9" height="2.4" fill="${c.dark}"/><circle cx="36.4" cy="9" r="1" fill="${c.light}" opacity="0.8"/><circle cx="34" cy="9" r="0.4" fill="#ff3d5f"/>`,
+    sling: [17, 21, 52, 18.6], neon: 'M26.6 17.8 H43.4 M44.6 17.8 H59.4',
+    anchors: { tail: [12.6, 21.4], face: [52, 15.8], swivel: [50.4, 18.6] },
+  },
+  bullpup: {
+    name: 'Bullpup (magazine behind the grip)',
+    parts: [
+      { role: 'dark', ...rect(7.2, 12, 1.6, 10) },
+      { role: 'stock', d: 'M8 12.4 L14 11.6 L50 12.4 Q54 12.8 54 15 L54 19.6 L44 20.4 L40 21 L26 21.4 L14 22 L8 22 Z', box: [8, 11.6, 54, 22], handguard: true }, // the shell is both
+      { role: 'dark', d: 'M18 21.6 L23 21.4 L23.6 27.6 L18.6 27.8 Z', box: [18, 21.4, 23.6, 27.8] },
+      { role: 'dark', d: 'M36 20.8 L40.4 20.8 L38.8 27 L35 26.8 Z', box: [35, 20.8, 40.4, 27], grip: true },
+      { role: 'metal', ...rect(54, 15.3, 16, 1.8) },
+      { role: 'dark', ...rect(70, 13.8, 7, 4.4) },
+      { role: 'dark', ...rect(22, 8.2, 22, 3) },
+      { role: 'dark', d: 'M44 7.8 L48 7 L48 12 L44 11.2 Z', box: [44, 7, 48, 12] },
+    ],
+    extra: (c) => `<rect x="24" y="14.4" width="6" height="1.6" fill="${c.dark}"/><path d="M40.8 21 Q41.4 23.6 44 23.4" stroke="${c.dark}" stroke-width="0.7" fill="none"/>
+      <rect x="25" y="11" width="1.6" height="1.6" fill="${c.dark}"/><rect x="38" y="11" width="1.6" height="1.6" fill="${c.dark}"/>
+      ${[71.4, 73.2, 75].map((x) => `<rect x="${x}" y="14.8" width="0.7" height="2.4" fill="#0d1016"/>`).join('')}
+      <rect x="47.4" y="7.4" width="0.8" height="4.4" rx="0.4" fill="${c.light}"/>`,
+    sling: [10, 21.6, 50, 20], neon: 'M14 19.6 H52',
+    anchors: { tail: [9, 21.8], face: [30, 17], swivel: [48, 20.2] },
+  },
+  heavy: {
+    name: 'Heavy (anti-materiel, muzzle brake)',
+    parts: [
+      { role: 'stock', d: 'M5 11.8 L12 11.2 L25 12.8 L25 20.2 L19 20.8 L13 22.6 L5 23 Z', box: [5, 11.2, 25, 23] },
+      { role: 'dark', ...rect(4.2, 11.6, 1.6, 11.6) },
+      { role: 'dark', d: 'M29.6 20 L34 20 L32.4 26.4 L28.6 26.2 Z', box: [28.6, 20, 34, 26.4], grip: true },
+      { role: 'dark', ...rect(37.6, 20, 8, 7.6) },
+      { role: 'metal', ...rect(25, 12.6, 21, 7.4), receiver: true },
+      { role: 'guard', ...rect(46, 13.4, 18, 5.2), handguard: true },
+      { role: 'metal', ...rect(64, 14.9, 20, 2.4) },
+      { role: 'dark', ...rect(84, 13, 8, 6.2) },
+      { role: 'dark', ...rect(22, 5.6, 24, 3.8) },
+      { role: 'dark', d: 'M46 5 L52 4 L52 11 L46 10 Z', box: [46, 4, 52, 11] },
+    ],
+    extra: (c) => `<path d="M34.4 20.2 Q35 22.8 37.6 22.6" stroke="${c.dark}" stroke-width="0.7" fill="none"/>
+      ${[48, 52, 56, 60].map((x) => `<rect x="${x}" y="15.2" width="2.4" height="1.6" rx="0.5" fill="#0d1016" opacity="0.8"/>`).join('')}
+      ${[85.6, 88, 90.4].map((x) => `<rect x="${x}" y="13.8" width="0.9" height="4.6" fill="#0d1016"/>`).join('')}
+      <rect x="27" y="9.4" width="1.8" height="3.2" fill="${c.dark}"/><rect x="41" y="9.4" width="1.8" height="3.2" fill="${c.dark}"/><rect x="33.4" y="4" width="2.2" height="1.8" fill="${c.dark}"/>
+      <path d="M54 18.6 L65 20 M54 19.2 L64.4 20.8" stroke="${c.dark}" stroke-width="0.8"/><rect x="51.4" y="4.4" width="0.9" height="6.2" rx="0.4" fill="${c.light}"/>`,
+    sling: [15, 22.4, 56, 19], neon: 'M25.6 19 H45.4 M46.6 18.2 H63.4',
+    anchors: { tail: [5.6, 22.8], face: [15, 17], swivel: [54.6, 19.6] },
+  },
+  heritage: {
+    name: 'Heritage (long wood, iron sights)',
+    parts: [
+      { role: 'stock', d: 'M5 13.4 L10 12.6 L26 14.6 L30 14.6 L30 18.6 L24 18.8 L14 21.6 L5 22.4 Z', box: [5, 12.6, 30, 22.4] },
+      { role: 'stock', d: 'M30 14.6 L78 14.8 L80 15.4 L80 18 L30 18.6 Z', box: [30, 14.6, 80, 18.6], handguard: true, always: true },
+      { role: 'metal', ...rect(80, 15.6, 12, 1.6) },
+      { role: 'metal', ...rect(28, 13.2, 12, 4), receiver: true },
+      { role: 'metal', ...rect(52, 14.4, 1.4, 4.6) },
+      { role: 'metal', ...rect(74, 14.6, 1.4, 4.2) },
+      { role: 'dark', ...rect(31, 18.6, 6, 0.9) },
+    ],
+    extra: (c) => `<path d="M31.6 18.8 Q32.4 21.6 35.4 21.2" stroke="${c.dark}" stroke-width="0.7" fill="none"/>
+      <path d="M37 17.2 L39.4 20.4" stroke="${c.metal}" stroke-width="0.9"/><circle cx="39.6" cy="20.8" r="1" fill="${c.lit(c.metal, 0.5)}"/>
+      <path d="M44 13.4 h3 v1.4 h-3 Z" fill="${c.dark}"/><path d="M89.6 13.4 h0.8 v2.2 h-0.8 Z" fill="${c.dark}"/><rect x="91.4" y="15.4" width="1.2" height="2" fill="${c.dark}"/>`,
+    sling: [18, 21, 66, 18.8], neon: 'M30 17.4 H78',
+    anchors: { tail: [5.6, 22.2], face: [16, 17.6], swivel: [64.4, 19.2] },
+  },
+};
+
+export const RIFLE_ENGRAVINGS = { clouds: 'Auspicious clouds', scales: 'Dragon scales', circuit: 'Neon circuit' };
+export const RIFLE_CHARMS = {
+  tassel: 'Red silk tassel', talisman: 'Paper talisman', coin: 'Lucky coin', mala: 'Prayer beads',
+  mahjong: 'Mahjong tile', sticker: 'Lucky sticker', hazard: 'Hazard tape',
+};
+
+/** Engravings on the furniture, in the finish's trim colour (gold by default). */
+function rifleEngraving(kind, fr, c, clip) {
+  const gold = c.f.trim ?? '#d9a441';
+  if (kind === 'clouds') {
+    // Xiangyun: two curling cloud scrolls on the stock.
+    const [x, y] = fr.anchors.face;
+    const curl = (cx, cy, s) => `<path d="M${cx - 2.4 * s} ${cy + 0.6 * s} Q${cx - 2.4 * s} ${cy - 1.4 * s} ${cx - 0.8 * s} ${cy - 1.2 * s} Q${cx + 0.4 * s} ${cy - 1 * s} ${cx + 0.2 * s} ${cy} Q${cx} ${cy + 0.7 * s} ${cx - 0.6 * s} ${cy + 0.3 * s} M${cx + 0.2 * s} ${cy} Q${cx + 1.4 * s} ${cy - 1.6 * s} ${cx + 2.6 * s} ${cy - 0.4 * s} Q${cx + 3.2 * s} ${cy + 0.6 * s} ${cx + 2.2 * s} ${cy + 0.8 * s}"/>`;
+    return `<g clip-path="url(#${clip})" stroke="${gold}" stroke-width="0.4" fill="none" opacity="0.9" stroke-linecap="round">${curl(x - 4, y - 0.6, 1)}${curl(x + 3, y + 1.4, 0.8)}</g>`;
+  }
+  if (kind === 'scales') {
+    const g = fr.parts.find((p) => p.handguard) ?? fr.parts[0];
+    const [x0, y0, x1, y1] = g.box;
+    const arcs = [];
+    for (let y = y0 + 1.2, row = 0; y < y1; y += 1.3, row++) for (let x = x0 + (row % 2 ? 1.2 : 0.2); x < x1 - 0.5; x += 2.2) arcs.push(`<path d="M${x} ${y} Q${x + 1.1} ${y + 1.3} ${x + 2.2} ${y}"/>`);
+    return `<g clip-path="url(#${clip}g)" stroke="${gold}" stroke-width="0.3" fill="none" opacity="0.75">${arcs.join('')}</g>`;
+  }
+  if (kind === 'circuit') {
+    const r = fr.parts.find((p) => p.receiver) ?? fr.parts.find((p) => p.handguard);
+    const [x0, y0, x1, y1] = r.box, my = (y0 + y1) / 2;
+    return `<path d="M${x0 + 1} ${my} H${x0 + 5} L${x0 + 6.4} ${my - 1.4} H${x1 - 4} M${x0 + 8} ${my} L${x0 + 9.4} ${my + 1.4} H${x1 - 2}" stroke="${c.neon}" stroke-width="0.35" fill="none" opacity="0.9"/>
+      <circle cx="${x1 - 4}" cy="${my - 1.4}" r="0.45" fill="${c.neon}"/><circle cx="${x1 - 2}" cy="${my + 1.4}" r="0.45" fill="${c.neon}"/>`;
+  }
+  return '';
+}
+
+/** Charms that hang from the rifle or sit on it. */
+function rifleCharm(kind, fr, c) {
+  const [tx, ty] = fr.anchors.tail, [fx, fy] = fr.anchors.face, [sx, sy] = fr.anchors.swivel;
+  const red = '#c62a2a', redLit = mix(red, c.light, 0.4), gold = '#d4a640';
+  switch (kind) {
+    case 'tassel': return `<path d="M${tx} ${ty} Q${tx - 1} ${ty + 1.8} ${tx - 0.4} ${ty + 3}" stroke="${red}" stroke-width="0.5" fill="none"/>
+      <path d="M${tx - 0.4} ${ty + 2.6} l1 1 l-1 1 l-1 -1 Z" fill="${red}"/><circle cx="${tx - 0.4}" cy="${ty + 5}" r="0.6" fill="${gold}"/>
+      <path d="M${tx - 1.4} ${ty + 5.4} L${tx + 0.6} ${ty + 5.4} L${tx + 1} ${ty + 9.4} L${tx - 1.8} ${ty + 9.4} Z" fill="${red}"/>
+      <path d="M${tx - 1} ${ty + 6} V${ty + 9.2} M${tx - 0.2} ${ty + 6} V${ty + 9.2} M${tx + 0.5} ${ty + 6} V${ty + 9.2}" stroke="${mix(red, '#000', 0.35)}" stroke-width="0.25"/>
+      <path d="M${tx + 0.6} ${ty + 5.4} L${tx + 1} ${ty + 9.4}" stroke="${redLit}" stroke-width="0.35"/>`;
+    case 'talisman': return `<g transform="rotate(6 ${fx} ${fy})"><path d="M${fx - 1.4} ${fy - 3.4} H${fx + 1.4} V${fy + 4.4} l-0.5 0.5 l-0.5 -0.5 l-0.5 0.5 l-0.5 -0.5 l-0.5 0.5 l-0.4 -0.5 Z" fill="#e9d27c"/>
+      <path d="M${fx + 1.4} ${fy - 3.4} V${fy + 4.4}" stroke="${mix('#e9d27c', c.light, 0.5)}" stroke-width="0.35"/>
+      <g stroke="#b3261e" stroke-width="0.32" fill="none" stroke-linecap="round"><circle cx="${fx}" cy="${fy - 2.2}" r="0.6"/><path d="M${fx - 0.8} ${fy - 0.9} H${fx + 0.8} M${fx} ${fy - 0.9} Q${fx - 0.7} ${fy + 0.6} ${fx + 0.4} ${fy + 1.2} Q${fx + 0.9} ${fy + 2} ${fx - 0.5} ${fy + 2.6} M${fx - 0.7} ${fy + 3.4} H${fx + 0.7}"/></g></g>`;
+    case 'coin': return `<path d="M${sx} ${sy} V${sy + 3.4}" stroke="${red}" stroke-width="0.45"/>
+      <circle cx="${sx}" cy="${sy + 5}" r="1.7" fill="${gold}"/><path d="M${sx} ${sy + 3.3} A1.7 1.7 0 0 1 ${sx + 1.7} ${sy + 5}" stroke="${mix(gold, c.light, 0.5)}" stroke-width="0.4" fill="none"/>
+      <rect x="${sx - 0.45}" y="${sy + 4.55}" width="0.9" height="0.9" fill="#0d1016"/><path d="M${sx} ${sy + 6.7} l-0.4 1.2 M${sx} ${sy + 6.7} l0.4 1.2" stroke="${red}" stroke-width="0.4"/>`;
+    case 'mala': {
+      const beads = [];
+      for (let i = 0; i <= 10; i++) { const t = Math.PI * (i / 10); beads.push([sx - Math.cos(t) * 3, sy + 0.4 + Math.sin(t) * 3.6]); }
+      return `${beads.map(([x, y]) => `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="0.62" fill="#6a3f22"/><circle cx="${(x + 0.2).toFixed(2)}" cy="${(y - 0.2).toFixed(2)}" r="0.2" fill="#fff" opacity="0.35"/>`).join('')}
+        <circle cx="${sx}" cy="${sy + 4.8}" r="0.9" fill="#3a2214"/><path d="M${sx - 0.5} ${sy + 5.6} L${sx + 0.5} ${sy + 5.6} L${sx + 0.7} ${sy + 8} L${sx - 0.7} ${sy + 8} Z" fill="${red}"/>`;
+    }
+    case 'mahjong': return `<path d="M${sx} ${sy} V${sy + 2.6}" stroke="${red}" stroke-width="0.45"/>
+      <rect x="${sx - 1.3}" y="${sy + 2.6}" width="2.6" height="3.6" rx="0.4" fill="#ece6d6"/><rect x="${sx + 0.9}" y="${sy + 2.6}" width="0.4" height="3.6" fill="#9db08a"/>
+      <circle cx="${sx - 0.2}" cy="${sy + 3.7}" r="0.45" fill="${red}"/><path d="M${sx - 0.8} ${sy + 4.9} h1.2 M${sx - 0.8} ${sy + 5.5} h1.2" stroke="#2e7d4f" stroke-width="0.35"/>`;
+    case 'sticker': return `<circle cx="${fx}" cy="${fy}" r="2" fill="#fff"/><circle cx="${fx}" cy="${fy}" r="1.7" fill="#ff4f7b"/>
+      <circle cx="${fx - 0.6}" cy="${fy - 0.3}" r="0.25" fill="#1b1f28"/><circle cx="${fx + 0.6}" cy="${fy - 0.3}" r="0.25" fill="#1b1f28"/><path d="M${fx - 0.5} ${fy + 0.5} Q${fx} ${fy + 1} ${fx + 0.5} ${fy + 0.5}" stroke="#1b1f28" stroke-width="0.25" fill="none"/>
+      <path d="M${fx - 1.3} ${fy - 1.1} l0.3 -0.9 l0.5 0.6 M${fx + 1.3} ${fy - 1.1} l-0.3 -0.9 l-0.5 0.6" fill="#ff4f7b" stroke="#fff" stroke-width="0.2"/>`;
+    case 'hazard': {
+      const g = fr.parts.find((p) => p.handguard) ?? fr.parts[0];
+      const [x0, y0, , y1] = g.box;
+      return [x0 + 3, x0 + 9].map((x) => `<rect x="${x}" y="${y0 - 0.2}" width="2.6" height="${y1 - y0 + 0.4}" fill="#f2b544"/>
+        <path d="M${x} ${y0 + 1} l2.6 -1.2 M${x} ${y0 + 2.6} l2.6 -1.2 M${x} ${y0 + 4.2} l2.6 -1.2" stroke="#1b1f28" stroke-width="0.55"/>`).join('');
+    }
+    default: return '';
+  }
+}
+
+/** A rifle from the kit. look: { frame, finish, engraving?, charm? }. */
+export function rifleBuild({ light, neon, look }) {
+  const fr = RIFLE_FRAMES[look.frame] ?? RIFLE_FRAMES.marksman;
+  const f = RIFLE_FINISHES[look.finish] ?? RIFLE_FINISHES.street;
+  const lit = (col, t = 0.45) => mix(col, light, t);
+  const shade = (col) => mix(col, SHADOW, 0.45);
+  const c = { f, light, neon, lit, shade, metal: f.metal, dark: f.dark };
+  const colour = (p) => (p.role === 'guard' ? f[f.guard ?? 'dark'] : f[p.role]);
+  const id = `rb${++uid}`;
+  const isWood = (p) => p.role === 'stock' || (p.role === 'guard' && f.guard === 'stock');
+  const wood = fr.parts.filter(isWood);
+  const guard = fr.parts.filter((p) => p.handguard);
+  const metal = fr.parts.filter((p) => p.role === 'metal');
+  const box = (ps) => ps.reduce((b, p) => [Math.min(b[0], p.box[0]), Math.min(b[1], p.box[1]), Math.max(b[2], p.box[2]), Math.max(b[3], p.box[3])], [99, 99, 0, 0]);
+  const [wx0, wy0, wx1, wy1] = box(wood);
+
+  const parts = fr.parts.map((p, i) => {
+    const col = colour(p);
+    const [x0, y0, x1, y1] = p.box;
+    return `<clipPath id="${id}p${i}"><path d="${p.d}"/></clipPath><path d="${p.d}" fill="${col}"/>
+      <g clip-path="url(#${id}p${i})"><rect x="${x0}" y="${y0}" width="${x1 - x0}" height="0.8" fill="${lit(col, f.gloss ? 0.6 : 0.45)}"/><rect x="${x0}" y="${y1 - 0.8}" width="${x1 - x0}" height="0.8" fill="${shade(col)}"/></g>`;
+  }).join('');
+
+  // Finish details, clipped to the furniture (or the metal).
+  const onWood = [];
+  if (f.grain) for (let k = 1; k <= 3; k++) { const y = wy0 + ((wy1 - wy0) * k) / 4; onWood.push(`<path d="M${wx0} ${y} Q${(wx0 + wx1) / 2} ${y - 0.7} ${wx1} ${y + 0.3}" stroke="${shade(f.stock)}" stroke-width="0.35" fill="none" opacity="0.8"/>`); }
+  if (f.veins) onWood.push(`<path d="M${wx0 + 2} ${wy0 + 2} Q${wx0 + 8} ${wy0 + 5} ${wx0 + 12} ${wy0 + 3} T${wx0 + 22} ${wy0 + 6} M${wx0 + 4} ${wy1 - 2} Q${wx0 + 10} ${wy1 - 4} ${wx0 + 16} ${wy1 - 2.6}" stroke="${f.veins}" stroke-width="0.4" fill="none" opacity="0.7"/>`);
+  if (f.nodes) for (let x = wx0 + 4; x < wx1; x += 7) onWood.push(`<path d="M${x} ${wy0} V${wy1}" stroke="${shade(f.stock)}" stroke-width="0.7"/><path d="M${x + 0.6} ${wy0} V${wy1}" stroke="${lit(f.stock, 0.5)}" stroke-width="0.35"/>`);
+  if (f.gloss) onWood.push(`<path d="M${wx0 + 1} ${wy0 + 1.6} L${wx1 - 2} ${wy0 + 1.9}" stroke="#fff" stroke-width="0.5" opacity="0.28"/>`);
+  if (f.camo) for (let k = 0; k < 14; k++) { const x = wx0 + ((k * 7.3) % (wx1 - wx0)), y = wy0 + ((k * 3.1) % (wy1 - wy0)); onWood.push(`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${2 + (k % 3)}" height="${1.2 + (k % 2)}" fill="${f.camo[k % 3]}"/>`); }
+  if (f.inlay) { const [x, y] = fr.anchors.face; onWood.push(`<path d="M${x - 3} ${y} l1 -1 l1 1 l-1 1 Z M${x + 3} ${y} l1 -1 l1 1 l-1 1 Z" fill="${f.inlay}" opacity="0.9"/><circle cx="${x + 0.5}" cy="${y}" r="0.5" fill="${f.inlay}"/>`); }
+  if (f.skeleton) { const [x, y] = fr.anchors.face; onWood.push(`<path d="M${x - 4} ${y - 1.2} Q${x} ${y - 1.8} ${x + 3} ${y - 0.8} L${x + 2.6} ${y + 1.6} Q${x - 0.6} ${y + 1.8} ${x - 3.6} ${y + 2.2} Z" fill="#0d1016" opacity="0.85"/>`); }
+  if (f.chips) for (let k = 0; k < 8; k++) onWood.push(`<circle cx="${wx0 + 2 + ((k * 5.7) % (wx1 - wx0 - 4))}" cy="${wy0 + 1.5 + ((k * 2.3) % (wy1 - wy0 - 3))}" r="0.35" fill="${lit(f.stock, 0.6)}" opacity="0.7"/>`);
+  const onMetal = [];
+  if (f.patina) for (let k = 0; k < 10; k++) { const p = metal[k % metal.length]; const [x0, y0, x1, y1] = p.box; onMetal.push(`<ellipse cx="${x0 + ((k * 4.1) % (x1 - x0))}" cy="${(y0 + y1) / 2}" rx="1.4" ry="0.7" fill="${f.patina}" opacity="0.6"/>`); }
+  if (f.chips) for (const p of metal) onMetal.push(`<rect x="${p.box[0] + 2}" y="${p.box[1] + 0.8}" width="1.6" height="0.6" fill="#8a5a3a" opacity="0.8"/>`);
+  // Trim: a gold line just inside the top of each piece of furniture, and one along the receiver.
+  if (f.trim) for (const p of wood) onWood.push(`<path d="M${p.box[0] + 0.8} ${p.box[1] + 1.3} L${p.box[2] - 0.8} ${p.box[1] + 1.3}" stroke="${f.trim}" stroke-width="0.35" opacity="0.9"/>`);
+  const rcv = fr.parts.find((p) => p.receiver);
+  const trim = f.trim && rcv ? `<path d="M${rcv.box[0] + 0.6} ${rcv.box[1] + 1.4} H${rcv.box[2] - 0.6}" stroke="${f.trim}" stroke-width="0.35" opacity="0.9"/>` : '';
+  const grip = fr.parts.find((p) => p.grip);
+  const tape = f.tape && grip ? `<path d="M${grip.box[0] + 0.8} ${grip.box[1] + 2} h3.8 M${grip.box[0] + 0.4} ${grip.box[1] + 3.6} h3.8 M${grip.box[0] + 0.2} ${grip.box[1] + 5.2} h3.6" stroke="#f2b544" stroke-width="0.5" opacity="0.55"/>` : '';
+  const neonLine = f.neonLine ? `<path d="${fr.neon}" stroke="${neon}" stroke-width="0.5"/>` : '';
+  const sling = (() => { const [x1, y1, x2, y2] = fr.sling; const col = f.dark; return `<path d="M${x1} ${y1} Q${(x1 + x2) / 2} ${Math.max(y1, y2) + 9} ${x2} ${y2}" stroke="${col}" stroke-width="1.4" fill="none"/><path d="M${x1} ${y1 - 0.4} Q${(x1 + x2) / 2} ${Math.max(y1, y2) + 8.4} ${x2} ${y2 - 0.4}" stroke="${lit(col, 0.3)}" stroke-width="0.35" fill="none"/>`; })();
+
+  return `<defs><clipPath id="${id}"><path d="${wood.map((p) => p.d).join(' ')}"/></clipPath><clipPath id="${id}g"><path d="${guard.map((p) => p.d).join(' ')}"/></clipPath>
+    <clipPath id="${id}m"><path d="${metal.map((p) => p.d).join(' ')}"/></clipPath></defs>
+    ${parts}${fr.extra(c)}
+    <g clip-path="url(#${id})">${onWood.join('')}</g><g clip-path="url(#${id}m)">${onMetal.join('')}</g>
+    ${trim}${tape}${neonLine}
+    ${look.engraving ? rifleEngraving(look.engraving, fr, c, id) : ''}
+    ${sling}
+    ${look.charm ? rifleCharm(look.charm, fr, c) : ''}`;
+}
+
 const GEAR_SHAPES = { rifle: rifleShapes };
 
 /** True when this item type has a drawing (otherwise the UI shows its line icon). */
@@ -929,7 +1188,7 @@ export const hasGearArt = (type) => !!GEAR_SHAPES[type];
  * it (their light and chrome colour); without one it sits under the safehouse's sodium lamp.
  */
 export function gearArt(item, { carrier = null, width = 96 } = {}) {
-  const shapes = GEAR_SHAPES[item.type];
+  const shapes = item.type === 'rifle' && item.look ? (o) => rifleBuild({ ...o, look: item.look }) : GEAR_SHAPES[item.type];
   if (!shapes) return null;
   const light = carrier ? lightOf(carrier) : STASH_LIGHT;
   const neon = carrier ? faceOf(carrier).chromeColor : '#3de8d8';
@@ -951,7 +1210,7 @@ function portraitGear(op, c, f) {
   const tier = item.tier ?? 'street';
   const sling = tier === 'pro' ? '#1a1d24' : '#3a3125';
   return {
-    back: `<g class="gear-rifle" transform="translate(4 72) rotate(-44) scale(0.9) translate(0 -16)">${rifleShapes({ tier, light: c.light, neon: f.chromeColor })}</g>`,
+    back: `<g class="gear-rifle" transform="translate(4 72) rotate(-44) scale(0.9) translate(0 -16)">${item.look ? rifleBuild({ light: c.light, neon: f.chromeColor, look: item.look }) : rifleShapes({ tier, light: c.light, neon: f.chromeColor })}</g>`,
     front: `<path d="M46 48.5 L18 57" stroke="${sling}" stroke-width="1.8"/><path d="M46 47.8 L18 56.3" stroke="${mix(sling, c.light, 0.35)}" stroke-width="0.4"/>`,
   };
 }

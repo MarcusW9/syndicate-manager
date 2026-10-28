@@ -158,3 +158,18 @@ test('Shaolin monks lean East and Southeast Asian, anyone can be one, and the ea
   // The pick comes last on the gear seed: anyone who was already a monk keeps their robe.
   for (const { f } of s) if (f.monk && f.monk !== 'shaolin') assert.ok(['grey', 'ochre', 'cyber'].includes(f.monk));
 });
+
+test('rifle looks (draft): a look draws from the kit, the same every time; items without one are unchanged', async () => {
+  const { gearArt, RIFLE_FRAMES, RIFLE_FINISHES, RIFLE_ENGRAVINGS, RIFLE_CHARMS } = await import('../src/ui/art.js');
+  const clean = (svg) => svg.replace(/(ga|rb)\d+/g, 'x');
+  const plain = { uid: 'r1', type: 'rifle', tier: 'street' };
+  assert.equal(clean(gearArt(plain)), clean(gearArt({ ...plain, look: undefined })), 'no look, the original drawing');
+  for (const frame of Object.keys(RIFLE_FRAMES)) for (const finish of Object.keys(RIFLE_FINISHES)) {
+    for (const [engraving, charm] of [[null, null], ...Object.keys(RIFLE_ENGRAVINGS).map((e, i) => [e, Object.keys(RIFLE_CHARMS)[i]]), [null, 'hazard'], [null, 'sticker'], [null, 'mahjong'], [null, 'mala']]) {
+      const item = { ...plain, look: { frame, finish, engraving, charm } };
+      const svg = gearArt(item);
+      assert.ok(svg.startsWith('<svg') && !svg.includes('undefined') && !svg.includes('NaN'), `${frame}/${finish}/${engraving}/${charm} draws`);
+      assert.equal(clean(svg), clean(gearArt(item)), 'and draws the same every time');
+    }
+  }
+});
