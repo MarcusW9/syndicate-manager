@@ -165,7 +165,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .jobcard__left { font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
 .jobcard__left.is-last { color: var(--warn); font-weight: 600; }
 .jobcard__client { font-size: 0.9rem; }
-.jobcard__facts { grid-column: 1 / -1; font-size: 0.85rem; color: var(--muted); }
+.jobcard__facts { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 5px; font-size: 0.85rem; color: var(--muted); } /* icons line up with the words (owner's feedback, 2026-10-28) */
 .jobcard__extra { grid-column: 1 / -1; }
 .clients { margin-top: 16px; }
 .clientline { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
@@ -181,7 +181,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .stats dd { margin: 0; font-size: 1.2rem; font-weight: 600; }
 .nextbar { display: block; height: 4px; margin-top: 6px; background: var(--line); border-radius: 2px; overflow: hidden; }
 .nextbar span { display: block; height: 100%; background: var(--accent-2); }
-.climb { margin: 8px 0 12px; align-items: center; flex-wrap: wrap; }
+.climb { margin: 8px 0 12px; }
 .growth { font-size: 0.8rem; font-weight: 600; color: var(--accent-2); }
 .growth.is-down { color: var(--danger); }
 .mentor { color: var(--accent-2); margin: 0.5rem 0 0; }
@@ -816,17 +816,15 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 /* Owner's feedback (2026-10-27): icons, a tap-to-read (i), grouped "coming up" lines. */
 .icon { width: 1.05em; height: 1.05em; vertical-align: -0.17em; flex: none; }
 .iconword { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
-.iconcrew { display: inline-flex; gap: 1px; vertical-align: -0.2em; }
+.iconcrew { display: inline-flex; align-items: center; gap: 2px; vertical-align: -0.2em; white-space: nowrap; }
 .iconcrew .icon { width: 1.2em; height: 1.2em; }
-.infoline { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 12px; }
+.infoline { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .infoline > p { margin: 0; }
-.infotip { position: relative; }
-.infotip > summary { list-style: none; cursor: pointer; width: 22px; height: 22px; border: 1px solid var(--muted); border-radius: 50%; display: grid; place-items: center; font-size: 0.75rem; font-weight: 700; color: var(--muted); font-style: italic; }
-.infotip > summary::-webkit-details-marker { display: none; }
-.infotip > summary::before { content: ''; position: absolute; inset: -11px; } /* a 44px tap area round the small (i) */
-.infotip[open] > summary { color: var(--accent-2); border-color: var(--accent-2); }
-.infotip > p { margin: 6px 0 0; color: var(--muted); max-width: 60ch; }
-.infoline:has(.infotip[open]) { flex-wrap: wrap; }
+/* The (i): small and quiet, centred on its line, with a 44px tap area round it. */
+.infobtn { position: relative; flex: none; width: 16px; height: 16px; padding: 0; border: 1px solid var(--muted); border-radius: 50%; background: none; color: var(--muted); font: italic 700 0.62rem/1 Georgia, serif; display: grid; place-items: center; cursor: pointer; }
+.infobtn::before { content: ''; position: absolute; inset: -14px; }
+.infobtn.is-on { color: var(--accent-2); border-color: var(--accent-2); }
+.infotext { margin: -6px 0 12px; color: var(--muted); max-width: 60ch; }
 .upcoming__group > summary { cursor: pointer; list-style: none; }
 .upcoming__group > summary::-webkit-details-marker { display: none; }
 .upcoming__group > summary::after { content: ' ▸'; color: var(--muted); font-size: 0.8em; }
@@ -834,11 +832,33 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .upcoming__group > span { display: block; }
 .jobcard__stats { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 0.8rem; color: var(--muted); }
 .stats dt.iconword { display: flex; }
-/* Reputation: a compact line with a short ten-block gauge (owner's feedback, 2026-10-27). */
-.climb__label { font-size: 0.85rem; color: var(--muted); }
-.climb__label strong { color: var(--text); }
-.climb__gauge { display: inline-flex; gap: 2px; }
-.climb__gauge i { width: 8px; height: 10px; background: var(--line); }
-.climb__gauge i.is-on { background: var(--accent); }
-.climb__gauge i.is-part { background: linear-gradient(90deg, var(--accent) 50%, var(--line) 50%); }
-.climb .infotip[open] { flex-basis: 100%; }
+/* Reputation in the Heat meter's style (owner's pick of five, 2026-10-28): label, track, number. */
+.climb__label { font-family: var(--display); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.climb__track { width: 56px; }
+.climb__track span { background: var(--accent-2); }
+.climb__value { font-family: var(--display); font-weight: 700; font-size: 1rem; letter-spacing: 0.04em; }
+
+/* District sites (data/sites.js, slice 4). */
+.sp-water { fill: #0d1620; } .sp-jetty { fill: #2a2f3b; } .sp-desk { fill: #222837; }
+.sp-yard { fill: #10141a; } .sp-alley { fill: #12141a; } .sp-step { fill: #2a2f3b; }
+.sp-room { fill: #1d1520; stroke: var(--accent); stroke-width: 1; stroke-dasharray: 2 2; }
+.sp-block { fill: #141820; stroke: #2f3644; stroke-width: 1; }
+.sp-window { opacity: 0.9; }
+.sp-tank { fill: #1b2230; stroke: #7a6430; stroke-width: 1.5; }
+.sp-laundry { fill: none; stroke: #8a93a6; stroke-width: 0.8; stroke-dasharray: 3 2; opacity: 0.7; }
+.sp-sign { opacity: 0.85; }
+.sp-gatepost { stroke: #4a5266; stroke-width: 2.5; stroke-linecap: round; }
+.sp-neon { stroke: #ff3d5f; stroke-width: 1.5; stroke-linecap: round; opacity: 0.9; }
+.sp-stall { stroke: #0b0d11; stroke-width: 1; opacity: 0.55; }
+.sp-crowd { opacity: 0.9; }
+.sp-bridge { fill: #1b2230; stroke: #7a6430; stroke-width: 1.5; }
+.sp-plaza { fill: #10151a; stroke: #232a35; stroke-width: 1; }
+.sp-planter { stroke: #2b4a3a; stroke-width: 1; }
+.sp-barrier { stroke: #f2d541; stroke-width: 2; stroke-dasharray: 4 3; }
+.sp-tower { fill: #121a22; stroke: #3de8d8; stroke-opacity: 0.35; stroke-width: 1.2; }
+.sp-glass { opacity: 0.8; }
+.sp-infield { fill: #0f1a14; }
+.sp-track { fill: none; stroke: #f7efc8; stroke-width: 3; opacity: 0.55; }
+.sp-stable { fill: #1a1712; stroke: #4a3f2a; stroke-width: 1; }
+.sp-pole { stroke: #4a5266; stroke-width: 2; }
+.sp-lamp { fill: #f7efc8; opacity: 0.9; }

@@ -56,7 +56,8 @@ let openOperativeId = null;
 let openRecruitId = null;
 let newGameSlot = null; // slot number while picking a difficulty
 let plan = null; // { jobId, crew: [...ids], approach, orders, callIn, overwatch: id|null, kit, wheels: id|null, standby: id|null } (core/mission.js startMission)
-let pickSlot = null; // the squad-board slot being filled ('in:<n>' or 'over'), while its picker is open
+let pickSlot = null;
+const openInfo = new Set(); // which (i) explanations are open (infoButton) // the squad-board slot being filled ('in:<n>' or 'over'), while its picker is open
 let root;
 // Continue rests briefly after each new day, so a double click can't skip one.
 const CONTINUE_REST_MS = 800;
@@ -129,6 +130,7 @@ function onClick(e) {
       break;
     case 'open-job': screen = 'jobs'; plan = { jobId: id, crew: [], approach: 'stealth', orders: 'steady', callIn: 'risky', overwatch: null, kit: 'rifle', wheels: null, standby: null }; break; // also from Today's alerts
     // The squad board (ui/board.js): tap a card, pick who goes there; anyone already placed swaps.
+    case 'info': if (openInfo.has(id)) openInfo.delete(id); else openInfo.add(id); break;
     case 'pick-slot': pickSlot = id; break;
     case 'close-picker': focusNext = { action: 'pick-slot', id: pickSlot }; pickSlot = null; break;
     case 'assign': Object.assign(plan, assignSlot(plan, pickSlot, id || null)); focusNext = { action: 'pick-slot', id: pickSlot }; pickSlot = null; break;
@@ -983,17 +985,19 @@ const talkTag = (v) => v.rumour ? `<span class="talk-tag">Street talk: ${esc(v.r
 function climbLine() {
   const next = nextUnlock(state);
   if (!next) return '';
-  // One compact line: the number, a short ten-block gauge to the next unlock, and the rest behind
-  // an (i) (owner's feedback, 2026-10-27: the full-width bar read as a big scale).
+  // One compact line in the Heat meter's style (option B of five, owner's pick 2026-10-28; the
+  // others are in drafts/prototypes/reputation-gauge-options.html): a label, a small segmented
+  // track to the next unlock, the number, and the rest behind an (i).
   const rep = state.reputation ?? 0;
-  const share = Math.min(1, rep / next.rep);
-  const blocks = Array.from({ length: 10 }, (_, i) => `<i class="${share * 10 >= i + 1 ? 'is-on' : share * 10 > i ? 'is-part' : ''}"></i>`).join('');
+  const pct = Math.round(Math.min(1, rep / next.rep) * 100);
   const ladder = Object.entries(JOB_GATES).map(([threat, need]) => `${need} (threat ${threat})`).join(', ');
   return `<div class="climb infoline">
-    <span class="climb__label">Reputation <strong>${Math.floor(rep)}/${next.rep}</strong></span>
-    <span class="climb__gauge" role="progressbar" aria-label="Reputation towards the next unlock" aria-valuenow="${Math.floor(rep)}" aria-valuemin="0" aria-valuemax="${next.rep}">${blocks}</span>
-    ${infoTip('About reputation', `Bigger work opens up once people know your name. Finished jobs build it; aborts cost it. Rookie jobs are open from the start; the rest open at ${ladder}.`)}
-  </div>`;
+    <span class="climb__label">Rep</span>
+    <span class="heat__track climb__track" role="progressbar" aria-label="Reputation towards the next unlock" aria-valuenow="${Math.floor(rep)}" aria-valuemin="0" aria-valuemax="${next.rep}"><span style="width:${pct}%"></span></span>
+    <strong class="climb__value">${Math.floor(rep)}/${next.rep}</strong>
+    ${infoButton('reputation', 'About reputation')}
+  </div>
+  ${infoText('reputation', `Bigger work opens up once people know your name. Finished jobs build it; aborts cost it. Rookie jobs are open from the start; the rest open at ${ladder}.`)}`;
 }
 
 function renderJobs() {
@@ -1031,7 +1035,8 @@ function renderSideBoard() {
   const board = (state.sideBoard ?? []).map(sideTaskById).filter(Boolean);
   return `
       <h2>Side work this week</h2>
-      <div class="infoline"><p class="muted small">Small jobs for whoever's free.</p>${infoTip('About side work', 'One-off jobs for whoever isn\'t on the main work. They\'re away for the days shown, and the result comes back with them. A new board every Monday.')}</div>
+      <div class="infoline"><p class="muted small">Small jobs for whoever's free.</p>${infoButton('side-work', 'About side work')}</div>
+      ${infoText('side-work', 'One-off jobs for whoever isn\'t on the main work. They\'re away for the days shown, and the result comes back with them. A new board every Monday.')}
       ${board.length ? `<ul class="list list--cols">
         ${board.map((t) => `
           <li>
@@ -1044,8 +1049,10 @@ function renderSideBoard() {
       </ul>` : '<p class="muted">Nothing left this week. More on Monday.</p>'}`;
 }
 
-/** A small (i) that opens an explanation on tap (no hover: iOS rules in CLAUDE.md). */
-const infoTip = (label, text) => `<details class="infotip"><summary aria-label="${esc(label)}">i</summary><p class="small">${esc(text)}</p></details>`;
+// A small (i) that opens an explanation under its line on tap (no hover: iOS rules in CLAUDE.md).
+// The button stays put and the text appears below, so nothing jumps (owner's feedback, 2026-10-28).
+const infoButton = (id, label) => `<button class="infobtn ${openInfo.has(id) ? 'is-on' : ''}" data-action="info" data-id="${esc(id)}" aria-label="${esc(label)}" aria-expanded="${openInfo.has(id)}">i</button>`;
+const infoText = (id, text) => (openInfo.has(id) ? `<p class="infotext small">${esc(text)}</p>` : '');
 
 /** Planning a side task: who goes, how likely it goes well, what it gives and costs. */
 function renderSidePlan() {

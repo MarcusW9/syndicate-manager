@@ -20,7 +20,7 @@ files. Rough lines are fine; anything off gets flagged, not silently changed.
 | 8 | ~~One-off side tasks~~ **Done 2026-10-26** (25 in the game) | Side tasks | — | — |
 | 9 | ~~Earned traits~~ **20 of 26 in the game 2026-10-26**; the rest in `drafts/earned-traits-backlog.md` | Progression step 2 | — | — |
 | 10 | Jobs for the locked districts | Promotions and districts | 1-2 jobs per district | `drafts/district-hooks.md` |
-| 11 | Incident lines per district (the squad run) | `PLAN-CORE-LOOP.md` slice 4 | 12 incidents × 1 district a batch | `src/data/incidents.js` |
+| 11 | Incident lines per district (the squad run): **the Docks and Old Town done 2026-10-28**; the Night Market, Glass Heights and the Basin to go | `PLAN-CORE-LOOP.md` slice 4 | 12 incidents × 1 district a batch | `src/data/incidents.js` |
 
 Tasks 1 and 2 first: 1 is a prerequisite for everything hands-off, and 2 decides whether
 mission logs get built at all. Tasks 3-6 wait until the first mission-log slice is built and shows where words are missing (decided 2026-10-26).
@@ -419,3 +419,14 @@ Keep {op} where a person is meant. No new injuries or costs: the game decides th
 ```
 
 Then paste the list of incident ids and names from `src/data/incidents.js`.
+
+Where it goes (slice 4, 2026-10-28): `src/data/districtIncidents.js`, one object per district,
+`{ incidentId: { text, hOk, ok, hBad, bad, comp } }`. Only the lines you write change; the rest
+falls back to the generic text, and a test checks each line keeps `{op}` where the generic has it.
+Each district also has its own site plan now (`src/data/sites.js`: the Docks yard and crane,
+Old Town's alley, courtyard and flat, the Night Market's stalls, footbridge and mahjong back room,
+Glass Heights' plaza, tower and server room, the Basin's stables, floodlight and vet block), so the
+lines can name those places.
+
+**Done 2026-10-28:** the Docks and Old Town, all 12 incidents, every line (in the game). Still to
+write: the Night Market, Glass Heights, the Basin. Until then they read the generic lines.
