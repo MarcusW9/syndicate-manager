@@ -5,6 +5,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-28 · Two fixes from the owner's play
+- Joss no longer says "doctor's orders" about someone who can't work for another reason: Today's line gives each person's real reason ("Sitting today out: Byte (unlucky day)").
+- On a computer, the squad picker's "Already on the squad" heading and "Leave this empty" button sat at the far left of the screen; they're centred with the rest of the list now.
+
 ## 2026-10-28 · Watching a job without the page jumping
 - On a computer, a running job shows the map and the story side by side: the map stays put on the left, and the story scrolls in its own column on the right.
 - The story only follows new moments while you're at the bottom. Scroll up to reread something and it stays put, with a "↓ 3 new" button to jump back. Same on phones.

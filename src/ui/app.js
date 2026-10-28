@@ -561,7 +561,7 @@ function renderBriefing() {
       case 'job-last': return [say('job-last', { job: a.name }, a.jobId), 'open-job', a.jobId];
       case 'jobs-last': return [say('jobs-last', { count: a.names.length, jobs: andList(a.names) }), 'nav', 'jobs'];
       case 'lead-last': return [say('lead-last', { name: a.name, role: a.role }, a.name), 'nav', 'crew'];
-      case 'crew-out': return [say('crew-out', { names: andList(a.names) }), 'nav', 'crew'];
+      case 'crew-out': return [say('crew-out', { names: andList(a.why ?? a.names) }), 'nav', 'crew'];
       default: return null;
     }
   };
