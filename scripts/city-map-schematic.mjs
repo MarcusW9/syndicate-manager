@@ -92,6 +92,8 @@ function map() {
     <!-- The coast: one thin cyan hairline, the UI's accent at low strength. -->
     <g fill="none" stroke="${T.cyan}" stroke-opacity="0.45" stroke-width="1">${land.map((p) => `<path d="${d(p)}" />`).join('')}</g>
     <path d="${d(S.MUDFLAT)}" fill="none" stroke="${T.line}" stroke-dasharray="2 3" />
+    <!-- The islets round the harbour: small straight-edged rocks, same fill and hairline as the coast. -->
+    ${S.ISLETS.map(([x, y, r]) => `<path d="${d(S.ring(x, y, r, r * 0.8, 6))}" fill="${T.panel}" stroke="${T.cyan}" stroke-opacity="0.45" />`).join('')}
     ${S.PIERS.map((p) => `<path d="${d(p)}" fill="${T.panel}" stroke="${T.cyan}" stroke-opacity="0.45" />`).join('')}
     <!-- Selected district: the cyan edge every selected card has. -->
     <path d="${area(SELECTED)}" clip-path="url(#sm-land)" fill="none" stroke="${T.cyan}" stroke-width="2" />
