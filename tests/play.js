@@ -1,6 +1,8 @@
 // Shared helpers for tests: an automated "player" that plays missions and weeks.
 
-import { createNewGame } from '../src/core/state.js';
+import { createNewGame, chooseFounders } from '../src/core/state.js';
+import { hire, canHire } from '../src/core/recruits.js';
+import { primaryStat } from '../src/core/development.js';
 import * as M from '../src/core/mission.js';
 import { advanceDay, calendar } from '../src/core/time.js';
 import { templateById } from '../src/core/jobs.js';
@@ -90,9 +92,20 @@ export const carefulPolicy = {
   },
 };
 
-/** Play whole weeks: each Monday take the best-paying job the available crew can staff. */
-export function playWeeks(weeks, seed, policy = carefulPolicy, { startCrew = 'classic' } = {}) {
+/** The founder pick for simulations: the three candidates with the best main stat. */
+export function autoFounders(state) {
+  const best = [...state.founding.candidates].sort((a, b) => b.stats[primaryStat(b)] - a.stats[primaryStat(a)]).slice(0, 3);
+  return chooseFounders(state, best.map((r) => r.id));
+}
+
+/**
+ * Play whole weeks: each Monday take the best-paying job the available crew can staff.
+ * hireAbove: if set, hire the best lead (up to five on the crew) when cash after the fee would
+ * still cover this plus four weeks of their wage.
+ */
+export function playWeeks(weeks, seed, policy = carefulPolicy, { startCrew = 'classic', hireAbove = null } = {}) {
   let s = createNewGame({ seed, startCrew });
+  if (s.founding) s = autoFounders(s);
   let deaths = 0;
   for (let day = 0; day < weeks * 7; day++) {
     const free = s.crew.filter((op) => availability(s, op).ok);
@@ -105,6 +118,10 @@ export function playWeeks(weeks, seed, policy = carefulPolicy, { startCrew = 'cl
       const r = playMission(s, policy);
       deaths += r.state.activeMission.result.deaths.length;
       s = M.closeMission(r.state);
+    }
+    if (hireAbove != null) {
+      const lead = [...(s.recruits ?? [])].filter((r) => canHire(s, r).ok).sort((a, b) => b.stats[primaryStat(b)] - a.stats[primaryStat(a)])[0];
+      if (lead && s.crew.length < 5 && s.cash - lead.wage * 5 > hireAbove) s = hire(s, lead.id);
     }
     s = advanceDay(s);
   }

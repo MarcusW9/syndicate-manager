@@ -1,13 +1,14 @@
-# Handoff · 2026-10-27
+# Handoff · 2026-10-28
 
 Where the project stands and what to pick up next. Read `CLAUDE.md` first: its rules (architecture, tests, design log, changelog, screenshot log, commit author) are not repeated here. `DESIGN.md`'s decision log has the why for everything below, newest first.
 
 ## State
 
-- **`main`:** up to [#24](https://github.com/MarcusW9/syndicate-manager/pull/24) (squash-merged, the focus-crisis fix): squad-run slices 1-3 and the growth and trait retune. **Branch `claude/jolly-keller-6eqry7`** carries PR #25: job-board polish and slice 4. Pushes after a PR is merged stay on the branch: check a PR is still open before adding to it.
+- **`main`:** up to [#28](https://github.com/MarcusW9/syndicate-manager/pull/28) (play-test fixes and the City map design session). **Branch `claude/jolly-keller-6eqry7`** carries the founder pick (not yet in a PR). Pushes after a PR is merged stay on the branch: check a PR is still open before adding to it; if it was merged, merge `main` in (`git merge -s ours origin/main` when the trees already match) and carry on.
 - **The game is becoming the squad run** (`PLAN-CORE-LOOP.md`, the build order; `drafts/core-loop.md`, how we got there). **Slices 1-5 are built** (the engine; the squad board and the watch screen; Wheels and standby; a site plan per district, with district incident text; gear and the first specialisations). Slice 6, battles, is to design.
 - **Design review:** `STATE-OF-PLAY.md` (2026-10-26) and the owner's calls on it (in the file and in DESIGN.md). Read it instead of re-assessing.
-- **Tests:** 314 passing. **Save format v24.**
+- **New games start with three founders picked from six** (`startCrew: 'pick'`, `chooseFounders`). Most rule tests still use the five-rookie `'fresh'` crew as a fixture.
+- **Tests:** 320 passing. **Save format v25.**
 
 ## What the 2026-10-26/27 session did
 
@@ -31,14 +32,15 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 
 ## Next
 
-1. **Merge [#27](https://github.com/MarcusW9/syndicate-manager/pull/27)** (the last districts' incident text, and slice 5: gear and specialisations). The owner is play-testing and sending feedback.
-2. **Small polish:** reloading while the crew calls you in doesn't scroll to the call-in. The reputation gauge is B of five (DESIGN.md, 2026-10-28); the owner wants to revisit it, options in `drafts/prototypes/reputation-gauge-options.html`. The phone planning screen is long (owner to decide after more play).
-3. **After gear has been played with:** tune prices and bonuses; the next specialisations (Breacher, Netrunner, Ghost...), in batches; design slice 6, battles (automatic exchanges where gear does damage and soaks hits); tone the early game down (a new crew starts with no gear now, which already helps).
-4. Then the agreed review items: the neural load and burnout cleanup, mood traits, money pressure, relationships with the career page.
+1. **Early-game money** (owner said: rebalance after the sim). `node scripts/sim-early-game.mjs` compares the old five, three without hiring, and three who hire. Three alone get rich; hiring two leads at market wages early goes broke in 10-23% of runs by week 13. Options put to the owner; nothing changed yet.
+2. **City screen rebuild** (designed: DESIGN.md 2026-10-28 rows; `drafts/prototypes/city-map-schematic.html` and `district-docks.html`). Owner still to pick straight or rough coasts and whether the district pictures come now. Needs heat per district (from the design review), not built yet.
+3. **Slice 6, battles** (to design), then gear tuning and the next specialisations: gear can't be tuned until battles give it something to do (owner, 2026-10-28).
+4. **Small polish:** reloading while the crew calls you in doesn't scroll to the call-in; the reputation gauge (owner wants to revisit; `drafts/prototypes/reputation-gauge-options.html`); the phone planning screen is long.
+5. Then the agreed review items: the neural load and burnout cleanup, mood traits, money pressure, relationships with the career page. Parked: the underground place (below).
 
 ## Writing pipeline (owner writes in other chats, pastes back)
 
-`drafts/writing-tasks.md` holds a prompt per task; paste the `WORLD.md` context block first. Done: 1 (report lines), 2 (Container 409 log: go), 7 (stat unlocks), 8 (side tasks), 9 (traits). Waiting: 3-6 (log templates, district packs, Joss lines, authored beats) until real hands-off reports show what's missing; **10 (locked-district jobs) is the next useful one.** New: **11 (incident lines per district)** for the squad run; the Docks and Old Town first.
+`drafts/writing-tasks.md` holds a prompt per task; paste the `WORLD.md` context block first. Done: 1 (report lines), 2 (Container 409 log: go), 7 (stat unlocks), 8 (side tasks), 9 (traits), 11 (incident lines for every district). Waiting: 3-6 (log templates, district packs, Joss lines, authored beats) until real hands-off reports show what's missing; **10 (locked-district jobs) is the next useful one.**
 
 When a batch comes back: check every line against the game data (ids, costs, injury severity, success-only bonuses: the source dumps show them in brackets), house style ("badly hurt", "Pay -20%, heat +1.", one sentence, "someone" for injuries in focus crises), merge with a script, add a test, then report what was edited.
 

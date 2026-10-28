@@ -86,6 +86,14 @@ try {
   // Settle a start-of-game choice, if this version opens with one.
   for (let i = 0; i < 3 && await click('[data-action="difficulty"], [data-action="pick-start"]'); i++);
 
+  // The founder pick (2026-10-28): three of six, then start.
+  if (await visible('[data-action="founder-toggle"]').count()) {
+    for (let i = 0; i < 3; i++) await click('[data-action="founder-toggle"]:not(.is-on):not([disabled])');
+    await page.evaluate(() => document.querySelector('.founding__bar')?.scrollIntoView({ block: 'end' }));
+    await shot('founders-picked');
+    await click('[data-action="found-crew"]');
+  }
+
   if (await click('[data-action="nav"][data-id="inbox"]')) {
     await click('[data-action="open-message"]');
     await top(); await shot('inbox');

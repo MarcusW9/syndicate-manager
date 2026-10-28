@@ -12,7 +12,7 @@ import { statIcon, statGlyph, crewIcons } from './icons.js';
 import { cityMapSvg, MAP_DISTRICTS } from './citymap.js';
 
 import { advanceDay, calendar, formatShortDate, isBlocked, seasonStartDay } from '../core/time.js';
-import { createNewGame } from '../core/state.js';
+import { createNewGame, chooseFounders } from '../core/state.js';
 import { templateById, jobView, nextUnlock, JOB_GATES } from '../core/jobs.js';
 import { trustLabel, trustOf } from '../core/clients.js';
 import { CLIENTS } from '../data/clients.js';
@@ -42,7 +42,7 @@ import {
   saveGame, loadGame, exportSave, importSave, listSlots, getActiveSlot, setActiveSlot,
   deleteSlot, loadBackup, backupDue, SLOT_COUNT,
 } from '../save/save.js';
-import { hire, haggle, passRecruit, canHire, signingFee, nextExpansion, expandSafehouse, STARTING_ROSTER_CAP } from '../core/recruits.js';
+import { hire, haggle, passRecruit, canHire, signingFee, nextExpansion, expandSafehouse, STARTING_ROSTER_CAP, FOUNDERS_TO_PICK } from '../core/recruits.js';
 import { potentialRead, potentialTag, primaryStat, scoutFor, ageRate, declineChance, mentoring, changesSince, progressShare, STATS } from '../core/development.js';
 import { GROWTH_LINES, GRADUATION_LINES } from '../data/growthLines.js';
 import { freelancerAsCrew, shareOf, MAX_FREELANCERS_PER_JOB } from '../core/freelance.js';
@@ -69,6 +69,7 @@ const CONTINUE_REST_MS = 800;
 let continueRestUntil = 0;
 let dayCue = null; // what the day that just started brought; shown once, on the next render
 let focusNext = null; // { action, id }: the control to focus after the next render (going back to a list)
+let founderPick = []; // candidate ids picked so far on a new game's first screen (renderFounding)
 let runnersHidden = false; // the job board's runners panel, folded away for this session
 
 export function mountApp(el, initialState) {
@@ -141,6 +142,17 @@ function onClick(e) {
     case 'equip': focusNext = { action: 'gear-slot', id: gearSlot }; gearSlot = null; return setState(equip(state, id, openOperativeId));
     case 'unequip': focusNext = { action: 'gear-slot', id: gearSlot }; gearSlot = null; return setState(unequip(state, openOperativeId, id));
     case 'open-recruit': openRecruitId = id; break;
+    case 'founder-toggle':
+      if (founderPick.includes(id)) founderPick = founderPick.filter((x) => x !== id);
+      else if (founderPick.length < FOUNDERS_TO_PICK) founderPick = [...founderPick, id];
+      focusNext = { action, id };
+      break;
+    case 'found-crew': {
+      const next = chooseFounders(state, founderPick);
+      if (next === state) return;
+      founderPick = []; screen = 'inbox';
+      return setState(next);
+    }
     case 'hire': openRecruitId = null; return setState(hire(state, id));
     case 'haggle': return setState(haggle(state, id));
     case 'pass': openRecruitId = null; return setState(passRecruit(state, id));
@@ -227,7 +239,7 @@ function onClick(e) {
     case 'slot-new': newGameSlot = Number(id); break;
     case 'cancel-new': newGameSlot = null; break;
     case 'difficulty': {
-      // Every new game starts with five generated rookies (PLAN-PROGRESSION.md).
+      // Every new game starts with the founder pick: three of six generated rookies (DESIGN.md, 2026-10-28).
       const slot = newGameSlot;
       const difficulty = id;
       const taken = !listSlots()[slot - 1].empty;
@@ -236,7 +248,8 @@ function onClick(e) {
       setActiveSlot(slot);
       newGameSlot = null;
       screen = 'inbox'; plan = null; openMessageId = null; openOperativeId = null; openRecruitId = null;
-      return setState(createNewGame({ difficulty, startCrew: 'fresh' }));
+      founderPick = [];
+      return setState(createNewGame({ difficulty, startCrew: 'pick' }));
     }
     case 'slot-delete':
       if (confirm(`Delete the game in slot ${id}? This can't be undone.`)) deleteSlot(Number(id));
@@ -368,7 +381,7 @@ function render() {
   // everywhere (owner, 2026-10-28: on desktop the top-bar Continue was easy to hit by mistake).
   const planning = !state.activeMission && screen === 'jobs' && !!(plan || sidePlan);
   // Phones: Continue sits above the tab bar, except while planning and during a job (nothing to continue).
-  const dock = !state.activeMission && !planning;
+  const dock = !state.activeMission && !planning && !state.founding; // the founder pick has its own bar
 
   root.innerHTML = `
     <header class="topbar ${cue ? 'is-new-day' : ''}">
@@ -378,7 +391,7 @@ function render() {
         <span class="stat"><span class="stat__label">Heat</span> ${heatMeter()}</span>
         <span class="tier">${esc(statName(state.tier))}<span class="tier__word"> tier</span></span>
       </div>
-      ${planning ? '' : renderContinue(blocked, resting, unread, 'topbar__continue')}
+      ${planning || state.founding ? '' : renderContinue(blocked, resting, unread, 'topbar__continue')}
     </header>
 
     <nav class="nav" aria-label="Main">
@@ -433,7 +446,7 @@ function cashDelta() {
 
 /** Continue names the next day and lists what's still waiting; it never asks for a second tap. */
 function renderContinue(blocked, resting, unread, where) {
-  const label = state.activeMission ? 'On a job' : blocked ? 'Decision needed'
+  const label = state.activeMission ? 'On a job' : state.founding ? 'Pick your crew' : blocked ? 'Decision needed'
     : `Continue → ${calendar(state.day + 1).weekday}`;
   const waiting = [
     unread ? `${unread} unread` : '',
@@ -485,6 +498,7 @@ function navButton(id, label, count = 0, countWord = '') {
 }
 
 function renderScreen() {
+  if (state.founding) return renderFounding(); // nothing else until the founders are picked
   if (screen === 'inbox') return renderInbox();
   if (screen === 'crew') return openRecruitId ? renderRecruit() : openOperativeId ? renderOperative() : openArmoury ? renderArmoury(gearUi, state) : renderCrew();
   // Jobs: on wide screens the board stays beside the job being planned (styles.css hides it on phones).
@@ -824,6 +838,55 @@ function renderHeatNotice(m) {
         <button class="btn btn--ghost" data-action="decide" data-id="${esc(m.id)}" data-option="ride">Let it ride</button>
         <p class="muted small">Letting it ride costs nothing now. The next job you start is watched: −${WATCHED_PENALTY} on its first crisis roll, then it's gone. Jobs stay open either way.</p>
       </div>`}`;
+}
+
+// --- founders ------------------------------------------------------------
+/**
+ * A new game's first screen: six candidates, pick three (DESIGN.md, 2026-10-28). Each one is a
+ * card like the squad board's dossiers, with what the scouts and Joss know about them below.
+ */
+function renderFounding() {
+  const cands = state.founding.candidates;
+  const picked = founderPick.filter((id) => cands.some((c) => c.id === id));
+  const n = picked.length;
+  const wages = cands.filter((c) => picked.includes(c.id)).reduce((sum, c) => sum + c.wage, 0);
+  const names = picked.map((id) => cands.find((c) => c.id === id).handle);
+  const best = (r) => Object.entries(r.stats).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  return `
+    <section class="panel founding">
+      <h1>Who's in?</h1>
+      <div class="joss">
+        <span class="joss__badge">${jossIcon({ mood: 'happy', size: 32 })}</span>
+        <div class="joss__body">
+          <span class="joss__name">${esc(NAMES.partner)}</span>
+          <p class="joss__line">Six people will work for street wages, and the room sleeps three. Pick who you want to grow with. We hire the rest later.</p>
+        </div>
+      </div>
+      <ul class="founders" role="group" aria-label="Candidates: pick ${FOUNDERS_TO_PICK}">
+        ${cands.map((r, i) => {
+          const on = picked.includes(r.id);
+          const full = !on && n >= FOUNDERS_TO_PICK;
+          return `<li><button class="founder ${on ? 'is-on' : ''}" data-action="founder-toggle" data-id="${esc(r.id)}" aria-pressed="${on}" ${full ? 'disabled' : ''}>
+            <span class="founder__file dossier" style="--tilt:${['-1.2deg', '0.8deg', '-0.4deg', '1.1deg', '-0.9deg', '0.5deg'][i % 6]}">
+              <span class="dossier__photo">${face(r)}</span>
+              <span class="dossier__name">${esc(r.handle)}</span>
+              <span class="dossier__real">${esc(r.role)} · ${r.age}</span>
+              ${on ? '<span class="dossier__tag">In</span>' : ''}
+            </span>
+            <span class="founder__about">
+              <span class="founder__stats">${best(r).map(([k, v]) => `<span><b>${v}</b> ${esc(statName(k))}</span>`).join('')}</span>
+              <span class="founder__line">${esc(r.origin)}</span>
+              <span class="founder__traits muted small">${esc(r.traits.map((t) => TRAITS[t]?.name ?? t).join(' · '))}</span>
+              <span class="founder__wage muted small">${money(r.wage)}/wk</span>
+            </span>
+          </button></li>`;
+        }).join('')}
+      </ul>
+      <div class="planbar founding__bar">
+        <p class="small">${n ? `<strong>${esc(names.join(', '))}</strong><br>` : ''}${n === FOUNDERS_TO_PICK ? `Wages ${money(wages)} a week. Rent ${money(state.rent)}, due Sunday.` : `Picked ${n} of ${FOUNDERS_TO_PICK}.`}</p>
+        <button class="btn btn--primary" data-action="found-crew" ${n === FOUNDERS_TO_PICK ? '' : 'disabled'}>${n === FOUNDERS_TO_PICK ? 'Start with these three' : `Pick ${FOUNDERS_TO_PICK - n} more`}</button>
+      </div>
+    </section>`;
 }
 
 // --- crew --------------------------------------------------------------

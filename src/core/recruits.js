@@ -82,7 +82,7 @@ export function generateRecruit(state, { role: forcedRole, quality: forcedQualit
   }
 
 
-  const takenHandles = new Set([...state.crew, ...state.memorial, ...(state.recruits ?? []), ...(state.freelancers ?? [])].map((o) => o.handle));
+  const takenHandles = new Set([...state.crew, ...state.memorial, ...(state.recruits ?? []), ...(state.freelancers ?? []), ...(state.founding?.candidates ?? [])].map((o) => o.handle));
   const freeHandles = HANDLES.filter((h) => !takenHandles.has(h));
   const handle = freeHandles.length ? pick(rng, freeHandles) : `${pick(rng, HANDLES)} ${between(rng, [2, 9])}`;
 
@@ -162,6 +162,22 @@ export function generateStartingCrew(state) {
     if (miss === 0) break;
   }
   return best.crew;
+}
+
+// The founder pick (DESIGN.md, 2026-10-28): a new game offers six candidates, one of each core
+// role and one more, and the player picks three. Fewer people means the first hires matter.
+export const FOUNDER_CANDIDATES = 6;
+export const FOUNDERS_TO_PICK = 3;
+
+/** Six generated founders to choose from: one per core role, plus one of any role. */
+export function generateFounderCandidates(state) {
+  // generateRecruit reads the crew (for handles) and advances the counters, so work on a scratch copy.
+  const work = { ...state, crew: [] };
+  for (const role of FRESH_CREW_ROLES) work.crew.push(generateRecruit(work, { role, founder: true }));
+  while (work.crew.length < FOUNDER_CANDIDATES) work.crew.push(generateRecruit(work, { founder: true }));
+  state.rngCounter = work.rngCounter;
+  state.recruitSeq = work.recruitSeq;
+  return work.crew.map(({ expiresDay, ...r }) => r);
 }
 
 /** Weekly scouting (Wednesdays): 1 lead, or 2 when the crew is short-handed. */

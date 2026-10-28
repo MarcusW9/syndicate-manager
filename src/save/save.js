@@ -357,5 +357,11 @@ function migrate(state) {
     }
     state.version = 24;
   }
+  if (state.version === 24) {
+    // v25: a new game picks its founders before day 1 (state.js chooseFounders). Saves already
+    // have their crew.
+    state.founding = state.founding ?? null;
+    state.version = 25;
+  }
   return state;
 }
