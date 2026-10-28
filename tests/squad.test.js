@@ -10,11 +10,14 @@ import { availability } from '../src/core/crew.js';
 import { coverage, jossPicks, likelyIncidents, jobRead, planRead, leanPicks } from '../src/core/squad.js';
 import { ZONE_POOLS } from '../src/data/incidents.js';
 import { APPROACHES } from '../src/data/approaches.js';
+import { arm } from './play.js';
 
 const APPROACH_IDS = Object.keys(APPROACHES);
+const armed = (s) => arm(arm(s, s.crew.at(-1).id, 'rifle'), s.crew.at(-2).id, 'drone');
 
+/** A fresh crew with one offer; the last two carry a rifle and a drone, so overwatch is possible. */
 function offer(seed, templateId) {
-  const s = createNewGame({ seed, startCrew: 'fresh' });
+  const s = armed(createNewGame({ seed, startCrew: 'fresh' }));
   s.jobs = [];
   addOffer(s, templateId);
   return s;
@@ -63,7 +66,7 @@ test('the read counts saves on danger incidents, and overwatch only where it can
   const s = offer(3, 'container409');
   const tpl = templateById('container409');
   const crew = s.crew.slice(0, tpl.crewSize);
-  const spare = s.crew[tpl.crewSize];
+  const spare = arm(s, s.crew[tpl.crewSize].id, 'rifle', 'drone').crew[tpl.crewSize];
   const bare = coverage(tpl, crew, 'stealth').rows.find((r) => r.id === 'patrol');
   const rifle = coverage(tpl, crew, 'stealth', { overwatch: { op: spare, kit: 'rifle' } }).rows.find((r) => r.id === 'patrol');
   assert.ok(bare.danger && rifle.withSave, 'a patrol can be saved');
@@ -126,7 +129,7 @@ test('Joss covers the approach: his team handles its incidents at least as well 
 test('the job board read is the planner read: same squad, same approach, same risk, the least risky approach', () => {
   const RANK = ['low', 'moderate', 'high', 'extreme'];
   for (let seed = 1; seed <= 20; seed++) {
-    const s = createNewGame({ seed, startCrew: 'fresh' });
+    const s = armed(createNewGame({ seed, startCrew: 'fresh' }));
     // Someone away, so the read has to leave them out.
     s.crew[0].condition.awayUntil = s.day + 2;
     for (const job of s.jobs) {
@@ -135,7 +138,7 @@ test('the job board read is the planner read: same squad, same approach, same ri
       assert.ok(!r.crew.includes(s.crew[0]), `seed ${seed}: not the one who's away`);
       const byId = (id) => s.crew.find((o) => o.id === id) ?? null;
       // What the planner shows when it opens on the card's plan.
-      const shown = planRead(s, job, { crew: r.picks.crew.map(byId), approach: r.approach, overwatch: byId(r.picks.overwatch), kit: r.picks.kit ?? 'rifle', wheels: byId(r.picks.wheels) });
+      const shown = planRead(s, job, { crew: r.picks.crew.map(byId), approach: r.approach, overwatch: byId(r.picks.overwatch), kit: r.picks.kit, wheels: byId(r.picks.wheels) });
       assert.equal(shown.level, r.level, `seed ${seed} ${job.id}: card and planner agree`);
       // No other approach with Joss's squad for it would read safer.
       for (const a of APPROACH_IDS) assert.ok(RANK.indexOf(r.level) <= RANK.indexOf(leanPicks(s, job, a).level), `seed ${seed}: ${a} isn't safer`);
@@ -148,7 +151,7 @@ test('Joss sends the smallest squad that gets the best risk: everyone beyond the
   const RANK = ['low', 'moderate', 'high', 'extreme'];
   let extras = 0;
   for (let seed = 1; seed <= 20; seed++) {
-    const s = createNewGame({ seed, startCrew: 'fresh' });
+    const s = armed(createNewGame({ seed, startCrew: 'fresh' }));
     const byId = (id) => s.crew.find((o) => o.id === id) ?? null;
     for (const job of s.jobs) {
       const tpl = templateById(job.templateId);

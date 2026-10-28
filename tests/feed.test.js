@@ -11,7 +11,7 @@ import { autoRun } from '../src/core/autorun.js';
 import { feedItems } from '../src/core/feed.js';
 import { summariseRun } from '../src/core/report.js';
 import { APPROACHES } from '../src/data/approaches.js';
-import { playMission, randomPolicy } from './play.js';
+import { playMission, randomPolicy, arm } from './play.js';
 
 const APPROACH_IDS = Object.keys(APPROACHES);
 
@@ -19,6 +19,7 @@ function run(seed, { live = false, approach = APPROACH_IDS[seed % 4] } = {}) {
   const s = createNewGame({ seed, startCrew: 'fresh' });
   s.jobs = [];
   addOffer(s, 'container409');
+  arm(s, s.crew[2].id, 'rifle', 'drone');
   const st = M.startMission(s, s.jobs[0].id, s.crew.slice(0, 2).map((o) => o.id), approach, { overwatch: { id: s.crew[2].id, kit: seed % 2 ? 'rifle' : 'drone' } });
   return live ? playMission(st, randomPolicy(seed)).state.activeMission : autoRun(st, 'steady').activeMission;
 }

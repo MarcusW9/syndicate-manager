@@ -3,7 +3,8 @@
 // shared crew rule), so the read on the board is the risk the crew actually meets.
 
 import { ZONE_POOLS, OFF_APPROACH } from '../data/incidents.js';
-import { incidentById, incidentDifficulty, handlerFor, bestSave, OVERWATCH_KIT } from './incidents.js';
+import { incidentById, incidentDifficulty, handlerFor, bestSave } from './incidents.js';
+import { overwatchKit, kitsFor } from './gear.js';
 import { crewRoll, effectiveStat, APPROACHES } from './crew.js';
 import { successChance, riskLabel, rollTarget, assessJob } from './risk.js';
 import { availability, MAX_EXTRA_CREW } from './crew.js';
@@ -27,19 +28,21 @@ export function likelyIncidents(approach) {
 
 /**
  * The coverage read: for each likely incident, who would handle it, their odds, and (for danger)
- * the odds once the best save is counted. crew: the inside team (operatives). overwatch: { op, kit }.
+ * the odds once the best save is counted. crew: the inside team (operatives). overwatch: { op, kit }
+ * (only counts if they carry that kit).
  * Returns { rows, spotted, toughest }.
  */
 export function coverage(template, crew, approach, { threat = template.threat, overwatch = null, intel = null } = {}) {
   const am = { threat, alert: 0 };
-  const ow = overwatch?.op ? { kit: overwatch.kit, left: OVERWATCH_KIT[overwatch.kit].uses } : null;
+  const kit = overwatch?.op ? overwatchKit(overwatch.op, overwatch.kit) : null;
+  const ow = kit ? { kit: overwatch.kit, left: kit.uses } : null;
   const rows = likelyIncidents(approach).map(({ id, zone, sometimes }) => {
     const inc = incidentById(id);
     const diff = incidentDifficulty(template, am, inc);
     const base = { id, name: inc.name, zone, where: sometimes ? 'Sometimes, inside' : ZONE_NOTE[zone], danger: !!inc.danger, diff };
     const h = crew.length ? handlerFor(crew, inc, diff, { approach, recommended: template.crewSize, intel }) : null;
     if (!h) return { ...base, handler: null, chance: 0, risk: 'extreme', withSave: null, effective: 'extreme', gap: true };
-    const save = inc.danger ? bestSave({ victim: h.roll.op, able: crew, overwatch: ow, overwatchOp: overwatch?.op ?? null, zone, diff }) : null;
+    const save = inc.danger ? bestSave({ victim: h.roll.op, able: crew, overwatch: ow, overwatchOp: ow ? overwatch.op : null, zone, diff }) : null;
     const eff = save ? h.chance + (1 - h.chance) * save.chance : h.chance;
     return {
       ...base,
@@ -67,7 +70,8 @@ function squadScore(template, crew, approach, overwatch, threat) {
 }
 
 /**
- * Joss's picks: an inside team of the recommended size and an overwatch, chosen one at a time
+ * Joss's picks: an inside team of the recommended size and an overwatch (someone carrying a rifle
+ * or a drone), chosen one at a time
  * for the best coverage, from the operatives given (free crew; freelancers cost a cut, so Joss
  * leaves them to you). Overwatch only if it helps; Wheels if the job can need driving and they'd
  * out-drive the team; standby from whoever's left. Returns { crew, overwatch, kit, wheels, standby }.
@@ -86,8 +90,8 @@ export function jossPicks(template, candidates, approach, { threat = template.th
   }
   const without = squadScore(template, team, approach, null, threat);
   let over = null;
-  for (const kit of Object.keys(OVERWATCH_KIT)) {
-    for (const op of pool) {
+  for (const op of pool) {
+    for (const kit of kitsFor(op)) {
       const s = squadScore(template, team, approach, { op, kit }, threat);
       if (s > without + 0.005 && (!over || s > over.s)) over = { op, kit, s };
     }
@@ -118,12 +122,13 @@ export function bestLine(op, approach) {
  * plan: { crew: [op], approach, overwatch: op | null, kit, wheels: op | null }.
  * Returns { level, read, cov }.
  */
-export function planRead(state, job, { crew, approach, overwatch = null, kit = 'rifle', wheels = null }) {
+export function planRead(state, job, { crew, approach, overwatch = null, kit = null, wheels = null }) {
   const v = jobView(state, job);
   const tpl = { ...v.tpl, threat: v.threat };
   const intel = intelFor(state, v.tpl.district);
   const read = assessJob(tpl, crew, approach, { watched: state.heatWatched ? WATCHED_PENALTY : 0, intel, wheels });
-  const cov = coverage(tpl, crew, approach, { threat: v.threat, overwatch: overwatch ? { op: overwatch, kit } : null, intel });
+  const owKit = overwatch && (kitsFor(overwatch).includes(kit) ? kit : kitsFor(overwatch)[0]);
+  const cov = coverage(tpl, crew, approach, { threat: v.threat, overwatch: owKit ? { op: overwatch, kit: owKit } : null, intel });
   const level = crew.length && RISK_ORDER.indexOf(cov.toughest) > RISK_ORDER.indexOf(read.level) ? cov.toughest : read.level;
   return { level, read, cov };
 }
@@ -151,7 +156,7 @@ export function leanPicks(state, job, approach) {
   let best = Infinity;
   for (const overwatch of [null, byId(base.overwatch)].filter((o, i) => i === 0 || o)) {
     for (const wheels of [null, byId(base.wheels)].filter((o, i) => i === 0 || o)) {
-      const sq = { crew: base.crew.map(byId), overwatch, kit: base.kit ?? 'rifle', wheels };
+      const sq = { crew: base.crew.map(byId), overwatch, kit: base.kit, wheels };
       let r = rank(sq);
       for (let n = 0; n < MAX_EXTRA_CREW && sq.crew.length >= tpl.crewSize; n++) {
         const left = free.filter((o) => !sq.crew.includes(o) && o !== sq.overwatch && o !== sq.wheels);

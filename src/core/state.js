@@ -9,7 +9,7 @@ import { refreshFreelancers } from './freelance.js';
 import { ECONOMY } from '../data/economy.js';
 import { refreshSideBoard } from './sidetasks.js';
 
-export const SAVE_VERSION = 22;
+export const SAVE_VERSION = 23;
 
 // A rookie crew's first board: small work only.
 export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];
@@ -53,6 +53,7 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
     rent: 4000,
     difficulty,
     crew,
+    stash: [], // gear bought and not on anyone (core/gear.js); a new crew starts with none
     inbox: [
       {
         id: 'welcome',

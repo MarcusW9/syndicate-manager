@@ -14,6 +14,7 @@ import { money } from './money.js';
 import { returnCrews } from './autorun.js';
 import { refreshSideBoard, returnSideTasks } from './sidetasks.js';
 import { dailyTraits } from './earned.js';
+import { neuralFloor } from './gear.js';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAYS_PER_SEASON = 364; // 52 weeks
@@ -58,7 +59,7 @@ export function advanceDay(prev) {
     expireStatuses(op, state.day);
     const c = op.condition;
     c.fatigue = Math.max(0, c.fatigue - 8); // resting recovers
-    c.neuralLoad = Math.max(0, c.neuralLoad - 3);
+    c.neuralLoad = Math.max(neuralFloor(op), c.neuralLoad - 3); // implants keep a floor (core/gear.js)
     if (c.injuryDays > 0) {
       c.injuryDays -= 1;
       if (c.injuryDays === 0 && c.injury !== 'dead') c.injury = 'healthy';

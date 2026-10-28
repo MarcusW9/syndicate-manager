@@ -127,9 +127,20 @@ written; each incident falls back to the generic lines, `core/incidents.js` `inc
 `tests/sites.test.js` (routes join, views 3:2 and on the map, the rifle can't see the target and
 the drone can; district lines only change words and keep `{op}`).
 
-### Slice 5 · Gear and specialisations — [ ]
-- Rifles and drones become gear (bought, per person); the shared kit goes.
-- Specialisations: earned offer, player picks; Marksman and Drone Jockey first.
+### Slice 5 · Gear and specialisations — [ ] (owner's calls 2026-10-28, DESIGN.md)
+- **5a, gear — [x] 2026-10-28.** A stash and four slots per runner (weapon, armour, tool,
+  implant); the rifle and the drone are items, and overwatch needs one. No wear. A new crew
+  starts with nothing; some recruits bring their own. Built as `src/data/gear.js` and
+  `src/core/gear.js`, drawn by `src/ui/gear.js` (the armoury from the Crew screen, the loadout on
+  a runner's page). Save v23. Tests: `tests/gear.test.js`.
+- **5b, specialisations — [ ].** Stats plus experience unlock an offer from Joss; the player picks
+  (or "not yet"). Marksman (combat and cool, overwatch jobs with a rifle) and Drone Jockey (tech,
+  overwatch jobs with a drone) first.
+
+### Slice 6 · Battles — [ ] (to design)
+- Fights as automatic exchanges of 2-3 rounds on the watch feed: guards with health, gear doing
+  damage and soaking hits. Designed after gear has been played with.
+- Also later: tone the early game down (a full founding squad is strong for its first jobs).
 
 ## Not in this plan
 Relationships (bonds feeding saves), money pressure, the morale and burnout cleanup (save

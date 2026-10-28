@@ -14,9 +14,21 @@ const PATHS = {
   medical: '<path d="M9 4h6v5h5v6h-5v5H9v-5H4V9h5z"/>', // a cross
   cool: '<path d="M3 12h4l2-4 3 8 2-4h7"/>', // a steady pulse
   person: '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.8 3.6-6 7-6s6.2 2.2 7 6"/>',
+  // Gear (slice 5): one per item type in data/gear.js.
+  rifle: '<path d="M2 12h15l2-1.5h3M5 12l-1.5 5h3L8 12M11 12v2.5M9 9h5"/>', // a long gun with a scope
+  pistol: '<path d="M4 7h15v4h-7l-2 7H6l2-7H4z"/>', // a handgun
+  vest: '<path d="M8 3L4 6v14h16V6l-4-3-4 3z"/><path d="M12 6v14M7 11h3M14 11h3"/>', // plates on a vest
+  drone: '<rect x="9" y="10" width="6" height="4" rx="1"/><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><path d="M7 7.5l2 2.5M17 7.5l-2 2.5M12 14v3"/>', // a quadcopter
+  deck: '<rect x="5" y="5" width="14" height="10" rx="1"/><path d="M3 19h18M8 9h4M8 12h6"/>', // a deck
+  medkit: '<rect x="3" y="7" width="18" height="13" rx="1"/><path d="M9 7V4h6v3M12 10.5v6M9 13.5h6"/>', // a bag with a cross
+  picks: '<circle cx="7" cy="12" r="3.5"/><path d="M10.5 12H21M17 12v3M20 12v2"/>', // a key
+  implant: '<path d="M8 21v-3.5A7 7 0 1 1 18 11l2 3h-2v3h-3v4"/><rect x="9" y="8" width="4" height="4"/>', // a head with a chip
 };
 
 const svg = (key, cls = '') => `<svg class="icon ${cls}" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g ${stroke}>${PATHS[key] ?? ''}</g></svg>`;
+
+/** An item's icon alone (data/gear.js type; implants share one), beside its name. */
+export const gearGlyph = (type, slot) => svg(PATHS[type] ? type : slot === 'implant' ? 'implant' : 'tech');
 
 /** A stat's icon alone, to sit right before its word (the word carries the meaning). */
 export const statGlyph = (stat) => svg(stat);

@@ -5,6 +5,13 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-28 · Gear: an armoury, and what each runner carries (the squad run, part 5a)
+- **The armoury** (Crew screen): buy gear into the stash, sell it back for half. Rifles and drones, a sidearm, an armoured vest, a cyberdeck, a trauma kit, lockpicks and two implants, each in a street or a pro version (pro is one better and costs 2.5×).
+- **Every runner has four slots**: weapon, armour, tool and implant. Tap a slot on their page to put something on them; it stays with them job after job. Gear can't change while they're on a job or away.
+- **Gear shows in the numbers**: a sidearm is "Sidearm +1" in the roll breakdown. A vest makes a serious wound less likely, a trauma kit lets someone patch a wound with less training, and implants help two stats but keep neural load from resting below 10.
+- **Overwatch needs a rifle or a drone now.** The shared kit is gone: a new crew starts with nothing, and only someone carrying one can take overwatch (Joss too). An old save keeps its rifle and drone in the stash.
+- **Some recruits bring their own kit**, and their page says so: a muscle might turn up with a rifle.
+
 ## 2026-10-28 · Every district in its own words
 - The small moments of a run now read differently in the last three districts too: smoke and holo-ads between the Night Market stalls and a mahjong back room counting money; planters, private guards and a humming server room in Glass Heights; Association guards, feed sacks and the vet block in the Basin. Written by the owner; every district now has all 12. 292 tests.
 

@@ -8,7 +8,7 @@ import { addOffer } from '../src/core/jobs.js';
 import { effectiveStat, crewRoll, setInjury, INJURY_DAYS } from '../src/core/crew.js';
 import * as E from '../src/core/earned.js';
 import { EARNED_TRAITS } from '../src/data/earnedTraits.js';
-import { playMission, carefulPolicy, playWeeks } from './play.js';
+import { playMission, carefulPolicy, playWeeks, arm } from './play.js';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 const { importSave } = await import('../src/save/save.js');
@@ -374,6 +374,7 @@ test('everyone on the job counts towards traits, outside the inside team too', (
   let s = game(5);
   s.jobs = []; addOffer(s, 'container409');
   const [a, b, c, d] = s.crew.map((o) => o.id);
+  arm(s, c, 'drone');
   s = M.startMission(s, s.jobs[0].id, [a, b], 'stealth', { overwatch: { id: c, kit: 'drone' }, wheels: d });
   s = M.closeMission(playMission(s, carefulPolicy).state);
   for (const id of [c, d]) assert.ok(Object.keys(s.crew.find((o) => o.id === id).track?.together ?? {}).length > 0, `${id} worked the job with the others`);

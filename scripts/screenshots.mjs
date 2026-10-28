@@ -92,6 +92,21 @@ try {
     await click('[data-action="back"]');
   }
 
+  // Gear (2026-10-28, slice 5): buy a rifle in the armoury and put it on someone, so overwatch is possible.
+  if (await click('[data-action="nav"][data-id="crew"]') && await click('[data-action="open-armoury"]')) {
+    await top(); await shot('armoury');
+    await click('[data-action="buy"][data-id="rifle"][data-tier="street"]');
+    await click('[data-action="back"]');
+    if (await click('[data-action="open-op"]:has-text("muscle")') || await click('[data-action="open-op"]')) {
+      await click('[data-action="gear-slot"][data-id="weapon"]');
+      await shot('gear-sheet');
+      await click('.sheet [data-action="equip"]');
+      await page.evaluate(() => document.querySelector('.loadout')?.scrollIntoView({ block: 'center' }));
+      await shot('operative-gear');
+      await click('[data-action="back"]');
+    }
+  }
+
   if (await click('[data-action="nav"][data-id="jobs"]')) {
     await top(); await shot('job-board');
     if (await click('[data-action="open-job"]')) {

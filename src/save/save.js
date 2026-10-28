@@ -16,6 +16,7 @@ import { STARTING_ROSTER_CAP } from '../core/recruits.js';
 import { prepareOperative, rollPotential, rollScoutError, scoutFor, potentialRead } from '../core/development.js';
 import { nextRng } from '../core/random.js';
 import { refreshFreelancers } from '../core/freelance.js';
+import { GEAR, emptyLoadout, loadoutOf } from '../core/gear.js';
 
 export const SLOT_COUNT = 3;
 export const BACKUP_REMINDER_DAYS = 28;
@@ -324,6 +325,22 @@ function migrate(state) {
       am.standby = am.standby ?? null;
     }
     state.version = 22;
+  }
+  if (state.version === 22) {
+    // v23: gear (PLAN-CORE-LOOP.md, slice 5). The safehouse's shared rifle and drone become two
+    // items: whoever has one on overwatch in a job saved mid-way carries it; the rest go to the stash.
+    state.stash = state.stash ?? [];
+    for (const op of state.crew) op.gear = op.gear ?? emptyLoadout();
+    const kits = new Set(['rifle', 'drone']);
+    for (const am of [state.activeMission, ...(state.awayJobs ?? []).map((j) => j.mission)]) {
+      const ow = am?.overwatch && state.crew.find((o) => o.id === am.overwatch.id);
+      if (!ow || !GEAR[am.overwatch.kit]) continue;
+      const slot = GEAR[am.overwatch.kit].slot;
+      if (!ow.gear[slot]) ow.gear[slot] = loadoutOf(state, [am.overwatch.kit])[slot];
+      kits.delete(am.overwatch.kit);
+    }
+    for (const kit of kits) state.stash.push(loadoutOf(state, [kit])[GEAR[kit].slot]);
+    state.version = 23;
   }
   return state;
 }
