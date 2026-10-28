@@ -91,8 +91,8 @@ test('district incident lines only replace words, for known incidents, and keep 
   }
 });
 
-test('Docks and Old Town have every incident written out, every line', () => {
-  for (const district of ['docks', 'oldTown']) {
+test('every district has every incident written out, every line', () => {
+  for (const district of Object.keys(DISTRICTS)) {
     for (const [id, base] of Object.entries(INCIDENTS)) {
       const local = DISTRICT_INCIDENTS[district][id];
       assert.ok(local, `${district}: ${id} is written`);
@@ -104,7 +104,7 @@ test('Docks and Old Town have every incident written out, every line', () => {
 test('a district\'s own incident lines are used on its jobs, and the generic ones everywhere else', () => {
   assert.equal(incidentIn('lock', 'docks').text, DISTRICT_INCIDENTS.docks.lock.text);
   assert.equal(incidentIn('lock', 'docks').stats, INCIDENTS.lock.stats, 'the rules stay');
-  assert.equal(incidentIn('lock', 'nightMarket').text, INCIDENTS.lock.text, 'nothing written there yet: the generic line');
+  assert.equal(incidentIn('lock', 'nightMarket').text, DISTRICT_INCIDENTS.nightMarket.lock.text);
   assert.equal(incidentIn('lock', 'nowhere').text, INCIDENTS.lock.text);
   let seen = 0;
   for (let seed = 1; seed <= 60 && !seen; seed++) {

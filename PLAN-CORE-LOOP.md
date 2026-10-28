@@ -115,16 +115,15 @@ loop in `runIncident`), `core/incidents.js` (`decisionChoices`, `ordersDecision`
 `standbySave`), `core/squad.js` (Joss), `ui/board.js` (two more outside slots) and the watch.
 Save v22. Tests: `tests/standby.test.js`.
 
-### Slice 4 · Sites and district text — [x] sites 2026-10-28; district text for the Docks and Old Town 2026-10-28, three districts to write
+### Slice 4 · Sites and district text — [x] 2026-10-28 (sites; district text for all five districts)
 - A site plan per district (Docks yard, Old Town tenement, Night Market, Glass Heights
   tower, the Basin), drawn as data.
 - Writing task: incident text per district (`drafts/writing-tasks.md`).
 
 Built as `src/data/sites.js` (shapes, points, the path per zone, camera views, rifle and drone
 sight; a generic site for anywhere else), drawn by `ui/siteplan.js` for the job's district. The
-district text has its slot, `src/data/districtIncidents.js` (writing task 11: the Docks and Old Town
-are written; each
-incident falls back to the generic lines, `core/incidents.js` `incidentIn`). Tests:
+district text has its slot, `src/data/districtIncidents.js` (writing task 11, all five districts
+written; each incident falls back to the generic lines, `core/incidents.js` `incidentIn`). Tests:
 `tests/sites.test.js` (routes join, views 3:2 and on the map, the rifle can't see the target and
 the drone can; district lines only change words and keep `{op}`).
 
