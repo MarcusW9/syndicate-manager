@@ -8,4 +8,5 @@ await p.goto(new URL('../drafts/prototypes/city-map-schematic.html', import.meta
 await p.evaluate(() => document.fonts.ready);
 await p.locator('#desk').screenshot({ path: `${out}/10-schematic-desktop.png` });
 await p.locator('#phone').screenshot({ path: `${out}/11-schematic-phone.png` });
+await p.locator('#side').screenshot({ path: `${out}/12-schematic-coasts-side-by-side.png` });
 await b.close();

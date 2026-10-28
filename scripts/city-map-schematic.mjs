@@ -63,8 +63,12 @@ function plate(key) {
   return s + '</g>';
 }
 
-function map() {
-  const land = [S.ISLAND, S.WEST, S.AMBER, S.MAINLAND];
+/** `rough`: the hand-drawn coastline the game's map uses today, instead of straight edges. */
+function map({ rough = false } = {}) {
+  const c = (pts, seed, r, depth) => (rough ? S.coast(pts, seed, r, depth) : pts);
+  const land = [c(S.ISLAND, 3, 0.22), c(S.WEST, 8, 0.3), c(S.AMBER, 5, 0.2, 3), c(S.MAINLAND, 4, 0.2)];
+  const mud = c(S.MUDFLAT, 6, 0.3);
+  const id = rough ? 'smr' : 'sm';
   const keys = Object.keys(S.DISTRICT_MAP);
   const area = (k) => d(S.DISTRICT_MAP[k].area) + (S.DISTRICT_MAP[k].holes ?? []).map(d).join('');
   let grid = '';
@@ -72,31 +76,31 @@ function map() {
   for (let y = 0; y <= MAP_H; y += 24) grid += `M0 ${y}H${MAP_W}`;
   return `<svg class="sm" viewBox="0 0 ${MAP_W} ${MAP_H}" role="group" aria-label="Map of the city">
     <defs>
-      <clipPath id="sm-land">${land.map((p) => `<path d="${d(p)}" />`).join('')}<path d="${d(S.MUDFLAT)}" /></clipPath>
-      ${keys.map((k) => `<clipPath id="sm-${k}"><path d="${area(k)}" clip-rule="evenodd" /></clipPath>`).join('')}
-      <pattern id="sm-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V6" stroke="${T.line}" stroke-width="1" /></pattern>
+      <clipPath id="${id}-land">${land.map((p) => `<path d="${d(p)}" />`).join('')}<path d="${d(mud)}" /></clipPath>
+      ${keys.map((k) => `<clipPath id="${id}-${k}"><path d="${area(k)}" clip-rule="evenodd" /></clipPath>`).join('')}
+      <pattern id="${id}-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V6" stroke="${T.line}" stroke-width="1" /></pattern>
     </defs>
     <rect width="${MAP_W}" height="${MAP_H}" fill="${T.bg}" />
     <path d="${grid}" stroke="${T.cyan}" stroke-opacity="0.05" stroke-width="1" />
-    <g fill="${T.panel}">${land.map((p) => `<path d="${d(p)}" />`).join('')}<path d="${d(S.MUDFLAT)}" /></g>
+    <g fill="${T.panel}">${land.map((p) => `<path d="${d(p)}" />`).join('')}<path d="${d(mud)}" /></g>
     ${keys.map((k) => {
       const locked = LOCKED.has(k);
       const sel = k === SELECTED;
-      return `<g clip-path="url(#sm-land)"><g clip-path="url(#sm-${k})" class="sm-d" data-id="${k}">
+      return `<g clip-path="url(#${id}-land)"><g clip-path="url(#${id}-${k})" class="sm-d" data-id="${k}">
         <rect width="${MAP_W}" height="${MAP_H}" fill="${locked ? T.bg : T.panel2}" />
-        ${locked ? `<rect width="${MAP_W}" height="${MAP_H}" fill="url(#sm-hatch)" />` : `<rect width="${MAP_W}" height="${MAP_H}" fill="${TURF[k]}" fill-opacity="${sel ? 0.13 : 0.06}" />`}
+        ${locked ? `<rect width="${MAP_W}" height="${MAP_H}" fill="url(#${id}-hatch)" />` : `<rect width="${MAP_W}" height="${MAP_H}" fill="${TURF[k]}" fill-opacity="${sel ? 0.13 : 0.06}" />`}
       </g></g>`;
     }).join('')}
     <!-- Borders between districts: 1px in the line colour, like the dividers between panels. -->
-    <g clip-path="url(#sm-land)" fill="none" stroke="${T.line}" stroke-width="1.2">${keys.map((k) => `<path d="${area(k)}" />`).join('')}</g>
+    <g clip-path="url(#${id}-land)" fill="none" stroke="${T.line}" stroke-width="1.2">${keys.map((k) => `<path d="${area(k)}" />`).join('')}</g>
     <!-- The coast: one thin cyan hairline, the UI's accent at low strength. -->
     <g fill="none" stroke="${T.cyan}" stroke-opacity="0.45" stroke-width="1">${land.map((p) => `<path d="${d(p)}" />`).join('')}</g>
-    <path d="${d(S.MUDFLAT)}" fill="none" stroke="${T.line}" stroke-dasharray="2 3" />
+    <path d="${d(mud)}" fill="none" stroke="${T.line}" stroke-dasharray="2 3" />
     <!-- The islets round the harbour: small straight-edged rocks, same fill and hairline as the coast. -->
-    ${S.ISLETS.map(([x, y, r]) => `<path d="${d(S.ring(x, y, r, r * 0.8, 6))}" fill="${T.panel}" stroke="${T.cyan}" stroke-opacity="0.45" />`).join('')}
+    ${S.ISLETS.map(([x, y, r], i) => `<path d="${d(c(S.ring(x, y, r, r * 0.8, 6), 20 + i, 0.4, 3))}" fill="${T.panel}" stroke="${T.cyan}" stroke-opacity="0.45" />`).join('')}
     ${S.PIERS.map((p) => `<path d="${d(p)}" fill="${T.panel}" stroke="${T.cyan}" stroke-opacity="0.45" />`).join('')}
     <!-- Selected district: the cyan edge every selected card has. -->
-    <path d="${area(SELECTED)}" clip-path="url(#sm-land)" fill="none" stroke="${T.cyan}" stroke-width="2" />
+    <path d="${area(SELECTED)}" clip-path="url(#${id}-land)" fill="none" stroke="${T.cyan}" stroke-width="2" />
     <!-- Landmarks and routes as thin lines. -->
     <path d="${d(S.COURSE)}" fill="none" stroke="#f7efc8" stroke-opacity="0.55" stroke-width="1" />
     <path d="M114 254V352" stroke="${T.muted}" stroke-opacity="0.6" stroke-dasharray="2 3" />
@@ -157,7 +161,7 @@ body{font-family:system-ui,sans-serif;padding:24px}
 .sm-heat--inline{vertical-align:middle;margin:0 4px}
 .sm-places{display:grid;grid-template-columns:1fr 1fr;gap:8px}.sm-places .btn{display:grid;text-align:left;gap:2px;min-height:56px}
 .sm-card{margin-top:12px}
-.phone{width:390px}
+.phone{width:390px}.side{display:grid;grid-template-columns:repeat(2,390px);gap:16px;margin:16px 0}.cap{font-family:var(--display);font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-size:.8rem;margin:0 0 6px}
 @media (max-width:820px){.citycols{grid-template-columns:1fr}}
 </style></head><body><div class="wrap">
 <p class="note">City map built from the interface's own parts (2026-10-28), after the owner's note that the sketches felt off next to the UI. Loads the game's styles.css, so panels, headings, buttons and colours are the real ones. Same made-up night as the other sketches; the Docks are selected.</p>
@@ -166,6 +170,7 @@ body{font-family:system-ui,sans-serif;padding:24px}
   <div class="subtabs" role="group"><button class="subtab is-on">Map</button><button class="subtab">Clients</button><button class="subtab">Who's who</button><button class="subtab">Lore</button></div>
   <div class="citycols"><div>${map()}${dcard()}</div><div>${summary()}</div></div>
 </section>
+<div class="side" id="side"><div><p class="cap">Straight coast</p><section class="panel">${map()}</section></div><div><p class="cap">Rough coast (today's outline)</p><section class="panel">${map({ rough: true })}</section></div></div>
 <div class="phone" id="phone"><section class="panel">${map()}${dcard()}</section></div>
 </div></body></html>`;
 
