@@ -54,6 +54,7 @@ When a batch comes back: check every line against the game data (ids, costs, inj
 - The fixer's backstory, rival crews, festivals calendar, street-language glossary.
 - Retirement, scouts improving with experience, several live jobs at once.
 - Hand-drawn faces for the named cast: **dropped** (2026-10-26).
+- **An underground place** (2026-10-28, owner's idea, for later): a black market or bar where you hire, hear rumours and buy gear. The safehouse and the armoury might move out of the Crew tab then (into it, or a tab of their own); hiring and the armoury would fit there more naturally than on Crew.
 
 ## Working with the owner
 
