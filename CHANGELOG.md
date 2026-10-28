@@ -5,6 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-28 · Shaolin monks
+- **A new kind of monk turns up among recruits**: Shaolin warrior monks in saffron robes, with a heavy string of dark prayer beads and nine small ordination dots on the shaved head. Mostly Hong Kong and Southeast Asian names; rarely anyone else. Nobody else's face has changed, though a few existing crew are now drawn as Shaolin monks.
+
 ## 2026-10-28 · The rifle, drawn
 - **The rifle has its own picture**, in the same style as the faces: a street rifle with a worn wooden stock and taped grip, or a pro one in carbon with a neon line. It catches the city light of whoever carries it.
 - **You can see who carries one**: a runner with a rifle has it slung across their back in their portrait, everywhere their face appears.

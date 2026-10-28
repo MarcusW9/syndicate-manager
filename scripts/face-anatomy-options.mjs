@@ -42,6 +42,14 @@ const looks = Object.entries(LOOKS).map(([label, test]) => {
   }
 });
 
+// Shaolin warrior monks (added 2026-10-28), with real names from the cultures they lean to.
+const shaolin = [];
+for (let n = 0; shaolin.length < 8; n++) {
+  const c = CULTURES.find((x) => x.id === (n % 3 ? 'hk' : 'southeast_asian'));
+  const op = { id: `sh${n}`, name: `${c.given[n % c.given.length]} ${c.surnames[n % c.surnames.length]}`, age: 19 + ((n * 7) % 40) };
+  if (faceOf(op).monk === 'shaolin') shaolin.push(at(op));
+}
+
 const frame = (svg) => `<span class="pf">${svg}</span>`;
 const pair = (op, label) => `<figure>
   <div class="pairrow">${frame(portrait(op, { size: 104 }))}${frame(portrait(op, { size: 104, anatomy: true }))}</div>
@@ -89,6 +97,12 @@ ${moodPeople.map((op) => `<div class="key" style="margin:10px 0 6px">${who(op)}<
 
 <section><h2>Age shows in the face, not just the hair</h2><p>Lines from nose to mouth from 33, eye bags and a forehead line from 45. Same person drawn at 22, 38 and 54.</p>
 ${agePeople.map((op) => `<div class="grid" style="margin-bottom:10px">${[22, 38, 54].map((age) => `<figure>${frame(portrait({ ...op, age }, { size: 104, anatomy: true }))}<figcaption>${op.name} at ${age}</figcaption></figure>`).join('')}</div>`).join('')}
+</section>
+
+<section><h2>Shaolin warrior monks</h2><p>A new kind of monk, in the game now on today's faces: saffron robe with a dark crossed collar, a heavy mala of big dark beads, and nine ordination dots on the shaved crown. Bare-faced (no mask, hat or glasses). About 4% of Hong Kong names and 3% of Southeast Asian ones; anyone else rarely. A new pick at the end of the gear seed, so nobody else's look changed.</p><p class="key">Left: today · Right: new</p><div class="grid">
+${shaolin.map((op) => pair(op, who(op))).join('')}
+</div>
+<div class="key" style="margin:12px 0 6px">${who(shaolin[0])}, new face, every condition</div><div class="grid">${CONDITIONS.map(([label, cond]) => `<figure>${frame(portrait(at(shaolin[0], cond), { size: 104, anatomy: true }))}<figcaption>${label}</figcaption></figure>`).join('')}</div>
 </section>
 
 <section><h2>Masks, lenses and hats still line up</h2><p>One person per look. Lenses, glasses and moustaches follow the eyes and mouth to wherever they now sit.</p><p class="key">Left: today · Right: new</p><div class="grid">

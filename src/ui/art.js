@@ -90,6 +90,7 @@ const MASKS = ['respirator', 'jawplate', 'grille'];
 const FULL_MASKS = ['goggles', 'faceplate'];
 const MONK_ROBES = ['grey', 'grey', 'ochre', 'cyber'];
 const FACIAL_HAIR = ['pencil', 'goatee', 'goatee', 'droop', 'soul', 'beard'];
+const SHAOLIN_ODDS = { hk: 0.04, southeast_asian: 0.03 };
 
 function withGear(f, op) {
   const r = picker(hash(`${op.id}|${op.name}|gear`));
@@ -102,8 +103,12 @@ function withGear(f, op) {
   const monkHat = r.chance(0.35); // a wandering monk's woven hat
   // Full-cover masks hide the eyes too. That's allowed: every condition is also written as text.
   const fullMask = r.chance(0.03) ? r.pick(FULL_MASKS) : null;
+  // Shaolin warrior monks (added 2026-10-28): leaning East and Southeast Asian, anyone can be one.
+  const shaolin = !monk && r.chance(SHAOLIN_ODDS[cultureOf(op.name)] ?? 0.004);
   const g = { ...f, monk, halfFace, mask, headwear, facialHair };
   if (monk) Object.assign(g, { hair: 'bald', splitDye: null, earring: false, facialHair: null, headwear: monkHat ? 'douli' : null });
+  // A Shaolin monk shows the whole face: shaved crown with its ordination dots, no mask, hat or glasses.
+  if (shaolin) return { ...g, monk: 'shaolin', halfFace: false, hair: 'bald', splitDye: null, earring: false, facialHair: null, headwear: null, mask: null, glasses: false, visor: false };
   // Half the face is chrome: it replaces any other chrome, and the lens takes the lit eye.
   if (halfFace) Object.assign(g, { chrome: 'half', glasses: false, visor: false });
   // A full mask takes the place of any lower-face mask, glasses and visor; a faceplate covers chrome too.
@@ -554,24 +559,33 @@ function maskMarks(f, c, g, st, id) {
 
 /** Robes and prayer beads for monks, in place of the shirt (collar and beads go over the neck). */
 function monkRobe(f, c, id) {
-  const robe = { grey: '#6b6f78', ochre: '#5e4630', cyber: '#22252d' }[f.monk];
+  const robe = { grey: '#6b6f78', ochre: '#5e4630', cyber: '#22252d', shaolin: '#c8681c' }[f.monk];
   return `<path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="${robe}"/>
     <g clip-path="url(#${id}s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="${mix(robe, c.light, 0.32)}"/>
     ${f.monk === 'ochre' ? `<path d="M6 64 C8 52 18 47 27.5 47 L46 64 Z" fill="#b06a24"/><path d="M14 52 L22 64 M20 49 L31 64" stroke="#8a4f17" stroke-width="0.5"/>` : ''}</g>`;
 }
 function monkCollar(f, c) {
-  const band = { grey: '#33363d', ochre: '#3f2f20', cyber: '#16181e' }[f.monk];
+  const band = { grey: '#33363d', ochre: '#3f2f20', cyber: '#16181e', shaolin: '#7a3410' }[f.monk];
   const edge = f.monk === 'cyber' ? f.chromeColor : mix(band, '#000', 0.3);
+  // The Shaolin mala is heavier: fewer, bigger, darker beads.
+  const big = f.monk === 'shaolin', n = big ? 10 : 12;
   const beads = [];
-  for (let i = 0; i <= 12; i++) {
-    const t = Math.PI * (0.08 + 0.84 * (i / 12));
+  for (let i = 0; i <= n; i++) {
+    const t = Math.PI * (0.08 + 0.84 * (i / n));
     beads.push([32 - Math.cos(t) * 7.6, 45.8 + Math.sin(t) * 5]);
   }
   // Crossed collar, left over right, then the mala hanging over it (all inside the crop).
   return `<path d="M37.4 46.2 L35.4 45.8 L31.6 49.4 L32.6 51 Z" fill="${band}" stroke="${edge}" stroke-width="0.35"/>
     <path d="M26.2 46.2 L28.8 45.6 L37.6 53 L34.4 53 Z" fill="${band}" stroke="${edge}" stroke-width="0.35"/>
-    ${beads.map(([x, y], i) => `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="0.95" fill="${f.monk === 'cyber' && i % 3 === 0 ? f.chromeColor : '#7a4a2a'}"/>`).join('')}
+    ${beads.map(([x, y], i) => `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${big ? 1.2 : 0.95}" fill="${f.monk === 'cyber' && i % 3 === 0 ? f.chromeColor : big ? '#3a2214' : '#7a4a2a'}"/>`).join('')}
     ${beads.map(([x, y]) => `<circle cx="${(x + 0.3).toFixed(2)}" cy="${(y - 0.3).toFixed(2)}" r="0.3" fill="#fff" opacity="0.3"/>`).join('')}`;
+}
+
+/** Ordination dots on a Shaolin monk's crown: nine small scars in three rows. */
+function jieba(c) {
+  const dots = [];
+  for (const [y, xs] of [[12.6, [30.2, 32, 33.8]], [14.4, [30, 32, 34]], [16.2, [29.8, 32, 34.2]]]) for (const x of xs) dots.push([x, y]);
+  return dots.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="0.58" fill="${mix(c.skin, '#f3e2d6', 0.55)}"/><circle cx="${x}" cy="${y + 0.25}" r="0.58" fill="none" stroke="${c.midShade}" stroke-width="0.2" opacity="0.6"/>`).join('');
 }
 
 /** Conical hats: a steel war hat, a carbon one with a neon rim, and a deep woven one. */
@@ -633,7 +647,7 @@ export function portrait(op, { size = 44, anatomy = false } = {}) {
   const a = anatomy ? anatomyOf(op) : null;
   const g = a ? reshape(HEAD_SHAPES[f.shape], a) : HEAD_SHAPES[f.shape];
   const eyeAt = a ? [32 + a.eyeGap, a.eyeY] : [36.6, 29];
-  const nk = a ? a.neck : 4.4, ear = a ? a.ear : 1, earOut = a ? a.earOut : 0;
+  const nk = a?.neck, ear = a?.ear, earOut = a?.earOut;
   const w = g.w;
   const id = `pf${++uid}`;
   const head = headPath(g);
@@ -672,11 +686,12 @@ export function portrait(op, { size = 44, anatomy = false } = {}) {
   ${f.monk ? monkRobe(f, c, id) : `<path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="${c.shirt}"/>
   <g clip-path="url(#${id}s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="${c.shirtLit}"/><path d="M27 46 L32 54 L37 46 Z" fill="${mix(c.shirt, '#000', 0.35)}"/></g>`}
   ${gear.front}
-  <path d="M${32 - nk} 37 L${32 - nk} 48 Q32 51 ${32 + nk} 48 L${32 + nk} 37 Z" fill="${c.shade}"/><path d="M${32 + nk - 1.8} 38 L${32 + nk} 37 L${32 + nk} 48 L${32 + nk - 1.8} 49 Z" fill="${c.lit}" opacity="0.8"/>
+  ${a ? `<path d="M${32 - nk} 37 L${32 - nk} 48 Q32 51 ${32 + nk} 48 L${32 + nk} 37 Z" fill="${c.shade}"/><path d="M${32 + nk - 1.8} 38 L${32 + nk} 37 L${32 + nk} 48 L${32 + nk - 1.8} 49 Z" fill="${c.lit}" opacity="0.8"/>` : `<path d="M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z" fill="${c.shade}"/><path d="M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z" fill="${c.lit}" opacity="0.8"/>`}
   ${f.monk ? monkCollar(f, c) : ''}
 
-  <ellipse cx="${L + 0.3 - earOut}" cy="30" rx="${1.9 * ear}" ry="${3.4 * ear}" fill="${c.shade}"/>
-  <ellipse cx="${R - 0.3 + earOut}" cy="30" rx="${1.9 * ear}" ry="${3.4 * ear}" fill="${c.skin}"/><path d="M${R + 0.6 + earOut} ${30 - 2.5 * ear} Q${R + 1.5 * ear + earOut} 30 ${R + 0.4 + earOut} ${30 + 3 * ear}" stroke="${c.lit}" stroke-width="0.9" fill="none"/>
+  ${a ? `<ellipse cx="${L + 0.3 - earOut}" cy="30" rx="${1.9 * ear}" ry="${3.4 * ear}" fill="${c.shade}"/>
+  <ellipse cx="${R - 0.3 + earOut}" cy="30" rx="${1.9 * ear}" ry="${3.4 * ear}" fill="${c.skin}"/><path d="M${R + 0.6 + earOut} ${30 - 2.5 * ear} Q${R + 1.5 * ear + earOut} 30 ${R + 0.4 + earOut} ${30 + 3 * ear}" stroke="${c.lit}" stroke-width="0.9" fill="none"/>` : `<ellipse cx="${L + 0.3}" cy="30" rx="1.9" ry="3.4" fill="${c.shade}"/>
+  <ellipse cx="${R - 0.3}" cy="30" rx="1.9" ry="3.4" fill="${c.skin}"/><path d="M${R + 0.6} 27.5 Q${R + 1.5} 30 ${R + 0.4} 33" stroke="${c.lit}" stroke-width="0.9" fill="none"/>`}
   ${f.earring ? `<circle cx="${R}" cy="34" r="0.9" fill="#f2b544"/>` : ''}
 
   <path d="${head}" fill="${c.skin}"/>
@@ -686,8 +701,9 @@ export function portrait(op, { size = 44, anatomy = false } = {}) {
       : `<path d="M${32 + w * 0.3} 34.5 L${R - 0.8} 31.5 L${32 + g.j + 1} 39 Z" fill="${c.midShade}" opacity="${a?.cheek === 'soft' ? 0.3 : 0.55}"/>`}
     <path d="M64 0 L${R - 1.8} 12 L${R - 1.3} 30 L${32 + g.j - 0.3} 40.5 L64 64 Z" fill="${c.lit}"/>
         ${f.stubble ? `<path d="M${L} 36 Q32 50 ${R} 36 L${R} 50 L${L} 50 Z" fill="${c.hair}" opacity="0.28"/>` : ''}
+    ${f.monk === 'shaolin' ? jieba(c) : ''}
     ${hair.shaved ? `<path d="M${L - 1} 15 L${L + 4} 15 L${L + 3} 27 L${L - 1} 27 Z" fill="${c.hair}" opacity="0.3"/>${shavedInk}` : ''}
-    <path d="M${L + 2} ${26.5 + eyeAt[1] - 29} Q28 ${25.6 + eyeAt[1] - 29} 30.4 ${27.6 + eyeAt[1] - 29} L28 ${28.2 + eyeAt[1] - 29} Z" fill="${c.midShade}"/>
+    <g ${a ? `transform="translate(0 ${eyeAt[1] - 29})"` : ''}><path d="M${L + 2} 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="${c.midShade}"/></g>
     ${a ? skinMarks(a, c, op.age ?? 25) : ''}
   </g>
 

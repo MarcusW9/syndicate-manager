@@ -76,12 +76,13 @@ test('every new look turns up, and the rules between them hold', () => {
       assert.equal(f.hair, 'bald', 'monks shave their heads');
       assert.ok(!f.earring && !f.facialHair && !f.splitDye);
       assert.ok(f.headwear === null || f.headwear === 'douli', 'a monk only wears the woven hat');
+      if (f.monk === 'shaolin') assert.ok(!f.headwear && !f.mask && !f.glasses && !f.visor && !f.halfFace, 'a Shaolin monk shows the whole face');
     }
     if (f.halfFace) assert.ok(f.chrome === 'half' && !f.visor && !f.glasses, 'the half-chrome face is the chrome');
     if (['goggles', 'faceplate'].includes(f.mask)) assert.ok(!f.visor && !f.glasses, 'a full mask replaces glasses and visors');
   }
   for (const k of ['headwear:jingasa', 'headwear:neonhat', 'headwear:douli', 'mask:respirator', 'mask:jawplate', 'mask:grille', 'mask:goggles', 'mask:faceplate', 'halfFace',
-    'monk:grey', 'monk:ochre', 'monk:cyber', 'facialHair:pencil', 'facialHair:goatee', 'facialHair:droop', 'facialHair:soul', 'facialHair:beard']) {
+    'monk:grey', 'monk:ochre', 'monk:cyber', 'monk:shaolin', 'facialHair:pencil', 'facialHair:goatee', 'facialHair:droop', 'facialHair:soul', 'facialHair:beard']) {
     assert.ok(seen.has(k), `${k} never appears`);
   }
 });
@@ -144,4 +145,15 @@ test('anatomy draft: a face is fixed per person, varies between people, and is o
   assert.ok(shapes.size > 20, 'eyes differ between people');
   assert.notEqual(withoutIds(portrait(op, { anatomy: true })), withoutIds(portrait(op)), 'the draft draws a different face');
   assert.equal(withoutIds(portrait(op, { anatomy: true })), withoutIds(portrait(op, { anatomy: true })), 'and draws it the same every time');
+});
+
+test('Shaolin monks lean East and Southeast Asian, anyone can be one, and the earlier looks never moved', () => {
+  const s = sample(24000);
+  const rate = (pick) => { const xs = s.filter(pick); return xs.filter(({ f }) => f.monk === 'shaolin').length / xs.length; };
+  const asian = rate(({ op }) => ['hk', 'southeast_asian'].includes(cultureOf(op.name)));
+  const other = rate(({ op }) => !['hk', 'southeast_asian'].includes(cultureOf(op.name)));
+  assert.ok(asian > other * 4, `asian ${asian} vs others ${other}`);
+  assert.ok(other > 0, 'other cultures can be Shaolin monks too');
+  // The pick comes last on the gear seed: anyone who was already a monk keeps their robe.
+  for (const { f } of s) if (f.monk && f.monk !== 'shaolin') assert.ok(['grey', 'ochre', 'cyber'].includes(f.monk));
 });
