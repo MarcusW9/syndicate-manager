@@ -6,6 +6,11 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+
+## 2026-10-28 · Every district has its own map (the squad run, part 4)
+- The watch screen's site plan now matches where the job is: a **container yard** by the harbour in the Docks (with the crane for overwatch), a **tenement** up an alley of steps in Old Town (overwatch by a rooftop water tank), **market stalls** under a footbridge in the Night Market with a mahjong parlour's back room, a **plaza and glass tower** in Glass Heights with the server room at the top, and the **racecourse stables** in the Basin, under a floodlight tower, with the vet block as the target.
+- Behind the scenes, each district can now have its own wording for the small moments of a run (a locked door, a patrol...). Until that's written they read as before.
+- 289 tests.
 ## 2026-10-28 · A neater (i) and reputation line (owner's feedback)
 - The (i) is smaller and lines up with its text; tapping it opens the explanation under the line, and the (i) stays put (on phones it used to jump).
 - Reputation now looks like the Heat meter in the top bar: "REP", a small segmented cyan track to the next unlock, then "2/10" and the (i).

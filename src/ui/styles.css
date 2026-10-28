@@ -837,3 +837,28 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .climb__track { width: 56px; }
 .climb__track span { background: var(--accent-2); }
 .climb__value { font-family: var(--display); font-weight: 700; font-size: 1rem; letter-spacing: 0.04em; }
+
+/* District sites (data/sites.js, slice 4). */
+.sp-water { fill: #0d1620; } .sp-jetty { fill: #2a2f3b; } .sp-desk { fill: #222837; }
+.sp-yard { fill: #10141a; } .sp-alley { fill: #12141a; } .sp-step { fill: #2a2f3b; }
+.sp-room { fill: #1d1520; stroke: var(--accent); stroke-width: 1; stroke-dasharray: 2 2; }
+.sp-block { fill: #141820; stroke: #2f3644; stroke-width: 1; }
+.sp-window { opacity: 0.9; }
+.sp-tank { fill: #1b2230; stroke: #7a6430; stroke-width: 1.5; }
+.sp-laundry { fill: none; stroke: #8a93a6; stroke-width: 0.8; stroke-dasharray: 3 2; opacity: 0.7; }
+.sp-sign { opacity: 0.85; }
+.sp-gatepost { stroke: #4a5266; stroke-width: 2.5; stroke-linecap: round; }
+.sp-neon { stroke: #ff3d5f; stroke-width: 1.5; stroke-linecap: round; opacity: 0.9; }
+.sp-stall { stroke: #0b0d11; stroke-width: 1; opacity: 0.55; }
+.sp-crowd { opacity: 0.9; }
+.sp-bridge { fill: #1b2230; stroke: #7a6430; stroke-width: 1.5; }
+.sp-plaza { fill: #10151a; stroke: #232a35; stroke-width: 1; }
+.sp-planter { stroke: #2b4a3a; stroke-width: 1; }
+.sp-barrier { stroke: #f2d541; stroke-width: 2; stroke-dasharray: 4 3; }
+.sp-tower { fill: #121a22; stroke: #3de8d8; stroke-opacity: 0.35; stroke-width: 1.2; }
+.sp-glass { opacity: 0.8; }
+.sp-infield { fill: #0f1a14; }
+.sp-track { fill: none; stroke: #f7efc8; stroke-width: 3; opacity: 0.55; }
+.sp-stable { fill: #1a1712; stroke: #4a3f2a; stroke-width: 1; }
+.sp-pole { stroke: #4a5266; stroke-width: 2; }
+.sp-lamp { fill: #f7efc8; opacity: 0.9; }

@@ -419,3 +419,11 @@ Keep {op} where a person is meant. No new injuries or costs: the game decides th
 ```
 
 Then paste the list of incident ids and names from `src/data/incidents.js`.
+
+Where it goes (slice 4, 2026-10-28): `src/data/districtIncidents.js`, one object per district,
+`{ incidentId: { text, hOk, ok, hBad, bad, comp } }`. Only the lines you write change; the rest
+falls back to the generic text, and a test checks each line keeps `{op}` where the generic has it.
+Each district also has its own site plan now (`src/data/sites.js`: the Docks yard and crane,
+Old Town's alley, courtyard and flat, the Night Market's stalls, footbridge and mahjong back room,
+Glass Heights' plaza, tower and server room, the Basin's stables, floodlight and vet block), so the
+lines can name those places.

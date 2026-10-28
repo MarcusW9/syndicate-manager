@@ -7,11 +7,20 @@
 // uses shows in the roll's notes, the same numbers the planning read uses.
 
 import { INCIDENTS, ZONES, ZONE_POOLS, OFF_APPROACH, ALERT_MAX } from '../data/incidents.js';
+import { DISTRICT_INCIDENTS } from '../data/districtIncidents.js';
 import { crewRoll, effectiveStat } from './crew.js';
 import { successChance, rollTarget } from './risk.js';
 
 export { ZONES, ALERT_MAX };
 export const incidentById = (id) => INCIDENTS[id] ?? null;
+
+/** An incident with its district's own lines where written (data/districtIncidents.js), else the generic ones. */
+export const incidentIn = (id, district) => {
+  const base = INCIDENTS[id];
+  if (!base) return null;
+  const local = DISTRICT_INCIDENTS[district]?.[id];
+  return local ? { ...base, ...local } : base;
+};
 
 // The safehouse's shared kit for overwatch until gear exists (DESIGN.md, 2026-10-27).
 // uses: shots or drone actions a job. sees: which zones it can help in.
