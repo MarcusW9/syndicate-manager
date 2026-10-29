@@ -23,12 +23,12 @@ const card = (look, label, note = '') => `<figure>${gun(look)}<figcaption><b>${l
 
 const BUILDS = [
   ['Neon', [
-    ['Ghost Link', { frame: 'smart', finish: 'synth', charm: 'shard' }, 'A smart pistol: light strip, holo sight, a smartlink cable to the wrist.'],
-    ['Volt Fox', { frame: 'coil', finish: 'neon', mod: 'vents', charm: 'cube' }, 'A coil pistol with glowing rings and a power cell.'],
-    ['Afterhours Wasp', { frame: 'compact', finish: 'neon', mod: 'laser', charm: 'cube' }, 'Neon edges, a laser line, a pixel keychain.'],
-    ['Prism Echo', { frame: 'smart', finish: 'holo', mod: 'ledmag', charm: 'cat' }, 'Holographic chrome, an ammo counter, a hologram lucky cat.'],
-    ['Red-Eye Cicada', { frame: 'machine', finish: 'ronin', mod: 'laser', charm: 'shard' }, 'Matte black, a wrapped grip, red eyes.'],
-    ['Furnace Bull', { frame: 'cannon', finish: 'polymer', mod: 'vents' }, 'A hand cannon that glows when it works.'],
+    ['Ghost Link', { frame: 'smart', finish: 'synth', charm: 'shard', glow: 'cyan' }, 'A smart pistol: light strip, holo sight, a smartlink cable to the wrist.'],
+    ['Ultraviolet Volt Fox', { frame: 'coil', finish: 'neon', mod: 'vents', charm: 'cube', glow: 'violet' }, 'A coil pistol with neon-purple rings and a power cell.'],
+    ['Crimson Wasp', { frame: 'compact', finish: 'neon', mod: 'laser', charm: 'cube', glow: 'red' }, 'Red neon edges, a laser line, a pixel keychain.'],
+    ['Prism Echo', { frame: 'smart', finish: 'holo', mod: 'ledmag', charm: 'cat', glow: 'violet' }, 'Holographic chrome, an ammo counter, a hologram lucky cat.'],
+    ['Red-Eye Cicada', { frame: 'machine', finish: 'ronin', mod: 'laser', charm: 'shard', glow: 'red' }, 'Matte black, a wrapped grip, red eyes.'],
+    ['Sodium Bull', { frame: 'cannon', finish: 'polymer', mod: 'vents', glow: 'gold' }, 'A hand cannon whose vents glow gold.'],
   ]],
   ['Asian', [
     ['Vermilion Lotus', { frame: 'revolver', finish: 'cinnabar', mod: 'clouds', charm: 'tassel' }, 'Cinnabar lacquer, gold clouds, a silk tassel.'],
@@ -36,7 +36,7 @@ const BUILDS = [
     ['Golden Fortune Wheel', { frame: 'revolver', finish: 'blackgold', mod: 'scales', charm: 'coin' }, 'Black and gold, for the boss.'],
     ['Pearl Moon', { frame: 'compact', finish: 'pearl', charm: 'mahjong' }, 'Pearl grips and a mahjong tile.'],
     ['Teahouse Elder Brother', { frame: 'heritage', finish: 'rosewood', mod: 'clouds', charm: 'tassel' }, 'Rosewood and brass, an old family piece.'],
-    ['Spirit Needle', { frame: 'compact', finish: 'cinnabar', mod: 'circuit', charm: 'talisman' }, 'Red lacquer with a neon circuit and a paper charm.'],
+    ['Spirit Needle', { frame: 'compact', finish: 'cinnabar', mod: 'circuit', charm: 'talisman', glow: 'gold' }, 'Red lacquer with a gold neon circuit and a paper charm.'],
   ]],
   ['Standard', [
     ['Service Wasp', { frame: 'compact', finish: 'polymer' }, 'A plain service pistol.'],
@@ -65,7 +65,7 @@ figcaption{font-size:.8rem;color:var(--muted);max-width:288px}figcaption b{color
 p{color:var(--muted);margin:0 0 10px;max-width:72ch}
 </style></head><body>
 <h1>Sidearm looks: draft</h1>
-<p>The rifle's kit idea for the sidearm, leaning into the neon: light strips, glowing vents, laser lines, holo sights, LED ammo counters, smart pistols with a cable to the wrist and coil pistols with glowing rings. The glow takes the carrier's chrome colour (the laser is always red). Standard and Asian-themed ones alongside. ${Object.keys(SIDEARM_LOOKS.frames).length} frames × ${Object.keys(SIDEARM_LOOKS.finishes).length} finishes × ${Object.keys(SIDEARM_LOOKS.mods).length + 1} mods × ${Object.keys(SIDEARM_LOOKS.charms).length + 1} charms. Not in the game yet.</p>
+<p>The rifle's kit idea for the sidearm, leaning into the neon: light strips, glowing vents, laser lines, holo sights, LED ammo counters, smart pistols with a cable to the wrist and coil pistols with glowing rings. Each gun glows in its own colour: cyan, neon purple, red or gold (a laser is always red). Standard and Asian-themed ones alongside. ${Object.keys(SIDEARM_LOOKS.frames).length} frames × ${Object.keys(SIDEARM_LOOKS.finishes).length} finishes × ${Object.keys(SIDEARM_LOOKS.mods).length + 1} mods × ${Object.keys(SIDEARM_LOOKS.charms).length + 1} charms × ${Object.keys(SIDEARM_LOOKS.glows).length} glow colours. Not in the game yet.</p>
 
 <section><h2>An assortment</h2>
 ${BUILDS.map(([group, list]) => `<h3>${group}</h3><div class="grid">${list.map(([name, look, note]) => card(look, name, note)).join('')}</div>`).join('')}
@@ -88,8 +88,12 @@ ${Object.entries(SIDEARM_LOOKS.mods).map(([k, m]) => card({ frame: 'compact', fi
 ${Object.entries(SIDEARM_LOOKS.charms).map(([k, ch]) => card({ frame: 'compact', finish: 'blued', charm: k }, cap(ch.name))).join('')}
 </div></section>
 
-<section><h2>Under each light</h2><p>Afterhours Wasp carried by people with different city lights and chrome colours: the glow follows their chrome.</p><div class="grid">
-${bare.filter((op, i, a) => a.findIndex((o) => faceOf(o).chromeColor === faceOf(op).chromeColor && lightOf(o) === lightOf(op)) === i).slice(0, 4).map((op) => `<figure>${gun(BUILDS[0][1][2][1], { who: op })}<figcaption>${op.name}</figcaption></figure>`).join('')}
+<section><h2>Glow colours</h2><p>Each gun's lights have their own colour: cyan, neon purple, red or gold. Four neon builds in each. (A laser is always red.)</p>
+${[['Smart pistol, clinic white', { frame: 'smart', finish: 'synth' }], ['Coil pistol, neon edges', { frame: 'coil', finish: 'neon', mod: 'vents' }], ['Compact, neon edges and vents', { frame: 'compact', finish: 'neon', mod: 'vents', charm: 'cube' }], ['Machine pistol, ronin, circuit', { frame: 'machine', finish: 'ronin', mod: 'circuit', charm: 'shard' }]].map(([label, look]) => `<h3>${label}</h3><div class="grid">${Object.entries(SIDEARM_LOOKS.glows).map(([g, gl]) => card({ ...look, glow: g }, cap(gl.name))).join('')}</div>`).join('')}
+</section>
+
+<section><h2>No glow chosen</h2><p>A gun with no glow colour of its own takes its carrier's implant colour.</p><div class="grid">
+${bare.filter((op, i, a) => a.findIndex((o) => faceOf(o).chromeColor === faceOf(op).chromeColor && lightOf(o) === lightOf(op)) === i).slice(0, 4).map((op) => `<figure>${gun({ ...BUILDS[0][1][2][1], glow: undefined }, { who: op })}<figcaption>${op.name}</figcaption></figure>`).join('')}
 </div></section>
 </body></html>`;
 writeFileSync(new URL('../drafts/prototypes/sidearm-variants-options.html', import.meta.url), html);

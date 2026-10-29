@@ -95,6 +95,13 @@ export const SIDEARM_LOOKS = {
     shard: { name: 'a data shard', words: ['Shard', 'Data'] },
     cat: { name: 'a hologram lucky cat', words: ['Lucky Cat', 'Waving'] },
   },
+  // The colour its lights glow (light strips, vents, circuits, holo sights; a laser is always red).
+  glows: {
+    cyan: { name: 'cyan', words: ['Ice', 'Cyan'] },
+    violet: { name: 'neon purple', words: ['Violet', 'Ultraviolet'] },
+    red: { name: 'red', words: ['Crimson', 'Red Neon'] },
+    gold: { name: 'gold', words: ['Sodium', 'Gold Neon'] },
+  },
   odds: {
     street: { mod: 0.45, charm: 0.5, mods: ['laser', 'vents', 'ledmag', 'circuit', 'holo'], charms: ['sticker', 'cube', 'coin', 'talisman', 'shard', 'mahjong'] },
     pro: { mod: 0.75, charm: 0.5, mods: ['laser', 'holo', 'vents', 'ledmag', 'scales', 'clouds', 'circuit'], charms: ['tassel', 'coin', 'cat', 'shard', 'mahjong', 'talisman'] },

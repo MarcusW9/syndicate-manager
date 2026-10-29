@@ -193,6 +193,11 @@ test('sidearm looks (draft): every frame, finish, mod and charm draws, the same 
       assert.equal(clean(svg), clean(gearArt(item)));
     }
   }
+  const { GLOW_COLOURS } = await import('../src/ui/art.js');
+  assert.deepEqual(Object.keys(SIDEARM_LOOKS.glows).sort(), Object.keys(GLOW_COLOURS).sort(), 'the data names every glow the art draws');
+  const lit = (glow) => gearArt({ uid: 'p', type: 'pistol', tier: 'street', look: { frame: 'smart', finish: 'synth', glow } });
+  for (const [g, hex] of Object.entries(GLOW_COLOURS)) assert.ok(lit(g).includes(hex), `${g} glows ${hex}`);
+  assert.equal(clean(lit(undefined)), clean(gearArt({ uid: 'p', type: 'pistol', tier: 'street', look: { frame: 'smart', finish: 'synth' } })), 'no glow: the carrier decides');
   const op = { ...createNewGame({ seed: 3 }).crew[0], gear: {} };
   const holstered = { ...op, gear: { weapon: { uid: 'p', type: 'pistol', tier: 'street', look: { frame: 'compact', finish: 'neon' } } } };
   assert.notEqual(clean(portrait(holstered)), clean(portrait(op)), 'a sidearm with a look shows in a chest holster');

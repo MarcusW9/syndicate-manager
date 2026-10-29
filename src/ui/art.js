@@ -1115,7 +1115,8 @@ function rifleCharm(kind, fr, c) {
 }
 
 /** A rifle from the kit. look: { frame, finish, engraving?, charm? }. */
-export function rifleBuild({ light, neon, look }) {
+export function rifleBuild({ light, neon: carrierNeon, look }) {
+  const neon = GLOW_COLOURS[look.glow] ?? carrierNeon;
   const fr = RIFLE_FRAMES[look.frame] ?? RIFLE_FRAMES.marksman;
   const f = RIFLE_FINISHES[look.finish] ?? RIFLE_FINISHES.street;
   const lit = (col, t = 0.45) => mix(col, light, t);
@@ -1173,6 +1174,9 @@ export function rifleBuild({ light, neon, look }) {
 // The same kit idea as the rifles, drawn bigger in the same 96×32 frame (muzzle right), and
 // leaning into the city's neon: light strips, glowing vents, laser lines and holo sights. A glow
 // is a wide, faint stroke under a bright thin one, never a blur, so it stays flat.
+
+// A gun's glow colour is part of its look (look.glow); without one it takes the carrier's chrome.
+export const GLOW_COLOURS = { cyan: '#3de8d8', violet: '#b26bff', red: '#ff3d5f', gold: '#ffc23d' };
 
 const glowPath = (d, col, w = 0.5, o = 0.22) => `<path d="${d}" stroke="${col}" stroke-width="${w * 6}" fill="none" opacity="${o * 0.6}" stroke-linecap="round"/><path d="${d}" stroke="${col}" stroke-width="${w * 3}" fill="none" opacity="${o * 1.3}" stroke-linecap="round"/><path d="${d}" stroke="${col}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`;
 
@@ -1335,7 +1339,8 @@ function sidearmCharm(kind, fr, c) {
 }
 
 /** A sidearm from the kit. look: { frame, finish, mod?, charm? }. */
-export function sidearmBuild({ light, neon, look }) {
+export function sidearmBuild({ light, neon: carrierNeon, look }) {
+  const neon = GLOW_COLOURS[look.glow] ?? carrierNeon;
   const fr = SIDEARM_FRAMES[look.frame] ?? SIDEARM_FRAMES.compact;
   const f = SIDEARM_FINISHES[look.finish] ?? SIDEARM_FINISHES.blued;
   const lit = (col, t = 0.45) => mix(col, light, t);
