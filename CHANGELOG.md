@@ -5,6 +5,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-29 · Tap a name in a message to see them
+- In an open message, your crew's names are underlined: tap one to open their page, and "← Back to the message" takes you straight back to it.
+- The line under a message's title is capitalised ("Crew · Day 21").
+
 ## 2026-10-29 · Renewal numbers line up
 - When someone asks for a new deal, their current wage, what they're asking and their market value now sit in three equal boxes with the numbers on one line, and the loyalty note no longer touches them.
 

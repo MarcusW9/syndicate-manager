@@ -69,6 +69,7 @@ const CONTINUE_REST_MS = 800;
 let continueRestUntil = 0;
 let dayCue = null; // what the day that just started brought; shown once, on the next render
 let focusNext = null; // { action, id }: the control to focus after the next render (going back to a list)
+let returnTo = null; // { screen, messageId }: where a runner's page opened from a name link goes back to
 let founderPick = []; // candidate ids picked so far on a new game's first screen (renderFounding)
 let runnersHidden = false; // the job board's runners panel, folded away for this session
 
@@ -98,7 +99,7 @@ function onClick(e) {
   const { action, id } = t.dataset;
 
   switch (action) {
-    case 'nav': screen = id; openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; gearSlot = null; plan = null; sidePlan = null; pickSlot = null; break;
+    case 'nav': screen = id; returnTo = null; openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; gearSlot = null; plan = null; sidePlan = null; pickSlot = null; break;
     case 'continue': {
       if (isBlocked(state) || Date.now() < continueRestUntil) return;
       const next = advanceDay(state);
@@ -118,6 +119,12 @@ function onClick(e) {
       break;
     }
     case 'back':
+      // A runner's page opened from a name in a message goes back to that message.
+      if (returnTo && openOperativeId) {
+        focusNext = { action: 'op-link', id: openOperativeId };
+        ({ screen } = returnTo); openMessageId = returnTo.messageId; openOperativeId = null; gearSlot = null; returnTo = null;
+        break;
+      }
       // Land keyboard focus back on the row that was opened.
       focusNext = openMessageId ? { action: 'open-message', id: openMessageId }
         : openRecruitId ? { action: 'open-recruit', id: openRecruitId }
@@ -128,7 +135,9 @@ function onClick(e) {
       openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; gearSlot = null; plan = null; sidePlan = null; pickSlot = null;
       break;
     case 'decide': return setState(resolveDecision(state, id, t.dataset.option));
-    case 'open-op': screen = 'crew'; openArmoury = false; openOperativeId = id; break;
+    case 'open-op': screen = 'crew'; openArmoury = false; openOperativeId = id; returnTo = null; break;
+    // A crew member's name in a message: open their page, remembering the message to come back to.
+    case 'op-link': returnTo = { screen, messageId: openMessageId }; screen = 'crew'; openArmoury = false; openRecruitId = null; openOperativeId = id; break;
     // Gear (ui/gear.js, core/gear.js): the armoury, and a runner's slots.
     case 'open-armoury': screen = 'crew'; openArmoury = true; openOperativeId = null; gearSlot = null; break;
     case 'buy': return setState(buyGear(state, id, t.dataset.tier || 'street'));
@@ -659,15 +668,34 @@ function renderUpcoming(where) {
     </section>`;
 }
 
+/**
+ * Text with the crew's names (full names first, then handles) turned into links to their page,
+ * escaped. Only people on the crew now: the fallen and freelancers stay plain text.
+ */
+function crewLinks(text) {
+  const names = state.crew.flatMap((op) => [[op.name, op.id], [op.handle, op.id]]).filter(([n]) => n).sort((a, b) => b[0].length - a[0].length);
+  if (!names.length || !text) return esc(text ?? '');
+  const byName = new Map(names);
+  const pattern = names.map(([n]) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+  const re = new RegExp(`(?<![\\p{L}\\p{N}])(${pattern})(?![\\p{L}\\p{N}])`, 'gu');
+  let out = '';
+  let last = 0;
+  for (const m of text.matchAll(re)) {
+    out += esc(text.slice(last, m.index)) + `<button class="namelink" data-action="op-link" data-id="${esc(byName.get(m[1]))}">${esc(m[1])}</button>`;
+    last = m.index + m[1].length;
+  }
+  return out + esc(text.slice(last));
+}
+
 function renderMessage(m) {
   // The welcome message points a new player at their first job.
   const jobLink = (m.type === 'job' || m.id === 'welcome') && state.jobs.length ? `<button class="btn" data-action="nav" data-id="jobs">Open the job board</button>`
     : m.type === 'scout' && (state.recruits ?? []).length ? `<button class="btn" data-action="nav" data-id="crew">See the leads</button>` : '';
   return `
       <button class="btn btn--ghost inbox__back" data-action="back">← Today</button>
-      <h1>${esc(m.subject)}</h1>
-      <p class="muted">${esc(m.type)} · Day ${m.day}</p>
-      ${m.type === 'report' ? renderReportTimeline(m) : `<p class="body">${esc(m.body)}</p>`}
+      <h1>${crewLinks(m.subject)}</h1>
+      <p class="muted">${esc(m.type.charAt(0).toUpperCase() + m.type.slice(1))} · Day ${m.day}</p>
+      ${m.type === 'report' ? renderReportTimeline(m) : `<p class="body">${crewLinks(m.body)}</p>`}
       ${m.kind === 'renewal' ? renderRenewal(m) : ''}
       ${m.kind === 'heat' ? renderHeatNotice(m) : ''}
       ${m.kind === 'spec' ? renderSpecOffer(m) : ''}
@@ -696,7 +724,7 @@ function renderReportTimeline(m) {
     <div class="report ${play ? 'report--play' : ''}" ${play ? `data-action="skip-report" style="--step:${STEP}s; --end:${(steps.length + 1) * STEP + 0.6}s"` : ''}>
       ${renderReportSummary(m.timeline)}
       <ol class="timeline">
-        ${steps.map((text, i) => `<li class="timeline__item" style="--i:${i}"><span class="timeline__node" aria-hidden="true">${i + 1}</span><p class="timeline__text">${esc(text)}</p></li>`).join('')}
+        ${steps.map((text, i) => `<li class="timeline__item" style="--i:${i}"><span class="timeline__node" aria-hidden="true">${i + 1}</span><p class="timeline__text">${crewLinks(text)}</p></li>`).join('')}
         ${outcome.length ? `<li class="timeline__item timeline__item--end timeline__item--${esc(result ?? 'plain')}" style="--i:${steps.length}">
           <span class="timeline__node" aria-hidden="true">${end[0]}</span>
           <div class="timeline__text"><p class="timeline__label">${esc(end[1])}</p>
@@ -1030,7 +1058,7 @@ function renderOperative() {
   const nameOf = (id) => state.crew.find((x) => x.id === id)?.handle ?? state.memorial.find((x) => x.id === id)?.handle ?? id;
   return `
     <section class="panel">
-      <button class="btn btn--ghost" data-action="back">← Crew</button>
+      <button class="btn btn--ghost" data-action="back">${returnTo ? '← Back to the message' : '← Crew'}</button>
       <div class="ophead">
         ${face(op, 'lg')}
         <div>

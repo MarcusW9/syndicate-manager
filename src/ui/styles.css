@@ -995,3 +995,9 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
    line along the bottom however the labels wrap, and room before the loyalty line. */
 .stats--deal { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 10px; }
 .stats--deal div { display: flex; flex-direction: column; justify-content: space-between; gap: 6px; }
+
+/* A crew member's name in a message: tap to open their page (owner, 2026-10-29). Inline, so it
+   reads as text with a dotted cyan underline; the back button returns to the message. */
+.namelink { display: inline; padding: 0; margin: 0; border: 0; background: none; font: inherit; color: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer;
+  text-decoration: underline dotted var(--accent-2); text-decoration-thickness: 2px; text-underline-offset: 0.2em; }
+.namelink:hover, .namelink:focus-visible { color: var(--accent-2); }
