@@ -150,7 +150,7 @@ export function playRound(b, rng) {
     g.hp = Math.max(0, g.hp - dmg);
     if (g.hp === 0) g.out = true;
     const what = ow.kit === 'drone' ? 'tases' : 'hits';
-    line({ kind: 'overwatch', actor: { id: ow.id, handle: ow.handle }, kit: ow.kit, target: guardName(g, b), stat: ow.stat, value: ow.value, notes: ow.notes, ...r, damage: dmg, armour: g.armour, dropped: g.out,
+    line({ kind: 'overwatch', actor: { id: ow.id, handle: ow.handle }, kit: ow.kit, target: guardName(g, b), guard: g.n, stat: ow.stat, value: ow.value, notes: ow.notes, ...r, damage: dmg, armour: g.armour, dropped: g.out,
       text: r.success ? `${ow.handle} ${what} ${guardName(g, b)} from overwatch for ${dmg}${g.armour ? ` (armour ${g.armour})` : ''}${g.out ? '. Down.' : '.'}` : `${ow.handle}'s ${ow.kit === 'drone' ? 'drone misses' : 'shot goes wide'}.` });
   }
 
@@ -169,12 +169,12 @@ export function playRound(b, rng) {
       const k = roll(rng, st.value, b.diff);
       const heal = k.success ? Math.min(t.max - t.hp, BATTLE.patchHeal + r.patch) : 0;
       t.hp += heal;
-      line({ ...base, ...k, target: t.handle, heal, text: k.success ? `${r.handle} patches ${t === r ? 'themself' : t.handle} up: +${heal}.` : `${r.handle} can't patch ${t === r ? 'themself' : t.handle} up under fire.` });
+      line({ ...base, ...k, target: t.handle, targetId: t.id, heal, text: k.success ? `${r.handle} patches ${t === r ? 'themself' : t.handle} up: +${heal}.` : `${r.handle} can't patch ${t === r ? 'themself' : t.handle} up under fire.` });
     } else if (act.kind === 'talk') {
       const g = up(b).sort((a, c) => c.hp - a.hp || a.n - c.n)[0];
       const k = roll(rng, st.value, b.diff + BATTLE.talkStep);
       if (k.success) g.out = true;
-      line({ ...base, ...k, target: guardName(g, b), text: k.success ? `${r.handle} talks ${guardName(g, b)} into backing off.` : `${r.handle} tries to talk ${guardName(g, b)} down. Nobody's listening.` });
+      line({ ...base, ...k, target: guardName(g, b), guard: g.n, text: k.success ? `${r.handle} talks ${guardName(g, b)} into backing off.` : `${r.handle} tries to talk ${guardName(g, b)} down. Nobody's listening.` });
     } else if (act.kind === 'lights') {
       const k = roll(rng, st.value, b.diff);
       if (k.success) b.lights = true;
@@ -186,7 +186,7 @@ export function playRound(b, rng) {
       const dmg = k.success ? hitFor(r.damage, g.armour) : 0;
       g.hp = Math.max(0, g.hp - dmg);
       if (g.hp === 0) g.out = true;
-      line({ ...base, ...k, target: guardName(g, b), weapon: r.weapon, damage: dmg, armour: g.armour, dropped: g.out,
+      line({ ...base, ...k, target: guardName(g, b), guard: g.n, weapon: r.weapon, damage: dmg, armour: g.armour, dropped: g.out,
         text: k.success ? `${r.handle} hits ${guardName(g, b)} for ${dmg}${g.armour ? ` (armour ${g.armour})` : ''}${g.out ? '. Down.' : '.'}` : `${r.handle} misses.` });
     }
   }
@@ -216,7 +216,7 @@ export function playRound(b, rng) {
     g.fled = true;
     fled = true;
     const who = guardName(g, b);
-    lines.push({ kind: 'flee', actor: null, target: who, text: `${who[0].toUpperCase()}${who.slice(1)} breaks and runs, shouting into a radio.` });
+    lines.push({ kind: 'flee', actor: null, guard: g.n, target: who, text: `${who[0].toUpperCase()}${who.slice(1)} breaks and runs, shouting into a radio.` });
   }
   return { lines, heat, neural, down, fled };
 }
@@ -244,7 +244,7 @@ function guardAttack(b, g, t, rng, down, { floor = 0 } = {}) {
   const who = guardName(g, b);
   const Who = who[0].toUpperCase() + who.slice(1);
   return {
-    kind: 'guard', actor: null, target: t.handle, targetId: t.id, stat: 'cool', value: skill, notes: [`${t.handle}'s cool ${def.value}`, ...(shift ? [`lights out +${shift}`] : [])], die, need, success, damage: dmg, armour: t.armour, down: t.down && dmg > 0 && t.hp === 0,
+    kind: 'guard', actor: null, guard: g.n, target: t.handle, targetId: t.id, stat: 'cool', value: skill, notes: [`${t.handle}'s cool ${def.value}`, ...(shift ? [`lights out +${shift}`] : [])], die, need, success, damage: dmg, armour: t.armour, down: t.down && dmg > 0 && t.hp === 0,
     text: success ? (dmg ? `${Who} hits ${t.handle} for ${dmg}${t.armour ? ` (${t.armourName ?? 'armour'} took ${t.armour})` : ''}${t.hp === 0 ? `. ${t.handle} is down.` : '.'}` : `${Who} grazes ${t.handle}.`) : `${Who} misses ${t.handle}.`,
   };
 }

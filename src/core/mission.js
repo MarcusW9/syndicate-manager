@@ -455,7 +455,11 @@ export function describePending(state) {
       : am.pending.kind === 'standoff' ? `${BATTLE.rounds} rounds in and ${guardCount(guardsUp(am.battle))} still standing.`
         : `${patient?.handle ?? 'Someone'} is badly hurt and out of the job.`;
   const choices = decisionChoices(am.pending, { patient, standby: standbyReady(state, am) }).map((c) => ({ ...c, available: true, risk: c.exit ? 'safe' : null }));
-  return { kind: am.pending.kind, text, choices, standby: standbyReady(state, am)?.handle ?? null };
+  // A fight's call-ins show everyone's health (the watch screen's call-in card).
+  const b = am.battle;
+  const fight = b && (am.pending.kind === 'door' || am.pending.kind === 'standoff')
+    ? { runners: b.runners.map((r) => ({ handle: r.handle, hp: r.hp, max: r.max, down: r.down })), guards: b.guards.map((g) => ({ n: g.n, hp: g.hp, max: g.max, out: g.out })) } : null;
+  return { kind: am.pending.kind, text, choices, standby: standbyReady(state, am)?.handle ?? null, fight };
 }
 
 /** Answer the decision: go loud or keep going, or take the exit (everyone comes home). */
