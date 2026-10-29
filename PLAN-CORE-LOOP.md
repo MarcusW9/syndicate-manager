@@ -34,6 +34,8 @@ moments. Plan → watch → call-ins → report.
 - **No death without "push on".** Incidents can cause a serious injury, never critical or
   death. Criticals still come only from crises and are always the player's call on a live
   run; hands-off crews always extract.
+- **Death only after "keep fighting" (slice 6).** A fight puts someone at death's door, never
+  dead; only the player's "keep fighting" makes them critical, and any exit after it saves them.
 - **Every decision has an exit.** Crises (validator), the alert call-in and the injury
   call-in all offer a way out that brings everyone home.
 - **Shown risk equals used risk.** Every new modifier (approach, extra bodies on stealth and
@@ -139,10 +141,71 @@ the drone can; district lines only change words and keep `{op}`).
   `src/core/specialisations.js`; the effect lives in `core/gear.js` `overwatchKit`. Tests:
   `tests/specialisations.test.js`. Next directions (Breacher, Netrunner, Ghost...) come in batches.
 
-### Slice 6 · Battles — [ ] (to design)
-- Fights as automatic exchanges of 2-3 rounds on the watch feed: guards with health, gear doing
-  damage and soaking hits. Designed after gear has been played with.
-- Also later: tone the early game down (a full founding squad is strong for its first jobs).
+### Slice 6 · Battles — 6a, the engine: [x] 2026-10-29 · 6b, the watch screen: [ ]
+Fights are automatic exchanges of up to 3 rounds on the watch feed. You watch; you're called in
+only when something big happens. Designed with the owner on 2026-10-29 (DESIGN.md rows); built as
+`src/core/battle.js` (pure, seeded), numbers in `src/data/battle.js`, the run's side in
+`core/mission.js` (`runBattle`, a `battle` step in the queue, `am.battle`, save v26). Tuned with
+`node scripts/sim-battles.mjs`. Tests: `tests/battle.test.js`.
+
+- **When:** only when a run escalates: a danger incident (patrol, guard up close, more guards,
+  holding the room) that goes unsaved starts a fight instead of the old serious-wound roll. Each
+  says how many guards (`guards` in `data/incidents.js`); one more on threat 5 work. Every other
+  incident stays one roll. Loud runs meet more danger incidents, so they fight more.
+- **Who:** the inside team still standing, overwatch if it can see the zone and has uses left
+  (one shot or drone action a round, spent from its uses: heat and neural load as before), and
+  Wheels, who can bring the van round once (then pulling back costs no parting shots).
+- **Health:** runners have 10 + cool/4 HP (3 less if already lightly hurt). Guards by threat:
+  HP 4-8, armour 0/0/1/1/2, damage 2-4. Guns are standard (WORLD.md): no weapon means a street
+  piece (2); sidearm 3, rifle 5 and drone taser 3 from overwatch; pro gear +1.
+- **Armour, first version: XCOM's flat soak** (owner's call, 2026-10-29: "see how it plays
+  out"). Each point takes 1 off every hit, and **a hit that lands always does at least 1**.
+  Street vest 1, pro vest 2. Armour never wears and is full every job. The feed says what it took
+  ("Armoured vest took 1"). **Later, if it plays flat:** shred and pierce tags on weapons, armour
+  adding HP, a heavy vest costing stealth and social, or Battle Brothers' armour as a second bar.
+- **A round:** overwatch, then each runner, then Wheels, then every guard still up. A runner's
+  action is picked by one rule (no player input): stabilise someone left dying (medical 7+),
+  patch someone under half HP if medical beats their combat (+3, trauma kit more), talk a guard
+  into backing off if social beats combat by 2 (two harder than the fight), kill the lights if
+  tech beats combat by 2 (guards −3 to hit for the rest of the fight), else shoot the most hurt
+  guard. Shots are 2 easier than the fight's difficulty (the incident's); overwatch 1 easier
+  again. Guards hit with the fight's difficulty −2 against the runner's cool, and half their
+  attacks go for whoever is hurt worst.
+- **Morale (after Battle Brothers):** the last guard standing, under half HP, breaks and runs:
+  the fight is won, but the alert goes up 1 (they're on the radio).
+- **Death's door (Darkest Dungeon):** at 0 HP a runner is down, never dead. You're called in:
+  **pull back** (listed first: everyone home), **send standby in** to drag them clear and take
+  their place in the fight (if standby is waiting), or **keep fighting** with them down. Keeping
+  on fighting is the push on: they become critical and untreated, the existing rule decides at
+  the end of the job whether they make it, a medic in the fight can stabilise them, and any later
+  exit still brings them home. Someone alone who goes down is dragged out without a call.
+- **After round 3 with guards still up:** a call-in: push past them (alert +1, heat +1) or pull back.
+- **Pulling back costs** (owner's calls): no pay, heat +1, reputation −2 on top of the abort's,
+  and a parting shot from every guard still up as the crew runs: it can hurt anyone but never
+  drops them below 1 HP.
+- **After the fight:** HP left becomes the injury the game tracks: half or more fine, under half
+  light, under a quarter serious (out of the job; the usual call-in follows). Someone dragged out
+  from death's door is badly hurt for 21 days.
+- **Orders, when the crew decides (also on live runs, between call-ins):** Cautious pulls back
+  once anyone is under half HP; Steady once anyone is under a quarter; Committed doesn't, and
+  pushes past at the end. At death's door every order pulls back, or sends standby in (Steady
+  and Committed). Hands-off never keeps fighting.
+- **The planning read:** each danger row runs the fight 120 times on fixed seeds with the same
+  round function (`battleOdds`, cached), counts a fight won with nobody down as getting through,
+  and says "If it comes to a fight: low risk" on the board. Joss's picks use it too.
+- **The watch, for now:** a note when the fight starts, a card per round (each moment with its
+  dice, HP in the card's setup), "Pulling back", a note when it's over; the full log in the
+  report shows the same. The call-in names death's door and shows "Keep fighting" as extreme risk.
+- **Measured (`sim-battles.mjs`, 300 runs a row):** rookie jobs: about 1 run in 10 becomes a
+  fight and rookies win nearly all of them, nobody goes down. Threat 4 with a grown crew (+4 every
+  stat), loud: wins 22% with no kit, 44% with a sidearm and vest, 69% with pro kit; someone goes
+  down in 9%, 4%, 0% of rounds. Growth sims stay on target; earned traits fell from 2.5 to 2.2
+  moments a week (fight rolls don't count towards traits yet).
+
+**Not yet (6b or later):** the watch screen's own look for fights (HP on the tokens, guard tokens
+on the site plan, round pacing); a runner dragged out from death's door dropping their weapon;
+reinforcements as a call-in; fight rolls counting towards earned traits (Corner Fighter is about
+exactly this); toning the early game down (rookie-tier fights are easy).
 
 ## Not in this plan
 Relationships (bonds feeding saves), money pressure, the morale and burnout cleanup (save

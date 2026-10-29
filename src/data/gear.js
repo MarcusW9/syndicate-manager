@@ -8,7 +8,10 @@
 // serious: takes this off the chance that an unsaved incident leaves a serious wound.
 // patch: counts this much extra towards the medical a teammate needs to patch a serious wound.
 // neuralFloor: implants keep the wearer's neural load from resting below this.
-// Tiers add their step to the item's bonus (or its overwatch roll) and multiply the price.
+// damage: what a hit does in a fight (slice 6; weapons, and the rifle and drone from overwatch).
+// armour: flat soak in a fight, taken off every hit (a hit that lands always does at least 1).
+// Tiers add their step to the item's bonus (or its overwatch roll), its damage and its armour,
+// and multiply the price.
 
 export const SLOTS = {
   weapon: { name: 'Weapon' },
@@ -26,20 +29,20 @@ export const GEAR = {
   rifle: {
     name: 'Rifle', slot: 'weapon', price: 2500,
     desc: 'Lets them take overwatch with the combat stat. Sees the open ground, not inside. Every shot is heat +1.',
-    overwatch: { stat: 'combat', uses: 2, heat: 1, neural: 0, indoors: false },
+    overwatch: { stat: 'combat', uses: 2, heat: 1, neural: 0, indoors: false, damage: 5 },
   },
   pistol: {
-    name: 'Sidearm', slot: 'weapon', price: 600, bonus: { combat: 1 },
+    name: 'Sidearm', slot: 'weapon', price: 600, bonus: { combat: 1 }, damage: 3,
     desc: 'A reliable handgun.',
   },
   vest: {
-    name: 'Armoured vest', slot: 'armour', price: 1200, serious: 0.1,
-    desc: 'Plates under a work jacket. An unsaved incident is less likely to leave a serious wound.',
+    name: 'Armoured vest', slot: 'armour', price: 1200, serious: 0.1, armour: 1,
+    desc: 'Plates under a work jacket. Takes 1 off every hit in a fight.',
   },
   drone: {
     name: 'Drone', slot: 'tool', price: 3000,
     desc: 'Lets them take overwatch with the tech stat. Sees everywhere. Every action is neural load +10 for the pilot.',
-    overwatch: { stat: 'tech', uses: 3, heat: 0, neural: 10, indoors: true },
+    overwatch: { stat: 'tech', uses: 3, heat: 0, neural: 10, indoors: true, damage: 3 },
   },
   deck: {
     name: 'Cyberdeck', slot: 'tool', price: 1000, bonus: { tech: 1 },

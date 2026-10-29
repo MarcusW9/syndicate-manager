@@ -35,8 +35,8 @@ test('a hands-off crew never pushes on and never loses anyone, under any orders'
       assert.ok(!report.timeline.events.some((e) => e.kind === 'critical' && e.action === 'push'), 'never pushes on');
       assert.equal(report.timeline.orders, orders);
       // The numbered timeline is the report lines, one per choice taken: none may go missing.
-      // Incidents, saves and decisions are taken too (the squad run, 2026-10-27).
-      const taken = report.timeline.events.filter((e) => ['roll', 'sure', 'exit', 'save', 'decision'].includes(e.kind) && e.report).map((e) => e.report);
+      // Incidents, saves and decisions are taken too (the squad run, 2026-10-27), and fights (slice 6).
+      const taken = report.timeline.events.filter((e) => ['roll', 'sure', 'exit', 'save', 'decision', 'battle'].includes(e.kind) && e.report).map((e) => e.report);
       assert.deepEqual(report.timeline.steps, taken, `seed ${seed} ${orders}: timeline matches the record`);
     }
   }

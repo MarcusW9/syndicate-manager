@@ -5,6 +5,8 @@
 //
 // Items: { type: 'phase', zone, title } | { type: 'beat', text } | { type: 'note', text, tone }
 //      | { type: 'card', kind, label, setup, results: [{ headline, detail, tone, roll, why }], cue }
+// A fight (slice 6) is a card per round, with HP in its setup line; the watch screen's own look
+// for fights comes in slice 6b.
 
 import { ZONES } from '../data/incidents.js';
 import { incidentById } from './incidents.js';
@@ -61,6 +63,19 @@ export function feedItems(events = [], { kit = null } = {}) {
         type: 'card', kind: e.kind, label: e.kind === 'exit' ? 'Pulling out' : e.rescued ? 'Rescue' : e.standby ? 'Standby comes in' : 'Call-in', setup: e.text,
         results: [{ headline: e.choice, detail: e.report, tone: e.kind === 'exit' ? 'warn' : 'save', roll: null, why: e.why ?? null }],
         cue: e.standby ? { standby: e.standby.id, rescued: e.rescued?.id ?? null } : { decision: true },
+      });
+    } else if (e.kind === 'battle') {
+      // A fight (slice 6): a note when it starts, one card per round and for pulling back, a note when it's over.
+      if (e.phase === 'start' || e.phase === 'end') {
+        items.push({ type: 'note', text: e.phase === 'end' ? e.report ?? e.text : e.text, tone: e.phase === 'start' ? 'warn' : e.hurt?.length ? 'bad' : 'good' });
+        continue;
+      }
+      const up = (e.guards ?? []).filter((g) => !g.out).length;
+      items.push({
+        type: 'card', kind: 'battle', label: e.phase === 'retreat' ? 'Pulling back' : `Fight · round ${e.round}`,
+        setup: e.phase === 'retreat' ? e.text : `${up ? `${up} guard${up === 1 ? '' : 's'} up` : 'Last guard down'} · ${(e.runners ?? []).map((r) => `${r.handle} ${r.down ? 'down' : `${r.hp}/${r.max}`}`).join(', ')}`,
+        results: (e.lines ?? []).map((l) => ({ headline: l.text, detail: '', tone: l.kind === 'guard' ? (l.damage ? 'bad' : 'good') : l.success ? 'good' : 'bad', roll: roll(l), why: null })),
+        cue: { decision: true },
       });
     } else if (e.kind === 'critical') {
       items.push({
