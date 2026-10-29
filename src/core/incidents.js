@@ -11,6 +11,7 @@ import { DISTRICT_INCIDENTS } from '../data/districtIncidents.js';
 import { crewRoll, effectiveStat } from './crew.js';
 import { successChance, rollTarget } from './risk.js';
 import { overwatchKit, baseKit } from './gear.js';
+import { BATTLE } from '../data/battle.js';
 
 export { ZONES, ALERT_MAX };
 export const incidentById = (id) => INCIDENTS[id] ?? null;
@@ -107,6 +108,22 @@ export function bestSave({ victim, able, overwatch, overwatchOp, zone, diff }) {
  * hurt they can go in, get them out and take their place.
  */
 export function decisionChoices(pending, { patient = null, standby = null } = {}) {
+  // A fight's call-ins (slice 6; core/battle.js). At death's door the safe way is listed first.
+  const pullBack = `Everyone comes home. No pay, heat +${BATTLE.retreat.heat}, reputation −${BATTLE.retreat.rep}, and the guards get a parting shot as you run (it can hurt, never kill).`;
+  if (pending.kind === 'door') {
+    const who = patient?.handle ?? 'them';
+    return [
+      { id: 'out', label: `Pull back and get ${who} out`, cost: pullBack, exit: true },
+      ...(standby ? [{ id: 'rescue', label: `Send ${standby.handle} in to get ${who} out`, cost: `${standby.handle} drags ${who} clear and takes their place in the fight.` }] : []),
+      { id: 'fight', label: `Keep fighting with ${who} down`, cost: `${who} could die unless someone stabilises them in time.`, push: true },
+    ];
+  }
+  if (pending.kind === 'standoff') {
+    return [
+      { id: 'press', label: 'Push past them', cost: `Alert +${BATTLE.press.alert}, heat +${BATTLE.press.heat}. The guards are still out there.` },
+      { id: 'out', label: 'Pull back', cost: pullBack, exit: true },
+    ];
+  }
   if (pending.kind === 'alert') {
     return [
       ...(standby ? [{ id: 'standby', label: `Call ${standby.handle} in from standby`, cost: 'They join the team: one more to back up rolls and pull someone out of trouble. The alert stays up.' }] : []),
@@ -127,6 +144,12 @@ export function decisionChoices(pending, { patient = null, standby = null } = {}
  */
 export function ordersDecision(kind, ordersId, { standby = false } = {}) {
   const cautious = ordersId === 'cautious';
+  // Nobody's orders leave someone on the floor: only the player can choose to keep fighting.
+  if (kind === 'door') {
+    if (standby && !cautious) return { id: 'rescue', why: 'Someone went down, so they sent standby in to drag them clear.' };
+    return { id: 'out', why: 'Someone went down, and nobody\'s orders leave a friend on the floor.' };
+  }
+  if (kind === 'standoff') return BATTLE.orders[ordersId]?.press ? { id: 'press', why: 'Committed orders: they pushed past the guards still standing.' } : { id: 'out', why: 'The guards were still standing, and the orders said not to force it.' };
   if (kind === 'alert') {
     if (standby && !cautious) return { id: 'standby', why: 'They were blown, so they called standby in from the van.' };
     return ordersId === 'committed' ? { id: 'loud', why: 'Committed orders: they went loud to finish it.' } : { id: 'out', why: 'They were blown, and the orders said not to force it.' };

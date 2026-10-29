@@ -363,5 +363,11 @@ function migrate(state) {
     state.founding = state.founding ?? null;
     state.version = 25;
   }
+  if (state.version === 25) {
+    // v26: fights (PLAN-CORE-LOOP.md, slice 6). A job keeps its fight in am.battle while one is on;
+    // jobs saved before fights existed have none.
+    for (const am of [state.activeMission, ...(state.awayJobs ?? []).map((j) => j.mission)]) if (am) am.battle = am.battle ?? null;
+    state.version = 26;
+  }
   return state;
 }
