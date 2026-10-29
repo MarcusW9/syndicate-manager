@@ -303,11 +303,12 @@ function chromeMarks(f, load, w, tired) {
 }
 
 /** Tattoos, barcodes and scars. Ink is a thin neon so it shows on every skin tone. */
-function markings(f, c, w) {
-  const L = 32 - w;
+function markings(f, c, g, id) {
+  const w = g.w, L = 32 - w;
   switch (f.marking) {
     case 'tattoo': return `<g stroke="${c.light}" stroke-width="0.5" fill="none" opacity="0.75"><path d="M${L + 3} 31 L${L + 5.5} 35.5 L${L + 0.8} 35.5 Z"/><path d="M${L + 2.4} 37.3 h4 M${L + 3.2} 38.6 h2.4"/></g>`;
-    case 'barcode': return `<g fill="${mix(c.skin, '#05080c', 0.7)}" opacity="0.85">${[0, 0.9, 1.4, 2.5, 3, 3.8].map((dx, i) => `<rect x="${33.4 + dx}" y="42.5" width="${i % 2 ? 0.35 : 0.55}" height="3.6"/>`).join('')}</g>`;
+    // On the chin, centred, and kept inside the face (owner, 2026-10-29: it hung off the jaw).
+    case 'barcode': return `<g fill="${mix(c.skin, '#05080c', 0.7)}" opacity="0.85" clip-path="url(#${id}h)">${[0, 0.9, 1.4, 2.5, 3, 3.8].map((dx, i) => `<rect x="${30.1 + dx}" y="${g.chin - 5.2}" width="${i % 2 ? 0.35 : 0.55}" height="3.2"/>`).join('')}</g>`;
     case 'scar': return `<path d="M${L + 2.5} 22 L${L + 4} 24 L${L + 3.2} 25.2 L${L + 5} 28" stroke="${mix(c.skin, '#ffd5d5', 0.35)}" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>`;
     case 'cut': return `<path d="M${L + 3} 22.5 L${L + 6} 27" stroke="${mix(c.skin, '#ffd5d5', 0.35)}" stroke-width="0.7"/>`;
     default: return '';
@@ -534,7 +535,7 @@ export function portrait(op, { size = 44 } = {}) {
   ${eye(27.4, st.tired, c, st.expression)}${f.chrome === 'cybereye' || f.chrome === 'half' ? '' : eye(36.6, st.tired, c, st.expression)}
   ${browsAndMouth(st, c)}
   ${f.mask ? '' : facialHairMarks(f, c, g, id)}
-  ${markings(f, c, w)}
+  ${markings(f, c, g, id)}
   ${f.chrome === 'half' ? `<g clip-path="url(#${id}h)">${halfFacePlate(f, c, g)}</g>` : ''}
   ${f.mask ? maskMarks(f, c, g, st, id) : ''}
   ${f.glasses && f.chrome !== 'cybereye' ? `<g fill="${c.light}" fill-opacity="0.12" stroke="#0d0d0f" stroke-width="0.8"><rect x="24.3" y="27" width="6.2" height="4.2" rx="1.2"/><rect x="33.5" y="27" width="6.2" height="4.2" rx="1.2"/></g><path d="M30.5 28.6 h3" stroke="#0d0d0f" stroke-width="0.8"/>` : ''}

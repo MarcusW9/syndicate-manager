@@ -5,6 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-29 · Barcode tattoos sit on the chin
+- Portraits with a barcode tattoo now have it centred on the chin and inside the face on every head shape, instead of hanging off the side of the jaw.
+
 ## 2026-10-29 · Jobs screen lines up
 - Side work: the stat each job uses (Combat, Social, Driving…) now sits on the same line as the job's name and district, and the days and people on the right line up too.
 - Clients: each client's standing ("neutral · 50") is now left-aligned under their name, like the rest of the screen.

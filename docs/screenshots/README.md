@@ -22,6 +22,9 @@ Then add a row to the top of the table below and commit the folder with the chan
 
 | Date | Version | Commit | What's new on screen | Folder |
 | --- | --- | --- | --- | --- |
+| 2026-10-29 | Barcode tattoos on the chin | (this change) | The usual set (portraits with a barcode show it centred on the chin). | [2026-10-29-barcode-chin](2026-10-29-barcode-chin/) |
+| 2026-10-29 | Design session: the barcode marking, centred | (this change) | 01: twelve generated faces with the barcode marking across head shapes, now centred on the chin and inside the face. | [2026-10-29-design-session-barcode](2026-10-29-design-session-barcode/) |
+| 2026-10-29 | Owner captures: Monorail's barcode | (owner) | 01: Monorail's page on an iPad (zoomed in), the barcode tattoo hanging off the side of his chin. | [2026-10-29-owner-captures-barcode](2026-10-29-owner-captures-barcode/) |
 | 2026-10-29 | Jobs screen lines up | (this change) | The usual set. 07, the job board: side work's stat icon and word on the name's line, client standings left-aligned. | [2026-10-29-jobs-alignment](2026-10-29-jobs-alignment/) |
 | 2026-10-29 | Design session: the Jobs screen's side work and clients, aligned | (this change) | Full-page captures after the fix (2x): 01 iPad landscape (1180), 02 iPad portrait (820), 03 phone (390). | [2026-10-29-design-session-jobs-alignment](2026-10-29-design-session-jobs-alignment/) |
 | 2026-10-29 | Room above the job result | (this change) | The usual set. 16, the end of a job: the result card now has space between it and the last line of the play-by-play. | [2026-10-29-result-spacing](2026-10-29-result-spacing/) |
