@@ -33,7 +33,7 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 ## Next
 
 1. **Play-test the new start** (three founders, rookie leads at half price). `node scripts/sim-early-game.mjs` measures it: a careful hirer is broke in 3% of runs at week 13. Watch for three founders alone getting too rich (median ¥37,400 at week 26 without hiring).
-2. **City screen: what's left.** Built 2026-10-29 (`ui/citymap.js`, `ui/districtArt.js`). Next: the other four district pictures, one at a time like the gear art; heat per district (from the design review), then heat pips on the plates.
+2. **City screen: what's left.** Built 2026-10-29 (`ui/citymap.js`, `ui/districtArt.js`). All five district pictures are drawn (`ui/districtArt.js`). Next: heat per district (from the design review), then heat pips on the plates; pictures for the locked districts when they open.
 3. **Slice 6, battles** (to design), then gear tuning and the next specialisations: gear can't be tuned until battles give it something to do (owner, 2026-10-28).
 4. **Small polish:** reloading while the crew calls you in doesn't scroll to the call-in; the reputation gauge (owner wants to revisit; `drafts/prototypes/reputation-gauge-options.html`); the phone planning screen is long.
 5. Then the agreed review items: the neural load and burnout cleanup, mood traits, money pressure, relationships with the career page. Parked: the underground place (below).

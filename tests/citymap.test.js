@@ -30,9 +30,14 @@ test('a plate shows its work, HOME, crew out and street talk; the picked distric
   assert.match(svg, /NO WORK/);
 });
 
-test('the Docks picture is the same every time; districts without one get none', () => {
-  assert.equal(docksScene(), docksScene());
+test('every open district has a picture, the same every time; locked ones have none', () => {
   assert.equal(districtArt('docks'), docksScene());
   assert.match(docksScene(), /AHX 409/);
-  assert.equal(districtArt('oldTown'), null);
+  for (const k of ['docks', 'oldTown', 'nightMarket', 'heights', 'basin']) {
+    const a = districtArt(k);
+    assert.match(a, /^<svg viewBox="0 0 720 300"/, k);
+    assert.match(a, /aria-label="[^"]+"/, `${k}: described for screen readers`);
+    assert.equal(districtArt(k), a, `${k}: drawn the same each time`);
+  }
+  for (const k of ['ironPeak', 'amberReach', 'silt']) assert.equal(districtArt(k), null, k);
 });

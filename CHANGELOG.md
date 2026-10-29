@@ -5,6 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-29 · Every district has its picture
+- Tap Old Town, the Night Market, Glass Heights or the Basin on the City map and its card now opens on a picture, like the Docks: Auntie Fung's tea shop and joss paper burning in a bin; the Neon Dragon's wok fire under a sky of neon; Veridian-Apex's tower and a security drone sweeping the plaza; race night at Lantern Course under the floodlights.
+
 ## 2026-10-29 · The new City map
 - The City screen's map is redrawn to match the rest of the game: each district has a small label showing its gang's colour, how much work is on the board, and tags for your safehouse (HOME) and crew out on jobs there. Tap a district (or its label) to pick it.
 - Beside the map (below it on a phone): the district you picked, then the city tonight (every open district's gang, work, street talk and crew out), the city's heat, where your people are and when they're back, and places (the safehouse; a bar and black market are coming later).
