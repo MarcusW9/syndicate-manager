@@ -22,6 +22,7 @@ Then add a row to the top of the table below and commit the folder with the chan
 
 | Date | Version | Commit | What's new on screen | Folder |
 | --- | --- | --- | --- | --- |
+| 2026-10-29 | Room above the job result | (this change) | The usual set. 16, the end of a job: the result card now has space between it and the last line of the play-by-play. | [2026-10-29-result-spacing](2026-10-29-result-spacing/) |
 | 2026-10-29 | "What they'll likely meet" folds away | (this change) | The usual set; the coverage-read shot opens the fold first, so it still shows the read. | [2026-10-29-meet-fold](2026-10-29-meet-fold/) |
 | 2026-10-29 | Design session: folding "What they'll likely meet" | (this change) | 01 phone, folded by default (arrow on the right of the heading); 02 phone, opened; 03 desktop, open by default; 04 desktop, folded. | [2026-10-29-design-session-meet-fold](2026-10-29-design-session-meet-fold/) |
 | 2026-10-29 | Tabs off during the founder pick | (this change) | The usual set. 01, the founder pick: Crew, Jobs and City dimmed in the tab bar until the three founders are picked. | [2026-10-29-founder-pick-tabs-off](2026-10-29-founder-pick-tabs-off/) |

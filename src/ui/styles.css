@@ -332,6 +332,8 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .resultcard h2 { margin-top: 0; color: var(--text); }
 .resultcard--loss { border-color: var(--danger); }
 .resultcard--completed { border-color: #2e6b52; }
+/* After the play-by-play the result sits clear of the last line of the feed (owner, 2026-10-29: "very close to the message above it"). */
+.mission .resultcard { margin-top: 24px; }
 .meter__fill.is-hot { background: var(--danger); }
 
 /* Job report as a timeline: a rail down the left, a numbered node per crisis, the outcome last. */

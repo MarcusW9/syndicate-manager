@@ -5,6 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-29 · Room above the job result
+- At the end of a job, the result card (Job done, pay, heat) now sits clear of the last line of the play-by-play instead of right against it.
+
 ## 2026-10-29 · Fold away "What they'll likely meet"
 - On the plan screen, the "What they'll likely meet" read now has an arrow on the right of its heading: tap the heading to fold it away or open it. It starts folded on phones, to cut the scrolling, and open on wider screens; it stays how you left it until you close the game. Folded, the heading still warns you in red if there's a gap nobody can cover.
 
