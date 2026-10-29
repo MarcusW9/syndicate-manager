@@ -139,9 +139,56 @@ the drone can; district lines only change words and keep `{op}`).
   `src/core/specialisations.js`; the effect lives in `core/gear.js` `overwatchKit`. Tests:
   `tests/specialisations.test.js`. Next directions (Breacher, Netrunner, Ghost...) come in batches.
 
-### Slice 6 · Battles — [ ] (to design)
-- Fights as automatic exchanges of 2-3 rounds on the watch feed: guards with health, gear doing
-  damage and soaking hits. Designed after gear has been played with.
+### Slice 6 · Battles — [ ] (designed 2026-10-29, owner's calls in DESIGN.md; not built)
+Fights become automatic exchanges of up to 3 rounds on the watch feed. You watch; you're called
+in only when something big happens. Numbers below are drafts, to tune with a sim like the others.
+
+- **When:** only when a run escalates. A fight incident that goes unsaved, or an entry or threat
+  incident failed badly on a stealth, tech or con run ("the stealth run went loud"), starts a
+  battle instead of the single roll and save. Loud runs escalate more often (it's fighting by
+  design). Every other incident stays one roll.
+- **Who:** the runners in that zone, plus overwatch if it can see the zone (rifle outdoors, drone
+  anywhere). Against them, guards: count and toughness from threat, alert and the site.
+- **Health:** every runner has HP (a base plus something from combat or cool; draft: 10 + cool/4).
+  Guards have HP too. Weapons do damage (draft: unarmed 1, sidearm 3, rifle 5 from overwatch);
+  armour takes some off every hit (draft: vest 2). So gear is visible in numbers: "Sidearm 3,
+  vest blocks 2".
+- **A round:** everyone acts once, by role, then each standing guard goes for someone.
+  Fighter: shoot (combat). Medic: stabilise or patch someone (medical; trauma kit helps). Tech:
+  lights, cameras or a turret off for the round (tech; deck helps). Face: get a guard to back off
+  or freeze (social, cool). Driver: bring the van round, which opens a cleaner way out (driving).
+  Overwatch: a shot or a drone action, spent from its uses as now. The best action per person is
+  picked by the same rules Joss uses (no new player input).
+- **Death's door (Darkest Dungeon):** at 0 HP a runner is down and out of the fight, not dead.
+  This is the main call-in. **Pull back:** the crew drags them out and nobody dies. **Keep
+  fighting:** from then on a hit on someone at death's door, or a failed stabilise, can kill
+  them. That's the "push on" choice: death only follows it (the existing rule holds).
+- **Other call-ins:** round 3 ends with guards still standing; reinforcements arrive. No call-in
+  after every round (owner rejected round-by-round play).
+- **Pulling back costs** (owner's calls): the job's pay, heat and alert, **reputation**, and the
+  guards get a parting exchange as the crew runs, which can **injure anyone** on the way out but
+  can never kill (an exit always saves everyone). Someone at death's door who is dragged out ends
+  the job critical, as today.
+- **After the battle:** HP left becomes the injury the game already tracks (draft: half or more =
+  fine, under half = light, under a quarter = serious, 0 = critical), so the clinic, statuses and
+  recovery stay as they are.
+- **Gear loss:** a runner who hits death's door and is dragged out can drop their weapon (the
+  "fight gone badly" rule from slice 5's follow-up). Never otherwise.
+- **Hands-off and standing orders:** Cautious pulls back at the first runner under half HP;
+  Steady fights until someone hits death's door or round 2 ends with guards up; Committed fights
+  all 3 rounds and pulls back at death's door. Hands-off never chooses "keep fighting" at death's
+  door (only a player can push on).
+- **The watch:** one card per round ("Round 1: Rat drops one; Mei takes 3"), HP shown on the
+  runners' tokens, guard tokens on the site plan.
+- **Odds read (shown risk equals used risk):** the coverage read and Joss quote fight odds by
+  running the battle function itself many times on a fixed seed inside `core` (pure), never a
+  separate estimate.
+- **Engine:** `core/battle.js` (pure, seeded through `core/rng.js`), content in
+  `src/data/battle.js` (guard types, actions); weapon damage and armour soak join `data/gear.js`.
+  A battle stopped at a call-in keeps its state in the run, so **save bump** and a migration.
+- **Tests:** no death without "keep fighting"; pulling back never kills and always ends the
+  battle; hands-off never pushes on; the odds read uses the battle function; armour and weapon
+  numbers appear on the feed cards; old saves load.
 - Also later: tone the early game down (a full founding squad is strong for its first jobs).
 
 ## Not in this plan

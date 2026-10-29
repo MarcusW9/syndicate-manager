@@ -5,7 +5,7 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 ## State
 
 - **`main`:** up to [#28](https://github.com/MarcusW9/syndicate-manager/pull/28) (play-test fixes and the City map design session). **Branch `claude/jolly-keller-6eqry7`** carries the founder pick (not yet in a PR). Pushes after a PR is merged stay on the branch: check a PR is still open before adding to it; if it was merged, merge `main` in (`git merge -s ours origin/main` when the trees already match) and carry on.
-- **The game is becoming the squad run** (`PLAN-CORE-LOOP.md`, the build order; `drafts/core-loop.md`, how we got there). **Slices 1-5 are built** (the engine; the squad board and the watch screen; Wheels and standby; a site plan per district, with district incident text; gear and the first specialisations). Slice 6, battles, is to design.
+- **The game is becoming the squad run** (`PLAN-CORE-LOOP.md`, the build order; `drafts/core-loop.md`, how we got there). **Slices 1-5 are built** (the engine; the squad board and the watch screen; Wheels and standby; a site plan per district, with district incident text; gear and the first specialisations). Slice 6, battles, is designed (2026-10-29) and ready to build.
 - **Design review:** `STATE-OF-PLAY.md` (2026-10-26) and the owner's calls on it (in the file and in DESIGN.md). Read it instead of re-assessing.
 - **New games start with three founders picked from six** (`startCrew: 'pick'`, `chooseFounders`). Most rule tests still use the five-rookie `'fresh'` crew as a fixture.
 - **Tests:** 320 passing. **Save format v25.**
@@ -34,7 +34,7 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 
 1. **Play-test the new start** (three founders, rookie leads at half price). `node scripts/sim-early-game.mjs` measures it: a careful hirer is broke in 3% of runs at week 13. Watch for three founders alone getting too rich (median ¥37,400 at week 26 without hiring).
 2. **City screen rebuild** (designed: DESIGN.md 2026-10-28 rows; `drafts/prototypes/city-map-schematic.html` and `district-docks.html`). Owner still to pick straight or rough coasts and whether the district pictures come now. Needs heat per district (from the design review), not built yet.
-3. **Slice 6, battles** (to design), then gear tuning and the next specialisations: gear can't be tuned until battles give it something to do (owner, 2026-10-28).
+3. **Slice 6, battles** (designed 2026-10-29: spec in `PLAN-CORE-LOOP.md`, ready to build), then gear tuning and the next specialisations: gear can't be tuned until battles give it something to do (owner, 2026-10-28).
 4. **Small polish:** reloading while the crew calls you in doesn't scroll to the call-in; the reputation gauge (owner wants to revisit; `drafts/prototypes/reputation-gauge-options.html`); the phone planning screen is long.
 5. Then the agreed review items: the neural load and burnout cleanup, mood traits, money pressure, relationships with the career page. Parked: the underground place (below).
 
