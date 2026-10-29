@@ -5,6 +5,14 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-29 · Fights
+- When a patrol or a guard catches someone and nobody saves them, it's now a fight: up to three rounds on the watch feed instead of one roll. Everyone has health; guards come in tougher on bigger jobs.
+- Gear finally matters outside overwatch: a sidearm hits harder than the street piece everyone carries, and a vest takes 1 off every hit (a pro vest 2). Medics patch people up mid-fight, a face can talk a guard into backing off, a tech can kill the lights, and Wheels can bring the van round for a clean getaway.
+- If someone goes down, they're at death's door, not dead. The crew calls you in: pull back (everyone home, but no pay, more heat and a hit to your reputation), send standby in to drag them out, or keep fighting, which is the only way they can die.
+- After three rounds with guards still up, you choose: push past them (the alert goes up) or pull back. A lone guard who's badly hurt runs for it.
+- The planning screen now says how a fight would go for each danger ("If it comes to a fight: low risk"), worked out from the same rules.
+- Fixed: a one-person crew who pushed on with a critical wound could freeze the game at the next crisis.
+
 ## 2026-10-29 · Rookie hires cost half
 - Rookies the scouts find now ask for about half what they used to (¥200-350 a week instead of ¥400-650), so growing past your three founders is affordable. Pros and veterans cost the same as before, and anyone's pay still goes up at contract time once they've grown.
 

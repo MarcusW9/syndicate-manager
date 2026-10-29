@@ -116,7 +116,9 @@ test('Joss covers the approach: his team handles its incidents at least as well 
     const tpl = templateById('container409');
     for (const a of APPROACH_IDS) {
       const p = jossPicks(tpl, s.crew, a);
-      const mean = (crew) => { const r = coverage(tpl, crew, a).rows; return r.reduce((n, x) => n + x.chance, 0) / r.length; };
+      // Each incident's odds of going right: the roll, the save, and (slice 6) the fight if both miss.
+      const ok = (x) => (x.handler ? 1 - (x.fight ? x.fight.chance * (1 - x.fight.win) : (1 - x.chance) * (1 - (x.withSave?.chance ?? 0))) : 0);
+      const mean = (crew) => { const r = coverage(tpl, crew, a).rows; return r.reduce((n, x) => n + ok(x), 0) / r.length; };
       const joss = mean(s.crew.filter((o) => p.crew.includes(o.id)));
       const naive = mean(s.crew.slice(0, tpl.crewSize));
       total++;

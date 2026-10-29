@@ -762,6 +762,14 @@ function renderFullLog(t) {
       beat: () => `<p class="flog__beat">${esc(e.text)}</p>`,
       twist: () => `<p class="flog__twist">Twist: ${esc(e.text)}</p>`,
       aftermath: () => `<p class="flog__line ${e.death ? 'tone--bad' : 'tone--good'}">${esc(e.text)}</p>`,
+      // A fight (slice 6): what started it, each round's moments with their dice, how it ended.
+      battle: () => `
+        <div class="flog__step">
+          ${e.phase === 'round' ? `<p class="flog__crisis">${esc(e.text)}</p>` : ''}
+          ${(e.lines ?? []).map((l) => `<p class="flog__line ${l.kind === 'guard' ? (l.damage ? 'tone--bad' : 'tone--good') : l.success === false ? 'tone--bad' : 'tone--good'}">${esc(l.text)}</p>${rollDetail(l)}`).join('')}
+          ${e.phase === 'start' || e.phase === 'end' ? `<p class="flog__line ${e.phase === 'start' || e.hurt?.length ? 'tone--warn' : 'tone--good'}">${esc(e.report ?? e.text)}</p>` : ''}
+          ${e.phase === 'retreat' ? `<p class="flog__line tone--warn">${esc(e.text)}</p>` : ''}
+        </div>`,
       critical: () => `
         <div class="flog__step">
           <p class="flog__crisis">${esc(e.patient)} is critical.</p>
@@ -1541,9 +1549,9 @@ function renderCallIn(s) {
     const v = describePending(s);
     return `
       <div class="crisis">
-        <p class="crisis__title">${v.kind === 'alert' ? 'The crew is calling in: you\'ve been spotted' : 'The crew is calling in: someone is down'}</p>
+        <p class="crisis__title">${v.kind === 'alert' ? 'The crew is calling in: you\'ve been spotted' : v.kind === 'door' ? 'The crew is calling in: someone is at death\'s door' : v.kind === 'standoff' ? 'The crew is calling in: the guards are still standing' : 'The crew is calling in: someone is down'}</p>
         <p>${esc(v.text)}</p>
-        <div class="choices">${v.choices.map((c) => choiceButton({ ...c, risk: c.exit ? 'safe' : 'moderate', riskReason: c.cost, cost: '' }, 'pending')).join('')}</div>
+        <div class="choices">${v.choices.map((c) => choiceButton({ ...c, risk: c.exit ? 'safe' : c.push ? 'extreme' : 'moderate', riskReason: c.cost, cost: '' }, 'pending')).join('')}</div>
       </div>`;
   }
   if (currentStep(am)?.type === 'crisis' && needsPlayer(s)) {

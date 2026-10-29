@@ -8,6 +8,8 @@
 // (PLAN-CORE-LOOP.md, slice 4). hOk / hBad are the short headlines; ok / bad the detail.
 // diff: added to the job's typical roll difficulty (core/risk.js rollTarget), so incidents
 // scale with the work. Failure costs stay small: never worse than a serious injury.
+// guards: a danger incident that goes unsaved starts a fight with this many (slice 6;
+// core/battle.js), which replaces the old serious-wound roll.
 
 export const INCIDENTS = {
   lock: {
@@ -25,21 +27,21 @@ export const INCIDENTS = {
     fail: { alert: 1 },
   },
   patrol: {
-    name: 'Patrol', situations: ['entry'], stats: ['stealth'], diff: 0, danger: true,
+    name: 'Patrol', situations: ['entry'], stats: ['stealth'], diff: 0, danger: true, guards: 1,
     text: 'A guard on patrol, torch low, coming this way.',
     hOk: '{op} slips the patrol', ok: '{op} waits in the dark until the torch passes.',
     hBad: 'Spotted by a patrol', bad: 'The torch finds {op}.', comp: '"Oi!" The guard is on {op} before they can move.',
     fail: { alert: 1, heat: 1 },
   },
   guard: {
-    name: 'Guard up close', situations: ['fight', 'threat'], stats: ['combat'], diff: 0, danger: true,
+    name: 'Guard up close', situations: ['fight', 'threat'], stats: ['combat'], diff: 0, danger: true, guards: 1,
     text: 'A guard steps round the corner, right in front of {op}.',
     hOk: '{op} drops the guard', ok: '{op} puts him down quietly and zip-ties his wrists.',
     hBad: '{op} is cornered', bad: 'He\'s bigger than he looked, and he has {op} against the wall.', comp: '{op} is cornered.',
     fail: { alert: 1, injury: true },
   },
   backup: {
-    name: 'More guards', situations: ['fight'], stats: ['combat'], diff: 1, danger: true,
+    name: 'More guards', situations: ['fight'], stats: ['combat'], diff: 1, danger: true, guards: 2,
     text: 'Two more guards come running.',
     hOk: '{op} handles the guards', ok: '{op} meets them in the gap and ends it fast.',
     hBad: '{op} is pinned down', bad: 'They split up and one gets behind {op}.', comp: '{op} is pinned down.',
@@ -81,7 +83,7 @@ export const INCIDENTS = {
     fail: { alert: 1, payCut: 0.15 },
   },
   hold: {
-    name: 'Holding the room', situations: ['fight', 'threat'], stats: ['combat', 'cool'], diff: 0, danger: true,
+    name: 'Holding the room', situations: ['fight', 'threat'], stats: ['combat', 'cool'], diff: 0, danger: true, guards: 2,
     text: 'The people at the target don\'t want to cooperate.',
     hOk: '{op} holds the room', ok: '{op} keeps everyone on the floor and calm.',
     hBad: 'Someone makes a move', bad: 'Someone goes for {op}.', comp: '{op} has a fight on their hands.',
