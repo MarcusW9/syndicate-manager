@@ -12,3 +12,5 @@ authoring layouts (`src/data/sites.js`).
    hut for Submerged Cable, Container 409 for Container 409).
 3. `03-old-town-flat-and-clinic.png`: Old Town's flat (any Old Town job) and Block 9's stairwell
    clinic, Clinic Night's own place (cots, the cyan sign at the door).
+4. `04-docks-more-crates.png`: the twelve Docks combinations again, after the owner asked for more
+   crates: the stacked yard full of containers, the open yard with more loose crates.

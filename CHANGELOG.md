@@ -63,7 +63,7 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 ## 2026-10-29 · Jobs look like where they happen
 - Some jobs now have their own place on the map: Clinic Night is Doc Siu's clinic down Block 9's stairwell, Submerged Cable is the cable hut on Pier 12, Container 409 is the container itself.
-- The Docks also varies from job to job: two ways in (the gate, or the quay at the harbour end) and two ways the yard is stacked. Each job keeps the same layout whenever you look at it, and two jobs can differ.
+- The Docks also varies from job to job: two ways in (the gate, or the quay at the harbour end) and two ways the yard is stacked, both full of containers and crates. Each job keeps the same layout whenever you look at it, and two jobs can differ.
 - The Night Market, Glass Heights and the Basin come next.
 
 ## 2026-10-29 · Rookie hires cost half
