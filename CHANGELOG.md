@@ -5,6 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-29 · The City map holds still while you scroll
+- On iPad and iPhone, the City map and the district picture beside it no longer grow as you scroll and Safari hides its toolbar. They keep the size they open at. The site plan on the watch screen holds still the same way.
+
 ## 2026-10-29 · Four inside fits on a phone
 - When four or more people go inside, the planning board on a phone now shows two cards to a row, each laid sideways (photo on the left, name and number on the right), so names and stats are full size instead of squeezed into four narrow cards. Three inside, tablets and desktop look as before.
 

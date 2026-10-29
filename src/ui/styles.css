@@ -274,6 +274,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
   /* City map: the map's column is only as wide as the map draws (its height cap × 360/520,
      see .citymap below), so the district card sits right beside it instead of across a gap. */
   .cols2--map { grid-template-columns: min(460px, calc(max(360px, 100dvh - 300px) * 360 / 520)) minmax(0, 1fr); }
+  .cols2--map { grid-template-columns: min(460px, calc(max(360px, 100svh - 300px) * 360 / 520)) minmax(0, 1fr); }
   /* Planning a job: approach, squad and orders on the left; client and the reads beside them, so the risk updates in view as you pick. */
   .plangrid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); grid-template-rows: auto auto 1fr; column-gap: 28px; align-items: start;
     grid-template-areas: "approach client" "crew risk" "orders risk"; }
@@ -556,9 +557,12 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 @media (max-width: 899px) { .citymap__hint { display: none; } }
 .citycard { scroll-margin-top: 88px; }
 /* The map tab fits one screen: the map shrinks to what's left after the header, tabs,
-   legend and (on phones) the Continue dock and tab bar, but never below a readable size. */
-.citymap { max-height: max(300px, calc(100dvh - 400px)); }
-@media (min-width: 900px) { .citymap { max-height: max(360px, calc(100dvh - 300px)); } }
+   legend and (on phones) the Continue dock and tab bar, but never below a readable size.
+   Sized on svh (the viewport with the browser's bars showing), not dvh: dvh grows as Safari
+   hides its bars on scroll, which made the map and the picture beside it grow mid-scroll
+   (owner, iPad, 2026-10-29). The dvh lines are the fallback for browsers without svh. */
+.citymap { max-height: max(300px, calc(100dvh - 400px)); max-height: max(300px, calc(100svh - 400px)); }
+@media (min-width: 900px) { .citymap { max-height: max(360px, calc(100dvh - 300px)); max-height: max(360px, calc(100svh - 300px)); } }
 .citycard ul { margin-top: 0; }
 .citydetails { border: 1px solid var(--line); border-radius: var(--radius); padding: 0 12px; margin-bottom: 6px; }
 .citydetails summary { min-height: var(--tap); display: flex; align-items: center; cursor: pointer; font-weight: 600; }
@@ -791,7 +795,7 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .watch.is-calling .watch__bar { display: none; }
 .watch__callin { scroll-margin-top: calc(var(--live-top, 0px) + 8px); }
 .watch__map { position: relative; background: #0b0d11; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
-.siteplan { display: block; width: 100%; height: min(34dvh, 280px); }
+.siteplan { display: block; width: 100%; height: min(34dvh, 280px); height: min(34svh, 280px); }
 .watch__phase { position: absolute; left: 8px; top: 8px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-2); background: rgba(11, 13, 17, 0.85); border: 1px solid #1f4440; border-radius: 6px; padding: 2px 8px; }
 .watch__alert { position: absolute; right: 8px; top: 8px; display: inline-flex; gap: 3px; align-items: center; font-size: 0.66rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); background: rgba(11, 13, 17, 0.85); border: 1px solid var(--line); border-radius: 6px; padding: 3px 7px; }
 .watch__alert i { width: 9px; height: 9px; border-radius: 2px; background: var(--line); display: inline-block; }
