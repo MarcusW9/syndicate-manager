@@ -656,10 +656,18 @@ export function basinScene() {
     for (let k = 0; k < 4; k++) s += rect(fx - 14 + k * 7.5, 32, 6, 8, '#f7efc8') ;
     s += `<circle cx="${fx}" cy="36" r="30" fill="url(#ba-glow)" />`;
   }
-  // The odds board: amber dot-matrix, the next race's prices.
-  s += rect(372, 92, 130, 46, '#0e0f14') + `<rect x="373" y="93" width="128" height="44" fill="none" stroke="${LIGHT}" stroke-width="0.6" />`;
-  [['1', 'PEPPER', '5/2'], ['4', 'GOLD JUNK', '7/1'], ['7', 'LUCKY TAM', '9/1']].forEach(([n, name, odds], i) => { s += `<text x="380" y="${106 + i * 12}" class="da-stencil" style="fill:${LIGHT}" font-size="8">${n}  ${name}</text><text x="494" y="${106 + i * 12}" class="da-stencil" style="fill:${LIGHT}" font-size="8" text-anchor="end">${odds}</text>`; });
-  s += sign(352, 96, '馬場', LIGHT);
+  // The odds board, in neon (owner, 2026-10-29): a double tube frame in pink and orange with a
+  // wide glow, the race in pink, the prices in bright orange, the course's name over it in neon.
+  const PINK2 = '#ff5fae';
+  const glowText = (x, y, t, col, size, anchor = 'start') => `<text x="${x}" y="${y}" class="da-stencil" style="fill:${col};stroke:${col};stroke-width:2.4;opacity:0.25" font-size="${size}" text-anchor="${anchor}">${t}</text><text x="${x}" y="${y}" class="da-stencil" style="fill:${mix(col, '#ffffff', 0.35)};opacity:1" font-size="${size}" text-anchor="${anchor}">${t}</text>`;
+  s += rect(358, 76, 158, 76, LIGHT, 'opacity="0.07"') + rect(364, 82, 146, 64, PINK2, 'opacity="0.08"');
+  s += rect(370, 88, 134, 54, '#0b0a0f');
+  s += `<rect x="370" y="88" width="134" height="54" fill="none" stroke="${PINK2}" stroke-width="3.5" opacity="0.25" /><rect x="370" y="88" width="134" height="54" fill="none" stroke="${mix(PINK2, '#ffffff', 0.3)}" stroke-width="1.1" />`;
+  s += `<rect x="374" y="92" width="126" height="46" fill="none" stroke="${LIGHT}" stroke-width="3" opacity="0.22" /><rect x="374" y="92" width="126" height="46" fill="none" stroke="${mix(LIGHT, '#ffffff', 0.3)}" stroke-width="0.9" />`;
+  s += glowText(437, 102, 'RACE 7 · WIN', PINK2, 6.5, 'middle');
+  [['1', 'PEPPER', '5/2'], ['4', 'GOLD JUNK', '7/1'], ['7', 'LUCKY TAM', '9/1']].forEach(([n, name, odds], i) => { s += glowText(380, 113 + i * 9.5, `${n}  ${name}`, LIGHT, 7.5) + glowText(494, 113 + i * 9.5, odds, LIGHT, 7.5, 'end'); });
+  s += `<text x="437" y="72" class="da-neon" fill="${PINK2}" font-size="15" text-anchor="middle" style="stroke:${PINK2};stroke-width:4;opacity:0.22">燈籠馬場</text><text x="437" y="72" class="da-neon" fill="${mix(PINK2, '#ffffff', 0.35)}" font-size="15" text-anchor="middle">燈籠馬場</text>`;
+  s += sign(352, 92, '馬場', LIGHT, 12) + `<circle cx="352" cy="104" r="20" fill="${LIGHT}" opacity="0.1" />`;
   // The course: the turf under the lights, the white rail, the far rail, the inner field.
   s += poly([[0, 158], [720, 152], [720, RAIL], [0, RAIL]], '#1f4a2a') + poly([[0, 158], [720, 152], [720, 160], [0, 166]], lt('#1f4a2a', 0.3));
   s += rect(0, 162, W, 1.2, '#e9e2cf', 'opacity="0.7"') + rect(0, RAIL - 3, W, 2, '#f7efc8');
@@ -678,6 +686,19 @@ export function basinScene() {
   };
   s += horse(150, 176, '#d42a48', 0.9) + horse(200, 182, '#f2d541') + horse(236, 172, '#3de8d8', 0.85) + horse(282, 186, '#b48cff', 1.05);
   s += `<path d="M310 196 Q360 192 420 198" stroke="#c9b48a" stroke-width="6" fill="none" opacity="0.08" />`; // kicked-up dust
+  // Camera drones filming the race (owner, 2026-10-29): little quadcopters pacing the horses, each
+  // with its lens on them in a faint cone, rotors blurred, a red recording light.
+  const camDrone = (dx, dy, ax, ay, sc = 1) => {
+    let o = `<path d="M${dx} ${dy + 2 * sc} L${ax - 14} ${ay} L${ax + 14} ${ay} Z" fill="#f7efc8" opacity="0.05" />`;
+    o += `<g transform="translate(${dx} ${dy}) scale(${sc})">`;
+    for (const rx of [-8, 8]) o += `<ellipse cx="${rx}" cy="-3" rx="5.5" ry="1.2" fill="#c9d3e0" opacity="0.18" /><rect x="${rx - 0.5}" y="-3" width="1" height="2.4" fill="#3a3f4a" />`;
+    o += `<rect x="-8" y="-1" width="16" height="1.4" fill="#3a3f4a" /><path d="M-4 -1.6 L4 -1.6 L5 2 L-5 2 Z" fill="#23262e" /><path d="M2 -1.6 L4 -1.6 L5 2 L3 2 Z" fill="${lt('#23262e', 0.5)}" />`;
+    o += `<circle cx="0" cy="3.4" r="1.6" fill="#14171d" /><circle cx="0.4" cy="3.4" r="0.6" fill="#3de8d8" />`;
+    o += `<circle cx="-3" cy="-0.2" r="2.6" fill="#ff3d5f" opacity="0.3" /><circle cx="-3" cy="-0.2" r="0.8" fill="#ff3d5f" />`; // recording
+    o += `<circle cx="-8" cy="-3" r="1.6" fill="#3de8d8" opacity="0.35" /><circle cx="8" cy="-3" r="1.6" fill="#3de8d8" opacity="0.35" />`; // rotor tips
+    return o + '</g>';
+  };
+  s += camDrone(186, 146, 176, 186, 1.8) + camDrone(266, 134, 252, 180, 1.6) + camDrone(340, 152, 304, 196, 2) + camDrone(600, 120, 560, 206, 1.2) + camDrone(118, 92, 100, 140, 1.1);
   // The Old Stand on the left: an iron roof on slim columns, pennants, rows of people under it.
   s += rect(0, 118, 236, 42, '#1d1a1a');
   for (let row = 0; row < 4; row++) for (let hx = 6 + (row % 2) * 4; hx < 226; hx += 8) s += `<circle cx="${hx}" cy="${128 + row * 8}" r="2.6" fill="${dk(['#3a2e2a', '#2a2f38', '#3a3240'][(hx + row) % 3], 0.2)}" /><path d="M${hx + 1} ${125.5 + row * 8} A2.6 2.6 0 0 1 ${hx + 1} ${130.5 + row * 8} Z" fill="${lt('#3a2e2a', 0.5)}" />`;

@@ -5,6 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-29 · The Basin in neon
+- The Basin's odds board now glows in pink and orange neon under the course's name, and little camera drones fly alongside the horses, filming the race.
+
 ## 2026-10-29 · Every district has its picture
 - Tap Old Town, the Night Market, Glass Heights or the Basin on the City map and its card now opens on a picture, like the Docks: Auntie Fung's tea shop and joss paper burning in a bin; the Neon Dragon's wok fire under a sky of neon; Veridian-Apex's tower and a security drone sweeping the plaza; race night at Lantern Course under the floodlights.
 
