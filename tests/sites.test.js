@@ -57,6 +57,14 @@ for (const { key: district, variant, site } of allSites()) {
     assert.equal(site.labels.filter((l) => l.hi).length, 1, 'one target label');
   });
 
+  test(`${key}: every zone has a guard post, on the map and in the zone's camera view`, () => {
+    for (const zone of ['in', 'inside', 'target']) {
+      const p = site.posts?.[zone];
+      assert.ok(p && onMap(p), `${zone} post`);
+      assert.ok(inBox(p, site.views[zone]), `${zone} post in view`);
+    }
+  });
+
   test(`${key}: camera views are 3:2, on the map, and show their zone`, () => {
     for (const zone of ['in', 'inside', 'target']) {
       const [x, y, w, h] = site.views[zone];

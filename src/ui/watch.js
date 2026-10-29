@@ -16,6 +16,7 @@ import { needsPlayer } from '../core/autorun.js';
 import { ALERT_MAX, OVERWATCH_KIT, ZONES } from '../core/incidents.js';
 import { sitePlanSvg, bindSitePlan, siteFor } from './siteplan.js';
 import { templateById } from '../core/jobs.js';
+import { guardPosts } from '../core/battle.js';
 
 const FAST = 0.35;
 // How long each kind of moment stays before the next step (ms at normal speed): routine moments
@@ -169,6 +170,7 @@ function sync(state, { animate }) {
     }
   }
   for (const e of am.events ?? []) if (e.injury) live.plan.hurt(e.injury.id, e.injury.severity);
+  live.plan.posts(guardPosts(am)); // the guards still ahead, on their posts
   if (fresh.length && follow) feed.lastElementChild?.scrollIntoView?.({ block: 'nearest', behavior: animate && speed === 1 && !matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto' });
   else if (fresh.length) {
     live.unseen += fresh.length;

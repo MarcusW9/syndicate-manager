@@ -71,6 +71,10 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - The planning screen now says how a fight would go for each danger ("If it comes to a fight: low risk"), worked out from the same rules.
 - Fixed: a one-person crew who pushed on with a critical wound could freeze the game at the next crisis.
 
+## 2026-10-29 · More guards, and you can see them coming
+- Bigger jobs bring more guards to a fight (up to four), each a bit easier to drop, so rounds where two go down, or the last one runs, happen more often. Gear still makes the difference.
+- Before the crew gets there, the guards they'll meet wait on the map in their spot, with a number for how many. They're the real ones: if it comes to a fight there, that's who you'll fight.
+
 ## 2026-10-29 · Jobs look like where they happen
 - Some jobs now have their own place on the map: Clinic Night is Doc Siu's clinic down Block 9's stairwell, Submerged Cable is the cable hut on Pier 12, Container 409 is the container itself.
 - The Docks also varies from job to job: two ways in (the gate, or the quay at the harbour end) and two ways the yard is stacked, both full of containers and crates. Each job keeps the same layout whenever you look at it, and two jobs can differ.

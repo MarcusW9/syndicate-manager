@@ -15,7 +15,7 @@
 
 import { BATTLE } from '../data/battle.js';
 import { GEAR, TIERS } from '../data/gear.js';
-import { ZONES } from '../data/incidents.js';
+import { ZONES, INCIDENTS } from '../data/incidents.js';
 import { carried, itemName, overwatchKit, patchBonus } from './gear.js';
 import { effectiveStat } from './crew.js';
 import { d20, makeRng } from './rng.js';
@@ -31,6 +31,24 @@ const step = (item) => TIERS[item?.tier]?.step ?? 0;
  * whatever the roll. After that the usual rule holds: only an unsaved failure starts one.
  */
 export const loudFightDue = (am, inc) => Boolean((am.approach === 'loud' || am.wentLoud) && inc.danger && inc.guards && !am.fought);
+
+/**
+ * The guards a run will meet, for the plan to show on their posts before they come into it (shown
+ * equals used): each danger incident still ahead in the queue, with as many guards as its fight
+ * would start with. Once the crew has gone loud, what's left short of the target is a guard, as in
+ * runIncident. [{ step, zone, incident, guards }].
+ */
+export function guardPosts(am) {
+  if (!am || am.done) return [];
+  const out = [];
+  (am.queue ?? []).forEach((q, i) => {
+    if (i < am.step || q.type !== 'incident') return;
+    const id = am.wentLoud && q.zone !== 'target' && !INCIDENTS[q.id]?.danger ? 'guard' : q.id;
+    const inc = INCIDENTS[id];
+    if (inc?.danger && inc.guards) out.push({ step: i, zone: q.zone, incident: id, guards: guardsFor(am.threat ?? 1, inc.guards).length });
+  });
+  return out;
+}
 
 /** Their health in a fight: base + cool. */
 export const maxHp = (op) => BATTLE.hp + Math.floor((op.stats.cool ?? 0) / BATTLE.hpPerCool);
@@ -48,10 +66,10 @@ export function armourOf(op) {
   return item ? { name: itemName(item), value: GEAR[item.type].armour + step(item) } : { name: null, value: 0 };
 }
 
-/** The guards a fight starts with: the incident's count (one more on threat 4+), toughened by threat. */
+/** The guards a fight starts with: the incident's count, more on bigger work (at most maxGuards), toughened by threat. */
 export function guardsFor(threat, count) {
   const t = Math.max(1, Math.min(5, Math.round(threat)));
-  const n = count + (t >= BATTLE.extraGuardFrom ? 1 : 0);
+  const n = Math.min(BATTLE.maxGuards, count + BATTLE.extraGuards[t]);
   return Array.from({ length: n }, (_, i) => ({ n: i + 1, hp: BATTLE.guardHp[t], max: BATTLE.guardHp[t], armour: BATTLE.guardArmour[t], damage: BATTLE.guardDamage[t], out: false }));
 }
 
@@ -207,11 +225,12 @@ export function playRound(b, rng) {
     if (!t) break;
     lines.push(guardAttack(b, g, t, rng, down));
   }
-  // Morale (after Battle Brothers): the last guard standing, badly hurt, breaks and runs for it.
+  // Morale (after Battle Brothers): a badly hurt guard breaks and runs when they're the last one up,
+  // or once half their side is down.
   let fled = false;
   const left = up(b);
-  if (left.length === 1 && left[0].hp < left[0].max * BATTLE.breakBelow && standing(b).length) {
-    const g = left[0];
+  const broken = left.length === 1 || b.guards.length - left.length >= Math.ceil(b.guards.length / 2);
+  for (const g of broken && standing(b).length ? left.filter((x) => x.hp < x.max * BATTLE.breakBelow) : []) {
     g.out = true;
     g.fled = true;
     fled = true;

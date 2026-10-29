@@ -859,6 +859,8 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .sp-hp.is-low rect.is-on { fill: var(--warn); } .sp-hp.is-crit rect.is-on { fill: var(--danger); }
 .sp-enemy .sp-hp rect.is-on { fill: var(--danger); }
 .sp-enemy--guard circle { fill: #9b2f3f; }
+/* A guard on their post, waiting (the number is how many): dim until the crew reaches them. */
+.sp-enemy--post circle { fill: #3a1820; stroke: var(--danger); stroke-width: 1; stroke-dasharray: 2 1.5; } .sp-enemy--post text { fill: #ff8a98; }
 /* A fight's health chips, in a round card's summary and at the call-in: sharp tags in display caps. */
 .wf-hp { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 0; }
 .wf-chip { font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 1px 7px; border: 1px solid var(--line); color: var(--muted); border-radius: var(--radius); }

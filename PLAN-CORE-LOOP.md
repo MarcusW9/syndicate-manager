@@ -155,8 +155,9 @@ only when something big happens. Designed with the owner on 2026-10-29 (DESIGN.m
 - **Who:** the inside team still standing, overwatch if it can see the zone and has uses left
   (one shot or drone action a round, spent from its uses: heat and neural load as before), and
   Wheels, who can bring the van round once (then pulling back costs no parting shots).
-- **Health:** runners have 10 + cool/4 HP (3 less if already lightly hurt). Guards by threat:
-  HP 4-8, armour 0/0/1/1/2, damage 2-4. Guns are standard (WORLD.md): no weapon means a street
+- **Health:** runners have 10 + cool/4 HP (3 less if already lightly hurt). Guards by threat
+  (2026-10-29: more of them, each lighter): HP 4/4/5/5/6, armour only on threat 5 (1), damage 2-3; count
+  the incident's 1-2 plus 0/0/0/1/1/2 by threat, at most 4. Guards still ahead wait on their posts on the map. Guns are standard (WORLD.md): no weapon means a street
   piece (2); sidearm 3, rifle 5 and drone taser 3 from overwatch; pro gear +1.
 - **Armour, first version: XCOM's flat soak** (owner's call, 2026-10-29: "see how it plays
   out"). Each point takes 1 off every hit, and **a hit that lands always does at least 1**.

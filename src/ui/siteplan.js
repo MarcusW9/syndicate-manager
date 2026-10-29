@@ -238,7 +238,32 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
     }
   }
 
+  // Guards on their posts: the guards the run will meet (core/battle.js guardPosts), waiting in their
+  // zone with how many there are, until the crew comes to them. One token per incident, keyed by its
+  // step in the queue; a post whose moment has come fades out (the incident or the fight takes over).
+  const postNodes = new Map();
+  function setPosts(list) {
+    const want = new Set(list.map((p) => p.step));
+    for (const [step, node] of postNodes) {
+      if (want.has(step)) continue;
+      node.classList.add('is-gone');
+      setTimeout(() => node.remove(), 600);
+      postNodes.delete(step);
+    }
+    const nth = {};
+    for (const p of list) {
+      const i = (nth[p.zone] = (nth[p.zone] ?? -1) + 1);
+      const spot = site.posts?.[p.zone];
+      if (!spot || postNodes.has(p.step)) continue;
+      const node = spawn([spot[0] + i * 15, spot[1]], 'sp-enemy sp-enemy--post', String(p.guards));
+      node.setAttribute('aria-hidden', 'true');
+      postNodes.set(p.step, node);
+    }
+  }
+
   return {
+    /** The guards waiting on their posts (core/battle.js guardPosts). */
+    posts: setPosts,
     /** A fight on the plan: the guards appear (start), a round plays out, pulling back or the end clears it. */
     async fight(c) {
       if (c.phase === 'start') { clearFight(); showFight(c); await wait(500); return; }
