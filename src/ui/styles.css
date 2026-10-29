@@ -211,9 +211,10 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .clientstrip { list-style: none; margin: 0; padding: 0 0 4px; display: flex; gap: 8px; overflow-x: auto; }
 .clientchip { flex: 0 0 auto; display: grid; gap: 2px; padding: 8px 12px; border: 1px solid var(--line); font-size: 0.85rem; }
 .clientchip .trust { font-size: 0.75rem; }
-/* Wide screens: the board stays beside the job being planned. Phones: the plan replaces it. */
+/* Wide screens: the board stays beside the job being planned. Phones and tablets: the plan replaces
+   it, with a back button (owner, 2026-10-29: at iPad width the plan was squeezed; 1100px became 1400px). */
 .jobsplit__list { display: none; }
-@media (min-width: 1100px) {
+@media (min-width: 1400px) {
   .main--wide.main--split { max-width: 1440px; }
   .jobsplit { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 20px; align-items: start; }
   .jobsplit__list { display: block; position: sticky; top: 84px; max-height: calc(100dvh - 100px); overflow-y: auto; }
@@ -719,13 +720,16 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .dossier > * { max-width: 100%; }
 .dossier::before { content: ""; position: absolute; top: 5px; left: 50%; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: var(--pin, var(--accent)); box-shadow: 0 2px 2px rgba(0, 0, 0, 0.5); }
 .dossier__photo .face { outline: 3px solid #fff; }
-.dossier__name { font-weight: 700; font-size: 0.98rem; line-height: 1.05; overflow-wrap: anywhere; }
+/* Names and slot labels shrink to fit their card instead of breaking mid-word (owner, 2026-10-29:
+   "Overcloc k", OVERWATCH running out of its slot). The card is a size container for this. */
+.dossier { container-type: inline-size; }
+.dossier__name { font-weight: 700; font-size: min(0.98rem, 15cqi); line-height: 1.05; overflow-wrap: normal; word-break: keep-all; white-space: nowrap; }
 .dossier__real { font-size: 0.66rem; color: #5a5f6c; }
 .dossier__note { font: 500 0.62rem ui-monospace, 'SF Mono', Menlo, monospace; text-transform: uppercase; letter-spacing: 0.04em; color: #4a4f5c; }
 .dossier__tag { font: 600 0.58rem ui-monospace, 'SF Mono', Menlo, monospace; text-transform: uppercase; color: #fff; background: #1b1d22; border-radius: 3px; padding: 1px 5px; }
 .dossier.is-empty { background: transparent; color: var(--muted); border: 2px dashed #3a4254; box-shadow: none; align-content: center; transform: none; }
 .dossier.is-empty::before { display: none; }
-.dossier.is-empty b { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; }
+.dossier.is-empty b { font-size: min(0.72rem, 12.5cqi); letter-spacing: min(0.12em, 1.2cqi); text-transform: uppercase; white-space: nowrap; }
 .dossier.is-empty small { font-size: 0.68rem; padding: 0 4px; }
 .dossier__sil { width: 40px; height: 40px; border-radius: 50%; border: 2px dashed #3a4254; display: grid; place-items: center; font-size: 1.3rem; color: #4a5266; }
 .kitpick { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 3px; }

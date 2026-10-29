@@ -5,6 +5,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-29 · Room to plan on a tablet
+- On an iPad (and any screen narrower than 1400px), opening a job now gives the plan the whole screen, with a back button to the job list, as on a phone. Wide desktop screens keep the list beside the plan.
+- Runner names on the squad board no longer break mid-word, and the OVERWATCH, WHEELS and STANDBY labels always fit their slots.
+
 ## 2026-10-29 · A cleaner City map
 - The map no longer draws lines round the coast and the districts. Like the district pictures, the land is shaped by light and shadow, and districts meet at a dark gap. The district you pick lights up in its gang's colour.
 
