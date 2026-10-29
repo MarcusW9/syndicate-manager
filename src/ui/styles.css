@@ -732,6 +732,24 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .dossier.is-empty b { font-size: min(0.72rem, 12.5cqi); letter-spacing: min(0.12em, 1.2cqi); text-transform: uppercase; white-space: nowrap; }
 .dossier.is-empty small { font-size: 0.68rem; padding: 0 4px; }
 .dossier__sil { width: 40px; height: 40px; border-radius: 50%; border: 2px dashed #3a4254; display: grid; place-items: center; font-size: 1.3rem; color: #4a5266; }
+/* Four or more inside on a phone: two to a row, each card turned landscape (photo left, name and
+   numbers right) so names and stats stay full size (owner, 2026-10-29: "quite tight here maybe we
+   can have 2 on a row"). Measured on the board, so a narrow plan pane on a tablet gets it too. */
+.board { container: board / inline-size; }
+@container board (max-width: 520px) {
+  .dossiers--pairs { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); row-gap: 12px; }
+  .dossiers--pairs .dossier { grid-template-columns: auto minmax(0, 1fr); grid-auto-flow: dense; justify-items: start; align-content: center; column-gap: 9px; row-gap: 1px; min-height: 92px; padding: 14px 9px 9px; text-align: left; }
+  .dossiers--pairs .dossier__photo { grid-column: 1; grid-row: 1 / span 4; align-self: center; }
+  .dossiers--pairs .dossier > :not(.dossier__photo):not(.dossier__sil) { grid-column: 2; }
+  .dossiers--pairs .dossier__name { font-size: min(1.05rem, 13cqi); }
+  .dossiers--pairs .dossier__real { font-size: 0.72rem; }
+  .dossiers--pairs .dossier__note { font-size: min(0.66rem, 7.4cqi); white-space: nowrap; }
+  .dossiers--pairs .dossier__photo .face { width: 44px; height: 44px; }
+  .dossiers--pairs .dossier.is-empty { grid-template-columns: auto minmax(0, 1fr); }
+  .dossiers--pairs .dossier.is-empty .dossier__sil { grid-column: 1; grid-row: 1 / span 2; width: 36px; height: 36px; }
+  .dossiers--pairs .dossier.is-empty b { font-size: 0.72rem; }
+  .dossiers--pairs .dossier.is-empty small { padding: 0; }
+}
 .kitpick { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 3px; }
 .kitpick__btn { min-height: var(--tap); background: transparent; border: 0; border-radius: 7px; color: var(--muted); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
 .kitpick__btn.is-on { background: #16262a; color: var(--accent-2); box-shadow: inset 0 0 0 1px var(--accent-2); }

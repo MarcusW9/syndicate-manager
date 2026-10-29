@@ -5,6 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-29 · Four inside fits on a phone
+- When four or more people go inside, the planning board on a phone now shows two cards to a row, each laid sideways (photo on the left, name and number on the right), so names and stats are full size instead of squeezed into four narrow cards. Three inside, tablets and desktop look as before.
+
 ## 2026-10-29 · Change gear while they rest
 - You can now change someone's gear while they're resting, hurt, or back tomorrow from a job. Gear only stays locked while they're out on a job that hasn't finished (including hands-off jobs and side tasks, which play out when they're back).
 
