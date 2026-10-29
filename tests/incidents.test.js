@@ -86,9 +86,13 @@ test('an incident never kills and never makes anyone critical (3,000 runs, every
 });
 
 test('every decision a run stops for has an exit, and taking it brings everyone home', () => {
-  let seen = { alert: 0, injury: 0 };
-  for (let seed = 1; seed <= 600 && (seen.alert < 5 || seen.injury < 5); seed++) {
-    let s = begin(seed, 'warehouse', APPROACH_IDS[seed % 4], { n: 1 });
+  // Slice 6: an unsaved danger incident is a fight now, so the hurt call-ins are mostly a fight's
+  // (death's door, guards still standing) and a serious wound after one.
+  let seen = { alert: 0, injury: 0, door: 0, standoff: 0 };
+  const hurt = () => seen.injury + seen.door + seen.standoff;
+  for (let seed = 1; seed <= 600 && (seen.alert < 5 || hurt() < 5); seed++) {
+    // Two inside on some runs: someone alone who goes down in a fight is dragged out without a call.
+    let s = begin(seed, 'warehouse', APPROACH_IDS[seed % 4], { n: 1 + (seed % 2) });
     for (let g = 0; g < 160 && !s.activeMission.done && !s.activeMission.pending; g++) {
       const next = autoStep(s, { force: true });
       if (next === s) break;
@@ -106,7 +110,7 @@ test('every decision a run stops for has an exit, and taking it brings everyone 
     assert.equal(out.activeMission.aborted, true);
     assert.deepEqual(out.activeMission.result.deaths, []);
   }
-  assert.ok(seen.alert >= 5 && seen.injury >= 5, `saw ${JSON.stringify(seen)}`);
+  assert.ok(seen.alert >= 5 && hurt() >= 5, `saw ${JSON.stringify(seen)}`);
 });
 
 test('a hands-off crew decides every decision and still never loses anyone', () => {
@@ -193,7 +197,9 @@ test('saves happen, use up the kit, and the overwatch person is on the job: away
     const s = M.startMission(g, g.jobs[0].id, [g.crew[0].id], 'loud', { overwatch: { id: ow.id, kit: seed % 2 ? 'rifle' : 'drone' } });
     const { state } = playMission(s, carefulPolicy);
     const am = state.activeMission;
-    const used = am.events.filter((e) => e.kind === 'save' && e.via === 'overwatch').length;
+    // Saves, and shots in a fight (slice 6), each use one.
+    const used = am.events.filter((e) => e.kind === 'save' && e.via === 'overwatch').length
+      + am.events.filter((e) => e.kind === 'battle').flatMap((e) => e.lines ?? []).filter((l) => l.kind === 'overwatch').length;
     assert.equal(am.overwatch.left, OVERWATCH_KIT[am.overwatch.kit].uses - used);
     saves += used;
     const op = state.crew.find((o) => o.id === ow.id);

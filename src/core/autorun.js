@@ -2,8 +2,8 @@
 // the player reads the report. Pure logic. Same engine, same dice, same consequences as a
 // played job (mission.js); the orders only decide which choice to take.
 //
-// Death rule: a hands-off crew never pushes on. At any critical state it extracts, so a
-// hands-off job can't kill anyone (DESIGN.md, 2026-10-26).
+// Death rule: a hands-off crew never pushes on. At any critical state it extracts, and at death's
+// door in a fight it pulls back, so a hands-off job can't kill anyone (DESIGN.md, 2026-10-26).
 //
 // Timing: sendOff starts the job and sets it aside (state.awayJobs, save v17) with the crew
 // away; returnCrews plays it out on the day they get back, so pay, heat and injuries land
@@ -13,7 +13,7 @@
 // on its own; needsPlayer says when the run waits for the player (a call-in).
 
 import { templateById } from './jobs.js';
-import { crisisOdds, chooseOption, revealBeat, resolveCritical, currentStep, startMission, closeMission, enterZone, runIncident, resolvePending, describePending, RISKY_BELOW } from './mission.js';
+import { crisisOdds, chooseOption, revealBeat, resolveCritical, currentStep, startMission, closeMission, enterZone, runIncident, runBattle, resolvePending, describePending, RISKY_BELOW } from './mission.js';
 import { ordersDecision } from './incidents.js';
 
 const pct = (n) => `${Math.round(n * 100)}%`;
@@ -119,6 +119,7 @@ export function autoStep(prev, { force = false } = {}) {
   if (type === 'beat') return revealBeat(s);
   if (type === 'zone') return enterZone(s);
   if (type === 'incident') return runIncident(s);
+  if (type === 'battle') return runBattle(s);
   if (type === 'crisis') {
     const { id, why } = decide(s, orders);
     am.nextWhy = why;

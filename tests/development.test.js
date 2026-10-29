@@ -104,6 +104,7 @@ test('a failed roll still teaches the roller', () => {
     const job = s.jobs.find((j) => j.templateId === 'warehouse');
     s = M.startMission(s, job.id, s.crew.slice(0, 4).map((o) => o.id), 'loud');
     s = toCrisis(s);
+    if (!M.describeCrisis(s)) continue; // the run ended first (a fight pulled back, slice 6)
     const choice = M.describeCrisis(s).choices.find((c) => c.available && !['abort', 'extract'].includes(c.kind) && c.risk !== 'certain');
     const [, handle, stat] = choice.riskReason.match(/^(.+?) on (\w+) \(/);
     const progressOf = (st) => { const o = st.crew.find((x) => x.handle === handle); return o.stats[stat] * 1000 + (o.progress[stat] ?? 0); };

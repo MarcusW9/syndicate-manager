@@ -11,6 +11,7 @@ import { availability, MAX_EXTRA_CREW } from './crew.js';
 import { jobView } from './jobs.js';
 import { intelFor } from './sidetasks.js';
 import { WATCHED_PENALTY } from './heat.js';
+import { battleOdds } from './battle.js';
 
 const ZONE_NOTE = { in: 'The way in', inside: 'Inside', target: 'The target' };
 const RISK_ORDER = ['low', 'moderate', 'high', 'extreme'];
@@ -28,11 +29,12 @@ export function likelyIncidents(approach) {
 
 /**
  * The coverage read: for each likely incident, who would handle it, their odds, and (for danger)
- * the odds once the best save is counted. crew: the inside team (operatives). overwatch: { op, kit }
- * (only counts if they carry that kit).
+ * the odds once the best save is counted and, if that fails too, how the fight goes (slice 6:
+ * core/battle.js battleOdds, the run's own round function). crew: the inside team (operatives).
+ * overwatch: { op, kit } (only counts if they carry that kit). wheels: the driver in the van.
  * Returns { rows, spotted, toughest }.
  */
-export function coverage(template, crew, approach, { threat = template.threat, overwatch = null, intel = null } = {}) {
+export function coverage(template, crew, approach, { threat = template.threat, overwatch = null, intel = null, wheels = null } = {}) {
   const am = { threat, alert: 0 };
   const kit = overwatch?.op ? overwatchKit(overwatch.op, overwatch.kit) : null;
   const ow = kit ? { kit: overwatch.kit, left: kit.uses } : null;
@@ -43,12 +45,16 @@ export function coverage(template, crew, approach, { threat = template.threat, o
     const h = crew.length ? handlerFor(crew, inc, diff, { approach, recommended: template.crewSize, intel }) : null;
     if (!h) return { ...base, handler: null, chance: 0, risk: 'extreme', withSave: null, effective: 'extreme', gap: true };
     const save = inc.danger ? bestSave({ victim: h.roll.op, able: crew, overwatch: ow, overwatchOp: ow ? overwatch.op : null, zone, diff }) : null;
-    const eff = save ? h.chance + (1 - h.chance) * save.chance : h.chance;
+    // Unsaved danger becomes a fight: a fight won with nobody at death's door counts as getting through.
+    const fight = inc.danger && inc.guards ? battleOdds({ incident: id, zone, diff, threat, guards: inc.guards, crew, approach, overwatchOp: ow ? overwatch.op : null, ow, wheels }) : null;
+    const missed = save ? (1 - h.chance) * (1 - save.chance) : 1 - h.chance;
+    const eff = 1 - missed * (fight ? 1 - fight.win : 1);
     return {
       ...base,
       handler: { op: h.roll.op, stat: h.stat, value: h.roll.value, notes: h.roll.notes },
       chance: h.chance, risk: riskLabel(h.chance),
       withSave: save ? { via: save.via, op: save.op, chance: save.chance } : null,
+      fight: fight ? { ...fight, chance: missed } : null,
       effective: riskLabel(eff), gap: riskLabel(eff) === 'extreme',
     };
   });
@@ -60,7 +66,7 @@ export function coverage(template, crew, approach, { threat = template.threat, o
 function squadScore(template, crew, approach, overwatch, threat) {
   if (!crew.length) return 0;
   const { rows } = coverage(template, crew, approach, { threat, overwatch });
-  const odds = rows.map((r) => (r.handler ? r.chance + (r.withSave ? (1 - r.chance) * r.withSave.chance : 0) : 0));
+  const odds = rows.map((r) => (r.handler ? 1 - (r.fight ? r.fight.chance * (1 - r.fight.win) : (1 - r.chance) * (1 - (r.withSave?.chance ?? 0))) : 0));
   const target = rollTarget({ ...template, threat });
   for (const stat of template.keyStats) {
     const roll = crewRoll(crew, stat, { approach, recommended: template.crewSize });
@@ -128,7 +134,7 @@ export function planRead(state, job, { crew, approach, overwatch = null, kit = n
   const intel = intelFor(state, v.tpl.district);
   const read = assessJob(tpl, crew, approach, { watched: state.heatWatched ? WATCHED_PENALTY : 0, intel, wheels });
   const owKit = overwatch && (kitsFor(overwatch).includes(kit) ? kit : kitsFor(overwatch)[0]);
-  const cov = coverage(tpl, crew, approach, { threat: v.threat, overwatch: owKit ? { op: overwatch, kit: owKit } : null, intel });
+  const cov = coverage(tpl, crew, approach, { threat: v.threat, overwatch: owKit ? { op: overwatch, kit: owKit } : null, intel, wheels });
   const level = crew.length && RISK_ORDER.indexOf(cov.toughest) > RISK_ORDER.indexOf(read.level) ? cov.toughest : read.level;
   return { level, read, cov };
 }

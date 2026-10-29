@@ -5,10 +5,10 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 ## State
 
 - **`main`:** up to [#28](https://github.com/MarcusW9/syndicate-manager/pull/28) (play-test fixes and the City map design session). **Branch `claude/jolly-keller-6eqry7`** carries the founder pick (not yet in a PR). Pushes after a PR is merged stay on the branch: check a PR is still open before adding to it; if it was merged, merge `main` in (`git merge -s ours origin/main` when the trees already match) and carry on.
-- **The game is becoming the squad run** (`PLAN-CORE-LOOP.md`, the build order; `drafts/core-loop.md`, how we got there). **Slices 1-5 are built** (the engine; the squad board and the watch screen; Wheels and standby; a site plan per district, with district incident text; gear and the first specialisations). Slice 6, battles, is to design.
+- **The game is becoming the squad run** (`PLAN-CORE-LOOP.md`, the build order; `drafts/core-loop.md`, how we got there). **Slices 1-5 are built** (the engine; the squad board and the watch screen; Wheels and standby; a site plan per district, with district incident text; gear and the first specialisations). **Slice 6a, the battle engine, is built** (2026-10-29, branch `claude/great-brown-xaye3r`): `core/battle.js`, numbers in `data/battle.js`, tuned with `node scripts/sim-battles.mjs`; fights show as plain cards on the watch feed. 6b, the watch screen's own look for fights, is next.
 - **Design review:** `STATE-OF-PLAY.md` (2026-10-26) and the owner's calls on it (in the file and in DESIGN.md). Read it instead of re-assessing.
 - **New games start with three founders picked from six** (`startCrew: 'pick'`, `chooseFounders`). Most rule tests still use the five-rookie `'fresh'` crew as a fixture.
-- **Tests:** 320 passing. **Save format v25.**
+- **Tests:** 333 passing. **Save format v26.**
 
 ## What the 2026-10-26/27 session did
 
@@ -17,6 +17,7 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 - **Prototypes** (`drafts/prototypes/`, published as artifacts): v1 plan-watch-report, then v2 with the squad board, coverage read, incidents, saves, alert, standby and an animated site-plan watch screen. The owner called v2 "pretty damn cool".
 - **Slice 1 in the game:** `src/data/approaches.js`, `src/data/incidents.js`, `src/core/incidents.js`; `core/mission.js` gains zone and incident steps and `am.pending` decisions; `core/autorun.js` gains `autoStep` and `needsPlayer` (one stepper for live and hands-off runs); planning has four approaches, overwatch and "Call me in…"; the mission screen steps with Next. `tests/incidents.test.js` guards the rules.
 - **Slice 2 in the game:** `core/squad.js` (coverage read, Joss's picks), `core/feed.js` (a run's events as watch cards), `ui/board.js` (dossier board, picker sheet, coverage), `ui/siteplan.js` (generic site plan and its animations) and `ui/watch.js` (the timed feed; while a job runs, `app.js` hands it each new state instead of re-rendering). Zones are recorded as events. Tests: `tests/squad.test.js`, `tests/feed.test.js`.
+- **Slice 6a in the game:** an unsaved danger incident starts a fight (`am.battle`, a `battle` step in the queue, `runBattle`); call-ins `door` (death's door: pull back, standby rescue, keep fighting = push on via `am.untreated`) and `standoff` (after round 3) go through `describePending`/`resolvePending`; orders in fights live in `data/battle.js` `orders`. The planning read runs `battleOdds` (the same round function, fixed seeds, cached). Tests: `tests/battle.test.js`.
 - **Slice 3 in the game:** Wheels (optional; takes every driving roll from the van) and standby (called in at max alert, where the alert stays up and they get a second save, or to rescue the badly hurt). Standby joins by being added to `am.crewIds`. Tests: `tests/standby.test.js`.
 
 ## Agreed rules worth remembering
@@ -34,7 +35,7 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 
 1. **Play-test the new start** (three founders, rookie leads at half price). `node scripts/sim-early-game.mjs` measures it: a careful hirer is broke in 3% of runs at week 13. Watch for three founders alone getting too rich (median ¥37,400 at week 26 without hiring).
 2. **City screen rebuild** (designed: DESIGN.md 2026-10-28 rows; `drafts/prototypes/city-map-schematic.html` and `district-docks.html`). Owner still to pick straight or rough coasts and whether the district pictures come now. Needs heat per district (from the design review), not built yet.
-3. **Slice 6, battles** (to design), then gear tuning and the next specialisations: gear can't be tuned until battles give it something to do (owner, 2026-10-28).
+3. **Slice 6b, the watch screen for fights** (HP on the tokens, guard tokens, round pacing), after the owner has played 6a; open calls from 6a for the owner: rookie-tier fights are easy, fight rolls don't count towards earned traits yet (traits fell from 2.5 to 2.2 a week), dropping a weapon at death's door and reinforcements aren't built. Then gear tuning and the next specialisations: battles now give gear something to do (owner, 2026-10-28).
 4. **Small polish:** reloading while the crew calls you in doesn't scroll to the call-in; the reputation gauge (owner wants to revisit; `drafts/prototypes/reputation-gauge-options.html`); the phone planning screen is long.
 5. Then the agreed review items: the neural load and burnout cleanup, mood traits, money pressure, relationships with the career page. Parked: the underground place (below).
 

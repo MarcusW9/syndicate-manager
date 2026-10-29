@@ -35,6 +35,7 @@ export function toCrisis(state, policy = carefulPolicy) {
     else if (type === 'beat') s = M.revealBeat(s);
     else if (type === 'zone') s = M.enterZone(s);
     else if (type === 'incident') s = M.runIncident(s);
+    else if (type === 'battle') s = M.runBattle(s);
     else return s;
   }
   throw new Error('toCrisis got stuck');
@@ -54,14 +55,19 @@ export function playMission(state, policy) {
       s = M.resolveCritical(s, pick);
     } else if (am.pending) {
       // Decisions a run stops for (max alert, a serious injury): the policy picks, or the first option.
+      // Keeping on fighting with someone at death's door is a push on (slice 6).
       const options = M.describePending(s).choices.map((c) => c.id);
-      s = M.resolvePending(s, (policy.pending ?? ((o) => o[0]))(options, guard));
+      const pick = (policy.pending ?? ((o) => o[0]))(options, guard);
+      if (pick === 'fight') pushed = true;
+      s = M.resolvePending(s, pick);
     } else if (type === 'beat') {
       s = M.revealBeat(s);
     } else if (type === 'zone') {
       s = M.enterZone(s);
     } else if (type === 'incident') {
       s = M.runIncident(s);
+    } else if (type === 'battle') {
+      s = M.runBattle(s);
     } else {
       const choices = M.describeCrisis(s).choices.filter((c) => c.available);
       s = M.chooseOption(s, policy.crisis(choices, guard).id);

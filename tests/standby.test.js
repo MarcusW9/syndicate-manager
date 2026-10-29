@@ -38,7 +38,7 @@ function toPending(s, kind) {
   for (let g = 0; g < 160 && !s.activeMission.done; g++) {
     const p = s.activeMission.pending;
     if (p?.kind === kind) return s;
-    if (p) { s = M.resolvePending(s, p.kind === 'injury' ? 'keep' : 'loud'); continue; }
+    if (p) { s = M.resolvePending(s, p.kind === 'injury' ? 'keep' : p.kind === 'alert' ? 'loud' : p.kind === 'standoff' ? 'press' : 'out'); continue; }
     if (s.activeMission.critical) return s;
     const next = autoStep(s, { force: true });
     if (next === s) return s;
@@ -101,9 +101,11 @@ test('standby at max alert: they join the team, the alert stays up, and the next
 
 test('a rescue: standby gets the wounded out and takes their place', () => {
   let seen = 0;
+  // Badly hurt after a fight, or down in one (slice 6): standby can go in either way.
   for (let seed = 1; seed <= 800 && seen < 5; seed++) {
-    let s = toPending(begin(seed, 'warehouse', APPROACH_IDS[seed % 4], { n: 2, standby: true }), 'injury');
-    if (s.activeMission.pending?.kind !== 'injury') continue;
+    const kind = seed % 2 ? 'door' : 'injury';
+    let s = toPending(begin(seed, 'warehouse', APPROACH_IDS[seed % 4], { n: 2, standby: true }), kind);
+    if (s.activeMission.pending?.kind !== kind) continue;
     const patient = s.activeMission.pending.opId;
     assert.ok(M.describePending(s).choices.some((c) => c.id === 'rescue'));
     const sb = s.activeMission.standby.id;
@@ -122,7 +124,8 @@ test('once standby is in, a failed save gets a second try from them, never more'
   let second = 0;
   for (let seed = 1; seed <= 300; seed++) {
     const s = begin(seed, 'warehouse', 'loud', { n: 2, standby: true });
-    const am = autoRun(s, 'steady').activeMission;
+    // Committed: on Steady orders a lost fight ends the job before standby meets another incident (slice 6).
+    const am = autoRun(s, 'committed').activeMission;
     const ev = am.events;
     for (let i = 0; i < ev.length; i++) {
       if (ev[i].kind !== 'save' || ev[i].via !== 'standby') continue;
