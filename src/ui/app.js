@@ -73,6 +73,7 @@ let focusNext = null; // { action, id }: the control to focus after the next ren
 let returnTo = null; // { screen, messageId }: where a runner's page opened from a name link goes back to
 let founderPick = []; // candidate ids picked so far on a new game's first screen (renderFounding)
 let runnersHidden = false; // the job board's runners panel, folded away for this session
+let meetHidden = null; // the plan's "What they'll likely meet" read folded away; null until first shown (folded on phones)
 
 export function mountApp(el, initialState) {
   root = el;
@@ -179,6 +180,7 @@ function onClick(e) {
       break;
     }
     case 'toggle-runners': runnersHidden = !runnersHidden; break;
+    case 'toggle-meet': meetHidden = !meetHidden; break;
     // The squad board (ui/board.js): tap a card, pick who goes there; anyone already placed swaps.
     case 'info': if (openInfo.has(id)) openInfo.delete(id); else openInfo.add(id); break;
     case 'pick-slot': pickSlot = id; break;
@@ -1412,8 +1414,7 @@ function renderPlan() {
       </div>
 
       <div class="plangrid__risk">
-      <h2 id="risk-read">What they'll likely meet</h2>
-      ${renderCoverage(boardUi, cov, { overwatch: owOp, approachName: APPROACHES[plan.approach].name, standby: state.crew.find((o) => o.id === plan.standby) ?? null })}
+      ${renderMeet(cov, owOp)}
       <h2>The crises</h2>
       <div class="riskcard">
         ${picked.length ? `${riskBadge(read.level)}
@@ -1772,6 +1773,18 @@ function renderCity() {
       </div>
       ${body}
     </section>`;
+}
+
+/** The plan's coverage read under a heading that folds it away (owner, 2026-10-29: useful but
+ *  not essential, and long on a phone). Folded by default on phones, open on wider screens; the
+ *  choice holds for the session. Folded, the heading still flags any gap nobody can cover. */
+function renderMeet(cov, owOp) {
+  if (meetHidden === null) meetHidden = !matchMedia('(min-width: 900px)').matches;
+  const gaps = cov.rows.filter((r) => r.gap).length;
+  const peek = meetHidden && gaps ? `<span class="foldh2__peek">${gaps} ${gaps === 1 ? 'gap' : 'gaps'}</span>` : '';
+  return `<h2 id="risk-read" class="foldh2"><button class="foldh2__btn" data-action="toggle-meet" aria-expanded="${!meetHidden}" aria-controls="meet-read">
+        <span>What they'll likely meet</span>${peek}<span class="foldh2__line" aria-hidden="true"></span><span class="foldh2__arrow" aria-hidden="true">▾</span></button></h2>
+      <div id="meet-read" ${meetHidden ? 'hidden' : ''}>${meetHidden ? '' : renderCoverage(boardUi, cov, { overwatch: owOp, approachName: APPROACHES[plan.approach].name, standby: state.crew.find((o) => o.id === plan.standby) ?? null })}</div>`;
 }
 
 function renderSettings() {

@@ -5,6 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-29 · Fold away "What they'll likely meet"
+- On the plan screen, the "What they'll likely meet" read now has an arrow on the right of its heading: tap the heading to fold it away or open it. It starts folded on phones, to cut the scrolling, and open on wider screens; it stays how you left it until you close the game. Folded, the heading still warns you in red if there's a gap nobody can cover.
+
 ## 2026-10-29 · Tabs are off until you pick your crew
 - At the start of a new game, the Crew, Jobs and City tabs are greyed out until you pick your three founders, instead of looking tappable and doing nothing. Save still works, so you can load another game, and Today takes you back to the pick.
 
@@ -12,7 +15,7 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - On iPad and iPhone, the City map and the district picture beside it no longer grow as you scroll and Safari hides its toolbar. They keep the size they open at. The site plan on the watch screen holds still the same way.
 
 ## 2026-10-29 · Four inside fits on a phone
-- When four or more people go inside, the planning board on a phone now shows two cards to a row, each laid sideways (photo on the left, name and number on the right), so names and stats are full size instead of squeezed into four narrow cards. Three inside, tablets and desktop look as before.
+- When the inside team has four or more cards (people plus the empty spare), the planning board on a phone now shows two cards to a row, each laid sideways (photo on the left, name and number on the right), so names and stats are full size instead of squeezed into four narrow cards. The same happens wherever the board is narrow, including the plan column on a wide desktop; the iPad plan, which has the full width, keeps four across.
 
 ## 2026-10-29 · Change gear while they rest
 - You can now change someone's gear while they're resting, hurt, or back tomorrow from a job. Gear only stays locked while they're out on a job that hasn't finished (including hands-off jobs and side tasks, which play out when they're back).

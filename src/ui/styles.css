@@ -619,6 +619,14 @@ h1, h2, .btn, .nav__btn, .row__tag, .tier, .risk, .status, .pill, .stat__label, 
 h1 { font-size: 1.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
 h2 { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; font-weight: 600; letter-spacing: 0.14em; color: var(--accent-2); }
 h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line), transparent); }
+/* A heading that folds its section (the plan's "What they'll likely meet"): the whole line is the tap target, the arrow sits on the right. */
+.foldh2::after { display: none; }
+.foldh2__btn { display: flex; align-items: center; gap: 10px; width: 100%; min-height: var(--tap); padding: 0; background: none; border: 0; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; text-align: left; cursor: pointer; }
+.foldh2__line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--line), transparent); }
+.foldh2__peek { color: var(--danger, #ff3d5f); font-size: 0.75rem; }
+.foldh2__arrow { font-size: 0.9rem; color: var(--muted); transition: transform 0.15s; }
+.foldh2__btn[aria-expanded="false"] .foldh2__arrow { transform: rotate(-90deg); }
+@media (prefers-reduced-motion: reduce) { .foldh2__arrow { transition: none; } }
 .stats dd { font-size: 1.5rem; font-weight: 700; }
 .stats dt { letter-spacing: 0.08em; text-transform: uppercase; }
 

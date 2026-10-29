@@ -124,6 +124,8 @@ try {
         await click('[data-action="callin"][data-id="every"]');
         await page.evaluate(() => document.querySelector('.board')?.scrollIntoView({ block: 'center' }));
         await shot('squad-board');
+        // Folded by default on phones (2026-10-29): open it so this shot still shows the read.
+        await click('[data-action="toggle-meet"][aria-expanded="false"]');
         await page.evaluate(() => document.querySelector('#risk-read')?.scrollIntoView({ block: 'center' }));
         await shot('coverage-read');
         if (await click('[data-action="pick-slot"]')) { await shot('squad-picker'); await click('.sheet [data-action="close-picker"]'); }
