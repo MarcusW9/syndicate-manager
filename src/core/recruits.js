@@ -93,8 +93,9 @@ export function generateRecruit(state, { role: forcedRole, quality: forcedQualit
   const origin = originLine.text.replace('{district}', district);
   const traits = pickTraits(rng, originLine.tags);
 
-  // Market price: rookies ~500, stars cost more. The founding crew work for street wages.
-  const wage = founder ? round50(marketWage({ role, stats }) * ECONOMY.streetWage) : marketWage({ role, stats });
+  // Market price: rookies ~500, stars cost more. The founding crew work for street wages, and
+  // rookie leads for a share of market too (ECONOMY.rookieLeadWage).
+  const wage = round50(marketWage({ role, stats }) * (founder ? ECONOMY.streetWage : quality.id === 'rookie' ? ECONOMY.rookieLeadWage : 1));
 
   const name = `${pick(rng, culture.given)} ${pick(rng, culture.surnames)}`;
   const age = between(rng, quality.age);

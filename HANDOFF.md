@@ -32,7 +32,7 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 
 ## Next
 
-1. **Early-game money** (owner said: rebalance after the sim). `node scripts/sim-early-game.mjs` compares the old five, three without hiring, and three who hire. Three alone get rich; hiring two leads at market wages early goes broke in 10-23% of runs by week 13. Options put to the owner; nothing changed yet.
+1. **Play-test the new start** (three founders, rookie leads at half price). `node scripts/sim-early-game.mjs` measures it: a careful hirer is broke in 3% of runs at week 13. Watch for three founders alone getting too rich (median ¥37,400 at week 26 without hiring).
 2. **City screen rebuild** (designed: DESIGN.md 2026-10-28 rows; `drafts/prototypes/city-map-schematic.html` and `district-docks.html`). Owner still to pick straight or rough coasts and whether the district pictures come now. Needs heat per district (from the design review), not built yet.
 3. **Slice 6, battles** (to design), then gear tuning and the next specialisations: gear can't be tuned until battles give it something to do (owner, 2026-10-28).
 4. **Small polish:** reloading while the crew calls you in doesn't scroll to the call-in; the reputation gauge (owner wants to revisit; `drafts/prototypes/reputation-gauge-options.html`); the phone planning screen is long.
