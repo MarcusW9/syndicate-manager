@@ -5,6 +5,14 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-29 · Rookie hires cost half
+- Rookies the scouts find now ask for about half what they used to (¥200-350 a week instead of ¥400-650), so growing past your three founders is affordable. Pros and veterans cost the same as before, and anyone's pay still goes up at contract time once they've grown.
+
+## 2026-10-28 · Pick your founders
+- A new game now starts with a "Who's in?" screen: six raw rookies who'll work for street wages, one of each kind and one extra. You pick three, and day 1 starts with them. Joss welcomes them by name.
+- Everyone else comes later, through the scouts on Wednesdays and the freelancers on Mondays. Your three cost about ¥750 a week instead of the old five's ¥1,300, so every hire is a real decision.
+- Games already in progress are unchanged (save version 25).
+
 ## 2026-10-28 · No more Continue by mistake while planning
 - While you're planning a job, the Continue button in the top bar is hidden, so the only button that moves things on is Start. Back out of the plan (or change tabs) and Continue returns. Phones already worked this way for main jobs; now desktop and side tasks do too.
 

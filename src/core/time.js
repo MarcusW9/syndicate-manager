@@ -47,7 +47,8 @@ export function formatShortDate(day) {
 
 /** True when a blocking message is waiting, so Continue should not tick. */
 export function isBlocked(state) {
-  return Boolean(state.activeMission) || state.inbox.some((m) => m.blocking && !m.resolved);
+  // A new game waits for the founder pick (state.js chooseFounders).
+  return Boolean(state.activeMission) || Boolean(state.founding) || state.inbox.some((m) => m.blocking && !m.resolved);
 }
 
 /** Advance one day. Returns a new state; never mutates the input. */
