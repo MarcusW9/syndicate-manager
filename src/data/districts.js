@@ -9,3 +9,6 @@ export const DISTRICTS = {
   basin: { faction: 'Racing Association', turf: 'Racing Association ground', pitch: 'A bowl of towers round a floodlit 1891 racecourse, where real horses run and forty thousand people watch the odds change in their eyes.' },
   heights: { faction: 'Veridian-Apex', turf: 'Veridian-Apex ground', pitch: 'Corporate towers in filtered air, where anyone without a pass is treated as a hazard.' },
 };
+
+// Where the crew's safehouse is (the damp room above a noodle shop): its HOME tag on the City map.
+export const SAFEHOUSE_DISTRICT = 'oldTown';

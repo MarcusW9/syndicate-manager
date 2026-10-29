@@ -5,6 +5,33 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-29 · Change gear while they rest
+- You can now change someone's gear while they're resting, hurt, or back tomorrow from a job. Gear only stays locked while they're out on a job that hasn't finished (including hands-off jobs and side tasks, which play out when they're back).
+
+## 2026-10-29 · Room to plan on a tablet
+- On an iPad (and any screen narrower than 1400px), opening a job now gives the plan the whole screen, with a back button to the job list, as on a phone. Wide desktop screens keep the list beside the plan.
+- Runner names on the squad board no longer break mid-word, and the OVERWATCH, WHEELS and STANDBY labels always fit their slots.
+
+## 2026-10-29 · A cleaner City map
+- The map no longer draws lines round the coast and the districts. Like the district pictures, the land is shaped by light and shadow, and districts meet at a dark gap. The district you pick lights up in its gang's colour.
+
+## 2026-10-29 · The Basin in neon
+- The Basin's odds board now glows in pink and orange neon under the course's name, and little camera drones fly alongside the horses, filming the race.
+
+## 2026-10-29 · Every district has its picture
+- Tap Old Town, the Night Market, Glass Heights or the Basin on the City map and its card now opens on a picture, like the Docks: Auntie Fung's tea shop and joss paper burning in a bin; the Neon Dragon's wok fire under a sky of neon; Veridian-Apex's tower and a security drone sweeping the plaza; race night at Lantern Course under the floodlights.
+
+## 2026-10-29 · The new City map
+- The City screen's map is redrawn to match the rest of the game: each district has a small label showing its gang's colour, how much work is on the board, and tags for your safehouse (HOME) and crew out on jobs there. Tap a district (or its label) to pick it.
+- Beside the map (below it on a phone): the district you picked, then the city tonight (every open district's gang, work, street talk and crew out), the city's heat, where your people are and when they're back, and places (the safehouse; a bar and black market are coming later).
+- The Docks' card has a picture: cranes in neon, container 409, red lanterns, a flying car, and the city's neon signs across the harbour.
+
+## 2026-10-29 · Tap a name in a message to see them
+- In an open message, your crew's names are underlined: tap one to open their page, and "← Back to the message" takes you straight back to it.
+- The line under a message's title is capitalised ("Crew · Day 21").
+
+## 2026-10-29 · Renewal numbers line up
+- When someone asks for a new deal, their current wage, what they're asking and their market value now sit in three equal boxes with the numbers on one line, and the loyalty note no longer touches them.
 ## 2026-10-29 · Play offline
 - After you've opened the game once, it opens without a connection too: reload it or open it in a new tab on the train and it's all there, saves included. When there's a new version, the game picks it up in the background and you get it the next time you open it.
 
