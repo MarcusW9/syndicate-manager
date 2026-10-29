@@ -84,12 +84,19 @@ export const patchBonus = (op) => carried(op).reduce((n, i) => n + (GEAR[i.type]
 /** Their implants keep neural load from resting below this. */
 export const neuralFloor = (op) => carried(op).reduce((n, i) => n + (GEAR[i.type]?.neuralFloor ?? 0), 0);
 
-/** Can their loadout change today? Not while they're on a job or away. Returns { ok, reason }. */
+/**
+ * Can their loadout change today? Returns { ok, reason }. Only while they're out on a job whose
+ * outcome isn't settled yet: the live job, a hands-off job (it plays out when they're back, with
+ * what they carry) or a side task. Resting, hurt, or "back tomorrow" after a finished job is fine
+ * (owner, 2026-10-29: "even if they're out of action you should be able to modify them").
+ */
 export function canChangeGear(state, op) {
   const am = state.activeMission;
   const placed = am && !am.done ? [...am.crewIds, am.overwatch?.id, am.wheels, am.standby?.id] : [];
   if (placed.includes(op.id)) return { ok: false, reason: 'on a job' };
-  if ((op.condition?.awayUntil ?? 0) > state.day) return { ok: false, reason: 'away' };
+  const handsOff = (state.awayJobs ?? []).some(({ mission: m }) => [...m.crewIds, m.overwatch?.id, m.wheels, m.standby?.id].includes(op.id));
+  if (handsOff) return { ok: false, reason: 'out on a job' };
+  if ((state.sideOut ?? []).some((t) => t.crewIds.includes(op.id))) return { ok: false, reason: 'out on a side task' };
   return { ok: true, reason: '' };
 }
 

@@ -62,14 +62,24 @@ test('equipping: from the stash into the right slot; what was there goes back; m
   assert.equal(s.stash.length, 2);
 });
 
-test('no changing gear for someone on a job or away', () => {
+// Changed on purpose (owner, 2026-10-29; DESIGN.md): resting or hurt no longer locks gear, only
+// being out on a job whose outcome isn't settled (live, hands-off, or a side task).
+test('no changing gear while out on an unfinished job; resting or hurt is fine', () => {
   let s = buyGear(fresh(), 'pistol');
   s.jobs = []; addOffer(s, 'container409');
-  const [a, b] = s.crew.map((o) => o.id);
+  const [a, b, c] = s.crew.map((o) => o.id);
   const busy = M.startMission(s, s.jobs[0].id, [a, b], 'stealth');
-  assert.equal(equip(busy, busy.stash[0].uid, a), busy, 'on the job');
-  s.crew[2].condition.awayUntil = s.day + 3;
-  assert.equal(equip(s, s.stash[0].uid, s.crew[2].id), s, 'away');
+  assert.equal(equip(busy, busy.stash[0].uid, a), busy, 'on the live job');
+  const away = structuredClone(s);
+  away.awayJobs = [{ returnDay: s.day + 2, mission: { crewIds: [c], overwatch: null, wheels: null, standby: null } }];
+  assert.equal(equip(away, away.stash[0].uid, c), away, 'out on a hands-off job');
+  const side = structuredClone(s);
+  side.sideOut = [{ taskId: 'x', crewIds: [c], returnDay: s.day + 2 }];
+  assert.equal(equip(side, side.stash[0].uid, c), side, 'out on a side task');
+  const resting = structuredClone(s);
+  resting.crew[2].condition.awayUntil = s.day + 1; // back tomorrow after a finished job
+  resting.crew[2].condition.injury = 'serious';
+  assert.notEqual(equip(resting, resting.stash[0].uid, c), resting, 'resting and hurt: gear still changes');
 });
 
 test('gear adds to rolls and says so in the breakdown; a pro item adds one more', () => {
