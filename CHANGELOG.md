@@ -61,6 +61,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - The planning screen now says how a fight would go for each danger ("If it comes to a fight: low risk"), worked out from the same rules.
 - Fixed: a one-person crew who pushed on with a critical wound could freeze the game at the next crisis.
 
+## 2026-10-29 · The Docks look different
+- Jobs in the Docks now come in three yard layouts, not one: the original, a quay-side yard (the van at the harbour end, the office on the left) and a pump house in the middle of the yard. Each job keeps the same layout whenever you look at it, and two jobs can differ. Other districts follow.
+
 ## 2026-10-29 · Rookie hires cost half
 - Rookies the scouts find now ask for about half what they used to (¥200-350 a week instead of ¥400-650), so growing past your three founders is affordable. Pros and veterans cost the same as before, and anyone's pay still goes up at contract time once they've grown.
 

@@ -4,7 +4,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SITES } from '../src/data/sites.js';
+import { SITES, SITE_VARIANTS, allSites, pickSite } from '../src/data/sites.js';
 import { DISTRICTS } from '../src/data/districts.js';
 import { ZONES, INCIDENTS } from '../src/data/incidents.js';
 import { DISTRICT_INCIDENTS } from '../src/data/districtIncidents.js';
@@ -32,7 +32,9 @@ test('every district has a site plan, and there is a generic one for anywhere el
   assert.ok(SITES.generic);
 });
 
-for (const [key, site] of Object.entries(SITES)) {
+// Every base site and every variant is held to the same rules.
+for (const { key: district, variant, site } of allSites()) {
+  const key = variant === 'base' ? district : `${district}/${variant}`;
   test(`${key}: on the map, and the route walks van → in → inside → target → back to the van`, () => {
     const { paths, points } = site;
     for (const zone of ['in', 'inside', 'target', 'out']) {
@@ -118,4 +120,36 @@ test('a district\'s own incident lines are used on its jobs, and the generic one
     seen += 1;
   }
   assert.equal(seen, 1, 'found a Docks job that starts with a lock');
+});
+
+// --- variants (DESIGN.md, 2026-10-29) ----------------------------------------------------------
+
+test('every variant is another layout of the same place: it changes where things are, and keeps the district\'s labels and rules', () => {
+  const variants = allSites().filter((x) => x.variant !== 'base');
+  assert.ok(variants.length >= 2, 'the Docks has its two');
+  for (const { key, variant, site } of variants) {
+    const base = SITES[key];
+    const moved = JSON.stringify([site.points, site.paths]) !== JSON.stringify([base.points, base.paths]);
+    assert.ok(moved, `${key}/${variant}: the target or the route is somewhere else`);
+    assert.notEqual(JSON.stringify(site.shapes), JSON.stringify(base.shapes), `${key}/${variant}: it is drawn differently`);
+    assert.ok(site.name && site.aria, `${key}/${variant}: named, and described for screen readers`);
+    assert.notEqual(site.aria, base.aria);
+  }
+  const ids = variants.map((v) => `${v.key}/${v.variant}`);
+  assert.equal(new Set(ids).size, ids.length, 'no two variants share an id');
+  for (const district of Object.keys(SITE_VARIANTS)) assert.ok(SITES[district], `${district} has a base site`);
+});
+
+test('the site for a job is picked from its id: the same job always gets the same layout, different jobs differ, anywhere else is generic', () => {
+  const kinds = new Map();
+  for (let n = 1; n <= 90; n++) {
+    const site = pickSite('docks', `job-${n}`);
+    assert.equal(JSON.stringify(pickSite('docks', `job-${n}`)), JSON.stringify(site), 'stable');
+    const id = site.variant ?? 'base';
+    kinds.set(id, (kinds.get(id) ?? 0) + 1);
+  }
+  assert.deepEqual([...kinds.keys()].sort(), ['base', 'pump-house', 'quay-gate'], 'every layout comes up');
+  for (const count of kinds.values()) assert.ok(count >= 15, `spread across 90 jobs: ${[...kinds]}`);
+  assert.equal(pickSite('nowhere', 'job-3'), SITES.generic);
+  assert.equal(pickSite('oldTown', 'job-3'), SITES.oldTown, 'a district with no variants always gets its own site');
 });

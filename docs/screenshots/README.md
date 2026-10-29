@@ -22,6 +22,7 @@ Then add a row to the top of the table below and commit the folder with the chan
 
 | Date | Version | Commit | What's new on screen | Folder |
 | --- | --- | --- | --- | --- |
+| 2026-10-29 | Site variants: the Docks' three layouts | (this change; `scripts/preview-sites.mjs`) | The usual set (a stealth job plays on one of the Docks' layouts), and a design-session image: the Docks' base yard, the quay-gate layout and the pump-house layout side by side with the rifle's sight. | [2026-10-29-site-variants](2026-10-29-site-variants/), [2026-10-29-design-session-site-variants](2026-10-29-design-session-site-variants/) |
 | 2026-10-29 | Room above the job result | (this change) | The usual set. 16, the end of a job: the result card now has space between it and the last line of the play-by-play. | [2026-10-29-result-spacing](2026-10-29-result-spacing/) |
 | 2026-10-29 | "What they'll likely meet" folds away | (this change) | The usual set; the coverage-read shot opens the fold first, so it still shows the read. | [2026-10-29-meet-fold](2026-10-29-meet-fold/) |
 | 2026-10-29 | Design session: folding "What they'll likely meet" | (this change) | 01 phone, folded by default (arrow on the right of the heading); 02 phone, opened; 03 desktop, open by default; 04 desktop, folded. | [2026-10-29-design-session-meet-fold](2026-10-29-design-session-meet-fold/) |

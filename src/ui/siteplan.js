@@ -3,7 +3,7 @@
 // what happens there (guards, patrols, cameras, saves). Decoration only: everything shown here is
 // also in the feed as text.
 
-import { SITES } from '../data/sites.js';
+import { SITES, pickSite } from '../data/sites.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const W = 360;
@@ -14,8 +14,8 @@ const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-r
 const initials = (op) => (op.handle ?? '?').split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 const escAttr = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-/** The site for a district, or the generic one. */
-export const siteFor = (district) => SITES[district] ?? SITES.generic;
+/** The site for a job: its district's layout (or one of its variants, picked from the job's id), or the generic one. */
+export const siteFor = (district, jobId) => pickSite(district, jobId);
 
 /** One shape from a site's data as SVG. */
 function shapeSvg(s) {

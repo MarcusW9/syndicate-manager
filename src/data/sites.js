@@ -221,3 +221,110 @@ const BASIN = {
 
 /** Site plans by district key (data/districts.js); `generic` for anywhere without one. */
 export const SITES = { generic: GENERIC, docks: DOCKS, oldTown: OLD_TOWN, nightMarket: NIGHT_MARKET, heights: HEIGHTS, basin: BASIN };
+
+// --- variants (DESIGN.md, 2026-10-29) ----------------------------------------------------------
+// A district's site can have variants: other layouts of the same place, so two jobs in the Docks
+// aren't the same yard. A variant is a patch on the base site: `drop` removes the base shapes with
+// those `cls` (or `id`), `add` draws new ones, and points, paths, views, sight, labels, name and
+// aria replace what they name (points, paths, views and sight merge key by key). Picture only: the
+// core never reads a site, so a variant changes nothing about the odds. Every variant is checked
+// by tests/sites.test.js like a base site.
+
+const QUAY_GATE = {
+  id: 'quay-gate',
+  name: 'a container yard, quay side',
+  aria: 'Site plan of a container yard entered from the quay: the van on the harbour end of the service road, a gate at the far end of the fence, containers stacked in the middle, the yard office on the left, and a crane for overwatch',
+  points: { van: [300, 224], target: [56, 74] },
+  paths: {
+    in: [[300, 224], [282, 224], [282, 196]],
+    inside: [[282, 196], [282, 150], [200, 135], [130, 120]],
+    target: [[130, 120], [96, 98], [56, 74]],
+    out: [[56, 74], [96, 98], [130, 120], [200, 135], [282, 150], [282, 196], [282, 224], [300, 224]],
+  },
+  views: { in: [189, 126, 171, 114], inside: [100, 60, 255, 170], target: [10, 10, 204, 136] },
+  sight: { rifle: [[176, 24], [104, 56], [104, 194], [300, 194], [300, 40]], drone: [[176, 24], [8, 12], [8, 212], [352, 212], [352, 12]] },
+  drop: ['sp-cover', 'sp-fence', 'sp-building', 'sp-door', 'sp-desk'],
+  add: [
+    { t: 'poly', cls: 'sp-fence', points: [[8, 196], [262, 196]] },
+    { t: 'poly', cls: 'sp-fence', points: [[294, 196], [352, 196]] },
+    { t: 'row', cls: 'sp-cover', x: 110, y: 56, w: 27, h: 14, step: 31, n: 4, tones: CONTAINER_TONES },
+    { t: 'row', cls: 'sp-cover', x: 110, y: 96, w: 27, h: 14, step: 31, n: 4, skip: [1], tones: CONTAINER_TONES, shift: 1 },
+    { t: 'row', cls: 'sp-cover', x: 110, y: 150, w: 27, h: 14, step: 31, n: 4, tones: CONTAINER_TONES, shift: 2 },
+    { t: 'rect', cls: 'sp-building', x: 20, y: 38, w: 72, h: 72 },
+    { t: 'rect', cls: 'sp-door', x: 89, y: 94, w: 5, h: 12 },
+    { t: 'rect', cls: 'sp-desk', x: 32, y: 52, w: 20, h: 8 },
+    { t: 'rect', cls: 'sp-desk', x: 62, y: 80, w: 16, h: 16 },
+  ],
+  labels: [
+    { x: 196, y: 206, text: 'THE FENCE' }, { x: 120, y: 182, text: 'THE YARD' },
+    { x: 26, y: 32, text: 'YARD OFFICE', hi: true }, { x: 212, y: 20, text: 'CRANE' }, { x: 292, y: 236, text: 'VAN' },
+  ],
+};
+
+const PUMP_HOUSE = {
+  id: 'pump-house',
+  name: 'a container yard, pump house',
+  aria: 'Site plan of a container yard with a pump house in the middle: the fence and gate, short rows of containers round it, a crane on the left for overwatch, and the van on the service road',
+  points: { perch: [60, 26], target: [178, 118] },
+  paths: {
+    inside: [[106, 196], [106, 172], [128, 150], [136, 117]],
+    target: [[136, 117], [150, 117], [178, 118]],
+    out: [[178, 118], [150, 117], [136, 117], [128, 150], [106, 172], [106, 196], [106, 224], [40, 224]],
+  },
+  views: { inside: [40, 60, 255, 170], target: [90, 40, 204, 136] },
+  sight: { rifle: [[60, 26], [14, 60], [14, 194], [146, 194], [146, 40]], drone: [[60, 26], [6, 14], [6, 214], [354, 214], [354, 14]] },
+  drop: ['sp-cover', 'sp-building', 'sp-door', 'sp-desk', 'sp-perch'],
+  add: [
+    { t: 'row', cls: 'sp-cover', x: 16, y: 56, w: 27, h: 14, step: 31, n: 4, tones: CONTAINER_TONES },
+    { t: 'row', cls: 'sp-cover', x: 210, y: 56, w: 27, h: 14, step: 31, n: 4, tones: CONTAINER_TONES, shift: 1 },
+    { t: 'row', cls: 'sp-cover', x: 16, y: 96, w: 27, h: 14, step: 31, n: 2, tones: CONTAINER_TONES, shift: 2 },
+    { t: 'row', cls: 'sp-cover', x: 232, y: 96, w: 27, h: 14, step: 31, n: 4, tones: CONTAINER_TONES },
+    { t: 'row', cls: 'sp-cover', x: 160, y: 156, w: 27, h: 14, step: 31, n: 5, tones: CONTAINER_TONES, shift: 1 },
+    { t: 'rect', cls: 'sp-building', x: 150, y: 96, w: 56, h: 42 },
+    { t: 'rect', cls: 'sp-door', x: 147, y: 110, w: 5, h: 14 },
+    { t: 'rect', cls: 'sp-desk', x: 160, y: 104, w: 16, h: 8 },
+    { t: 'rect', cls: 'sp-desk', x: 184, y: 118, w: 14, h: 12 },
+    { t: 'line', cls: 'sp-perch', x1: 30, y1: 24, x2: 90, y2: 24 },
+    { t: 'line', cls: 'sp-perch', x1: 34, y1: 24, x2: 34, y2: 40 },
+    { t: 'line', cls: 'sp-perch', x1: 86, y1: 24, x2: 86, y2: 40 },
+  ],
+  labels: [
+    { x: 124, y: 206, text: 'THE FENCE' }, { x: 18, y: 140, text: 'THE YARD' },
+    { x: 152, y: 90, text: 'PUMP HOUSE', hi: true }, { x: 96, y: 20, text: 'CRANE' }, { x: 8, y: 236, text: 'VAN' },
+  ],
+};
+
+/** The variants of each district's site, other layouts of the same place (the base is variant 0). */
+export const SITE_VARIANTS = { docks: [QUAY_GATE, PUMP_HOUSE] };
+
+/** A base site with a variant's patch applied. */
+function applyVariant(base, v) {
+  const { id, drop = [], add = [], ...patch } = v;
+  const keep = (shape) => !drop.includes(shape.cls) && !drop.includes(shape.id);
+  return {
+    ...base, ...patch, variant: id,
+    points: { ...base.points, ...patch.points }, paths: { ...base.paths, ...patch.paths },
+    views: { ...base.views, ...patch.views }, sight: { ...base.sight, ...patch.sight },
+    shapes: [...base.shapes.filter(keep), ...add],
+  };
+}
+
+/** Every site there is, base and variants, for the tests and the preview: [{ key, variant, site }]. */
+export const allSites = () => Object.entries(SITES).flatMap(([key, base]) => [
+  { key, variant: 'base', site: base },
+  ...(SITE_VARIANTS[key] ?? []).map((v) => ({ key, variant: v.id, site: applyVariant(base, v) })),
+]);
+
+const hash = (str) => { let h = 0; for (const ch of String(str)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; };
+
+/**
+ * The site for a job: its district's base site or one of its variants, picked from the job's id so
+ * the same job always shows the same layout and different jobs (two offers of the same work) differ.
+ * Anywhere without a site gets the generic one. Nothing is stored: the id is the seed.
+ */
+export function pickSite(district, jobId = '') {
+  const base = SITES[district] ?? SITES.generic;
+  const variants = SITE_VARIANTS[district] ?? [];
+  const i = hash(jobId) % (variants.length + 1);
+  return i === 0 ? base : applyVariant(base, variants[i - 1]);
+}
