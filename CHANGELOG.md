@@ -5,6 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-29 · Play offline
+- After you've opened the game once, it opens without a connection too: reload it or open it in a new tab on the train and it's all there, saves included. When there's a new version, the game picks it up in the background and you get it the next time you open it.
+
 ## 2026-10-29 · Fights
 - When a patrol or a guard catches someone and nobody saves them, it's now a fight: up to three rounds on the watch feed instead of one roll. Everyone has health; guards come in tougher on bigger jobs.
 - Gear finally matters outside overwatch: a sidearm hits harder than the street piece everyone carries, and a vest takes 1 off every hit (a pro vest 2). Medics patch people up mid-fight, a face can talk a guard into backing off, a tech can kill the lights, and Wheels can bring the van round for a clean getaway.
