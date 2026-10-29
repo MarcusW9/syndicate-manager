@@ -5,6 +5,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-29 · The new City map
+- The City screen's map is redrawn to match the rest of the game: each district has a small label showing its gang's colour, how much work is on the board, and tags for your safehouse (HOME) and crew out on jobs there. Tap a district (or its label) to pick it.
+- Beside the map (below it on a phone): the district you picked, then the city tonight (every open district's gang, work, street talk and crew out), the city's heat, where your people are and when they're back, and places (the safehouse; a bar and black market are coming later).
+- The Docks' card has a picture: cranes in neon, container 409, red lanterns, a flying car, and the city's neon signs across the harbour.
+
 ## 2026-10-29 · Tap a name in a message to see them
 - In an open message, your crew's names are underlined: tap one to open their page, and "← Back to the message" takes you straight back to it.
 - The line under a message's title is capitalised ("Crew · Day 21").

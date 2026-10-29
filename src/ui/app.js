@@ -2,7 +2,7 @@
 // functions, re-renders. Tap/click only; nothing depends on hover.
 
 import { NAMES } from '../config/names.js';
-import { DISTRICTS } from '../data/districts.js';
+import { DISTRICTS, SAFEHOUSE_DISTRICT } from '../data/districts.js';
 import { DISTRICT_CARDS, FACTIONS, STREET_FACTS, HISTORY } from '../data/city.js';
 import { MISSIONS } from '../data/missions.js';
 import { TRAITS } from '../data/traits.js';
@@ -10,6 +10,7 @@ import { PARTNER } from '../data/partner.js';
 import { jossIcon, portrait } from './art.js';
 import { statIcon, statGlyph, crewIcons } from './icons.js';
 import { cityMapSvg, MAP_DISTRICTS } from './citymap.js';
+import { districtArt } from './districtArt.js';
 
 import { advanceDay, calendar, formatShortDate, isBlocked, seasonStartDay } from '../core/time.js';
 import { createNewGame, chooseFounders } from '../core/state.js';
@@ -1616,40 +1617,80 @@ const TURF_TONE = { 'Brass Anchor': 'sodium', 'Red Lantern': 'red', 'Silver Fan'
 
 const TURF_HEX = { sodium: '#f2d541', red: '#ff3d5f', violet: '#b48cff', cyan: '#3de8d8', orange: '#ff9a3d' };
 
+/** How many of the crew are out in a district right now: on the job you're watching, or away. */
+function crewOutIn(key) {
+  const am = state.activeMission;
+  let n = am && !am.done && templateById(am.templateId)?.district === key ? am.crewIds.length : 0;
+  for (const j of state.awayJobs ?? []) if (templateById(j.mission.templateId)?.district === key) n += j.mission.crewIds.length;
+  return n;
+}
+
+const turfHex = (key) => { const f = DISTRICTS[key]?.faction; return f ? TURF_HEX[TURF_TONE[f]] : null; };
+
 function cityMap() {
   const talk = activeRumour(state)?.district;
   const districts = MAP_DISTRICTS.map((key) => {
     const card = DISTRICT_CARDS[key];
-    const n = card.locked ? 0 : jobsIn(key).length;
+    const jobs = card.locked ? 0 : jobsIn(key).length;
+    const out = crewOutIn(key);
     const faction = DISTRICTS[key]?.faction;
-    const hot = talk === key;
+    const home = key === SAFEHOUSE_DISTRICT;
     return {
-      key, locked: card.locked, hot, selected: cityDistrict === key,
+      key, locked: card.locked, selected: cityDistrict === key, jobs, out, home, talk: talk === key,
       name: cityName(key).replace(/^The /, ''),
-      // The live readout under the name: work on the board here, and whether the street's talking about it.
-      readout: card.locked ? 'LOCKED' : `${n ? `${n} JOB${n === 1 ? '' : 'S'}` : 'NO WORK'}${hot ? ' · TALK' : ''}`,
-      tone: hot ? 'has-talk' : n ? 'has-work' : '',
-      turf: faction ? TURF_HEX[TURF_TONE[faction]] : '#8a93a6',
-      label: [cityName(key), card.locked ? 'locked' : `${n || 'no'} job${n === 1 ? '' : 's'} on the board`, faction && `${faction} turf`, hot && 'street talk about it'].filter(Boolean).join(', '),
+      turf: card.locked ? null : turfHex(key),
+      label: [cityName(key), card.locked ? 'locked' : `${jobs || 'no'} job${jobs === 1 ? '' : 's'} on the board`, faction && `${faction} turf`,
+        home && 'the safehouse is here', out && `${out} of yours out here`, talk === key && 'street talk about it'].filter(Boolean).join(', '),
     };
   });
-  const legend = [...new Set(Object.values(DISTRICTS).map((d) => d.faction).filter(Boolean))];
+  return cityMapSvg(districts, esc);
+}
+
+/** The city tonight, beside the map on wide screens and under it on phones. */
+function citySummary() {
+  const talk = activeRumour(state)?.district;
+  const open = MAP_DISTRICTS.filter((k) => !DISTRICT_CARDS[k].locked);
+  const rows = open.map((k) => {
+    const n = jobsIn(k).length;
+    return `<li><button class="cityrow ${cityDistrict === k ? 'is-on' : ''}" data-action="city-district" data-id="${k}" aria-pressed="${cityDistrict === k}">
+      <span class="cityrow__tab" style="background:${turfHex(k) ?? 'var(--line)'}"></span>
+      <span class="cityrow__name">${esc(cityName(k).replace(/^The /, ''))}<span class="muted small"> · ${esc(DISTRICTS[k]?.faction ?? '')}</span></span>
+      <span class="cityrow__meta">${talk === k ? '<span class="cityrow__talk">Talk</span>' : ''}${crewOutIn(k) ? `<span class="cityrow__out">${crewOutIn(k)} out</span>` : ''}${n ? `<b>${n}</b> job${n === 1 ? '' : 's'}` : '<span class="muted">—</span>'}</span>
+    </button></li>`;
+  }).join('');
+  // Your people: who's out where, who's hurt, who's at the safehouse.
+  const away = (state.awayJobs ?? []).map((j) => {
+    const t = templateById(j.mission.templateId);
+    const names = j.mission.crewIds.map((id) => state.crew.find((o) => o.id === id)?.handle).filter(Boolean);
+    return `${names.join(' and ')} on ${t?.name ?? 'a job'} in ${cityName(t?.district) ?? 'the city'}, back ${calendar(j.returnDay).weekday}`;
+  });
+  const outIds = new Set((state.awayJobs ?? []).flatMap((j) => j.mission.crewIds));
+  const hurt = state.crew.filter((o) => !outIds.has(o.id) && o.condition?.injury && o.condition.injury !== 'healthy').length;
+  const home = state.crew.filter((o) => !outIds.has(o.id)).length;
   return `
-    ${cityMapSvg(districts, esc)}
-    <ul class="maplegend">
-      ${legend.map((f) => `<li><span class="maplegend__swatch map-turf--${TURF_TONE[f] ?? 'cyan'}"></span>${esc(f)}</li>`).join('')}
-      ${talk ? '<li><span class="maplegend__dot"></span>Street talk</li>' : ''}
-    </ul>`;
+    <h2>The city tonight</h2>
+    <ul class="list list--plain cityrows">${rows}</ul>
+    <p class="muted small">Heat across the city: ${state.heat}/10.</p>
+    <h2>Your people</h2>
+    <p class="small">${away.length ? `${esc(away.join('. '))}. ` : ''}${home} at the safehouse in ${esc(cityName(SAFEHOUSE_DISTRICT))}${hurt ? `, ${hurt} of them hurt` : ''}.</p>
+    <h2>Places</h2>
+    <div class="cityplaces">
+      <button class="btn cityplace" data-action="nav" data-id="crew">Safehouse<span class="muted small">${esc(cityName(SAFEHOUSE_DISTRICT))}</span></button>
+      <button class="btn cityplace" disabled>Bar · black market<span class="muted small">Later</span></button>
+    </div>`;
 }
 
 function districtCard(key) {
   const c = DISTRICT_CARDS[key];
   const turf = DISTRICTS[key]?.turf;
   const jobs = MISSIONS.filter((m) => m.district === key).map((m) => m.name);
+  const art = c.locked ? null : districtArt(key);
+  const out = crewOutIn(key);
   return `
-    <div class="riskcard citycard">
+    <div class="riskcard citycard ${art ? 'has-art' : ''}" style="--turf:${turfHex(key) ?? 'var(--line)'}">
+      ${art ? `<div class="citycard__art" aria-hidden="true">${art}</div>` : ''}
       <h2 class="nomargin">${esc(cityName(key))} <span class="muted">${esc(c.chinese)}</span></h2>
-      <p class="muted small">${esc(c.side)}${turf ? ` · ${esc(turf)}` : ''}</p>
+      <p class="muted small">${esc(c.side)}${turf ? ` · <span class="citycard__turf">${esc(turf)}</span>` : ''}${key === SAFEHOUSE_DISTRICT ? ' · your safehouse' : ''}${out ? ` · ${out} of yours out here` : ''}</p>
       <p class="body">${esc(c.pitch)}</p>
       ${c.locked ? `<p class="intel">${esc(c.teaser)}</p>` : (() => {
         const now = jobsIn(key);
@@ -1681,7 +1722,7 @@ function renderCity() {
     map: () => `
       <div class="cols2 cols2--map">
         <div>${cityMap()}</div>
-        <div>${cityDistrict ? districtCard(cityDistrict) : '<p class="muted small citymap__hint">Tap a district for its jobs, street talk and who runs it.</p>'}</div>
+        <div>${cityDistrict ? districtCard(cityDistrict) : ''}${citySummary()}</div>
       </div>`,
     clients: () => renderClientCards(),
     factions: () => `

@@ -1,11 +1,13 @@
-// Lantern Bay from above (WORLD.md, Geography): a made-up coast, terrain, a street grid
-// with each district's own character, and a wave-pattern sea. All decoration: names,
-// readouts and the district card carry the meaning. Geometry is seeded, so the city
-// draws the same every time, and it's built once per session.
+// Lantern Bay from above (WORLD.md, Geography), built from the interface's own parts (owner,
+// 2026-10-28/29; DESIGN.md): the made-up coast as a faint cyan hairline, districts in the panel
+// colours with 1px borders, locked ones hatched, and each district's name on a small cut-corner
+// plate with its gang's colour as the plate's tab, its work as a cyan badge, and HOME, crew out
+// and street talk hanging off it. The selected district gets the cyan edge every selected card
+// has. Geometry is seeded, so the city draws the same every time; it's built once per session.
 //
-// Adding a district: one entry in DISTRICT_MAP (its area, streets and label spot, and
-// `holes` in whichever districts it's cut out of). The island has room to grow: the north
-// shore, the valley east of the Peak and the wild island to the west carry no district yet.
+// Adding a district: one entry in DISTRICT_MAP (its area, plate spot, and `holes` in whichever
+// districts it's cut out of). The island has room to grow: the north shore, the valley east of
+// the Peak and the wild island to the west carry no district yet.
 
 /** Small seeded generator for decoration only (game randomness stays in core/rng.js). */
 function seeded(seed) {
@@ -38,34 +40,6 @@ function coast(points, seed, rough = 0.24, depth = 4) {
 const path = (pts) => `M${pts.map((p) => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join('L')}Z`;
 const ring = (cx, cy, rx, ry, n = 9) => Array.from({ length: n }, (_, k) => [cx + Math.cos((k / n) * Math.PI * 2) * rx, cy + Math.sin((k / n) * Math.PI * 2) * ry]);
 
-/** A street lattice over a box: jittered, turned, with some links dropped. */
-function streets({ box: [x0, y0, x1, y1], step, angle = 0, jitter = 0, keepX = 1, keepY = 1, seed }) {
-  const rnd = seeded(seed);
-  const cx = (x0 + x1) / 2;
-  const cy = (y0 + y1) / 2;
-  const r = (angle * Math.PI) / 180;
-  const pad = Math.max(x1 - x0, y1 - y0) * 0.4;
-  const cols = Math.ceil((x1 - x0 + pad * 2) / step);
-  const rows = Math.ceil((y1 - y0 + pad * 2) / step);
-  const p = [];
-  for (let i = 0; i <= cols; i++) {
-    p[i] = [];
-    for (let j = 0; j <= rows; j++) {
-      const x = x0 - pad + i * step + (rnd() - 0.5) * jitter - cx;
-      const y = y0 - pad + j * step + (rnd() - 0.5) * jitter - cy;
-      p[i][j] = `${(cx + x * Math.cos(r) - y * Math.sin(r)).toFixed(1)} ${(cy + x * Math.sin(r) + y * Math.cos(r)).toFixed(1)}`;
-    }
-  }
-  let out = '';
-  for (let i = 0; i <= cols; i++) {
-    for (let j = 0; j <= rows; j++) {
-      if (i < cols && rnd() < keepX) out += `M${p[i][j]}L${p[i + 1][j]}`;
-      if (j < rows && rnd() < keepY) out += `M${p[i][j]}L${p[i][j + 1]}`;
-    }
-  }
-  return out;
-}
-
 export const MAP_W = 360;
 export const MAP_H = 520;
 
@@ -83,204 +57,100 @@ const PEAK = [[186, 74], [214, 62], [244, 72], [252, 98], [228, 116], [196, 114]
 const BASIN = coast(ring(138, 164, 52, 32, 12), 30, 0.12, 2);
 const COURSE = ring(138, 176, 31, 11, 24);
 
-// Each district's streets say what it's like (WORLD.md): switchbacks up the Peak, a
-// corporate grid on the ridge, crooked lanes in Old Town, a dense tangle in the market,
-// haul roads at the docks, almost nothing in the Silt.
+// Each district: its area, where its plate sits (where it has room on a phone), and the label
+// spot the older map used (design drafts still read it).
 const DISTRICT_MAP = {
-  ironPeak: { area: PEAK, label: [216, 92], streets: 'M180 112C200 104 228 110 240 100S206 92 196 86S226 76 232 70S208 66 204 60' },
+  ironPeak: { area: PEAK, plate: [216, 96], label: [216, 92] },
   heights: {
     // The ridge's lower edge rides over the top of the Basin's bowl.
     area: [[76, -20], [380, -20], [380, 166], [300, 160], [248, 172], [205, 162], [196, 126], [160, 118], [110, 116], [76, 122]],
-    holes: [PEAK], label: [292, 138], streets: { box: [76, 20, 352, 172], step: 13, angle: -6, keepX: 0.9, keepY: 0.88, seed: 11 },
+    holes: [PEAK], plate: [262, 62], label: [292, 138],
   },
   oldTown: {
     area: [[76, 122], [110, 116], [160, 118], [196, 126], [205, 162], [202, 215], [200, 272], [76, 272]],
-    holes: [BASIN], label: [146, 222], streets: { box: [76, 112, 205, 258], step: 7, angle: 18, jitter: 3.5, keepX: 0.72, keepY: 0.62, seed: 12 },
+    holes: [BASIN], plate: [126, 226], label: [146, 222],
   },
   nightMarket: {
     area: [[205, 162], [248, 172], [300, 160], [380, 166], [380, 272], [200, 272], [202, 215]],
-    label: [276, 210], streets: { box: [200, 160, 352, 256], step: 6, angle: -11, jitter: 1.5, keepX: 0.86, keepY: 0.78, seed: 13 },
+    plate: [282, 210], label: [276, 210],
   },
-  basin: {
-    area: BASIN, label: [138, 150],
-    // Dense towers packed round the course; the floodlit oval itself is drawn on top.
-    streets: { box: [84, 130, 192, 198], step: 6, angle: 4, jitter: 1, keepX: 0.8, keepY: 0.8, seed: 17 },
-    feature: COURSE,
-  },
-  amberReach: {
-    area: [[120, 276], [290, 276], [290, 350], [120, 350]],
-    label: [200, 314], streets: { box: [150, 286, 252, 340], step: 8, angle: 45, jitter: 1, keepX: 0.9, keepY: 0.9, seed: 14 },
-  },
-  docks: {
-    area: [[-20, 352], [250, 352], [258, 420], [280, 460], [280, 560], [-20, 560]],
-    label: [118, 444], streets: { box: [0, 352, 260, 520], step: 9, keepX: 1, keepY: 0.22, seed: 15 },
-  },
-  silt: {
-    area: [[250, 352], [380, 352], [380, 560], [280, 560], [280, 460], [258, 420]],
-    label: [314, 410], streets: { box: [250, 360, 360, 520], step: 10, angle: 28, jitter: 5, keepX: 0.35, keepY: 0.3, seed: 16 },
-  },
+  basin: { area: BASIN, plate: [138, 158], label: [138, 150] },
+  amberReach: { area: [[120, 276], [290, 276], [290, 350], [120, 350]], plate: [204, 314], label: [200, 314] },
+  docks: { area: [[-20, 352], [250, 352], [258, 420], [280, 460], [280, 560], [-20, 560]], plate: [108, 452], label: [118, 444] },
+  silt: { area: [[250, 352], [380, 352], [380, 560], [280, 560], [280, 460], [258, 420]], plate: [314, 470], label: [314, 410] },
 };
 export const MAP_DISTRICTS = Object.keys(DISTRICT_MAP);
-
-// Terrain heights: rolling noise everywhere, the Peak rising in the middle of the island,
-// a lower ridge on the west island, the mainland flat.
-const HILLS = [[216, 92, 80, 56, 1.2], [36, 210, 34, 64, 0.7], [300, 110, 40, 30, 0.35], [138, 166, 44, 26, -0.45]];
-
-/** Smooth value noise, seeded. */
-function noise2(seed) {
-  const rnd = seeded(seed);
-  const n = 256;
-  const perm = Array.from({ length: n }, (_, i) => i);
-  for (let i = n - 1; i > 0; i--) {
-    const j = Math.floor(rnd() * (i + 1));
-    [perm[i], perm[j]] = [perm[j], perm[i]];
-  }
-  const val = Array.from({ length: n }, () => rnd());
-  const at = (x, y) => val[perm[(perm[x & 255] + y) & 255]];
-  const fade = (t) => t * t * (3 - 2 * t);
-  return (x, y) => {
-    const xi = Math.floor(x);
-    const yi = Math.floor(y);
-    const u = fade(x - xi);
-    const v = fade(y - yi);
-    const a = at(xi, yi) + (at(xi + 1, yi) - at(xi, yi)) * u;
-    const b = at(xi, yi + 1) + (at(xi + 1, yi + 1) - at(xi, yi + 1)) * u;
-    return a + (b - a) * v;
-  };
-}
-
-/**
- * Hill shading, drawn once into an image (a blob URL the browser keeps decoded), so
- * re-rendering the page costs nothing. Returns '' where there's no canvas.
- */
-let reliefUrl = null;
-function relief() {
-  if (reliefUrl !== null) return reliefUrl;
-  reliefUrl = '';
-  const canvas = typeof document !== 'undefined' && document.createElement('canvas');
-  const ctx = canvas?.getContext?.('2d');
-  if (!ctx) return reliefUrl;
-  // Half resolution: the shading is soft, and a quarter of the pixels keeps the first
-  // visit to the City tab quick on older phones.
-  const S = 2;
-  const W = MAP_W / S;
-  const H = MAP_H / S;
-  canvas.width = W;
-  canvas.height = H;
-  const n = noise2(9);
-  const h = new Float32Array(W * H);
-  for (let y = 0; y < H; y++) {
-    for (let x = 0; x < W; x++) {
-      let v = 0;
-      let amp = 0.5;
-      let f = 1 / 40;
-      const mx = x * S;
-      const my = y * S;
-      for (let o = 0; o < 4; o++, amp /= 2, f *= 2) v += n(mx * f, my * f) * amp;
-      let hill = 0;
-      for (const [hx, hy, rx, ry, k] of HILLS) hill += k * Math.exp(-(((mx - hx) / rx) ** 2 + ((my - hy) / ry) ** 2));
-      h[y * W + x] = (my > 360 ? 0.25 : 1) * v * 0.6 + hill;
-    }
-  }
-  const img = ctx.createImageData(W, H);
-  const [lx, ly, lz] = [-0.6, -0.6, 0.53]; // light from the top left
-  for (let y = 1; y < H - 1; y++) {
-    for (let x = 1; x < W - 1; x++) {
-      const dx = (h[y * W + x + 1] - h[y * W + x - 1]) * 18 / S;
-      const dy = (h[(y + 1) * W + x] - h[(y - 1) * W + x]) * 18 / S;
-      const shade = (-dx * lx - dy * ly + lz) / Math.sqrt(dx * dx + dy * dy + 1);
-      const i = (y * W + x) * 4;
-      // Lit slopes glow cyan; shadowed ones go to navy.
-      if (shade > 0.5) img.data.set([61, 232, 216, Math.min(255, (shade - 0.5) * 300)], i);
-      else img.data.set([4, 8, 20, Math.min(255, (0.5 - shade) * 420)], i);
-    }
-  }
-  ctx.putImageData(img, 0, 0);
-  try {
-    const bin = atob(canvas.toDataURL('image/png').split(',')[1]);
-    const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
-    reliefUrl = URL.createObjectURL(new Blob([bytes], { type: 'image/png' }));
-  } catch {
-    reliefUrl = '';
-  }
-  return reliefUrl;
-}
 
 let built = null;
 function geometry() {
   if (built) return built;
-  const island = path(coast(ISLAND, 3, 0.22));
-  const west = path(coast(WEST, 8, 0.3));
-  const mainland = path(coast(MAINLAND, 4, 0.2));
-  const amber = path(coast(AMBER, 5, 0.2, 3));
-  const mudflat = path(coast(MUDFLAT, 6, 0.3));
-  const piers = PIERS.map(path).join('');
+  const land = [coast(ISLAND, 3, 0.22), coast(WEST, 8, 0.3), coast(AMBER, 5, 0.2, 3), coast(MAINLAND, 4, 0.2)].map(path);
   built = {
-    land: [island, west, mainland, amber, piers],
-    island, west, mainland, amber, mudflat, piers,
+    land,
+    mudflat: path(coast(MUDFLAT, 6, 0.3)),
+    piers: PIERS.map(path).join(''),
     islets: ISLETS.map(([x, y, rad], i) => path(coast(ring(x, y, rad, rad * 0.8, 6), 20 + i, 0.4, 3))).join(''),
-    // Contour rings round the summits, rougher the further down they are.
-    contours: [
-      ...[18, 30, 44, 60].map((rad, i) => path(coast(ring(216, 92, rad * 1.45, rad), 40 + i, 0.28, 3))),
-      ...[14, 26].map((rad, i) => path(coast(ring(36, 210, rad * 0.7, rad * 1.6), 50 + i, 0.3, 3))),
-      // The bowl's rim.
-      path(coast(ring(138, 164, 60, 38, 12), 60, 0.12, 2)),
-    ].join(''),
     areas: Object.fromEntries(Object.entries(DISTRICT_MAP).map(([k, m]) => [k, path(m.area) + (m.holes ?? []).map(path).join('')])),
-    streets: Object.fromEntries(Object.entries(DISTRICT_MAP).map(([k, m]) => [k, typeof m.streets === 'string' ? m.streets : streets(m.streets)])),
   };
   return built;
 }
 
+const f1 = (n) => n.toFixed(1);
+/** A cut-corner plate (the panels' shape), top-left at x, y. */
+const plateShape = (x, y, w, h, cut = 5) => `M${f1(x)} ${f1(y)}H${f1(x + w - cut)}L${f1(x + w)} ${f1(y + cut)}V${f1(y + h)}H${f1(x)}Z`;
+
+/** A district's plate: name, gang tab, work badge, and HOME / crew out / street talk off it. */
+function plate(x, esc) {
+  const [cx, cy] = DISTRICT_MAP[x.key].plate;
+  const name = x.name.toUpperCase();
+  const badge = x.jobs ? `${x.jobs} JOB${x.jobs === 1 ? '' : 'S'}` : '';
+  const w = Math.max(name.length * 6.6 + 16, x.locked ? 64 : badge ? 92 : 74);
+  const h = 32;
+  const px = cx - w / 2;
+  const py = cy - h / 2;
+  let s = `<path class="cm-plate__bg" d="${plateShape(px, py, w, h)}" />`;
+  if (x.turf) s += `<rect x="${f1(px)}" y="${f1(py)}" width="18" height="2" fill="${x.turf}" />`; // the gang's tab
+  s += `<text class="cm-plate__name" x="${f1(px + 8)}" y="${f1(py + 13)}">${esc(name)}</text>`;
+  if (x.locked) s += `<text class="cm-plate__sub" x="${f1(px + 8)}" y="${f1(py + 24)}">LOCKED</text>`;
+  else if (badge) s += `<rect class="cm-badge" x="${f1(px + 8)}" y="${f1(py + 17)}" width="${f1(badge.length * 5 + 8)}" height="11" /><text class="cm-badge__txt" x="${f1(px + 12)}" y="${f1(py + 25.5)}">${badge}</text>`;
+  else s += `<text class="cm-plate__sub" x="${f1(px + 8)}" y="${f1(py + 24)}">NO WORK</text>`;
+  // Tags hang off the plate's top edge, so nothing floats loose on the map.
+  if (x.home) s += `<g transform="translate(${f1(px - 2)} ${f1(py - 15)})"><path class="cm-tag cm-tag--home" d="${plateShape(0, 0, 42, 12, 4)}" /><path class="cm-tag__icon--home" d="M5 9V5L8.5 2.5L12 5V9Z" /><text class="cm-tag__txt cm-tag__txt--home" x="15" y="9">HOME</text></g>`;
+  if (x.out) s += `<g transform="translate(${f1(px + w - 48)} ${f1(py - 15)})"><path class="cm-tag cm-tag--out" d="${plateShape(0, 0, 50, 12, 4)}" /><path class="cm-tag__icon--out" d="M7 2.5L10.5 6L7 9.5L3.5 6Z" /><text class="cm-tag__txt cm-tag__txt--out" x="14" y="9">${x.out} OUT</text></g>`;
+  if (x.talk) s += `<rect class="map-talk" x="${f1(px + w + 4)}" y="${f1(py + 4)}" width="5" height="5" />`;
+  return s;
+}
+
 /**
- * The map. `districts` is a list of { key, name, label, locked, readout, tone, turf,
- * hot, selected } from the UI, in MAP_DISTRICTS order; this file only draws.
+ * The map. `districts` is a list of { key, name, label, locked, selected, turf (hex or null),
+ * jobs, home, out, talk } from the UI, in MAP_DISTRICTS order; this file only draws.
  */
 export function cityMapSvg(districts, esc) {
   const g = geometry();
-  const img = relief();
-  const drawn = districts.map((x) => {
-    const [lx, ly] = DISTRICT_MAP[x.key].label;
-    const clip = `url(#cm-${x.key})`;
-    // Clipped twice: to the district, and (by the inner group) to the land.
-    return `<g class="cm-d ${x.locked ? 'is-locked' : ''} ${x.selected ? 'is-selected' : ''}" data-action="city-district" data-id="${x.key}" role="button" tabindex="0" aria-label="${esc(x.label)}" style="--turf:${x.turf}">
-      <g clip-path="url(#cm-land)">
-        <path class="cm-d__streets" d="${g.streets[x.key]}" clip-path="${clip}" />
-        ${x.locked ? `<rect class="cm-d__hatch" width="${MAP_W}" height="${MAP_H}" clip-path="${clip}" />` : ''}
-        <path class="cm-d__area" d="${g.areas[x.key]}" clip-path="${clip}" fill-rule="evenodd" />
-      </g>
-      ${DISTRICT_MAP[x.key].feature ? `<path class="cm-track cm-track--infield" d="${path(DISTRICT_MAP[x.key].feature)}" /><path class="cm-track" d="${path(DISTRICT_MAP[x.key].feature)}" />` : ''}
-      ${x.hot ? `<circle class="map-talk" cx="${lx}" cy="${ly - 21}" r="4" />` : ''}
-      <text class="cm-d__name" x="${lx}" y="${ly}">${esc(x.name)}</text>
-      <text class="cm-d__readout ${x.tone}" x="${lx}" y="${ly + 14}">${x.readout}</text>
-    </g>`;
-  }).join('');
+  const selected = districts.find((x) => x.selected);
+  let grid = '';
+  for (let x = 0; x <= MAP_W; x += 24) grid += `M${x} 0V${MAP_H}`;
+  for (let y = 0; y <= MAP_H; y += 24) grid += `M0 ${y}H${MAP_W}`;
+  const area = (x) => `<path class="cm-d__area ${x.locked ? 'is-locked' : ''}" d="${g.areas[x.key]}" fill-rule="evenodd" clip-path="url(#cm-land)" ${x.turf && !x.locked ? `style="--turf:${x.turf}"` : ''} />`;
   return `
     <svg class="citymap" viewBox="0 0 ${MAP_W} ${MAP_H}" role="group" aria-label="Map of the city">
       <defs>
-        ${MAP_DISTRICTS.map((k) => `<clipPath id="cm-${k}"><path d="${g.areas[k]}" clip-rule="evenodd" /></clipPath>`).join('')}
         <clipPath id="cm-land">${g.land.map((d) => `<path d="${d}" />`).join('')}<path d="${g.mudflat}" /></clipPath>
-        <pattern id="cm-sea" width="20" height="10" patternUnits="userSpaceOnUse">
-          ${[[0, 0], [20, 0], [10, 5], [0, 10], [20, 10]].map(([x, y]) => `<g transform="translate(${x} ${y})"><circle r="10" /><circle r="7" /><circle r="4" /></g>`).join('')}
-        </pattern>
-        <pattern id="cm-hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V5" /></pattern>
-        <pattern id="cm-mud" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="1.5" cy="1.5" r="0.7" /><circle cx="4.5" cy="4.5" r="0.7" /></pattern>
+        <pattern id="cm-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V6" /></pattern>
       </defs>
       <rect class="cm-sea" width="${MAP_W}" height="${MAP_H}" />
-      <rect class="cm-sea__scales" width="${MAP_W}" height="${MAP_H}" fill="url(#cm-sea)" />
-      <g class="cm-land">${g.land.map((d) => `<path d="${d}" />`).join('')}<path d="${g.islets}" /></g>
-      <path class="cm-mud" d="${g.mudflat}" />
-      ${img ? `<image href="${img}" width="${MAP_W}" height="${MAP_H}" class="cm-relief" clip-path="url(#cm-land)" />` : ''}
-      <path class="cm-contours" d="${g.contours}" clip-path="url(#cm-land)" />
-      ${drawn}
-      <g class="cm-coast"><path d="${g.island}" /><path d="${g.west}" /><path d="${g.mainland}" /><path d="${g.amber}" /><path d="${g.islets}" /></g>
-      <path class="cm-coast cm-coast--pier" d="${g.piers}" />
-      <path class="cm-coast cm-coast--mud" d="${g.mudflat}" />
+      <path class="cm-grid" d="${grid}" />
+      <g class="cm-land">${g.land.map((d) => `<path d="${d}" />`).join('')}<path d="${g.mudflat}" /></g>
+      ${districts.map((x) => `<g class="cm-d ${x.selected ? 'is-selected' : ''}" data-action="city-district" data-id="${x.key}" role="button" tabindex="0" aria-pressed="${x.selected}" aria-label="${esc(x.label)}">${area(x)}</g>`).join('')}
+      <g class="cm-coast">${g.land.map((d) => `<path d="${d}" />`).join('')}<path d="${g.islets}" class="cm-islets" /><path d="${g.piers}" class="cm-piers" /></g>
+      <path class="cm-coast--mud" d="${g.mudflat}" />
+      ${selected ? `<path class="cm-pick" d="${g.areas[selected.key]}" fill-rule="evenodd" clip-path="url(#cm-land)" />` : ''}
       <path class="cm-rail" d="M202 252V292M202 334V380" />
       <path class="map-crossing" d="M114 254V352" />
-      <circle class="map-ferry" cx="114" cy="258" r="3.5" aria-hidden="true" />
+      <circle class="map-ferry" cx="114" cy="258" r="3" aria-hidden="true" />
       <text x="350" y="272" class="map-label" text-anchor="end">HARBOUR</text>
       <text x="10" y="510" class="map-label">MAINLAND</text>
+      ${districts.map((x) => `<g class="cm-plate ${x.locked ? 'is-locked' : ''} ${x.selected ? 'is-on' : ''}" data-action="city-district" data-id="${x.key}" aria-hidden="true">${plate(x, esc)}</g>`).join('')}
     </svg>`;
 }
 
