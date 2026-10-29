@@ -89,6 +89,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .nav { order: 3; display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--line); background: var(--panel); position: sticky; bottom: 0; }
 .nav__btn { white-space: nowrap; min-height: 56px; background: none; border: 0; color: var(--muted); font: inherit; font-size: 0.85rem; cursor: pointer; }
 .nav__btn.is-active { color: var(--accent); box-shadow: inset 0 2px 0 var(--accent); }
+.nav__btn:disabled { opacity: 0.35; cursor: default; }
 .pill { display: inline-block; min-width: 20px; padding: 1px 6px; border-radius: 10px; background: #262b36; color: var(--text); font-size: 0.72rem; font-weight: 600; text-align: center; }
 .pill--new { background: var(--accent-2); color: #0f1115; }
 
@@ -274,6 +275,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
   /* City map: the map's column is only as wide as the map draws (its height cap × 360/520,
      see .citymap below), so the district card sits right beside it instead of across a gap. */
   .cols2--map { grid-template-columns: min(460px, calc(max(360px, 100dvh - 300px) * 360 / 520)) minmax(0, 1fr); }
+  .cols2--map { grid-template-columns: min(460px, calc(max(360px, 100svh - 300px) * 360 / 520)) minmax(0, 1fr); }
   /* Planning a job: approach, squad and orders on the left; client and the reads beside them, so the risk updates in view as you pick. */
   .plangrid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); grid-template-rows: auto auto 1fr; column-gap: 28px; align-items: start;
     grid-template-areas: "approach client" "crew risk" "orders risk"; }
@@ -330,6 +332,8 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .resultcard h2 { margin-top: 0; color: var(--text); }
 .resultcard--loss { border-color: var(--danger); }
 .resultcard--completed { border-color: #2e6b52; }
+/* After the play-by-play the result sits clear of the last line of the feed (owner, 2026-10-29: "very close to the message above it"). */
+.mission .resultcard { margin-top: 24px; }
 .meter__fill.is-hot { background: var(--danger); }
 
 /* Job report as a timeline: a rail down the left, a numbered node per crisis, the outcome last. */
@@ -556,9 +560,12 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 @media (max-width: 899px) { .citymap__hint { display: none; } }
 .citycard { scroll-margin-top: 88px; }
 /* The map tab fits one screen: the map shrinks to what's left after the header, tabs,
-   legend and (on phones) the Continue dock and tab bar, but never below a readable size. */
-.citymap { max-height: max(300px, calc(100dvh - 400px)); }
-@media (min-width: 900px) { .citymap { max-height: max(360px, calc(100dvh - 300px)); } }
+   legend and (on phones) the Continue dock and tab bar, but never below a readable size.
+   Sized on svh (the viewport with the browser's bars showing), not dvh: dvh grows as Safari
+   hides its bars on scroll, which made the map and the picture beside it grow mid-scroll
+   (owner, iPad, 2026-10-29). The dvh lines are the fallback for browsers without svh. */
+.citymap { max-height: max(300px, calc(100dvh - 400px)); max-height: max(300px, calc(100svh - 400px)); }
+@media (min-width: 900px) { .citymap { max-height: max(360px, calc(100dvh - 300px)); max-height: max(360px, calc(100svh - 300px)); } }
 .citycard ul { margin-top: 0; }
 .citydetails { border: 1px solid var(--line); border-radius: var(--radius); padding: 0 12px; margin-bottom: 6px; }
 .citydetails summary { min-height: var(--tap); display: flex; align-items: center; cursor: pointer; font-weight: 600; }
@@ -614,6 +621,14 @@ h1, h2, .btn, .nav__btn, .row__tag, .tier, .risk, .status, .pill, .stat__label, 
 h1 { font-size: 1.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
 h2 { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; font-weight: 600; letter-spacing: 0.14em; color: var(--accent-2); }
 h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line), transparent); }
+/* A heading that folds its section (the plan's "What they'll likely meet"): the whole line is the tap target, the arrow sits on the right. */
+.foldh2::after { display: none; }
+.foldh2__btn { display: flex; align-items: center; gap: 10px; width: 100%; min-height: var(--tap); padding: 0; background: none; border: 0; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; text-align: left; cursor: pointer; }
+.foldh2__line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--line), transparent); }
+.foldh2__peek { color: var(--danger, #ff3d5f); font-size: 0.75rem; }
+.foldh2__arrow { font-size: 0.9rem; color: var(--muted); transition: transform 0.15s; }
+.foldh2__btn[aria-expanded="false"] .foldh2__arrow { transform: rotate(-90deg); }
+@media (prefers-reduced-motion: reduce) { .foldh2__arrow { transition: none; } }
 .stats dd { font-size: 1.5rem; font-weight: 700; }
 .stats dt { letter-spacing: 0.08em; text-transform: uppercase; }
 
@@ -732,6 +747,24 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .dossier.is-empty b { font-size: min(0.72rem, 12.5cqi); letter-spacing: min(0.12em, 1.2cqi); text-transform: uppercase; white-space: nowrap; }
 .dossier.is-empty small { font-size: 0.68rem; padding: 0 4px; }
 .dossier__sil { width: 40px; height: 40px; border-radius: 50%; border: 2px dashed #3a4254; display: grid; place-items: center; font-size: 1.3rem; color: #4a5266; }
+/* Four or more inside on a phone: two to a row, each card turned landscape (photo left, name and
+   numbers right) so names and stats stay full size (owner, 2026-10-29: "quite tight here maybe we
+   can have 2 on a row"). Measured on the board, so a narrow plan pane on a tablet gets it too. */
+.board { container: board / inline-size; }
+@container board (max-width: 520px) {
+  .dossiers--pairs { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); row-gap: 12px; }
+  .dossiers--pairs .dossier { grid-template-columns: auto minmax(0, 1fr); grid-auto-flow: dense; justify-items: start; align-content: center; column-gap: 9px; row-gap: 1px; min-height: 92px; padding: 14px 9px 9px; text-align: left; }
+  .dossiers--pairs .dossier__photo { grid-column: 1; grid-row: 1 / span 4; align-self: center; }
+  .dossiers--pairs .dossier > :not(.dossier__photo):not(.dossier__sil) { grid-column: 2; }
+  .dossiers--pairs .dossier__name { font-size: min(1.05rem, 13cqi); }
+  .dossiers--pairs .dossier__real { font-size: 0.72rem; }
+  .dossiers--pairs .dossier__note { font-size: min(0.66rem, 7.4cqi); white-space: nowrap; }
+  .dossiers--pairs .dossier__photo .face { width: 44px; height: 44px; }
+  .dossiers--pairs .dossier.is-empty { grid-template-columns: auto minmax(0, 1fr); }
+  .dossiers--pairs .dossier.is-empty .dossier__sil { grid-column: 1; grid-row: 1 / span 2; width: 36px; height: 36px; }
+  .dossiers--pairs .dossier.is-empty b { font-size: 0.72rem; }
+  .dossiers--pairs .dossier.is-empty small { padding: 0; }
+}
 .kitpick { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 3px; }
 .kitpick__btn { min-height: var(--tap); background: transparent; border: 0; border-radius: 7px; color: var(--muted); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
 .kitpick__btn.is-on { background: #16262a; color: var(--accent-2); box-shadow: inset 0 0 0 1px var(--accent-2); }
@@ -773,7 +806,7 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .watch.is-calling .watch__bar { display: none; }
 .watch__callin { scroll-margin-top: calc(var(--live-top, 0px) + 8px); }
 .watch__map { position: relative; background: #0b0d11; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
-.siteplan { display: block; width: 100%; height: min(34dvh, 280px); }
+.siteplan { display: block; width: 100%; height: min(34dvh, 280px); height: min(34svh, 280px); }
 .watch__phase { position: absolute; left: 8px; top: 8px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-2); background: rgba(11, 13, 17, 0.85); border: 1px solid #1f4440; border-radius: 6px; padding: 2px 8px; }
 .watch__alert { position: absolute; right: 8px; top: 8px; display: inline-flex; gap: 3px; align-items: center; font-size: 0.66rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); background: rgba(11, 13, 17, 0.85); border: 1px solid var(--line); border-radius: 6px; padding: 3px 7px; }
 .watch__alert i { width: 9px; height: 9px; border-radius: 2px; background: var(--line); display: inline-block; }

@@ -73,6 +73,7 @@ let focusNext = null; // { action, id }: the control to focus after the next ren
 let returnTo = null; // { screen, messageId }: where a runner's page opened from a name link goes back to
 let founderPick = []; // candidate ids picked so far on a new game's first screen (renderFounding)
 let runnersHidden = false; // the job board's runners panel, folded away for this session
+let meetHidden = null; // the plan's "What they'll likely meet" read folded away; null until first shown (folded on phones)
 
 export function mountApp(el, initialState) {
   root = el;
@@ -100,7 +101,7 @@ function onClick(e) {
   const { action, id } = t.dataset;
 
   switch (action) {
-    case 'nav': screen = id; returnTo = null; openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; gearSlot = null; plan = null; sidePlan = null; pickSlot = null; break;
+    case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; screen = id; returnTo = null; openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; gearSlot = null; plan = null; sidePlan = null; pickSlot = null; break;
     case 'continue': {
       if (isBlocked(state) || Date.now() < continueRestUntil) return;
       const next = advanceDay(state);
@@ -179,6 +180,7 @@ function onClick(e) {
       break;
     }
     case 'toggle-runners': runnersHidden = !runnersHidden; break;
+    case 'toggle-meet': meetHidden = !meetHidden; break;
     // The squad board (ui/board.js): tap a card, pick who goes there; anyone already placed swaps.
     case 'info': if (openInfo.has(id)) openInfo.delete(id); else openInfo.add(id); break;
     case 'pick-slot': pickSlot = id; break;
@@ -502,13 +504,19 @@ function renderDayCue(cue) {
     </div>`;
 }
 
+// While the founders are being picked there's nothing to see on Crew, Jobs or City: those tabs are
+// off, Today shows the pick, and Save stays open so another slot can still be loaded.
+const FOUNDING_TABS = ['inbox', 'settings'];
+
 function navButton(id, label, count = 0, countWord = '') {
-  const pill = count ? ` <span class="pill ${id === 'inbox' ? 'pill--new' : ''}" aria-label="${count} ${countWord}">${count}</span>` : '';
-  return `<button class="nav__btn ${screen === id ? 'is-active' : ''}" data-action="nav" data-id="${id}">${esc(label)}${pill}</button>`;
+  const off = state.founding && !FOUNDING_TABS.includes(id);
+  const on = state.founding ? id === (screen === 'settings' ? 'settings' : 'inbox') : screen === id;
+  const pill = count && !off ? ` <span class="pill ${id === 'inbox' ? 'pill--new' : ''}" aria-label="${count} ${countWord}">${count}</span>` : '';
+  return `<button class="nav__btn ${on ? 'is-active' : ''}" data-action="nav" data-id="${id}" ${off ? 'disabled' : ''}>${esc(label)}${pill}</button>`;
 }
 
 function renderScreen() {
-  if (state.founding) return renderFounding(); // nothing else until the founders are picked
+  if (state.founding && screen !== 'settings') return renderFounding(); // nothing else until the founders are picked
   if (screen === 'inbox') return renderInbox();
   if (screen === 'crew') return openRecruitId ? renderRecruit() : openOperativeId ? renderOperative() : openArmoury ? renderArmoury(gearUi, state) : renderCrew();
   // Jobs: on wide screens the board stays beside the job being planned (styles.css hides it on phones).
@@ -1406,8 +1414,7 @@ function renderPlan() {
       </div>
 
       <div class="plangrid__risk">
-      <h2 id="risk-read">What they'll likely meet</h2>
-      ${renderCoverage(boardUi, cov, { overwatch: owOp, approachName: APPROACHES[plan.approach].name, standby: state.crew.find((o) => o.id === plan.standby) ?? null })}
+      ${renderMeet(cov, owOp)}
       <h2>The crises</h2>
       <div class="riskcard">
         ${picked.length ? `${riskBadge(read.level)}
@@ -1766,6 +1773,18 @@ function renderCity() {
       </div>
       ${body}
     </section>`;
+}
+
+/** The plan's coverage read under a heading that folds it away (owner, 2026-10-29: useful but
+ *  not essential, and long on a phone). Folded by default on phones, open on wider screens; the
+ *  choice holds for the session. Folded, the heading still flags any gap nobody can cover. */
+function renderMeet(cov, owOp) {
+  if (meetHidden === null) meetHidden = !matchMedia('(min-width: 900px)').matches;
+  const gaps = cov.rows.filter((r) => r.gap).length;
+  const peek = meetHidden && gaps ? `<span class="foldh2__peek">${gaps} ${gaps === 1 ? 'gap' : 'gaps'}</span>` : '';
+  return `<h2 id="risk-read" class="foldh2"><button class="foldh2__btn" data-action="toggle-meet" aria-expanded="${!meetHidden}" aria-controls="meet-read">
+        <span>What they'll likely meet</span>${peek}<span class="foldh2__line" aria-hidden="true"></span><span class="foldh2__arrow" aria-hidden="true">▾</span></button></h2>
+      <div id="meet-read" ${meetHidden ? 'hidden' : ''}>${meetHidden ? '' : renderCoverage(boardUi, cov, { overwatch: owOp, approachName: APPROACHES[plan.approach].name, standby: state.crew.find((o) => o.id === plan.standby) ?? null })}</div>`;
 }
 
 function renderSettings() {

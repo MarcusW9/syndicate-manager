@@ -107,7 +107,7 @@ export function renderBoard(ui, { plan, tpl, people, crewSize }) {
         </div>
         <div class="board__group">
           <p class="board__label">Inside team <span>moves as one group</span></p>
-          <div class="dossiers" style="--n:${Math.min(4, n)}">${inside}</div>
+          <div class="dossiers dossiers--inside ${n >= 4 ? 'dossiers--pairs' : ''}" style="--n:${Math.min(4, n)}">${inside}</div>
         </div>
         <div class="board__group">
           <p class="board__label">Outside <span>overwatch, the van, standby</span></p>
