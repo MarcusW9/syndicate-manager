@@ -53,65 +53,7 @@ const GENERIC = {
   ],
 };
 
-// The Docks: a container yard behind a fence, the yard office, a crane, the harbour on the right.
-const DOCKS = {
-  ...GENERIC,
-  name: 'a container yard',
-  aria: 'Site plan of a container yard: the fence and gate, rows of containers, the yard office, a crane for overwatch, the harbour and the van on the service road',
-  shapes: [
-    ...GENERIC.shapes.filter((s) => s.cls !== 'sp-road' && s.cls !== 'sp-road__line'),
-    { t: 'rect', cls: 'sp-road', x: 0, y: 212, w: 318, h: 28 },
-    { t: 'line', cls: 'sp-road__line', x1: 0, y1: 226, x2: 318, y2: 226 },
-    { t: 'rect', cls: 'sp-water', x: 318, y: 0, w: 42, h: 240 },
-    { t: 'rect', cls: 'sp-jetty', x: 310, y: 186, w: 24, h: 9 },
-    { t: 'rect', cls: 'sp-desk', x: 252, y: 52, w: 20, h: 8 },
-    { t: 'rect', cls: 'sp-desk', x: 282, y: 80, w: 16, h: 16 },
-  ],
-  labels: [
-    { x: 124, y: 206, text: 'THE FENCE' }, { x: 18, y: 140, text: 'THE YARD' },
-    { x: 246, y: 32, text: 'YARD OFFICE', hi: true }, { x: 212, y: 20, text: 'CRANE' }, { x: 8, y: 236, text: 'VAN' },
-  ],
-};
 
-// Old Town: up an alley of steps from the lane, across a courtyard strung with laundry, into a
-// tenement flat. Overwatch on the next block's roof, by the water tank.
-const OLD_TOWN = {
-  name: 'a tenement',
-  aria: 'Site plan of a tenement: the lane and the van, an alley of steps, a courtyard with laundry lines, the tenement with the flat, and a rooftop water tank for overwatch',
-  points: { van: [316, 224], perch: [292, 40], target: [72, 64] },
-  paths: {
-    in: [[316, 224], [236, 224], [236, 198]],
-    inside: [[236, 198], [236, 160], [200, 128], [140, 118]],
-    target: [[140, 118], [118, 100], [72, 64]],
-    out: [[72, 64], [118, 100], [140, 118], [200, 128], [236, 160], [236, 198], [236, 224], [316, 224]],
-  },
-  views: { in: [189, 126, 171, 114], inside: [105, 72, 195, 130], target: [10, 10, 204, 136] },
-  sight: { rifle: [[292, 40], [128, 96], [128, 156], [222, 212], [300, 212], [300, 100]], drone: [[292, 40], [8, 12], [8, 212], [352, 212], [352, 12]] },
-  shapes: [
-    ...ROAD,
-    { t: 'rect', cls: 'sp-yard', x: 132, y: 100, w: 170, h: 52 },
-    { t: 'rect', cls: 'sp-alley', x: 226, y: 150, w: 20, h: 62 },
-    { t: 'row', cls: 'sp-step', x: 228, y: 156, w: 16, h: 1.5, step: 7, n: 8, axis: 'y' },
-    { t: 'rect', cls: 'sp-building', x: 24, y: 28, w: 96, h: 84 },
-    { t: 'rect', cls: 'sp-door', x: 117, y: 92, w: 5, h: 12 },
-    { t: 'rect', cls: 'sp-room', x: 40, y: 44, w: 50, h: 36 },
-    { t: 'rect', cls: 'sp-block', x: 150, y: 20, w: 76, h: 72 },
-    { t: 'rect', cls: 'sp-block', x: 250, y: 30, w: 92, h: 66 },
-    { t: 'row', cls: 'sp-window', x: 158, y: 30, w: 5, h: 4, step: 12, n: 6, tones: ['#2a303b', '#f2d541', '#2a303b', '#2a303b', '#3de8d8', '#2a303b'] },
-    { t: 'row', cls: 'sp-window', x: 158, y: 50, w: 5, h: 4, step: 12, n: 6, tones: ['#2a303b', '#2a303b', '#ff3d5f', '#2a303b', '#2a303b', '#f2d541'] },
-    { t: 'row', cls: 'sp-window', x: 158, y: 70, w: 5, h: 4, step: 12, n: 6, tones: ['#f2d541', '#2a303b', '#2a303b', '#2a303b', '#2a303b', '#2a303b'] },
-    { t: 'row', cls: 'sp-window', x: 258, y: 58, w: 5, h: 4, step: 12, n: 7, tones: ['#2a303b', '#2a303b', '#3de8d8', '#2a303b', '#f2d541', '#2a303b', '#2a303b'] },
-    { t: 'row', cls: 'sp-window', x: 258, y: 78, w: 5, h: 4, step: 12, n: 7, tones: ['#2a303b', '#ff3d5f', '#2a303b', '#2a303b', '#2a303b', '#2a303b', '#f2d541'] },
-    { t: 'circle', cls: 'sp-tank', cx: 292, cy: 40, r: 7 },
-    { t: 'poly', cls: 'sp-laundry', points: [[150, 106], [190, 112], [250, 104]] },
-    { t: 'poly', cls: 'sp-laundry', points: [[150, 140], [210, 146], [290, 138]] },
-    { t: 'rect', cls: 'sp-sign', x: 256, y: 196, w: 30, h: 6, fill: '#ff3d5f' },
-  ],
-  labels: [
-    { x: 252, y: 188, text: 'ALLEY' }, { x: 150, y: 160, text: 'COURTYARD' },
-    { x: 40, y: 22, text: 'THE FLAT', hi: true }, { x: 304, y: 26, text: 'ROOF' }, { x: 300, y: 236, text: 'VAN' },
-  ],
-};
 
 // The Night Market: through the market gate, down lanes of stalls in the crowd, to the back room of
 // a mahjong parlour. Overwatch on the footbridge over the market.
@@ -219,112 +161,247 @@ const BASIN = {
   ],
 };
 
-/** Site plans by district key (data/districts.js); `generic` for anywhere without one. */
-export const SITES = { generic: GENERIC, docks: DOCKS, oldTown: OLD_TOWN, nightMarket: NIGHT_MARKET, heights: HEIGHTS, basin: BASIN };
+// --- plots and parts (DESIGN.md, 2026-10-29) ----------------------------------------------------
+// A district with parts is a plot (the place itself: what's always there, the overwatch perch, the
+// hub where every way in meets every target, what the drone sees) and three kinds of hand-drawn
+// part, put together per job (after XCOM 2's plots and parcels):
+// - approaches: where the van stops and the way in to the hub (its own fence and gate), with the
+//   camera views for the way in and inside, and its labels;
+// - covers: what's stacked in the open ground between (no route may cross one);
+// - targets: the building the job is about, with the walk from the hub, its camera view and what
+//   the rifle sees past it. A target with `jobs` is that job's own place (Clinic Night's clinic);
+//   the others are the district's usual targets, for every other job there.
+// assemble() turns a choice of parts into the same site shape the plain sites have, so the plan
+// draws it the same way. Picture only: the core never reads a site.
 
-// --- variants (DESIGN.md, 2026-10-29) ----------------------------------------------------------
-// A district's site can have variants: other layouts of the same place, so two jobs in the Docks
-// aren't the same yard. A variant is a patch on the base site: `drop` removes the base shapes with
-// those `cls` (or `id`), `add` draws new ones, and points, paths, views, sight, labels, name and
-// aria replace what they name (points, paths, views and sight merge key by key). Picture only: the
-// core never reads a site, so a variant changes nothing about the odds. Every variant is checked
-// by tests/sites.test.js like a base site.
-
-const QUAY_GATE = {
-  id: 'quay-gate',
-  name: 'a container yard, quay side',
-  aria: 'Site plan of a container yard entered from the quay: the van on the harbour end of the service road, a gate at the far end of the fence, containers stacked in the middle, the yard office on the left, and a crane for overwatch',
-  points: { van: [300, 224], target: [56, 74] },
-  paths: {
-    in: [[300, 224], [282, 224], [282, 196]],
-    inside: [[282, 196], [282, 150], [200, 135], [130, 120]],
-    target: [[130, 120], [96, 98], [56, 74]],
-    out: [[56, 74], [96, 98], [130, 120], [200, 135], [282, 150], [282, 196], [282, 224], [300, 224]],
-  },
-  views: { in: [189, 126, 171, 114], inside: [100, 60, 255, 170], target: [10, 10, 204, 136] },
-  sight: { rifle: [[176, 24], [104, 56], [104, 194], [300, 194], [300, 40]], drone: [[176, 24], [8, 12], [8, 212], [352, 212], [352, 12]] },
-  drop: ['sp-cover', 'sp-fence', 'sp-building', 'sp-door', 'sp-desk'],
-  add: [
-    { t: 'poly', cls: 'sp-fence', points: [[8, 196], [262, 196]] },
-    { t: 'poly', cls: 'sp-fence', points: [[294, 196], [352, 196]] },
-    { t: 'row', cls: 'sp-cover', x: 110, y: 56, w: 27, h: 14, step: 31, n: 4, tones: CONTAINER_TONES },
-    { t: 'row', cls: 'sp-cover', x: 110, y: 96, w: 27, h: 14, step: 31, n: 4, skip: [1], tones: CONTAINER_TONES, shift: 1 },
-    { t: 'row', cls: 'sp-cover', x: 110, y: 150, w: 27, h: 14, step: 31, n: 4, tones: CONTAINER_TONES, shift: 2 },
-    { t: 'rect', cls: 'sp-building', x: 20, y: 38, w: 72, h: 72 },
-    { t: 'rect', cls: 'sp-door', x: 89, y: 94, w: 5, h: 12 },
-    { t: 'rect', cls: 'sp-desk', x: 32, y: 52, w: 20, h: 8 },
-    { t: 'rect', cls: 'sp-desk', x: 62, y: 80, w: 16, h: 16 },
+const DOCKS = {
+  name: 'a container yard',
+  aria: 'Site plan of a container yard on the harbour',
+  perch: [176, 24],
+  hub: [186, 135],
+  drone: [[176, 24], [8, 12], [8, 212], [352, 212], [352, 12]],
+  shapes: [
+    { t: 'rect', cls: 'sp-road', x: 0, y: 212, w: 318, h: 28 },
+    { t: 'line', cls: 'sp-road__line', x1: 0, y1: 226, x2: 318, y2: 226 },
+    { t: 'rect', cls: 'sp-water', x: 318, y: 0, w: 42, h: 240 },
+    { t: 'rect', cls: 'sp-jetty', x: 310, y: 186, w: 24, h: 9 },
+    { t: 'line', cls: 'sp-perch', x1: 146, y1: 24, x2: 206, y2: 24 },
+    { t: 'line', cls: 'sp-perch', x1: 150, y1: 24, x2: 150, y2: 40 },
+    { t: 'line', cls: 'sp-perch', x1: 202, y1: 24, x2: 202, y2: 40 },
   ],
-  labels: [
-    { x: 196, y: 206, text: 'THE FENCE' }, { x: 120, y: 182, text: 'THE YARD' },
-    { x: 26, y: 32, text: 'YARD OFFICE', hi: true }, { x: 212, y: 20, text: 'CRANE' }, { x: 292, y: 236, text: 'VAN' },
+  labels: [{ x: 212, y: 20, text: 'CRANE' }],
+  approaches: [
+    {
+      id: 'gate', aria: 'the van on the service road and a gate in the fence',
+      van: [40, 224], in: [[40, 224], [106, 224], [106, 196]], inside: [[106, 196], [106, 135], [186, 135]],
+      views: { in: [6, 126, 171, 114], inside: [0, 46, 249, 166] },
+      shapes: [
+        { t: 'poly', cls: 'sp-fence', points: [[8, 196], [94, 196]] },
+        { t: 'poly', cls: 'sp-fence', points: [[118, 196], [352, 196]] },
+      ],
+      labels: [{ x: 124, y: 206, text: 'THE FENCE' }, { x: 8, y: 236, text: 'VAN' }],
+    },
+    {
+      id: 'quay', aria: 'the van at the harbour end of the road and a gate by the quay',
+      van: [300, 224], in: [[300, 224], [282, 224], [282, 196]], inside: [[282, 196], [282, 150], [230, 135], [186, 135]],
+      views: { in: [189, 126, 171, 114], inside: [100, 60, 255, 170] },
+      shapes: [
+        { t: 'poly', cls: 'sp-fence', points: [[8, 196], [262, 196]] },
+        { t: 'poly', cls: 'sp-fence', points: [[294, 196], [352, 196]] },
+      ],
+      labels: [{ x: 196, y: 206, text: 'THE FENCE' }, { x: 292, y: 236, text: 'VAN' }],
+    },
+  ],
+  covers: [
+    {
+      id: 'stacks', aria: 'rows of containers',
+      shapes: [
+        { t: 'row', cls: 'sp-cover', x: 16, y: 100, w: 27, h: 14, step: 31, n: 2, tones: CONTAINER_TONES },
+        { t: 'row', cls: 'sp-cover', x: 16, y: 150, w: 27, h: 14, step: 31, n: 2, tones: CONTAINER_TONES, shift: 1 },
+        { t: 'row', cls: 'sp-cover', x: 130, y: 156, w: 27, h: 14, step: 31, n: 3, tones: CONTAINER_TONES, shift: 2 },
+        { t: 'row', cls: 'sp-cover', x: 114, y: 44, w: 27, h: 14, step: 31, n: 2, tones: CONTAINER_TONES, shift: 3 },
+        { t: 'rect', cls: 'sp-cover', x: 250, y: 160, w: 22, h: 12, fill: CONTAINER_TONES[1] },
+        { t: 'row', cls: 'sp-cover', x: 16, y: 124, w: 27, h: 14, step: 31, n: 2, tones: CONTAINER_TONES, shift: 2 },
+        { t: 'row', cls: 'sp-cover', x: 130, y: 176, w: 27, h: 14, step: 31, n: 3, tones: CONTAINER_TONES, shift: 1 },
+      ],
+      labels: [{ x: 18, y: 120, text: 'THE YARD' }],
+    },
+    {
+      id: 'open', aria: 'a few containers and loose crates',
+      shapes: [
+        { t: 'row', cls: 'sp-cover', x: 16, y: 150, w: 27, h: 14, step: 31, n: 2, tones: CONTAINER_TONES, shift: 2 },
+        { t: 'row', cls: 'sp-cover', x: 140, y: 160, w: 27, h: 14, step: 31, n: 2, tones: CONTAINER_TONES },
+        { t: 'rect', cls: 'sp-cover', x: 208, y: 48, w: 27, h: 14, fill: CONTAINER_TONES[3] },
+        { t: 'rect', cls: 'sp-cover', x: 24, y: 104, w: 18, h: 12, fill: CONTAINER_TONES[1] },
+        { t: 'rect', cls: 'sp-cover', x: 60, y: 176, w: 18, h: 12, fill: CONTAINER_TONES[2] },
+      ],
+      labels: [{ x: 18, y: 140, text: 'THE YARD' }],
+    },
+  ],
+  targets: [
+    {
+      id: 'office', aria: 'the yard office',
+      point: [272, 74], path: [[186, 135], [236, 100], [272, 74]], view: [150, 4, 204, 136],
+      rifle: [[176, 24], [12, 194], [232, 194], [232, 40]],
+      shapes: [
+        { t: 'rect', cls: 'sp-building', x: 236, y: 38, w: 72, h: 72 },
+        { t: 'rect', cls: 'sp-door', x: 233, y: 94, w: 5, h: 12 },
+        { t: 'rect', cls: 'sp-desk', x: 252, y: 52, w: 20, h: 8 },
+        { t: 'rect', cls: 'sp-desk', x: 282, y: 80, w: 16, h: 16 },
+      ],
+      labels: [{ x: 246, y: 32, text: 'YARD OFFICE', hi: true }],
+    },
+    {
+      id: 'cable-hut', jobs: ['cable'], aria: 'the cable hut on Pier 12, its cable running into the water',
+      point: [298, 58], path: [[186, 135], [250, 110], [276, 74], [298, 58]], view: [170, 20, 180, 120],
+      rifle: [[176, 24], [12, 194], [300, 194], [270, 92], [270, 36]],
+      shapes: [
+        { t: 'rect', cls: 'sp-building', x: 282, y: 34, w: 34, h: 50 },
+        { t: 'rect', cls: 'sp-door', x: 279, y: 62, w: 5, h: 12 },
+        { t: 'rect', cls: 'sp-desk', x: 292, y: 42, w: 14, h: 8 },
+        { t: 'line', cls: 'sp-cable', x1: 316, y1: 60, x2: 360, y2: 72 },
+      ],
+      labels: [{ x: 262, y: 28, text: 'PIER 12 HUT', hi: true }],
+    },
+    {
+      id: 'container-409', jobs: ['container409'], aria: 'Container 409 in a stack by the fence',
+      point: [76, 74], path: [[186, 135], [130, 104], [104, 78], [76, 74]], view: [40, 40, 180, 120],
+      rifle: [[176, 24], [118, 58], [118, 194], [300, 194], [300, 40]],
+      shapes: [
+        { t: 'rect', cls: 'sp-cover', x: 50, y: 40, w: 27, h: 14, fill: CONTAINER_TONES[0] },
+        { t: 'rect', cls: 'sp-cover', x: 80, y: 40, w: 27, h: 14, fill: CONTAINER_TONES[2] },
+        { t: 'rect', cls: 'sp-building', x: 50, y: 62, w: 50, h: 24 },
+        { t: 'rect', cls: 'sp-door', x: 98, y: 68, w: 5, h: 12 },
+      ],
+      labels: [{ x: 40, y: 34, text: 'CONTAINER 409', hi: true }],
+    },
   ],
 };
 
-const PUMP_HOUSE = {
-  id: 'pump-house',
-  name: 'a container yard, pump house',
-  aria: 'Site plan of a container yard with a pump house in the middle: the fence and gate, short rows of containers round it, a crane on the left for overwatch, and the van on the service road',
-  points: { perch: [60, 26], target: [178, 118] },
-  paths: {
-    inside: [[106, 196], [106, 172], [128, 150], [136, 117]],
-    target: [[136, 117], [150, 117], [178, 118]],
-    out: [[178, 118], [150, 117], [136, 117], [128, 150], [106, 172], [106, 196], [106, 224], [40, 224]],
-  },
-  views: { inside: [40, 60, 255, 170], target: [90, 40, 204, 136] },
-  sight: { rifle: [[60, 26], [14, 60], [14, 194], [146, 194], [146, 40]], drone: [[60, 26], [6, 14], [6, 214], [354, 214], [354, 14]] },
-  drop: ['sp-cover', 'sp-building', 'sp-door', 'sp-desk', 'sp-perch'],
-  add: [
-    { t: 'row', cls: 'sp-cover', x: 16, y: 56, w: 27, h: 14, step: 31, n: 4, tones: CONTAINER_TONES },
-    { t: 'row', cls: 'sp-cover', x: 210, y: 56, w: 27, h: 14, step: 31, n: 4, tones: CONTAINER_TONES, shift: 1 },
-    { t: 'row', cls: 'sp-cover', x: 16, y: 96, w: 27, h: 14, step: 31, n: 2, tones: CONTAINER_TONES, shift: 2 },
-    { t: 'row', cls: 'sp-cover', x: 232, y: 96, w: 27, h: 14, step: 31, n: 4, tones: CONTAINER_TONES },
-    { t: 'row', cls: 'sp-cover', x: 160, y: 156, w: 27, h: 14, step: 31, n: 5, tones: CONTAINER_TONES, shift: 1 },
-    { t: 'rect', cls: 'sp-building', x: 150, y: 96, w: 56, h: 42 },
-    { t: 'rect', cls: 'sp-door', x: 147, y: 110, w: 5, h: 14 },
-    { t: 'rect', cls: 'sp-desk', x: 160, y: 104, w: 16, h: 8 },
-    { t: 'rect', cls: 'sp-desk', x: 184, y: 118, w: 14, h: 12 },
-    { t: 'line', cls: 'sp-perch', x1: 30, y1: 24, x2: 90, y2: 24 },
-    { t: 'line', cls: 'sp-perch', x1: 34, y1: 24, x2: 34, y2: 40 },
-    { t: 'line', cls: 'sp-perch', x1: 86, y1: 24, x2: 86, y2: 40 },
+// Old Town: up an alley of steps from the lane, across a courtyard strung with laundry, into a
+// tenement. Overwatch on the next block's roof, by the water tank. Block 9's stairwell clinic is
+// Clinic Night's own target.
+const TENEMENT = [
+  { t: 'rect', cls: 'sp-building', x: 24, y: 28, w: 96, h: 84 },
+  { t: 'rect', cls: 'sp-door', x: 117, y: 92, w: 5, h: 12 },
+];
+const OLD_TOWN_TARGET = {
+  point: [72, 64], path: [[140, 118], [118, 100], [72, 64]], view: [10, 10, 204, 136],
+  rifle: [[292, 40], [128, 96], [128, 156], [222, 212], [300, 212], [300, 100]],
+};
+const OLD_TOWN = {
+  name: 'a tenement',
+  aria: 'Site plan of a tenement in Old Town',
+  perch: [292, 40],
+  hub: [140, 118],
+  drone: [[292, 40], [8, 12], [8, 212], [352, 212], [352, 12]],
+  shapes: [
+    ...ROAD,
+    { t: 'rect', cls: 'sp-yard', x: 132, y: 100, w: 170, h: 52 },
+    { t: 'rect', cls: 'sp-alley', x: 226, y: 150, w: 20, h: 62 },
+    { t: 'row', cls: 'sp-step', x: 228, y: 156, w: 16, h: 1.5, step: 7, n: 8, axis: 'y' },
+    { t: 'rect', cls: 'sp-block', x: 150, y: 20, w: 76, h: 72 },
+    { t: 'rect', cls: 'sp-block', x: 250, y: 30, w: 92, h: 66 },
+    { t: 'row', cls: 'sp-window', x: 158, y: 30, w: 5, h: 4, step: 12, n: 6, tones: ['#2a303b', '#f2d541', '#2a303b', '#2a303b', '#3de8d8', '#2a303b'] },
+    { t: 'row', cls: 'sp-window', x: 158, y: 50, w: 5, h: 4, step: 12, n: 6, tones: ['#2a303b', '#2a303b', '#ff3d5f', '#2a303b', '#2a303b', '#f2d541'] },
+    { t: 'row', cls: 'sp-window', x: 158, y: 70, w: 5, h: 4, step: 12, n: 6, tones: ['#f2d541', '#2a303b', '#2a303b', '#2a303b', '#2a303b', '#2a303b'] },
+    { t: 'row', cls: 'sp-window', x: 258, y: 58, w: 5, h: 4, step: 12, n: 7, tones: ['#2a303b', '#2a303b', '#3de8d8', '#2a303b', '#f2d541', '#2a303b', '#2a303b'] },
+    { t: 'row', cls: 'sp-window', x: 258, y: 78, w: 5, h: 4, step: 12, n: 7, tones: ['#2a303b', '#ff3d5f', '#2a303b', '#2a303b', '#2a303b', '#2a303b', '#f2d541'] },
+    { t: 'circle', cls: 'sp-tank', cx: 292, cy: 40, r: 7 },
+    { t: 'rect', cls: 'sp-sign', x: 256, y: 196, w: 30, h: 6, fill: '#ff3d5f' },
   ],
-  labels: [
-    { x: 124, y: 206, text: 'THE FENCE' }, { x: 18, y: 140, text: 'THE YARD' },
-    { x: 152, y: 90, text: 'PUMP HOUSE', hi: true }, { x: 96, y: 20, text: 'CRANE' }, { x: 8, y: 236, text: 'VAN' },
+  labels: [{ x: 304, y: 26, text: 'ROOF' }],
+  approaches: [
+    {
+      id: 'alley', aria: 'the lane and the van, and an alley of steps',
+      van: [316, 224], in: [[316, 224], [236, 224], [236, 198]], inside: [[236, 198], [236, 160], [200, 128], [140, 118]],
+      views: { in: [189, 126, 171, 114], inside: [105, 72, 195, 130] },
+      shapes: [],
+      labels: [{ x: 252, y: 188, text: 'ALLEY' }, { x: 300, y: 236, text: 'VAN' }],
+    },
+  ],
+  covers: [
+    {
+      id: 'laundry', aria: 'a courtyard with laundry lines',
+      shapes: [
+        { t: 'poly', cls: 'sp-laundry', points: [[150, 106], [190, 112], [250, 104]] },
+        { t: 'poly', cls: 'sp-laundry', points: [[150, 140], [210, 146], [290, 138]] },
+      ],
+      labels: [{ x: 150, y: 160, text: 'COURTYARD' }],
+    },
+  ],
+  targets: [
+    {
+      id: 'flat', aria: 'the tenement with the flat', ...OLD_TOWN_TARGET,
+      shapes: [...TENEMENT, { t: 'rect', cls: 'sp-room', x: 40, y: 44, w: 50, h: 36 }],
+      labels: [{ x: 40, y: 22, text: 'THE FLAT', hi: true }],
+    },
+    {
+      id: 'clinic', jobs: ['clinic'], aria: 'Block 9, with Doc Siu\'s clinic down the stairwell', ...OLD_TOWN_TARGET,
+      shapes: [
+        ...TENEMENT,
+        { t: 'rect', cls: 'sp-room', x: 40, y: 44, w: 50, h: 36 },
+        { t: 'row', cls: 'sp-cot', x: 44, y: 50, w: 12, h: 5, step: 16, n: 3 },
+        { t: 'row', cls: 'sp-cot', x: 44, y: 68, w: 12, h: 5, step: 16, n: 3 },
+        { t: 'rect', cls: 'sp-sign', x: 100, y: 100, w: 12, h: 4, fill: '#3de8d8' },
+      ],
+      labels: [{ x: 26, y: 22, text: 'BLOCK 9 CLINIC', hi: true }],
+    },
   ],
 };
 
-/** The variants of each district's site, other layouts of the same place (the base is variant 0). */
-export const SITE_VARIANTS = { docks: [QUAY_GATE, PUMP_HOUSE] };
+/** Districts drawn as parts, by key. */
+export const PLOTS = { docks: DOCKS, oldTown: OLD_TOWN };
 
-/** A base site with a variant's patch applied. */
-function applyVariant(base, v) {
-  const { id, drop = [], add = [], ...patch } = v;
-  const keep = (shape) => !drop.includes(shape.cls) && !drop.includes(shape.id);
+/** A choice of parts as a site, the same shape as a plain site. */
+export function assemble(plot, approach, cover, target) {
+  const rev = (path) => [...path].reverse();
   return {
-    ...base, ...patch, variant: id,
-    points: { ...base.points, ...patch.points }, paths: { ...base.paths, ...patch.paths },
-    views: { ...base.views, ...patch.views }, sight: { ...base.sight, ...patch.sight },
-    shapes: [...base.shapes.filter(keep), ...add],
+    name: plot.name,
+    aria: `${plot.aria}: ${approach.aria}, ${cover.aria}, ${target.aria}`,
+    parts: { approach: approach.id, cover: cover.id, target: target.id },
+    points: { van: approach.van, perch: plot.perch, target: target.point },
+    paths: {
+      in: approach.in, inside: approach.inside, target: target.path,
+      out: [...rev(target.path), ...rev(approach.inside).slice(1), ...rev(approach.in).slice(1)],
+    },
+    views: { ...approach.views, target: target.view },
+    sight: { rifle: target.rifle, drone: plot.drone },
+    shapes: [...plot.shapes, ...cover.shapes, ...approach.shapes, ...target.shapes],
+    labels: [...approach.labels, ...cover.labels, ...target.labels, ...plot.labels],
   };
 }
 
-/** Every site there is, base and variants, for the tests and the preview: [{ key, variant, site }]. */
-export const allSites = () => Object.entries(SITES).flatMap(([key, base]) => [
-  { key, variant: 'base', site: base },
-  ...(SITE_VARIANTS[key] ?? []).map((v) => ({ key, variant: v.id, site: applyVariant(base, v) })),
-]);
+/** The targets a job can get in a plot: its own if it has one, else the district's usual ones. */
+export const targetsFor = (plot, templateId) => {
+  const own = plot.targets.filter((t) => t.jobs?.includes(templateId));
+  return own.length ? own : plot.targets.filter((t) => !t.jobs);
+};
 
-const hash = (str) => { let h = 0; for (const ch of String(str)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; };
+const usual = (plot) => assemble(plot, plot.approaches[0], plot.covers[0], targetsFor(plot, null)[0]);
+
+/** Site plans by district key (data/districts.js); `generic` for anywhere without one. A district
+ * drawn as parts is here as its first approach, cover and usual target. */
+export const SITES = { generic: GENERIC, docks: usual(DOCKS), oldTown: usual(OLD_TOWN), nightMarket: NIGHT_MARKET, heights: HEIGHTS, basin: BASIN };
+
+/** Every site there can be, for the tests and the preview: [{ key, variant, site }], every combination of parts. */
+export const allSites = () => Object.entries(SITES).flatMap(([key, base]) => {
+  const plot = PLOTS[key];
+  if (!plot) return [{ key, variant: 'base', site: base }];
+  return plot.approaches.flatMap((a) => plot.covers.flatMap((c) => plot.targets.map((t) => ({ key, variant: `${a.id}+${c.id}+${t.id}`, site: assemble(plot, a, c, t) }))));
+});
+
+const hash = (str) => { let h = 2166136261; for (const ch of String(str)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0; return h; };
 
 /**
- * The site for a job: its district's base site or one of its variants, picked from the job's id so
- * the same job always shows the same layout and different jobs (two offers of the same work) differ.
- * Anywhere without a site gets the generic one. Nothing is stored: the id is the seed.
+ * The site for a job: in a district drawn as parts, an approach, a cover and a target picked from
+ * the job's id (the job's own target if it has one), so the same job always shows the same place
+ * and two offers of the same work can differ. Nothing is stored: the id is the seed. Anywhere else,
+ * the district's site or the generic one.
  */
-export function pickSite(district, jobId = '') {
-  const base = SITES[district] ?? SITES.generic;
-  const variants = SITE_VARIANTS[district] ?? [];
-  const i = hash(jobId) % (variants.length + 1);
-  return i === 0 ? base : applyVariant(base, variants[i - 1]);
+export function pickSite(district, jobId = '', templateId = null) {
+  const plot = PLOTS[district];
+  if (!plot) return SITES[district] ?? SITES.generic;
+  const pick = (list, salt) => list[hash(`${jobId}:${salt}`) % list.length];
+  return assemble(plot, pick(plot.approaches, 'a'), pick(plot.covers, 'c'), pick(targetsFor(plot, templateId), 't'));
 }

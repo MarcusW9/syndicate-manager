@@ -14,8 +14,8 @@ const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-r
 const initials = (op) => (op.handle ?? '?').split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 const escAttr = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-/** The site for a job: its district's layout (or one of its variants, picked from the job's id), or the generic one. */
-export const siteFor = (district, jobId) => pickSite(district, jobId);
+/** The site for a job: its district's place, put together from parts picked by the job's id (data/sites.js pickSite). */
+export const siteFor = (district, jobId, templateId) => pickSite(district, jobId, templateId);
 
 /** One shape from a site's data as SVG. */
 function shapeSvg(s) {

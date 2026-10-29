@@ -1,4 +1,4 @@
-// Draw every site plan (each district's base and its variants) side by side, with the rifle's sight,
+// Draw every site plan side by side (a district drawn as parts: every combination), with the rifle's sight,
 // for looking at layouts while authoring them (src/data/sites.js). Writes one PNG.
 //
 //   node scripts/preview-sites.mjs [district] [out.png]

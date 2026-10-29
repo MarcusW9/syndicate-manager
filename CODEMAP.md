@@ -28,7 +28,7 @@ Where things live and how a run flows, so you can read a few functions instead o
 - World: `jobs.js` (board, offers), `clients.js`, `heat.js`, `rumours.js`, `recruits.js`, `freelance.js`, `sidetasks.js`, `renewals.js`, `loyalty.js`, `time.js` (the day tick), `state.js` (new game, `SAVE_VERSION`), `report.js` (the report summary), `feed.js` (a run's events as watch cards), `upcoming.js` (Today's list).
 
 ## Site maps
-`data/sites.js`: a base site per district plus `SITE_VARIANTS` (patches: other layouts of the same place); `pickSite(district, jobId)` picks one from the job's id (stable, nothing stored). Picture only: the core never reads a site. `ui/siteplan.js` draws it. `node scripts/preview-sites.mjs <district>` draws every layout for authoring; `tests/sites.test.js` holds each to the same geometry rules.
+`data/sites.js`: plain sites, and districts drawn as parts (`PLOTS`: a plot with approaches, covers and targets; a target with `jobs` is that job's own place). `pickSite(district, jobId, templateId)` picks the parts from the job's id (stable, nothing stored) and `assemble()` makes them a site. Picture only: the core never reads a site. `ui/siteplan.js` draws it. `node scripts/preview-sites.mjs <district>` draws every combination; `tests/sites.test.js` checks each (geometry, routes clear of cover, a job's own target).
 
 ## Events and the record
 Everything that happens in a run is `record(am, event)` into `am.events`. `feed.js` turns events into watch cards; `report.js` and the report's full log (`ui/app.js` `renderFullLog`) read the same events. A new kind of moment needs its event, a card in `feed.js` and a line in `renderFullLog`.
