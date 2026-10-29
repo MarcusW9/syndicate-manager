@@ -990,3 +990,8 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .founding__bar .btn { flex: 1 1 200px; max-width: 420px; }
 .founding__bar p { margin: 0; }
 @media (min-width: 760px) { .founders { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* A renewal's three numbers (owner, 2026-10-29): equal columns, labels on top, the numbers on one
+   line along the bottom however the labels wrap, and room before the loyalty line. */
+.stats--deal { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 10px; }
+.stats--deal div { display: flex; flex-direction: column; justify-content: space-between; gap: 6px; }

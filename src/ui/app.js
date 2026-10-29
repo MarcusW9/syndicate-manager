@@ -792,7 +792,7 @@ function renderRenewal(m) {
   const pct = Math.round(p.discount * 100);
   return `
       <div class="riskcard">
-        <dl class="stats">
+        <dl class="stats stats--deal">
           <div><dt>Current wage</dt><dd>${money(p.current)}</dd></div>
           <div><dt>Asking</dt><dd>${money(p.ask)}</dd></div>
           <div><dt>Market value</dt><dd>${money(p.market)}</dd></div>
