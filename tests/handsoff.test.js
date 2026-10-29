@@ -6,7 +6,7 @@ import { createNewGame, SAVE_VERSION } from '../src/core/state.js';
 import * as M from '../src/core/mission.js';
 import { addOffer, templateById } from '../src/core/jobs.js';
 import { autoRun, ORDERS } from '../src/core/autorun.js';
-import { REPORT_LOGS_KEPT } from '../src/core/report.js';
+import { REPORT_LOGS_KEPT, introKind } from '../src/core/report.js';
 import { MISSIONS } from '../src/data/missions.js';
 import { playMission, carefulPolicy } from './play.js';
 
@@ -105,6 +105,9 @@ test('the summary only claims what the record shows', () => {
     const paid = events.some((e) => e.kind !== 'exit' && (e.choiceCost?.payCut ?? 0) > 0);
     if (!failed && !paid) assert.deepEqual(summary.hurt.filter((h) => !h.includes('whatever the roll')), [], 'nothing hurt, nothing listed');
     if (summary.introKind === 'clean') assert.ok(!failed && !paid);
+    // Joss's opener matches the record (owner, 2026-10-29: "not all the money" on a run where every roll held).
+    if (summary.introKind === 'messy') assert.ok(failed, 'messy means a roll failed');
+    if (summary.introKind === 'spent') assert.ok(!failed, 'spent means every roll held');
     assert.ok(summary.intro, 'Joss always opens the report');
   }
 });
@@ -230,4 +233,15 @@ test('every rookie job can be sent hands-off; bigger jobs not yet', async () => 
   const s = createNewGame({ seed: 34, startCrew: 'fresh' });
   s.jobs = []; addOffer(s, 'warehouse');
   assert.equal(send(s, s.jobs[0].id, s.crew.slice(0, 3).map((o) => o.id), 'stealth', 'steady'), s, 'a big job stays hands-on');
+});
+
+// 2026-10-29: a run where every roll held but a choice cost pay opened with "Not quietly, and not
+// all of it". Paying for a choice is its own opener; messy needs a failed roll.
+test("Joss's opener: a choice's cost isn't a messy run", () => {
+  const ok = { kind: 'roll', success: true, choiceCost: {} };
+  const tea = { kind: 'roll', success: true, choice: 'Calm the rider with tea first', choiceCost: { payCut: 0.1 } };
+  const slip = { kind: 'roll', success: false, choiceCost: {} };
+  assert.equal(introKind([ok, ok], { outcome: 'completed' }), 'clean');
+  assert.equal(introKind([ok, tea], { outcome: 'completed' }), 'spent');
+  assert.equal(introKind([tea, slip], { outcome: 'completed' }), 'messy');
 });

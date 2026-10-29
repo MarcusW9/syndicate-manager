@@ -29,13 +29,16 @@ function choiceCostText(e) {
   return parts.length ? `"${e.choice}" cost ${parts.join(' and ')} whatever the roll.` : null;
 }
 
-/** Which of Joss's report openers fits: loss, aborted, hurt, clean or messy. */
+/**
+ * Which of Joss's report openers fits: loss, aborted, hurt, messy (a roll failed), spent (every
+ * roll held, but a choice you made cost pay, heat or cash) or clean.
+ */
 export function introKind(events, { outcome, deaths = 0 }) {
   if (deaths || outcome === 'loss') return 'loss';
   if (outcome === 'aborted') return 'aborted';
   if (events.some((e) => ['serious', 'critical'].includes(e.injury?.severity))) return 'hurt';
-  const rough = events.some((e) => (e.kind === 'roll' && !e.success) || choiceCostText(e));
-  return rough ? 'messy' : 'clean';
+  if (events.some((e) => e.kind === 'roll' && !e.success)) return 'messy';
+  return events.some((e) => choiceCostText(e)) ? 'spent' : 'clean';
 }
 
 /**

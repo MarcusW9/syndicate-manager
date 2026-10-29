@@ -64,8 +64,15 @@ export const PARTNER = {
       'That\'s how it\'s meant to go. I\'ll pretend I wasn\'t worried.',
       'Clean. Nobody hurt, and the money\'s all there.',
     ],
+    // Every roll held; a choice you made cost something. The log says what, so Joss doesn't.
+    spent: [
+      'Every roll held. The rest was what you chose to spend.',
+      'Clean work. It cost what you said it could, and not a yen more.',
+      'Nobody slipped. We paid our way past one bit, on your call.',
+    ],
+    // A roll failed somewhere. Nothing here about noise or money: the log says what it cost.
     messy: [
-      'We got paid. Not quietly, and not all of it, but we got paid.',
+      'We got paid. It wasn\'t pretty, but we got paid.',
       'Done, with dents. The log says where.',
       'It went sideways in places. It still went.',
     ],
