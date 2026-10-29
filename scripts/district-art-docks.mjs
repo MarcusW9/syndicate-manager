@@ -18,6 +18,9 @@ const SHADOW = '#1b2340';
 const RED = '#ff3d5f'; // Red Lantern turf: the light that falls on everything from the right
 const SODIUM = '#f2b544';
 const CYAN = '#3de8d8';
+const VIOLET = '#b48cff';
+const PINK = '#ff5fae';
+const GREEN = '#5dff9b';
 const QUAY = 236; // the quay's edge, where water meets concrete
 
 function seeded(seed) {
@@ -88,6 +91,62 @@ function farShore() {
   return s;
 }
 
+// --- Hong Kong neon across the water ---------------------------------------------------------
+// Signs jutting out over the old streets on the far shore, stacked and crowding each other: the
+// pawnshop's 押, mahjong, a restaurant, a pharmacy, a goldsmith, a cha chaan teng (owner,
+// 2026-10-29). Far away, so small, but bright, and each one in the water below.
+const SIGNS = [
+  { x: 34, y: 128, text: '押', col: RED, w: 10, h: 12 },
+  { x: 58, y: 120, text: '麻雀', col: GREEN, w: 9, h: 22 },
+  { x: 86, y: 132, text: '酒家', col: PINK, w: 9, h: 22 },
+  { x: 116, y: 126, text: '藥房', col: CYAN, w: 9, h: 22 },
+  { x: 214, y: 134, text: '金行', col: SODIUM, w: 9, h: 22 },
+  { x: 262, y: 142, text: '茶餐廳', col: VIOLET, w: 9, h: 30 },
+  { x: 352, y: 146, text: '押', col: RED, w: 9, h: 11 },
+  { x: 666, y: 120, text: '夜總會', col: PINK, w: 9, h: 30 },
+  { x: 706, y: 136, text: '麻雀', col: CYAN, w: 9, h: 22 },
+];
+function hkSigns() {
+  let s = '';
+  // The tenements they hang off: each sign juts from the right-hand corner of an old block.
+  for (const g of SIGNS) {
+    const bx = g.x - g.w / 2 - 22;
+    const top = g.y - 10;
+    const c = mix(BG, SHADOW, 0.32);
+    s += rect(bx, top, 24, FAR_BASE - top, c) + rect(bx + 22.4, top, 1.6, FAR_BASE - top, lit(c, 0.3));
+    for (let wy = top + 4; wy < FAR_BASE - 3; wy += 6) for (let wx = bx + 2; wx < bx + 20; wx += 5) if (rnd() < 0.3) s += rect(wx, wy, 1.6, 1.3, SODIUM, `opacity="${(0.4 + rnd() * 0.4).toFixed(2)}"`);
+  }
+  for (const g of SIGNS) {
+    const chars = [...g.text];
+    s += rect(g.x - g.w / 2 - 3, g.y - 3, g.w + 6, g.h + 6, g.col, 'opacity="0.18"'); // the glow
+    s += rect(g.x - g.w / 2, g.y, g.w, g.h, '#0e0f14');
+    s += `<rect x="${f(g.x - g.w / 2 + 0.6)}" y="${f(g.y + 0.6)}" width="${f(g.w - 1.2)}" height="${f(g.h - 1.2)}" fill="none" stroke="${g.col}" stroke-width="0.6" />`;
+    const step = (g.h - 2) / chars.length;
+    chars.forEach((c, i) => { s += `<text x="${f(g.x)}" y="${f(g.y + 1 + step * (i + 0.78))}" class="neon-txt" fill="${g.col}" font-size="${f(Math.min(step * 0.86, g.w * 0.86))}" text-anchor="middle">${c}</text>`; });
+    s += rect(g.x - 0.4, g.y + g.h, 0.8, 4, '#2b3038'); // its bracket
+    farLights.push([g.x, g.y + g.h, g.col]);
+  }
+  return s;
+}
+
+// --- a flying car --------------------------------------------------------------------------
+/** A VTOL car crossing the sky behind the cranes, heading left: dark hull, lit right edge,
+ *  thrusters glowing underneath, a red tail light, a faint trail. */
+function flyer(x, y, scale = 1) {
+  const hull = '#232733';
+  let s = `<g transform="translate(${x} ${y}) scale(${scale})">`;
+  s += `<path d="M38 5 L120 4.4" stroke="#c9d3e0" stroke-width="0.6" opacity="0.12" />`; // its trail
+  s += poly([[0, 6], [7, 2], [16, 0.5], [28, 0.5], [35, 3], [38, 6], [35, 9], [4, 9.5]], hull);
+  s += poly([[28, 0.5], [35, 3], [38, 6], [35, 9], [33, 9], [35, 6], [32, 3], [26, 1.4]], lit(hull, 0.5)); // its lit side
+  s += poly([[8, 2.4], [15, 1.2], [24, 1.2], [24, 4], [7, 4]], mix(hull, CYAN, 0.35)); // canopy
+  s += rect(9, 2.4, 6, 0.6, mix('#ffffff', CYAN, 0.4), 'opacity="0.7"');
+  s += rect(4, 6.4, 30, 0.7, CYAN, 'opacity="0.8"'); // a running light along the flank
+  for (const tx of [6, 26]) s += rect(tx, 9.4, 7, 2.2, '#14171d') + `<ellipse cx="${tx + 3.5}" cy="13" rx="5" ry="2.6" fill="${CYAN}" opacity="0.28" /><ellipse cx="${tx + 3.5}" cy="12" rx="2.4" ry="1.1" fill="${CYAN}" opacity="0.8" />`;
+  s += rect(36.6, 5, 1.6, 1.6, RED) + `<circle cx="37.4" cy="5.8" r="4" fill="url(#dk-glow)" />`;
+  s += `<path d="M0 6 L-26 2 L-26 11 Z" fill="#f7efc8" opacity="0.08" />` + rect(0, 5.4, 1.4, 1.2, '#f7efc8'); // headlight
+  return s + '</g>';
+}
+
 // --- water ---------------------------------------------------------------------------------
 function water() {
   let s = rect(0, FAR_BASE, W, QUAY - FAR_BASE, '#080b11');
@@ -111,7 +170,8 @@ function water() {
 
 // --- cranes --------------------------------------------------------------------------------
 /** A ship-to-shore crane: two A-frame legs on the quay, a boom out over the water, a cab. */
-function crane(x, top, reach) {
+/** neon: the colour of the strip lights along its boom and front leg (owner, 2026-10-29). */
+function crane(x, top, reach, neon, signAt = 54) {
   const steel = '#3a404c';
   const sh = dark(steel, 0.35);
   const li = lit(steel, 0.55);
@@ -140,6 +200,16 @@ function crane(x, top, reach) {
   s += `<path d="M${tx + 4} ${by + 16} V${by + 70} M${tx + 14} ${by + 16} V${by + 70}" stroke="#5a606c" stroke-width="0.6" />`;
   s += container(tx - 12, by + 70, 42, 16, '#2f5d5a');
   s += rect(x - reach + 2, by + 7, 2, 3, RED);
+  // Neon strip lights: under the boom, up the front leg, and a sign on the machinery house, the
+  // way Hong Kong cranes get dressed up at night.
+  const glow = (gx, gy, gw, gh) => rect(gx - 2, gy - 2, gw + 4, gh + 4, neon, 'opacity="0.22"') + rect(gx, gy, gw, gh, neon);
+  s += glow(x - reach + 4, by + 7.4, reach + 72, 0.9);
+  s += glow(x + 47.8, top + 2, 0.9, QUAY - top - 4);
+  s += glow(x + 6, top - 2.6, 44, 0.8);
+  const sx = x + signAt;
+  s += rect(sx, by + 8, 22, 12, '#14171d') + `<rect x="${sx + 1}" y="${by + 9}" width="20" height="10" fill="none" stroke="${neon}" stroke-width="0.7" />`
+    + `<text x="${sx + 11}" y="${by + 16.6}" class="neon-txt" fill="${neon}" font-size="6.5" text-anchor="middle">${neon === CYAN ? '安達' : '海港'}</text>`
+    + `<rect x="${sx - 4}" y="${by + 4}" width="30" height="20" fill="${neon}" opacity="0.08" />`;
   return s;
 }
 
@@ -251,10 +321,13 @@ export function docksScene() {
     <defs>${sky()}</defs>
     <rect width="${W}" height="${H}" fill="url(#dk-sky)" />
     <rect width="${W}" height="${H}" fill="url(#dk-red)" />
+    ${flyer(250, 30, 1)}
+    ${flyer(598, 108, 0.42)}
     ${farShore()}
+    ${hkSigns()}
     ${water()}
-    ${crane(520, 70, 230)}
-    ${crane(140, 92, 120)}
+    ${crane(520, 70, 230, CYAN)}
+    ${crane(140, 92, 120, VIOLET, -30)}
     ${quay()}
     ${lamps()}
     ${stacks()}
@@ -273,7 +346,7 @@ body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,sa
 h1,h2,h3{font-family:Rajdhani,'Arial Narrow',sans-serif;text-transform:uppercase;letter-spacing:.1em;margin:0 0 6px}h1{font-size:1.4rem}h2{font-size:1.05rem;color:var(--cyan)}
 p{color:var(--muted);margin:0 0 10px}
 section{background:var(--panel);border:1px solid var(--line);padding:14px;margin:14px 0;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
-.scene{display:block;width:100%}.stencil{font:700 6.5px Rajdhani,'Arial Narrow',sans-serif;letter-spacing:.12em;fill:#e9e2cf;opacity:.85}
+.scene{display:block;width:100%}.neon-txt{font-family:'Noto Sans CJK TC','Noto Sans TC','PingFang TC','Microsoft JhengHei','WenQuanYi Zen Hei',sans-serif;font-weight:700}.stencil{font:700 6.5px Rajdhani,'Arial Narrow',sans-serif;letter-spacing:.12em;fill:#e9e2cf;opacity:.85}
 .dcard{background:var(--panel2);border:1px solid var(--line);max-width:390px;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
 .dcard .scene{aspect-ratio:2.4;object-fit:cover}.dcard__body{padding:10px 12px}.turf{font-size:.75rem;letter-spacing:.1em;color:#ff3d5f}
 .facts{list-style:none;margin:0 0 6px;padding:0;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.9rem}.talk-line{color:#f2d541;font-size:.85rem;margin:0}
