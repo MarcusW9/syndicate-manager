@@ -177,3 +177,24 @@ test('rifle looks: a look draws from the kit, the same every time; items without
     }
   }
 });
+
+test('sidearm looks (draft): every frame, finish, mod and charm draws, the same every time; plain sidearms are unchanged', async () => {
+  const { gearArt, portrait, SIDEARM_FRAMES, SIDEARM_FINISHES } = await import('../src/ui/art.js');
+  const { SIDEARM_LOOKS } = await import('../src/data/gearLooks.js');
+  const clean = (svg) => svg.replace(/(ga|sb|pf)\d+/g, 'x');
+  for (const k of ['frames', 'finishes']) assert.deepEqual(Object.keys(SIDEARM_LOOKS[k]).sort(), Object.keys({ frames: SIDEARM_FRAMES, finishes: SIDEARM_FINISHES }[k]).sort(), k);
+  assert.equal(gearArt({ uid: 'p', type: 'pistol', tier: 'street' }), null, 'a sidearm without a look has no drawing yet');
+  const mods = [null, ...Object.keys(SIDEARM_LOOKS.mods)], charms = [null, ...Object.keys(SIDEARM_LOOKS.charms)];
+  for (const frame of Object.keys(SIDEARM_FRAMES)) for (const finish of Object.keys(SIDEARM_FINISHES)) {
+    for (let i = 0; i < charms.length; i++) {
+      const item = { uid: 'p', type: 'pistol', tier: 'street', look: { frame, finish, mod: mods[i % mods.length], charm: charms[i] } };
+      const svg = gearArt(item);
+      assert.ok(svg.startsWith('<svg') && !svg.includes('undefined') && !svg.includes('NaN'), `${JSON.stringify(item.look)} draws`);
+      assert.equal(clean(svg), clean(gearArt(item)));
+    }
+  }
+  const op = { ...createNewGame({ seed: 3 }).crew[0], gear: {} };
+  const holstered = { ...op, gear: { weapon: { uid: 'p', type: 'pistol', tier: 'street', look: { frame: 'compact', finish: 'neon' } } } };
+  assert.notEqual(clean(portrait(holstered)), clean(portrait(op)), 'a sidearm with a look shows in a chest holster');
+  assert.equal(clean(portrait({ ...op, gear: { weapon: { uid: 'p', type: 'pistol', tier: 'street' } } })), clean(portrait(op)), 'a plain one still shows nothing');
+});

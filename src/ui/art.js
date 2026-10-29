@@ -1169,6 +1169,212 @@ export function rifleBuild({ light, neon, look }) {
     ${look.charm ? rifleCharm(look.charm, fr, c) : ''}`;
 }
 
+// --- sidearm looks (design draft, 2026-10-29) --------------------------------------------
+// The same kit idea as the rifles, drawn bigger in the same 96×32 frame (muzzle right), and
+// leaning into the city's neon: light strips, glowing vents, laser lines and holo sights. A glow
+// is a wide, faint stroke under a bright thin one, never a blur, so it stays flat.
+
+const glowPath = (d, col, w = 0.5, o = 0.22) => `<path d="${d}" stroke="${col}" stroke-width="${w * 6}" fill="none" opacity="${o * 0.6}" stroke-linecap="round"/><path d="${d}" stroke="${col}" stroke-width="${w * 3}" fill="none" opacity="${o * 1.3}" stroke-linecap="round"/><path d="${d}" stroke="${col}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`;
+
+export const SIDEARM_FINISHES = {
+  blued: { slide: '#2f3640', frame: '#232830', grip: '#1a1d23', dark: '#14171c', stipple: true },
+  stainless: { slide: '#b7bec8', frame: '#8e96a1', grip: '#5a3a22', dark: '#2a2e36', grain: true },
+  polymer: { slide: '#2a2e36', frame: '#1c1f25', grip: '#1c1f25', dark: '#121419', stipple: true },
+  tan: { slide: '#2a2e36', frame: '#9a8460', grip: '#9a8460', dark: '#1c1f25', stipple: true },
+  hazard: { slide: '#e0b23a', frame: '#2a2d36', grip: '#2a2d36', dark: '#16181d', stripes: true },
+  neon: { slide: '#15171c', frame: '#15171c', grip: '#15171c', dark: '#0d0e12', neonEdge: true },
+  cinnabar: { slide: '#1b1b20', frame: '#a8261e', grip: '#a8261e', dark: '#121216', gloss: true, trim: '#d9a441' },
+  jade: { slide: '#7a5c34', frame: '#3a3226', grip: '#3d8a68', dark: '#221e18', gloss: true, veins: '#9ad8b8' },
+  pearl: { slide: '#c9ced6', frame: '#8e96a1', grip: '#e9e3d6', dark: '#2a2e36', pearl: true },
+  rosewood: { slide: '#a07c44', frame: '#2e2420', grip: '#5a2a1c', dark: '#1e1814', grain: true, inlay: '#e9e1cc' },
+  blackgold: { slide: '#16171b', frame: '#16171b', grip: '#16171b', dark: '#0d0e11', gloss: true, trim: '#c9a24a', medallion: true },
+  holo: { slide: '#3a4a6a', frame: '#20232b', grip: '#20232b', dark: '#121419', holo: ['#7dd3fc', '#c4b5fd', '#f9a8d4'] },
+  synth: { slide: '#e6e9ee', frame: '#c9ced6', grip: '#3a3f48', dark: '#2a2e36', ledStrip: true },
+  ronin: { slide: '#101114', frame: '#101114', grip: '#2a1416', dark: '#08090b', wrap: '#8a2222', redEye: true },
+};
+
+/** Sidearm frames: parts by role (slide, frame, grip, dark), and anchors for mods and charms. */
+export const SIDEARM_FRAMES = {
+  compact: {
+    parts: [
+      { role: 'grip', d: 'M27 18 L40 18 L37.5 30 L24.5 30 Z', box: [24.5, 18, 40, 30] },
+      { role: 'frame', d: 'M26 14 L68 14 L68 17.4 L44 17.4 L40 18.4 L26 18.4 Z', box: [26, 14, 68, 18.4] },
+      { role: 'slide', d: 'M22 7 L70 7 L71 8 L71 14 L22 14 Z', box: [22, 7, 71, 14], slide: true },
+      { role: 'dark', ...rect(24, 29.4, 13.8, 1.4) },
+    ],
+    extra: (c) => `<path d="M40 18.4 Q41 23.4 47 22.6 L48 17.4" stroke="${c.f.frame}" stroke-width="1.2" fill="none"/><path d="M42.4 18.4 Q43.4 20 42.8 21.6" stroke="${c.f.dark}" stroke-width="0.8" fill="none"/>
+      ${[24.4, 25.8, 27.2, 28.6, 30].map((x) => `<path d="M${x} 8.6 V12.6" stroke="${c.shade(c.f.slide)}" stroke-width="0.5"/>`).join('')}
+      <rect x="46" y="8.2" width="8" height="2" fill="${c.f.dark}"/><rect x="23" y="5.6" width="2.4" height="1.4" fill="${c.f.dark}"/><rect x="67.6" y="5.8" width="1.2" height="1.2" fill="${c.f.dark}"/>`,
+    rail: [54, 17.4], lanyard: [25.4, 30.6], face: [31.4, 24.4], body: [36, 10.6, 66, 10.6], sightAt: [44, 7],
+  },
+  revolver: {
+    parts: [
+      { role: 'grip', d: 'M25 19 Q20.6 23 21.6 30.4 L31.4 30.4 Q31 24.4 35 20 Z', box: [20.6, 19, 35, 30.4] },
+      { role: 'frame', d: 'M24 7 L52 7 L52 19.6 L44 19.6 L40 20.4 L26 20.4 L24 17 Z', box: [24, 7, 52, 20.4] },
+      { role: 'slide', d: 'M50 8.6 L82 8.6 L82 13.2 L50 13.2 Z', box: [50, 8.6, 82, 13.2], slide: true },
+      { role: 'slide', ...rect(50, 7.4, 32, 1.4) },
+      { role: 'slide', d: 'M35 8 L48 8 Q50 8 50 10 L50 16.6 Q50 18.6 48 18.6 L35 18.6 Q33 18.6 33 16.6 L33 10 Q33 8 35 8 Z', box: [33, 8, 50, 18.6] },
+      { role: 'frame', ...rect(52, 13.2, 22, 1.4) },
+    ],
+    extra: (c) => `${[10.4, 13.2, 16].map((y) => `<path d="M35 ${y} H48" stroke="${c.shade(c.f.slide)}" stroke-width="0.6"/>`).join('')}
+      <path d="M24 7.6 L21 5 L22.6 4 L26 7 Z" fill="${c.f.dark}"/><rect x="80" y="5.8" width="1.4" height="1.8" fill="${c.f.dark}"/>
+      <path d="M36 20 Q37 25 43 24.2 L44 19.6" stroke="${c.f.frame}" stroke-width="1.2" fill="none"/><path d="M38.4 20.2 Q39.4 21.8 38.8 23.2" stroke="${c.f.dark}" stroke-width="0.8" fill="none"/>`,
+    rail: [56, 14.6], lanyard: [22.6, 31], face: [27, 25], body: [52, 10.9, 80, 10.9], sightAt: [56, 7.4],
+  },
+  machine: {
+    parts: [
+      { role: 'grip', d: 'M30 16 L39 16 L37.4 25 L28.4 25 Z', box: [28.4, 16, 39, 25] },
+      { role: 'dark', d: 'M29 25 L37.2 25 L36.4 31.6 L28.2 31.6 Z', box: [28.2, 25, 37.2, 31.6] },
+      { role: 'grip', d: 'M54 16 L58.6 16 L58 24 L54.6 24 Z', box: [54, 16, 58.6, 24] },
+      { role: 'slide', ...rect(18, 8, 46, 8), slide: true },
+      { role: 'dark', ...rect(64, 9.4, 12, 5.2) },
+      { role: 'dark', ...rect(76, 11, 4, 2) },
+      { role: 'dark', ...rect(6.6, 8.8, 1.6, 7) },
+      { role: 'dark', ...rect(24, 6.6, 30, 1.4) },
+    ],
+    extra: (c) => `<path d="M18 9.5 L8 9.5 L8 15 L18 15" stroke="${c.f.frame}" stroke-width="1.2" fill="none"/>
+      ${[66.4, 69.6, 72.8].map((x) => `<circle cx="${x}" cy="12" r="0.9" fill="#0d1016"/>`).join('')}
+      ${[27, 31, 35, 39, 43, 47, 51].map((x) => `<rect x="${x}" y="6.6" width="0.8" height="0.7" fill="#0d1016"/>`).join('')}
+      <path d="M39 16 Q40 20.4 45 19.8 L46 16" stroke="${c.f.frame}" stroke-width="1.2" fill="none"/><rect x="42" y="9" width="8" height="2" fill="${c.f.dark}"/>`,
+    rail: [60, 16], lanyard: [7.4, 16.4], face: [33.4, 20.6], body: [20, 12, 62, 12], sightAt: [30, 6.6],
+  },
+  heritage: {
+    parts: [
+      { role: 'grip', d: 'M24 15 Q17.4 19 19 30.4 L28.4 30.4 Q27 22.4 31.6 15.4 Z', box: [17.4, 15, 31.6, 30.4] },
+      { role: 'frame', d: 'M38 15.4 L48 15.4 L47.4 22.4 L38.6 22.4 Z', box: [38, 15.4, 48, 22.4] },
+      { role: 'slide', ...rect(24, 8, 28, 7.4), slide: true },
+      { role: 'slide', ...rect(52, 9.4, 32, 3) },
+    ],
+    extra: (c) => `<circle cx="23" cy="8.2" r="1.6" fill="none" stroke="${c.f.dark}" stroke-width="0.8"/><rect x="82" y="7.8" width="1.2" height="1.6" fill="${c.f.dark}"/>
+      <path d="M31.6 15.4 Q32.6 20.4 37.6 20 L38 15.4" stroke="${c.f.frame}" stroke-width="1.2" fill="none"/><path d="M45 6.6 L48 6.6 L48 8 L45 8 Z" fill="${c.f.dark}"/>
+      ${[19, 21.4, 23.8, 26.2, 28.6].map((y) => `<path d="M${20.6 + (y - 19) * 0.12} ${y} L${27.4 + (y - 19) * 0.2} ${y - 0.6}" stroke="${c.shade(c.f.grip)}" stroke-width="0.4"/>`).join('')}`,
+    rail: [56, 12.4], lanyard: [19.6, 30.8], face: [24, 23], body: [26, 11.7, 50, 11.7], sightAt: [60, 7.6],
+  },
+  cannon: {
+    parts: [
+      { role: 'grip', d: 'M23 20 L40 20 L37 31.6 L20 31.6 Z', box: [20, 20, 40, 31.6] },
+      { role: 'frame', d: 'M22 15 L78 15 L78 19 L46 19 L42 20.4 L22 20.4 Z', box: [22, 15, 78, 20.4] },
+      { role: 'slide', d: 'M18 5 L80 5 L82 7 L82 15 L18 15 Z', box: [18, 5, 82, 15], slide: true },
+      { role: 'dark', ...rect(82, 6, 8, 8.6) },
+      { role: 'dark', ...rect(24, 3.6, 40, 1.4) },
+    ],
+    extra: (c) => `${[64, 68, 72, 76].map((x) => `<rect x="${x}" y="5" width="2" height="1.6" fill="#0d1016"/>`).join('')}${[84, 86.4, 88.6].map((x) => `<rect x="${x}" y="7.4" width="0.8" height="5.8" fill="#0d1016"/>`).join('')}
+      ${[20.6, 22, 23.4, 24.8, 26.2].map((x) => `<path d="M${x} 7 V13" stroke="${c.shade(c.f.slide)}" stroke-width="0.5"/>`).join('')}
+      <path d="M42 20.4 Q43.4 26 50 25 L51 19" stroke="${c.f.frame}" stroke-width="1.3" fill="none"/><rect x="48" y="7" width="9" height="2.4" fill="${c.f.dark}"/>`,
+    rail: [56, 19], lanyard: [21, 31.8], face: [29.4, 25.6], body: [30, 10, 78, 10], sightAt: [36, 3.6],
+  },
+  smart: {
+    parts: [
+      { role: 'grip', d: 'M27 18 L40 18 L38 29.6 L25 29.6 Z', box: [25, 18, 40, 29.6] },
+      { role: 'frame', d: 'M26 14.4 L66 14.4 L64 17.6 L44 17.6 L40 18.6 L26 18.6 Z', box: [26, 14.4, 66, 18.6] },
+      { role: 'slide', d: 'M22 8 L68 8 Q73 8.4 73 11 Q73 14 68 14.4 L22 14.4 Z', box: [22, 8, 73, 14.4], slide: true },
+    ],
+    extra: (c) => `<path d="M40 18.6 Q41 23 46.6 22.4 L47.4 17.6" stroke="${c.f.frame}" stroke-width="1.2" fill="none"/>
+      <path d="M31 29.6 Q31 32 26 31.6 Q14 30.6 4 31.4" stroke="${c.f.dark}" stroke-width="1" fill="none"/>${glowPath('M31 29.8 Q31 31.6 26 31.3 Q14 30.4 4 31.1', c.neon, 0.3, 0.15)}
+      ${glowPath('M24 12.8 H69', c.neon, 0.55)}${[21, 23, 25].map((y, i) => `<circle cx="26.6" cy="${y}" r="0.45" fill="${i === 2 ? '#3dff9a' : c.neon}"/>`).join('')}
+      <rect x="40" y="1.6" width="12" height="5.4" fill="${c.neon}" opacity="0.12" stroke="${c.neon}" stroke-width="0.35"/><circle cx="46" cy="4.3" r="1.2" fill="none" stroke="${c.neon}" stroke-width="0.35"/><circle cx="46" cy="4.3" r="0.25" fill="${c.neon}"/><rect x="45" y="7" width="2" height="1" fill="${c.f.dark}"/>`,
+    rail: [52, 17.6], lanyard: [26, 30], face: [32.4, 23.6], body: [28, 10.6, 66, 10.6], sightAt: null,
+  },
+  coil: {
+    parts: [
+      { role: 'grip', d: 'M27 16 L39 16 L37 29.6 L24.6 29.6 Z', box: [24.6, 16, 39, 29.6] },
+      { role: 'slide', d: 'M22 8 L52 8 L54 10 L54 16 L22 16 Z', box: [22, 8, 54, 16], slide: true },
+      { role: 'slide', ...rect(54, 8.4, 30, 2) },
+      { role: 'slide', ...rect(54, 14, 30, 2) },
+      { role: 'dark', ...rect(84, 8, 2, 8) },
+      { role: 'dark', ...rect(15, 9.6, 7, 5.4) },
+    ],
+    extra: (c) => `${glowPath('M56 12.2 H83', c.neon, 0.6, 0.3)}${[58, 62, 66, 70, 74, 78].map((x) => `<rect x="${x}" y="10.2" width="1.6" height="3.8" fill="${c.f.frame}"/><rect x="${x}" y="10.2" width="1.6" height="0.6" fill="${c.lit(c.f.frame)}"/>`).join('')}
+      <rect x="16.2" y="10.8" width="4.6" height="3" fill="${c.neon}" opacity="0.85"/><rect x="16.2" y="10.8" width="4.6" height="3" fill="none" stroke="${c.neon}" stroke-width="1.6" opacity="0.15"/>
+      <path d="M18.6 9.6 Q18.6 5 30 5.4 L52 6.4 L55 8.4" stroke="${c.f.dark}" stroke-width="0.9" fill="none"/>${glowPath('M18.6 9.4 Q18.6 5.2 30 5.6', c.neon, 0.25, 0.12)}
+      <path d="M39 16 Q40 21 45.6 20.4 L46.4 16" stroke="${c.f.frame}" stroke-width="1.2" fill="none"/>`,
+    rail: [44, 16], lanyard: [25.4, 30], face: [31.6, 22.6], body: [26, 12, 52, 12], sightAt: [34, 8],
+  },
+};
+
+/** Mods: the cyberpunk ones glow in the carrier's chrome colour (a laser is always red). */
+function sidearmMod(kind, fr, c, id) {
+  const [rx, ry] = fr.rail;
+  const [bx0, by, bx1] = fr.body;
+  const gold = c.f.trim ?? '#d9a441';
+  switch (kind) {
+    case 'laser': return `<rect x="${rx}" y="${ry}" width="9" height="2.8" rx="0.6" fill="${c.f.dark}"/><rect x="${rx}" y="${ry}" width="9" height="0.6" fill="${c.lit(c.f.dark)}"/>
+      <circle cx="${rx + 9}" cy="${ry + 1.4}" r="0.7" fill="#ff3d5f"/>${glowPath(`M${rx + 9.6} ${ry + 1.4} H96`, '#ff3d5f', 0.35, 0.25)}`;
+    case 'holo': return fr.sightAt ? `<rect x="${fr.sightAt[0]}" y="${fr.sightAt[1] - 1.2}" width="5" height="1.2" fill="${c.f.dark}"/>
+      <path d="M${fr.sightAt[0] + 0.6} ${fr.sightAt[1] - 1.2} L${fr.sightAt[0] - 0.4} ${fr.sightAt[1] - 6.2} L${fr.sightAt[0] + 5.6} ${fr.sightAt[1] - 6.2} L${fr.sightAt[0] + 4.4} ${fr.sightAt[1] - 1.2} Z" fill="${c.neon}" opacity="0.14" stroke="${c.neon}" stroke-width="0.35"/>
+      <circle cx="${fr.sightAt[0] + 2.6}" cy="${fr.sightAt[1] - 3.7}" r="0.9" fill="none" stroke="${c.neon}" stroke-width="0.3"/><circle cx="${fr.sightAt[0] + 2.6}" cy="${fr.sightAt[1] - 3.7}" r="0.25" fill="${c.neon}"/>` : '';
+    case 'vents': {
+      const n = 4, step = (bx1 - bx0 - 8) / n;
+      return Array.from({ length: n }, (_, i) => { const x = bx0 + 6 + i * step; return `<rect x="${x}" y="${by - 0.9}" width="${step * 0.55}" height="1.8" rx="0.4" fill="${c.neon}" opacity="0.9"/><rect x="${x - 0.6}" y="${by - 1.6}" width="${step * 0.55 + 1.2}" height="3.2" rx="1" fill="${c.neon}" opacity="0.18"/>`; }).join('');
+    }
+    case 'ledmag': { const [fx, fy] = fr.face; return `<rect x="${fx - 1.6}" y="${fy - 2.6}" width="3.2" height="5.4" rx="0.4" fill="#0b0d10"/>${[0, 1, 2, 3].map((i) => `<rect x="${fx - 1}" y="${fy - 2 + i * 1.25}" width="2" height="0.8" fill="${i === 0 ? c.f.dark : c.neon}" opacity="${i === 0 ? 1 : 0.95}"/>`).join('')}<rect x="${fx - 2.2}" y="${fy - 3.2}" width="4.4" height="6.6" rx="1" fill="${c.neon}" opacity="0.12"/>`; }
+    case 'scales': { const arcs = []; for (let y = by - 2.2, row = 0; y <= by + 1.6; y += 1.3, row++) for (let x = bx0 + (row % 2 ? 1.1 : 0); x < bx1 - 2; x += 2.2) arcs.push(`<path d="M${x} ${y} Q${x + 1.1} ${y + 1.3} ${x + 2.2} ${y}"/>`); return `<g clip-path="url(#${id}s)" stroke="${gold}" stroke-width="0.3" fill="none" opacity="0.8">${arcs.join('')}</g>`; }
+    case 'clouds': { const curl = (cx, cy, s) => `<path d="M${cx - 2.4 * s} ${cy + 0.6 * s} Q${cx - 2.4 * s} ${cy - 1.4 * s} ${cx - 0.8 * s} ${cy - 1.2 * s} Q${cx + 0.4 * s} ${cy - 1 * s} ${cx + 0.2 * s} ${cy} Q${cx} ${cy + 0.7 * s} ${cx - 0.6 * s} ${cy + 0.3 * s} M${cx + 0.2 * s} ${cy} Q${cx + 1.4 * s} ${cy - 1.6 * s} ${cx + 2.6 * s} ${cy - 0.4 * s} Q${cx + 3.2 * s} ${cy + 0.6 * s} ${cx + 2.2 * s} ${cy + 0.8 * s}"/>`; const mx = (bx0 + bx1) / 2; return `<g clip-path="url(#${id}s)" stroke="${gold}" stroke-width="0.4" fill="none" opacity="0.9">${curl(mx - 6, by, 1)}${curl(mx + 4, by + 0.6, 0.8)}</g>`; }
+    case 'circuit': return `${glowPath(`M${bx0 + 1} ${by + 1} H${bx0 + 6} L${bx0 + 7.4} ${by - 0.6} H${bx1 - 6} M${bx0 + 10} ${by + 1} H${bx1 - 3}`, c.neon, 0.35, 0.18)}<circle cx="${bx1 - 6}" cy="${by - 0.6}" r="0.5" fill="${c.neon}"/><circle cx="${bx1 - 3}" cy="${by + 1}" r="0.5" fill="${c.neon}"/>`;
+    default: return '';
+  }
+}
+
+/** Charms on a lanyard from the grip, or flat on it. The cyber ones glow. */
+function sidearmCharm(kind, fr, c) {
+  const [lx, ly] = fr.lanyard, [fx, fy] = fr.face;
+  const red = '#c62a2a', gold = '#d4a640';
+  const cord = (len, col = red) => `<path d="M${lx} ${ly} Q${lx - 1.4} ${ly + len / 2} ${lx - 0.6} ${ly + len}" stroke="${col}" stroke-width="0.45" fill="none"/>`;
+  const end = [lx - 0.6, ly];
+  switch (kind) {
+    case 'tassel': return `${cord(1.4)}<path d="M${end[0] - 1} ${ly + 1.4} L${end[0] + 1} ${ly + 1.4} L${end[0] + 1.4} ${Math.min(31.8, ly + 5)} L${end[0] - 1.4} ${Math.min(31.8, ly + 5)} Z" fill="${red}"/><circle cx="${end[0]}" cy="${ly + 1.2}" r="0.5" fill="${gold}"/>`;
+    case 'coin': return `${cord(0.6)}<circle cx="${end[0]}" cy="${Math.min(30.4, ly + 1.6)}" r="1.4" fill="${gold}"/><rect x="${end[0] - 0.35}" y="${Math.min(30.4, ly + 1.6) - 0.35}" width="0.7" height="0.7" fill="#0d1016"/>`;
+    case 'talisman': return `<g transform="rotate(-4 ${fx} ${fy})"><rect x="${fx - 1.2}" y="${fy - 3}" width="2.4" height="6" fill="#e9d27c"/><g stroke="#b3261e" stroke-width="0.3" fill="none"><circle cx="${fx}" cy="${fy - 1.8}" r="0.5"/><path d="M${fx - 0.6} ${fy - 0.6} H${fx + 0.6} M${fx} ${fy - 0.6} Q${fx - 0.6} ${fy + 0.8} ${fx + 0.4} ${fy + 1.4} M${fx - 0.6} ${fy + 2.2} H${fx + 0.6}"/></g></g>`;
+    case 'mahjong': return `${cord(0.6)}<rect x="${end[0] - 1.1}" y="${ly + 0.6}" width="2.2" height="${Math.min(3, 31.8 - ly - 0.6)}" rx="0.3" fill="#ece6d6"/><circle cx="${end[0] - 0.2}" cy="${ly + 1.5}" r="0.4" fill="${red}"/>`;
+    case 'sticker': return `<circle cx="${fx}" cy="${fy}" r="1.8" fill="#fff"/><circle cx="${fx}" cy="${fy}" r="1.5" fill="#ff4f7b"/><circle cx="${fx - 0.5}" cy="${fy - 0.3}" r="0.22" fill="#1b1f28"/><circle cx="${fx + 0.5}" cy="${fy - 0.3}" r="0.22" fill="#1b1f28"/><path d="M${fx - 0.4} ${fy + 0.4} Q${fx} ${fy + 0.8} ${fx + 0.4} ${fy + 0.4}" stroke="#1b1f28" stroke-width="0.22" fill="none"/>`;
+    case 'cube': { const y = Math.min(29, ly + 0.8); return `${cord(0.8, '#2a2e36')}<rect x="${end[0] - 1.2}" y="${y}" width="2.4" height="2.4" fill="${c.neon}" opacity="0.2"/><rect x="${end[0] - 1}" y="${y + 0.2}" width="2" height="2" fill="none" stroke="${c.neon}" stroke-width="0.4"/><rect x="${end[0] - 0.3}" y="${y + 0.9}" width="0.6" height="0.6" fill="${c.neon}"/><rect x="${end[0] - 2.2}" y="${y - 1}" width="4.4" height="4.4" fill="${c.neon}" opacity="0.1"/>`; }
+    case 'shard': { const y = Math.min(28.4, ly + 0.6); return `${cord(0.6, '#2a2e36')}<path d="M${end[0]} ${y} L${end[0] + 1.1} ${y + 1.4} L${end[0]} ${y + 3.4} L${end[0] - 1.1} ${y + 1.4} Z" fill="${c.neon}" opacity="0.35" stroke="${c.neon}" stroke-width="0.3"/><path d="M${end[0]} ${y} V${y + 3.4}" stroke="#fff" stroke-width="0.2" opacity="0.6"/>`; }
+    case 'cat': return `${glowPath(`M${fx - 1.4} ${fy + 1.2} V${fy - 0.6} L${fx - 1} ${fy - 1.8} L${fx - 0.4} ${fy - 0.9} H${fx + 0.4} L${fx + 1} ${fy - 1.8} L${fx + 1.4} ${fy - 0.6} V${fy + 1.2} Z`, '#ff8ad8', 0.3, 0.22)}<circle cx="${fx - 0.5}" cy="${fy - 0.1}" r="0.2" fill="#ff8ad8"/><circle cx="${fx + 0.5}" cy="${fy - 0.1}" r="0.2" fill="#ff8ad8"/><path d="M${fx + 1.4} ${fy} l1 -1.2" stroke="#ff8ad8" stroke-width="0.3"/>`;
+    default: return '';
+  }
+}
+
+/** A sidearm from the kit. look: { frame, finish, mod?, charm? }. */
+export function sidearmBuild({ light, neon, look }) {
+  const fr = SIDEARM_FRAMES[look.frame] ?? SIDEARM_FRAMES.compact;
+  const f = SIDEARM_FINISHES[look.finish] ?? SIDEARM_FINISHES.blued;
+  const lit = (col, t = 0.45) => mix(col, light, t);
+  const shade = (col) => mix(col, SHADOW, 0.45);
+  const c = { f, light, neon, lit, shade };
+  const id = `sb${++uid}`;
+  const of = (role) => fr.parts.filter((p) => p.role === role);
+  const box = (ps) => ps.reduce((b, p) => [Math.min(b[0], p.box[0]), Math.min(b[1], p.box[1]), Math.max(b[2], p.box[2]), Math.max(b[3], p.box[3])], [99, 99, 0, 0]);
+  const parts = fr.parts.map((p, i) => {
+    const col = f[p.role];
+    const [x0, y0, x1, y1] = p.box;
+    return `<clipPath id="${id}p${i}"><path d="${p.d}"/></clipPath><path d="${p.d}" fill="${col}"/>
+      <g clip-path="url(#${id}p${i})"><rect x="${x0}" y="${y0}" width="${x1 - x0}" height="0.8" fill="${lit(col, f.gloss ? 0.6 : 0.45)}"/><rect x="${x0}" y="${y1 - 0.8}" width="${x1 - x0}" height="0.8" fill="${shade(col)}"/></g>`;
+  }).join('');
+  const [gx0, gy0, gx1, gy1] = box(of('grip'));
+  const [sx0, sy0, sx1, sy1] = box(of('slide'));
+  const onGrip = [], onSlide = [];
+  if (f.stipple) for (let y = gy0 + 2; y < gy1 - 1; y += 1.4) for (let x = gx0 + 1; x < gx1 - 1; x += 1.4) onGrip.push(`<circle cx="${x + ((y * 3) % 1.4) * 0.3}" cy="${y}" r="0.22" fill="${shade(f.grip)}"/>`);
+  if (f.grain) for (let k = 1; k <= 4; k++) { const y = gy0 + ((gy1 - gy0) * k) / 5; onGrip.push(`<path d="M${gx0} ${y} Q${(gx0 + gx1) / 2} ${y - 0.8} ${gx1} ${y + 0.2}" stroke="${shade(f.grip)}" stroke-width="0.35" fill="none"/>`); }
+  if (f.veins) onGrip.push(`<path d="M${gx0 + 1} ${gy0 + 2} Q${gx0 + 5} ${gy0 + 5} ${gx0 + 3} ${gy0 + 8} T${gx0 + 6} ${gy1 - 1}" stroke="${f.veins}" stroke-width="0.4" fill="none" opacity="0.75"/>`);
+  if (f.pearl) onGrip.push(`<path d="M${gx0 + 2} ${gy0 + 2} Q${gx0 + 6} ${gy0 + 4} ${gx0 + 4} ${gy0 + 8}" stroke="#f9c6e0" stroke-width="0.6" fill="none" opacity="0.6"/><path d="M${gx0 + 4} ${gy0 + 3} Q${gx0 + 8} ${gy0 + 6} ${gx0 + 5} ${gy1 - 2}" stroke="#bfeaf5" stroke-width="0.6" fill="none" opacity="0.6"/>`);
+  if (f.inlay) { const [fx, fy] = fr.face; onGrip.push(`<path d="M${fx} ${fy - 1.4} l1 1.4 l-1 1.4 l-1 -1.4 Z" fill="${f.inlay}"/>`); }
+  if (f.medallion) { const [fx, fy] = fr.face; onGrip.push(`<circle cx="${fx}" cy="${fy}" r="1.6" fill="${f.trim}"/><circle cx="${fx}" cy="${fy}" r="1" fill="none" stroke="${shade(f.trim)}" stroke-width="0.3"/>`); }
+  if (f.wrap) for (let y = gy0 + 1; y < gy1; y += 2.2) onGrip.push(`<path d="M${gx0} ${y} L${(gx0 + gx1) / 2} ${y + 1.1} L${gx1} ${y} M${gx0} ${y + 2.2} L${(gx0 + gx1) / 2} ${y + 1.1} L${gx1} ${y + 2.2}" stroke="${f.wrap}" stroke-width="0.7" fill="none"/>`);
+  if (f.stripes) for (let x = sx0 + 2; x < sx1; x += 3) onSlide.push(`<path d="M${x} ${sy1} L${x + 2.4} ${sy0}" stroke="#16181d" stroke-width="0.9"/>`);
+  if (f.holo) f.holo.forEach((col, i) => onSlide.push(`<path d="M${sx0 + i * 9} ${sy1} L${sx0 + 9 + i * 9} ${sy0} L${sx0 + 15 + i * 9} ${sy0} L${sx0 + 6 + i * 9} ${sy1} Z" fill="${col}" opacity="0.55"/><path d="M${sx0 + 30 + i * 9} ${sy1} L${sx0 + 39 + i * 9} ${sy0} L${sx0 + 44 + i * 9} ${sy0} L${sx0 + 35 + i * 9} ${sy1} Z" fill="${col}" opacity="0.45"/>`));
+  if (f.gloss) onSlide.push(`<path d="M${sx0 + 1} ${sy0 + 1.6} L${sx1 - 2} ${sy0 + 1.6}" stroke="#fff" stroke-width="0.4" opacity="0.25"/>`);
+  if (f.trim) onSlide.push(`<path d="M${sx0 + 0.6} ${sy1 - 1.4} H${sx1 - 0.6}" stroke="${f.trim}" stroke-width="0.35"/>`);
+  const neonEdge = f.neonEdge ? fr.parts.filter((p) => p.role !== 'dark').map((p) => glowPath(p.d, neon, 0.3, 0.15)).join('') : '';
+  const ledStrip = f.ledStrip ? glowPath(`M${sx0 + 2} ${sy1 - 1.4} H${sx1 - 3}`, neon, 0.5) : '';
+  const redEye = f.redEye ? `${[0, 1.4, 2.8].map((dx) => `<circle cx="${sx1 - 6 - dx}" cy="${sy0 + 2}" r="0.35" fill="#ff3d5f"/>`).join('')}${glowPath(`M${sx0 + 3} ${sy1 - 1.2} H${sx0 + 12}`, '#ff3d5f', 0.3, 0.2)}` : '';
+  return `<defs><clipPath id="${id}g"><path d="${of('grip').map((p) => p.d).join(' ')}"/></clipPath><clipPath id="${id}s"><path d="${of('slide').map((p) => p.d).join(' ')}"/></clipPath></defs>
+    ${parts}${fr.extra(c)}
+    <g clip-path="url(#${id}g)">${onGrip.join('')}</g><g clip-path="url(#${id}s)">${onSlide.join('')}</g>
+    ${neonEdge}${ledStrip}${redEye}
+    ${look.mod ? sidearmMod(look.mod, fr, c, id) : ''}
+    ${look.charm ? sidearmCharm(look.charm, fr, c) : ''}`;
+}
+
 const GEAR_SHAPES = { rifle: rifleShapes };
 
 /** True when this item type has a drawing (otherwise the UI shows its line icon). */
@@ -1179,7 +1385,8 @@ export const hasGearArt = (type) => !!GEAR_SHAPES[type];
  * it (their light and chrome colour); without one it sits under the safehouse's sodium lamp.
  */
 export function gearArt(item, { carrier = null, width = 96 } = {}) {
-  const shapes = item.type === 'rifle' && item.look ? (o) => rifleBuild({ ...o, look: item.look }) : GEAR_SHAPES[item.type];
+  const build = item.look && { rifle: rifleBuild, pistol: sidearmBuild }[item.type];
+  const shapes = build ? (o) => build({ ...o, look: item.look }) : GEAR_SHAPES[item.type];
   if (!shapes) return null;
   const light = carrier ? lightOf(carrier) : STASH_LIGHT;
   const neon = carrier ? faceOf(carrier).chromeColor : '#3de8d8';
@@ -1197,6 +1404,13 @@ const ON_PORTRAIT = ['rifle'];
 
 function portraitGear(op, c, f) {
   const item = Object.values(op.gear ?? {}).filter(Boolean).find((i) => ON_PORTRAIT.includes(i.type));
+  // No rifle: a sidearm with a look sits in a chest holster on the shadow side (design draft).
+  const pistol = !item && Object.values(op.gear ?? {}).find((i) => i?.type === 'pistol' && i.look);
+  if (pistol) {
+    return { back: '', front: `<path d="M44 47.4 L14 55" stroke="#1a1d24" stroke-width="2.2"/><path d="M44 46.8 L14 54.4" stroke="${mix('#1a1d24', c.light, 0.35)}" stroke-width="0.4"/>
+      <g transform="translate(8.5 44.6) rotate(-8) scale(0.27)">${sidearmBuild({ light: c.light, neon: f.chromeColor, look: pistol.look })}</g>
+      <path d="M11 50 L19.6 48.8 L21 54.4 L12.4 55.6 Z" fill="#20242c"/><path d="M11 50 L19.6 48.8" stroke="${mix('#20242c', c.light, 0.4)}" stroke-width="0.4"/>` };
+  }
   if (!item) return { back: '', front: '' };
   const tier = item.tier ?? 'street';
   const sling = tier === 'pro' ? '#1a1d24' : '#3a3125';
