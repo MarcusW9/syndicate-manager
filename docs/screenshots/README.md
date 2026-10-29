@@ -22,6 +22,7 @@ Then add a row to the top of the table below and commit the folder with the chan
 
 | Date | Version | Commit | What's new on screen | Folder |
 | --- | --- | --- | --- | --- |
+| 2026-10-29 | Tabs off during the founder pick | (this change) | The usual set. 01, the founder pick: Crew, Jobs and City dimmed in the tab bar until the three founders are picked. | [2026-10-29-founder-pick-tabs-off](2026-10-29-founder-pick-tabs-off/) |
 | 2026-10-29 | Four inside on a phone, two to a row | (this change) | The usual set. Before and after at 390 and 360px wide with four inside (`scripts/capture-plan-phone.mjs`) are in the design-session folder. | [2026-10-29-squad-board-pairs](2026-10-29-squad-board-pairs/) |
 | 2026-10-29 | Design session: four inside on a phone | (`scripts/capture-plan-phone.mjs`) | 01 and 02: before, four portrait cards at 390 and 360px (names shrunk, the stat line running off the card). 03 and 04: after, two landscape cards to a row. | [2026-10-29-design-session-board-pairs](2026-10-29-design-session-board-pairs/) |
 | 2026-10-29 | Owner captures: four inside on an iPhone | (owner) | 01: the board with four inside, too tight (an older cached build: names not yet shrunk to fit), and "maybe we can have 2 on a row or a horizontal swipe". | [2026-10-29-owner-captures-board-phone](2026-10-29-owner-captures-board-phone/) |

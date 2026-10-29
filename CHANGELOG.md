@@ -5,6 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-29 · Tabs are off until you pick your crew
+- At the start of a new game, the Crew, Jobs and City tabs are greyed out until you pick your three founders, instead of looking tappable and doing nothing. Save still works, so you can load another game, and Today takes you back to the pick.
+
 ## 2026-10-29 · The City map holds still while you scroll
 - On iPad and iPhone, the City map and the district picture beside it no longer grow as you scroll and Safari hides its toolbar. They keep the size they open at. The site plan on the watch screen holds still the same way.
 

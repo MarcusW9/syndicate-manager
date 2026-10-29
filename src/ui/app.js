@@ -100,7 +100,7 @@ function onClick(e) {
   const { action, id } = t.dataset;
 
   switch (action) {
-    case 'nav': screen = id; returnTo = null; openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; gearSlot = null; plan = null; sidePlan = null; pickSlot = null; break;
+    case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; screen = id; returnTo = null; openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; gearSlot = null; plan = null; sidePlan = null; pickSlot = null; break;
     case 'continue': {
       if (isBlocked(state) || Date.now() < continueRestUntil) return;
       const next = advanceDay(state);
@@ -502,13 +502,19 @@ function renderDayCue(cue) {
     </div>`;
 }
 
+// While the founders are being picked there's nothing to see on Crew, Jobs or City: those tabs are
+// off, Today shows the pick, and Save stays open so another slot can still be loaded.
+const FOUNDING_TABS = ['inbox', 'settings'];
+
 function navButton(id, label, count = 0, countWord = '') {
-  const pill = count ? ` <span class="pill ${id === 'inbox' ? 'pill--new' : ''}" aria-label="${count} ${countWord}">${count}</span>` : '';
-  return `<button class="nav__btn ${screen === id ? 'is-active' : ''}" data-action="nav" data-id="${id}">${esc(label)}${pill}</button>`;
+  const off = state.founding && !FOUNDING_TABS.includes(id);
+  const on = state.founding ? id === (screen === 'settings' ? 'settings' : 'inbox') : screen === id;
+  const pill = count && !off ? ` <span class="pill ${id === 'inbox' ? 'pill--new' : ''}" aria-label="${count} ${countWord}">${count}</span>` : '';
+  return `<button class="nav__btn ${on ? 'is-active' : ''}" data-action="nav" data-id="${id}" ${off ? 'disabled' : ''}>${esc(label)}${pill}</button>`;
 }
 
 function renderScreen() {
-  if (state.founding) return renderFounding(); // nothing else until the founders are picked
+  if (state.founding && screen !== 'settings') return renderFounding(); // nothing else until the founders are picked
   if (screen === 'inbox') return renderInbox();
   if (screen === 'crew') return openRecruitId ? renderRecruit() : openOperativeId ? renderOperative() : openArmoury ? renderArmoury(gearUi, state) : renderCrew();
   // Jobs: on wide screens the board stays beside the job being planned (styles.css hides it on phones).
