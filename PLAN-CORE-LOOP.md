@@ -150,9 +150,16 @@ in only when something big happens. Numbers below are drafts, to tune with a sim
 - **Who:** the runners in that zone, plus overwatch if it can see the zone (rifle outdoors, drone
   anywhere). Against them, guards: count and toughness from threat, alert and the site.
 - **Health:** every runner has HP (a base plus something from combat or cool; draft: 10 + cool/4).
-  Guards have HP too. Weapons do damage (draft: unarmed 1, sidearm 3, rifle 5 from overwatch);
-  armour takes some off every hit (draft: vest 2). So gear is visible in numbers: "Sidearm 3,
-  vest blocks 2".
+  Guards have HP too. Weapons do damage (draft: unarmed 1, sidearm 3, rifle 5 from overwatch).
+  So gear is visible in numbers: "Sidearm 3, vest blocks 1".
+- **Armour, first version: XCOM's flat soak** (owner's call, 2026-10-29: "see how it plays
+  out"). Armour has points; each takes 1 off every hit, and **a hit that lands always does at
+  least 1** (nobody is immune). Draft: street vest 1, pro vest 2. Guards carry armour too, more at
+  higher threat (armoured corp security), so a sidearm into armour 2 does 1 and the rifle matters.
+  Armour never wears down and is full on every job (no wear, no repairs). Outside battles the vest
+  keeps its −10 points on the serious-wound chance. **Later, if it plays flat:** shred and pierce
+  tags on weapons, armour adding HP, a heavy vest costing stealth and social, or Battle Brothers'
+  armour as a second bar (DESIGN.md row of 2026-10-29).
 - **A round:** everyone acts once, by role, then each standing guard goes for someone.
   Fighter: shoot (combat). Medic: stabilise or patch someone (medical; trauma kit helps). Tech:
   lights, cameras or a turret off for the round (tech; deck helps). Face: get a guard to back off
