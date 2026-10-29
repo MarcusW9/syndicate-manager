@@ -159,8 +159,12 @@ test('Shaolin monks lean East and Southeast Asian, anyone can be one, and the ea
   for (const { f } of s) if (f.monk && f.monk !== 'shaolin') assert.ok(['grey', 'ochre', 'cyber'].includes(f.monk));
 });
 
-test('rifle looks (draft): a look draws from the kit, the same every time; items without one are unchanged', async () => {
-  const { gearArt, RIFLE_FRAMES, RIFLE_FINISHES, RIFLE_ENGRAVINGS, RIFLE_CHARMS } = await import('../src/ui/art.js');
+test('rifle looks: a look draws from the kit, the same every time; items without one are unchanged', async () => {
+  const { gearArt, RIFLE_FRAMES, RIFLE_FINISHES } = await import('../src/ui/art.js');
+  const { RIFLE_LOOKS } = await import('../src/data/gearLooks.js');
+  const { engravings: RIFLE_ENGRAVINGS, charms: RIFLE_CHARMS } = RIFLE_LOOKS;
+  // The data names every part the art can draw, and the art draws every part the data names.
+  for (const k of ['frames', 'finishes']) assert.deepEqual(Object.keys(RIFLE_LOOKS[k]).sort(), Object.keys({ frames: RIFLE_FRAMES, finishes: RIFLE_FINISHES }[k]).sort(), k);
   const clean = (svg) => svg.replace(/(ga|rb)\d+/g, 'x');
   const plain = { uid: 'r1', type: 'rifle', tier: 'street' };
   assert.equal(clean(gearArt(plain)), clean(gearArt({ ...plain, look: undefined })), 'no look, the original drawing');

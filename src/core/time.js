@@ -16,6 +16,7 @@ import { refreshSideBoard, returnSideTasks } from './sidetasks.js';
 import { dailyTraits } from './earned.js';
 import { neuralFloor } from './gear.js';
 import { checkSpecialisations } from './specialisations.js';
+import { refreshArmoury } from './looks.js';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAYS_PER_SEASON = 364; // 52 weeks
@@ -81,6 +82,7 @@ export function advanceDay(prev) {
   if (calendar(state.day).isMonday) driftTrust(state); // clients drift back towards neutral
   if (calendar(state.day).isMonday) refreshFreelancers(state);
   if (calendar(state.day).isMonday) refreshSideBoard(state); // a fresh board of side tasks
+  if (calendar(state.day).isMonday) refreshArmoury(state); // new rifles in the armoury
   if (calendar(state.day).isMonday) rollRumour(state);
   tickJobs(state); // offers expire; new work trickles in through the week
   if (calendar(state.day).weekday === 'Wed') scoutWeek(state);

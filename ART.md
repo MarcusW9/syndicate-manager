@@ -48,7 +48,7 @@ A street terminal in a wet neon city, after Cyberpunk 2077's interface and Citiz
 - **Site plans** (`src/data/sites.js`, drawn by `src/ui/siteplan.js`): the watch screen's map of a job, one per district, from above at night on the same dark ground as the city map. Flat shapes, no outlines on cover; buildings `#171b24` with a grey edge; the target room a dashed signal-red outline; the crew's route a cyan line with ring nodes; overwatch a sodium perch; the rifle's sight a faint sodium wedge, the drone's cyan. Each district reads at a glance: rust and teal containers and the harbour (Docks), lit windows, laundry lines and an alley of steps (Old Town), neon stalls and a grey crowd (Night Market), a cyan-edged glass tower over a planted plaza (Glass Heights), the cream racecourse oval and timber stables (Basin). Labels are small grey caps; the target's is white.
 - **Gear** (`src/ui/gear.js`): the armoury is rows on `--panel-2` with the bottom-right corner cut, the item's drawing above (or its cyan line icon beside) its name in display caps and what it does in cyan. A runner's four slots are tiles in a 2×2 grid, each with the item drawn big in a 3:1 frame; empty ones are dashed with a +. Buying shows one row per item with a button per tier ("¥2,500", "PRO +1 ¥6,250").
 - **Gear drawings** (`gearArt` in `src/ui/art.js`, 2026-10-28): items drawn like the faces: flat colour, hard light from the right, no outlines, top edges and lenses catching the city light, undersides falling to the navy shadow `#1b2340`. A 96×32 frame, front to the right, on `#0d1016` with the light as a gradient from the right. One drawing per item type; only three things change: the **tier** (street: gunmetal `#454c57`, worn wood `#6b4a2e`, sodium tape, canvas sling; pro: carbon `#1d2129`, skeleton polymer stock, a neon line in the carrier's chrome colour), the **light** (the carrier's city light; sodium `#f2b544` in the stash) and the **neon**. So far: the rifle (scope, vented handguard, suppressor, folded bipod, sling). Others keep their line icon until drawn.
-- **Gear on portraits:** one item at a time, the most telling (only the rifle so far). The rifle hangs across the back: drawn behind everything at `translate(4 72) rotate(-44) scale(0.9)` in the 64-grid, stock low on the left, scope and muzzle up behind the lit shoulder, with the sling across the chest in front of the shirt. From game state, like injuries; never random.
+- **Gear on portraits:** one item at a time, the most telling (only the rifle so far; each rifle drawn with its own look, see "Rifle looks"). The rifle hangs across the back: drawn behind everything at `translate(4 72) rotate(-44) scale(0.9)` in the 64-grid, stock low on the left, scope and muzzle up behind the lit shoulder, with the sling across the chest in front of the shirt. From game state, like injuries; never random.
 - **Freelancers** (squad picker and board): violet `#b48cff`, the one colour nothing else on the board uses: a 3px stripe down the left of their picker row on a violet-tinted `#1c1928`, a "Freelance" tag in display caps over their cut, and a violet bar along the bottom of their dossier.
 - **Tap targets** stay at least 44px. **Layout** is phone first (360–430px), with a sidebar from 900px.
 
@@ -171,6 +171,20 @@ What the job leaves on a face, for good. `src/core/marks.js` records each one in
 Tired eyes override any expression. First match wins: dead stare, then stressed, then smirk, then neutral.
 
 ---
+
+## Rifle looks (since 2026-10-29)
+
+Every rifle is built from a kit of parts and has its own name. The parts, their names and the odds are data (`src/data/gearLooks.js`), `src/core/looks.js` rolls them from the game's seed and the item's id (never the shared dice), and `rifleBuild()` in `src/ui/art.js` draws them in the 96×32 item frame, lit by the carrier's city light (the safehouse's sodium lamp in the stash). The same drawing hangs on the portrait.
+
+| Part | Options |
+| --- | --- |
+| Frame | **marksman** (scope, suppressor, folded bipod), **carbine** (collapsible stock, curved magazine, red dot), **bullpup** (one-piece shell, magazine behind the grip, carry-handle scope), **heavy** (big box magazine, thick barrel, slotted muzzle brake, long scope), **heritage** (long wooden stock to the muzzle, barrel bands, iron sights, bolt with a ball knob) |
+| Finish, street | gunmetal and old wood (grain, taped grip) `#6b4a2e`/`#454c57`; rust (chipped olive and rusted metal) `#4b4f3b`/`#6b4733`; urban camo `#5b616b` with grey blocks; bamboo `#b8995a` with node rings; candy-pink paint `#ff4f7b` (gloss) |
+| Finish, pro | rosewood and brass `#5a2a1c`/`#a07c44` with mother-of-pearl inlay; carbon `#272c35` with a thumbhole and a neon line; cinnabar lacquer `#a8261e` with gold trim `#d9a441`; jade and bronze `#3d8a68`/`#7a5c34` with pale veins; temple bronze (green patina `#6fa08a`, gold trim); black lacquer and gold `#16171b`/`#c9a24a`; white ceramic `#d8dce2` with a neon line |
+| Engraving | gold xiangyun **clouds** on the stock; **dragon scales** across the handguard; a **neon circuit** along the receiver in the carrier's chrome colour. Street 15%, pro 60%. |
+| Charm | **red silk tassel** from the butt; **paper talisman** (yellow `#e9d27c`, red strokes `#b3261e`) on the stock; **lucky coin** (gold, square hole) on red cord; **prayer beads** from the swivel; **mahjong tile**; **lucky sticker** (pink cat face); **hazard tape** on the handguard. About half of rifles have one; street and pro shelves stock different charms. |
+
+**Names** are two words: one from the finish, engraving or charm, one from the frame ("Vermilion Heron", "Ghost Heirloom", "Emerald Hornet"). Every part is drawn with flat planes: a lit band along each part's top and a shaded band along its bottom.
 
 ## Joss
 

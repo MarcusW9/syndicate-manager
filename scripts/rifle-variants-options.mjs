@@ -4,7 +4,11 @@
 // Writes drafts/prototypes/rifle-variants-options.html. Run: node scripts/rifle-variants-options.mjs
 
 import { writeFileSync } from 'node:fs';
-import { gearArt, portrait, faceOf, RIFLE_FRAMES, RIFLE_FINISHES, RIFLE_ENGRAVINGS, RIFLE_CHARMS } from '../src/ui/art.js';
+import { gearArt, portrait, faceOf } from '../src/ui/art.js';
+import { RIFLE_LOOKS } from '../src/data/gearLooks.js';
+const { frames: RIFLE_FRAMES, finishes: RIFLE_FINISHES } = RIFLE_LOOKS;
+const RIFLE_ENGRAVINGS = Object.fromEntries(Object.entries(RIFLE_LOOKS.engravings).map(([k, v]) => [k, v.name]));
+const RIFLE_CHARMS = Object.fromEntries(Object.entries(RIFLE_LOOKS.charms).map(([k, v]) => [k, v.name]));
 import { createNewGame } from '../src/core/state.js';
 import { generateRecruit } from '../src/core/recruits.js';
 
@@ -62,11 +66,11 @@ ${BUILDS.slice(0, 8).map(([name, look], i) => { const op = { ...bare[i % bare.le
 </div></section>
 
 <section><h2>Frames</h2><p>The silhouette, in the street finish.</p><div class="grid">
-${Object.entries(RIFLE_FRAMES).map(([k, fr]) => card({ frame: k, finish: 'street' }, fr.name)).join('')}
+${Object.entries(RIFLE_FRAMES).map(([k, fr]) => card({ frame: k, finish: 'street' }, fr.name.charAt(0).toUpperCase() + fr.name.slice(1))).join('')}
 </div></section>
 
 <section><h2>Finishes</h2><p>Materials and colours, on the marksman frame.</p><div class="grid">
-${Object.entries(RIFLE_FINISHES).map(([k, f]) => card({ frame: 'marksman', finish: k }, f.name)).join('')}
+${Object.entries(RIFLE_FINISHES).map(([k, f]) => card({ frame: 'marksman', finish: k }, f.name.charAt(0).toUpperCase() + f.name.slice(1))).join('')}
 </div></section>
 
 <section><h2>Engravings and charms</h2><div class="grid">

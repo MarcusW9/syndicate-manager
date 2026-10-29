@@ -5,6 +5,12 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-29 · Every rifle is its own
+- **Rifles have looks and names.** Each one is built from a frame (marksman, carbine, bullpup, heavy or heritage), a finish (from old wood and rust to cinnabar lacquer, jade, temple bronze and white ceramic), sometimes an engraving (gold clouds, dragon scales, a neon circuit) and sometimes a charm (a red silk tassel, a paper talisman, a lucky coin, prayer beads, a mahjong tile...). Each has a name to match, like "Vermilion Heron" or "Ghost Heirloom".
+- **The armoury has a weekly shelf of rifles**: two street and one pro, all different, with new ones every Monday. Other gear is bought as before.
+- The name shows wherever the rifle does, with what it's made of underneath. Looks don't change what a rifle does.
+- Saves upgrade on their own: a rifle you already own keeps its look and gets a name.
+
 ## 2026-10-28 · Career marks
 - **A bad wound leaves a scar.** A serious or critical injury leaves a permanent scar on their face, up to three. Light wounds heal clean.
 - **Pushing neural load leaves chrome.** A job that ends with someone in the danger zone (over 70) adds a visible implant, up to two.

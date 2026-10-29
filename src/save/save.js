@@ -12,6 +12,7 @@
 import { refreshSideBoard } from '../core/sidetasks.js';
 import { SAVE_VERSION } from '../core/state.js';
 import { TATTOO_JOBS } from '../core/marks.js';
+import { nameLook, refreshArmoury } from '../core/looks.js';
 import { addOffer } from '../core/jobs.js';
 import { STARTING_ROSTER_CAP } from '../core/recruits.js';
 import { prepareOperative, rollPotential, rollScoutError, scoutFor, potentialRead } from '../core/development.js';
@@ -370,6 +371,17 @@ function migrate(state) {
     }
     for (const entry of state.memorial ?? []) entry.marks = entry.marks ?? [];
     state.version = 25;
+  }
+  if (state.version === 25) {
+    // v26: rifle looks and names (core/looks.js). Rifles already owned keep the look they had
+    // (gunmetal and wood, or carbon for pro) and get a name; the armoury stocks its first rifles.
+    const rifles = [...(state.stash ?? []), ...state.crew.flatMap((op) => Object.values(op.gear ?? {}))].filter((i) => i?.type === 'rifle' && !i.look);
+    for (const item of rifles) {
+      item.look = { frame: 'marksman', finish: item.tier === 'pro' ? 'carbon' : 'street', engraving: null, charm: null };
+      item.name = nameLook(state, `item|${item.uid}`, item.look);
+    }
+    if (!state.armoury) refreshArmoury(state);
+    state.version = 26;
   }
   return state;
 }

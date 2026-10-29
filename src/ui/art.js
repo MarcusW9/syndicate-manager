@@ -919,24 +919,25 @@ function rifleShapes({ tier, light, neon }) {
   ].join('');
 }
 
-// --- rifle looks (design draft, 2026-10-28) ---------------------------------------------
+// --- rifle looks (2026-10-29) -----------------------------------------------------------
 // A kit of parts: a frame (the silhouette), a finish (materials and colours), an engraving and
-// a charm. An item with a `look` draws from the kit; items without one (every item in the game
-// today) keep the drawing above. Same 96×32 frame, muzzle right, lit from the right.
+// a charm. Which parts exist, their names and the odds are data (data/gearLooks.js); core/looks.js
+// rolls each rifle's look; these are the drawings. An item without a look keeps the drawing
+// above. Same 96×32 frame, muzzle right, lit from the right.
 
 export const RIFLE_FINISHES = {
-  street: { name: 'Gunmetal and old wood', stock: '#6b4a2e', metal: '#454c57', dark: '#2b3038', guard: 'dark', grain: true, tape: true },
-  carbon: { name: 'Carbon', stock: '#272c35', metal: '#1d2129', dark: '#121519', guard: 'metal', skeleton: true, neonLine: true },
-  rosewood: { name: 'Rosewood and brass', stock: '#5a2a1c', metal: '#a07c44', dark: '#2e2420', guard: 'stock', grain: true, inlay: '#e9e1cc' },
-  cinnabar: { name: 'Cinnabar lacquer', stock: '#a8261e', metal: '#1b1b20', dark: '#121216', guard: 'stock', gloss: true, trim: '#d9a441' },
-  jade: { name: 'Jade and bronze', stock: '#3d8a68', metal: '#7a5c34', dark: '#2a2620', guard: 'stock', gloss: true, veins: '#9ad8b8' },
-  bamboo: { name: 'Bamboo', stock: '#b8995a', metal: '#3a3f47', dark: '#24282e', guard: 'stock', nodes: true },
-  bronze: { name: 'Temple bronze', stock: '#4a3a2a', metal: '#8a6a3c', dark: '#3a3024', guard: 'metal', patina: '#6fa08a', trim: '#c9a24a' },
-  blackgold: { name: 'Black and gold', stock: '#16171b', metal: '#202127', dark: '#0f1013', guard: 'metal', gloss: true, trim: '#c9a24a' },
-  ceramic: { name: 'White ceramic', stock: '#d8dce2', metal: '#aeb5bf', dark: '#353a43', guard: 'stock', neonLine: true },
-  candy: { name: 'Candy neon', stock: '#ff4f7b', metal: '#2a2d36', dark: '#191b21', guard: 'stock', gloss: true },
-  urban: { name: 'Urban camo', stock: '#5b616b', metal: '#3a3f47', dark: '#24282e', guard: 'stock', camo: ['#7b818b', '#3e434c', '#9aa0a8'] },
-  rust: { name: 'Rust bucket', stock: '#4b4f3b', metal: '#6b4733', dark: '#3a2a22', guard: 'dark', chips: true, tape: true },
+  street: { stock: '#6b4a2e', metal: '#454c57', dark: '#2b3038', guard: 'dark', grain: true, tape: true },
+  carbon: { stock: '#272c35', metal: '#1d2129', dark: '#121519', guard: 'metal', skeleton: true, neonLine: true },
+  rosewood: { stock: '#5a2a1c', metal: '#a07c44', dark: '#2e2420', guard: 'stock', grain: true, inlay: '#e9e1cc' },
+  cinnabar: { stock: '#a8261e', metal: '#1b1b20', dark: '#121216', guard: 'stock', gloss: true, trim: '#d9a441' },
+  jade: { stock: '#3d8a68', metal: '#7a5c34', dark: '#2a2620', guard: 'stock', gloss: true, veins: '#9ad8b8' },
+  bamboo: { stock: '#b8995a', metal: '#3a3f47', dark: '#24282e', guard: 'stock', nodes: true },
+  bronze: { stock: '#4a3a2a', metal: '#8a6a3c', dark: '#3a3024', guard: 'metal', patina: '#6fa08a', trim: '#c9a24a' },
+  blackgold: { stock: '#16171b', metal: '#202127', dark: '#0f1013', guard: 'metal', gloss: true, trim: '#c9a24a' },
+  ceramic: { stock: '#d8dce2', metal: '#aeb5bf', dark: '#353a43', guard: 'stock', neonLine: true },
+  candy: { stock: '#ff4f7b', metal: '#2a2d36', dark: '#191b21', guard: 'stock', gloss: true },
+  urban: { stock: '#5b616b', metal: '#3a3f47', dark: '#24282e', guard: 'stock', camo: ['#7b818b', '#3e434c', '#9aa0a8'] },
+  rust: { stock: '#4b4f3b', metal: '#6b4733', dark: '#3a2a22', guard: 'dark', chips: true, tape: true },
 };
 
 /**
@@ -948,7 +949,6 @@ export const RIFLE_FINISHES = {
 const rect = (x, y, w, h) => ({ d: `M${x} ${y} H${x + w} V${y + h} H${x} Z`, box: [x, y, x + w, y + h] });
 export const RIFLE_FRAMES = {
   marksman: {
-    name: 'Marksman (scope, suppressor)',
     parts: [
       { role: 'stock', d: 'M6 12.6 L12 12 L25 13.6 L25 19.4 L19 19.8 L13 21.4 L6 21.8 Z', box: [6, 12, 25, 21.8] },
       { role: 'dark', ...rect(5.2, 12.4, 1.6, 9.6) },
@@ -973,7 +973,6 @@ export const RIFLE_FRAMES = {
     anchors: { tail: [6.4, 21.6], face: [17, 16.4], swivel: [52.6, 19] },
   },
   carbine: {
-    name: 'Carbine (short, red dot)',
     parts: [
       { role: 'metal', ...rect(16, 14, 10, 2.4) },
       { role: 'stock', d: 'M12 12.8 L17 12.4 L17 21.2 L12 21.6 Z', box: [12, 12.4, 17, 21.6] },
@@ -995,7 +994,6 @@ export const RIFLE_FRAMES = {
     anchors: { tail: [12.6, 21.4], face: [52, 15.8], swivel: [50.4, 18.6] },
   },
   bullpup: {
-    name: 'Bullpup (magazine behind the grip)',
     parts: [
       { role: 'dark', ...rect(7.2, 12, 1.6, 10) },
       { role: 'stock', d: 'M8 12.4 L14 11.6 L50 12.4 Q54 12.8 54 15 L54 19.6 L44 20.4 L40 21 L26 21.4 L14 22 L8 22 Z', box: [8, 11.6, 54, 22], handguard: true }, // the shell is both
@@ -1014,7 +1012,6 @@ export const RIFLE_FRAMES = {
     anchors: { tail: [9, 21.8], face: [30, 17], swivel: [48, 20.2] },
   },
   heavy: {
-    name: 'Heavy (anti-materiel, muzzle brake)',
     parts: [
       { role: 'stock', d: 'M5 11.8 L12 11.2 L25 12.8 L25 20.2 L19 20.8 L13 22.6 L5 23 Z', box: [5, 11.2, 25, 23] },
       { role: 'dark', ...rect(4.2, 11.6, 1.6, 11.6) },
@@ -1036,7 +1033,6 @@ export const RIFLE_FRAMES = {
     anchors: { tail: [5.6, 22.8], face: [15, 17], swivel: [54.6, 19.6] },
   },
   heritage: {
-    name: 'Heritage (long wood, iron sights)',
     parts: [
       { role: 'stock', d: 'M5 13.4 L10 12.6 L26 14.6 L30 14.6 L30 18.6 L24 18.8 L14 21.6 L5 22.4 Z', box: [5, 12.6, 30, 22.4] },
       { role: 'stock', d: 'M30 14.6 L78 14.8 L80 15.4 L80 18 L30 18.6 Z', box: [30, 14.6, 80, 18.6], handguard: true, always: true },
@@ -1054,11 +1050,6 @@ export const RIFLE_FRAMES = {
   },
 };
 
-export const RIFLE_ENGRAVINGS = { clouds: 'Auspicious clouds', scales: 'Dragon scales', circuit: 'Neon circuit' };
-export const RIFLE_CHARMS = {
-  tassel: 'Red silk tassel', talisman: 'Paper talisman', coin: 'Lucky coin', mala: 'Prayer beads',
-  mahjong: 'Mahjong tile', sticker: 'Lucky sticker', hazard: 'Hazard tape',
-};
 
 /** Engravings on the furniture, in the finish's trim colour (gold by default). */
 function rifleEngraving(kind, fr, c, clip) {
