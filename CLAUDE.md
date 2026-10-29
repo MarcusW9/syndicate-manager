@@ -3,6 +3,7 @@
 Text-first crew management game (Football Manager style, endless). Plain JavaScript + Vite. Hosted on GitHub Pages; will be wrapped for iOS later.
 
 ## Architecture (do not break)
+- `CODEMAP.md` says where things live and how a run flows: read it before reading `src/core/` files, and keep it current when you move things.
 - `src/core/` = game logic only. No DOM, no `localStorage`, no `window`. Functions take state and return new state.
 - `src/ui/` = the only code that touches the DOM.
 - `src/save/save.js` = the only code that touches storage. iOS swaps its three storage functions.
