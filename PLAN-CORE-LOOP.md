@@ -145,7 +145,7 @@ the drone can; district lines only change words and keep `{op}`).
 Fights are automatic exchanges of up to 3 rounds on the watch feed. You watch; you're called in
 only when something big happens. Designed with the owner on 2026-10-29 (DESIGN.md rows); built as
 `src/core/battle.js` (pure, seeded), numbers in `src/data/battle.js`, the run's side in
-`core/mission.js` (`runBattle`, a `battle` step in the queue, `am.battle`, save v26). Tuned with
+`core/runbattle.js` (`runBattle`, started from `runIncident` in `core/mission.js`; a `battle` step in the queue, `am.battle`, save v26). Tuned with
 `node scripts/sim-battles.mjs`. Tests: `tests/battle.test.js`.
 
 - **When:** only when a run escalates: a danger incident (patrol, guard up close, more guards,

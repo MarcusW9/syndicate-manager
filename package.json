@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test tests/*.test.js",
+    "test:fast": "node scripts/test-fast.mjs",
     "screenshots": "node scripts/screenshots.mjs"
   },
   "devDependencies": {
