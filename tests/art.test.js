@@ -178,12 +178,11 @@ test('rifle looks: a look draws from the kit, the same every time; items without
   }
 });
 
-test('sidearm looks (draft): every frame, finish, mod and charm draws, the same every time; plain sidearms are unchanged', async () => {
+test('sidearm looks: every frame, finish, mod and charm draws, the same every time; plain sidearms are unchanged', async () => {
   const { gearArt, portrait, SIDEARM_FRAMES, SIDEARM_FINISHES } = await import('../src/ui/art.js');
   const { SIDEARM_LOOKS } = await import('../src/data/gearLooks.js');
   const clean = (svg) => svg.replace(/(ga|sb|pf)\d+/g, 'x');
   for (const k of ['frames', 'finishes']) assert.deepEqual(Object.keys(SIDEARM_LOOKS[k]).sort(), Object.keys({ frames: SIDEARM_FRAMES, finishes: SIDEARM_FINISHES }[k]).sort(), k);
-  assert.equal(gearArt({ uid: 'p', type: 'pistol', tier: 'street' }), null, 'a sidearm without a look has no drawing yet');
   const mods = [null, ...Object.keys(SIDEARM_LOOKS.mods)], charms = [null, ...Object.keys(SIDEARM_LOOKS.charms)];
   for (const frame of Object.keys(SIDEARM_FRAMES)) for (const finish of Object.keys(SIDEARM_FINISHES)) {
     for (let i = 0; i < charms.length; i++) {
@@ -194,12 +193,12 @@ test('sidearm looks (draft): every frame, finish, mod and charm draws, the same 
     }
   }
   const { GLOW_COLOURS } = await import('../src/ui/art.js');
-  assert.deepEqual(Object.keys(SIDEARM_LOOKS.glows).sort(), Object.keys(GLOW_COLOURS).sort(), 'the data names every glow the art draws');
+  const { GLOWS } = await import('../src/data/gearLooks.js');
+  assert.deepEqual(Object.keys(GLOWS).sort(), Object.keys(GLOW_COLOURS).sort(), 'the data names every glow the art draws');
   const lit = (glow) => gearArt({ uid: 'p', type: 'pistol', tier: 'street', look: { frame: 'smart', finish: 'synth', glow } });
   for (const [g, hex] of Object.entries(GLOW_COLOURS)) assert.ok(lit(g).includes(hex), `${g} glows ${hex}`);
   assert.equal(clean(lit(undefined)), clean(gearArt({ uid: 'p', type: 'pistol', tier: 'street', look: { frame: 'smart', finish: 'synth' } })), 'no glow: the carrier decides');
+  // Sidearms stay off faces (owner's call): only a rifle shows on a portrait.
   const op = { ...createNewGame({ seed: 3 }).crew[0], gear: {} };
-  const holstered = { ...op, gear: { weapon: { uid: 'p', type: 'pistol', tier: 'street', look: { frame: 'compact', finish: 'neon' } } } };
-  assert.notEqual(clean(portrait(holstered)), clean(portrait(op)), 'a sidearm with a look shows in a chest holster');
-  assert.equal(clean(portrait({ ...op, gear: { weapon: { uid: 'p', type: 'pistol', tier: 'street' } } })), clean(portrait(op)), 'a plain one still shows nothing');
+  assert.equal(clean(portrait({ ...op, gear: { weapon: { uid: 'p', type: 'pistol', tier: 'street', look: { frame: 'compact', finish: 'neon', glow: 'violet' } } } })), clean(portrait(op)));
 });

@@ -1170,12 +1170,14 @@ export function rifleBuild({ light, neon: carrierNeon, look }) {
     ${look.charm ? rifleCharm(look.charm, fr, c) : ''}`;
 }
 
-// --- sidearm looks (design draft, 2026-10-29) --------------------------------------------
+// --- sidearm looks (2026-10-29) ---------------------------------------------------------
 // The same kit idea as the rifles, drawn bigger in the same 96×32 frame (muzzle right), and
 // leaning into the city's neon: light strips, glowing vents, laser lines and holo sights. A glow
-// is a wide, faint stroke under a bright thin one, never a blur, so it stays flat.
+// is a wide, faint stroke under a bright thin one, never a blur, so it stays flat. Sidearms show
+// in the armoury and on gear tiles, not on faces (owner's call, 2026-10-29).
 
-// A gun's glow colour is part of its look (look.glow); without one it takes the carrier's chrome.
+// A gun's glow colour is part of its look (look.glow, data/gearLooks.js GLOWS); a gun that lights
+// up but has none (rifles bought before glows) takes the carrier's chrome.
 export const GLOW_COLOURS = { cyan: '#3de8d8', violet: '#b26bff', red: '#ff3d5f', gold: '#ffc23d' };
 
 const glowPath = (d, col, w = 0.5, o = 0.22) => `<path d="${d}" stroke="${col}" stroke-width="${w * 6}" fill="none" opacity="${o * 0.6}" stroke-linecap="round"/><path d="${d}" stroke="${col}" stroke-width="${w * 3}" fill="none" opacity="${o * 1.3}" stroke-linecap="round"/><path d="${d}" stroke="${col}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`;
@@ -1409,13 +1411,6 @@ const ON_PORTRAIT = ['rifle'];
 
 function portraitGear(op, c, f) {
   const item = Object.values(op.gear ?? {}).filter(Boolean).find((i) => ON_PORTRAIT.includes(i.type));
-  // No rifle: a sidearm with a look sits in a chest holster on the shadow side (design draft).
-  const pistol = !item && Object.values(op.gear ?? {}).find((i) => i?.type === 'pistol' && i.look);
-  if (pistol) {
-    return { back: '', front: `<path d="M44 47.4 L14 55" stroke="#1a1d24" stroke-width="2.2"/><path d="M44 46.8 L14 54.4" stroke="${mix('#1a1d24', c.light, 0.35)}" stroke-width="0.4"/>
-      <g transform="translate(8.5 44.6) rotate(-8) scale(0.27)">${sidearmBuild({ light: c.light, neon: f.chromeColor, look: pistol.look })}</g>
-      <path d="M11 50 L19.6 48.8 L21 54.4 L12.4 55.6 Z" fill="#20242c"/><path d="M11 50 L19.6 48.8" stroke="${mix('#20242c', c.light, 0.4)}" stroke-width="0.4"/>` };
-  }
   if (!item) return { back: '', front: '' };
   const tier = item.tier ?? 'street';
   const sling = tier === 'pro' ? '#1a1d24' : '#3a3125';

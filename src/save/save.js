@@ -12,7 +12,7 @@
 import { refreshSideBoard } from '../core/sidetasks.js';
 import { SAVE_VERSION } from '../core/state.js';
 import { TATTOO_JOBS } from '../core/marks.js';
-import { nameLook, refreshArmoury } from '../core/looks.js';
+import { nameLook, refreshArmoury, stockShelf } from '../core/looks.js';
 import { addOffer } from '../core/jobs.js';
 import { STARTING_ROSTER_CAP } from '../core/recruits.js';
 import { prepareOperative, rollPotential, rollScoutError, scoutFor, potentialRead } from '../core/development.js';
@@ -382,6 +382,18 @@ function migrate(state) {
     }
     if (!state.armoury) refreshArmoury(state);
     state.version = 26;
+  }
+  if (state.version === 26) {
+    // v27: sidearm looks. Sidearms already owned become plain blued compact pistols with a name
+    // (they had no drawing before); this week's shelf gains its sidearms, the rifles stay.
+    const pistols = [...(state.stash ?? []), ...state.crew.flatMap((op) => Object.values(op.gear ?? {}))].filter((i) => i?.type === 'pistol' && !i.look);
+    for (const item of pistols) {
+      item.look = { frame: 'compact', finish: 'blued', mod: null, charm: null };
+      item.name = nameLook(state, `item|${item.uid}`, item.look, 'pistol');
+    }
+    state.armoury ??= { day: state.day, offers: [] };
+    if (!state.armoury.offers.some((o) => o.type === 'pistol')) state.armoury.offers.push(...stockShelf(state, 'pistol'));
+    state.version = 27;
   }
   return state;
 }

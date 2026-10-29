@@ -5,6 +5,12 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-29 · Sidearms with style, and neon
+- **Sidearms have looks and names too**, and two turn up on the armoury's shelf each week (one street, one pro). Compact pistols, revolvers, machine pistols, old long-barrelled pistols and hand cannons, plus pro-only smart pistols (a light strip, a holo sight, a cable to the wrist) and coil pistols (glowing rings and a power cell).
+- **Finishes and add-ons** from blued steel and hazard yellow to cinnabar lacquer, jade, pearl grips, holographic chrome and clinic white; laser sights, holo sights, glowing vents, LED ammo counters; charms like a neon keychain, a data shard or a hologram lucky cat.
+- **Guns that light up glow in their own colour**: cyan, neon purple, red or gold. Plain ones don't glow, so most rifles look as before.
+- Sidearms you already own become plain blued pistols with a name. They show in the armoury and on gear tiles, not on faces.
+
 ## 2026-10-29 · Every rifle is its own
 - **Rifles have looks and names.** Each one is built from a frame (marksman, carbine, bullpup, heavy or heritage), a finish (from old wood and rust to cinnabar lacquer, jade, temple bronze and white ceramic), sometimes an engraving (gold clouds, dragon scales, a neon circuit) and sometimes a charm (a red silk tassel, a paper talisman, a lucky coin, prayer beads, a mahjong tile...). Each has a name to match, like "Vermilion Heron" or "Ghost Heirloom".
 - **The armoury has a weekly shelf of rifles**: two street and one pro, all different, with new ones every Monday. Other gear is bought as before.

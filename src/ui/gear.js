@@ -87,7 +87,7 @@ export function renderArmoury(ui, state) {
   const { esc, money } = ui;
   const stash = state.stash ?? [];
   const worn = state.crew.flatMap((op) => carried(op).map((item) => ({ item, op })));
-  const forSale = Object.keys(GEAR).filter((type) => !HAS_LOOKS[type]); // rifles come from the weekly shelf
+  const forSale = Object.keys(GEAR).filter((type) => !HAS_LOOKS[type]); // guns come from the weekly shelf
   const offers = state.armoury?.offers ?? [];
   const bySlot = (list, slotOf) => Object.entries(SLOTS).map(([slot, s]) => [s.name, list.filter((x) => slotOf(x) === slot)]).filter(([, l]) => l.length);
   return `
@@ -104,9 +104,12 @@ export function renderArmoury(ui, state) {
       </div>
       <div>
       <h2>Buy <span class="muted small">· ${money(state.cash)} in hand</span></h2>
-      <h3 class="gear__slot">This week's rifles</h3>
-      ${offers.length ? `<ul class="list list--plain gearlist">${offers.map((o) => offerRow(ui, state, o)).join('')}</ul>` : '<p class="muted small">Sold out.</p>'}
-      <p class="muted small">New rifles come in every Monday, each one different.</p>
+      ${[['rifle', "This week's rifles"], ['pistol', "This week's sidearms"]].map(([type, title]) => {
+        const shelf = offers.filter((o) => o.type === type);
+        return `<h3 class="gear__slot">${title}</h3>
+      ${shelf.length ? `<ul class="list list--plain gearlist">${shelf.map((o) => offerRow(ui, state, o)).join('')}</ul>` : '<p class="muted small">Sold out.</p>'}`;
+      }).join('')}
+      <p class="muted small">New guns come in every Monday, each one different.</p>
       ${bySlot(forSale, (type) => GEAR[type].slot).map(([name, list]) => `
         <h3 class="gear__slot">${esc(name)}</h3>
         <ul class="list list--plain gearlist">${list.map((type) => buyRow(ui, state, type)).join('')}</ul>`).join('')}

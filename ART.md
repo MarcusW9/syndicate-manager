@@ -186,6 +186,21 @@ Every rifle is built from a kit of parts and has its own name. The parts, their 
 
 **Names** are two words: one from the finish, engraving or charm, one from the frame ("Vermilion Heron", "Ghost Heirloom", "Emerald Hornet"). Every part is drawn with flat planes: a lit band along each part's top and a shaded band along its bottom.
 
+## Sidearm looks (since 2026-10-29)
+
+Sidearms use the rifle's kit idea, drawn bigger in the same 96×32 frame by `sidearmBuild()`, and lean into the city's neon. Parts, names and odds in `SIDEARM_LOOKS` (`src/data/gearLooks.js`). They show in the armoury and on gear tiles, **not on faces** (owner's call: a chest holster was too small to read at this crop).
+
+| Part | Options |
+| --- | --- |
+| Frame | compact, revolver (fluted cylinder, hammer), machine pistol (long magazine, foregrip, folded wire stock), heritage (broom-handle grip, magazine ahead of the trigger), hand cannon (ported slide, compensator); pro only: **smart pistol** (rounded slide, light strip, floating holo sight, status lights, a smartlink cable to the wrist) and **coil pistol** (twin rails with glowing rings, a lit power cell and cable) |
+| Finish, street | blued steel (stippled grip), stainless and walnut, black polymer, desert tan, hazard yellow (black stripes), black with neon edges |
+| Finish, pro | cinnabar lacquer (gold trim), jade grips and bronze, pearl grips (pink and blue sheen), rosewood and brass (inlay), black and gold (grip medallion), holographic chrome (cyan, violet and pink bands), clinic white with a light strip, ronin (matte black, red-wrapped grip, red eyes) |
+| Mod | laser sight (always red, the beam to the frame's edge), holo sight, glowing vents, LED ammo counter, dragon scales, gold clouds, neon circuit |
+| Charm | red silk tassel, lucky coin, paper talisman, mahjong tile, lucky sticker, neon keychain, data shard, hologram lucky cat (pink) |
+
+### Glow colours (rifles and sidearms)
+A gun **only glows when something on it lights up** (marked `glows: true` in the data: carbon and ceramic rifles, neon circuits; neon-edged, clinic-white, smart and coil sidearms, holo sights, vents, LED counters, keychains and data shards). Those roll a colour: **cyan** `#3de8d8`, **neon purple** `#b26bff`, **red** `#ff3d5f` or **gold** `#ffc23d` (`GLOW_COLOURS` in `art.js`). A glow is drawn flat: a wide faint stroke, a narrower one and a bright core, never a blur. Rifles bought before glows existed light up in their carrier's chrome colour.
+
 ## Joss
 
 The crew's bootleg AI (`WORLD.md`, "Joss"). They/them.

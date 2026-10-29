@@ -5,16 +5,22 @@ import { createNewGame, SAVE_VERSION } from '../src/core/state.js';
 import { advanceDay, calendar } from '../src/core/time.js';
 import { buyGear, buyOffer, priceOf, loadoutOf, itemTitle } from '../src/core/gear.js';
 import { rollLook, lookText } from '../src/core/looks.js';
-import { RIFLE_LOOKS, ARMOURY_STOCK } from '../src/data/gearLooks.js';
+import { RIFLE_LOOKS, SIDEARM_LOOKS, ARMOURY_STOCK } from '../src/data/gearLooks.js';
 
 const game = (seed = 31) => createNewGame({ seed });
 const toMonday = (s) => { do { s = advanceDay(s); } while (!calendar(s.day).isMonday); return s; };
 
-test('a new game opens with a shelf of rifles, each its own, the same for the same seed', () => {
+const stocked = (type) => ARMOURY_STOCK[type].street + ARMOURY_STOCK[type].pro;
+
+test('a new game opens with a shelf of guns, rifles and sidearms, the same for the same seed', () => {
   const s = game();
-  const offers = s.armoury.offers;
-  assert.equal(offers.length, ARMOURY_STOCK.street + ARMOURY_STOCK.pro);
-  assert.equal(offers.filter((o) => o.tier === 'pro').length, ARMOURY_STOCK.pro);
+  for (const type of ['rifle', 'pistol']) {
+    const shelf = s.armoury.offers.filter((o) => o.type === type);
+    assert.equal(shelf.length, stocked(type), `${type}s on the shelf`);
+    assert.equal(shelf.filter((o) => o.tier === 'pro').length, ARMOURY_STOCK[type].pro);
+    assert.equal(new Set(shelf.map((o) => o.look.finish)).size, shelf.length, `${type}s differ in finish`);
+  }
+  const offers = s.armoury.offers.filter((o) => o.type === 'rifle');
   assert.equal(new Set(offers.map((o) => o.look.frame)).size, offers.length, 'different frames');
   assert.equal(new Set(offers.map((o) => o.look.finish)).size, offers.length, 'different finishes');
   for (const o of offers) {
@@ -23,7 +29,34 @@ test('a new game opens with a shelf of rifles, each its own, the same for the sa
     assert.ok(lookText(o).length > 5);
   }
   assert.deepEqual(game().armoury, s.armoury, 'same seed, same shelf');
-  assert.notDeepEqual(game(32).armoury.offers.map((o) => o.name), offers.map((o) => o.name), 'another game, other rifles');
+  assert.notDeepEqual(game(32).armoury.offers.map((o) => o.name), s.armoury.offers.map((o) => o.name), 'another game, other guns');
+});
+
+test('only guns with something that lights up glow, and then in their own colour', () => {
+  const s = game();
+  const lit = { rifle: 0, pistol: 0 }, dark = { rifle: 0, pistol: 0 };
+  for (const type of ['rifle', 'pistol']) {
+    const L = type === 'rifle' ? RIFLE_LOOKS : SIDEARM_LOOKS;
+    for (let i = 0; i < 400; i++) {
+      const { look } = rollLook(s, `t${i}`, i % 2 ? 'pro' : 'street', type);
+      const extra = type === 'rifle' ? L.engravings[look.engraving] : L.mods[look.mod];
+      const lightsUp = Boolean(L.frames[look.frame].glows || L.finishes[look.finish].glows || extra?.glows || L.charms[look.charm]?.glows);
+      assert.equal(Boolean(look.glow), lightsUp, `${type} ${JSON.stringify(look)}`);
+      (look.glow ? lit : dark)[type]++;
+      if (L.frames[look.frame].tier) assert.equal(i % 2 ? 'pro' : 'street', L.frames[look.frame].tier, 'smart and coil pistols are pro only');
+    }
+  }
+  assert.ok(dark.rifle > lit.rifle * 2, `most rifles don't glow (${lit.rifle} lit, ${dark.rifle} not)`);
+  assert.ok(lit.pistol > 50 && dark.pistol > 50, `sidearms both ways (${lit.pistol} lit, ${dark.pistol} not)`);
+});
+
+test('a sidearm off the shelf keeps its look, glow and name; one brought by a recruit gets one too', () => {
+  const s = game();
+  const offer = s.armoury.offers.find((o) => o.type === 'pistol');
+  const item = buyOffer(s, offer.oid).stash.at(-1);
+  assert.deepEqual([item.type, item.look, item.name], ['pistol', offer.look, offer.name]);
+  assert.match(lookText(item), /^[A-Z].* in /);
+  assert.ok(loadoutOf(structuredClone(s), ['pistol']).weapon.look);
 });
 
 test('the shelf restocks every Monday', () => {
@@ -77,5 +110,21 @@ test('a v25 save upgrades to v26: owned rifles keep their old look and get a nam
   assert.equal(loaded.crew[0].gear.weapon.look.finish, 'carbon');
   assert.ok(loaded.stash[0].name && loaded.crew[0].gear.weapon.name);
   assert.equal(loaded.stash[1].look, undefined);
-  assert.equal(loaded.armoury.offers.length, ARMOURY_STOCK.street + ARMOURY_STOCK.pro);
+  assert.equal(loaded.armoury.offers.length, stocked('rifle') + stocked('pistol'));
+});
+
+test('a v26 save upgrades to v27: sidearms become named blued compacts; the shelf gains sidearms and keeps its rifles', async () => {
+  globalThis.localStorage ??= { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+  const { importSave } = await import('../src/save/save.js');
+  const old = game(34);
+  old.version = 26;
+  const rifles = old.armoury.offers.filter((o) => o.type === 'rifle');
+  old.armoury.offers = rifles;
+  old.stash = [{ uid: 'g1', type: 'pistol', tier: 'street' }];
+  const loaded = await importSave({ text: async () => JSON.stringify(old) });
+  assert.equal(loaded.version, SAVE_VERSION);
+  assert.deepEqual(loaded.stash[0].look, { frame: 'compact', finish: 'blued', mod: null, charm: null });
+  assert.ok(loaded.stash[0].name);
+  assert.deepEqual(loaded.armoury.offers.filter((o) => o.type === 'rifle'), rifles);
+  assert.equal(loaded.armoury.offers.filter((o) => o.type === 'pistol').length, stocked('pistol'));
 });

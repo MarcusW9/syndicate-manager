@@ -1,11 +1,11 @@
 // Design session (2026-10-29): sidearm looks from a kit of parts, leaning into the city's neon
 // (light strips, glowing vents, laser lines, holo sights) alongside standard and Asian-themed
-// ones. Uses sidearmBuild() in src/ui/art.js; no sidearm in the game has a look yet.
+// ones. Uses sidearmBuild() in src/ui/art.js. In the game since 2026-10-29 (core/looks.js rolls them).
 // Writes drafts/prototypes/sidearm-variants-options.html. Run: node scripts/sidearm-variants-options.mjs
 
 import { writeFileSync } from 'node:fs';
 import { gearArt, portrait, faceOf, lightOf } from '../src/ui/art.js';
-import { SIDEARM_LOOKS } from '../src/data/gearLooks.js';
+import { SIDEARM_LOOKS, GLOWS } from '../src/data/gearLooks.js';
 import { createNewGame } from '../src/core/state.js';
 import { generateRecruit } from '../src/core/recruits.js';
 
@@ -64,16 +64,12 @@ figcaption{font-size:.8rem;color:var(--muted);max-width:288px}figcaption b{color
 .row{display:flex;gap:6px;align-items:end}
 p{color:var(--muted);margin:0 0 10px;max-width:72ch}
 </style></head><body>
-<h1>Sidearm looks: draft</h1>
-<p>The rifle's kit idea for the sidearm, leaning into the neon: light strips, glowing vents, laser lines, holo sights, LED ammo counters, smart pistols with a cable to the wrist and coil pistols with glowing rings. Each gun glows in its own colour: cyan, neon purple, red or gold (a laser is always red). Standard and Asian-themed ones alongside. ${Object.keys(SIDEARM_LOOKS.frames).length} frames × ${Object.keys(SIDEARM_LOOKS.finishes).length} finishes × ${Object.keys(SIDEARM_LOOKS.mods).length + 1} mods × ${Object.keys(SIDEARM_LOOKS.charms).length + 1} charms × ${Object.keys(SIDEARM_LOOKS.glows).length} glow colours. Not in the game yet.</p>
+<h1>Sidearm looks</h1>
+<p>The rifle's kit idea for the sidearm, leaning into the neon: light strips, glowing vents, laser lines, holo sights, LED ammo counters, smart pistols with a cable to the wrist and coil pistols with glowing rings. Each gun glows in its own colour: cyan, neon purple, red or gold (a laser is always red). Standard and Asian-themed ones alongside. ${Object.keys(SIDEARM_LOOKS.frames).length} frames × ${Object.keys(SIDEARM_LOOKS.finishes).length} finishes × ${Object.keys(SIDEARM_LOOKS.mods).length + 1} mods × ${Object.keys(SIDEARM_LOOKS.charms).length + 1} charms × ${Object.keys(GLOWS).length} glow colours. In the game since 2026-10-29: two a week on the armoury's shelf, rolled at random, named, and only glowing when something on them lights up. Sidearms don't show on faces.</p>
 
 <section><h2>An assortment</h2>
 ${BUILDS.map(([group, list]) => `<h3>${group}</h3><div class="grid">${list.map(([name, look, note]) => card(look, name, note)).join('')}</div>`).join('')}
 </section>
-
-<section><h2>In a chest holster</h2><p>With no rifle on their back, a sidearm sits in a holster on the chest, on the shadow side, at 104 and 48px. A rifle still wins (one item on a face at a time).</p><div class="grid">
-${BUILDS.flatMap(([, list]) => list.slice(0, 3)).map(([name, look], i) => { const op = { ...bare[i % bare.length], gear: { weapon: { uid: `p${i}`, type: 'pistol', tier: 'street', look } } }; return `<figure><div class="row"><span class="pf">${portrait(op, { size: 104 })}</span><span class="pf">${portrait(op, { size: 48 })}</span></div><figcaption><b>${name}</b><br>${op.name}</figcaption></figure>`; }).join('')}
-</div></section>
 
 <section><h2>Frames</h2><p>In blued steel (the smart and coil pistols are pro only).</p><div class="grid">
 ${Object.entries(SIDEARM_LOOKS.frames).map(([k, fr]) => card({ frame: k, finish: 'blued' }, cap(fr.name))).join('')}
@@ -89,7 +85,7 @@ ${Object.entries(SIDEARM_LOOKS.charms).map(([k, ch]) => card({ frame: 'compact',
 </div></section>
 
 <section><h2>Glow colours</h2><p>Each gun's lights have their own colour: cyan, neon purple, red or gold. Four neon builds in each. (A laser is always red.)</p>
-${[['Smart pistol, clinic white', { frame: 'smart', finish: 'synth' }], ['Coil pistol, neon edges', { frame: 'coil', finish: 'neon', mod: 'vents' }], ['Compact, neon edges and vents', { frame: 'compact', finish: 'neon', mod: 'vents', charm: 'cube' }], ['Machine pistol, ronin, circuit', { frame: 'machine', finish: 'ronin', mod: 'circuit', charm: 'shard' }]].map(([label, look]) => `<h3>${label}</h3><div class="grid">${Object.entries(SIDEARM_LOOKS.glows).map(([g, gl]) => card({ ...look, glow: g }, cap(gl.name))).join('')}</div>`).join('')}
+${[['Smart pistol, clinic white', { frame: 'smart', finish: 'synth' }], ['Coil pistol, neon edges', { frame: 'coil', finish: 'neon', mod: 'vents' }], ['Compact, neon edges and vents', { frame: 'compact', finish: 'neon', mod: 'vents', charm: 'cube' }], ['Machine pistol, ronin, circuit', { frame: 'machine', finish: 'ronin', mod: 'circuit', charm: 'shard' }]].map(([label, look]) => `<h3>${label}</h3><div class="grid">${Object.entries(GLOWS).map(([g, gl]) => card({ ...look, glow: g }, cap(gl.name))).join('')}</div>`).join('')}
 </section>
 
 <section><h2>No glow chosen</h2><p>A gun with no glow colour of its own takes its carrier's implant colour.</p><div class="grid">

@@ -1,8 +1,18 @@
-// Gear looks (DESIGN.md 2026-10-29): what a rifle is made of and what it's called. Content only:
+// Gear looks (DESIGN.md 2026-10-29): what a gun is made of and what it's called. Content only:
 // core/looks.js rolls them, ui/art.js draws them (its palettes use the same ids).
 //
-// A look is { frame, finish, engraving, charm }. Names are two words: one from the finish, an
-// engraving or a charm, one from the frame ("Vermilion Heron", "Ghost Heirloom").
+// A rifle's look is { frame, finish, engraving, charm, glow? }; a sidearm's { frame, finish, mod,
+// charm, glow? }. Names are two words: one from what it's made of, one from the frame ("Vermilion
+// Heron", "Ultraviolet Volt Fox"). glows: true marks a part that lights up; only a gun with one
+// rolls a glow colour, so most guns don't glow.
+
+// The colours a gun's lights can glow (light strips, vents, circuits, holo sights; a laser is always red).
+export const GLOWS = {
+  cyan: { name: 'cyan', words: ['Ice', 'Cyan'] },
+  violet: { name: 'neon purple', words: ['Violet', 'Ultraviolet'] },
+  red: { name: 'red', words: ['Crimson', 'Red Neon'] },
+  gold: { name: 'gold', words: ['Sodium', 'Gold Neon'] },
+};
 
 export const RIFLE_LOOKS = {
   frames: {
@@ -20,17 +30,17 @@ export const RIFLE_LOOKS = {
     bamboo: { name: 'bamboo', tier: 'street', words: ['Bamboo', "Hermit's", 'Green'] },
     candy: { name: 'candy-pink paint', tier: 'street', words: ['Candy', 'Night Market', 'Neon'] },
     rosewood: { name: 'rosewood and brass', tier: 'pro', words: ['Rosewood', 'Teahouse', 'Parlour'] },
-    carbon: { name: 'carbon', tier: 'pro', words: ['Midnight', 'Black', 'Shadow'] },
+    carbon: { name: 'carbon', tier: 'pro', glows: true, words: ['Midnight', 'Black', 'Shadow'] },
     cinnabar: { name: 'cinnabar lacquer', tier: 'pro', words: ['Vermilion', 'Cinnabar', 'Red'] },
     jade: { name: 'jade and bronze', tier: 'pro', words: ['Jade', 'Emerald', 'Bureau'] },
     bronze: { name: 'temple bronze', tier: 'pro', words: ['Temple', 'Bronze', "Abbot's"] },
     blackgold: { name: 'black lacquer and gold', tier: 'pro', words: ['Golden', 'Triad', 'Gilded'] },
-    ceramic: { name: 'white ceramic', tier: 'pro', words: ['Porcelain', 'Glass', 'White'] },
+    ceramic: { name: 'white ceramic', tier: 'pro', glows: true, words: ['Porcelain', 'Glass', 'White'] },
   },
   engravings: {
     clouds: { name: 'gold clouds', words: ['Cloud', 'Auspicious'] },
     scales: { name: 'dragon scales', words: ['Dragon', 'Scaled'] },
-    circuit: { name: 'a neon circuit', words: ['Wired', 'Neon'] },
+    circuit: { name: 'a neon circuit', glows: true, words: ['Wired', 'Neon'] },
   },
   charms: {
     tassel: { name: 'a red silk tassel', words: ['Silk', 'Red Thread'] },
@@ -48,8 +58,8 @@ export const RIFLE_LOOKS = {
   },
 };
 
-// Sidearm looks (design draft, 2026-10-29): not given out in the game until the owner picks.
-// Frames with a tier only turn up on that shelf (the smart and coil pistols are pro).
+// Sidearm looks (2026-10-29). Frames with a tier only turn up on that shelf (the smart and coil
+// pistols are pro).
 export const SIDEARM_LOOKS = {
   frames: {
     compact: { name: 'compact pistol', nouns: ['Wasp', 'Needle', 'Cricket', 'Pocket Moon'] },
@@ -57,8 +67,8 @@ export const SIDEARM_LOOKS = {
     machine: { name: 'machine pistol', nouns: ['Cicada', 'Hailstorm', 'Rattle', 'Firecracker'] },
     heritage: { name: 'heritage pistol', nouns: ['Magistrate', 'Old Consul', 'Elder Brother', 'Lamplighter'] },
     cannon: { name: 'hand cannon', nouns: ['Harbour Hammer', 'Bull', 'Thunderclap', 'Pile Driver'] },
-    smart: { name: 'smart pistol', tier: 'pro', nouns: ['Ghost Link', 'Synapse', 'Familiar', 'Echo'] },
-    coil: { name: 'coil pistol', tier: 'pro', nouns: ['Storm Coil', 'Arc', 'Volt Fox', 'Lightning'] },
+    smart: { name: 'smart pistol', tier: 'pro', glows: true, nouns: ['Ghost Link', 'Synapse', 'Familiar', 'Echo'] },
+    coil: { name: 'coil pistol', tier: 'pro', glows: true, nouns: ['Storm Coil', 'Arc', 'Volt Fox', 'Lightning'] },
   },
   finishes: {
     blued: { name: 'blued steel', tier: 'street', words: ['Blue', 'Steel', 'Plain'] },
@@ -66,24 +76,24 @@ export const SIDEARM_LOOKS = {
     polymer: { name: 'black polymer', tier: 'street', words: ['Service', 'Black', 'Issue'] },
     tan: { name: 'desert tan', tier: 'street', words: ['Desert', 'Dust', 'Sand'] },
     hazard: { name: 'hazard yellow', tier: 'street', words: ['Hazard', 'Dockside', 'Caution'] },
-    neon: { name: 'black with neon edges', tier: 'street', words: ['Neon', 'Glow', 'Afterhours'] },
+    neon: { name: 'black with neon edges', tier: 'street', glows: true, words: ['Neon', 'Glow', 'Afterhours'] },
     cinnabar: { name: 'cinnabar lacquer', tier: 'pro', words: ['Vermilion', 'Cinnabar', 'Red'] },
     jade: { name: 'jade grips and bronze', tier: 'pro', words: ['Jade', 'Emerald', 'Bureau'] },
     pearl: { name: 'pearl grips', tier: 'pro', words: ['Pearl', 'Moon', 'Opal'] },
     rosewood: { name: 'rosewood and brass', tier: 'pro', words: ['Rosewood', 'Teahouse', 'Parlour'] },
     blackgold: { name: 'black and gold', tier: 'pro', words: ['Golden', 'Triad', 'Gilded'] },
     holo: { name: 'holographic chrome', tier: 'pro', words: ['Prism', 'Holo', 'Mirage'] },
-    synth: { name: 'clinic white with a light strip', tier: 'pro', words: ['White', 'Clinic', 'Sterile'] },
+    synth: { name: 'clinic white with a light strip', tier: 'pro', glows: true, words: ['White', 'Clinic', 'Sterile'] },
     ronin: { name: 'matte black with a wrapped grip', tier: 'pro', words: ['Ronin', 'Red-Eye', 'Midnight'] },
   },
   mods: {
     laser: { name: 'a laser sight', words: ['Laser', 'Red Line'] },
-    holo: { name: 'a holo sight', words: ['Holo', 'Ghost'] },
-    vents: { name: 'glowing vents', words: ['Hot', 'Furnace'] },
-    ledmag: { name: 'an LED ammo counter', words: ['Counting', 'Digital'] },
+    holo: { name: 'a holo sight', glows: true, words: ['Holo', 'Ghost'] },
+    vents: { name: 'glowing vents', glows: true, words: ['Hot', 'Furnace'] },
+    ledmag: { name: 'an LED ammo counter', glows: true, words: ['Counting', 'Digital'] },
     scales: { name: 'dragon scales', words: ['Dragon', 'Scaled'] },
     clouds: { name: 'gold clouds', words: ['Cloud', 'Auspicious'] },
-    circuit: { name: 'a neon circuit', words: ['Wired', 'Neon'] },
+    circuit: { name: 'a neon circuit', glows: true, words: ['Wired', 'Neon'] },
   },
   charms: {
     tassel: { name: 'a red silk tassel', words: ['Silk', 'Red Thread'] },
@@ -91,16 +101,9 @@ export const SIDEARM_LOOKS = {
     talisman: { name: 'a paper talisman', words: ['Spirit', 'Paper'] },
     mahjong: { name: 'a mahjong tile', words: ['Mahjong', 'Thirteen'] },
     sticker: { name: 'a lucky sticker', words: ['Happy', 'Sticker'] },
-    cube: { name: 'a neon keychain', words: ['Keychain', 'Pixel'] },
-    shard: { name: 'a data shard', words: ['Shard', 'Data'] },
+    cube: { name: 'a neon keychain', glows: true, words: ['Keychain', 'Pixel'] },
+    shard: { name: 'a data shard', glows: true, words: ['Shard', 'Data'] },
     cat: { name: 'a hologram lucky cat', words: ['Lucky Cat', 'Waving'] },
-  },
-  // The colour its lights glow (light strips, vents, circuits, holo sights; a laser is always red).
-  glows: {
-    cyan: { name: 'cyan', words: ['Ice', 'Cyan'] },
-    violet: { name: 'neon purple', words: ['Violet', 'Ultraviolet'] },
-    red: { name: 'red', words: ['Crimson', 'Red Neon'] },
-    gold: { name: 'gold', words: ['Sodium', 'Gold Neon'] },
   },
   odds: {
     street: { mod: 0.45, charm: 0.5, mods: ['laser', 'vents', 'ledmag', 'circuit', 'holo'], charms: ['sticker', 'cube', 'coin', 'talisman', 'shard', 'mahjong'] },
@@ -108,4 +111,5 @@ export const SIDEARM_LOOKS = {
   },
 };
 
-export const ARMOURY_STOCK = { street: 2, pro: 1 }; // rifles on offer each week
+// Guns on the armoury's shelf each week, by type and tier.
+export const ARMOURY_STOCK = { rifle: { street: 2, pro: 1 }, pistol: { street: 1, pro: 1 } };
