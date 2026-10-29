@@ -47,6 +47,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 ## 2026-10-29 · Renewal numbers line up
 - When someone asks for a new deal, their current wage, what they're asking and their market value now sit in three equal boxes with the numbers on one line, and the loyalty note no longer touches them.
+## 2026-10-29 · Tidy-up (nothing changes in the game)
+- The run engine's fight code moved out of `mission.js` into its own file, a map of the code (`CODEMAP.md`) was added, and `npm run test:fast` runs the quick tests in about 40 seconds instead of two minutes.
+
 ## 2026-10-29 · Play offline
 - After you've opened the game once, it opens without a connection too: reload it or open it in a new tab on the train and it's all there, saves included. When there's a new version, the game picks it up in the background and you get it the next time you open it.
 
