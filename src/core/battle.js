@@ -25,6 +25,13 @@ export { BATTLE };
 const FIGHT_STATS = ['combat', 'cool', 'medical', 'social', 'tech'];
 const step = (item) => TIERS[item?.tier]?.step ?? 0;
 
+/**
+ * A loud run is a fight (owner, 2026-10-29: "every loud run pretty much"): on a loud approach, or
+ * once the crew has gone loud, the first danger incident with guards in it always becomes a fight,
+ * whatever the roll. After that the usual rule holds: only an unsaved failure starts one.
+ */
+export const loudFightDue = (am, inc) => Boolean((am.approach === 'loud' || am.wentLoud) && inc.danger && inc.guards && !am.fought);
+
 /** Their health in a fight: base + cool. */
 export const maxHp = (op) => BATTLE.hp + Math.floor((op.stats.cool ?? 0) / BATTLE.hpPerCool);
 
@@ -78,9 +85,9 @@ export function overwatchOf(op, ow, zone) {
  * Build a fight. crew: the inside team still standing (operatives). overwatchOp/ow: the run's
  * overwatch (am.overwatch). wheels: the driver in the van, who can bring it round.
  */
-export function buildBattle({ incident, zone, diff, threat, guards, crew, approach, overwatchOp = null, ow = null, wheels = null }) {
+export function buildBattle({ incident, zone, diff, threat, guards, crew, approach, overwatchOp = null, ow = null, wheels = null, ambush = false }) {
   return {
-    incident, zone, diff, round: 0,
+    incident, zone, diff, round: 0, ambush,
     guards: guardsFor(threat, guards),
     runners: crew.map((op) => runnerOf(op, approach)),
     overwatch: overwatchOf(overwatchOp, ow, zone),
@@ -192,7 +199,10 @@ export function playRound(b, rng) {
       text: k.success ? `${b.wheels.handle} brings the van round. There's a clean way out.` : `${b.wheels.handle} can't get the van any closer.` });
   }
 
-  for (const g of up(b)) {
+  if (b.ambush && b.round === 1 && up(b).length) {
+    // The crew hit first: the guards don't get a shot in this round.
+    line({ kind: 'ambush', actor: null, text: up(b).length > 1 ? 'The guards are caught off balance and get no shot in.' : 'The guard is caught off balance and gets no shot in.' });
+  } else for (const g of up(b)) {
     const t = guardTarget(b, rng);
     if (!t) break;
     lines.push(guardAttack(b, g, t, rng, down));
@@ -268,7 +278,7 @@ const oddsCache = new Map();
  */
 export function battleOdds(args) {
   const b0 = buildBattle(args);
-  const key = JSON.stringify([b0.diff, b0.guards, b0.runners.map((r) => [r.hp, r.max, r.armour, r.damage, r.patch, FIGHT_STATS.map((s) => r.stats[s].value)]), b0.overwatch && [b0.overwatch.value, b0.overwatch.damage, b0.overwatch.left], b0.wheels?.value]);
+  const key = JSON.stringify([b0.diff, b0.ambush, b0.guards, b0.runners.map((r) => [r.hp, r.max, r.armour, r.damage, r.patch, FIGHT_STATS.map((s) => r.stats[s].value)]), b0.overwatch && [b0.overwatch.value, b0.overwatch.damage, b0.overwatch.left], b0.wheels?.value]);
   if (oddsCache.has(key)) return oddsCache.get(key);
   const n = { win: 0, down: 0, standoff: 0 };
   if (!b0.runners.length) return { win: 0, down: 1, standoff: 0 };

@@ -23,15 +23,16 @@ export const guardsUp = (b) => b.guards.filter((g) => !g.out).length;
 export const guardCount = (n) => (n === 1 ? 'one guard' : `${n} guards`);
 
 /** An unsaved danger incident turns into a fight: build both sides and put a battle step next in the queue. */
-export function startBattle(state, am, tpl, inc, id, zone, diff, able) {
-  const b = buildBattle({
+export function startBattle(state, am, tpl, inc, id, zone, diff, able, { ambush = false } = {}) {
+  const b = buildBattle({ ambush,
     incident: id, zone, diff, threat: am.threat ?? tpl.threat, guards: inc.guards, crew: able, approach: am.approach,
     overwatchOp: overwatchOp(state, am), ow: am.overwatch, wheels: driver(state, am),
   });
   am.battle = b;
+  am.fought = true;
   // The alarm call waits until the fight is over.
   if (am.alert >= ALERT_MAX && !am.wentLoud) am.alertDue = true;
-  const text = `It's a fight: ${guardCount(b.guards.length)}${b.guards[0].armour ? `, armour ${b.guards[0].armour}` : ''}, against ${b.runners.map((r) => r.handle).join(', ')}.`;
+  const text = `It's a fight: ${guardCount(b.guards.length)}${b.guards[0].armour ? `, armour ${b.guards[0].armour}` : ''}, against ${b.runners.map((r) => r.handle).join(', ')}.${ambush ? ' They have the jump on them.' : ''}`;
   record(am, { kind: 'battle', phase: 'start', from: id, zone, text, report: text, ...battleSnapshot(b) });
   am.log.push({ kind: 'bad', text });
   am.report = [...(am.report ?? []), text];

@@ -74,7 +74,7 @@ export function feedItems(events = [], { kit = null } = {}) {
       items.push({
         type: 'card', kind: 'battle', label: e.phase === 'retreat' ? 'Pulling back' : `Fight · round ${e.round}`,
         setup: e.phase === 'retreat' ? e.text : `${up ? `${up} guard${up === 1 ? '' : 's'} up` : 'Last guard down'} · ${(e.runners ?? []).map((r) => `${r.handle} ${r.down ? 'down' : `${r.hp}/${r.max}`}`).join(', ')}`,
-        results: (e.lines ?? []).map((l) => ({ headline: l.text, detail: '', tone: l.kind === 'guard' ? (l.damage ? 'bad' : 'good') : l.success ? 'good' : 'bad', roll: roll(l), why: null })),
+        results: (e.lines ?? []).map((l) => ({ headline: l.text, detail: '', tone: l.kind === 'guard' ? (l.damage ? 'bad' : 'good') : l.kind === 'flee' || l.kind === 'ambush' ? 'good' : l.success ? 'good' : 'bad', roll: roll(l), why: null })),
         cue: { decision: true },
       });
     } else if (e.kind === 'critical') {

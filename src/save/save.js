@@ -369,5 +369,13 @@ function migrate(state) {
     for (const am of [state.activeMission, ...(state.awayJobs ?? []).map((j) => j.mission)]) if (am) am.battle = am.battle ?? null;
     state.version = 26;
   }
+  if (state.version === 26) {
+    // v27: a loud run's first guard is always a fight (am.fought: has this run had one yet). A job
+    // saved mid-way has fought if its record shows a fight.
+    for (const am of [state.activeMission, ...(state.awayJobs ?? []).map((j) => j.mission)]) {
+      if (am) am.fought = am.fought ?? (am.events ?? []).some((e) => e.kind === 'battle' && e.phase === 'start');
+    }
+    state.version = 27;
+  }
   return state;
 }

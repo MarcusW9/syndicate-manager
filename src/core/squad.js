@@ -45,16 +45,25 @@ export function coverage(template, crew, approach, { threat = template.threat, o
     const h = crew.length ? handlerFor(crew, inc, diff, { approach, recommended: template.crewSize, intel }) : null;
     if (!h) return { ...base, handler: null, chance: 0, risk: 'extreme', withSave: null, effective: 'extreme', gap: true };
     const save = inc.danger ? bestSave({ victim: h.roll.op, able: crew, overwatch: ow, overwatchOp: ow ? overwatch.op : null, zone, diff }) : null;
-    // Unsaved danger becomes a fight: a fight won with nobody at death's door counts as getting through.
-    const fight = inc.danger && inc.guards ? battleOdds({ incident: id, zone, diff, threat, guards: inc.guards, crew, approach, overwatchOp: ow ? overwatch.op : null, ow, wheels }) : null;
-    const missed = save ? (1 - h.chance) * (1 - save.chance) : 1 - h.chance;
+    // Unsaved danger becomes a fight: a fight won with nobody at death's door counts as getting
+    // through. On a loud run it is a fight whatever the roll (core/battle.js loudFightDue), and
+    // winning the roll means the crew gets the jump on the guards (the ambush odds).
+    const fargs = { incident: id, zone, diff, threat, guards: inc.guards, crew, approach, overwatchOp: ow ? overwatch.op : null, ow, wheels };
+    const forced = approach === 'loud' && Boolean(inc.danger && inc.guards);
+    let fight = inc.danger && inc.guards ? battleOdds(fargs) : null;
+    if (forced) {
+      const jump = battleOdds({ ...fargs, ambush: true });
+      const mix = (k) => h.chance * jump[k] + (1 - h.chance) * fight[k];
+      fight = { win: mix('win'), down: mix('down'), standoff: mix('standoff') };
+    }
+    const missed = forced ? 1 : save ? (1 - h.chance) * (1 - save.chance) : 1 - h.chance;
     const eff = 1 - missed * (fight ? 1 - fight.win : 1);
     return {
       ...base,
       handler: { op: h.roll.op, stat: h.stat, value: h.roll.value, notes: h.roll.notes },
       chance: h.chance, risk: riskLabel(h.chance),
       withSave: save ? { via: save.via, op: save.op, chance: save.chance } : null,
-      fight: fight ? { ...fight, chance: missed } : null,
+      fight: fight ? { ...fight, chance: missed, forced } : null,
       effective: riskLabel(eff), gap: riskLabel(eff) === 'extreme',
     };
   });
