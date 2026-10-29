@@ -645,8 +645,6 @@ export function basinScene() {
     const edge = Math.abs(x - 360) / 360; const h = 60 + edge * 120 + r() * 30; const w = 18 + r() * 14; const c = dk('#262a35', 0.4);
     s += rect(x, 150 - h, w, h + 20, c) + rect(x + w - 1.4, 150 - h, 1.4, h + 20, lt(c, 0.3)) + windows(x, 150 - h, w, h, [LIGHT, '#f7efc8', '#3de8d8'], 0.25, 4, 5, 2, 1.3);
   }
-  // Glass Heights' private boxes up on the ridge: a cyan glass gallery at the top right.
-  s += rect(560, 60, 150, 14, '#1d2a34') + rect(560, 60, 150, 14, '#3de8d8', 'opacity="0.2"') + rect(560, 73, 150, 1, '#3de8d8', 'opacity="0.7"');
   // Floodlight towers: lattice masts, banks of lamps, wide cones of light over the track.
   for (const fx of [80, 300, 520, 690]) {
     s += `<path d="M${fx - 40} 44 L${fx - 140} ${RAIL + 20} L${fx + 140} ${RAIL + 20} L${fx + 40} 44 Z" fill="#f7efc8" opacity="0.05" />`;
