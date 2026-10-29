@@ -5,6 +5,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-29 · Jobs screen lines up
+- Side work: the stat each job uses (Combat, Social, Driving…) now sits on the same line as the job's name and district, and the days and people on the right line up too.
+- Clients: each client's standing ("neutral · 50") is now left-aligned under their name, like the rest of the screen.
+
 ## 2026-10-29 · Joss reads the run right
 - When every roll on a job held but one of your choices cost something (like paying Auntie Fung's tea out of the take), Joss now opens the report with a line about the cost you chose, not "Not quietly, and not all of it". Runs where a roll actually failed still get the rougher lines, which no longer claim noise or lost pay the log doesn't show.
 

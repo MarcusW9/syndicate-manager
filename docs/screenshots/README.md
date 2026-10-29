@@ -22,6 +22,8 @@ Then add a row to the top of the table below and commit the folder with the chan
 
 | Date | Version | Commit | What's new on screen | Folder |
 | --- | --- | --- | --- | --- |
+| 2026-10-29 | Jobs screen lines up | (this change) | The usual set. 07, the job board: side work's stat icon and word on the name's line, client standings left-aligned. | [2026-10-29-jobs-alignment](2026-10-29-jobs-alignment/) |
+| 2026-10-29 | Design session: the Jobs screen's side work and clients, aligned | (this change) | Full-page captures after the fix (2x): 01 iPad landscape (1180), 02 iPad portrait (820), 03 phone (390). | [2026-10-29-design-session-jobs-alignment](2026-10-29-design-session-jobs-alignment/) |
 | 2026-10-29 | Room above the job result | (this change) | The usual set. 16, the end of a job: the result card now has space between it and the last line of the play-by-play. | [2026-10-29-result-spacing](2026-10-29-result-spacing/) |
 | 2026-10-29 | "What they'll likely meet" folds away | (this change) | The usual set; the coverage-read shot opens the fold first, so it still shows the read. | [2026-10-29-meet-fold](2026-10-29-meet-fold/) |
 | 2026-10-29 | Design session: folding "What they'll likely meet" | (this change) | 01 phone, folded by default (arrow on the right of the heading); 02 phone, opened; 03 desktop, open by default; 04 desktop, folded. | [2026-10-29-design-session-meet-fold](2026-10-29-design-session-meet-fold/) |
