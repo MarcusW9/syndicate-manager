@@ -30,6 +30,9 @@ Where things live and how a run flows, so you can read a few functions instead o
 ## The watch screen
 `ui/watch.js` runs the feed on a timer and hands each new card's `cue` to `ui/siteplan.js`, which plays it on the site map; a fight's cue is `cue.battle` (`phase`, both sides' health, the round's `lines`), played by `fight()` in `siteplan.js`. `core/feed.js` builds the cards and cues from `am.events`.
 
+## Site maps
+`data/sites.js`: plain sites, and districts drawn as parts (`PLOTS`: a plot with approaches, covers and targets; a target with `jobs` is that job's own place). `pickSite(district, jobId, templateId)` picks the parts from the job's id (stable, nothing stored) and `assemble()` makes them a site. Picture only: the core never reads a site. `ui/siteplan.js` draws it. `node scripts/preview-sites.mjs <district>` draws every combination; `tests/sites.test.js` checks each (geometry, routes clear of cover, a job's own target).
+
 ## Events and the record
 Everything that happens in a run is `record(am, event)` into `am.events`. `feed.js` turns events into watch cards; `report.js` and the report's full log (`ui/app.js` `renderFullLog`) read the same events. A new kind of moment needs its event, a card in `feed.js` and a line in `renderFullLog`.
 
