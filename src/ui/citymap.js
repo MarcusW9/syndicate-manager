@@ -1,6 +1,6 @@
 // Lantern Bay from above (WORLD.md, Geography), built from the interface's own parts (owner,
 // 2026-10-28/29; DESIGN.md): the made-up coast as a faint cyan hairline, districts in the panel
-// colours with 1px borders, locked ones hatched, and each district's name on a small cut-corner
+// colours, locked ones hatched, and each district's name on a small cut-corner
 // plate with its gang's colour as the plate's tab, its work as a cyan badge, and HOME, crew out
 // and street talk hanging off it. The selected district gets the cyan edge every selected card
 // has. Geometry is seeded, so the city draws the same every time; it's built once per session.
@@ -127,7 +127,6 @@ function plate(x, esc) {
  */
 export function cityMapSvg(districts, esc) {
   const g = geometry();
-  const selected = districts.find((x) => x.selected);
   let grid = '';
   for (let x = 0; x <= MAP_W; x += 24) grid += `M${x} 0V${MAP_H}`;
   for (let y = 0; y <= MAP_H; y += 24) grid += `M0 ${y}H${MAP_W}`;
@@ -140,11 +139,14 @@ export function cityMapSvg(districts, esc) {
       </defs>
       <rect class="cm-sea" width="${MAP_W}" height="${MAP_H}" />
       <path class="cm-grid" d="${grid}" />
-      <g class="cm-land">${g.land.map((d) => `<path d="${d}" />`).join('')}<path d="${g.mudflat}" /></g>
+      <!-- No outlines, like the pictures (owner, 2026-10-29): the land's edges are light and shadow.
+           A shadow copy nudged down-left, a lit copy nudged right, then the land itself on top. -->
+      <g class="cm-cliff" transform="translate(-2 2)">${g.land.map((d) => `<path d="${d}" />`).join('')}<path d="${g.islets}" /></g>
+      <g class="cm-rim" transform="translate(1.6 -0.6)">${g.land.map((d) => `<path d="${d}" />`).join('')}<path d="${g.islets}" /><path d="${g.piers}" /></g>
+      <g class="cm-land">${g.land.map((d) => `<path d="${d}" />`).join('')}<path d="${g.mudflat}" /><path d="${g.islets}" /><path d="${g.piers}" /></g>
       ${districts.map((x) => `<g class="cm-d ${x.selected ? 'is-selected' : ''}" data-action="city-district" data-id="${x.key}" role="button" tabindex="0" aria-pressed="${x.selected}" aria-label="${esc(x.label)}">${area(x)}</g>`).join('')}
-      <g class="cm-coast">${g.land.map((d) => `<path d="${d}" />`).join('')}<path d="${g.islets}" class="cm-islets" /><path d="${g.piers}" class="cm-piers" /></g>
-      <path class="cm-coast--mud" d="${g.mudflat}" />
-      ${selected ? `<path class="cm-pick" d="${g.areas[selected.key]}" fill-rule="evenodd" clip-path="url(#cm-land)" />` : ''}
+      <!-- Districts meet at a dark seam (the ground between them), not a drawn border. -->
+      <g class="cm-seams" clip-path="url(#cm-land)">${districts.map((x) => `<path d="${g.areas[x.key]}" />`).join('')}</g>
       <path class="cm-rail" d="M202 252V292M202 334V380" />
       <path class="map-crossing" d="M114 254V352" />
       <circle class="map-ferry" cx="114" cy="258" r="3" aria-hidden="true" />

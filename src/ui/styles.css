@@ -507,15 +507,16 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .cm-land { fill: var(--panel); pointer-events: none; }
 .cm-d { cursor: pointer; }
 .cm-d:focus { outline: none; }
-.cm-d__area { fill: var(--panel-2); stroke: var(--line); stroke-width: 1.2; }
-.cm-d__area[style] { fill: color-mix(in srgb, var(--turf) 6%, var(--panel-2)); }
-.cm-d.is-selected .cm-d__area[style], .cm-d:focus-visible .cm-d__area[style] { fill: color-mix(in srgb, var(--turf) 14%, var(--panel-2)); }
+.cm-d__area { fill: var(--panel-2); }
+.cm-d__area[style] { fill: color-mix(in srgb, var(--turf) 8%, var(--panel-2)); }
+/* The picked district lights up in its gang's colour (no outline, like the pictures). */
+.cm-d.is-selected .cm-d__area[style], .cm-d:focus-visible .cm-d__area[style] { fill: color-mix(in srgb, var(--turf) 24%, var(--panel-2)); animation: map-pick 2.4s ease-in-out infinite; }
+.cm-d.is-selected .cm-d__area:not([style]), .cm-d:focus-visible .cm-d__area:not([style]) { fill: color-mix(in srgb, var(--accent-2) 12%, var(--panel-2)); }
 .cm-d__area.is-locked { fill: url(#cm-hatch); }
 #cm-hatch path { stroke: var(--line); stroke-width: 1; }
-.cm-coast path { fill: none; stroke: color-mix(in srgb, var(--accent-2) 45%, transparent); stroke-width: 1; stroke-linejoin: round; pointer-events: none; }
-.cm-coast .cm-islets, .cm-coast .cm-piers { fill: var(--panel); }
-.cm-coast--mud { fill: none; stroke: var(--line); stroke-dasharray: 2 3; pointer-events: none; }
-.cm-pick { fill: none; stroke: var(--accent-2); stroke-width: 2; pointer-events: none; animation: map-pick 2.4s ease-in-out infinite; }
+.cm-cliff { fill: color-mix(in srgb, #1b2340 70%, var(--bg)); pointer-events: none; }
+.cm-rim { fill: color-mix(in srgb, var(--accent-2) 42%, var(--panel)); pointer-events: none; }
+.cm-seams path { fill: none; stroke: var(--bg); stroke-width: 1.6; pointer-events: none; }
 .cm-rail { fill: none; stroke: var(--line); stroke-width: 1.5; pointer-events: none; }
 .map-crossing { fill: none; stroke: var(--muted); stroke-opacity: 0.6; stroke-width: 1; stroke-dasharray: 2 3; pointer-events: none; }
 .map-label { fill: var(--muted); opacity: 0.6; font-size: 8px; font-weight: 600; letter-spacing: 0.24em; }
@@ -541,10 +542,10 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
    Still for reduced motion. */
 .map-ferry { fill: var(--warn); animation: map-ferry 14s ease-in-out infinite alternate; }
 @keyframes map-ferry { 0%, 8% { transform: translateY(0); } 92%, 100% { transform: translateY(90px); } }
-@keyframes map-pick { 50% { stroke-opacity: 0.45; } }
+@keyframes map-pick { 50% { opacity: 0.8; } }
 .map-talk { fill: var(--warn); pointer-events: none; animation: map-talk 1.8s ease-in-out infinite; }
 @keyframes map-talk { 50% { opacity: 0.3; } }
-@media (prefers-reduced-motion: reduce) { .map-talk, .map-ferry, .cm-pick { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .map-talk, .map-ferry, .cm-d.is-selected .cm-d__area { animation: none; } }
 /* City sub-tabs: one section at a time so the map screen fits a phone. */
 .cityhead { margin-bottom: 8px; }
 .subtabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid var(--line); margin: 0 0 4px; }

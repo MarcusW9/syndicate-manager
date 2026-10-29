@@ -5,6 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-29 · A cleaner City map
+- The map no longer draws lines round the coast and the districts. Like the district pictures, the land is shaped by light and shadow, and districts meet at a dark gap. The district you pick lights up in its gang's colour.
+
 ## 2026-10-29 · The Basin in neon
 - The Basin's odds board now glows in pink and orange neon under the course's name, and little camera drones fly alongside the horses, filming the race.
 

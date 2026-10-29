@@ -19,14 +19,15 @@ test('every district is a tap target with a plate; locked ones say so', () => {
   assert.doesNotMatch(svg, /cm-track|Lantern Course/, 'the racecourse is off the map (owner, 2026-10-28)');
 });
 
-test('a plate shows its work, HOME, crew out and street talk; the picked district gets the cyan edge', () => {
+test('a plate shows its work, HOME, crew out and street talk; the picked district lights up', () => {
   const svg = cityMapSvg(MAP_DISTRICTS.map((k) => district(k, k === 'docks' ? { jobs: 2, out: 3, talk: true, selected: true } : k === 'oldTown' ? { home: true, jobs: 1 } : {})), esc);
   assert.match(svg, />2 JOBS</);
   assert.match(svg, />1 JOB</);
   assert.match(svg, />HOME</);
   assert.match(svg, />3 OUT</);
   assert.match(svg, /class="map-talk"/);
-  assert.equal((svg.match(/class="cm-pick"/g) ?? []).length, 1);
+  assert.equal((svg.match(/class="cm-d is-selected"/g) ?? []).length, 1, "the picked district lights up");
+  assert.doesNotMatch(svg, /cm-coast|cm-pick/, "no outlines: the coast is light and shadow, districts meet at a seam");
   assert.match(svg, /NO WORK/);
 });
 
