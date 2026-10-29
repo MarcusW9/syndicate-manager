@@ -22,3 +22,10 @@ if (!state) {
 }
 
 mountApp(document.getElementById('app'), state);
+
+// Offline play (DESIGN.md, 2026-10-29): the built game keeps a copy of itself (sw.js, written by
+// vite.config.js), so it opens without a connection after the first visit. Not in dev, where
+// files change all the time, and only where the browser supports it.
+if (import.meta.env.PROD && 'serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}

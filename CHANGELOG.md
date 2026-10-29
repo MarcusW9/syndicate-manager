@@ -5,6 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-29 · Play offline
+- After you've opened the game once, it opens without a connection too: reload it or open it in a new tab on the train and it's all there, saves included. When there's a new version, the game picks it up in the background and you get it the next time you open it.
+
 ## 2026-10-29 · Rookie hires cost half
 - Rookies the scouts find now ask for about half what they used to (¥200-350 a week instead of ¥400-650), so growing past your three founders is affordable. Pros and veterans cost the same as before, and anyone's pay still goes up at contract time once they've grown.
 
