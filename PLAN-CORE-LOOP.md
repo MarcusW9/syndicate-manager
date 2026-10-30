@@ -148,7 +148,7 @@ only when something big happens. Designed with the owner on 2026-10-29 (DESIGN.m
 `core/runbattle.js` (`runBattle`, started from `runIncident` in `core/mission.js`; a `battle` step in the queue, `am.battle`, save v26). Tuned with
 `node scripts/sim-battles.mjs`. Tests: `tests/battle.test.js`.
 
-- **When:** only when a run escalates: a danger incident (patrol, guard up close, more guards,
+- **When:** when a run escalates, and always on a loud run (2026-10-29, owner: "every loud run pretty much"): the first danger incident of a loud run, or after "go loud", is a fight whatever the roll, and winning the roll gives the crew the jump (the guards get no shot in round 1). Otherwise a danger incident (patrol, guard up close, more guards,
   holding the room) that goes unsaved starts a fight instead of the old serious-wound roll. Each
   says how many guards (`guards` in `data/incidents.js`); one more on threat 5 work. Every other
   incident stays one roll. Loud runs meet more danger incidents, so they fight more.
