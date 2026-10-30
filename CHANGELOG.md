@@ -5,6 +5,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-30 · Loading a save file works again
+- **Save → "Load save file into this slot" did nothing.** You could pick a file, but the game ignored it and showed no error. It loads now. Picking the same file twice in a row also works.
+- **A saved game that can't be opened is no longer lost.** If the game finds a save it can't open (saved by a newer version, which can happen for one launch after an update, or damaged), it now keeps that save and its weekly backup aside before starting fresh. A red banner says so, and the Save screen offers **Restore it**, **Download it** or **Throw away**. Before, the fresh game quietly saved over it, backup included.
+- If a save is from a newer version, the message now says to reload the page to update.
+
 ## 2026-10-29 · Room above the job result
 - At the end of a job, the result card (Job done, pay, heat) now sits clear of the last line of the play-by-play instead of right against it.
 
