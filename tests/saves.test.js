@@ -150,3 +150,48 @@ test('money in messages reads like money', () => {
   const week = s.inbox.find((m) => m.type === 'finance');
   assert.match(week.body, /Wages ¥[\d,]+, rent ¥[\d,]+\. Paid ¥[\d,]+\. Cash now -?¥[\d,]+\./);
 });
+
+test('a save that can\'t be opened is kept aside with its backup, never lost to the fresh game', () => {
+  // Day 30 in slot 1, with its weekly backup; then a newer version of the game saves over it.
+  const old = days(createNewGame({ seed: 3 }), 30);
+  S.saveGame(old);
+  const newer = { ...old, version: SAVE_VERSION + 1, day: 31 };
+  store.set('syndicate-slot-1', JSON.stringify(newer));
+  const backupBefore = store.get('syndicate-slot-1-backup');
+
+  // This (older) copy of the game can't open it: it keeps it aside and says what happened.
+  assert.equal(S.loadGame(), null);
+  const kept = S.unreadableSave();
+  assert.equal(kept.day, 31);
+  assert.equal(kept.newer, true);
+  assert.match(kept.reason, /newer version/);
+
+  // The fresh game it starts saves over the slot and its backup; the kept copy is untouched.
+  S.saveGame(createNewGame({ seed: 4 }));
+  assert.notEqual(store.get('syndicate-slot-1-backup'), backupBefore);
+  assert.throws(() => S.restoreUnreadable(), /newer version/, 'still too new for this copy');
+  assert.ok(S.unreadableSave(), 'a failed restore keeps it');
+  // Loading the slot again (the fresh game) doesn't replace what was kept.
+  assert.ok(S.loadGame());
+  assert.equal(S.unreadableSave().day, 31);
+
+  // Once the game is updated it opens: the save and its backup come back, and nothing is kept any more.
+  const stored = JSON.parse(store.get('syndicate-slot-1-unreadable'));
+  store.set('syndicate-slot-1-unreadable', JSON.stringify({ ...stored, raw: JSON.stringify({ ...newer, version: SAVE_VERSION }) }));
+  const back = S.restoreUnreadable();
+  assert.equal(back.day, 31);
+  assert.equal(store.get('syndicate-slot-1-backup'), backupBefore);
+  assert.equal(S.unreadableSave(), null);
+});
+
+test('damaged save data is kept as it was, and can be thrown away', () => {
+  store.set('syndicate-slot-2', '{"version": 26, "day": 12, broken');
+  assert.equal(S.loadGame(2), null);
+  const kept = S.unreadableSave(2);
+  assert.equal(kept.newer, false);
+  assert.equal(kept.day, null);
+  assert.equal(JSON.parse(store.get('syndicate-slot-2-unreadable')).raw, '{"version": 26, "day": 12, broken');
+  assert.throws(() => S.restoreUnreadable(2));
+  S.discardUnreadable(2);
+  assert.equal(S.unreadableSave(2), null);
+});

@@ -30,7 +30,7 @@ import { summariseRun, REPORT_LOGS_KEPT } from './report.js';
 import { intelFor } from './sidetasks.js';
 import { afterJob, noteInjury, spendSecondWind, earnedOf } from './earned.js';
 import { overwatchKit, seriousGuard, patchBonus } from './gear.js';
-import { BATTLE } from './battle.js';
+import { BATTLE, loudFightDue } from './battle.js';
 import { crewOf, actors, overwatchOp, standbyOp, standbyReady, driver, onJob, opById, grow, record, takeWhy, addNeural } from './run.js';
 import { startBattle, runBattle, resolveBattleDecision, guardsUp, guardCount } from './runbattle.js';
 export { runBattle };
@@ -199,7 +199,7 @@ export function startMission(prev, jobId, crewIds, approach, opts = {}) {
     overwatch: ow ? { id: ow.id, kit: ow.kit, left: overwatchKit(owOp, ow.kit).uses } : null,
     wheels: wheels ?? null, standby: standby ? { id: standby, used: false } : null,
     callIn: CALL_IN[opts.callIn] ? opts.callIn : 'every', orders: opts.orders ?? null,
-    alert: 0, out: [], pending: null, wentLoud: false, battle: null,
+    alert: 0, out: [], pending: null, wentLoud: false, battle: null, fought: false,
     pay: view.pay, threat: view.threat, threatDelta: view.threatDelta, clientId: job.clientId ?? null, twist: job.twist ?? null,
     queue, step: 0, log: [],
     payCut: 0, extraHeat: 0, clientTrust: 0, watched,
@@ -343,7 +343,12 @@ export function runIncident(prev) {
   if (load && h.stat === 'tech') addNeural(op, load);
   event.alert = am.alert ?? 0; // the alert after this moment (the report's peak); updated below if it fails
   record(am, event);
-  if (success) { advance(state); return state; }
+  if (success) {
+    // On a loud run the first guard is a fight anyway; winning the roll means the crew gets the jump on them.
+    if (loudFightDue(am, inc)) { startBattle(state, am, tpl, inc, id, step.zone, diff, able, { ambush: true }); return state; }
+    advance(state);
+    return state;
+  }
 
   // In danger: one save, from overwatch (if it can see) or the best fighter inside; once standby
   // has come in, they get a try of their own if that misses (slice 3).
@@ -375,7 +380,11 @@ export function runIncident(prev) {
       });
       am.log.push({ kind: saved ? 'good' : 'bad', text: how });
       am.report = [...(am.report ?? []), how];
-      if (saved) { advance(state); return state; }
+      if (saved) {
+        if (loudFightDue(am, inc)) { startBattle(state, am, tpl, inc, id, step.zone, diff, able); return state; }
+        advance(state);
+        return state;
+      }
     }
   }
 
@@ -446,7 +455,11 @@ export function describePending(state) {
       : am.pending.kind === 'standoff' ? `${BATTLE.rounds} rounds in and ${guardCount(guardsUp(am.battle))} still standing.`
         : `${patient?.handle ?? 'Someone'} is badly hurt and out of the job.`;
   const choices = decisionChoices(am.pending, { patient, standby: standbyReady(state, am) }).map((c) => ({ ...c, available: true, risk: c.exit ? 'safe' : null }));
-  return { kind: am.pending.kind, text, choices, standby: standbyReady(state, am)?.handle ?? null };
+  // A fight's call-ins show everyone's health (the watch screen's call-in card).
+  const b = am.battle;
+  const fight = b && (am.pending.kind === 'door' || am.pending.kind === 'standoff')
+    ? { runners: b.runners.map((r) => ({ handle: r.handle, hp: r.hp, max: r.max, down: r.down })), guards: b.guards.map((g) => ({ n: g.n, hp: g.hp, max: g.max, out: g.out })) } : null;
+  return { kind: am.pending.kind, text, choices, standby: standbyReady(state, am)?.handle ?? null, fight };
 }
 
 /** Answer the decision: go loud or keep going, or take the exit (everyone comes home). */

@@ -5,6 +5,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-30 · Loading a save file works again
+- **Save → "Load save file into this slot" did nothing.** You could pick a file, but the game ignored it and showed no error. It loads now. Picking the same file twice in a row also works.
+- **A saved game that can't be opened is no longer lost.** If the game finds a save it can't open (saved by a newer version, which can happen for one launch after an update, or damaged), it now keeps that save and its weekly backup aside before starting fresh. A red banner says so, and the Save screen offers **Restore it**, **Download it** or **Throw away**. Before, the fresh game quietly saved over it, backup included.
+- If a save is from a newer version, the message now says to reload the page to update.
+
 ## 2026-10-29 · Barcode tattoos sit on the chin
 - Portraits with a barcode tattoo now have it centred on the chin and inside the face on every head shape, instead of hanging off the side of the jaw.
 
@@ -57,6 +62,16 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 ## 2026-10-29 · Renewal numbers line up
 - When someone asks for a new deal, their current wage, what they're asking and their market value now sit in three equal boxes with the numbers on one line, and the loyalty note no longer touches them.
+## 2026-10-29 · Fights on the map
+- A fight now plays out on the site map: the guards appear across from your crew, everyone has a little health bar, and each round's shots and hits play as they're reported. Anyone who goes down turns red; a guard who's down, talked round or running off fades out.
+- Each round's card ends with everyone's health, and the call-in at death's door shows it too, so you can decide without scrolling back. The bar under the map counts the guards still up.
+- A guard running off, or your crew getting the jump, is now green in the feed (it showed red).
+
+## 2026-10-29 · Loud runs mean a fight
+- On a loud run the first guard is always a fight now, however well the roll goes: win the roll and your crew gets the jump (the guards get no shot in the first round); miss it and they fight back from the start. The same goes after you tell the crew to go loud at max alert.
+- The planning screen says so ("A loud run means a fight") and works the odds out with the jump counted in.
+- Stealth, tech and con runs still only fight when something goes wrong.
+
 ## 2026-10-29 · Tidy-up (nothing changes in the game)
 - The run engine's fight code moved out of `mission.js` into its own file, a map of the code (`CODEMAP.md`) was added, and `npm run test:fast` runs the quick tests in about 40 seconds instead of two minutes.
 
@@ -70,6 +85,15 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - After three rounds with guards still up, you choose: push past them (the alert goes up) or pull back. A lone guard who's badly hurt runs for it.
 - The planning screen now says how a fight would go for each danger ("If it comes to a fight: low risk"), worked out from the same rules.
 - Fixed: a one-person crew who pushed on with a critical wound could freeze the game at the next crisis.
+
+## 2026-10-29 · More guards, and you can see them coming
+- Bigger jobs bring more guards to a fight (up to four), each a bit easier to drop, so rounds where two go down, or the last one runs, happen more often. Gear still makes the difference.
+- Before the crew gets there, the guards they'll meet wait on the map in their spot, with a number for how many. They're the real ones: if it comes to a fight there, that's who you'll fight.
+
+## 2026-10-29 · Jobs look like where they happen
+- Some jobs now have their own place on the map: Clinic Night is Doc Siu's clinic down Block 9's stairwell, Submerged Cable is the cable hut on Pier 12, Container 409 is the container itself.
+- The Docks also varies from job to job: two ways in (the gate, or the quay at the harbour end) and two ways the yard is stacked, both full of containers and crates. Each job keeps the same layout whenever you look at it, and two jobs can differ.
+- The Night Market, Glass Heights and the Basin come next.
 
 ## 2026-10-29 · Rookie hires cost half
 - Rookies the scouts find now ask for about half what they used to (¥200-350 a week instead of ¥400-650), so growing past your three founders is affordable. Pros and veterans cost the same as before, and anyone's pay still goes up at contract time once they've grown.

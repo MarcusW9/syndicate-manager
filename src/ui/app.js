@@ -41,7 +41,7 @@ import { SPECIALISATIONS, specOf } from '../core/specialisations.js';
 import { sideTaskById, sideOdds, sendOnSideTask, sideReward, sideCost, sidePitch, intelFor, SIDE_TRUST } from '../core/sidetasks.js';
 import {
   saveGame, loadGame, exportSave, importSave, listSlots, getActiveSlot, setActiveSlot,
-  deleteSlot, loadBackup, backupDue, SLOT_COUNT,
+  deleteSlot, loadBackup, backupDue, SLOT_COUNT, unreadableSave, restoreUnreadable, exportUnreadable, discardUnreadable,
 } from '../save/save.js';
 import { hire, haggle, passRecruit, canHire, signingFee, nextExpansion, expandSafehouse, STARTING_ROSTER_CAP, FOUNDERS_TO_PICK } from '../core/recruits.js';
 import { potentialRead, potentialTag, primaryStat, scoutFor, ageRate, declineChance, mentoring, changesSince, progressShare, STATS } from '../core/development.js';
@@ -69,6 +69,7 @@ let root;
 const CONTINUE_REST_MS = 800;
 let continueRestUntil = 0;
 let dayCue = null; // what the day that just started brought; shown once, on the next render
+let importInput = null; // the hidden save-file picker (see mountApp)
 let focusNext = null; // { action, id }: the control to focus after the next render (going back to a list)
 let returnTo = null; // { screen, messageId }: where a runner's page opened from a name link goes back to
 let founderPick = []; // candidate ids picked so far on a new game's first screen (renderFounding)
@@ -84,7 +85,12 @@ export function mountApp(el, initialState) {
     if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('g[data-action]')) { e.preventDefault(); onClick(e); }
     if (e.key === 'Escape' && pickSlot) { focusNext = { action: 'pick-slot', id: pickSlot }; pickSlot = null; render(); }
   });
-  root.addEventListener('change', onChange);
+  // The save-file picker lives outside root: render() replaces everything inside root, and the
+  // Load button's own click re-renders, so a picker inside would be swapped out mid-pick and its
+  // file never arrive (owner's report, 2026-10-30: "nothing happens").
+  importInput = Object.assign(document.createElement('input'), { type: 'file', id: 'import-file', accept: 'application/json,.json', hidden: true });
+  importInput.addEventListener('change', onImportFile);
+  root.after(importInput);
   render();
 }
 
@@ -238,12 +244,16 @@ function onClick(e) {
       exportSave(state);
       break;
     case 'import':
-      if (confirm(`Load a save file into slot ${getActiveSlot()}? The game in this slot will be replaced.`)) root.querySelector('#import-file').click();
+      if (confirm(`Load a save file into slot ${getActiveSlot()}? The game in this slot will be replaced.`)) { importInput.value = ''; importInput.click(); } // cleared, so the same file can be picked again
       break;
     case 'slot-load': {
       const n = Number(id);
       const loaded = loadGame(n);
-      if (!loaded) { alert(`Slot ${n} could not be loaded.`); break; }
+      if (!loaded) {
+        const kept = unreadableSave(n);
+        alert(`Slot ${n} could not be opened.${kept?.newer ? ' It was saved by a newer version of the game: reload the page to update.' : ''} It's kept safe on this screen.`);
+        break;
+      }
       setActiveSlot(n);
       screen = 'inbox'; plan = null; openMessageId = null; openOperativeId = null; openRecruitId = null;
       return setState(loaded);
@@ -266,6 +276,22 @@ function onClick(e) {
     case 'slot-delete':
       if (confirm(`Delete the game in slot ${id}? This can't be undone.`)) deleteSlot(Number(id));
       break;
+    // A save that couldn't be opened, kept aside by save.js (DESIGN.md, 2026-10-30).
+    case 'kept-restore': {
+      const n = Number(id);
+      if (!confirm(`Restore the kept game into slot ${n}? Whatever is in slot ${n} now will be replaced.`)) break;
+      try {
+        const restored = restoreUnreadable(n);
+        setActiveSlot(n);
+        screen = 'inbox'; plan = null; openMessageId = null; openOperativeId = null; openRecruitId = null;
+        return setState(restored);
+      } catch (err) { alert(`Could not restore it yet: ${err.message}`); }
+      break;
+    }
+    case 'kept-export': exportUnreadable(Number(id)); break;
+    case 'kept-discard':
+      if (confirm(`Throw away the kept game from slot ${id}? Download it first if you might want it. This can't be undone.`)) discardUnreadable(Number(id));
+      break;
     case 'restore-backup': {
       const backup = loadBackup();
       if (backup && confirm(`Go back to the automatic backup from day ${backup.day}? Everything since then will be lost.`)) {
@@ -281,9 +307,9 @@ function onClick(e) {
 /** The planning screen's squad options for startMission / sendOff. */
 const planOpts = () => ({ overwatch: plan.overwatch ? { id: plan.overwatch, kit: planKit(plan, state.crew.find((o) => o.id === plan.overwatch)) } : null, wheels: plan.wheels ?? null, standby: plan.standby ?? null, callIn: plan.callIn ?? 'risky', orders: plan.orders ?? 'steady' });
 
-function onChange(e) {
-  if (e.target.id !== 'import-file' || !e.target.files[0]) return;
-  importSave(e.target.files[0])
+function onImportFile() {
+  if (!importInput.files[0]) return;
+  importSave(importInput.files[0])
     .then((loaded) => { screen = 'inbox'; plan = null; setState(loaded); })
     .catch((err) => alert(`Could not load that file: ${err.message}`));
 }
@@ -414,10 +440,9 @@ function render() {
       ${navButton('settings', 'Save')}
     </nav>
 
-    <main class="main ${wide ? 'main--wide' : ''} ${!state.activeMission && screen === 'jobs' && plan ? 'main--split' : ''}">${state.activeMission ? renderMission() : renderScreen()}</main>
+    <main class="main ${wide ? 'main--wide' : ''} ${!state.activeMission && screen === 'jobs' && plan ? 'main--split' : ''}">${state.activeMission ? renderMission() : `${keptBanner()}${renderScreen()}`}</main>
     ${dock ? `<div class="dock">${renderContinue(blocked, resting, unread, 'dock__continue')}</div>` : ''}
     ${cue ? renderDayCue(cue) : ''}
-    <input type="file" id="import-file" accept="application/json" hidden />
   `;
   if (am) mountWatch(root.querySelector('.watch'), state, { ui: watchUi, onAuto: () => setState(autoStep(state)) });
   if (pickSlot) (root.querySelector('.sheet .cand.is-on') ?? root.querySelector('.sheet .cand:not([disabled])'))?.focus({ preventScroll: true });
@@ -527,6 +552,14 @@ function renderScreen() {
 }
 
 // --- inbox -------------------------------------------------------------
+/** Says a save in this slot was kept aside because it couldn't be opened, on every screen until it's dealt with. */
+function keptBanner() {
+  const kept = screen === 'settings' ? null : unreadableSave();
+  if (!kept) return '';
+  return `<div class="banner banner--danger"><span>${kept.newer ? 'Your saved game is from a newer version of the game.' : 'Your saved game couldn\'t be opened.'} It's kept safe.</span>
+    <button class="btn" data-action="nav" data-id="settings">See Save</button></div>`;
+}
+
 function backupBanner() {
   if (!backupDue(state)) return '';
   return `<div class="banner"><span>${state.lastBackupDay ? `No backup for ${state.day - state.lastBackupDay} days.` : 'You have never backed up this save.'}</span>
@@ -1570,6 +1603,12 @@ function renderMission() {
 const outsider = (id, what) => { const op = id ? state.crew.find((o) => o.id === id) : null; return op ? ` · ${esc(op.handle)} ${what}` : ''; };
 
 /** The card for whatever the crew is calling you in for, if anything (shown inline in the watch feed). */
+/** Everyone's health at a fight's call-in: the crew, then the guards still up. */
+function fightHealth({ runners, guards }) {
+  const chip = (cls, text) => `<span class="wf-chip ${cls}">${esc(text)}</span>`;
+  return `<p class="wf-hp wf-hp--callin" aria-label="Health">${runners.map((r) => chip(r.down ? 'is-down' : r.hp < r.max * 0.25 ? 'is-crit' : r.hp < r.max * 0.5 ? 'is-low' : '', `${r.handle} ${r.down ? 'down' : `${r.hp}/${r.max}`}`)).join('')}${guards.filter((g) => !g.out).map((g) => chip('wf-chip--guard', `Guard ${g.n} ${g.hp}/${g.max}`)).join('')}</p>`;
+}
+
 function renderCallIn(s) {
   const am = s.activeMission;
   if (am.critical) {
@@ -1587,6 +1626,7 @@ function renderCallIn(s) {
       <div class="crisis">
         <p class="crisis__title">${v.kind === 'alert' ? 'The crew is calling in: you\'ve been spotted' : v.kind === 'door' ? 'The crew is calling in: someone is at death\'s door' : v.kind === 'standoff' ? 'The crew is calling in: the guards are still standing' : 'The crew is calling in: someone is down'}</p>
         <p>${esc(v.text)}</p>
+        ${v.fight ? fightHealth(v.fight) : ''}
         <div class="choices">${v.choices.map((c) => choiceButton({ ...c, risk: c.exit ? 'safe' : c.push ? 'extreme' : 'moderate', riskReason: c.cost, cost: '' }, 'pending')).join('')}</div>
       </div>`;
   }
@@ -1787,6 +1827,22 @@ function renderMeet(cov, owOp) {
       <div id="meet-read" ${meetHidden ? 'hidden' : ''}>${meetHidden ? '' : renderCoverage(boardUi, cov, { overwatch: owOp, approachName: APPROACHES[plan.approach].name, standby: state.crew.find((o) => o.id === plan.standby) ?? null })}</div>`;
 }
 
+/** A save that couldn't be opened, kept aside for slot n: what happened and the way back. */
+function keptCard(n) {
+  const kept = unreadableSave(n);
+  if (!kept) return '';
+  return `
+      <div class="riskcard riskcard--kept">
+        <p><strong>A saved game in slot ${n}${kept.day ? ` (day ${kept.day})` : ''} couldn't be opened.</strong> It's kept safe, apart from the game in the slot now.</p>
+        <p class="muted small">${kept.newer ? 'It was saved by a newer version of the game than this one. Reload the page to update, then restore it.' : esc(kept.reason)}</p>
+        <div class="kept__actions">
+          <button class="btn btn--primary" data-action="kept-restore" data-id="${n}">Restore it</button>
+          <button class="btn" data-action="kept-export" data-id="${n}">Download it</button>
+          <button class="btn btn--danger" data-action="kept-discard" data-id="${n}">Throw away</button>
+        </div>
+      </div>`;
+}
+
 function renderSettings() {
   const slots = listSlots();
   const active = getActiveSlot();
@@ -1808,6 +1864,7 @@ function renderSettings() {
     <section class="panel">
       <h1>Save</h1>
       <p class="body">The game saves automatically after every action, in this browser only.</p>
+      ${Array.from({ length: SLOT_COUNT }, (_, i) => keptCard(i + 1)).join('')}
 
       <div class="cols2">
       <div>

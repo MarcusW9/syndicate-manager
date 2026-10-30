@@ -16,6 +16,7 @@ import { needsPlayer } from '../core/autorun.js';
 import { ALERT_MAX, OVERWATCH_KIT, ZONES } from '../core/incidents.js';
 import { sitePlanSvg, bindSitePlan, siteFor } from './siteplan.js';
 import { templateById } from '../core/jobs.js';
+import { guardPosts } from '../core/battle.js';
 
 const FAST = 0.35;
 // How long each kind of moment stays before the next step (ms at normal speed): routine moments
@@ -35,7 +36,7 @@ export function renderWatch(ui, state) {
   return `
     <div class="watch ${done ? 'is-done' : ''}" data-mission="${ui.esc(am.jobId)}">
       <div class="watch__live">
-        <div class="watch__map">${sitePlanSvg({ kit: am.overwatch?.kit ?? null, site: siteFor(templateById(am.templateId)?.district) })}
+        <div class="watch__map">${sitePlanSvg({ kit: am.overwatch?.kit ?? null, site: siteFor(templateById(am.templateId)?.district, am.jobId, am.templateId) })}
           <span class="watch__phase" aria-live="polite"></span>
           <span class="watch__alert" role="img"></span>
         </div>
@@ -75,7 +76,7 @@ export function mountWatch(el, state, { onAuto, ui }) {
   const team = opsOf(state, am.crewIds.filter((id) => !out.includes(id)));
   const ow = am.overwatch ? { op: state.crew.find((o) => o.id === am.overwatch.id), kit: am.overwatch.kit } : null;
   const plan = bindSitePlan(el.querySelector('.siteplan'), {
-    team, overwatch: ow?.op ? ow : null, zone: am.done ? 'full' : am.zone ?? 'start', speed: () => speed, site: siteFor(templateById(am.templateId)?.district),
+    team, overwatch: ow?.op ? ow : null, zone: am.done ? 'full' : am.zone ?? 'start', speed: () => speed, site: siteFor(templateById(am.templateId)?.district, am.jobId, am.templateId),
     wheels: am.wheels ? opsOf(state, [am.wheels])[0] : null,
     standby: am.standby && !am.standby.joined ? opsOf(state, [am.standby.id])[0] : null,
     out: opsOf(state, out),
@@ -88,6 +89,7 @@ export function mountWatch(el, state, { onAuto, ui }) {
   // The plan sticks just under the top bar (its height changes with the screen width).
   el.style.setProperty('--live-top', `${document.querySelector('.topbar')?.offsetHeight ?? 0}px`);
   if (am.done) plan.full();
+  if (am.battle) plan.syncFight(am.battle); // a page opened mid-fight draws it as it stands
   sync(state, { animate: false });
 }
 
@@ -164,10 +166,11 @@ function sync(state, { animate }) {
     if (animate) {
       const plan = live.plan;
       const cue = item.cue?.standby ? { ...item.cue, standbyOp: opsOf(state, [item.cue.standby])[0] } : item.cue;
-      live.chain = live.chain.then(() => (item.type === 'phase' ? plan.enter(item.zone) : item.type === 'card' ? plan.play(cue) : null)).catch(() => {});
+      live.chain = live.chain.then(() => (item.type === 'phase' ? plan.enter(item.zone) : item.type === 'card' || (item.type === 'note' && item.cue) ? plan.play(cue) : null)).catch(() => {});
     }
   }
   for (const e of am.events ?? []) if (e.injury) live.plan.hurt(e.injury.id, e.injury.severity);
+  live.plan.posts(guardPosts(am)); // the guards still ahead, on their posts
   if (fresh.length && follow) feed.lastElementChild?.scrollIntoView?.({ block: 'nearest', behavior: animate && speed === 1 && !matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto' });
   else if (fresh.length) {
     live.unseen += fresh.length;
@@ -211,6 +214,7 @@ function tally(state) {
     <span class="${saves ? 'is-good' : ''}">Saves ${saves}</span>
     <span class="${hurt ? 'is-bad' : ''}">Hurt ${hurt}</span>
     ${am.extraHeat ? `<span class="is-bad">Heat +${am.extraHeat}</span>` : ''}
+    ${am.battle ? `<span class="is-bad">Guards ${am.battle.guards.filter((g) => !g.out).length} up</span>` : ''}
     ${kit ? `<span>${ui.esc(kit.name)} ${'●'.repeat(Math.max(0, am.overwatch.left))}${'○'.repeat(Math.max(0, kit.uses - am.overwatch.left))}</span>` : ''}`;
 }
 
@@ -229,6 +233,12 @@ function callIn(state) {
     first.focus({ preventScroll: true });
     slot.scrollIntoView?.({ block: 'start' });
   }
+}
+
+/** Everyone's health after a round, in the card's summary: the crew's, then the guards still up. */
+function fightChips(esc, { runners = [], guards = [] }) {
+  const up = guards.filter((g) => !g.out);
+  return `<span class="wf-hp" aria-label="Health after the round">${runners.map((r) => `<span class="wf-chip ${r.down ? 'is-down' : r.hp < r.max * 0.25 ? 'is-crit' : r.hp < r.max * 0.5 ? 'is-low' : ''}">${esc(r.handle)} ${r.down ? 'down' : `${r.hp}/${r.max}`}</span>`).join('')}${up.map((g) => `<span class="wf-chip wf-chip--guard">Guard ${g.n} ${g.hp}/${g.max}</span>`).join('')}</span>`;
 }
 
 const TONE = { good: 'good', bad: 'bad', save: 'save', warn: 'warn' };
@@ -251,6 +261,7 @@ function itemHtml(ui, item, animate) {
       <summary>
         <span class="wf-kind">${esc(item.label)}</span>
         <span class="wf-hls">${item.results.map((r, i) => `<span class="wf-hl wf-hl--${TONE[r.tone] ?? 'plain'}" style="--d:${i}">${icon(r.tone)} ${esc(r.headline)}</span>`).join('')}</span>
+        ${item.hp ? fightChips(esc, item.hp) : ''}
       </summary>
       <div class="wf-more">
         ${item.setup ? `<p class="wf-setup">${esc(item.setup)}</p>` : ''}

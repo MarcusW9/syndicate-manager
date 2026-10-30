@@ -14,7 +14,7 @@ Where things live and how a run flows, so you can read a few functions instead o
 | beat | `revealBeat` | `core/mission.js` |
 | zone | `enterZone` | `core/mission.js` |
 | incident | `runIncident` (roll, save, cost; an unsaved danger incident starts a fight) | `core/mission.js` |
-| battle | `runBattle` (one round, then `afterRound`) | `core/runbattle.js` |
+| battle | `runBattle` (one round, then `afterRound`); a loud run's first guard always starts one (`loudFightDue`, `core/battle.js`) | `core/runbattle.js` |
 | crisis | `describeCrisis` / `chooseOption` (the player's or the orders' choice) | `core/mission.js` |
 | critical | `describeCritical` / `resolveCritical` (stabilise, extract, push on) | `core/mission.js` |
 | call-in | `describePending` / `resolvePending` (`am.pending`: `alert`, `injury`, `door`, `standoff`) | `core/mission.js` |
@@ -26,6 +26,12 @@ Where things live and how a run flows, so you can read a few functions instead o
 - `mission.js` the run engine above. `run.js` shared helpers (who's on the job: `actors`, `crewOf`, `overwatchOp`...; `record`, `grow`). `runbattle.js` a fight's side of the run (start, call-ins, pulling back). `battle.js` a fight's rules: `playRound`, `battleOdds`, HP and armour. `incidents.js` incident rules, saves, `decisionChoices`, `ordersDecision`. `autorun.js` standing orders and hands-off.
 - `squad.js` the planning read (`coverage`, `jossPicks`, `leanPicks`, `jobRead`): uses the run's own functions, so shown risk equals used risk. `risk.js` odds and labels. `crew.js` effective stats, `crewRoll`, injuries. `gear.js` stash, loadouts, overwatch kits. `specialisations.js`, `earned.js` (earned traits), `development.js` (growth, mentoring, age).
 - World: `jobs.js` (board, offers), `clients.js`, `heat.js`, `rumours.js`, `recruits.js`, `freelance.js`, `sidetasks.js`, `renewals.js`, `loyalty.js`, `time.js` (the day tick), `state.js` (new game, `SAVE_VERSION`), `report.js` (the report summary), `feed.js` (a run's events as watch cards), `upcoming.js` (Today's list).
+
+## The watch screen
+`ui/watch.js` runs the feed on a timer and hands each new card's `cue` to `ui/siteplan.js`, which plays it on the site map; a fight's cue is `cue.battle` (`phase`, both sides' health, the round's `lines`), played by `fight()` in `siteplan.js`. Guards still ahead wait on their posts: `guardPosts(am)` (`core/battle.js`) → `plan.posts()`, at each site's `posts` spots. `core/feed.js` builds the cards and cues from `am.events`.
+
+## Site maps
+`data/sites.js`: plain sites, and districts drawn as parts (`PLOTS`: a plot with approaches, covers and targets; a target with `jobs` is that job's own place). `pickSite(district, jobId, templateId)` picks the parts from the job's id (stable, nothing stored) and `assemble()` makes them a site. Picture only: the core never reads a site. `ui/siteplan.js` draws it. `node scripts/preview-sites.mjs <district>` draws every combination; `tests/sites.test.js` checks each (geometry, routes clear of cover, a job's own target).
 
 ## Events and the record
 Everything that happens in a run is `record(am, event)` into `am.events`. `feed.js` turns events into watch cards; `report.js` and the report's full log (`ui/app.js` `renderFullLog`) read the same events. A new kind of moment needs its event, a card in `feed.js` and a line in `renderFullLog`.

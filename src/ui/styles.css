@@ -415,6 +415,9 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .riskcard .btn--block { margin-top: 8px; }
 .nomargin { margin-top: 0; }
 .warntext { color: var(--warn); font-weight: 600; }
+/* A save kept aside because it couldn't be opened (2026-10-30). */
+.riskcard--kept { border-color: var(--danger); }
+.kept__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; padding: 10px 12px; border: 1px solid var(--warn); border-radius: var(--radius); background: #1f1c14; font-size: 0.9rem; }
 
 /* --- Trait bonuses on stats panels --- */
@@ -854,6 +857,19 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .sp-token.is-down circle { stroke: var(--danger); stroke-width: 2.5; opacity: 0.6; }
 .sp-token.is-cornered circle { stroke: var(--danger); stroke-width: 2; animation: sp-blink 0.5s steps(2) infinite; }
 .sp-enemy circle { fill: var(--danger); stroke: #0b0d11; stroke-width: 1.5; } .sp-enemy--patrol circle { fill: #c9772f; }
+/* Fights (slice 6b): three-segment health bars (the gauges' 4 on, 1 off) under the tokens, cyan, then sodium, then red. */
+.sp-hp rect { fill: #2a303b; } .sp-hp rect.is-on { fill: var(--accent-2); }
+.sp-hp.is-low rect.is-on { fill: var(--warn); } .sp-hp.is-crit rect.is-on { fill: var(--danger); }
+.sp-enemy .sp-hp rect.is-on { fill: var(--danger); }
+.sp-enemy--guard circle { fill: #9b2f3f; }
+/* A guard on their post, waiting (the number is how many): dim until the crew reaches them. */
+.sp-enemy--post circle { fill: #3a1820; stroke: var(--danger); stroke-width: 1; stroke-dasharray: 2 1.5; } .sp-enemy--post text { fill: #ff8a98; }
+/* A fight's health chips, in a round card's summary and at the call-in: sharp tags in display caps. */
+.wf-hp { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 0; }
+.wf-chip { font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 1px 7px; border: 1px solid var(--line); color: var(--muted); border-radius: var(--radius); }
+.wf-chip.is-low { color: var(--warn); border-color: var(--warn); } .wf-chip.is-crit, .wf-chip.is-down { color: var(--danger); border-color: var(--danger); }
+.wf-chip--guard { color: #ff8a98; border-color: #7a2a38; }
+.wf-hp--callin { margin: 0 0 10px; }
 .sp-npc circle { fill: #8b93a7; stroke: #0b0d11; stroke-width: 1.5; } .sp-npc.is-alarmed circle { fill: var(--warn); }
 .sp-cam circle { fill: #2a2f3b; stroke: var(--accent-2); stroke-width: 1; } .sp-cam text { fill: var(--accent-2); }
 .sp-cam.is-alarmed circle { stroke: var(--danger); } .sp-cam.is-alarmed text { fill: var(--danger); }
@@ -929,6 +945,7 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 
 /* District sites (data/sites.js, slice 4). */
 .sp-water { fill: #0d1620; } .sp-jetty { fill: #2a2f3b; } .sp-desk { fill: #222837; }
+.sp-cable { stroke: var(--accent-2); stroke-width: 1.2; stroke-dasharray: 3 2; opacity: 0.6; } .sp-cot { fill: #2a303b; }
 .sp-yard { fill: #10141a; } .sp-alley { fill: #12141a; } .sp-step { fill: #2a2f3b; }
 .sp-room { fill: #1d1520; stroke: var(--accent); stroke-width: 1; stroke-dasharray: 2 2; }
 .sp-block { fill: #141820; stroke: #2f3644; stroke-width: 1; }
@@ -1061,3 +1078,5 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
    signs' Chinese in the system's CJK font, as the city's name is elsewhere. */
 .da-stencil { font: 700 6.5px var(--display); letter-spacing: 0.12em; fill: #e9e2cf; opacity: 0.85; }
 .da-neon { font-family: 'Noto Sans CJK TC', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', 'WenQuanYi Zen Hei', sans-serif; font-weight: 700; }
+/* A save kept aside: the banner is red, not the backup reminder's yellow (after the skin's banner rule). */
+.banner.banner--danger { border-color: var(--danger); background: rgba(255, 74, 74, 0.08); }

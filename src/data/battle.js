@@ -30,11 +30,14 @@ export const BATTLE = {
   shootStep: -2, overwatchStep: -1, guardStep: -2,
 
   // Guards by threat (index = threat 1-5): health, armour (flat soak), damage per hit.
-  guardHp: [0, 4, 5, 6, 7, 8],
-  guardArmour: [0, 0, 0, 1, 1, 2],
-  guardDamage: [0, 2, 3, 3, 4, 4],
-  extraGuardFrom: 5, // one more guard on threat 5 work
-  breakBelow: 0.5, // the last guard standing breaks and runs under this share of their HP (alert +fledAlert)
+  // More guards on bigger work, each lighter (2026-10-29): armour only on threat 5 security.
+  guardHp: [0, 4, 4, 5, 5, 6],
+  guardArmour: [0, 0, 0, 0, 0, 1],
+  guardDamage: [0, 2, 2, 3, 3, 3],
+  // How many: the incident's own count (1 or 2), plus more on bigger work (index = threat), at most
+  // maxGuards (owner, 2026-10-29: more guards a fight, each a bit weaker).
+  extraGuards: [0, 0, 0, 1, 1, 2], maxGuards: 4,
+  breakBelow: 0.5, // under this share of their HP a guard breaks and runs, if they're the last one up or half their side is down (alert +fledAlert)
   fledAlert: 1,
   guardsFocus: 0.5, // share of guard attacks that go for whoever is hurt worst (the rest pick anyone)
 

@@ -6,6 +6,7 @@
 //   syndicate-active-slot          '1' | '2' | '3'
 //   syndicate-slot-N               the save in slot N
 //   syndicate-slot-N-backup        automatic weekly backup of slot N (not for Ironman)
+//   syndicate-slot-N-unreadable    a save in slot N that couldn't be opened, kept aside with its backup
 //   syndicate-ironman-progress     { [ironmanId]: highest save counter seen }
 //   syndicate-save-v1              legacy single save, moved into slot 1 on first load
 
@@ -25,6 +26,7 @@ const ACTIVE_KEY = 'syndicate-active-slot';
 const IRONMAN_KEY = 'syndicate-ironman-progress';
 const slotKey = (n) => `syndicate-slot-${n}`;
 const backupKey = (n) => `syndicate-slot-${n}-backup`;
+const unreadableKey = (n) => `syndicate-slot-${n}-unreadable`;
 
 // --- storage backend (replace for iOS) ---------------------------------
 function storageGet(key) {
@@ -124,9 +126,66 @@ export function saveGame(state) {
 }
 
 export function loadGame(slot = getActiveSlot()) {
-  const state = readJson(slotKey(slot));
-  if (!state) return null;
-  try { return migrate(state); } catch { return null; }
+  const raw = storageGet(slotKey(slot));
+  if (!raw) return null;
+  try { return migrate(JSON.parse(raw)); } catch (err) { keepUnreadable(slot, raw, err); return null; }
+}
+
+// --- unreadable saves: kept aside, never lost -----------------------------
+// When a slot's save can't be opened (a newer version than this copy of the game, which can
+// happen for one launch after an update while the offline copy catches up; or damaged data),
+// the game starts afresh and that fresh game saves over the slot. So first the save and the
+// slot's backup are copied aside here, and the Save screen offers them back (owner's report,
+// 2026-10-30: a reset game).
+
+function keepUnreadable(slot, raw, err) {
+  if (readJson(unreadableKey(slot))?.raw === raw) return;
+  let parsed = null;
+  try { parsed = JSON.parse(raw); } catch { /* damaged: keep the text as it is */ }
+  storageSet(unreadableKey(slot), JSON.stringify({
+    raw,
+    backupRaw: storageGet(backupKey(slot)),
+    newer: typeof parsed?.version === 'number' && parsed.version > SAVE_VERSION,
+    reason: err.message,
+    day: typeof parsed?.day === 'number' ? parsed.day : null,
+  }));
+}
+
+/** The save kept aside for a slot, or null: { day, newer, reason }. */
+export function unreadableSave(slot = getActiveSlot()) {
+  const kept = readJson(unreadableKey(slot));
+  return kept ? { day: kept.day, newer: kept.newer, reason: kept.reason } : null;
+}
+
+/**
+ * Open the kept save, put it (and its backup) back in the slot and stop keeping it aside.
+ * Returns the state, or throws the same errors as loading a file (still too new, damaged,
+ * an older copy of an Ironman run).
+ */
+export function restoreUnreadable(slot = getActiveSlot()) {
+  const kept = readJson(unreadableKey(slot));
+  if (!kept) throw new Error('Nothing kept for this slot');
+  const state = migrate(JSON.parse(kept.raw));
+  checkIronman(state);
+  if (kept.backupRaw) storageSet(backupKey(slot), kept.backupRaw);
+  storageRemove(unreadableKey(slot));
+  return state;
+}
+
+/** Download the kept save exactly as it was, so it's safe outside the browser. */
+export function exportUnreadable(slot = getActiveSlot()) {
+  const kept = readJson(unreadableKey(slot));
+  if (!kept) return;
+  const url = URL.createObjectURL(new Blob([kept.raw], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `syndicate-slot${slot}-${kept.day ? `day${kept.day}-` : ''}kept.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function discardUnreadable(slot = getActiveSlot()) {
+  storageRemove(unreadableKey(slot));
 }
 
 export function deleteSlot(slot) {
@@ -173,7 +232,7 @@ export function backupDue(state) {
 // Upgrade old save formats when SAVE_VERSION changes.
 function migrate(state) {
   if (typeof state?.version !== 'number') throw new Error('Not a save file');
-  if (state.version > SAVE_VERSION) throw new Error('Save is from a newer version');
+  if (state.version > SAVE_VERSION) throw new Error('This save is from a newer version of the game. Reload the page to update, then try again.');
   if (state.version === 1) {
     // v2 added the job board and missions.
     state.jobs = state.jobs ?? [];
@@ -368,6 +427,14 @@ function migrate(state) {
     // jobs saved before fights existed have none.
     for (const am of [state.activeMission, ...(state.awayJobs ?? []).map((j) => j.mission)]) if (am) am.battle = am.battle ?? null;
     state.version = 26;
+  }
+  if (state.version === 26) {
+    // v27: a loud run's first guard is always a fight (am.fought: has this run had one yet). A job
+    // saved mid-way has fought if its record shows a fight.
+    for (const am of [state.activeMission, ...(state.awayJobs ?? []).map((j) => j.mission)]) {
+      if (am) am.fought = am.fought ?? (am.events ?? []).some((e) => e.kind === 'battle' && e.phase === 'start');
+    }
+    state.version = 27;
   }
   return state;
 }

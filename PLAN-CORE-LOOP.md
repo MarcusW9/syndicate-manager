@@ -141,22 +141,23 @@ the drone can; district lines only change words and keep `{op}`).
   `src/core/specialisations.js`; the effect lives in `core/gear.js` `overwatchKit`. Tests:
   `tests/specialisations.test.js`. Next directions (Breacher, Netrunner, Ghost...) come in batches.
 
-### Slice 6 · Battles — 6a, the engine: [x] 2026-10-29 · 6b, the watch screen: [ ]
+### Slice 6 · Battles — 6a, the engine: [x] 2026-10-29 · 6b, the watch screen: [x] 2026-10-29
 Fights are automatic exchanges of up to 3 rounds on the watch feed. You watch; you're called in
 only when something big happens. Designed with the owner on 2026-10-29 (DESIGN.md rows); built as
 `src/core/battle.js` (pure, seeded), numbers in `src/data/battle.js`, the run's side in
 `core/runbattle.js` (`runBattle`, started from `runIncident` in `core/mission.js`; a `battle` step in the queue, `am.battle`, save v26). Tuned with
 `node scripts/sim-battles.mjs`. Tests: `tests/battle.test.js`.
 
-- **When:** only when a run escalates: a danger incident (patrol, guard up close, more guards,
+- **When:** when a run escalates, and always on a loud run (2026-10-29, owner: "every loud run pretty much"): the first danger incident of a loud run, or after "go loud", is a fight whatever the roll, and winning the roll gives the crew the jump (the guards get no shot in round 1). Otherwise a danger incident (patrol, guard up close, more guards,
   holding the room) that goes unsaved starts a fight instead of the old serious-wound roll. Each
   says how many guards (`guards` in `data/incidents.js`); one more on threat 5 work. Every other
   incident stays one roll. Loud runs meet more danger incidents, so they fight more.
 - **Who:** the inside team still standing, overwatch if it can see the zone and has uses left
   (one shot or drone action a round, spent from its uses: heat and neural load as before), and
   Wheels, who can bring the van round once (then pulling back costs no parting shots).
-- **Health:** runners have 10 + cool/4 HP (3 less if already lightly hurt). Guards by threat:
-  HP 4-8, armour 0/0/1/1/2, damage 2-4. Guns are standard (WORLD.md): no weapon means a street
+- **Health:** runners have 10 + cool/4 HP (3 less if already lightly hurt). Guards by threat
+  (2026-10-29: more of them, each lighter): HP 4/4/5/5/6, armour only on threat 5 (1), damage 2-3; count
+  the incident's 1-2 plus 0/0/0/1/1/2 by threat, at most 4. Guards still ahead wait on their posts on the map. Guns are standard (WORLD.md): no weapon means a street
   piece (2); sidearm 3, rifle 5 and drone taser 3 from overwatch; pro gear +1.
 - **Armour, first version: XCOM's flat soak** (owner's call, 2026-10-29: "see how it plays
   out"). Each point takes 1 off every hit, and **a hit that lands always does at least 1**.
@@ -193,9 +194,11 @@ only when something big happens. Designed with the owner on 2026-10-29 (DESIGN.m
 - **The planning read:** each danger row runs the fight 120 times on fixed seeds with the same
   round function (`battleOdds`, cached), counts a fight won with nobody down as getting through,
   and says "If it comes to a fight: low risk" on the board. Joss's picks use it too.
-- **The watch, for now:** a note when the fight starts, a card per round (each moment with its
-  dice, HP in the card's setup), "Pulling back", a note when it's over; the full log in the
-  report shows the same. The call-in names death's door and shows "Keep fighting" as extreme risk.
+- **The watch (6b, built):** a note when the fight starts (the guards appear on the plan), a card per
+  round (each moment with its dice; health chips in the summary), "Pulling back", a note when it's
+  over; every token has a three-segment health bar and each moment plays on the plan; the call-in
+  shows everyone's health. The full log in the report shows the same text. The call-in names
+  death's door and shows "Keep fighting" as extreme risk.
 - **Measured (`sim-battles.mjs`, 300 runs a row):** rookie jobs: about 1 run in 10 becomes a
   fight and rookies win nearly all of them, nobody goes down. Threat 4 with a grown crew (+4 every
   stat), loud: wins 22% with no kit, 44% with a sidearm and vest, 69% with pro kit; someone goes

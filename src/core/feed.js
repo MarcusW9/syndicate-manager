@@ -5,8 +5,8 @@
 //
 // Items: { type: 'phase', zone, title } | { type: 'beat', text } | { type: 'note', text, tone }
 //      | { type: 'card', kind, label, setup, results: [{ headline, detail, tone, roll, why }], cue }
-// A fight (slice 6) is a card per round, with HP in its setup line; the watch screen's own look
-// for fights comes in slice 6b.
+// A fight (slice 6) is a card per round, with HP in its setup line and in `hp` (the summary's
+// chips); its cue (battle) says what to play on the plan (ui/siteplan.js fight()).
 
 import { ZONES } from '../data/incidents.js';
 import { incidentById } from './incidents.js';
@@ -65,17 +65,21 @@ export function feedItems(events = [], { kit = null } = {}) {
         cue: e.standby ? { standby: e.standby.id, rescued: e.rescued?.id ?? null } : { decision: true },
       });
     } else if (e.kind === 'battle') {
-      // A fight (slice 6): a note when it starts, one card per round and for pulling back, a note when it's over.
+      // A fight (slice 6): a note when it starts (the guards appear on the plan), one card per round
+      // and for pulling back (each moment plays on the plan), a note when it's over. The cue carries
+      // everyone's health after the round, so the plan can draw the bars without the run's state.
+      const state = { guards: (e.guards ?? []).map((g) => ({ n: g.n, hp: g.hp, max: g.max, armour: g.armour, out: g.out })), runners: (e.runners ?? []).map((r) => ({ id: r.id, handle: r.handle, hp: r.hp, max: r.max, armour: r.armour, down: r.down })) };
       if (e.phase === 'start' || e.phase === 'end') {
-        items.push({ type: 'note', text: e.phase === 'end' ? e.report ?? e.text : e.text, tone: e.phase === 'start' ? 'warn' : e.hurt?.length ? 'bad' : 'good' });
+        items.push({ type: 'note', text: e.phase === 'end' ? e.report ?? e.text : e.text, tone: e.phase === 'start' ? 'warn' : e.hurt?.length ? 'bad' : 'good', cue: { battle: { phase: e.phase, ...state } } });
         continue;
       }
-      const up = (e.guards ?? []).filter((g) => !g.out).length;
+      const up = state.guards.filter((g) => !g.out).length;
       items.push({
         type: 'card', kind: 'battle', label: e.phase === 'retreat' ? 'Pulling back' : `Fight · round ${e.round}`,
-        setup: e.phase === 'retreat' ? e.text : `${up ? `${up} guard${up === 1 ? '' : 's'} up` : 'Last guard down'} · ${(e.runners ?? []).map((r) => `${r.handle} ${r.down ? 'down' : `${r.hp}/${r.max}`}`).join(', ')}`,
-        results: (e.lines ?? []).map((l) => ({ headline: l.text, detail: '', tone: l.kind === 'guard' ? (l.damage ? 'bad' : 'good') : l.success ? 'good' : 'bad', roll: roll(l), why: null })),
-        cue: { decision: true },
+        setup: e.phase === 'retreat' ? e.text : `${up ? `${up} guard${up === 1 ? '' : 's'} up` : 'Last guard down'} · ${state.runners.map((r) => `${r.handle} ${r.down ? 'down' : `${r.hp}/${r.max}`}`).join(', ')}`,
+        hp: state,
+        results: (e.lines ?? []).map((l) => ({ headline: l.text, detail: '', tone: l.kind === 'guard' ? (l.damage ? 'bad' : 'good') : l.kind === 'flee' || l.kind === 'ambush' ? 'good' : l.success ? 'good' : 'bad', roll: roll(l), why: null })),
+        cue: { battle: { phase: e.phase, ...state, lines: (e.lines ?? []).map((l) => ({ kind: l.kind, actor: l.actor?.id ?? null, targetId: l.targetId ?? null, guard: l.guard ?? null, success: l.success ?? null, damage: l.damage ?? 0, heal: l.heal ?? 0, kit: l.kit ?? null, dropped: !!l.dropped })) } },
       });
     } else if (e.kind === 'critical') {
       items.push({

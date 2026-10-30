@@ -184,7 +184,7 @@ export function renderCoverage(ui, cov, { overwatch, approachName, standby = nul
           <p class="cover__name">${esc(r.name)}${r.danger ? ' <span class="muted">· danger</span>' : ''}</p>
           <span class="cover__risk">${riskBadge(r.handler ? r.risk : 'extreme')}${(r.withSave || r.fight) && r.effective !== r.risk ? `<span class="cover__with">→ ${esc(ui.riskWord(r.effective))}${r.withSave ? ` with ${esc(r.withSave.op.handle)}` : ''}${r.fight ? `${r.withSave ? ',' : ''} counting the fight` : ''}</span>` : ''}</span>
           <p class="cover__who">${esc(r.where)} · ${r.handler ? `${esc(r.handler.op.handle)} (${esc(r.handler.stat)} ${r.handler.value})` : 'nobody can'}</p>
-          ${r.fight && r.handler ? `<p class="cover__who">If it comes to a fight: ${esc(ui.riskWord(riskLabel(r.fight.win)))} risk${r.fight.down >= 0.1 ? ', and someone could go down' : ''}</p>` : ''}
+          ${r.fight && r.handler ? `<p class="cover__who">${r.fight.forced ? 'A loud run means a fight' : 'If it comes to a fight'}: ${esc(ui.riskWord(riskLabel(r.fight.win)))} risk${r.fight.down >= 0.1 ? ', and someone could go down' : ''}</p>` : ''}
         </div>`).join('')}
         ${cov.spotted ? `<p class="cover__note">${cov.spotted} more than recommended inside on a ${esc(approachName.toLowerCase())} run: −${cov.spotted} on stealth and social rolls.</p>` : ''}
         ${overwatch ? '' : '<p class="cover__note cover__note--muted">No overwatch: only a teammate inside can save someone in trouble.</p>'}
