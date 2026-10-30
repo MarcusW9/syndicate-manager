@@ -10,6 +10,8 @@
 // - shapes: drawn in order. rect, line, poly (points; closed or not), circle, ellipse, and
 //   row: n copies of a rect, `step` apart, skipping the indexes in `skip`, filled from `tones`.
 // - labels: small map captions (the second one in `hi` is the target).
+// - posts: where the guards a run will meet wait in each zone (in, inside, target), until they come
+//   into it (core/battle.js guardPosts; the plan draws them there).
 // Coordinates were set by hand and are checked by tests/sites.test.js (on the map, routes join,
 // the rifle can't see the target, the drone can).
 
@@ -33,6 +35,7 @@ const GENERIC = {
     out: [[272, 74], [236, 100], [186, 135], [106, 135], [106, 196], [106, 224], [40, 224]],
   },
   views: { in: [6, 126, 171, 114], inside: [0, 46, 249, 166], target: [150, 4, 204, 136] },
+  posts: { in: [122, 184], inside: [150, 122], target: [290, 92] },
   sight: { rifle: [[176, 24], [12, 194], [232, 194], [232, 40]], drone: [[176, 24], [8, 206], [314, 206], [314, 30]] },
   shapes: [
     ...ROAD,
@@ -68,6 +71,7 @@ const NIGHT_MARKET = {
     out: [[318, 72], [300, 110], [266, 120], [240, 120], [180, 138], [92, 138], [92, 196], [92, 224], [40, 224]],
   },
   views: { in: [0, 112, 192, 128], inside: [10, 40, 270, 180], target: [180, 20, 180, 120] },
+  posts: { in: [112, 184], inside: [228, 138], target: [300, 118] },
   sight: { rifle: [[196, 26], [16, 80], [16, 198], [262, 198], [262, 40]], drone: [[196, 26], [6, 14], [6, 206], [354, 206], [354, 14]] },
   shapes: [
     ...ROAD,
@@ -105,6 +109,7 @@ const HEIGHTS = {
     out: [[310, 56], [290, 90], [290, 140], [232, 150], [210, 150], [140, 160], [120, 198], [120, 224], [52, 224]],
   },
   views: { in: [0, 112, 192, 128], inside: [0, 60, 270, 180], target: [150, 40, 204, 136] },
+  posts: { in: [100, 188], inside: [180, 130], target: [270, 110] },
   sight: { rifle: [[80, 30], [16, 100], [16, 198], [228, 198], [228, 60]], drone: [[80, 30], [6, 6], [6, 206], [354, 206], [354, 6]] },
   shapes: [
     ...ROAD,
@@ -137,6 +142,7 @@ const BASIN = {
     out: [[300, 70], [250, 96], [230, 118], [200, 156], [250, 156], [250, 198], [250, 224], [300, 224]],
   },
   views: { in: [168, 112, 192, 128], inside: [100, 60, 255, 170], target: [180, 10, 180, 120] },
+  posts: { in: [230, 192], inside: [215, 106], target: [318, 98] },
   sight: { rifle: [[200, 30], [140, 120], [160, 198], [348, 198], [348, 114], [246, 114], [246, 34]], drone: [[200, 30], [6, 6], [6, 206], [354, 206], [354, 6]] },
   shapes: [
     ...ROAD,
@@ -195,6 +201,7 @@ const DOCKS = {
       id: 'gate', aria: 'the van on the service road and a gate in the fence',
       van: [40, 224], in: [[40, 224], [106, 224], [106, 196]], inside: [[106, 196], [106, 135], [186, 135]],
       views: { in: [6, 126, 171, 114], inside: [0, 46, 249, 166] },
+      posts: { in: [122, 184], inside: [150, 122] },
       shapes: [
         { t: 'poly', cls: 'sp-fence', points: [[8, 196], [94, 196]] },
         { t: 'poly', cls: 'sp-fence', points: [[118, 196], [352, 196]] },
@@ -205,6 +212,7 @@ const DOCKS = {
       id: 'quay', aria: 'the van at the harbour end of the road and a gate by the quay',
       van: [300, 224], in: [[300, 224], [282, 224], [282, 196]], inside: [[282, 196], [282, 150], [230, 135], [186, 135]],
       views: { in: [189, 126, 171, 114], inside: [100, 60, 255, 170] },
+      posts: { in: [298, 186], inside: [250, 150] },
       shapes: [
         { t: 'poly', cls: 'sp-fence', points: [[8, 196], [262, 196]] },
         { t: 'poly', cls: 'sp-fence', points: [[294, 196], [352, 196]] },
@@ -252,6 +260,7 @@ const DOCKS = {
     {
       id: 'office', aria: 'the yard office',
       point: [272, 74], path: [[186, 135], [236, 100], [272, 74]], view: [150, 4, 204, 136],
+      post: [290, 92],
       rifle: [[176, 24], [12, 194], [232, 194], [232, 40]],
       shapes: [
         { t: 'rect', cls: 'sp-building', x: 236, y: 38, w: 72, h: 72 },
@@ -264,6 +273,7 @@ const DOCKS = {
     {
       id: 'cable-hut', jobs: ['cable'], aria: 'the cable hut on Pier 12, its cable running into the water',
       point: [298, 58], path: [[186, 135], [250, 110], [276, 74], [298, 58]], view: [170, 20, 180, 120],
+      post: [306, 74],
       rifle: [[176, 24], [12, 194], [300, 194], [270, 92], [270, 36]],
       shapes: [
         { t: 'rect', cls: 'sp-building', x: 282, y: 34, w: 34, h: 50 },
@@ -276,6 +286,7 @@ const DOCKS = {
     {
       id: 'container-409', jobs: ['container409'], aria: 'Container 409 in a stack by the fence',
       point: [76, 74], path: [[186, 135], [130, 104], [104, 78], [76, 74]], view: [40, 40, 180, 120],
+      post: [62, 76],
       rifle: [[176, 24], [118, 58], [118, 194], [300, 194], [300, 40]],
       shapes: [
         { t: 'rect', cls: 'sp-cover', x: 50, y: 40, w: 27, h: 14, fill: CONTAINER_TONES[0] },
@@ -297,6 +308,7 @@ const TENEMENT = [
 ];
 const OLD_TOWN_TARGET = {
   point: [72, 64], path: [[140, 118], [118, 100], [72, 64]], view: [10, 10, 204, 136],
+  post: [100, 60],
   rifle: [[292, 40], [128, 96], [128, 156], [222, 212], [300, 212], [300, 100]],
 };
 const OLD_TOWN = {
@@ -326,6 +338,7 @@ const OLD_TOWN = {
       id: 'alley', aria: 'the lane and the van, and an alley of steps',
       van: [316, 224], in: [[316, 224], [236, 224], [236, 198]], inside: [[236, 198], [236, 160], [200, 128], [140, 118]],
       views: { in: [189, 126, 171, 114], inside: [105, 72, 195, 130] },
+      posts: { in: [216, 200], inside: [180, 140] },
       shapes: [],
       labels: [{ x: 252, y: 188, text: 'ALLEY' }, { x: 300, y: 236, text: 'VAN' }],
     },
@@ -376,6 +389,7 @@ export function assemble(plot, approach, cover, target) {
       out: [...rev(target.path), ...rev(approach.inside).slice(1), ...rev(approach.in).slice(1)],
     },
     views: { ...approach.views, target: target.view },
+    posts: { ...approach.posts, target: target.post },
     sight: { rifle: target.rifle, drone: plot.drone },
     shapes: [...plot.shapes, ...cover.shapes, ...approach.shapes, ...target.shapes],
     labels: [...approach.labels, ...cover.labels, ...target.labels, ...plot.labels],

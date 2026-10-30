@@ -15,7 +15,7 @@
 
 import { BATTLE } from '../data/battle.js';
 import { GEAR, TIERS } from '../data/gear.js';
-import { ZONES } from '../data/incidents.js';
+import { ZONES, INCIDENTS } from '../data/incidents.js';
 import { carried, itemName, overwatchKit, patchBonus } from './gear.js';
 import { effectiveStat } from './crew.js';
 import { d20, makeRng } from './rng.js';
@@ -31,6 +31,24 @@ const step = (item) => TIERS[item?.tier]?.step ?? 0;
  * whatever the roll. After that the usual rule holds: only an unsaved failure starts one.
  */
 export const loudFightDue = (am, inc) => Boolean((am.approach === 'loud' || am.wentLoud) && inc.danger && inc.guards && !am.fought);
+
+/**
+ * The guards a run will meet, for the plan to show on their posts before they come into it (shown
+ * equals used): each danger incident still ahead in the queue, with as many guards as its fight
+ * would start with. Once the crew has gone loud, what's left short of the target is a guard, as in
+ * runIncident. [{ step, zone, incident, guards }].
+ */
+export function guardPosts(am) {
+  if (!am || am.done) return [];
+  const out = [];
+  (am.queue ?? []).forEach((q, i) => {
+    if (i < am.step || q.type !== 'incident') return;
+    const id = am.wentLoud && q.zone !== 'target' && !INCIDENTS[q.id]?.danger ? 'guard' : q.id;
+    const inc = INCIDENTS[id];
+    if (inc?.danger && inc.guards) out.push({ step: i, zone: q.zone, incident: id, guards: guardsFor(am.threat ?? 1, inc.guards).length });
+  });
+  return out;
+}
 
 /** Their health in a fight: base + cool. */
 export const maxHp = (op) => BATTLE.hp + Math.floor((op.stats.cool ?? 0) / BATTLE.hpPerCool);
@@ -48,10 +66,10 @@ export function armourOf(op) {
   return item ? { name: itemName(item), value: GEAR[item.type].armour + step(item) } : { name: null, value: 0 };
 }
 
-/** The guards a fight starts with: the incident's count (one more on threat 4+), toughened by threat. */
+/** The guards a fight starts with: the incident's count, more on bigger work (at most maxGuards), toughened by threat. */
 export function guardsFor(threat, count) {
   const t = Math.max(1, Math.min(5, Math.round(threat)));
-  const n = count + (t >= BATTLE.extraGuardFrom ? 1 : 0);
+  const n = Math.min(BATTLE.maxGuards, count + BATTLE.extraGuards[t]);
   return Array.from({ length: n }, (_, i) => ({ n: i + 1, hp: BATTLE.guardHp[t], max: BATTLE.guardHp[t], armour: BATTLE.guardArmour[t], damage: BATTLE.guardDamage[t], out: false }));
 }
 
@@ -150,7 +168,7 @@ export function playRound(b, rng) {
     g.hp = Math.max(0, g.hp - dmg);
     if (g.hp === 0) g.out = true;
     const what = ow.kit === 'drone' ? 'tases' : 'hits';
-    line({ kind: 'overwatch', actor: { id: ow.id, handle: ow.handle }, kit: ow.kit, target: guardName(g, b), stat: ow.stat, value: ow.value, notes: ow.notes, ...r, damage: dmg, armour: g.armour, dropped: g.out,
+    line({ kind: 'overwatch', actor: { id: ow.id, handle: ow.handle }, kit: ow.kit, target: guardName(g, b), guard: g.n, stat: ow.stat, value: ow.value, notes: ow.notes, ...r, damage: dmg, armour: g.armour, dropped: g.out,
       text: r.success ? `${ow.handle} ${what} ${guardName(g, b)} from overwatch for ${dmg}${g.armour ? ` (armour ${g.armour})` : ''}${g.out ? '. Down.' : '.'}` : `${ow.handle}'s ${ow.kit === 'drone' ? 'drone misses' : 'shot goes wide'}.` });
   }
 
@@ -169,12 +187,12 @@ export function playRound(b, rng) {
       const k = roll(rng, st.value, b.diff);
       const heal = k.success ? Math.min(t.max - t.hp, BATTLE.patchHeal + r.patch) : 0;
       t.hp += heal;
-      line({ ...base, ...k, target: t.handle, heal, text: k.success ? `${r.handle} patches ${t === r ? 'themself' : t.handle} up: +${heal}.` : `${r.handle} can't patch ${t === r ? 'themself' : t.handle} up under fire.` });
+      line({ ...base, ...k, target: t.handle, targetId: t.id, heal, text: k.success ? `${r.handle} patches ${t === r ? 'themself' : t.handle} up: +${heal}.` : `${r.handle} can't patch ${t === r ? 'themself' : t.handle} up under fire.` });
     } else if (act.kind === 'talk') {
       const g = up(b).sort((a, c) => c.hp - a.hp || a.n - c.n)[0];
       const k = roll(rng, st.value, b.diff + BATTLE.talkStep);
       if (k.success) g.out = true;
-      line({ ...base, ...k, target: guardName(g, b), text: k.success ? `${r.handle} talks ${guardName(g, b)} into backing off.` : `${r.handle} tries to talk ${guardName(g, b)} down. Nobody's listening.` });
+      line({ ...base, ...k, target: guardName(g, b), guard: g.n, text: k.success ? `${r.handle} talks ${guardName(g, b)} into backing off.` : `${r.handle} tries to talk ${guardName(g, b)} down. Nobody's listening.` });
     } else if (act.kind === 'lights') {
       const k = roll(rng, st.value, b.diff);
       if (k.success) b.lights = true;
@@ -186,7 +204,7 @@ export function playRound(b, rng) {
       const dmg = k.success ? hitFor(r.damage, g.armour) : 0;
       g.hp = Math.max(0, g.hp - dmg);
       if (g.hp === 0) g.out = true;
-      line({ ...base, ...k, target: guardName(g, b), weapon: r.weapon, damage: dmg, armour: g.armour, dropped: g.out,
+      line({ ...base, ...k, target: guardName(g, b), guard: g.n, weapon: r.weapon, damage: dmg, armour: g.armour, dropped: g.out,
         text: k.success ? `${r.handle} hits ${guardName(g, b)} for ${dmg}${g.armour ? ` (armour ${g.armour})` : ''}${g.out ? '. Down.' : '.'}` : `${r.handle} misses.` });
     }
   }
@@ -207,16 +225,17 @@ export function playRound(b, rng) {
     if (!t) break;
     lines.push(guardAttack(b, g, t, rng, down));
   }
-  // Morale (after Battle Brothers): the last guard standing, badly hurt, breaks and runs for it.
+  // Morale (after Battle Brothers): a badly hurt guard breaks and runs when they're the last one up,
+  // or once half their side is down.
   let fled = false;
   const left = up(b);
-  if (left.length === 1 && left[0].hp < left[0].max * BATTLE.breakBelow && standing(b).length) {
-    const g = left[0];
+  const broken = left.length === 1 || b.guards.length - left.length >= Math.ceil(b.guards.length / 2);
+  for (const g of broken && standing(b).length ? left.filter((x) => x.hp < x.max * BATTLE.breakBelow) : []) {
     g.out = true;
     g.fled = true;
     fled = true;
     const who = guardName(g, b);
-    lines.push({ kind: 'flee', actor: null, target: who, text: `${who[0].toUpperCase()}${who.slice(1)} breaks and runs, shouting into a radio.` });
+    lines.push({ kind: 'flee', actor: null, guard: g.n, target: who, text: `${who[0].toUpperCase()}${who.slice(1)} breaks and runs, shouting into a radio.` });
   }
   return { lines, heat, neural, down, fled };
 }
@@ -244,7 +263,7 @@ function guardAttack(b, g, t, rng, down, { floor = 0 } = {}) {
   const who = guardName(g, b);
   const Who = who[0].toUpperCase() + who.slice(1);
   return {
-    kind: 'guard', actor: null, target: t.handle, targetId: t.id, stat: 'cool', value: skill, notes: [`${t.handle}'s cool ${def.value}`, ...(shift ? [`lights out +${shift}`] : [])], die, need, success, damage: dmg, armour: t.armour, down: t.down && dmg > 0 && t.hp === 0,
+    kind: 'guard', actor: null, guard: g.n, target: t.handle, targetId: t.id, stat: 'cool', value: skill, notes: [`${t.handle}'s cool ${def.value}`, ...(shift ? [`lights out +${shift}`] : [])], die, need, success, damage: dmg, armour: t.armour, down: t.down && dmg > 0 && t.hp === 0,
     text: success ? (dmg ? `${Who} hits ${t.handle} for ${dmg}${t.armour ? ` (${t.armourName ?? 'armour'} took ${t.armour})` : ''}${t.hp === 0 ? `. ${t.handle} is down.` : '.'}` : `${Who} grazes ${t.handle}.`) : `${Who} misses ${t.handle}.`,
   };
 }

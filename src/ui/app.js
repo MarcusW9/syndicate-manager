@@ -1603,6 +1603,12 @@ function renderMission() {
 const outsider = (id, what) => { const op = id ? state.crew.find((o) => o.id === id) : null; return op ? ` · ${esc(op.handle)} ${what}` : ''; };
 
 /** The card for whatever the crew is calling you in for, if anything (shown inline in the watch feed). */
+/** Everyone's health at a fight's call-in: the crew, then the guards still up. */
+function fightHealth({ runners, guards }) {
+  const chip = (cls, text) => `<span class="wf-chip ${cls}">${esc(text)}</span>`;
+  return `<p class="wf-hp wf-hp--callin" aria-label="Health">${runners.map((r) => chip(r.down ? 'is-down' : r.hp < r.max * 0.25 ? 'is-crit' : r.hp < r.max * 0.5 ? 'is-low' : '', `${r.handle} ${r.down ? 'down' : `${r.hp}/${r.max}`}`)).join('')}${guards.filter((g) => !g.out).map((g) => chip('wf-chip--guard', `Guard ${g.n} ${g.hp}/${g.max}`)).join('')}</p>`;
+}
+
 function renderCallIn(s) {
   const am = s.activeMission;
   if (am.critical) {
@@ -1620,6 +1626,7 @@ function renderCallIn(s) {
       <div class="crisis">
         <p class="crisis__title">${v.kind === 'alert' ? 'The crew is calling in: you\'ve been spotted' : v.kind === 'door' ? 'The crew is calling in: someone is at death\'s door' : v.kind === 'standoff' ? 'The crew is calling in: the guards are still standing' : 'The crew is calling in: someone is down'}</p>
         <p>${esc(v.text)}</p>
+        ${v.fight ? fightHealth(v.fight) : ''}
         <div class="choices">${v.choices.map((c) => choiceButton({ ...c, risk: c.exit ? 'safe' : c.push ? 'extreme' : 'moderate', riskReason: c.cost, cost: '' }, 'pending')).join('')}</div>
       </div>`;
   }

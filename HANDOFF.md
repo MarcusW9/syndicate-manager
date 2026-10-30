@@ -8,7 +8,7 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 - **The game is becoming the squad run** (`PLAN-CORE-LOOP.md`, the build order; `drafts/core-loop.md`, how we got there). **Slices 1-5 are built** (the engine; the squad board and the watch screen; Wheels and standby; a site plan per district, with district incident text; gear and the first specialisations). **Slice 6a, the battle engine, is built** (2026-10-29, branch `claude/great-brown-xaye3r`): `core/battle.js`, numbers in `data/battle.js`, tuned with `node scripts/sim-battles.mjs`; fights show as plain cards on the watch feed. 6b, the watch screen's own look for fights, is next.
 - **Design review:** `STATE-OF-PLAY.md` (2026-10-26) and the owner's calls on it (in the file and in DESIGN.md). Read it instead of re-assessing.
 - **New games start with three founders picked from six** (`startCrew: 'pick'`, `chooseFounders`). Most rule tests still use the five-rookie `'fresh'` crew as a fixture.
-- **Tests:** 339 passing (`npm run test:fast` for the quick 40 s set while working; `npm test` before every push). **Save format v27.** **`CODEMAP.md`** says where things live: read it before reading `core/` files.
+- **Tests:** 341 passing (`npm run test:fast` for the quick 40 s set while working; `npm test` before every push). **Save format v27.** **`CODEMAP.md`** says where things live: read it before reading `core/` files.
 
 ## What the 2026-10-26/27 session did
 

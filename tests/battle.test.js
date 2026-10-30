@@ -8,10 +8,11 @@ import * as M from '../src/core/mission.js';
 import { addOffer, templateById } from '../src/core/jobs.js';
 import { autoStep, autoRun } from '../src/core/autorun.js';
 import { coverage } from '../src/core/squad.js';
-import { buildBattle, playRound, battleOdds, hitFor, weaponOf, armourOf, maxHp, partingShots, BATTLE } from '../src/core/battle.js';
+import { buildBattle, playRound, battleOdds, hitFor, weaponOf, armourOf, maxHp, partingShots, guardPosts, guardsFor, BATTLE } from '../src/core/battle.js';
 import { ordersDecision, incidentDifficulty, incidentById } from '../src/core/incidents.js';
 import { INCIDENTS } from '../src/data/incidents.js';
 import { makeRng } from '../src/core/rng.js';
+import { feedItems } from '../src/core/feed.js';
 import { playMission, randomPolicy, arm } from './play.js';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
@@ -295,6 +296,83 @@ test('the planning read quotes the fight from the run\'s own round function', ()
   for (const op of crew) arm(s, op.id, 'pistol:pro', 'vest:pro');
   const armed = coverage(tpl, crew, 'loud').rows.find((r) => r.id === 'backup');
   assert.ok(armed.fight.win > before, `${armed.fight.win} > ${before}`);
+});
+
+// --- the watch feed (slice 6b) ------------------------------------------------------------------
+
+test('a fight on the feed: guards appear on a note, every round is a card with health and a cue the plan can play', () => {
+  let rounds = 0;
+  let starts = 0;
+  for (let seed = 1; seed <= 200; seed++) {
+    const am = autoRun(begin(seed, 'warehouse', 'loud', { n: 3 }), 'committed').activeMission;
+    const items = feedItems(am.events);
+    const battle = items.filter((i) => i.cue?.battle);
+    const shown = am.events.filter((e) => e.kind === 'battle').length;
+    assert.equal(battle.length, shown, `seed ${seed}: every fight event is on the feed`);
+    for (const it of battle) {
+      const c = it.cue.battle;
+      assert.ok(['start', 'round', 'retreat', 'end'].includes(c.phase));
+      assert.ok(c.guards.length >= 1 && c.runners.length >= 1, 'both sides are named');
+      if (c.phase === 'start') { starts++; assert.equal(it.type, 'note'); assert.ok(c.guards.every((g) => g.hp === g.max), 'they start unhurt'); }
+      if (c.phase === 'round') {
+        rounds++;
+        assert.equal(it.type, 'card');
+        assert.ok(it.hp.runners.length && it.hp.guards.length, 'the summary has everyone\'s health');
+        assert.equal(c.lines.length, it.results.length, 'one result per moment');
+        for (const l of c.lines) {
+          if (['shoot', 'overwatch', 'talk', 'flee', 'guard'].includes(l.kind)) assert.ok(l.guard >= 1 && l.guard <= c.guards.length, `seed ${seed}: ${l.kind} names its guard`);
+          if (l.kind === 'guard') assert.ok(c.runners.some((r) => r.id === l.targetId), `seed ${seed}: a guard's target is in the fight`);
+        }
+        for (const r of it.results.filter((x, i) => ['flee', 'ambush'].includes(c.lines[i].kind))) assert.equal(r.tone, 'good', 'a guard running or the jump reads as good news');
+      }
+    }
+  }
+  assert.ok(starts > 100 && rounds > 100, `starts ${starts}, rounds ${rounds}`);
+});
+
+test('the call-in at a fight shows everyone\'s health', () => {
+  const found = findPending('door', { want: 2 });
+  assert.ok(found.length >= 1);
+  for (const { s } of found) {
+    const f = M.describePending(s).fight;
+    assert.ok(f.runners.length >= 1 && f.guards.length >= 1);
+    assert.ok(f.runners.some((r) => r.down), 'someone is down at death\'s door');
+    assert.ok(M.describePending(findPending('standoff', { want: 1 })[0]?.s ?? s).fight, 'and at the stand-off');
+  }
+});
+
+// --- guard numbers and posts (2026-10-29) -------------------------------------------------------
+
+test('more guards on bigger work: the incident\'s own count, plus more by threat, never more than the cap', () => {
+  for (let t = 1; t <= 5; t++) {
+    for (const own of [1, 2]) {
+      const n = guardsFor(t, own).length;
+      assert.equal(n, Math.min(BATTLE.maxGuards, own + BATTLE.extraGuards[t]), `threat ${t}, ${own}`);
+      assert.ok(n >= own && n <= BATTLE.maxGuards);
+    }
+  }
+  assert.ok(guardsFor(5, 2).length > guardsFor(1, 2).length, 'bigger work, more guards');
+});
+
+test('guards on their posts are the guards the run meets: one per danger incident ahead, and the fight starts with as many', () => {
+  let checked = 0;
+  for (let seed = 1; seed <= 200; seed++) {
+    let s = begin(seed, 'warehouse', APPROACHES[seed % 4], { n: 3 });
+    const posted = new Map(guardPosts(s.activeMission).map((p) => [p.step, p]));
+    for (const p of posted.values()) assert.ok(INCIDENTS[p.incident].danger, 'only danger incidents');
+    for (let g = 0; g < 300 && !s.activeMission.done; g++) {
+      const am = s.activeMission;
+      const ahead = guardPosts(am);
+      for (const p of ahead) assert.ok(p.step >= am.step, 'only what is still ahead');
+      const step = am.step;
+      s = autoStep(s, { force: true });
+      // A fight that starts from a posted incident brings exactly the guards the post showed.
+      const start = s.activeMission.events.at(-1)?.kind === 'battle' && s.activeMission.events.at(-1).phase === 'start' ? s.activeMission.events.at(-1) : null;
+      if (start && posted.has(step) && !s.activeMission.wentLoud) { assert.equal(start.guards.length, posted.get(step).guards, `seed ${seed}`); checked++; }
+    }
+    assert.deepEqual(guardPosts(s.activeMission), [], 'nobody waits once the job is done');
+  }
+  assert.ok(checked > 20, `checked ${checked} fights against their posts`);
 });
 
 // --- saves ---------------------------------------------------------------------------------------

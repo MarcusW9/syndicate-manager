@@ -152,7 +152,128 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
     if (t) place(t, home);
   }
 
+  // --- fights (PLAN-CORE-LOOP.md, slice 6b) ---------------------------------------------------
+  // The guards stand across from the crew, everyone carries a three-segment health bar, and each
+  // moment of a round plays in the order the feed reports it. Decoration like the rest of the plan:
+  // the feed has every number. hpNow holds what's drawn ('g1' for a guard, an operative's id).
+  const SEG = 3;
+  const foes = new Map();
+  const hpNow = new Map();
+  const foePos = (n) => [here[0] + 28 + ((n - 1) % 2) * 8, here[1] - 14 + (n - 1) * 12];
+  const hostOf = (key) => (key.startsWith('g') ? foes.get(Number(key.slice(1))) : tok(key));
+  function setHp(key, hp, max) {
+    const host = hostOf(key);
+    if (!host) return;
+    hpNow.set(key, [hp, max]);
+    let bar = host.querySelector('.sp-hp');
+    if (!bar) {
+      bar = el('g', { class: 'sp-hp' });
+      for (let i = 0; i < SEG; i++) bar.append(el('rect', { x: -7 + i * 5, y: 9, width: 4, height: 2 }));
+      host.append(bar);
+    }
+    const lit = hp <= 0 ? 0 : Math.ceil((SEG * hp) / max);
+    [...bar.children].forEach((r, i) => r.classList.toggle('is-on', i < lit));
+    bar.classList.toggle('is-low', hp / max < 0.5);
+    bar.classList.toggle('is-crit', hp / max < 0.25);
+  }
+  const hurtBy = (key, d) => { const [hp, max] = hpNow.get(key) ?? [0, 1]; setHp(key, Math.max(0, Math.min(max, hp - d)), max); return hpNow.get(key)[0]; };
+  /** Put the fight on the plan as the state has it: guards, bars, anyone down. */
+  function showFight({ guards, runners }) {
+    for (const g of guards) {
+      if (!foes.has(g.n)) { const node = spawn(foePos(g.n), 'sp-enemy sp-enemy--guard', String(g.n)); foes.set(g.n, node); }
+      const node = foes.get(g.n);
+      setHp(`g${g.n}`, g.hp, g.max);
+      if (g.out && !node.classList.contains('is-gone')) node.classList.add('is-dead');
+    }
+    for (const r of runners) { setHp(r.id, r.hp, r.max); tok(r.id)?.classList.toggle('is-down', r.down); }
+  }
+  function clearFight() {
+    for (const node of foes.values()) node.remove();
+    foes.clear();
+    hpNow.clear();
+    tokens.querySelectorAll('.sp-hp').forEach((b) => b.remove());
+  }
+  async function bolt(from, to, hit) {
+    const l = el('line', { class: 'sp-shot', x1: from[0], y1: from[1], x2: to[0] + (hit ? 0 : 8), y2: to[1] + (hit ? 0 : -6) });
+    fx.append(l);
+    await wait(260);
+    await flash(to, hit ? 'hit' : 'miss');
+    l.remove();
+  }
+  /** One moment of a round (core/feed.js cue.battle.lines). */
+  async function moment(l) {
+    const foeAt = l.guard ? foePos(l.guard) : here;
+    const key = `g${l.guard}`;
+    if (l.kind === 'overwatch') {
+      await (l.kit === 'drone' ? drone(foeAt, l.success) : shot(foeAt, l.success));
+      if (l.success && hurtBy(key, l.damage) <= 0) foes.get(l.guard)?.classList.add('is-dead');
+    } else if (l.kind === 'shoot') {
+      await bolt(posOf(l.actor), foeAt, l.success);
+      if (l.success && hurtBy(key, l.damage) <= 0) foes.get(l.guard)?.classList.add('is-dead');
+    } else if (l.kind === 'guard') {
+      const to = posOf(l.targetId);
+      await bolt(foeAt, to, l.success && l.damage > 0);
+      if (l.damage && hurtBy(l.targetId, l.damage) <= 0) tok(l.targetId)?.classList.add('is-down');
+    } else if (l.kind === 'talk') {
+      ring(foeAt, l.success);
+      await wait(500);
+      if (l.success) foes.get(l.guard)?.classList.add('is-gone');
+    } else if (l.kind === 'flee') {
+      const node = foes.get(l.guard);
+      if (node) { place(node, [foeAt[0] + 40, foeAt[1] - 20]); node.classList.add('is-gone'); }
+      await wait(500);
+    } else if (l.kind === 'lights') {
+      await flash(here, l.success ? 'zap' : 'miss');
+    } else if (l.kind === 'stabilise' || l.kind === 'patch') {
+      ring(posOf(l.targetId), l.success);
+      if (l.success && l.heal) hurtBy(l.targetId, -l.heal);
+      if (l.success && l.kind === 'stabilise') tok(l.targetId)?.classList.remove('is-down');
+      await wait(500);
+    } else if (l.kind === 'van') {
+      ring(tok(l.actor) ? posOf(l.actor) : P.van, l.success);
+      await wait(500);
+    } else if (l.kind === 'ambush') {
+      ring(here, true);
+      await wait(500);
+    }
+  }
+
+  // Guards on their posts: the guards the run will meet (core/battle.js guardPosts), waiting in their
+  // zone with how many there are, until the crew comes to them. One token per incident, keyed by its
+  // step in the queue; a post whose moment has come fades out (the incident or the fight takes over).
+  const postNodes = new Map();
+  function setPosts(list) {
+    const want = new Set(list.map((p) => p.step));
+    for (const [step, node] of postNodes) {
+      if (want.has(step)) continue;
+      node.classList.add('is-gone');
+      setTimeout(() => node.remove(), 600);
+      postNodes.delete(step);
+    }
+    const nth = {};
+    for (const p of list) {
+      const i = (nth[p.zone] = (nth[p.zone] ?? -1) + 1);
+      const spot = site.posts?.[p.zone];
+      if (!spot || postNodes.has(p.step)) continue;
+      const node = spawn([spot[0] + i * 15, spot[1]], 'sp-enemy sp-enemy--post', String(p.guards));
+      node.setAttribute('aria-hidden', 'true');
+      postNodes.set(p.step, node);
+    }
+  }
+
   return {
+    /** The guards waiting on their posts (core/battle.js guardPosts). */
+    posts: setPosts,
+    /** A fight on the plan: the guards appear (start), a round plays out, pulling back or the end clears it. */
+    async fight(c) {
+      if (c.phase === 'start') { clearFight(); showFight(c); await wait(500); return; }
+      if (c.phase === 'end') { await wait(250); clearFight(); return; }
+      for (const l of c.lines ?? []) await moment(l);
+      showFight(c); // whatever the moments left out, as the state has it
+      if (c.phase === 'retreat') { await wait(300); clearFight(); }
+    },
+    /** The fight as it stands, drawn at once (a page that mounts mid-fight). */
+    syncFight: (c) => (c ? showFight(c) : clearFight()),
     /** Walk the group into a zone and pan the camera there. */
     async enter(zone) {
       panTo(zone);
@@ -163,6 +284,7 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
     /** Play one feed card's moment (core/feed.js cue). */
     async play(cue) {
       if (!cue) return;
+      if (cue.battle) return this.fight(cue.battle);
       if (cue.standby) { if (cue.rescued) await this.leave(cue.rescued); await this.join(cue.standbyOp); return; }
       if (cue.crisis || cue.decision || cue.critical) { const at = here; if (cue.actor) ring(posOf(cue.actor), cue.success !== false); await pulse(at); return; }
       if (!cue.incident) return;
