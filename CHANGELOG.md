@@ -5,6 +5,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-30 · Faces on the fight map
+- **Fights now stand on the map as they were meant to:** your crew's faces on their tokens, everyone on their spot behind cover, and the map zoomed to the fight. A bug kept everyone's place off the map, so fights showed initials crowded together.
+
+
 ## 2026-10-30 · Every sidearm is different
 - **Each sidearm now has its own strengths:** aim (how much it helps you hit), damage, and for some, pierce (how much armour it ignores).
 - **They come from the gun's frame:**
