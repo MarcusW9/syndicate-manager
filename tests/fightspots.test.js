@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { allSites } from '../src/data/sites.js';
-import { fightSpots, siteRects } from '../src/core/fightspots.js';
+import { fightSpots, siteRects, COVER } from '../src/core/fightspots.js';
 import { BATTLE } from '../src/data/battle.js';
 
 const near = (p, r, by) => p[0] > r.x - by && p[0] < r.x + r.w + by && p[1] > r.y - by && p[1] < r.y + r.h + by;
@@ -13,8 +13,8 @@ const near = (p, r, by) => p[0] > r.x - by && p[0] < r.x + r.w + by && p[1] > r.
 for (const { key, variant, site } of allSites().filter((x) => BATTLE.spotsIn.includes(x.key))) {
   test(`${key} ${variant}: every zone has spots for both sides, clear of cover, apart, and the cover is real`, () => {
     const rects = siteRects(site);
-    const solid = rects.filter((r) => ['sp-cover', 'sp-desk', 'sp-water', 'sp-jetty'].includes(r.cls));
-    const cover = rects.filter((r) => ['sp-cover', 'sp-desk'].includes(r.cls));
+    const solid = rects.filter((r) => COVER.has(r.cls) || ['sp-water', 'sp-jetty'].includes(r.cls));
+    const cover = rects.filter((r) => COVER.has(r.cls));
     for (const zone of ['in', 'inside', 'target']) {
       const s = fightSpots(site, zone, { crew: 7, guards: 4 });
       assert.ok(s, `${zone}: has spots`);

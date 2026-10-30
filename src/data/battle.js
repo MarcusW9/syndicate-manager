@@ -36,7 +36,7 @@ export const BATTLE = {
   cover: { open: 0, half: 2, full: 4 },
   // Districts whose fights stand on spots read off the site map (core/fightspots.js; step 2 the
   // Docks, step 3 the rest). Anywhere else everyone stands in startCover.
-  spotsIn: ['docks'],
+  spotsIn: ['docks', 'oldTown', 'nightMarket', 'heights', 'basin'],
   hunkerStep: 4, // hunkering: one step better cover and this much on top, for the round (no shot)
   startCover: 'half',
   // The player's orders, a round at a time (the crew's own call, core/battle.js actionFor, is the

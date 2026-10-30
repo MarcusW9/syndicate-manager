@@ -5,6 +5,17 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-30 · Fights on the map in every district
+- **Old Town, the Night Market, Glass Heights and the Basin now fight on their maps too,** like the Docks: everyone stands behind something or out in the open, and the map zooms in on the fight.
+- **New things to hide behind:**
+  - Old Town: bins and a dumpster in the alley, and a handcart, washtubs and crates in the courtyard.
+  - Night Market: a cart and crates by the gate.
+  - Glass Heights: crates in the loading bay, plus the lobby desk and server cabinets inside.
+  - Basin: a horse trailer and hay bales at the service gate.
+  - Inside the targets: a table in the flat and in the clinic, and the vet's table.
+- **Market stalls, plaza planters, clinic cots and the stable blocks count as cover.**
+- In the Basin, the guards on the way in now wait further along the fence.
+
 ## 2026-10-30 · You command the fights (the Docks first)
 - **Fights now stop for your orders each round** on any job you watch. Jobs sent off with "Never" still fight on their own.
 - **Fights in the Docks happen on the map.** The crew takes the best cover nearby: full behind a container, half behind a crate or a desk. The guards are wherever they were standing. Each person shows a shield for their cover, or an OPEN tag. Other districts still use the old fight picture for now: everyone counts as half cover there.

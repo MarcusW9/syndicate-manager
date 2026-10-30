@@ -221,6 +221,8 @@ exactly this); toning the early game down (rookie-tier fights are easy).
   **Step 2 built (2026-10-30):** `core/fightspots.js` (spots off the drawn cover, Docks only:
   `data/battle.js` `spotsIn`), the Move order, fights waiting for orders on live runs (`needsPlayer`;
   `handOffFight`, `pullBack`), `ui/fightorders.js` (the panel and the map overlay).
+  **Step 3 built (2026-10-30):** spots in every district, cover drawn where fights happen, checked
+  with `node scripts/sim-districts.mjs` (each district with and without spots).
   **Step 3:** spots on the other maps. Held: the Outside section's orders, the round cap (the
   owner doesn't want a constant clock), enemy types and fight goals (prototype:
   `drafts/prototypes/command-fight.html`), ranks and perks.

@@ -11,8 +11,10 @@
 // were caught where they stood, one of them on the post itself, in the open.
 
 const MAP = { x0: 6, y0: 6, x1: 354, y1: 232 }; // where anyone can stand (the road too)
-const COVER = new Set(['sp-cover', 'sp-desk']);
-const BLOCK = new Set(['sp-cover', 'sp-desk', 'sp-water', 'sp-jetty']);
+// What counts as cover on a site (data/sites.js classes): containers and crates, desks, market
+// stalls, planters, cots, stable blocks. Cover and water are solid (nobody stands in them).
+export const COVER = new Set(['sp-cover', 'sp-desk', 'sp-stall', 'sp-planter', 'sp-cot', 'sp-stable']);
+const BLOCK = new Set([...COVER, 'sp-water', 'sp-jetty', 'sp-block']);
 const FULL_AT = 24; // a piece of cover this long or longer (a container) is full cover; smaller is half
 const GAP = 6; // how far behind the cover a spot is
 const APART = 16; // spots at least this far apart
@@ -42,12 +44,32 @@ const len = (a) => Math.hypot(a[0], a[1]);
 const round = (p) => [Math.round(p[0]), Math.round(p[1])];
 const centre = (r) => [r.x + r.w / 2, r.y + r.h / 2];
 
+/** A long piece of cover (a stable block, a row of desks) as container-length pieces, so each length gives its own spots. */
+function chunks(r) {
+  const along = r.w >= r.h ? 'w' : 'h';
+  const n = Math.max(1, Math.round(r[along] / 27));
+  if (n === 1) return [r];
+  const size = r[along] / n;
+  return Array.from({ length: n }, (_, i) => (along === 'w' ? { ...r, x: r.x + i * size, w: size } : { ...r, y: r.y + i * size, h: size }));
+}
+
 /** Where the crew is when a fight starts in this zone: the zone's end (for the target, just outside it). */
 export function crewAnchor(site, zone) {
   const p = site.paths;
   if (zone === 'in') return p.in.at(-1);
   if (zone === 'target') return p.target.at(-2) ?? p.target.at(-1);
   return p.inside.at(-1);
+}
+
+/** Which way the crew was walking as they reached the zone's anchor (a unit vector). */
+function travel(site, zone) {
+  const path = zone === 'target' ? site.paths.target.slice(0, -1) : site.paths[zone];
+  const all = [...(zone === 'in' ? [] : zone === 'inside' ? site.paths.in : [...site.paths.in, ...site.paths.inside]), ...path];
+  for (let i = all.length - 1; i > 0; i--) {
+    const v = sub(all[i], all[i - 1]);
+    if (len(v) > 0.5) return [v[0] / len(v), v[1] / len(v)];
+  }
+  return [0, -1];
 }
 
 /**
@@ -57,16 +79,27 @@ export function crewAnchor(site, zone) {
  */
 export function fightSpots(site, zone, need = { crew: 6, guards: 4 }) {
   const post = site.posts?.[zone];
-  let C = crewAnchor(site, zone);
-  if (!C || !post) return null;
-  let d = sub(post, C);
-  const dist0 = len(d) || 1;
-  d = [d[0] / dist0, d[1] / dist0];
-  // The guards hold their post; if the crew is right on top of it, the fight starts with the crew
-  // backed off to MIN_SPLIT (kept on the map).
-  const dist = Math.max(dist0, MIN_SPLIT);
+  const C0 = crewAnchor(site, zone);
+  if (!C0 || !post) return null;
+  // The guards hold their post. The crew faces them from where the zone ends; if that's right on
+  // top of the post, the fight starts with the crew backed off to MIN_SPLIT: straight back from the
+  // post if that's open ground (not inside a building), else back the way they came.
   const E = post;
-  C = round([post[0] - d[0] * dist, post[1] - d[1] * dist]).map((v, i) => Math.max(i ? MAP.y0 + 10 : MAP.x0 + 10, Math.min(i ? MAP.y1 - 4 : MAP.x1 - 10, v)));
+  const dist0 = len(sub(post, C0));
+  let d = dist0 ? [(post[0] - C0[0]) / dist0, (post[1] - C0[1]) / dist0] : travel(site, zone);
+  let C = C0;
+  const clampC = (p) => round(p).map((v, i) => Math.max(i ? MAP.y0 + 10 : MAP.x0 + 10, Math.min(i ? MAP.y1 - 4 : MAP.x1 - 10, v)));
+  if (dist0 < MIN_SPLIT) {
+    const u = travel(site, zone);
+    const back = clampC([post[0] - d[0] * MIN_SPLIT, post[1] - d[1] * MIN_SPLIT]);
+    const solid = siteRects(site).filter((r) => BLOCK.has(r.cls) || r.cls === 'sp-building' || r.cls === 'sp-room');
+    const clear = (p) => !solid.some((r) => p[0] > r.x - 4 && p[0] < r.x + r.w + 4 && p[1] > r.y - 4 && p[1] < r.y + r.h + 4);
+    if (dist0 && clear(back)) C = back;
+    else { d = u; C = clampC([post[0] - u[0] * MIN_SPLIT, post[1] - u[1] * MIN_SPLIT]); }
+  }
+  // The line of fire as it ends up (the map's edge can hold the crew closer than MIN_SPLIT).
+  const dist = len(sub(E, C)) || 1;
+  d = [(E[0] - C[0]) / dist, (E[1] - C[1]) / dist];
   const rects = siteRects(site);
   const blocks = rects.filter((r) => BLOCK.has(r.cls));
   const taken = [];
@@ -87,17 +120,19 @@ export function fightSpots(site, zone, need = { crew: 6, guards: 4 }) {
     const spots = [];
     // The guards: whoever is on the post stands on it, in the open.
     if (!best && free(anchor) && mine(anchor)) { spots.push({ at: anchor, cover: 'open' }); taken.push(anchor); }
-    const cands = rects.filter((r) => COVER.has(r.cls)).flatMap((r) => {
+    const cands = rects.filter((r) => COVER.has(r.cls)).flatMap(chunks).flatMap((r) => {
       const c = centre(r);
       const v = sub(c, foe);
       const away = [v[0] / (len(v) || 1), v[1] / (len(v) || 1)];
       // How far from the centre to the edge along the line of fire.
       const t = Math.min(Math.abs(away[0]) > 0.01 ? r.w / 2 / Math.abs(away[0]) : Infinity, Math.abs(away[1]) > 0.01 ? r.h / 2 / Math.abs(away[1]) : Infinity);
       const at = [c[0] + away[0] * (t + GAP), c[1] + away[1] * (t + GAP)];
-      // A container hides two, side by side; a crate or a desk one.
+      // A container (or a container's length of something longer) hides two, side by side; a crate
+      // or a desk one. Seen at an angle, only the spots still up against it count.
       const full = Math.max(r.w, r.h) >= FULL_AT;
       const across = [-away[1] * SIDE, away[0] * SIDE];
-      return (full ? [[at[0] + across[0], at[1] + across[1]], [at[0] - across[0], at[1] - across[1]]] : [at])
+      const hug = (p) => Math.hypot(Math.max(r.x - p[0], 0, p[0] - r.x - r.w), Math.max(r.y - p[1], 0, p[1] - r.y - r.h)) <= GAP + 4;
+      return (full ? [[at[0] + across[0], at[1] + across[1]], [at[0] - across[0], at[1] - across[1]]] : [at]).filter(hug)
         .map((p) => ({ at: round(p), cover: full ? 'full' : 'half', off: len(sub(p, anchor)) }));
     }).filter((x) => x.off <= REACH && mine(x.at)).sort((x, y) => x.off - y.off);
     for (const x of cands) {
@@ -109,9 +144,9 @@ export function fightSpots(site, zone, need = { crew: 6, guards: 4 }) {
     const f = sub(anchor, foe);
     const away = [f[0] / (len(f) || 1), f[1] / (len(f) || 1)];
     const across = [-away[1], away[0]];
-    for (const ring of [0, 1, 2, -1, 3, 4]) {
+    for (const ring of [0, 1, 2, -1, 3, 4, 5, 6]) {
       if (spots.length >= n) break;
-      for (const k of [0, 1, -1, 2, -2, 3, -3]) {
+      for (const k of [0, 1, -1, 2, -2, 3, -3, 4, -4]) {
         if (spots.length >= n) break;
         const p = round([anchor[0] + across[0] * k * 15 + away[0] * ring * 14, anchor[1] + across[1] * k * 15 + away[1] * ring * 14]);
         if (free(p) && mine(p)) { spots.push({ at: p, cover: 'open' }); taken.push(p); }

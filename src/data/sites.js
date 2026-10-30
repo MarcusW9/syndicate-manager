@@ -89,6 +89,11 @@ const NIGHT_MARKET = {
     { t: 'rect', cls: 'sp-door', x: 265, y: 114, w: 5, h: 12 },
     { t: 'rect', cls: 'sp-room', x: 296, y: 48, w: 44, h: 46 },
     { t: 'rect', cls: 'sp-sign', x: 274, y: 140, w: 40, h: 5, fill: '#b48cff' },
+    // Cover for fights (core/fightspots.js, 2026-10-30): a cart and crates by the gate and the back room, a mahjong table inside.
+    { t: 'rect', cls: 'sp-cover', x: 50, y: 196, w: 24, h: 10, fill: CONTAINER_TONES[3] },
+    { t: 'rect', cls: 'sp-cover', x: 22, y: 200, w: 14, h: 10, fill: CONTAINER_TONES[1] },
+    { t: 'rect', cls: 'sp-cover', x: 258, y: 138, w: 12, h: 10, fill: CONTAINER_TONES[2] },
+    { t: 'rect', cls: 'sp-desk', x: 306, y: 122, w: 16, h: 10 },
   ],
   labels: [
     { x: 110, y: 206, text: 'MARKET GATE' }, { x: 22, y: 66, text: 'STALLS' },
@@ -122,6 +127,12 @@ const HEIGHTS = {
     { t: 'rect', cls: 'sp-door', x: 229, y: 144, w: 5, h: 12 },
     { t: 'rect', cls: 'sp-room', x: 280, y: 30, w: 60, h: 50 },
     { t: 'rect', cls: 'sp-block', x: 20, y: 10, w: 90, h: 50 },
+    // Cover for fights (core/fightspots.js, 2026-10-30): crates in the loading bay, the lobby's front desk, server cabinets and a desk on the server floor.
+    { t: 'rect', cls: 'sp-cover', x: 126, y: 204, w: 24, h: 9, fill: CONTAINER_TONES[0] },
+    { t: 'rect', cls: 'sp-cover', x: 160, y: 199, w: 14, h: 9, fill: CONTAINER_TONES[2] },
+    { t: 'rect', cls: 'sp-desk', x: 240, y: 158, w: 10, h: 26 },
+    { t: 'rect', cls: 'sp-cover', x: 256, y: 154, w: 24, h: 9, fill: CONTAINER_TONES[0] },
+    { t: 'rect', cls: 'sp-desk', x: 278, y: 120, w: 16, h: 8 },
   ],
   labels: [
     { x: 140, y: 208, text: 'LOADING BAY' }, { x: 24, y: 92, text: 'PLAZA' },
@@ -142,7 +153,7 @@ const BASIN = {
     out: [[300, 70], [250, 96], [230, 118], [200, 156], [250, 156], [250, 198], [250, 224], [300, 224]],
   },
   views: { in: [168, 112, 192, 128], inside: [100, 60, 255, 170], target: [180, 10, 180, 120] },
-  posts: { in: [230, 192], inside: [215, 106], target: [318, 98] },
+  posts: { in: [186, 192], inside: [215, 106], target: [318, 98] },
   sight: { rifle: [[200, 30], [140, 120], [160, 198], [348, 198], [348, 114], [246, 114], [246, 34]], drone: [[200, 30], [6, 6], [6, 206], [354, 206], [354, 6]] },
   shapes: [
     ...ROAD,
@@ -159,6 +170,12 @@ const BASIN = {
     { t: 'rect', cls: 'sp-room', x: 276, y: 52, w: 52, h: 36 },
     { t: 'line', cls: 'sp-pole', x1: 200, y1: 30, x2: 200, y2: 110 },
     { t: 'rect', cls: 'sp-lamp', x: 190, y: 22, w: 20, h: 6 },
+    // Cover for fights (core/fightspots.js, 2026-10-30): a horse trailer and hay at the service gate, a trailer and a feed bin by the vet block, the vet's table inside.
+    { t: 'rect', cls: 'sp-cover', x: 258, y: 204, w: 26, h: 9, fill: CONTAINER_TONES[3] },
+    { t: 'rect', cls: 'sp-cover', x: 300, y: 200, w: 14, h: 10, fill: '#6b5a2e' },
+    { t: 'rect', cls: 'sp-cover', x: 214, y: 84, w: 10, h: 24, fill: CONTAINER_TONES[3] },
+    { t: 'rect', cls: 'sp-cover', x: 228, y: 70, w: 12, h: 10, fill: CONTAINER_TONES[1] },
+    { t: 'rect', cls: 'sp-desk', x: 296, y: 90, w: 16, h: 8 },
   ],
   labels: [
     { x: 258, y: 208, text: 'SERVICE GATE' }, { x: 176, y: 124, text: 'STABLES' },
@@ -338,6 +355,10 @@ const OLD_TOWN = {
     { t: 'row', cls: 'sp-window', x: 258, y: 78, w: 5, h: 4, step: 12, n: 7, tones: ['#2a303b', '#ff3d5f', '#2a303b', '#2a303b', '#2a303b', '#2a303b', '#f2d541'] },
     { t: 'circle', cls: 'sp-tank', cx: 292, cy: 40, r: 7 },
     { t: 'rect', cls: 'sp-sign', x: 256, y: 196, w: 30, h: 6, fill: '#ff3d5f' },
+    // Cover for fights (core/fightspots.js, 2026-10-30): bins and a dumpster at the foot of the alley.
+    { t: 'rect', cls: 'sp-cover', x: 252, y: 178, w: 12, h: 12, fill: CONTAINER_TONES[2] },
+    { t: 'rect', cls: 'sp-cover', x: 248, y: 204, w: 24, h: 8, fill: CONTAINER_TONES[0] },
+    { t: 'rect', cls: 'sp-cover', x: 196, y: 184, w: 14, h: 10, fill: CONTAINER_TONES[3] },
   ],
   labels: [{ x: 304, y: 26, text: 'ROOF' }],
   approaches: [
@@ -356,6 +377,10 @@ const OLD_TOWN = {
       shapes: [
         { t: 'poly', cls: 'sp-laundry', points: [[150, 106], [190, 112], [250, 104]] },
         { t: 'poly', cls: 'sp-laundry', points: [[150, 140], [210, 146], [290, 138]] },
+        // Cover for fights: a handcart, washing tubs, a stack of crates.
+        { t: 'rect', cls: 'sp-cover', x: 150, y: 128, w: 24, h: 9, fill: CONTAINER_TONES[3] },
+        { t: 'rect', cls: 'sp-cover', x: 128, y: 128, w: 12, h: 10, fill: CONTAINER_TONES[1] },
+        { t: 'rect', cls: 'sp-cover', x: 196, y: 150, w: 14, h: 10, fill: CONTAINER_TONES[2] },
       ],
       labels: [{ x: 150, y: 160, text: 'COURTYARD' }],
     },
@@ -363,7 +388,7 @@ const OLD_TOWN = {
   targets: [
     {
       id: 'flat', aria: 'the tenement with the flat', ...OLD_TOWN_TARGET,
-      shapes: [...TENEMENT, { t: 'rect', cls: 'sp-room', x: 40, y: 44, w: 50, h: 36 }],
+      shapes: [...TENEMENT, { t: 'rect', cls: 'sp-room', x: 40, y: 44, w: 50, h: 36 }, { t: 'rect', cls: 'sp-desk', x: 94, y: 70, w: 16, h: 8 }],
       labels: [{ x: 40, y: 22, text: 'THE FLAT', hi: true }],
     },
     {
@@ -374,6 +399,7 @@ const OLD_TOWN = {
         { t: 'row', cls: 'sp-cot', x: 44, y: 50, w: 12, h: 5, step: 16, n: 3 },
         { t: 'row', cls: 'sp-cot', x: 44, y: 68, w: 12, h: 5, step: 16, n: 3 },
         { t: 'rect', cls: 'sp-sign', x: 100, y: 100, w: 12, h: 4, fill: '#3de8d8' },
+        { t: 'rect', cls: 'sp-desk', x: 94, y: 70, w: 16, h: 8 },
       ],
       labels: [{ x: 26, y: 22, text: 'BLOCK 9 CLINIC', hi: true }],
     },
