@@ -41,7 +41,7 @@ import { SPECIALISATIONS, specOf } from '../core/specialisations.js';
 import { sideTaskById, sideOdds, sendOnSideTask, sideReward, sideCost, sidePitch, intelFor, SIDE_TRUST } from '../core/sidetasks.js';
 import {
   saveGame, loadGame, exportSave, importSave, listSlots, getActiveSlot, setActiveSlot,
-  deleteSlot, loadBackup, backupDue, SLOT_COUNT,
+  deleteSlot, loadBackup, backupDue, SLOT_COUNT, unreadableSave, restoreUnreadable, exportUnreadable, discardUnreadable,
 } from '../save/save.js';
 import { hire, haggle, passRecruit, canHire, signingFee, nextExpansion, expandSafehouse, STARTING_ROSTER_CAP, FOUNDERS_TO_PICK } from '../core/recruits.js';
 import { potentialRead, potentialTag, primaryStat, scoutFor, ageRate, declineChance, mentoring, changesSince, progressShare, STATS } from '../core/development.js';
@@ -249,7 +249,11 @@ function onClick(e) {
     case 'slot-load': {
       const n = Number(id);
       const loaded = loadGame(n);
-      if (!loaded) { alert(`Slot ${n} could not be loaded.`); break; }
+      if (!loaded) {
+        const kept = unreadableSave(n);
+        alert(`Slot ${n} could not be opened.${kept?.newer ? ' It was saved by a newer version of the game: reload the page to update.' : ''} It's kept safe on this screen.`);
+        break;
+      }
       setActiveSlot(n);
       screen = 'inbox'; plan = null; openMessageId = null; openOperativeId = null; openRecruitId = null;
       return setState(loaded);
@@ -271,6 +275,22 @@ function onClick(e) {
     }
     case 'slot-delete':
       if (confirm(`Delete the game in slot ${id}? This can't be undone.`)) deleteSlot(Number(id));
+      break;
+    // A save that couldn't be opened, kept aside by save.js (DESIGN.md, 2026-10-30).
+    case 'kept-restore': {
+      const n = Number(id);
+      if (!confirm(`Restore the kept game into slot ${n}? Whatever is in slot ${n} now will be replaced.`)) break;
+      try {
+        const restored = restoreUnreadable(n);
+        setActiveSlot(n);
+        screen = 'inbox'; plan = null; openMessageId = null; openOperativeId = null; openRecruitId = null;
+        return setState(restored);
+      } catch (err) { alert(`Could not restore it yet: ${err.message}`); }
+      break;
+    }
+    case 'kept-export': exportUnreadable(Number(id)); break;
+    case 'kept-discard':
+      if (confirm(`Throw away the kept game from slot ${id}? Download it first if you might want it. This can't be undone.`)) discardUnreadable(Number(id));
       break;
     case 'restore-backup': {
       const backup = loadBackup();
@@ -420,7 +440,7 @@ function render() {
       ${navButton('settings', 'Save')}
     </nav>
 
-    <main class="main ${wide ? 'main--wide' : ''} ${!state.activeMission && screen === 'jobs' && plan ? 'main--split' : ''}">${state.activeMission ? renderMission() : renderScreen()}</main>
+    <main class="main ${wide ? 'main--wide' : ''} ${!state.activeMission && screen === 'jobs' && plan ? 'main--split' : ''}">${state.activeMission ? renderMission() : `${keptBanner()}${renderScreen()}`}</main>
     ${dock ? `<div class="dock">${renderContinue(blocked, resting, unread, 'dock__continue')}</div>` : ''}
     ${cue ? renderDayCue(cue) : ''}
   `;
@@ -532,6 +552,14 @@ function renderScreen() {
 }
 
 // --- inbox -------------------------------------------------------------
+/** Says a save in this slot was kept aside because it couldn't be opened, on every screen until it's dealt with. */
+function keptBanner() {
+  const kept = screen === 'settings' ? null : unreadableSave();
+  if (!kept) return '';
+  return `<div class="banner banner--danger"><span>${kept.newer ? 'Your saved game is from a newer version of the game.' : 'Your saved game couldn\'t be opened.'} It's kept safe.</span>
+    <button class="btn" data-action="nav" data-id="settings">See Save</button></div>`;
+}
+
 function backupBanner() {
   if (!backupDue(state)) return '';
   return `<div class="banner"><span>${state.lastBackupDay ? `No backup for ${state.day - state.lastBackupDay} days.` : 'You have never backed up this save.'}</span>
@@ -1792,6 +1820,22 @@ function renderMeet(cov, owOp) {
       <div id="meet-read" ${meetHidden ? 'hidden' : ''}>${meetHidden ? '' : renderCoverage(boardUi, cov, { overwatch: owOp, approachName: APPROACHES[plan.approach].name, standby: state.crew.find((o) => o.id === plan.standby) ?? null })}</div>`;
 }
 
+/** A save that couldn't be opened, kept aside for slot n: what happened and the way back. */
+function keptCard(n) {
+  const kept = unreadableSave(n);
+  if (!kept) return '';
+  return `
+      <div class="riskcard riskcard--kept">
+        <p><strong>A saved game in slot ${n}${kept.day ? ` (day ${kept.day})` : ''} couldn't be opened.</strong> It's kept safe, apart from the game in the slot now.</p>
+        <p class="muted small">${kept.newer ? 'It was saved by a newer version of the game than this one. Reload the page to update, then restore it.' : esc(kept.reason)}</p>
+        <div class="kept__actions">
+          <button class="btn btn--primary" data-action="kept-restore" data-id="${n}">Restore it</button>
+          <button class="btn" data-action="kept-export" data-id="${n}">Download it</button>
+          <button class="btn btn--danger" data-action="kept-discard" data-id="${n}">Throw away</button>
+        </div>
+      </div>`;
+}
+
 function renderSettings() {
   const slots = listSlots();
   const active = getActiveSlot();
@@ -1813,6 +1857,7 @@ function renderSettings() {
     <section class="panel">
       <h1>Save</h1>
       <p class="body">The game saves automatically after every action, in this browser only.</p>
+      ${Array.from({ length: SLOT_COUNT }, (_, i) => keptCard(i + 1)).join('')}
 
       <div class="cols2">
       <div>
