@@ -12,6 +12,7 @@ import { createNewGame } from '../src/core/state.js';
 import * as M from '../src/core/mission.js';
 import { addOffer, templateById } from '../src/core/jobs.js';
 import { autoStep, needsPlayer } from '../src/core/autorun.js';
+import { arm } from '../tests/play.js';
 
 const { chromium } = createRequire(import.meta.url)('playwright');
 const JOB = process.env.JOB ?? 'warehouse'; // JOB=kidnap etc. for another district's map
@@ -27,6 +28,9 @@ function fightState() {
     let s = createNewGame({ seed, startCrew: 'fresh' });
     // Grown a season or so (every stat +4, as in scripts/sim-battles.mjs), so threat-4 work is a fair fight.
     for (const op of s.crew) for (const k of Object.keys(op.stats)) op.stats[k] = Math.min(20, op.stats[k] + 4);
+    // Mixed kit, so the panel shows what gear does: a pro sidearm and a vest, a sidearm, then nothing.
+    arm(s, s.crew[0].id, 'pistol:pro', 'vest');
+    arm(s, s.crew[1].id, 'pistol');
     s.jobs = [];
     addOffer(s, JOB);
     s = M.startMission(s, s.jobs[0].id, s.crew.slice(0, Math.min(4, templateById(JOB).crewSize + 1)).map((o) => o.id), 'loud', { callIn: 'risky', orders: 'steady' });

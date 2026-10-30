@@ -5,6 +5,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-30 · See your gear in a fight
+- **Each runner in the fight panel now shows their gun, its damage and their armour,** for example "Pro sidearm 4 · Armoured vest −1".
+- **Shoot and Flank say what a hit does:** "hits for 3 · 2 hits to drop".
+- **The guards' aim shows the damage they'd do after armour,** and Hunker shows how much damage is coming at you this round.
+
 ## 2026-10-30 · The planning read knows the map
 - **The fight odds on the planning screen now use the job's own map:** where each side will stand and what cover they'll have. Before, they assumed everyone was in half cover, which was a few points off: Kidnap fights were easier than shown, for example. Now the odds you're shown are the odds the fight uses.
 

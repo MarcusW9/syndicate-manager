@@ -1134,6 +1134,7 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .ffo-who.is-down { opacity: 0.5; cursor: default; }
 .ffo-hp { font-size: 0.74rem; color: var(--muted); } .ffo-hp b { color: #ff8a98; font-weight: 600; }
 .ffo-hp.is-low { color: var(--warn); } .ffo-hp.is-crit { color: var(--danger); }
+.ffo-kit { font-size: 0.72rem; color: var(--accent-2); }
 .ffo-order { font-size: 0.74rem; color: var(--muted); } .ffo-order.is-set { color: var(--warn); font-weight: 600; }
 .ffo-targets { display: flex; flex-wrap: wrap; gap: 6px; }
 .ffo-target { min-height: var(--tap, 44px); padding: 4px 10px; border: 1px solid #4a2230; background: #160d12; color: #ff8a98; font: 700 0.8rem var(--display); letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
