@@ -3,7 +3,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createNewGame } from '../src/core/state.js';
+import { createNewGame, SAVE_VERSION } from '../src/core/state.js';
 import * as M from '../src/core/mission.js';
 import { addOffer, templateById } from '../src/core/jobs.js';
 import { autoStep, autoRun } from '../src/core/autorun.js';
@@ -78,22 +78,58 @@ test('gear in a fight: weapons do damage, armour soaks it flat, a hit that lands
 
 // --- when fights happen ------------------------------------------------------------------------
 
-test('a fight starts only when a danger incident goes unsaved', () => {
+test('a fight starts when a danger incident goes unsaved, or on a loud run for the first guard whatever the roll', () => {
   let fights = 0;
+  let loudWins = 0;
   for (let seed = 1; seed <= 400; seed++) {
     const am = autoRun(begin(seed, 'warehouse', APPROACHES[seed % 4], { n: 2 + (seed % 2) }), 'steady').activeMission;
     const ev = am.events;
+    let first = true;
     ev.forEach((e, i) => {
       if (e.kind !== 'battle' || e.phase !== 'start') return;
       fights++;
       let j = i - 1;
-      while (ev[j].kind === 'save') { assert.equal(ev[j].success, false, `seed ${seed}: a save that worked ends it there`); j--; }
+      const saved = [];
+      while (ev[j].kind === 'save') { saved.push(ev[j].success); j--; }
       assert.equal(ev[j].kind, 'roll');
-      assert.equal(ev[j].success, false, `seed ${seed}: the incident failed`);
       assert.ok(incidentById(ev[j].incident).danger, `seed ${seed}: ${ev[j].incident} is danger`);
+      const loud = am.approach === 'loud' || ev.slice(0, j).some((x) => x.kind === 'decision' && /loud/i.test(x.choice ?? ''));
+      const unsaved = !ev[j].success && saved.every((x) => x === false);
+      if (!unsaved) {
+        assert.ok(loud && first, `seed ${seed}: only the first guard of a loud run fights when it wasn't lost`);
+        if (ev[j].success) { loudWins++; assert.match(e.text, /jump/, 'a won roll gets the jump on them'); }
+      }
+      first = false;
     });
   }
-  assert.ok(fights > 30, `saw ${fights} fights`);
+  assert.ok(fights > 30 && loudWins > 10, `saw ${fights} fights, ${loudWins} ambushes`);
+});
+
+test('every loud run has a fight (the first danger incident), a stealth run only when it goes wrong', () => {
+  let loud = 0;
+  let loudFights = 0;
+  let quiet = 0;
+  let quietFights = 0;
+  for (let seed = 1; seed <= 300; seed++) {
+    const am = autoRun(begin(seed, 'container409', seed % 2 ? 'loud' : 'stealth', { n: 3 }), 'committed').activeMission;
+    const fought = am.events.some((e) => e.kind === 'battle' && e.phase === 'start');
+    if (seed % 2) { loud++; if (fought) loudFights++; } else { quiet++; if (fought) quietFights++; }
+  }
+  assert.equal(loudFights, loud, 'every loud run fights');
+  assert.ok(quietFights < quiet * 0.5, `stealth fought ${quietFights} of ${quiet}`);
+});
+
+test('the jump: on the first round the guards get no shot in, and only then', () => {
+  const s = createNewGame({ seed: 5, startCrew: 'fresh' });
+  const make = (ambush) => buildBattle({ incident: 'backup', zone: 'inside', diff: 12, threat: 3, guards: 2, crew: s.crew.slice(0, 3), approach: 'loud', ambush });
+  const jump = make(true);
+  const r1 = playRound(jump, makeRng(3));
+  assert.ok(r1.lines.some((l) => l.kind === 'ambush'));
+  assert.ok(!r1.lines.some((l) => l.kind === 'guard'), 'no guard attacks on round 1');
+  const r2 = playRound(jump, makeRng(4));
+  assert.ok(!r2.lines.some((l) => l.kind === 'ambush'));
+  assert.ok(r2.lines.some((l) => l.kind === 'guard') || !jump.guards.some((g) => !g.out), 'they fight back from round 2');
+  assert.ok(playRound(make(false), makeRng(3)).lines.some((l) => l.kind === 'guard'), 'no jump, no free round');
 });
 
 test('every roll in a fight is the rule: die + value against need decides it, and it never runs past the last round', () => {
@@ -104,6 +140,7 @@ test('every roll in a fight is the rule: die + value against need decides it, an
       if (e.phase === 'round') assert.ok(e.round <= BATTLE.rounds, `seed ${seed}: round ${e.round}`);
       for (const l of e.lines ?? []) {
         if (l.kind === 'flee') { assert.equal(l, e.lines.at(-1), 'a guard runs at the end of a round'); continue; } // no roll
+        if (l.kind === 'ambush') { assert.equal(e.round, 1, 'the jump is only the first round'); continue; } // no roll
         assert.equal(l.die + l.value >= l.need, l.success, `seed ${seed}: ${l.text}`);
         assert.ok(l.text, 'every moment has a line for the feed');
         lines++;
@@ -233,30 +270,49 @@ test('the planning read quotes the fight from the run\'s own round function', ()
   const s = createNewGame({ seed: 4, startCrew: 'fresh' });
   const tpl = templateById('container409'); // rookie work: a fight this crew can win sometimes
   const crew = s.crew.slice(0, 3);
-  const { rows } = coverage(tpl, crew, 'loud');
-  const row = rows.find((r) => r.id === 'backup');
-  assert.ok(row.fight, 'danger rows carry the fight');
-  const diff = incidentDifficulty(tpl, { threat: tpl.threat, alert: 0 }, incidentById('backup'));
-  const odds = battleOdds({ incident: 'backup', zone: row.zone, diff, threat: tpl.threat, guards: INCIDENTS.backup.guards, crew, approach: 'loud' });
+  // A quiet approach: the fight is only the roll's and the save's miss, odds straight from battleOdds.
+  const { rows } = coverage(tpl, crew, 'stealth');
+  const row = rows.find((r) => r.id === 'guard');
+  assert.ok(row.fight && !row.fight.forced, 'danger rows carry the fight');
+  const diff = incidentDifficulty(tpl, { threat: tpl.threat, alert: 0 }, incidentById('guard'));
+  const odds = battleOdds({ incident: 'guard', zone: row.zone, diff, threat: tpl.threat, guards: INCIDENTS.guard.guards, crew, approach: 'stealth' });
   assert.equal(row.fight.win, odds.win);
   assert.equal(Math.round((odds.win + odds.down + odds.standoff) * 1000), 1000);
+  assert.ok(!rows.find((r) => r.id === 'lock')?.fight, 'no fight where there is no danger');
+  // A loud run: the fight is certain, and the odds mix the jump (the roll won) with the plain fight.
+  const loud = coverage(tpl, crew, 'loud').rows.find((r) => r.id === 'backup');
+  assert.equal(loud.fight.forced, true);
+  assert.equal(loud.fight.chance, 1, 'it happens whatever the roll');
+  const ldiff = incidentDifficulty(tpl, { threat: tpl.threat, alert: 0 }, incidentById('backup'));
+  const args = { incident: 'backup', zone: loud.zone, diff: ldiff, threat: tpl.threat, guards: INCIDENTS.backup.guards, crew, approach: 'loud' };
+  const plain = battleOdds(args);
+  const jump = battleOdds({ ...args, ambush: true });
+  const mixed = loud.chance * jump.win + (1 - loud.chance) * plain.win;
+  assert.ok(Math.abs(loud.fight.win - mixed) < 1e-9, 'the read mixes the jump and the plain fight by the roll');
+  assert.ok(jump.win >= plain.win, 'the first round is worth something');
   // Better kit, better odds.
+  const before = loud.fight.win;
   for (const op of crew) arm(s, op.id, 'pistol:pro', 'vest:pro');
   const armed = coverage(tpl, crew, 'loud').rows.find((r) => r.id === 'backup');
-  assert.ok(armed.fight.win > row.fight.win, `${armed.fight.win} > ${row.fight.win}`);
-  assert.ok(!rows.find((r) => r.id === 'lock')?.fight, 'no fight where there is no danger');
+  assert.ok(armed.fight.win > before, `${armed.fight.win} > ${before}`);
 });
 
 // --- saves ---------------------------------------------------------------------------------------
 
-test('a v25 save upgrades: jobs get no fight on; a job saved mid-fight carries on', async () => {
+test('a v25 or v26 save upgrades: jobs get no fight on, and know if they have fought; a job saved mid-fight carries on', async () => {
   const s = begin(2, 'warehouse', 'loud', { n: 2 });
   const old = structuredClone(s);
   old.version = 25;
   delete old.activeMission.battle;
   const up = await importSave({ text: async () => JSON.stringify(old) });
-  assert.equal(up.version, 26);
+  assert.equal(up.version, SAVE_VERSION);
   assert.equal(up.activeMission.battle, null);
+  assert.equal(up.activeMission.fought, false, 'no fight in its record yet');
+  const fought = structuredClone(old);
+  fought.version = 26;
+  delete fought.activeMission.fought;
+  fought.activeMission.events = [{ kind: 'battle', phase: 'start' }];
+  assert.equal((await importSave({ text: async () => JSON.stringify(fought) })).activeMission.fought, true, 'a job whose record shows a fight has fought');
   const mid = findPending('standoff', { want: 1 })[0] ?? findPending('door', { want: 1 })[0];
   assert.ok(mid, 'found a job stopped in a fight');
   const back = await importSave({ text: async () => JSON.stringify(mid.s) });

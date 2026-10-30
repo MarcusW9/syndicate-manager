@@ -14,7 +14,7 @@ Where things live and how a run flows, so you can read a few functions instead o
 | beat | `revealBeat` | `core/mission.js` |
 | zone | `enterZone` | `core/mission.js` |
 | incident | `runIncident` (roll, save, cost; an unsaved danger incident starts a fight) | `core/mission.js` |
-| battle | `runBattle` (one round, then `afterRound`) | `core/runbattle.js` |
+| battle | `runBattle` (one round, then `afterRound`); a loud run's first guard always starts one (`loudFightDue`, `core/battle.js`) | `core/runbattle.js` |
 | crisis | `describeCrisis` / `chooseOption` (the player's or the orders' choice) | `core/mission.js` |
 | critical | `describeCritical` / `resolveCritical` (stabilise, extract, push on) | `core/mission.js` |
 | call-in | `describePending` / `resolvePending` (`am.pending`: `alert`, `injury`, `door`, `standoff`) | `core/mission.js` |

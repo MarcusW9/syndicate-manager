@@ -52,6 +52,11 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 ## 2026-10-29 · Renewal numbers line up
 - When someone asks for a new deal, their current wage, what they're asking and their market value now sit in three equal boxes with the numbers on one line, and the loyalty note no longer touches them.
+## 2026-10-29 · Loud runs mean a fight
+- On a loud run the first guard is always a fight now, however well the roll goes: win the roll and your crew gets the jump (the guards get no shot in the first round); miss it and they fight back from the start. The same goes after you tell the crew to go loud at max alert.
+- The planning screen says so ("A loud run means a fight") and works the odds out with the jump counted in.
+- Stealth, tech and con runs still only fight when something goes wrong.
+
 ## 2026-10-29 · Tidy-up (nothing changes in the game)
 - The run engine's fight code moved out of `mission.js` into its own file, a map of the code (`CODEMAP.md`) was added, and `npm run test:fast` runs the quick tests in about 40 seconds instead of two minutes.
 
