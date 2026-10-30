@@ -415,6 +415,9 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .riskcard .btn--block { margin-top: 8px; }
 .nomargin { margin-top: 0; }
 .warntext { color: var(--warn); font-weight: 600; }
+/* A save kept aside because it couldn't be opened (2026-10-30). */
+.riskcard--kept { border-color: var(--danger); }
+.kept__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; padding: 10px 12px; border: 1px solid var(--warn); border-radius: var(--radius); background: #1f1c14; font-size: 0.9rem; }
 
 /* --- Trait bonuses on stats panels --- */
@@ -1062,3 +1065,5 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
    signs' Chinese in the system's CJK font, as the city's name is elsewhere. */
 .da-stencil { font: 700 6.5px var(--display); letter-spacing: 0.12em; fill: #e9e2cf; opacity: 0.85; }
 .da-neon { font-family: 'Noto Sans CJK TC', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', 'WenQuanYi Zen Hei', sans-serif; font-weight: 700; }
+/* A save kept aside: the banner is red, not the backup reminder's yellow (after the skin's banner rule). */
+.banner.banner--danger { border-color: var(--danger); background: rgba(255, 74, 74, 0.08); }
