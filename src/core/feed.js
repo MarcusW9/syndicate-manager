@@ -79,7 +79,7 @@ export function feedItems(events = [], { kit = null } = {}) {
         setup: e.phase === 'retreat' ? e.text : `${up ? `${up} guard${up === 1 ? '' : 's'} up` : 'Last guard down'} · ${state.runners.map((r) => `${r.handle} ${r.down ? 'down' : `${r.hp}/${r.max}`}`).join(', ')}`,
         hp: state,
         results: (e.lines ?? []).map((l) => ({ headline: l.text, detail: '', tone: l.kind === 'guard' ? (l.damage ? 'bad' : 'good') : l.kind === 'flee' || l.kind === 'ambush' || l.kind === 'hunker' ? 'good' : l.success ? 'good' : 'bad', roll: roll(l), why: null })),
-        cue: { battle: { phase: e.phase, ...state, lines: (e.lines ?? []).map((l) => ({ kind: l.kind, actor: l.actor?.id ?? null, targetId: l.targetId ?? null, guard: l.guard ?? null, success: l.success ?? null, damage: l.damage ?? 0, heal: l.heal ?? 0, kit: l.kit ?? null, dropped: !!l.dropped })) } },
+        cue: { battle: { phase: e.phase, ...state, lines: (e.lines ?? []).map((l) => ({ kind: l.kind, actor: l.actor?.id ?? null, targetId: l.targetId ?? null, guard: l.guard ?? null, success: l.success ?? null, damage: l.damage ?? 0, heal: l.heal ?? 0, kit: l.kit ?? null, dropped: !!l.dropped, to: l.to ?? null, flank: !!l.flank })) } },
       });
     } else if (e.kind === 'critical') {
       items.push({

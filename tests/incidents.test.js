@@ -288,6 +288,8 @@ test('a run played live with "risky" call-ins finishes, and asks the player only
       const am = s.activeMission;
       if (am.critical) s = M.resolveCritical(s, 'extract');
       else if (am.pending) s = M.resolvePending(s, M.describePending(s).choices.find((c) => !c.exit).id);
+      // A fight waits for orders each round (command fights, 2026-10-30): give none, the crew's own call.
+      else if (am.battle && M.currentStep(am)?.type === 'battle') s = M.runBattle(s);
       else s = M.chooseOption(s, M.describeCrisis(s).choices.find((c) => c.available).id);
     }
     assert.equal(s.activeMission.done, true, `seed ${seed}`);

@@ -32,8 +32,8 @@ import { afterJob, noteInjury, spendSecondWind, earnedOf } from './earned.js';
 import { overwatchKit, seriousGuard, patchBonus } from './gear.js';
 import { BATTLE, loudFightDue } from './battle.js';
 import { crewOf, actors, overwatchOp, standbyOp, standbyReady, driver, onJob, opById, grow, record, takeWhy, addNeural } from './run.js';
-import { startBattle, runBattle, resolveBattleDecision, guardsUp, guardCount } from './runbattle.js';
-export { runBattle };
+import { startBattle, runBattle, resolveBattleDecision, guardsUp, guardCount, handOffFight, pullBack } from './runbattle.js';
+export { runBattle, handOffFight, pullBack };
 import { noteOverwatchJob, checkSpecialisations } from './specialisations.js';
 import { planIncidents, weaveIncidents, incidentById, incidentIn, incidentDifficulty, handlerFor, bestSave, standbySave, decisionChoices, ALERT_MAX, SERIOUS_CHANCE, SERIOUS_PER_ALERT, PATCH_MIN_MEDICAL, ZONES } from './incidents.js';
 

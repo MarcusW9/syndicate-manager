@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { createNewGame, SAVE_VERSION } from '../src/core/state.js';
 import * as M from '../src/core/mission.js';
 import { addOffer } from '../src/core/jobs.js';
-import { autoStep, autoRun } from '../src/core/autorun.js';
+import { autoStep, autoRun, needsPlayer } from '../src/core/autorun.js';
 import { playRound, planIntents, ordersFor, guardHitChance, fightChance, BATTLE } from '../src/core/battle.js';
 import { makeRng } from '../src/core/rng.js';
 import { testFight, commandOrders } from './play.js';
@@ -141,4 +141,64 @@ test('a run takes the player\'s orders, and a v27 save mid-fight upgrades and ca
   assert.ok([...up.activeMission.battle.guards, ...up.activeMission.battle.runners].every((x) => x.cover === 'half' && x.now === null));
   assert.equal(up.activeMission.battle.intents, null);
   assert.equal(autoRun(up, 'steady').activeMission.done, true, 'and the run finishes');
+});
+
+/** A Docks job walked to its first fight round, waiting for orders. */
+function docksFight(seed = 4) {
+  let s = createNewGame({ seed, startCrew: 'fresh' });
+  s.jobs = [];
+  addOffer(s, 'warehouse');
+  s = M.startMission(s, s.jobs[0].id, s.crew.slice(0, 4).map((o) => o.id), 'loud', { callIn: 'every' });
+  for (let g = 0; g < 200 && !s.activeMission.done && !s.activeMission.battle; g++) {
+    const next = autoStep(s);
+    s = next !== s ? next : autoStep(s, { force: true });
+  }
+  return s;
+}
+
+test('a fight in the Docks stands on the map: everyone on a spot, the crew in the best cover going', () => {
+  const s = docksFight();
+  const b = s.activeMission.battle;
+  assert.ok(b?.spots, 'the fight has spots');
+  for (const x of b.runners) assert.equal(x.cover, b.spots.crew[x.spot].cover);
+  for (const g of b.guards) assert.equal(g.cover, b.spots.guards[g.spot].cover);
+  assert.equal(new Set(b.runners.map((r) => r.spot)).size, b.runners.length, 'one to a spot');
+  const start = s.activeMission.events.find((e) => e.kind === 'battle' && e.phase === 'start');
+  assert.ok(start.runners.every((r) => Array.isArray(r.at)) && start.guards.every((g) => Array.isArray(g.at)), 'the feed knows where everyone stands');
+});
+
+test('moving: to a free spot, for good, taking the turn; never onto someone\'s spot', () => {
+  const s = docksFight();
+  const b = structuredClone(s.activeMission.battle);
+  const r = b.runners[0];
+  const to = ordersFor(b, r.id).filter((o) => o.kind === 'move');
+  assert.ok(to.length, 'somewhere to go');
+  assert.ok(!to.some((o) => b.runners.some((x) => x.spot === o.target)), 'only free spots');
+  const pick = to.at(-1);
+  const out = playRound(b, makeRng(2), { [r.id]: { kind: 'move', target: pick.target }, [b.runners[1].id]: { kind: 'move', target: b.runners[2].spot } });
+  assert.equal(r.spot, pick.target);
+  assert.equal(r.cover, b.spots.crew[pick.target].cover);
+  assert.ok(out.lines.some((l) => l.kind === 'move' && l.actor.id === r.id && l.to), 'the move is on the feed, with where to');
+  assert.ok(!out.lines.some((l) => l.actor?.id === r.id && l.kind === 'shoot'), 'and it was their turn');
+  assert.notEqual(b.runners[1].spot, b.runners[2].spot, 'a move onto someone else\'s spot is the crew\'s own call instead');
+});
+
+test('a live fight waits for orders each round; Auto leaves the rest to the crew; pulling back is always there and brings everyone home', () => {
+  const s = docksFight();
+  assert.equal(needsPlayer(s), true, 'the fight waits for orders');
+  assert.equal(autoStep(s), s, 'the clock doesn\'t play it');
+  const after = M.runBattle(s, {});
+  if (after.activeMission.battle && !after.activeMission.pending) assert.equal(needsPlayer(after), true, 'and again next round');
+  const auto = M.handOffFight(s);
+  assert.equal(needsPlayer(auto), false, 'left to the crew');
+  assert.notEqual(autoStep(auto), auto, 'the crew carries on');
+  const never = structuredClone(s);
+  never.activeMission.callIn = 'never';
+  assert.equal(needsPlayer(never), false, 'a hands-off job never asks');
+  const back = M.pullBack(s);
+  const am = back.activeMission;
+  assert.equal(am.done, true, 'pulling back ends the job');
+  assert.equal(am.battle, null);
+  assert.ok(am.crewIds.every((id) => back.crew.some((o) => o.id === id)), 'nobody dies');
+  assert.ok(am.payCut >= 1, 'the job is lost');
 });

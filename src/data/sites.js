@@ -205,6 +205,9 @@ const DOCKS = {
       shapes: [
         { t: 'poly', cls: 'sp-fence', points: [[8, 196], [94, 196]] },
         { t: 'poly', cls: 'sp-fence', points: [[118, 196], [352, 196]] },
+        // Pallets stacked by the gate: cover for a fight at the fence (core/fightspots.js).
+        { t: 'rect', cls: 'sp-cover', x: 60, y: 199, w: 26, h: 10, fill: CONTAINER_TONES[3] },
+        { t: 'rect', cls: 'sp-cover', x: 30, y: 199, w: 18, h: 10, fill: CONTAINER_TONES[1] },
       ],
       labels: [{ x: 124, y: 206, text: 'THE FENCE' }, { x: 8, y: 236, text: 'VAN' }],
     },
@@ -216,6 +219,9 @@ const DOCKS = {
       shapes: [
         { t: 'poly', cls: 'sp-fence', points: [[8, 196], [262, 196]] },
         { t: 'poly', cls: 'sp-fence', points: [[294, 196], [352, 196]] },
+        // Pallets stacked by the gate: cover for a fight at the fence (core/fightspots.js).
+        { t: 'rect', cls: 'sp-cover', x: 236, y: 199, w: 26, h: 10, fill: CONTAINER_TONES[3] },
+        { t: 'rect', cls: 'sp-cover', x: 208, y: 199, w: 18, h: 10, fill: CONTAINER_TONES[1] },
       ],
       labels: [{ x: 196, y: 206, text: 'THE FENCE' }, { x: 292, y: 236, text: 'VAN' }],
     },

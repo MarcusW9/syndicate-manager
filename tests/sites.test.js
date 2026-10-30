@@ -158,7 +158,7 @@ for (const [district, plot] of Object.entries(PLOTS)) {
     }
     for (const t of plot.targets) assert.deepEqual(t.path[0], plot.hub, `${t.id}: starts at the hub`);
     const routes = [...plot.approaches.flatMap((a) => [a.in, a.inside].map((p) => [a.id, p])), ...plot.targets.map((t) => [t.id, t.path])];
-    const solid = [...plot.covers.flatMap((c) => c.shapes.flatMap(rectsOf).map((r) => [c.id, r]))];
+    const solid = [...plot.covers.flatMap((c) => c.shapes.flatMap(rectsOf).map((r) => [c.id, r])), ...plot.approaches.flatMap((a) => a.shapes.filter((sh) => sh.cls === 'sp-cover').flatMap(rectsOf).map((r) => [a.id, r]))];
     for (const [who, path] of routes) {
       for (let i = 1; i < path.length; i++) for (const [cover, r] of solid) assert.ok(!crosses(path[i - 1], path[i], r), `${who}'s route ${path[i - 1]}→${path[i]} crosses ${cover} at ${r}`);
     }

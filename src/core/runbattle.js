@@ -10,15 +10,25 @@ import { XP } from './development.js';
 import { noteInjury } from './earned.js';
 import { ALERT_MAX } from './incidents.js';
 import { buildBattle, playRound, planIntents, partingShots, injuryFromHp, runnerOf, BATTLE } from './battle.js';
+import { fightSpots } from './fightspots.js';
+import { pickSite } from '../data/sites.js';
 import { actors, overwatchOp, driver, standbyReady, opById, grow, record, takeWhy, addNeural } from './run.js';
 import { currentStep, advance, exitRun } from './mission.js';
 
 // --- battles (slice 6; core/battle.js) ----------------------------------------------------------
 
+// Where someone stands, for the plan to draw (null off the map's spots).
+const atOf = (b, side, x) => (x.spot != null ? b.spots?.[side]?.[x.spot]?.at ?? null : null);
 const battleSnapshot = (b) => ({
-  guards: b.guards.map((g) => ({ n: g.n, hp: g.hp, max: g.max, armour: g.armour, out: g.out })),
-  runners: b.runners.map((r) => ({ id: r.id, handle: r.handle, hp: r.hp, max: r.max, armour: r.armour, down: r.down, fightOn: r.fightOn, stable: r.stable })),
+  guards: b.guards.map((g) => ({ n: g.n, hp: g.hp, max: g.max, armour: g.armour, out: g.out, cover: g.cover, at: atOf(b, 'guards', g) })),
+  runners: b.runners.map((r) => ({ id: r.id, handle: r.handle, hp: r.hp, max: r.max, armour: r.armour, down: r.down, fightOn: r.fightOn, stable: r.stable, cover: r.cover, at: atOf(b, 'crew', r) })),
 });
+
+/** The fight's spots on the job's site map, where the district has them (data/battle.js spotsIn). */
+function spotsFor(am, tpl, zone, crew, guards) {
+  if (!BATTLE.spotsIn.includes(tpl.district)) return null;
+  return fightSpots(pickSite(tpl.district, am.jobId, am.templateId), zone, { crew: crew + 2, guards });
+}
 export const guardsUp = (b) => b.guards.filter((g) => !g.out).length;
 export const guardCount = (n) => (n === 1 ? 'one guard' : `${n} guards`);
 
@@ -27,6 +37,7 @@ export function startBattle(state, am, tpl, inc, id, zone, diff, able, { ambush 
   const b = buildBattle({ ambush,
     incident: id, zone, diff, threat: am.threat ?? tpl.threat, guards: inc.guards, crew: able, approach: am.approach,
     overwatchOp: overwatchOp(state, am), ow: am.overwatch, wheels: driver(state, am),
+    spots: spotsFor(am, tpl, zone, able.length, BATTLE.maxGuards),
   });
   am.battle = b;
   am.fought = true;
@@ -75,6 +86,25 @@ export function runBattle(prev, orders = {}) {
   // The guards' next move, rolled now so the player can see it before giving orders.
   if (guardsUp(b) && b.runners.some((x) => !x.down)) planIntents(b, nextRng(state));
   return afterRound(state, am);
+}
+
+/**
+ * Leave the rest of this fight to the crew (the fight screen's "Auto: rest of the fight"): the run
+ * stops asking for orders until it's over (am.battle.auto; core/autorun.js needsPlayer).
+ */
+export function handOffFight(prev) {
+  if (!prev.activeMission?.battle) return prev;
+  const s = structuredClone(prev);
+  s.activeMission.battle.auto = true;
+  return s;
+}
+
+/** The player pulls the crew back from a fight between rounds: an exit, at the usual cost (retreat). */
+export function pullBack(prev) {
+  const am0 = prev.activeMission;
+  if (!am0?.battle || currentStep(am0)?.type !== 'battle' || am0.pending || am0.critical) return prev;
+  const state = structuredClone(prev);
+  return retreat(state, state.activeMission, { text: 'You call the crew back.', choice: 'They pull back', why: 'You called them back.' });
 }
 
 /** What happens after a round (or a call-in during one). orders: false right after the player chose to keep fighting. */
@@ -202,7 +232,8 @@ export function resolveBattleDecision(state, am, choice, view) {
     patient.condition.injuryDays = Math.max(patient.condition.injuryDays, 21);
     noteInjury(state, patient, 'serious');
     am.out = [...(am.out ?? []), patient.id];
-    b.runners = [...b.runners.filter((x) => x.id !== patient.id), runnerOf(sb, am.approach)];
+    const was = b.runners.find((x) => x.id === patient.id);
+    b.runners = [...b.runners.filter((x) => x.id !== patient.id), { ...runnerOf(sb, am.approach), spot: was?.spot ?? null, cover: was?.cover ?? BATTLE.startCover }];
     b.door = b.door.filter((id) => id !== patient.id);
     const report = `${sb.handle} came in from standby, dragged ${patient.handle} clear and took their place in the fight.`;
     record(am, { kind: 'decision', standby: { id: sb.id, handle: sb.handle }, rescued: { id: patient.id, handle: patient.handle }, text: view.text, choice: choice.label, why, report, choiceCost: {} });

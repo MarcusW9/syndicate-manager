@@ -10,6 +10,8 @@
 // runner { id, handle, hp, max, armour, armourName, damage, weapon, stats, patch,
 //          down, fightOn, stable, cover, now }         stats: { stat: { value, notes } }
 // cover: where they stand (open, half, full); now: this round's, when an order changed it.
+// spot: their index in spots (the fight's places on the site map, core/fightspots.js), or null.
+// spots: { crew: [{ at, cover }], guards: [...] } or null where the site gives none.
 // intents: what each guard means to do this round, rolled before orders ([{ guard, target }]).
 //
 // Command fights (2026-10-30): the player can give each runner an order a round (playRound's
@@ -108,14 +110,16 @@ export function overwatchOf(op, ow, zone) {
  * Build a fight. crew: the inside team still standing (operatives). overwatchOp/ow: the run's
  * overwatch (am.overwatch). wheels: the driver in the van, who can bring it round.
  */
-export function buildBattle({ incident, zone, diff, threat, guards, crew, approach, overwatchOp = null, ow = null, wheels = null, ambush = false }) {
+export function buildBattle({ incident, zone, diff, threat, guards, crew, approach, overwatchOp = null, ow = null, wheels = null, ambush = false, spots = null }) {
+  // On a site with spots, each side takes the best cover going (spots come best first).
+  const onSpot = (x, i, side) => (spots?.[side]?.[i] ? { ...x, spot: i, cover: spots[side][i].cover } : { ...x, spot: null });
   return {
-    incident, zone, diff, round: 0, ambush,
-    guards: guardsFor(threat, guards),
-    runners: crew.map((op) => runnerOf(op, approach)),
+    incident, zone, diff, round: 0, ambush, spots,
+    guards: guardsFor(threat, guards).map((g, i) => onSpot(g, i, 'guards')),
+    runners: crew.map((op, i) => onSpot(runnerOf(op, approach), i, 'crew')),
     overwatch: overwatchOf(overwatchOp, ow, zone),
     wheels: wheels ? { id: wheels.id, handle: wheels.handle, ...effectiveStat(wheels, 'driving', { approach }) } : null,
-    lights: false, van: false, door: [], intents: null,
+    lights: false, van: false, door: [], intents: null, auto: false,
   };
 }
 
@@ -158,7 +162,7 @@ export function actionFor(r, b) {
 /** The guard a talker works on when nobody picked one: the one least hurt, who has most to lose. */
 const talkTarget = (b) => up(b).sort((a, c) => c.hp - a.hp || a.n - c.n)[0];
 
-const STAT_OF = { shoot: 'combat', flank: 'combat', hunker: null, patch: 'medical', stabilise: 'medical', talk: 'social', lights: 'tech' };
+const STAT_OF = { shoot: 'combat', flank: 'combat', hunker: null, move: null, patch: 'medical', stabilise: 'medical', talk: 'social', lights: 'tech' };
 const isMedic = (r) => r.stats.medical.value + r.patch >= BATTLE.patchMin;
 
 /** Whether an order can be carried out now. A runner whose order can't is left to the crew's own call (actionFor). */
@@ -168,6 +172,7 @@ function canDo(b, r, o) {
   switch (o?.kind) {
     case 'shoot': case 'flank': case 'talk': return guard;
     case 'hunker': return true;
+    case 'move': return freeSpots(b).includes(o.target);
     case 'patch': return isMedic(r) && !!mate && !mate.down && mate.hp < mate.max;
     case 'stabilise': return isMedic(r) && !!mate && mate.down && mate.fightOn && !mate.stable;
     case 'lights': return !b.lights && up(b).length > 0;
@@ -175,10 +180,17 @@ function canDo(b, r, o) {
   }
 }
 
+/** The crew's spots nobody standing or down is on: where a runner can move to. */
+export function freeSpots(b) {
+  const used = new Set(b.runners.map((r) => r.spot));
+  return (b.spots?.crew ?? []).map((_, i) => i).filter((i) => !used.has(i));
+}
+
 /**
  * Everything a runner can be ordered to do this round, with the chance each has (fightChance: the
  * same numbers the round rolls against, so shown equals used). auto marks what the crew would do
- * on its own. [{ kind, target, stat, chance, cover?, heal?, auto }]: target a guard's n or a runner's id.
+ * on its own. [{ kind, target, stat, chance, cover?, heal?, at?, auto }]: target a guard's n, a runner's
+ * id, or for a move the spot's index (spots.crew).
  */
 export function ordersFor(b, id) {
   const r = b.runners.find((x) => x.id === id && !x.down);
@@ -190,6 +202,7 @@ export function ordersFor(b, id) {
   for (const g of up(b)) add({ kind: 'shoot', target: g.n, stat: 'combat', chance: fightChance(s('combat'), shotDiff(b, g)), cover: coverNow(g) });
   for (const g of up(b)) add({ kind: 'flank', target: g.n, stat: 'combat', chance: fightChance(s('combat'), b.diff + BATTLE.shootStep + BATTLE.cover.open), cover: 'open' });
   add({ kind: 'hunker', target: null, stat: null, chance: 1, cover: better(coverNow(r)) });
+  for (const i of freeSpots(b)) add({ kind: 'move', target: i, stat: null, chance: 1, cover: b.spots.crew[i].cover, at: b.spots.crew[i].at });
   if (isMedic(r)) {
     for (const x of b.runners) {
       if (x.down && x.fightOn && !x.stable) add({ kind: 'stabilise', target: x.id, stat: 'medical', chance: fightChance(s('medical'), BATTLE.stabilise) });
@@ -234,11 +247,18 @@ export function playRound(b, rng, orders = {}) {
   let neural = 0;
   const line = (x) => { lines.push(x); return x; };
 
-  // The player's orders, checked now; hunkering and flanking change where people stand this round.
+  // The player's orders, checked now; moving, hunkering and flanking change where people stand.
+  // A move is to a new spot for good (its cover from now on), and takes the runner's turn.
   const given = new Map(standing(b).filter((r) => canDo(b, r, orders[r.id])).map((r) => [r.id, { ...orders[r.id], stat: STAT_OF[orders[r.id].kind] }]));
   for (const r of standing(b)) {
     const o = given.get(r.id);
     if (o?.kind === 'hunker') { r.now = better(coverNow(r)); r.hunker = true; }
+    if (o?.kind === 'move' && !freeSpots(b).includes(o.target)) given.delete(r.id); // someone got there first: their own call
+    else if (o?.kind === 'move') {
+      r.spot = o.target;
+      r.cover = b.spots.crew[o.target].cover;
+      line({ kind: 'move', actor: { id: r.id, handle: r.handle }, spot: o.target, to: b.spots.crew[o.target].at, cover: r.cover, text: `${r.handle} moves ${r.cover === 'open' ? 'out into the open' : `into ${r.cover} cover`}.` });
+    }
     if (o?.kind === 'flank') { r.now = 'open'; b.guards.find((g) => g.n === o.target).now = 'open'; }
   }
 
@@ -261,6 +281,7 @@ export function playRound(b, rng, orders = {}) {
   for (const r of [...standing(b)].sort((a, c) => flankFirst(a) - flankFirst(c))) {
     if (!up(b).length && !b.runners.some((x) => x.down && x.fightOn && !x.stable)) break;
     const mine = given.get(r.id);
+    if (mine?.kind === 'move') continue; // moved at the start of the round
     const act = mine && canDo(b, r, mine) ? mine : mine && (mine.kind === 'shoot' || mine.kind === 'flank') && up(b).length ? { ...mine, kind: 'shoot', target: targetOf(b).n } : actionFor(r, b);
     if (act.kind === 'hunker') {
       line({ kind: 'hunker', actor: { id: r.id, handle: r.handle }, cover: coverNow(r), text: `${r.handle} gets down behind ${coverNow(r) === 'full' ? 'solid cover' : 'what cover there is'}.` });
