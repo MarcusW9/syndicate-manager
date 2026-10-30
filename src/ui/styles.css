@@ -932,6 +932,7 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 
 /* District sites (data/sites.js, slice 4). */
 .sp-water { fill: #0d1620; } .sp-jetty { fill: #2a2f3b; } .sp-desk { fill: #222837; }
+.sp-cable { stroke: var(--accent-2); stroke-width: 1.2; stroke-dasharray: 3 2; opacity: 0.6; } .sp-cot { fill: #2a303b; }
 .sp-yard { fill: #10141a; } .sp-alley { fill: #12141a; } .sp-step { fill: #2a2f3b; }
 .sp-room { fill: #1d1520; stroke: var(--accent); stroke-width: 1; stroke-dasharray: 2 2; }
 .sp-block { fill: #141820; stroke: #2f3644; stroke-width: 1; }
