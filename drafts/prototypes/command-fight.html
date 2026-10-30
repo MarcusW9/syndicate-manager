@@ -1,0 +1,467 @@
+<title>Command Fight</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Prototype (2026-10-30): one fight from a loud job, played with orders each round. Not part of the
+   game; the rules mirror src/core/battle.js loosely so the feel can be judged before the engine changes.
+   Layout: one phone-width column. Guards (with their intent) over your crew (with their orders), a
+   sticky Go bar, the round log underneath. Single dark look on purpose: the game's street-terminal skin. */
+:root {
+  --bg: #0a0c0f;
+  --panel: #12151b;
+  --panel-2: #161a21;
+  --line: #2a303b;
+  --text: #e9ecf1;
+  --muted: #8a93a6;
+  --accent: #ff3d5f;
+  --accent-2: #3de8d8;
+  --warn: #f2d541;
+  --danger: #ff4a4a;
+  --good: #5fe0a5;
+  --foe: #9b2f3f;
+  --display: 'Rajdhani', 'Arial Narrow', system-ui, sans-serif;
+  --body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --tap: 44px;
+  --cut: 10px;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--text); }
+body {
+  font-family: var(--body); font-size: 15px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 0;
+  background-image: linear-gradient(rgba(61,232,216,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(61,232,216,0.025) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+button { font: inherit; color: inherit; cursor: pointer; }
+.wrap { max-width: 560px; margin: 0 auto; display: grid; gap: 16px; padding-bottom: 120px; }
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; letter-spacing: 0.04em; }
+h1 { font-size: 1.7rem; font-weight: 700; text-transform: uppercase; }
+h2 { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; color: var(--accent-2); }
+.intro { color: var(--muted); margin: 4px 0 0; }
+.tag { font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.78rem; color: var(--muted); }
+.panel {
+  background: linear-gradient(var(--panel-2), var(--panel)); border: 1px solid var(--line); padding: 12px;
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+  display: grid; gap: 10px;
+}
+.row-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+
+/* Health: segmented like the game's gauges, one segment per 2 HP. */
+.hp { display: flex; gap: 2px; align-items: center; }
+.hp i { width: 6px; height: 6px; background: var(--line); }
+.hp i.on { background: var(--accent-2); }
+.hp.low i.on { background: var(--warn); } .hp.crit i.on { background: var(--danger); }
+.hp.foe i.on { background: var(--accent); }
+.hpnum { font-family: var(--mono); font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* Guards: one card each, with what they're about to do. */
+.guards { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.guard { border: 1px solid #4a2230; background: #160d12; padding: 10px; display: grid; gap: 6px; }
+.guard.out { opacity: 0.4; }
+.guard .name { font-family: var(--display); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #ff8a98; }
+.intent { font-size: 0.88rem; }
+.intent b { color: var(--warn); font-weight: 600; }
+.intent .odds { color: var(--muted); font-family: var(--mono); font-size: 0.78rem; display: block; }
+.intent.pinned b { color: var(--accent-2); }
+
+/* Your crew: one row each; the order underneath, editable. */
+.runner { border: 1px solid var(--line); background: var(--panel); padding: 10px; display: grid; gap: 8px; }
+.runner.down { opacity: 0.55; }
+.runner .who { display: flex; gap: 10px; align-items: center; }
+.badge { width: 34px; height: 34px; display: grid; place-items: center; font-family: var(--display); font-weight: 700; color: #0b0d11; flex: none; }
+.runner .name { font-family: var(--display); font-weight: 700; font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.runner .meta { color: var(--muted); font-size: 0.82rem; }
+.acts, .targets { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  min-height: var(--tap); padding: 6px 12px; border: 1px solid var(--line); background: var(--panel-2);
+  font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.86rem;
+  clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 0 100%);
+}
+.chip[aria-pressed="true"] { border-color: var(--accent-2); color: var(--accent-2); background: #0f2020; }
+.chip:disabled { opacity: 0.35; cursor: not-allowed; }
+.chip .cd { color: var(--muted); font-family: var(--mono); font-size: 0.72rem; text-transform: none; margin-left: 4px; }
+.chip.ability { border-color: #5a4a20; }
+.chip.ability[aria-pressed="true"] { border-color: var(--warn); color: var(--warn); background: #211d0c; }
+.order { font-size: 0.9rem; }
+.order .odds { font-family: var(--mono); font-size: 0.8rem; color: var(--accent-2); }
+
+/* The Go bar sticks to the bottom, clear of the phone's edge. */
+.bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background: rgba(10,12,15,0.94); border-top: 1px solid var(--line);
+}
+.bar .in { max-width: 560px; margin: 0 auto; display: flex; gap: 8px; }
+.btn {
+  min-height: var(--tap); padding: 8px 16px; border: 1px solid var(--line); background: var(--panel-2);
+  font-family: var(--display); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em;
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+}
+.btn.go { background: var(--accent); border-color: var(--accent); color: #fff; flex: 1; }
+.btn.ghost { color: var(--accent-2); }
+
+/* The round log, newest round at the top. */
+.log { display: grid; gap: 10px; }
+.round { border-left: 2px solid var(--line); padding-left: 10px; display: grid; gap: 2px; }
+.round h3 { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.14em; }
+.line { font-size: 0.92rem; }
+.line.good { color: var(--good); } .line.bad { color: #ffb0a0; } .line.warn { color: var(--warn); } .line.plain { color: var(--text); }
+.roll { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-left: 4px; }
+
+/* Call-ins and the level-up use the game's call-in look. */
+.callin { border: 1px solid var(--warn); background: #1a170a; padding: 14px; display: grid; gap: 10px; }
+.callin h2 { color: var(--warn); }
+.choice { text-align: left; min-height: var(--tap); padding: 10px 12px; border: 1px solid var(--line); background: var(--panel); display: grid; gap: 2px; }
+.choice b { font-family: var(--display); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.choice span { color: var(--muted); font-size: 0.86rem; }
+.choice:hover { border-color: var(--accent-2); }
+.how { color: var(--muted); font-size: 0.86rem; }
+.how summary { cursor: pointer; font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent-2); min-height: var(--tap); display: flex; align-items: center; }
+.how ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+@media (prefers-reduced-motion: no-preference) { .round.new { animation: in 0.35s ease-out; } }
+@keyframes in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="tag">Prototype · command fights</span>
+    <h1>The yard office, gone loud</h1>
+    <p class="intro">Three guards between your crew and the office. Each round, see who every guard is aiming at, give your people their orders, then Go. Everyone starts on what they'd do on their own.</p>
+  </header>
+
+  <details class="how panel">
+    <summary>How it works</summary>
+    <ul>
+      <li><b>Shoot</b> a guard: the odds and the damage are on the button. Armour takes 1 off a hit.</li>
+      <li><b>Cover</b>: no shot this round, but guards aiming at you are much less likely to hit.</li>
+      <li><b>Abilities</b> come from rank. Some need a round or two to come back.</li>
+      <li>Guards pick their target before you order. Half the time they go for whoever is hurt worst.</li>
+      <li>At 0 HP someone is down, not dead. Up to 4 rounds, then you decide: push past or pull back.</li>
+    </ul>
+  </details>
+
+  <section aria-labelledby="g-h" class="panel">
+    <div class="row-head"><h2 id="g-h">Guards</h2><span class="tag" id="round-tag"></span></div>
+    <div class="guards" id="guards"></div>
+  </section>
+
+  <section aria-labelledby="c-h" class="panel">
+    <h2 id="c-h">Your crew · orders</h2>
+    <div id="crew" style="display:grid; gap:8px"></div>
+  </section>
+
+  <div id="callin"></div>
+
+  <section aria-labelledby="l-h" class="panel">
+    <h2 id="l-h">What happened</h2>
+    <div class="log" id="log"><p class="how">Nothing yet. Give your orders and press Go.</p></div>
+  </section>
+</div>
+
+<div class="bar"><div class="in">
+  <button class="btn ghost" id="auto-round" type="button">Auto round</button>
+  <button class="btn ghost" id="auto-rest" type="button">Auto rest</button>
+  <button class="btn go" id="go" type="button">Go</button>
+</div></div>
+
+<script>
+// --- numbers (the engine's rules, simplified) ------------------------------------------------
+// Roll: d20 + stat >= 10 + difficulty. Shots at 12; guards hit with skill 12 against the target's cool.
+const SHOT = 12, GUARD_SKILL = 12, COVER = 4, PATCH_DIFF = 6, ROUNDS = 4;
+const pct = (stat, diff) => Math.max(0.05, Math.min(0.95, (21 - (10 + diff - stat)) / 20));
+const d20 = () => 1 + Math.floor(Math.random() * 20);
+const P = (x) => `${Math.round(x * 100)}%`;
+
+const ABILITIES = {
+  doubletap: { name: 'Double Tap', cooldown: 2, target: 'guard', desc: 'Two shots at one guard, each 1 harder.' },
+  suppress: { name: 'Suppress', cooldown: 2, target: 'guard', desc: 'On a hit, that guard can\'t shoot this round.' },
+  patch: { name: 'Patch', cooldown: 0, target: 'ally', desc: 'Heal a teammate 5.' },
+  stim: { name: 'Stim', cooldown: 3, target: 'ally', desc: 'A teammate gets +3 to hit this round.' },
+};
+const PERKS = {
+  doubletap: { name: 'Double Tap', desc: 'Two shots at one guard every other round.' },
+  steady: { name: 'Steady Hands', desc: '+2 on every shot, for good.' },
+  tough: { name: 'Hard to Kill', desc: '+4 health, and cover works better for them (+6).' },
+};
+const START = () => [
+  { id: 'jax', name: 'Jax', rank: 'Veteran', role: 'Muscle', color: '#ff9a3d', combat: 15, cool: 12, medical: 6, max: 15, dmg: 4, weapon: 'Pro sidearm 4', armour: 1, gear: 'Vest', abilities: ['doubletap', 'suppress'], hitBonus: 0, coverBonus: COVER },
+  { id: 'stitch', name: 'Stitch', rank: 'Pro', role: 'Medic', color: '#5fe0a5', combat: 9, cool: 11, medical: 14, max: 13, dmg: 3, weapon: 'Sidearm 3', armour: 0, gear: 'Trauma kit', abilities: ['patch', 'stim'], hitBonus: 0, coverBonus: COVER },
+  { id: 'kit', name: 'Kit', rank: 'Rookie', role: 'Driver', color: '#b48cff', combat: 9, cool: 9, medical: 5, max: 12, dmg: 2, weapon: 'Street piece 2', armour: 0, gear: '', abilities: [], hitBonus: 0, coverBonus: COVER },
+];
+const GUARDS = () => [
+  { n: 1, max: 6, armour: 0, dmg: 3 }, { n: 2, max: 6, armour: 0, dmg: 3 }, { n: 3, max: 7, armour: 1, dmg: 3 },
+];
+
+// --- state -----------------------------------------------------------------------------------
+let crew = START();
+let fightNo = 1;
+let perkTaken = null;
+let S; // { round, guards, runners, orders, cooldowns, intents, stim, over, call, log }
+
+function newFight() {
+  const runners = crew.map((c) => ({ ...c, hp: c.max, down: false, fightOn: false }));
+  S = { round: 1, guards: GUARDS().map((g) => ({ ...g, hp: g.max, out: false })), runners, cooldowns: {}, intents: {}, orders: {}, stim: null, over: null, call: null, log: [] };
+  rollIntents();
+  defaultOrders();
+  render();
+}
+
+const up = () => S.guards.filter((g) => !g.out);
+const standing = () => S.runners.filter((r) => !r.down);
+const byId = (id) => S.runners.find((r) => r.id === id);
+const guardN = (n) => S.guards.find((g) => g.n === n);
+
+// Guards choose who to go for before you give orders: half go for whoever is hurt worst.
+function rollIntents() {
+  S.intents = {};
+  for (const g of up()) {
+    const pool = standing();
+    if (!pool.length) break;
+    const worst = [...pool].sort((a, b) => a.hp / a.max - b.hp / b.max)[0];
+    S.intents[g.n] = Math.random() < 0.5 ? worst.id : pool[Math.floor(Math.random() * pool.length)].id;
+  }
+}
+
+// What the crew would do on its own: the medic patches anyone under half, everyone else shoots the
+// guard aiming at the most hurt teammate, or else the most hurt guard.
+function defaultOrder(r) {
+  const hurt = standing().filter((x) => x.hp < x.max / 2).sort((a, b) => a.hp - b.hp)[0];
+  if (r.abilities.includes('patch') && hurt) return { act: 'patch', target: hurt.id };
+  const aimedAtWeakest = up().map((g) => ({ g, t: byId(S.intents[g.n]) })).filter((x) => x.t).sort((a, b) => a.t.hp / a.t.max - b.t.hp / b.t.max)[0];
+  const target = aimedAtWeakest?.g ?? [...up()].sort((a, b) => a.hp - b.hp)[0];
+  return { act: 'shoot', target: target?.n ?? null };
+}
+function defaultOrders() { S.orders = {}; for (const r of standing()) S.orders[r.id] = defaultOrder(r); }
+
+// --- the odds shown on buttons, and used when the round plays ---------------------------------
+const shotChance = (r, extra = 0) => pct(r.combat + r.hitBonus + (S.stim === r.id ? 3 : 0) + extra, SHOT);
+const hitFor = (r, g) => Math.max(1, r.dmg - g.armour);
+function guardChance(g, r) {
+  const cover = S.orders[r.id]?.act === 'cover';
+  return pct(GUARD_SKILL, r.cool + (cover ? r.coverBonus : 0));
+}
+function orderText(r) {
+  const o = S.orders[r.id];
+  if (!o) return '';
+  const g = o.target != null ? guardN(o.target) : null;
+  if (o.act === 'shoot') return `Shoot guard ${g.n} · <span class="odds">${P(shotChance(r))} · ${hitFor(r, g)} dmg</span>`;
+  if (o.act === 'doubletap') return `Double Tap guard ${g.n} · <span class="odds">2 × ${P(shotChance(r, -1))} · ${hitFor(r, g)} dmg each</span>`;
+  if (o.act === 'suppress') return `Suppress guard ${g.n} · <span class="odds">${P(shotChance(r))} to pin them down</span>`;
+  if (o.act === 'cover') return `Take cover · <span class="odds">guards need ${10 + r.cool + r.coverBonus - GUARD_SKILL}+ on a d20</span>`;
+  if (o.act === 'patch') { const t = byId(o.target); return `Patch ${t.name} · <span class="odds">${P(pct(r.medical, PATCH_DIFF))} · +5</span>`; }
+  if (o.act === 'stim') { const t = byId(o.target); return `Stim ${t.name} · <span class="odds">+3 to hit this round</span>`; }
+  return '';
+}
+
+// --- playing a round -------------------------------------------------------------------------
+function playRound() {
+  const lines = [];
+  const say = (text, tone = 'plain', roll = '') => lines.push({ text, tone, roll });
+  const pinned = new Set();
+  // Stim lands first, so the teammate it's for gets it this round.
+  for (const r of standing()) { const o = S.orders[r.id]; if (o?.act === 'stim') { S.stim = o.target; S.cooldowns[r.id + ':stim'] = ABILITIES.stim.cooldown; say(`${r.name} jabs a stim into ${byId(o.target).name}.`, 'good'); } }
+  for (const r of standing()) {
+    const o = S.orders[r.id];
+    if (!o || o.act === 'stim' || o.act === 'cover') { if (o?.act === 'cover') say(`${r.name} gets down behind a container.`, 'plain'); continue; }
+    if (o.act === 'patch') {
+      const t = byId(o.target); const die = d20(); const ok = die + r.medical >= 10 + PATCH_DIFF;
+      if (ok) { const heal = Math.min(5, t.max - t.hp); t.hp += heal; say(`${r.name} patches ${t.name}: +${heal}.`, 'good', `${die}+${r.medical} vs ${10 + PATCH_DIFF}`); }
+      else say(`${r.name} can't patch ${t.name} under fire.`, 'bad', `${die}+${r.medical} vs ${10 + PATCH_DIFF}`);
+      continue;
+    }
+    let g = guardN(o.target);
+    if (!g || g.out) g = up()[0];
+    if (!g) break;
+    const shots = o.act === 'doubletap' ? 2 : 1;
+    if (o.act !== 'shoot') S.cooldowns[r.id + ':' + o.act] = ABILITIES[o.act].cooldown;
+    for (let k = 0; k < shots && !g.out; k++) {
+      const extra = o.act === 'doubletap' ? -1 : 0;
+      const val = r.combat + r.hitBonus + (S.stim === r.id ? 3 : 0) + extra;
+      const die = d20(); const hit = die + val >= 10 + SHOT;
+      const roll = `${die}+${val} vs ${10 + SHOT}`;
+      if (o.act === 'suppress') {
+        if (hit) { pinned.add(g.n); say(`${r.name} pins guard ${g.n} down. They won't get a shot off.`, 'good', roll); }
+        else say(`${r.name}'s suppressing fire goes wide.`, 'bad', roll);
+        continue;
+      }
+      if (!hit) { say(`${r.name} misses guard ${g.n}.`, 'bad', roll); continue; }
+      const d = hitFor(r, g); g.hp = Math.max(0, g.hp - d);
+      if (g.hp === 0) g.out = true;
+      say(`${o.act === 'doubletap' ? `${r.name} double taps` : `${r.name} hits`} guard ${g.n} for ${d}${g.armour ? ' (armour 1)' : ''}${g.out ? '. Down.' : '.'}`, 'good', roll);
+    }
+  }
+  // The guards go for who they said they would (or anyone standing, if that one is down).
+  for (const g of up()) {
+    if (pinned.has(g.n)) { say(`Guard ${g.n} keeps their head down.`, 'good'); continue; }
+    let t = byId(S.intents[g.n]);
+    if (!t || t.down) t = standing()[0];
+    if (!t) break;
+    const cover = S.orders[t.id]?.act === 'cover';
+    const need = 10 + t.cool + (cover ? t.coverBonus : 0);
+    const die = d20(); const hit = die + GUARD_SKILL >= need;
+    const roll = `${die}+${GUARD_SKILL} vs ${need}`;
+    if (!hit) { say(`Guard ${g.n} misses ${t.name}${cover ? ' in cover' : ''}.`, 'good', roll); continue; }
+    const d = Math.max(1, g.dmg - t.armour); t.hp = Math.max(0, t.hp - d);
+    if (t.hp === 0) { t.down = true; say(`Guard ${g.n} hits ${t.name} for ${d}. ${t.name} is down.`, 'bad', roll); }
+    else say(`Guard ${g.n} hits ${t.name} for ${d}${t.armour ? ' (vest took 1)' : ''}.`, 'bad', roll);
+  }
+  // Morale: the last guard up, badly hurt, runs for it.
+  const left = up();
+  if (left.length === 1 && left[0].hp < left[0].max / 2) { left[0].out = true; left[0].fled = true; say(`Guard ${left[0].n} breaks and runs.`, 'warn'); }
+  S.stim = null;
+  for (const k of Object.keys(S.cooldowns)) if (S.cooldowns[k] > 0) S.cooldowns[k] -= 1;
+  S.log.unshift({ round: S.round, lines });
+}
+
+function afterRound() {
+  if (!up().length) return finish('won');
+  if (!standing().length) return finish('dragged');
+  const down = S.runners.find((r) => r.down && !r.fightOn && !r.asked);
+  if (down) { down.asked = true; S.call = { kind: 'door', id: down.id }; return; }
+  if (S.round >= ROUNDS) { S.call = { kind: 'standoff' }; return; }
+  S.round += 1;
+  rollIntents();
+  defaultOrders();
+}
+
+function finish(how) {
+  const bleeding = S.runners.filter((r) => r.down && r.fightOn);
+  const medic = standing().find((r) => r.abilities.includes('patch'));
+  const fates = bleeding.map((r) => (medic || Math.random() < 0.65 ? `${r.name} pulls through, badly hurt.` : `${r.name} doesn't make it.`));
+  const head = { won: 'The yard is yours.', pulled: 'The crew pulls back. Everyone comes home; the job is lost.', pushed: 'The crew pushes past the guards still standing. The alarm is up.', dragged: 'Nobody left standing: the van comes in and gets them all out.' }[how];
+  S.over = { how, head, fates };
+  S.call = null;
+}
+
+// --- input -----------------------------------------------------------------------------------
+function setOrder(id, patch) { S.orders[id] = { ...S.orders[id], ...patch }; render(); }
+function go() {
+  if (S.over || S.call) return;
+  playRound(); afterRound(); render();
+  document.getElementById('log').querySelector('.round')?.classList.add('new');
+}
+function autoRound() { if (S.over || S.call) return; defaultOrders(); go(); }
+function autoRest() { let guard = 0; while (!S.over && !S.call && guard++ < 10) { defaultOrders(); playRound(); afterRound(); } render(); }
+
+document.getElementById('go').addEventListener('click', go);
+document.getElementById('auto-round').addEventListener('click', autoRound);
+document.getElementById('auto-rest').addEventListener('click', autoRest);
+
+// --- drawing ---------------------------------------------------------------------------------
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function hpBar(hp, max, foe) {
+  const segs = Math.ceil(max / 2), lit = hp <= 0 ? 0 : Math.ceil(hp / 2);
+  const cls = foe ? 'foe' : hp / max < 0.25 ? 'crit' : hp / max < 0.5 ? 'low' : '';
+  return `<span class="hp ${cls}" aria-label="${hp} of ${max} health">${Array.from({ length: segs }, (_, i) => `<i class="${i < lit ? 'on' : ''}"></i>`).join('')}</span> <span class="hpnum">${hp}/${max}</span>`;
+}
+
+function renderGuards() {
+  document.getElementById('round-tag').textContent = S.over ? 'Over' : `Round ${S.round} of ${ROUNDS}`;
+  document.getElementById('guards').innerHTML = S.guards.map((g) => {
+    const t = byId(S.intents[g.n]);
+    const supp = Object.entries(S.orders).find(([id, o]) => o.act === 'suppress' && o.target === g.n);
+    let intent = '';
+    if (g.out) intent = g.fled ? 'Ran off.' : 'Down.';
+    else if (S.over) intent = 'Still standing.';
+    else if (t && !t.down) {
+      intent = `Aiming at <b>${esc(t.name)}</b><span class="odds">${P(guardChance(g, t))} to hit · ${Math.max(1, g.dmg - t.armour)} dmg${S.orders[t.id]?.act === 'cover' ? ' · in cover' : ''}</span>`;
+      if (supp) intent += `<span class="odds">${esc(byId(supp[0]).name)} will try to pin them (${P(shotChance(byId(supp[0])))})</span>`;
+    } else intent = 'Looking for a target.';
+    return `<div class="guard ${g.out ? 'out' : ''}"><div class="row-head"><span class="name">Guard ${g.n}</span>${g.armour ? '<span class="tag">vest</span>' : ''}</div>${hpBar(g.hp, g.max, true)}<div class="intent ${supp ? 'pinned' : ''}">${intent}</div></div>`;
+  }).join('');
+}
+
+function renderCrew() {
+  document.getElementById('crew').innerHTML = S.runners.map((r) => {
+    const o = S.orders[r.id];
+    const live = !S.over && !S.call && !r.down;
+    const ready = (a) => !(S.cooldowns[r.id + ':' + a] > 0);
+    const acts = [['shoot', 'Shoot'], ...r.abilities.map((a) => [a, ABILITIES[a].name]), ['cover', 'Cover']];
+    const actBtns = acts.map(([a, label]) => {
+      const cd = S.cooldowns[r.id + ':' + a];
+      const isAbility = a !== 'shoot' && a !== 'cover';
+      const needsHurt = a === 'patch' && !standing().some((x) => x.hp < x.max);
+      return `<button type="button" class="chip ${isAbility ? 'ability' : ''}" aria-pressed="${o?.act === a}" data-r="${r.id}" data-act="${a}" ${!live || !ready(a) || needsHurt ? 'disabled' : ''}>${label}${cd > 0 ? `<span class="cd">${cd} rnd</span>` : ''}</button>`;
+    }).join('');
+    let targets = '';
+    if (live && o && ['shoot', 'doubletap', 'suppress'].includes(o.act)) {
+      targets = up().map((g) => `<button type="button" class="chip" aria-pressed="${o.target === g.n}" data-r="${r.id}" data-target="${g.n}">Guard ${g.n} · ${P(shotChance(r, o.act === 'doubletap' ? -1 : 0))}</button>`).join('');
+    } else if (live && o && ['patch', 'stim'].includes(o.act)) {
+      targets = standing().filter((x) => o.act === 'stim' ? x.id !== r.id : x.hp < x.max).map((x) => `<button type="button" class="chip" aria-pressed="${o.target === x.id}" data-r="${r.id}" data-target="${x.id}">${esc(x.name)} ${x.hp}/${x.max}</button>`).join('');
+    }
+    return `<div class="runner ${r.down ? 'down' : ''}">
+      <div class="who"><span class="badge" style="background:${r.color}">${r.name[0]}</span>
+        <div style="min-width:0"><div class="name">${esc(r.name)} <span class="tag">${esc(r.rank)} · ${esc(r.role)}</span></div>
+        <div class="meta">${esc(r.weapon)}${r.armour ? ` · ${esc(r.gear)} 1` : r.gear ? ` · ${esc(r.gear)}` : ''}${r.perk ? ` · <b style="color:var(--warn)">${esc(PERKS[r.perk].name)}</b>` : ''}</div></div>
+        <div style="margin-left:auto; text-align:right">${hpBar(r.hp, r.max)}</div></div>
+      ${r.down ? `<div class="order">${r.fightOn ? 'Down and bleeding.' : 'Down.'}</div>` : live ? `<div class="acts" role="group" aria-label="${esc(r.name)}'s order">${actBtns}</div>${targets ? `<div class="targets" role="group" aria-label="Target">${targets}</div>` : ''}<div class="order">${orderText(r)}</div>` : ''}
+    </div>`;
+  }).join('');
+  for (const b of document.querySelectorAll('[data-act]')) b.addEventListener('click', () => {
+    const r = byId(b.dataset.r); const act = b.dataset.act; const o = S.orders[r.id];
+    if (act === 'cover') return setOrder(r.id, { act, target: null });
+    if (act === 'patch') return setOrder(r.id, { act, target: [...standing()].filter((x) => x.hp < x.max).sort((a, c) => a.hp / a.max - c.hp / c.max)[0]?.id });
+    if (act === 'stim') return setOrder(r.id, { act, target: standing().find((x) => x.id !== r.id)?.id });
+    setOrder(r.id, { act, target: o?.target && guardN(o.target) && !guardN(o.target).out ? o.target : up()[0]?.n });
+  });
+  for (const b of document.querySelectorAll('[data-target]')) b.addEventListener('click', () => {
+    const t = b.dataset.target; setOrder(b.dataset.r, { target: /^\d+$/.test(t) ? Number(t) : t });
+  });
+}
+
+function renderCall() {
+  const el = document.getElementById('callin');
+  if (S.call?.kind === 'door') {
+    const r = byId(S.call.id);
+    el.innerHTML = `<div class="callin"><h2>Calling in: someone is at death's door</h2><p>${esc(r.name)} is down and bleeding. They'll live if you get them out now.</p>
+      <button type="button" class="choice" data-call="out"><b>Pull back and get ${esc(r.name)} out</b><span>Everyone comes home. The job is lost.</span></button>
+      <button type="button" class="choice" data-call="fight"><b>Keep fighting with ${esc(r.name)} down</b><span>They could die unless the medic is still standing at the end.</span></button></div>`;
+  } else if (S.call?.kind === 'standoff') {
+    el.innerHTML = `<div class="callin"><h2>Calling in: the guards are still standing</h2><p>${ROUNDS} rounds in and ${up().length} still up.</p>
+      <button type="button" class="choice" data-call="press"><b>Push past them</b><span>The alarm goes up, but the job goes on.</span></button>
+      <button type="button" class="choice" data-call="out"><b>Pull back</b><span>Everyone comes home. The job is lost.</span></button></div>`;
+  } else if (S.over) {
+    const kit = S.runners.find((r) => r.id === 'kit');
+    const levelUp = S.over.how === 'won' && !perkTaken && !kit.down;
+    el.innerHTML = `<div class="callin"><h2>${S.over.how === 'won' ? 'Fight won' : 'Fight over'}</h2><p>${esc(S.over.head)}</p>${S.over.fates.map((f) => `<p>${esc(f)}</p>`).join('')}
+      ${levelUp ? `<p><b>Kit ranks up: Rookie → Pro.</b> +2 health, +1 combat, and one perk. Pick it:</p>${Object.entries(PERKS).map(([id, p]) => `<button type="button" class="choice" data-perk="${id}"><b>${p.name}</b><span>${p.desc}</span></button>`).join('')}` : `<button type="button" class="choice" data-call="again"><b>${perkTaken ? 'Next fight' : 'Fight again'}</b><span>${perkTaken ? `Same guards, Kit now a Pro with ${esc(PERKS[perkTaken].name)}.` : 'Same guards, same crew.'}</span></button>`}</div>`;
+  } else el.innerHTML = '';
+  for (const b of el.querySelectorAll('[data-call]')) b.addEventListener('click', () => {
+    const c = b.dataset.call;
+    if (c === 'again') { fightNo += 1; newFight(); window.scrollTo({ top: 0 }); return; }
+    if (c === 'out') return finish('pulled'), render();
+    if (c === 'press') return finish('pushed'), render();
+    if (c === 'fight') { byId(S.call.id).fightOn = true; S.call = null; if (S.round >= ROUNDS) S.call = { kind: 'standoff' }; else { S.round += 1; rollIntents(); defaultOrders(); } render(); }
+  });
+  for (const b of el.querySelectorAll('[data-perk]')) b.addEventListener('click', () => {
+    perkTaken = b.dataset.perk;
+    const kit = crew.find((c) => c.id === 'kit');
+    Object.assign(kit, { rank: 'Pro', combat: kit.combat + 1, max: kit.max + 2, perk: perkTaken });
+    if (perkTaken === 'doubletap') kit.abilities = ['doubletap'];
+    if (perkTaken === 'steady') kit.hitBonus = 2;
+    if (perkTaken === 'tough') { kit.max += 4; kit.coverBonus = 6; }
+    fightNo += 1; newFight(); window.scrollTo({ top: 0 });
+  });
+}
+
+function renderLog() {
+  const el = document.getElementById('log');
+  if (!S.log.length) { el.innerHTML = `<p class="how">${fightNo > 1 ? `Fight ${fightNo}. ` : ''}Nothing yet. Give your orders and press Go.</p>`; return; }
+  el.innerHTML = S.log.map((r) => `<div class="round"><h3>Round ${r.round}</h3>${r.lines.map((l) => `<div class="line ${l.tone}">${esc(l.text)}${l.roll ? `<span class="roll">${esc(l.roll)}</span>` : ''}</div>`).join('')}</div>`).join('');
+}
+
+function render() {
+  renderGuards(); renderCrew(); renderCall(); renderLog();
+  const busy = !!(S.over || S.call);
+  for (const id of ['go', 'auto-round', 'auto-rest']) document.getElementById(id).disabled = busy;
+}
+
+newFight();
+</script>
