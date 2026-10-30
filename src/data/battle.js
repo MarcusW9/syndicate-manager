@@ -25,9 +25,23 @@ export const BATTLE = {
   lightsOff: 3, // with the lights out, guards are this much worse at hitting anyone
 
   // Shots: a guard is an easier mark than a lock, so shooting is shootStep easier than the fight's
-  // difficulty; overwatch one easier again, as for saves. Guards hit with the fight's difficulty
-  // plus guardStep as their skill, against the runner's cool.
-  shootStep: -2, overwatchStep: -1, guardStep: -2,
+  // difficulty, plus the target's cover; overwatch one easier again, as for saves. Guards hit with
+  // the fight's difficulty plus guardStep as their skill, against the runner's cool plus their cover.
+  // Half cover is built into these steps (2026-10-30): a fight with everyone in half cover plays as
+  // fights did before cover existed (shootStep -2, guardStep -2, no cover).
+  shootStep: -4, overwatchStep: -1, guardStep: 0,
+
+  // Cover (command fights, 2026-10-30, after XCOM): everyone stands somewhere, and a shot at them is
+  // this much harder. Everyone starts a fight in startCover until the site map gives them spots.
+  cover: { open: 0, half: 2, full: 4 },
+  // Districts whose fights stand on spots read off the site map (core/fightspots.js; step 2 the
+  // Docks, step 3 the rest). Anywhere else everyone stands in startCover.
+  spotsIn: ['docks', 'oldTown', 'nightMarket', 'heights', 'basin'],
+  hunkerStep: 4, // hunkering: one step better cover and this much on top, for the round (no shot)
+  startCover: 'half',
+  // The player's orders, a round at a time (the crew's own call, core/battle.js actionFor, is the
+  // default): hunker (one step better cover this round, no shot), flank (round a guard's cover: they
+  // count as in the open for every shot this round, and so does the flanker for the guards' turn).
 
   // Guards by threat (index = threat 1-5): health, armour (flat soak), damage per hit.
   // More guards on bigger work, each lighter (2026-10-29): armour only on threat 5 security.

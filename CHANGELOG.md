@@ -5,6 +5,32 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-30 · Fights on the map in every district
+- **Old Town, the Night Market, Glass Heights and the Basin now fight on their maps too,** like the Docks: everyone stands behind something or out in the open, and the map zooms in on the fight.
+- **New things to hide behind:**
+  - Old Town: bins and a dumpster in the alley, and a handcart, washtubs and crates in the courtyard.
+  - Night Market: a cart and crates by the gate.
+  - Glass Heights: crates in the loading bay, plus the lobby desk and server cabinets inside.
+  - Basin: a horse trailer and hay bales at the service gate.
+  - Inside the targets: a table in the flat and in the clinic, and the vet's table.
+- **Market stalls, plaza planters, clinic cots and the stable blocks count as cover.**
+- In the Basin, the guards on the way in now wait further along the fence.
+
+## 2026-10-30 · You command the fights (the Docks first)
+- **Fights now stop for your orders each round** on any job you watch. Jobs sent off with "Never" still fight on their own.
+- **Fights in the Docks happen on the map.** The crew takes the best cover nearby: full behind a container, half behind a crate or a desk. The guards are wherever they were standing. Each person shows a shield for their cover, or an OPEN tag. Other districts still use the old fight picture for now: everyone counts as half cover there.
+- **You can see what the guards are about to do:** a red line from each guard to who they're aiming at, with their chance to hit.
+- **Each runner gets an order:** shoot or flank a guard, hunker down, move to better cover, patch someone, talk a guard down, or kill the lights. Every order shows its odds. Anyone you don't give an order to does what they'd do anyway.
+- **Auto round** plays one round your crew's way. **Auto fight** leaves the rest of the fight to them. **Pull back** is always there.
+- **The map zooms in on the fight,** with faces on the tokens. You can tap a runner, a guard, or a free spot to move to.
+- **New pallets by the Docks gates,** so a fight at the fence has some cover.
+
+## 2026-10-30 · Fights can take orders (the rules, not the screen yet)
+- **Under the hood, fights now have cover.** Everyone stands in the open, in half cover or in full cover, and that changes how hard they are to hit. For now everyone starts in half cover, which plays exactly like fights did before.
+- **The guards decide who they're aiming at before each round.** The screen doesn't show it yet; it will when orders reach the map.
+- **The rules can take an order for each runner each round,** with the chance for each shown: shoot a chosen guard, flank (works round a guard's cover, but leaves you in the open), hunker (much harder to hit, no shot), patch, stabilise, talk, or kill the lights. You can't give orders on screen yet. Until you can, everyone does what they would have done anyway.
+- Old saves still work. A save made mid-fight carries on with everyone in half cover.
+
 ## 2026-10-30 · Loading a save file works again
 - **Save → "Load save file into this slot" did nothing.** You could pick a file, but the game ignored it and showed no error. It loads now. Picking the same file twice in a row also works.
 - **A saved game that can't be opened is no longer lost.** If the game finds a save it can't open (saved by a newer version, which can happen for one launch after an update, or damaged), it now keeps that save and its weekly backup aside before starting fresh. A red banner says so, and the Save screen offers **Restore it**, **Download it** or **Throw away**. Before, the fresh game quietly saved over it, backup included.

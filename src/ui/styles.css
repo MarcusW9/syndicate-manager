@@ -1080,3 +1080,73 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .da-neon { font-family: 'Noto Sans CJK TC', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', 'WenQuanYi Zen Hei', sans-serif; font-weight: 700; }
 /* A save kept aside: the banner is red, not the backup reminder's yellow (after the skin's banner rule). */
 .banner.banner--danger { border-color: var(--danger); background: rgba(255, 74, 74, 0.08); }
+
+/* Command fights (2026-10-30, ui/fightorders.js and siteplan.js command): the fight on the map,
+   bigger while it's on and kept in view with the orders under it; faces on the tokens; cover
+   shields, the guards' aim, the orders given and the free spots drawn on top. */
+.watch.is-fighting .siteplan { height: min(42svh, 400px); }
+/* Tokens grow in a fight so faces read and taps land (the map is zoomed out to show everyone). */
+.siteplan.is-fight .sp-token > *, .siteplan.is-fight .sp-enemy > * { transform: scale(1.2); }
+.watch.is-fighting.is-calling .watch__live { position: sticky; }
+.watch.is-fighting .watch__callin { scroll-margin-top: calc(var(--live-top, 0px) + var(--live-h, 0px) + 8px); }
+.sp-face, .sp-face__ring { display: none; }
+.siteplan.is-fight .sp-enemy--post { display: none; } /* the guards still ahead step aside while a fight is on */
+.siteplan.is-fight .sp-token .sp-face, .siteplan.is-fight .sp-token .sp-face__ring { display: inline; }
+.siteplan.is-fight .sp-token > text { display: none; }
+.sp-face__ring { fill: none; stroke: #8a93a6; stroke-width: 1; }
+.siteplan.is-fight .sp-token.is-down .sp-face { opacity: 0.4; }
+.siteplan.is-command [data-action] { cursor: pointer; }
+.sp-cmd { pointer-events: none; }
+.sp-cmd .sp-spot { pointer-events: auto; }
+.sp-aim { stroke: var(--accent); stroke-width: 1; stroke-dasharray: 3 2.5; opacity: 0.9; }
+.sp-tag rect { fill: #160d12; stroke: #4a2230; stroke-width: 0.5; }
+.sp-tag text { fill: #ff8a98; font: 600 5px var(--display); text-anchor: middle; dominant-baseline: central; }
+.sp-order { stroke: var(--accent-2); stroke-width: 1.3; opacity: 0.9; }
+.sp-order--flank { stroke-dasharray: 1.5 2; stroke-width: 1.6; }
+.sp-order--move { stroke-dasharray: 3 2; }
+.sp-order--heal { stroke: #5fe0a5; }
+.sp-order--talk { stroke: var(--warn); stroke-dasharray: 1 2; }
+.sp-hunker { fill: none; stroke: var(--accent-2); stroke-width: 1.4; stroke-dasharray: 2 1.5; }
+.sp-sel { fill: none; stroke: var(--accent-2); stroke-width: 1.6; }
+.sp-sel--foe { stroke: var(--warn); stroke-dasharray: 2 1.5; }
+.sp-spot { fill: rgba(61, 232, 216, 0.08); stroke: var(--accent-2); stroke-width: 0.8; stroke-dasharray: 1.5 1.5; }
+.sp-spot--open { stroke: #6b7385; }
+.sp-spot.is-picked { fill: rgba(61, 232, 216, 0.2); stroke-dasharray: none; }
+.sp-cover-mark path { fill: var(--accent-2); }
+.sp-cover-mark .sp-cover-mark__edge { fill: none; stroke: var(--accent-2); stroke-width: 1.6; }
+.sp-cover-mark.is-foe path { fill: #ff8a98; } .sp-cover-mark.is-foe .sp-cover-mark__edge { fill: none; stroke: #ff8a98; }
+.sp-cover-mark--open rect { fill: #211d0c; stroke: var(--warn); stroke-width: 1; }
+.sp-cover-mark--open text { fill: var(--warn); font: 700 8px var(--display); text-anchor: middle; }
+
+.ffo { display: grid; gap: 10px; border: 1px solid var(--line); background: linear-gradient(var(--panel-2), var(--panel)); padding: 12px; clip-path: polygon(0 0, calc(100% - var(--cut, 10px)) 0, 100% var(--cut, 10px), 100% 100%, 0 100%); }
+.ffo-title { margin: 0; display: flex; justify-content: space-between; align-items: baseline; font: 700 0.95rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-2); }
+.ffo-title span { color: var(--accent); font-size: 0.78rem; }
+.ffo-last { font-size: 0.82rem; color: var(--muted); } .ffo-last summary { cursor: pointer; min-height: 32px; line-height: 1.4; }
+.ffo-last p { margin: 2px 0 0; } .ffo-last .tone--bad { color: #ff8a98; } .ffo-last .tone--good { color: var(--text); }
+.watch.is-fighting.is-calling .watch__new { display: none; }
+.ffo-intents { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.ffo-intents span { font: 600 0.72rem var(--display); letter-spacing: 0.08em; text-transform: uppercase; color: #ff8a98; border: 1px solid #4a2230; background: #160d12; padding: 2px 6px; }
+.ffo-intents--none { color: var(--muted); font-size: 0.85rem; }
+.ffo-crew { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(140px, 45%), 1fr)); gap: 6px; }
+.ffo-who { display: grid; gap: 1px; min-height: var(--tap, 44px); text-align: left; padding: 6px 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); font: inherit; cursor: pointer; clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 0 100%); }
+.ffo-who strong { font: 700 0.86rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; }
+.ffo-who.is-on { border-color: var(--accent-2); background: #12262a; }
+.ffo-who.is-down { opacity: 0.5; cursor: default; }
+.ffo-hp { font-size: 0.74rem; color: var(--muted); } .ffo-hp b { color: #ff8a98; font-weight: 600; }
+.ffo-hp.is-low { color: var(--warn); } .ffo-hp.is-crit { color: var(--danger); }
+.ffo-order { font-size: 0.74rem; color: var(--muted); } .ffo-order.is-set { color: var(--warn); font-weight: 600; }
+.ffo-targets { display: flex; flex-wrap: wrap; gap: 6px; }
+.ffo-target { min-height: var(--tap, 44px); padding: 4px 10px; border: 1px solid #4a2230; background: #160d12; color: #ff8a98; font: 700 0.8rem var(--display); letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
+.ffo-target span { display: block; font: 500 0.7rem system-ui, sans-serif; letter-spacing: 0; text-transform: none; color: var(--muted); }
+.ffo-target.is-on { border-color: var(--warn); color: var(--warn); }
+.ffo-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ffo-act { display: grid; gap: 2px; align-content: start; min-height: 52px; text-align: left; padding: 7px 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); font: inherit; cursor: pointer; clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); }
+.ffo-act b { font: 700 0.86rem var(--display); letter-spacing: 0.08em; text-transform: uppercase; }
+.ffo-act b i { font-style: normal; font-weight: 600; font-size: 0.66rem; color: var(--muted); letter-spacing: 0.06em; }
+.ffo-act span { font-size: 0.74rem; color: var(--accent-2); line-height: 1.3; }
+.ffo-act.is-on { border-color: var(--warn); background: #211d0c; } .ffo-act.is-on b { color: var(--warn); }
+.ffo-clear { justify-self: start; }
+.ffo-bar { display: grid; grid-template-columns: repeat(3, auto) 1fr; gap: 6px; }
+.ffo-bar .btn { min-height: var(--tap, 44px); padding-inline: 10px; }
+.ffo-note { margin: 0; color: var(--muted); font-size: 0.8rem; line-height: 1.4; }
+@media (max-width: 420px) { .ffo-bar { grid-template-columns: 1fr 1fr 1fr; } .ffo-go { grid-column: 1 / -1; } }

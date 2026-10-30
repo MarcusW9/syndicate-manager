@@ -3,12 +3,19 @@
 // function many times on fixed seeds (shown risk equals used risk). core/mission.js owns the run:
 // when a fight starts, the call-ins, pulling back, and what HP left turns into.
 //
-// A battle object (am.battle, save v26):
+// A battle object (am.battle, save v26; cover and intents v28):
 //   { incident, zone, diff, round, guards: [guard], runners: [runner], overwatch, wheels,
-//     lights, van, door: [opId] }
-// guard  { n, hp, max, armour, damage, out }            out: down, or talked into backing off
+//     lights, van, door: [opId], intents }
+// guard  { n, hp, max, armour, damage, out, cover, now } out: down, or talked into backing off
 // runner { id, handle, hp, max, armour, armourName, damage, weapon, stats, patch,
-//          down, fightOn, stable }                     stats: { stat: { value, notes } }
+//          down, fightOn, stable, cover, now }         stats: { stat: { value, notes } }
+// cover: where they stand (open, half, full); now: this round's, when an order changed it.
+// spot: their index in spots (the fight's places on the site map, core/fightspots.js), or null.
+// spots: { crew: [{ at, cover }], guards: [...] } or null where the site gives none.
+// intents: what each guard means to do this round, rolled before orders ([{ guard, target }]).
+//
+// Command fights (2026-10-30): the player can give each runner an order a round (playRound's
+// orders); anyone without one does what the crew would (actionFor), as on a hands-off run.
 //
 // Death's door: a runner at 0 HP is down, never dead. Only after the player chooses to keep
 // fighting (fightOn) can they die, and that runs through the existing "push on" rule (am.untreated).
@@ -70,7 +77,7 @@ export function armourOf(op) {
 export function guardsFor(threat, count) {
   const t = Math.max(1, Math.min(5, Math.round(threat)));
   const n = Math.min(BATTLE.maxGuards, count + BATTLE.extraGuards[t]);
-  return Array.from({ length: n }, (_, i) => ({ n: i + 1, hp: BATTLE.guardHp[t], max: BATTLE.guardHp[t], armour: BATTLE.guardArmour[t], damage: BATTLE.guardDamage[t], out: false }));
+  return Array.from({ length: n }, (_, i) => ({ n: i + 1, hp: BATTLE.guardHp[t], max: BATTLE.guardHp[t], armour: BATTLE.guardArmour[t], damage: BATTLE.guardDamage[t], out: false, cover: BATTLE.startCover, now: null }));
 }
 
 /** A runner as they enter a fight: their numbers, read once (gear, traits and the approach included). */
@@ -82,7 +89,7 @@ export function runnerOf(op, approach) {
   return {
     id: op.id, handle: op.handle, hp: max - hurt, max, armour: a.value, armourName: a.name, damage: w.damage, weapon: w.name,
     stats: Object.fromEntries(FIGHT_STATS.map((s) => [s, effectiveStat(op, s, { approach })])),
-    patch: patchBonus(op), down: false, fightOn: false, stable: false,
+    patch: patchBonus(op), down: false, fightOn: false, stable: false, cover: BATTLE.startCover, now: null,
   };
 }
 
@@ -103,14 +110,16 @@ export function overwatchOf(op, ow, zone) {
  * Build a fight. crew: the inside team still standing (operatives). overwatchOp/ow: the run's
  * overwatch (am.overwatch). wheels: the driver in the van, who can bring it round.
  */
-export function buildBattle({ incident, zone, diff, threat, guards, crew, approach, overwatchOp = null, ow = null, wheels = null, ambush = false }) {
+export function buildBattle({ incident, zone, diff, threat, guards, crew, approach, overwatchOp = null, ow = null, wheels = null, ambush = false, spots = null }) {
+  // On a site with spots, each side takes the best cover going (spots come best first).
+  const onSpot = (x, i, side) => (spots?.[side]?.[i] ? { ...x, spot: i, cover: spots[side][i].cover } : { ...x, spot: null });
   return {
-    incident, zone, diff, round: 0, ambush,
-    guards: guardsFor(threat, guards),
-    runners: crew.map((op) => runnerOf(op, approach)),
+    incident, zone, diff, round: 0, ambush, spots,
+    guards: guardsFor(threat, guards).map((g, i) => onSpot(g, i, 'guards')),
+    runners: crew.map((op, i) => onSpot(runnerOf(op, approach), i, 'crew')),
     overwatch: overwatchOf(overwatchOp, ow, zone),
     wheels: wheels ? { id: wheels.id, handle: wheels.handle, ...effectiveStat(wheels, 'driving', { approach }) } : null,
-    lights: false, van: false, door: [],
+    lights: false, van: false, door: [], intents: null, auto: false,
   };
 }
 
@@ -118,6 +127,17 @@ const up = (b) => b.guards.filter((g) => !g.out);
 const standing = (b) => b.runners.filter((r) => !r.down);
 const roll = (rng, value, diff) => { const die = d20(rng); return { die, need: 10 + diff, success: die + value >= 10 + diff }; };
 const guardName = (g, b) => (b.guards.length > 1 ? `guard ${g.n}` : 'the guard');
+
+/** The chance of a fight roll, exactly as roll() makes it (d20 + value >= 10 + diff, no caps): what the orders show. */
+export const fightChance = (value, diff) => Math.min(1, Math.max(0, (11 + value - diff) / 20));
+
+const COVERS = ['open', 'half', 'full'];
+/** Where someone stands this round: their spot's cover, or what this round's orders made it. */
+export const coverNow = (x) => x.now ?? x.cover ?? BATTLE.startCover;
+const coverStep = (x) => BATTLE.cover[coverNow(x)];
+const better = (c) => COVERS[Math.min(COVERS.length - 1, COVERS.indexOf(c) + 1)];
+/** A shot's difficulty at a guard: the fight's, shootStep, and their cover. */
+const shotDiff = (b, g) => b.diff + BATTLE.shootStep + coverStep(g);
 
 /** The one hit rule: armour comes off every hit, and a hit that lands always does at least 1. */
 export const hitFor = (damage, armour) => Math.max(1, damage - armour);
@@ -134,22 +154,92 @@ export function actionFor(r, b) {
   if (medic && dying) return { kind: 'stabilise', stat: 'medical', target: dying.id };
   const hurt = standing(b).filter((x) => x.hp < x.max * BATTLE.lightBelow).sort((a, c) => a.hp / a.max - c.hp / c.max)[0];
   if (medic && hurt && s('medical') > s('combat')) return { kind: 'patch', stat: 'medical', target: hurt.id };
-  if (s('social') >= s('combat') + BATTLE.lean && up(b).length) return { kind: 'talk', stat: 'social' };
-  if (s('tech') >= s('combat') + BATTLE.lean && !b.lights) return { kind: 'lights', stat: 'tech' };
-  return { kind: 'shoot', stat: 'combat' };
+  if (s('social') >= s('combat') + BATTLE.lean && up(b).length) return { kind: 'talk', stat: 'social', target: talkTarget(b)?.n ?? null };
+  if (s('tech') >= s('combat') + BATTLE.lean && !b.lights) return { kind: 'lights', stat: 'tech', target: null };
+  return { kind: 'shoot', stat: 'combat', target: targetOf(b)?.n ?? null };
+}
+
+/** The guard a talker works on when nobody picked one: the one least hurt, who has most to lose. */
+const talkTarget = (b) => up(b).sort((a, c) => c.hp - a.hp || a.n - c.n)[0];
+
+const STAT_OF = { shoot: 'combat', flank: 'combat', hunker: null, move: null, patch: 'medical', stabilise: 'medical', talk: 'social', lights: 'tech' };
+const isMedic = (r) => r.stats.medical.value + r.patch >= BATTLE.patchMin;
+
+/** Whether an order can be carried out now. A runner whose order can't is left to the crew's own call (actionFor). */
+function canDo(b, r, o) {
+  const guard = up(b).some((g) => g.n === o?.target);
+  const mate = b.runners.find((x) => x.id === o?.target);
+  switch (o?.kind) {
+    case 'shoot': case 'flank': case 'talk': return guard;
+    case 'hunker': return true;
+    case 'move': return freeSpots(b).includes(o.target);
+    case 'patch': return isMedic(r) && !!mate && !mate.down && mate.hp < mate.max;
+    case 'stabilise': return isMedic(r) && !!mate && mate.down && mate.fightOn && !mate.stable;
+    case 'lights': return !b.lights && up(b).length > 0;
+    default: return false;
+  }
+}
+
+/** The crew's spots nobody standing or down is on: where a runner can move to. */
+export function freeSpots(b) {
+  const used = new Set(b.runners.map((r) => r.spot));
+  return (b.spots?.crew ?? []).map((_, i) => i).filter((i) => !used.has(i));
+}
+
+/**
+ * Everything a runner can be ordered to do this round, with the chance each has (fightChance: the
+ * same numbers the round rolls against, so shown equals used). auto marks what the crew would do
+ * on its own. [{ kind, target, stat, chance, cover?, heal?, at?, auto }]: target a guard's n, a runner's
+ * id, or for a move the spot's index (spots.crew).
+ */
+export function ordersFor(b, id) {
+  const r = b.runners.find((x) => x.id === id && !x.down);
+  if (!r) return [];
+  const s = (k) => r.stats[k].value;
+  const auto = actionFor(r, b);
+  const out = [];
+  const add = (o) => out.push({ ...o, auto: o.kind === auto.kind && (o.target ?? null) === (auto.target ?? null) });
+  for (const g of up(b)) add({ kind: 'shoot', target: g.n, stat: 'combat', chance: fightChance(s('combat'), shotDiff(b, g)), cover: coverNow(g) });
+  for (const g of up(b)) add({ kind: 'flank', target: g.n, stat: 'combat', chance: fightChance(s('combat'), b.diff + BATTLE.shootStep + BATTLE.cover.open), cover: 'open' });
+  add({ kind: 'hunker', target: null, stat: null, chance: 1, cover: better(coverNow(r)) });
+  for (const i of freeSpots(b)) add({ kind: 'move', target: i, stat: null, chance: 1, cover: b.spots.crew[i].cover, at: b.spots.crew[i].at });
+  if (isMedic(r)) {
+    for (const x of b.runners) {
+      if (x.down && x.fightOn && !x.stable) add({ kind: 'stabilise', target: x.id, stat: 'medical', chance: fightChance(s('medical'), BATTLE.stabilise) });
+      else if (!x.down && x.hp < x.max) add({ kind: 'patch', target: x.id, stat: 'medical', chance: fightChance(s('medical'), b.diff), heal: Math.min(x.max - x.hp, BATTLE.patchHeal + r.patch) });
+    }
+  }
+  for (const g of up(b)) add({ kind: 'talk', target: g.n, stat: 'social', chance: fightChance(s('social'), b.diff + BATTLE.talkStep) });
+  if (!b.lights && up(b).length) add({ kind: 'lights', target: null, stat: 'tech', chance: fightChance(s('tech'), b.diff) });
+  return out;
+}
+
+/**
+ * What each guard means to do this round, rolled before the player gives orders so they can answer
+ * it (XCOM's telegraphed attacks): who they'll go for (often whoever is hurt worst, guardsFocus).
+ * None in an ambush's first round: the guards are caught off balance. Sets and returns b.intents.
+ */
+export function planIntents(b, rng) {
+  b.intents = b.ambush && b.round === 0 ? [] : up(b).map((g) => ({ guard: g.n, target: guardTarget(b, rng)?.id ?? null })).filter((i) => i.target);
+  return b.intents;
 }
 
 /** The guard a shot goes at: the most hurt first, so the crew finishes what it starts. */
 const targetOf = (b) => up(b).sort((a, c) => a.hp - c.hp || a.n - c.n)[0];
 
 /**
- * Play one round, mutating the battle. Order: overwatch, the inside team, Wheels, then every guard
- * still up goes for someone standing; then the last guard, if badly hurt, breaks and runs. Returns
+ * Play one round, mutating the battle. orders: { [runnerId]: { kind, target } } from the player
+ * (ordersFor); anyone without a doable one does what the crew would. The guards' intents are rolled
+ * first if nobody has yet (planIntents). Order: hunker and flank set this round's cover, overwatch,
+ * the inside team (flankers first), Wheels, then every guard still up goes for the runner they meant
+ * to (or someone else standing, if that one is down); then the last guard, if badly hurt, breaks and
+ * runs. Cover goes back to everyone's spot at the end of the round. Returns
  * { lines, heat, neural, down, fled } where lines are the moments for the feed (each with its roll,
  * but for a guard running), heat and neural what overwatch spent, down the runners who hit 0 HP
  * this round, and fled whether a guard ran (the run raises the alert for it).
  */
-export function playRound(b, rng) {
+export function playRound(b, rng, orders = {}) {
+  if (!b.intents) planIntents(b, rng);
   b.round += 1;
   const lines = [];
   const down = [];
@@ -157,10 +247,25 @@ export function playRound(b, rng) {
   let neural = 0;
   const line = (x) => { lines.push(x); return x; };
 
+  // The player's orders, checked now; moving, hunkering and flanking change where people stand.
+  // A move is to a new spot for good (its cover from now on), and takes the runner's turn.
+  const given = new Map(standing(b).filter((r) => canDo(b, r, orders[r.id])).map((r) => [r.id, { ...orders[r.id], stat: STAT_OF[orders[r.id].kind] }]));
+  for (const r of standing(b)) {
+    const o = given.get(r.id);
+    if (o?.kind === 'hunker') { r.now = better(coverNow(r)); r.hunker = true; }
+    if (o?.kind === 'move' && !freeSpots(b).includes(o.target)) given.delete(r.id); // someone got there first: their own call
+    else if (o?.kind === 'move') {
+      r.spot = o.target;
+      r.cover = b.spots.crew[o.target].cover;
+      line({ kind: 'move', actor: { id: r.id, handle: r.handle }, spot: o.target, to: b.spots.crew[o.target].at, cover: r.cover, text: `${r.handle} moves ${r.cover === 'open' ? 'out into the open' : `into ${r.cover} cover`}.` });
+    }
+    if (o?.kind === 'flank') { r.now = 'open'; b.guards.find((g) => g.n === o.target).now = 'open'; }
+  }
+
   const ow = b.overwatch;
   if (ow && ow.left > 0 && up(b).length) {
     const g = targetOf(b);
-    const r = roll(rng, ow.value, b.diff + BATTLE.shootStep + BATTLE.overwatchStep);
+    const r = roll(rng, ow.value, shotDiff(b, g) + BATTLE.overwatchStep);
     ow.left -= 1;
     if (!ow.heatOnHit || r.success) heat += ow.heat;
     neural += ow.neural;
@@ -172,9 +277,16 @@ export function playRound(b, rng) {
       text: r.success ? `${ow.handle} ${what} ${guardName(g, b)} from overwatch for ${dmg}${g.armour ? ` (armour ${g.armour})` : ''}${g.out ? '. Down.' : '.'}` : `${ow.handle}'s ${ow.kit === 'drone' ? 'drone misses' : 'shot goes wide'}.` });
   }
 
-  for (const r of standing(b)) {
+  const flankFirst = (r) => (given.get(r.id)?.kind === 'flank' ? 0 : 1);
+  for (const r of [...standing(b)].sort((a, c) => flankFirst(a) - flankFirst(c))) {
     if (!up(b).length && !b.runners.some((x) => x.down && x.fightOn && !x.stable)) break;
-    const act = actionFor(r, b);
+    const mine = given.get(r.id);
+    if (mine?.kind === 'move') continue; // moved at the start of the round
+    const act = mine && canDo(b, r, mine) ? mine : mine && (mine.kind === 'shoot' || mine.kind === 'flank') && up(b).length ? { ...mine, kind: 'shoot', target: targetOf(b).n } : actionFor(r, b);
+    if (act.kind === 'hunker') {
+      line({ kind: 'hunker', actor: { id: r.id, handle: r.handle }, cover: coverNow(r), text: `${r.handle} gets down behind ${coverNow(r) === 'full' ? 'solid cover' : 'what cover there is'}.` });
+      continue;
+    }
     const st = r.stats[act.stat];
     const base = { kind: act.kind, actor: { id: r.id, handle: r.handle }, stat: act.stat, value: st.value, notes: st.notes };
     if (act.kind === 'stabilise') {
@@ -189,7 +301,7 @@ export function playRound(b, rng) {
       t.hp += heal;
       line({ ...base, ...k, target: t.handle, targetId: t.id, heal, text: k.success ? `${r.handle} patches ${t === r ? 'themself' : t.handle} up: +${heal}.` : `${r.handle} can't patch ${t === r ? 'themself' : t.handle} up under fire.` });
     } else if (act.kind === 'talk') {
-      const g = up(b).sort((a, c) => c.hp - a.hp || a.n - c.n)[0];
+      const g = up(b).find((x) => x.n === act.target) ?? talkTarget(b);
       const k = roll(rng, st.value, b.diff + BATTLE.talkStep);
       if (k.success) g.out = true;
       line({ ...base, ...k, target: guardName(g, b), guard: g.n, text: k.success ? `${r.handle} talks ${guardName(g, b)} into backing off.` : `${r.handle} tries to talk ${guardName(g, b)} down. Nobody's listening.` });
@@ -198,14 +310,17 @@ export function playRound(b, rng) {
       if (k.success) b.lights = true;
       line({ ...base, ...k, text: k.success ? `${r.handle} kills the lights. The guards are shooting blind.` : `${r.handle} goes for the lights and can't find the circuit.` });
     } else {
-      const g = targetOf(b);
+      // Shoot, or flank: the same shot, from round the guard's cover (kind 'shoot' either way, flank marked).
+      const g = up(b).find((x) => x.n === act.target) ?? targetOf(b);
       if (!g) continue;
-      const k = roll(rng, st.value, b.diff + BATTLE.shootStep);
+      const flank = act.kind === 'flank';
+      const k = roll(rng, st.value, shotDiff(b, g));
       const dmg = k.success ? hitFor(r.damage, g.armour) : 0;
       g.hp = Math.max(0, g.hp - dmg);
       if (g.hp === 0) g.out = true;
-      line({ ...base, ...k, target: guardName(g, b), guard: g.n, weapon: r.weapon, damage: dmg, armour: g.armour, dropped: g.out,
-        text: k.success ? `${r.handle} hits ${guardName(g, b)} for ${dmg}${g.armour ? ` (armour ${g.armour})` : ''}${g.out ? '. Down.' : '.'}` : `${r.handle} misses.` });
+      const where = flank ? `${r.handle} works round ${guardName(g, b)}'s cover` : r.handle;
+      line({ ...base, kind: 'shoot', flank, ...k, target: guardName(g, b), guard: g.n, cover: coverNow(g), notes: [...st.notes, `${guardName(g, b)} in ${coverNow(g) === 'open' ? 'the open' : `${coverNow(g)} cover`}`], weapon: r.weapon, damage: dmg, armour: g.armour, dropped: g.out,
+        text: k.success ? `${where}${flank ? ' and' : ''} hits ${flank ? 'them' : guardName(g, b)} for ${dmg}${g.armour ? ` (armour ${g.armour})` : ''}${g.out ? '. Down.' : '.'}` : `${where}${flank ? ' and' : ''} misses.` });
     }
   }
 
@@ -221,7 +336,8 @@ export function playRound(b, rng) {
     // The crew hit first: the guards don't get a shot in this round.
     line({ kind: 'ambush', actor: null, text: up(b).length > 1 ? 'The guards are caught off balance and get no shot in.' : 'The guard is caught off balance and gets no shot in.' });
   } else for (const g of up(b)) {
-    const t = guardTarget(b, rng);
+    const meant = (b.intents ?? []).find((i) => i.guard === g.n);
+    const t = b.runners.find((x) => x.id === meant?.target && !x.down) ?? guardTarget(b, rng);
     if (!t) break;
     lines.push(guardAttack(b, g, t, rng, down));
   }
@@ -237,8 +353,14 @@ export function playRound(b, rng) {
     const who = guardName(g, b);
     lines.push({ kind: 'flee', actor: null, guard: g.n, target: who, text: `${who[0].toUpperCase()}${who.slice(1)} breaks and runs, shouting into a radio.` });
   }
+  // The round is over: everyone is back on their spot, and the guards' next move is still to come.
+  for (const x of [...b.runners, ...b.guards]) { x.now = null; delete x.hunker; }
+  b.intents = null;
   return { lines, heat, neural, down, fled };
 }
+
+/** A guard's chance to hit a runner standing in this cover (theirs now unless given): shown on the guards' intent lines. */
+export const guardHitChance = (b, t, cover = coverNow(t), hunker = !!t.hunker) => fightChance(b.diff + BATTLE.guardStep, t.stats.cool.value + BATTLE.cover[cover] + (hunker ? BATTLE.hunkerStep : 0) + (b.lights ? BATTLE.lightsOff : 0));
 
 /** Who a guard goes for: often whoever is already hurt worst (guardsFocus), otherwise anyone standing. */
 function guardTarget(b, rng) {
@@ -253,9 +375,10 @@ function guardTarget(b, rng) {
 function guardAttack(b, g, t, rng, down, { floor = 0 } = {}) {
   const def = t.stats.cool;
   const shift = b.lights ? BATTLE.lightsOff : 0;
+  const cover = coverStep(t) + (t.hunker ? BATTLE.hunkerStep : 0);
   const die = d20(rng);
   const skill = b.diff + BATTLE.guardStep;
-  const need = 10 + def.value + shift;
+  const need = 10 + def.value + cover + shift;
   const success = die + skill >= need;
   const dmg = success ? Math.min(hitFor(g.damage, t.armour), Math.max(0, t.hp - floor)) : 0;
   t.hp -= dmg;
@@ -263,7 +386,7 @@ function guardAttack(b, g, t, rng, down, { floor = 0 } = {}) {
   const who = guardName(g, b);
   const Who = who[0].toUpperCase() + who.slice(1);
   return {
-    kind: 'guard', actor: null, guard: g.n, target: t.handle, targetId: t.id, stat: 'cool', value: skill, notes: [`${t.handle}'s cool ${def.value}`, ...(shift ? [`lights out +${shift}`] : [])], die, need, success, damage: dmg, armour: t.armour, down: t.down && dmg > 0 && t.hp === 0,
+    kind: 'guard', actor: null, guard: g.n, target: t.handle, targetId: t.id, stat: 'cool', value: skill, notes: [`${t.handle}'s cool ${def.value}`, ...(cover ? [`${t.hunker ? 'hunkered in ' : ''}${coverNow(t)} cover +${cover}`] : [`${t.handle} in the open`]), ...(shift ? [`lights out +${shift}`] : [])], die, need, success, damage: dmg, armour: t.armour, down: t.down && dmg > 0 && t.hp === 0,
     text: success ? (dmg ? `${Who} hits ${t.handle} for ${dmg}${t.armour ? ` (${t.armourName ?? 'armour'} took ${t.armour})` : ''}${t.hp === 0 ? `. ${t.handle} is down.` : '.'}` : `${Who} grazes ${t.handle}.`) : `${Who} misses ${t.handle}.`,
   };
 }
@@ -297,7 +420,7 @@ const oddsCache = new Map();
  */
 export function battleOdds(args) {
   const b0 = buildBattle(args);
-  const key = JSON.stringify([b0.diff, b0.ambush, b0.guards, b0.runners.map((r) => [r.hp, r.max, r.armour, r.damage, r.patch, FIGHT_STATS.map((s) => r.stats[s].value)]), b0.overwatch && [b0.overwatch.value, b0.overwatch.damage, b0.overwatch.left], b0.wheels?.value]);
+  const key = JSON.stringify([b0.diff, b0.ambush, b0.guards, b0.runners.map((r) => [r.hp, r.max, r.armour, r.damage, r.patch, r.cover, FIGHT_STATS.map((s) => r.stats[s].value)]), b0.overwatch && [b0.overwatch.value, b0.overwatch.damage, b0.overwatch.left], b0.wheels?.value]);
   if (oddsCache.has(key)) return oddsCache.get(key);
   const n = { win: 0, down: 0, standoff: 0 };
   if (!b0.runners.length) return { win: 0, down: 1, standoff: 0 };

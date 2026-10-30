@@ -4,6 +4,7 @@
 // also in the feed as text.
 
 import { SITES, pickSite } from '../data/sites.js';
+import { portrait } from './art.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const W = 360;
@@ -55,7 +56,8 @@ export function sitePlanSvg({ kit = null, site = SITES.generic } = {}) {
     <circle class="sp-node sp-node--target" cx="${P.target[0]}" cy="${P.target[1]}" r="4"/><circle class="sp-node sp-node--perch" cx="${P.perch[0]}" cy="${P.perch[1]}" r="4"/>
     ${site.labels.map((l) => `<text class="sp-label ${l.hi ? 'sp-label--hi' : ''}" x="${l.x}" y="${l.y}">${escAttr(l.text)}</text>`).join('')}
     <circle class="sp-alarm" cx="0" cy="0" r="6"/>
-    <g class="sp-fx"></g><g class="sp-tokens"></g>
+    <defs><clipPath id="sp-face-clip"><circle r="6.5"/></clipPath></defs>
+    <g class="sp-fx"></g><g class="sp-cmd"></g><g class="sp-tokens"></g>
   </svg>`;
 }
 
@@ -89,6 +91,7 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
   const tokens = svg.querySelector('.sp-tokens');
   const alarm = svg.querySelector('.sp-alarm');
   let here = ZONE_END[zone] ?? P.van;
+  let zoneNow = zone;
   let view = [...(VB[zone] ?? VB.full)];
   svg.setAttribute('viewBox', view.join(' '));
   const wait = (ms) => later(ms * speed());
@@ -97,6 +100,12 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
   const addToken = (op, at) => {
     const g = el('g', { class: 'sp-token', 'data-op': op.id });
     g.append(el('circle', { r: 6.5, fill: op.color ?? '#8b93a7' }), el('text', {}, initials(op)));
+    // Their face, shown in a fight (the token's initials elsewhere, where it's too small to read).
+    if (op.stats) {
+      const face = el('g', { class: 'sp-face', 'clip-path': 'url(#sp-face-clip)' });
+      face.innerHTML = portrait(op, { size: 13 }).replace('<svg ', '<svg x="-6.5" y="-6.5" ');
+      g.append(face, el('circle', { r: 6.5, class: 'sp-face__ring' }));
+    }
     place(g, at);
     tokens.append(g);
   };
@@ -105,12 +114,14 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
   if (wheels) addToken(wheels, VAN_SPOT.wheels);
   if (standby) addToken(standby, VAN_SPOT.standby);
   for (const op of out) { addToken(op, VAN_SPOT.out); tok(op.id)?.classList.add('is-down'); }
-  const posOf = (id) => slot(Math.max(0, team.findIndex((o) => o.id === id)), here);
+  // In a fight on the map's spots (core/fightspots.js), where everyone stands: an op's id, or 'g1' for a guard.
+  const fightAt = new Map();
+  const posOf = (id) => fightAt.get(id) ?? slot(Math.max(0, team.findIndex((o) => o.id === id)), here);
 
   function moveGroup(pt) { here = pt; team.forEach((op, i) => { const t = tok(op.id); if (t) place(t, slot(i, pt)); }); }
 
   function panTo(name, ms = 700) {
-    const to = VB[name] ?? VB.full;
+    const to = Array.isArray(name) ? name : VB[name] ?? VB.full;
     const from = [...view];
     if (reduced() || ms <= 0) { view = [...to]; svg.setAttribute('viewBox', to.join(' ')); return; }
     const t0 = performance.now();
@@ -159,7 +170,21 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
   const SEG = 3;
   const foes = new Map();
   const hpNow = new Map();
-  const foePos = (n) => [here[0] + 28 + ((n - 1) % 2) * 8, here[1] - 14 + (n - 1) * 12];
+  const foePos = (n) => fightAt.get(`g${n}`) ?? [here[0] + 28 + ((n - 1) % 2) * 8, here[1] - 14 + (n - 1) * 12];
+  /** A 3:2 camera box round every spot in the fight, with room for the tokens. */
+  function fightBox() {
+    const pts = [...fightAt.values()];
+    if (!pts.length) return null;
+    const xs = pts.map((p) => p[0]); const ys = pts.map((p) => p[1]);
+    let [x0, y0, x1, y1] = [Math.min(...xs) - 22, Math.min(...ys) - 24, Math.max(...xs) + 22, Math.max(...ys) + 22];
+    // As wide as the plan is drawn (a tall phone map shows a taller box), at least 150 x 100.
+    const ar = svg.clientWidth > 0 && svg.clientHeight > 0 ? svg.clientWidth / svg.clientHeight : 1.5;
+    let w = Math.max(x1 - x0, 150); let h = Math.max(y1 - y0, 100);
+    if (w / h > ar) h = w / ar; else w = h * ar;
+    const cx = (x0 + x1) / 2; const cy = (y0 + y1) / 2;
+    x0 = Math.max(0, Math.min(W - w, cx - w / 2)); y0 = Math.max(0, Math.min(H - h, cy - h / 2));
+    return [x0, y0, Math.min(w, W), Math.min(h, H)];
+  }
   const hostOf = (key) => (key.startsWith('g') ? foes.get(Number(key.slice(1))) : tok(key));
   function setHp(key, hp, max) {
     const host = hostOf(key);
@@ -178,7 +203,18 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
   }
   const hurtBy = (key, d) => { const [hp, max] = hpNow.get(key) ?? [0, 1]; setHp(key, Math.max(0, Math.min(max, hp - d)), max); return hpNow.get(key)[0]; };
   /** Put the fight on the plan as the state has it: guards, bars, anyone down. */
-  function showFight({ guards, runners }) {
+  function showFight({ guards, runners, spots = null }) {
+    // On the map's spots: everyone to their place, and the camera on the fight. A feed cue carries
+    // where each stands (at); the battle itself (a page mounting mid-fight) carries spots and indexes.
+    const atOf = (x, side) => x.at ?? (spots && x.spot != null ? spots[side]?.[x.spot]?.at : null) ?? null;
+    const onMap = runners.some((r) => atOf(r, 'crew')) || guards.some((g) => atOf(g, 'guards'));
+    if (onMap) {
+      for (const r of runners) { const at = atOf(r, 'crew'); if (at) { fightAt.set(r.id, at); const t = tok(r.id); if (t) place(t, at); } }
+      for (const g of guards) { const at = atOf(g, 'guards'); if (at) { fightAt.set(`g${g.n}`, at); const node = foes.get(g.n); if (node) place(node, at); } }
+      svg.classList.add('is-fight');
+      const box = fightBox();
+      if (box) panTo(box);
+    }
     for (const g of guards) {
       if (!foes.has(g.n)) { const node = spawn(foePos(g.n), 'sp-enemy sp-enemy--guard', String(g.n)); foes.set(g.n, node); }
       const node = foes.get(g.n);
@@ -192,6 +228,8 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
     foes.clear();
     hpNow.clear();
     tokens.querySelectorAll('.sp-hp').forEach((b) => b.remove());
+    command(null);
+    if (fightAt.size) { fightAt.clear(); svg.classList.remove('is-fight'); moveGroup(here); panTo(zoneNow); }
   }
   async function bolt(from, to, hit) {
     const l = el('line', { class: 'sp-shot', x1: from[0], y1: from[1], x2: to[0] + (hit ? 0 : 8), y2: to[1] + (hit ? 0 : -6) });
@@ -229,12 +267,82 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
       if (l.success && l.heal) hurtBy(l.targetId, -l.heal);
       if (l.success && l.kind === 'stabilise') tok(l.targetId)?.classList.remove('is-down');
       await wait(500);
+    } else if (l.kind === 'move' && l.to) {
+      fightAt.set(l.actor, l.to);
+      const t = tok(l.actor);
+      if (t) place(t, l.to);
+      await wait(500);
     } else if (l.kind === 'van') {
       ring(tok(l.actor) ? posOf(l.actor) : P.van, l.success);
       await wait(500);
     } else if (l.kind === 'ambush') {
       ring(here, true);
       await wait(500);
+    }
+  }
+
+  // --- command fights (2026-10-30): the orders overlay ------------------------------------------
+  // While a fight waits for orders: a cover mark on everyone (XCOM's shields: full, half, or OPEN),
+  // a dashed red line from each guard to who they mean to shoot with the chance, the orders given
+  // so far in cyan, the picked runner ringed, and the free spots they could move to. Tokens and
+  // spots are tappable (the same data-actions as the orders panel, which has every choice too).
+  const cmd = svg.querySelector('.sp-cmd');
+  const SHIELD = 'M6 0 L12 2.5 V7 C12 10.5 9 13 6 14 C3 13 0 10.5 0 7 V2.5 Z';
+  function coverMark(at, cover, foe) {
+    const g = el('g', { class: `sp-cover-mark sp-cover-mark--${cover} ${foe ? 'is-foe' : ''}`, transform: `translate(${at[0] + 4} ${at[1] - 12}) scale(0.42)` });
+    if (cover === 'open') g.append(el('rect', { x: -2, y: 2, width: 22, height: 10 }), el('text', { x: 9, y: 9.5 }, 'OPEN'));
+    else {
+      g.append(el('path', { d: SHIELD, class: 'sp-cover-mark__edge' }));
+      if (cover === 'full') g.append(el('path', { d: SHIELD }));
+      else g.append(el('path', { d: 'M0 7 H12 C12 10.5 9 13 6 14 C3 13 0 10.5 0 7 Z' }));
+    }
+    cmd.append(g);
+  }
+  const pctOf = (c) => `${Math.round(c * 100)}%`;
+  function tag(at, text, cls) {
+    const g = el('g', { class: `sp-tag ${cls}`, transform: `translate(${at[0]} ${at[1]})` });
+    g.append(el('rect', { x: -9, y: -4.5, width: 18, height: 9 }), el('text', { y: 0.4 }, text));
+    cmd.append(g);
+  }
+  function command(v) {
+    cmd.replaceChildren();
+    svg.classList.toggle('is-command', !!v);
+    for (const n of svg.querySelectorAll('[data-action^="fight-"]')) { n.removeAttribute('data-action'); n.removeAttribute('data-id'); }
+    if (!v) return;
+    const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+    for (const i of v.intents) {
+      const a = foePos(i.guard); const b = posOf(i.target);
+      cmd.append(el('line', { class: 'sp-aim', x1: a[0], y1: a[1], x2: b[0], y2: b[1] }));
+      tag(mid(a, b), pctOf(i.chance), 'sp-tag--foe');
+    }
+    for (const r of v.runners) {
+      const from = posOf(r.id);
+      const o = r.order;
+      if (o && (o.kind === 'shoot' || o.kind === 'flank' || o.kind === 'talk')) {
+        const to = foePos(o.target);
+        cmd.append(el('line', { class: `sp-order sp-order--${o.kind}`, x1: from[0], y1: from[1], x2: to[0], y2: to[1] }));
+      } else if (o?.kind === 'move' && v.spots[o.target]) {
+        const to = v.spots[o.target].at;
+        cmd.append(el('line', { class: 'sp-order sp-order--move', x1: from[0], y1: from[1], x2: to[0], y2: to[1] }), el('circle', { class: 'sp-spot is-picked', cx: to[0], cy: to[1], r: 6.5 }));
+      } else if (o && (o.kind === 'patch' || o.kind === 'stabilise')) {
+        const to = posOf(o.target);
+        cmd.append(el('line', { class: 'sp-order sp-order--heal', x1: from[0], y1: from[1], x2: to[0], y2: to[1] }));
+      } else if (o?.kind === 'hunker') cmd.append(el('circle', { class: 'sp-hunker', cx: from[0], cy: from[1], r: 9 }));
+      if (!r.down) coverMark(from, r.cover, false);
+      if (r.sel) cmd.append(el('circle', { class: 'sp-sel', cx: from[0], cy: from[1], r: 9.5 }));
+      const t = tok(r.id);
+      if (t && !r.down) { t.setAttribute('data-action', 'fight-sel'); t.setAttribute('data-id', r.id); }
+    }
+    for (const g of v.guards) {
+      if (g.out) continue;
+      coverMark(foePos(g.n), g.cover, true);
+      if (g.target) cmd.append(el('circle', { class: 'sp-sel sp-sel--foe', cx: foePos(g.n)[0], cy: foePos(g.n)[1], r: 9 }));
+      const node = foes.get(g.n);
+      if (node) { node.setAttribute('data-action', 'fight-target'); node.setAttribute('data-id', String(g.n)); }
+    }
+    for (const f of v.free) {
+      const c = el('circle', { class: `sp-spot sp-spot--${f.cover}`, cx: f.at[0], cy: f.at[1], r: 5.5, 'data-action': 'fight-order', 'data-kind': 'move', 'data-target': String(f.i) });
+      cmd.append(c);
     }
   }
 
@@ -272,10 +380,13 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
       showFight(c); // whatever the moments left out, as the state has it
       if (c.phase === 'retreat') { await wait(300); clearFight(); }
     },
+    /** The orders overlay while a fight waits for the player (ui/fightorders.js commandView), or null to clear it. */
+    command: (v) => command(v),
     /** The fight as it stands, drawn at once (a page that mounts mid-fight). */
     syncFight: (c) => (c ? showFight(c) : clearFight()),
     /** Walk the group into a zone and pan the camera there. */
     async enter(zone) {
+      zoneNow = zone;
       panTo(zone);
       const path = PATHS[zone];
       if (!path) return;

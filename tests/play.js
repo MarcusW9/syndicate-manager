@@ -8,6 +8,7 @@ import { advanceDay, calendar } from '../src/core/time.js';
 import { templateById } from '../src/core/jobs.js';
 import { availability } from '../src/core/crew.js';
 import { GEAR } from '../src/data/gear.js';
+import { buildBattle, ordersFor, hitFor } from '../src/core/battle.js';
 
 /** Put gear on someone for a test (no cost, no stash): arm(state, opId, 'rifle', 'drone'). Returns state. */
 export function arm(state, opId, ...types) {
@@ -132,4 +133,40 @@ export function playWeeks(weeks, seed, policy = carefulPolicy, { startCrew = 'cl
     s = advanceDay(s);
   }
   return { state: s, deaths };
+}
+
+/**
+ * The fixed test fight for command fights (2026-10-30): four of a fresh crew grown to pros (every
+ * stat +4) in a sidearm and a vest, against threat-4 guards at a threat-4 incident's difficulty
+ * (three guards, no alert). A close fight hands-off. Returns a battle (core/battle.js buildBattle).
+ */
+export function testFight(seed = 1) {
+  const s = createNewGame({ seed, startCrew: 'fresh' });
+  for (const op of s.crew) for (const k of Object.keys(op.stats)) op.stats[k] = Math.min(20, op.stats[k] + 4);
+  const crew = s.crew.slice(0, 4);
+  for (const op of crew) arm(s, op.id, 'pistol', 'vest');
+  return buildBattle({ incident: 'guard', zone: 'inside', diff: 16, threat: 4, guards: 2, crew, approach: 'loud' });
+}
+
+/**
+ * A plain player's orders for a round (core/battle.js playRound), reading only what the screen
+ * shows (the guards' intents, their damage and ordersFor's odds): medics, talkers and tech keep to
+ * their own call; anyone who'd go down if every guard aiming at them hit gets down; everyone else
+ * fires at the same guard (the most hurt), and one runner nobody is aiming at flanks them.
+ */
+export function commandOrders(b) {
+  const orders = {};
+  const aimers = (id) => (b.intents ?? []).filter((i) => i.target === id).map((i) => b.guards.find((g) => g.n === i.guard));
+  const aimed = (id) => aimers(id).length;
+  const focus = b.guards.filter((g) => !g.out).sort((a, c) => a.hp - c.hp || a.n - c.n)[0];
+  let flanker = false;
+  for (const r of b.runners.filter((x) => !x.down)) {
+    const opts = ordersFor(b, r.id);
+    const auto = opts.find((o) => o.auto);
+    if (auto && auto.kind !== 'shoot') orders[r.id] = auto;
+    else if (aimed(r.id) && aimers(r.id).reduce((n, g) => n + hitFor(g.damage, r.armour), 0) >= r.hp) orders[r.id] = { kind: 'hunker' };
+    else if (focus && !flanker && !aimed(r.id) && focus.cover !== 'open') { orders[r.id] = { kind: 'flank', target: focus.n }; flanker = true; }
+    else if (focus) orders[r.id] = { kind: 'shoot', target: focus.n };
+  }
+  return orders;
 }

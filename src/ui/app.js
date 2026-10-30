@@ -27,7 +27,9 @@ import { money } from '../core/money.js';
 import {
   startMission, chooseOption, resolveCritical, closeMission,
   describeCrisis, describeCritical, currentStep, fillBrief, describePending, resolvePending, CALL_IN,
+  runBattle, handOffFight, pullBack,
 } from '../core/mission.js';
+import { renderFightOrders, fightTap, takeOrders } from './fightorders.js';
 import { sendOff, ORDERS, handsOffAllowed, autoStep, needsPlayer } from '../core/autorun.js';
 import { OVERWATCH_KIT, ALERT_MAX } from '../core/incidents.js';
 import { leanPicks, jobRead, planRead } from '../core/squad.js';
@@ -235,6 +237,14 @@ function onClick(e) {
     case 'watch-speed': return toggleSpeed(state);
     case 'watch-latest': return showLatest();
     case 'pending': return setState(resolvePending(state, id));
+    // Command fights (ui/fightorders.js): pick, target and order are the player's draft; the rest play the round.
+    case 'fight-sel': case 'fight-target': case 'fight-clear': case 'fight-order':
+      fightTap(state.activeMission, action, { id, kind: t.dataset.kind, target: t.dataset.target });
+      break;
+    case 'fight-go': return setState(runBattle(state, takeOrders()));
+    case 'fight-auto': takeOrders(); return setState(runBattle(state, {}));
+    case 'fight-hand-off': takeOrders(); return setState(runBattle(handOffFight(state), {}));
+    case 'fight-pull': takeOrders(); return setState(pullBack(state));
     case 'choose': return setState(chooseOption(state, id));
     case 'critical': return setState(resolveCritical(state, id));
     case 'close-mission': screen = 'inbox'; return setState(closeMission(state));
@@ -1630,6 +1640,7 @@ function renderCallIn(s) {
         <div class="choices">${v.choices.map((c) => choiceButton({ ...c, risk: c.exit ? 'safe' : c.push ? 'extreme' : 'moderate', riskReason: c.cost, cost: '' }, 'pending')).join('')}</div>
       </div>`;
   }
+  if (am.battle && currentStep(am)?.type === 'battle' && needsPlayer(s)) return renderFightOrders(s, esc);
   if (currentStep(am)?.type === 'crisis' && needsPlayer(s)) {
     const v = describeCrisis(s);
     return `
