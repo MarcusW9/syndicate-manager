@@ -12,6 +12,8 @@
 
 import { refreshSideBoard } from '../core/sidetasks.js';
 import { SAVE_VERSION } from '../core/state.js';
+import { TATTOO_JOBS } from '../core/marks.js';
+import { nameLook, refreshArmoury, stockShelf } from '../core/looks.js';
 import { addOffer } from '../core/jobs.js';
 import { STARTING_ROSTER_CAP } from '../core/recruits.js';
 import { prepareOperative, rollPotential, rollScoutError, scoutFor, potentialRead } from '../core/development.js';
@@ -446,6 +448,34 @@ function migrate(state) {
       for (const x of am?.battle ? [...am.battle.guards, ...am.battle.runners] : []) x.spot = x.spot ?? null;
     }
     state.version = 28;
+  }
+  if (state.version === 28) {
+    // v29: career marks and gun looks (brought in 2026-10-30 from the branch where they were made,
+    // as its v25-v27). Career marks (core/marks.js): nobody has scars or chrome on record yet;
+    // anyone who has already worked ten jobs with the crew gets the crew's mark now, with a line
+    // saying so. Rifles already owned keep the look they had (gunmetal and wood, or carbon for pro)
+    // and get a name; sidearms already owned become plain blued compact pistols with a name; the
+    // armoury stocks its first rifles and sidearms.
+    for (const op of state.crew) {
+      op.marks = op.marks ?? [];
+      if (!op.freelance && (op.jobsWithCrew ?? 0) >= TATTOO_JOBS && !op.marks.some((m) => m.kind === 'tattoo')) {
+        op.marks.push({ kind: 'tattoo', day: state.day });
+        op.history = [...(op.history ?? []), `Day ${state.day}: got the crew's mark (${TATTOO_JOBS} jobs together)`];
+      }
+    }
+    for (const entry of state.memorial ?? []) entry.marks = entry.marks ?? [];
+    const owned = [...(state.stash ?? []), ...state.crew.flatMap((op) => Object.values(op.gear ?? {}))];
+    for (const item of owned.filter((i) => i?.type === 'rifle' && !i.look)) {
+      item.look = { frame: 'marksman', finish: item.tier === 'pro' ? 'carbon' : 'street', engraving: null, charm: null };
+      item.name = nameLook(state, `item|${item.uid}`, item.look);
+    }
+    for (const item of owned.filter((i) => i?.type === 'pistol' && !i.look)) {
+      item.look = { frame: 'compact', finish: 'blued', mod: null, charm: null };
+      item.name = nameLook(state, `item|${item.uid}`, item.look, 'pistol');
+    }
+    if (!state.armoury) refreshArmoury(state);
+    else if (!state.armoury.offers.some((o) => o.type === 'pistol')) state.armoury.offers.push(...stockShelf(state, 'pistol'));
+    state.version = 29;
   }
   return state;
 }

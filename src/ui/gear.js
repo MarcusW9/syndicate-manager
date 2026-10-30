@@ -4,7 +4,8 @@
 //
 // ui: helpers from app.js { esc, money, face, statusChip }.
 
-import { GEAR, SLOTS, TIERS, carried, itemName, priceOf, sellPrice, canChangeGear, kitsFor } from '../core/gear.js';
+import { GEAR, SLOTS, TIERS, carried, itemName, itemTitle, priceOf, sellPrice, canChangeGear, kitsFor } from '../core/gear.js';
+import { HAS_LOOKS, lookText } from '../core/looks.js';
 import { gearGlyph } from './icons.js';
 import { gearArt } from './art.js';
 
@@ -32,8 +33,9 @@ function itemRow(ui, item, { action, label, sub = '', disabled = false, id = ite
   return `
     <li class="gearrow">
       ${thumb(item, carrier)}
-      <span class="gearrow__main"><strong>${esc(itemName(item))}</strong>
+      <span class="gearrow__main"><strong>${esc(itemTitle(item))}</strong>
         <span class="gearrow__eff">${esc(itemEffect(item))}</span>
+        ${item.look ? `<span class="gearrow__sub muted small">${esc(itemName(item))} · ${esc(lookText(item))}</span>` : ''}
         ${sub ? `<span class="gearrow__sub muted small">${sub}</span>` : ''}</span>
       ${action ? `<button class="btn gearrow__btn" data-action="${action}" data-id="${esc(id)}" ${item.tier ? `data-tier="${esc(item.tier)}"` : ''} ${disabled ? 'disabled' : ''}>${esc(label)}</button>` : ''}
     </li>`;
@@ -50,6 +52,20 @@ function buyRow(ui, state, type) {
         <span class="gearrow__eff">${esc(itemEffect({ type, tier: 'street' }))}</span>
         <span class="gearrow__sub muted small">${esc(g.desc)}</span></span>
       <span class="gearrow__buy">${Object.entries(TIERS).map(([tier, t]) => `<button class="btn gearrow__btn" data-action="buy" data-id="${esc(type)}" data-tier="${esc(tier)}" ${state.cash < priceOf(type, tier) ? 'disabled' : ''} aria-label="Buy ${esc(t.step ? `a ${t.name.toLowerCase()} ` : '')}${esc(g.name.toLowerCase())} for ${esc(money(priceOf(type, tier)))}">${t.step ? `${esc(t.name)} +${t.step} ` : ''}${esc(money(priceOf(type, tier)))}</button>`).join('')}</span>
+    </li>`;
+}
+
+/** One of this week's rifles: drawn under the safehouse lamp, its name, and one price. */
+function offerRow(ui, state, offer) {
+  const { esc, money } = ui;
+  const price = priceOf(offer.type, offer.tier);
+  return `
+    <li class="gearrow gearrow--buy">
+      ${thumb(offer)}
+      <span class="gearrow__main"><strong>${esc(offer.name)}</strong>
+        <span class="gearrow__eff">${esc(itemEffect(offer))}</span>
+        <span class="gearrow__sub muted small">${esc(itemName(offer))} · ${esc(lookText(offer))}</span></span>
+      <span class="gearrow__buy"><button class="btn gearrow__btn" data-action="buy-offer" data-id="${esc(offer.oid)}" ${state.cash < price ? 'disabled' : ''} aria-label="Buy the ${esc(offer.name)} for ${esc(money(price))}">${esc(money(price))}</button></span>
     </li>`;
 }
 
@@ -71,7 +87,8 @@ export function renderArmoury(ui, state) {
   const { esc, money } = ui;
   const stash = state.stash ?? [];
   const worn = state.crew.flatMap((op) => carried(op).map((item) => ({ item, op })));
-  const forSale = Object.keys(GEAR);
+  const forSale = Object.keys(GEAR).filter((type) => !HAS_LOOKS[type]); // guns come from the weekly shelf
+  const offers = state.armoury?.offers ?? [];
   const bySlot = (list, slotOf) => Object.entries(SLOTS).map(([slot, s]) => [s.name, list.filter((x) => slotOf(x) === slot)]).filter(([, l]) => l.length);
   return `
     <section class="panel">
@@ -87,6 +104,12 @@ export function renderArmoury(ui, state) {
       </div>
       <div>
       <h2>Buy <span class="muted small">· ${money(state.cash)} in hand</span></h2>
+      ${[['rifle', "This week's rifles"], ['pistol', "This week's sidearms"]].map(([type, title]) => {
+        const shelf = offers.filter((o) => o.type === type);
+        return `<h3 class="gear__slot">${title}</h3>
+      ${shelf.length ? `<ul class="list list--plain gearlist">${shelf.map((o) => offerRow(ui, state, o)).join('')}</ul>` : '<p class="muted small">Sold out.</p>'}`;
+      }).join('')}
+      <p class="muted small">New guns come in every Monday, each one different.</p>
       ${bySlot(forSale, (type) => GEAR[type].slot).map(([name, list]) => `
         <h3 class="gear__slot">${esc(name)}</h3>
         <ul class="list list--plain gearlist">${list.map((type) => buyRow(ui, state, type)).join('')}</ul>`).join('')}
@@ -108,10 +131,10 @@ export function renderLoadout(ui, state, op) {
         ${Object.entries(SLOTS).map(([slot, s]) => {
           const item = op.gear?.[slot] ?? null;
           const art = item ? gearArt(item, { carrier: op, width: 192 }) : null;
-          return `<li><button class="loadout__tile ${item ? '' : 'is-empty'}" data-action="gear-slot" data-id="${slot}" ${can.ok ? '' : 'disabled'} aria-label="${esc(s.name)}: ${esc(item ? itemName(item) : 'empty')}. Tap to change.">
+          return `<li><button class="loadout__tile ${item ? '' : 'is-empty'}" data-action="gear-slot" data-id="${slot}" ${can.ok ? '' : 'disabled'} aria-label="${esc(s.name)}: ${esc(item ? itemTitle(item) : 'empty')}. Tap to change.">
             <span class="loadout__name">${esc(s.name)}</span>
             <span class="loadout__pic ${art ? '' : 'loadout__pic--icon'}" aria-hidden="true">${item ? art ?? glyphFor(item) : '+'}</span>
-            <strong class="loadout__item">${item ? esc(itemName(item)) : 'Empty'}</strong>
+            <strong class="loadout__item">${item ? esc(itemTitle(item)) : 'Empty'}</strong>
             ${item ? `<span class="loadout__eff">${esc(itemEffect(item))}</span>` : ''}
           </button></li>`;
         }).join('')}
@@ -131,7 +154,7 @@ export function renderGearSheet(ui, state, op, slot) {
     <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(SLOTS[slot].name)} for ${esc(op.handle)}">
       <div class="sheet__head">
         <div><h2 class="sheet__title">${esc(SLOTS[slot].name)} for ${esc(op.handle)}</h2>
-        <p class="muted small">${current ? `Carrying: ${esc(itemName(current))}. Whatever you pick swaps with it.` : 'Nothing in this slot.'}</p></div>
+        <p class="muted small">${current ? `Carrying: ${esc(itemTitle(current))}. Whatever you pick swaps with it.` : 'Nothing in this slot.'}</p></div>
         <button class="btn btn--ghost sheet__x" data-action="close-gear" aria-label="Close">✕</button>
       </div>
       <ul class="list list--plain gearlist">${stash.length ? stash.map((item) => itemRow(ui, item, { action: 'equip', label: 'Carry' })).join('') : '<li class="muted small">Nothing for this slot in the stash. Buy it in the armoury.</li>'}</ul>

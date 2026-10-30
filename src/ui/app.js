@@ -14,6 +14,7 @@ import { districtArt } from './districtArt.js';
 
 import { advanceDay, calendar, formatShortDate, isBlocked, seasonStartDay } from '../core/time.js';
 import { createNewGame, chooseFounders } from '../core/state.js';
+import { marksText } from '../core/marks.js';
 import { templateById, jobView, nextUnlock, JOB_GATES } from '../core/jobs.js';
 import { trustLabel, trustOf } from '../core/clients.js';
 import { CLIENTS } from '../data/clients.js';
@@ -35,7 +36,7 @@ import { OVERWATCH_KIT, ALERT_MAX } from '../core/incidents.js';
 import { leanPicks, jobRead, planRead } from '../core/squad.js';
 import { renderBoard, renderPicker, renderCoverage, assignSlot, planKit } from './board.js';
 import { armouryCard, renderArmoury, renderLoadout, renderGearSheet } from './gear.js';
-import { buyGear, sellGear, equip, unequip, itemName, sellPrice } from '../core/gear.js';
+import { buyGear, buyOffer, sellGear, equip, unequip, itemName, sellPrice } from '../core/gear.js';
 import { renderWatch, mountWatch, syncWatch, isWatching, stopWatch, togglePause, toggleSpeed, showLatest } from './watch.js';
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
 import { earnedText } from '../core/earned.js';
@@ -151,9 +152,10 @@ function onClick(e) {
     // Gear (ui/gear.js, core/gear.js): the armoury, and a runner's slots.
     case 'open-armoury': screen = 'crew'; openArmoury = true; openOperativeId = null; gearSlot = null; break;
     case 'buy': return setState(buyGear(state, id, t.dataset.tier || 'street'));
+    case 'buy-offer': return setState(buyOffer(state, id));
     case 'sell': {
       const item = (state.stash ?? []).find((i) => i.uid === id);
-      if (item && confirm(`Sell the ${itemName(item).toLowerCase()} for ${money(sellPrice(item))}?`)) return setState(sellGear(state, id));
+      if (item && confirm(`Sell the ${item.name ?? itemName(item).toLowerCase()} for ${money(sellPrice(item))}?`)) return setState(sellGear(state, id));
       break;
     }
     case 'gear-slot': gearSlot = id; break;
@@ -1124,6 +1126,7 @@ function renderOperative() {
         <div>
           <h1>${esc(op.name)} <span class="muted">"${esc(op.handle)}"</span></h1>
           <p class="muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age} · ${money(op.wage)}/week</p>
+          ${marksText(op) ? `<p class="muted small">Marked: ${esc(marksText(op))}</p>` : ''}
           ${statusChip(availability(state, op))}
         </div>
       </div>

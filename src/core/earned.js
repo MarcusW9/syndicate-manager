@@ -12,6 +12,7 @@
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
 import { CLIENTS } from '../data/clients.js';
 import { NAMES } from '../config/names.js';
+import { noteScar } from './marks.js';
 
 export const MAX_TEMPORARY = 2;
 export const NEEDS = {
@@ -196,6 +197,7 @@ export function jobMods(op, { stat, job }) {
 /** Someone was hurt (on a job or side work). Mutates the (cloned) state. */
 export function noteInjury(state, op, severity) {
   if (!op || op.freelance || severity === 'none') return;
+  noteScar(state, op, severity); // a bad wound leaves a mark for good (core/marks.js)
   const t = track(op);
   t.hurtDays = [...(t.hurtDays ?? []).filter((d) => d > state.day - 7), state.day];
   if (severity === 'critical') {

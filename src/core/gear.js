@@ -2,13 +2,15 @@
 //
 // state.stash   [item]                       bought and not on anyone
 // op.gear       { weapon, armour, tool, implant }: item | null, stays on them between jobs
-// item          { uid, type, tier }          type: data/gear.js GEAR; tier: TIERS
+// item          { uid, type, tier, look?, name? }  type: data/gear.js GEAR; tier: TIERS; rifles
+//               also have a look and a name (core/looks.js)
 //
 // Gear is a bonus, never a gate, except that overwatch needs a rifle or a drone (as it always
 // needed the kit). A runner who dies takes their gear with them.
 
 import { GEAR, SLOTS, TIERS } from '../data/gear.js';
 import { SPECIALISATIONS } from '../data/specialisations.js';
+import { giveLook } from './looks.js';
 
 export { GEAR, SLOTS, TIERS };
 
@@ -22,6 +24,9 @@ export function itemName(item) {
   const name = GEAR[item.type]?.name ?? item.type;
   return item.tier && item.tier !== 'street' ? `${TIERS[item.tier].name} ${name.charAt(0).toLowerCase()}${name.slice(1)}` : name;
 }
+
+/** What to call it on screen: its own name if it has one ("Vermilion Heron"), else itemName. */
+export const itemTitle = (item) => item.name ?? itemName(item);
 
 /** Everything someone has on. */
 export const carried = (op) => Object.values(op?.gear ?? {}).filter(Boolean);
@@ -102,7 +107,7 @@ export function canChangeGear(state, op) {
 
 const newItem = (state, type, tier) => {
   state.gearSeq = (state.gearSeq ?? 0) + 1;
-  return { uid: `g${state.gearSeq}`, type, tier };
+  return giveLook(state, { uid: `g${state.gearSeq}`, type, tier });
 };
 
 /** Buy an item into the stash. Returns the new state, or prev if it can't be bought. */
@@ -111,6 +116,18 @@ export function buyGear(prev, type, tier = 'street') {
   const state = structuredClone(prev);
   state.cash -= priceOf(type, tier);
   (state.stash ??= []).push(newItem(state, type, tier));
+  return state;
+}
+
+/** Buy one of this week's rifles from the armoury (core/looks.js): it keeps its look and name. */
+export function buyOffer(prev, oid) {
+  const offer = prev.armoury?.offers?.find((o) => o.oid === oid);
+  if (!offer || prev.cash < priceOf(offer.type, offer.tier)) return prev;
+  const state = structuredClone(prev);
+  state.cash -= priceOf(offer.type, offer.tier);
+  state.armoury.offers = state.armoury.offers.filter((o) => o.oid !== oid);
+  state.gearSeq = (state.gearSeq ?? 0) + 1;
+  (state.stash ??= []).push({ uid: `g${state.gearSeq}`, type: offer.type, tier: offer.tier, look: offer.look, name: offer.name });
   return state;
 }
 

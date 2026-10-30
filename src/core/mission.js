@@ -35,6 +35,7 @@ import { crewOf, actors, overwatchOp, standbyOp, standbyReady, driver, onJob, op
 import { startBattle, runBattle, resolveBattleDecision, guardsUp, guardCount, handOffFight, pullBack } from './runbattle.js';
 export { runBattle, handOffFight, pullBack };
 import { noteOverwatchJob, checkSpecialisations } from './specialisations.js';
+import { noteJobMarks } from './marks.js';
 import { planIncidents, weaveIncidents, incidentById, incidentIn, incidentDifficulty, handlerFor, bestSave, standbySave, decisionChoices, ALERT_MAX, SERIOUS_CHANCE, SERIOUS_PER_ALERT, PATCH_MIN_MEDICAL, ZONES } from './incidents.js';
 
 const EXIT_KINDS = new Set(['abort', 'extract']);
@@ -904,7 +905,7 @@ function finish(state) {
 
   for (const op of deaths) {
     state.crew = state.crew.filter((o) => o.id !== op.id);
-    state.memorial.push({ id: op.id, name: op.name, handle: op.handle, role: op.role, color: op.color, age: op.age, day: state.day, cause: `Died of wounds after the ${tpl.name}${isFreelancer(op) ? ' (freelancer)' : ''}` });
+    state.memorial.push({ id: op.id, name: op.name, handle: op.handle, role: op.role, color: op.color, age: op.age, marks: op.marks ?? [], day: state.day, cause: `Died of wounds after the ${tpl.name}${isFreelancer(op) ? ' (freelancer)' : ''}` });
   }
 
   // Growth: crisis lessons already landed during the job; finishing it also teaches its key stats.
@@ -957,6 +958,7 @@ function finish(state) {
     c.morale = Math.max(0, Math.min(100, c.morale + (deaths.length ? -20 : am.aborted ? -3 : 5)));
     if (c.injury !== 'healthy') injuries.push(`${op.handle} (${c.injury}, ${c.injuryDays}d)`);
     op.history.push(`Day ${state.day}: ${tpl.name}, ${am.aborted ? 'aborted' : 'completed'}`);
+    noteJobMarks(state, op); // chrome for a danger-zone load, the crew's mark at ten jobs
     if (c.neuralLoad > 70) {
       state.inbox.unshift({ id: `neural-${op.id}-${state.day}`, type: 'warning', day: state.day,
         subject: `${op.handle}'s neural load is in the danger zone`,

@@ -12,5 +12,5 @@ export const TRAITS = {
   veteran: { tier: 'rare', name: 'Veteran', desc: '+1 cool for the whole crew on the job.', effects: { crewCool: 1 } },
   superstitious: { tier: 'common', name: 'Superstitious', desc: 'Won\'t start a job on any day number ending in 4.', effects: { unluckyDigit: 4 } },
   silver_tongue: { tier: 'uncommon', name: 'Silver Tongue', desc: 'Unlocks talk-your-way-out options in crises.', effects: { unlocks: 'talk' } },
-  greedy: { tier: 'common', name: 'Greedy', desc: 'Morale tied to pay; buyout offers tempt her more.', effects: { buyoutChance: 1.5 } },
+  greedy: { tier: 'common', name: 'Greedy', desc: 'Morale tied to pay; buyout offers tempt them more.', effects: { buyoutChance: 1.5 } },
 };
