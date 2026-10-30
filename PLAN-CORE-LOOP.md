@@ -141,7 +141,7 @@ the drone can; district lines only change words and keep `{op}`).
   `src/core/specialisations.js`; the effect lives in `core/gear.js` `overwatchKit`. Tests:
   `tests/specialisations.test.js`. Next directions (Breacher, Netrunner, Ghost...) come in batches.
 
-### Slice 6 · Battles — 6a, the engine: [x] 2026-10-29 · 6b, the watch screen: [ ]
+### Slice 6 · Battles — 6a, the engine: [x] 2026-10-29 · 6b, the watch screen: [x] 2026-10-29
 Fights are automatic exchanges of up to 3 rounds on the watch feed. You watch; you're called in
 only when something big happens. Designed with the owner on 2026-10-29 (DESIGN.md rows); built as
 `src/core/battle.js` (pure, seeded), numbers in `src/data/battle.js`, the run's side in
@@ -193,9 +193,11 @@ only when something big happens. Designed with the owner on 2026-10-29 (DESIGN.m
 - **The planning read:** each danger row runs the fight 120 times on fixed seeds with the same
   round function (`battleOdds`, cached), counts a fight won with nobody down as getting through,
   and says "If it comes to a fight: low risk" on the board. Joss's picks use it too.
-- **The watch, for now:** a note when the fight starts, a card per round (each moment with its
-  dice, HP in the card's setup), "Pulling back", a note when it's over; the full log in the
-  report shows the same. The call-in names death's door and shows "Keep fighting" as extreme risk.
+- **The watch (6b, built):** a note when the fight starts (the guards appear on the plan), a card per
+  round (each moment with its dice; health chips in the summary), "Pulling back", a note when it's
+  over; every token has a three-segment health bar and each moment plays on the plan; the call-in
+  shows everyone's health. The full log in the report shows the same text. The call-in names
+  death's door and shows "Keep fighting" as extreme risk.
 - **Measured (`sim-battles.mjs`, 300 runs a row):** rookie jobs: about 1 run in 10 becomes a
   fight and rookies win nearly all of them, nobody goes down. Threat 4 with a grown crew (+4 every
   stat), loud: wins 22% with no kit, 44% with a sidearm and vest, 69% with pro kit; someone goes

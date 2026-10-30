@@ -27,6 +27,9 @@ Where things live and how a run flows, so you can read a few functions instead o
 - `squad.js` the planning read (`coverage`, `jossPicks`, `leanPicks`, `jobRead`): uses the run's own functions, so shown risk equals used risk. `risk.js` odds and labels. `crew.js` effective stats, `crewRoll`, injuries. `gear.js` stash, loadouts, overwatch kits. `specialisations.js`, `earned.js` (earned traits), `development.js` (growth, mentoring, age).
 - World: `jobs.js` (board, offers), `clients.js`, `heat.js`, `rumours.js`, `recruits.js`, `freelance.js`, `sidetasks.js`, `renewals.js`, `loyalty.js`, `time.js` (the day tick), `state.js` (new game, `SAVE_VERSION`), `report.js` (the report summary), `feed.js` (a run's events as watch cards), `upcoming.js` (Today's list).
 
+## The watch screen
+`ui/watch.js` runs the feed on a timer and hands each new card's `cue` to `ui/siteplan.js`, which plays it on the site map; a fight's cue is `cue.battle` (`phase`, both sides' health, the round's `lines`), played by `fight()` in `siteplan.js`. `core/feed.js` builds the cards and cues from `am.events`.
+
 ## Events and the record
 Everything that happens in a run is `record(am, event)` into `am.events`. `feed.js` turns events into watch cards; `report.js` and the report's full log (`ui/app.js` `renderFullLog`) read the same events. A new kind of moment needs its event, a card in `feed.js` and a line in `renderFullLog`.
 

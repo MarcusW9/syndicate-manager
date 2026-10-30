@@ -47,6 +47,11 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 ## 2026-10-29 · Renewal numbers line up
 - When someone asks for a new deal, their current wage, what they're asking and their market value now sit in three equal boxes with the numbers on one line, and the loyalty note no longer touches them.
+## 2026-10-29 · Fights on the map
+- A fight now plays out on the site map: the guards appear across from your crew, everyone has a little health bar, and each round's shots and hits play as they're reported. Anyone who goes down turns red; a guard who's down, talked round or running off fades out.
+- Each round's card ends with everyone's health, and the call-in at death's door shows it too, so you can decide without scrolling back. The bar under the map counts the guards still up.
+- A guard running off, or your crew getting the jump, is now green in the feed (it showed red).
+
 ## 2026-10-29 · Loud runs mean a fight
 - On a loud run the first guard is always a fight now, however well the roll goes: win the roll and your crew gets the jump (the guards get no shot in the first round); miss it and they fight back from the start. The same goes after you tell the crew to go loud at max alert.
 - The planning screen says so ("A loud run means a fight") and works the odds out with the jump counted in.

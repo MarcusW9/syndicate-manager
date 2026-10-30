@@ -22,6 +22,7 @@ Then add a row to the top of the table below and commit the folder with the chan
 
 | Date | Version | Commit | What's new on screen | Folder |
 | --- | --- | --- | --- | --- |
+| 2026-10-29 | Design session: a fight on the watch screen, slice 6b | (this change; `scripts/capture-fights.mjs`) | A loud warehouse run with three rookies, played live in the page. 01: the guards arrive on the map, numbered, with health bars on every token. 02: a round playing, the tally bar's "Guards 2 up". 03: a later round. 04: the fight at death's door drawn as it stands, 05: its call-in with everyone's health chips above the choices. Phone and desktop (06-10). | [2026-10-29-design-session-fights](2026-10-29-design-session-fights/) |
 | 2026-10-29 | Loud runs mean a fight | (this change) | The usual set. New on screen: 10, the coverage read; on a loud run its danger rows say "A loud run means a fight" with the fight's odds. The set's default job uses the stealth approach, so a loud row only shows if the crew changes the approach. | [2026-10-29-loud-fights](2026-10-29-loud-fights/) |
 | 2026-10-29 | Room above the job result | (this change) | The usual set. 16, the end of a job: the result card now has space between it and the last line of the play-by-play. | [2026-10-29-result-spacing](2026-10-29-result-spacing/) |
 | 2026-10-29 | "What they'll likely meet" folds away | (this change) | The usual set; the coverage-read shot opens the fold first, so it still shows the read. | [2026-10-29-meet-fold](2026-10-29-meet-fold/) |
