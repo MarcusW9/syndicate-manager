@@ -178,7 +178,8 @@ const BASIN = {
 //   the rifle sees past it. A target with `jobs` is that job's own place (Clinic Night's clinic);
 //   the others are the district's usual targets, for every other job there.
 // assemble() turns a choice of parts into the same site shape the plain sites have, so the plan
-// draws it the same way. Picture only: the core never reads a site.
+// draws it the same way. The core reads a site for one thing: where a fight stands, off its drawn
+// cover (core/fightspots.js, in the districts data/battle.js spotsIn names).
 
 const DOCKS = {
   name: 'a container yard',

@@ -5,6 +5,15 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-30 · You command the fights (the Docks first)
+- **Fights now stop for your orders each round** on any job you watch. Jobs sent off with "Never" still fight on their own.
+- **Fights in the Docks happen on the map.** The crew takes the best cover nearby: full behind a container, half behind a crate or a desk. The guards are wherever they were standing. Each person shows a shield for their cover, or an OPEN tag. Other districts still use the old fight picture for now: everyone counts as half cover there.
+- **You can see what the guards are about to do:** a red line from each guard to who they're aiming at, with their chance to hit.
+- **Each runner gets an order:** shoot or flank a guard, hunker down, move to better cover, patch someone, talk a guard down, or kill the lights. Every order shows its odds. Anyone you don't give an order to does what they'd do anyway.
+- **Auto round** plays one round your crew's way. **Auto fight** leaves the rest of the fight to them. **Pull back** is always there.
+- **The map zooms in on the fight,** with faces on the tokens. You can tap a runner, a guard, or a free spot to move to.
+- **New pallets by the Docks gates,** so a fight at the fence has some cover.
+
 ## 2026-10-30 · Fights can take orders (the rules, not the screen yet)
 - **Under the hood, fights now have cover.** Everyone stands in the open, in half cover or in full cover, and that changes how hard they are to hit. For now everyone starts in half cover, which plays exactly like fights did before.
 - **The guards decide who they're aiming at before each round.** The screen doesn't show it yet; it will when orders reach the map.
