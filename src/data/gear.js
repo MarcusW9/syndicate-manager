@@ -74,3 +74,33 @@ export const RECRUIT_GEAR = {
   face: [[0.2, 'pistol']],
   driver: [[0.2, 'pistol'], [0.15, 'picks']],
 };
+
+// Sidearm strengths (2026-10-30, owner: "randomly generated strengths, and in the future perks").
+// A sidearm's numbers come from its frame (data/gearLooks.js SIDEARM_LOOKS) and a quirk rolled with
+// its look (core/looks.js). aim: added to the carrier's combat rolls (the sidearm's bonus); damage:
+// what a hit does; pierce: armour points a hit ignores. A pro sidearm adds its tier step to aim and
+// damage, as every pro item does. A sidearm with no frame (old saves, tests) is a heritage pistol:
+// aim 1, damage 3, the sidearm as it always was. Perks are for later: they'd sit beside the quirk.
+export const SIDEARM_FRAMES = {
+  compact: { aim: 2, damage: 2, pierce: 0, trait: 'light and accurate' },
+  heritage: { aim: 1, damage: 3, pierce: 0, trait: 'steady' },
+  revolver: { aim: 1, damage: 4, pierce: 0, trait: 'hits hard' },
+  machine: { aim: 0, damage: 3, pierce: 1, trait: 'sprays: some rounds get through armour' },
+  cannon: { aim: 0, damage: 5, pierce: 0, trait: 'hits very hard, kicks' },
+  smart: { aim: 3, damage: 3, pierce: 0, trait: 'the rounds find their mark' },
+  coil: { aim: 1, damage: 3, pierce: 2, trait: 'punches through armour' },
+};
+// The quirk each sidearm rolls, by weight: most are as made, some are better, some trade one thing
+// for another, a few are worn.
+export const SIDEARM_QUIRKS = {
+  none: { weight: 40, name: null },
+  sights: { weight: 15, name: 'true sights', aim: 1 },
+  hotloads: { weight: 15, name: 'hot loads', damage: 1 },
+  hairtrigger: { weight: 10, name: 'hair trigger', aim: 1, damage: -1 },
+  heavyrounds: { weight: 10, name: 'heavy rounds', aim: -1, damage: 1 },
+  worn: { weight: 5, name: 'worn barrel', aim: -1 },
+  lightloads: { weight: 5, name: 'light loads', damage: -1 },
+};
+// Price: each point of strength over the plain sidearm's (aim 1, damage 3) adds this share; a
+// point of pierce counts half.
+export const SIDEARM_PRICE_PER_POINT = 0.15;

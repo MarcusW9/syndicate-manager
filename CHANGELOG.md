@@ -5,6 +5,18 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-30 · Every sidearm is different
+- **Each sidearm now has its own strengths:** aim (how much it helps you hit), damage, and for some, pierce (how much armour it ignores).
+- **They come from the gun's frame:**
+  - compact pistols are accurate but light
+  - revolvers hit hard
+  - machine pistols get some rounds through armour
+  - hand cannons hit very hard
+  - pro-only smart pistols are very accurate, and pro-only coil pistols punch through armour
+- **Each gun also rolls a quirk:** true sights, hot loads, a hair trigger, heavy rounds, a worn barrel or light loads. Most have none.
+- **The price follows the strength.** The armoury shows each gun's numbers, and so does the fight.
+- Sidearms you already own are the plain sidearm they always were.
+
 ## 2026-10-30 · Gun looks, faces and career marks are in the game
 - **Gun looks:** every rifle and sidearm now has its own look and name, and some guns glow. The armoury stocks a new shelf each week. These were made earlier but never reached the live game.
 - **Faces:** every face has its own shape (anatomy) now.

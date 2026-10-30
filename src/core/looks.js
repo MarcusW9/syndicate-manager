@@ -3,6 +3,7 @@
 // item.look  how a gun is built (ui/art.js draws it): a rifle's { frame, finish, engraving, charm,
 //            glow? }, a sidearm's { frame, finish, mod, charm, glow? }
 // item.name  "Vermilion Heron"  what it's called
+// item.quirk  a sidearm's rolled quirk (data/gear.js SIDEARM_QUIRKS): with its frame, its strengths
 // state.armoury { day, offers: [{ oid, type, tier, look, name }] }  this week's guns
 //
 // Looks come from their own seed (the game's seed and the item's id), not the shared dice, so
@@ -10,6 +11,7 @@
 
 import { makeRng, pick } from './rng.js';
 import { RIFLE_LOOKS, SIDEARM_LOOKS, GLOWS, ARMOURY_STOCK } from '../data/gearLooks.js';
+import { SIDEARM_QUIRKS } from '../data/gear.js';
 
 /** Types that have looks. */
 export const HAS_LOOKS = { rifle: RIFLE_LOOKS, pistol: SIDEARM_LOOKS };
@@ -43,7 +45,18 @@ export function rollLook(state, key, tier = 'street', type = 'rifle') {
   const charm = rng() < odds.charm ? pick(rng, odds.charms) : null;
   const look = { frame, finish, [slot]: extra, charm };
   if (lightsUp(type, look)) look.glow = pick(rng, Object.keys(GLOWS));
-  return { look, name: nameFor(look, rng, type) };
+  const out = { look, name: nameFor(look, rng, type) };
+  // A sidearm's quirk, from a seed of its own (so adding it changed no look or name).
+  if (type === 'pistol') out.quirk = rollQuirk(makeRng(seedOf(state, `${key}|quirk`)));
+  return out;
+}
+
+/** A sidearm's quirk, by weight (data/gear.js SIDEARM_QUIRKS). */
+function rollQuirk(rng) {
+  const total = Object.values(SIDEARM_QUIRKS).reduce((n, q) => n + q.weight, 0);
+  let at = rng() * total;
+  for (const [id, q] of Object.entries(SIDEARM_QUIRKS)) if ((at -= q.weight) < 0) return id;
+  return 'none';
 }
 
 /** A two-word name from what it's made of (and the colour it glows), then a word from its frame. */

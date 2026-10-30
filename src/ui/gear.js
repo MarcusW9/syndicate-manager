@@ -4,7 +4,7 @@
 //
 // ui: helpers from app.js { esc, money, face, statusChip }.
 
-import { GEAR, SLOTS, TIERS, carried, itemName, itemTitle, priceOf, sellPrice, canChangeGear, kitsFor } from '../core/gear.js';
+import { GEAR, SLOTS, TIERS, carried, itemName, itemTitle, priceOf, sellPrice, canChangeGear, kitsFor, sidearmStats } from '../core/gear.js';
 import { HAS_LOOKS, lookText } from '../core/looks.js';
 import { gearGlyph } from './icons.js';
 import { gearArt } from './art.js';
@@ -14,6 +14,9 @@ export function itemEffect(item) {
   const g = GEAR[item.type];
   const step = TIERS[item.tier]?.step ?? 0;
   if (g.overwatch) return `Overwatch · ${g.overwatch.stat} ${g.overwatch.uses} ${item.type === 'rifle' ? 'shots' : 'actions'}${step ? ` · +${step}` : ''}`;
+  // A sidearm: its own strengths (frame and quirk): "Aim +2 · damage 2 · light and accurate · true sights".
+  const s = sidearmStats(item);
+  if (s) return [`Aim ${s.aim >= 0 ? '+' : '−'}${Math.abs(s.aim)}`, `damage ${s.damage}`, s.pierce ? `pierces ${s.pierce}` : null, s.trait, s.quirk].filter(Boolean).join(' · ');
   const bonus = Object.entries(g.bonus ?? {}).map(([s, v]) => `${s} +${v + step}`);
   if (g.serious) bonus.push('fewer serious wounds');
   return bonus.join(' · ').replace(/^./, (c) => c.toUpperCase());
@@ -58,7 +61,7 @@ function buyRow(ui, state, type) {
 /** One of this week's rifles: drawn under the safehouse lamp, its name, and one price. */
 function offerRow(ui, state, offer) {
   const { esc, money } = ui;
-  const price = priceOf(offer.type, offer.tier);
+  const price = priceOf(offer.type, offer.tier, offer);
   return `
     <li class="gearrow gearrow--buy">
       ${thumb(offer)}

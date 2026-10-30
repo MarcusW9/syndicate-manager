@@ -23,7 +23,7 @@
 import { BATTLE } from '../data/battle.js';
 import { GEAR, TIERS } from '../data/gear.js';
 import { ZONES, INCIDENTS } from '../data/incidents.js';
-import { carried, itemName, overwatchKit, patchBonus } from './gear.js';
+import { carried, itemName, itemTitle, overwatchKit, patchBonus, sidearmStats } from './gear.js';
 import { effectiveStat } from './crew.js';
 import { d20, makeRng } from './rng.js';
 
@@ -60,11 +60,13 @@ export function guardPosts(am) {
 /** Their health in a fight: base + cool. */
 export const maxHp = (op) => BATTLE.hp + Math.floor((op.stats.cool ?? 0) / BATTLE.hpPerCool);
 
-/** What they shoot with: { name, damage }. Nothing in the weapon slot means a street piece. */
+/** What they shoot with: { name, damage, pierce }. A sidearm by its own strengths; nothing in the weapon slot means a street piece. */
 export function weaponOf(op) {
   const item = op.gear?.weapon;
+  const s = sidearmStats(item);
+  if (s) return { name: itemTitle(item), damage: s.damage, pierce: s.pierce };
   const dmg = item && GEAR[item.type]?.damage;
-  return dmg ? { name: itemName(item), damage: dmg + step(item) } : { ...BATTLE.unarmed };
+  return dmg ? { name: itemName(item), damage: dmg + step(item), pierce: 0 } : { ...BATTLE.unarmed, pierce: 0 };
 }
 
 /** Their armour in a fight: { name, value } (flat soak per hit), value 0 if none. */
@@ -87,7 +89,7 @@ export function runnerOf(op, approach) {
   const w = weaponOf(op);
   const a = armourOf(op);
   return {
-    id: op.id, handle: op.handle, hp: max - hurt, max, armour: a.value, armourName: a.name, damage: w.damage, weapon: w.name,
+    id: op.id, handle: op.handle, hp: max - hurt, max, armour: a.value, armourName: a.name, damage: w.damage, pierce: w.pierce, weapon: w.name,
     stats: Object.fromEntries(FIGHT_STATS.map((s) => [s, effectiveStat(op, s, { approach })])),
     patch: patchBonus(op), down: false, fightOn: false, stable: false, cover: BATTLE.startCover, now: null,
   };
@@ -139,8 +141,8 @@ const better = (c) => COVERS[Math.min(COVERS.length - 1, COVERS.indexOf(c) + 1)]
 /** A shot's difficulty at a guard: the fight's, shootStep, and their cover. */
 const shotDiff = (b, g) => b.diff + BATTLE.shootStep + coverStep(g);
 
-/** The one hit rule: armour comes off every hit, and a hit that lands always does at least 1. */
-export const hitFor = (damage, armour) => Math.max(1, damage - armour);
+/** The one hit rule: armour (less what the shot pierces) comes off every hit, and a hit that lands always does at least 1. */
+export const hitFor = (damage, armour, pierce = 0) => Math.max(1, damage - Math.max(0, armour - pierce));
 
 /**
  * What a runner does with their turn, by the same rule every time (no player input): get a downed
@@ -315,7 +317,7 @@ export function playRound(b, rng, orders = {}) {
       if (!g) continue;
       const flank = act.kind === 'flank';
       const k = roll(rng, st.value, shotDiff(b, g));
-      const dmg = k.success ? hitFor(r.damage, g.armour) : 0;
+      const dmg = k.success ? hitFor(r.damage, g.armour, r.pierce ?? 0) : 0;
       g.hp = Math.max(0, g.hp - dmg);
       if (g.hp === 0) g.out = true;
       const where = flank ? `${r.handle} works round ${guardName(g, b)}'s cover` : r.handle;
@@ -420,7 +422,7 @@ const oddsCache = new Map();
  */
 export function battleOdds(args) {
   const b0 = buildBattle(args);
-  const key = JSON.stringify([b0.diff, b0.ambush, b0.guards, b0.runners.map((r) => [r.hp, r.max, r.armour, r.damage, r.patch, r.cover, FIGHT_STATS.map((s) => r.stats[s].value)]), b0.overwatch && [b0.overwatch.value, b0.overwatch.damage, b0.overwatch.left], b0.wheels?.value]);
+  const key = JSON.stringify([b0.diff, b0.ambush, b0.guards, b0.runners.map((r) => [r.hp, r.max, r.armour, r.damage, r.pierce, r.patch, r.cover, FIGHT_STATS.map((s) => r.stats[s].value)]), b0.overwatch && [b0.overwatch.value, b0.overwatch.damage, b0.overwatch.left], b0.wheels?.value]);
   if (oddsCache.has(key)) return oddsCache.get(key);
   const n = { win: 0, down: 0, standoff: 0 };
   if (!b0.runners.length) return { win: 0, down: 1, standoff: 0 };

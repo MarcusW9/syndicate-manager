@@ -455,7 +455,8 @@ function migrate(state) {
     // anyone who has already worked ten jobs with the crew gets the crew's mark now, with a line
     // saying so. Rifles already owned keep the look they had (gunmetal and wood, or carbon for pro)
     // and get a name; sidearms already owned become plain blued compact pistols with a name; the
-    // armoury stocks its first rifles and sidearms.
+    // armoury stocks its first rifles and sidearms. A sidearm may carry a rolled quirk (item.quirk);
+    // none means the plain sidearm's numbers (core/gear.js sidearmStats).
     for (const op of state.crew) {
       op.marks = op.marks ?? [];
       if (!op.freelance && (op.jobsWithCrew ?? 0) >= TATTOO_JOBS && !op.marks.some((m) => m.kind === 'tattoo')) {

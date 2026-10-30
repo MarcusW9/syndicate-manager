@@ -22,6 +22,7 @@ Then add a row to the top of the table below and commit the folder with the chan
 
 | Date | Version | Commit | What's new on screen | Folder |
 | --- | --- | --- | --- | --- |
+| 2026-10-30 | Sidearm strengths | (this change) | The armoury's sidearms show their strengths ("Aim +0 · damage 5 · hits very hard, kicks"); `23-sidearm-shelf.png` is the sidearm shelf. | [2026-10-30-sidearm-strengths](2026-10-30-sidearm-strengths/) |
 | 2026-10-30 | The looks branch comes in | (this change) | Gun looks on the armoury shelf (rolled rifles and sidearms with names and glows), faces with their own anatomy, career marks. Made on a branch that was never merged; now in the game. | [2026-10-30-looks-branch-in](2026-10-30-looks-branch-in/) |
 | 2026-10-30 | Design session: gear in the fight | (`scripts/capture-command.mjs`) | The orders panel with each runner's gun, damage and armour; the guards' aim with damage after armour; what each shot does and how many hits drop a guard. Phone. | [2026-10-30-design-session-fight-gear](2026-10-30-design-session-fight-gear/) |
 | 2026-10-30 | Design session: command fights in every district | (`scripts/capture-command.mjs`) | A fight's orders in Old Town, the Night Market, Glass Heights and the Basin, on each map's new cover, phone width. | [2026-10-30-design-session-command-fights-districts](2026-10-30-design-session-command-fights-districts/) |

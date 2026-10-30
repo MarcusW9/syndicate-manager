@@ -17,9 +17,9 @@ const guardName = (b, n) => (b.guards.length > 1 ? `Guard ${n}` : 'The guard');
 
 /** What a runner's shot does to a guard, short: "hits for 3 · 2 hits to drop" (armour taken off, as the round does). */
 function shotWord(r, g) {
-  const dmg = hitFor(r.damage, g.armour);
+  const dmg = hitFor(r.damage, g.armour, r.pierce ?? 0);
   const k = Math.ceil(g.hp / dmg);
-  return `hits for ${dmg}${g.armour ? ` (armour ${g.armour})` : ''} · ${k === 1 ? 'drops them' : `${k} hits to drop`}`;
+  return `hits for ${dmg}${g.armour ? ` (armour ${g.armour}${r.pierce ? `, pierces ${Math.min(r.pierce, g.armour)}` : ''})` : ''} · ${k === 1 ? 'drops them' : `${k} hits to drop`}`;
 }
 /** What a runner carries into the fight: their gun and its damage, their armour. */
 const kitWord = (r) => `${r.weapon} ${r.damage}${r.armour ? ` · ${r.armourName ?? 'armour'} −${r.armour}` : ' · no armour'}`;

@@ -39,7 +39,7 @@ Everything that happens in a run is `record(am, event)` into `am.events`. `feed.
 ## Adding things
 - **A call-in (pending kind):** `decisionChoices` and `ordersDecision` (`incidents.js`), `describePending` and `resolvePending` (`mission.js`), the title in `ui/app.js` (search `calling in`), a test that it has an exit.
 - **An incident:** `data/incidents.js` (and `ZONE_POOLS`), district lines in `data/districtIncidents.js`; `tests/incidents.test.js` checks the shape.
-- **Gear:** `data/gear.js`; the rules read it in `core/gear.js` (and `core/battle.js` for fights).
+- **Gear:** `data/gear.js`; the rules read it in `core/gear.js` (and `core/battle.js` for fights). Looks and names: `core/looks.js`, `data/gearLooks.js`. A sidearm's strengths: its frame and rolled quirk, `core/gear.js` `sidearmStats` (`SIDEARM_FRAMES`, `SIDEARM_QUIRKS`); perks would sit beside the quirk.
 - **Changing the state's shape:** bump `SAVE_VERSION` in `core/state.js` and add a migration in `save/save.js`.
 - **A roll modifier:** it must show in the roll's notes and in the planning read (`coverage`), or the shown risk lies.
 
