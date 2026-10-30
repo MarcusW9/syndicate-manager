@@ -69,6 +69,7 @@ let root;
 const CONTINUE_REST_MS = 800;
 let continueRestUntil = 0;
 let dayCue = null; // what the day that just started brought; shown once, on the next render
+let importInput = null; // the hidden save-file picker (see mountApp)
 let focusNext = null; // { action, id }: the control to focus after the next render (going back to a list)
 let returnTo = null; // { screen, messageId }: where a runner's page opened from a name link goes back to
 let founderPick = []; // candidate ids picked so far on a new game's first screen (renderFounding)
@@ -84,7 +85,12 @@ export function mountApp(el, initialState) {
     if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('g[data-action]')) { e.preventDefault(); onClick(e); }
     if (e.key === 'Escape' && pickSlot) { focusNext = { action: 'pick-slot', id: pickSlot }; pickSlot = null; render(); }
   });
-  root.addEventListener('change', onChange);
+  // The save-file picker lives outside root: render() replaces everything inside root, and the
+  // Load button's own click re-renders, so a picker inside would be swapped out mid-pick and its
+  // file never arrive (owner's report, 2026-10-30: "nothing happens").
+  importInput = Object.assign(document.createElement('input'), { type: 'file', id: 'import-file', accept: 'application/json,.json', hidden: true });
+  importInput.addEventListener('change', onImportFile);
+  root.after(importInput);
   render();
 }
 
@@ -238,7 +244,7 @@ function onClick(e) {
       exportSave(state);
       break;
     case 'import':
-      if (confirm(`Load a save file into slot ${getActiveSlot()}? The game in this slot will be replaced.`)) root.querySelector('#import-file').click();
+      if (confirm(`Load a save file into slot ${getActiveSlot()}? The game in this slot will be replaced.`)) { importInput.value = ''; importInput.click(); } // cleared, so the same file can be picked again
       break;
     case 'slot-load': {
       const n = Number(id);
@@ -281,9 +287,9 @@ function onClick(e) {
 /** The planning screen's squad options for startMission / sendOff. */
 const planOpts = () => ({ overwatch: plan.overwatch ? { id: plan.overwatch, kit: planKit(plan, state.crew.find((o) => o.id === plan.overwatch)) } : null, wheels: plan.wheels ?? null, standby: plan.standby ?? null, callIn: plan.callIn ?? 'risky', orders: plan.orders ?? 'steady' });
 
-function onChange(e) {
-  if (e.target.id !== 'import-file' || !e.target.files[0]) return;
-  importSave(e.target.files[0])
+function onImportFile() {
+  if (!importInput.files[0]) return;
+  importSave(importInput.files[0])
     .then((loaded) => { screen = 'inbox'; plan = null; setState(loaded); })
     .catch((err) => alert(`Could not load that file: ${err.message}`));
 }
@@ -417,7 +423,6 @@ function render() {
     <main class="main ${wide ? 'main--wide' : ''} ${!state.activeMission && screen === 'jobs' && plan ? 'main--split' : ''}">${state.activeMission ? renderMission() : renderScreen()}</main>
     ${dock ? `<div class="dock">${renderContinue(blocked, resting, unread, 'dock__continue')}</div>` : ''}
     ${cue ? renderDayCue(cue) : ''}
-    <input type="file" id="import-file" accept="application/json" hidden />
   `;
   if (am) mountWatch(root.querySelector('.watch'), state, { ui: watchUi, onAuto: () => setState(autoStep(state)) });
   if (pickSlot) (root.querySelector('.sheet .cand.is-on') ?? root.querySelector('.sheet .cand:not([disabled])'))?.focus({ preventScroll: true });

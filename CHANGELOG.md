@@ -5,6 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-30 · Loading a save file works again
+- **Save → "Load save file into this slot" did nothing.** You could pick a file, but the game ignored it and showed no error. It loads now. Picking the same file twice in a row also works.
+
 ## 2026-10-29 · Room above the job result
 - At the end of a job, the result card (Job done, pay, heat) now sits clear of the last line of the play-by-play instead of right against it.
 
