@@ -10,6 +10,16 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - **A saved game that can't be opened is no longer lost.** If the game finds a save it can't open (saved by a newer version, which can happen for one launch after an update, or damaged), it now keeps that save and its weekly backup aside before starting fresh. A red banner says so, and the Save screen offers **Restore it**, **Download it** or **Throw away**. Before, the fresh game quietly saved over it, backup included.
 - If a save is from a newer version, the message now says to reload the page to update.
 
+## 2026-10-29 · Barcode tattoos sit on the chin
+- Portraits with a barcode tattoo now have it centred on the chin and inside the face on every head shape, instead of hanging off the side of the jaw.
+
+## 2026-10-29 · Jobs screen lines up
+- Side work: the stat each job uses (Combat, Social, Driving…) now sits on the same line as the job's name and district, and the days and people on the right line up too.
+- Clients: each client's standing ("neutral · 50") is now left-aligned under their name, like the rest of the screen.
+
+## 2026-10-29 · Joss reads the run right
+- When every roll on a job held but one of your choices cost something (like paying Auntie Fung's tea out of the take), Joss now opens the report with a line about the cost you chose, not "Not quietly, and not all of it". Runs where a roll actually failed still get the rougher lines, which no longer claim noise or lost pay the log doesn't show.
+
 ## 2026-10-29 · Room above the job result
 - At the end of a job, the result card (Job done, pay, heat) now sits clear of the last line of the play-by-play instead of right against it.
 
