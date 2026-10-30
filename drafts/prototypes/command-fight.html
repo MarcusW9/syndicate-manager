@@ -4,7 +4,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Prototype (2026-10-30): one fight from a loud job, played with orders each round. Not part of the
+/* Prototype (2026-10-30): fights from a loud job, played with orders each round; three fights with a
+   goal each (clear, hold for Static, stop the alarm) and enemy types with their own moves. Not part of the
    game; the rules mirror src/core/battle.js loosely so the feel can be judged before the engine changes.
    Layout: one phone-width column. Guards (with their intent) over your crew (with their orders), a
    sticky Go bar, the round log underneath. Single dark look on purpose: the game's street-terminal skin. */
@@ -123,8 +124,16 @@ h2 { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spa
 .choice span { color: var(--muted); font-size: 0.86rem; }
 .choice:hover { border-color: var(--accent-2); }
 .how { color: var(--muted); font-size: 0.86rem; }
+details.how { display: block; padding-block: 0; }
 .how summary { cursor: pointer; font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent-2); min-height: var(--tap); display: flex; align-items: center; }
 .how ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.tabs .chip { flex: 1 1 auto; text-align: center; }
+.goal { margin: 0; padding: 10px 12px; border: 1px solid var(--accent-2); background: #0d1a1a; font-size: 0.95rem; }
+.goal b { font-family: var(--display); text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent-2); margin-right: 6px; }
+.progress { display: flex; gap: 3px; } .progress i { flex: 1; height: 6px; background: var(--line); } .progress i.on { background: var(--accent-2); }
+.guard .kind { color: var(--muted); font-size: 0.78rem; }
+.runner.objective { border-color: var(--accent-2); }
 @media (prefers-reduced-motion: no-preference) { .round.new { animation: in 0.35s ease-out; } }
 @keyframes in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 </style>
@@ -133,8 +142,11 @@ h2 { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spa
   <header>
     <span class="tag">Prototype · command fights</span>
     <h1>The yard office, gone loud</h1>
-    <p class="intro">Three guards between your crew and the office. Each round, see who every guard is aiming at, give your people their orders, then Go. Everyone starts on what they'd do on their own.</p>
+    <p class="intro">Each round, see what every enemy is about to do, give your people their orders, then Go. Everyone starts on what they'd do on their own.</p>
   </header>
+
+  <nav class="tabs" aria-label="Which fight" id="tabs"></nav>
+  <p class="goal" id="goal"></p>
 
   <details class="how panel">
     <summary>How it works</summary>
@@ -144,11 +156,12 @@ h2 { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spa
       <li><b>Abilities</b> come from rank. Some need a round or two to come back.</li>
       <li>Guards pick their target before you order. Half the time they go for whoever is hurt worst.</li>
       <li>At 0 HP someone is down, not dead. Up to 4 rounds, then you decide: push past or pull back.</li>
+      <li>Enemies: a <b>heavy</b> charges through cover; a <b>dog</b> pins whoever it bites (they lose their next turn); a <b>lieutenant</b> makes every other guard +1 while he's up; a <b>runner</b> goes for the alarm and doesn't fight.</li>
     </ul>
   </details>
 
   <section aria-labelledby="g-h" class="panel">
-    <div class="row-head"><h2 id="g-h">Guards</h2><span class="tag" id="round-tag"></span></div>
+    <div class="row-head"><h2 id="g-h">Enemies</h2><span class="tag" id="round-tag"></span></div>
     <div class="guards" id="guards"></div>
   </section>
 
@@ -180,34 +193,52 @@ const d20 = () => 1 + Math.floor(Math.random() * 20);
 const P = (x) => `${Math.round(x * 100)}%`;
 
 const ABILITIES = {
-  doubletap: { name: 'Double Tap', cooldown: 2, target: 'guard', desc: 'Two shots at one guard, each 1 harder.' },
-  suppress: { name: 'Suppress', cooldown: 2, target: 'guard', desc: 'On a hit, that guard can\'t shoot this round.' },
-  patch: { name: 'Patch', cooldown: 0, target: 'ally', desc: 'Heal a teammate 5.' },
-  stim: { name: 'Stim', cooldown: 3, target: 'ally', desc: 'A teammate gets +3 to hit this round.' },
+  doubletap: { name: 'Double Tap', cooldown: 2 },
+  suppress: { name: 'Suppress', cooldown: 2 },
+  patch: { name: 'Patch', cooldown: 0 },
+  stim: { name: 'Stim', cooldown: 3 },
 };
 const PERKS = {
-  doubletap: { name: 'Double Tap', desc: 'Two shots at one guard every other round.' },
+  doubletap: { name: 'Double Tap', desc: 'Two shots at one enemy every other round.' },
   steady: { name: 'Steady Hands', desc: '+2 on every shot, for good.' },
   tough: { name: 'Hard to Kill', desc: '+4 health, and cover works better for them (+6).' },
 };
+
+// Enemy types: each asks a different question of the same few buttons.
+const ENEMY = {
+  guard: { name: 'Guard', max: 6, armour: 0, dmg: 3 },
+  heavy: { name: 'Heavy', max: 10, armour: 1, dmg: 4, charges: true },
+  dog: { name: 'Dog', max: 4, armour: 0, dmg: 2, pins: true },
+  lieutenant: { name: 'Lieutenant', max: 7, armour: 0, dmg: 2, leads: 1 },
+  runner: { name: 'Runner', max: 4, armour: 0, dmg: 0, alarm: 2 },
+};
+
+// The fights: a goal each, and who's in the way.
+const SCENARIOS = {
+  clear: { name: 'Clear the yard', goal: 'Drop or drive off everyone between you and the office.', enemies: ['guard', 'guard', 'dog'] },
+  hold: { name: 'Hold for Static', goal: 'Static is cracking the safe: keep them off her for 3 rounds. If she goes down, the safe stays shut.', enemies: ['guard', 'heavy', 'guard'], objective: true, work: 3 },
+  alarm: { name: 'Stop the alarm', goal: 'A runner is going for the alarm panel, 2 rounds away. Drop or pin him first, or two more guards come.', enemies: ['lieutenant', 'guard', 'runner'] },
+};
+
 const START = () => [
   { id: 'jax', name: 'Jax', rank: 'Veteran', role: 'Muscle', color: '#ff9a3d', combat: 15, cool: 12, medical: 6, max: 15, dmg: 4, weapon: 'Pro sidearm 4', armour: 1, gear: 'Vest', abilities: ['doubletap', 'suppress'], hitBonus: 0, coverBonus: COVER },
   { id: 'stitch', name: 'Stitch', rank: 'Pro', role: 'Medic', color: '#5fe0a5', combat: 9, cool: 11, medical: 14, max: 13, dmg: 3, weapon: 'Sidearm 3', armour: 0, gear: 'Trauma kit', abilities: ['patch', 'stim'], hitBonus: 0, coverBonus: COVER },
   { id: 'kit', name: 'Kit', rank: 'Rookie', role: 'Driver', color: '#b48cff', combat: 9, cool: 9, medical: 5, max: 12, dmg: 2, weapon: 'Street piece 2', armour: 0, gear: '', abilities: [], hitBonus: 0, coverBonus: COVER },
 ];
-const GUARDS = () => [
-  { n: 1, max: 6, armour: 0, dmg: 3 }, { n: 2, max: 6, armour: 0, dmg: 3 }, { n: 3, max: 7, armour: 1, dmg: 3 },
-];
+const STATIC = { id: 'static', name: 'Static', rank: 'Pro', role: 'Tech', color: '#3de8d8', combat: 7, cool: 10, medical: 5, max: 11, dmg: 2, weapon: 'Cyberdeck', armour: 0, gear: '', abilities: [], hitBonus: 0, coverBonus: COVER, objective: true };
 
 // --- state -----------------------------------------------------------------------------------
 let crew = START();
+let scenario = 'clear';
 let fightNo = 1;
 let perkTaken = null;
-let S; // { round, guards, runners, orders, cooldowns, intents, stim, over, call, log }
+let S; // { round, guards, runners, orders, cooldowns, intents, stim, work, alarmed, over, call, log }
 
 function newFight() {
-  const runners = crew.map((c) => ({ ...c, hp: c.max, down: false, fightOn: false }));
-  S = { round: 1, guards: GUARDS().map((g) => ({ ...g, hp: g.max, out: false })), runners, cooldowns: {}, intents: {}, orders: {}, stim: null, over: null, call: null, log: [] };
+  const sc = SCENARIOS[scenario];
+  const runners = [...crew, ...(sc.objective ? [STATIC] : [])].map((c) => ({ ...c, hp: c.max, down: false, fightOn: false, pinnedFor: 0 }));
+  const guards = sc.enemies.map((type, i) => ({ n: i + 1, type, ...ENEMY[type], hp: ENEMY[type].max, out: false, steps: ENEMY[type].alarm ?? 0 }));
+  S = { round: 1, guards, runners, cooldowns: {}, intents: {}, orders: {}, stim: null, work: 0, alarmed: false, over: null, call: null, log: [] };
   rollIntents();
   defaultOrders();
   render();
@@ -215,46 +246,54 @@ function newFight() {
 
 const up = () => S.guards.filter((g) => !g.out);
 const standing = () => S.runners.filter((r) => !r.down);
+const canAct = (r) => !r.down && !r.objective && r.pinnedFor !== S.round;
 const byId = (id) => S.runners.find((r) => r.id === id);
 const guardN = (n) => S.guards.find((g) => g.n === n);
+const label = (g) => `${g.name} ${g.n}`;
+const leaderUp = () => up().some((g) => g.leads);
+const skillOf = (g) => GUARD_SKILL + (leaderUp() && !g.leads ? 1 : 0);
 
-// Guards choose who to go for before you give orders: half go for whoever is hurt worst.
+// Enemies choose before you give orders. In the hold, most go for Static; otherwise half go for
+// whoever is hurt worst. The runner doesn't fight: he's going for the alarm.
 function rollIntents() {
   S.intents = {};
   for (const g of up()) {
+    if (g.alarm) continue;
     const pool = standing();
     if (!pool.length) break;
+    const st = pool.find((r) => r.objective);
     const worst = [...pool].sort((a, b) => a.hp / a.max - b.hp / b.max)[0];
-    S.intents[g.n] = Math.random() < 0.5 ? worst.id : pool[Math.floor(Math.random() * pool.length)].id;
+    const roll = Math.random();
+    S.intents[g.n] = st && roll < 0.6 ? st.id : roll < 0.8 ? worst.id : pool[Math.floor(Math.random() * pool.length)].id;
   }
 }
 
-// What the crew would do on its own: the medic patches anyone under half, everyone else shoots the
-// guard aiming at the most hurt teammate, or else the most hurt guard.
+// What the crew would do on its own: the medic patches anyone under half; everyone else shoots the
+// runner if there is one, else whatever is aiming at the most hurt teammate, else the most hurt enemy.
 function defaultOrder(r) {
   const hurt = standing().filter((x) => x.hp < x.max / 2).sort((a, b) => a.hp - b.hp)[0];
   if (r.abilities.includes('patch') && hurt) return { act: 'patch', target: hurt.id };
-  const aimedAtWeakest = up().map((g) => ({ g, t: byId(S.intents[g.n]) })).filter((x) => x.t).sort((a, b) => a.t.hp / a.t.max - b.t.hp / b.t.max)[0];
-  const target = aimedAtWeakest?.g ?? [...up()].sort((a, b) => a.hp - b.hp)[0];
+  const runner = up().find((g) => g.alarm);
+  const aimed = up().map((g) => ({ g, t: byId(S.intents[g.n]) })).filter((x) => x.t).sort((a, b) => a.t.hp / a.t.max - b.t.hp / b.t.max)[0];
+  const target = runner ?? aimed?.g ?? [...up()].sort((a, b) => a.hp - b.hp)[0];
   return { act: 'shoot', target: target?.n ?? null };
 }
-function defaultOrders() { S.orders = {}; for (const r of standing()) S.orders[r.id] = defaultOrder(r); }
+function defaultOrders() { S.orders = {}; for (const r of S.runners.filter(canAct)) S.orders[r.id] = defaultOrder(r); }
 
 // --- the odds shown on buttons, and used when the round plays ---------------------------------
 const shotChance = (r, extra = 0) => pct(r.combat + r.hitBonus + (S.stim === r.id ? 3 : 0) + extra, SHOT);
 const hitFor = (r, g) => Math.max(1, r.dmg - g.armour);
-function guardChance(g, r) {
-  const cover = S.orders[r.id]?.act === 'cover';
-  return pct(GUARD_SKILL, r.cool + (cover ? r.coverBonus : 0));
-}
+const inCover = (r) => S.orders[r.id]?.act === 'cover';
+const guardNeed = (g, r) => 10 + r.cool + (inCover(r) && !g.charges ? r.coverBonus : 0);
+const guardChance = (g, r) => pct(skillOf(g), guardNeed(g, r) - 10);
 function orderText(r) {
   const o = S.orders[r.id];
   if (!o) return '';
   const g = o.target != null ? guardN(o.target) : null;
-  if (o.act === 'shoot') return `Shoot guard ${g.n} · <span class="odds">${P(shotChance(r))} · ${hitFor(r, g)} dmg</span>`;
-  if (o.act === 'doubletap') return `Double Tap guard ${g.n} · <span class="odds">2 × ${P(shotChance(r, -1))} · ${hitFor(r, g)} dmg each</span>`;
-  if (o.act === 'suppress') return `Suppress guard ${g.n} · <span class="odds">${P(shotChance(r))} to pin them down</span>`;
-  if (o.act === 'cover') return `Take cover · <span class="odds">guards need ${10 + r.cool + r.coverBonus - GUARD_SKILL}+ on a d20</span>`;
+  if (o.act === 'shoot') return `Shoot ${label(g)} · <span class="odds">${P(shotChance(r))} · ${hitFor(r, g)} dmg</span>`;
+  if (o.act === 'doubletap') return `Double Tap ${label(g)} · <span class="odds">2 × ${P(shotChance(r, -1))} · ${hitFor(r, g)} dmg each</span>`;
+  if (o.act === 'suppress') return `Suppress ${label(g)} · <span class="odds">${P(shotChance(r))} to pin them down</span>`;
+  if (o.act === 'cover') return `Take cover · <span class="odds">guards need ${10 + r.cool + r.coverBonus - GUARD_SKILL}+ on a d20 (not the heavy)</span>`;
   if (o.act === 'patch') { const t = byId(o.target); return `Patch ${t.name} · <span class="odds">${P(pct(r.medical, PATCH_DIFF))} · +5</span>`; }
   if (o.act === 'stim') { const t = byId(o.target); return `Stim ${t.name} · <span class="odds">+3 to hit this round</span>`; }
   return '';
@@ -265,14 +304,16 @@ function playRound() {
   const lines = [];
   const say = (text, tone = 'plain', roll = '') => lines.push({ text, tone, roll });
   const pinned = new Set();
-  // Stim lands first, so the teammate it's for gets it this round.
-  for (const r of standing()) { const o = S.orders[r.id]; if (o?.act === 'stim') { S.stim = o.target; S.cooldowns[r.id + ':stim'] = ABILITIES.stim.cooldown; say(`${r.name} jabs a stim into ${byId(o.target).name}.`, 'good'); } }
-  for (const r of standing()) {
+  const actors = S.runners.filter(canAct);
+  for (const r of S.runners.filter((x) => !x.down && x.pinnedFor === S.round)) say(`${r.name} is still tangled up with the dog.`, 'bad');
+  for (const r of actors) { const o = S.orders[r.id]; if (o?.act === 'stim') { S.stim = o.target; S.cooldowns[r.id + ':stim'] = ABILITIES.stim.cooldown; say(`${r.name} jabs a stim into ${byId(o.target).name}.`, 'good'); } }
+  for (const r of actors) {
     const o = S.orders[r.id];
-    if (!o || o.act === 'stim' || o.act === 'cover') { if (o?.act === 'cover') say(`${r.name} gets down behind a container.`, 'plain'); continue; }
+    if (!o || o.act === 'stim') continue;
+    if (o.act === 'cover') { say(`${r.name} gets down behind a container.`); continue; }
     if (o.act === 'patch') {
       const t = byId(o.target); const die = d20(); const ok = die + r.medical >= 10 + PATCH_DIFF;
-      if (ok) { const heal = Math.min(5, t.max - t.hp); t.hp += heal; say(`${r.name} patches ${t.name}: +${heal}.`, 'good', `${die}+${r.medical} vs ${10 + PATCH_DIFF}`); }
+      if (ok && !t.down) { const heal = Math.min(5, t.max - t.hp); t.hp += heal; say(`${r.name} patches ${t.name}: +${heal}.`, 'good', `${die}+${r.medical} vs ${10 + PATCH_DIFF}`); }
       else say(`${r.name} can't patch ${t.name} under fire.`, 'bad', `${die}+${r.medical} vs ${10 + PATCH_DIFF}`);
       continue;
     }
@@ -282,61 +323,81 @@ function playRound() {
     const shots = o.act === 'doubletap' ? 2 : 1;
     if (o.act !== 'shoot') S.cooldowns[r.id + ':' + o.act] = ABILITIES[o.act].cooldown;
     for (let k = 0; k < shots && !g.out; k++) {
-      const extra = o.act === 'doubletap' ? -1 : 0;
-      const val = r.combat + r.hitBonus + (S.stim === r.id ? 3 : 0) + extra;
+      const val = r.combat + r.hitBonus + (S.stim === r.id ? 3 : 0) + (o.act === 'doubletap' ? -1 : 0);
       const die = d20(); const hit = die + val >= 10 + SHOT;
       const roll = `${die}+${val} vs ${10 + SHOT}`;
       if (o.act === 'suppress') {
-        if (hit) { pinned.add(g.n); say(`${r.name} pins guard ${g.n} down. They won't get a shot off.`, 'good', roll); }
+        if (hit) { pinned.add(g.n); say(`${r.name} pins ${label(g)} down.${g.alarm ? ' He can\'t move.' : ' No shot from them this round.'}`, 'good', roll); }
         else say(`${r.name}'s suppressing fire goes wide.`, 'bad', roll);
         continue;
       }
-      if (!hit) { say(`${r.name} misses guard ${g.n}.`, 'bad', roll); continue; }
+      if (!hit) { say(`${r.name} misses ${label(g)}.`, 'bad', roll); continue; }
       const d = hitFor(r, g); g.hp = Math.max(0, g.hp - d);
       if (g.hp === 0) g.out = true;
-      say(`${o.act === 'doubletap' ? `${r.name} double taps` : `${r.name} hits`} guard ${g.n} for ${d}${g.armour ? ' (armour 1)' : ''}${g.out ? '. Down.' : '.'}`, 'good', roll);
+      say(`${r.name} ${o.act === 'doubletap' ? 'double taps' : 'hits'} ${label(g)} for ${d}${g.armour ? ' (armour 1)' : ''}${g.out ? (g.leads ? '. Down. The rest falter.' : '. Down.') : '.'}`, 'good', roll);
     }
   }
-  // The guards go for who they said they would (or anyone standing, if that one is down).
+  // The enemies do what they said they would.
   for (const g of up()) {
-    if (pinned.has(g.n)) { say(`Guard ${g.n} keeps their head down.`, 'good'); continue; }
+    if (pinned.has(g.n)) { say(`${label(g)} keeps their head down.`, 'good'); continue; }
+    if (g.alarm) {
+      g.steps -= 1;
+      if (g.steps > 0) { say(`${label(g)} sprints for the alarm panel. One round away.`, 'warn'); continue; }
+      g.out = true; S.alarmed = true;
+      const n = S.guards.length;
+      S.guards.push({ n: n + 1, type: 'guard', ...ENEMY.guard, hp: ENEMY.guard.max, out: false, steps: 0 }, { n: n + 2, type: 'guard', ...ENEMY.guard, hp: ENEMY.guard.max, out: false, steps: 0 });
+      say(`${label(g)} hits the alarm. Two more guards come running.`, 'bad');
+      continue;
+    }
     let t = byId(S.intents[g.n]);
     if (!t || t.down) t = standing()[0];
     if (!t) break;
-    const cover = S.orders[t.id]?.act === 'cover';
-    const need = 10 + t.cool + (cover ? t.coverBonus : 0);
-    const die = d20(); const hit = die + GUARD_SKILL >= need;
-    const roll = `${die}+${GUARD_SKILL} vs ${need}`;
-    if (!hit) { say(`Guard ${g.n} misses ${t.name}${cover ? ' in cover' : ''}.`, 'good', roll); continue; }
+    const need = guardNeed(g, t);
+    const die = d20(); const sk = skillOf(g); const hit = die + sk >= need;
+    const roll = `${die}+${sk} vs ${need}`;
+    const verb = g.charges ? 'charges' : g.pins ? 'goes for' : 'shoots at';
+    if (!hit) { say(`${label(g)} ${verb} ${t.name} and misses${inCover(t) && !g.charges ? ' (in cover)' : ''}.`, 'good', roll); continue; }
     const d = Math.max(1, g.dmg - t.armour); t.hp = Math.max(0, t.hp - d);
-    if (t.hp === 0) { t.down = true; say(`Guard ${g.n} hits ${t.name} for ${d}. ${t.name} is down.`, 'bad', roll); }
-    else say(`Guard ${g.n} hits ${t.name} for ${d}${t.armour ? ' (vest took 1)' : ''}.`, 'bad', roll);
+    if (g.pins && t.hp > 0) t.pinnedFor = S.round + 1;
+    if (t.hp === 0) { t.down = true; say(`${label(g)} hits ${t.name} for ${d}. ${t.name} is down.`, 'bad', roll); }
+    else say(`${label(g)} ${g.charges ? 'slams into' : g.pins ? 'bites' : 'hits'} ${t.name} for ${d}${t.armour ? ' (vest took 1)' : ''}${g.pins ? `. ${t.name} is pinned: no turn next round` : ''}.`, 'bad', roll);
   }
-  // Morale: the last guard up, badly hurt, runs for it.
+  // Morale: the last enemy up, badly hurt, runs for it.
   const left = up();
-  if (left.length === 1 && left[0].hp < left[0].max / 2) { left[0].out = true; left[0].fled = true; say(`Guard ${left[0].n} breaks and runs.`, 'warn'); }
+  if (left.length === 1 && left[0].hp < left[0].max / 2 && !left[0].alarm) { left[0].out = true; left[0].fled = true; say(`${label(left[0])} breaks and runs.`, 'warn'); }
+  // Static works if she's still on her feet.
+  const st = S.runners.find((r) => r.objective);
+  if (st && !st.down) { S.work += 1; say(`Static works the safe: ${S.work} of ${SCENARIOS.hold.work}.`, S.work >= SCENARIOS.hold.work ? 'good' : 'plain'); }
   S.stim = null;
   for (const k of Object.keys(S.cooldowns)) if (S.cooldowns[k] > 0) S.cooldowns[k] -= 1;
   S.log.unshift({ round: S.round, lines });
 }
 
 function afterRound() {
+  const sc = SCENARIOS[scenario];
+  if (sc.objective && S.work >= sc.work) return finish('cracked');
   if (!up().length) return finish('won');
-  if (!standing().length) return finish('dragged');
+  if (!S.runners.some(canActNext)) return finish('dragged');
   const down = S.runners.find((r) => r.down && !r.fightOn && !r.asked);
   if (down) { down.asked = true; S.call = { kind: 'door', id: down.id }; return; }
   if (S.round >= ROUNDS) { S.call = { kind: 'standoff' }; return; }
-  S.round += 1;
-  rollIntents();
-  defaultOrders();
+  nextRound();
 }
+const canActNext = (r) => !r.down && !r.objective;
+function nextRound() { S.round += 1; rollIntents(); defaultOrders(); }
 
 function finish(how) {
   const bleeding = S.runners.filter((r) => r.down && r.fightOn);
   const medic = standing().find((r) => r.abilities.includes('patch'));
   const fates = bleeding.map((r) => (medic || Math.random() < 0.65 ? `${r.name} pulls through, badly hurt.` : `${r.name} doesn't make it.`));
-  const head = { won: 'The yard is yours.', pulled: 'The crew pulls back. Everyone comes home; the job is lost.', pushed: 'The crew pushes past the guards still standing. The alarm is up.', dragged: 'Nobody left standing: the van comes in and gets them all out.' }[how];
-  S.over = { how, head, fates };
+  const head = {
+    won: S.alarmed ? 'The yard is yours, but the alarm is up.' : 'The yard is yours.',
+    cracked: 'Static has it. The crew is out with the goods before the guards regroup.',
+    pulled: 'The crew pulls back. Everyone comes home; the job is lost.',
+    pushed: 'The crew pushes past the guards still standing. The alarm is up.',
+    dragged: 'Nobody left standing: the van comes in and gets them all out.',
+  }[how];
+  S.over = { how, head, fates, win: how === 'won' || how === 'cracked' };
   S.call = null;
 }
 
@@ -348,8 +409,7 @@ function go() {
   document.getElementById('log').querySelector('.round')?.classList.add('new');
 }
 function autoRound() { if (S.over || S.call) return; defaultOrders(); go(); }
-function autoRest() { let guard = 0; while (!S.over && !S.call && guard++ < 10) { defaultOrders(); playRound(); afterRound(); } render(); }
-
+function autoRest() { let n = 0; while (!S.over && !S.call && n++ < 10) { defaultOrders(); playRound(); afterRound(); } render(); }
 document.getElementById('go').addEventListener('click', go);
 document.getElementById('auto-round').addEventListener('click', autoRound);
 document.getElementById('auto-rest').addEventListener('click', autoRest);
@@ -362,53 +422,68 @@ function hpBar(hp, max, foe) {
   return `<span class="hp ${cls}" aria-label="${hp} of ${max} health">${Array.from({ length: segs }, (_, i) => `<i class="${i < lit ? 'on' : ''}"></i>`).join('')}</span> <span class="hpnum">${hp}/${max}</span>`;
 }
 
+function renderTop() {
+  document.getElementById('tabs').innerHTML = Object.entries(SCENARIOS).map(([id, sc]) => `<button type="button" class="chip" data-sc="${id}" aria-pressed="${scenario === id}">${sc.name}</button>`).join('');
+  document.getElementById('goal').innerHTML = `<b>Goal</b>${esc(SCENARIOS[scenario].goal)}`;
+  for (const b of document.querySelectorAll('[data-sc]')) b.addEventListener('click', () => { scenario = b.dataset.sc; fightNo = 1; newFight(); });
+}
+
 function renderGuards() {
   document.getElementById('round-tag').textContent = S.over ? 'Over' : `Round ${S.round} of ${ROUNDS}`;
   document.getElementById('guards').innerHTML = S.guards.map((g) => {
     const t = byId(S.intents[g.n]);
-    const supp = Object.entries(S.orders).find(([id, o]) => o.act === 'suppress' && o.target === g.n);
-    let intent = '';
-    if (g.out) intent = g.fled ? 'Ran off.' : 'Down.';
+    const supp = Object.entries(S.orders).find(([, o]) => o.act === 'suppress' && o.target === g.n);
+    let intent;
+    if (g.out) intent = g.fled ? 'Ran off.' : g.alarm && S.alarmed ? 'Hit the alarm.' : 'Down.';
     else if (S.over) intent = 'Still standing.';
+    else if (g.alarm) intent = `<b>Running for the alarm</b><span class="odds">${g.steps} round${g.steps === 1 ? '' : 's'} away · doesn't fight</span>`;
     else if (t && !t.down) {
-      intent = `Aiming at <b>${esc(t.name)}</b><span class="odds">${P(guardChance(g, t))} to hit · ${Math.max(1, g.dmg - t.armour)} dmg${S.orders[t.id]?.act === 'cover' ? ' · in cover' : ''}</span>`;
-      if (supp) intent += `<span class="odds">${esc(byId(supp[0]).name)} will try to pin them (${P(shotChance(byId(supp[0])))})</span>`;
+      const what = g.charges ? 'Charging' : g.pins ? 'Going for' : 'Aiming at';
+      intent = `${what} <b>${esc(t.name)}</b><span class="odds">${P(guardChance(g, t))} to hit · ${Math.max(1, g.dmg - t.armour)} dmg${g.charges ? ' · cover won\'t help' : inCover(t) ? ' · in cover' : ''}${g.pins ? ' · pins them' : ''}</span>`;
+      if (g.leads) intent += '<span class="odds">While he\'s up, every other guard +1</span>';
     } else intent = 'Looking for a target.';
-    return `<div class="guard ${g.out ? 'out' : ''}"><div class="row-head"><span class="name">Guard ${g.n}</span>${g.armour ? '<span class="tag">vest</span>' : ''}</div>${hpBar(g.hp, g.max, true)}<div class="intent ${supp ? 'pinned' : ''}">${intent}</div></div>`;
+    if (supp && !g.out && !S.over) intent += `<span class="odds">${esc(byId(supp[0]).name)} will try to pin them (${P(shotChance(byId(supp[0])))})</span>`;
+    return `<div class="guard ${g.out ? 'out' : ''}"><div class="row-head"><span class="name">${label(g)}</span>${g.armour ? '<span class="tag">armour 1</span>' : ''}</div>${hpBar(g.hp, g.max, true)}<div class="intent ${supp ? 'pinned' : ''}">${intent}</div></div>`;
   }).join('');
 }
 
 function renderCrew() {
   document.getElementById('crew').innerHTML = S.runners.map((r) => {
     const o = S.orders[r.id];
-    const live = !S.over && !S.call && !r.down;
+    const live = !S.over && !S.call && canAct(r);
     const ready = (a) => !(S.cooldowns[r.id + ':' + a] > 0);
     const acts = [['shoot', 'Shoot'], ...r.abilities.map((a) => [a, ABILITIES[a].name]), ['cover', 'Cover']];
-    const actBtns = acts.map(([a, label]) => {
+    const actBtns = acts.map(([a, text]) => {
       const cd = S.cooldowns[r.id + ':' + a];
       const isAbility = a !== 'shoot' && a !== 'cover';
       const needsHurt = a === 'patch' && !standing().some((x) => x.hp < x.max);
-      return `<button type="button" class="chip ${isAbility ? 'ability' : ''}" aria-pressed="${o?.act === a}" data-r="${r.id}" data-act="${a}" ${!live || !ready(a) || needsHurt ? 'disabled' : ''}>${label}${cd > 0 ? `<span class="cd">${cd} rnd</span>` : ''}</button>`;
+      return `<button type="button" class="chip ${isAbility ? 'ability' : ''}" aria-pressed="${o?.act === a}" data-r="${r.id}" data-act="${a}" ${!ready(a) || needsHurt ? 'disabled' : ''}>${text}${cd > 0 ? `<span class="cd">${cd} rnd</span>` : ''}</button>`;
     }).join('');
     let targets = '';
     if (live && o && ['shoot', 'doubletap', 'suppress'].includes(o.act)) {
-      targets = up().map((g) => `<button type="button" class="chip" aria-pressed="${o.target === g.n}" data-r="${r.id}" data-target="${g.n}">Guard ${g.n} · ${P(shotChance(r, o.act === 'doubletap' ? -1 : 0))}</button>`).join('');
+      targets = up().map((g) => `<button type="button" class="chip" aria-pressed="${o.target === g.n}" data-r="${r.id}" data-target="${g.n}">${label(g)} · ${P(shotChance(r, o.act === 'doubletap' ? -1 : 0))}</button>`).join('');
     } else if (live && o && ['patch', 'stim'].includes(o.act)) {
-      targets = standing().filter((x) => o.act === 'stim' ? x.id !== r.id : x.hp < x.max).map((x) => `<button type="button" class="chip" aria-pressed="${o.target === x.id}" data-r="${r.id}" data-target="${x.id}">${esc(x.name)} ${x.hp}/${x.max}</button>`).join('');
+      targets = standing().filter((x) => (o.act === 'stim' ? x.id !== r.id && !x.objective : x.hp < x.max)).map((x) => `<button type="button" class="chip" aria-pressed="${o.target === x.id}" data-r="${r.id}" data-target="${x.id}">${esc(x.name)} ${x.hp}/${x.max}</button>`).join('');
     }
-    return `<div class="runner ${r.down ? 'down' : ''}">
+    let body;
+    if (r.down) body = `<div class="order">${r.fightOn ? 'Down and bleeding.' : 'Down.'}</div>`;
+    else if (r.objective) body = `<div class="order">Cracking the safe: ${S.work} of ${SCENARIOS.hold.work}. Can't fight or take cover while she works.</div><div class="progress">${Array.from({ length: SCENARIOS.hold.work }, (_, i) => `<i class="${i < S.work ? 'on' : ''}"></i>`).join('')}</div>`;
+    else if (r.pinnedFor === S.round && !S.over) body = '<div class="order">Pinned by the dog: no turn this round.</div>';
+    else if (live) body = `<div class="acts" role="group" aria-label="${esc(r.name)}'s order">${actBtns}</div>${targets ? `<div class="targets" role="group" aria-label="Target">${targets}</div>` : ''}<div class="order">${orderText(r)}</div>`;
+    else body = '';
+    return `<div class="runner ${r.down ? 'down' : ''} ${r.objective ? 'objective' : ''}">
       <div class="who"><span class="badge" style="background:${r.color}">${r.name[0]}</span>
         <div style="min-width:0"><div class="name">${esc(r.name)} <span class="tag">${esc(r.rank)} · ${esc(r.role)}</span></div>
         <div class="meta">${esc(r.weapon)}${r.armour ? ` · ${esc(r.gear)} 1` : r.gear ? ` · ${esc(r.gear)}` : ''}${r.perk ? ` · <b style="color:var(--warn)">${esc(PERKS[r.perk].name)}</b>` : ''}</div></div>
         <div style="margin-left:auto; text-align:right">${hpBar(r.hp, r.max)}</div></div>
-      ${r.down ? `<div class="order">${r.fightOn ? 'Down and bleeding.' : 'Down.'}</div>` : live ? `<div class="acts" role="group" aria-label="${esc(r.name)}'s order">${actBtns}</div>${targets ? `<div class="targets" role="group" aria-label="Target">${targets}</div>` : ''}<div class="order">${orderText(r)}</div>` : ''}
+      ${body}
     </div>`;
   }).join('');
   for (const b of document.querySelectorAll('[data-act]')) b.addEventListener('click', () => {
     const r = byId(b.dataset.r); const act = b.dataset.act; const o = S.orders[r.id];
     if (act === 'cover') return setOrder(r.id, { act, target: null });
     if (act === 'patch') return setOrder(r.id, { act, target: [...standing()].filter((x) => x.hp < x.max).sort((a, c) => a.hp / a.max - c.hp / c.max)[0]?.id });
-    if (act === 'stim') return setOrder(r.id, { act, target: standing().find((x) => x.id !== r.id)?.id });
+    if (act === 'stim') return setOrder(r.id, { act, target: standing().find((x) => x.id !== r.id && !x.objective)?.id });
     setOrder(r.id, { act, target: o?.target && guardN(o.target) && !guardN(o.target).out ? o.target : up()[0]?.n });
   });
   for (const b of document.querySelectorAll('[data-target]')) b.addEventListener('click', () => {
@@ -420,25 +495,26 @@ function renderCall() {
   const el = document.getElementById('callin');
   if (S.call?.kind === 'door') {
     const r = byId(S.call.id);
-    el.innerHTML = `<div class="callin"><h2>Calling in: someone is at death's door</h2><p>${esc(r.name)} is down and bleeding. They'll live if you get them out now.</p>
+    el.innerHTML = `<div class="callin"><h2>Calling in: someone is at death's door</h2><p>${esc(r.name)} is down and bleeding. They'll live if you get them out now.${r.objective ? ' The safe stays shut.' : ''}</p>
       <button type="button" class="choice" data-call="out"><b>Pull back and get ${esc(r.name)} out</b><span>Everyone comes home. The job is lost.</span></button>
-      <button type="button" class="choice" data-call="fight"><b>Keep fighting with ${esc(r.name)} down</b><span>They could die unless the medic is still standing at the end.</span></button></div>`;
+      ${r.objective ? '' : `<button type="button" class="choice" data-call="fight"><b>Keep fighting with ${esc(r.name)} down</b><span>They could die unless the medic is still standing at the end.</span></button>`}</div>`;
   } else if (S.call?.kind === 'standoff') {
-    el.innerHTML = `<div class="callin"><h2>Calling in: the guards are still standing</h2><p>${ROUNDS} rounds in and ${up().length} still up.</p>
+    el.innerHTML = `<div class="callin"><h2>Calling in: they're still standing</h2><p>${ROUNDS} rounds in and ${up().length} still up.</p>
       <button type="button" class="choice" data-call="press"><b>Push past them</b><span>The alarm goes up, but the job goes on.</span></button>
       <button type="button" class="choice" data-call="out"><b>Pull back</b><span>Everyone comes home. The job is lost.</span></button></div>`;
   } else if (S.over) {
     const kit = S.runners.find((r) => r.id === 'kit');
-    const levelUp = S.over.how === 'won' && !perkTaken && !kit.down;
-    el.innerHTML = `<div class="callin"><h2>${S.over.how === 'won' ? 'Fight won' : 'Fight over'}</h2><p>${esc(S.over.head)}</p>${S.over.fates.map((f) => `<p>${esc(f)}</p>`).join('')}
-      ${levelUp ? `<p><b>Kit ranks up: Rookie → Pro.</b> +2 health, +1 combat, and one perk. Pick it:</p>${Object.entries(PERKS).map(([id, p]) => `<button type="button" class="choice" data-perk="${id}"><b>${p.name}</b><span>${p.desc}</span></button>`).join('')}` : `<button type="button" class="choice" data-call="again"><b>${perkTaken ? 'Next fight' : 'Fight again'}</b><span>${perkTaken ? `Same guards, Kit now a Pro with ${esc(PERKS[perkTaken].name)}.` : 'Same guards, same crew.'}</span></button>`}</div>`;
+    const levelUp = S.over.win && !perkTaken && !kit.down;
+    el.innerHTML = `<div class="callin"><h2>${S.over.win ? 'Fight won' : 'Fight over'}</h2><p>${esc(S.over.head)}</p>${S.over.fates.map((f) => `<p>${esc(f)}</p>`).join('')}
+      ${levelUp ? `<p><b>Kit ranks up: Rookie → Pro.</b> +2 health, +1 combat, and one perk. Pick it:</p>${Object.entries(PERKS).map(([id, p]) => `<button type="button" class="choice" data-perk="${id}"><b>${p.name}</b><span>${p.desc}</span></button>`).join('')}`
+        : `<button type="button" class="choice" data-call="again"><b>Fight again</b><span>${perkTaken ? `Kit is a Pro with ${esc(PERKS[perkTaken].name)}. Try another fight from the tabs too.` : 'Same fight, same crew. Or pick another fight from the tabs.'}</span></button>`}</div>`;
   } else el.innerHTML = '';
   for (const b of el.querySelectorAll('[data-call]')) b.addEventListener('click', () => {
     const c = b.dataset.call;
     if (c === 'again') { fightNo += 1; newFight(); window.scrollTo({ top: 0 }); return; }
-    if (c === 'out') return finish('pulled'), render();
-    if (c === 'press') return finish('pushed'), render();
-    if (c === 'fight') { byId(S.call.id).fightOn = true; S.call = null; if (S.round >= ROUNDS) S.call = { kind: 'standoff' }; else { S.round += 1; rollIntents(); defaultOrders(); } render(); }
+    if (c === 'out') { finish('pulled'); render(); return; }
+    if (c === 'press') { finish('pushed'); render(); return; }
+    if (c === 'fight') { byId(S.call.id).fightOn = true; S.call = null; if (S.round >= ROUNDS) S.call = { kind: 'standoff' }; else nextRound(); render(); }
   });
   for (const b of el.querySelectorAll('[data-perk]')) b.addEventListener('click', () => {
     perkTaken = b.dataset.perk;
@@ -458,7 +534,7 @@ function renderLog() {
 }
 
 function render() {
-  renderGuards(); renderCrew(); renderCall(); renderLog();
+  renderTop(); renderGuards(); renderCrew(); renderCall(); renderLog();
   const busy = !!(S.over || S.call);
   for (const id of ['go', 'auto-round', 'auto-rest']) document.getElementById(id).disabled = busy;
 }
