@@ -5,6 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-30 · The planning read knows the map
+- **The fight odds on the planning screen now use the job's own map:** where each side will stand and what cover they'll have. Before, they assumed everyone was in half cover, which was a few points off: Kidnap fights were easier than shown, for example. Now the odds you're shown are the odds the fight uses.
+
 ## 2026-10-30 · Fights on the map in every district
 - **Old Town, the Night Market, Glass Heights and the Basin now fight on their maps too,** like the Docks: everyone stands behind something or out in the open, and the map zooms in on the fight.
 - **New things to hide behind:**

@@ -10,6 +10,9 @@
 // take the best cover going as the fight starts. The guards' come nearest their post first: they
 // were caught where they stood, one of them on the post itself, in the open.
 
+import { BATTLE } from '../data/battle.js';
+import { pickSite } from '../data/sites.js';
+
 const MAP = { x0: 6, y0: 6, x1: 354, y1: 232 }; // where anyone can stand (the road too)
 // What counts as cover on a site (data/sites.js classes): containers and crates, desks, market
 // stalls, planters, cots, stable blocks. Cover and water are solid (nobody stands in them).
@@ -158,4 +161,16 @@ export function fightSpots(site, zone, need = { crew: 6, guards: 4 }) {
   const crew = side(C, E, need.crew, ours, true);
   const guards = side(E, C, need.guards, theirs, false);
   return { crew, guards, anchors: { crew: C, guards: E } };
+}
+
+/**
+ * A job's fight spots for a zone: its site (data/sites.js pickSite, from the job's id) where the
+ * district stands its fights on the map (data/battle.js spotsIn), else null (everyone in half
+ * cover). One function for the run (core/runbattle.js) and the planning read (core/squad.js
+ * coverage), so the odds shown are worked out on the spots the fight will use. crew: how many
+ * inside (two spots spare to move to).
+ */
+export function spotsForJob(district, jobId, templateId, zone, crew) {
+  if (!BATTLE.spotsIn.includes(district)) return null;
+  return fightSpots(pickSite(district, jobId, templateId), zone, { crew: crew + 2, guards: BATTLE.maxGuards });
 }

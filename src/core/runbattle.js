@@ -10,8 +10,7 @@ import { XP } from './development.js';
 import { noteInjury } from './earned.js';
 import { ALERT_MAX } from './incidents.js';
 import { buildBattle, playRound, planIntents, partingShots, injuryFromHp, runnerOf, BATTLE } from './battle.js';
-import { fightSpots } from './fightspots.js';
-import { pickSite } from '../data/sites.js';
+import { spotsForJob } from './fightspots.js';
 import { actors, overwatchOp, driver, standbyReady, opById, grow, record, takeWhy, addNeural } from './run.js';
 import { currentStep, advance, exitRun } from './mission.js';
 
@@ -24,11 +23,6 @@ const battleSnapshot = (b) => ({
   runners: b.runners.map((r) => ({ id: r.id, handle: r.handle, hp: r.hp, max: r.max, armour: r.armour, down: r.down, fightOn: r.fightOn, stable: r.stable, cover: r.cover, at: atOf(b, 'crew', r) })),
 });
 
-/** The fight's spots on the job's site map, where the district has them (data/battle.js spotsIn). */
-function spotsFor(am, tpl, zone, crew, guards) {
-  if (!BATTLE.spotsIn.includes(tpl.district)) return null;
-  return fightSpots(pickSite(tpl.district, am.jobId, am.templateId), zone, { crew: crew + 2, guards });
-}
 export const guardsUp = (b) => b.guards.filter((g) => !g.out).length;
 export const guardCount = (n) => (n === 1 ? 'one guard' : `${n} guards`);
 
@@ -37,7 +31,7 @@ export function startBattle(state, am, tpl, inc, id, zone, diff, able, { ambush 
   const b = buildBattle({ ambush,
     incident: id, zone, diff, threat: am.threat ?? tpl.threat, guards: inc.guards, crew: able, approach: am.approach,
     overwatchOp: overwatchOp(state, am), ow: am.overwatch, wheels: driver(state, am),
-    spots: spotsFor(am, tpl, zone, able.length, BATTLE.maxGuards),
+    spots: spotsForJob(tpl.district, am.jobId, am.templateId, zone, able.length),
   });
   am.battle = b;
   am.fought = true;
