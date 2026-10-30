@@ -49,7 +49,7 @@ A street terminal in a wet neon city, after Cyberpunk 2077's interface and Citiz
 - **Site plans** (`src/data/sites.js`, drawn by `src/ui/siteplan.js`): the watch screen's map of a job, one per district, from above at night on the same dark ground as the city map. Flat shapes, no outlines on cover; buildings `#171b24` with a grey edge; the target room a dashed signal-red outline; the crew's route a cyan line with ring nodes; overwatch a sodium perch; the rifle's sight a faint sodium wedge, the drone's cyan. Each district reads at a glance: rust and teal containers and the harbour (Docks), lit windows, laundry lines and an alley of steps (Old Town), neon stalls and a grey crowd (Night Market), a cyan-edged glass tower over a planted plaza (Glass Heights), the cream racecourse oval and timber stables (Basin). Labels are small grey caps; the target's is white. Cover for fights is drawn like the containers, flat blocks in the district's muted tones with no outline (bins, carts, crates, a horse trailer, hay), and furniture inside a target like the desks. **In a fight** (command fights, 2026-10-30): the camera frames the fight; tokens grow a little and show the runner's face in a circle; everyone has a small shield for their cover (cyan for the crew, pink for the guards; filled for full, half-filled for half) or a sodium OPEN tag; each guard's aim is a dashed signal-red line with its chance in a dark red tag; orders given are cyan lines (dotted for a flank, dashed for a move, green for a patch), a hunker is a dashed cyan ring, the picked runner a solid cyan ring, the target guard a dashed sodium ring, free spots dotted circles.
 - **Gear** (`src/ui/gear.js`): the armoury is rows on `--panel-2` with the bottom-right corner cut, the item's drawing above (or its cyan line icon beside) its name in display caps and what it does in cyan. A runner's four slots are tiles in a 2×2 grid, each with the item drawn big in a 3:1 frame; empty ones are dashed with a +. Buying shows one row per item with a button per tier ("¥2,500", "PRO +1 ¥6,250").
 - **Gear drawings** (`gearArt` in `src/ui/art.js`, 2026-10-28): items drawn like the faces: flat colour, hard light from the right, no outlines, top edges and lenses catching the city light, undersides falling to the navy shadow `#1b2340`. A 96×32 frame, front to the right, on `#0d1016` with the light as a gradient from the right. One drawing per item type; only three things change: the **tier** (street: gunmetal `#454c57`, worn wood `#6b4a2e`, sodium tape, canvas sling; pro: carbon `#1d2129`, skeleton polymer stock, a neon line in the carrier's chrome colour), the **light** (the carrier's city light; sodium `#f2b544` in the stash) and the **neon**. So far: the rifle (scope, vented handguard, suppressor, folded bipod, sling). Others keep their line icon until drawn.
-- **Gear on portraits:** one item at a time, the most telling (only the rifle so far). The rifle hangs across the back: drawn behind everything at `translate(4 72) rotate(-44) scale(0.9)` in the 64-grid, stock low on the left, scope and muzzle up behind the lit shoulder, with the sling across the chest in front of the shirt. From game state, like injuries; never random.
+- **Gear on portraits:** one item at a time, the most telling (only the rifle so far; each rifle drawn with its own look, see "Rifle looks"). The rifle hangs across the back: drawn behind everything at `translate(4 72) rotate(-44) scale(0.9)` in the 64-grid, stock low on the left, scope and muzzle up behind the lit shoulder, with the sling across the chest in front of the shirt. From game state, like injuries; never random.
 - **Freelancers** (squad picker and board): violet `#b48cff`, the one colour nothing else on the board uses: a 3px stripe down the left of their picker row on a violet-tinted `#1c1928`, a "Freelance" tag in display caps over their cut, and a violet bar along the bottom of their dossier.
 - **Tap targets** stay at least 44px. **Layout** is phone first (360–430px), with a sidebar from 900px.
 
@@ -104,7 +104,33 @@ Culture comes from the surname, using the game's own name lists (`src/data/recru
 | Unknown | all |
 
 ### Head shapes
-Four (half-width / jaw / chin / chin height): oval 11.5/7.5/3.2/45, round 12.5/9/4/44, square 12/10/5/45, long 10.8/7/3/46.5. Eyes sit at y 29, brows around y 25, mouth at y 40, hairline around y 19.
+Four (half-width / jaw / chin / chin height): oval 11.5/7.5/3.2/45, round 12.5/9/4/44, square 12/10/5/45, long 10.8/7/3/46.5. Eyes sit around y 29, brows around y 25, mouth around y 40, hairline around y 19. Each person's anatomy (below) then adjusts width, jaw and chin.
+
+### Face anatomy (since 2026-10-28)
+Everyone used to share one set of eyes, brows, nose and mouth. Now each face has its own, from continuous measurements on a **third seed** (`id|name|face`, `anatomyOf()`), so hair, chrome and gear keep their picks. New measurements go at the end of `anatomyOf()`, never earlier. `portrait(op, { anatomy: false })` still draws the earlier shared face for comparison sheets.
+
+| Part | Range (64-grid) |
+| --- | --- |
+| Head | half-width ±1.2, jaw −2.2 to +1.8 (never wider than the head less 1.2), chin width −1 to +1.6, chin height −1.2 to +1.8 |
+| Eyes | centre 4.1–5.2 from the midline, height y 28.5–29.6, half-width 1.6–2.6, upper-lid arc 0.45–1.4, tilt −0.8 (outer corners down) to +1 (up). Lids: **monolid**, **crease** (a fine line above), **hooded** (a fold of skin over the outer lid), **deep-set** (a shadowed socket); half the time the lid leans by culture (Hong Kong: mono, hooded; Southeast Asian: mono, hooded; Filipino: mono, crease; African: crease, deep; South Asian and European: crease, deep, hooded). **Eyes with an arc over 0.85 show their whites** (`#e8e2d8` blended 25% toward the skin) with a dark iris looking slightly toward the light. |
+| Brows | tapered shapes, thick at the inner end: thickness 0.7–2.6, arch −0.2 to 1.5, height ±0.5. Expressions move the ends from each person's own line. |
+| Nose | tip at y 34.6–37.3, width 1.1–2.8; bridge straight (3 in 6), **hooked** (a line down the lit side), **button** (a round highlight on the tip) or **broad** (shaded nostril wings). |
+| Mouth | half-width 1.9–3.4, at y 39.4–40.9; an upper lip shows when its fullness is over 0.45; lower lip 0.7–2.6. Moustaches and beards move with the mouth. |
+| Cheeks | low (as before, 2 in 4), **high** (the cheekbone plane higher and darker) or **soft** (faint). |
+| Ears, neck | ears 0.85–1.2× and up to 0.8 further out; neck half-width 3.7–5.1. |
+| Skin | freckles 10% (nine dots over the nose and cheeks), a mole 12% (one of six spots). |
+| Age | lines from nose to mouth from 33 (stronger with age), eye bags and a forehead line from 45. |
+
+Lenses (cyber-eye, half-chrome), glasses and moustaches follow the eyes and mouth to wherever they sit.
+
+### Career marks (since 2026-10-28, from game state)
+What the job leaves on a face, for good. `src/core/marks.js` records each one in `op.marks` (with a history line, and "Marked: ..." on the profile); `art.js` draws them and places them from the person's own seed (`id|name|scarN`), so a mark never moves. Drawn on the anatomy face; hidden under a faceplate (the text still says so).
+
+| Mark | When | What the face shows |
+| --- | --- | --- |
+| Scar (up to 3) | a serious or critical wound, at most one a day | a raised pale line (skin blended 50% toward `#ffe0dc`) over a dark edge (skin 45% toward `#2a1210`), with stitch marks across it. Sites, from the seed: shadow cheek, through the shadow-side brow (the brow keeps a gap; skipped if the face already has a random scar or cut there), through the lip, the chin, across the nose, the lit cheek (skipped under a half-chrome plate). |
+| Extra chrome (up to 2) | a job that ends with neural load over 70 (the line the game warns at) | on the **shadow side**, so it never clashes with bought chrome on the lit side, in the chrome colour, glowing and haloing with load like other chrome: first a port at the temple with a trace to a node by the eye; second, three ringed ports along the jaw. |
+| The crew's mark (once) | ten jobs with the crew | a small neon **lantern** (the city is Lantern Bay) in the city-light colour, under the shadow-side eye. |
 
 ### Features and how often they appear (random, fixed per person)
 
@@ -123,6 +149,7 @@ Four (half-width / jaw / chin / chin height): oval 11.5/7.5/3.2/45, round 12.5/9
 | Feature | Options and odds |
 | --- | --- |
 | Monk | 6% of Hong Kong names, 1.5% of everyone else. Shaved head; no earring, dye or facial hair. Robes replace the shirt: **grey** (2 in 4), a Chinese crossed-collar robe `#6b6f78` with a dark collar band; **ochre**, a brown robe `#5e4630` with an ochre kasaya `#b06a24` across the left shoulder, patchwork seams; **cyber**, a dark robe `#22252d` with a collar edged in the chrome colour. All wear a mala of 13 wooden beads `#7a4a2a` round the neck (the cyber monk's every third bead glows in the chrome colour). 35% of monks wear the woven hat. |
+| Shaolin monk | Added 2026-10-28, the last pick on the gear seed (so nobody else changed): 4% of Hong Kong names, 3% of Southeast Asian ones, 0.4% of everyone else, among people not already monks. Saffron robe `#c8681c` with a dark crossed collar `#7a3410`; a heavier mala of 11 big dark beads `#3a2214`; nine ordination dots in three rows on the shaved crown (skin blended 55% toward `#f3e2d6`, a faint shadow under each). Always bare-faced: no hat, mask, glasses, visor or half-chrome plate. |
 | Half-chrome face | 3%. A gunmetal plate `#58606b` over the lit half of the face, seamed into the skin just right of the nose and mouth, with panel lines, rivets and a cheek vent; the lit-side eye is a lens and the ear a metal disc, both glowing with neural load. It replaces any other chrome, glasses and visor. |
 | Mask | 7%: **Respirator**: rounded `#2a2f38` with twin filter cans and a status LED. **Jaw plate**: angular gunmetal `#4a525d` from nose to chin with breathing slots. **LED grille**: black `#101318` with an LED line where the mouth is, drawn to match the real mood (flat, smirk, zigzag when stressed, dotted and dim for the dead stare, drooping when tired). These can come with a visor. A mask hides facial hair. |
 | Full mask | 3%, from its own pick, replacing any other mask, glasses and visor; it hides the eyes. **Goggles**: the respirator plus sealed round goggles with tinted lenses that catch the city light, on a strap. **Faceplate**: a smooth plate `#2b3039` over the whole face with a centre seam, mouth vents and two angled LED eye slits in the chrome colour that brighten (and halo) with neural load; it hides other chrome, and injury shows as a crack across the plate instead of a plaster. |
@@ -145,6 +172,35 @@ Four (half-width / jaw / chin / chin height): oval 11.5/7.5/3.2/45, round 12.5/9
 Tired eyes override any expression. First match wins: dead stare, then stressed, then smirk, then neutral.
 
 ---
+
+## Rifle looks (since 2026-10-29)
+
+Every rifle is built from a kit of parts and has its own name. The parts, their names and the odds are data (`src/data/gearLooks.js`), `src/core/looks.js` rolls them from the game's seed and the item's id (never the shared dice), and `rifleBuild()` in `src/ui/art.js` draws them in the 96×32 item frame, lit by the carrier's city light (the safehouse's sodium lamp in the stash). The same drawing hangs on the portrait.
+
+| Part | Options |
+| --- | --- |
+| Frame | **marksman** (scope, suppressor, folded bipod), **carbine** (collapsible stock, curved magazine, red dot), **bullpup** (one-piece shell, magazine behind the grip, carry-handle scope), **heavy** (big box magazine, thick barrel, slotted muzzle brake, long scope), **heritage** (long wooden stock to the muzzle, barrel bands, iron sights, bolt with a ball knob) |
+| Finish, street | gunmetal and old wood (grain, taped grip) `#6b4a2e`/`#454c57`; rust (chipped olive and rusted metal) `#4b4f3b`/`#6b4733`; urban camo `#5b616b` with grey blocks; bamboo `#b8995a` with node rings; candy-pink paint `#ff4f7b` (gloss) |
+| Finish, pro | rosewood and brass `#5a2a1c`/`#a07c44` with mother-of-pearl inlay; carbon `#272c35` with a thumbhole and a neon line; cinnabar lacquer `#a8261e` with gold trim `#d9a441`; jade and bronze `#3d8a68`/`#7a5c34` with pale veins; temple bronze (green patina `#6fa08a`, gold trim); black lacquer and gold `#16171b`/`#c9a24a`; white ceramic `#d8dce2` with a neon line |
+| Engraving | gold xiangyun **clouds** on the stock; **dragon scales** across the handguard; a **neon circuit** along the receiver in the carrier's chrome colour. Street 15%, pro 60%. |
+| Charm | **red silk tassel** from the butt; **paper talisman** (yellow `#e9d27c`, red strokes `#b3261e`) on the stock; **lucky coin** (gold, square hole) on red cord; **prayer beads** from the swivel; **mahjong tile**; **lucky sticker** (pink cat face); **hazard tape** on the handguard. About half of rifles have one; street and pro shelves stock different charms. |
+
+**Names** are two words: one from the finish, engraving or charm, one from the frame ("Vermilion Heron", "Ghost Heirloom", "Emerald Hornet"). Every part is drawn with flat planes: a lit band along each part's top and a shaded band along its bottom.
+
+## Sidearm looks (since 2026-10-29)
+
+Sidearms use the rifle's kit idea, drawn bigger in the same 96×32 frame by `sidearmBuild()`, and lean into the city's neon. Parts, names and odds in `SIDEARM_LOOKS` (`src/data/gearLooks.js`). They show in the armoury and on gear tiles, **not on faces** (owner's call: a chest holster was too small to read at this crop).
+
+| Part | Options |
+| --- | --- |
+| Frame | compact, revolver (fluted cylinder, hammer), machine pistol (long magazine, foregrip, folded wire stock), heritage (broom-handle grip, magazine ahead of the trigger), hand cannon (ported slide, compensator); pro only: **smart pistol** (rounded slide, light strip, floating holo sight, status lights, a smartlink cable to the wrist) and **coil pistol** (twin rails with glowing rings, a lit power cell and cable) |
+| Finish, street | blued steel (stippled grip), stainless and walnut, black polymer, desert tan, hazard yellow (black stripes), black with neon edges |
+| Finish, pro | cinnabar lacquer (gold trim), jade grips and bronze, pearl grips (pink and blue sheen), rosewood and brass (inlay), black and gold (grip medallion), holographic chrome (cyan, violet and pink bands), clinic white with a light strip, ronin (matte black, red-wrapped grip, red eyes) |
+| Mod | laser sight (always red, the beam to the frame's edge), holo sight, glowing vents, LED ammo counter, dragon scales, gold clouds, neon circuit |
+| Charm | red silk tassel, lucky coin, paper talisman, mahjong tile, lucky sticker, neon keychain, data shard, hologram lucky cat (pink) |
+
+### Glow colours (rifles and sidearms)
+A gun **only glows when something on it lights up** (marked `glows: true` in the data: carbon and ceramic rifles, neon circuits; neon-edged, clinic-white, smart and coil sidearms, holo sights, vents, LED counters, keychains and data shards). Those roll a colour: **cyan** `#3de8d8`, **neon purple** `#b26bff`, **red** `#ff3d5f` or **gold** `#ffc23d` (`GLOW_COLOURS` in `art.js`). A glow is drawn flat: a wide faint stroke, a narrower one and a bright core, never a blur. Rifles bought before glows existed light up in their carrier's chrome colour.
 
 ## Joss
 
@@ -182,7 +238,9 @@ stored in the save); expressions and condition marks come from game state only
 (stateOf), never chance; every tone readable (catchlights, neon ink); no "tribal"
 designs; everyone 18+; portraits are aria-hidden and every fact they show is also in
 text; no DOM in src/core. New features: add the choice with its odds at the END of
-withGear()'s picks (never earlier, or existing faces change), draw
+withGear()'s picks, or a new face measurement at the END of anatomyOf() (never
+earlier, or existing faces change); marks that come from play are recorded in
+src/core/marks.js and only drawn in art.js. Draw
 it in portrait(), add a row to ART.md's feature table, add a test in
 tests/art.test.js, log the decision in DESIGN.md, and add a CHANGELOG.md entry.
 Check results by rendering a sheet of real generated crew with Playwright at 48px and

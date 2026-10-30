@@ -63,7 +63,7 @@ test('every danger incident names its guards; only danger incidents start fights
 test('gear in a fight: weapons do damage, armour soaks it flat, a hit that lands always does at least 1', () => {
   const s = createNewGame({ seed: 3, startCrew: 'fresh' });
   const op = s.crew[0];
-  assert.deepEqual(weaponOf(op), BATTLE.unarmed, 'guns are standard: a street piece');
+  assert.deepEqual(weaponOf(op), { ...BATTLE.unarmed, pierce: 0 }, 'guns are standard: a street piece (it pierces nothing)');
   assert.equal(armourOf(op).value, 0);
   arm(s, op.id, 'pistol', 'vest');
   assert.equal(weaponOf(op).damage, 3);

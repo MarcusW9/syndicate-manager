@@ -10,6 +10,9 @@ import { autoStep, autoRun, needsPlayer } from '../src/core/autorun.js';
 import { playRound, planIntents, ordersFor, guardHitChance, fightChance, BATTLE } from '../src/core/battle.js';
 import { makeRng } from '../src/core/rng.js';
 import { testFight, commandOrders } from './play.js';
+import { planRead, coverage } from '../src/core/squad.js';
+import { spotsForJob } from '../src/core/fightspots.js';
+import { templateById, jobView } from '../src/core/jobs.js';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 const { importSave } = await import('../src/save/save.js');
@@ -201,4 +204,30 @@ test('a live fight waits for orders each round; Auto leaves the rest to the crew
   assert.equal(am.battle, null);
   assert.ok(am.crewIds.every((id) => back.crew.some((o) => o.id === id)), 'nobody dies');
   assert.ok(am.payCut >= 1, 'the job is lost');
+});
+
+test('shown equals used: the planning read works each fight out on the spots the run will stand on', () => {
+  let differs = 0;
+  for (const [job, seed] of [['wrong_horse', 3], ['kidnap', 5], ['warehouse', 4], ['casino', 2], ['data_pull', 6]]) {
+    let s = createNewGame({ seed, startCrew: 'fresh' });
+    s.jobs = [];
+    addOffer(s, job);
+    const j = s.jobs[0];
+    const tpl = templateById(job);
+    const crew = s.crew.slice(0, tpl.crewSize);
+    const read = planRead(s, j, { crew, approach: 'loud' });
+    const threat = jobView(s, j).threat;
+    const onMap = coverage({ ...tpl, threat }, crew, 'loud', { threat, jobId: j.id });
+    const half = coverage({ ...tpl, threat }, crew, 'loud', { threat }); // the same read without the job's map
+    assert.deepEqual(read.cov.rows.map((r) => r.fight), onMap.rows.map((r) => r.fight), `${job}: the planning screen reads the fights on the job's map`);
+    const fights = onMap.rows.filter((r) => r.fight);
+    assert.ok(fights.length, `${job}: the read has fights`);
+    fights.forEach((r) => { if (Math.abs(half.rows[onMap.rows.indexOf(r)].fight.win - r.fight.win) > 1e-9) differs++; });
+    // The run's fight stands on the same spots the read used.
+    s = M.startMission(s, j.id, crew.map((o) => o.id), 'loud', { callIn: 'every' });
+    for (let g = 0; g < 200 && !s.activeMission.done && !s.activeMission.battle; g++) { const n = autoStep(s); s = n !== s ? n : autoStep(s, { force: true }); }
+    const am = s.activeMission;
+    if (am.battle) assert.deepEqual(am.battle.spots, spotsForJob(tpl.district, j.id, tpl.id, am.battle.zone, am.battle.runners.length), `${job}: the run's spots are the read's`);
+  }
+  assert.ok(differs > 0, 'the spots change the read somewhere (it isn\'t still half cover everywhere)');
 });

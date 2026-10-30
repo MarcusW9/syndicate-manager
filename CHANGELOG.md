@@ -5,6 +5,33 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-30 · Every sidearm is different
+- **Each sidearm now has its own strengths:** aim (how much it helps you hit), damage, and for some, pierce (how much armour it ignores).
+- **They come from the gun's frame:**
+  - compact pistols are accurate but light
+  - revolvers hit hard
+  - machine pistols get some rounds through armour
+  - hand cannons hit very hard
+  - pro-only smart pistols are very accurate, and pro-only coil pistols punch through armour
+- **Each gun also rolls a quirk:** true sights, hot loads, a hair trigger, heavy rounds, a worn barrel or light loads. Most have none.
+- **The price follows the strength.** The armoury shows each gun's numbers, and so does the fight.
+- Sidearms you already own are the plain sidearm they always were.
+
+## 2026-10-30 · Gun looks, faces and career marks are in the game
+- **Gun looks:** every rifle and sidearm now has its own look and name, and some guns glow. The armoury stocks a new shelf each week. These were made earlier but never reached the live game.
+- **Faces:** every face has its own shape (anatomy) now.
+- **Career marks:** your crew pick up scars, extra chrome and, after ten jobs together, the crew's lantern mark.
+- **Shaolin monks** can turn up.
+- **Older saves:** guns you already own get a plain look and a name, and the armoury gets stocked.
+
+## 2026-10-30 · See your gear in a fight
+- **Each runner in the fight panel now shows their gun, its damage and their armour,** for example "Pro sidearm 4 · Armoured vest −1".
+- **Shoot and Flank say what a hit does:** "hits for 3 · 2 hits to drop".
+- **The guards' aim shows the damage they'd do after armour,** and Hunker shows how much damage is coming at you this round.
+
+## 2026-10-30 · The planning read knows the map
+- **The fight odds on the planning screen now use the job's own map:** where each side will stand and what cover they'll have. Before, they assumed everyone was in half cover, which was a few points off: Kidnap fights were easier than shown, for example. Now the odds you're shown are the odds the fight uses.
+
 ## 2026-10-30 · Fights on the map in every district
 - **Old Town, the Night Market, Glass Heights and the Basin now fight on their maps too,** like the Docks: everyone stands behind something or out in the open, and the map zooms in on the fight.
 - **New things to hide behind:**
@@ -129,6 +156,29 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - Everyone else comes later, through the scouts on Wednesdays and the freelancers on Mondays. Your three cost about ¥750 a week instead of the old five's ¥1,300, so every hire is a real decision.
 - Games already in progress are unchanged (save version 25).
 
+## 2026-10-29 · Sidearms with style, and neon
+- **Sidearms have looks and names too**, and two turn up on the armoury's shelf each week (one street, one pro). Compact pistols, revolvers, machine pistols, old long-barrelled pistols and hand cannons, plus pro-only smart pistols (a light strip, a holo sight, a cable to the wrist) and coil pistols (glowing rings and a power cell).
+- **Finishes and add-ons** from blued steel and hazard yellow to cinnabar lacquer, jade, pearl grips, holographic chrome and clinic white; laser sights, holo sights, glowing vents, LED ammo counters; charms like a neon keychain, a data shard or a hologram lucky cat.
+- **Guns that light up glow in their own colour**: cyan, neon purple, red or gold. Plain ones don't glow, so most rifles look as before.
+- Sidearms you already own become plain blued pistols with a name. They show in the armoury and on gear tiles, not on faces.
+## 2026-10-29 · Every rifle is its own
+- **Rifles have looks and names.** Each one is built from a frame (marksman, carbine, bullpup, heavy or heritage), a finish (from old wood and rust to cinnabar lacquer, jade, temple bronze and white ceramic), sometimes an engraving (gold clouds, dragon scales, a neon circuit) and sometimes a charm (a red silk tassel, a paper talisman, a lucky coin, prayer beads, a mahjong tile...). Each has a name to match, like "Vermilion Heron" or "Ghost Heirloom".
+- **The armoury has a weekly shelf of rifles**: two street and one pro, all different, with new ones every Monday. Other gear is bought as before.
+- The name shows wherever the rifle does, with what it's made of underneath. Looks don't change what a rifle does.
+- Saves upgrade on their own: a rifle you already own keeps its look and gets a name.
+## 2026-10-28 · Career marks
+- **A bad wound leaves a scar.** A serious or critical injury leaves a permanent scar on their face, up to three. Light wounds heal clean.
+- **Pushing neural load leaves chrome.** A job that ends with someone in the danger zone (over 70) adds a visible implant, up to two.
+- **The crew's mark.** After ten jobs with the crew, someone gets a small neon lantern under the eye.
+- Each mark is written in their history, and the profile lists them under their name ("Marked: a scar, the crew's mark"). The memorial wall keeps them.
+- Saves upgrade on their own: nobody has scars on record yet, but anyone already past ten jobs gets the crew's mark straight away.
+## 2026-10-28 · Every face is its own
+- **Faces now differ in the face itself**, not just the hair and gear: eyes (spacing, size, tilt, and monolid, creased, hooded or deep-set lids), brows, nose, mouth and lips, jaw, chin, ears and neck. Wide-open eyes show their whites. Some people have freckles or a mole.
+- **Age shows**: lines from nose to mouth from the mid-thirties, eye bags and a forehead line from 45.
+- **Everyone's face is redrawn once**, crew already in a save included. Hair, skin, implants, gear and the light on them stay the same, so they're still recognisable. Expressions, injuries, masks, glasses and lenses all work as before.
+- Fixed: the Greedy trait said buyout offers "tempt her more" whoever had it; it now says "them".
+## 2026-10-28 · Shaolin monks
+- **A new kind of monk turns up among recruits**: Shaolin warrior monks in saffron robes, with a heavy string of dark prayer beads and nine small ordination dots on the shaved head. Mostly Hong Kong and Southeast Asian names; rarely anyone else. Nobody else's face has changed, though a few existing crew are now drawn as Shaolin monks.
 ## 2026-10-28 · No more Continue by mistake while planning
 - While you're planning a job, the Continue button in the top bar is hidden, so the only button that moves things on is Start. Back out of the plan (or change tabs) and Continue returns. Phones already worked this way for main jobs; now desktop and side tasks do too.
 

@@ -4,7 +4,7 @@
 // round rolls; what the guards mean to do is the battle's intents. Who's picked and the orders given
 // so far live here until Go: they're the player's draft, not game state.
 
-import { ordersFor, guardHitChance, freeSpots, coverNow, BATTLE } from '../core/battle.js';
+import { ordersFor, guardHitChance, freeSpots, coverNow, hitFor, BATTLE } from '../core/battle.js';
 
 let draft = { key: null, sel: null, target: null, orders: {} };
 
@@ -14,6 +14,15 @@ const MOVE_WORD = { full: 'Move to full cover', half: 'Move to half cover', open
 const standing = (b) => b.runners.filter((r) => !r.down);
 const up = (b) => b.guards.filter((g) => !g.out);
 const guardName = (b, n) => (b.guards.length > 1 ? `Guard ${n}` : 'The guard');
+
+/** What a runner's shot does to a guard, short: "hits for 3 · 2 hits to drop" (armour taken off, as the round does). */
+function shotWord(r, g) {
+  const dmg = hitFor(r.damage, g.armour, r.pierce ?? 0);
+  const k = Math.ceil(g.hp / dmg);
+  return `hits for ${dmg}${g.armour ? ` (armour ${g.armour}${r.pierce ? `, pierces ${Math.min(r.pierce, g.armour)}` : ''})` : ''} · ${k === 1 ? 'drops them' : `${k} hits to drop`}`;
+}
+/** What a runner carries into the fight: their gun and its damage, their armour. */
+const kitWord = (r) => `${r.weapon} ${r.damage}${r.armour ? ` · ${r.armourName ?? 'armour'} −${r.armour}` : ' · no armour'}`;
 
 /** The draft for this fight's round: a new round starts a new draft, with the first runner picked. */
 function current(am) {
@@ -103,6 +112,7 @@ export function renderFightOrders(state, esc) {
     return `<button class="ffo-who ${r.id === draft.sel ? 'is-on' : ''} ${r.down ? 'is-down' : ''}" data-action="fight-sel" data-id="${esc(r.id)}" ${r.down ? 'disabled' : ''} aria-pressed="${r.id === draft.sel}">
       <strong>${esc(r.handle)}</strong>
       <span class="ffo-hp ${r.hp < r.max * 0.25 ? 'is-crit' : r.hp < r.max * 0.5 ? 'is-low' : ''}">${r.down ? 'down' : `${r.hp}/${r.max}`} · ${esc(COVER_WORD[coverNow(r)])}${aimedAt(r.id).length ? ` · <b>${aimedAt(r.id).length} aiming</b>` : ''}</span>
+      ${r.down ? '' : `<span class="ffo-kit">${esc(kitWord(r))}</span>`}
       <span class="ffo-order ${o ? 'is-set' : ''}">${r.down ? '' : o ? esc(orderWord(b, o)) : `Crew's call: ${esc(orderWord(b, auto))}`}</span>
     </button>`;
   };
@@ -117,10 +127,11 @@ export function renderFightOrders(state, esc) {
     const of = (kind, t = undefined) => opts.find((o) => o.kind === kind && (t === undefined || o.target === t));
     const list = [];
     const shoot = of('shoot', n); const flank = of('flank', n); const talk = of('talk', n);
-    if (shoot) list.push(btn(shoot, `Shoot ${guardName(b, n).toLowerCase()}`, `${pct(shoot.chance)} · they're ${COVER_WORD[shoot.cover]}`));
-    if (flank && shoot?.cover !== 'open') list.push(btn(flank, `Flank ${guardName(b, n).toLowerCase()}`, `${pct(flank.chance)} · everyone's shots at them easier · you're in the open`));
+    if (shoot) list.push(btn(shoot, `Shoot ${guardName(b, n).toLowerCase()}`, `${pct(shoot.chance)} · ${shotWord(sel, g)} · they're ${COVER_WORD[shoot.cover]}`));
+    if (flank && shoot?.cover !== 'open') list.push(btn(flank, `Flank ${guardName(b, n).toLowerCase()}`, `${pct(flank.chance)} · ${shotWord(sel, g)} · everyone's shots at them easier · you're in the open`));
     const hk = of('hunker');
-    const now = aimedAt(sel.id).length ? `${pct(guardHitChance(b, sel))} → ${pct(guardHitChance(b, sel, better(coverNow(sel)), true))} to be hit` : 'nobody is aiming at you';
+    const incoming = aimedAt(sel.id).reduce((t, i) => t + hitFor(b.guards.find((x) => x.n === i.guard).damage, sel.armour), 0);
+    const now = aimedAt(sel.id).length ? `${pct(guardHitChance(b, sel))} → ${pct(guardHitChance(b, sel, better(coverNow(sel)), true))} to be hit · up to ${incoming} damage coming` : 'nobody is aiming at you';
     list.push(btn(hk, 'Hunker down', `no shot · ${now}`));
     // Moves worth making: to better cover than they have (the map shows every free spot to tap).
     const rank = { full: 0, half: 1, open: 2 };
@@ -135,7 +146,7 @@ export function renderFightOrders(state, esc) {
     const lights = of('lights');
     if (lights) list.push(btn(lights, 'Kill the lights', `${pct(lights.chance)} · the guards hit less for the rest of the fight`));
     acts = `
-      ${up(b).length > 1 ? `<div class="ffo-targets" role="group" aria-label="Which guard">${up(b).map((x) => `<button class="ffo-target ${x.n === n ? 'is-on' : ''}" data-action="fight-target" data-id="${x.n}" aria-pressed="${x.n === n}">Guard ${x.n} <span>${x.hp}/${x.max} · ${esc(COVER_WORD[coverNow(x)])}</span></button>`).join('')}</div>` : g ? `<p class="ffo-note">${esc(guardName(b, n))}: ${g.hp}/${g.max}, ${esc(COVER_WORD[coverNow(g)])}.</p>` : ''}
+      ${up(b).length > 1 ? `<div class="ffo-targets" role="group" aria-label="Which guard">${up(b).map((x) => `<button class="ffo-target ${x.n === n ? 'is-on' : ''}" data-action="fight-target" data-id="${x.n}" aria-pressed="${x.n === n}">Guard ${x.n} <span>${x.hp}/${x.max} · ${esc(COVER_WORD[coverNow(x)])}${x.armour ? ` · armour ${x.armour}` : ''}</span></button>`).join('')}</div>` : g ? `<p class="ffo-note">${esc(guardName(b, n))}: ${g.hp}/${g.max}, ${esc(COVER_WORD[coverNow(g)])}${g.armour ? `, armour ${g.armour}` : ''}.</p>` : ''}
       <div class="ffo-acts">${list.join('')}</div>
       ${mine ? '<button class="btn btn--ghost ffo-clear" data-action="fight-clear">Leave it to them</button>' : ''}`;
   }
@@ -145,7 +156,7 @@ export function renderFightOrders(state, esc) {
     <div class="ffo" data-callin="fight:${esc(draft.key)}">
       <p class="ffo-title">Fight · round ${b.round + 1} <span>${up(b).length} ${up(b).length === 1 ? 'guard' : 'guards'} up</span></p>
       ${last ? `<details class="ffo-last"><summary>Round ${last.round}: ${last.lines.filter((l) => l.damage || l.dropped).length ? esc(last.lines.filter((l) => l.damage || l.dropped).map((l) => l.text).slice(0, 2).join(' ')) : 'nobody hit'}</summary>${last.lines.map((l) => `<p class="${l.kind === 'guard' ? (l.damage ? 'tone--bad' : 'tone--good') : l.success === false ? 'tone--bad' : 'tone--good'}">${esc(l.text)}</p>`).join('')}</details>` : ''}
-      ${intents.length ? `<p class="ffo-intents">${intents.map((i) => `<span>${esc(guardName(b, i.guard))} → ${esc(b.runners.find((r) => r.id === i.target).handle)}</span>`).join('')}</p>` : '<p class="ffo-intents ffo-intents--none">The guards are caught off balance: no shots from them this round.</p>'}
+      ${intents.length ? `<p class="ffo-intents">${intents.map((i) => { const t = b.runners.find((r) => r.id === i.target); const dmg = hitFor(b.guards.find((x) => x.n === i.guard).damage, t.armour); return `<span>${esc(guardName(b, i.guard))} → ${esc(t.handle)} · ${pct(guardHitChance(b, t))} · ${dmg} dmg${t.armour ? ' after armour' : ''}</span>`; }).join('')}</p>` : '<p class="ffo-intents ffo-intents--none">The guards are caught off balance: no shots from them this round.</p>'}
       <div class="ffo-crew">${b.runners.map(chip).join('')}</div>
       ${acts}
       <div class="ffo-bar">
