@@ -9,7 +9,7 @@ import { setInjury, worsenInjury } from './crew.js';
 import { XP } from './development.js';
 import { noteInjury } from './earned.js';
 import { ALERT_MAX } from './incidents.js';
-import { buildBattle, playRound, partingShots, injuryFromHp, runnerOf, BATTLE } from './battle.js';
+import { buildBattle, playRound, planIntents, partingShots, injuryFromHp, runnerOf, BATTLE } from './battle.js';
 import { actors, overwatchOp, driver, standbyReady, opById, grow, record, takeWhy, addNeural } from './run.js';
 import { currentStep, advance, exitRun } from './mission.js';
 
@@ -37,28 +37,30 @@ export function startBattle(state, am, tpl, inc, id, zone, diff, able, { ambush 
   am.log.push({ kind: 'bad', text });
   am.report = [...(am.report ?? []), text];
   am.queue.splice(am.step + 1, 0, { type: 'battle' });
+  planIntents(b, nextRng(state));
   advance(state);
 }
 
 /**
- * Play the fight's next round. After it: every guard down means the fight is won; nobody standing
+ * Play the fight's next round, with the player's orders if they gave any (core/battle.js playRound:
+ * { [runnerId]: { kind, target } }; anyone without one does what the crew would). After it: every guard down means the fight is won; nobody standing
  * means the crew is dragged out (an exit: nobody dies); someone at death's door calls you in; after
  * the last round with guards still up, a call-in: push past or pull back; otherwise the orders
  * (Cautious pulls back once someone is hurt, Steady once someone is badly hurt).
  */
-export function runBattle(prev) {
+export function runBattle(prev, orders = {}) {
   const am0 = prev.activeMission;
   if (!am0?.battle || currentStep(am0)?.type !== 'battle' || am0.pending || am0.critical) return prev;
   const state = structuredClone(prev);
   const am = state.activeMission;
   const b = am.battle;
-  const r = playRound(b, nextRng(state));
+  const r = playRound(b, nextRng(state), orders);
   if (b.overwatch && am.overwatch) {
     am.overwatch.left = b.overwatch.left;
     am.extraHeat += r.heat;
     if (r.neural) addNeural(opById(state, b.overwatch.id), r.neural);
   }
-  for (const l of r.lines) if (l.actor) grow(state, am, opById(state, l.actor.id), l.stat, XP.incident);
+  for (const l of r.lines) if (l.actor && l.stat) grow(state, am, opById(state, l.actor.id), l.stat, XP.incident);
   // Someone dying who's been stabilised is back to a serious wound, and out of danger.
   for (const x of b.runners.filter((x) => x.stable && (am.untreated ?? []).includes(x.id))) {
     am.untreated = am.untreated.filter((id) => id !== x.id);
@@ -70,6 +72,8 @@ export function runBattle(prev) {
   record(am, { kind: 'battle', phase: 'round', round: b.round, text, lines: r.lines, ...battleSnapshot(b) });
   am.log.push({ kind: guardsUp(b) ? 'bad' : 'good', text });
   b.door.push(...r.down);
+  // The guards' next move, rolled now so the player can see it before giving orders.
+  if (guardsUp(b) && b.runners.some((x) => !x.down)) planIntents(b, nextRng(state));
   return afterRound(state, am);
 }
 

@@ -5,6 +5,12 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-10-30 · Fights can take orders (the rules, not the screen yet)
+- **Under the hood, fights now have cover.** Everyone stands in the open, in half cover or in full cover, and that changes how hard they are to hit. For now everyone starts in half cover, which plays exactly like fights did before.
+- **The guards decide who they're aiming at before each round.** The screen doesn't show it yet; it will when orders reach the map.
+- **The rules can take an order for each runner each round,** with the chance for each shown: shoot a chosen guard, flank (works round a guard's cover, but leaves you in the open), hunker (much harder to hit, no shot), patch, stabilise, talk, or kill the lights. You can't give orders on screen yet. Until you can, everyone does what they would have done anyway.
+- Old saves still work. A save made mid-fight carries on with everyone in half cover.
+
 ## 2026-10-30 · Loading a save file works again
 - **Save → "Load save file into this slot" did nothing.** You could pick a file, but the game ignored it and showed no error. It loads now. Picking the same file twice in a row also works.
 - **A saved game that can't be opened is no longer lost.** If the game finds a save it can't open (saved by a newer version, which can happen for one launch after an update, or damaged), it now keeps that save and its weekly backup aside before starting fresh. A red banner says so, and the Save screen offers **Restore it**, **Download it** or **Throw away**. Before, the fresh game quietly saved over it, backup included.

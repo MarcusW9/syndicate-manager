@@ -436,5 +436,14 @@ function migrate(state) {
     }
     state.version = 27;
   }
+  if (state.version === 27) {
+    // v28: command fights. Everyone in a fight stands in cover (cover; now: this round's, if an order
+    // changed it), and the guards' next move is rolled ahead (intents; none yet means the round rolls it).
+    for (const am of [state.activeMission, ...(state.awayJobs ?? []).map((j) => j.mission)]) {
+      for (const x of am?.battle ? [...am.battle.guards, ...am.battle.runners] : []) { x.cover = x.cover ?? 'half'; x.now = x.now ?? null; }
+      if (am?.battle) am.battle.intents = am.battle.intents ?? null;
+    }
+    state.version = 28;
+  }
   return state;
 }
