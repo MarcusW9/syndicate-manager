@@ -68,7 +68,8 @@ export function feedItems(events = [], { kit = null } = {}) {
       // A fight (slice 6): a note when it starts (the guards appear on the plan), one card per round
       // and for pulling back (each moment plays on the plan), a note when it's over. The cue carries
       // everyone's health after the round, so the plan can draw the bars without the run's state.
-      const state = { guards: (e.guards ?? []).map((g) => ({ n: g.n, hp: g.hp, max: g.max, armour: g.armour, out: g.out })), runners: (e.runners ?? []).map((r) => ({ id: r.id, handle: r.handle, hp: r.hp, max: r.max, armour: r.armour, down: r.down })) };
+      // Where each one stands (at, cover) so the map can put the fight on its spots and show the faces.
+      const state = { guards: (e.guards ?? []).map((g) => ({ n: g.n, hp: g.hp, max: g.max, armour: g.armour, out: g.out, at: g.at ?? null, cover: g.cover ?? null })), runners: (e.runners ?? []).map((r) => ({ id: r.id, handle: r.handle, hp: r.hp, max: r.max, armour: r.armour, down: r.down, at: r.at ?? null, cover: r.cover ?? null })) };
       if (e.phase === 'start' || e.phase === 'end') {
         items.push({ type: 'note', text: e.phase === 'end' ? e.report ?? e.text : e.text, tone: e.phase === 'start' ? 'warn' : e.hurt?.length ? 'bad' : 'good', cue: { battle: { phase: e.phase, ...state } } });
         continue;

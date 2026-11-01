@@ -10,6 +10,7 @@ import { autoStep, autoRun, needsPlayer } from '../src/core/autorun.js';
 import { playRound, planIntents, ordersFor, guardHitChance, fightChance, BATTLE } from '../src/core/battle.js';
 import { makeRng } from '../src/core/rng.js';
 import { testFight, commandOrders } from './play.js';
+import { feedItems } from '../src/core/feed.js';
 import { planRead, coverage } from '../src/core/squad.js';
 import { spotsForJob } from '../src/core/fightspots.js';
 import { templateById, jobView } from '../src/core/jobs.js';
@@ -230,4 +231,15 @@ test('shown equals used: the planning read works each fight out on the spots the
     if (am.battle) assert.deepEqual(am.battle.spots, spotsForJob(tpl.district, j.id, tpl.id, am.battle.zone, am.battle.runners.length), `${job}: the run's spots are the read's`);
   }
   assert.ok(differs > 0, 'the spots change the read somewhere (it isn\'t still half cover everywhere)');
+});
+
+test('the feed hands the map where everyone stands: the fight cues carry each one\'s spot and cover', () => {
+  const s = docksFight();
+  const am = s.activeMission;
+  const items = feedItems(am.events ?? [], {});
+  const cue = items.find((i) => i.cue?.battle?.phase === 'start')?.cue.battle;
+  assert.ok(cue, 'the fight starts with a cue');
+  assert.ok(cue.runners.every((r) => Array.isArray(r.at)), 'every runner has a place on the map');
+  assert.ok(cue.guards.every((g) => Array.isArray(g.at)), 'every guard has a place on the map');
+  assert.ok(cue.runners.every((r) => ['open', 'half', 'full'].includes(r.cover)), 'and their cover');
 });
