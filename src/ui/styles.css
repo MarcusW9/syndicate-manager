@@ -1020,7 +1020,7 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
   .watch__new { bottom: 8px; }
   .watch.is-calling .watch__live { position: sticky; }
 }
-.sheet > .btn { display: flex; width: 100%; justify-content: center; }
+.sheet > .btn { display: flex; width: 100%; justify-content: center; align-items: center; } /* centred both ways (owner, 2026-11-03: "Go to the armoury" sat at the top of its button) */
 /* Freelancers in the picker and on the board: a violet stripe and tint, and a tag (owner, 2026-10-28). */
 .cand--freelance { border-left: 3px solid #b48cff; background: #1c1928; }
 .cand__hire { display: block; margin-bottom: 2px; font: 600 0.66rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: #b48cff; }

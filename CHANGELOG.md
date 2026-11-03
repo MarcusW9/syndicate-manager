@@ -5,6 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-03 · Buttons in pop-up sheets are centred
+- "Go to the armoury" (and any full-width button at the bottom of a pop-up sheet) now has its label centred top to bottom, not pressed against the top edge.
+
 ## 2026-11-03 · Fame, standing and paths (renown, slice 3)
 - **Runners now become known.** Fame climbs one step at a time from the record: Unknown, Known (6 jobs), Respected (6 active weeks and 10 jobs at their level), Elite. Elite needs 12 active weeks, 20 jobs at their level (Lifers: 40 jobs), a path's Elite numbers and a standing of 40. It arrives on its own, with a message in the inbox, a history line and a highlight. Legend isn't given yet; the runner page shows when someone is "Ready for their moment".
 - **Standing** is how the street rates a runner right now, 0 to 100: up with completed jobs at their level, hard calls that held and milestones; down when a job is lost or aborted, the crew pulls back from a fight, or they come back badly hurt, and a little every week on the bench. An Elite under 20 on two Sundays in a row drops back to Respected, and can win it back.
