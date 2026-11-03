@@ -15,6 +15,7 @@ import { returnCrews } from './autorun.js';
 import { refreshSideBoard, returnSideTasks } from './sidetasks.js';
 import { dailyTraits } from './earned.js';
 import { weeklyRecord } from './record.js';
+import { weeklyFame } from './fame.js';
 import { neuralFloor } from './gear.js';
 import { checkSpecialisations } from './specialisations.js';
 import { refreshArmoury } from './looks.js';
@@ -121,6 +122,7 @@ function settleWeek(state) {
   const broke = state.cash < 0;
 
   weeklyRecord(state); // a week they worked counts towards their record
+  weeklyFame(state); // standing slips on the bench, Elite can lapse, fame may climb (core/fame.js)
 
   // Heat cools the same every week, job or no job (core/heat.js).
   const heatBefore = state.heat;

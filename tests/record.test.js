@@ -38,7 +38,8 @@ test('wins, clean, flawless and the streak follow the outcome', () => {
   if (am.result.outcome === 'completed') {
     assert.equal(r.wins, 1);
     if (!am.wentLoud && am.result.heatGain === 0) { assert.equal(r.clean, 1); assert.equal(r.cleanStreak, 1); }
-  } else assert.equal(r.wins, 0);
+    else { assert.equal(r.clean, 0); assert.equal(r.cleanStreak, 0); }
+  } else { assert.equal(r.wins, 0); assert.equal(r.clean, 0); assert.equal(r.flawless, 0); }
   assert.ok(r.bestCleanStreak >= r.cleanStreak);
 });
 
@@ -66,7 +67,10 @@ test('freelancers get no record', () => {
   const f = s.freelancers[0];
   assert.ok(f, 'expected a freelancer on the board');
   s = run(s, 'container409', [s.crew[0].id, f.id]);
-  assert.equal(s.crew.find((o) => o.id === f.id)?.record, undefined); // they stay on the books until closeMission
+  const hired = s.crew.find((o) => o.id === f.id);
+  assert.ok(hired && s.activeMission.done, 'the freelancer was really on the finished job'); // else the check below proves nothing
+  assert.equal(hired.record, undefined); // they stay on the books until closeMission
+  assert.equal(s.crew[0].record.jobs, 1);
 });
 
 test('a hands-off run updates the record like a live one', async () => {
@@ -87,6 +91,33 @@ test('active weeks: a week with a job counts on Sunday, an idle week does not', 
   assert.equal(s.crew[0].record.activeWeeks, 1);
   for (let i = 0; i < 14; i++) s = advanceDay(s);
   assert.equal(s.crew[0].record.activeWeeks, 1); // two idle Sundays added nothing
+});
+
+test('active weeks: a job finished on a Sunday counts on the next Sunday, once (live and hands-off)', async () => {
+  const { calendar } = await import('../src/core/time.js');
+  const { sendOff } = await import('../src/core/autorun.js');
+  // Live: Sunday settles first thing, then the crew works.
+  let s = game(9);
+  while (!calendar(s.day).isSunday) s = advanceDay(s);
+  const ids = s.crew.slice(0, 2).map((o) => o.id);
+  s = M.closeMission(run(s, 'container409', ids));
+  assert.equal(s.crew.find((o) => o.id === ids[0]).record.activeWeeks, 0);
+  for (let i = 0; i < 7; i++) s = advanceDay(s); // the next Sunday
+  assert.equal(s.crew.find((o) => o.id === ids[0]).record.activeWeeks, 1);
+  for (let i = 0; i < 7; i++) s = advanceDay(s); // an idle week after it
+  assert.equal(s.crew.find((o) => o.id === ids[0]).record.activeWeeks, 1);
+  // Hands-off: a crew back on a Sunday files its report after that Sunday's settle.
+  let h = game(12); h.jobs = []; addOffer(h, 'container409');
+  const hid = h.crew.slice(0, 2).map((o) => o.id);
+  while (calendar(h.day + 1).weekday !== 'Sat') h = advanceDay(h);
+  h = sendOff(h, h.jobs[0].id, hid, 'stealth', 'steady');
+  const back = h.awayJobs[0].returnDay;
+  assert.ok(calendar(back).isSunday, `expected the crew back on a Sunday (day ${back})`);
+  while (h.day < back) h = advanceDay(h);
+  assert.equal(h.awayJobs.length, 0);
+  assert.equal(h.crew.find((o) => o.id === hid[0]).record.activeWeeks, 0);
+  for (let i = 0; i < 7; i++) h = advanceDay(h);
+  assert.equal(h.crew.find((o) => o.id === hid[0]).record.activeWeeks, 1);
 });
 
 test('the dead go to the memorial with a short record summary', () => {

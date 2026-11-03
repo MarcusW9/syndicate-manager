@@ -16,6 +16,8 @@ import { advanceDay, calendar, formatShortDate, isBlocked, seasonStartDay } from
 import { createNewGame, chooseFounders } from '../core/state.js';
 import { marksText } from '../core/marks.js';
 import { recordOf } from '../core/record.js';
+import { fameOf, fameName, standingOf, standingWord, pathOf, legendProgress } from '../core/fame.js';
+import { FAME_RULES } from '../data/fame.js';
 import { templateById, jobView, nextUnlock, JOB_GATES } from '../core/jobs.js';
 import { trustLabel, trustOf } from '../core/clients.js';
 import { CLIENTS } from '../data/clients.js';
@@ -1014,7 +1016,7 @@ function renderCrew() {
             <button class="row crewrow" data-action="open-op" data-id="${esc(op.id)}">
               ${face(op)}
               <span class="crewrow__name"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"${op.record?.highlights?.[0] ? `<small class="muted crewrow__hl">${esc(op.record.highlights[0].text)}</small>` : ''}</span>
-              <span class="crewrow__info muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age}</span>
+              <span class="crewrow__info muted">${fameOf(op) === 'elite' ? `<span class="fame fame--elite">${esc(fameName('elite'))}</span> · ` : ''}${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age}</span>
               <span class="crewrow__status">${statusChip(availability(state, op))}</span>
               <span class="crewrow__scout">${scoutLine(op)}${growthMarker(op)}</span>
               <span class="crewrow__bars">${conditionBars(op)}</span>
@@ -1136,6 +1138,41 @@ function renderRecord(op) {
   </details>`;
 }
 
+/** Fame on the runner page: "ELITE · pro", with how the street rates them now (Elite only). */
+function fameBadge(op) {
+  if (op.freelance || !op.record) return '';
+  const fame = fameOf(op);
+  if (fame === 'unknown') return '';
+  const word = fame === 'elite' ? ` · <span class="fame__standing">${esc(standingWord(op))}</span>` : '';
+  return `<p class="famebadge"><span class="fame fame--${esc(fame)}">${esc(fameName(fame))}</span> · ${esc(op.tier ?? '')}${word}</p>`;
+}
+
+/** Their path (core/fame.js) and how far it is to Elite and Legend; the numbers behind a tap. */
+function renderPath(op) {
+  if (op.freelance || !recordOf(op).jobs) return '';
+  const p = pathOf(op);
+  const legend = legendProgress(op);
+  const elite = fameOf(op) === 'elite';
+  const pct = (n) => Math.round(n * 100);
+  const meter = (label, n) => `<div class="meter pathbar"><span class="meter__label">${label}</span><span class="meter__track"><span class="meter__fill" style="width:${pct(n)}%"></span></span><span class="meter__value">${pct(n)}%</span></div>`;
+  const e = FAME_RULES.elite;
+  const numbers = p.conditions.map((c) => `${c.label}: ${c.value} (Elite ${c.elite}, Legend ${c.legend})`).join('; ');
+  const todo = legend.checks.filter((x) => !x.met).map((x) => x.label);
+  const info = `Their path is the one their record is furthest along. ${p.name}: ${numbers}. `
+    + (elite ? '' : `Elite also needs ${e.activeWeeks} active weeks, ${e.atLevel} jobs at their level and standing ${e.standing} (how the street rates them now: good work at their level raises it, the bench wears it down). `)
+    + (legend.ready ? 'They meet every Legend condition.' : `Still to come for Legend: ${todo.join(', ')}.`)
+    + ' Fame never changes a roll, pay or heat.';
+  return `<h2>Path</h2>
+    <div class="riskcard pathcard">
+      <div class="infoline"><p><strong class="pathcard__name">${esc(p.name)}</strong> <span class="muted small">${esc(p.line)}</span></p>${infoButton(`path-${op.id}`, `About ${op.handle}'s path`)}</div>
+      ${infoText(`path-${op.id}`, info)}
+      ${elite ? '' : meter('To Elite', p.toElite)}
+      ${meter('To Legend', p.toLegend)}
+      ${legend.ready ? '<p class="pathcard__ready">Ready for their moment.</p>' : ''}
+      ${elite ? `<p class="muted small">Standing ${standingOf(op)}: ${esc(standingWord(op))}.</p>` : ''}
+    </div>`;
+}
+
 function renderOperative() {
   const op = state.crew.find((x) => x.id === openOperativeId);
   if (!op) return renderCrew();
@@ -1149,6 +1186,7 @@ function renderOperative() {
         <div>
           <h1>${esc(op.name)} <span class="muted">"${esc(op.handle)}"</span></h1>
           <p class="muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age} · ${money(op.wage)}/week</p>
+          ${fameBadge(op)}
           ${marksText(op) ? `<p class="muted small">Marked: ${esc(marksText(op))}</p>` : ''}
           ${statusChip(availability(state, op))}
         </div>
@@ -1200,6 +1238,7 @@ function renderOperative() {
         ${Object.entries(op.trust).map(([id, v]) => `<li>${esc(nameOf(id))}: ${v > 0 ? '+' : ''}${v}</li>`).join('') || '<li class="muted">No strong feelings yet.</li>'}
       </ul>
 
+      ${renderPath(op)}
       ${renderRecord(op)}
       ${op.history.length ? `<h2>History</h2><ul class="list list--plain">${op.history.slice(-8).reverse().map((h) => `<li class="muted">${esc(h)}</li>`).join('')}</ul>` : ''}
       </div>
