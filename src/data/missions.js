@@ -400,5 +400,9 @@ const BASE_MISSIONS = [
 
 // Rookie jobs (rookie: true) draw the shared rookie pool instead of the district crises:
 // those are aimed at 9-14, too hard for a new crew.
+const sharedPool = (m) => (m.rookie ? ROOKIE_CRISES : DISTRICT_CRISES[m.district] ?? []);
 export const MISSIONS = [...BASE_MISSIONS, KIDNAP, CASINO, PENTHOUSE, PROTECTION, CLINIC, HERBAL, LEDGER, CONTAINER, DELIVERY, EVICTION, CHROME, CABLE, SCRUB, FAVOURITE, LAST_TICKET, WRONG_HORSE]
-  .map((m) => ({ ...m, crises: [...m.crises, ...(m.rookie ? ROOKIE_CRISES : DISTRICT_CRISES[m.district] ?? [])] }));
+  .map((m) => ({ ...m, crises: [...m.crises, ...sharedPool(m)] }));
+
+/** A job's own crises, without the shared district or rookie pool (scripts/check-job.mjs). */
+export const ownCrises = (m) => m.crises.filter((c) => !sharedPool(m).includes(c));

@@ -15,7 +15,7 @@ Text-first crew management game (Football Manager style, endless). Plain JavaScr
 | --- | --- |
 | Anything in `src/core/` | `CODEMAP.md` |
 | State shape, saves, economy loop, tests, how things connect | `docs/ARCHITECTURE.md` |
-| A job, crisis or beat (content) | `src/data/missions/<job>.js`, then `core/validate.js` for the rules it must meet |
+| A job, crisis or beat (content) | `src/data/missions/<job>.js`, then `core/validate.js` and `core/jobcheck.js` for the rules it must meet (`node scripts/check-job.mjs <file>`) |
 | A run's flow, `finish()`, pay/heat/reputation | `CODEMAP.md` "The run, in order", then `core/mission.js` |
 | Planning read, risk numbers | `core/squad.js`, `core/risk.js` |
 | Traits, growth, specialisations | `data/earnedTraits.js`, `core/earned.js`, `core/development.js` |

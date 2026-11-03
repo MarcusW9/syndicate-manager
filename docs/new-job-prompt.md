@@ -239,6 +239,7 @@ Idea: [one or two sentences: what the client wants and what makes it interesting
 
 ## What Claude does with the file
 
+- Runs `node scripts/check-job.mjs <file>` on it first (`core/jobcheck.js`): errors (a crisis with no way out, an unknown token like `{fung}`, a retired name, a clashing id) get fixed; warnings (difficulty or pay outside the tier, long lines, a role named but not required) get a look.
 - Saves it as `src/data/missions/<name>.js`, imports it in `src/data/missions.js` and adds it to `MISSIONS`.
 - Adds its id to the client's `jobs` in `src/data/clients.js`. Walk-in jobs need no client; Doc Siu's and Mrs. Ip's are rookie work, offered by Auntie Fung or as walk-ins.
 - Runs the tests: `core/validate.js` checks every crisis has an exit and every choice has its lines.
