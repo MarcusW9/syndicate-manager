@@ -23,6 +23,7 @@ export const freshRecord = () => ({
   broughtHome: 0, criticalsSurvived: 0, unscathed: 0, bigScores: 0, seriousInjuries: 0,
   cleanStreak: 0, bestCleanStreak: 0,
   with: {}, activeWeeks: 0, lastJobDay: 0,
+  milestones: [], highlights: [], // earned ids; the best three {id, day, text, weight} (core/milestones.js)
   estimated: false, // true on saves from before records began (counts were guessed from jobs worked)
 });
 

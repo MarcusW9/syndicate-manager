@@ -1,6 +1,6 @@
 # PROPOSAL-runner-renown.md
 
-Owner's design, written outside the repo with an AI (kit: `drafts/ideation-kit.md`), then reviewed against the code on 2026-11-03. **Read "Review decisions" at the bottom first: it changes parts of the text below.** Built in slices; slice 1 (the record, `core/record.js`) is on main, slices 2-6 are not.
+Owner's design, written outside the repo with an AI (kit: `drafts/ideation-kit.md`), then reviewed against the code on 2026-11-03. **Read "Review decisions" at the bottom first: it changes parts of the text below.** Built in slices; slice 1 (the record, `core/record.js`) and slice 2 (milestones and highlights, `core/milestones.js`, save v31) are on main, slices 3-6 are not. In slice 2 the 'pending' queue became implicit (thresholds are re-checked each job), so `record.pending` doesn't exist.
 
 ## 1. Goal and player-facing behaviour
 

@@ -1013,7 +1013,7 @@ function renderCrew() {
           <li>
             <button class="row crewrow" data-action="open-op" data-id="${esc(op.id)}">
               ${face(op)}
-              <span class="crewrow__name"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"</span>
+              <span class="crewrow__name"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"${op.record?.highlights?.[0] ? `<small class="muted crewrow__hl">${esc(op.record.highlights[0].text)}</small>` : ''}</span>
               <span class="crewrow__info muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age}</span>
               <span class="crewrow__status">${statusChip(availability(state, op))}</span>
               <span class="crewrow__scout">${scoutLine(op)}${growthMarker(op)}</span>
@@ -1129,6 +1129,7 @@ function renderRecord(op) {
       ${stat('carries', r.carries)}${stat('fights won', r.fightsWon)}${stat('brought home', r.broughtHome)}
       ${stat('unscathed', r.unscathed)}${stat('big scores', r.bigScores)}${stat('active weeks', r.activeWeeks)}
     </div>
+    ${r.highlights?.length ? `<ul class="list list--plain highlights">${r.highlights.map((h) => `<li>${esc(h.text)}</li>`).join('')}</ul>` : ''}
     ${top ? `<p class="muted small">Most jobs with ${esc(nameOf(top[0]))}: ${top[1]}.</p>` : ''}
     ${r.estimated ? '<p class="muted small">Counts from before records began are estimates.</p>' : ''}
     <p class="muted small">Clean: no heat and nobody went loud. Flawless: nobody went critical. Carries: a hard crisis roll they made.</p>

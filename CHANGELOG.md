@@ -8,6 +8,12 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 ## 2026-11-03 · No more "someone" in job choices
 - Some choices in older jobs (the courier, warehouse and data runs, Kidnap, Casino Con, Protection Run) named a role, like the driver or the face, without needing one on the crew. Without that person, the line read "someone ran the light". They now name whoever actually does it.
 
+## 2026-11-03 · Milestones and highlights (renown, slice 2)
+- **A runner's record now produces moments.** After a job, someone whose record crosses a line gets a milestone: a first (first clean job, first time they brought a crewmate home), a count (10, 25, 50 jobs; clean jobs; hard calls that held), a clean streak, a long partnership with a crewmate, or a stretch of steady work. It shows as a highlighted "Milestone:" line in the job report and goes into their history.
+- **At most one a person and two a job;** anything else that's ready waits for a later job. A partnership counts for both people at once.
+- **Highlights:** each runner keeps their best three moments, shown on their page and as one line under their name on the crew list.
+- Wording is a first pass in `src/data/milestones.js`, for the owner to rewrite. Old saves count what they've already reached as earned, so there's no flood on the next job. **Save format v31.**
+
 ## 2026-11-03 · Runner record (renown, slice 1)
 - **Every runner now keeps a record** of what they've done on the job: jobs, jobs at their level, completed, clean (no heat, nobody went loud), flawless (nobody went critical), carries (a hard crisis roll they made), fights won, people brought home, unscathed jobs, big scores, best clean streak, active weeks, and who they've worked with most. It's a "Record" fold on the runner's page.
 - Nothing about rolls, pay, heat or risk changes: this only counts. Fame, milestones and retirement build on it later.

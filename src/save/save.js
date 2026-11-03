@@ -14,6 +14,7 @@ import { refreshSideBoard } from '../core/sidetasks.js';
 import { SAVE_VERSION } from '../core/state.js';
 import { TATTOO_JOBS } from '../core/marks.js';
 import { seedRecord } from '../core/record.js';
+import { seedMilestones } from '../core/milestones.js';
 import { nameLook, refreshArmoury, stockShelf } from '../core/looks.js';
 import { addOffer } from '../core/jobs.js';
 import { STARTING_ROSTER_CAP } from '../core/recruits.js';
@@ -485,6 +486,12 @@ function migrate(state) {
     for (const op of state.crew) seedRecord(op, { today: state.day });
     for (const m of state.memorial ?? []) m.record = m.record ?? null;
     state.version = 30;
+  }
+  if (state.version === 30) {
+    // v31: milestones and highlights on the record (core/milestones.js). What a record has already
+    // reached counts as earned, so an old crew doesn't get a flood of milestones on its next job.
+    for (const op of state.crew) { if (op.record) delete op.record.milestones; seedMilestones(op); }
+    state.version = 31;
   }
   return state;
 }

@@ -181,7 +181,7 @@ test('Wheels and standby are on the job: away on a hands-off run, tired and in t
   for (const id of [c, d]) {
     const op = live.crew.find((o) => o.id === id);
     assert.ok(op.condition.fatigue > s.crew.find((o) => o.id === id).condition.fatigue, `${id} is tired`);
-    assert.match(op.history.at(-1), /Container 409/);
+    assert.ok(op.history.some((h) => /Container 409/.test(h))); // a milestone line may follow it
   }
 });
 
