@@ -96,8 +96,8 @@ export const CAST = {
       disappoint: ['You said their business where the whole queue could hear.', 'Being in a hurry does not make somebody else\'s money yours.'],
     },
   },
-  yip: {
-    name: 'Yip Man-ki',
+  pang: {
+    name: 'Pang Man-ki',
     district: 'heights',
     desc: 'Veridian-Apex clinic administrator in Glass Heights. Wears a pale clinic jacket over an immaculate suit, turns her appointment screen away before you reach the desk, and dims the waiting-room lights when a patient flinches.',
     lines: {
