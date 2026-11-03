@@ -22,7 +22,7 @@ Text-first crew management game (Football Manager style, endless). Plain JavaScr
 | Side tasks, hands-off runs | `core/sidetasks.js`, `core/autorun.js` |
 | Changing the save shape | `src/save/save.js` (`migrate`) and `SAVE_VERSION` in `core/state.js` |
 | Any screen or style | "UI skin" in `ART.md`, newest `docs/screenshots/` set, `ui/app.js`, `ui/board.js` |
-| Writing in-game text, lore, names | `WRITING_GUIDE.md`, `WORLD.md`, `src/config/names.js` |
+| Writing in-game text, lore, names | `WRITING_GUIDE.md`, `WORLD.md`, `src/config/names.js`; any change to canon goes through the `add-lore` skill (`.claude/skills/add-lore/`) |
 | Why something was decided | `DESIGN.md` decision log (grep the topic; rows may be under `docs/design/`) |
 | What shipped / what's next | `CHANGELOG.md` / `HANDOFF.md` (`STATE-OF-PLAY.md` is a 2026-10-26 snapshot) |
 
