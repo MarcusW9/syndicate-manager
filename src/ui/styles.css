@@ -1218,6 +1218,9 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
      column gets the larger share; the feed keeps at least 360px. */
   #app.is-onjob .watch { grid-template-columns: minmax(0, 1.5fr) minmax(360px, 1fr); }
   #app.is-onjob .watch__map { container-type: inline-size; }
+  /* A gap under the top bar for the sticky map, and the feed column no taller than the map column. */
+  #app.is-onjob .watch .watch__live, #app.is-onjob .watch.is-calling .watch__live, #app.is-onjob .watch.is-done .watch__live { top: calc(var(--live-top, 0px) + 12px); }
+  #app.is-onjob .watch .watch__side { max-height: var(--live-h, calc(100svh - var(--live-top, 0px) - 120px)); }
   #app.is-onjob .watch .siteplan,
   #app.is-onjob .watch.is-fighting .siteplan { height: max(360px, min(calc(100svh - var(--live-top, 0px) - 250px), 85cqw)); }
 }
