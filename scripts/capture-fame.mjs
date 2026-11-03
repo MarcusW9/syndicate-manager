@@ -1,5 +1,5 @@
 // Design-session screenshots for fame and paths (renown slice 3, 2026-11-03): a crew that has
-// played sixteen careful weeks (tests/play.js playWeeks, seed 1, fresh start), loaded into the
+// played thirty careful weeks (tests/play.js playWeeks, seed 1, fresh start), loaded into the
 // page at phone width. Shots: the crew list (an Elite runner's badge), the Elite runner's page,
 // the same with the path's (i) open, and a runner who isn't Elite yet.
 //
@@ -18,11 +18,13 @@ const repo = resolve(new URL('..', import.meta.url).pathname);
 const outDir = join(repo, 'docs', 'screenshots', process.argv[2] ?? '2026-11-03-design-session-fame');
 mkdirSync(outDir, { recursive: true });
 
-const { state } = playWeeks(16, 1, carefulPolicy, { startCrew: 'fresh', hireAbove: 10000 });
+// 30 weeks since Elite moved to 60 jobs at their level (2026-11-03); the first set used 16.
+const { state } = playWeeks(30, 1, carefulPolicy, { startCrew: 'fresh', hireAbove: 10000 });
 state.inbox.forEach((m) => { m.read = true; });
+state.inbox = state.inbox.filter((m) => !m.blocking || m.resolved); // unanswered pay asks would lock the tabs
 const elite = state.crew.find((o) => o.fame === 'elite');
 const other = state.crew.find((o) => o.fame !== 'elite' && o.record?.jobs);
-if (!elite) throw new Error('no Elite runner after 16 weeks');
+if (!elite) throw new Error('no Elite runner after 30 weeks');
 
 const server = spawn(join(repo, 'node_modules', '.bin', 'vite'), ['--port', '5174', '--strictPort'], { cwd: repo, stdio: 'pipe' });
 await new Promise((ok, fail) => {
@@ -42,24 +44,26 @@ await page.addInitScript((save) => {
 await page.goto('http://localhost:5174/');
 await page.waitForTimeout(800);
 let n = 0;
+// Click through the DOM: Playwright's visibility wait can stall while the page animates.
+const tap = async (sel) => { await page.evaluate((q) => document.querySelector(q).click(), sel); await page.waitForTimeout(300); };
 const shot = async (name, full = false) => { await page.screenshot({ path: join(outDir, `${String(++n).padStart(2, '0')}-${name}.png`), fullPage: full }); };
-await page.click('[data-action="nav"][data-id="crew"]');
+await tap('[data-action="nav"][data-id="crew"]');
 await page.waitForTimeout(300);
 await page.locator(`[data-action="open-op"][data-id="${elite.id}"]`).scrollIntoViewIfNeeded();
 await shot('crew-list');
-await page.click(`[data-action="open-op"][data-id="${elite.id}"]`);
+await tap(`[data-action="open-op"][data-id="${elite.id}"]`);
 await page.waitForTimeout(300);
 await page.evaluate(() => window.scrollTo(0, 0));
 await shot('elite-runner');
 await page.locator('h2:has-text("Path")').scrollIntoViewIfNeeded();
 await shot('elite-path');
-await page.click(`[data-action="info"][data-id="path-${elite.id}"]`);
+await tap(`[data-action="info"][data-id="path-${elite.id}"]`);
 await page.waitForTimeout(200);
 await page.locator('h2:has-text("Path")').scrollIntoViewIfNeeded();
 await shot('elite-path-info');
 if (other) {
-  await page.click('[data-action="back"]');
-  await page.click(`[data-action="open-op"][data-id="${other.id}"]`);
+  await tap('[data-action="back"]');
+  await tap(`[data-action="open-op"][data-id="${other.id}"]`);
   await page.waitForTimeout(300);
   await page.locator('h2:has-text("Path")').scrollIntoViewIfNeeded();
   await shot('path-not-elite');
