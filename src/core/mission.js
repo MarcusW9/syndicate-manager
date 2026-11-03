@@ -278,9 +278,11 @@ function incidentContext(state, am, inc, diff) {
   };
 }
 
-/** Exit the job from a decision: everyone comes home (the death rule), the job ends. */
-export function exitRun(state, am, { text, choice, report, why }) {
+/** Exit the job from a decision: everyone comes home (the death rule), the job ends. Pays nothing
+ *  by default, as the button says ("Everyone comes home. No pay."); pass payCut to soften that. */
+export function exitRun(state, am, { text, choice, report, why, payCut = 1 }) {
   am.aborted = true;
+  am.payCut = Math.max(am.payCut, payCut);
   am.pending = null;
   am.log.push({ kind: 'choice', text: choice });
   record(am, { kind: 'exit', text, choice, why: why ?? null, report, choiceCost: {} });
