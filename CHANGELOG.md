@@ -5,6 +5,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-03 · Fix: the crew walks the drawn route again, and the speed button works
+- **On a job, the crew now walks the route drawn on the map.** A recent change left the crew's walking and the map drawn from two different places: the map showed the right site (for Herbal Run, the Old Town tenement) but the crew moved on a stock site, so they walked a different route and, once the job was done, stood at a different van spot from the one drawn. They now share the same site.
+- **"Faster" works again** on the job screen (it had stopped doing anything).
+
 ## 2026-11-03 · The play-by-play keeps up, and a finished job stays put
 - The play-by-play now always scrolls to the newest moment unless you scroll up yourself to reread something; scroll back to the bottom, or tap "↓ new", and it follows again. Before, it sometimes stopped following on its own.
 - When a job ends (done, aborted or someone lost), the screen keeps the map and the play-by-play side by side, and the summary with "Back to the safehouse" appears at the end of the play-by-play, instead of switching to a different view.

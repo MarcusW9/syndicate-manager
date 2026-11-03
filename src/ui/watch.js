@@ -85,7 +85,9 @@ export function mountWatch(el, state, { onAuto, ui }) {
   const team = opsOf(state, am.crewIds.filter((id) => !out.includes(id)));
   const ow = am.overwatch ? { op: state.crew.find((o) => o.id === am.overwatch.id), kit: am.overwatch.kit } : null;
   const plan = bindSitePlan(el.querySelector('.siteplan'), {
-    team, overwatch: ow?.op ? ow : null, zone: am.zone ?? 'start', // a finished job stays where the crew ended up speed: () => speed, site: siteFor(templateById(am.templateId)?.district, am.jobId, am.templateId),
+    // a finished job stays where the crew ended up (am.zone)
+    team, overwatch: ow?.op ? ow : null, zone: am.zone ?? 'start',
+    speed: () => speed, site: siteFor(templateById(am.templateId)?.district, am.jobId, am.templateId),
     wheels: am.wheels ? opsOf(state, [am.wheels])[0] : null,
     standby: am.standby && !am.standby.joined ? opsOf(state, [am.standby.id])[0] : null,
     out: opsOf(state, out),
