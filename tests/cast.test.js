@@ -68,7 +68,7 @@ test('the after-action message is a timeline: each crisis in order, then the out
     assert.equal(result, done.activeMission.result.outcome, `seed ${seed}: result`);
     assert.deepEqual(steps, done.activeMission.result.report, `seed ${seed}: steps in order`);
     assert.match(outcome[0].text, /^Paid ¥/, `seed ${seed}: outcome starts with pay`);
-    for (const o of outcome) assert.ok(['good', 'bad', 'warn', 'plain'].includes(o.tone), `seed ${seed}: tone ${o.tone}`);
+    for (const o of outcome) assert.ok(['good', 'bad', 'warn', 'plain', 'milestone'].includes(o.tone), `seed ${seed}: tone ${o.tone}`);
     assert.equal(msg.body, [...steps, ...outcome.map((o) => o.text)].join(' '), `seed ${seed}: preview text matches`);
   }
 });

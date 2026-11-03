@@ -206,7 +206,7 @@ test('saves happen, use up the kit, and the overwatch person is on the job: away
     const op = state.crew.find((o) => o.id === ow.id);
     assert.ok(op.condition.awayUntil > g.day, 'away with the crew');
     assert.ok(op.condition.fatigue > ow.condition.fatigue, 'tired too');
-    assert.ok(op.history.at(-1).includes('Container 409'));
+    assert.ok(op.history.some((h) => h.includes('Container 409'))); // a milestone line may follow it
   }
   assert.ok(saves >= 10, `saw ${saves} overwatch saves`);
 });
