@@ -5,6 +5,12 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-03 · A tidier fight panel
+- The fight's orders are now one short row per crew member: face, name, health bar, cover, who's aiming at them, and their order. Orders you give show solid ("You: Flank G2"); anyone you leave alone shows the crew's call, faded. Tap your order (or the crew's pick) to hand it back to them.
+- Pick someone and their tray opens below: their kit, who's aiming at them, the guards with your chance to hit each, and what they can do, each with its odds in big numbers.
+- Go says what it'll play ("Go · 1 yours, 3 crew's call"). The rules are behind "?", and Pull back asks before it ends the job, showing what it costs.
+- On the map, the picked crew member's call is drawn as a faded line, and tokens are easier to tap.
+
 ## 2026-11-03 · Everyone in a fight stays in view
 - In a fight, the map's camera now keeps every crew member and guard fully in view, health bars included, even when someone stands by the edge of the map or has no cover spot. It looks a little past the edge of the drawn site when it needs to.
 

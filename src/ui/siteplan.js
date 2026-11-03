@@ -360,19 +360,26 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
       cmd.append(el('line', { class: 'sp-aim', x1: a[0], y1: a[1], x2: b[0], y2: b[1] }));
       tag(mid(a, b), pctOf(i.chance), 'sp-tag--foe');
     }
+    // Tap areas: an invisible ring round every token, at least 44px across wherever the camera is
+    // (a token alone is often too small to hit on a phone). Under the free spots, which go on top.
+    const m = svg.getScreenCTM?.();
+    const hitR = Math.min(14, Math.max(9, 22 / (m ? Math.hypot(m.a, m.b) || 1 : 1)));
+    for (const r of v.runners) if (!r.down) { const at = posOf(r.id); cmd.append(el('circle', { class: 'sp-hit', cx: at[0], cy: at[1], r: hitR, 'data-action': 'fight-sel', 'data-id': r.id })); }
+    for (const g of v.guards) if (!g.out) { const at = foePos(g.n); cmd.append(el('circle', { class: 'sp-hit', cx: at[0], cy: at[1], r: hitR, 'data-action': 'fight-target', 'data-id': String(g.n) })); }
     for (const r of v.runners) {
       const from = posOf(r.id);
-      const o = r.order;
+      const call = !r.order && r.call;
+      const o = r.order ?? r.call;
       if (o && (o.kind === 'shoot' || o.kind === 'flank' || o.kind === 'talk')) {
         const to = foePos(o.target);
-        cmd.append(el('line', { class: `sp-order sp-order--${o.kind}`, x1: from[0], y1: from[1], x2: to[0], y2: to[1] }));
+        cmd.append(el('line', { class: `sp-order sp-order--${o.kind}${call ? ' is-call' : ''}`, x1: from[0], y1: from[1], x2: to[0], y2: to[1] }));
       } else if (o?.kind === 'move' && v.spots[o.target]) {
         const to = v.spots[o.target].at;
         cmd.append(el('line', { class: 'sp-order sp-order--move', x1: from[0], y1: from[1], x2: to[0], y2: to[1] }), el('circle', { class: 'sp-spot is-picked', cx: to[0], cy: to[1], r: 6.5 }));
       } else if (o && (o.kind === 'patch' || o.kind === 'stabilise')) {
         const to = posOf(o.target);
-        cmd.append(el('line', { class: 'sp-order sp-order--heal', x1: from[0], y1: from[1], x2: to[0], y2: to[1] }));
-      } else if (o?.kind === 'hunker') cmd.append(el('circle', { class: 'sp-hunker', cx: from[0], cy: from[1], r: 9 }));
+        cmd.append(el('line', { class: `sp-order sp-order--heal${call ? ' is-call' : ''}`, x1: from[0], y1: from[1], x2: to[0], y2: to[1] }));
+      } else if (o?.kind === 'hunker') cmd.append(el('circle', { class: `sp-hunker${call ? ' is-call' : ''}`, cx: from[0], cy: from[1], r: 9 }));
       if (!r.down) coverMark(from, r.cover, false);
       if (r.sel) cmd.append(el('circle', { class: 'sp-sel', cx: from[0], cy: from[1], r: 9.5 }));
       const t = tok(r.id);

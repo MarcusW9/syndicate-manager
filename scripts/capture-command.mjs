@@ -74,6 +74,14 @@ try {
     await page.waitForTimeout(300);
     await page.evaluate(() => document.querySelector('.watch__callin').scrollIntoView({ block: 'start' }));
     await shot(page, 'orders-given', w);
+    // The "?" card and Pull back's confirm (2026-11-03), then back to the fight.
+    await page.locator('[data-action="fight-rules"]').dispatchEvent('click');
+    await page.locator('[data-action="fight-pull-ask"]').dispatchEvent('click');
+    await page.waitForTimeout(200);
+    await page.evaluate(() => document.querySelector('.watch__callin').scrollIntoView({ block: 'start' }));
+    await shot(page, 'rules-and-pull-back', w, w < 500);
+    await page.locator('[data-action="fight-pull-no"]').dispatchEvent('click');
+    await page.locator('[data-action="fight-rules"]').dispatchEvent('click');
     await page.locator('[data-action="fight-go"]').dispatchEvent('click');
     await page.waitForTimeout(9000);
     await shot(page, 'after-go', w);
