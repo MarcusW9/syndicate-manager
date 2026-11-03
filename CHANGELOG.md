@@ -5,6 +5,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-03 · Runner record (renown, slice 1)
+- **Every runner now keeps a record** of what they've done on the job: jobs, jobs at their level, completed, clean (no heat, nobody went loud), flawless (nobody went critical), carries (a hard crisis roll they made), fights won, people brought home, unscathed jobs, big scores, best clean streak, active weeks, and who they've worked with most. It's a "Record" fold on the runner's page.
+- Nothing about rolls, pay, heat or risk changes: this only counts. Fame, milestones and retirement build on it later.
+- Saves from before get an estimated record (guessed from jobs worked, marked "estimates"). Runners lost on a job go to the memorial with a short summary. **Save format v30.**
+
 ## 2026-11-03 · Getting out now pays nothing
 - **Walking away from a job now pays nothing, as the button says.** Taking "Everyone comes home. No pay." when the alarm goes up, when someone is badly hurt, or when nobody is left to carry on used to pay the full fee. It now pays ¥0. Everyone still comes home.
 - **Money is a little tighter early on.** On a careful run, cash at week 26 is about ¥2,500 lower with three founders and no hiring (¥34,250 to ¥31,700). Players who hire up to five feel it more: median ¥15,150 to ¥9,800, and 22% broke instead of 15%.

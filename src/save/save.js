@@ -13,6 +13,7 @@
 import { refreshSideBoard } from '../core/sidetasks.js';
 import { SAVE_VERSION } from '../core/state.js';
 import { TATTOO_JOBS } from '../core/marks.js';
+import { seedRecord } from '../core/record.js';
 import { nameLook, refreshArmoury, stockShelf } from '../core/looks.js';
 import { addOffer } from '../core/jobs.js';
 import { STARTING_ROSTER_CAP } from '../core/recruits.js';
@@ -477,6 +478,13 @@ function migrate(state) {
     if (!state.armoury) refreshArmoury(state);
     else if (!state.armoury.offers.some((o) => o.type === 'pistol')) state.armoury.offers.push(...stockShelf(state, 'pistol'));
     state.version = 29;
+  }
+  if (state.version === 29) {
+    // v30: runner record (core/record.js). Everyone who has worked gets one, guessed from the jobs they've
+    // done (marked estimated); the memorial keeps no record for people who were lost before it began.
+    for (const op of state.crew) seedRecord(op, { today: state.day });
+    for (const m of state.memorial ?? []) m.record = m.record ?? null;
+    state.version = 30;
   }
   return state;
 }

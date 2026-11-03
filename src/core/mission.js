@@ -20,6 +20,7 @@ import { APPROACHES, crewRoll, effectiveStat, findRole, worsenInjury, setInjury,
 import { successChance, riskLabel } from './risk.js';
 import { clampHeat, WATCHED_PENALTY } from './heat.js';
 import { XP, applyGrowth, primaryStat } from './development.js';
+import { recordJob, recordSummary } from './record.js';
 import { freelancerAsCrew, freelanceCut, isFreelancer, MAX_FREELANCERS_PER_JOB } from './freelance.js';
 import { reactToJob, RUMOUR_CRISIS_CHANCE } from './rumours.js';
 import { CAST } from '../data/cast.js';
@@ -720,7 +721,7 @@ export function chooseOption(prev, choiceId) {
     spendSecondWind(state, roller.op);
   }
   Object.assign(event, {
-    stat: choice.stat, actor: { id: roller.op.id, handle: roller.op.handle }, value: roller.value, notes: roller.notes,
+    stat: choice.stat, difficulty: choice.difficulty, actor: { id: roller.op.id, handle: roller.op.handle }, value: roller.value, notes: roller.notes,
     die, need, success, outcomeCost: { ...((success ? choice.successCost : choice.failureCost) ?? {}) }, injury: null,
     report: reportLine(state, voice, choice, success),
   });
@@ -905,9 +906,12 @@ function finish(state) {
   const favourite = !am.aborted && am.clientId && crew.some((o) => earnedOf(o, 'client_favourite', { client: am.clientId })) ? 1 : 0;
   const trustChange = adjustTrust(state, am.clientId, base + am.clientTrust + favourite);
 
+  // Everyone's record of the job, the dead included (they go to the memorial with a summary).
+  recordJob(state, am, { threat, outcome: deaths.length ? 'loss' : am.aborted ? 'aborted' : 'completed', heatGain, deaths });
+
   for (const op of deaths) {
     state.crew = state.crew.filter((o) => o.id !== op.id);
-    state.memorial.push({ id: op.id, name: op.name, handle: op.handle, role: op.role, color: op.color, age: op.age, marks: op.marks ?? [], day: state.day, cause: `Died of wounds after the ${tpl.name}${isFreelancer(op) ? ' (freelancer)' : ''}` });
+    state.memorial.push({ id: op.id, name: op.name, handle: op.handle, role: op.role, color: op.color, age: op.age, marks: op.marks ?? [], day: state.day, cause: `Died of wounds after the ${tpl.name}${isFreelancer(op) ? ' (freelancer)' : ''}`, record: recordSummary(op) });
   }
 
   // Growth: crisis lessons already landed during the job; finishing it also teaches its key stats.

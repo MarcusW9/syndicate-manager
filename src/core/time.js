@@ -14,6 +14,7 @@ import { money } from './money.js';
 import { returnCrews } from './autorun.js';
 import { refreshSideBoard, returnSideTasks } from './sidetasks.js';
 import { dailyTraits } from './earned.js';
+import { weeklyRecord } from './record.js';
 import { neuralFloor } from './gear.js';
 import { checkSpecialisations } from './specialisations.js';
 import { refreshArmoury } from './looks.js';
@@ -118,6 +119,8 @@ function settleWeek(state) {
   state.cash -= total;
 
   const broke = state.cash < 0;
+
+  weeklyRecord(state); // a week they worked counts towards their record
 
   // Heat cools the same every week, job or no job (core/heat.js).
   const heatBefore = state.heat;
