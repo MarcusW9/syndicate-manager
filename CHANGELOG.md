@@ -5,6 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-03 · Sunday jobs count towards active weeks
+- **A job finished on a Sunday now counts as a week worked.** The weekly count ran before any Sunday job (live, or a hands-off crew back that day), and the next Sunday's count had already moved past it, so Sunday work never counted. It now counts on the following Sunday, once. Only `record.activeWeeks` moves; nothing about rolls, pay or heat.
+
 ## 2026-11-03 · No more "someone" in job choices
 - Some choices in older jobs (the courier, warehouse and data runs, Kidnap, Casino Con, Protection Run) named a role, like the driver or the face, without needing one on the crew. Without that person, the line read "someone ran the light". They now name whoever actually does it.
 

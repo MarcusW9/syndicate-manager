@@ -92,11 +92,19 @@ export function recordJob(state, am, { threat, outcome, heatGain, deaths }) {
   }
 }
 
-/** Sunday: a week counts as active if they worked in the last seven days. Mutates the (cloned) state. */
+/**
+ * Did they work since last Sunday's settle? Sunday settles at the start of the day (time.js
+ * advanceDay), before any job that day, so last Sunday's jobs (day - 7) belong to this week.
+ * (Until 2026-11-03 this was day - 6, which lost every job finished on a Sunday, live or a
+ * hands-off crew back that day.)
+ */
+export const workedThisWeek = (op, day) => (op.record?.lastJobDay ?? -Infinity) >= day - 7;
+
+/** Sunday: a week counts as active if they worked since last Sunday. Mutates the (cloned) state. */
 export function weeklyRecord(state) {
   for (const op of state.crew) {
     if (isFreelancer(op) || !op.record) continue;
-    if (op.record.lastJobDay >= state.day - 6) op.record.activeWeeks += 1;
+    if (workedThisWeek(op, state.day)) op.record.activeWeeks += 1;
   }
 }
 
