@@ -5,6 +5,12 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-03 · Fights on a phone
+- On a phone or an iPad in portrait, a fight waiting for your orders now fits on one screen: the map stays at the top, your crew is a strip you can swipe sideways, and Go sits in a bar at the bottom with Pull back and "⋯" (Auto round, Auto fight).
+- The play-by-play becomes one line (the latest thing that happened); tap it to read the whole fight so far.
+- Pick Shoot, Flank or Talk and the game asks which guard, showing your chance against each; tap one in the list or on the map.
+- Each crew card shows how many guards are aiming at them and their chance to hit.
+
 ## 2026-11-03 · A tidier fight panel
 - The fight's orders are now one short row per crew member: face, name, health bar, cover, who's aiming at them, and their order. Orders you give show solid ("You: Flank G2"); anyone you leave alone shows the crew's call, faded. Tap your order (or the crew's pick) to hand it back to them.
 - Pick someone and their tray opens below: their kit, who's aiming at them, the guards with your chance to hit each, and what they can do, each with its odds in big numbers.
