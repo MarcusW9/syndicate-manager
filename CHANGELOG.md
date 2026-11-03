@@ -5,6 +5,18 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-03 · Fame, standing and paths (renown, slice 3)
+- **Runners now become known.** Fame climbs one step at a time from the record: Unknown, Known (6 jobs), Respected (6 active weeks and 10 jobs at their level), Elite. Elite needs 12 active weeks, 20 jobs at their level (Lifers: 40 jobs), a path's Elite numbers and a standing of 40. It arrives on its own, with a message in the inbox, a history line and a highlight. Legend isn't given yet; the runner page shows when someone is "Ready for their moment".
+- **Standing** is how the street rates a runner right now, 0 to 100: up with completed jobs at their level, hard calls that held and milestones; down when a job is lost or aborted, the crew pulls back from a fight, or they come back badly hurt, and a little every week on the bench. An Elite under 20 on two Sundays in a row drops back to Respected, and can win it back.
+- **Paths:** Ghost, Enforcer, Earner, Iron or Lifer, whichever their record is furthest along. The runner page has a Path card with bars towards Elite and Legend; tap (i) for the numbers.
+- **Pros can become veterans:** main stat 16 and 50 jobs with the crew. A message and a history line say so. Same wage; jobs at their level now mean threat 3 and up, and rookies in their role learn faster beside them.
+- On screen: an "ELITE" badge on the crew list (Elite only) and a fame line on the runner page ("ELITE · pro · Steady").
+- **Nothing about rolls, pay, heat or the risk read changes.** The same 60 long careful runs end with the same cash, to the yen, with and without this change. With the current numbers Elite comes early: careful stealth crews get their first Elite in week 12 (every run), and most of the crew is Elite by week 52.
+- Old saves: standing starts at 3 a job worked (at most 50), fame at what the record reaches but no higher than Respected. **Save format v32.**
+
+## 2026-11-03 · Sunday jobs count towards active weeks
+- **A job finished on a Sunday now counts as a week worked.** The weekly count ran before any Sunday job (live, or a hands-off crew back that day), and the next Sunday's count had already moved past it, so Sunday work never counted. It now counts on the following Sunday, once. Only `record.activeWeeks` moves; nothing about rolls, pay or heat.
+
 ## 2026-11-03 · No more "someone" in job choices
 - Some choices in older jobs (the courier, warehouse and data runs, Kidnap, Casino Con, Protection Run) named a role, like the driver or the face, without needing one on the crew. Without that person, the line read "someone ran the light". They now name whoever actually does it.
 
