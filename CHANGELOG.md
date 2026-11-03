@@ -5,6 +5,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-03 · New jobs: Paid in Full and Second-Hand Heart
+- **Paid in Full** (Madam Rao, Night Market, threat 2): collect a pawned recorder holding flood-lost repayment receipts before the shop wipes it. Six crises, each with a no-roll way out.
+- **Second-Hand Heart** (Doc Siu via Auntie Fung, Old Town, rookie): get the clinic's repaired battery back before the recycling lorry takes it, after a payment was filed against the wrong serial number.
+
 ## 2026-11-03 · No more "someone" in job choices
 - Some choices in older jobs (the courier, warehouse and data runs, Kidnap, Casino Con, Protection Run) named a role, like the driver or the face, without needing one on the crew. Without that person, the line read "someone ran the light". They now name whoever actually does it.
 

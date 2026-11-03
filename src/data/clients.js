@@ -6,7 +6,7 @@ export const CLIENTS = [
     id: 'fung',
     name: 'Auntie Fung',
     desc: 'Runs three herbal tea shops in Old Town and a quiet fencing business behind them. A senior elder of the Brass Anchor Society. Pays in cash, remembers everything.',
-    jobs: ['clinic', 'herbal_run', 'courier', 'protection', 'kidnap', 'favourite'],
+    jobs: ['clinic', 'herbal_run', 'courier', 'protection', 'kidnap', 'favourite', 'second_hand_heart'],
   },
   {
     id: 'szeto',
@@ -24,7 +24,7 @@ export const CLIENTS = [
     id: 'rao',
     name: 'Madam Rao',
     desc: 'Lends money to half the Night Market from a sari shop. Generous until you\'re late.',
-    jobs: ['ledger', 'chrome', 'casino', 'kidnap', 'courier'],
+    jobs: ['ledger', 'chrome', 'casino', 'kidnap', 'courier', 'paid_in_full'],
   },
   {
     id: 'okonkwo',
