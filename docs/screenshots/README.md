@@ -22,6 +22,8 @@ Then add a row to the top of the table below and commit the folder with the chan
 
 | Date | Version | Commit | What's new on screen | Folder |
 | --- | --- | --- | --- | --- |
+| 2026-11-03 | Traits as chips, synergies as portraits | (this change) | The usual set. 19, a runner's page: traits as chips. | [2026-11-03-trait-chips](2026-11-03-trait-chips/) |
+| 2026-11-03 | Design session: trait chips and synergies | (`scripts/capture-trait-chips.mjs`) | A staged runner with born traits, earned traits (lasting, temporary, a setback) and two synergies, at phone and iPad: 01 chips; 02 icons only (phone, for comparison, not shipped); 03 Shaky's card open; 04 a synergy's card open. | [2026-11-03-design-session-trait-chips](2026-11-03-design-session-trait-chips/) |
 | 2026-11-03 | Sheet buttons centred | (this change) | The usual set. 05, the gear sheet: "Go to the armoury" centred in its button. | [2026-11-03-sheet-button-centred](2026-11-03-sheet-button-centred/) |
 | 2026-11-03 | Owner captures: the armoury button | (owner) | 01: the gear sheet on an iPad, "Go to the armoury" pressed against the top of its button. | [2026-11-03-owner-captures-armoury-button](2026-11-03-owner-captures-armoury-button/) |
 | 2026-11-03 | Design session: fame and paths | (`scripts/capture-fame.mjs`) | A crew after sixteen careful weeks: the crew list with ELITE badges, an Elite runner's page ("ELITE · ROOKIE · AT THEIR PEAK"), the Path card with its bar to Legend and the (i) open, and a Respected runner's bars to Elite and Legend. Phone. | [2026-11-03-design-session-fame](2026-11-03-design-session-fame/) |

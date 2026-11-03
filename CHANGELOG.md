@@ -5,6 +5,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-03 · Traits as chips, and Synergies
+- On a runner's page, traits (the ones they were born with and the ones earned on the job) are now compact chips with an icon and a name, instead of a long list. Tap a chip to see what it does and since when; tap again to close. Temporary traits have a dashed edge; setbacks like Shaky are red.
+- **Crew Anchor is now called Synergy**, everywhere: on the page, in messages and in roll notes. Synergies have their own row of portraits: tap one to see the bonus, the downside if that partner gets badly hurt, and a link to their page.
+- The same trait chips are on a lead's page when you're hiring.
+
 ## 2026-11-03 · Buttons in pop-up sheets are centred
 - "Go to the armoury" (and any full-width button at the bottom of a pop-up sheet) now has its label centred top to bottom, not pressed against the top edge.
 

@@ -157,12 +157,12 @@ test("Client's Favourite: three clean jobs for one client; fades when one of the
   assert.ok(!has(op, 'client_favourite'));
 });
 
-test('Crew Anchor: five jobs together, both unhurt; +1 cool together; shaken for a job after the partner goes critical', () => {
+test('Synergy (crew_anchor): five jobs together, both unhurt; +1 cool together; shaken for a job after the partner goes critical', () => {
   const s = game(12); const [a, b] = s.crew;
   for (let i = 0; i < 5; i++) job(s, [], [a, b]);
   assert.ok(E.earnedOf(a, 'crew_anchor', { partner: b.id }) && E.earnedOf(b, 'crew_anchor', { partner: a.id }));
-  assert.match(effectiveStat(a, 'cool', { crew: [a, b] }).notes.join(), /Crew Anchor/);
-  assert.doesNotMatch(effectiveStat(a, 'cool', { crew: [a] }).notes.join(), /Crew Anchor/);
+  assert.match(effectiveStat(a, 'cool', { crew: [a, b] }).notes.join(), /synergy with/); // shown as Synergy since 2026-11-03 (was Crew Anchor)
+  assert.doesNotMatch(effectiveStat(a, 'cool', { crew: [a] }).notes.join(), /synergy with/);
   E.noteInjury(s, b, 'critical');
   assert.match(effectiveStat(a, 'cool', { crew: [a] }).notes.join(), /shaken/);
   job(s, [], [a]);
@@ -380,7 +380,7 @@ test('everyone on the job counts towards traits, outside the inside team too', (
   for (const id of [c, d]) assert.ok(Object.keys(s.crew.find((o) => o.id === id).track?.together ?? {}).length > 0, `${id} worked the job with the others`);
 });
 
-test('two Crew Anchors on one day are two messages you can open, each naming the partner', async () => {
+test('two Synergies on one day are two messages you can open, each naming the partner', async () => {
   let s = game(3);
   const [a, b, c] = s.crew;
   for (const p of [b, c]) a.track = { ...(a.track ?? {}), together: { ...(a.track?.together ?? {}), [p.id]: 99 } };

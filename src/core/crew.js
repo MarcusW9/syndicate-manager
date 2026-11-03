@@ -57,7 +57,7 @@ export const OPERATIVE_RULES = [
   { id: 'gear', applies: (op, { stat }) => gearMods(op, stat).length > 0, value: (op, { stat }) => gearMods(op, stat).reduce((n, m) => n + m.value, 0), note: (op, { stat }) => gearMods(op, stat).map((m) => m.note).join(', ') },
   { id: 'fatigue', applies: (op) => op.condition.fatigue > 60, value: () => -2, note: 'fatigued' },
   { id: 'injury', applies: (op) => op.condition.injury === 'light', value: () => -2, note: 'hurt' },
-  // Earned traits that are about the person alone (core/earned.js): Ghost Driver, Shaky, Scarred, Crew Anchor.
+  // Earned traits that are about the person alone (core/earned.js): Ghost Driver, Shaky, Scarred, Synergy.
   { id: 'earned', applies: (op, ctx) => ownMods(op, ctx).length > 0, value: (op, ctx) => ownMods(op, ctx).reduce((n, m) => n + m.value, 0), note: (op, ctx) => ownMods(op, ctx).map((m) => m.note).join(', ') },
   { id: 'status', applies: (op) => statusRollMods(op).length > 0, value: (op) => statusRollMods(op).reduce((n, d) => n + d.rollMod, 0), note: (op) => statusRollMods(op).map((d) => d.note).join(', ') },
 ];

@@ -718,6 +718,26 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .chip--earned { border-color: color-mix(in srgb, var(--accent-2) 60%, var(--line)); }
 .chip--temporary { border-style: dashed; }
 .chip__when { color: var(--muted); font-size: 0.75rem; }
+/* Traits as chips (2026-11-03): icon and name in a wrapping row, the details in a card under the
+   row on tap. Born traits plain, earned ones in cyan, temporary ones dashed, setbacks in red. */
+.tchips { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.tchip { display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap); padding: 0 12px; background: var(--panel); border: 1px solid var(--line); color: var(--text); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%); }
+.tchip .icon { flex: none; color: var(--muted); }
+.tchip--lasting, .tchip--temporary { border-color: color-mix(in srgb, var(--accent-2) 55%, var(--line)); }
+.tchip--lasting .icon, .tchip--temporary .icon { color: var(--accent-2); }
+.tchip--temporary { border-style: dashed; }
+.tchip--setback { border-color: color-mix(in srgb, var(--danger) 60%, var(--line)); }
+.tchip--setback .icon { color: var(--danger); }
+.tchip.is-open { background: #16262a; box-shadow: inset 0 -2px 0 var(--accent-2); }
+.tchip--setback.is-open { background: #2a1a1e; box-shadow: inset 0 -2px 0 var(--danger); }
+.tipcard { margin-top: 8px; padding: 10px 12px; border: 1px solid var(--line); border-left: 2px solid var(--accent-2); background: var(--panel); }
+.tipcard--setback { border-left-color: var(--danger); }
+.tipcard p { margin: 4px 0 0; }
+.tipcard .btn--ghost { margin-top: 4px; }
+.synergies { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.synergy { display: inline-flex; align-items: center; gap: 8px; min-height: var(--tap); padding: 4px 12px 4px 4px; background: var(--panel); border: 1px solid color-mix(in srgb, var(--accent-2) 55%, var(--line)); color: var(--text); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+.synergy.is-open { background: #16262a; box-shadow: inset 0 -2px 0 var(--accent-2); }
 
 /* The squad run (PLAN-CORE-LOOP.md, slice 1): four approaches. */
 .segmented--grid { grid-template-columns: 1fr 1fr; }
