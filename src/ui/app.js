@@ -430,8 +430,9 @@ function render() {
   const unread = state.inbox.filter((m) => !m.read).length;
   const cue = dayCue;
   dayCue = null;
-  // Desktop pages use the full width; a running job stays a narrow reading column.
-  const wide = !state.activeMission || !state.activeMission.done; // a running job gets the width for map and feed side by side (no tabs: see is-onjob)
+  // Desktop pages use the full width; a job keeps its map and feed side by side to the end, its
+  // summary in the feed (no tabs during a job: see is-onjob).
+  const wide = true;
   // While a job is being planned its own Start button is the way on, so Continue steps aside
   // everywhere (owner, 2026-10-28: on desktop the top-bar Continue was easy to hit by mistake).
   const planning = !state.activeMission && screen === 'jobs' && !!(plan || sidePlan);
@@ -1668,8 +1669,7 @@ function renderMission() {
     <section class="panel mission">
       <p class="muted small">On the job · ${esc(APPROACHES[am.approach]?.name ?? '')} approach · ${esc(crewNames)}${ow ? ` · ${esc(ow.handle)} on overwatch (${esc(OVERWATCH_KIT[am.overwatch.kit].name.toLowerCase())})` : ''}${outsider(am.wheels, 'at the wheel')}${am.standby && !am.standby.joined ? outsider(am.standby.id, 'on standby') : ''}</p>
       <h1>${esc(t.name)}</h1>
-      ${renderWatch(watchUi, state)}
-      ${result}
+      ${renderWatch(watchUi, state, result)}
     </section>`;
 }
 

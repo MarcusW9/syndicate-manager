@@ -8,8 +8,10 @@
 // the rest of the page stays put.
 //
 // Wide screens put the map and the feed side by side, the feed scrolling in its own column; on
-// phones the feed runs under the map. Either way the feed only follows new moments while you're
-// at its bottom; scroll up to read and it stays put, with a "↓ N new" button (owner, 2026-10-28).
+// phones the feed runs under the map. Either way the feed follows new moments until you scroll up
+// yourself; then it stays put, with a "↓ N new" button, until you're back at the bottom (owner,
+// 2026-10-28). Its own smooth scrolling never counts as you scrolling away (2026-11-03: it
+// sometimes stopped following when a new moment arrived mid-scroll).
 
 import { feedItems } from '../core/feed.js';
 import { needsPlayer } from '../core/autorun.js';
@@ -35,7 +37,7 @@ let speed = 1;
 const opsOf = (state, ids) => ids.map((id) => state.crew.find((o) => o.id === id) ?? state.memorial?.find((o) => o.id === id)).filter(Boolean);
 
 /** The live header, the feed and the controls. Done jobs show the same feed, still. */
-export function renderWatch(ui, state) {
+export function renderWatch(ui, state, end = '') {
   const am = state.activeMission;
   const done = !!am.done;
   return `
@@ -50,6 +52,7 @@ export function renderWatch(ui, state) {
       <div class="watch__side">
         <div class="watch__feed" aria-live="polite"></div>
         <div class="watch__callin"></div>
+        ${end ? `<div class="watch__end">${end}</div>` : ''}
         <button class="btn watch__new" data-action="watch-latest" hidden></button>
       </div>
       ${done ? '' : `
@@ -67,6 +70,7 @@ export const isWatching = (root, am) => !!live && !am.done && live.key === am.jo
 /** Stop the clock (the job ended, or the page changed). */
 export function stopWatch() {
   if (live?.timer) clearTimeout(live.timer);
+  live?.unlisten?.();
   live = null;
 }
 
@@ -81,21 +85,37 @@ export function mountWatch(el, state, { onAuto, ui }) {
   const team = opsOf(state, am.crewIds.filter((id) => !out.includes(id)));
   const ow = am.overwatch ? { op: state.crew.find((o) => o.id === am.overwatch.id), kit: am.overwatch.kit } : null;
   const plan = bindSitePlan(el.querySelector('.siteplan'), {
-    team, overwatch: ow?.op ? ow : null, zone: am.done ? 'full' : am.zone ?? 'start', speed: () => speed, site: siteFor(templateById(am.templateId)?.district, am.jobId, am.templateId),
+    team, overwatch: ow?.op ? ow : null, zone: am.zone ?? 'start', // a finished job stays where the crew ended up speed: () => speed, site: siteFor(templateById(am.templateId)?.district, am.jobId, am.templateId),
     wheels: am.wheels ? opsOf(state, [am.wheels])[0] : null,
     standby: am.standby && !am.standby.joined ? opsOf(state, [am.standby.id])[0] : null,
     out: opsOf(state, out),
   });
-  live = { key: am.jobId, el, plan, shown: 0, timer: null, chain: Promise.resolve(), onAuto, ui, callKey: null, unseen: 0 };
-  // Reaching the bottom by hand clears the "new" button.
-  const seen = () => { if (live?.el === el && atBottom(el)) markSeen(); };
-  el.querySelector('.watch__side').addEventListener('scroll', seen, { passive: true });
-  window.addEventListener('scroll', seen, { passive: true });
+  live?.unlisten?.();
+  live = { key: am.jobId, el, plan, shown: 0, timer: null, chain: Promise.resolve(), onAuto, ui, callKey: null, unseen: 0, pinned: true, autoUntil: 0 };
+  // Following: pinned to the newest moment until the reader scrolls. Scroll events while our own
+  // scroll is still moving don't count; a wheel, a touch or a key means the reader took over.
+  const me = live;
+  const onScroll = () => {
+    if (live !== me || performance.now() < me.autoUntil) return;
+    me.pinned = atBottom(el);
+    if (me.pinned) markSeen();
+  };
+  const takeOver = () => { me.autoUntil = 0; };
+  const side = el.querySelector('.watch__side');
+  side.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('scroll', onScroll, { passive: true });
+  for (const ev of ['wheel', 'touchmove', 'keydown']) window.addEventListener(ev, takeOver, { passive: true });
+  me.unlisten = () => {
+    window.removeEventListener('scroll', onScroll);
+    for (const ev of ['wheel', 'touchmove', 'keydown']) window.removeEventListener(ev, takeOver);
+  };
   // The plan sticks just under the top bar (its height changes with the screen width).
   el.style.setProperty('--live-top', `${document.querySelector('.topbar')?.offsetHeight ?? 0}px`);
-  if (am.done) plan.full();
   if (am.battle) plan.syncFight(am.battle); // a page opened mid-fight draws it as it stands
   sync(state, { animate: false });
+  // A job just finished: the page redraws in the same layout, with the summary at the end of the
+  // feed (owner, 2026-11-03: "it can stay in the same view with the summary there"). Show it.
+  if (am.done) autoScroll(el.querySelector('.watch__end'), false);
 }
 
 /** A new state for the job on screen: append what's new and schedule the next step. */
@@ -138,8 +158,16 @@ function atBottom(el) {
 export function showLatest() {
   if (!live) return;
   const last = live.el.querySelector('.watch__feed').lastElementChild;
-  last?.scrollIntoView?.({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  live.pinned = true;
+  autoScroll(last, !matchMedia('(prefers-reduced-motion: reduce)').matches);
   markSeen();
+}
+
+/** Scroll the feed ourselves, and don't let the scroll events it causes unpin the reader. */
+function autoScroll(node, smooth) {
+  if (!node || !live) return;
+  live.autoUntil = performance.now() + (smooth ? 1000 : 150);
+  node.scrollIntoView?.({ block: 'nearest', behavior: smooth ? 'smooth' : 'auto' });
 }
 
 function markSeen() {
@@ -151,8 +179,8 @@ function markSeen() {
 function sync(state, { animate }) {
   const am = state.activeMission;
   const { el, ui } = live;
-  // Follow only if they were already watching the newest moment (or this is the first draw).
-  const follow = !animate || atBottom(el);
+  // Follow unless they scrolled away from the newest moment (always on the first draw).
+  const follow = !animate || live.pinned;
   el.style.setProperty('--speed', speed);
   const items = feedItems(am.events ?? [], { kit: am.overwatch?.kit ?? null });
   const fresh = items.slice(live.shown);
@@ -176,7 +204,7 @@ function sync(state, { animate }) {
   }
   for (const e of am.events ?? []) if (e.injury) live.plan.hurt(e.injury.id, e.injury.severity);
   live.plan.posts(guardPosts(am)); // the guards still ahead, on their posts
-  if (fresh.length && follow) feed.lastElementChild?.scrollIntoView?.({ block: 'nearest', behavior: animate && speed === 1 && !matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto' });
+  if (fresh.length && follow) autoScroll(feed.lastElementChild, animate && speed === 1 && !matchMedia('(prefers-reduced-motion: reduce)').matches);
   else if (fresh.length) {
     live.unseen += fresh.length;
     const b = el.querySelector('.watch__new');
