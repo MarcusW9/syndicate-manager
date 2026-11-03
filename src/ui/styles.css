@@ -1162,3 +1162,14 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 /* Milestones and highlights (core/milestones.js) */
 .highlights { margin: 6px 0 10px; }
 .crewrow__hl { display: block; font-size: 0.78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Fame and paths (core/fame.js, renown slice 3) */
+.famebadge { margin: 2px 0; font-family: var(--display); text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.85rem; color: var(--muted); }
+.fame { font-family: var(--display); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; padding: 1px 6px; border: 1px solid var(--line); color: var(--text); }
+.fame--respected { border-color: var(--accent-2); color: var(--accent-2); }
+.fame--elite { border-color: var(--warn); background: var(--warn); color: var(--bg); }
+.fame__standing { color: var(--text); }
+.crewrow__info .fame { font-size: 0.72rem; padding: 0 4px; }
+.pathcard .infoline { margin-bottom: 6px; }
+.pathcard__name { font-family: var(--display); text-transform: uppercase; letter-spacing: 0.1em; color: var(--warn); }
+.pathcard__ready { margin: 6px 0 0; font-family: var(--display); text-transform: uppercase; letter-spacing: 0.1em; color: var(--warn); }

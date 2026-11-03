@@ -2,7 +2,8 @@
 // age and decline. Pure logic. See DESIGN.md (development) for the targets.
 //
 // Each operative carries:
-//   tier       'rookie' | 'pro' | 'veteran'  (rookies graduate to pro at GRADUATE_AT)
+//   tier       'rookie' | 'pro' | 'veteran'  (rookies graduate to pro at GRADUATE_AT; pros become
+//              veterans at VETERAN_AT, checked after each job: promoteVeteran)
 //   potential  stat -> hidden ceiling. Never shown as a number.
 //   progress   stat -> points banked towards the next +1
 //   startStats stats on the day they joined, to show growth
@@ -29,6 +30,11 @@ export const XP = {
 };
 export const MENTOR_RATE = 1.5;
 export const GRADUATE_AT = 15; // rookie -> pro when their main stat gets here
+// Pro -> veteran (renown slice 3, 2026-11-03): main stat 16 and 50 jobs with the crew. Set from a
+// 78-week simulation (careful play, fresh start): every run has one, median week 44 on stealth
+// runs and 24 on loud ones. Veterans count jobs at threat 3+ as their level (core/record.js) and
+// mentor rookies in their role (mentorsOf); wages don't read the tier.
+export const VETERAN_AT = { main: 16, jobs: 50 };
 
 // Cost per point: (stat + 4) × GROWTH_SCALE. The scale is the main tuning knob
 // (1.7 until 2026-10-25; x2.5 for the slower climb). The ceiling is a wall, not a
@@ -232,6 +238,17 @@ export function gainXp(op, crew, stat, raw, day) {
     graduated = true;
   }
   return { events, graduated };
+}
+
+/**
+ * A pro with the stat and the miles becomes a veteran. Call after a job (core/mission.js finish),
+ * once the job's growth has landed; never for freelancers. Mutates op; returns true if promoted.
+ */
+export function promoteVeteran(op) {
+  if (op.tier !== 'pro' || op.freelance) return false;
+  if (op.stats[primaryStat(op)] < VETERAN_AT.main || (op.jobsWithCrew ?? 0) < VETERAN_AT.jobs) return false;
+  op.tier = 'veteran';
+  return true;
 }
 
 /**
