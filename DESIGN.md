@@ -65,7 +65,7 @@ The log is split by date into `docs/design/` (newest file first). **Add new rows
 
 | File | Rows | Themes |
 | --- | --- | --- |
-| [`docs/design/2026-11.md`](docs/design/2026-11.md) | 6 | 2026-11: walking away from a decision pays nothing; runner record; milestones; a prompt for drafting jobs outside a session; a job checker; fame, standing, paths and pro-to-veteran promotion |
+| [`docs/design/2026-11.md`](docs/design/2026-11.md) | 7 | 2026-11: walking away from a decision pays nothing; runner record; milestones; a prompt for drafting jobs outside a session; a job checker; fame, standing, paths and pro-to-veteran promotion; the add-lore skill |
 | [`docs/design/2026-10-28-to-30.md`](docs/design/2026-10-28-to-30.md) | 54 | 2026-10-28 to 2026-10-30: gear, specialisations, sites, district art, offline play, battles and command fights, sidearms |
 | [`docs/design/2026-10-26-to-27.md`](docs/design/2026-10-26-to-27.md) | 43 | 2026-10-26 to 2026-10-27: mission logs, hands-off runs, traits, situations, side tasks, money pressure, the squad run (approaches, incidents, overwatch, wheels, standby) |
 | [`docs/design/2026-10-24-to-25.md`](docs/design/2026-10-24-to-25.md) | 75 | 2026-10-24 to 2026-10-25: development, renewals, pricing, world canon, progression and the rookie start, UI skin and portraits |
