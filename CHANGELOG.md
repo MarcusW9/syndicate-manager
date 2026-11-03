@@ -5,6 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-03 · No more "someone" in job choices
+- Some choices in older jobs (the courier, warehouse and data runs, Kidnap, Casino Con, Protection Run) named a role, like the driver or the face, without needing one on the crew. Without that person, the line read "someone ran the light". They now name whoever actually does it.
+
 ## 2026-11-03 · Runner record (renown, slice 1)
 - **Every runner now keeps a record** of what they've done on the job: jobs, jobs at their level, completed, clean (no heat, nobody went loud), flawless (nobody went critical), carries (a hard crisis roll they made), fights won, people brought home, unscathed jobs, big scores, best clean streak, active weeks, and who they've worked with most. It's a "Record" fold on the runner's page.
 - Nothing about rolls, pay, heat or risk changes: this only counts. Fame, milestones and retirement build on it later.

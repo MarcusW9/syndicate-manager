@@ -12,8 +12,10 @@ const clone = (o) => structuredClone(o);
 
 test('every job in the game passes the checker', () => {
   for (const m of MISSIONS) {
-    const { errors } = checkJob({ ...m, crises: ownCrises(m) }, { others: ids.filter((id) => id !== m.id) });
+    const { errors, warnings } = checkJob({ ...m, crises: ownCrises(m) }, { others: ids.filter((id) => id !== m.id) });
     assert.deepEqual(errors, [], m.id);
+    // 2026-11-03: the 19 choices that named a role they didn't require now say {op}; keep it that way.
+    assert.deepEqual(warnings.filter((w) => w.includes("doesn't require")), [], m.id);
   }
 });
 
