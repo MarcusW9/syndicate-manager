@@ -6,19 +6,19 @@ export const CLIENTS = [
     id: 'fung',
     name: 'Auntie Fung',
     desc: 'Runs three herbal tea shops in Old Town and a quiet fencing business behind them. A senior elder of the Brass Anchor Society. Pays in cash, remembers everything.',
-    jobs: ['clinic', 'herbal_run', 'courier', 'protection', 'kidnap', 'favourite', 'second_hand_heart'],
+    jobs: ['clinic', 'herbal_run', 'courier', 'protection', 'kidnap', 'favourite', 'second_hand_heart', 'last_sitting'],
   },
   {
     id: 'szeto',
     name: 'Mr. Szeto',
     desc: 'Property developer in Glass Heights. Wants his rivals\' secrets and doesn\'t ask how you get them. Old tenements near his sites have a habit of catching fire.',
-    jobs: ['eviction', 'data_pull', 'penthouse', 'casino'],
+    jobs: ['eviction', 'data_pull', 'penthouse', 'casino', 'borrowed_glory'],
   },
   {
     id: 'ferryman',
     name: 'The Ferryman',
     desc: 'Leung Ka-wai runs boats in and out of the Docks at night. Nobody has seen him on dry land in years.',
-    jobs: ['container409', 'cable', 'warehouse', 'protection', 'courier', 'wrong_horse'],
+    jobs: ['container409', 'cable', 'warehouse', 'protection', 'courier', 'wrong_horse', 'low_water'],
   },
   {
     id: 'rao',

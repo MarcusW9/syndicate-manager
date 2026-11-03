@@ -5,6 +5,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-03 · New jobs: Borrowed Glory, Last Sitting and Low Water
+- **Borrowed Glory** (Mr. Szeto, the Basin, threat 4): steal the champion mare Harbour Dividend from Lantern Course so he can race her under his own colours.
+- **Last Sitting** (Auntie Fung, Old Town, threat 2): move a mahjong parlour, its tables, cupboard and regulars to a new room before the old landlord changes the locks.
+- **Low Water** (the Ferryman, the Docks, threat 3): recover a stolen channel marker's sounding logger from a scrap yard, so the night boats know where the seabed has moved.
+
 ## 2026-11-03 · New jobs: Paid in Full and Second-Hand Heart
 - **Paid in Full** (Madam Rao, Night Market, threat 2): collect a pawned recorder holding flood-lost repayment receipts before the shop wipes it. Six crises, each with a no-roll way out.
 - **Second-Hand Heart** (Doc Siu via Auntie Fung, Old Town, rookie): get the clinic's repaired battery back before the recycling lorry takes it, after a payment was filed against the wrong serial number.
