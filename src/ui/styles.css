@@ -391,6 +391,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .tone--good { color: #5fe0a5; }
 .tone--warn { color: var(--warn); }
 .tone--bad { color: var(--danger); }
+.tone--milestone { color: var(--accent-2, #36d6c3); font-weight: 600; }
 
 
 @media (min-width: 900px) {
@@ -1157,3 +1158,7 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .recgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 8px 0; }
 .recstat { display: flex; flex-direction: column; min-height: 44px; }
 .recstat__n { font-size: 1.25rem; font-weight: 600; }
+
+/* Milestones and highlights (core/milestones.js) */
+.highlights { margin: 6px 0 10px; }
+.crewrow__hl { display: block; font-size: 0.78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

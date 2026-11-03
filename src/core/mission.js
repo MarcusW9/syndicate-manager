@@ -21,6 +21,7 @@ import { successChance, riskLabel } from './risk.js';
 import { clampHeat, WATCHED_PENALTY } from './heat.js';
 import { XP, applyGrowth, primaryStat } from './development.js';
 import { recordJob, recordSummary } from './record.js';
+import { checkMilestones } from './milestones.js';
 import { freelancerAsCrew, freelanceCut, isFreelancer, MAX_FREELANCERS_PER_JOB } from './freelance.js';
 import { reactToJob, RUMOUR_CRISIS_CHANCE } from './rumours.js';
 import { CAST } from '../data/cast.js';
@@ -971,6 +972,8 @@ function finish(state) {
         body: `${op.name} is at ${c.neuralLoad}/100. Rest brings it down; pushing harder risks a breakdown.`, blocking: false, read: false });
     }
   }
+  // The record may have crossed a line: milestones for those who came home (core/milestones.js).
+  const milestoneLines = checkMilestones(state, survivors);
   for (const op of state.crew) {
     if (deaths.length && !am.crewIds.includes(op.id)) op.condition.morale = Math.max(0, op.condition.morale - 15);
   }
@@ -993,6 +996,7 @@ function finish(state) {
     injuries.length ? { tone: 'bad', text: `Injured: ${injuries.join(', ')}.` } : { tone: 'good', text: 'Nobody hurt.' },
     ...(deaths.length ? [{ tone: 'bad', text: 'Their names go on the wall.' }] : []),
     ...(growthLines.length ? [{ tone: 'good', text: `Improved: ${growthLines.join(', ')}.` }] : []),
+    ...milestoneLines.map((m) => ({ tone: 'milestone', text: `Milestone: ${m.text}` })),
     ...patched.map((p) => ({ tone: 'good', text: `${p.medic.handle} patched up ${p.patient.handle} (Clinic Hands): back a day sooner.` })),
     ...(client && trustChange ? [{ tone: trustChange > 0 ? 'good' : 'bad', text: `${client.name} ${trustChange > 0 ? 'thinks more of you' : 'is unhappy with you'} (trust ${trustChange > 0 ? '+' : ''}${trustChange}).` }] : []),
   ];
