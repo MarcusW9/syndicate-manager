@@ -41,7 +41,7 @@ export function addHighlight(r, h) {
 
 /**
  * Award this job's milestones to the people who came home. Returns the report lines
- * [{ opId, id, text }]. Mutates the (cloned) state. Call after recordJob and the crew's mark.
+ * [{ opId, opIds, id, text }] (opIds: everyone it was given to; a bond names both). Mutates the (cloned) state. Call after recordJob and the crew's mark.
  */
 export function checkMilestones(state, people) {
   const ops = people.filter((o) => !isFreelancer(o) && o.record);
@@ -72,7 +72,7 @@ export function checkMilestones(state, people) {
       addHighlight(r, { id: c.id, day: state.day, text, weight: c.def.weight });
       used.add(who.id);
     }
-    lines.push({ opId: c.op.id, id: c.id, text });
+    lines.push({ opId: c.op.id, opIds: partnerOp ? [c.op.id, partnerOp.id] : [c.op.id], id: c.id, text });
   }
   return lines;
 }

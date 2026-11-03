@@ -15,6 +15,7 @@ import { SAVE_VERSION } from '../core/state.js';
 import { TATTOO_JOBS } from '../core/marks.js';
 import { seedRecord } from '../core/record.js';
 import { seedMilestones } from '../core/milestones.js';
+import { seedFame } from '../core/fame.js';
 import { nameLook, refreshArmoury, stockShelf } from '../core/looks.js';
 import { addOffer } from '../core/jobs.js';
 import { STARTING_ROSTER_CAP } from '../core/recruits.js';
@@ -492,6 +493,14 @@ function migrate(state) {
     // reached counts as earned, so an old crew doesn't get a flood of milestones on its next job.
     for (const op of state.crew) { if (op.record) delete op.record.milestones; seedMilestones(op); }
     state.version = 31;
+  }
+  if (state.version === 31) {
+    // v32: fame and standing (core/fame.js). Everyone with a record gets standing from their jobs
+    // (3 a job, at most 50) and the fame their record reaches, capped at respected: nobody starts
+    // as Elite (it comes with its message once standing and the record back it up). The record
+    // gains lowWeeks and wasElite (Elite lapsing). Memorial entries are unchanged.
+    for (const op of state.crew) seedFame(op);
+    state.version = 32;
   }
   return state;
 }

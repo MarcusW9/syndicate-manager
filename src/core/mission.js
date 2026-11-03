@@ -19,9 +19,10 @@ import { checkRenewal } from './renewals.js';
 import { APPROACHES, crewRoll, effectiveStat, findRole, worsenInjury, setInjury, maxCrew } from './crew.js';
 import { successChance, riskLabel } from './risk.js';
 import { clampHeat, WATCHED_PENALTY } from './heat.js';
-import { XP, applyGrowth, primaryStat } from './development.js';
+import { XP, applyGrowth, primaryStat, promoteVeteran } from './development.js';
 import { recordJob, recordSummary } from './record.js';
 import { checkMilestones } from './milestones.js';
+import { afterJobFame } from './fame.js';
 import { freelancerAsCrew, freelanceCut, isFreelancer, MAX_FREELANCERS_PER_JOB } from './freelance.js';
 import { reactToJob, RUMOUR_CRISIS_CHANCE } from './rumours.js';
 import { CAST } from '../data/cast.js';
@@ -908,7 +909,7 @@ function finish(state) {
   const trustChange = adjustTrust(state, am.clientId, base + am.clientTrust + favourite);
 
   // Everyone's record of the job, the dead included (they go to the memorial with a summary).
-  recordJob(state, am, { threat, outcome: deaths.length ? 'loss' : am.aborted ? 'aborted' : 'completed', heatGain, deaths });
+  const facts = recordJob(state, am, { threat, outcome: deaths.length ? 'loss' : am.aborted ? 'aborted' : 'completed', heatGain, deaths });
 
   for (const op of deaths) {
     state.crew = state.crew.filter((o) => o.id !== op.id);
@@ -938,6 +939,15 @@ function finish(state) {
     state.inbox.unshift({ id: `graduate-${op.id}-${state.day}`, type: 'crew', day: state.day,
       subject: `${op.handle} isn't a rookie any more`,
       body: `After the ${tpl.name}, nobody on the crew calls ${op.name} the new kid. A pro now, on a rookie's wage.`, blocking: false, read: false });
+  }
+
+  // A pro with the stat and fifty jobs behind them is a veteran now (core/development.js VETERAN_AT).
+  const promotedOps = survivors.filter((o) => !isFreelancer(o) && !graduatedOps.includes(o) && promoteVeteran(o));
+  for (const op of promotedOps) {
+    op.history.push(`Day ${state.day}: became a veteran`);
+    state.inbox.unshift({ id: `veteran-${op.id}-${state.day}`, type: 'crew', day: state.day,
+      subject: `${op.handle} is a veteran now`,
+      body: `After the ${tpl.name}, ${op.name} has nothing left to prove on the small jobs. A veteran: from now on, work at their level means threat 3 and up, and rookies in their role learn faster beside them. Same wage.`, blocking: false, read: false });
   }
 
   // Growth can mean a pay rise: graduation or main stat +2 since the last deal (core/renewals.js).
@@ -974,6 +984,8 @@ function finish(state) {
   }
   // The record may have crossed a line: milestones for those who came home (core/milestones.js).
   const milestoneLines = checkMilestones(state, survivors);
+  // Standing for everyone who came home, then fame (one tier at most; core/fame.js). Never a roll, pay or heat.
+  const fameLines = afterJobFame(state, survivors, { outcome: deaths.length ? 'loss' : am.aborted ? 'aborted' : 'completed', facts, milestones: milestoneLines, retreat: (am.repCut ?? 0) > 0 });
   for (const op of state.crew) {
     if (deaths.length && !am.crewIds.includes(op.id)) op.condition.morale = Math.max(0, op.condition.morale - 15);
   }
@@ -997,6 +1009,8 @@ function finish(state) {
     ...(deaths.length ? [{ tone: 'bad', text: 'Their names go on the wall.' }] : []),
     ...(growthLines.length ? [{ tone: 'good', text: `Improved: ${growthLines.join(', ')}.` }] : []),
     ...milestoneLines.map((m) => ({ tone: 'milestone', text: `Milestone: ${m.text}` })),
+    ...fameLines.map((f) => ({ tone: 'milestone', text: `Fame: ${f.text}` })),
+    ...promotedOps.map((o) => ({ tone: 'good', text: `${o.handle} is a veteran now.` })),
     ...patched.map((p) => ({ tone: 'good', text: `${p.medic.handle} patched up ${p.patient.handle} (Clinic Hands): back a day sooner.` })),
     ...(client && trustChange ? [{ tone: trustChange > 0 ? 'good' : 'bad', text: `${client.name} ${trustChange > 0 ? 'thinks more of you' : 'is unhappy with you'} (trust ${trustChange > 0 ? '+' : ''}${trustChange}).` }] : []),
   ];

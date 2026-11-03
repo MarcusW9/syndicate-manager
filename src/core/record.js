@@ -24,6 +24,7 @@ export const freshRecord = () => ({
   cleanStreak: 0, bestCleanStreak: 0,
   with: {}, activeWeeks: 0, lastJobDay: 0,
   milestones: [], highlights: [], // earned ids; the best three {id, day, text, weight} (core/milestones.js)
+  lowWeeks: 0, wasElite: false, // Sundays in a row an Elite has had standing under 20; lost Elite once (core/fame.js)
   estimated: false, // true on saves from before records began (counts were guessed from jobs worked)
 });
 
@@ -37,10 +38,12 @@ export const ensureRecord = (op) => (op.record ??= freshRecord());
  * and before deaths are removed. Mutates the (cloned) state.
  *
  * ctx: { threat, outcome: 'completed'|'aborted'|'loss', heatGain, deaths: [op] }
+ * Returns this job's facts per person, { [opId]: { atLevel, carries } }, for standing (core/fame.js).
  */
 export function recordJob(state, am, { threat, outcome, heatGain, deaths }) {
   const crew = onJob(state, am).filter((o) => !isFreelancer(o));
-  if (!crew.length) return;
+  const facts = {};
+  if (!crew.length) return facts;
   const events = am.events ?? [];
   const completed = outcome === 'completed';
   const clean = completed && !am.wentLoud && heatGain === 0;
@@ -80,16 +83,19 @@ export function recordJob(state, am, { threat, outcome, heatGain, deaths }) {
     if (patients.has(op.handle) && !dead.has(op.id)) r.criticalsSurvived += 1;
     // Carries: a successful roll of theirs on a real crisis (not an incident, not a walk-away) at a
     // hard-enough difficulty, on a job at their level.
+    let carries = 0;
     if (atLevel) {
       for (const e of events) {
         if (e.kind !== 'roll' || e.incident || !e.success || e.actor?.id !== op.id) continue;
         if ((e.difficulty ?? 0) < CARRY_MIN_DIFFICULTY) continue;
-        r.carries += 1;
+        r.carries += 1; carries += 1;
         if (e.stat) r.carriesByStat[e.stat] = (r.carriesByStat[e.stat] ?? 0) + 1;
       }
     }
     for (const other of crew) if (other.id !== op.id) r.with[other.id] = (r.with[other.id] ?? 0) + 1;
+    facts[op.id] = { atLevel, carries };
   }
+  return facts;
 }
 
 /**
