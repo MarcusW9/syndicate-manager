@@ -162,6 +162,8 @@ try {
             if (!(await click('[data-action="pending"]:not([data-id="out"])'))) await click('[data-action="pending"]');
             continue;
           }
+          // A command fight (ui/fightorders.js) waits for orders: leave it to the crew ("Auto fight").
+          if (await click('[data-action="fight-hand-off"]')) continue;
           if (await click('[data-action="step"], [data-action="beat"]')) continue;
           // The watch screen (slice 2) plays on its own: wait, and catch it mid-run twice.
           if (!(await visible('.watch').count())) break;

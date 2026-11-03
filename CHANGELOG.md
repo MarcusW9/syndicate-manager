@@ -8,6 +8,37 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 ## 2026-11-03 · Elite is rarer
 - **Elite now needs 60 jobs at their level** (was 20), or 120 jobs for a Lifer (was 40). On careful play the first Elite now comes around week 26 (weeks 23 to 35) instead of week 12, and a crew has one or two Elites by week 52 instead of four. Legend's readiness now asks for 120 jobs at their level (was 40). Still nothing about rolls, pay or heat.
 
+## 2026-11-03 · A tidier fight panel
+- The fight's orders are now one short row per crew member: face, name, health bar, cover, who's aiming at them, and their order. Orders you give show solid ("You: Flank G2"); anyone you leave alone shows the crew's call, faded. Tap your order (or the crew's pick) to hand it back to them.
+- Pick someone and their tray opens below: their kit, who's aiming at them, the guards with your chance to hit each, and what they can do, each with its odds in big numbers.
+- Go says what it'll play ("Go · 1 yours, 3 crew's call"). The rules are behind "?", and Pull back asks before it ends the job, showing what it costs.
+- On the map, the picked crew member's call is drawn as a faded line, and tokens are easier to tap.
+
+## 2026-11-03 · Everyone in a fight stays in view
+- In a fight, the map's camera now keeps every crew member and guard fully in view, health bars included, even when someone stands by the edge of the map or has no cover spot. It looks a little past the edge of the drawn site when it needs to.
+
+## 2026-11-03 · Fight orders fit the screen
+- On a computer or an iPad in landscape, the play-by-play beside the map (with a fight's orders in it) now ends level with the map, leaving space above the bottom of the screen, instead of running to the edge. When the page scrolls, the map keeps a small gap under the top bar.
+
+## 2026-11-03 · The play-by-play keeps up, and a finished job stays put
+- The play-by-play now always scrolls to the newest moment unless you scroll up yourself to reread something; scroll back to the bottom, or tap "↓ new", and it follows again. Before, it sometimes stopped following on its own.
+- When a job ends (done, aborted or someone lost), the screen keeps the map and the play-by-play side by side, and the summary with "Back to the safehouse" appears at the end of the play-by-play, instead of switching to a different view.
+
+## 2026-11-03 · The job's map fills the screen
+- On an iPad in landscape or a computer, the site map during a job is now as tall as the screen allows, with the job's title and the Pause and Faster buttons still in view, and takes a larger share of the width. Its zoomed views reshape to fit, so the extra height shows more of the place instead of empty space.
+
+## 2026-11-03 · A job takes the whole screen
+- While a job runs, the tabs (the bar at the bottom on a phone, the side menu on a tablet or computer) step aside, since they can't take you anywhere mid-job. They come back when you press "Back to the safehouse".
+- On tablets and computers the job uses the full width, and the map of the site is drawn larger.
+
+## 2026-11-03 · Traits as chips, and Synergies
+- On a runner's page, traits (the ones they were born with and the ones earned on the job) are now compact chips with an icon and a name, instead of a long list. Tap a chip to see what it does and since when; tap again to close. Temporary traits have a dashed edge; setbacks like Shaky are red.
+- **Crew Anchor is now called Synergy**, everywhere: on the page, in messages and in roll notes. Synergies have their own row of portraits: tap one to see the bonus, the downside if that partner gets badly hurt, and a link to their page.
+- The same trait chips are on a lead's page when you're hiring.
+
+## 2026-11-03 · Buttons in pop-up sheets are centred
+- "Go to the armoury" (and any full-width button at the bottom of a pop-up sheet) now has its label centred top to bottom, not pressed against the top edge.
+
 ## 2026-11-03 · Fame, standing and paths (renown, slice 3)
 - **Runners now become known.** Fame climbs one step at a time from the record: Unknown, Known (6 jobs), Respected (6 active weeks and 10 jobs at their level), Elite. Elite needs 12 active weeks, 20 jobs at their level (Lifers: 40 jobs), a path's Elite numbers and a standing of 40. It arrives on its own, with a message in the inbox, a history line and a highlight. Legend isn't given yet; the runner page shows when someone is "Ready for their moment".
 - **Standing** is how the street rates a runner right now, 0 to 100: up with completed jobs at their level, hard calls that held and milestones; down when a job is lost or aborted, the crew pulls back from a fight, or they come back badly hurt, and a little every week on the bench. An Elite under 20 on two Sundays in a row drops back to Respected, and can win it back.

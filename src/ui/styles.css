@@ -718,6 +718,26 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .chip--earned { border-color: color-mix(in srgb, var(--accent-2) 60%, var(--line)); }
 .chip--temporary { border-style: dashed; }
 .chip__when { color: var(--muted); font-size: 0.75rem; }
+/* Traits as chips (2026-11-03): icon and name in a wrapping row, the details in a card under the
+   row on tap. Born traits plain, earned ones in cyan, temporary ones dashed, setbacks in red. */
+.tchips { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.tchip { display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap); padding: 0 12px; background: var(--panel); border: 1px solid var(--line); color: var(--text); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%); }
+.tchip .icon { flex: none; color: var(--muted); }
+.tchip--lasting, .tchip--temporary { border-color: color-mix(in srgb, var(--accent-2) 55%, var(--line)); }
+.tchip--lasting .icon, .tchip--temporary .icon { color: var(--accent-2); }
+.tchip--temporary { border-style: dashed; }
+.tchip--setback { border-color: color-mix(in srgb, var(--danger) 60%, var(--line)); }
+.tchip--setback .icon { color: var(--danger); }
+.tchip.is-open { background: #16262a; box-shadow: inset 0 -2px 0 var(--accent-2); }
+.tchip--setback.is-open { background: #2a1a1e; box-shadow: inset 0 -2px 0 var(--danger); }
+.tipcard { margin-top: 8px; padding: 10px 12px; border: 1px solid var(--line); border-left: 2px solid var(--accent-2); background: var(--panel); }
+.tipcard--setback { border-left-color: var(--danger); }
+.tipcard p { margin: 4px 0 0; }
+.tipcard .btn--ghost { margin-top: 4px; }
+.synergies { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.synergy { display: inline-flex; align-items: center; gap: 8px; min-height: var(--tap); padding: 4px 12px 4px 4px; background: var(--panel); border: 1px solid color-mix(in srgb, var(--accent-2) 55%, var(--line)); color: var(--text); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+.synergy.is-open { background: #16262a; box-shadow: inset 0 -2px 0 var(--accent-2); }
 
 /* The squad run (PLAN-CORE-LOOP.md, slice 1): four approaches. */
 .segmented--grid { grid-template-columns: 1fr 1fr; }
@@ -1013,14 +1033,15 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .watch__new[hidden] { display: none; }
 /* Wide screens: the map on the left stays put; the feed scrolls in its own column on the right. */
 @media (min-width: 1100px) {
-  .watch:not(.is-done) { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; }
-  .watch:not(.is-done) .watch__live { position: sticky; top: var(--live-top, 0); }
-  .watch:not(.is-done) .watch__side { overflow-y: auto; max-height: calc(100vh - var(--live-top, 0px) - 96px); padding-right: 4px; overscroll-behavior: contain; }
-  .watch:not(.is-done) .watch__bar { grid-column: 1 / -1; }
+  .watch { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; }
+  .watch .watch__live { position: sticky; top: var(--live-top, 0); }
+  .watch .watch__side { overflow-y: auto; max-height: calc(100vh - var(--live-top, 0px) - 96px); padding-right: 4px; overscroll-behavior: contain; }
+  .watch .watch__bar { grid-column: 1 / -1; }
   .watch__new { bottom: 8px; }
   .watch.is-calling .watch__live { position: sticky; }
+  .watch.is-done .watch__live { position: sticky; } /* a finished job keeps the side-by-side view (2026-11-03) */
 }
-.sheet > .btn { display: flex; width: 100%; justify-content: center; }
+.sheet > .btn { display: flex; width: 100%; justify-content: center; align-items: center; } /* centred both ways (owner, 2026-11-03: "Go to the armoury" sat at the top of its button) */
 /* Freelancers in the picker and on the board: a violet stripe and tint, and a tag (owner, 2026-10-28). */
 .cand--freelance { border-left: 3px solid #b48cff; background: #1c1928; }
 .cand__hire { display: block; margin-bottom: 2px; font: 600 0.66rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: #b48cff; }
@@ -1125,33 +1146,63 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .ffo-last { font-size: 0.82rem; color: var(--muted); } .ffo-last summary { cursor: pointer; min-height: 32px; line-height: 1.4; }
 .ffo-last p { margin: 2px 0 0; } .ffo-last .tone--bad { color: #ff8a98; } .ffo-last .tone--good { color: var(--text); }
 .watch.is-fighting.is-calling .watch__new { display: none; }
-.ffo-intents { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
-.ffo-intents span { font: 600 0.72rem var(--display); letter-spacing: 0.08em; text-transform: uppercase; color: #ff8a98; border: 1px solid #4a2230; background: #160d12; padding: 2px 6px; }
-.ffo-intents--none { color: var(--muted); font-size: 0.85rem; }
-.ffo-crew { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(140px, 45%), 1fr)); gap: 6px; }
-.ffo-who { display: grid; gap: 1px; min-height: var(--tap, 44px); text-align: left; padding: 6px 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); font: inherit; cursor: pointer; clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 0 100%); }
-.ffo-who strong { font: 700 0.86rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; }
-.ffo-who.is-on { border-color: var(--accent-2); background: #12262a; }
-.ffo-who.is-down { opacity: 0.5; cursor: default; }
-.ffo-hp { font-size: 0.74rem; color: var(--muted); } .ffo-hp b { color: #ff8a98; font-weight: 600; }
+.ffo-intents--none { margin: 0; color: var(--muted); font-size: 0.85rem; }
+/* 2026-11-03: a compact roster (one row each), then the picked runner's tray. */
+.ffo-title .ffo-help { margin-left: 8px; min-width: 32px; min-height: 32px; border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); font: 700 0.9rem var(--display); cursor: pointer; }
+.ffo-title { align-items: center; } .ffo-title > span { margin-left: auto; }
+.ffo-help.is-on { border-color: var(--accent-2); color: var(--accent-2); }
+.ffo-rules { display: grid; gap: 4px; border-left: 2px solid var(--accent-2); padding: 2px 0 2px 10px; }
+.ffo-rules p { margin: 0; color: var(--muted); font-size: 0.8rem; line-height: 1.4; }
+.ffo-crew { display: grid; gap: 4px; }
+.ffo-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, max-content); align-items: stretch; border: 1px solid var(--line); background: var(--panel-2); clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 0 100%); }
+.ffo-row.is-on { border-color: var(--accent-2); background: #12262a; }
+.ffo-row.is-down { opacity: 0.5; }
+.ffo-who { display: flex; align-items: center; gap: 8px; min-width: 0; min-height: var(--tap, 44px); text-align: left; padding: 4px 6px; border: 0; background: none; color: var(--text); font: inherit; cursor: pointer; }
+.ffo-who:disabled { cursor: default; }
+.ffo-who .face { width: 32px; height: 32px; }
+.ffo-who__main { display: grid; gap: 2px; min-width: 0; flex: 1; overflow: hidden; }
+.ffo-who__top { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.ffo-who strong { font: 700 0.86rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ffo-cover { flex: none; font: 700 0.62rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; padding: 0 4px; border: 1px solid var(--accent-2); color: var(--accent-2); }
+.ffo-cover--half { border-style: dashed; } .ffo-cover--open { border-color: var(--warn); color: var(--warn); }
+.ffo-hp { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--muted); white-space: nowrap; } .ffo-hp b { color: #ff8a98; font-weight: 600; }
+.ffo-hpbar { flex: none; width: 48px; height: 4px; background: #262c38; } .ffo-hpbar i { display: block; height: 100%; background: #5fe0a5; }
+.ffo-hp.is-low .ffo-hpbar i { background: var(--warn); } .ffo-hp.is-crit .ffo-hpbar i { background: var(--danger); }
 .ffo-hp.is-low { color: var(--warn); } .ffo-hp.is-crit { color: var(--danger); }
-.ffo-kit { font-size: 0.72rem; color: var(--accent-2); }
-.ffo-order { font-size: 0.74rem; color: var(--muted); } .ffo-order.is-set { color: var(--warn); font-weight: 600; }
+.ffo-tag { display: flex; align-items: center; gap: 5px; justify-content: flex-end; text-align: right; padding: 4px 10px; font-size: 0.74rem; color: var(--muted); opacity: 0.8; min-width: 0; }
+.ffo-tag small { font: 700 0.6rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; }
+button.ffo-tag { min-height: var(--tap, 44px); border: 0; border-left: 1px solid #4a3f1a; background: #211d0c; color: var(--warn); font: 600 0.74rem system-ui, sans-serif; opacity: 1; cursor: pointer; }
+button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
+.ffo-tray { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 8px; }
+.ffo-tray__who { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.ffo-tray__who strong { font: 700 0.9rem var(--display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-2); }
+.ffo-tray__who span { font-size: 0.74rem; color: var(--muted); }
+.ffo-threat { margin: 0; font-size: 0.74rem; color: #ff8a98; line-height: 1.4; }
 .ffo-targets { display: flex; flex-wrap: wrap; gap: 6px; }
-.ffo-target { min-height: var(--tap, 44px); padding: 4px 10px; border: 1px solid #4a2230; background: #160d12; color: #ff8a98; font: 700 0.8rem var(--display); letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
+.ffo-target { min-height: var(--tap, 44px); padding: 4px 10px; border: 1px solid #4a2230; background: #160d12; color: #ff8a98; font: 700 0.8rem var(--display); letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; text-align: left; }
+.ffo-target em { font-style: normal; color: var(--text); margin-left: 4px; }
 .ffo-target span { display: block; font: 500 0.7rem system-ui, sans-serif; letter-spacing: 0; text-transform: none; color: var(--muted); }
 .ffo-target.is-on { border-color: var(--warn); color: var(--warn); }
-.ffo-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.ffo-act { display: grid; gap: 2px; align-content: start; min-height: 52px; text-align: left; padding: 7px 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); font: inherit; cursor: pointer; clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); }
+.ffo-target.is-out { display: inline-flex; flex-direction: column; justify-content: center; opacity: 0.4; cursor: default; }
+.ffo-acts { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 6px; }
+.ffo-act { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; row-gap: 1px; align-content: start; min-height: var(--tap, 44px); text-align: left; padding: 6px 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); font: inherit; cursor: pointer; clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); }
 .ffo-act b { font: 700 0.86rem var(--display); letter-spacing: 0.08em; text-transform: uppercase; }
-.ffo-act b i { font-style: normal; font-weight: 600; font-size: 0.66rem; color: var(--muted); letter-spacing: 0.06em; }
+.ffo-act b i { font-style: normal; font-weight: 600; font-size: 0.62rem; color: var(--muted); letter-spacing: 0.06em; border: 1px solid var(--line); padding: 0 3px; margin-left: 2px; white-space: nowrap; }
+.ffo-act em { grid-row: span 2; align-self: center; font: 700 1.2rem var(--display); font-style: normal; color: var(--text); }
 .ffo-act span { font-size: 0.74rem; color: var(--accent-2); line-height: 1.3; }
+.ffo-act.is-call { border-style: dashed; border-color: #3a4a52; }
 .ffo-act.is-on { border-color: var(--warn); background: #211d0c; } .ffo-act.is-on b { color: var(--warn); }
-.ffo-clear { justify-self: start; }
 .ffo-bar { display: grid; grid-template-columns: repeat(3, auto) 1fr; gap: 6px; }
 .ffo-bar .btn { min-height: var(--tap, 44px); padding-inline: 10px; }
+.ffo-go small { font-weight: 500; font-size: 0.72rem; letter-spacing: 0.04em; text-transform: none; opacity: 0.85; }
+.ffo-confirm { display: grid; gap: 8px; border: 1px solid #4a3f1a; background: #160f08; padding: 10px; }
+.ffo-confirm p { margin: 0; font-size: 0.85rem; line-height: 1.4; } .ffo-confirm strong { color: var(--warn); }
+.ffo-bar--confirm { grid-template-columns: 1fr 1fr; }
 .ffo-note { margin: 0; color: var(--muted); font-size: 0.8rem; line-height: 1.4; }
-@media (max-width: 420px) { .ffo-bar { grid-template-columns: 1fr 1fr 1fr; } .ffo-go { grid-column: 1 / -1; } }
+@media (max-width: 420px) { .ffo-bar { grid-template-columns: 1fr 1fr 1fr; } .ffo-go { grid-column: 1 / -1; } .ffo-bar--confirm { grid-template-columns: 1fr 1fr; } }
+.sp-cmd .sp-hit { fill: transparent; pointer-events: auto; }
+.sp-order.is-call { opacity: 0.4; stroke-dasharray: 2 2.5; }
+.sp-hunker.is-call { opacity: 0.4; }
 
 /* Runner record (core/record.js) */
 .record__title { display: inline; margin: 0; }
@@ -1173,3 +1224,33 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .pathcard .infoline { margin-bottom: 6px; }
 .pathcard__name { font-family: var(--display); text-transform: uppercase; letter-spacing: 0.1em; color: var(--warn); }
 .pathcard__ready { margin: 6px 0 0; font-family: var(--display); text-transform: uppercase; letter-spacing: 0.1em; color: var(--warn); }
+
+/* On a job (2026-11-03): no tabs (they can't go anywhere mid-job), so the job takes the whole width,
+   and on tablets and desktops the site map is drawn larger. */
+#app.is-onjob .nav { display: none; }
+#app.is-onjob .watch__bar { bottom: 0; }
+#app.is-onjob .watch__new { bottom: 64px; }
+@media (min-width: 700px) {
+  #app.is-onjob .siteplan { height: min(40svh, 360px); }
+  #app.is-onjob .watch.is-fighting .siteplan { height: min(48svh, 440px); }
+}
+@media (min-width: 900px) {
+  #app.is-onjob { grid-template-columns: 1fr; }
+  #app.is-onjob .main { grid-column: 1; }
+  #app.is-onjob .main--wide { max-width: 1440px; }
+  #app.is-onjob .siteplan { height: min(52svh, 480px); }
+  #app.is-onjob .watch.is-fighting .siteplan { height: min(58svh, 560px); }
+}
+@media (min-width: 1100px) {
+  #app.is-onjob .watch__new { bottom: 8px; }
+  /* Map and feed side by side: the map takes the screen's height (less the top bar, the job's title,
+     the tally and the Pause bar), but no taller than about 1.2:1 so the whole-site view keeps most of its width. The map
+     column gets the larger share; the feed keeps at least 360px. */
+  #app.is-onjob .watch { grid-template-columns: minmax(0, 1.5fr) minmax(360px, 1fr); }
+  #app.is-onjob .watch__map { container-type: inline-size; }
+  /* A gap under the top bar for the sticky map, and the feed column no taller than the map column. */
+  #app.is-onjob .watch .watch__live, #app.is-onjob .watch.is-calling .watch__live, #app.is-onjob .watch.is-done .watch__live { top: calc(var(--live-top, 0px) + 12px); }
+  #app.is-onjob .watch .watch__side { max-height: var(--live-h, calc(100svh - var(--live-top, 0px) - 120px)); }
+  #app.is-onjob .watch .siteplan,
+  #app.is-onjob .watch.is-fighting .siteplan { height: max(360px, min(calc(100svh - var(--live-top, 0px) - 250px), 85cqw)); }
+}
