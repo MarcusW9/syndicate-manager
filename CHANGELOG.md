@@ -5,6 +5,13 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-03 · The play-by-play keeps up, and a finished job stays put
+- The play-by-play now always scrolls to the newest moment unless you scroll up yourself to reread something; scroll back to the bottom, or tap "↓ new", and it follows again. Before, it sometimes stopped following on its own.
+- When a job ends (done, aborted or someone lost), the screen keeps the map and the play-by-play side by side, and the summary with "Back to the safehouse" appears at the end of the play-by-play, instead of switching to a different view.
+
+## 2026-11-03 · The job's map fills the screen
+- On an iPad in landscape or a computer, the site map during a job is now as tall as the screen allows, with the job's title and the Pause and Faster buttons still in view, and takes a larger share of the width. Its zoomed views reshape to fit, so the extra height shows more of the place instead of empty space.
+
 ## 2026-11-03 · A job takes the whole screen
 - While a job runs, the tabs (the bar at the bottom on a phone, the side menu on a tablet or computer) step aside, since they can't take you anywhere mid-job. They come back when you press "Back to the safehouse".
 - On tablets and computers the job uses the full width, and the map of the site is drawn larger.

@@ -92,7 +92,18 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
   const alarm = svg.querySelector('.sp-alarm');
   let here = ZONE_END[zone] ?? P.van;
   let zoneNow = zone;
-  let view = [...(VB[zone] ?? VB.full)];
+  /**
+   * A camera box reshaped to the map as it's drawn (2026-11-03: a taller map on wide screens):
+   * grown about its centre, within the site, so the extra room shows more of the place instead
+   * of empty bands. The full map can't grow past the site, so it keeps its bands.
+   */
+  function fit(box) {
+    const ar = svg.clientWidth > 0 && svg.clientHeight > 0 ? svg.clientWidth / svg.clientHeight : 1.5;
+    let [x, y, w, h] = box;
+    if (w / h > ar) { const nh = Math.min(H, w / ar); y -= (nh - h) / 2; h = nh; } else { const nw = Math.min(W, h * ar); x -= (nw - w) / 2; w = nw; }
+    return [Math.max(0, Math.min(W - w, x)), Math.max(0, Math.min(H - h, y)), w, h];
+  }
+  let view = fit(VB[zone] ?? VB.full);
   svg.setAttribute('viewBox', view.join(' '));
   const wait = (ms) => later(ms * speed());
   const slot = (i, pt) => [pt[0] + (i % 2) * 11 - 5, pt[1] + Math.floor(i / 2) * 11 - 5];
@@ -121,7 +132,7 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
   function moveGroup(pt) { here = pt; team.forEach((op, i) => { const t = tok(op.id); if (t) place(t, slot(i, pt)); }); }
 
   function panTo(name, ms = 700) {
-    const to = Array.isArray(name) ? name : VB[name] ?? VB.full;
+    const to = Array.isArray(name) ? name : fit(VB[name] ?? VB.full);
     const from = [...view];
     if (reduced() || ms <= 0) { view = [...to]; svg.setAttribute('viewBox', to.join(' ')); return; }
     const t0 = performance.now();
