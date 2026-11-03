@@ -1151,3 +1151,9 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .ffo-bar .btn { min-height: var(--tap, 44px); padding-inline: 10px; }
 .ffo-note { margin: 0; color: var(--muted); font-size: 0.8rem; line-height: 1.4; }
 @media (max-width: 420px) { .ffo-bar { grid-template-columns: 1fr 1fr 1fr; } .ffo-go { grid-column: 1 / -1; } }
+
+/* Runner record (core/record.js) */
+.record__title { display: inline; margin: 0; }
+.recgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 8px 0; }
+.recstat { display: flex; flex-direction: column; min-height: 44px; }
+.recstat__n { font-size: 1.25rem; font-weight: 600; }

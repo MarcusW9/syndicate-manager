@@ -15,6 +15,7 @@ import { districtArt } from './districtArt.js';
 import { advanceDay, calendar, formatShortDate, isBlocked, seasonStartDay } from '../core/time.js';
 import { createNewGame, chooseFounders } from '../core/state.js';
 import { marksText } from '../core/marks.js';
+import { recordOf } from '../core/record.js';
 import { templateById, jobView, nextUnlock, JOB_GATES } from '../core/jobs.js';
 import { trustLabel, trustOf } from '../core/clients.js';
 import { CLIENTS } from '../data/clients.js';
@@ -1113,6 +1114,27 @@ function bar(label, value) {
   return `<div class="meter"><span class="meter__label">${label}</span><span class="meter__track"><span class="meter__fill ${value > 70 ? 'is-hot' : ''}" style="width:${value}%"></span></span><span class="meter__value">${value}</span></div>`;
 }
 
+/** A runner's record (core/record.js): what they've done on the job, behind a tap. */
+function renderRecord(op) {
+  const r = recordOf(op);
+  if (!r.jobs) return '';
+  const nameOf = (id) => state.crew.find((x) => x.id === id)?.handle ?? state.memorial.find((x) => x.id === id)?.handle ?? null;
+  const top = Object.entries(r.with).filter(([id]) => nameOf(id)).sort((a, b) => b[1] - a[1])[0];
+  const stat = (label, n) => `<div class="recstat"><span class="recstat__n">${n}</span><span class="muted small">${esc(label)}</span></div>`;
+  return `<details class="flog record">
+    <summary><h2 class="record__title">Record</h2></summary>
+    <div class="recgrid">
+      ${stat('jobs', r.jobs)}${stat('at their level', r.atLevel)}${stat('completed', r.wins)}
+      ${stat('clean', r.clean)}${stat('flawless', r.flawless)}${stat('best clean streak', r.bestCleanStreak)}
+      ${stat('carries', r.carries)}${stat('fights won', r.fightsWon)}${stat('brought home', r.broughtHome)}
+      ${stat('unscathed', r.unscathed)}${stat('big scores', r.bigScores)}${stat('active weeks', r.activeWeeks)}
+    </div>
+    ${top ? `<p class="muted small">Most jobs with ${esc(nameOf(top[0]))}: ${top[1]}.</p>` : ''}
+    ${r.estimated ? '<p class="muted small">Counts from before records began are estimates.</p>' : ''}
+    <p class="muted small">Clean: no heat and nobody went loud. Flawless: nobody went critical. Carries: a hard crisis roll they made.</p>
+  </details>`;
+}
+
 function renderOperative() {
   const op = state.crew.find((x) => x.id === openOperativeId);
   if (!op) return renderCrew();
@@ -1177,6 +1199,7 @@ function renderOperative() {
         ${Object.entries(op.trust).map(([id, v]) => `<li>${esc(nameOf(id))}: ${v > 0 ? '+' : ''}${v}</li>`).join('') || '<li class="muted">No strong feelings yet.</li>'}
       </ul>
 
+      ${renderRecord(op)}
       ${op.history.length ? `<h2>History</h2><ul class="list list--plain">${op.history.slice(-8).reverse().map((h) => `<li class="muted">${esc(h)}</li>`).join('')}</ul>` : ''}
       </div>
       </div>
