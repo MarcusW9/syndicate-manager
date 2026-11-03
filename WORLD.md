@@ -272,6 +272,12 @@ Smaller people a new crew meets on rookie work (2026-10-25). Their spoken lines 
 - **Mrs. Ip** (Night Market). Runs the fish-ball stall at the Neon Dragon, never stops talking, and moves crates that aren't fish balls. Pays in cash and a bag of fish balls.
 - **Ah-Wah** (Night Market). A petty runner who borrowed from Madam Rao and tried to skip town with her ledger.
 - **Dr. Lim** (Night Market). A back-alley implant doc behind the noodle stalls, built his clinic on Madam Rao's money, and sold Silver Fan counterfeit eyes to her debtors.
+- **Meena D'Sa** (Night Market). Seamstress and counterkeeper in Madam Rao's shop. Rao lets her mind the counter; she returns a customer's deposit rather than promise work the shop can't finish. Wants her own alterations counter, and keeps spending the savings replacing garments Rao accepted as collateral. Knows Mrs. Ip.
+- **Tang Wai-chiu** (Night Market). Silver Fan Circle collector for the third-floor mahjong parlour: spotless bowling shirt, a folding stool he opens before discussing money. Would rather make six patient visits than explain one broken debtor. Secret: he has been advancing small payments from his own pocket to keep his figures tidy, and needs Rao to buy the debts without learning how many there are.
+- **Uncle Tariq** (Amber Reach). Keeps the remittance booth at Pearl Haven House that Madam Rao quietly backs; open late on paydays, never charges twice to correct a spelling. Secret: he wants to repay Rao before anyone mistakes her support for ownership, but keeps waiving the fees that would let him.
+- **Yip Man-ki** (Glass Heights). Veridian-Apex clinic administrator. Finds an appointment when a corporate account is attached; an old Veridian-Apex implant doesn't entitle its owner to affordable treatment. Secret: she wants a transfer out of patient administration before an audit finds the appointments she moved between billing categories.
+- **Ho Sze-lam** (Old Town). Hoi-Sing Grid & Cable field supervisor. Knows which meters have been repaired past their life, but records a disconnection if that's the order on his screen. Secret: he leaves intermittent faults out of his reports so his section doesn't look badly maintained. Auntie Fung and the Brass Anchor know him by his thermos.
+- **Mak Chi-on** (the Basin). Racing Association stable-access official, checks passes against a paper list despite the scanner on his wrist, and treats unexplained stable access as possible race-fixing. Secret: he once waved a familiar contractor through without checking a replacement pass, and fears admitting it would undermine every inspection he has signed since.
 - **The old radio man on Block 9's roof.** The last tenant Mr. Szeto wants out, broadcasting pirate radio from a tin shack full of tapes. Block 9 is Doc Siu's building.
 - **The Ferryman's habits:** he chews betel nut as well as the clove cigarettes, and he runs a private line to the Silt under Pier 12.
 
@@ -373,7 +379,11 @@ CLIENTS (local powers a small crew can reach, below the corps):
   that could sink AHL, and wants out of the city.
 STREET CAST (rookie work): Doc Siu (Old Town; ex-surgeon, unlicensed clinic under
 Tenement Block 9, dry praise); Mrs. Ip (Night Market fish-ball stall at the Neon Dragon,
-moves crates). Currency is cash in ¥; no "credits" or "Bits".
+moves crates); Meena D'Sa (Rao's seamstress and counterkeeper); Tang Wai-chiu (Silver Fan
+collector, third-floor parlour); Uncle Tariq (remittance booth, Pearl Haven House, backed
+by Rao); Yip Man-ki (Veridian-Apex clinic administrator); Ho Sze-lam (Hoi-Sing field
+supervisor, Old Town); Mak Chi-on (Racing Association stable-access official). Currency
+is cash in ¥; no "credits" or "Bits".
 Reputation tier promotions open the locked districts,
 each introduced by a client: the Silt (the Ferryman), the Amber Reach (Okonkwo), Iron
 Peak (Szeto).
