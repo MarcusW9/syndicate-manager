@@ -136,9 +136,9 @@ const BASE_MISSIONS = [
           { id: 'talk', label: '{face} talks him out of it', kind: 'adapt', stat: 'social', difficulty: 11, requires: { kind: 'role', value: 'face' }, failureCost: { heat: 1 },
             success: 'By the end he is apologising for interrupting.', failure: 'He walks off muttering and makes a call. Heat rises.', failureInjury: 'none',
             report: { success: '{face} talked the man out of demanding a cut. By the end, he was apologising for interrupting the run.', failure: '{face} failed to talk the man down. He walked away muttering and made a call. Heat +1.' } },
-          { id: 'floor', label: '{driver} runs the light', kind: 'push', stat: 'driving', difficulty: 12, failureCost: { heat: 1 },
+          { id: 'floor', label: '{op} runs the light', kind: 'push', stat: 'driving', difficulty: 12, failureCost: { heat: 1 },
             success: 'Gone before the light changes. He is left shouting at taillights.', failure: 'A minibus clips you running the light.', failureInjury: 'light',
-            report: { success: '{driver} ran the red light before the man could react, leaving him shouting at the crew\'s taillights.', failure: 'A minibus clipped the crew\'s car as {driver} ran the light. Someone was hurt, and the collision drew attention. Heat +1.' } },
+            report: { success: '{op} ran the red light before the man could react, leaving him shouting at the crew\'s taillights.', failure: 'A minibus clipped the crew\'s car as {op} ran the light. Someone was hurt, and the collision drew attention. Heat +1.' } },
           { id: 'abort', label: 'Abort: call off the run', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -5 },
             success: 'You drive home the long way. The job is blown, but nobody is in his pocket.', failure: '', failureInjury: 'none',
             report: { success: 'The crew called off the courier run and drove home by the long route. The job was blown, but nobody remained in the man\'s pocket.' } },
@@ -261,7 +261,7 @@ const BASE_MISSIONS = [
             report: { success: 'The crew joined the evacuation with a partial copy, walking out soaked and anonymous among the office workers. Pay -30%.', failure: 'A fire warden challenged the crew during the evacuation. Someone was hurt when they broke away and ran. Pay -30%.' } },
           { id: 'stay', label: 'Stay and finish the copy in the spray', kind: 'push', stat: 'tech', difficulty: 12, failureCost: { heat: 1 },
             success: 'Water everywhere, but the copy finishes. Full set.', failure: 'A shorted cable sparks in the water.', failureInjury: 'serious',
-            report: { success: '{tech} stayed at the terminal while the sprinklers ran and completed the full copy.', failure: 'A damaged cable shorted in the sprinkler water while the crew stayed behind. Someone was badly hurt, and the incident drew attention. Heat +1.' } },
+            report: { success: '{op} stayed at the terminal while the sprinklers ran and completed the full copy.', failure: 'A damaged cable shorted in the sprinkler water while the crew stayed behind. Someone was badly hurt, and the incident drew attention. Heat +1.' } },
           { id: 'abort', label: 'Abort: leave with the crowd, nothing copied', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -5 },
             success: 'You stand in the rain with three hundred office workers and then go home.', failure: '', failureInjury: 'none',
             report: { success: 'The crew left with the evacuation and stood in the rain among hundreds of office workers. They returned home without the data.' } },
@@ -309,9 +309,9 @@ const BASE_MISSIONS = [
         situations: ['fight'],
         text: 'A night-shift forklift driver rounds the corner and stops dead. He has a radio on his belt.',
         choices: [
-          { id: 'grab', label: '{muscle} grabs him before he can call', kind: 'push', stat: 'combat', difficulty: 9,
+          { id: 'grab', label: '{op} grabs him before he can call', kind: 'push', stat: 'combat', difficulty: 9,
             success: 'He is zip-tied behind a pallet, unharmed and very quiet.', failure: 'He fights back hard and gets a shout out.', failureInjury: 'light',
-            report: { success: '{muscle} caught the forklift driver before he could reach his radio. He was left unharmed, zip-tied and quiet behind a pallet.', failure: 'The forklift driver fought back and managed to shout for help. Someone was hurt in the struggle.' } },
+            report: { success: '{op} caught the forklift driver before he could reach his radio. He was left unharmed, zip-tied and quiet behind a pallet.', failure: 'The forklift driver fought back and managed to shout for help. Someone was hurt in the struggle.' } },
           { id: 'bribe', label: 'Pay him to forget tonight', kind: 'adapt', stat: 'social', difficulty: 10, cost: { cash: -500 },
             success: 'He pockets the cash and suddenly needs a long cigarette break.', failure: 'He takes the money and calls it in anyway.', failureInjury: 'none',
             report: { success: 'The crew paid the forklift driver ¥500. He pocketed the money and decided it was time for a long cigarette break.', failure: 'The forklift driver took the crew\'s ¥500 and called in the intrusion anyway.' } },
@@ -325,9 +325,9 @@ const BASE_MISSIONS = [
         situations: ['fight'],
         text: 'The guard dog slips its chain and comes straight at the crew, barking loud enough to wake the whole dock.',
         choices: [
-          { id: 'hold', label: '{muscle} holds it off', kind: 'push', stat: 'combat', difficulty: 11,
+          { id: 'hold', label: '{op} holds it off', kind: 'push', stat: 'combat', difficulty: 11,
             success: 'A firm grip on the collar and a lot of patience. The dog sits.', failure: 'It gets a good bite in before it lets go.', failureInjury: 'serious',
-            report: { success: '{muscle} caught the guard dog by the collar and held firm until it stopped fighting and sat down.', failure: 'The guard dog broke through {muscle}\'s grip and landed a deep bite before the crew could pull it away. Someone was badly hurt.' } },
+            report: { success: '{op} caught the guard dog by the collar and held firm until it stopped fighting and sat down.', failure: 'The guard dog broke through {op}\'s grip and landed a deep bite before the crew could pull it away. Someone was badly hurt.' } },
           { id: 'sedate', label: '{medic} sedates it', kind: 'adapt', stat: 'medical', difficulty: 10, requires: { kind: 'role', value: 'medic' },
             success: 'One quick jab and it is asleep, snoring. Nobody hurt, dog included.', failure: 'The needle misses. The dog does not.', failureInjury: 'light',
             report: { success: '{medic} landed one clean injection. The guard dog curled up and began snoring, unharmed.', failure: '{medic} missed the injection, and the dog caught someone before the crew could restrain it.' } },
@@ -369,9 +369,9 @@ const BASE_MISSIONS = [
           { id: 'debt', label: '{face} calls in an old favour with their boss', kind: 'adapt', stat: 'social', difficulty: 13, requires: { kind: 'role', value: 'face' },
             success: 'A phone call, a long pause, and they wave you through. You owe somebody now.', failure: 'The name means nothing to them, and they are insulted you tried.', failureInjury: 'light',
             report: { success: '{face} called in an old favour with the enforcers\' boss. After a long phone call, they waved the crew through. Somebody would expect repayment.', failure: 'The Red Lantern enforcers didn\'t recognise the name {face} offered and took offence at the attempt. Someone was hurt.' } },
-          { id: 'ram', label: '{driver} rams through the gap', kind: 'push', stat: 'driving', difficulty: 13, cost: { heat: 2 },
+          { id: 'ram', label: '{op} rams through the gap', kind: 'push', stat: 'driving', difficulty: 13, cost: { heat: 2 },
             success: 'Metal screams and you are through, crates and all. The Red Lanterns will remember this.', failure: 'The van spins into a bollard. They get a few hits in before you escape.', failureInjury: 'serious',
-            report: { success: '{driver} forced the van through the gap between the Red Lantern cars. Metal screamed, but the crew escaped with the crates. Heat +2.', failure: 'The van spun into a bollard while {driver} tried to break through the roadblock. The enforcers got several blows in before the crew escaped. Someone was badly hurt. Heat +2.' } },
+            report: { success: '{op} forced the van through the gap between the Red Lantern cars. Metal screamed, but the crew escaped with the crates. Heat +2.', failure: 'The van spun into a bollard while {op} tried to break through the roadblock. The enforcers got several blows in before the crew escaped. Someone was badly hurt. Heat +2.' } },
           { id: 'abort', label: 'Abort: leave the crates with them', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -10 },
             success: 'You hand over the van keys and walk. Humiliating, but everyone is breathing.', failure: '', failureInjury: 'none',
             report: { success: 'The crew handed over the van keys and left the shipment with the Red Lanterns. They returned on foot, humiliated but alive.' } },
@@ -400,5 +400,9 @@ const BASE_MISSIONS = [
 
 // Rookie jobs (rookie: true) draw the shared rookie pool instead of the district crises:
 // those are aimed at 9-14, too hard for a new crew.
+const sharedPool = (m) => (m.rookie ? ROOKIE_CRISES : DISTRICT_CRISES[m.district] ?? []);
 export const MISSIONS = [...BASE_MISSIONS, KIDNAP, CASINO, PENTHOUSE, PROTECTION, CLINIC, HERBAL, LEDGER, CONTAINER, DELIVERY, EVICTION, CHROME, CABLE, SCRUB, FAVOURITE, LAST_TICKET, WRONG_HORSE]
-  .map((m) => ({ ...m, crises: [...m.crises, ...(m.rookie ? ROOKIE_CRISES : DISTRICT_CRISES[m.district] ?? [])] }));
+  .map((m) => ({ ...m, crises: [...m.crises, ...sharedPool(m)] }));
+
+/** A job's own crises, without the shared district or rookie pool (scripts/check-job.mjs). */
+export const ownCrises = (m) => m.crises.filter((c) => !sharedPool(m).includes(c));
