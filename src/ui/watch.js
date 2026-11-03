@@ -111,6 +111,15 @@ export function mountWatch(el, state, { onAuto, ui }) {
   };
   // The plan sticks just under the top bar (its height changes with the screen width).
   el.style.setProperty('--live-top', `${document.querySelector('.topbar')?.offsetHeight ?? 0}px`);
+  // Side by side, the feed column is as tall as the map column beside it, so both end together
+  // with a gap above the screen's edge (owner, 2026-11-03: the fight orders ran to the bottom).
+  const liveCol = el.querySelector('.watch__live');
+  if (liveCol && typeof ResizeObserver === 'function') {
+    const ro = new ResizeObserver(() => el.style.setProperty('--live-h', `${liveCol.offsetHeight}px`));
+    ro.observe(liveCol);
+    const off = me.unlisten;
+    me.unlisten = () => { off(); ro.disconnect(); };
+  }
   if (am.battle) plan.syncFight(am.battle); // a page opened mid-fight draws it as it stands
   sync(state, { animate: false });
   // A job just finished: the page redraws in the same layout, with the summary at the end of the

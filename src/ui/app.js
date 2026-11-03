@@ -245,7 +245,7 @@ function onClick(e) {
     case 'watch-latest': return showLatest();
     case 'pending': return setState(resolvePending(state, id));
     // Command fights (ui/fightorders.js): pick, target and order are the player's draft; the rest play the round.
-    case 'fight-sel': case 'fight-target': case 'fight-clear': case 'fight-order':
+    case 'fight-sel': case 'fight-target': case 'fight-clear': case 'fight-order': case 'fight-pull-ask': case 'fight-pull-no': case 'fight-rules':
       fightTap(state.activeMission, action, { id, kind: t.dataset.kind, target: t.dataset.target });
       break;
     case 'fight-go': return setState(runBattle(state, takeOrders()));
@@ -1704,7 +1704,7 @@ function renderCallIn(s) {
         <div class="choices">${v.choices.map((c) => choiceButton({ ...c, risk: c.exit ? 'safe' : c.push ? 'extreme' : 'moderate', riskReason: c.cost, cost: '' }, 'pending')).join('')}</div>
       </div>`;
   }
-  if (am.battle && currentStep(am)?.type === 'battle' && needsPlayer(s)) return renderFightOrders(s, esc);
+  if (am.battle && currentStep(am)?.type === 'battle' && needsPlayer(s)) return renderFightOrders(s, esc, (id) => { const op = s.crew.find((o) => o.id === id); return op ? face(op, 'sm') : ''; });
   if (currentStep(am)?.type === 'crisis' && needsPlayer(s)) {
     const v = describeCrisis(s);
     return `

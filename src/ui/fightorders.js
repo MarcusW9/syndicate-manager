@@ -7,6 +7,7 @@
 import { ordersFor, guardHitChance, freeSpots, coverNow, hitFor, BATTLE } from '../core/battle.js';
 
 let draft = { key: null, sel: null, target: null, orders: {} };
+let rulesOpen = false; // the "?" card: open stays open, fight to fight
 
 const pct = (c) => `${Math.round(c * 100)}%`;
 const COVER_WORD = { full: 'full cover', half: 'half cover', open: 'in the open' };
@@ -51,16 +52,22 @@ export function fightTap(am, action, { id, kind, target } = {}) {
   current(am);
   if (action === 'fight-sel') { draft.sel = id; draft.target = null; return; }
   if (action === 'fight-target') { draft.target = Number(id); return; }
-  if (action === 'fight-clear') { delete draft.orders[draft.sel]; return; }
+  if (action === 'fight-clear') { delete draft.orders[id ?? draft.sel]; return; }
+  if (action === 'fight-pull-ask') { draft.pullAsk = true; return; }
+  if (action === 'fight-pull-no') { draft.pullAsk = false; return; }
+  if (action === 'fight-rules') { rulesOpen = !rulesOpen; return; }
   if (action === 'fight-order') {
     const t = ['shoot', 'flank', 'talk', 'move'].includes(kind) ? Number(target) : target || null;
-    const ok = ordersFor(b, draft.sel).some((o) => o.kind === kind && String(o.target ?? '') === String(t ?? ''));
-    if (!ok) return;
-    draft.orders[draft.sel] = { kind, target: t };
+    const opt = ordersFor(b, draft.sel).find((o) => o.kind === kind && String(o.target ?? '') === String(t ?? ''));
+    if (!opt) return;
+    const had = draft.orders[draft.sel];
+    // Tapping the order you gave hands it back to the crew; so does tapping the crew's own pick.
+    if ((had && had.kind === kind && String(had.target ?? '') === String(t ?? '')) || opt.auto) { delete draft.orders[draft.sel]; if (had) return; }
+    else draft.orders[draft.sel] = { kind, target: t };
     // A move someone else had planned to the same spot goes back to the crew's call.
     if (kind === 'move') for (const [rid, o] of Object.entries(draft.orders)) if (rid !== draft.sel && o.kind === 'move' && o.target === t) delete draft.orders[rid];
     // On to the next runner without an order, if there is one.
-    const next = standing(b).find((r) => !draft.orders[r.id]);
+    const next = standing(b).find((r) => !draft.orders[r.id] && r.id !== draft.sel);
     if (next) { draft.sel = next.id; draft.target = null; }
   }
 }
@@ -84,7 +91,9 @@ export function commandView(am) {
   const sel = b.runners.find((r) => r.id === draft.sel);
   const hunkered = (id) => draft.orders[id]?.kind === 'hunker';
   return {
-    runners: b.runners.map((r) => ({ id: r.id, cover: coverNow(r), down: r.down, sel: r.id === draft.sel, order: draft.orders[r.id] ?? null })),
+    runners: b.runners.map((r) => ({ id: r.id, cover: coverNow(r), down: r.down, sel: r.id === draft.sel, order: draft.orders[r.id] ?? null,
+      // The picked runner's crew's call, drawn faded (only theirs: five faded lines would be a tangle).
+      call: r.id === draft.sel && !r.down && !draft.orders[r.id] ? ordersFor(b, r.id).find((x) => x.auto) ?? null : null })),
     guards: b.guards.map((g) => ({ n: g.n, cover: coverNow(g), out: g.out, target: sel && g.n === targetFor(b, sel) })),
     intents: (b.intents ?? []).filter((i) => standing(b).some((r) => r.id === i.target)).map((i) => {
       const t = b.runners.find((r) => r.id === i.target);
@@ -98,73 +107,117 @@ export function commandView(am) {
 }
 const better = (c) => (c === 'open' ? 'half' : 'full');
 
-/** The orders panel, in the watch's call-in slot. esc: app.js's escaper. */
-export function renderFightOrders(state, esc) {
+/** The orders panel, in the watch's call-in slot (2026-11-03: a compact roster, then the picked
+ *  runner's tray). esc: app.js's escaper; face(id): their portrait, small. */
+export function renderFightOrders(state, esc, face = () => '') {
   const am = state.activeMission;
   const b = am.battle;
   current(am);
   const sel = b.runners.find((r) => r.id === draft.sel);
   const aimedAt = (id) => (b.intents ?? []).filter((i) => i.target === id);
   const intents = (b.intents ?? []).filter((i) => standing(b).some((r) => r.id === i.target));
-  const chip = (r) => {
+  const short = (s) => s.replace(/\bguard (\d)/g, 'G$1').replace(/^The guard\b|\bthe guard\b/, 'guard');
+  // One row each: face, name, health, cover, who's aiming, and their order (yours, or the crew's call).
+  const row = (r) => {
     const o = draft.orders[r.id];
     const auto = !o && !r.down ? ordersFor(b, r.id).find((x) => x.auto) : null;
-    return `<button class="ffo-who ${r.id === draft.sel ? 'is-on' : ''} ${r.down ? 'is-down' : ''}" data-action="fight-sel" data-id="${esc(r.id)}" ${r.down ? 'disabled' : ''} aria-pressed="${r.id === draft.sel}">
-      <strong>${esc(r.handle)}</strong>
-      <span class="ffo-hp ${r.hp < r.max * 0.25 ? 'is-crit' : r.hp < r.max * 0.5 ? 'is-low' : ''}">${r.down ? 'down' : `${r.hp}/${r.max}`} · ${esc(COVER_WORD[coverNow(r)])}${aimedAt(r.id).length ? ` · <b>${aimedAt(r.id).length} aiming</b>` : ''}</span>
-      ${r.down ? '' : `<span class="ffo-kit">${esc(kitWord(r))}</span>`}
-      <span class="ffo-order ${o ? 'is-set' : ''}">${r.down ? '' : o ? esc(orderWord(b, o)) : `Crew's call: ${esc(orderWord(b, auto))}`}</span>
-    </button>`;
+    const aim = aimedAt(r.id);
+    const hp = Math.max(0, r.hp) / r.max;
+    const tag = r.down ? `<span class="ffo-tag is-down">${r.stable ? 'Stable' : 'Down'}</span>`
+      : o ? `<button class="ffo-tag is-set" data-action="fight-clear" data-id="${esc(r.id)}" aria-label="${esc(`${r.handle}: ${orderWord(b, o)}. Tap to leave it to the crew`)}"><small>You</small> ${esc(short(orderWord(b, o)))} <span aria-hidden="true">✕</span></button>`
+      : `<span class="ffo-tag"><small>Crew</small> ${esc(short(orderWord(b, auto)))}</span>`;
+    return `<div class="ffo-row ${r.id === draft.sel ? 'is-on' : ''} ${r.down ? 'is-down' : ''}">
+      <button class="ffo-who" data-action="fight-sel" data-id="${esc(r.id)}" ${r.down ? 'disabled' : ''} aria-pressed="${r.id === draft.sel}">
+        ${face(r.id)}
+        <span class="ffo-who__main">
+          <span class="ffo-who__top"><strong>${esc(r.handle)}</strong>${r.down ? '' : `<span class="ffo-cover ffo-cover--${coverNow(r)}">${coverNow(r)}</span>`}</span>
+          <span class="ffo-hp ${hp < 0.25 ? 'is-crit' : hp < 0.5 ? 'is-low' : ''}"><span class="ffo-hpbar" aria-hidden="true"><i style="width:${Math.round(hp * 100)}%"></i></span>${r.down ? 'down' : `${r.hp}/${r.max}`}${aim.length ? ` · <b>${aim.length} aiming</b>` : ''}</span>
+        </span>
+      </button>
+      ${tag}
+    </div>`;
   };
-  let acts = '';
+  let tray = '';
   if (sel) {
     const opts = ordersFor(b, sel.id);
     const n = targetFor(b, sel);
     const mine = draft.orders[sel.id];
-    const pick = (o) => mine && mine.kind === o.kind && String(mine.target ?? '') === String(o.target ?? '');
+    const auto = opts.find((o) => o.auto);
+    const same = (x, o) => x && x.kind === o.kind && String(x.target ?? '') === String(o.target ?? '');
+    const pick = (o) => (mine ? same(mine, o) : false);
     const g = b.guards.find((x) => x.n === n);
-    const btn = (o, label, note) => `<button class="ffo-act ${pick(o) ? 'is-on' : ''}" data-action="fight-order" data-kind="${o.kind}" data-target="${esc(o.target ?? '')}" aria-pressed="${pick(o)}"><b>${esc(label)}${o.auto ? ' <i>crew\'s pick</i>' : ''}</b><span>${esc(note)}</span></button>`;
+    // name, the big number (blank when nothing rolls), what it does in a line, the crew's pick badge.
+    const btn = (o, label, note, odds = pct(o.chance)) => `<button class="ffo-act ${pick(o) ? 'is-on' : ''} ${!mine && same(auto, o) ? 'is-call' : ''}" data-action="fight-order" data-kind="${o.kind}" data-target="${esc(o.target ?? '')}" aria-pressed="${pick(o)}">
+        <b>${esc(label)}${o.auto ? ' <i>crew\'s pick</i>' : ''}</b><em>${odds}</em><span>${esc(note)}</span></button>`;
     const of = (kind, t = undefined) => opts.find((o) => o.kind === kind && (t === undefined || o.target === t));
     const list = [];
     const shoot = of('shoot', n); const flank = of('flank', n); const talk = of('talk', n);
-    if (shoot) list.push(btn(shoot, `Shoot ${guardName(b, n).toLowerCase()}`, `${pct(shoot.chance)} · ${shotWord(sel, g)} · they're ${COVER_WORD[shoot.cover]}`));
-    if (flank && shoot?.cover !== 'open') list.push(btn(flank, `Flank ${guardName(b, n).toLowerCase()}`, `${pct(flank.chance)} · ${shotWord(sel, g)} · everyone's shots at them easier · you're in the open`));
+    if (shoot) list.push(btn(shoot, `Shoot ${guardName(b, n).toLowerCase()}`, `${shotWord(sel, g)} · they're ${COVER_WORD[shoot.cover]}`));
+    if (flank && shoot?.cover !== 'open') list.push(btn(flank, `Flank ${guardName(b, n).toLowerCase()}`, `${shotWord(sel, g)} · everyone's shots at them easier · you're in the open`));
     const hk = of('hunker');
     const incoming = aimedAt(sel.id).reduce((t, i) => t + hitFor(b.guards.find((x) => x.n === i.guard).damage, sel.armour), 0);
     const now = aimedAt(sel.id).length ? `${pct(guardHitChance(b, sel))} → ${pct(guardHitChance(b, sel, better(coverNow(sel)), true))} to be hit · up to ${incoming} damage coming` : 'nobody is aiming at you';
-    list.push(btn(hk, 'Hunker down', `no shot · ${now}`));
+    list.push(btn(hk, 'Hunker down', `no shot · ${now}`, ''));
     // Moves worth making: to better cover than they have (the map shows every free spot to tap).
     const rank = { full: 0, half: 1, open: 2 };
-    for (const o of opts.filter((x) => x.kind === 'move' && rank[x.cover] < rank[sel.cover]).sort((x, y) => rank[x.cover] - rank[y.cover]).slice(0, 2)) list.push(btn(o, MOVE_WORD[o.cover], `no shot · ${COVER_WORD[o.cover]} from now on`));
+    for (const o of opts.filter((x) => x.kind === 'move' && rank[x.cover] < rank[sel.cover]).sort((x, y) => rank[x.cover] - rank[y.cover]).slice(0, 2)) list.push(btn(o, MOVE_WORD[o.cover], `no shot · ${COVER_WORD[o.cover]} from now on`, ''));
     const picked = mine?.kind === 'move' && !list.some((h) => h.includes('is-on')) ? opts.find((o) => pick(o)) : null;
-    if (picked) list.push(btn(picked, MOVE_WORD[picked.cover], `no shot · ${COVER_WORD[picked.cover]} from now on`));
+    if (picked) list.push(btn(picked, MOVE_WORD[picked.cover], `no shot · ${COVER_WORD[picked.cover]} from now on`, ''));
     for (const o of opts.filter((x) => x.kind === 'patch' || x.kind === 'stabilise')) {
       const who = b.runners.find((r) => r.id === o.target);
-      list.push(btn(o, `${o.kind === 'patch' ? 'Patch' : 'Stabilise'} ${who.id === sel.id ? 'yourself' : who.handle}`, `${pct(o.chance)}${o.heal ? ` · +${o.heal} health` : ''}`));
+      list.push(btn(o, `${o.kind === 'patch' ? 'Patch' : 'Stabilise'} ${who.id === sel.id ? 'yourself' : who.handle}`, o.heal ? `+${o.heal} health` : 'keeps them from bleeding out'));
     }
-    if (talk) list.push(btn(talk, `Talk ${guardName(b, n).toLowerCase()} down`, `${pct(talk.chance)} · they back off`));
+    if (talk) list.push(btn(talk, `Talk ${guardName(b, n).toLowerCase()} down`, 'they back off'));
     const lights = of('lights');
-    if (lights) list.push(btn(lights, 'Kill the lights', `${pct(lights.chance)} · the guards hit less for the rest of the fight`));
-    acts = `
-      ${up(b).length > 1 ? `<div class="ffo-targets" role="group" aria-label="Which guard">${up(b).map((x) => `<button class="ffo-target ${x.n === n ? 'is-on' : ''}" data-action="fight-target" data-id="${x.n}" aria-pressed="${x.n === n}">Guard ${x.n} <span>${x.hp}/${x.max} · ${esc(COVER_WORD[coverNow(x)])}${x.armour ? ` · armour ${x.armour}` : ''}</span></button>`).join('')}</div>` : g ? `<p class="ffo-note">${esc(guardName(b, n))}: ${g.hp}/${g.max}, ${esc(COVER_WORD[coverNow(g)])}${g.armour ? `, armour ${g.armour}` : ''}.</p>` : ''}
-      <div class="ffo-acts">${list.join('')}</div>
-      ${mine ? '<button class="btn btn--ghost ffo-clear" data-action="fight-clear">Leave it to them</button>' : ''}`;
+    if (lights) list.push(btn(lights, 'Kill the lights', 'the guards hit less for the rest of the fight'));
+    // The guards, numbered as on the map, with this runner's shot at each; anyone down greyed, in place.
+    const guards = b.guards.map((x) => {
+      const s = of('shoot', x.n);
+      return x.out ? `<span class="ffo-target is-out">Guard ${x.n} <span>down</span></span>`
+        : `<button class="ffo-target ${x.n === n ? 'is-on' : ''}" data-action="fight-target" data-id="${x.n}" aria-pressed="${x.n === n}">Guard ${x.n}${s ? ` <em>${pct(s.chance)}</em>` : ''} <span>${x.hp}/${x.max} · ${esc(COVER_WORD[coverNow(x)])}${x.armour ? ` · armour ${x.armour}` : ''}</span></button>`;
+    }).join('');
+    const threats = aimedAt(sel.id).map((i) => `${guardName(b, i.guard)} aims at them: ${pct(guardHitChance(b, sel))} · ${hitFor(b.guards.find((x) => x.n === i.guard).damage, sel.armour)} damage`);
+    tray = `
+      <div class="ffo-tray">
+        <p class="ffo-tray__who"><strong>${esc(sel.handle)}</strong> <span>${esc(kitWord(sel))}</span></p>
+        ${threats.length ? `<p class="ffo-threat">${threats.map(esc).join('<br>')}</p>` : ''}
+        <div class="ffo-targets" role="group" aria-label="Which guard">${guards}</div>
+        <div class="ffo-acts">${list.join('')}</div>
+      </div>`;
   }
   // What the last round did, here as well as in the feed above, so you don't lose your place.
   const last = b.round ? (am.events ?? []).findLast((e) => e.kind === 'battle' && e.phase === 'round' && e.round === b.round) : null;
-  return `
-    <div class="ffo" data-callin="fight:${esc(draft.key)}">
-      <p class="ffo-title">Fight · round ${b.round + 1} <span>${up(b).length} ${up(b).length === 1 ? 'guard' : 'guards'} up</span></p>
-      ${last ? `<details class="ffo-last"><summary>Round ${last.round}: ${last.lines.filter((l) => l.damage || l.dropped).length ? esc(last.lines.filter((l) => l.damage || l.dropped).map((l) => l.text).slice(0, 2).join(' ')) : 'nobody hit'}</summary>${last.lines.map((l) => `<p class="${l.kind === 'guard' ? (l.damage ? 'tone--bad' : 'tone--good') : l.success === false ? 'tone--bad' : 'tone--good'}">${esc(l.text)}</p>`).join('')}</details>` : ''}
-      ${intents.length ? `<p class="ffo-intents">${intents.map((i) => { const t = b.runners.find((r) => r.id === i.target); const dmg = hitFor(b.guards.find((x) => x.n === i.guard).damage, t.armour); return `<span>${esc(guardName(b, i.guard))} → ${esc(t.handle)} · ${pct(guardHitChance(b, t))} · ${dmg} dmg${t.armour ? ' after armour' : ''}</span>`; }).join('')}</p>` : '<p class="ffo-intents ffo-intents--none">The guards are caught off balance: no shots from them this round.</p>'}
-      <div class="ffo-crew">${b.runners.map(chip).join('')}</div>
-      ${acts}
-      <div class="ffo-bar">
-        <button class="btn btn--ghost" data-action="fight-pull">Pull back</button>
+  const yours = standing(b).filter((r) => draft.orders[r.id]).length;
+  const theirs = standing(b).length - yours;
+  const go = !yours ? "all the crew's call" : !theirs ? 'all yours' : `${yours} yours, ${theirs} crew's call`;
+  const cost = `no pay, heat +${BATTLE.retreat.heat}, reputation −${BATTLE.retreat.rep}${b.van ? '' : ', and the guards get a parting shot (nobody goes down from it)'}`;
+  const bar = draft.pullAsk
+    ? `<div class="ffo-confirm" role="alertdialog" aria-label="Pull back?">
+        <p><strong>Pull back?</strong> The job ends and everyone comes home: ${esc(cost)}.</p>
+        <div class="ffo-bar ffo-bar--confirm">
+          <button class="btn btn--ghost" data-action="fight-pull-no">Stay in the fight</button>
+          <button class="btn btn--primary" data-action="fight-pull">Pull back</button>
+        </div>
+      </div>`
+    : `<div class="ffo-bar">
+        <button class="btn btn--ghost" data-action="fight-pull-ask">Pull back</button>
         <button class="btn btn--ghost" data-action="fight-auto">Auto round</button>
         <button class="btn btn--ghost" data-action="fight-hand-off">Auto fight</button>
-        <button class="btn btn--primary ffo-go" data-action="fight-go">Go</button>
-      </div>
-      <p class="ffo-note">Anyone without an order does what the crew would. Auto fight leaves the rest of this fight to them. Pull back ends the job and everyone comes home: no pay, heat +${BATTLE.retreat.heat}, reputation −${BATTLE.retreat.rep}${b.van ? '' : ', and the guards get a parting shot (nobody goes down from it)'}.</p>
+        <button class="btn btn--primary ffo-go" data-action="fight-go">Go <small>· ${esc(go)}</small></button>
+      </div>`;
+  return `
+    <div class="ffo" data-callin="fight:${esc(draft.key)}">
+      <p class="ffo-title">Fight · round ${b.round + 1} <span>${up(b).length} ${up(b).length === 1 ? 'guard' : 'guards'} up</span>
+        <button class="ffo-help ${rulesOpen ? 'is-on' : ''}" data-action="fight-rules" aria-expanded="${rulesOpen}" aria-label="How fights work">?</button></p>
+      ${rulesOpen ? `<div class="ffo-rules" role="note">
+        <p>Tap someone (here or on the map), then what they do; if it needs a guard, tap the guard. Tap an order you gave to hand it back to the crew.</p>
+        <p>Anyone without an order does what the crew would: their call shows faded on their row and on the map. Go plays the round. Auto round plays one on the crew's calls; Auto fight leaves the rest of this fight to them.</p>
+        <p>Pull back ends the job and everyone comes home: ${esc(cost)}.</p>
+      </div>` : ''}
+      ${last ? `<details class="ffo-last"><summary>Round ${last.round}: ${last.lines.filter((l) => l.damage || l.dropped).length ? esc(last.lines.filter((l) => l.damage || l.dropped).map((l) => l.text).slice(0, 2).join(' ')) : 'nobody hit'}</summary>${last.lines.map((l) => `<p class="${l.kind === 'guard' ? (l.damage ? 'tone--bad' : 'tone--good') : l.success === false ? 'tone--bad' : 'tone--good'}">${esc(l.text)}</p>`).join('')}</details>` : ''}
+      ${intents.length ? '' : '<p class="ffo-intents--none">The guards are caught off balance: no shots from them this round.</p>'}
+      <div class="ffo-crew">${b.runners.map(row).join('')}</div>
+      ${tray}
+      ${bar}
     </div>`;
 }

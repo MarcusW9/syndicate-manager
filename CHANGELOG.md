@@ -5,6 +5,18 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-03 · A tidier fight panel
+- The fight's orders are now one short row per crew member: face, name, health bar, cover, who's aiming at them, and their order. Orders you give show solid ("You: Flank G2"); anyone you leave alone shows the crew's call, faded. Tap your order (or the crew's pick) to hand it back to them.
+- Pick someone and their tray opens below: their kit, who's aiming at them, the guards with your chance to hit each, and what they can do, each with its odds in big numbers.
+- Go says what it'll play ("Go · 1 yours, 3 crew's call"). The rules are behind "?", and Pull back asks before it ends the job, showing what it costs.
+- On the map, the picked crew member's call is drawn as a faded line, and tokens are easier to tap.
+
+## 2026-11-03 · Everyone in a fight stays in view
+- In a fight, the map's camera now keeps every crew member and guard fully in view, health bars included, even when someone stands by the edge of the map or has no cover spot. It looks a little past the edge of the drawn site when it needs to.
+
+## 2026-11-03 · Fight orders fit the screen
+- On a computer or an iPad in landscape, the play-by-play beside the map (with a fight's orders in it) now ends level with the map, leaving space above the bottom of the screen, instead of running to the edge. When the page scrolls, the map keeps a small gap under the top bar.
+
 ## 2026-11-03 · The play-by-play keeps up, and a finished job stays put
 - The play-by-play now always scrolls to the newest moment unless you scroll up yourself to reread something; scroll back to the bottom, or tap "↓ new", and it follows again. Before, it sometimes stopped following on its own.
 - When a job ends (done, aborted or someone lost), the screen keeps the map and the play-by-play side by side, and the summary with "Back to the safehouse" appears at the end of the play-by-play, instead of switching to a different view.
