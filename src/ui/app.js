@@ -431,13 +431,16 @@ function render() {
   const cue = dayCue;
   dayCue = null;
   // Desktop pages use the full width; a running job stays a narrow reading column.
-  const wide = !state.activeMission || !state.activeMission.done; // a running job gets the width for map and feed side by side
+  const wide = !state.activeMission || !state.activeMission.done; // a running job gets the width for map and feed side by side (no tabs: see is-onjob)
   // While a job is being planned its own Start button is the way on, so Continue steps aside
   // everywhere (owner, 2026-10-28: on desktop the top-bar Continue was easy to hit by mistake).
   const planning = !state.activeMission && screen === 'jobs' && !!(plan || sidePlan);
   // Phones: Continue sits above the tab bar, except while planning and during a job (nothing to continue).
   const dock = !state.activeMission && !planning && !state.founding; // the founder pick has its own bar
 
+  // During a job the tabs can't take you anywhere, so they step aside and the job gets the room
+  // (owner, 2026-11-03). They come back with "Back to the safehouse".
+  root.classList.toggle('is-onjob', !!state.activeMission);
   root.innerHTML = `
     <header class="topbar ${cue ? 'is-new-day' : ''}">
       ${renderWhen()}

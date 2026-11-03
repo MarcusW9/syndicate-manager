@@ -1193,3 +1193,21 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .pathcard .infoline { margin-bottom: 6px; }
 .pathcard__name { font-family: var(--display); text-transform: uppercase; letter-spacing: 0.1em; color: var(--warn); }
 .pathcard__ready { margin: 6px 0 0; font-family: var(--display); text-transform: uppercase; letter-spacing: 0.1em; color: var(--warn); }
+
+/* On a job (2026-11-03): no tabs (they can't go anywhere mid-job), so the job takes the whole width,
+   and on tablets and desktops the site map is drawn larger. */
+#app.is-onjob .nav { display: none; }
+#app.is-onjob .watch__bar { bottom: 0; }
+#app.is-onjob .watch__new { bottom: 64px; }
+@media (min-width: 700px) {
+  #app.is-onjob .siteplan { height: min(40svh, 360px); }
+  #app.is-onjob .watch.is-fighting .siteplan { height: min(48svh, 440px); }
+}
+@media (min-width: 900px) {
+  #app.is-onjob { grid-template-columns: 1fr; }
+  #app.is-onjob .main { grid-column: 1; }
+  #app.is-onjob .main--wide { max-width: 1440px; }
+  #app.is-onjob .siteplan { height: min(52svh, 480px); }
+  #app.is-onjob .watch.is-fighting .siteplan { height: min(58svh, 560px); }
+}
+@media (min-width: 1100px) { #app.is-onjob .watch__new { bottom: 8px; } }
