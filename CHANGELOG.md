@@ -5,6 +5,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-03 · Getting out now pays nothing
+- **Walking away from a job now pays nothing, as the button says.** Taking "Everyone comes home. No pay." when the alarm goes up, when someone is badly hurt, or when nobody is left to carry on used to pay the full fee. It now pays ¥0. Everyone still comes home.
+- **Money is a little tighter early on.** On a careful run, cash at week 26 is about ¥2,500 lower with three founders and no hiring (¥34,250 to ¥31,700). Players who hire up to five feel it more: median ¥15,150 to ¥9,800, and 22% broke instead of 15%.
+
 ## 2026-10-30 · Faces on the fight map
 - **Fights now stand on the map as they were meant to:** your crew's faces on their tokens, everyone on their spot behind cover, and the map zoomed to the fight. A bug kept everyone's place off the map, so fights showed initials crowded together.
 

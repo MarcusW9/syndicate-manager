@@ -85,7 +85,7 @@ test('an incident never kills and never makes anyone critical (3,000 runs, every
   }
 });
 
-test('every decision a run stops for has an exit, and taking it brings everyone home', () => {
+test('every decision a run stops for has an exit, and taking it brings everyone home and pays nothing', () => {
   // Slice 6: an unsaved danger incident is a fight now, so the hurt call-ins are mostly a fight's
   // (death's door, guards still standing) and a serious wound after one.
   let seen = { alert: 0, injury: 0, door: 0, standoff: 0 };
@@ -109,6 +109,7 @@ test('every decision a run stops for has an exit, and taking it brings everyone 
     assert.equal(out.activeMission.done, true);
     assert.equal(out.activeMission.aborted, true);
     assert.deepEqual(out.activeMission.result.deaths, []);
+    assert.equal(out.activeMission.result.pay, 0, `${am.pending.kind} seed ${seed}: "Everyone comes home. No pay."`);
   }
   assert.ok(seen.alert >= 5 && hurt() >= 5, `saw ${JSON.stringify(seen)}`);
 });
