@@ -1,6 +1,6 @@
 # Code map
 
-Where things live and how a run flows, so you can read a few functions instead of whole files. Rules (architecture, tests, docs, commits) are in `CLAUDE.md`; status and what's next in `HANDOFF.md`; why each choice was made in `DESIGN.md`. Keep this file short and current: when you move something, fix its line here.
+Where things live and how a run flows, so you can read a few functions instead of whole files. Rules (architecture, tests, docs, commits) are in `CLAUDE.md`; status and what's next in `HANDOFF.md`; why each choice was made in `DESIGN.md` (decision log rows in `docs/design/`). Keep this file short and current: when you move something, fix its line here.
 
 See also `docs/ARCHITECTURE.md` (state shapes, economy loop, `finish()`, saves, tests).
 
