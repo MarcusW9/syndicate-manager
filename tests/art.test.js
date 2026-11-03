@@ -76,12 +76,13 @@ test('every new look turns up, and the rules between them hold', () => {
       assert.equal(f.hair, 'bald', 'monks shave their heads');
       assert.ok(!f.earring && !f.facialHair && !f.splitDye);
       assert.ok(f.headwear === null || f.headwear === 'douli', 'a monk only wears the woven hat');
+      if (f.monk === 'shaolin') assert.ok(!f.headwear && !f.mask && !f.glasses && !f.visor && !f.halfFace, 'a Shaolin monk shows the whole face');
     }
     if (f.halfFace) assert.ok(f.chrome === 'half' && !f.visor && !f.glasses, 'the half-chrome face is the chrome');
     if (['goggles', 'faceplate'].includes(f.mask)) assert.ok(!f.visor && !f.glasses, 'a full mask replaces glasses and visors');
   }
   for (const k of ['headwear:jingasa', 'headwear:neonhat', 'headwear:douli', 'mask:respirator', 'mask:jawplate', 'mask:grille', 'mask:goggles', 'mask:faceplate', 'halfFace',
-    'monk:grey', 'monk:ochre', 'monk:cyber', 'facialHair:pencil', 'facialHair:goatee', 'facialHair:droop', 'facialHair:soul', 'facialHair:beard']) {
+    'monk:grey', 'monk:ochre', 'monk:cyber', 'monk:shaolin', 'facialHair:pencil', 'facialHair:goatee', 'facialHair:droop', 'facialHair:soul', 'facialHair:beard']) {
     assert.ok(seen.has(k), `${k} never appears`);
   }
 });
@@ -134,4 +135,70 @@ test('item drawings: the rifle has one, lit by whoever carries it; others fall b
   const carried = gearArt({ type: 'rifle', tier: 'street' }, { carrier: op });
   assert.ok(stash.startsWith('<svg') && stash.includes('aria-hidden="true"'));
   assert.ok(carried.includes(lightOf(op)), 'their own city light');
+});
+
+test('anatomy: a face is fixed per person, varies between people, and is on in the game', async () => {
+  const { anatomyOf } = await import('../src/ui/art.js');
+  const op = { id: 'op_anat', name: 'Kelvin Chan', age: 30 };
+  assert.deepEqual(anatomyOf(op), anatomyOf({ ...op }), 'same person, same face');
+  const shapes = new Set(Array.from({ length: 40 }, (_, i) => anatomyOf({ id: `p${i}`, name: 'Kelvin Chan' }).eyeW.toFixed(2)));
+  assert.ok(shapes.size > 20, 'eyes differ between people');
+  assert.equal(withoutIds(portrait(op)), withoutIds(portrait(op, { anatomy: true })), 'the game draws the anatomy face');
+  assert.notEqual(withoutIds(portrait(op)), withoutIds(portrait(op, { anatomy: false })), 'which differs from the earlier shared face');
+  assert.equal(withoutIds(portrait(op)), withoutIds(portrait({ ...op })), 'and is drawn the same every time');
+});
+
+test('Shaolin monks lean East and Southeast Asian, anyone can be one, and the earlier looks never moved', () => {
+  const s = sample(24000);
+  const rate = (pick) => { const xs = s.filter(pick); return xs.filter(({ f }) => f.monk === 'shaolin').length / xs.length; };
+  const asian = rate(({ op }) => ['hk', 'southeast_asian'].includes(cultureOf(op.name)));
+  const other = rate(({ op }) => !['hk', 'southeast_asian'].includes(cultureOf(op.name)));
+  assert.ok(asian > other * 4, `asian ${asian} vs others ${other}`);
+  assert.ok(other > 0, 'other cultures can be Shaolin monks too');
+  // The pick comes last on the gear seed: anyone who was already a monk keeps their robe.
+  for (const { f } of s) if (f.monk && f.monk !== 'shaolin') assert.ok(['grey', 'ochre', 'cyber'].includes(f.monk));
+});
+
+test('rifle looks: a look draws from the kit, the same every time; items without one are unchanged', async () => {
+  const { gearArt, RIFLE_FRAMES, RIFLE_FINISHES } = await import('../src/ui/art.js');
+  const { RIFLE_LOOKS } = await import('../src/data/gearLooks.js');
+  const { engravings: RIFLE_ENGRAVINGS, charms: RIFLE_CHARMS } = RIFLE_LOOKS;
+  // The data names every part the art can draw, and the art draws every part the data names.
+  for (const k of ['frames', 'finishes']) assert.deepEqual(Object.keys(RIFLE_LOOKS[k]).sort(), Object.keys({ frames: RIFLE_FRAMES, finishes: RIFLE_FINISHES }[k]).sort(), k);
+  const clean = (svg) => svg.replace(/(ga|rb)\d+/g, 'x');
+  const plain = { uid: 'r1', type: 'rifle', tier: 'street' };
+  assert.equal(clean(gearArt(plain)), clean(gearArt({ ...plain, look: undefined })), 'no look, the original drawing');
+  for (const frame of Object.keys(RIFLE_FRAMES)) for (const finish of Object.keys(RIFLE_FINISHES)) {
+    for (const [engraving, charm] of [[null, null], ...Object.keys(RIFLE_ENGRAVINGS).map((e, i) => [e, Object.keys(RIFLE_CHARMS)[i]]), [null, 'hazard'], [null, 'sticker'], [null, 'mahjong'], [null, 'mala']]) {
+      const item = { ...plain, look: { frame, finish, engraving, charm } };
+      const svg = gearArt(item);
+      assert.ok(svg.startsWith('<svg') && !svg.includes('undefined') && !svg.includes('NaN'), `${frame}/${finish}/${engraving}/${charm} draws`);
+      assert.equal(clean(svg), clean(gearArt(item)), 'and draws the same every time');
+    }
+  }
+});
+
+test('sidearm looks: every frame, finish, mod and charm draws, the same every time; plain sidearms are unchanged', async () => {
+  const { gearArt, portrait, SIDEARM_FRAMES, SIDEARM_FINISHES } = await import('../src/ui/art.js');
+  const { SIDEARM_LOOKS } = await import('../src/data/gearLooks.js');
+  const clean = (svg) => svg.replace(/(ga|sb|pf)\d+/g, 'x');
+  for (const k of ['frames', 'finishes']) assert.deepEqual(Object.keys(SIDEARM_LOOKS[k]).sort(), Object.keys({ frames: SIDEARM_FRAMES, finishes: SIDEARM_FINISHES }[k]).sort(), k);
+  const mods = [null, ...Object.keys(SIDEARM_LOOKS.mods)], charms = [null, ...Object.keys(SIDEARM_LOOKS.charms)];
+  for (const frame of Object.keys(SIDEARM_FRAMES)) for (const finish of Object.keys(SIDEARM_FINISHES)) {
+    for (let i = 0; i < charms.length; i++) {
+      const item = { uid: 'p', type: 'pistol', tier: 'street', look: { frame, finish, mod: mods[i % mods.length], charm: charms[i] } };
+      const svg = gearArt(item);
+      assert.ok(svg.startsWith('<svg') && !svg.includes('undefined') && !svg.includes('NaN'), `${JSON.stringify(item.look)} draws`);
+      assert.equal(clean(svg), clean(gearArt(item)));
+    }
+  }
+  const { GLOW_COLOURS } = await import('../src/ui/art.js');
+  const { GLOWS } = await import('../src/data/gearLooks.js');
+  assert.deepEqual(Object.keys(GLOWS).sort(), Object.keys(GLOW_COLOURS).sort(), 'the data names every glow the art draws');
+  const lit = (glow) => gearArt({ uid: 'p', type: 'pistol', tier: 'street', look: { frame: 'smart', finish: 'synth', glow } });
+  for (const [g, hex] of Object.entries(GLOW_COLOURS)) assert.ok(lit(g).includes(hex), `${g} glows ${hex}`);
+  assert.equal(clean(lit(undefined)), clean(gearArt({ uid: 'p', type: 'pistol', tier: 'street', look: { frame: 'smart', finish: 'synth' } })), 'no glow: the carrier decides');
+  // Sidearms stay off faces (owner's call): only a rifle shows on a portrait.
+  const op = { ...createNewGame({ seed: 3 }).crew[0], gear: {} };
+  assert.equal(clean(portrait({ ...op, gear: { weapon: { uid: 'p', type: 'pistol', tier: 'street', look: { frame: 'compact', finish: 'neon', glow: 'violet' } } } })), clean(portrait(op)));
 });

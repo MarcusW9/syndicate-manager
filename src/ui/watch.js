@@ -17,6 +17,11 @@ import { ALERT_MAX, OVERWATCH_KIT, ZONES } from '../core/incidents.js';
 import { sitePlanSvg, bindSitePlan, siteFor } from './siteplan.js';
 import { templateById } from '../core/jobs.js';
 import { guardPosts } from '../core/battle.js';
+import { currentStep } from '../core/mission.js';
+import { commandView } from './fightorders.js';
+
+/** Is a fight waiting for the player's orders (command fights: the panel and the map's overlay)? */
+const fightWaiting = (state) => { const am = state.activeMission; return !!am?.battle && !am.done && !am.pending && !am.critical && currentStep(am)?.type === 'battle' && needsPlayer(state); };
 
 const FAST = 0.35;
 // How long each kind of moment stays before the next step (ms at normal speed): routine moments
@@ -181,6 +186,11 @@ function sync(state, { animate }) {
   }
   tally(state);
   callIn(state);
+  // A fight on: a bigger map; waiting for orders: the overlay, once the round's moments have played.
+  el.classList.toggle('is-fighting', !!am.battle);
+  el.style.setProperty('--live-h', `${el.querySelector('.watch__live')?.offsetHeight ?? 0}px`);
+  const view = fightWaiting(state) ? commandView(am) : null;
+  live.chain = live.chain.then(() => live?.plan.command(view)).catch(() => {});
   schedule(state, wait || PACE.result);
 }
 
@@ -224,10 +234,21 @@ function callIn(state) {
   const slot = el.querySelector('.watch__callin');
   const html = state.activeMission.done ? '' : ui.callIn(state);
   if (html === live.callKey) return;
+  // The same question redrawn (a fight's orders as you give them): keep the place and the focus.
+  const kind = (h) => /data-callin="([^"]*)"/.exec(h)?.[1] ?? h;
+  const same = !!live.callKey && !!html && kind(html) === kind(live.callKey);
+  const f = document.activeElement;
+  const was = same && slot.contains(f) ? ['action', 'id', 'kind', 'target'].map((k) => f.dataset[k] ?? '') : null;
   live.callKey = html;
   slot.innerHTML = html;
   // While you're called in, the decision gets the screen: the plan scrolls with the page and the clock controls go.
   el.classList.toggle('is-calling', !!html);
+  if (was) {
+    const back = [...slot.querySelectorAll('[data-action]')].find((b) => ['action', 'id', 'kind', 'target'].every((k, i) => (b.dataset[k] ?? '') === was[i]));
+    (back ?? slot.querySelector('button:not([disabled])'))?.focus({ preventScroll: true });
+    return;
+  }
+  if (same) return;
   const first = slot.querySelector('button:not([disabled])');
   if (first) {
     first.focus({ preventScroll: true });

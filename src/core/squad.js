@@ -12,6 +12,7 @@ import { jobView } from './jobs.js';
 import { intelFor } from './sidetasks.js';
 import { WATCHED_PENALTY } from './heat.js';
 import { battleOdds } from './battle.js';
+import { spotsForJob } from './fightspots.js';
 
 const ZONE_NOTE = { in: 'The way in', inside: 'Inside', target: 'The target' };
 const RISK_ORDER = ['low', 'moderate', 'high', 'extreme'];
@@ -32,9 +33,11 @@ export function likelyIncidents(approach) {
  * the odds once the best save is counted and, if that fails too, how the fight goes (slice 6:
  * core/battle.js battleOdds, the run's own round function). crew: the inside team (operatives).
  * overwatch: { op, kit } (only counts if they carry that kit). wheels: the driver in the van.
+ * jobId: the job's id, so each fight is read on the spots the run will use (its site comes from
+ * the id; core/fightspots.js spotsForJob). Without it, everyone stands in half cover.
  * Returns { rows, spotted, toughest }.
  */
-export function coverage(template, crew, approach, { threat = template.threat, overwatch = null, intel = null, wheels = null } = {}) {
+export function coverage(template, crew, approach, { threat = template.threat, overwatch = null, intel = null, wheels = null, jobId = null } = {}) {
   const am = { threat, alert: 0 };
   const kit = overwatch?.op ? overwatchKit(overwatch.op, overwatch.kit) : null;
   const ow = kit ? { kit: overwatch.kit, left: kit.uses } : null;
@@ -48,7 +51,8 @@ export function coverage(template, crew, approach, { threat = template.threat, o
     // Unsaved danger becomes a fight: a fight won with nobody at death's door counts as getting
     // through. On a loud run it is a fight whatever the roll (core/battle.js loudFightDue), and
     // winning the roll means the crew gets the jump on the guards (the ambush odds).
-    const fargs = { incident: id, zone, diff, threat, guards: inc.guards, crew, approach, overwatchOp: ow ? overwatch.op : null, ow, wheels };
+    const spots = jobId && inc.danger && inc.guards ? spotsForJob(template.district, jobId, template.id, zone, crew.length) : null;
+    const fargs = { incident: id, zone, diff, threat, guards: inc.guards, crew, approach, overwatchOp: ow ? overwatch.op : null, ow, wheels, spots };
     const forced = approach === 'loud' && Boolean(inc.danger && inc.guards);
     let fight = inc.danger && inc.guards ? battleOdds(fargs) : null;
     if (forced) {
@@ -143,7 +147,7 @@ export function planRead(state, job, { crew, approach, overwatch = null, kit = n
   const intel = intelFor(state, v.tpl.district);
   const read = assessJob(tpl, crew, approach, { watched: state.heatWatched ? WATCHED_PENALTY : 0, intel, wheels });
   const owKit = overwatch && (kitsFor(overwatch).includes(kit) ? kit : kitsFor(overwatch)[0]);
-  const cov = coverage(tpl, crew, approach, { threat: v.threat, overwatch: owKit ? { op: overwatch, kit: owKit } : null, intel, wheels });
+  const cov = coverage(tpl, crew, approach, { threat: v.threat, overwatch: owKit ? { op: overwatch, kit: owKit } : null, intel, wheels, jobId: job.id });
   const level = crew.length && RISK_ORDER.indexOf(cov.toughest) > RISK_ORDER.indexOf(read.level) ? cov.toughest : read.level;
   return { level, read, cov };
 }

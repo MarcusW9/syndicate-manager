@@ -10,6 +10,22 @@ Text-first crew management game (Football Manager style, endless). Plain JavaScr
 - `src/data/` = content as data (operatives, traits, missions). No game logic here.
 - `src/config/names.js` = all placeholder names (title, city, districts). Rename there only.
 
+## Where to read for a task
+| Working on | Read first |
+| --- | --- |
+| Anything in `src/core/` | `CODEMAP.md` |
+| State shape, saves, economy loop, tests, how things connect | `docs/ARCHITECTURE.md` |
+| A job, crisis or beat (content) | `src/data/missions/<job>.js`, then `core/validate.js` for the rules it must meet |
+| A run's flow, `finish()`, pay/heat/reputation | `CODEMAP.md` "The run, in order", then `core/mission.js` |
+| Planning read, risk numbers | `core/squad.js`, `core/risk.js` |
+| Traits, growth, specialisations | `data/earnedTraits.js`, `core/earned.js`, `core/development.js` |
+| Side tasks, hands-off runs | `core/sidetasks.js`, `core/autorun.js` |
+| Changing the save shape | `src/save/save.js` (`migrate`) and `SAVE_VERSION` in `core/state.js` |
+| Any screen or style | "UI skin" in `ART.md`, newest `docs/screenshots/` set, `ui/app.js`, `ui/board.js` |
+| Writing in-game text, lore, names | `WRITING_GUIDE.md`, `WORLD.md`, `src/config/names.js` |
+| Why something was decided | `DESIGN.md` decision log (grep the topic; rows may be under `docs/design/`) |
+| What shipped / what's next | `CHANGELOG.md` / `HANDOFF.md` (`STATE-OF-PLAY.md` is a 2026-10-26 snapshot) |
+
 ## iOS-ready rules
 - No information that only appears on hover. Tap/click to reveal.
 - Design at phone width first (360-430px), then widen.
@@ -28,7 +44,7 @@ Text-first crew management game (Football Manager style, endless). Plain JavaScr
 - Main jobs are planned on the squad board (`src/ui/board.js`: approach, inside team, outside, Joss's picks, the coverage read). The checkbox picker in `renderSidePlan` is only for side work; don't model new screens on it.
 
 ## Keep the design log current
-`DESIGN.md` holds the narrative, tone, cast and a dated decision log (decision, why, rejected alternatives). The world's lore and the context block for worldbuilding prompts live in `WORLD.md`; the visual style, art rules and art prompts live in `ART.md`; canon changes there still get a DESIGN.md log row. Whenever a design or technical decision is made or changed in a session, add a row to the top of the log in the same change. Never rewrite past entries; supersede them with a new row. New rows go under `## Decision log`, not the first table in the file (that's the cast table).
+`DESIGN.md` holds the narrative, tone, cast and a dated decision log (decision, why, rejected alternatives). The world's lore and the context block for worldbuilding prompts live in `WORLD.md`; the visual style, art rules and art prompts live in `ART.md`; canon changes there still get a DESIGN.md log row. Whenever a design or technical decision is made or changed in a session, add a row to the top of the log in the same change. Never rewrite past entries; supersede them with a new row. The log is split by date into `docs/design/`; new rows go at the top of the newest file there (listed under `## Decision log` in `DESIGN.md`), not in the cast table.
 
 ## Tests
 Run `npm test` before every push. The tests encode the design promises in DESIGN.md (no death without "push on", exits always save everyone, saves upgrade). Never loosen a test to make a change pass; if a rule changes on purpose, update the test and log the change in DESIGN.md.

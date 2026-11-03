@@ -9,7 +9,9 @@ import { createNewGame } from '../src/core/state.js';
 import * as M from '../src/core/mission.js';
 import { addOffer, templateById } from '../src/core/jobs.js';
 import { autoRun } from '../src/core/autorun.js';
-import { arm } from '../tests/play.js';
+import { arm, testFight, commandOrders } from '../tests/play.js';
+import { playRound, planIntents, BATTLE } from '../src/core/battle.js';
+import { makeRng } from '../src/core/rng.js';
 
 const SEEDS = Number(process.argv[2] ?? 400);
 const APPROACHES = ['stealth', 'tech', 'loud', 'con'];
@@ -63,4 +65,24 @@ for (const [job] of JOBS) {
       console.log(`${job} · ${grown ? 'pros' : 'rookies'} · ${name}`, JSON.stringify(run({ job, grown, approach: 'loud', kit })));
     }
   }
+}
+
+// Command fights (2026-10-30): the fixed test fight (tests/play.js testFight), hands-off against a
+// plain player's orders (commandOrders), BATTLE.rounds rounds. Giving orders should be worth it.
+console.log('\nCommand fights: the test fight, hands-off and with orders.');
+for (const [name, policy] of [['hands-off', () => ({})], ['orders', commandOrders]]) {
+  const t = { won: 0, down: 0, lost: 0 };
+  for (let seed = 1; seed <= SEEDS; seed++) {
+    const b = testFight(1 + (seed % 5));
+    const rng = makeRng(seed * 7919);
+    const hp0 = b.runners.reduce((n, r) => n + r.hp, 0);
+    while (b.round < BATTLE.rounds && b.guards.some((g) => !g.out) && b.runners.some((r) => !r.down)) {
+      planIntents(b, rng);
+      const r = playRound(b, rng, policy(b));
+      if (r.down.length) t.down++;
+    }
+    if (!b.guards.some((g) => !g.out)) t.won++;
+    t.lost += hp0 - b.runners.reduce((n, r) => n + r.hp, 0);
+  }
+  console.log(name, JSON.stringify({ won: pct(t.won, SEEDS), someoneDown: pct(t.down, SEEDS), hpLost: (t.lost / SEEDS).toFixed(1) }));
 }

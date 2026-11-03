@@ -88,6 +88,8 @@ export function needsPlayer(state) {
   if (!am || am.done) return false;
   if (am.callIn === 'never') return false;
   if (am.critical || am.pending) return true;
+  // Command fights (2026-10-30): a fight waits for your orders each round, unless you left it to the crew.
+  if (currentStep(am)?.type === 'battle') return !!am.battle && !am.battle.auto;
   if (currentStep(am)?.type !== 'crisis') return false;
   if (am.callIn !== 'risky') return true;
   const tries = (crisisOdds(state) ?? []).filter((o) => !o.exit);

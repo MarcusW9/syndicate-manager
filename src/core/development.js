@@ -78,6 +78,7 @@ export function prepareOperative(op) {
   op.lastNoticeDay = op.lastNoticeDay ?? null;
   op.renewalAgain = op.renewalAgain ?? false;
   op.gear = op.gear ?? emptyLoadout();
+  op.marks = op.marks ?? [];
   return op;
 }
 

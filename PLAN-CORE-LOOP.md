@@ -210,6 +210,23 @@ on the site plan, round pacing); a runner dragged out from death's door dropping
 reinforcements as a call-in; fight rolls counting towards earned traits (Corner Fighter is about
 exactly this); toning the early game down (rookie-tier fights are easy).
 
+- **6c, command fights (2026-10-30, owner: "go with your suggestion").** Step 1 built: cover
+  (open, half, full; everyone in half until the maps give spots), the guards' intents rolled
+  before the round, and an order per runner per round (`playRound(b, rng, orders)`, odds from
+  `ordersFor`; shoot, flank, hunker, patch, stabilise, talk, lights; anyone without one does what
+  the crew would). The test fight is `tests/play.js` `testFight`, and the plain player is `commandOrders`. Tests:
+  `tests/commandfight.test.js`; the sim's last section compares hands-off and orders. **Step 2:**
+  fight spots with cover on the Docks map and the fight screen there (the mockup:
+  `docs/screenshots/2026-10-30-design-session-battle-view/02-...`), orders on live runs.
+  **Step 2 built (2026-10-30):** `core/fightspots.js` (spots off the drawn cover, Docks only:
+  `data/battle.js` `spotsIn`), the Move order, fights waiting for orders on live runs (`needsPlayer`;
+  `handOffFight`, `pullBack`), `ui/fightorders.js` (the panel and the map overlay).
+  **Step 3 built (2026-10-30):** spots in every district, cover drawn where fights happen, checked
+  with `node scripts/sim-districts.mjs` (each district with and without spots).
+  **Step 3:** spots on the other maps. Held: the Outside section's orders, the round cap (the
+  owner doesn't want a constant clock), enemy types and fight goals (prototype:
+  `drafts/prototypes/command-fight.html`), ranks and perks.
+
 ## Not in this plan
 Relationships (bonds feeding saves), money pressure, the morale and burnout cleanup (save
 bump of its own), heists and split teams. Each has its own DESIGN.md row.

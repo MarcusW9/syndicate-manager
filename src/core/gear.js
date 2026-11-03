@@ -2,26 +2,53 @@
 //
 // state.stash   [item]                       bought and not on anyone
 // op.gear       { weapon, armour, tool, implant }: item | null, stays on them between jobs
-// item          { uid, type, tier }          type: data/gear.js GEAR; tier: TIERS
+// item          { uid, type, tier, look?, name? }  type: data/gear.js GEAR; tier: TIERS; rifles
+//               also have a look and a name (core/looks.js)
 //
 // Gear is a bonus, never a gate, except that overwatch needs a rifle or a drone (as it always
 // needed the kit). A runner who dies takes their gear with them.
 
-import { GEAR, SLOTS, TIERS } from '../data/gear.js';
+import { GEAR, SLOTS, TIERS, SIDEARM_FRAMES, SIDEARM_QUIRKS, SIDEARM_PRICE_PER_POINT } from '../data/gear.js';
 import { SPECIALISATIONS } from '../data/specialisations.js';
+import { giveLook } from './looks.js';
 
 export { GEAR, SLOTS, TIERS };
 
 export const SELL_SHARE = 0.5; // what the fence pays back for something from the stash
 
-export const priceOf = (type, tier = 'street') => Math.round((GEAR[type].price * TIERS[tier].price) / 50) * 50;
-export const sellPrice = (item) => Math.round((priceOf(item.type, item.tier) * SELL_SHARE) / 50) * 50;
+/** What it costs: the type's price by tier, and for a sidearm its strengths (an item or an offer, when given). */
+export const priceOf = (type, tier = 'street', item = null) => {
+  const base = GEAR[type].price * TIERS[tier].price;
+  const s = type === 'pistol' && item ? sidearmStats({ ...item, tier: 'street' }) : null;
+  const points = s ? (s.aim - 1) + (s.damage - 3) + s.pierce / 2 : 0;
+  return Math.round((base * Math.max(0.5, 1 + points * SIDEARM_PRICE_PER_POINT)) / 50) * 50;
+};
+export const sellPrice = (item) => Math.round((priceOf(item.type, item.tier, item) * SELL_SHARE) / 50) * 50;
+
+/**
+ * A sidearm's strengths: { aim, damage, pierce, trait, quirk }: its frame's numbers, its rolled
+ * quirk, and the tier's step on aim and damage (data/gear.js SIDEARM_FRAMES, SIDEARM_QUIRKS).
+ * Damage never drops below 1, aim never below -2. Null for anything that isn't a sidearm.
+ */
+export function sidearmStats(item) {
+  if (item?.type !== 'pistol') return null;
+  const f = SIDEARM_FRAMES[item.look?.frame] ?? SIDEARM_FRAMES.heritage;
+  const q = SIDEARM_QUIRKS[item.quirk] ?? SIDEARM_QUIRKS.none;
+  const step = TIERS[item.tier]?.step ?? 0;
+  return {
+    aim: Math.max(-2, f.aim + (q.aim ?? 0) + step), damage: Math.max(1, f.damage + (q.damage ?? 0) + step), pierce: f.pierce,
+    trait: f.trait, quirk: q.name,
+  };
+}
 
 /** "Rifle", "Pro rifle". */
 export function itemName(item) {
   const name = GEAR[item.type]?.name ?? item.type;
   return item.tier && item.tier !== 'street' ? `${TIERS[item.tier].name} ${name.charAt(0).toLowerCase()}${name.slice(1)}` : name;
 }
+
+/** What to call it on screen: its own name if it has one ("Vermilion Heron"), else itemName. */
+export const itemTitle = (item) => item.name ?? itemName(item);
 
 /** Everything someone has on. */
 export const carried = (op) => Object.values(op?.gear ?? {}).filter(Boolean);
@@ -33,6 +60,12 @@ export const inSlot = (op, slot) => op?.gear?.[slot] ?? null;
 export function gearMods(op, stat) {
   const out = [];
   for (const item of carried(op)) {
+    // A sidearm's aim is its combat bonus, whatever its frame and quirk make it (and it can be a minus).
+    if (item.type === 'pistol') {
+      const aim = stat === 'combat' ? sidearmStats(item).aim : 0;
+      if (aim) out.push({ value: aim, note: `${itemTitle(item)} ${aim > 0 ? '+' : '−'}${Math.abs(aim)}` });
+      continue;
+    }
     const base = GEAR[item.type]?.bonus?.[stat];
     if (!base) continue;
     const value = base + (TIERS[item.tier]?.step ?? 0);
@@ -102,7 +135,7 @@ export function canChangeGear(state, op) {
 
 const newItem = (state, type, tier) => {
   state.gearSeq = (state.gearSeq ?? 0) + 1;
-  return { uid: `g${state.gearSeq}`, type, tier };
+  return giveLook(state, { uid: `g${state.gearSeq}`, type, tier });
 };
 
 /** Buy an item into the stash. Returns the new state, or prev if it can't be bought. */
@@ -111,6 +144,18 @@ export function buyGear(prev, type, tier = 'street') {
   const state = structuredClone(prev);
   state.cash -= priceOf(type, tier);
   (state.stash ??= []).push(newItem(state, type, tier));
+  return state;
+}
+
+/** Buy one of this week's rifles from the armoury (core/looks.js): it keeps its look and name. */
+export function buyOffer(prev, oid) {
+  const offer = prev.armoury?.offers?.find((o) => o.oid === oid);
+  if (!offer || prev.cash < priceOf(offer.type, offer.tier, offer)) return prev;
+  const state = structuredClone(prev);
+  state.cash -= priceOf(offer.type, offer.tier, offer);
+  state.armoury.offers = state.armoury.offers.filter((o) => o.oid !== oid);
+  state.gearSeq = (state.gearSeq ?? 0) + 1;
+  (state.stash ??= []).push({ uid: `g${state.gearSeq}`, type: offer.type, tier: offer.tier, look: offer.look, name: offer.name, ...(offer.quirk ? { quirk: offer.quirk } : {}) });
   return state;
 }
 

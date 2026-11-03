@@ -1,0 +1,558 @@
+<title>Tactical Battle View</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root { --bg:#0a0c0f; --panel:#12151b; --panel-2:#161a21; --line:#2a303b; --text:#e9ecf1; --muted:#8a93a6; --accent:#ff3d5f; --accent-2:#3de8d8; --warn:#f2d541; --danger:#ff4a4a; --good:#5fe0a5;
+  --display:'Rajdhani','Arial Narrow',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace; color-scheme: dark; }
+* { box-sizing:border-box; } body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,sans-serif; }
+.top { display:flex; justify-content:space-between; align-items:center; padding:10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px)); font-family:var(--display); text-transform:uppercase; letter-spacing:.14em; font-weight:700; font-size:.85rem; }
+.top .goal { color:var(--accent-2); border:1px solid var(--accent-2); padding:3px 8px; } .top .goal i { display:inline-block; width:10px; height:5px; background:var(--line); margin-left:2px; } .top .goal i.on { background:var(--accent-2); }
+.stage { position:relative; width:390px; max-width:100%; height:440px; margin:0 auto; border-block:1px solid var(--line); overflow:hidden; }
+.arena { position:absolute; inset:0; width:100%; height:100%; }
+.lbl { fill:#6b7385; font:8px var(--mono); letter-spacing:.08em; } .lbl.hi { fill:var(--text); }
+.aim { stroke:var(--accent); stroke-width:1.6; stroke-dasharray:5 4; opacity:.9; } .aim.charge { stroke:#ff9a3d; stroke-dasharray:none; stroke-width:2.5; }
+.mine { stroke:var(--accent-2); stroke-width:2; opacity:.85; }
+.oddsbg { fill:#160d12; stroke:#4a2230; } .odds { fill:#ff8a98; font:600 9px var(--mono); }
+.tok { position:absolute; width:0; height:0; }
+.ring { position:absolute; left:-20px; top:-20px; width:40px; height:40px; border-radius:50%; overflow:hidden; border:2px solid #4a5266; background:var(--panel); }
+.tok.foe .ring { border-color:#a33244; } .tok.sel .ring { border-color:var(--accent-2); box-shadow:0 0 0 3px rgba(61,232,216,.3); } .tok.goal .ring { border-color:var(--accent-2); border-style:dashed; }
+.tok.down { opacity:.35; } .tok.down .ring { border-color:#555; }
+.cv { position:absolute; left:14px; top:-24px; } .sh { width:12px; height:14px; display:block; } .sh path { fill:var(--accent-2); stroke:var(--accent-2); } .sh.half path:first-child { stroke:var(--accent-2); }
+.tok.foe .sh path { fill:#ff8a98; stroke:#ff8a98; }
+.open { font:600 7px var(--mono); color:var(--warn); border:1px solid var(--warn); padding:0 2px; background:#211d0c; }
+.under { position:absolute; left:-30px; width:60px; top:22px; display:grid; justify-items:center; gap:1px; }
+.tok.foe .under { top:-40px; }
+.nm { font-family:var(--display); font-weight:700; font-size:.68rem; letter-spacing:.08em; text-transform:uppercase; text-shadow:0 0 4px #000; white-space:nowrap; }
+.hp { display:flex; gap:1px; } .hp i { width:5px; height:4px; background:#2a303b; } .hp i.on { background:var(--accent-2); } .hp.low i.on { background:var(--warn); } .hp.crit i.on { background:var(--danger); } .hp.foe i.on { background:var(--accent); }
+.pop { position:absolute; font-family:var(--display); font-weight:700; color:#fff; text-shadow:0 0 6px var(--accent); font-size:1.2rem; }
+.flash { position:absolute; font-family:var(--display); font-weight:700; letter-spacing:.2em; color:var(--warn); font-size:.95rem; text-shadow:0 0 10px rgba(242,213,65,.6); }
+.mini { position:absolute; display:flex; align-items:center; gap:4px; font-family:var(--display); font-size:.66rem; letter-spacing:.08em; text-transform:uppercase; background:rgba(18,21,27,.92); border:1px solid var(--line); padding:2px 6px 2px 2px; }
+.mini .m { width:22px; height:22px; border-radius:50%; overflow:hidden; } .mini b { color:var(--warn); }
+.sheet { padding:12px max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px)); display:grid; gap:10px; max-width:560px; margin:0 auto; }
+.who { font-family:var(--display); text-transform:uppercase; letter-spacing:.1em; font-weight:700; } .who span { color:var(--muted); font-weight:500; }
+.acts { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.act { min-height:52px; border:1px solid var(--line); background:var(--panel-2); padding:6px 10px; display:grid; clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%); }
+.act b { font-family:var(--display); text-transform:uppercase; letter-spacing:.08em; font-size:.92rem; } .act span { font-family:var(--mono); font-size:.72rem; color:var(--accent-2); }
+.act.on { border-color:var(--warn); background:#211d0c; } .act.on b { color:var(--warn); }
+.hint { color:var(--muted); font-size:.85rem; margin:0; }
+.bar { display:flex; gap:8px; padding:10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); max-width:560px; margin:0 auto; }
+.btn { min-height:46px; padding:8px 14px; border:1px solid var(--line); background:var(--panel-2); font-family:var(--display); font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--accent-2); }
+.btn.go { flex:1; background:var(--accent); border-color:var(--accent); color:#fff; }
+</style>
+<div class="top"><span>Fight · round 2</span><span class="goal">Hold for Static <i class="on"></i><i></i><i></i></span></div>
+<div class="stage">
+  <svg viewBox="0 0 390 440" class="arena" aria-hidden="true">
+  <defs><pattern id="grid" width="26" height="26" patternUnits="userSpaceOnUse"><path d="M26 0 H0 V26" fill="none" stroke="rgba(61,232,216,0.05)"/></pattern></defs>
+  <rect width="390" height="440" fill="#0b0d11"/><rect width="390" height="440" fill="url(#grid)"/>
+  <rect x="368" y="0" width="22" height="440" fill="#0d1620"/>
+  <rect x="250" y="-4" width="112" height="78" fill="#171b24" stroke="#4a5266" stroke-width="1.5"/><rect x="247" y="46" width="5" height="14" fill="#ff3d5f" opacity=".6"/><text x="262" y="20" class="lbl hi">YARD OFFICE</text>
+  <polygon points="40,14 0,190 300,190 238,14" fill="rgba(245,185,66,0.05)" stroke="rgba(245,185,66,0.25)" stroke-dasharray="3 4"/>
+  <line x1="18" y1="14" x2="64" y2="14" stroke="#7a6430" stroke-width="3"/><line x1="22" y1="14" x2="22" y2="30" stroke="#7a6430" stroke-width="3"/><line x1="60" y1="14" x2="60" y2="30" stroke="#7a6430" stroke-width="3"/>
+  <rect x="36" y="132" width="74" height="24" rx="1.5" fill="#1b2433" stroke="#2b3240"/><rect x="176" y="112" width="42" height="22" rx="1.5" fill="#2b2618" stroke="#2b3240"/><rect x="262" y="140" width="78" height="22" rx="1.5" fill="#2a1d26" stroke="#2b3240"/><rect x="30" y="290" width="82" height="26" rx="1.5" fill="#1d2a24" stroke="#2b3240"/><rect x="154" y="306" width="46" height="24" rx="1.5" fill="#2a1d26" stroke="#2b3240"/><rect x="240" y="292" width="80" height="26" rx="1.5" fill="#2b2618" stroke="#2b3240"/><rect x="130" y="200" width="26" height="18" rx="1.5" fill="#1b2433" stroke="#2b3240"/><rect x="300" y="214" width="22" height="16" rx="1.5" fill="#1d2a24" stroke="#2b3240"/>
+  <rect x="334" y="352" width="22" height="16" fill="#12303a" stroke="#3de8d8"/><text x="332" y="380" class="lbl" fill="#3de8d8">SAFE</text>
+  <line x1="0" y1="396" x2="390" y2="396" stroke="#4a5266" stroke-width="1.5" stroke-dasharray="1.5 2"/>
+  <rect x="0" y="404" width="368" height="36" fill="#12141a"/><text x="200" y="426" class="lbl">ROAD</text>
+  <text x="96" y="10" class="lbl">CRANE</text><text x="300" y="134" class="lbl">CONTAINERS</text>
+  <line x1="72" y1="330" x2="236" y2="186" class="mine"/>
+  <line x1="236" y1="186" x2="300" y2="336" class="aim charge"/><g transform="translate(268 261)"><rect x="-16" y="-8" width="32" height="15" class="oddsbg"/><text class="odds" text-anchor="middle" y="3">65%</text></g><line x1="197" y1="84" x2="222" y2="250" class="aim "/><g transform="translate(209.5 167)"><rect x="-16" y="-8" width="32" height="15" class="oddsbg"/><text class="odds" text-anchor="middle" y="3">75%</text></g><line x1="118" y1="236" x2="222" y2="250" class="aim "/><g transform="translate(170 243)"><rect x="-16" y="-8" width="32" height="15" class="oddsbg"/><text class="odds" text-anchor="middle" y="3">55%</text></g>
+</svg>
+  <div class="tok foe   " style="left:236px; top:186px">
+  <div class="ring"><svg viewBox="0 0 64 64" width="100%" height="100%" aria-hidden="true"><rect width="64" height="64" fill="#160d12"/><path d="M10 64 Q12 44 32 42 Q52 44 54 64 Z" fill="#3a1c22"/><path d="M32 42 Q52 44 54 64 L40 64 Z" fill="#ff3d5f" opacity=".35"/><ellipse cx="32" cy="28" rx="12" ry="12" fill="#3b2026"/><path d="M32 16 A12 12 0 0 1 44 28 L36 28 Z" fill="#ff3d5f" opacity=".5"/><rect x="19" y="24" width="26" height="5" fill="#0b0d11"/><rect x="34" y="25" width="8" height="2" fill="#ff3d5f"/></svg></div>
+  <div class="cv"><span class="open">OPEN</span></div>
+  <div class="under"><span class="hp foe"><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i></span><span class="nm">Heavy</span></div></div><div class="tok foe   " style="left:197px; top:84px">
+  <div class="ring"><svg viewBox="0 0 64 64" width="100%" height="100%" aria-hidden="true"><rect width="64" height="64" fill="#160d12"/><path d="M10 64 Q12 44 32 42 Q52 44 54 64 Z" fill="#2a1418"/><path d="M32 42 Q52 44 54 64 L40 64 Z" fill="#ff3d5f" opacity=".35"/><ellipse cx="32" cy="28" rx="10" ry="12" fill="#3b2026"/><path d="M32 16 A12 12 0 0 1 44 28 L36 28 Z" fill="#ff3d5f" opacity=".5"/><rect x="22" y="24" width="20" height="5" fill="#0b0d11"/><rect x="34" y="25" width="8" height="2" fill="#ff3d5f"/></svg></div>
+  <div class="cv"><svg viewBox="0 0 12 14" class="sh half"><path d="M6 0 L12 2.5 V7 C12 10.5 9 13 6 14 C3 13 0 10.5 0 7 V2.5 Z" fill="none"/><path d="M0 7 H12 C12 10.5 9 13 6 14 C3 13 0 10.5 0 7 Z"/></svg></div>
+  <div class="under"><span class="hp foe"><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="nm">Guard 2</span></div></div><div class="tok foe   " style="left:118px; top:236px">
+  <div class="ring"><svg viewBox="0 0 64 64" width="100%" height="100%" aria-hidden="true"><rect width="64" height="64" fill="#160d12"/><path d="M14 44 L22 30 L36 28 L46 20 L52 24 L50 34 L40 40 L40 50 L20 50 Z" fill="#2a1418"/><path d="M46 20 L52 24 L50 34 L46 32 Z" fill="#ff3d5f" opacity=".55"/><circle cx="47" cy="26" r="1.6" fill="#ffd36b"/></svg></div>
+  <div class="cv"><span class="open">OPEN</span></div>
+  <div class="under"><span class="hp foe"><i class="on"></i><i class="on"></i></span><span class="nm">Dog</span></div></div><div class="tok foe   down" style="left:72px; top:108px">
+  <div class="ring"><svg viewBox="0 0 64 64" width="100%" height="100%" aria-hidden="true"><rect width="64" height="64" fill="#160d12"/><path d="M10 64 Q12 44 32 42 Q52 44 54 64 Z" fill="#2a1418"/><path d="M32 42 Q52 44 54 64 L40 64 Z" fill="#ff3d5f" opacity=".35"/><ellipse cx="32" cy="28" rx="10" ry="12" fill="#3b2026"/><path d="M32 16 A12 12 0 0 1 44 28 L36 28 Z" fill="#ff3d5f" opacity=".5"/><rect x="22" y="24" width="20" height="5" fill="#0b0d11"/><rect x="34" y="25" width="8" height="2" fill="#ff3d5f"/></svg></div>
+  <div class="cv"><svg viewBox="0 0 12 14" class="sh full"><path d="M6 0 L12 2.5 V7 C12 10.5 9 13 6 14 C3 13 0 10.5 0 7 V2.5 Z"/></svg></div>
+  <div class="under"><span class="hp foe"><i class=""></i><i class=""></i><i class=""></i></span><span class="nm">Guard 1</span></div></div>
+  <div class="tok  sel  " style="left:72px; top:330px">
+  <div class="ring"><svg class="art portrait" viewBox="9 6 46 46" width="40" height="40" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf1bg" x1="1" x2="0"><stop offset="0" stop-color="#ff3d5f" stop-opacity="0.28"/><stop offset="0.65" stop-color="#ff3d5f" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf1h"><path d="M32 11 C40.1 11 42.8 16 42.8 24 C42.8 30 42.199999999999996 33 40.5 38 L35 46 Q32 47.7 29 46 L23.5 38 C21.8 33 21.2 30 21.2 24 C21.2 16 23.9 11 32 11 Z"/></clipPath>
+    <clipPath id="pf1s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf1t"><path d="M20.4 27 C19.4 17 22.2 6.5 32 6 C41.8 6.5 44.599999999999994 16 43.599999999999994 26 C42.199999999999996 22 40.8 19.5 38.8 18.6 C33 18 30 20 28 19 C25 18.5 23.2 20 20.4 27 Z"/></clipPath>
+    <clipPath id="pf1b"><path d="M19.2 24 C18.7 7 45.3 7 44.8 24 L46.3 56 L41.8 56 L41.3 36 L22.7 36 L22.2 56 L17.7 56 Z"/></clipPath>
+    <clipPath id="pf1u"><path d="M0 64 L0 19.5 L13 19.5 L32 8.5 L51 19.5 L64 19.5 L64 64 Z"/></clipPath>
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf1bg)"/>
+  
+
+  <g clip-path="url(#pf1u)">
+  <path d="M19.2 24 C18.7 7 45.3 7 44.8 24 L46.3 56 L41.8 56 L41.3 36 L22.7 36 L22.2 56 L17.7 56 Z" fill="#563820"/><path d="M19.7 36 V52" stroke="#3de8d8" stroke-width="0.5" opacity="0.7"/><circle cx="19.7" cy="52.4" r="0.7" fill="#3de8d8"/><path d="M22.4 36 V52" stroke="#3de8d8" stroke-width="0.5" opacity="0.7"/><circle cx="22.4" cy="52.4" r="0.7" fill="#3de8d8"/><path d="M41.599999999999994 36 V52" stroke="#3de8d8" stroke-width="0.5" opacity="0.7"/><circle cx="41.599999999999994" cy="52.4" r="0.7" fill="#3de8d8"/><path d="M44.3 36 V52" stroke="#3de8d8" stroke-width="0.5" opacity="0.7"/><circle cx="44.3" cy="52.4" r="0.7" fill="#3de8d8"/>
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#262b36"/>
+  <g clip-path="url(#pf1s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#783246"/><path d="M27 46 L32 54 L37 46 Z" fill="#191c23"/></g>
+  
+  <path d="M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z" fill="#654741"/><path d="M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z" fill="#c0534d" opacity="0.8"/>
+  
+
+  <ellipse cx="21.5" cy="30" rx="1.9" ry="3.4" fill="#654741"/>
+  <ellipse cx="42.5" cy="30" rx="1.9" ry="3.4" fill="#9a6142"/><path d="M43.4 27.5 Q44.3 30 43.199999999999996 33" stroke="#c0534d" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.1 11 42.8 16 42.8 24 C42.8 30 42.199999999999996 33 40.5 38 L35 46 Q32 47.7 29 46 L23.5 38 C21.8 33 21.2 30 21.2 24 C21.2 16 23.9 11 32 11 Z" fill="#9a6142"/>
+  <g clip-path="url(#pf1h)">
+    <path d="M0 0 L30.704 9 C26.06 20 26.816 31 30.5 48 L0 64 Z" fill="#654741"/>
+    <path d="M35.24 34.5 L42 31.5 L40 39 Z" fill="#815542" opacity="0.55"/>
+    <path d="M64 0 L41 12 L41.5 30 L38.7 40.5 L64 64 Z" fill="#c0534d"/>
+        
+    
+    <path d="M23.2 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#815542"/>
+  </g>
+
+  <path d="M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z" fill="#654741"/>
+  <path d="M32.9 33.6 L33.5 35.6 L32.7 36.2 Z" fill="#c0534d" opacity="0.7"/>
+  <path d="M30.6 36.3 h2.6" stroke="#623a29" stroke-width="0.7" stroke-linecap="round"/>
+  <path d="M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z" fill="#120d0b"/>
+    <circle cx="28" cy="28.55" r="0.45" fill="#fff" opacity="0.85"/><path d="M34.5 29 Q36.6 27.3 38.7 29 Q36.6 30.1 34.5 29 Z" fill="#120d0b"/>
+    <circle cx="37.2" cy="28.55" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M24.9 25.6 L29.7 25.1" stroke="#352316" stroke-width="1.5" stroke-linecap="round"/><path d="M34.3 25.1 L39.1 25.6" stroke="#352316" stroke-width="1.5" stroke-linecap="round"/><path d="M29.4 40 Q32 40.9 34.6 40" stroke="#623a29" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+      <path d="M30.2 40.7 Q32 42.2 33.8 40.7 Z" fill="#94583f"/>
+  
+  
+  
+  
+  
+
+  <g clip-path="url(#pf1u)">
+  <path d="M20.4 27 C19.4 17 22.2 6.5 32 6 C41.8 6.5 44.599999999999994 16 43.599999999999994 26 C42.199999999999996 22 40.8 19.5 38.8 18.6 C33 18 30 20 28 19 C25 18.5 23.2 20 20.4 27 Z" fill="#563820" />
+    <g clip-path="url(#pf1t)"><path d="M34.7 0 L64 0 L64 30 L38.480000000000004 30 Z" fill="#ab3b40" opacity="0.75"/><path d="M27 16 V22" stroke="#3de8d8" stroke-width="0.6" opacity="0.8"/><path d="M30.5 16 V22" stroke="#3de8d8" stroke-width="0.6" opacity="0.8"/><path d="M34 16 V22" stroke="#3de8d8" stroke-width="0.6" opacity="0.8"/><path d="M37.5 16 V22" stroke="#3de8d8" stroke-width="0.6" opacity="0.8"/>
+    </g>
+  
+  
+  
+  </g>
+  <g clip-path="url(#pf1h)"><path d="M0 19.5 H64 V24 H0 Z" fill="#1b2340" opacity="0.45"/></g>
+    <path d="M13 19.5 L32 8.5 L51 19.5 Q32 22.5 13 19.5 Z" fill="#5b636e"/>
+    <path d="M32 8.5 L51 19.5 Q41.5 22.2 32 22.5 Z" fill="#9d5468"/>
+    <path d="M13 19.5 Q32 22.5 51 19.5 Q32 21.15 13 19.5 Z" fill="#32363d"/>
+    <g stroke="#3b4048" stroke-width="0.4" fill="none"><path d="M32 8.5 L20.6 21.323999999999998"/><path d="M32 8.5 L27.25 22.171875"/><path d="M32 8.5 L36.75 22.171875"/><path d="M32 8.5 L43.4 21.323999999999998"/></g>
+    <circle cx="32" cy="9.1" r="0.9" fill="#ad5067"/>
+    
+    <path d="M13 19.5 Q32 22.5 51 19.5" stroke="#bd4c65" stroke-width="0.4" fill="none"/>
+
+  
+  <path d="M40.199999999999996 19 V27" stroke="#3de8d8" stroke-width="1.1" stroke-linecap="round" opacity="0.5"/><circle cx="40.199999999999996" cy="27.5" r="0.9" fill="#3de8d8" opacity="0.5"/>
+  
+</svg></div>
+  <div class="cv"><svg viewBox="0 0 12 14" class="sh full"><path d="M6 0 L12 2.5 V7 C12 10.5 9 13 6 14 C3 13 0 10.5 0 7 V2.5 Z"/></svg></div>
+  <div class="under"><span class="hp "><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i></span><span class="nm">Jax</span></div></div><div class="tok    " style="left:178px; top:354px">
+  <div class="ring"><svg class="art portrait" viewBox="9 6 46 46" width="40" height="40" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf2bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf2h"><path d="M32 11 C40.625 11 43.5 16 43.5 24 C43.5 30 42.9 33 41 38 L35.2 44.5 Q32 46.2 28.8 44.5 L23 38 C21.1 33 20.5 30 20.5 24 C20.5 16 23.375 11 32 11 Z"/></clipPath>
+    <clipPath id="pf2s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    
+    
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf2bg)"/>
+  
+
+  <g >
+  
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#2b2433"/>
+  <g clip-path="url(#pf2s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#326e72"/><path d="M27 46 L32 54 L37 46 Z" fill="#1c1721"/></g>
+  
+  <path d="M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z" fill="#7e5e54"/><path d="M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z" fill="#92ac8f" opacity="0.8"/>
+  
+
+  <ellipse cx="20.8" cy="30" rx="1.9" ry="3.4" fill="#7e5e54"/>
+  <ellipse cx="43.2" cy="30" rx="1.9" ry="3.4" fill="#c68863"/><path d="M44.1 27.5 Q45 30 43.9 33" stroke="#92ac8f" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.625 11 43.5 16 43.5 24 C43.5 30 42.9 33 41 38 L35.2 44.5 Q32 46.2 28.8 44.5 L23 38 C21.1 33 20.5 30 20.5 24 C20.5 16 23.375 11 32 11 Z" fill="#c68863"/>
+  <g clip-path="url(#pf2h)">
+    <path d="M0 0 L30.62 9 C25.675 20 26.48 31 30.5 48 L0 64 Z" fill="#7e5e54"/>
+    <path d="M35.45 34.5 L42.7 31.5 L40.5 39 Z" fill="#a4745c" opacity="0.55"/>
+    <path d="M64 0 L41.7 12 L42.2 30 L39.2 40.5 L64 64 Z" fill="#92ac8f"/>
+        
+    
+    <path d="M22.5 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#a4745c"/>
+  </g>
+
+  <path d="M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z" fill="#7e5e54"/>
+  <path d="M32.9 33.6 L33.5 35.6 L32.7 36.2 Z" fill="#92ac8f" opacity="0.7"/>
+  <path d="M30.6 36.3 h2.6" stroke="#784d3a" stroke-width="0.7" stroke-linecap="round"/>
+  <path d="M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z" fill="#120d0b"/>
+    <circle cx="28" cy="28.55" r="0.45" fill="#fff" opacity="0.85"/><path d="M34.5 29 Q36.6 27.3 38.7 29 Q36.6 30.1 34.5 29 Z" fill="#120d0b"/>
+    <circle cx="37.2" cy="28.55" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M24.9 25.6 L29.7 25.1" stroke="#1a1412" stroke-width="1.5" stroke-linecap="round"/><path d="M34.3 25.1 L39.1 25.6" stroke="#1a1412" stroke-width="1.5" stroke-linecap="round"/><path d="M29.4 40 Q32 40.9 34.6 40" stroke="#784d3a" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+      <path d="M30.2 40.7 Q32 42.2 33.8 40.7 Z" fill="#b8785a"/>
+  
+  <g fill="#3f2e26" opacity="0.85" clip-path="url(#pf2h)"><rect x="30.1" y="39.8" width="0.55" height="3.2"/><rect x="31" y="39.8" width="0.35" height="3.2"/><rect x="31.5" y="39.8" width="0.55" height="3.2"/><rect x="32.6" y="39.8" width="0.35" height="3.2"/><rect x="33.1" y="39.8" width="0.55" height="3.2"/><rect x="33.9" y="39.8" width="0.35" height="3.2"/></g>
+  
+  
+  
+
+  <g >
+  
+  
+  
+  <path d="M34.3 12.5 Q42.5 14 42.9 21" stroke="#92ac8f" stroke-width="1" fill="none" opacity="0.6"/>
+  </g>
+  
+
+  
+  <path d="M29.3 27.4 L31 28.6 L33 28.6 L34.7 27.4 M32 28.6 V31" stroke="#ff3d5f" stroke-width="0.55" fill="none" stroke-linejoin="round" opacity="0.5"/>
+        <circle cx="32" cy="31" r="0.6" fill="#ff3d5f" opacity="0.5"/>
+  
+</svg></div>
+  <div class="cv"><svg viewBox="0 0 12 14" class="sh half"><path d="M6 0 L12 2.5 V7 C12 10.5 9 13 6 14 C3 13 0 10.5 0 7 V2.5 Z" fill="none"/><path d="M0 7 H12 C12 10.5 9 13 6 14 C3 13 0 10.5 0 7 Z"/></svg></div>
+  <div class="under"><span class="hp "><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="nm">Stitch</span></div></div><div class="tok    " style="left:222px; top:250px">
+  <div class="ring"><svg class="art portrait" viewBox="9 6 46 46" width="40" height="40" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf3bg" x1="1" x2="0"><stop offset="0" stop-color="#9b8cff" stop-opacity="0.28"/><stop offset="0.65" stop-color="#9b8cff" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf3h"><path d="M32 11 C40.1 11 42.8 16 42.8 24 C42.8 30 42.199999999999996 33 40.5 38 L35 46 Q32 47.7 29 46 L23.5 38 C21.8 33 21.2 30 21.2 24 C21.2 16 23.9 11 32 11 Z"/></clipPath>
+    <clipPath id="pf3s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf3t"><path d="M20.4 27 C19.4 17 22.2 8 32 7.5 C41.8 8 44.599999999999994 16 43.599999999999994 26 C42.199999999999996 22 40.8 19.5 38.8 18.6 C33 18 30 20 28 19 C25 18.5 23.2 20 20.4 27 Z"/></clipPath>
+    
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf3bg)"/>
+  
+
+  <g >
+  
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#33291f"/>
+  <g clip-path="url(#pf3s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#5b4f74"/><path d="M27 46 L32 54 L37 46 Z" fill="#211b14"/></g>
+  
+  <path d="M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z" fill="#715149"/><path d="M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z" fill="#a87d93" opacity="0.8"/>
+  
+
+  <ellipse cx="21.5" cy="30" rx="1.9" ry="3.4" fill="#715149"/>
+  <ellipse cx="42.5" cy="30" rx="1.9" ry="3.4" fill="#b07350"/><path d="M43.4 27.5 Q44.3 30 43.199999999999996 33" stroke="#a87d93" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.1 11 42.8 16 42.8 24 C42.8 30 42.199999999999996 33 40.5 38 L35 46 Q32 47.7 29 46 L23.5 38 C21.8 33 21.2 30 21.2 24 C21.2 16 23.9 11 32 11 Z" fill="#b07350"/>
+  <g clip-path="url(#pf3h)">
+    <path d="M0 0 L30.704 9 C26.06 20 26.816 31 30.5 48 L0 64 Z" fill="#715149"/>
+    <path d="M35.24 34.5 L42 31.5 L40 39 Z" fill="#92634d" opacity="0.55"/>
+    <path d="M64 0 L41 12 L41.5 30 L38.7 40.5 L64 64 Z" fill="#a87d93"/>
+        
+    
+    <path d="M23.2 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#92634d"/>
+  </g>
+
+  <path d="M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z" fill="#715149"/>
+  <path d="M32.9 33.6 L33.5 35.6 L32.7 36.2 Z" fill="#a87d93" opacity="0.7"/>
+  <path d="M30.6 36.3 h2.6" stroke="#6d4330" stroke-width="0.7" stroke-linecap="round"/>
+  <path d="M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z" fill="#120d0b"/>
+    <circle cx="28" cy="28.55" r="0.45" fill="#fff" opacity="0.85"/><path d="M34.5 29 Q36.6 27.3 38.7 29 Q36.6 30.1 34.5 29 Z" fill="#120d0b"/>
+    <circle cx="37.2" cy="28.55" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M24.9 25.6 L29.7 25.1" stroke="#352316" stroke-width="1.5" stroke-linecap="round"/><path d="M34.3 25.1 L39.1 25.6" stroke="#352316" stroke-width="1.5" stroke-linecap="round"/><path d="M29.4 40 Q32 40.9 34.6 40" stroke="#6d4330" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+      <path d="M30.2 40.7 Q32 42.2 33.8 40.7 Z" fill="#a6674a"/>
+  
+  <path d="M23.7 22 L25.2 24 L24.4 25.2 L26.2 28" stroke="#cc957f" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>
+  
+  
+  
+
+  <g >
+  <path d="M20.4 27 C19.4 17 22.2 8 32 7.5 C41.8 8 44.599999999999994 16 43.599999999999994 26 C42.199999999999996 22 40.8 19.5 38.8 18.6 C33 18 30 20 28 19 C25 18.5 23.2 20 20.4 27 Z" fill="#563820" />
+    <g clip-path="url(#pf3t)"><path d="M34.7 0 L64 0 L64 30 L38.480000000000004 30 Z" fill="#796290" opacity="0.75"/>
+    </g>
+  
+  <circle cx="33" cy="4.5" r="4.4" fill="#563820"/><path d="M34 0.6 A4.4 4.4 0 0 1 37.3 5.4 L34.5 4.5 Z" fill="#796290" opacity="0.7"/>
+  
+  </g>
+  
+
+  
+  <path d="M40.199999999999996 19 V27" stroke="#f2b544" stroke-width="1.1" stroke-linecap="round" opacity="0.5"/><circle cx="40.199999999999996" cy="27.5" r="0.9" fill="#f2b544" opacity="0.5"/>
+  
+</svg></div>
+  <div class="cv"><span class="open">OPEN</span></div>
+  <div class="under"><span class="hp low"><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></span><span class="nm">Kit</span></div></div><div class="tok   goal " style="left:300px; top:336px">
+  <div class="ring"><svg class="art portrait" viewBox="9 6 46 46" width="40" height="40" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf4bg" x1="1" x2="0"><stop offset="0" stop-color="#f2b544" stop-opacity="0.28"/><stop offset="0.65" stop-color="#f2b544" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf4h"><path d="M32 11 C40.1 11 42.8 16 42.8 24 C42.8 30 42.199999999999996 33 40.5 38 L35 46 Q32 47.7 29 46 L23.5 38 C21.8 33 21.2 30 21.2 24 C21.2 16 23.9 11 32 11 Z"/></clipPath>
+    <clipPath id="pf4s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf4t"><path d="M20.4 27 C19.4 17 22.2 7.5 32 7 C41.8 7.5 44.599999999999994 16 43.599999999999994 26 C42.199999999999996 22 40.8 19.5 38.8 18.6 C33 18 30 20 28 19 C25 18.5 23.2 20 20.4 27 Z"/></clipPath>
+    
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf4bg)"/>
+  
+
+  <g >
+  
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#262b36"/>
+  <g clip-path="url(#pf4s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#745f3b"/><path d="M27 46 L32 54 L37 46 Z" fill="#191c23"/></g>
+  
+  <path d="M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z" fill="#8f756e"/><path d="M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z" fill="#e9b273" opacity="0.8"/>
+  
+
+  <ellipse cx="21.5" cy="30" rx="1.9" ry="3.4" fill="#8f756e"/>
+  <ellipse cx="42.5" cy="30" rx="1.9" ry="3.4" fill="#e3b08f"/><path d="M43.4 27.5 Q44.3 30 43.199999999999996 33" stroke="#e9b273" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.1 11 42.8 16 42.8 24 C42.8 30 42.199999999999996 33 40.5 38 L35 46 Q32 47.7 29 46 L23.5 38 C21.8 33 21.2 30 21.2 24 C21.2 16 23.9 11 32 11 Z" fill="#e3b08f"/>
+  <g clip-path="url(#pf4h)">
+    <path d="M0 0 L30.704 9 C26.06 20 26.816 31 30.5 48 L0 64 Z" fill="#8f756e"/>
+    <path d="M35.24 34.5 L42 31.5 L40 39 Z" fill="#bb947f" opacity="0.55"/>
+    <path d="M64 0 L41 12 L41.5 30 L38.7 40.5 L64 64 Z" fill="#e9b273"/>
+        <path d="M21.2 36 Q32 50 42.8 36 L42.8 50 L21.2 50 Z" fill="#a78bfa" opacity="0.28"/>
+    
+    <path d="M23.2 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#bb947f"/>
+  </g>
+
+  <path d="M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z" fill="#8f756e"/>
+  <path d="M32.9 33.6 L33.5 35.6 L32.7 36.2 Z" fill="#e9b273" opacity="0.7"/>
+  <path d="M30.6 36.3 h2.6" stroke="#876150" stroke-width="0.7" stroke-linecap="round"/>
+  <path d="M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z" fill="#120d0b"/>
+    <circle cx="28" cy="28.55" r="0.45" fill="#fff" opacity="0.85"/><path d="M34.5 29 Q36.6 27.3 38.7 29 Q36.6 30.1 34.5 29 Z" fill="#120d0b"/>
+    <circle cx="37.2" cy="28.55" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M24.9 25.6 L29.7 25.1" stroke="#62518e" stroke-width="1.5" stroke-linecap="round"/><path d="M34.3 25.1 L39.1 25.6" stroke="#62518e" stroke-width="1.5" stroke-linecap="round"/><path d="M29.4 40 Q32 40.9 34.6 40" stroke="#876150" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+      <path d="M30.2 40.7 Q32 42.2 33.8 40.7 Z" fill="#d0997e"/>
+  
+  <path d="M24.2 22.5 L27.2 27" stroke="#edbda8" stroke-width="0.7"/>
+  
+  <path d="M23.4 34.2 L20.599999999999998 31.5 M40.599999999999994 34.2 L43.4 31.5" stroke="#15181d" stroke-width="0.9"/>
+      <path d="M23.7 34.4 Q32 31.4 40.3 34.4 L39.4 41 Q32 47.4 24.6 41 Z" fill="#2a2f38"/>
+      <path d="M32.5 32.6 Q38.8 33 40.3 34.4 L39.4 41 Q34 45.6 32.5 46 Z" fill="#66573c"/>
+      <circle cx="26" cy="41.2" r="2.7" fill="#3a404b"/><circle cx="26" cy="41.2" r="1.7" fill="#14171c"/><path d="M24.8 41.2 h2.4 M26 40 v2.4" stroke="#5a616d" stroke-width="0.35"/><circle cx="38" cy="41.2" r="2.7" fill="#3a404b"/><circle cx="38" cy="41.2" r="1.7" fill="#14171c"/><path d="M36.8 41.2 h2.4 M38 40 v2.4" stroke="#5a616d" stroke-width="0.35"/>
+      <path d="M30.6 37 h2.8 M30.9 38.2 h2.2" stroke="#14171c" stroke-width="0.5"/>
+      <circle cx="38.199999999999996" cy="36.2" r="0.5" fill="#3de8d8"/>
+  
+
+  <g >
+  <path d="M20.4 27 C19.4 17 22.2 7.5 32 7 C41.8 7.5 44.599999999999994 16 43.599999999999994 26 C42.199999999999996 22 40.8 19.5 38.8 18.6 C33 18 30 20 28 19 C25 18.5 23.2 20 20.4 27 Z" fill="#a78bfa" />
+    <g clip-path="url(#pf4t)"><path d="M34.7 0 L64 0 L64 30 L38.480000000000004 30 Z" fill="#cda09f" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  
+  <path d="M40.199999999999996 19 V27" stroke="#3de8d8" stroke-width="1.1" stroke-linecap="round" opacity="0.5"/><circle cx="40.199999999999996" cy="27.5" r="0.9" fill="#3de8d8" opacity="0.5"/>
+  
+</svg></div>
+  <div class="cv"><svg viewBox="0 0 12 14" class="sh full"><path d="M6 0 L12 2.5 V7 C12 10.5 9 13 6 14 C3 13 0 10.5 0 7 V2.5 Z"/></svg></div>
+  <div class="under"><span class="hp "><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i></span><span class="nm">Static · 1/3</span></div></div>
+  <div class="pop" style="left:262px; top:180px">−4</div>
+  <div class="flash" style="left:126px; top:122px">DOUBLE TAP</div>
+  <div class="mini" style="left:22px; top:22px"><span class="m"><svg class="art portrait" viewBox="9 6 46 46" width="22" height="22" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf5bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf5h"><path d="M32 11 C41.375 11 44.5 16 44.5 24 C44.5 30 43.9 33 42.5 38 L36 43.5 Q32 45.2 28 43.5 L21.5 38 C20.1 33 19.5 30 19.5 24 C19.5 16 22.625 11 32 11 Z"/></clipPath>
+    <clipPath id="pf5s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf5t"><path d="M18.7 27 C17.7 17 20.5 7.5 32 7 C43.5 7.5 46.3 16 45.3 26 C43.9 22 42.5 19.5 40.5 18.6 C33 18 30 20 28 19 C25 18.5 21.5 20 18.7 27 Z"/></clipPath>
+    
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf5bg)"/>
+  
+
+  <g >
+  
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#232838"/>
+  <g clip-path="url(#pf5s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#2d7175"/><path d="M27 46 L32 54 L37 46 Z" fill="#171a24"/></g>
+  
+  <path d="M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z" fill="#7e5e54"/><path d="M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z" fill="#92ac8f" opacity="0.8"/>
+  
+
+  <ellipse cx="19.8" cy="30" rx="1.9" ry="3.4" fill="#7e5e54"/>
+  <ellipse cx="44.2" cy="30" rx="1.9" ry="3.4" fill="#c68863"/><path d="M45.1 27.5 Q46 30 44.9 33" stroke="#92ac8f" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C41.375 11 44.5 16 44.5 24 C44.5 30 43.9 33 42.5 38 L36 43.5 Q32 45.2 28 43.5 L21.5 38 C20.1 33 19.5 30 19.5 24 C19.5 16 22.625 11 32 11 Z" fill="#c68863"/>
+  <g clip-path="url(#pf5h)">
+    <path d="M0 0 L30.5 9 C25.125 20 26 31 30.5 48 L0 64 Z" fill="#7e5e54"/>
+    <path d="M35.75 34.5 L43.7 31.5 L42 39 Z" fill="#a4745c" opacity="0.55"/>
+    <path d="M64 0 L42.7 12 L43.2 30 L40.7 40.5 L64 64 Z" fill="#92ac8f"/>
+        
+    
+    <path d="M21.5 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#a4745c"/>
+  </g>
+
+  <path d="M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z" fill="#7e5e54"/>
+  <path d="M32.9 33.6 L33.5 35.6 L32.7 36.2 Z" fill="#92ac8f" opacity="0.7"/>
+  <path d="M30.6 36.3 h2.6" stroke="#784d3a" stroke-width="0.7" stroke-linecap="round"/>
+  <path d="M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z" fill="#120d0b"/>
+    <circle cx="28" cy="28.55" r="0.45" fill="#fff" opacity="0.85"/><path d="M34.5 29 Q36.6 27.3 38.7 29 Q36.6 30.1 34.5 29 Z" fill="#120d0b"/>
+    <circle cx="37.2" cy="28.55" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M24.9 25.6 L29.7 25.1" stroke="#261b15" stroke-width="1.5" stroke-linecap="round"/><path d="M34.3 25.1 L39.1 25.6" stroke="#261b15" stroke-width="1.5" stroke-linecap="round"/><path d="M29.4 40 Q32 40.9 34.6 40" stroke="#784d3a" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+      <path d="M30.2 40.7 Q32 42.2 33.8 40.7 Z" fill="#b8785a"/>
+  
+  
+  
+  
+  
+
+  <g >
+  <path d="M18.7 27 C17.7 17 20.5 7.5 32 7 C43.5 7.5 46.3 16 45.3 26 C43.9 22 42.5 19.5 40.5 18.6 C33 18 30 20 28 19 C25 18.5 21.5 20 18.7 27 Z" fill="#3a291e" />
+    <g clip-path="url(#pf5t)"><path d="M35.125 0 L64 0 L64 30 L39.5 30 Z" fill="#3c897b" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  
+  <path d="M41.9 19 V27" stroke="#f2b544" stroke-width="1.1" stroke-linecap="round" opacity="0.5"/><circle cx="41.9" cy="27.5" r="0.9" fill="#f2b544" opacity="0.5"/>
+  
+</svg></span>Rifle <b>●●○</b></div>
+  <div class="mini" style="left:20px; top:408px"><span class="m"><svg class="art portrait" viewBox="9 6 46 46" width="22" height="22" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf6bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf6h"><path d="M32 11 C40.625 11 43.5 16 43.5 24 C43.5 30 42.9 33 41 38 L35.2 44.5 Q32 46.2 28.8 44.5 L23 38 C21.1 33 20.5 30 20.5 24 C20.5 16 23.375 11 32 11 Z"/></clipPath>
+    <clipPath id="pf6s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    
+    
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf6bg)"/>
+  
+
+  <g >
+  
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#2b2433"/>
+  <g clip-path="url(#pf6s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#326e72"/><path d="M27 46 L32 54 L37 46 Z" fill="#1c1721"/></g>
+  
+  <path d="M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z" fill="#7e5e54"/><path d="M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z" fill="#92ac8f" opacity="0.8"/>
+  
+
+  <ellipse cx="20.8" cy="30" rx="1.9" ry="3.4" fill="#7e5e54"/>
+  <ellipse cx="43.2" cy="30" rx="1.9" ry="3.4" fill="#c68863"/><path d="M44.1 27.5 Q45 30 43.9 33" stroke="#92ac8f" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.625 11 43.5 16 43.5 24 C43.5 30 42.9 33 41 38 L35.2 44.5 Q32 46.2 28.8 44.5 L23 38 C21.1 33 20.5 30 20.5 24 C20.5 16 23.375 11 32 11 Z" fill="#c68863"/>
+  <g clip-path="url(#pf6h)">
+    <path d="M0 0 L30.62 9 C25.675 20 26.48 31 30.5 48 L0 64 Z" fill="#7e5e54"/>
+    <path d="M35.45 34.5 L42.7 31.5 L40.5 39 Z" fill="#a4745c" opacity="0.55"/>
+    <path d="M64 0 L41.7 12 L42.2 30 L39.2 40.5 L64 64 Z" fill="#92ac8f"/>
+        
+    
+    <path d="M22.5 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#a4745c"/>
+  </g>
+
+  <path d="M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z" fill="#7e5e54"/>
+  <path d="M32.9 33.6 L33.5 35.6 L32.7 36.2 Z" fill="#92ac8f" opacity="0.7"/>
+  <path d="M30.6 36.3 h2.6" stroke="#784d3a" stroke-width="0.7" stroke-linecap="round"/>
+  <path d="M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z" fill="#120d0b"/>
+    <circle cx="28" cy="28.55" r="0.45" fill="#fff" opacity="0.85"/><path d="M34.5 29 Q36.6 27.3 38.7 29 Q36.6 30.1 34.5 29 Z" fill="#120d0b"/>
+    <circle cx="37.2" cy="28.55" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M24.9 25.6 L29.7 25.1" stroke="#1a1412" stroke-width="1.5" stroke-linecap="round"/><path d="M34.3 25.1 L39.1 25.6" stroke="#1a1412" stroke-width="1.5" stroke-linecap="round"/><path d="M29.4 40 Q32 40.9 34.6 40" stroke="#784d3a" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+      <path d="M30.2 40.7 Q32 42.2 33.8 40.7 Z" fill="#b8785a"/>
+  
+  <g fill="#3f2e26" opacity="0.85" clip-path="url(#pf6h)"><rect x="30.1" y="39.8" width="0.55" height="3.2"/><rect x="31" y="39.8" width="0.35" height="3.2"/><rect x="31.5" y="39.8" width="0.55" height="3.2"/><rect x="32.6" y="39.8" width="0.35" height="3.2"/><rect x="33.1" y="39.8" width="0.55" height="3.2"/><rect x="33.9" y="39.8" width="0.35" height="3.2"/></g>
+  
+  
+  
+
+  <g >
+  
+  
+  
+  <path d="M34.3 12.5 Q42.5 14 42.9 21" stroke="#92ac8f" stroke-width="1" fill="none" opacity="0.6"/>
+  </g>
+  
+
+  
+  <path d="M29.3 27.4 L31 28.6 L33 28.6 L34.7 27.4 M32 28.6 V31" stroke="#ff3d5f" stroke-width="0.55" fill="none" stroke-linejoin="round" opacity="0.5"/>
+        <circle cx="32" cy="31" r="0.6" fill="#ff3d5f" opacity="0.5"/>
+  
+</svg></span>Van</div>
+  <div class="mini" style="left:96px; top:408px"><span class="m" style="opacity:.6"><svg class="art portrait" viewBox="9 6 46 46" width="22" height="22" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf7bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf7h"><path d="M32 11 C40.625 11 43.5 16 43.5 24 C43.5 30 42.9 33 41 38 L35.2 44.5 Q32 46.2 28.8 44.5 L23 38 C21.1 33 20.5 30 20.5 24 C20.5 16 23.375 11 32 11 Z"/></clipPath>
+    <clipPath id="pf7s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    
+    
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf7bg)"/>
+  
+
+  <g >
+  
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#2b2433"/>
+  <g clip-path="url(#pf7s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#326e72"/><path d="M27 46 L32 54 L37 46 Z" fill="#1c1721"/></g>
+  
+  <path d="M27.6 37 L27.6 48 Q32 51 36.4 48 L36.4 37 Z" fill="#7e5e54"/><path d="M34.6 38 L36.4 37 L36.4 48 L34.6 49 Z" fill="#92ac8f" opacity="0.8"/>
+  
+
+  <ellipse cx="20.8" cy="30" rx="1.9" ry="3.4" fill="#7e5e54"/>
+  <ellipse cx="43.2" cy="30" rx="1.9" ry="3.4" fill="#c68863"/><path d="M44.1 27.5 Q45 30 43.9 33" stroke="#92ac8f" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.625 11 43.5 16 43.5 24 C43.5 30 42.9 33 41 38 L35.2 44.5 Q32 46.2 28.8 44.5 L23 38 C21.1 33 20.5 30 20.5 24 C20.5 16 23.375 11 32 11 Z" fill="#c68863"/>
+  <g clip-path="url(#pf7h)">
+    <path d="M0 0 L30.62 9 C25.675 20 26.48 31 30.5 48 L0 64 Z" fill="#7e5e54"/>
+    <path d="M35.45 34.5 L42.7 31.5 L40.5 39 Z" fill="#a4745c" opacity="0.55"/>
+    <path d="M64 0 L41.7 12 L42.2 30 L39.2 40.5 L64 64 Z" fill="#92ac8f"/>
+        
+    
+    <path d="M22.5 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#a4745c"/>
+  </g>
+
+  <path d="M31.5 30 L30.1 35.4 L32.7 36.2 L31.6 34.9 Z" fill="#7e5e54"/>
+  <path d="M32.9 33.6 L33.5 35.6 L32.7 36.2 Z" fill="#92ac8f" opacity="0.7"/>
+  <path d="M30.6 36.3 h2.6" stroke="#784d3a" stroke-width="0.7" stroke-linecap="round"/>
+  <path d="M25.299999999999997 29 Q27.4 27.3 29.5 29 Q27.4 30.1 25.299999999999997 29 Z" fill="#120d0b"/>
+    <circle cx="28" cy="28.55" r="0.45" fill="#fff" opacity="0.85"/><path d="M34.5 29 Q36.6 27.3 38.7 29 Q36.6 30.1 34.5 29 Z" fill="#120d0b"/>
+    <circle cx="37.2" cy="28.55" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M24.9 25.6 L29.7 25.1" stroke="#1a1412" stroke-width="1.5" stroke-linecap="round"/><path d="M34.3 25.1 L39.1 25.6" stroke="#1a1412" stroke-width="1.5" stroke-linecap="round"/><path d="M29.4 40 Q32 40.9 34.6 40" stroke="#784d3a" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+      <path d="M30.2 40.7 Q32 42.2 33.8 40.7 Z" fill="#b8785a"/>
+  
+  <g fill="#3f2e26" opacity="0.85" clip-path="url(#pf7h)"><rect x="30.1" y="39.8" width="0.55" height="3.2"/><rect x="31" y="39.8" width="0.35" height="3.2"/><rect x="31.5" y="39.8" width="0.55" height="3.2"/><rect x="32.6" y="39.8" width="0.35" height="3.2"/><rect x="33.1" y="39.8" width="0.55" height="3.2"/><rect x="33.9" y="39.8" width="0.35" height="3.2"/></g>
+  
+  
+  
+
+  <g >
+  
+  
+  
+  <path d="M34.3 12.5 Q42.5 14 42.9 21" stroke="#92ac8f" stroke-width="1" fill="none" opacity="0.6"/>
+  </g>
+  
+
+  
+  <path d="M29.3 27.4 L31 28.6 L33 28.6 L34.7 27.4 M32 28.6 V31" stroke="#ff3d5f" stroke-width="0.55" fill="none" stroke-linejoin="round" opacity="0.5"/>
+        <circle cx="32" cy="31" r="0.6" fill="#ff3d5f" opacity="0.5"/>
+  
+</svg></span>Standby</div>
+</div>
+<div class="sheet">
+  <div class="who">Jax <span>· Veteran · full cover · tap an enemy</span></div>
+  <div class="acts">
+    <div class="act"><b>Shoot</b><span>Heavy · 70% · in the open</span></div>
+    <div class="act on"><b>Double Tap</b><span>Heavy · 2 × 65% · 3 each</span></div>
+    <div class="act"><b>Suppress</b><span>Guard 2 · 60% · half cover</span></div>
+    <div class="act"><b>Move</b><span>Kit's crate · flank the dog</span></div>
+  </div>
+  <p class="hint">Kit is in the open with two lines on him. The heavy left cover to charge Static: he's easy to hit now.</p>
+</div>
+<div class="bar"><button class="btn">Auto</button><button class="btn">Pull back</button><button class="btn go">Go</button></div>

@@ -103,7 +103,7 @@ try {
   // Gear (2026-10-28, slice 5): buy a rifle in the armoury and put it on someone, so overwatch is possible.
   if (await click('[data-action="nav"][data-id="crew"]') && await click('[data-action="open-armoury"]')) {
     await top(); await shot('armoury');
-    await click('[data-action="buy"][data-id="rifle"][data-tier="street"]');
+    await click('[data-action="buy-offer"]:not([disabled])'); // the first rifle on this week's shelf
     await click('[data-action="back"]');
     if (await click('[data-action="open-op"]:has-text("muscle")') || await click('[data-action="open-op"]')) {
       await click('[data-action="gear-slot"][data-id="weapon"]');

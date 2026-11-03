@@ -5,6 +5,67 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-03 · Getting out now pays nothing
+- **Walking away from a job now pays nothing, as the button says.** Taking "Everyone comes home. No pay." when the alarm goes up, when someone is badly hurt, or when nobody is left to carry on used to pay the full fee. It now pays ¥0. Everyone still comes home.
+- **Money is a little tighter early on.** On a careful run, cash at week 26 is about ¥2,500 lower with three founders and no hiring (¥34,250 to ¥31,700). Players who hire up to five feel it more: median ¥15,150 to ¥9,800, and 22% broke instead of 15%.
+
+## 2026-10-30 · Faces on the fight map
+- **Fights now stand on the map as they were meant to:** your crew's faces on their tokens, everyone on their spot behind cover, and the map zoomed to the fight. A bug kept everyone's place off the map, so fights showed initials crowded together.
+
+
+## 2026-10-30 · Every sidearm is different
+- **Each sidearm now has its own strengths:** aim (how much it helps you hit), damage, and for some, pierce (how much armour it ignores).
+- **They come from the gun's frame:**
+  - compact pistols are accurate but light
+  - revolvers hit hard
+  - machine pistols get some rounds through armour
+  - hand cannons hit very hard
+  - pro-only smart pistols are very accurate, and pro-only coil pistols punch through armour
+- **Each gun also rolls a quirk:** true sights, hot loads, a hair trigger, heavy rounds, a worn barrel or light loads. Most have none.
+- **The price follows the strength.** The armoury shows each gun's numbers, and so does the fight.
+- Sidearms you already own are the plain sidearm they always were.
+
+## 2026-10-30 · Gun looks, faces and career marks are in the game
+- **Gun looks:** every rifle and sidearm now has its own look and name, and some guns glow. The armoury stocks a new shelf each week. These were made earlier but never reached the live game.
+- **Faces:** every face has its own shape (anatomy) now.
+- **Career marks:** your crew pick up scars, extra chrome and, after ten jobs together, the crew's lantern mark.
+- **Shaolin monks** can turn up.
+- **Older saves:** guns you already own get a plain look and a name, and the armoury gets stocked.
+
+## 2026-10-30 · See your gear in a fight
+- **Each runner in the fight panel now shows their gun, its damage and their armour,** for example "Pro sidearm 4 · Armoured vest −1".
+- **Shoot and Flank say what a hit does:** "hits for 3 · 2 hits to drop".
+- **The guards' aim shows the damage they'd do after armour,** and Hunker shows how much damage is coming at you this round.
+
+## 2026-10-30 · The planning read knows the map
+- **The fight odds on the planning screen now use the job's own map:** where each side will stand and what cover they'll have. Before, they assumed everyone was in half cover, which was a few points off: Kidnap fights were easier than shown, for example. Now the odds you're shown are the odds the fight uses.
+
+## 2026-10-30 · Fights on the map in every district
+- **Old Town, the Night Market, Glass Heights and the Basin now fight on their maps too,** like the Docks: everyone stands behind something or out in the open, and the map zooms in on the fight.
+- **New things to hide behind:**
+  - Old Town: bins and a dumpster in the alley, and a handcart, washtubs and crates in the courtyard.
+  - Night Market: a cart and crates by the gate.
+  - Glass Heights: crates in the loading bay, plus the lobby desk and server cabinets inside.
+  - Basin: a horse trailer and hay bales at the service gate.
+  - Inside the targets: a table in the flat and in the clinic, and the vet's table.
+- **Market stalls, plaza planters, clinic cots and the stable blocks count as cover.**
+- In the Basin, the guards on the way in now wait further along the fence.
+
+## 2026-10-30 · You command the fights (the Docks first)
+- **Fights now stop for your orders each round** on any job you watch. Jobs sent off with "Never" still fight on their own.
+- **Fights in the Docks happen on the map.** The crew takes the best cover nearby: full behind a container, half behind a crate or a desk. The guards are wherever they were standing. Each person shows a shield for their cover, or an OPEN tag. Other districts still use the old fight picture for now: everyone counts as half cover there.
+- **You can see what the guards are about to do:** a red line from each guard to who they're aiming at, with their chance to hit.
+- **Each runner gets an order:** shoot or flank a guard, hunker down, move to better cover, patch someone, talk a guard down, or kill the lights. Every order shows its odds. Anyone you don't give an order to does what they'd do anyway.
+- **Auto round** plays one round your crew's way. **Auto fight** leaves the rest of the fight to them. **Pull back** is always there.
+- **The map zooms in on the fight,** with faces on the tokens. You can tap a runner, a guard, or a free spot to move to.
+- **New pallets by the Docks gates,** so a fight at the fence has some cover.
+
+## 2026-10-30 · Fights can take orders (the rules, not the screen yet)
+- **Under the hood, fights now have cover.** Everyone stands in the open, in half cover or in full cover, and that changes how hard they are to hit. For now everyone starts in half cover, which plays exactly like fights did before.
+- **The guards decide who they're aiming at before each round.** The screen doesn't show it yet; it will when orders reach the map.
+- **The rules can take an order for each runner each round,** with the chance for each shown: shoot a chosen guard, flank (works round a guard's cover, but leaves you in the open), hunker (much harder to hit, no shot), patch, stabilise, talk, or kill the lights. You can't give orders on screen yet. Until you can, everyone does what they would have done anyway.
+- Old saves still work. A save made mid-fight carries on with everyone in half cover.
+
 ## 2026-10-30 · Loading a save file works again
 - **Save → "Load save file into this slot" did nothing.** You could pick a file, but the game ignored it and showed no error. It loads now. Picking the same file twice in a row also works.
 - **A saved game that can't be opened is no longer lost.** If the game finds a save it can't open (saved by a newer version, which can happen for one launch after an update, or damaged), it now keeps that save and its weekly backup aside before starting fresh. A red banner says so, and the Save screen offers **Restore it**, **Download it** or **Throw away**. Before, the fresh game quietly saved over it, backup included.
@@ -103,6 +164,29 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - Everyone else comes later, through the scouts on Wednesdays and the freelancers on Mondays. Your three cost about ¥750 a week instead of the old five's ¥1,300, so every hire is a real decision.
 - Games already in progress are unchanged (save version 25).
 
+## 2026-10-29 · Sidearms with style, and neon
+- **Sidearms have looks and names too**, and two turn up on the armoury's shelf each week (one street, one pro). Compact pistols, revolvers, machine pistols, old long-barrelled pistols and hand cannons, plus pro-only smart pistols (a light strip, a holo sight, a cable to the wrist) and coil pistols (glowing rings and a power cell).
+- **Finishes and add-ons** from blued steel and hazard yellow to cinnabar lacquer, jade, pearl grips, holographic chrome and clinic white; laser sights, holo sights, glowing vents, LED ammo counters; charms like a neon keychain, a data shard or a hologram lucky cat.
+- **Guns that light up glow in their own colour**: cyan, neon purple, red or gold. Plain ones don't glow, so most rifles look as before.
+- Sidearms you already own become plain blued pistols with a name. They show in the armoury and on gear tiles, not on faces.
+## 2026-10-29 · Every rifle is its own
+- **Rifles have looks and names.** Each one is built from a frame (marksman, carbine, bullpup, heavy or heritage), a finish (from old wood and rust to cinnabar lacquer, jade, temple bronze and white ceramic), sometimes an engraving (gold clouds, dragon scales, a neon circuit) and sometimes a charm (a red silk tassel, a paper talisman, a lucky coin, prayer beads, a mahjong tile...). Each has a name to match, like "Vermilion Heron" or "Ghost Heirloom".
+- **The armoury has a weekly shelf of rifles**: two street and one pro, all different, with new ones every Monday. Other gear is bought as before.
+- The name shows wherever the rifle does, with what it's made of underneath. Looks don't change what a rifle does.
+- Saves upgrade on their own: a rifle you already own keeps its look and gets a name.
+## 2026-10-28 · Career marks
+- **A bad wound leaves a scar.** A serious or critical injury leaves a permanent scar on their face, up to three. Light wounds heal clean.
+- **Pushing neural load leaves chrome.** A job that ends with someone in the danger zone (over 70) adds a visible implant, up to two.
+- **The crew's mark.** After ten jobs with the crew, someone gets a small neon lantern under the eye.
+- Each mark is written in their history, and the profile lists them under their name ("Marked: a scar, the crew's mark"). The memorial wall keeps them.
+- Saves upgrade on their own: nobody has scars on record yet, but anyone already past ten jobs gets the crew's mark straight away.
+## 2026-10-28 · Every face is its own
+- **Faces now differ in the face itself**, not just the hair and gear: eyes (spacing, size, tilt, and monolid, creased, hooded or deep-set lids), brows, nose, mouth and lips, jaw, chin, ears and neck. Wide-open eyes show their whites. Some people have freckles or a mole.
+- **Age shows**: lines from nose to mouth from the mid-thirties, eye bags and a forehead line from 45.
+- **Everyone's face is redrawn once**, crew already in a save included. Hair, skin, implants, gear and the light on them stay the same, so they're still recognisable. Expressions, injuries, masks, glasses and lenses all work as before.
+- Fixed: the Greedy trait said buyout offers "tempt her more" whoever had it; it now says "them".
+## 2026-10-28 · Shaolin monks
+- **A new kind of monk turns up among recruits**: Shaolin warrior monks in saffron robes, with a heavy string of dark prayer beads and nine small ordination dots on the shaved head. Mostly Hong Kong and Southeast Asian names; rarely anyone else. Nobody else's face has changed, though a few existing crew are now drawn as Shaolin monks.
 ## 2026-10-28 · No more Continue by mistake while planning
 - While you're planning a job, the Continue button in the top bar is hidden, so the only button that moves things on is Start. Back out of the plan (or change tabs) and Continue returns. Phones already worked this way for main jobs; now desktop and side tasks do too.
 
