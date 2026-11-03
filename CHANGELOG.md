@@ -5,6 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-03 · The job's map fills the screen
+- On an iPad in landscape or a computer, the site map during a job is now as tall as the screen allows, with the job's title and the Pause and Faster buttons still in view, and takes a larger share of the width. Its zoomed views reshape to fit, so the extra height shows more of the place instead of empty space.
+
 ## 2026-11-03 · A job takes the whole screen
 - While a job runs, the tabs (the bar at the bottom on a phone, the side menu on a tablet or computer) step aside, since they can't take you anywhere mid-job. They come back when you press "Back to the safehouse".
 - On tablets and computers the job uses the full width, and the map of the site is drawn larger.

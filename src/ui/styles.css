@@ -1210,4 +1210,13 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
   #app.is-onjob .siteplan { height: min(52svh, 480px); }
   #app.is-onjob .watch.is-fighting .siteplan { height: min(58svh, 560px); }
 }
-@media (min-width: 1100px) { #app.is-onjob .watch__new { bottom: 8px; } }
+@media (min-width: 1100px) {
+  #app.is-onjob .watch__new { bottom: 8px; }
+  /* Map and feed side by side: the map takes the screen's height (less the top bar, the job's title,
+     the tally and the Pause bar), but no taller than about 1.2:1 so the whole-site view keeps most of its width. The map
+     column gets the larger share; the feed keeps at least 360px. */
+  #app.is-onjob .watch:not(.is-done) { grid-template-columns: minmax(0, 1.5fr) minmax(360px, 1fr); }
+  #app.is-onjob .watch__map { container-type: inline-size; }
+  #app.is-onjob .watch:not(.is-done) .siteplan,
+  #app.is-onjob .watch.is-fighting:not(.is-done) .siteplan { height: max(360px, min(calc(100svh - var(--live-top, 0px) - 250px), 85cqw)); }
+}
