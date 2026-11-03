@@ -1,13 +1,13 @@
 # Prompt: write a new job
 
-Use this to draft new jobs (missions) in any chat, outside a Claude Code session. The result is one JavaScript file in the game's own format. Paste it into a Claude Code session and say "add this job": adding it is a few small edits (the file, one import, the client's job list) and a test run.
+Use this to draft new jobs (missions) in any chat, outside a Claude Code session. The result is one JavaScript file in the game's own format. Add it in a Claude Code session with `/add-job` (Sonnet is enough): adding it is a few small edits (the file, one import, the client's job list) and a test run.
 
 ## How to use it
 
 1. Open a fresh chat and paste everything in the box below.
 2. Replace the **PITCH** at the bottom with your idea: who the client is, which district, how hard, and what happens. A sentence or two is enough.
 3. Read what comes back. If you want changes, ask for them in the same chat.
-4. Paste the file into a Claude Code session with "add this job".
+4. In a Claude Code session, switch to Sonnet (`/model`), type `/add-job` and paste the file after it. Sonnet is enough: `/add-job` (`.claude/commands/add-job.md`) walks it through checking, registering, testing and committing the job. Several jobs can go in one paste.
 
 The world context in the box is a copy of the block in `WORLD.md` (a test checks they match, so update both together). If you'd rather write a job in plain English and have Claude turn it into data, `WRITING_GUIDE.md` has fill-in templates for that; this prompt skips the conversion, so adding a job costs a session almost nothing.
 
