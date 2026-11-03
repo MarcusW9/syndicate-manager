@@ -10,6 +10,22 @@ Text-first crew management game (Football Manager style, endless). Plain JavaScr
 - `src/data/` = content as data (operatives, traits, missions). No game logic here.
 - `src/config/names.js` = all placeholder names (title, city, districts). Rename there only.
 
+## Where to read for a task
+| Working on | Read first |
+| --- | --- |
+| Anything in `src/core/` | `CODEMAP.md` |
+| State shape, saves, economy loop, tests, how things connect | `docs/ARCHITECTURE.md` |
+| A job, crisis or beat (content) | `src/data/missions/<job>.js`, then `core/validate.js` for the rules it must meet |
+| A run's flow, `finish()`, pay/heat/reputation | `CODEMAP.md` "The run, in order", then `core/mission.js` |
+| Planning read, risk numbers | `core/squad.js`, `core/risk.js` |
+| Traits, growth, specialisations | `data/earnedTraits.js`, `core/earned.js`, `core/development.js` |
+| Side tasks, hands-off runs | `core/sidetasks.js`, `core/autorun.js` |
+| Changing the save shape | `src/save/save.js` (`migrate`) and `SAVE_VERSION` in `core/state.js` |
+| Any screen or style | "UI skin" in `ART.md`, newest `docs/screenshots/` set, `ui/app.js`, `ui/board.js` |
+| Writing in-game text, lore, names | `WRITING_GUIDE.md`, `WORLD.md`, `src/config/names.js` |
+| Why something was decided | `DESIGN.md` decision log (grep the topic; rows may be under `docs/design/`) |
+| What shipped / what's next | `CHANGELOG.md` / `HANDOFF.md` (`STATE-OF-PLAY.md` is a 2026-10-26 snapshot) |
+
 ## iOS-ready rules
 - No information that only appears on hover. Tap/click to reveal.
 - Design at phone width first (360-430px), then widen.

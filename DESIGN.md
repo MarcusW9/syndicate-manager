@@ -61,10 +61,11 @@ Each operative is built to carry one long-running story thread, so the first sea
 
 ## Decision log
 
-The log is split by date into `docs/design/` (newest file first). **Add new rows to the top of the newest file**, `docs/design/2026-10-28-to-30.md` (start a new file when it gets long). Never rewrite past rows; supersede them with a new row.
+The log is split by date into `docs/design/` (newest file first). **Add new rows to the top of the newest file**, `docs/design/2026-11.md` (start a new file when it gets long). Never rewrite past rows; supersede them with a new row.
 
 | File | Rows | Themes |
 | --- | --- | --- |
+| [`docs/design/2026-11.md`](docs/design/2026-11.md) | 1 | 2026-11: walking away from a decision pays nothing |
 | [`docs/design/2026-10-28-to-30.md`](docs/design/2026-10-28-to-30.md) | 54 | 2026-10-28 to 2026-10-30: gear, specialisations, sites, district art, offline play, battles and command fights, sidearms |
 | [`docs/design/2026-10-26-to-27.md`](docs/design/2026-10-26-to-27.md) | 43 | 2026-10-26 to 2026-10-27: mission logs, hands-off runs, traits, situations, side tasks, money pressure, the squad run (approaches, incidents, overwatch, wheels, standby) |
 | [`docs/design/2026-10-24-to-25.md`](docs/design/2026-10-24-to-25.md) | 75 | 2026-10-24 to 2026-10-25: development, renewals, pricing, world canon, progression and the rookie start, UI skin and portraits |
