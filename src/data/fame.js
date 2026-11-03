@@ -11,10 +11,13 @@ export const FAME_NAMES = { unknown: 'Unknown', known: 'Known', respected: 'Resp
 export const FAME_RULES = {
   known: { jobs: 6 },
   respected: { activeWeeks: 6, atLevel: 10 },
-  // Lifers swap the at-level count for jobs (their own Elite asks for 40 of them).
-  elite: { activeWeeks: 12, atLevel: 20, liferJobs: 40, standing: 40 },
-  // Shown as progress only in this slice; Lifers are exempt from the at-level count.
-  legend: { activeWeeks: 26, atLevel: 40, tier: 'veteran' },
+  // Lifers swap the at-level count for jobs. atLevel was 20 and liferJobs 40 (proposal 2.4) until
+  // the owner's target (2026-11-03): first Elite around week 20-30, one or two by week 52. At 20,
+  // careful crews had an Elite in week 12 and four by week 52 (docs/design/2026-11.md).
+  elite: { activeWeeks: 12, atLevel: 60, liferJobs: 120, standing: 40 },
+  // Shown as progress only in this slice; Lifers are exempt from the at-level count. atLevel was 40,
+  // raised with Elite's so Legend still asks for more (twice Elite, like the paths).
+  legend: { activeWeeks: 26, atLevel: 120, tier: 'veteran' },
 };
 
 // Elite lapses to respected after this many Sundays in a row with standing under `below`.

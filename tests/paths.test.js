@@ -53,12 +53,12 @@ test('Enforcer reads fights won and combat carries; Iron adds lives saved and ne
 });
 
 test('Legend readiness lists every condition; Lifers skip the at-level count', () => {
-  const ghostLegend = { clean: 30, bestCleanStreak: 10, activeWeeks: 26, atLevel: 40 };
+  const ghostLegend = { clean: 30, bestCleanStreak: 10, activeWeeks: 26, atLevel: 120 }; // at level: 120 since 2026-11-03 (was 40)
   assert.equal(legendProgress(op(ghostLegend, { fame: 'elite', tier: 'veteran' })).ready, true);
   const notVet = legendProgress(op(ghostLegend, { fame: 'elite', tier: 'pro' }));
   assert.equal(notVet.ready, false);
   assert.deepEqual(notVet.checks.filter((c) => !c.met).map((c) => c.label), ['a veteran']);
-  assert.equal(legendProgress(op({ ...ghostLegend, atLevel: 39 }, { fame: 'elite', tier: 'veteran' })).ready, false);
+  assert.equal(legendProgress(op({ ...ghostLegend, atLevel: 119 }, { fame: 'elite', tier: 'veteran' })).ready, false);
   assert.equal(legendProgress(op({ activeWeeks: 52, jobs: 80, atLevel: 3 }, { fame: 'elite', tier: 'veteran' })).ready, true, 'a Lifer');
   assert.equal(legendProgress(op(ghostLegend, { fame: 'elite', tier: 'veteran' })).path.id, 'ghost');
 });
