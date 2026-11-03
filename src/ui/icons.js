@@ -23,12 +23,30 @@ const PATHS = {
   medkit: '<rect x="3" y="7" width="18" height="13" rx="1"/><path d="M9 7V4h6v3M12 10.5v6M9 13.5h6"/>', // a bag with a cross
   picks: '<circle cx="7" cy="12" r="3.5"/><path d="M10.5 12H21M17 12v3M20 12v2"/>', // a key
   implant: '<path d="M8 21v-3.5A7 7 0 1 1 18 11l2 3h-2v3h-3v4"/><rect x="9" y="8" width="4" height="4"/>', // a head with a chip
+  // Traits (2026-11-03): born and earned traits as chips on a runner's page. Most use a stat's
+  // icon; these are the ones no stat says.
+  bolt: '<path d="M13 3L5 13h6l-1 8 8-10h-6z"/>', // a short fuse, a hothead
+  heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+  eye: '<path d="M3 12c2.5-4 5.5-6 9-6s6.5 2 9 6c-2.5 4-5.5 6-9 6s-6.5-2-9-6z"/><circle cx="12" cy="12" r="2.5"/>',
+  star: '<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/>',
+  moon: '<path d="M19 15.5A8 8 0 0 1 8.5 5a8 8 0 1 0 10.5 10.5z"/>', // superstition
+  coin: '<circle cx="12" cy="12" r="8"/><path d="M9 8l3 4 3-4M12 12v5M9.5 13h5M9.5 15.5h5"/>', // a yen coin
+  flame: '<path d="M12 21c-4 0-6-2.6-6-5.6 0-3.4 3-5 3.5-9 2 1.5 3 3.2 3 5 1-1 1.5-2.2 1.5-3.4 2.5 2 4 4.6 4 7.4 0 3-2 5.6-6 5.6z"/>', // heat
+  scar: '<path d="M5 17l4-3 2 2 3-4 2 2 3-3M8 11l2 2M14 9l2 2"/>', // a stitched line
+  wave: '<path d="M3 12c1.5-3 3-3 4.5 0s3 3 4.5 0 3-3 4.5 0 3 3 4.5 0"/>', // shaky hands
+  rise: '<path d="M4 18l6-6 4 4 6-8M15 8h5v5"/>', // riding high
+  pin: '<path d="M12 21s-6-6.2-6-11a6 6 0 0 1 12 0c0 4.8-6 11-6 11z"/><circle cx="12" cy="10" r="2"/>', // a district
+  siren: '<path d="M7 18v-6a5 5 0 0 1 10 0v6M5 18h14v3H5zM12 3v2M4.5 6l1.4 1.4M19.5 6l-1.4 1.4"/>',
+  battery: '<rect x="3" y="8" width="16" height="9" rx="1"/><path d="M21 11v3M6 11v3"/>', // burned out: nearly empty
 };
 
 const svg = (key, cls = '') => `<svg class="icon ${cls}" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g ${stroke}>${PATHS[key] ?? ''}</g></svg>`;
 
 /** An item's icon alone (data/gear.js type; implants share one), beside its name. */
 export const gearGlyph = (type, slot) => svg(PATHS[type] ? type : slot === 'implant' ? 'implant' : 'tech');
+
+/** A trait's icon (data/traits.js and data/earnedTraits.js `icon`), beside its name. */
+export const traitGlyph = (key) => svg(PATHS[key] ? key : 'star');
 
 /** A stat's icon alone, to sit right before its word (the word carries the meaning). */
 export const statGlyph = (stat) => svg(stat);

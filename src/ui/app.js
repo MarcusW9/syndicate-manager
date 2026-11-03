@@ -8,7 +8,7 @@ import { MISSIONS } from '../data/missions.js';
 import { TRAITS } from '../data/traits.js';
 import { PARTNER } from '../data/partner.js';
 import { jossIcon, portrait } from './art.js';
-import { statIcon, statGlyph, crewIcons } from './icons.js';
+import { statIcon, statGlyph, crewIcons, traitGlyph } from './icons.js';
 import { cityMapSvg, MAP_DISTRICTS } from './citymap.js';
 import { districtArt } from './districtArt.js';
 
@@ -77,6 +77,7 @@ let continueRestUntil = 0;
 let dayCue = null; // what the day that just started brought; shown once, on the next render
 let importInput = null; // the hidden save-file picker (see mountApp)
 let focusNext = null; // { action, id }: the control to focus after the next render (going back to a list)
+let traitTip = null; // 'pageId|key': the trait chip or synergy whose card is open (one at a time)
 let returnTo = null; // { screen, messageId }: where a runner's page opened from a name link goes back to
 let founderPick = []; // candidate ids picked so far on a new game's first screen (renderFounding)
 let runnersHidden = false; // the job board's runners panel, folded away for this session
@@ -151,6 +152,7 @@ function onClick(e) {
     case 'decide': return setState(resolveDecision(state, id, t.dataset.option));
     case 'open-op': screen = 'crew'; openArmoury = false; openOperativeId = id; returnTo = null; break;
     // A crew member's name in a message: open their page, remembering the message to come back to.
+    case 'trait-tip': traitTip = traitTip === id ? null : id; break;
     case 'op-link': returnTo = { screen, messageId: openMessageId }; screen = 'crew'; openArmoury = false; openRecruitId = null; openOperativeId = id; break;
     // Gear (ui/gear.js, core/gear.js): the armoury, and a runner's slots.
     case 'open-armoury': screen = 'crew'; openArmoury = true; openOperativeId = null; gearSlot = null; break;
@@ -429,13 +431,16 @@ function render() {
   const cue = dayCue;
   dayCue = null;
   // Desktop pages use the full width; a running job stays a narrow reading column.
-  const wide = !state.activeMission || !state.activeMission.done; // a running job gets the width for map and feed side by side
+  const wide = !state.activeMission || !state.activeMission.done; // a running job gets the width for map and feed side by side (no tabs: see is-onjob)
   // While a job is being planned its own Start button is the way on, so Continue steps aside
   // everywhere (owner, 2026-10-28: on desktop the top-bar Continue was easy to hit by mistake).
   const planning = !state.activeMission && screen === 'jobs' && !!(plan || sidePlan);
   // Phones: Continue sits above the tab bar, except while planning and during a job (nothing to continue).
   const dock = !state.activeMission && !planning && !state.founding; // the founder pick has its own bar
 
+  // During a job the tabs can't take you anywhere, so they step aside and the job gets the room
+  // (owner, 2026-11-03). They come back with "Back to the safehouse".
+  root.classList.toggle('is-onjob', !!state.activeMission);
   root.innerHTML = `
     <header class="topbar ${cue ? 'is-new-day' : ''}">
       ${renderWhen()}
@@ -1062,9 +1067,7 @@ function renderRecruit() {
 
       ${r.brings?.length ? `<p class="body"><strong>Brings their own:</strong> ${esc(r.brings.map((type) => itemName({ type, tier: 'street' }).toLowerCase()).join(', '))}.</p>` : ''}
       <h2>Traits</h2>
-      <ul class="chips">
-        ${r.traits.map((t) => `<li class="chip"><strong>${esc(TRAITS[t]?.name ?? t)}</strong><span>${esc(TRAITS[t]?.desc ?? '')}</span></li>`).join('')}
-      </ul>
+      ${traitChips(r.id, r.traits.map(bornChip))}
       </div>
 
       <div class="opgrid__stats">
@@ -1202,14 +1205,9 @@ function renderOperative() {
         <li class="chip chip--earned"><strong>${esc(specOf(op).name)}</strong><span>${esc(specOf(op).desc)}</span><span class="chip__when">Since day ${op.spec.day}</span></li>
       </ul>` : ''}
       <h2>Traits</h2>
-      <ul class="chips">
-        ${op.traits.map((t) => `<li class="chip"><strong>${esc(TRAITS[t]?.name ?? t)}</strong><span>${esc(TRAITS[t]?.desc ?? '')}</span></li>`).join('')}
-      </ul>
-      ${(op.earned ?? []).length ? `
-      <h2>Earned on the job</h2>
-      <ul class="chips">
-        ${op.earned.map((e) => `<li class="chip chip--earned ${EARNED_TRAITS[e.id].kind === 'temporary' ? 'chip--temporary' : ''}"><strong>${esc(EARNED_TRAITS[e.id].name)}</strong><span>${esc(earnedText(state, e))}</span><span class="chip__when">${EARNED_TRAITS[e.id].kind === 'temporary' ? 'For now' : 'For good'} · since day ${e.day}</span></li>`).join('')}
-      </ul>` : ''}
+      ${traitChips(op.id, op.traits.map(bornChip))}
+      ${earnedChips(op)}
+      ${synergies(op)}
       </div>
 
       <div class="opgrid__stats">
@@ -1918,6 +1916,48 @@ function keptCard(n) {
           <button class="btn btn--danger" data-action="kept-discard" data-id="${n}">Throw away</button>
         </div>
       </div>`;
+}
+
+// Traits as chips (owner, 2026-11-03): an icon and a name in a wrapping row; tap one and its card
+// opens under the row (tap again, or another, to close). Tap, not hover: iOS rule in CLAUDE.md.
+const bornChip = (t) => ({ key: `t:${t}`, icon: TRAITS[t]?.icon, name: TRAITS[t]?.name ?? t, desc: TRAITS[t]?.desc ?? '', kind: 'born' });
+
+/** One row of trait chips for a runner's (or a lead's) page, and the open chip's card. */
+function traitChips(pageId, items) {
+  if (!items.length) return '<p class="muted small">None.</p>';
+  const open = items.find((it) => traitTip === `${pageId}|${it.key}`);
+  return `<ul class="tchips">${items.map((it) => {
+    const on = it === open;
+    return `<li><button class="tchip tchip--${it.kind}${it.setback ? ' tchip--setback' : ''}${on ? ' is-open' : ''}" data-action="trait-tip" data-id="${esc(`${pageId}|${it.key}`)}" aria-expanded="${on}">${traitGlyph(it.icon)}<span>${esc(it.name)}</span></button></li>`;
+  }).join('')}</ul>
+      ${open ? `<div class="tipcard${open.setback ? ' tipcard--setback' : ''}" role="note"><strong>${esc(open.name)}</strong><p>${esc(open.desc)}</p>${open.when ? `<p class="muted small">${esc(open.when)}</p>` : ''}</div>` : ''}`;
+}
+
+/** "Earned on the job": every earned trait but synergies, which get their own row. */
+function earnedChips(op) {
+  const list = (op.earned ?? []).filter((e) => e.id !== 'crew_anchor');
+  if (!list.length) return '';
+  return `<h2>Earned on the job</h2>
+      ${traitChips(op.id, list.map((e, i) => {
+        const def = EARNED_TRAITS[e.id];
+        return { key: `e:${i}`, icon: def.icon, name: def.name, desc: earnedText(state, e), kind: def.kind, setback: def.setback,
+          when: `${def.kind === 'temporary' ? 'For now' : 'For good'} · since day ${e.day}` };
+      }))}`;
+}
+
+/** Synergies (crew_anchor, shown as Synergy since 2026-11-03): who they work best with, as portraits. */
+function synergies(op) {
+  const list = (op.earned ?? []).filter((e) => e.id === 'crew_anchor')
+    .map((e) => ({ e, mate: state.crew.find((o) => o.id === e.partner) ?? state.memorial.find((o) => o.id === e.partner) }))
+    .filter((x) => x.mate);
+  if (!list.length) return '';
+  const open = list.find((x) => traitTip === `${op.id}|s:${x.mate.id}`);
+  return `<h2>Synergies</h2>
+      <ul class="synergies">${list.map(({ mate }) => {
+        const on = mate === open?.mate;
+        return `<li><button class="synergy${on ? ' is-open' : ''}" data-action="trait-tip" data-id="${esc(`${op.id}|s:${mate.id}`)}" aria-expanded="${on}" aria-label="Synergy with ${esc(mate.handle)}">${face(mate, 'sm')}<span>${esc(mate.handle)}</span></button></li>`;
+      }).join('')}</ul>
+      ${open ? `<div class="tipcard" role="note"><strong>Synergy with ${esc(open.mate.handle)}</strong><p>${esc(earnedText(state, open.e))}</p><p class="muted small">${open.mate.cause ? `${esc(open.mate.handle)} is gone. ` : ''}For good · since day ${open.e.day}</p>${open.mate.cause ? '' : `<button class="btn btn--ghost" data-action="open-op" data-id="${esc(open.mate.id)}">${esc(open.mate.handle)}'s page →</button>`}</div>` : ''}`;
 }
 
 function renderSettings() {

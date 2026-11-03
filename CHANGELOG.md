@@ -5,6 +5,18 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-03 · A job takes the whole screen
+- While a job runs, the tabs (the bar at the bottom on a phone, the side menu on a tablet or computer) step aside, since they can't take you anywhere mid-job. They come back when you press "Back to the safehouse".
+- On tablets and computers the job uses the full width, and the map of the site is drawn larger.
+
+## 2026-11-03 · Traits as chips, and Synergies
+- On a runner's page, traits (the ones they were born with and the ones earned on the job) are now compact chips with an icon and a name, instead of a long list. Tap a chip to see what it does and since when; tap again to close. Temporary traits have a dashed edge; setbacks like Shaky are red.
+- **Crew Anchor is now called Synergy**, everywhere: on the page, in messages and in roll notes. Synergies have their own row of portraits: tap one to see the bonus, the downside if that partner gets badly hurt, and a link to their page.
+- The same trait chips are on a lead's page when you're hiring.
+
+## 2026-11-03 · Buttons in pop-up sheets are centred
+- "Go to the armoury" (and any full-width button at the bottom of a pop-up sheet) now has its label centred top to bottom, not pressed against the top edge.
+
 ## 2026-11-03 · Fame, standing and paths (renown, slice 3)
 - **Runners now become known.** Fame climbs one step at a time from the record: Unknown, Known (6 jobs), Respected (6 active weeks and 10 jobs at their level), Elite. Elite needs 12 active weeks, 20 jobs at their level (Lifers: 40 jobs), a path's Elite numbers and a standing of 40. It arrives on its own, with a message in the inbox, a history line and a highlight. Legend isn't given yet; the runner page shows when someone is "Ready for their moment".
 - **Standing** is how the street rates a runner right now, 0 to 100: up with completed jobs at their level, hard calls that held and milestones; down when a job is lost or aborted, the crew pulls back from a fight, or they come back badly hurt, and a little every week on the bench. An Elite under 20 on two Sundays in a row drops back to Respected, and can win it back.

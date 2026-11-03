@@ -94,7 +94,7 @@ export function earn(state, op, id, extra = {}) {
   op.earned = [...(op.earned ?? []), entry];
   RESTART[id]?.(track(op), extra); // a temporary trait comes back only after a fresh run of the same
   op.history.push(`Day ${state.day}: ${def.name}. ${earnedText(state, entry, 'history')}`);
-  // One message per trait earned, even two of the same on one day (Crew Anchor with two
+  // One message per trait earned, even two of the same on one day (a Synergy with two
   // partners): the id and the subject name who or where it's about (owner's save, 2026-10-28).
   const about = extra.partner ? ` with ${state.crew.find((o) => o.id === extra.partner)?.handle ?? 'a partner'}`
     : extra.district ? ` (${districtText(extra.district)})` : extra.client ? ` (${clientName(extra.client)})` : '';
@@ -146,9 +146,9 @@ export function ownMods(op, { stat, crew = [] }) {
   if (stat === 'cool') {
     for (const e of (op.earned ?? []).filter((x) => x.id === 'crew_anchor')) {
       const mate = crew.find((o) => o.id === e.partner);
-      if (mate) out.push({ value: 1, note: `with ${mate.handle} (Crew Anchor) +1` });
+      if (mate) out.push({ value: 1, note: `synergy with ${mate.handle} +1` });
     }
-    if (t.anchorShaken) out.push({ value: -1, note: 'shaken (partner hurt) −1' });
+    if (t.anchorShaken) out.push({ value: -1, note: 'shaken (synergy partner hurt) −1' });
   }
   return out;
 }
@@ -259,7 +259,7 @@ export function afterJob(state, { events, district, clientId, outcome, crewIds }
     if (done && !causedHeat) t.cleanJobs = (t.cleanJobs ?? 0) + 1;
     if ((t.cleanJobs ?? 0) >= NEEDS.cleanProfessional) earn(state, op, 'clean_professional');
 
-    // Crew Anchor: jobs together with someone, both back unhurt.
+    // Synergy (crew_anchor): jobs together with someone, both back unhurt.
     if (!wasHurt) {
       for (const mate of crew) {
         if (mate === op || hurt.has(mate.id)) continue;
