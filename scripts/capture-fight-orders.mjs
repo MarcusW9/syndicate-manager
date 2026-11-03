@@ -27,11 +27,11 @@ try {
     await vis('[data-action="watch-speed"]').click();
     for (let i = 0; i < 300; i++) {
       if (await p.locator('[data-action="fight-go"]').filter({ visible: true }).count()) {
-        await p.waitForTimeout(1500);
+        await p.waitForTimeout(4000); // the map plays the fight's start (and the camera pans) after the orders appear
         await p.screenshot({ path: `${out}/fight-orders-${w}x${h}.png` });
         console.log(`${w}x${h}`, JSON.stringify(await p.evaluate(() => {
           const r = (q) => { const e = document.querySelector(q); if (!e) return null; const b = e.getBoundingClientRect(); return [Math.round(b.top), Math.round(b.bottom)]; };
-          return { screen: innerHeight, topbar: r('.topbar'), map: r('.watch__live'), feed: r('.watch__side') };
+          return { screen: innerHeight, topbar: r('.topbar'), map: r('.watch__live'), feed: r('.watch__side'), camera: document.querySelector('.siteplan')?.getAttribute('viewBox'), fight: document.querySelector('.siteplan')?.classList.contains('is-fight'), tokens: [...document.querySelectorAll('.siteplan .sp-token, .siteplan .sp-enemy')].map((t) => t.getAttribute('transform')).filter(Boolean).slice(0, 8) };
         })));
         break;
       }
@@ -44,4 +44,4 @@ try {
     }
     await p.close();
   }
-} finally { await b.close(); process.kill(-srv.pid); }
+} finally { await b.close(); try { process.kill(-srv.pid); } catch {} }

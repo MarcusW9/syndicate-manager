@@ -22,6 +22,7 @@ Then add a row to the top of the table below and commit the folder with the chan
 
 | Date | Version | Commit | What's new on screen | Folder |
 | --- | --- | --- | --- | --- |
+| 2026-11-03 | Design session: the fight camera frames everyone | (`scripts/capture-fight-orders.mjs`) | A fight waiting for orders at 1440×900, 2000×1100 and 1180×820, captured once the map has played the fight's start: every crew member and guard whole, health bars and armour marks included. | [2026-11-03-design-session-fight-camera](2026-11-03-design-session-fight-camera/) |
 | 2026-11-03 | Design session: fight orders fit the screen | (`scripts/capture-fight-orders.mjs`) | A fight waiting for orders at 1440×900, 2000×1100 and 1180×820: the feed column ends level with the map, with space below. | [2026-11-03-design-session-fight-orders-fit](2026-11-03-design-session-fight-orders-fit/) |
 | 2026-11-03 | Owner captures: fight orders to the screen's edge | (owner) | 01: a fight's orders on desktop, the feed column running to the bottom of the screen. | [2026-11-03-owner-captures-fight-overflow](2026-11-03-owner-captures-fight-overflow/) |
 | 2026-11-03 | A finished job keeps its view | (this change) | The usual set. 16, the end of a job: the summary at the end of the play-by-play. | [2026-11-03-job-end-same-view](2026-11-03-job-end-same-view/) |
