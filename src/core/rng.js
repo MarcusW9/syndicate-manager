@@ -20,3 +20,17 @@ export function d20(rng) {
 export function pick(rng, list) {
   return list[Math.floor(rng() * list.length)];
 }
+
+/**
+ * A stable 32-bit number for a list of keys (FNV-1a over their text). For rolls that must not move
+ * the saved counter (core/random.js nextRng), so adding them changes no other roll in the game:
+ * named offers and fame pay asks (renown slice 4).
+ */
+export function hash(...parts) {
+  let h = 2166136261;
+  for (const ch of parts.join('|')) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+
+/** A generator seeded from hash(...parts): the same keys always give the same numbers. */
+export const hashRng = (...parts) => makeRng(hash(...parts));

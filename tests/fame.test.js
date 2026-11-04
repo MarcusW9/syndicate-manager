@@ -21,7 +21,7 @@ const { importSave } = await import('../src/save/save.js');
 const game = (seed = 1) => createNewGame({ seed, startCrew: 'fresh' });
 const rec = (extra) => ({ ...freshRecord(), ...extra });
 // A record that meets the Elite rule on the Ghost path (and everything below it).
-const eliteRecord = (extra) => rec({ jobs: 30, atLevel: 25, wins: 25, clean: 20, bestCleanStreak: 6, activeWeeks: 14, lastJobDay: 0, ...extra });
+const eliteRecord = (extra) => rec({ jobs: 70, atLevel: 65, wins: 25, clean: 20, bestCleanStreak: 6, activeWeeks: 14, lastJobDay: 0, ...extra });
 const toSunday = (s) => { while (!calendar(s.day + 1).isSunday) s = advanceDay(s); return advanceDay(s); };
 function runJob(s, crewIds, template = 'container409', approach = 'stealth') {
   s.jobs = []; addOffer(s, template);
@@ -48,12 +48,13 @@ test('Elite needs the whole rule: active weeks, at-level work, a path, and stand
   assert.equal(eliteRuleMet(op({})), true);
   assert.equal(eliteRuleMet(op({}, 39)), false, 'standing under 40');
   assert.equal(eliteRuleMet(op({ activeWeeks: 11 })), false, 'too few active weeks');
-  assert.equal(eliteRuleMet(op({ atLevel: 19 })), false, 'too little work at their level');
+  assert.equal(eliteRuleMet(op({ atLevel: 59 })), false, 'too little work at their level (60 since 2026-11-03; was 20)');
   assert.equal(eliteRuleMet(op({ clean: 14 })), false, 'no path at Elite');
-  // Lifers swap the at-level count for jobs.
-  const lifer = op({ atLevel: 0, clean: 0, bestCleanStreak: 0, activeWeeks: 26, jobs: 40 });
+  // Lifers swap the at-level count for jobs (120 since 2026-11-03; was 40).
+  const lifer = op({ atLevel: 0, clean: 0, bestCleanStreak: 0, activeWeeks: 26, jobs: 120 });
   assert.equal(eliteRuleMet(lifer), true);
-  assert.equal(eliteRuleMet(op({ atLevel: 0, clean: 0, bestCleanStreak: 0, activeWeeks: 26, jobs: 39 })), false);
+  assert.equal(eliteRuleMet(op({ atLevel: 0, clean: 0, bestCleanStreak: 0, activeWeeks: 26, jobs: 119 })), false);
+  assert.equal(eliteRuleMet(op({ atLevel: 59, clean: 0, bestCleanStreak: 0, activeWeeks: 26, jobs: 100 })), false, 'a Lifer path alone, short of 120 jobs and 60 at level');
   assert.equal(fameTarget(op({}, 39)), 'respected');
   assert.equal(fameTarget({ record: rec({ jobs: 6 }) }), 'known');
   assert.equal(fameTarget({ record: rec({ jobs: 5 }) }), 'unknown');
@@ -143,7 +144,7 @@ test('standing words for Elite', () => {
 });
 
 test('nobody is made a Legend in this slice; eligibility is only a flag', () => {
-  const op = { handle: 'L', tier: 'veteran', fame: 'elite', standing: 90, record: eliteRecord({ clean: 40, bestCleanStreak: 12, activeWeeks: 30, atLevel: 45 }) };
+  const op = { handle: 'L', tier: 'veteran', fame: 'elite', standing: 90, record: eliteRecord({ clean: 40, bestCleanStreak: 12, activeWeeks: 30, atLevel: 125 }) };
   assert.equal(legendEligible(op), true);
   assert.equal(legendEligible({ ...op, tier: 'pro' }), false, 'Legend needs a veteran');
   assert.equal(legendEligible({ ...op, fame: 'respected' }), false);
@@ -244,7 +245,7 @@ test('save v32: a v29 save upgrades straight through, standing from jobs, nobody
   s.crew.push({ ...structuredClone(s.crew[3]), id: 'fx', freelance: true, jobsWithCrew: 30 });
   const st = await importSave({ text: () => Promise.resolve(JSON.stringify(s)) });
   assert.equal(st.version, SAVE_VERSION);
-  assert.equal(SAVE_VERSION, 32);
+  assert.ok(SAVE_VERSION >= 32); // the chain runs on through later versions (v33: named offers)
   const [ua, ub, uc] = st.crew;
   assert.equal(ua.standing, 50); assert.equal(ub.standing, 12); assert.equal(uc.standing, 0);
   assert.ok(['known', 'respected'].includes(ua.fame), `capped at respected, got ${ua.fame}`);

@@ -53,6 +53,10 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .stat__label { color: var(--muted); font-size: 0.75rem; margin-right: 4px; }
 .delta { font-size: 0.78rem; font-weight: 600; color: #5fe0a5; }
 .delta.is-down { color: var(--danger); }
+/* The tong's rank is a button: tap it for what a tong is (DESIGN.md 2026-11-04). 44px tall to tap. */
+.tierbtn { min-height: 44px; display: inline-flex; align-items: center; background: none; border: 0; padding: 0; margin: -10px 0; cursor: pointer; font: inherit; color: inherit; }
+.topbar:has(> .infotext) { flex-wrap: wrap; }
+.topbar > .infotext { flex: 1 0 100%; order: 9; margin: 0; }
 .tier { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 3px 8px; border-radius: 6px; background: #262b36; color: var(--text); }
 .topbar__continue { display: none; flex: 0 0 auto; justify-items: center; align-content: center; gap: 1px; padding: 4px 16px; }
 /* Phones: Continue in a dock just above the tab bar, where the thumb is. */
@@ -1146,33 +1150,110 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .ffo-last { font-size: 0.82rem; color: var(--muted); } .ffo-last summary { cursor: pointer; min-height: 32px; line-height: 1.4; }
 .ffo-last p { margin: 2px 0 0; } .ffo-last .tone--bad { color: #ff8a98; } .ffo-last .tone--good { color: var(--text); }
 .watch.is-fighting.is-calling .watch__new { display: none; }
-.ffo-intents { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
-.ffo-intents span { font: 600 0.72rem var(--display); letter-spacing: 0.08em; text-transform: uppercase; color: #ff8a98; border: 1px solid #4a2230; background: #160d12; padding: 2px 6px; }
-.ffo-intents--none { color: var(--muted); font-size: 0.85rem; }
-.ffo-crew { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(140px, 45%), 1fr)); gap: 6px; }
-.ffo-who { display: grid; gap: 1px; min-height: var(--tap, 44px); text-align: left; padding: 6px 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); font: inherit; cursor: pointer; clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 0 100%); }
-.ffo-who strong { font: 700 0.86rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; }
-.ffo-who.is-on { border-color: var(--accent-2); background: #12262a; }
-.ffo-who.is-down { opacity: 0.5; cursor: default; }
-.ffo-hp { font-size: 0.74rem; color: var(--muted); } .ffo-hp b { color: #ff8a98; font-weight: 600; }
+.ffo-intents--none { margin: 0; color: var(--muted); font-size: 0.85rem; }
+/* 2026-11-03: a compact roster (one row each), then the picked runner's tray. */
+.ffo-title .ffo-help { margin-left: 8px; min-width: 32px; min-height: 32px; border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); font: 700 0.9rem var(--display); cursor: pointer; }
+.ffo-title { align-items: center; } .ffo-title > span { margin-left: auto; }
+.ffo-help.is-on { border-color: var(--accent-2); color: var(--accent-2); }
+.ffo-rules { display: grid; gap: 4px; border-left: 2px solid var(--accent-2); padding: 2px 0 2px 10px; }
+.ffo-rules p { margin: 0; color: var(--muted); font-size: 0.8rem; line-height: 1.4; }
+.ffo-crew { display: grid; gap: 4px; }
+.ffo-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, max-content); align-items: stretch; border: 1px solid var(--line); background: var(--panel-2); clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 0 100%); }
+.ffo-row.is-on { border-color: var(--accent-2); background: #12262a; }
+.ffo-row.is-down { opacity: 0.5; }
+.ffo-who { display: flex; align-items: center; gap: 8px; min-width: 0; min-height: var(--tap, 44px); text-align: left; padding: 4px 6px; border: 0; background: none; color: var(--text); font: inherit; cursor: pointer; }
+.ffo-who:disabled { cursor: default; }
+.ffo-who .face { width: 32px; height: 32px; }
+.ffo-who__main { display: grid; gap: 2px; min-width: 0; flex: 1; overflow: hidden; }
+.ffo-who__top { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.ffo-who strong { font: 700 0.86rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ffo-cover { flex: none; font: 700 0.62rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; padding: 0 4px; border: 1px solid var(--accent-2); color: var(--accent-2); }
+.ffo-cover--half { border-style: dashed; } .ffo-cover--open { border-color: var(--warn); color: var(--warn); }
+.ffo-hp { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--muted); white-space: nowrap; } .ffo-hp b { color: #ff8a98; font-weight: 600; }
+.ffo-hpbar { flex: none; width: 48px; height: 4px; background: #262c38; } .ffo-hpbar i { display: block; height: 100%; background: #5fe0a5; }
+.ffo-hp.is-low .ffo-hpbar i { background: var(--warn); } .ffo-hp.is-crit .ffo-hpbar i { background: var(--danger); }
 .ffo-hp.is-low { color: var(--warn); } .ffo-hp.is-crit { color: var(--danger); }
-.ffo-kit { font-size: 0.72rem; color: var(--accent-2); }
-.ffo-order { font-size: 0.74rem; color: var(--muted); } .ffo-order.is-set { color: var(--warn); font-weight: 600; }
+.ffo-aimed { flex: none; font: 600 0.7rem var(--display); letter-spacing: 0.04em; color: #ff8a98; white-space: nowrap; }
+.ffo-tag { display: flex; align-items: center; gap: 5px; justify-content: flex-end; text-align: right; padding: 4px 10px; font-size: 0.74rem; color: var(--muted); opacity: 0.8; min-width: 0; }
+.ffo-tag small { font: 700 0.6rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; }
+button.ffo-tag { min-height: var(--tap, 44px); border: 0; border-left: 1px solid #4a3f1a; background: #211d0c; color: var(--warn); font: 600 0.74rem system-ui, sans-serif; opacity: 1; cursor: pointer; }
+button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
+.ffo-tray { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 8px; }
+.ffo-tray__who { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.ffo-tray__who strong { font: 700 0.9rem var(--display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-2); }
+.ffo-tray__who span { font-size: 0.74rem; color: var(--muted); }
+.ffo-threat { margin: 0; font-size: 0.74rem; color: #ff8a98; line-height: 1.4; }
 .ffo-targets { display: flex; flex-wrap: wrap; gap: 6px; }
-.ffo-target { min-height: var(--tap, 44px); padding: 4px 10px; border: 1px solid #4a2230; background: #160d12; color: #ff8a98; font: 700 0.8rem var(--display); letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
+.ffo-target { min-height: var(--tap, 44px); padding: 4px 10px; border: 1px solid #4a2230; background: #160d12; color: #ff8a98; font: 700 0.8rem var(--display); letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; text-align: left; }
+.ffo-target em { font-style: normal; color: var(--text); margin-left: 4px; }
 .ffo-target span { display: block; font: 500 0.7rem system-ui, sans-serif; letter-spacing: 0; text-transform: none; color: var(--muted); }
 .ffo-target.is-on { border-color: var(--warn); color: var(--warn); }
-.ffo-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.ffo-act { display: grid; gap: 2px; align-content: start; min-height: 52px; text-align: left; padding: 7px 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); font: inherit; cursor: pointer; clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); }
+.ffo-target.is-out { display: inline-flex; flex-direction: column; justify-content: center; opacity: 0.4; cursor: default; }
+.ffo-acts { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 6px; }
+.ffo-act { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; row-gap: 1px; align-content: start; min-height: var(--tap, 44px); text-align: left; padding: 6px 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); font: inherit; cursor: pointer; clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); }
 .ffo-act b { font: 700 0.86rem var(--display); letter-spacing: 0.08em; text-transform: uppercase; }
-.ffo-act b i { font-style: normal; font-weight: 600; font-size: 0.66rem; color: var(--muted); letter-spacing: 0.06em; }
+.ffo-act b i { font-style: normal; font-weight: 600; font-size: 0.62rem; color: var(--muted); letter-spacing: 0.06em; border: 1px solid var(--line); padding: 0 3px; margin-left: 2px; white-space: nowrap; }
+.ffo-act em { grid-row: span 2; align-self: center; font: 700 1.2rem var(--display); font-style: normal; color: var(--text); }
 .ffo-act span { font-size: 0.74rem; color: var(--accent-2); line-height: 1.3; }
+.ffo-act.is-call { border-style: dashed; border-color: #3a4a52; }
 .ffo-act.is-on { border-color: var(--warn); background: #211d0c; } .ffo-act.is-on b { color: var(--warn); }
-.ffo-clear { justify-self: start; }
 .ffo-bar { display: grid; grid-template-columns: repeat(3, auto) 1fr; gap: 6px; }
 .ffo-bar .btn { min-height: var(--tap, 44px); padding-inline: 10px; }
+.ffo-go small { font-weight: 500; font-size: 0.72rem; letter-spacing: 0.04em; text-transform: none; opacity: 0.85; }
+.ffo-confirm { display: grid; gap: 8px; border: 1px solid #4a3f1a; background: #160f08; padding: 10px; }
+.ffo-confirm p { margin: 0; font-size: 0.85rem; line-height: 1.4; } .ffo-confirm strong { color: var(--warn); }
+.ffo-bar--confirm { grid-template-columns: 1fr 1fr; }
 .ffo-note { margin: 0; color: var(--muted); font-size: 0.8rem; line-height: 1.4; }
-@media (max-width: 420px) { .ffo-bar { grid-template-columns: 1fr 1fr 1fr; } .ffo-go { grid-column: 1 / -1; } }
+@media (max-width: 699px) { .watch.is-fighting.is-calling .siteplan { height: min(36svh, 400px); } }
+/* The fight on a phone or a tablet in portrait (2026-11-03, step 4): the map stays on top, the
+   feed steps aside for a one-line log, the crew is a strip you scroll sideways, the guard chips
+   appear when a shot, flank or talk asks which guard, and Go sits in a bar at the bottom with
+   Pull back and "⋯" (Auto round, Auto fight). Wide screens keep the panel beside the map. */
+.ffo-log, .ffo-loglist, .ffo-more, .ffo-menu, .ffo-aimq { display: none; }
+.ffo-act.is-aim { border-color: var(--warn); border-style: solid; }
+@media (max-width: 1099px) {
+  .watch.is-fighting.is-calling .watch__feed, .watch.is-fighting.is-calling .watch__tally { display: none; }
+  .mission:has(> .watch.is-fighting.is-calling) > p.muted, .mission:has(> .watch.is-fighting.is-calling) > h1 { display: none; }
+  .watch.is-fighting.is-calling .watch__side { gap: 0; }
+  /* The panel fills the screen under the map, so the page can scroll the map up to the top bar. */
+  .watch.is-fighting.is-calling .watch__side { min-height: calc(100svh - var(--live-top, 0px) - var(--live-h, 0px)); }
+  .ffo { min-height: calc(100svh - var(--live-top, 0px) - var(--live-h, 0px)); align-content: start; }
+  .ffo-who__top { gap: 4px; }
+  .ffo { padding: 10px 12px 0; gap: 8px; }
+  .ffo-last { display: none; }
+  .ffo-log { display: flex; align-items: center; gap: 8px; min-height: var(--tap, 44px); padding: 4px 0; border: 0; border-bottom: 1px solid var(--line); background: none; color: var(--text); font: inherit; font-size: 0.82rem; line-height: 1.35; text-align: left; cursor: pointer; }
+  .ffo-log span { flex: 1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .ffo-log small { flex: none; color: var(--muted); font: 600 0.72rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; }
+  .ffo-loglist { display: grid; gap: 2px; max-height: 40svh; overflow: auto; font-size: 0.8rem; line-height: 1.4; border-left: 2px solid var(--line); padding-left: 10px; }
+  .ffo-loglist p { margin: 0; } .ffo-loglist .tone--bad { color: #ff8a98; }
+  .ffo-loglist b { margin-top: 4px; font: 700 0.7rem var(--display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-2); }
+  .ffo-crew { display: flex; gap: 6px; overflow-x: auto; margin-inline: -12px; padding: 0 12px 2px; scroll-snap-type: x proximity; scrollbar-width: none; }
+  .ffo-row { flex: 0 0 148px; grid-template-columns: 1fr; scroll-snap-align: start; }
+  .ffo-who { padding: 4px 6px 0; gap: 6px; } .ffo-who .face { width: 28px; height: 28px; }
+  .ffo-who__top .ffo-cover { display: none; }
+  .ffo-hpbar { width: 32px; }
+  .ffo-tag, button.ffo-tag { justify-content: flex-start; text-align: left; min-height: 32px; padding: 2px 8px 4px; font-size: 0.7rem; border-left: 0; white-space: nowrap; overflow: hidden; }
+  button.ffo-tag { min-height: var(--tap, 44px); }
+  .ffo-tray { border-top: 0; padding-top: 0; padding-bottom: 8px; }
+  .ffo-threat { display: none; }
+  .ffo-targets:not(.is-aiming) { display: none; }
+  .ffo-targets.is-aiming { padding: 8px; margin-inline: -4px; border: 1px solid #4a3f1a; background: #160f08; }
+  .ffo-aimq { display: block; flex-basis: 100%; margin: 0; font: 700 0.8rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--warn); }
+  .ffo-aimq span { font: 500 0.72rem system-ui, sans-serif; letter-spacing: 0; text-transform: none; color: var(--muted); }
+  .ffo-bar, .ffo-confirm { position: sticky; bottom: 0; z-index: 2; margin-inline: -12px; padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--line); }
+  .ffo-bar { grid-template-columns: auto 1fr auto; }
+  .ffo-bar > [data-action="fight-auto"], .ffo-bar > [data-action="fight-hand-off"] { display: none; }
+  .ffo-bar .ffo-go { grid-column: auto; min-height: 48px; }
+  .ffo-more { display: block; min-width: 48px; font-size: 1.1rem; }
+  .ffo-menu { display: grid; position: absolute; right: 12px; bottom: calc(100% + 4px); min-width: 230px; border: 1px solid var(--line); background: var(--panel-2); box-shadow: 0 -8px 24px #000a; }
+  .ffo-menu button { min-height: 52px; text-align: left; padding: 6px 14px; border: 0; border-bottom: 1px solid var(--line); background: none; color: var(--text); font: 700 0.85rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; }
+  .ffo-menu button:last-child { border-bottom: 0; }
+  .ffo-menu small { display: block; font: 500 0.72rem system-ui, sans-serif; letter-spacing: 0; text-transform: none; color: var(--muted); }
+  .ffo-bar--confirm { position: static; margin: 0; padding: 0; border: 0; background: none; grid-template-columns: 1fr 1fr; }
+}
+.sp-cmd .sp-hit { fill: transparent; pointer-events: auto; }
+.sp-order.is-call { opacity: 0.4; stroke-dasharray: 2 2.5; }
+.sp-hunker.is-call { opacity: 0.4; }
 
 /* Runner record (core/record.js) */
 .record__title { display: inline; margin: 0; }
@@ -1218,6 +1299,22 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
      column gets the larger share; the feed keeps at least 360px. */
   #app.is-onjob .watch { grid-template-columns: minmax(0, 1.5fr) minmax(360px, 1fr); }
   #app.is-onjob .watch__map { container-type: inline-size; }
+  /* A gap under the top bar for the sticky map, and the feed column no taller than the map column. */
+  #app.is-onjob .watch .watch__live, #app.is-onjob .watch.is-calling .watch__live, #app.is-onjob .watch.is-done .watch__live { top: calc(var(--live-top, 0px) + 12px); }
+  #app.is-onjob .watch .watch__side { max-height: var(--live-h, calc(100svh - var(--live-top, 0px) - 120px)); }
   #app.is-onjob .watch .siteplan,
   #app.is-onjob .watch.is-fighting .siteplan { height: max(360px, min(calc(100svh - var(--live-top, 0px) - 250px), 85cqw)); }
 }
+
+/* Named offers (renown slice 4): a client asked for an Elite by name */
+.flag--named { color: var(--warn); font-weight: 600; }
+.named { color: var(--warn); margin: 6px 0; }
+
+/* Crews out on Today (core/away.js, 2026-11-04): one block per away job, a cyan rule on the left;
+   a crew waiting on a call turns the rule yellow. */
+.crewsout { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 8px; }
+.crewsout__job { border-left: 2px solid var(--accent-2); background: var(--panel-2, var(--panel)); padding: 8px 12px; display: grid; gap: 4px; }
+.crewsout__job p { margin: 0; }
+.crewsout__job.is-waiting { border-left-color: var(--warn); }
+.crewsout__head strong { font-family: var(--display, inherit); letter-spacing: 0.04em; }
+.crewsout__job .btn { margin-top: 6px; justify-self: start; }

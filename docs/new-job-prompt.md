@@ -20,8 +20,11 @@ CONTEXT — LANTERN BAY. Treat this as the only source of truth; if anything ear
 our chat conflicts with it, this wins.
 
 GAME: text-first crew management game (Football Manager style, endless, no win state).
-The player is a fixer running a small crew of operatives, starting with three founders
-picked from six, one safehouse and rent due on Sunday.
+The player is a fixer running a tong (堂, "hall": a registered association, like a
+guild), starting with three founders picked from six, one safehouse and rent due on
+Sunday. A tong's rank is how far its name carries: back room, street, district, city,
+harbour. A crew is the people the tong sends on a job. The Brass Anchor Society is an
+old tong.
 
 PARTNER: Joss (they/them), the crew's bootleg AI: pirated assistant code the Ghost
 Circuit flashed onto salvaged hardware, named after joss paper. With the fixer since
@@ -254,11 +257,22 @@ export const WRONG_HORSE = {
 For a rookie job add `rookie: true,` after threat, and keep difficulty 3-8.
 For a job no client offers (it turns up as walk-in work) add `walkIn: true,` too.
 
+ROUTINE WORK (add `routine: true,` after threat): everyday jobs the board offers often, so
+they must survive repeating.
+- No one-off events, named first-times or plot reveals. It should read fine the tenth time.
+- Beats describe the job, not a story: the pickup, the route, the handover.
+- The 6 crises carry the variety (only 2-3 are drawn each time): make them as different as
+  possible, e.g. a crowd, the police, the weather, a rival, something breaking, someone
+  trying to cheat you.
+- Rookie or threat 2, crewSize 2, days 1-2, pay at the low end of its tier.
+- The same kind of work in several districts is one file per district (a Docks courier
+  run and a Night Market courier run).
+
 PITCH
 Client: [Auntie Fung / Mr. Szeto / the Ferryman / Madam Rao / Ruth Okonkwo / Doc Siu /
 Mrs. Ip / walk-in]
 District: [Old Town / the Docks / the Night Market / Glass Heights / the Basin]
-Tier: [rookie / threat 2 / 3 / 4 / 5]
+Tier: [rookie / threat 2 / 3 / 4 / 5] [routine: yes / no]
 Idea: [one or two sentences: what the client wants and what makes it interesting]
 ````
 
@@ -268,4 +282,5 @@ Idea: [one or two sentences: what the client wants and what makes it interesting
 - Saves it as `src/data/missions/<name>.js`, imports it in `src/data/missions.js` and adds it to `MISSIONS`.
 - Adds its id to the client's `jobs` in `src/data/clients.js`. Walk-in jobs need no client; Doc Siu's and Mrs. Ip's are rookie work, offered by Auntie Fung or as walk-ins.
 - Runs the tests: `core/validate.js` checks every crisis has an exit and every choice has its lines.
+- Routine work (`routine: true`): the checker warns if it's past threat 2, a crew of 2 or 2 days. Until the board treats routine work specially, it is offered like any other job of its tier.
 - Adds a CHANGELOG entry. New canon in the job (a person, a place) also gets a line in `WORLD.md` and a DESIGN.md row.

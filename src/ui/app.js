@@ -1,6 +1,8 @@
 // UI layer: the only code that touches the DOM. Reads state, calls core
 // functions, re-renders. Tap/click only; nothing depends on hover.
 
+import { rankOf } from '../core/tong.js';
+import { TONG_EXPLAINER } from '../data/tong.js';
 import { NAMES } from '../config/names.js';
 import { DISTRICTS, SAFEHOUSE_DISTRICT } from '../data/districts.js';
 import { DISTRICT_CARDS, FACTIONS, STREET_FACTS, HISTORY } from '../data/city.js';
@@ -17,7 +19,7 @@ import { createNewGame, chooseFounders } from '../core/state.js';
 import { marksText } from '../core/marks.js';
 import { recordOf } from '../core/record.js';
 import { fameOf, fameName, standingOf, standingWord, pathOf, legendProgress } from '../core/fame.js';
-import { FAME_RULES } from '../data/fame.js';
+import { FAME_RULES, NAMED_OFFER, NAMED_TEXT } from '../data/fame.js';
 import { templateById, jobView, nextUnlock, JOB_GATES } from '../core/jobs.js';
 import { trustLabel, trustOf } from '../core/clients.js';
 import { CLIENTS } from '../data/clients.js';
@@ -35,6 +37,7 @@ import {
 } from '../core/mission.js';
 import { renderFightOrders, fightTap, takeOrders } from './fightorders.js';
 import { sendOff, ORDERS, handsOffAllowed, autoStep, needsPlayer } from '../core/autorun.js';
+import { takeCall, letThemRun, takeCommand, crewsOut, dayDone } from '../core/away.js';
 import { OVERWATCH_KIT, ALERT_MAX } from '../core/incidents.js';
 import { leanPicks, jobRead, planRead } from '../core/squad.js';
 import { renderBoard, renderPicker, renderCoverage, assignSlot, planKit } from './board.js';
@@ -190,7 +193,7 @@ function onClick(e) {
       screen = 'jobs';
       const job = state.jobs.find((j) => j.id === id);
       const r = job ? boardRead(job) : null;
-      plan = { jobId: id, crew: r ? r.picks.crew : [], approach: r ? r.approach : 'stealth', orders: 'steady', callIn: 'risky',
+      plan = { jobId: id, crew: r ? r.picks.crew : [], approach: r ? r.approach : 'stealth', orders: 'steady', callIn: 'risky', mode: 'away',
         overwatch: r?.picks.overwatch ?? null, kit: r?.picks.kit ?? null, wheels: r?.picks.wheels ?? null, standby: r?.picks.standby ?? null };
       break;
     }
@@ -210,6 +213,7 @@ function onClick(e) {
     case 'approach': plan.approach = id; break;
     case 'orders': plan.orders = id; break;
     case 'callin': plan.callIn = id; break;
+    case 'mode': plan.mode = id; break; // send them away, or watch live (DESIGN.md 2026-11-04)
     case 'kit': plan.kit = id; break;
     case 'open-side': sidePlan = { taskId: id, crew: [] }; break;
     case 'toggle-side-crew': {
@@ -245,7 +249,7 @@ function onClick(e) {
     case 'watch-latest': return showLatest();
     case 'pending': return setState(resolvePending(state, id));
     // Command fights (ui/fightorders.js): pick, target and order are the player's draft; the rest play the round.
-    case 'fight-sel': case 'fight-target': case 'fight-clear': case 'fight-order':
+    case 'fight-sel': case 'fight-target': case 'fight-clear': case 'fight-order': case 'fight-pull-ask': case 'fight-pull-no': case 'fight-rules': case 'fight-more': case 'fight-log':
       fightTap(state.activeMission, action, { id, kind: t.dataset.kind, target: t.dataset.target });
       break;
     case 'fight-go': return setState(runBattle(state, takeOrders()));
@@ -255,6 +259,10 @@ function onClick(e) {
     case 'choose': return setState(chooseOption(state, id));
     case 'critical': return setState(resolveCritical(state, id));
     case 'close-mission': screen = 'inbox'; return setState(closeMission(state));
+    // Away crews calling in (core/away.js): take the call, then hand it back or take command.
+    case 'take-call': openMessageId = null; return setState(takeCall(state, id));
+    case 'let-run': screen = 'inbox'; return setState(letThemRun(state));
+    case 'take-command': return setState(takeCommand(state));
     case 'export':
       state.lastBackupDay = state.day;
       saveGame(state);
@@ -448,9 +456,10 @@ function render() {
       <div class="topbar__stats">
         <span class="stat stat--cash"><span class="stat__label">Cash</span> ${money(state.cash)}${cashDelta()}</span>
         <span class="stat"><span class="stat__label">Heat</span> ${heatMeter()}</span>
-        <span class="tier">${esc(statName(state.tier))}<span class="tier__word"> tier</span></span>
+        <button class="tierbtn" data-action="info" data-id="tong" aria-expanded="${openInfo.has('tong')}" aria-label="What's a tong?"><span class="tier">${esc(rankOf(state).name)}<span class="tier__word"> tong</span></span></button>
       </div>
       ${planning || state.founding ? '' : renderContinue(blocked, resting, unread, 'topbar__continue')}
+      ${infoText('tong', TONG_EXPLAINER)}
     </header>
 
     <nav class="nav" aria-label="Main">
@@ -614,6 +623,7 @@ function renderInbox() {
         <section class="panel inbox__list">
           <h1>Today</h1>
           ${renderBriefing()}
+          ${renderCrewsOut()}
           ${list}
         </section>
       </div>
@@ -621,6 +631,21 @@ function renderInbox() {
         ${open ? renderMessage(open) : '<p class="muted inbox__empty">Tap a message to read it here.</p>'}
       </section>
     </div>`;
+}
+
+/** Crews out on jobs: where each is, what they did today, and a call waiting (core/away.js). */
+function renderCrewsOut() {
+  const out = crewsOut(state);
+  if (!out.length) return '';
+  return `
+    <ul class="crewsout" aria-label="Crews out">
+      ${out.map((c) => `
+        <li class="crewsout__job ${c.waiting ? 'is-waiting' : ''}">
+          <p class="crewsout__head"><strong>${esc(c.name)}</strong> <span class="muted small">${esc(c.crew)} · ${c.day ? `day ${c.day} of ${c.days}` : 'leaving'}</span></p>
+          ${c.lines.map((l) => `<p class="small">${crewLinks(l)}</p>`).join('')}
+          ${c.waiting ? `<button class="btn btn--primary" data-action="take-call" data-id="${esc(c.jobId)}">Take the call</button>` : ''}
+        </li>`).join('')}
+    </ul>`;
 }
 
 /** "A, B and C". */
@@ -762,6 +787,7 @@ function renderMessage(m) {
       ${m.kind === 'renewal' ? renderRenewal(m) : ''}
       ${m.kind === 'heat' ? renderHeatNotice(m) : ''}
       ${m.kind === 'spec' ? renderSpecOffer(m) : ''}
+      ${m.kind === 'callin' && !m.resolved ? `<button class="btn btn--primary" data-action="take-call" data-id="${esc(m.payload.jobId)}">Take the call</button>` : ''}
       ${jobLink}`;
 }
 
@@ -896,7 +922,8 @@ function renderRenewal(m) {
           <div><dt>Asking</dt><dd>${money(p.ask)}</dd></div>
           <div><dt>Market value</dt><dd>${money(p.market)}</dd></div>
         </dl>
-        <p class="muted small">Loyalty: ${p.jobs} job${p.jobs === 1 ? '' : 's'} with the crew, ${pct}% off the raise${pct >= 25 ? ' (the most loyalty buys)' : ''}.</p>
+        ${p.reason === 'fame' ? '<p class="muted small">They became Elite: the street knows the name. Loyal runners ask less often; greedy ones more.</p>'
+          : `<p class="muted small">Loyalty: ${p.jobs} job${p.jobs === 1 ? '' : 's'} with the crew, ${pct}% off the raise${pct >= 25 ? ' (the most loyalty buys)' : ''}.</p>`}
         ${p.haggleResult ? `<p class="muted">${esc(p.haggleResult)}</p>` : ''}
         ${p.outcome ? `<p><strong>${esc(p.outcome)}</strong></p>` : ''}
       </div>
@@ -1286,14 +1313,19 @@ function boardRead(job) {
  * What's unusual about an offer, most important first, at most two. Usual facts (district, threat,
  * client mood, days left) stay on the planning screen: the card only speaks up when there's news.
  */
+const namedHandle = (v) => (v.askedFor ? state.crew.find((o) => o.id === v.askedFor)?.handle ?? null : null);
+const namedVars = (v) => ({ op: namedHandle(v), pct: Math.round(NAMED_OFFER.payBonus * 100) });
+const fillNamed = (text, v) => text.replace(/\{(\w+)\}/g, (m, k) => namedVars(v)[k] ?? m);
+
 function jobFlags(v) {
   const flags = [];
+  if (namedHandle(v)) flags.push(['named', fillNamed(NAMED_TEXT.chip, v)]); // a client asked for an Elite by name (renown slice 4)
   if (v.hinted) flags.push(['bad', 'Intel unreliable']);
   if (v.rumour) flags.push([v.threatDelta > 0 ? 'hot' : v.threatDelta < 0 ? 'good' : 'info', `Street talk: ${v.rumour.tag}`]);
   else if (v.threatDelta > 0) flags.push(['hot', 'Hotter than usual']);
   else if (v.threatDelta < 0) flags.push(['good', 'Quieter than usual']);
   if (intelFor(state, v.tpl.district)) flags.push(['good', 'Intel here']);
-  if (v.tpl.days > 1) flags.push(['info', `${v.tpl.days}-day job`]);
+  if (v.days > 1) flags.push(['info', `${v.days}-day job`]);
   return flags.slice(0, 2);
 }
 
@@ -1490,7 +1522,7 @@ function renderPlan() {
     <section class="panel">
       <button class="btn btn--ghost" data-action="back">← Jobs</button>
       <h1>${esc(t.name)}</h1>
-      <p class="muted">${esc(districtName(t.district))}${districtTurf(t.district)} · threat ${threatHtml(v)} · pays ${money(v.pay)} · crew away ${t.days}d · ${daysLeft(job.expiresDay)}</p>
+      <p class="muted">${esc(districtName(t.district))}${districtTurf(t.district)} · threat ${threatHtml(v)} · pays ${money(v.pay)} · crew away ${v.days}d · ${daysLeft(job.expiresDay)}</p>
       ${DISTRICTS[t.district] ? `<p class="muted small">${esc(DISTRICTS[t.district].pitch)}</p>` : ''}
       <p class="body">${esc(fillBrief(t))}</p>
       <div class="plangrid">
@@ -1499,6 +1531,7 @@ function renderPlan() {
         ${v.client ? `<p class="muted small">${esc(v.client.desc)}</p>` : ''}
         ${v.threatDelta ? `<p class="muted small">Every roll on this job is ${Math.abs(v.threatDelta) === 1 ? 'one point' : `${Math.abs(v.threatDelta)} points`} ${v.threatDelta > 0 ? 'harder' : 'easier'} than usual.</p>` : ''}
         ${v.hinted ? '<p class="intel">Intel unreliable: something about this job may not be what you were told.</p>' : ''}
+        ${namedHandle(v) ? `<p class="named">${esc(fillNamed(NAMED_TEXT.chip, v))} by name: ${esc(fillNamed(NAMED_TEXT.bonus, v))} (inside, outside or on standby). Without them it pays as usual.</p>` : ''}
         ${v.rumour ? `<p class="talk-tag">Street talk: ${esc(v.rumour.text)}</p>` : ''}
         ${intel ? `<p class="talk-tag">Intel from ${esc(intel.source)}: +${intel.bonus} on every roll here until day ${state.intel[t.district].until}.</p>` : ''}
       </div>
@@ -1531,7 +1564,7 @@ function renderPlan() {
       </div>
 
       <div class="plangrid__orders">
-      ${renderCallIns(t)}
+      ${renderCallIns(t, v.days)}
       </div>
       </div>
     </section>
@@ -1542,7 +1575,7 @@ function renderPlan() {
         <span class="planbar__why">${esc(picked.length ? toughWhy : `Pick up to ${most}; ${t.crewSize} recommended`)}</span>
       </div>
       ${(() => {
-        const away = plan.callIn === 'never' && handsOffAllowed(t);
+        const away = plan.mode !== 'live' && handsOffAllowed(t);
         return `<button class="btn btn--primary" data-action="${away ? 'send-job' : 'start-job'}" ${plan.crew.length ? '' : 'disabled'}>
         ${plan.crew.length ? `${away ? 'Send' : 'Start with'} ${plan.crew.length + [plan.overwatch, plan.wheels, plan.standby].filter(Boolean).length}` : 'Pick a crew'}
       </button>`;
@@ -1571,17 +1604,23 @@ function freelancersFull() {
 }
 
 /** When the crew calls you in, and how they decide when they don't (core/autorun.js ORDERS). */
-function renderCallIns(t) {
+function renderCallIns(t, days = t.days) {
   const orders = ORDERS[plan.orders] ? plan.orders : 'steady';
   const callIn = CALL_IN[plan.callIn] ? plan.callIn : 'risky';
-  const away = handsOffAllowed(t);
+  const canSend = handsOffAllowed(t);
+  const mode = canSend && plan.mode !== 'live' ? 'away' : 'live';
+  const modes = { away: ['Send them', `They go and do it over ${days === 1 ? 'the day' : `${days} days`}. Today shows what they did; they call when it's beyond their orders.`], live: ['Watch live', 'You watch the whole job now, on the map.'] };
   return `
+      <h2>How</h2>
+      ${canSend ? `<div class="segmented">
+        ${Object.entries(modes).map(([k, [name, desc]]) => `
+          <button class="seg ${mode === k ? 'is-on' : ''}" data-action="mode" data-id="${k}" aria-pressed="${mode === k}"><strong>${esc(name)}</strong><span>${esc(desc)}</span></button>`).join('')}
+      </div>` : '<p class="muted small">This job can\'t be sent off on its own: you\'ll watch this one.</p>'}
       <h2>Call me in…</h2>
       <div class="segmented">
-        ${Object.entries(CALL_IN).filter(([k]) => k !== 'never' || away).map(([k, c]) => `
+        ${Object.entries(CALL_IN).map(([k, c]) => `
           <button class="seg ${callIn === k ? 'is-on' : ''}" data-action="callin" data-id="${k}" aria-pressed="${callIn === k}"><strong>${esc(c.name)}</strong><span>${esc(c.desc)}</span></button>`).join('')}
       </div>
-      ${away ? '' : '<p class="muted small">Bigger jobs can\'t be sent off on their own yet: you\'ll watch this one.</p>'}
       ${callIn === 'every' ? '' : `
       <h2>When they decide themselves</h2>
       <p class="muted small">Their orders decide each call they don't bring to you. They never push on with a critical wound: at worst, they pull out.</p>
@@ -1667,7 +1706,7 @@ function renderMission() {
   }
   return `
     <section class="panel mission">
-      <p class="muted small">On the job · ${esc(APPROACHES[am.approach]?.name ?? '')} approach · ${esc(crewNames)}${ow ? ` · ${esc(ow.handle)} on overwatch (${esc(OVERWATCH_KIT[am.overwatch.kit].name.toLowerCase())})` : ''}${outsider(am.wheels, 'at the wheel')}${am.standby && !am.standby.joined ? outsider(am.standby.id, 'on standby') : ''}</p>
+      <p class="muted small">${am.away ? `${am.away.command ? 'Under your command' : `Away · day ${am.away.day ?? 1} of ${am.days ?? t.days}`}` : 'On the job'} · ${esc(APPROACHES[am.approach]?.name ?? '')} approach · ${esc(crewNames)}${ow ? ` · ${esc(ow.handle)} on overwatch (${esc(OVERWATCH_KIT[am.overwatch.kit].name.toLowerCase())})` : ''}${outsider(am.wheels, 'at the wheel')}${am.standby && !am.standby.joined ? outsider(am.standby.id, 'on standby') : ''}</p>
       <h1>${esc(t.name)}</h1>
       ${renderWatch(watchUi, state, result)}
     </section>`;
@@ -1685,6 +1724,18 @@ function fightHealth({ runners, guards }) {
 
 function renderCallIn(s) {
   const am = s.activeMission;
+  if (dayDone(am)) {
+    const days = am.days ?? templateById(am.templateId).days;
+    return `
+      <div class="crisis" data-callin="day-done">
+        <p class="crisis__title">That's day ${am.away.day ?? 1} of ${days} done</p>
+        <p>They'll carry on tomorrow on their orders, and call if they need you. Or stay on the line and play the rest now.</p>
+        <div class="stack">
+          <button class="btn btn--primary" data-action="let-run">Let them carry on</button>
+          <button class="btn btn--ghost" data-action="take-command">Take command: play the rest now</button>
+        </div>
+      </div>`;
+  }
   if (am.critical) {
     const v = describeCritical(s);
     return `
@@ -1704,7 +1755,7 @@ function renderCallIn(s) {
         <div class="choices">${v.choices.map((c) => choiceButton({ ...c, risk: c.exit ? 'safe' : c.push ? 'extreme' : 'moderate', riskReason: c.cost, cost: '' }, 'pending')).join('')}</div>
       </div>`;
   }
-  if (am.battle && currentStep(am)?.type === 'battle' && needsPlayer(s)) return renderFightOrders(s, esc);
+  if (am.battle && currentStep(am)?.type === 'battle' && needsPlayer(s)) return renderFightOrders(s, esc, (id) => { const op = s.crew.find((o) => o.id === id); return op ? face(op, 'sm') : ''; });
   if (currentStep(am)?.type === 'crisis' && needsPlayer(s)) {
     const v = describeCrisis(s);
     return `

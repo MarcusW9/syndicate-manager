@@ -10,6 +10,7 @@
 //   syndicate-ironman-progress     { [ironmanId]: highest save counter seen }
 //   syndicate-save-v1              legacy single save, moved into slot 1 on first load
 
+import { STARTING_RANK } from '../data/tong.js';
 import { refreshSideBoard } from '../core/sidetasks.js';
 import { SAVE_VERSION } from '../core/state.js';
 import { TATTOO_JOBS } from '../core/marks.js';
@@ -17,7 +18,7 @@ import { seedRecord } from '../core/record.js';
 import { seedMilestones } from '../core/milestones.js';
 import { seedFame } from '../core/fame.js';
 import { nameLook, refreshArmoury, stockShelf } from '../core/looks.js';
-import { addOffer } from '../core/jobs.js';
+import { addOffer, templateById } from '../core/jobs.js';
 import { STARTING_ROSTER_CAP } from '../core/recruits.js';
 import { prepareOperative, rollPotential, rollScoutError, scoutFor, potentialRead } from '../core/development.js';
 import { nextRng } from '../core/random.js';
@@ -501,6 +502,35 @@ function migrate(state) {
     // gains lowWeeks and wasElite (Elite lapsing). Memorial entries are unchanged.
     for (const op of state.crew) seedFame(op);
     state.version = 32;
+  }
+  if (state.version === 32) {
+    // v33: fame's payoffs (renown slice 4). An offer can ask for a runner by name (job.askedFor,
+    // carried onto the run as am.askedFor), at most one a week (state.namedOfferWeek). None yet on
+    // an old save. Pay-rise messages gain payload.reason ('growth' or 'fame'); old ones are growth.
+    for (const job of state.jobs ?? []) job.askedFor = job.askedFor ?? null;
+    for (const am of [state.activeMission, ...(state.awayJobs ?? []).map((j) => j.mission)]) if (am) am.askedFor = am.askedFor ?? null;
+    state.namedOfferWeek = state.namedOfferWeek ?? null;
+    for (const m of state.inbox ?? []) if (m.kind === 'renewal' && m.payload) m.payload.reason = m.payload.reason ?? 'growth';
+    state.version = 33;
+  }
+  if (state.version === 33) {
+    // v34: the tong's rank replaces tier (DESIGN.md 2026-11-04). Tier never moved off 'street' and
+    // nothing read it, and ranks have no gates yet, so every tong starts at the first rank.
+    delete state.tier;
+    state.rank = STARTING_RANK;
+    state.version = 34;
+  }
+  if (state.version === 34) {
+    // v35: away jobs play a share a day and can call in (core/away.js). A job already out gets its
+    // beat count (none reached yet: it plays from where it is) and isn't waiting on a call.
+    for (const j of state.awayJobs ?? []) { j.mission.away = j.mission.away ?? { beats: 0 }; j.waiting = false; j.today = null; }
+    state.version = 35;
+  }
+  if (state.version === 35) {
+    // v36: an offer has its own days (core/jobs.js daysRange); offers already on the board keep
+    // the template's, as before.
+    for (const job of state.jobs ?? []) job.days = job.days ?? templateById(job.templateId)?.days ?? 1;
+    state.version = 36;
   }
   return state;
 }

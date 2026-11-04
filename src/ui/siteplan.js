@@ -11,6 +11,38 @@ const W = 360;
 const H = 240;
 const FULL = [0, 0, W, H];
 const pts = (list) => list.map((p) => p.join(',')).join(' ');
+/** How far a token reaches from its spot in a fight: the face ring, the health bar under it and
+ *  the armour mark, drawn 1.2 times bigger while a fight is on (styles.css .is-fight). */
+export const TOKEN_REACH = 16;
+/** How far past the site's edge a fight camera may look (the map's dark ground goes on). */
+export const EDGE_PAD = 16;
+
+/**
+ * The fight camera: a box round every spot in the fight, as wide as the map is drawn (ar, width
+ * over height), at least 150 x 100, with room for the tokens. It may run up to EDGE_PAD past the
+ * site's edge so a token standing near it is never cut in half (owner's capture, 2026-11-03).
+ */
+export function frameFight(pts, ar = 1.5) {
+  if (!pts.length) return null;
+  const xs = pts.map((p) => p[0]); const ys = pts.map((p) => p[1]);
+  let [x0, y0, x1, y1] = [Math.min(...xs) - 22, Math.min(...ys) - 24, Math.max(...xs) + 22, Math.max(...ys) + 22];
+  let w = Math.max(x1 - x0, 150); let h = Math.max(y1 - y0, 100);
+  if (w / h > ar) h = w / ar; else w = h * ar;
+  w = Math.min(w, W + 2 * EDGE_PAD); h = Math.min(h, H + 2 * EDGE_PAD);
+  const cx = (x0 + x1) / 2; const cy = (y0 + y1) / 2;
+  // On the site where it can be; then far enough to hold every token whole; never more than
+  // EDGE_PAD past the edge.
+  const place = (c, size, span, lo, hi) => {
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    let v = clamp(c - size / 2, Math.min(0, span - size), Math.max(0, span - size));
+    v = clamp(v, hi + TOKEN_REACH - size, lo - TOKEN_REACH);
+    return clamp(v, -EDGE_PAD, span + EDGE_PAD - size);
+  };
+  x0 = place(cx, w, W, Math.min(...xs), Math.max(...xs));
+  y0 = place(cy, h, H, Math.min(...ys), Math.max(...ys));
+  return [x0, y0, w, h];
+}
+
 const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const initials = (op) => (op.handle ?? '?').split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 const escAttr = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -129,7 +161,12 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
   const fightAt = new Map();
   const posOf = (id) => fightAt.get(id) ?? slot(Math.max(0, team.findIndex((o) => o.id === id)), here);
 
-  function moveGroup(pt) { here = pt; team.forEach((op, i) => { const t = tok(op.id); if (t) place(t, slot(i, pt)); }); }
+  function moveGroup(pt) {
+    here = pt;
+    // In a fight, whoever has a fight spot stays on it, and the camera keeps everyone in view.
+    team.forEach((op, i) => { const t = tok(op.id); if (t) place(t, fightAt.get(op.id) ?? slot(i, pt)); });
+    if (svg.classList.contains('is-fight')) { const box = fightBox(); if (box) panTo(box); }
+  }
 
   function panTo(name, ms = 700) {
     const to = Array.isArray(name) ? name : fit(VB[name] ?? VB.full);
@@ -182,19 +219,14 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
   const foes = new Map();
   const hpNow = new Map();
   const foePos = (n) => fightAt.get(`g${n}`) ?? [here[0] + 28 + ((n - 1) % 2) * 8, here[1] - 14 + (n - 1) * 12];
-  /** A 3:2 camera box round every spot in the fight, with room for the tokens. */
+  /** A camera box round every spot in the fight, with room for the tokens (frameFight). */
   function fightBox() {
-    const pts = [...fightAt.values()];
-    if (!pts.length) return null;
-    const xs = pts.map((p) => p[0]); const ys = pts.map((p) => p[1]);
-    let [x0, y0, x1, y1] = [Math.min(...xs) - 22, Math.min(...ys) - 24, Math.max(...xs) + 22, Math.max(...ys) + 22];
-    // As wide as the plan is drawn (a tall phone map shows a taller box), at least 150 x 100.
     const ar = svg.clientWidth > 0 && svg.clientHeight > 0 ? svg.clientWidth / svg.clientHeight : 1.5;
-    let w = Math.max(x1 - x0, 150); let h = Math.max(y1 - y0, 100);
-    if (w / h > ar) h = w / ar; else w = h * ar;
-    const cx = (x0 + x1) / 2; const cy = (y0 + y1) / 2;
-    x0 = Math.max(0, Math.min(W - w, cx - w / 2)); y0 = Math.max(0, Math.min(H - h, cy - h / 2));
-    return [x0, y0, Math.min(w, W), Math.min(h, H)];
+    // Everyone where they're drawn: the crew (someone without a fight spot stays where the walk
+    // ended) and the guards still standing.
+    const at = (node) => { const m = /translate\(([-\d.]+)px, ([-\d.]+)px\)/.exec(node?.style.transform ?? ''); return m ? [Number(m[1]), Number(m[2])] : null; };
+    const drawn = [...tokens.querySelectorAll('[data-op]'), ...foes.values()].filter((n) => !n.classList.contains('is-dead')).map(at).filter(Boolean);
+    return frameFight([...fightAt.values(), ...drawn], ar);
   }
   const hostOf = (key) => (key.startsWith('g') ? foes.get(Number(key.slice(1))) : tok(key));
   function setHp(key, hp, max) {
@@ -282,6 +314,8 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
       fightAt.set(l.actor, l.to);
       const t = tok(l.actor);
       if (t) place(t, l.to);
+      const box = fightBox();
+      if (box) panTo(box); // keep whoever moved in view
       await wait(500);
     } else if (l.kind === 'van') {
       ring(tok(l.actor) ? posOf(l.actor) : P.van, l.success);
@@ -326,19 +360,26 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
       cmd.append(el('line', { class: 'sp-aim', x1: a[0], y1: a[1], x2: b[0], y2: b[1] }));
       tag(mid(a, b), pctOf(i.chance), 'sp-tag--foe');
     }
+    // Tap areas: an invisible ring round every token, at least 44px across wherever the camera is
+    // (a token alone is often too small to hit on a phone). Under the free spots, which go on top.
+    const m = svg.getScreenCTM?.();
+    const hitR = Math.min(14, Math.max(9, 22 / (m ? Math.hypot(m.a, m.b) || 1 : 1)));
+    for (const r of v.runners) if (!r.down) { const at = posOf(r.id); cmd.append(el('circle', { class: 'sp-hit', cx: at[0], cy: at[1], r: hitR, 'data-action': 'fight-sel', 'data-id': r.id })); }
+    for (const g of v.guards) if (!g.out) { const at = foePos(g.n); cmd.append(el('circle', { class: 'sp-hit', cx: at[0], cy: at[1], r: hitR, 'data-action': 'fight-target', 'data-id': String(g.n) })); }
     for (const r of v.runners) {
       const from = posOf(r.id);
-      const o = r.order;
+      const call = !r.order && r.call;
+      const o = r.order ?? r.call;
       if (o && (o.kind === 'shoot' || o.kind === 'flank' || o.kind === 'talk')) {
         const to = foePos(o.target);
-        cmd.append(el('line', { class: `sp-order sp-order--${o.kind}`, x1: from[0], y1: from[1], x2: to[0], y2: to[1] }));
+        cmd.append(el('line', { class: `sp-order sp-order--${o.kind}${call ? ' is-call' : ''}`, x1: from[0], y1: from[1], x2: to[0], y2: to[1] }));
       } else if (o?.kind === 'move' && v.spots[o.target]) {
         const to = v.spots[o.target].at;
         cmd.append(el('line', { class: 'sp-order sp-order--move', x1: from[0], y1: from[1], x2: to[0], y2: to[1] }), el('circle', { class: 'sp-spot is-picked', cx: to[0], cy: to[1], r: 6.5 }));
       } else if (o && (o.kind === 'patch' || o.kind === 'stabilise')) {
         const to = posOf(o.target);
-        cmd.append(el('line', { class: 'sp-order sp-order--heal', x1: from[0], y1: from[1], x2: to[0], y2: to[1] }));
-      } else if (o?.kind === 'hunker') cmd.append(el('circle', { class: 'sp-hunker', cx: from[0], cy: from[1], r: 9 }));
+        cmd.append(el('line', { class: `sp-order sp-order--heal${call ? ' is-call' : ''}`, x1: from[0], y1: from[1], x2: to[0], y2: to[1] }));
+      } else if (o?.kind === 'hunker') cmd.append(el('circle', { class: `sp-hunker${call ? ' is-call' : ''}`, cx: from[0], cy: from[1], r: 9 }));
       if (!r.down) coverMark(from, r.cover, false);
       if (r.sel) cmd.append(el('circle', { class: 'sp-sel', cx: from[0], cy: from[1], r: 9.5 }));
       const t = tok(r.id);

@@ -1,16 +1,29 @@
-# Handoff · 2026-10-28
+# Handoff · 2026-11-04
 
-Where the project stands and what to pick up next. Read `CLAUDE.md` first: its rules (architecture, tests, design log, changelog, screenshot log, commit author) are not repeated here. `DESIGN.md`'s decision log has the why for everything below, newest first.
+Where the project stands and what to pick up next. Read `CLAUDE.md` first: its rules (architecture, tests, design log, changelog, screenshot log, commit author) are not repeated here. `DESIGN.md`'s decision log (rows under `docs/design/`, newest file `2026-11.md`) has the why for everything below.
 
 ## State
 
-- **`main`:** up to [#32](https://github.com/MarcusW9/syndicate-manager/pull/32) (offline play; #31 brought battles, slice 6a). **Branch `claude/jolly-keller-6eqry7`** carries PR #30 (the living City map, district pictures, tablet planning, gear while resting), with `main` merged in. Pushes after a PR is merged stay on the branch: check a PR is still open before adding to it; if it was merged, merge `main` in (`git merge -s ours origin/main` when the trees already match) and carry on.
-- **The game is becoming the squad run** (`PLAN-CORE-LOOP.md`, the build order; `drafts/core-loop.md`, how we got there). **Slices 1-5 are built** (the engine; the squad board and the watch screen; Wheels and standby; a site plan per district, with district incident text; gear and the first specialisations). **Slice 6a, the battle engine, is built** (2026-10-29, branch `claude/great-brown-xaye3r`): `core/battle.js`, numbers in `data/battle.js`, tuned with `node scripts/sim-battles.mjs`; fights show as plain cards on the watch feed. 6b, the watch screen's own look for fights, is next.
-- **Design review:** `STATE-OF-PLAY.md` (2026-10-26) and the owner's calls on it (in the file and in DESIGN.md). Read it instead of re-assessing.
+- **`main`:** up to [#60](https://github.com/MarcusW9/syndicate-manager/pull/60) (renown slice 4). PRs are squash-merged; one PR per feature, the owner merges.
+- **The squad run is the game** (`PLAN-CORE-LOOP.md`): slices 1-6 are built, including **command fights** (6c: orders each round, fight spots and cover in every district, the fight screen; on a phone the map is pinned on top with Go in a bottom bar, #59).
+- **Renown** (`drafts/PROPOSAL-runner-renown.md`, read its "Review decisions" first): slices 1-4 built (runner record v30, milestones and highlights v31, fame / standing / paths / pro-to-veteran v32, named offers / fame pay ask / better recruits v33). **Slices 5-6 are not built** (the defining job that makes a Legend, then retirement and the hall).
+- **Finished plans:** `PLAN-RENEWALS.md`, `PLAN-PERSONALITY.md` (all steps). `PLAN-PROGRESSION.md`: steps 0-1 done, step 2 mostly covered by earned traits, stat unlocks and the runner record; step 3 (relationships) not built.
+- **Design review:** `STATE-OF-PLAY.md` is a 2026-10-26 snapshot; the owner's calls on it are in the file and in DESIGN.md.
 - **New games start with three founders picked from six** (`startCrew: 'pick'`, `chooseFounders`). Most rule tests still use the five-rookie `'fresh'` crew as a fixture.
-- **Tests:** 341 passing (`npm run test:fast` for the quick 40 s set while working; `npm test` before every push). **Save format v27.** **`CODEMAP.md`** says where things live: read it before reading `core/` files.
+- **Tests:** 525 passing in 49 files (`npm run test:fast` while working; `npm test`, about 2-3 min, before every push). **Save format v36** (v34: the tong rank; v35: away jobs day by day with call-ins; v36: an offer's own days; DESIGN.md 2026-11-04). **`CODEMAP.md`** says where things live; **`docs/ARCHITECTURE.md`** has state shapes, saves and the economy loop.
 
-## What the 2026-10-26/27 session did
+## What the 2026-10-28 to 2026-11-04 sessions did
+
+- **Looks:** gun looks, faces with their own anatomy, career marks, Shaolin monks; every sidearm rolls its own strengths (aim, damage, pierce).
+- **City:** the living City map with a picture per district (`ui/citymap.js`, `ui/districtArt.js`).
+- **Fights:** battles (6a/6b), then command fights in every district, gear shown in the fight, faces on the fight map, the fight camera framing everyone, a compact orders panel, and the phone layout.
+- **The job screen:** the job takes the whole screen (tabs step aside), the map fills the height, the feed keeps up, a finished job keeps its view.
+- **Traits as chips** with icons, and Synergies (was Crew Anchor).
+- **Renown slices 1-4** (above), and Elite made rarer (60 jobs at level; Lifers 120).
+- **Tools:** a job checker (`node scripts/check-job.mjs <file>` / `--all`), `/add-job`, a prompt for drafting jobs outside a session (`docs/new-job-prompt.md`), the `add-lore` skill for canon changes, `docs/ARCHITECTURE.md`.
+- **Rules:** walking away from a decision pays nothing (`exitRun`).
+
+## Earlier: what the 2026-10-26/27 session did
 
 - **Design review** (`STATE-OF-PLAY.md`) and the owner's calls: money pressure mostly positive (gear, rooms, clinic bills, tea money); morale cut for mood traits; burnout removed; neural load wired; approaches cost different things; heat per district; relationships as bonds and rifts with grief by personality; repetition layers; competing clients and danger parked. **None of these is built yet** except what slice 1 needed.
 - **The core loop rethought:** manager first, with call-ins; build a squad for one of four approaches; incidents handled by the team; saves (overwatch, teammates); alert; specialisations (gear to try, experience to unlock, the player picks); guns standard in the canon (`WORLD.md`).
@@ -33,11 +46,12 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 
 ## Next
 
-1. **Play-test the new start** (three founders, rookie leads at half price). `node scripts/sim-early-game.mjs` measures it: a careful hirer is broke in 3% of runs at week 13. Watch for three founders alone getting too rich (median ¥37,400 at week 26 without hiring).
-2. **City screen: what's left.** Built 2026-10-29 (`ui/citymap.js`, `ui/districtArt.js`). All five district pictures are drawn (`ui/districtArt.js`). Next: heat per district (from the design review), then heat pips on the plates; pictures for the locked districts when they open.
-3. **Command fights (slice 6c, `PLAN-CORE-LOOP.md`):** step 1 (the engine takes orders: cover, intents, `ordersFor`) is on branch `claude/command-fight-prototype`; step 2 (fight spots off the Docks map, the Move order, live fights waiting for orders, the fight screen) is built too; step 3 (spots in every district, cover drawn where fights happen) is built: `scripts/preview-fightspots.mjs <district>` draws the spots, `scripts/sim-districts.mjs` checks each district's balance with and without them. Held for the owner: the Outside section's orders, the round cap, enemy types and fight goals, ranks and perks. Older note: **Slice 6b, the watch screen for fights** (HP on the tokens, guard tokens, round pacing), after the owner has played 6a; open calls from 6a for the owner: rookie-tier fights are easy, fight rolls don't count towards earned traits yet (traits fell from 2.5 to 2.2 a week), dropping a weapon at death's door and reinforcements aren't built. Then gear tuning and the next specialisations: battles now give gear something to do (owner, 2026-10-28).
-4. **Small polish:** reloading while the crew calls you in doesn't scroll to the call-in; the reputation gauge (owner wants to revisit; `drafts/prototypes/reputation-gauge-options.html`); the phone planning screen is long.
-5. Then the agreed review items: the neural load and burnout cleanup, mood traits, money pressure, relationships with the career page. Parked: the underground place (below).
+1. **Renown slices 5-6** (`drafts/PROPOSAL-runner-renown.md`): the defining job (`legendEligible` already shows readiness on the runner page), then retirement (a decision message, never without the player's choice) and the hall. Its content list (section 8) is for the owner to write.
+2. **Command fights, held for the owner:** the Outside section's orders, the round cap, enemy types and fight goals, ranks and perks. Open from 6a: rookie-tier fights are easy; fight rolls don't count towards earned traits; dropping a weapon at death's door and reinforcements aren't built.
+3. **City:** heat per district (from the design review), then heat pips on the plates; pictures for the locked districts when they open.
+4. **Play-test the start** (three founders, rookie leads at half price): `node scripts/sim-early-game.mjs`.
+5. **Small polish:** reloading during a call-in doesn't scroll to it; the reputation gauge (`drafts/prototypes/reputation-gauge-options.html`).
+6. Then the agreed review items: neural load cleanup, mood traits, money pressure, relationships (`PLAN-PROGRESSION.md` step 3). Parked: the underground place (below).
 
 ## Writing pipeline (owner writes in other chats, pastes back)
 
@@ -62,7 +76,7 @@ When a batch comes back: check every line against the game data (ids, costs, inj
 ## Working with the owner
 
 - **Ask, don't assume,** on anything design-shaped. Multiple-choice questions with a recommended option work well; the owner often adds a twist in the free text. Lay out decisions with their consequences when asked.
-- **Commits as `marcusw`** (CLAUDE.md). A stop hook asks for Claude-authored commits; the owner's rule wins. Merge commits pick up the default identity: amend them before pushing.
+- **Commits as `marcusw <160358373+MarcusW9@users.noreply.github.com>`, author and committer, with no Claude co-author or session lines** (CLAUDE.md). Never the personal Gmail address. A stop hook asks for Claude-authored commits; the owner's rule wins. Merge commits pick up the default identity: amend them before pushing.
 - **PRs:** the owner merges; open one per feature. Prefer one PR at a time against `main`; if stacking, see the gotcha below.
 - **Screenshot sets** for visual changes (`npm run screenshots -- <slug>`); the script can't reach mid-game screens, so add 1x Playwright captures as extra numbered shots and say so in the README row.
 - **Lore style:** narrative, second person, present tense in `WORLD.md`; in-game text 1-2 sentences, phone-first. Canon rules: English district names, Cantonese romanisation, everything invented, rumours never confirmed, Szeto suspected not proven.

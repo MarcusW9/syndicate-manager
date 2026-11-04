@@ -6,7 +6,8 @@
 import { MISSIONS } from '../data/missions.js';
 import { TWISTS } from '../data/twists.js';
 import { CLIENTS } from '../data/clients.js';
-import { pick, makeRng } from './rng.js';
+import { pick, makeRng, hashRng } from './rng.js';
+import { NAMED_OFFER, NAMED_TEXT } from '../data/fame.js';
 import { nextRng } from './random.js';
 import { callingClients, trustOf, trustPay } from './clients.js';
 import { rumourFor } from './rumours.js';
@@ -23,11 +24,47 @@ export const MAX_OFFERS = 5;
 export const ARRIVAL_WINDOWS = [[0, 1], [2, 3], [4, 5, 6]];
 export const NEW_PER_WEEK = ARRIVAL_WINDOWS.length;
 
-/** The days new work comes in during the week that `day` falls in. */
+// A bigger tong gets more work (DESIGN.md 2026-11-04, the tong direction): one more offer a week
+// for every `per` runners past `over`, and the board holds `room` more than a week's arrivals.
+// Exported as one object so scripts/sim-tong.mjs can compare settings.
+export const ARRIVALS = { over: 5, per: 2.5, room: 2 };
+
+/** The tong's own runners (not freelancers, not the dead): what the board's size follows. */
+const rosterSize = (state) => state.crew.filter((o) => !o.freelance && o.condition?.injury !== 'dead').length;
+
+/** How many new offers come in a week: three, plus one for every few runners past five. */
+export const arrivalsPerWeek = (state) => NEW_PER_WEEK + Math.floor(Math.max(0, rosterSize(state) - ARRIVALS.over) / ARRIVALS.per);
+
+/** How many offers the board holds. */
+export const maxOffers = (state) => Math.max(MAX_OFFERS, arrivalsPerWeek(state) + ARRIVALS.room);
+
+/** The week's windows for k arrivals: the week split evenly (k = 3 gives ARRIVAL_WINDOWS). */
+export function arrivalWindows(k) {
+  return Array.from({ length: k }, (_, i) => {
+    const start = Math.floor((i * 7) / k);
+    const end = Math.max(start, Math.floor(((i + 1) * 7) / k) - 1);
+    return Array.from({ length: end - start + 1 }, (_, d) => start + d);
+  });
+}
+
+/** The days new work comes in during the week that `day` falls in (a day can come up twice on a big tong). */
 export function arrivalDays(state, day) {
   const monday = day - ((day - 1) % 7);
   const rng = makeRng((state.seed ^ Math.imul(monday, 2654435761)) >>> 0);
-  return ARRIVAL_WINDOWS.map((w) => monday + pick(rng, w));
+  return arrivalWindows(arrivalsPerWeek(state)).map((w) => monday + pick(rng, w));
+}
+
+// How long a job takes (DESIGN.md 2026-11-04): each offer rolls its days in the template's range,
+// and every day past the template's own adds EXTRA_DAY_PAY of its pay (the crew is tied up longer).
+// Rookie work stays as written; bigger jobs can run a day longer, threat 3 and up two.
+export const EXTRA_DAY_PAY = 0.05;
+export const MAX_JOB_DAYS = 4;
+
+/** [shortest, longest] days an offer of this template can take. */
+export function daysRange(tpl) {
+  if (tpl.daysRange) return tpl.daysRange;
+  if (tpl.rookie) return [tpl.days, tpl.days];
+  return [tpl.days, Math.min(MAX_JOB_DAYS, tpl.days + (tpl.threat >= 3 ? 2 : 1))];
 }
 
 // Reputation needed before a job of this (template) threat is offered; rookie jobs are
@@ -76,8 +113,11 @@ export function addOffer(state, templateId, { rng = null, clientId = null } = {}
     twist = rng() < TWIST_CHANCE ? pick(rng, TWISTS).id : null;
     hinted = rng() < (twist ? HINT_IF_TWIST : HINT_IF_CLEAN);
   }
+  // Its days roll from a hash of the seed and the offer, so no other roll moves.
+  const [lo, hi] = daysRange(tpl);
+  const days = rng ? lo + Math.floor(hashRng(state.seed, 'job-days', n)() * (hi - lo + 1)) : tpl.days;
   state.jobs.push({
-    id: `job-${n}`, templateId, clientId: client,
+    id: `job-${n}`, templateId, clientId: client, days,
     payMult: Math.round(payMult * 100) / 100, threatDelta, twist, hinted,
     offeredDay: state.day, expiresDay: state.day + 6,
   });
@@ -90,24 +130,69 @@ export function jobView(state, job) {
   const rumour = rumourFor(state, tpl.district);
   const delta = Math.max(1 - tpl.threat, Math.min(5 - tpl.threat, (job.threatDelta ?? 0) + (rumour?.threat ?? 0)));
   const trust = job.clientId ? trustOf(state, job.clientId) : null;
+  const days = job.days ?? tpl.days;
   return {
     tpl,
     client: CLIENTS.find((c) => c.id === job.clientId) ?? null,
     trust,
-    pay: round50(tpl.pay * (job.payMult ?? 1) * (trust == null ? 1 : trustPay(trust))),
+    days,
+    pay: round50(tpl.pay * (1 + EXTRA_DAY_PAY * (days - tpl.days)) * (job.payMult ?? 1) * (trust == null ? 1 : trustPay(trust))),
     threat: tpl.threat + delta,
     threatDelta: delta,
     hinted: Boolean(job.hinted),
     rumour,
+    askedFor: job.askedFor ?? null, // an Elite the client asked for by name (+NAMED_OFFER.payBonus if they go)
   };
 }
 
 /** Daily: offers past their last day leave the board, and on an arrival day new work comes in. Mutates the (cloned) state. */
 export function tickJobs(state) {
   state.jobs = state.jobs.filter((j) => j.expiresDay >= state.day);
-  const slot = arrivalDays(state, state.day).indexOf(state.day);
-  if (slot >= 0) postJobs(state, 1, { slot });
+  const days = arrivalDays(state, state.day);
+  const slot = days.indexOf(state.day);
+  if (slot >= 0) {
+    const before = state.jobs.length;
+    postJobs(state, days.filter((d) => d === state.day).length, { slot });
+    nameAnOffer(state, state.jobs.slice(before));
+  }
 }
+
+// --- named offers (renown slice 4) -------------------------------------------------------------
+
+const weekOf = (day) => Math.floor((day - 1) / 7);
+const fillIn = (text, vars) => text.replace(/\{(\w+)\}/g, (m, k) => vars[k] ?? m);
+
+/** Who a client would ask for by name: an Elite of yours with standing 50+, the highest first. */
+export function namedCandidate(state) {
+  return state.crew
+    .filter((o) => !o.freelance && o.fame === 'elite' && (o.standing ?? 0) >= NAMED_OFFER.standing)
+    .sort((a, b) => b.standing - a.standing)[0] ?? null;
+}
+
+/** Is this week one where a client asks for someone by name? A hash roll: it moves no other roll. */
+export const namedWeek = (state, day = state.day) => hashRng(state.seed, 'named-offer', weekOf(day))() < NAMED_OFFER.chance;
+
+/**
+ * New work just arrived: in a named week, the first new client job (not rookie work) asks for your
+ * best-rated Elite by name. One a week at most. Mutates the (cloned) state.
+ */
+export function nameAnOffer(state, fresh) {
+  const week = weekOf(state.day);
+  if (state.namedOfferWeek === week || !namedWeek(state)) return null;
+  const who = namedCandidate(state);
+  const job = fresh.find((j) => j.clientId && !templateById(j.templateId).rookie);
+  if (!who || !job) return null;
+  job.askedFor = who.id;
+  state.namedOfferWeek = week;
+  const client = CLIENTS.find((c) => c.id === job.clientId);
+  const vars = { op: who.handle, name: who.name, client: client?.name ?? 'A client', pct: Math.round(NAMED_OFFER.payBonus * 100) };
+  state.inbox.unshift({ id: `named-${job.id}`, type: 'job', day: state.day,
+    subject: fillIn(NAMED_TEXT.subject, vars), body: fillIn(NAMED_TEXT.body, vars), blocking: false, read: false });
+  return job;
+}
+
+/** The pay bonus a finished job earns for having its named runner on it (0 if none). */
+export const namedBonus = (am, onJobIds) => (am.askedFor && onJobIds.includes(am.askedFor) ? NAMED_OFFER.payBonus : 0);
 
 /**
  * Add up to `count` new offers, while the board has room. `slot` is the first one's place
@@ -121,7 +206,7 @@ export function postJobs(state, count = NEW_PER_WEEK, { slot = 0 } = {}) {
   const walkIns = open.filter((m) => m.walkIn);
   const rookieWork = open.filter((m) => m.rookie);
   let added = 0;
-  while (state.jobs.length < MAX_OFFERS && added < count) {
+  while (state.jobs.length < maxOffers(state) && added < count) {
     const n = slot + added;
     const clients = callingClients(state).filter((c) => c.jobs.some((id) => jobUnlocked(state, id)));
     if (state.jobGates && n === 0 && rookieWork.length) {
