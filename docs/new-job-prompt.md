@@ -99,7 +99,11 @@ CLIENTS (local powers a small crew can reach, below the corps):
   that could sink AHL, and wants out of the city.
 STREET CAST (rookie work): Doc Siu (Old Town; ex-surgeon, unlicensed clinic under
 Tenement Block 9, dry praise); Mrs. Ip (Night Market fish-ball stall at the Neon Dragon,
-moves crates). Currency is cash in ¥; no "credits" or "Bits".
+moves crates); Meena D'Sa (Rao's seamstress and counterkeeper); Tang Wai-chiu (Silver Fan
+collector, third-floor parlour); Uncle Tariq (remittance booth, Pearl Haven House, backed
+by Rao); Pang Man-ki (Veridian-Apex clinic administrator); Ho Sze-lam (Hoi-Sing field
+supervisor, Old Town); Mak Chi-on (Racing Association stable-access official). Currency
+is cash in ¥; no "credits" or "Bits".
 Reputation tier promotions open the locked districts,
 each introduced by a client: the Silt (the Ferryman), the Amber Reach (Okonkwo), Iron
 Peak (Szeto).
@@ -142,11 +146,13 @@ d20 + the operative's stat must reach 10 + difficulty. Stats run about 4-14.
 - Text tokens, filled in by the game:
   {op} = whoever acts or rolls. {driver} {tech} {face} {muscle} {medic} {infiltrator} =
   the crew member with that role (only use a role token where the choice requires that
-  role, or in beats). {szeto} {ferryman} {rao} {okonkwo} {siu} {ip} = a client's or
-  street contact's name; {ferryman:approve} (and the same for the others) = one of their
+  role, or in beats). {szeto} {ferryman} {rao} {okonkwo} {siu} {ip} {meena} {tang} {tariq} {pang} {ho}
+  {mak} = a client's or street contact's name; {ferryman:approve} (and the same for the others) = one of their
   approving lines (use it in the last beat). Auntie Fung has no token: write her name.
 - Every choice has report: { success, failure }: one plain past-tense sentence for the
-  after-action report, no jokes, names via tokens. Aborts and sure choices need only
+  after-action report, no jokes, names via tokens. Plain does not mean legal: use short,
+  concrete verbs ("paid", "got in", "lost the lead"), not "incurred", "secured" or
+  "established". Aborts and sure choices need only
   success. If a cost applies, the report line ends with it ("Heat +1.", "Pay -20%.").
 - Crisis placement: after: N means it can't come up before beat N (0 = after the first
   beat; N must be lower than the number of beats minus 1). order: -1 puts it earlier
@@ -156,6 +162,25 @@ d20 + the operative's stat must reach 10 + difficulty. Stats run about 4-14.
 - Voice: short, concrete sentences; phone-readable; specific details over adjectives
   (a smell, a sign, a sound); dry humour; nobody is a cartoon villain. Choice labels are
   actions in under ten words. success/failure lines are one sentence each.
+- Quality (lessons from the first batches of jobs; follow these as well):
+  - Brief: under 320 characters.
+  - Pronouns: Joss is they. Doc Siu, Auntie Fung, Madam Rao, Ruth Okonkwo and Mrs. Ip are
+    she. Mr. Szeto and the Ferryman are he. Check every "he", "his" and "him" in the job.
+  - Failures: at most a third may cost only a fee, charge or deposit. Give the rest a
+    different price: a client's trust, a named person's reaction, a lost item, a rumour,
+    time, or an injury. Money and heat are not the only things that can go wrong.
+  - Shape: don't repeat the same six crises (a gate or desk, a blocker, a tech problem,
+    a trolley or van problem, a checkpoint, a last confrontation). Use a transport crisis
+    only if the job is about moving something. At least one crisis should be a choice
+    about people (who to trust, what to say, who to leave behind), not an obstacle.
+  - People: give the job one named person from the street cast above, as a contact or an
+    antagonist, and use them in at least two crises. A clerk, an attendant and a manager
+    with no names make a job feel the same as the last one.
+  - Sure options: at least half of them should cost something other than cash: a favour
+    owed, part of the pay, a clue handed over, or someone left behind.
+  - Stakes: prefer a job where a person's choice is at stake (someone who must still say
+    yes, a patient, a worker who shouldn't be blamed) over a plain retrieval. Write the
+    failure as that person's loss, not only the crew's.
 - Size: 4-5 beats, exactly 6 crises. Pay: rookie 1,300-1,800; threat 2 3,000-4,500;
   threat 3 4,000-5,500; threat 4 6,000-7,000; threat 5 ~12,000. days: 1 (2-3 only for big
   jobs). crewSize: 2 rookie, 3 mid, 4 big. heat: 0.

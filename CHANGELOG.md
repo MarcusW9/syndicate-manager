@@ -4,15 +4,17 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
-
-
+## 2026-11-04 · 15 routine jobs
+- **Fifteen everyday jobs, all rookie work for a crew of two**, small and repeatable: Queue Duty, Shutter Watch, Paper Collection, Clean Sheets (Old Town); Fitting Room, Quiet Table (Night Market, for Madam Rao); Closing Stack, Crate Return (Night Market, for Mrs. Ip); Landing Hands (the Docks, for the Ferryman); Clear the Ramp, Eyes on the Seal (the Docks, for Ruth Okonkwo); Access Window (Glass Heights, for Mr. Szeto). Signal Walk (Old Town), Stable Turnover and Closing Sweep (the Basin) are walk-in work with no client. Queue Duty, Clean Sheets and Shutter Watch are Doc Siu's and Auntie Fung's, Closing Stack and Crate Return Mrs. Ip's, all offered through Auntie Fung's list.
 
 ## 2026-11-04 · Writing routine jobs
 - Docs and tools only, no game change: the job-writing prompt (`docs/new-job-prompt.md`) has a "Routine work" section for everyday jobs that repeat (courier runs, collections, guard shifts), and the job checker warns when a routine job is bigger than one.
+
 ## 2026-11-04 · More work for a bigger tong, and longer jobs
 - **The job board grows with your tong.** Up to five runners, three new jobs come in a week, as before. After that, one more a week for every two or three runners, and the board holds more offers at once. Freelancers don't count.
 - **Jobs now take a range of days.** Rookie work is as written. Bigger jobs can take a day longer, and threat 3 and up up to two days longer (four at most). Each extra day adds 5% to the pay. The job board and the planning screen show the days.
 - **Save format v36.** Offers already on the board keep their days.
+
 ## 2026-11-04 · Crews out call you in
 - **Sending a crew is now the default, and they can call you.** Planning a job has a new **How**: *Send them* (they go and do it over the days it takes) or *Watch live* (as before). Every "Call me in" setting works for both.
 - **A job sent away plays out day by day.** Each morning Today has a **Crews out** list: each job, who's on it, which day of how many, and a line or two on what they did. A long job's early days can be quiet: casing the place or lying low.
@@ -28,6 +30,7 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - **Every job can now be sent off on its own**, not only rookie work. On the planning screen, "Call me in: never" is offered for every job; the crew goes away and the report comes back when they do. Everything still starts on "risky", so sending a crew away is always your choice.
 - As before, a hands-off crew never pushes on with a critical wound: at worst they pull out. That's now tested on every job, under every order, full-handed and short-handed.
 - This is the first step towards running a bigger organisation with several crews out at once (the plan is in the design log).
+
 ## 2026-11-04 · Docs brought up to date
 - Docs only, no game change: `HANDOFF.md` now describes `main` as of #60 (save v33, 525 tests, renown slices 1-4 built, what's next). `README.md` has a current status list and doc index. `docs/ARCHITECTURE.md`, `DATA.md` and the `STATE-OF-PLAY.md` banner know about save v33. `PLAN-PROGRESSION.md` marks step 2 as mostly covered by later work and step 3 as not built.
 
@@ -57,6 +60,17 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 ## 2026-11-03 · Fight orders fit the screen
 - On a computer or an iPad in landscape, the play-by-play beside the map (with a fight's orders in it) now ends level with the map, leaving space above the bottom of the screen, instead of running to the edge. When the page scrolls, the map keeps a small gap under the top bar.
+
+## 2026-11-04 · New jobs: A Steady Hand, House Advantage, Exit Interview, Cold Chain and Quiet Hours
+- **A Steady Hand** (Doc Siu via Auntie Fung, Old Town, rookie): help a retired instrument maker close her workshop, then walk her to the clinic.
+- **House Advantage** (Madam Rao, Night Market, threat 2): recover the hidden reader from a mahjong table without naming the players who complained.
+- **Exit Interview** (Ruth Okonkwo, Glass Heights, threat 4): escort a shipping clerk who wants to leave a corporate residence, only if he still says yes.
+- **Cold Chain** (Mrs. Ip via Auntie Fung, Night Market, rookie): bring a borrowed chiller back before dawn without spoiling a neighbour's stock.
+- **Quiet Hours** (Ruth Okonkwo, the Docks, threat 3): take the real recording of a dockworker briefing from an AHL training room before the morning reset.
+
+## 2026-11-03 · Fix: the crew walks the drawn route again, and the speed button works
+- **On a job, the crew now walks the route drawn on the map.** A recent change left the crew's walking and the map drawn from two different places: the map showed the right site (for Herbal Run, the Old Town tenement) but the crew moved on a stock site, so they walked a different route and, once the job was done, stood at a different van spot from the one drawn. They now share the same site.
+- **"Faster" works again** on the job screen (it had stopped doing anything).
 
 ## 2026-11-03 · The play-by-play keeps up, and a finished job stays put
 - The play-by-play now always scrolls to the newest moment unless you scroll up yourself to reread something; scroll back to the bottom, or tap "↓ new", and it follows again. Before, it sometimes stopped following on its own.
@@ -89,6 +103,15 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 ## 2026-11-03 · Sunday jobs count towards active weeks
 - **A job finished on a Sunday now counts as a week worked.** The weekly count ran before any Sunday job (live, or a hands-off crew back that day), and the next Sunday's count had already moved past it, so Sunday work never counted. It now counts on the following Sunday, once. Only `record.activeWeeks` moves; nothing about rolls, pay or heat.
 
+## 2026-11-03 · New jobs: Borrowed Glory, Last Sitting and Low Water
+- **Borrowed Glory** (Mr. Szeto, the Basin, threat 4): steal the champion mare Harbour Dividend from Lantern Course so he can race her under his own colours.
+- **Last Sitting** (Auntie Fung, Old Town, threat 2): move a mahjong parlour, its tables, cupboard and regulars to a new room before the old landlord changes the locks.
+- **Low Water** (the Ferryman, the Docks, threat 3): recover a stolen channel marker's sounding logger from a scrap yard, so the night boats know where the seabed has moved.
+
+## 2026-11-03 · New jobs: Paid in Full and Second-Hand Heart
+- **Paid in Full** (Madam Rao, Night Market, threat 2): collect a pawned recorder holding flood-lost repayment receipts before the shop wipes it. Six crises, each with a no-roll way out.
+- **Second-Hand Heart** (Doc Siu via Auntie Fung, Old Town, rookie): get the clinic's repaired battery back before the recycling lorry takes it, after a payment was filed against the wrong serial number.
+
 ## 2026-11-03 · No more "someone" in job choices
 - Some choices in older jobs (the courier, warehouse and data runs, Kidnap, Casino Con, Protection Run) named a role, like the driver or the face, without needing one on the crew. Without that person, the line read "someone ran the light". They now name whoever actually does it.
 
@@ -109,7 +132,6 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 ## 2026-10-30 · Faces on the fight map
 - **Fights now stand on the map as they were meant to:** your crew's faces on their tokens, everyone on their spot behind cover, and the map zoomed to the fight. A bug kept everyone's place off the map, so fights showed initials crowded together.
-
 
 ## 2026-10-30 · Every sidearm is different
 - **Each sidearm now has its own strengths:** aim (how much it helps you hit), damage, and for some, pierce (how much armour it ignores).
@@ -221,6 +243,7 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 ## 2026-10-29 · Renewal numbers line up
 - When someone asks for a new deal, their current wage, what they're asking and their market value now sit in three equal boxes with the numbers on one line, and the loyalty note no longer touches them.
+
 ## 2026-10-29 · Fights on the map
 - A fight now plays out on the site map: the guards appear across from your crew, everyone has a little health bar, and each round's shots and hits play as they're reported. Anyone who goes down turns red; a guard who's down, talked round or running off fades out.
 - Each round's card ends with everyone's health, and the call-in at death's door shows it too, so you can decide without scrolling back. The bar under the map counts the guards still up.
@@ -267,24 +290,29 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - **Finishes and add-ons** from blued steel and hazard yellow to cinnabar lacquer, jade, pearl grips, holographic chrome and clinic white; laser sights, holo sights, glowing vents, LED ammo counters; charms like a neon keychain, a data shard or a hologram lucky cat.
 - **Guns that light up glow in their own colour**: cyan, neon purple, red or gold. Plain ones don't glow, so most rifles look as before.
 - Sidearms you already own become plain blued pistols with a name. They show in the armoury and on gear tiles, not on faces.
+
 ## 2026-10-29 · Every rifle is its own
 - **Rifles have looks and names.** Each one is built from a frame (marksman, carbine, bullpup, heavy or heritage), a finish (from old wood and rust to cinnabar lacquer, jade, temple bronze and white ceramic), sometimes an engraving (gold clouds, dragon scales, a neon circuit) and sometimes a charm (a red silk tassel, a paper talisman, a lucky coin, prayer beads, a mahjong tile...). Each has a name to match, like "Vermilion Heron" or "Ghost Heirloom".
 - **The armoury has a weekly shelf of rifles**: two street and one pro, all different, with new ones every Monday. Other gear is bought as before.
 - The name shows wherever the rifle does, with what it's made of underneath. Looks don't change what a rifle does.
 - Saves upgrade on their own: a rifle you already own keeps its look and gets a name.
+
 ## 2026-10-28 · Career marks
 - **A bad wound leaves a scar.** A serious or critical injury leaves a permanent scar on their face, up to three. Light wounds heal clean.
 - **Pushing neural load leaves chrome.** A job that ends with someone in the danger zone (over 70) adds a visible implant, up to two.
 - **The crew's mark.** After ten jobs with the crew, someone gets a small neon lantern under the eye.
 - Each mark is written in their history, and the profile lists them under their name ("Marked: a scar, the crew's mark"). The memorial wall keeps them.
 - Saves upgrade on their own: nobody has scars on record yet, but anyone already past ten jobs gets the crew's mark straight away.
+
 ## 2026-10-28 · Every face is its own
 - **Faces now differ in the face itself**, not just the hair and gear: eyes (spacing, size, tilt, and monolid, creased, hooded or deep-set lids), brows, nose, mouth and lips, jaw, chin, ears and neck. Wide-open eyes show their whites. Some people have freckles or a mole.
 - **Age shows**: lines from nose to mouth from the mid-thirties, eye bags and a forehead line from 45.
 - **Everyone's face is redrawn once**, crew already in a save included. Hair, skin, implants, gear and the light on them stay the same, so they're still recognisable. Expressions, injuries, masks, glasses and lenses all work as before.
 - Fixed: the Greedy trait said buyout offers "tempt her more" whoever had it; it now says "them".
+
 ## 2026-10-28 · Shaolin monks
 - **A new kind of monk turns up among recruits**: Shaolin warrior monks in saffron robes, with a heavy string of dark prayer beads and nine small ordination dots on the shaved head. Mostly Hong Kong and Southeast Asian names; rarely anyone else. Nobody else's face has changed, though a few existing crew are now drawn as Shaolin monks.
+
 ## 2026-10-28 · No more Continue by mistake while planning
 - While you're planning a job, the Continue button in the top bar is hidden, so the only button that moves things on is Start. Back out of the plan (or change tabs) and Continue returns. Phones already worked this way for main jobs; now desktop and side tasks do too.
 
@@ -347,15 +375,18 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - The watch screen's site plan now matches where the job is: a **container yard** by the harbour in the Docks (with the crane for overwatch), a **tenement** up an alley of steps in Old Town (overwatch by a rooftop water tank), **market stalls** under a footbridge in the Night Market with a mahjong parlour's back room, a **plaza and glass tower** in Glass Heights with the server room at the top, and the **racecourse stables** in the Basin, under a floodlight tower, with the vet block as the target.
 - Behind the scenes, each district can now have its own wording for the small moments of a run (a locked door, a patrol...). Until that's written they read as before.
 - 289 tests.
+
 ## 2026-10-28 · A neater (i) and reputation line (owner's feedback)
 - The (i) is smaller and lines up with its text; tapping it opens the explanation under the line, and the (i) stays put (on phones it used to jump).
 - Reputation now looks like the Heat meter in the top bar: "REP", a small segmented cyan track to the next unlock, then "2/10" and the (i).
 - The bottom line of job and side-work cards lines its icons up with the words.
 - Crew sizes on job and side-work cards are one figure and a number ("[figure] 4") instead of a figure per person, which didn't scale to the four-person jobs.
+
 ## 2026-10-28 · Crises name the right person
 - In crises that are about one role (the tech when a container stack slips, the driver at a roadblock), the choice now names whoever actually does it, and if it goes wrong they're the one hurt. Before, it could say "Flicker braced it" when Thimble, the better hand, made the roll.
 - When Doc Siu hands a patient to someone by name, that medic now does the stitching (backup still helps), like other crises that name someone.
 - Crises about one person's own trouble (the tech's nosebleed) still hurt that person if the attempt fails.
+
 ## 2026-10-27 · A tidier reputation line
 - The job board's reputation is one compact line: "Reputation 2/10", a short gauge of ten blocks (each a tenth of the way to the next unlock) and an (i). The (i) explains how reputation works and, new, what opens when: rookie jobs from the start, then threat 1 at 10, threat 2 at 15, threat 3 at 35, threat 4 at 60 and threat 5 at 80. The old full-width bar read like a big scale.
 
@@ -452,6 +483,7 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - **See why a number is what it is:** when you pick a choice, the risk read now names every bonus behind the number, e.g. "Egg Tart on tech (14, Chromed +2, stealth approach +1)". Traits, a veteran on the crew and your approach were already counted, just never shown.
 - **Clearer job reports:** every crisis in the game now gets a plain line in the job report saying what happened. Until now only the newer jobs had them; the district crises, the twists and the seven older jobs are done too (183 lines, written by the owner).
 - **City map:** on a computer screen, the district card now sits right next to the map instead of across a wide gap.
+
 ## 2026-10-26 · Screenshot log
 - **How the game looked, version by version:** `docs/screenshots/` now holds phone screenshots of 11 versions, from the first playable build on 23 Oct to the current one, plus the owner's own screenshots from 24 Oct. Its README lists each version with what changed on screen.
 - Every set shows the same screens with the same file names (job board, planning, a crisis, the report, crew and so on), so old and new are easy to put side by side.

@@ -40,7 +40,8 @@ C3 Follows the established shape for its kind:
    - district: landmarks / control / police / 3am / a custom;
    - client: what the street knows / what they don't say / ties to every other client /
      briefings / trust at 60, 75, 90 / if you lose them;
-   - street character: district, one trade, one habit, one tie to someone in canon.
+   - street character: district, one trade, one habit, a want, one tie to someone in
+     canon; a secret is optional and small.
 C4 Secrets are human and mundane: money, guilt, debt, a stolen name, a cover-up. No
    conspiracies that rewrite the city, no "secretly an AI/ghost/clone" twists.
 C5 Ties to at least one person or place already in canon, and does not make an existing
