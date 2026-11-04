@@ -49,6 +49,16 @@ test('the checker catches the usual mistakes', () => {
   has(warnings, 'difficulty 19 is outside');
 });
 
+test('routine work is held to routine numbers: small, short, rookie or threat 2', () => {
+  const big = { ...clone(WRONG_HORSE), id: 'routine_horse', routine: true };
+  const { errors, warnings } = checkJob(big, { others: ids });
+  assert.deepEqual(errors, []);
+  assert.ok(warnings.some((w) => w.startsWith('a routine job is rookie or threat 2')), 'threat 3 flagged');
+  assert.ok(warnings.some((w) => w.startsWith('a routine job takes a crew of 2')), 'crew of 3 flagged');
+  const small = { ...big, threat: 2, crewSize: 2, days: 1 };
+  assert.ok(!checkJob(small, { others: ids }).warnings.some((w) => w.startsWith('a routine job')), 'threat 2, crew of 2, a day: fine');
+});
+
 test('a rookie job is held to rookie numbers', () => {
   const job = { ...clone(WRONG_HORSE), id: 'rookie_horse', rookie: true, threat: 1 };
   const { warnings } = checkJob(job, { others: ids });

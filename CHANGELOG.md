@@ -6,6 +6,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+
+## 2026-11-04 · Writing routine jobs
+- Docs and tools only, no game change: the job-writing prompt (`docs/new-job-prompt.md`) has a "Routine work" section for everyday jobs that repeat (courier runs, collections, guard shifts), and the job checker warns when a routine job is bigger than one.
 ## 2026-11-04 · More work for a bigger tong, and longer jobs
 - **The job board grows with your tong.** Up to five runners, three new jobs come in a week, as before. After that, one more a week for every two or three runners, and the board holds more offers at once. Freelancers don't count.
 - **Jobs now take a range of days.** Rookie work is as written. Bigger jobs can take a day longer, and threat 3 and up up to two days longer (four at most). Each extra day adds 5% to the pay. The job board and the planning screen show the days.
