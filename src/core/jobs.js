@@ -6,7 +6,8 @@
 import { MISSIONS } from '../data/missions.js';
 import { TWISTS } from '../data/twists.js';
 import { CLIENTS } from '../data/clients.js';
-import { pick, makeRng } from './rng.js';
+import { pick, makeRng, hashRng } from './rng.js';
+import { NAMED_OFFER, NAMED_TEXT } from '../data/fame.js';
 import { nextRng } from './random.js';
 import { callingClients, trustOf, trustPay } from './clients.js';
 import { rumourFor } from './rumours.js';
@@ -99,6 +100,7 @@ export function jobView(state, job) {
     threatDelta: delta,
     hinted: Boolean(job.hinted),
     rumour,
+    askedFor: job.askedFor ?? null, // an Elite the client asked for by name (+NAMED_OFFER.payBonus if they go)
   };
 }
 
@@ -106,8 +108,49 @@ export function jobView(state, job) {
 export function tickJobs(state) {
   state.jobs = state.jobs.filter((j) => j.expiresDay >= state.day);
   const slot = arrivalDays(state, state.day).indexOf(state.day);
-  if (slot >= 0) postJobs(state, 1, { slot });
+  if (slot >= 0) {
+    const before = state.jobs.length;
+    postJobs(state, 1, { slot });
+    nameAnOffer(state, state.jobs.slice(before));
+  }
 }
+
+// --- named offers (renown slice 4) -------------------------------------------------------------
+
+const weekOf = (day) => Math.floor((day - 1) / 7);
+const fillIn = (text, vars) => text.replace(/\{(\w+)\}/g, (m, k) => vars[k] ?? m);
+
+/** Who a client would ask for by name: an Elite of yours with standing 50+, the highest first. */
+export function namedCandidate(state) {
+  return state.crew
+    .filter((o) => !o.freelance && o.fame === 'elite' && (o.standing ?? 0) >= NAMED_OFFER.standing)
+    .sort((a, b) => b.standing - a.standing)[0] ?? null;
+}
+
+/** Is this week one where a client asks for someone by name? A hash roll: it moves no other roll. */
+export const namedWeek = (state, day = state.day) => hashRng(state.seed, 'named-offer', weekOf(day))() < NAMED_OFFER.chance;
+
+/**
+ * New work just arrived: in a named week, the first new client job (not rookie work) asks for your
+ * best-rated Elite by name. One a week at most. Mutates the (cloned) state.
+ */
+export function nameAnOffer(state, fresh) {
+  const week = weekOf(state.day);
+  if (state.namedOfferWeek === week || !namedWeek(state)) return null;
+  const who = namedCandidate(state);
+  const job = fresh.find((j) => j.clientId && !templateById(j.templateId).rookie);
+  if (!who || !job) return null;
+  job.askedFor = who.id;
+  state.namedOfferWeek = week;
+  const client = CLIENTS.find((c) => c.id === job.clientId);
+  const vars = { op: who.handle, name: who.name, client: client?.name ?? 'A client', pct: Math.round(NAMED_OFFER.payBonus * 100) };
+  state.inbox.unshift({ id: `named-${job.id}`, type: 'job', day: state.day,
+    subject: fillIn(NAMED_TEXT.subject, vars), body: fillIn(NAMED_TEXT.body, vars), blocking: false, read: false });
+  return job;
+}
+
+/** The pay bonus a finished job earns for having its named runner on it (0 if none). */
+export const namedBonus = (am, onJobIds) => (am.askedFor && onJobIds.includes(am.askedFor) ? NAMED_OFFER.payBonus : 0);
 
 /**
  * Add up to `count` new offers, while the board has room. `slot` is the first one's place

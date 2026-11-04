@@ -5,6 +5,12 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-04 · Fame pays off (renown, slice 4)
+- **Clients ask for your Elites by name.** About one week in five, once you have an Elite with standing 50 or more, a new client job asks for them (the best-rated one). The job card says "Asks for Tofu". Send them, inside, outside or on standby, and it pays 15% more; send others and it's an ordinary job at its ordinary pay. One a week at most, never rookie work.
+- **A new Elite may ask for a raise.** The first time someone becomes Elite there's a 35% chance they want more (more likely if Greedy, less if Loyal), for 10% to 30% on top of their wage. It's the usual pay-rise message: accept, haggle or refuse (refusing makes them unhappy for four weeks). Winning Elite back later doesn't bring another ask.
+- **Better recruits come looking** once anyone on the crew is Elite: more pros and veterans among the leads (rookie 42%, pro 42%, veteran 16%, from 50/38/12).
+- Money: on long careful runs, median cash at week 52 is about 2% higher (¥39,750 to ¥40,450). If every fame raise were accepted it would cost about as much as named offers bring in. Nothing about rolls, heat or the risk read changes; the early game (to week 26) is unchanged. **Save format v33.**
+
 ## 2026-11-03 · Fights on a phone
 - On a phone or an iPad in portrait, a fight waiting for your orders now fits on one screen: the map stays at the top, your crew is a strip you can swipe sideways, and Go sits in a bar at the bottom with Pull back and "⋯" (Auto round, Auto fight).
 - The play-by-play becomes one line (the latest thing that happened); tap it to read the whole fight so far.

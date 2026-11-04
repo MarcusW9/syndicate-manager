@@ -9,6 +9,12 @@
 // four by week 52 (docs/design/2026-11.md). The veteran bands are from the same runs: the first
 // pro -> veteran promotion at a median week 44, in every run. Nobody died, before or after this
 // slice (the same 60 runs without it end with identical cash).
+//
+// Fame's payoffs (slice 4, 2026-11-04): median cash at week 52 was ¥39,750 before them and
+// ¥40,450 after (+1.8%); the owner's band is within 10% either way. Named offers: a median of 7 a
+// run, 5.5 of them paid with the named runner on the job. Fame pay asks don't show here (playWeeks
+// never answers pay-rise messages, and a new ask waits while one is open); if every one were
+// accepted they'd cost a median ¥840 by week 52, about what named offers bring in.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -17,6 +23,7 @@ import { cpus } from 'node:os';
 
 const SEEDS = Array.from({ length: 60 }, (_, i) => i + 1);
 const WEEKS = 78;
+const CASH52_BEFORE_PAYOFFS = 39750; // median cash at week 52 before slice 4, same 60 runs
 const median = (a) => { const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
 
 function playAll() {
@@ -38,7 +45,9 @@ test('fame over 78 careful weeks: when Elite arrives, how common it is, deaths u
   const lapsed = runs.filter((r) => r.lapses > 0).length / runs.length;
   const vets = runs.map((r) => r.firstVeteran).filter((w) => w != null);
   const deathsPerRun = runs.reduce((n, r) => n + r.deaths, 0) / runs.length;
-  console.log({ share, medianFirstElite: m, earliest: Math.min(...firsts), latest: Math.max(...firsts), elitesBy52: by52, lapsed, veteranShare: vets.length / runs.length, medianFirstVeteran: median(vets), deathsPerRun });
+  const cash52 = median(runs.map((r) => r.cash52));
+  const named = median(runs.map((r) => r.namedOffers));
+  console.log({ share, medianFirstElite: m, earliest: Math.min(...firsts), latest: Math.max(...firsts), elitesBy52: by52, lapsed, veteranShare: vets.length / runs.length, medianFirstVeteran: median(vets), deathsPerRun, cash52, named });
 
   // Elite: the owner's target, first around week 20-30, one or two by week 52.
   assert.ok(Math.min(...firsts) >= 12, 'Elite needs twelve active weeks');
@@ -51,6 +60,10 @@ test('fame over 78 careful weeks: when Elite arrives, how common it is, deaths u
   // Promotion: a veteran in most long runs, around the season's three-quarter mark.
   assert.ok(vets.length / runs.length >= 0.8, `runs with a promoted veteran: ${vets.length / runs.length}`);
   assert.ok(median(vets) >= 36 && median(vets) <= 56, `median first veteran week ${median(vets)}`);
+  // Money: fame's payoffs keep median cash at week 52 within 10% of where it was without them.
+  assert.ok(Math.abs(cash52 - CASH52_BEFORE_PAYOFFS) / CASH52_BEFORE_PAYOFFS <= 0.1, `median cash at week 52: ${cash52}`);
+  // Named offers: a handful a run once there's an Elite (about one week in five, from week ~26).
+  assert.ok(named >= 3 && named <= 12, `median named offers a run: ${named}`);
   // Deaths: the rules test's band (under 0.1 a run); 0 on these runs before and after this slice.
   assert.ok(deathsPerRun < 0.1, `deaths per run ${deathsPerRun}`);
 });

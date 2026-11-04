@@ -1301,3 +1301,7 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
   #app.is-onjob .watch .siteplan,
   #app.is-onjob .watch.is-fighting .siteplan { height: max(360px, min(calc(100svh - var(--live-top, 0px) - 250px), 85cqw)); }
 }
+
+/* Named offers (renown slice 4): a client asked for an Elite by name */
+.flag--named { color: var(--warn); font-weight: 600; }
+.named { color: var(--warn); margin: 6px 0; }
