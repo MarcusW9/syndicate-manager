@@ -5,6 +5,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-04 · You run a tong
+- **Your organisation is now a tong** (堂, "hall"): a registered association, a bit like a guild. The top bar shows its rank, which is how far its name carries: Back Room, Street, District, City, Harbour. Tap the rank for Joss's explanation.
+- Every tong starts in the back room, and older saves do too: moving up the ranks comes in a later update. **Save format v33.**
+
 ## 2026-11-04 · Any job can be sent hands-off
 - **Every job can now be sent off on its own**, not only rookie work. On the planning screen, "Call me in: never" is offered for every job; the crew goes away and the report comes back when they do. Everything still starts on "risky", so sending a crew away is always your choice.
 - As before, a hands-off crew never pushes on with a critical wound: at worst they pull out. That's now tested on every job, under every order, full-handed and short-handed.

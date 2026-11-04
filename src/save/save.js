@@ -10,6 +10,7 @@
 //   syndicate-ironman-progress     { [ironmanId]: highest save counter seen }
 //   syndicate-save-v1              legacy single save, moved into slot 1 on first load
 
+import { STARTING_RANK } from '../data/tong.js';
 import { refreshSideBoard } from '../core/sidetasks.js';
 import { SAVE_VERSION } from '../core/state.js';
 import { TATTOO_JOBS } from '../core/marks.js';
@@ -501,6 +502,13 @@ function migrate(state) {
     // gains lowWeeks and wasElite (Elite lapsing). Memorial entries are unchanged.
     for (const op of state.crew) seedFame(op);
     state.version = 32;
+  }
+  if (state.version === 32) {
+    // v33: the tong's rank replaces tier (DESIGN.md 2026-11-04). Tier never moved off 'street' and
+    // nothing read it, and ranks have no gates yet, so every tong starts at the first rank.
+    delete state.tier;
+    state.rank = STARTING_RANK;
+    state.version = 33;
   }
   return state;
 }

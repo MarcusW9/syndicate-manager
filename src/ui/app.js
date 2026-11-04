@@ -1,6 +1,8 @@
 // UI layer: the only code that touches the DOM. Reads state, calls core
 // functions, re-renders. Tap/click only; nothing depends on hover.
 
+import { rankOf } from '../core/tong.js';
+import { TONG_EXPLAINER } from '../data/tong.js';
 import { NAMES } from '../config/names.js';
 import { DISTRICTS, SAFEHOUSE_DISTRICT } from '../data/districts.js';
 import { DISTRICT_CARDS, FACTIONS, STREET_FACTS, HISTORY } from '../data/city.js';
@@ -448,9 +450,10 @@ function render() {
       <div class="topbar__stats">
         <span class="stat stat--cash"><span class="stat__label">Cash</span> ${money(state.cash)}${cashDelta()}</span>
         <span class="stat"><span class="stat__label">Heat</span> ${heatMeter()}</span>
-        <span class="tier">${esc(statName(state.tier))}<span class="tier__word"> tier</span></span>
+        <button class="tierbtn" data-action="info" data-id="tong" aria-expanded="${openInfo.has('tong')}" aria-label="What's a tong?"><span class="tier">${esc(rankOf(state).name)}<span class="tier__word"> tong</span></span></button>
       </div>
       ${planning || state.founding ? '' : renderContinue(blocked, resting, unread, 'topbar__continue')}
+      ${infoText('tong', TONG_EXPLAINER)}
     </header>
 
     <nav class="nav" aria-label="Main">

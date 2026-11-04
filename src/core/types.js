@@ -160,7 +160,7 @@
  * @property {?{id: string, until: number}} rumour  This week's street talk (core/rumours.js)
  * @property {number} [lastJobDay]     Day the last job started
  * @property {number} reputation       0-100 within tier
- * @property {'street'|'district'|'city'|'regional'} tier
+ * @property {'backroom'|'street'|'district'|'city'|'harbour'} rank  The tong's rank (data/tong.js); was tier until v33
  * @property {number} rent             Weekly safehouse rent
  * @property {Operative[]} crew
  * @property {InboxMessage[]} inbox

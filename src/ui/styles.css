@@ -53,6 +53,10 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .stat__label { color: var(--muted); font-size: 0.75rem; margin-right: 4px; }
 .delta { font-size: 0.78rem; font-weight: 600; color: #5fe0a5; }
 .delta.is-down { color: var(--danger); }
+/* The tong's rank is a button: tap it for what a tong is (DESIGN.md 2026-11-04). 44px tall to tap. */
+.tierbtn { min-height: 44px; display: inline-flex; align-items: center; background: none; border: 0; padding: 0; margin: -10px 0; cursor: pointer; font: inherit; color: inherit; }
+.topbar:has(> .infotext) { flex-wrap: wrap; }
+.topbar > .infotext { flex: 1 0 100%; order: 9; margin: 0; }
 .tier { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 3px 8px; border-radius: 6px; background: #262b36; color: var(--text); }
 .topbar__continue { display: none; flex: 0 0 auto; justify-items: center; align-content: center; gap: 1px; padding: 4px 16px; }
 /* Phones: Continue in a dock just above the tab bar, where the thumb is. */
