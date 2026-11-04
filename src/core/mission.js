@@ -11,7 +11,8 @@
 // can put someone at death's door, never dead: only "keep fighting" (the push on of a fight)
 // leaves them dying, and any exit after that still brings them home.
 
-import { templateById, twistById, jobView } from './jobs.js';
+import { templateById, twistById, jobView, namedBonus } from './jobs.js';
+import { NAMED_OFFER, NAMED_TEXT } from '../data/fame.js';
 import { adjustTrust, clientById, completionTrust, ABORT_TRUST } from './clients.js';
 import { nextRng } from './random.js';
 import { d20 } from './rng.js';
@@ -205,6 +206,7 @@ export function startMission(prev, jobId, crewIds, approach, opts = {}) {
     callIn: CALL_IN[opts.callIn] ? opts.callIn : 'every', orders: opts.orders ?? null,
     alert: 0, out: [], pending: null, wentLoud: false, battle: null, fought: false,
     pay: view.pay, threat: view.threat, threatDelta: view.threatDelta, clientId: job.clientId ?? null, twist: job.twist ?? null,
+    askedFor: job.askedFor ?? null, // the runner a client asked for by name (renown slice 4)
     queue, step: 0, log: [],
     payCut: 0, extraHeat: 0, clientTrust: 0, watched,
     critical: null, stabiliseFailed: false, untreated: [],
@@ -889,7 +891,9 @@ function finish(state) {
 
   const basePay = am.pay ?? tpl.pay;
   const threat = am.threat ?? tpl.threat;
-  const pay = Math.round((basePay * Math.max(0, 1 - am.payCut)) / 50) * 50;
+  // A client who asked for someone by name pays more if they were on the job (core/jobs.js namedBonus).
+  const named = namedBonus(am, onJob(state, am).map((o) => o.id));
+  const pay = Math.round((basePay * (1 + named) * Math.max(0, 1 - am.payCut)) / 50) * 50;
   // Freelancers who make it back take their share of what was actually paid.
   const freelance = crew.filter((o) => isFreelancer(o) && !deaths.includes(o)).map((o) => ({ handle: o.handle, cut: freelanceCut(o, pay) }));
   const cuts = freelance.reduce((n, f) => n + f.cut, 0);
@@ -1002,6 +1006,7 @@ function finish(state) {
   const steps = [...(am.report ?? [])];
   const results = [
     { tone: pay > 0 ? 'good' : 'plain', text: `Paid ${money(pay)}.` },
+    ...(named ? [{ tone: 'good', text: NAMED_TEXT.report.replace('{client}', clientById(am.clientId)?.name ?? 'The client').replace('{op}', opById(state, am.askedFor)?.handle ?? state.memorial.find((m) => m.id === am.askedFor)?.handle ?? 'them').replace('{pct}', Math.round(NAMED_OFFER.payBonus * 100)) }] : []),
     ...(cuts ? [{ tone: 'plain', text: `Freelancers took ${money(cuts)}.` }] : []),
     ...(am.bribe ? [{ tone: 'plain', text: `Props and bribes cost ${money(am.bribe)} up front.` }] : []),
     { tone: heatGain > 0 ? 'warn' : 'plain', text: `Heat +${heatGain}.` },

@@ -4,6 +4,7 @@
 import { CULTURES, HANDLES, ROLE_PROFILES, ORIGINS, TEMPERAMENTS, HABITS, BADGE_COLORS } from '../data/recruitPools.js';
 import { TRAITS } from '../data/traits.js';
 import { NAMES } from '../config/names.js';
+import { ELITE_RECRUIT_WEIGHTS } from '../data/fame.js';
 import { nextRng } from './random.js';
 import { pick, d20 } from './rng.js';
 import { bestFor } from './crew.js';
@@ -66,10 +67,18 @@ function withoutClashes(lines, tags) {
 // The founding crew: raw rookies, below the rookies you can hire later (PLAN-PROGRESSION.md).
 const FOUNDER = { id: 'rookie', age: [18, 24], primary: [8, 11], secondary: [5, 9], other: [2, 6] };
 
+/** Lead quality weights: the usual ones, or better with an Elite on the crew. */
+export function recruitQualities(state) {
+  const elite = (state.crew ?? []).some((o) => !o.freelance && o.fame === 'elite');
+  return elite ? QUALITY.map((q) => ({ ...q, weight: ELITE_RECRUIT_WEIGHTS[q.id] ?? q.weight })) : QUALITY;
+}
+
 export function generateRecruit(state, { role: forcedRole, quality: forcedQuality, founder = false } = {}) {
   const rng = nextRng(state);
   const culture = weighted(rng, CULTURES);
-  const rolledQuality = weighted(rng, QUALITY);
+  // With an Elite on the crew, better people come looking (renown slice 4; data/fame.js). Same
+  // number of draws either way, so no other roll moves.
+  const rolledQuality = weighted(rng, recruitQualities(state));
   const quality = founder ? FOUNDER : QUALITY.find((q) => q.id === forcedQuality) ?? rolledQuality;
   const rolledRole = pickRole(rng, state.crew);
   const role = forcedRole ?? rolledRole;

@@ -36,19 +36,28 @@ export function renewalDue(state, op, graduated = false) {
 /** Post a renewal notice if one is due. Mutates state. Returns true if one fired. */
 export function checkRenewal(state, op, graduated = false) {
   if (!renewalDue(state, op, graduated)) return false;
-  const market = marketWage(op);
   const ask = renewalAsk(op);
+  postPayAsk(state, op, { ask, subject: `${op.handle} wants a new deal`, body: `${op.name} knows what they're worth now. On ${op.wage} a week; asking for ${ask}.` });
+  return true;
+}
+
+/** Is a pay-rise message for them still waiting on an answer? */
+export const payAskPending = (state, op) => pendingFor(state, op);
+
+/**
+ * Post a pay-rise message (accept, haggle, refuse; RENEWAL_RESOLVER below). Used by renewals and
+ * by fame's ask (core/fame.js, reason 'fame'). Starts their notice cooldown. Mutates state.
+ */
+export function postPayAsk(state, op, { ask, subject, body, reason = 'growth' }) {
   op.lastNoticeDay = state.day;
   state.inbox.unshift({
     id: `renewal-${op.id}-${state.day}`, type: 'crew', day: state.day,
-    subject: `${op.handle} wants a new deal`,
-    body: `${op.name} knows what they're worth now. On ${op.wage} a week; asking for ${ask}.`,
+    subject, body,
     kind: 'renewal',
     options: renewalOptions(false),
-    payload: { opId: op.id, current: op.wage, ask, market, loyalty: loyalty(op), discount: loyaltyDiscount(op), jobs: op.jobsWithCrew ?? 0, haggled: false, haggleResult: null },
+    payload: { opId: op.id, current: op.wage, ask, market: marketWage(op), loyalty: loyalty(op), discount: loyaltyDiscount(op), jobs: op.jobsWithCrew ?? 0, haggled: false, haggleResult: null, reason },
     blocking: true, resolved: false, read: false,
   });
-  return true;
 }
 
 const renewalOptions = (haggled) => [
