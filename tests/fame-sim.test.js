@@ -15,6 +15,12 @@
 // run, 5.5 of them paid with the named runner on the job. Fame pay asks don't show here (playWeeks
 // never answers pay-rise messages, and a new ask waits while one is open); if every one were
 // accepted they'd cost a median ¥840 by week 52, about what named offers bring in.
+//
+// Re-baselined 2026-11-04 (docs/design/2026-11.md): 25 drafted jobs joined the board's pool, several
+// of them paying ¥5,000-7,000, and the same runs end with more cash. Without the payoffs (named
+// offers off, recruit weights back to 50/38/12) the median at week 52 is ¥43,570; with them ¥44,920
+// (+3.1%). The sim hires at most five and buys nothing, so this number is mostly unspent cash and will
+// need another look when the crew can grow past five or there are more things to buy.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -23,7 +29,7 @@ import { cpus } from 'node:os';
 
 const SEEDS = Array.from({ length: 60 }, (_, i) => i + 1);
 const WEEKS = 78;
-const CASH52_BEFORE_PAYOFFS = 39750; // median cash at week 52 before slice 4, same 60 runs
+const CASH52_BEFORE_PAYOFFS = 43570; // median cash at week 52 without slice 4's payoffs, same 60 runs, with the jobs added 2026-11-04 (was 39750 before them)
 const median = (a) => { const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
 
 function playAll() {
