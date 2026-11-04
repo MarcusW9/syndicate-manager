@@ -461,6 +461,9 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .planbar { position: sticky; bottom: 56px; z-index: 1; display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: #1b1f28; box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.35); }
 .planbar__read { flex: 1; min-width: 0; display: grid; gap: 4px; justify-items: start; }
 .planbar__why { font-size: 0.8rem; color: var(--muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.planbar__why--more { display: block; gap: 2px; min-height: 32px; padding: 0; border: 0; background: none; font: inherit; font-size: 0.8rem; color: var(--muted); text-align: left; cursor: pointer; }
+.planbar__why--more b { color: var(--warn); font-weight: 600; }
+.planbar__why--more[aria-expanded="true"] { display: grid; white-space: normal; }
 .planbar .btn { flex: 0 0 auto; }
 .risk--none { background: #262b36; color: var(--muted); }
 @media (min-width: 900px) { .planbar { bottom: 16px; } }
@@ -816,12 +819,16 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 
 /* The coverage read (core/squad.js): what they'll likely meet, who handles it, the gaps. */
 .cover { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
-.cover__row { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 9px 12px; border-top: 1px solid var(--line); align-items: center; }
-.cover__row:first-child { border-top: 0; }
+/* One line a row (2026-11-04): what and who on the left, the risk on the right; the right column
+   is capped and wraps, so a long "→ low with …" can't squeeze the left one. */
+.cover__group { margin: 0; padding: 8px 12px 2px; border-top: 1px solid var(--line); font: 700 0.68rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.cover__group:first-child { border-top: 0; }
+.cover__row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, max-content); gap: 1px 10px; padding: 6px 12px 8px; align-items: center; }
 .cover__row.is-gap { background: #1e1416; }
 .cover__name { margin: 0; font-weight: 600; font-size: 0.9rem; }
+.cover__danger { color: #ff8a98; font-size: 0.8rem; }
 .cover__who { margin: 0; grid-column: 1; font-size: 0.76rem; color: var(--muted); }
-.cover__risk { grid-row: span 2; display: grid; justify-items: end; gap: 3px; }
+.cover__risk { grid-column: 2; grid-row: 1 / span 2; max-width: 11rem; display: grid; justify-items: end; gap: 3px; text-align: right; }
 .cover__risk .risk { margin-right: 0; }
 .cover__with { font-size: 0.68rem; color: var(--muted); }
 .cover__note { margin: 0; padding: 9px 12px; border-top: 1px solid var(--line); font-size: 0.78rem; color: var(--warn); }
@@ -954,6 +961,7 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 /* The (i): small and quiet, centred on its line, with a 44px tap area round it. */
 .infobtn { position: relative; flex: none; width: 16px; height: 16px; padding: 0; border: 1px solid var(--muted); border-radius: 50%; background: none; color: var(--muted); font: italic 700 0.62rem/1 Georgia, serif; display: grid; place-items: center; cursor: pointer; }
 .infobtn::before { content: ''; position: absolute; inset: -14px; }
+p > .infobtn { display: inline-grid; vertical-align: 2px; margin-left: 4px; }
 .infobtn.is-on { color: var(--accent-2); border-color: var(--accent-2); }
 .infotext { margin: -6px 0 12px; color: var(--muted); max-width: 60ch; }
 .upcoming__group > summary { cursor: pointer; list-style: none; }

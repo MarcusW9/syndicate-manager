@@ -5,6 +5,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-04 · A shorter job plan
+- The client's background is behind an ⓘ next to their name; tap it to read. What changes the job (harder rolls, unreliable intel, named offers, street talk) still shows.
+- "What they'll likely meet" is grouped by when it happens (the way in, inside, the target) with one line each: what it is, who handles it, the risk. ⚠ marks the dangerous ones. On desktop the rows no longer squeeze into narrow columns.
+- The separate crises card is gone: its warnings (weak skills, someone tired or hurt, no medic, crew size) are in the bar at the bottom with the risk. Tap "+N more" to see them all.
+
 ## 2026-11-04 · The week as the tong's rhythm
 - **What's due on Sunday is always in the top bar**, e.g. "¥2,750 due Sun".
 - **Monday's briefing:** on Mondays, Today opens with the week: cash, what's due Sunday (red if you're short), how many runners are free, the jobs on the board, and who's out, hurt or whose offers end this week.
