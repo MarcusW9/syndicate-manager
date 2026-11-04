@@ -45,6 +45,16 @@ import { LANDING_HANDS } from './missions/landinghands.js';
 import { PAPER_COLLECTION } from './missions/papercollection.js';
 import { CLEAN_SHEETS } from './missions/cleansheets.js';
 import { CRATE_RETURN } from './missions/cratereturn.js';
+import { RELAY_COVER } from './missions/relaycover.js';
+import { TACK_LEDGER } from './missions/tackledger.js';
+import { MOORING_WATCH } from './missions/mooringwatch.js';
+import { DRY_SHELF } from './missions/dryshelf.js';
+import { KIT_RETURN } from './missions/kitreturn.js';
+import { AFTER_HOURS } from './missions/afterhours.js';
+import { RACE_NIGHT_DOOR } from './missions/racenightdoor.js';
+import { COUNT_AGAINST_PAPER } from './missions/countagainstpaper.js';
+import { RENT_ROUND } from './missions/rentround.js';
+import { INSPECTION_HOURS } from './missions/inspectionhours.js';
 import { DISTRICT_CRISES } from './districtCrises.js';
 import { ROOKIE_CRISES } from './rookieCrises.js';
 
@@ -426,7 +436,7 @@ const BASE_MISSIONS = [
 // Rookie jobs (rookie: true) draw the shared rookie pool instead of the district crises:
 // those are aimed at 9-14, too hard for a new crew.
 const sharedPool = (m) => (m.rookie ? ROOKIE_CRISES : DISTRICT_CRISES[m.district] ?? []);
-export const MISSIONS = [...BASE_MISSIONS, KIDNAP, CASINO, PENTHOUSE, PROTECTION, CLINIC, HERBAL, LEDGER, CONTAINER, DELIVERY, EVICTION, CHROME, CABLE, SCRUB, FAVOURITE, LAST_TICKET, WRONG_HORSE, PAID_IN_FULL, SECOND_HAND_HEART, BORROWED_GLORY, LAST_SITTING, LOW_WATER, A_STEADY_HAND, HOUSE_ADVANTAGE, EXIT_INTERVIEW, COLD_CHAIN, QUIET_HOURS, QUEUE_DUTY, SHUTTER_WATCH, SIGNAL_WALK, FITTING_ROOM, CLEAR_THE_RAMP, EYES_ON_THE_SEAL, STABLE_TURNOVER, CLOSING_SWEEP, ACCESS_WINDOW, QUIET_TABLE, CLOSING_STACK, LANDING_HANDS, PAPER_COLLECTION, CLEAN_SHEETS, CRATE_RETURN]
+export const MISSIONS = [...BASE_MISSIONS, KIDNAP, CASINO, PENTHOUSE, PROTECTION, CLINIC, HERBAL, LEDGER, CONTAINER, DELIVERY, EVICTION, CHROME, CABLE, SCRUB, FAVOURITE, LAST_TICKET, WRONG_HORSE, PAID_IN_FULL, SECOND_HAND_HEART, BORROWED_GLORY, LAST_SITTING, LOW_WATER, A_STEADY_HAND, HOUSE_ADVANTAGE, EXIT_INTERVIEW, COLD_CHAIN, QUIET_HOURS, QUEUE_DUTY, SHUTTER_WATCH, SIGNAL_WALK, FITTING_ROOM, CLEAR_THE_RAMP, EYES_ON_THE_SEAL, STABLE_TURNOVER, CLOSING_SWEEP, ACCESS_WINDOW, QUIET_TABLE, CLOSING_STACK, LANDING_HANDS, PAPER_COLLECTION, CLEAN_SHEETS, CRATE_RETURN, RELAY_COVER, TACK_LEDGER, MOORING_WATCH, DRY_SHELF, KIT_RETURN, AFTER_HOURS, RACE_NIGHT_DOOR, COUNT_AGAINST_PAPER, RENT_ROUND, INSPECTION_HOURS]
   .map((m) => ({ ...m, crises: [...m.crises, ...sharedPool(m)] }));
 
 /** A job's own crises, without the shared district or rookie pool (scripts/check-job.mjs). */

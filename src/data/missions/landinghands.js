@@ -150,7 +150,7 @@ export const LANDING_HANDS = {
         },
         {
           id: 'hire_cradle',
-          label: 'Hire the landing attendant\'s transfer cradle',
+          label: 'Hire the attendant’s transfer cradle',
           kind: 'adapt',
           sure: true,
           stat: 'cool',
@@ -309,7 +309,7 @@ export const LANDING_HANDS = {
         },
         {
           id: 'scan_returns',
-          label: 'Scan the return tags against the receipt',
+          label: 'Scan return tags against the receipt',
           kind: 'adapt',
           stat: 'tech',
           difficulty: 4,
