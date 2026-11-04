@@ -11,6 +11,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - Pick Shoot, Flank or Talk and the game asks which guard, showing your chance against each; tap one in the list or on the map.
 - Each crew card shows how many guards are aiming at them and their chance to hit.
 
+## 2026-11-03 · Elite is rarer
+- **Elite now needs 60 jobs at their level** (was 20), or 120 jobs for a Lifer (was 40). On careful play the first Elite now comes around week 26 (weeks 23 to 35) instead of week 12, and a crew has one or two Elites by week 52 instead of four. Legend's readiness now asks for 120 jobs at their level (was 40). Still nothing about rolls, pay or heat.
+
 ## 2026-11-03 · A tidier fight panel
 - The fight's orders are now one short row per crew member: face, name, health bar, cover, who's aiming at them, and their order. Orders you give show solid ("You: Flank G2"); anyone you leave alone shows the crew's call, faded. Tap your order (or the crew's pick) to hand it back to them.
 - Pick someone and their tray opens below: their kit, who's aiming at them, the guards with your chance to hit each, and what they can do, each with its odds in big numbers.
