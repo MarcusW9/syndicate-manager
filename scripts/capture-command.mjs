@@ -16,7 +16,7 @@ import { arm } from '../tests/play.js';
 
 const { chromium } = createRequire(import.meta.url)('playwright');
 const JOB = process.env.JOB ?? 'warehouse'; // JOB=kidnap etc. for another district's map
-const SIZES = process.env.PHONE_ONLY ? [[390, 844]] : [[390, 844], [1440, 900]];
+const SIZES = process.env.SIZES ? process.env.SIZES.split(',').map((s) => s.split('x').map(Number)) : process.env.PHONE_ONLY ? [[390, 844]] : [[390, 844], [1440, 900]]; // SIZES=834x1194,390x844
 const PREFIX = process.env.PREFIX ?? '';
 const repo = new URL('..', import.meta.url).pathname;
 const out = process.argv[2]?.startsWith('/') ? process.argv[2] : join(repo, 'docs/screenshots', process.argv[2] ?? 'command-fight-scratch');
@@ -62,6 +62,7 @@ try {
     await page.waitForSelector('.ffo');
     await page.waitForTimeout(800);
     await page.evaluate(() => document.querySelector('.watch__callin').scrollIntoView({ block: 'start' }));
+    await page.waitForTimeout(3000); // the map plays the fight's start
     await shot(page, 'orders', w);
     await shot(page, 'orders-full', w, true);
     // The first runner flanks a guard in cover, the second hunkers.
@@ -70,6 +71,13 @@ try {
     // (Flank shows only against a guard in cover; else they shoot.)
     const flank = page.locator('.ffo-act[data-kind="flank"]');
     await ((await flank.count()) ? flank : page.locator('.ffo-act[data-kind="shoot"]')).first().dispatchEvent('click');
+    // On a phone the shot asks which guard first (2026-11-03): show the question, then pick the last.
+    if (await page.locator('.ffo-targets.is-aiming').count()) {
+      await page.waitForTimeout(200);
+      await shot(page, 'which-guard', w);
+      await page.locator('.ffo-targets.is-aiming button.ffo-target').last().dispatchEvent('click');
+      await page.waitForTimeout(200);
+    }
     await page.locator('.ffo-act[data-kind="hunker"]').first().dispatchEvent('click');
     await page.waitForTimeout(300);
     await page.evaluate(() => document.querySelector('.watch__callin').scrollIntoView({ block: 'start' }));
@@ -82,6 +90,17 @@ try {
     await shot(page, 'rules-and-pull-back', w, w < 500);
     await page.locator('[data-action="fight-pull-no"]').dispatchEvent('click');
     await page.locator('[data-action="fight-rules"]').dispatchEvent('click');
+    // A phone's log and the "⋯" menu.
+    if (await page.locator('.ffo-log').isVisible()) {
+      await page.locator('.ffo-log').dispatchEvent('click');
+      await page.waitForTimeout(200);
+      await shot(page, 'log-open', w);
+      await page.locator('.ffo-log').dispatchEvent('click');
+      await page.locator('[data-action="fight-more"]').dispatchEvent('click');
+      await page.waitForTimeout(200);
+      await shot(page, 'more-menu', w);
+      await page.locator('[data-action="fight-more"]').dispatchEvent('click');
+    }
     await page.locator('[data-action="fight-go"]').dispatchEvent('click');
     await page.waitForTimeout(9000);
     await shot(page, 'after-go', w);

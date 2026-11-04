@@ -245,7 +245,7 @@ function onClick(e) {
     case 'watch-latest': return showLatest();
     case 'pending': return setState(resolvePending(state, id));
     // Command fights (ui/fightorders.js): pick, target and order are the player's draft; the rest play the round.
-    case 'fight-sel': case 'fight-target': case 'fight-clear': case 'fight-order': case 'fight-pull-ask': case 'fight-pull-no': case 'fight-rules':
+    case 'fight-sel': case 'fight-target': case 'fight-clear': case 'fight-order': case 'fight-pull-ask': case 'fight-pull-no': case 'fight-rules': case 'fight-more': case 'fight-log':
       fightTap(state.activeMission, action, { id, kind: t.dataset.kind, target: t.dataset.target });
       break;
     case 'fight-go': return setState(runBattle(state, takeOrders()));

@@ -5,6 +5,12 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-03 · Fights on a phone
+- On a phone or an iPad in portrait, a fight waiting for your orders now fits on one screen: the map stays at the top, your crew is a strip you can swipe sideways, and Go sits in a bar at the bottom with Pull back and "⋯" (Auto round, Auto fight).
+- The play-by-play becomes one line (the latest thing that happened); tap it to read the whole fight so far.
+- Pick Shoot, Flank or Talk and the game asks which guard, showing your chance against each; tap one in the list or on the map.
+- Each crew card shows how many guards are aiming at them and their chance to hit.
+
 ## 2026-11-03 · Elite is rarer
 - **Elite now needs 60 jobs at their level** (was 20), or 120 jobs for a Lifer (was 40). On careful play the first Elite now comes around week 26 (weeks 23 to 35) instead of week 12, and a crew has one or two Elites by week 52 instead of four. Legend's readiness now asks for 120 jobs at their level (was 40). Still nothing about rolls, pay or heat.
 
