@@ -12,7 +12,7 @@ export const EXIT_INTERVIEW = {
   days: 1,
   crewSize: 4,
   keyStats: ['social', 'stealth', 'tech'],
-  brief: '{okonkwo} forwards a message from a shipping clerk lodged in a corporate residence: I WANT TO LEAVE. "Temporary assignment. Six weeks ago. His access pass now opens his room and the dining floor, nothing outside." She wants him escorted out with his own belongings. "Ask him yourself before you move. If he says no, we stop."',
+  brief: '{okonkwo} forwards a message from a shipping clerk lodged in a corporate residence: I WANT TO LEAVE. "A temporary posting, six weeks ago. His pass now opens his room and the dining floor, nothing outside." She wants him escorted out with his own belongings. "Ask him yourself before you move. If he says no, we stop."',
   beats: [
     'The residence lobby smells of cut flowers and filtered air; a wall display welcomes guests to Apex Ridge.',
     'Upstairs, the clerk waits beside a packed bag and an untouched meal. Asked directly, he says he wants to leave.',
