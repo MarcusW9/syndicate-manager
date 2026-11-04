@@ -150,7 +150,7 @@ export const CRATE_RETURN = {
         },
         {
           id: 'covered_passage',
-          label: 'Pay for the covered passage',
+          label: 'Pay for covered passage',
           kind: 'adapt',
           sure: true,
           stat: 'cool',
@@ -309,7 +309,7 @@ export const CRATE_RETURN = {
         },
         {
           id: 'check_terminal',
-          label: 'Check the collection terminal for duplicate entries',
+          label: 'Check the terminal for duplicate entries',
           kind: 'adapt',
           stat: 'tech',
           difficulty: 4,
