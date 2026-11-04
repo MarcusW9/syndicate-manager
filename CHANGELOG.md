@@ -4,6 +4,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-04 · 15 routine jobs
+- **Fifteen everyday jobs, all rookie work for a crew of two**, small and repeatable: Queue Duty, Shutter Watch, Paper Collection, Clean Sheets (Old Town); Fitting Room, Quiet Table (Night Market, for Madam Rao); Closing Stack, Crate Return (Night Market, for Mrs. Ip); Landing Hands (the Docks, for the Ferryman); Clear the Ramp, Eyes on the Seal (the Docks, for Ruth Okonkwo); Access Window (Glass Heights, for Mr. Szeto). Signal Walk (Old Town), Stable Turnover and Closing Sweep (the Basin) are walk-in work with no client. Queue Duty, Clean Sheets and Shutter Watch are Doc Siu's and Auntie Fung's, Closing Stack and Crate Return Mrs. Ip's, all offered through Auntie Fung's list.
+
 ## 2026-11-04 · Writing routine jobs
 - Docs and tools only, no game change: the job-writing prompt (`docs/new-job-prompt.md`) has a "Routine work" section for everyday jobs that repeat (courier runs, collections, guard shifts), and the job checker warns when a routine job is bigger than one.
 
