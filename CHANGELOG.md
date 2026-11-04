@@ -4,6 +4,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-04 · Ten more routine jobs, and shorter choice labels
+- **Ten threat-2 routine jobs**, each for a crew of two on a day's work and ¥3,000-3,200: Relay Cover (Mr. Szeto, Glass Heights), Mooring Watch (the Ferryman, the Docks), Dry Shelf (Auntie Fung, Old Town), Kit Return (Madam Rao, Night Market), Count Against Paper (Ruth Okonkwo, the Docks) and Inspection Hours (Mrs. Ip, through Auntie Fung, Night Market). Tack Ledger and Race-Night Door (the Basin), After Hours (Glass Heights) and Rent Round (Old Town) are walk-in work with no client.
+- **Shorter choice labels** in 14 of the earlier routine jobs (56 labels), so they read cleanly on a phone.
+
 ## 2026-11-04 · 15 routine jobs
 - **Fifteen everyday jobs, all rookie work for a crew of two**, small and repeatable: Queue Duty, Shutter Watch, Paper Collection, Clean Sheets (Old Town); Fitting Room, Quiet Table (Night Market, for Madam Rao); Closing Stack, Crate Return (Night Market, for Mrs. Ip); Landing Hands (the Docks, for the Ferryman); Clear the Ramp, Eyes on the Seal (the Docks, for Ruth Okonkwo); Access Window (Glass Heights, for Mr. Szeto). Signal Walk (Old Town), Stable Turnover and Closing Sweep (the Basin) are walk-in work with no client. Queue Duty, Clean Sheets and Shutter Watch are Doc Siu's and Auntie Fung's, Closing Stack and Crate Return Mrs. Ip's, all offered through Auntie Fung's list.
 

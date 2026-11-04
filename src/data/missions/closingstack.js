@@ -256,7 +256,7 @@ export const CLOSING_STACK = {
         },
         {
           id: 'replace_brace',
-          label: 'Buy a replacement brace from the repair stall',
+          label: 'Buy a replacement brace',
           kind: 'adapt',
           sure: true,
           stat: 'cool',
@@ -294,7 +294,7 @@ export const CLOSING_STACK = {
       choices: [
         {
           id: 'show_agreement',
-          label: 'Show the storage clause on the agreement',
+          label: 'Show the agreement’s storage clause',
           kind: 'push',
           stat: 'social',
           difficulty: 5,

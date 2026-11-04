@@ -28,7 +28,7 @@ export const SIGNAL_WALK = {
       after: 0, order: -1,
       text: 'A fresh coat of paint covers a cabinet number. Two identical boxes stand beneath the same dripping balcony.',
       choices: [
-        { id: 'match_layout', label: 'Match the external fittings to the route reference', kind: 'push', stat: 'tech', difficulty: 6,
+        { id: 'match_layout', label: 'Match external fittings to the route reference', kind: 'push', stat: 'tech', difficulty: 6,
           success: '{op} matches the vent pattern and mounting bolts to the reference photograph.',
           failure: 'The fittings remain ambiguous, and the contractor deducts for a return inspection.', failureInjury: 'none', failureCost: { payCut: 0.1 },
           report: { success: '{op} identified the painted cabinet from its external fittings.', failure: '{op} could not verify the painted cabinet number. Pay -10%.' } },
@@ -48,7 +48,7 @@ export const SIGNAL_WALK = {
       after: 1, order: 0,
       text: 'A shop display throws moving red light across the next indicator window. Every photograph makes the healthy lamps look like fault warnings.',
       choices: [
-        { id: 'shade_window', label: 'Shade the window and lock the camera exposure', kind: 'push', stat: 'tech', difficulty: 5,
+        { id: 'shade_window', label: 'Shade the window; lock camera exposure', kind: 'push', stat: 'tech', difficulty: 5,
           success: '{op} shades the indicator window and captures the lamps without reflected colour.',
           failure: 'The images remain unreadable, leaving a paid revisit on the route.', failureInjury: 'none', failureCost: { payCut: 0.1 },
           report: { success: '{op} photographed the indicators without reflected display light.', failure: '{op} could not obtain a readable indicator photograph. Pay -10%.' } },
@@ -88,7 +88,7 @@ export const SIGNAL_WALK = {
       after: 1, order: 0,
       text: 'A Wet Sleeve officer asks why the crew is photographing cable infrastructure. The contractor\'s authorisation is printed on the route sheet.',
       choices: [
-        { id: 'present_authorisation', label: 'Present the route sheet and contractor contact', kind: 'push', stat: 'social', difficulty: 8,
+        { id: 'present_authorisation', label: 'Present the authorisation and contractor contact', kind: 'push', stat: 'social', difficulty: 8,
           success: '{op} shows the limited inspection scope, and the officer returns the sheet.',
           failure: 'The officer records the crew and contractor details before allowing the walk to continue.', failureInjury: 'none', failureCost: { heat: 1 },
           report: { success: '{op} cleared the photography check with the route authorisation.', failure: 'The officer recorded {op} and the contractor details. Heat +1.' } },
@@ -128,7 +128,7 @@ export const SIGNAL_WALK = {
       after: 2, order: 1,
       text: 'Another route walker offers photographs of the remaining panels for a small fee. The visible timestamp belongs to a different day.',
       choices: [
-        { id: 'check_own_set', label: 'Reject the offer and verify the original images', kind: 'push', stat: 'tech', difficulty: 6,
+        { id: 'check_own_set', label: 'Reject the offer; verify original images', kind: 'push', stat: 'tech', difficulty: 6,
           success: '{op} checks the crew\'s timestamps and confirms which panels still need a fresh photograph.',
           failure: 'A missing original image requires a paid return visit.', failureInjury: 'none', failureCost: { payCut: 0.1 },
           report: { success: '{op} rejected stale photographs and verified the original image set.', failure: '{op} found an original image missing from the route set. Pay -10%.' } },

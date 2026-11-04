@@ -309,7 +309,7 @@ export const CLEAN_SHEETS = {
         },
         {
           id: 'check_receipt',
-          label: 'Check the receipt against the counter terminal',
+          label: 'Check the receipt against the terminal',
           kind: 'adapt',
           stat: 'tech',
           difficulty: 3,
