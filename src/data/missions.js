@@ -20,6 +20,41 @@ import { SCRUB } from './missions/scrub.js';
 import { FAVOURITE } from './missions/favourite.js';
 import { LAST_TICKET } from './missions/lastticket.js';
 import { WRONG_HORSE } from './missions/wronghorse.js';
+import { PAID_IN_FULL } from './missions/paidinfull.js';
+import { SECOND_HAND_HEART } from './missions/secondhandheart.js';
+import { BORROWED_GLORY } from './missions/borrowedglory.js';
+import { LAST_SITTING } from './missions/lastsitting.js';
+import { LOW_WATER } from './missions/lowwater.js';
+import { A_STEADY_HAND } from './missions/asteadyhand.js';
+import { HOUSE_ADVANTAGE } from './missions/houseadvantage.js';
+import { EXIT_INTERVIEW } from './missions/exitinterview.js';
+import { COLD_CHAIN } from './missions/coldchain.js';
+import { QUIET_HOURS } from './missions/quiethours.js';
+import { QUEUE_DUTY } from './missions/queueduty.js';
+import { SHUTTER_WATCH } from './missions/shutterwatch.js';
+import { SIGNAL_WALK } from './missions/signalwalk.js';
+import { FITTING_ROOM } from './missions/fittingroom.js';
+import { CLEAR_THE_RAMP } from './missions/cleartheramp.js';
+import { EYES_ON_THE_SEAL } from './missions/eyesontheseal.js';
+import { STABLE_TURNOVER } from './missions/stableturnover.js';
+import { CLOSING_SWEEP } from './missions/closingsweep.js';
+import { ACCESS_WINDOW } from './missions/accesswindow.js';
+import { QUIET_TABLE } from './missions/quiettable.js';
+import { CLOSING_STACK } from './missions/closingstack.js';
+import { LANDING_HANDS } from './missions/landinghands.js';
+import { PAPER_COLLECTION } from './missions/papercollection.js';
+import { CLEAN_SHEETS } from './missions/cleansheets.js';
+import { CRATE_RETURN } from './missions/cratereturn.js';
+import { RELAY_COVER } from './missions/relaycover.js';
+import { TACK_LEDGER } from './missions/tackledger.js';
+import { MOORING_WATCH } from './missions/mooringwatch.js';
+import { DRY_SHELF } from './missions/dryshelf.js';
+import { KIT_RETURN } from './missions/kitreturn.js';
+import { AFTER_HOURS } from './missions/afterhours.js';
+import { RACE_NIGHT_DOOR } from './missions/racenightdoor.js';
+import { COUNT_AGAINST_PAPER } from './missions/countagainstpaper.js';
+import { RENT_ROUND } from './missions/rentround.js';
+import { INSPECTION_HOURS } from './missions/inspectionhours.js';
 import { DISTRICT_CRISES } from './districtCrises.js';
 import { ROOKIE_CRISES } from './rookieCrises.js';
 
@@ -401,7 +436,7 @@ const BASE_MISSIONS = [
 // Rookie jobs (rookie: true) draw the shared rookie pool instead of the district crises:
 // those are aimed at 9-14, too hard for a new crew.
 const sharedPool = (m) => (m.rookie ? ROOKIE_CRISES : DISTRICT_CRISES[m.district] ?? []);
-export const MISSIONS = [...BASE_MISSIONS, KIDNAP, CASINO, PENTHOUSE, PROTECTION, CLINIC, HERBAL, LEDGER, CONTAINER, DELIVERY, EVICTION, CHROME, CABLE, SCRUB, FAVOURITE, LAST_TICKET, WRONG_HORSE]
+export const MISSIONS = [...BASE_MISSIONS, KIDNAP, CASINO, PENTHOUSE, PROTECTION, CLINIC, HERBAL, LEDGER, CONTAINER, DELIVERY, EVICTION, CHROME, CABLE, SCRUB, FAVOURITE, LAST_TICKET, WRONG_HORSE, PAID_IN_FULL, SECOND_HAND_HEART, BORROWED_GLORY, LAST_SITTING, LOW_WATER, A_STEADY_HAND, HOUSE_ADVANTAGE, EXIT_INTERVIEW, COLD_CHAIN, QUIET_HOURS, QUEUE_DUTY, SHUTTER_WATCH, SIGNAL_WALK, FITTING_ROOM, CLEAR_THE_RAMP, EYES_ON_THE_SEAL, STABLE_TURNOVER, CLOSING_SWEEP, ACCESS_WINDOW, QUIET_TABLE, CLOSING_STACK, LANDING_HANDS, PAPER_COLLECTION, CLEAN_SHEETS, CRATE_RETURN, RELAY_COVER, TACK_LEDGER, MOORING_WATCH, DRY_SHELF, KIT_RETURN, AFTER_HOURS, RACE_NIGHT_DOOR, COUNT_AGAINST_PAPER, RENT_ROUND, INSPECTION_HOURS]
   .map((m) => ({ ...m, crises: [...m.crises, ...sharedPool(m)] }));
 
 /** A job's own crises, without the shared district or rookie pool (scripts/check-job.mjs). */

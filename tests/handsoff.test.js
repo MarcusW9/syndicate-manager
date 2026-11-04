@@ -227,12 +227,23 @@ test('a crew out on a hands-off job comes back with its report after a save and 
   assert.ok(advanceDay(loaded).inbox.some((m) => m.type === 'report'));
 });
 
-test('every rookie job can be sent hands-off; bigger jobs not yet', async () => {
+// 2026-11-04: hands-off opened to every job (it was rookie-only while the orders were judged).
+test('every job can be sent hands-off, and every job under every order brings everyone home', async () => {
   const { handsOffAllowed } = await import('../src/core/autorun.js');
-  for (const m of MISSIONS) assert.equal(handsOffAllowed(m), !!m.rookie, m.id);
+  for (const m of MISSIONS) assert.equal(handsOffAllowed(m), m.handsOff ?? true, m.id);
+  assert.equal(handsOffAllowed({ id: 'x', handsOff: false }), false, 'a template can still opt out');
   const s = createNewGame({ seed: 34, startCrew: 'fresh' });
   s.jobs = []; addOffer(s, 'warehouse');
-  assert.equal(send(s, s.jobs[0].id, s.crew.slice(0, 3).map((o) => o.id), 'stealth', 'steady'), s, 'a big job stays hands-on');
+  assert.notEqual(send(s, s.jobs[0].id, s.crew.slice(0, 3).map((o) => o.id), 'stealth', 'steady'), s, 'a big job can be sent off');
+  for (let seed = 1; seed <= 12; seed++) {
+    for (const m of MISSIONS) {
+      for (const orders of Object.keys(ORDERS)) {
+        const { done } = sendOff(seed, m.id, orders, { n: seed % 2 ? 1 : undefined }); // short-handed on odd seeds
+        assert.equal(done.activeMission.done, true, `${m.id} ${orders} seed ${seed}`);
+        assert.deepEqual(done.activeMission.result.deaths, [], `${m.id} ${orders} seed ${seed}`);
+      }
+    }
+  }
 });
 
 // 2026-10-29: a run where every roll held but a choice cost pay opened with "Not quietly, and not

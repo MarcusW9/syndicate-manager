@@ -53,6 +53,10 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .stat__label { color: var(--muted); font-size: 0.75rem; margin-right: 4px; }
 .delta { font-size: 0.78rem; font-weight: 600; color: #5fe0a5; }
 .delta.is-down { color: var(--danger); }
+/* The tong's rank is a button: tap it for what a tong is (DESIGN.md 2026-11-04). 44px tall to tap. */
+.tierbtn { min-height: 44px; display: inline-flex; align-items: center; background: none; border: 0; padding: 0; margin: -10px 0; cursor: pointer; font: inherit; color: inherit; }
+.topbar:has(> .infotext) { flex-wrap: wrap; }
+.topbar > .infotext { flex: 1 0 100%; order: 9; margin: 0; }
 .tier { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 3px 8px; border-radius: 6px; background: #262b36; color: var(--text); }
 .topbar__continue { display: none; flex: 0 0 auto; justify-items: center; align-content: center; gap: 1px; padding: 4px 16px; }
 /* Phones: Continue in a dock just above the tab bar, where the thumb is. */
@@ -1305,3 +1309,32 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 /* Named offers (renown slice 4): a client asked for an Elite by name */
 .flag--named { color: var(--warn); font-weight: 600; }
 .named { color: var(--warn); margin: 6px 0; }
+
+/* Crews out on Today (core/away.js, 2026-11-04): one block per away job, a cyan rule on the left;
+   a crew waiting on a call turns the rule yellow. */
+.crewsout { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 8px; }
+.crewsout__job { border-left: 2px solid var(--accent-2); background: var(--panel-2, var(--panel)); padding: 8px 12px; display: grid; gap: 4px; }
+.crewsout__job p { margin: 0; }
+.crewsout__job.is-waiting { border-left-color: var(--warn); }
+.crewsout__head strong { font-family: var(--display, inherit); letter-spacing: 0.04em; }
+.crewsout__job .btn { margin-top: 6px; justify-self: start; }
+
+/* Monday's briefing on Today (core/week.js, 2026-11-04): four numbers framing the week. */
+.weekbrief { border: 1px solid var(--line); background: var(--panel-2, var(--panel)); padding: 10px 12px; margin: 0 0 14px; }
+.weekbrief__title { margin: 0 0 6px; font-family: var(--display, inherit); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-2); font-size: 0.8rem; }
+.weekbrief__stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0 0 6px; }
+.weekbrief__stats div { display: grid; gap: 2px; }
+.weekbrief__stats dt { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.weekbrief__stats dd { margin: 0; font-family: var(--display, inherit); font-weight: 700; font-size: 1.05rem; }
+.weekbrief__stats .is-short dd { color: var(--danger); }
+.weekbrief p { margin: 0; }
+/* The crew standard on the planning screen: guidance, coloured only once a crew is picked. */
+.standard { margin: 8px 0; color: var(--muted); }
+.standard strong { color: var(--text); }
+.standard.is-met { color: var(--accent-2); }
+.standard.is-short { color: var(--warn); }
+.lead { margin: 8px 0 0; color: var(--muted); }
+.lead strong { color: var(--accent-2); }
+/* The Sunday summary: one line each for jobs, money, reputation and the crew. */
+.weeksum { list-style: none; margin: 12px 0; padding: 0; display: grid; gap: 8px; }
+.weeksum li { border-left: 2px solid var(--accent-2); padding: 2px 0 2px 10px; }

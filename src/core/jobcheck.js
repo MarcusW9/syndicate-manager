@@ -83,6 +83,12 @@ export function checkJob(job, { others = [] } = {}) {
     if (job.crewSize < tier.crewSize[0] || job.crewSize > tier.crewSize[1]) warnings.push(`crewSize ${job.crewSize} is outside the usual ${tier.crewSize.join('-')} for this tier`);
   }
   if (!(job.days >= 1 && job.days <= 3)) errors.push(`days ${job.days} must be 1-3`);
+  // Routine work repeats every week (docs/new-job-prompt.md "Routine work", 2026-11-04): small and short.
+  if (job.routine) {
+    if (job.threat > 2) warnings.push(`a routine job is rookie or threat 2, not threat ${job.threat}`);
+    if (job.crewSize > 2) warnings.push(`a routine job takes a crew of 2, not ${job.crewSize}`);
+    if (job.days > 2) warnings.push(`a routine job takes 1-2 days, not ${job.days}`);
+  }
 
   const crises = job.crises ?? [];
   // Six of its own; a job can get by on three, as the shared pool fills the draw (older rookie jobs).

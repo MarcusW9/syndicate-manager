@@ -10,7 +10,7 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 - **Finished plans:** `PLAN-RENEWALS.md`, `PLAN-PERSONALITY.md` (all steps). `PLAN-PROGRESSION.md`: steps 0-1 done, step 2 mostly covered by earned traits, stat unlocks and the runner record; step 3 (relationships) not built.
 - **Design review:** `STATE-OF-PLAY.md` is a 2026-10-26 snapshot; the owner's calls on it are in the file and in DESIGN.md.
 - **New games start with three founders picked from six** (`startCrew: 'pick'`, `chooseFounders`). Most rule tests still use the five-rookie `'fresh'` crew as a fixture.
-- **Tests:** 525 passing in 49 files (`npm run test:fast` while working; `npm test`, about 2-3 min, before every push). **Save format v33.** **`CODEMAP.md`** says where things live; **`docs/ARCHITECTURE.md`** has state shapes, saves and the economy loop.
+- **Tests:** 525 passing in 49 files (`npm run test:fast` while working; `npm test`, about 2-3 min, before every push). **Save format v37** (v34: the tong rank; v35: away jobs day by day with call-ins; v36: an offer's own days; v37: the week's start and crew leads; DESIGN.md 2026-11-04). **`CODEMAP.md`** says where things live; **`docs/ARCHITECTURE.md`** has state shapes, saves and the economy loop.
 
 ## What the 2026-10-28 to 2026-11-04 sessions did
 

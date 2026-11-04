@@ -1,6 +1,10 @@
 // UI layer: the only code that touches the DOM. Reads state, calls core
 // functions, re-renders. Tap/click only; nothing depends on hover.
 
+import { billDue, mondayBrief, crewStandard, crewAgainstStandard } from '../core/week.js';
+import { crewLead } from '../core/lead.js';
+import { rankOf } from '../core/tong.js';
+import { TONG_EXPLAINER } from '../data/tong.js';
 import { NAMES } from '../config/names.js';
 import { DISTRICTS, SAFEHOUSE_DISTRICT } from '../data/districts.js';
 import { DISTRICT_CARDS, FACTIONS, STREET_FACTS, HISTORY } from '../data/city.js';
@@ -35,6 +39,7 @@ import {
 } from '../core/mission.js';
 import { renderFightOrders, fightTap, takeOrders } from './fightorders.js';
 import { sendOff, ORDERS, handsOffAllowed, autoStep, needsPlayer } from '../core/autorun.js';
+import { takeCall, letThemRun, takeCommand, crewsOut, dayDone } from '../core/away.js';
 import { OVERWATCH_KIT, ALERT_MAX } from '../core/incidents.js';
 import { leanPicks, jobRead, planRead } from '../core/squad.js';
 import { renderBoard, renderPicker, renderCoverage, assignSlot, planKit } from './board.js';
@@ -190,7 +195,7 @@ function onClick(e) {
       screen = 'jobs';
       const job = state.jobs.find((j) => j.id === id);
       const r = job ? boardRead(job) : null;
-      plan = { jobId: id, crew: r ? r.picks.crew : [], approach: r ? r.approach : 'stealth', orders: 'steady', callIn: 'risky',
+      plan = { jobId: id, crew: r ? r.picks.crew : [], approach: r ? r.approach : 'stealth', orders: 'steady', callIn: 'risky', mode: 'away',
         overwatch: r?.picks.overwatch ?? null, kit: r?.picks.kit ?? null, wheels: r?.picks.wheels ?? null, standby: r?.picks.standby ?? null };
       break;
     }
@@ -210,6 +215,7 @@ function onClick(e) {
     case 'approach': plan.approach = id; break;
     case 'orders': plan.orders = id; break;
     case 'callin': plan.callIn = id; break;
+    case 'mode': plan.mode = id; break; // send them away, or watch live (DESIGN.md 2026-11-04)
     case 'kit': plan.kit = id; break;
     case 'open-side': sidePlan = { taskId: id, crew: [] }; break;
     case 'toggle-side-crew': {
@@ -255,6 +261,10 @@ function onClick(e) {
     case 'choose': return setState(chooseOption(state, id));
     case 'critical': return setState(resolveCritical(state, id));
     case 'close-mission': screen = 'inbox'; return setState(closeMission(state));
+    // Away crews calling in (core/away.js): take the call, then hand it back or take command.
+    case 'take-call': openMessageId = null; return setState(takeCall(state, id));
+    case 'let-run': screen = 'inbox'; return setState(letThemRun(state));
+    case 'take-command': return setState(takeCommand(state));
     case 'export':
       state.lastBackupDay = state.day;
       saveGame(state);
@@ -448,9 +458,10 @@ function render() {
       <div class="topbar__stats">
         <span class="stat stat--cash"><span class="stat__label">Cash</span> ${money(state.cash)}${cashDelta()}</span>
         <span class="stat"><span class="stat__label">Heat</span> ${heatMeter()}</span>
-        <span class="tier">${esc(statName(state.tier))}<span class="tier__word"> tier</span></span>
+        <button class="tierbtn" data-action="info" data-id="tong" aria-expanded="${openInfo.has('tong')}" aria-label="What's a tong?"><span class="tier">${esc(rankOf(state).name)}<span class="tier__word"> tong</span></span></button>
       </div>
       ${planning || state.founding ? '' : renderContinue(blocked, resting, unread, 'topbar__continue')}
+      ${infoText('tong', TONG_EXPLAINER)}
     </header>
 
     <nav class="nav" aria-label="Main">
@@ -485,7 +496,8 @@ function render() {
 function renderWhen() {
   const today = (state.day - 1) % 7; // 0 = Monday, 6 = Sunday (bills)
   const toBills = 6 - today;
-  const bills = toBills === 0 ? 'bills paid today' : toBills === 1 ? 'bills tomorrow' : `bills in ${toBills} days`;
+  const due = money(billDue(state).total); // always in view: what Sunday will cost (core/week.js)
+  const bills = toBills === 0 ? 'bills paid today' : `${due} due Sun`;
   const cells = Array.from({ length: 7 }, (_, i) =>
     `<span class="week__day ${i < today ? 'is-done' : i === today ? 'is-today' : ''} ${i === 6 ? 'is-bills' : ''}"></span>`).join('');
   return `<div class="topbar__when">
@@ -614,6 +626,8 @@ function renderInbox() {
         <section class="panel inbox__list">
           <h1>Today</h1>
           ${renderBriefing()}
+          ${renderWeekBrief()}
+          ${renderCrewsOut()}
           ${list}
         </section>
       </div>
@@ -621,6 +635,39 @@ function renderInbox() {
         ${open ? renderMessage(open) : '<p class="muted inbox__empty">Tap a message to read it here.</p>'}
       </section>
     </div>`;
+}
+
+/** Monday's briefing (core/week.js): the numbers that frame the week, in one block. */
+function renderWeekBrief() {
+  if (!calendar(state.day).isMonday) return '';
+  const b = mondayBrief(state);
+  const short = b.cash < b.due;
+  return `
+    <div class="weekbrief" aria-label="This week">
+      <p class="weekbrief__title">Week ${calendar(state.day).week}</p>
+      <dl class="weekbrief__stats">
+        <div><dt>Cash</dt><dd>${money(b.cash)}</dd></div>
+        <div class="${short ? 'is-short' : ''}"><dt>Due Sunday</dt><dd>${money(b.due)}</dd></div>
+        <div><dt>Free</dt><dd>${b.roster.free}/${b.roster.total}</dd></div>
+        <div><dt>Jobs</dt><dd>${b.jobs}</dd></div>
+      </dl>
+      <p class="small muted">${[b.roster.away && `${b.roster.away} out`, b.roster.hurt && `${b.roster.hurt} hurt`, b.expiring && `${b.expiring} ${b.expiring === 1 ? 'offer ends' : 'offers end'} this week`, short && `${money(b.due - b.cash)} short of Sunday`].filter(Boolean).join(' · ') || 'A clear week.'}</p>
+    </div>`;
+}
+
+/** Crews out on jobs: where each is, what they did today, and a call waiting (core/away.js). */
+function renderCrewsOut() {
+  const out = crewsOut(state);
+  if (!out.length) return '';
+  return `
+    <ul class="crewsout" aria-label="Crews out">
+      ${out.map((c) => `
+        <li class="crewsout__job ${c.waiting ? 'is-waiting' : ''}">
+          <p class="crewsout__head"><strong>${esc(c.name)}</strong> <span class="muted small">${esc(c.crew)} · ${c.day ? `day ${c.day} of ${c.days}` : 'leaving'}</span></p>
+          ${c.lines.map((l) => `<p class="small">${crewLinks(l)}</p>`).join('')}
+          ${c.waiting ? `<button class="btn btn--primary" data-action="take-call" data-id="${esc(c.jobId)}">Take the call</button>` : ''}
+        </li>`).join('')}
+    </ul>`;
 }
 
 /** "A, B and C". */
@@ -758,11 +805,21 @@ function renderMessage(m) {
       <button class="btn btn--ghost inbox__back" data-action="back">← Today</button>
       <h1>${crewLinks(m.subject)}</h1>
       <p class="muted">${esc(m.type.charAt(0).toUpperCase() + m.type.slice(1))} · Day ${m.day}</p>
-      ${m.type === 'report' ? renderReportTimeline(m) : `<p class="body">${crewLinks(m.body)}</p>`}
+      ${m.type === 'report' ? renderReportTimeline(m) : m.kind === 'week' && m.payload?.lines ? renderWeekSummary(m) : `<p class="body">${crewLinks(m.body)}</p>`}
       ${m.kind === 'renewal' ? renderRenewal(m) : ''}
       ${m.kind === 'heat' ? renderHeatNotice(m) : ''}
       ${m.kind === 'spec' ? renderSpecOffer(m) : ''}
+      ${m.kind === 'callin' && !m.resolved ? `<button class="btn btn--primary" data-action="take-call" data-id="${esc(m.payload.jobId)}">Take the call</button>` : ''}
       ${jobLink}`;
+}
+
+/** The Sunday summary (core/week.js): the week's lines, then what was paid. */
+function renderWeekSummary(m) {
+  const p = m.payload;
+  return `
+      <ul class="weeksum">${p.lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>
+      <p class="body">Wages ${money(p.wages)}, rent ${money(p.rent)}. Paid ${money(p.paid)}. Cash now ${money(p.cash)}.</p>
+      ${m.body.includes('Heat cooled') ? `<p class="body muted">${esc(m.body.slice(m.body.indexOf('Heat cooled')))}</p>` : ''}`;
 }
 
 /**
@@ -1299,7 +1356,7 @@ function jobFlags(v) {
   else if (v.threatDelta > 0) flags.push(['hot', 'Hotter than usual']);
   else if (v.threatDelta < 0) flags.push(['good', 'Quieter than usual']);
   if (intelFor(state, v.tpl.district)) flags.push(['good', 'Intel here']);
-  if (v.tpl.days > 1) flags.push(['info', `${v.tpl.days}-day job`]);
+  if (v.days > 1) flags.push(['info', `${v.days}-day job`]);
   return flags.slice(0, 2);
 }
 
@@ -1345,7 +1402,7 @@ function jobCard(j) {
           <strong class="jobcard__name">${esc(t.name)}</strong><strong class="jobcard__pay">${money(v.pay)}</strong>
           <span class="jobcard__client">${esc(v.client?.name ?? 'Walk-in job')}</span>${j.expiresDay === state.day ? '<span class="jobcard__left">ends today</span>' : ''}
           ${flags.length ? `<span class="jobcard__flags">${flags.map(([tone, text]) => `<span class="flag flag--${tone}">${esc(text)}</span>`).join('')}</span>` : ''}
-          <span class="jobcard__facts">${r.size || t.crewSize} ${(r.size || t.crewSize) === 1 ? 'runner' : 'runners'} · <span class="keyglyphs">${stats}</span>${note ? ` · <span class="jobcard__note">${esc(note)}</span>` : ''}</span>
+          <span class="jobcard__facts">${r.size || t.crewSize} ${(r.size || t.crewSize) === 1 ? 'runner' : 'runners'} · ${esc(crewStandard(v.threat).label)} · <span class="keyglyphs">${stats}</span>${note ? ` · <span class="jobcard__note">${esc(note)}</span>` : ''}</span>
           <span class="riskcorner riskcorner--${esc(r.level)}" role="img" aria-label="${esc(risk)} risk" title="${esc(risk[0].toUpperCase() + risk.slice(1))} risk"></span>
         </button>
       </li>`;
@@ -1496,9 +1553,10 @@ function renderPlan() {
     <section class="panel">
       <button class="btn btn--ghost" data-action="back">← Jobs</button>
       <h1>${esc(t.name)}</h1>
-      <p class="muted">${esc(districtName(t.district))}${districtTurf(t.district)} · threat ${threatHtml(v)} · pays ${money(v.pay)} · crew away ${t.days}d · ${daysLeft(job.expiresDay)}</p>
+      <p class="muted">${esc(districtName(t.district))}${districtTurf(t.district)} · threat ${threatHtml(v)} · pays ${money(v.pay)} · crew away ${v.days}d · ${daysLeft(job.expiresDay)}</p>
       ${DISTRICTS[t.district] ? `<p class="muted small">${esc(DISTRICTS[t.district].pitch)}</p>` : ''}
       <p class="body">${esc(fillBrief(t))}</p>
+      ${(() => { const c = crewAgainstStandard(picked, v.threat); return `<p class="standard ${picked.length ? (c.met ? 'is-met' : 'is-short') : ''} small"><strong>Crew standard: ${esc(c.std.label)}</strong>${picked.length ? ` · ${esc(c.note)}` : ''}</p>`; })()}
       <div class="plangrid">
       <div class="riskcard plangrid__client">
         <p><strong>Client:</strong> ${clientLine(v)}</p>
@@ -1538,7 +1596,7 @@ function renderPlan() {
       </div>
 
       <div class="plangrid__orders">
-      ${renderCallIns(t)}
+      ${renderCallIns(t, v.days)}
       </div>
       </div>
     </section>
@@ -1549,7 +1607,7 @@ function renderPlan() {
         <span class="planbar__why">${esc(picked.length ? toughWhy : `Pick up to ${most}; ${t.crewSize} recommended`)}</span>
       </div>
       ${(() => {
-        const away = plan.callIn === 'never' && handsOffAllowed(t);
+        const away = plan.mode !== 'live' && handsOffAllowed(t);
         return `<button class="btn btn--primary" data-action="${away ? 'send-job' : 'start-job'}" ${plan.crew.length ? '' : 'disabled'}>
         ${plan.crew.length ? `${away ? 'Send' : 'Start with'} ${plan.crew.length + [plan.overwatch, plan.wheels, plan.standby].filter(Boolean).length}` : 'Pick a crew'}
       </button>`;
@@ -1578,17 +1636,25 @@ function freelancersFull() {
 }
 
 /** When the crew calls you in, and how they decide when they don't (core/autorun.js ORDERS). */
-function renderCallIns(t) {
+function renderCallIns(t, days = t.days) {
   const orders = ORDERS[plan.orders] ? plan.orders : 'steady';
   const callIn = CALL_IN[plan.callIn] ? plan.callIn : 'risky';
-  const away = handsOffAllowed(t);
+  const lead = crewLead(plan.crew.map((id) => state.crew.find((o) => o.id === id)));
+  const canSend = handsOffAllowed(t);
+  const mode = canSend && plan.mode !== 'live' ? 'away' : 'live';
+  const modes = { away: ['Send them', `They go and do it over ${days === 1 ? 'the day' : `${days} days`}. Today shows what they did; they call when it's beyond their orders.`], live: ['Watch live', 'You watch the whole job now, on the map.'] };
   return `
+      <h2>How</h2>
+      ${canSend ? `<div class="segmented">
+        ${Object.entries(modes).map(([k, [name, desc]]) => `
+          <button class="seg ${mode === k ? 'is-on' : ''}" data-action="mode" data-id="${k}" aria-pressed="${mode === k}"><strong>${esc(name)}</strong><span>${esc(desc)}</span></button>`).join('')}
+      </div>` : '<p class="muted small">This job can\'t be sent off on its own: you\'ll watch this one.</p>'}
       <h2>Call me in…</h2>
       <div class="segmented">
-        ${Object.entries(CALL_IN).filter(([k]) => k !== 'never' || away).map(([k, c]) => `
+        ${Object.entries(CALL_IN).map(([k, c]) => `
           <button class="seg ${callIn === k ? 'is-on' : ''}" data-action="callin" data-id="${k}" aria-pressed="${callIn === k}"><strong>${esc(c.name)}</strong><span>${esc(c.desc)}</span></button>`).join('')}
       </div>
-      ${away ? '' : '<p class="muted small">Bigger jobs can\'t be sent off on their own yet: you\'ll watch this one.</p>'}
+      ${lead && callIn === 'risky' ? `<p class="lead small"><strong>${esc(lead.handle)} leads</strong> (${esc(lead.fame)}): they take one risky call themselves before calling you.</p>` : ''}
       ${callIn === 'every' ? '' : `
       <h2>When they decide themselves</h2>
       <p class="muted small">Their orders decide each call they don't bring to you. They never push on with a critical wound: at worst, they pull out.</p>
@@ -1674,7 +1740,7 @@ function renderMission() {
   }
   return `
     <section class="panel mission">
-      <p class="muted small">On the job · ${esc(APPROACHES[am.approach]?.name ?? '')} approach · ${esc(crewNames)}${ow ? ` · ${esc(ow.handle)} on overwatch (${esc(OVERWATCH_KIT[am.overwatch.kit].name.toLowerCase())})` : ''}${outsider(am.wheels, 'at the wheel')}${am.standby && !am.standby.joined ? outsider(am.standby.id, 'on standby') : ''}</p>
+      <p class="muted small">${am.away ? `${am.away.command ? 'Under your command' : `Away · day ${am.away.day ?? 1} of ${am.days ?? t.days}`}` : 'On the job'} · ${esc(APPROACHES[am.approach]?.name ?? '')} approach · ${esc(crewNames)}${ow ? ` · ${esc(ow.handle)} on overwatch (${esc(OVERWATCH_KIT[am.overwatch.kit].name.toLowerCase())})` : ''}${outsider(am.wheels, 'at the wheel')}${am.standby && !am.standby.joined ? outsider(am.standby.id, 'on standby') : ''}</p>
       <h1>${esc(t.name)}</h1>
       ${renderWatch(watchUi, state, result)}
     </section>`;
@@ -1692,6 +1758,18 @@ function fightHealth({ runners, guards }) {
 
 function renderCallIn(s) {
   const am = s.activeMission;
+  if (dayDone(am)) {
+    const days = am.days ?? templateById(am.templateId).days;
+    return `
+      <div class="crisis" data-callin="day-done">
+        <p class="crisis__title">That's day ${am.away.day ?? 1} of ${days} done</p>
+        <p>They'll carry on tomorrow on their orders, and call if they need you. Or stay on the line and play the rest now.</p>
+        <div class="stack">
+          <button class="btn btn--primary" data-action="let-run">Let them carry on</button>
+          <button class="btn btn--ghost" data-action="take-command">Take command: play the rest now</button>
+        </div>
+      </div>`;
+  }
   if (am.critical) {
     const v = describeCritical(s);
     return `

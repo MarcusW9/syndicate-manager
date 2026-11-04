@@ -65,4 +65,65 @@ export const CAST = {
       disappoint: ['Thirty years at this stall. Nobody ever lost a crate before.', 'Go. Go! I\'ll find someone with hands.'],
     },
   },
+  // Added from a worldbuilding batch (2026-11-03): Rao's circle and the corporate faces.
+  meena: {
+    name: 'Meena D\'Sa',
+    district: 'nightMarket',
+    desc: 'Seamstress and counterkeeper at Madam Rao\'s shop. Measures a jacket without asking you to take it off, and puts your wet coat somewhere safe before asking whether you brought money or trouble.',
+    lines: {
+      greet: ['Mind the pins, we have already had one expensive misunderstanding today.', 'Madam is occupied, but I can tell you whether this needs her.', 'Put your coat there, the dry chair is for people.'],
+      approve: ['You brought everything back, including the bits nobody counted.', 'Good, now somebody gets to wear this instead of argue over it.', 'I have put your things aside, somewhere without a leak.'],
+      disappoint: ['You promised quiet and brought an audience.', 'That was somebody\'s good coat, not spare wrapping.'],
+    },
+  },
+  tang: {
+    name: 'Tang Wai-chiu',
+    district: 'nightMarket',
+    desc: 'Silver Fan Circle collector for the third-floor mahjong parlour. Wears a spotless bowling shirt and opens a folding stool before discussing overdue money, then moves it for anyone carrying hot food.',
+    lines: {
+      greet: ['Sit if you like, standing does not improve the figures.', 'Are we discussing your business or somebody else\'s mistake?', 'Madam Rao has sent people with clean shoes this time.'],
+      approve: ['That settles the amount we actually discussed.', 'You kept the stall open, which means next week remains possible.', 'Good, nobody upstairs needs a more interesting version.'],
+      disappoint: ['I asked for a receipt, not a street meeting.', 'Now I have to explain why a small debt has witnesses.'],
+    },
+  },
+  tariq: {
+    name: 'Uncle Tariq',
+    district: 'amberReach',
+    desc: 'Keeps the remittance booth at Pearl Haven House, behind a scratched window with three pens clipped to his shirt and a fan aimed at the customers. Reads every receipt aloud, then waits while you check it again.',
+    lines: {
+      greet: ['Check the name before you check the amount.', 'If Madam sent you, come round the side and stop blocking the queue.', 'The fan is for everyone, you may stand closer.'],
+      approve: ['Good, the receipt and the person agree.', 'You let them decide without making them feel foolish.', 'Sit down, I can close five minutes late.'],
+      disappoint: ['You said their business where the whole queue could hear.', 'Being in a hurry does not make somebody else\'s money yours.'],
+    },
+  },
+  pang: {
+    name: 'Pang Man-ki',
+    district: 'heights',
+    desc: 'Veridian-Apex clinic administrator in Glass Heights. Wears a pale clinic jacket over an immaculate suit, turns her appointment screen away before you reach the desk, and dims the waiting-room lights when a patient flinches.',
+    lines: {
+      greet: ['Give me the reference number before you give me the circumstances.', 'This desk handles appointments, not the promises made when the implant was fitted.', 'If you are here for the collection, your names are not required.'],
+      approve: ['The discrepancy is closed and your fee is authorised.', 'You followed the collection terms without adding a patient complaint.', 'Leave the envelope there and we need not extend this appointment.'],
+      disappoint: ['You have made an internal correction externally visible.', 'Your involvement ends here, whether or not your invoice is settled.'],
+    },
+  },
+  ho: {
+    name: 'Ho Sze-lam',
+    district: 'oldTown',
+    desc: 'Hoi-Sing Grid & Cable field supervisor for Old Town. Arrives in a rain-darkened utility jacket with a numbered seal pouch and a thermos wrapped in electrical tape, and checks the stairwell lighting before opening his work order.',
+    lines: {
+      greet: ['Which meter, and has anyone touched the seal?', 'Auntie can complain about the bill after I check whether the cupboard is live.', 'Keep the landing clear, I am not carrying this kit up twice.'],
+      approve: ['That is the access I asked for, nothing more.', 'The readings match, so we can stop arguing about the handwriting.', 'Your fee covers today, not a standing arrangement.'],
+      disappoint: ['You touched a sealed cupboard and made it my report.', 'If this becomes an investigation, you are not my contractors.'],
+    },
+  },
+  mak: {
+    name: 'Mak Chi-on',
+    district: 'basin',
+    desc: 'Lantern Bay Racing Association stable-access official at Lantern Course. Stands beside the stable gate in a pressed Association jacket, checking passes against a paper list despite the scanner on his wrist.',
+    lines: {
+      greet: ['Names first, purpose second, pockets stay closed.', 'A familiar face still needs a current pass.', 'Lower your voice, the horses have heard enough people today.'],
+      approve: ['The record now says what actually happened.', 'You stayed outside the rail and still got your answer.', 'Your temporary access is finished, hand the pass back.'],
+      disappoint: ['You turned a missing form into an integrity matter.', 'Whoever sent you can explain this without using my name.'],
+    },
+  },
 };

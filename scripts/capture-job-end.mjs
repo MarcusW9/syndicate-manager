@@ -21,6 +21,12 @@ try {
     await vis('[data-action="nav"][data-id="jobs"]').click();
     await vis('[data-action="open-job"]').click();
     await vis('[data-action="joss"]').click();
+    // The squad board (2026-10-27): Joss fills it, then the call-in setting is chosen.
+    const every = vis('[data-action="callin"][data-id="every"]');
+    if (await every.count()) await every.click();
+    // Watching it live (2026-11-04): jobs may default to sending the crew away.
+    const live = vis('[data-action="mode"][data-id="live"]');
+    if (await live.count()) await live.click();
     await vis('[data-action="start-job"]').click();
     await vis('[data-action="watch-speed"]').click();
     let checks = 0; let missed = 0; let lastCount = 0;

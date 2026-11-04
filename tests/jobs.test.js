@@ -132,7 +132,9 @@ test('trust changes pay, and a client below 20 stops calling', () => {
   for (const c of CLIENTS) if (c.id !== 'okonkwo') adjustTrust(t, c.id, -100);
   t.jobs = [];
   postJobs(t);
-  for (const j of t.jobs) assert.equal(j.clientId, 'okonkwo');
+  // No offer from a client below WONT_CALL; the week's routine offer may be walk-in work (2026-11-04).
+  for (const j of t.jobs) assert.ok(j.clientId === 'okonkwo' || (j.clientId === null && templateById(j.templateId).walkIn), `${j.templateId} from ${j.clientId}`);
+  assert.ok(t.jobs.some((j) => j.clientId === 'okonkwo'), 'the one client still calling does');
   assert.ok(trustOf(t, 'fung') < WONT_CALL);
 });
 
@@ -190,7 +192,9 @@ test('job gates: games started before them keep an open board', () => {
   assert.ok(seen.has(4) && seen.has(5), 'big work is still offered at reputation 0');
 });
 
-test('the board adds up to 3 new jobs a week and holds up to 5', async () => {
+// 2026-11-04 (owner's "middle version"): the week's first offer is routine work and the other two
+// never are; still three a week, up to five on the board.
+test('the board adds 3 new jobs a week, the first routine and the rest not, and holds up to 5', async () => {
   const { MAX_OFFERS, NEW_PER_WEEK } = await import('../src/core/jobs.js');
   const s = createNewGame({ seed: 13, startCrew: 'fresh' });
   s.jobs = [];
@@ -198,6 +202,11 @@ test('the board adds up to 3 new jobs a week and holds up to 5', async () => {
   assert.equal(s.jobs.length, NEW_PER_WEEK);
   s.day += 1; postJobs(s);
   assert.equal(s.jobs.length, MAX_OFFERS);
+  for (let i = 0; i < 40; i++) {
+    s.jobs = []; postJobs(s);
+    assert.ok(templateById(s.jobs[0].templateId).routine, 'the first is routine');
+    assert.ok(s.jobs.slice(1).every((j) => !templateById(j.templateId).routine), 'the regular two never are');
+  }
 });
 
 test('a finished job earns REP_PER_THREAT per threat level; an abort costs ABORT_REP', async () => {
@@ -224,11 +233,11 @@ test('new work trickles in: one job in each part of the week, never all on one d
     if (s.jobSeq > seq) arrivals.set(s.day, s.jobSeq - seq);
     seq = s.jobSeq;
   }
-  for (const n of arrivals.values()) assert.equal(n, 1, 'one job at a time');
   for (let week = 1; week < 20; week++) {
     const monday = week * 7 + 1;
     const days = [...arrivals.keys()].filter((d) => d >= monday && d < monday + 7);
     assert.deepEqual(days, arrivalDays(s, monday), `week ${week + 1}`);
+    days.forEach((d) => assert.equal(arrivals.get(d), 1, `week ${week + 1}: one job at a time`));
     days.forEach((d, i) => assert.ok(ARRIVAL_WINDOWS[i].includes(d - monday), `week ${week + 1}: arrival ${i} in its window`));
   }
   const weekdays = new Set([...arrivals.keys()].map((d) => (d - 1) % 7));
@@ -253,4 +262,53 @@ test('a gated board still gets small work every week', () => {
     for (const j of s.jobs) if (templateById(j.templateId).rookie) weeks.set(Math.floor((s.day - 1) / 7), true);
   }
   for (let w = 1; w < 12; w++) assert.ok(weeks.get(w), `week ${w + 1} had rookie work`);
+});
+
+// 2026-11-04 (the tong direction): a bigger tong gets more work, and jobs take a range of days.
+test('the board grows with the roster: three a week up to five runners, then more', async () => {
+  const { arrivalsPerWeek, maxOffers, arrivalWindows, arrivalDays, MAX_OFFERS, ARRIVAL_WINDOWS } = await import('../src/core/jobs.js');
+  const s = createNewGame({ seed: 61, startCrew: 'fresh' });
+  assert.equal(arrivalsPerWeek(s), 3);
+  assert.equal(maxOffers(s), MAX_OFFERS);
+  assert.deepEqual(arrivalWindows(3), ARRIVAL_WINDOWS, 'three arrivals: the same windows as before');
+  const big = structuredClone(s);
+  while (big.crew.length < 15) big.crew.push({ ...structuredClone(s.crew[0]), id: `x${big.crew.length}` });
+  assert.equal(arrivalsPerWeek(big), 7);
+  assert.equal(maxOffers(big), 9);
+  for (const k of [1, 3, 5, 7, 9, 12]) {
+    const w = arrivalWindows(k);
+    assert.equal(w.length, k);
+    assert.ok(w.every((x) => x.length && x.every((d) => d >= 0 && d <= 6)), `k=${k}: every window inside the week`);
+  }
+  const monday = 8;
+  assert.equal(arrivalDays(big, monday).length, 7);
+  const freelancer = structuredClone(big);
+  for (const o of freelancer.crew.slice(5)) o.freelance = true;
+  assert.equal(arrivalsPerWeek(freelancer), 3, 'freelancers do not count');
+});
+
+test('an offer takes a range of days; longer pays more; rookie work keeps its days', async () => {
+  const { addOffer, jobView, daysRange, templateById, EXTRA_DAY_PAY } = await import('../src/core/jobs.js');
+  const { MISSIONS } = await import('../src/data/missions.js');
+  for (const m of MISSIONS) {
+    const [lo, hi] = daysRange(m);
+    assert.equal(lo, m.days, m.id);
+    assert.ok(hi >= lo && hi <= 4, m.id);
+    if (m.rookie) assert.equal(hi, lo, `${m.id}: rookie work as written`);
+  }
+  const s = createNewGame({ seed: 62, startCrew: 'fresh' });
+  s.jobs = [];
+  const seen = new Set();
+  for (let i = 0; i < 60; i++) addOffer(s, 'penthouse', { rng: () => 0.5 });
+  for (const job of s.jobs) {
+    seen.add(job.days);
+    const v = jobView(s, job);
+    assert.equal(v.days, job.days);
+    const base = Math.round(templateById('penthouse').pay * (1 + EXTRA_DAY_PAY * (job.days - 3)) * job.payMult / 50) * 50;
+    assert.equal(v.pay, base, 'each extra day adds EXTRA_DAY_PAY of the pay');
+  }
+  assert.deepEqual([...seen].sort(), [3, 4], 'threat 5: three or four days (capped at 4)');
+  s.jobs = [];
+  addOffer(s, 'penthouse');
+  assert.equal(s.jobs[0].days, 3, 'a plain offer keeps the template days');
 });

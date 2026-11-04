@@ -11,6 +11,7 @@
 // can put someone at death's door, never dead: only "keep fighting" (the push on of a fight)
 // leaves them dying, and any exit after that still brings them home.
 
+import { crewLead } from './lead.js';
 import { templateById, twistById, jobView, namedBonus } from './jobs.js';
 import { NAMED_OFFER, NAMED_TEXT } from '../data/fame.js';
 import { adjustTrust, clientById, completionTrust, ABORT_TRUST } from './clients.js';
@@ -57,7 +58,7 @@ const rollDifficulty = (am, choice) => choice.difficulty + (am.threatDelta ?? 0)
 export const CALL_IN = {
   every: { name: 'Every crisis', desc: 'You make every call.' },
   risky: { name: 'When it\'s risky', desc: 'They call you when their best option is less than even odds. Otherwise their orders decide.' },
-  never: { name: 'Never', desc: 'They go and do it. The report comes back when they do.' },
+  never: { name: 'Never', desc: 'Their orders decide everything. A critical wound: they pull out.' },
 };
 export const RISKY_BELOW = 0.5;
 
@@ -196,7 +197,7 @@ export function startMission(prev, jobId, crewIds, approach, opts = {}) {
   const watched = state.heatWatched ? WATCHED_PENALTY : 0;
   state.heatWatched = false;
   // The approach's costs: time away, and props and bribes paid up front (data/approaches.js).
-  const days = Math.max(1, tpl.days + (ap.days ?? 0));
+  const days = Math.max(1, (job.days ?? tpl.days) + (ap.days ?? 0)); // the offer's days (core/jobs.js daysRange)
   const bribe = (ap.bribePerThreat ?? 0) * view.threat;
   state.cash -= bribe;
   state.activeMission = {
@@ -207,6 +208,7 @@ export function startMission(prev, jobId, crewIds, approach, opts = {}) {
     alert: 0, out: [], pending: null, wentLoud: false, battle: null, fought: false,
     pay: view.pay, threat: view.threat, threatDelta: view.threatDelta, clientId: job.clientId ?? null, twist: job.twist ?? null,
     askedFor: job.askedFor ?? null, // the runner a client asked for by name (renown slice 4)
+    lead: crewLead(crewIds.map((id) => state.crew.find((o) => o.id === id))), // takes one risky call (core/lead.js)
     queue, step: 0, log: [],
     payCut: 0, extraHeat: 0, clientTrust: 0, watched,
     critical: null, stabiliseFailed: false, untreated: [],

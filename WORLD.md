@@ -17,6 +17,7 @@ The setting's canon: history, power, districts and places. Why each piece was ch
 ## Who runs it
 - **On paper:** the Municipal District Administration, a board of corporate-appointed bureaucrats behind red tape, safety ordinances and hollow public announcements.
 - **In reality:** megacorps and the big factions sit at the top (see the power map). Below them are the neighbourhood powers a small crew can actually reach: Auntie Fung keeps the peace in Old Town with tea and favours in her ledger, as a senior elder of the Brass Anchor Society; Madam Rao holds the Night Market's purse strings; Mr. Szeto reshapes Glass Heights and the tenements below it; the Ferryman owns the night water; the Red Lanterns tax the Docks roads; Ruth Okonkwo brokers the contracts the megacorps pretend don't exist, for Aether-Harbour Logistics' off-books arm.
+- **Tongs:** a tong (堂, "hall") is a registered association, much like a guild: on paper a benevolent society with a front room, a ledger and an altar; in practice how anyone below the corps gets organised. The Brass Anchor Society is one of the oldest, and its elders still sit at Auntie Fung's tea tables. Yours started in the room above the noodle shop. A tong's rank is how far its name carries: a back-room tong, a street tong, a district tong, a city tong, and a harbour tong, known on both sides of the water. A *crew* is the people a tong sends on a job.
 
 ## Power map
 Rumours are street talk: the game never confirms them (no supernatural, and no proof).
@@ -84,7 +85,7 @@ The game shows the **English names**; the Chinese names are flavour for district
 - *People a crew might deal with:*
   - **Tita Mila** (Filipino), domestic workers' organiser who hears every secret whispered in Glass Heights dining rooms. Wants safe, untracked passage for a young helper fleeing an abusive corporate household.
   - **Zainab** (Nigerian), hardware tinkerer who can strip an encrypted chip to bare copper in minutes. Wants rare corporate diagnostic tools from an Aether-Harbour freight shipment.
-  - **Uncle Tariq** (Pakistani, born in the city), sharp currency broker. Wants discreet muscle to see off Silver Fan enforcers collecting illegal levies from his neighbours.
+  - **Uncle Tariq** (Pakistani, born in the city), sharp but fair currency broker behind a scratched booth window, three pens clipped to his shirt and a fan aimed at the customers rather than himself. Reads every receipt aloud, then waits while you check it again; stays open late on paydays and won't charge twice to correct a spelling. Madam Rao quietly backs the booth. Wants discreet muscle to see off Silver Fan enforcers collecting illegal levies from his neighbours. *Doesn't say:* he wants to repay Rao's backing before anyone mistakes her quiet support for ownership, but keeps waiving the fees that would let him.
   - **Mateo** (Filipino, born in the city), ex-dock mechanic who keeps the water pumps and rooftop power running. Wants industrial filters to clean the water line after coolant leaked from a Hoi-Sing substation upstream.
   - **Prakash Gurung** (Nepali), ex-security guard who runs the council's night watch. Wants to know who keeps leaving the fire doors unlocked.
 - *3am:* night-shift couriers murmuring in the halls, spice sizzling on Floor 5, fluorescent tubes flickering over concrete that smells of cardamom, diesel and sweet tea.
@@ -272,6 +273,12 @@ Smaller people a new crew meets on rookie work (2026-10-25). Their spoken lines 
 - **Mrs. Ip** (Night Market). Runs the fish-ball stall at the Neon Dragon, never stops talking, and moves crates that aren't fish balls. Pays in cash and a bag of fish balls.
 - **Ah-Wah** (Night Market). A petty runner who borrowed from Madam Rao and tried to skip town with her ledger.
 - **Dr. Lim** (Night Market). A back-alley implant doc behind the noodle stalls, built his clinic on Madam Rao's money, and sold Silver Fan counterfeit eyes to her debtors.
+- **Meena D'Sa** (Night Market). Seamstress and counterkeeper in Madam Rao's shop. Rao lets her mind the counter; she returns a customer's deposit rather than promise work the shop can't finish. Wants her own alterations counter, and keeps spending the savings replacing garments Rao accepted as collateral. Knows Mrs. Ip.
+- **Tang Wai-chiu** (Night Market). Silver Fan Circle collector for the third-floor mahjong parlour: spotless bowling shirt, a folding stool he opens before discussing money. Would rather make six patient visits than explain one broken debtor. Secret: he has been advancing small payments from his own pocket to keep his figures tidy, and needs Rao to buy the debts without learning how many there are. The circle doesn't know he is approaching her; Rao is its old enemy.
+- **Uncle Tariq** (Amber Reach): the remittance booth at Pearl Haven House; his dossier is under Pearl Haven House, above.
+- **Pang Man-ki** (Glass Heights). Veridian-Apex clinic administrator. Finds an appointment when a corporate account is attached; an old Veridian-Apex implant doesn't entitle its owner to affordable treatment. Secret: she wants a transfer out of patient administration before an audit finds the appointments she moved between billing categories.
+- **Ho Sze-lam** (Old Town). Hoi-Sing Grid & Cable field supervisor. Knows which meters have been repaired past their life, but records a disconnection if that's the order on his screen. Secret: he leaves intermittent faults out of his reports so his section doesn't look badly maintained. Auntie Fung and the Brass Anchor know him by his thermos.
+- **Mak Chi-on** (the Basin). Racing Association stable-access official, checks passes against a paper list despite the scanner on his wrist, and treats unexplained stable access as possible race-fixing. Secret: he once waved a familiar contractor through without checking a replacement pass, and fears admitting it would undermine every inspection he has signed since.
 - **The old radio man on Block 9's roof.** The last tenant Mr. Szeto wants out, broadcasting pirate radio from a tin shack full of tapes. Block 9 is Doc Siu's building.
 - **The Ferryman's habits:** he chews betel nut as well as the clove cigarettes, and he runs a private line to the Silt under Pier 12.
 
@@ -297,8 +304,11 @@ CONTEXT — LANTERN BAY. Treat this as the only source of truth; if anything ear
 our chat conflicts with it, this wins.
 
 GAME: text-first crew management game (Football Manager style, endless, no win state).
-The player is a fixer running a small crew of operatives, starting with three founders
-picked from six, one safehouse and rent due on Sunday.
+The player is a fixer running a tong (堂, "hall": a registered association, like a
+guild), starting with three founders picked from six, one safehouse and rent due on
+Sunday. A tong's rank is how far its name carries: back room, street, district, city,
+harbour. A crew is the people the tong sends on a job. The Brass Anchor Society is an
+old tong.
 
 PARTNER: Joss (they/them), the crew's bootleg AI: pirated assistant code the Ghost
 Circuit flashed onto salvaged hardware, named after joss paper. With the fixer since
@@ -373,7 +383,11 @@ CLIENTS (local powers a small crew can reach, below the corps):
   that could sink AHL, and wants out of the city.
 STREET CAST (rookie work): Doc Siu (Old Town; ex-surgeon, unlicensed clinic under
 Tenement Block 9, dry praise); Mrs. Ip (Night Market fish-ball stall at the Neon Dragon,
-moves crates). Currency is cash in ¥; no "credits" or "Bits".
+moves crates); Meena D'Sa (Rao's seamstress and counterkeeper); Tang Wai-chiu (Silver Fan
+collector, third-floor parlour); Uncle Tariq (remittance booth, Pearl Haven House, backed
+by Rao); Pang Man-ki (Veridian-Apex clinic administrator); Ho Sze-lam (Hoi-Sing field
+supervisor, Old Town); Mak Chi-on (Racing Association stable-access official). Currency
+is cash in ¥; no "credits" or "Bits".
 Reputation tier promotions open the locked districts,
 each introduced by a client: the Silt (the Ferryman), the Amber Reach (Okonkwo), Iron
 Peak (Szeto).

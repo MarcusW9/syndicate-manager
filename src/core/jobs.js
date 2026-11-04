@@ -24,11 +24,48 @@ export const MAX_OFFERS = 5;
 export const ARRIVAL_WINDOWS = [[0, 1], [2, 3], [4, 5, 6]];
 export const NEW_PER_WEEK = ARRIVAL_WINDOWS.length;
 
-/** The days new work comes in during the week that `day` falls in. */
+// A bigger tong gets more work (DESIGN.md 2026-11-04, the tong direction): one more offer a week
+// for every `per` runners past `over`, and the board holds `room` more than a week's arrivals.
+// Exported as one object so scripts/sim-tong.mjs can compare settings.
+// routine: of the extra offers past the usual three a week, the share that are routine work.
+export const ARRIVALS = { over: 5, per: 2.5, room: 2, routine: 0.75 };
+
+/** The tong's own runners (not freelancers, not the dead): what the board's size follows. */
+const rosterSize = (state) => state.crew.filter((o) => !o.freelance && o.condition?.injury !== 'dead').length;
+
+/** How many new offers come in a week: three, plus one for every few runners past five. */
+export const arrivalsPerWeek = (state) => NEW_PER_WEEK + Math.floor(Math.max(0, rosterSize(state) - ARRIVALS.over) / ARRIVALS.per);
+
+/** How many offers the board holds. */
+export const maxOffers = (state) => Math.max(MAX_OFFERS, arrivalsPerWeek(state) + ARRIVALS.room);
+
+/** The week's windows for k arrivals: the week split evenly (k = 3 gives ARRIVAL_WINDOWS). */
+export function arrivalWindows(k) {
+  return Array.from({ length: k }, (_, i) => {
+    const start = Math.floor((i * 7) / k);
+    const end = Math.max(start, Math.floor(((i + 1) * 7) / k) - 1);
+    return Array.from({ length: end - start + 1 }, (_, d) => start + d);
+  });
+}
+
+/** The days new work comes in during the week that `day` falls in (a day can come up twice on a big tong). */
 export function arrivalDays(state, day) {
   const monday = day - ((day - 1) % 7);
   const rng = makeRng((state.seed ^ Math.imul(monday, 2654435761)) >>> 0);
-  return ARRIVAL_WINDOWS.map((w) => monday + pick(rng, w));
+  return arrivalWindows(arrivalsPerWeek(state)).map((w) => monday + pick(rng, w));
+}
+
+// How long a job takes (DESIGN.md 2026-11-04): each offer rolls its days in the template's range,
+// and every day past the template's own adds EXTRA_DAY_PAY of its pay (the crew is tied up longer).
+// Rookie work stays as written; bigger jobs can run a day longer, threat 3 and up two.
+export const EXTRA_DAY_PAY = 0.05;
+export const MAX_JOB_DAYS = 4;
+
+/** [shortest, longest] days an offer of this template can take. */
+export function daysRange(tpl) {
+  if (tpl.daysRange) return tpl.daysRange;
+  if (tpl.rookie) return [tpl.days, tpl.days];
+  return [tpl.days, Math.min(MAX_JOB_DAYS, tpl.days + (tpl.threat >= 3 ? 2 : 1))];
 }
 
 // Reputation needed before a job of this (template) threat is offered; rookie jobs are
@@ -77,8 +114,11 @@ export function addOffer(state, templateId, { rng = null, clientId = null } = {}
     twist = rng() < TWIST_CHANCE ? pick(rng, TWISTS).id : null;
     hinted = rng() < (twist ? HINT_IF_TWIST : HINT_IF_CLEAN);
   }
+  // Its days roll from a hash of the seed and the offer, so no other roll moves.
+  const [lo, hi] = daysRange(tpl);
+  const days = rng ? lo + Math.floor(hashRng(state.seed, 'job-days', n)() * (hi - lo + 1)) : tpl.days;
   state.jobs.push({
-    id: `job-${n}`, templateId, clientId: client,
+    id: `job-${n}`, templateId, clientId: client, days,
     payMult: Math.round(payMult * 100) / 100, threatDelta, twist, hinted,
     offeredDay: state.day, expiresDay: state.day + 6,
   });
@@ -91,11 +131,13 @@ export function jobView(state, job) {
   const rumour = rumourFor(state, tpl.district);
   const delta = Math.max(1 - tpl.threat, Math.min(5 - tpl.threat, (job.threatDelta ?? 0) + (rumour?.threat ?? 0)));
   const trust = job.clientId ? trustOf(state, job.clientId) : null;
+  const days = job.days ?? tpl.days;
   return {
     tpl,
     client: CLIENTS.find((c) => c.id === job.clientId) ?? null,
     trust,
-    pay: round50(tpl.pay * (job.payMult ?? 1) * (trust == null ? 1 : trustPay(trust))),
+    days,
+    pay: round50(tpl.pay * (1 + EXTRA_DAY_PAY * (days - tpl.days)) * (job.payMult ?? 1) * (trust == null ? 1 : trustPay(trust))),
     threat: tpl.threat + delta,
     threatDelta: delta,
     hinted: Boolean(job.hinted),
@@ -107,10 +149,11 @@ export function jobView(state, job) {
 /** Daily: offers past their last day leave the board, and on an arrival day new work comes in. Mutates the (cloned) state. */
 export function tickJobs(state) {
   state.jobs = state.jobs.filter((j) => j.expiresDay >= state.day);
-  const slot = arrivalDays(state, state.day).indexOf(state.day);
+  const days = arrivalDays(state, state.day);
+  const slot = days.indexOf(state.day);
   if (slot >= 0) {
     const before = state.jobs.length;
-    postJobs(state, 1, { slot });
+    postJobs(state, days.filter((d) => d === state.day).length, { slot });
     nameAnOffer(state, state.jobs.slice(before));
   }
 }
@@ -157,17 +200,36 @@ export const namedBonus = (am, onJobIds) => (am.askedFor && onJobIds.includes(am
  * in the week's arrivals: on a gated board the week's first is always small work, and only
  * the first two can be walk-ins. Mutates the (cloned) state; returns how many were added.
  */
-export function postJobs(state, count = NEW_PER_WEEK, { slot = 0 } = {}) {
+export function postJobs(state, count = NEW_PER_WEEK, { slot = 0, routineOnly = false } = {}) {
   const rng = nextRng(state);
-  const open = MISSIONS.filter((m) => jobUnlocked(state, m.id));
+  // The week's first offer is routine work and the other two never are (DESIGN.md 2026-11-04, the
+  // owner's "middle version"); a bigger tong's extra offers are mostly routine. Offers are what pay
+  // the bills, so the count stays three a week: routine work changes the mix, not the amount.
+  const unlocked = MISSIONS.filter((m) => jobUnlocked(state, m.id));
+  // Routine work comes from clients still calling you, or as walk-in work.
+  const calling = callingClients(state);
+  const routineClient = (m) => (m.walkIn ? null : calling.find((c) => c.jobs.includes(m.id)) ?? false);
+  const routine = unlocked.filter((m) => m.routine && routineClient(m) !== false);
+  const open = unlocked.filter((m) => !m.routine);
+  const regular = (id) => !templateById(id).routine && jobUnlocked(state, id);
   // Walk-in work (walkIn: true, e.g. the market delivery) has no client and turns up on its own.
   const walkIns = open.filter((m) => m.walkIn);
   const rookieWork = open.filter((m) => m.rookie);
+  // The week's first is rookie routine, so a gated board always has small work; a bigger tong's
+  // extras favour the best routine tier open.
+  const routineWeight = (m) => (m.rookie ? 1 : 2);
+  const rookieRoutine = routine.filter((m) => m.rookie);
   let added = 0;
-  while (state.jobs.length < MAX_OFFERS && added < count) {
+  while (state.jobs.length < maxOffers(state) && added < count) {
     const n = slot + added;
-    const clients = callingClients(state).filter((c) => c.jobs.some((id) => jobUnlocked(state, id)));
-    if (state.jobGates && n === 0 && rookieWork.length) {
+    const clients = callingClients(state).filter((c) => c.jobs.some(regular));
+    if (n === 0 && rookieRoutine.length) {
+      const tpl = pick(rng, rookieRoutine);
+      addOffer(state, tpl.id, { rng, clientId: routineClient(tpl) });
+    } else if (routine.length && (routineOnly || (n >= NEW_PER_WEEK && rng() < ARRIVALS.routine))) {
+      const tpl = weighted(rng, routine.map((m) => ({ ...m, weight: routineWeight(m) })));
+      addOffer(state, tpl.id, { rng, clientId: routineClient(tpl) });
+    } else if (state.jobGates && n === 0 && rookieWork.length) {
       // A gated board always has some small work, so a crew is never priced out of earning.
       const tpl = pick(rng, rookieWork);
       const client = clients.filter((c) => c.jobs.includes(tpl.id));
@@ -176,7 +238,7 @@ export function postJobs(state, count = NEW_PER_WEEK, { slot = 0 } = {}) {
       addOffer(state, pick(rng, walkIns).id, { rng, clientId: null });
     } else if (clients.length) {
       const client = weighted(rng, clients);
-      addOffer(state, pick(rng, client.jobs.filter((id) => jobUnlocked(state, id))), { rng, clientId: client.id });
+      addOffer(state, pick(rng, client.jobs.filter(regular)), { rng, clientId: client.id });
     } else {
       addOffer(state, pick(rng, open).id, { rng, clientId: null }); // nobody will call: walk-in work
     }
