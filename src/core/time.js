@@ -12,6 +12,7 @@ import { HEAT_COOL_WEEKLY, clampHeat, checkHeatNotice } from './heat.js';
 import { rollRumour } from './rumours.js';
 import { money } from './money.js';
 import { advanceAway } from './away.js';
+import { weekSummary, weekStartOf } from './week.js';
 import { refreshSideBoard, returnSideTasks } from './sidetasks.js';
 import { dailyTraits } from './earned.js';
 import { weeklyRecord } from './record.js';
@@ -116,6 +117,7 @@ export function weeklyBill(state) {
 }
 
 function settleWeek(state) {
+  const summary = weekSummary(state); // the week's jobs and money, before the bills (core/week.js)
   const { wages, total } = weeklyBill(state);
   state.cash -= total;
 
@@ -134,12 +136,14 @@ function settleWeek(state) {
     id: `week-${state.day}`,
     type: 'finance',
     day: state.day,
-    subject: broke ? 'You missed payments this week' : 'Week settled',
-    body: `Wages ${money(wages)}, rent ${money(state.rent)}. Paid ${money(total)}. Cash now ${money(state.cash)}.` + heatLine +
+    subject: broke ? 'You missed payments this week' : `Week ${calendar(state.day).week} settled: ${summary.net >= 0 ? '+' : '−'}${money(Math.abs(summary.net))} after the bills`,
+    body: `${summary.lines.join(' ')} Wages ${money(wages)}, rent ${money(state.rent)}. Paid ${money(total)}. Cash now ${money(state.cash)}.` + heatLine +
       (broke ? ' The crew noticed. Morale will drop until you are back in the black.' : ''),
+    kind: 'week', payload: { lines: summary.lines, net: summary.net, paid: total, wages, rent: state.rent, cash: state.cash },
     blocking: false,
     read: false,
   });
+  state.weekStart = weekStartOf(state); // next week is measured from here
 
   if (broke) {
     for (const op of state.crew) op.condition.morale = Math.max(0, op.condition.morale - 10);

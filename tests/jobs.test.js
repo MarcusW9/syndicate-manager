@@ -132,7 +132,9 @@ test('trust changes pay, and a client below 20 stops calling', () => {
   for (const c of CLIENTS) if (c.id !== 'okonkwo') adjustTrust(t, c.id, -100);
   t.jobs = [];
   postJobs(t);
-  for (const j of t.jobs) assert.equal(j.clientId, 'okonkwo');
+  // No offer from a client below WONT_CALL; the week's routine offer may be walk-in work (2026-11-04).
+  for (const j of t.jobs) assert.ok(j.clientId === 'okonkwo' || (j.clientId === null && templateById(j.templateId).walkIn), `${j.templateId} from ${j.clientId}`);
+  assert.ok(t.jobs.some((j) => j.clientId === 'okonkwo'), 'the one client still calling does');
   assert.ok(trustOf(t, 'fung') < WONT_CALL);
 });
 
@@ -190,7 +192,9 @@ test('job gates: games started before them keep an open board', () => {
   assert.ok(seen.has(4) && seen.has(5), 'big work is still offered at reputation 0');
 });
 
-test('the board adds up to 3 new jobs a week and holds up to 5', async () => {
+// 2026-11-04 (owner's "middle version"): the week's first offer is routine work and the other two
+// never are; still three a week, up to five on the board.
+test('the board adds 3 new jobs a week, the first routine and the rest not, and holds up to 5', async () => {
   const { MAX_OFFERS, NEW_PER_WEEK } = await import('../src/core/jobs.js');
   const s = createNewGame({ seed: 13, startCrew: 'fresh' });
   s.jobs = [];
@@ -198,6 +202,11 @@ test('the board adds up to 3 new jobs a week and holds up to 5', async () => {
   assert.equal(s.jobs.length, NEW_PER_WEEK);
   s.day += 1; postJobs(s);
   assert.equal(s.jobs.length, MAX_OFFERS);
+  for (let i = 0; i < 40; i++) {
+    s.jobs = []; postJobs(s);
+    assert.ok(templateById(s.jobs[0].templateId).routine, 'the first is routine');
+    assert.ok(s.jobs.slice(1).every((j) => !templateById(j.templateId).routine), 'the regular two never are');
+  }
 });
 
 test('a finished job earns REP_PER_THREAT per threat level; an abort costs ABORT_REP', async () => {
@@ -224,11 +233,11 @@ test('new work trickles in: one job in each part of the week, never all on one d
     if (s.jobSeq > seq) arrivals.set(s.day, s.jobSeq - seq);
     seq = s.jobSeq;
   }
-  for (const n of arrivals.values()) assert.equal(n, 1, 'one job at a time');
   for (let week = 1; week < 20; week++) {
     const monday = week * 7 + 1;
     const days = [...arrivals.keys()].filter((d) => d >= monday && d < monday + 7);
     assert.deepEqual(days, arrivalDays(s, monday), `week ${week + 1}`);
+    days.forEach((d) => assert.equal(arrivals.get(d), 1, `week ${week + 1}: one job at a time`));
     days.forEach((d, i) => assert.ok(ARRIVAL_WINDOWS[i].includes(d - monday), `week ${week + 1}: arrival ${i} in its window`));
   }
   const weekdays = new Set([...arrivals.keys()].map((d) => (d - 1) % 7));

@@ -50,10 +50,10 @@ function play(seed) {
 }
 
 const CONFIGS = {
-  'fixed board (before)': () => Object.assign(ARRIVALS, { over: 5, per: Infinity }),
-  'one more per 2.5 past 5': () => Object.assign(ARRIVALS, { over: 5, per: 2.5 }),
-  'one more per 2 past 3': () => Object.assign(ARRIVALS, { over: 3, per: 2 }),
-  'one more per 1.5 past 3': () => Object.assign(ARRIVALS, { over: 3, per: 1.5 }),
+  'fixed board (before)': () => Object.assign(ARRIVALS, { over: 5, per: Infinity, routine: 0 }),
+  'one more per 2 past 3': () => Object.assign(ARRIVALS, { over: 3, per: 2, routine: 0 }),
+  'one more per 1.5 past 3': () => Object.assign(ARRIVALS, { over: 3, per: 1.5, routine: 0 }),
+  'chosen, extra offers 75% routine': () => Object.assign(ARRIVALS, { over: 5, per: 2.5, routine: 0.75 }),
 };
 const only = process.argv[3];
 for (const [name, set] of Object.entries(CONFIGS).filter(([n]) => !only || n.startsWith(only))) {

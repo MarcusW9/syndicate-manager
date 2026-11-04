@@ -4,6 +4,15 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+
+## 2026-11-04 · The week as the tong's rhythm
+- **What's due on Sunday is always in the top bar**, e.g. "¥2,750 due Sun".
+- **Monday's briefing:** on Mondays, Today opens with the week: cash, what's due Sunday (red if you're short), how many runners are free, the jobs on the board, and who's out, hurt or whose offers end this week.
+- **The Sunday summary:** the weekly bills message is now "Week N settled: +¥X after the bills", with a line each for the week's jobs, money, reputation and who's hurt, then the bills.
+- **Crew standard:** each job card and planning screen says what kind of crew it expects: rookie work, pros, or veteran-led. The planning screen checks your pick against it ("2 below pro", "no veteran to lead it", or a veteran wasted on rookie work). It's advice: you can send anyone.
+- **Crew leads:** a Respected (or better) runner on the crew leads it, and on "When it's risky" they take one risky call themselves before calling you. The planning screen says who leads. It never changes a roll.
+- **Routine work has its own place on the board:** the week's first new offer is always a small routine job, and the other two are never routine, so everyday work no longer crowds out the better-paid jobs. Still three a week. A bigger tong's extra offers are mostly routine work, for the bench.
+- **Save format v37.**
 ## 2026-11-04 · Ten more routine jobs, and shorter choice labels
 - **Ten threat-2 routine jobs**, each for a crew of two on a day's work and ¥3,000-3,200: Relay Cover (Mr. Szeto, Glass Heights), Mooring Watch (the Ferryman, the Docks), Dry Shelf (Auntie Fung, Old Town), Kit Return (Madam Rao, Night Market), Count Against Paper (Ruth Okonkwo, the Docks) and Inspection Hours (Mrs. Ip, through Auntie Fung, Night Market). Tack Ledger and Race-Night Door (the Basin), After Hours (Glass Heights) and Rent Round (Old Town) are walk-in work with no client.
 - **Shorter choice labels** in 14 of the earlier routine jobs (56 labels), so they read cleanly on a phone.

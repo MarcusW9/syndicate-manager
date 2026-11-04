@@ -1,5 +1,6 @@
 // Creating a new game. Pure logic: no DOM, no storage.
 
+import { weekStartOf } from './week.js';
 import { STARTING_RANK } from '../data/tong.js';
 import { STARTING_CREW, STARTING_TRUST } from '../data/operatives.js';
 import { NAMES } from '../config/names.js';
@@ -11,7 +12,7 @@ import { ECONOMY } from '../data/economy.js';
 import { refreshSideBoard } from './sidetasks.js';
 import { refreshArmoury } from './looks.js';
 
-export const SAVE_VERSION = 36;
+export const SAVE_VERSION = 37;
 
 // A rookie crew's first board: small work only.
 export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];
@@ -53,7 +54,8 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
     rumour: null,
     reputation: 0,
     jobGates: false,
-    rank: STARTING_RANK, // the tong's rank (data/tong.js; replaced tier in v34)
+    rank: STARTING_RANK,
+    weekStart: null, // where the week started (core/week.js), set below // the tong's rank (data/tong.js; replaced tier in v34)
     rent: 4000,
     difficulty,
     crew,
@@ -107,6 +109,7 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
   refreshSideBoard(state);
   refreshArmoury(state);
   state.dayStartCash = state.cash;
+  state.weekStart = weekStartOf(state); // the Sunday summary measures from here (core/week.js)
   return state;
 }
 
