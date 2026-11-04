@@ -17,6 +17,7 @@ The setting's canon: history, power, districts and places. Why each piece was ch
 ## Who runs it
 - **On paper:** the Municipal District Administration, a board of corporate-appointed bureaucrats behind red tape, safety ordinances and hollow public announcements.
 - **In reality:** megacorps and the big factions sit at the top (see the power map). Below them are the neighbourhood powers a small crew can actually reach: Auntie Fung keeps the peace in Old Town with tea and favours in her ledger, as a senior elder of the Brass Anchor Society; Madam Rao holds the Night Market's purse strings; Mr. Szeto reshapes Glass Heights and the tenements below it; the Ferryman owns the night water; the Red Lanterns tax the Docks roads; Ruth Okonkwo brokers the contracts the megacorps pretend don't exist, for Aether-Harbour Logistics' off-books arm.
+- **Tongs:** a tong (堂, "hall") is a registered association, much like a guild: on paper a benevolent society with a front room, a ledger and an altar; in practice how anyone below the corps gets organised. The Brass Anchor Society is one of the oldest, and its elders still sit at Auntie Fung's tea tables. Yours started in the room above the noodle shop. A tong's rank is how far its name carries: a back-room tong, a street tong, a district tong, a city tong, and a harbour tong, known on both sides of the water. A *crew* is the people a tong sends on a job.
 
 ## Power map
 Rumours are street talk: the game never confirms them (no supernatural, and no proof).
@@ -297,8 +298,11 @@ CONTEXT — LANTERN BAY. Treat this as the only source of truth; if anything ear
 our chat conflicts with it, this wins.
 
 GAME: text-first crew management game (Football Manager style, endless, no win state).
-The player is a fixer running a small crew of operatives, starting with three founders
-picked from six, one safehouse and rent due on Sunday.
+The player is a fixer running a tong (堂, "hall": a registered association, like a
+guild), starting with three founders picked from six, one safehouse and rent due on
+Sunday. A tong's rank is how far its name carries: back room, street, district, city,
+harbour. A crew is the people the tong sends on a job. The Brass Anchor Society is an
+old tong.
 
 PARTNER: Joss (they/them), the crew's bootleg AI: pirated assistant code the Ghost
 Circuit flashed onto salvaged hardware, named after joss paper. With the fixer since

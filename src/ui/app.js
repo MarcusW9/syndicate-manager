@@ -1,6 +1,8 @@
 // UI layer: the only code that touches the DOM. Reads state, calls core
 // functions, re-renders. Tap/click only; nothing depends on hover.
 
+import { rankOf } from '../core/tong.js';
+import { TONG_EXPLAINER } from '../data/tong.js';
 import { NAMES } from '../config/names.js';
 import { DISTRICTS, SAFEHOUSE_DISTRICT } from '../data/districts.js';
 import { DISTRICT_CARDS, FACTIONS, STREET_FACTS, HISTORY } from '../data/city.js';
@@ -448,9 +450,10 @@ function render() {
       <div class="topbar__stats">
         <span class="stat stat--cash"><span class="stat__label">Cash</span> ${money(state.cash)}${cashDelta()}</span>
         <span class="stat"><span class="stat__label">Heat</span> ${heatMeter()}</span>
-        <span class="tier">${esc(statName(state.tier))}<span class="tier__word"> tier</span></span>
+        <button class="tierbtn" data-action="info" data-id="tong" aria-expanded="${openInfo.has('tong')}" aria-label="What's a tong?"><span class="tier">${esc(rankOf(state).name)}<span class="tier__word"> tong</span></span></button>
       </div>
       ${planning || state.founding ? '' : renderContinue(blocked, resting, unread, 'topbar__continue')}
+      ${infoText('tong', TONG_EXPLAINER)}
     </header>
 
     <nav class="nav" aria-label="Main">
@@ -1588,7 +1591,7 @@ function renderCallIns(t) {
         ${Object.entries(CALL_IN).filter(([k]) => k !== 'never' || away).map(([k, c]) => `
           <button class="seg ${callIn === k ? 'is-on' : ''}" data-action="callin" data-id="${k}" aria-pressed="${callIn === k}"><strong>${esc(c.name)}</strong><span>${esc(c.desc)}</span></button>`).join('')}
       </div>
-      ${away ? '' : '<p class="muted small">Bigger jobs can\'t be sent off on their own yet: you\'ll watch this one.</p>'}
+      ${away ? '' : '<p class="muted small">This job can\'t be sent off on its own: you\'ll watch this one.</p>'}
       ${callIn === 'every' ? '' : `
       <h2>When they decide themselves</h2>
       <p class="muted small">Their orders decide each call they don't bring to you. They never push on with a critical wound: at worst, they pull out.</p>

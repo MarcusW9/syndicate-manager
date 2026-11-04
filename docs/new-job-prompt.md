@@ -20,8 +20,11 @@ CONTEXT — LANTERN BAY. Treat this as the only source of truth; if anything ear
 our chat conflicts with it, this wins.
 
 GAME: text-first crew management game (Football Manager style, endless, no win state).
-The player is a fixer running a small crew of operatives, starting with three founders
-picked from six, one safehouse and rent due on Sunday.
+The player is a fixer running a tong (堂, "hall": a registered association, like a
+guild), starting with three founders picked from six, one safehouse and rent due on
+Sunday. A tong's rank is how far its name carries: back room, street, district, city,
+harbour. A crew is the people the tong sends on a job. The Brass Anchor Society is an
+old tong.
 
 PARTNER: Joss (they/them), the crew's bootleg AI: pirated assistant code the Ghost
 Circuit flashed onto salvaged hardware, named after joss paper. With the fixer since

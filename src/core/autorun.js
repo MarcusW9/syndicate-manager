@@ -144,8 +144,8 @@ export function autoRun(prev, ordersId) {
   return s;
 }
 
-/** Can this job be sent hands-off? Every rookie job can; others only if marked handsOff (DESIGN.md, 2026-10-26). */
-export const handsOffAllowed = (tpl) => Boolean(tpl?.handsOff ?? tpl?.rookie);
+/** Can this job be sent hands-off? Every job can, unless its template opts out with handsOff: false (DESIGN.md, 2026-11-04). */
+export const handsOffAllowed = (tpl) => Boolean(tpl && (tpl.handsOff ?? true));
 
 const crewNames = (handles) => (handles.length > 1 ? `${handles.slice(0, -1).join(', ')} and ${handles.at(-1)}` : handles[0]);
 
