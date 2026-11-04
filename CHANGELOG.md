@@ -5,6 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-04 · Docs brought up to date
+- Docs only, no game change: `HANDOFF.md` now describes `main` as of #60 (save v33, 525 tests, renown slices 1-4 built, what's next). `README.md` has a current status list and doc index. `docs/ARCHITECTURE.md`, `DATA.md` and the `STATE-OF-PLAY.md` banner know about save v33. `PLAN-PROGRESSION.md` marks step 2 as mostly covered by later work and step 3 as not built.
+
 ## 2026-11-04 · Fame pays off (renown, slice 4)
 - **Clients ask for your Elites by name.** About one week in five, once you have an Elite with standing 50 or more, a new client job asks for them (the best-rated one). The job card says "Asks for Tofu". Send them, inside, outside or on standby, and it pays 15% more; send others and it's an ordinary job at its ordinary pay. One a week at most, never rookie work.
 - **A new Elite may ask for a raise.** The first time someone becomes Elite there's a 35% chance they want more (more likely if Greedy, less if Loyal), for 10% to 30% on top of their wage. It's the usual pay-rise message: accept, haggle or refuse (refusing makes them unhappy for four weeks). Winning Elite back later doesn't bring another ask.

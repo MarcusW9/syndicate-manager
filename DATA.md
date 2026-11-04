@@ -16,6 +16,7 @@ Plain-English reference for the game's data. The code version is `src/core/types
 | `bio`, `origin` | Personality and background text |
 | `history` | Notable events, for story memory and the memorial |
 | `tier` | `rookie`, `pro` or `veteran`. Rookies become pros at 15 in their main stat |
+| `record`, `fame`, `standing` | Renown (2026-11): `record` counts jobs, carries, firsts, milestones and highlights (`core/record.js`, `core/milestones.js`); `fame` is `unknown`, `known`, `respected` or `elite`; `standing` 0-100 (`core/fame.js`). Never read by a roll, pay or the risk read, except named offers and the fame pay ask |
 | `potential` | Hidden ceiling per stat. Never shown as a number |
 | `progress` | Growth points banked per stat towards the next +1 |
 | `startStats` | Stats on the day they joined (to show growth) |
@@ -92,7 +93,7 @@ Gates (new games only, `state.jobGates`): rookie jobs are always offered; other 
 `type` (`job`, `crew`, `warning`, `rival`, `report`, `scout`, `finance`), `subject`, `body`, `day`, optional `expiresDay`. `blocking: true` stops Continue until resolved.
 
 ## Game state
-`day` (day 1 = Monday, week 1, season 1; 364-day seasons), `cash`, `heat` 0-10, `reputation`, `tier`, `rent`, `crew`, `inbox`, `memorial`, `jobs` (offers on the board), `activeMission` (null or the mission in progress, saved so a reload resumes it), `difficulty`, `seed`, `rngCounter`, `recruits` (open leads), `recruitSeq`, `rosterCap` (beds), `safehouseLevel`, `lastJobDay`, `lastBackupDay` (day of last export), `ironman` (`{ id, seq }`, Ironman runs only), `clients` (trust by client id), `jobGates` (true for games started with the rookie crew), `version` (currently 12).
+`day` (day 1 = Monday, week 1, season 1; 364-day seasons), `cash`, `heat` 0-10, `reputation`, `tier`, `rent`, `crew`, `inbox`, `memorial`, `jobs` (offers on the board), `activeMission` (null or the mission in progress, saved so a reload resumes it), `difficulty`, `seed`, `rngCounter`, `recruits` (open leads), `recruitSeq`, `rosterCap` (beds), `safehouseLevel`, `lastJobDay`, `lastBackupDay` (day of last export), `ironman` (`{ id, seq }`, Ironman runs only), `clients` (trust by client id), `jobGates` (true for games started with the rookie crew), `version` (currently 33). Fields added since v12 (gear, away jobs, `namedOfferWeek` and more) are listed with their migrations in `docs/ARCHITECTURE.md` and `src/save/save.js`.
 
 ## Storage (src/save/save.js)
 Keys: `syndicate-active-slot`, `syndicate-slot-N` (N = 1-3), `syndicate-slot-N-backup` (weekly, not Ironman), `syndicate-ironman-progress` (`{ ironmanId: highest seq seen }`). The pre-slots key `syndicate-save-v1` is moved into slot 1 on first load.
