@@ -74,7 +74,7 @@ test('freelancers get no record', () => {
 });
 
 test('a hands-off run updates the record like a live one', async () => {
-  const { sendOff, returnCrews } = await import('../src/core/autorun.js');
+  const { sendOff } = await import('../src/core/autorun.js');
   let s = game(8); s.jobs = []; addOffer(s, 'container409');
   const ids = s.crew.slice(0, 2).map((o) => o.id);
   s = sendOff(s, s.jobs[0].id, ids, 'stealth', 'steady');

@@ -57,7 +57,7 @@ const rollDifficulty = (am, choice) => choice.difficulty + (am.threatDelta ?? 0)
 export const CALL_IN = {
   every: { name: 'Every crisis', desc: 'You make every call.' },
   risky: { name: 'When it\'s risky', desc: 'They call you when their best option is less than even odds. Otherwise their orders decide.' },
-  never: { name: 'Never', desc: 'They go and do it. The report comes back when they do.' },
+  never: { name: 'Never', desc: 'Their orders decide everything. A critical wound: they pull out.' },
 };
 export const RISKY_BELOW = 0.5;
 

@@ -5,6 +5,13 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-04 · Crews out call you in
+- **Sending a crew is now the default, and they can call you.** Planning a job has a new **How**: *Send them* (they go and do it over the days it takes) or *Watch live* (as before). Every "Call me in" setting works for both.
+- **A job sent away plays out day by day.** Each morning Today has a **Crews out** list: each job, who's on it, which day of how many, and a line or two on what they did. A long job's early days can be quiet: casing the place or lying low.
+- **When something's beyond their orders, they call.** A yellow "We need a call" block appears in Today with **Take the call**, and Continue waits until you answer. Taking it opens the job on the map at that moment. Make the call, watch the rest of the day, then **Let them carry on** (they pick it up tomorrow) or **Take command** to play the rest now, giving orders in fights.
+- Crews out fight on their own unless you've taken command. A critical wound on a crew out is always your call, as on a live job; on "never" they pull out by themselves, as before.
+- **Save format v35.** Jobs already out carry on from where they are.
+
 ## 2026-11-04 · You run a tong
 - **Your organisation is now a tong** (堂, "hall"): a registered association, a bit like a guild. The top bar shows its rank, which is how far its name carries: Back Room, Street, District, City, Harbour. Tap the rank for Joss's explanation.
 - Every tong starts in the back room, and older saves do too: moving up the ranks comes in a later update. **Save format v34.**

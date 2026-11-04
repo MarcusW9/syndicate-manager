@@ -11,7 +11,7 @@ import { checkRenewal } from './renewals.js';
 import { HEAT_COOL_WEEKLY, clampHeat, checkHeatNotice } from './heat.js';
 import { rollRumour } from './rumours.js';
 import { money } from './money.js';
-import { returnCrews } from './autorun.js';
+import { advanceAway } from './away.js';
 import { refreshSideBoard, returnSideTasks } from './sidetasks.js';
 import { dailyTraits } from './earned.js';
 import { weeklyRecord } from './record.js';
@@ -92,7 +92,7 @@ export function advanceDay(prev) {
   state.recruits = (state.recruits ?? []).filter((r) => r.expiresDay >= state.day);
 
   returnSideTasks(state); // side tasks whose crew is back today resolve
-  return returnCrews(state); // hands-off crews back today file their reports
+  return advanceAway(state); // crews out take today's share; one that needs a call waits (core/away.js)
 }
 
 /** Season turn: everyone a year older; past 40, stats start to slip. */
