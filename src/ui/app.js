@@ -86,6 +86,8 @@ let traitTip = null; // 'pageId|key': the trait chip or synergy whose card is op
 let returnTo = null; // { screen, messageId }: where a runner's page opened from a name link goes back to
 let founderPick = []; // candidate ids picked so far on a new game's first screen (renderFounding)
 let runnersHidden = false; // the job board's runners panel, folded away for this session
+let clientOpen = false; // the plan's client background, shown on tap (owner, 2026-11-04: the same on every job they offer)
+let whyOpen = false; // the plan bar's notes, all of them, on tap
 let meetHidden = null; // the plan's "What they'll likely meet" read folded away; null until first shown (folded on phones)
 
 export function mountApp(el, initialState) {
@@ -201,6 +203,8 @@ function onClick(e) {
     }
     case 'toggle-runners': runnersHidden = !runnersHidden; break;
     case 'toggle-meet': meetHidden = !meetHidden; break;
+    case 'client-info': clientOpen = !clientOpen; break;
+    case 'plan-why': whyOpen = !whyOpen; break;
     // The squad board (ui/board.js): tap a card, pick who goes there; anyone already placed swaps.
     case 'info': if (openInfo.has(id)) openInfo.delete(id); else openInfo.add(id); break;
     case 'pick-slot': pickSlot = id; break;
@@ -1546,7 +1550,11 @@ function renderPlan() {
   // The bar shows the worse of the two reads: the crises (risk read) and the incidents (coverage).
   // core/squad.js planRead is shared with the job board, so the card and this screen agree.
   const { level: toughest, read, cov } = planRead(state, job, { crew: picked, approach: plan.approach, overwatch: owOp, kit: plan.kit, wheels: wheelsOp });
-  const toughWhy = toughest !== read.level ? (() => { const r = cov.rows.find((x) => x.effective === toughest); return `${r.name}: ${r.handler ? `${r.handler.op.handle} on ${r.handler.stat}` : 'nobody can handle it'}`; })() : read.reasons[0];
+  // The bar's notes (2026-11-04: the crises card folded in here): the toughest encounter if it sets
+  // the risk, then the skills read's warnings (weak stats, fatigue, injuries, no medic, crew size).
+  const warnings = read.reasons.filter((r) => r !== 'Crew matches the job well');
+  const notes = [...(toughest !== read.level ? (() => { const r = cov.rows.find((x) => x.effective === toughest); return [`${r.name}: ${r.handler ? `${r.handler.op.handle} on ${r.handler.stat}` : 'nobody can handle it'}`]; })() : []), ...warnings];
+  if (!notes.length) notes.push('Crew matches the job well');
   const most = maxCrew(t.crewSize);
 
   return `
@@ -1559,8 +1567,8 @@ function renderPlan() {
       ${(() => { const c = crewAgainstStandard(picked, v.threat); return `<p class="standard ${picked.length ? (c.met ? 'is-met' : 'is-short') : ''} small"><strong>Crew standard: ${esc(c.std.label)}</strong>${picked.length ? ` · ${esc(c.note)}` : ''}</p>`; })()}
       <div class="plangrid">
       <div class="riskcard plangrid__client">
-        <p><strong>Client:</strong> ${clientLine(v)}</p>
-        ${v.client ? `<p class="muted small">${esc(v.client.desc)}</p>` : ''}
+        <p><strong>Client:</strong> ${clientLine(v)}${v.client ? ` <button class="infobtn" data-action="client-info" aria-expanded="${clientOpen}" aria-label="About ${esc(v.client.name)}">${clientOpen ? '×' : 'i'}</button>` : ''}</p>
+        ${v.client && clientOpen ? `<p class="muted small">${esc(v.client.desc)}</p>` : ''}
         ${v.threatDelta ? `<p class="muted small">Every roll on this job is ${Math.abs(v.threatDelta) === 1 ? 'one point' : `${Math.abs(v.threatDelta)} points`} ${v.threatDelta > 0 ? 'harder' : 'easier'} than usual.</p>` : ''}
         ${v.hinted ? '<p class="intel">Intel unreliable: something about this job may not be what you were told.</p>' : ''}
         ${namedHandle(v) ? `<p class="named">${esc(fillNamed(NAMED_TEXT.chip, v))} by name: ${esc(fillNamed(NAMED_TEXT.bonus, v))} (inside, outside or on standby). Without them it pays as usual.</p>` : ''}
@@ -1588,11 +1596,6 @@ function renderPlan() {
 
       <div class="plangrid__risk">
       ${renderMeet(cov, owOp)}
-      <h2>The crises</h2>
-      <div class="riskcard">
-        ${picked.length ? `${riskBadge(read.level)}
-        <ul>${read.reasons.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>` : '<p class="muted">Pick a crew to see the risk.</p>'}
-      </div>
       </div>
 
       <div class="plangrid__orders">
@@ -1604,7 +1607,9 @@ function renderPlan() {
     <div class="planbar">
       <div class="planbar__read">
         ${picked.length ? riskBadge(toughest) : '<span class="risk risk--none">no crew yet</span>'}
-        <span class="planbar__why">${esc(picked.length ? toughWhy : `Pick up to ${most}; ${t.crewSize} recommended`)}</span>
+        ${!picked.length ? `<span class="planbar__why">${esc(`Pick up to ${most}; ${t.crewSize} recommended`)}</span>`
+          : notes.length === 1 ? `<span class="planbar__why">${esc(notes[0])}</span>`
+          : `<button class="planbar__why planbar__why--more" data-action="plan-why" aria-expanded="${whyOpen}">${whyOpen ? notes.map((n) => `<span>${esc(n)}</span>`).join('') : `${esc(notes[0])} <b>+${notes.length - 1} more</b>`}</button>`}
       </div>
       ${(() => {
         const away = plan.mode !== 'live' && handsOffAllowed(t);
