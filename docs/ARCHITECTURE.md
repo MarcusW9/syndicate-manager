@@ -1,6 +1,6 @@
 # Architecture — Syndicate Manager
 
-Snapshot of `main` at `71d5a79` ("#43 Fix fights in map"), `SAVE_VERSION` 29, about 367 top-level `test(` calls in 39 test files. Counts and line numbers date quickly; check the code. Short orientation lives in `CODEMAP.md`. Where something could not be confirmed something it says **unclear**.
+Snapshot of `main` at `7dc3d50` ("Elite is rarer", #57), `SAVE_VERSION` 32, about 423 top-level `test(` calls in 48 test files. Counts and line numbers date quickly; check the code. Short orientation lives in `CODEMAP.md`. Where something could not be confirmed it says **unclear**.
 
 ---
 ## 1. STACK & STRUCTURE
@@ -43,13 +43,17 @@ mountApp(document.getElementById('app'), state);
 | rumours.js, incidents.js, decisions.js, loyalty.js, freelance.js | rumours; incidents woven into runs; call-ins; unclear loyalty (see §12); freelancers |
 | rng.js, random.js | mulberry32 + saved-counter wrapper |
 | validate.js, types.js | content validators; JSDoc typedefs (partly stale) |
+| record.js | runner record: per-person job counters (`recordJob` in `finish()`, `weeklyRecord`, `seedRecord`); counts only |
+| milestones.js | moments a record crosses a line: `checkMilestones` after a job, `addHighlight` (best three kept) |
+| fame.js | fame tiers (unknown to elite), standing 0-100, paths, Elite lapse, Legend readiness (`afterJobFame`, `weeklyFame`, `seedFame`) |
+| jobcheck.js | lints a job template beyond `validate.js` (`scripts/check-job.mjs`) |
 
-**src/data:** approaches, battle, cast, city, clients, districtCrises, districtIncidents, districts, earnedTraits, economy, gear, gearLooks, growthLines, incidents, `missions.js` + `missions/*.js` (16 jobs), operatives (authored "Lantern Bay Five"), partner, recruitPools, rookieCrises, rumours, sideTasks, sites, situations, specialisations, statuses, tags, traits, twists.
+**src/data:** fame, milestones, paths (renown numbers and wording, declarative), approaches, battle, cast, city, clients, districtCrises, districtIncidents, districts, earnedTraits, economy, gear, gearLooks, growthLines, incidents, `missions.js` + `missions/*.js` (16 jobs), operatives (authored "Lantern Bay Five"), partner, recruitPools, rookieCrises, rumours, sideTasks, sites, situations, specialisations, statuses, tags, traits, twists.
 
 **src/ui:** app.js (~1900 lines, all screens + routing), board.js (squad board/plan), citymap.js, districtArt.js, siteplan.js, fightorders.js, watch.js (live run view), gear.js, art.js, icons.js, styles.css.
 **Also:** `src/offline/serviceWorker.js`, `src/save/save.js`, `src/config/names.js`.
 
-**tests/**: 39 `*.test.js` files (rules, economy/development/heat/startcrew sims, founders, reports, earned, sidetasks, autorun, saves, battle, etc.) and helpers `play.js`, `develop-sim.js`, `heat-sim.js`. Docs: CODEMAP.md, DESIGN.md, CHANGELOG.md, STATE-OF-PLAY.md, HANDOFF.md, WORLD.md, ART.md, PLAN-*.md.
+**tests/**: 48 `*.test.js` files (rules, economy/development/heat/startcrew sims, founders, reports, earned, sidetasks, autorun, saves, battle, etc.) and helpers `play.js`, `develop-sim.js`, `heat-sim.js`. Docs: CODEMAP.md, DESIGN.md, CHANGELOG.md, STATE-OF-PLAY.md, HANDOFF.md, WORLD.md, ART.md, PLAN-*.md.
 
 ---
 ## 2. GAME STATE
@@ -62,7 +66,7 @@ setState(next){ state = next; saveGame(state); render(); }
 
 **Root shape** (`createNewGame` in `core/state.js`):
 ```js
-{ version: SAVE_VERSION /*29*/, seed, day: 1, cash: 8000, heat: 0, heatNoticeDay: null, heatWatched: false, rumour: null,
+{ version: SAVE_VERSION /*32*/, seed, day: 1, cash: 8000, heat: 0, heatNoticeDay: null, heatWatched: false, rumour: null,
   reputation: 0, jobGates: false, tier: 'street', rent: 4000, difficulty, crew, stash: [], inbox: [welcome], memorial: [],
   jobs: [], jobSeq: 0, rngCounter: 0, activeMission: null, awayJobs: [], sideBoard: [], sideOut: [], intel: {},
   recruits: [], freelancers: [], recruitSeq: 0, rosterCap: 8, safehouseLevel: 1, clients: {}, founding: null }
@@ -81,6 +85,10 @@ setState(next){ state = next; saveGame(state); render(); }
   history: [strings], progress, startStats, growthLog, status: [{id, until}],
   jobsWithCrew, contractMainStat, lastNoticeDay, renewalAgain,
   gear: {weapon, armour, tool, implant}, marks: [{kind: 'scar'|'implant'|'tattoo', day}] }
+// renown (2026-11), written once a job finishes: record: {jobs, atLevel, wins, clean, flawless, fights, fightsWon, carries, carriesByStat,
+//   broughtHome, criticalsSurvived, unscathed, bigScores, seriousInjuries, cleanStreak, bestCleanStreak, with:{opId:n}, activeWeeks, lastJobDay,
+//   milestones:[ids], highlights:[{id,day,text,weight}] (best 3), lowWeeks, wasElite, estimated},
+//   fame: 'unknown'|'known'|'respected'|'elite', standing: 0-100. None of these touch a roll, pay, heat or the risk read.
 // added lazily: earned: [{id, day, district?, client?, partner?, uses?}], track: {hidden counters},
 //               spec: {id, day}, specSnooze, freelance (flag)
 ```
@@ -88,18 +96,18 @@ Morale and burnout exist and are written (in `finish`, `settleWeek`) but nothing
 
 **Generation** (`core/recruits.js`): `generateRecruit(state, {role, quality, founder})`. Quality weights: rookie 50 (primary stat 10–13), pro 38 (13–16), veteran 12 (15–18); founders primary 8–11. Wage = `marketWage × (founder 0.6 | rookie 0.5 | 1)`. Also rolls `potential`, `scoutError`, may carry gear; id `r${recruitSeq}`. `generateFounderCandidates` (6), `generateStartingCrew` (5, 'fresh'). `scoutWeek` (Wednesday: 1 lead, 2 if crew < 4, lead lasts 7 days), `hire` (signing fee = wage), `recruitToOperative`, `expandSafehouse`. The 'classic' start uses the authored Lantern Bay Five (`data/operatives.js`).
 
-**Per-runner history.** `op.history` (strings such as "Day 12: graduated from rookie"), `jobsWithCrew` counter, `growthLog`, `marks` (scar/implant/tattoo around 10 jobs), earned traits with hidden `op.track`, `spec`. **No per-runner kill, job-by-job win/loss or per-client record exists** — **unclear/not tracked** (kills aren't recorded; battle events record guard actions only).
+**Per-runner history.** Skill tier moves rookie to pro (`GRADUATE_AT`) and pro to veteran (`VETERAN_AT`: main stat 16 and 50 jobs, checked after each job, `promoteVeteran` in development.js); fame is separate from tier. `op.history` (strings such as "Day 12: graduated from rookie"), `jobsWithCrew` counter, `growthLog`, `marks` (scar/implant/tattoo around 10 jobs), earned traits with hidden `op.track`, `spec`. **No per-runner kill, job-by-job win/loss or per-client record exists** — **unclear/not tracked** (kills aren't recorded; battle events record guard actions only).
 
 **Death / critical / memorial.** A failed roll can injure (`setInjury`, `noteInjury`); a bad injury makes the runner *critical* (`am.critical`). The player then chooses stabilise (difficulty 9, +1 heat), extract (serious injury, 21 days, payCut +0.5, job aborted) or push on (adds them to `am.untreated`). All deaths are resolved in `finish`: chance = 1 if story/aborted-rule case else 0.35 (+0.3 w/ medic). Design rule: **death only follows a player choice**. Dead are removed from `crew` and:
 ```js
-memorial.push({id,name,handle,role,color,age,marks,day,cause})
+memorial.push({id,name,handle,role,color,age,marks,day,cause, record: recordSummary(op)})
 ```
 Others on the crew get morale −15.
 
 ---
 ## 4. TIME & ECONOMY LOOP
 
-`time.js advanceDay`: daily per operative — statuses expire, fatigue −8, neural load −3 (to implant floor), injury countdown; then `dailyTraits`, `checkSpecialisations`, renewal re-asks, inbox expiry, `tickJobs` (board arrivals), recruits expire, `returnSideTasks`, `returnCrews`. Wednesday: `scoutWeek`. Monday: `driftTrust`, `refreshFreelancers`, `refreshSideBoard`, `refreshArmoury`, `rollRumour`; Monday of week 1: `newSeason` (aging). **Sunday: `settleWeek`** — wages + rent deducted (if broke: morale −10), heat −2 (`HEAT_COOL_WEEKLY`), `checkHeatNotice` (heat ≥ 6, 14-day cooldown), fixer. `isBlocked` = active mission, founding, or unresolved blocking messages. `weeklyBill`.
+`time.js advanceDay`: daily per operative — statuses expire, fatigue −8, neural load −3 (to implant floor), injury countdown; then `dailyTraits`, `checkSpecialisations`, renewal re-asks, inbox expiry, `tickJobs` (board arrivals), recruits expire, `returnSideTasks`, `returnCrews`. Wednesday: `scoutWeek`. Monday: `driftTrust`, `refreshFreelancers`, `refreshSideBoard`, `refreshArmoury`, `rollRumour`; Monday of week 1: `newSeason` (aging). **Sunday: `settleWeek`** (also `weeklyRecord`: active weeks; `weeklyFame`: bench standing decay, Elite lapse) — wages + rent deducted (if broke: morale −10), heat −2 (`HEAT_COOL_WEEKLY`), `checkHeatNotice` (heat ≥ 6, 14-day cooldown), fixer. `isBlocked` = active mission, founding, or unresolved blocking messages. `weeklyBill`.
 
 **Money (`state.cash`) change points:** heat.js (fixer ¥1500) · recruits.js (signing fee; expansion) · sidetasks.js (pay) · gear.js (buy/sell) · mission.js (con bribe at start; choice success/failure cash; `finish` pay) · time.js (weekly bill).
 
@@ -157,6 +165,7 @@ state.reputation = Math.round(Math.max(0, Math.min(100, state.reputation + gain)
 - **Client trust:** `adjustTrust(clientId, base + am.clientTrust + favourite)`, base = −3 on abort else `completionTrust(threat) = 4 + threat`.
 - **Survivors:** `jobsWithCrew++`, growth (`XP.job`, `XP.craft`), graduation inbox message, `checkRenewal`, specialisations, fatigue `+10+threat*6`, `awayUntil`, morale ±, `history` line, marks, neural warning.
 - **Result:** `am.result {report, outcome:'loss'|'aborted'|'completed', pay, heatGain, injuries, deaths, freelance, growth, graduated, client, trustChange}`; inbox report message with `timeline {result, steps, outcome, events, summary: summariseRun(...), orders, callIn, liveOrders}` (old full logs trimmed to `REPORT_LOGS_KEPT`).
+- Renown (2026-11): `recordJob` before deaths are removed (the dead too; their memorial entry gets a short `record`), `checkMilestones` for survivors (report line `Milestone: …`, tone `milestone`), `afterJobFame` (standing, fame, Elite message; line `Fame: …`). Crisis roll events now carry `difficulty` (carries need it).
 - Then `reactToJob` (rumours) and `afterJob` (earned traits).
 - Fights: pulling back (`runbattle.js retreat`) sets payCut 1, adds heat, `am.repCut += BATTLE.retreat.rep`.
 
@@ -179,7 +188,7 @@ Seeded and saved. `makeRng(seed)` is mulberry32 (`core/rng.js`). `nextRng(state)
 
 Format: JSON of the state in `localStorage`. Keys: `syndicate-active-slot`, `syndicate-slot-N`, `…-backup` (weekly), `…-unreadable`, `syndicate-ironman-progress`, legacy `syndicate-save-v1`. `storageGet/Set/Remove` are the only storage calls (swap for iOS). `saveGame` writes slot + weekly backup (not in Ironman). `loadGame` migrates; on failure `keepUnreadable` and returns null. `exportSave` downloads JSON; `importSave(file)` migrates then `checkIronman`; `loadBackup`.
 
-**Versioning:** `SAVE_VERSION` 29 in `core/state.js`. `migrate(state)` throws on missing or newer version, then runs a chain `if (state.version === N) { …; state.version = N+1; }` from v1 to v29. Real code from `src/save/save.js` (head of the chain, then the v26→v29 blocks; v1→v25 omitted for length):
+**Versioning:** `SAVE_VERSION` 32 in `core/state.js`. `migrate(state)` throws on missing or newer version, then runs a chain `if (state.version === N) { …; state.version = N+1; }` from v1 to v32. Real code from `src/save/save.js` (head of the chain, then the v26→v32 blocks; v1→v25 omitted for length):
 ```js
 // Upgrade old save formats when SAVE_VERSION changes.
 function migrate(state) {
@@ -239,6 +248,27 @@ function migrate(state) {
     else if (!state.armoury.offers.some((o) => o.type === 'pistol')) state.armoury.offers.push(...stockShelf(state, 'pistol'));
     state.version = 29;
   }
+  if (state.version === 29) {
+    // v30: runner record (core/record.js). Everyone who has worked gets one, guessed from the jobs they've
+    // done (marked estimated); the memorial keeps no record for people who were lost before it began.
+    for (const op of state.crew) seedRecord(op, { today: state.day });
+    for (const m of state.memorial ?? []) m.record = m.record ?? null;
+    state.version = 30;
+  }
+  if (state.version === 30) {
+    // v31: milestones and highlights on the record (core/milestones.js). What a record has already
+    // reached counts as earned, so an old crew doesn't get a flood of milestones on its next job.
+    for (const op of state.crew) { if (op.record) delete op.record.milestones; seedMilestones(op); }
+    state.version = 31;
+  }
+  if (state.version === 31) {
+    // v32: fame and standing (core/fame.js). Everyone with a record gets standing from their jobs
+    // (3 a job, at most 50) and the fame their record reaches, capped at respected: nobody starts
+    // as Elite (it comes with its message once standing and the record back it up). The record
+    // gains lowWeeks and wasElite (Elite lapsing). Memorial entries are unchanged.
+    for (const op of state.crew) seedFame(op);
+    state.version = 32;
+  }
   return state;
 ```
 **To add a version:** bump `SAVE_VERSION` in `core/state.js`, append a block `if (state.version === N) {…; state.version = N+1;}` to `migrate`, add a test (tests/saves cover "v1 save upgrades", "newer saves refused"), log in DESIGN.md/CHANGELOG.md.
@@ -266,7 +296,7 @@ Reputation UI: a "Rep" compact line in the jobs screen (segmented track to the n
 ---
 ## 10. TESTS
 
-Runner: Node built-in `node:test` (`npm test`); 39 files in `tests/`, one concern per file (rules, economy/development/heat/startcrew sims, founders, reports, earned, sidetasks, autorun, saves, battle…). Helpers: `play.js` (`playMission`, `randomPolicy`, `carefulPolicy`, `playWeeks`, `autoFounders`, `toCrisis`, `arm`, `testFight`, `commandOrders`), `develop-sim.js`, `heat-sim.js`.
+Runner: Node built-in `node:test` (`npm test`); 48 files in `tests/`, one concern per file (rules, record/milestones/fame (renown), economy/development/heat/startcrew sims, founders, reports, earned, sidetasks, autorun, saves, battle…). Helpers: `play.js` (`playMission`, `randomPolicy`, `carefulPolicy`, `playWeeks`, `autoFounders`, `toCrisis`, `arm`, `testFight`, `commandOrders`), `develop-sim.js`, `heat-sim.js`.
 
 **`tests/rules.test.js` rule tests:** (1) content passes validation; (2) every mission type has ≥6 crises; (3) nobody dies unless "push on" (3,000 random missions); (4) aborting always brings everyone home (300); (5) Story difficulty: nobody dies even pushing on (500); (6) no unfilled `{placeholder}`; (7) a v1 save upgrades with a job board; (8) newer saves are refused; (9) economy: a careful player survives the first month but is not rich; (10) heat cools by 2 every Sunday and stays 0–10.
 
@@ -281,9 +311,9 @@ for (let seed = 1; seed <= 200; seed++) results.push(playWeeks(4, seed));
 ---
 ## 11. PROJECT RULES
 
-**CLAUDE.md:** read CODEMAP.md first; layer rules (§1); iOS rules (no hover-only info, phone-first, 44px taps, safe areas, seeded RNG); design rules (abort/extract on every crisis, death only after a player choice, operatives 18+, bump `SAVE_VERSION` + migration on any state-shape change); keep DESIGN.md log rows (supersede, never rewrite), CHANGELOG, screenshot log current; run `npm test` before pushing and never loosen tests; commits authored as `marcusw`, no Co-Authored-By / Claude-Session / "Generated with" lines.
+**CLAUDE.md:** has a "Where to read for a task" routing table; read CODEMAP.md first; layer rules (§1); iOS rules (no hover-only info, phone-first, 44px taps, safe areas, seeded RNG); design rules (abort/extract on every crisis, death only after a player choice, operatives 18+, bump `SAVE_VERSION` + migration on any state-shape change); keep DESIGN.md log rows (supersede, never rewrite), CHANGELOG, screenshot log current; run `npm test` before pushing and never loosen tests; commits authored as `marcusw`, no Co-Authored-By / Claude-Session / "Generated with" lines.
 
-**DESIGN.md:** sections — game in one paragraph, Setting, World, Tone, Starting crew, Decision log (246 rows, 2026-10-23 → 2026-10-30), Open questions. Row themes: foundations and death rules; development, renewals, pricing; world canon; progression and rookie start; UI skin/portraits; mission logs, hands-off, traits, situations, side tasks; money pressure, morale cut, per-district heat, relationships; squad run (approaches, incidents, overwatch, wheels, standby); gear, specialisations, sites, district art, offline; battles and command fights, sidearms.
+**DESIGN.md:** sections — game in one paragraph, Setting, World, Tone, Starting crew, Decision log (now split by date into `docs/design/`; the index is in `DESIGN.md`; 246 rows from 2026-10-23 → 2026-10-30 plus newer files), Open questions. Row themes: foundations and death rules; development, renewals, pricing; world canon; progression and rookie start; UI skin/portraits; mission logs, hands-off, traits, situations, side tasks; money pressure, morale cut, per-district heat, relationships; squad run (approaches, incidents, overwatch, wheels, standby); gear, specialisations, sites, district art, offline; battles and command fights, sidearms.
 
 ---
 ## 12. PLAYTEST STATUS
