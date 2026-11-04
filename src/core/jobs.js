@@ -200,23 +200,35 @@ export const namedBonus = (am, onJobIds) => (am.askedFor && onJobIds.includes(am
  * in the week's arrivals: on a gated board the week's first is always small work, and only
  * the first two can be walk-ins. Mutates the (cloned) state; returns how many were added.
  */
-export function postJobs(state, count = NEW_PER_WEEK, { slot = 0 } = {}) {
+export function postJobs(state, count = NEW_PER_WEEK, { slot = 0, routineOnly = false } = {}) {
   const rng = nextRng(state);
-  const open = MISSIONS.filter((m) => jobUnlocked(state, m.id));
+  // The week's first offer is routine work and the other two never are (DESIGN.md 2026-11-04, the
+  // owner's "middle version"); a bigger tong's extra offers are mostly routine. Offers are what pay
+  // the bills, so the count stays three a week: routine work changes the mix, not the amount.
+  const unlocked = MISSIONS.filter((m) => jobUnlocked(state, m.id));
+  // Routine work comes from clients still calling you, or as walk-in work.
+  const calling = callingClients(state);
+  const routineClient = (m) => (m.walkIn ? null : calling.find((c) => c.jobs.includes(m.id)) ?? false);
+  const routine = unlocked.filter((m) => m.routine && routineClient(m) !== false);
+  const open = unlocked.filter((m) => !m.routine);
+  const regular = (id) => !templateById(id).routine && jobUnlocked(state, id);
   // Walk-in work (walkIn: true, e.g. the market delivery) has no client and turns up on its own.
   const walkIns = open.filter((m) => m.walkIn);
   const rookieWork = open.filter((m) => m.rookie);
-  // A bigger tong's extra offers (past the usual three a week) lean to routine work: everyday jobs
-  // for the bench, not more big ones (DESIGN.md 2026-11-04). The best tier open comes up more.
-  const routine = open.filter((m) => m.routine);
+  // The week's first is rookie routine, so a gated board always has small work; a bigger tong's
+  // extras favour the best routine tier open.
   const routineWeight = (m) => (m.rookie ? 1 : 2);
+  const rookieRoutine = routine.filter((m) => m.rookie);
   let added = 0;
   while (state.jobs.length < maxOffers(state) && added < count) {
     const n = slot + added;
-    const clients = callingClients(state).filter((c) => c.jobs.some((id) => jobUnlocked(state, id)));
-    if (n >= NEW_PER_WEEK && routine.length && rng() < ARRIVALS.routine) {
+    const clients = callingClients(state).filter((c) => c.jobs.some(regular));
+    if (n === 0 && rookieRoutine.length) {
+      const tpl = pick(rng, rookieRoutine);
+      addOffer(state, tpl.id, { rng, clientId: routineClient(tpl) });
+    } else if (routine.length && (routineOnly || (n >= NEW_PER_WEEK && rng() < ARRIVALS.routine))) {
       const tpl = weighted(rng, routine.map((m) => ({ ...m, weight: routineWeight(m) })));
-      addOffer(state, tpl.id, { rng });
+      addOffer(state, tpl.id, { rng, clientId: routineClient(tpl) });
     } else if (state.jobGates && n === 0 && rookieWork.length) {
       // A gated board always has some small work, so a crew is never priced out of earning.
       const tpl = pick(rng, rookieWork);
@@ -226,7 +238,7 @@ export function postJobs(state, count = NEW_PER_WEEK, { slot = 0 } = {}) {
       addOffer(state, pick(rng, walkIns).id, { rng, clientId: null });
     } else if (clients.length) {
       const client = weighted(rng, clients);
-      addOffer(state, pick(rng, client.jobs.filter((id) => jobUnlocked(state, id))), { rng, clientId: client.id });
+      addOffer(state, pick(rng, client.jobs.filter(regular)), { rng, clientId: client.id });
     } else {
       addOffer(state, pick(rng, open).id, { rng, clientId: null }); // nobody will call: walk-in work
     }

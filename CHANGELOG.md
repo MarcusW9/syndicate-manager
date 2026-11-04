@@ -11,7 +11,7 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - **The Sunday summary:** the weekly bills message is now "Week N settled: +¥X after the bills", with a line each for the week's jobs, money, reputation and who's hurt, then the bills.
 - **Crew standard:** each job card and planning screen says what kind of crew it expects: rookie work, pros, or veteran-led. The planning screen checks your pick against it ("2 below pro", "no veteran to lead it", or a veteran wasted on rookie work). It's advice: you can send anyone.
 - **Crew leads:** a Respected (or better) runner on the crew leads it, and on "When it's risky" they take one risky call themselves before calling you. The planning screen says who leads. It never changes a roll.
-- **More routine work for a bigger tong:** the extra offers a bigger tong gets are mostly routine jobs, so there's everyday work for the bench.
+- **Routine work has its own place on the board:** the week's first new offer is always a small routine job, and the other two are never routine, so everyday work no longer crowds out the better-paid jobs. Still three a week. A bigger tong's extra offers are mostly routine work, for the bench.
 - **Save format v37.**
 ## 2026-11-04 · Ten more routine jobs, and shorter choice labels
 - **Ten threat-2 routine jobs**, each for a crew of two on a day's work and ¥3,000-3,200: Relay Cover (Mr. Szeto, Glass Heights), Mooring Watch (the Ferryman, the Docks), Dry Shelf (Auntie Fung, Old Town), Kit Return (Madam Rao, Night Market), Count Against Paper (Ruth Okonkwo, the Docks) and Inspection Hours (Mrs. Ip, through Auntie Fung, Night Market). Tack Ledger and Race-Night Door (the Basin), After Hours (Glass Heights) and Rent Round (Old Town) are walk-in work with no client.
