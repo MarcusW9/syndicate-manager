@@ -108,9 +108,9 @@ export function autoFounders(state) {
 /**
  * Play whole weeks: each Monday take the best-paying job the available crew can staff.
  * hireAbove: if set, hire the best lead (up to five on the crew) when cash after the fee would
- * still cover this plus four weeks of their wage.
+ * still cover this plus four weeks of their wage. onDay(state), if given, sees the state after each day.
  */
-export function playWeeks(weeks, seed, policy = carefulPolicy, { startCrew = 'classic', hireAbove = null } = {}) {
+export function playWeeks(weeks, seed, policy = carefulPolicy, { startCrew = 'classic', hireAbove = null, onDay = null } = {}) {
   let s = createNewGame({ seed, startCrew });
   if (s.founding) s = autoFounders(s);
   let deaths = 0;
@@ -131,6 +131,7 @@ export function playWeeks(weeks, seed, policy = carefulPolicy, { startCrew = 'cl
       if (lead && s.crew.length < 5 && s.cash - lead.wage * 5 > hireAbove) s = hire(s, lead.id);
     }
     s = advanceDay(s);
+    if (onDay) onDay(s); // a look at the state after each day (tests/fame-sim-worker.js samples week 52)
   }
   return { state: s, deaths };
 }

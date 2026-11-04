@@ -502,5 +502,15 @@ function migrate(state) {
     for (const op of state.crew) seedFame(op);
     state.version = 32;
   }
+  if (state.version === 32) {
+    // v33: fame's payoffs (renown slice 4). An offer can ask for a runner by name (job.askedFor,
+    // carried onto the run as am.askedFor), at most one a week (state.namedOfferWeek). None yet on
+    // an old save. Pay-rise messages gain payload.reason ('growth' or 'fame'); old ones are growth.
+    for (const job of state.jobs ?? []) job.askedFor = job.askedFor ?? null;
+    for (const am of [state.activeMission, ...(state.awayJobs ?? []).map((j) => j.mission)]) if (am) am.askedFor = am.askedFor ?? null;
+    state.namedOfferWeek = state.namedOfferWeek ?? null;
+    for (const m of state.inbox ?? []) if (m.kind === 'renewal' && m.payload) m.payload.reason = m.payload.reason ?? 'growth';
+    state.version = 33;
+  }
   return state;
 }
