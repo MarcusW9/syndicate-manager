@@ -1,6 +1,6 @@
 # Architecture — Syndicate Manager
 
-Snapshot of `main` at `7dc3d50` ("Elite is rarer", #57), `SAVE_VERSION` 32, about 423 top-level `test(` calls in 48 test files. Counts and line numbers date quickly; check the code. Short orientation lives in `CODEMAP.md`. Where something could not be confirmed it says **unclear**.
+Snapshot of `main` at `7dc3d50` ("Elite is rarer", #57), `SAVE_VERSION` 32 (v33 added since: see Saves), about 423 top-level `test(` calls in 48 test files. Counts and line numbers date quickly; check the code. Short orientation lives in `CODEMAP.md`. Where something could not be confirmed it says **unclear**.
 
 ---
 ## 1. STACK & STRUCTURE
@@ -188,7 +188,7 @@ Seeded and saved. `makeRng(seed)` is mulberry32 (`core/rng.js`). `nextRng(state)
 
 Format: JSON of the state in `localStorage`. Keys: `syndicate-active-slot`, `syndicate-slot-N`, `…-backup` (weekly), `…-unreadable`, `syndicate-ironman-progress`, legacy `syndicate-save-v1`. `storageGet/Set/Remove` are the only storage calls (swap for iOS). `saveGame` writes slot + weekly backup (not in Ironman). `loadGame` migrates; on failure `keepUnreadable` and returns null. `exportSave` downloads JSON; `importSave(file)` migrates then `checkIronman`; `loadBackup`.
 
-**Versioning:** `SAVE_VERSION` 32 in `core/state.js`. `migrate(state)` throws on missing or newer version, then runs a chain `if (state.version === N) { …; state.version = N+1; }` from v1 to v32. Real code from `src/save/save.js` (head of the chain, then the v26→v32 blocks; v1→v25 omitted for length):
+**Versioning:** `SAVE_VERSION` 33 in `core/state.js` (v33, renown slice 4: `job.askedFor` / `am.askedFor` for named offers, `state.namedOfferWeek`, and `payload.reason` on pay-rise messages, `growth` or `fame`). `migrate(state)` throws on missing or newer version, then runs a chain `if (state.version === N) { …; state.version = N+1; }` from v1 to v33. Real code from `src/save/save.js` (head of the chain, then the v26→v32 blocks; v1→v25 omitted for length):
 ```js
 // Upgrade old save formats when SAVE_VERSION changes.
 function migrate(state) {

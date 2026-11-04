@@ -1,6 +1,6 @@
 # Syndicate Manager (working title)
 
-A text-first, endless crew management game. You are a fixer in Lantern Bay (placeholder name), building a crew of five into a syndicate. Football Manager meets a heist crew: the story comes from the people you keep alive.
+A text-first, endless crew management game. You are a fixer in Lantern Bay (placeholder name), starting with three founders you pick from six and building them into a syndicate. Football Manager meets a heist crew: the story comes from the people you keep alive.
 
 ## Run it
 ```
@@ -22,31 +22,23 @@ npm run build
 Output goes to `dist/`. Pushing to `main` deploys to GitHub Pages automatically (see `.github/workflows/deploy.yml`).
 
 ## Status
-- [x] Project skeleton, mobile-first shell
-- [x] Data shapes, 5 starting operatives, 3 mission templates (2 crises each)
-- [x] Day ticking, weekly wages and rent, save/export/import
-- [x] Job board (weekly offers) and planning screen with risk read
-- [x] Mission flow: tap-through beats, crisis decisions
-- [x] Injury ladder, critical state, death, memorial wall
-- [x] 6 crises per mission type (18 total)
-- [x] Automated rule tests (run before every deploy)
-- [x] Crew badges (placeholder portraits)
-- [x] Heat cools weekly (2 every Sunday)
-- [x] Heat consequences (v1): heat from Loud jobs and crisis mistakes only; a fixer notice at 6+ (pay to cool it, or let it ride)
-- [ ] Economy tuning
-- [x] Recruiting: weekly scout leads, hire/haggle/pass, generated recruits
-- [x] Safehouse expansion (roster cap 8, +2 per upgrade)
-- [x] Save slots (3), difficulty picker, weekly auto-backups, backup reminder, Ironman lock
-- [x] 7 job types (42 crises), 5 recurring clients with trust, offer variations, hidden twists
-- [ ] Running several jobs at once (needed for big crews)
-- [ ] Burnout warnings
-- [ ] First playtest
-- [ ] Crew portraits (after playtest)
+Playable and endless. What's in the game is listed, newest first, in `CHANGELOG.md`; what's next is in `HANDOFF.md`. In short:
+- The squad run: pick an approach, an inside team, overwatch, wheels and standby; watch the job on the district's map; the crew calls you in for decisions.
+- Command fights in every district, with gear, cover and orders each round.
+- Recruiting, contract renewals, earned traits, specialisations, growth from rookie to veteran.
+- Renown: each runner's record, milestones, fame and paths; named offers and fame pay asks.
+- A City map, heat, rumours, clients with trust, side work and hands-off runs.
+- Saves: 3 slots, export/import, weekly backups, Ironman, offline play.
+- Not yet: Legends and retirement (renown slices 5-6), crew relationships, heat per district, several live jobs at once.
 
 ## Docs
+- `CLAUDE.md`: project rules for working on the code, and where to read for each kind of task
+- `HANDOFF.md`: where the project stands and what's next
 - `CHANGELOG.md`: what changed in each update
-- `DESIGN.md`: narrative, setting, cast, and the decision log (why each choice was made)
-- `WORLD.md`: the world bible (history, factions, districts) and the context block for worldbuilding prompts
+- `DESIGN.md`: narrative, tone, cast, and the decision log (rows in `docs/design/`)
+- `CODEMAP.md` and `docs/ARCHITECTURE.md`: where code lives, how a run flows, state and saves
+- `WORLD.md`: the world bible and the context block for worldbuilding prompts
+- `ART.md`: the visual style and art rules; `docs/screenshots/`: how the game looked over time
 - `DATA.md`: data shapes
-- `CLAUDE.md`: project rules for working on the code
-- `WRITING_GUIDE.md`: how to write new crises and jobs in plain English
+- `WRITING_GUIDE.md`: how to write new crises and jobs; `docs/new-job-prompt.md`: a prompt for drafting jobs outside a session
+- `PLAN-*.md`: step-by-step plans (core loop, progression, renewals, personality)

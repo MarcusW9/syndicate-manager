@@ -131,7 +131,8 @@ Then **playtest** before step 2.
 - [x] **Data Scrub** (2026-10-25): a threat-2 job for Okonkwo, opening at reputation 15.
 - [x] **Abort penalty** stays -3 on purpose (owner, 2026-10-25): aborting should be costly.
 
-### Step 2 · Career page + earned traits — [ ]
+### Step 2 · Career page + earned traits — [x] mostly, by other work (status 2026-11-04)
+Status: earned traits are built (`data/earnedTraits.js`, `core/earned.js`, 2026-10-26), stat thresholds that unlock choices are built (`tests/unlocks.test.js`), and the career page became the runner page's Record fold, milestones and highlights (renown slices 1-2, `core/record.js`, `core/milestones.js`). What's below is the original plan, kept as written.
 - **Candidate (owner liked it, 2026-10-25): skill thresholds that unlock crisis choices** (e.g. tech 12: kill a beacon quietly; driving 14: lose them on the flyover), so a +1 can change what a crew can do. Uses the existing `requires: { kind: 'stat' }`.
 - **Career page** (tap an operative): stats on the day they joined vs now, jobs run,
   firsts ("first clean job, day 12"), injuries and scars, best moment, graduation day.
@@ -142,7 +143,7 @@ Then **playtest** before step 2.
   fades with clean jobs), *Ghost Driver* (several clean getaways), *Steady Under Fire*.
   Each earned trait gets a history line and an inbox note. Content in `data/traits.js`.
 
-### Step 3 · Crew relationships — [ ]
+### Step 3 · Crew relationships — [ ] (not built as of 2026-11-04; still an agreed review item)
 Supersedes the 2026-10-25 "Crew relationships parked" row. Use the existing
 `op.trust` map: trust moves from shared jobs (saved each other, a botched roll that
 got someone hurt, trait clashes from `data/tags.js`). Pairs that trust each other get
