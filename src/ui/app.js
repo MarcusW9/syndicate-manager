@@ -1581,7 +1581,7 @@ function renderCallIns(t) {
         ${Object.entries(CALL_IN).filter(([k]) => k !== 'never' || away).map(([k, c]) => `
           <button class="seg ${callIn === k ? 'is-on' : ''}" data-action="callin" data-id="${k}" aria-pressed="${callIn === k}"><strong>${esc(c.name)}</strong><span>${esc(c.desc)}</span></button>`).join('')}
       </div>
-      ${away ? '' : '<p class="muted small">Bigger jobs can\'t be sent off on their own yet: you\'ll watch this one.</p>'}
+      ${away ? '' : '<p class="muted small">This job can\'t be sent off on its own: you\'ll watch this one.</p>'}
       ${callIn === 'every' ? '' : `
       <h2>When they decide themselves</h2>
       <p class="muted small">Their orders decide each call they don't bring to you. They never push on with a critical wound: at worst, they pull out.</p>

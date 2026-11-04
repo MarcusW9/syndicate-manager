@@ -107,7 +107,7 @@
  * @property {string[]} beats          Narrated beats, in order
  * @property {Crisis[]} crises         Pool; 2-3 drawn per run
  * @property {number} heat             Heat gained on completion (0 on every job: heat comes from Loud and crisis costs)
- * @property {boolean} [handsOff]      Can be sent hands-off under standing orders (core/autorun.js); defaults to `rookie`
+ * @property {boolean} [handsOff]      Can be sent hands-off under standing orders (core/autorun.js); defaults to true
  */
 
 /**
