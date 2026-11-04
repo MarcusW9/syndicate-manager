@@ -11,6 +11,7 @@
 // can put someone at death's door, never dead: only "keep fighting" (the push on of a fight)
 // leaves them dying, and any exit after that still brings them home.
 
+import { crewLead } from './lead.js';
 import { templateById, twistById, jobView, namedBonus } from './jobs.js';
 import { NAMED_OFFER, NAMED_TEXT } from '../data/fame.js';
 import { adjustTrust, clientById, completionTrust, ABORT_TRUST } from './clients.js';
@@ -207,6 +208,7 @@ export function startMission(prev, jobId, crewIds, approach, opts = {}) {
     alert: 0, out: [], pending: null, wentLoud: false, battle: null, fought: false,
     pay: view.pay, threat: view.threat, threatDelta: view.threatDelta, clientId: job.clientId ?? null, twist: job.twist ?? null,
     askedFor: job.askedFor ?? null, // the runner a client asked for by name (renown slice 4)
+    lead: crewLead(crewIds.map((id) => state.crew.find((o) => o.id === id))), // takes one risky call (core/lead.js)
     queue, step: 0, log: [],
     payCut: 0, extraHeat: 0, clientTrust: 0, watched,
     critical: null, stabiliseFailed: false, untreated: [],

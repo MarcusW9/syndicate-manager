@@ -1,6 +1,8 @@
 // UI layer: the only code that touches the DOM. Reads state, calls core
 // functions, re-renders. Tap/click only; nothing depends on hover.
 
+import { billDue, mondayBrief, crewStandard, crewAgainstStandard } from '../core/week.js';
+import { crewLead } from '../core/lead.js';
 import { rankOf } from '../core/tong.js';
 import { TONG_EXPLAINER } from '../data/tong.js';
 import { NAMES } from '../config/names.js';
@@ -494,7 +496,8 @@ function render() {
 function renderWhen() {
   const today = (state.day - 1) % 7; // 0 = Monday, 6 = Sunday (bills)
   const toBills = 6 - today;
-  const bills = toBills === 0 ? 'bills paid today' : toBills === 1 ? 'bills tomorrow' : `bills in ${toBills} days`;
+  const due = money(billDue(state).total); // always in view: what Sunday will cost (core/week.js)
+  const bills = toBills === 0 ? 'bills paid today' : `${due} due Sun`;
   const cells = Array.from({ length: 7 }, (_, i) =>
     `<span class="week__day ${i < today ? 'is-done' : i === today ? 'is-today' : ''} ${i === 6 ? 'is-bills' : ''}"></span>`).join('');
   return `<div class="topbar__when">
@@ -623,6 +626,7 @@ function renderInbox() {
         <section class="panel inbox__list">
           <h1>Today</h1>
           ${renderBriefing()}
+          ${renderWeekBrief()}
           ${renderCrewsOut()}
           ${list}
         </section>
@@ -630,6 +634,24 @@ function renderInbox() {
       <section class="panel inbox__detail">
         ${open ? renderMessage(open) : '<p class="muted inbox__empty">Tap a message to read it here.</p>'}
       </section>
+    </div>`;
+}
+
+/** Monday's briefing (core/week.js): the numbers that frame the week, in one block. */
+function renderWeekBrief() {
+  if (!calendar(state.day).isMonday) return '';
+  const b = mondayBrief(state);
+  const short = b.cash < b.due;
+  return `
+    <div class="weekbrief" aria-label="This week">
+      <p class="weekbrief__title">Week ${calendar(state.day).week}</p>
+      <dl class="weekbrief__stats">
+        <div><dt>Cash</dt><dd>${money(b.cash)}</dd></div>
+        <div class="${short ? 'is-short' : ''}"><dt>Due Sunday</dt><dd>${money(b.due)}</dd></div>
+        <div><dt>Free</dt><dd>${b.roster.free}/${b.roster.total}</dd></div>
+        <div><dt>Jobs</dt><dd>${b.jobs}</dd></div>
+      </dl>
+      <p class="small muted">${[b.roster.away && `${b.roster.away} out`, b.roster.hurt && `${b.roster.hurt} hurt`, b.expiring && `${b.expiring} ${b.expiring === 1 ? 'offer ends' : 'offers end'} this week`, short && `${money(b.due - b.cash)} short of Sunday`].filter(Boolean).join(' · ') || 'A clear week.'}</p>
     </div>`;
 }
 
@@ -783,12 +805,21 @@ function renderMessage(m) {
       <button class="btn btn--ghost inbox__back" data-action="back">← Today</button>
       <h1>${crewLinks(m.subject)}</h1>
       <p class="muted">${esc(m.type.charAt(0).toUpperCase() + m.type.slice(1))} · Day ${m.day}</p>
-      ${m.type === 'report' ? renderReportTimeline(m) : `<p class="body">${crewLinks(m.body)}</p>`}
+      ${m.type === 'report' ? renderReportTimeline(m) : m.kind === 'week' && m.payload?.lines ? renderWeekSummary(m) : `<p class="body">${crewLinks(m.body)}</p>`}
       ${m.kind === 'renewal' ? renderRenewal(m) : ''}
       ${m.kind === 'heat' ? renderHeatNotice(m) : ''}
       ${m.kind === 'spec' ? renderSpecOffer(m) : ''}
       ${m.kind === 'callin' && !m.resolved ? `<button class="btn btn--primary" data-action="take-call" data-id="${esc(m.payload.jobId)}">Take the call</button>` : ''}
       ${jobLink}`;
+}
+
+/** The Sunday summary (core/week.js): the week's lines, then what was paid. */
+function renderWeekSummary(m) {
+  const p = m.payload;
+  return `
+      <ul class="weeksum">${p.lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>
+      <p class="body">Wages ${money(p.wages)}, rent ${money(p.rent)}. Paid ${money(p.paid)}. Cash now ${money(p.cash)}.</p>
+      ${m.body.includes('Heat cooled') ? `<p class="body muted">${esc(m.body.slice(m.body.indexOf('Heat cooled')))}</p>` : ''}`;
 }
 
 /**
@@ -1371,7 +1402,7 @@ function jobCard(j) {
           <strong class="jobcard__name">${esc(t.name)}</strong><strong class="jobcard__pay">${money(v.pay)}</strong>
           <span class="jobcard__client">${esc(v.client?.name ?? 'Walk-in job')}</span>${j.expiresDay === state.day ? '<span class="jobcard__left">ends today</span>' : ''}
           ${flags.length ? `<span class="jobcard__flags">${flags.map(([tone, text]) => `<span class="flag flag--${tone}">${esc(text)}</span>`).join('')}</span>` : ''}
-          <span class="jobcard__facts">${r.size || t.crewSize} ${(r.size || t.crewSize) === 1 ? 'runner' : 'runners'} · <span class="keyglyphs">${stats}</span>${note ? ` · <span class="jobcard__note">${esc(note)}</span>` : ''}</span>
+          <span class="jobcard__facts">${r.size || t.crewSize} ${(r.size || t.crewSize) === 1 ? 'runner' : 'runners'} · ${esc(crewStandard(v.threat).label)} · <span class="keyglyphs">${stats}</span>${note ? ` · <span class="jobcard__note">${esc(note)}</span>` : ''}</span>
           <span class="riskcorner riskcorner--${esc(r.level)}" role="img" aria-label="${esc(risk)} risk" title="${esc(risk[0].toUpperCase() + risk.slice(1))} risk"></span>
         </button>
       </li>`;
@@ -1525,6 +1556,7 @@ function renderPlan() {
       <p class="muted">${esc(districtName(t.district))}${districtTurf(t.district)} · threat ${threatHtml(v)} · pays ${money(v.pay)} · crew away ${v.days}d · ${daysLeft(job.expiresDay)}</p>
       ${DISTRICTS[t.district] ? `<p class="muted small">${esc(DISTRICTS[t.district].pitch)}</p>` : ''}
       <p class="body">${esc(fillBrief(t))}</p>
+      ${(() => { const c = crewAgainstStandard(picked, v.threat); return `<p class="standard ${picked.length ? (c.met ? 'is-met' : 'is-short') : ''} small"><strong>Crew standard: ${esc(c.std.label)}</strong>${picked.length ? ` · ${esc(c.note)}` : ''}</p>`; })()}
       <div class="plangrid">
       <div class="riskcard plangrid__client">
         <p><strong>Client:</strong> ${clientLine(v)}</p>
@@ -1607,6 +1639,7 @@ function freelancersFull() {
 function renderCallIns(t, days = t.days) {
   const orders = ORDERS[plan.orders] ? plan.orders : 'steady';
   const callIn = CALL_IN[plan.callIn] ? plan.callIn : 'risky';
+  const lead = crewLead(plan.crew.map((id) => state.crew.find((o) => o.id === id)));
   const canSend = handsOffAllowed(t);
   const mode = canSend && plan.mode !== 'live' ? 'away' : 'live';
   const modes = { away: ['Send them', `They go and do it over ${days === 1 ? 'the day' : `${days} days`}. Today shows what they did; they call when it's beyond their orders.`], live: ['Watch live', 'You watch the whole job now, on the map.'] };
@@ -1621,6 +1654,7 @@ function renderCallIns(t, days = t.days) {
         ${Object.entries(CALL_IN).map(([k, c]) => `
           <button class="seg ${callIn === k ? 'is-on' : ''}" data-action="callin" data-id="${k}" aria-pressed="${callIn === k}"><strong>${esc(c.name)}</strong><span>${esc(c.desc)}</span></button>`).join('')}
       </div>
+      ${lead && callIn === 'risky' ? `<p class="lead small"><strong>${esc(lead.handle)} leads</strong> (${esc(lead.fame)}): they take one risky call themselves before calling you.</p>` : ''}
       ${callIn === 'every' ? '' : `
       <h2>When they decide themselves</h2>
       <p class="muted small">Their orders decide each call they don't bring to you. They never push on with a critical wound: at worst, they pull out.</p>

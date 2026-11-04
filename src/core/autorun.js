@@ -94,9 +94,22 @@ export function needsPlayer(state) {
   // crew. An away crew fights on its own unless you've taken command (core/away.js).
   if (currentStep(am)?.type === 'battle') return !!am.battle && !am.battle.auto && !(am.away && !am.away.command);
   if (currentStep(am)?.type !== 'crisis') return false;
+  return wouldCall(state) && !leadTakes(state);
+}
+
+/** Would this crisis go to the player under the call-in rule (before any lead takes it)? */
+function wouldCall(state) {
+  const am = state.activeMission;
   if (am.callIn !== 'risky') return true;
   const tries = (crisisOdds(state) ?? []).filter((o) => !o.exit);
   return !tries.length || Math.max(...tries.map((o) => o.chance)) < RISKY_BELOW;
+}
+
+/** A crew lead (core/lead.js) takes a risky call themselves while they have one left ('risky' only: 'every' means every). */
+export function leadTakes(state) {
+  const am = state.activeMission;
+  return am.callIn === 'risky' && (am.lead?.calls ?? 0) > 0 && !am.critical && !am.pending && !am.done && !dayDone(am)
+    && currentStep(am)?.type === 'crisis' && wouldCall(state);
 }
 
 // --- away jobs, day by day (core/away.js) ----------------------------------
@@ -149,8 +162,10 @@ export function autoStep(prev, { force = false } = {}) {
   if (type === 'incident') return runIncident(s);
   if (type === 'battle') return runBattle(s);
   if (type === 'crisis') {
+    const led = leadTakes(s);
     const { id, why } = decide(s, orders);
-    am.nextWhy = why;
+    am.nextWhy = led ? `${am.lead.handle} made the call as lead. ${why}` : why;
+    if (led) am.lead.calls -= 1;
     return chooseOption(s, id);
   }
   return prev;

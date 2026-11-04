@@ -532,5 +532,12 @@ function migrate(state) {
     for (const job of state.jobs ?? []) job.days = job.days ?? templateById(job.templateId)?.days ?? 1;
     state.version = 36;
   }
+  if (state.version === 36) {
+    // v37: the week's start for the Sunday summary (core/week.js), measured from today on an old
+    // save; and a crew lead on a job (core/lead.js): none on jobs already running.
+    state.weekStart = state.weekStart ?? { day: state.day, cash: state.cash, reputation: state.reputation ?? 0 };
+    for (const am of [state.activeMission, ...(state.awayJobs ?? []).map((j) => j.mission)]) if (am) am.lead = am.lead ?? null;
+    state.version = 37;
+  }
   return state;
 }

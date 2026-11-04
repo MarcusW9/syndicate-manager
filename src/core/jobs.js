@@ -27,7 +27,8 @@ export const NEW_PER_WEEK = ARRIVAL_WINDOWS.length;
 // A bigger tong gets more work (DESIGN.md 2026-11-04, the tong direction): one more offer a week
 // for every `per` runners past `over`, and the board holds `room` more than a week's arrivals.
 // Exported as one object so scripts/sim-tong.mjs can compare settings.
-export const ARRIVALS = { over: 5, per: 2.5, room: 2 };
+// routine: of the extra offers past the usual three a week, the share that are routine work.
+export const ARRIVALS = { over: 5, per: 2.5, room: 2, routine: 0.75 };
 
 /** The tong's own runners (not freelancers, not the dead): what the board's size follows. */
 const rosterSize = (state) => state.crew.filter((o) => !o.freelance && o.condition?.injury !== 'dead').length;
@@ -205,11 +206,18 @@ export function postJobs(state, count = NEW_PER_WEEK, { slot = 0 } = {}) {
   // Walk-in work (walkIn: true, e.g. the market delivery) has no client and turns up on its own.
   const walkIns = open.filter((m) => m.walkIn);
   const rookieWork = open.filter((m) => m.rookie);
+  // A bigger tong's extra offers (past the usual three a week) lean to routine work: everyday jobs
+  // for the bench, not more big ones (DESIGN.md 2026-11-04). The best tier open comes up more.
+  const routine = open.filter((m) => m.routine);
+  const routineWeight = (m) => (m.rookie ? 1 : 2);
   let added = 0;
   while (state.jobs.length < maxOffers(state) && added < count) {
     const n = slot + added;
     const clients = callingClients(state).filter((c) => c.jobs.some((id) => jobUnlocked(state, id)));
-    if (state.jobGates && n === 0 && rookieWork.length) {
+    if (n >= NEW_PER_WEEK && routine.length && rng() < ARRIVALS.routine) {
+      const tpl = weighted(rng, routine.map((m) => ({ ...m, weight: routineWeight(m) })));
+      addOffer(state, tpl.id, { rng });
+    } else if (state.jobGates && n === 0 && rookieWork.length) {
       // A gated board always has some small work, so a crew is never priced out of earning.
       const tpl = pick(rng, rookieWork);
       const client = clients.filter((c) => c.jobs.includes(tpl.id));

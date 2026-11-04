@@ -1318,3 +1318,23 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .crewsout__job.is-waiting { border-left-color: var(--warn); }
 .crewsout__head strong { font-family: var(--display, inherit); letter-spacing: 0.04em; }
 .crewsout__job .btn { margin-top: 6px; justify-self: start; }
+
+/* Monday's briefing on Today (core/week.js, 2026-11-04): four numbers framing the week. */
+.weekbrief { border: 1px solid var(--line); background: var(--panel-2, var(--panel)); padding: 10px 12px; margin: 0 0 14px; }
+.weekbrief__title { margin: 0 0 6px; font-family: var(--display, inherit); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-2); font-size: 0.8rem; }
+.weekbrief__stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0 0 6px; }
+.weekbrief__stats div { display: grid; gap: 2px; }
+.weekbrief__stats dt { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.weekbrief__stats dd { margin: 0; font-family: var(--display, inherit); font-weight: 700; font-size: 1.05rem; }
+.weekbrief__stats .is-short dd { color: var(--danger); }
+.weekbrief p { margin: 0; }
+/* The crew standard on the planning screen: guidance, coloured only once a crew is picked. */
+.standard { margin: 8px 0; color: var(--muted); }
+.standard strong { color: var(--text); }
+.standard.is-met { color: var(--accent-2); }
+.standard.is-short { color: var(--warn); }
+.lead { margin: 8px 0 0; color: var(--muted); }
+.lead strong { color: var(--accent-2); }
+/* The Sunday summary: one line each for jobs, money, reputation and the crew. */
+.weeksum { list-style: none; margin: 12px 0; padding: 0; display: grid; gap: 8px; }
+.weeksum li { border-left: 2px solid var(--accent-2); padding: 2px 0 2px 10px; }
