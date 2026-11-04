@@ -49,4 +49,13 @@ Every canon change also gets a row at the top of the newest file in `docs/design
 
 ## Model
 
-The edits are mechanical. The canon check in step 1 is judgement: for a new client, faction, district or secret, say so if the session is on a smaller model, and offer to leave the check to the owner or a larger model.
+The edits are mechanical. The canon check in step 1 is judgement:
+
+| Kind of lore | Model |
+| --- | --- |
+| A street character, a tech or weapon detail, a district texture line (a landmark, a custom), retiring a name | A smaller model (Sonnet) is fine: the check is mostly names and world rules, and the sync tests catch drift. |
+| A new client, faction or district; a secret; who runs what; history; the power map's hates/owes/fears; the "Three contradictions" | A larger model (Opus). These ripple into existing motives and ties, which is where a quiet contradiction gets through. |
+
+If the session is on a smaller model and the lore is in the second row, say so, and offer to leave the check to the owner, a larger model, or an outside review with `docs/lore-review-prompt.md`. If the owner brings a review from that prompt, still run step 1; treat the review as a second opinion.
+
+Read `WORLD.md` in full here (this is the one task that needs all of it); other tasks read only the context block and the section they need.
