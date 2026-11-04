@@ -196,7 +196,7 @@ export function startMission(prev, jobId, crewIds, approach, opts = {}) {
   const watched = state.heatWatched ? WATCHED_PENALTY : 0;
   state.heatWatched = false;
   // The approach's costs: time away, and props and bribes paid up front (data/approaches.js).
-  const days = Math.max(1, tpl.days + (ap.days ?? 0));
+  const days = Math.max(1, (job.days ?? tpl.days) + (ap.days ?? 0)); // the offer's days (core/jobs.js daysRange)
   const bribe = (ap.bribePerThreat ?? 0) * view.threat;
   state.cash -= bribe;
   state.activeMission = {

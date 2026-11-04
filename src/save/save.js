@@ -18,7 +18,7 @@ import { seedRecord } from '../core/record.js';
 import { seedMilestones } from '../core/milestones.js';
 import { seedFame } from '../core/fame.js';
 import { nameLook, refreshArmoury, stockShelf } from '../core/looks.js';
-import { addOffer } from '../core/jobs.js';
+import { addOffer, templateById } from '../core/jobs.js';
 import { STARTING_ROSTER_CAP } from '../core/recruits.js';
 import { prepareOperative, rollPotential, rollScoutError, scoutFor, potentialRead } from '../core/development.js';
 import { nextRng } from '../core/random.js';
@@ -525,6 +525,12 @@ function migrate(state) {
     // beat count (none reached yet: it plays from where it is) and isn't waiting on a call.
     for (const j of state.awayJobs ?? []) { j.mission.away = j.mission.away ?? { beats: 0 }; j.waiting = false; j.today = null; }
     state.version = 35;
+  }
+  if (state.version === 35) {
+    // v36: an offer has its own days (core/jobs.js daysRange); offers already on the board keep
+    // the template's, as before.
+    for (const job of state.jobs ?? []) job.days = job.days ?? templateById(job.templateId)?.days ?? 1;
+    state.version = 36;
   }
   return state;
 }

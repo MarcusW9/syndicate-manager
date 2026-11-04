@@ -210,3 +210,13 @@ test('a v33 save upgrades its tier to the tong rank', async () => {
   assert.equal(rankOf(loaded).name, 'Back Room');
   assert.equal(rankOf(createNewGame({ seed: 41, startCrew: 'fresh' })).id, 'backroom', 'new games start in the back room');
 });
+
+test('a v35 save gives each offer on the board its template days', async () => {
+  const s = createNewGame({ seed: 43, startCrew: 'fresh' });
+  for (const j of s.jobs) delete j.days;
+  s.version = 35;
+  const loaded = await S.importSave({ text: async () => JSON.stringify(s) });
+  assert.equal(loaded.version, SAVE_VERSION);
+  const { templateById } = await import('../src/core/jobs.js');
+  for (const j of loaded.jobs) assert.equal(j.days, templateById(j.templateId).days);
+});
