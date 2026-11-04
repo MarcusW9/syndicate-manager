@@ -6,7 +6,7 @@ export const CLIENTS = [
     id: 'fung',
     name: 'Auntie Fung',
     desc: 'Runs three herbal tea shops in Old Town and a quiet fencing business behind them. A senior elder of the Brass Anchor Society. Pays in cash, remembers everything.',
-    jobs: ['clinic', 'herbal_run', 'courier', 'protection', 'kidnap', 'favourite', 'second_hand_heart', 'last_sitting'],
+    jobs: ['clinic', 'herbal_run', 'courier', 'protection', 'kidnap', 'favourite', 'second_hand_heart', 'last_sitting', 'a_steady_hand', 'cold_chain'],
   },
   {
     id: 'szeto',
@@ -24,12 +24,12 @@ export const CLIENTS = [
     id: 'rao',
     name: 'Madam Rao',
     desc: 'Lends money to half the Night Market from a sari shop. Generous until you\'re late.',
-    jobs: ['ledger', 'chrome', 'casino', 'kidnap', 'courier', 'paid_in_full'],
+    jobs: ['ledger', 'chrome', 'casino', 'kidnap', 'courier', 'paid_in_full', 'house_advantage'],
   },
   {
     id: 'okonkwo',
     name: 'Ruth Okonkwo',
     desc: 'Broker for Aether-Harbour Logistics\' off-books arm, the part that officially doesn\'t exist. Pays the best and trusts nobody.',
-    jobs: ['data_scrub', 'data_pull', 'penthouse', 'warehouse', 'last_ticket'],
+    jobs: ['data_scrub', 'data_pull', 'penthouse', 'warehouse', 'last_ticket', 'exit_interview', 'quiet_hours'],
   },
 ];

@@ -5,6 +5,13 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-04 · New jobs: A Steady Hand, House Advantage, Exit Interview, Cold Chain and Quiet Hours
+- **A Steady Hand** (Doc Siu via Auntie Fung, Old Town, rookie): help a retired instrument maker close her workshop, then walk her to the clinic.
+- **House Advantage** (Madam Rao, Night Market, threat 2): recover the hidden reader from a mahjong table without naming the players who complained.
+- **Exit Interview** (Ruth Okonkwo, Glass Heights, threat 4): escort a shipping clerk who wants to leave a corporate residence, only if he still says yes.
+- **Cold Chain** (Mrs. Ip via Auntie Fung, Night Market, rookie): bring a borrowed chiller back before dawn without spoiling a neighbour's stock.
+- **Quiet Hours** (Ruth Okonkwo, the Docks, threat 3): take the real recording of a dockworker briefing from an AHL training room before the morning reset.
+
 ## 2026-11-03 · Fix: the crew walks the drawn route again, and the speed button works
 - **On a job, the crew now walks the route drawn on the map.** A recent change left the crew's walking and the map drawn from two different places: the map showed the right site (for Herbal Run, the Old Town tenement) but the crew moved on a stock site, so they walked a different route and, once the job was done, stood at a different van spot from the one drawn. They now share the same site.
 - **"Faster" works again** on the job screen (it had stopped doing anything).

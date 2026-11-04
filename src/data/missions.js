@@ -25,6 +25,11 @@ import { SECOND_HAND_HEART } from './missions/secondhandheart.js';
 import { BORROWED_GLORY } from './missions/borrowedglory.js';
 import { LAST_SITTING } from './missions/lastsitting.js';
 import { LOW_WATER } from './missions/lowwater.js';
+import { A_STEADY_HAND } from './missions/asteadyhand.js';
+import { HOUSE_ADVANTAGE } from './missions/houseadvantage.js';
+import { EXIT_INTERVIEW } from './missions/exitinterview.js';
+import { COLD_CHAIN } from './missions/coldchain.js';
+import { QUIET_HOURS } from './missions/quiethours.js';
 import { DISTRICT_CRISES } from './districtCrises.js';
 import { ROOKIE_CRISES } from './rookieCrises.js';
 
@@ -406,7 +411,7 @@ const BASE_MISSIONS = [
 // Rookie jobs (rookie: true) draw the shared rookie pool instead of the district crises:
 // those are aimed at 9-14, too hard for a new crew.
 const sharedPool = (m) => (m.rookie ? ROOKIE_CRISES : DISTRICT_CRISES[m.district] ?? []);
-export const MISSIONS = [...BASE_MISSIONS, KIDNAP, CASINO, PENTHOUSE, PROTECTION, CLINIC, HERBAL, LEDGER, CONTAINER, DELIVERY, EVICTION, CHROME, CABLE, SCRUB, FAVOURITE, LAST_TICKET, WRONG_HORSE, PAID_IN_FULL, SECOND_HAND_HEART, BORROWED_GLORY, LAST_SITTING, LOW_WATER]
+export const MISSIONS = [...BASE_MISSIONS, KIDNAP, CASINO, PENTHOUSE, PROTECTION, CLINIC, HERBAL, LEDGER, CONTAINER, DELIVERY, EVICTION, CHROME, CABLE, SCRUB, FAVOURITE, LAST_TICKET, WRONG_HORSE, PAID_IN_FULL, SECOND_HAND_HEART, BORROWED_GLORY, LAST_SITTING, LOW_WATER, A_STEADY_HAND, HOUSE_ADVANTAGE, EXIT_INTERVIEW, COLD_CHAIN, QUIET_HOURS]
   .map((m) => ({ ...m, crises: [...m.crises, ...sharedPool(m)] }));
 
 /** A job's own crises, without the shared district or rookie pool (scripts/check-job.mjs). */
