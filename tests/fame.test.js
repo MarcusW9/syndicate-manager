@@ -245,7 +245,7 @@ test('save v32: a v29 save upgrades straight through, standing from jobs, nobody
   s.crew.push({ ...structuredClone(s.crew[3]), id: 'fx', freelance: true, jobsWithCrew: 30 });
   const st = await importSave({ text: () => Promise.resolve(JSON.stringify(s)) });
   assert.equal(st.version, SAVE_VERSION);
-  assert.equal(SAVE_VERSION, 33); // v33 (the tong rank) upgrades straight through too
+  assert.ok(SAVE_VERSION >= 32); // the chain runs on through later versions (v33: named offers)
   const [ua, ub, uc] = st.crew;
   assert.equal(ua.standing, 50); assert.equal(ub.standing, 12); assert.equal(uc.standing, 0);
   assert.ok(['known', 'respected'].includes(ua.fame), `capped at respected, got ${ua.fame}`);

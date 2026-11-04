@@ -196,13 +196,13 @@ test('damaged save data is kept as it was, and can be thrown away', () => {
   assert.equal(S.unreadableSave(2), null);
 });
 
-// 2026-11-04: the tong's rank replaces tier (v33).
-test('a v32 save upgrades its tier to the tong rank', async () => {
+// 2026-11-04: the tong's rank replaces tier (v34).
+test('a v33 save upgrades its tier to the tong rank', async () => {
   const { rankOf } = await import('../src/core/tong.js');
   const s = createNewGame({ seed: 41, startCrew: 'fresh' });
   delete s.rank;
   s.tier = 'street';
-  s.version = 32;
+  s.version = 33;
   const loaded = await S.importSave({ text: async () => JSON.stringify(s) });
   assert.equal(loaded.version, SAVE_VERSION);
   assert.equal(loaded.tier, undefined);

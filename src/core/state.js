@@ -11,7 +11,7 @@ import { ECONOMY } from '../data/economy.js';
 import { refreshSideBoard } from './sidetasks.js';
 import { refreshArmoury } from './looks.js';
 
-export const SAVE_VERSION = 33;
+export const SAVE_VERSION = 34;
 
 // A rookie crew's first board: small work only.
 export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];
@@ -53,7 +53,7 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
     rumour: null,
     reputation: 0,
     jobGates: false,
-    rank: STARTING_RANK, // the tong's rank (data/tong.js; replaced tier in v33)
+    rank: STARTING_RANK, // the tong's rank (data/tong.js; replaced tier in v34)
     rent: 4000,
     difficulty,
     crew,

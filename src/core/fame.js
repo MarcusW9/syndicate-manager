@@ -10,8 +10,11 @@
 import { PATHS } from '../data/paths.js';
 import {
   FAME_TIERS, FAME_NAMES, FAME_RULES, ELITE_LAPSE, STANDING, STANDING_START, STANDING_WORDS,
-  ELITE_TEXT, ELITE_BACK, ELITE_LOST, FAME_HISTORY, ELITE_HIGHLIGHT_WEIGHT,
+  ELITE_TEXT, ELITE_BACK, ELITE_LOST, FAME_HISTORY, ELITE_HIGHLIGHT_WEIGHT, FAME_RAISE, FAME_RAISE_TEXT,
 } from '../data/fame.js';
+import { hashRng, pick } from './rng.js';
+import { postPayAsk, payAskPending } from './renewals.js';
+import { round50 } from './pricing.js';
 import { isFreelancer } from './freelance.js';
 import { recordOf, workedThisWeek } from './record.js';
 import { addHighlight } from './milestones.js';
@@ -131,7 +134,31 @@ function stepFame(state, op) {
     id: `elite-${op.id}-${state.day}`, type: 'crew', day: state.day,
     subject: fill(msg.subject, vars), body: fill(msg.body, vars), blocking: false, read: false,
   });
+  if (!back) fameRaise(state, op); // only the first time they become Elite
   return next;
+}
+
+/** How likely a new Elite is to ask for more: 35%, more if greedy, less if loyal (data/fame.js FAME_RAISE). */
+export function fameRaiseChance(op) {
+  let c = FAME_RAISE.chance;
+  if (op.traits?.includes('greedy')) c *= FAME_RAISE.greedy;
+  if (op.traits?.includes('loyal')) c *= FAME_RAISE.loyal;
+  return Math.min(1, c);
+}
+
+/**
+ * On first becoming Elite, maybe ask for a raise: the usual pay-rise message (core/renewals.js).
+ * Rolled from a hash of the game, the runner and the day, so it moves no other roll. Skipped if a
+ * pay-rise message for them is already waiting. Mutates state; returns the ask or null.
+ */
+export function fameRaise(state, op) {
+  if (isFreelancer(op) || payAskPending(state, op)) return null;
+  const rng = hashRng(state.seed, 'fame-raise', op.id, state.day);
+  if (rng() >= fameRaiseChance(op)) return null;
+  const ask = Math.max(op.wage + 50, round50(op.wage * pick(rng, FAME_RAISE.steps)));
+  const vars = { op: op.handle, name: op.name, current: op.wage, ask };
+  postPayAsk(state, op, { ask, subject: fill(FAME_RAISE_TEXT.subject, vars), body: fill(FAME_RAISE_TEXT.body, vars), reason: 'fame' });
+  return ask;
 }
 
 /** One job's change in standing for one runner. facts: { atLevel, carries } from recordJob. */

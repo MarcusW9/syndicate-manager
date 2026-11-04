@@ -8,6 +8,12 @@ import { ordersFor, guardHitChance, freeSpots, coverNow, hitFor, BATTLE } from '
 
 let draft = { key: null, sel: null, target: null, orders: {} };
 let rulesOpen = false; // the "?" card: open stays open, fight to fight
+let logOpen = false; // the fight's log on a phone (the feed steps aside there while orders wait)
+/** Phones and tablets in portrait (the map above the panel, styles.css): a shot, flank or talk asks
+ *  which guard after you pick it, so the guard chips only take room when they're needed. */
+const NARROW = '(max-width: 1099px)';
+const narrow = () => typeof window !== 'undefined' && !!window.matchMedia?.(NARROW).matches;
+const AT_GUARD = ['shoot', 'flank', 'talk'];
 
 const pct = (c) => `${Math.round(c * 100)}%`;
 const COVER_WORD = { full: 'full cover', half: 'half cover', open: 'in the open' };
@@ -50,26 +56,42 @@ export function fightTap(am, action, { id, kind, target } = {}) {
   const b = am?.battle;
   if (!b) return;
   current(am);
-  if (action === 'fight-sel') { draft.sel = id; draft.target = null; return; }
-  if (action === 'fight-target') { draft.target = Number(id); return; }
+  if (action === 'fight-sel') { draft.sel = id; draft.target = null; draft.aim = null; return; }
+  if (action === 'fight-target') {
+    draft.target = Number(id);
+    // Picking the guard for the shot, flank or talk you just chose (phone): that's the order.
+    if (draft.aim) { const kind = draft.aim; draft.aim = null; give(b, kind, Number(id)); }
+    return;
+  }
+  if (action === 'fight-more') { draft.menu = !draft.menu; return; }
+  if (action === 'fight-log') { logOpen = !logOpen; return; }
   if (action === 'fight-clear') { delete draft.orders[id ?? draft.sel]; return; }
   if (action === 'fight-pull-ask') { draft.pullAsk = true; return; }
   if (action === 'fight-pull-no') { draft.pullAsk = false; return; }
   if (action === 'fight-rules') { rulesOpen = !rulesOpen; return; }
   if (action === 'fight-order') {
-    const t = ['shoot', 'flank', 'talk', 'move'].includes(kind) ? Number(target) : target || null;
-    const opt = ordersFor(b, draft.sel).find((o) => o.kind === kind && String(o.target ?? '') === String(t ?? ''));
-    if (!opt) return;
+    const t = [...AT_GUARD, 'move'].includes(kind) ? Number(target) : target || null;
     const had = draft.orders[draft.sel];
-    // Tapping the order you gave hands it back to the crew; so does tapping the crew's own pick.
-    if ((had && had.kind === kind && String(had.target ?? '') === String(t ?? '')) || opt.auto) { delete draft.orders[draft.sel]; if (had) return; }
-    else draft.orders[draft.sel] = { kind, target: t };
-    // A move someone else had planned to the same spot goes back to the crew's call.
-    if (kind === 'move') for (const [rid, o] of Object.entries(draft.orders)) if (rid !== draft.sel && o.kind === 'move' && o.target === t) delete draft.orders[rid];
-    // On to the next runner without an order, if there is one.
-    const next = standing(b).find((r) => !draft.orders[r.id] && r.id !== draft.sel);
-    if (next) { draft.sel = next.id; draft.target = null; }
+    // Tapping the order you gave hands it back to the crew.
+    if (had && had.kind === kind && String(had.target ?? '') === String(t ?? '')) { delete draft.orders[draft.sel]; draft.aim = null; return; }
+    // On a phone, a shot, flank or talk asks which guard first (tap it again to put the question away).
+    if (AT_GUARD.includes(kind) && up(b).length > 1 && narrow()) { draft.aim = draft.aim === kind ? null : kind; return; }
+    draft.aim = null;
+    give(b, kind, t);
   }
+}
+
+/** Give the picked runner an order (the crew's own pick hands it back to them), then go on to the next. */
+function give(b, kind, t) {
+  const opt = ordersFor(b, draft.sel).find((o) => o.kind === kind && String(o.target ?? '') === String(t ?? ''));
+  if (!opt) return;
+  if (opt.auto) delete draft.orders[draft.sel];
+  else draft.orders[draft.sel] = { kind, target: t };
+  // A move someone else had planned to the same spot goes back to the crew's call.
+  if (kind === 'move') for (const [rid, o] of Object.entries(draft.orders)) if (rid !== draft.sel && o.kind === 'move' && o.target === t) delete draft.orders[rid];
+  // On to the next runner without an order, if there is one.
+  const next = standing(b).find((r) => !draft.orders[r.id] && r.id !== draft.sel);
+  if (next) { draft.sel = next.id; draft.target = null; }
 }
 
 /** What an order reads as, short: "Flank guard 2", "Move to full cover". */
@@ -130,8 +152,8 @@ export function renderFightOrders(state, esc, face = () => '') {
       <button class="ffo-who" data-action="fight-sel" data-id="${esc(r.id)}" ${r.down ? 'disabled' : ''} aria-pressed="${r.id === draft.sel}">
         ${face(r.id)}
         <span class="ffo-who__main">
-          <span class="ffo-who__top"><strong>${esc(r.handle)}</strong>${r.down ? '' : `<span class="ffo-cover ffo-cover--${coverNow(r)}">${coverNow(r)}</span>`}</span>
-          <span class="ffo-hp ${hp < 0.25 ? 'is-crit' : hp < 0.5 ? 'is-low' : ''}"><span class="ffo-hpbar" aria-hidden="true"><i style="width:${Math.round(hp * 100)}%"></i></span>${r.down ? 'down' : `${r.hp}/${r.max}`}${aim.length ? ` · <b>${aim.length} aiming</b>` : ''}</span>
+          <span class="ffo-who__top"><strong>${esc(r.handle)}</strong>${r.down ? '' : `<span class="ffo-cover ffo-cover--${coverNow(r)}">${coverNow(r)}</span>`}${aim.length ? `<b class="ffo-aimed" aria-label="${aim.length} aiming at them, ${pct(guardHitChance(b, r))} to hit">⌖${aim.length} · ${pct(guardHitChance(b, r))}</b>` : ''}</span>
+          <span class="ffo-hp ${hp < 0.25 ? 'is-crit' : hp < 0.5 ? 'is-low' : ''}"><span class="ffo-hpbar" aria-hidden="true"><i style="width:${Math.round(hp * 100)}%"></i></span>${r.down ? 'down' : `${r.hp}/${r.max}`}</span>
         </span>
       </button>
       ${tag}
@@ -147,7 +169,7 @@ export function renderFightOrders(state, esc, face = () => '') {
     const pick = (o) => (mine ? same(mine, o) : false);
     const g = b.guards.find((x) => x.n === n);
     // name, the big number (blank when nothing rolls), what it does in a line, the crew's pick badge.
-    const btn = (o, label, note, odds = pct(o.chance)) => `<button class="ffo-act ${pick(o) ? 'is-on' : ''} ${!mine && same(auto, o) ? 'is-call' : ''}" data-action="fight-order" data-kind="${o.kind}" data-target="${esc(o.target ?? '')}" aria-pressed="${pick(o)}">
+    const btn = (o, label, note, odds = pct(o.chance)) => `<button class="ffo-act ${pick(o) ? 'is-on' : ''} ${!mine && same(auto, o) ? 'is-call' : ''} ${draft.aim === o.kind ? 'is-aim' : ''}" data-action="fight-order" data-kind="${o.kind}" data-target="${esc(o.target ?? '')}" aria-pressed="${pick(o)}">
         <b>${esc(label)}${o.auto ? ' <i>crew\'s pick</i>' : ''}</b><em>${odds}</em><span>${esc(note)}</span></button>`;
     const of = (kind, t = undefined) => opts.find((o) => o.kind === kind && (t === undefined || o.target === t));
     const list = [];
@@ -171,8 +193,9 @@ export function renderFightOrders(state, esc, face = () => '') {
     const lights = of('lights');
     if (lights) list.push(btn(lights, 'Kill the lights', 'the guards hit less for the rest of the fight'));
     // The guards, numbered as on the map, with this runner's shot at each; anyone down greyed, in place.
+    const aimKind = draft.aim && of(draft.aim) ? draft.aim : null;
     const guards = b.guards.map((x) => {
-      const s = of('shoot', x.n);
+      const s = of(aimKind ?? 'shoot', x.n);
       return x.out ? `<span class="ffo-target is-out">Guard ${x.n} <span>down</span></span>`
         : `<button class="ffo-target ${x.n === n ? 'is-on' : ''}" data-action="fight-target" data-id="${x.n}" aria-pressed="${x.n === n}">Guard ${x.n}${s ? ` <em>${pct(s.chance)}</em>` : ''} <span>${x.hp}/${x.max} · ${esc(COVER_WORD[coverNow(x)])}${x.armour ? ` · armour ${x.armour}` : ''}</span></button>`;
     }).join('');
@@ -181,7 +204,7 @@ export function renderFightOrders(state, esc, face = () => '') {
       <div class="ffo-tray">
         <p class="ffo-tray__who"><strong>${esc(sel.handle)}</strong> <span>${esc(kitWord(sel))}</span></p>
         ${threats.length ? `<p class="ffo-threat">${threats.map(esc).join('<br>')}</p>` : ''}
-        <div class="ffo-targets" role="group" aria-label="Which guard">${guards}</div>
+        <div class="ffo-targets ${aimKind ? 'is-aiming' : ''}" role="group" aria-label="Which guard">${aimKind ? `<p class="ffo-aimq">${{ shoot: 'Shoot', flank: 'Flank', talk: 'Talk down' }[aimKind]} which guard? <span>Tap one here or on the map.</span></p>` : ''}${guards}</div>
         <div class="ffo-acts">${list.join('')}</div>
       </div>`;
   }
@@ -191,6 +214,13 @@ export function renderFightOrders(state, esc, face = () => '') {
   const theirs = standing(b).length - yours;
   const go = !yours ? "all the crew's call" : !theirs ? 'all yours' : `${yours} yours, ${theirs} crew's call`;
   const cost = `no pay, heat +${BATTLE.retreat.heat}, reputation −${BATTLE.retreat.rep}${b.van ? '' : ', and the guards get a parting shot (nobody goes down from it)'}`;
+  // A phone's log (the feed steps aside while orders wait): the latest line, tap for this fight's play-by-play.
+  const fightEvents = (() => { const ev = (am.events ?? []).filter((e) => e.kind === 'battle'); const i = ev.findLastIndex((e) => e.phase === 'start'); return i < 0 ? [] : ev.slice(i); })();
+  const logLines = fightEvents.flatMap((e) => (e.phase === 'round' ? [{ head: `Round ${e.round}` }, ...e.lines.map((l) => ({ text: l.text, bad: l.kind === 'guard' ? !!l.damage : l.success === false }))] : e.text ? [{ text: e.text, bad: false }] : []));
+  const latest = last ? `Round ${last.round}: ${last.lines.filter((l) => l.damage || l.dropped).map((l) => l.text).slice(0, 2).join(' ') || 'nobody hit.'}` : fightEvents[0]?.text ?? '';
+  const log = `
+      <button class="ffo-log" data-action="fight-log" aria-expanded="${logOpen}"><span>${esc(latest)}</span><small>Log ${logOpen ? '▴' : '▾'}</small></button>
+      ${logOpen ? `<div class="ffo-loglist">${logLines.map((l) => (l.head ? `<b>${esc(l.head)}</b>` : `<p class="${l.bad ? 'tone--bad' : ''}">${esc(l.text)}</p>`)).join('')}</div>` : ''}`;
   const bar = draft.pullAsk
     ? `<div class="ffo-confirm" role="alertdialog" aria-label="Pull back?">
         <p><strong>Pull back?</strong> The job ends and everyone comes home: ${esc(cost)}.</p>
@@ -204,6 +234,11 @@ export function renderFightOrders(state, esc, face = () => '') {
         <button class="btn btn--ghost" data-action="fight-auto">Auto round</button>
         <button class="btn btn--ghost" data-action="fight-hand-off">Auto fight</button>
         <button class="btn btn--primary ffo-go" data-action="fight-go">Go <small>· ${esc(go)}</small></button>
+        <button class="btn btn--ghost ffo-more" data-action="fight-more" aria-expanded="${!!draft.menu}" aria-label="More: auto round, auto fight">⋯</button>
+        ${draft.menu ? `<div class="ffo-menu" role="menu">
+          <button role="menuitem" data-action="fight-auto">Auto round<small>Play this round on the crew's calls</small></button>
+          <button role="menuitem" data-action="fight-hand-off">Auto fight<small>Leave the rest of this fight to them</small></button>
+        </div>` : ''}
       </div>`;
   return `
     <div class="ffo" data-callin="fight:${esc(draft.key)}">
@@ -214,6 +249,7 @@ export function renderFightOrders(state, esc, face = () => '') {
         <p>Anyone without an order does what the crew would: their call shows faded on their row and on the map. Go plays the round. Auto round plays one on the crew's calls; Auto fight leaves the rest of this fight to them.</p>
         <p>Pull back ends the job and everyone comes home: ${esc(cost)}.</p>
       </div>` : ''}
+      ${log}
       ${last ? `<details class="ffo-last"><summary>Round ${last.round}: ${last.lines.filter((l) => l.damage || l.dropped).length ? esc(last.lines.filter((l) => l.damage || l.dropped).map((l) => l.text).slice(0, 2).join(' ')) : 'nobody hit'}</summary>${last.lines.map((l) => `<p class="${l.kind === 'guard' ? (l.damage ? 'tone--bad' : 'tone--good') : l.success === false ? 'tone--bad' : 'tone--good'}">${esc(l.text)}</p>`).join('')}</details>` : ''}
       ${intents.length ? '' : '<p class="ffo-intents--none">The guards are caught off balance: no shots from them this round.</p>'}
       <div class="ffo-crew">${b.runners.map(row).join('')}</div>

@@ -504,11 +504,21 @@ function migrate(state) {
     state.version = 32;
   }
   if (state.version === 32) {
-    // v33: the tong's rank replaces tier (DESIGN.md 2026-11-04). Tier never moved off 'street' and
+    // v33: fame's payoffs (renown slice 4). An offer can ask for a runner by name (job.askedFor,
+    // carried onto the run as am.askedFor), at most one a week (state.namedOfferWeek). None yet on
+    // an old save. Pay-rise messages gain payload.reason ('growth' or 'fame'); old ones are growth.
+    for (const job of state.jobs ?? []) job.askedFor = job.askedFor ?? null;
+    for (const am of [state.activeMission, ...(state.awayJobs ?? []).map((j) => j.mission)]) if (am) am.askedFor = am.askedFor ?? null;
+    state.namedOfferWeek = state.namedOfferWeek ?? null;
+    for (const m of state.inbox ?? []) if (m.kind === 'renewal' && m.payload) m.payload.reason = m.payload.reason ?? 'growth';
+    state.version = 33;
+  }
+  if (state.version === 33) {
+    // v34: the tong's rank replaces tier (DESIGN.md 2026-11-04). Tier never moved off 'street' and
     // nothing read it, and ranks have no gates yet, so every tong starts at the first rank.
     delete state.tier;
     state.rank = STARTING_RANK;
-    state.version = 33;
+    state.version = 34;
   }
   return state;
 }

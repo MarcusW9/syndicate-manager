@@ -19,7 +19,7 @@ import { createNewGame, chooseFounders } from '../core/state.js';
 import { marksText } from '../core/marks.js';
 import { recordOf } from '../core/record.js';
 import { fameOf, fameName, standingOf, standingWord, pathOf, legendProgress } from '../core/fame.js';
-import { FAME_RULES } from '../data/fame.js';
+import { FAME_RULES, NAMED_OFFER, NAMED_TEXT } from '../data/fame.js';
 import { templateById, jobView, nextUnlock, JOB_GATES } from '../core/jobs.js';
 import { trustLabel, trustOf } from '../core/clients.js';
 import { CLIENTS } from '../data/clients.js';
@@ -247,7 +247,7 @@ function onClick(e) {
     case 'watch-latest': return showLatest();
     case 'pending': return setState(resolvePending(state, id));
     // Command fights (ui/fightorders.js): pick, target and order are the player's draft; the rest play the round.
-    case 'fight-sel': case 'fight-target': case 'fight-clear': case 'fight-order': case 'fight-pull-ask': case 'fight-pull-no': case 'fight-rules':
+    case 'fight-sel': case 'fight-target': case 'fight-clear': case 'fight-order': case 'fight-pull-ask': case 'fight-pull-no': case 'fight-rules': case 'fight-more': case 'fight-log':
       fightTap(state.activeMission, action, { id, kind: t.dataset.kind, target: t.dataset.target });
       break;
     case 'fight-go': return setState(runBattle(state, takeOrders()));
@@ -899,7 +899,8 @@ function renderRenewal(m) {
           <div><dt>Asking</dt><dd>${money(p.ask)}</dd></div>
           <div><dt>Market value</dt><dd>${money(p.market)}</dd></div>
         </dl>
-        <p class="muted small">Loyalty: ${p.jobs} job${p.jobs === 1 ? '' : 's'} with the crew, ${pct}% off the raise${pct >= 25 ? ' (the most loyalty buys)' : ''}.</p>
+        ${p.reason === 'fame' ? '<p class="muted small">They became Elite: the street knows the name. Loyal runners ask less often; greedy ones more.</p>'
+          : `<p class="muted small">Loyalty: ${p.jobs} job${p.jobs === 1 ? '' : 's'} with the crew, ${pct}% off the raise${pct >= 25 ? ' (the most loyalty buys)' : ''}.</p>`}
         ${p.haggleResult ? `<p class="muted">${esc(p.haggleResult)}</p>` : ''}
         ${p.outcome ? `<p><strong>${esc(p.outcome)}</strong></p>` : ''}
       </div>
@@ -1289,8 +1290,13 @@ function boardRead(job) {
  * What's unusual about an offer, most important first, at most two. Usual facts (district, threat,
  * client mood, days left) stay on the planning screen: the card only speaks up when there's news.
  */
+const namedHandle = (v) => (v.askedFor ? state.crew.find((o) => o.id === v.askedFor)?.handle ?? null : null);
+const namedVars = (v) => ({ op: namedHandle(v), pct: Math.round(NAMED_OFFER.payBonus * 100) });
+const fillNamed = (text, v) => text.replace(/\{(\w+)\}/g, (m, k) => namedVars(v)[k] ?? m);
+
 function jobFlags(v) {
   const flags = [];
+  if (namedHandle(v)) flags.push(['named', fillNamed(NAMED_TEXT.chip, v)]); // a client asked for an Elite by name (renown slice 4)
   if (v.hinted) flags.push(['bad', 'Intel unreliable']);
   if (v.rumour) flags.push([v.threatDelta > 0 ? 'hot' : v.threatDelta < 0 ? 'good' : 'info', `Street talk: ${v.rumour.tag}`]);
   else if (v.threatDelta > 0) flags.push(['hot', 'Hotter than usual']);
@@ -1502,6 +1508,7 @@ function renderPlan() {
         ${v.client ? `<p class="muted small">${esc(v.client.desc)}</p>` : ''}
         ${v.threatDelta ? `<p class="muted small">Every roll on this job is ${Math.abs(v.threatDelta) === 1 ? 'one point' : `${Math.abs(v.threatDelta)} points`} ${v.threatDelta > 0 ? 'harder' : 'easier'} than usual.</p>` : ''}
         ${v.hinted ? '<p class="intel">Intel unreliable: something about this job may not be what you were told.</p>' : ''}
+        ${namedHandle(v) ? `<p class="named">${esc(fillNamed(NAMED_TEXT.chip, v))} by name: ${esc(fillNamed(NAMED_TEXT.bonus, v))} (inside, outside or on standby). Without them it pays as usual.</p>` : ''}
         ${v.rumour ? `<p class="talk-tag">Street talk: ${esc(v.rumour.text)}</p>` : ''}
         ${intel ? `<p class="talk-tag">Intel from ${esc(intel.source)}: +${intel.bonus} on every roll here until day ${state.intel[t.district].until}.</p>` : ''}
       </div>

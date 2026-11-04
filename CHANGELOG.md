@@ -7,12 +7,26 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 ## 2026-11-04 · You run a tong
 - **Your organisation is now a tong** (堂, "hall"): a registered association, a bit like a guild. The top bar shows its rank, which is how far its name carries: Back Room, Street, District, City, Harbour. Tap the rank for Joss's explanation.
-- Every tong starts in the back room, and older saves do too: moving up the ranks comes in a later update. **Save format v33.**
+- Every tong starts in the back room, and older saves do too: moving up the ranks comes in a later update. **Save format v34.**
 
 ## 2026-11-04 · Any job can be sent hands-off
 - **Every job can now be sent off on its own**, not only rookie work. On the planning screen, "Call me in: never" is offered for every job; the crew goes away and the report comes back when they do. Everything still starts on "risky", so sending a crew away is always your choice.
 - As before, a hands-off crew never pushes on with a critical wound: at worst they pull out. That's now tested on every job, under every order, full-handed and short-handed.
 - This is the first step towards running a bigger organisation with several crews out at once (the plan is in the design log).
+## 2026-11-04 · Docs brought up to date
+- Docs only, no game change: `HANDOFF.md` now describes `main` as of #60 (save v33, 525 tests, renown slices 1-4 built, what's next). `README.md` has a current status list and doc index. `docs/ARCHITECTURE.md`, `DATA.md` and the `STATE-OF-PLAY.md` banner know about save v33. `PLAN-PROGRESSION.md` marks step 2 as mostly covered by later work and step 3 as not built.
+
+## 2026-11-04 · Fame pays off (renown, slice 4)
+- **Clients ask for your Elites by name.** About one week in five, once you have an Elite with standing 50 or more, a new client job asks for them (the best-rated one). The job card says "Asks for Tofu". Send them, inside, outside or on standby, and it pays 15% more; send others and it's an ordinary job at its ordinary pay. One a week at most, never rookie work.
+- **A new Elite may ask for a raise.** The first time someone becomes Elite there's a 35% chance they want more (more likely if Greedy, less if Loyal), for 10% to 30% on top of their wage. It's the usual pay-rise message: accept, haggle or refuse (refusing makes them unhappy for four weeks). Winning Elite back later doesn't bring another ask.
+- **Better recruits come looking** once anyone on the crew is Elite: more pros and veterans among the leads (rookie 42%, pro 42%, veteran 16%, from 50/38/12).
+- Money: on long careful runs, median cash at week 52 is about 2% higher (¥39,750 to ¥40,450). If every fame raise were accepted it would cost about as much as named offers bring in. Nothing about rolls, heat or the risk read changes; the early game (to week 26) is unchanged. **Save format v33.**
+
+## 2026-11-03 · Fights on a phone
+- On a phone or an iPad in portrait, a fight waiting for your orders now fits on one screen: the map stays at the top, your crew is a strip you can swipe sideways, and Go sits in a bar at the bottom with Pull back and "⋯" (Auto round, Auto fight).
+- The play-by-play becomes one line (the latest thing that happened); tap it to read the whole fight so far.
+- Pick Shoot, Flank or Talk and the game asks which guard, showing your chance against each; tap one in the list or on the map.
+- Each crew card shows how many guards are aiming at them and their chance to hit.
 
 ## 2026-11-03 · Elite is rarer
 - **Elite now needs 60 jobs at their level** (was 20), or 120 jobs for a Lifer (was 40). On careful play the first Elite now comes around week 26 (weeks 23 to 35) instead of week 12, and a crew has one or two Elites by week 52 instead of four. Legend's readiness now asks for 120 jobs at their level (was 40). Still nothing about rolls, pay or heat.
