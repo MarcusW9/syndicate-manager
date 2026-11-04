@@ -1325,7 +1325,7 @@ function jobFlags(v) {
   else if (v.threatDelta > 0) flags.push(['hot', 'Hotter than usual']);
   else if (v.threatDelta < 0) flags.push(['good', 'Quieter than usual']);
   if (intelFor(state, v.tpl.district)) flags.push(['good', 'Intel here']);
-  if (v.tpl.days > 1) flags.push(['info', `${v.tpl.days}-day job`]);
+  if (v.days > 1) flags.push(['info', `${v.days}-day job`]);
   return flags.slice(0, 2);
 }
 
@@ -1522,7 +1522,7 @@ function renderPlan() {
     <section class="panel">
       <button class="btn btn--ghost" data-action="back">← Jobs</button>
       <h1>${esc(t.name)}</h1>
-      <p class="muted">${esc(districtName(t.district))}${districtTurf(t.district)} · threat ${threatHtml(v)} · pays ${money(v.pay)} · crew away ${t.days}d · ${daysLeft(job.expiresDay)}</p>
+      <p class="muted">${esc(districtName(t.district))}${districtTurf(t.district)} · threat ${threatHtml(v)} · pays ${money(v.pay)} · crew away ${v.days}d · ${daysLeft(job.expiresDay)}</p>
       ${DISTRICTS[t.district] ? `<p class="muted small">${esc(DISTRICTS[t.district].pitch)}</p>` : ''}
       <p class="body">${esc(fillBrief(t))}</p>
       <div class="plangrid">
@@ -1564,7 +1564,7 @@ function renderPlan() {
       </div>
 
       <div class="plangrid__orders">
-      ${renderCallIns(t)}
+      ${renderCallIns(t, v.days)}
       </div>
       </div>
     </section>
@@ -1604,12 +1604,12 @@ function freelancersFull() {
 }
 
 /** When the crew calls you in, and how they decide when they don't (core/autorun.js ORDERS). */
-function renderCallIns(t) {
+function renderCallIns(t, days = t.days) {
   const orders = ORDERS[plan.orders] ? plan.orders : 'steady';
   const callIn = CALL_IN[plan.callIn] ? plan.callIn : 'risky';
   const canSend = handsOffAllowed(t);
   const mode = canSend && plan.mode !== 'live' ? 'away' : 'live';
-  const modes = { away: ['Send them', `They go and do it over ${t.days === 1 ? 'the day' : 'the days it takes'}. Today shows what they did; they call when it's beyond their orders.`], live: ['Watch live', 'You watch the whole job now, on the map.'] };
+  const modes = { away: ['Send them', `They go and do it over ${days === 1 ? 'the day' : `${days} days`}. Today shows what they did; they call when it's beyond their orders.`], live: ['Watch live', 'You watch the whole job now, on the map.'] };
   return `
       <h2>How</h2>
       ${canSend ? `<div class="segmented">
