@@ -37,6 +37,7 @@ import {
 } from '../core/mission.js';
 import { renderFightOrders, fightTap, takeOrders } from './fightorders.js';
 import { sendOff, ORDERS, handsOffAllowed, autoStep, needsPlayer } from '../core/autorun.js';
+import { takeCall, letThemRun, takeCommand, crewsOut, dayDone } from '../core/away.js';
 import { OVERWATCH_KIT, ALERT_MAX } from '../core/incidents.js';
 import { leanPicks, jobRead, planRead } from '../core/squad.js';
 import { renderBoard, renderPicker, renderCoverage, assignSlot, planKit } from './board.js';
@@ -192,7 +193,7 @@ function onClick(e) {
       screen = 'jobs';
       const job = state.jobs.find((j) => j.id === id);
       const r = job ? boardRead(job) : null;
-      plan = { jobId: id, crew: r ? r.picks.crew : [], approach: r ? r.approach : 'stealth', orders: 'steady', callIn: 'risky',
+      plan = { jobId: id, crew: r ? r.picks.crew : [], approach: r ? r.approach : 'stealth', orders: 'steady', callIn: 'risky', mode: 'away',
         overwatch: r?.picks.overwatch ?? null, kit: r?.picks.kit ?? null, wheels: r?.picks.wheels ?? null, standby: r?.picks.standby ?? null };
       break;
     }
@@ -212,6 +213,7 @@ function onClick(e) {
     case 'approach': plan.approach = id; break;
     case 'orders': plan.orders = id; break;
     case 'callin': plan.callIn = id; break;
+    case 'mode': plan.mode = id; break; // send them away, or watch live (DESIGN.md 2026-11-04)
     case 'kit': plan.kit = id; break;
     case 'open-side': sidePlan = { taskId: id, crew: [] }; break;
     case 'toggle-side-crew': {
@@ -257,6 +259,10 @@ function onClick(e) {
     case 'choose': return setState(chooseOption(state, id));
     case 'critical': return setState(resolveCritical(state, id));
     case 'close-mission': screen = 'inbox'; return setState(closeMission(state));
+    // Away crews calling in (core/away.js): take the call, then hand it back or take command.
+    case 'take-call': openMessageId = null; return setState(takeCall(state, id));
+    case 'let-run': screen = 'inbox'; return setState(letThemRun(state));
+    case 'take-command': return setState(takeCommand(state));
     case 'export':
       state.lastBackupDay = state.day;
       saveGame(state);
@@ -617,6 +623,7 @@ function renderInbox() {
         <section class="panel inbox__list">
           <h1>Today</h1>
           ${renderBriefing()}
+          ${renderCrewsOut()}
           ${list}
         </section>
       </div>
@@ -624,6 +631,21 @@ function renderInbox() {
         ${open ? renderMessage(open) : '<p class="muted inbox__empty">Tap a message to read it here.</p>'}
       </section>
     </div>`;
+}
+
+/** Crews out on jobs: where each is, what they did today, and a call waiting (core/away.js). */
+function renderCrewsOut() {
+  const out = crewsOut(state);
+  if (!out.length) return '';
+  return `
+    <ul class="crewsout" aria-label="Crews out">
+      ${out.map((c) => `
+        <li class="crewsout__job ${c.waiting ? 'is-waiting' : ''}">
+          <p class="crewsout__head"><strong>${esc(c.name)}</strong> <span class="muted small">${esc(c.crew)} · ${c.day ? `day ${c.day} of ${c.days}` : 'leaving'}</span></p>
+          ${c.lines.map((l) => `<p class="small">${crewLinks(l)}</p>`).join('')}
+          ${c.waiting ? `<button class="btn btn--primary" data-action="take-call" data-id="${esc(c.jobId)}">Take the call</button>` : ''}
+        </li>`).join('')}
+    </ul>`;
 }
 
 /** "A, B and C". */
@@ -765,6 +787,7 @@ function renderMessage(m) {
       ${m.kind === 'renewal' ? renderRenewal(m) : ''}
       ${m.kind === 'heat' ? renderHeatNotice(m) : ''}
       ${m.kind === 'spec' ? renderSpecOffer(m) : ''}
+      ${m.kind === 'callin' && !m.resolved ? `<button class="btn btn--primary" data-action="take-call" data-id="${esc(m.payload.jobId)}">Take the call</button>` : ''}
       ${jobLink}`;
 }
 
@@ -1552,7 +1575,7 @@ function renderPlan() {
         <span class="planbar__why">${esc(picked.length ? toughWhy : `Pick up to ${most}; ${t.crewSize} recommended`)}</span>
       </div>
       ${(() => {
-        const away = plan.callIn === 'never' && handsOffAllowed(t);
+        const away = plan.mode !== 'live' && handsOffAllowed(t);
         return `<button class="btn btn--primary" data-action="${away ? 'send-job' : 'start-job'}" ${plan.crew.length ? '' : 'disabled'}>
         ${plan.crew.length ? `${away ? 'Send' : 'Start with'} ${plan.crew.length + [plan.overwatch, plan.wheels, plan.standby].filter(Boolean).length}` : 'Pick a crew'}
       </button>`;
@@ -1584,14 +1607,20 @@ function freelancersFull() {
 function renderCallIns(t) {
   const orders = ORDERS[plan.orders] ? plan.orders : 'steady';
   const callIn = CALL_IN[plan.callIn] ? plan.callIn : 'risky';
-  const away = handsOffAllowed(t);
+  const canSend = handsOffAllowed(t);
+  const mode = canSend && plan.mode !== 'live' ? 'away' : 'live';
+  const modes = { away: ['Send them', `They go and do it over ${t.days === 1 ? 'the day' : 'the days it takes'}. Today shows what they did; they call when it's beyond their orders.`], live: ['Watch live', 'You watch the whole job now, on the map.'] };
   return `
+      <h2>How</h2>
+      ${canSend ? `<div class="segmented">
+        ${Object.entries(modes).map(([k, [name, desc]]) => `
+          <button class="seg ${mode === k ? 'is-on' : ''}" data-action="mode" data-id="${k}" aria-pressed="${mode === k}"><strong>${esc(name)}</strong><span>${esc(desc)}</span></button>`).join('')}
+      </div>` : '<p class="muted small">This job can\'t be sent off on its own: you\'ll watch this one.</p>'}
       <h2>Call me in…</h2>
       <div class="segmented">
-        ${Object.entries(CALL_IN).filter(([k]) => k !== 'never' || away).map(([k, c]) => `
+        ${Object.entries(CALL_IN).map(([k, c]) => `
           <button class="seg ${callIn === k ? 'is-on' : ''}" data-action="callin" data-id="${k}" aria-pressed="${callIn === k}"><strong>${esc(c.name)}</strong><span>${esc(c.desc)}</span></button>`).join('')}
       </div>
-      ${away ? '' : '<p class="muted small">This job can\'t be sent off on its own: you\'ll watch this one.</p>'}
       ${callIn === 'every' ? '' : `
       <h2>When they decide themselves</h2>
       <p class="muted small">Their orders decide each call they don't bring to you. They never push on with a critical wound: at worst, they pull out.</p>
@@ -1677,7 +1706,7 @@ function renderMission() {
   }
   return `
     <section class="panel mission">
-      <p class="muted small">On the job · ${esc(APPROACHES[am.approach]?.name ?? '')} approach · ${esc(crewNames)}${ow ? ` · ${esc(ow.handle)} on overwatch (${esc(OVERWATCH_KIT[am.overwatch.kit].name.toLowerCase())})` : ''}${outsider(am.wheels, 'at the wheel')}${am.standby && !am.standby.joined ? outsider(am.standby.id, 'on standby') : ''}</p>
+      <p class="muted small">${am.away ? `${am.away.command ? 'Under your command' : `Away · day ${am.away.day ?? 1} of ${am.days ?? t.days}`}` : 'On the job'} · ${esc(APPROACHES[am.approach]?.name ?? '')} approach · ${esc(crewNames)}${ow ? ` · ${esc(ow.handle)} on overwatch (${esc(OVERWATCH_KIT[am.overwatch.kit].name.toLowerCase())})` : ''}${outsider(am.wheels, 'at the wheel')}${am.standby && !am.standby.joined ? outsider(am.standby.id, 'on standby') : ''}</p>
       <h1>${esc(t.name)}</h1>
       ${renderWatch(watchUi, state, result)}
     </section>`;
@@ -1695,6 +1724,18 @@ function fightHealth({ runners, guards }) {
 
 function renderCallIn(s) {
   const am = s.activeMission;
+  if (dayDone(am)) {
+    const days = am.days ?? templateById(am.templateId).days;
+    return `
+      <div class="crisis" data-callin="day-done">
+        <p class="crisis__title">That's day ${am.away.day ?? 1} of ${days} done</p>
+        <p>They'll carry on tomorrow on their orders, and call if they need you. Or stay on the line and play the rest now.</p>
+        <div class="stack">
+          <button class="btn btn--primary" data-action="let-run">Let them carry on</button>
+          <button class="btn btn--ghost" data-action="take-command">Take command: play the rest now</button>
+        </div>
+      </div>`;
+  }
   if (am.critical) {
     const v = describeCritical(s);
     return `

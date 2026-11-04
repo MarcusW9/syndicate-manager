@@ -1309,3 +1309,12 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 /* Named offers (renown slice 4): a client asked for an Elite by name */
 .flag--named { color: var(--warn); font-weight: 600; }
 .named { color: var(--warn); margin: 6px 0; }
+
+/* Crews out on Today (core/away.js, 2026-11-04): one block per away job, a cyan rule on the left;
+   a crew waiting on a call turns the rule yellow. */
+.crewsout { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 8px; }
+.crewsout__job { border-left: 2px solid var(--accent-2); background: var(--panel-2, var(--panel)); padding: 8px 12px; display: grid; gap: 4px; }
+.crewsout__job p { margin: 0; }
+.crewsout__job.is-waiting { border-left-color: var(--warn); }
+.crewsout__head strong { font-family: var(--display, inherit); letter-spacing: 0.04em; }
+.crewsout__job .btn { margin-top: 6px; justify-self: start; }

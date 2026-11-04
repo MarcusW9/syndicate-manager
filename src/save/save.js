@@ -520,5 +520,11 @@ function migrate(state) {
     state.rank = STARTING_RANK;
     state.version = 34;
   }
+  if (state.version === 34) {
+    // v35: away jobs play a share a day and can call in (core/away.js). A job already out gets its
+    // beat count (none reached yet: it plays from where it is) and isn't waiting on a call.
+    for (const j of state.awayJobs ?? []) { j.mission.away = j.mission.away ?? { beats: 0 }; j.waiting = false; j.today = null; }
+    state.version = 35;
+  }
   return state;
 }
