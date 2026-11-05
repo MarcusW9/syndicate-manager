@@ -1,5 +1,6 @@
 // Crew helpers: availability, effective stats, role lookup. Pure logic.
 
+import { HOME_HALL } from '../data/halls.js';
 import { TRAITS } from '../data/traits.js';
 import { statusRollMods } from './statuses.js';
 import { ownMods, jobMods } from './earned.js';
@@ -20,6 +21,7 @@ export function availability(state, op) {
   if (c.injury === 'serious' || c.injury === 'critical') return { ok: false, reason: `${c.injury} injury, ${c.injuryDays}d` };
   if (isAway(state, op)) return { ok: false, reason: `away until day ${c.awayUntil}` };
   if (op.settlingDay === state.day) return { ok: false, reason: 'settling in' }; // moved halls today (core/halls.js)
+  if (!op.freelance && ((state.halls ?? []).find((h) => h.district === (op.hall ?? HOME_HALL))?.shutUntil ?? 0) > state.day) return { ok: false, reason: 'lying low (hall shut)' }; // after a raid (core/raids.js)
   if (c.fatigue > 85) return { ok: false, reason: 'exhausted' };
   if (op.traits.includes('superstitious') && state.day % 10 === 4) return { ok: false, reason: 'unlucky day (ends in 4)' };
   return { ok: true, reason: c.fatigue > 60 ? 'fatigued' : c.injury === 'light' ? 'light injury' : 'ready' };

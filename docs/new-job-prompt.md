@@ -76,7 +76,8 @@ therapies; Glass Heights), Hoi-Sing Grid & Cable (the power company; Old Town an
 Market nodes). Gangs: Red Lanterns (Docks road tolls), Silver Fan Circle (Night Market
 loans, gambling, fake implants), Brass Anchor Society (Old Town elders resisting
 buyouts). Police: Harbour Police 4th Precinct, the "Wet Sleeve" unit (corrupt; fines
-crews at "neural-load checks"). Institution: Lantern Bay Racing Association (racing, licensed betting, old and
+crews at "neural-load checks"; a hot district brings a raid on a tong's hall, and only
+the Wet Sleeve, on its own patch, will sell one off). Institution: Lantern Bay Racing Association (racing, licensed betting, old and
 well connected; fears race fixing above all). Wildcard: Ghost Circuit (data liberators in Old Town's
 drainage tunnels and bomb shelters).
 

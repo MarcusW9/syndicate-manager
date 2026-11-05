@@ -580,6 +580,11 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .cm-tag--heat-low { stroke: var(--line); } .cm-tag__txt--heat-low { fill: var(--muted); }
 .cm-tag--heat-warm { stroke: #ff9a3d; } .cm-tag__txt--heat-warm { fill: #ff9a3d; }
 .cm-tag--heat-hot { stroke: var(--danger); } .cm-tag__txt--heat-hot { fill: var(--danger); }
+/* A raid warned on a hall (2026-11-05): a red ring round the district's plate that breathes outwards, and a RAID tag. Still for reduced motion. */
+.cm-raid { fill: none; stroke: var(--danger); stroke-width: 1.5; opacity: 0.9; pointer-events: none; }
+.cm-raid--pulse { transform-box: fill-box; transform-origin: center; animation: cm-raid 2.2s ease-out infinite; }
+@keyframes cm-raid { from { transform: scale(1); opacity: 0.8; } to { transform: scale(1.35); opacity: 0; } }
+.cm-tag--raid { stroke: var(--danger); fill: #2a1218; } .cm-tag__txt--raid { fill: var(--danger); }
 /* A little life: a ferry light crosses, the picked district's edge breathes, street talk blinks.
    Still for reduced motion. */
 .map-ferry { fill: var(--warn); animation: map-ferry 14s ease-in-out infinite alternate; }
@@ -587,7 +592,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 @keyframes map-pick { 50% { opacity: 0.8; } }
 .map-talk { fill: var(--warn); pointer-events: none; animation: map-talk 1.8s ease-in-out infinite; }
 @keyframes map-talk { 50% { opacity: 0.3; } }
-@media (prefers-reduced-motion: reduce) { .map-talk, .map-ferry, .cm-d.is-selected .cm-d__area { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .map-talk, .map-ferry, .cm-d.is-selected .cm-d__area, .cm-raid--pulse { animation: none; } .cm-raid--pulse { display: none; } }
 /* City sub-tabs: one section at a time so the map screen fits a phone. */
 .cityhead { margin-bottom: 8px; }
 .subtabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid var(--line); margin: 0 0 4px; }
@@ -1031,7 +1036,7 @@ p > .infobtn { display: inline-grid; vertical-align: 2px; margin-left: 4px; }
 /* District sites (data/sites.js, slice 4). */
 .sp-water { fill: #0d1620; } .sp-jetty { fill: #2a2f3b; } .sp-desk { fill: #222837; }
 .sp-cable { stroke: var(--accent-2); stroke-width: 1.2; stroke-dasharray: 3 2; opacity: 0.6; } .sp-cot { fill: #2a303b; }
-.sp-yard { fill: #10141a; } .sp-alley { fill: #12141a; } .sp-step { fill: #2a2f3b; }
+.sp-wall { stroke: #4a5266; stroke-width: 2; } .sp-yard { fill: #10141a; } .sp-alley { fill: #12141a; } .sp-step { fill: #2a2f3b; }
 .sp-room { fill: #1d1520; stroke: var(--accent); stroke-width: 1; stroke-dasharray: 2 2; }
 .sp-block { fill: #141820; stroke: #2f3644; stroke-width: 1; }
 .sp-window { opacity: 0.9; }
@@ -1378,6 +1383,9 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .crewsout__job p { margin: 0; }
 .crewsout__job.is-call { --light: var(--warn); }
 .crewsout__job.is-hurt { --light: var(--danger); }
+.crewsout__job.is-raid { --light: var(--danger); background: #1d1418; } .crewsout__job.is-raid .crewsout__light { animation: light-pulse 1.2s ease-in-out infinite; }
+.citycard__raid { color: var(--danger); font-weight: 600; } .citycard__shut { color: var(--warn); }
+.raidcall .choice--exit { border-color: #2f5f55; }
 .crewsout__job.is-low { --light: var(--muted); }
 .crewsout__top { display: flex; align-items: center; gap: 8px; }
 .crewsout__light { flex: 0 0 10px; height: 10px; border-radius: 50%; background: var(--light); box-shadow: 0 0 8px var(--light); }
@@ -1413,6 +1421,7 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 /* Today's line about the crews out: tap through to City. */
 .outnow { --light: var(--accent-2); width: 100%; min-height: 44px; display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 8px 12px; border: 1px solid var(--line); border-left: 2px solid var(--light); background: var(--panel-2, var(--panel)); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
 .outnow.is-call { --light: var(--warn); }
+.outnow.is-raid { --light: var(--danger); } .outnow.is-raid strong { color: var(--danger); } .outnow.is-raid .outnow__light { animation: light-pulse 1.2s ease-in-out infinite; }
 .outnow > span:nth-child(2) { flex: 1 1 auto; }
 .outnow strong { color: var(--warn); }
 .outnow__light { flex: 0 0 10px; height: 10px; border-radius: 50%; background: var(--light); box-shadow: 0 0 8px var(--light); }
@@ -1455,7 +1464,7 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 @keyframes stamp { from { transform: scale(1.4) rotate(-4deg); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
   .sendoff { animation: cue-still 2.2s step-end forwards; }
-  .sendoff__face, .sendoff__stamp, .back__face, .crewsout__job.is-call .crewsout__light, .outnow.is-call .outnow__light { animation: none; }
+  .sendoff__face, .sendoff__stamp, .back__face, .crewsout__job.is-call .crewsout__light, .outnow.is-call .outnow__light, .crewsout__job.is-raid .crewsout__light, .outnow.is-raid .outnow__light { animation: none; }
 }
 
 /* Monday's briefing on Today (core/week.js, 2026-11-04): four numbers framing the week. */

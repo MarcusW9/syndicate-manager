@@ -108,3 +108,14 @@ side work), then the city. A crew's district lights the map and narrows the list
 briefing, the back cards and one line ("2 crews out · 1 call waiting"); Save is a ☰ button in the
 top bar. Next: raids with an exit (warnings and call-ins in this list, rings on the map); part 2,
 the neon map from the mock-up (face tokens, heat glows); opening jobs when the owner's writing is in.
+
+## 10. Raids, police first (built, 2026-11-05)
+
+Each day a district with one of our halls is at heat 7+, a seeded 25% roll can warn of a raid three
+days ahead. The warning is on City (top of Out now, a ring on the map), Today and Coming up. Only the
+Wet Sleeve (Docks, Night Market) can be paid off. On the day: hold (a command fight on one shared
+hall map, `data/sites.js` HALL), walk out the back (nobody hurt; the hall loses what was kept there,
+pays repairs and shuts a week), or pay at the door where possible. Death only after "keep fighting".
+Owner's calls: police now, gangs next (gangs expect settlements; police barely bribable); a daily
+roll, not every Sunday; holding as a reverse command fight; no minimum garrison. Next: gang raids
+(a grudge per gang), a hall map per district, then the neon map.

@@ -11,6 +11,7 @@
 // can put someone at death's door, never dead: only "keep fighting" (the push on of a fight)
 // leaves them dying, and any exit after that still brings them home.
 
+import { finishRaid } from './raids.js';
 import { crewLead } from './lead.js';
 import { templateById, twistById, jobView, namedBonus } from './jobs.js';
 import { NAMED_OFFER, NAMED_TEXT } from '../data/fame.js';
@@ -462,9 +463,9 @@ export function describePending(state) {
   const text = am.pending.kind === 'alert'
     ? 'They know you\'re here. Lights are coming on and someone is shouting into a radio.'
     : am.pending.kind === 'door' ? `${patient?.handle ?? 'Someone'} is down and bleeding. They'll live if you get them out now.`
-      : am.pending.kind === 'standoff' ? `${BATTLE.rounds} rounds in and ${guardCount(guardsUp(am.battle))} still standing.`
+      : am.pending.kind === 'standoff' ? `${BATTLE.rounds} rounds in and ${guardCount(guardsUp(am.battle), am.battle)} still standing.`
         : `${patient?.handle ?? 'Someone'} is badly hurt and out of the job.`;
-  const choices = decisionChoices(am.pending, { patient, standby: standbyReady(state, am) }).map((c) => ({ ...c, available: true, risk: c.exit ? 'safe' : null }));
+  const choices = decisionChoices(am.pending, { patient, standby: standbyReady(state, am), raid: !!am.raid }).map((c) => ({ ...c, available: true, risk: c.exit ? 'safe' : null }));
   // A fight's call-ins show everyone's health (the watch screen's call-in card).
   const b = am.battle;
   const fight = b && (am.pending.kind === 'door' || am.pending.kind === 'standoff')
@@ -476,7 +477,7 @@ export function describePending(state) {
 export function resolvePending(prev, optionId) {
   const am0 = prev.activeMission;
   if (!am0?.pending) return prev;
-  const choice = decisionChoices(am0.pending, { patient: am0.pending.opId ? opById(prev, am0.pending.opId) : null, standby: standbyReady(prev, am0) }).find((c) => c.id === optionId);
+  const choice = decisionChoices(am0.pending, { patient: am0.pending.opId ? opById(prev, am0.pending.opId) : null, standby: standbyReady(prev, am0), raid: !!am0.raid }).find((c) => c.id === optionId);
   if (!choice) return prev;
   const state = structuredClone(prev);
   const am = state.activeMission;
@@ -870,6 +871,7 @@ export function resolveCritical(prev, option) {
 function finish(state) {
   const am = state.activeMission;
   if (am.done) return;
+  if (am.raid) { finishRaid(state); return; } // a raid on a hall ends its own way (core/raids.js)
   const tpl = templateById(am.templateId);
   const crew = crewOf(state, am);
   const medic = findRole(crew.filter((o) => !am.untreated.includes(o.id)), 'medic');

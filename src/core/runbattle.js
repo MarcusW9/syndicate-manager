@@ -24,7 +24,7 @@ const battleSnapshot = (b) => ({
 });
 
 export const guardsUp = (b) => b.guards.filter((g) => !g.out).length;
-export const guardCount = (n) => (n === 1 ? 'one guard' : `${n} guards`);
+export const guardCount = (n, b = null) => (b?.foe ? (n === 1 ? 'one officer' : `${n} officers`) : n === 1 ? 'one guard' : `${n} guards`);
 
 /** An unsaved danger incident turns into a fight: build both sides and put a battle step next in the queue. */
 export function startBattle(state, am, tpl, inc, id, zone, diff, able, { ambush = false } = {}) {
@@ -37,7 +37,7 @@ export function startBattle(state, am, tpl, inc, id, zone, diff, able, { ambush 
   am.fought = true;
   // The alarm call waits until the fight is over.
   if (am.alert >= ALERT_MAX && !am.wentLoud) am.alertDue = true;
-  const text = `It's a fight: ${guardCount(b.guards.length)}${b.guards[0].armour ? `, armour ${b.guards[0].armour}` : ''}, against ${b.runners.map((r) => r.handle).join(', ')}.${ambush ? ' They have the jump on them.' : ''}`;
+  const text = `It's a fight: ${guardCount(b.guards.length, b)}${b.guards[0].armour ? `, armour ${b.guards[0].armour}` : ''}, against ${b.runners.map((r) => r.handle).join(', ')}.${ambush ? ' They have the jump on them.' : ''}`;
   record(am, { kind: 'battle', phase: 'start', from: id, zone, text, report: text, ...battleSnapshot(b) });
   am.log.push({ kind: 'bad', text });
   am.report = [...(am.report ?? []), text];
@@ -73,7 +73,8 @@ export function runBattle(prev, orders = {}) {
   }
   // A guard who ran is on the radio: the alert goes up (the call waits until the fight is over).
   if (r.fled) am.alert = Math.min(ALERT_MAX, (am.alert ?? 0) + BATTLE.fledAlert);
-  const text = `Round ${b.round}: ${guardsUp(b) ? `${guardCount(guardsUp(b))} still up` : r.fled ? 'the last guard runs' : 'the last guard goes down'}.`;
+  const last = b.foe ? 'officer' : 'guard';
+  const text = `Round ${b.round}: ${guardsUp(b) ? `${guardCount(guardsUp(b), b)} still up` : r.fled ? `the last ${last} runs` : `the last ${last} goes down`}.`;
   record(am, { kind: 'battle', phase: 'round', round: b.round, text, lines: r.lines, ...battleSnapshot(b) });
   am.log.push({ kind: guardsUp(b) ? 'bad' : 'good', text });
   b.door.push(...r.down);
@@ -151,18 +152,19 @@ const hurtLine = (hurt) => hurt.map((h) => `${h.handle} ${h.down ? 'went down' :
 function endBattle(state, am, how) {
   const b = am.battle;
   const hurt = battleInjuries(state, am, b);
-  if (how === 'press') {
+  if (how === 'press' && am.raid) am.pressed = true; // a raid's door held after the last round (core/raids.js)
+  else if (how === 'press') {
     am.alert = Math.min(ALERT_MAX, (am.alert ?? 0) + BATTLE.press.alert);
     am.extraHeat += BATTLE.press.heat;
   }
-  const text = how === 'won' ? 'The fight is over.' : `The crew pushes past ${guardCount(guardsUp(b))} still standing. Alert +${BATTLE.press.alert}, heat +${BATTLE.press.heat}.`;
+  const text = how === 'won' ? 'The fight is over.' : am.raid ? `The crew holds the door, and ${guardCount(guardsUp(b), b)} ${guardsUp(b) === 1 ? 'backs' : 'back'} off down the stairs.` : `The crew pushes past ${guardCount(guardsUp(b), b)} still standing. Alert +${BATTLE.press.alert}, heat +${BATTLE.press.heat}.`;
   const report = `${text}${hurt.length ? ` ${hurtLine(hurt)}.` : ' Nobody badly hurt.'}`;
   record(am, { kind: 'battle', phase: 'end', how, text, report, hurt, ...battleSnapshot(b) });
   am.log.push({ kind: hurt.length ? 'bad' : 'good', text: report });
   am.report = [...(am.report ?? []), report];
   am.battle = null;
   const serious = hurt.find((h) => h.severity === 'serious');
-  if (serious) am.pending = { kind: 'injury', opId: serious.id };
+  if (serious && !am.raid) am.pending = { kind: 'injury', opId: serious.id }; // a raid is over when its fight is
   if (am.alertDue || (am.alert >= ALERT_MAX && !am.wentLoud)) {
     if (am.pending) am.alertDue = true;
     else { delete am.alertDue; am.pending = { kind: 'alert' }; }
@@ -187,10 +189,12 @@ function retreat(state, am, { text, choice, why, forced = false }) {
   am.payCut = Math.max(am.payCut, 1);
   am.extraHeat += BATTLE.retreat.heat;
   am.repCut = (am.repCut ?? 0) + BATTLE.retreat.rep;
-  const ran = b.van ? `${b.wheels.handle} had the van round, so they got out clean.` : shots.some((l) => l.damage) ? 'The guards shoot after them as they run.' : 'They get out under fire, untouched.';
+  const foe = b.foe ? 'The officers' : 'The guards';
+  const ran = b.van ? `${b.wheels.handle} had the van round, so they got out clean.` : shots.some((l) => l.damage) ? `${foe} shoot after them as they run.` : 'They get out under fire, untouched.';
   record(am, { kind: 'battle', phase: 'retreat', text: ran, lines: shots, hurt, forced, ...battleSnapshot(b) });
   am.battle = null;
-  const report = `The crew pulled back from the fight. ${ran}${hurt.length ? ` ${hurtLine(hurt)}.` : ''} No pay, heat +${BATTLE.retreat.heat}, reputation −${BATTLE.retreat.rep}.`;
+  const report = am.raid ? `The crew got out down the back stairs. ${ran}${hurt.length ? ` ${hurtLine(hurt)}.` : ''}` // a raid's costs are the hall's (core/raids.js)
+    : `The crew pulled back from the fight. ${ran}${hurt.length ? ` ${hurtLine(hurt)}.` : ''} No pay, heat +${BATTLE.retreat.heat}, reputation −${BATTLE.retreat.rep}.`;
   exitRun(state, am, { text, choice, why, report });
   return state;
 }
@@ -237,7 +241,7 @@ export function resolveBattleDecision(state, am, choice, view) {
     return afterRound(state, am, { orders: false });
   }
   // Push past the guards still standing.
-  const report = 'The crew pushed past the guards still standing.';
+  const report = am.raid ? 'You told them to hold the door.' : 'The crew pushed past the guards still standing.';
   record(am, { kind: 'decision', text: view.text, choice: choice.label, why, report, choiceCost: { heat: BATTLE.press.heat } });
   am.report = [...(am.report ?? []), report];
   am.pending = null;

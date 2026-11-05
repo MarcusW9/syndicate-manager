@@ -33,7 +33,7 @@ Rumours are street talk: the game never confirms them (no supernatural, and no p
 - **The Brass Anchor Society, Old Town.** Wants Old Town left to itself and its businesses safe from corporate buyouts. Earns from dai pai dong protection fees, herbal-shop levies and old-school mediation; Auntie Fung is a senior elder, and her tea shops are its front room. Small crews get warm, suspicious paternalism: prove yourself over a bowl of beef chow fun and they'll back you in a brawl. *Rumour:* they hold handwritten debt ledgers from the 2052 blackout that could ruin any developer trying to buy out Old Town.
 
 **Police**
-- **Municipal Harbour Police, 4th Precinct (the "Wet Sleeve" unit), the Docks and the Night Market borders.** Wants steady protection money, low paperwork and no internal-affairs audits. Earns from cuts of Red Lantern smuggling, shaking down night boats and selling confiscated gear. Small crews are walking cash machines: stopped for "neural-load checks" and fined unless they pay in cash or intel. *Rumour:* the commander's office has a back door straight into a Red Lantern warehouse.
+- **Municipal Harbour Police, 4th Precinct (the "Wet Sleeve" unit), the Docks and the Night Market borders.** Wants steady protection money, low paperwork and no internal-affairs audits. Earns from cuts of Red Lantern smuggling, shaking down night boats and selling confiscated gear. Small crews are walking cash machines: stopped for "neural-load checks" and fined unless they pay in cash or intel. When a district runs hot, the precinct sends a raid through the door of any tong's hall there; only the Wet Sleeve, on its own patch, will sell one off, and never cheaply. Old Town's patrol pairs take small bribes but can't call off a raid, and the Basin's Association security and Glass Heights' Veridian-Apex guards can't be bought at all. *Rumour:* the commander's office has a back door straight into a Red Lantern warehouse.
 
 **Institutions**
 - **The Lantern Bay Racing Association, the Basin.** Officially independent: old, wealthy, deep inside the Municipal District Administration and ferociously protective of its name. Runs the racing, licensed betting, the big legal pools, horse registration, jockey licensing and the vets, and presents itself as one of the few things in Lantern Bay that belongs to the whole city, which is roughly true. Wants punters to keep believing a horse can genuinely win or lose, because the betting economy dies the day they stop. Small crews are deniable help when it needs a scandal found, or buried, before race night. *Rumour:* somebody has already crossed the line, and a horse has won a big race running on software.
@@ -360,7 +360,8 @@ therapies; Glass Heights), Hoi-Sing Grid & Cable (the power company; Old Town an
 Market nodes). Gangs: Red Lanterns (Docks road tolls), Silver Fan Circle (Night Market
 loans, gambling, fake implants), Brass Anchor Society (Old Town elders resisting
 buyouts). Police: Harbour Police 4th Precinct, the "Wet Sleeve" unit (corrupt; fines
-crews at "neural-load checks"). Institution: Lantern Bay Racing Association (racing, licensed betting, old and
+crews at "neural-load checks"; a hot district brings a raid on a tong's hall, and only
+the Wet Sleeve, on its own patch, will sell one off). Institution: Lantern Bay Racing Association (racing, licensed betting, old and
 well connected; fears race fixing above all). Wildcard: Ghost Circuit (data liberators in Old Town's
 drainage tunnels and bomb shelters).
 

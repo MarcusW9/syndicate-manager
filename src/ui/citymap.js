@@ -123,6 +123,10 @@ function plate(x, esc) {
     s += `<g transform="translate(${f1(px + w - 44)} ${f1(py + h + 3)})"><path class="cm-tag cm-tag--heat-${tone}" d="${plateShape(0, 0, 44, 12, 4)}" /><text class="cm-tag__txt cm-tag__txt--heat-${tone}" x="6" y="9">HEAT ${x.heat}</text></g>`;
   }
   if (x.talk) s += `<rect class="map-talk" x="${f1(px + w + 4)}" y="${f1(py + 4)}" width="5" height="5" />`;
+  if (x.raid) { // a raid warned on our hall here (core/raids.js): a red ring round the plate, and when
+    s = `<circle class="cm-raid" cx="${f1(cx)}" cy="${f1(cy)}" r="${f1(w / 2 + 10)}" /><circle class="cm-raid cm-raid--pulse" cx="${f1(cx)}" cy="${f1(cy)}" r="${f1(w / 2 + 10)}" />${s}`;
+    s += `<g transform="translate(${f1(px - 2)} ${f1(py - (x.home || x.hall ? 29 : 15))})"><path class="cm-tag cm-tag--raid" d="${plateShape(0, 0, 58, 12, 4)}" /><text class="cm-tag__txt cm-tag__txt--raid" x="6" y="9">RAID ${esc(x.raid)}</text></g>`;
+  }
   return s;
 }
 

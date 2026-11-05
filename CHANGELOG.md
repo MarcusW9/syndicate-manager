@@ -4,6 +4,15 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-05 · Raids on the halls
+- **Run a district hot where you have a hall, and the police may come for it.** At heat 7 or more there's a chance each day of a warning: they'll be at the door in three days.
+- **The warning shows on City** (top of Out now, with who's home and the day), as a red ring round the district on the map, on Today, and in Coming up. Until then you can move people into or out of the hall, or keep crews home.
+- **Only the Wet Sleeve can be paid off** (in the Docks and the Night Market), and not cheaply. Everywhere else they can't be bought.
+- **On the day you get the call:** hold the hall with whoever is home, walk out the back, or pay them at the door where that's possible.
+- **Walking out hurts nobody.** You lose what was kept there and pay for repairs, and the hall is shut for a week: its people lie low and can't work, and nobody can move in.
+- **Holding is a fight in the hall itself**, on its own map (the back stairs, the bunks, a table on its side, the front door), with orders each round, like command fights on a job. As always, nobody dies unless you choose to keep fighting with someone down. Hold, and the heat there eases; the district hears of it.
+- **Save format v40.** Old saves have no raids yet.
+
 ## 2026-11-05 · The plan bar beside the job list on wide screens
 - **On a wide screen (1400px and up) the plan bar sits in the left column, right under the job list**, instead of floating along the bottom over the plan. It stays in view as you scroll the plan; a long job list scrolls on its own above it.
 - In that column the bar has room: the whole reason shows (no "…"), Send is full width, and the Try chips wrap underneath.
