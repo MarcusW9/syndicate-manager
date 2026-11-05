@@ -190,7 +190,7 @@ export function renderPicker(ui, { plan, tpl, threat, slot, people, freelancersF
 const RISKS = ['low', 'moderate', 'high', 'extreme'];
 
 /** The coverage read (core/squad.js coverage): what the crew will likely meet, who handles it, the gaps. */
-export function renderCoverage(ui, cov, { overwatch, approachName, standby = null }) {
+export function renderCoverage(ui, cov, { overwatch, approachName, standby = null, was = null }) {
   const { esc, riskBadge } = ui;
   if (!cov.rows.some((r) => r.handler)) return '<div class="riskcard"><p class="muted">Pick a crew to see what they\'d face.</p></div>';
   return `
@@ -201,20 +201,27 @@ export function renderCoverage(ui, cov, { overwatch, approachName, standby = nul
           const groups = [];
           for (const r of cov.rows) { const g = groups.find((x) => x.where === r.where); if (g) g.rows.push(r); else groups.push({ where: r.where, rows: [r] }); }
           const row = (r) => {
-            const lower = (r.withSave || r.fight) && r.effective !== r.risk
+            // What it was before the last change to the plan (2026-11-05), if it was there and moved
+            // (a new approach brings different encounters: those aren't tagged). The tag goes with the
+            // final risk: at the end of the "→" line when there is one, else under the badge.
+            const before = was?.rows.get(was.key(r)) ?? null;
+            const moved = before && before !== r.effective;
+            const wasTag = moved ? `<span class="was was--${RISKS.indexOf(r.effective) < RISKS.indexOf(before) ? 'better' : 'worse'}">was ${esc(ui.riskWord(before))}</span>` : '';
+            const hasLower = (r.withSave || r.fight) && r.effective !== r.risk;
+            const lower = hasLower
               ? (() => {
                 // Who helps is named only when the row gets better (2026-11-05); a fight can make it worse.
                 const better = RISKS.indexOf(r.effective) < RISKS.indexOf(r.risk);
                 const who = better && r.withSave ? ` with ${esc(r.withSave.op.handle)}` : '';
-                return `<span class="cover__with">→ ${esc(ui.riskWord(r.effective))}${who}${r.fight ? `${who ? ',' : ''} counting the fight` : ''}</span>`;
+                return `<span class="cover__with">→ ${esc(ui.riskWord(r.effective))}${who}${r.fight ? `${who ? ',' : ''} counting the fight` : ''}${wasTag ? ` ${wasTag}` : ''}</span>`;
               })() : '';
             // "A loud run means a fight" is said once, under the read (2026-11-05), not on every row.
             const fight = r.fight && r.handler && r.fight.down >= 0.1 ? 'a fight could put someone down' : '';
             return `
-          <div class="cover__row ${r.gap ? 'is-gap' : ''}">
+          <div class="cover__row ${r.gap ? 'is-gap' : ''} ${moved && was.fresh ? 'is-flash' : ''}">
             <p class="cover__name">${esc(r.name)}${r.danger ? ' <span class="cover__danger" role="img" aria-label="danger">⚠</span>' : ''}</p>
             <p class="cover__who">${r.handler ? `${esc(r.handler.op.handle)} (${esc(r.handler.stat)} ${r.handler.value})` : 'nobody can'}${fight ? ` · ${esc(fight)}` : ''}</p>
-            <span class="cover__risk">${riskBadge(r.handler ? r.risk : 'extreme')}</span>
+            <span class="cover__risk">${riskBadge(r.handler ? r.risk : 'extreme')}${hasLower ? '' : wasTag}</span>
             ${lower}
           </div>`;
           };

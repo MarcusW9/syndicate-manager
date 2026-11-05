@@ -798,6 +798,8 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .slotchip.is-off b { color: var(--muted); }
 .slotchip.is-off small { grid-column: 1; }
 .slotchip__link { grid-column: 2; grid-row: 1 / span 2; align-self: center; min-height: 36px; padding: 0 8px; border: 0; background: none; color: var(--accent-2); font: 600 0.78rem system-ui, sans-serif; cursor: pointer; }
+.brief--short { margin-bottom: 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; } /* the brief after the first read (2026-11-05) */
+.linkbtn { min-height: var(--tap, 44px); padding: 0; margin-bottom: 8px; border: 0; background: none; color: var(--accent-2); font: 600 0.8rem system-ui, sans-serif; cursor: pointer; }
 .orderline { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 10px; width: 100%; min-height: var(--tap, 44px); padding: 8px 12px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font: inherit; font-size: 0.86rem; text-align: left; cursor: pointer; }
 .orderline b { font: 700 0.72rem var(--display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-2); }
 .orders__h { margin: 14px 0 6px; font: 700 0.78rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
@@ -854,6 +856,14 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .cover__who { margin: 0; grid-column: 1; font-size: 0.76rem; color: var(--muted); }
 .cover__risk { grid-column: 2; grid-row: 1 / span 2; display: grid; justify-items: end; }
 .cover__risk .risk { margin-right: 0; }
+/* What moved with the last change to the plan (2026-11-05): "was mid", green if better, red if worse, and a flash once. */
+.was { display: block; font: 600 0.66rem var(--display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); text-align: right; }
+.was--better { color: #5fe0a5; } .was--worse { color: #ff8a98; }
+.cover__with .was { display: inline; margin-left: 4px; }
+.planbar__level { display: inline-flex; align-items: center; gap: 8px; } .planbar__level .was { text-align: left; }
+@keyframes was-flash { from { background-color: rgba(61, 232, 216, 0.22); } to { background-color: transparent; } }
+.is-flash { animation: was-flash 1.2s ease-out; }
+@media (prefers-reduced-motion: reduce) { .is-flash { animation: none; } }
 .cover__with { grid-column: 1 / -1; font-size: 0.74rem; color: var(--muted); } /* the whole row's width, under it (2026-11-05) */
 .cover__note { margin: 0; padding: 9px 12px; border-top: 1px solid var(--line); font-size: 0.78rem; color: var(--warn); }
 .cover__note--muted { color: var(--muted); }

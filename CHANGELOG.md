@@ -5,6 +5,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-05 · See what a change does
+- When you change a plan (who goes, the approach, overwatch, the van), each encounter whose risk moved says what it was ("was high", green if better, red if worse) and flashes once; so does the risk in the bar. Folded, "What they'll likely meet" says how many changed.
+- A job's brief is shown in full the first time you open it; after that it's two lines with "Read more".
+
 ## 2026-11-05 · A shorter job plan
 - The orders (send them or watch live, when to call you in, how they decide on their own) are one line now; tap Change to set them.
 - Empty Overwatch, Wheels and Standby slots are small "optional" chips instead of big empty cards. With nobody carrying a rifle or a drone, Overwatch links straight to the armoury.

@@ -90,6 +90,11 @@ let clientOpen = false; // the plan's client background, shown on tap (owner, 20
 let planTryList = []; // the plan bar's "Try" changes as last drawn (core/squad.js planTries), applied by index
 let ordersOpen = false; // the plan's How / Call me in / When they decide, folded to one line until tapped (2026-11-05)
 let boardRulesOpen = false; // the squad board's rules line, behind an i
+const briefSeen = new Set(); // jobs whose brief has been shown in full once this session (2026-11-05)
+let briefOpen = true; // the open job's brief in full, or two lines and "Read more"
+let readMemo = null; // the plan read as last drawn: { jobId, sig, rows: Map(row key → effective risk), level }
+let readBefore = null; // the read before the last change to the plan, for "was low" (2026-11-05)
+let readFresh = false; // this draw is the first since the plan changed: flash what moved
 let whyOpen = false; // the plan bar's notes, all of them, on tap
 let meetHidden = null; // the plan's "What they'll likely meet" read folded away; null until first shown (folded on phones)
 
@@ -200,6 +205,9 @@ function onClick(e) {
       screen = 'jobs';
       const job = state.jobs.find((j) => j.id === id);
       const r = job ? boardRead(job) : null;
+      // The brief in full the first time this session, then two lines (2026-11-05).
+      briefOpen = !briefSeen.has(id); briefSeen.add(id);
+      readMemo = null; readBefore = null; // a fresh plan: nothing to compare with yet
       plan = { jobId: id, crew: r ? r.picks.crew : [], approach: r ? r.approach : 'stealth', orders: 'steady', callIn: 'risky', mode: 'away',
         overwatch: r?.picks.overwatch ?? null, kit: r?.picks.kit ?? null, wheels: r?.picks.wheels ?? null, standby: r?.picks.standby ?? null };
       break;
@@ -208,6 +216,7 @@ function onClick(e) {
     case 'toggle-meet': meetHidden = !meetHidden; break;
     case 'client-info': clientOpen = !clientOpen; break;
     case 'plan-why': whyOpen = !whyOpen; break;
+    case 'brief-more': briefOpen = !briefOpen; break;
     case 'toggle-orders': ordersOpen = !ordersOpen; break;
     case 'board-rules': boardRulesOpen = !boardRulesOpen; break;
     // The squad board (ui/board.js): tap a card, pick who goes there; anyone already placed swaps.
@@ -370,6 +379,7 @@ const threatDots = (n) => '●'.repeat(n) + '○'.repeat(5 - n);
 const threatHtml = (v) => `<span class="threat">${threatDots(v.threat)}</span>${v.threatDelta > 0 ? ' <span class="tag-up">hotter than usual</span>' : v.threatDelta < 0 ? ' <span class="tag-down">quieter than usual</span>' : ''}`;
 const clientLine = (v) => v.client ? `${esc(v.client.name)} <span class="muted">(${esc(trustLabel(v.trust))})</span>` : '<span class="muted">Walk-in job</span>';
 /** The word a risk level shows as: "moderate" reads as "mid" (shorter; owner's call, 2026-10-28). */
+const RANK = ['low', 'moderate', 'high', 'extreme'];
 const riskWord = (level) => (level === 'moderate' ? 'mid' : level);
 const riskBadge = (level) => `<span class="risk risk--${esc(level)}">${esc(level === 'safe' || level === 'certain' ? level : `${riskWord(level)} risk`)}</span>`;
 /** Availability as a coloured chip: green ready, amber usable but worse off, red can't go, teal away on a job. */
@@ -1569,6 +1579,16 @@ function renderPlan() {
   // The bar shows the worse of the two reads: the crises (risk read) and the incidents (coverage).
   // core/squad.js planRead is shared with the job board, so the card and this screen agree.
   const { level: toughest, read, cov } = planRead(state, job, { crew: picked, approach: plan.approach, overwatch: owOp, kit: plan.kit, wheels: wheelsOp });
+  // What moved since the last change to the plan (2026-11-05): each encounter's risk and the bar's.
+  // The read before the change is kept until the plan changes again, so a fold or a tap elsewhere
+  // doesn't lose it; the flash only plays on the first draw after a change.
+  const sig = JSON.stringify([plan.crew, plan.approach, plan.overwatch, plan.kit, plan.wheels]);
+  const rowKey = (r) => `${r.id}:${r.zone}`;
+  readFresh = false;
+  if (readMemo?.jobId !== plan.jobId) readBefore = null;
+  else if (readMemo.sig !== sig) { readBefore = readMemo; readFresh = true; }
+  readMemo = { jobId: plan.jobId, sig, rows: new Map(cov.rows.map((r) => [rowKey(r), r.effective])), level: picked.length ? toughest : null };
+  const was = readBefore && picked.length && readBefore.level ? { rows: readBefore.rows, level: readBefore.level, key: rowKey, fresh: readFresh } : null;
   // The bar's notes (2026-11-04: the crises card folded in here; 2026-11-05: always says what sets the
   // risk). Above low risk the first note names the weakest point: the encounter at the bar's level,
   // and, when the crises' skills read is at that level too, the stat they lean on. Then the skills
@@ -1604,8 +1624,9 @@ function renderPlan() {
       <button class="btn btn--ghost" data-action="back">← Jobs</button>
       <h1>${esc(t.name)}</h1>
       <p class="muted">${esc(districtName(t.district))}${districtTurf(t.district)} · threat ${threatHtml(v)} · pays ${money(v.pay)} · crew away ${v.days}d · ${daysLeft(job.expiresDay)}</p>
-      ${DISTRICTS[t.district] ? `<p class="muted small">${esc(DISTRICTS[t.district].pitch)}</p>` : ''}
-      <p class="body">${esc(fillBrief(t))}</p>
+      ${DISTRICTS[t.district] && briefOpen ? `<p class="muted small">${esc(DISTRICTS[t.district].pitch)}</p>` : ''}
+      <p class="body ${briefOpen ? '' : 'brief--short'}">${esc(fillBrief(t))}</p>
+      <button class="linkbtn" data-action="brief-more" aria-expanded="${briefOpen}">${briefOpen ? 'Show less' : 'Read more'}</button>
       ${(() => { const c = crewAgainstStandard(picked, v.threat); return `<p class="standard ${picked.length ? (c.met ? 'is-met' : 'is-short') : ''} small"><strong>Crew standard: ${esc(c.std.label)}</strong>${picked.length ? ` · ${esc(c.note)}` : ''}</p>`; })()}
       <div class="plangrid">
       <div class="riskcard plangrid__client">
@@ -1638,7 +1659,7 @@ function renderPlan() {
       </div>
 
       <div class="plangrid__risk">
-      ${renderMeet(cov, owOp)}
+      ${renderMeet(cov, owOp, was)}
       </div>
 
       <div class="plangrid__orders">
@@ -1649,7 +1670,7 @@ function renderPlan() {
 
     <div class="planbar">
       <div class="planbar__read">
-        ${picked.length ? riskBadge(toughest) : '<span class="risk risk--none">no crew yet</span>'}
+        ${picked.length ? `<span class="planbar__level ${was && was.level !== toughest && was.fresh ? 'is-flash' : ''}">${riskBadge(toughest)}${was && was.level !== toughest ? `<span class="was was--${RANK.indexOf(toughest) < RANK.indexOf(was.level) ? 'better' : 'worse'}">was ${esc(riskWord(was.level))}</span>` : ''}</span>` : '<span class="risk risk--none">no crew yet</span>'}
         ${!picked.length ? `<span class="planbar__why">${esc(`Pick up to ${most}; ${t.crewSize} recommended`)}</span>`
           : notes.length === 1 && !planTryList.length ? `<span class="planbar__why">${esc(notes[0])}</span>`
           : (() => {
@@ -2043,13 +2064,15 @@ function renderCity() {
 /** The plan's coverage read under a heading that folds it away (owner, 2026-10-29: useful but
  *  not essential, and long on a phone). Folded by default on phones, open on wider screens; the
  *  choice holds for the session. Folded, the heading still flags any gap nobody can cover. */
-function renderMeet(cov, owOp) {
+function renderMeet(cov, owOp, was = null) {
   if (meetHidden === null) meetHidden = !matchMedia('(min-width: 900px)').matches;
   const gaps = cov.rows.filter((r) => r.gap).length;
-  const peek = meetHidden && gaps ? `<span class="foldh2__peek">${gaps} ${gaps === 1 ? 'gap' : 'gaps'}</span>` : '';
+  // Folded, the heading still says how many encounters changed with the last change to the plan.
+  const moved = was ? cov.rows.filter((r) => was.rows.has(was.key(r)) && was.rows.get(was.key(r)) !== r.effective).length : 0;
+  const peek = meetHidden && (gaps || moved) ? `<span class="foldh2__peek">${[gaps ? `${gaps} ${gaps === 1 ? 'gap' : 'gaps'}` : '', moved ? `${moved} changed` : ''].filter(Boolean).join(' · ')}</span>` : '';
   return `<h2 id="risk-read" class="foldh2"><button class="foldh2__btn" data-action="toggle-meet" aria-expanded="${!meetHidden}" aria-controls="meet-read">
         <span>What they'll likely meet</span>${peek}<span class="foldh2__line" aria-hidden="true"></span><span class="foldh2__arrow" aria-hidden="true">▾</span></button></h2>
-      <div id="meet-read" ${meetHidden ? 'hidden' : ''}>${meetHidden ? '' : renderCoverage(boardUi, cov, { overwatch: owOp, approachName: APPROACHES[plan.approach].name, standby: state.crew.find((o) => o.id === plan.standby) ?? null })}</div>`;
+      <div id="meet-read" ${meetHidden ? 'hidden' : ''}>${meetHidden ? '' : renderCoverage(boardUi, cov, { overwatch: owOp, approachName: APPROACHES[plan.approach].name, standby: state.crew.find((o) => o.id === plan.standby) ?? null, was })}</div>`;
 }
 
 /** A save that couldn't be opened, kept aside for slot n: what happened and the way back. */
