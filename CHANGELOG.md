@@ -11,8 +11,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
-## 2026-11-05 · Handoff tidied
-- Docs only, no game change: `HANDOFF.md` now says `main` is up to #78, its "Now" line describes Phase 2 as built so far, and the City item no longer lists heat per district as still to do, and the test count is 564.
+## 2026-11-05 · Handoff, architecture and docs brought up to date
+- Docs only, no game change. `HANDOFF.md`: `main` is up to #78; the "Now" line describes Phase 2 as built so far; the City item no longer lists heat per district as still to do; tests are 564; a section on what the 2026-11-04/05 sessions did (the tong, the shorter job plan, Joss's voice, new jobs); and the open items from the planning and fight reviews in Next.
+- `docs/ARCHITECTURE.md` describes `main` at #78 and save v39: the state's shape (rank, halls, heat per district, the week), crews out day by day, heat per district, offers with their own days, the new core files, test counts. `CODEMAP.md` lists the smaller core helpers and the UI files. `README.md`, `DATA.md` and the `STATE-OF-PLAY.md` banner are brought up to save v39.
 
 ## 2026-11-05 · City becomes the command centre
 - **Crews out now live on City**, under the map: every crew out (calls first), then side work, each with its district. Tap a crew's district to light it on the map and show only what's happening there.

@@ -15,6 +15,14 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 - **New games start with three founders picked from six** (`startCrew: 'pick'`, `chooseFounders`). Most rule tests still use the five-rookie `'fresh'` crew as a fixture.
 - **Tests:** 564 passing in 55 files (`npm run test:fast` while working; `npm test`, about 2-3 min, before every push). **Save format v39** (v34: the tong rank; v35: away jobs day by day with call-ins; v36: an offer's own days; v37: the week's start and crew leads; v38: halls; v39: heat per district; DESIGN.md 2026-11-04/05). **`CODEMAP.md`** says where things live; **`docs/ARCHITECTURE.md`** has state shapes, saves and the economy loop.
 
+## What the 2026-11-04/05 sessions did
+
+- **The tong, Phase 1** (#62-#64, #69, #73, #75) and **Phase 2 so far** (#76-#78): see State and Next 0.
+- **The job plan, shorter and clearer** (#70, #71, DESIGN.md 2026-11-04/05): the client's background on tap; "What they'll likely meet" grouped by when it happens, one line a row, with "was high" when a change moves a risk; the crises card folded into the plan bar; the plan bar names what sets the risk, Joss's reason in one line, and **Try** chips that apply one change; the orders fold to one line; empty outside slots are chips; the brief folds after the first read. About 30% shorter on a phone.
+- **Joss's voice** (#72): new lines, and the voice in canon (`WORLD.md`).
+- **Content:** 35 new jobs (#65, #67), six new street-cast people; the lore review prompt (`docs/lore-review-prompt.md`, #66).
+- **Encounter read in plain words** (#74): "→ low, improved by Siphon".
+
 ## What the 2026-10-28 to 2026-11-04 sessions did
 
 - **Looks:** gun looks, faces with their own anatomy, career marks, Shaolin monks; every sidearm rolls its own strengths (aim, damage, pierce).
@@ -55,7 +63,8 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 3. **City:** heat per district is built (#77: a HEAT tag on warm districts, heat on cards and halls); left are pictures for the locked districts when they open.
 4. **Play-test the start** (three founders, rookie leads at half price): `node scripts/sim-early-game.mjs`.
 5. **Small polish:** reloading during a call-in doesn't scroll to it; the reputation gauge (`drafts/prototypes/reputation-gauge-options.html`).
-6. Then the agreed review items: neural load cleanup, mood traits, money pressure, relationships (`PLAN-PROGRESSION.md` step 3). Parked: the underground place (below).
+6. **Open from the planning and fight reviews (2026-11-05):** on desktop, move the plan bar (risk, reason, Try, Send) into the empty space under the job list in the left column; a phone mock-up of the plan only if it still feels long in play; the review's playtest check (someone plans three jobs thinking aloud: "why is it mid?" means the bar still isn't doing its job); first-fight tips (3-4 pointers in the first fight, a "seen it" flag, so a save-version bump); keyboard shortcuts for laptop players (low priority).
+7. Then the agreed review items: neural load cleanup, mood traits, money pressure, relationships (`PLAN-PROGRESSION.md` step 3). Parked: the underground place (below).
 
 ## Writing pipeline (owner writes in other chats, pastes back)
 
