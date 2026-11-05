@@ -4,6 +4,15 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-05 · Each hall its own map
+- **A raid is now fought in that hall's own place,** not one shared layout:
+  - **Old Town:** the room above the noodle shop. Up the front stairs past the noodle crates; out by the fire stair. Bunks, the mahjong table, the altar and a lacquer screen.
+  - **Night Market:** two rooms above Madam Rao's sari shop. Racks of silk, the cutting table; out through the roof hatch.
+  - **Docks:** a container office at the end of the old pier. Containers, bollards and pallets on the deck; out down the ladder to a boat.
+  - **Basin:** a flat over a tack workshop, with the Old Stand through the window. Up through the workshop's trapdoor; out by the yard stair. Saddle racks, hay bales and stacked tack trunks.
+  - **Glass Heights:** a service floor nobody upstairs remembers. Out of the service lift; away down the maintenance stair. Rows of server racks.
+- Both sides find cover in every hall: our people by the way out, the raiders by their way in.
+
 ## 2026-11-05 · Gang raids
 - **The gangs remember.** A job that hurts the Red Lanterns or the Silver Fan Circle adds to that gang's grudge; it fades a little every Sunday. Six jobs count so far (Protection, Casino, Chrome, Herbal Run, House Advantage, Inspection Hours).
 - **You see it before you take the job:** a flag on its card ("Against Silver Fan") and a line in its plan with the grudge it adds. Each gang's grudge is a gauge on Who's who and on its districts' cards.

@@ -135,3 +135,10 @@ raid a hall of ours on its own turf (Red Lanterns: Docks; Silver Fan: Night Mark
 Old Town. Settling is always on offer and halves the grudge; holding keeps it; walking out leaves
 it. Shown on the job's card and plan, Who's who and the district cards. Open: more grudge sources if
 play needs them, a grudge cost on single crisis choices.
+
+## 13. A hall map per district (built, 2026-11-05)
+
+Each hall has its own fight map, the place `data/halls.js` names: the room above the noodle shop,
+the rooms above the sari shop, the container office on the pier, the flat over the tack workshop,
+the service floor. Our people start by the way out, the raiders at their way in, and both sides have
+cover. Open: rooms per hall, and maybe a map that grows with the hall's level.
