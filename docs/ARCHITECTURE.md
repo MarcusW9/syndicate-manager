@@ -1,11 +1,11 @@
 # Architecture — Syndicate Manager
 
-Snapshot of `main` at `7dc3d50` ("Elite is rarer", #57), `SAVE_VERSION` 32 (v33 added since: see Saves), about 423 top-level `test(` calls in 48 test files. Counts and line numbers date quickly; check the code. Short orientation lives in `CODEMAP.md`. Where something could not be confirmed it says **unclear**.
+Snapshot of `main` at `b988fd6` ("City becomes the command centre, part 1", #78), `SAVE_VERSION` 39, about 473 top-level `test(` calls in 55 test files (564 tests). Refreshed 2026-11-05. Counts and line numbers date quickly; check the code. Short orientation lives in `CODEMAP.md`. Where something could not be confirmed it says **unclear**.
 
 ---
 ## 1. STACK & STRUCTURE
 
-**Stack.** Plain JavaScript (ES modules) + Vite 5.4. No UI framework, no state library. Deps: `@fontsource/rajdhani`; devDeps `vite`, `playwright 1.63.0`. Scripts: `dev`, `build`, `preview`, `test` (`node --test tests/*.test.js`), `test:fast` (skips the slow files development, heat, rules, startcrew), `screenshots`. `vite.config.js` uses `base: './'` (GitHub Pages / iOS wrap) and the build writes an offline service worker `sw.js`.
+**Stack.** Plain JavaScript (ES modules) + Vite 5.4. No UI framework, no state library. Deps: `@fontsource/rajdhani`; devDeps `vite`, `playwright 1.63.0`. Scripts: `dev`, `build`, `preview`, `test` (`node --test tests/*.test.js`), `test:fast` (skips the slow files development, fame-sim, heat, rules, startcrew), `screenshots`. `vite.config.js` uses `base: './'` (GitHub Pages / iOS wrap) and the build writes an offline service worker `sw.js`.
 
 **Layering (enforced by CLAUDE.md):** `src/core` = pure logic (clone state, mutate the clone, return it; no DOM, no storage, no `Math.random`). `src/ui` = only DOM code. `src/save/save.js` = only storage code. `src/data` = content as data. `src/config/names.js` = all names.
 
@@ -22,25 +22,31 @@ mountApp(document.getElementById('app'), state);
 | file | purpose |
 |---|---|
 | state.js | `createNewGame`, `SAVE_VERSION`, founders, `freshCondition` |
-| time.js | `advanceDay`, `settleWeek`, `weeklyBill`, `isBlocked` |
-| mission.js (~1000 lines) | squad run: `startMission`, crises, criticals, `advance`, private `finish` |
+| time.js | `advanceDay` (ends with `advanceAway`), `settleWeek`, `weeklyBill`, `isBlocked` |
+| week.js | the weekly rhythm: `billDue`, `mondayBrief`, `weekSummary` (Sunday), `crewStandard` / `crewAgainstStandard` |
+| mission.js (~1050 lines) | squad run: `startMission`, crises, criticals, `advance`, private `finish` |
 | runbattle.js / battle.js / fightspots.js | fights inside a run; command fights; map spots/cover |
-| autorun.js | hands-off runs (`sendOff`, `returnCrews`, orders) |
-| jobs.js | job offers, board arrivals, reputation gates |
+| autorun.js | hands-off steps and orders (`autoStep`, `needsPlayer`, `dayDone`, `leadTakes`) |
+| away.js | crews out play a share a day: `advanceAway`, `takeCall`, `letThemRun`, `takeCommand`, `crewsOut`, `phaseOf` |
+| lead.js | a crew's lead (`crewLead`) |
+| jobs.js | job offers, board arrivals (grow with the roster: `arrivalsPerWeek`, `maxOffers`), an offer's days (`daysRange`), named offers, reputation gates |
 | clients.js | client trust |
 | crew.js | availability, `crewRoll`, roll-modifier rule lists, injuries |
 | development.js | XP / growth / graduation |
 | earned.js | earned traits (`afterJob`, `earn`, `noteInjury`) |
-| recruits.js | generation, scouting, hiring, safehouse expansion |
+| recruits.js | generation, scouting, hiring |
+| halls.js | the tong's halls, one per district (`openHall`, `expandHall`, `moveToHall`, `introduceHalls`, `syncHalls` keeps `rosterCap`, `rent`, rank) |
+| tong.js | the tong's rank (`rankOf`) |
 | renewals.js | contract renewals |
-| heat.js | heat clamp, cooling, fixer notice |
+| heat.js | heat per district (`heatIn`, `addHeat`, `coolHeat`, `hottest`, `watchedIn`), fixer notice |
 | money.js, pricing.js | formatting; wages |
-| squad.js, risk.js | planning read (`coverage`, `planRead`), `successChance`, `riskLabel` |
+| squad.js, risk.js | planning read (`coverage`, `planRead`, `planTries`, `jossPicks`, `leanPicks`), `successChance`, `riskLabel` |
+| worth.js | a runner's value (`crewValue`) and what a job gives them (`jobGain`, the picker sheet) |
 | report.js, feed.js, upcoming.js | report text / run feed events / "coming up" |
 | sidetasks.js | one-roll bench tasks |
 | gear.js, looks.js, marks.js | gear shop/loadouts, gun looks, scars/tattoos |
 | specialisations.js, tiered.js, statuses (data) | specialisms etc. |
-| rumours.js, incidents.js, decisions.js, loyalty.js, freelance.js | rumours; incidents woven into runs; call-ins; unclear loyalty (see §12); freelancers |
+| rumours.js, incidents.js, decisions.js, loyalty.js, freelance.js | rumours; incidents woven into runs; blocking decision messages; unclear loyalty (see §12); freelancers |
 | rng.js, random.js | mulberry32 + saved-counter wrapper |
 | validate.js, types.js | content validators; JSDoc typedefs (partly stale) |
 | record.js | runner record: per-person job counters (`recordJob` in `finish()`, `weeklyRecord`, `seedRecord`); counts only |
@@ -48,12 +54,12 @@ mountApp(document.getElementById('app'), state);
 | fame.js | fame tiers (unknown to elite), standing 0-100, paths, Elite lapse, Legend readiness (`afterJobFame`, `weeklyFame`, `seedFame`) |
 | jobcheck.js | lints a job template beyond `validate.js` (`scripts/check-job.mjs`) |
 
-**src/data:** fame, milestones, paths (renown numbers and wording, declarative), approaches, battle, cast, city, clients, districtCrises, districtIncidents, districts, earnedTraits, economy, gear, gearLooks, growthLines, incidents, `missions.js` + `missions/*.js` (16 jobs), operatives (authored "Lantern Bay Five"), partner, recruitPools, rookieCrises, rumours, sideTasks, sites, situations, specialisations, statuses, tags, traits, twists.
+**src/data:** fame, milestones, paths (renown numbers and wording, declarative), approaches, battle, cast, city, clients, districtCrises, districtIncidents, districts, earnedTraits, economy, gear, gearLooks, growthLines, incidents, `missions.js` + `missions/*.js` (54 jobs), away (quiet-day lines), halls, tong (ranks), operatives (authored "Lantern Bay Five"), partner, recruitPools, rookieCrises, rumours, sideTasks, sites, situations, specialisations, statuses, tags, traits, twists.
 
-**src/ui:** app.js (~1900 lines, all screens + routing), board.js (squad board/plan), citymap.js, districtArt.js, siteplan.js, fightorders.js, watch.js (live run view), gear.js, art.js, icons.js, styles.css.
+**src/ui:** app.js (~2400 lines, all screens + routing), board.js (squad board/plan), citymap.js, districtArt.js, siteplan.js, fightorders.js, watch.js (live run view), gear.js, art.js, icons.js, styles.css.
 **Also:** `src/offline/serviceWorker.js`, `src/save/save.js`, `src/config/names.js`.
 
-**tests/**: 48 `*.test.js` files (rules, economy/development/heat/startcrew sims, founders, reports, earned, sidetasks, autorun, saves, battle, etc.) and helpers `play.js`, `develop-sim.js`, `heat-sim.js`. Docs: CODEMAP.md, DESIGN.md, CHANGELOG.md, STATE-OF-PLAY.md, HANDOFF.md, WORLD.md, ART.md, PLAN-*.md.
+**tests/**: 55 `*.test.js` files (rules, economy/development/heat/startcrew sims, founders, reports, earned, sidetasks, autorun, saves, battle, etc.) and helpers `play.js`, `develop-sim.js`, `heat-sim.js`. Docs: CODEMAP.md, DESIGN.md, CHANGELOG.md, STATE-OF-PLAY.md, HANDOFF.md, WORLD.md, ART.md, PLAN-*.md.
 
 ---
 ## 2. GAME STATE
@@ -66,12 +72,15 @@ setState(next){ state = next; saveGame(state); render(); }
 
 **Root shape** (`createNewGame` in `core/state.js`):
 ```js
-{ version: SAVE_VERSION /*32*/, seed, day: 1, cash: 8000, heat: 0, heatNoticeDay: null, heatWatched: false, rumour: null,
-  reputation: 0, jobGates: false, tier: 'street', rent: 4000, difficulty, crew, stash: [], inbox: [welcome], memorial: [],
-  jobs: [], jobSeq: 0, rngCounter: 0, activeMission: null, awayJobs: [], sideBoard: [], sideOut: [], intel: {},
-  recruits: [], freelancers: [], recruitSeq: 0, rosterCap: 8, safehouseLevel: 1, clients: {}, founding: null }
+{ version: SAVE_VERSION /*39*/, seed, day: 1, cash: 8000, heat: 0 /*the hottest district*/, heatBy: {} /*district → 0-10*/,
+  heatNoticeDay: null, heatWatched: false /*or a district*/, rumour: null, reputation: 0, jobGates: false,
+  rank: 'backroom' /*the tong's rank, data/tong.js*/, weekStart: null /*{day, cash, reputation}*/, rent: 4000, difficulty,
+  crew, stash: [], inbox: [welcome], memorial: [], jobs: [], jobSeq: 0, rngCounter: 0, activeMission: null,
+  awayJobs: [], sideBoard: [], sideOut: [], intel: {}, recruits: [], freelancers: [], recruitSeq: 0,
+  rosterCap: 8 /*all halls' beds*/, halls: [] /*{district, beds, rent, level, opened}; home hall set at start*/, hallOffers: [],
+  clients: {}, founding: null }
 ```
-'pick'/'fresh' starts also set `rent = 1500`, `jobGates = true`, open board `['clinic','ledger','container409']`, then call `refreshFreelancers`, `refreshSideBoard`, `refreshArmoury` (adds `armoury {day, offers}`), and set `dayStartCash`. Optional fields appear later: `lastJobDay`, `lastBackupDay`, `ironman {id, seq}`. `chooseFounders(prev, ids)` picks 3 of 6 candidates. `types.js` typedefs are partly stale.
+'pick'/'fresh' starts also set `rent = 1500`, `jobGates = true`, open board `['clinic','ledger','container409']`, then call `refreshFreelancers`, `refreshSideBoard`, `refreshArmoury` (adds `armoury {day, offers}`), and set `dayStartCash`. Optional fields appear later: `lastJobDay`, `lastBackupDay`, `ironman {id, seq}`, `namedOfferWeek`. `chooseFounders(prev, ids)` picks 3 of 6 candidates. `types.js` typedefs are partly stale.
 
 ---
 ## 3. RUNNERS / OPERATIVES
@@ -84,7 +93,8 @@ setState(next){ state = next; saveGame(state); render(); }
   trust: {},            // op→op; nothing reads it
   history: [strings], progress, startStats, growthLog, status: [{id, until}],
   jobsWithCrew, contractMainStat, lastNoticeDay, renewalAgain,
-  gear: {weapon, armour, tool, implant}, marks: [{kind: 'scar'|'implant'|'tattoo', day}] }
+  gear: {weapon, armour, tool, implant}, marks: [{kind: 'scar'|'implant'|'tattoo', day}],
+  hall /*the district whose hall they sleep in (core/halls.js); freelancers have none*/ }
 // renown (2026-11), written once a job finishes: record: {jobs, atLevel, wins, clean, flawless, fights, fightsWon, carries, carriesByStat,
 //   broughtHome, criticalsSurvived, unscathed, bigScores, seriousInjuries, cleanStreak, bestCleanStreak, with:{opId:n}, activeWeeks, lastJobDay,
 //   milestones:[ids], highlights:[{id,day,text,weight}] (best 3), lowWeeks, wasElite, estimated},
@@ -107,16 +117,16 @@ Others on the crew get morale −15.
 ---
 ## 4. TIME & ECONOMY LOOP
 
-`time.js advanceDay`: daily per operative — statuses expire, fatigue −8, neural load −3 (to implant floor), injury countdown; then `dailyTraits`, `checkSpecialisations`, renewal re-asks, inbox expiry, `tickJobs` (board arrivals), recruits expire, `returnSideTasks`, `returnCrews`. Wednesday: `scoutWeek`. Monday: `driftTrust`, `refreshFreelancers`, `refreshSideBoard`, `refreshArmoury`, `rollRumour`; Monday of week 1: `newSeason` (aging). **Sunday: `settleWeek`** (also `weeklyRecord`: active weeks; `weeklyFame`: bench standing decay, Elite lapse) — wages + rent deducted (if broke: morale −10), heat −2 (`HEAT_COOL_WEEKLY`), `checkHeatNotice` (heat ≥ 6, 14-day cooldown), fixer. `isBlocked` = active mission, founding, or unresolved blocking messages. `weeklyBill`.
+`time.js advanceDay`: daily per operative — statuses expire, fatigue −8, neural load −3 (to implant floor), injury countdown; then `dailyTraits`, `checkSpecialisations`, renewal re-asks, inbox expiry, `tickJobs` (board arrivals), recruits expire, `returnSideTasks`, and last `advanceAway` (each crew out plays today's share; one that needs the player waits with a blocking call). Wednesday: `scoutWeek`. Monday: `driftTrust`, `refreshFreelancers`, `refreshSideBoard`, `refreshArmoury`, `rollRumour`, `introduceHalls`; Monday of week 1: `newSeason` (aging). The Monday briefing (`week.js mondayBrief`) is read by the UI. **Sunday: `settleWeek`** — `weekSummary` (the week's jobs and money, before the bills), `weeklyRecord` (active weeks), `weeklyFame` (bench standing decay, Elite lapse), wages + rent deducted (if broke: morale −10), every district's heat −2 (`HEAT_COOL_WEEKLY`), `checkHeatNotice` (the hottest district at 6+, 14-day cooldown), fixer. `isBlocked` = active mission, founding, or unresolved blocking messages. `weeklyBill`.
 
 **Money (`state.cash`) change points:** heat.js (fixer ¥1500) · recruits.js (signing fee; expansion) · sidetasks.js (pay) · gear.js (buy/sell) · mission.js (con bribe at start; choice success/failure cash; `finish` pay) · time.js (weekly bill).
 
-**Heat (`state.heat`, citywide 0–10, single number):** changes only in `finish` (`heatGain`), side-task failure, fixer (−3), weekly cooling. Sources of `am.extraHeat`: overwatch shots, incident failures, going loud (+2), choice costs, stabilise (+1), battle rounds, press, retreat; Ghost Driver / Clean Professional shave 1. Per-district heat was agreed in DESIGN but **not built**.
+**Heat (per district since v39, `core/heat.js`):** `state.heatBy` holds each district's heat (0–10); `state.heat` is kept as the hottest, for the top bar and anything that reads one number. It changes only in `finish` (`addHeat(state, tpl.district, heatGain)`), side-task failure (the task's district), the fixer (pays to cool the named district) and weekly cooling (every district −2). Letting the fixer's warning ride sets `state.heatWatched` to that district: the next job *there* starts watched (−1 on its first crisis roll). Sources of `am.extraHeat`: overwatch shots, incident failures, going loud (+2), choice costs, stabilise (+1), battle rounds, press, retreat; Ghost Driver / Clean Professional shave 1.
 
 ---
 ## 5. JOBS & MISSIONS
 
-**Offer** (`core/jobs.js`): `{id:'job-N', templateId, clientId, payMult, threatDelta, twist, hinted, offeredDay, expiresDay}`. Board: `MAX_OFFERS 5`; arrivals spread over `ARRIVAL_WINDOWS [[0,1],[2,3],[4,5,6]]` from `makeRng(seed ^ week)`; `postJobs` puts rookie work first when gated, `TWIST_CHANCE 0.25`. **Reputation gates:** `JOB_GATES = {1:10, 2:15, 3:35, 4:60, 5:80}` (threat level → reputation needed; rookie jobs always open). `jobView` applies rumour threat shift and client `trustPay`.
+**Offer** (`core/jobs.js`): `{id:'job-N', templateId, clientId, payMult, threatDelta, twist, hinted, offeredDay, expiresDay, days, askedFor?}` (`days` rolled from `daysRange`, pay +`EXTRA_DAY_PAY` 5% a day over the template's; `askedFor` names the runner a named offer wants). Board: at least `MAX_OFFERS 5`, more as the roster grows (`maxOffers`, `arrivalsPerWeek`); arrivals spread over `ARRIVAL_WINDOWS [[0,1],[2,3],[4,5,6]]` from `makeRng(seed ^ week)`; `postJobs` puts rookie work first when gated, `TWIST_CHANCE 0.25`. **Reputation gates:** `JOB_GATES = {1:10, 2:15, 3:35, 4:60, 5:80}` (threat level → reputation needed; rookie jobs always open). `jobView` applies rumour threat shift and client `trustPay`.
 
 **Template (shortened, container409):**
 ```js
@@ -169,7 +179,7 @@ state.reputation = Math.round(Math.max(0, Math.min(100, state.reputation + gain)
 - Then `reactToJob` (rumours) and `afterJob` (earned traits).
 - Fights: pulling back (`runbattle.js retreat`) sets payCut 1, adds heat, `am.repCut += BATTLE.retreat.rep`.
 
-**Concurrent jobs.** One live `state.activeMission`, plus hands-off `state.awayJobs [{returnDay, mission}]` (resolved when the crew returns, via `autorun.js sendOff(prev, jobId, crewIds, approach, ordersId, opts)` / `returnCrews`), plus `state.sideOut` (side tasks). Hands-off crews always extract at a critical, never push on.
+**Concurrent jobs.** One live `state.activeMission` (the watch screen), plus any number of crews out: `state.awayJobs [{returnDay, mission, waiting?, today}]`, where `mission.away = {beats, day, command}` (save v35). `advanceAway` plays each a share a day (`beatsByDay`); when a step needs the player the entry is `waiting` with a blocking `kind: 'callin'` message. `takeCall` moves it into `activeMission`, `letThemRun` hands it back for the rest of the day, `takeCommand` plays the rest live. A crew's lead (`lead.js`, `autorun.js leadTakes`) may take one risky call. Plus `state.sideOut` (side tasks). Hands-off crews always extract at a critical, never push on.
 
 **Mission log / report text.** Every run records `am.events` (kinds: beat, zone, roll incl. incident, save, decision, exit, battle, critical, aftermath, twist, sure). `core/report.js` builds Joss's opening line, turning point, standout, what hurt; the inbox report has a "Full log" fold with dice. Per-crisis report lines (`choice.report.{success,failure}`) are hand-written and a test keeps them present.
 
@@ -188,7 +198,7 @@ Seeded and saved. `makeRng(seed)` is mulberry32 (`core/rng.js`). `nextRng(state)
 
 Format: JSON of the state in `localStorage`. Keys: `syndicate-active-slot`, `syndicate-slot-N`, `…-backup` (weekly), `…-unreadable`, `syndicate-ironman-progress`, legacy `syndicate-save-v1`. `storageGet/Set/Remove` are the only storage calls (swap for iOS). `saveGame` writes slot + weekly backup (not in Ironman). `loadGame` migrates; on failure `keepUnreadable` and returns null. `exportSave` downloads JSON; `importSave(file)` migrates then `checkIronman`; `loadBackup`.
 
-**Versioning:** `SAVE_VERSION` 39 in `core/state.js` (v39: `state.heatBy` { district: 0-10 }, heat per district; `state.heat` is the hottest; `state.heatWatched` names a district (`core/heat.js`). v38: `state.halls` [{ district, beds, rent, level, opened }] and `state.hallOffers`; `op.hall`; `state.safehouseLevel` gone (`core/halls.js`). v37: `state.weekStart` `{ day, cash, reputation }` for the Sunday summary, and `am.lead` on a job (`core/lead.js`). v36: `job.days`, an offer's own days (`core/jobs.js` `daysRange`). v35: away jobs play a share a day and can call in: `am.away` `{ beats, day, command }`, and on each `state.awayJobs` entry `waiting` and `today` (`core/away.js`). v34: `state.rank` replaces `state.tier`, the tong rank. v33, renown slice 4: `job.askedFor` / `am.askedFor` for named offers, `state.namedOfferWeek`, and `payload.reason` on pay-rise messages, `growth` or `fame`). `migrate(state)` throws on missing or newer version, then runs a chain `if (state.version === N) { …; state.version = N+1; }` from v1 to v33. Real code from `src/save/save.js` (head of the chain, then the v26→v32 blocks; v1→v25 omitted for length):
+**Versioning:** `SAVE_VERSION` 39 in `core/state.js` (v39: `state.heatBy` { district: 0-10 }, heat per district; `state.heat` is the hottest; `state.heatWatched` names a district (`core/heat.js`). v38: `state.halls` [{ district, beds, rent, level, opened }] and `state.hallOffers`; `op.hall`; `state.safehouseLevel` gone (`core/halls.js`). v37: `state.weekStart` `{ day, cash, reputation }` for the Sunday summary, and `am.lead` on a job (`core/lead.js`). v36: `job.days`, an offer's own days (`core/jobs.js` `daysRange`). v35: away jobs play a share a day and can call in: `am.away` `{ beats, day, command }`, and on each `state.awayJobs` entry `waiting` and `today` (`core/away.js`). v34: `state.rank` replaces `state.tier`, the tong rank. v33, renown slice 4: `job.askedFor` / `am.askedFor` for named offers, `state.namedOfferWeek`, and `payload.reason` on pay-rise messages, `growth` or `fame`). `migrate(state)` throws on missing or newer version, then runs a chain `if (state.version === N) { …; state.version = N+1; }` from v1 to v39. Real code from `src/save/save.js` (head of the chain, then the v26→v32 blocks; v1→v25 and v33→v39 omitted for length, see the file):
 ```js
 // Upgrade old save formats when SAVE_VERSION changes.
 function migrate(state) {
@@ -296,7 +306,7 @@ Reputation UI: a "Rep" compact line in the jobs screen (segmented track to the n
 ---
 ## 10. TESTS
 
-Runner: Node built-in `node:test` (`npm test`); 48 files in `tests/`, one concern per file (rules, record/milestones/fame (renown), economy/development/heat/startcrew sims, founders, reports, earned, sidetasks, autorun, saves, battle…). Helpers: `play.js` (`playMission`, `randomPolicy`, `carefulPolicy`, `playWeeks`, `autoFounders`, `toCrisis`, `arm`, `testFight`, `commandOrders`), `develop-sim.js`, `heat-sim.js`.
+Runner: Node built-in `node:test` (`npm test`); 55 files in `tests/`, one concern per file (rules, record/milestones/fame (renown), economy/development/heat/startcrew sims, founders, reports, earned, sidetasks, autorun, saves, battle…). Helpers: `play.js` (`playMission`, `randomPolicy`, `carefulPolicy`, `playWeeks`, `autoFounders`, `toCrisis`, `arm`, `testFight`, `commandOrders`), `develop-sim.js`, `heat-sim.js`.
 
 **`tests/rules.test.js` rule tests:** (1) content passes validation; (2) every mission type has ≥6 crises; (3) nobody dies unless "push on" (3,000 random missions); (4) aborting always brings everyone home (300); (5) Story difficulty: nobody dies even pushing on (500); (6) no unfilled `{placeholder}`; (7) a v1 save upgrades with a job board; (8) newer saves are refused; (9) economy: a careful player survives the first month but is not rich; (10) heat cools by 2 every Sunday and stays 0–10.
 
@@ -322,4 +332,5 @@ CHANGELOG.md has no section titled "first playtest"; the playtest notes are most
 - **First playtest (2026-10-25, DESIGN.md):** owner felt "no sense of a climb" and no investment in crew development (the Five started near their ceilings with every job open). Changes after: five generated raw rookies, rent ¥1,500, gated job board (`jobGates`, save v12), reputation 0.75/threat, rookie jobs, growth cost ×2.5, then career/earned traits and the City map.
 - **2026-10-27 owner playtest feedback (CHANGELOG + DESIGN):** squad picker separates free crew from the squad ("Already on the squad" greyed, slot tags); run feed is one line per moment with details on tap; "less to read" on Today and the job board (grouped "back from the job" lines, side-work one-liner, stat icons); crises name the right person (fixed 2026-10-28).
 - **2026-10-28 owner feedback:** smaller (i) buttons, a reputation line styled like the Heat meter, tidier job-card icons.
+- **2026-11-05 owner playtest of the tong's Phase 1 (HANDOFF + DESIGN):** call-ins about right; Take Command nice to have; outcomes readable; money fine; Today busy. Not happening yet: sending "the cheapest crew I trust" (the owner sent the best) and the bench mostly sat; lean picks (#75) were the first answer, districts as presence (Phase 2) the next.
 - Later notes: owner feedback that hands-off results arrive too quickly led to animated/next-day report playback; open DESIGN question on whether heat "earns its place" (cut it if nobody notices). No later formal playtest is recorded — **unclear**.

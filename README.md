@@ -27,9 +27,10 @@ Playable and endless. What's in the game is listed, newest first, in `CHANGELOG.
 - Command fights in every district, with gear, cover and orders each round.
 - Recruiting, contract renewals, earned traits, specialisations, growth from rookie to veteran.
 - Renown: each runner's record, milestones, fame and paths; named offers and fame pay asks.
-- A City map, heat, rumours, clients with trust, side work and hands-off runs.
+- The tong: crews sent out play day by day and call you in; jobs of 1-4 days; the week as the rhythm (Monday briefing, Sunday summary); crew leads; halls in more than one district.
+- The City as the command centre: the map with crews out, halls and heat per district; rumours, clients with trust, side work.
 - Saves: 3 slots, export/import, weekly backups, Ironman, offline play.
-- Not yet: Legends and retirement (renown slices 5-6), crew relationships, heat per district, several live jobs at once.
+- Not yet: raids on a hall (next), Legends and retirement (renown slices 5-6), crew relationships.
 
 ## Docs
 - `CLAUDE.md`: project rules for working on the code, and where to read for each kind of task

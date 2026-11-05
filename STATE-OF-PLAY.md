@@ -1,6 +1,6 @@
 # State of play · 2026-10-26
 
-> **Historical snapshot (2026-10-26, save v20).** `main` has moved on (save v33 on 2026-11-04, 525 tests). For current structure see `docs/ARCHITECTURE.md` and `CODEMAP.md`; for what's next see `HANDOFF.md`.
+> **Historical snapshot (2026-10-26, save v20).** `main` has moved on (save v39 on 2026-11-05, 564 tests). For current structure see `docs/ARCHITECTURE.md` and `CODEMAP.md`; for what's next see `HANDOFF.md`.
 
 A design review of the whole game as it stands on `main` (`4ada93b`, save v20, 227 tests), so later sessions don't need to redo it. It's an assessment, not a set of decisions: nothing here is agreed until the owner says so, and agreed items go into `DESIGN.md`'s log as usual. When this file goes stale, write a new review and add a line under it saying which version replaced it, rather than rewriting this one.
 
