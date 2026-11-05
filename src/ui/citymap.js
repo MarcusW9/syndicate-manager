@@ -1,45 +1,36 @@
 // The command centre's map (part 2, 2026-11-05; drafts/ops-and-presence.md §3 and the owner's
 // mock-up, drafts/prototypes/command-centre.html): Lantern Bay as a neon tactical map drawn in code.
 // The island's districts as faceted shapes in their gang's light, meeting at dark seams, with a
-// faint block grid inside and lit edges where the city meets the harbour; the Amber Reach in the
+// faint block grid inside; the Amber Reach in the
 // harbour; the mainland's Docks and the Silt. Locked districts are hatched. Each district has a
-// plate (its name, then who's based there, its work and its heat) and a landmark glyph. On top, for
+// plate (its name, then who's based there, its work and its heat) and a landmark drawn like the portraits (ui/landmarks.js). On top, for
 // glancing: heat glows, crews out as face tokens on a route from their hall, calls pulsing sodium,
 // and a ring on a hall with a raid warned. It fits the width and never moves (no zoom, no pan).
 //
-// Adding a district: one entry in DISTRICTS below (its shape, plate spot and glyph). A locked
+// Adding a district: one entry in DISTRICTS below (its shape, plate spot and where its landmark stands). A locked
 // district is already on the map; opening it is data (src/data/city.js), not new art.
 
 export const MAP_W = 330;
 export const MAP_H = 290;
 const VIEW = '14 12 330 290'; // the mock-up's frame: the whole city with a little harbour round it
 
+import { landmark } from './landmarks.js';
+
 const f1 = (n) => (Math.round(n * 10) / 10).toString();
 
-/** Each district: its shape (straight edges, as the mock-up), where its plate sits, its glyph. */
+/** Each district: its shape (straight edges, as the mock-up), where its plate sits, where its landmark stands (bottom-centre). */
 const DISTRICTS = {
   ironPeak: { shape: 'M150 22L205 18L232 34L214 58L170 60L146 44Z', plate: [180, 36] },
-  heights: { shape: 'M214 58L232 34L286 40L312 72L300 104L246 100L222 84Z', plate: [264, 70], glyph: 'heights' },
-  basin: { shape: 'M120 70L146 44L170 60L214 58L222 84L196 110L150 112L124 98Z', plate: [146, 90], glyph: 'basin' },
-  oldTown: { shape: 'M76 104L124 98L150 112L170 140L150 160L100 162L72 140Z', plate: [112, 140], glyph: 'oldTown' },
-  nightMarket: { shape: 'M150 112L196 110L222 84L246 100L300 104L292 136L250 156L170 140Z', plate: [238, 128], glyph: 'nightMarket' },
-  amberReach: { shape: 'M168 186L206 182L214 200L196 212L166 206Z', plate: [190, 200] },
-  docks: { shape: 'M20 238L60 226L130 230L190 236L214 252L210 300L20 300Z', plate: [100, 270], glyph: 'docks' },
-  silt: { shape: 'M214 252L262 240L340 246L340 300L210 300Z', plate: [284, 274] },
+  heights: { shape: 'M214 58L232 34L286 40L312 72L300 104L246 100L222 84Z', plate: [264, 70], art: [292, 56] },
+  basin: { shape: 'M120 70L146 44L170 60L214 58L222 84L196 110L150 112L124 98Z', plate: [146, 90], art: [132, 76] },
+  oldTown: { shape: 'M76 104L124 98L150 112L170 140L150 160L100 162L72 140Z', plate: [112, 140], art: [82, 126] },
+  nightMarket: { shape: 'M150 112L196 110L222 84L246 100L300 104L292 136L250 156L170 140Z', plate: [238, 128], art: [286, 188] },
+  amberReach: { shape: 'M168 186L206 182L214 200L196 212L166 206Z', plate: [190, 200], art: [238, 214] },
+  docks: { shape: 'M20 238L60 226L130 230L190 236L214 252L210 300L20 300Z', plate: [100, 270], art: [150, 256] },
+  silt: { shape: 'M214 252L262 240L340 246L340 300L210 300Z', plate: [284, 274], art: [318, 254] },
 };
 export const MAP_DISTRICTS = Object.keys(DISTRICTS);
 
-/** Landmark glyphs, drawn beside a plate in the district's light (the mock-up's). */
-const GLYPHS = {
-  docks: (x, y) => `M${x - 40} ${y - 6}v-26h22M${x - 40} ${y - 26}l12 8M${x - 22} ${y - 32}v6`, // a crane
-  oldTown: (x, y) => `M${x - 44} ${y - 12}l8-6l8 6M${x - 42} ${y - 12}v8h12v-8`, // the shrine
-  nightMarket: (x, y) => `M${x + 34} ${y - 26}v4M${x + 30} ${y - 22}h8l-1 10h-6Z`, // a lantern
-  heights: (x, y) => `M${x + 30} ${y - 4}v-22l5-6l5 6v22M${x + 26} ${y - 4}h18`, // the Central Tower
-  basin: (x, y) => `M${x - 42} ${y + 14}a12 6 0 1 0 24 0a12 6 0 1 0-24 0`, // the course
-};
-
-// The edges that catch the light: the ridge's harbour side and the Silt's shore (the mock-up's).
-const RIMS = ['M232 34L286 40L312 72L300 104L292 136L250 156', 'M214 252L262 240L340 246', 'M76 104L72 140L100 162', 'M20 238L60 226L130 230L190 236'];
 const MONORAIL = 'M262 92L190 198L150 246'; // the maglev, through the Amber Reach to the Docks
 const FERRY = 'M110 190H206'; // the night ferry across the harbour
 
@@ -134,18 +125,16 @@ export function cityMapSvg(districts, esc, { portrait = null } = {}) {
         <clipPath id="cm-land">${MAP_DISTRICTS.map((k) => `<path d="${DISTRICTS[k].shape}" />`).join('')}</clipPath>
         <clipPath id="cm-face-m"><circle r="7" /></clipPath>
         <clipPath id="cm-face-s"><circle r="5.5" /></clipPath>
-        <filter id="cm-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.4" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
       </defs>
-      <text x="282" y="178" class="map-label">HARBOUR</text>
+      <text x="236" y="236" class="map-label">HARBOUR</text>
       ${districts.map((x) => `<g class="cm-d ${cls(x)}" data-action="city-district" data-id="${x.key}" role="button" tabindex="0" aria-pressed="${!!x.selected}" aria-label="${esc(x.label)}"><path class="cm-d__area" d="${DISTRICTS[x.key].shape}" ${fill(x)} /></g>`).join('')}
       <rect class="cm-streets" x="0" y="0" width="360" height="310" fill="url(#cm-blocks)" clip-path="url(#cm-land)" />
       <g class="cm-seams">${MAP_DISTRICTS.map((k) => `<path d="${DISTRICTS[k].shape}" />`).join('')}</g>
-      <g class="cm-rims" filter="url(#cm-glow)">${RIMS.map((d) => `<path d="${d}" />`).join('')}</g>
       <path class="cm-transit" d="${MONORAIL}" />
       <path class="cm-train" d="${MONORAIL}" />
       <path class="map-crossing" d="${FERRY}" />
       <circle class="map-ferry" cx="110" cy="190" r="2" />
-      <g class="cm-glyphs">${districts.filter((x) => !x.locked && DISTRICTS[x.key].glyph).map((x) => `<path class="cm-glyph" d="${GLYPHS[DISTRICTS[x.key].glyph](...DISTRICTS[x.key].plate)}" ${fill(x)} />`).join('')}</g>
+      <g class="cm-landmarks" aria-hidden="true">${districts.map((x) => DISTRICTS[x.key].art ? landmark(x.key, { x: DISTRICTS[x.key].art[0], y: DISTRICTS[x.key].art[1], size: x.locked ? 36 : 46, light: x.turf ?? '#3de8d8', locked: x.locked }) : '').join('')}</g>
       <g class="cm-heats">${districts.map(heatGlow).join('')}</g>
       <g class="cm-raids">${districts.map(raidRing).join('')}</g>
       ${districts.map((x) => `<g class="cm-plate ${x.locked ? 'is-locked' : ''} ${x.selected ? 'is-on' : ''}" data-action="city-district" data-id="${x.key}" aria-hidden="true">${plate(x, esc)}<circle class="cm-hit" cx="${DISTRICTS[x.key].plate[0]}" cy="${DISTRICTS[x.key].plate[1]}" r="24" /></g>`).join('')}

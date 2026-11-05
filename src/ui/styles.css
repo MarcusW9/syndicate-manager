@@ -551,7 +551,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .cm-streets { pointer-events: none; }
 #cm-blocks path { fill: none; stroke: rgba(233, 236, 241, 0.06); stroke-width: 0.6; }
 .cm-seams path { fill: none; stroke: var(--bg); stroke-width: 2.5; stroke-linejoin: round; pointer-events: none; }
-.cm-rims path { fill: none; stroke: rgba(61, 232, 216, 0.55); stroke-width: 1.2; stroke-linejoin: round; pointer-events: none; }
+
 .cm-transit { fill: none; stroke: rgba(180, 140, 255, 0.35); stroke-width: 1; stroke-dasharray: 3 3; pointer-events: none; }
 .cm-train { fill: none; stroke: #b48cff; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 6 300; pointer-events: none; animation: cm-train 8s linear infinite; }
 @keyframes cm-train { from { stroke-dashoffset: 6; } to { stroke-dashoffset: -190; } }
@@ -559,7 +559,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .map-ferry { fill: var(--warn); pointer-events: none; animation: map-ferry 14s linear infinite; }
 @keyframes map-ferry { 0% { transform: translate(0, 0); } 50% { transform: translate(96px, -6px); } 100% { transform: translate(0, 0); } }
 .map-label { fill: var(--muted); font-size: 9px; font-weight: 600; letter-spacing: 0.24em; }
-.cm-glyph { fill: none; stroke: var(--turf); stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; opacity: 0.8; pointer-events: none; }
+
 .cm-heat { pointer-events: none; }
 .cm-heat.is-hot { animation: cm-heat 3.2s ease-in-out infinite; }
 @keyframes cm-heat { 50% { opacity: 0.6; } }
