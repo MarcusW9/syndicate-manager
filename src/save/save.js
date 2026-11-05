@@ -558,5 +558,10 @@ function migrate(state) {
     syncHeat(state);
     state.version = 39;
   }
+  if (state.version === 39) {
+    // v40: raids on the halls (core/raids.js). Nobody has been raided yet; no hall is shut.
+    state.raids = state.raids ?? [];
+    state.version = 40;
+  }
   return state;
 }

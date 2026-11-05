@@ -99,6 +99,9 @@ export function upcoming(state, horizon = HORIZON_DAYS) {
     }
   }
 
-  const ORDER = ['season', 'board', 'report', 'back', 'healed', 'rested', 'scout', 'job-last', 'lead-last', 'reask', 'bills'];
+  // A raid warned on a hall (core/raids.js), on its day, unless it's been paid off.
+  for (const r of state.raids ?? []) if (!r.done && r.answer !== 'paid' && within(r.day)) items.push({ day: r.day, kind: 'raid', district: r.district });
+
+  const ORDER = ['raid', 'season', 'board', 'report', 'back', 'healed', 'rested', 'scout', 'job-last', 'lead-last', 'reask', 'bills'];
   return items.sort((a, b) => a.day - b.day || ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind));
 }

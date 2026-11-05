@@ -107,21 +107,24 @@ export function bestSave({ victim, able, overwatch, overwatchOp, zone, diff }) {
  * (slice 3): at max alert they can join the inside team (the alert stays up); for someone badly
  * hurt they can go in, get them out and take their place.
  */
-export function decisionChoices(pending, { patient = null, standby = null } = {}) {
+export function decisionChoices(pending, { patient = null, standby = null, raid = false } = {}) {
   // A fight's call-ins (slice 6; core/battle.js). At death's door the safe way is listed first.
-  const pullBack = `Everyone comes home. No pay, heat +${BATTLE.retreat.heat}, reputation −${BATTLE.retreat.rep}, and the guards get a parting shot as you run (it can hurt, never kill).`;
+  // In a raid on a hall (core/raids.js) pulling back is walking out the back: the hall's costs.
+  const pullBack = raid ? 'Everyone gets out the back stairs (a parting shot can hurt, never kill). We lose what was kept there, pay for repairs, and the hall is shut for a week.'
+    : `Everyone comes home. No pay, heat +${BATTLE.retreat.heat}, reputation −${BATTLE.retreat.rep}, and the guards get a parting shot as you run (it can hurt, never kill).`;
   if (pending.kind === 'door') {
     const who = patient?.handle ?? 'them';
     return [
-      { id: 'out', label: `Pull back and get ${who} out`, cost: pullBack, exit: true },
+      { id: 'out', label: raid ? `Get ${who} out the back` : `Pull back and get ${who} out`, cost: pullBack, exit: true },
       ...(standby ? [{ id: 'rescue', label: `Send ${standby.handle} in to get ${who} out`, cost: `${standby.handle} drags ${who} clear and takes their place in the fight.` }] : []),
       { id: 'fight', label: `Keep fighting with ${who} down`, cost: `${who} could die unless someone stabilises them in time.`, push: true },
     ];
   }
   if (pending.kind === 'standoff') {
     return [
-      { id: 'press', label: 'Push past them', cost: `Alert +${BATTLE.press.alert}, heat +${BATTLE.press.heat}. The guards are still out there.` },
-      { id: 'out', label: 'Pull back', cost: pullBack, exit: true },
+      raid ? { id: 'press', label: 'Hold the door', cost: 'They back off down the stairs for now. The hall is held, and they\'ll remember (heat +1).' }
+        : { id: 'press', label: 'Push past them', cost: `Alert +${BATTLE.press.alert}, heat +${BATTLE.press.heat}. The guards are still out there.` },
+      { id: 'out', label: raid ? 'Walk out the back' : 'Pull back', cost: pullBack, exit: true },
     ];
   }
   if (pending.kind === 'alert') {

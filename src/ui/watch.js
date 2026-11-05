@@ -254,7 +254,8 @@ function tally(state) {
   const pips = el.querySelector('.watch__alert');
   pips.innerHTML = `Alert ${Array.from({ length: ALERT_MAX }, (_, i) => `<i class="${i < alert ? 'is-on' : ''}"></i>`).join('')}`;
   pips.setAttribute('aria-label', `Alert ${alert} of ${ALERT_MAX}${am.wentLoud ? ', gone loud' : ''}`);
-  el.querySelector('.watch__phase').textContent = am.wentLoud ? 'Gone loud' : ZONES[am.zone]?.name ?? 'Getting there';
+  el.querySelector('.watch__phase').textContent = am.raid ? 'Holding the hall' : am.wentLoud ? 'Gone loud' : ZONES[am.zone]?.name ?? 'Getting there';
+  pips.style.display = am.raid ? 'none' : ''; // a raid has no alarm to raise: they're already here
   const events = am.events ?? [];
   const saves = events.filter((e) => e.kind === 'save' && e.success && e.via !== 'patch').length;
   const hurt = new Set(events.filter((e) => e.injury).map((e) => e.injury.id)).size;

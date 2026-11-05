@@ -1,5 +1,6 @@
 // Calendar and the daily tick. Pure logic: takes state, returns new state.
 
+import { checkRaids } from './raids.js';
 import { introduceHalls } from './halls.js';
 import { tickJobs } from './jobs.js';
 import { driftTrust } from './clients.js';
@@ -96,6 +97,7 @@ export function advanceDay(prev) {
   state.recruits = (state.recruits ?? []).filter((r) => r.expiresDay >= state.day);
 
   returnSideTasks(state); // side tasks whose crew is back today resolve
+  checkRaids(state); // a raid due today knocks; a hot district with a hall may draw a warning (core/raids.js)
   return advanceAway(state); // crews out take today's share; one that needs a call waits (core/away.js)
 }
 

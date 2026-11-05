@@ -5,12 +5,14 @@
 import { RENEWAL_RESOLVER } from './renewals.js';
 import { HEAT_RESOLVER } from './heat.js';
 import { SPEC_RESOLVER } from './specialisations.js';
+import { RAID_RESOLVER } from './raids.js';
 
 /** kind -> (state, msg, optionId) => void. Mutates the (cloned) state; leaves msg.resolved to decide. */
 export const RESOLVERS = {
   renewal: RENEWAL_RESOLVER,
   heat: HEAT_RESOLVER,
   spec: SPEC_RESOLVER,
+  raid: RAID_RESOLVER,
 };
 
 /** Resolve one option on a decision message. Returns a new state; unknown ids or kinds change nothing. */

@@ -3,6 +3,7 @@
 
 import { heatIn, hottest, HEAT_DISTRICTS } from '../core/heat.js';
 import { hallIn, residents, freeBeds, canOpenHall, openHall, nextHallExpansion, expandHall, canMove, moveToHall } from '../core/halls.js';
+import { openRaids, raidOn, raidPrice, canBuyOff, defenders, raidChoices, payOffRaid, hallShut, raidWho, raidBy } from '../core/raids.js';
 import { HALL_SITES, HOME_HALL } from '../data/halls.js';
 import { billDue, mondayBrief, crewStandard, crewAgainstStandard } from '../core/week.js';
 import { crewLead } from '../core/lead.js';
@@ -319,6 +320,9 @@ function onClick(e) {
     case 'close-mission': screen = 'inbox'; return setState(closeMission(state));
     // Away crews calling in (core/away.js): take the call, then hand it back or take command.
     case 'take-call': openMessageId = null; return setState(takeCall(state, id));
+    case 'raid-pay': return setState(payOffRaid(state, id)); // pay the police off before the day (core/raids.js)
+    // A raid at the door, answered from City: its call is a message on Today.
+    case 'raid-answer': { screen = 'inbox'; openMessageId = id; const m = state.inbox.find((x) => x.id === id); if (m && !m.read) { m.read = true; saveGame(state); } break; }
     case 'let-run': screen = 'city'; cityTab = 'map'; return setState(letThemRun(state));
     case 'take-command': return setState(takeCommand(state));
     case 'sendoff-close': t.remove(); return;
@@ -765,18 +769,64 @@ function renderWeekBrief() {
 }
 
 /** Crews waiting on a call from the player. */
-const calls = () => (state.awayJobs ?? []).filter((j) => j.waiting).length;
+const calls = () => (state.awayJobs ?? []).filter((j) => j.waiting).length + raidCalls().length;
+/** Raids at the door now, waiting on the player's call (core/raids.js). */
+const raidCalls = () => state.inbox.filter((m) => m.kind === 'raid' && !m.resolved);
 
 /** Today's one line about the crews out; they're followed on City, the command centre (2026-11-05). */
 function renderOutLine() {
   const jobs = crewsOut(state).length + sideTasksOut(state).length;
-  if (!jobs) return '';
-  const n = calls();
-  return `<button class="outnow ${n ? 'is-call' : ''}" data-action="nav" data-id="city">
+  // A raid warned or at the door gets a line of its own (raids, 2026-11-05).
+  const raids = openRaids(state).map((r) => `<button class="outnow is-raid" data-action="nav" data-id="city">
+      <span class="outnow__light" aria-hidden="true"></span>
+      <span>${r.called ? `<strong>${esc(raidWho(r.district))} at the door: ${esc(hallLabel(r.district))}</strong>` : `<strong>Raid warned:</strong> ${esc(hallLabel(r.district))}, ${esc(raidWhen(r))}${r.answer === 'paid' ? ' · paid off' : ''}`}</span>
+      <span class="outnow__go">City ›</span>
+    </button>`).join('');
+  if (!jobs) return raids;
+  const n = calls() - raidCalls().length;
+  return `${raids}<button class="outnow ${n ? 'is-call' : ''}" data-action="nav" data-id="city">
       <span class="outnow__light" aria-hidden="true"></span>
       <span>${jobs} ${jobs === 1 ? 'crew' : 'crews'} out${n ? ` · <strong>${n} ${n === 1 ? 'call' : 'calls'} waiting</strong>` : ''}</span>
       <span class="outnow__go">City ›</span>
     </button>`;
+}
+
+/** "the Docks hall". */
+const hallLabel = (d) => `the ${cityName(d).replace(/^The /, '')} hall`;
+/** When a warned raid comes: "today", "tomorrow", or the weekday with the days to go. */
+function raidWhen(r) {
+  const left = r.day - state.day;
+  return left <= 0 ? 'today' : left === 1 ? 'tomorrow' : `${calendar(r.day).weekday} (in ${left} days)`;
+}
+
+/** The command centre's raid items (raids, 2026-11-05): warned, paid off, or at the door now. */
+function renderRaids(raids) {
+  if (!raids.length) return '';
+  return `
+    <ul class="crewsout" aria-label="Raids">
+      ${raids.map((r) => {
+        const home = defenders(state, r.district);
+        const call = state.inbox.find((m) => m.kind === 'raid' && !m.resolved && m.payload?.raidId === r.id);
+        const price = raidPrice(state, r);
+        const buy = canBuyOff(state, r) && !r.answer && !r.called;
+        return `
+        <li class="crewsout__job is-raid">
+          <div class="crewsout__top">
+            <span class="crewsout__light" aria-hidden="true"></span>
+            <p class="crewsout__head"><strong>${call ? 'At the door' : 'Raid warned'}</strong> <span class="muted small">${esc(hallLabel(r.district))} · ${esc(raidWhen(r))}</span></p>
+            <span class="crewsout__faces">${home.map((op) => face(op, 'sm')).join('')}</span>
+          </div>
+          <p class="small">${r.answer === 'paid' ? `Paid off (${money(r.paid)}). Nobody will come.`
+            : `${home.length ? `Home: ${esc(andList(home.map((o) => o.handle)))}.` : 'Nobody of ours is home to hold it.'} ${call ? 'They need your call now.' : `Hold it with whoever is home that day, or walk out the back. ${canBuyOff(state, r) ? `${esc(raidWho(r.district))} are on the take.` : `${esc(raidWho(r.district))} can\'t be bought.`}`}`}</p>
+          <div class="crewsout__foot">
+            ${call ? `<button class="btn btn--primary" data-action="raid-answer" data-id="${esc(call.id)}">Answer the door</button>` : ''}
+            ${buy ? `<button class="btn" data-action="raid-pay" data-id="${esc(r.id)}" ${state.cash < price ? 'disabled' : ''}>Pay them off · ${money(price)}</button>` : ''}
+            ${!call && r.answer !== 'paid' ? '<button class="linkbtn" data-action="nav" data-id="crew">Who lives there: Halls ›</button>' : ''}
+            ${whereButton(r.district)}
+          </div>
+        </li>`;
+      }).join('')}
+    </ul>`;
 }
 
 /** Crews out on jobs: where each is, what they did today, and a call waiting (core/away.js). */
@@ -875,6 +925,7 @@ function renderUpcoming(where) {
       case 'season': return `Season ${i.season} begins: everyone a year older`;
       case 'board': return 'New freelancers and street talk';
       case 'scout': return 'Scout report: new leads';
+      case 'raid': return `Raid on ${hallLabel(i.district)}: ${raidBy(i.district)} at the door`;
       case 'bills': return `Bills: ${money(i.total)} (wages ${money(i.wages)}, rent ${money(i.rent)})${state.cash < i.total ? `, ${money(i.total - state.cash)} short` : ''}`;
       case 'job-last': return `Last day for ${i.names.join(', ')}`;
       case 'lead-last': return `Last day to sign ${i.name} (${i.role})`;
@@ -953,6 +1004,8 @@ function renderMessage(m) {
       ${m.kind === 'spec' ? renderSpecOffer(m) : ''}
       ${m.kind === 'hall-offer' && !hallIn(state, m.payload.district) ? (canOpenHall(state, m.payload.district).ok ? `<button class="btn btn--primary" data-action="open-hall" data-id="${esc(m.payload.district)}">Open the hall · ${money(HALL_SITES[m.payload.district].deposit)}</button>` : `<p class="muted small">${esc(canOpenHall(state, m.payload.district).reason)}.</p>`) : ''}
       ${m.kind === 'callin' && !m.resolved ? `<button class="btn btn--primary" data-action="take-call" data-id="${esc(m.payload.jobId)}">Take the call</button>` : ''}
+      ${m.kind === 'raid' ? renderRaidCall(m) : ''}
+      ${m.kind === 'raid-warning' ? renderRaidWarning(m) : ''}
       ${jobLink}`;
 }
 
@@ -1118,6 +1171,34 @@ function renderSpecOffer(m) {
       ${m.resolved ? '' : `<div class="stack">
         ${m.options.map((o) => `<button class="btn ${o.id === 'later' ? 'btn--ghost' : 'btn--primary'}" data-action="decide" data-id="${esc(m.id)}" data-option="${esc(o.id)}">${esc(o.label)}</button>`).join('')}
       </div>`}`;
+}
+
+/** The police at a hall's door (core/raids.js): hold it, walk out the back, or pay where they take it. */
+function renderRaidCall(m) {
+  const raid = (state.raids ?? []).find((r) => r.id === m.payload.raidId);
+  if (!raid) return '';
+  if (m.resolved) return m.payload.outcome ? `<p><strong>${esc(m.payload.outcome)}</strong></p>` : '';
+  return `
+      <div class="stack raidcall">
+        ${raidChoices(state, raid).map((c) => `
+        <button class="choice ${c.exit ? 'choice--exit' : ''}" data-action="decide" data-id="${esc(m.id)}" data-option="${esc(c.id)}" ${c.disabled ? 'disabled' : ''}>
+          <strong>${esc(c.label)}</strong><span>${esc(c.disabled && c.reason ? `${c.reason}. ${c.cost}` : c.cost)}</span>
+        </button>`).join('')}
+      </div>`;
+}
+
+/** A raid warning: what's coming, and where the police take money, the price to call it off. */
+function renderRaidWarning(m) {
+  const raid = (state.raids ?? []).find((r) => r.id === m.payload.raidId);
+  if (!raid || raid.done) return raid?.outcome ? `<p class="muted small">It's over: ${esc({ paid: 'paid off', held: 'we held the hall', withdrew: 'we walked out' }[raid.outcome] ?? raid.outcome)}.</p>` : '';
+  const price = raidPrice(state, raid);
+  return `
+      <div class="stack">
+        ${canBuyOff(state, raid) && !raid.answer && !raid.called ? `<button class="btn btn--primary" data-action="raid-pay" data-id="${esc(raid.id)}" ${state.cash < price ? 'disabled' : ''}>Pay them off · ${money(price)}</button>` : ''}
+        ${raid.answer === 'paid' ? `<p class="small"><strong>Paid off (${money(raid.paid)}).</strong> Nobody will come.</p>` : ''}
+        <button class="btn" data-action="nav" data-id="city">See it on City</button>
+        <p class="muted small">Until then: move people into or out of the hall on Crew › Halls (moving takes the day), and keep crews home or send them out. On the day, whoever is home can hold it.</p>
+      </div>`;
 }
 
 /** Fixer notice at high heat: pay to cool it, or let it ride (the next job's first crisis roll is −1). */
@@ -2117,10 +2198,11 @@ function cityMap() {
     const hall = !home && !!hallIn(state, key); // another of the tong's halls (core/halls.js)
     return {
       key, locked: card.locked, selected: cityDistrict === key, jobs, out, home, hall, talk: talk === key, heat: card.locked ? 0 : heatIn(state, key),
+      raid: raidOn(state, key) && raidOn(state, key).answer !== 'paid' ? (raidOn(state, key).called ? 'NOW' : calendar(raidOn(state, key)?.day).weekday.slice(0, 3).toUpperCase()) : null, // a raid ring (core/raids.js)
       name: cityName(key).replace(/^The /, ''),
       turf: card.locked ? null : turfHex(key),
       label: [cityName(key), card.locked ? 'locked' : `${jobs || 'no'} job${jobs === 1 ? '' : 's'} on the board`, faction && `${faction} turf`,
-        home && 'the home hall is here', hall && 'a hall of ours is here', heatIn(state, key) > 0 && `heat ${heatIn(state, key)} of 10`, out && `${out} of yours out here`, talk === key && 'street talk about it'].filter(Boolean).join(', '),
+        home && 'the home hall is here', hall && 'a hall of ours is here', raidOn(state, key) && 'a raid is coming', heatIn(state, key) > 0 && `heat ${heatIn(state, key)} of 10`, out && `${out} of yours out here`, talk === key && 'street talk about it'].filter(Boolean).join(', '),
     };
   });
   return cityMapSvg(districts, esc);
@@ -2134,7 +2216,8 @@ function renderOps() {
   const f = cityDistrict;
   const jobs = crewsOut(state).filter((c) => !f || c.district === f).sort((a, b) => b.waiting - a.waiting);
   const side = sideTasksOut(state).filter((t) => !f || t.district === f);
-  const any = crewsOut(state).length + sideTasksOut(state).length;
+  const raids = openRaids(state).filter((r) => !f || r.district === f);
+  const any = crewsOut(state).length + sideTasksOut(state).length + openRaids(state).length;
   const sideList = side.length ? `
     <ul class="crewsout" aria-label="Side work out">
       ${side.map((t) => {
@@ -2156,7 +2239,7 @@ function renderOps() {
         <h2>Out now</h2>
         ${f ? `<button class="linkbtn" data-action="city-district" data-id="${esc(f)}">${esc(cityName(f))} only · show all</button>` : ''}
       </div>
-      ${jobs.length || side.length ? `${renderCrewsOut(jobs)}${sideList}`
+      ${jobs.length || side.length || raids.length ? `${renderRaids(raids)}${renderCrewsOut(jobs)}${sideList}`
         : `<p class="muted small">${any ? `Nobody of ours is out in ${esc(cityName(f))}.` : 'Nobody is out. Crews you send away are followed here, day by day.'}</p>
            ${any ? '' : '<button class="btn" data-action="nav" data-id="jobs">Find work</button>'}`}
     </div>`;
@@ -2210,7 +2293,8 @@ function districtCard(key) {
         const h = hallIn(state, key);
         if (!h) return '';
         const who = residents(state, key);
-        return `<div class="citycard__hall"><p class="small"><strong>Our hall</strong> · ${who.length}/${h.beds} beds · level ${h.level}</p>
+        const raid = raidOn(state, key);
+        return `<div class="citycard__hall"><p class="small"><strong>Our hall</strong> · ${who.length}/${h.beds} beds · level ${h.level}${hallShut(state, key) ? ` · <span class="citycard__shut">shut after a raid until day ${h.shutUntil}</span>` : ''}${raid ? ` · <span class="citycard__raid">raid ${esc(raidWhen(raid))}${raid.answer === 'paid' ? ', paid off' : ''}</span>` : ''}</p>
           ${who.length ? `<span class="citycard__faces">${who.map((op) => { const away = !!op.condition?.awayUntil && op.condition.awayUntil > state.day; return `<button class="citycard__face ${away ? 'is-out' : ''}" data-action="op-link" data-id="${esc(op.id)}" aria-label="${esc(op.handle)}${away ? ', out' : ''}">${face(op, 'sm')}</button>`; }).join('')}</span>` : '<p class="muted small">Nobody lives here yet.</p>'}</div>`;
       })()}
       ${c.locked ? `<p class="intel">${esc(c.teaser)}</p>` : (() => {

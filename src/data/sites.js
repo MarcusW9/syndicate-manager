@@ -406,6 +406,50 @@ const OLD_TOWN = {
   ],
 };
 
+/**
+ * A hall of ours, from above (raids, 2026-11-05): one shared layout for now, every district's hall
+ * drawn the same until each gets its own. Our people are in the back room by the stairs (the way
+ * out); the raiders come in through the front door off the street. The cover between is the hall's
+ * furniture: bunks, a table turned on its side, crates, the kitchen counter.
+ */
+export const HALL = {
+  name: 'our hall',
+  aria: 'Plan of our hall: the back stairs and the bunk room, the main room with a table and crates, the kitchen, and the front door onto the street',
+  points: { van: [40, 30], perch: [320, 30], target: [180, 56] },
+  paths: {
+    in: [[40, 30], [70, 44]],
+    inside: [[70, 44], [130, 52], [180, 56]],
+    target: [[180, 56], [180, 56]],
+    out: [[180, 56], [130, 52], [70, 44], [40, 30]],
+  },
+  views: { in: [0, 0, 360, 240], inside: [0, 0, 360, 240], target: [0, 0, 360, 240] },
+  posts: { in: [180, 190], inside: [180, 190], target: [180, 190] },
+  sight: { rifle: [[320, 30], [330, 34], [330, 40]], drone: [[320, 30], [8, 206], [352, 206], [352, 8]] },
+  shapes: [
+    ...ROAD,
+    { t: 'rect', cls: 'sp-building', x: 16, y: 14, w: 328, h: 184 },
+    { t: 'rect', cls: 'sp-door', x: 172, y: 195, w: 16, h: 5 },
+    { t: 'row', cls: 'sp-step', x: 24, y: 22, w: 26, h: 1.5, step: 5, n: 6, axis: 'y' },
+    { t: 'line', cls: 'sp-wall', x1: 110, y1: 14, x2: 110, y2: 92 },
+    { t: 'line', cls: 'sp-wall', x1: 260, y1: 14, x2: 260, y2: 92 },
+    { t: 'line', cls: 'sp-wall', x1: 16, y1: 120, x2: 120, y2: 120 },
+    { t: 'line', cls: 'sp-wall', x1: 240, y1: 120, x2: 344, y2: 120 },
+    // The bunk room (left), the back room (centre top), the kitchen (right).
+    { t: 'row', cls: 'sp-cot', x: 26, y: 132, w: 22, h: 8, step: 30, n: 3 },
+    { t: 'row', cls: 'sp-cot', x: 26, y: 160, w: 22, h: 8, step: 30, n: 3 },
+    { t: 'rect', cls: 'sp-desk', x: 150, y: 88, w: 30, h: 10 }, // the table, on its side
+    { t: 'rect', cls: 'sp-cover', x: 206, y: 96, w: 14, h: 12 }, // crates
+    { t: 'rect', cls: 'sp-cover', x: 126, y: 104, w: 12, h: 12 },
+    { t: 'rect', cls: 'sp-desk', x: 276, y: 130, w: 48, h: 9 }, // the kitchen counter
+    { t: 'rect', cls: 'sp-cover', x: 150, y: 150, w: 14, h: 10 }, // a shrine table by the door
+    { t: 'rect', cls: 'sp-cover', x: 204, y: 156, w: 12, h: 10 }, // shoes and umbrellas
+  ],
+  labels: [
+    { x: 22, y: 10, text: 'BACK STAIRS' }, { x: 26, y: 128, text: 'BUNKS' }, { x: 272, y: 126, text: 'KITCHEN' },
+    { x: 150, y: 30, text: 'OUR HALL', hi: true }, { x: 156, y: 210, text: 'FRONT DOOR' },
+  ],
+};
+
 /** Districts drawn as parts, by key. */
 export const PLOTS = { docks: DOCKS, oldTown: OLD_TOWN };
 
@@ -457,6 +501,7 @@ const hash = (str) => { let h = 2166136261; for (const ch of String(str)) h = Ma
  * the district's site or the generic one.
  */
 export function pickSite(district, jobId = '', templateId = null) {
+  if (String(templateId).startsWith('raid:')) return HALL; // a raid is fought in the hall itself
   const plot = PLOTS[district];
   if (!plot) return SITES[district] ?? SITES.generic;
   const pick = (list, salt) => list[hash(`${jobId}:${salt}`) % list.length];

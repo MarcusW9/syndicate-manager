@@ -108,6 +108,7 @@ export function canMove(state, opId, district) {
   if ((op.hall ?? HOME_HALL) === district) return { ok: false, reason: 'Already lives there' };
   if ((op.condition.awayUntil ?? 0) > state.day) return { ok: false, reason: 'Out on a job' };
   if (freeBeds(state, district) < 1) return { ok: false, reason: 'No free bed there' };
+  if ((hallIn(state, district).shutUntil ?? 0) > state.day) return { ok: false, reason: 'Shut after a raid' };
   return { ok: true, reason: 'ready' };
 }
 
