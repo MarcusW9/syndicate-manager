@@ -88,6 +88,8 @@ let founderPick = []; // candidate ids picked so far on a new game's first scree
 let runnersHidden = false; // the job board's runners panel, folded away for this session
 let clientOpen = false; // the plan's client background, shown on tap (owner, 2026-11-04: the same on every job they offer)
 let planTryList = []; // the plan bar's "Try" changes as last drawn (core/squad.js planTries), applied by index
+let ordersOpen = false; // the plan's How / Call me in / When they decide, folded to one line until tapped (2026-11-05)
+let boardRulesOpen = false; // the squad board's rules line, behind an i
 let whyOpen = false; // the plan bar's notes, all of them, on tap
 let meetHidden = null; // the plan's "What they'll likely meet" read folded away; null until first shown (folded on phones)
 
@@ -206,6 +208,8 @@ function onClick(e) {
     case 'toggle-meet': meetHidden = !meetHidden; break;
     case 'client-info': clientOpen = !clientOpen; break;
     case 'plan-why': whyOpen = !whyOpen; break;
+    case 'toggle-orders': ordersOpen = !ordersOpen; break;
+    case 'board-rules': boardRulesOpen = !boardRulesOpen; break;
     // The squad board (ui/board.js): tap a card, pick who goes there; anyone already placed swaps.
     case 'info': if (openInfo.has(id)) openInfo.delete(id); else openInfo.add(id); break;
     case 'pick-slot': pickSlot = id; break;
@@ -1628,7 +1632,8 @@ function renderPlan() {
       <h2>Squad</h2>
       ${(() => { const r = crewSizeRead(plan.crew.length, t.crewSize); return `<p class="sizebadge sizebadge--${r.level} ${r.penalty >= 2 ? 'is-severe' : ''}">${esc(r.text)}</p>`; })()}
       ${renderBoard(boardUi, { plan, tpl: t, people, crewSize: t.crewSize })}
-      <p class="muted small">Tap a card to pick who goes. Each person short of ${t.crewSize}: −1 on every roll. A second person within 3 of whoever rolls backs them up: +1.${freelancers.length ? ` Freelancers (up to ${MAX_FREELANCERS_PER_JOB}) take a share of the pay instead of a wage.` : ''}</p>
+      <p class="muted small">Tap a card to pick who goes. <button class="infobtn" data-action="board-rules" aria-expanded="${boardRulesOpen}" aria-label="How the squad works">${boardRulesOpen ? '×' : 'i'}</button></p>
+      ${boardRulesOpen ? `<p class="muted small">Each person short of ${t.crewSize}: −1 on every roll. A second person within 3 of whoever rolls backs them up: +1.${freelancers.length ? ` Freelancers (up to ${MAX_FREELANCERS_PER_JOB}) take a share of the pay instead of a wage.` : ''}</p>` : ''}
       ${renderMentoring(picked)}
       </div>
 
@@ -1646,8 +1651,12 @@ function renderPlan() {
       <div class="planbar__read">
         ${picked.length ? riskBadge(toughest) : '<span class="risk risk--none">no crew yet</span>'}
         ${!picked.length ? `<span class="planbar__why">${esc(`Pick up to ${most}; ${t.crewSize} recommended`)}</span>`
-          : notes.length === 1 ? `<span class="planbar__why">${esc(notes[0])}</span>`
-          : `<button class="planbar__why planbar__why--more" data-action="plan-why" aria-expanded="${whyOpen}">${whyOpen ? notes.map((n) => `<span>${esc(n)}</span>`).join('') : `${esc(notes[0])} <b>+${notes.length - 1} more</b>`}</button>`}
+          : notes.length === 1 && !planTryList.length ? `<span class="planbar__why">${esc(notes[0])}</span>`
+          : (() => {
+            // One line until asked (2026-11-05): the reason, then a tap for the rest and what to try.
+            const more = [notes.length > 1 ? `+${notes.length - 1} more` : '', planTryList.length ? `${planTryList.length} to try` : ''].filter(Boolean).join(' · ');
+            return `<button class="planbar__why planbar__why--more" data-action="plan-why" aria-expanded="${whyOpen}">${whyOpen ? `${notes.map((n) => `<span>${esc(n)}</span>`).join('')}<b>Hide ▴</b>` : `<span class="planbar__line">${esc(notes[0])}</span><b>${esc(more)} ▾</b>`}</button>`;
+          })()}
 
       </div>
       ${(() => {
@@ -1656,7 +1665,7 @@ function renderPlan() {
         ${plan.crew.length ? `${away ? 'Send them' : 'Go live'} (${plan.crew.length + [plan.overwatch, plan.wheels, plan.standby].filter(Boolean).length})` : 'Pick a crew'}
       </button>`;
       })()}
-      ${planTryList.length ? `<div class="planbar__tries"><span>Try</span>${planTryList.map((tr, i) => `<button class="trychip" data-action="plan-try" data-id="${i}">${esc(tryWord(tr))} <b>→ ${esc(riskWord(tr.level))}</b></button>`).join('')}</div>` : ''}
+      ${planTryList.length && whyOpen ? `<div class="planbar__tries"><span>Try</span>${planTryList.map((tr, i) => `<button class="trychip" data-action="plan-try" data-id="${i}">${esc(tryWord(tr))} <b>→ ${esc(riskWord(tr.level))}</b></button>`).join('')}</div>` : ''}
     </div>
     ${pickSlot ? renderPicker(boardUi, { plan, tpl: t, threat: v.threat, slot: pickSlot, people: pickerPeople(), freelancersFull: freelancersFull() }) : ''}`;
 }
@@ -1688,27 +1697,38 @@ function renderCallIns(t, days = t.days) {
   const canSend = handsOffAllowed(t);
   const mode = canSend && plan.mode !== 'live' ? 'away' : 'live';
   const modes = { away: ['Send them', `They go and do it over ${days === 1 ? 'the day' : `${days} days`}. Today shows what they did; they call when it's beyond their orders.`], live: ['Watch live', 'You watch the whole job now, on the map.'] };
-  return `
-      <h2>How</h2>
+  // Folded to one line until tapped (2026-11-05): most players set these once and leave them.
+  const summary = [canSend ? modes[mode][0] : 'Watch live (this one can\'t be sent off)', `call me in: ${CALL_IN[callIn].name.toLowerCase()}`, callIn === 'every' ? '' : `${ORDERS[orders].name.toLowerCase()} on their own`].filter(Boolean).join(' · ');
+  const head = `<h2 class="foldh2"><button class="foldh2__btn" data-action="toggle-orders" aria-expanded="${ordersOpen}" aria-controls="plan-orders">
+        <span>Orders</span><span class="foldh2__line" aria-hidden="true"></span><span class="foldh2__arrow" aria-hidden="true">▾</span></button></h2>`;
+  if (!ordersOpen) {
+    return `${head}
+      <button class="orderline" data-action="toggle-orders" aria-expanded="false">${esc(summary)} <b>Change</b></button>
+      ${lead && callIn === 'risky' ? `<p class="lead small"><strong>${esc(lead.handle)} leads</strong> (${esc(lead.fame)}): they take one risky call themselves before calling you.</p>` : ''}`;
+  }
+  return `${head}
+      <div id="plan-orders">
+      <h3 class="orders__h">How</h3>
       ${canSend ? `<div class="segmented">
         ${Object.entries(modes).map(([k, [name, desc]]) => `
           <button class="seg ${mode === k ? 'is-on' : ''}" data-action="mode" data-id="${k}" aria-pressed="${mode === k}"><strong>${esc(name)}</strong><span>${esc(desc)}</span></button>`).join('')}
       </div>` : '<p class="muted small">This job can\'t be sent off on its own: you\'ll watch this one.</p>'}
-      <h2>Call me in…</h2>
+      <h3 class="orders__h">Call me in…</h3>
       <div class="segmented">
         ${Object.entries(CALL_IN).map(([k, c]) => `
           <button class="seg ${callIn === k ? 'is-on' : ''}" data-action="callin" data-id="${k}" aria-pressed="${callIn === k}"><strong>${esc(c.name)}</strong><span>${esc(c.desc)}</span></button>`).join('')}
       </div>
       ${lead && callIn === 'risky' ? `<p class="lead small"><strong>${esc(lead.handle)} leads</strong> (${esc(lead.fame)}): they take one risky call themselves before calling you.</p>` : ''}
       ${callIn === 'every' ? '' : `
-      <h2>When they decide themselves</h2>
+      <h3 class="orders__h">When they decide themselves</h3>
       <p class="muted small">Their orders decide each call they don't bring to you. They never push on with a critical wound: at worst, they pull out.</p>
       <div class="segmented">
         ${Object.entries(ORDERS).map(([k, o]) => `
           <button class="seg ${orders === k ? 'is-on' : ''}" data-action="orders" data-id="${k}" aria-pressed="${orders === k}">
             <strong>${esc(o.name)}</strong><span>${esc(o.desc)}</span>
           </button>`).join('')}
-      </div>`}`;
+      </div>`}
+      </div>`;
 }
 
 // --- mission -----------------------------------------------------------

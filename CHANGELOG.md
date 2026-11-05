@@ -5,6 +5,13 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-05 · A shorter job plan
+- The orders (send them or watch live, when to call you in, how they decide on their own) are one line now; tap Change to set them.
+- Empty Overwatch, Wheels and Standby slots are small "optional" chips instead of big empty cards. With nobody carrying a rifle or a drone, Overwatch links straight to the armoury.
+- The squad rules (short-handed, backup, freelancers) are behind an ⓘ.
+- The bar at the bottom shows one reason; tap it for the rest and the changes to try.
+- On a phone the plan page is about a quarter shorter; on a desktop, about 30%.
+
 ## 2026-11-05 · Try this
 - When a job's plan is above low risk, the bar now suggests changes that would lower it, each with where it gets you: "switch to Stealth → high", "Burner for Signal → high", "add Synapse → high". Tap one and the plan changes. Only changes the game has checked actually lower the risk are shown; if none does on its own, it offers Joss's picks.
 - In "What they'll likely meet", a helper is only named when they make the row better.

@@ -110,12 +110,26 @@ export function renderBoard(ui, { plan, tpl, people, crewSize }) {
           <div class="dossiers dossiers--inside ${n >= 4 ? 'dossiers--pairs' : ''}" style="--n:${Math.min(4, n)}">${inside}</div>
         </div>
         <div class="board__group">
-          <p class="board__label">Outside <span>overwatch, the van, standby</span></p>
+          <p class="board__label">Outside <span>optional</span></p>
           ${ow && kitsFor(ow).length > 1 ? `<div class="kitpick" role="group" aria-label="Overwatch kit">
             ${kitsFor(ow).map((k) => `<button class="kitpick__btn ${kit === k ? 'is-on' : ''}" data-action="kit" data-id="${k}" aria-pressed="${kit === k}">${esc(overwatchKit(ow, k).name)}: ${k === 'rifle' ? 'sees outdoors' : 'sees everywhere'}</button>`).join('')}
           </div>` : ''}
           ${kit ? `<p class="small muted board__kitdesc">${esc(ow.handle)} has the ${esc(overwatchKit(ow, kit).name.toLowerCase())}. ${esc(overwatchKit(ow, kit).desc.replace(/^Lets them take overwatch with the \w+ stat\. /, ''))}${overwatchKit(ow, kit).spec ? ` ${esc(SPECIALISATIONS[overwatchKit(ow, kit).spec].name)}: ${esc(SPECIALISATIONS[overwatchKit(ow, kit).spec].desc.replace(/^On overwatch with an? \w+: /, ''))}` : ''}</p>` : ''}
-          <div class="dossiers" style="--n:3">${overCard}${wheelsCard}${standbyCard}</div>
+          ${(() => {
+            // Filled slots are cards; empty ones are one-line chips marked optional (2026-11-05), so
+            // they don't read as unfinished. Overwatch without a rifle or drone links to the armoury.
+            const slots = [
+              { slot: 'over', op: ow, card: overCard, name: 'Overwatch', hint: 'saves people in trouble', off: !armed },
+              { slot: 'wheels', op: wh, card: wheelsCard, name: 'Wheels', hint: 'takes the driving rolls' },
+              { slot: 'standby', op: sb, card: standbyCard, name: 'Standby', hint: 'called in when it goes wrong' },
+            ];
+            const filled = slots.filter((x) => x.op);
+            const chip = (x) => (x.off
+              ? `<div class="slotchip is-off"><b>Overwatch</b><small>needs a rifle or a drone</small><button class="slotchip__link" data-action="open-armoury">Armoury →</button></div>`
+              : `<button class="slotchip" data-action="pick-slot" data-id="${x.slot}" aria-label="${esc(x.name)}: empty, optional. ${esc(x.hint)}. Tap to assign."><b>+ ${esc(x.name)}</b><small>${esc(x.hint)}</small></button>`);
+            return `${filled.length ? `<div class="dossiers" style="--n:3">${filled.map((x) => x.card).join('')}</div>` : ''}
+          <div class="slotchips">${slots.filter((x) => !x.op).map(chip).join('')}</div>`;
+          })()}
         </div>
       </div>`;
 }

@@ -461,9 +461,11 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .planbar { position: sticky; bottom: 56px; z-index: 1; display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: #1b1f28; box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.35); }
 .planbar__read { flex: 1; min-width: 0; display: grid; gap: 4px; justify-items: start; }
 .planbar__why { font-size: 0.8rem; color: var(--muted); max-width: 100%; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; } /* two lines, then … (2026-11-05) */
-.planbar__why--more { display: -webkit-box; gap: 2px; min-height: 32px; padding: 0; border: 0; background: none; font: inherit; font-size: 0.8rem; color: var(--muted); text-align: left; cursor: pointer; }
+.planbar__why--more { display: grid; gap: 2px; min-height: 32px; padding: 0; border: 0; background: none; font: inherit; font-size: 0.8rem; color: var(--muted); text-align: left; cursor: pointer; }
 .planbar__why--more b { color: var(--warn); font-weight: 600; }
 .planbar__why--more[aria-expanded="true"] { display: grid; white-space: normal; }
+.planbar__line { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.planbar__why--more > b { justify-self: start; }
 /* "Try": single changes that lower the risk (2026-11-05); a tap makes the change. */
 .planbar:has(.planbar__tries) { flex-wrap: wrap; }
 .planbar__tries { flex: 1 0 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
@@ -785,6 +787,20 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .dossier.is-empty::before { display: none; }
 .dossier.is-empty b { font-size: min(0.72rem, 12.5cqi); letter-spacing: min(0.12em, 1.2cqi); text-transform: uppercase; white-space: nowrap; }
 .dossier.is-empty small { font-size: 0.68rem; padding: 0 4px; }
+/* Empty outside slots as one-line chips (2026-11-05): optional, so they shouldn't look unfinished. */
+.slotchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.slotchips:empty { display: none; }
+.dossiers + .slotchips { margin-top: 8px; }
+.slotchip { flex: 1 1 140px; display: grid; align-content: center; gap: 1px; min-height: var(--tap, 44px); padding: 5px 10px; text-align: left; border: 1px dashed #3a4254; background: transparent; color: var(--muted); font: inherit; cursor: pointer; }
+.slotchip b { font: 700 0.78rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text); }
+.slotchip small { font-size: 0.72rem; }
+.slotchip.is-off { cursor: default; grid-template-columns: 1fr auto; column-gap: 8px; }
+.slotchip.is-off b { color: var(--muted); }
+.slotchip.is-off small { grid-column: 1; }
+.slotchip__link { grid-column: 2; grid-row: 1 / span 2; align-self: center; min-height: 36px; padding: 0 8px; border: 0; background: none; color: var(--accent-2); font: 600 0.78rem system-ui, sans-serif; cursor: pointer; }
+.orderline { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 10px; width: 100%; min-height: var(--tap, 44px); padding: 8px 12px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font: inherit; font-size: 0.86rem; text-align: left; cursor: pointer; }
+.orderline b { font: 700 0.72rem var(--display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-2); }
+.orders__h { margin: 14px 0 6px; font: 700 0.78rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 .dossier__sil { width: 40px; height: 40px; border-radius: 50%; border: 2px dashed #3a4254; display: grid; place-items: center; font-size: 1.3rem; color: #4a5266; }
 /* Four or more inside on a phone: two to a row, each card turned landscape (photo left, name and
    numbers right) so names and stats stay full size (owner, 2026-10-29: "quite tight here maybe we

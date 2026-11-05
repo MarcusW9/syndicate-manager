@@ -40,6 +40,11 @@ try {
     await p.evaluate(() => document.querySelector('#risk-read').scrollIntoView({ block: 'start' }));
     await p.waitForTimeout(400);
     console.log(tag, await p.evaluate(() => document.querySelector('.planbar').innerText.replace(/\s+/g, ' ')));
+    await p.screenshot({ path: `${out}/try-${tag}-closed.png` });
+    // The chips show once the reason is tapped (2026-11-05).
+    if (await p.locator('[data-action="plan-why"]').count()) await p.locator('[data-action="plan-why"]').click();
+    await p.waitForTimeout(300);
+    await p.evaluate(() => document.querySelector('#risk-read').scrollIntoView({ block: 'start' }));
     await p.screenshot({ path: `${out}/try-${tag}.png` });
     if (await p.locator('.trychip').count()) {
       await p.locator('.trychip').first().click();
