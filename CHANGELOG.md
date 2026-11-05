@@ -11,6 +11,37 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - **Runner tiles say when they're back**, e.g. "Out · Wed".
 - **Each crew out has its own card on Today:** their faces, a status light (cyan on track, pulsing yellow when they're calling, red if someone's hurt, grey when lying low), a bar filling as the job moves through its story, what they're doing now (casing the place, going in, on the job, getting out) and today's lines.
 - **When a crew you sent away gets back**, Today shows it that day: their faces coming home, a stamp with the result and the pay, a line from Joss, and the report.
+- Joss's new lines (sending off, coming back, a crew calling in, the end of a day out) are in the warmer voice now in canon: people first, then the money.
+## 2026-11-05 · Joss says why
+- Under the squad board, Joss says in one line why they picked who they picked: "Drizzle keeps us out of sight, Signal takes the locks and cameras." It shows while the squad is still Joss's.
+- The notes in the plan's bottom bar are shorter ("Weakest: Locked door · Signal tech 9"), say each thing once, and the bar folds back to one line when you open a job or try a change.
+
+## 2026-11-05 · See what a change does
+- When you change a plan (who goes, the approach, overwatch, the van), each encounter whose risk moved says what it was ("was high", green if better, red if worse) and flashes once; so does the risk in the bar. Folded, "What they'll likely meet" says how many changed.
+- A job's brief is shown in full the first time you open it; after that it's two lines with "Read more".
+
+## 2026-11-05 · A shorter job plan
+- The orders (send them or watch live, when to call you in, how they decide on their own) are one line now; tap Change to set them.
+- Empty Overwatch, Wheels and Standby slots are small "optional" chips instead of big empty cards. With nobody carrying a rifle or a drone, Overwatch links straight to the armoury.
+- The squad rules (short-handed, backup, freelancers) are behind an ⓘ.
+- The bar at the bottom shows one reason; tap it for the rest and the changes to try.
+- On a phone the plan page is about a quarter shorter; on a desktop, about 30%.
+
+## 2026-11-05 · Try this
+- When a job's plan is above low risk, the bar now suggests changes that would lower it, each with where it gets you: "switch to Stealth → high", "Burner for Signal → high", "add Synapse → high". Tap one and the plan changes. Only changes the game has checked actually lower the risk are shown; if none does on its own, it offers Joss's picks.
+- In "What they'll likely meet", a helper is only named when they make the row better.
+
+## 2026-11-05 · Planning says why
+- The bar at the bottom of a job's plan now always says what sets the risk: the weakest point ("Weakest point: Guard up close, Siphon combat 5"), or the skill the job's crises lean on and your chance on it. "Crew matches the job well" only shows when the risk is low.
+- The start button says what you're committing to: "Send them (4)" or "Go live (4)".
+- The skill icons on the job cards now have their names next to them.
+
+## 2026-11-05 · The plan's encounter list fits on desktop
+- In "What they'll likely meet", what lowers a risk ("→ low with Dim Sum, counting the fight") now sits on its own line under the encounter, so the names and who handles them no longer get squeezed on desktop. On a loud run, "a loud run means a fight" is said once at the bottom instead of on every row.
+
+## 2026-11-05 · A warmer Joss
+- Joss's lines on Today, in alerts and at the top of job reports are rewritten to be warmer and more practical, with less teasing. Same facts, same places.
+
 ## 2026-11-04 · A shorter job plan
 - The client's background is behind an ⓘ next to their name; tap it to read. What changes the job (harder rolls, unreliable intel, named offers, street talk) still shows.
 - "What they'll likely meet" is grouped by when it happens (the way in, inside, the target) with one line each: what it is, who handles it, the risk. ⚠ marks the dangerous ones. On desktop the rows no longer squeeze into narrow columns.

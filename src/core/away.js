@@ -42,7 +42,7 @@ function callMessage(s, am) {
   return {
     id: `callin-${am.jobId}-${s.day}-${am.step}`, type: 'job', kind: 'callin', day: s.day,
     subject: `We need a call: ${tpl.name}`,
-    body: `${names(crewOf(s, am))} ${am.crewIds.length > 1 ? 'are' : 'is'} on the line. Something's come up that's beyond their orders.`,
+    body: `${names(crewOf(s, am))} ${am.crewIds.length > 1 ? 'are' : 'is'} on the line. Something's come up that's beyond their orders, and they'd like your call. They'll hold until we answer.`,
     blocking: true, resolved: false, read: false, payload: { jobId: am.jobId },
   };
 }

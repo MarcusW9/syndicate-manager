@@ -25,6 +25,7 @@ try {
   await p.locator('[data-action="open-job"]').filter({ visible: true }).first().click();
   await p.waitForTimeout(300);
   await p.screenshot({ path: `${out}/01-plan-top.png` });
+  if (await p.locator('[data-action="toggle-orders"][aria-expanded="false"]').count()) await p.locator('[data-action="toggle-orders"]').first().click(); // The plan's orders fold to one line (2026-11-05): open them first.
   await p.locator('[data-action="callin"]').first().scrollIntoViewIfNeeded();
   await p.evaluate(() => window.scrollBy(0, 200));
   await p.waitForTimeout(200);

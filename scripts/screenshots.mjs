@@ -121,6 +121,7 @@ try {
       await top(); await shot('planning');
       // The squad board (2026-10-27, slice 2): Joss fills it; a look at the picker sheet.
       if (await click('[data-action="joss"]')) {
+        await click('[data-action="toggle-orders"][aria-expanded="false"]'); // The plan's orders fold to one line (2026-11-05): open them first.
         await click('[data-action="callin"][data-id="every"]');
         await page.evaluate(() => document.querySelector('.board')?.scrollIntoView({ block: 'center' }));
         await shot('squad-board');
@@ -133,6 +134,7 @@ try {
         for (let i = 0; i < 4; i++) await click('[data-action="toggle-crew"]:not(.is-on):not([disabled])');
         // The squad run (2026-10-27): someone on overwatch, and call-ins at every crisis so one shows up.
         await click('[data-action="overwatch"]');
+        await click('[data-action="toggle-orders"][aria-expanded="false"]');
         await click('[data-action="callin"][data-id="every"]');
       }
       await shot('planning-crew-picked');

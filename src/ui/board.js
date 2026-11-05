@@ -110,12 +110,26 @@ export function renderBoard(ui, { plan, tpl, people, crewSize }) {
           <div class="dossiers dossiers--inside ${n >= 4 ? 'dossiers--pairs' : ''}" style="--n:${Math.min(4, n)}">${inside}</div>
         </div>
         <div class="board__group">
-          <p class="board__label">Outside <span>overwatch, the van, standby</span></p>
+          <p class="board__label">Outside <span>optional</span></p>
           ${ow && kitsFor(ow).length > 1 ? `<div class="kitpick" role="group" aria-label="Overwatch kit">
             ${kitsFor(ow).map((k) => `<button class="kitpick__btn ${kit === k ? 'is-on' : ''}" data-action="kit" data-id="${k}" aria-pressed="${kit === k}">${esc(overwatchKit(ow, k).name)}: ${k === 'rifle' ? 'sees outdoors' : 'sees everywhere'}</button>`).join('')}
           </div>` : ''}
           ${kit ? `<p class="small muted board__kitdesc">${esc(ow.handle)} has the ${esc(overwatchKit(ow, kit).name.toLowerCase())}. ${esc(overwatchKit(ow, kit).desc.replace(/^Lets them take overwatch with the \w+ stat\. /, ''))}${overwatchKit(ow, kit).spec ? ` ${esc(SPECIALISATIONS[overwatchKit(ow, kit).spec].name)}: ${esc(SPECIALISATIONS[overwatchKit(ow, kit).spec].desc.replace(/^On overwatch with an? \w+: /, ''))}` : ''}</p>` : ''}
-          <div class="dossiers" style="--n:3">${overCard}${wheelsCard}${standbyCard}</div>
+          ${(() => {
+            // Filled slots are cards; empty ones are one-line chips marked optional (2026-11-05), so
+            // they don't read as unfinished. Overwatch without a rifle or drone links to the armoury.
+            const slots = [
+              { slot: 'over', op: ow, card: overCard, name: 'Overwatch', hint: 'saves people in trouble', off: !armed },
+              { slot: 'wheels', op: wh, card: wheelsCard, name: 'Wheels', hint: 'takes the driving rolls' },
+              { slot: 'standby', op: sb, card: standbyCard, name: 'Standby', hint: 'called in when it goes wrong' },
+            ];
+            const filled = slots.filter((x) => x.op);
+            const chip = (x) => (x.off
+              ? `<div class="slotchip is-off"><b>Overwatch</b><small>needs a rifle or a drone</small><button class="slotchip__link" data-action="open-armoury">Armoury →</button></div>`
+              : `<button class="slotchip" data-action="pick-slot" data-id="${x.slot}" aria-label="${esc(x.name)}: empty, optional. ${esc(x.hint)}. Tap to assign."><b>+ ${esc(x.name)}</b><small>${esc(x.hint)}</small></button>`);
+            return `${filled.length ? `<div class="dossiers" style="--n:3">${filled.map((x) => x.card).join('')}</div>` : ''}
+          <div class="slotchips">${slots.filter((x) => !x.op).map(chip).join('')}</div>`;
+          })()}
         </div>
       </div>`;
 }
@@ -173,8 +187,10 @@ export function renderPicker(ui, { plan, tpl, threat, slot, people, freelancersF
     </div>`;
 }
 
+const RISKS = ['low', 'moderate', 'high', 'extreme'];
+
 /** The coverage read (core/squad.js coverage): what the crew will likely meet, who handles it, the gaps. */
-export function renderCoverage(ui, cov, { overwatch, approachName, standby = null }) {
+export function renderCoverage(ui, cov, { overwatch, approachName, standby = null, was = null }) {
   const { esc, riskBadge } = ui;
   if (!cov.rows.some((r) => r.handler)) return '<div class="riskcard"><p class="muted">Pick a crew to see what they\'d face.</p></div>';
   return `
@@ -185,19 +201,33 @@ export function renderCoverage(ui, cov, { overwatch, approachName, standby = nul
           const groups = [];
           for (const r of cov.rows) { const g = groups.find((x) => x.where === r.where); if (g) g.rows.push(r); else groups.push({ where: r.where, rows: [r] }); }
           const row = (r) => {
-            const lower = (r.withSave || r.fight) && r.effective !== r.risk
-              ? `<span class="cover__with">→ ${esc(ui.riskWord(r.effective))}${r.withSave ? ` with ${esc(r.withSave.op.handle)}` : ''}${r.fight ? `${r.withSave ? ',' : ''} counting the fight` : ''}</span>` : '';
-            const fight = r.fight && r.handler ? [r.fight.forced ? 'a loud run means a fight' : '', r.fight.down >= 0.1 ? 'a fight could put someone down' : ''].filter(Boolean).join('; ') : '';
+            // What it was before the last change to the plan (2026-11-05), if it was there and moved
+            // (a new approach brings different encounters: those aren't tagged). The tag goes with the
+            // final risk: at the end of the "→" line when there is one, else under the badge.
+            const before = was?.rows.get(was.key(r)) ?? null;
+            const moved = before && before !== r.effective;
+            const wasTag = moved ? `<span class="was was--${RISKS.indexOf(r.effective) < RISKS.indexOf(before) ? 'better' : 'worse'}">was ${esc(ui.riskWord(before))}</span>` : '';
+            const hasLower = (r.withSave || r.fight) && r.effective !== r.risk;
+            const lower = hasLower
+              ? (() => {
+                // Who helps is named only when the row gets better (2026-11-05); a fight can make it worse.
+                const better = RISKS.indexOf(r.effective) < RISKS.indexOf(r.risk);
+                const who = better && r.withSave ? ` with ${esc(r.withSave.op.handle)}` : '';
+                return `<span class="cover__with">→ ${esc(ui.riskWord(r.effective))}${who}${r.fight ? `${who ? ',' : ''} counting the fight` : ''}${wasTag ? ` ${wasTag}` : ''}</span>`;
+              })() : '';
+            // "A loud run means a fight" is said once, under the read (2026-11-05), not on every row.
+            const fight = r.fight && r.handler && r.fight.down >= 0.1 ? 'a fight could put someone down' : '';
             return `
-          <div class="cover__row ${r.gap ? 'is-gap' : ''}">
+          <div class="cover__row ${r.gap ? 'is-gap' : ''} ${moved && was.fresh ? 'is-flash' : ''}">
             <p class="cover__name">${esc(r.name)}${r.danger ? ' <span class="cover__danger" role="img" aria-label="danger">⚠</span>' : ''}</p>
             <p class="cover__who">${r.handler ? `${esc(r.handler.op.handle)} (${esc(r.handler.stat)} ${r.handler.value})` : 'nobody can'}${fight ? ` · ${esc(fight)}` : ''}</p>
-            <span class="cover__risk">${riskBadge(r.handler ? r.risk : 'extreme')}${lower}</span>
+            <span class="cover__risk">${riskBadge(r.handler ? r.risk : 'extreme')}${hasLower ? '' : wasTag}</span>
+            ${lower}
           </div>`;
           };
           return groups.map((g) => `<p class="cover__group">${esc(g.where)}</p>${g.rows.map(row).join('')}`).join('');
         })()}
-        ${cov.rows.some((r) => r.danger) ? '<p class="cover__note cover__note--muted">⚠ Danger: if it goes wrong, someone could be hurt, or it turns into a fight.</p>' : ''}
+        ${cov.rows.some((r) => r.danger) ? `<p class="cover__note cover__note--muted">⚠ Danger: ${cov.rows.some((r) => r.fight?.forced) ? 'on a loud run, each one is a fight' : 'if it goes wrong, someone could be hurt, or it turns into a fight'}.</p>` : ''}
         ${cov.spotted ? `<p class="cover__note">${cov.spotted} more than recommended inside on a ${esc(approachName.toLowerCase())} run: −${cov.spotted} on stealth and social rolls.</p>` : ''}
         ${overwatch ? '' : '<p class="cover__note cover__note--muted">No overwatch: only a teammate inside can save someone in trouble.</p>'}
         ${standby ? `<p class="cover__note cover__note--muted">${esc(standby.handle)} is on standby: they can come in at max alert (the alert stays up, but they back up rolls and get a try at saving anyone in trouble) or to get someone badly hurt out.</p>` : ''}

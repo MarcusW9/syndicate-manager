@@ -28,7 +28,7 @@ old tong.
 
 PARTNER: Joss (they/them), the crew's bootleg AI: pirated assistant code the Ghost
 Circuit flashed onto salvaged hardware, named after joss paper. With the fixer since
-before the crew; a partner and crew member who says "we", dry and warm, and never knows
+before the crew; a partner and crew member who says "we", warm, practical, occasionally dry, and never knows
 more than the board shows. Where they came from is a rumour, never confirmed.
 
 CITY: Lantern Bay (燈籠灣, Dang Lung Wan). FICTIONAL, Hong Kong-inspired, year 2057.

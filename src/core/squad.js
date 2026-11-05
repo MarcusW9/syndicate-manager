@@ -7,7 +7,7 @@ import { incidentById, incidentDifficulty, handlerFor, bestSave } from './incide
 import { overwatchKit, kitsFor } from './gear.js';
 import { crewRoll, effectiveStat, APPROACHES } from './crew.js';
 import { successChance, riskLabel, rollTarget, assessJob } from './risk.js';
-import { availability, MAX_EXTRA_CREW } from './crew.js';
+import { availability, MAX_EXTRA_CREW, maxCrew } from './crew.js';
 import { jobView } from './jobs.js';
 import { intelFor } from './sidetasks.js';
 import { WATCHED_PENALTY } from './heat.js';
@@ -214,4 +214,34 @@ export function jobRead(state, job) {
     }
   }
   return best;
+}
+
+/**
+ * What to try to lower the plan's risk (2026-11-05, the plan bar's "Try"): one change at a time
+ * from the plan as it stands: another approach, one inside runner swapped for someone free, one
+ * more inside (up to the most allowed), someone free on overwatch (with kit they carry) or at the
+ * wheel. Each is read with planRead, the same read the bar shows; only changes that lower the level
+ * are kept, the lowest level first, then the smallest change; one of each kind, at most `limit`.
+ * plan: { crew: [op], approach, overwatch: op|null, kit, wheels: op|null }; free: [op] who could go.
+ * Returns [{ kind: 'approach'|'swap'|'add'|'overwatch'|'wheels', level, approach?, out?, op?, kit? }].
+ */
+export function planTries(state, job, plan, free, { limit = 3 } = {}) {
+  const tpl = jobView(state, job).tpl;
+  const rank = (p) => RISK_ORDER.indexOf(planRead(state, job, p).level);
+  const now = rank(plan);
+  if (now === 0 || !plan.crew.length) return [];
+  const inPlan = (op) => plan.crew.includes(op) || op === plan.overwatch || op === plan.wheels;
+  const spare = free.filter((op) => !inPlan(op));
+  const COST = { approach: 0, swap: 1, overwatch: 2, wheels: 2, add: 3 };
+  const found = [];
+  const keep = (t, p) => { const r = rank(p); if (r < now) found.push({ ...t, level: RISK_ORDER[r], r }); };
+  for (const approach of Object.keys(APPROACHES)) if (approach !== plan.approach) keep({ kind: 'approach', approach }, { ...plan, approach });
+  for (const out of plan.crew) for (const op of spare) keep({ kind: 'swap', out, op }, { ...plan, crew: plan.crew.map((o) => (o === out ? op : o)) });
+  if (plan.crew.length < maxCrew(tpl.crewSize)) for (const op of spare) keep({ kind: 'add', op }, { ...plan, crew: [...plan.crew, op] });
+  if (!plan.overwatch) for (const op of spare) for (const kit of kitsFor(op)) keep({ kind: 'overwatch', op, kit }, { ...plan, overwatch: op, kit });
+  if (!plan.wheels) for (const op of spare) keep({ kind: 'wheels', op }, { ...plan, wheels: op });
+  found.sort((a, b) => a.r - b.r || COST[a.kind] - COST[b.kind]);
+  const out = [];
+  for (const t of found) if (!out.some((x) => x.kind === t.kind) && out.length < limit) out.push(t);
+  return out.map(({ r, ...t }) => t);
 }
