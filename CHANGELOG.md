@@ -4,6 +4,14 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-05 · The City map, redrawn
+- **The City map is now the command centre's neon map**, as in the mock-up: a compact map of the city that fits a phone with room for the card underneath. Districts in their gang's light, halls a little brighter, locked districts hatched.
+- **Each district's plate says who's based there, its work and its heat** ("⌂ 7 here · heat 1").
+- **Crews out show as their faces** on the district they're working, on a dotted route from their hall. A crew calling you rings yellow and pulses; side work is a smaller grey token.
+- **Heat glows** round each district, sodium, amber, then red; **a raid warned** rings the hall.
+- A legend under the map. Every district's name is a big tap target.
+- Only calls and raids move on the map; all of it stays still with reduced motion.
+
 ## 2026-11-05 · Raids on the halls
 - **Run a district hot where you have a hall, and the police may come for it.** At heat 7 or more there's a chance each day of a warning: they'll be at the door in three days.
 - **The warning shows on City** (top of Out now, with who's home and the day), as a red ring round the district on the map, on Today, and in Coming up. Until then you can move people into or out of the hall, or keep crews home.

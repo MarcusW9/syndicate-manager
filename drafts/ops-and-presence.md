@@ -119,3 +119,11 @@ pays repairs and shuts a week), or pay at the door where possible. Death only af
 Owner's calls: police now, gangs next (gangs expect settlements; police barely bribable); a daily
 roll, not every Sunday; holding as a reverse command fight; no minimum garrison. Next: gang raids
 (a grudge per gang), a hall map per district, then the neon map.
+
+## 11. The command centre's map, part 2 (built, 2026-11-05)
+
+The City map is the mock-up's neon map (`ui/citymap.js`): faceted districts, plates with who's based
+there and the heat, heat glows, crews out as faces on a route from their hall, calls pulsing, raid
+rings, a legend. Only calls and raids move (owner: ambient motion clutters it). The landmarks drawn
+in the portraits' style (`ui/landmarks.js`) are kept for the district card, the halls and the raid
+screens. Next: gang raids.

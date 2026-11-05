@@ -7,7 +7,7 @@
 // Run: node scripts/city-map-schematic.mjs
 
 import { writeFileSync } from 'node:fs';
-import { MAP_SHAPES as S, MAP_W, MAP_H } from '../src/ui/citymap.js';
+import { MAP_SHAPES as S, MAP_W, MAP_H } from './lib/city-map-2026-10.mjs';
 
 const T = {
   bg: '#0a0c0f', panel: '#12151b', panel2: '#161a21', line: '#2a303b', text: '#e9ecf1', muted: '#8a93a6',
