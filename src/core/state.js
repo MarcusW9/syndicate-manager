@@ -1,5 +1,6 @@
 // Creating a new game. Pure logic: no DOM, no storage.
 
+import { homeHall, syncHalls } from './halls.js';
 import { weekStartOf } from './week.js';
 import { STARTING_RANK } from '../data/tong.js';
 import { STARTING_CREW, STARTING_TRUST } from '../data/operatives.js';
@@ -12,7 +13,7 @@ import { ECONOMY } from '../data/economy.js';
 import { refreshSideBoard } from './sidetasks.js';
 import { refreshArmoury } from './looks.js';
 
-export const SAVE_VERSION = 37;
+export const SAVE_VERSION = 38;
 
 // A rookie crew's first board: small work only.
 export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];
@@ -81,8 +82,9 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
     recruits: [],
     freelancers: [],
     recruitSeq: 0,
-    rosterCap: STARTING_ROSTER_CAP,
-    safehouseLevel: 1,
+    rosterCap: STARTING_ROSTER_CAP, // all the halls' beds (core/halls.js syncHalls)
+    halls: [], // the tong's halls, one per district (core/halls.js); the home hall is set below
+    hallOffers: [], // districts whose contact has offered us a place (introduceHalls)
     clients: {},
     founding: null, // { candidates } while the player picks the founders (chooseFounders)
   };
@@ -105,6 +107,8 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
     // Opening board: one safe job, one mid, one dangerous (see DESIGN.md).
     for (const id of ['courier', 'data_pull', 'warehouse']) addOffer(state, id);
   }
+  state.halls = [homeHall(state.rosterCap, state.rent)]; // the safehouse is the Old Town hall
+  syncHalls(state);
   refreshFreelancers(state);
   refreshSideBoard(state);
   refreshArmoury(state);

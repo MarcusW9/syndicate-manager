@@ -1,6 +1,8 @@
 // Recruiting: generated operatives, weekly scout leads, hiring, safehouse
 // expansion. Pure logic. All randomness is seeded through nextRng(state).
 
+import { hallWithRoom, nextHallExpansion, expandHall } from './halls.js';
+import { HOME_HALL } from '../data/halls.js';
 import { CULTURES, HANDLES, ROLE_PROFILES, ORIGINS, TEMPERAMENTS, HABITS, BADGE_COLORS } from '../data/recruitPools.js';
 import { TRAITS } from '../data/traits.js';
 import { NAMES } from '../config/names.js';
@@ -30,11 +32,8 @@ export function pickTraits(rng, leanings = []) {
   return [first.id, second.id];
 }
 
-/** Cost and effect of the next safehouse expansion. */
-export function nextExpansion(state) {
-  const level = state.safehouseLevel ?? 1;
-  return { cost: 10000 * level, beds: 2, rentIncrease: 1000, level: level + 1 };
-}
+/** Cost and effect of the next expansion of the home hall (the old safehouse; core/halls.js). */
+export const nextExpansion = (state) => nextHallExpansion(state, HOME_HALL);
 
 const QUALITY = [
   { id: 'rookie', weight: 50, age: [18, 24], primary: [10, 13], secondary: [6, 10], other: [3, 8] },
@@ -212,7 +211,7 @@ export function scoutWeek(state) {
 export const signingFee = (recruit) => recruit.wage; // one week's wage up front
 
 export function canHire(state, recruit) {
-  if (state.crew.length >= (state.rosterCap ?? STARTING_ROSTER_CAP)) return { ok: false, reason: 'The safehouse is full' };
+  if (state.crew.length >= (state.rosterCap ?? STARTING_ROSTER_CAP)) return { ok: false, reason: 'Every bed is taken' };
   if (state.cash < signingFee(recruit)) return { ok: false, reason: 'Not enough cash for the signing fee' };
   return { ok: true };
 }
@@ -234,6 +233,7 @@ export function hire(prev, recruitId) {
     history: [`Day ${state.day}: joined the crew`],
     gear: loadoutOf(state, r.brings ?? []),
   }));
+  state.crew.at(-1).hall = hallWithRoom(prev) ?? HOME_HALL; // a free bed, home first (core/halls.js)
   state.inbox.unshift({
     id: `hired-${r.id}`, type: 'crew', day: state.day,
     subject: `${r.handle} joins the crew`,
@@ -261,18 +261,5 @@ export function passRecruit(prev, recruitId) {
   return state;
 }
 
-export function expandSafehouse(prev) {
-  const state = structuredClone(prev);
-  const x = nextExpansion(state);
-  if (state.cash < x.cost) return prev;
-  state.cash -= x.cost;
-  state.rosterCap = (state.rosterCap ?? STARTING_ROSTER_CAP) + x.beds;
-  state.rent += x.rentIncrease;
-  state.safehouseLevel = x.level;
-  state.inbox.unshift({
-    id: `safehouse-${state.day}`, type: 'finance', day: state.day,
-    subject: `Safehouse expanded: room for ${state.rosterCap}`,
-    body: `You took over the flat next door. Paid ${x.cost}. Rent is now ${state.rent} a week.`, blocking: false, read: false,
-  });
-  return state;
-}
+/** Expand the home hall (the old safehouse). */
+export const expandSafehouse = (prev) => expandHall(prev, HOME_HALL);

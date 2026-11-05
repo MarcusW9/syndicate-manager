@@ -1,6 +1,8 @@
 // UI layer: the only code that touches the DOM. Reads state, calls core
 // functions, re-renders. Tap/click only; nothing depends on hover.
 
+import { hallIn, residents, freeBeds, canOpenHall, openHall, nextHallExpansion, expandHall, canMove, moveToHall } from '../core/halls.js';
+import { HALL_SITES, HOME_HALL } from '../data/halls.js';
 import { billDue, mondayBrief, crewStandard, crewAgainstStandard } from '../core/week.js';
 import { crewLead } from '../core/lead.js';
 import { rankOf } from '../core/tong.js';
@@ -200,9 +202,17 @@ function onClick(e) {
     case 'hire': openRecruitId = null; return setState(hire(state, id));
     case 'haggle': return setState(haggle(state, id));
     case 'pass': openRecruitId = null; return setState(passRecruit(state, id));
-    case 'expand':
-      if (confirm(`Expand the safehouse for ${money(nextExpansion(state).cost)}? Rent goes up by ${money(nextExpansion(state).rentIncrease)} a week.`)) return setState(expandSafehouse(state));
+    case 'expand-hall': { // halls (core/halls.js)
+      const x = nextHallExpansion(state, id);
+      if (x && confirm(`Expand the ${cityName(id)} hall for ${money(x.cost)}? +${x.beds} beds; its rent goes up by ${money(x.rentIncrease)} a week.`)) return setState(expandHall(state, id));
       break;
+    }
+    case 'open-hall': {
+      const site = HALL_SITES[id];
+      if (confirm(`Open a hall in ${cityName(id)}: ${site.place}? ${money(site.deposit)} down, ${site.beds} beds, ${money(site.rent)} a week.`)) return setState(openHall(state, id));
+      break;
+    }
+    case 'move-hall': { const [opId, d] = id.split('|'); return setState(moveToHall(state, opId, d)); }
     case 'open-job': { // also from Today's alerts
       // The plan starts as Joss's read from the board card, so the risk the card showed is the risk here.
       screen = 'jobs';
@@ -906,6 +916,7 @@ function renderMessage(m) {
       ${m.kind === 'renewal' ? renderRenewal(m) : ''}
       ${m.kind === 'heat' ? renderHeatNotice(m) : ''}
       ${m.kind === 'spec' ? renderSpecOffer(m) : ''}
+      ${m.kind === 'hall-offer' && !hallIn(state, m.payload.district) ? (canOpenHall(state, m.payload.district).ok ? `<button class="btn btn--primary" data-action="open-hall" data-id="${esc(m.payload.district)}">Open the hall · ${money(HALL_SITES[m.payload.district].deposit)}</button>` : `<p class="muted small">${esc(canOpenHall(state, m.payload.district).reason)}.</p>`) : ''}
       ${m.kind === 'callin' && !m.resolved ? `<button class="btn btn--primary" data-action="take-call" data-id="${esc(m.payload.jobId)}">Take the call</button>` : ''}
       ${jobLink}`;
 }
@@ -1144,9 +1155,41 @@ function renderFounding() {
 }
 
 // --- crew --------------------------------------------------------------
+/** The tong's halls (core/halls.js): who lives where, beds, rent, expanding, and opening another. */
+function renderHalls() {
+  const halls = state.halls ?? [];
+  const sites = Object.entries(HALL_SITES).filter(([d, site]) => site.deposit != null && !hallIn(state, d));
+  return `
+      <h2>Halls</h2>
+      <ul class="halls">
+        ${halls.map((h) => {
+          const x = nextHallExpansion(state, h.district);
+          const who = residents(state, h.district);
+          return `
+          <li class="hall">
+            <p class="hall__head"><strong>${esc(cityName(h.district))}</strong>${h.district === HOME_HALL ? ' <span class="hall__home">home</span>' : ''} <span class="muted small">level ${h.level} · ${money(h.rent)}/wk</span></p>
+            <p class="small">${who.length}/${h.beds} beds${who.length ? `: ${esc(who.map((o) => o.handle).join(', '))}` : ' · nobody lives here yet'}</p>
+            <button class="btn btn--block" data-action="expand-hall" data-id="${esc(h.district)}" ${state.cash >= x.cost ? '' : 'disabled'}>Expand: +${x.beds} beds for ${money(x.cost)} (rent +${money(x.rentIncrease)}/wk)</button>
+          </li>`;
+        }).join('')}
+      </ul>
+      ${sites.length ? `
+      <h2>Open a hall</h2>
+      <p class="muted small">A hall in another district: people of ours living there, more rent, more to look after.</p>
+      <ul class="halls">
+        ${sites.map(([d, site]) => {
+          const can = canOpenHall(state, d);
+          return `
+          <li class="hall is-closed">
+            <p class="hall__head"><strong>${esc(cityName(d))}</strong> <span class="muted small">${money(site.deposit)} down · ${money(site.rent)}/wk · ${site.beds} beds</span></p>
+            ${can.ok ? `<button class="btn btn--block" data-action="open-hall" data-id="${esc(d)}">Open the hall</button>` : `<p class="muted small">${esc(can.reason)}</p>`}
+          </li>`;
+        }).join('')}
+      </ul>` : ''}`;
+}
+
 function renderCrew() {
   const cap = state.rosterCap ?? STARTING_ROSTER_CAP;
-  const x = nextExpansion(state);
   const recruits = state.recruits ?? [];
   const wall = state.memorial.length ? `
       <h2>The wall</h2>
@@ -1187,14 +1230,7 @@ function renderCrew() {
       <div class="cols2">
       <div>${leads}</div>
       <div>
-      <h2>Safehouse</h2>
-      <div class="riskcard">
-        <p class="small">Level ${state.safehouseLevel ?? 1} · ${cap} beds · rent ${money(state.rent)}/wk</p>
-        <button class="btn btn--block" data-action="expand" ${state.cash >= x.cost ? '' : 'disabled'}>
-          Expand: +${x.beds} beds for ${money(x.cost)} (rent +${money(x.rentIncrease)}/wk)
-        </button>
-        ${state.cash < x.cost ? `<p class="muted small">Need ${money(x.cost - state.cash)} more.</p>` : ''}
-      </div>
+      ${renderHalls()}
       ${armouryCard(gearUi, state)}
       </div>
       </div>
@@ -1332,6 +1368,19 @@ function renderPath(op) {
     </div>`;
 }
 
+/** Where a runner lives (core/halls.js), and moving them into another hall. */
+function renderHome(op) {
+  const home = op.hall ?? HOME_HALL;
+  const others = (state.halls ?? []).filter((h) => h.district !== home);
+  return `
+      <h2>Home</h2>
+      <p class="small">Lives at the ${esc(cityName(home))} hall${op.settlingDay === state.day ? ': settling in today, free tomorrow' : ''}.</p>
+      ${others.length ? `<div class="stack">${others.map((h) => {
+        const can = canMove(state, op.id, h.district);
+        return `<button class="btn btn--ghost" data-action="move-hall" data-id="${esc(`${op.id}|${h.district}`)}" ${can.ok ? '' : 'disabled'}>Move to ${esc(cityName(h.district))} <span class="muted small">· ${can.ok ? `${freeBeds(state, h.district)} free ${freeBeds(state, h.district) === 1 ? 'bed' : 'beds'}; settles in today` : esc(can.reason.toLowerCase())}</span></button>`;
+      }).join('')}</div>` : ''}`;
+}
+
 function renderOperative() {
   const op = state.crew.find((x) => x.id === openOperativeId);
   if (!op) return renderCrew();
@@ -1354,6 +1403,7 @@ function renderOperative() {
       <div class="opgrid__about">
       <p class="body">${esc(op.bio)}</p>
       <p class="body muted">${esc(op.origin)}</p>
+      ${op.freelance ? '' : renderHome(op)}
 
       ${specOf(op) ? `
       <h2>Specialisation</h2>
@@ -2027,12 +2077,13 @@ function cityMap() {
     const out = crewOutIn(key);
     const faction = DISTRICTS[key]?.faction;
     const home = key === SAFEHOUSE_DISTRICT;
+    const hall = !home && !!hallIn(state, key); // another of the tong's halls (core/halls.js)
     return {
-      key, locked: card.locked, selected: cityDistrict === key, jobs, out, home, talk: talk === key,
+      key, locked: card.locked, selected: cityDistrict === key, jobs, out, home, hall, talk: talk === key,
       name: cityName(key).replace(/^The /, ''),
       turf: card.locked ? null : turfHex(key),
       label: [cityName(key), card.locked ? 'locked' : `${jobs || 'no'} job${jobs === 1 ? '' : 's'} on the board`, faction && `${faction} turf`,
-        home && 'the safehouse is here', out && `${out} of yours out here`, talk === key && 'street talk about it'].filter(Boolean).join(', '),
+        home && 'the home hall is here', hall && 'a hall of ours is here', out && `${out} of yours out here`, talk === key && 'street talk about it'].filter(Boolean).join(', '),
     };
   });
   return cityMapSvg(districts, esc);

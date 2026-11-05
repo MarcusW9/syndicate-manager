@@ -1,5 +1,6 @@
 // Calendar and the daily tick. Pure logic: takes state, returns new state.
 
+import { introduceHalls } from './halls.js';
 import { tickJobs } from './jobs.js';
 import { driftTrust } from './clients.js';
 import { scoutWeek } from './recruits.js';
@@ -88,6 +89,7 @@ export function advanceDay(prev) {
   if (calendar(state.day).isMonday) refreshSideBoard(state); // a fresh board of side tasks
   if (calendar(state.day).isMonday) refreshArmoury(state); // new rifles in the armoury
   if (calendar(state.day).isMonday) rollRumour(state);
+  if (calendar(state.day).isMonday) introduceHalls(state); // a contact offers a place once we're welcome (core/halls.js)
   tickJobs(state); // offers expire; new work trickles in through the week
   if (calendar(state.day).weekday === 'Wed') scoutWeek(state);
   state.recruits = (state.recruits ?? []).filter((r) => r.expiresDay >= state.day);

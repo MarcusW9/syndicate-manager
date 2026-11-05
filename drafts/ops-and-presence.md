@@ -88,3 +88,14 @@ resumes.
 - The map must leave room to grow: locked districts open later (data, not new art), and what's inside a district (the hall, contacts, job sites) lives on its card or a district view, so the city map stays readable at phone width.
 - Reinforce now opens "who do we send?" in place, with the arrival day (was: jumped to the hall's card).
 
+## 8. Halls (decided and built, 2026-11-05)
+
+The owner: build presence into buying places, as beds are bought. The safehouse is the Old Town
+hall; one hall per district, each with beds, rent and a level; everyone lives in one; the roster
+limit is all the beds; opening another needs the district's welcome and a deposit; each hall
+expands on its own; the rank follows the halls. **Moving in takes the day, not the trip** (the
+city crosses in under an hour): they count there at once but settle in and can't work until
+tomorrow. This replaces the handover's "a day's travel" (also for jobs in other districts: none).
+Next slices: heat per district; raids with an exit; an opening job per district (owner's writing);
+City as the command centre; rooms per hall later (clinic, workshop...), so halls can specialise.
+

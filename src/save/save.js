@@ -10,6 +10,7 @@
 //   syndicate-ironman-progress     { [ironmanId]: highest save counter seen }
 //   syndicate-save-v1              legacy single save, moved into slot 1 on first load
 
+import { homeHall, syncHalls } from '../core/halls.js';
 import { STARTING_RANK } from '../data/tong.js';
 import { refreshSideBoard } from '../core/sidetasks.js';
 import { SAVE_VERSION } from '../core/state.js';
@@ -538,6 +539,16 @@ function migrate(state) {
     state.weekStart = state.weekStart ?? { day: state.day, cash: state.cash, reputation: state.reputation ?? 0 };
     for (const am of [state.activeMission, ...(state.awayJobs ?? []).map((j) => j.mission)]) if (am) am.lead = am.lead ?? null;
     state.version = 37;
+  }
+  if (state.version === 37) {
+    // v38: halls (core/halls.js). The safehouse becomes the Old Town hall with its beds, rent and
+    // level; everyone lives there; the rank follows the halls (one hall: Back Room).
+    state.halls = [{ ...homeHall(state.rosterCap ?? STARTING_ROSTER_CAP, state.rent ?? 0), level: state.safehouseLevel ?? 1 }];
+    delete state.safehouseLevel;
+    state.hallOffers = state.hallOffers ?? [];
+    for (const op of state.crew) if (!op.freelance) op.hall = op.hall ?? 'oldTown';
+    syncHalls(state);
+    state.version = 38;
   }
   return state;
 }
