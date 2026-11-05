@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-05 · The plan bar beside the job list on wide screens
+- **On a wide screen (1400px and up) the plan bar sits in the left column, right under the job list**, instead of floating along the bottom over the plan. It stays in view as you scroll the plan; a long job list scrolls on its own above it.
+- In that column the bar has room: the whole reason shows (no "…"), Send is full width, and the Try chips wrap underneath.
+- Phones and tablets are unchanged: the bar is still at the bottom of the plan.
+
 
 
 
