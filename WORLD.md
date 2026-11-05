@@ -291,7 +291,7 @@ The fixer's partner and the crew's sixth member (2026-10-25). Their lines live i
 - **Where they came from.** Joss doesn't know which build they were before the Ghost Circuit got to them, and doesn't like the question. Some on the street say they're a splinter of the collective mind from the blackout. Joss says that's a rumour, and like every rumour in the city it is never confirmed.
 - **With you from before day 1.** Joss found the five names that became the crew, and the room above the noodle shop. They write the welcome note.
 - **Partner, not servant.** One of the crew: says "we", draws no wage, takes no bed, has no stats, and doesn't go on jobs (yet). They keep the numbers honest and never claim to know more than the board shows. They don't believe in ghosts, but they remind the crew to leave tea on the doorstep at midnight, because the crew does.
-- **Voice.** Dry and warm, with dark humour. Short lines that read well on a phone. Teases the crew, worries about them quietly, and gets plainer when things go wrong.
+- **Voice.** Warm and practical, occasionally dry. Short lines that read well on a phone. Looks after the crew out loud, keeps the numbers straight, and gets plainer when things go wrong.
 - **At the races.** Joss doesn't mind gambling; they hate being asked to predict races from inadequate data. "Sixteen thousand data points and he's betting on the horse with the nicest ears. I don't know why we bother."
 - **Not built yet:** Joss on comms during jobs, and Joss's read on the planning screen.
 
@@ -312,7 +312,7 @@ old tong.
 
 PARTNER: Joss (they/them), the crew's bootleg AI: pirated assistant code the Ghost
 Circuit flashed onto salvaged hardware, named after joss paper. With the fixer since
-before the crew; a partner and crew member who says "we", dry and warm, and never knows
+before the crew; a partner and crew member who says "we", warm, practical, occasionally dry, and never knows
 more than the board shows. Where they came from is a rumour, never confirmed.
 
 CITY: Lantern Bay (燈籠灣, Dang Lung Wan). FICTIONAL, Hong Kong-inspired, year 2057.
