@@ -19,6 +19,7 @@ export function availability(state, op) {
   const c = op.condition;
   if (c.injury === 'serious' || c.injury === 'critical') return { ok: false, reason: `${c.injury} injury, ${c.injuryDays}d` };
   if (isAway(state, op)) return { ok: false, reason: `away until day ${c.awayUntil}` };
+  if (op.settlingDay === state.day) return { ok: false, reason: 'settling in' }; // moved halls today (core/halls.js)
   if (c.fatigue > 85) return { ok: false, reason: 'exhausted' };
   if (op.traits.includes('superstitious') && state.day % 10 === 4) return { ok: false, reason: 'unlucky day (ends in 4)' };
   return { ok: true, reason: c.fatigue > 60 ? 'fatigued' : c.injury === 'light' ? 'light injury' : 'ready' };

@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tong Command Centre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Mock-up of the command centre (drafts/ops-and-presence.md, 2026-11-05): districts as presence, a
+   map that fits the width and never moves, the list below as the real controls. Street-terminal
+   skin (ART.md "UI skin"); one dark theme, as the game. Layout: map on top, list under it on a
+   phone; side by side from 900px. */
+:root {
+  --bg: #0a0c0f; --panel: #12151b; --panel-2: #161a21; --line: #2a303b;
+  --text: #e9ecf1; --muted: #8a93a6; --accent: #ff3d5f; --accent-2: #3de8d8;
+  --warn: #f2d541; --danger: #ff4a4a; --good: #5fe0a5;
+  --brass: #f2d541; --lantern: #ff3d5f; --fan: #b48cff; --apex: #3de8d8; --race: #ff9a3d;
+  --display: 'Rajdhani', 'Arial Narrow', system-ui, sans-serif;
+  --body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --cut: 10px; --tap: 44px;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 15px/1.45 var(--body);
+  background-image: linear-gradient(rgba(61,232,216,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(61,232,216,.025) 1px, transparent 1px);
+  background-size: 32px 32px; padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.caps { font-family: var(--display); font-weight: 700; text-transform: uppercase; letter-spacing: .1em; }
+.muted { color: var(--muted); }
+.small { font-size: .85rem; }
+p { margin: 0; }
+
+/* top bar */
+.top { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: calc(10px + env(safe-area-inset-top)) 16px 10px; background: var(--panel); border-bottom: 1px solid var(--line); }
+.top__date { font: 700 1.05rem var(--display); letter-spacing: .08em; text-transform: uppercase; }
+.top__due { font: 600 .72rem var(--display); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.top__right { display: flex; align-items: center; gap: 10px; }
+.top__cash { font: 700 1.05rem var(--display); font-variant-numeric: tabular-nums; }
+.rank { font: 700 .72rem var(--display); letter-spacing: .12em; text-transform: uppercase; color: var(--warn); border: 1px solid var(--warn); padding: 3px 8px; }
+
+.mock { margin: 12px 16px 0; padding: 10px 12px; border: 1px dashed var(--line); color: var(--muted); font-size: .82rem; display: grid; gap: 6px; }
+.mock strong { color: var(--text); }
+.mock button { justify-self: start; min-height: 36px; padding: 0 12px; background: none; border: 1px solid var(--line); color: var(--muted); font: 700 .72rem var(--display); letter-spacing: .1em; text-transform: uppercase; }
+
+.layout { display: grid; gap: 14px; padding: 12px 16px 0; }
+@media (min-width: 900px) { .layout { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; } .mapcol { position: sticky; top: 72px; } }
+
+/* panels */
+.panel { position: relative; background: linear-gradient(var(--panel-2), var(--panel)); border: 1px solid var(--line); padding: 12px;
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+.panel::before { content: ''; position: absolute; top: 0; left: 12px; width: 36px; height: 2px; background: var(--accent-2); }
+.head { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font: 700 .8rem var(--display); letter-spacing: .16em; text-transform: uppercase; color: var(--accent-2); }
+.head::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.stack { display: grid; gap: 14px; }
+
+/* the map */
+.map { display: block; width: 100%; height: auto; touch-action: manipulation; }
+.map .land { fill: #12151b; }
+.map .dist { transition: fill-opacity .3s; }
+.map .seam { fill: none; stroke: var(--bg); stroke-width: 2.5; }
+.map .rim { fill: none; stroke: rgba(61,232,216,.55); stroke-width: 1.2; filter: url(#glow); }
+.map .locked { fill: url(#hatch); }
+.map .streets { stroke: rgba(233,236,241,.06); stroke-width: .6; }
+.map .transit { fill: none; stroke: rgba(180,140,255,.35); stroke-width: 1; stroke-dasharray: 3 3; }
+.map .ferry { fill: var(--warn); }
+.map .plate rect { fill: rgba(10,12,15,.88); stroke: var(--line); }
+.map .plate.is-picked rect { stroke: var(--accent-2); }
+.map .plate text { font: 700 11px var(--display); letter-spacing: .1em; text-transform: uppercase; fill: var(--text); }
+.map .plate .sub { font: 600 9px var(--display); letter-spacing: .08em; fill: var(--muted); }
+.map .plate.is-locked text { fill: var(--muted); font-size: 9px; }
+.map .glyph { fill: none; stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; opacity: .8; }
+.map .heat { pointer-events: none; }
+.map .hit { fill: transparent; cursor: pointer; }
+.map .blip { fill: var(--accent-2); filter: url(#glow); }
+.map .blip.is-call { fill: var(--warn); }
+.map .route { fill: none; stroke: rgba(61,232,216,.35); stroke-width: 1; stroke-dasharray: 2 3; }
+.map .raid { fill: none; stroke: var(--danger); stroke-width: 1.4; }
+.map .callring { fill: none; stroke: var(--warn); stroke-width: 1.4; }
+@media (prefers-reduced-motion: no-preference) {
+  .map .raid { animation: ring 2.2s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+  .map .callring { animation: ring 1.6s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+  .map .ferry { animation: ferry 14s linear infinite; }
+}
+@keyframes ring { from { transform: scale(.6); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
+@keyframes ferry { 0% { transform: translate(0,0); } 50% { transform: translate(96px,-6px); } 100% { transform: translate(0,0); } }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; font: 600 .7rem var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: 0; }
+
+/* district card */
+.dcard { border-left: 3px solid var(--tone, var(--accent-2)); }
+.dcard__top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.dcard__name { font: 700 1.15rem var(--display); letter-spacing: .1em; text-transform: uppercase; }
+.dcard__who { color: var(--tone); font-size: .82rem; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; margin: 10px 0; }
+.stats dt { font: 600 .68rem var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.stats dd { margin: 0; font: 700 1.05rem var(--display); font-variant-numeric: tabular-nums; }
+.gauge { display: flex; gap: 1px; margin-top: 4px; }
+.gauge span { width: 7px; height: 6px; background: var(--line); }
+.gauge span.on { background: var(--hc, var(--warn)); }
+.people { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 2px 10px 2px 2px; border: 1px solid var(--line); background: var(--panel); font-size: .85rem; }
+.chip .av { width: 26px; height: 26px; display: grid; place-items: center; font: 700 .72rem var(--display); color: var(--bg); }
+.chip.is-moving { border-style: dashed; color: var(--muted); }
+.row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+
+/* buttons */
+.btn { min-height: var(--tap); padding: 0 16px; border: 0; background: var(--accent); color: #fff; font: 700 .85rem var(--display); letter-spacing: .12em; text-transform: uppercase;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); }
+.btn--ghost { background: none; color: var(--accent-2); border: 1px solid var(--line); clip-path: none; }
+.btn--warn { background: var(--warn); color: #15130a; }
+.btn:disabled { opacity: .4; cursor: default; }
+
+/* list rows */
+.item { position: relative; padding: 10px 12px; background: var(--panel-2); border-left: 3px solid var(--tone, var(--accent-2)); display: grid; gap: 6px; }
+.item + .item { margin-top: 8px; }
+.item__title { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.item__title strong { font: 700 1rem var(--display); letter-spacing: .06em; text-transform: uppercase; }
+.light { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--tone); box-shadow: 0 0 8px var(--tone); margin-right: 6px; }
+@media (prefers-reduced-motion: no-preference) { .is-pulse .light { animation: pulse 1.2s ease-in-out infinite; } }
+@keyframes pulse { 50% { opacity: .35; box-shadow: none; } }
+.track { height: 6px; background: var(--line); position: relative; overflow: hidden; }
+.track span { position: absolute; inset: 0 auto 0 0; background: var(--tone); }
+.choices { display: grid; gap: 8px; }
+.choice { text-align: left; min-height: var(--tap); padding: 8px 12px; background: var(--panel); border: 1px solid var(--line); display: grid; gap: 2px; }
+.choice strong { font: 700 .9rem var(--display); letter-spacing: .08em; text-transform: uppercase; }
+.choice span { color: var(--muted); font-size: .82rem; }
+.choice:disabled { opacity: .45; cursor: default; }
+.joss { display: flex; gap: 10px; align-items: flex-start; }
+.joss b { font: 700 .72rem var(--display); letter-spacing: .14em; text-transform: uppercase; color: var(--accent-2); flex: 0 0 auto; padding-top: 2px; }
+.result { padding: 8px 12px; border: 1px solid var(--tone, var(--accent-2)); color: var(--text); font-size: .9rem; }
+
+/* dock */
+.dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: linear-gradient(transparent, var(--bg) 30%); }
+.dock .btn { width: 100%; max-width: 640px; display: block; margin: 0 auto; min-height: 52px; font-size: 1rem; }
+.dock small { display: block; font: 600 .7rem var(--display); letter-spacing: .1em; opacity: .85; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <div class="top__date" id="date">Wed · Wk 3 · S1</div>
+    <div class="top__due" id="due">¥3,600 due Sun</div>
+  </div>
+  <div class="top__right">
+    <span class="top__cash" id="cash">¥12,400</span>
+    <span class="rank" id="rank">Street tong</span>
+  </div>
+</header>
+
+<div class="mock">
+  <p><strong>Mock-up, not the game.</strong> Two halls: Old Town (home) and the Night Market, opened this week. Tap a district, take the call, answer the raid warning, move someone between halls, press Continue. Ask yourself: does holding presence feel like decisions, or admin?</p>
+  <button type="button" id="reset">Start again</button>
+</div>
+
+<main class="layout">
+  <section class="mapcol stack">
+    <div class="panel">
+      <p class="head">Lantern Bay tonight</p>
+      <svg class="map" id="map" viewBox="14 12 330 290" role="img" aria-label="Map of Lantern Bay: your halls, crews out and heat by district"></svg>
+      <div class="legend">
+        <span><i style="background:var(--accent-2)"></i>Crew</span>
+        <span><i style="background:var(--warn)"></i>Calling</span>
+        <span><i style="background:var(--danger)"></i>Raid warned</span>
+        <span>⌂ Hall</span>
+      </div>
+    </div>
+    <div id="district"></div>
+  </section>
+  <section class="stack" id="list"></section>
+</main>
+
+<div class="dock"><button class="btn" id="continue" type="button"></button></div>
+
+<script>
+// ---- the scenario: data only; the rules below are a sketch of presence, not the game's ----------
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const DISTRICTS = {
+  oldTown:  { name: 'Old Town', who: 'Brass Anchor Society', tone: 'var(--brass)', open: true },
+  market:   { name: 'Night Market', who: 'Silver Fan Circle', tone: 'var(--fan)', open: true },
+  docks:    { name: 'Docks', who: 'Red Lanterns', tone: 'var(--lantern)', open: true },
+  basin:    { name: 'Basin', who: 'Racing Association', tone: 'var(--race)', open: true },
+  heights:  { name: 'Glass Heights', who: 'Veridian-Apex', tone: 'var(--apex)', open: true },
+  peak:     { name: 'Iron Peak', open: false },
+  reach:    { name: 'Amber Reach', open: false },
+  silt:     { name: 'Silt', open: false },
+};
+const PEOPLE = {
+  tofu: { handle: 'Tofu', role: 'veteran medic', color: '#f2d541' },
+  abacus: { handle: 'Abacus', role: 'rookie tech', color: '#3de8d8' },
+  scallion: { handle: 'Scallion', role: 'pro face', color: '#b48cff' },
+  signal: { handle: 'Signal', role: 'rookie infiltrator', color: '#5fe0a5' },
+  lantern: { handle: 'Lantern', role: 'pro muscle', color: '#ff9a3d' },
+  drizzle: { handle: 'Drizzle', role: 'rookie driver', color: '#8ab4ff' },
+  bandwidth: { handle: 'Bandwidth', role: 'pro driver', color: '#ff3d5f' },
+  scalpel: { handle: 'Scalpel', role: 'pro muscle', color: '#ff7aa8' },
+  viper: { handle: 'Viper', role: 'veteran infiltrator', color: '#c6f26b' },
+};
+const fresh = () => ({
+  day: 3, cash: 12400, due: 3600,
+  halls: ['oldTown', 'market'],
+  heat: { oldTown: 2, market: 7, docks: 4, basin: 1, heights: 0 },
+  base: { tofu: 'oldTown', abacus: 'oldTown', scallion: 'oldTown', signal: 'oldTown', lantern: 'market', drizzle: 'oldTown', bandwidth: 'oldTown', scalpel: 'oldTown', viper: 'market' },
+  moving: {}, // id -> { to, arrives }
+  out: [{ id: 'lift', name: 'Warehouse Lift', district: 'docks', crew: ['bandwidth', 'scalpel', 'viper'], day: 2, days: 3, beats: 2, of: 4, phase: 'Going in', calling: true,
+    line: 'A second guard shift turned up early on the loading dock.' }],
+  raid: { district: 'market', day: 5, answered: null, text: 'Silver Fan collectors are asking who runs the new hall above the fabric shop. They\'ll come Friday.' },
+  picked: 'market', call: null, log: [],
+});
+let s = fresh();
+
+// ---- rules of the sketch ------------------------------------------------------------------------
+const MIN_HOLD = 2; // fewer than this at a hall on raid day and the raid lands
+const at = (d) => Object.keys(s.base).filter((id) => s.base[id] === d && !s.moving[id] && !s.out.some((o) => o.crew.includes(id)));
+const outIds = () => s.out.flatMap((o) => o.crew);
+const free = (d) => at(d);
+const money = (n) => `${n < 0 ? '−' : ''}¥${Math.abs(n).toLocaleString('en-GB')}`;
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const say = (text, tone = 'var(--accent-2)') => s.log.unshift({ text, tone, day: s.day });
+
+function moveTo(id, to) {
+  s.moving[id] = { to, arrives: s.day + 1 };
+  say(`${PEOPLE[id].handle} heads to the ${DISTRICTS[to].name} hall. In by ${WEEKDAYS[(s.day) % 7]}.`);
+}
+function answerCall(pick) {
+  const job = s.out.find((o) => o.calling);
+  job.calling = false;
+  if (pick === 'wait') { job.line = 'They waited it out behind the containers. Slower, but nobody saw them.'; job.days += 1; say('Warehouse Lift: they wait out the shift. A day longer.'); }
+  if (pick === 'quick') { job.line = 'Viper took them through the gap between shifts. It held, just.'; job.beats = 3; job.phase = 'On the job'; say('Warehouse Lift: Viper goes through the gap. It holds.', 'var(--good)'); }
+  if (pick === 'out') { s.out = s.out.filter((o) => o !== job); for (const id of job.crew) s.base[id] = 'oldTown'; say('Warehouse Lift: they walk away and head home. Everyone back by tonight.', 'var(--warn)'); }
+  s.call = null;
+}
+function answerRaid(pick) {
+  const r = s.raid;
+  r.answered = pick;
+  if (pick === 'pay') { s.cash -= 3000; say('Paid the Silver Fan ¥3,000. The Night Market hall is left alone this time.', 'var(--warn)'); }
+  if (pick === 'low') { s.heat.market = Math.max(0, s.heat.market - 3); say('The Night Market hall lies low: no work from there this week. Heat eases.'); }
+  if (pick === 'hold') say('We hold the Night Market hall with who\'s there. Friday will tell.');
+}
+function nextDay() {
+  s.day += 1;
+  for (const [id, m] of Object.entries(s.moving)) if (m.arrives <= s.day) { s.base[id] = m.to; delete s.moving[id]; say(`${PEOPLE[id].handle} is in at the ${DISTRICTS[m.to].name} hall.`); }
+  for (const job of s.out) {
+    if (job.calling) continue;
+    job.day += 1;
+    job.beats = Math.min(job.of, job.beats + 1);
+    job.phase = job.beats >= job.of ? 'Getting out' : 'On the job';
+    job.line = job.day >= job.days ? 'Crates out of the gate and into the van.' : 'Inside, quiet, working the second row of containers.';
+    if (job.day > job.days) { s.cash += 6600; for (const id of job.crew) s.base[id] = 'oldTown'; say(`${job.name}: everyone home, ¥6,600 in.`, 'var(--good)'); job.done = true; }
+  }
+  s.out = s.out.filter((o) => !o.done);
+  if (s.day % 7 === 0) { s.cash -= s.due; say(`Sunday: bills paid, ${money(s.due)}.`); }
+  for (const d of Object.keys(s.heat)) if (s.halls.includes(d) && s.heat[d] > 0 && s.day % 2 === 0) s.heat[d] -= 1;
+  const r = s.raid;
+  if (r && s.day === r.day) {
+    const held = at(r.district).length;
+    if (r.answered === 'pay' || r.answered === 'low') say('Friday passes quietly at the Night Market hall.', 'var(--good)');
+    else if (held >= MIN_HOLD) { say(`The Silver Fan came to the Night Market hall. ${held} of ours were there; they looked, and left.`, 'var(--good)'); s.heat.market = Math.max(0, s.heat.market - 2); }
+    else { s.cash -= 1500; s.heat.market = 3; say(`The Silver Fan came and only ${held} of ours were there. They took ¥1,500 from the stash; nobody hurt. No work from the Night Market for a week.`, 'var(--danger)'); }
+    s.raid = null;
+  }
+}
+
+// ---- drawing ------------------------------------------------------------------------------------
+// The made-up coast for the sketch: the island (Iron Peak, Glass Heights, the Basin, Old Town, the
+// Night Market), the Amber Reach in the harbour, the mainland (Docks, Silt).
+const SHAPES = {
+  peak:    'M150 22 L205 18 L232 34 L214 58 L170 60 L146 44 Z',
+  heights: 'M214 58 L232 34 L286 40 L312 72 L300 104 L246 100 L222 84 Z',
+  basin:   'M120 70 L146 44 L170 60 L214 58 L222 84 L196 110 L150 112 L124 98 Z',
+  oldTown: 'M76 104 L124 98 L150 112 L170 140 L150 160 L100 162 L72 140 Z',
+  market:  'M150 112 L196 110 L222 84 L246 100 L300 104 L292 136 L250 156 L170 140 Z',
+  reach:   'M168 186 L206 182 L214 200 L196 212 L166 206 Z',
+  docks:   'M20 238 L60 226 L130 230 L190 236 L214 252 L210 300 L20 300 Z',
+  silt:    'M214 252 L262 240 L340 246 L340 300 L210 300 Z',
+};
+const PLATES = { peak: [180, 36], heights: [264, 70], basin: [146, 90], oldTown: [112, 140], market: [238, 128], reach: [190, 200], docks: [100, 270], silt: [284, 274] };
+const GLYPHS = {
+  docks: (x, y) => `<path class="glyph" stroke="#ff3d5f" d="M${x - 40} ${y - 6} v-26 h22 M${x - 40} ${y - 26} l12 8 M${x - 22} ${y - 32} v6"/>`,
+  oldTown: (x, y) => `<path class="glyph" stroke="#f2d541" d="M${x - 44} ${y - 12} l8 -6 l8 6 M${x - 42} ${y - 12} v8 h12 v-8"/>`,
+  market: (x, y) => `<path class="glyph" stroke="#b48cff" d="M${x + 34} ${y - 26} v4 M${x + 30} ${y - 22} h8 l-1 10 h-6 Z"/>`,
+  heights: (x, y) => `<path class="glyph" stroke="#3de8d8" d="M${x + 30} ${y - 4} v-22 l5 -6 l5 6 v22 M${x + 26} ${y - 4} h18"/>`,
+  basin: (x, y) => `<ellipse class="glyph" stroke="#ff9a3d" cx="${x - 30}" cy="${y + 14}" rx="12" ry="6"/>`,
+};
+const centre = (d) => PLATES[d];
+
+function heatColor(h) { return h >= 7 ? '255,74,74' : h >= 4 ? '255,154,61' : '242,213,65'; }
+
+function drawMap() {
+  const plate = (d) => {
+    const [x, y] = PLATES[d];
+    const D = DISTRICTS[d];
+    const label = D.name;
+    const w = D.open ? Math.max(64, label.length * 8 + 14) : label.length * 6.4 + 12;
+    const hall = s.halls.includes(d);
+    const sub = hall ? `⌂ ${at(d).length} here · heat ${s.heat[d]}` : `heat ${s.heat[d] ?? 0}`;
+    if (!D.open) return `<g class="plate is-locked" transform="translate(${x - w / 2} ${y - 9})"><rect width="${w}" height="16"/><text x="6" y="11.5">${esc(label)}</text></g>`;
+    return `<g class="plate ${s.picked === d ? 'is-picked' : ''}" transform="translate(${x - w / 2} ${y - 15})">
+      <rect width="${w}" height="30" rx="0"/>
+      <rect width="16" height="2" fill="${D.tone}" stroke="none"/>
+      <text x="7" y="13">${esc(label)}</text>
+      <text class="sub" x="7" y="25">${esc(sub)}</text>
+    </g>`;
+  };
+  const heatHalo = (d) => {
+    const h = s.heat[d] ?? 0;
+    if (!h) return '';
+    const [x, y] = centre(d);
+    return `<circle class="heat" cx="${x}" cy="${y}" r="${20 + h * 3}" fill="url(#heat-${d})"/>
+      <radialGradient id="heat-${d}"><stop offset="0" stop-color="rgb(${heatColor(h)})" stop-opacity="${0.06 + h * 0.035}"/><stop offset="1" stop-color="rgb(${heatColor(h)})" stop-opacity="0"/></radialGradient>`;
+  };
+  const crew = s.out.map((o) => {
+    const [x1, y1] = centre('oldTown');
+    const [x2, y2] = centre(o.district);
+    const t = Math.min(1, o.beats / o.of);
+    const bx = x1 + (x2 - x1) * (0.35 + 0.6 * t), by = y1 + (y2 - y1) * (0.35 + 0.6 * t);
+    return `<path class="route" d="M${x1} ${y1 + 14} Q ${(x1 + x2) / 2 - 30} ${(y1 + y2) / 2} ${x2} ${y2 - 14}"/>
+      ${o.calling ? `<circle class="callring" cx="${bx}" cy="${by}" r="9"/>` : ''}
+      ${o.crew.map((id, i) => `<circle class="blip ${o.calling ? 'is-call' : ''}" cx="${bx + (i - 1) * 5}" cy="${by + (i % 2) * 3}" r="2.6"/>`).join('')}`;
+  }).join('');
+  const moving = Object.entries(s.moving).map(([id, m]) => {
+    const from = s.base[id];
+    const [x1, y1] = centre(from); const [x2, y2] = centre(m.to);
+    return `<path class="route" d="M${x1} ${y1} L${x2} ${y2}"/><circle class="blip" cx="${(x1 + x2) / 2}" cy="${(y1 + y2) / 2}" r="2.6"/>`;
+  }).join('');
+  const raid = s.raid ? (() => { const [x, y] = centre(s.raid.district); return `<circle class="raid" cx="${x}" cy="${y}" r="22"/>`; })() : '';
+  const order = ['peak', 'heights', 'basin', 'oldTown', 'market', 'reach', 'docks', 'silt'];
+  document.getElementById('map').innerHTML = `
+    <defs>
+      <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#12151b"/><line x1="0" y1="0" x2="0" y2="6" stroke="#2a303b" stroke-width="2"/></pattern>
+      <pattern id="grid" width="9" height="9" patternUnits="userSpaceOnUse"><path class="streets" d="M0 0 H9 M0 0 V9" fill="none"/></pattern>
+      <clipPath id="land">${order.map((d) => `<path d="${SHAPES[d]}"/>`).join('')}</clipPath>
+    </defs>
+    <text x="282" y="178" font-family="Rajdhani" font-size="9" letter-spacing="2" fill="#8a93a6">HARBOUR</text>
+    ${order.map((d) => DISTRICTS[d].open
+      ? `<path class="dist" d="${SHAPES[d]}" fill="${DISTRICTS[d].tone}" fill-opacity="${s.picked === d ? 0.2 : s.halls.includes(d) ? 0.12 : 0.06}"/><path d="${SHAPES[d]}" fill="#161a21" fill-opacity="0.75"/><path class="dist" d="${SHAPES[d]}" fill="${DISTRICTS[d].tone}" fill-opacity="${s.picked === d ? 0.16 : s.halls.includes(d) ? 0.1 : 0.04}"/>`
+      : `<path class="locked" d="${SHAPES[d]}"/>`).join('')}
+    <rect width="360" height="300" fill="url(#grid)" clip-path="url(#land)"/>
+    ${order.map((d) => `<path class="seam" d="${SHAPES[d]}"/>`).join('')}
+    <path class="rim" d="M232 34 L286 40 L312 72 L300 104 L292 136 L250 156"/>
+    <path class="rim" d="M214 252 L262 240 L340 246"/>
+    <path class="transit" d="M262 92 L190 198 L150 246"/>
+    <circle class="ferry" cx="110" cy="190" r="2"/>
+    ${Object.keys(GLYPHS).map((d) => GLYPHS[d](...PLATES[d])).join('')}
+    ${Object.keys(s.heat).map(heatHalo).join('')}
+    ${raid}${crew}${moving}
+    ${order.map(plate).join('')}
+    ${order.filter((d) => DISTRICTS[d].open).map((d) => { const [x, y] = PLATES[d]; return `<circle class="hit" cx="${x}" cy="${y}" r="26" data-d="${d}"><title>${esc(DISTRICTS[d].name)}</title></circle>`; }).join('')}`;
+}
+
+const av = (id) => `<span class="av" style="background:${PEOPLE[id].color}">${esc(PEOPLE[id].handle.slice(0, 2))}</span>`;
+
+function drawDistrict() {
+  const d = s.picked;
+  const D = DISTRICTS[d];
+  const hall = s.halls.includes(d);
+  const here = at(d);
+  const coming = Object.entries(s.moving).filter(([, m]) => m.to === d).map(([id]) => id);
+  const h = s.heat[d] ?? 0;
+  const otherHall = s.halls.find((x) => x !== d);
+  const canSend = hall && otherHall ? free(otherHall).filter((id) => !coming.includes(id)) : [];
+  document.getElementById('district').innerHTML = `
+    <div class="panel dcard" style="--tone:${D.tone}">
+      <div class="dcard__top"><span class="dcard__name">${esc(D.name)}</span><span class="dcard__who">${esc(D.who)}</span></div>
+      <dl class="stats">
+        <div><dt>Hall</dt><dd>${hall ? (d === 'oldTown' ? 'Home' : 'Ours') : 'None'}</dd></div>
+        <div><dt>Here</dt><dd>${hall ? `${here.length}${coming.length ? ` +${coming.length}` : ''}` : '—'}</dd></div>
+        <div><dt>Heat</dt><dd>${h}/10<div class="gauge" style="--hc:rgb(${heatColor(h)})">${Array.from({ length: 10 }, (_, i) => `<span class="${i < h ? 'on' : ''}"></span>`).join('')}</div></dd></div>
+      </dl>
+      ${hall ? `
+        <p class="small muted">Based here${here.length < MIN_HOLD ? ` <strong style="color:var(--warn)">· thin: ${MIN_HOLD} hold a hall on a raid</strong>` : ''}</p>
+        <div class="people">${here.map((id) => `<span class="chip">${av(id)}${esc(PEOPLE[id].handle)} <span class="muted small">${esc(PEOPLE[id].role)}</span></span>`).join('')}${coming.map((id) => `<span class="chip is-moving">${av(id)}${esc(PEOPLE[id].handle)} · on the way</span>`).join('')}${!here.length && !coming.length ? '<span class="muted small">Nobody. The hall is empty.</span>' : ''}</div>
+        ${canSend.length ? `<p class="small muted" style="margin-top:8px">Move someone here from ${esc(DISTRICTS[otherHall].name)} (a day's travel):</p><div class="row">${canSend.map((id) => `<button class="btn btn--ghost" data-move="${id}" data-to="${d}" type="button">${esc(PEOPLE[id].handle)}</button>`).join('')}</div>` : ''}`
+      : D.open ? `<p class="small muted">No hall here yet. Work from here comes to the board; open a hall once ${esc(D.who)} trusts us.</p>` : ''}
+    </div>`;
+}
+
+function drawList() {
+  const items = [];
+  const job = s.out.find((o) => o.calling);
+  if (job) items.push(`
+    <div class="item is-pulse" style="--tone:var(--warn)">
+      <div class="item__title"><strong><span class="light"></span>We need a call</strong><span class="small muted">${esc(job.name)} · Docks</span></div>
+      <p>${esc(job.line)} Viper wants to go through the gap between shifts; Bandwidth would rather wait it out.</p>
+      ${s.call ? `<div class="choices">
+        <button class="choice" data-call="quick" type="button"><strong>Go through the gap</strong><span>Viper's stealth 15 · 70% · alert +1 if it slips</span></button>
+        <button class="choice" data-call="wait" type="button"><strong>Wait out the shift</strong><span>Safe · the job takes a day longer</span></button>
+        <button class="choice" data-call="out" type="button"><strong>Walk away</strong><span>Everyone home tonight · no pay</span></button>
+      </div>` : `<div class="row"><button class="btn" data-takecall type="button">Take the call</button></div>`}
+    </div>`);
+  if (s.raid) {
+    const r = s.raid;
+    const held = at(r.district).length;
+    const left = r.day - s.day;
+    items.push(`
+    <div class="item is-pulse" style="--tone:var(--danger)">
+      <div class="item__title"><strong><span class="light"></span>Raid warned</strong><span class="small muted">${esc(DISTRICTS[r.district].name)} · ${left === 0 ? 'today' : left === 1 ? 'tomorrow' : WEEKDAYS[(r.day - 1) % 7]}</span></div>
+      <div class="joss"><b>Joss</b><p>${esc(r.text)} ${held >= MIN_HOLD ? `We've ${held} there; that should be enough to make them think twice.` : `We've only ${held} there. Two would make them think twice.`}</p></div>
+      ${s.reinforcing && !r.answered ? `<p class="small muted">Who do we send from Old Town? A day's travel; they arrive ${WEEKDAYS[s.day % 7]}, before the raid.</p>
+        <div class="choices">${free('oldTown').filter((id) => !s.moving[id]).map((id) => `<button class="choice" data-move="${id}" data-to="${r.district}" data-reinforce type="button"><strong>Send ${esc(PEOPLE[id].handle)}</strong><span>${esc(PEOPLE[id].role)} · Old Town keeps ${free('oldTown').length - 1}</span></button>`).join('')}
+        <button class="choice" data-raid="back" type="button"><strong>Back</strong><span>Choose another answer</span></button></div>`
+      : r.answered ? `<p class="result" style="--tone:var(--accent-2)">${r.answered === 'pay' ? 'Paid. They\'ll leave the hall alone.' : r.answered === 'low' ? 'Lying low: no work from the Night Market this week.' : r.answered === 'reinforce' ? `Reinforced: ${at(r.district).length} there, ${Object.values(s.moving).filter((m) => m.to === r.district).length} on the way. You can send more from the hall's card.` : 'Holding with who\'s there.'}</p>`
+        : `<div class="choices">
+        <button class="choice" data-raid="reinforce" type="button"><strong>Reinforce</strong><span>Send someone from Old Town to the Night Market hall · a day's travel</span></button>
+        <button class="choice" data-raid="low" type="button"><strong>Lie low</strong><span>No work from there this week · heat −3</span></button>
+        <button class="choice" data-raid="pay" type="button" ${s.cash < 3000 ? 'disabled' : ''}><strong>Pay them off · ¥3,000</strong><span>It ends here · they'll remember we pay</span></button>
+        <button class="choice" data-raid="hold" type="button"><strong>Hold with who's there</strong><span>If fewer than ${MIN_HOLD}: they take ¥1,500 from the stash and the hall goes quiet a week. Nobody gets hurt unless you choose to fight.</span></button>
+      </div>`}
+    </div>`);
+  }
+  const outCards = s.out.map((o) => `
+    <div class="item ${o.calling ? 'is-pulse' : ''}" style="--tone:${o.calling ? 'var(--warn)' : 'var(--accent-2)'}">
+      <div class="item__title"><strong><span class="light"></span>${esc(o.name)}</strong><span class="small muted">${esc(DISTRICTS[o.district].name)} · day ${Math.min(o.day, o.days)} of ${o.days}</span></div>
+      <div class="people">${o.crew.map((id) => `<span class="chip">${av(id)}${esc(PEOPLE[id].handle)}</span>`).join('')}</div>
+      <div class="track"><span style="width:${Math.round((o.beats / o.of) * 100)}%"></span></div>
+      <p class="small"><strong style="color:var(--tone)">${esc(o.phase)}</strong> · ${esc(o.line)}</p>
+    </div>`).join('');
+  const halls = s.halls.map((d) => {
+    const here = at(d);
+    const thin = here.length < MIN_HOLD;
+    return `<button class="choice" data-pick="${d}" type="button" style="border-left:3px solid ${DISTRICTS[d].tone}">
+      <strong>${esc(DISTRICTS[d].name)} hall ${d === 'oldTown' ? '· home' : ''}</strong>
+      <span>${here.length} here${thin ? ' · thin' : ''} · heat ${s.heat[d]}/10${Object.values(s.moving).some((m) => m.to === d) ? ' · someone on the way' : ''}</span>
+    </button>`;
+  }).join('');
+  document.getElementById('list').innerHTML = `
+    ${items.length ? `<div class="panel"><p class="head">Needs you</p>${items.join('')}</div>` : ''}
+    <div class="panel"><p class="head">Crews out</p>${outCards || '<p class="muted small">Nobody out. The board has work.</p>'}</div>
+    <div class="panel"><p class="head">Our halls</p><div class="choices">${halls}</div></div>
+    <div class="panel"><p class="head">Today</p>${s.log.length ? s.log.slice(0, 6).map((l) => `<p class="small" style="border-left:2px solid ${l.tone};padding-left:8px;margin-bottom:6px">${esc(WEEKDAYS[(l.day - 1) % 7])} · ${esc(l.text)}</p>`).join('') : '<p class="muted small">Nothing yet today.</p>'}</div>`;
+}
+
+function draw() {
+  document.getElementById('date').textContent = `${WEEKDAYS[(s.day - 1) % 7]} · Wk ${Math.floor((s.day - 1) / 7) + 3} · S1`;
+  document.getElementById('due').textContent = s.day % 7 === 0 ? 'Bills paid today' : `${money(s.due)} due Sun`;
+  document.getElementById('cash').textContent = money(s.cash);
+  document.getElementById('rank').textContent = s.halls.length >= 2 ? 'Street tong' : 'Back room';
+  drawMap(); drawDistrict(); drawList();
+  const blocked = s.out.some((o) => o.calling);
+  const c = document.getElementById('continue');
+  c.disabled = blocked;
+  c.innerHTML = blocked ? 'Decision needed<small>Warehouse Lift is calling</small>' : `Continue → ${WEEKDAYS[s.day % 7]}<small>${s.raid ? `raid ${s.raid.day - s.day <= 0 ? 'today' : `in ${s.raid.day - s.day}d`}` : 'all quiet'}</small>`;
+}
+
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-d],[data-pick],[data-move],[data-takecall],[data-call],[data-raid],#continue,#reset');
+  if (!t) return;
+  if (t.dataset.d) { s.picked = t.dataset.d; draw(); const card = document.getElementById('district'); const r = card.getBoundingClientRect(); if (r.top < 60 || r.top > innerHeight - 120) card.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' }); return; }
+  else if (t.dataset.pick) { s.picked = t.dataset.pick; document.getElementById('district').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+  else if (t.dataset.move) { moveTo(t.dataset.move, t.dataset.to); if ('reinforce' in t.dataset) { s.raid.answered = 'reinforce'; s.reinforcing = false; } }
+  else if ('takecall' in t.dataset) s.call = true;
+  else if (t.dataset.call) answerCall(t.dataset.call);
+  else if (t.dataset.raid === 'reinforce') s.reinforcing = true;
+  else if (t.dataset.raid === 'back') s.reinforcing = false;
+  else if (t.dataset.raid) answerRaid(t.dataset.raid);
+  else if (t.id === 'continue') nextDay();
+  else if (t.id === 'reset') s = fresh();
+  draw();
+});
+draw();
+</script>
+</body>
+</html>

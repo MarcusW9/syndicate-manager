@@ -8,6 +8,18 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+
+
+## 2026-11-05 · Halls: a place of your own in more of the city
+- **The safehouse is now your Old Town hall**, and the tong can have one hall per district. Each hall has its own beds and rent, and everyone lives in one. Your roster limit is all your beds together, and the rent is every hall's rent.
+- **Opening a hall:** once your reputation is high enough and the district's contact trusts you, they offer you a place (Madam Rao has two rooms above her sari shop in the Night Market). Pay the deposit and it's yours, small to start.
+- **Each hall expands on its own**, the way the safehouse did: more beds, more rent.
+- **Moving someone into another hall** is on their page under Home. They count there straight away but spend the day settling in, so they're free for work tomorrow.
+- **Your tong's rank follows your halls:** one hall is a back-room tong, two a street tong, and so on.
+- The Crew screen has a Halls section, and the City map tags each district where you have a hall.
+- **Save format v38.** Your safehouse becomes the Old Town hall with its beds, rent and level, and everyone lives there.
+## 2026-11-05 · A command-centre mock-up
+- No game change. A clickable mock-up of the tong's command centre (`drafts/prototypes/command-centre.html`) to try before anything is built: two halls (Old Town and the Night Market), who's based where, heat per district, a raid warned for Friday with four answers, a crew calling in, and moving people between halls. HANDOFF.md now describes the tong direction and the playtest.
 ## 2026-11-05 · Joss saves your best for when they're needed
 - **Joss now suggests the cheapest crew they trust with a job**, not the strongest. If leaving a star at home keeps the risk at mid or lower, Joss leaves them at home, so they're free for work that needs them. The risk on the board and the plan shows Joss's crew, and "Try" still offers putting someone stronger in.
 - **When you tap a slot to pick someone**, each candidate has a few words on what the job does for them: "learns on the job", "learns faster beside Rook", "1 point from pro", "2 jobs from veteran", or "below their level: little to gain". The planning page itself is unchanged.
