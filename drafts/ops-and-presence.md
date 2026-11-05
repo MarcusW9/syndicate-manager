@@ -99,3 +99,12 @@ tomorrow. This replaces the handover's "a day's travel" (also for jobs in other 
 Next slices: heat per district; raids with an exit; an opening job per district (owner's writing);
 City as the command centre; rooms per hall later (clinic, workshop...), so halls can specialise.
 
+
+## 9. The command centre, part 1 (built, 2026-11-05)
+
+Moved ahead of raids (owner agreed), so raids are built straight into it. City's map tab: the map,
+the picked district's card (now with the hall's faces), then **Out now** (crews out, calls first,
+side work), then the city. A crew's district lights the map and narrows the list. Today keeps the
+briefing, the back cards and one line ("2 crews out · 1 call waiting"); Save is a ☰ button in the
+top bar. Next: raids with an exit (warnings and call-ins in this list, rings on the map); part 2,
+the neon map from the mock-up (face tokens, heat glows); opening jobs when the owner's writing is in.

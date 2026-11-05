@@ -222,3 +222,14 @@ test('a report remembers who went, what it paid and whether they were sent away 
   assert.equal(report.back.templateId, 'clinic');
   assert.equal(typeof report.back.pay, 'number');
 });
+
+test('crews out and side work out say which district they are in (the command centre narrows by it)', async () => {
+  const s = sent(3, 'warehouse', 'never');
+  assert.equal(crewsOut(s)[0].district, templateById('warehouse').district);
+  const { refreshSideBoard, sendOnSideTask, sideTasksOut, sideTaskById } = await import('../src/core/sidetasks.js');
+  const g = createNewGame({ seed: 4, startCrew: 'fresh' });
+  refreshSideBoard(g);
+  const task = g.sideBoard[0];
+  const out = sendOnSideTask(g, task, [g.crew[0].id]);
+  assert.equal(sideTasksOut(out)[0].district, sideTaskById(task).district);
+});

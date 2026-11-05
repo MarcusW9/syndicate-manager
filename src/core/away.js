@@ -151,7 +151,7 @@ export function crewsOut(s) {
     const today = j.today?.day === s.day ? j.today : null;
     const hurt = (am.events ?? []).some((e) => e.injury);
     return {
-      jobId: am.jobId, name: tpl.name, crew: names(crewOf(s, am)), crewIds: crewOf(s, am).map((o) => o.id), returnDay: j.returnDay,
+      jobId: am.jobId, name: tpl.name, district: tpl.district, crew: names(crewOf(s, am)), crewIds: crewOf(s, am).map((o) => o.id), returnDay: j.returnDay,
       day: Math.min(days, Math.max(0, s.day - (am.startedDay ?? s.day))), days,
       beats: tpl.beats.length, beatsDone: (am.events ?? []).filter((e) => e.kind === 'beat').length,
       phase: phaseOf(am),

@@ -90,7 +90,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 }
 
 /* Bottom nav on phones */
-.nav { order: 3; display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--line); background: var(--panel); position: sticky; bottom: 0; }
+.nav { order: 3; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); background: var(--panel); position: sticky; bottom: 0; }
 .nav__btn { white-space: nowrap; min-height: 56px; background: none; border: 0; color: var(--muted); font: inherit; font-size: 0.85rem; cursor: pointer; }
 .nav__btn.is-active { color: var(--accent); box-shadow: inset 0 2px 0 var(--accent); }
 .nav__btn:disabled { opacity: 0.35; cursor: default; }
@@ -584,6 +584,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .citymap__hint { margin-top: 8px; }
 @media (max-width: 899px) { .citymap__hint { display: none; } }
 .citycard { scroll-margin-top: 88px; }
+.citymap { scroll-margin-top: 120px; }
 /* The map tab fits one screen: the map shrinks to what's left after the header, tabs,
    legend and (on phones) the Continue dock and tab bar, but never below a readable size.
    Sized on svh (the viewport with the browser's bars showing), not dvh: dvh grows as Safari
@@ -1380,6 +1381,38 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .crewsout__job .btn { margin-top: 4px; justify-self: start; }
 @keyframes light-pulse { 50% { opacity: 0.35; box-shadow: none; } }
 
+/* The command centre (City, 2026-11-05): crews out live under the map; a district under each crew
+   lights it on the map and narrows the list. Side work out gets a dimmer light. */
+.crewsout__job.is-side { --light: var(--muted); }
+.crewsout__foot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; }
+.crewsout__foot .btn { margin-top: 0; }
+.crewsout__where { margin: 0; }
+.crewsout__where::before { content: '◉ '; }
+.crewsout__where.is-on { color: var(--text); }
+.ops__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.ops__head .linkbtn { margin: 0; }
+.ops { margin-bottom: 8px; }
+.citycard__hall { display: grid; gap: 6px; margin: 8px 0 12px; }
+.citycard__hall p { margin: 0; }
+.citycard__faces { display: flex; flex-wrap: wrap; gap: 4px; }
+.citycard__face { min-width: 44px; min-height: 44px; padding: 0; border: 0; background: none; cursor: pointer; display: grid; place-items: center; }
+.citycard__face.is-out { opacity: 0.4; }
+
+/* Today's line about the crews out: tap through to City. */
+.outnow { --light: var(--accent-2); width: 100%; min-height: 44px; display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 8px 12px; border: 1px solid var(--line); border-left: 2px solid var(--light); background: var(--panel-2, var(--panel)); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.outnow.is-call { --light: var(--warn); }
+.outnow > span:nth-child(2) { flex: 1 1 auto; }
+.outnow strong { color: var(--warn); }
+.outnow__light { flex: 0 0 10px; height: 10px; border-radius: 50%; background: var(--light); box-shadow: 0 0 8px var(--light); }
+.outnow.is-call .outnow__light { animation: light-pulse 1.2s ease-in-out infinite; }
+.outnow__go { color: var(--accent-2); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.8rem; }
+
+/* Save left the tab bar (2026-11-05): a small button at the end of the top bar. */
+.savebtn { flex: 0 0 auto; min-width: 44px; min-height: 44px; display: inline-grid; place-items: center; grid-auto-flow: column; padding: 0 6px; margin: -6px -6px -6px 0; background: none; border: 1px solid transparent; color: var(--muted); font: inherit; font-size: 1.1rem; cursor: pointer; }
+.savebtn.is-active { color: var(--text); border-color: var(--accent); }
+.savebtn__word { display: none; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; margin-left: 4px; }
+@media (min-width: 900px) { .savebtn__word { display: inline; } }
+
 /* Back today (2026-11-04): faces home again, a result stamp, Joss's line and the report. */
 .backs { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 8px; }
 .back { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--accent-2); background: var(--panel-2, var(--panel)); }
@@ -1410,7 +1443,7 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 @keyframes stamp { from { transform: scale(1.4) rotate(-4deg); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
   .sendoff { animation: cue-still 2.2s step-end forwards; }
-  .sendoff__face, .sendoff__stamp, .back__face, .crewsout__job.is-call .crewsout__light { animation: none; }
+  .sendoff__face, .sendoff__stamp, .back__face, .crewsout__job.is-call .crewsout__light, .outnow.is-call .outnow__light { animation: none; }
 }
 
 /* Monday's briefing on Today (core/week.js, 2026-11-04): four numbers framing the week. */
