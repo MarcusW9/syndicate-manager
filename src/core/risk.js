@@ -36,12 +36,14 @@ export function assessJob(template, crew, approach, { watched = 0, intel = null,
   const reasons = [];
   const target = rollTarget(template);
   let worst = 1;
+  let weakest = null; // the key stat the crises are hardest on, with who rolls it (2026-11-05: the plan bar names it)
   for (const stat of template.keyStats) {
     // Wheels takes the driving rolls alone from the van (core/mission.js rollerFor).
     const best = stat === 'driving' && wheels
       ? crewRoll([wheels], stat, { approach, watched, intel })
       : crewRoll(crew, stat, { approach, recommended: template.crewSize, watched, intel });
     const chance = successChance(best.value, target);
+    if (chance < worst) weakest = { stat, op: best.op, value: best.value, chance };
     worst = Math.min(worst, chance);
     if (chance < 0.5) {
       reasons.push(`Weak on ${stat}: best is ${best.op.handle} (${best.value}${best.notes.length ? ', ' + best.notes.join(', ') : ''})`);
@@ -59,5 +61,5 @@ export function assessJob(template, crew, approach, { watched = 0, intel = null,
   if (watched) reasons.unshift(`Watched: you let the heat ride, so the first crisis roll is -${watched}`);
   const level = riskLabel(worst);
   if (!reasons.length) reasons.push('Crew matches the job well');
-  return { level, reasons: reasons.slice(0, 4) };
+  return { level, reasons: reasons.slice(0, 4), weakest };
 }

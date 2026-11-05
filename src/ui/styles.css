@@ -178,7 +178,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .jobcard__facts { grid-column: 1 / -1; display: flex; align-items: center; flex-wrap: wrap; gap: 0 6px; font-size: 0.85rem; color: var(--muted); }
 .jobcard__note { color: #ff9a5a; }
 .keyglyphs { display: inline-flex; gap: 6px; color: var(--text); }
-.keyglyph { display: inline-flex; }
+.keyglyph { display: inline-flex; align-items: center; gap: 3px; } .keyglyph > span { font-size: 0.74rem; color: var(--muted); }
 .keyglyph .icon { width: 18px; height: 18px; }
 .flag { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 7px; border: 1px solid currentColor; }
 .flag--hot { color: #ff9a5a; }

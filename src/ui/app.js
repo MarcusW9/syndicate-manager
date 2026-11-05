@@ -1398,7 +1398,8 @@ function jobCard(j) {
   // A note only when Joss's squad has a catch: someone missing, or someone tired or hurt.
   const worn = r.crew.map((op) => ({ op, a: availability(state, op) })).find((x) => x.a.reason === 'fatigued' || x.a.reason === 'light injury');
   const note = r.short ? `short ${r.short}` : worn ? `${worn.op.handle} is ${worn.a.reason === 'fatigued' ? 'tired' : 'hurt'}` : '';
-  const stats = t.keyStats.map((k) => `<span class="keyglyph" role="img" aria-label="${esc(statName(k))}" title="${esc(statName(k))}">${statGlyph(k)}</span>`).join('');
+  // The job's key skills, each an icon with its name (2026-11-05: the icons alone didn't say what they were).
+  const stats = t.keyStats.map((k) => `<span class="keyglyph">${statGlyph(k)}<span>${esc(statName(k).toLowerCase())}</span></span>`).join('');
   const risk = riskWord(r.level);
   return `
       <li>
@@ -1550,11 +1551,20 @@ function renderPlan() {
   // The bar shows the worse of the two reads: the crises (risk read) and the incidents (coverage).
   // core/squad.js planRead is shared with the job board, so the card and this screen agree.
   const { level: toughest, read, cov } = planRead(state, job, { crew: picked, approach: plan.approach, overwatch: owOp, kit: plan.kit, wheels: wheelsOp });
-  // The bar's notes (2026-11-04: the crises card folded in here): the toughest encounter if it sets
-  // the risk, then the skills read's warnings (weak stats, fatigue, injuries, no medic, crew size).
+  // The bar's notes (2026-11-04: the crises card folded in here; 2026-11-05: always says what sets the
+  // risk). Above low risk the first note names the weakest point: the encounter at the bar's level,
+  // and, when the crises' skills read is at that level too, the stat they lean on. Then the skills
+  // read's warnings. "Crew matches the job well" only at low risk.
   const warnings = read.reasons.filter((r) => r !== 'Crew matches the job well');
-  const notes = [...(toughest !== read.level ? (() => { const r = cov.rows.find((x) => x.effective === toughest); return [`${r.name}: ${r.handler ? `${r.handler.op.handle} on ${r.handler.stat}` : 'nobody can handle it'}`]; })() : []), ...warnings];
-  if (!notes.length) notes.push('Crew matches the job well');
+  const notes = [];
+  if (toughest !== 'low') {
+    const row = cov.rows.find((x) => x.effective === toughest);
+    if (row) notes.push(`Weakest point: ${row.name}, ${row.handler ? `${row.handler.op.handle} ${row.handler.stat} ${row.handler.value}` : 'nobody can handle it'}`);
+    const w = read.weakest;
+    if (read.level === toughest && w && !warnings.some((x) => x.startsWith(`Weak on ${w.stat}`))) notes.push(`The crises lean on ${w.stat}: best is ${w.op.handle} (${w.value}), about ${Math.round(w.chance * 100)}% a roll`);
+  }
+  notes.push(...warnings);
+  if (!notes.length) notes.push(toughest === 'low' ? 'Crew matches the job well' : 'Some rolls on this job are close calls');
   const most = maxCrew(t.crewSize);
 
   return `
@@ -1614,7 +1624,7 @@ function renderPlan() {
       ${(() => {
         const away = plan.mode !== 'live' && handsOffAllowed(t);
         return `<button class="btn btn--primary" data-action="${away ? 'send-job' : 'start-job'}" ${plan.crew.length ? '' : 'disabled'}>
-        ${plan.crew.length ? `${away ? 'Send' : 'Start with'} ${plan.crew.length + [plan.overwatch, plan.wheels, plan.standby].filter(Boolean).length}` : 'Pick a crew'}
+        ${plan.crew.length ? `${away ? 'Send them' : 'Go live'} (${plan.crew.length + [plan.overwatch, plan.wheels, plan.standby].filter(Boolean).length})` : 'Pick a crew'}
       </button>`;
       })()}
     </div>

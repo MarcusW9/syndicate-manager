@@ -5,6 +5,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-05 · Planning says why
+- The bar at the bottom of a job's plan now always says what sets the risk: the weakest point ("Weakest point: Guard up close, Siphon combat 5"), or the skill the job's crises lean on and your chance on it. "Crew matches the job well" only shows when the risk is low.
+- The start button says what you're committing to: "Send them (4)" or "Go live (4)".
+- The skill icons on the job cards now have their names next to them.
+
 ## 2026-11-05 · The plan's encounter list fits on desktop
 - In "What they'll likely meet", what lowers a risk ("→ low with Dim Sum, counting the fight") now sits on its own line under the encounter, so the names and who handles them no longer get squeezed on desktop. On a loud run, "a loud run means a fight" is said once at the bottom instead of on every row.
 
