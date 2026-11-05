@@ -20,14 +20,14 @@ export const PARTNER = {
       'Cash is below zero. We need to take that seriously, one job at a time.',
     ],
     short: [
-      'We\'re short for Sunday. Let\'s keep that in mind when we choose the next job.',
+      'We\'re short for Sunday. We\'ll keep that in mind when we choose the next job.',
       'Bills on Sunday, and we\'re not there yet. Small work still counts.',
-      'We need a little more breathing room before Sunday. Let\'s see what the board offers.',
+      'We need a little more breathing room before Sunday. The board\'s the place to find it.',
     ],
     hurt: [
       'Not everyone\'s fit today. Let\'s give them time and work with who we\'ve got.',
-      'Someone needs a rest. I know the bills don\'t take days off. People still need them.',
-      'We\'re short-handed today. Let\'s find work that leaves room for people to recover.',
+      'Someone needs a rest. I know the bills don\'t take days off. People still need days off.',
+      'We\'re short-handed today. We\'ll find work that leaves room for people to recover.',
     ],
     sunday: [
       'Bills paid. Another week with a roof over us. That matters.',
@@ -52,7 +52,7 @@ export const PARTNER = {
   // Same facts as the plain alert, nothing more.
   alerts: {
     decision: [
-      '{subject}. This one needs your call. Let\'s take a look.',
+      '{subject}. This one needs your call when you\'re ready.',
       '{subject}. One for you to decide; I\'ll keep the details here.',
     ],
     broke: [
@@ -61,14 +61,14 @@ export const PARTNER = {
     ],
     'bills-short': [
       'Sunday\'s bills are {total}. We\'re {short} short. That\'s the gap we need to close.',
-      'We need {total} for Sunday, with {short} still to find. Let\'s plan with that in mind.',
+      'We need {total} for Sunday, with {short} still to find. We\'ll plan with that in mind.',
     ],
     'job-last': [
       'Last day for {job}. Worth a look before it leaves the board.',
-      '{job} comes off the board after today. Let\'s decide whether it suits us.',
+      '{job} comes off the board after today. Time to decide whether it suits us.',
     ],
     'jobs-last': [
-      '{count} jobs leave the board after today: {jobs}. Let\'s see if any suit us.',
+      '{count} jobs leave the board after today: {jobs}. Any of them suit us?',
       'Last day for {jobs}. Worth a look, not a reason to rush into the wrong work.',
     ],
     'lead-last': [
@@ -77,7 +77,7 @@ export const PARTNER = {
     ],
     'crew-out': [
       'Unavailable today: {names}. We\'ll plan with the others.',
-      '{names} can\'t work today. Let\'s work with who we\'ve got.',
+      '{names} can\'t work today. The rest of us can cover.',
     ],
   },
 
@@ -103,11 +103,11 @@ export const PARTNER = {
     messy: [
       'Not everything held together. Let\'s read it through and see what we can learn.',
       'A rough one in places. We\'ll go through the details, not just the headline.',
-      'Some of it went sideways. Let\'s understand where before we choose the next job.',
+      'Some of it went sideways. We\'ll want to know where before we choose the next job.',
     ],
 
     aborted: [
-      'We pulled out. Let\'s go through what happened and take stock.',
+      'We pulled out. Time to go through what happened and take stock.',
       'The job stopped here. We can look at the next step after we\'ve read the log.',
       'We walked away from this one. Let\'s understand the call before we judge it.',
     ],
