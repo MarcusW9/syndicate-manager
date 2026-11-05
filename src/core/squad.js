@@ -13,9 +13,12 @@ import { intelFor } from './sidetasks.js';
 import { WATCHED_PENALTY } from './heat.js';
 import { battleOdds } from './battle.js';
 import { spotsForJob } from './fightspots.js';
+import { crewValue } from './worth.js';
 
 const ZONE_NOTE = { in: 'The way in', inside: 'Inside', target: 'The target' };
 const RISK_ORDER = ['low', 'moderate', 'high', 'extreme'];
+/** The most risk Joss accepts to keep a more valuable runner home (2026-11-05); never past the best read if that's worse. */
+export const JOSS_ACCEPTS = 'moderate';
 export const worstRisk = (levels) => levels.reduce((a, b) => (RISK_ORDER.indexOf(b) > RISK_ORDER.indexOf(a) ? b : a), 'low');
 
 /** Every incident this approach can meet, zone by zone, once each: [{ id, zone, sometimes }]. */
@@ -191,7 +194,21 @@ export function leanPicks(state, job, approach) {
       if (!squad || r < best || (r === best && people(sq) < people(squad))) { squad = sq; best = r; }
     }
   }
-  return { crew: squad.crew.map((o) => o.id), overwatch: squad.overwatch?.id ?? null, kit: squad.kit, wheels: squad.wheels?.id ?? null, standby: null, level: RISK_ORDER[best] };
+  // The cheapest crew Joss trusts with it (2026-11-05, after the playtest's "I mostly sent whoever
+  // was best"): each inside runner, most valuable first, is swapped for the least valuable free
+  // runner who keeps the read at the best level or JOSS_ACCEPTS, whichever is riskier, so stars stay
+  // free for work that needs them. Then any extra who no longer earns their place goes.
+  const accept = Math.max(best, RISK_ORDER.indexOf(JOSS_ACCEPTS));
+  const inSquad = (op) => squad.crew.includes(op) || op === squad.overwatch || op === squad.wheels;
+  for (const member of [...squad.crew].sort((a, b) => crewValue(b) - crewValue(a))) {
+    const cheaper = free.filter((o) => !inSquad(o) && crewValue(o) < crewValue(member)).sort((a, b) => crewValue(a) - crewValue(b));
+    for (const op of cheaper) {
+      const crew = squad.crew.map((o) => (o === member ? op : o));
+      if (rank({ ...squad, crew }) <= accept) { squad.crew = crew; break; }
+    }
+  }
+  while (squad.crew.length > tpl.crewSize && rank({ ...squad, crew: squad.crew.slice(0, -1) }) <= accept) squad.crew = squad.crew.slice(0, -1);
+  return { crew: squad.crew.map((o) => o.id), overwatch: squad.overwatch?.id ?? null, kit: squad.kit, wheels: squad.wheels?.id ?? null, standby: null, level: RISK_ORDER[rank(squad)] };
 }
 
 /**
