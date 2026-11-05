@@ -401,9 +401,12 @@ function drawList() {
     <div class="item is-pulse" style="--tone:var(--danger)">
       <div class="item__title"><strong><span class="light"></span>Raid warned</strong><span class="small muted">${esc(DISTRICTS[r.district].name)} · ${left === 0 ? 'today' : left === 1 ? 'tomorrow' : WEEKDAYS[(r.day - 1) % 7]}</span></div>
       <div class="joss"><b>Joss</b><p>${esc(r.text)} ${held >= MIN_HOLD ? `We've ${held} there; that should be enough to make them think twice.` : `We've only ${held} there. Two would make them think twice.`}</p></div>
-      ${r.answered ? `<p class="result" style="--tone:var(--accent-2)">${r.answered === 'pay' ? 'Paid. They\'ll leave the hall alone.' : r.answered === 'low' ? 'Lying low: no work from the Night Market this week.' : 'Holding with who\'s there.'}</p>`
+      ${s.reinforcing && !r.answered ? `<p class="small muted">Who do we send from Old Town? A day's travel; they arrive ${WEEKDAYS[s.day % 7]}, before the raid.</p>
+        <div class="choices">${free('oldTown').filter((id) => !s.moving[id]).map((id) => `<button class="choice" data-move="${id}" data-to="${r.district}" data-reinforce type="button"><strong>Send ${esc(PEOPLE[id].handle)}</strong><span>${esc(PEOPLE[id].role)} · Old Town keeps ${free('oldTown').length - 1}</span></button>`).join('')}
+        <button class="choice" data-raid="back" type="button"><strong>Back</strong><span>Choose another answer</span></button></div>`
+      : r.answered ? `<p class="result" style="--tone:var(--accent-2)">${r.answered === 'pay' ? 'Paid. They\'ll leave the hall alone.' : r.answered === 'low' ? 'Lying low: no work from the Night Market this week.' : r.answered === 'reinforce' ? `Reinforced: ${at(r.district).length} there, ${Object.values(s.moving).filter((m) => m.to === r.district).length} on the way. You can send more from the hall's card.` : 'Holding with who\'s there.'}</p>`
         : `<div class="choices">
-        <button class="choice" data-raid="reinforce" type="button"><strong>Reinforce</strong><span>Move someone from Old Town: tap the Night Market on the map</span></button>
+        <button class="choice" data-raid="reinforce" type="button"><strong>Reinforce</strong><span>Send someone from Old Town to the Night Market hall · a day's travel</span></button>
         <button class="choice" data-raid="low" type="button"><strong>Lie low</strong><span>No work from there this week · heat −3</span></button>
         <button class="choice" data-raid="pay" type="button" ${s.cash < 3000 ? 'disabled' : ''}><strong>Pay them off · ¥3,000</strong><span>It ends here · they'll remember we pay</span></button>
         <button class="choice" data-raid="hold" type="button"><strong>Hold with who's there</strong><span>If fewer than ${MIN_HOLD}: they take ¥1,500 from the stash and the hall goes quiet a week. Nobody gets hurt unless you choose to fight.</span></button>
@@ -447,12 +450,13 @@ function draw() {
 document.addEventListener('click', (e) => {
   const t = e.target.closest('[data-d],[data-pick],[data-move],[data-takecall],[data-call],[data-raid],#continue,#reset');
   if (!t) return;
-  if (t.dataset.d) s.picked = t.dataset.d;
+  if (t.dataset.d) { s.picked = t.dataset.d; draw(); const card = document.getElementById('district'); const r = card.getBoundingClientRect(); if (r.top < 60 || r.top > innerHeight - 120) card.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' }); return; }
   else if (t.dataset.pick) { s.picked = t.dataset.pick; document.getElementById('district').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
-  else if (t.dataset.move) moveTo(t.dataset.move, t.dataset.to);
+  else if (t.dataset.move) { moveTo(t.dataset.move, t.dataset.to); if ('reinforce' in t.dataset) { s.raid.answered = 'reinforce'; s.reinforcing = false; } }
   else if ('takecall' in t.dataset) s.call = true;
   else if (t.dataset.call) answerCall(t.dataset.call);
-  else if (t.dataset.raid === 'reinforce') { s.picked = 'market'; document.getElementById('district').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  else if (t.dataset.raid === 'reinforce') s.reinforcing = true;
+  else if (t.dataset.raid === 'back') s.reinforcing = false;
   else if (t.dataset.raid) answerRaid(t.dataset.raid);
   else if (t.id === 'continue') nextDay();
   else if (t.id === 'reset') s = fresh();

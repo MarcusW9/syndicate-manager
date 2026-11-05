@@ -79,3 +79,12 @@ crediting fight kills to the runner who made them; moving `finish()` into `core/
 The first heist (Black Sun: prep jobs across districts feeding one score); named squads; safehouse
 rooms; Legend, retirement and the Hall of Legends (maybe the tong's own hall); command-fight polish
 resumes.
+
+## 7. The owner on the mock-up (2026-11-05)
+
+"Pretty cool"; "the actual feeling is cool". Notes for the real build:
+- Tapping a district on a phone shows its card right under the map; scroll it into view when it would land off screen (done in the mock-up).
+- The game's portraits replace the initials (halls, crews out, people travelling); crews on the map could become small face tokens, as the fight map has.
+- The map must leave room to grow: locked districts open later (data, not new art), and what's inside a district (the hall, contacts, job sites) lives on its card or a district view, so the city map stays readable at phone width.
+- Reinforce now opens "who do we send?" in place, with the arrival day (was: jumped to the hall's card).
+
