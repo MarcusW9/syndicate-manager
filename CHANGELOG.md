@@ -13,6 +13,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - **When you tap a slot to pick someone**, each candidate has a few words on what the job does for them: "learns on the job", "learns faster beside Rook", "1 point from pro", "2 jobs from veteran", or "below their level: little to gain". The planning page itself is unchanged.
 ## 2026-11-05 · Back cards play once
 - A crew's back card on Today slid their faces in again every time you opened a message. It now plays once per report and stays still after that.
+## 2026-11-05 · "Improved by"
+- In "What they'll likely meet", the line under an encounter now reads "→ low, improved by Siphon" (who'd step in if the roll fails), "→ low, the crew can win the fight", or "→ extreme if it turns into a fight". On a loud run it no longer credits someone who wouldn't play a part.
+
 ## 2026-11-05 · Crews out you can see
 - **Sending a crew feels like something:** a card plays as they leave, with their faces heading out, a stamp ("Out · Rent Round · back Wed") and a line from Joss. Tap it to skip.
 - **Runner tiles say when they're back**, e.g. "Out · Wed".

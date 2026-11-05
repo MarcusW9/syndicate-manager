@@ -216,10 +216,13 @@ export function renderCoverage(ui, cov, { overwatch, approachName, standby = nul
             const hasLower = (r.withSave || r.fight) && r.effective !== r.risk;
             const lower = hasLower
               ? (() => {
-                // Who helps is named only when the row gets better (2026-11-05); a fight can make it worse.
+                // Plain words (owner, 2026-11-05: "Can't it just be Improved by (name)"): who makes it
+                // better if the roll fails; else what the fight does to it.
                 const better = RISKS.indexOf(r.effective) < RISKS.indexOf(r.risk);
-                const who = better && r.withSave ? ` with ${esc(r.withSave.op.handle)}` : '';
-                return `<span class="cover__with">→ ${esc(ui.riskWord(r.effective))}${who}${r.fight ? `${who ? ',' : ''} counting the fight` : ''}${wasTag ? ` ${wasTag}` : ''}</span>`;
+                // On a loud run every ⚠ is a fight anyway, so nobody steps in to save: the fight is what helps.
+                const why = better && r.withSave && !r.fight?.forced ? `improved by ${esc(r.withSave.op.handle)}`
+                  : better ? 'the crew can win the fight' : 'if it turns into a fight';
+                return `<span class="cover__with">→ ${esc(ui.riskWord(r.effective))}, ${why}${wasTag ? ` ${wasTag}` : ''}</span>`;
               })() : '';
             // "A loud run means a fight" is said once, under the read (2026-11-05), not on every row.
             const fight = r.fight && r.handler && r.fight.down >= 0.1 ? 'a fight could put someone down' : '';
