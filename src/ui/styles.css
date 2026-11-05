@@ -1391,6 +1391,7 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .back.is-loss .back__stamp { color: var(--danger); }
 .back .btn { flex: 0 0 auto; min-height: var(--tap); }
 @keyframes back-in { from { transform: translateX(-24px); opacity: 0; } }
+.back.is-seen .back__face { animation: none; } /* played once already: Today redraws on every tap */
 
 /* The send-off card (2026-11-04): plays once over the screen as a crew leaves, then fades; tap to dismiss. */
 .sendoff { position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%); z-index: 4; width: min(360px, calc(100vw - 32px)); padding: 16px; display: grid; gap: 8px; justify-items: center; text-align: center;

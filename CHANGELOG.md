@@ -6,6 +6,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+
+## 2026-11-05 · Back cards play once
+- A crew's back card on Today slid their faces in again every time you opened a message. It now plays once per report and stays still after that.
 ## 2026-11-05 · Crews out you can see
 - **Sending a crew feels like something:** a card plays as they leave, with their faces heading out, a stamp ("Out · Rent Round · back Wed") and a line from Joss. Tap it to skip.
 - **Runner tiles say when they're back**, e.g. "Out · Wed".
