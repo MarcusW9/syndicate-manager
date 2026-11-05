@@ -32,6 +32,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 ## 2026-11-05 · The plan's encounter list fits on desktop
 - In "What they'll likely meet", what lowers a risk ("→ low with Dim Sum, counting the fight") now sits on its own line under the encounter, so the names and who handles them no longer get squeezed on desktop. On a loud run, "a loud run means a fight" is said once at the bottom instead of on every row.
 
+## 2026-11-05 · A warmer Joss
+- Joss's lines on Today, in alerts and at the top of job reports are rewritten to be warmer and more practical, with less teasing. Same facts, same places.
+
 ## 2026-11-04 · A shorter job plan
 - The client's background is behind an ⓘ next to their name; tap it to read. What changes the job (harder rolls, unreliable intel, named offers, street talk) still shows.
 - "What they'll likely meet" is grouped by when it happens (the way in, inside, the target) with one line each: what it is, who handles it, the risk. ⚠ marks the dangerous ones. On desktop the rows no longer squeeze into narrow columns.
