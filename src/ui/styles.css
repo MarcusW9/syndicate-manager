@@ -592,7 +592,49 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 @keyframes map-pick { 50% { opacity: 0.8; } }
 .map-talk { fill: var(--warn); pointer-events: none; animation: map-talk 1.8s ease-in-out infinite; }
 @keyframes map-talk { 50% { opacity: 0.3; } }
-@media (prefers-reduced-motion: reduce) { .map-talk, .map-ferry, .cm-d.is-selected .cm-d__area, .cm-raid--pulse { animation: none; } .cm-raid--pulse { display: none; } }
+/* The neon tactical map (command centre, part 2, 2026-11-05; ART.md "City map"): a lit coastline,
+   faint streets, transit, a landmark glyph per district, and the glance layer: heat glows, crews out
+   as faces, calls pulsing sodium, raid rings. Everything that moves stops for reduced motion. */
+.cm-shore path { fill: none; stroke: color-mix(in srgb, var(--accent-2) 70%, transparent); stroke-width: 1; stroke-opacity: 0.75; pointer-events: none; }
+#cm-blocks path { fill: none; stroke: rgba(233, 236, 241, 0.035); stroke-width: 0.6; }
+.cm-streets { pointer-events: none; }
+.cm-roads { fill: none; stroke: rgba(233, 236, 241, 0.075); stroke-width: 1; stroke-linecap: round; }
+.cm-d.has-hall .cm-d__area[style] { fill: color-mix(in srgb, var(--turf) 13%, var(--panel-2)); }
+.cm-transit { fill: none; pointer-events: none; stroke-width: 1.2; }
+.cm-transit--mono { stroke: color-mix(in srgb, #b48cff 45%, transparent); stroke-dasharray: 3 3; }
+.cm-transit--maglev { stroke: color-mix(in srgb, var(--accent-2) 32%, transparent); }
+.cm-train { fill: none; stroke: var(--accent-2); stroke-width: 2.2; stroke-linecap: round; stroke-dasharray: 9 400; pointer-events: none; animation: cm-train 9s linear infinite; }
+@keyframes cm-train { from { stroke-dashoffset: 9; } to { stroke-dashoffset: -330; } }
+.map-ferry--east { animation-duration: 18s; animation-name: map-ferry-east; }
+@keyframes map-ferry-east { 0%, 8% { transform: translate(0, 0); } 92%, 100% { transform: translate(12px, 104px); } }
+.cm-crane { fill: var(--accent); animation: map-talk 2.6s ease-in-out infinite; pointer-events: none; }
+.cm-drone { fill: var(--accent-2); pointer-events: none; animation: cm-drone 7s linear infinite; transform-box: view-box; transform-origin: 318px 104px; }
+@keyframes cm-drone { to { transform: rotate(360deg); } }
+.cm-glyph { fill: none; stroke: var(--turf, var(--muted)); stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; opacity: 0.85; pointer-events: none; }
+.cm-glyph.is-locked { stroke: var(--line); opacity: 1; }
+.cm-heat { opacity: var(--heat, 0.5); pointer-events: none; }
+.cm-heat__in--low { stop-color: #f2d541; stop-opacity: 0.35; } .cm-heat__out--low { stop-color: #f2d541; stop-opacity: 0; }
+.cm-heat__in--warm { stop-color: #ff9a3d; stop-opacity: 0.5; } .cm-heat__out--warm { stop-color: #ff9a3d; stop-opacity: 0; }
+.cm-heat__in--hot { stop-color: #ff4a4a; stop-opacity: 0.6; } .cm-heat__out--hot { stop-color: #ff4a4a; stop-opacity: 0; }
+.cm-heat.is-hot { animation: cm-heat 3.2s ease-in-out infinite; }
+@keyframes cm-heat { 50% { opacity: calc(var(--heat, 0.5) * 0.6); } }
+.cm-plate__heat { font-size: 8px; font-weight: 700; letter-spacing: 0.1em; }
+.cm-plate__heat--low { fill: var(--muted); } .cm-plate__heat--warm { fill: #ff9a3d; } .cm-plate__heat--hot { fill: var(--danger); }
+.cm-plate__lock { fill: var(--muted); font-size: 7.5px; font-weight: 600; letter-spacing: 0.14em; }
+.cm-hit { fill: transparent; } /* a 48-unit circle round each plate: a 44px+ tap target at phone width */
+.cm-token__bg { fill: var(--bg); }
+.cm-token__ring { fill: none; stroke: var(--accent-2); stroke-width: 1.2; }
+.cm-token__ring.is-call { stroke: var(--warn); }
+.cm-token__ring.is-side { stroke: var(--muted); }
+.cm-token__more { fill: var(--accent-2); font-size: 8px; font-weight: 700; }
+.cm-route { fill: none; stroke: color-mix(in srgb, var(--accent-2) 40%, transparent); stroke-width: 1; stroke-dasharray: 2 3; pointer-events: none; }
+.cm-route.is-call { stroke: color-mix(in srgb, var(--warn) 50%, transparent); }
+.cm-call { fill: none; stroke: var(--warn); stroke-width: 1.3; pointer-events: none; }
+.cm-call--pulse { transform-box: fill-box; transform-origin: center; animation: cm-raid 1.6s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .map-talk, .map-ferry, .cm-d.is-selected .cm-d__area, .cm-raid--pulse, .cm-call--pulse, .cm-train, .cm-crane, .cm-drone, .cm-heat.is-hot { animation: none; }
+  .cm-raid--pulse, .cm-call--pulse, .cm-train { display: none; }
+}
 /* City sub-tabs: one section at a time so the map screen fits a phone. */
 .cityhead { margin-bottom: 8px; }
 .subtabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid var(--line); margin: 0 0 4px; }

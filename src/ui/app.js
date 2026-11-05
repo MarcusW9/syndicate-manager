@@ -2187,6 +2187,21 @@ function crewOutIn(key) {
 
 const turfHex = (key) => { const f = DISTRICTS[key]?.faction; return f ? TURF_HEX[TURF_TONE[f]] : null; };
 
+/**
+ * Who's out in a district, for the map's face tokens (command centre, part 2): crews away (calls
+ * first), the job being watched, and side work, each with the hall their first runner lives in.
+ */
+function crewsOnMap(key) {
+  const ops = (ids) => ids.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean);
+  const from = (list) => list[0]?.hall ?? SAFEHOUSE_DISTRICT;
+  const away = crewsOut(state).filter((c) => c.district === key).sort((a, b) => b.waiting - a.waiting)
+    .map((c) => { const o = ops(c.crewIds); return { ops: o, call: c.waiting, side: false, from: from(o) }; });
+  const am = state.activeMission;
+  const live = am && !am.done && !am.raid && templateById(am.templateId)?.district === key ? [{ ops: ops(am.crewIds), call: false, side: false, from: from(ops(am.crewIds)) }] : [];
+  const side = sideTasksOut(state).filter((t) => t.district === key).map((t) => { const o = ops(t.crewIds); return { ops: o, call: false, side: true, from: from(o) }; });
+  return [...away, ...live, ...side].filter((c) => c.ops.length).slice(0, 3);
+}
+
 function cityMap() {
   const talk = activeRumour(state)?.district;
   const districts = MAP_DISTRICTS.map((key) => {
@@ -2200,12 +2215,13 @@ function cityMap() {
       key, locked: card.locked, selected: cityDistrict === key, jobs, out, home, hall, talk: talk === key, heat: card.locked ? 0 : heatIn(state, key),
       raid: raidOn(state, key) && raidOn(state, key).answer !== 'paid' ? (raidOn(state, key).called ? 'NOW' : calendar(raidOn(state, key)?.day).weekday.slice(0, 3).toUpperCase()) : null, // a raid ring (core/raids.js)
       name: cityName(key).replace(/^The /, ''),
+      crews: card.locked ? [] : crewsOnMap(key), // face tokens on the map
       turf: card.locked ? null : turfHex(key),
       label: [cityName(key), card.locked ? 'locked' : `${jobs || 'no'} job${jobs === 1 ? '' : 's'} on the board`, faction && `${faction} turf`,
         home && 'the home hall is here', hall && 'a hall of ours is here', raidOn(state, key) && 'a raid is coming', heatIn(state, key) > 0 && `heat ${heatIn(state, key)} of 10`, out && `${out} of yours out here`, talk === key && 'street talk about it'].filter(Boolean).join(', '),
     };
   });
-  return cityMapSvg(districts, esc);
+  return cityMapSvg(districts, esc, { portrait });
 }
 
 /**
