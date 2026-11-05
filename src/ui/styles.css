@@ -178,7 +178,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .jobcard__facts { grid-column: 1 / -1; display: flex; align-items: center; flex-wrap: wrap; gap: 0 6px; font-size: 0.85rem; color: var(--muted); }
 .jobcard__note { color: #ff9a5a; }
 .keyglyphs { display: inline-flex; gap: 6px; color: var(--text); }
-.keyglyph { display: inline-flex; }
+.keyglyph { display: inline-flex; align-items: center; gap: 3px; } .keyglyph > span { font-size: 0.74rem; color: var(--muted); }
 .keyglyph .icon { width: 18px; height: 18px; }
 .flag { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 7px; border: 1px solid currentColor; }
 .flag--hot { color: #ff9a5a; }
@@ -460,10 +460,20 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 /* Planning: the risk read and Start stay on screen while you pick (above the phone tab bar). */
 .planbar { position: sticky; bottom: 56px; z-index: 1; display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: #1b1f28; box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.35); }
 .planbar__read { flex: 1; min-width: 0; display: grid; gap: 4px; justify-items: start; }
-.planbar__why { font-size: 0.8rem; color: var(--muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.planbar__why--more { display: block; gap: 2px; min-height: 32px; padding: 0; border: 0; background: none; font: inherit; font-size: 0.8rem; color: var(--muted); text-align: left; cursor: pointer; }
+.planbar__why { font-size: 0.8rem; color: var(--muted); max-width: 100%; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; } /* two lines, then … (2026-11-05) */
+.planbar__why--more { display: grid; gap: 2px; min-height: 32px; padding: 0; border: 0; background: none; font: inherit; font-size: 0.8rem; color: var(--muted); text-align: left; cursor: pointer; }
 .planbar__why--more b { color: var(--warn); font-weight: 600; }
 .planbar__why--more[aria-expanded="true"] { display: grid; white-space: normal; }
+.planbar__line { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.planbar__why--more > b { justify-self: start; }
+/* "Try": single changes that lower the risk (2026-11-05); a tap makes the change. */
+.planbar:has(.planbar__tries) { flex-wrap: wrap; }
+.planbar__tries { flex: 1 0 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+@media (max-width: 699px) { .planbar__tries { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: -12px; padding: 6px 12px 0; } .trychip { flex: none; } .trychip::before { inset: -6px 0 0; } }
+.planbar__tries > span { font: 700 0.68rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-2); }
+.trychip { position: relative; min-height: 32px; padding: 3px 10px; border: 1px solid var(--accent-2); background: #12262a; color: var(--text); font: 600 0.78rem system-ui, sans-serif; cursor: pointer; clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%); }
+.trychip::before { content: ''; position: absolute; inset: -6px 0; } /* 44px tall to the finger */
+.trychip b { color: #5fe0a5; font-weight: 700; }
 .planbar .btn { flex: 0 0 auto; }
 .risk--none { background: #262b36; color: var(--muted); }
 @media (min-width: 900px) { .planbar { bottom: 16px; } }
@@ -777,6 +787,23 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .dossier.is-empty::before { display: none; }
 .dossier.is-empty b { font-size: min(0.72rem, 12.5cqi); letter-spacing: min(0.12em, 1.2cqi); text-transform: uppercase; white-space: nowrap; }
 .dossier.is-empty small { font-size: 0.68rem; padding: 0 4px; }
+/* Empty outside slots as one-line chips (2026-11-05): optional, so they shouldn't look unfinished. */
+.slotchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.slotchips:empty { display: none; }
+.dossiers + .slotchips { margin-top: 8px; }
+.slotchip { flex: 1 1 140px; display: grid; align-content: center; gap: 1px; min-height: var(--tap, 44px); padding: 5px 10px; text-align: left; border: 1px dashed #3a4254; background: transparent; color: var(--muted); font: inherit; cursor: pointer; }
+.slotchip b { font: 700 0.78rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text); }
+.slotchip small { font-size: 0.72rem; }
+.slotchip.is-off { cursor: default; grid-template-columns: 1fr auto; column-gap: 8px; }
+.slotchip.is-off b { color: var(--muted); }
+.slotchip.is-off small { grid-column: 1; }
+.slotchip__link { grid-column: 2; grid-row: 1 / span 2; align-self: center; min-height: 36px; padding: 0 8px; border: 0; background: none; color: var(--accent-2); font: 600 0.78rem system-ui, sans-serif; cursor: pointer; }
+.jossline { margin: 8px 0 0; font-size: 0.82rem; line-height: 1.4; color: var(--text); } .jossline b { font: 700 0.74rem var(--display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-2); } /* Joss's reason for their picks (2026-11-05) */
+.brief--short { margin-bottom: 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; } /* the brief after the first read (2026-11-05) */
+.linkbtn { min-height: var(--tap, 44px); padding: 0; margin-bottom: 8px; border: 0; background: none; color: var(--accent-2); font: 600 0.8rem system-ui, sans-serif; cursor: pointer; }
+.orderline { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 10px; width: 100%; min-height: var(--tap, 44px); padding: 8px 12px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font: inherit; font-size: 0.86rem; text-align: left; cursor: pointer; }
+.orderline b { font: 700 0.72rem var(--display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-2); }
+.orders__h { margin: 14px 0 6px; font: 700 0.78rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 .dossier__sil { width: 40px; height: 40px; border-radius: 50%; border: 2px dashed #3a4254; display: grid; place-items: center; font-size: 1.3rem; color: #4a5266; }
 /* Four or more inside on a phone: two to a row, each card turned landscape (photo left, name and
    numbers right) so names and stats stay full size (owner, 2026-10-29: "quite tight here maybe we
@@ -828,9 +855,17 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .cover__name { margin: 0; font-weight: 600; font-size: 0.9rem; }
 .cover__danger { color: #ff8a98; font-size: 0.8rem; }
 .cover__who { margin: 0; grid-column: 1; font-size: 0.76rem; color: var(--muted); }
-.cover__risk { grid-column: 2; grid-row: 1 / span 2; max-width: 11rem; display: grid; justify-items: end; gap: 3px; text-align: right; }
+.cover__risk { grid-column: 2; grid-row: 1 / span 2; display: grid; justify-items: end; }
 .cover__risk .risk { margin-right: 0; }
-.cover__with { font-size: 0.68rem; color: var(--muted); }
+/* What moved with the last change to the plan (2026-11-05): "was mid", green if better, red if worse, and a flash once. */
+.was { display: block; font: 600 0.66rem var(--display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); text-align: right; }
+.was--better { color: #5fe0a5; } .was--worse { color: #ff8a98; }
+.cover__with .was { display: inline; margin-left: 4px; }
+.planbar__level { display: inline-flex; align-items: center; gap: 8px; } .planbar__level .was { text-align: left; }
+@keyframes was-flash { from { background-color: rgba(61, 232, 216, 0.22); } to { background-color: transparent; } }
+.is-flash { animation: was-flash 1.2s ease-out; }
+@media (prefers-reduced-motion: reduce) { .is-flash { animation: none; } }
+.cover__with { grid-column: 1 / -1; font-size: 0.74rem; color: var(--muted); } /* the whole row's width, under it (2026-11-05) */
 .cover__note { margin: 0; padding: 9px 12px; border-top: 1px solid var(--line); font-size: 0.78rem; color: var(--warn); }
 .cover__note--muted { color: var(--muted); }
 

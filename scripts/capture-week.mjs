@@ -38,6 +38,7 @@ try {
   await p.locator('.standard').scrollIntoViewIfNeeded();
   await p.evaluate(() => window.scrollBy(0, -200));
   await p.screenshot({ path: `${out}/03-plan-standard.png` });
+  if (await p.locator('[data-action="toggle-orders"][aria-expanded="false"]').count()) await p.locator('[data-action="toggle-orders"]').first().click(); // The plan's orders fold to one line (2026-11-05): open them first.
   await p.locator('.lead, [data-action="callin"]').first().scrollIntoViewIfNeeded();
   await p.evaluate(() => window.scrollBy(0, 150));
   await p.screenshot({ path: `${out}/04-plan-lead.png` });

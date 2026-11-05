@@ -1,6 +1,6 @@
 // Capture (2026-11-04): the job's planning screen with a crew picked: the client line (background
 // on tap), "What they'll likely meet" grouped by zone, and the plan bar's notes, at phone, iPad and
-// desktop widths. Run: node scripts/capture-plan-read.mjs <out dir>
+// desktop widths. Run: node scripts/capture-plan-read.mjs <out dir>  (APPROACH=loud to plan a loud run)
 import { createNewGame } from '../src/core/state.js';
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
@@ -23,6 +23,7 @@ try {
     await p.reload();
     await p.locator('[data-action="nav"][data-id="jobs"]').filter({ visible: true }).first().click();
     await p.locator('[data-action="open-job"]').filter({ visible: true }).first().click();
+    if (process.env.APPROACH) await p.locator(`[data-action="approach"][data-id="${process.env.APPROACH}"]`).first().click();
     for (let i = 0; i < 3; i++) {
       const slot = p.locator('.board .dossier.is-empty[data-id^="in:"]').first();
       if (!(await slot.count())) break;
@@ -32,11 +33,11 @@ try {
     }
     if (await p.locator('[data-action="toggle-meet"][aria-expanded="false"]').count()) await p.locator('[data-action="toggle-meet"]').click();
     await p.waitForTimeout(300);
-    await p.screenshot({ path: `${out}/plan-${tag}.png`, fullPage: true });
+    await p.screenshot({ path: `${out}/${process.env.APPROACH ? `${process.env.APPROACH}-` : ''}plan-${tag}.png`, fullPage: true });
     await p.locator('[data-action="client-info"]').first().click().catch(() => {});
     if (await p.locator('[data-action="plan-why"]').count()) await p.locator('[data-action="plan-why"]').click();
     await p.waitForTimeout(300);
-    await p.screenshot({ path: `${out}/plan-${tag}-opened.png`, fullPage: true });
+    await p.screenshot({ path: `${out}/${process.env.APPROACH ? `${process.env.APPROACH}-` : ''}plan-${tag}-opened.png`, fullPage: true });
     await p.close();
   }
 } finally { await b.close(); process.kill(-srv.pid); }

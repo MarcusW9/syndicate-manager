@@ -4,6 +4,20 @@
 // Slots: {amount} {total} {short} {job} {jobs} {count} {name} {role} {names} {subject}.
 
 export const PARTNER = {
+  // Why Joss picked who they picked, one line on the squad board (2026-11-05): what each runner
+  // covers on this job, by the stat they cover it with. "{name}" is the runner; the overwatch line
+  // is for whoever's on the rifle or drone. Short: the line holds up to three of these.
+  pickReasons: {
+    stealth: '{name} keeps us out of sight',
+    tech: '{name} takes the locks and cameras',
+    social: '{name} does the talking',
+    combat: '{name} handles anyone who won\'t move',
+    medical: '{name} keeps us breathing',
+    driving: '{name} gets us out',
+    cool: '{name} keeps their head when it goes loud',
+    overwatch: '{name} watches from up high',
+    wheels: '{name} has the van',
+  },
   // One line at the top of Today, picked by the day's mood
   // (first match wins in the UI).
   moods: {

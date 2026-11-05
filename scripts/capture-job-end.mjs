@@ -22,6 +22,8 @@ try {
     await vis('[data-action="open-job"]').click();
     await vis('[data-action="joss"]').click();
     // The squad board (2026-10-27): Joss fills it, then the call-in setting is chosen.
+    const fold = vis('[data-action="toggle-orders"][aria-expanded="false"]'); // The plan's orders fold to one line (2026-11-05): open them first.
+    if (await fold.count()) await fold.click();
     const every = vis('[data-action="callin"][data-id="every"]');
     if (await every.count()) await every.click();
     // Watching it live (2026-11-04): jobs may default to sending the crew away.
