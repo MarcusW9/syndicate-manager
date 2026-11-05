@@ -95,6 +95,7 @@ let briefOpen = true; // the open job's brief in full, or two lines and "Read mo
 let readMemo = null; // the plan read as last drawn: { jobId, sig, rows: Map(row key → effective risk), level }
 let readBefore = null; // the read before the last change to the plan, for "was low" (2026-11-05)
 let readFresh = false; // this draw is the first since the plan changed: flash what moved
+let jossSig = null; // the plan as Joss picked it (on opening a job, or Joss's picks); their reason shows while it's unchanged
 let whyOpen = false; // the plan bar's notes, all of them, on tap
 let meetHidden = null; // the plan's "What they'll likely meet" read folded away; null until first shown (folded on phones)
 
@@ -208,6 +209,8 @@ function onClick(e) {
       // The brief in full the first time this session, then two lines (2026-11-05).
       briefOpen = !briefSeen.has(id); briefSeen.add(id);
       readMemo = null; readBefore = null; // a fresh plan: nothing to compare with yet
+      whyOpen = false; // the bar starts with one line on every job
+      jossSig = r ? JSON.stringify([r.picks.crew, r.approach, r.picks.overwatch ?? null, r.picks.kit ?? null, r.picks.wheels ?? null]) : null;
       plan = { jobId: id, crew: r ? r.picks.crew : [], approach: r ? r.approach : 'stealth', orders: 'steady', callIn: 'risky', mode: 'away',
         overwatch: r?.picks.overwatch ?? null, kit: r?.picks.kit ?? null, wheels: r?.picks.wheels ?? null, standby: r?.picks.standby ?? null };
       break;
@@ -228,6 +231,7 @@ function onClick(e) {
       // The smallest squad that gets the best risk for this approach (core/squad.js leanPicks); standby is the player's call.
       const p = leanPicks(state, state.jobs.find((j) => j.id === plan.jobId), plan.approach);
       Object.assign(plan, { crew: p.crew, overwatch: p.overwatch, wheels: p.wheels, standby: p.standby }); if (p.kit) plan.kit = p.kit;
+      jossSig = JSON.stringify([plan.crew, plan.approach, plan.overwatch, plan.kit, plan.wheels]);
       break;
     }
     case 'approach': plan.approach = id; break;
@@ -242,6 +246,7 @@ function onClick(e) {
       else if (tr.kind === 'wheels') plan.wheels = tr.op.id;
       else if (tr.kind === 'joss') { Object.assign(plan, { crew: tr.picks.crew, overwatch: tr.picks.overwatch, wheels: tr.picks.wheels }); if (tr.picks.kit) plan.kit = tr.picks.kit; }
       if (plan.standby && [...plan.crew, plan.overwatch, plan.wheels].includes(plan.standby)) plan.standby = null;
+      whyOpen = false; // back to one line: the new reason, and what moved on the rows
       break;
     }
     case 'orders': plan.orders = id; break;
@@ -1588,18 +1593,43 @@ function renderPlan() {
   if (readMemo?.jobId !== plan.jobId) readBefore = null;
   else if (readMemo.sig !== sig) { readBefore = readMemo; readFresh = true; }
   readMemo = { jobId: plan.jobId, sig, rows: new Map(cov.rows.map((r) => [rowKey(r), r.effective])), level: picked.length ? toughest : null };
+  // Joss's reason, while the plan is still theirs (2026-11-05): what each runner covers on this job,
+  // by the stat they handle the most encounters with (else their best key stat), then overwatch, the van.
+  const jossLine = (() => {
+    if (sig !== jossSig || !picked.length) return '';
+    const R = PARTNER.pickReasons;
+    const parts = picked.map((op) => {
+      const handled = cov.rows.filter((x) => x.handler?.op.id === op.id).map((x) => x.handler.stat);
+      const stat = handled.sort((a, b) => handled.filter((x) => x === b).length - handled.filter((x) => x === a).length)[0]
+        ?? [...t.keyStats].sort((a, b) => ratedStat(op, b) - ratedStat(op, a))[0];
+      return R[stat] ? R[stat].replace('{name}', op.handle) : '';
+    }).filter(Boolean);
+    const seen = new Set(); const uniq = parts.filter((x) => { const k = x.replace(/^\S+ /, ''); if (seen.has(k)) return false; seen.add(k); return true; });
+    const out = [...uniq.slice(0, 3), owOp ? R.overwatch.replace('{name}', owOp.handle) : '', wheelsOp ? R.wheels.replace('{name}', wheelsOp.handle) : ''].filter(Boolean).slice(0, 3);
+    return out.length ? `“${out.join(', ')}.”` : '';
+  })();
   const was = readBefore && picked.length && readBefore.level ? { rows: readBefore.rows, level: readBefore.level, key: rowKey, fresh: readFresh } : null;
   // The bar's notes (2026-11-04: the crises card folded in here; 2026-11-05: always says what sets the
   // risk). Above low risk the first note names the weakest point: the encounter at the bar's level,
   // and, when the crises' skills read is at that level too, the stat they lean on. Then the skills
   // read's warnings. "Crew matches the job well" only at low risk.
-  const warnings = read.reasons.filter((r) => r !== 'Crew matches the job well');
+  // Short enough to read on a phone (2026-11-05): "who stat value", no roll arithmetic (that's on
+  // the cards and in the read), and no line that repeats the weakest point's person and stat.
+  const short = (r) => r
+    .replace(/^Weak on (\w+): best is (\S+) \((\d+).*$/, 'Weak on $1 · $2 $3')
+    .replace(/^(\d+) extra on the crew: .*$/, '$1 extra: more backup, more at risk')
+    .replace(/^Short-handed: (\d+) of (\d+), (.*)$/, 'Short-handed ($1 of $2): $3')
+    .replace(/^No medic: .*$/, 'No medic for a bad wound')
+    .replace(/^Watched: .*?(-\d+)$/, 'Watched: first crisis roll $1');
+  const warnings = read.reasons.filter((r) => r !== 'Crew matches the job well').map(short);
   const notes = [];
   if (toughest !== 'low') {
     const row = cov.rows.find((x) => x.effective === toughest);
-    if (row) notes.push(`Weakest point: ${row.name}, ${row.handler ? `${row.handler.op.handle} ${row.handler.stat} ${row.handler.value}` : 'nobody can handle it'}`);
+    if (row) notes.push(`Weakest: ${row.name} · ${row.handler ? `${row.handler.op.handle} ${row.handler.stat} ${row.handler.value}` : 'nobody can'}`);
     const w = read.weakest;
-    if (read.level === toughest && w && !warnings.some((x) => x.startsWith(`Weak on ${w.stat}`))) notes.push(`The crises lean on ${w.stat}: best is ${w.op.handle} (${w.value}), about ${Math.round(w.chance * 100)}% a roll`);
+    if (read.level === toughest && w && !warnings.some((x) => x.startsWith(`Weak on ${w.stat}`))) notes.push(`Crises lean on ${w.stat} · ${w.op.handle} ${w.value}, about ${Math.round(w.chance * 100)}%`);
+    // Drop "Weak on tech · Signal 9" when the weakest point already says "Signal tech 9".
+    if (row?.handler) for (let i = warnings.length - 1; i >= 0; i--) if (warnings[i].startsWith(`Weak on ${row.handler.stat} · ${row.handler.op.handle} `)) warnings.splice(i, 1);
   }
   notes.push(...warnings);
   if (!notes.length) notes.push(toughest === 'low' ? 'Crew matches the job well' : 'Some rolls on this job are close calls');
@@ -1653,6 +1683,7 @@ function renderPlan() {
       <h2>Squad</h2>
       ${(() => { const r = crewSizeRead(plan.crew.length, t.crewSize); return `<p class="sizebadge sizebadge--${r.level} ${r.penalty >= 2 ? 'is-severe' : ''}">${esc(r.text)}</p>`; })()}
       ${renderBoard(boardUi, { plan, tpl: t, people, crewSize: t.crewSize })}
+      ${jossLine ? `<p class="jossline"><b>${esc(NAMES.partner)}:</b> ${esc(jossLine)}</p>` : ''}
       <p class="muted small">Tap a card to pick who goes. <button class="infobtn" data-action="board-rules" aria-expanded="${boardRulesOpen}" aria-label="How the squad works">${boardRulesOpen ? '×' : 'i'}</button></p>
       ${boardRulesOpen ? `<p class="muted small">Each person short of ${t.crewSize}: −1 on every roll. A second person within 3 of whoever rolls backs them up: +1.${freelancers.length ? ` Freelancers (up to ${MAX_FREELANCERS_PER_JOB}) take a share of the pay instead of a wage.` : ''}</p>` : ''}
       ${renderMentoring(picked)}

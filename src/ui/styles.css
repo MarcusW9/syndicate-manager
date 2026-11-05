@@ -798,6 +798,7 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .slotchip.is-off b { color: var(--muted); }
 .slotchip.is-off small { grid-column: 1; }
 .slotchip__link { grid-column: 2; grid-row: 1 / span 2; align-self: center; min-height: 36px; padding: 0 8px; border: 0; background: none; color: var(--accent-2); font: 600 0.78rem system-ui, sans-serif; cursor: pointer; }
+.jossline { margin: 8px 0 0; font-size: 0.82rem; line-height: 1.4; color: var(--text); } .jossline b { font: 700 0.74rem var(--display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-2); } /* Joss's reason for their picks (2026-11-05) */
 .brief--short { margin-bottom: 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; } /* the brief after the first read (2026-11-05) */
 .linkbtn { min-height: var(--tap, 44px); padding: 0; margin-bottom: 8px; border: 0; background: none; color: var(--accent-2); font: 600 0.8rem system-ui, sans-serif; cursor: pointer; }
 .orderline { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 10px; width: 100%; min-height: var(--tap, 44px); padding: 8px 12px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font: inherit; font-size: 0.86rem; text-align: left; cursor: pointer; }

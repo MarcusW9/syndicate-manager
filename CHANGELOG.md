@@ -5,6 +5,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-05 · Joss says why
+- Under the squad board, Joss says in one line why they picked who they picked: "Drizzle keeps us out of sight, Signal takes the locks and cameras." It shows while the squad is still Joss's.
+- The notes in the plan's bottom bar are shorter ("Weakest: Locked door · Signal tech 9"), say each thing once, and the bar folds back to one line when you open a job or try a change.
+
 ## 2026-11-05 · See what a change does
 - When you change a plan (who goes, the approach, overwatch, the van), each encounter whose risk moved says what it was ("was high", green if better, red if worse) and flashes once; so does the risk in the bar. Folded, "What they'll likely meet" says how many changed.
 - A job's brief is shown in full the first time you open it; after that it's two lines with "Read more".
