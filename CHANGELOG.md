@@ -11,6 +11,12 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-05 · City becomes the command centre
+- **Crews out now live on City**, under the map: every crew out (calls first), then side work, each with its district. Tap a crew's district to light it on the map and show only what's happening there.
+- **A district's card shows your hall there**: beds, level and the faces of who lives there (tap one for their page).
+- **Today keeps one line about them**: "2 crews out · 1 call waiting — City ›". The City tab shows how many calls are waiting.
+- Sending a crew away, or handing a call back, takes you to City.
+- **Save has left the tab bar.** It's the ☰ button at the end of the top bar.
 ## 2026-11-05 · Heat per district
 - **Each district now has its own heat.** A job's heat lands in its own district, and every district cools by 2 each Sunday. The top bar shows the hottest district.
 - **The City map** puts a small HEAT tag under any warm district (amber from 3, red from 6), and the district card, the city summary and each hall show its heat.

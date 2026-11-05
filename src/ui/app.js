@@ -52,7 +52,7 @@ import { renderWatch, mountWatch, syncWatch, isWatching, stopWatch, togglePause,
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
 import { earnedText } from '../core/earned.js';
 import { SPECIALISATIONS, specOf } from '../core/specialisations.js';
-import { sideTaskById, sideOdds, sendOnSideTask, sideReward, sideCost, sidePitch, intelFor, SIDE_TRUST } from '../core/sidetasks.js';
+import { sideTaskById, sideTasksOut, sideOdds, sendOnSideTask, sideReward, sideCost, sidePitch, intelFor, SIDE_TRUST } from '../core/sidetasks.js';
 import {
   saveGame, loadGame, exportSave, importSave, listSlots, getActiveSlot, setActiveSlot,
   deleteSlot, loadBackup, backupDue, SLOT_COUNT, unreadableSave, restoreUnreadable, exportUnreadable, discardUnreadable,
@@ -67,6 +67,7 @@ let screen = 'inbox';
 let cityDistrict = null; // district card open on the City screen
 let cityTab = 'map'; // which City section is showing (CITY_TABS)
 let cityCardDue = false; // scroll a newly opened district card into view after drawing
+let cityMapDue = false; // scroll the map into view after drawing (a crew's district picked in the list)
 let openMessageId = null;
 let sidePlan = null; // { taskId, crew: [] } while planning a side task (Jobs tab)
 let playReportId = null; // a hands-off report playing out on its first open (renderReportTimeline)
@@ -145,6 +146,8 @@ function onClick(e) {
       return setState(next);
     }
     case 'city-district': cityDistrict = cityDistrict === id ? null : id; cityCardDue = !!cityDistrict; break;
+    // A crew's district in the list: light it on the map (scrolled into view) and narrow the list to it.
+    case 'city-show': cityDistrict = cityDistrict === id ? null : id; cityMapDue = !!cityDistrict; break;
     case 'city-tab': cityTab = id; break;
     case 'open-message': {
       openMessageId = id;
@@ -277,7 +280,7 @@ function onClick(e) {
     case 'send-side': {
       const next = sendOnSideTask(state, sidePlan.taskId, sidePlan.crew);
       sidePlan = null;
-      screen = 'inbox';
+      screen = 'city'; cityTab = 'map';
       return setState(next);
     }
     case 'send-job': {
@@ -287,7 +290,7 @@ function onClick(e) {
       if (out) sendOffCue = { jobId: plan.jobId, name: templateById(out.mission.templateId).name, returnDay: out.returnDay,
         crewIds: [...out.mission.crewIds, out.mission.overwatch?.id, out.mission.wheels, out.mission.standby?.id].filter(Boolean) };
       plan = null;
-      screen = 'inbox';
+      screen = 'city'; cityTab = 'map';
       openMessageId = null;
       return setState(next);
     }
@@ -315,7 +318,7 @@ function onClick(e) {
     case 'close-mission': screen = 'inbox'; return setState(closeMission(state));
     // Away crews calling in (core/away.js): take the call, then hand it back or take command.
     case 'take-call': openMessageId = null; return setState(takeCall(state, id));
-    case 'let-run': screen = 'inbox'; return setState(letThemRun(state));
+    case 'let-run': screen = 'city'; cityTab = 'map'; return setState(letThemRun(state));
     case 'take-command': return setState(takeCommand(state));
     case 'sendoff-close': t.remove(); return;
     case 'export':
@@ -517,6 +520,7 @@ function render() {
         <span class="stat"><span class="stat__label">Heat</span> ${heatMeter()}</span>
         <button class="tierbtn" data-action="info" data-id="tong" aria-expanded="${openInfo.has('tong')}" aria-label="What's a tong?"><span class="tier">${esc(rankOf(state).name)}<span class="tier__word"> tong</span></span></button>
       </div>
+      ${state.activeMission ? '' : `<button class="savebtn ${screen === 'settings' ? 'is-active' : ''}" data-action="nav" data-id="settings" aria-label="Save and settings" aria-pressed="${screen === 'settings'}"><span aria-hidden="true">☰</span><span class="savebtn__word"> Save</span></button>`}
       ${planning || state.founding ? '' : renderContinue(blocked, resting, unread, 'topbar__continue')}
       ${infoText('tong', TONG_EXPLAINER)}
     </header>
@@ -525,8 +529,7 @@ function render() {
       ${navButton('inbox', 'Today', unread, 'unread')}
       ${navButton('crew', 'Crew')}
       ${navButton('jobs', 'Jobs', state.jobs.length, 'open')}
-      ${navButton('city', 'City')}
-      ${navButton('settings', 'Save')}
+      ${navButton('city', 'City', calls(), 'calling')}
     </nav>
 
     <main class="main ${wide ? 'main--wide' : ''} ${!state.activeMission && screen === 'jobs' && plan ? 'main--split' : ''}">${state.activeMission ? renderMission() : `${keptBanner()}${renderScreen()}`}</main>
@@ -536,6 +539,7 @@ function render() {
   `;
   if (am) mountWatch(root.querySelector('.watch'), state, { ui: watchUi, onAuto: () => setState(autoStep(state)) });
   if (pickSlot) (root.querySelector('.sheet .cand.is-on') ?? root.querySelector('.sheet .cand:not([disabled])'))?.focus({ preventScroll: true });
+  if (cityMapDue) { cityMapDue = false; root.querySelector('.citymap')?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
   if (cityCardDue) { cityCardDue = false; root.querySelector('.citycard')?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
   const want = focusNext ?? refocus;
   focusNext = null;
@@ -697,7 +701,7 @@ function renderInbox() {
           ${renderBriefing()}
           ${renderWeekBrief()}
           ${renderBack()}
-          ${renderCrewsOut()}
+          ${renderOutLine()}
           ${list}
         </section>
       </div>
@@ -751,9 +755,23 @@ function renderWeekBrief() {
     </div>`;
 }
 
+/** Crews waiting on a call from the player. */
+const calls = () => (state.awayJobs ?? []).filter((j) => j.waiting).length;
+
+/** Today's one line about the crews out; they're followed on City, the command centre (2026-11-05). */
+function renderOutLine() {
+  const jobs = crewsOut(state).length + sideTasksOut(state).length;
+  if (!jobs) return '';
+  const n = calls();
+  return `<button class="outnow ${n ? 'is-call' : ''}" data-action="nav" data-id="city">
+      <span class="outnow__light" aria-hidden="true"></span>
+      <span>${jobs} ${jobs === 1 ? 'crew' : 'crews'} out${n ? ` · <strong>${n} ${n === 1 ? 'call' : 'calls'} waiting</strong>` : ''}</span>
+      <span class="outnow__go">City ›</span>
+    </button>`;
+}
+
 /** Crews out on jobs: where each is, what they did today, and a call waiting (core/away.js). */
-function renderCrewsOut() {
-  const out = crewsOut(state);
+function renderCrewsOut(out = crewsOut(state)) {
   if (!out.length) return '';
   const STATUS = { call: 'Calling you', hurt: 'Someone hurt', low: 'Lying low', on: 'On track' };
   return `
@@ -773,11 +791,17 @@ function renderCrewsOut() {
           </div>
           <p class="crewsout__phase small"><strong>${esc(c.phase)}</strong> · ${esc(STATUS[c.status])}</p>
           ${c.lines.map((l) => `<p class="small">${c.day ? `Day ${c.day}: ` : ''}${crewLinks(l)}</p>`).join('')}
-          ${c.waiting ? `<button class="btn btn--primary" data-action="take-call" data-id="${esc(c.jobId)}">Take the call</button>` : ''}
+          <div class="crewsout__foot">
+            ${c.waiting ? `<button class="btn btn--primary" data-action="take-call" data-id="${esc(c.jobId)}">Take the call</button>` : ''}
+            ${c.district ? whereButton(c.district) : ''}
+          </div>
         </li>`;
       }).join('')}
     </ul>`;
 }
+
+/** A district under a crew: tap to light it on the map and show only what's happening there. */
+const whereButton = (d) => `<button class="linkbtn crewsout__where ${cityDistrict === d ? 'is-on' : ''}" data-action="city-show" data-id="${esc(d)}" aria-pressed="${cityDistrict === d}">${esc(cityName(d))}</button>`;
 
 /** "A, B and C". */
 const andList = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
@@ -2091,6 +2115,42 @@ function cityMap() {
   return cityMapSvg(districts, esc);
 }
 
+/**
+ * The command centre's list (2026-11-05): everyone out, calls first, then side work. Everything can
+ * be done from here without the map; picking a district (on the map or a crew's district) narrows it.
+ */
+function renderOps() {
+  const f = cityDistrict;
+  const jobs = crewsOut(state).filter((c) => !f || c.district === f).sort((a, b) => b.waiting - a.waiting);
+  const side = sideTasksOut(state).filter((t) => !f || t.district === f);
+  const any = crewsOut(state).length + sideTasksOut(state).length;
+  const sideList = side.length ? `
+    <ul class="crewsout" aria-label="Side work out">
+      ${side.map((t) => {
+        const ops = t.crewIds.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean);
+        return `
+        <li class="crewsout__job is-side">
+          <div class="crewsout__top">
+            <span class="crewsout__light" aria-hidden="true"></span>
+            <p class="crewsout__head"><strong>${esc(t.name)}</strong> <span class="muted small">side work · back ${esc(calendar(t.returnDay).weekday)}</span></p>
+            <span class="crewsout__faces">${ops.map((op) => face(op, 'sm')).join('')}</span>
+          </div>
+          ${t.district ? `<div class="crewsout__foot">${whereButton(t.district)}</div>` : ''}
+        </li>`;
+      }).join('')}
+    </ul>` : '';
+  return `
+    <div class="ops">
+      <div class="ops__head">
+        <h2>Out now</h2>
+        ${f ? `<button class="linkbtn" data-action="city-district" data-id="${esc(f)}">${esc(cityName(f))} only · show all</button>` : ''}
+      </div>
+      ${jobs.length || side.length ? `${renderCrewsOut(jobs)}${sideList}`
+        : `<p class="muted small">${any ? `Nobody of ours is out in ${esc(cityName(f))}.` : 'Nobody is out. Crews you send away are followed here, day by day.'}</p>
+           ${any ? '' : '<button class="btn" data-action="nav" data-id="jobs">Find work</button>'}`}
+    </div>`;
+}
+
 /** The city tonight, beside the map on wide screens and under it on phones. */
 function citySummary() {
   const talk = activeRumour(state)?.district;
@@ -2103,24 +2163,22 @@ function citySummary() {
       <span class="cityrow__meta">${talk === k ? '<span class="cityrow__talk">Talk</span>' : ''}${crewOutIn(k) ? `<span class="cityrow__out">${crewOutIn(k)} out</span>` : ''}${n ? `<b>${n}</b> job${n === 1 ? '' : 's'}` : '<span class="muted">—</span>'}</span>
     </button></li>`;
   }).join('');
-  // Your people: who's out where, who's hurt, who's at the safehouse.
-  const away = (state.awayJobs ?? []).map((j) => {
-    const t = templateById(j.mission.templateId);
-    const names = j.mission.crewIds.map((id) => state.crew.find((o) => o.id === id)?.handle).filter(Boolean);
-    return `${names.join(' and ')} on ${t?.name ?? 'a job'} in ${cityName(t?.district) ?? 'the city'}, back ${calendar(j.returnDay).weekday}`;
+  // Your people at home, hall by hall: who's in, who's hurt (the ones out are in the list above).
+  const outIds = new Set([...(state.awayJobs ?? []).flatMap((j) => j.mission.crewIds), ...sideTasksOut(state).flatMap((t) => t.crewIds)]);
+  const halls = (state.halls ?? []).map((h) => {
+    const who = residents(state, h.district).filter((o) => !outIds.has(o.id));
+    const hurt = who.filter((o) => o.condition?.injury && o.condition.injury !== 'healthy').length;
+    return `${who.length} in ${cityName(h.district)}${hurt ? ` (${hurt} hurt)` : ''}`;
   });
-  const outIds = new Set((state.awayJobs ?? []).flatMap((j) => j.mission.crewIds));
-  const hurt = state.crew.filter((o) => !outIds.has(o.id) && o.condition?.injury && o.condition.injury !== 'healthy').length;
-  const home = state.crew.filter((o) => !outIds.has(o.id)).length;
   return `
     <h2>The city tonight</h2>
     <ul class="list list--plain cityrows">${rows}</ul>
     <p class="muted small">${(() => { const hot = HEAT_DISTRICTS.filter((d) => heatIn(state, d) > 0).sort((a, b) => heatIn(state, b) - heatIn(state, a)); return hot.length ? `Heat: ${hot.map((d) => `${esc(districtName(d))} ${heatIn(state, d)}/10`).join(' · ')}.` : 'No heat anywhere.'; })()}</p>
-    <h2>Your people</h2>
-    <p class="small">${away.length ? `${esc(away.join('. '))}. ` : ''}${home} at the safehouse in ${esc(cityName(SAFEHOUSE_DISTRICT))}${hurt ? `, ${hurt} of them hurt` : ''}.</p>
+    <h2>At home</h2>
+    <p class="small">${esc(halls.join(' · '))}${outIds.size ? ` · ${outIds.size} out` : ''}.</p>
     <h2>Places</h2>
     <div class="cityplaces">
-      <button class="btn cityplace" data-action="nav" data-id="crew">Safehouse<span class="muted small">${esc(cityName(SAFEHOUSE_DISTRICT))}</span></button>
+      <button class="btn cityplace" data-action="nav" data-id="crew">Halls<span class="muted small">On Crew</span></button>
       <button class="btn cityplace" disabled>Bar · black market<span class="muted small">Later</span></button>
     </div>`;
 }
@@ -2137,6 +2195,13 @@ function districtCard(key) {
       <h2 class="nomargin">${esc(cityName(key))} <span class="muted">${esc(c.chinese)}</span></h2>
       <p class="muted small">${esc(c.side)}${turf ? ` · <span class="citycard__turf">${esc(turf)}</span>` : ''}${key === SAFEHOUSE_DISTRICT ? ' · our home hall' : hallIn(state, key) ? ' · a hall of ours' : ''}${out ? ` · ${out} of yours out here` : ''}${heatIn(state, key) ? ` · heat ${heatIn(state, key)}/10` : ''}</p>
       <p class="body">${esc(c.pitch)}</p>
+      ${(() => {
+        const h = hallIn(state, key);
+        if (!h) return '';
+        const who = residents(state, key);
+        return `<div class="citycard__hall"><p class="small"><strong>Our hall</strong> · ${who.length}/${h.beds} beds · level ${h.level}</p>
+          ${who.length ? `<span class="citycard__faces">${who.map((op) => { const away = !!op.condition?.awayUntil && op.condition.awayUntil > state.day; return `<button class="citycard__face ${away ? 'is-out' : ''}" data-action="op-link" data-id="${esc(op.id)}" aria-label="${esc(op.handle)}${away ? ', out' : ''}">${face(op, 'sm')}</button>`; }).join('')}</span>` : '<p class="muted small">Nobody lives here yet.</p>'}</div>`;
+      })()}
       ${c.locked ? `<p class="intel">${esc(c.teaser)}</p>` : (() => {
         const now = jobsIn(key);
         return now.length ? `<div class="stack">${now.map(({ j, v }) => `<button class="btn" data-action="open-job" data-id="${esc(j.id)}">${esc(v.tpl.name)} · ${money(v.pay)} · ${daysLeft(j.expiresDay)}</button>`).join('')}</div>`
@@ -2167,7 +2232,7 @@ function renderCity() {
     map: () => `
       <div class="cols2 cols2--map">
         <div>${cityMap()}</div>
-        <div>${cityDistrict ? districtCard(cityDistrict) : ''}${citySummary()}</div>
+        <div>${cityDistrict ? districtCard(cityDistrict) : ''}${renderOps()}${citySummary()}</div>
       </div>`,
     clients: () => renderClientCards(),
     factions: () => `

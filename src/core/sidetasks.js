@@ -194,7 +194,7 @@ function resolve(state, { taskId, crewIds }) {
   });
 }
 
-/** Side tasks still out: [{ returnDay, name, crewIds }]. */
+/** Side tasks still out: [{ returnDay, name, district, crewIds }]. */
 export function sideTasksOut(state) {
-  return (state.sideOut ?? []).map((s) => ({ returnDay: s.returnDay, name: sideTaskById(s.taskId)?.name ?? s.taskId, crewIds: s.crewIds }));
+  return (state.sideOut ?? []).map((s) => ({ returnDay: s.returnDay, name: sideTaskById(s.taskId)?.name ?? s.taskId, district: sideTaskById(s.taskId)?.district ?? null, crewIds: s.crewIds }));
 }
