@@ -28,6 +28,7 @@ Rumours are street talk: the game never confirms them (no supernatural, and no p
 - **Hoi-Sing Grid & Cable, Old Town and Night Market** (infrastructure nodes). Wants every kilowatt in the city under its meter. Earns from surge pricing, power-theft fines and battery-pack leases. Small crews are petty power thieves, squeezed for bribes or forced into dangerous substation clean-ups. *Rumour:* it triggers micro-blackouts in the Night Market whenever its gambling algorithms need a distraction.
 
 **Triads and gangs**
+- **A gang remembers a tong that hurts its business.** With a big enough grudge it sends its people through the door of that tong's hall on its own turf: Red Lantern enforcers in the Docks, Silver Fan collectors in the Night Market and the Basin's Undercroft. Gangs expect settlements; tribute calls it off and eases the grudge. The Brass Anchor Society never raids a tong's hall.
 - **The Red Lanterns, the Docks.** Want every land cargo route and protection fee on the southern waterfront. Earn from road tolls on container trucks, dockside rackets and counterfeit hardware. Small crews are junior licensees: pay the toll on time, respect the incense, and they share dock gossip. *Rumour:* their dragon head consults a blind fortune-teller in the container yards before every big hijacking.
 - **The Silver Fan Circle, Night Market.** Wants the underground credit economy and the counterfeit luxury trade. Earns from high-interest street loans, gambling parlours and fake designer implants. Small crews are walk-in debtors or runners who clear their tabs with messy collection work. *Rumour:* lose at mahjong to the elders on the third floor and you pay with your biometric keys.
 - **The Brass Anchor Society, Old Town.** Wants Old Town left to itself and its businesses safe from corporate buyouts. Earns from dai pai dong protection fees, herbal-shop levies and old-school mediation; Auntie Fung is a senior elder, and her tea shops are its front room. Small crews get warm, suspicious paternalism: prove yourself over a bowl of beef chow fun and they'll back you in a brawl. *Rumour:* they hold handwritten debt ledgers from the 2052 blackout that could ruin any developer trying to buy out Old Town.
@@ -361,7 +362,9 @@ Market nodes). Gangs: Red Lanterns (Docks road tolls), Silver Fan Circle (Night 
 loans, gambling, fake implants), Brass Anchor Society (Old Town elders resisting
 buyouts). Police: Harbour Police 4th Precinct, the "Wet Sleeve" unit (corrupt; fines
 crews at "neural-load checks"; a hot district brings a raid on a tong's hall, and only
-the Wet Sleeve, on its own patch, will sell one off). Institution: Lantern Bay Racing Association (racing, licensed betting, old and
+the Wet Sleeve, on its own patch, will sell one off). A gang with a grudge against a tong
+raids its hall on the gang's own turf and expects a settlement; the Brass Anchor never
+raids. Institution: Lantern Bay Racing Association (racing, licensed betting, old and
 well connected; fears race fixing above all). Wildcard: Ghost Circuit (data liberators in Old Town's
 drainage tunnels and bomb shelters).
 

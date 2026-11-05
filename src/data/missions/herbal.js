@@ -10,6 +10,7 @@ export const HERBAL = {
   id: 'herbal_run',
   name: 'Herbal Run',
   district: 'oldTown',
+  against: 'silverFan', // the job hurts this gang: finishing it adds to their grudge (core/gangs.js)
   threat: 1,
   rookie: true,
   pay: 1400,

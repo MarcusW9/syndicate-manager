@@ -563,5 +563,12 @@ function migrate(state) {
     state.raids = state.raids ?? [];
     state.version = 40;
   }
+  if (state.version === 40) {
+    // v41: gangs' grudges (core/gangs.js), and raids that say who's coming. No gang has a quarrel
+    // with us yet; every raid so far was the police.
+    state.grudges = state.grudges ?? { redLanterns: 0, silverFan: 0 };
+    for (const r of state.raids ?? []) r.by = r.by ?? 'police';
+    state.version = 41;
+  }
   return state;
 }

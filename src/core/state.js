@@ -13,7 +13,7 @@ import { ECONOMY } from '../data/economy.js';
 import { refreshSideBoard } from './sidetasks.js';
 import { refreshArmoury } from './looks.js';
 
-export const SAVE_VERSION = 40;
+export const SAVE_VERSION = 41;
 
 // A rookie crew's first board: small work only.
 export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];
@@ -79,7 +79,8 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
     rngCounter: 0,
     activeMission: null,
     awayJobs: [], // hands-off jobs out, finished when the crew is back (core/autorun.js)
-    raids: [], // police raids on our halls, warned and waiting (core/raids.js, save v40)
+    raids: [], // raids on our halls, warned and waiting (core/raids.js; police v40, gangs v41)
+    grudges: { redLanterns: 0, silverFan: 0 }, // each gang's grudge against us, 0-10 (core/gangs.js, save v41)
     sideBoard: [], sideOut: [], intel: {}, // side tasks (core/sidetasks.js)
     recruits: [],
     freelancers: [],

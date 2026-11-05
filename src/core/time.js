@@ -1,5 +1,6 @@
 // Calendar and the daily tick. Pure logic: takes state, returns new state.
 
+import { fadeGrudges } from './gangs.js';
 import { checkRaids } from './raids.js';
 import { introduceHalls } from './halls.js';
 import { tickJobs } from './jobs.js';
@@ -133,6 +134,7 @@ function settleWeek(state) {
 
   // Heat cools the same every week, job or no job (core/heat.js).
   const cooled = coolHeat(state); // every district cools the same (heat per district, save v39)
+  fadeGrudges(state); // the gangs' grudges ease a little (core/gangs.js)
   const hot = hottest(state);
   const heatLine = cooled ? ` Heat cooled by ${HEAT_COOL_WEEKLY} everywhere${hot ? `; hottest now ${NAMES.districts[hot.district]} ${hot.heat}/10` : '; nowhere is hot'}.` : '';
 

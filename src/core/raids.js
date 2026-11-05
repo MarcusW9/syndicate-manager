@@ -29,6 +29,7 @@ import { rollTarget } from './risk.js';
 import { setInjury } from './crew.js';
 import { recordSummary } from './record.js';
 import { money } from './money.js';
+import { GANGS, GRUDGE, grudgeOf, addGrudge, gangsOn } from './gangs.js';
 
 const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const weekday = (day) => WEEKDAYS[(day - 1) % 7];
@@ -36,10 +37,24 @@ const inText = (d) => NAMES.districtsInText?.[d] ?? NAMES.districts?.[d] ?? d;
 const hallName = (d) => `the ${NAMES.districts?.[d] ?? d} hall`.replace('the The ', 'the ');
 const round50 = (n) => Math.round(n / 50) * 50;
 const police = (d) => RAID_POLICE[d] ?? { who: 'the police', onTake: false };
-/** Who comes through the door in a district's raid, capitalised for the start of a line: "The Wet Sleeve". */
-/** Who comes, as written mid-line: "the Wet Sleeve", "Veridian-Apex security". */
-export const raidBy = (d) => police(d).who;
-export const raidWho = (d) => `${police(d).who[0].toUpperCase()}${police(d).who.slice(1)}`;
+const cap = (s) => `${s[0].toUpperCase()}${s.slice(1)}`;
+/** Is this raid a gang's (raid.by a gang id, data/gangs.js), not the police's? */
+export const isGangRaid = (raid) => !!GANGS[raid?.by];
+/**
+ * Who's coming in a raid (or, given a district, its police): who they are, what the fight calls
+ * one of them, the gang if it's a gang's, and whether they'll take money ('bribe' where the police
+ * are on the take, 'settle' for any gang: gangs expect a settlement).
+ */
+export function raider(x) {
+  const raid = typeof x === 'string' ? { district: x, by: 'police' } : x;
+  if (isGangRaid(raid)) { const g = GANGS[raid.by]; return { who: g.who, one: g.one, gang: raid.by, buy: 'settle' }; }
+  const p = police(raid.district);
+  return { who: p.who, one: 'officer', gang: null, buy: p.onTake ? 'bribe' : null };
+}
+/** Who comes, as written mid-line: "the Wet Sleeve", "Silver Fan collectors". */
+export const raidBy = (x) => raider(x).who;
+/** The same at the start of a line: "The Wet Sleeve". */
+export const raidWho = (x) => cap(raider(x).who);
 const andNames = (ops) => (ops.length > 1 ? `${ops.slice(0, -1).map((o) => o.handle).join(', ')} and ${ops.at(-1).handle}` : ops[0]?.handle ?? '');
 
 /** The raid on a district's hall that hasn't happened yet (warned, or waiting on the call), or null. */
@@ -54,14 +69,18 @@ export const hallShut = (state, district) => (hallIn(state, district)?.shutUntil
 /** Is this runner's hall shut today? */
 export const lyingLow = (state, op) => !op.freelance && hallShut(state, op.hall ?? HOME_HALL);
 
-/** What the police on the take want to call it off: dearer the hotter it is, and dearer on the day. */
+/**
+ * What it takes to call a raid off: police on the take want more the hotter the district runs; a
+ * gang's tribute grows with its grudge. Both are dearer on the day, at the door.
+ */
 export function raidPrice(state, raid, { late = false } = {}) {
+  if (isGangRaid(raid)) return round50((GRUDGE.tribute.base + GRUDGE.tribute.perGrudge * grudgeOf(state, raid.by)) * (late ? GRUDGE.lateTribute : 1));
   const p = RAID.bribe.base + RAID.bribe.perHeat * heatIn(state, raid.district);
   return round50(p * (late ? RAID.lateBribe : 1));
 }
 
-/** Can this raid be paid off now? Only where the police are on the take, and only once. */
-export const canBuyOff = (state, raid) => police(raid.district).onTake;
+/** Can this raid be called off with money? Any gang's (a settlement); the police's only where they're on the take. */
+export const canBuyOff = (state, raid) => !!raider(raid).buy;
 
 /** Who holds the hall if it comes to it: residents at home, on their feet (not out, not badly hurt). */
 export function defenders(state, district) {
@@ -76,7 +95,9 @@ export function defenders(state, district) {
 }
 
 /** The raiders' strength: the hotter the district, the more of them and the harder they are. */
-export const raidThreat = (state, district) => Math.max(1, Math.min(4, heatIn(state, district) - 6)); // heat 7: 1 … heat 10: 4 (measured: 2 rookies hold ~1 in 5 at heat 9)
+export const raidThreat = (state, district, raid = null) => (isGangRaid(raid)
+  ? Math.max(1, Math.min(4, grudgeOf(state, raid.by) - 4)) // a gang's: grudge 6: 2 … grudge 8+: 4
+  : Math.max(1, Math.min(4, heatIn(state, district) - 6))); // the police's: heat 7: 1 … heat 10: 4 (measured: 2 rookies hold ~1 in 5 at heat 9)
 
 /** What walking out costs: what was kept there (no more than we have) and the repairs. */
 export function withdrawCost(state, district) {
@@ -86,17 +107,21 @@ export function withdrawCost(state, district) {
 
 // --- the warning and the day ---------------------------------------------------------------------
 
-function warn(state, district) {
-  const id = `raid-${district}-${state.day}`;
+function warn(state, district, by = 'police') {
+  const id = `raid-${district}-${state.day}${by === 'police' ? '' : `-${by}`}`;
   const day = state.day + RAID.warnDays;
-  const who = police(district).who;
-  const raid = { id, district, by: 'police', warnedDay: state.day, day, answer: null, outcome: null, done: false };
+  const raid = { id, district, by, warnedDay: state.day, day, answer: null, outcome: null, done: false };
+  const who = raidBy(raid);
   state.raids = [...(state.raids ?? []), raid];
-  const buy = police(district).onTake ? ` They're on the take here: ${money(raidPrice(state, raid))} would make it go away.` : ' Nobody here can be paid to make it go away.';
+  const gang = GANGS[by];
+  const buy = gang ? ` They'd take a settlement: ${money(raidPrice(state, raid))} now, more at the door.`
+    : police(district).onTake ? ` They're on the take here: ${money(raidPrice(state, raid))} would make it go away.` : ' Nobody here can be paid to make it go away.';
+  const why = gang ? `${who} have been asking for us. ${cap(gang.name)} haven't forgotten what we did to them (grudge ${grudgeOf(state, by)}/10), and they mean to come through the door on ${weekday(day)}.`
+    : `${who} have been asking about our hall there, and they mean to come through the door on ${weekday(day)}. Heat there is ${heatIn(state, district)}/10.`;
   state.inbox.unshift({
     id: `raid-warn-${id}`, type: 'warning', kind: 'raid-warning', day: state.day,
-    subject: `Raid warned: ${hallName(district)}, ${weekday(day)}`,
-    body: `Word from ${inText(district)}: ${who} have been asking about our hall there, and they mean to come through the door on ${weekday(day)}. Heat there is ${heatIn(state, district)}/10. Whoever is home that day can hold it, or walk out the back.${buy}`,
+    subject: `Raid warned: ${hallName(district)}, ${weekday(day)}${gang ? ` (${gang.short})` : ''}`,
+    body: `Word from ${inText(district)}: ${why} Whoever is home that day can hold it, or walk out the back.${buy}`,
     payload: { raidId: id, district }, blocking: false, read: false,
   });
   return raid;
@@ -109,8 +134,8 @@ export function raidChoices(state, raid) {
   const price = raidPrice(state, raid, { late: true });
   return [
     ...(home.length ? [{ id: 'hold', label: `Hold the hall (${andNames(home)})`, cost: 'A fight at the door, on your orders. Someone could get hurt. Nobody dies unless you choose to keep fighting with them down.', disabled: !!state.activeMission, reason: state.activeMission ? 'Finish the job on screen first' : '' }] : []),
-    { id: 'withdraw', label: 'Walk out the back', cost: `Everyone gets out, nobody hurt. We lose what was kept there (${money(cost.kept)}) and ${money(cost.repairs)} in repairs; the hall is shut for a week (its people lie low, no work). Heat there −${RAID.withdrawCools}.`, exit: true, disabled: false, reason: '' },
-    ...(canBuyOff(state, raid) ? [{ id: 'pay', label: `Pay them at the door (${money(price)})`, cost: 'It ends here. They\'ll remember we pay.', disabled: state.cash < price, reason: state.cash < price ? 'Not enough cash' : '' }] : []),
+    { id: 'withdraw', label: 'Walk out the back', cost: `Everyone gets out, nobody hurt. We lose what was kept there (${money(cost.kept)}) and ${money(cost.repairs)} in repairs; the hall is shut for a week (its people lie low, no work). ${isGangRaid(raid) ? 'Their grudge stays.' : `Heat there −${RAID.withdrawCools}.`}`, exit: true, disabled: false, reason: '' },
+    ...(canBuyOff(state, raid) ? [{ id: 'pay', label: isGangRaid(raid) ? `Settle at the door (${money(price)})` : `Pay them at the door (${money(price)})`, cost: isGangRaid(raid) ? 'They take the money and go; their grudge eases by half.' : 'It ends here. They\'ll remember we pay.', disabled: state.cash < price, reason: state.cash < price ? 'Not enough cash' : '' }] : []),
   ];
 }
 
@@ -118,8 +143,8 @@ function callMessage(state, raid) {
   const home = defenders(state, raid.district);
   return {
     id: `raid-call-${raid.id}`, type: 'warning', kind: 'raid', day: state.day,
-    subject: `${raidWho(raid.district)} at the door: ${hallName(raid.district)}`,
-    body: `${police(raid.district).who[0].toUpperCase()}${police(raid.district).who.slice(1)} are on the stairs of ${hallName(raid.district)}. ${home.length ? `${andNames(home)} ${home.length > 1 ? 'are' : 'is'} home.` : 'Nobody of ours is home to hold it.'} They need your call now.`,
+    subject: `${raidWho(raid)} at the door: ${hallName(raid.district)}`,
+    body: `${raidWho(raid)} are on the stairs of ${hallName(raid.district)}. ${home.length ? `${andNames(home)} ${home.length > 1 ? 'are' : 'is'} home.` : 'Nobody of ours is home to hold it.'} They need your call now.`,
     options: raidChoices(state, raid).map(({ id, label }) => ({ id, label })),
     payload: { raidId: raid.id, district: raid.district }, blocking: true, resolved: false, read: false,
   };
@@ -146,6 +171,18 @@ export function checkRaids(state) {
     if (last && state.day - last.warnedDay < RAID.cooldownDays) continue;
     if (hashRng(state.seed, 'raid', d, state.day)() < RAID.dailyChance) warn(state, d);
   }
+  // A gang with a big grudge may come for one of our halls on its own turf (never Old Town's, the
+  // Brass Anchor's ground: no gang there raids). One raid per hall at a time, police or gang.
+  for (const gang of Object.keys(GANGS)) {
+    if (grudgeOf(state, gang) < GRUDGE.raidAt) continue;
+    for (const hall of state.halls ?? []) {
+      const d = hall.district;
+      if (!gangsOn(d).includes(gang) || raidOn(state, d)) continue;
+      const last = (state.raids ?? []).filter((r) => r.district === d).at(-1);
+      if (last && state.day - last.warnedDay < RAID.cooldownDays) continue;
+      if (hashRng(state.seed, 'gang', gang, d, state.day)() < RAID.dailyChance) warn(state, d, gang);
+    }
+  }
   return state;
 }
 
@@ -160,6 +197,7 @@ export function payOffRaid(prev, raidId) {
   state.cash -= price;
   r.answer = 'paid';
   r.paid = price;
+  if (isGangRaid(r)) addGrudge(state, r.by, -Math.ceil(grudgeOf(state, r.by) * (1 - GRUDGE.settleKeeps))); // settled: the grudge halves
   return state;
 }
 
@@ -178,11 +216,11 @@ function withdraw(state, raid, how = 'We walked out the back before they reached
   const hall = hallIn(state, d);
   if (hall) hall.shutUntil = state.day + RAID.shutDays;
   const before = heatIn(state, d);
-  setHeat(state, d, before - RAID.withdrawCools);
+  if (!isGangRaid(raid)) setHeat(state, d, before - RAID.withdrawCools); // the police found nothing; a gang's grudge stays
   raid.answer = raid.answer ?? 'withdraw';
   closeRaid(state, raid, 'withdrew', {
     subject: `We walked out of ${hallName(d)}`,
-    body: `${how} They took ${money(cost.kept)} in cash and kit and broke what they could; repairs ${money(cost.repairs)}. The hall is shut for a week, until ${weekday(state.day + RAID.shutDays)} (day ${state.day + RAID.shutDays}): its people lie low and take no work. Heat in ${inText(d)} ${before} → ${heatIn(state, d)}/10.`,
+    body: `${how} They took ${money(cost.kept)} in cash and kit and broke what they could; repairs ${money(cost.repairs)}. The hall is shut for a week, until ${weekday(state.day + RAID.shutDays)} (day ${state.day + RAID.shutDays}): its people lie low and take no work. ${isGangRaid(raid) ? `${cap(GANGS[raid.by].name)} still have their grudge (${grudgeOf(state, raid.by)}/10).` : `Heat in ${inText(d)} ${before} → ${heatIn(state, d)}/10.`}`,
   });
 }
 
@@ -198,7 +236,11 @@ export function RAID_RESOLVER(state, msg, optionId) {
     state.cash -= price;
     raid.answer = 'pay';
     raid.paid = price;
-    closeRaid(state, raid, 'paid', { subject: `We paid them at the door of ${hallName(raid.district)}`, body: `${money(price)} changed hands on the stairs and they went back down them. They'll remember we pay.` });
+    if (isGangRaid(raid)) {
+      const before = grudgeOf(state, raid.by);
+      addGrudge(state, raid.by, -Math.ceil(before * (1 - GRUDGE.settleKeeps)));
+      closeRaid(state, raid, 'paid', { subject: `We settled with ${GANGS[raid.by].name} at the door of ${hallName(raid.district)}`, body: `${money(price)} changed hands on the stairs and they went back down them. Their grudge eases: ${before} → ${grudgeOf(state, raid.by)}/10.` });
+    } else closeRaid(state, raid, 'paid', { subject: `We paid them at the door of ${hallName(raid.district)}`, body: `${money(price)} changed hands on the stairs and they went back down them. They'll remember we pay.` });
   } else if (optionId === 'hold') {
     raid.answer = 'hold';
     startRaidFight(state, raid);
@@ -216,15 +258,16 @@ export function startRaidFight(state, raid) {
   const d = raid.district;
   const tpl = raidTemplate(d);
   const ops = defenders(state, d);
-  const threat = raidThreat(state, d);
+  const threat = raidThreat(state, d, raid);
   const diff = Math.round(rollTarget({ threat }));
   const b = buildBattle({
     incident: 'raid', zone: 'inside', diff, threat, guards: RAID.raiders, crew: ops, approach: 'loud',
     spots: spotsForJob(d, raid.id, tpl.id, 'inside', ops.length),
   });
-  b.foe = police(d).who; // the battle lines name them (core/battle.js guardName)
+  b.foe = raidBy(raid); // who they are, and what the battle lines call one of them (core/battle.js foeWord)
+  b.foeOne = raider(raid).one;
   planIntents(b, nextRng(state));
-  const text = `${police(d).who[0].toUpperCase()}${police(d).who.slice(1)} come through the door: ${b.guards.length} of them, against ${andNames(ops)}.`;
+  const text = `${raidWho(raid)} come through the door: ${b.guards.length} of them, against ${andNames(ops)}.`;
   state.activeMission = {
     jobId: raid.id, templateId: tpl.id, raid: raid.id, crewIds: ops.map((o) => o.id), approach: 'loud', days: 0, bribe: 0,
     overwatch: null, wheels: null, standby: null, callIn: 'every', orders: null,
@@ -281,12 +324,17 @@ export function finishRaid(state) {
     else {
       const d = raid.district;
       const before = heatIn(state, d);
-      setHeat(state, d, before - RAID.holdCools); // seen off: the heat eases
-      if (am.pressed) setHeat(state, d, heatIn(state, d) + RAID.pressHeat);
+      const gang = isGangRaid(raid);
+      if (!gang) {
+        setHeat(state, d, before - RAID.holdCools); // seen off: the heat eases
+        if (am.pressed) setHeat(state, d, heatIn(state, d) + RAID.pressHeat);
+      }
       state.reputation = Math.round(Math.min(100, (state.reputation ?? 0) + RAID.holdRep) * 10) / 10;
+      // Beating a gang's men keeps their grudge where it is; the hall's quiet spell buys the time.
+      const after = gang ? `${cap(GANGS[raid.by].name)} still have their grudge (${grudgeOf(state, raid.by)}/10), but they'll think twice for a while` : `Heat in ${inText(d)} ${before} → ${heatIn(state, d)}/10`;
       closeRaid(state, raid, 'held', {
         subject: `We held ${hallName(d)}`,
-        body: `${am.pressed ? 'They backed off down the stairs, for now.' : 'They went back down the stairs and didn\'t come up again.'} ${injuries.length ? `Hurt: ${injuries.join(', ')}.` : 'Nobody hurt.'} ${deaths.length ? `${deaths.map((o) => o.handle).join(', ')} died.` : ''} Heat in ${inText(d)} ${before} → ${heatIn(state, d)}/10; the district hears we held (reputation +${RAID.holdRep}).`.replace(/\s+/g, ' ').trim(),
+        body: `${am.pressed ? 'They backed off down the stairs, for now.' : 'They went back down the stairs and didn\'t come up again.'} ${injuries.length ? `Hurt: ${injuries.join(', ')}.` : 'Nobody hurt.'} ${deaths.length ? `${deaths.map((o) => o.handle).join(', ')} died.` : ''} ${after}; the district hears we held (reputation +${RAID.holdRep}).`.replace(/\s+/g, ' ').trim(),
       });
     }
   }

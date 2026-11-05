@@ -5,6 +5,7 @@ export const PROTECTION = {
   id: 'protection',
   name: 'Protection Run',
   district: 'docks',
+  against: 'redLanterns', // the job hurts this gang: finishing it adds to their grudge (core/gangs.js)
   threat: 3,
   pay: 4000,
   days: 1,

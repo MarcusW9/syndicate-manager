@@ -128,7 +128,9 @@ export function buildBattle({ incident, zone, diff, threat, guards, crew, approa
 const up = (b) => b.guards.filter((g) => !g.out);
 const standing = (b) => b.runners.filter((r) => !r.down);
 const roll = (rng, value, diff) => { const die = d20(rng); return { die, need: 10 + diff, success: die + value >= 10 + diff }; };
-const guardName = (g, b) => (b.guards.length > 1 ? `${b.foe ? 'officer' : 'guard'} ${g.n}` : b.foe ? 'the officer' : 'the guard'); // b.foe: a raid's police (core/raids.js)
+/** What the other side are called in a fight's lines: guards, or a raid's officers, enforcers, collectors (b.foeOne, core/raids.js). */
+export const foeWord = (b) => b?.foeOne ?? (b?.foe ? 'officer' : 'guard');
+const guardName = (g, b) => (b.guards.length > 1 ? `${foeWord(b)} ${g.n}` : `the ${foeWord(b)}`);
 
 /** The chance of a fight roll, exactly as roll() makes it (d20 + value >= 10 + diff, no caps): what the orders show. */
 export const fightChance = (value, diff) => Math.min(1, Math.max(0, (11 + value - diff) / 20));
@@ -310,7 +312,7 @@ export function playRound(b, rng, orders = {}) {
     } else if (act.kind === 'lights') {
       const k = roll(rng, st.value, b.diff);
       if (k.success) b.lights = true;
-      line({ ...base, ...k, text: k.success ? `${r.handle} kills the lights. The ${b.foe ? 'officers are' : 'guards are'} shooting blind.` : `${r.handle} goes for the lights and can't find the circuit.` });
+      line({ ...base, ...k, text: k.success ? `${r.handle} kills the lights. The ${foeWord(b)}s are shooting blind.` : `${r.handle} goes for the lights and can't find the circuit.` });
     } else {
       // Shoot, or flank: the same shot, from round the guard's cover (kind 'shoot' either way, flank marked).
       const g = up(b).find((x) => x.n === act.target) ?? targetOf(b);
@@ -336,7 +338,7 @@ export function playRound(b, rng, orders = {}) {
 
   if (b.ambush && b.round === 1 && up(b).length) {
     // The crew hit first: the guards don't get a shot in this round.
-    line({ kind: 'ambush', actor: null, text: up(b).length > 1 ? `The ${b.foe ? 'officers' : 'guards'} are caught off balance and get no shot in.` : `The ${b.foe ? 'officer' : 'guard'} is caught off balance and gets no shot in.` });
+    line({ kind: 'ambush', actor: null, text: up(b).length > 1 ? `The ${foeWord(b)}s are caught off balance and get no shot in.` : `The ${foeWord(b)} is caught off balance and gets no shot in.` });
   } else for (const g of up(b)) {
     const meant = (b.intents ?? []).find((i) => i.guard === g.n);
     const t = b.runners.find((x) => x.id === meant?.target && !x.down) ?? guardTarget(b, rng);

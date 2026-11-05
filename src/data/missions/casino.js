@@ -5,6 +5,7 @@ export const CASINO = {
   id: 'casino',
   name: 'Casino Con',
   district: 'nightMarket',
+  against: 'redLanterns', // the job hurts this gang: finishing it adds to their grudge (core/gangs.js)
   threat: 2,
   pay: 4500,
   days: 1,

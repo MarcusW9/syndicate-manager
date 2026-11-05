@@ -6,6 +6,7 @@ export const INSPECTION_HOURS = {
   id: 'inspection_hours',
   name: 'Inspection Hours',
   district: 'nightMarket',
+  against: 'silverFan', // the job hurts this gang: finishing it adds to their grudge (core/gangs.js)
   threat: 2,
   routine: true,
   pay: 3200,

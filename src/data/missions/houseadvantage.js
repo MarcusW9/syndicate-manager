@@ -7,6 +7,7 @@ export const HOUSE_ADVANTAGE = {
   id: 'house_advantage',
   name: 'House Advantage',
   district: 'nightMarket',
+  against: 'silverFan', // the job hurts this gang: finishing it adds to their grudge (core/gangs.js)
   threat: 2,
   pay: 3900,
   days: 1,

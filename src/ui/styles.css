@@ -1382,7 +1382,16 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .crewsout__job.is-call { --light: var(--warn); }
 .crewsout__job.is-hurt { --light: var(--danger); }
 .crewsout__job.is-raid { --light: var(--danger); background: #1d1418; } .crewsout__job.is-raid .crewsout__light { animation: light-pulse 1.2s ease-in-out infinite; }
-.citycard__raid { color: var(--danger); font-weight: 600; } .citycard__shut { color: var(--warn); }
+.citycard__raid { color: var(--danger); font-weight: 600; }
+/* A gang's grudge (2026-11-05, gang raids): a segmented gauge like the others, sodium, red from the raid line, which is marked. */
+.grudge { display: inline-flex; align-items: center; gap: 6px; vertical-align: middle; }
+.grudge__bar { display: inline-flex; gap: 1px; }
+.grudge__bar i { width: 6px; height: 7px; background: var(--line); }
+.grudge__bar i.is-on { background: var(--warn); } .grudge__bar i.is-hot { background: var(--danger); }
+.grudge__bar i.is-line { box-shadow: 1px 0 0 0 var(--muted); margin-right: 2px; }
+.grudge__n { font-family: var(--display); font-weight: 700; font-variant-numeric: tabular-nums; }
+.grudge__word { color: var(--muted); } .grudge__word.is-hot { color: var(--danger); font-weight: 600; }
+.grudgeline { color: var(--warn); } .grudgeline strong { color: var(--warn); } .citycard__shut { color: var(--warn); }
 .raidcall .choice--exit { border-color: #2f5f55; }
 .crewsout__job.is-low { --light: var(--muted); }
 .crewsout__top { display: flex; align-items: center; gap: 8px; }
