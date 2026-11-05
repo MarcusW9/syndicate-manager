@@ -11,6 +11,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-05 · Handoff tidied
+- Docs only, no game change: `HANDOFF.md` now says `main` is up to #78, its "Now" line describes Phase 2 as built so far, and the City item no longer lists heat per district as still to do, and the test count is 564.
+
 ## 2026-11-05 · City becomes the command centre
 - **Crews out now live on City**, under the map: every crew out (calls first), then side work, each with its district. Tap a crew's district to light it on the map and show only what's happening there.
 - **A district's card shows your hall there**: beds, level and the faces of who lives there (tap one for their page).
