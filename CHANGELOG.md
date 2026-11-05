@@ -5,6 +5,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-05 · A warmer Joss
+- Joss's lines on Today, in alerts and at the top of job reports are rewritten to be warmer and more practical, with less teasing. Same facts, same places.
+
 ## 2026-11-04 · A shorter job plan
 - The client's background is behind an ⓘ next to their name; tap it to read. What changes the job (harder rolls, unreliable intel, named offers, street talk) still shows.
 - "What they'll likely meet" is grouped by when it happens (the way in, inside, the target) with one line each: what it is, who handles it, the risk. ⚠ marks the dangerous ones. On desktop the rows no longer squeeze into narrow columns.
