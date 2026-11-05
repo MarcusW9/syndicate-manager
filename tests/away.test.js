@@ -187,3 +187,38 @@ test('a v34 save with a crew out upgrades and the job carries on', async () => {
   assert.equal(s.awayJobs.length, 0);
   assert.ok(s.inbox.some((m) => m.type === 'report'));
 });
+
+// 2026-11-04 (crews out made visible, slice 4a): what Today's crew-out cards and back cards read.
+test('a crew out says its phase, its progress through the beats and its status', async () => {
+  const { phaseOf } = await import('../src/core/away.js');
+  assert.equal(phaseOf({ events: [] }), 'Casing the place');
+  assert.equal(phaseOf({ events: [{ kind: 'beat' }], zone: 'in' }), 'Going in');
+  assert.equal(phaseOf({ events: [{ kind: 'beat' }], zone: 'target' }), 'On the job');
+  assert.equal(phaseOf({ events: [{ kind: 'beat' }], zone: 'out' }), 'Getting out');
+  let s = sent(3, 'penthouse', 'never');
+  let [c] = crewsOut(s);
+  assert.equal(c.day, 0);
+  assert.equal(c.beatsDone, 0);
+  assert.equal(c.beats, templateById('penthouse').beats.length);
+  assert.equal(c.crewIds.length, templateById('penthouse').crewSize);
+  s = advanceDay(s);
+  [c] = crewsOut(s);
+  if (c) {
+    assert.equal(c.day, 1);
+    assert.ok(c.beatsDone >= 1, 'a beat told on day one');
+    assert.ok(['on', 'hurt', 'low'].includes(c.status));
+  }
+  const calling = Array.from({ length: 30 }, (_, i) => advanceDay(sent(i + 1, 'warehouse', 'every'))).find((x) => x.awayJobs[0]?.waiting);
+  assert.equal(crewsOut(calling)[0].status, 'call');
+});
+
+test('a report remembers who went, what it paid and whether they were sent away (the back card)', () => {
+  let s = sent(4, 'clinic', 'never', { approach: 'tech' });
+  const ids = s.awayJobs[0].mission.crewIds;
+  for (let i = 0; i < 4 && s.awayJobs.length; i++) s = advanceDay(s);
+  const report = s.inbox.find((m) => m.type === 'report');
+  assert.deepEqual(report.back.crewIds, ids);
+  assert.equal(report.back.away, true);
+  assert.equal(report.back.templateId, 'clinic');
+  assert.equal(typeof report.back.pay, 'number');
+});

@@ -5,6 +5,12 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+
+## 2026-11-05 · Crews out you can see
+- **Sending a crew feels like something:** a card plays as they leave, with their faces heading out, a stamp ("Out · Rent Round · back Wed") and a line from Joss. Tap it to skip.
+- **Runner tiles say when they're back**, e.g. "Out · Wed".
+- **Each crew out has its own card on Today:** their faces, a status light (cyan on track, pulsing yellow when they're calling, red if someone's hurt, grey when lying low), a bar filling as the job moves through its story, what they're doing now (casing the place, going in, on the job, getting out) and today's lines.
+- **When a crew you sent away gets back**, Today shows it that day: their faces coming home, a stamp with the result and the pay, a line from Joss, and the report.
 ## 2026-11-04 · A shorter job plan
 - The client's background is behind an ⓘ next to their name; tap it to read. What changes the job (harder rolls, unreliable intel, named offers, street talk) still shows.
 - "What they'll likely meet" is grouped by when it happens (the way in, inside, the target) with one line each: what it is, who handles it, the risk. ⚠ marks the dangerous ones. On desktop the rows no longer squeeze into narrow columns.

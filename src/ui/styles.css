@@ -1318,14 +1318,60 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .flag--named { color: var(--warn); font-weight: 600; }
 .named { color: var(--warn); margin: 6px 0; }
 
-/* Crews out on Today (core/away.js, 2026-11-04): one block per away job, a cyan rule on the left;
-   a crew waiting on a call turns the rule yellow. */
+/* Crews out on Today (core/away.js, 2026-11-04): one card per away job. A status light (cyan on the
+   job, pulsing yellow when calling, red when someone's hurt, grey lying low), the crew's faces, a
+   track filling through the job's story beats with a mark between days, the phase and today's lines. */
 .crewsout { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 8px; }
-.crewsout__job { border-left: 2px solid var(--accent-2); background: var(--panel-2, var(--panel)); padding: 8px 12px; display: grid; gap: 4px; }
+.crewsout__job { --light: var(--accent-2); border-left: 2px solid var(--light); background: var(--panel-2, var(--panel)); padding: 8px 12px; display: grid; gap: 6px; }
 .crewsout__job p { margin: 0; }
-.crewsout__job.is-waiting { border-left-color: var(--warn); }
+.crewsout__job.is-call { --light: var(--warn); }
+.crewsout__job.is-hurt { --light: var(--danger); }
+.crewsout__job.is-low { --light: var(--muted); }
+.crewsout__top { display: flex; align-items: center; gap: 8px; }
+.crewsout__light { flex: 0 0 10px; height: 10px; border-radius: 50%; background: var(--light); box-shadow: 0 0 8px var(--light); }
+.crewsout__job.is-call .crewsout__light { animation: light-pulse 1.2s ease-in-out infinite; }
+.crewsout__head { flex: 1 1 auto; min-width: 0; }
 .crewsout__head strong { font-family: var(--display, inherit); letter-spacing: 0.04em; }
-.crewsout__job .btn { margin-top: 6px; justify-self: start; }
+.crewsout__faces { display: flex; flex: 0 0 auto; }
+.crewsout__faces .face + .face { margin-left: -8px; }
+.crewsout__track { position: relative; height: 6px; background: var(--line); overflow: hidden;
+  background-image: repeating-linear-gradient(90deg, transparent 0 calc(100% / var(--days) - 2px), var(--bg) calc(100% / var(--days) - 2px) calc(100% / var(--days))); }
+.crewsout__fill { position: absolute; inset: 0 auto 0 0; width: var(--fill); background: var(--light); opacity: 0.85; transition: width 0.6s ease-out; }
+.crewsout__phase strong { color: var(--light); font-weight: 600; }
+.crewsout__job .btn { margin-top: 4px; justify-self: start; }
+@keyframes light-pulse { 50% { opacity: 0.35; box-shadow: none; } }
+
+/* Back today (2026-11-04): faces home again, a result stamp, Joss's line and the report. */
+.backs { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 8px; }
+.back { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--accent-2); background: var(--panel-2, var(--panel)); }
+.back.is-aborted, .back.is-setback { border-color: var(--warn); }
+.back.is-loss { border-color: var(--danger); }
+.back p { margin: 0; }
+.back__faces { display: flex; flex: 0 0 auto; }
+.back__face { animation: back-in 0.5s ease-out both; animation-delay: calc(var(--i) * 0.12s); }
+.back__face + .back__face { margin-left: -8px; }
+.back__text { flex: 1 1 auto; min-width: 0; }
+.back__stamp { margin-left: 6px; font-family: var(--display, inherit); font-weight: 700; letter-spacing: 0.06em; color: var(--accent-2); }
+.back.is-aborted .back__stamp, .back.is-setback .back__stamp { color: var(--warn); }
+.back.is-loss .back__stamp { color: var(--danger); }
+.back .btn { flex: 0 0 auto; min-height: var(--tap); }
+@keyframes back-in { from { transform: translateX(-24px); opacity: 0; } }
+
+/* The send-off card (2026-11-04): plays once over the screen as a crew leaves, then fades; tap to dismiss. */
+.sendoff { position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%); z-index: 4; width: min(360px, calc(100vw - 32px)); padding: 16px; display: grid; gap: 8px; justify-items: center; text-align: center;
+  border: 1px solid var(--accent-2); background: #0c1d20; box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.55); cursor: pointer; animation: sendoff 2.2s ease-in forwards; }
+.sendoff p { margin: 0; }
+.sendoff__faces { display: flex; gap: 4px; }
+.sendoff__face { animation: sendoff-face 1.6s ease-in forwards; animation-delay: calc(0.5s + var(--i) * 0.12s); }
+.sendoff__stamp { font-family: var(--display, inherit); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-2); border: 1px solid var(--accent-2); padding: 4px 8px; animation: stamp 0.35s ease-out both; animation-delay: 0.15s; }
+.sendoff__line { color: var(--muted); font-size: 0.9rem; }
+@keyframes sendoff { 0% { opacity: 0; } 10% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
+@keyframes sendoff-face { to { transform: translateX(60px); opacity: 0; } }
+@keyframes stamp { from { transform: scale(1.4) rotate(-4deg); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .sendoff { animation: cue-still 2.2s step-end forwards; }
+  .sendoff__face, .sendoff__stamp, .back__face, .crewsout__job.is-call .crewsout__light { animation: none; }
+}
 
 /* Monday's briefing on Today (core/week.js, 2026-11-04): four numbers framing the week. */
 .weekbrief { border: 1px solid var(--line); background: var(--panel-2, var(--panel)); padding: 10px 12px; margin: 0 0 14px; }

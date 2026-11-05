@@ -24,16 +24,16 @@ const crewOf = (s, am) => [...am.crewIds, am.overwatch?.id, am.wheels, am.standb
 const names = (ops) => (ops.length > 1 ? `${ops.slice(0, -1).map((o) => o.handle).join(', ')} and ${ops.at(-1).handle}` : ops[0]?.handle ?? 'The crew');
 const firstSentence = (text = '') => (/^.*?[.!?](?=\s|$)/.exec(text)?.[0] ?? text);
 
-/** One or two lines for what the crew did today (Today's "crews out" list). */
+/** One or two lines for what the crew did today (Today's "crews out" list); quiet when nothing happened. */
 function dayLines(s, am, fromEvent) {
   const today = (am.events ?? []).slice(fromEvent);
   const said = today.filter((e) => e.report).map((e) => e.report);
-  if (said.length) return said.slice(-2);
+  if (said.length) return { lines: said.slice(-2), quiet: false };
   const beat = today.filter((e) => e.kind === 'beat').at(-1);
-  if (beat) return [firstSentence(beat.text)];
+  if (beat) return { lines: [firstSentence(beat.text)], quiet: false };
   const lead = crewOf(s, am)[0];
   const line = QUIET_LINES[(s.day + am.jobId.length) % QUIET_LINES.length];
-  return [line.replace('{lead}', lead?.handle ?? 'The crew')];
+  return { lines: [line.replace('{lead}', lead?.handle ?? 'The crew')], quiet: true };
 }
 
 /** The blocking message that asks the player to take a crew's call. */
@@ -82,7 +82,7 @@ export function advanceAway(prev) {
       continue;
     }
     j.mission = now;
-    j.today = { day: s.day, lines: dayLines(s, now, from) };
+    j.today = { day: s.day, ...dayLines(s, now, from) };
     if (!dayDone(now)) { // it stopped for the player, not for the night
       j.waiting = true;
       s.inbox.unshift(callMessage(s, now));
@@ -129,15 +129,34 @@ export function takeCommand(prev) {
 }
 
 /** For Today: each crew out, with its day, what it did today and whether it's waiting on you. */
+/** Where a crew out has got to, in a word: before the first beat they're casing the place. */
+export function phaseOf(am) {
+  const told = (am.events ?? []).filter((e) => e.kind === 'beat').length;
+  if (!told) return 'Casing the place';
+  if (am.zone === 'out') return 'Getting out';
+  if (am.zone === 'inside' || am.zone === 'target') return 'On the job';
+  return 'Going in';
+}
+
+/**
+ * For Today (and later the command centre): each crew out, with its day, how far through its story
+ * beats it is, a phase word, a status (call waiting, someone hurt, lying low today, or on the job),
+ * the people on it and what they did today.
+ */
 export function crewsOut(s) {
   return (s.awayJobs ?? []).map((j) => {
     const am = j.mission;
     const tpl = templateById(am.templateId);
     const days = am.days ?? tpl.days;
+    const today = j.today?.day === s.day ? j.today : null;
+    const hurt = (am.events ?? []).some((e) => e.injury);
     return {
-      jobId: am.jobId, name: tpl.name, crew: names(crewOf(s, am)), returnDay: j.returnDay,
+      jobId: am.jobId, name: tpl.name, crew: names(crewOf(s, am)), crewIds: crewOf(s, am).map((o) => o.id), returnDay: j.returnDay,
       day: Math.min(days, Math.max(0, s.day - (am.startedDay ?? s.day))), days,
-      lines: j.today?.day === s.day ? j.today.lines : [], waiting: !!j.waiting,
+      beats: tpl.beats.length, beatsDone: (am.events ?? []).filter((e) => e.kind === 'beat').length,
+      phase: phaseOf(am),
+      status: j.waiting ? 'call' : hurt ? 'hurt' : today?.quiet ? 'low' : 'on',
+      lines: today?.lines ?? [], waiting: !!j.waiting,
     };
   });
 }

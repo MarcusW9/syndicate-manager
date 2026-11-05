@@ -58,6 +58,20 @@ export const PARTNER = {
   },
   // The first line of a job report, picked by how it went (core/report.js). Only what the
   // report itself shows: no guessing at who was behind anything.
+  // The send-off card (ui/app.js, 2026-11-04): one line as a crew leaves. {job}
+  sendOff: [
+    'Out the door. I\'ll keep the line open.',
+    'They\'re gone. I\'ll shout if {job} goes sideways.',
+    'Kettle\'s on for when they\'re back.',
+    'Off they go. Try not to pace.',
+  ],
+  // The back card on Today, by how it went.
+  back: {
+    completed: ['Back, and paid.', 'Everyone through the door. Money\'s in.'],
+    aborted: ['Back early. They walked away, and they\'re all here.', 'They pulled out. Better than the alternative.'],
+    setback: ['Back. It went badly, but they\'re back.'],
+    loss: ['Not everyone came back.'],
+  },
   reports: {
     clean: [
       'Full pay, no bandages. Write it down somewhere.',
