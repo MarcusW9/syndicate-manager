@@ -6,6 +6,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-05 · "Improved by"
+- In "What they'll likely meet", the line under an encounter now reads "→ low, improved by Siphon" (who'd step in if the roll fails), "→ low, the crew can win the fight", or "→ extreme if it turns into a fight". On a loud run it no longer credits someone who wouldn't play a part.
+
 ## 2026-11-05 · Crews out you can see
 - **Sending a crew feels like something:** a card plays as they leave, with their faces heading out, a stamp ("Out · Rent Round · back Wed") and a line from Joss. Tap it to skip.
 - **Runner tiles say when they're back**, e.g. "Out · Wed".
