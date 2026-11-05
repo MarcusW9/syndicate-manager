@@ -118,6 +118,10 @@ function plate(x, esc) {
   if (x.home) s += `<g transform="translate(${f1(px - 2)} ${f1(py - 15)})"><path class="cm-tag cm-tag--home" d="${plateShape(0, 0, 42, 12, 4)}" /><path class="cm-tag__icon--home" d="M5 9V5L8.5 2.5L12 5V9Z" /><text class="cm-tag__txt cm-tag__txt--home" x="15" y="9">HOME</text></g>`;
   if (x.hall) s += `<g transform="translate(${f1(px - 2)} ${f1(py - 15)})"><path class="cm-tag cm-tag--home" d="${plateShape(0, 0, 38, 12, 4)}" /><path class="cm-tag__icon--home" d="M5 9V5L8.5 2.5L12 5V9Z" /><text class="cm-tag__txt cm-tag__txt--home" x="15" y="9">HALL</text></g>`;
   if (x.out) s += `<g transform="translate(${f1(px + w - 48)} ${f1(py - 15)})"><path class="cm-tag cm-tag--out" d="${plateShape(0, 0, 50, 12, 4)}" /><path class="cm-tag__icon--out" d="M7 2.5L10.5 6L7 9.5L3.5 6Z" /><text class="cm-tag__txt cm-tag__txt--out" x="14" y="9">${x.out} OUT</text></g>`;
+  if (x.heat > 0) { // heat per district (core/heat.js): a small tag under the plate, amber from 3, red at the fixer's 6
+    const tone = x.heat >= 6 ? 'hot' : x.heat >= 3 ? 'warm' : 'low';
+    s += `<g transform="translate(${f1(px + w - 44)} ${f1(py + h + 3)})"><path class="cm-tag cm-tag--heat-${tone}" d="${plateShape(0, 0, 44, 12, 4)}" /><text class="cm-tag__txt cm-tag__txt--heat-${tone}" x="6" y="9">HEAT ${x.heat}</text></g>`;
+  }
   if (x.talk) s += `<rect class="map-talk" x="${f1(px + w + 4)}" y="${f1(py + 4)}" width="5" height="5" />`;
   return s;
 }

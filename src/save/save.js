@@ -10,6 +10,7 @@
 //   syndicate-ironman-progress     { [ironmanId]: highest save counter seen }
 //   syndicate-save-v1              legacy single save, moved into slot 1 on first load
 
+import { syncHeat } from '../core/heat.js';
 import { homeHall, syncHalls } from '../core/halls.js';
 import { STARTING_RANK } from '../data/tong.js';
 import { refreshSideBoard } from '../core/sidetasks.js';
@@ -549,6 +550,13 @@ function migrate(state) {
     for (const op of state.crew) if (!op.freelance) op.hall = op.hall ?? 'oldTown';
     syncHalls(state);
     state.version = 38;
+  }
+  if (state.version === 38) {
+    // v39: heat per district (core/heat.js). The old city-wide heat goes to the home district (it
+    // followed the tong home); a ride already in place stays true (the next job, wherever it is).
+    if (!state.heatBy || !Object.keys(state.heatBy).length) state.heatBy = { oldTown: state.heat ?? 0 };
+    syncHeat(state);
+    state.version = 39;
   }
   return state;
 }

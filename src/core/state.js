@@ -13,7 +13,7 @@ import { ECONOMY } from '../data/economy.js';
 import { refreshSideBoard } from './sidetasks.js';
 import { refreshArmoury } from './looks.js';
 
-export const SAVE_VERSION = 38;
+export const SAVE_VERSION = 39;
 
 // A rookie crew's first board: small work only.
 export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];
@@ -52,6 +52,7 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
     heat: 0,
     heatNoticeDay: null,
     heatWatched: false,
+    heatBy: {}, // heat per district (core/heat.js); state.heat is the hottest
     rumour: null,
     reputation: 0,
     jobGates: false,

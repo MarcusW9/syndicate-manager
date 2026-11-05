@@ -18,7 +18,7 @@ import { nextRng } from './random.js';
 import { d20 } from './rng.js';
 import { gainXp } from './development.js';
 import { adjustTrust } from './clients.js';
-import { clampHeat } from './heat.js';
+import { clampHeat, addHeat } from './heat.js';
 import { money } from './money.js';
 import { pick, makeRng } from './rng.js';
 import { noteInjury, earn } from './earned.js';
@@ -163,7 +163,7 @@ function resolve(state, { taskId, crewIds }) {
 
   if (!success) {
     const f = task.fail ?? {};
-    if (f.heat) { state.heat = clampHeat(state.heat + f.heat); results.push({ tone: 'warn', text: `Heat +${f.heat}.` }); }
+    if (f.heat) { addHeat(state, task.district, f.heat); results.push({ tone: 'warn', text: `Heat +${f.heat} in ${districtText(task.district)}.` }); }
     if (f.injury) {
       setInjury(roll.op, worsenInjury(roll.op.condition.injury, f.injury));
       noteInjury(state, roll.op, roll.op.condition.injury);

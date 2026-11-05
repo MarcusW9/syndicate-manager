@@ -2,6 +2,7 @@
 // These guard the design promises in DESIGN.md. If one fails, a change has
 // broken a rule players rely on.
 
+import { setHeat } from '../src/core/heat.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createNewGame, SAVE_VERSION } from '../src/core/state.js';
@@ -108,20 +109,20 @@ test('heat cools by 2 every Sunday, with or without a job, and never leaves 0-10
   // Changed 2026-10-24 (DESIGN.md): was 1 a week, 3 after a quiet week; that rewarded skipping jobs.
   const { advanceDay } = await import('../src/core/time.js');
   let s = createNewGame({ seed: 9 });
-  s.heat = 5;
+  setHeat(s, 'oldTown', 5);
   for (let i = 0; i < 6; i++) s = advanceDay(s); // Mon -> Sun, no jobs
   assert.equal(s.heat, 3, 'week with no job');
-  assert.match(s.inbox.find((m) => m.id === `week-${s.day}`).body, /Heat cooled by 2 to 3\/10\./);
+  assert.match(s.inbox.find((m) => m.id === `week-${s.day}`).body, /Heat cooled by 2 everywhere; hottest now Old Town 3\/10\./);
   s = advanceDay(s); // Monday: take a real job this week
   const job = s.jobs[0];
   s = M.startMission(s, job.id, s.crew.slice(0, templateById(job.templateId).crewSize).map((o) => o.id), 'stealth');
   s = M.closeMission(playMission(s, { critical: () => 'extract', crisis: (c) => c.find((x) => x.kind === 'abort') }).state);
-  s.heat = 3;
+  setHeat(s, 'oldTown', 3);
   for (let i = 0; i < 6; i++) s = advanceDay(s);
   assert.equal(s.heat, 1, 'week with a job cools the same');
   for (let i = 0; i < 7; i++) s = advanceDay(s);
   assert.equal(s.heat, 0, 'never below zero');
-  s.heat = 10;
+  setHeat(s, templateById(s.jobs[0].templateId).district, 10); // the job's own district
   const big = M.closeMission(playMission(M.startMission(s, s.jobs[0].id, s.crew.slice(0, 3).map((o) => o.id), 'loud'), randomPolicy(1)).state);
   assert.ok(big.heat <= 10, 'never above ten');
 });

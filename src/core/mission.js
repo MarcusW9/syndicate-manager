@@ -20,7 +20,7 @@ import { d20 } from './rng.js';
 import { checkRenewal } from './renewals.js';
 import { APPROACHES, crewRoll, effectiveStat, findRole, worsenInjury, setInjury, maxCrew } from './crew.js';
 import { successChance, riskLabel } from './risk.js';
-import { clampHeat, WATCHED_PENALTY } from './heat.js';
+import { clampHeat, WATCHED_PENALTY, addHeat, watchedIn } from './heat.js';
 import { XP, applyGrowth, primaryStat, promoteVeteran } from './development.js';
 import { recordJob, recordSummary } from './record.js';
 import { checkMilestones } from './milestones.js';
@@ -194,8 +194,8 @@ export function startMission(prev, jobId, crewIds, approach, opts = {}) {
   state.jobs = state.jobs.filter((j) => j.id !== jobId);
   state.lastJobDay = state.day;
   // Heat the player let ride lands on this job's first crisis roll, then it's spent.
-  const watched = state.heatWatched ? WATCHED_PENALTY : 0;
-  state.heatWatched = false;
+  const watched = watchedIn(state, tpl.district) ? WATCHED_PENALTY : 0; // only a job in the watched district
+  if (watched) state.heatWatched = false;
   // The approach's costs: time away, and props and bribes paid up front (data/approaches.js).
   const days = Math.max(1, (job.days ?? tpl.days) + (ap.days ?? 0)); // the offer's days (core/jobs.js daysRange)
   const bribe = (ap.bribePerThreat ?? 0) * view.threat;
@@ -901,7 +901,7 @@ function finish(state) {
   const cuts = freelance.reduce((n, f) => n + f.cut, 0);
   const heatGain = (am.aborted ? 0 : tpl.heat + (APPROACHES[am.approach]?.heat ?? 0)) + am.extraHeat;
   state.cash += pay - cuts;
-  state.heat = clampHeat(state.heat + heatGain);
+  addHeat(state, tpl.district, heatGain); // in the job's district (heat per district, save v39)
   // A finished job earns REP_PER_THREAT per threat level (3 until 2026-10-25; x0.4 for
   // the long climb); an abort costs ABORT_REP (unchanged: scaling it too let crews
   // reach work they weren't ready for, measured 2026-10-25).
