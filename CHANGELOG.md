@@ -5,6 +5,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-05 · Try this
+- When a job's plan is above low risk, the bar now suggests changes that would lower it, each with where it gets you: "switch to Stealth → high", "Burner for Signal → high", "add Synapse → high". Tap one and the plan changes. Only changes the game has checked actually lower the risk are shown; if none does on its own, it offers Joss's picks.
+- In "What they'll likely meet", a helper is only named when they make the row better.
+
 ## 2026-11-05 · Planning says why
 - The bar at the bottom of a job's plan now always says what sets the risk: the weakest point ("Weakest point: Guard up close, Siphon combat 5"), or the skill the job's crises lean on and your chance on it. "Crew matches the job well" only shows when the risk is low.
 - The start button says what you're committing to: "Send them (4)" or "Go live (4)".

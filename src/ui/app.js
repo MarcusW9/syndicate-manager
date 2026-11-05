@@ -41,7 +41,7 @@ import { renderFightOrders, fightTap, takeOrders } from './fightorders.js';
 import { sendOff, ORDERS, handsOffAllowed, autoStep, needsPlayer } from '../core/autorun.js';
 import { takeCall, letThemRun, takeCommand, crewsOut, dayDone } from '../core/away.js';
 import { OVERWATCH_KIT, ALERT_MAX } from '../core/incidents.js';
-import { leanPicks, jobRead, planRead } from '../core/squad.js';
+import { leanPicks, jobRead, planRead, planTries } from '../core/squad.js';
 import { renderBoard, renderPicker, renderCoverage, assignSlot, planKit } from './board.js';
 import { armouryCard, renderArmoury, renderLoadout, renderGearSheet } from './gear.js';
 import { buyGear, buyOffer, sellGear, equip, unequip, itemName, sellPrice } from '../core/gear.js';
@@ -87,6 +87,7 @@ let returnTo = null; // { screen, messageId }: where a runner's page opened from
 let founderPick = []; // candidate ids picked so far on a new game's first screen (renderFounding)
 let runnersHidden = false; // the job board's runners panel, folded away for this session
 let clientOpen = false; // the plan's client background, shown on tap (owner, 2026-11-04: the same on every job they offer)
+let planTryList = []; // the plan bar's "Try" changes as last drawn (core/squad.js planTries), applied by index
 let whyOpen = false; // the plan bar's notes, all of them, on tap
 let meetHidden = null; // the plan's "What they'll likely meet" read folded away; null until first shown (folded on phones)
 
@@ -217,6 +218,19 @@ function onClick(e) {
       break;
     }
     case 'approach': plan.approach = id; break;
+    case 'plan-try': {
+      // One of the plan bar's "Try" changes (2026-11-05), as planTries read it.
+      const tr = planTryList[Number(id)];
+      if (!tr) break;
+      if (tr.kind === 'approach') plan.approach = tr.approach;
+      else if (tr.kind === 'swap') plan.crew = plan.crew.map((x) => (x === tr.out.id ? tr.op.id : x));
+      else if (tr.kind === 'add') plan.crew = [...plan.crew, tr.op.id];
+      else if (tr.kind === 'overwatch') { plan.overwatch = tr.op.id; plan.kit = tr.kit; }
+      else if (tr.kind === 'wheels') plan.wheels = tr.op.id;
+      else if (tr.kind === 'joss') { Object.assign(plan, { crew: tr.picks.crew, overwatch: tr.picks.overwatch, wheels: tr.picks.wheels }); if (tr.picks.kit) plan.kit = tr.picks.kit; }
+      if (plan.standby && [...plan.crew, plan.overwatch, plan.wheels].includes(plan.standby)) plan.standby = null;
+      break;
+    }
     case 'orders': plan.orders = id; break;
     case 'callin': plan.callIn = id; break;
     case 'mode': plan.mode = id; break; // send them away, or watch live (DESIGN.md 2026-11-04)
@@ -1565,6 +1579,20 @@ function renderPlan() {
   }
   notes.push(...warnings);
   if (!notes.length) notes.push(toughest === 'low' ? 'Crew matches the job well' : 'Some rolls on this job are close calls');
+  // What to try (2026-11-05): single changes that lower the risk, read the same way as the bar; if
+  // none does, Joss's squad for this approach when it's better.
+  planTryList = [];
+  if (picked.length && toughest !== 'low') {
+    const free = state.crew.filter((o) => !o.freelance && o.id !== plan.standby && availability(state, o).ok);
+    planTryList = planTries(state, job, { crew: picked, approach: plan.approach, overwatch: owOp, kit: plan.kit, wheels: wheelsOp }, free);
+    if (!planTryList.length) {
+      const picks = leanPicks(state, job, plan.approach);
+      const order = ['low', 'moderate', 'high', 'extreme'];
+      if (order.indexOf(picks.level) < order.indexOf(toughest)) planTryList = [{ kind: 'joss', picks, level: picks.level }];
+    }
+  }
+  const tryWord = (tr) => ({ approach: () => `switch to ${APPROACHES[tr.approach].name}`, swap: () => `${tr.op.handle} for ${tr.out.handle}`, add: () => `add ${tr.op.handle}`,
+    overwatch: () => `${tr.op.handle} on overwatch`, wheels: () => `${tr.op.handle} at the wheel`, joss: () => "Joss's picks" }[tr.kind]());
   const most = maxCrew(t.crewSize);
 
   return `
@@ -1620,6 +1648,7 @@ function renderPlan() {
         ${!picked.length ? `<span class="planbar__why">${esc(`Pick up to ${most}; ${t.crewSize} recommended`)}</span>`
           : notes.length === 1 ? `<span class="planbar__why">${esc(notes[0])}</span>`
           : `<button class="planbar__why planbar__why--more" data-action="plan-why" aria-expanded="${whyOpen}">${whyOpen ? notes.map((n) => `<span>${esc(n)}</span>`).join('') : `${esc(notes[0])} <b>+${notes.length - 1} more</b>`}</button>`}
+
       </div>
       ${(() => {
         const away = plan.mode !== 'live' && handsOffAllowed(t);
@@ -1627,6 +1656,7 @@ function renderPlan() {
         ${plan.crew.length ? `${away ? 'Send them' : 'Go live'} (${plan.crew.length + [plan.overwatch, plan.wheels, plan.standby].filter(Boolean).length})` : 'Pick a crew'}
       </button>`;
       })()}
+      ${planTryList.length ? `<div class="planbar__tries"><span>Try</span>${planTryList.map((tr, i) => `<button class="trychip" data-action="plan-try" data-id="${i}">${esc(tryWord(tr))} <b>→ ${esc(riskWord(tr.level))}</b></button>`).join('')}</div>` : ''}
     </div>
     ${pickSlot ? renderPicker(boardUi, { plan, tpl: t, threat: v.threat, slot: pickSlot, people: pickerPeople(), freelancersFull: freelancersFull() }) : ''}`;
 }

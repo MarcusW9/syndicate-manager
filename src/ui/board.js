@@ -173,6 +173,8 @@ export function renderPicker(ui, { plan, tpl, threat, slot, people, freelancersF
     </div>`;
 }
 
+const RISKS = ['low', 'moderate', 'high', 'extreme'];
+
 /** The coverage read (core/squad.js coverage): what the crew will likely meet, who handles it, the gaps. */
 export function renderCoverage(ui, cov, { overwatch, approachName, standby = null }) {
   const { esc, riskBadge } = ui;
@@ -186,7 +188,12 @@ export function renderCoverage(ui, cov, { overwatch, approachName, standby = nul
           for (const r of cov.rows) { const g = groups.find((x) => x.where === r.where); if (g) g.rows.push(r); else groups.push({ where: r.where, rows: [r] }); }
           const row = (r) => {
             const lower = (r.withSave || r.fight) && r.effective !== r.risk
-              ? `<span class="cover__with">→ ${esc(ui.riskWord(r.effective))}${r.withSave ? ` with ${esc(r.withSave.op.handle)}` : ''}${r.fight ? `${r.withSave ? ',' : ''} counting the fight` : ''}</span>` : '';
+              ? (() => {
+                // Who helps is named only when the row gets better (2026-11-05); a fight can make it worse.
+                const better = RISKS.indexOf(r.effective) < RISKS.indexOf(r.risk);
+                const who = better && r.withSave ? ` with ${esc(r.withSave.op.handle)}` : '';
+                return `<span class="cover__with">→ ${esc(ui.riskWord(r.effective))}${who}${r.fight ? `${who ? ',' : ''} counting the fight` : ''}</span>`;
+              })() : '';
             // "A loud run means a fight" is said once, under the read (2026-11-05), not on every row.
             const fight = r.fight && r.handler && r.fight.down >= 0.1 ? 'a fight could put someone down' : '';
             return `
