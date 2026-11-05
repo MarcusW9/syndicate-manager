@@ -1,16 +1,19 @@
-# Handoff · 2026-11-04
+# Handoff · 2026-11-05
 
 Where the project stands and what to pick up next. Read `CLAUDE.md` first: its rules (architecture, tests, design log, changelog, screenshot log, commit author) are not repeated here. `DESIGN.md`'s decision log (rows under `docs/design/`, newest file `2026-11.md`) has the why for everything below.
 
 ## State
 
-- **`main`:** up to [#60](https://github.com/MarcusW9/syndicate-manager/pull/60) (renown slice 4). PRs are squash-merged; one PR per feature, the owner merges.
+- **`main`:** up to [#75](https://github.com/MarcusW9/syndicate-manager/pull/75). PRs are squash-merged; one PR per feature, the owner merges.
+- **The tong direction** (DESIGN.md 2026-11-04 onwards; backlog in `drafts/ops-and-presence.md`): the player runs a tong (堂, a hall; ranks Back Room → Street → District → City → Harbour by reach). **Phase 1 is built and playtested** (#62-#75): hands-off on every job with call-ins day by day (`core/away.js`), Take Command as the option; jobs of 1-4 days and a board that grows with the roster (`core/jobs.js`); routine work (the week's first offer, and most of a bigger tong's extras); the week as the rhythm (due Sunday in the top bar, Monday briefing, Sunday summary, `core/week.js`); crew standards and crew leads (`core/lead.js`); crews out you can see (send-off, crew-out and back cards on Today); Joss suggests the cheapest crew they trust, and the picker sheet says what a job gives each runner (`core/worth.js`). Tuning: `scripts/sim-tong.mjs` (a player running every crew) beside the fame sim's cash band.
+- **The playtest (owner, 2026-11-05):** call-ins about right; Take Command nice to have; outcomes readable; money fine (the parked board tweak is dropped); Today busy. **Not yet happening:** "the cheapest crew I trust" (the owner sent the best) and the bench mostly sat. Lean picks (#75) are the first answer; **districts as presence** is the next.
+- **Now:** the command-centre mock-up (`drafts/prototypes/command-centre.html`, published as a private claude.ai page) for the owner to try: two halls, presence, heat per district, a warned raid, a call, moving runners between halls.
 - **The squad run is the game** (`PLAN-CORE-LOOP.md`): slices 1-6 are built, including **command fights** (6c: orders each round, fight spots and cover in every district, the fight screen; on a phone the map is pinned on top with Go in a bottom bar, #59).
 - **Renown** (`drafts/PROPOSAL-runner-renown.md`, read its "Review decisions" first): slices 1-4 built (runner record v30, milestones and highlights v31, fame / standing / paths / pro-to-veteran v32, named offers / fame pay ask / better recruits v33). **Slices 5-6 are not built** (the defining job that makes a Legend, then retirement and the hall).
 - **Finished plans:** `PLAN-RENEWALS.md`, `PLAN-PERSONALITY.md` (all steps). `PLAN-PROGRESSION.md`: steps 0-1 done, step 2 mostly covered by earned traits, stat unlocks and the runner record; step 3 (relationships) not built.
 - **Design review:** `STATE-OF-PLAY.md` is a 2026-10-26 snapshot; the owner's calls on it are in the file and in DESIGN.md.
 - **New games start with three founders picked from six** (`startCrew: 'pick'`, `chooseFounders`). Most rule tests still use the five-rookie `'fresh'` crew as a fixture.
-- **Tests:** 525 passing in 49 files (`npm run test:fast` while working; `npm test`, about 2-3 min, before every push). **Save format v37** (v34: the tong rank; v35: away jobs day by day with call-ins; v36: an offer's own days; v37: the week's start and crew leads; DESIGN.md 2026-11-04). **`CODEMAP.md`** says where things live; **`docs/ARCHITECTURE.md`** has state shapes, saves and the economy loop.
+- **Tests:** 552 passing in 53 files (`npm run test:fast` while working; `npm test`, about 2-3 min, before every push). **Save format v37** (v34: the tong rank; v35: away jobs day by day with call-ins; v36: an offer's own days; v37: the week's start and crew leads; DESIGN.md 2026-11-04). **`CODEMAP.md`** says where things live; **`docs/ARCHITECTURE.md`** has state shapes, saves and the economy loop.
 
 ## What the 2026-10-28 to 2026-11-04 sessions did
 
@@ -46,6 +49,7 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 
 ## Next
 
+0. **The tong, Phase 2** (`drafts/ops-and-presence.md`): the owner tries the command-centre mock-up; if presence feels like decisions, build it in slices (home districts and travel, heat per district, the rank following reach with an opening job, raids with an exit, then City becomes the command centre and the crew cards move there). Alongside: slice 4b (mini site maps on crew-out cards, replaying a day). Owner's writing: the quiet-day lines (`src/data/away.js`) and story text that names fixed days.
 1. **Renown slices 5-6** (`drafts/PROPOSAL-runner-renown.md`): the defining job (`legendEligible` already shows readiness on the runner page), then retirement (a decision message, never without the player's choice) and the hall. Its content list (section 8) is for the owner to write.
 2. **Command fights, held for the owner:** the Outside section's orders, the round cap, enemy types and fight goals, ranks and perks. Open from 6a: rookie-tier fights are easy; fight rolls don't count towards earned traits; dropping a weapon at death's door and reinforcements aren't built.
 3. **City:** heat per district (from the design review), then heat pips on the plates; pictures for the locked districts when they open.

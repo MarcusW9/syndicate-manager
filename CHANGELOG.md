@@ -8,6 +8,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+
+## 2026-11-05 · A command-centre mock-up
+- No game change. A clickable mock-up of the tong's command centre (`drafts/prototypes/command-centre.html`) to try before anything is built: two halls (Old Town and the Night Market), who's based where, heat per district, a raid warned for Friday with four answers, a crew calling in, and moving people between halls. HANDOFF.md now describes the tong direction and the playtest.
 ## 2026-11-05 · Joss saves your best for when they're needed
 - **Joss now suggests the cheapest crew they trust with a job**, not the strongest. If leaving a star at home keeps the risk at mid or lower, Joss leaves them at home, so they're free for work that needs them. The risk on the board and the plan shows Joss's crew, and "Try" still offers putting someone stronger in.
 - **When you tap a slot to pick someone**, each candidate has a few words on what the job does for them: "learns on the job", "learns faster beside Rook", "1 point from pro", "2 jobs from veteran", or "below their level: little to gain". The planning page itself is unchanged.
