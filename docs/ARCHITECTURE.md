@@ -37,7 +37,8 @@ mountApp(document.getElementById('app'), state);
 | recruits.js | generation, scouting, hiring |
 | halls.js | the tong's halls, one per district (`openHall`, `expandHall`, `moveToHall`, `introduceHalls`, `syncHalls` keeps `rosterCap`, `rent`, rank) |
 | tong.js | the tong's rank (`rankOf`) |
-| raids.js | police raids on the halls: `checkRaids` (day tick: warns, knocks), `payOffRaid`, `RAID_RESOLVER`, `startRaidFight` (the hold as a job `raid:<district>`), `finishRaid` (called by `finish()`) |
+| gangs.js | gangs' grudges: `addGrudge`, `jobGrudge` (a template's `against`), `fadeGrudges`, `gangsOn` |
+| raids.js | raids on the halls (police and gangs, `raider`): `checkRaids` (day tick: warns, knocks), `payOffRaid`, `RAID_RESOLVER`, `startRaidFight` (the hold as a job `raid:<district>`), `finishRaid` (called by `finish()`) |
 | renewals.js | contract renewals |
 | heat.js | heat per district (`heatIn`, `addHeat`, `coolHeat`, `hottest`, `watchedIn`), fixer notice |
 | money.js, pricing.js | formatting; wages |
@@ -79,7 +80,7 @@ setState(next){ state = next; saveGame(state); render(); }
   crew, stash: [], inbox: [welcome], memorial: [], jobs: [], jobSeq: 0, rngCounter: 0, activeMission: null,
   awayJobs: [], sideBoard: [], sideOut: [], intel: {}, recruits: [], freelancers: [], recruitSeq: 0,
   rosterCap: 8 /*all halls' beds*/, halls: [] /*{district, beds, rent, level, opened, shutUntil?}; home hall set at start*/, hallOffers: [],
-  raids: [] /*police raids on the halls, v40*/,
+  raids: [] /*raids on the halls: police v40, gangs v41 (raid.by)*/, grudges: { redLanterns: 0, silverFan: 0 } /*v41*/,
   clients: {}, founding: null }
 ```
 'pick'/'fresh' starts also set `rent = 1500`, `jobGates = true`, open board `['clinic','ledger','container409']`, then call `refreshFreelancers`, `refreshSideBoard`, `refreshArmoury` (adds `armoury {day, offers}`), and set `dayStartCash`. Optional fields appear later: `lastJobDay`, `lastBackupDay`, `ironman {id, seq}`, `namedOfferWeek`. `chooseFounders(prev, ids)` picks 3 of 6 candidates. `types.js` typedefs are partly stale.
@@ -200,7 +201,7 @@ Seeded and saved. `makeRng(seed)` is mulberry32 (`core/rng.js`). `nextRng(state)
 
 Format: JSON of the state in `localStorage`. Keys: `syndicate-active-slot`, `syndicate-slot-N`, `…-backup` (weekly), `…-unreadable`, `syndicate-ironman-progress`, legacy `syndicate-save-v1`. `storageGet/Set/Remove` are the only storage calls (swap for iOS). `saveGame` writes slot + weekly backup (not in Ironman). `loadGame` migrates; on failure `keepUnreadable` and returns null. `exportSave` downloads JSON; `importSave(file)` migrates then `checkIronman`; `loadBackup`.
 
-**Versioning:** `SAVE_VERSION` 40 in `core/state.js` (v40: `state.raids` [{ id, district, by, warnedDay, day, answer, outcome, done, called?, paid? }] and `hall.shutUntil` after a hall is walked out of (`core/raids.js`). v39: `state.heatBy` { district: 0-10 }, heat per district; `state.heat` is the hottest; `state.heatWatched` names a district (`core/heat.js`). v38: `state.halls` [{ district, beds, rent, level, opened }] and `state.hallOffers`; `op.hall`; `state.safehouseLevel` gone (`core/halls.js`). v37: `state.weekStart` `{ day, cash, reputation }` for the Sunday summary, and `am.lead` on a job (`core/lead.js`). v36: `job.days`, an offer's own days (`core/jobs.js` `daysRange`). v35: away jobs play a share a day and can call in: `am.away` `{ beats, day, command }`, and on each `state.awayJobs` entry `waiting` and `today` (`core/away.js`). v34: `state.rank` replaces `state.tier`, the tong rank. v33, renown slice 4: `job.askedFor` / `am.askedFor` for named offers, `state.namedOfferWeek`, and `payload.reason` on pay-rise messages, `growth` or `fame`). `migrate(state)` throws on missing or newer version, then runs a chain `if (state.version === N) { …; state.version = N+1; }` from v1 to v40. Real code from `src/save/save.js` (head of the chain, then the v26→v32 blocks; v1→v25 and v33→v39 omitted for length, see the file):
+**Versioning:** `SAVE_VERSION` 41 in `core/state.js` (v41: `state.grudges` { gangId: 0-10 } and `raid.by` (`'police'` or a gang id; old raids become `'police'`) (`core/gangs.js`). v40: `state.raids` [{ id, district, by, warnedDay, day, answer, outcome, done, called?, paid? }] and `hall.shutUntil` after a hall is walked out of (`core/raids.js`). v39: `state.heatBy` { district: 0-10 }, heat per district; `state.heat` is the hottest; `state.heatWatched` names a district (`core/heat.js`). v38: `state.halls` [{ district, beds, rent, level, opened }] and `state.hallOffers`; `op.hall`; `state.safehouseLevel` gone (`core/halls.js`). v37: `state.weekStart` `{ day, cash, reputation }` for the Sunday summary, and `am.lead` on a job (`core/lead.js`). v36: `job.days`, an offer's own days (`core/jobs.js` `daysRange`). v35: away jobs play a share a day and can call in: `am.away` `{ beats, day, command }`, and on each `state.awayJobs` entry `waiting` and `today` (`core/away.js`). v34: `state.rank` replaces `state.tier`, the tong rank. v33, renown slice 4: `job.askedFor` / `am.askedFor` for named offers, `state.namedOfferWeek`, and `payload.reason` on pay-rise messages, `growth` or `fame`). `migrate(state)` throws on missing or newer version, then runs a chain `if (state.version === N) { …; state.version = N+1; }` from v1 to v41. Real code from `src/save/save.js` (head of the chain, then the v26→v32 blocks; v1→v25 and v33→v39 omitted for length, see the file):
 ```js
 // Upgrade old save formats when SAVE_VERSION changes.
 function migrate(state) {

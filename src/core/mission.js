@@ -11,6 +11,7 @@
 // can put someone at death's door, never dead: only "keep fighting" (the push on of a fight)
 // leaves them dying, and any exit after that still brings them home.
 
+import { jobGrudge, addGrudge, grudgeOf, GANGS } from './gangs.js';
 import { finishRaid } from './raids.js';
 import { crewLead } from './lead.js';
 import { templateById, twistById, jobView, namedBonus } from './jobs.js';
@@ -904,6 +905,9 @@ function finish(state) {
   const heatGain = (am.aborted ? 0 : tpl.heat + (APPROACHES[am.approach]?.heat ?? 0)) + am.extraHeat;
   state.cash += pay - cuts;
   addHeat(state, tpl.district, heatGain); // in the job's district (heat per district, save v39)
+  // A job that hurt a gang: they remember (core/gangs.js); an aborted one doesn't count.
+  const grudge = !am.aborted ? jobGrudge(tpl, threat) : null;
+  const grudged = grudge ? addGrudge(state, grudge.gang, grudge.n) : 0;
   // A finished job earns REP_PER_THREAT per threat level (3 until 2026-10-25; x0.4 for
   // the long climb); an abort costs ABORT_REP (unchanged: scaling it too let crews
   // reach work they weren't ready for, measured 2026-10-25).
@@ -1014,6 +1018,7 @@ function finish(state) {
     ...(cuts ? [{ tone: 'plain', text: `Freelancers took ${money(cuts)}.` }] : []),
     ...(am.bribe ? [{ tone: 'plain', text: `Props and bribes cost ${money(am.bribe)} up front.` }] : []),
     { tone: heatGain > 0 ? 'warn' : 'plain', text: `Heat +${heatGain}.` },
+    ...(grudged ? [{ tone: 'warn', text: `${GANGS[grudge.gang].name[0].toUpperCase()}${GANGS[grudge.gang].name.slice(1)} won't forget this (grudge +${grudged}, now ${grudgeOf(state, grudge.gang)}/10).` }] : []),
     injuries.length ? { tone: 'bad', text: `Injured: ${injuries.join(', ')}.` } : { tone: 'good', text: 'Nobody hurt.' },
     ...(deaths.length ? [{ tone: 'bad', text: 'Their names go on the wall.' }] : []),
     ...(growthLines.length ? [{ tone: 'good', text: `Improved: ${growthLines.join(', ')}.` }] : []),

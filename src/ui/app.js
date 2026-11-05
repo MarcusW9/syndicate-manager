@@ -3,7 +3,8 @@
 
 import { heatIn, hottest, HEAT_DISTRICTS } from '../core/heat.js';
 import { hallIn, residents, freeBeds, canOpenHall, openHall, nextHallExpansion, expandHall, canMove, moveToHall } from '../core/halls.js';
-import { openRaids, raidOn, raidPrice, canBuyOff, defenders, raidChoices, payOffRaid, hallShut, raidWho, raidBy } from '../core/raids.js';
+import { GANGS, GRUDGE, grudgeOf, jobGrudge, grudgeWord, gangsOn } from '../core/gangs.js';
+import { openRaids, raidOn, raidPrice, canBuyOff, defenders, raidChoices, payOffRaid, hallShut, raidWho, raidBy, isGangRaid } from '../core/raids.js';
 import { HALL_SITES, HOME_HALL } from '../data/halls.js';
 import { billDue, mondayBrief, crewStandard, crewAgainstStandard } from '../core/week.js';
 import { crewLead } from '../core/lead.js';
@@ -779,7 +780,7 @@ function renderOutLine() {
   // A raid warned or at the door gets a line of its own (raids, 2026-11-05).
   const raids = openRaids(state).map((r) => `<button class="outnow is-raid" data-action="nav" data-id="city">
       <span class="outnow__light" aria-hidden="true"></span>
-      <span>${r.called ? `<strong>${esc(raidWho(r.district))} at the door: ${esc(hallLabel(r.district))}</strong>` : `<strong>Raid warned:</strong> ${esc(hallLabel(r.district))}, ${esc(raidWhen(r))}${r.answer === 'paid' ? ' · paid off' : ''}`}</span>
+      <span>${r.called ? `<strong>${esc(raidWho(r))} at the door: ${esc(hallLabel(r.district))}</strong>` : `<strong>Raid warned:</strong> ${esc(hallLabel(r.district))}, ${esc(raidWhen(r))}${r.answer === 'paid' ? ' · paid off' : ''}`}</span>
       <span class="outnow__go">City ›</span>
     </button>`).join('');
   if (!jobs) return raids;
@@ -799,6 +800,13 @@ function raidWhen(r) {
   return left <= 0 ? 'today' : left === 1 ? 'tomorrow' : `${calendar(r.day).weekday} (in ${left} days)`;
 }
 
+/** A gang's grudge as a segmented gauge and a word: "▮▮▮▮▯▯… 4/10 · angry" (core/gangs.js). */
+function grudgeGauge(gang) {
+  const n = grudgeOf(state, gang);
+  const seg = Array.from({ length: GRUDGE.max }, (_, i) => `<i class="${i < n ? (n >= GRUDGE.raidAt ? 'is-hot' : 'is-on') : ''} ${i === GRUDGE.raidAt - 1 ? 'is-line' : ''}"></i>`).join('');
+  return `<span class="grudge"><span class="grudge__bar" aria-hidden="true">${seg}</span><span class="grudge__n">${n}/10</span> <span class="grudge__word ${n >= GRUDGE.raidAt ? 'is-hot' : ''}">${esc(grudgeWord(n))}</span></span>`;
+}
+
 /** The command centre's raid items (raids, 2026-11-05): warned, paid off, or at the door now. */
 function renderRaids(raids) {
   if (!raids.length) return '';
@@ -813,14 +821,14 @@ function renderRaids(raids) {
         <li class="crewsout__job is-raid">
           <div class="crewsout__top">
             <span class="crewsout__light" aria-hidden="true"></span>
-            <p class="crewsout__head"><strong>${call ? 'At the door' : 'Raid warned'}</strong> <span class="muted small">${esc(hallLabel(r.district))} · ${esc(raidWhen(r))}</span></p>
+            <p class="crewsout__head"><strong>${call ? 'At the door' : 'Raid warned'}</strong> <span class="muted small">${esc(hallLabel(r.district))} · ${esc(raidWhen(r))}${isGangRaid(r) ? ` · ${esc(raidBy(r))}` : ''}</span></p>
             <span class="crewsout__faces">${home.map((op) => face(op, 'sm')).join('')}</span>
           </div>
-          <p class="small">${r.answer === 'paid' ? `Paid off (${money(r.paid)}). Nobody will come.`
-            : `${home.length ? `Home: ${esc(andList(home.map((o) => o.handle)))}.` : 'Nobody of ours is home to hold it.'} ${call ? 'They need your call now.' : `Hold it with whoever is home that day, or walk out the back. ${canBuyOff(state, r) ? `${esc(raidWho(r.district))} are on the take.` : `${esc(raidWho(r.district))} can\'t be bought.`}`}`}</p>
+          <p class="small">${r.answer === 'paid' ? `${isGangRaid(r) ? 'Settled' : 'Paid off'} (${money(r.paid)}). Nobody will come.`
+            : `${home.length ? `Home: ${esc(andList(home.map((o) => o.handle)))}.` : 'Nobody of ours is home to hold it.'} ${call ? 'They need your call now.' : `Hold it with whoever is home that day, or walk out the back. ${isGangRaid(r) ? `${esc(raidWho(r))} would take a settlement.` : canBuyOff(state, r) ? `${esc(raidWho(r))} are on the take.` : `${esc(raidWho(r))} can\'t be bought.`}`}`}</p>
           <div class="crewsout__foot">
             ${call ? `<button class="btn btn--primary" data-action="raid-answer" data-id="${esc(call.id)}">Answer the door</button>` : ''}
-            ${buy ? `<button class="btn" data-action="raid-pay" data-id="${esc(r.id)}" ${state.cash < price ? 'disabled' : ''}>Pay them off · ${money(price)}</button>` : ''}
+            ${buy ? `<button class="btn" data-action="raid-pay" data-id="${esc(r.id)}" ${state.cash < price ? 'disabled' : ''}>${isGangRaid(r) ? 'Settle' : 'Pay them off'} · ${money(price)}</button>` : ''}
             ${!call && r.answer !== 'paid' ? '<button class="linkbtn" data-action="nav" data-id="crew">Who lives there: Halls ›</button>' : ''}
             ${whereButton(r.district)}
           </div>
@@ -925,7 +933,7 @@ function renderUpcoming(where) {
       case 'season': return `Season ${i.season} begins: everyone a year older`;
       case 'board': return 'New freelancers and street talk';
       case 'scout': return 'Scout report: new leads';
-      case 'raid': return `Raid on ${hallLabel(i.district)}: ${raidBy(i.district)} at the door`;
+      case 'raid': return `Raid on ${hallLabel(i.district)}: ${raidBy(i)} at the door`;
       case 'bills': return `Bills: ${money(i.total)} (wages ${money(i.wages)}, rent ${money(i.rent)})${state.cash < i.total ? `, ${money(i.total - state.cash)} short` : ''}`;
       case 'job-last': return `Last day for ${i.names.join(', ')}`;
       case 'lead-last': return `Last day to sign ${i.name} (${i.role})`;
@@ -1194,8 +1202,8 @@ function renderRaidWarning(m) {
   const price = raidPrice(state, raid);
   return `
       <div class="stack">
-        ${canBuyOff(state, raid) && !raid.answer && !raid.called ? `<button class="btn btn--primary" data-action="raid-pay" data-id="${esc(raid.id)}" ${state.cash < price ? 'disabled' : ''}>Pay them off · ${money(price)}</button>` : ''}
-        ${raid.answer === 'paid' ? `<p class="small"><strong>Paid off (${money(raid.paid)}).</strong> Nobody will come.</p>` : ''}
+        ${canBuyOff(state, raid) && !raid.answer && !raid.called ? `<button class="btn btn--primary" data-action="raid-pay" data-id="${esc(raid.id)}" ${state.cash < price ? 'disabled' : ''}>${isGangRaid(raid) ? 'Settle' : 'Pay them off'} · ${money(price)}</button>` : ''}
+        ${raid.answer === 'paid' ? `<p class="small"><strong>${isGangRaid(raid) ? 'Settled' : 'Paid off'} (${money(raid.paid)}).</strong> Nobody will come.</p>` : ''}
         <button class="btn" data-action="nav" data-id="city">See it on City</button>
         <p class="muted small">Until then: move people into or out of the hall on Crew › Halls (moving takes the day), and keep crews home or send them out. On the day, whoever is home can hold it.</p>
       </div>`;
@@ -1614,6 +1622,8 @@ const fillNamed = (text, v) => text.replace(/\{(\w+)\}/g, (m, k) => namedVars(v)
 function jobFlags(v) {
   const flags = [];
   if (namedHandle(v)) flags.push(['named', fillNamed(NAMED_TEXT.chip, v)]); // a client asked for an Elite by name (renown slice 4)
+  const g = jobGrudge(v.tpl, v.threat);
+  if (g) flags.push(['hot', `Against ${GANGS[g.gang].short}`]); // a job that hurts a gang (core/gangs.js)
   if (v.hinted) flags.push(['bad', 'Intel unreliable']);
   if (v.rumour) flags.push([v.threatDelta > 0 ? 'hot' : v.threatDelta < 0 ? 'good' : 'info', `Street talk: ${v.rumour.tag}`]);
   else if (v.threatDelta > 0) flags.push(['hot', 'Hotter than usual']);
@@ -1906,6 +1916,12 @@ function renderPlan() {
       <p class="body ${briefOpen ? '' : 'brief--short'}">${esc(fillBrief(t))}</p>
       <button class="linkbtn" data-action="brief-more" aria-expanded="${briefOpen}">${briefOpen ? 'Show less' : 'Read more'}</button>
       ${(() => { const c = crewAgainstStandard(picked, v.threat); return `<p class="standard ${picked.length ? (c.met ? 'is-met' : 'is-short') : ''} small"><strong>Crew standard: ${esc(c.std.label)}</strong>${picked.length ? ` · ${esc(c.note)}` : ''}</p>`; })()}
+      ${(() => { // a job against a gang says what it costs before you take it (shown risk equals used risk)
+        const g = jobGrudge(t, v.threat);
+        if (!g) return '';
+        const now = grudgeOf(state, g.gang);
+        return `<p class="grudgeline small"><strong>Against ${esc(GANGS[g.gang].name)}:</strong> finishing it adds grudge +${g.n} (now ${now}/10, then ${Math.min(GRUDGE.max, now + g.n)}). From ${GRUDGE.raidAt} they may raid a hall of ours on their turf.</p>`;
+      })()}
       <div class="plangrid">
       <div class="riskcard plangrid__client">
         <p><strong>Client:</strong> ${clientLine(v)}${v.client ? ` <button class="infobtn" data-action="client-info" aria-expanded="${clientOpen}" aria-label="About ${esc(v.client.name)}">${clientOpen ? '×' : 'i'}</button>` : ''}</p>
@@ -2306,6 +2322,7 @@ function districtCard(key) {
       <h2 class="nomargin">${esc(cityName(key))} <span class="muted">${esc(c.chinese)}</span></h2>
       <p class="muted small">${esc(c.side)}${turf ? ` · <span class="citycard__turf">${esc(turf)}</span>` : ''}${key === SAFEHOUSE_DISTRICT ? ' · our home hall' : hallIn(state, key) ? ' · a hall of ours' : ''}${out ? ` · ${out} of yours out here` : ''}${heatIn(state, key) ? ` · heat ${heatIn(state, key)}/10` : ''}</p>
       <p class="body">${esc(c.pitch)}</p>
+      ${c.locked ? '' : gangsOn(key).map((g) => `<p class="small citycard__grudge">${esc(GANGS[g].short)} grudge: ${grudgeGauge(g)}${hallIn(state, key) ? ` <span class="muted">· from ${GRUDGE.raidAt} they may raid our hall here</span>` : ''}</p>`).join('')}
       ${(() => {
         const h = hallIn(state, key);
         if (!h) return '';
@@ -2355,6 +2372,7 @@ function renderCity() {
           <ul class="list list--plain">
             ${FACTIONS.filter((f) => f.group === g).map((f) => `
               <li><strong>${esc(f.name)}</strong> <span class="muted small">· ${esc(f.where)}</span><br>
+                ${f.gang ? `<span class="small">Their grudge: ${grudgeGauge(f.gang)}</span><br>` : f.name.startsWith('The Brass Anchor') ? '<span class="small muted">Never raids a tong\'s hall.</span><br>' : ''}
                 <span class="small">${esc(f.line)}</span><br>
                 <span class="muted small">Rumour: ${esc(f.rumour)}</span></li>`).join('')}
           </ul>

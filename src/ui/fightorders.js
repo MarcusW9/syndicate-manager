@@ -4,7 +4,7 @@
 // round rolls; what the guards mean to do is the battle's intents. Who's picked and the orders given
 // so far live here until Go: they're the player's draft, not game state.
 
-import { ordersFor, guardHitChance, freeSpots, coverNow, hitFor, BATTLE } from '../core/battle.js';
+import { ordersFor, guardHitChance, freeSpots, coverNow, hitFor, foeWord, BATTLE } from '../core/battle.js';
 
 let draft = { key: null, sel: null, target: null, orders: {} };
 let rulesOpen = false; // the "?" card: open stays open, fight to fight
@@ -20,7 +20,8 @@ const COVER_WORD = { full: 'full cover', half: 'half cover', open: 'in the open'
 const MOVE_WORD = { full: 'Move to full cover', half: 'Move to half cover', open: 'Move into the open' };
 const standing = (b) => b.runners.filter((r) => !r.down);
 const up = (b) => b.guards.filter((g) => !g.out);
-const guardName = (b, n) => (b.guards.length > 1 ? `${b.foe ? 'Officer' : 'Guard'} ${n}` : b.foe ? 'The officer' : 'The guard'); // b.foe: a raid (core/raids.js)
+const Foe = (b) => foeWord(b)[0].toUpperCase() + foeWord(b).slice(1);
+const guardName = (b, n) => (b.guards.length > 1 ? `${Foe(b)} ${n}` : `The ${foeWord(b)}`); // a raid's raiders by name (core/battle.js foeWord)
 
 /** What a runner's shot does to a guard, short: "hits for 3 · 2 hits to drop" (armour taken off, as the round does). */
 function shotWord(r, g) {
@@ -138,7 +139,7 @@ export function renderFightOrders(state, esc, face = () => '') {
   const sel = b.runners.find((r) => r.id === draft.sel);
   const aimedAt = (id) => (b.intents ?? []).filter((i) => i.target === id);
   const intents = (b.intents ?? []).filter((i) => standing(b).some((r) => r.id === i.target));
-  const short = (s) => s.replace(/\bguard (\d)/g, 'G$1').replace(/\bofficer (\d)/g, 'O$1').replace(/^The guard\b|\bthe guard\b/, 'guard');
+  const short = (s) => s.replace(/\bguard (\d)/g, 'G$1').replace(/\b(officer|enforcer|collector) (\d)/g, (m, w, d) => `${w[0].toUpperCase()}${d}`).replace(/^The guard\b|\bthe guard\b/, 'guard');
   // One row each: face, name, health, cover, who's aiming, and their order (yours, or the crew's call).
   const row = (r) => {
     const o = draft.orders[r.id];
@@ -191,7 +192,7 @@ export function renderFightOrders(state, esc, face = () => '') {
     }
     if (talk) list.push(btn(talk, `Talk ${guardName(b, n).toLowerCase()} down`, 'they back off'));
     const lights = of('lights');
-    if (lights) list.push(btn(lights, 'Kill the lights', `the ${b.foe ? 'officers' : 'guards'} hit less for the rest of the fight`));
+    if (lights) list.push(btn(lights, 'Kill the lights', `the ${foeWord(b)}s hit less for the rest of the fight`));
     // The guards, numbered as on the map, with this runner's shot at each; anyone down greyed, in place.
     const aimKind = draft.aim && of(draft.aim) ? draft.aim : null;
     const guards = b.guards.map((x) => {
@@ -204,7 +205,7 @@ export function renderFightOrders(state, esc, face = () => '') {
       <div class="ffo-tray">
         <p class="ffo-tray__who"><strong>${esc(sel.handle)}</strong> <span>${esc(kitWord(sel))}</span></p>
         ${threats.length ? `<p class="ffo-threat">${threats.map(esc).join('<br>')}</p>` : ''}
-        <div class="ffo-targets ${aimKind ? 'is-aiming' : ''}" role="group" aria-label="Which ${b.foe ? 'officer' : 'guard'}">${aimKind ? `<p class="ffo-aimq">${{ shoot: 'Shoot', flank: 'Flank', talk: 'Talk down' }[aimKind]} which ${b.foe ? 'officer' : 'guard'}? <span>Tap one here or on the map.</span></p>` : ''}${guards}</div>
+        <div class="ffo-targets ${aimKind ? 'is-aiming' : ''}" role="group" aria-label="Which ${foeWord(b)}">${aimKind ? `<p class="ffo-aimq">${{ shoot: 'Shoot', flank: 'Flank', talk: 'Talk down' }[aimKind]} which ${foeWord(b)}? <span>Tap one here or on the map.</span></p>` : ''}${guards}</div>
         <div class="ffo-acts">${list.join('')}</div>
       </div>`;
   }

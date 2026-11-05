@@ -4,6 +4,13 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-05 · Gang raids
+- **The gangs remember.** A job that hurts the Red Lanterns or the Silver Fan Circle adds to that gang's grudge; it fades a little every Sunday. Six jobs count so far (Protection, Casino, Chrome, Herbal Run, House Advantage, Inspection Hours).
+- **You see it before you take the job:** a flag on its card ("Against Silver Fan") and a line in its plan with the grudge it adds. Each gang's grudge is a gauge on Who's who and on its districts' cards.
+- **With a grudge of 6 or more, a gang may come for a hall of ours on its own turf** (the Red Lanterns in the Docks; the Silver Fan in the Night Market and the Basin). Old Town is safe: the Brass Anchor never raids. Warned three days ahead, like a police raid.
+- **Gangs expect a settlement:** you can always pay tribute, before the day or at the door (dearer), and it halves their grudge. Or hold the hall against their enforcers or collectors, or walk out the back (nobody hurt; their grudge stays).
+- **Save format v41.** Old saves start with no grudges.
+
 ## 2026-11-05 · The City map, redrawn
 - **The City map is now the command centre's neon map**, as in the mock-up: a compact map of the city that fits a phone with room for the card underneath. Districts in their gang's light, halls a little brighter, locked districts hatched.
 - **Each district's plate says who's based there, its work and its heat** ("⌂ 7 here · heat 1").

@@ -127,3 +127,11 @@ there and the heat, heat glows, crews out as faces on a route from their hall, c
 rings, a legend. Only calls and raids move (owner: ambient motion clutters it). The landmarks drawn
 in the portraits' style (`ui/landmarks.js`) are kept for the district card, the halls and the raid
 screens. Next: gang raids.
+
+## 12. Gang raids (built, 2026-11-05)
+
+A grudge per gang (0-10) from jobs against them (six tagged), fading 1 a week. From 6 a gang may
+raid a hall of ours on its own turf (Red Lanterns: Docks; Silver Fan: Night Market, Basin), never
+Old Town. Settling is always on offer and halves the grudge; holding keeps it; walking out leaves
+it. Shown on the job's card and plan, Who's who and the district cards. Open: more grudge sources if
+play needs them, a grudge cost on single crisis choices.

@@ -51,6 +51,7 @@ Same shape as an Operative, plus `culture`, `quality` (`rookie`/`pro`/`veteran`,
 | --- | --- |
 | `threat` | 1-5, drives the risk read |
 | `pay`, `days`, `crewSize`, `heat` | Reward, time away, recommended crew (up to 2 extra allowed), heat gained |
+| `against` | Optional: the gang the job hurts (`redLanterns`, `silverFan`; `data/gangs.js`). Finishing it adds to that gang's grudge (`core/gangs.js`) |
 | `keyStats` | Stats the risk read compares against the crew |
 | `beats` | Narrated text in order. Placeholders: `{driver}`, `{tech}`, `{face}`, `{muscle}`, `{medic}`, `{op}`; `{district}` (mid-sentence name from `config/names.js`), `{faction}` (from `data/districts.js`); a cast name `{siu}` or one of their lines `{siu:approve}` (`data/cast.js`) |
 | `brief` | The client's pitch on the planning screen; cast and district slots work here too (`fillBrief`) |
@@ -94,7 +95,7 @@ Gates (new games only, `state.jobGates`): rookie jobs are always offered; other 
 `type` (`job`, `crew`, `warning`, `rival`, `report`, `scout`, `finance`), `subject`, `body`, `day`, optional `expiresDay`. `blocking: true` stops Continue until resolved.
 
 ## Game state
-`day` (day 1 = Monday, week 1, season 1; 364-day seasons), `cash`, `heat` (the hottest district, 0-10) and `heatBy` (each district's heat), `reputation`, `rank` (the tong's rank; was `tier` before v34), `rent`, `crew`, `inbox`, `memorial`, `jobs` (offers on the board), `activeMission` (null or the mission in progress, saved so a reload resumes it), `difficulty`, `seed`, `rngCounter`, `recruits` (open leads), `recruitSeq`, `rosterCap` (all the halls' beds), `halls` (one per district: beds, rent, level; replaced `safehouseLevel` in v38), `hallOffers`, `weekStart`, `lastJobDay`, `lastBackupDay` (day of last export), `ironman` (`{ id, seq }`, Ironman runs only), `clients` (trust by client id), `jobGates` (true for games started with the rookie crew), `version` (currently 39). Fields added since v12 (gear, away jobs, `namedOfferWeek`, halls, heat per district and more) are listed with their migrations in `docs/ARCHITECTURE.md` and `src/save/save.js`.
+`day` (day 1 = Monday, week 1, season 1; 364-day seasons), `cash`, `heat` (the hottest district, 0-10) and `heatBy` (each district's heat), `reputation`, `rank` (the tong's rank; was `tier` before v34), `rent`, `crew`, `inbox`, `memorial`, `jobs` (offers on the board), `activeMission` (null or the mission in progress, saved so a reload resumes it), `difficulty`, `seed`, `rngCounter`, `recruits` (open leads), `recruitSeq`, `rosterCap` (all the halls' beds), `halls` (one per district: beds, rent, level; replaced `safehouseLevel` in v38), `hallOffers`, `weekStart`, `lastJobDay`, `lastBackupDay` (day of last export), `ironman` (`{ id, seq }`, Ironman runs only), `clients` (trust by client id), `jobGates` (true for games started with the rookie crew), `version` (currently 41). Fields added since v12 (gear, away jobs, `namedOfferWeek`, halls, heat per district and more) are listed with their migrations in `docs/ARCHITECTURE.md` and `src/save/save.js`.
 
 ## Storage (src/save/save.js)
 Keys: `syndicate-active-slot`, `syndicate-slot-N` (N = 1-3), `syndicate-slot-N-backup` (weekly, not Ironman), `syndicate-ironman-progress` (`{ ironmanId: highest seq seen }`). The pre-slots key `syndicate-save-v1` is moved into slot 1 on first load.

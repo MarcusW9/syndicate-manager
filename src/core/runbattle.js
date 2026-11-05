@@ -9,7 +9,7 @@ import { setInjury, worsenInjury } from './crew.js';
 import { XP } from './development.js';
 import { noteInjury } from './earned.js';
 import { ALERT_MAX } from './incidents.js';
-import { buildBattle, playRound, planIntents, partingShots, injuryFromHp, runnerOf, BATTLE } from './battle.js';
+import { buildBattle, playRound, planIntents, partingShots, injuryFromHp, runnerOf, foeWord, BATTLE } from './battle.js';
 import { spotsForJob } from './fightspots.js';
 import { actors, overwatchOp, driver, standbyReady, opById, grow, record, takeWhy, addNeural } from './run.js';
 import { currentStep, advance, exitRun } from './mission.js';
@@ -24,7 +24,7 @@ const battleSnapshot = (b) => ({
 });
 
 export const guardsUp = (b) => b.guards.filter((g) => !g.out).length;
-export const guardCount = (n, b = null) => (b?.foe ? (n === 1 ? 'one officer' : `${n} officers`) : n === 1 ? 'one guard' : `${n} guards`);
+export const guardCount = (n, b = null) => (n === 1 ? `one ${foeWord(b)}` : `${n} ${foeWord(b)}s`);
 
 /** An unsaved danger incident turns into a fight: build both sides and put a battle step next in the queue. */
 export function startBattle(state, am, tpl, inc, id, zone, diff, able, { ambush = false } = {}) {
@@ -73,7 +73,7 @@ export function runBattle(prev, orders = {}) {
   }
   // A guard who ran is on the radio: the alert goes up (the call waits until the fight is over).
   if (r.fled) am.alert = Math.min(ALERT_MAX, (am.alert ?? 0) + BATTLE.fledAlert);
-  const last = b.foe ? 'officer' : 'guard';
+  const last = foeWord(b);
   const text = `Round ${b.round}: ${guardsUp(b) ? `${guardCount(guardsUp(b), b)} still up` : r.fled ? `the last ${last} runs` : `the last ${last} goes down`}.`;
   record(am, { kind: 'battle', phase: 'round', round: b.round, text, lines: r.lines, ...battleSnapshot(b) });
   am.log.push({ kind: guardsUp(b) ? 'bad' : 'good', text });
@@ -189,7 +189,7 @@ function retreat(state, am, { text, choice, why, forced = false }) {
   am.payCut = Math.max(am.payCut, 1);
   am.extraHeat += BATTLE.retreat.heat;
   am.repCut = (am.repCut ?? 0) + BATTLE.retreat.rep;
-  const foe = b.foe ? 'The officers' : 'The guards';
+  const foe = `The ${foeWord(b)}s`;
   const ran = b.van ? `${b.wheels.handle} had the van round, so they got out clean.` : shots.some((l) => l.damage) ? `${foe} shoot after them as they run.` : 'They get out under fire, untouched.';
   record(am, { kind: 'battle', phase: 'retreat', text: ran, lines: shots, hurt, forced, ...battleSnapshot(b) });
   am.battle = null;
