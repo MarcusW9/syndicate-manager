@@ -10,7 +10,7 @@ import { successChance, riskLabel, rollTarget, assessJob } from './risk.js';
 import { availability, MAX_EXTRA_CREW, maxCrew } from './crew.js';
 import { jobView } from './jobs.js';
 import { intelFor } from './sidetasks.js';
-import { WATCHED_PENALTY } from './heat.js';
+import { WATCHED_PENALTY, watchedIn } from './heat.js';
 import { battleOdds } from './battle.js';
 import { spotsForJob } from './fightspots.js';
 import { crewValue } from './worth.js';
@@ -148,7 +148,7 @@ export function planRead(state, job, { crew, approach, overwatch = null, kit = n
   const v = jobView(state, job);
   const tpl = { ...v.tpl, threat: v.threat };
   const intel = intelFor(state, v.tpl.district);
-  const read = assessJob(tpl, crew, approach, { watched: state.heatWatched ? WATCHED_PENALTY : 0, intel, wheels });
+  const read = assessJob(tpl, crew, approach, { watched: watchedIn(state, v.tpl.district) ? WATCHED_PENALTY : 0, intel, wheels });
   const owKit = overwatch && (kitsFor(overwatch).includes(kit) ? kit : kitsFor(overwatch)[0]);
   const cov = coverage(tpl, crew, approach, { threat: v.threat, overwatch: owKit ? { op: overwatch, kit: owKit } : null, intel, wheels, jobId: job.id });
   const level = crew.length && RISK_ORDER.indexOf(cov.toughest) > RISK_ORDER.indexOf(read.level) ? cov.toughest : read.level;

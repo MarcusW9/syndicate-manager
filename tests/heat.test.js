@@ -5,13 +5,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createNewGame } from '../src/core/state.js';
 import * as M from '../src/core/mission.js';
-import { advanceDay } from '../src/core/time.js';
-import { templateById } from '../src/core/jobs.js';
+import { advanceDay, calendar } from '../src/core/time.js';
+import { availability } from '../src/core/crew.js';
+import { templateById, addOffer } from '../src/core/jobs.js';
 import { MISSIONS } from '../src/data/missions.js';
 import { ECONOMY } from '../src/data/economy.js';
 import { resolveDecision } from '../src/core/decisions.js';
 import { assessJob } from '../src/core/risk.js';
-import { checkHeatNotice, heatChoices, HEAT_NOTICE_AT, WATCHED_PENALTY } from '../src/core/heat.js';
+import { checkHeatNotice, heatChoices, HEAT_NOTICE_AT, WATCHED_PENALTY, setHeat, heatIn } from '../src/core/heat.js';
 import { playMission, toCrisis, carefulPolicy } from './play.js';
 import { playHeat, median } from './heat-sim.js';
 
@@ -51,7 +52,7 @@ test('a clean stealth or con job adds 0 heat; Loud adds exactly +1', () => {
 
 test('the fixer notice fires at heat 6+ after Sunday cooling, and not below', () => {
   let s = createNewGame({ seed: 21 });
-  s.heat = HEAT_NOTICE_AT + 2; // cools to 6
+  setHeat(s, 'oldTown', HEAT_NOTICE_AT + 2); // cools to 6
   s = toSunday(s);
   assert.equal(s.heat, HEAT_NOTICE_AT);
   const n = notice(s);
@@ -60,7 +61,7 @@ test('the fixer notice fires at heat 6+ after Sunday cooling, and not below', ()
   assert.match(n.body, /asking/);
 
   let t = createNewGame({ seed: 22 });
-  t.heat = HEAT_NOTICE_AT + 1; // cools to 5
+  setHeat(t, 'oldTown', HEAT_NOTICE_AT + 1); // cools to 5
   t = toSunday(t);
   assert.equal(t.heat, HEAT_NOTICE_AT - 1);
   assert.equal(notice(t), undefined, 'no notice at 5');
@@ -68,22 +69,22 @@ test('the fixer notice fires at heat 6+ after Sunday cooling, and not below', ()
 
 test('the notice respects its 14-day cooldown and never stacks', () => {
   let s = createNewGame({ seed: 23 });
-  s.heat = 10;
+  setHeat(s, 'oldTown', 10);
   s = toSunday(s);
   assert.ok(notice(s));
   assert.equal(checkHeatNotice(s), false, 'one already pending');
   s = resolveDecision(s, notice(s).id, 'ride');
-  s.heat = 10;
+  setHeat(s, 'oldTown', 10);
   s = nextSunday(s); // 7 days later
   assert.equal(notice(s), undefined, 'inside the cooldown');
-  s.heat = 10;
+  setHeat(s, 'oldTown', 10);
   s = nextSunday(s); // 14 days later
   assert.ok(notice(s), 'cooldown over');
 });
 
 test('paying the fixer costs cash and takes 3 heat; it is closed when you cannot afford it', () => {
   let s = createNewGame({ seed: 24 });
-  s.heat = 10;
+  setHeat(s, 'oldTown', 10);
   s = toSunday(s);
   const n = notice(s);
   const cash = s.cash;
@@ -107,7 +108,7 @@ test('paying the fixer costs cash and takes 3 heat; it is closed when you cannot
 
 test('the notice is never a lockout: a job can start while it waits', () => {
   let s = createNewGame({ seed: 25 });
-  s.heat = 10;
+  setHeat(s, 'oldTown', 10);
   s = toSunday(s);
   s = advanceDay(s); // Monday: fresh board
   assert.ok(notice(s));
@@ -118,11 +119,20 @@ test('the notice is never a lockout: a job can start while it waits', () => {
 
 test('letting it ride: the next job is -1 on its first crisis roll only, and the risk read says so', () => {
   let s = createNewGame({ seed: 26 });
-  s.heat = 10;
+  setHeat(s, 'oldTown', 10);
   s = toSunday(s);
   s = resolveDecision(s, notice(s).id, 'ride');
-  assert.equal(s.heatWatched, true);
+  assert.equal(s.heatWatched, 'oldTown', 'the hot district is watched (heat per district, 2026-11-05)');
   assert.equal(s.heat, 8, 'riding costs nothing and cools nothing');
+
+  // A job elsewhere isn't watched; a job in Old Town is.
+  s.jobs = [];
+  addOffer(s, 'warehouse');
+  const elsewhere = M.startMission(s, s.jobs[0].id, s.crew.slice(0, 3).map((o) => o.id), 'stealth');
+  assert.equal(elsewhere.activeMission.watched, 0, 'the Docks are not watched');
+  assert.equal(elsewhere.heatWatched, 'oldTown', 'still waiting for a job in Old Town');
+  s.jobs = [];
+  addOffer(s, 'clinic');
 
   // Planning read: the reason is listed and every key stat reads 1 lower, same as the real roll.
   const job = s.jobs[0];
@@ -155,15 +165,41 @@ test('letting it ride: the next job is -1 on its first crisis roll only, and the
   assert.equal(s.activeMission.watched, 0);
 });
 
-test('steady state: mixed play keeps heat low; all-Loud play runs hot and meets the fixer', () => {
-  // Bounds chosen 2026-10-24 from 300 seeds (DESIGN.md): mixed 2 jobs/week sits at a median of 1
-  // on a typical day (0 after Sunday cooling); all-Loud 3/week reaches 7+ in ~78% of runs, notice in ~66%.
-  const SEEDS = 100;
+// Changed 2026-11-05 (heat per district, DESIGN.md): all-Loud play spread over the city now stays
+// cool (3% reached 7+); the same play in one district runs hot (100% reach 7+ and meet the fixer).
+// Was (2026-10-24): all-Loud 3/week anywhere reached 7+ in ~78% of runs, notice in ~66%.
+function playLoudIn(seed, templateId, weeks = 8) {
+  let s = createNewGame({ seed });
+  let peak = 0, notices = 0, week = 0;
+  const district = templateById(templateId).district;
+  for (let day = 0; day < weeks * 7; day++) {
+    const c = calendar(s.day);
+    if (c.isMonday) week = 0;
+    if (week < 3 && c.weekday !== 'Sun') {
+      s.jobs = s.jobs.filter((j) => j.templateId !== templateId);
+      addOffer(s, templateId);
+      const tpl = templateById(templateId);
+      const free = s.crew.filter((op) => availability(s, op).ok);
+      if (free.length >= tpl.crewSize) {
+        s = M.closeMission(playMission(M.startMission(s, s.jobs.at(-1).id, free.slice(0, tpl.crewSize).map((o) => o.id), 'loud'), carefulPolicy).state);
+        week += 1;
+      }
+    }
+    peak = Math.max(peak, heatIn(s, district));
+    s = advanceDay(s);
+    for (const m of s.inbox.filter((x) => x.kind === 'heat' && !x.resolved)) { notices += 1; s = resolveDecision(s, m.id, 'ride'); }
+  }
+  return { peak, notices };
+}
+
+test('steady state: mixed play keeps heat low; all-Loud play in one district runs hot and meets the fixer', () => {
+  // Mixed bounds chosen 2026-10-24 from 300 seeds: mixed 2 jobs/week sits at a median of 1 on a typical day.
+  const SEEDS = 60;
   const mixed = [];
   const loud = [];
   for (let seed = 1; seed <= SEEDS; seed++) {
     mixed.push(playHeat(8, seed, { perWeek: 2, approach: 'mix' }));
-    loud.push(playHeat(8, seed, { perWeek: 3, approach: 'loud' }));
+    loud.push(playLoudIn(seed, 'container409'));
   }
   const days = mixed.flatMap((r) => r.daily.slice(7)); // weeks 2-8
   const mixedMedian = median(mixed.map((r) => median(r.daily.slice(7))));

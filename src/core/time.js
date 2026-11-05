@@ -9,7 +9,8 @@ import { ageCrew } from './development.js';
 import { nextRng } from './random.js';
 import { expireStatuses } from './statuses.js';
 import { checkRenewal } from './renewals.js';
-import { HEAT_COOL_WEEKLY, clampHeat, checkHeatNotice } from './heat.js';
+import { HEAT_COOL_WEEKLY, clampHeat, checkHeatNotice, coolHeat, hottest } from './heat.js';
+import { NAMES } from '../config/names.js';
 import { rollRumour } from './rumours.js';
 import { money } from './money.js';
 import { advanceAway } from './away.js';
@@ -129,10 +130,9 @@ function settleWeek(state) {
   weeklyFame(state); // standing slips on the bench, Elite can lapse, fame may climb (core/fame.js)
 
   // Heat cools the same every week, job or no job (core/heat.js).
-  const heatBefore = state.heat;
-  state.heat = clampHeat(state.heat - HEAT_COOL_WEEKLY);
-  const cooled = heatBefore - state.heat;
-  const heatLine = cooled ? ` Heat cooled by ${cooled} to ${state.heat}/10.` : '';
+  const cooled = coolHeat(state); // every district cools the same (heat per district, save v39)
+  const hot = hottest(state);
+  const heatLine = cooled ? ` Heat cooled by ${HEAT_COOL_WEEKLY} everywhere${hot ? `; hottest now ${NAMES.districts[hot.district]} ${hot.heat}/10` : '; nowhere is hot'}.` : '';
 
   state.inbox.unshift({
     id: `week-${state.day}`,

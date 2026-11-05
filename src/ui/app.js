@@ -1,6 +1,7 @@
 // UI layer: the only code that touches the DOM. Reads state, calls core
 // functions, re-renders. Tap/click only; nothing depends on hover.
 
+import { heatIn, hottest, HEAT_DISTRICTS } from '../core/heat.js';
 import { hallIn, residents, freeBeds, canOpenHall, openHall, nextHallExpansion, expandHall, canMove, moveToHall } from '../core/halls.js';
 import { HALL_SITES, HOME_HALL } from '../data/halls.js';
 import { billDue, mondayBrief, crewStandard, crewAgainstStandard } from '../core/week.js';
@@ -433,7 +434,8 @@ const daysLeft = (lastDay) => { const n = lastDay - state.day; return n <= 0 ? '
 function heatMeter() {
   const h = state.heat;
   const tone = h >= HEAT_NOTICE_AT ? 'high' : h >= 3 ? 'mid' : 'low';
-  return `<span class="heat heat--${tone}"><span class="heat__track" aria-hidden="true"><span style="width:${(h / HEAT_MAX) * 100}%"></span></span>${h}/${HEAT_MAX}</span>`;
+  const hot = hottest(state); // heat per district: the bar is the hottest (core/heat.js)
+  return `<span class="heat heat--${tone}" aria-label="${esc(hot ? `Hottest: ${districtName(hot.district)}, heat ${h} of ${HEAT_MAX}` : `Heat 0 of ${HEAT_MAX}`)}"><span class="heat__track" aria-hidden="true"><span style="width:${(h / HEAT_MAX) * 100}%"></span></span>${h}/${HEAT_MAX}</span>`;
 }
 const districtName = (key) => NAMES.districts[key] ?? key;
 const districtTurf = (key) => DISTRICTS[key]?.turf ? ` · ${esc(DISTRICTS[key].turf)}` : '';
@@ -1092,7 +1094,7 @@ function renderHeatNotice(m) {
   return `
       <div class="riskcard">
         <dl class="stats">
-          <div><dt>Heat</dt><dd>${state.heat}/10</dd></div>
+          <div><dt>Heat${p.district ? ` · ${esc(districtName(p.district))}` : ''}</dt><dd>${p.district ? heatIn(state, p.district) : state.heat}/10</dd></div>
           <div><dt>Fixer</dt><dd>${money(p.cost)}</dd></div>
           <div><dt>Cash</dt><dd>${money(state.cash)}</dd></div>
         </dl>
@@ -1167,7 +1169,7 @@ function renderHalls() {
           const who = residents(state, h.district);
           return `
           <li class="hall">
-            <p class="hall__head"><strong>${esc(cityName(h.district))}</strong>${h.district === HOME_HALL ? ' <span class="hall__home">home</span>' : ''} <span class="muted small">level ${h.level} · ${money(h.rent)}/wk</span></p>
+            <p class="hall__head"><strong>${esc(cityName(h.district))}</strong>${h.district === HOME_HALL ? ' <span class="hall__home">home</span>' : ''} <span class="muted small">level ${h.level} · ${money(h.rent)}/wk · heat ${heatIn(state, h.district)}/10</span></p>
             <p class="small">${who.length}/${h.beds} beds${who.length ? `: ${esc(who.map((o) => o.handle).join(', '))}` : ' · nobody lives here yet'}</p>
             <button class="btn btn--block" data-action="expand-hall" data-id="${esc(h.district)}" ${state.cash >= x.cost ? '' : 'disabled'}>Expand: +${x.beds} beds for ${money(x.cost)} (rent +${money(x.rentIncrease)}/wk)</button>
           </li>`;
@@ -2079,11 +2081,11 @@ function cityMap() {
     const home = key === SAFEHOUSE_DISTRICT;
     const hall = !home && !!hallIn(state, key); // another of the tong's halls (core/halls.js)
     return {
-      key, locked: card.locked, selected: cityDistrict === key, jobs, out, home, hall, talk: talk === key,
+      key, locked: card.locked, selected: cityDistrict === key, jobs, out, home, hall, talk: talk === key, heat: card.locked ? 0 : heatIn(state, key),
       name: cityName(key).replace(/^The /, ''),
       turf: card.locked ? null : turfHex(key),
       label: [cityName(key), card.locked ? 'locked' : `${jobs || 'no'} job${jobs === 1 ? '' : 's'} on the board`, faction && `${faction} turf`,
-        home && 'the home hall is here', hall && 'a hall of ours is here', out && `${out} of yours out here`, talk === key && 'street talk about it'].filter(Boolean).join(', '),
+        home && 'the home hall is here', hall && 'a hall of ours is here', heatIn(state, key) > 0 && `heat ${heatIn(state, key)} of 10`, out && `${out} of yours out here`, talk === key && 'street talk about it'].filter(Boolean).join(', '),
     };
   });
   return cityMapSvg(districts, esc);
@@ -2113,7 +2115,7 @@ function citySummary() {
   return `
     <h2>The city tonight</h2>
     <ul class="list list--plain cityrows">${rows}</ul>
-    <p class="muted small">Heat across the city: ${state.heat}/10.</p>
+    <p class="muted small">${(() => { const hot = HEAT_DISTRICTS.filter((d) => heatIn(state, d) > 0).sort((a, b) => heatIn(state, b) - heatIn(state, a)); return hot.length ? `Heat: ${hot.map((d) => `${esc(districtName(d))} ${heatIn(state, d)}/10`).join(' · ')}.` : 'No heat anywhere.'; })()}</p>
     <h2>Your people</h2>
     <p class="small">${away.length ? `${esc(away.join('. '))}. ` : ''}${home} at the safehouse in ${esc(cityName(SAFEHOUSE_DISTRICT))}${hurt ? `, ${hurt} of them hurt` : ''}.</p>
     <h2>Places</h2>
@@ -2133,7 +2135,7 @@ function districtCard(key) {
     <div class="riskcard citycard ${art ? 'has-art' : ''}" style="--turf:${turfHex(key) ?? 'var(--line)'}">
       ${art ? `<div class="citycard__art" aria-hidden="true">${art}</div>` : ''}
       <h2 class="nomargin">${esc(cityName(key))} <span class="muted">${esc(c.chinese)}</span></h2>
-      <p class="muted small">${esc(c.side)}${turf ? ` · <span class="citycard__turf">${esc(turf)}</span>` : ''}${key === SAFEHOUSE_DISTRICT ? ' · your safehouse' : ''}${out ? ` · ${out} of yours out here` : ''}</p>
+      <p class="muted small">${esc(c.side)}${turf ? ` · <span class="citycard__turf">${esc(turf)}</span>` : ''}${key === SAFEHOUSE_DISTRICT ? ' · our home hall' : hallIn(state, key) ? ' · a hall of ours' : ''}${out ? ` · ${out} of yours out here` : ''}${heatIn(state, key) ? ` · heat ${heatIn(state, key)}/10` : ''}</p>
       <p class="body">${esc(c.pitch)}</p>
       ${c.locked ? `<p class="intel">${esc(c.teaser)}</p>` : (() => {
         const now = jobsIn(key);

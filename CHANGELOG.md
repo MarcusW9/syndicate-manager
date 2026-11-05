@@ -10,6 +10,13 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+
+## 2026-11-05 · Heat per district
+- **Each district now has its own heat.** A job's heat lands in its own district, and every district cools by 2 each Sunday. The top bar shows the hottest district.
+- **The City map** puts a small HEAT tag under any warm district (amber from 3, red from 6), and the district card, the city summary and each hall show its heat.
+- **The fixer's warning names the district** ("Someone has been asking about us in the Docks"). Paying cools that district. Letting it ride means the next job *there* is watched, not the next job anywhere.
+- Being loud in one place runs it hot fast; spreading loud work around the city keeps each district cooler.
+- **Save format v39.** Your old heat goes to Old Town.
 ## 2026-11-05 · Halls: a place of your own in more of the city
 - **The safehouse is now your Old Town hall**, and the tong can have one hall per district. Each hall has its own beds and rent, and everyone lives in one. Your roster limit is all your beds together, and the rent is every hall's rent.
 - **Opening a hall:** once your reputation is high enough and the district's contact trusts you, they offer you a place (Madam Rao has two rooms above her sari shop in the Night Market). Pay the deposit and it's yours, small to start.

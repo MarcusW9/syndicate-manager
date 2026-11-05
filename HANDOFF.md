@@ -13,7 +13,7 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 - **Finished plans:** `PLAN-RENEWALS.md`, `PLAN-PERSONALITY.md` (all steps). `PLAN-PROGRESSION.md`: steps 0-1 done, step 2 mostly covered by earned traits, stat unlocks and the runner record; step 3 (relationships) not built.
 - **Design review:** `STATE-OF-PLAY.md` is a 2026-10-26 snapshot; the owner's calls on it are in the file and in DESIGN.md.
 - **New games start with three founders picked from six** (`startCrew: 'pick'`, `chooseFounders`). Most rule tests still use the five-rookie `'fresh'` crew as a fixture.
-- **Tests:** 552 passing in 53 files (`npm run test:fast` while working; `npm test`, about 2-3 min, before every push). **Save format v38** (v34: the tong rank; v35: away jobs day by day with call-ins; v36: an offer's own days; v37: the week's start and crew leads; v38: halls; DESIGN.md 2026-11-04/05). **`CODEMAP.md`** says where things live; **`docs/ARCHITECTURE.md`** has state shapes, saves and the economy loop.
+- **Tests:** 552 passing in 53 files (`npm run test:fast` while working; `npm test`, about 2-3 min, before every push). **Save format v39** (v34: the tong rank; v35: away jobs day by day with call-ins; v36: an offer's own days; v37: the week's start and crew leads; v38: halls; v39: heat per district; DESIGN.md 2026-11-04/05). **`CODEMAP.md`** says where things live; **`docs/ARCHITECTURE.md`** has state shapes, saves and the economy loop.
 
 ## What the 2026-10-28 to 2026-11-04 sessions did
 
@@ -49,7 +49,7 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 
 ## Next
 
-0. **The tong, Phase 2** (`drafts/ops-and-presence.md`): the owner liked the mock-up; **slice 1, halls, is built** (`core/halls.js`, save v38). Next slices: heat per district, the rank following reach with an opening job, raids with an exit, then City becomes the command centre and the crew cards move there). Alongside: slice 4b (mini site maps on crew-out cards, replaying a day). Owner's writing: the quiet-day lines (`src/data/away.js`) and story text that names fixed days.
+0. **The tong, Phase 2** (`drafts/ops-and-presence.md`): the owner liked the mock-up; **slice 1, halls, is built** (`core/halls.js`, save v38), **and slice 2, heat per district** (`core/heat.js`, save v39). Next slices: heat per district, the rank following reach with an opening job, raids with an exit, then City becomes the command centre and the crew cards move there). Alongside: slice 4b (mini site maps on crew-out cards, replaying a day). Owner's writing: the quiet-day lines (`src/data/away.js`) and story text that names fixed days.
 1. **Renown slices 5-6** (`drafts/PROPOSAL-runner-renown.md`): the defining job (`legendEligible` already shows readiness on the runner page), then retirement (a decision message, never without the player's choice) and the hall. Its content list (section 8) is for the owner to write.
 2. **Command fights, held for the owner:** the Outside section's orders, the round cap, enemy types and fight goals, ranks and perks. Open from 6a: rookie-tier fights are easy; fight rolls don't count towards earned traits; dropping a weapon at death's door and reinforcements aren't built.
 3. **City:** heat per district (from the design review), then heat pips on the plates; pictures for the locked districts when they open.

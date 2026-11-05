@@ -564,6 +564,10 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .cm-tag__txt { font-size: 8px; font-weight: 700; letter-spacing: 0.12em; }
 .cm-tag__txt--home { fill: var(--warn); }
 .cm-tag__txt--out { fill: var(--accent-2); }
+/* Heat per district on the map (2026-11-05): grey while low, amber from 3, red from the fixer's 6. */
+.cm-tag--heat-low { stroke: var(--line); } .cm-tag__txt--heat-low { fill: var(--muted); }
+.cm-tag--heat-warm { stroke: #ff9a3d; } .cm-tag__txt--heat-warm { fill: #ff9a3d; }
+.cm-tag--heat-hot { stroke: var(--danger); } .cm-tag__txt--heat-hot { fill: var(--danger); }
 /* A little life: a ferry light crosses, the picked district's edge breathes, street talk blinks.
    Still for reduced motion. */
 .map-ferry { fill: var(--warn); animation: map-ferry 14s ease-in-out infinite alternate; }
