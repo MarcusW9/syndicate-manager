@@ -1026,6 +1026,8 @@ function finish(state) {
   state.inbox.unshift({
     id, type: 'report', day: state.day, subject,
     body: [...steps, ...results.map((o) => o.text)].join(' '),
+    // Who went and what it came to, for Today's "back" card (2026-11-04, crews out made visible).
+    back: { crewIds: [...am.crewIds, am.overwatch?.id, am.wheels, am.standby?.joined ? null : am.standby?.id].filter(Boolean), pay, away: !!am.away, templateId: am.templateId },
     timeline: {
       result: outcome, steps, outcome: results,
       // The full log and its summary (save v16). Hands-off runs also name their orders.

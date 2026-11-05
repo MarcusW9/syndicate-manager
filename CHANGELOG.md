@@ -5,6 +5,13 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+
+## 2026-11-05 · Crews out you can see
+- **Sending a crew feels like something:** a card plays as they leave, with their faces heading out, a stamp ("Out · Rent Round · back Wed") and a line from Joss. Tap it to skip.
+- **Runner tiles say when they're back**, e.g. "Out · Wed".
+- **Each crew out has its own card on Today:** their faces, a status light (cyan on track, pulsing yellow when they're calling, red if someone's hurt, grey when lying low), a bar filling as the job moves through its story, what they're doing now (casing the place, going in, on the job, getting out) and today's lines.
+- **When a crew you sent away gets back**, Today shows it that day: their faces coming home, a stamp with the result and the pay, a line from Joss, and the report.
+- Joss's new lines (sending off, coming back, a crew calling in, the end of a day out) are in the warmer voice now in canon: people first, then the money.
 ## 2026-11-05 · Joss says why
 - Under the squad board, Joss says in one line why they picked who they picked: "Drizzle keeps us out of sight, Signal takes the locks and cameras." It shows while the squad is still Joss's.
 - The notes in the plan's bottom bar are shorter ("Weakest: Locked door · Signal tech 9"), say each thing once, and the bar folds back to one line when you open a job or try a change.
@@ -31,6 +38,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 ## 2026-11-05 · The plan's encounter list fits on desktop
 - In "What they'll likely meet", what lowers a risk ("→ low with Dim Sum, counting the fight") now sits on its own line under the encounter, so the names and who handles them no longer get squeezed on desktop. On a loud run, "a loud run means a fight" is said once at the bottom instead of on every row.
+
+## 2026-11-05 · A warmer Joss
+- Joss's lines on Today, in alerts and at the top of job reports are rewritten to be warmer and more practical, with less teasing. Same facts, same places.
 
 ## 2026-11-04 · A shorter job plan
 - The client's background is behind an ⓘ next to their name; tap it to read. What changes the job (harder rolls, unreliable intel, named offers, street talk) still shows.
