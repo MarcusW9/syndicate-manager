@@ -20,6 +20,7 @@ import { jossIcon, portrait } from './art.js';
 import { statIcon, statGlyph, crewIcons, traitGlyph } from './icons.js';
 import { cityMapSvg, cityMapLegend, MAP_DISTRICTS } from './citymap.js';
 import { districtArt } from './districtArt.js';
+import { landmark } from './landmarks.js';
 
 import { advanceDay, calendar, formatShortDate, isBlocked, seasonStartDay } from '../core/time.js';
 import { createNewGame, chooseFounders } from '../core/state.js';
@@ -792,6 +793,20 @@ function renderOutLine() {
     </button>`;
 }
 
+/**
+ * A hall's district as its landmark (ui/landmarks.js; 2026-11-05, kept off the map for the halls
+ * and the raid screens): about 56px, lit in the gang's light; dim for a hall not yet opened; a red
+ * glow behind it while a raid is coming. Decoration: the words beside it say the same.
+ */
+function hallMark(d, { dim = false, raid = false } = {}) {
+  const art = landmark(d, { x: 24, y: 44, size: 48, light: turfHex(d) ?? '#3de8d8' });
+  if (!art) return '';
+  const glow = raid ? `<radialGradient id="lmk-raid-${d}"><stop offset="0" stop-color="#ff3d5f" stop-opacity="0.55" /><stop offset="1" stop-color="#ff3d5f" stop-opacity="0" /></radialGradient><ellipse cx="24" cy="26" rx="26" ry="20" fill="url(#lmk-raid-${d})" />` : '';
+  return `<svg class="lmk ${dim ? 'is-dim' : ''} ${raid ? 'is-raid' : ''}" viewBox="0 0 48 44" width="56" height="51" aria-hidden="true" data-landmark="${esc(d)}">${glow}${art}</svg>`;
+}
+/** A raid's hall, its landmark beside the words: where, when, who. */
+const raidWhere = (r, extra = '') => `<div class="raidwhere">${hallMark(r.district, { raid: r.answer !== 'paid' && !r.done })}<p class="small"><strong>${esc(hallLabel(r.district))}</strong> · ${esc(raidWhen(r))} · ${esc(raidWho(r))}${extra}</p></div>`;
+
 /** "the Docks hall". */
 const hallLabel = (d) => `the ${cityName(d).replace(/^The /, '')} hall`;
 /** When a warned raid comes: "today", "tomorrow", or the weekday with the days to go. */
@@ -824,8 +839,8 @@ function renderRaids(raids) {
             <p class="crewsout__head"><strong>${call ? 'At the door' : 'Raid warned'}</strong> <span class="muted small">${esc(hallLabel(r.district))} · ${esc(raidWhen(r))}${isGangRaid(r) ? ` · ${esc(raidBy(r))}` : ''}</span></p>
             <span class="crewsout__faces">${home.map((op) => face(op, 'sm')).join('')}</span>
           </div>
-          <p class="small">${r.answer === 'paid' ? `${isGangRaid(r) ? 'Settled' : 'Paid off'} (${money(r.paid)}). Nobody will come.`
-            : `${home.length ? `Home: ${esc(andList(home.map((o) => o.handle)))}.` : 'Nobody of ours is home to hold it.'} ${call ? 'They need your call now.' : `Hold it with whoever is home that day, or walk out the back. ${isGangRaid(r) ? `${esc(raidWho(r))} would take a settlement.` : canBuyOff(state, r) ? `${esc(raidWho(r))} are on the take.` : `${esc(raidWho(r))} can\'t be bought.`}`}`}</p>
+          <div class="raidwhere">${hallMark(r.district, { raid: r.answer !== 'paid' })}<p class="small">${r.answer === 'paid' ? `${isGangRaid(r) ? 'Settled' : 'Paid off'} (${money(r.paid)}). Nobody will come.`
+            : `${home.length ? `Home: ${esc(andList(home.map((o) => o.handle)))}.` : 'Nobody of ours is home to hold it.'} ${call ? 'They need your call now.' : `Hold it with whoever is home that day, or walk out the back. ${isGangRaid(r) ? `${esc(raidWho(r))} would take a settlement.` : canBuyOff(state, r) ? `${esc(raidWho(r))} are on the take.` : `${esc(raidWho(r))} can\'t be bought.`}`}`}</p></div>
           <div class="crewsout__foot">
             ${call ? `<button class="btn btn--primary" data-action="raid-answer" data-id="${esc(call.id)}">Answer the door</button>` : ''}
             ${buy ? `<button class="btn" data-action="raid-pay" data-id="${esc(r.id)}" ${state.cash < price ? 'disabled' : ''}>${isGangRaid(r) ? 'Settle' : 'Pay them off'} · ${money(price)}</button>` : ''}
@@ -1188,6 +1203,7 @@ function renderRaidCall(m) {
   if (m.resolved) return m.payload.outcome ? `<p><strong>${esc(m.payload.outcome)}</strong></p>` : '';
   return `
       <div class="stack raidcall">
+        ${raidWhere(raid)}
         ${raidChoices(state, raid).map((c) => `
         <button class="choice ${c.exit ? 'choice--exit' : ''}" data-action="decide" data-id="${esc(m.id)}" data-option="${esc(c.id)}" ${c.disabled ? 'disabled' : ''}>
           <strong>${esc(c.label)}</strong><span>${esc(c.disabled && c.reason ? `${c.reason}. ${c.cost}` : c.cost)}</span>
@@ -1202,6 +1218,7 @@ function renderRaidWarning(m) {
   const price = raidPrice(state, raid);
   return `
       <div class="stack">
+        ${raidWhere(raid)}
         ${canBuyOff(state, raid) && !raid.answer && !raid.called ? `<button class="btn btn--primary" data-action="raid-pay" data-id="${esc(raid.id)}" ${state.cash < price ? 'disabled' : ''}>${isGangRaid(raid) ? 'Settle' : 'Pay them off'} · ${money(price)}</button>` : ''}
         ${raid.answer === 'paid' ? `<p class="small"><strong>${isGangRaid(raid) ? 'Settled' : 'Paid off'} (${money(raid.paid)}).</strong> Nobody will come.</p>` : ''}
         <button class="btn" data-action="nav" data-id="city">See it on City</button>
@@ -1290,10 +1307,13 @@ function renderHalls() {
           const x = nextHallExpansion(state, h.district);
           const who = residents(state, h.district);
           return `
-          <li class="hall">
+          <li class="hall has-mark">
+            ${hallMark(h.district, { raid: openRaids(state).some((r) => r.district === h.district && r.answer !== 'paid') })}
+            <div class="hall__body">
             <p class="hall__head"><strong>${esc(cityName(h.district))}</strong>${h.district === HOME_HALL ? ' <span class="hall__home">home</span>' : ''} <span class="muted small">level ${h.level} · ${money(h.rent)}/wk · heat ${heatIn(state, h.district)}/10</span></p>
             <p class="small">${who.length}/${h.beds} beds${who.length ? `: ${esc(who.map((o) => o.handle).join(', '))}` : ' · nobody lives here yet'}</p>
             <button class="btn btn--block" data-action="expand-hall" data-id="${esc(h.district)}" ${state.cash >= x.cost ? '' : 'disabled'}>Expand: +${x.beds} beds for ${money(x.cost)} (rent +${money(x.rentIncrease)}/wk)</button>
+            </div>
           </li>`;
         }).join('')}
       </ul>
@@ -1304,9 +1324,12 @@ function renderHalls() {
         ${sites.map(([d, site]) => {
           const can = canOpenHall(state, d);
           return `
-          <li class="hall is-closed">
+          <li class="hall is-closed has-mark">
+            ${hallMark(d, { dim: true })}
+            <div class="hall__body">
             <p class="hall__head"><strong>${esc(cityName(d))}</strong> <span class="muted small">${money(site.deposit)} down · ${money(site.rent)}/wk · ${site.beds} beds</span></p>
             ${can.ok ? `<button class="btn btn--block" data-action="open-hall" data-id="${esc(d)}">Open the hall</button>` : `<p class="muted small">${esc(can.reason)}</p>`}
+            </div>
           </li>`;
         }).join('')}
       </ul>` : ''}`;

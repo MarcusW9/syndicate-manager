@@ -142,3 +142,9 @@ Each hall has its own fight map, the place `data/halls.js` names: the room above
 the rooms above the sari shop, the container office on the pier, the flat over the tack workshop,
 the service floor. Our people start by the way out, the raiders at their way in, and both sides have
 cover. Open: rooms per hall, and maybe a map that grows with the hall's level.
+
+## 14. The landmarks off the map (built, 2026-11-05)
+
+The district landmarks stand beside the halls on Crew › Halls (dimmed for a hall not yet opened)
+and beside a raid in Out now, the warning and the call, with a red glow while it's coming. Not on
+the district cards: open districts already have their picture.

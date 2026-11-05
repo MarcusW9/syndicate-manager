@@ -4,6 +4,17 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-05 · The districts' landmarks
+- **Each hall on Crew › Halls shows its district's landmark** beside it, lit in the gang's colour:
+  - Old Town: the tenement and its shrine.
+  - The Night Market: the stall under paper lanterns.
+  - The Docks: the crane over container 409.
+  - The Basin: the floodlit Old Stand.
+  - Glass Heights: the Central Tower.
+- Halls you haven't opened yet show theirs dimmed.
+- **A raid shows the hall's landmark with a red glow behind it:** in Out now on City, in the warning, and at the door when you make the call.
+- The City map stays as it was, without them.
+
 ## 2026-11-05 · Each hall its own map
 - **A raid is now fought in that hall's own place,** not one shared layout:
   - **Old Town:** the room above the noodle shop. Up the front stairs past the noodle crates; out by the fire stair. Bunks, the mahjong table, the altar and a lacquer screen.
