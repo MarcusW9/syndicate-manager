@@ -219,10 +219,22 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 /* Wide screens: the board stays beside the job being planned. Phones and tablets: the plan replaces
    it, with a back button (owner, 2026-10-29: at iPad width the plan was squeezed; 1100px became 1400px). */
 .jobsplit__list { display: none; }
+/* The plan bar sits in .jobsplit__side after the plan. Narrower than 1400px the side box steps aside
+   (display: contents), so the bar is the plan's sticky bottom bar as before; from 1400px the side box is
+   the left column, the job list with the bar right under it, held in view while the plan scrolls
+   (the planning review, 2026-11-05: the space under the list was empty). */
+.jobsplit__side { display: contents; }
 @media (min-width: 1400px) {
   .main--wide.main--split { max-width: 1440px; }
   .jobsplit { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 20px; align-items: start; }
-  .jobsplit__list { display: block; position: sticky; top: 84px; max-height: calc(100dvh - 100px); overflow-y: auto; }
+  .jobsplit__plan { grid-column: 2; grid-row: 1; }
+  .jobsplit__side { grid-column: 1; grid-row: 1; position: sticky; top: 84px; max-height: calc(100dvh - 100px); display: flex; flex-direction: column; gap: 12px; }
+  .jobsplit__list { display: block; flex: 0 1 auto; min-height: 120px; overflow-y: auto; }
+  .jobsplit__side .planbar { position: static; flex: none; flex-direction: column; align-items: stretch; margin-top: 0; padding: 14px 16px; box-shadow: none; }
+  .jobsplit__side .planbar .btn { width: 100%; }
+  .jobsplit__side .planbar__why, .jobsplit__side .planbar__line { display: block; overflow: visible; -webkit-line-clamp: unset; } /* room for the whole reason */
+  .jobsplit__side .planbar__why--more { display: grid; }
+  .jobsplit__side .planbar__tries { flex: none; }
   .jobsplit__list .jobslist { grid-template-columns: 1fr; }
   .jobsplit__list .sidelist, .jobsplit__list .clientstrip, .jobsplit__list h2, .jobsplit__list .infoline:not(.climb), .jobsplit__list .talk { display: none; }
   .jobsplit__plan [data-action="back"] { display: none; }

@@ -63,7 +63,7 @@ Where the project stands and what to pick up next. Read `CLAUDE.md` first: its r
 3. **City:** heat per district is built (#77: a HEAT tag on warm districts, heat on cards and halls); left are pictures for the locked districts when they open.
 4. **Play-test the start** (three founders, rookie leads at half price): `node scripts/sim-early-game.mjs`.
 5. **Small polish:** reloading during a call-in doesn't scroll to it; the reputation gauge (`drafts/prototypes/reputation-gauge-options.html`).
-6. **Open from the planning and fight reviews (2026-11-05):** on desktop, move the plan bar (risk, reason, Try, Send) into the empty space under the job list in the left column; a phone mock-up of the plan only if it still feels long in play; the review's playtest check (someone plans three jobs thinking aloud: "why is it mid?" means the bar still isn't doing its job); first-fight tips (3-4 pointers in the first fight, a "seen it" flag, so a save-version bump); keyboard shortcuts for laptop players (low priority).
+6. **Open from the planning and fight reviews (2026-11-05):** the plan bar under the job list on wide screens is done (2026-11-05); a phone mock-up of the plan only if it still feels long in play; the review's playtest check (someone plans three jobs thinking aloud: "why is it mid?" means the bar still isn't doing its job); first-fight tips (3-4 pointers in the first fight, a "seen it" flag, so a save-version bump); keyboard shortcuts for laptop players (low priority).
 7. Then the agreed review items: neural load cleanup, mood traits, money pressure, relationships (`PLAN-PROGRESSION.md` step 3). Parked: the underground place (below).
 
 ## Writing pipeline (owner writes in other chats, pastes back)

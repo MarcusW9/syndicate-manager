@@ -103,6 +103,7 @@ let readBefore = null; // the read before the last change to the plan, for "was 
 let readFresh = false; // this draw is the first since the plan changed: flash what moved
 let jossSig = null; // the plan as Joss picked it (on opening a job, or Joss's picks); their reason shows while it's unchanged
 let whyOpen = false; // the plan bar's notes, all of them, on tap
+let planBarHtml = ''; // the plan bar as renderPlan last drew it; the jobs screen places it (under the list on wide screens)
 let meetHidden = null; // the plan's "What they'll likely meet" read folded away; null until first shown (folded on phones)
 
 export function mountApp(el, initialState) {
@@ -651,7 +652,15 @@ function renderScreen() {
   if (screen === 'inbox') return renderInbox();
   if (screen === 'crew') return openRecruitId ? renderRecruit() : openOperativeId ? renderOperative() : openArmoury ? renderArmoury(gearUi, state) : renderCrew();
   // Jobs: on wide screens the board stays beside the job being planned (styles.css hides it on phones).
-  if (screen === 'jobs') return plan ? `<div class="jobsplit"><div class="jobsplit__list">${renderJobs()}</div><div class="jobsplit__plan">${renderPlan()}</div></div>` : sidePlan ? renderSidePlan() : renderJobs();
+  if (screen === 'jobs' && plan) {
+    // The plan, then the job list with the plan bar under it: from 1400px wide the list and the bar
+    // stand in the left column beside the plan; narrower, the list hides and the bar stays at the
+    // bottom of the plan (2026-11-05). The plan comes first, so on a phone nothing moves.
+    const body = renderPlan();
+    if (!plan) return body; // the job has gone: renderPlan showed the board
+    return `<div class="jobsplit"><div class="jobsplit__plan">${body}</div><div class="jobsplit__side"><div class="jobsplit__list">${renderJobs()}</div>${planBarHtml}</div></div>`;
+  }
+  if (screen === 'jobs') return sidePlan ? renderSidePlan() : renderJobs();
   if (screen === 'city') return renderCity();
   if (screen === 'settings') return renderSettings();
   return '';
@@ -1785,6 +1794,28 @@ function renderPlan() {
     overwatch: () => `${tr.op.handle} on overwatch`, wheels: () => `${tr.op.handle} at the wheel`, joss: () => "Joss's picks" }[tr.kind]());
   const most = maxCrew(t.crewSize);
 
+  planBarHtml = `
+    <div class="planbar">
+      <div class="planbar__read">
+        ${picked.length ? `<span class="planbar__level ${was && was.level !== toughest && was.fresh ? 'is-flash' : ''}">${riskBadge(toughest)}${was && was.level !== toughest ? `<span class="was was--${RANK.indexOf(toughest) < RANK.indexOf(was.level) ? 'better' : 'worse'}">was ${esc(riskWord(was.level))}</span>` : ''}</span>` : '<span class="risk risk--none">no crew yet</span>'}
+        ${!picked.length ? `<span class="planbar__why">${esc(`Pick up to ${most}; ${t.crewSize} recommended`)}</span>`
+          : notes.length === 1 && !planTryList.length ? `<span class="planbar__why">${esc(notes[0])}</span>`
+          : (() => {
+            // One line until asked (2026-11-05): the reason, then a tap for the rest and what to try.
+            const more = [notes.length > 1 ? `+${notes.length - 1} more` : '', planTryList.length ? `${planTryList.length} to try` : ''].filter(Boolean).join(' · ');
+            return `<button class="planbar__why planbar__why--more" data-action="plan-why" aria-expanded="${whyOpen}">${whyOpen ? `${notes.map((n) => `<span>${esc(n)}</span>`).join('')}<b>Hide ▴</b>` : `<span class="planbar__line">${esc(notes[0])}</span><b>${esc(more)} ▾</b>`}</button>`;
+          })()}
+
+      </div>
+      ${(() => {
+        const away = plan.mode !== 'live' && handsOffAllowed(t);
+        return `<button class="btn btn--primary" data-action="${away ? 'send-job' : 'start-job'}" ${plan.crew.length ? '' : 'disabled'}>
+        ${plan.crew.length ? `${away ? 'Send them' : 'Go live'} (${plan.crew.length + [plan.overwatch, plan.wheels, plan.standby].filter(Boolean).length})` : 'Pick a crew'}
+      </button>`;
+      })()}
+      ${planTryList.length && whyOpen ? `<div class="planbar__tries"><span>Try</span>${planTryList.map((tr, i) => `<button class="trychip" data-action="plan-try" data-id="${i}">${esc(tryWord(tr))} <b>→ ${esc(riskWord(tr.level))}</b></button>`).join('')}</div>` : ''}
+    </div>`;
+
   return `
     <section class="panel">
       <button class="btn btn--ghost" data-action="back">← Jobs</button>
@@ -1835,26 +1866,6 @@ function renderPlan() {
       </div>
     </section>
 
-    <div class="planbar">
-      <div class="planbar__read">
-        ${picked.length ? `<span class="planbar__level ${was && was.level !== toughest && was.fresh ? 'is-flash' : ''}">${riskBadge(toughest)}${was && was.level !== toughest ? `<span class="was was--${RANK.indexOf(toughest) < RANK.indexOf(was.level) ? 'better' : 'worse'}">was ${esc(riskWord(was.level))}</span>` : ''}</span>` : '<span class="risk risk--none">no crew yet</span>'}
-        ${!picked.length ? `<span class="planbar__why">${esc(`Pick up to ${most}; ${t.crewSize} recommended`)}</span>`
-          : notes.length === 1 && !planTryList.length ? `<span class="planbar__why">${esc(notes[0])}</span>`
-          : (() => {
-            // One line until asked (2026-11-05): the reason, then a tap for the rest and what to try.
-            const more = [notes.length > 1 ? `+${notes.length - 1} more` : '', planTryList.length ? `${planTryList.length} to try` : ''].filter(Boolean).join(' · ');
-            return `<button class="planbar__why planbar__why--more" data-action="plan-why" aria-expanded="${whyOpen}">${whyOpen ? `${notes.map((n) => `<span>${esc(n)}</span>`).join('')}<b>Hide ▴</b>` : `<span class="planbar__line">${esc(notes[0])}</span><b>${esc(more)} ▾</b>`}</button>`;
-          })()}
-
-      </div>
-      ${(() => {
-        const away = plan.mode !== 'live' && handsOffAllowed(t);
-        return `<button class="btn btn--primary" data-action="${away ? 'send-job' : 'start-job'}" ${plan.crew.length ? '' : 'disabled'}>
-        ${plan.crew.length ? `${away ? 'Send them' : 'Go live'} (${plan.crew.length + [plan.overwatch, plan.wheels, plan.standby].filter(Boolean).length})` : 'Pick a crew'}
-      </button>`;
-      })()}
-      ${planTryList.length && whyOpen ? `<div class="planbar__tries"><span>Try</span>${planTryList.map((tr, i) => `<button class="trychip" data-action="plan-try" data-id="${i}">${esc(tryWord(tr))} <b>→ ${esc(riskWord(tr.level))}</b></button>`).join('')}</div>` : ''}
-    </div>
     ${pickSlot ? renderPicker(boardUi, { plan, tpl: t, threat: v.threat, slot: pickSlot, people: pickerPeople(), freelancersFull: freelancersFull() }) : ''}`;
 }
 
