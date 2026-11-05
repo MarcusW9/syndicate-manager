@@ -10,7 +10,7 @@
 // Everything here is a sketch: fake numbers, no game state.
 
 import { writeFileSync } from 'node:fs';
-import { MAP_SHAPES, MAP_W, MAP_H } from '../src/ui/citymap.js';
+import { MAP_SHAPES, MAP_W, MAP_H } from './lib/city-map-2026-10.mjs';
 import { mix } from '../src/ui/art.js';
 
 const S = MAP_SHAPES;
