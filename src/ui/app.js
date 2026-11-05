@@ -81,6 +81,7 @@ const CONTINUE_REST_MS = 800;
 let continueRestUntil = 0;
 let dayCue = null; // what the day that just started brought; shown once, on the next render
 let sendOffCue = null; // the crew that just left (the send-off card); shown once, on the next render
+const backPlayed = new Set(); // back cards whose faces have already slid home: they play once, not on every redraw
 let importInput = null; // the hidden save-file picker (see mountApp)
 let focusNext = null; // { action, id }: the control to focus after the next render (going back to a list)
 let traitTip = null; // 'pageId|key': the trait chip or synergy whose card is open (one at a time)
@@ -705,8 +706,10 @@ function renderBack() {
         const ops = m.back.crewIds.map((id) => state.crew.find((o) => o.id === id) ?? state.memorial.find((o) => o.id === id)).filter(Boolean);
         const result = m.timeline?.result ?? 'completed';
         const line = pickLine(PARTNER.back[result] ?? PARTNER.back.completed, `${m.id}-back`);
+        const seen = backPlayed.has(m.id);
+        backPlayed.add(m.id);
         return `
-        <li class="back is-${esc(result)}">
+        <li class="back is-${esc(result)} ${seen ? 'is-seen' : ''}">
           <span class="back__faces">${ops.map((op, i) => `<span class="back__face" style="--i:${i}">${face(op, 'sm')}</span>`).join('')}</span>
           <div class="back__text">
             <p class="back__title"><strong>${esc(templateById(m.back.templateId)?.name ?? 'Job')}</strong> <span class="back__stamp">${esc((STAMP[result] ?? STAMP.completed)(m.back.pay))}</span></p>

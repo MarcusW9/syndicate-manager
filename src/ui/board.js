@@ -5,6 +5,7 @@
 // ui: helpers from app.js { esc, face, riskBadge, statusChip, keyStats } so the board looks
 // like the rest of the game without copying them.
 
+import { jobGain } from '../core/worth.js';
 import { overwatchKit, kitsFor } from '../core/gear.js';
 import { SPECIALISATIONS } from '../data/specialisations.js';
 
@@ -159,15 +160,20 @@ export function renderPicker(ui, { plan, tpl, threat, slot, people, freelancersF
   // so tapping the same person again by accident is hard (owner's feedback, 2026-10-27).
   const free = rows.filter(({ op }) => !where(op.id));
   const placed = rows.filter(({ op }) => where(op.id));
+  // What this job does for each candidate (core/worth.js), with the others already inside: here only,
+  // where you're already choosing someone, so the planning page stays short (owner, 2026-11-05).
+  const insideOps = people.filter((p) => plan.crew.includes(p.op.id)).map((p) => p.op);
+  const gain = (op) => jobGain(op, threat, insideOps.filter((o) => o.id !== op.id));
   const cand = ({ op, status, freelance }) => {
     const w = where(op.id);
+    const g = status.ok ? gain(op) : null;
     const here = current === op.id;
     const blocked = !status.ok || (freelance && freelancersFull && !plan.crew.includes(op.id)) || (FIT.needs && !FIT.needs(op));
     return `
           <li><button class="cand ${freelance ? 'cand--freelance' : ''} ${here ? 'is-on' : w ? 'is-placed' : ''}" data-action="assign" data-id="${esc(op.id)}" ${blocked ? 'disabled' : ''} aria-pressed="${here}">
             ${face(op, 'sm')}
             <span class="cand__txt"><strong>${esc(op.handle)}</strong> <span class="muted">${esc(freelance ? `freelance ${op.role}` : op.role)}</span><br>
-              <span class="small">${FIT.line ? FIT.line(op) : keyStats(op, tpl, threat)}</span></span>
+              <span class="small">${FIT.line ? FIT.line(op) : keyStats(op, tpl, threat)}</span>${g ? `<br><span class="cand__gain cand__gain--${g.tone}">${esc(g.text)}</span>` : ''}</span>
             <span class="cand__side">${here ? '<span class="cand__where cand__where--here">In this slot</span>' : w ? `<span class="cand__where">${esc(w)}</span>` : freelance ? `<span class="cand__hire">Freelance</span><strong>${Math.round(freelance.share * 100)}%</strong> of pay` : statusChip(status)}</span>
           </button></li>`;
   };
