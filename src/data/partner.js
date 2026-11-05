@@ -94,6 +94,31 @@ export const PARTNER = {
       '{names} can\'t work today. The rest of us can cover.',
     ],
   },
+  // The send-off card (ui/app.js, 2026-11-04): one line as a crew leaves. {job}
+  sendOff: [
+    'They\'re on their way. I\'ll keep the line open for them.',
+    'Off they go to {job}. I\'ll tell you the moment they need us.',
+    'Out the door, all of them. I\'ll keep an eye on things from here.',
+    'They\'re off. Try not to pace; I\'ll call if anything comes up.',
+  ],
+
+  // The back card on Today, by how it went: people first, then the money.
+  back: {
+    completed: [
+      'Everyone\'s home, and paid. Good to have them back.',
+      'They\'re back safe, money in. Well done, all of us.',
+    ],
+    aborted: [
+      'They walked away from it, and they\'re all home. That counts.',
+      'Back early, everyone in one piece. We\'ll read why together.',
+    ],
+    setback: [
+      'They\'re back. It went badly, but they\'re here. Let\'s check on them.',
+    ],
+    loss: [
+      'Not everyone came home. I\'m here. The rest can wait.',
+    ],
+  },
 
   // The first line of a job report, picked by how it went (core/report.js).
   // Only what the report itself shows: no guessing at causes or hidden events.

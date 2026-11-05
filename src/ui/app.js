@@ -80,6 +80,7 @@ let root;
 const CONTINUE_REST_MS = 800;
 let continueRestUntil = 0;
 let dayCue = null; // what the day that just started brought; shown once, on the next render
+let sendOffCue = null; // the crew that just left (the send-off card); shown once, on the next render
 let importInput = null; // the hidden save-file picker (see mountApp)
 let focusNext = null; // { action, id }: the control to focus after the next render (going back to a list)
 let traitTip = null; // 'pageId|key': the trait chip or synergy whose card is open (one at a time)
@@ -270,6 +271,9 @@ function onClick(e) {
     case 'send-job': {
       // Hands-off: the crew leaves now; their report comes back when they do (core/autorun.js).
       const next = sendOff(state, plan.jobId, plan.crew, plan.approach, plan.orders ?? 'steady', planOpts());
+      const out = (next.awayJobs ?? []).find((j) => j.mission.jobId === plan.jobId);
+      if (out) sendOffCue = { jobId: plan.jobId, name: templateById(out.mission.templateId).name, returnDay: out.returnDay,
+        crewIds: [...out.mission.crewIds, out.mission.overwatch?.id, out.mission.wheels, out.mission.standby?.id].filter(Boolean) };
       plan = null;
       screen = 'inbox';
       openMessageId = null;
@@ -301,6 +305,7 @@ function onClick(e) {
     case 'take-call': openMessageId = null; return setState(takeCall(state, id));
     case 'let-run': screen = 'inbox'; return setState(letThemRun(state));
     case 'take-command': return setState(takeCommand(state));
+    case 'sendoff-close': t.remove(); return;
     case 'export':
       state.lastBackupDay = state.day;
       saveGame(state);
@@ -477,6 +482,8 @@ function render() {
   const unread = state.inbox.filter((m) => !m.read).length;
   const cue = dayCue;
   dayCue = null;
+  const leaving = sendOffCue;
+  sendOffCue = null;
   // Desktop pages use the full width; a job keeps its map and feed side by side to the end, its
   // summary in the feed (no tabs during a job: see is-onjob).
   const wide = true;
@@ -512,6 +519,7 @@ function render() {
     <main class="main ${wide ? 'main--wide' : ''} ${!state.activeMission && screen === 'jobs' && plan ? 'main--split' : ''}">${state.activeMission ? renderMission() : `${keptBanner()}${renderScreen()}`}</main>
     ${dock ? `<div class="dock">${renderContinue(blocked, resting, unread, 'dock__continue')}</div>` : ''}
     ${cue ? renderDayCue(cue) : ''}
+    ${leaving ? renderSendOff(leaving) : ''}
   `;
   if (am) mountWatch(root.querySelector('.watch'), state, { ui: watchUi, onAuto: () => setState(autoStep(state)) });
   if (pickSlot) (root.querySelector('.sheet .cand.is-on') ?? root.querySelector('.sheet .cand:not([disabled])'))?.focus({ preventScroll: true });
@@ -584,6 +592,17 @@ function dayCueFor(before, after) {
     jobs: after.jobs.filter((j) => !knownJobs.has(j.id)).length,
     cash: after.cash - before.cash,
   };
+}
+
+/** The send-off card (2026-11-04): the crew's faces leave, a stamp says where and until when, Joss says a line. CSS plays it once and it fades; tap to dismiss. */
+function renderSendOff(c) {
+  const ops = c.crewIds.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean);
+  const line = fillLine(pickLine(PARTNER.sendOff, `${c.jobId}-send`), { job: c.name });
+  return `<div class="sendoff" role="status" data-action="sendoff-close">
+      <div class="sendoff__faces">${ops.map((op, i) => `<span class="sendoff__face" style="--i:${i}">${face(op)}</span>`).join('')}</div>
+      <p class="sendoff__stamp">Out · ${esc(c.name)} · back ${esc(calendar(c.returnDay).weekday)}</p>
+      <p class="sendoff__line">${esc(line)}</p>
+    </div>`;
 }
 
 function renderDayCue(cue) {
@@ -664,6 +683,7 @@ function renderInbox() {
           <h1>Today</h1>
           ${renderBriefing()}
           ${renderWeekBrief()}
+          ${renderBack()}
           ${renderCrewsOut()}
           ${list}
         </section>
@@ -672,6 +692,30 @@ function renderInbox() {
         ${open ? renderMessage(open) : '<p class="muted inbox__empty">Tap a message to read it here.</p>'}
       </section>
     </div>`;
+}
+
+/** Crews back today from jobs sent away (2026-11-04): their faces home again and a stamp, then the report. */
+function renderBack() {
+  const back = state.inbox.filter((m) => m.type === 'report' && m.day === state.day && m.back?.away);
+  if (!back.length) return '';
+  const STAMP = { completed: (p) => `✓ ${money(p)}`, aborted: () => '↩ Walked away', setback: (p) => `✗ ${money(p)}`, loss: () => '✕ Someone lost' };
+  return `
+    <ul class="backs" aria-label="Back today">
+      ${back.map((m) => {
+        const ops = m.back.crewIds.map((id) => state.crew.find((o) => o.id === id) ?? state.memorial.find((o) => o.id === id)).filter(Boolean);
+        const result = m.timeline?.result ?? 'completed';
+        const line = pickLine(PARTNER.back[result] ?? PARTNER.back.completed, `${m.id}-back`);
+        return `
+        <li class="back is-${esc(result)}">
+          <span class="back__faces">${ops.map((op, i) => `<span class="back__face" style="--i:${i}">${face(op, 'sm')}</span>`).join('')}</span>
+          <div class="back__text">
+            <p class="back__title"><strong>${esc(templateById(m.back.templateId)?.name ?? 'Job')}</strong> <span class="back__stamp">${esc((STAMP[result] ?? STAMP.completed)(m.back.pay))}</span></p>
+            <p class="small muted">${esc(line)}</p>
+          </div>
+          <button class="btn btn--ghost" data-action="open-message" data-id="${esc(m.id)}">Report</button>
+        </li>`;
+      }).join('')}
+    </ul>`;
 }
 
 /** Monday's briefing (core/week.js): the numbers that frame the week, in one block. */
@@ -696,14 +740,27 @@ function renderWeekBrief() {
 function renderCrewsOut() {
   const out = crewsOut(state);
   if (!out.length) return '';
+  const STATUS = { call: 'Calling you', hurt: 'Someone hurt', low: 'Lying low', on: 'On track' };
   return `
     <ul class="crewsout" aria-label="Crews out">
-      ${out.map((c) => `
-        <li class="crewsout__job ${c.waiting ? 'is-waiting' : ''}">
-          <p class="crewsout__head"><strong>${esc(c.name)}</strong> <span class="muted small">${esc(c.crew)} · ${c.day ? `day ${c.day} of ${c.days}` : 'leaving'}</span></p>
-          ${c.lines.map((l) => `<p class="small">${crewLinks(l)}</p>`).join('')}
+      ${out.map((c) => {
+        const ops = c.crewIds.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean);
+        const fill = Math.round((c.beatsDone / Math.max(1, c.beats)) * 100);
+        return `
+        <li class="crewsout__job is-${c.status}">
+          <div class="crewsout__top">
+            <span class="crewsout__light" aria-hidden="true"></span>
+            <p class="crewsout__head"><strong>${esc(c.name)}</strong> <span class="muted small">${c.day ? `day ${c.day} of ${c.days}` : 'leaving'} · back ${esc(calendar(c.returnDay).weekday)}</span></p>
+            <span class="crewsout__faces">${ops.map((op) => face(op, 'sm')).join('')}</span>
+          </div>
+          <div class="crewsout__track" role="img" aria-label="${esc(`${c.phase}: ${c.beatsDone} of ${c.beats} story beats, day ${c.day} of ${c.days}`)}" style="--fill:${fill}%; --days:${c.days}">
+            <span class="crewsout__fill"></span>
+          </div>
+          <p class="crewsout__phase small"><strong>${esc(c.phase)}</strong> · ${esc(STATUS[c.status])}</p>
+          ${c.lines.map((l) => `<p class="small">${c.day ? `Day ${c.day}: ` : ''}${crewLinks(l)}</p>`).join('')}
           ${c.waiting ? `<button class="btn btn--primary" data-action="take-call" data-id="${esc(c.jobId)}">Take the call</button>` : ''}
-        </li>`).join('')}
+        </li>`;
+      }).join('')}
     </ul>`;
 }
 
@@ -1401,7 +1458,7 @@ function jobFlags(v) {
 function runnerWord(a) {
   if (a.ok) return a.reason === 'fatigued' ? 'Tired' : a.reason === 'light injury' ? 'Hurt' : 'Free';
   const back = /^away until day (\d+)$/.exec(a.reason);
-  if (back) return Number(back[1]) - state.day <= 1 ? 'Back tomorrow' : `Back in ${Number(back[1]) - state.day}d`;
+  if (back) return `Out · ${calendar(Number(back[1])).weekday}`;
   return a.reason[0].toUpperCase() + a.reason.slice(1);
 }
 
@@ -1880,7 +1937,7 @@ function renderCallIn(s) {
     return `
       <div class="crisis" data-callin="day-done">
         <p class="crisis__title">That's day ${am.away.day ?? 1} of ${days} done</p>
-        <p>They'll carry on tomorrow on their orders, and call if they need you. Or stay on the line and play the rest now.</p>
+        <p>They'll pick it up again tomorrow, and call if they need us. Or stay on the line with them and play the rest now.</p>
         <div class="stack">
           <button class="btn btn--primary" data-action="let-run">Let them carry on</button>
           <button class="btn btn--ghost" data-action="take-command">Take command: play the rest now</button>
