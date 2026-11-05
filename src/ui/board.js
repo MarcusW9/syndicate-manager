@@ -187,17 +187,19 @@ export function renderCoverage(ui, cov, { overwatch, approachName, standby = nul
           const row = (r) => {
             const lower = (r.withSave || r.fight) && r.effective !== r.risk
               ? `<span class="cover__with">→ ${esc(ui.riskWord(r.effective))}${r.withSave ? ` with ${esc(r.withSave.op.handle)}` : ''}${r.fight ? `${r.withSave ? ',' : ''} counting the fight` : ''}</span>` : '';
-            const fight = r.fight && r.handler ? [r.fight.forced ? 'a loud run means a fight' : '', r.fight.down >= 0.1 ? 'a fight could put someone down' : ''].filter(Boolean).join('; ') : '';
+            // "A loud run means a fight" is said once, under the read (2026-11-05), not on every row.
+            const fight = r.fight && r.handler && r.fight.down >= 0.1 ? 'a fight could put someone down' : '';
             return `
           <div class="cover__row ${r.gap ? 'is-gap' : ''}">
             <p class="cover__name">${esc(r.name)}${r.danger ? ' <span class="cover__danger" role="img" aria-label="danger">⚠</span>' : ''}</p>
             <p class="cover__who">${r.handler ? `${esc(r.handler.op.handle)} (${esc(r.handler.stat)} ${r.handler.value})` : 'nobody can'}${fight ? ` · ${esc(fight)}` : ''}</p>
-            <span class="cover__risk">${riskBadge(r.handler ? r.risk : 'extreme')}${lower}</span>
+            <span class="cover__risk">${riskBadge(r.handler ? r.risk : 'extreme')}</span>
+            ${lower}
           </div>`;
           };
           return groups.map((g) => `<p class="cover__group">${esc(g.where)}</p>${g.rows.map(row).join('')}`).join('');
         })()}
-        ${cov.rows.some((r) => r.danger) ? '<p class="cover__note cover__note--muted">⚠ Danger: if it goes wrong, someone could be hurt, or it turns into a fight.</p>' : ''}
+        ${cov.rows.some((r) => r.danger) ? `<p class="cover__note cover__note--muted">⚠ Danger: ${cov.rows.some((r) => r.fight?.forced) ? 'on a loud run, each one is a fight' : 'if it goes wrong, someone could be hurt, or it turns into a fight'}.</p>` : ''}
         ${cov.spotted ? `<p class="cover__note">${cov.spotted} more than recommended inside on a ${esc(approachName.toLowerCase())} run: −${cov.spotted} on stealth and social rolls.</p>` : ''}
         ${overwatch ? '' : '<p class="cover__note cover__note--muted">No overwatch: only a teammate inside can save someone in trouble.</p>'}
         ${standby ? `<p class="cover__note cover__note--muted">${esc(standby.handle)} is on standby: they can come in at max alert (the alert stays up, but they back up rolls and get a try at saving anyone in trouble) or to get someone badly hurt out.</p>` : ''}

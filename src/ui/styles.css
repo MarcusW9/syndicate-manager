@@ -828,9 +828,9 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .cover__name { margin: 0; font-weight: 600; font-size: 0.9rem; }
 .cover__danger { color: #ff8a98; font-size: 0.8rem; }
 .cover__who { margin: 0; grid-column: 1; font-size: 0.76rem; color: var(--muted); }
-.cover__risk { grid-column: 2; grid-row: 1 / span 2; max-width: 11rem; display: grid; justify-items: end; gap: 3px; text-align: right; }
+.cover__risk { grid-column: 2; grid-row: 1 / span 2; display: grid; justify-items: end; }
 .cover__risk .risk { margin-right: 0; }
-.cover__with { font-size: 0.68rem; color: var(--muted); }
+.cover__with { grid-column: 1 / -1; font-size: 0.74rem; color: var(--muted); } /* the whole row's width, under it (2026-11-05) */
 .cover__note { margin: 0; padding: 9px 12px; border-top: 1px solid var(--line); font-size: 0.78rem; color: var(--warn); }
 .cover__note--muted { color: var(--muted); }
 
