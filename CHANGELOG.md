@@ -11,6 +11,12 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - **Gear pictures sit on an inventory grid:** a rifle, sidearm, drone or deck fills a strip of three squares; a vest, trauma kit, ghost kit or implant takes one square, with the empty squares beside it. No more black bars, and the item names line up down the armoury.
 - On the squad board, an overwatch runner's card shows their stat with the shots or actions on the line under it, instead of breaking across two lines.
 
+## 2026-11-06 · A runner's stats, lined up
+- On a runner's page the progress bar under each stat now sits at the bottom of its tile, so the bars line up whatever notes are above them.
+
+## 2026-11-06 · A runner's page, tidier
+- A runner's status ("ready", "hurt", "back in 2 days") now sits at the right of the line with their fame, instead of squeezed under it.
+
 ## 2026-11-06 · A lighter top bar
 - **The tong's rank** ("Back Room tong") is on the Ops heading now, not the top bar. Tap it for what a tong is.
 - **Heat only shows when a district is warming:** from 3 a chip names it ("Heat Docks 4"), amber, and red from 6, when a police raid can come. Tap it to see that district on Ops.

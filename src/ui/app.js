@@ -1613,12 +1613,11 @@ function renderOperative() {
       <button class="btn btn--ghost" data-action="back">${returnTo ? (returnTo.screen === 'jobs' ? '← Back to the job' : '← Back to the message') : '← Crew'}</button>
       <div class="ophead">
         ${face(op, 'lg')}
-        <div>
+        <div class="ophead__who">
           <h1>${esc(op.name)} <span class="muted">"${esc(op.handle)}"</span></h1>
           <p class="muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age} · ${money(op.wage)}/week</p>
-          ${fameBadge(op)}
+          <div class="ophead__line">${fameBadge(op)}<span class="ophead__status">${statusChip(availability(state, op))}</span></div>
           ${marksText(op) ? `<p class="muted small">Marked: ${esc(marksText(op))}</p>` : ''}
-          ${statusChip(availability(state, op))}
         </div>
       </div>
       <div class="opgrid">

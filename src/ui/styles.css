@@ -257,6 +257,12 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .stats dd { margin: 0; font-size: 1.2rem; font-weight: 600; }
 .nextbar { display: block; height: 4px; margin-top: 6px; background: var(--line); border-radius: 2px; overflow: hidden; }
 .nextbar span { display: block; height: 100%; background: var(--accent-2); }
+/* A runner's stat tiles (2026-11-06, owner): every tile the same height, its progress bar on the
+   bottom edge, so the bars line up whatever notes (a trait's change, "career +1") sit above them. */
+.stats { grid-auto-rows: 1fr; }
+.stats div { display: flex; flex-direction: column; }
+.stats div > .nextbar { margin-top: auto; }
+.stats div > :nth-last-child(2) { margin-bottom: 6px; }
 .climb { margin: 8px 0 12px; }
 .growth { font-size: 0.8rem; font-weight: 600; color: var(--accent-2); }
 .growth.is-down { color: var(--danger); }
@@ -423,6 +429,12 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .ophead { display: flex; align-items: center; gap: 14px; }
 .ophead h1 { margin-bottom: 0; }
 .ophead p { margin: 4px 0 0; }
+/* Their status sits on the fame badge's line, pushed to the right (owner, 2026-11-06: "known" and
+   "ready" touched). */
+.ophead__who { flex: 1 1 auto; min-width: 0; }
+.ophead__line { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; margin-top: 8px; }
+.ophead__line .famebadge { margin: 0; line-height: 1.6; }
+.ophead__status { margin-left: auto; }
 .fallen { display: flex; gap: 10px; align-items: center; }
 
 /* --- Recruiting --- */
