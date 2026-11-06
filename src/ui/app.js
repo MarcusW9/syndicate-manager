@@ -484,6 +484,17 @@ function keyStatsFor(op, tpl, threat) {
 /** How long something on offer lasts: it's still there on its last day. */
 const daysLeft = (lastDay) => { const n = lastDay - state.day; return n <= 0 ? 'last day' : n === 1 ? '1 day left' : `${n} days left`; };
 /** Heat as a small bar: green while quiet, amber, then red from the level that brings the fixer. */
+/**
+ * The top bar's heat (2026-11-06, owner: heat is per district now): the hottest district, named,
+ * and a tap takes you to it on Ops. With no heat anywhere it's just "Heat 0/10".
+ */
+function heatStat() {
+  const hot = state.heat > 0 ? hottest(state) : null;
+  if (!hot || state.founding) return `<span class="stat"><span class="stat__label">Heat</span> ${heatMeter()}</span>`;
+  return `<button class="stat stat--heat" data-action="ops-district" data-id="${esc(hot.district)}" aria-label="Hottest district: ${esc(districtName(hot.district))}, heat ${state.heat} of ${HEAT_MAX}. See it on Ops">
+    <span class="stat__label">Heat<span class="stat__where"> · ${esc(districtName(hot.district).replace(/^The /, ''))}</span></span> ${heatMeter()}</button>`;
+}
+
 function heatMeter() {
   const h = state.heat;
   const tone = h >= HEAT_NOTICE_AT ? 'high' : h >= 3 ? 'mid' : 'low';
@@ -567,7 +578,7 @@ function render() {
       ${renderWhen()}
       <div class="topbar__stats">
         <span class="stat stat--cash"><span class="stat__label">Cash</span> ${money(state.cash)}${cashDelta()}</span>
-        <span class="stat"><span class="stat__label">Heat</span> ${heatMeter()}</span>
+        ${heatStat()}
         <button class="tierbtn" data-action="info" data-id="tong" aria-expanded="${openInfo.has('tong')}" aria-label="What's a tong?"><span class="tier">${esc(rankOf(state).name)}<span class="tier__word"> tong</span></span></button>
       </div>
       ${state.activeMission ? '' : `<button class="savebtn ${screen === 'settings' ? 'is-active' : ''}" data-action="nav" data-id="settings" aria-label="Save and settings" aria-pressed="${screen === 'settings'}"><span aria-hidden="true">☰</span><span class="savebtn__word"> Save</span></button>`}
@@ -581,6 +592,7 @@ function render() {
       ${navButton('crew', 'Crew')}
       ${navButton('jobs', 'Jobs', state.jobs.length, 'open')}
       ${navButton('lore', 'Lore')}
+      ${state.activeMission ? '' : navButton('settings', '☰ Save').replace('class="nav__btn', 'class="nav__btn nav__btn--save')}
     </nav>
 
     <main class="main ${wide ? 'main--wide' : ''} ${!state.activeMission && screen === 'jobs' && plan ? 'main--split' : ''}">${state.activeMission ? renderMission() : `${keptBanner()}${renderScreen()}`}</main>

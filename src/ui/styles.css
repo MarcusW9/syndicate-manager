@@ -1467,6 +1467,24 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .savebtn.is-active { color: var(--text); border-color: var(--accent); }
 .savebtn__word { display: none; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; margin-left: 4px; }
 @media (min-width: 900px) { .savebtn__word { display: inline; } }
+/* Save at the foot of the sidebar on wide screens (owner, 2026-11-06: too close to Continue up
+   top); phones keep the ☰ in the top bar, where Continue is down in the dock. The sidebar sticks
+   under the top bar so Save stays in reach on a long page. */
+.nav__btn--save { display: none; }
+@media (min-width: 900px) {
+  .topbar .savebtn { display: none; }
+  .nav { display: flex; flex-direction: column; position: sticky; top: 72px; align-self: start; height: calc(100dvh - 72px); height: calc(100svh - 72px); }
+  .nav__btn { flex: 0 0 auto; }
+  .nav__btn--save { display: block; margin-top: auto; border-top: 1px solid var(--line); font-size: 0.85rem; }
+}
+/* The top bar's heat names the hottest district and opens it on Ops. */
+.stat--heat { background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; min-height: 44px; display: inline-flex; align-items: center; gap: 6px; }
+/* The top bar on a phone: tighter gaps so date, stats and ☰ fit 360-430px without a sideways scroll (it ran to 415px at 390). */
+@media (max-width: 899px) { .topbar { padding: 12px; column-gap: 8px; } .topbar__when { min-width: 0; } .topbar__stats { column-gap: 8px; } .savebtn { margin-right: -4px; } }
+@media (max-width: 379px) { .topbar { padding: 12px 10px; column-gap: 4px; } .topbar__stats { column-gap: 6px; } }
+/* On a phone the top bar has no room for the name: the tap still opens the hottest district. */
+@media (max-width: 899px) { .stat__where { display: none; } }
+.stat--heat:hover .stat__label, .stat--heat:focus-visible .stat__label { color: var(--accent-2); }
 
 /* Back today (2026-11-04): faces home again, a result stamp, Joss's line and the report. */
 .backs { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 8px; }

@@ -13,6 +13,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - **City is renamed Lore**, and is about the city again: a new **Districts** section comes first, a card per district led by its picture (the Docks' cranes, Old Town's alleys, the Night Market's neon, Glass Heights' towers, the Basin's racecourse). Tap one for who runs it, the police, the night, the local custom and the landmarks. The three districts not open yet follow, with what the street says about them. Then Clients, Who's who, and History (what the Lore section was).
 - A district picked on the Ops map links to its write-up on Lore, and back.
 - **The Ops map is bigger on tablets and computers:** about a third larger, and still on one screen.
+- **Heat in the top bar names the hottest district** ("Heat · Docks 6/10"; on a phone just the number) and a tap opens it on Ops.
+- **Save is at the foot of the sidebar** on computers and tablets in landscape, away from Continue. Phones keep ☰ in the top bar.
+- Fixed: on a phone the top bar was a little wider than the screen, so the page scrolled sideways and ☰ was half cut off.
 
 ## 2026-11-06 · Buy a hall, and a work board
 - **A hall can be bought outright:** 26 weeks of its rent, once. After that it pays no rent, and making it bigger adds none. Crew › Halls has "Buy the place" on each hall; a bought hall is marked ours. The home hall can be bought too.
