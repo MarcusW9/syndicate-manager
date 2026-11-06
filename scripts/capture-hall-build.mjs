@@ -1,13 +1,14 @@
 // Capture (2026-11-06, building up a hall): on a phone (390), a Street tong with halls in Old Town
 // and the Night Market (level 2). Crew › Halls with the Build button; the Night Market's build
 // screen with a plate, a barricade and a wall placed; a free square picked with a steel plate ready
-// to place; a placed piece picked (turn, remove); and a raid held in the built-up hall.
+// to place; a placed piece picked (turn, remove); the Rooms tab with a clinic and a bunk room built
+// (slice 2a); and a raid held in the built-up hall.
 // Run: node scripts/capture-hall-build.mjs <out dir>
 import { createNewGame } from '../src/core/state.js';
 import { advanceDay } from '../src/core/time.js';
 import { syncHalls, hallIn } from '../src/core/halls.js';
 import { setHeat } from '../src/core/heat.js';
-import { placePiece, buildableCells, hallMap } from '../src/core/hallbuild.js';
+import { placePiece, buildableCells, hallMap, pieceCells, canPlace } from '../src/core/hallbuild.js';
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
@@ -28,6 +29,12 @@ s = placePiece(s, 'nightMarket', 'plate', ...cells[0], 0);
 s = placePiece(s, 'nightMarket', 'barricade', ...cells[1]);
 s = placePiece(s, 'nightMarket', 'wall', ...cells[3], 1);
 const built = structuredClone(s);
+// Rooms: a clinic and a bunk room, where they fit.
+const fit = (st, id, rot = 0) => { for (const k of buildableCells(site)) { const [x, y] = k.split(',').map(Number); if (canPlace(st, 'nightMarket', id, x, y, rot).ok) return [x, y]; } return null; };
+let roomy = structuredClone(built);
+roomy.halls.find((h) => h.district === 'nightMarket').level = 3;
+for (const [id, rot] of [['clinic', 0], ['bunks', 1]]) { const at = fit(roomy, id, rot); if (at) roomy = placePiece(roomy, 'nightMarket', id, ...at, rot); }
+const roomCell = fit(roomy, 'lookout');
 const pick = cells[2];
 // A raid on the built-up hall: the Night Market run hot until the police come.
 for (let i = 0; i < 60 && !s.inbox.some((m) => m.kind === 'raid' && !m.resolved); i++) {
@@ -60,6 +67,13 @@ try {
   await p.setViewportSize({ width: 1280, height: 900 }); await p.waitForTimeout(300);
   await p.screenshot({ path: `${out}/05-desktop-build.png` });
   await p.setViewportSize({ width: 390, height: 844 });
+  await load(p, roomy);
+  await tap(p, '[data-action="nav"][data-id="crew"]'); await p.waitForTimeout(300);
+  await tap(p, '[data-action="build-hall"][data-id="nightMarket"]'); await p.waitForTimeout(300);
+  await tap(p, '[data-action="build-tab"][data-id="room"]'); await p.waitForTimeout(200);
+  if (roomCell) { await p.locator(`[data-action="build-cell"][data-id="${roomCell.join(',')}"]`).click({ force: true }); await p.waitForTimeout(200); }
+  await tap(p, '[data-action="build-piece"][data-id="lookout"]'); await p.waitForTimeout(300);
+  await p.screenshot({ path: `${out}/07-rooms-tab.png`, fullPage: true });
   await load(p, calling);
   await tap(p, '[data-action="nav"][data-id="city"]'); await p.waitForTimeout(400);
   await tap(p, '[data-action="raid-answer"]'); await p.waitForTimeout(400);

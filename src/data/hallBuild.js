@@ -11,6 +11,15 @@ export const HALL_BUILD = {
   perThreat: 3, // every this many defence pieces lower a raid's threat by 1, never below 1 (owner, 2026-11-06)
 };
 
+/** What the rooms do (slice 2a): for the people who live in that hall. */
+export const ROOM_EFFECT = {
+  clinicHeal: 2, // injury days healed a day at home with a clinic (1 without)
+  canteenRest: 12, // fatigue shed a day at home with a canteen (8 without, core/time.js)
+  bunkBeds: 2, // beds a bunk room adds
+  stashKeeps: 0.5, // walking out loses this share of what was kept there
+  lookoutWarn: 4, // a raid is warned this many days ahead (3 without, data/raids.js)
+};
+
 const plate = '#5d6b7a';
 
 /**
@@ -34,6 +43,46 @@ export const PIECES = {
     shapes: (x, y, rot) => [rot ? { t: 'rect', cls: 'sp-block', x: x + 13, y, w: 4, h: 30 } : { t: 'rect', cls: 'sp-block', x, y: y + 13, w: 30, h: 4 }],
   },
 };
+
+// Rooms (slice 2a): a room of the hall's own, its walls drawn on the plan with a door, its fittings
+// inside. Fittings are 'sp-fit' (no fight cover), so a raid is fought the same with or without it.
+// w, h in plan units; the room is drawn at (x, y), turned rooms already swapped.
+const room = (x, y, w, h, fit) => [
+  { t: 'rect', cls: 'sp-hallroom', x: x + 2, y: y + 2, w: w - 4, h: h - 4 },
+  { t: 'rect', cls: 'sp-door', x: x + 2, y: y + h / 2 - 6, w: 3, h: 12 },
+  ...fit(x + 2, y + 2, w - 4, h - 4),
+];
+const fit = (x, y, w, h, fill) => ({ t: 'rect', cls: 'sp-fit', x, y, w, h, fill });
+/** A room's size in plan units at its turn: [w, h]. */
+const span = (size, rot) => (rot ? [size[1] * 30, size[0] * 30] : [size[0] * 30, size[1] * 30]);
+
+Object.assign(PIECES, {
+  clinic: {
+    name: 'Clinic', kind: 'room', cost: 18000, size: [2, 2], turns: false, needs: 2, one: true, what: 'heals ×2',
+    about: 'Two beds, a drug cabinet and a lamp. Injuries heal twice as fast for whoever lives here, while they\'re home.',
+    shapes: (x, y) => room(x, y, 60, 60, (rx, ry, w, h) => [fit(rx + 6, ry + 6, 22, 8, '#8b9aab'), fit(rx + 6, ry + h - 14, 22, 8, '#8b9aab'), fit(rx + w - 12, ry + 6, 8, 16, '#d8e2ea'), fit(rx + w - 17, ry + h - 22, 12, 3, '#3de8d8'), fit(rx + w - 12.5, ry + h - 26.5, 3, 12, '#3de8d8')]),
+  },
+  bunks: {
+    name: 'Bunk room', kind: 'room', cost: 15000, size: [3, 2], turns: true, needs: 2, one: true, what: '+2 beds',
+    about: 'Bunks two high along the wall. Two more beds in this hall, with no more rent.',
+    shapes: (x, y, rot) => { const [w, h] = span([3, 2], rot); return room(x, y, w, h, (rx, ry, iw, ih) => (iw > ih ? [0, 1, 2].map((i) => fit(rx + 6 + i * (iw - 12) / 3, ry + 6, (iw - 12) / 3 - 4, ih - 12, '#4a5566')) : [0, 1, 2].map((i) => fit(rx + 6, ry + 6 + i * (ih - 12) / 3, iw - 12, (ih - 12) / 3 - 4, '#4a5566')))); },
+  },
+  canteen: {
+    name: 'Canteen', kind: 'room', cost: 10000, size: [3, 2], turns: true, needs: 2, one: true, what: 'rest faster',
+    about: 'A long table, a rice cooker that never goes off. Whoever lives here shakes off fatigue faster at home.',
+    shapes: (x, y, rot) => { const [w, h] = span([3, 2], rot); return room(x, y, w, h, (rx, ry, iw, ih) => (iw > ih ? [fit(rx + 10, ry + ih / 2 - 5, iw - 20, 10, '#6b5a2a'), fit(rx + iw - 14, ry + 4, 10, 8, '#f2d541')] : [fit(rx + iw / 2 - 5, ry + 10, 10, ih - 20, '#6b5a2a'), fit(rx + 4, ry + ih - 14, 8, 10, '#f2d541')])); },
+  },
+  stash: {
+    name: 'Stash', kind: 'room', cost: 10000, size: [2, 2], turns: false, one: true, what: 'walk out: lose half',
+    about: 'A safe bolted to the floor under a false board. Walk out of a raid and we lose half as much.',
+    shapes: (x, y) => room(x, y, 60, 60, (rx, ry, w, h) => [fit(rx + w / 2 - 11, ry + h / 2 - 11, 22, 22, '#5d6b7a'), fit(rx + w / 2 - 3, ry + h / 2 - 3, 6, 6, '#f2d541')]),
+  },
+  lookout: {
+    name: 'Lookout', kind: 'room', cost: 12000, size: [2, 2], turns: false, one: true, what: 'warned 4 days',
+    about: 'A stool at a window that sees the street both ways. We hear of a raid on this hall a day sooner.',
+    shapes: (x, y) => room(x, y, 60, 60, (rx, ry, w) => [fit(rx + 4, ry + 2, w - 8, 4, '#3de8d8'), fit(rx + w / 2 - 5, ry + 14, 10, 10, '#6b5a2a')]),
+  },
+});
 
 /** The site shapes for a hall's pieces: [{ piece, x, y, rot }], x and y in cells. */
 export function buildShapes(build = []) {

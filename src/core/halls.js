@@ -12,10 +12,18 @@ import { trustOf } from './clients.js';
 import { CLIENTS } from '../data/clients.js';
 import { TONG_RANKS } from '../data/tong.js';
 import { money } from './money.js';
+import { PIECES, ROOM_EFFECT } from '../data/hallBuild.js';
 
 const districtName = (d) => NAMES.districts?.[d] ?? d;
 const districtInText = (d) => NAMES.districtsInText?.[d] ?? districtName(d);
 const living = (state) => state.crew.filter((o) => !o.freelance && o.condition?.injury !== 'dead');
+
+/** Does a hall have this room built (data/hallBuild.js)? */
+export const hasRoom = (hall, id) => !!hall?.build?.some((b) => b.piece === id && PIECES[id]?.kind === 'room');
+/** A hall's beds: its own, and a bunk room's. */
+export const bedsOf = (hall) => (hall?.beds ?? 0) + (hasRoom(hall, 'bunks') ? ROOM_EFFECT.bunkBeds : 0);
+/** The hall someone lives in, while they're at home (not out on a job or freelance). */
+export const homeOf = (state, op) => (op.freelance || (op.condition?.awayUntil ?? 0) > state.day ? null : (state.halls ?? []).find((h) => h.district === (op.hall ?? HOME_HALL)) ?? null);
 
 /** The tong's hall in a district, or null. */
 export const hallIn = (state, district) => (state.halls ?? []).find((h) => h.district === district) ?? null;
@@ -26,7 +34,7 @@ export const residents = (state, district) => living(state).filter((o) => (o.hal
 /** Free beds in a hall. */
 export const freeBeds = (state, district) => {
   const h = hallIn(state, district);
-  return h ? Math.max(0, h.beds - residents(state, district).length) : 0;
+  return h ? Math.max(0, bedsOf(h) - residents(state, district).length) : 0;
 };
 
 /** The hall a new hire moves into: home first, then whichever has room. Null when every bed is taken. */
@@ -35,7 +43,7 @@ export const hallWithRoom = (state) => [...(state.halls ?? [])].sort((a, b) => (
 /** Keep the totals and the rank in step with the halls: beds, rent, and one rank per hall. */
 export function syncHalls(state) {
   const halls = state.halls ?? [];
-  state.rosterCap = halls.reduce((n, h) => n + h.beds, 0);
+  state.rosterCap = halls.reduce((n, h) => n + bedsOf(h), 0);
   state.rent = halls.reduce((n, h) => n + h.rent, 0);
   state.rank = TONG_RANKS[Math.min(TONG_RANKS.length, Math.max(1, halls.length)) - 1].id;
   return state;

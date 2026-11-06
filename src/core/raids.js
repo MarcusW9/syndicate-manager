@@ -17,11 +17,11 @@
 // null, 'paid' (before the day), 'hold', 'withdraw', 'pay'. hall.shutUntil: the day it opens again.
 
 import { RAID, RAID_POLICE, raidTemplate } from '../data/raids.js';
-import { HALL_BUILD, PIECES } from '../data/hallBuild.js';
+import { HALL_BUILD, PIECES, ROOM_EFFECT } from '../data/hallBuild.js';
 import { HOME_HALL } from '../data/halls.js';
 import { NAMES } from '../config/names.js';
 import { heatIn, setHeat } from './heat.js';
-import { hallIn, residents } from './halls.js';
+import { hallIn, residents, hasRoom } from './halls.js';
 import { hashRng } from './rng.js';
 import { nextRng } from './random.js';
 import { buildBattle, planIntents } from './battle.js';
@@ -109,14 +109,15 @@ export const raidThreat = (state, district, raid = null) => Math.max(1, baseThre
 /** What walking out costs: what was kept there (no more than we have) and the repairs. */
 export function withdrawCost(state, district) {
   const level = hallIn(state, district)?.level ?? 1;
-  return { kept: Math.min(RAID.keptPerLevel * level, Math.max(0, state.cash)), repairs: RAID.repairs };
+  const kept = Math.round(RAID.keptPerLevel * level * (hasRoom(hallIn(state, district), 'stash') ? ROOM_EFFECT.stashKeeps : 1));
+  return { kept: Math.min(kept, Math.max(0, state.cash)), repairs: RAID.repairs };
 }
 
 // --- the warning and the day ---------------------------------------------------------------------
 
 function warn(state, district, by = 'police') {
   const id = `raid-${district}-${state.day}${by === 'police' ? '' : `-${by}`}`;
-  const day = state.day + RAID.warnDays;
+  const day = state.day + (hasRoom(hallIn(state, district), 'lookout') ? ROOM_EFFECT.lookoutWarn : RAID.warnDays);
   const raid = { id, district, by, warnedDay: state.day, day, answer: null, outcome: null, done: false };
   const who = raidBy(raid);
   state.raids = [...(state.raids ?? []), raid];

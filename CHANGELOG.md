@@ -4,6 +4,15 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-06 · Rooms in a hall
+- **The build screen has a Rooms tab.** Each room helps whoever lives in that hall, and a hall can have one of each:
+  - **Clinic** (¥18,000, level 2, 2 × 2): injuries heal twice as fast while they're home.
+  - **Bunk room** (¥15,000, level 2, 2 × 3, turns): two more beds, and no more rent.
+  - **Canteen** (¥10,000, level 2, 2 × 3, turns): fatigue goes faster at home.
+  - **Stash** (¥10,000, 2 × 2): walking out of a raid loses half as much.
+  - **Lookout** (¥12,000, 2 × 2): a raid on this hall is warned 4 days ahead, not 3.
+- Rooms aren't cover in a raid. A bunk room can't be removed while its beds are slept in.
+
 ## 2026-11-06 · Defences make raids easier
 - **Every 3 defence pieces in a hall make a raid there one step easier** (fewer, weaker raiders), never below the easiest. This counts for police and gang raids alike.
 - The build screen says how many are built and how many more give the next step. The hall's row on Halls says the effect, and so does Hold the hall at the door.

@@ -2,7 +2,7 @@
 // functions, re-renders. Tap/click only; nothing depends on hover.
 
 import { heatIn, hottest, HEAT_DISTRICTS } from '../core/heat.js';
-import { hallIn, residents, freeBeds, canOpenHall, openHall, nextHallExpansion, expandHall, canMove, moveToHall } from '../core/halls.js';
+import { bedsOf, hallIn, residents, freeBeds, canOpenHall, openHall, nextHallExpansion, expandHall, canMove, moveToHall } from '../core/halls.js';
 import { GANGS, GRUDGE, grudgeOf, jobGrudge, grudgeWord, gangsOn } from '../core/gangs.js';
 import { defenceCut, openRaids, raidOn, raidPrice, canBuyOff, defenders, raidChoices, payOffRaid, hallShut, raidWho, raidBy, isGangRaid } from '../core/raids.js';
 import { HALL_SITES, HOME_HALL } from '../data/halls.js';
@@ -22,7 +22,7 @@ import { cityMapSvg, cityMapLegend, MAP_DISTRICTS } from './citymap.js';
 import { districtArt } from './districtArt.js';
 import { landmark } from './landmarks.js';
 import { renderHallBuild, hallBuildLine } from './hallbuild.js';
-import { placePiece, removePiece, turnPiece, pieceAt, refundOf } from '../core/hallbuild.js';
+import { placePiece, removePiece, turnPiece, pieceAt, refundOf, canRemove } from '../core/hallbuild.js';
 import { PIECES } from '../data/hallBuild.js';
 
 import { advanceDay, calendar, formatShortDate, isBlocked, seasonStartDay } from '../core/time.js';
@@ -226,7 +226,7 @@ function onClick(e) {
       break;
     }
     // Building up a hall (ui/hallbuild.js, core/hallbuild.js).
-    case 'build-hall': screen = 'crew'; openOperativeId = null; openArmoury = false; buildView = { district: id, cell: null, piece: null, rot: 0, picked: null }; window.scrollTo?.(0, 0); break;
+    case 'build-hall': screen = 'crew'; openOperativeId = null; openArmoury = false; buildView = { district: id, cell: null, piece: null, rot: 0, picked: null, tab: 'defence' }; window.scrollTo?.(0, 0); break;
     case 'build-cell': {
       const [x, y] = id.split(',').map(Number);
       const on = pieceAt(hallIn(state, buildView.district), x, y);
@@ -234,6 +234,7 @@ function onClick(e) {
       break;
     }
     case 'build-piece': buildView = { ...buildView, piece: id, picked: null, rot: 0 }; break;
+    case 'build-tab': buildView = { ...buildView, tab: id, piece: null }; break;
     case 'build-rot': buildView = { ...buildView, rot: buildView.rot ? 0 : 1 }; break;
     case 'build-place': {
       const { district, piece, cell, rot } = buildView;
@@ -245,7 +246,7 @@ function onClick(e) {
     case 'build-turn': return setState(turnPiece(state, buildView.district, id));
     case 'build-remove': {
       const b = hallIn(state, buildView.district)?.build?.find((x) => x.id === id);
-      if (!b || !confirm(`Remove the ${PIECES[b.piece].name.toLowerCase()}? You get ${money(refundOf(b.piece))} back.`)) break;
+      if (!b || !canRemove(state, buildView.district, id).ok || !confirm(`Remove the ${PIECES[b.piece].name.toLowerCase()}? You get ${money(refundOf(b.piece))} back.`)) break;
       buildView = { ...buildView, picked: null };
       return setState(removePiece(state, buildView.district, id));
     }
@@ -1340,7 +1341,7 @@ function renderHalls() {
             ${hallMark(h.district, { raid: openRaids(state).some((r) => r.district === h.district && r.answer !== 'paid') })}
             <div class="hall__body">
             <p class="hall__head"><strong>${esc(cityName(h.district))}</strong>${h.district === HOME_HALL ? ' <span class="hall__home">home</span>' : ''} <span class="muted small">level ${h.level} · ${money(h.rent)}/wk · heat ${heatIn(state, h.district)}/10</span></p>
-            <p class="small">${who.length}/${h.beds} beds${who.length ? `: ${esc(who.map((o) => o.handle).join(', '))}` : ' · nobody lives here yet'}</p>
+            <p class="small">${who.length}/${bedsOf(h)} beds${who.length ? `: ${esc(who.map((o) => o.handle).join(', '))}` : ' · nobody lives here yet'}</p>
             <p class="small muted">${esc(hallBuildLine(h, defenceCut(state, h.district)))}</p>
             <button class="btn btn--block" data-action="build-hall" data-id="${esc(h.district)}">Build</button>
             <button class="btn btn--block" data-action="expand-hall" data-id="${esc(h.district)}" ${state.cash >= x.cost ? '' : 'disabled'}>Expand: +${x.beds} beds for ${money(x.cost)} (rent +${money(x.rentIncrease)}/wk)</button>
@@ -2382,7 +2383,7 @@ function districtCard(key) {
         if (!h) return '';
         const who = residents(state, key);
         const raid = raidOn(state, key);
-        return `<div class="citycard__hall"><p class="small"><strong>Our hall</strong> · ${who.length}/${h.beds} beds · level ${h.level}${hallShut(state, key) ? ` · <span class="citycard__shut">shut after a raid until day ${h.shutUntil}</span>` : ''}${raid ? ` · <span class="citycard__raid">raid ${esc(raidWhen(raid))}${raid.answer === 'paid' ? ', paid off' : ''}</span>` : ''}</p>
+        return `<div class="citycard__hall"><p class="small"><strong>Our hall</strong> · ${who.length}/${bedsOf(h)} beds · level ${h.level}${hallShut(state, key) ? ` · <span class="citycard__shut">shut after a raid until day ${h.shutUntil}</span>` : ''}${raid ? ` · <span class="citycard__raid">raid ${esc(raidWhen(raid))}${raid.answer === 'paid' ? ', paid off' : ''}</span>` : ''}</p>
           ${who.length ? `<span class="citycard__faces">${who.map((op) => { const away = !!op.condition?.awayUntil && op.condition.awayUntil > state.day; return `<button class="citycard__face ${away ? 'is-out' : ''}" data-action="op-link" data-id="${esc(op.id)}" aria-label="${esc(op.handle)}${away ? ', out' : ''}">${face(op, 'sm')}</button>`; }).join('')}</span>` : '<p class="muted small">Nobody lives here yet.</p>'}</div>`;
       })()}
       ${c.locked ? `<p class="intel">${esc(c.teaser)}</p>` : (() => {
