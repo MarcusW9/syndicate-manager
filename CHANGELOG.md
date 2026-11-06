@@ -4,6 +4,13 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-06 · Building up a hall: the build screen
+- **Each hall on Crew › Halls has a Build button.** It opens the hall's plan, the map its raids are fought on, with the free squares marked.
+- **To place something:** tap a free square, pick a barricade, a steel plate or an inner wall, then Place. The piece shows where it would go first. A plate or a wall can be turned.
+- **Tap something built** to turn it or remove it (half its cost back).
+- The bar at the top shows the floor used (6 squares at level 1, 4 more for each Expand) and your cash. When something can't be placed, the screen says why.
+- Each hall's row says what's built there.
+
 ## 2026-11-06 · Building up a hall: the groundwork
 - **What you build in a hall will be part of its raids:** a barricade is half cover, a steel plate full cover, and an inner wall is solid. You can't place anything yet; the build screen comes next.
 - **The Docks hall's pier is a little wider.**
