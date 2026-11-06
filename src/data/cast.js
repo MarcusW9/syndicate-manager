@@ -126,4 +126,55 @@ export const CAST = {
       disappoint: ['You turned a missing form into an integrity matter.', 'Whoever sent you can explain this without using my name.'],
     },
   },
+  // Glass Heights people (WORLD.md, 2026-11-06). Draft lines for the owner to edit.
+  chow: {
+    name: 'Chow Nga-man',
+    district: 'heights',
+    desc: 'Veridian-Apex payroll officer in Glass Heights. Three access cards on her lanyard, a lunch container she has not opened, and the patience to explain a payslip line by line, outside office hours.',
+    lines: {
+      greet: ['If this is about a payslip, bring the payslip.', 'I have ten minutes before someone finds me a new problem.', 'Not here. The Lower Arcade, by the noodle counter.'],
+      approve: ['Nobody got blamed for it. That was the whole job.', 'Thank you. I owe you lunch, at least.', 'My father will never admit it, but he will be glad.'],
+      disappoint: ['I asked you to keep my name out of it.', 'Now there is a report, and my name is on the second page.'],
+    },
+  },
+  edith: {
+    name: 'Edith Pryce',
+    district: 'heights',
+    desc: 'Morrow & Venn estates administrator at Venn House. An expensive old coat, practical shoes and a clipboard; she asks before opening drawers and gives everyone a copy of what they sign.',
+    lines: {
+      greet: ['Before we begin, everyone gets a copy of this.', 'Please touch nothing until it has been written down.', 'My client has a claim. A claim is not the same as ownership.'],
+      approve: ['Witnessed, signed and nothing broken. Thank you.', 'You treated their things as theirs. That is rarer than you would think.', 'The inventory is clean, and so is my fee note.'],
+      disappoint: ['You took the instructions as proof. They were not.', 'Morrow & Venn will not be defending you. Neither will I.'],
+    },
+  },
+  kwok: {
+    name: 'Kwok Mei-yee',
+    district: 'heights',
+    desc: 'Visiting Hang Yuen Systems integration engineer in Glass Heights. A diagnostic kit on her shoulder, relocation boxes still taped shut at home, and a habit of paying local repairers out of her own pocket.',
+    lines: {
+      greet: ['It failed for a reason. I can tell you the reason over noodles.', 'Off the record, harbour weather is not an unforeseeable event.', 'Once this is company business, there are conditions.'],
+      approve: ['Back before the customer visit. You may have saved my trial.', 'Nobody knows it left the building. Good.', 'I will pay you now. My expense claim can take its time.'],
+      disappoint: ['That was the demonstration unit, not a crate.', 'My manager will ask who you were, and I will have to answer.'],
+    },
+  },
+  poon: {
+    name: 'Poon Hok-yin',
+    district: 'heights',
+    desc: 'Facilities coordinator for a shared tower in Glass Heights. Too many keys, a handset that rings the moment he sits down, and spare umbrellas he lends the cleaners.',
+    lines: {
+      greet: ['I can give you a loading slot. Not a building.', 'Use the Service Steps. The lobby cameras remember faces.', 'Be quick, something on the twelfth floor is leaking.'],
+      approve: ['In and out inside the slot. I could almost sit down.', 'Nobody on the night shift had to cover for you. Thank you.', 'Take an umbrella. It is going to rain.'],
+      disappoint: ['That pass was for the loading bay, not the lifts.', 'I will not risk the night shift for you. Do not ask again.'],
+    },
+  },
+  binta: {
+    name: 'Binta Sarr',
+    district: 'heights',
+    desc: 'Independent overnight courier in Glass Heights. Waits by the Lower Arcade lockers with a folding trolley and a flask wrapped in a towel, and reads the collection terms before she touches a parcel.',
+    lines: {
+      greet: ['Let me read the terms first. Then we can argue.', 'That deadline is impossible. I can get you close.', 'I carry it. I do not open it, and I do not ask.'],
+      approve: ['Signed for, on time, nobody pretending to be anybody. Good.', 'You read the terms. I could get used to that.', 'Dinner at the Late Counter is on me.'],
+      disappoint: ['You promised a time you knew we could not make.', 'Find another courier. One who does not read the terms.'],
+    },
+  },
 };
