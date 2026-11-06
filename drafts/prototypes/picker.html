@@ -1,0 +1,1286 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Squad Picker Mock-up</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#0a0c0f; --panel:#12151b; --panel-2:#161a21; --line:#2a303b; --text:#e9ecf1; --muted:#8a93a6; --accent:#ff3d5f; --accent-2:#3de8d8; --good:#5fe0a5; --near:#f2b544; --short:#ff6b6b; --fan:#b48cff; --display:'Rajdhani','Arial Narrow',system-ui,sans-serif; }
+* { box-sizing: border-box; } body { margin:0; background:var(--bg); color:var(--text); font:15px/1.45 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+.muted { color: var(--muted); } .small { font-size: .8rem; }
+.page { padding: 24px; display: grid; gap: 40px; justify-content: center; }
+.cap { font-family: var(--display); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-size: .8rem; margin: 0 0 8px; }
+.sheet { background: var(--panel); border: 1px solid var(--line); padding: 18px 16px 20px; clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); }
+.sheet--phone { width: 390px; } .sheet--desk { width: 920px; padding: 22px 24px; }
+.sheet__head { display: flex; justify-content: space-between; align-items: center; }
+h2 { margin: 0; font: 700 1.05rem var(--display); letter-spacing: .14em; text-transform: uppercase; }
+.x { color: var(--accent-2); font-size: 1.3rem; }
+.want { margin: 8px 0 4px; } .want b { color: var(--text); }
+.legend { display: inline-flex; gap: 12px; font-size: .78rem; margin: 0 0 10px; } .sheet--desk .legend { margin-left: 10px; }
+.t-good { color: var(--good); } .t-near { color: var(--near); } .t-short { color: var(--short); }
+.sort { display: flex; gap: 6px; align-items: center; margin: 4px 0 6px; flex-wrap: wrap; }
+.sort__l { font: 600 .75rem var(--display); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.sort button { min-height: 36px; padding: 0 10px; border: 1px solid var(--line); font: 600 .8rem var(--display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.sort button.is-on { border-color: var(--accent-2); color: var(--accent-2); }
+.grp { display: flex; justify-content: space-between; align-items: baseline; margin: 16px 0 6px; font: 700 .85rem var(--display); letter-spacing: .14em; text-transform: uppercase; color: var(--accent-2); }
+.grp span { font: 400 .75rem system-ui; letter-spacing: 0; text-transform: none; color: var(--muted); }
+.grp--free { color: var(--fan); }
+.pcs { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.pc { width: 100%; display: grid; grid-template-columns: 44px minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 8px 10px; text-align: left; background: var(--panel-2); border: 1px solid var(--line); }
+.pc--free { border-left: 3px solid var(--fan); }
+.pc--placed { opacity: .55; border-style: dashed; }
+.pc__who { display: grid; gap: 1px; } .pc__who strong { font-size: 1rem; }
+.pc__big { font: 700 1.05rem var(--display); letter-spacing: .06em; text-transform: uppercase; } .pc__big b { font-size: 1.25rem; }
+.pc__rest { font-size: .8rem; } .pc__gain { font-size: .78rem; color: var(--accent-2); }
+.pc__side { text-align: right; font-size: .85rem; display: grid; justify-items: end; gap: 2px; }
+.hire { font: 700 .7rem var(--display); letter-spacing: .14em; text-transform: uppercase; color: var(--fan); }
+.ready { font: 700 .8rem var(--display); color: var(--good); background: rgba(95,224,165,.1); padding: 2px 8px; }
+.where { font: 700 .75rem var(--display); letter-spacing: .12em; color: var(--muted); border: 1px solid var(--line); padding: 2px 8px; }
+.joss { font: 700 .68rem var(--display); letter-spacing: .12em; text-transform: uppercase; color: #0a0c0f; background: var(--accent-2); padding: 1px 5px; vertical-align: 2px; }
+.fold { width: 100%; min-height: 44px; margin-top: 14px; border: 1px dashed var(--line); color: var(--muted); font: 600 .85rem var(--display); letter-spacing: .1em; text-transform: uppercase; }
+.pface { display: inline-block; overflow: hidden; flex: 0 0 auto; } .pface svg { display: block; width: 100%; height: 100%; }
+.pt { width: 100%; border-collapse: separate; border-spacing: 0 4px; margin-top: 8px; }
+.pt th { text-align: left; font: 600 .75rem var(--display); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); padding: 4px 10px; }
+.pt thead th.num { text-align: center; cursor: pointer; } .pt thead th.is-on { color: var(--accent-2); box-shadow: inset 0 -2px 0 var(--accent-2); }
+.pt td { background: var(--panel-2); padding: 6px 10px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.pt td:first-child { border-left: 1px solid var(--line); } .pt td:last-child { border-right: 1px solid var(--line); text-align: right; }
+.pt td.who { min-width: 220px; } .whoin { display: flex; gap: 10px; align-items: center; }
+.pt td.num { text-align: center; width: 90px; }
+.pill { display: inline-block; min-width: 38px; padding: 2px 8px; font: 700 1.05rem var(--display); text-align: center; }
+.pill.t-good { background: rgba(95,224,165,.14); } .pill.t-near { background: rgba(242,181,68,.12); } .pill.t-short { background: rgba(255,107,107,.08); opacity: .85; }
+.pt .gain { color: var(--accent-2); }
+.tgrp th { padding-top: 14px; color: var(--accent-2); font-size: .85rem; } .tgrp th span { font: 400 .75rem system-ui; letter-spacing: 0; text-transform: none; color: var(--muted); margin-left: 8px; }
+.tgrp--free th { color: var(--fan); }
+.tr--free td:first-child { border-left: 3px solid var(--fan); }
+.tr--placed td, .tr--out td { opacity: .5; } .tr--placed td { border-top-style: dashed; border-bottom-style: dashed; } .tr--placed td:first-child { border-left-style: dashed; } .tr--placed td:last-child { border-right-style: dashed; }
+.foot { margin: 10px 0 0; }
+</style></head><body><div class="page">
+<section><p class="cap">Phone (390): cards in groups, the stat that counts big</p>
+  <div class="sheet sheet--phone">
+    <div class="sheet__head"><h2>Who's on the inside team?</h2><span class="x">✕</span></div>
+    <p class="want">The Favourite wants about <b>10</b> in <b>social, stealth or medical</b>.</p>
+    <p class="legend"><span class="t-good">● 10+ ready for it</span><span class="t-near">● close</span><span class="t-short">● short</span></p>
+    <div class="sort" role="group"><span class="sort__l">Sort</span><button class="is-on">Best fit</button><button>Social</button><button>Stealth</button><button>Medical</button></div>
+    <h3 class="grp">Your crew <span>4 free</span></h3>
+    <ul class="pcs"><li><button class="pc ">
+    <span class="pface" style="width:44px;height:44px"><svg class="art portrait" viewBox="9 6 46 46" width="44" height="44" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf1bg" x1="1" x2="0"><stop offset="0" stop-color="#ff3d5f" stop-opacity="0.28"/><stop offset="0.65" stop-color="#ff3d5f" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf1h"><path d="M32 11 C41.6918 11 44.922399999999996 16 44.922399999999996 24 C44.922399999999996 30 44.322399999999995 33 42.872 38 L37.586 45.223 Q32 46.923 26.414 45.223 L21.128 38 C19.6776 33 19.0776 30 19.0776 24 C19.0776 16 22.3082 11 32 11 Z"/></clipPath>
+    <clipPath id="pf1s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf1t"><path d="M18.2776 27 C17.2776 17 20.0776 7 32 6.5 C43.922399999999996 7 46.72239999999999 16 45.72239999999999 26 C44.322399999999995 22 42.922399999999996 19.5 40.922399999999996 19.1 C33 18.5 30 20.5 28 19.5 C25 19 21.0776 20.5 18.2776 27 Z"/></clipPath>
+    <clipPath id="pf1b"><path d="M17.5776 24 C16.5776 7 47.422399999999996 7 46.422399999999996 24 L47.922399999999996 54 L41.422399999999996 52 L42.922399999999996 35 L21.0776 35 L22.5776 52 L16.0776 54 Z"/></clipPath>
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf1bg)"/>
+  
+
+  <g >
+  <path d="M17.5776 24 C16.5776 7 47.422399999999996 7 46.422399999999996 24 L47.922399999999996 54 L41.422399999999996 52 L42.922399999999996 35 L21.0776 35 L22.5776 52 L16.0776 54 Z" fill="#17171b"/>
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#232838"/>
+  <g clip-path="url(#pf1s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#773047"/><path d="M27 46 L32 54 L37 46 Z" fill="#171a24"/></g>
+  
+  <path d="M27.061 37 L27.061 48 Q32 51 36.939 48 L36.939 37 Z" fill="#8f756e"/><path d="M35.139 38 L36.939 37 L36.939 48 L35.139 49 Z" fill="#ee847d" opacity="0.8"/>
+  
+
+  <ellipse cx="19.297600000000003" cy="30" rx="1.761965" ry="3.15299" fill="#8f756e"/>
+  <ellipse cx="44.7024" cy="30" rx="1.761965" ry="3.15299" fill="#e3b08f"/><path d="M45.602399999999996 27.681625 Q46.39342499999999 30 45.40239999999999 32.78205" stroke="#ee847d" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C41.6918 11 44.922399999999996 16 44.922399999999996 24 C44.922399999999996 30 44.322399999999995 33 42.872 38 L37.586 45.223 Q32 46.923 26.414 45.223 L21.128 38 C19.6776 33 19.0776 30 19.0776 24 C19.0776 16 22.3082 11 32 11 Z" fill="#e3b08f"/>
+  <g clip-path="url(#pf1h)">
+    <path d="M0 0 L30.449312 9 C24.89268 20 25.797248 31 30.5 48 L0 64 Z" fill="#8f756e"/>
+    <path d="M35.87672 34.5 L44.1224 31.5 L42.372 39 Z" fill="#bb947f" opacity="0.55"/>
+    <path d="M64 0 L43.1224 12 L43.6224 30 L41.072 40.5 L64 64 Z" fill="#ee847d"/>
+        
+    
+    
+    <g transform="translate(0 0.4756999999999998)"><path d="M21.0776 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#bb947f"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 30.4757 L30.00884 36.0197 L32.7 36.8197 L31.6 35.5197 Z" fill="#8f756e"/>
+    <path d="M32.9 34.1197 L33.5 36.1197 L32.7 36.8197 Z" fill="#ee847d" opacity="0.7"/>
+    <path d="M30.4407 36.9197 Q32 37.2697 33.427440000000004 36.9197" stroke="#876150" stroke-width="0.7" fill="none" stroke-linecap="round"/><clipPath id="pf1e-1"><path d="M24.771800000000002 29.09602 Q27.2708 26.836039999999997 29.7698 29.60226 Q27.2708 30.677415 24.771800000000002 29.09602 Z"/></clipPath><path d="M24.771800000000002 29.09602 Q27.2708 26.836039999999997 29.7698 29.60226 Q27.2708 30.677415 24.771800000000002 29.09602 Z" fill="#e7d6c6"/><circle cx="27.570800000000002" cy="29.2872175" r="1.54938" fill="#120d0b" clip-path="url(#pf1e-1)"/><path d="M24.771800000000002 29.09602 Q27.2708 26.836039999999997 29.7698 29.60226" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.820800000000002" cy="28.9102525" r="0.45" fill="#fff" opacity="0.85"/><clipPath id="pf1e1"><path d="M34.230199999999996 29.60226 Q36.7292 26.836039999999997 39.2282 29.09602 Q36.7292 30.677415 34.230199999999996 29.60226 Z"/></clipPath><path d="M34.230199999999996 29.60226 Q36.7292 26.836039999999997 39.2282 29.09602 Q36.7292 30.677415 34.230199999999996 29.60226 Z" fill="#e7d6c6"/><circle cx="37.029199999999996" cy="29.2872175" r="1.54938" fill="#120d0b" clip-path="url(#pf1e1)"/><path d="M34.230199999999996 29.60226 Q36.7292 26.836039999999997 39.2282 29.09602" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.279199999999996" cy="28.9102525" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.570800000000002 25.450200000000002 Q26.68385 24.438790000000004 24.3218 25.886740000000003 L24.3218 26.335460000000005 Q26.68385 25.448410000000003 29.570800000000002 26.572000000000003 Z" fill="#131113"/><path d="M34.4292 25.450200000000002 Q37.31615 24.438790000000004 39.6782 25.886740000000003 L39.6782 26.335460000000005 Q37.31615 25.448410000000003 34.4292 26.572000000000003 Z" fill="#131113"/><path d="M29.360500000000002 39.7315 Q32 40.631499999999996 34.6395 39.7315" stroke="#876150" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.160500000000003 40.4315 Q32 42.7522 33.8395 40.4315 Z" fill="#d0997e"/>
+  <g transform="translate(0 -0.27)"></g>
+  
+  
+  
+  
+  
+
+  <g >
+  <path d="M18.2776 27 C17.2776 17 20.0776 7 32 6.5 C43.922399999999996 7 46.72239999999999 16 45.72239999999999 26 C44.322399999999995 22 42.922399999999996 19.5 40.922399999999996 19.1 C33 18.5 30 20.5 28 19.5 C25 19 21.0776 20.5 18.2776 27 Z" fill="#17171b" />
+    <g clip-path="url(#pf1t)"><path d="M35.2306 0 L64 0 L64 30 L39.75344 30 Z" fill="#8b2a3d" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  
+  <path d="M42.322399999999995 19 V27" stroke="#ff3d5f" stroke-width="1.1" stroke-linecap="round" opacity="0.5"/><circle cx="42.322399999999995" cy="27.5" r="0.9" fill="#ff3d5f" opacity="0.5"/>
+  
+  
+</svg></span>
+    <span class="pc__who"><span><strong>Cortex</strong> <span class="muted">medic</span> <span class="joss">Joss picks</span></span>
+      <span class="pc__big t-near">Medical <b>9</b></span>
+      <span class="pc__rest"><span class="t-short">Social 5</span> · <span class="t-short">Stealth 5</span></span>
+      <span class="pc__gain">learns on the job</span></span>
+    <span class="pc__side"><span class="ready">ready</span></span>
+  </button></li><li><button class="pc ">
+    <span class="pface" style="width:44px;height:44px"><svg class="art portrait" viewBox="9 6 46 46" width="44" height="44" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf2bg" x1="1" x2="0"><stop offset="0" stop-color="#f2b544" stop-opacity="0.28"/><stop offset="0.65" stop-color="#f2b544" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf2h"><path d="M32 11 C40.5026 11 43.3368 16 43.3368 24 C43.3368 30 42.736799999999995 33 42.78 38 L35.9932 42.744 Q32 44.444 28.0068 42.744 L21.22 38 C21.2632 33 20.6632 30 20.6632 24 C20.6632 16 23.4974 11 32 11 Z"/></clipPath>
+    <clipPath id="pf2s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    
+    
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf2bg)"/>
+  
+
+  <g >
+  
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#262b36"/>
+  <g clip-path="url(#pf2s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#745f3b"/><path d="M27 46 L32 54 L37 46 Z" fill="#191c23"/></g>
+  
+  <path d="M27.8646 37 L27.8646 48 Q32 51 36.1354 48 L36.1354 37 Z" fill="#583e3a"/><path d="M34.3354 38 L36.1354 37 L36.1354 48 L34.3354 49 Z" fill="#ae783b" opacity="0.8"/>
+  
+
+  <ellipse cx="20.6808" cy="30" rx="1.720735" ry="3.07921" fill="#583e3a"/>
+  <ellipse cx="43.3192" cy="30" rx="1.720735" ry="3.07921" fill="#855236"/><path d="M44.2192 27.735875 Q44.977675 30 44.0192 32.71695" stroke="#ae783b" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.5026 11 43.3368 16 43.3368 24 C43.3368 30 42.736799999999995 33 42.78 38 L35.9932 42.744 Q32 44.444 28.0068 42.744 L21.22 38 C21.2632 33 20.6632 30 20.6632 24 C20.6632 16 23.4974 11 32 11 Z" fill="#855236"/>
+  <g clip-path="url(#pf2h)">
+    <path d="M0 0 L30.639584 9 C25.76476 20 26.558336 31 30.5 48 L0 64 Z" fill="#583e3a"/>
+    <path d="M35.40104 34.5 L42.5368 31.5 L42.28 39 Z" fill="#704938" opacity="0.3"/>
+    <path d="M64 0 L41.5368 12 L42.0368 30 L40.980000000000004 40.5 L64 64 Z" fill="#ae783b"/>
+        
+    
+    
+    <g transform="translate(0 -0.4955999999999996)"><path d="M22.6632 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#704938"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 29.5044 L30.27404 34.9235 L32.7 35.723499999999994 L31.6 34.4235 Z" fill="#583e3a"/>
+    <path d="M32.9 33.0235 L33.5 35.0235 L32.7 35.723499999999994 Z" fill="#ae783b" opacity="0.7"/>
+    <path d="M30.661700000000003 35.823499999999996 Q32 36.1735 33.250640000000004 35.823499999999996" stroke="#583223" stroke-width="0.7" fill="none" stroke-linecap="round"/><circle cx="32.9" cy="35.0235" r="0.75" fill="#ae783b" opacity="0.6"/><path d="M24.911299999999997 28.45628 Q27.4413 27.35846 29.9713 28.52044 Q27.4413 29.470835 24.911299999999997 28.45628 Z" fill="#120d0b"/><circle cx="27.9913" cy="28.2501725" r="0.45" fill="#fff" opacity="0.85"/><path d="M34.0287 28.52044 Q36.5587 27.35846 39.0887 28.45628 Q36.5587 29.470835 34.0287 28.52044 Z" fill="#120d0b"/><circle cx="37.1087" cy="28.2501725" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.7413 23.881750000000004 Q26.8373 23.929145000000005 24.461299999999998 24.306320000000003 L24.461299999999998 24.739080000000005 Q26.8373 24.902855000000002 29.7413 24.96365 Z" fill="#604527"/><path d="M34.258700000000005 23.881750000000004 Q37.16270000000001 23.929145000000005 39.538700000000006 24.306320000000003 L39.538700000000006 24.739080000000005 Q37.16270000000001 24.902855000000002 34.258700000000005 24.96365 Z" fill="#604527"/><path d="M29.3095 39.708999999999996 Q32 40.608999999999995 34.6905 39.708999999999996" stroke="#583223" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.1095 40.409 Q32 42.4105 33.8905 40.409 Z" fill="#834c35"/>
+  <g transform="translate(0 -0.29)"></g>
+  <g fill="#2b1e19" opacity="0.85" clip-path="url(#pf2h)"><rect x="30.1" y="38.044" width="0.55" height="3.2"/><rect x="31" y="38.044" width="0.35" height="3.2"/><rect x="31.5" y="38.044" width="0.55" height="3.2"/><rect x="32.6" y="38.044" width="0.35" height="3.2"/><rect x="33.1" y="38.044" width="0.55" height="3.2"/><rect x="33.9" y="38.044" width="0.35" height="3.2"/></g>
+  
+  
+  
+  
+
+  <g >
+  
+  
+  
+  <path d="M34.26736 12.5 Q42.3368 14 42.736799999999995 21" stroke="#ae783b" stroke-width="1" fill="none" opacity="0.6"/>
+  </g>
+  
+
+  
+  <path d="M29.3 27.4 L31 28.6 L33 28.6 L34.7 27.4 M32 28.6 V31" stroke="#ff3d5f" stroke-width="0.55" fill="none" stroke-linejoin="round" opacity="0.5"/>
+        <circle cx="32" cy="31" r="0.6" fill="#ff3d5f" opacity="0.5"/>
+  
+  
+</svg></span>
+    <span class="pc__who"><span><strong>Crow</strong> <span class="muted">tech</span></span>
+      <span class="pc__big t-short">Stealth <b>7</b></span>
+      <span class="pc__rest"><span class="t-short">Social 5</span> · <span class="t-short">Medical 5</span></span>
+      <span class="pc__gain">1 point from pro</span></span>
+    <span class="pc__side"><span class="ready">ready</span></span>
+  </button></li><li><button class="pc ">
+    <span class="pface" style="width:44px;height:44px"><svg class="art portrait" viewBox="9 6 46 46" width="44" height="44" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf3bg" x1="1" x2="0"><stop offset="0" stop-color="#9b8cff" stop-opacity="0.28"/><stop offset="0.65" stop-color="#9b8cff" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf3h"><path d="M32 11 C41.772800000000004 11 45.0304 16 45.0304 24 C45.0304 30 44.4304 33 42.792 38 L38 43.582 Q32 45.282000000000004 26 43.582 L21.208 38 C19.5696 33 18.9696 30 18.9696 24 C18.9696 16 22.2272 11 32 11 Z"/></clipPath>
+    <clipPath id="pf3s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf3t"><path d="M21.9696 21 C20.4696 9 22.9696 4.5 32 4.5 C44.0304 5 47.0304 15 45.8304 26 C44.4304 22 43.0304 19.5 41.0304 18.6 C33 18 30 19.5 21.9696 21 Z"/></clipPath>
+    
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf3bg)"/>
+  
+
+  <g >
+  
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#262b36"/>
+  <g clip-path="url(#pf3s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#525082"/><path d="M27 46 L32 54 L37 46 Z" fill="#191c23"/></g>
+  
+  <path d="M27.6266 37 L27.6266 48 Q32 51 36.373400000000004 48 L36.373400000000004 37 Z" fill="#7e5e54"/><path d="M34.57340000000001 38 L36.373400000000004 37 L36.373400000000004 48 L34.57340000000001 49 Z" fill="#b68a9e" opacity="0.8"/>
+  
+
+  <ellipse cx="19.2296" cy="30" rx="2.111755" ry="3.77893" fill="#7e5e54"/>
+  <ellipse cx="44.7704" cy="30" rx="2.111755" ry="3.77893" fill="#c68863"/><path d="M45.6704 27.221375000000002 Q46.737575 30 45.4704 33.33435" stroke="#b68a9e" stroke-width="0.9" fill="none"/>
+  <circle cx="45.0304" cy="34" r="0.9" fill="#f2b544"/>
+
+  <path d="M32 11 C41.772800000000004 11 45.0304 16 45.0304 24 C45.0304 30 44.4304 33 42.792 38 L38 43.582 Q32 45.282000000000004 26 43.582 L21.208 38 C19.5696 33 18.9696 30 18.9696 24 C18.9696 16 22.2272 11 32 11 Z" fill="#c68863"/>
+  <g clip-path="url(#pf3h)">
+    <path d="M0 0 L30.436352 9 C24.83328 20 25.745408 31 30.5 48 L0 64 Z" fill="#7e5e54"/>
+    <path d="M35.90912 34.5 L44.2304 31.5 L42.292 39 Z" fill="#a4745c" opacity="0.55"/>
+    <path d="M64 0 L43.2304 12 L43.7304 30 L40.992000000000004 40.5 L64 64 Z" fill="#b68a9e"/>
+        
+    
+    <path d="M17.9696 15 L22.9696 15 L21.9696 27 L17.9696 27 Z" fill="#563820" opacity="0.3"/><path d="M18.7696 17.5 l2.4 2.4 l-2.4 2.4 M20.3696 23.6 h2.2" stroke="#9b8cff" stroke-width="0.5" fill="none" opacity="0.7"/>
+    <g transform="translate(0 -0.09410000000000096)"><path d="M20.9696 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#a4745c"/></g>
+    <g fill="#976244"><circle cx="28.6" cy="33.105900000000005" r="0.32"/><circle cx="29.8" cy="32.305899999999994" r="0.32"/><circle cx="30.9" cy="33.5059" r="0.32"/><circle cx="33.2" cy="32.5059" r="0.32"/><circle cx="34.4" cy="33.305899999999994" r="0.32"/><circle cx="35.6" cy="32.4059" r="0.32"/><circle cx="27.5" cy="34.2059" r="0.32"/><circle cx="36.6" cy="33.9059" r="0.32"/><circle cx="31.8" cy="31.505899999999997" r="0.32"/></g>
+    
+  </g>
+
+  <path d="M31.5 29.9059 L30.527 34.5509 L32.7 35.350899999999996 L31.6 34.0509 Z" fill="#7e5e54"/>
+    <path d="M32.9 32.6509 L33.5 34.6509 L32.7 35.350899999999996 Z" fill="#b68a9e" opacity="0.7"/>
+    <path d="M30.872500000000002 35.4509 Q32 35.8009 33.082 35.4509" stroke="#784d3a" stroke-width="0.7" fill="none" stroke-linecap="round"/><circle cx="32.9" cy="34.6509" r="0.75" fill="#b68a9e" opacity="0.6"/><clipPath id="pf3e-1"><path d="M25.3031 28.79082 Q27.4281 26.18914 29.5531 28.94426 Q27.4281 30.237139999999997 25.3031 28.79082 Z"/></clipPath><path d="M25.3031 28.79082 Q27.4281 26.18914 29.5531 28.94426 Q27.4281 30.237139999999997 25.3031 28.79082 Z" fill="#e0ccbb"/><circle cx="27.7281" cy="28.705019999999998" r="1.3175" fill="#120d0b" clip-path="url(#pf3e-1)"/><path d="M25.3031 28.79082 Q27.4281 26.18914 29.5531 28.94426" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.9781" cy="28.303259999999998" r="0.45" fill="#fff" opacity="0.85"/><clipPath id="pf3e1"><path d="M34.4469 28.94426 Q36.5719 26.18914 38.6969 28.79082 Q36.5719 30.237139999999997 34.4469 28.94426 Z"/></clipPath><path d="M34.4469 28.94426 Q36.5719 26.18914 38.6969 28.79082 Q36.5719 30.237139999999997 34.4469 28.94426 Z" fill="#e0ccbb"/><circle cx="36.8719" cy="28.705019999999998" r="1.3175" fill="#120d0b" clip-path="url(#pf3e1)"/><path d="M34.4469 28.94426 Q36.5719 26.18914 38.6969 28.79082" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.1219" cy="28.303259999999998" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.7281 23.867350000000002 Q27.04685 23.435835 24.8531 24.600860000000004 L24.8531 25.44554 Q27.04685 25.336365000000004 29.7281 25.97905 Z" fill="#352316"/><path d="M34.2719 23.867350000000002 Q36.95315 23.435835 39.1469 24.600860000000004 L39.1469 25.44554 Q36.95315 25.336365000000004 34.2719 25.97905 Z" fill="#352316"/><path d="M29.3565 40.612 Q31 39.97325 32 40.2606875 Q33 39.97325 34.6435 40.612 Z" fill="#b27156" opacity="0.8"/><path d="M28.8565 40.612 Q32 41.512 35.1435 40.612" stroke="#784d3a" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M29.6565 41.312000000000005 Q32 43.22990000000001 34.343500000000006 41.312000000000005 Z" fill="#b8785a"/>
+  <g transform="translate(0 0.61)"></g>
+  
+  
+  
+  
+  <g fill="#9b8cff" fill-opacity="0.12" stroke="#0d0d0f" stroke-width="0.8"><rect x="24.5031" y="26.9059" width="5.85" height="4.2" rx="1.2"/><rect x="33.6469" y="26.9059" width="5.85" height="4.2" rx="1.2"/></g><path d="M30.353099999999998 28.5059 H33.6469" stroke="#0d0d0f" stroke-width="0.8"/>
+
+  <g >
+  <path d="M21.9696 21 C20.4696 9 22.9696 4.5 32 4.5 C44.0304 5 47.0304 15 45.8304 26 C44.4304 22 43.0304 19.5 41.0304 18.6 C33 18 30 19.5 21.9696 21 Z" fill="#563820" />
+    <g clip-path="url(#pf3t)"><path d="M35.2576 0 L64 0 L64 30 L39.81824 30 Z" fill="#796290" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  
+  <path d="M29.3 27.4 L31 28.6 L33 28.6 L34.7 27.4 M32 28.6 V31" stroke="#3de8d8" stroke-width="0.55" fill="none" stroke-linejoin="round" opacity="0.5"/>
+        <circle cx="32" cy="31" r="0.6" fill="#3de8d8" opacity="0.5"/>
+  
+  
+</svg></span>
+    <span class="pc__who"><span><strong>Plug</strong> <span class="muted">driver</span></span>
+      <span class="pc__big t-short">Social <b>6</b></span>
+      <span class="pc__rest"><span class="t-short">Stealth 2</span> · <span class="t-short">Medical 6</span></span>
+      <span class="pc__gain">learns on the job</span></span>
+    <span class="pc__side"><span class="ready">ready</span></span>
+  </button></li><li><button class="pc ">
+    <span class="pface" style="width:44px;height:44px"><svg class="art portrait" viewBox="9 6 46 46" width="44" height="44" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf4bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf4h"><path d="M32 11 C40.298 11 43.064 16 43.064 24 C43.064 30 42.464 33 39.164 38 L35.773 43.978 Q32 45.678000000000004 28.227 43.978 L24.836 38 C21.536 33 20.936 30 20.936 24 C20.936 16 23.701999999999998 11 32 11 Z"/></clipPath>
+    <clipPath id="pf4s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf4t"><path d="M20.536 25 C19.936 13 22.936 8.6 32 8.4 C41.064 8.6 44.064 13 43.464 25 C42.064 20 40.064 17.2 32 16.8 C23.936 17.2 21.936 20 20.536 25 Z"/></clipPath>
+    
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf4bg)"/>
+  
+
+  <g >
+  
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#33291f"/>
+  <g clip-path="url(#pf4s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#377265"/><path d="M27 46 L32 54 L37 46 Z" fill="#211b14"/></g>
+  
+  <path d="M28.1432 37 L28.1432 48 Q32 51 35.8568 48 L35.8568 37 Z" fill="#654741"/><path d="M34.0568 38 L35.8568 37 L35.8568 48 L34.0568 49 Z" fill="#77947b" opacity="0.8"/>
+  
+
+  <ellipse cx="21.1304" cy="30" rx="1.7134199999999997" ry="3.0661199999999997" fill="#654741"/>
+  <ellipse cx="42.869600000000005" cy="30" rx="1.7134199999999997" ry="3.0661199999999997" fill="#9a6142"/><path d="M43.769600000000004 27.7455 Q44.5223 30 43.5696 32.7054" stroke="#77947b" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.298 11 43.064 16 43.064 24 C43.064 30 42.464 33 39.164 38 L35.773 43.978 Q32 45.678000000000004 28.227 43.978 L24.836 38 C21.536 33 20.936 30 20.936 24 C20.936 16 23.701999999999998 11 32 11 Z" fill="#9a6142"/>
+  <g clip-path="url(#pf4h)">
+    <path d="M0 0 L30.67232 9 C25.9148 20 26.68928 31 30.5 48 L0 64 Z" fill="#654741"/>
+    <path d="M35.3192 34.5 L42.264 31.5 L38.664 39 Z" fill="#815542" opacity="0.55"/>
+    <path d="M64 0 L41.264 12 L41.764 30 L37.364000000000004 40.5 L64 64 Z" fill="#77947b"/>
+        
+    
+    
+    <g transform="translate(0 -0.4878999999999998)"><path d="M22.936 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#815542"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 29.5121 L29.88644 34.6724 L32.7 35.4724 L31.6 34.1724 Z" fill="#654741"/>
+    <path d="M32.9 32.772400000000005 L33.5 34.772400000000005 L32.7 35.4724 Z" fill="#77947b" opacity="0.7"/>
+    <path d="M30.338700000000003 35.5724 Q32 35.9224 33.50904 35.5724" stroke="#623a29" stroke-width="0.7" fill="none" stroke-linecap="round"/><ellipse cx="27.532600000000002" cy="28.1121" rx="3.327" ry="2.48365" fill="#815542" opacity="0.75"/><clipPath id="pf4e-1"><path d="M25.205600000000004 27.990940000000002 Q27.532600000000002 26.17108 29.8596 28.68582 Q27.532600000000002 29.580205 25.205600000000004 27.990940000000002 Z"/></clipPath><path d="M25.205600000000004 27.990940000000002 Q27.532600000000002 26.17108 29.8596 28.68582 Q27.532600000000002 29.580205 25.205600000000004 27.990940000000002 Z" fill="#d5c2b3"/><circle cx="27.832600000000003" cy="28.3495525" r="1.44274" fill="#120d0b" clip-path="url(#pf4e-1)"/><path d="M25.205600000000004 27.990940000000002 Q27.532600000000002 26.17108 29.8596 28.68582" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="28.082600000000003" cy="28.0244575" r="0.45" fill="#fff" opacity="0.85"/><ellipse cx="36.4674" cy="28.1121" rx="3.327" ry="2.48365" fill="#815542" opacity="0.75"/><clipPath id="pf4e1"><path d="M34.1404 28.68582 Q36.4674 26.17108 38.794399999999996 27.990940000000002 Q36.4674 29.580205 34.1404 28.68582 Z"/></clipPath><path d="M34.1404 28.68582 Q36.4674 26.17108 38.794399999999996 27.990940000000002 Q36.4674 29.580205 34.1404 28.68582 Z" fill="#d5c2b3"/><circle cx="36.767399999999995" cy="28.3495525" r="1.44274" fill="#120d0b" clip-path="url(#pf4e1)"/><path d="M34.1404 28.68582 Q36.4674 26.17108 38.794399999999996 27.990940000000002" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.017399999999995" cy="28.0244575" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.832600000000003 23.24745 Q27.04025 22.653665 24.7556 23.966140000000003 L24.7556 24.79106 Q27.04025 24.509735000000003 29.832600000000003 25.30975 Z" fill="#352316"/><path d="M34.1674 23.24745 Q36.95975 22.653665 39.2444 23.966140000000003 L39.2444 24.79106 Q36.95975 24.509735000000003 34.1674 25.30975 Z" fill="#352316"/><path d="M30.2955 40.3195 Q31 39.52265 32 39.881232499999996 Q33 39.52265 33.7045 40.3195 Z" fill="#92543d" opacity="0.8"/><path d="M29.7955 40.3195 Q32 41.2195 34.2045 40.3195" stroke="#623a29" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.5955 41.0195 Q32 43.0571 33.404500000000006 41.0195 Z" fill="#94583f"/>
+  <g transform="translate(0 0.32)"></g>
+  <path d="M23.936 22.5 L26.936 27" stroke="#bd8a75" stroke-width="0.7"/>
+  
+  
+  
+  <g fill="#3de8d8" fill-opacity="0.12" stroke="#0d0d0f" stroke-width="0.8"><rect x="24.405600000000003" y="26.5121" width="6.254" height="4.2" rx="1.2"/><rect x="33.340399999999995" y="26.5121" width="6.254" height="4.2" rx="1.2"/></g><path d="M30.659600000000005 28.1121 H33.340399999999995" stroke="#0d0d0f" stroke-width="0.8"/>
+
+  <g >
+  <path d="M20.536 25 C19.936 13 22.936 8.6 32 8.4 C41.064 8.6 44.064 13 43.464 25 C42.064 20 40.064 17.2 32 16.8 C23.936 17.2 21.936 20 20.536 25 Z" fill="#563820" />
+    <g clip-path="url(#pf4t)"><path d="M34.766 0 L64 0 L64 30 L38.6384 30 Z" fill="#4a907c" opacity="0.75"/>
+    <g stroke="#382415" stroke-width="0.5" fill="none"><path d="M22.936 21 Q30 11 41.064 13"/><path d="M24.936 19 Q32 12 42.064 17"/></g><path d="M33.6596 11 Q41.064 12 42.264 19" stroke="#fff" stroke-width="0.9" fill="none" opacity="0.35"/></g>
+  
+  
+  
+  </g>
+  
+
+  
+  <path d="M41.464 19 L39.564 21.5 L39.564 24.5 L39.8 25.2 M39.564 22.6 L41.664 23.6" stroke="#3de8d8" stroke-width="0.55" fill="none" stroke-linejoin="round" opacity="0.5"/>
+        <circle cx="39.8" cy="25.2" r="0.6" fill="#3de8d8" opacity="0.5"/>
+  
+  
+</svg></span>
+    <span class="pc__who"><span><strong>Dim Sum</strong> <span class="muted">tech</span></span>
+      <span class="pc__big t-short">Stealth <b>6</b></span>
+      <span class="pc__rest"><span class="t-short">Social 5</span> · <span class="t-short">Medical 2</span></span>
+      <span class="pc__gain">learns on the job</span></span>
+    <span class="pc__side"><span class="ready">ready</span></span>
+  </button></li></ul>
+    <h3 class="grp grp--free">Freelancers <span>they take a cut of the pay</span></h3>
+    <ul class="pcs"><li><button class="pc pc--free">
+    <span class="pface" style="width:44px;height:44px"><svg class="art portrait" viewBox="9 6 46 46" width="44" height="44" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf5bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf5h"><path d="M32 11 C40.4858 11 43.3144 16 43.3144 24 C43.3144 30 42.7144 33 39.224000000000004 38 L35.3494 45.124 Q32 46.824000000000005 28.6506 45.124 L24.776 38 C21.285600000000002 33 20.6856 30 20.6856 24 C20.6856 16 23.5142 11 32 11 Z"/></clipPath>
+    <clipPath id="pf5s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf5t"><path d="M19.8856 27 C18.8856 17 21.6856 8 32 7.5 C42.3144 8 45.114399999999996 16 44.114399999999996 26 C42.7144 22 41.3144 19.5 39.3144 18.6 C33 18 30 20 28 19 C25 18.5 22.6856 20 19.8856 27 Z"/></clipPath>
+    
+    <clipPath id="pf5u"><path d="M0 64 L0 21.5 L11 21.5 L32 6.8 L53 21.5 L64 21.5 L64 64 Z"/></clipPath>
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf5bg)"/>
+  
+
+  <g clip-path="url(#pf5u)">
+  
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#2b2433"/>
+  <g clip-path="url(#pf5s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#326e72"/><path d="M27 46 L32 54 L37 46 Z" fill="#1c1721"/></g>
+  
+  <path d="M28.0382 37 L28.0382 48 Q32 51 35.9618 48 L35.9618 37 Z" fill="#654741"/><path d="M34.1618 38 L35.9618 37 L35.9618 48 L34.1618 49 Z" fill="#77947b" opacity="0.8"/>
+  
+
+  <ellipse cx="20.7816" cy="30" rx="1.81982" ry="3.25652" fill="#654741"/>
+  <ellipse cx="43.2184" cy="30" rx="1.81982" ry="3.25652" fill="#9a6142"/><path d="M44.1184 27.6055 Q44.9551 30 43.9184 32.873400000000004" stroke="#77947b" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.4858 11 43.3144 16 43.3144 24 C43.3144 30 42.7144 33 39.224000000000004 38 L35.3494 45.124 Q32 46.824000000000005 28.6506 45.124 L24.776 38 C21.285600000000002 33 20.6856 30 20.6856 24 C20.6856 16 23.5142 11 32 11 Z" fill="#9a6142"/>
+  <g clip-path="url(#pf5h)">
+    <path d="M0 0 L30.642272 9 C25.777079999999998 20 26.569088 31 30.5 48 L0 64 Z" fill="#654741"/>
+    <path d="M34.8286 33 L42.5144 29.8 L38.724000000000004 37.6 Z" fill="#815542" opacity="0.75"/>
+    <path d="M64 0 L41.5144 12 L42.0144 30 L37.42400000000001 40.5 L64 64 Z" fill="#77947b"/>
+        <path d="M20.6856 36 Q32 50 43.3144 36 L43.3144 50 L20.6856 50 Z" fill="#7dd3fc" opacity="0.28"/>
+    
+    
+    <g transform="translate(0 -0.31629999999999825)"><path d="M22.6856 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#815542"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 29.6837 L29.5988 35.2502 L32.7 36.0502 L31.6 34.7502 Z" fill="#654741"/>
+    <path d="M32.9 33.3502 L33.5 35.3502 L32.7 36.0502 Z" fill="#77947b" opacity="0.7"/>
+    <path d="M30.099 36.1502 Q32 36.5002 33.7008 36.1502" stroke="#623a29" stroke-width="0.7" fill="none" stroke-linecap="round"/><path d="M29.799 34.8502 Q28.898999999999997 35.7502 30.198999999999998 36.2502 M33.8008 34.8502 Q34.7008 35.7502 33.4008 36.2502" stroke="#815542" stroke-width="0.55" fill="none"/><path d="M24.744200000000003 28.160380000000004 Q27.066200000000002 26.974660000000004 29.3882 28.858140000000002 Q27.066200000000002 29.592910000000003 24.744200000000003 28.160380000000004 Z" fill="#120d0b"/><circle cx="27.616200000000003" cy="28.338415" r="0.45" fill="#fff" opacity="0.85"/><path d="M25.244200000000003 27.660380000000004 Q27.066200000000002 25.374660000000002 28.8882 28.358140000000002" stroke="#623a29" stroke-width="0.4" fill="none" opacity="0.55"/><path d="M34.611799999999995 28.858140000000002 Q36.9338 26.974660000000004 39.2558 28.160380000000004 Q36.9338 29.592910000000003 34.611799999999995 28.858140000000002 Z" fill="#120d0b"/><circle cx="37.483799999999995" cy="28.338415" r="0.45" fill="#fff" opacity="0.85"/><path d="M35.111799999999995 28.358140000000002 Q36.9338 25.374660000000002 38.7558 27.660380000000004" stroke="#623a29" stroke-width="0.4" fill="none" opacity="0.55"/>
+  <path d="M29.366200000000003 24.17285 Q26.576600000000003 23.608075000000003 24.294200000000004 24.616800000000005 L24.294200000000004 25.075400000000002 Q26.576600000000003 24.639925 29.366200000000003 25.319350000000004 Z" fill="#4b798f"/><path d="M34.6338 24.17285 Q37.4234 23.608075000000003 39.705799999999996 24.616800000000005 L39.705799999999996 25.075400000000002 Q37.4234 24.639925 34.6338 25.319350000000004 Z" fill="#4b798f"/><path d="M30.019 40.2415 Q32 41.1415 33.981 40.2415" stroke="#623a29" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.819 40.941500000000005 Q32 42.5953 33.181000000000004 40.941500000000005 Z" fill="#94583f"/>
+  <g transform="translate(0 0.24)"></g>
+  <path d="M23.6856 22.5 L26.6856 27" stroke="#bd8a75" stroke-width="0.7"/>
+  
+  
+  
+  
+
+  <g clip-path="url(#pf5u)">
+  <path d="M19.8856 27 C18.8856 17 21.6856 8 32 7.5 C42.3144 8 45.114399999999996 16 44.114399999999996 26 C42.7144 22 41.3144 19.5 39.3144 18.6 C33 18 30 20 28 19 C25 18.5 22.6856 20 19.8856 27 Z" fill="#7dd3fc" />
+    <g clip-path="url(#pf5t)"><path d="M34.8286 0 L64 0 L64 30 L38.78864 30 Z" fill="#5ddeea" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  <g clip-path="url(#pf5h)"><path d="M0 21.5 H64 V26 H0 Z" fill="#1b2340" opacity="0.45"/></g>
+    <path d="M11 21.5 L32 6.8 L53 21.5 Q32 24.9 11 21.5 Z" fill="#a8844c"/>
+    <path d="M32 6.8 L53 21.5 Q42.5 24.56 32 24.9 Z" fill="#7dac84"/>
+    <path d="M11 21.5 Q32 24.9 53 21.5 Q32 23.37 11 21.5 Z" fill="#5c492a"/>
+    <g stroke="#6d5631" stroke-width="0.4" fill="none"><path d="M25.7 11.209999999999999 Q32 12.229999999999999 38.3 11.209999999999999"/><path d="M20.45 14.885000000000002 Q32 16.755000000000003 43.55 14.885000000000002"/><path d="M15.2 18.56 Q32 21.279999999999998 48.8 18.56"/></g>
+    <path d="M20 22.9 L28 46 M44 22.9 L36 46" stroke="#3a2c1a" stroke-width="0.45"/>
+    
+    
+
+  
+  <path d="M40.7144 19 V27" stroke="#f2b544" stroke-width="1.1" stroke-linecap="round" opacity="0.5"/><circle cx="40.7144" cy="27.5" r="0.9" fill="#f2b544" opacity="0.5"/>
+  
+  
+</svg></span>
+    <span class="pc__who"><span><strong>Parity</strong> <span class="muted">freelance medic</span></span>
+      <span class="pc__big t-good">Medical <b>12</b></span>
+      <span class="pc__rest"><span class="t-short">Social 7</span> · <span class="t-short">Stealth 6</span></span>
+      </span>
+    <span class="pc__side"><span class="hire">Freelance</span><b>15%</b> of pay</span>
+  </button></li><li><button class="pc pc--free">
+    <span class="pface" style="width:44px;height:44px"><svg class="art portrait" viewBox="9 6 46 46" width="44" height="44" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf6bg" x1="1" x2="0"><stop offset="0" stop-color="#9b8cff" stop-opacity="0.28"/><stop offset="0.65" stop-color="#9b8cff" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf6h"><path d="M32 11 C40.6988 11 43.5984 16 43.5984 24 C43.5984 30 42.9984 33 42.112 38 L35.5174 42.585 Q32 44.285000000000004 28.4826 42.585 L21.887999999999998 38 C21.001600000000003 33 20.401600000000002 30 20.401600000000002 24 C20.401600000000002 16 23.3012 11 32 11 Z"/></clipPath>
+    <clipPath id="pf6s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf6t"><path d="M23.401600000000002 21 C21.901600000000002 9 24.401600000000002 4.5 32 4.5 C42.5984 5 45.5984 15 44.398399999999995 26 C42.9984 22 41.5984 19.5 39.5984 18.6 C33 18 30 19.5 23.401600000000002 21 Z"/></clipPath>
+    
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf6bg)"/>
+  
+
+  <g >
+  
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#2b2433"/>
+  <g clip-path="url(#pf6s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#564c81"/><path d="M27 46 L32 54 L37 46 Z" fill="#1c1721"/></g>
+  
+  <path d="M27.7764 37 L27.7764 48 Q32 51 36.2236 48 L36.2236 37 Z" fill="#7e5e54"/><path d="M34.4236 38 L36.2236 37 L36.2236 48 L34.4236 49 Z" fill="#b68a9e" opacity="0.8"/>
+  
+
+  <ellipse cx="20.649600000000003" cy="30" rx="1.792555" ry="3.2077299999999997" fill="#7e5e54"/>
+  <ellipse cx="43.3504" cy="30" rx="1.792555" ry="3.2077299999999997" fill="#c68863"/><path d="M44.2504 27.641375 Q45.065574999999995 30 44.050399999999996 32.83035" stroke="#b68a9e" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.6988 11 43.5984 16 43.5984 24 C43.5984 30 42.9984 33 42.112 38 L35.5174 42.585 Q32 44.285000000000004 28.4826 42.585 L21.887999999999998 38 C21.001600000000003 33 20.401600000000002 30 20.401600000000002 24 C20.401600000000002 16 23.3012 11 32 11 Z" fill="#c68863"/>
+  <g clip-path="url(#pf6h)">
+    <path d="M0 0 L30.608192 9 C25.62088 20 26.432768 31 30.5 48 L0 64 Z" fill="#7e5e54"/>
+    <path d="M35.47952 34.5 L42.7984 31.5 L41.612 39 Z" fill="#a4745c" opacity="0.3"/>
+    <path d="M64 0 L41.7984 12 L42.2984 30 L40.312000000000005 40.5 L64 64 Z" fill="#b68a9e"/>
+        
+    
+    <path d="M19.401600000000002 15 L24.401600000000002 15 L23.401600000000002 27 L19.401600000000002 27 Z" fill="#241c19" opacity="0.3"/><path d="M20.201600000000003 17.5 l2.4 2.4 l-2.4 2.4 M21.8016 23.6 h2.2" stroke="#9b8cff" stroke-width="0.5" fill="none" opacity="0.7"/>
+    <g transform="translate(0 -0.1568000000000005)"><path d="M22.401600000000002 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#a4745c"/></g>
+    <circle cx="34.8" cy="22.5" r="0.45" fill="#704831"/>
+    
+  </g>
+
+  <path d="M31.5 29.8432 L30.22508 35.1827 L32.7 35.982699999999994 L31.6 34.6827 Z" fill="#7e5e54"/>
+    <path d="M32.9 33.2827 L33.5 35.2827 L32.7 35.982699999999994 Z" fill="#b68a9e" opacity="0.7"/>
+    <path d="M30.620900000000002 36.082699999999996 Q32 36.4327 33.283280000000005 36.082699999999996" stroke="#784d3a" stroke-width="0.7" fill="none" stroke-linecap="round"/><path d="M32.6 31.4432 Q33.9 32.36295 33.1 34.482699999999994" stroke="#a4745c" stroke-width="0.5" fill="none"/><path d="M25.6831 28.96464 Q27.5601 27.35288 29.437099999999997 28.80272 Q27.5601 29.966379999999997 25.6831 28.96464 Z" fill="#120d0b"/><circle cx="28.1101" cy="28.49877" r="0.45" fill="#fff" opacity="0.85"/><path d="M34.5629 28.80272 Q36.4399 27.35288 38.316900000000004 28.96464 Q36.4399 29.966379999999997 34.5629 28.80272 Z" fill="#120d0b"/><circle cx="36.9899" cy="28.49877" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.8601 24.91355 Q27.31525 24.579225000000005 25.233099999999997 25.363200000000003 L25.233099999999997 25.829400000000003 Q27.31525 25.628175000000002 29.8601 26.079050000000002 Z" fill="#1a1412"/><path d="M34.139900000000004 24.91355 Q36.68475 24.579225000000005 38.7669 25.363200000000003 L38.7669 25.829400000000003 Q36.68475 25.628175000000002 34.139900000000004 26.079050000000002 Z" fill="#1a1412"/><path d="M29.5255 40.492 Q32 41.391999999999996 34.4745 40.492" stroke="#784d3a" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.3255 41.192 Q32 43.1194 33.6745 41.192 Z" fill="#b8785a"/>
+  <g transform="translate(0 0.49)"></g>
+  <path d="M22.901600000000002 22 L24.401600000000002 24 L23.6016 25.2 L25.401600000000002 28" stroke="#daa38b" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>
+  
+  
+  
+  
+
+  <g >
+  <path d="M23.401600000000002 21 C21.901600000000002 9 24.401600000000002 4.5 32 4.5 C42.5984 5 45.5984 15 44.398399999999995 26 C42.9984 22 41.5984 19.5 39.5984 18.6 C33 18 30 19.5 23.401600000000002 21 Z" fill="#241c19" />
+    <g clip-path="url(#pf6t)"><path d="M34.8996 0 L64 0 L64 30 L38.95904 30 Z" fill="#60548c" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  
+  <path d="M40.9984 19 V27" stroke="#ff3d5f" stroke-width="1.1" stroke-linecap="round" opacity="0.5"/><circle cx="40.9984" cy="27.5" r="0.9" fill="#ff3d5f" opacity="0.5"/>
+  
+  
+</svg></span>
+    <span class="pc__who"><span><strong>Sampan</strong> <span class="muted">freelance driver</span></span>
+      <span class="pc__big t-short">Stealth <b>7</b></span>
+      <span class="pc__rest"><span class="t-short">Social 3</span> · <span class="t-short">Medical 3</span></span>
+      </span>
+    <span class="pc__side"><span class="hire">Freelance</span><b>15%</b> of pay</span>
+  </button></li></ul>
+    <h3 class="grp">Already on the squad <span>tap to move them here</span></h3>
+    <ul class="pcs"><li><button class="pc pc--placed">
+    <span class="pface" style="width:44px;height:44px"><svg class="art portrait" viewBox="9 6 46 46" width="44" height="44" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf7bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf7h"><path d="M32 11 C40.5578 11 43.4104 16 43.4104 24 C43.4104 30 42.8104 33 41.26 38 L35.952600000000004 47.236 Q32 48.936 28.0474 47.236 L22.740000000000002 38 C21.1896 33 20.589599999999997 30 20.589599999999997 24 C20.589599999999997 16 23.4422 11 32 11 Z"/></clipPath>
+    <clipPath id="pf7s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf7t"><path d="M20.1896 25 C19.589599999999997 13 22.589599999999997 8.6 32 8.4 C41.4104 8.6 44.4104 13 43.8104 25 C42.4104 20 40.4104 17.2 32 16.8 C23.589599999999997 17.2 21.589599999999997 20 20.1896 25 Z"/></clipPath>
+    
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf7bg)"/>
+  
+
+  <g >
+  
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#1f2b2a"/>
+  <g clip-path="url(#pf7s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#2a736c"/><path d="M27 46 L32 54 L37 46 Z" fill="#141c1b"/></g>
+  
+  <path d="M27.4712 37 L27.4712 48 Q32 51 36.528800000000004 48 L36.528800000000004 37 Z" fill="#412e2f"/><path d="M34.72880000000001 38 L36.528800000000004 37 L36.528800000000004 48 L34.72880000000001 49 Z" fill="#507a68" opacity="0.8"/>
+  
+
+  <ellipse cx="20.212799999999998" cy="30" rx="2.18291" ry="3.90626" fill="#412e2f"/>
+  <ellipse cx="43.787200000000006" cy="30" rx="2.18291" ry="3.90626" fill="#5c3623"/><path d="M44.687200000000004 27.12775 Q45.810550000000006 30 44.4872 33.4467" stroke="#507a68" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.5578 11 43.4104 16 43.4104 24 C43.4104 30 42.8104 33 41.26 38 L35.952600000000004 47.236 Q32 48.936 28.0474 47.236 L22.740000000000002 38 C21.1896 33 20.589599999999997 30 20.589599999999997 24 C20.589599999999997 16 23.4422 11 32 11 Z" fill="#5c3623"/>
+  <g clip-path="url(#pf7h)">
+    <path d="M0 0 L30.630752 9 C25.72428 20 26.523008 31 30.5 48 L0 64 Z" fill="#412e2f"/>
+    <path d="M35.42312 34.5 L42.610400000000006 31.5 L40.76 39 Z" fill="#4f3229" opacity="0.3"/>
+    <path d="M64 0 L41.610400000000006 12 L42.110400000000006 30 L39.46 40.5 L64 64 Z" fill="#507a68"/>
+        <path d="M20.589599999999997 36 Q32 50 43.4104 36 L43.4104 50 L20.589599999999997 50 Z" fill="#a37540" opacity="0.28"/>
+    
+    
+    <g transform="translate(0 0.05770000000000053)"><path d="M22.589599999999997 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#4f3229"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 30.0577 L30.56168 36.767599999999995 L32.7 37.56759999999999 L31.6 36.267599999999995 Z" fill="#412e2f"/>
+    <path d="M32.9 34.867599999999996 L33.5 36.867599999999996 L32.7 37.56759999999999 Z" fill="#507a68" opacity="0.7"/>
+    <path d="M30.901400000000002 37.66759999999999 Q32 38.017599999999995 33.05888 37.66759999999999" stroke="#43241a" stroke-width="0.7" fill="none" stroke-linecap="round"/><path d="M30.6014 36.367599999999996 Q29.7014 37.267599999999995 31.0014 37.767599999999995 M33.15888 36.367599999999996 Q34.05888 37.267599999999995 32.75888 37.767599999999995" stroke="#4f3229" stroke-width="0.55" fill="none"/><ellipse cx="27.4974" cy="28.657700000000002" rx="3.1350000000000002" ry="2.75915" fill="#4f3229" opacity="0.75"/><clipPath id="pf7e-1"><path d="M25.362399999999997 28.96746 Q27.4974 26.30932 29.6324 29.087780000000002 Q27.4974 30.407194999999998 25.362399999999997 28.96746 Z"/></clipPath><path d="M25.362399999999997 28.96746 Q27.4974 26.30932 29.6324 29.087780000000002 Q27.4974 30.407194999999998 25.362399999999997 28.96746 Z" fill="#c5b7ab"/><circle cx="27.7974" cy="28.8538275" r="1.3237" fill="#120d0b" clip-path="url(#pf7e-1)"/><path d="M25.362399999999997 28.96746 Q27.4974 26.30932 29.6324 29.087780000000002" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="28.0474" cy="28.4460825" r="0.45" fill="#fff" opacity="0.85"/><ellipse cx="36.5026" cy="28.657700000000002" rx="3.1350000000000002" ry="2.75915" fill="#4f3229" opacity="0.75"/><clipPath id="pf7e1"><path d="M34.3676 29.087780000000002 Q36.5026 26.30932 38.6376 28.96746 Q36.5026 30.407194999999998 34.3676 29.087780000000002 Z"/></clipPath><path d="M34.3676 29.087780000000002 Q36.5026 26.30932 38.6376 28.96746 Q36.5026 30.407194999999998 34.3676 29.087780000000002 Z" fill="#c5b7ab"/><circle cx="36.8026" cy="28.8538275" r="1.3237" fill="#120d0b" clip-path="url(#pf7e1)"/><path d="M34.3676 29.087780000000002 Q36.5026 26.30932 38.6376 28.96746" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.0526" cy="28.4460825" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.7974 23.814600000000002 Q27.11065 23.475640000000002 24.912399999999998 24.644440000000003 L24.912399999999998 25.617560000000005 Q27.11065 25.665160000000004 29.7974 26.247400000000003 Z" fill="#604527"/><path d="M34.202600000000004 23.814600000000002 Q36.88935 23.475640000000002 39.0876 24.644440000000003 L39.0876 25.617560000000005 Q36.88935 25.665160000000004 34.202600000000004 26.247400000000003 Z" fill="#604527"/><path d="M28.6945 40.0525 Q32 40.9525 35.3055 40.0525" stroke="#43241a" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M29.494500000000002 40.752500000000005 Q32 41.6349 34.505500000000005 40.752500000000005 Z" fill="#613525"/>
+  <g transform="translate(0 0.05)"></g>
+  <g stroke="#3de8d8" stroke-width="0.5" fill="none" opacity="0.75"><path d="M23.589599999999997 31 L26.089599999999997 35.5 L21.389599999999998 35.5 Z"/><path d="M22.989599999999996 37.3 h4 M23.789599999999997 38.6 h2.4"/></g>
+  
+  
+  
+  
+
+  <g >
+  <path d="M20.1896 25 C19.589599999999997 13 22.589599999999997 8.6 32 8.4 C41.4104 8.6 44.4104 13 43.8104 25 C42.4104 20 40.4104 17.2 32 16.8 C23.589599999999997 17.2 21.589599999999997 20 20.1896 25 Z" fill="#a37540" />
+    <g clip-path="url(#pf7t)"><path d="M34.8526 0 L64 0 L64 30 L38.84624 30 Z" fill="#70af8c" opacity="0.75"/>
+    <g stroke="#6a4c2a" stroke-width="0.5" fill="none"><path d="M22.589599999999997 21 Q30 11 41.4104 13"/><path d="M24.589599999999997 19 Q32 12 42.4104 17"/></g><path d="M33.71156 11 Q41.4104 12 42.610400000000006 19" stroke="#fff" stroke-width="0.9" fill="none" opacity="0.35"/></g>
+  
+  
+  
+  </g>
+  
+
+  
+  <path d="M41.8104 19 L39.9104 21.5 L39.9104 24.5 L39.8 25.2 M39.9104 22.6 L42.010400000000004 23.6" stroke="#ff3d5f" stroke-width="0.55" fill="none" stroke-linejoin="round" opacity="0.5"/>
+        <circle cx="39.8" cy="25.2" r="0.6" fill="#ff3d5f" opacity="0.5"/>
+  
+  
+</svg></span>
+    <span class="pc__who"><span><strong>Vector</strong> <span class="muted">face</span></span>
+      <span class="pc__big t-good">Social <b>12</b></span>
+      <span class="pc__rest"><span class="t-short">Stealth 7</span> · <span class="t-short">Medical 3</span></span>
+      <span class="pc__gain">learns on the job</span></span>
+    <span class="pc__side"><span class="where">INSIDE</span></span>
+  </button></li><li><button class="pc pc--placed">
+    <span class="pface" style="width:44px;height:44px"><svg class="art portrait" viewBox="9 6 46 46" width="44" height="44" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf8bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf8h"><path d="M32 11 C41.9354 11 45.2472 16 45.2472 24 C45.2472 30 44.6472 33 42.9 38 L35.0884 44.784 Q32 46.484 28.9116 44.784 L21.1 38 C19.352800000000002 33 18.7528 30 18.7528 24 C18.7528 16 22.0646 11 32 11 Z"/></clipPath>
+    <clipPath id="pf8s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    
+    <clipPath id="pf8b"><path d="M16.2528 30 C14.7528 6 49.2472 6 47.7472 30 Z"/></clipPath>
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf8bg)"/>
+  
+
+  <g >
+  <path d="M16.2528 30 C14.7528 6 49.2472 6 47.7472 30 Z" fill="#17171b"/>
+  <g fill="#17171b"><circle cx="19.7528" cy="18" r="5.2"/><circle cx="24.7528" cy="12.5" r="5.6"/><circle cx="32" cy="10.5" r="5.8"/><circle cx="39.2472" cy="12" r="5.6"/><circle cx="44.2472" cy="17.5" r="5.2"/><circle cx="17.7528" cy="25" r="4"/><circle cx="46.2472" cy="24" r="4"/></g><path d="M16.2528 30 C14.7528 6 49.2472 6 47.7472 30 Z" fill="#17171b"/>
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#1f2b2a"/>
+  <g clip-path="url(#pf8s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#2a736c"/><path d="M27 46 L32 54 L37 46 Z" fill="#141c1b"/></g>
+  
+  <path d="M27.8702 37 L27.8702 48 Q32 51 36.1298 48 L36.1298 37 Z" fill="#7e5e54"/><path d="M34.329800000000006 38 L36.1298 37 L36.1298 48 L34.329800000000006 49 Z" fill="#92ac8f" opacity="0.8"/>
+  
+
+  <ellipse cx="18.3168" cy="30" rx="1.6535699999999998" ry="2.9590199999999998" fill="#7e5e54"/>
+  <ellipse cx="45.6832" cy="30" rx="1.6535699999999998" ry="2.9590199999999998" fill="#c68863"/><path d="M46.5832 27.82425 Q47.28865 30 46.383199999999995 32.6109" stroke="#92ac8f" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C41.9354 11 45.2472 16 45.2472 24 C45.2472 30 44.6472 33 42.9 38 L35.0884 44.784 Q32 46.484 28.9116 44.784 L21.1 38 C19.352800000000002 33 18.7528 30 18.7528 24 C18.7528 16 22.0646 11 32 11 Z" fill="#c68863"/>
+  <g clip-path="url(#pf8h)">
+    <path d="M0 0 L30.410336 9 C24.71404 20 25.641344 31 30.5 48 L0 64 Z" fill="#7e5e54"/>
+    <path d="M35.97416 34.5 L44.4472 31.5 L42.4 39 Z" fill="#a4745c" opacity="0.55"/>
+    <path d="M64 0 L43.4472 12 L43.9472 30 L41.1 40.5 L64 64 Z" fill="#92ac8f"/>
+        
+    
+    
+    <g transform="translate(0 0.21170000000000044)"><path d="M20.7528 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#a4745c"/></g>
+    <circle cx="26" cy="34" r="0.45" fill="#704831"/>
+    
+  </g>
+
+  <path d="M31.5 30.2117 L28.90316 34.2593 L32.7 35.0593 L31.6 33.7593 Z" fill="#7e5e54"/>
+    <path d="M32.9 32.359300000000005 L33.5 34.359300000000005 L32.7 35.0593 Z" fill="#92ac8f" opacity="0.7"/>
+    <path d="M29.5193 35.1593 Q32 35.5093 34.16456 35.1593" stroke="#784d3a" stroke-width="0.7" fill="none" stroke-linecap="round"/><clipPath id="pf8e-1"><path d="M24.9893 29.1463 Q27.3643 26.9998 29.7393 29.2335 Q27.3643 30.437425 24.9893 29.1463 Z"/></clipPath><path d="M24.9893 29.1463 Q27.3643 26.9998 29.7393 29.2335 Q27.3643 30.437425 24.9893 29.1463 Z" fill="#e0ccbb"/><circle cx="27.6643" cy="29.0474425" r="1.4725" fill="#120d0b" clip-path="url(#pf8e-1)"/><path d="M24.9893 29.1463 Q27.3643 26.9998 29.7393 29.2335" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.9143" cy="28.7189275" r="0.45" fill="#fff" opacity="0.85"/><path d="M28.5518 27.21665 Q25.9393 27.01665 24.5893 29.3463 Q26.4143 28.226155000000002 28.5518 27.21665 Z" fill="#a4745c"/><clipPath id="pf8e1"><path d="M34.2607 29.2335 Q36.6357 26.9998 39.0107 29.1463 Q36.6357 30.437425 34.2607 29.2335 Z"/></clipPath><path d="M34.2607 29.2335 Q36.6357 26.9998 39.0107 29.1463 Q36.6357 30.437425 34.2607 29.2335 Z" fill="#e0ccbb"/><circle cx="36.9357" cy="29.0474425" r="1.4725" fill="#120d0b" clip-path="url(#pf8e1)"/><path d="M34.2607 29.2335 Q36.6357 26.9998 39.0107 29.1463" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.1857" cy="28.7189275" r="0.45" fill="#fff" opacity="0.85"/><path d="M35.4482 27.21665 Q38.0607 27.01665 39.4107 29.3463 Q37.5857 28.226155000000002 35.4482 27.21665 Z" fill="#a4745c"/>
+  <path d="M29.6643 24.917500000000004 Q26.84555 24.130190000000002 24.5393 25.240040000000004 L24.5393 25.536760000000005 Q26.84555 24.797810000000002 29.6643 25.6593 Z" fill="#131113"/><path d="M34.3357 24.917500000000004 Q37.154450000000004 24.130190000000002 39.4607 25.240040000000004 L39.4607 25.536760000000005 Q37.154450000000004 24.797810000000002 34.3357 25.6593 Z" fill="#131113"/><path d="M29.7315 40.294 Q31 39.395149999999994 32 39.799632499999994 Q33 39.395149999999994 34.2685 40.294 Z" fill="#b27156" opacity="0.8"/><path d="M29.2315 40.294 Q32 41.193999999999996 34.7685 40.294" stroke="#784d3a" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.0315 40.994 Q32 42.0322 33.968500000000006 40.994 Z" fill="#b8785a"/>
+  <g transform="translate(0 0.29)"></g>
+  <path d="M21.2528 22 L22.7528 24 L21.9528 25.2 L23.7528 28" stroke="#daa38b" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>
+  
+  
+  
+  
+
+  <g >
+  
+  <g fill="#2a807a" opacity="0.55"><circle cx="39.2472" cy="11" r="2.2"/><circle cx="43.7472" cy="16.5" r="2"/></g>
+  
+  
+  </g>
+  
+
+  
+  <path d="M43.6472 19 L41.7472 21.5 L41.7472 24.5 L39.8 25.2 M41.7472 22.6 L43.8472 23.6" stroke="#f2b544" stroke-width="0.55" fill="none" stroke-linejoin="round" opacity="0.5"/>
+        <circle cx="39.8" cy="25.2" r="0.6" fill="#f2b544" opacity="0.5"/>
+  
+  
+</svg></span>
+    <span class="pc__who"><span><strong>Siphon</strong> <span class="muted">face</span></span>
+      <span class="pc__big t-good">Social <b>13</b></span>
+      <span class="pc__rest"><span class="t-near">Stealth 9</span> · <span class="t-short">Medical 2</span></span>
+      <span class="pc__gain">2 points from pro</span></span>
+    <span class="pc__side"><span class="where">INSIDE</span></span>
+  </button></li></ul>
+    <button class="fold">Not free today (1) ▸</button>
+  </div></section>
+<section><p class="cap">Computer: a table to compare, sorted by a column</p>
+  <div class="sheet sheet--desk">
+    <div class="sheet__head"><h2>Who's on the inside team?</h2><span class="x">✕</span></div>
+    <p class="want">The Favourite wants about <b>10</b> in <b>social, stealth or medical</b>. <span class="legend"><span class="t-good">● 10+ ready for it</span><span class="t-near">● close</span><span class="t-short">● short</span></span></p>
+    <table class="pt">
+      <thead><tr><th>Runner</th><th class="num is-sort">Social</th><th class="num">Stealth</th><th class="num is-on">Medical ▾</th><th>This job</th><th></th></tr></thead>
+      <tbody>
+        <tr class="tgrp "><th colspan="6">Your crew <span>4 free</span></th></tr><tr class=""><td class="who"><div class="whoin"><span class="pface" style="width:36px;height:36px"><svg class="art portrait" viewBox="9 6 46 46" width="36" height="36" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf9bg" x1="1" x2="0"><stop offset="0" stop-color="#ff3d5f" stop-opacity="0.28"/><stop offset="0.65" stop-color="#ff3d5f" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf9h"><path d="M32 11 C41.6918 11 44.922399999999996 16 44.922399999999996 24 C44.922399999999996 30 44.322399999999995 33 42.872 38 L37.586 45.223 Q32 46.923 26.414 45.223 L21.128 38 C19.6776 33 19.0776 30 19.0776 24 C19.0776 16 22.3082 11 32 11 Z"/></clipPath>
+    <clipPath id="pf9s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf9t"><path d="M18.2776 27 C17.2776 17 20.0776 7 32 6.5 C43.922399999999996 7 46.72239999999999 16 45.72239999999999 26 C44.322399999999995 22 42.922399999999996 19.5 40.922399999999996 19.1 C33 18.5 30 20.5 28 19.5 C25 19 21.0776 20.5 18.2776 27 Z"/></clipPath>
+    <clipPath id="pf9b"><path d="M17.5776 24 C16.5776 7 47.422399999999996 7 46.422399999999996 24 L47.922399999999996 54 L41.422399999999996 52 L42.922399999999996 35 L21.0776 35 L22.5776 52 L16.0776 54 Z"/></clipPath>
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf9bg)"/>
+  
+
+  <g >
+  <path d="M17.5776 24 C16.5776 7 47.422399999999996 7 46.422399999999996 24 L47.922399999999996 54 L41.422399999999996 52 L42.922399999999996 35 L21.0776 35 L22.5776 52 L16.0776 54 Z" fill="#17171b"/>
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#232838"/>
+  <g clip-path="url(#pf9s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#773047"/><path d="M27 46 L32 54 L37 46 Z" fill="#171a24"/></g>
+  
+  <path d="M27.061 37 L27.061 48 Q32 51 36.939 48 L36.939 37 Z" fill="#8f756e"/><path d="M35.139 38 L36.939 37 L36.939 48 L35.139 49 Z" fill="#ee847d" opacity="0.8"/>
+  
+
+  <ellipse cx="19.297600000000003" cy="30" rx="1.761965" ry="3.15299" fill="#8f756e"/>
+  <ellipse cx="44.7024" cy="30" rx="1.761965" ry="3.15299" fill="#e3b08f"/><path d="M45.602399999999996 27.681625 Q46.39342499999999 30 45.40239999999999 32.78205" stroke="#ee847d" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C41.6918 11 44.922399999999996 16 44.922399999999996 24 C44.922399999999996 30 44.322399999999995 33 42.872 38 L37.586 45.223 Q32 46.923 26.414 45.223 L21.128 38 C19.6776 33 19.0776 30 19.0776 24 C19.0776 16 22.3082 11 32 11 Z" fill="#e3b08f"/>
+  <g clip-path="url(#pf9h)">
+    <path d="M0 0 L30.449312 9 C24.89268 20 25.797248 31 30.5 48 L0 64 Z" fill="#8f756e"/>
+    <path d="M35.87672 34.5 L44.1224 31.5 L42.372 39 Z" fill="#bb947f" opacity="0.55"/>
+    <path d="M64 0 L43.1224 12 L43.6224 30 L41.072 40.5 L64 64 Z" fill="#ee847d"/>
+        
+    
+    
+    <g transform="translate(0 0.4756999999999998)"><path d="M21.0776 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#bb947f"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 30.4757 L30.00884 36.0197 L32.7 36.8197 L31.6 35.5197 Z" fill="#8f756e"/>
+    <path d="M32.9 34.1197 L33.5 36.1197 L32.7 36.8197 Z" fill="#ee847d" opacity="0.7"/>
+    <path d="M30.4407 36.9197 Q32 37.2697 33.427440000000004 36.9197" stroke="#876150" stroke-width="0.7" fill="none" stroke-linecap="round"/><clipPath id="pf9e-1"><path d="M24.771800000000002 29.09602 Q27.2708 26.836039999999997 29.7698 29.60226 Q27.2708 30.677415 24.771800000000002 29.09602 Z"/></clipPath><path d="M24.771800000000002 29.09602 Q27.2708 26.836039999999997 29.7698 29.60226 Q27.2708 30.677415 24.771800000000002 29.09602 Z" fill="#e7d6c6"/><circle cx="27.570800000000002" cy="29.2872175" r="1.54938" fill="#120d0b" clip-path="url(#pf9e-1)"/><path d="M24.771800000000002 29.09602 Q27.2708 26.836039999999997 29.7698 29.60226" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.820800000000002" cy="28.9102525" r="0.45" fill="#fff" opacity="0.85"/><clipPath id="pf9e1"><path d="M34.230199999999996 29.60226 Q36.7292 26.836039999999997 39.2282 29.09602 Q36.7292 30.677415 34.230199999999996 29.60226 Z"/></clipPath><path d="M34.230199999999996 29.60226 Q36.7292 26.836039999999997 39.2282 29.09602 Q36.7292 30.677415 34.230199999999996 29.60226 Z" fill="#e7d6c6"/><circle cx="37.029199999999996" cy="29.2872175" r="1.54938" fill="#120d0b" clip-path="url(#pf9e1)"/><path d="M34.230199999999996 29.60226 Q36.7292 26.836039999999997 39.2282 29.09602" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.279199999999996" cy="28.9102525" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.570800000000002 25.450200000000002 Q26.68385 24.438790000000004 24.3218 25.886740000000003 L24.3218 26.335460000000005 Q26.68385 25.448410000000003 29.570800000000002 26.572000000000003 Z" fill="#131113"/><path d="M34.4292 25.450200000000002 Q37.31615 24.438790000000004 39.6782 25.886740000000003 L39.6782 26.335460000000005 Q37.31615 25.448410000000003 34.4292 26.572000000000003 Z" fill="#131113"/><path d="M29.360500000000002 39.7315 Q32 40.631499999999996 34.6395 39.7315" stroke="#876150" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.160500000000003 40.4315 Q32 42.7522 33.8395 40.4315 Z" fill="#d0997e"/>
+  <g transform="translate(0 -0.27)"></g>
+  
+  
+  
+  
+  
+
+  <g >
+  <path d="M18.2776 27 C17.2776 17 20.0776 7 32 6.5 C43.922399999999996 7 46.72239999999999 16 45.72239999999999 26 C44.322399999999995 22 42.922399999999996 19.5 40.922399999999996 19.1 C33 18.5 30 20.5 28 19.5 C25 19 21.0776 20.5 18.2776 27 Z" fill="#17171b" />
+    <g clip-path="url(#pf9t)"><path d="M35.2306 0 L64 0 L64 30 L39.75344 30 Z" fill="#8b2a3d" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  
+  <path d="M42.322399999999995 19 V27" stroke="#ff3d5f" stroke-width="1.1" stroke-linecap="round" opacity="0.5"/><circle cx="42.322399999999995" cy="27.5" r="0.9" fill="#ff3d5f" opacity="0.5"/>
+  
+  
+</svg></span><span><strong>Cortex</strong> <span class="joss">Joss picks</span><br><span class="muted small">medic</span></span></div></td>
+    <td class="num"><span class="pill t-short">5</span></td><td class="num"><span class="pill t-short">5</span></td><td class="num"><span class="pill t-near">9</span></td><td class="small gain">learns on the job</td>
+    <td class="side"><span class="ready">ready</span></td></tr><tr class=""><td class="who"><div class="whoin"><span class="pface" style="width:36px;height:36px"><svg class="art portrait" viewBox="9 6 46 46" width="36" height="36" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf10bg" x1="1" x2="0"><stop offset="0" stop-color="#9b8cff" stop-opacity="0.28"/><stop offset="0.65" stop-color="#9b8cff" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf10h"><path d="M32 11 C41.772800000000004 11 45.0304 16 45.0304 24 C45.0304 30 44.4304 33 42.792 38 L38 43.582 Q32 45.282000000000004 26 43.582 L21.208 38 C19.5696 33 18.9696 30 18.9696 24 C18.9696 16 22.2272 11 32 11 Z"/></clipPath>
+    <clipPath id="pf10s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf10t"><path d="M21.9696 21 C20.4696 9 22.9696 4.5 32 4.5 C44.0304 5 47.0304 15 45.8304 26 C44.4304 22 43.0304 19.5 41.0304 18.6 C33 18 30 19.5 21.9696 21 Z"/></clipPath>
+    
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf10bg)"/>
+  
+
+  <g >
+  
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#262b36"/>
+  <g clip-path="url(#pf10s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#525082"/><path d="M27 46 L32 54 L37 46 Z" fill="#191c23"/></g>
+  
+  <path d="M27.6266 37 L27.6266 48 Q32 51 36.373400000000004 48 L36.373400000000004 37 Z" fill="#7e5e54"/><path d="M34.57340000000001 38 L36.373400000000004 37 L36.373400000000004 48 L34.57340000000001 49 Z" fill="#b68a9e" opacity="0.8"/>
+  
+
+  <ellipse cx="19.2296" cy="30" rx="2.111755" ry="3.77893" fill="#7e5e54"/>
+  <ellipse cx="44.7704" cy="30" rx="2.111755" ry="3.77893" fill="#c68863"/><path d="M45.6704 27.221375000000002 Q46.737575 30 45.4704 33.33435" stroke="#b68a9e" stroke-width="0.9" fill="none"/>
+  <circle cx="45.0304" cy="34" r="0.9" fill="#f2b544"/>
+
+  <path d="M32 11 C41.772800000000004 11 45.0304 16 45.0304 24 C45.0304 30 44.4304 33 42.792 38 L38 43.582 Q32 45.282000000000004 26 43.582 L21.208 38 C19.5696 33 18.9696 30 18.9696 24 C18.9696 16 22.2272 11 32 11 Z" fill="#c68863"/>
+  <g clip-path="url(#pf10h)">
+    <path d="M0 0 L30.436352 9 C24.83328 20 25.745408 31 30.5 48 L0 64 Z" fill="#7e5e54"/>
+    <path d="M35.90912 34.5 L44.2304 31.5 L42.292 39 Z" fill="#a4745c" opacity="0.55"/>
+    <path d="M64 0 L43.2304 12 L43.7304 30 L40.992000000000004 40.5 L64 64 Z" fill="#b68a9e"/>
+        
+    
+    <path d="M17.9696 15 L22.9696 15 L21.9696 27 L17.9696 27 Z" fill="#563820" opacity="0.3"/><path d="M18.7696 17.5 l2.4 2.4 l-2.4 2.4 M20.3696 23.6 h2.2" stroke="#9b8cff" stroke-width="0.5" fill="none" opacity="0.7"/>
+    <g transform="translate(0 -0.09410000000000096)"><path d="M20.9696 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#a4745c"/></g>
+    <g fill="#976244"><circle cx="28.6" cy="33.105900000000005" r="0.32"/><circle cx="29.8" cy="32.305899999999994" r="0.32"/><circle cx="30.9" cy="33.5059" r="0.32"/><circle cx="33.2" cy="32.5059" r="0.32"/><circle cx="34.4" cy="33.305899999999994" r="0.32"/><circle cx="35.6" cy="32.4059" r="0.32"/><circle cx="27.5" cy="34.2059" r="0.32"/><circle cx="36.6" cy="33.9059" r="0.32"/><circle cx="31.8" cy="31.505899999999997" r="0.32"/></g>
+    
+  </g>
+
+  <path d="M31.5 29.9059 L30.527 34.5509 L32.7 35.350899999999996 L31.6 34.0509 Z" fill="#7e5e54"/>
+    <path d="M32.9 32.6509 L33.5 34.6509 L32.7 35.350899999999996 Z" fill="#b68a9e" opacity="0.7"/>
+    <path d="M30.872500000000002 35.4509 Q32 35.8009 33.082 35.4509" stroke="#784d3a" stroke-width="0.7" fill="none" stroke-linecap="round"/><circle cx="32.9" cy="34.6509" r="0.75" fill="#b68a9e" opacity="0.6"/><clipPath id="pf10e-1"><path d="M25.3031 28.79082 Q27.4281 26.18914 29.5531 28.94426 Q27.4281 30.237139999999997 25.3031 28.79082 Z"/></clipPath><path d="M25.3031 28.79082 Q27.4281 26.18914 29.5531 28.94426 Q27.4281 30.237139999999997 25.3031 28.79082 Z" fill="#e0ccbb"/><circle cx="27.7281" cy="28.705019999999998" r="1.3175" fill="#120d0b" clip-path="url(#pf10e-1)"/><path d="M25.3031 28.79082 Q27.4281 26.18914 29.5531 28.94426" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.9781" cy="28.303259999999998" r="0.45" fill="#fff" opacity="0.85"/><clipPath id="pf10e1"><path d="M34.4469 28.94426 Q36.5719 26.18914 38.6969 28.79082 Q36.5719 30.237139999999997 34.4469 28.94426 Z"/></clipPath><path d="M34.4469 28.94426 Q36.5719 26.18914 38.6969 28.79082 Q36.5719 30.237139999999997 34.4469 28.94426 Z" fill="#e0ccbb"/><circle cx="36.8719" cy="28.705019999999998" r="1.3175" fill="#120d0b" clip-path="url(#pf10e1)"/><path d="M34.4469 28.94426 Q36.5719 26.18914 38.6969 28.79082" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.1219" cy="28.303259999999998" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.7281 23.867350000000002 Q27.04685 23.435835 24.8531 24.600860000000004 L24.8531 25.44554 Q27.04685 25.336365000000004 29.7281 25.97905 Z" fill="#352316"/><path d="M34.2719 23.867350000000002 Q36.95315 23.435835 39.1469 24.600860000000004 L39.1469 25.44554 Q36.95315 25.336365000000004 34.2719 25.97905 Z" fill="#352316"/><path d="M29.3565 40.612 Q31 39.97325 32 40.2606875 Q33 39.97325 34.6435 40.612 Z" fill="#b27156" opacity="0.8"/><path d="M28.8565 40.612 Q32 41.512 35.1435 40.612" stroke="#784d3a" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M29.6565 41.312000000000005 Q32 43.22990000000001 34.343500000000006 41.312000000000005 Z" fill="#b8785a"/>
+  <g transform="translate(0 0.61)"></g>
+  
+  
+  
+  
+  <g fill="#9b8cff" fill-opacity="0.12" stroke="#0d0d0f" stroke-width="0.8"><rect x="24.5031" y="26.9059" width="5.85" height="4.2" rx="1.2"/><rect x="33.6469" y="26.9059" width="5.85" height="4.2" rx="1.2"/></g><path d="M30.353099999999998 28.5059 H33.6469" stroke="#0d0d0f" stroke-width="0.8"/>
+
+  <g >
+  <path d="M21.9696 21 C20.4696 9 22.9696 4.5 32 4.5 C44.0304 5 47.0304 15 45.8304 26 C44.4304 22 43.0304 19.5 41.0304 18.6 C33 18 30 19.5 21.9696 21 Z" fill="#563820" />
+    <g clip-path="url(#pf10t)"><path d="M35.2576 0 L64 0 L64 30 L39.81824 30 Z" fill="#796290" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  
+  <path d="M29.3 27.4 L31 28.6 L33 28.6 L34.7 27.4 M32 28.6 V31" stroke="#3de8d8" stroke-width="0.55" fill="none" stroke-linejoin="round" opacity="0.5"/>
+        <circle cx="32" cy="31" r="0.6" fill="#3de8d8" opacity="0.5"/>
+  
+  
+</svg></span><span><strong>Plug</strong><br><span class="muted small">driver</span></span></div></td>
+    <td class="num"><span class="pill t-short">6</span></td><td class="num"><span class="pill t-short">2</span></td><td class="num"><span class="pill t-short">6</span></td><td class="small gain">learns on the job</td>
+    <td class="side"><span class="ready">ready</span></td></tr><tr class=""><td class="who"><div class="whoin"><span class="pface" style="width:36px;height:36px"><svg class="art portrait" viewBox="9 6 46 46" width="36" height="36" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf11bg" x1="1" x2="0"><stop offset="0" stop-color="#f2b544" stop-opacity="0.28"/><stop offset="0.65" stop-color="#f2b544" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf11h"><path d="M32 11 C40.5026 11 43.3368 16 43.3368 24 C43.3368 30 42.736799999999995 33 42.78 38 L35.9932 42.744 Q32 44.444 28.0068 42.744 L21.22 38 C21.2632 33 20.6632 30 20.6632 24 C20.6632 16 23.4974 11 32 11 Z"/></clipPath>
+    <clipPath id="pf11s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    
+    
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf11bg)"/>
+  
+
+  <g >
+  
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#262b36"/>
+  <g clip-path="url(#pf11s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#745f3b"/><path d="M27 46 L32 54 L37 46 Z" fill="#191c23"/></g>
+  
+  <path d="M27.8646 37 L27.8646 48 Q32 51 36.1354 48 L36.1354 37 Z" fill="#583e3a"/><path d="M34.3354 38 L36.1354 37 L36.1354 48 L34.3354 49 Z" fill="#ae783b" opacity="0.8"/>
+  
+
+  <ellipse cx="20.6808" cy="30" rx="1.720735" ry="3.07921" fill="#583e3a"/>
+  <ellipse cx="43.3192" cy="30" rx="1.720735" ry="3.07921" fill="#855236"/><path d="M44.2192 27.735875 Q44.977675 30 44.0192 32.71695" stroke="#ae783b" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.5026 11 43.3368 16 43.3368 24 C43.3368 30 42.736799999999995 33 42.78 38 L35.9932 42.744 Q32 44.444 28.0068 42.744 L21.22 38 C21.2632 33 20.6632 30 20.6632 24 C20.6632 16 23.4974 11 32 11 Z" fill="#855236"/>
+  <g clip-path="url(#pf11h)">
+    <path d="M0 0 L30.639584 9 C25.76476 20 26.558336 31 30.5 48 L0 64 Z" fill="#583e3a"/>
+    <path d="M35.40104 34.5 L42.5368 31.5 L42.28 39 Z" fill="#704938" opacity="0.3"/>
+    <path d="M64 0 L41.5368 12 L42.0368 30 L40.980000000000004 40.5 L64 64 Z" fill="#ae783b"/>
+        
+    
+    
+    <g transform="translate(0 -0.4955999999999996)"><path d="M22.6632 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#704938"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 29.5044 L30.27404 34.9235 L32.7 35.723499999999994 L31.6 34.4235 Z" fill="#583e3a"/>
+    <path d="M32.9 33.0235 L33.5 35.0235 L32.7 35.723499999999994 Z" fill="#ae783b" opacity="0.7"/>
+    <path d="M30.661700000000003 35.823499999999996 Q32 36.1735 33.250640000000004 35.823499999999996" stroke="#583223" stroke-width="0.7" fill="none" stroke-linecap="round"/><circle cx="32.9" cy="35.0235" r="0.75" fill="#ae783b" opacity="0.6"/><path d="M24.911299999999997 28.45628 Q27.4413 27.35846 29.9713 28.52044 Q27.4413 29.470835 24.911299999999997 28.45628 Z" fill="#120d0b"/><circle cx="27.9913" cy="28.2501725" r="0.45" fill="#fff" opacity="0.85"/><path d="M34.0287 28.52044 Q36.5587 27.35846 39.0887 28.45628 Q36.5587 29.470835 34.0287 28.52044 Z" fill="#120d0b"/><circle cx="37.1087" cy="28.2501725" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.7413 23.881750000000004 Q26.8373 23.929145000000005 24.461299999999998 24.306320000000003 L24.461299999999998 24.739080000000005 Q26.8373 24.902855000000002 29.7413 24.96365 Z" fill="#604527"/><path d="M34.258700000000005 23.881750000000004 Q37.16270000000001 23.929145000000005 39.538700000000006 24.306320000000003 L39.538700000000006 24.739080000000005 Q37.16270000000001 24.902855000000002 34.258700000000005 24.96365 Z" fill="#604527"/><path d="M29.3095 39.708999999999996 Q32 40.608999999999995 34.6905 39.708999999999996" stroke="#583223" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.1095 40.409 Q32 42.4105 33.8905 40.409 Z" fill="#834c35"/>
+  <g transform="translate(0 -0.29)"></g>
+  <g fill="#2b1e19" opacity="0.85" clip-path="url(#pf11h)"><rect x="30.1" y="38.044" width="0.55" height="3.2"/><rect x="31" y="38.044" width="0.35" height="3.2"/><rect x="31.5" y="38.044" width="0.55" height="3.2"/><rect x="32.6" y="38.044" width="0.35" height="3.2"/><rect x="33.1" y="38.044" width="0.55" height="3.2"/><rect x="33.9" y="38.044" width="0.35" height="3.2"/></g>
+  
+  
+  
+  
+
+  <g >
+  
+  
+  
+  <path d="M34.26736 12.5 Q42.3368 14 42.736799999999995 21" stroke="#ae783b" stroke-width="1" fill="none" opacity="0.6"/>
+  </g>
+  
+
+  
+  <path d="M29.3 27.4 L31 28.6 L33 28.6 L34.7 27.4 M32 28.6 V31" stroke="#ff3d5f" stroke-width="0.55" fill="none" stroke-linejoin="round" opacity="0.5"/>
+        <circle cx="32" cy="31" r="0.6" fill="#ff3d5f" opacity="0.5"/>
+  
+  
+</svg></span><span><strong>Crow</strong><br><span class="muted small">tech</span></span></div></td>
+    <td class="num"><span class="pill t-short">5</span></td><td class="num"><span class="pill t-short">7</span></td><td class="num"><span class="pill t-short">5</span></td><td class="small gain">1 point from pro</td>
+    <td class="side"><span class="ready">ready</span></td></tr><tr class=""><td class="who"><div class="whoin"><span class="pface" style="width:36px;height:36px"><svg class="art portrait" viewBox="9 6 46 46" width="36" height="36" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf12bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf12h"><path d="M32 11 C40.298 11 43.064 16 43.064 24 C43.064 30 42.464 33 39.164 38 L35.773 43.978 Q32 45.678000000000004 28.227 43.978 L24.836 38 C21.536 33 20.936 30 20.936 24 C20.936 16 23.701999999999998 11 32 11 Z"/></clipPath>
+    <clipPath id="pf12s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf12t"><path d="M20.536 25 C19.936 13 22.936 8.6 32 8.4 C41.064 8.6 44.064 13 43.464 25 C42.064 20 40.064 17.2 32 16.8 C23.936 17.2 21.936 20 20.536 25 Z"/></clipPath>
+    
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf12bg)"/>
+  
+
+  <g >
+  
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#33291f"/>
+  <g clip-path="url(#pf12s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#377265"/><path d="M27 46 L32 54 L37 46 Z" fill="#211b14"/></g>
+  
+  <path d="M28.1432 37 L28.1432 48 Q32 51 35.8568 48 L35.8568 37 Z" fill="#654741"/><path d="M34.0568 38 L35.8568 37 L35.8568 48 L34.0568 49 Z" fill="#77947b" opacity="0.8"/>
+  
+
+  <ellipse cx="21.1304" cy="30" rx="1.7134199999999997" ry="3.0661199999999997" fill="#654741"/>
+  <ellipse cx="42.869600000000005" cy="30" rx="1.7134199999999997" ry="3.0661199999999997" fill="#9a6142"/><path d="M43.769600000000004 27.7455 Q44.5223 30 43.5696 32.7054" stroke="#77947b" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.298 11 43.064 16 43.064 24 C43.064 30 42.464 33 39.164 38 L35.773 43.978 Q32 45.678000000000004 28.227 43.978 L24.836 38 C21.536 33 20.936 30 20.936 24 C20.936 16 23.701999999999998 11 32 11 Z" fill="#9a6142"/>
+  <g clip-path="url(#pf12h)">
+    <path d="M0 0 L30.67232 9 C25.9148 20 26.68928 31 30.5 48 L0 64 Z" fill="#654741"/>
+    <path d="M35.3192 34.5 L42.264 31.5 L38.664 39 Z" fill="#815542" opacity="0.55"/>
+    <path d="M64 0 L41.264 12 L41.764 30 L37.364000000000004 40.5 L64 64 Z" fill="#77947b"/>
+        
+    
+    
+    <g transform="translate(0 -0.4878999999999998)"><path d="M22.936 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#815542"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 29.5121 L29.88644 34.6724 L32.7 35.4724 L31.6 34.1724 Z" fill="#654741"/>
+    <path d="M32.9 32.772400000000005 L33.5 34.772400000000005 L32.7 35.4724 Z" fill="#77947b" opacity="0.7"/>
+    <path d="M30.338700000000003 35.5724 Q32 35.9224 33.50904 35.5724" stroke="#623a29" stroke-width="0.7" fill="none" stroke-linecap="round"/><ellipse cx="27.532600000000002" cy="28.1121" rx="3.327" ry="2.48365" fill="#815542" opacity="0.75"/><clipPath id="pf12e-1"><path d="M25.205600000000004 27.990940000000002 Q27.532600000000002 26.17108 29.8596 28.68582 Q27.532600000000002 29.580205 25.205600000000004 27.990940000000002 Z"/></clipPath><path d="M25.205600000000004 27.990940000000002 Q27.532600000000002 26.17108 29.8596 28.68582 Q27.532600000000002 29.580205 25.205600000000004 27.990940000000002 Z" fill="#d5c2b3"/><circle cx="27.832600000000003" cy="28.3495525" r="1.44274" fill="#120d0b" clip-path="url(#pf12e-1)"/><path d="M25.205600000000004 27.990940000000002 Q27.532600000000002 26.17108 29.8596 28.68582" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="28.082600000000003" cy="28.0244575" r="0.45" fill="#fff" opacity="0.85"/><ellipse cx="36.4674" cy="28.1121" rx="3.327" ry="2.48365" fill="#815542" opacity="0.75"/><clipPath id="pf12e1"><path d="M34.1404 28.68582 Q36.4674 26.17108 38.794399999999996 27.990940000000002 Q36.4674 29.580205 34.1404 28.68582 Z"/></clipPath><path d="M34.1404 28.68582 Q36.4674 26.17108 38.794399999999996 27.990940000000002 Q36.4674 29.580205 34.1404 28.68582 Z" fill="#d5c2b3"/><circle cx="36.767399999999995" cy="28.3495525" r="1.44274" fill="#120d0b" clip-path="url(#pf12e1)"/><path d="M34.1404 28.68582 Q36.4674 26.17108 38.794399999999996 27.990940000000002" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.017399999999995" cy="28.0244575" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.832600000000003 23.24745 Q27.04025 22.653665 24.7556 23.966140000000003 L24.7556 24.79106 Q27.04025 24.509735000000003 29.832600000000003 25.30975 Z" fill="#352316"/><path d="M34.1674 23.24745 Q36.95975 22.653665 39.2444 23.966140000000003 L39.2444 24.79106 Q36.95975 24.509735000000003 34.1674 25.30975 Z" fill="#352316"/><path d="M30.2955 40.3195 Q31 39.52265 32 39.881232499999996 Q33 39.52265 33.7045 40.3195 Z" fill="#92543d" opacity="0.8"/><path d="M29.7955 40.3195 Q32 41.2195 34.2045 40.3195" stroke="#623a29" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.5955 41.0195 Q32 43.0571 33.404500000000006 41.0195 Z" fill="#94583f"/>
+  <g transform="translate(0 0.32)"></g>
+  <path d="M23.936 22.5 L26.936 27" stroke="#bd8a75" stroke-width="0.7"/>
+  
+  
+  
+  <g fill="#3de8d8" fill-opacity="0.12" stroke="#0d0d0f" stroke-width="0.8"><rect x="24.405600000000003" y="26.5121" width="6.254" height="4.2" rx="1.2"/><rect x="33.340399999999995" y="26.5121" width="6.254" height="4.2" rx="1.2"/></g><path d="M30.659600000000005 28.1121 H33.340399999999995" stroke="#0d0d0f" stroke-width="0.8"/>
+
+  <g >
+  <path d="M20.536 25 C19.936 13 22.936 8.6 32 8.4 C41.064 8.6 44.064 13 43.464 25 C42.064 20 40.064 17.2 32 16.8 C23.936 17.2 21.936 20 20.536 25 Z" fill="#563820" />
+    <g clip-path="url(#pf12t)"><path d="M34.766 0 L64 0 L64 30 L38.6384 30 Z" fill="#4a907c" opacity="0.75"/>
+    <g stroke="#382415" stroke-width="0.5" fill="none"><path d="M22.936 21 Q30 11 41.064 13"/><path d="M24.936 19 Q32 12 42.064 17"/></g><path d="M33.6596 11 Q41.064 12 42.264 19" stroke="#fff" stroke-width="0.9" fill="none" opacity="0.35"/></g>
+  
+  
+  
+  </g>
+  
+
+  
+  <path d="M41.464 19 L39.564 21.5 L39.564 24.5 L39.8 25.2 M39.564 22.6 L41.664 23.6" stroke="#3de8d8" stroke-width="0.55" fill="none" stroke-linejoin="round" opacity="0.5"/>
+        <circle cx="39.8" cy="25.2" r="0.6" fill="#3de8d8" opacity="0.5"/>
+  
+  
+</svg></span><span><strong>Dim Sum</strong><br><span class="muted small">tech</span></span></div></td>
+    <td class="num"><span class="pill t-short">5</span></td><td class="num"><span class="pill t-short">6</span></td><td class="num"><span class="pill t-short">2</span></td><td class="small gain">learns on the job</td>
+    <td class="side"><span class="ready">ready</span></td></tr>
+        <tr class="tgrp tgrp--free"><th colspan="6">Freelancers <span>they take a cut of the pay</span></th></tr><tr class="tr--free"><td class="who"><div class="whoin"><span class="pface" style="width:36px;height:36px"><svg class="art portrait" viewBox="9 6 46 46" width="36" height="36" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf13bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf13h"><path d="M32 11 C40.4858 11 43.3144 16 43.3144 24 C43.3144 30 42.7144 33 39.224000000000004 38 L35.3494 45.124 Q32 46.824000000000005 28.6506 45.124 L24.776 38 C21.285600000000002 33 20.6856 30 20.6856 24 C20.6856 16 23.5142 11 32 11 Z"/></clipPath>
+    <clipPath id="pf13s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf13t"><path d="M19.8856 27 C18.8856 17 21.6856 8 32 7.5 C42.3144 8 45.114399999999996 16 44.114399999999996 26 C42.7144 22 41.3144 19.5 39.3144 18.6 C33 18 30 20 28 19 C25 18.5 22.6856 20 19.8856 27 Z"/></clipPath>
+    
+    <clipPath id="pf13u"><path d="M0 64 L0 21.5 L11 21.5 L32 6.8 L53 21.5 L64 21.5 L64 64 Z"/></clipPath>
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf13bg)"/>
+  
+
+  <g clip-path="url(#pf13u)">
+  
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#2b2433"/>
+  <g clip-path="url(#pf13s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#326e72"/><path d="M27 46 L32 54 L37 46 Z" fill="#1c1721"/></g>
+  
+  <path d="M28.0382 37 L28.0382 48 Q32 51 35.9618 48 L35.9618 37 Z" fill="#654741"/><path d="M34.1618 38 L35.9618 37 L35.9618 48 L34.1618 49 Z" fill="#77947b" opacity="0.8"/>
+  
+
+  <ellipse cx="20.7816" cy="30" rx="1.81982" ry="3.25652" fill="#654741"/>
+  <ellipse cx="43.2184" cy="30" rx="1.81982" ry="3.25652" fill="#9a6142"/><path d="M44.1184 27.6055 Q44.9551 30 43.9184 32.873400000000004" stroke="#77947b" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.4858 11 43.3144 16 43.3144 24 C43.3144 30 42.7144 33 39.224000000000004 38 L35.3494 45.124 Q32 46.824000000000005 28.6506 45.124 L24.776 38 C21.285600000000002 33 20.6856 30 20.6856 24 C20.6856 16 23.5142 11 32 11 Z" fill="#9a6142"/>
+  <g clip-path="url(#pf13h)">
+    <path d="M0 0 L30.642272 9 C25.777079999999998 20 26.569088 31 30.5 48 L0 64 Z" fill="#654741"/>
+    <path d="M34.8286 33 L42.5144 29.8 L38.724000000000004 37.6 Z" fill="#815542" opacity="0.75"/>
+    <path d="M64 0 L41.5144 12 L42.0144 30 L37.42400000000001 40.5 L64 64 Z" fill="#77947b"/>
+        <path d="M20.6856 36 Q32 50 43.3144 36 L43.3144 50 L20.6856 50 Z" fill="#7dd3fc" opacity="0.28"/>
+    
+    
+    <g transform="translate(0 -0.31629999999999825)"><path d="M22.6856 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#815542"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 29.6837 L29.5988 35.2502 L32.7 36.0502 L31.6 34.7502 Z" fill="#654741"/>
+    <path d="M32.9 33.3502 L33.5 35.3502 L32.7 36.0502 Z" fill="#77947b" opacity="0.7"/>
+    <path d="M30.099 36.1502 Q32 36.5002 33.7008 36.1502" stroke="#623a29" stroke-width="0.7" fill="none" stroke-linecap="round"/><path d="M29.799 34.8502 Q28.898999999999997 35.7502 30.198999999999998 36.2502 M33.8008 34.8502 Q34.7008 35.7502 33.4008 36.2502" stroke="#815542" stroke-width="0.55" fill="none"/><path d="M24.744200000000003 28.160380000000004 Q27.066200000000002 26.974660000000004 29.3882 28.858140000000002 Q27.066200000000002 29.592910000000003 24.744200000000003 28.160380000000004 Z" fill="#120d0b"/><circle cx="27.616200000000003" cy="28.338415" r="0.45" fill="#fff" opacity="0.85"/><path d="M25.244200000000003 27.660380000000004 Q27.066200000000002 25.374660000000002 28.8882 28.358140000000002" stroke="#623a29" stroke-width="0.4" fill="none" opacity="0.55"/><path d="M34.611799999999995 28.858140000000002 Q36.9338 26.974660000000004 39.2558 28.160380000000004 Q36.9338 29.592910000000003 34.611799999999995 28.858140000000002 Z" fill="#120d0b"/><circle cx="37.483799999999995" cy="28.338415" r="0.45" fill="#fff" opacity="0.85"/><path d="M35.111799999999995 28.358140000000002 Q36.9338 25.374660000000002 38.7558 27.660380000000004" stroke="#623a29" stroke-width="0.4" fill="none" opacity="0.55"/>
+  <path d="M29.366200000000003 24.17285 Q26.576600000000003 23.608075000000003 24.294200000000004 24.616800000000005 L24.294200000000004 25.075400000000002 Q26.576600000000003 24.639925 29.366200000000003 25.319350000000004 Z" fill="#4b798f"/><path d="M34.6338 24.17285 Q37.4234 23.608075000000003 39.705799999999996 24.616800000000005 L39.705799999999996 25.075400000000002 Q37.4234 24.639925 34.6338 25.319350000000004 Z" fill="#4b798f"/><path d="M30.019 40.2415 Q32 41.1415 33.981 40.2415" stroke="#623a29" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.819 40.941500000000005 Q32 42.5953 33.181000000000004 40.941500000000005 Z" fill="#94583f"/>
+  <g transform="translate(0 0.24)"></g>
+  <path d="M23.6856 22.5 L26.6856 27" stroke="#bd8a75" stroke-width="0.7"/>
+  
+  
+  
+  
+
+  <g clip-path="url(#pf13u)">
+  <path d="M19.8856 27 C18.8856 17 21.6856 8 32 7.5 C42.3144 8 45.114399999999996 16 44.114399999999996 26 C42.7144 22 41.3144 19.5 39.3144 18.6 C33 18 30 20 28 19 C25 18.5 22.6856 20 19.8856 27 Z" fill="#7dd3fc" />
+    <g clip-path="url(#pf13t)"><path d="M34.8286 0 L64 0 L64 30 L38.78864 30 Z" fill="#5ddeea" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  <g clip-path="url(#pf13h)"><path d="M0 21.5 H64 V26 H0 Z" fill="#1b2340" opacity="0.45"/></g>
+    <path d="M11 21.5 L32 6.8 L53 21.5 Q32 24.9 11 21.5 Z" fill="#a8844c"/>
+    <path d="M32 6.8 L53 21.5 Q42.5 24.56 32 24.9 Z" fill="#7dac84"/>
+    <path d="M11 21.5 Q32 24.9 53 21.5 Q32 23.37 11 21.5 Z" fill="#5c492a"/>
+    <g stroke="#6d5631" stroke-width="0.4" fill="none"><path d="M25.7 11.209999999999999 Q32 12.229999999999999 38.3 11.209999999999999"/><path d="M20.45 14.885000000000002 Q32 16.755000000000003 43.55 14.885000000000002"/><path d="M15.2 18.56 Q32 21.279999999999998 48.8 18.56"/></g>
+    <path d="M20 22.9 L28 46 M44 22.9 L36 46" stroke="#3a2c1a" stroke-width="0.45"/>
+    
+    
+
+  
+  <path d="M40.7144 19 V27" stroke="#f2b544" stroke-width="1.1" stroke-linecap="round" opacity="0.5"/><circle cx="40.7144" cy="27.5" r="0.9" fill="#f2b544" opacity="0.5"/>
+  
+  
+</svg></span><span><strong>Parity</strong><br><span class="muted small">freelance medic</span></span></div></td>
+    <td class="num"><span class="pill t-short">7</span></td><td class="num"><span class="pill t-short">6</span></td><td class="num"><span class="pill t-good">12</span></td><td class="small gain"><span class="muted">—</span></td>
+    <td class="side"><span class="hire">Freelance</span> <b>15%</b> of pay</td></tr><tr class="tr--free"><td class="who"><div class="whoin"><span class="pface" style="width:36px;height:36px"><svg class="art portrait" viewBox="9 6 46 46" width="36" height="36" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf14bg" x1="1" x2="0"><stop offset="0" stop-color="#9b8cff" stop-opacity="0.28"/><stop offset="0.65" stop-color="#9b8cff" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf14h"><path d="M32 11 C40.6988 11 43.5984 16 43.5984 24 C43.5984 30 42.9984 33 42.112 38 L35.5174 42.585 Q32 44.285000000000004 28.4826 42.585 L21.887999999999998 38 C21.001600000000003 33 20.401600000000002 30 20.401600000000002 24 C20.401600000000002 16 23.3012 11 32 11 Z"/></clipPath>
+    <clipPath id="pf14s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf14t"><path d="M23.401600000000002 21 C21.901600000000002 9 24.401600000000002 4.5 32 4.5 C42.5984 5 45.5984 15 44.398399999999995 26 C42.9984 22 41.5984 19.5 39.5984 18.6 C33 18 30 19.5 23.401600000000002 21 Z"/></clipPath>
+    
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf14bg)"/>
+  
+
+  <g >
+  
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#2b2433"/>
+  <g clip-path="url(#pf14s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#564c81"/><path d="M27 46 L32 54 L37 46 Z" fill="#1c1721"/></g>
+  
+  <path d="M27.7764 37 L27.7764 48 Q32 51 36.2236 48 L36.2236 37 Z" fill="#7e5e54"/><path d="M34.4236 38 L36.2236 37 L36.2236 48 L34.4236 49 Z" fill="#b68a9e" opacity="0.8"/>
+  
+
+  <ellipse cx="20.649600000000003" cy="30" rx="1.792555" ry="3.2077299999999997" fill="#7e5e54"/>
+  <ellipse cx="43.3504" cy="30" rx="1.792555" ry="3.2077299999999997" fill="#c68863"/><path d="M44.2504 27.641375 Q45.065574999999995 30 44.050399999999996 32.83035" stroke="#b68a9e" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.6988 11 43.5984 16 43.5984 24 C43.5984 30 42.9984 33 42.112 38 L35.5174 42.585 Q32 44.285000000000004 28.4826 42.585 L21.887999999999998 38 C21.001600000000003 33 20.401600000000002 30 20.401600000000002 24 C20.401600000000002 16 23.3012 11 32 11 Z" fill="#c68863"/>
+  <g clip-path="url(#pf14h)">
+    <path d="M0 0 L30.608192 9 C25.62088 20 26.432768 31 30.5 48 L0 64 Z" fill="#7e5e54"/>
+    <path d="M35.47952 34.5 L42.7984 31.5 L41.612 39 Z" fill="#a4745c" opacity="0.3"/>
+    <path d="M64 0 L41.7984 12 L42.2984 30 L40.312000000000005 40.5 L64 64 Z" fill="#b68a9e"/>
+        
+    
+    <path d="M19.401600000000002 15 L24.401600000000002 15 L23.401600000000002 27 L19.401600000000002 27 Z" fill="#241c19" opacity="0.3"/><path d="M20.201600000000003 17.5 l2.4 2.4 l-2.4 2.4 M21.8016 23.6 h2.2" stroke="#9b8cff" stroke-width="0.5" fill="none" opacity="0.7"/>
+    <g transform="translate(0 -0.1568000000000005)"><path d="M22.401600000000002 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#a4745c"/></g>
+    <circle cx="34.8" cy="22.5" r="0.45" fill="#704831"/>
+    
+  </g>
+
+  <path d="M31.5 29.8432 L30.22508 35.1827 L32.7 35.982699999999994 L31.6 34.6827 Z" fill="#7e5e54"/>
+    <path d="M32.9 33.2827 L33.5 35.2827 L32.7 35.982699999999994 Z" fill="#b68a9e" opacity="0.7"/>
+    <path d="M30.620900000000002 36.082699999999996 Q32 36.4327 33.283280000000005 36.082699999999996" stroke="#784d3a" stroke-width="0.7" fill="none" stroke-linecap="round"/><path d="M32.6 31.4432 Q33.9 32.36295 33.1 34.482699999999994" stroke="#a4745c" stroke-width="0.5" fill="none"/><path d="M25.6831 28.96464 Q27.5601 27.35288 29.437099999999997 28.80272 Q27.5601 29.966379999999997 25.6831 28.96464 Z" fill="#120d0b"/><circle cx="28.1101" cy="28.49877" r="0.45" fill="#fff" opacity="0.85"/><path d="M34.5629 28.80272 Q36.4399 27.35288 38.316900000000004 28.96464 Q36.4399 29.966379999999997 34.5629 28.80272 Z" fill="#120d0b"/><circle cx="36.9899" cy="28.49877" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.8601 24.91355 Q27.31525 24.579225000000005 25.233099999999997 25.363200000000003 L25.233099999999997 25.829400000000003 Q27.31525 25.628175000000002 29.8601 26.079050000000002 Z" fill="#1a1412"/><path d="M34.139900000000004 24.91355 Q36.68475 24.579225000000005 38.7669 25.363200000000003 L38.7669 25.829400000000003 Q36.68475 25.628175000000002 34.139900000000004 26.079050000000002 Z" fill="#1a1412"/><path d="M29.5255 40.492 Q32 41.391999999999996 34.4745 40.492" stroke="#784d3a" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.3255 41.192 Q32 43.1194 33.6745 41.192 Z" fill="#b8785a"/>
+  <g transform="translate(0 0.49)"></g>
+  <path d="M22.901600000000002 22 L24.401600000000002 24 L23.6016 25.2 L25.401600000000002 28" stroke="#daa38b" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>
+  
+  
+  
+  
+
+  <g >
+  <path d="M23.401600000000002 21 C21.901600000000002 9 24.401600000000002 4.5 32 4.5 C42.5984 5 45.5984 15 44.398399999999995 26 C42.9984 22 41.5984 19.5 39.5984 18.6 C33 18 30 19.5 23.401600000000002 21 Z" fill="#241c19" />
+    <g clip-path="url(#pf14t)"><path d="M34.8996 0 L64 0 L64 30 L38.95904 30 Z" fill="#60548c" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  
+  <path d="M40.9984 19 V27" stroke="#ff3d5f" stroke-width="1.1" stroke-linecap="round" opacity="0.5"/><circle cx="40.9984" cy="27.5" r="0.9" fill="#ff3d5f" opacity="0.5"/>
+  
+  
+</svg></span><span><strong>Sampan</strong><br><span class="muted small">freelance driver</span></span></div></td>
+    <td class="num"><span class="pill t-short">3</span></td><td class="num"><span class="pill t-short">7</span></td><td class="num"><span class="pill t-short">3</span></td><td class="small gain"><span class="muted">—</span></td>
+    <td class="side"><span class="hire">Freelance</span> <b>15%</b> of pay</td></tr>
+        <tr class="tgrp "><th colspan="6">Already on the squad <span>tap to move them here</span></th></tr><tr class="tr--placed"><td class="who"><div class="whoin"><span class="pface" style="width:36px;height:36px"><svg class="art portrait" viewBox="9 6 46 46" width="36" height="36" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf15bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf15h"><path d="M32 11 C40.5578 11 43.4104 16 43.4104 24 C43.4104 30 42.8104 33 41.26 38 L35.952600000000004 47.236 Q32 48.936 28.0474 47.236 L22.740000000000002 38 C21.1896 33 20.589599999999997 30 20.589599999999997 24 C20.589599999999997 16 23.4422 11 32 11 Z"/></clipPath>
+    <clipPath id="pf15s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf15t"><path d="M20.1896 25 C19.589599999999997 13 22.589599999999997 8.6 32 8.4 C41.4104 8.6 44.4104 13 43.8104 25 C42.4104 20 40.4104 17.2 32 16.8 C23.589599999999997 17.2 21.589599999999997 20 20.1896 25 Z"/></clipPath>
+    
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf15bg)"/>
+  
+
+  <g >
+  
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#1f2b2a"/>
+  <g clip-path="url(#pf15s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#2a736c"/><path d="M27 46 L32 54 L37 46 Z" fill="#141c1b"/></g>
+  
+  <path d="M27.4712 37 L27.4712 48 Q32 51 36.528800000000004 48 L36.528800000000004 37 Z" fill="#412e2f"/><path d="M34.72880000000001 38 L36.528800000000004 37 L36.528800000000004 48 L34.72880000000001 49 Z" fill="#507a68" opacity="0.8"/>
+  
+
+  <ellipse cx="20.212799999999998" cy="30" rx="2.18291" ry="3.90626" fill="#412e2f"/>
+  <ellipse cx="43.787200000000006" cy="30" rx="2.18291" ry="3.90626" fill="#5c3623"/><path d="M44.687200000000004 27.12775 Q45.810550000000006 30 44.4872 33.4467" stroke="#507a68" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.5578 11 43.4104 16 43.4104 24 C43.4104 30 42.8104 33 41.26 38 L35.952600000000004 47.236 Q32 48.936 28.0474 47.236 L22.740000000000002 38 C21.1896 33 20.589599999999997 30 20.589599999999997 24 C20.589599999999997 16 23.4422 11 32 11 Z" fill="#5c3623"/>
+  <g clip-path="url(#pf15h)">
+    <path d="M0 0 L30.630752 9 C25.72428 20 26.523008 31 30.5 48 L0 64 Z" fill="#412e2f"/>
+    <path d="M35.42312 34.5 L42.610400000000006 31.5 L40.76 39 Z" fill="#4f3229" opacity="0.3"/>
+    <path d="M64 0 L41.610400000000006 12 L42.110400000000006 30 L39.46 40.5 L64 64 Z" fill="#507a68"/>
+        <path d="M20.589599999999997 36 Q32 50 43.4104 36 L43.4104 50 L20.589599999999997 50 Z" fill="#a37540" opacity="0.28"/>
+    
+    
+    <g transform="translate(0 0.05770000000000053)"><path d="M22.589599999999997 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#4f3229"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 30.0577 L30.56168 36.767599999999995 L32.7 37.56759999999999 L31.6 36.267599999999995 Z" fill="#412e2f"/>
+    <path d="M32.9 34.867599999999996 L33.5 36.867599999999996 L32.7 37.56759999999999 Z" fill="#507a68" opacity="0.7"/>
+    <path d="M30.901400000000002 37.66759999999999 Q32 38.017599999999995 33.05888 37.66759999999999" stroke="#43241a" stroke-width="0.7" fill="none" stroke-linecap="round"/><path d="M30.6014 36.367599999999996 Q29.7014 37.267599999999995 31.0014 37.767599999999995 M33.15888 36.367599999999996 Q34.05888 37.267599999999995 32.75888 37.767599999999995" stroke="#4f3229" stroke-width="0.55" fill="none"/><ellipse cx="27.4974" cy="28.657700000000002" rx="3.1350000000000002" ry="2.75915" fill="#4f3229" opacity="0.75"/><clipPath id="pf15e-1"><path d="M25.362399999999997 28.96746 Q27.4974 26.30932 29.6324 29.087780000000002 Q27.4974 30.407194999999998 25.362399999999997 28.96746 Z"/></clipPath><path d="M25.362399999999997 28.96746 Q27.4974 26.30932 29.6324 29.087780000000002 Q27.4974 30.407194999999998 25.362399999999997 28.96746 Z" fill="#c5b7ab"/><circle cx="27.7974" cy="28.8538275" r="1.3237" fill="#120d0b" clip-path="url(#pf15e-1)"/><path d="M25.362399999999997 28.96746 Q27.4974 26.30932 29.6324 29.087780000000002" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="28.0474" cy="28.4460825" r="0.45" fill="#fff" opacity="0.85"/><ellipse cx="36.5026" cy="28.657700000000002" rx="3.1350000000000002" ry="2.75915" fill="#4f3229" opacity="0.75"/><clipPath id="pf15e1"><path d="M34.3676 29.087780000000002 Q36.5026 26.30932 38.6376 28.96746 Q36.5026 30.407194999999998 34.3676 29.087780000000002 Z"/></clipPath><path d="M34.3676 29.087780000000002 Q36.5026 26.30932 38.6376 28.96746 Q36.5026 30.407194999999998 34.3676 29.087780000000002 Z" fill="#c5b7ab"/><circle cx="36.8026" cy="28.8538275" r="1.3237" fill="#120d0b" clip-path="url(#pf15e1)"/><path d="M34.3676 29.087780000000002 Q36.5026 26.30932 38.6376 28.96746" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.0526" cy="28.4460825" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.7974 23.814600000000002 Q27.11065 23.475640000000002 24.912399999999998 24.644440000000003 L24.912399999999998 25.617560000000005 Q27.11065 25.665160000000004 29.7974 26.247400000000003 Z" fill="#604527"/><path d="M34.202600000000004 23.814600000000002 Q36.88935 23.475640000000002 39.0876 24.644440000000003 L39.0876 25.617560000000005 Q36.88935 25.665160000000004 34.202600000000004 26.247400000000003 Z" fill="#604527"/><path d="M28.6945 40.0525 Q32 40.9525 35.3055 40.0525" stroke="#43241a" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M29.494500000000002 40.752500000000005 Q32 41.6349 34.505500000000005 40.752500000000005 Z" fill="#613525"/>
+  <g transform="translate(0 0.05)"></g>
+  <g stroke="#3de8d8" stroke-width="0.5" fill="none" opacity="0.75"><path d="M23.589599999999997 31 L26.089599999999997 35.5 L21.389599999999998 35.5 Z"/><path d="M22.989599999999996 37.3 h4 M23.789599999999997 38.6 h2.4"/></g>
+  
+  
+  
+  
+
+  <g >
+  <path d="M20.1896 25 C19.589599999999997 13 22.589599999999997 8.6 32 8.4 C41.4104 8.6 44.4104 13 43.8104 25 C42.4104 20 40.4104 17.2 32 16.8 C23.589599999999997 17.2 21.589599999999997 20 20.1896 25 Z" fill="#a37540" />
+    <g clip-path="url(#pf15t)"><path d="M34.8526 0 L64 0 L64 30 L38.84624 30 Z" fill="#70af8c" opacity="0.75"/>
+    <g stroke="#6a4c2a" stroke-width="0.5" fill="none"><path d="M22.589599999999997 21 Q30 11 41.4104 13"/><path d="M24.589599999999997 19 Q32 12 42.4104 17"/></g><path d="M33.71156 11 Q41.4104 12 42.610400000000006 19" stroke="#fff" stroke-width="0.9" fill="none" opacity="0.35"/></g>
+  
+  
+  
+  </g>
+  
+
+  
+  <path d="M41.8104 19 L39.9104 21.5 L39.9104 24.5 L39.8 25.2 M39.9104 22.6 L42.010400000000004 23.6" stroke="#ff3d5f" stroke-width="0.55" fill="none" stroke-linejoin="round" opacity="0.5"/>
+        <circle cx="39.8" cy="25.2" r="0.6" fill="#ff3d5f" opacity="0.5"/>
+  
+  
+</svg></span><span><strong>Vector</strong><br><span class="muted small">face</span></span></div></td>
+    <td class="num"><span class="pill t-good">12</span></td><td class="num"><span class="pill t-short">7</span></td><td class="num"><span class="pill t-short">3</span></td><td class="small gain">learns on the job</td>
+    <td class="side"><span class="where">INSIDE</span></td></tr><tr class="tr--placed"><td class="who"><div class="whoin"><span class="pface" style="width:36px;height:36px"><svg class="art portrait" viewBox="9 6 46 46" width="36" height="36" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf16bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf16h"><path d="M32 11 C41.9354 11 45.2472 16 45.2472 24 C45.2472 30 44.6472 33 42.9 38 L35.0884 44.784 Q32 46.484 28.9116 44.784 L21.1 38 C19.352800000000002 33 18.7528 30 18.7528 24 C18.7528 16 22.0646 11 32 11 Z"/></clipPath>
+    <clipPath id="pf16s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    
+    <clipPath id="pf16b"><path d="M16.2528 30 C14.7528 6 49.2472 6 47.7472 30 Z"/></clipPath>
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf16bg)"/>
+  
+
+  <g >
+  <path d="M16.2528 30 C14.7528 6 49.2472 6 47.7472 30 Z" fill="#17171b"/>
+  <g fill="#17171b"><circle cx="19.7528" cy="18" r="5.2"/><circle cx="24.7528" cy="12.5" r="5.6"/><circle cx="32" cy="10.5" r="5.8"/><circle cx="39.2472" cy="12" r="5.6"/><circle cx="44.2472" cy="17.5" r="5.2"/><circle cx="17.7528" cy="25" r="4"/><circle cx="46.2472" cy="24" r="4"/></g><path d="M16.2528 30 C14.7528 6 49.2472 6 47.7472 30 Z" fill="#17171b"/>
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#1f2b2a"/>
+  <g clip-path="url(#pf16s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#2a736c"/><path d="M27 46 L32 54 L37 46 Z" fill="#141c1b"/></g>
+  
+  <path d="M27.8702 37 L27.8702 48 Q32 51 36.1298 48 L36.1298 37 Z" fill="#7e5e54"/><path d="M34.329800000000006 38 L36.1298 37 L36.1298 48 L34.329800000000006 49 Z" fill="#92ac8f" opacity="0.8"/>
+  
+
+  <ellipse cx="18.3168" cy="30" rx="1.6535699999999998" ry="2.9590199999999998" fill="#7e5e54"/>
+  <ellipse cx="45.6832" cy="30" rx="1.6535699999999998" ry="2.9590199999999998" fill="#c68863"/><path d="M46.5832 27.82425 Q47.28865 30 46.383199999999995 32.6109" stroke="#92ac8f" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C41.9354 11 45.2472 16 45.2472 24 C45.2472 30 44.6472 33 42.9 38 L35.0884 44.784 Q32 46.484 28.9116 44.784 L21.1 38 C19.352800000000002 33 18.7528 30 18.7528 24 C18.7528 16 22.0646 11 32 11 Z" fill="#c68863"/>
+  <g clip-path="url(#pf16h)">
+    <path d="M0 0 L30.410336 9 C24.71404 20 25.641344 31 30.5 48 L0 64 Z" fill="#7e5e54"/>
+    <path d="M35.97416 34.5 L44.4472 31.5 L42.4 39 Z" fill="#a4745c" opacity="0.55"/>
+    <path d="M64 0 L43.4472 12 L43.9472 30 L41.1 40.5 L64 64 Z" fill="#92ac8f"/>
+        
+    
+    
+    <g transform="translate(0 0.21170000000000044)"><path d="M20.7528 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#a4745c"/></g>
+    <circle cx="26" cy="34" r="0.45" fill="#704831"/>
+    
+  </g>
+
+  <path d="M31.5 30.2117 L28.90316 34.2593 L32.7 35.0593 L31.6 33.7593 Z" fill="#7e5e54"/>
+    <path d="M32.9 32.359300000000005 L33.5 34.359300000000005 L32.7 35.0593 Z" fill="#92ac8f" opacity="0.7"/>
+    <path d="M29.5193 35.1593 Q32 35.5093 34.16456 35.1593" stroke="#784d3a" stroke-width="0.7" fill="none" stroke-linecap="round"/><clipPath id="pf16e-1"><path d="M24.9893 29.1463 Q27.3643 26.9998 29.7393 29.2335 Q27.3643 30.437425 24.9893 29.1463 Z"/></clipPath><path d="M24.9893 29.1463 Q27.3643 26.9998 29.7393 29.2335 Q27.3643 30.437425 24.9893 29.1463 Z" fill="#e0ccbb"/><circle cx="27.6643" cy="29.0474425" r="1.4725" fill="#120d0b" clip-path="url(#pf16e-1)"/><path d="M24.9893 29.1463 Q27.3643 26.9998 29.7393 29.2335" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.9143" cy="28.7189275" r="0.45" fill="#fff" opacity="0.85"/><path d="M28.5518 27.21665 Q25.9393 27.01665 24.5893 29.3463 Q26.4143 28.226155000000002 28.5518 27.21665 Z" fill="#a4745c"/><clipPath id="pf16e1"><path d="M34.2607 29.2335 Q36.6357 26.9998 39.0107 29.1463 Q36.6357 30.437425 34.2607 29.2335 Z"/></clipPath><path d="M34.2607 29.2335 Q36.6357 26.9998 39.0107 29.1463 Q36.6357 30.437425 34.2607 29.2335 Z" fill="#e0ccbb"/><circle cx="36.9357" cy="29.0474425" r="1.4725" fill="#120d0b" clip-path="url(#pf16e1)"/><path d="M34.2607 29.2335 Q36.6357 26.9998 39.0107 29.1463" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.1857" cy="28.7189275" r="0.45" fill="#fff" opacity="0.85"/><path d="M35.4482 27.21665 Q38.0607 27.01665 39.4107 29.3463 Q37.5857 28.226155000000002 35.4482 27.21665 Z" fill="#a4745c"/>
+  <path d="M29.6643 24.917500000000004 Q26.84555 24.130190000000002 24.5393 25.240040000000004 L24.5393 25.536760000000005 Q26.84555 24.797810000000002 29.6643 25.6593 Z" fill="#131113"/><path d="M34.3357 24.917500000000004 Q37.154450000000004 24.130190000000002 39.4607 25.240040000000004 L39.4607 25.536760000000005 Q37.154450000000004 24.797810000000002 34.3357 25.6593 Z" fill="#131113"/><path d="M29.7315 40.294 Q31 39.395149999999994 32 39.799632499999994 Q33 39.395149999999994 34.2685 40.294 Z" fill="#b27156" opacity="0.8"/><path d="M29.2315 40.294 Q32 41.193999999999996 34.7685 40.294" stroke="#784d3a" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.0315 40.994 Q32 42.0322 33.968500000000006 40.994 Z" fill="#b8785a"/>
+  <g transform="translate(0 0.29)"></g>
+  <path d="M21.2528 22 L22.7528 24 L21.9528 25.2 L23.7528 28" stroke="#daa38b" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>
+  
+  
+  
+  
+
+  <g >
+  
+  <g fill="#2a807a" opacity="0.55"><circle cx="39.2472" cy="11" r="2.2"/><circle cx="43.7472" cy="16.5" r="2"/></g>
+  
+  
+  </g>
+  
+
+  
+  <path d="M43.6472 19 L41.7472 21.5 L41.7472 24.5 L39.8 25.2 M41.7472 22.6 L43.8472 23.6" stroke="#f2b544" stroke-width="0.55" fill="none" stroke-linejoin="round" opacity="0.5"/>
+        <circle cx="39.8" cy="25.2" r="0.6" fill="#f2b544" opacity="0.5"/>
+  
+  
+</svg></span><span><strong>Siphon</strong><br><span class="muted small">face</span></span></div></td>
+    <td class="num"><span class="pill t-good">13</span></td><td class="num"><span class="pill t-near">9</span></td><td class="num"><span class="pill t-short">2</span></td><td class="small gain">2 points from pro</td>
+    <td class="side"><span class="where">INSIDE</span></td></tr>
+        <tr class="tgrp "><th colspan="6">Not free today <span></span></th></tr><tr class="tr--out"><td class="who"><div class="whoin"><span class="pface" style="width:36px;height:36px"><svg class="art portrait" viewBox="9 6 46 46" width="36" height="36" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf17bg" x1="1" x2="0"><stop offset="0" stop-color="#9b8cff" stop-opacity="0.28"/><stop offset="0.65" stop-color="#9b8cff" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf17h"><path d="M32 11 C39.6614 11 42.2152 16 42.2152 24 C42.2152 30 41.6152 33 42.208 38 L35.8902 47.47 Q32 49.17 28.1098 47.47 L21.792 38 C22.3848 33 21.784799999999997 30 21.784799999999997 24 C21.784799999999997 16 24.3386 11 32 11 Z"/></clipPath>
+    <clipPath id="pf17s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf17t"><path d="M24.784799999999997 21 C23.284799999999997 9 25.784799999999997 4.5 32 4.5 C41.2152 5 44.2152 15 43.0152 26 C41.6152 22 40.2152 19.5 38.2152 18.6 C33 18 30 19.5 24.784799999999997 21 Z"/></clipPath>
+    
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf17bg)"/>
+  
+
+  <g >
+  
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#2b2433"/>
+  <g clip-path="url(#pf17s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#564c81"/><path d="M27 46 L32 54 L37 46 Z" fill="#1c1721"/></g>
+  
+  <path d="M27.962600000000002 37 L27.962600000000002 48 Q32 51 36.0374 48 L36.0374 37 Z" fill="#654741"/><path d="M34.2374 38 L36.0374 37 L36.0374 48 L34.2374 49 Z" fill="#9a718a" opacity="0.8"/>
+  
+
+  <ellipse cx="21.569599999999998" cy="30" rx="1.8051899999999999" ry="3.2303399999999995" fill="#654741"/>
+  <ellipse cx="42.430400000000006" cy="30" rx="1.8051899999999999" ry="3.2303399999999995" fill="#9a6142"/><path d="M43.330400000000004 27.62475 Q44.155550000000005 30 43.1304 32.8503" stroke="#9a718a" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C39.6614 11 42.2152 16 42.2152 24 C42.2152 30 41.6152 33 42.208 38 L35.8902 47.47 Q32 49.17 28.1098 47.47 L21.792 38 C22.3848 33 21.784799999999997 30 21.784799999999997 24 C21.784799999999997 16 24.3386 11 32 11 Z" fill="#9a6142"/>
+  <g clip-path="url(#pf17h)">
+    <path d="M0 0 L30.774176 9 C26.381639999999997 20 27.096704 31 30.5 48 L0 64 Z" fill="#654741"/>
+    <path d="M35.06456 34.5 L41.415200000000006 31.5 L41.708 39 Z" fill="#815542" opacity="0.55"/>
+    <path d="M64 0 L40.415200000000006 12 L40.915200000000006 30 L40.408 40.5 L64 64 Z" fill="#9a718a"/>
+        
+    
+    <path d="M20.784799999999997 15 L25.784799999999997 15 L24.784799999999997 27 L20.784799999999997 27 Z" fill="#3a291e" opacity="0.3"/><path d="M21.584799999999998 17.5 l2.4 2.4 l-2.4 2.4 M23.184799999999996 23.6 h2.2" stroke="#9b8cff" stroke-width="0.5" fill="none" opacity="0.7"/>
+    <g transform="translate(0 -0.04129999999999967)"><path d="M23.784799999999997 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#815542"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 29.9587 L30.25364 35.1422 L32.7 35.9422 L31.6 34.6422 Z" fill="#654741"/>
+    <path d="M32.9 33.242200000000004 L33.5 35.242200000000004 L32.7 35.9422 Z" fill="#9a718a" opacity="0.7"/>
+    <path d="M30.6447 36.0422 Q32 36.3922 33.26424 36.0422" stroke="#623a29" stroke-width="0.7" fill="none" stroke-linecap="round"/><clipPath id="pf17e-1"><path d="M24.3708 29.12766 Q26.9408 27.258119999999998 29.5108 28.90238 Q26.9408 30.154245 24.3708 29.12766 Z"/></clipPath><path d="M24.3708 29.12766 Q26.9408 27.258119999999998 29.5108 28.90238 Q26.9408 30.154245 24.3708 29.12766 Z" fill="#d5c2b3"/><circle cx="27.2408" cy="28.8269325" r="1.27717875" fill="#120d0b" clip-path="url(#pf17e-1)"/><path d="M24.3708 29.12766 Q26.9408 27.258119999999998 29.5108 28.90238" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.4908" cy="28.5633975" r="0.45" fill="#fff" opacity="0.85"/><clipPath id="pf17e1"><path d="M34.489200000000004 28.90238 Q37.059200000000004 27.258119999999998 39.629200000000004 29.12766 Q37.059200000000004 30.154245 34.489200000000004 28.90238 Z"/></clipPath><path d="M34.489200000000004 28.90238 Q37.059200000000004 27.258119999999998 39.629200000000004 29.12766 Q37.059200000000004 30.154245 34.489200000000004 28.90238 Z" fill="#d5c2b3"/><circle cx="37.3592" cy="28.8269325" r="1.27717875" fill="#120d0b" clip-path="url(#pf17e1)"/><path d="M34.489200000000004 28.90238 Q37.059200000000004 27.258119999999998 39.629200000000004 29.12766" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.6092" cy="28.5633975" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.2408 23.943300000000004 Q26.314799999999998 24.03759 23.9208 24.710440000000006 L23.9208 25.599960000000003 Q26.314799999999998 26.039010000000005 29.2408 26.1671 Z" fill="#261b15"/><path d="M34.75920000000001 23.943300000000004 Q37.68520000000001 24.03759 40.07920000000001 24.710440000000006 L40.07920000000001 25.599960000000003 Q37.68520000000001 26.039010000000005 34.75920000000001 26.1671 Z" fill="#261b15"/><path d="M30.357 40.3645 Q31 39.83965 32 40.0758325 Q33 39.83965 33.643 40.3645 Z" fill="#92543d" opacity="0.8"/><path d="M29.857 40.3645 Q32 41.2645 34.143 40.3645" stroke="#623a29" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.657 41.0645 Q32 42.6974 33.343 41.0645 Z" fill="#94583f"/>
+  
+  <path d="M24.784799999999997 22.5 L27.784799999999997 27" stroke="#bd8a75" stroke-width="0.7"/>
+  
+  
+  <path d="M23.984799999999996 34.2 L21.184799999999996 31.5 M40.0152 34.2 L42.815200000000004 31.5" stroke="#15181d" stroke-width="0.9"/>
+      <path d="M24.284799999999997 34.4 Q32 31.4 39.7152 34.4 L41.108 41 Q32 47.4 22.892000000000003 41 Z" fill="#2a2f38"/>
+      <path d="M32.5 32.6 Q38.2152 33 39.7152 34.4 L41.108 41 Q34 45.6 32.5 46 Z" fill="#4c4b74"/>
+      <circle cx="26" cy="41.2" r="2.7" fill="#3a404b"/><circle cx="26" cy="41.2" r="1.7" fill="#14171c"/><path d="M24.8 41.2 h2.4 M26 40 v2.4" stroke="#5a616d" stroke-width="0.35"/><circle cx="38" cy="41.2" r="2.7" fill="#3a404b"/><circle cx="38" cy="41.2" r="1.7" fill="#14171c"/><path d="M36.8 41.2 h2.4 M38 40 v2.4" stroke="#5a616d" stroke-width="0.35"/>
+      <path d="M30.6 37 h2.8 M30.9 38.2 h2.2" stroke="#14171c" stroke-width="0.5"/>
+      <circle cx="37.6152" cy="36.2" r="0.5" fill="#f2b544"/>
+  
+
+  <g >
+  <path d="M24.784799999999997 21 C23.284799999999997 9 25.784799999999997 4.5 32 4.5 C41.2152 5 44.2152 15 43.0152 26 C41.6152 22 40.2152 19.5 38.2152 18.6 C33 18 30 19.5 24.784799999999997 21 Z" fill="#3a291e" />
+    <g clip-path="url(#pf17t)"><path d="M34.5538 0 L64 0 L64 30 L38.12912 30 Z" fill="#6b5b8f" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  
+  <path d="M40.6152 19 L38.7152 21.5 L38.7152 24.5 L39.8 25.2 M38.7152 22.6 L40.815200000000004 23.6" stroke="#f2b544" stroke-width="0.55" fill="none" stroke-linejoin="round" opacity="0.5"/>
+        <circle cx="39.8" cy="25.2" r="0.6" fill="#f2b544" opacity="0.5"/>
+  
+  
+</svg></span><span><strong>Grid</strong><br><span class="muted small">muscle</span></span></div></td>
+    <td class="num"><span class="pill t-short">4</span></td><td class="num"><span class="pill t-short">3</span></td><td class="num"><span class="pill t-short">4</span></td><td class="small gain"><span class="muted">—</span></td>
+    <td class="side"><span class="muted">hurt · 3 days</span></td></tr>
+      </tbody>
+    </table>
+    <p class="muted small foot">Tap a column to sort by it (here: medical). Tap a row to put them in.</p>
+  </div></section>
+</div></body></html>
