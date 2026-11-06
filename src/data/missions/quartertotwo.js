@@ -96,7 +96,7 @@ export const QUARTER_TO_TWO = {
       ],
     },
     {
-      id: 'toll',
+      id: 'toll_boat',
       situations: ['threat'],
       after: 1,
       text: `A Red Lantern toll boat draws alongside, its collector holding a receipt book inside a clear plastic bag. "Weather supplement," comes the explanation; the usual amount has been crossed out.`,

@@ -9,6 +9,7 @@ import { pathToFileURL } from 'node:url';
 import { checkJob } from '../src/core/jobcheck.js';
 import { validateMissions } from '../src/core/validate.js';
 import { MISSIONS, ownCrises } from '../src/data/missions.js';
+import { TWISTS } from '../src/data/twists.js';
 
 const args = process.argv.slice(2);
 if (!args.length) {
@@ -31,7 +32,10 @@ if (args.includes('--all')) {
 let bad = 0;
 for (const { from, job, inGame } of jobs) {
   const others = MISSIONS.map((m) => m.id).filter((id) => !(inGame && id === job.id));
-  const { errors, warnings } = checkJob(job, { others });
+  // Every crisis and twist id outside this job (its own crises are the same objects in the game).
+  const own = new Set(job.crises);
+  const takenCrises = [...new Set([...MISSIONS.flatMap((m) => m.crises).filter((c) => !own.has(c) && !(inGame && ownCrises(MISSIONS.find((x) => x.id === job.id)).includes(c))).map((c) => c.id), ...TWISTS.map((t) => t.id)])];
+  const { errors, warnings } = checkJob(job, { others, takenCrises });
   const base = validateMissions([{ ...job, rookie: true }]).filter((p) => !errors.some((e) => p.endsWith(e.split(': ').pop())));
   const all = [...errors, ...base];
   if (all.length) bad++;

@@ -72,3 +72,12 @@ test("the checker's retired names are WORLD.md's", () => {
   const block = rest.slice(rest.indexOf(line), rest.indexOf('```', rest.indexOf(line)));
   for (const name of RETIRED) assert.ok(block.includes(name), `${name} is in WORLD.md's RETIRED line`);
 });
+
+test('a crisis id already used by another job\'s crisis or a twist is an error (2026-11-06)', () => {
+  const job = clone(WRONG_HORSE);
+  job.id = 'wrong_horse_three';
+  job.crises[0].id = 'patrol';
+  const { errors } = checkJob(job, { others: ids, takenCrises: ['patrol', 'toll'] });
+  assert.ok(errors.some((e) => /crisis id "patrol" is already used/.test(e)));
+  assert.ok(!checkJob(clone(WRONG_HORSE), { others: [], takenCrises: ['patrol'] }).errors.some((e) => /already used/.test(e)), 'its own ids are fine');
+});

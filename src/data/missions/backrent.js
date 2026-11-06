@@ -97,7 +97,7 @@ export const BACK_RENT = {
       ],
     },
     {
-      id: 'runner',
+      id: 'tangs_runner',
       situations: ['crowd', 'threat'],
       after: 1,
       text: `An adult runner in a Silver Fan bowling shirt stops on the stair: "{tang} sent me for a box." Below, {meena} sets down the iron; the runner adds, "Please don't make me go back empty."`,
@@ -367,7 +367,7 @@ export const BACK_RENT = {
       ],
     },
     {
-      id: 'patrol',
+      id: 'alley_patrol',
       situations: ['police'],
       after: 3,
       text: `The remaining crates wait beside the loading bay; collection is due any minute. At the alley mouth, a Wet Sleeve patrol stops beneath the noodle sign and switches on a neural-load scanner.`,
