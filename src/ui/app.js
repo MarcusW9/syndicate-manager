@@ -10,6 +10,7 @@ import { billDue, mondayBrief, crewStandard, crewAgainstStandard } from '../core
 import { crewLead } from '../core/lead.js';
 import { rankOf } from '../core/tong.js';
 import { TONG_EXPLAINER } from '../data/tong.js';
+import { RAID } from '../data/raids.js';
 import { NAMES } from '../config/names.js';
 import { DISTRICTS, SAFEHOUSE_DISTRICT } from '../data/districts.js';
 import { DISTRICT_CARDS, FACTIONS, STREET_FACTS, HISTORY } from '../data/city.js';
@@ -27,7 +28,7 @@ import { siteFor } from './siteplan.js';
 import { placePiece, removePiece, turnPiece, pieceAt, refundOf, canRemove } from '../core/hallbuild.js';
 import { PIECES } from '../data/hallBuild.js';
 
-import { advanceDay, calendar, formatShortDate, isBlocked, seasonStartDay } from '../core/time.js';
+import { advanceDay, calendar, isBlocked, seasonStartDay } from '../core/time.js';
 import { createNewGame, chooseFounders } from '../core/state.js';
 import { marksText } from '../core/marks.js';
 import { recordOf } from '../core/record.js';
@@ -39,7 +40,7 @@ import { CLIENTS } from '../data/clients.js';
 import { availability, APPROACHES, traitMods, ratedStat, maxCrew, crewSizeRead } from '../core/crew.js';
 import { rollTarget, successChance, riskLabel } from '../core/risk.js';
 import { resolveDecision } from '../core/decisions.js';
-import { WATCHED_PENALTY, HEAT_NOTICE_AT, HEAT_MAX, heatChoices } from '../core/heat.js';
+import { WATCHED_PENALTY, HEAT_MAX, heatChoices } from '../core/heat.js';
 import { activeRumour } from '../core/rumours.js';
 import { alerts, upcoming } from '../core/upcoming.js';
 import { money } from '../core/money.js';
@@ -489,22 +490,18 @@ function keyStatsFor(op, tpl, threat) {
 const daysLeft = (lastDay) => { const n = lastDay - state.day; return n <= 0 ? 'last day' : n === 1 ? '1 day left' : `${n} days left`; };
 /** Heat as a small bar: green while quiet, amber, then red from the level that brings the fixer. */
 /**
- * The top bar's heat (2026-11-06, owner: heat is per district now): the hottest district, named,
- * and a tap takes you to it on Ops. With no heat anywhere it's just "Heat 0/10".
+ * The top bar's heat (2026-11-06, mock-up drafts/prototypes/topbar.html): nothing while no district
+ * is warm; from HEAT_CHIP_AT a chip naming the hottest one, amber, red from the heat that can bring
+ * a raid. A tap opens that district on Ops, where every district's heat is on the map.
  */
+const HEAT_CHIP_AT = 3;
 function heatStat() {
-  const hot = state.heat > 0 ? hottest(state) : null;
-  if (!hot || state.founding) return `<span class="stat"><span class="stat__label">Heat</span> ${heatMeter()}</span>`;
-  return `<button class="stat stat--heat" data-action="ops-district" data-id="${esc(hot.district)}" aria-label="Hottest district: ${esc(districtName(hot.district))}, heat ${state.heat} of ${HEAT_MAX}. See it on Ops">
-    <span class="stat__label">Heat<span class="stat__where"> · ${esc(districtName(hot.district).replace(/^The /, ''))}</span></span> ${heatMeter()}</button>`;
+  const hot = state.founding || state.heat < HEAT_CHIP_AT ? null : hottest(state);
+  if (!hot) return '';
+  return `<button class="heatchip ${state.heat >= RAID.heatAt ? 'is-hot' : ''}" data-action="ops-district" data-id="${esc(hot.district)}" aria-label="Hottest district: ${esc(districtName(hot.district))}, heat ${state.heat} of ${HEAT_MAX}${state.heat >= RAID.heatAt ? ', hot enough for a raid' : ''}. See it on Ops">
+    <span class="heatchip__l">Heat</span> ${esc(districtName(hot.district).replace(/^The /, ''))} <b>${state.heat}</b></button>`;
 }
 
-function heatMeter() {
-  const h = state.heat;
-  const tone = h >= HEAT_NOTICE_AT ? 'high' : h >= 3 ? 'mid' : 'low';
-  const hot = hottest(state); // heat per district: the bar is the hottest (core/heat.js)
-  return `<span class="heat heat--${tone}" aria-label="${esc(hot ? `Hottest: ${districtName(hot.district)}, heat ${h} of ${HEAT_MAX}` : `Heat 0 of ${HEAT_MAX}`)}"><span class="heat__track" aria-hidden="true"><span style="width:${(h / HEAT_MAX) * 100}%"></span></span>${h}/${HEAT_MAX}</span>`;
-}
 const districtName = (key) => NAMES.districts[key] ?? key;
 const districtTurf = (key) => DISTRICTS[key]?.turf ? ` · ${esc(DISTRICTS[key].turf)}` : '';
 
@@ -583,11 +580,9 @@ function render() {
       <div class="topbar__stats">
         <span class="stat stat--cash"><span class="stat__label">Cash</span> ${money(state.cash)}${cashDelta()}</span>
         ${heatStat()}
-        <button class="tierbtn" data-action="info" data-id="tong" aria-expanded="${openInfo.has('tong')}" aria-label="What's a tong?"><span class="tier">${esc(rankOf(state).name)}<span class="tier__word"> tong</span></span></button>
       </div>
       ${state.activeMission ? '' : `<button class="savebtn ${screen === 'settings' ? 'is-active' : ''}" data-action="nav" data-id="settings" aria-label="Save and settings" aria-pressed="${screen === 'settings'}"><span aria-hidden="true">☰</span><span class="savebtn__word"> Save</span></button>`}
       ${planning || state.founding ? '' : renderContinue(blocked, resting, unread, 'topbar__continue')}
-      ${infoText('tong', TONG_EXPLAINER)}
     </header>
 
     <nav class="nav" aria-label="Main">
@@ -623,6 +618,15 @@ function render() {
 }
 
 /** Date, a bar that fills across the week, and how long until Sunday's bills. */
+/**
+ * The top bar's date (2026-11-06, owner: the bar "looks packed"): weekday and week; the season
+ * only on its first day (it's in Sunday's message too).
+ */
+function topbarDate(day) {
+  const c = calendar(day);
+  return `${c.weekday} · Wk ${c.week}${day === seasonStartDay(day) ? ` · S${c.season}` : ''}`;
+}
+
 function renderWhen() {
   const today = (state.day - 1) % 7; // 0 = Monday, 6 = Sunday (bills)
   const toBills = 6 - today;
@@ -631,9 +635,9 @@ function renderWhen() {
   const cells = Array.from({ length: 7 }, (_, i) =>
     `<span class="week__day ${i < today ? 'is-done' : i === today ? 'is-today' : ''} ${i === 6 ? 'is-bills' : ''}"></span>`).join('');
   return `<div class="topbar__when">
-      <div class="topbar__date">${esc(formatShortDate(state.day))}</div>
+      <div class="topbar__date">${esc(topbarDate(state.day))}</div>
       <div class="week" role="img" aria-label="Day ${today + 1} of 7 this week">${cells}</div>
-      <div class="week__note">Day ${state.day} · ${bills}</div>
+      <div class="week__note">${bills}</div>
     </div>`;
 }
 
@@ -2516,7 +2520,9 @@ function renderDistrictLore() {
 function renderOpsScreen() {
   return `
     <section class="panel">
-      <h1 class="cityhead">Ops <span class="muted small">${esc(NAMES.city)} tonight</span></h1>
+      <div class="opshead"><h1 class="cityhead">Ops <span class="muted small">${esc(NAMES.city)} tonight</span></h1>
+        <button class="tierbtn" data-action="info" data-id="tong" aria-expanded="${openInfo.has('tong')}" aria-label="The tong's rank: ${esc(rankOf(state).name)}. What's a tong?"><span class="tier">${esc(rankOf(state).name)} tong</span></button></div>
+      ${infoText('tong', TONG_EXPLAINER)}
       <div class="cols2 cols2--map">
         <div>${cityMap()}</div>
         <div>${cityDistrict ? districtCard(cityDistrict) : ''}${renderOps()}${citySummary()}</div>
