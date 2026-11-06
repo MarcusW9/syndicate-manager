@@ -1,8 +1,8 @@
 # Opening jobs: outlines for the owner (draft, 2026-11-06)
 
 An opening job is a favour for a district's contact, done before they offer you a hall there.
-These began as outlines for the owner; **the full drafts are now in `drafts/opening-jobs/`** (see its
-README), for the owner to edit. Once the text is final, each one goes through `docs/new-job-prompt.md` and `/add-job` like any other. Old Town has none: it's
+These began as outlines for the owner; **the jobs are written, polished and in the game** (`src/data/missions/`;
+see `drafts/opening-jobs/README.md`). Built 2026-11-06, save v43. Once the text is final, each one goes through `docs/new-job-prompt.md` and `/add-job` like any other. Old Town has none: it's
 the home hall.
 
 Checked against `WORLD.md` (the context block, the four clients' sections) and the jobs each

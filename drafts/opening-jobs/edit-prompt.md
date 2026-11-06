@@ -1,9 +1,9 @@
 # Prompt: edit an opening job
 
 Paste everything in the box into a fresh chat, then paste one opening job file from
-`drafts/opening-jobs/` after it, and say what you want changed (or ask for a polish). The reply is the
+`src/data/missions/` (backrent, quartertotwo, flatdoesntexist, nofortyfirstfloor) after it, and say what you want changed (or ask for a polish). The reply is the
 whole file again, ready to save over the old one. Then check it:
-`node scripts/check-job.mjs drafts/opening-jobs/<file>.js`.
+`node scripts/check-job.mjs src/data/missions/<file>.js`.
 
 The CONTEXT and RULES below are copied from `docs/new-job-prompt.md`, which `tests/prompts.test.js`
 keeps in step with `WORLD.md`. If canon changes, copy them again from there.

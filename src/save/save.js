@@ -575,5 +575,11 @@ function migrate(state) {
     for (const h of state.halls ?? []) h.build = h.build ?? [];
     state.version = 42;
   }
+  if (state.version === 42) {
+    // v43: opening jobs (core/halls.js). A hall already offered or opened needs no favour now.
+    state.openings = state.openings ?? {};
+    for (const d of [...(state.hallOffers ?? []), ...(state.halls ?? []).map((h) => h.district)]) state.openings[d] = { status: 'done', jobId: null };
+    state.version = 43;
+  }
   return state;
 }

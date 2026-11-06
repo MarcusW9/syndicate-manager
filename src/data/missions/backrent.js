@@ -3,13 +3,15 @@
 // Rao has arranged collection from the covered loading bay behind the shop.
 // The final beat hands over the Night Market hall (data/sites.js HALLS).
 // Rolls aimed at 8-13. No Silver Fan grudge added.
-// Not in the game yet: no client lists it.
+// The opening job for this district's hall (core/halls.js introduceHalls): never dealt to the
+// board at random; the contact asks for it once the tong is welcome. Owner's text (2026-11-06).
 
-/** @type {import('../../src/core/types.js').MissionTemplate} */
+/** @type {import('../../core/types.js').MissionTemplate} */
 export const BACK_RENT = {
   id: 'back_rent',
   name: 'Back Rent',
   district: 'nightMarket',
+  opening: 'nightMarket', // the hall it opens (data/halls.js HALL_SITES)
   threat: 2,
   pay: 3500,
   days: 1,

@@ -13,7 +13,7 @@ import { ECONOMY } from '../data/economy.js';
 import { refreshSideBoard } from './sidetasks.js';
 import { refreshArmoury } from './looks.js';
 
-export const SAVE_VERSION = 42;
+export const SAVE_VERSION = 43;
 
 // A rookie crew's first board: small work only.
 export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];
@@ -88,6 +88,7 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
     rosterCap: STARTING_ROSTER_CAP, // all the halls' beds (core/halls.js syncHalls)
     halls: [], // the tong's halls, one per district (core/halls.js); the home hall is set below
     hallOffers: [], // districts whose contact has offered us a place (introduceHalls)
+    openings: {}, // each district's opening favour: { status, jobId, retryDay } (core/halls.js, save v43)
     clients: {},
     founding: null, // { candidates } while the player picks the founders (chooseFounders)
   };

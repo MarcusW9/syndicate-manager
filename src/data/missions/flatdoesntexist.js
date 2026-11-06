@@ -4,13 +4,15 @@
 // Mak Chi-on appears in two crises. The final beat hands over the Basin hall
 // above the tack workshop (data/sites.js HALLS).
 // Original stats, difficulties and costs preserved.
-// Not in the game yet: no client lists it.
+// The opening job for this district's hall (core/halls.js introduceHalls): never dealt to the
+// board at random; the contact asks for it once the tong is welcome. Owner's text (2026-11-06).
 
-/** @type {import('../../src/core/types.js').MissionTemplate} */
+/** @type {import('../../core/types.js').MissionTemplate} */
 export const THE_FLAT_DOESNT_EXIST = {
   id: 'the_flat_doesnt_exist',
   name: 'The Flat Doesn\'t Exist',
   district: 'basin',
+  opening: 'basin', // the hall it opens (data/halls.js HALL_SITES)
   threat: 3,
   pay: 5000,
   days: 1,

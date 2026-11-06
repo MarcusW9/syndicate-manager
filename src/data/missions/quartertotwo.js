@@ -4,13 +4,15 @@
 // The old man stays a hint: a worn rope he taught the Ferryman to retire, never a name.
 // The final beat hands over the Docks hall (data/sites.js HALLS).
 // Original stats, difficulties, costs and job structure preserved.
-// Not in the game yet: no client lists it.
+// The opening job for this district's hall (core/halls.js introduceHalls): never dealt to the
+// board at random; the contact asks for it once the tong is welcome. Owner's text (2026-11-06).
 
-/** @type {import('../../src/core/types.js').MissionTemplate} */
+/** @type {import('../../core/types.js').MissionTemplate} */
 export const QUARTER_TO_TWO = {
   id: 'quarter_to_two',
   name: 'Quarter to Two',
   district: 'docks',
+  opening: 'docks', // the hall it opens (data/halls.js HALL_SITES)
   threat: 2,
   pay: 4000,
   days: 1,

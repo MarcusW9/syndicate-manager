@@ -136,6 +136,7 @@ export function jobView(state, job) {
   const days = job.days ?? tpl.days;
   return {
     tpl,
+    jobId: job.id,
     client: CLIENTS.find((c) => c.id === job.clientId) ?? null,
     trust,
     days,
@@ -207,7 +208,8 @@ export function postJobs(state, count = NEW_PER_WEEK, { slot = 0, routineOnly = 
   // The week's first offer is routine work and the other two never are (DESIGN.md 2026-11-04, the
   // owner's "middle version"); a bigger tong's extra offers are mostly routine. Offers are what pay
   // the bills, so the count stays three a week: routine work changes the mix, not the amount.
-  const unlocked = MISSIONS.filter((m) => jobUnlocked(state, m.id));
+  // Opening jobs are asked for by a contact (core/halls.js), never dealt at random.
+  const unlocked = MISSIONS.filter((m) => !m.opening && jobUnlocked(state, m.id));
   // Routine work comes from clients still calling you, or as walk-in work.
   const calling = callingClients(state);
   const routineClient = (m) => (m.walkIn ? null : calling.find((c) => c.jobs.includes(m.id)) ?? false);
