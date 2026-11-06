@@ -5,6 +5,17 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+## 2026-11-06 · Opening jobs
+- **A hall is earned now, not just offered.** Once a district's contact would have you, they ask a favour first, a job of its own:
+  - *Back Rent* for Madam Rao (the Night Market);
+  - *Quarter to Two* for the Ferryman (the Docks);
+  - *The Flat Doesn't Exist* for Ruth Okonkwo (the Basin);
+  - *There Is No Forty-First Floor* for Mr. Szeto (Glass Heights).
+- **It's on the board for two weeks,** flagged "Opens the … hall", and its plan says what finishing it gets you. Finish it and the hall is offered at once: pay the deposit as before.
+- **Walk away, fail, or let it go off the board,** and the contact asks again two weeks later, with one of their own jobs as the test.
+- Crew › Halls says what's still needed ("Madam Rao wants a favour first: Back Rent, on the board").
+- **Save format v43.** Halls already offered or opened in an old save need no favour.
+
 ## 2026-11-06 · Mini maps on the crew-out cards
 - **Each crew out on City now has a small map of its job's site.** The route walked so far is solid, the rest dashed, and the crew stand as dots where they got to today. A dot on the perch or by the van shows someone on overwatch or the wheel.
 - **A crew waiting on your call** shows yellow with a ring that pulses (still with reduced motion). Nothing else moves.

@@ -61,9 +61,11 @@ function checkCost(where, cost, errors) {
 
 /**
  * Check one job template (its own crises, not the district or rookie pool).
- * others: the ids of every other job, to catch a clash. Returns { errors, warnings }.
+ * others: the ids of every other job, to catch a clash. takenCrises: the ids of every crisis and twist
+ * outside this job: a run and its report find a crisis by its id, so two crises sharing one get
+ * mixed up (2026-11-06: Back Rent's runner, Quarter to Two's toll). Returns { errors, warnings }.
  */
-export function checkJob(job, { others = [] } = {}) {
+export function checkJob(job, { others = [], takenCrises = [] } = {}) {
   const errors = [];
   const warnings = [];
   const tier = TIERS[job.rookie ? 'rookie' : job.threat];
@@ -97,6 +99,7 @@ export function checkJob(job, { others = [] } = {}) {
   const crisisIds = new Set();
   for (const c of crises) {
     if (crisisIds.has(c.id)) errors.push(`crisis id "${c.id}" is used twice`);
+    if (takenCrises.includes(c.id)) errors.push(`crisis id "${c.id}" is already used by another job's crisis or a twist`);
     crisisIds.add(c.id);
     if (!c.text) errors.push(`${c.id}: no text`);
     for (const s of c.situations ?? []) if (!SITUATIONS[s]) errors.push(`${c.id}: unknown situation "${s}"`);

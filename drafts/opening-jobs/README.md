@@ -1,16 +1,16 @@
-# Opening job drafts (for the owner to edit)
+# Opening jobs (now in the game)
 
 The four opening jobs from `drafts/opening-jobs.md`, written in full and **polished by the owner
 (2026-11-06)**: one per hall outside Old Town,
-fixed for every player. **They aren't in the game yet.** The mechanic that holds a hall's offer back
-until its job is done comes after your edits.
+fixed for every player. **They're in the game now** (2026-11-06, save v43): the files moved to
+`src/data/missions/`, and `core/halls.js` holds each hall until its favour is done. Edit them there.
 
 | File | Job | Contact | Hall |
 | --- | --- | --- | --- |
-| `backrent.js` | Back Rent | Madam Rao | the Night Market: two rooms above her sari shop |
-| `quartertotwo.js` | Quarter to Two | the Ferryman | the Docks: the container office on the old pier |
-| `flatdoesntexist.js` | The Flat Doesn't Exist | Ruth Okonkwo | the Basin: the flat over the tack workshop |
-| `nofortyfirstfloor.js` | There Is No Forty-First Floor | Mr. Szeto | Glass Heights: the service floor |
+| `src/data/missions/backrent.js` | Back Rent | Madam Rao | the Night Market: two rooms above her sari shop |
+| `src/data/missions/quartertotwo.js` | Quarter to Two | the Ferryman | the Docks: the container office on the old pier |
+| `src/data/missions/flatdoesntexist.js` | The Flat Doesn't Exist | Ruth Okonkwo | the Basin: the flat over the tack workshop |
+| `src/data/missions/nofortyfirstfloor.js` | There Is No Forty-First Floor | Mr. Szeto | Glass Heights: the service floor |
 
 ## Editing
 
@@ -19,7 +19,7 @@ until its job is done comes after your edits.
   difficulties, costs) unless you mean to change how it plays.
 - Tokens in braces stay as they are: `{rao}` becomes "Madam Rao", `{op}` whoever acts, and
   `{rao:approve}` one of her approving lines.
-- Check a file after editing: `node scripts/check-job.mjs drafts/opening-jobs/<file>.js`. It catches a
+- Check a file after editing: `node scripts/check-job.mjs src/data/missions/<file>.js`. It catches a
   missing exit, a token the game doesn't know, a retired name, or a line too long for a phone.
 - To get help editing in another chat, paste `edit-prompt.md`'s box, then the file and what you want
   changed. It carries the world, the rules and these jobs' notes.

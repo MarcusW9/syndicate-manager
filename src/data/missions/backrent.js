@@ -3,13 +3,15 @@
 // Rao has arranged collection from the covered loading bay behind the shop.
 // The final beat hands over the Night Market hall (data/sites.js HALLS).
 // Rolls aimed at 8-13. No Silver Fan grudge added.
-// Not in the game yet: no client lists it.
+// The opening job for this district's hall (core/halls.js introduceHalls): never dealt to the
+// board at random; the contact asks for it once the tong is welcome. Owner's text (2026-11-06).
 
-/** @type {import('../../src/core/types.js').MissionTemplate} */
+/** @type {import('../../core/types.js').MissionTemplate} */
 export const BACK_RENT = {
   id: 'back_rent',
   name: 'Back Rent',
   district: 'nightMarket',
+  opening: 'nightMarket', // the hall it opens (data/halls.js HALL_SITES)
   threat: 2,
   pay: 3500,
   days: 1,
@@ -95,7 +97,7 @@ export const BACK_RENT = {
       ],
     },
     {
-      id: 'runner',
+      id: 'tangs_runner',
       situations: ['crowd', 'threat'],
       after: 1,
       text: `An adult runner in a Silver Fan bowling shirt stops on the stair: "{tang} sent me for a box." Below, {meena} sets down the iron; the runner adds, "Please don't make me go back empty."`,
@@ -365,7 +367,7 @@ export const BACK_RENT = {
       ],
     },
     {
-      id: 'patrol',
+      id: 'alley_patrol',
       situations: ['police'],
       after: 3,
       text: `The remaining crates wait beside the loading bay; collection is due any minute. At the alley mouth, a Wet Sleeve patrol stops beneath the noodle sign and switches on a neural-load scanner.`,

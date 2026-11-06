@@ -2,7 +2,7 @@
 // functions, re-renders. Tap/click only; nothing depends on hover.
 
 import { heatIn, hottest, HEAT_DISTRICTS } from '../core/heat.js';
-import { bedsOf, hallIn, residents, freeBeds, canOpenHall, openHall, nextHallExpansion, expandHall, canMove, moveToHall } from '../core/halls.js';
+import { openingFor, bedsOf, hallIn, residents, freeBeds, canOpenHall, openHall, nextHallExpansion, expandHall, canMove, moveToHall } from '../core/halls.js';
 import { GANGS, GRUDGE, grudgeOf, jobGrudge, grudgeWord, gangsOn } from '../core/gangs.js';
 import { defenceCut, openRaids, raidOn, raidPrice, canBuyOff, defenders, raidChoices, payOffRaid, hallShut, raidWho, raidBy, isGangRaid } from '../core/raids.js';
 import { HALL_SITES, HOME_HALL } from '../data/halls.js';
@@ -1686,6 +1686,8 @@ function jobFlags(v) {
   if (namedHandle(v)) flags.push(['named', fillNamed(NAMED_TEXT.chip, v)]); // a client asked for an Elite by name (renown slice 4)
   const g = jobGrudge(v.tpl, v.threat);
   if (g) flags.push(['hot', `Against ${GANGS[g.gang].short}`]); // a job that hurts a gang (core/gangs.js)
+  const opens = openingFor(state, v.jobId);
+  if (opens) flags.push(['named', `Opens the ${cityName(opens).replace(/^The /, '')} hall`]); // a contact's opening favour (core/halls.js)
   if (v.hinted) flags.push(['bad', 'Intel unreliable']);
   if (v.rumour) flags.push([v.threatDelta > 0 ? 'hot' : v.threatDelta < 0 ? 'good' : 'info', `Street talk: ${v.rumour.tag}`]);
   else if (v.threatDelta > 0) flags.push(['hot', 'Hotter than usual']);
@@ -1983,6 +1985,11 @@ function renderPlan() {
         if (!g) return '';
         const now = grudgeOf(state, g.gang);
         return `<p class="grudgeline small"><strong>Against ${esc(GANGS[g.gang].name)}:</strong> finishing it adds grudge +${g.n} (now ${now}/10, then ${Math.min(GRUDGE.max, now + g.n)}). From ${GRUDGE.raidAt} they may raid a hall of ours on their turf.</p>`;
+      })()}
+      ${(() => { // a contact's opening favour says what it opens (core/halls.js)
+        const d = openingFor(state, job.id);
+        if (!d) return '';
+        return `<p class="openingline small"><strong>A favour for ${esc(v.client?.name ?? 'a contact')}:</strong> finish it and ${esc(hallLabel(d))} is ours to take (${esc(HALL_SITES[d].place)}). Walk away, and they ask again in two weeks.</p>`;
       })()}
       <div class="plangrid">
       <div class="riskcard plangrid__client">

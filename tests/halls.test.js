@@ -14,12 +14,16 @@ import { adjustTrust } from '../src/core/clients.js';
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 const { importSave } = await import('../src/save/save.js');
 
-/** A game where the Night Market will have us: reputation, Madam Rao's trust, and the deposit. */
+/**
+ * A game where the Night Market will have us: reputation, Madam Rao's trust, the deposit, and her
+ * opening favour already done (tests/openingjobs.test.js covers the favour itself).
+ */
 function welcome(seed = 1) {
   const s = createNewGame({ seed, startCrew: 'fresh' });
   s.reputation = HALL_SITES.nightMarket.rep;
   adjustTrust(s, 'rao', HALL_SITES.nightMarket.trust - 50);
   s.cash = 30000;
+  s.openings = { nightMarket: { status: 'done', jobId: null } };
   return s;
 }
 
@@ -40,6 +44,8 @@ test('opening a hall needs the welcome (reputation, the contact\'s trust) and th
   s.reputation = 30;
   assert.match(canOpenHall(s, 'nightMarket').reason, /trust/);
   adjustTrust(s, 'rao', 10);
+  assert.match(canOpenHall(s, 'nightMarket').reason, /favour first/, 'then her opening favour (2026-11-06)');
+  s.openings = { nightMarket: { status: 'done', jobId: null } };
   s.cash = 1000;
   assert.match(canOpenHall(s, 'nightMarket').reason, /deposit/);
   assert.equal(canOpenHall(s, 'oldTown').ok, false, 'not twice');

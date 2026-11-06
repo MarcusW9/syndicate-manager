@@ -5,13 +5,15 @@
 // Someone already lives on the floor. Their identity remains unknown.
 // The final beat hands over the Glass Heights hall (data/sites.js HALLS).
 // Original stats, difficulties, costs and job structure preserved.
-// Not in the game yet: no client lists it.
+// The opening job for this district's hall (core/halls.js introduceHalls): never dealt to the
+// board at random; the contact asks for it once the tong is welcome. Owner's text (2026-11-06).
 
-/** @type {import('../../src/core/types.js').MissionTemplate} */
+/** @type {import('../../core/types.js').MissionTemplate} */
 export const THERE_IS_NO_FORTY_FIRST_FLOOR = {
   id: 'there_is_no_forty_first_floor',
   name: 'There Is No Forty-First Floor',
   district: 'heights',
+  opening: 'heights', // the hall it opens (data/halls.js HALL_SITES)
   threat: 3,
   pay: 5500,
   days: 2,

@@ -13,6 +13,7 @@ import { TWISTS } from '../src/data/twists.js';
 import { CLIENTS } from '../src/data/clients.js';
 import { validateMissions } from '../src/core/validate.js';
 import { playMission, carefulPolicy } from './play.js';
+import { HALL_SITES } from '../src/data/halls.js';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 const { importSave } = await import('../src/save/save.js');
@@ -32,8 +33,12 @@ test('twists follow the same rules as every crisis', () => {
 
 test('every client offers only job types that exist', () => {
   for (const c of CLIENTS) for (const j of c.jobs) assert.ok(templateById(j), `${c.id} offers unknown job ${j}`);
-  // Walk-in work (2026-10-25) is the one exception: it has no client on purpose.
-  for (const m of MISSIONS) assert.ok(m.walkIn ? !CLIENTS.some((c) => c.jobs.includes(m.id)) : CLIENTS.some((c) => c.jobs.includes(m.id)), `${m.id}: client or walk-in, not neither`);
+  // Walk-in work (2026-10-25) has no client on purpose. Opening jobs (2026-11-06) are asked for by
+  // their district's contact (data/halls.js), so they're in no client's list either.
+  for (const m of MISSIONS) {
+    if (m.opening) { assert.equal(HALL_SITES[m.opening]?.opening, m.id, `${m.id}: its hall's opening job`); assert.ok(!CLIENTS.some((c) => c.jobs.includes(m.id)), `${m.id}: never dealt by a client`); continue; }
+    assert.ok(m.walkIn ? !CLIENTS.some((c) => c.jobs.includes(m.id)) : CLIENTS.some((c) => c.jobs.includes(m.id)), `${m.id}: client or walk-in, not neither`);
+  }
 });
 
 test('offers vary pay by up to 25% and threat by at most 1, staying on the 1-5 scale', () => {

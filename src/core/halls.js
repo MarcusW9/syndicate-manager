@@ -6,7 +6,9 @@
 // Moving into another hall takes the day, not the trip: they count there at once, but are
 // settling in and can't work until tomorrow (the city crosses in under an hour). Pure logic.
 
-import { HALL_SITES, HALL_EXPANSION, HOME_HALL } from '../data/halls.js';
+import { HALL_SITES, HALL_EXPANSION, HOME_HALL, OPENING } from '../data/halls.js';
+import { addOffer, jobUnlocked, templateById } from './jobs.js';
+import { hashRng, pick } from './rng.js';
 import { NAMES } from '../config/names.js';
 import { trustOf } from './clients.js';
 import { CLIENTS } from '../data/clients.js';
@@ -60,6 +62,14 @@ export function canOpenHall(state, district) {
   const contact = CLIENTS.find((c) => c.id === site.contact);
   if ((state.reputation ?? 0) < site.rep) return { ok: false, reason: `Needs reputation ${site.rep}`, site };
   if (trustOf(state, site.contact) < site.trust) return { ok: false, reason: `${contact?.name ?? 'The contact'} needs to trust us more (${site.trust})`, site };
+  // An opening job first (2026-11-06): the contact asks a favour before offering the place.
+  const opening = openingOf(state, district);
+  if (site.opening && opening?.status !== 'done') {
+    const who = CLIENTS.find((c) => c.id === site.contact)?.name ?? 'Our contact';
+    const job = opening?.jobId ? state.jobs.find((j) => j.id === opening.jobId) : null;
+    const name = templateById(job?.templateId ?? site.opening)?.name;
+    return { ok: false, reason: opening?.status === 'asked' ? `${who} wants a favour first: ${name}, on the board` : opening?.status === 'failed' ? `${who} will ask again by day ${opening.retryDay}` : `${who} will ask a favour first`, site };
+  }
   if (state.cash < site.deposit) return { ok: false, reason: `Needs ${money(site.deposit)} for the deposit`, site };
   return { ok: true, reason: 'ready', site };
 }
@@ -133,23 +143,97 @@ export function moveToHall(prev, opId, district) {
 /** Is this runner settling into a new hall today (busy: no work until tomorrow)? */
 export const settlingIn = (state, op) => op.settlingDay === state.day;
 
+// --- opening jobs (2026-11-06) ------------------------------------------------------------------
+// Once the tong is welcome in a district (reputation and the contact's trust), the contact asks a
+// favour first: the district's opening job (data/halls.js HALL_SITES opening; data/missions). Finish
+// it and the hall is offered. Walk away, fail or let it go off the board, and two weeks later they
+// ask again with one of their own jobs as the test. state.openings: { district: { status, jobId,
+// retryDay } }, status 'asked' | 'failed' | 'done' (save v43).
+
+/** Where a district's opening job stands, or null if nobody has asked yet. */
+export const openingOf = (state, district) => state.openings?.[district] ?? null;
+
+/** Is this offer (or run) a district's opening favour? The district, or null. */
+export const openingFor = (state, jobId) => Object.entries(state.openings ?? {}).find(([, o]) => o.status === 'asked' && o.jobId === jobId)?.[0] ?? null;
+
+const contactOf = (site) => CLIENTS.find((c) => c.id === site.contact);
+const stillOut = (state, jobId) => state.jobs.some((j) => j.id === jobId) || state.activeMission?.jobId === jobId || (state.awayJobs ?? []).some((j) => j.mission?.jobId === jobId);
+
+/** The contact asks the favour: the job goes on the board (for two weeks) and a message says so. Mutates state. */
+function askOpening(state, district, retry = false) {
+  const site = HALL_SITES[district];
+  const contact = contactOf(site);
+  let templateId = site.opening;
+  if (retry) {
+    // The second ask is one of their own jobs, picked by the seed, as the test.
+    const own = (contact?.jobs ?? []).filter((id) => templateById(id) && !templateById(id).routine && !templateById(id).opening && jobUnlocked(state, id));
+    templateId = own.length ? pick(hashRng(state.seed, 'opening', district, state.day), own) : site.opening;
+  }
+  addOffer(state, templateId, { clientId: site.contact });
+  const job = state.jobs.at(-1);
+  job.expiresDay = state.day + OPENING.boardDays;
+  (state.openings ??= {})[district] = { status: 'asked', jobId: job.id, retry };
+  const tpl = templateById(templateId);
+  state.inbox.unshift({
+    id: `opening-${district}-${state.day}`, type: 'job', kind: 'opening', day: state.day,
+    subject: retry ? `${contact?.name ?? 'A contact'} will try us again` : `${contact?.name ?? 'A contact'} has a favour to ask`,
+    body: retry
+      ? `${contact?.name ?? 'They'} still has a place for us in ${districtInText(district)}, and one more test: ${tpl.name}. It's on the board for two weeks. Finish it, and the place is ours to take.`
+      : `${contact?.name ?? 'They'} could put us in ${site.place}, but wants to see how we work first: ${tpl.name}. It's on the board for two weeks. Finish it, and the place is ours to take.`,
+    payload: { district, jobId: job.id }, blocking: false, read: false,
+  });
+}
+
+/** The hall offer, once the favour is done. Mutates state. */
+function offerHall(state, district) {
+  const site = HALL_SITES[district];
+  state.hallOffers = state.hallOffers ?? [];
+  if (state.hallOffers.includes(district)) return;
+  state.hallOffers.push(district);
+  const contact = contactOf(site);
+  state.inbox.unshift({
+    id: `hall-offer-${district}`, type: 'crew', kind: 'hall-offer', day: state.day,
+    subject: `${contact?.name ?? 'A contact'} has a place for us in ${districtInText(district)}`,
+    body: `${contact?.name ?? 'They'} can put us in ${site.place}: ${site.beds} beds, ${money(site.rent)} a week, ${money(site.deposit)} down. A hall there means people of ours living in ${districtInText(district)}, more rent, and somewhere else to look after. No rush; the offer stands.`,
+    payload: { district }, blocking: false, read: false,
+  });
+}
+
 /**
- * Mondays: a district's contact offers the tong a place once it's welcome there (reputation and
- * trust met; money comes later). Once per district (state.hallOffers). Mutates the (cloned) state.
+ * A run has ended (core/mission.js finish): if it was a district's opening favour, finishing it
+ * opens the way to the hall now; walking away or a death means they ask again in two weeks.
+ * Returns a report line, or null. Mutates state.
+ */
+export function openingResult(state, jobId, outcome) {
+  const district = openingFor(state, jobId);
+  if (!district) return null;
+  const site = HALL_SITES[district];
+  const who = contactOf(site)?.name ?? 'Our contact';
+  if (outcome === 'completed') {
+    state.openings[district] = { status: 'done', jobId };
+    offerHall(state, district);
+    return { tone: 'good', text: `${who} has a place for us now: ${site.place}. It's on Crew › Halls.` };
+  }
+  state.openings[district] = { status: 'failed', jobId, retryDay: state.day + OPENING.retryDays };
+  return { tone: 'warn', text: `${who} will ask again in two weeks.` };
+}
+
+/**
+ * Mondays: once the tong is welcome in a district (reputation and the contact's trust), the contact
+ * asks the opening favour; once it's done, the place is offered (state.hallOffers). A favour that
+ * went off the board unfinished counts as walking away. Mutates the (cloned) state.
  */
 export function introduceHalls(state) {
   state.hallOffers = state.hallOffers ?? [];
+  state.openings = state.openings ?? {};
   for (const [district, site] of Object.entries(HALL_SITES)) {
     if (site.deposit == null || hallIn(state, district) || state.hallOffers.includes(district)) continue;
     if ((state.reputation ?? 0) < site.rep || trustOf(state, site.contact) < site.trust) continue;
-    state.hallOffers.push(district);
-    const contact = CLIENTS.find((c) => c.id === site.contact);
-    state.inbox.unshift({
-      id: `hall-offer-${district}`, type: 'crew', kind: 'hall-offer', day: state.day,
-      subject: `${contact?.name ?? 'A contact'} has a place for us in ${districtInText(district)}`,
-      body: `${contact?.name ?? 'They'} can put us in ${site.place}: ${site.beds} beds, ${money(site.rent)} a week, ${money(site.deposit)} down. A hall there means people of ours living in ${districtInText(district)}, more rent, and somewhere else to look after. No rush; the offer stands.`,
-      payload: { district }, blocking: false, read: false,
-    });
+    const o = state.openings[district];
+    if (!site.opening || o?.status === 'done') { offerHall(state, district); continue; }
+    if (!o) { askOpening(state, district); continue; }
+    if (o.status === 'asked' && !stillOut(state, o.jobId)) state.openings[district] = { status: 'failed', jobId: o.jobId, retryDay: state.day + OPENING.retryDays };
+    if (state.openings[district].status === 'failed' && state.day >= state.openings[district].retryDay) askOpening(state, district, true);
   }
   return state;
 }
