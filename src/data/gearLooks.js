@@ -113,3 +113,47 @@ export const SIDEARM_LOOKS = {
 
 // Guns on the armoury's shelf each week, by type and tier.
 export const ARMOURY_STOCK = { rifle: { street: 2, pro: 1 }, pistol: { street: 1, pro: 1 } };
+
+// Item frames (2026-11-06; first the tools, then the rest of the armoury). The drone "quad A ... the others can be rarer instances"; the
+// decks "all are fine and can be varied"): the drone and the cyberdeck come in more than one build.
+// Only the frame varies (no name, finish or charm); weight is how often it turns up. Drawn in
+// ui/art.js (TOOL_SHAPES), from the options in drafts/prototypes/drone-deck-options.html.
+export const TOOL_FRAMES = {
+  drone: {
+    quad: { name: 'quadcopter', weight: 8 },
+    kite: { name: 'flying-wing kite', weight: 1 },
+    duct: { name: 'ducted-fan drone', weight: 1 },
+  },
+  deck: {
+    slab: { name: 'keyboard slab', weight: 1 },
+    case: { name: 'hard-case deck', weight: 1 },
+    brick: { name: 'handheld brick', weight: 1 },
+  },
+  // The rest of the armoury (2026-11-06, the owner took the suggested cores; square drawings,
+  // drafts/prototypes/gear-options-square.html): a usual build and rarer ones, or even for implants.
+  vest: {
+    carrier: { name: 'plate carrier', weight: 8 },
+    jacket: { name: 'armoured jacket', weight: 1 },
+    weave: { name: 'hex-weave undershirt', weight: 1 },
+  },
+  medkit: {
+    bag: { name: 'trauma bag', weight: 7 },
+    box: { name: 'trauma case', weight: 1 },
+    roll: { name: 'trauma roll', weight: 1 },
+    gun: { name: 'med gun', weight: 1 },
+  },
+  picks: {
+    roll: { name: 'bypass roll', weight: 7 },
+    decoder: { name: 'lock decoder', weight: 1 },
+    veil: { name: 'heat veil', weight: 1 },
+    blinder: { name: 'lens blinder', weight: 1 },
+  },
+  reflex: {
+    harness: { name: 'spinal harness', weight: 1 },
+    sleeve: { name: 'forearm sleeve', weight: 1 },
+  },
+  cortex: {
+    chip: { name: 'chip module', weight: 1 },
+    bud: { name: 'behind-the-ear bud', weight: 1 },
+  },
+};

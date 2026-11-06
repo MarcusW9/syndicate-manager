@@ -53,8 +53,9 @@ export const GEAR = {
     desc: 'Clotting foam, staples, a stim. They can patch a serious wound with less training.',
   },
   picks: {
-    name: 'Lockpicks and shims', slot: 'tool', price: 700, bonus: { stealth: 1 },
-    desc: 'Quiet tools for doors and windows.',
+    // The ghost kit (was "Lockpicks and shims", renamed 2026-11-06): the id stays 'picks' so saves keep it.
+    name: 'Ghost kit', slot: 'tool', price: 700, bonus: { stealth: 1 },
+    desc: 'Whatever gets you past a door or a camera unseen: picks and shims, a decoder, a heat veil, a lens blinder.',
   },
   reflex: {
     name: 'Reflex wiring', slot: 'implant', price: 3500, bonus: { combat: 1, driving: 1 }, neuralFloor: 10,
