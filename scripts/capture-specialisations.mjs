@@ -29,7 +29,7 @@ try {
     const op = s.crew.find((o) => o.role === 'muscle');
     Object.assign(op.stats, { combat: Math.max(op.stats.combat, 11), cool: Math.max(op.stats.cool, 9) });
     op.track = { ...(op.track ?? {}), overwatch: { rifle: 3 } };
-    op.gear.weapon = { uid: 'g90', type: 'rifle', tier: 'street' };
+    op.gear = { armour: null, implants: [], bag: [{ item: { uid: 'g90', type: 'rifle', tier: 'street' }, x: 0, y: 0 }] }; // the carry grid (save v45)
     localStorage.setItem(key, JSON.stringify(s));
   });
   await page.reload();

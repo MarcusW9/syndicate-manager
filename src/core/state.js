@@ -13,7 +13,7 @@ import { ECONOMY } from '../data/economy.js';
 import { refreshSideBoard } from './sidetasks.js';
 import { refreshArmoury } from './looks.js';
 
-export const SAVE_VERSION = 44;
+export const SAVE_VERSION = 45;
 
 // A rookie crew's first board: small work only.
 export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];

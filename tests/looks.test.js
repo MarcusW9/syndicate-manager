@@ -56,7 +56,7 @@ test('a sidearm off the shelf keeps its look, glow and name; one brought by a re
   const item = buyOffer(s, offer.oid).stash.at(-1);
   assert.deepEqual([item.type, item.look, item.name], ['pistol', offer.look, offer.name]);
   assert.match(lookText(item), /^[A-Z].* in /);
-  assert.ok(loadoutOf(structuredClone(s), ['pistol']).weapon.look);
+  assert.ok(loadoutOf(structuredClone(s), ['pistol']).bag[0].item.look);
 });
 
 test('the shelf restocks every Monday', () => {
@@ -85,7 +85,7 @@ test('every rifle has a look, however it arrives; other gear has only a build', 
   const bought = buyGear(s, 'rifle', 'pro').stash.at(-1);
   assert.ok(bought.look && bought.name, 'bought by type');
   const brought = loadoutOf(structuredClone(s), ['rifle', 'pistol']);
-  assert.ok(brought.weapon.look, 'brought by a recruit');
+  assert.ok(brought.bag.length === 2 && brought.bag.every((b) => b.item.look), 'brought by a recruit (both fit the bag)');
   // Since 2026-11-06 other gear rolls a build (data/gearLooks.js TOOL_FRAMES), but no name or finish.
   const vest = buyGear(s, 'vest').stash.at(-1);
   assert.deepEqual(Object.keys(vest.look), ['frame']);

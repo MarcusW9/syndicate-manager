@@ -7,6 +7,13 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-06 · The carry grid
+- **A runner now wears armour, has two implant sockets, and carries a bag.** The bag is 4×2 squares: a rifle, sidearm, drone or deck takes three, a trauma kit or ghost kit one. So a runner can carry a rifle *and* a deck, or a drone with a ghost kit and a trauma kit beside it.
+- **Two implants** both work, and both keep neural load up: between jobs it stays at 20 or more with two.
+- **Different kinds of kit add up; the same kind counts once.** A deck and a ghost kit give tech +1 and stealth +1; two ghost kits still give stealth +1.
+- **On a runner's page:** tap an empty square to pack something that fits there; tap an item to pick it up, then a free square to move it, or take it off.
+- Your saves keep everyone's gear: each runner's weapon and tool move into their bag, and their implant into the first socket.
+
 ## 2026-11-06 · Gear on a grid
 - **Gear pictures sit on an inventory grid:** a rifle, sidearm, drone or deck fills a strip of three squares; a vest, trauma kit, ghost kit or implant takes one square, with the empty squares beside it. No more black bars, and the item names line up down the armoury.
 - On the squad board, an overwatch runner's card shows their stat with the shots or actions on the line under it, instead of breaking across two lines.

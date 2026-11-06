@@ -55,7 +55,7 @@ import { takeCall, letThemRun, takeCommand, crewsOut, dayDone } from '../core/aw
 import { OVERWATCH_KIT, ALERT_MAX } from '../core/incidents.js';
 import { leanPicks, jobRead, planRead, planTries } from '../core/squad.js';
 import { renderBoard, renderPicker, renderCoverage, assignSlot, planKit } from './board.js';
-import { armouryCard, renderArmoury, renderLoadout, renderGearSheet } from './gear.js';
+import { armouryCard, renderArmoury, renderLoadout, renderGearSheet, gearPlace } from './gear.js';
 import { buyGear, buyOffer, sellGear, equip, unequip, itemName, sellPrice } from '../core/gear.js';
 import { renderWatch, mountWatch, syncWatch, isWatching, stopWatch, togglePause, toggleSpeed, showLatest } from './watch.js';
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
@@ -86,7 +86,8 @@ let openOperativeId = null;
 let openRecruitId = null;
 let openArmoury = false; // the armoury, from the Crew screen (ui/gear.js)
 let buildView = null; // the hall build screen, from Crew › Halls (ui/hallbuild.js): { district, cell, piece, rot, picked }
-let gearSlot = null; // the loadout slot being filled on a runner's page
+let gearSlot = null; // the place being filled on a runner's page: 'armour', 'implant:0', 'bag:2,1'
+let bagPick = null; // the bag item picked up on a runner's page, to move or take off
 let newGameSlot = null; // slot number while picking a difficulty
 let plan = null; // { jobId, crew: [...ids], approach, orders, callIn, overwatch: id|null, kit, wheels: id|null, standby: id|null } (core/mission.js startMission)
 let pickSlot = null;
@@ -150,7 +151,7 @@ function onClick(e) {
   const { action, id } = t.dataset;
 
   switch (action) {
-    case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; screen = id; returnTo = null; buildView = null; openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; gearSlot = null; plan = null; sidePlan = null; pickSlot = null; break;
+    case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; screen = id; returnTo = null; buildView = null; openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; gearSlot = null; bagPick = null; plan = null; sidePlan = null; pickSlot = null; break;
     case 'continue': {
       if (isBlocked(state) || Date.now() < continueRestUntil) return;
       const next = advanceDay(state);
@@ -179,7 +180,7 @@ function onClick(e) {
       // A runner's page opened from a name in a message, or from the runners on the job board, goes back there.
       if (returnTo && openOperativeId) {
         focusNext = { action: 'op-link', id: openOperativeId };
-        ({ screen } = returnTo); openMessageId = returnTo.messageId; openOperativeId = null; gearSlot = null; returnTo = null;
+        ({ screen } = returnTo); openMessageId = returnTo.messageId; openOperativeId = null; gearSlot = null; bagPick = null; returnTo = null;
         break;
       }
       // Land keyboard focus back on the row that was opened.
@@ -190,10 +191,10 @@ function onClick(e) {
         : buildView ? { action: 'build-hall', id: buildView.district }
         : plan ? { action: 'open-job', id: plan.jobId }
         : sidePlan ? { action: 'open-side', id: sidePlan.taskId } : null;
-      openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; buildView = null; gearSlot = null; plan = null; sidePlan = null; pickSlot = null;
+      openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; buildView = null; gearSlot = null; bagPick = null; plan = null; sidePlan = null; pickSlot = null;
       break;
     case 'decide': return setState(resolveDecision(state, id, t.dataset.option));
-    case 'open-op': screen = 'crew'; openArmoury = false; openOperativeId = id; returnTo = null; break;
+    case 'open-op': screen = 'crew'; openArmoury = false; openOperativeId = id; returnTo = null; bagPick = null; break;
     // A crew member's name in a message: open their page, remembering the message to come back to.
     case 'trait-tip': traitTip = traitTip === id ? null : id; break;
     case 'op-link': returnTo = { screen, messageId: openMessageId }; screen = 'crew'; openArmoury = false; openRecruitId = null; openOperativeId = id; break;
@@ -208,8 +209,23 @@ function onClick(e) {
     }
     case 'gear-slot': gearSlot = id; break;
     case 'close-gear': focusNext = { action: 'gear-slot', id: gearSlot }; gearSlot = null; break;
-    case 'equip': focusNext = { action: 'gear-slot', id: gearSlot }; gearSlot = null; return setState(equip(state, id, openOperativeId));
+    case 'equip': {
+      // Into the place the sheet was opened for (core/gear.js equip): a socket, or a cell in the bag.
+      const place = gearPlace(gearSlot);
+      const target = place.kind === 'implant' ? { socket: place.socket } : place.kind === 'bag' ? { x: place.x, y: place.y } : null;
+      focusNext = place.kind === 'bag' ? null : { action: 'gear-slot', id: gearSlot }; gearSlot = null;
+      return setState(equip(state, id, openOperativeId, target));
+    }
     case 'unequip': focusNext = { action: 'gear-slot', id: gearSlot }; gearSlot = null; return setState(unequip(state, openOperativeId, id));
+    // The bag (the carry grid, 2026-11-06): tap an item to pick it up; a free cell moves it there,
+    // or, with nothing picked up, opens what fits there.
+    case 'bag-pick': bagPick = bagPick === id ? null : id; break;
+    case 'bag-cell': {
+      if (bagPick) { const [x, y] = id.split(',').map(Number); const uid = bagPick; bagPick = null; return setState(equip(state, uid, openOperativeId, { x, y })); }
+      gearSlot = `bag:${id}`;
+      break;
+    }
+    case 'bag-off': { const uid = bagPick; bagPick = null; return setState(unequip(state, openOperativeId, uid)); }
     case 'open-recruit': openRecruitId = id; break;
     case 'founder-toggle':
       if (founderPick.includes(id)) founderPick = founderPick.filter((x) => x !== id);
@@ -1642,7 +1658,7 @@ function renderOperative() {
       <dl class="stats">
         ${Object.keys(op.stats).map((k) => statCell(op, k, { growth: true })).join('')}
       </dl>
-      ${renderLoadout(gearUi, state, op)}
+      ${renderLoadout(gearUi, state, op, { picked: bagPick })}
 
       </div>
 

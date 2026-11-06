@@ -97,7 +97,7 @@ setState(next){ state = next; saveGame(state); render(); }
   trust: {},            // op→op; nothing reads it
   history: [strings], progress, startStats, growthLog, status: [{id, until}],
   jobsWithCrew, contractMainStat, lastNoticeDay, renewalAgain,
-  gear: {weapon, armour, tool, implant}, marks: [{kind: 'scar'|'implant'|'tattoo', day}],
+  gear: {armour, implants: [≤2], bag: [{item, x, y}]} (the carry grid, v45; was {weapon, armour, tool, implant}), marks: [{kind: 'scar'|'implant'|'tattoo', day}],
   hall /*the district whose hall they sleep in (core/halls.js); freelancers have none*/ }
 // renown (2026-11), written once a job finishes: record: {jobs, atLevel, wins, clean, flawless, fights, fightsWon, carries, carriesByStat,
 //   broughtHome, criticalsSurvived, unscathed, bigScores, seriousInjuries, cleanStreak, bestCleanStreak, with:{opId:n}, activeWeeks, lastJobDay,

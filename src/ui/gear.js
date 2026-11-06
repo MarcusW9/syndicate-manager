@@ -4,7 +4,8 @@
 //
 // ui: helpers from app.js { esc, money, face, statusChip }.
 
-import { GEAR, SLOTS, TIERS, carried, itemName, itemTitle, buyPrice, sellPrice, canChangeGear, kitsFor, sidearmStats } from '../core/gear.js';
+import { GEAR, SLOTS, TIERS, carried, itemName, itemTitle, buyPrice, sellPrice, canChangeGear, kitsFor, sidearmStats, placeOf, cellsOf, fitsAt, bagUsed } from '../core/gear.js';
+import { BAG, SOCKETS } from '../data/gear.js';
 import { HAS_LOOKS, lookText } from '../core/looks.js';
 import { gearGlyph } from './icons.js';
 import { gearArt } from './art.js';
@@ -121,49 +122,93 @@ export function renderArmoury(ui, state) {
     </section>`;
 }
 
+/** One worn tile (armour, or an implant socket): its drawing, name and effect, or empty. */
+function wornTile(ui, op, { id, label, item, can }) {
+  const { esc } = ui;
+  const art = item ? gearArt(item, { carrier: op, width: 96 }) : null;
+  return `<li><button class="loadout__tile loadout__tile--worn ${item ? '' : 'is-empty'}" data-action="gear-slot" data-id="${id}" ${can.ok ? '' : 'disabled'} aria-label="${esc(label)}: ${esc(item ? itemTitle(item) : 'empty')}. Tap to change.">
+      <span class="loadout__name">${esc(label)}</span>
+      <span class="loadout__cell ${art ? '' : 'loadout__pic--icon'}" aria-hidden="true">${item ? art ?? glyphFor(item) : '+'}</span>
+      <strong class="loadout__item">${item ? esc(itemTitle(item)) : 'Empty'}</strong>
+      ${item ? `<span class="loadout__eff">${esc(itemEffect(item))}</span>` : ''}
+    </button></li>`;
+}
+
 /**
- * A runner's four slots on their page, as a 2×2 grid of tiles with each item drawn big (owner's
- * call, 2026-10-28), lit by the runner's own city light. Items without a drawing show their icon.
+ * A runner's gear on their page (the carry grid, 2026-11-06; mock-up drafts/prototypes/carry-grid.html):
+ * worn (armour, two implant sockets) and the bag of BAG.cols × BAG.rows cells. Tap an empty cell to
+ * put something there; tap an item to pick it up, then a free cell to move it, or take it off.
+ * picked: the uid of the bag item picked up, or null.
  */
-export function renderLoadout(ui, state, op) {
+export function renderLoadout(ui, state, op, { picked = null } = {}) {
   const { esc } = ui;
   const can = canChangeGear(state, op);
+  const g = op.gear ?? {};
+  const bag = g.bag ?? [];
+  const held = bag.find((b) => b.item.uid === picked)?.item ?? null;
+  const cells = [];
+  for (let y = 0; y < BAG.rows; y++) for (let x = 0; x < BAG.cols; x++) {
+    const free = !bag.some((b) => b.y === y && x >= b.x && x < b.x + cellsOf(b.item.type));
+    if (!free) continue;
+    const ok = held ? fitsAt(op, held, x, y) : true;
+    cells.push(`<button class="bag__cell ${held && ok ? 'is-free' : ''}" style="grid-column:${x + 1};grid-row:${y + 1}" data-action="bag-cell" data-id="${x},${y}" ${can.ok && ok ? '' : 'disabled'} aria-label="${held ? `Move ${esc(itemTitle(held))} here` : 'Empty space: put something here'}"></button>`);
+  }
+  const items = bag.map((b) => `<button class="bag__item ${b.item.uid === picked ? 'is-picked' : ''}" style="grid-column:${b.x + 1} / span ${cellsOf(b.item.type)};grid-row:${b.y + 1}" data-action="bag-pick" data-id="${esc(b.item.uid)}" ${can.ok ? '' : 'disabled'} aria-pressed="${b.item.uid === picked}" aria-label="${esc(itemTitle(b.item))}: tap to move it or take it off">${gearArt(b.item, { carrier: op, width: 96 }) ?? `<span class="bag__icon">${glyphFor(b.item)}</span>`}</button>`).join('');
   return `
       <h2>Gear</h2>
-      <ul class="list list--plain loadout">
-        ${Object.entries(SLOTS).map(([slot, s]) => {
-          const item = op.gear?.[slot] ?? null;
-          const art = item ? gearArt(item, { carrier: op, width: 192 }) : null;
-          return `<li><button class="loadout__tile ${item ? '' : 'is-empty'}" data-action="gear-slot" data-id="${slot}" ${can.ok ? '' : 'disabled'} aria-label="${esc(s.name)}: ${esc(item ? itemTitle(item) : 'empty')}. Tap to change.">
-            <span class="loadout__name">${esc(s.name)}</span>
-            <span class="loadout__pic ${art ? '' : 'loadout__pic--icon'}" aria-hidden="true">${item ? art ?? glyphFor(item) : '+'}</span>
-            <strong class="loadout__item">${item ? esc(itemTitle(item)) : 'Empty'}</strong>
-            ${item ? `<span class="loadout__eff">${esc(itemEffect(item))}</span>` : ''}
-          </button></li>`;
-        }).join('')}
+      <ul class="list list--plain loadout loadout--worn">
+        ${wornTile(ui, op, { id: 'armour', label: 'Armour · worn', item: g.armour ?? null, can })}
+        ${Array.from({ length: SOCKETS }, (_, i) => wornTile(ui, op, { id: `implant:${i}`, label: `Implant socket ${i + 1}`, item: (g.implants ?? [])[i] ?? null, can })).join('')}
       </ul>
+      ${(g.implants ?? []).length > 1 ? '<p class="muted small">Two implants: their neural load stays higher between jobs (both count).</p>' : ''}
+      <h3 class="gear__slot bag__head">Carried <span>${bagUsed(op)} of ${BAG.cols * BAG.rows} cells</span></h3>
+      <div class="bag" style="--cols:${BAG.cols};--rows:${BAG.rows}">${cells.join('')}${items}</div>
+      ${held ? `<div class="bag__bar"><span><strong>${esc(itemTitle(held))}</strong> · tap a free space to move it</span>
+        <button class="btn btn--ghost" data-action="bag-off">Take it off</button><button class="btn btn--ghost" data-action="bag-pick" data-id="${esc(held.uid)}">Done</button></div>` : ''}
+      ${bag.length ? `<ul class="list list--plain bag__list">${bag.map((b) => `<li><strong>${esc(itemTitle(b.item))}</strong> <span class="loadout__eff">${esc(itemEffect(b.item))}</span></li>`).join('')}</ul>`
+        : '<p class="muted small">Nothing carried. Tap a space to pack a weapon or a tool.</p>'}
       ${can.ok ? '' : `<p class="muted small">Their gear can't change while they're ${esc(can.reason)}.</p>`}
       ${kitsFor(op).length ? '' : '<p class="muted small">No rifle or drone: they can\'t take overwatch.</p>'}`;
 }
 
-/** The sheet for one slot: what's in the stash for it, what others carry, or take it off. */
+/** What a place on a runner takes, from the sheet's id: 'armour', 'implant:1' or 'bag:2,0'. */
+export function gearPlace(id) {
+  const [kind, rest = ''] = String(id).split(':');
+  if (kind === 'implant') return { kind, socket: Number(rest), title: `Implant socket ${Number(rest) + 1}` };
+  if (kind === 'bag') { const [x, y] = rest.split(',').map(Number); return { kind, x, y, title: 'Carried' }; }
+  return { kind: 'armour', title: 'Armour' };
+}
+
+/** The sheet for one place: what's in the stash that goes there, what others carry, or take it off. */
 export function renderGearSheet(ui, state, op, slot) {
   const { esc } = ui;
-  const current = op.gear?.[slot] ?? null;
-  const stash = (state.stash ?? []).filter((i) => GEAR[i.type].slot === slot);
-  const others = state.crew.filter((o) => o.id !== op.id).flatMap((o) => (o.gear?.[slot] ? [{ item: o.gear[slot], o }] : []));
+  const place = gearPlace(slot);
+  const g = op.gear ?? {};
+  const current = place.kind === 'armour' ? g.armour ?? null : place.kind === 'implant' ? (g.implants ?? [])[place.socket] ?? null : null;
+  const otherImplant = place.kind === 'implant' ? (g.implants ?? []).find((_, i) => i !== place.socket) : null;
+  const fits = (item) => {
+    if (placeOf(item.type) !== place.kind) return false;
+    if (place.kind === 'implant') return item.type !== otherImplant?.type;
+    if (place.kind === 'bag') return fitsAt(op, item, place.x, place.y);
+    return true;
+  };
+  const stash = (state.stash ?? []).filter(fits);
+  const others = state.crew.filter((o) => o.id !== op.id).flatMap((o) => carried(o).filter(fits).map((item) => ({ item, o })));
+  const why = place.kind === 'bag' ? 'Weapons and tools that fit here: a rifle, sidearm, drone or deck takes 3 spaces, a trauma kit or ghost kit 1.'
+    : place.kind === 'implant' ? `${otherImplant ? `Not a second ${esc(itemName(otherImplant).toLowerCase())}: the same implant twice does nothing twice. ` : ''}Each implant keeps neural load up; two keep it higher.`
+    : current ? `Wearing: ${esc(itemTitle(current))}. Whatever you pick swaps with it.` : 'Nothing worn.';
   return `
     <div class="scrim" data-action="close-gear"></div>
-    <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(SLOTS[slot].name)} for ${esc(op.handle)}">
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(place.title)} for ${esc(op.handle)}">
       <div class="sheet__head">
-        <div><h2 class="sheet__title">${esc(SLOTS[slot].name)} for ${esc(op.handle)}</h2>
-        <p class="muted small">${current ? `Carrying: ${esc(itemTitle(current))}. Whatever you pick swaps with it.` : 'Nothing in this slot.'}</p></div>
+        <div><h2 class="sheet__title">${esc(place.title)} for ${esc(op.handle)}</h2>
+        <p class="muted small">${why}</p></div>
         <button class="btn btn--ghost sheet__x" data-action="close-gear" aria-label="Close">✕</button>
       </div>
-      <ul class="list list--plain gearlist">${stash.length ? stash.map((item) => itemRow(ui, item, { action: 'equip', label: 'Carry' })).join('') : '<li class="muted small">Nothing for this slot in the stash. Buy it in the armoury.</li>'}</ul>
+      <ul class="list list--plain gearlist">${stash.length ? stash.map((item) => itemRow(ui, item, { action: 'equip', label: place.kind === 'bag' ? 'Pack' : 'Carry' })).join('') : `<li class="muted small">Nothing in the stash ${place.kind === 'bag' ? 'fits here' : 'for this'}. Buy it in the armoury.</li>`}</ul>
       ${others.length ? `<h3 class="sheet__group">Carried by others <span>takes it off them</span></h3>
       <ul class="list list--plain gearlist">${others.map(({ item, o }) => itemRow(ui, item, { action: 'equip', label: `From ${o.handle}`, disabled: !canChangeGear(state, o).ok, carrier: o })).join('')}</ul>` : ''}
-      ${current ? `<button class="btn btn--ghost btn--block" data-action="unequip" data-id="${slot}">Put it back in the stash</button>` : ''}
+      ${current ? `<button class="btn btn--ghost btn--block" data-action="unequip" data-id="${esc(current.uid)}">Put it back in the stash</button>` : ''}
       <button class="btn btn--block" data-action="open-armoury">Go to the armoury</button>
     </div>`;
 }

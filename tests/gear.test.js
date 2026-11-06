@@ -13,7 +13,7 @@ import { jossPicks } from '../src/core/squad.js';
 import { templateById } from '../src/core/jobs.js';
 import { advanceDay } from '../src/core/time.js';
 import { generateRecruit, hire } from '../src/core/recruits.js';
-import { buyGear, sellGear, equip, unequip, priceOf, sellPrice, kitsFor, overwatchKit, seriousGuard, SLOTS, GEAR } from '../src/core/gear.js';
+import { buyGear, sellGear, equip, unequip, priceOf, sellPrice, kitsFor, overwatchKit, seriousGuard, GEAR, carried, emptyLoadout, gearMods, neuralFloor, bagUsed } from '../src/core/gear.js';
 import { playMission, carefulPolicy, arm } from './play.js';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
@@ -21,10 +21,11 @@ const { importSave } = await import('../src/save/save.js');
 
 const fresh = (seed = 3) => createNewGame({ seed, startCrew: 'fresh' });
 
-test('a new crew starts with nothing: an empty stash and four empty slots each', () => {
+// Changed on purpose (2026-11-06, the carry grid; DESIGN.md): no armour, empty sockets, an empty bag.
+test('a new crew starts with nothing: an empty stash, no armour, empty sockets and an empty bag', () => {
   const s = fresh();
   assert.deepEqual(s.stash, []);
-  for (const op of s.crew) assert.deepEqual(Object.keys(op.gear), Object.keys(SLOTS)), assert.ok(Object.values(op.gear).every((v) => v === null));
+  for (const op of s.crew) assert.deepEqual(op.gear, emptyLoadout());
 });
 
 test('buying costs its price and goes to the stash; you can\'t buy what you can\'t afford; selling pays half', () => {
@@ -44,22 +45,61 @@ test('buying costs its price and goes to the stash; you can\'t buy what you can\
   assert.equal(sellPrice(s.stash[0]), priceOf('rifle') / 2);
 });
 
-test('equipping: from the stash into the right slot; what was there goes back; moving between runners', () => {
-  let s = buyGear(buyGear(fresh(), 'pistol'), 'rifle');
-  const [pistol, rifle] = s.stash;
+// Changed on purpose (2026-11-06, the carry grid; DESIGN.md): weapons and tools share a 4×2 bag.
+test('equipping: into the bag where it fits; a second long item on the next row; moving between runners', () => {
+  let s = buyGear(buyGear(buyGear(Object.assign(fresh(), { cash: 20000 }), 'pistol'), 'rifle'), 'drone');
+  const [pistol, rifle, drone] = s.stash;
   const [a, b] = s.crew.map((o) => o.id);
   s = equip(s, pistol.uid, a);
-  assert.equal(s.crew[0].gear.weapon.uid, pistol.uid);
-  assert.equal(s.stash.length, 1);
   s = equip(s, rifle.uid, a);
-  assert.equal(s.crew[0].gear.weapon.uid, rifle.uid, 'one weapon at a time');
-  assert.deepEqual(s.stash.map((i) => i.uid), [pistol.uid], 'the sidearm went back to the stash');
+  assert.deepEqual(s.crew[0].gear.bag.map((x) => [x.item.type, x.x, x.y]), [['pistol', 0, 0], ['rifle', 0, 1]], 'a sidearm and a rifle, a row each');
+  assert.equal(bagUsed(s.crew[0]), 6);
+  assert.equal(equip(s, drone.uid, a), s, 'no room for a third long item');
   s = equip(s, rifle.uid, b);
-  assert.equal(s.crew[0].gear.weapon, null);
-  assert.equal(s.crew[1].gear.weapon.uid, rifle.uid, 'handed over');
-  s = unequip(s, b, 'weapon');
-  assert.equal(s.crew[1].gear.weapon, null);
-  assert.equal(s.stash.length, 2);
+  assert.ok(!carried(s.crew[0]).some((i) => i.uid === rifle.uid));
+  assert.ok(carried(s.crew[1]).some((i) => i.uid === rifle.uid), 'handed over');
+  s = unequip(s, b, rifle.uid);
+  assert.ok(!carried(s.crew[1]).length);
+  assert.ok(s.stash.some((i) => i.uid === rifle.uid));
+});
+
+test('the bag: placed where you tap if it fits, moved within it, never overlapping', () => {
+  let s = buyGear(buyGear(buyGear(Object.assign(fresh(), { cash: 20000 }), 'deck'), 'medkit'), 'picks');
+  const [deck, kit, ghost] = s.stash;
+  const a = s.crew[0].id;
+  s = equip(s, kit.uid, a, { x: 3, y: 0 });
+  assert.equal(equip(s, deck.uid, a, { x: 1, y: 0 }), s, 'a 3-cell deck at x 1 would cover the trauma kit');
+  s = equip(s, deck.uid, a, { x: 0, y: 0 });
+  s = equip(s, ghost.uid, a);
+  assert.deepEqual(s.crew[0].gear.bag.find((x) => x.item.uid === ghost.uid), { item: s.crew[0].gear.bag.find((x) => x.item.uid === ghost.uid).item, x: 0, y: 1 }, 'the first free cell');
+  s = equip(s, ghost.uid, a, { x: 3, y: 1 });
+  assert.deepEqual([s.crew[0].gear.bag.find((x) => x.item.uid === ghost.uid).x, s.crew[0].gear.bag.find((x) => x.item.uid === ghost.uid).y], [3, 1], 'moved');
+  assert.equal(carried(s.crew[0]).length, 3);
+});
+
+test('two implant sockets: their neural-load floors add up; never the same implant twice', () => {
+  let s = fresh();
+  s.cash = 20000;
+  s = buyGear(buyGear(buyGear(s, 'reflex'), 'cortex'), 'reflex');
+  const [r1, c, r2] = s.stash;
+  const a = s.crew[0].id;
+  s = equip(s, r1.uid, a);
+  assert.equal(neuralFloor(s.crew[0]), GEAR.reflex.neuralFloor);
+  s = equip(s, c.uid, a);
+  assert.equal(neuralFloor(s.crew[0]), GEAR.reflex.neuralFloor + GEAR.cortex.neuralFloor, 'both count');
+  assert.equal(equip(s, r2.uid, a), s, 'both sockets full');
+  assert.equal(equip(s, r2.uid, a, { socket: 1 }), s, 'swapping the cortex for a second reflex: refused');
+  s = equip(s, r2.uid, a, { socket: 0 });
+  assert.deepEqual(s.crew[0].gear.implants.map((i) => i.uid), [r2.uid, c.uid], 'swapped into socket 0');
+  assert.ok(s.stash.some((i) => i.uid === r1.uid), 'the old one back in the stash');
+});
+
+test('different kinds add up; the same kind counts once', () => {
+  const s = fresh();
+  const op = s.crew[0];
+  arm(s, op.id, 'deck', 'picks', 'picks:pro');
+  assert.equal(gearMods(op, 'tech').reduce((n, m) => n + m.value, 0), 1, 'the deck');
+  assert.equal(gearMods(op, 'stealth').reduce((n, m) => n + m.value, 0), 2, 'the better ghost kit, once');
 });
 
 // Changed on purpose (owner, 2026-10-29; DESIGN.md): resting or hurt no longer locks gear, only
@@ -151,7 +191,7 @@ test('some recruits bring their own kit, and keep it when hired; the founders br
     if (r.brings.length) brought++;
   }
   assert.ok(brought > 20 && brought < 160, `${brought} of 200 brought something`);
-  for (const op of s.crew) assert.ok(Object.values(op.gear).every((v) => v === null));
+  for (const op of s.crew) assert.equal(carried(op).length, 0);
   let g = fresh(12);
   for (let i = 0; i < 50 && !(g.recruits ?? []).some((r) => r.brings.length); i++) g.recruits = [generateRecruit(g)];
   const lead = g.recruits.find((r) => r.brings.length);
@@ -159,7 +199,7 @@ test('some recruits bring their own kit, and keep it when hired; the founders br
   g = hire(g, lead.id);
   const op = g.crew.at(-1);
   assert.equal(op.handle, lead.handle);
-  assert.deepEqual(Object.values(op.gear).filter(Boolean).map((i) => i.type), lead.brings);
+  assert.deepEqual(carried(op).map((i) => i.type).sort(), [...lead.brings].sort());
 });
 
 test('a v22 save upgrades: the shared rifle and drone go to the stash, or with whoever has one on overwatch mid-job', async () => {
@@ -174,11 +214,33 @@ test('a v22 save upgrades: the shared rifle and drone go to the stash, or with w
   const loaded = await importSave({ text: async () => JSON.stringify(old) });
   assert.equal(loaded.version, SAVE_VERSION);
   assert.deepEqual(loaded.stash.map((i) => i.type), ['drone'], 'the drone waits in the stash');
-  assert.equal(loaded.crew[2].gear.weapon.type, 'rifle', 'the rifle is with the person using it');
-  assert.ok(loaded.crew.every((o) => o.gear && Object.keys(o.gear).length === 4));
+  assert.ok(carried(loaded.crew[2]).some((i) => i.type === 'rifle'), 'the rifle is with the person using it');
+  assert.ok(loaded.crew.every((o) => o.gear && Array.isArray(o.gear.bag)), 'and on into the carry grid (v45)');
   assert.equal(playMission(loaded, carefulPolicy).state.activeMission.done, true, 'the job finishes');
   const idle = structuredClone(fresh(15));
   idle.version = 22; delete idle.stash; for (const op of idle.crew) delete op.gear;
   const up = await importSave({ text: async () => JSON.stringify(idle) });
   assert.deepEqual(up.stash.map((i) => i.type).sort(), ['drone', 'rifle']);
+});
+
+test('a v44 save upgrades: the weapon and tool go in the bag, the implant in a socket, armour stays worn', async () => {
+  const s = fresh(16);
+  const old = structuredClone(s);
+  old.version = 44;
+  const rifle = { uid: 'o1', type: 'rifle', tier: 'street' };
+  const kit = { uid: 'o2', type: 'medkit', tier: 'street' };
+  const deck = { uid: 'o3', type: 'deck', tier: 'pro' };
+  const vest = { uid: 'o4', type: 'vest', tier: 'street' };
+  const reflex = { uid: 'o5', type: 'reflex', tier: 'street' };
+  old.crew[0].gear = { weapon: rifle, armour: vest, tool: kit, implant: reflex };
+  old.crew[1].gear = { weapon: rifle && { ...rifle, uid: 'o6' }, armour: null, tool: deck, implant: null };
+  old.crew[2].gear = { weapon: null, armour: null, tool: null, implant: null };
+  const up = await importSave({ text: async () => JSON.stringify(old) });
+  assert.equal(up.version, SAVE_VERSION);
+  const [a, b, c] = up.crew;
+  assert.deepEqual(a.gear.armour.uid, 'o4');
+  assert.deepEqual(a.gear.implants.map((i) => i.uid), ['o5']);
+  assert.deepEqual(a.gear.bag.map((x) => [x.item.uid, x.x, x.y]), [['o1', 0, 0], ['o2', 3, 0]], 'a compact tool beside the rifle');
+  assert.deepEqual(b.gear.bag.map((x) => [x.item.uid, x.x, x.y]), [['o6', 0, 0], ['o3', 0, 1]], 'a long tool on the next row');
+  assert.deepEqual(c.gear, emptyLoadout());
 });
