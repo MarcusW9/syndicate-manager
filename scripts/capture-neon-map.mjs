@@ -59,7 +59,7 @@ try {
     const p = await b.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, reducedMotion: motion });
     p.on('pageerror', (e) => console.error('page error', e.message));
     await load(p, busy);
-    await tap(p, '[data-action="nav"][data-id="city"]'); await p.waitForTimeout(900);
+    await tap(p, '[data-action="nav"][data-id="ops"]'); await p.waitForTimeout(900);
     await p.locator('.citymap').screenshot({ path: `${out}/${name}.png` });
     if (motion === 'no-preference') {
       await p.locator('.cm-hit').nth(6).click({ force: true }); await p.waitForTimeout(600); // the Docks (MAP_DISTRICTS order)
@@ -70,7 +70,7 @@ try {
   }
   const d = await b.newPage({ viewport: { width: 1280, height: 860 }, deviceScaleFactor: 2 });
   await load(d, busy);
-  await tap(d, '[data-action="nav"][data-id="city"]'); await d.waitForTimeout(900);
+  await tap(d, '[data-action="nav"][data-id="ops"]'); await d.waitForTimeout(900);
   await d.screenshot({ path: `${out}/05-desktop-city.png` });
 } finally {
   await b.close();

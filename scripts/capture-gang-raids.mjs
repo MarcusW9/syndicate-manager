@@ -52,7 +52,7 @@ try {
   await p.waitForTimeout(200);
   await p.screenshot({ path: `${out}/03-whos-who-grudges.png` });
   await load(p, warned);
-  await tap(p, '[data-action="nav"][data-id="city"]'); await p.waitForTimeout(500);
+  await tap(p, '[data-action="nav"][data-id="ops"]'); await p.waitForTimeout(500);
   await p.locator('.ops').scrollIntoViewIfNeeded(); await p.waitForTimeout(200);
   await p.screenshot({ path: `${out}/04-out-now-gang-raid.png` });
   await p.locator('.cm-hit').nth(4).click({ force: true }); await p.waitForTimeout(600); // the Night Market
@@ -63,7 +63,7 @@ try {
   await p.locator(`[data-action="open-message"][data-id="${warn.id}"]`).first().click(); await p.waitForTimeout(300);
   await p.screenshot({ path: `${out}/06-gang-raid-warning.png` });
   await load(p, calling);
-  await tap(p, '[data-action="nav"][data-id="city"]'); await p.waitForTimeout(400);
+  await tap(p, '[data-action="nav"][data-id="ops"]'); await p.waitForTimeout(400);
   await tap(p, '[data-action="raid-answer"]'); await p.waitForTimeout(400);
   await p.screenshot({ path: `${out}/07-the-call-settle.png` });
   await tap(p, '[data-action="decide"][data-option="hold"]'); await p.waitForTimeout(1500);

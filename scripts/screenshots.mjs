@@ -187,6 +187,7 @@ try {
     await top(); await shot('crew');
     if (await click('[data-action="open-op"]')) { await top(); await shot('operative'); await click('[data-action="back"]'); }
   }
+  if (await click('[data-action="nav"][data-id="ops"]')) { await top(); await shot('ops'); }
   if (await click('[data-action="nav"][data-id="city"]')) { await top(); await shot('city'); }
   if (await click('[data-action="nav"][data-id="today"]')) { await top(); await shot('today'); }
 

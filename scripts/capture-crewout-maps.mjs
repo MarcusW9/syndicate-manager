@@ -55,7 +55,7 @@ try {
   const p = await b.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
   p.on('pageerror', (e) => console.error('page error', e.message));
   await load(p, busy);
-  await tap(p, '[data-action="nav"][data-id="city"]'); await p.waitForTimeout(700);
+  await tap(p, '[data-action="nav"][data-id="ops"]'); await p.waitForTimeout(700);
   await p.evaluate(() => { document.querySelector('.crewsout')?.scrollIntoView({ block: 'start' }); window.scrollBy(0, -120); });
   await p.waitForTimeout(300);
   await p.screenshot({ path: `${out}/01-out-now-mini-maps.png` });
@@ -63,7 +63,7 @@ try {
   await p.locator('.crewsout__job:not(.is-call):not(.is-side)').first().screenshot({ path: `${out}/03-crew-card.png` });
   const d = await b.newPage({ viewport: { width: 1280, height: 860 }, deviceScaleFactor: 2 });
   await load(d, busy);
-  await tap(d, '[data-action="nav"][data-id="city"]'); await d.waitForTimeout(700);
+  await tap(d, '[data-action="nav"][data-id="ops"]'); await d.waitForTimeout(700);
   await d.evaluate(() => document.querySelector('.crewsout')?.scrollIntoView({ block: 'center' }));
   await d.screenshot({ path: `${out}/04-desktop-out-now.png` });
 } finally {

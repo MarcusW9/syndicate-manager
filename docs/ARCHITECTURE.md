@@ -290,7 +290,7 @@ function migrate(state) {
 ---
 ## 9. UI
 
-Screens (`screen` var in app.js): `inbox` (Today), `crew`, `jobs`, `city`, `settings` (Save); sub-views via module vars (`openMessageId`, `openOperativeId`, `openRecruitId`, `openArmoury`, `plan`, `sidePlan`, `cityTab`…). Founding screen renders first for new games. Nav: Today / Crew / Jobs / City (the command centre: crews out under the map), topbar with cash, heat, tier and a ☰ Save button; dock with Continue. Watch screen is `renderMission`. Main jobs are planned on the squad board (`ui/board.js`).
+Screens (`screen` var in app.js): `inbox` (Today), `crew`, `jobs`, `ops` (the command centre, 2026-11-06), `city` (the lore book), `settings` (Save); sub-views via module vars (`openMessageId`, `openOperativeId`, `openRecruitId`, `openArmoury`, `plan`, `sidePlan`, `cityTab`…). Founding screen renders first for new games. Nav: Today / Crew / Jobs / City (the command centre: crews out under the map), topbar with cash, heat, tier and a ☰ Save button; dock with Continue. Watch screen is `renderMission`. Main jobs are planned on the squad board (`ui/board.js`).
 
 **Small example (`renderClients()`):**
 ```js
