@@ -2,7 +2,7 @@
 // functions, re-renders. Tap/click only; nothing depends on hover.
 
 import { heatIn, hottest, HEAT_DISTRICTS } from '../core/heat.js';
-import { openingFor, bedsOf, hallIn, residents, freeBeds, canOpenHall, openHall, nextHallExpansion, expandHall, canMove, moveToHall } from '../core/halls.js';
+import { buyPrice, buyHall, openingFor, bedsOf, hallIn, residents, freeBeds, canOpenHall, openHall, nextHallExpansion, expandHall, canMove, moveToHall } from '../core/halls.js';
 import { GANGS, GRUDGE, grudgeOf, jobGrudge, grudgeWord, gangsOn } from '../core/gangs.js';
 import { defenceCut, openRaids, raidOn, raidPrice, canBuyOff, defenders, raidChoices, payOffRaid, hallShut, raidWho, raidBy, isGangRaid } from '../core/raids.js';
 import { HALL_SITES, HOME_HALL } from '../data/halls.js';
@@ -251,6 +251,11 @@ function onClick(e) {
       if (!b || !canRemove(state, buildView.district, id).ok || !confirm(`Remove the ${PIECES[b.piece].name.toLowerCase()}? You get ${money(refundOf(b.piece))} back.`)) break;
       buildView = { ...buildView, picked: null };
       return setState(removePiece(state, buildView.district, id));
+    }
+    case 'buy-hall': { // buying a hall outright (core/halls.js)
+      const price = buyPrice(state, id);
+      if (price != null && confirm(`Buy the ${cityName(id)} hall for ${money(price)}? No more rent on it, and expanding it adds none.`)) return setState(buyHall(state, id));
+      break;
     }
     case 'move-hall': { const [opId, d] = id.split('|'); return setState(moveToHall(state, opId, d)); }
     case 'open-job': { // also from Today's alerts
@@ -1074,8 +1079,9 @@ function renderWeekSummary(m) {
   const p = m.payload;
   return `
       <ul class="weeksum">${p.lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>
+      ${p.broker ? `<p class="body"><strong>Work boards:</strong> ${esc(p.broker.lines.join(' '))}</p>` : ''}
       <p class="body">Wages ${money(p.wages)}, rent ${money(p.rent)}. Paid ${money(p.paid)}. Cash now ${money(p.cash)}.</p>
-      ${m.body.includes('Heat cooled') ? `<p class="body muted">${esc(m.body.slice(m.body.indexOf('Heat cooled')))}</p>` : ''}`;
+      ${m.body.includes('Heat cooled') ? `<p class="body muted">${esc(m.body.slice(m.body.indexOf('Heat cooled')).split(' Work boards:')[0])}</p>` : ''}`;
 }
 
 /**
@@ -1347,11 +1353,12 @@ function renderHalls() {
           <li class="hall has-mark">
             ${hallMark(h.district, { raid: openRaids(state).some((r) => r.district === h.district && r.answer !== 'paid') })}
             <div class="hall__body">
-            <p class="hall__head"><strong>${esc(cityName(h.district))}</strong>${h.district === HOME_HALL ? ' <span class="hall__home">home</span>' : ''} <span class="muted small">level ${h.level} · ${money(h.rent)}/wk · heat ${heatIn(state, h.district)}/10</span></p>
+            <p class="hall__head"><strong>${esc(cityName(h.district))}</strong>${h.district === HOME_HALL ? ' <span class="hall__home">home</span>' : ''}${h.owned ? ' <span class="hall__home hall__owned">ours</span>' : ''} <span class="muted small">level ${h.level} · ${h.owned ? 'no rent' : `${money(h.rent)}/wk`} · heat ${heatIn(state, h.district)}/10</span></p>
             <p class="small">${who.length}/${bedsOf(h)} beds${who.length ? `: ${esc(who.map((o) => o.handle).join(', '))}` : ' · nobody lives here yet'}</p>
             <p class="small muted">${esc(hallBuildLine(h, defenceCut(state, h.district)))}</p>
             <button class="btn btn--block" data-action="build-hall" data-id="${esc(h.district)}">Build</button>
-            <button class="btn btn--block" data-action="expand-hall" data-id="${esc(h.district)}" ${state.cash >= x.cost ? '' : 'disabled'}>Expand: +${x.beds} beds for ${money(x.cost)} (rent +${money(x.rentIncrease)}/wk)</button>
+            <button class="btn btn--block" data-action="expand-hall" data-id="${esc(h.district)}" ${state.cash >= x.cost ? '' : 'disabled'}>Expand: +${x.beds} beds for ${money(x.cost)} (${x.rentIncrease ? `rent +${money(x.rentIncrease)}/wk` : 'no rent'})</button>
+            ${(() => { const price = buyPrice(state, h.district); return price == null ? '' : `<button class="btn btn--block" data-action="buy-hall" data-id="${esc(h.district)}" ${state.cash >= price ? '' : 'disabled'}>Buy the place: ${money(price)}, then no rent</button>`; })()}
             </div>
           </li>`;
         }).join('')}

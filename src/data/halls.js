@@ -17,5 +17,8 @@ export const HALL_SITES = {
 /** Opening jobs (2026-11-06): a favour the contact asks before offering the hall; walk away or fail and they ask again after this many days, with one of their own jobs as the test. */
 export const OPENING = { retryDays: 14, boardDays: 13 };
 
+/** Buying a hall instead of renting it (owner, 2026-11-06): this many weeks of its rent, once; then no rent, and expanding it adds none. */
+export const HALL_BUY = { weeks: 26 };
+
 /** Expanding a hall: like the old safehouse, the cost grows with the hall's level. */
 export const HALL_EXPANSION = { costPerLevel: 10000, beds: 2, rent: 1000 };

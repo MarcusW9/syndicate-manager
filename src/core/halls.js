@@ -6,7 +6,7 @@
 // Moving into another hall takes the day, not the trip: they count there at once, but are
 // settling in and can't work until tomorrow (the city crosses in under an hour). Pure logic.
 
-import { HALL_SITES, HALL_EXPANSION, HOME_HALL, OPENING } from '../data/halls.js';
+import { HALL_SITES, HALL_EXPANSION, HOME_HALL, OPENING, HALL_BUY } from '../data/halls.js';
 import { addOffer, jobUnlocked, templateById } from './jobs.js';
 import { hashRng, pick } from './rng.js';
 import { NAMES } from '../config/names.js';
@@ -52,7 +52,7 @@ export function syncHalls(state) {
 }
 
 /** The first hall, from a new game's safehouse: Old Town, with its beds and rent. */
-export const homeHall = (beds, rent) => ({ district: HOME_HALL, beds, rent, level: 1, opened: 1, build: [] });
+export const homeHall = (beds, rent) => ({ district: HOME_HALL, beds, rent, level: 1, opened: 1, build: [], owned: false });
 
 /** Can the tong open a hall here now? { ok, reason, site }. */
 export function canOpenHall(state, district) {
@@ -80,7 +80,7 @@ export function openHall(prev, district) {
   const state = structuredClone(prev);
   const site = HALL_SITES[district];
   state.cash -= site.deposit;
-  state.halls = [...(state.halls ?? []), { district, beds: site.beds, rent: site.rent, level: 1, opened: state.day, build: [] }];
+  state.halls = [...(state.halls ?? []), { district, beds: site.beds, rent: site.rent, level: 1, opened: state.day, build: [], owned: false }];
   syncHalls(state);
   const contact = CLIENTS.find((c) => c.id === site.contact);
   state.inbox.unshift({
@@ -96,7 +96,31 @@ export function openHall(prev, district) {
 export function nextHallExpansion(state, district) {
   const h = hallIn(state, district);
   if (!h) return null;
-  return { cost: HALL_EXPANSION.costPerLevel * h.level, beds: HALL_EXPANSION.beds, rentIncrease: HALL_EXPANSION.rent, level: h.level + 1 };
+  return { cost: HALL_EXPANSION.costPerLevel * h.level, beds: HALL_EXPANSION.beds, rentIncrease: h.owned ? 0 : HALL_EXPANSION.rent, level: h.level + 1 }; // a bought hall adds no rent
+}
+
+/** What buying a hall costs: HALL_BUY.weeks of its rent, once (2026-11-06). null if it's ours already. */
+export function buyPrice(state, district) {
+  const h = hallIn(state, district);
+  return h && !h.owned && h.rent > 0 ? h.rent * HALL_BUY.weeks : null;
+}
+
+/** Buy a hall outright: pay the price, and its rent is gone for good. Returns the new state, or prev. */
+export function buyHall(prev, district) {
+  const price = buyPrice(prev, district);
+  if (price == null || prev.cash < price) return prev;
+  const state = structuredClone(prev);
+  const h = hallIn(state, district);
+  state.cash -= price;
+  h.owned = true;
+  h.rent = 0;
+  syncHalls(state);
+  state.inbox.unshift({
+    id: `hall-buy-${district}-${state.day}`, type: 'finance', day: state.day,
+    subject: `The ${districtName(district).replace(/^The /, '')} hall is ours`,
+    body: `Paid ${money(price)} for the place. No more rent on it, ever, and making it bigger adds none.`, blocking: false, read: false,
+  });
+  return state;
 }
 
 /** Expand a hall: more beds, more rent. Returns the new state, or prev. */

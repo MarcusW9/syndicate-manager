@@ -22,6 +22,19 @@ export const ROOM_EFFECT = {
   docShare: 0.75, // with a cyber doc in the tong, implants cost this share (core/gear.js)
 };
 
+/**
+ * The work board (owner, 2026-11-06: "middle man jobs ... these rookies and solo guys would be coming
+ * here to take on work that we give them"): each Sunday a hall with one brokers small outside work in
+ * its district to street freelancers, never the jobs on the tong's own board, and takes a cut
+ * (core/broker.js). Jobs a week: the hall's level.
+ */
+export const BROKER = {
+  cut: 0.2, // the tong's share of what each brokered job pays
+  wrong: 0.1, // the chance one goes wrong: no fee, and that client's trust falls
+  wrongTrust: -2,
+  lead: 0.15, // each week, the chance a freelancer who did well asks to join (a recruit lead)
+};
+
 /** The auto turret (slice 3, owner 2026-11-06: no crew, can't be knocked out): it fires each round of a raid on its own. */
 export const TURRET = { aim: 8, damage: 5, shots: 6 };
 
@@ -86,6 +99,11 @@ Object.assign(PIECES, {
     name: 'Lookout', kind: 'room', cost: 12000, size: [2, 2], turns: false, one: true, what: 'warned 4 days',
     about: 'A stool at a window that sees the street both ways. We hear of a raid on this hall a day sooner.',
     shapes: (x, y) => room(x, y, 60, 60, (rx, ry, w) => [fit(rx + 4, ry + 2, w - 8, 4, '#3de8d8'), fit(rx + w / 2 - 5, ry + 14, 10, 10, '#6b5a2a')]),
+  },
+  workboard: {
+    name: 'Work board', kind: 'room', cost: 8000, size: [2, 2], turns: false, one: true, what: 'brokers work',
+    about: 'A cork board, a kettle and a bench by the door. Street freelancers come in for the small work we broker, and the tong keeps a fifth of the fee. Now and then one asks to join.',
+    shapes: (x, y) => room(x, y, 60, 60, (rx, ry, w, h) => [fit(rx + 4, ry + 4, w - 8, 14, '#6b5a2a'), fit(rx + 8, ry + 7, 8, 6, '#e8e2d0'), fit(rx + 20, ry + 8, 8, 5, '#e8e2d0'), fit(rx + 32, ry + 6, 8, 7, '#e8e2d0'), fit(rx + 6, ry + h - 12, w - 12, 6, '#4a5566')]),
   },
   den: {
     name: 'Den', kind: 'room', cost: 14000, size: [3, 2], turns: true, needs: 2, one: true, what: 'loyalty',

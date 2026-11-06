@@ -24,12 +24,12 @@ import { availability } from '../src/core/crew.js';
 import { sendOff } from '../src/core/autorun.js';
 import { takeCall, letThemRun } from '../src/core/away.js';
 import { resolveDecision } from '../src/core/decisions.js';
-import { canOpenHall, openHall, nextHallExpansion, expandHall, freeBeds } from '../src/core/halls.js';
+import { canOpenHall, openHall, nextHallExpansion, expandHall, freeBeds, buyPrice, buyHall } from '../src/core/halls.js';
 import { HALL_SITES } from '../src/data/halls.js';
 import { canBuyOff, raidPrice, payOffRaid, defenders } from '../src/core/raids.js';
 import { runBattle } from '../src/core/runbattle.js';
 import { resolvePending, describePending, closeMission } from '../src/core/mission.js';
-import { buildableCells, hallMap, placePiece } from '../src/core/hallbuild.js';
+import { buildableCells, hallMap, placePiece, canPlace } from '../src/core/hallbuild.js';
 
 const SEEDS = Number(process.argv[2] ?? 20);
 const median = (a) => (a.length ? [...a].sort((x, y) => x - y)[Math.floor(a.length / 2)] : null);
@@ -116,6 +116,14 @@ function play(seed, cfg) {
         for (const [x, y] of nearStart(h.district)) { const next = placePiece(s, h.district, 'plate', x, y, 0); if (next !== s) { s = next; break; } }
       }
     }
+    // Buying and brokering (2026-11-06): a work board in every hall once there's money for it, and a
+    // hall bought outright once its price leaves six weeks of bills.
+    if (cfg.broker) for (const h of s.halls ?? []) {
+      if ((h.build ?? []).some((b) => b.piece === 'workboard') || s.cash < 8000 + bills(s) * 4) continue;
+      const at = [...buildableCells(hallMap(h.district))].map((k) => k.split(',').map(Number)).find(([x, y]) => canPlace(s, h.district, 'workboard', x, y).ok);
+      if (at) s = placePiece(s, h.district, 'workboard', ...at);
+    }
+    if (cfg.buy) for (const h of s.halls ?? []) { const p = buyPrice(s, h.district); if (p != null && s.cash > p + bills(s) * 6) s = buyHall(s, h.district); }
     s = advanceDay(s);
     const wk = (day + 1) / 7;
     if (SNAP.includes(wk)) snaps[wk] = { s, t: { ...t } };
@@ -127,6 +135,9 @@ function play(seed, cfg) {
 const CONFIGS = {
   'careful, nothing built': { approach: 'stealth', plates: 0 },
   'careful, one hall only': { approach: 'stealth', plates: 0, noHalls: true },
+  'careful, buys halls': { approach: 'stealth', plates: 0, buy: true },
+  'careful, work boards': { approach: 'stealth', plates: 0, broker: true },
+  'careful, buys and brokers': { approach: 'stealth', plates: 0, buy: true, broker: true },
   // What would make a second hall pay its way (tuning probes; the game's numbers aren't changed).
   'careful, halls at half rent': { approach: 'stealth', plates: 0, tweak: () => { for (const s of Object.values(HALL_SITES)) if (s.rent) s.rent = Math.round(s.rent / 2); } },
   'careful, halls with 4 beds': { approach: 'stealth', plates: 0, tweak: () => { for (const s of Object.values(HALL_SITES)) if (s.beds) s.beds = 4; } },
