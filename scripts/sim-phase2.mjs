@@ -24,12 +24,12 @@ import { availability } from '../src/core/crew.js';
 import { sendOff } from '../src/core/autorun.js';
 import { takeCall, letThemRun } from '../src/core/away.js';
 import { resolveDecision } from '../src/core/decisions.js';
-import { canOpenHall, openHall, nextHallExpansion, expandHall, freeBeds } from '../src/core/halls.js';
+import { canOpenHall, openHall, nextHallExpansion, expandHall, freeBeds, buyPrice, buyHall } from '../src/core/halls.js';
 import { HALL_SITES } from '../src/data/halls.js';
 import { canBuyOff, raidPrice, payOffRaid, defenders } from '../src/core/raids.js';
 import { runBattle } from '../src/core/runbattle.js';
 import { resolvePending, describePending, closeMission } from '../src/core/mission.js';
-import { buildableCells, hallMap, placePiece } from '../src/core/hallbuild.js';
+import { buildableCells, hallMap, placePiece, canPlace } from '../src/core/hallbuild.js';
 
 const SEEDS = Number(process.argv[2] ?? 20);
 const median = (a) => (a.length ? [...a].sort((x, y) => x - y)[Math.floor(a.length / 2)] : null);
@@ -84,7 +84,7 @@ function play(seed, cfg) {
   const snaps = {};
   let s = createNewGame({ seed, startCrew: 'pick' });
   if (s.founding) s = autoFounders(s);
-  const t = { jobs: 0, held: 0, walked: 0, paid: 0, raidHurt: 0, raidDeaths: 0, secondHall: null };
+  const t = { jobs: 0, held: 0, walked: 0, paid: 0, raidHurt: 0, raidDeaths: 0, secondHall: null, bought: 0, boards: 0, brokered: 0 };
   for (let day = 0; day < 52 * 7; day++) {
     s = answer(s, t, cfg);
     if (calendar(s.day).weekday !== 'Sun') {
@@ -116,6 +116,14 @@ function play(seed, cfg) {
         for (const [x, y] of nearStart(h.district)) { const next = placePiece(s, h.district, 'plate', x, y, 0); if (next !== s) { s = next; break; } }
       }
     }
+    // Buying and brokering (2026-11-06): a work board in every hall once there's money for it, and a
+    // hall bought outright once its price leaves six weeks of bills.
+    if (cfg.broker) for (const h of s.halls ?? []) {
+      if ((h.build ?? []).some((b) => b.piece === 'workboard') || s.cash < 8000 + bills(s) * (cfg.boardWeeks ?? 4)) continue;
+      const at = [...buildableCells(hallMap(h.district))].map((k) => k.split(',').map(Number)).find(([x, y]) => canPlace(s, h.district, 'workboard', x, y).ok);
+      if (at) { s = placePiece(s, h.district, 'workboard', ...at); t.boards += 1; }
+    }
+    if (cfg.buy) for (const h of s.halls ?? []) { const p = buyPrice(s, h.district); if (p != null && s.cash > p + bills(s) * (cfg.buyWeeks ?? 6)) { s = buyHall(s, h.district); t.bought += 1; } }
     s = advanceDay(s);
     const wk = (day + 1) / 7;
     if (SNAP.includes(wk)) snaps[wk] = { s, t: { ...t } };
@@ -127,6 +135,11 @@ function play(seed, cfg) {
 const CONFIGS = {
   'careful, nothing built': { approach: 'stealth', plates: 0 },
   'careful, one hall only': { approach: 'stealth', plates: 0, noHalls: true },
+  'careful, buys halls': { approach: 'stealth', plates: 0, buy: true },
+  'careful, work boards': { approach: 'stealth', plates: 0, broker: true },
+  'careful, buys and brokers': { approach: 'stealth', plates: 0, buy: true, broker: true },
+  'careful, eager work boards': { approach: 'stealth', plates: 0, broker: true, boardWeeks: 1 },
+  'careful, eager buys and brokers': { approach: 'stealth', plates: 0, buy: true, broker: true, buyWeeks: 2, boardWeeks: 1 },
   // What would make a second hall pay its way (tuning probes; the game's numbers aren't changed).
   'careful, halls at half rent': { approach: 'stealth', plates: 0, tweak: () => { for (const s of Object.values(HALL_SITES)) if (s.rent) s.rent = Math.round(s.rent / 2); } },
   'careful, halls with 4 beds': { approach: 'stealth', plates: 0, tweak: () => { for (const s of Object.values(HALL_SITES)) if (s.beds) s.beds = 4; } },
@@ -147,6 +160,7 @@ for (const [name, cfg] of Object.entries(CONFIGS).filter(([n]) => !only || n.sta
     const openings = (r) => Object.values(r.s.openings ?? {});
     console.log(`  wk${weeks}: cash ${median(cash)} · broke ${Math.round((cash.filter((c) => c < 0).length / runs.length) * 100)}% · halls ${median(runs.map((r) => r.s.halls.length))} · roster ${median(runs.map((r) => r.s.crew.length))} · rep ${median(runs.map((r) => r.s.reputation))} · jobs/wk ${Math.round(median(runs.map((r) => r.t.jobs / weeks)) * 10) / 10}`);
     console.log(`         raids ${sum((r) => (r.s.raids ?? []).length)} (median ${median(raids)}; gang ${sum((r) => (r.s.raids ?? []).filter((x) => x.by !== 'police').length)}) · held ${sum((r) => r.t.held)} · walked out ${sum((r) => r.t.walked)} · paid ${sum((r) => r.t.paid)} · hurt in raids ${sum((r) => r.t.raidHurt)} · killed in raids ${sum((r) => r.t.raidDeaths)} · all deaths ${sum((r) => r.s.memorial.length)}`);
+    if (runs[0].t.bought != null) console.log(`         halls bought ${sum((r) => r.t.bought)} · work boards built ${sum((r) => r.t.boards)}`);
     console.log(`         favours done ${sum((r) => openings(r).filter((o) => o.status === 'done').length)} · failed or waiting ${sum((r) => openings(r).filter((o) => o.status === 'failed').length)} · 2nd hall by week ${median(runs.map((r) => r.t.secondHall).filter((x) => x != null)) ?? '-'} (${runs.filter((r) => r.t.secondHall != null).length}/${runs.length} runs)`);
   }
 }

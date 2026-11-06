@@ -6,6 +6,17 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+
+## 2026-11-06 · Buy a hall, and a work board
+- **A hall can be bought outright:** 26 weeks of its rent, once. After that it pays no rent, and making it bigger adds none. Crew › Halls has "Buy the place" on each hall; a bought hall is marked ours. The home hall can be bought too.
+- **A new room, the work board** (¥8,000, 2 × 2). Street freelancers come in for small work the tong brokers in that district, and the tong keeps a fifth of the fee:
+  - one job a week at level 1, one more for each Expand;
+  - it's never the jobs on your own board, and nobody of yours goes;
+  - about one in ten goes wrong: no fee, and that client thinks a little less of you;
+  - now and then a freelancer who did well asks to join;
+  - Sunday's message says what the boards brought in.
+- **Save format v44.** No hall in an old save is bought yet.
+
 ## 2026-11-06 · Balance: halls cheaper to keep, raids a little likelier
 - **Hall rent is halved:** the Night Market ¥500 a week, the Docks and the Basin ¥600, Glass Heights ¥800. A second hall was costing more than it brought.
 - **Raids come a little more readily:**

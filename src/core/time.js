@@ -26,6 +26,7 @@ import { checkSpecialisations } from './specialisations.js';
 import { refreshArmoury } from './looks.js';
 import { homeOf, hasRoom } from './halls.js';
 import { ROOM_EFFECT } from '../data/hallBuild.js';
+import { brokerWeek } from './broker.js';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAYS_PER_SEASON = 364; // 52 weeks
@@ -126,6 +127,7 @@ export function weeklyBill(state) {
 }
 
 function settleWeek(state) {
+  const brokered = brokerWeek(state); // the work boards' week, before the bills (core/broker.js)
   const summary = weekSummary(state); // the week's jobs and money, before the bills (core/week.js)
   const { wages, total } = weeklyBill(state);
   state.cash -= total;
@@ -147,8 +149,9 @@ function settleWeek(state) {
     day: state.day,
     subject: broke ? 'You missed payments this week' : `Week ${calendar(state.day).week} settled: ${summary.net >= 0 ? '+' : '−'}${money(Math.abs(summary.net))} after the bills`,
     body: `${summary.lines.join(' ')} Wages ${money(wages)}, rent ${money(state.rent)}. Paid ${money(total)}. Cash now ${money(state.cash)}.` + heatLine +
+      (brokered.lines.length ? ` Work boards: ${brokered.lines.join(' ')}` : '') +
       (broke ? ' The crew noticed. Morale will drop until you are back in the black.' : ''),
-    kind: 'week', payload: { lines: summary.lines, net: summary.net, paid: total, wages, rent: state.rent, cash: state.cash },
+    kind: 'week', payload: { lines: summary.lines, net: summary.net, paid: total, wages, rent: state.rent, cash: state.cash, broker: brokered.lines.length ? brokered : null },
     blocking: false,
     read: false,
   });
