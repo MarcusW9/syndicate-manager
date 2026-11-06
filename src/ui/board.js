@@ -64,13 +64,19 @@ function dossier(ui, slot, op, { name, does, line = '', note = '', i = 0 }) {
     return `<button class="dossier is-empty" data-action="pick-slot" data-id="${slot}" aria-label="${esc(name)}: empty. ${esc(does)} Tap to assign.">
       <b>${esc(name)}</b><span class="dossier__sil" aria-hidden="true">+</span><small>${esc(does)}</small></button>`;
   }
-  return `<button class="dossier ${op.freelance ? 'dossier--freelance' : ''}" data-action="pick-slot" data-id="${slot}" style="--tilt:${TILTS[i % TILTS.length]};--pin:${PINS[i % PINS.length]}" aria-label="${esc(name)}: ${esc(op.handle)}. Tap to change.">
+  // A filled card: tap it to change who's there, or its × to take them off (owner, 2026-11-06:
+  // removing someone meant opening the picker to leave it empty). Two buttons side by side,
+  // since a button can't hold another.
+  return `<div class="dossierwrap" style="--tilt:${TILTS[i % TILTS.length]}">
+    <button class="dossier ${op.freelance ? 'dossier--freelance' : ''}" data-action="pick-slot" data-id="${slot}" style="--tilt:${TILTS[i % TILTS.length]};--pin:${PINS[i % PINS.length]}" aria-label="${esc(name)}: ${esc(op.handle)}. Tap to change.">
       <span class="dossier__photo">${face(op)}</span>
       <span class="dossier__name">${esc(op.handle)}</span>
       <span class="dossier__real">${esc(op.freelance ? `freelance ${op.role}` : op.role)}</span>
       ${line ? `<span class="dossier__note">${line}</span>` : ''}
       ${note ? `<span class="dossier__tag">${esc(note)}</span>` : ''}
-    </button>`;
+    </button>
+    <button class="dossier__off" data-action="unassign" data-id="${slot}" aria-label="Take ${esc(op.handle)} off ${esc(name.toLowerCase())}"><span aria-hidden="true">×</span></button>
+  </div>`;
 }
 
 /** The board: who's inside, who's on overwatch with which kit, and Joss's picks. */
@@ -136,11 +142,16 @@ export function renderBoard(ui, { plan, tpl, people, crewSize }) {
 }
 
 /**
- * The picker sheet for one slot: everyone who could go, best fit first, with what they'd bring.
+ * The picker sheet for one slot (rebuilt 2026-11-06 after the owner's playtest, mock-up
+ * drafts/prototypes/picker.html): the job's target up top and what the colours mean, then fixed
+ * groups (your crew, freelancers, already on the squad, not free today, folded), a "Joss picks"
+ * tag, and a sort. Inside slots show the job's key stats, the one that counts most big on a phone
+ * and as columns to compare on a computer; outside slots keep their one line.
  * people: [{ op, status (availability), freelance: { share, left } | null }].
+ * fit: { want, stats(op) → [{ key, name, glyph, value, fit: good|shaky|weak, mark }] } for this job.
  */
-export function renderPicker(ui, { plan, tpl, threat, slot, people, freelancersFull }) {
-  const { esc, face, statusChip, keyStats } = ui;
+export function renderPicker(ui, { plan, tpl, threat, slot, people, freelancersFull, fit = null, sortBy = 'fit', jossId = null }) {
+  const { esc, face, statusChip } = ui;
   const outside = !!OUTSIDE[slot];
   const current = outside ? plan[OUTSIDE[slot]] ?? null : plan.crew[Number(slot.split(':')[1])] ?? null;
   // What counts for this slot, best first.
@@ -150,45 +161,92 @@ export function renderPicker(ui, { plan, tpl, threat, slot, people, freelancersF
       line: (op) => (planKit(plan, op) ? kitLine(op, planKit(plan, op)) : 'no rifle or drone'), needs: (op) => !!planKit(plan, op) },
     wheels: { name: 'Wheels', note: 'In the van: they take every driving roll, alone.', score: (op) => effectiveStat(op, 'driving').value, line: (op) => statValue('driving', effectiveStat(op, 'driving').value) },
     standby: { name: 'standby', note: 'At the van until called: they can save someone in trouble or get the wounded out.', score: (op) => effectiveStat(op, 'combat').value + effectiveStat(op, 'medical').value / 2, line: (op) => `${statValue('combat', effectiveStat(op, 'combat').value)} · ${statValue('medical', effectiveStat(op, 'medical').value)}` },
-  }[slot] ?? { name: 'the inside team', note: `Numbers are for this job: ${tpl.keyStats.join(', ')} matter most.`, score: (op) => bestLine(op, plan.approach).value, line: null };
+  }[slot] ?? { name: 'the inside team', note: null, score: (op) => bestLine(op, plan.approach).value, line: null };
+  const stats = !outside && fit ? fit.stats : null;
+  const sortKey = stats && sortBy !== 'fit' && tpl.keyStats.includes(sortBy) ? sortBy : 'fit';
+  // Best fit, inside: the best of the job's key stats (what the colours and the target read), the
+  // approach's line only to break a tie; by a stat: that stat.
+  const score = (op) => (sortKey !== 'fit' ? stats(op).find((x) => x.key === sortKey).value
+    : stats ? Math.max(...stats(op).map((x) => x.value)) + FIT.score(op) / 100 : FIT.score(op));
+  const where = (id) => (plan.crew.includes(id) ? 'inside' : Object.keys(OUTSIDE).find((k) => plan[OUTSIDE[k]] === id)?.replace('over', 'overwatch') ?? null);
   const rows = people
     .filter(({ freelance }) => !(outside && freelance))
-    .map((p) => ({ ...p, score: p.status.ok ? FIT.score(p.op) : -99 }))
+    .map((p) => ({ ...p, score: score(p.op) }))
     .sort((a, b) => b.score - a.score);
-  const where = (id) => (plan.crew.includes(id) ? 'inside' : Object.keys(OUTSIDE).find((k) => plan[OUTSIDE[k]] === id)?.replace('over', 'overwatch') ?? null);
-  // Free crew first; anyone already on the squad goes below, greyed and tagged with where they are,
-  // so tapping the same person again by accident is hard (owner's feedback, 2026-10-27).
-  const free = rows.filter(({ op }) => !where(op.id));
+  // The groups, always in this order: freelancers apart from your own (owner, 2026-11-06), anyone
+  // already on the squad below, greyed and tagged with where they are (2026-10-27), and whoever
+  // isn't free today folded away at the bottom.
   const placed = rows.filter(({ op }) => where(op.id));
-  // What this job does for each candidate (core/worth.js), with the others already inside: here only,
-  // where you're already choosing someone, so the planning page stays short (owner, 2026-11-05).
+  const rest = rows.filter(({ op }) => !where(op.id));
+  const crew = rest.filter((p) => !p.freelance && p.status.ok);
+  const hired = rest.filter((p) => p.freelance);
+  const off = rest.filter((p) => !p.freelance && !p.status.ok);
+  // What this job does for each candidate (core/worth.js), with the others already inside.
   const insideOps = people.filter((p) => plan.crew.includes(p.op.id)).map((p) => p.op);
   const gain = (op) => jobGain(op, threat, insideOps.filter((o) => o.id !== op.id));
-  const cand = ({ op, status, freelance }) => {
+  const parts = ({ op, status, freelance }) => {
     const w = where(op.id);
-    const g = status.ok ? gain(op) : null;
     const here = current === op.id;
     const blocked = !status.ok || (freelance && freelancersFull && !plan.crew.includes(op.id)) || (FIT.needs && !FIT.needs(op));
+    const g = status.ok ? gain(op) : null;
+    const side = here ? '<span class="cand__where cand__where--here">In this slot</span>' : w ? `<span class="cand__where">${esc(w)}</span>`
+      : freelance ? `<span class="cand__hire">Freelance</span><strong>${Math.round(freelance.share * 100)}%</strong> of pay` : statusChip(status);
+    const joss = jossId === op.id && !w ? ' <span class="cand__joss">Joss picks</span>' : '';
+    const cls = `${freelance ? 'cand--freelance' : ''} ${here ? 'is-on' : w ? 'is-placed' : ''}`;
+    return { op, freelance, here, blocked, g, side, joss, cls };
+  };
+  const statTxt = (x) => `<span class="fit fit--${x.fit}">${esc(x.name)} ${x.value}${x.mark}</span>`;
+  // A phone's card: the stat that counts most big, the others small.
+  const card = (p) => {
+    const c = parts(p);
+    const all = stats ? stats(c.op) : null;
+    const top = all ? (sortKey === 'fit' ? [...all].sort((a, b) => b.value - a.value)[0] : all.find((x) => x.key === sortKey)) : null;
     return `
-          <li><button class="cand ${freelance ? 'cand--freelance' : ''} ${here ? 'is-on' : w ? 'is-placed' : ''}" data-action="assign" data-id="${esc(op.id)}" ${blocked ? 'disabled' : ''} aria-pressed="${here}">
-            ${face(op, 'sm')}
-            <span class="cand__txt"><strong>${esc(op.handle)}</strong> <span class="muted">${esc(freelance ? `freelance ${op.role}` : op.role)}</span><br>
-              <span class="small">${FIT.line ? FIT.line(op) : keyStats(op, tpl, threat)}</span>${g ? `<br><span class="cand__gain cand__gain--${g.tone}">${esc(g.text)}</span>` : ''}</span>
-            <span class="cand__side">${here ? '<span class="cand__where cand__where--here">In this slot</span>' : w ? `<span class="cand__where">${esc(w)}</span>` : freelance ? `<span class="cand__hire">Freelance</span><strong>${Math.round(freelance.share * 100)}%</strong> of pay` : statusChip(status)}</span>
+          <li><button class="cand ${c.cls}" data-action="assign" data-id="${esc(c.op.id)}" ${c.blocked ? 'disabled' : ''} aria-pressed="${c.here}">
+            ${face(c.op, 'sm')}
+            <span class="cand__txt"><span><strong>${esc(c.op.handle)}</strong> <span class="muted">${esc(c.freelance ? `freelance ${c.op.role}` : c.op.role)}</span>${c.joss}</span>
+              ${top ? `<span class="cand__top fit--${top.fit}">${esc(top.name)} <b>${top.value}${top.mark}</b></span>
+              <span class="cand__rest small">${all.filter((x) => x !== top).map(statTxt).join(' · ')}</span>` : `<span class="small">${FIT.line(c.op)}</span>`}
+              ${c.g ? `<span class="cand__gain cand__gain--${c.g.tone}">${esc(c.g.text)}</span>` : ''}</span>
+            <span class="cand__side">${c.side}</span>
           </button></li>`;
   };
+  // A computer's row: the key stats as columns to read down.
+  const tr = (p) => {
+    const c = parts(p);
+    return `<li><button class="ptrow cand ${c.cls}" data-action="assign" data-id="${esc(c.op.id)}" ${c.blocked ? 'disabled' : ''} aria-pressed="${c.here}">
+      <span class="ptrow__who">${face(c.op, 'sm')}<span><strong>${esc(c.op.handle)}</strong>${c.joss}<br><span class="muted small">${esc(c.freelance ? `freelance ${c.op.role}` : c.op.role)}</span></span></span>
+      ${stats(c.op).map((x) => `<span class="ptrow__num"><span class="ptpill ptpill--${x.fit}">${x.value}${x.mark}</span></span>`).join('')}
+      <span class="ptrow__gain small">${c.g ? `<span class="cand__gain cand__gain--${c.g.tone}">${esc(c.g.text)}</span>` : '<span class="muted">—</span>'}</span>
+      <span class="cand__side">${c.side}</span></button></li>`;
+  };
+  const groups = [
+    { key: 'crew', name: 'Your crew', note: `${crew.length} free`, list: crew },
+    { key: 'free', name: 'Freelancers', note: freelancersFull ? 'the freelance places are full' : 'they take a cut of the pay', list: hired },
+    { key: 'placed', name: 'Already on the squad', note: `tap to move them here${current ? ' (they swap places)' : ''}`, list: placed },
+  ].filter((g) => g.list.length);
+  const sortNames = stats ? [['fit', 'Best fit'], ...tpl.keyStats.map((k) => [k, stats(rows[0]?.op ?? people[0].op).find((x) => x.key === k).name])] : [];
+  const cards = `
+      ${stats ? `<div class="psort" role="group" aria-label="Sort by"><span class="psort__l">Sort</span>${sortNames.map(([k, n]) => `<button class="psort__btn ${sortKey === k ? 'is-on' : ''}" data-action="pick-sort" data-id="${k}" aria-pressed="${sortKey === k}">${esc(n)}</button>`).join('')}</div>` : ''}
+      ${groups.map((g) => `<h3 class="sheet__group sheet__group--${g.key}">${esc(g.name)} <span>${esc(g.note)}</span></h3><ul class="list">${g.list.map(card).join('')}</ul>`).join('') || '<p class="muted small">Nobody is free for this.</p>'}
+      ${off.length ? `<details class="pfold"><summary>Not free today (${off.length})</summary><ul class="list">${off.map(card).join('')}</ul></details>` : ''}`;
+  const table = stats ? `
+      <div class="ptable" style="--n:${tpl.keyStats.length}">
+        <div class="ptable__head"><span>Runner</span>${tpl.keyStats.map((k) => { const n = stats(people[0].op).find((x) => x.key === k).name; return `<button class="ptable__sort ${sortKey === k ? 'is-on' : ''}" data-action="pick-sort" data-id="${sortKey === k ? 'fit' : k}" aria-pressed="${sortKey === k}">${esc(n)}${sortKey === k ? ' ▾' : ''}</button>`; }).join('')}<span>This job</span><span></span></div>
+        ${groups.map((g) => `<h3 class="sheet__group sheet__group--${g.key}">${esc(g.name)} <span>${esc(g.note)}</span></h3><ul class="list">${g.list.map(tr).join('')}</ul>`).join('')}
+        ${off.length ? `<h3 class="sheet__group">Not free today</h3><ul class="list">${off.map(tr).join('')}</ul>` : ''}
+      </div>
+      <p class="muted small">Tap a column to sort by it, again for best fit. Tap a row to put them in.</p>` : '';
+  const legend = '<span class="plegend"><span class="fit--good">● ready for it</span><span class="fit--shaky">● close</span><span class="fit--weak">● short</span></span>';
   return `
     <div class="scrim" data-action="close-picker"></div>
-    <div class="sheet" role="dialog" aria-modal="true" aria-label="Who's on ${esc(FIT.name)}?">
+    <div class="sheet ${stats ? 'sheet--picker' : ''}" role="dialog" aria-modal="true" aria-label="Who's on ${esc(FIT.name)}?">
       <div class="sheet__head">
         <div><h2 class="sheet__title">Who's on ${esc(FIT.name)}?</h2>
-        <p class="muted small">${esc(FIT.note)}</p></div>
+        ${stats ? `<p class="pwant">${esc(tpl.name)} wants about <b>${fit.want}</b> in <b>${esc(tpl.keyStats.map((k) => stats(people[0].op).find((x) => x.key === k).name.toLowerCase()).join(', ').replace(/, ([^,]*)$/, ' or $1'))}</b>. ${legend}</p>` : `<p class="muted small">${esc(FIT.note)}</p>`}</div>
         <button class="btn btn--ghost sheet__x" data-action="close-picker" aria-label="Close">✕</button>
       </div>
-      <ul class="list">${free.length ? free.map(cand).join('') : '<li class="muted small">Everyone free is already on the squad.</li>'}</ul>
-      ${placed.length ? `
-      <h3 class="sheet__group">Already on the squad <span>tap to move them here${current ? ' (they swap places)' : ''}</span></h3>
-      <ul class="list">${placed.map(cand).join('')}</ul>` : ''}
+      ${stats ? `<div class="picker__cards">${cards}</div><div class="picker__table">${table}</div>` : cards}
       ${current ? '<button class="btn btn--ghost btn--block" data-action="assign" data-id="">Leave this empty</button>' : ''}
     </div>`;
 }

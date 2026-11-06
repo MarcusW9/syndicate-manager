@@ -89,6 +89,7 @@ let gearSlot = null; // the loadout slot being filled on a runner's page
 let newGameSlot = null; // slot number while picking a difficulty
 let plan = null; // { jobId, crew: [...ids], approach, orders, callIn, overwatch: id|null, kit, wheels: id|null, standby: id|null } (core/mission.js startMission)
 let pickSlot = null;
+let pickSort = 'fit'; // the picker's sort: best fit, or one of the job's key stats (2026-11-06)
 const openInfo = new Set(); // which (i) explanations are open (infoButton) // the squad-board slot being filled ('in:<n>' or 'over'), while its picker is open
 let root;
 // Continue rests briefly after each new day, so a double click can't skip one.
@@ -174,7 +175,7 @@ function onClick(e) {
       break;
     }
     case 'back':
-      // A runner's page opened from a name in a message goes back to that message.
+      // A runner's page opened from a name in a message, or from the runners on the job board, goes back there.
       if (returnTo && openOperativeId) {
         focusNext = { action: 'op-link', id: openOperativeId };
         ({ screen } = returnTo); openMessageId = returnTo.messageId; openOperativeId = null; gearSlot = null; returnTo = null;
@@ -288,8 +289,11 @@ function onClick(e) {
     // The squad board (ui/board.js): tap a card, pick who goes there; anyone already placed swaps.
     case 'info': if (openInfo.has(id)) openInfo.delete(id); else openInfo.add(id); break;
     case 'pick-slot': pickSlot = id; break;
+    case 'pick-sort': pickSort = id; break;
     case 'close-picker': focusNext = { action: 'pick-slot', id: pickSlot }; pickSlot = null; break;
     case 'assign': Object.assign(plan, assignSlot(plan, pickSlot, id || null)); focusNext = { action: 'pick-slot', id: pickSlot }; pickSlot = null; break;
+    // A card's × on the squad board: that slot left empty, without opening the picker.
+    case 'unassign': Object.assign(plan, assignSlot(plan, id, null)); focusNext = { action: 'pick-slot', id }; break;
     case 'joss': {
       // The smallest squad that gets the best risk for this approach (core/squad.js leanPicks); standby is the player's call.
       const p = leanPicks(state, state.jobs.find((j) => j.id === plan.jobId), plan.approach);
@@ -1602,7 +1606,7 @@ function renderOperative() {
   const nameOf = (id) => state.crew.find((x) => x.id === id)?.handle ?? state.memorial.find((x) => x.id === id)?.handle ?? id;
   return `
     <section class="panel">
-      <button class="btn btn--ghost" data-action="back">${returnTo ? '← Back to the message' : '← Crew'}</button>
+      <button class="btn btn--ghost" data-action="back">${returnTo ? (returnTo.screen === 'jobs' ? '← Back to the job' : '← Back to the message') : '← Crew'}</button>
       <div class="ophead">
         ${face(op, 'lg')}
         <div>
@@ -1746,7 +1750,7 @@ function renderRunners() {
           <span class="runners__toggle">${runnersHidden ? 'Show' : 'Hide'}</span>
         </button>
         ${runnersHidden ? '' : `<ul class="runners__list">
-          ${people.map(({ op, a }) => `<li class="runner ${a.ok ? (a.reason === 'ready' ? 'is-free' : 'is-worn') : 'is-out'}">${face(op)}<strong>${esc(op.handle)}</strong><span>${esc(runnerWord(a))}</span></li>`).join('')}
+          ${people.map(({ op, a }) => `<li><button class="runner ${a.ok ? (a.reason === 'ready' ? 'is-free' : 'is-worn') : 'is-out'}" data-action="op-link" data-id="${esc(op.id)}" aria-label="${esc(op.handle)}, ${esc(runnerWord(a))}: open their page">${face(op)}<strong>${esc(op.handle)}</strong><span>${esc(runnerWord(a))}</span></button></li>`).join('')}
         </ul>`}
       </div>`;
 }
@@ -2060,12 +2064,37 @@ function renderPlan() {
       </div>
     </section>
 
-    ${pickSlot ? renderPicker(boardUi, { plan, tpl: t, threat: v.threat, slot: pickSlot, people: pickerPeople(), freelancersFull: freelancersFull() }) : ''}`;
+    ${pickSlot ? renderPicker(boardUi, { plan, tpl: t, threat: v.threat, slot: pickSlot, people: pickerPeople(), freelancersFull: freelancersFull(), fit: pickerFit(t, v.threat), sortBy: pickSort, jossId: jossFor(pickSlot) }) : ''}`;
 }
 
 /** Helpers the squad board borrows (ui/board.js), so it looks like the rest of the game. */
 const gearUi = { esc, money };
 const boardUi = { esc, face: (op, size) => face(op, size), riskBadge: (l) => riskBadge(l), riskWord, statusChip: (a) => statusChip(a), keyStats: (op, tpl, threat) => keyStatsFor(op, tpl, threat) };
+
+/**
+ * The picker's read of the job (2026-11-06): each key stat with how it measures up to the job's
+ * typical roll (as keyStatsFor colours it), and "want", the lowest value that reads low risk.
+ */
+function pickerFit(tpl, threat) {
+  const target = rollTarget({ ...tpl, threat });
+  const fitOf = (v) => ({ low: 'good', moderate: 'shaky', high: 'weak', extreme: 'weak' }[riskLabel(successChance(v, target))]);
+  let want = 1;
+  while (want < 30 && fitOf(want) !== 'good') want += 1;
+  return {
+    want,
+    stats: (op) => tpl.keyStats.map((k) => { const value = ratedStat(op, k); return { key: k, name: statName(k), value, fit: fitOf(value), mark: traitMods(op)[k] ? '*' : '' }; }),
+  };
+}
+
+/** Who Joss would put in a slot: from his picks for the whole squad, the one not placed yet (core/squad.js leanPicks). */
+function jossFor(slot) {
+  const job = state.jobs.find((j) => j.id === plan?.jobId);
+  if (!job) return null;
+  const p = leanPicks(state, job, plan.approach);
+  const out = { over: p.overwatch, wheels: p.wheels, standby: p.standby };
+  if (slot in out) return out[slot] ?? null;
+  return p.crew.find((id) => !plan.crew.includes(id)) ?? null;
+}
 
 /** Everyone the picker can offer: the crew with their availability, and freelancers with their cut. */
 function pickerPeople() {

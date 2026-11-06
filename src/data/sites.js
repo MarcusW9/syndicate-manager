@@ -159,8 +159,9 @@ const BASIN = {
   sight: { rifle: [[200, 30], [140, 120], [160, 198], [348, 198], [348, 114], [246, 114], [246, 34]], drone: [[200, 30], [6, 6], [6, 206], [354, 206], [354, 6]] },
   shapes: [
     ...ROAD,
-    { t: 'ellipse', cls: 'sp-infield', cx: 92, cy: 92, rx: 96, ry: 62 },
-    { t: 'ellipse', cls: 'sp-track', cx: 92, cy: 92, rx: 96, ry: 62 },
+    // The track stops short of the stable rows (owner, 2026-11-06: its edge ran over the first row's corner).
+    { t: 'ellipse', cls: 'sp-infield', cx: 84, cy: 92, rx: 92, ry: 62 },
+    { t: 'ellipse', cls: 'sp-track', cx: 84, cy: 92, rx: 92, ry: 62 },
     { t: 'poly', cls: 'sp-fence', points: [[8, 198], [236, 198]] },
     { t: 'poly', cls: 'sp-fence', points: [[264, 198], [352, 198]] },
     { t: 'rect', cls: 'sp-stable', x: 170, y: 128, w: 160, h: 20 },
@@ -180,8 +181,8 @@ const BASIN = {
     { t: 'rect', cls: 'sp-desk', x: 296, y: 90, w: 16, h: 8 },
   ],
   labels: [
-    { x: 258, y: 208, text: 'SERVICE GATE' }, { x: 176, y: 124, text: 'STABLES' },
-    { x: 262, y: 34, text: 'VET BLOCK', hi: true }, { x: 214, y: 20, text: 'FLOODLIGHT' }, { x: 52, y: 96, text: 'LANTERN COURSE' },
+    { x: 178, y: 210, text: 'SERVICE GATE' }, { x: 176, y: 124, text: 'STABLES' },
+    { x: 262, y: 34, text: 'VET BLOCK', hi: true }, { x: 214, y: 20, text: 'FLOODLIGHT' }, { x: 46, y: 96, text: 'LANTERN COURSE' },
     { x: 300, y: 236, text: 'VAN' },
   ],
 };

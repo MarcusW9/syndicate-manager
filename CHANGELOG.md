@@ -7,6 +7,12 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-06 · Planning a job: quicker to look and to change
+- **The runners beside the job list open their page:** tap one to see their stats, record and gear (and change it), then "Back to the job" returns to the plan as you left it.
+- **Each card on the squad board has an ×** to take that runner off at once. Tapping the card still opens the list to swap someone in.
+- **Picking who goes is clearer.** The list says what the job wants ("about 10 in medical or cool") and what the colours mean. Your own crew comes first, freelancers have their own section below with their cut, then those already on the squad, and anyone not free today is folded away. Joss's pick for the slot is tagged. Sort by best fit or by any of the job's stats. On a phone the stat that counts most is shown big; on a computer it's a table you read down, sorted by tapping a column.
+- **The racecourse stables plan** (the Basin's jobs) no longer has the track running over the first stable row, and the service gate's label is clear of the hay bales.
+
 ## 2026-11-06 · Ops gets its own tab; City becomes Lore
 - **The tabs are now Today · Ops · Crew · Jobs · Lore.**
 - **Ops, the new second tab:** the city map, everyone out, raids and calls, and the city tonight (what City's Map tab was). The count of calls waiting is on it, and sending a crew out lands there.
