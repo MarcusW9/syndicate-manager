@@ -58,7 +58,7 @@ export const CAST = {
   ip: {
     name: 'Mrs. Ip',
     district: 'nightMarket',
-    desc: 'Runs the fish-ball stall at the Neon Dragon dai pai dong, talks without stopping, and moves things that aren\'t fish balls.',
+    desc: 'Runs the fish-ball stall at the Neon Dragon dai pai dong, talks without stopping, and moves things that aren\'t fish balls. Buys her fish at the old pier before dawn, and keeps the tally on Auntie Fung\'s night loads.',
     lines: {
       greet: ['Don\'t open it. Don\'t drop it. Don\'t be clever.', 'Heavy? Of course it\'s heavy. Lift with your legs, not your mouth.', 'You\'re late. You\'re not late? Then you\'re lucky.'],
       approve: ['Not dropped! Miracles still happen in this market.', 'Good. Eat these before they go cold.', 'Next week, same time. Don\'t tell anyone.'],

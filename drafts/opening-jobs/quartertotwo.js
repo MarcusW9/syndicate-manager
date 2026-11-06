@@ -1,7 +1,7 @@
 // Quarter to Two: the Docks' opening job (drafts/opening-jobs.md).
 // One night aboard the Ferryman's boat, carrying Auntie Fung's crates to an
 // unlit lighter beyond the breakwater. Mrs. Ip handles the loading paperwork.
-// The old man's charts remain a hint, not an explanation.
+// The old man stays a hint: a worn rope he taught the Ferryman to retire, never a name.
 // The final beat hands over the Docks hall (data/sites.js HALLS).
 // Original stats, difficulties, costs and job structure preserved.
 // Not in the game yet: no client lists it.

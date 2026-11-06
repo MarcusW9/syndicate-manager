@@ -271,7 +271,7 @@ Ruth Okonkwo brokers the work Aether-Harbour Logistics can't put its name to: fr
 Smaller people a new crew meets on rookie work (2026-10-25). Their spoken lines live in `src/data/cast.js`, so any job can use them.
 
 - **Doc Siu** (Old Town). An ex-hospital surgeon who runs an unlicensed clinic in the basement of Tenement Block 9: a dentist's chair, a car battery and a shower curtain for a wall. Smokes under the No Smoking sign. Her praise is dry and rare ("Not bad, new hands"). Auntie Fung sends her people there.
-- **Mrs. Ip** (Night Market). Runs the fish-ball stall at the Neon Dragon, never stops talking, and moves crates that aren't fish balls. Pays in cash and a bag of fish balls.
+- **Mrs. Ip** (Night Market). Runs the fish-ball stall at the Neon Dragon, never stops talking, and moves crates that aren't fish balls. Pays in cash and a bag of fish balls. Buys her fish at the old pier before dawn, and keeps the tally on Auntie Fung's night loads.
 - **Ah-Wah** (Night Market). A petty runner who borrowed from Madam Rao and tried to skip town with her ledger.
 - **Dr. Lim** (Night Market). A back-alley implant doc behind the noodle stalls, built his clinic on Madam Rao's money, and sold Silver Fan counterfeit eyes to her debtors.
 - **Meena D'Sa** (Night Market). Seamstress and counterkeeper in Madam Rao's shop. Rao lets her mind the counter; she returns a customer's deposit rather than promise work the shop can't finish. Wants her own alterations counter, and keeps spending the savings replacing garments Rao accepted as collateral. Knows Mrs. Ip.
@@ -387,7 +387,7 @@ CLIENTS (local powers a small crew can reach, below the corps):
   that could sink AHL, and wants out of the city.
 STREET CAST (rookie work): Doc Siu (Old Town; ex-surgeon, unlicensed clinic under
 Tenement Block 9, dry praise); Mrs. Ip (Night Market fish-ball stall at the Neon Dragon,
-moves crates); Meena D'Sa (Rao's seamstress and counterkeeper); Tang Wai-chiu (Silver Fan
+moves crates, tallies Fung's night loads at the old pier); Meena D'Sa (Rao's seamstress and counterkeeper); Tang Wai-chiu (Silver Fan
 collector, third-floor parlour); Uncle Tariq (remittance booth, Pearl Haven House, backed
 by Rao); Pang Man-ki (Veridian-Apex clinic administrator); Ho Sze-lam (Hoi-Sing field
 supervisor, Old Town); Mak Chi-on (Racing Association stable-access official). Currency

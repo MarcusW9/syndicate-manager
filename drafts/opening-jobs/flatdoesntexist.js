@@ -22,7 +22,7 @@ export const THE_FLAT_DOESNT_EXIST = {
     `The flat smells of saddle soap through the boards and stale cigarettes above them. Tape seals the window edges; pale rectangles mark where somebody took the photographs but left the hooks.`,
     `Beneath a loose board, a relay box warms the dust around it. Its cables run towards the Old Stand, neatly clipped along a pipe somebody still uses to dry towels.`,
     `Above the Old Stand, the camera mast sways against the floodlights, its service lift parked at the base. Aether-Harbour's tap sits beneath an Association camera, painted the same tired green.`,
-    `{okonkwo} leaves the keys on the workbench beside the saddle racks; the trapdoor leads down to the workshop, the yard stair outside, and the Old Stand fills the window. "The saddler starts at six; don't make a promise about sleeping through it."`,
+    `{okonkwo} leaves the keys on the workbench by the saddle racks: a trapdoor down to the workshop, the yard stair outside, the Old Stand in the window. "The saddler starts at six. Don't promise to sleep through it."`,
   ],
   crises: [
     {
