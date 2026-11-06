@@ -20,6 +20,8 @@ until its job is done comes after your edits.
   `{rao:approve}` one of her approving lines.
 - Check a file after editing: `node scripts/check-job.mjs drafts/opening-jobs/<file>.js`. It catches a
   missing exit, a token the game doesn't know, a retired name, or a line too long for a phone.
+- To get help editing in another chat, paste `edit-prompt.md`'s box, then the file and what you want
+  changed. It carries the world, the rules and these jobs' notes.
 - Rough notes in the margins are fine. Write them as `//` comments and they'll be picked up when the
   jobs go in.
 
