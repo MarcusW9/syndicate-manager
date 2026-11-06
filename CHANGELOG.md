@@ -7,6 +7,12 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-06 · A lighter top bar
+- **The tong's rank** ("Back Room tong") is on the Ops heading now, not the top bar. Tap it for what a tong is.
+- **Heat only shows when a district is warming:** from 3 a chip names it ("Heat Docks 4"), amber, and red from 6, when a police raid can come. Tap it to see that district on Ops.
+- **The date** reads "Mon · Wk 1". The season shows on its first day, and Sunday's message names it ("Week 3, season 1 settled").
+- The bills line is just "¥2,750 due Sun".
+
 ## 2026-11-06 · Drones and cyberdecks, drawn, and the rest of the armoury
 - **Every piece of gear has a picture now.** The armoured vest, the trauma kit, the ghost kit and both implants are drawn too, in a square frame so compact things aren't stretched.
 - **Lockpicks are now the ghost kit**, still +1 stealth: a bypass roll most of the time, sometimes a lock decoder, a heat veil (a hooded poncho that blurs you on thermal and on cameras) or a lens blinder.

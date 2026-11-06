@@ -1660,3 +1660,19 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
   .ptpill--weak { color: var(--danger); background: rgba(255, 90, 90, 0.08); }
   .ptrow .cand__side { justify-self: end; text-align: right; }
 }
+
+/* The lighter top bar (2026-11-06, mock-up drafts/prototypes/topbar.html): cash, with today's change
+   under it on a phone; the heat chip only while a district is warm (amber), red from the heat that
+   can bring a raid; the tong's rank on the Ops heading instead. */
+.topbar__stats { display: flex; align-items: center; gap: 10px; }
+.stat--cash { display: inline-grid; justify-items: end; line-height: 1.15; }
+@media (min-width: 900px) { .stat--cash { display: inline; } }
+.heatchip { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 10px; background: rgba(242, 181, 68, 0.08); border: 1px solid #f2b544; color: #f2b544;
+  font-family: var(--display); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; cursor: pointer; }
+.heatchip b { font-size: 1.05rem; }
+.heatchip__l { font-weight: 600; font-size: 0.68rem; opacity: 0.8; }
+.heatchip.is-hot { color: var(--danger); border-color: var(--danger); background: rgba(255, 74, 74, 0.1); box-shadow: 0 0 10px rgba(255, 74, 74, 0.25); }
+.heatchip:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+@media (max-width: 379px) { .heatchip { padding: 0 7px; gap: 4px; } .heatchip__l { display: none; } }
+.opshead { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.opshead .tierbtn { margin: 0; }
