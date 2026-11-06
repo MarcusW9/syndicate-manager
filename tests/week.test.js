@@ -39,7 +39,8 @@ test('Sunday sums up the week from where it started, then starts the next', () =
   s = days(s, 6); // Sunday
   const week = s.inbox.find((m) => m.kind === 'week');
   assert.ok(week, 'the summary message');
-  assert.match(week.subject, /^Week 1 settled: [+−]¥[\d,]+ after the bills$/);
+  // The season is named here since the top bar dropped it (2026-11-06).
+  assert.match(week.subject, /^Week 1, season 1 settled: [+−]¥[\d,]+ after the bills$/);
   assert.equal(week.payload.lines.length, 4);
   assert.equal(s.weekStart.day, s.day, 'next week is measured from Sunday');
   assert.equal(s.weekStart.cash, s.cash, 'after the bills');

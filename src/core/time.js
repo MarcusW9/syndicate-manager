@@ -147,7 +147,7 @@ function settleWeek(state) {
     id: `week-${state.day}`,
     type: 'finance',
     day: state.day,
-    subject: broke ? 'You missed payments this week' : `Week ${calendar(state.day).week} settled: ${summary.net >= 0 ? '+' : '−'}${money(Math.abs(summary.net))} after the bills`,
+    subject: broke ? 'You missed payments this week' : `Week ${calendar(state.day).week}, season ${calendar(state.day).season} settled: ${summary.net >= 0 ? '+' : '−'}${money(Math.abs(summary.net))} after the bills`,
     body: `${summary.lines.join(' ')} Wages ${money(wages)}, rent ${money(state.rent)}. Paid ${money(total)}. Cash now ${money(state.cash)}.` + heatLine +
       (brokered.lines.length ? ` Work boards: ${brokered.lines.join(' ')}` : '') +
       (broke ? ' The crew noticed. Morale will drop until you are back in the black.' : ''),
