@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-06 · A runner's stats, lined up
+- On a runner's page the progress bar under each stat now sits at the bottom of its tile, so the bars line up whatever notes are above them.
+
 ## 2026-11-06 · Drones and cyberdecks, drawn, and the rest of the armoury
 - **Every piece of gear has a picture now.** The armoured vest, the trauma kit, the ghost kit and both implants are drawn too, in a square frame so compact things aren't stretched.
 - **Lockpicks are now the ghost kit**, still +1 stealth: a bypass roll most of the time, sometimes a lock decoder, a heat veil (a hooded poncho that blurs you on thermal and on cameras) or a lens blinder.
