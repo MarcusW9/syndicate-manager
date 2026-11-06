@@ -1093,20 +1093,17 @@ p > .infobtn { display: inline-grid; vertical-align: 2px; margin-left: 4px; }
 .loadout__tile.is-empty { background: transparent; border-style: dashed; color: var(--muted); }
 .loadout__tile:disabled { cursor: not-allowed; opacity: 0.6; }
 .loadout__name { font: 600 0.68rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
-.loadout__pic { display: grid; place-items: center; aspect-ratio: 3 / 1; background: #0d1016; clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%); }
+.loadout__pic { display: grid; place-items: center; aspect-ratio: 3 / 2; background: #0d1016; clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%); }
 .loadout__pic svg { width: 100%; height: 100%; display: block; }
 .loadout__pic--icon svg { width: 26px; height: 26px; color: var(--accent-2); }
 .loadout__tile.is-empty .loadout__pic { background: transparent; border: 1px dashed #3a4254; font-size: 1.2rem; color: #4a5266; }
 .loadout__item { font-family: var(--display); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.9rem; line-height: 1.1; }
 .loadout__eff { font-size: 0.74rem; color: var(--accent-2); line-height: 1.25; }
-.gearrow__art { display: block; width: 96px; }
-.gearrow__art svg { display: block; width: 96px; height: 32px; clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 0 100%); }
-.gearrow--buy { align-items: start; }
-.gearrow__buy { display: grid; gap: 4px; justify-items: stretch; }
-/* A row with a drawing: the picture on its own line above the words, so the words keep their width. */
-.gearrow:has(.gearrow__art) { grid-template-columns: 1fr auto; }
-.gearrow:has(.gearrow__art) .gearrow__art { grid-column: 1 / -1; width: 100%; max-width: 288px; }
-.gearrow:has(.gearrow__art) .gearrow__art svg { width: 100%; height: auto; }
+/* Every drawing sits in one 3:2 box beside its name, fitted inside it (2026-11-06): a long item
+   fills the width, a square one the height, so compact gear isn't stretched and the rows stay short. */
+.gearrow__art { display: block; width: 84px; height: 56px; background: #0d1016; clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 0 100%); }
+.gearrow__art svg { display: block; width: 100%; height: 100%; }
+.gearrow:has(.gearrow__art) { grid-template-columns: 84px minmax(0, 1fr) auto; }
 /* The armoury's rows are list items: keep their own padding over the plain list's (owner's capture, 2026-10-28). */
 .gearlist > .gearrow { padding: 8px 8px 8px 10px; }
 /* The crew list's stat line: the icon, the stat and the words share one centre line. */
@@ -1492,6 +1489,8 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .stat--heat { background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; min-height: 44px; display: inline-flex; align-items: center; gap: 6px; }
 /* The top bar on a phone: tighter gaps so date, stats and ☰ fit 360-430px without a sideways scroll (it ran to 415px at 390). */
 @media (max-width: 899px) { .topbar { padding: 12px; column-gap: 8px; } .topbar__when { min-width: 0; } .topbar__stats { column-gap: 8px; } .savebtn { margin-right: -4px; } }
+/* The week's seven squares narrow with the date column rather than spill into the heat. */
+@media (max-width: 899px) { .week { grid-template-columns: repeat(7, minmax(5px, 14px)); max-width: 100%; } }
 @media (max-width: 379px) { .topbar { padding: 12px 10px; column-gap: 4px; } .topbar__stats { column-gap: 6px; } }
 /* On a phone the top bar has no room for the name: the tap still opens the hottest district. */
 @media (max-width: 899px) { .stat__where { display: none; } }

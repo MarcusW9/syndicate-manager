@@ -7,6 +7,15 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-06 · Drones and cyberdecks, drawn, and the rest of the armoury
+- **Every piece of gear has a picture now.** The armoured vest, the trauma kit, the ghost kit and both implants are drawn too, in a square frame so compact things aren't stretched.
+- **Lockpicks are now the ghost kit**, still +1 stealth: a bypass roll most of the time, sometimes a lock decoder, a heat veil (a hooded poncho that blurs you on thermal and on cameras) or a lens blinder.
+- **More builds:** most vests are plate carriers, sometimes an armoured jacket or a hex-weave undershirt; most trauma kits are bags, sometimes a hard case, a roll or a med gun. Implants come as a spinal harness or a forearm sleeve, a chip module or a behind-the-ear bud.
+- **The armoury is shorter on a phone:** each item's picture sits beside its name instead of across the row.
+- **Drones and cyberdecks now have pictures** in the armoury and in a runner's gear slots, drawn like the rifles: street ones patched and taped, pro ones dark with a neon line.
+- **They come in different builds.** Most drones are quadcopters, but now and then one is a flying-wing kite or a ducted-fan drone. A cyberdeck is a keyboard slab, a hard-case deck or a handheld brick. The armoury says which.
+- Fixed: on a phone the week's squares in the top bar could run into the heat.
+
 ## 2026-11-06 · Planning a job: quicker to look and to change
 - **The runners beside the job list open their page:** tap one to see their stats, record and gear (and change it), then "Back to the job" returns to the plan as you left it.
 - **Each card on the squad board has an ×** to take that runner off at once. Tapping the card still opens the list to swap someone in.

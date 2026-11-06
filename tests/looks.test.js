@@ -80,13 +80,16 @@ test('buying a rifle off the shelf keeps its look and name, costs its price, and
   assert.equal(buyOffer({ ...s, cash: 0 }, offer.oid).cash, 0, 'not without the money');
 });
 
-test('every rifle has a look, however it arrives; other gear has none', () => {
+test('every rifle has a look, however it arrives; other gear has only a build', () => {
   const s = game();
   const bought = buyGear(s, 'rifle', 'pro').stash.at(-1);
   assert.ok(bought.look && bought.name, 'bought by type');
   const brought = loadoutOf(structuredClone(s), ['rifle', 'pistol']);
   assert.ok(brought.weapon.look, 'brought by a recruit');
-  assert.equal(buyGear(s, 'vest').stash.at(-1).look, undefined);
+  // Since 2026-11-06 other gear rolls a build (data/gearLooks.js TOOL_FRAMES), but no name or finish.
+  const vest = buyGear(s, 'vest').stash.at(-1);
+  assert.deepEqual(Object.keys(vest.look), ['frame']);
+  assert.equal(vest.name, undefined);
 });
 
 test("a look is rolled from its own seed: rolling one never moves the game's dice", () => {

@@ -38,7 +38,7 @@ function itemRow(ui, item, { action, label, sub = '', disabled = false, id = ite
       ${thumb(item, carrier)}
       <span class="gearrow__main"><strong>${esc(itemTitle(item))}</strong>
         <span class="gearrow__eff">${esc(itemEffect(item))}</span>
-        ${item.look ? `<span class="gearrow__sub muted small">${esc(itemName(item))} · ${esc(lookText(item))}</span>` : ''}
+        ${lookText(item) ? `<span class="gearrow__sub muted small">${item.name ? `${esc(itemName(item))} · ` : ''}${esc(lookText(item))}</span>` : ''}
         ${sub ? `<span class="gearrow__sub muted small">${sub}</span>` : ''}</span>
       ${action ? `<button class="btn gearrow__btn" data-action="${action}" data-id="${esc(id)}" ${item.tier ? `data-tier="${esc(item.tier)}"` : ''} ${disabled ? 'disabled' : ''}>${esc(label)}</button>` : ''}
     </li>`;

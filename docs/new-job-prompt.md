@@ -47,6 +47,8 @@ the ridge) · 2040s Iron Peak foundries close; the corp boards build estates on 
 TECH: street implants are cheap, second-hand and glitchy; the rich wear luxury hardware.
 Neural load = migraines, memory stutter, emotional deadness; the street treats it with
 herbal infusions and downtime, not corporate therapy.
+Stealth kit is street-level too: picks, lock decoders, heat veils that blur you on
+thermal and on cameras; never true invisibility.
 WEAPONS: guns and tech are standard kit for mercs and crews (cyberpunk setting); using
 one is what gets noticed, so gunfire brings police and heat. Drones are everywhere
 (corporate, police, patched street drones flown off an implant at a neural-load cost).
