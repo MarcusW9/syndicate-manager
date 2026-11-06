@@ -12,7 +12,8 @@ The owner's answers on the plan (2026-11-06):
 - Prices go up, in line with gear (a sidearm ¥600, a Pro implant about ¥8,750).
 - Add turrets and defences, a cyber doc for augments, entertainment for loyalty, and a canteen.
 - A mock-up of the build screen first.
-- Rotation: the options are in section 4.
+- Rotation: a mix of options a and b. Most rooms are 2 × 2 and don't turn; the long ones are 2 × 3 and
+  turn (section 4).
 
 ## 1. What the player does
 
@@ -76,28 +77,29 @@ the pieces are on our side. The raiders' side is limited, because the cells roun
 can't be built on. **To check by measuring:** the same 60 fights as the raids slice, with 0, 3 and
 6 pieces, so that a built-up hall is clearly better but not unbeatable.
 
-### Rooms (2 × 2 cells; slice 2)
+### Rooms (2 × 2, or 2 × 3 for the long ones; slice 2)
 
 | Room | Cost | Needs | Effect (only for the people who live there) |
 | --- | --- | --- | --- |
 | Clinic | ¥18,000 | level 2 | injuries heal 2 days a day while at home (not out on a job) |
-| Bunk room | ¥15,000 | – | +2 beds (the roster limit grows with it) |
-| Canteen | ¥10,000 | – | residents shed fatigue faster at home (12 a day, not 8) |
+| Bunk room (2 × 3) | ¥15,000 | level 2 | +2 beds (the roster limit grows with it) |
+| Canteen (2 × 3) | ¥10,000 | level 2 | residents shed fatigue faster at home (12 a day, not 8) |
 | Stash | ¥10,000 | – | walking out of a raid loses half of what was kept there |
 | Lookout | ¥12,000 | – | a raid on this hall is warned 4 days ahead, not 3 |
-| Den (mahjong, karaoke) | ¥14,000 | level 2 | loyalty: residents' renewals ask a little less (`core/loyalty.js`, counted as 5 more jobs together, still capped at the 25% discount) |
+| Den (mahjong, karaoke; 2 × 3) | ¥14,000 | level 2 | loyalty: residents' renewals ask a little less (`core/loyalty.js`, counted as 5 more jobs together, still capped at the 25% discount) |
 | Cyber doc | ¥25,000 | level 3, one in the whole tong | implants bought for its residents cost a quarter less (`core/gear.js`); the doc's chair as the room |
 
 A room is drawn as a room (`sp-room`) with its own thing inside: cots and a cabinet, bunks, a safe,
 a window with a stool. A room's walls aren't fight cover, so a fight is the same with or without
-it. A room's 2 × 2 must all be buildable cells.
+it. All of a room's cells must be buildable. The clinic, stash, lookout and cyber doc are 2 × 2; the bunk room, canteen and den are 2 × 3 and turn (3 wide or 3 tall). A 2 × 3 room needs level 2, because it would fill a level-1 hall's 6 cells.
 
 **Left for later:** a workshop (gear repairs and mods); rooms that change the job, not the hall; a
 reinforced door at the way in (it would need the fight to start with the raiders held back).
 
 ### Rotation (the options)
 
-- **a. Long pieces turn 0° or 90°; rooms don't turn** (recommended). The plate and the inner wall
+- **Chosen (owner, 2026-11-06): a mix of a and b.** The plate, the inner wall and the 2 × 3 rooms turn 0° or 90°; the 2 × 2 rooms don't.
+- **a. Long pieces turn 0° or 90°; rooms don't turn.** The plate and the inner wall
   run across or along, rooms are square (2 × 2). It's simple, and works on a grid.
 - **b. Rooms of 2 × 3 that turn too.** The clinic or den could be long and fit along a wall. It's more
   fitting to do, but a 2 × 3 room uses 6 of a level-1 hall's 6 cells.
@@ -157,5 +159,4 @@ drawn), the CODEMAP and ARCHITECTURE notes, and a HANDOFF update.
 
 ## 8. Open questions for the owner
 
-1. Rotation: option a, b or c (section 4)?
-2. The mock-up: `drafts/prototypes/hall-build.png` (section 1's screen, with the Night Market hall).
+1. The mock-up: `drafts/prototypes/hall-build.png` (section 1's screen, with the Night Market hall).
