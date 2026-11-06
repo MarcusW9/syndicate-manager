@@ -18,6 +18,7 @@ export const PIECE_ICON = {
   barricade: '<rect x="5" y="9" width="8" height="8" fill="#6b5a2a"/><rect x="13" y="11" width="8" height="6" fill="#8a7440"/>',
   plate: '<rect x="3" y="11" width="20" height="4" fill="#8b9aab"/><rect x="6" y="15" width="2" height="5" fill="#5d6b7a"/><rect x="18" y="15" width="2" height="5" fill="#5d6b7a"/>',
   wall: '<rect x="3" y="11" width="20" height="4" fill="#3a4150"/><rect x="3" y="11" width="20" height="1" fill="#5a6474"/>',
+  turret: '<rect x="11" y="13" width="4" height="9" fill="#5d6b7a"/><circle cx="13" cy="12" r="4" fill="#8b9aab"/><rect x="15" y="10" width="8" height="2" fill="#ff3d5f"/>',
   clinic: '<rect x="4" y="4" width="18" height="18" fill="#1f2633" stroke="#5a6474"/><rect x="11.5" y="7" width="3" height="12" fill="#3de8d8"/><rect x="7" y="11.5" width="12" height="3" fill="#3de8d8"/>',
   bunks: '<rect x="4" y="4" width="18" height="18" fill="#1f2633" stroke="#5a6474"/><rect x="7" y="8" width="12" height="3" fill="#8b9aab"/><rect x="7" y="15" width="12" height="3" fill="#8b9aab"/>',
   canteen: '<rect x="4" y="4" width="18" height="18" fill="#1f2633" stroke="#5a6474"/><path d="M7 12h12a6 6 0 0 1-12 0z" fill="#f2d541"/><rect x="12" y="6" width="1.5" height="4" fill="#8b9aab"/>',

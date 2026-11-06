@@ -22,6 +22,9 @@ export const ROOM_EFFECT = {
   docShare: 0.75, // with a cyber doc in the tong, implants cost this share (core/gear.js)
 };
 
+/** The auto turret (slice 3, owner 2026-11-06: no crew, can't be knocked out): it fires each round of a raid on its own. */
+export const TURRET = { aim: 8, damage: 5, shots: 6 };
+
 const plate = '#5d6b7a';
 
 /**
@@ -95,6 +98,15 @@ Object.assign(PIECES, {
     shapes: (x, y) => room(x, y, 60, 60, (rx, ry, w, h) => [fit(rx + w / 2 - 8, ry + h / 2 - 12, 16, 24, '#4a5566'), fit(rx + w / 2 - 3, ry + 6, 6, 6, '#b48cff'), fit(rx + w - 12, ry + h - 14, 8, 10, '#b48cff')]),
   },
 });
+
+PIECES.turret = {
+  name: 'Auto turret', kind: 'defence', cost: 12000, size: [1, 1], turns: false, needs: 2, one: true, what: 'fires on its own',
+  about: `A gun on a post with a motion sensor. In a raid it fires at the nearest raider every round, ${TURRET.shots} bursts a fight, with nobody on it. It counts as a defence piece.`,
+  shapes: (x, y) => [
+    { t: 'rect', cls: 'sp-turret', x: x + 12, y: y + 12, w: 6, h: 6, fill: '#8b9aab' },
+    { t: 'rect', cls: 'sp-turret', x: x + 17, y: y + 14, w: 9, h: 2, fill: '#ff3d5f' },
+  ],
+};
 
 /** The site shapes for a hall's pieces: [{ piece, x, y, rot }], x and y in cells. */
 export function buildShapes(build = []) {

@@ -1548,3 +1548,4 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .sp-hallroom { fill: #1b2130; stroke: #5a6474; stroke-width: 1.2; } .sp-fit { stroke: none; }
 .bdef + .btiles, .bsubs { margin-top: 4px; } .bsubs { grid-template-columns: 1fr 1fr; }
 .bgrid__ghost.is-room { opacity: 0.3; }
+.sp-turret { stroke: none; }

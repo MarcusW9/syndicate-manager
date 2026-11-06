@@ -11,6 +11,7 @@ import { hallShut } from './raids.js';
 import { money } from './money.js';
 
 const C = HALL_BUILD.cell;
+const aName = (p) => `${/^[aeiou]/i.test(p.name) ? 'an' : 'a'} ${p.name.toLowerCase()}`;
 /** What a piece can't be placed on: the hall's own things, its stairs and doors. */
 const TAKEN = new Set(['sp-cover', 'sp-desk', 'sp-stall', 'sp-planter', 'sp-cot', 'sp-stable', 'sp-water', 'sp-jetty', 'sp-block', 'sp-step', 'sp-door', 'sp-room', 'sp-window']);
 /** Where a hall's floor is: inside its building, or on the pier's deck. */
@@ -75,8 +76,8 @@ export function canPlace(state, district, pieceId, x, y, rot = 0) {
   if (!hall || !p) return { ok: false, reason: 'No such hall or piece' };
   if (hallShut(state, district)) return { ok: false, reason: 'The hall is shut after a raid' };
   if (p.needs && hall.level < p.needs) return { ok: false, reason: `Needs a level ${p.needs} hall` };
-  if (p.one && (hall.build ?? []).some((b) => b.piece === pieceId)) return { ok: false, reason: `This hall already has a ${p.name.toLowerCase()}` };
-  if (p.tongOne && (state.halls ?? []).some((h) => (h.build ?? []).some((b) => b.piece === pieceId))) return { ok: false, reason: `The tong already has a ${p.name.toLowerCase()}` };
+  if (p.one && (hall.build ?? []).some((b) => b.piece === pieceId)) return { ok: false, reason: `This hall already has ${aName(p)}` };
+  if (p.tongOne && (state.halls ?? []).some((h) => (h.build ?? []).some((b) => b.piece === pieceId))) return { ok: false, reason: `The tong already has ${aName(p)}` };
   const cells = pieceCells(pieceId, x, y, rot);
   const free = buildableCells(hallMap(district));
   const built = builtCells(hall);

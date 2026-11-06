@@ -17,7 +17,7 @@
 // null, 'paid' (before the day), 'hold', 'withdraw', 'pay'. hall.shutUntil: the day it opens again.
 
 import { RAID, RAID_POLICE, raidTemplate } from '../data/raids.js';
-import { HALL_BUILD, PIECES, ROOM_EFFECT } from '../data/hallBuild.js';
+import { HALL_BUILD, PIECES, ROOM_EFFECT, TURRET } from '../data/hallBuild.js';
 import { HOME_HALL } from '../data/halls.js';
 import { NAMES } from '../config/names.js';
 import { heatIn, setHeat } from './heat.js';
@@ -103,6 +103,13 @@ const baseThreat = (state, district, raid) => (isGangRaid(raid)
 export const defencesIn = (state, district) => (hallIn(state, district)?.build ?? []).filter((b) => PIECES[b.piece]?.kind === 'defence').length;
 /** How much a hall's defences lower a raid's threat: 1 for every HALL_BUILD.perThreat pieces (2026-11-06). */
 export const defenceCut = (state, district) => Math.floor(defencesIn(state, district) / HALL_BUILD.perThreat);
+/** A hall's auto turret for a raid's fight, where it stands on the map, or null (data/hallBuild.js TURRET). */
+export function hallTurret(state, district) {
+  const t = (hallIn(state, district)?.build ?? []).find((b) => b.piece === 'turret');
+  const c = HALL_BUILD.cell;
+  return t ? { at: [t.x * c + c / 2, t.y * c + c / 2], aim: TURRET.aim, damage: TURRET.damage, left: TURRET.shots } : null;
+}
+
 /** A raid's threat: the heat or the grudge, less what the hall's defences take off, never below 1. */
 export const raidThreat = (state, district, raid = null) => Math.max(1, baseThreat(state, district, raid) - defenceCut(state, district));
 
@@ -271,6 +278,7 @@ export function startRaidFight(state, raid) {
   const b = buildBattle({
     incident: 'raid', zone: 'inside', diff, threat, guards: RAID.raiders, crew: ops, approach: 'loud',
     spots: spotsForJob(d, raid.id, tpl.id, 'inside', ops.length, hallIn(state, d)?.build),
+    turret: hallTurret(state, d),
   });
   b.foe = raidBy(raid); // who they are, and what the battle lines call one of them (core/battle.js foeWord)
   b.foeOne = raider(raid).one;
