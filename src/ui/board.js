@@ -64,13 +64,19 @@ function dossier(ui, slot, op, { name, does, line = '', note = '', i = 0 }) {
     return `<button class="dossier is-empty" data-action="pick-slot" data-id="${slot}" aria-label="${esc(name)}: empty. ${esc(does)} Tap to assign.">
       <b>${esc(name)}</b><span class="dossier__sil" aria-hidden="true">+</span><small>${esc(does)}</small></button>`;
   }
-  return `<button class="dossier ${op.freelance ? 'dossier--freelance' : ''}" data-action="pick-slot" data-id="${slot}" style="--tilt:${TILTS[i % TILTS.length]};--pin:${PINS[i % PINS.length]}" aria-label="${esc(name)}: ${esc(op.handle)}. Tap to change.">
+  // A filled card: tap it to change who's there, or its × to take them off (owner, 2026-11-06:
+  // removing someone meant opening the picker to leave it empty). Two buttons side by side,
+  // since a button can't hold another.
+  return `<div class="dossierwrap" style="--tilt:${TILTS[i % TILTS.length]}">
+    <button class="dossier ${op.freelance ? 'dossier--freelance' : ''}" data-action="pick-slot" data-id="${slot}" style="--tilt:${TILTS[i % TILTS.length]};--pin:${PINS[i % PINS.length]}" aria-label="${esc(name)}: ${esc(op.handle)}. Tap to change.">
       <span class="dossier__photo">${face(op)}</span>
       <span class="dossier__name">${esc(op.handle)}</span>
       <span class="dossier__real">${esc(op.freelance ? `freelance ${op.role}` : op.role)}</span>
       ${line ? `<span class="dossier__note">${line}</span>` : ''}
       ${note ? `<span class="dossier__tag">${esc(note)}</span>` : ''}
-    </button>`;
+    </button>
+    <button class="dossier__off" data-action="unassign" data-id="${slot}" aria-label="Take ${esc(op.handle)} off ${esc(name.toLowerCase())}"><span aria-hidden="true">×</span></button>
+  </div>`;
 }
 
 /** The board: who's inside, who's on overwatch with which kit, and Joss's picks. */

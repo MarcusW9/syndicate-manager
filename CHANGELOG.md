@@ -7,6 +7,11 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-06 · Planning a job: quicker to look and to change
+- **The runners beside the job list open their page:** tap one to see their stats, record and gear (and change it), then "Back to the job" returns to the plan as you left it.
+- **Each card on the squad board has an ×** to take that runner off at once. Tapping the card still opens the list to swap someone in.
+- **The racecourse stables plan** (the Basin's jobs) no longer has the track running over the first stable row, and the service gate's label is clear of the hay bales.
+
 ## 2026-11-06 · Buy a hall, and a work board
 - **A hall can be bought outright:** 26 weeks of its rent, once. After that it pays no rent, and making it bigger adds none. Crew › Halls has "Buy the place" on each hall; a bought hall is marked ours. The home hall can be bought too.
 - **A new room, the work board** (¥8,000, 2 × 2). Street freelancers come in for small work the tong brokers in that district, and the tong keeps a fifth of the fee:

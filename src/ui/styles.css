@@ -198,6 +198,10 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .runners__toggle { font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.75rem; color: var(--accent-2); }
 .runners__list { list-style: none; margin: 0; padding: 0 12px 12px; display: flex; gap: 8px; overflow-x: auto; }
 .runner { flex: 0 0 76px; display: grid; justify-items: center; gap: 2px; text-align: center; padding: 6px 2px; border: 1px solid var(--line); }
+/* A runner on the job board opens their page (gear, record), and Back returns to the job (2026-11-06). */
+.runners__list > li { display: contents; }
+button.runner { background: none; color: inherit; font: inherit; cursor: pointer; min-height: 44px; }
+button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2); }
 .runner strong { font-size: 0.8rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .runner span { font-size: 0.7rem; color: var(--muted); line-height: 1.2; }
 .runner.is-free span { color: #5fe0a5; font-weight: 700; }
@@ -811,6 +815,13 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .slotchips { display: flex; flex-wrap: wrap; gap: 6px; }
 .slotchips:empty { display: none; }
 .dossiers + .slotchips { margin-top: 8px; }
+/* A filled card and its × (2026-11-06): the × sits on the card's top-right corner, a 44px target
+   drawn as a small dark tab so it doesn't fight the pin. */
+.dossierwrap { position: relative; display: grid; min-width: 0; }
+.dossierwrap > .dossier { width: 100%; }
+.dossier__off { position: absolute; top: -8px; right: -8px; z-index: 1; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; background: none; border: 0; cursor: pointer; }
+.dossier__off span { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #1b1f29; color: var(--muted); border: 1px solid #3a4254; font-size: 16px; line-height: 1; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
+.dossier__off:hover span, .dossier__off:focus-visible span { color: var(--text); border-color: var(--danger); background: #2a1a20; }
 .slotchip { flex: 1 1 140px; display: grid; align-content: center; gap: 1px; min-height: var(--tap, 44px); padding: 5px 10px; text-align: left; border: 1px dashed #3a4254; background: transparent; color: var(--muted); font: inherit; cursor: pointer; }
 .slotchip b { font: 700 0.78rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text); }
 .slotchip small { font-size: 0.72rem; }

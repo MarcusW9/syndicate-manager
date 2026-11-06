@@ -168,7 +168,7 @@ function onClick(e) {
       break;
     }
     case 'back':
-      // A runner's page opened from a name in a message goes back to that message.
+      // A runner's page opened from a name in a message, or from the runners on the job board, goes back there.
       if (returnTo && openOperativeId) {
         focusNext = { action: 'op-link', id: openOperativeId };
         ({ screen } = returnTo); openMessageId = returnTo.messageId; openOperativeId = null; gearSlot = null; returnTo = null;
@@ -284,6 +284,8 @@ function onClick(e) {
     case 'pick-slot': pickSlot = id; break;
     case 'close-picker': focusNext = { action: 'pick-slot', id: pickSlot }; pickSlot = null; break;
     case 'assign': Object.assign(plan, assignSlot(plan, pickSlot, id || null)); focusNext = { action: 'pick-slot', id: pickSlot }; pickSlot = null; break;
+    // A card's × on the squad board: that slot left empty, without opening the picker.
+    case 'unassign': Object.assign(plan, assignSlot(plan, id, null)); focusNext = { action: 'pick-slot', id }; break;
     case 'joss': {
       // The smallest squad that gets the best risk for this approach (core/squad.js leanPicks); standby is the player's call.
       const p = leanPicks(state, state.jobs.find((j) => j.id === plan.jobId), plan.approach);
@@ -1581,7 +1583,7 @@ function renderOperative() {
   const nameOf = (id) => state.crew.find((x) => x.id === id)?.handle ?? state.memorial.find((x) => x.id === id)?.handle ?? id;
   return `
     <section class="panel">
-      <button class="btn btn--ghost" data-action="back">${returnTo ? '← Back to the message' : '← Crew'}</button>
+      <button class="btn btn--ghost" data-action="back">${returnTo ? (returnTo.screen === 'jobs' ? '← Back to the job' : '← Back to the message') : '← Crew'}</button>
       <div class="ophead">
         ${face(op, 'lg')}
         <div>
@@ -1725,7 +1727,7 @@ function renderRunners() {
           <span class="runners__toggle">${runnersHidden ? 'Show' : 'Hide'}</span>
         </button>
         ${runnersHidden ? '' : `<ul class="runners__list">
-          ${people.map(({ op, a }) => `<li class="runner ${a.ok ? (a.reason === 'ready' ? 'is-free' : 'is-worn') : 'is-out'}">${face(op)}<strong>${esc(op.handle)}</strong><span>${esc(runnerWord(a))}</span></li>`).join('')}
+          ${people.map(({ op, a }) => `<li><button class="runner ${a.ok ? (a.reason === 'ready' ? 'is-free' : 'is-worn') : 'is-out'}" data-action="op-link" data-id="${esc(op.id)}" aria-label="${esc(op.handle)}, ${esc(runnerWord(a))}: open their page">${face(op)}<strong>${esc(op.handle)}</strong><span>${esc(runnerWord(a))}</span></button></li>`).join('')}
         </ul>`}
       </div>`;
 }
