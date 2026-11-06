@@ -144,6 +144,7 @@ Status: earned traits are built (`data/earnedTraits.js`, `core/earned.js`, 2026-
   Each earned trait gets a history line and an inbox note. Content in `data/traits.js`.
 
 ### Step 3 · Crew relationships — [ ] (not built as of 2026-11-04; still an agreed review item)
+**Superseded 2026-11-06 by `PLAN-RELATIONSHIPS.md`**, which builds the 2026-10-26 design. The sketch below is kept for history.
 Supersedes the 2026-10-25 "Crew relationships parked" row. Use the existing
 `op.trust` map: trust moves from shared jobs (saved each other, a botched roll that
 got someone hurt, trait clashes from `data/tags.js`). Pairs that trust each other get

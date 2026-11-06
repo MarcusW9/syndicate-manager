@@ -4,6 +4,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-06 · Plan: the rest of crew relationships
+- Plan only, no game change: next to Synergy, runners will come to owe each other, blame each other, become old hands or rub each other the wrong way, and grieve a partner who dies in a way that fits who they are. Step by step in `PLAN-RELATIONSHIPS.md`.
+
 ## 2026-11-05 · The districts' landmarks
 - **Each hall on Crew › Halls shows its district's landmark** beside it, lit in the gang's colour:
   - Old Town: the tenement and its shrine.
