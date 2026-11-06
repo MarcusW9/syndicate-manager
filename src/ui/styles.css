@@ -1503,5 +1503,11 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .hall { display: grid; gap: 6px; padding: 10px 12px; background: var(--panel-2, var(--panel)); border-left: 2px solid var(--accent-2); }
 .hall p { margin: 0; }
 .hall.is-closed { border-left: 2px dashed var(--line); }
+.hall.has-mark { grid-template-columns: 56px 1fr; align-items: start; gap: 10px; }
+.hall__body { display: grid; gap: 6px; min-width: 0; }
+.lmk { display: block; flex: none; }
+.lmk.is-dim { filter: grayscale(1) brightness(0.6); opacity: 0.75; }
+.raidwhere { display: flex; align-items: center; gap: 10px; }
+.raidwhere p { margin: 0; }
 .hall__head strong { font-family: var(--display, inherit); letter-spacing: 0.06em; text-transform: uppercase; }
 .hall__home { font: 700 0.68rem var(--display, inherit); letter-spacing: 0.12em; text-transform: uppercase; color: var(--warn); border: 1px solid var(--warn); padding: 1px 5px; }

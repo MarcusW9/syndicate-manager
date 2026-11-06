@@ -1,4 +1,5 @@
-// Landmarks on the City map (command centre, part 2, 2026-11-05; owner: "the quality of the face
+// District landmarks (command centre, part 2, 2026-11-05; drawn for the map, then kept off it: they
+// stand beside the halls on Crew › Halls and on the raid screens, app.js hallMark; owner: "the quality of the face
 // portraits is what I'm looking for"): one small illustration per district, drawn like the
 // portraits and the district pictures (ui/districtArt.js): flat colour planes, hard light from the
 // right in the district gang's colour, a navy shadow on the left, no outlines, lit windows and neon.
