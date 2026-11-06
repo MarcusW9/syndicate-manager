@@ -429,6 +429,12 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .ophead { display: flex; align-items: center; gap: 14px; }
 .ophead h1 { margin-bottom: 0; }
 .ophead p { margin: 4px 0 0; }
+/* Their status sits on the fame badge's line, pushed to the right (owner, 2026-11-06: "known" and
+   "ready" touched). */
+.ophead__who { flex: 1 1 auto; min-width: 0; }
+.ophead__line { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; margin-top: 8px; }
+.ophead__line .famebadge { margin: 0; line-height: 1.6; }
+.ophead__status { margin-left: auto; }
 .fallen { display: flex; gap: 10px; align-items: center; }
 
 /* --- Recruiting --- */
