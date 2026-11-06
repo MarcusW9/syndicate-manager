@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-06 · A runner's stats, lined up
+- On a runner's page the progress bar under each stat now sits at the bottom of its tile, so the bars line up whatever notes are above them.
+
 ## 2026-11-06 · A runner's page, tidier
 - A runner's status ("ready", "hurt", "back in 2 days") now sits at the right of the line with their fame, instead of squeezed under it.
 
