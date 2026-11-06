@@ -12,8 +12,9 @@ export const GANGS = {
 
 export const GRUDGE = {
   max: 10,
-  fadeWeekly: 1, // every Sunday each grudge eases by this much
-  raidAt: 6, // from here a gang may raid a hall of ours on its turf
+  fadeWeekly: 1, // each grudge eases by this much on a fading Sunday
+  fadeEvery: 2, // every this many Sundays (was every one; balance pass 2026-11-06)
+  raidAt: 5, // from here a gang may raid a hall of ours on its turf (was 6; balance pass 2026-11-06)
   // A job against a gang adds by its threat: 1 for threat 1-2, 2 for 3-4, 3 for 5.
   forThreat: (threat) => 1 + (threat >= 3 ? 1 : 0) + (threat >= 5 ? 1 : 0),
   tribute: { base: 1000, perGrudge: 500 }, // settling: they expect it, and it's never cheap

@@ -5,6 +5,14 @@ What changed in each update, newest first. For *why* a decision was made, see th
 Live build: https://marcusw9.github.io/syndicate-manager/
 
 
+
+## 2026-11-06 · Balance: halls cheaper to keep, raids a little likelier
+- **Hall rent is halved:** the Night Market ¥500 a week, the Docks and the Basin ¥600, Glass Heights ¥800. A second hall was costing more than it brought.
+- **Raids come a little more readily:**
+  - police from heat 6 in a hall's district (was 7);
+  - a gang from a grudge of 5 (was 6);
+  - grudges now fade every other Sunday, not every Sunday.
+
 ## 2026-11-06 · Opening jobs
 - **A hall is earned now, not just offered.** Once a district's contact would have you, they ask a favour first, a job of its own:
   - *Back Rent* for Madam Rao (the Night Market);
