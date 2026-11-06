@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-06 · A runner's page, tidier
+- A runner's status ("ready", "hurt", "back in 2 days") now sits at the right of the line with their fame, instead of squeezed under it.
+
 ## 2026-11-06 · Drones and cyberdecks, drawn, and the rest of the armoury
 - **Every piece of gear has a picture now.** The armoured vest, the trauma kit, the ghost kit and both implants are drawn too, in a square frame so compact things aren't stretched.
 - **Lockpicks are now the ghost kit**, still +1 stealth: a bypass roll most of the time, sometimes a lock decoder, a heat veil (a hooded poncho that blurs you on thermal and on cameras) or a lens blinder.
