@@ -16,7 +16,12 @@ would need the `add-lore` skill before it ships.
 - **With an opening job:** that Monday, the contact asks for the favour instead. It's a named offer
   on the board, with their own brief.
   - **Finish it** (not aborted) and the hall offer follows, with the deposit as now.
-  - **Walk away or fail,** and they ask again two weeks later. Nobody's locked out for good.
+  - **Walk away or fail,** and they ask again two weeks later, with a different favour: one of their
+    own existing jobs, picked per game by the seed, with a line saying it's the test. Finish that one
+    and the hall is offered. Nobody's locked out for good, and the retry isn't the same story again.
+- **Fixed for every player** (owner, 2026-11-06): each district has one opening job, the same in every
+  game, because it's the introduction to the contact and their rooms. Runs still differ by which
+  crises come up and how the rolls go, by which hall opens first, and by who you send.
 - **Size:** a step up from rookie work, about the reach the hall asks for:
 
   | Hall | Welcome needs | Danger | Days | Pay |
@@ -213,7 +218,7 @@ Thursday, there is no forty-first floor. Afterwards, you may use it."
 
 1. **The four ideas:** keep, change or replace any of them?
 2. **Back Rent:** should it add Silver Fan grudge?
-3. **The failure rule:** if you walk away or fail, the contact asks again after two weeks. Or should
-   failing cost trust as well, and if so, how much?
+3. **The failure rule:** if you walk away or fail, the contact asks again after two weeks with one of
+   their existing jobs as the test (decided). Should failing also cost trust, and if so, how much?
 4. **Who writes what:** do you want to write the full text (briefs, beats, the crises' outcomes)
    from these, or have a draft written with `docs/new-job-prompt.md` for you to edit?
