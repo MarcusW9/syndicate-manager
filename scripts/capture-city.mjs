@@ -16,7 +16,7 @@ try {
     await p.goto('http://localhost:5186/');
     await p.evaluate((st) => { localStorage.clear(); localStorage.setItem('syndicate-active-slot', '1'); localStorage.setItem('syndicate-slot-1', JSON.stringify(st)); }, s);
     await p.reload();
-    await p.locator('[data-action="nav"][data-id="city"]').filter({ visible: true }).first().click();
+    await p.locator('[data-action="nav"][data-id="ops"]').filter({ visible: true }).first().click();
     await p.waitForTimeout(400);
     await p.screenshot({ path: `${out}/0${n}-city-${name}.png` });
     await p.locator('.cm-plate[data-id="docks"]').click();

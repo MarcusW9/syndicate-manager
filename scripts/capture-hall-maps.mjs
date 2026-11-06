@@ -42,7 +42,7 @@ try {
   let n = 1;
   for (const [d, st] of Object.entries(days)) {
     await load(p, st);
-    await tap(p, '[data-action="nav"][data-id="city"]'); await p.waitForTimeout(400);
+    await tap(p, '[data-action="nav"][data-id="ops"]'); await p.waitForTimeout(400);
     await tap(p, '[data-action="raid-answer"]'); await p.waitForTimeout(400);
     await tap(p, '[data-action="decide"][data-option="hold"]'); await p.waitForTimeout(1500);
     await p.screenshot({ path: `${out}/${String(n++).padStart(2, '0')}-hold-${d}.png` });
