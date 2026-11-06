@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-06 · The auto turret
+- **A new defence for a hall: the auto turret** (¥12,000, level 2, one per hall).
+- In a raid it fires on its own every round at the nearest raider, with nobody on it: 6 bursts a fight, then it clicks dry. Raiders can't knock it out.
+- It counts as a defence piece toward making raids easier.
+
 ## 2026-11-06 · The den and the cyber doc
 - **Den** (¥14,000, level 2, 2 × 3, turns): a mahjong table and a karaoke screen. Whoever lives there asks for a smaller raise when they want a new deal.
 - **Cyber doc** (¥25,000, level 3, 2 × 2): one in the whole tong. While you have one, implants in the armoury cost a quarter less.

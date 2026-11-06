@@ -2,7 +2,7 @@
 // and the Night Market (level 2). Crew › Halls with the Build button; the Night Market's build
 // screen with a plate, a barricade and a wall placed; a free square picked with a steel plate ready
 // to place; a placed piece picked (turn, remove); the Rooms tab with a clinic and a bunk room built
-// (slice 2a); and a raid held in the built-up hall.
+// (slice 2a); and a raid held in the built-up hall, its auto turret firing in the first round (slice 3).
 // Run: node scripts/capture-hall-build.mjs <out dir>
 import { createNewGame } from '../src/core/state.js';
 import { advanceDay } from '../src/core/time.js';
@@ -28,6 +28,7 @@ const cells = [...buildableCells(site)].map((k) => k.split(',').map(Number))
 s = placePiece(s, 'nightMarket', 'plate', ...cells[0], 0);
 s = placePiece(s, 'nightMarket', 'barricade', ...cells[1]);
 s = placePiece(s, 'nightMarket', 'wall', ...cells[3], 1);
+s = placePiece(s, 'nightMarket', 'turret', ...cells[4]); // the auto turret (slice 3)
 const built = structuredClone(s);
 // Rooms: a clinic and a bunk room, where they fit.
 const fit = (st, id, rot = 0) => { for (const k of buildableCells(site)) { const [x, y] = k.split(',').map(Number); if (canPlace(st, 'nightMarket', id, x, y, rot).ok) return [x, y]; } return null; };
@@ -79,6 +80,8 @@ try {
   await tap(p, '[data-action="raid-answer"]'); await p.waitForTimeout(400);
   await tap(p, '[data-action="decide"][data-option="hold"]'); await p.waitForTimeout(1500);
   await p.screenshot({ path: `${out}/06-holding-the-built-hall.png` });
+  await tap(p, '[data-action="fight-go"]'); await p.waitForTimeout(6000);
+  await p.screenshot({ path: `${out}/08-the-turret-fires.png` });
 } finally {
   await b.close();
   process.kill(-srv.pid);

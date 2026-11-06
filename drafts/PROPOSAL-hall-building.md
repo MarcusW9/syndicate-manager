@@ -66,7 +66,7 @@ gets a thick outline. On wider screens the plan scales up.
 | Barricade | ¥2,000 | crates and a table, `sp-cover`, 14 × 10 | half cover |
 | Steel plate | ¥4,000 | a plate on legs, `sp-cover`, 26 × 6, rotates 0/90 | full cover (24 or more long) |
 | Inner wall | ¥3,000 | a wall section, `sp-block`, 30 × 4, rotates 0/90 | solid: nobody stands in it |
-| Turret | ¥12,000, level 2 | a gun on a post, 1 cell, one per hall | slice 3: it fires on the nearest raider in sight each round (damage as a sidearm's) and can be knocked out for the rest of the fight. It needs the fight engine to have a shooter that isn't one of our people. |
+| Auto turret | ¥12,000, level 2 | a gun on a post, 1 cell, one per hall | slice 3 (built): fires on the nearest raider each round with nobody on it, aim 8, damage 5, 6 bursts; can't be knocked out (owner, 2026-11-06). |
 
 They become ordinary shapes on the hall's site, so `core/fightspots.js` uses them as it does any
 cover: spots behind them on the side away from the other lot, full cover for a piece 24 or more

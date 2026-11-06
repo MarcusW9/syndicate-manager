@@ -285,7 +285,10 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
   async function moment(l) {
     const foeAt = l.guard ? foePos(l.guard) : here;
     const key = `g${l.guard}`;
-    if (l.kind === 'overwatch') {
+    if (l.kind === 'turret') {
+      await (l.at ? bolt(l.at, foeAt, l.success) : shot(foeAt, l.success));
+      if (l.success && hurtBy(key, l.damage) <= 0) foes.get(l.guard)?.classList.add('is-dead');
+    } else if (l.kind === 'overwatch') {
       await (l.kit === 'drone' ? drone(foeAt, l.success) : shot(foeAt, l.success));
       if (l.success && hurtBy(key, l.damage) <= 0) foes.get(l.guard)?.classList.add('is-dead');
     } else if (l.kind === 'shoot') {

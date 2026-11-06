@@ -5,7 +5,8 @@
 //
 // A battle object (am.battle, save v26; cover and intents v28):
 //   { incident, zone, diff, round, guards: [guard], runners: [runner], overwatch, wheels,
-//     lights, van, door: [opId], intents }
+//     lights, van, door: [opId], intents, turret }
+// turret: a hall's auto turret in a raid, { at, aim, damage, left }, or null (core/raids.js hallTurret).
 // guard  { n, hp, max, armour, damage, out, cover, now } out: down, or talked into backing off
 // runner { id, handle, hp, max, armour, armourName, damage, weapon, stats, patch,
 //          down, fightOn, stable, cover, now }         stats: { stat: { value, notes } }
@@ -112,7 +113,7 @@ export function overwatchOf(op, ow, zone) {
  * Build a fight. crew: the inside team still standing (operatives). overwatchOp/ow: the run's
  * overwatch (am.overwatch). wheels: the driver in the van, who can bring it round.
  */
-export function buildBattle({ incident, zone, diff, threat, guards, crew, approach, overwatchOp = null, ow = null, wheels = null, ambush = false, spots = null }) {
+export function buildBattle({ incident, zone, diff, threat, guards, crew, approach, overwatchOp = null, ow = null, wheels = null, ambush = false, spots = null, turret = null }) {
   // On a site with spots, each side takes the best cover going (spots come best first).
   const onSpot = (x, i, side) => (spots?.[side]?.[i] ? { ...x, spot: i, cover: spots[side][i].cover } : { ...x, spot: null });
   return {
@@ -122,6 +123,7 @@ export function buildBattle({ incident, zone, diff, threat, guards, crew, approa
     overwatch: overwatchOf(overwatchOp, ow, zone),
     wheels: wheels ? { id: wheels.id, handle: wheels.handle, ...effectiveStat(wheels, 'driving', { approach }) } : null,
     lights: false, van: false, door: [], intents: null, auto: false,
+    turret: turret ? { ...turret } : null, // a hall's auto turret in a raid: { at, aim, damage, left } (data/hallBuild.js TURRET)
   };
 }
 
@@ -279,6 +281,21 @@ export function playRound(b, rng, orders = {}) {
     const what = ow.kit === 'drone' ? 'tases' : 'hits';
     line({ kind: 'overwatch', actor: { id: ow.id, handle: ow.handle }, kit: ow.kit, target: guardName(g, b), guard: g.n, stat: ow.stat, value: ow.value, notes: ow.notes, ...r, damage: dmg, armour: g.armour, dropped: g.out,
       text: r.success ? `${ow.handle} ${what} ${guardName(g, b)} from overwatch for ${dmg}${g.armour ? ` (armour ${g.armour})` : ''}${g.out ? '. Down.' : '.'}` : `${ow.handle}'s ${ow.kit === 'drone' ? 'drone misses' : 'shot goes wide'}.` });
+  }
+
+  // A hall's auto turret (raids, 2026-11-06): fires on its own at the nearest raider, until it's dry.
+  const tu = b.turret;
+  if (tu && tu.left > 0 && up(b).length) {
+    const at = (g) => b.spots?.guards?.[g.spot]?.at;
+    const g = tu.at && up(b).every((x) => at(x)) ? [...up(b)].sort((p, q) => Math.hypot(at(p)[0] - tu.at[0], at(p)[1] - tu.at[1]) - Math.hypot(at(q)[0] - tu.at[0], at(q)[1] - tu.at[1]))[0] : targetOf(b);
+    const r = roll(rng, tu.aim, shotDiff(b, g));
+    tu.left -= 1;
+    const dmg = r.success ? hitFor(tu.damage, g.armour) : 0;
+    g.hp = Math.max(0, g.hp - dmg);
+    if (g.hp === 0) g.out = true;
+    const dry = tu.left === 0 ? ' It clicks dry.' : '';
+    line({ kind: 'turret', actor: null, at: tu.at ?? null, target: guardName(g, b), guard: g.n, value: tu.aim, ...r, damage: dmg, armour: g.armour, dropped: g.out, left: tu.left,
+      text: r.success ? `The turret fires at ${guardName(g, b)}: hit for ${dmg}${g.armour ? ` (armour ${g.armour})` : ''}${g.out ? '. Down.' : '.'}${dry}` : `The turret's burst goes wide.${dry}` });
   }
 
   const flankFirst = (r) => (given.get(r.id)?.kind === 'flank' ? 0 : 1);

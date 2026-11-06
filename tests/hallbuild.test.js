@@ -160,3 +160,33 @@ test('defences make a raid easier: every 3 pieces lower its threat by 1, never b
   assert.match(raidChoices(s, police).find((c) => c.id === 'hold').cost, /Our defences make it easier \(threat −3\)/);
   assert.equal(raidThreat(tong(), 'docks', { ...police, district: 'docks' }), 1, 'a hall with nothing built is as before');
 });
+
+test('the auto turret: one per hall from level 2, a defence piece; in a raid it fires on its own, never knocked out, until dry', async () => {
+  const { TURRET } = await import('../src/data/hallBuild.js');
+  const { hallTurret, startRaidFight, defencesIn } = await import('../src/core/raids.js');
+  const { buildBattle, playRound } = await import('../src/core/battle.js');
+  const { makeRng } = await import('../src/core/rng.js');
+  let s = tong(1e6);
+  const [x, y] = cellsOf('docks')[0];
+  assert.match(canPlace(s, 'docks', 'turret', x, y).reason, /level 2/);
+  hallIn(s, 'docks').level = 2;
+  s = placePiece(s, 'docks', 'turret', x, y);
+  assert.match(canPlace(s, 'docks', 'turret', ...cellsOf('docks')[1]).reason, /already has an auto turret/);
+  assert.equal(defencesIn(s, 'docks'), 1, 'it counts toward the defences');
+  assert.deepEqual(hallTurret(s, 'docks'), { at: [x * C + C / 2, y * C + C / 2], aim: TURRET.aim, damage: TURRET.damage, left: TURRET.shots });
+  assert.equal(hallTurret(tong(), 'docks'), null);
+  s.crew[0].hall = 'docks';
+  const st = structuredClone(s);
+  startRaidFight(st, { id: 'raid-docks-1', district: 'docks', by: 'police', warnedDay: st.day, day: st.day, answer: null, outcome: null, done: false });
+  assert.equal(st.activeMission.battle.turret.left, TURRET.shots);
+  // A long fight: it fires every round until it's out, with no crew on it, and nothing aims at it.
+  const b = buildBattle({ incident: 'raid', zone: 'inside', diff: 0, threat: 1, guards: 4, crew: [s.crew[0]], approach: 'loud', turret: hallTurret(s, 'docks') });
+  for (const g of b.guards) { g.hp = 999; g.max = 999; }
+  const rng = makeRng(7);
+  const fired = [];
+  for (let i = 0; i < TURRET.shots + 2 && !b.runners.every((r) => r.down); i++) fired.push(playRound(b, rng).lines.filter((l) => l.kind === 'turret'));
+  assert.ok(fired.slice(0, TURRET.shots).every((ls) => ls.length === 1), 'one burst a round');
+  assert.match(fired[TURRET.shots - 1][0].text, /clicks dry/);
+  assert.ok(fired.slice(TURRET.shots).every((ls) => !ls.length), 'then nothing');
+  assert.ok(fired.flat().every((l) => l.actor === null), 'nobody on it');
+});
