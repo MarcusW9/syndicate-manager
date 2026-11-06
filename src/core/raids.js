@@ -262,14 +262,14 @@ export function startRaidFight(state, raid) {
   const diff = Math.round(rollTarget({ threat }));
   const b = buildBattle({
     incident: 'raid', zone: 'inside', diff, threat, guards: RAID.raiders, crew: ops, approach: 'loud',
-    spots: spotsForJob(d, raid.id, tpl.id, 'inside', ops.length),
+    spots: spotsForJob(d, raid.id, tpl.id, 'inside', ops.length, hallIn(state, d)?.build),
   });
   b.foe = raidBy(raid); // who they are, and what the battle lines call one of them (core/battle.js foeWord)
   b.foeOne = raider(raid).one;
   planIntents(b, nextRng(state));
   const text = `${raidWho(raid)} come through the door: ${b.guards.length} of them, against ${andNames(ops)}.`;
   state.activeMission = {
-    jobId: raid.id, templateId: tpl.id, raid: raid.id, crewIds: ops.map((o) => o.id), approach: 'loud', days: 0, bribe: 0,
+    jobId: raid.id, templateId: tpl.id, raid: raid.id, build: structuredClone(hallIn(state, d)?.build ?? []), crewIds: ops.map((o) => o.id), approach: 'loud', days: 0, bribe: 0,
     overwatch: null, wheels: null, standby: null, callIn: 'every', orders: null,
     alert: 0, out: [], pending: null, wentLoud: true, battle: b, fought: true,
     pay: 0, threat, threatDelta: 0, clientId: null, twist: null, askedFor: null, lead: null,

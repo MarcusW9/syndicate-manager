@@ -43,7 +43,7 @@ export function renderWatch(ui, state, end = '') {
   return `
     <div class="watch ${done ? 'is-done' : ''}" data-mission="${ui.esc(am.jobId)}">
       <div class="watch__live">
-        <div class="watch__map">${sitePlanSvg({ kit: am.overwatch?.kit ?? null, site: siteFor(templateById(am.templateId)?.district, am.jobId, am.templateId) })}
+        <div class="watch__map">${sitePlanSvg({ kit: am.overwatch?.kit ?? null, site: siteFor(templateById(am.templateId)?.district, am.jobId, am.templateId, am.build) })}
           <span class="watch__phase" aria-live="polite"></span>
           <span class="watch__alert" role="img"></span>
         </div>
@@ -87,7 +87,7 @@ export function mountWatch(el, state, { onAuto, ui }) {
   const plan = bindSitePlan(el.querySelector('.siteplan'), {
     // a finished job stays where the crew ended up (am.zone)
     team, overwatch: ow?.op ? ow : null, zone: am.zone ?? 'start',
-    speed: () => speed, site: siteFor(templateById(am.templateId)?.district, am.jobId, am.templateId),
+    speed: () => speed, site: siteFor(templateById(am.templateId)?.district, am.jobId, am.templateId, am.build),
     wheels: am.wheels ? opsOf(state, [am.wheels])[0] : null,
     standby: am.standby && !am.standby.joined ? opsOf(state, [am.standby.id])[0] : null,
     out: opsOf(state, out),

@@ -170,7 +170,7 @@ export function fightSpots(site, zone, need = { crew: 6, guards: 4 }) {
  * coverage), so the odds shown are worked out on the spots the fight will use. crew: how many
  * inside (two spots spare to move to).
  */
-export function spotsForJob(district, jobId, templateId, zone, crew) {
+export function spotsForJob(district, jobId, templateId, zone, crew, build = null) {
   if (!BATTLE.spotsIn.includes(district)) return null;
-  return fightSpots(pickSite(district, jobId, templateId), zone, { crew: crew + 2, guards: BATTLE.maxGuards });
+  return fightSpots(pickSite(district, jobId, templateId, build), zone, { crew: crew + 2, guards: BATTLE.maxGuards });
 }
