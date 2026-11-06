@@ -288,10 +288,12 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
   .list--cols { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 8px; }
   .cols2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 28px; align-items: start; }
   .cols2--flow { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
-  /* City map: the map's column is only as wide as the map draws (its height cap × 330/290,
-     see .citymap below), so the district card sits right beside it instead of across a gap. */
-  .cols2--map { grid-template-columns: min(460px, calc(max(360px, 100dvh - 300px) * 330 / 290)) minmax(0, 1fr); }
-  .cols2--map { grid-template-columns: min(460px, calc(max(360px, 100svh - 300px) * 330 / 290)) minmax(0, 1fr); }
+  /* Ops map: the map's column is only as wide as the map draws (its height cap × 330/290,
+     see .citymap below), so the district card sits right beside it instead of across a gap.
+     Bigger since Ops got its own tab (owner, 2026-11-06): up to 60% of the width, the card
+     column never under 340px. */
+  .cols2--map { grid-template-columns: min(60%, calc(max(400px, 100dvh - 230px) * 330 / 290)) minmax(340px, 1fr); }
+  .cols2--map { grid-template-columns: min(60%, calc(max(400px, 100svh - 230px) * 330 / 290)) minmax(340px, 1fr); }
   /* Planning a job: approach, squad and orders on the left; client and the reads beside them, so the risk updates in view as you pick. */
   .plangrid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); grid-template-rows: auto auto 1fr; column-gap: 28px; align-items: start;
     grid-template-areas: "approach client" "crew risk" "orders risk"; }
@@ -539,7 +541,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
    after the owner's mock-up drafts/prototypes/command-centre.html). Faceted districts in their
    gang's light at dark seams, a faint block grid, transit; then heat glows, crews out as faces,
    calls pulsing sodium, raid rings. Only calls and raids move; that stops too for reduced motion. */
-.citymap { display: block; width: 100%; max-width: 520px; margin: 8px auto 6px; touch-action: manipulation; }
+.citymap { display: block; width: 100%; max-width: 760px; margin: 8px auto 6px; touch-action: manipulation; }
 .citymap text { font-family: var(--display); pointer-events: none; }
 .cm-d { cursor: pointer; }
 .cm-d:focus { outline: none; }
@@ -606,7 +608,9 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
    hides its bars on scroll, which made the map and the picture beside it grow mid-scroll
    (owner, iPad, 2026-10-29). The dvh lines are the fallback for browsers without svh. */
 .citymap { max-height: max(300px, calc(100dvh - 400px)); max-height: max(300px, calc(100svh - 400px)); }
-@media (min-width: 900px) { .citymap { max-height: max(360px, calc(100dvh - 300px)); max-height: max(360px, calc(100svh - 300px)); } }
+/* Ops has no section tabs (2026-11-06), so the map takes that room back. */
+@media (min-width: 600px) and (max-width: 899px) { .citymap { max-height: max(360px, calc(100dvh - 340px)); max-height: max(360px, calc(100svh - 340px)); } }
+@media (min-width: 900px) { .citymap { max-width: none; max-height: max(400px, calc(100dvh - 230px)); max-height: max(400px, calc(100svh - 230px)); } }
 .citycard ul { margin-top: 0; }
 .citydetails { border: 1px solid var(--line); border-radius: var(--radius); padding: 0 12px; margin-bottom: 6px; }
 .citydetails summary { min-height: var(--tap); display: flex; align-items: center; cursor: pointer; font-weight: 600; }
