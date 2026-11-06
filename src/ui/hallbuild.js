@@ -1,0 +1,110 @@
+// The hall build screen (DESIGN.md 2026-11-06; mock-up drafts/prototypes/hall-build.png): the hall's
+// own map with a grid over its floor, what's built on it, the cell or piece picked, and a palette of
+// pieces. Tap a free cell, pick a piece, Place; tap a placed piece to turn or remove it. Markup only:
+// app.js owns the clicks (data-action) and core/hallbuild.js the rules.
+//
+// ui: helpers from app.js { esc, money, cityName }. view: { district, cell: [x, y] | null, piece, rot, picked }.
+
+import { HALL_BUILD, PIECES } from '../data/hallBuild.js';
+import { buildableCells, builtCells, canPlace, canTurn, floorOf, floorUsed, hallMap, hallSiteFor, pieceAt, refundOf } from '../core/hallbuild.js';
+import { hallIn } from '../core/halls.js';
+import { sitePlanSvg } from './siteplan.js';
+
+const C = HALL_BUILD.cell;
+
+/** A small drawing of each piece for the palette (26 × 26). */
+export const PIECE_ICON = {
+  barricade: '<rect x="5" y="9" width="8" height="8" fill="#6b5a2a"/><rect x="13" y="11" width="8" height="6" fill="#8a7440"/>',
+  plate: '<rect x="3" y="11" width="20" height="4" fill="#8b9aab"/><rect x="6" y="15" width="2" height="5" fill="#5d6b7a"/><rect x="18" y="15" width="2" height="5" fill="#5d6b7a"/>',
+  wall: '<rect x="3" y="11" width="20" height="4" fill="#3a4150"/><rect x="3" y="11" width="20" height="1" fill="#5a6474"/>',
+};
+const icon = (id) => `<svg class="btile__icon" viewBox="0 0 26 26" width="32" height="32" aria-hidden="true">${PIECE_ICON[id] ?? ''}</svg>`;
+
+/** The pieces' shapes as a faint ghost where the picked piece would go. */
+function ghost(view) {
+  if (!view.cell || !view.piece) return '';
+  const [x, y] = view.cell;
+  return PIECES[view.piece].shapes(x * C, y * C, PIECES[view.piece].turns ? view.rot : 0)
+    .filter((s) => s.t === 'rect').map((s) => `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" class="bgrid__ghost"/>`).join('');
+}
+
+/** The grid over the plan: free cells to tap, built cells to pick, the picked one outlined. */
+function grid(state, view, esc) {
+  const hall = hallIn(state, view.district);
+  const free = buildableCells(hallMap(view.district));
+  const built = builtCells(hall);
+  const sel = view.picked ? (hall.build ?? []).find((b) => b.id === view.picked) : null;
+  const cells = [...free].map((k) => {
+    const [x, y] = k.split(',').map(Number);
+    const taken = built.has(k);
+    const on = view.cell && view.cell[0] === x && view.cell[1] === y;
+    const label = taken ? `${PIECES[pieceAt(hall, x, y).piece].name}, row ${y + 1}, column ${x + 1}` : `Free square, row ${y + 1}, column ${x + 1}`;
+    return `<rect x="${x * C + 1.5}" y="${y * C + 1.5}" width="${C - 3}" height="${C - 3}" class="bgrid__cell ${taken ? 'is-built' : ''} ${on ? 'is-on' : ''}" data-action="build-cell" data-id="${x},${y}" role="button" tabindex="0" aria-label="${esc(label)}"/>`;
+  }).join('');
+  const outline = sel ? (() => {
+    const p = PIECES[sel.piece];
+    const [w, h] = sel.rot && p.turns ? [p.size[1], p.size[0]] : p.size;
+    return `<rect x="${sel.x * C + 0.5}" y="${sel.y * C + 0.5}" width="${w * C - 1}" height="${h * C - 1}" class="bgrid__sel"/>`;
+  })() : view.cell ? `<rect x="${view.cell[0] * C + 0.5}" y="${view.cell[1] * C + 0.5}" width="${C - 1}" height="${C - 1}" class="bgrid__sel"/>` : '';
+  return `<svg class="bgrid" viewBox="0 0 360 240">${cells}${ghost(view)}${outline}</svg>`;
+}
+
+/** The sheet under the plan: what's picked and what you can do with it. */
+function sheet(state, view, ui) {
+  const { esc, money } = ui;
+  const hall = hallIn(state, view.district);
+  const sel = view.picked ? (hall.build ?? []).find((b) => b.id === view.picked) : null;
+  if (sel) {
+    const p = PIECES[sel.piece];
+    return `<div class="bsheet"><p class="bsheet__head"><strong>${esc(p.name)}</strong> <span class="muted small">built day ${sel.day}</span></p>
+      <p class="small">${esc(p.about)}</p>
+      <div class="bsheet__btns">
+        ${p.turns ? `<button class="btn" data-action="build-turn" data-id="${esc(sel.id)}" ${canTurn(state, view.district, sel.id) ? '' : 'disabled'}>Turn</button>` : ''}
+        <button class="btn" data-action="build-remove" data-id="${esc(sel.id)}">Remove · ${money(refundOf(sel.piece))} back</button>
+      </div></div>`;
+  }
+  if (!view.cell) return '<div class="bsheet"><p class="small muted">Tap a free square on the plan, then pick what goes there. Tap something built to turn or remove it.</p></div>';
+  if (!view.piece) return '<div class="bsheet"><p class="small muted">Pick what goes there, below.</p></div>';
+  const p = PIECES[view.piece];
+  const can = canPlace(state, view.district, view.piece, view.cell[0], view.cell[1], view.rot);
+  return `<div class="bsheet"><p class="bsheet__head"><strong>${esc(p.name)}</strong> <span class="muted small">${p.size[0] * p.size[1]} ${p.size[0] * p.size[1] === 1 ? 'square' : 'squares'}</span></p>
+    <p class="small">${esc(p.about)}</p>
+    ${can.ok ? '' : `<p class="small bsheet__why">${esc(can.reason)}.</p>`}
+    <div class="bsheet__btns">
+      ${p.turns ? '<button class="btn" data-action="build-rot">Turn</button>' : ''}
+      <button class="btn btn--primary" data-action="build-place" ${can.ok ? '' : 'disabled'}>Place · ${money(p.cost)}</button>
+    </div></div>`;
+}
+
+/** The whole screen. */
+export function renderHallBuild(ui, state, view) {
+  const { esc, money, cityName } = ui;
+  const hall = hallIn(state, view.district);
+  if (!hall) return '';
+  const used = floorUsed(hall);
+  const floor = floorOf(hall);
+  const tiles = Object.entries(PIECES).filter(([, p]) => p.kind === 'defence').map(([id, p]) => `
+      <button class="btile ${view.piece === id ? 'is-on' : ''}" data-action="build-piece" data-id="${esc(id)}" aria-pressed="${view.piece === id}">
+        ${icon(id)}<strong>${esc(p.name)}</strong><span class="btile__what"><span class="btile__price">${money(p.cost)}</span> · ${esc(p.what)}</span>
+      </button>`).join('');
+  return `
+    <section class="hallbuild">
+      <div class="bhead"><button class="linkbtn" data-action="back">‹ Halls</button><span class="bhead__level">level ${hall.level}</span></div>
+      <h1 class="btitle">Build · the ${esc(cityName(view.district).replace(/^The /, ''))} hall</h1>
+      <div class="bbar" role="status"><span>Floor <b>${used}/${floor}</b></span><span class="bbar__seg" aria-hidden="true">${Array.from({ length: floor }, (_, k) => `<i class="${k < used ? 'is-on' : ''}"></i>`).join('')}</span><span>${money(state.cash)}</span></div>
+      <div class="bplan">${sitePlanSvg({ site: hallSiteFor(state, view.district) })}${grid(state, view, esc)}</div>
+      ${sheet(state, view, ui)}
+      <h2>Defences</h2>
+      <p class="muted small">Cover where our people stand when they hold the hall. A raid is fought on this map.</p>
+      <div class="btiles">${tiles}</div>
+      <p class="muted small">Removing something gives back half its cost. Expanding the hall gives ${HALL_BUILD.floorPerLevel} more squares.</p>
+    </section>`;
+}
+
+/** A line for the hall's row on Crew › Halls: what's built and the floor. */
+export function hallBuildLine(hall) {
+  const n = {};
+  for (const b of hall.build ?? []) n[b.piece] = (n[b.piece] ?? 0) + 1;
+  const what = Object.entries(n).map(([id, k]) => `${k} ${PIECES[id].name.toLowerCase()}${k > 1 ? 's' : ''}`);
+  return `${what.length ? `Built: ${what.join(', ')}` : 'Nothing built yet'} · floor ${floorUsed(hall)}/${floorOf(hall)}`;
+}
