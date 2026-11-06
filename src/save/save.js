@@ -570,5 +570,10 @@ function migrate(state) {
     for (const r of state.raids ?? []) r.by = r.by ?? 'police';
     state.version = 41;
   }
+  if (state.version === 41) {
+    // v42: building up a hall (core/hallbuild.js): nothing built in any hall yet.
+    for (const h of state.halls ?? []) h.build = h.build ?? [];
+    state.version = 42;
+  }
   return state;
 }

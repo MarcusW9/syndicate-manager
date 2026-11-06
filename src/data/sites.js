@@ -15,6 +15,8 @@
 // Coordinates were set by hand and are checked by tests/sites.test.js (on the map, routes join,
 // the rifle can't see the target, the drone can).
 
+import { buildShapes } from './hallBuild.js';
+
 const CONTAINER_TONES = ['#1b2433', '#2a1d26', '#1d2a24', '#2b2618'];
 const STALL_TONES = ['#ff3d5f', '#3de8d8', '#f2d541', '#b48cff'];
 
@@ -523,14 +525,14 @@ export const HALLS = {
   // between the stacks; out down the ladder to a boat.
   docks: {
     ...hallSite('a container office on the old pier', 'Plan of our Docks hall: a container office at the end of the old pier, the stove, a desk and two cots, containers and bollards on the pier, the ladder down to a boat',
-      { exit: [338, 198], anchor: [292, 132], entry: [62, 130] }),
+      { exit: [338, 202], anchor: [292, 132], entry: [62, 130] }),
     shapes: [
-      { t: 'rect', cls: 'sp-water', x: 0, y: 0, w: 360, h: 92 },
-      { t: 'rect', cls: 'sp-water', x: 0, y: 170, w: 360, h: 70 },
-      { t: 'rect', cls: 'sp-yard', x: 0, y: 92, w: 40, h: 78 },
-      { t: 'rect', cls: 'sp-pier', x: 40, y: 92, w: 320, h: 78 }, // the pier's deck: walkable, unlike the job maps' jetties
-      { t: 'row', cls: 'sp-step', x: 330, y: 170, w: 14, h: 1.5, step: 5, n: 4, axis: 'y' }, // the ladder down
-      { t: 'ellipse', cls: 'sp-cover', cx: 338, cy: 206, rx: 18, ry: 6, fill: '#3a2d22' }, // the boat
+      { t: 'rect', cls: 'sp-water', x: 0, y: 0, w: 360, h: 90 },
+      { t: 'rect', cls: 'sp-water', x: 0, y: 180, w: 360, h: 60 },
+      { t: 'rect', cls: 'sp-yard', x: 0, y: 90, w: 40, h: 90 },
+      { t: 'rect', cls: 'sp-pier', x: 40, y: 90, w: 320, h: 90 }, // the pier's deck: walkable, unlike the job maps' jetties
+      { t: 'row', cls: 'sp-step', x: 330, y: 180, w: 14, h: 1.5, step: 5, n: 3, axis: 'y' }, // the ladder down
+      { t: 'ellipse', cls: 'sp-cover', cx: 338, cy: 210, rx: 18, ry: 6, fill: '#3a2d22' }, // the boat
       { t: 'rect', cls: 'sp-building', x: 232, y: 98, w: 98, h: 66 },
       { t: 'rect', cls: 'sp-door', x: 229, y: 120, w: 4, h: 18 },
       { t: 'rect', cls: 'sp-desk', x: 300, y: 104, w: 18, h: 10 }, // the stove
@@ -545,7 +547,7 @@ export const HALLS = {
       { t: 'rect', cls: 'sp-cover', x: 90, y: 100, w: 12, h: 10, fill: CONTAINER_TONES[3] },
       { t: 'rect', cls: 'sp-cover', x: 92, y: 120, w: 26, h: 8, fill: '#3a2d22' }, // a stack of pallets
     ],
-    labels: [{ x: 6, y: 88, text: 'THE YARD' }, { x: 120, y: 182, text: 'THE OLD PIER' }, { x: 240, y: 92, text: 'OUR OFFICE', hi: true }, { x: 300, y: 226, text: 'BOAT' }],
+    labels: [{ x: 6, y: 86, text: 'THE YARD' }, { x: 120, y: 192, text: 'THE OLD PIER' }, { x: 240, y: 92, text: 'OUR OFFICE', hi: true }, { x: 300, y: 226, text: 'BOAT' }],
   },
   // The Basin: a flat over a tack workshop, the Old Stand outside the window. Up through the
   // workshop's trapdoor; out by the stair to the stable yard.
@@ -648,8 +650,11 @@ const hash = (str) => { let h = 2166136261; for (const ch of String(str)) h = Ma
  * and two offers of the same work can differ. Nothing is stored: the id is the seed. Anywhere else,
  * the district's site or the generic one.
  */
-export function pickSite(district, jobId = '', templateId = null) {
-  if (String(templateId).startsWith('raid:')) return HALLS[String(templateId).slice(5)] ?? HALL; // a raid is fought in the hall itself
+export function pickSite(district, jobId = '', templateId = null, build = null) {
+  if (String(templateId).startsWith('raid:')) { // a raid is fought in the hall itself, with what's built there (data/hallBuild.js)
+    const hall = HALLS[String(templateId).slice(5)] ?? HALL;
+    return build?.length ? { ...hall, shapes: [...hall.shapes, ...buildShapes(build)] } : hall;
+  }
   const plot = PLOTS[district];
   if (!plot) return SITES[district] ?? SITES.generic;
   const pick = (list, salt) => list[hash(`${jobId}:${salt}`) % list.length];

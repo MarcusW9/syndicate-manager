@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-06 · Building up a hall: the groundwork
+- **What you build in a hall will be part of its raids:** a barricade is half cover, a steel plate full cover, and an inner wall is solid. You can't place anything yet; the build screen comes next.
+- **The Docks hall's pier is a little wider.**
+- **Save format v42.** Old saves start with nothing built.
+
 ## 2026-11-05 · The districts' landmarks
 - **Each hall on Crew › Halls shows its district's landmark** beside it, lit in the gang's colour:
   - Old Town: the tenement and its shrine.

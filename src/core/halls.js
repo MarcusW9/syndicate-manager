@@ -42,7 +42,7 @@ export function syncHalls(state) {
 }
 
 /** The first hall, from a new game's safehouse: Old Town, with its beds and rent. */
-export const homeHall = (beds, rent) => ({ district: HOME_HALL, beds, rent, level: 1, opened: 1 });
+export const homeHall = (beds, rent) => ({ district: HOME_HALL, beds, rent, level: 1, opened: 1, build: [] });
 
 /** Can the tong open a hall here now? { ok, reason, site }. */
 export function canOpenHall(state, district) {
@@ -62,7 +62,7 @@ export function openHall(prev, district) {
   const state = structuredClone(prev);
   const site = HALL_SITES[district];
   state.cash -= site.deposit;
-  state.halls = [...(state.halls ?? []), { district, beds: site.beds, rent: site.rent, level: 1, opened: state.day }];
+  state.halls = [...(state.halls ?? []), { district, beds: site.beds, rent: site.rent, level: 1, opened: state.day, build: [] }];
   syncHalls(state);
   const contact = CLIENTS.find((c) => c.id === site.contact);
   state.inbox.unshift({
