@@ -10,7 +10,7 @@
 // rolling one never changes anything else that happens in the game.
 
 import { makeRng, pick } from './rng.js';
-import { RIFLE_LOOKS, SIDEARM_LOOKS, GLOWS, ARMOURY_STOCK } from '../data/gearLooks.js';
+import { RIFLE_LOOKS, SIDEARM_LOOKS, GLOWS, ARMOURY_STOCK, TOOL_FRAMES } from '../data/gearLooks.js';
 import { SIDEARM_QUIRKS } from '../data/gear.js';
 
 /** Types that have looks. */
@@ -72,6 +72,7 @@ export const nameLook = (state, key, look, type = 'rifle') => nameFor(look, make
 
 /** What it's made of, in words: "Carbine in carbon, a neon circuit, neon purple lights". */
 export function lookText(item) {
+  if (TOOL_FRAMES[item?.type]) { const n = TOOL_FRAMES[item.type][toolFrameOf(item)].name; return n.charAt(0).toUpperCase() + n.slice(1); }
   const L = HAS_LOOKS[item?.type];
   if (!L || !item.look) return '';
   const [slot, table] = EXTRA[item.type];
@@ -80,8 +81,32 @@ export function lookText(item) {
   return [base.charAt(0).toUpperCase() + base.slice(1), item.look[slot] && L[table][item.look[slot]]?.name, charm && L.charms[charm]?.name, glow && `${GLOWS[glow].name} lights`].filter(Boolean).join(', ');
 }
 
-/** A new item gets a look if its type has them (rifles and sidearms). Mutates and returns item. */
+/** A frame by weight (data/gearLooks.js TOOL_FRAMES), from a number in [0, 1). */
+function frameAt(type, r) {
+  const F = TOOL_FRAMES[type];
+  const total = Object.values(F).reduce((n, f) => n + f.weight, 0);
+  let at = r * total;
+  for (const [id, f] of Object.entries(F)) if ((at -= f.weight) < 0) return id;
+  return Object.keys(F)[0];
+}
+
+/**
+ * A drone's or a deck's frame: the one it rolled when it came in, or, for one from before frames
+ * (2026-11-06) or a catalogue row with no item yet, one fixed by its uid (the first, with none).
+ */
+export function toolFrameOf(item) {
+  const F = TOOL_FRAMES[item?.type];
+  if (!F) return null;
+  if (item.look?.frame && F[item.look.frame]) return item.look.frame;
+  if (!item.uid) return Object.keys(F)[0];
+  let h = 2166136261;
+  for (const ch of `frame|${item.uid}`) h = Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0;
+  return frameAt(item.type, (h % 10000) / 10000);
+}
+
+/** A new item gets a look if its type has them (rifles and sidearms; a drone's or deck's frame). Mutates and returns item. */
 export function giveLook(state, item) {
+  if (TOOL_FRAMES[item.type] && !item.look) item.look = { frame: frameAt(item.type, makeRng(seedOf(state, `frame|${item.uid}`))()) };
   if (HAS_LOOKS[item.type] && !item.look) Object.assign(item, rollLook(state, `item|${item.uid}`, item.tier, item.type));
   return item;
 }

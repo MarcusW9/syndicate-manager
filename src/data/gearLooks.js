@@ -113,3 +113,20 @@ export const SIDEARM_LOOKS = {
 
 // Guns on the armoury's shelf each week, by type and tier.
 export const ARMOURY_STOCK = { rifle: { street: 2, pro: 1 }, pistol: { street: 1, pro: 1 } };
+
+// Tool frames (2026-11-06, owner: the drone "quad A ... the others can be rarer instances"; the
+// decks "all are fine and can be varied"): the drone and the cyberdeck come in more than one build.
+// Only the frame varies (no name, finish or charm); weight is how often it turns up. Drawn in
+// ui/art.js (TOOL_SHAPES), from the options in drafts/prototypes/drone-deck-options.html.
+export const TOOL_FRAMES = {
+  drone: {
+    quad: { name: 'quadcopter', weight: 8 },
+    kite: { name: 'flying-wing kite', weight: 1 },
+    duct: { name: 'ducted-fan drone', weight: 1 },
+  },
+  deck: {
+    slab: { name: 'keyboard slab', weight: 1 },
+    case: { name: 'hard-case deck', weight: 1 },
+    brick: { name: 'handheld brick', weight: 1 },
+  },
+};

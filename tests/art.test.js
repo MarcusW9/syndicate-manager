@@ -129,7 +129,8 @@ test('a rifle carried shows on the portrait, the same every time; nothing else c
 
 test('item drawings: the rifle has one, lit by whoever carries it; others fall back to icons', () => {
   assert.ok(hasGearArt('rifle'));
-  assert.equal(gearArt({ type: 'drone', tier: 'street' }), null);
+  // The drone was the example of an undrawn item until it was drawn (2026-11-06); the trauma kit isn't yet.
+  assert.equal(gearArt({ type: 'medkit', tier: 'street' }), null);
   const op = { id: 'g9', name: 'Kit Lau' };
   const stash = gearArt({ type: 'rifle', tier: 'street' });
   const carried = gearArt({ type: 'rifle', tier: 'street' }, { carrier: op });

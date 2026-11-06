@@ -7,6 +7,11 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-06 · Drones and cyberdecks, drawn
+- **Drones and cyberdecks now have pictures** in the armoury and in a runner's gear slots, drawn like the rifles: street ones patched and taped, pro ones dark with a neon line.
+- **They come in different builds.** Most drones are quadcopters, but now and then one is a flying-wing kite or a ducted-fan drone. A cyberdeck is a keyboard slab, a hard-case deck or a handheld brick. The armoury says which.
+- Fixed: on a phone the week's squares in the top bar could run into the heat.
+
 ## 2026-11-06 · Planning a job: quicker to look and to change
 - **The runners beside the job list open their page:** tap one to see their stats, record and gear (and change it), then "Back to the job" returns to the plan as you left it.
 - **Each card on the squad board has an ×** to take that runner off at once. Tapping the card still opens the list to swap someone in.
