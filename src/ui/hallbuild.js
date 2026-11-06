@@ -9,6 +9,7 @@ import { HALL_BUILD, PIECES } from '../data/hallBuild.js';
 import { buildableCells, builtCells, canPlace, canTurn, floorOf, floorUsed, hallMap, hallSiteFor, pieceAt, refundOf } from '../core/hallbuild.js';
 import { hallIn } from '../core/halls.js';
 import { sitePlanSvg } from './siteplan.js';
+import { defencesIn, defenceCut } from '../core/raids.js';
 
 const C = HALL_BUILD.cell;
 
@@ -76,6 +77,14 @@ function sheet(state, view, ui) {
     </div></div>`;
 }
 
+/** What the hall's defences do to a raid: "4 built · raid threat −1 · 2 more for −2". */
+function defenceLine(state, district) {
+  const n = defencesIn(state, district);
+  const cut = defenceCut(state, district);
+  const next = HALL_BUILD.perThreat * (cut + 1) - n;
+  return `${n} built · ${cut ? `<strong>raid threat −${cut}</strong>` : 'no change to a raid yet'} · ${next} more for −${cut + 1}`;
+}
+
 /** The whole screen. */
 export function renderHallBuild(ui, state, view) {
   const { esc, money, cityName } = ui;
@@ -95,16 +104,17 @@ export function renderHallBuild(ui, state, view) {
       <div class="bplan">${sitePlanSvg({ site: hallSiteFor(state, view.district) })}${grid(state, view, esc)}</div>
       ${sheet(state, view, ui)}
       <h2>Defences</h2>
-      <p class="muted small">Cover where our people stand when they hold the hall. A raid is fought on this map.</p>
+      <p class="muted small">Cover where our people stand when they hold the hall; a raid is fought on this map. Every ${HALL_BUILD.perThreat} pieces make a raid one step easier.</p>
+      <p class="small bdef">${defenceLine(state, view.district)}</p>
       <div class="btiles">${tiles}</div>
       <p class="muted small">Removing something gives back half its cost. Expanding the hall gives ${HALL_BUILD.floorPerLevel} more squares.</p>
     </section>`;
 }
 
 /** A line for the hall's row on Crew › Halls: what's built and the floor. */
-export function hallBuildLine(hall) {
+export function hallBuildLine(hall, cut = 0) {
   const n = {};
   for (const b of hall.build ?? []) n[b.piece] = (n[b.piece] ?? 0) + 1;
   const what = Object.entries(n).map(([id, k]) => `${k} ${PIECES[id].name.toLowerCase()}${k > 1 ? 's' : ''}`);
-  return `${what.length ? `Built: ${what.join(', ')}` : 'Nothing built yet'} · floor ${floorUsed(hall)}/${floorOf(hall)}`;
+  return `${what.length ? `Built: ${what.join(', ')}` : 'Nothing built yet'} · floor ${floorUsed(hall)}/${floorOf(hall)}${cut ? ` · raid threat −${cut}` : ''}`;
 }

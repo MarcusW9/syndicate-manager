@@ -17,6 +17,7 @@
 // null, 'paid' (before the day), 'hold', 'withdraw', 'pay'. hall.shutUntil: the day it opens again.
 
 import { RAID, RAID_POLICE, raidTemplate } from '../data/raids.js';
+import { HALL_BUILD, PIECES } from '../data/hallBuild.js';
 import { HOME_HALL } from '../data/halls.js';
 import { NAMES } from '../config/names.js';
 import { heatIn, setHeat } from './heat.js';
@@ -95,9 +96,15 @@ export function defenders(state, district) {
 }
 
 /** The raiders' strength: the hotter the district, the more of them and the harder they are. */
-export const raidThreat = (state, district, raid = null) => (isGangRaid(raid)
+const baseThreat = (state, district, raid) => (isGangRaid(raid)
   ? Math.max(1, Math.min(4, grudgeOf(state, raid.by) - 4)) // a gang's: grudge 6: 2 … grudge 8+: 4
   : Math.max(1, Math.min(4, heatIn(state, district) - 6))); // the police's: heat 7: 1 … heat 10: 4 (measured: 2 rookies hold ~1 in 5 at heat 9)
+/** Defence pieces built in a hall (data/hallBuild.js). */
+export const defencesIn = (state, district) => (hallIn(state, district)?.build ?? []).filter((b) => PIECES[b.piece]?.kind === 'defence').length;
+/** How much a hall's defences lower a raid's threat: 1 for every HALL_BUILD.perThreat pieces (2026-11-06). */
+export const defenceCut = (state, district) => Math.floor(defencesIn(state, district) / HALL_BUILD.perThreat);
+/** A raid's threat: the heat or the grudge, less what the hall's defences take off, never below 1. */
+export const raidThreat = (state, district, raid = null) => Math.max(1, baseThreat(state, district, raid) - defenceCut(state, district));
 
 /** What walking out costs: what was kept there (no more than we have) and the repairs. */
 export function withdrawCost(state, district) {
@@ -133,7 +140,7 @@ export function raidChoices(state, raid) {
   const cost = withdrawCost(state, raid.district);
   const price = raidPrice(state, raid, { late: true });
   return [
-    ...(home.length ? [{ id: 'hold', label: `Hold the hall (${andNames(home)})`, cost: 'A fight at the door, on your orders. Someone could get hurt. Nobody dies unless you choose to keep fighting with them down.', disabled: !!state.activeMission, reason: state.activeMission ? 'Finish the job on screen first' : '' }] : []),
+    ...(home.length ? [{ id: 'hold', label: `Hold the hall (${andNames(home)})`, cost: `A fight at the door, on your orders.${defenceCut(state, raid.district) ? ` Our defences make it easier (threat −${defenceCut(state, raid.district)}).` : ''} Someone could get hurt. Nobody dies unless you choose to keep fighting with them down.`, disabled: !!state.activeMission, reason: state.activeMission ? 'Finish the job on screen first' : '' }] : []),
     { id: 'withdraw', label: 'Walk out the back', cost: `Everyone gets out, nobody hurt. We lose what was kept there (${money(cost.kept)}) and ${money(cost.repairs)} in repairs; the hall is shut for a week (its people lie low, no work). ${isGangRaid(raid) ? 'Their grudge stays.' : `Heat there −${RAID.withdrawCools}.`}`, exit: true, disabled: false, reason: '' },
     ...(canBuyOff(state, raid) ? [{ id: 'pay', label: isGangRaid(raid) ? `Settle at the door (${money(price)})` : `Pay them at the door (${money(price)})`, cost: isGangRaid(raid) ? 'They take the money and go; their grudge eases by half.' : 'It ends here. They\'ll remember we pay.', disabled: state.cash < price, reason: state.cash < price ? 'Not enough cash' : '' }] : []),
   ];

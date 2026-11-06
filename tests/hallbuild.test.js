@@ -137,3 +137,26 @@ test('old saves upgrade with nothing built', async () => {
   assert.equal(up.version, SAVE_VERSION);
   assert.ok(up.halls.every((h) => Array.isArray(h.build) && !h.build.length));
 });
+
+test('defences make a raid easier: every 3 pieces lower its threat by 1, never below 1 (owner, 2026-11-06)', async () => {
+  const { raidThreat, defenceCut, raidChoices } = await import('../src/core/raids.js');
+  const { setHeat } = await import('../src/core/heat.js');
+  let s = tong(1e6);
+  hallIn(s, 'nightMarket').level = 3;
+  setHeat(s, 'nightMarket', 10);
+  const police = { id: 'r1', district: 'nightMarket', by: 'police', warnedDay: s.day, day: s.day, answer: null, outcome: null, done: false };
+  assert.equal(raidThreat(s, 'nightMarket', police), 4);
+  const cells = cellsOf('nightMarket');
+  for (const [x, y] of cells.slice(0, 2)) s = placePiece(s, 'nightMarket', 'barricade', x, y);
+  assert.equal(defenceCut(s, 'nightMarket'), 0, 'two pieces: no change yet');
+  s = placePiece(s, 'nightMarket', 'wall', ...cells[2]);
+  assert.equal(raidThreat(s, 'nightMarket', police), 3, 'three pieces: −1');
+  for (const [x, y] of cells.slice(3, 9)) s = placePiece(s, 'nightMarket', 'plate', x, y);
+  assert.equal(defenceCut(s, 'nightMarket'), 3);
+  assert.equal(raidThreat(s, 'nightMarket', police), 1, 'nine pieces: −3, from 4 down to 1');
+  s.grudges = { silverFan: 8, redLanterns: 0 };
+  assert.equal(raidThreat(s, 'nightMarket', { ...police, by: 'silverFan' }), 1, 'gang raids too, never below 1');
+  s.crew[0].hall = 'nightMarket';
+  assert.match(raidChoices(s, police).find((c) => c.id === 'hold').cost, /Our defences make it easier \(threat −3\)/);
+  assert.equal(raidThreat(tong(), 'docks', { ...police, district: 'docks' }), 1, 'a hall with nothing built is as before');
+});

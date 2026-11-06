@@ -4,7 +4,7 @@
 import { heatIn, hottest, HEAT_DISTRICTS } from '../core/heat.js';
 import { hallIn, residents, freeBeds, canOpenHall, openHall, nextHallExpansion, expandHall, canMove, moveToHall } from '../core/halls.js';
 import { GANGS, GRUDGE, grudgeOf, jobGrudge, grudgeWord, gangsOn } from '../core/gangs.js';
-import { openRaids, raidOn, raidPrice, canBuyOff, defenders, raidChoices, payOffRaid, hallShut, raidWho, raidBy, isGangRaid } from '../core/raids.js';
+import { defenceCut, openRaids, raidOn, raidPrice, canBuyOff, defenders, raidChoices, payOffRaid, hallShut, raidWho, raidBy, isGangRaid } from '../core/raids.js';
 import { HALL_SITES, HOME_HALL } from '../data/halls.js';
 import { billDue, mondayBrief, crewStandard, crewAgainstStandard } from '../core/week.js';
 import { crewLead } from '../core/lead.js';
@@ -1341,7 +1341,7 @@ function renderHalls() {
             <div class="hall__body">
             <p class="hall__head"><strong>${esc(cityName(h.district))}</strong>${h.district === HOME_HALL ? ' <span class="hall__home">home</span>' : ''} <span class="muted small">level ${h.level} · ${money(h.rent)}/wk · heat ${heatIn(state, h.district)}/10</span></p>
             <p class="small">${who.length}/${h.beds} beds${who.length ? `: ${esc(who.map((o) => o.handle).join(', '))}` : ' · nobody lives here yet'}</p>
-            <p class="small muted">${esc(hallBuildLine(h))}</p>
+            <p class="small muted">${esc(hallBuildLine(h, defenceCut(state, h.district)))}</p>
             <button class="btn btn--block" data-action="build-hall" data-id="${esc(h.district)}">Build</button>
             <button class="btn btn--block" data-action="expand-hall" data-id="${esc(h.district)}" ${state.cash >= x.cost ? '' : 'disabled'}>Expand: +${x.beds} beds for ${money(x.cost)} (rent +${money(x.rentIncrease)}/wk)</button>
             </div>

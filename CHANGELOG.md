@@ -4,6 +4,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-06 · Defences make raids easier
+- **Every 3 defence pieces in a hall make a raid there one step easier** (fewer, weaker raiders), never below the easiest. This counts for police and gang raids alike.
+- The build screen says how many are built and how many more give the next step. The hall's row on Halls says the effect, and so does Hold the hall at the door.
+
 ## 2026-11-06 · Building up a hall: the build screen
 - **Each hall on Crew › Halls has a Build button.** It opens the hall's plan, the map its raids are fought on, with the free squares marked.
 - **To place something:** tap a free square, pick a barricade, a steel plate or an inner wall, then Place. The piece shows where it would go first. A plate or a wall can be turned.

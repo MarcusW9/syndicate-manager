@@ -1544,3 +1544,4 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .btile__price { font: 600 0.8rem var(--display, inherit); color: var(--warn); }
 .btile.is-on { border-color: var(--accent-2); box-shadow: inset 0 0 0 1px var(--accent-2); }
 .btile:disabled { opacity: 0.5; cursor: not-allowed; }
+.bdef { margin: 0 0 6px; } .bdef strong { color: var(--accent-2); }

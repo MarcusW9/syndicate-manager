@@ -106,6 +106,12 @@ reinforced door at the way in (it would need the fight to start with the raiders
 - **c. Any angle.** It doesn't sit on a grid, so it's fiddly with a thumb and fight cover gets harder
   to read. Not recommended.
 
+### What defences do (slice 1c, owner 2026-11-06)
+
+Cover alone barely moved the odds (measured in DESIGN.md), so every 3 defence pieces also lower a
+raid's threat by 1, never below 1. Measured: 6 pieces hold every raid up to heat 10. It's strong,
+and flagged for the playtest.
+
 ## 5. State and save
 
 - `hall.build: [{ piece, x, y, rot }]`, with x and y as grid cells. It's empty for every hall when

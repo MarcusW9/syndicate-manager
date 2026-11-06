@@ -8,6 +8,7 @@ export const HALL_BUILD = {
   floorBase: 6, floorPerLevel: 4, // cells a hall can build on: 6 at level 1, +4 for each Expand
   refund: 0.5, // removing a piece gives back this share of its cost
   keepClear: 18, // no cell this near the way in, the way out, or where either side starts
+  perThreat: 3, // every this many defence pieces lower a raid's threat by 1, never below 1 (owner, 2026-11-06)
 };
 
 const plate = '#5d6b7a';
