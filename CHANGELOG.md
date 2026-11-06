@@ -7,6 +7,11 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-06 · A smaller save: old messages are cleared
+- **The inbox no longer keeps every message since day 1.** Read messages go after four weeks, unread ones after eight, and it never holds more than 200. Anything still waiting on you stays however old it is: decisions, raises, heat notices, specialisation offers, call-ins, raid calls, a hall offer you haven't taken, a raid warning before the raid.
+- A year's save was over half a megabyte, nearly all of it old messages; it is now under 200KB. Saves load and write faster and leave more room for backups and slots.
+- Your saves are trimmed the same way the first time they load.
+
 ## 2026-11-06 · The carry grid
 - **A runner now wears armour, has two implant sockets, and carries a bag.** The bag is 4×2 squares: a rifle, sidearm, drone or deck takes three, a trauma kit or ghost kit one. So a runner can carry a rifle *and* a deck, or a drone with a ghost kit and a trauma kit beside it.
 - **Two implants** both work, and both keep neural load up: between jobs it stays at 20 or more with two.

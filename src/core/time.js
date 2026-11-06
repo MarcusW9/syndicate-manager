@@ -4,6 +4,7 @@ import { fadeGrudges } from './gangs.js';
 import { checkRaids } from './raids.js';
 import { introduceHalls } from './halls.js';
 import { tickJobs } from './jobs.js';
+import { trimInbox } from './inbox.js';
 import { driftTrust } from './clients.js';
 import { scoutWeek } from './recruits.js';
 import { refreshFreelancers } from './freelance.js';
@@ -88,6 +89,7 @@ export function advanceDay(prev) {
 
   // Expire old optional messages
   state.inbox = state.inbox.filter((m) => !m.expiresDay || m.expiresDay >= state.day);
+  trimInbox(state); // old news goes; anything still waiting on the player stays (core/inbox.js)
 
   if (calendar(state.day).isSunday) settleWeek(state);
   if (calendar(state.day).isMonday && calendar(state.day).week === 1) newSeason(state);
