@@ -52,7 +52,8 @@ export function planKit(plan, op) {
 /** "combat 9 · 2 shots" for someone on overwatch with this kit. */
 function kitLine(op, kitId) {
   const k = overwatchKit(op, kitId);
-  return `${statValue(k.stat, effectiveStat(op, k.stat).value + k.bonus)} · ${k.uses} ${kitId === 'rifle' ? 'shots' : 'actions'}`;
+  // The uses on a line of their own (owner, 2026-11-06: "combat 11 · 2 shots" wrapped mid-phrase on the card).
+  return `${statValue(k.stat, effectiveStat(op, k.stat).value + k.bonus)}<span class="kituses"><span class="kituses__sep"> · </span>${k.uses} ${kitId === 'rifle' ? 'shots' : 'actions'}</span>`;
 }
 
 const PINS = ['#ff4f7b', '#36d6c3', '#f5b942', '#b48cff', '#5fe0a5', '#ff9a5a'];

@@ -7,6 +7,10 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-06 · Gear on a grid
+- **Gear pictures sit on an inventory grid:** a rifle, sidearm, drone or deck fills a strip of three squares; a vest, trauma kit, ghost kit or implant takes one square, with the empty squares beside it. No more black bars, and the item names line up down the armoury.
+- On the squad board, an overwatch runner's card shows their stat with the shots or actions on the line under it, instead of breaking across two lines.
+
 ## 2026-11-06 · A runner's stats, lined up
 - On a runner's page the progress bar under each stat now sits at the bottom of its tile, so the bars line up whatever notes are above them.
 
