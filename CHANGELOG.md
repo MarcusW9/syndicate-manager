@@ -7,6 +7,12 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-06 · A lighter top bar
+- **The tong's rank** ("Back Room tong") is on the Ops heading now, not the top bar. Tap it for what a tong is.
+- **Heat only shows when a district is warming:** from 3 a chip names it ("Heat Docks 4"), amber, and red from 6, when a police raid can come. Tap it to see that district on Ops.
+- **The date** reads "Mon · Wk 1". The season shows on its first day, and Sunday's message names it ("Week 3, season 1 settled").
+- The bills line is just "¥2,750 due Sun".
+
 ## 2026-11-06 · Planning a job: quicker to look and to change
 - **The runners beside the job list open their page:** tap one to see their stats, record and gear (and change it), then "Back to the job" returns to the plan as you left it.
 - **Each card on the squad board has an ×** to take that runner off at once. Tapping the card still opens the list to swap someone in.
