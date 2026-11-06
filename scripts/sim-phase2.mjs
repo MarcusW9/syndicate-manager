@@ -101,7 +101,7 @@ function play(seed, cfg) {
     // Pay off a raid before the day where it's cheap.
     for (const r of (s.raids ?? []).filter((x) => !x.done && !x.answer && !x.called)) if (canBuyOff(s, r) && raidPrice(s, r) < s.cash / 5) { s = payOffRaid(s, r.id); t.paid += 1; }
     // Halls: open one once the favour's done and two weeks of bills are covered; expand a full one.
-    for (const d of Object.keys(HALL_SITES)) if (canOpenHall(s, d).ok && s.cash > HALL_SITES[d].deposit + bills(s) * 2) { s = openHall(s, d); if (t.secondHall == null) t.secondHall = Math.ceil((day + 1) / 7); }
+    for (const d of cfg.noHalls ? [] : Object.keys(HALL_SITES)) if (canOpenHall(s, d).ok && s.cash > HALL_SITES[d].deposit + bills(s) * 2) { s = openHall(s, d); if (t.secondHall == null) t.secondHall = Math.ceil((day + 1) / 7); }
     const lead = [...(s.recruits ?? [])].filter((r) => canHire(s, r).ok).sort((a, b) => b.stats[primaryStat(b)] - a.stats[primaryStat(a)])[0];
     if (lead && s.cash - (bills(s) + lead.wage) * 2 > 0) s = hire(s, lead.id);
     if (s.crew.length >= (s.rosterCap ?? STARTING_ROSTER_CAP)) {
@@ -126,6 +126,7 @@ function play(seed, cfg) {
 // A careful player (stealth) rarely heats a district to a raid; a loud one does.
 const CONFIGS = {
   'careful, nothing built': { approach: 'stealth', plates: 0 },
+  'careful, one hall only': { approach: 'stealth', plates: 0, noHalls: true },
   'loud, nothing built': { approach: 'loud', plates: 0 },
   'loud, 3 plates a hall': { approach: 'loud', plates: 3 },
   'loud, 6 plates a hall': { approach: 'loud', plates: 6 },
