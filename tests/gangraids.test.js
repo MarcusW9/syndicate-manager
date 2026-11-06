@@ -71,11 +71,11 @@ test('finishing a job against a gang adds to its grudge; aborting it, or other w
   assert.deepEqual(u.grudges, { redLanterns: 0, silverFan: 0 });
 });
 
-test('a grudge fades a little every Sunday', () => {
+test('a grudge fades a little every other Sunday (balance pass, 2026-11-06: was every Sunday)', () => {
   let s = createNewGame({ seed: 5, startCrew: 'fresh' });
   addGrudge(s, 'silverFan', 5);
-  for (let i = 0; i < 14; i++) s = advanceDay(s);
-  assert.equal(grudgeOf(s, 'silverFan'), 5 - 2 * GRUDGE.fadeWeekly);
+  for (let i = 0; i < 28; i++) s = advanceDay(s);
+  assert.equal(grudgeOf(s, 'silverFan'), 5 - 2 * GRUDGE.fadeWeekly, 'four Sundays, two fades');
 });
 
 test('a gang raids only a hall on its own turf, and only with a big grudge', () => {

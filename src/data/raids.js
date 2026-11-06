@@ -4,7 +4,7 @@
 // Content only; the rules are in core/raids.js.
 
 export const RAID = {
-  heatAt: 7, // a hall's district at this heat or more can draw a raid
+  heatAt: 6, // a hall's district at this heat or more can draw a raid (was 7; balance pass 2026-11-06)
   dailyChance: 0.25, // each day it's that hot, a seeded roll (owner: rarer and less predictable than every Sunday)
   warnDays: 3, // the warning comes this many days ahead
   cooldownDays: 28, // a hall isn't raided again this soon

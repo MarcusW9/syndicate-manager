@@ -28,6 +28,7 @@ export function jobGrudge(tpl, threat = tpl?.threat ?? 1) {
 
 /** Sunday: every grudge eases. Mutates state. */
 export function fadeGrudges(state) {
+  if (Math.floor((state.day - 1) / 7) % (GRUDGE.fadeEvery ?? 1) !== 0) return state; // every other Sunday
   for (const g of Object.keys(GANGS)) if (grudgeOf(state, g) > 0) addGrudge(state, g, -GRUDGE.fadeWeekly);
   return state;
 }
