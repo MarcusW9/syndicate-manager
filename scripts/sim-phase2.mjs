@@ -127,12 +127,16 @@ function play(seed, cfg) {
 const CONFIGS = {
   'careful, nothing built': { approach: 'stealth', plates: 0 },
   'careful, one hall only': { approach: 'stealth', plates: 0, noHalls: true },
+  // What would make a second hall pay its way (tuning probes; the game's numbers aren't changed).
+  'careful, halls at half rent': { approach: 'stealth', plates: 0, tweak: () => { for (const s of Object.values(HALL_SITES)) if (s.rent) s.rent = Math.round(s.rent / 2); } },
+  'careful, halls with 4 beds': { approach: 'stealth', plates: 0, tweak: () => { for (const s of Object.values(HALL_SITES)) if (s.beds) s.beds = 4; } },
   'loud, nothing built': { approach: 'loud', plates: 0 },
   'loud, 3 plates a hall': { approach: 'loud', plates: 3 },
   'loud, 6 plates a hall': { approach: 'loud', plates: 6 },
 };
 const only = process.argv[3];
 for (const [name, cfg] of Object.entries(CONFIGS).filter(([n]) => !only || n.startsWith(only))) {
+  cfg.tweak?.();
   const all = Array.from({ length: SEEDS }, (_, i) => play(i + 1, cfg));
   console.log(`\n${name} (${SEEDS} seeds)`);
   for (const weeks of SNAP) {
