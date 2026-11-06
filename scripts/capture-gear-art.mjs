@@ -1,6 +1,6 @@
-// Capture (2026-11-06, the drone and the cyberdeck drawn): on a phone (390) and a computer (1280),
-// a stash holding every drone and deck frame, street and pro, and a runner carrying a pro drone and
-// a deck. The armoury (the stash, the buy rows), the runner's gear page.
+// Capture (2026-11-06, the armoury drawn: the drone and the deck, then the rest, square): on a phone
+// (390) and a computer (1280), a stash holding every build of every item, street and pro, and a
+// runner carrying a pro kite drone, a jacket, and a reflex harness. The armoury (the stash, the buy rows), the runner's gear page.
 // Run: node scripts/capture-gear-art.mjs <out dir>
 import { createNewGame } from '../src/core/state.js';
 import { TOOL_FRAMES } from '../src/data/gearLooks.js';
@@ -17,7 +17,7 @@ let n = 100;
 s.stash = [];
 for (const [type, frames] of Object.entries(TOOL_FRAMES)) for (const frame of Object.keys(frames)) for (const tier of ['street', 'pro']) s.stash.push({ uid: `g${n++}`, type, tier, look: { frame } });
 const op = s.crew[0];
-op.gear = { ...op.gear, tool: { uid: `g${n++}`, type: 'drone', tier: 'pro', look: { frame: 'kite' } } };
+op.gear = { ...op.gear, tool: { uid: `g${n++}`, type: 'drone', tier: 'pro', look: { frame: 'kite' } }, armour: { uid: `g${n++}`, type: 'vest', tier: 'street', look: { frame: 'jacket' } }, implant: { uid: `g${n++}`, type: 'reflex', tier: 'pro', look: { frame: 'harness' } } };
 const op2 = s.crew[1];
 op2.gear = { ...op2.gear, tool: { uid: `g${n++}`, type: 'deck', tier: 'street', look: { frame: 'case' } } };
 s.gearSeq = n;

@@ -1570,6 +1570,249 @@ function deckBrick({ tier, light, neon }) {
   ].join('');
 }
 
+// --- the rest of the armoury, square (2026-11-06) ---------------------------------------
+// Compact things drawn in a 64×64 frame instead of the long 96×32 one (owner: the wide frame
+// "far too stretched"), from drafts/prototypes/gear-options-square.html (scripts/gear-options-square.mjs).
+// Each type has builds (data/gearLooks.js TOOL_FRAMES): the vest, the trauma kit, the ghost kit
+// and the two implants. Implants are the part itself: street in a grey-market bag, pro on a tray.
+const MED_RED = '#e8484f';
+const sqLit = (c, light, t = 0.45) => mix(c, light, t);
+const sqShade = (c, t = 0.45) => mix(c, SHADOW, t);
+const sqBox = (x, y, w, h, fill, light, { r = 0, t = 0.45, top = 1.2 } = {}) =>
+  `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${fill}"/><rect x="${x}" y="${y}" width="${w}" height="${Math.min(top, h)}" rx="${Math.min(r, top / 2)}" fill="${sqLit(fill, light, t)}"/><rect x="${x}" y="${y + h - Math.min(top, h)}" width="${w}" height="${Math.min(top, h)}" fill="${sqShade(fill)}"/>`;
+const sqGlow = (d, c, w = 0.7) => `<path d="${d}" stroke="${c}" stroke-width="${w * 3}" opacity="0.18" fill="none" stroke-linecap="round"/><path d="${d}" stroke="${c}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`;
+// The right-hand edge of a shape catching the light: a thin strip along a path.
+const sqRim = (d, light, w = 1) => `<path d="${d}" stroke="${light}" stroke-width="${w}" fill="none" opacity="0.55" stroke-linecap="round"/>`;
+
+// --- armoured vest ------------------------------------------------------------------------
+function vestCarrier({ tier, light, neon }) {
+  const pro = tier === 'pro';
+  const cloth = pro ? '#1f242b' : '#55604a';
+  const dark = pro ? '#121519' : '#343b2e';
+  return [
+    `<path d="M20 6 H26 L27 14 H37 L38 6 H44 L45 15 L50 18 V56 H14 V18 L19 15 Z" fill="${cloth}"/>`,
+    `<path d="M20 6 H26 L26.2 7.4 H20.1 Z M38 6 H44 L44.1 7.4 H38 Z" fill="${sqLit(cloth, light, 0.6)}"/>`,
+    sqRim('M45 15 L50 18 V56', light),
+    sqBox(21, 18, 22, 17, dark, light, { r: 1.6 }),
+    [0, 1, 2].map((r) => `<path d="M16 ${39 + r * 3.4} H48" stroke="${sqShade(cloth, 0.6)}" stroke-width="1"/>`).join(''),
+    sqBox(17, 44, 10, 10, pro ? '#272c35' : '#6b5a3a', light, { r: 1 }), sqBox(37, 44, 10, 10, pro ? '#272c35' : '#4a5340', light, { r: 1 }),
+    pro ? sqGlow('M23 33 H41', neon) : `<rect x="27" y="23" width="10" height="3" fill="${TAPE}" opacity="0.85"/><path d="M46 50 l-8 2" stroke="${TAPE}" stroke-width="1.2" opacity="0.7"/>`,
+    `<rect x="14" y="55" width="36" height="1.6" fill="${sqShade(cloth, 0.6)}"/>`,
+  ].join('');
+}
+function vestJacket({ tier, light, neon }) {
+  const pro = tier === 'pro';
+  const cloth = pro ? '#1b1f26' : '#7a2f2a';
+  const dark = pro ? '#101317' : '#4f1e1b';
+  return [
+    `<path d="M22 8 L28 6 L32 9 L36 6 L42 8 L52 15 L58 48 L50 50 L46 28 V58 H18 V28 L14 50 L6 48 L12 15 Z" fill="${cloth}"/>`,
+    sqRim('M42 8 L52 15 L58 48', light, 1.2),
+    `<path d="M28 6 L32 9 L36 6 L35 13 L32 15 L29 13 Z" fill="${dark}"/>`,
+    `<path d="M32 15 V58" stroke="${sqShade(cloth, 0.7)}" stroke-width="1"/><path d="M32 15 V58" stroke="#c9ccd3" stroke-width="0.3" stroke-dasharray="1 0.8"/>`,
+    [24, 31, 38, 45, 52].map((y) => `<path d="M19 ${y} H45" stroke="${sqShade(cloth, 0.5)}" stroke-width="0.6"/>`).join(''),
+    pro ? sqGlow('M19 27 H45', neon, 0.5) : `<rect x="50" y="34" width="6" height="6" rx="0.8" fill="#3a3f47" transform="rotate(-10 53 37)"/><path d="M36 36 q4 -5 8 -1 q-3 2 -1 5 q2 2 5 0" stroke="#d6a640" stroke-width="0.8" fill="none" opacity="0.85"/>`,
+  ].join('');
+}
+function vestWeave({ tier, light, neon }) {
+  const pro = tier === 'pro';
+  const cloth = pro ? '#20262e' : '#4b5059';
+  const hexes = [];
+  for (let r = 0; r < 7; r++) for (let k = 0; k < 6; k++) hexes.push(`<path d="M${17.5 + k * 5 + (r % 2) * 2.5} ${21 + r * 4.6} l2.2 -1.3 l2.2 1.3 v2.4 l-2.2 1.3 l-2.2 -1.3 Z" fill="none" stroke="${pro ? mix(cloth, neon, 0.28) : sqShade(cloth, 0.3)}" stroke-width="0.45"/>`);
+  return [
+    `<path d="M26 5 H38 L40 11 L48 14 L50 58 H14 L16 14 L24 11 Z" fill="${cloth}"/>`,
+    `<path d="M26 5 H38 L38.3 6.4 H25.7 Z" fill="${sqLit(cloth, light, 0.55)}"/>`,
+    sqRim('M40 11 L48 14 L50 58', light),
+    hexes.join(''),
+    `<path d="M14 56.6 H50" stroke="${sqShade(cloth, 0.6)}" stroke-width="2"/>`,
+    pro ? `${sqGlow('M17 15 L32 19 L47 15', neon, 0.5)}<circle cx="32" cy="19" r="1" fill="${neon}"/>` : `<rect x="34" y="38" width="9" height="7" fill="#5a5f68" transform="rotate(8 38 41)"/><path d="M34.6 39.4 l8 1 M34.4 42 l8 1" stroke="#3a3f47" stroke-width="0.5"/>`,
+  ].join('');
+}
+
+// --- trauma kit ---------------------------------------------------------------------------
+function kitBag({ tier, light, neon }) {
+  const pro = tier === 'pro';
+  const cloth = pro ? '#1d2229' : '#7a6a4c';
+  return [
+    `<path d="M14 26 Q32 2 50 26" stroke="${sqShade(cloth, 0.3)}" stroke-width="3" fill="none"/>${sqRim('M33 8 Q44 12 50 26', light, 0.8)}`,
+    sqBox(8, 24, 48, 30, cloth, light, { r: 3, top: 1.6 }),
+    `<path d="M8 31 H56" stroke="${sqShade(cloth, 0.5)}" stroke-width="0.8"/>`,
+    sqBox(24, 34, 16, 14, pro ? '#262b33' : '#e9e2cf', light, { r: 1.2, t: 0.2 }),
+    `<path d="M32 36.6 V45.4 M27.6 41 H36.4" stroke="${pro ? neon : MED_RED}" stroke-width="3.2"/>`,
+    pro ? sqGlow('M10 51.6 H54', neon, 0.5) : `<rect x="11" y="44" width="10" height="4" fill="${TAPE}" opacity="0.8" transform="rotate(-8 16 46)"/>`,
+  ].join('');
+}
+function kitBox({ tier, light, neon }) {
+  const pro = tier === 'pro';
+  const shell = pro ? '#232831' : '#d9d3c4';
+  const foam = pro ? '#14171c' : '#2b2f36';
+  return [
+    `<path d="M10 6 H54 V26 H10 Z" fill="${sqShade(shell, 0.25)}"/><rect x="16" y="10" width="32" height="12" fill="${pro ? '#101317' : '#bfb7a5'}"/>`,
+    `<path d="M24 12.4 V19.6 M20.4 16 H27.6" stroke="${pro ? neon : MED_RED}" stroke-width="2.4"/><path d="M31 13.4 h13 M31 16.4 h10 M31 19.4 h12" stroke="${pro ? '#8a93a6' : '#7a7466'}" stroke-width="0.7"/>`,
+    sqBox(6, 26, 52, 30, shell, light, { r: 1.6, top: 1.4 }),
+    `<rect x="9" y="29" width="46" height="24" rx="1" fill="${foam}"/>`,
+    [0, 1, 2, 3].map((i) => `<rect x="${12 + i * 5.4}" y="31.6" width="3.6" height="17" rx="1.6" fill="${pro ? '#e9ecf1' : '#cfd3d9'}"/><rect x="${12 + i * 5.4}" y="31.6" width="3.6" height="3.6" rx="1.4" fill="${[MED_RED, TAPE, '#5fe0a5', MED_RED][i]}"/>`).join(''),
+    `<circle cx="42" cy="36" r="5.6" fill="#efe8dc"/><circle cx="42" cy="36" r="2" fill="${foam}"/>`,
+    `<path d="M36 44 L50 51 M36 51 L50 44" stroke="#8a93a6" stroke-width="1.2"/>`,
+    pro ? `<circle cx="54" cy="53" r="1" fill="${neon}"/>` : `<path d="M8 52 l4 -3" stroke="${sqShade(shell, 0.5)}" stroke-width="0.8"/>`,
+  ].join('');
+}
+function kitRoll({ tier, light, neon }) {
+  const pro = tier === 'pro';
+  const cloth = pro ? '#1d2229' : '#3f5a4a';
+  return [
+    sqBox(6, 10, 52, 44, cloth, light, { r: 1.4, top: 1.4 }),
+    `<path d="M6 32 H58" stroke="${sqShade(cloth, 0.55)}" stroke-width="1"/>`,
+    [0, 1, 2, 3].map((i) => `<rect x="${9 + i * 12.4}" y="22" width="11" height="9" fill="${sqShade(cloth, 0.25)}"/><rect x="${9 + i * 12.4}" y="44" width="11" height="9" fill="${sqShade(cloth, 0.25)}"/>`).join(''),
+    `<rect x="11" y="13" width="3" height="15" rx="1.4" fill="#e9ecf1"/><rect x="16" y="14" width="3" height="14" rx="1.4" fill="#e9ecf1"/><rect x="11" y="13" width="3" height="3" fill="${MED_RED}"/><rect x="16" y="14" width="3" height="3" fill="${TAPE}"/>`,
+    `<path d="M24 29 q4 -15 8 0" stroke="#ff9a3d" stroke-width="2" fill="none"/>`,
+    `<circle cx="44" cy="22" r="5" fill="#e9e2cf"/><circle cx="44" cy="22" r="2" fill="${sqShade(cloth, 0.25)}"/>`,
+    `<rect x="12" y="35" width="3" height="15" rx="1.4" fill="#8a93a6"/><rect x="12" y="35" width="3" height="2.6" rx="1.2" fill="${light}"/>`,
+    `<path d="M22 36 L32 50 M22 50 L32 36" stroke="#c9ccd3" stroke-width="1.2"/>`,
+    sqBox(38, 36, 14, 14, '#e9e2cf', light, { r: 0.8, t: 0.2 }), `<path d="M45 38.6 V47.4 M40.6 43 H49.4" stroke="${pro ? neon : MED_RED}" stroke-width="2.4"/>`,
+    pro ? sqGlow('M8 52.6 H56', neon, 0.5) : '',
+  ].join('');
+}
+// D: the med gun. A pistol-grip scanner that reads the wound and fires an injector cartridge.
+function kitGun({ tier, light, neon }) {
+  const pro = tier === 'pro';
+  const shell = pro ? '#e3e6ea' : '#9aa0a8';
+  const dark = pro ? '#1d2229' : '#3a3f47';
+  return [
+    `<path d="M14 36 L22 36 L18 56 L10 55 Z" fill="${dark}"/>${pro ? '' : `<path d="M12 42 l8 1 M11.4 46 l8 1 M10.8 50 l8 1" stroke="${TAPE}" stroke-width="1" opacity="0.6"/>`}`,
+    `<path d="M10 22 Q10 18 14 18 L46 18 Q50 18 50 22 L50 34 Q50 38 46 38 L14 38 Q10 38 10 34 Z" fill="${shell}"/>`,
+    `<path d="M10 22 Q10 18 14 18 L46 18 Q50 18 50 22 L50 23.6 Q49.6 19.6 46 19.6 L14 19.6 Q10.4 19.6 10 23.6 Z" fill="${sqLit(shell, light, 0.5)}"/>`,
+    sqRim('M50 22 V34', light),
+    `<rect x="16" y="22" width="18" height="11" rx="1" fill="#0b1a1c"/>`,
+    `<path d="M18 28 l3 0 l1.6 -3.6 l2 7 l1.6 -3.4 h6" stroke="${pro ? neon : '#5fe0a5'}" stroke-width="0.8" fill="none"/>`,
+    pro ? `<rect x="16" y="10" width="18" height="7" rx="0.8" fill="${neon}" opacity="0.12"/><path d="M18 13.4 h8 M18 15 h12" stroke="${neon}" stroke-width="0.6" opacity="0.8"/>` : '<path d="M30 22 L26 28 L29 31" stroke="#c9ccd3" stroke-width="0.4" fill="none" opacity="0.8"/>',
+    `<path d="M50 24 L58 26 V30 L50 32 Z" fill="${dark}"/><circle cx="58" cy="28" r="1" fill="${pro ? neon : light}"/>`,
+    sqBox(36, 22, 10, 8, '#e9e2cf', light, { r: 1, t: 0.25 }), `<rect x="38" y="24" width="6" height="2" fill="${MED_RED}"/>`,
+    `<path d="M22 38 Q24 44 28 42" stroke="${dark}" stroke-width="1.2" fill="none"/>`,
+  ].join('');
+}
+
+// --- ghost kit ----------------------------------------------------------------------------
+function ghostRoll({ tier, light, neon }) {
+  const pro = tier === 'pro';
+  const leather = pro ? '#1d2229' : '#6b4a2e';
+  const steel = pro ? '#c9ccd3' : '#9aa0a8';
+  const tips = ['M0 0 l2.6 -2', 'M0 0 q1.3 -2.6 2.6 0 q1.3 2.6 2.6 0', 'M0 0 l1.3 -1.4 l1.3 1.4 l1.3 -1.4 l1.3 1.4', 'M0 0 l3 -2.6'];
+  return [
+    sqBox(6, 8, 52, 48, leather, light, { r: 1.6, top: 1.4 }),
+    `<path d="M6 32 H58" stroke="${sqShade(leather, 0.55)}" stroke-width="1"/>`,
+    tips.map((t, i) => `<path d="M${13 + i * 8} 29 V13" stroke="${steel}" stroke-width="1.2"/><path d="${t}" transform="translate(${13 + i * 8} 13)" stroke="${steel}" stroke-width="1.2" fill="none"/><rect x="${11.2 + i * 8}" y="24" width="3.6" height="6" rx="0.8" fill="${pro ? '#262b33' : '#2b2f36'}"/>`).join(''),
+    `<path d="M47 29 V14 h5" stroke="${steel}" stroke-width="1.4" fill="none"/>`,
+    [0, 1, 2].map((i) => `<path d="M${11 + i * 3} 52 L${22 + i * 5} 37" stroke="${steel}" stroke-width="1.6" stroke-linecap="round"/>`).join(''),
+    sqBox(36, 38, 18, 13, pro ? '#1a1e24' : '#2f6b4a', light, { r: 1 }), `<rect x="38.4" y="40.4" width="6" height="4" fill="#c9a54a"/>`,
+    pro ? sqGlow('M38.4 48 H51.6', neon, 0.5) : '<path d="M46.6 41 h5 M46.6 43 h4" stroke="#5a5f68" stroke-width="0.6"/>',
+  ].join('');
+}
+function ghostDecoder({ tier, light, neon }) {
+  const pro = tier === 'pro';
+  const shell = pro ? '#1d2229' : '#c2a23a';
+  return [
+    `<path d="M38 22 a9 9 0 0 1 18 0 v5" stroke="#9aa0a8" stroke-width="3" fill="none"/>`,
+    sqBox(34, 25, 26, 22, '#5a5f68', light, { r: 2.4 }), `<circle cx="47" cy="34" r="2.6" fill="#0d1016"/><rect x="46.2" y="34" width="1.6" height="6" fill="#0d1016"/>`,
+    `<path d="M30 42 H44" stroke="#c9ccd3" stroke-width="1.2"/>`,
+    sqBox(4, 28, 28, 30, shell, light, { r: 3, top: 1.4 }),
+    sqRim('M32 31 V55', light),
+    `<rect x="8" y="32" width="20" height="12" rx="0.8" fill="#0b1a1c"/><path d="M10 36 h6 M10 39.6 h12" stroke="${pro ? neon : '#5fe0a5'}" stroke-width="1"/><path d="M19 36 h1.4 M22 36 h1.4 M25 36 h1.4" stroke="${pro ? neon : '#5fe0a5'}" stroke-width="1"/>`,
+    `<circle cx="18" cy="51" r="4" fill="${sqShade(shell, 0.4)}"/><circle cx="18" cy="51" r="2.4" fill="${sqShade(shell, 0.2)}"/><path d="M18 48.6 v2" stroke="${sqLit(shell, light, 0.6)}" stroke-width="0.8"/>`,
+    pro ? sqGlow('M7 56 H29', neon, 0.5) : '<path d="M7 55 l7 -1.4" stroke="#2b2f36" stroke-width="0.9"/>',
+  ].join('');
+}
+// C: the heat veil. A hooded poncho of heat-damping cloth, front-on, with a glare strip across the
+// shoulders that smears a camera's picture. Not invisibility: hard to see on thermal, blurry on a lens.
+function ghostVeil({ tier, light, neon, holo = 'holo' }) {
+  const pro = tier === 'pro';
+  const cloth = pro ? '#1b2129' : '#565a55';
+  const dark = sqShade(cloth, 0.35);
+  return [
+    `<path d="M32 4 Q42 4 44 16 L58 50 Q44 58 32 58 Q20 58 6 50 L20 16 Q22 4 32 4 Z" fill="${cloth}"/>`,
+    `<path d="M24 14 Q32 6 40 14 Q40 24 32 26 Q24 24 24 14 Z" fill="${dark}"/>`,
+    sqRim('M44 16 L58 50', light, 1.2),
+    [16, 26, 38, 48].map((x) => `<path d="M${x} ${x < 32 ? 30 : 30} Q${x + (x < 32 ? -2 : 2)} 44 ${x + (x < 32 ? -4 : 4)} 56" stroke="${sqShade(cloth, 0.5)}" stroke-width="0.8" fill="none"/>`).join(''),
+    pro ? `<path d="M14 30 Q32 36 50 30 L51 33 Q32 39 13 33 Z" fill="url(#${holo})"/>` : `<path d="M14 30 Q32 36 50 30 L51 33 Q32 39 13 33 Z" fill="#9aa0a8" opacity="0.7"/><path d="M20 33 l2 1 M30 35 l2 0.4 M40 34 l2 -0.6" stroke="#2b2f36" stroke-width="0.6"/>`,
+    pro ? sqGlow('M24 14 Q32 6 40 14', neon, 0.4) : `<rect x="40" y="44" width="8" height="5" fill="${TAPE}" opacity="0.7" transform="rotate(20 44 46)"/>`,
+  ].join('');
+}
+// D: the lens blinder. A palm-sized emitter with a ring of bright diodes; the camera it's aimed at
+// gets nothing but white for a few seconds.
+function ghostBlinder({ tier, light, neon }) {
+  const pro = tier === 'pro';
+  const shell = pro ? '#1d2229' : '#3a3f47';
+  return [
+    `<path d="M14 40 L24 30 L36 42 L26 52 Z" fill="${sqShade(shell, 0.2)}"/>${pro ? '' : `<path d="M16 42 l8 -8 M19 45 l8 -8" stroke="${TAPE}" stroke-width="1.2" opacity="0.7"/>`}`,
+    `<circle cx="38" cy="26" r="14" fill="${shell}"/><path d="M38 12 a14 14 0 0 1 14 14" stroke="${sqLit(shell, light, 0.6)}" stroke-width="1.6" fill="none"/>`,
+    `<circle cx="38" cy="26" r="9" fill="#0d1016"/>`,
+    [0, 1, 2, 3, 4, 5, 6, 7].map((i) => { const a = (i / 8) * Math.PI * 2; return `<circle cx="${(38 + Math.cos(a) * 6.4).toFixed(2)}" cy="${(26 + Math.sin(a) * 6.4).toFixed(2)}" r="1.1" fill="${pro ? neon : '#e9ecf1'}"/>`; }).join(''),
+    `<circle cx="38" cy="26" r="2.4" fill="${pro ? '#e9ecf1' : light}"/>`,
+    pro ? `<circle cx="38" cy="26" r="11" fill="none" stroke="${neon}" stroke-width="0.6" opacity="0.6"/>` : '',
+    `<rect x="24" y="42" width="5" height="3" rx="0.8" fill="#ff3d5f" transform="rotate(-45 26 43)"/>`,
+  ].join('');
+}
+
+// --- implants (the part itself, out of the body) ------------------------------------------
+const implantPack = (pro, light, neon) => (pro
+  ? `${sqBox(4, 50, 56, 8, '#8a929c', light, { r: 1.2, t: 0.5 })}${sqGlow('M8 52 H22', neon, 0.4)}`
+  : `<path d="M6 6 H58 V58 H6 Z" fill="#e9ecf1" opacity="0.06"/><path d="M6 6 H58" stroke="#e9ecf1" stroke-width="1.4" opacity="0.25"/><path d="M6 9 H58" stroke="#ff3d5f" stroke-width="0.8" opacity="0.4"/>
+     <rect x="36" y="44" width="18" height="10" fill="#e9e2cf" transform="rotate(-6 45 49)"/><path d="M38.6 47.6 q2.4 -1.2 4.8 0 t4.8 0 M38.6 51 q3.4 -1.2 7 0" stroke="#2b5fa8" stroke-width="0.7" fill="none" transform="rotate(-6 45 49)"/>`);
+function reflexHarness({ tier, light, neon }) {
+  const pro = tier === 'pro';
+  const node = pro ? '#2a2f38' : '#5a5f68';
+  const wire = pro ? neon : '#c97a2e';
+  return [
+    implantPack(pro, light, neon),
+    `<path d="M26 12 Q30 30 26 48" stroke="${sqShade(node, 0.2)}" stroke-width="2.4" fill="none"/><path d="M26 12 Q30 30 26 48" stroke="${wire}" stroke-width="0.5" fill="none" opacity="0.85"/>`,
+    [0, 1, 2, 3, 4, 5].map((i) => { const y = 14 + i * 6.6; const x = 26 + Math.sin((i / 5) * Math.PI) * 3.2; return `${sqBox(x - 4.4, y - 2.6, 8.8, 5.2, node, light, { r: 1.2, top: 0.8 })}<path d="M${x - 6.6} ${y + 2} l2.2 -1.4 M${x + 6.6} ${y + 2} l-2.2 -1.4" stroke="${wire}" stroke-width="0.7"/>`; }).join(''),
+    pro ? '' : `<rect x="32" y="20" width="5" height="3" fill="${TAPE}" opacity="0.85"/>`,
+  ].join('');
+}
+function reflexSleeve({ tier, light, neon }) {
+  const pro = tier === 'pro';
+  const mesh = pro ? '#1f242b' : '#6a6f77';
+  const wire = pro ? neon : '#c97a2e';
+  return [
+    implantPack(pro, light, neon),
+    `<path d="M14 16 L40 12 Q46 14 46 22 L44 42 Q40 46 34 44 L16 40 Q10 30 14 16 Z" fill="${mesh}"/>`,
+    sqRim('M46 22 L44 42', light),
+    [0, 1, 2, 3, 4].map((i) => `<path d="M16 ${19 + i * 4.6} Q30 ${17 + i * 4.6} 44 ${18 + i * 4.6}" stroke="${wire}" stroke-width="0.5" fill="none" opacity="0.85"/>`).join(''),
+    [[20, 22], [30, 20], [24, 32], [36, 30]].map(([x, y]) => `<rect x="${x}" y="${y}" width="5" height="5" rx="0.8" fill="${pro ? '#c9ccd3' : '#a8a294'}"/>`).join(''),
+    `<path d="M44 36 Q52 38 52 46" stroke="${sqShade(mesh, 0.2)}" stroke-width="1.6" fill="none"/><rect x="50.4" y="45" width="3.6" height="4.6" rx="0.8" fill="${sqLit('#3a3f47', light, 0.3)}"/>`,
+  ].join('');
+}
+function cortexChip({ tier, light, neon }) {
+  const pro = tier === 'pro';
+  const body = pro ? '#1a1e24' : '#2f6b4a';
+  return [
+    implantPack(pro, light, neon),
+    [0, 1, 2, 3, 4].map((i) => `<rect x="${17 + i * 6}" y="10" width="1.8" height="4" fill="#c9a54a"/><rect x="${17 + i * 6}" y="42" width="1.8" height="4" fill="#c9a54a"/><rect x="10" y="${17 + i * 6}" width="4" height="1.8" fill="#c9a54a"/><rect x="42" y="${17 + i * 6}" width="4" height="1.8" fill="#c9a54a"/>`).join(''),
+    sqBox(13, 13, 30, 30, body, light, { r: 1.4 }),
+    sqBox(19, 19, 18, 18, pro ? '#3a414b' : '#8a929c', light, { r: 1, t: 0.55 }),
+    pro ? `<circle cx="28" cy="28" r="4.4" fill="none" stroke="${neon}" stroke-width="0.9"/><circle cx="28" cy="28" r="1.4" fill="${neon}"/>` : `<path d="M22 24 h8 M22 27.4 h12 M22 30.8 h6" stroke="#5a616b" stroke-width="0.7"/><rect x="31" y="31" width="3.4" height="3.4" fill="${TAPE}"/>`,
+  ].join('');
+}
+function cortexBud({ tier, light, neon }) {
+  const pro = tier === 'pro';
+  const shell = pro ? '#e3e6ea' : '#8a8f96';
+  return [
+    implantPack(pro, light, neon),
+    `<path d="M14 40 Q10 14 28 12 Q46 12 44 28 Q42 38 32 37 Q24 36 24 44 Z" fill="${shell}"/>`,
+    sqRim('M30 12.4 Q46 12 44 28', light, 1.4),
+    pro ? sqGlow('M20 20 Q28 16 38 22', neon, 0.6) : `<path d="M20 22 L26 28" stroke="#5a5f68" stroke-width="0.8"/><rect x="30" y="18" width="7" height="3" fill="${TAPE}" opacity="0.85"/>`,
+    `<path d="M24 43 Q34 50 46 40" stroke="${sqShade(shell, 0.4)}" stroke-width="1.2" fill="none"/><rect x="45" y="36" width="4" height="5" rx="0.9" fill="${sqLit('#3a3f47', light, 0.3)}"/><rect x="46.4" y="34" width="1.2" height="2.2" fill="#c9ccd3"/>`,
+  ].join('');
+}
+
+/** The square drawings, by item type and frame. */
+const SQUARE_SHAPES = {
+  vest: { carrier: vestCarrier, jacket: vestJacket, weave: vestWeave },
+  medkit: { bag: kitBag, box: kitBox, roll: kitRoll, gun: kitGun },
+  picks: { roll: ghostRoll, decoder: ghostDecoder, veil: ghostVeil, blinder: ghostBlinder },
+  reflex: { harness: reflexHarness, sleeve: reflexSleeve },
+  cortex: { chip: cortexChip, bud: cortexBud },
+};
+
 const TOOL_SHAPES = {
   drone: { quad: droneQuad, kite: droneKite, duct: droneDuct },
   deck: { slab: deckSlab, case: deckCase, brick: deckBrick },
@@ -1578,13 +1821,28 @@ const TOOL_SHAPES = {
 const GEAR_SHAPES = { rifle: rifleShapes, drone: droneQuad, deck: deckSlab };
 
 /** True when this item type has a drawing (otherwise the UI shows its line icon). */
-export const hasGearArt = (type) => !!GEAR_SHAPES[type];
+export const hasGearArt = (type) => !!(GEAR_SHAPES[type] || SQUARE_SHAPES[type]);
+
+/** A compact item's drawing in its square 64×64 frame (its box in the UI fits either shape). */
+function squareArt(item, shape, { carrier, width }) {
+  const light = carrier ? lightOf(carrier) : STASH_LIGHT;
+  const neon = carrier ? faceOf(carrier).chromeColor : '#3de8d8';
+  const id = `ga${++uid}`;
+  const size = Math.round((width * 2) / 3);
+  return `<svg class="art gearart gearart--square" viewBox="0 0 64 64" width="${size}" height="${size}" aria-hidden="true" focusable="false">
+  <defs><linearGradient id="${id}" x1="1" x2="0"><stop offset="0" stop-color="${light}" stop-opacity="0.22"/><stop offset="0.4" stop-color="${light}" stop-opacity="0.08"/><stop offset="1" stop-color="${light}" stop-opacity="0"/></linearGradient>
+  <linearGradient id="${id}h" x1="0" x2="1"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.7"/><stop offset="0.5" stop-color="#b48cff" stop-opacity="0.7"/><stop offset="1" stop-color="#ff5fae" stop-opacity="0.7"/></linearGradient></defs>
+  <rect width="64" height="64" fill="#0d1016"/><rect width="64" height="64" fill="url(#${id})"/>
+  ${shape({ tier: item.tier ?? 'street', light, neon, holo: `${id}h` })}</svg>`;
+}
 
 /**
  * An item's drawing as an SVG string, or null if it has none yet. carrier: the person carrying
  * it (their light and chrome colour); without one it sits under the safehouse's sodium lamp.
  */
 export function gearArt(item, { carrier = null, width = 96 } = {}) {
+  const squareShape = SQUARE_SHAPES[item.type]?.[toolFrameOf(item)];
+  if (squareShape) return squareArt(item, squareShape, { carrier, width });
   const build = item.look && { rifle: rifleBuild, pistol: sidearmBuild }[item.type];
   const tool = TOOL_SHAPES[item.type]?.[toolFrameOf(item)];
   const shapes = build ? (o) => build({ ...o, look: item.look }) : tool ?? GEAR_SHAPES[item.type];

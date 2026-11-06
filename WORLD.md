@@ -108,6 +108,8 @@ Crisis hooks from the district outline wait in `drafts/district-hooks.md` until 
 ## Tech and neural load
 Street implants are cheap, second-hand and always glitching; Glass Heights wears smooth luxury hardware. Pushing implants too hard brings on neural load: migraines, memory stutter, emotional deadness. Street crews treat it not with corporate therapy patches but with bitter herbal infusions from Auntie Fung's shop, damp cloths and downtime in dim mahjong parlours. The megacorps own the infrastructure; working people treat tech like a rusty outboard motor, duct-taped, prayed over and kept running out of stubbornness.
 
+Getting past people is street kit too, and nothing in it makes anyone invisible: a **ghost kit** is whatever a runner carries for it, picks and shims for the old doors, a lock decoder for the newer ones, a **heat veil** (a hooded poncho of heat-damping cloth with a glare strip: hard to see on thermal, a smear on a camera) or a **lens blinder** (a palm emitter that whites out a camera for a few seconds). Street medics carry a trauma bag; the lucky ones carry a **med gun**, a pistol-grip scanner that reads the wound and fires an injector.
+
 ## Weapons and drones
 Guns are ordinary kit for anyone who works for money: second-hand pistols in waistbands at the Docks, smartlinked rifles in Glass Heights security lockers, printed receivers sold under the counter in the Night Market. Owning one isn't the crime; being noticed using one is. Shots fired bring the Harbour Police and the cameras, so pros prefer a quiet way in and save the gun for when it goes wrong. Drones are everywhere: corporate delivery swarms, police spotters, and patched-together street drones flown off a cheap implant, which costs the pilot neural load.
 
@@ -332,6 +334,8 @@ the ridge) · 2040s Iron Peak foundries close; the corp boards build estates on 
 TECH: street implants are cheap, second-hand and glitchy; the rich wear luxury hardware.
 Neural load = migraines, memory stutter, emotional deadness; the street treats it with
 herbal infusions and downtime, not corporate therapy.
+Stealth kit is street-level too: picks, lock decoders, heat veils that blur you on
+thermal and on cameras; never true invisibility.
 WEAPONS: guns and tech are standard kit for mercs and crews (cyberpunk setting); using
 one is what gets noticed, so gunfire brings police and heat. Drones are everywhere
 (corporate, police, patched street drones flown off an implant at a neural-load cost).

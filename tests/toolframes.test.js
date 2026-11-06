@@ -25,6 +25,21 @@ test('drones: mostly quads, kites and ducted fans now and then', () => {
   for (const f of ['kite', 'duct']) assert.ok(d[f] > 0.04 && d[f] < 0.17, `${f} ${d[f]}`);
 });
 
+test('the rest of the armoury: a usual build and rarer ones; implants evenly', () => {
+  const cores = { vest: 'carrier', medkit: 'bag', picks: 'roll' };
+  for (const [type, core] of Object.entries(cores)) {
+    const d = shares(type, 400);
+    assert.ok(d[core] > 0.55 && d[core] < 0.85, `${type} ${core} ${d[core]}`);
+    for (const f of Object.keys(TOOL_FRAMES[type]).filter((f) => f !== core)) assert.ok(d[f] > 0.03 && d[f] < 0.2, `${type} ${f} ${d[f]}`);
+  }
+  for (const type of ['reflex', 'cortex']) for (const [f, v] of Object.entries(shares(type, 400))) assert.ok(v > 0.38 && v < 0.62, `${type} ${f} ${v}`);
+});
+
+test('compact gear is drawn square, long gear wide', () => {
+  for (const type of ['vest', 'medkit', 'picks', 'reflex', 'cortex']) assert.match(gearArt({ uid: 'g1', type, tier: 'street' }), /viewBox="0 0 64 64"/, type);
+  for (const type of ['rifle', 'drone', 'deck']) assert.match(gearArt({ uid: 'g1', type, tier: 'street' }), /viewBox="0 0 96 32"/, type);
+});
+
 test('decks: slab, case and brick about evenly', () => {
   const d = shares('deck');
   for (const f of Object.keys(TOOL_FRAMES.deck)) assert.ok(d[f] > 0.25 && d[f] < 0.42, `${f} ${d[f]}`);
