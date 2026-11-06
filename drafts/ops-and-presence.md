@@ -65,7 +65,7 @@ crediting fight kills to the runner who made them; moving `finish()` into `core/
   today's lines; back cards with the faces home and a result stamp.
 - **4b:** a mini site map on each crew-out card with the crew as dots where they got to today (built
   2026-11-06: still dots, a thumbnail beside the lines); tap to replay the day on the watch screen
-  without taking command (next).
+  without taking command (skipped for now, owner 2026-11-06).
 - **Later:** phone vibrations once wrapped for iOS (Safari on iPhone has none); sound.
 
 ## 5. Parked until the playtest says otherwise
