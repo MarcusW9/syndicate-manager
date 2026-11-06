@@ -257,6 +257,12 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .stats dd { margin: 0; font-size: 1.2rem; font-weight: 600; }
 .nextbar { display: block; height: 4px; margin-top: 6px; background: var(--line); border-radius: 2px; overflow: hidden; }
 .nextbar span { display: block; height: 100%; background: var(--accent-2); }
+/* A runner's stat tiles (2026-11-06, owner): every tile the same height, its progress bar on the
+   bottom edge, so the bars line up whatever notes (a trait's change, "career +1") sit above them. */
+.stats { grid-auto-rows: 1fr; }
+.stats div { display: flex; flex-direction: column; }
+.stats div > .nextbar { margin-top: auto; }
+.stats div > :nth-last-child(2) { margin-bottom: 6px; }
 .climb { margin: 8px 0 12px; }
 .growth { font-size: 0.8rem; font-weight: 600; color: var(--accent-2); }
 .growth.is-down { color: var(--danger); }
@@ -423,6 +429,12 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .ophead { display: flex; align-items: center; gap: 14px; }
 .ophead h1 { margin-bottom: 0; }
 .ophead p { margin: 4px 0 0; }
+/* Their status sits on the fame badge's line, pushed to the right (owner, 2026-11-06: "known" and
+   "ready" touched). */
+.ophead__who { flex: 1 1 auto; min-width: 0; }
+.ophead__line { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; margin-top: 8px; }
+.ophead__line .famebadge { margin: 0; line-height: 1.6; }
+.ophead__status { margin-left: auto; }
 .fallen { display: flex; gap: 10px; align-items: center; }
 
 /* --- Recruiting --- */
@@ -813,6 +825,9 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .dossier__name { font-weight: 700; font-size: min(0.98rem, 15cqi); line-height: 1.05; overflow-wrap: normal; word-break: keep-all; white-space: nowrap; }
 .dossier__real { font-size: 0.66rem; color: #5a5f6c; }
 .dossier__note { font: 500 0.62rem ui-monospace, 'SF Mono', Menlo, monospace; text-transform: uppercase; letter-spacing: 0.04em; color: #4a4f5c; }
+/* On a card the overwatch kit's uses go under the stat ("COMBAT 11" / "2 SHOTS"), never split mid-phrase. */
+.dossier__note .kituses { display: block; white-space: nowrap; }
+.dossier__note .kituses__sep { display: none; }
 .dossier__tag { font: 600 0.58rem ui-monospace, 'SF Mono', Menlo, monospace; text-transform: uppercase; color: #fff; background: #1b1d22; border-radius: 3px; padding: 1px 5px; }
 .dossier.is-empty { background: transparent; color: var(--muted); border: 2px dashed #3a4254; box-shadow: none; align-content: center; transform: none; }
 .dossier.is-empty::before { display: none; }
@@ -1093,17 +1108,24 @@ p > .infobtn { display: inline-grid; vertical-align: 2px; margin-left: 4px; }
 .loadout__tile.is-empty { background: transparent; border-style: dashed; color: var(--muted); }
 .loadout__tile:disabled { cursor: not-allowed; opacity: 0.6; }
 .loadout__name { font: 600 0.68rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
-.loadout__pic { display: grid; place-items: center; aspect-ratio: 3 / 2; background: #0d1016; clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%); }
+.loadout__pic { display: grid; place-items: center; aspect-ratio: 3 / 1; background-color: #0b0d11; clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%);
+  background-image: linear-gradient(90deg, transparent calc(100% - 1px), #232a35 calc(100% - 1px)); background-size: calc(100% / 3) 100%; }
 .loadout__pic svg { width: 100%; height: 100%; display: block; }
+.loadout__pic svg.gearart--square { width: auto; aspect-ratio: 1; }
 .loadout__pic--icon svg { width: 26px; height: 26px; color: var(--accent-2); }
 .loadout__tile.is-empty .loadout__pic { background: transparent; border: 1px dashed #3a4254; font-size: 1.2rem; color: #4a5266; }
 .loadout__item { font-family: var(--display); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.9rem; line-height: 1.1; }
 .loadout__eff { font-size: 0.74rem; color: var(--accent-2); line-height: 1.25; }
-/* Every drawing sits in one 3:2 box beside its name, fitted inside it (2026-11-06): a long item
-   fills the width, a square one the height, so compact gear isn't stretched and the rows stay short. */
-.gearrow__art { display: block; width: 84px; height: 56px; background: #0d1016; clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 0 100%); }
+/* Gear on an inventory grid (owner, 2026-11-06, after Deus Ex's): pictures measured in square cells.
+   A long item (rifle, sidearm, drone, deck) takes 3×1 cells and fills them, a compact one 1×1; the
+   empty cells beside it show as faint grid. The same 3-cell strip in a row and in a gear tile. */
+.gearrow { --cell: 40px; }
+@media (min-width: 900px) { .gearrow { --cell: 48px; } }
+.gearrow__art { display: flex; width: calc(var(--cell) * 3); height: var(--cell); background-color: #0b0d11;
+  background-image: linear-gradient(90deg, transparent calc(100% - 1px), #232a35 calc(100% - 1px)); background-size: var(--cell) 100%; outline: 1px solid #232a35; outline-offset: -1px; }
 .gearrow__art svg { display: block; width: 100%; height: 100%; }
-.gearrow:has(.gearrow__art) { grid-template-columns: 84px minmax(0, 1fr) auto; }
+.gearrow__art svg.gearart--square { width: var(--cell); height: var(--cell); }
+.gearrow:has(.gearrow__art) { grid-template-columns: calc(var(--cell) * 3) minmax(0, 1fr) auto; }
 /* The armoury's rows are list items: keep their own padding over the plain list's (owner's capture, 2026-10-28). */
 .gearlist > .gearrow { padding: 8px 8px 8px 10px; }
 /* The crew list's stat line: the icon, the stat and the words share one centre line. */
