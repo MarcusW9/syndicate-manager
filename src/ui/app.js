@@ -22,6 +22,8 @@ import { cityMapSvg, cityMapLegend, MAP_DISTRICTS } from './citymap.js';
 import { districtArt } from './districtArt.js';
 import { landmark } from './landmarks.js';
 import { renderHallBuild, hallBuildLine } from './hallbuild.js';
+import { crewOutMap } from './minimap.js';
+import { siteFor } from './siteplan.js';
 import { placePiece, removePiece, turnPiece, pieceAt, refundOf, canRemove } from '../core/hallbuild.js';
 import { PIECES } from '../data/hallBuild.js';
 
@@ -901,8 +903,13 @@ function renderCrewsOut(out = crewsOut(state)) {
           <div class="crewsout__track" role="img" aria-label="${esc(`${c.phase}: ${c.beatsDone} of ${c.beats} story beats, day ${c.day} of ${c.days}`)}" style="--fill:${fill}%; --days:${c.days}">
             <span class="crewsout__fill"></span>
           </div>
-          <p class="crewsout__phase small"><strong>${esc(c.phase)}</strong> · ${esc(STATUS[c.status])}</p>
-          ${c.lines.map((l) => `<p class="small">${c.day ? `Day ${c.day}: ` : ''}${crewLinks(l)}</p>`).join('')}
+          <div class="crewsout__body">
+            <div class="crewsout__map">${crewOutMap({ site: siteFor(c.district, c.jobId, c.templateId), zone: c.zone, crew: c.inside, overwatch: c.overwatch, wheels: c.wheels, calling: c.waiting, esc })}</div>
+            <div class="crewsout__text">
+              <p class="crewsout__phase small"><strong>${esc(c.phase)}</strong> · ${esc(STATUS[c.status])}</p>
+              ${c.lines.map((l) => `<p class="small">${c.day ? `Day ${c.day}: ` : ''}${crewLinks(l)}</p>`).join('')}
+            </div>
+          </div>
           <div class="crewsout__foot">
             ${c.waiting ? `<button class="btn btn--primary" data-action="take-call" data-id="${esc(c.jobId)}">Take the call</button>` : ''}
             ${c.district ? whereButton(c.district) : ''}

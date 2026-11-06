@@ -63,8 +63,9 @@ crediting fight kills to the runner who made them; moving `finish()` into `core/
 - **4a, built 2026-11-04** (before the playtest): the send-off card; "Out · Thu" on runner tiles;
   crew-out cards with faces, a status light, a day track through the story beats, the phase and
   today's lines; back cards with the faces home and a result stamp.
-- **4b, after the playtest:** a mini site map on each crew-out card with the crew as dots where they
-  got to today, drifting gently; tap to replay the day on the watch screen without taking command.
+- **4b:** a mini site map on each crew-out card with the crew as dots where they got to today (built
+  2026-11-06: still dots, a thumbnail beside the lines); tap to replay the day on the watch screen
+  without taking command (next).
 - **Later:** phone vibrations once wrapped for iOS (Safari on iPhone has none); sound.
 
 ## 5. Parked until the playtest says otherwise

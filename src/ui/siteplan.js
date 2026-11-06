@@ -51,7 +51,7 @@ const escAttr = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<'
 export const siteFor = (district, jobId, templateId, build = null) => pickSite(district, jobId, templateId, build);
 
 /** One shape from a site's data as SVG. */
-function shapeSvg(s) {
+export function shapeSvg(s) {
   const cls = `class="${escAttr(s.cls ?? '')}"`;
   const fill = s.fill ? ` fill="${escAttr(s.fill)}"` : '';
   if (s.t === 'rect') return `<rect ${cls} x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="${s.rx ?? 1.5}"${fill}/>`;

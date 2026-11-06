@@ -1549,3 +1549,18 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .bdef + .btiles, .bsubs { margin-top: 4px; } .bsubs { grid-template-columns: 1fr 1fr; }
 .bgrid__ghost.is-room { opacity: 0.3; }
 .sp-turret { stroke: none; }
+
+/* The mini map on a crew-out card (ui/minimap.js; 2026-11-06): a still thumbnail beside today's lines. */
+.crewsout__body { display: grid; grid-template-columns: 120px 1fr; gap: 10px; align-items: start; }
+.crewsout__text { display: grid; gap: 4px; min-width: 0; }
+.crewsout__map { width: 120px; height: 80px; border: 1px solid var(--line); background: #0b0d11; overflow: hidden; }
+.minimap { display: block; width: 100%; height: 100%; }
+.minimap .sp-label { display: none; }
+.mm-ahead { fill: none; stroke: #4a5266; stroke-width: 2.5; stroke-dasharray: 5 5; }
+.mm-walked { fill: none; stroke: var(--accent-2); stroke-width: 3; }
+.mm-dot { fill: var(--accent-2); stroke: #0b0d11; stroke-width: 2; }
+.minimap.is-call .mm-dot { fill: var(--warn); }
+.mm-side { fill: none; stroke: #8b9aab; stroke-width: 2; }
+.mm-call { fill: none; stroke: var(--warn); stroke-width: 2.5; transform-box: fill-box; transform-origin: center; animation: mm-pulse 1.4s ease-out infinite; }
+@keyframes mm-pulse { from { opacity: 0.9; transform: scale(0.8); } to { opacity: 0; transform: scale(1.5); } }
+@media (prefers-reduced-motion: reduce) { .mm-call { animation: none; opacity: 0.8; } }
