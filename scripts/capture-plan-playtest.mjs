@@ -1,7 +1,8 @@
 // Capture (2026-11-06, the owner's playtest of the plan screen): on a wide computer (1600), a job being
 // planned. The runners strip (each one opens their page); a runner's page opened from it, with
 // "Back to the job"; the squad board with each card's × (then one taken off); and the Basin's
-// stables plan, the track clear of the stable rows. Then the board's × on a phone (390).
+// stables plan, the track clear of the stable rows. Then the board's × on a phone (390). Then the
+// picker: on a phone (cards in groups), sorted by a stat, and on the computer (the table).
 // Run: node scripts/capture-plan-playtest.mjs <out dir>
 import { createNewGame } from '../src/core/state.js';
 import { templateById } from '../src/core/jobs.js';
@@ -44,6 +45,13 @@ try {
   await tap(q, '[data-action="joss"]'); await q.waitForTimeout(400);
   await q.locator('.board').scrollIntoViewIfNeeded();
   await q.locator('.board').screenshot({ path: `${out}/22-board-with-x-phone.png` });
+  // The picker (2026-11-06): the extra inside slot on a phone, then sorted by a stat; then on the computer.
+  await tap(q, '.dossiers--inside .dossier.is-empty'); await q.waitForTimeout(500);
+  await q.locator('.sheet').screenshot({ path: `${out}/24-picker-phone.png` });
+  await tap(q, '.picker__cards [data-action="pick-sort"]:not(.is-on)'); await q.waitForTimeout(400);
+  await q.locator('.sheet').screenshot({ path: `${out}/25-picker-phone-sorted.png` });
+  await tap(p, '.dossiers--inside .dossier.is-empty'); await p.waitForTimeout(500);
+  await p.screenshot({ path: `${out}/26-picker-desktop.png` });
 } finally {
   await b.close();
   process.kill(-srv.pid);

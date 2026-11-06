@@ -1577,3 +1577,42 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 @media (prefers-reduced-motion: reduce) { .mm-call { animation: none; opacity: 0.8; } }
 .openingline { margin: 6px 0; padding: 6px 10px; border-left: 2px solid var(--accent-2); background: rgba(61, 232, 216, 0.06); }
 .hall__owned { color: var(--accent-2); border-color: var(--accent-2); }
+
+/* The squad picker (2026-11-06, the owner's playtest; mock-up drafts/prototypes/picker.html): the
+   job's target and the colour key up top; groups in a fixed order (freelancers apart, in violet);
+   on a phone cards with the stat that counts most big; from 900px a grid to read down, sorted by
+   tapping a column. */
+.pwant { margin: 6px 0 4px; font-size: 0.9rem; }
+.pwant b { color: var(--text); }
+.plegend { display: inline-flex; flex-wrap: wrap; gap: 4px 12px; font-size: 0.78rem; margin-left: 4px; }
+.psort { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 8px 0 2px; }
+.psort__l { font-family: var(--display); font-weight: 600; font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.psort__btn, .ptable__sort { min-height: 36px; padding: 0 10px; background: none; border: 1px solid var(--line); color: var(--muted); font-family: var(--display); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
+.psort__btn.is-on, .ptable__sort.is-on { border-color: var(--accent-2); color: var(--accent-2); }
+.sheet__group--crew { color: var(--accent-2); }
+.sheet__group--free { color: #b48cff; }
+.cand__txt { display: grid; gap: 1px; min-width: 0; }
+.cand__top { font-family: var(--display); font-weight: 700; font-size: 1rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.cand__top b { font-size: 1.2rem; }
+.cand__joss { display: inline-block; font-family: var(--display); font-weight: 700; font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; color: #0a0c0f; background: var(--accent-2); padding: 1px 5px; vertical-align: 2px; }
+.pfold { margin-top: 12px; border: 1px dashed var(--line); padding: 0 10px; }
+.pfold summary { min-height: var(--tap, 44px); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); font-family: var(--display); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.85rem; }
+.pfold[open] { padding-bottom: 10px; }
+.picker__table { display: none; }
+@media (min-width: 900px) {
+  .sheet--picker > * { max-width: 920px; }
+  .picker__cards { display: none; }
+  .picker__table { display: block; }
+  .ptable { --cols: minmax(190px, 2fr) repeat(var(--n, 3), 84px) minmax(150px, 1.6fr) minmax(110px, auto); }
+  .ptable__head, .ptrow { display: grid; grid-template-columns: var(--cols); gap: 10px; align-items: center; }
+  .ptable__head { padding: 8px 10px 4px; font-family: var(--display); font-weight: 600; font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .ptable__head .ptable__sort { justify-self: center; }
+  .ptrow { min-height: 56px; }
+  .ptrow__who { display: flex; gap: 10px; align-items: center; min-width: 0; }
+  .ptrow__num { text-align: center; }
+  .ptpill { display: inline-block; min-width: 40px; padding: 2px 8px; font-family: var(--display); font-weight: 700; font-size: 1.05rem; text-align: center; }
+  .ptpill--good { color: #5fe0a5; background: rgba(95, 224, 165, 0.14); }
+  .ptpill--shaky { color: var(--warn); background: rgba(242, 181, 68, 0.12); }
+  .ptpill--weak { color: var(--danger); background: rgba(255, 90, 90, 0.08); }
+  .ptrow .cand__side { justify-self: end; text-align: right; }
+}
