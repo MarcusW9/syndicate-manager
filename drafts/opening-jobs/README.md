@@ -1,6 +1,7 @@
 # Opening job drafts (for the owner to edit)
 
-The four opening jobs from `drafts/opening-jobs.md`, written in full: one per hall outside Old Town,
+The four opening jobs from `drafts/opening-jobs.md`, written in full and **polished by the owner
+(2026-11-06)**: one per hall outside Old Town,
 fixed for every player. **They aren't in the game yet.** The mechanic that holds a hall's offer back
 until its job is done comes after your edits.
 
