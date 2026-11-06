@@ -7,6 +7,13 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-06 · The carry grid
+- **A runner now wears armour, has two implant sockets, and carries a bag.** The bag is 4×2 squares: a rifle, sidearm, drone or deck takes three, a trauma kit or ghost kit one. So a runner can carry a rifle *and* a deck, or a drone with a ghost kit and a trauma kit beside it.
+- **Two implants** both work, and both keep neural load up: between jobs it stays at 20 or more with two.
+- **Different kinds of kit add up; the same kind counts once.** A deck and a ghost kit give tech +1 and stealth +1; two ghost kits still give stealth +1.
+- **On a runner's page:** tap an empty square to pack something that fits there; tap an item to pick it up, then a free square to move it, or take it off.
+- Your saves keep everyone's gear: each runner's weapon and tool move into their bag, and their implant into the first socket.
+
 ## 2026-11-06 · A lighter top bar
 - **The tong's rank** ("Back Room tong") is on the Ops heading now, not the top bar. Tap it for what a tong is.
 - **Heat only shows when a district is warming:** from 3 a chip names it ("Heat Docks 4"), amber, and red from 6, when a police raid can come. Tap it to see that district on Ops.

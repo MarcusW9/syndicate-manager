@@ -1676,3 +1676,27 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 @media (max-width: 379px) { .heatchip { padding: 0 7px; gap: 4px; } .heatchip__l { display: none; } }
 .opshead { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .opshead .tierbtn { margin: 0; }
+
+/* The carry grid on a runner's page (2026-11-06; mock-up drafts/prototypes/carry-grid.html): worn
+   tiles (armour, two implant sockets) in a row, then the bag, a grid of square cells. An item spans
+   its cells (3 for long things, 1 for compact ones) and fills them; an empty cell is a dark square to
+   tap; a picked-up item is outlined in cyan and the cells it fits light up. */
+.loadout--worn { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.loadout__cell { display: grid; place-items: center; width: 100%; max-width: 72px; aspect-ratio: 1; background: #0b0d11; outline: 1px solid #232a35; outline-offset: -1px; }
+.loadout__cell svg { display: block; width: 100%; height: 100%; }
+.loadout__tile.is-empty .loadout__cell { background: transparent; outline: 1px dashed #3a4254; color: #4a5266; font-size: 1.2rem; }
+.bag__head { display: flex; justify-content: space-between; align-items: baseline; }
+.bag__head span { font-family: var(--body, system-ui); font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--muted); }
+.bag { --bagcell: min(72px, calc((100vw - 76px) / var(--cols))); display: grid; grid-template-columns: repeat(var(--cols), var(--bagcell)); grid-template-rows: repeat(var(--rows), var(--bagcell));
+  gap: 4px; padding: 4px; width: max-content; background: #0b0d11; border: 1px solid var(--line); }
+.bag__cell { min-height: 0; padding: 0; background: #0e1116; border: 0; outline: 1px solid #232a35; outline-offset: -1px; cursor: pointer; }
+.bag__cell:hover:not(:disabled) { outline-color: var(--accent-2); }
+.bag__cell.is-free { background: rgba(61, 232, 216, 0.08); outline-color: rgba(61, 232, 216, 0.5); }
+.bag__cell:disabled { cursor: default; }
+.bag__item { padding: 0; border: 0; background: none; cursor: pointer; display: block; min-width: 0; }
+.bag__item svg { display: block; width: 100%; height: 100%; }
+.bag__item.is-picked { outline: 2px solid var(--accent-2); outline-offset: -2px; }
+.bag__icon { display: grid; place-items: center; width: 100%; height: 100%; color: var(--accent-2); background: #0e1116; }
+.bag__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; padding: 6px 8px; background: var(--panel-2); border: 1px solid var(--accent-2); font-size: 0.85rem; }
+.bag__bar span { flex: 1 1 160px; }
+.bag__list { margin-top: 8px; display: grid; gap: 2px; font-size: 0.85rem; }

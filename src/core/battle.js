@@ -24,7 +24,7 @@
 import { BATTLE } from '../data/battle.js';
 import { GEAR, TIERS } from '../data/gear.js';
 import { ZONES, INCIDENTS } from '../data/incidents.js';
-import { carried, itemName, itemTitle, overwatchKit, patchBonus, sidearmStats } from './gear.js';
+import { carried, counted, itemName, itemTitle, overwatchKit, patchBonus, sidearmStats } from './gear.js';
 import { effectiveStat } from './crew.js';
 import { d20, makeRng } from './rng.js';
 
@@ -61,9 +61,13 @@ export function guardPosts(am) {
 /** Their health in a fight: base + cool. */
 export const maxHp = (op) => BATTLE.hp + Math.floor((op.stats.cool ?? 0) / BATTLE.hpPerCool);
 
-/** What they shoot with: { name, damage, pierce }. A sidearm by its own strengths; nothing in the weapon slot means a street piece. */
+/**
+ * What they shoot with: { name, damage, pierce }. Their best sidearm by its own strengths (a bag can
+ * hold two; save v45), else any carried weapon with damage; nothing means a street piece.
+ */
 export function weaponOf(op) {
-  const item = op.gear?.weapon;
+  const guns = carried(op).filter((i) => GEAR[i.type]?.slot === 'weapon');
+  const item = guns.filter((i) => sidearmStats(i)).sort((a, b) => sidearmStats(b).damage - sidearmStats(a).damage)[0] ?? guns.find((i) => GEAR[i.type]?.damage) ?? null;
   const s = sidearmStats(item);
   if (s) return { name: itemTitle(item), damage: s.damage, pierce: s.pierce };
   const dmg = item && GEAR[item.type]?.damage;
@@ -101,7 +105,7 @@ export function overwatchOf(op, ow, zone) {
   const kit = op && ow ? overwatchKit(op, ow.kit) : null;
   if (!kit || !(ow.left > 0) || !(kit.indoors || ZONES[zone]?.open)) return null;
   const s = effectiveStat(op, kit.stat);
-  const item = carried(op).find((i) => i.type === ow.kit);
+  const item = counted(op).find((i) => i.type === ow.kit);
   return {
     id: op.id, handle: op.handle, kit: ow.kit, name: kit.name, stat: kit.stat, value: s.value + kit.bonus,
     notes: [`${kit.name.toLowerCase()} from overwatch`, ...kit.notes, ...s.notes],

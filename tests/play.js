@@ -8,6 +8,7 @@ import { advanceDay, calendar } from '../src/core/time.js';
 import { templateById } from '../src/core/jobs.js';
 import { availability } from '../src/core/crew.js';
 import { GEAR } from '../src/data/gear.js';
+import { emptyLoadout, firstFit, placeOf } from '../src/core/gear.js';
 import { buildBattle, ordersFor, hitFor } from '../src/core/battle.js';
 
 /** Put gear on someone for a test (no cost, no stash): arm(state, opId, 'rifle', 'drone'). Returns state. */
@@ -16,7 +17,13 @@ export function arm(state, opId, ...types) {
   for (const type of types) {
     const [t, tier = 'street'] = type.split(':');
     state.gearSeq = (state.gearSeq ?? 0) + 1;
-    op.gear[GEAR[t].slot] = { uid: `t${state.gearSeq}`, type: t, tier };
+    const item = { uid: `t${state.gearSeq}`, type: t, tier };
+    // Where it goes on them (the carry grid, save v45): worn, in a socket, or the bag's first free place.
+    op.gear = { ...emptyLoadout(), ...(op.gear ?? {}) };
+    const where = placeOf(t);
+    if (where === 'armour') op.gear.armour = item;
+    else if (where === 'implant') op.gear.implants = [...op.gear.implants, item];
+    else { const at = firstFit(op, item); if (at) op.gear.bag.push({ item, ...at }); }
   }
   return state;
 }

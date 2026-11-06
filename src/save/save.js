@@ -25,7 +25,12 @@ import { STARTING_ROSTER_CAP } from '../core/recruits.js';
 import { prepareOperative, rollPotential, rollScoutError, scoutFor, potentialRead } from '../core/development.js';
 import { nextRng } from '../core/random.js';
 import { refreshFreelancers } from '../core/freelance.js';
-import { GEAR, emptyLoadout, loadoutOf } from '../core/gear.js';
+import { GEAR, makeItem } from '../core/gear.js';
+import { CELLS } from '../data/gear.js';
+
+// The one-item-per-slot gear of saves before v45, for the migrations written against it.
+const slotLoadout = () => ({ weapon: null, armour: null, tool: null, implant: null });
+const slotItem = (state, type) => makeItem(state, type, 'street');
 
 export const SLOT_COUNT = 3;
 export const BACKUP_REMINDER_DAYS = 28;
@@ -397,16 +402,16 @@ function migrate(state) {
     // v23: gear (PLAN-CORE-LOOP.md, slice 5). The safehouse's shared rifle and drone become two
     // items: whoever has one on overwatch in a job saved mid-way carries it; the rest go to the stash.
     state.stash = state.stash ?? [];
-    for (const op of state.crew) op.gear = op.gear ?? emptyLoadout();
+    for (const op of state.crew) op.gear = op.gear ?? slotLoadout();
     const kits = new Set(['rifle', 'drone']);
     for (const am of [state.activeMission, ...(state.awayJobs ?? []).map((j) => j.mission)]) {
       const ow = am?.overwatch && state.crew.find((o) => o.id === am.overwatch.id);
       if (!ow || !GEAR[am.overwatch.kit]) continue;
       const slot = GEAR[am.overwatch.kit].slot;
-      if (!ow.gear[slot]) ow.gear[slot] = loadoutOf(state, [am.overwatch.kit])[slot];
+      if (!ow.gear[slot]) ow.gear[slot] = slotItem(state, am.overwatch.kit);
       kits.delete(am.overwatch.kit);
     }
-    for (const kit of kits) state.stash.push(loadoutOf(state, [kit])[GEAR[kit].slot]);
+    for (const kit of kits) state.stash.push(slotItem(state, kit));
     state.version = 23;
   }
   if (state.version === 23) {
@@ -585,6 +590,20 @@ function migrate(state) {
     // v44: a hall can be bought outright (core/halls.js buyHall): none is yet.
     for (const h of state.halls ?? []) h.owned = h.owned ?? false;
     state.version = 44;
+  }
+  if (state.version === 44) {
+    // v45: the carry grid (DESIGN.md 2026-11-06). Armour stays worn, the implant goes in the first
+    // socket, and the weapon and tool go in the bag: the weapon at the top left, the tool on the next
+    // row if it's long (3 cells), else beside the weapon. A 4×2 bag always holds both.
+    for (const op of [...state.crew, ...(state.memorial ?? [])]) {
+      const g = op.gear;
+      if (!g || Array.isArray(g.bag)) continue;
+      const bag = [];
+      if (g.weapon) bag.push({ item: g.weapon, x: 0, y: 0 });
+      if (g.tool) bag.push((CELLS[g.tool.type] ?? 1) > 1 || !g.weapon ? { item: g.tool, x: 0, y: g.weapon ? 1 : 0 } : { item: g.tool, x: CELLS[g.weapon.type] ?? 1, y: 0 });
+      op.gear = { armour: g.armour ?? null, implants: g.implant ? [g.implant] : [], bag };
+    }
+    state.version = 45;
   }
   return state;
 }

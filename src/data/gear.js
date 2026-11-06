@@ -13,6 +13,14 @@
 // Tiers add their step to the item's bonus (or its overwatch roll), its damage and its armour,
 // and multiply the price.
 
+// The carry grid (2026-11-06, owner, after Deus Ex: Human Revolution's inventory; mock-up
+// drafts/prototypes/carry-grid.html). Armour is worn, implants sit in sockets (their neural-load
+// floors add up), and weapons and tools go in a bag of cells: a long item takes 3, a compact one 1.
+export const BAG = { cols: 4, rows: 2 };
+export const SOCKETS = 2;
+/** How many bag cells an item takes (a 3×1 strip, or one cell). Only weapons and tools go in the bag. */
+export const CELLS = { rifle: 3, pistol: 3, drone: 3, deck: 3 };
+
 export const SLOTS = {
   weapon: { name: 'Weapon' },
   armour: { name: 'Armour' },

@@ -5,6 +5,7 @@
 
 import { CULTURES } from '../data/recruitPools.js';
 import { toolFrameOf } from '../core/looks.js';
+import { carried } from '../core/gear.js';
 
 // Shared drawing style: one palette, one line weight, everything on a 64×64 grid.
 export const ART = {
@@ -1862,7 +1863,7 @@ export function gearArt(item, { carrier = null, width = 96 } = {}) {
 const ON_PORTRAIT = ['rifle'];
 
 function portraitGear(op, c, f) {
-  const item = Object.values(op.gear ?? {}).filter(Boolean).find((i) => ON_PORTRAIT.includes(i.type));
+  const item = carried(op).find((i) => ON_PORTRAIT.includes(i.type));
   if (!item) return { back: '', front: '' };
   const tier = item.tier ?? 'street';
   const sling = tier === 'pro' ? '#1a1d24' : '#3a3125';
