@@ -72,9 +72,11 @@ import { freelancerAsCrew, shareOf, MAX_FREELANCERS_PER_JOB } from '../core/free
 
 let state;
 let screen = 'inbox';
-let cityDistrict = null; // district card open on the City screen
-let cityTab = 'map'; // which City section is showing (CITY_TABS)
+let cityDistrict = null; // district card open on the Ops map
+let cityTab = 'districts'; // which Lore section is showing (LORE_TABS)
+let loreDistrict = null; // the district read in full on Lore › Districts
 let cityCardDue = false; // scroll a newly opened district card into view after drawing
+let loreDue = false; // scroll Lore › Districts to the district opened from Ops
 let cityMapDue = false; // scroll the map into view after drawing (a crew's district picked in the list)
 let openMessageId = null;
 let sidePlan = null; // { taskId, crew: [] } while planning a side task (Jobs tab)
@@ -160,6 +162,10 @@ function onClick(e) {
     // A crew's district in the list: light it on the map (scrolled into view) and narrow the list to it.
     case 'city-show': cityDistrict = cityDistrict === id ? null : id; cityMapDue = !!cityDistrict; break;
     case 'city-tab': cityTab = id; break;
+    // Lore › Districts: open one district's full write-up (tap again to fold it); from the Ops card, go there.
+    case 'ops-district': screen = 'ops'; cityDistrict = id; cityMapDue = true; break;
+    case 'lore-district': loreDistrict = loreDistrict === id ? null : id; break;
+    case 'about-district': screen = 'lore'; cityTab = 'districts'; loreDistrict = id; loreDue = true; break;
     case 'open-message': {
       openMessageId = id;
       const msg = state.inbox.find((m) => m.id === id);
@@ -325,7 +331,7 @@ function onClick(e) {
     case 'send-side': {
       const next = sendOnSideTask(state, sidePlan.taskId, sidePlan.crew);
       sidePlan = null;
-      screen = 'city'; cityTab = 'map';
+      screen = 'ops';
       return setState(next);
     }
     case 'send-job': {
@@ -335,7 +341,7 @@ function onClick(e) {
       if (out) sendOffCue = { jobId: plan.jobId, name: templateById(out.mission.templateId).name, returnDay: out.returnDay,
         crewIds: [...out.mission.crewIds, out.mission.overwatch?.id, out.mission.wheels, out.mission.standby?.id].filter(Boolean) };
       plan = null;
-      screen = 'city'; cityTab = 'map';
+      screen = 'ops';
       openMessageId = null;
       return setState(next);
     }
@@ -364,9 +370,9 @@ function onClick(e) {
     // Away crews calling in (core/away.js): take the call, then hand it back or take command.
     case 'take-call': openMessageId = null; return setState(takeCall(state, id));
     case 'raid-pay': return setState(payOffRaid(state, id)); // pay the police off before the day (core/raids.js)
-    // A raid at the door, answered from City: its call is a message on Today.
+    // A raid at the door, answered from Ops: its call is a message on Today.
     case 'raid-answer': { screen = 'inbox'; openMessageId = id; const m = state.inbox.find((x) => x.id === id); if (m && !m.read) { m.read = true; saveGame(state); } break; }
-    case 'let-run': screen = 'city'; cityTab = 'map'; return setState(letThemRun(state));
+    case 'let-run': screen = 'ops'; return setState(letThemRun(state));
     case 'take-command': return setState(takeCommand(state));
     case 'sendoff-close': t.remove(); return;
     case 'export':
@@ -482,6 +488,17 @@ function keyStatsFor(op, tpl, threat) {
 /** How long something on offer lasts: it's still there on its last day. */
 const daysLeft = (lastDay) => { const n = lastDay - state.day; return n <= 0 ? 'last day' : n === 1 ? '1 day left' : `${n} days left`; };
 /** Heat as a small bar: green while quiet, amber, then red from the level that brings the fixer. */
+/**
+ * The top bar's heat (2026-11-06, owner: heat is per district now): the hottest district, named,
+ * and a tap takes you to it on Ops. With no heat anywhere it's just "Heat 0/10".
+ */
+function heatStat() {
+  const hot = state.heat > 0 ? hottest(state) : null;
+  if (!hot || state.founding) return `<span class="stat"><span class="stat__label">Heat</span> ${heatMeter()}</span>`;
+  return `<button class="stat stat--heat" data-action="ops-district" data-id="${esc(hot.district)}" aria-label="Hottest district: ${esc(districtName(hot.district))}, heat ${state.heat} of ${HEAT_MAX}. See it on Ops">
+    <span class="stat__label">Heat<span class="stat__where"> · ${esc(districtName(hot.district).replace(/^The /, ''))}</span></span> ${heatMeter()}</button>`;
+}
+
 function heatMeter() {
   const h = state.heat;
   const tone = h >= HEAT_NOTICE_AT ? 'high' : h >= 3 ? 'mid' : 'low';
@@ -565,7 +582,7 @@ function render() {
       ${renderWhen()}
       <div class="topbar__stats">
         <span class="stat stat--cash"><span class="stat__label">Cash</span> ${money(state.cash)}${cashDelta()}</span>
-        <span class="stat"><span class="stat__label">Heat</span> ${heatMeter()}</span>
+        ${heatStat()}
         <button class="tierbtn" data-action="info" data-id="tong" aria-expanded="${openInfo.has('tong')}" aria-label="What's a tong?"><span class="tier">${esc(rankOf(state).name)}<span class="tier__word"> tong</span></span></button>
       </div>
       ${state.activeMission ? '' : `<button class="savebtn ${screen === 'settings' ? 'is-active' : ''}" data-action="nav" data-id="settings" aria-label="Save and settings" aria-pressed="${screen === 'settings'}"><span aria-hidden="true">☰</span><span class="savebtn__word"> Save</span></button>`}
@@ -575,9 +592,11 @@ function render() {
 
     <nav class="nav" aria-label="Main">
       ${navButton('inbox', 'Today', unread, 'unread')}
+      ${navButton('ops', 'Ops', calls(), 'calling')}
       ${navButton('crew', 'Crew')}
       ${navButton('jobs', 'Jobs', state.jobs.length, 'open')}
-      ${navButton('city', 'City', calls(), 'calling')}
+      ${navButton('lore', 'Lore')}
+      ${state.activeMission ? '' : navButton('settings', '☰ Save').replace('class="nav__btn', 'class="nav__btn nav__btn--save')}
     </nav>
 
     <main class="main ${wide ? 'main--wide' : ''} ${!state.activeMission && screen === 'jobs' && plan ? 'main--split' : ''}">${state.activeMission ? renderMission() : `${keptBanner()}${renderScreen()}`}</main>
@@ -588,6 +607,7 @@ function render() {
   if (am) mountWatch(root.querySelector('.watch'), state, { ui: watchUi, onAuto: () => setState(autoStep(state)) });
   if (pickSlot) (root.querySelector('.sheet .cand.is-on') ?? root.querySelector('.sheet .cand:not([disabled])'))?.focus({ preventScroll: true });
   if (cityMapDue) { cityMapDue = false; root.querySelector('.citymap')?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
+  if (loreDue) { loreDue = false; root.querySelector('.lorecard.is-open')?.scrollIntoView({ block: 'start' }); }
   if (cityCardDue) { cityCardDue = false; root.querySelector('.citycard')?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
   const want = focusNext ?? refocus;
   focusNext = null;
@@ -683,7 +703,7 @@ function renderDayCue(cue) {
     </div>`;
 }
 
-// While the founders are being picked there's nothing to see on Crew, Jobs or City: those tabs are
+// While the founders are being picked there's nothing to see on Crew, Jobs, Ops or Lore: those tabs are
 // off, Today shows the pick, and Save stays open so another slot can still be loaded.
 const FOUNDING_TABS = ['inbox', 'settings'];
 
@@ -708,7 +728,8 @@ function renderScreen() {
     return `<div class="jobsplit"><div class="jobsplit__plan">${body}</div><div class="jobsplit__side"><div class="jobsplit__list">${renderJobs()}</div>${planBarHtml}</div></div>`;
   }
   if (screen === 'jobs') return sidePlan ? renderSidePlan() : renderJobs();
-  if (screen === 'city') return renderCity();
+  if (screen === 'ops') return renderOpsScreen();
+  if (screen === 'lore') return renderLore();
   if (screen === 'settings') return renderSettings();
   return '';
 }
@@ -816,21 +837,21 @@ const calls = () => (state.awayJobs ?? []).filter((j) => j.waiting).length + rai
 /** Raids at the door now, waiting on the player's call (core/raids.js). */
 const raidCalls = () => state.inbox.filter((m) => m.kind === 'raid' && !m.resolved);
 
-/** Today's one line about the crews out; they're followed on City, the command centre (2026-11-05). */
+/** Today's one line about the crews out; they're followed on Ops, the command centre (2026-11-05; its own tab 2026-11-06). */
 function renderOutLine() {
   const jobs = crewsOut(state).length + sideTasksOut(state).length;
   // A raid warned or at the door gets a line of its own (raids, 2026-11-05).
-  const raids = openRaids(state).map((r) => `<button class="outnow is-raid" data-action="nav" data-id="city">
+  const raids = openRaids(state).map((r) => `<button class="outnow is-raid" data-action="nav" data-id="ops">
       <span class="outnow__light" aria-hidden="true"></span>
       <span>${r.called ? `<strong>${esc(raidWho(r))} at the door: ${esc(hallLabel(r.district))}</strong>` : `<strong>Raid warned:</strong> ${esc(hallLabel(r.district))}, ${esc(raidWhen(r))}${r.answer === 'paid' ? ' · paid off' : ''}`}</span>
-      <span class="outnow__go">City ›</span>
+      <span class="outnow__go">Ops ›</span>
     </button>`).join('');
   if (!jobs) return raids;
   const n = calls() - raidCalls().length;
-  return `${raids}<button class="outnow ${n ? 'is-call' : ''}" data-action="nav" data-id="city">
+  return `${raids}<button class="outnow ${n ? 'is-call' : ''}" data-action="nav" data-id="ops">
       <span class="outnow__light" aria-hidden="true"></span>
       <span>${jobs} ${jobs === 1 ? 'crew' : 'crews'} out${n ? ` · <strong>${n} ${n === 1 ? 'call' : 'calls'} waiting</strong>` : ''}</span>
-      <span class="outnow__go">City ›</span>
+      <span class="outnow__go">Ops ›</span>
     </button>`;
 }
 
@@ -1268,7 +1289,7 @@ function renderRaidWarning(m) {
         ${raidWhere(raid)}
         ${canBuyOff(state, raid) && !raid.answer && !raid.called ? `<button class="btn btn--primary" data-action="raid-pay" data-id="${esc(raid.id)}" ${state.cash < price ? 'disabled' : ''}>${isGangRaid(raid) ? 'Settle' : 'Pay them off'} · ${money(price)}</button>` : ''}
         ${raid.answer === 'paid' ? `<p class="small"><strong>${isGangRaid(raid) ? 'Settled' : 'Paid off'} (${money(raid.paid)}).</strong> Nobody will come.</p>` : ''}
-        <button class="btn" data-action="nav" data-id="city">See it on City</button>
+        <button class="btn" data-action="nav" data-id="ops">See it on Ops</button>
         <p class="muted small">Until then: move people into or out of the hall on Crew › Halls (moving takes the day), and keep crews home or send them out. On the day, whoever is home can hold it.</p>
       </div>`;
 }
@@ -1854,12 +1875,12 @@ function renderSidePlan() {
 const trustTone = (t) => (t >= 60 ? 'good' : t >= 40 ? 'mid' : 'bad');
 const TRUST_NOTE = 'Finished jobs build trust; aborts and "client unhappy" choices cost it. High trust pays up to 15% more; below 20, a client stops calling. Trust drifts back towards neutral each week.';
 
-/** Jobs tab: the clients as a strip of chips under the board. Full write-ups are on City. */
+/** Jobs tab: the clients as a strip of chips under the board. Full write-ups are on Lore. */
 function renderClients() {
   return `
       <h2>Clients</h2>
       <div class="infoline"><p class="muted small">Where you stand with each.</p>${infoButton('clients', 'About client trust')}</div>
-      ${infoText('clients', `${TRUST_NOTE} Who they are: City tab.`)}
+      ${infoText('clients', `${TRUST_NOTE} Who they are: the Lore tab.`)}
       <ul class="clientstrip">
         ${CLIENTS.map((c) => {
           const t = trustOf(state, c.id);
@@ -1868,7 +1889,7 @@ function renderClients() {
       </ul>`;
 }
 
-/** City tab: who each client is, with where you stand. */
+/** Lore › Clients: who each client is, with where you stand. */
 function renderClientCards() {
   return `
       <ul class="list list--plain">
@@ -2419,11 +2440,9 @@ function districtCard(key) {
   const c = DISTRICT_CARDS[key];
   const turf = DISTRICTS[key]?.turf;
   const jobs = MISSIONS.filter((m) => m.district === key).map((m) => m.name);
-  const art = c.locked ? null : districtArt(key);
   const out = crewOutIn(key);
   return `
-    <div class="riskcard citycard ${art ? 'has-art' : ''}" style="--turf:${turfHex(key) ?? 'var(--line)'}">
-      ${art ? `<div class="citycard__art" aria-hidden="true">${art}</div>` : ''}
+    <div class="riskcard citycard" style="--turf:${turfHex(key) ?? 'var(--line)'}">
       <h2 class="nomargin">${esc(cityName(key))} <span class="muted">${esc(c.chinese)}</span></h2>
       <p class="muted small">${esc(c.side)}${turf ? ` · <span class="citycard__turf">${esc(turf)}</span>` : ''}${key === SAFEHOUSE_DISTRICT ? ' · our home hall' : hallIn(state, key) ? ' · a hall of ours' : ''}${out ? ` · ${out} of yours out here` : ''}${heatIn(state, key) ? ` · heat ${heatIn(state, key)}/10` : ''}</p>
       <p class="body">${esc(c.pitch)}</p>
@@ -2443,31 +2462,76 @@ function districtCard(key) {
             : '<p class="small muted">Nobody here is hiring crews like yours yet.</p>';
       })()}
       ${activeRumour(state)?.district === key ? `<p class="talk-tag">Street talk: ${esc(activeRumour(state).text)}</p>` : ''}
-      <details class="citydetails">
-        <summary>More about ${esc(cityName(key))}</summary>
-        ${c.locked || !jobs.length ? '' : `<p class="small"><strong>Kinds of work here:</strong> ${esc(jobs.join(', '))}</p>`}
+      <button class="linkbtn citycard__about" data-action="about-district" data-id="${esc(key)}">About ${esc(NAMES.districtsInText?.[key] ?? cityName(key))} on Lore ›</button>
+    </div>`;
+}
+
+/**
+ * Lore › Districts (2026-11-06, when Ops became its own tab and City became Lore): the city's places as a book, each
+ * led by its picture (ui/districtArt.js), with the write-up a tap away. Locked districts are a
+ * line each, with what the street says about them.
+ */
+function renderDistrictLore() {
+  // Home first, then the rest as the map lists them.
+  const open = MAP_DISTRICTS.filter((k) => !DISTRICT_CARDS[k].locked).sort((a, b) => (b === SAFEHOUSE_DISTRICT) - (a === SAFEHOUSE_DISTRICT));
+  const locked = MAP_DISTRICTS.filter((k) => DISTRICT_CARDS[k].locked);
+  const entry = (key) => {
+    const c = DISTRICT_CARDS[key];
+    const on = loreDistrict === key;
+    const turf = DISTRICTS[key]?.turf;
+    const jobs = MISSIONS.filter((m) => m.district === key && !m.opening).map((m) => m.name);
+    const art = districtArt(key);
+    return `
+    <li class="lorecard ${on ? 'is-open' : ''}" style="--turf:${turfHex(key) ?? 'var(--line)'}">
+      <button class="lorecard__head" data-action="lore-district" data-id="${esc(key)}" aria-expanded="${on}">
+        ${art ? `<span class="lorecard__art" aria-hidden="true">${art}</span>` : ''}
+        <span class="lorecard__title"><strong>${esc(cityName(key))}</strong> <span class="muted">${esc(c.chinese)}</span></span>
+        <span class="muted small lorecard__side">${esc(c.side)}${turf ? ` · <span class="citycard__turf">${esc(turf)}</span>` : ''}</span>
+        <span class="body lorecard__pitch">${esc(c.pitch)}</span>
+        ${c.locked ? `<span class="intel lorecard__teaser">${esc(c.teaser)}</span>` : ''}
+        <span class="lorecard__more small">${on ? 'Less ▴' : 'Read more ▾'}</span>
+      </button>
+      ${on ? `<div class="lorecard__body">
         <p class="small"><strong>Who runs it:</strong> ${esc(c.control)}</p>
         <p class="small"><strong>Police:</strong> ${esc(c.police)}</p>
         <p class="small"><strong>At 3am:</strong> ${esc(c.night)}</p>
         <p class="small"><strong>Local custom:</strong> ${esc(c.custom)}</p>
         <p class="small"><strong>Landmarks:</strong></p>
-        <ul>${c.landmarks.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>
-      </details>
-    </div>`;
+        <ul class="small">${c.landmarks.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>
+        ${jobs.length ? `<p class="small"><strong>Kinds of work here:</strong> ${esc(jobs.join(', '))}</p>` : ''}
+        ${c.locked ? '' : `<button class="linkbtn" data-action="ops-district" data-id="${esc(key)}">See it on Ops ›</button>`}
+      </div>` : ''}
+    </li>`;
+  };
+  return `
+    <ul class="lorecards">${open.map(entry).join('')}</ul>
+    <h2>Not open to us yet</h2>
+    <ul class="lorecards">${locked.map(entry).join('')}</ul>`;
 }
 
-/** City sections, one at a time, so the map screen fits a phone. */
-const CITY_TABS = { map: 'Map', clients: 'Clients', factions: "Who's who", lore: 'Lore' };
-
-function renderCity() {
-  const tab = CITY_TABS[cityTab] ? cityTab : 'map';
-  const groups = [...new Set(FACTIONS.map((f) => f.group))];
-  const body = {
-    map: () => `
+/**
+ * Ops, the command centre (2026-11-05; its own tab 2026-11-06, owner: City "more seems like
+ * lore"): the map, the picked district's card, everyone out, and the city tonight.
+ */
+function renderOpsScreen() {
+  return `
+    <section class="panel">
+      <h1 class="cityhead">Ops <span class="muted small">${esc(NAMES.city)} tonight</span></h1>
       <div class="cols2 cols2--map">
         <div>${cityMap()}</div>
         <div>${cityDistrict ? districtCard(cityDistrict) : ''}${renderOps()}${citySummary()}</div>
-      </div>`,
+      </div>
+    </section>`;
+}
+
+/** Lore's sections: the city as a book (the live map is on Ops). The tab was City until 2026-11-06. */
+const LORE_TABS = { districts: 'Districts', clients: 'Clients', factions: "Who's who", history: 'History' };
+
+function renderLore() {
+  const tab = LORE_TABS[cityTab] ? cityTab : 'districts';
+  const groups = [...new Set(FACTIONS.map((f) => f.group))];
+  const body = {
+    districts: renderDistrictLore,
     clients: () => renderClientCards(),
     factions: () => `
       <div class="cols2 cols2--flow">
@@ -2483,7 +2547,7 @@ function renderCity() {
           </ul>
         </div>`).join('')}
       </div>`,
-    lore: () => `
+    history: () => `
       <div class="cols2">
       <div>
       <h2>Everyone knows</h2>
@@ -2498,8 +2562,8 @@ function renderCity() {
   return `
     <section class="panel">
       <h1 class="cityhead">${esc(NAMES.city)} <span class="muted">燈籠灣</span> <span class="muted small">2057</span></h1>
-      <div class="subtabs" role="group" aria-label="City sections">
-        ${Object.entries(CITY_TABS).map(([k, label]) => `<button class="subtab ${k === tab ? 'is-on' : ''}" data-action="city-tab" data-id="${k}" aria-pressed="${k === tab}">${esc(label)}</button>`).join('')}
+      <div class="subtabs" role="group" aria-label="Lore sections">
+        ${Object.entries(LORE_TABS).map(([k, label]) => `<button class="subtab ${k === tab ? 'is-on' : ''}" data-action="city-tab" data-id="${k}" aria-pressed="${k === tab}">${esc(label)}</button>`).join('')}
       </div>
       ${body}
     </section>`;

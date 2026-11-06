@@ -90,7 +90,7 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 }
 
 /* Bottom nav on phones */
-.nav { order: 3; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); background: var(--panel); position: sticky; bottom: 0; }
+.nav { order: 3; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-top: 1px solid var(--line); background: var(--panel); position: sticky; bottom: 0; }
 .nav__btn { white-space: nowrap; min-height: 56px; background: none; border: 0; color: var(--muted); font: inherit; font-size: 0.85rem; cursor: pointer; }
 .nav__btn.is-active { color: var(--accent); box-shadow: inset 0 2px 0 var(--accent); }
 .nav__btn:disabled { opacity: 0.35; cursor: default; }
@@ -292,10 +292,12 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
   .list--cols { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 8px; }
   .cols2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 28px; align-items: start; }
   .cols2--flow { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
-  /* City map: the map's column is only as wide as the map draws (its height cap × 330/290,
-     see .citymap below), so the district card sits right beside it instead of across a gap. */
-  .cols2--map { grid-template-columns: min(460px, calc(max(360px, 100dvh - 300px) * 330 / 290)) minmax(0, 1fr); }
-  .cols2--map { grid-template-columns: min(460px, calc(max(360px, 100svh - 300px) * 330 / 290)) minmax(0, 1fr); }
+  /* Ops map: the map's column is only as wide as the map draws (its height cap × 330/290,
+     see .citymap below), so the district card sits right beside it instead of across a gap.
+     Bigger since Ops got its own tab (owner, 2026-11-06): up to 60% of the width, the card
+     column never under 340px. */
+  .cols2--map { grid-template-columns: min(60%, calc(max(400px, 100dvh - 230px) * 330 / 290)) minmax(340px, 1fr); }
+  .cols2--map { grid-template-columns: min(60%, calc(max(400px, 100svh - 230px) * 330 / 290)) minmax(340px, 1fr); }
   /* Planning a job: approach, squad and orders on the left; client and the reads beside them, so the risk updates in view as you pick. */
   .plangrid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); grid-template-rows: auto auto 1fr; column-gap: 28px; align-items: start;
     grid-template-areas: "approach client" "crew risk" "orders risk"; }
@@ -543,7 +545,7 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
    after the owner's mock-up drafts/prototypes/command-centre.html). Faceted districts in their
    gang's light at dark seams, a faint block grid, transit; then heat glows, crews out as faces,
    calls pulsing sodium, raid rings. Only calls and raids move; that stops too for reduced motion. */
-.citymap { display: block; width: 100%; max-width: 520px; margin: 8px auto 6px; touch-action: manipulation; }
+.citymap { display: block; width: 100%; max-width: 760px; margin: 8px auto 6px; touch-action: manipulation; }
 .citymap text { font-family: var(--display); pointer-events: none; }
 .cm-d { cursor: pointer; }
 .cm-d:focus { outline: none; }
@@ -610,7 +612,9 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
    hides its bars on scroll, which made the map and the picture beside it grow mid-scroll
    (owner, iPad, 2026-10-29). The dvh lines are the fallback for browsers without svh. */
 .citymap { max-height: max(300px, calc(100dvh - 400px)); max-height: max(300px, calc(100svh - 400px)); }
-@media (min-width: 900px) { .citymap { max-height: max(360px, calc(100dvh - 300px)); max-height: max(360px, calc(100svh - 300px)); } }
+/* Ops has no section tabs (2026-11-06), so the map takes that room back. */
+@media (min-width: 600px) and (max-width: 899px) { .citymap { max-height: max(360px, calc(100dvh - 340px)); max-height: max(360px, calc(100svh - 340px)); } }
+@media (min-width: 900px) { .citymap { max-width: none; max-height: max(400px, calc(100dvh - 230px)); max-height: max(400px, calc(100svh - 230px)); } }
 .citycard ul { margin-top: 0; }
 .citydetails { border: 1px solid var(--line); border-radius: var(--radius); padding: 0 12px; margin-bottom: 6px; }
 .citydetails summary { min-height: var(--tap); display: flex; align-items: center; cursor: pointer; font-weight: 600; }
@@ -731,6 +735,9 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 /* Tabs: display face; the active one gets a red bar and a small square marker. */
 .nav { background: rgba(10, 12, 15, 0.96); }
 .nav__btn { text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.95rem; font-weight: 600; }
+/* Five tabs across a phone (Ops joined 2026-11-06): a little tighter so TODAY with its count fits 78px. */
+@media (max-width: 899px) { .nav__btn { letter-spacing: 0.06em; font-size: 0.88rem; padding: 0 2px; } }
+@media (max-width: 399px) { .nav__btn { letter-spacing: 0.02em; font-size: 0.82rem; } .nav__btn .pill { padding: 1px 4px; min-width: 16px; } }
 .nav__btn.is-active { color: var(--text); }
 .nav__btn.is-active::before { content: '■ '; color: var(--accent); font-size: 0.6em; vertical-align: 0.15em; }
 
@@ -1174,6 +1181,26 @@ p > .infobtn { display: inline-grid; vertical-align: 2px; margin-left: 4px; }
 .cityrow__out { color: var(--accent-2); }
 .cityplaces { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .cityplace { display: grid; gap: 2px; text-align: left; min-height: 56px; }
+/* The Ops card points to the district's write-up on City (2026-11-06). */
+.citycard__about { display: inline-flex; align-items: center; min-height: var(--tap, 44px); margin-top: 4px; }
+/* City › Districts (2026-11-06): the city as a book, each district led by its picture, its gang's
+   light on the corner as on the map's plates. The whole head is one tap target that opens the rest. */
+.lorecards { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 14px; }
+.lorecard { position: relative; background: var(--panel-2); border: 1px solid var(--line);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); }
+.lorecard::before { content: ''; position: absolute; z-index: 1; top: 0; left: 0; width: 28px; height: 2px; background: var(--turf); }
+.lorecard.is-open { border-color: var(--turf); }
+.lorecard__head { display: grid; gap: 4px; width: 100%; padding: 0 0 12px; text-align: left; background: none; border: 0; color: var(--text); font: inherit; cursor: pointer; }
+.lorecard__head > :not(.lorecard__art) { padding: 0 14px; }
+.lorecard__art { display: block; margin-bottom: 8px; }
+.lorecard__art svg { display: block; width: 100%; height: auto; }
+.lorecard__head > .lorecard__title { padding-top: 12px; }
+.lorecard__art + .lorecard__title { padding-top: 0; }
+.lorecard__title strong { font-family: var(--display); font-size: 1.1rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-2); }
+.lorecard__more { color: var(--accent-2); font-family: var(--display); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; min-height: 28px; display: flex; align-items: end; }
+.lorecard__body { padding: 0 14px 12px; border-top: 1px solid var(--line); }
+.lorecard__body .linkbtn { min-height: var(--tap, 44px); }
+@media (min-width: 900px) { .lorecards { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; } }
 /* Lettering inside the district pictures (ui/districtArt.js): the container stencil, and the neon
    signs' Chinese in the system's CJK font, as the city's name is elsewhere. */
 .da-stencil { font: 700 6.5px var(--display); letter-spacing: 0.12em; fill: #e9e2cf; opacity: 0.85; }
@@ -1451,6 +1478,24 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .savebtn.is-active { color: var(--text); border-color: var(--accent); }
 .savebtn__word { display: none; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; margin-left: 4px; }
 @media (min-width: 900px) { .savebtn__word { display: inline; } }
+/* Save at the foot of the sidebar on wide screens (owner, 2026-11-06: too close to Continue up
+   top); phones keep the ☰ in the top bar, where Continue is down in the dock. The sidebar sticks
+   under the top bar so Save stays in reach on a long page. */
+.nav__btn--save { display: none; }
+@media (min-width: 900px) {
+  .topbar .savebtn { display: none; }
+  .nav { display: flex; flex-direction: column; position: sticky; top: 72px; align-self: start; height: calc(100dvh - 72px); height: calc(100svh - 72px); }
+  .nav__btn { flex: 0 0 auto; }
+  .nav__btn--save { display: block; margin-top: auto; border-top: 1px solid var(--line); font-size: 0.85rem; }
+}
+/* The top bar's heat names the hottest district and opens it on Ops. */
+.stat--heat { background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; min-height: 44px; display: inline-flex; align-items: center; gap: 6px; }
+/* The top bar on a phone: tighter gaps so date, stats and ☰ fit 360-430px without a sideways scroll (it ran to 415px at 390). */
+@media (max-width: 899px) { .topbar { padding: 12px; column-gap: 8px; } .topbar__when { min-width: 0; } .topbar__stats { column-gap: 8px; } .savebtn { margin-right: -4px; } }
+@media (max-width: 379px) { .topbar { padding: 12px 10px; column-gap: 4px; } .topbar__stats { column-gap: 6px; } }
+/* On a phone the top bar has no room for the name: the tap still opens the hottest district. */
+@media (max-width: 899px) { .stat__where { display: none; } }
+.stat--heat:hover .stat__label, .stat--heat:focus-visible .stat__label { color: var(--accent-2); }
 
 /* Back today (2026-11-04): faces home again, a result stamp, Joss's line and the report. */
 .backs { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 8px; }

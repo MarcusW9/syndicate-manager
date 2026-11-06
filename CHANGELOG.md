@@ -13,6 +13,16 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - **Picking who goes is clearer.** The list says what the job wants ("about 10 in medical or cool") and what the colours mean. Your own crew comes first, freelancers have their own section below with their cut, then those already on the squad, and anyone not free today is folded away. Joss's pick for the slot is tagged. Sort by best fit or by any of the job's stats. On a phone the stat that counts most is shown big; on a computer it's a table you read down, sorted by tapping a column.
 - **The racecourse stables plan** (the Basin's jobs) no longer has the track running over the first stable row, and the service gate's label is clear of the hay bales.
 
+## 2026-11-06 · Ops gets its own tab; City becomes Lore
+- **The tabs are now Today · Ops · Crew · Jobs · Lore.**
+- **Ops, the new second tab:** the city map, everyone out, raids and calls, and the city tonight (what City's Map tab was). The count of calls waiting is on it, and sending a crew out lands there.
+- **City is renamed Lore**, and is about the city again: a new **Districts** section comes first, a card per district led by its picture (the Docks' cranes, Old Town's alleys, the Night Market's neon, Glass Heights' towers, the Basin's racecourse). Tap one for who runs it, the police, the night, the local custom and the landmarks. The three districts not open yet follow, with what the street says about them. Then Clients, Who's who, and History (what the Lore section was).
+- A district picked on the Ops map links to its write-up on Lore, and back.
+- **The Ops map is bigger on tablets and computers:** about a third larger, and still on one screen.
+- **Heat in the top bar names the hottest district** ("Heat · Docks 6/10"; on a phone just the number) and a tap opens it on Ops.
+- **Save is at the foot of the sidebar** on computers and tablets in landscape, away from Continue. Phones keep ☰ in the top bar.
+- Fixed: on a phone the top bar was a little wider than the screen, so the page scrolled sideways and ☰ was half cut off.
+
 ## 2026-11-06 · Buy a hall, and a work board
 - **A hall can be bought outright:** 26 weeks of its rent, once. After that it pays no rent, and making it bigger adds none. Crew › Halls has "Buy the place" on each hall; a bought hall is marked ours. The home hall can be bought too.
 - **A new room, the work board** (¥8,000, 2 × 2). Street freelancers come in for small work the tong brokers in that district, and the tong keeps a fifth of the fee:

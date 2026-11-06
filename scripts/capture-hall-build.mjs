@@ -76,7 +76,7 @@ try {
   await tap(p, '[data-action="build-piece"][data-id="lookout"]'); await p.waitForTimeout(300);
   await p.screenshot({ path: `${out}/07-rooms-tab.png`, fullPage: true });
   await load(p, calling);
-  await tap(p, '[data-action="nav"][data-id="city"]'); await p.waitForTimeout(400);
+  await tap(p, '[data-action="nav"][data-id="ops"]'); await p.waitForTimeout(400);
   await tap(p, '[data-action="raid-answer"]'); await p.waitForTimeout(400);
   await tap(p, '[data-action="decide"][data-option="hold"]'); await p.waitForTimeout(1500);
   await p.screenshot({ path: `${out}/06-holding-the-built-hall.png` });

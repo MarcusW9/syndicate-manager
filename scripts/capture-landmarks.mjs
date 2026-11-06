@@ -42,7 +42,7 @@ try {
   await p.evaluate(() => { [...document.querySelectorAll('h2')].find((h) => h.textContent.trim() === 'Halls')?.scrollIntoView({ block: 'start' }); window.scrollBy(0, -130); });
   await p.waitForTimeout(200);
   await p.screenshot({ path: `${out}/01-crew-halls.png` });
-  await tap(p, '[data-action="nav"][data-id="city"]'); await p.waitForTimeout(500);
+  await tap(p, '[data-action="nav"][data-id="ops"]'); await p.waitForTimeout(500);
   await p.evaluate(() => document.querySelector('.crewsout__job.is-raid').scrollIntoView({ block: 'center' })); await p.waitForTimeout(200);
   await p.locator('.crewsout__job.is-raid').first().screenshot({ path: `${out}/02-out-now-raid.png` });
   const warn = warned.inbox.find((m) => m.kind === 'raid-warning');
@@ -50,7 +50,7 @@ try {
   await p.locator(`[data-action="open-message"][data-id="${warn.id}"]`).first().click(); await p.waitForTimeout(300);
   await p.screenshot({ path: `${out}/03-raid-warning.png` });
   await load(p, calling);
-  await tap(p, '[data-action="nav"][data-id="city"]'); await p.waitForTimeout(400);
+  await tap(p, '[data-action="nav"][data-id="ops"]'); await p.waitForTimeout(400);
   await tap(p, '[data-action="raid-answer"]'); await p.waitForTimeout(400);
   await p.screenshot({ path: `${out}/04-the-call.png` });
 } finally {

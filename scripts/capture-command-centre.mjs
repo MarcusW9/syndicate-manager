@@ -71,7 +71,7 @@ try {
   await p.screenshot({ path: `${out}/06-save-button.png` });
   const d = await b.newPage({ viewport: { width: 1280, height: 860 } });
   await load(d, busy);
-  await tap(d, '[data-action="nav"][data-id="city"]'); await d.waitForTimeout(500);
+  await tap(d, '[data-action="nav"][data-id="ops"]'); await d.waitForTimeout(500);
   await d.screenshot({ path: `${out}/07-desktop-city.png` });
   console.log('call waiting on', wanted?.mission.templateId, 'side out', busy.sideOut?.length);
 } finally {

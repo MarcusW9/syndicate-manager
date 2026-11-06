@@ -29,29 +29,29 @@ try {
   await tap(p, '[data-action="nav"][data-id="jobs"]'); await p.waitForTimeout(300);
   await tap(p, `[data-action="open-job"][data-id="${job.id}"]`); await p.waitForTimeout(600);
   await tap(p, '[data-action="joss"]'); await p.waitForTimeout(400);
-  await p.screenshot({ path: `${out}/18-plan-runners-and-board.png` });
+  await p.screenshot({ path: `${out}/19-plan-runners-and-board.png` });
   await tap(p, '.runners [data-action="op-link"]'); await p.waitForTimeout(500);
   await p.evaluate(() => window.scrollTo(0, 0));
-  await p.screenshot({ path: `${out}/19-runner-page-from-the-job.png` });
+  await p.screenshot({ path: `${out}/20-runner-page-from-the-job.png` });
   await tap(p, '[data-action="back"]'); await p.waitForTimeout(500);
   await p.locator('.board').scrollIntoViewIfNeeded();
-  await p.locator('.board').screenshot({ path: `${out}/20-board-with-x.png` });
+  await p.locator('.board').screenshot({ path: `${out}/21-board-with-x.png` });
   await tap(p, '[data-action="unassign"]'); await p.waitForTimeout(400);
-  await p.locator('.board').screenshot({ path: `${out}/21-board-one-taken-off.png` });
+  await p.locator('.board').screenshot({ path: `${out}/22-board-one-taken-off.png` });
   const q = await b.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
   await load(q, s);
   await tap(q, '[data-action="nav"][data-id="jobs"]'); await q.waitForTimeout(300);
   await tap(q, `[data-action="open-job"][data-id="${job.id}"]`); await q.waitForTimeout(600);
   await tap(q, '[data-action="joss"]'); await q.waitForTimeout(400);
   await q.locator('.board').scrollIntoViewIfNeeded();
-  await q.locator('.board').screenshot({ path: `${out}/22-board-with-x-phone.png` });
+  await q.locator('.board').screenshot({ path: `${out}/23-board-with-x-phone.png` });
   // The picker (2026-11-06): the extra inside slot on a phone, then sorted by a stat; then on the computer.
   await tap(q, '.dossiers--inside .dossier.is-empty'); await q.waitForTimeout(500);
-  await q.locator('.sheet').screenshot({ path: `${out}/24-picker-phone.png` });
+  await q.locator('.sheet').screenshot({ path: `${out}/25-picker-phone.png` });
   await tap(q, '.picker__cards [data-action="pick-sort"]:not(.is-on)'); await q.waitForTimeout(400);
-  await q.locator('.sheet').screenshot({ path: `${out}/25-picker-phone-sorted.png` });
+  await q.locator('.sheet').screenshot({ path: `${out}/26-picker-phone-sorted.png` });
   await tap(p, '.dossiers--inside .dossier.is-empty'); await p.waitForTimeout(500);
-  await p.screenshot({ path: `${out}/26-picker-desktop.png` });
+  await p.screenshot({ path: `${out}/27-picker-desktop.png` });
 } finally {
   await b.close();
   process.kill(-srv.pid);
