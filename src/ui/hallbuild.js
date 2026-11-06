@@ -22,6 +22,8 @@ export const PIECE_ICON = {
   bunks: '<rect x="4" y="4" width="18" height="18" fill="#1f2633" stroke="#5a6474"/><rect x="7" y="8" width="12" height="3" fill="#8b9aab"/><rect x="7" y="15" width="12" height="3" fill="#8b9aab"/>',
   canteen: '<rect x="4" y="4" width="18" height="18" fill="#1f2633" stroke="#5a6474"/><path d="M7 12h12a6 6 0 0 1-12 0z" fill="#f2d541"/><rect x="12" y="6" width="1.5" height="4" fill="#8b9aab"/>',
   stash: '<rect x="4" y="4" width="18" height="18" fill="#1f2633" stroke="#5a6474"/><rect x="8" y="8" width="10" height="10" fill="#5d6b7a"/><circle cx="13" cy="13" r="2" fill="#f2d541"/>',
+  den: '<rect x="4" y="4" width="18" height="18" fill="#1f2633" stroke="#5a6474"/><rect x="7" y="8" width="6" height="9" fill="#e8e2d0"/><rect x="13" y="10" width="6" height="9" fill="#e8e2d0"/><circle cx="10" cy="12" r="1.2" fill="#ff3d5f"/><circle cx="16" cy="14" r="1.2" fill="#3de8d8"/>',
+  cyberdoc: '<rect x="4" y="4" width="18" height="18" fill="#1f2633" stroke="#5a6474"/><rect x="8" y="8" width="10" height="10" fill="none" stroke="#b48cff" stroke-width="1.5"/><path d="M13 5v3M13 18v3M5 13h3M18 13h3" stroke="#b48cff" stroke-width="1.5"/>',
   lookout: '<rect x="4" y="4" width="18" height="18" fill="#1f2633" stroke="#5a6474"/><path d="M6 13q7-7 14 0q-7 7-14 0z" fill="none" stroke="#3de8d8" stroke-width="1.5"/><circle cx="13" cy="13" r="2" fill="#3de8d8"/>',
 };
 const icon = (id) => `<svg class="btile__icon" viewBox="0 0 26 26" width="32" height="32" aria-hidden="true">${PIECE_ICON[id] ?? ''}</svg>`;

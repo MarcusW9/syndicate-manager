@@ -111,3 +111,43 @@ test('the stash: walking out loses half; the lookout: a raid is warned a day soo
   assert.equal(RAID.warnDays, 3, 'without a lookout, three days');
   assert.equal(typeof checkRaids, 'function');
 });
+
+test('the den: whoever lives there asks a little less at renewal (as 10 more jobs together, still capped)', async () => {
+  const { renewalAsk } = await import('../src/core/renewals.js');
+  const { marketWage } = await import('../src/core/pricing.js');
+  let s = build(tong(), 'den');
+  const { denJobs } = await import('../src/core/renewals.js');
+  const op = s.crew[0];
+  for (const k of Object.keys(op.stats)) op.stats[k] = 16;
+  op.jobsWithCrew = 3;
+  op.wage = Math.round(marketWage(op) * 0.2);
+  op.hall = 'basin';
+  assert.equal(denJobs(s, op), ROOM_EFFECT.denJobs);
+  op.hall = 'oldTown';
+  const without = renewalAsk(op, s);
+  op.hall = 'basin';
+  const withDen = renewalAsk(op, s);
+  assert.ok(withDen < without, `${withDen} < ${without}`);
+  op.jobsWithCrew = 40;
+  const capped = renewalAsk(op, s);
+  op.hall = 'oldTown';
+  assert.equal(renewalAsk(op, s), capped, 'past the cap, the den adds nothing');
+});
+
+test('the cyber doc: one in the whole tong, level 3; implants cost a quarter less while it stands', async () => {
+  const { buyPrice, priceOf, buyGear } = await import('../src/core/gear.js');
+  let s = tong(2);
+  const at = [...buildableCells(HALLS.basin)][0].split(',').map(Number);
+  assert.match(canPlace(s, 'basin', 'cyberdoc', ...at).reason, /level 3/);
+  s = build(tong(3), 'cyberdoc');
+  s.halls.find((h) => h.district === 'oldTown').level = 3;
+  s.halls.find((h) => h.district === 'oldTown').build = [];
+  const ot = [...buildableCells(HALLS.oldTown)].map((k) => k.split(',').map(Number)).find(([x, y]) => canPlace({ ...s, halls: s.halls.map((h) => (h.district === 'basin' ? { ...h, build: [] } : h)) }, 'oldTown', 'cyberdoc', x, y).ok);
+  assert.match(canPlace(s, 'oldTown', 'cyberdoc', ...ot).reason, /tong already has a cyber doc/);
+  assert.equal(buyPrice(s, 'reflex'), Math.round((priceOf('reflex') * ROOM_EFFECT.docShare) / 50) * 50);
+  assert.equal(buyPrice(s, 'rifle'), priceOf('rifle'), 'only implants');
+  const cash = s.cash;
+  s = buyGear(s, 'reflex');
+  assert.equal(s.cash, cash - buyPrice(s, 'reflex'));
+  assert.equal(buyPrice(tong(), 'reflex'), priceOf('reflex'), 'no doc, the full price');
+});

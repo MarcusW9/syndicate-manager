@@ -4,6 +4,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-06 · The den and the cyber doc
+- **Den** (¥14,000, level 2, 2 × 3, turns): a mahjong table and a karaoke screen. Whoever lives there asks for a smaller raise when they want a new deal.
+- **Cyber doc** (¥25,000, level 3, 2 × 2): one in the whole tong. While you have one, implants in the armoury cost a quarter less.
+
 ## 2026-11-06 · Rooms in a hall
 - **The build screen has a Rooms tab.** Each room helps whoever lives in that hall, and a hall can have one of each:
   - **Clinic** (¥18,000, level 2, 2 × 2): injuries heal twice as fast while they're home.

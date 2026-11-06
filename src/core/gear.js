@@ -11,6 +11,7 @@
 import { GEAR, SLOTS, TIERS, SIDEARM_FRAMES, SIDEARM_QUIRKS, SIDEARM_PRICE_PER_POINT } from '../data/gear.js';
 import { SPECIALISATIONS } from '../data/specialisations.js';
 import { giveLook } from './looks.js';
+import { ROOM_EFFECT } from '../data/hallBuild.js';
 
 export { GEAR, SLOTS, TIERS };
 
@@ -139,10 +140,18 @@ const newItem = (state, type, tier) => {
 };
 
 /** Buy an item into the stash. Returns the new state, or prev if it can't be bought. */
+/** Does the tong have a cyber doc (a hall room, core/hallbuild.js)? */
+export const hasCyberDoc = (state) => (state?.halls ?? []).some((h) => (h.build ?? []).some((b) => b.piece === 'cyberdoc'));
+/** What buying costs the tong: the price, and implants a quarter less with a cyber doc. */
+export const buyPrice = (state, type, tier = 'street', item = null) => {
+  const p = priceOf(type, tier, item);
+  return GEAR[type]?.slot === 'implant' && hasCyberDoc(state) ? Math.round((p * ROOM_EFFECT.docShare) / 50) * 50 : p;
+};
+
 export function buyGear(prev, type, tier = 'street') {
-  if (!GEAR[type] || !TIERS[tier] || prev.cash < priceOf(type, tier)) return prev;
+  if (!GEAR[type] || !TIERS[tier] || prev.cash < buyPrice(prev, type, tier)) return prev;
   const state = structuredClone(prev);
-  state.cash -= priceOf(type, tier);
+  state.cash -= buyPrice(prev, type, tier);
   (state.stash ??= []).push(newItem(state, type, tier));
   return state;
 }
@@ -150,9 +159,9 @@ export function buyGear(prev, type, tier = 'street') {
 /** Buy one of this week's rifles from the armoury (core/looks.js): it keeps its look and name. */
 export function buyOffer(prev, oid) {
   const offer = prev.armoury?.offers?.find((o) => o.oid === oid);
-  if (!offer || prev.cash < priceOf(offer.type, offer.tier, offer)) return prev;
+  if (!offer || prev.cash < buyPrice(prev, offer.type, offer.tier, offer)) return prev;
   const state = structuredClone(prev);
-  state.cash -= priceOf(offer.type, offer.tier, offer);
+  state.cash -= buyPrice(prev, offer.type, offer.tier, offer);
   state.armoury.offers = state.armoury.offers.filter((o) => o.oid !== oid);
   state.gearSeq = (state.gearSeq ?? 0) + 1;
   (state.stash ??= []).push({ uid: `g${state.gearSeq}`, type: offer.type, tier: offer.tier, look: offer.look, name: offer.name, ...(offer.quirk ? { quirk: offer.quirk } : {}) });

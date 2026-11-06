@@ -9,6 +9,8 @@ import { addStatus, hasStatus } from './statuses.js';
 import { bestFor } from './crew.js';
 import { nextRng } from './random.js';
 import { d20 } from './rng.js';
+import { hallIn, hasRoom } from './halls.js';
+import { ROOM_EFFECT } from '../data/hallBuild.js';
 
 export const RENEWAL_STAT_RISE = 2;
 export const NOTICE_COOLDOWN_DAYS = 56; // 8 weeks
@@ -16,10 +18,13 @@ export const UNHAPPY_DAYS = 28; // 4 weeks
 export const RENEWAL_HAGGLE_DIFFICULTY = 14;
 export const RENEWAL_HAGGLE_OFF = 0.1;
 
+/** A den in the hall they live in counts as more jobs together (core/hallbuild.js; 2026-11-06). */
+export const denJobs = (state, op) => (state && !op.freelance && hasRoom(hallIn(state, op.hall ?? 'oldTown'), 'den') ? ROOM_EFFECT.denJobs : 0);
+
 /** What they ask for: the raise shrinks with loyalty, and the ask never drops below today's wage. */
-export function renewalAsk(op) {
+export function renewalAsk(op, state = null) {
   const market = marketWage(op);
-  return Math.max(op.wage, round50(op.wage + (market - op.wage) * (1 - loyaltyDiscount(op))));
+  return Math.max(op.wage, round50(op.wage + (market - op.wage) * (1 - loyaltyDiscount(op, denJobs(state, op)))));
 }
 
 const cooledDown = (op, day) => op.lastNoticeDay == null || day - op.lastNoticeDay >= NOTICE_COOLDOWN_DAYS;
@@ -36,7 +41,7 @@ export function renewalDue(state, op, graduated = false) {
 /** Post a renewal notice if one is due. Mutates state. Returns true if one fired. */
 export function checkRenewal(state, op, graduated = false) {
   if (!renewalDue(state, op, graduated)) return false;
-  const ask = renewalAsk(op);
+  const ask = renewalAsk(op, state);
   postPayAsk(state, op, { ask, subject: `${op.handle} wants a new deal`, body: `${op.name} knows what they're worth now. On ${op.wage} a week; asking for ${ask}.` });
   return true;
 }
@@ -55,7 +60,7 @@ export function postPayAsk(state, op, { ask, subject, body, reason = 'growth' })
     subject, body,
     kind: 'renewal',
     options: renewalOptions(false),
-    payload: { opId: op.id, current: op.wage, ask, market: marketWage(op), loyalty: loyalty(op), discount: loyaltyDiscount(op), jobs: op.jobsWithCrew ?? 0, haggled: false, haggleResult: null, reason },
+    payload: { opId: op.id, current: op.wage, ask, market: marketWage(op), loyalty: loyalty(op, denJobs(state, op)), discount: loyaltyDiscount(op, denJobs(state, op)), jobs: op.jobsWithCrew ?? 0, haggled: false, haggleResult: null, reason },
     blocking: true, resolved: false, read: false,
   });
 }

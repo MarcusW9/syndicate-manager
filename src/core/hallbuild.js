@@ -76,6 +76,7 @@ export function canPlace(state, district, pieceId, x, y, rot = 0) {
   if (hallShut(state, district)) return { ok: false, reason: 'The hall is shut after a raid' };
   if (p.needs && hall.level < p.needs) return { ok: false, reason: `Needs a level ${p.needs} hall` };
   if (p.one && (hall.build ?? []).some((b) => b.piece === pieceId)) return { ok: false, reason: `This hall already has a ${p.name.toLowerCase()}` };
+  if (p.tongOne && (state.halls ?? []).some((h) => (h.build ?? []).some((b) => b.piece === pieceId))) return { ok: false, reason: `The tong already has a ${p.name.toLowerCase()}` };
   const cells = pieceCells(pieceId, x, y, rot);
   const free = buildableCells(hallMap(district));
   const built = builtCells(hall);

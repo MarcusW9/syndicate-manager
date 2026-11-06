@@ -18,6 +18,8 @@ export const ROOM_EFFECT = {
   bunkBeds: 2, // beds a bunk room adds
   stashKeeps: 0.5, // walking out loses this share of what was kept there
   lookoutWarn: 4, // a raid is warned this many days ahead (3 without, data/raids.js)
+  denJobs: 10, // a den counts as this many more jobs together for loyalty (core/loyalty.js): a raise about 10% smaller, still capped
+  docShare: 0.75, // with a cyber doc in the tong, implants cost this share (core/gear.js)
 };
 
 const plate = '#5d6b7a';
@@ -81,6 +83,16 @@ Object.assign(PIECES, {
     name: 'Lookout', kind: 'room', cost: 12000, size: [2, 2], turns: false, one: true, what: 'warned 4 days',
     about: 'A stool at a window that sees the street both ways. We hear of a raid on this hall a day sooner.',
     shapes: (x, y) => room(x, y, 60, 60, (rx, ry, w) => [fit(rx + 4, ry + 2, w - 8, 4, '#3de8d8'), fit(rx + w / 2 - 5, ry + 14, 10, 10, '#6b5a2a')]),
+  },
+  den: {
+    name: 'Den', kind: 'room', cost: 14000, size: [3, 2], turns: true, needs: 2, one: true, what: 'loyalty',
+    about: 'A mahjong table and a karaoke screen. Whoever lives here sticks with us: they ask a little less when they want a new deal.',
+    shapes: (x, y, rot) => { const [w, h] = span([3, 2], rot); return room(x, y, w, h, (rx, ry, iw, ih) => [fit(rx + iw / 2 - 9, ry + ih / 2 - 9, 18, 18, '#2a5a3a'), fit(rx + 4, ry + 4, iw > ih ? 20 : 4, iw > ih ? 4 : 20, '#ff5fae')]); },
+  },
+  cyberdoc: {
+    name: 'Cyber doc', kind: 'room', cost: 25000, size: [2, 2], turns: false, needs: 3, one: true, tongOne: true, what: 'implants −25%',
+    about: 'A chair, a lamp and a doc who doesn\'t ask. While the tong has one, implants cost a quarter less. One in the whole tong.',
+    shapes: (x, y) => room(x, y, 60, 60, (rx, ry, w, h) => [fit(rx + w / 2 - 8, ry + h / 2 - 12, 16, 24, '#4a5566'), fit(rx + w / 2 - 3, ry + 6, 6, 6, '#b48cff'), fit(rx + w - 12, ry + h - 14, 8, 10, '#b48cff')]),
   },
 });
 
