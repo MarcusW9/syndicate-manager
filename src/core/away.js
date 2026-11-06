@@ -157,6 +157,8 @@ export function crewsOut(s) {
       phase: phaseOf(am),
       status: j.waiting ? 'call' : hurt ? 'hurt' : today?.quiet ? 'low' : 'on',
       lines: today?.lines ?? [], waiting: !!j.waiting,
+      // Where they are on the job's site, for the card's mini map (ui/minimap.js).
+      templateId: am.templateId, zone: am.zone ?? 'start', inside: am.crewIds.length, overwatch: !!am.overwatch, wheels: !!am.wheels,
     };
   });
 }

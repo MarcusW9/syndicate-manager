@@ -4,6 +4,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+
+## 2026-11-06 · Mini maps on the crew-out cards
+- **Each crew out on City now has a small map of its job's site.** The route walked so far is solid, the rest dashed, and the crew stand as dots where they got to today. A dot on the perch or by the van shows someone on overwatch or the wheel.
+- **A crew waiting on your call** shows yellow with a ring that pulses (still with reduced motion). Nothing else moves.
 ## 2026-11-06 · The auto turret
 - **A new defence for a hall: the auto turret** (¥12,000, level 2, one per hall).
 - In a raid it fires on its own every round at the nearest raider, with nobody on it: 6 bursts a fight, then it clicks dry. Raiders can't knock it out.
