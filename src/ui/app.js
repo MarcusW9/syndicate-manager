@@ -2,9 +2,9 @@
 // functions, re-renders. Tap/click only; nothing depends on hover.
 
 import { heatIn, hottest, HEAT_DISTRICTS } from '../core/heat.js';
-import { hallIn, residents, freeBeds, canOpenHall, openHall, nextHallExpansion, expandHall, canMove, moveToHall } from '../core/halls.js';
+import { bedsOf, hallIn, residents, freeBeds, canOpenHall, openHall, nextHallExpansion, expandHall, canMove, moveToHall } from '../core/halls.js';
 import { GANGS, GRUDGE, grudgeOf, jobGrudge, grudgeWord, gangsOn } from '../core/gangs.js';
-import { openRaids, raidOn, raidPrice, canBuyOff, defenders, raidChoices, payOffRaid, hallShut, raidWho, raidBy, isGangRaid } from '../core/raids.js';
+import { defenceCut, openRaids, raidOn, raidPrice, canBuyOff, defenders, raidChoices, payOffRaid, hallShut, raidWho, raidBy, isGangRaid } from '../core/raids.js';
 import { HALL_SITES, HOME_HALL } from '../data/halls.js';
 import { billDue, mondayBrief, crewStandard, crewAgainstStandard } from '../core/week.js';
 import { crewLead } from '../core/lead.js';
@@ -21,6 +21,9 @@ import { statIcon, statGlyph, crewIcons, traitGlyph } from './icons.js';
 import { cityMapSvg, cityMapLegend, MAP_DISTRICTS } from './citymap.js';
 import { districtArt } from './districtArt.js';
 import { landmark } from './landmarks.js';
+import { renderHallBuild, hallBuildLine } from './hallbuild.js';
+import { placePiece, removePiece, turnPiece, pieceAt, refundOf, canRemove } from '../core/hallbuild.js';
+import { PIECES } from '../data/hallBuild.js';
 
 import { advanceDay, calendar, formatShortDate, isBlocked, seasonStartDay } from '../core/time.js';
 import { createNewGame, chooseFounders } from '../core/state.js';
@@ -77,6 +80,7 @@ let playReportId = null; // a hands-off report playing out on its first open (re
 let openOperativeId = null;
 let openRecruitId = null;
 let openArmoury = false; // the armoury, from the Crew screen (ui/gear.js)
+let buildView = null; // the hall build screen, from Crew › Halls (ui/hallbuild.js): { district, cell, piece, rot, picked }
 let gearSlot = null; // the loadout slot being filled on a runner's page
 let newGameSlot = null; // slot number while picking a difficulty
 let plan = null; // { jobId, crew: [...ids], approach, orders, callIn, overwatch: id|null, kit, wheels: id|null, standby: id|null } (core/mission.js startMission)
@@ -140,7 +144,7 @@ function onClick(e) {
   const { action, id } = t.dataset;
 
   switch (action) {
-    case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; screen = id; returnTo = null; openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; gearSlot = null; plan = null; sidePlan = null; pickSlot = null; break;
+    case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; screen = id; returnTo = null; buildView = null; openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; gearSlot = null; plan = null; sidePlan = null; pickSlot = null; break;
     case 'continue': {
       if (isBlocked(state) || Date.now() < continueRestUntil) return;
       const next = advanceDay(state);
@@ -173,9 +177,10 @@ function onClick(e) {
         : openRecruitId ? { action: 'open-recruit', id: openRecruitId }
         : openOperativeId ? { action: 'open-op', id: openOperativeId }
         : openArmoury ? { action: 'open-armoury' }
+        : buildView ? { action: 'build-hall', id: buildView.district }
         : plan ? { action: 'open-job', id: plan.jobId }
         : sidePlan ? { action: 'open-side', id: sidePlan.taskId } : null;
-      openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; gearSlot = null; plan = null; sidePlan = null; pickSlot = null;
+      openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; buildView = null; gearSlot = null; plan = null; sidePlan = null; pickSlot = null;
       break;
     case 'decide': return setState(resolveDecision(state, id, t.dataset.option));
     case 'open-op': screen = 'crew'; openArmoury = false; openOperativeId = id; returnTo = null; break;
@@ -219,6 +224,31 @@ function onClick(e) {
       const site = HALL_SITES[id];
       if (confirm(`Open a hall in ${cityName(id)}: ${site.place}? ${money(site.deposit)} down, ${site.beds} beds, ${money(site.rent)} a week.`)) return setState(openHall(state, id));
       break;
+    }
+    // Building up a hall (ui/hallbuild.js, core/hallbuild.js).
+    case 'build-hall': screen = 'crew'; openOperativeId = null; openArmoury = false; buildView = { district: id, cell: null, piece: null, rot: 0, picked: null, tab: 'defence' }; window.scrollTo?.(0, 0); break;
+    case 'build-cell': {
+      const [x, y] = id.split(',').map(Number);
+      const on = pieceAt(hallIn(state, buildView.district), x, y);
+      buildView = on ? { ...buildView, cell: null, picked: on.id } : { ...buildView, cell: [x, y], picked: null };
+      break;
+    }
+    case 'build-piece': buildView = { ...buildView, piece: id, picked: null, rot: 0 }; break;
+    case 'build-tab': buildView = { ...buildView, tab: id, piece: null }; break;
+    case 'build-rot': buildView = { ...buildView, rot: buildView.rot ? 0 : 1 }; break;
+    case 'build-place': {
+      const { district, piece, cell, rot } = buildView;
+      const next = placePiece(state, district, piece, cell[0], cell[1], rot);
+      if (next === state) break;
+      buildView = { ...buildView, cell: null };
+      return setState(next);
+    }
+    case 'build-turn': return setState(turnPiece(state, buildView.district, id));
+    case 'build-remove': {
+      const b = hallIn(state, buildView.district)?.build?.find((x) => x.id === id);
+      if (!b || !canRemove(state, buildView.district, id).ok || !confirm(`Remove the ${PIECES[b.piece].name.toLowerCase()}? You get ${money(refundOf(b.piece))} back.`)) break;
+      buildView = { ...buildView, picked: null };
+      return setState(removePiece(state, buildView.district, id));
     }
     case 'move-hall': { const [opId, d] = id.split('|'); return setState(moveToHall(state, opId, d)); }
     case 'open-job': { // also from Today's alerts
@@ -656,7 +686,7 @@ function navButton(id, label, count = 0, countWord = '') {
 function renderScreen() {
   if (state.founding && screen !== 'settings') return renderFounding(); // nothing else until the founders are picked
   if (screen === 'inbox') return renderInbox();
-  if (screen === 'crew') return openRecruitId ? renderRecruit() : openOperativeId ? renderOperative() : openArmoury ? renderArmoury(gearUi, state) : renderCrew();
+  if (screen === 'crew') return openRecruitId ? renderRecruit() : openOperativeId ? renderOperative() : openArmoury ? renderArmoury(gearUi, state) : buildView && hallIn(state, buildView.district) ? renderHallBuild({ esc, money, cityName }, state, buildView) : renderCrew();
   // Jobs: on wide screens the board stays beside the job being planned (styles.css hides it on phones).
   if (screen === 'jobs' && plan) {
     // The plan, then the job list with the plan bar under it: from 1400px wide the list and the bar
@@ -1311,7 +1341,9 @@ function renderHalls() {
             ${hallMark(h.district, { raid: openRaids(state).some((r) => r.district === h.district && r.answer !== 'paid') })}
             <div class="hall__body">
             <p class="hall__head"><strong>${esc(cityName(h.district))}</strong>${h.district === HOME_HALL ? ' <span class="hall__home">home</span>' : ''} <span class="muted small">level ${h.level} · ${money(h.rent)}/wk · heat ${heatIn(state, h.district)}/10</span></p>
-            <p class="small">${who.length}/${h.beds} beds${who.length ? `: ${esc(who.map((o) => o.handle).join(', '))}` : ' · nobody lives here yet'}</p>
+            <p class="small">${who.length}/${bedsOf(h)} beds${who.length ? `: ${esc(who.map((o) => o.handle).join(', '))}` : ' · nobody lives here yet'}</p>
+            <p class="small muted">${esc(hallBuildLine(h, defenceCut(state, h.district)))}</p>
+            <button class="btn btn--block" data-action="build-hall" data-id="${esc(h.district)}">Build</button>
             <button class="btn btn--block" data-action="expand-hall" data-id="${esc(h.district)}" ${state.cash >= x.cost ? '' : 'disabled'}>Expand: +${x.beds} beds for ${money(x.cost)} (rent +${money(x.rentIncrease)}/wk)</button>
             </div>
           </li>`;
@@ -2351,7 +2383,7 @@ function districtCard(key) {
         if (!h) return '';
         const who = residents(state, key);
         const raid = raidOn(state, key);
-        return `<div class="citycard__hall"><p class="small"><strong>Our hall</strong> · ${who.length}/${h.beds} beds · level ${h.level}${hallShut(state, key) ? ` · <span class="citycard__shut">shut after a raid until day ${h.shutUntil}</span>` : ''}${raid ? ` · <span class="citycard__raid">raid ${esc(raidWhen(raid))}${raid.answer === 'paid' ? ', paid off' : ''}</span>` : ''}</p>
+        return `<div class="citycard__hall"><p class="small"><strong>Our hall</strong> · ${who.length}/${bedsOf(h)} beds · level ${h.level}${hallShut(state, key) ? ` · <span class="citycard__shut">shut after a raid until day ${h.shutUntil}</span>` : ''}${raid ? ` · <span class="citycard__raid">raid ${esc(raidWhen(raid))}${raid.answer === 'paid' ? ', paid off' : ''}</span>` : ''}</p>
           ${who.length ? `<span class="citycard__faces">${who.map((op) => { const away = !!op.condition?.awayUntil && op.condition.awayUntil > state.day; return `<button class="citycard__face ${away ? 'is-out' : ''}" data-action="op-link" data-id="${esc(op.id)}" aria-label="${esc(op.handle)}${away ? ', out' : ''}">${face(op, 'sm')}</button>`; }).join('')}</span>` : '<p class="muted small">Nobody lives here yet.</p>'}</div>`;
       })()}
       ${c.locked ? `<p class="intel">${esc(c.teaser)}</p>` : (() => {

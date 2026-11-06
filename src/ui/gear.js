@@ -4,7 +4,7 @@
 //
 // ui: helpers from app.js { esc, money, face, statusChip }.
 
-import { GEAR, SLOTS, TIERS, carried, itemName, itemTitle, priceOf, sellPrice, canChangeGear, kitsFor, sidearmStats } from '../core/gear.js';
+import { GEAR, SLOTS, TIERS, carried, itemName, itemTitle, buyPrice, sellPrice, canChangeGear, kitsFor, sidearmStats } from '../core/gear.js';
 import { HAS_LOOKS, lookText } from '../core/looks.js';
 import { gearGlyph } from './icons.js';
 import { gearArt } from './art.js';
@@ -54,14 +54,14 @@ function buyRow(ui, state, type) {
       <span class="gearrow__main"><strong>${esc(g.name)}</strong>
         <span class="gearrow__eff">${esc(itemEffect({ type, tier: 'street' }))}</span>
         <span class="gearrow__sub muted small">${esc(g.desc)}</span></span>
-      <span class="gearrow__buy">${Object.entries(TIERS).map(([tier, t]) => `<button class="btn gearrow__btn" data-action="buy" data-id="${esc(type)}" data-tier="${esc(tier)}" ${state.cash < priceOf(type, tier) ? 'disabled' : ''} aria-label="Buy ${esc(t.step ? `a ${t.name.toLowerCase()} ` : '')}${esc(g.name.toLowerCase())} for ${esc(money(priceOf(type, tier)))}">${t.step ? `${esc(t.name)} +${t.step} ` : ''}${esc(money(priceOf(type, tier)))}</button>`).join('')}</span>
+      <span class="gearrow__buy">${Object.entries(TIERS).map(([tier, t]) => `<button class="btn gearrow__btn" data-action="buy" data-id="${esc(type)}" data-tier="${esc(tier)}" ${state.cash < buyPrice(state, type, tier) ? 'disabled' : ''} aria-label="Buy ${esc(t.step ? `a ${t.name.toLowerCase()} ` : '')}${esc(g.name.toLowerCase())} for ${esc(money(buyPrice(state, type, tier)))}">${t.step ? `${esc(t.name)} +${t.step} ` : ''}${esc(money(buyPrice(state, type, tier)))}</button>`).join('')}</span>
     </li>`;
 }
 
 /** One of this week's rifles: drawn under the safehouse lamp, its name, and one price. */
 function offerRow(ui, state, offer) {
   const { esc, money } = ui;
-  const price = priceOf(offer.type, offer.tier, offer);
+  const price = buyPrice(state, offer.type, offer.tier, offer);
   return `
     <li class="gearrow gearrow--buy">
       ${thumb(offer)}

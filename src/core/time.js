@@ -24,6 +24,8 @@ import { weeklyFame } from './fame.js';
 import { neuralFloor } from './gear.js';
 import { checkSpecialisations } from './specialisations.js';
 import { refreshArmoury } from './looks.js';
+import { homeOf, hasRoom } from './halls.js';
+import { ROOM_EFFECT } from '../data/hallBuild.js';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAYS_PER_SEASON = 364; // 52 weeks
@@ -68,10 +70,11 @@ export function advanceDay(prev) {
   for (const op of state.crew) {
     expireStatuses(op, state.day);
     const c = op.condition;
-    c.fatigue = Math.max(0, c.fatigue - 8); // resting recovers
+    const home = homeOf(state, op); // their hall's rooms help while they're home (core/hallbuild.js)
+    c.fatigue = Math.max(0, c.fatigue - (hasRoom(home, 'canteen') ? ROOM_EFFECT.canteenRest : 8)); // resting recovers
     c.neuralLoad = Math.max(neuralFloor(op), c.neuralLoad - 3); // implants keep a floor (core/gear.js)
     if (c.injuryDays > 0) {
-      c.injuryDays -= 1;
+      c.injuryDays = Math.max(0, c.injuryDays - (hasRoom(home, 'clinic') ? ROOM_EFFECT.clinicHeal : 1));
       if (c.injuryDays === 0 && c.injury !== 'dead') c.injury = 'healthy';
     }
   }

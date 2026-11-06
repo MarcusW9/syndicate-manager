@@ -86,8 +86,8 @@ can't be built on. **To check by measuring:** the same 60 fights as the raids sl
 | Canteen (2 × 3) | ¥10,000 | level 2 | residents shed fatigue faster at home (12 a day, not 8) |
 | Stash | ¥10,000 | – | walking out of a raid loses half of what was kept there |
 | Lookout | ¥12,000 | – | a raid on this hall is warned 4 days ahead, not 3 |
-| Den (mahjong, karaoke; 2 × 3) | ¥14,000 | level 2 | loyalty: residents' renewals ask a little less (`core/loyalty.js`, counted as 5 more jobs together, still capped at the 25% discount) |
-| Cyber doc | ¥25,000 | level 3, one in the whole tong | implants bought for its residents cost a quarter less (`core/gear.js`); the doc's chair as the room |
+| Den (mahjong, karaoke; 2 × 3) | ¥14,000 | level 2 | loyalty: residents' renewals ask a little less (`core/loyalty.js`, counted as 10 more jobs together, still capped at the 25% discount; built with 10, not 5, see DESIGN.md) |
+| Cyber doc | ¥25,000 | level 3, one in the whole tong | implants cost the tong a quarter less while it has one (`core/gear.js`; built tong-wide, since implants are bought for the stash, see DESIGN.md); the doc's chair as the room |
 
 A room is drawn as a room (`sp-room`) with its own thing inside: cots and a cabinet, bunks, a safe,
 a window with a stool. A room's walls aren't fight cover, so a fight is the same with or without
@@ -105,6 +105,12 @@ reinforced door at the way in (it would need the fight to start with the raiders
   fitting to do, but a 2 × 3 room uses 6 of a level-1 hall's 6 cells.
 - **c. Any angle.** It doesn't sit on a grid, so it's fiddly with a thumb and fight cover gets harder
   to read. Not recommended.
+
+### What defences do (slice 1c, owner 2026-11-06)
+
+Cover alone barely moved the odds (measured in DESIGN.md), so every 3 defence pieces also lower a
+raid's threat by 1, never below 1. Measured: 6 pieces hold every raid up to heat 10. It's strong,
+and flagged for the playtest.
 
 ## 5. State and save
 

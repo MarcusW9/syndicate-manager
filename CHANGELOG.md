@@ -4,6 +4,30 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-06 · The den and the cyber doc
+- **Den** (¥14,000, level 2, 2 × 3, turns): a mahjong table and a karaoke screen. Whoever lives there asks for a smaller raise when they want a new deal.
+- **Cyber doc** (¥25,000, level 3, 2 × 2): one in the whole tong. While you have one, implants in the armoury cost a quarter less.
+
+## 2026-11-06 · Rooms in a hall
+- **The build screen has a Rooms tab.** Each room helps whoever lives in that hall, and a hall can have one of each:
+  - **Clinic** (¥18,000, level 2, 2 × 2): injuries heal twice as fast while they're home.
+  - **Bunk room** (¥15,000, level 2, 2 × 3, turns): two more beds, and no more rent.
+  - **Canteen** (¥10,000, level 2, 2 × 3, turns): fatigue goes faster at home.
+  - **Stash** (¥10,000, 2 × 2): walking out of a raid loses half as much.
+  - **Lookout** (¥12,000, 2 × 2): a raid on this hall is warned 4 days ahead, not 3.
+- Rooms aren't cover in a raid. A bunk room can't be removed while its beds are slept in.
+
+## 2026-11-06 · Defences make raids easier
+- **Every 3 defence pieces in a hall make a raid there one step easier** (fewer, weaker raiders), never below the easiest. This counts for police and gang raids alike.
+- The build screen says how many are built and how many more give the next step. The hall's row on Halls says the effect, and so does Hold the hall at the door.
+
+## 2026-11-06 · Building up a hall: the build screen
+- **Each hall on Crew › Halls has a Build button.** It opens the hall's plan, the map its raids are fought on, with the free squares marked.
+- **To place something:** tap a free square, pick a barricade, a steel plate or an inner wall, then Place. The piece shows where it would go first. A plate or a wall can be turned.
+- **Tap something built** to turn it or remove it (half its cost back).
+- The bar at the top shows the floor used (6 squares at level 1, 4 more for each Expand) and your cash. When something can't be placed, the screen says why.
+- Each hall's row says what's built there.
+
 ## 2026-11-06 · Building up a hall: the groundwork
 - **What you build in a hall will be part of its raids:** a barricade is half cover, a steel plate full cover, and an inner wall is solid. You can't place anything yet; the build screen comes next.
 - **The Docks hall's pier is a little wider.**

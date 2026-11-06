@@ -3,10 +3,10 @@
 // that can take a piece are worked out from the map, never stored. A raid is fought on the map with
 // the pieces on it, so they're cover like any other (core/fightspots.js). Pure logic.
 
-import { HALL_BUILD, PIECES } from '../data/hallBuild.js';
+import { HALL_BUILD, PIECES, ROOM_EFFECT } from '../data/hallBuild.js';
 import { HALLS, HALL, pickSite } from '../data/sites.js';
 import { siteRects } from './fightspots.js';
-import { hallIn } from './halls.js';
+import { hallIn, residents, bedsOf, syncHalls } from './halls.js';
 import { hallShut } from './raids.js';
 import { money } from './money.js';
 
@@ -76,6 +76,7 @@ export function canPlace(state, district, pieceId, x, y, rot = 0) {
   if (hallShut(state, district)) return { ok: false, reason: 'The hall is shut after a raid' };
   if (p.needs && hall.level < p.needs) return { ok: false, reason: `Needs a level ${p.needs} hall` };
   if (p.one && (hall.build ?? []).some((b) => b.piece === pieceId)) return { ok: false, reason: `This hall already has a ${p.name.toLowerCase()}` };
+  if (p.tongOne && (state.halls ?? []).some((h) => (h.build ?? []).some((b) => b.piece === pieceId))) return { ok: false, reason: `The tong already has a ${p.name.toLowerCase()}` };
   const cells = pieceCells(pieceId, x, y, rot);
   const free = buildableCells(hallMap(district));
   const built = builtCells(hall);
@@ -95,18 +96,29 @@ export function placePiece(prev, district, pieceId, x, y, rot = 0) {
   const n = hall.build.reduce((m, b) => Math.max(m, Number(String(b.id).split('-').at(-1)) || 0), 0) + 1;
   hall.build.push({ id: `${district}-${n}`, piece: pieceId, x, y, rot: PIECES[pieceId].turns ? (rot ? 1 : 0) : 0, day: state.day });
   state.cash -= PIECES[pieceId].cost;
+  syncHalls(state); // a bunk room's beds count in the roster limit
   return state;
+}
+
+/** Can a placed piece be removed? A bunk room can't while its beds are slept in. { ok, reason }. */
+export function canRemove(state, district, id) {
+  const hall = hallIn(state, district);
+  const b = hall?.build?.find((x) => x.id === id);
+  if (!b) return { ok: false, reason: 'Nothing there' };
+  if (b.piece === 'bunks' && residents(state, district).length > bedsOf(hall) - ROOM_EFFECT.bunkBeds) return { ok: false, reason: 'Its beds are slept in: move someone out first' };
+  return { ok: true, reason: 'ready' };
 }
 
 /** Remove a piece: half its cost back. Returns the new state, or prev. */
 export function removePiece(prev, district, id) {
   const hall = hallIn(prev, district);
   const b = hall?.build?.find((x) => x.id === id);
-  if (!b) return prev;
+  if (!b || !canRemove(prev, district, id).ok) return prev;
   const state = structuredClone(prev);
   const h = hallIn(state, district);
   h.build = h.build.filter((x) => x.id !== id);
   state.cash += refundOf(b.piece);
+  syncHalls(state);
   return state;
 }
 
