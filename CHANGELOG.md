@@ -7,10 +7,11 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
-## 2026-11-06 · Ops gets its own tab; City is the city's book again
-- **A fifth tab, Ops:** the city map, everyone out, raids and calls, and the city tonight (what City's Map tab was). The count of calls waiting is on it, and sending a crew out lands there.
-- **City is about the city again:** a new **Districts** section comes first, a card per district led by its picture (the Docks' cranes, Old Town's alleys, the Night Market's neon, Glass Heights' towers, the Basin's racecourse). Tap one for who runs it, the police, the night, the local custom and the landmarks. The three districts not open yet follow, with what the street says about them. Clients, Who's who and Lore are as they were.
-- A district picked on the Ops map links to its write-up on City, and back.
+## 2026-11-06 · Ops gets its own tab; City becomes Lore
+- **The tabs are now Today · Ops · Crew · Jobs · Lore.**
+- **Ops, the new second tab:** the city map, everyone out, raids and calls, and the city tonight (what City's Map tab was). The count of calls waiting is on it, and sending a crew out lands there.
+- **City is renamed Lore**, and is about the city again: a new **Districts** section comes first, a card per district led by its picture (the Docks' cranes, Old Town's alleys, the Night Market's neon, Glass Heights' towers, the Basin's racecourse). Tap one for who runs it, the police, the night, the local custom and the landmarks. The three districts not open yet follow, with what the street says about them. Then Clients, Who's who, and History (what the Lore section was).
+- A district picked on the Ops map links to its write-up on Lore, and back.
 
 ## 2026-11-06 · Buy a hall, and a work board
 - **A hall can be bought outright:** 26 weeks of its rent, once. After that it pays no rent, and making it bigger adds none. Crew › Halls has "Buy the place" on each hall; a bought hall is marked ours. The home hall can be bought too.

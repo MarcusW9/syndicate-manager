@@ -73,10 +73,10 @@ import { freelancerAsCrew, shareOf, MAX_FREELANCERS_PER_JOB } from '../core/free
 let state;
 let screen = 'inbox';
 let cityDistrict = null; // district card open on the Ops map
-let cityTab = 'districts'; // which City section is showing (CITY_TABS)
-let loreDistrict = null; // the district read in full on City › Districts
+let cityTab = 'districts'; // which Lore section is showing (LORE_TABS)
+let loreDistrict = null; // the district read in full on Lore › Districts
 let cityCardDue = false; // scroll a newly opened district card into view after drawing
-let loreDue = false; // scroll City › Districts to the district opened from Ops
+let loreDue = false; // scroll Lore › Districts to the district opened from Ops
 let cityMapDue = false; // scroll the map into view after drawing (a crew's district picked in the list)
 let openMessageId = null;
 let sidePlan = null; // { taskId, crew: [] } while planning a side task (Jobs tab)
@@ -161,10 +161,10 @@ function onClick(e) {
     // A crew's district in the list: light it on the map (scrolled into view) and narrow the list to it.
     case 'city-show': cityDistrict = cityDistrict === id ? null : id; cityMapDue = !!cityDistrict; break;
     case 'city-tab': cityTab = id; break;
-    // City › Districts: open one district's full write-up (tap again to fold it); from the Ops card, go there.
+    // Lore › Districts: open one district's full write-up (tap again to fold it); from the Ops card, go there.
     case 'ops-district': screen = 'ops'; cityDistrict = id; cityMapDue = true; break;
     case 'lore-district': loreDistrict = loreDistrict === id ? null : id; break;
-    case 'about-district': screen = 'city'; cityTab = 'districts'; loreDistrict = id; loreDue = true; break;
+    case 'about-district': screen = 'lore'; cityTab = 'districts'; loreDistrict = id; loreDue = true; break;
     case 'open-message': {
       openMessageId = id;
       const msg = state.inbox.find((m) => m.id === id);
@@ -577,10 +577,10 @@ function render() {
 
     <nav class="nav" aria-label="Main">
       ${navButton('inbox', 'Today', unread, 'unread')}
+      ${navButton('ops', 'Ops', calls(), 'calling')}
       ${navButton('crew', 'Crew')}
       ${navButton('jobs', 'Jobs', state.jobs.length, 'open')}
-      ${navButton('ops', 'Ops', calls(), 'calling')}
-      ${navButton('city', 'City')}
+      ${navButton('lore', 'Lore')}
     </nav>
 
     <main class="main ${wide ? 'main--wide' : ''} ${!state.activeMission && screen === 'jobs' && plan ? 'main--split' : ''}">${state.activeMission ? renderMission() : `${keptBanner()}${renderScreen()}`}</main>
@@ -687,7 +687,7 @@ function renderDayCue(cue) {
     </div>`;
 }
 
-// While the founders are being picked there's nothing to see on Crew, Jobs or City: those tabs are
+// While the founders are being picked there's nothing to see on Crew, Jobs, Ops or Lore: those tabs are
 // off, Today shows the pick, and Save stays open so another slot can still be loaded.
 const FOUNDING_TABS = ['inbox', 'settings'];
 
@@ -713,7 +713,7 @@ function renderScreen() {
   }
   if (screen === 'jobs') return sidePlan ? renderSidePlan() : renderJobs();
   if (screen === 'ops') return renderOpsScreen();
-  if (screen === 'city') return renderCity();
+  if (screen === 'lore') return renderLore();
   if (screen === 'settings') return renderSettings();
   return '';
 }
@@ -1859,12 +1859,12 @@ function renderSidePlan() {
 const trustTone = (t) => (t >= 60 ? 'good' : t >= 40 ? 'mid' : 'bad');
 const TRUST_NOTE = 'Finished jobs build trust; aborts and "client unhappy" choices cost it. High trust pays up to 15% more; below 20, a client stops calling. Trust drifts back towards neutral each week.';
 
-/** Jobs tab: the clients as a strip of chips under the board. Full write-ups are on City. */
+/** Jobs tab: the clients as a strip of chips under the board. Full write-ups are on Lore. */
 function renderClients() {
   return `
       <h2>Clients</h2>
       <div class="infoline"><p class="muted small">Where you stand with each.</p>${infoButton('clients', 'About client trust')}</div>
-      ${infoText('clients', `${TRUST_NOTE} Who they are: City tab.`)}
+      ${infoText('clients', `${TRUST_NOTE} Who they are: the Lore tab.`)}
       <ul class="clientstrip">
         ${CLIENTS.map((c) => {
           const t = trustOf(state, c.id);
@@ -1873,7 +1873,7 @@ function renderClients() {
       </ul>`;
 }
 
-/** City tab: who each client is, with where you stand. */
+/** Lore › Clients: who each client is, with where you stand. */
 function renderClientCards() {
   return `
       <ul class="list list--plain">
@@ -2421,12 +2421,12 @@ function districtCard(key) {
             : '<p class="small muted">Nobody here is hiring crews like yours yet.</p>';
       })()}
       ${activeRumour(state)?.district === key ? `<p class="talk-tag">Street talk: ${esc(activeRumour(state).text)}</p>` : ''}
-      <button class="linkbtn citycard__about" data-action="about-district" data-id="${esc(key)}">About ${esc(NAMES.districtsInText?.[key] ?? cityName(key))} on City ›</button>
+      <button class="linkbtn citycard__about" data-action="about-district" data-id="${esc(key)}">About ${esc(NAMES.districtsInText?.[key] ?? cityName(key))} on Lore ›</button>
     </div>`;
 }
 
 /**
- * City › Districts (2026-11-06, when Ops became its own tab): the city's places as a book, each
+ * Lore › Districts (2026-11-06, when Ops became its own tab and City became Lore): the city's places as a book, each
  * led by its picture (ui/districtArt.js), with the write-up a tap away. Locked districts are a
  * line each, with what the street says about them.
  */
@@ -2483,11 +2483,11 @@ function renderOpsScreen() {
     </section>`;
 }
 
-/** City sections: the city as a book (the live map is on Ops). */
-const CITY_TABS = { districts: 'Districts', clients: 'Clients', factions: "Who's who", lore: 'Lore' };
+/** Lore's sections: the city as a book (the live map is on Ops). The tab was City until 2026-11-06. */
+const LORE_TABS = { districts: 'Districts', clients: 'Clients', factions: "Who's who", history: 'History' };
 
-function renderCity() {
-  const tab = CITY_TABS[cityTab] ? cityTab : 'districts';
+function renderLore() {
+  const tab = LORE_TABS[cityTab] ? cityTab : 'districts';
   const groups = [...new Set(FACTIONS.map((f) => f.group))];
   const body = {
     districts: renderDistrictLore,
@@ -2506,7 +2506,7 @@ function renderCity() {
           </ul>
         </div>`).join('')}
       </div>`,
-    lore: () => `
+    history: () => `
       <div class="cols2">
       <div>
       <h2>Everyone knows</h2>
@@ -2521,8 +2521,8 @@ function renderCity() {
   return `
     <section class="panel">
       <h1 class="cityhead">${esc(NAMES.city)} <span class="muted">燈籠灣</span> <span class="muted small">2057</span></h1>
-      <div class="subtabs" role="group" aria-label="City sections">
-        ${Object.entries(CITY_TABS).map(([k, label]) => `<button class="subtab ${k === tab ? 'is-on' : ''}" data-action="city-tab" data-id="${k}" aria-pressed="${k === tab}">${esc(label)}</button>`).join('')}
+      <div class="subtabs" role="group" aria-label="Lore sections">
+        ${Object.entries(LORE_TABS).map(([k, label]) => `<button class="subtab ${k === tab ? 'is-on' : ''}" data-action="city-tab" data-id="${k}" aria-pressed="${k === tab}">${esc(label)}</button>`).join('')}
       </div>
       ${body}
     </section>`;

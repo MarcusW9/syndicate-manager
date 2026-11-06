@@ -46,7 +46,7 @@ try {
   await tap(p, '[data-action="open-job"]'); await p.waitForTimeout(600);
   await p.locator('.grudgeline').scrollIntoViewIfNeeded(); await p.evaluate(() => document.querySelector('.grudgeline').scrollIntoView({ block: 'center' }));
   await p.screenshot({ path: `${out}/02-plan-grudge-line.png` });
-  await tap(p, '[data-action="nav"][data-id="city"]'); await p.waitForTimeout(400);
+  await tap(p, '[data-action="nav"][data-id="lore"]'); await p.waitForTimeout(400);
   await tap(p, '[data-action="city-tab"][data-id="factions"]'); await p.waitForTimeout(400);
   await p.evaluate(() => [...document.querySelectorAll('h2')].find((h) => h.textContent.trim() === 'Gangs')?.scrollIntoView({ block: 'start' }));
   await p.waitForTimeout(200);
