@@ -26,6 +26,7 @@ import { hashRng } from './rng.js';
 import { nextRng } from './random.js';
 import { buildBattle, planIntents } from './battle.js';
 import { spotsForJob } from './fightspots.js';
+import { floorPieces, hallMap, waysIn } from './hallbuild.js';
 import { rollTarget } from './risk.js';
 import { setInjury } from './crew.js';
 import { recordSummary } from './record.js';
@@ -275,17 +276,23 @@ export function startRaidFight(state, raid) {
   const ops = defenders(state, d);
   const threat = raidThreat(state, d, raid);
   const diff = Math.round(rollTarget({ threat }));
+  // A compound can be come at more than one way (data/sites.js `ways`): which one, from the raid's id.
+  const ways = waysIn(hallMap(d), hallIn(state, d)?.level ?? 1);
+  const way = ways[[...String(raid.id)].reduce((n, ch) => (n * 31 + ch.charCodeAt(0)) >>> 0, 7) % ways.length];
+  const floor = floorPieces(hallIn(state, d), way.id);
   const b = buildBattle({
     incident: 'raid', zone: 'inside', diff, threat, guards: RAID.raiders, crew: ops, approach: 'loud',
-    spots: spotsForJob(d, raid.id, tpl.id, 'inside', ops.length, hallIn(state, d)?.build),
+    spots: spotsForJob(d, raid.id, tpl.id, 'inside', ops.length, floor),
     turret: hallTurret(state, d),
   });
   b.foe = raidBy(raid); // who they are, and what the battle lines call one of them (core/battle.js foeWord)
   b.foeOne = raider(raid).one;
   planIntents(b, nextRng(state));
-  const text = `${raidWho(raid)} come through the door: ${b.guards.length} of them, against ${andNames(ops)}.`;
+  // A way with a line of its own (the halls' lore, 2026-11-07) opens with it; else "<who> come ...".
+  const text = way.line ? `${way.line} ${raidWho(raid)}: ${b.guards.length} of them, against ${andNames(ops)}.`
+    : `${raidWho(raid)} ${way.say ?? 'come through the door'}: ${b.guards.length} of them, against ${andNames(ops)}.`;
   state.activeMission = {
-    jobId: raid.id, templateId: tpl.id, raid: raid.id, build: structuredClone(hallIn(state, d)?.build ?? []), crewIds: ops.map((o) => o.id), approach: 'loud', days: 0, bribe: 0,
+    jobId: raid.id, templateId: tpl.id, raid: raid.id, build: floor, crewIds: ops.map((o) => o.id), approach: 'loud', days: 0, bribe: 0,
     overwatch: null, wheels: null, standby: null, callIn: 'every', orders: null,
     alert: 0, out: [], pending: null, wentLoud: true, battle: b, fought: true,
     pay: 0, threat, threatDelta: 0, clientId: null, twist: null, askedFor: null, lead: null,

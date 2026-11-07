@@ -457,148 +457,215 @@ export const HALL = {
 // data/halls.js names, each with our people by the back way out (paths.inside's end) and the
 // raiders' way in (posts). Cover is furniture and the place's own stuff, so a fight there reads as
 // that hall. Checked by tests/hallmaps.test.js (on the map, spots in cover on both sides).
-const hallSite = (name, aria, { exit, anchor, entry, perch = [340, 18] }) => ({
-  name, aria,
-  points: { van: exit, perch, target: anchor },
-  paths: { in: [exit, [(exit[0] + anchor[0]) / 2, (exit[1] + anchor[1]) / 2]], inside: [[(exit[0] + anchor[0]) / 2, (exit[1] + anchor[1]) / 2], anchor], target: [anchor, anchor], out: [anchor, exit] },
+/** A hall's way in for a raid: where the raiders come in (entry), where ours stand (anchor), and ours' way out. */
+export const hallWay = ({ exit, anchor, entry, via = null, perch = [340, 18] }) => {
+  const mid = via ?? [(exit[0] + anchor[0]) / 2, (exit[1] + anchor[1]) / 2];
+  return {
+    points: { van: exit, perch, target: anchor },
+    paths: { in: [exit, mid], inside: [mid, anchor], target: [anchor, anchor], out: [anchor, exit] },
+    posts: { in: entry, inside: entry, target: entry },
+  };
+};
+const hallSite = (name, aria, way) => ({
+  name, aria, ...hallWay(way),
   views: { in: [0, 0, 360, 240], inside: [0, 0, 360, 240], target: [0, 0, 360, 240] },
-  posts: { in: entry, inside: entry, target: entry },
-  sight: { rifle: [perch, [perch[0] - 6, perch[1] + 4], [perch[0] + 6, perch[1] + 4]], drone: [perch, [4, 236], [356, 236], [356, 4], [4, 4]] },
+  sight: { rifle: [way.perch ?? [340, 18], [(way.perch ?? [340, 18])[0] - 6, (way.perch ?? [340, 18])[1] + 4], [(way.perch ?? [340, 18])[0] + 6, (way.perch ?? [340, 18])[1] + 4]], drone: [way.perch ?? [340, 18], [4, 236], [356, 236], [356, 4], [4, 4]] },
 });
 const SILK = ['#b48cff', '#ff5fae', '#f2d541', '#3de8d8'];
 const SADDLE = '#4a3424';
 
+// Every hall is a compound that grows with Expand (owner, 2026-11-07: Old Town first, "a bit of gap
+// between some of the buildings ... raids look better because they are fighting between buildings",
+// then "do the other four halls the same way"). One layout, drawn per district (mirrored for some):
+// separate buildings with a lane, a yard and a passage between them, a strip along the top (an
+// alley, a market lane, a walkway) and one along the bottom (the street, a yard, a loading dock).
+// `parts` are what the hall can hold, each from a level, in build cells (core/hallbuild.js
+// heldParts): the first building and the lane beside it at level 1, then the building across the
+// lane, the walled yard behind with its gate, and the small building across the passage. An inside
+// part's `beds` is how many of the hall's beds stand in it (the yard's go in the second building).
+// The buildings are solid in a fight (sp-house), so a raid is fought outside: `ways` are up the lane
+// from the bottom strip, and (with the yard) through the yard's gate from the top strip. The names
+// and places of the other four halls are the owner's lore (2026-11-07, after
+// drafts/BRIEF-hall-compounds.md); a way's `line` opens a raid that comes in by it.
+const mirrorX = (shape) => {
+  if (shape.t === 'rect') return { ...shape, x: 360 - shape.x - shape.w };
+  if (shape.t === 'line') return { ...shape, x1: 360 - shape.x1, x2: 360 - shape.x2 };
+  return shape;
+};
+const flipPt = ([x, y]) => [360 - x, y];
+const flipGrid = ([x0, y0, x1, y1]) => [11 - x1, y0, 11 - x0, y1];
+/**
+ * A hall drawn as a compound. spec: { name, aria, mirror, top: { cls, label }, bottom: { shapes, label },
+ * lit, sign, covers: [8 fills], gate, parts: [5 × { name, about }], beds: [3 shares],
+ * costs: [3], say: { street, gate } ("<who> come ...") or line: { street, gate } (a sentence of its own) }.
+ */
+function compound(spec) {
+  const m = spec.mirror;
+  const S = (shape) => (m ? mirrorX(shape) : shape);
+  const P = (pt) => (m ? flipPt(pt) : pt);
+  const G = (g) => (m ? flipGrid(g) : g);
+  const way = (w) => ({ ...w, exit: P(w.exit), anchor: P(w.anchor), entry: P(w.entry), via: P(w.via) });
+  const street = way({ exit: [20, 14], anchor: [180, 80], entry: [180, 226], via: [100, 10] });
+  const gate = way({ exit: [180, 226], anchor: [180, 100], entry: [135, 16], via: [200, 238] });
+  const [room, lane, flat, yard, kitchen] = spec.parts;
+  const fill = spec.covers;
+  return {
+    ...hallSite(spec.name, spec.aria, street),
+    ways: {
+      street: { lvl: 1, say: spec.say?.street, line: spec.line?.street, ...hallWay(street) },
+      gate: { lvl: 3, say: spec.say?.gate, line: spec.line?.gate, ...hallWay(gate) },
+    },
+    parts: [
+      { id: 'room', lvl: 1, inside: true, grid: G([1, 3, 4, 6]), bedCorner: P([1, 3]).map((v, i) => (i ? v : m ? 11 - 1 : 1)), beds: spec.beds[0], ...room },
+      { id: 'lane', lvl: 1, inside: false, grid: G([5, 3, 6, 6]), ...lane },
+      { id: 'flat', lvl: 2, inside: true, grid: G([7, 3, 10, 6]), bedCorner: [m ? 1 : 10, 6], beds: spec.beds[1], cost: spec.costs[0], ...flat },
+      { id: 'yard', lvl: 3, inside: false, grid: G([1, 1, 7, 2]), cost: spec.costs[1], ...yard,
+        shapes: [{ t: 'line', cls: 'sp-wall', x1: 26, y1: 30, x2: 120, y2: 30 }, { t: 'line', cls: 'sp-wall', x1: 150, y1: 30, x2: 240, y2: 30 }, { t: 'rect', cls: 'sp-gate', x: 120, y: 28, w: 30, h: 4, fill: spec.gate }].map(S) },
+      { id: 'kitchen', lvl: 4, inside: true, grid: G([9, 1, 11, 2]), bedCorner: [m ? 0 : 11, 1], beds: spec.beds[2], cost: spec.costs[2], ...kitchen },
+    ],
+    shapes: [
+      { t: 'rect', cls: spec.top.cls, x: 0, y: 0, w: 360, h: 30 },
+      ...spec.bottom.shapes,
+      ...[
+        { t: 'rect', cls: 'sp-house', x: 26, y: 92, w: 128, h: 118 },
+        { t: 'rect', cls: 'sp-house', x: 206, y: 92, w: 128, h: 118 },
+        { t: 'rect', cls: 'sp-house', x: 266, y: 32, w: 90, h: 58 },
+        { t: 'rect', cls: 'sp-block', x: 0, y: 32, w: 22, h: 178 },
+        { t: 'rect', cls: 'sp-block', x: 338, y: 92, w: 22, h: 118 },
+        { t: 'rect', cls: 'sp-sign', x: 50, y: 206, w: 44, h: 5, fill: spec.sign },
+        { t: 'rect', cls: 'sp-door', x: 151, y: 140, w: 4, h: 16 },
+        { t: 'rect', cls: 'sp-door', x: 80, y: 90, w: 16, h: 4 },
+        { t: 'rect', cls: 'sp-door', x: 205, y: 140, w: 4, h: 16 },
+        { t: 'rect', cls: 'sp-door', x: 264, y: 52, w: 4, h: 16 },
+        // Outside, as cover: two things in the yard, one in the passage, two in the top strip, three in the bottom.
+        { t: 'rect', cls: 'sp-cover', x: 182, y: 40, w: 26, h: 8, fill: fill[0] },
+        { t: 'rect', cls: 'sp-cover', x: 124, y: 66, w: 12, h: 12, fill: fill[1] },
+        { t: 'rect', cls: 'sp-cover', x: 244, y: 60, w: 8, h: 26, fill: fill[2] },
+        { t: 'rect', cls: 'sp-cover', x: 96, y: 16, w: 26, h: 8, fill: fill[3] },
+        { t: 'rect', cls: 'sp-cover', x: 170, y: 16, w: 14, h: 8, fill: fill[4] },
+        { t: 'rect', cls: 'sp-cover', x: 96, y: 212, w: 26, h: 8, fill: fill[5] },
+        { t: 'rect', cls: 'sp-cover', x: 244, y: 213, w: 14, h: 8, fill: fill[6] },
+        { t: 'rect', cls: 'sp-cover', x: 300, y: 212, w: 26, h: 8, fill: fill[7] ?? '#2f3442' },
+      ].map(S),
+    ],
+    labels: [
+      { x: m ? 250 : 52, y: 236, text: spec.bottom.label },
+      { x: m ? 20 : 262, y: 236, text: spec.lit, hi: true },
+      { x: m ? 250 : 6, y: 10, text: spec.top.label },
+    ],
+  };
+}
+const ROADWAY = (cls = 'sp-road') => [{ t: 'rect', cls, x: 0, y: 212, w: 360, h: 28 }, ...(cls === 'sp-road' ? [{ t: 'line', cls: 'sp-road__line', x1: 0, y1: 226, x2: 360, y2: 226 }] : [])];
+
 export const HALLS = {
-  // Old Town: the damp room above a noodle shop. Up the front stairs from the street; out by the
-  // rusted fire stair on the back wall.
-  oldTown: {
-    ...hallSite('the room above the noodle shop', 'Plan of our Old Town hall: the room above the noodle shop, the front stairs up from the street, bunks, the mahjong table, the altar, the stove, the fire stair out the back',
-      { exit: [334, 40], anchor: [272, 72], entry: [44, 168] }),
-    shapes: [
-      ...ROAD,
-      { t: 'rect', cls: 'sp-sign', x: 70, y: 206, w: 44, h: 5, fill: '#ff3d5f' },
-      { t: 'rect', cls: 'sp-building', x: 16, y: 14, w: 300, h: 188 },
-      { t: 'rect', cls: 'sp-door', x: 30, y: 199, w: 16, h: 4 },
-      { t: 'row', cls: 'sp-step', x: 26, y: 150, w: 26, h: 1.5, step: 6, n: 8, axis: 'y' },
-      { t: 'rect', cls: 'sp-door', x: 313, y: 48, w: 4, h: 16 },
-      { t: 'row', cls: 'sp-step', x: 322, y: 30, w: 22, h: 1.5, step: 6, n: 14, axis: 'y' },
-      { t: 'line', cls: 'sp-wall', x1: 16, y1: 100, x2: 140, y2: 100 },
-      { t: 'row', cls: 'sp-cot', x: 70, y: 26, w: 22, h: 8, step: 30, n: 5 },
-      { t: 'row', cls: 'sp-cot', x: 70, y: 52, w: 22, h: 8, step: 30, n: 3 },
-      { t: 'rect', cls: 'sp-desk', x: 160, y: 120, w: 26, h: 18 }, // the mahjong table
-      { t: 'rect', cls: 'sp-cover', x: 234, y: 118, w: 14, h: 10, fill: '#5a1e24' }, // the altar
-      { t: 'rect', cls: 'sp-cover', x: 236, y: 86, w: 14, h: 12, fill: CONTAINER_TONES[3] }, // crates of bitter herbs
-      { t: 'rect', cls: 'sp-cover', x: 290, y: 96, w: 12, h: 12, fill: CONTAINER_TONES[1] },
-      { t: 'rect', cls: 'sp-desk', x: 74, y: 124, w: 34, h: 10 }, // the stove and its counter
-      { t: 'rect', cls: 'sp-cover', x: 70, y: 152, w: 12, h: 12, fill: CONTAINER_TONES[2] }, // noodle crates at the top of the stairs
-      { t: 'rect', cls: 'sp-cover', x: 92, y: 176, w: 14, h: 8, fill: CONTAINER_TONES[0] }, // shoes and umbrellas
-      { t: 'rect', cls: 'sp-cover', x: 236, y: 58, w: 26, h: 6, fill: '#7a2a2a' }, // a lacquer screen by the back door
+  // Old Town: the room above the noodle shop, and the block around it.
+  oldTown: compound({
+    name: 'the room above the noodle shop',
+    aria: 'Plan of our Old Town hall: the room above the noodle shop, the lane beside it, the flat across the lane, the yard behind with a gate onto the back alley, and the back kitchen across the passage',
+    top: { cls: 'sp-alley', label: 'BACK ALLEY' }, bottom: { shapes: ROADWAY(), label: 'NOODLE SHOP' }, lit: 'OUR BLOCK', sign: '#ff3d5f', gate: '#f2d541',
+    covers: ['#3a2d22', CONTAINER_TONES[2], CONTAINER_TONES[3], CONTAINER_TONES[0], CONTAINER_TONES[1], CONTAINER_TONES[2], '#7a2a2a', '#2f3442'], // pallets, bins, a water tank, bins, crates, noodle crates, a hawker's cart, a delivery trike
+    parts: [
+      { name: 'The room', about: 'Where it started, above the noodle shop. Rooms and beds go in here.' },
+      { name: 'The lane', about: 'The lane between the buildings, up from the street. Outside: a raid from the street is fought here.' },
+      { name: 'The flat', about: 'The flat across the lane. Room for a clinic and more beds.' },
+      { name: 'The yard', about: 'The yard behind the block, walled in, with a gate onto the back alley. Outside: defences go here, and a raid can come through the gate.' },
+      { name: 'The back kitchen', about: 'The old back kitchen across the passage. With it the whole block is ours.' },
     ],
-    labels: [{ x: 70, y: 222, text: 'NOODLE SHOP' }, { x: 150, y: 32, text: 'BUNKS' }, { x: 196, y: 90, text: 'OUR HALL', hi: true }, { x: 280, y: 12, text: 'FIRE STAIR' }, { x: 22, y: 146, text: 'STAIRS' }],
-  },
-  // The Night Market: two rooms above Madam Rao's sari shop. Up the shop's back stair; out through
-  // the roof hatch.
-  nightMarket: {
-    ...hallSite('two rooms above her sari shop', 'Plan of our Night Market hall: two rooms above the sari shop, bolts of silk on racks, the cutting table, two beds, the stair up from the shop, the roof hatch',
-      { exit: [312, 26], anchor: [262, 92], entry: [58, 164] }),
-    shapes: [
-      ...ROAD,
-      { t: 'rect', cls: 'sp-sign', x: 40, y: 206, w: 60, h: 5, fill: '#ff5fae' },
-      { t: 'rect', cls: 'sp-building', x: 30, y: 20, w: 300, h: 182 },
-      { t: 'line', cls: 'sp-wall', x1: 180, y1: 20, x2: 180, y2: 86 },
-      { t: 'line', cls: 'sp-wall', x1: 180, y1: 132, x2: 180, y2: 202 },
-      { t: 'row', cls: 'sp-step', x: 42, y: 150, w: 24, h: 1.5, step: 6, n: 8, axis: 'y' },
-      { t: 'row', cls: 'sp-step', x: 300, y: 32, w: 22, h: 1.5, step: 5, n: 6, axis: 'y' }, // the ladder to the hatch
-      { t: 'rect', cls: 'sp-door', x: 304, y: 20, w: 16, h: 4 },
-      { t: 'row', cls: 'sp-cover', x: 70, y: 40, w: 26, h: 8, step: 34, n: 3, tones: SILK }, // bolts of silk on racks
-      { t: 'row', cls: 'sp-cover', x: 70, y: 66, w: 26, h: 8, step: 34, n: 3, tones: SILK, shift: 1 },
-      { t: 'rect', cls: 'sp-desk', x: 98, y: 110, w: 36, h: 12 }, // the cutting table
-      { t: 'rect', cls: 'sp-cover', x: 84, y: 146, w: 26, h: 8, fill: SILK[1] },
-      { t: 'rect', cls: 'sp-cover', x: 118, y: 168, w: 14, h: 10, fill: CONTAINER_TONES[3] }, // a basket of offcuts
-      { t: 'row', cls: 'sp-cot', x: 214, y: 34, w: 24, h: 8, step: 34, n: 2 },
-      { t: 'rect', cls: 'sp-cover', x: 228, y: 104, w: 14, h: 10, fill: CONTAINER_TONES[1] }, // a camphor chest
-      { t: 'rect', cls: 'sp-cover', x: 278, y: 112, w: 12, h: 12, fill: SILK[0] },
-      { t: 'rect', cls: 'sp-desk', x: 286, y: 160, w: 34, h: 8 }, // a hot plate and a kettle
+    beds: [8, 4, 2], costs: [20000, 30000, 40000],
+    say: { street: 'come up the lane from the street', gate: 'come through the yard gate' },
+  }),
+  // The Night Market: Wok Court (owner's lore, 2026-11-07). Rooms behind a dai pai dong courtyard,
+  // leased from the stallholders' association; Mrs. Ip makes the introduction. The public eating
+  // court is outside the compound, past the Supper Frontage.
+  nightMarket: compound({
+    name: 'Wok Court',
+    aria: 'Plan of Wok Court, our Night Market hall: the Late Rooms, the Wash Passage beside them, the Prep House across the passage, the Delivery Court behind with the Cart Gate onto the market service lane, and the Rice Store across the way',
+    top: { cls: 'sp-alley', label: 'MARKET SERVICE LANE' }, bottom: { shapes: ROADWAY(), label: 'SUPPER FRONTAGE' }, lit: 'WOK COURT', sign: '#ff5fae', gate: '#8b9aab',
+    // A folded-table rack, a washing-water drum, a washing cabinet, stacked steel delivery crates, an
+    // insulated delivery chest, a shuttered food-service cart, a delivery scooter, a retired refrigerator.
+    covers: ['#6b5a2a', '#2f5f8a', '#8b9aab', '#5d6b7a', '#c8c2b0', '#8b9aab', '#7a2a2a', '#a9b2bc'],
+    parts: [
+      { name: 'The Late Rooms', about: 'Overnight quarters for cooks and delivery workers once: a stubborn ceiling fan, windows on the eating court, faded names on the hooks by the door. Rooms and beds go in here.' },
+      { name: 'The Wash Passage', about: 'Wet paving and drain grilles where the shared washing stations stood, up from the Supper Frontage. Outside: a raid from the front is fought here. Nobody leaves crates blocking it.' },
+      { name: 'The Prep House', about: 'The stalls\' old shared preparation building: pale rectangles where the benches stood, a wall clock seven minutes fast. Room for more beds and a room or two.' },
+      { name: 'The Delivery Court', about: 'The walled receiving yard behind, with the Cart Gate onto the market service lane, its lower panels dented by decades of handcarts. Outside: defences go here, and a raid can come through the gate.' },
+      { name: 'The Rice Store', about: 'A dry store across the passage, emptied when the association changed suppliers. Sack weights still pencilled by the door, and an argument about a missing scoop.' },
     ],
-    labels: [{ x: 40, y: 222, text: 'SILK & CREDIT' }, { x: 70, y: 34, text: 'THE SILK ROOM' }, { x: 196, y: 128, text: 'OUR ROOMS', hi: true }, { x: 256, y: 16, text: 'ROOF HATCH' }, { x: 70, y: 144, text: 'SHOP STAIR' }],
-  },
-  // The Docks: a container office on the old pier, with a stove. Along the pier from the yard,
-  // between the stacks; out down the ladder to a boat.
-  docks: {
-    ...hallSite('a container office on the old pier', 'Plan of our Docks hall: a container office at the end of the old pier, the stove, a desk and two cots, containers and bollards on the pier, the ladder down to a boat',
-      { exit: [338, 202], anchor: [292, 132], entry: [62, 130] }),
-    shapes: [
-      { t: 'rect', cls: 'sp-water', x: 0, y: 0, w: 360, h: 90 },
-      { t: 'rect', cls: 'sp-water', x: 0, y: 180, w: 360, h: 60 },
-      { t: 'rect', cls: 'sp-yard', x: 0, y: 90, w: 40, h: 90 },
-      { t: 'rect', cls: 'sp-pier', x: 40, y: 90, w: 320, h: 90 }, // the pier's deck: walkable, unlike the job maps' jetties
-      { t: 'row', cls: 'sp-step', x: 330, y: 180, w: 14, h: 1.5, step: 5, n: 3, axis: 'y' }, // the ladder down
-      { t: 'ellipse', cls: 'sp-cover', cx: 338, cy: 210, rx: 18, ry: 6, fill: '#3a2d22' }, // the boat
-      { t: 'rect', cls: 'sp-building', x: 232, y: 98, w: 98, h: 66 },
-      { t: 'rect', cls: 'sp-door', x: 229, y: 120, w: 4, h: 18 },
-      { t: 'rect', cls: 'sp-desk', x: 300, y: 104, w: 18, h: 10 }, // the stove
-      { t: 'rect', cls: 'sp-desk', x: 250, y: 144, w: 30, h: 10 },
-      { t: 'rect', cls: 'sp-cot', x: 298, y: 148, w: 24, h: 8 },
-      { t: 'rect', cls: 'sp-cover', x: 248, y: 108, w: 14, h: 10, fill: CONTAINER_TONES[3] },
-      { t: 'rect', cls: 'sp-cover', x: 150, y: 98, w: 27, h: 14, fill: CONTAINER_TONES[0] }, // containers on the pier
-      { t: 'rect', cls: 'sp-cover', x: 150, y: 150, w: 27, h: 14, fill: CONTAINER_TONES[2] },
-      { t: 'rect', cls: 'sp-cover', x: 198, y: 104, w: 7, h: 7, fill: '#2f3442' }, // bollards
-      { t: 'rect', cls: 'sp-cover', x: 198, y: 152, w: 7, h: 7, fill: '#2f3442' },
-      { t: 'rect', cls: 'sp-cover', x: 98, y: 138, w: 14, h: 12, fill: CONTAINER_TONES[1] }, // crates by the yard gate
-      { t: 'rect', cls: 'sp-cover', x: 90, y: 100, w: 12, h: 10, fill: CONTAINER_TONES[3] },
-      { t: 'rect', cls: 'sp-cover', x: 92, y: 120, w: 26, h: 8, fill: '#3a2d22' }, // a stack of pallets
+    beds: [2, 4, 2], costs: [20000, 30000, 40000],
+    line: {
+      street: 'Stools scrape across the eating court as the stallholders pull people inside. Footsteps turn into the Wash Passage.',
+      gate: 'The Cart Gate bangs against its frame. Figures push into the Delivery Court from the market service lane.',
+    },
+  }),
+  // The Docks: the Stove Pier (owner's lore, 2026-11-07). A container office on an old working pier,
+  // leased from the pier cooperative; the Ferryman makes the introduction.
+  docks: compound({
+    mirror: true,
+    name: 'the Stove Pier',
+    aria: 'Plan of the Stove Pier, our Docks hall: the Stove Office, the Working Deck beside it, the Relief Box across the deck, the Rope Court behind with the Jetty Gate onto the pier walkway, and the Net House across the way',
+    top: { cls: 'sp-pier', label: 'PIER WALKWAY' }, bottom: { shapes: ROADWAY('sp-yard'), label: 'CONTAINER YARD' }, lit: 'THE STOVE PIER', sign: '#ff3d5f', gate: '#ff3d5f',
+    // A strapped pallet stack, an insulated fish chest, a container door panel on a repair cradle, a
+    // cable-reel stand, a mooring-equipment bin, a retired forklift, a ballast drum, an engine-parts crate.
+    covers: ['#3a2d22', '#c8c2b0', CONTAINER_TONES[0], '#2f3442', '#4a5566', '#8a7440', '#5a1e24', CONTAINER_TONES[1]],
+    parts: [
+      { name: 'The Stove Office', about: 'A container office with a narrow stove, a scarred desk and beds behind a partition. Old dispatch numbers show through the paint when the walls sweat. Rooms and beds go in here.' },
+      { name: 'The Working Deck', about: 'The open deck between the containers, up from the container yard; drain channels run to the pier edge. Outside: a raid from the front is fought here.' },
+      { name: 'The Relief Box', about: 'A container fitted out for relief crews between shifts; the cooperative put bunks in after the Grid Blackout. Room for more beds and a room or two.' },
+      { name: 'The Rope Court', about: 'The fenced pier end where mooring lines were sorted, with the Jetty Gate onto the pier walkway. Outside: defences go here, and a raid can come through the gate.' },
+      { name: 'The Net House', about: 'A low net-mending store across the way: salt marks where the drying frames were, a roof patched in three materials.' },
     ],
-    labels: [{ x: 6, y: 86, text: 'THE YARD' }, { x: 120, y: 192, text: 'THE OLD PIER' }, { x: 240, y: 92, text: 'OUR OFFICE', hi: true }, { x: 300, y: 226, text: 'BOAT' }],
-  },
-  // The Basin: a flat over a tack workshop, the Old Stand outside the window. Up through the
-  // workshop's trapdoor; out by the stair to the stable yard.
-  basin: {
-    ...hallSite('a flat over a tack workshop', 'Plan of our Basin hall: the flat over the tack workshop, saddle racks, the workbench, two cots, the trapdoor up from the workshop, the stair down to the stable yard, the Old Stand through the window',
-      { exit: [12, 118], anchor: [62, 104], entry: [184, 178] }),
-    shapes: [
-      { t: 'rect', cls: 'sp-block', x: 60, y: 2, w: 240, h: 20 }, // the Old Stand across the way
-      { t: 'row', cls: 'sp-window', x: 70, y: 8, w: 6, h: 4, step: 14, n: 16, tones: ['#ff9a3d', '#2a303b', '#ff9a3d', '#f2d541'] },
-      { t: 'rect', cls: 'sp-building', x: 20, y: 34, w: 320, h: 170 },
-      { t: 'row', cls: 'sp-window', x: 120, y: 33, w: 18, h: 2, step: 40, n: 4, tones: ['#ff9a3d'] },
-      { t: 'rect', cls: 'sp-door', x: 17, y: 108, w: 4, h: 18 },
-      { t: 'row', cls: 'sp-step', x: 4, y: 128, w: 12, h: 1.5, step: 6, n: 10, axis: 'y' }, // the yard stair
-      { t: 'rect', cls: 'sp-cover', x: 176, y: 182, w: 18, h: 14, fill: '#1a1410' }, // the trapdoor's hatch, thrown open
-      { t: 'row', cls: 'sp-cot', x: 36, y: 46, w: 24, h: 8, step: 34, n: 2 },
-      { t: 'rect', cls: 'sp-cover', x: 84, y: 82, w: 14, h: 10, fill: SADDLE }, // saddle racks
-      { t: 'rect', cls: 'sp-cover', x: 50, y: 136, w: 14, h: 10, fill: '#3a2d22' }, // a tack trunk
-      { t: 'rect', cls: 'sp-cover', x: 100, y: 120, w: 26, h: 8, fill: SADDLE },
-      { t: 'rect', cls: 'sp-desk', x: 146, y: 150, w: 32, h: 10 }, // the workbench
-      { t: 'rect', cls: 'sp-cover', x: 214, y: 160, w: 14, h: 10, fill: SADDLE },
-      { t: 'rect', cls: 'sp-cover', x: 230, y: 130, w: 12, h: 10, fill: '#6b5a2a' }, // hay bales
-      { t: 'rect', cls: 'sp-cover', x: 132, y: 178, w: 12, h: 10, fill: '#6b5a2a' },
-      { t: 'rect', cls: 'sp-desk', x: 286, y: 60, w: 34, h: 9 }, // a kettle on a shelf
-      { t: 'rect', cls: 'sp-cover', x: 196, y: 144, w: 24, h: 14, fill: '#3a2d22' }, // tack trunks, stacked
+    beds: [2, 4, 2], costs: [20000, 30000, 40000],
+    line: {
+      street: 'Boots strike the Working Deck from the container yard. A loose chain rings against the office wall.',
+      gate: 'The Jetty Gate jolts sideways. People are pushing through from the pier walkway.',
+    },
+  }),
+  // The Basin: the Unlisted Rooms (owner's lore, 2026-11-07). Service premises leased from a small
+  // property trust; the flat "doesn't exist" as a dwelling on paper. Okonkwo arranges access.
+  basin: compound({
+    mirror: true,
+    name: 'the Unlisted Rooms',
+    aria: 'Plan of the Unlisted Rooms, our Basin hall: the Unlisted Flat over the tack workshop, the Buckle Passage beside it, the Saddler\'s Store across the passage, the Wash Yard behind with the Course Gate onto the course lane, and the Chaff House across the way',
+    top: { cls: 'sp-alley', label: 'THE COURSE LANE' }, bottom: { shapes: ROADWAY(), label: 'WORKSHOP ROW' }, lit: 'THE UNLISTED ROOMS', sign: '#ff9a3d', gate: '#ff9a3d',
+    // A compressed straw stack, a feed-storage bin, a steel saddle stand, a transport-crate stack, a
+    // tack trunk, a retired horsebox trailer, an old water trough, a tip-seller's cart.
+    covers: ['#6b5a2a', '#4a5566', '#8b9aab', '#3a2d22', SADDLE, '#2f3442', '#5d6b7a', '#7a2a2a'],
+    parts: [
+      { name: 'The Unlisted Flat', about: 'Rooms over the tack workshop, up its trapdoor, the windows on the Old Stand; leather dressing and wet coats below. Rooms and beds go in here.' },
+      { name: 'The Buckle Passage', about: 'The passage between the buildings, up from Workshop Row, named for a brass buckle on an old repair-shop sign. Outside: a raid from the front is fought here.' },
+      { name: 'The Saddler\'s Store', about: 'A stockroom with high shelves and chalk outlines where the saddle trees hung. Room for more beds and a room or two.' },
+      { name: 'The Wash Yard', about: 'The walled yard where tack was washed, with the Course Gate onto the course lane. The old fittings stay; no horses. Outside: defences go here, and a raid can come through the gate.' },
+      { name: 'The Chaff House', about: 'A small old feed store across the way, still called a loft by older workers though its room is at yard level.' },
     ],
-    labels: [{ x: 120, y: 30, text: 'THE OLD STAND' }, { x: 60, y: 76, text: 'OUR FLAT', hi: true }, { x: 4, y: 232, text: 'YARD STAIR' }, { x: 200, y: 214, text: 'FROM THE WORKSHOP' }],
-  },
-  // Glass Heights: a service floor nobody upstairs remembers. Out of the service lift; away down
-  // the maintenance stair.
-  heights: {
-    ...hallSite('a service floor nobody upstairs remembers', 'Plan of our Glass Heights hall: a forgotten service floor of server racks and air handlers, cots between the machines, the service lift, the maintenance stair',
-      { exit: [30, 198], anchor: [74, 168], entry: [290, 110] }),
-    shapes: [
-      { t: 'rect', cls: 'sp-building', x: 10, y: 10, w: 340, h: 200 },
-      { t: 'line', cls: 'sp-cable', x1: 10, y1: 30, x2: 350, y2: 30 },
-      { t: 'line', cls: 'sp-cable', x1: 10, y1: 196, x2: 350, y2: 196 },
-      { t: 'rect', cls: 'sp-room', x: 300, y: 88, w: 40, h: 44 }, // the service lift
-      { t: 'rect', cls: 'sp-door', x: 297, y: 100, w: 4, h: 20 },
-      { t: 'row', cls: 'sp-step', x: 18, y: 176, w: 24, h: 1.5, step: 5, n: 6, axis: 'y' }, // the maintenance stair
-      { t: 'row', cls: 'sp-cover', x: 40, y: 50, w: 30, h: 8, step: 44, n: 6, tones: ['#18222c'] }, // server racks
-      { t: 'row', cls: 'sp-cover', x: 40, y: 84, w: 30, h: 8, step: 44, n: 5, skip: [2], tones: ['#18222c'] },
-      { t: 'rect', cls: 'sp-cover', x: 52, y: 132, w: 30, h: 8, fill: '#18222c' },
-      { t: 'rect', cls: 'sp-cover', x: 96, y: 150, w: 30, h: 8, fill: '#18222c' },
-      { t: 'rect', cls: 'sp-cover', x: 156, y: 120, w: 16, h: 16, fill: '#1d2a34' }, // air handlers
-      { t: 'rect', cls: 'sp-cover', x: 244, y: 104, w: 14, h: 14, fill: '#1d2a34' },
-      { t: 'rect', cls: 'sp-cover', x: 236, y: 140, w: 30, h: 8, fill: '#18222c' },
-      { t: 'row', cls: 'sp-cot', x: 104, y: 178, w: 24, h: 8, step: 32, n: 2 },
+    beds: [2, 4, 2], costs: [20000, 30000, 40000],
+    line: {
+      street: 'Footsteps come up the Buckle Passage from Workshop Row. Someone knocks the old repair sign against the wall.',
+      gate: 'The Course Gate bangs open. Figures enter the Wash Yard from the service lane.',
+    },
+  }),
+  // Glass Heights: the Underterrace (owner's lore, 2026-11-07). An old maintenance compound in the
+  // ridge under the corporate terraces, its court open to the sky; a maintenance cooperative holds
+  // the occupancy, and Forewoman Tse makes the introduction. The sealed inspection tunnel is scenery.
+  heights: compound({
+    name: 'the Underterrace',
+    aria: 'Plan of the Underterrace, our Glass Heights hall: the Night Rooms, the Rain Passage beside them, the Stores across the passage, the Sunken Court behind with the Delivery Gate onto the service road, and the Survey Room across the way',
+    top: { cls: 'sp-alley', label: 'SERVICE ROAD' }, bottom: { shapes: ROADWAY('sp-yard'), label: 'LOWER APPROACH' }, lit: 'THE UNDERTERRACE', sign: '#3de8d8', gate: '#5d6b7a',
+    // A paving-slab pallet, an inspection-equipment chest, a barrier-panel rack, a drain-cover stack, a
+    // retired pump casing, a cable-reel cradle, a maintenance trolley, a weatherproof storage cabinet.
+    covers: ['#8b8578', '#3a4352', '#a8892a', '#2f3442', '#4a5566', '#3a2d22', '#5d6b7a', '#3a4a3a'],
+    parts: [
+      { name: 'The Night Rooms', about: 'Rest rooms for maintenance workers on overnight call: duty hooks, a faded storm checklist, a patch where a time clock was. Rooms and beds go in here.' },
+      { name: 'The Rain Passage', about: 'The service approach between the buildings, down from the maintenance steps, drainage channels under removable grilles. Outside: a raid from the front is fought here. It stays clear for inspection.' },
+      { name: 'The Stores', about: 'A former equipment store: work clothes, fittings and tools once signed out against numbered brass tags. Room for more beds and a room or two.' },
+      { name: 'The Sunken Court', about: 'A walled receiving yard open to the sky, with the Delivery Gate onto the service road. Outside: defences go here, and a raid can come through the gate.' },
+      { name: 'The Survey Room', about: 'A small inspection office across the way; pencil height marks still by the door.' },
     ],
-    labels: [{ x: 300, y: 146, text: 'SERVICE LIFT' }, { x: 60, y: 122, text: 'OUR FLOOR', hi: true }, { x: 16, y: 224, text: 'MAINTENANCE STAIR' }, { x: 160, y: 24, text: 'PLANT ROOM' }],
-  },
+    beds: [2, 4, 2], costs: [25000, 35000, 45000],
+    line: {
+      street: 'Footsteps descend the maintenance steps. Figures turn into the Rain Passage beneath the terrace lights.',
+      gate: 'The Delivery Gate strikes the retaining wall. People are coming in from the service road.',
+    },
+  }),
 };
 
 /** Districts drawn as parts, by key. */
@@ -654,7 +721,11 @@ const hash = (str) => { let h = 2166136261; for (const ch of String(str)) h = Ma
 export function pickSite(district, jobId = '', templateId = null, build = null) {
   if (String(templateId).startsWith('raid:')) { // a raid is fought in the hall itself, with what's built there (data/hallBuild.js)
     const hall = HALLS[String(templateId).slice(5)] ?? HALL;
-    return build?.length ? { ...hall, shapes: [...hall.shapes, ...buildShapes(build)] } : hall;
+    if (!build?.length) return hall;
+    // A compound's parts held (their walls and gate) and the way the raid came in (core/hallbuild.js floorPieces).
+    const way = build.find((b) => b.piece === 'way');
+    const parts = build.filter((b) => b.piece === 'part').flatMap((b) => hall.parts?.find((x) => x.id === b.id)?.shapes ?? []);
+    return { ...hall, ...(way && hall.ways?.[way.id]), shapes: [...hall.shapes, ...parts, ...buildShapes(build)] };
   }
   const plot = PLOTS[district];
   if (!plot) return SITES[district] ?? SITES.generic;

@@ -177,4 +177,15 @@ export const CAST = {
       disappoint: ['You promised a time you knew we could not make.', 'Find another courier. One who does not read the terms.'],
     },
   },
+  // The owner's hall lore (2026-11-07): the Underterrace's contact, named by Claude (WORLD.md "The tong's halls").
+  tse: {
+    name: 'Forewoman Tse',
+    district: 'heights',
+    desc: 'Tse Yuk-lan, a former maintenance forewoman who still handles the cooperative\'s keys at the Underterrace, beneath the Glass Heights terraces, and knows which department answers a call about a leaking wall.',
+    lines: {
+      greet: ['Keep the drains clear. Pay what you agreed.', 'If someone comes asking, you rent the rooms. Don\'t tell them you discovered them.', 'Lift the grille first. Then we can have tea.'],
+      approve: ['Drains clear, rent paid. That\'s all I ever ask.', 'We\'ve been here thirty years. You might manage a few.'],
+      disappoint: ['Thirty years, and nobody ever blocked that channel before.', 'The cooperative pays the charges. You pay the cooperative. That was the arrangement.'],
+    },
+  },
 };

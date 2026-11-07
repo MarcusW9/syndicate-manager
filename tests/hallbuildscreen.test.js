@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createNewGame } from '../src/core/state.js';
 import { syncHalls } from '../src/core/halls.js';
-import { buildableCells, hallMap, placePiece } from '../src/core/hallbuild.js';
+import { buildableCells, hallMap, placePiece, partAt, bedCells, floorOf } from '../src/core/hallbuild.js';
 import { renderHallBuild, hallBuildLine } from '../src/ui/hallbuild.js';
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
@@ -18,14 +18,16 @@ function tong(cash = 20000) {
   s.cash = cash;
   return s;
 }
-const cells = [...buildableCells(hallMap('nightMarket'))].map((k) => k.split(',').map(Number));
+const all = [...buildableCells(hallMap('nightMarket'))];
+// Outside squares, where defences go (2026-11-07: every hall a compound).
+const cells = all.filter((k) => !partAt(hallMap('nightMarket'), ...k.split(',').map(Number)).inside).map((k) => k.split(',').map(Number));
 
 test('the plan, a tappable square on every free cell, the floor and the cash', () => {
   const html = renderHallBuild(ui, tong(), view());
   assert.match(html, /Build · the Night Market hall/);
   assert.match(html, /<svg class="siteplan"/);
-  assert.equal((html.match(/data-action="build-cell"/g) ?? []).length, cells.length);
-  assert.match(html, /Floor <b>0\/6<\/b>/);
+  assert.equal((html.match(/data-action="build-cell"/g) ?? []).length, all.length, 'every free square, beds included');
+  assert.match(html, new RegExp(`Floor <b>0/${floorOf(tong().halls.find((h) => h.district === 'nightMarket'))}</b>`));
   assert.match(html, /¥20,000/);
   assert.match(html, /Tap a free square/);
   for (const name of ['Barricade', 'Steel plate', 'Inner wall']) assert.match(html, new RegExp(name));
@@ -55,7 +57,8 @@ test('a placed piece picked: Turn and Remove with half back; the halls list says
   assert.match(html, /Inner wall<\/strong> <span class="muted small">built day/);
   assert.match(html, /data-action="build-turn"/);
   assert.match(html, /Remove · ¥1,500 back/);
-  assert.match(html, /Floor <b>1\/6<\/b>/);
-  assert.equal(hallBuildLine(s.halls.find((h) => h.district === 'nightMarket')), 'Built: 1 inner wall · floor 1/6');
+  const floor = floorOf(s.halls.find((h) => h.district === 'nightMarket'));
+  assert.match(html, new RegExp(`Floor <b>1/${floor}</b>`));
+  assert.equal(hallBuildLine(s.halls.find((h) => h.district === 'nightMarket')), `Built: 1 inner wall · floor 1/${floor}`);
   assert.equal(hallBuildLine({ level: 1, build: [] }), 'Nothing built yet · floor 0/6');
 });

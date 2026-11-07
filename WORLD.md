@@ -218,9 +218,57 @@ The crew's fee is agreed in ¥, usually cash when discretion matters. Expense co
 
 Not every job needs a clean victory. Sometimes the sensible ending is a witnessed handover, a written refusal, a cancelled collection or bringing back half of what was requested. A quiet, incomplete result is better than becoming the explanation for somebody else's misconduct.
 
-There are still only five recurring clients. The people here may call again, remember a kindness or warn the crew away from a bad collection, but they do not become permanent patrons simply because their names are known.
+There are only seven recurring clients, and the newest two (Mrs. Ip and Forewoman Tse) are small ones. The people here may call again, remember a kindness or warn the crew away from a bad collection, but they do not become permanent patrons simply because their names are known.
 
 Someone who buys the crew dinner on Sunday may refuse to recognise them in a lobby on Monday. Both moments can be sincere.
+
+## The tong's halls
+
+Owner's lore, 2026-11-07. A tong's halls grow through leases, repairs and negotiated access, not conquest. Taking another part of a site brings it into the crew's use; it never makes the crew owners of the district around it, or of the public businesses next door. Every hall is laid out the same way: a first building and the lane beside it; then the building across the lane; then a walled yard behind with a gate; then a small building across a passage; with a strip in front (where a raid comes from) and a strip behind (the gate's side). Fights happen outside, between the buildings. Background details (boat ladders, trapdoors, a sealed tunnel) are scenery, never extra ways in or rooms.
+
+### Old Town: the block above the noodle shop
+Where the tong started: the room above the noodle shop, found by Joss. Then **the lane** beside it, **the flat** across the lane, **the yard** behind with a gate onto the back alley, and **the back kitchen** across the passage. Brass Anchor ground; Auntie Fung's district.
+
+### The Night Market: Wok Court
+Rooms behind a dai pai dong courtyard where the last wok stops long after midnight; the front door faces stacked stools, drying bowls and a table somebody always saves for the neighbours. Independent food stalls share the eating court under patched awnings; behind them stand old prep rooms, stores and workers' quarters round a narrow delivery passage. A small **stallholders' association** holds the lease and won't rent to strangers who treat the neighbours as expendable. **Mrs. Ip** makes the introduction: she doesn't own the court, but vouches that the crew will pay what they agree and remember other people work here. The opening favour is **Back Rent**, asked by Mrs. Ip: the association paid its rent, a new agent issued an arrears notice against the old account and sent a contractor to lock the unused rooms; the crew finds the payment and gets the notice withdrawn and the order cancelled, in writing. Silver Fan turf, not Silver Fan property: taking rooms here makes no faction debt. Madam Rao keeps her sari shop and stays a client; the crew doesn't live above it.
+- **The Late Rooms** (first building): old overnight quarters for cooks and delivery workers; a stubborn ceiling fan, windows on the eating court, faded names on the hooks by the door.
+- **The Wash Passage** (lane): wet paving and drain grilles where the shared washing stations stood. The association's oldest rule: nobody leaves crates blocking it.
+- **The Prep House** (second building): the stalls' old shared preparation building, released when they consolidated their kitchens; pale rectangles where the benches stood, a wall clock seven minutes fast. No working kitchen is displaced.
+- **The Delivery Court** and **the Cart Gate** (yard): the walled receiving yard, cleared once the association moves its storage to a shared collection point; a broad metal gate onto the market service lane, its lower panels dented by decades of handcarts.
+- **The Rice Store** (small building): a dry store emptied when the association changed suppliers; sack weights pencilled by the door, and an argument about a missing scoop.
+- Strips: **the Supper Frontage** (beside the public eating court) and **the Market Service Lane**.
+- *Everyday:* a communal table the crew doesn't own. After a while, a stallholder sets out an extra bowl without asking. Nobody makes a speech about it.
+
+### The Docks: the Stove Pier
+A container office on an old working pier, with a stove that draws properly only when the wind is unhelpful. On paper the pier belongs to an **AHL property subsidiary** whose records still call it a temporary landing; a small **pier cooperative** holds the working lease. **The Ferryman** introduces the crew after Quarter to Two, without stepping ashore; he doesn't own the pier. The Red Lanterns collect their usual tolls on freight reaching it; taking more of the pier is a lease matter, not a claim on the Docks.
+- **The Stove Office** (first building): a narrow stove, a scarred desk, beds behind a partition; old dispatch numbers show through the paint when the walls sweat.
+- **The Working Deck** (lane): the deck between the containers, up from the container yard, drain channels running to the pier edge.
+- **The Relief Box** (second building): a container fitted out for relief crews between shifts; the cooperative put bunks in after the Grid Blackout.
+- **The Rope Court** and **the Jetty Gate** (yard): the fenced pier end where mooring lines were sorted; a sliding gate onto the pier walkway, beside an old pedestrian opening welded shut.
+- **The Net House** (small building): a net-mending store, salt marks where the drying frames were, a roof repaired in three materials.
+- Strips: **the Container Yard** and **the Pier Walkway**. The ladder reaches a boat only when one is there; the Ferryman moors no escape craft for the crew.
+- *Everyday:* nobody agrees who owns the kettle; everybody agrees taking it off the stove empty means a serious conversation. On wet nights boat crews leave gloves above the stove.
+
+### The Basin: the Unlisted Rooms
+A flat over a tack workshop, with a view of the Old Stand and no residential address anyone will admit to finding; race commentary reaches the windows a few seconds behind the crowd. A small **property trust** leases the buildings to racing trades; the Racing Association's records class the upper rooms as storage and staff rest space. The flat "doesn't exist" as a dwelling, not as a building. **Ruth Okonkwo** arranges access after The Flat Doesn't Exist, through a contact who handles the trust's service contracts. The Silver Fan's interests round the Undercroft don't automatically include it.
+- **The Unlisted Flat** (first building): up the workshop's trapdoor (an access detail, not a way in for a fight); leather dressing and wet coats below.
+- **The Buckle Passage** (lane): named for a brass buckle on an old repair-shop sign; deliveries come up it from the street.
+- **The Saddler's Store** (second building): high shelves and chalk outlines where the saddle trees hung.
+- **The Wash Yard** and **the Course Gate** (yard): where tack was washed and horses held between appointments; the fittings remain, the horses don't. The gate opens onto the course lane, towards Lantern Course's service approaches.
+- **The Chaff House** (small building): an old feed store still called a loft, though its room is at yard level.
+- Strips: **Workshop Row** and **the Course Lane**.
+- *Everyday:* a retired saddler gives advice about damp leather whether you own any or not. On race nights, everyone claims to have known the winner.
+
+### Glass Heights: the Underterrace
+Rooms beneath the corporate terraces, opening onto a sunken maintenance court: "Above you, someone pays to have rainwater disappear; down here, you learn where it goes." An old maintenance compound built into the ridge for the workers who kept the retaining walls, drains and service roads going during the redevelopment; still on maintenance plans, gone from the glossy maps. Not a secret bunker: maintenance workers know it; residents above have never had a reason to ask. A **maintenance cooperative** holds a long occupancy agreement and keeps the drains clear; the estate is administered by a **property company tied to Veridian-Apex**. **Forewoman Tse** (Tse Yuk-lan), a former maintenance forewoman who still handles the cooperative's keys, makes the introduction; Mr. Szeto isn't involved. The opening favour is **Still on the Books**: a contractor change left the occupancy agreement off the estate register and the compound listed as vacant, and the crew helps recover the archived agreement and get it recognised, letting clause included. Her terms: "Keep the drains clear. Pay what you agreed. If someone comes asking, you rent the rooms. Don't tell them you discovered them. We've been here thirty years."
+- **The Night Rooms** (first building): rest rooms for maintenance workers on overnight call; duty hooks, a faded storm checklist, a patch where a time clock was.
+- **The Rain Passage** (lane): the open service approach down from the public maintenance steps (not the Service Steps), drainage channels under grilles. It stays clear for inspection.
+- **The Stores** (second building): an equipment store where tools were signed out against numbered brass tags.
+- **The Sunken Court** and **the Delivery Gate** (yard): a walled receiving yard open to the sky, old water marks on the retaining wall; a metal gate onto the rear service road.
+- **The Survey Room** (small building): an inspection office; pencil height marks by the door.
+- Strips: **the Lower Approach** and **the Service Road**. A sealed inspection tunnel mouth beyond the compound is scenery only.
+- *Access:* Veridian-Apex contractors use the service road, and security may check occupancy records: a legitimate arrangement, not immunity.
+- *Everyday:* above the wall, gardeners replace plants before residents notice they're dying; below it, someone grows spring onions in a food tub.
 
 ## Tech and neural load
 Street implants are cheap, second-hand and always glitching; Glass Heights wears smooth luxury hardware. Pushing implants too hard brings on neural load: migraines, memory stutter, emotional deadness. Street crews treat it not with corporate therapy patches but with bitter herbal infusions from Auntie Fung's shop, damp cloths and downtime in dim mahjong parlours. The megacorps own the infrastructure; working people treat tech like a rusty outboard motor, duct-taped, prayed over and kept running out of stubbornness.
@@ -246,7 +294,7 @@ Guns are ordinary kit for anyone who works for money: second-hand pistols in wai
 
 ## The clients
 
-Narrative dossiers for the five recurring clients: who they are, what the street knows, what they hide, and how their story unfolds as the crew's trust with them reaches 60, 75 and 90 (or falls below 20). The trust arcs and introductions are canon but not built yet. When they become in-game messages, trim each moment to 2–4 short lines for the phone.
+Narrative dossiers for the recurring clients: the five big ones, then two small ones promoted from the street (2026-11-07). Who they are, what the street knows, what they hide, and how their story unfolds as the crew's trust with them reaches 60, 75 and 90 (or falls below 20). The trust arcs and introductions are canon but not built yet. When they become in-game messages, trim each moment to 2–4 short lines for the phone.
 
 ### Auntie Fung (Fung Wai-han)
 *Old Town · Brass Anchor Society*
@@ -387,12 +435,29 @@ Ruth Okonkwo brokers the work Aether-Harbour Logistics can't put its name to: fr
 **When your name starts to travel (the Amber Reach opens):**
 > "Your crew has a name now, which is inconvenient for both of us. The Amber Reach is where money changes trains. Meet me on the fifth floor of Pearl Haven House, back booth, and order the milk tea."
 
+### Mrs. Ip (a small client)
+*The Night Market · fish-ball stall at the Neon Dragon*
+
+Promoted from the street cast (owner, 2026-11-07). A practical market operator who never stops talking. Her trust is her own: she works on Silver Fan turf without being Silver Fan, and neither Rao nor Fung sponsors her work. She asks Back Rent (the stallholders' association's arrears notice); she knows the people affected and can judge whether the crew handled it properly, and doing it right is how the tong is introduced to Wok Court.
+
+**Her work:** modest and steady. Deliveries, supplier disputes and missing stock; helping market workers and neighbouring stalls; practical jobs where keeping people fed matters more than looking impressive.
+
+### Forewoman Tse (Tse Yuk-lan; a small client)
+*Glass Heights · the Underterrace maintenance cooperative*
+
+Promoted with the Underterrace (owner, 2026-11-07). The cooperative's representative, protecting its home and working arrangements. She deals with Veridian-Apex's estate contractors without working for the corporation, and has nothing to do with Mr. Szeto. She asks Still on the Books: recovering the cooperative's occupancy agreement and getting it recognised, which opens the Underterrace to the tong.
+
+**Her work:** contractor disputes, equipment recovery and maintenance access; missing records, and workers caught between employers; the infrastructure beneath corporate comfort.
+
+**Trust, standing and access are three things.** A client's trust is "do I trust this crew with another job?"; a faction's view of the tong is its own; a hall opens when the crew has earned the introduction and met the occupancy conditions. Where someone works is not who they work for: two clients may one day belong to the same faction and still disagree about the crew.
+
 ## Street characters
 
 Smaller people a new crew meets on rookie work (2026-10-25). Their spoken lines live in `src/data/cast.js`, so any job can use them.
 
 - **Doc Siu** (Old Town). An ex-hospital surgeon who runs an unlicensed clinic in the basement of Tenement Block 9: a dentist's chair, a car battery and a shower curtain for a wall. Smokes under the No Smoking sign. Her praise is dry and rare ("Not bad, new hands"). Auntie Fung sends her people there.
-- **Mrs. Ip** (Night Market). Runs the fish-ball stall at the Neon Dragon, never stops talking, and moves crates that aren't fish balls. Pays in cash and a bag of fish balls. Buys her fish at the old pier before dawn, and keeps the tally on Auntie Fung's night loads.
+- **Mrs. Ip** (Night Market). Runs the fish-ball stall at the Neon Dragon, never stops talking, and moves crates that aren't fish balls. Pays in cash and a bag of fish balls. Buys her fish at the old pier before dawn, and keeps the tally on Auntie Fung's night loads. Vouched for the crew to the stallholders' association at Wok Court ("The tong's halls", above).
+- **Forewoman Tse** (Tse Yuk-lan; Glass Heights). Former maintenance forewoman who still handles the cooperative's keys at the Underterrace and knows which department answers a call about a leaking wall. After heavy rain she inspects the drains; she'll accept tea, but not before somebody lifts the grille.
 - **Ah-Wah** (Night Market). A petty runner who borrowed from Madam Rao and tried to skip town with her ledger.
 - **Dr. Lim** (Night Market). A back-alley implant doc behind the noodle stalls, built his clinic on Madam Rao's money, and sold Silver Fan counterfeit eyes to her debtors.
 - **Meena D'Sa** (Night Market). Seamstress and counterkeeper in Madam Rao's shop. Rao lets her mind the counter; she returns a customer's deposit rather than promise work the shop can't finish. Wants her own alterations counter, and keeps spending the savings replacing garments Rao accepted as collateral. Knows Mrs. Ip.
@@ -646,9 +711,13 @@ CLIENTS (local powers a small crew can reach, below the corps):
 - Ruth Okonkwo: broker for AHL's off-books arm; trusts nobody; meets in the Spice Route
   Canteen back booth once she trusts you. Secret: keeps a file on every deniable job
   that could sink AHL, and wants out of the city.
+- Small clients (2026-11-07): Mrs. Ip (Night Market fish-ball stall at the Neon Dragon;
+  deliveries, supplier disputes, missing stock; not Silver Fan; asks Back Rent) and
+  Forewoman Tse (Tse Yuk-lan, the Underterrace maintenance cooperative in Glass Heights;
+  contractor disputes, lost records, maintenance access; not Veridian-Apex, not Szeto;
+  asks Still on the Books). A client's trust is personal, not their faction's.
 STREET CAST (rookie work): Doc Siu (Old Town; ex-surgeon, unlicensed clinic under
-Tenement Block 9, dry praise); Mrs. Ip (Night Market fish-ball stall at the Neon Dragon,
-moves crates, tallies Fung's night loads at the old pier); Meena D'Sa (Rao's seamstress and counterkeeper); Tang Wai-chiu (Silver Fan
+Tenement Block 9, dry praise); Meena D'Sa (Rao's seamstress and counterkeeper); Tang Wai-chiu (Silver Fan
 collector, third-floor parlour); Uncle Tariq (remittance booth, Pearl Haven House, backed
 by Rao); Pang Man-ki (Veridian-Apex clinic administrator); Ho Sze-lam (Hoi-Sing field
 supervisor, Old Town); Mak Chi-on (Racing Association stable-access official).
@@ -656,6 +725,12 @@ GLASS HEIGHTS PEOPLE (one-off job givers, not clients): Chow Nga-man (Veridian-A
 payroll officer); Edith Pryce (Morrow & Venn estates administrator); Kwok Mei-yee
 (visiting Hang Yuen engineer); Poon Hok-yin (shared-tower facilities coordinator); Binta
 Sarr (independent overnight courier). Currency is cash in ¥; no "credits" or "Bits".
+HALLS: the tong's halls grow by lease and negotiated access, never conquest (no claim on
+the district or the businesses next door): Old Town (the room above the noodle shop) ·
+Wok Court, Night Market (rooms behind a dai pai dong court, stallholders' association,
+via Mrs. Ip) · the Stove Pier, Docks (pier cooperative, via the Ferryman) · the Unlisted
+Rooms, Basin (flat over a tack workshop, via Okonkwo) · the Underterrace, Glass Heights
+(maintenance cooperative under the terraces, via Forewoman Tse, not Szeto).
 Reputation tier promotions open the locked districts,
 each introduced by a client: the Silt (the Ferryman), the Amber Reach (Okonkwo), Iron
 Peak (Szeto).

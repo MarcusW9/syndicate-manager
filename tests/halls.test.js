@@ -6,7 +6,7 @@ import { createNewGame, SAVE_VERSION } from '../src/core/state.js';
 import { advanceDay, weeklyBill } from '../src/core/time.js';
 import { availability } from '../src/core/crew.js';
 import { hire, canHire, expandSafehouse, STARTING_ROSTER_CAP } from '../src/core/recruits.js';
-import { hallIn, residents, freeBeds, canOpenHall, openHall, expandHall, canMove, moveToHall, introduceHalls, syncHalls } from '../src/core/halls.js';
+import { hallIn, residents, freeBeds, canOpenHall, openHall, expandHall, nextHallExpansion, canMove, moveToHall, introduceHalls, syncHalls } from '../src/core/halls.js';
 import { HALL_SITES } from '../src/data/halls.js';
 import { rankOf } from '../src/core/tong.js';
 import { adjustTrust } from '../src/core/clients.js';
@@ -21,7 +21,7 @@ const { importSave } = await import('../src/save/save.js');
 function welcome(seed = 1) {
   const s = createNewGame({ seed, startCrew: 'fresh' });
   s.reputation = HALL_SITES.nightMarket.rep;
-  adjustTrust(s, 'rao', HALL_SITES.nightMarket.trust - 50);
+  adjustTrust(s, 'ip', 10);
   s.cash = 30000;
   s.openings = { nightMarket: { status: 'done', jobId: null } };
   return s;
@@ -41,10 +41,12 @@ test('a new game has one hall, the old safehouse in Old Town: its beds are the r
 test('opening a hall needs the welcome (reputation, the contact\'s trust) and the deposit; it starts small', () => {
   const s = createNewGame({ seed: 2, startCrew: 'fresh' });
   assert.match(canOpenHall(s, 'nightMarket').reason, /reputation/);
-  s.reputation = 30;
-  assert.match(canOpenHall(s, 'nightMarket').reason, /trust/);
-  adjustTrust(s, 'rao', 10);
-  assert.match(canOpenHall(s, 'nightMarket').reason, /favour first/, 'then her opening favour (2026-11-06)');
+  s.reputation = HALL_SITES.nightMarket.rep;
+  // The Night Market's introducer, Mrs. Ip, isn't a client (2026-11-07): no trust check, the favour comes next.
+  assert.match(canOpenHall(s, 'nightMarket').reason, /Mrs\. Ip wants a favour first|Mrs\. Ip will ask a favour first/, 'then the opening favour (2026-11-06)');
+  // A hall whose contact is a client still needs their trust: the Docks and the Ferryman.
+  s.reputation = HALL_SITES.docks.rep;
+  assert.match(canOpenHall(s, 'docks').reason, /trust/);
   s.openings = { nightMarket: { status: 'done', jobId: null } };
   s.cash = 1000;
   assert.match(canOpenHall(s, 'nightMarket').reason, /deposit/);
@@ -64,13 +66,21 @@ test('opening a hall needs the welcome (reputation, the contact\'s trust) and th
 
 test('each hall expands on its own, the cost growing with its level; the old safehouse expansion is the home hall\'s', () => {
   const o = openHall(welcome(4), 'nightMarket');
+  o.cash = 100000;
   const e = expandHall(o, 'nightMarket');
   assert.equal(hallIn(e, 'nightMarket').beds, HALL_SITES.nightMarket.beds + 2);
   assert.equal(hallIn(e, 'nightMarket').level, 2);
-  assert.equal(e.cash, o.cash - 10000);
+  assert.equal(e.cash, o.cash - 20000, 'each hall takes its next part at that part\'s price (2026-11-07)');
   const home = expandSafehouse(o);
   assert.equal(hallIn(home, 'oldTown').beds, hallIn(o, 'oldTown').beds + 2);
   assert.equal(home.rosterCap, o.rosterCap + 2);
+  // Old Town is a compound (2026-11-07): it expands by taking its next part, at that part's price, until the block is ours.
+  assert.equal(home.cash, o.cash - 20000, 'the flat costs its own price');
+  let all = home;
+  all = expandSafehouse(all); all = expandSafehouse(all);
+  assert.equal(hallIn(all, 'oldTown').level, 4);
+  assert.equal(nextHallExpansion(all, 'oldTown'), null, 'the whole block is ours: nothing left to take');
+  assert.equal(expandSafehouse(all), all);
 });
 
 test('moving in takes the day: they count there at once, can\'t work today, and are free tomorrow', () => {

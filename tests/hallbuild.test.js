@@ -8,7 +8,7 @@ import { syncHalls, hallIn } from '../src/core/halls.js';
 import { HALLS, pickSite } from '../src/data/sites.js';
 import { HALL_SITES } from '../src/data/halls.js';
 import { HALL_BUILD, PIECES } from '../src/data/hallBuild.js';
-import { buildableCells, canPlace, placePiece, removePiece, turnPiece, canTurn, floorOf, floorUsed, hallSiteFor, pieceAt, refundOf } from '../src/core/hallbuild.js';
+import { bedCells, partAt, buildableCells, canPlace, placePiece, removePiece, turnPiece, canTurn, floorOf, floorUsed, hallSiteFor, pieceAt, refundOf } from '../src/core/hallbuild.js';
 import { fightSpots, siteRects, spotsForJob } from '../src/core/fightspots.js';
 import { BATTLE } from '../src/data/battle.js';
 
@@ -20,13 +20,15 @@ const tong = (cash = 100000) => {
   s.cash = cash;
   return s;
 };
-const cellsOf = (d) => [...buildableCells(HALLS[d])].map((k) => k.split(',').map(Number));
+/** A hall's free floor: its cells, less the beds on it in a new tong (2026-11-07: beds are blocks on the floor). */
+/** A hall's free outside squares at a level, where defences go (2026-11-07: every hall a compound; rooms inside, defences outside). */
+const cellsOf = (d, level = 1) => { const site = HALLS[d]; const beds = bedCells(hallIn(tong(), d)); return [...buildableCells(site, level)].filter((k) => !beds.has(k) && !partAt(site, ...k.split(',').map(Number))?.inside).map((k) => k.split(',').map(Number)); };
 
 test('every hall has floor to build on, and none of it near the ways in and out or where either side starts', () => {
   for (const d of Object.keys(HALLS)) {
     const site = HALLS[d];
-    const cells = cellsOf(d);
-    assert.ok(cells.length >= floorOf({ level: 1 }), `${d}: ${cells.length} cells, at least a level-1 hall's floor`);
+    const cells = [...buildableCells(site, 1)].map((k) => k.split(',').map(Number));
+    assert.ok(cells.length >= 6, `${d}: ${cells.length} cells at level 1`);
     const keep = [site.posts.inside, site.paths.out.at(-1), site.paths.inside.at(-1)];
     for (const [x, y] of cells) {
       for (const [px, py] of keep) assert.ok(!(px >= x * C && px <= x * C + C && py >= y * C && py <= y * C + C), `${d}: ${x},${y} isn't on a way in or out`);
@@ -55,17 +57,30 @@ test('placing a piece costs its price and floor; removing gives half back; the l
   assert.equal(floorUsed(hallIn(s, 'nightMarket')), 0);
 });
 
-test('the floor grows with the hall: 6 cells at level 1, 4 more a level', () => {
-  let s = tong();
-  assert.equal(floorOf(hallIn(s, 'docks')), 6);
-  const cells = cellsOf('docks');
-  for (const [x, y] of cells.slice(0, 6)) s = placePiece(s, 'docks', 'barricade', x, y);
-  assert.equal(floorUsed(hallIn(s, 'docks')), 6);
-  const [x, y] = cells[6] ?? cells[0];
-  assert.match(canPlace(s, 'docks', 'barricade', x, y).reason, /No floor left|already there/);
-  hallIn(s, 'docks').level = 2;
-  assert.equal(floorOf(hallIn(s, 'docks')), 10);
-  if (cells[6]) assert.equal(canPlace(s, 'docks', 'barricade', x, y).ok, true);
+test('a compound has no floor allowance: every free square of the parts it holds, and Expand takes the next part (2026-11-07)', async () => {
+  const { expandHall } = await import('../src/core/halls.js');
+  let s = tong(1e6);
+  const h = () => hallIn(s, 'docks');
+  const f1 = floorOf(h());
+  assert.equal(f1, buildableCells(HALLS.docks, 1).size - h().beds);
+  const out = cellsOf('docks');
+  for (const [x, y] of out) s = placePiece(s, 'docks', 'barricade', x, y);
+  assert.equal(floorUsed(h()), out.length, 'every outside square takes a defence');
+  s = expandHall(s, 'docks');
+  assert.equal(h().level, 2);
+  assert.ok(floorOf(h()) > f1, 'the next part brings its floor');
+});
+
+test('rooms go inside and defences outside, where a raid is fought (2026-11-07)', () => {
+  const s = tong(1e6);
+  hallIn(s, 'basin').level = 2;
+  const site = HALLS.basin;
+  const beds = bedCells(hallIn(s, 'basin'));
+  const inside = [...buildableCells(site, 2)].filter((k) => !beds.has(k) && partAt(site, ...k.split(',').map(Number)).inside).map((k) => k.split(',').map(Number));
+  const [ox, oy] = cellsOf('basin', 2)[0];
+  assert.match(canPlace(s, 'basin', 'plate', ...inside[0]).reason, /Defences go outside/);
+  assert.match(canPlace(s, 'basin', 'stash', ox, oy).reason, /Rooms go inside|Can't build there/);
+  assert.equal(canPlace(s, 'basin', 'plate', ox, oy).ok, true);
 });
 
 test('a hall shut after a raid can\'t be built in', () => {
@@ -96,9 +111,10 @@ test('what\'s built is on the raid\'s map, and its fight spots use it: a plate b
     const site = HALLS[d];
     const anchor = site.paths.inside.at(-1);
     const near = cellsOf(d).sort((a, b) => Math.hypot(a[0] * C + 15 - anchor[0], a[1] * C + 15 - anchor[1]) - Math.hypot(b[0] * C + 15 - anchor[0], b[1] * C + 15 - anchor[1]))[0];
+    const beforeBuild = hallSiteFor(s, d);
     s = placePiece(s, d, 'plate', near[0], near[1], 0);
     const built = hallSiteFor(s, d);
-    assert.equal(built.shapes.length, site.shapes.length + 1, `${d}: the plate is on the map`);
+    assert.equal(built.shapes.length, beforeBuild.shapes.length + 1, `${d}: the plate is on the map`);
     assert.equal(pickSite(d, 'raid-x', `raid:${d}`), site, `${d}: the bare map is unchanged`);
     const before = fightSpots(site, 'inside', { crew: 6, guards: BATTLE.maxGuards }).crew.filter((x) => x.cover === 'full').length;
     const after = spotsForJob(d, 'raid-x', `raid:${d}`, 'inside', 4, hallIn(s, d).build).crew.filter((x) => x.cover === 'full').length;
@@ -125,7 +141,8 @@ test('a raid starts on the hall as built, and keeps that map while it\'s fought'
   s = placePiece(s, 'docks', 'plate', x, y);
   const st = structuredClone(s);
   startRaidFight(st, { id: 'raid-docks-1', district: 'docks', by: 'police', warnedDay: st.day, day: st.day, answer: null, outcome: null, done: false });
-  assert.deepEqual(st.activeMission.build.map((b) => b.piece), ['plate']);
+  assert.deepEqual(st.activeMission.build.filter((b) => !['bed', 'way', 'part'].includes(b.piece)).map((b) => b.piece), ['plate']);
+  assert.equal(st.activeMission.build.filter((b) => b.piece === 'bed').length, hallIn(st, 'docks').beds, 'the hall\'s beds are on the raid\'s map too');
 });
 
 test('old saves upgrade with nothing built', async () => {
@@ -146,7 +163,7 @@ test('defences make a raid easier: every 3 pieces lower its threat by 1, never b
   setHeat(s, 'nightMarket', 10);
   const police = { id: 'r1', district: 'nightMarket', by: 'police', warnedDay: s.day, day: s.day, answer: null, outcome: null, done: false };
   assert.equal(raidThreat(s, 'nightMarket', police), 4);
-  const cells = cellsOf('nightMarket');
+  const cells = cellsOf('nightMarket', 3);
   for (const [x, y] of cells.slice(0, 2)) s = placePiece(s, 'nightMarket', 'barricade', x, y);
   assert.equal(defenceCut(s, 'nightMarket'), 0, 'two pieces: no change yet');
   s = placePiece(s, 'nightMarket', 'wall', ...cells[2]);
@@ -189,4 +206,105 @@ test('the auto turret: one per hall from level 2, a defence piece; in a raid it 
   assert.match(fired[TURRET.shots - 1][0].text, /clicks dry/);
   assert.ok(fired.slice(TURRET.shots).every((ls) => !ls.length), 'then nothing');
   assert.ok(fired.flat().every((l) => l.actor === null), 'nobody on it');
+});
+
+test('every hall\'s floor is whole: each cell of its grid can take a piece (owner, 2026-11-07)', () => {
+  for (const [d, site] of Object.entries(HALLS)) {
+    if (site.parts) continue; // a compound: its own test below
+    const [x0, y0, x1, y1] = site.grid;
+    assert.equal(buildableCells(site).size, (x1 - x0 + 1) * (y1 - y0 + 1), `${d}: no holes in the floor`);
+  }
+});
+
+test('the beds are blocks on the floor: as many as the hall has, never built over, two more with Expand', async () => {
+  const { bedsOnFloor } = await import('../src/core/hallbuild.js');
+  const { expandHall } = await import('../src/core/halls.js');
+  let s = tong(1e6);
+  for (const h of s.halls) {
+    const beds = bedsOnFloor(h);
+    assert.equal(beds.length, h.beds, `${h.district}: a block for each bed`);
+    const free = buildableCells(HALLS[h.district]);
+    assert.ok(beds.every((b) => free.has(`${b.x},${b.y}`)), `${h.district}: on the floor`);
+    assert.match(canPlace(s, h.district, 'barricade', beds[0].x, beds[0].y).reason, /bed/);
+  }
+  const before = bedsOnFloor(hallIn(s, 'docks'));
+  s = expandHall(s, 'docks');
+  const after = bedsOnFloor(hallIn(s, 'docks'));
+  assert.equal(after.length, before.length + 2);
+  assert.deepEqual(after.slice(0, before.length), before, 'the beds already there stay put');
+  const site = hallSiteFor(s, 'docks');
+  assert.equal(site.shapes.filter((x) => x.cls === 'sp-cot').length, after.length, 'each bed is a cot on the raid\'s map');
+});
+
+test('every hall is a compound that grows with Expand: each part from its level, all its floor ours, only ways in kept clear', async () => {
+  const { heldParts, partCells, waysIn, floorOf } = await import('../src/core/hallbuild.js');
+  for (const [d, site] of Object.entries(HALLS)) {
+  const ways = Object.values(site.ways);
+  const keep = ways.flatMap((w) => [w.posts.inside, w.paths.out.at(-1), w.paths.inside.at(-1), w.paths.inside[0]]);
+  const near = (k) => { const [x, y] = k.split(',').map(Number); return keep.some(([px, py]) => Math.hypot(Math.max(x * C - px, 0, px - x * C - C), Math.max(y * C - py, 0, py - y * C - C)) < HALL_BUILD.keepClear); };
+  let before = 0;
+  for (const level of [1, 2, 3, 4]) {
+    const held = heldParts(site, level);
+    assert.equal(held.length, site.parts.filter((p) => p.lvl <= level).length);
+    const cells = buildableCells(site, level);
+    assert.ok(cells.size > before, `level ${level}: more floor`);
+    before = cells.size;
+    // Every cell of a held part takes a piece, except one by a way in or under the yard's own pallets and bins.
+    const stuck = held.flatMap(partCells).filter((k) => !cells.has(k));
+    assert.ok(stuck.every((k) => near(k) || siteRects(site).some((r) => r.cls === 'sp-cover' && r.x < (Number(k.split(',')[0]) + 1) * C && r.x + r.w > Number(k.split(',')[0]) * C && r.y < (Number(k.split(',')[1]) + 1) * C && r.y + r.h > Number(k.split(',')[1]) * C)), `level ${level}: ${stuck}`);
+    assert.ok([...cells].every((k) => held.some((p) => partCells(p).includes(k))), 'only on parts held');
+  }
+  assert.deepEqual(waysIn(site, 2).map((w) => w.id), ['street']);
+  assert.deepEqual(waysIn(site, 3).map((w) => w.id), ['street', 'gate'], `${d}: the yard brings its gate`);
+  }
+  const site = HALLS.oldTown;
+  const s = tong();
+  assert.equal(floorOf(hallIn(s, 'oldTown')), buildableCells(site, 1).size - hallIn(s, 'oldTown').beds, 'no allowance: the floor held is all ours, less its beds');
+  // Each inside part holds its own share of the beds: the room its eight, the flat the next ones.
+  const { bedsOnFloor } = await import('../src/core/hallbuild.js');
+  const h4 = { ...hallIn(s, 'oldTown'), level: 4, beds: 14 };
+  const inRoom = bedsOnFloor(h4).filter((b) => b.y >= 3 && b.x <= 4).length;
+  assert.equal(inRoom, 8, 'the room keeps its eight; the new beds go in the flat and the kitchen');
+});
+
+test('a raid on any hall is fought between the buildings, by either way in: cover on both sides, nobody inside a building', () => {
+  for (const d of Object.keys(HALLS)) for (const way of Object.keys(HALLS[d].ways)) {
+    const map = pickSite(d, 'raid-x', `raid:${d}`, [{ piece: 'way', id: way }]);
+    const houses = siteRects(map).filter((r) => r.cls === 'sp-house');
+    for (const n of [1, 4, 8]) {
+      const sp = spotsForJob(d, 'raid-x', `raid:${d}`, 'inside', n, [{ piece: 'way', id: way }]);
+      assert.ok(sp.crew.length >= n + 2, `${way}: ${sp.crew.length} spots for ${n}`);
+      assert.ok(sp.guards.length >= BATTLE.maxGuards, `${way}: raiders' spots`);
+      for (const x of [...sp.crew, ...sp.guards]) assert.ok(!houses.some((r) => x.at[0] > r.x && x.at[0] < r.x + r.w && x.at[1] > r.y && x.at[1] < r.y + r.h), `${way}: ${x.at} outside the buildings`);
+    }
+    const sp = spotsForJob(d, 'raid-x', `raid:${d}`, 'inside', 4, [{ piece: 'way', id: way }]);
+    assert.ok(sp.crew.slice(0, 2).every((x) => x.cover !== 'open'), `${way}: our first two in cover`);
+    assert.ok(sp.guards.some((x) => x.cover === 'full'), `${way}: full cover for the raiders`);
+  }
+});
+
+test('the raid picks its way in from what the hall holds, and its map shows the yard\'s wall and gate', async () => {
+  const { startRaidFight } = await import('../src/core/raids.js');
+  let s = tong(1e6);
+  const raid = (i) => ({ id: `raid-oldTown-${i}`, district: 'oldTown', by: 'police', warnedDay: s.day, day: s.day, answer: null, outcome: null, done: false });
+  const ways = (st) => new Set(Array.from({ length: 12 }, (_, i) => { const x = structuredClone(st); startRaidFight(x, raid(i)); return x.activeMission.build.find((b) => b.piece === 'way')?.id; }));
+  assert.deepEqual([...ways(s)], ['street'], 'level 1: up the lane from the street');
+  hallIn(s, 'oldTown').level = 3;
+  assert.deepEqual([...ways(s)].sort(), ['gate', 'street'], 'with the yard, the gate too');
+  const st = structuredClone(s); startRaidFight(st, raid(1));
+  assert.ok(st.activeMission.build.some((b) => b.piece === 'part' && b.id === 'yard'));
+  assert.ok(pickSite('oldTown', 'r', 'raid:oldTown', st.activeMission.build).shapes.some((x) => x.cls === 'sp-gate'));
+});
+
+test('saves from v47 have what was built in Old Town paid back, with a note', async () => {
+  const { importSave } = await import('../src/save/save.js');
+  const s = createNewGame({ seed: 3 });
+  s.version = 47;
+  s.halls[0].build = [{ id: 'oldTown-1', piece: 'plate', x: 3, y: 2, rot: 0, day: 1 }, { id: 'oldTown-2', piece: 'barricade', x: 4, y: 2, rot: 0, day: 1 }];
+  const cash = s.cash;
+  const up = await importSave({ text: async () => JSON.stringify(s) });
+  assert.equal(up.version, SAVE_VERSION);
+  assert.deepEqual(up.halls[0].build, []);
+  assert.equal(up.cash, cash + PIECES.plate.cost + PIECES.barricade.cost);
+  assert.ok(up.inbox.some((m) => m.id.startsWith('hall-redrawn-oldTown')));
 });

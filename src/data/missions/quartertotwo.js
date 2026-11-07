@@ -2,9 +2,11 @@
 // One night aboard the Ferryman's boat, carrying Auntie Fung's crates to an
 // unlit lighter beyond the breakwater. Mrs. Ip handles the loading paperwork.
 // The old man stays a hint: a worn rope he taught the Ferryman to retire, never a name.
-// The final beat hands over the Docks hall (data/sites.js HALLS).
+// The final beat introduces the crew to the pier cooperative for the Docks hall, the Stove Pier
+// (WORLD.md "The tong's halls").
 // Original stats, difficulties, costs and job structure preserved.
-// The opening job for this district's hall (core/halls.js introduceHalls): never dealt to the
+// The opening job for this district's hall (data/halls.js HALL_SITES names it, and the client who
+// asks it; core/halls.js introduceHalls): never dealt to the
 // board at random; the contact asks for it once the tong is welcome. Owner's text (2026-11-06).
 
 /** @type {import('../../core/types.js').MissionTemplate} */
@@ -12,7 +14,6 @@ export const QUARTER_TO_TWO = {
   id: 'quarter_to_two',
   name: 'Quarter to Two',
   district: 'docks',
-  opening: 'docks', // the hall it opens (data/halls.js HALL_SITES)
   threat: 2,
   pay: 4000,
   days: 1,
@@ -24,7 +25,7 @@ export const QUARTER_TO_TWO = {
     `{ferryman} brings the boat alongside without tying up, one bare foot braced against a tyre. {ip} passes down the first crate and waits until two pairs of hands have it before letting go.`,
     `The crates disappear beneath a tarpaulin smelling of diesel and dried orange peel. {ferryman} lights a clove cigarette facing backwards, then checks each knot you tied.`,
     `Beyond the breakwater, unlit lighters rise and settle against the fog. {ferryman} points out a low hull with a patched rubbing strip: the buyer's boat, if the answering signal is right.`,
-    `Back at the pier, {ferryman} stays aboard and passes you the container office key: a stove, desk and cot inside, a ladder down to the boat outside. "Leave a little water in the kettle; whoever comes in next will want it."`,
+    `Back at the pier, {ferryman} stays aboard and calls up to the cooperative: their container office is going, a stove and beds behind a partition. "Leave a little water in the kettle; whoever comes in next will want it."`,
   ],
   crises: [
     {

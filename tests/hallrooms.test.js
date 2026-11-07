@@ -47,8 +47,9 @@ test('rooms take their squares (2 × 2, or 2 × 3 turned either way), one of eac
 });
 
 test('a room isn\'t cover: a raid\'s fight spots are the same with one', () => {
-  const s = build(tong(), 'canteen');
-  const bare = fightSpots(HALLS.basin, 'inside', { crew: 6, guards: 4 });
+  const s0 = tong();
+  const s = build(s0, 'canteen');
+  const bare = fightSpots(hallSiteFor(s0, 'basin'), 'inside', { crew: 6, guards: 4 }); // the hall with its beds
   const built = fightSpots(hallSiteFor(s, 'basin'), 'inside', { crew: 6, guards: 4 });
   assert.deepEqual(built.crew.map((x) => x.cover), bare.crew.map((x) => x.cover));
   assert.deepEqual(built.guards.map((x) => x.cover), bare.guards.map((x) => x.cover));

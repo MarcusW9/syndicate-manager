@@ -6,7 +6,7 @@
 // Moving into another hall takes the day, not the trip: they count there at once, but are
 // settling in and can't work until tomorrow (the city crosses in under an hour). Pure logic.
 
-import { HALL_SITES, HALL_EXPANSION, HOME_HALL, OPENING, HALL_BUY } from '../data/halls.js';
+import { HALL_SITES, HALL_EXPANSION, HOME_HALL, OPENING, HALL_BUY, isOpeningJob } from '../data/halls.js';
 import { addOffer, jobUnlocked, templateById } from './jobs.js';
 import { hashRng, pick } from './rng.js';
 import { NAMES } from '../config/names.js';
@@ -15,6 +15,7 @@ import { CLIENTS } from '../data/clients.js';
 import { TONG_RANKS } from '../data/tong.js';
 import { money } from './money.js';
 import { PIECES, ROOM_EFFECT } from '../data/hallBuild.js';
+import { HALLS } from '../data/sites.js';
 
 const districtName = (d) => NAMES.districts?.[d] ?? d;
 const districtInText = (d) => NAMES.districtsInText?.[d] ?? districtName(d);
@@ -61,11 +62,11 @@ export function canOpenHall(state, district) {
   if (hallIn(state, district)) return { ok: false, reason: 'We already have a hall there', site };
   const contact = CLIENTS.find((c) => c.id === site.contact);
   if ((state.reputation ?? 0) < site.rep) return { ok: false, reason: `Needs reputation ${site.rep}`, site };
-  if (trustOf(state, site.contact) < site.trust) return { ok: false, reason: `${contact?.name ?? 'The contact'} needs to trust us more (${site.trust})`, site };
+  if (!trusted(state, site)) return { ok: false, reason: `${contact?.name ?? 'The contact'} needs to trust us more (${site.trust})`, site };
   // An opening job first (2026-11-06): the contact asks a favour before offering the place.
   const opening = openingOf(state, district);
   if (site.opening && opening?.status !== 'done') {
-    const who = CLIENTS.find((c) => c.id === site.contact)?.name ?? 'Our contact';
+    const who = site.introducer ?? CLIENTS.find((c) => c.id === site.contact)?.name ?? 'Our contact';
     const job = opening?.jobId ? state.jobs.find((j) => j.id === opening.jobId) : null;
     const name = templateById(job?.templateId ?? site.opening)?.name;
     return { ok: false, reason: opening?.status === 'asked' ? `${who} wants a favour first: ${name}, on the board` : opening?.status === 'failed' ? `${who} will ask again by day ${opening.retryDay}` : `${who} will ask a favour first`, site };
@@ -82,11 +83,10 @@ export function openHall(prev, district) {
   state.cash -= site.deposit;
   state.halls = [...(state.halls ?? []), { district, beds: site.beds, rent: site.rent, level: 1, opened: state.day, build: [], owned: false }];
   syncHalls(state);
-  const contact = CLIENTS.find((c) => c.id === site.contact);
   state.inbox.unshift({
     id: `hall-${district}-${state.day}`, type: 'finance', day: state.day,
     subject: `A hall in ${districtInText(district)}`,
-    body: `${contact?.name ?? 'Our contact'} put in a word, and we've taken ${site.place}. ${site.beds} beds, ${money(site.rent)} a week. Paid ${money(site.deposit)}. Nobody lives there yet: move someone in from their page on the Crew screen.`,
+    body: `${site.introducer ?? CLIENTS.find((c) => c.id === site.contact)?.name ?? 'Our contact'} put in a word, and we've taken ${site.place}. ${site.beds} beds, ${money(site.rent)} a week. Paid ${money(site.deposit)}. Nobody lives there yet: move someone in from their page on the Crew screen.`,
     blocking: false, read: false,
   });
   return state;
@@ -96,6 +96,12 @@ export function openHall(prev, district) {
 export function nextHallExpansion(state, district) {
   const h = hallIn(state, district);
   if (!h) return null;
+  // A compound (data/sites.js `parts`, 2026-11-07) expands by taking its next part, at that part's price; none left, no expanding.
+  const site = HALLS[district];
+  if (site?.parts) {
+    const part = site.parts.find((p) => p.lvl === h.level + 1);
+    return part ? { cost: part.cost, beds: HALL_EXPANSION.beds, rentIncrease: h.owned ? 0 : HALL_EXPANSION.rent, level: h.level + 1, part: part.id, partName: part.name } : null;
+  }
   return { cost: HALL_EXPANSION.costPerLevel * h.level, beds: HALL_EXPANSION.beds, rentIncrease: h.owned ? 0 : HALL_EXPANSION.rent, level: h.level + 1 }; // a bought hall adds no rent
 }
 
@@ -137,7 +143,7 @@ export function expandHall(prev, district) {
   state.inbox.unshift({
     id: `hall-expand-${district}-${state.day}`, type: 'finance', day: state.day,
     subject: `${districtName(district)} hall expanded: ${h.beds} beds`,
-    body: `We took over the rooms next door. Paid ${money(x.cost)}. Rent for the hall is now ${money(h.rent)} a week.`, blocking: false, read: false,
+    body: `${x.partName ? `${x.partName} is ours now.` : 'We took over the rooms next door.'} Paid ${money(x.cost)}. Rent for the hall is now ${money(h.rent)} a week.`, blocking: false, read: false,
   });
   return state;
 }
@@ -181,6 +187,10 @@ export const openingOf = (state, district) => state.openings?.[district] ?? null
 export const openingFor = (state, jobId) => Object.entries(state.openings ?? {}).find(([, o]) => o.status === 'asked' && o.jobId === jobId)?.[0] ?? null;
 
 const contactOf = (site) => CLIENTS.find((c) => c.id === site.contact);
+/** Who makes the introduction: the hall's introducer (not a client), else its contact. */
+const introducerOf = (site) => site.introducer ?? contactOf(site)?.name ?? null;
+/** Does the contact trust us enough? Halls with an introducer have no trust check (trust: null). */
+const trusted = (state, site) => site.trust == null || trustOf(state, site.contact) >= site.trust;
 const stillOut = (state, jobId) => state.jobs.some((j) => j.id === jobId) || state.activeMission?.jobId === jobId || (state.awayJobs ?? []).some((j) => j.mission?.jobId === jobId);
 
 /** The contact asks the favour: the job goes on the board (for two weeks) and a message says so. Mutates state. */
@@ -190,20 +200,21 @@ function askOpening(state, district, retry = false) {
   let templateId = site.opening;
   if (retry) {
     // The second ask is one of their own jobs, picked by the seed, as the test.
-    const own = (contact?.jobs ?? []).filter((id) => templateById(id) && !templateById(id).routine && !templateById(id).opening && !templateById(id).heistOnly && jobUnlocked(state, id));
+    const own = (contact?.jobs ?? []).filter((id) => templateById(id) && !templateById(id).routine && !isOpeningJob(id) && !templateById(id).heistOnly && jobUnlocked(state, id));
     templateId = own.length ? pick(hashRng(state.seed, 'opening', district, state.day), own) : site.opening;
   }
   addOffer(state, templateId, { clientId: site.contact });
+  const name = introducerOf(site);
   const job = state.jobs.at(-1);
   job.expiresDay = state.day + OPENING.boardDays;
   (state.openings ??= {})[district] = { status: 'asked', jobId: job.id, retry };
   const tpl = templateById(templateId);
   state.inbox.unshift({
     id: `opening-${district}-${state.day}`, type: 'job', kind: 'opening', day: state.day,
-    subject: retry ? `${contact?.name ?? 'A contact'} will try us again` : `${contact?.name ?? 'A contact'} has a favour to ask`,
+    subject: retry ? `${name ?? 'A contact'} will try us again` : `${name ?? 'A contact'} has a favour to ask`,
     body: retry
-      ? `${contact?.name ?? 'They'} still has a place for us in ${districtInText(district)}, and one more test: ${tpl.name}. It's on the board for two weeks. Finish it, and the place is ours to take.`
-      : `${contact?.name ?? 'They'} could put us in ${site.place}, but wants to see how we work first: ${tpl.name}. It's on the board for two weeks. Finish it, and the place is ours to take.`,
+      ? `${name ?? 'They'} still has a place for us in ${districtInText(district)}, and one more test: ${tpl.name}. It's on the board for two weeks. Finish it, and the place is ours to take.`
+      : `${name ?? 'They'} could put us in ${site.place}, but wants to see how we work first: ${tpl.name}. It's on the board for two weeks. Finish it, and the place is ours to take.`,
     payload: { district, jobId: job.id }, blocking: false, read: false,
   });
 }
@@ -214,11 +225,11 @@ function offerHall(state, district) {
   state.hallOffers = state.hallOffers ?? [];
   if (state.hallOffers.includes(district)) return;
   state.hallOffers.push(district);
-  const contact = contactOf(site);
+  const name = introducerOf(site);
   state.inbox.unshift({
     id: `hall-offer-${district}`, type: 'crew', kind: 'hall-offer', day: state.day,
-    subject: `${contact?.name ?? 'A contact'} has a place for us in ${districtInText(district)}`,
-    body: `${contact?.name ?? 'They'} can put us in ${site.place}: ${site.beds} beds, ${money(site.rent)} a week, ${money(site.deposit)} down. A hall there means people of ours living in ${districtInText(district)}, more rent, and somewhere else to look after. No rush; the offer stands.`,
+    subject: `${name ?? 'A contact'} has a place for us in ${districtInText(district)}`,
+    body: `${name ?? 'They'} can put us in ${site.place}: ${site.beds} beds, ${money(site.rent)} a week, ${money(site.deposit)} down. A hall there means people of ours living in ${districtInText(district)}, more rent, and somewhere else to look after. No rush; the offer stands.`,
     payload: { district }, blocking: false, read: false,
   });
 }
@@ -232,7 +243,7 @@ export function openingResult(state, jobId, outcome) {
   const district = openingFor(state, jobId);
   if (!district) return null;
   const site = HALL_SITES[district];
-  const who = contactOf(site)?.name ?? 'Our contact';
+  const who = introducerOf(site) ?? 'Our contact';
   if (outcome === 'completed') {
     state.openings[district] = { status: 'done', jobId };
     offerHall(state, district);
@@ -252,7 +263,7 @@ export function introduceHalls(state) {
   state.openings = state.openings ?? {};
   for (const [district, site] of Object.entries(HALL_SITES)) {
     if (site.deposit == null || hallIn(state, district) || state.hallOffers.includes(district)) continue;
-    if ((state.reputation ?? 0) < site.rep || trustOf(state, site.contact) < site.trust) continue;
+    if ((state.reputation ?? 0) < site.rep || !trusted(state, site)) continue;
     const o = state.openings[district];
     if (!site.opening || o?.status === 'done') { offerHall(state, district); continue; }
     if (!o) { askOpening(state, district); continue; }

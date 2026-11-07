@@ -112,9 +112,13 @@ CLIENTS (local powers a small crew can reach, below the corps):
 - Ruth Okonkwo: broker for AHL's off-books arm; trusts nobody; meets in the Spice Route
   Canteen back booth once she trusts you. Secret: keeps a file on every deniable job
   that could sink AHL, and wants out of the city.
+- Small clients (2026-11-07): Mrs. Ip (Night Market fish-ball stall at the Neon Dragon;
+  deliveries, supplier disputes, missing stock; not Silver Fan; asks Back Rent) and
+  Forewoman Tse (Tse Yuk-lan, the Underterrace maintenance cooperative in Glass Heights;
+  contractor disputes, lost records, maintenance access; not Veridian-Apex, not Szeto;
+  asks Still on the Books). A client's trust is personal, not their faction's.
 STREET CAST (rookie work): Doc Siu (Old Town; ex-surgeon, unlicensed clinic under
-Tenement Block 9, dry praise); Mrs. Ip (Night Market fish-ball stall at the Neon Dragon,
-moves crates, tallies Fung's night loads at the old pier); Meena D'Sa (Rao's seamstress and counterkeeper); Tang Wai-chiu (Silver Fan
+Tenement Block 9, dry praise); Meena D'Sa (Rao's seamstress and counterkeeper); Tang Wai-chiu (Silver Fan
 collector, third-floor parlour); Uncle Tariq (remittance booth, Pearl Haven House, backed
 by Rao); Pang Man-ki (Veridian-Apex clinic administrator); Ho Sze-lam (Hoi-Sing field
 supervisor, Old Town); Mak Chi-on (Racing Association stable-access official).
@@ -122,6 +126,12 @@ GLASS HEIGHTS PEOPLE (one-off job givers, not clients): Chow Nga-man (Veridian-A
 payroll officer); Edith Pryce (Morrow & Venn estates administrator); Kwok Mei-yee
 (visiting Hang Yuen engineer); Poon Hok-yin (shared-tower facilities coordinator); Binta
 Sarr (independent overnight courier). Currency is cash in ¥; no "credits" or "Bits".
+HALLS: the tong's halls grow by lease and negotiated access, never conquest (no claim on
+the district or the businesses next door): Old Town (the room above the noodle shop) ·
+Wok Court, Night Market (rooms behind a dai pai dong court, stallholders' association,
+via Mrs. Ip) · the Stove Pier, Docks (pier cooperative, via the Ferryman) · the Unlisted
+Rooms, Basin (flat over a tack workshop, via Okonkwo) · the Underterrace, Glass Heights
+(maintenance cooperative under the terraces, via Forewoman Tse, not Szeto).
 Reputation tier promotions open the locked districts,
 each introduced by a client: the Silt (the Ferryman), the Amber Reach (Okonkwo), Iron
 Peak (Szeto).

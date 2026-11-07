@@ -8,6 +8,7 @@ import { BACK_RENT } from './missions/backrent.js';
 import { QUARTER_TO_TWO } from './missions/quartertotwo.js';
 import { THE_FLAT_DOESNT_EXIST } from './missions/flatdoesntexist.js';
 import { THERE_IS_NO_FORTY_FIRST_FLOOR } from './missions/nofortyfirstfloor.js';
+import { STILL_ON_THE_BOOKS } from './missions/stillonthebooks.js';
 // Madam Rao's The Big Table: its six prep jobs, never dealt at random (heistOnly; data/heists.js).
 import { THE_GUEST_COPY } from './missions/theguestcopy.js';
 import { AFTER_THE_APPLAUSE } from './missions/aftertheapplause.js';
@@ -447,7 +448,15 @@ const BASE_MISSIONS = [
 // Rookie jobs (rookie: true) draw the shared rookie pool instead of the district crises:
 // those are aimed at 9-14, too hard for a new crew.
 const sharedPool = (m) => (m.rookie ? ROOKIE_CRISES : DISTRICT_CRISES[m.district] ?? []);
-export const MISSIONS = [...BASE_MISSIONS, KIDNAP, CASINO, PENTHOUSE, PROTECTION, CLINIC, HERBAL, LEDGER, CONTAINER, DELIVERY, EVICTION, CHROME, CABLE, SCRUB, FAVOURITE, LAST_TICKET, WRONG_HORSE, PAID_IN_FULL, SECOND_HAND_HEART, BORROWED_GLORY, LAST_SITTING, LOW_WATER, A_STEADY_HAND, HOUSE_ADVANTAGE, EXIT_INTERVIEW, COLD_CHAIN, QUIET_HOURS, QUEUE_DUTY, SHUTTER_WATCH, SIGNAL_WALK, FITTING_ROOM, CLEAR_THE_RAMP, EYES_ON_THE_SEAL, STABLE_TURNOVER, CLOSING_SWEEP, ACCESS_WINDOW, QUIET_TABLE, CLOSING_STACK, LANDING_HANDS, PAPER_COLLECTION, CLEAN_SHEETS, CRATE_RETURN, RELAY_COVER, TACK_LEDGER, MOORING_WATCH, DRY_SHELF, KIT_RETURN, AFTER_HOURS, RACE_NIGHT_DOOR, COUNT_AGAINST_PAPER, RENT_ROUND, INSPECTION_HOURS, BACK_RENT, QUARTER_TO_TWO, THE_FLAT_DOESNT_EXIST, THERE_IS_NO_FORTY_FIRST_FLOOR, THE_GUEST_COPY, AFTER_THE_APPLAUSE, AN_OLD_ACCOUNT, SOMEONE_TO_COVER, SERVICE_INCLUDED, MANUAL_HANDLING]
+export const MISSIONS = [...BASE_MISSIONS, KIDNAP, CASINO, PENTHOUSE, PROTECTION, CLINIC, HERBAL, LEDGER, CONTAINER, DELIVERY, EVICTION, CHROME, CABLE, SCRUB, FAVOURITE, LAST_TICKET, WRONG_HORSE, PAID_IN_FULL, SECOND_HAND_HEART, BORROWED_GLORY, LAST_SITTING, LOW_WATER, A_STEADY_HAND, HOUSE_ADVANTAGE, EXIT_INTERVIEW, COLD_CHAIN, QUIET_HOURS, QUEUE_DUTY, SHUTTER_WATCH, SIGNAL_WALK, FITTING_ROOM, CLEAR_THE_RAMP, EYES_ON_THE_SEAL, STABLE_TURNOVER, CLOSING_SWEEP, ACCESS_WINDOW, QUIET_TABLE, CLOSING_STACK, LANDING_HANDS, PAPER_COLLECTION, CLEAN_SHEETS, CRATE_RETURN, RELAY_COVER, TACK_LEDGER, MOORING_WATCH, DRY_SHELF, KIT_RETURN, AFTER_HOURS, RACE_NIGHT_DOOR, COUNT_AGAINST_PAPER, RENT_ROUND, INSPECTION_HOURS, BACK_RENT, QUARTER_TO_TWO, THE_FLAT_DOESNT_EXIST, STILL_ON_THE_BOOKS, THE_GUEST_COPY, AFTER_THE_APPLAUSE, AN_OLD_ACCOUNT, SOMEONE_TO_COVER, SERVICE_INCLUDED, MANUAL_HANDLING]
+  .map((m) => ({ ...m, crises: [...m.crises, ...sharedPool(m)] }));
+
+/**
+ * Retired jobs (2026-11-07: There Is No Forty-First Floor, replaced by Still on the Books): never
+ * offered again, kept only so a run already under way in an old save can finish
+ * (core/jobs.js templateById). Offers on the board were moved to their replacement (save v50).
+ */
+export const RETIRED_MISSIONS = [THERE_IS_NO_FORTY_FIRST_FLOOR]
   .map((m) => ({ ...m, crises: [...m.crises, ...sharedPool(m)] }));
 
 /** A job's own crises, without the shared district or rookie pool (scripts/check-job.mjs). */

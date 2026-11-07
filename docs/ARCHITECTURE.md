@@ -188,6 +188,17 @@ state.reputation = Math.round(Math.max(0, Math.min(100, state.reputation + gain)
 **Mission log / report text.** Every run records `am.events` (kinds: beat, zone, roll incl. incident, save, decision, exit, battle, critical, aftermath, twist, sure). `core/report.js` builds Joss's opening line, turning point, standout, what hurt; the inbox report has a "Full log" fold with dice. Per-crisis report lines (`choice.report.{success,failure}`) are hand-written and a test keeps them present.
 
 ---
+### Adding a client (2026-11-07)
+
+Clients are data. To add one:
+
+1. **`src/data/clients.js`**: an entry with `id` (lower case, used as `{id}` in job text), `name`, `desc`, `district` (where they work), `affiliation` (who they work for or belong to, or `null`) and `jobs` (the templates they offer on the board). `affiliation` is description only: a client's trust, a faction's standing (`core/gangs.js` grudges) and hall access (`data/halls.js`) are kept apart, and where someone works is not who they work for.
+2. **`src/data/cast.js`**: an entry with the same `id` and name (lines: `greet`, `approve`, `disappoint`) if job text names them with `{id}` or `{id:approve}`.
+3. **Their jobs**: `src/data/missions/<job>.js` as usual. A hall's opening favour is not listed in `jobs`: `HALL_SITES[district].opening` names the job and `.contact` the client who asks it (and whose trust it moves); the template carries neither.
+4. **Lore**: their dossier in `WORLD.md` "The clients" and a line in the context block (and its copy in `docs/new-job-prompt.md`), through the `add-lore` skill.
+
+No save change: trust is `state.clients[id]`, and a client nobody has met reads as neutral (`START_TRUST`). The Jobs tab's client strip, Lore › Clients, the weekly drift and the board's client picks all read `CLIENTS`. `tests/clients.test.js` checks each entry.
+
 ## 6. CRISES & CONTENT
 
 A crisis is shown in §5's template: `{id (globally unique), situations[], text, choices[]}` with choice fields above. Extra: `rookieCrises.js`, `districtCrises.js`, `incidents.js`/`districtIncidents.js` (smaller zone incidents), `twists.js` (e.g. `twist_rival_crew`), `situations.js` (tags like police/law/crowd/hardware used by earned traits). Content lives in `src/data/`; names in `src/config/names.js`; narrative/lore in WORLD.md/DESIGN.md. **Validation:** `core/validate.js` — `validateMissions` (beats exist, `after` in range, an abort/extract exists, failure text present, rookie report lines), `validateCrew` (18+), `validateRecruit`; run at dev boot and in tests.

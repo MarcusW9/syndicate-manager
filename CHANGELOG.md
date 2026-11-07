@@ -7,6 +7,49 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-07 · New opening jobs for Wok Court and the Underterrace
+- **Back Rent** is new: Mrs. Ip's stallholders' association paid its rent, but a new agent says otherwise and has a contractor ready to lock their spare rooms. Find the payment, get the notice withdrawn and the order cancelled in writing, and Mrs. Ip introduces you to the association and the Late Rooms.
+- **Still on the Books** replaces There Is No Forty-First Floor as Glass Heights' opening job: Forewoman Tse's cooperative has been marked vacant after thirty years. Recover its occupancy agreement and get it recognised, and the Underterrace is open to you.
+- Both build trust with Mrs. Ip and Forewoman Tse. Saves upgrade (v50): an old Forty-First Floor offer on the board becomes Still on the Books.
+
+## 2026-11-07 · Mrs. Ip and Forewoman Tse are clients
+- Two new, smaller clients with their own trust: **Mrs. Ip** (Night Market) and **Forewoman Tse** (Glass Heights). They're on the Jobs tab's client strip and in Lore › Clients.
+- Mrs. Ip now gives her own routine work (Closing Stack, Crate Return, Inspection Hours, which came from Auntie Fung) and asks Back Rent, so finishing it builds her trust, not Madam Rao's. Forewoman Tse asks the Glass Heights hall's favour; Mr. Szeto has nothing to do with the Underterrace.
+
+## 2026-11-07 · Two opening jobs brought in line with the halls' lore
+- The Flat Doesn't Exist: Okonkwo now has the flat rented to you through the property trust's contracts man ("On paper it's storage"), not by Aether-Harbour, and the way out is the Buckle Passage, not the old yard stair.
+- Quarter to Two: the Ferryman no longer hands over the office key himself; he calls up to the pier cooperative, whose container office is going.
+
+## 2026-11-07 · The four halls get their names and stories
+- The Night Market hall is now **Wok Court**: rooms behind a dai pai dong courtyard, leased from the stallholders' association. Mrs. Ip makes the introduction; the tong no longer lives above Madam Rao's shop. The Docks' hall is **the Stove Pier**, the Basin's **the Unlisted Rooms**, Glass Heights' **the Underterrace**, introduced by Forewoman Tse.
+- Every part, lane, yard, gate and the things lying about outside have their own names and descriptions on the build screen and the hall's page, and each raid opens with a line of its own ("The Cart Gate bangs against its frame...").
+- The Night Market and Glass Heights halls no longer wait on a client's trust: reputation and the opening favour open them. The Night Market still opens at reputation 25. Back Rent and There Is No Forty-First Floor now end by pointing you to the new halls; their full rewrites are coming.
+
+## 2026-11-07 · Every hall grows into a compound
+- The Night Market, Docks, Basin and Glass Heights halls now grow like Old Town. Each starts as its first building and the lane beside it; Expand takes the building across the lane, then the walled yard behind with its gate, then a small building across the passage. Each part adds two beds (the yard's go in the second building). Prices: ¥20,000, ¥30,000, ¥40,000, a little more in Glass Heights.
+- Each hall has its own ground and look: the Night Market's market lane and cart court, the Docks' walkway and container yard, the Basin's course lane and stable yard, Glass Heights' service corridor and plant deck. The Docks and the Basin are drawn the other way round. The part names are placeholders until their lore is written (`drafts/BRIEF-hall-compounds.md`).
+- In every hall, rooms go inside and defences go outside, where a raid is fought between the buildings. A raid's opening line says which way it came in.
+- Saves upgrade (v49): anything already built in those four halls is cleared and paid back in full, with a note.
+
+## 2026-11-07 · The Old Town hall grows into a compound
+- The Old Town hall is now a block of separate buildings with space between them. You start with the room above the noodle shop and the lane beside it. Each Expand takes the next part: the flat across the lane (¥20,000), the walled yard behind with a gate onto the back alley (¥30,000), then the back kitchen across the passage (¥40,000). Each brings two more beds, and once the whole block is held there's nothing more to expand.
+- No floor allowance in Old Town: every square of the parts you hold is yours to build on. Parts you don't hold yet are hatched on the plan; tap the next one to take it. Squares kept clear for a way in are faintly marked, and tapping one says why.
+- Raids on Old Town are fought outside, between the buildings: up the lane from the street, or, once you hold the yard, through the yard gate. The buildings are solid in a fight, so defences belong in the lane and the yard.
+- The hall's page lists the block's parts, and Expand says which part it takes.
+- Saves upgrade (v48): anything already built in the Old Town hall is cleared and paid back in full, with a note in the inbox. The other halls are unchanged for now.
+
+## 2026-11-07 · A mock-up: halls that grow into compounds
+- No game change. `drafts/prototypes/hall-compound.html` shows the Old Town hall growing with each Expand: the room, the flat next door, the yard behind with a gate, then the back kitchen and the street shutter, a compound. You build zoomed in to one part at a time. For the owner to judge before anything is built.
+
+## 2026-11-07 · A page for each hall
+- Each hall has its own page: where it is, its plan as built (beds included), who sleeps there, moving people in from other halls, and Build, Expand and Buy. Open it from a hall's row on Crew › Halls, or with "Manage the hall ›" on its district's card on Ops; it shows on the tab you opened it from, and back goes there.
+- Crew › Halls is now a short row per hall (beds, level, rent, heat, what's built); tap one for its page. "Open a hall" stays on Crew.
+- The build screen's back link goes to the hall's page. A raid warning's "Who lives there" link opens that hall's page.
+
+## 2026-11-07 · Beds on the floor, and a whole floor to build on
+- A hall's beds are now blocks on its build plan, one per bed, instead of a "BUNKS" label over cots that never changed. A bed someone sleeps in is outlined; tap one to see who sleeps there. Expanding a hall adds two more blocks. Nothing can be built on a bed.
+- Every hall's floor is now one clean rectangle of squares to build on. The hall's own things (the altar, the crates, the stove, the silk racks, the server racks) stand along the walls instead of leaving holes in the floor, so they're still cover in a raid. The build screen's top line shows the beds too ("Beds 5/8").
+- In a raid, the beds are on the map as cots, the same half cover the drawn cots gave before.
 ## 2026-11-07 · Proposals for piloting, medical and leadership
 - No game change. Three proposals in `drafts/` follow the stat-usage results: driving becomes piloting and is worth time (`PROPOSAL-piloting.md`), medical becomes the support stat with named wounds (`PROPOSAL-medical.md`), and leadership and judgment arrive with a Leader slot (`PROPOSAL-leadership.md`). Each lists the owner's calls before anything is built.
 

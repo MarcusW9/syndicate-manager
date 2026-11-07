@@ -126,8 +126,23 @@ PIECES.turret = {
   ],
 };
 
-/** The site shapes for a hall's pieces: [{ piece, x, y, rot }], x and y in cells. */
+/**
+ * A bed (owner, 2026-11-07): not a piece you build but one of the hall's own, a block on its floor
+ * (core/hallbuild.js bedsOnFloor). A cot is half cover in a raid, as the cots drawn on the hall maps
+ * were before.
+ */
+export const BED = {
+  name: 'Bed',
+  about: 'A cot, a blanket, a locker under it. Beds come with the hall: Expand for two more, or build a bunk room.',
+  shapes: (x, y) => [
+    { t: 'rect', cls: 'sp-cot', x: x + 3, y: y + 8, w: 22, h: 14, fill: '#3a4352' },
+    { t: 'rect', cls: 'sp-fit', x: x + 4.5, y: y + 9.5, w: 5, h: 11, fill: '#8b9aab' },
+    { t: 'rect', cls: 'sp-fit', x: x + 11, y: y + 9.5, w: 12.5, h: 11, fill: '#4a5566' },
+  ],
+};
+
+/** The site shapes for a hall's pieces and beds: [{ piece, x, y, rot }], x and y in cells. */
 export function buildShapes(build = []) {
   const c = HALL_BUILD.cell;
-  return build.flatMap((b) => PIECES[b.piece]?.shapes(b.x * c, b.y * c, b.rot ?? 0) ?? []);
+  return build.flatMap((b) => (b.piece === 'bed' ? BED : PIECES[b.piece])?.shapes(b.x * c, b.y * c, b.rot ?? 0) ?? []);
 }

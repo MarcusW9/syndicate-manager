@@ -20,6 +20,8 @@ import { seedRecord } from '../core/record.js';
 import { seedMilestones } from '../core/milestones.js';
 import { seedFame } from '../core/fame.js';
 import { nameLook, refreshArmoury, stockShelf } from '../core/looks.js';
+import { PIECES } from '../data/hallBuild.js';
+import { money } from '../core/money.js';
 import { addOffer, templateById } from '../core/jobs.js';
 import { STARTING_ROSTER_CAP } from '../core/recruits.js';
 import { prepareOperative, rollPotential, rollScoutError, scoutFor, potentialRead } from '../core/development.js';
@@ -617,6 +619,55 @@ function migrate(state) {
     // the first Monday that meets a heist's gate offers it.
     state.heists = state.heists ?? {};
     state.version = 47;
+  }
+  if (state.version === 47) {
+    // v48: the Old Town hall is a compound that grows with Expand (data/sites.js HALLS.oldTown
+    // `parts`, DESIGN.md 2026-11-07), drawn anew, so its squares are not where they were. What was
+    // built there is paid back in full, with a note; the beds and the level stay as they are.
+    const hall = (state.halls ?? []).find((h) => h.district === 'oldTown');
+    const built = hall?.build ?? [];
+    if (built.length) {
+      const back = built.reduce((n, b) => n + (PIECES[b.piece]?.cost ?? 0), 0);
+      state.cash = (state.cash ?? 0) + back;
+      hall.build = [];
+      state.inbox = state.inbox ?? [];
+      state.inbox.unshift({
+        id: `hall-redrawn-oldTown-${state.day ?? 1}`, type: 'finance', day: state.day ?? 1,
+        subject: 'The Old Town hall has room to grow',
+        body: `The hall is a block of its own now: the room, the lane beside it, and the flat, the yard and the back kitchen to take as it grows. What we'd built there is cleared and paid back in full: ${money(back)}. Build it again on the new plan.`,
+        blocking: false, read: false,
+      });
+    }
+    state.version = 48;
+  }
+  if (state.version === 48) {
+    // v49: the other four halls are compounds too (DESIGN.md 2026-11-07), drawn anew: what was built
+    // in each is paid back in full, with a note, as Old Town's was at v48.
+    for (const hall of state.halls ?? []) {
+      if (hall.district === 'oldTown' || !hall.build?.length) continue;
+      const back = hall.build.reduce((n, b) => n + (PIECES[b.piece]?.cost ?? 0), 0);
+      state.cash = (state.cash ?? 0) + back;
+      hall.build = [];
+      state.inbox = state.inbox ?? [];
+      state.inbox.unshift({
+        id: `hall-redrawn-${hall.district}-${state.day ?? 1}`, type: 'finance', day: state.day ?? 1,
+        subject: 'A hall with room to grow',
+        body: `Our hall in ${hall.district === 'nightMarket' ? 'the Night Market' : hall.district === 'docks' ? 'the Docks' : hall.district === 'basin' ? 'the Basin' : 'Glass Heights'} is a block of its own now, with more of it to take as it grows. What we'd built there is cleared and paid back in full: ${money(back)}. Build it again on the new plan.`,
+        blocking: false, read: false,
+      });
+    }
+    state.version = 49;
+  }
+  if (state.version === 49) {
+    // v50: Glass Heights' opening favour is Still on the Books, asked by Forewoman Tse (DESIGN.md
+    // 2026-11-07); There Is No Forty-First Floor is retired. An offer of it on the board becomes the
+    // new job, Tse's; a run already under way finishes as it was (data/missions.js RETIRED_MISSIONS).
+    // The Night Market's favour stays back_rent, now Mrs. Ip's: an offer of it moves to her too.
+    for (const job of state.jobs ?? []) {
+      if (job.templateId === 'there_is_no_forty_first_floor') { job.templateId = 'still_on_the_books'; job.clientId = 'tse'; }
+      if (job.templateId === 'back_rent') job.clientId = 'ip';
+    }
+    state.version = 50;
   }
   return state;
 }

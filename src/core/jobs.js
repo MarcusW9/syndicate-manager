@@ -4,9 +4,10 @@
 // threat +/-1, and sometimes a hidden twist (usually hinted on the board).
 
 import { raidTemplate } from '../data/raids.js';
-import { MISSIONS } from '../data/missions.js';
+import { MISSIONS, RETIRED_MISSIONS } from '../data/missions.js';
 import { TWISTS } from '../data/twists.js';
 import { CLIENTS } from '../data/clients.js';
+import { isOpeningJob } from '../data/halls.js';
 import { pick, makeRng, hashRng } from './rng.js';
 import { NAMED_OFFER, NAMED_TEXT } from '../data/fame.js';
 import { nextRng } from './random.js';
@@ -14,7 +15,7 @@ import { callingClients, trustOf, trustPay } from './clients.js';
 import { rumourFor } from './rumours.js';
 
 // A raid on a hall runs as a job of its own ('raid:<district>', data/raids.js), never on the board.
-export const templateById = (id) => MISSIONS.find((m) => m.id === id) ?? (String(id).startsWith('raid:') ? raidTemplate(id.slice(5)) : undefined);
+export const templateById = (id) => MISSIONS.find((m) => m.id === id) ?? (String(id).startsWith('raid:') ? raidTemplate(id.slice(5)) : RETIRED_MISSIONS.find((m) => m.id === id));
 export const twistById = (id) => TWISTS.find((t) => t.id === id) ?? null;
 
 // A busier board of smaller work (PLAN-PROGRESSION.md step 0: rookies need ~3 jobs a week).
@@ -214,7 +215,7 @@ export function postJobs(state, count = NEW_PER_WEEK, { slot = 0, routineOnly = 
   // owner's "middle version"); a bigger tong's extra offers are mostly routine. Offers are what pay
   // the bills, so the count stays three a week: routine work changes the mix, not the amount.
   // Opening jobs are asked for by a contact (core/halls.js), never dealt at random.
-  const unlocked = MISSIONS.filter((m) => !m.opening && !m.heistOnly && jobUnlocked(state, m.id)); // opening and heist jobs come only when asked
+  const unlocked = MISSIONS.filter((m) => !isOpeningJob(m.id) && !m.heistOnly && jobUnlocked(state, m.id)); // opening and heist jobs come only when asked
   // Routine work comes from clients still calling you, or as walk-in work.
   const calling = callingClients(state);
   const routineClient = (m) => (m.walkIn ? null : calling.find((c) => c.jobs.includes(m.id)) ?? false);

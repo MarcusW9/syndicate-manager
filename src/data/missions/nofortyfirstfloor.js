@@ -1,11 +1,15 @@
+// RETIRED 2026-11-07: replaced by Still on the Books (stillonthebooks.js) as Glass Heights' opening job;
+// kept only so a run under way in an old save can finish (data/missions.js RETIRED_MISSIONS).
 // There Is No Forty-First Floor: Glass Heights' opening job (drafts/opening-jobs.md).
 // Over two days, remove a service floor from the tower's tenancy and audit records.
 // Keep its escape routes on the fire drawings as plant access, without a floor number.
 // Ho Sze-lam's Hoi-Sing crew is conducting a power audit at the same time.
 // Someone already lives on the floor. Their identity remains unknown.
-// The final beat hands over the Glass Heights hall (data/sites.js HALLS).
+// The final beat passes the crew to Forewoman Tse and the Underterrace, the Glass Heights hall
+// (owner's hall lore 2026-11-07). To be replaced by the owner's Still on the Books.
 // Original stats, difficulties, costs and job structure preserved.
-// The opening job for this district's hall (core/halls.js introduceHalls): never dealt to the
+// The opening job for this district's hall (data/halls.js HALL_SITES names it, and the client who
+// asks it; core/halls.js introduceHalls): never dealt to the
 // board at random; the contact asks for it once the tong is welcome. Owner's text (2026-11-06).
 
 /** @type {import('../../core/types.js').MissionTemplate} */
@@ -13,7 +17,6 @@ export const THERE_IS_NO_FORTY_FIRST_FLOOR = {
   id: 'there_is_no_forty_first_floor',
   name: 'There Is No Forty-First Floor',
   district: 'heights',
-  opening: 'heights', // the hall it opens (data/halls.js HALL_SITES)
   threat: 3,
   pay: 5500,
   days: 2,
@@ -25,7 +28,7 @@ export const THERE_IS_NO_FORTY_FIRST_FLOOR = {
     `The plans, lift directory and tenancy register must agree: forty, then forty-two. On the fire drawings, the escape routes stay; the rooms become unnumbered plant space.`,
     `That night, server lights blink across the service floor while the air handlers shake dust from their housings. Someone has wedged folded cardboard beneath a rattling grille.`,
     `Day two: Veridian-Apex auditors arrive in pairs, wiping rain from their tablets before they wipe their shoes. The service lift begins its slow count up the building.`,
-    `{szeto} meets you between the server racks and air handlers, with keys for the service lift and maintenance stair. "Have the rattling grille seen to; people should be able to sleep."`,
+    `{szeto} pays without looking up. On the maintenance steps below, {tse} is lifting a drain grille: she heard someone sorted out a register, and the Underterrace has rooms for people who keep the drains clear.`,
   ],
   crises: [
     {

@@ -37,7 +37,8 @@ test('every client offers only job types that exist', () => {
   // Walk-in work (2026-10-25) has no client on purpose. Opening jobs (2026-11-06) are asked for by
   // their district's contact (data/halls.js), so they're in no client's list either.
   for (const m of MISSIONS) {
-    if (m.opening) { assert.equal(HALL_SITES[m.opening]?.opening, m.id, `${m.id}: its hall's opening job`); assert.ok(!CLIENTS.some((c) => c.jobs.includes(m.id)), `${m.id}: never dealt by a client`); continue; }
+    const opens = Object.keys(HALL_SITES).find((d) => HALL_SITES[d].opening === m.id);
+    if (opens) { assert.ok(CLIENTS.some((c) => c.id === HALL_SITES[opens].contact), `${m.id}: asked by a client (data/halls.js contact)`); assert.ok(!CLIENTS.some((c) => c.jobs.includes(m.id)), `${m.id}: never dealt by a client`); continue; }
     // Heist prep (2026-11-07) is asked for by the heist's contact (data/heists.js): its own heist's prep, in no client's list.
     if (m.heistOnly) { assert.ok(heistById(m.heistOnly)?.prep.some((p) => p.templates.includes(m.id)), `${m.id}: prep for ${m.heistOnly}`); assert.ok(!CLIENTS.some((c) => c.jobs.includes(m.id)), `${m.id}: never dealt by a client`); continue; }
     assert.ok(m.walkIn ? !CLIENTS.some((c) => c.jobs.includes(m.id)) : CLIENTS.some((c) => c.jobs.includes(m.id)), `${m.id}: client or walk-in, not neither`);
