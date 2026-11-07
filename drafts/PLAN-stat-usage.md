@@ -70,6 +70,24 @@ One visible attribute that isn't rolled. It sets how many risky calls a lead tak
 - **Combat range bands**: rifles better at range, sidearms up close, a close-quarters specialisation. Heists will need these anyway.
 - Combat stays one stat.
 
-## 5. Results
+## 5. Results: first run (2026-11-07, 60 seeds × 52 weeks, 720 seasons; `docs/sims/stat-usage-2026-11-07.csv`)
 
-See the next section (filled in from the first run).
+All five policies together (50,384 jobs); +3 from the careful counterfactuals, ± two standard errors of the paired difference:
+
+| stat | rolls/wk | jobs% | decisive share | costly/wk | spec-util | +3 cash@52 | verdict |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| combat | 4.55 | 54.3% | 25.9% | 1.25 | 21.3% | +11.6% ±7.3 | healthy (muscle idle; 39.9% of decisive rolls on loud runs) |
+| stealth | 3.44 | 57.0% | 19.2% | 0.56 | 84.4% | +13.5% ±8.4 | healthy |
+| tech | 5.09 | 67.4% | 16.6% | 0.37 | 84.5% | +1.5% ±7.1 | healthy (busy, but under half its rolls are close) |
+| social | 4.34 | 60.1% | 20.3% | 0.28 | 66.3% | +6.5% ±7.6 | healthy |
+| medical | 0.12 | 3.3% | 0.6% | 0.02 | 5.5% | +1.2% ±5.5 | cut or merge |
+| driving | 0.57 | 14.1% | 2.7% | 0.05 | 18.2% | +5.0% ±5.9 | rework (by the point estimate) |
+| cool | 2.64 | 42.6% | 14.6% | 1.04 | - | +3.5% ±7.2 | healthy |
+
+Driving by policy: 8.2% of jobs careful, 34.5% loud, 14.6% mixed, 5.9% tong, 10.2% with a Wheels on every job. By approach 0.10 rolls a stealth job, 0.45 a loud one; by threat 0.15 a job at threat 1, about 0.37 at threats 4 and 5.
+
+What it says, and what it doesn't:
+- **The +3 test is too noisy at 60 seeds to apply the 2% rule**: every stat's noise is ±6-8%, so driving's +5% and medical's +1.2% are both inside it. Only combat and stealth clear it. Next: rerun the driving and medical counterfactuals at about 300 seeds before deciding cut or rework.
+- **Staffing a Wheels every time barely moves driving** (8.2% → 10.2% of jobs): few jobs ask for it. That supports the getaway step on every job (part 2) over anything about staffing.
+- **Medical is the weaker stat**, not driving: medics roll it on 5.5% of their jobs. Not in this plan's scope yet; it needs its own look.
+- No deaths in any policy.
