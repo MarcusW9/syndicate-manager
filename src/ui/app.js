@@ -24,8 +24,8 @@ import { districtArt } from './districtArt.js';
 import { landmark } from './landmarks.js';
 import { renderHallBuild, hallBuildLine } from './hallbuild.js';
 import { crewOutMap } from './minimap.js';
-import { siteFor } from './siteplan.js';
-import { placePiece, removePiece, turnPiece, pieceAt, bedAt, refundOf, canRemove } from '../core/hallbuild.js';
+import { siteFor, sitePlanSvg } from './siteplan.js';
+import { placePiece, removePiece, turnPiece, pieceAt, bedAt, refundOf, canRemove, hallSiteFor } from '../core/hallbuild.js';
 import { PIECES } from '../data/hallBuild.js';
 
 import { advanceDay, calendar, isBlocked, seasonStartDay } from '../core/time.js';
@@ -86,7 +86,8 @@ let playReportId = null; // a hands-off report playing out on its first open (re
 let openOperativeId = null;
 let openRecruitId = null;
 let openArmoury = false; // the armoury, from the Crew screen (ui/gear.js)
-let buildView = null; // the hall build screen, from Crew › Halls (ui/hallbuild.js): { district, cell, piece, rot, picked }
+let buildView = null; // the hall build screen, from a hall's page (ui/hallbuild.js): { district, cell, piece, rot, picked }
+let hallPage = null; // a hall's own page (2026-11-07), by district: from Crew › Halls or the district's card on Ops, shown on that tab
 let gearSlot = null; // the place being filled on a runner's page: 'armour', 'implant:0', 'bag:2,1'
 let bagPick = null; // the bag item picked up on a runner's page, to move or take off
 let newGameSlot = null; // slot number while picking a difficulty
@@ -153,7 +154,7 @@ function onClick(e) {
   const { action, id } = t.dataset;
 
   switch (action) {
-    case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; screen = id; returnTo = null; buildView = null; openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; gearSlot = null; bagPick = null; plan = null; sidePlan = null; pickSlot = null; break;
+    case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; screen = id; returnTo = null; buildView = null; hallPage = null; openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; gearSlot = null; bagPick = null; plan = null; sidePlan = null; pickSlot = null; break;
     case 'continue': {
       if (isBlocked(state) || Date.now() < continueRestUntil) return;
       const next = advanceDay(state);
@@ -188,6 +189,12 @@ function onClick(e) {
       if (returnTo && openOperativeId) {
         focusNext = { action: 'op-link', id: openOperativeId };
         ({ screen } = returnTo); openMessageId = returnTo.messageId; openOperativeId = null; gearSlot = null; bagPick = null; returnTo = null;
+        break;
+      }
+      // A hall's page goes back to the tab it was opened on (Crew or Ops); what was opened from it comes back to it.
+      if (hallPage && !openOperativeId && !openRecruitId && !openArmoury && !buildView) {
+        focusNext = { action: 'hall-page', id: hallPage };
+        hallPage = null;
         break;
       }
       // Land keyboard focus back on the row that was opened.
@@ -259,7 +266,8 @@ function onClick(e) {
       break;
     }
     // Building up a hall (ui/hallbuild.js, core/hallbuild.js).
-    case 'build-hall': screen = 'crew'; openOperativeId = null; openArmoury = false; buildView = { district: id, cell: null, piece: null, rot: 0, picked: null, tab: 'defence' }; window.scrollTo?.(0, 0); break;
+    case 'hall-page': if (screen !== 'ops') screen = 'crew'; hallPage = id; openOperativeId = null; openRecruitId = null; openArmoury = false; buildView = null; returnTo = null; window.scrollTo?.(0, 0); break;
+    case 'build-hall': if (screen !== 'ops') screen = 'crew'; hallPage = id; openOperativeId = null; openArmoury = false; buildView = { district: id, cell: null, piece: null, rot: 0, picked: null, tab: 'defence' }; window.scrollTo?.(0, 0); break;
     case 'build-cell': {
       const [x, y] = id.split(',').map(Number);
       const hall = hallIn(state, buildView.district);
@@ -745,7 +753,12 @@ function navButton(id, label, count = 0, countWord = '') {
 function renderScreen() {
   if (state.founding && screen !== 'settings') return renderFounding(); // nothing else until the founders are picked
   if (screen === 'inbox') return renderInbox();
-  if (screen === 'crew') return openRecruitId ? renderRecruit() : openOperativeId ? renderOperative() : openArmoury ? renderArmoury(gearUi, state) : buildView && hallIn(state, buildView.district) ? renderHallBuild({ esc, money, cityName }, state, buildView) : renderCrew();
+  // A hall's page and its build screen show on the tab they were opened from (Crew or Ops).
+  if ((screen === 'crew' || screen === 'ops') && !openOperativeId && !openRecruitId && !openArmoury) {
+    if (buildView && hallIn(state, buildView.district)) return renderHallBuild({ esc, money, cityName }, state, buildView);
+    if (hallPage && hallIn(state, hallPage)) return renderHallPage(hallPage);
+  }
+  if (screen === 'crew') return openRecruitId ? renderRecruit() : openOperativeId ? renderOperative() : openArmoury ? renderArmoury(gearUi, state) : renderCrew();
   // Jobs: on wide screens the board stays beside the job being planned (styles.css hides it on phones).
   if (screen === 'jobs' && plan) {
     // The plan, then the job list with the plan bar under it: from 1400px wide the list and the bar
@@ -934,7 +947,7 @@ function renderRaids(raids) {
           <div class="crewsout__foot">
             ${call ? `<button class="btn btn--primary" data-action="raid-answer" data-id="${esc(call.id)}">Answer the door</button>` : ''}
             ${buy ? `<button class="btn" data-action="raid-pay" data-id="${esc(r.id)}" ${state.cash < price ? 'disabled' : ''}>${isGangRaid(r) ? 'Settle' : 'Pay them off'} · ${money(price)}</button>` : ''}
-            ${!call && r.answer !== 'paid' ? '<button class="linkbtn" data-action="nav" data-id="crew">Who lives there: Halls ›</button>' : ''}
+            ${!call && r.answer !== 'paid' ? `<button class="linkbtn" data-action="hall-page" data-id="${esc(r.district)}">Who lives there: the hall ›</button>` : ''}
             ${whereButton(r.district)}
           </div>
         </li>`;
@@ -1392,7 +1405,7 @@ function renderFounding() {
 }
 
 // --- crew --------------------------------------------------------------
-/** The tong's halls (core/halls.js): who lives where, beds, rent, expanding, and opening another. */
+/** The tong's halls (core/halls.js): a row each, opening the hall's own page; and opening another. */
 function renderHalls() {
   const halls = state.halls ?? [];
   const sites = Object.entries(HALL_SITES).filter(([d, site]) => site.deposit != null && !hallIn(state, d));
@@ -1400,19 +1413,19 @@ function renderHalls() {
       <h2>Halls</h2>
       <ul class="halls">
         ${halls.map((h) => {
-          const x = nextHallExpansion(state, h.district);
           const who = residents(state, h.district);
+          const raid = openRaids(state).some((r) => r.district === h.district && r.answer !== 'paid');
           return `
-          <li class="hall has-mark">
-            ${hallMark(h.district, { raid: openRaids(state).some((r) => r.district === h.district && r.answer !== 'paid') })}
-            <div class="hall__body">
-            <p class="hall__head"><strong>${esc(cityName(h.district))}</strong>${h.district === HOME_HALL ? ' <span class="hall__home">home</span>' : ''}${h.owned ? ' <span class="hall__home hall__owned">ours</span>' : ''} <span class="muted small">level ${h.level} · ${h.owned ? 'no rent' : `${money(h.rent)}/wk`} · heat ${heatIn(state, h.district)}/10</span></p>
-            <p class="small">${who.length}/${bedsOf(h)} beds${who.length ? `: ${esc(who.map((o) => o.handle).join(', '))}` : ' · nobody lives here yet'}</p>
-            <p class="small muted">${esc(hallBuildLine(h, defenceCut(state, h.district)))}</p>
-            <button class="btn btn--block" data-action="build-hall" data-id="${esc(h.district)}">Build</button>
-            <button class="btn btn--block" data-action="expand-hall" data-id="${esc(h.district)}" ${state.cash >= x.cost ? '' : 'disabled'}>Expand: +${x.beds} beds for ${money(x.cost)} (${x.rentIncrease ? `rent +${money(x.rentIncrease)}/wk` : 'no rent'})</button>
-            ${(() => { const price = buyPrice(state, h.district); return price == null ? '' : `<button class="btn btn--block" data-action="buy-hall" data-id="${esc(h.district)}" ${state.cash >= price ? '' : 'disabled'}>Buy the place: ${money(price)}, then no rent</button>`; })()}
-            </div>
+          <li class="hall hall--row">
+            <button class="hallrow" data-action="hall-page" data-id="${esc(h.district)}" aria-label="The ${esc(cityName(h.district))} hall: ${who.length} of ${bedsOf(h)} beds${raid ? ', a raid is coming' : ''}">
+            ${hallMark(h.district, { raid })}
+            <span class="hall__body">
+            <span class="hall__head"><strong>${esc(cityName(h.district))}</strong>${h.district === HOME_HALL ? ' <span class="hall__home">home</span>' : ''}${h.owned ? ' <span class="hall__home hall__owned">ours</span>' : ''}</span>
+            <span class="small">${who.length}/${bedsOf(h)} beds · level ${h.level} · ${h.owned ? 'no rent' : `${money(h.rent)}/wk`}${heatIn(state, h.district) ? ` · heat ${heatIn(state, h.district)}/10` : ''}</span>
+            <span class="small muted">${esc(hallBuildLine(h, defenceCut(state, h.district)))}</span>
+            </span>
+            <span class="hallrow__go" aria-hidden="true">›</span>
+            </button>
           </li>`;
         }).join('')}
       </ul>
@@ -1432,6 +1445,52 @@ function renderHalls() {
           </li>`;
         }).join('')}
       </ul>` : ''}`;
+}
+
+/**
+ * A hall's own page (owner, 2026-11-07: halls are per district, so each gets its place): where it
+ * is, its plan as built, who sleeps there and moving people in, Build, Expand and Buy. Opened from
+ * Crew › Halls or the district's card on Ops, and shown on that tab.
+ */
+function renderHallPage(d) {
+  const h = hallIn(state, d);
+  const who = residents(state, d);
+  const x = nextHallExpansion(state, d);
+  const price = buyPrice(state, d);
+  const raid = raidOn(state, d);
+  const live = raid && raid.answer !== 'paid' && !raid.done;
+  const movers = state.crew.filter((o) => (o.hall ?? HOME_HALL) !== d && canMove(state, o.id, d).ok);
+  const free = freeBeds(state, d);
+  return `
+    <section class="panel hallpage">
+      <button class="linkbtn" data-action="back">‹ ${screen === 'ops' ? 'Ops' : 'Crew'}</button>
+      <div class="hallpage__head">${hallMark(d, { raid: live })}
+        <div><h1 class="btitle">The ${esc(cityName(d).replace(/^The /, ''))} hall${d === HOME_HALL ? ' <span class="hall__home">home</span>' : ''}${h.owned ? ' <span class="hall__home hall__owned">ours</span>' : ''}</h1>
+        <p class="muted small">${esc(HALL_SITES[d]?.place ?? '')}</p></div>
+      </div>
+      <p class="small">Level ${h.level} · ${h.owned ? 'no rent' : `${money(h.rent)}/wk`} · heat ${heatIn(state, d)}/10${hallShut(state, d) ? ` · <span class="citycard__shut">shut after a raid until day ${h.shutUntil}</span>` : ''}${live ? ` · <span class="citycard__raid">raid ${esc(raidWhen(raid))}</span>` : ''}</p>
+      <div class="bplan hallpage__plan">${sitePlanSvg({ site: hallSiteFor(state, d) })}</div>
+      <p class="small muted">${esc(hallBuildLine(h, defenceCut(state, d)))}</p>
+      <button class="btn btn--primary btn--block" data-action="build-hall" data-id="${esc(d)}">Build</button>
+      <h2>Who sleeps here <span class="muted small">${who.length}/${bedsOf(h)} beds</span></h2>
+      ${who.length ? `<ul class="list">
+        ${who.map((op) => `
+          <li><button class="row" data-action="open-op" data-id="${esc(op.id)}">
+            ${face(op)}
+            <span class="row__main"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"<br><span class="muted">${esc(op.tier ?? '')} ${esc(op.role)}</span></span>
+            <span class="row__meta">${statusChip(availability(state, op))}</span>
+          </button></li>`).join('')}
+      </ul>` : '<p class="muted small">Nobody sleeps here yet.</p>'}
+      ${free && movers.length ? `
+      <h2>Move someone in <span class="muted small">${free} free ${free === 1 ? 'bed' : 'beds'}</span></h2>
+      <p class="muted small">They settle in today and are free tomorrow.</p>
+      <div class="stack">${movers.map((op) => `<button class="btn btn--ghost" data-action="move-hall" data-id="${esc(`${op.id}|${d}`)}">${esc(op.handle)} <span class="muted small">· from ${esc(cityName(op.hall ?? HOME_HALL))}</span></button>`).join('')}</div>` : ''}
+      <h2>The place</h2>
+      <div class="stack">
+        <button class="btn btn--block" data-action="expand-hall" data-id="${esc(d)}" ${state.cash >= x.cost ? '' : 'disabled'}>Expand: +${x.beds} beds for ${money(x.cost)} (${x.rentIncrease ? `rent +${money(x.rentIncrease)}/wk` : 'no rent'})</button>
+        ${price == null ? '' : `<button class="btn btn--block" data-action="buy-hall" data-id="${esc(d)}" ${state.cash >= price ? '' : 'disabled'}>Buy the place: ${money(price)}, then no rent</button>`}
+      </div>
+    </section>`;
 }
 
 function renderCrew() {
@@ -2498,7 +2557,8 @@ function districtCard(key) {
         const who = residents(state, key);
         const raid = raidOn(state, key);
         return `<div class="citycard__hall"><p class="small"><strong>Our hall</strong> · ${who.length}/${bedsOf(h)} beds · level ${h.level}${hallShut(state, key) ? ` · <span class="citycard__shut">shut after a raid until day ${h.shutUntil}</span>` : ''}${raid ? ` · <span class="citycard__raid">raid ${esc(raidWhen(raid))}${raid.answer === 'paid' ? ', paid off' : ''}</span>` : ''}</p>
-          ${who.length ? `<span class="citycard__faces">${who.map((op) => { const away = !!op.condition?.awayUntil && op.condition.awayUntil > state.day; return `<button class="citycard__face ${away ? 'is-out' : ''}" data-action="op-link" data-id="${esc(op.id)}" aria-label="${esc(op.handle)}${away ? ', out' : ''}">${face(op, 'sm')}</button>`; }).join('')}</span>` : '<p class="muted small">Nobody lives here yet.</p>'}</div>`;
+          ${who.length ? `<span class="citycard__faces">${who.map((op) => { const away = !!op.condition?.awayUntil && op.condition.awayUntil > state.day; return `<button class="citycard__face ${away ? 'is-out' : ''}" data-action="op-link" data-id="${esc(op.id)}" aria-label="${esc(op.handle)}${away ? ', out' : ''}">${face(op, 'sm')}</button>`; }).join('')}</span>` : '<p class="muted small">Nobody lives here yet.</p>'}
+          <button class="btn btn--block citycard__hallbtn" data-action="hall-page" data-id="${esc(key)}">Manage the hall ›</button></div>`;
       })()}
       ${c.locked ? `<p class="intel">${esc(c.teaser)}</p>` : (() => {
         const now = jobsIn(key);

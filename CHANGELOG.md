@@ -7,6 +7,11 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-07 · A page for each hall
+- Each hall has its own page: where it is, its plan as built (beds included), who sleeps there, moving people in from other halls, and Build, Expand and Buy. Open it from a hall's row on Crew › Halls, or with "Manage the hall ›" on its district's card on Ops; it shows on the tab you opened it from, and back goes there.
+- Crew › Halls is now a short row per hall (beds, level, rent, heat, what's built); tap one for its page. "Open a hall" stays on Crew.
+- The build screen's back link goes to the hall's page. A raid warning's "Who lives there" link opens that hall's page.
+
 ## 2026-11-07 · Beds on the floor, and a whole floor to build on
 - A hall's beds are now blocks on its build plan, one per bed, instead of a "BUNKS" label over cots that never changed. A bed someone sleeps in is outlined; tap one to see who sleeps there. Expanding a hall adds two more blocks. Nothing can be built on a bed.
 - Every hall's floor is now one clean rectangle of squares to build on. The hall's own things (the altar, the crates, the stove, the silk racks, the server racks) stand along the walls instead of leaving holes in the floor, so they're still cover in a raid. The build screen's top line shows the beds too ("Beds 5/8").

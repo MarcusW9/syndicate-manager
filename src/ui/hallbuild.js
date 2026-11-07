@@ -126,7 +126,7 @@ export function renderHallBuild(ui, state, view) {
       </button>`).join('');
   return `
     <section class="hallbuild">
-      <div class="bhead"><button class="linkbtn" data-action="back">‹ Halls</button><span class="bhead__level">level ${hall.level}</span></div>
+      <div class="bhead"><button class="linkbtn" data-action="back">‹ The hall</button><span class="bhead__level">level ${hall.level}</span></div>
       <h1 class="btitle">Build · the ${esc(cityName(view.district).replace(/^The /, ''))} hall</h1>
       <div class="bbar" role="status"><span>Floor <b>${used}/${floor}</b></span><span class="bbar__beds">Beds <b>${residents(state, view.district).length}/${bedsOnFloor(hall).length}</b></span><span class="bbar__seg" aria-hidden="true">${Array.from({ length: floor }, (_, k) => `<i class="${k < used ? 'is-on' : ''}"></i>`).join('')}</span><span>${money(state.cash)}</span></div>
       <div class="bplan">${sitePlanSvg({ site: hallSiteFor(state, view.district) })}${grid(state, view, esc)}</div>
