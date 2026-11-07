@@ -299,11 +299,11 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
   .cols2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 28px; align-items: start; }
   .cols2--flow { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
   /* Ops map: the map's column is only as wide as the map draws (its height cap × 330/290,
-     see .citymap below), so the district card sits right beside it instead of across a gap.
+     see .citymap__view below, plus the frame's 18px), so the district card sits right beside it instead of across a gap.
      Bigger since Ops got its own tab (owner, 2026-11-06): up to 60% of the width, the card
      column never under 340px. */
-  .cols2--map { grid-template-columns: min(60%, calc(max(400px, 100dvh - 230px) * 330 / 290)) minmax(340px, 1fr); }
-  .cols2--map { grid-template-columns: min(60%, calc(max(400px, 100svh - 230px) * 330 / 290)) minmax(340px, 1fr); }
+  .cols2--map { grid-template-columns: min(60%, calc(max(400px, 100dvh - 290px) * 330 / 290 + 18px)) minmax(340px, 1fr); }
+  .cols2--map { grid-template-columns: min(60%, calc(max(400px, 100svh - 290px) * 330 / 290 + 18px)) minmax(340px, 1fr); }
   /* Planning a job: approach, squad and orders on the left; client and the reads beside them, so the risk updates in view as you pick. */
   .plangrid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); grid-template-rows: auto auto 1fr; column-gap: 28px; align-items: start;
     grid-template-areas: "approach client" "crew risk" "orders risk"; }
@@ -557,7 +557,25 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
    after the owner's mock-up drafts/prototypes/command-centre.html). Faceted districts in their
    gang's light at dark seams, a faint block grid, transit; then heat glows, crews out as faces,
    calls pulsing sodium, raid rings. Only calls and raids move; that stops too for reduced motion. */
-.citymap { display: block; width: 100%; max-width: 760px; margin: 8px auto 6px; touch-action: manipulation; }
+.citymap { display: block; width: 100%; height: 100%; touch-action: manipulation; }
+/* The map's frame (2026-11-07, owner: the map "blends right into the background"): a hairline a step
+   lighter than the panel's, cyan corner brackets, a darker ground; the legend (or "× Whole city")
+   inside it, at the foot. */
+.mapframe { position: relative; margin: 8px 0 12px; padding: 8px 8px 0; border: 1px solid #343b48; background: rgba(6, 8, 11, 0.55); scroll-margin-top: 120px; }
+.mapframe::before, .mapframe::after, .mapframe__corner { content: ''; position: absolute; width: 12px; height: 12px; border: 0 solid rgba(61, 232, 216, 0.7); pointer-events: none; }
+.mapframe::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; } .mapframe::after { top: -1px; right: -1px; border-width: 2px 2px 0 0; }
+.mapframe__corner--bl { bottom: -1px; left: -1px; border-width: 0 0 2px 2px; } .mapframe__corner--br { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+.mapframe__foot { display: flex; align-items: center; min-height: 52px; }
+.mapframe__foot .citymap__legend { margin: 0 2px; }
+.mapframe__out { min-height: var(--tap, 44px); margin: 4px 0; padding: 0 14px 0 10px; display: inline-flex; align-items: center; gap: 8px; background: var(--bg); border: 1px solid var(--accent-2); color: var(--accent-2); font: 700 0.8rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%); }
+.mapframe__out span { font-size: 1.2rem; line-height: 1; }
+/* The drawing and its labels share one box at the map's shape, so a label's % lands on its spot. */
+.citymap__view { position: relative; width: 100%; aspect-ratio: 330 / 290; margin: 0 auto; overflow: hidden; }
+.cm-sea { fill: transparent; }
+.citymap.is-zoomed .cm-sea { cursor: zoom-out; }
+.citymap.is-zoomed .cm-d:not(.is-selected) { opacity: 0.6; }
+.cm-mark { pointer-events: none; animation: cm-mark-in 0.4s ease-out 0.3s both; }
+@keyframes cm-mark-in { from { opacity: 0; } }
 .citymap text { font-family: var(--display); pointer-events: none; }
 .cm-d { cursor: pointer; }
 .cm-d:focus { outline: none; }
@@ -575,16 +593,26 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .map-label { fill: var(--muted); font-size: 9px; font-weight: 600; letter-spacing: 0.24em; }
 
 .cm-heat { pointer-events: none; }
-.cm-plate { cursor: pointer; }
-.cm-plate__bg { fill: rgba(10, 12, 15, 0.88); stroke: var(--line); stroke-width: 1; }
-.cm-plate.is-on .cm-plate__bg { stroke: var(--accent-2); }
-.cm-plate__name { fill: var(--text); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; }
-.cm-plate.is-locked .cm-plate__name { fill: var(--muted); font-size: 9px; }
-.cm-plate__sub { fill: var(--muted); font-size: 9px; font-weight: 600; letter-spacing: 0.08em; }
-.cm-plate__sub.is-warm { fill: #ff9a3d; } .cm-plate__sub.is-hot { fill: var(--danger); }
-.cm-hit { fill: transparent; } /* a 48-unit circle round each plate: 44px+ to the finger at phone width */
-.cm-tag { fill: var(--bg); stroke-width: 1; }
-.cm-tag--raid { stroke: var(--danger); fill: #2a1218; } .cm-tag__txt { font-size: 8px; font-weight: 700; letter-spacing: 0.12em; } .cm-tag__txt--raid { fill: var(--danger); }
+/* District labels (2026-11-07): HTML over the map, the same size on any screen (were SVG text that
+   grew with the map). The gang's colour as a tab, the landmark as an icon for a hall of ours or the
+   picked district; a 44px+ tap target with the ::after margin. */
+.cm-labels { position: absolute; inset: 0; pointer-events: none; }
+.cm-label { position: absolute; transform: translate(-50%, -50%); pointer-events: auto; display: flex; align-items: center; gap: 6px; min-height: 30px; padding: 4px 8px 4px 7px; background: rgba(10, 12, 15, 0.86); border: 1px solid var(--line); border-radius: 0; color: var(--text); font-family: var(--display); text-align: left; white-space: nowrap; cursor: pointer; transition: opacity 0.3s; }
+.cm-label::before { content: ''; position: absolute; top: -1px; left: -1px; width: 14px; height: 2px; background: var(--turf, var(--line)); }
+.cm-label::after { content: ''; position: absolute; inset: -8px; }
+.cm-label.is-on { border-color: var(--accent-2); box-shadow: 0 0 12px rgba(61, 232, 216, 0.25); }
+.cm-label.is-dim { opacity: 0.4; }
+.cm-label__icon { width: 24px; height: 22px; flex: none; }
+.cm-label__text { display: grid; line-height: 1.1; }
+.cm-label__name { font-weight: 700; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
+.cm-label__sub { font-weight: 600; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.cm-label__sub.is-warm { color: #ff9a3d; } .cm-label__sub.is-hot { color: var(--danger); }
+.cm-label.is-locked { min-height: 22px; padding: 2px 7px; background: rgba(10, 12, 15, 0.7); }
+.cm-label.is-locked::before { display: none; }
+.cm-label.is-locked .cm-label__name { font-size: 10px; color: var(--muted); }
+.cm-label__raid { position: absolute; left: -1px; bottom: calc(100% + 3px); padding: 1px 5px; border: 1px solid var(--danger); background: #2a1218; color: var(--danger); font-size: 10px; font-weight: 700; letter-spacing: 0.12em; }
+.cm-label .map-talk { position: absolute; left: calc(100% + 4px); top: 5px; width: 6px; height: 6px; background: var(--warn); }
+@media (min-width: 900px) { .cm-label__name { font-size: 13px; } .cm-label__sub { font-size: 11px; } }
 .cm-raid { fill: none; stroke: var(--danger); stroke-width: 1.4; pointer-events: none; }
 .cm-raid--pulse { transform-box: fill-box; transform-origin: center; animation: cm-ring 2.2s ease-out infinite; }
 .cm-call { fill: none; stroke: var(--warn); stroke-width: 1.4; pointer-events: none; }
@@ -606,7 +634,8 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .citymap__legend .is-crew { background: var(--accent-2); } .citymap__legend .is-call { background: var(--warn); } .citymap__legend .is-raid { background: var(--danger); }
 .citymap__legend b { font-weight: 600; margin-right: 3px; }
 @media (prefers-reduced-motion: reduce) {
-  .map-talk, .cm-d.is-selected .cm-d__area, .cm-raid--pulse, .cm-call--pulse { animation: none; }
+  .map-talk, .cm-d.is-selected .cm-d__area, .cm-raid--pulse, .cm-call--pulse, .cm-mark { animation: none; }
+  .cm-label { transition: none; }
   .cm-raid--pulse, .cm-call--pulse { display: none; }
 }
 /* City sub-tabs: one section at a time so the map screen fits a phone. */
@@ -617,16 +646,15 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .citymap__hint { margin-top: 8px; }
 @media (max-width: 899px) { .citymap__hint { display: none; } }
 .citycard { scroll-margin-top: 88px; }
-.citymap { scroll-margin-top: 120px; }
 /* The map tab fits one screen: the map shrinks to what's left after the header, tabs,
    legend and (on phones) the Continue dock and tab bar, but never below a readable size.
    Sized on svh (the viewport with the browser's bars showing), not dvh: dvh grows as Safari
    hides its bars on scroll, which made the map and the picture beside it grow mid-scroll
    (owner, iPad, 2026-10-29). The dvh lines are the fallback for browsers without svh. */
-.citymap { max-height: max(300px, calc(100dvh - 400px)); max-height: max(300px, calc(100svh - 400px)); }
+.citymap__view { max-width: calc(max(300px, 100dvh - 400px) * 330 / 290); max-width: calc(max(300px, 100svh - 400px) * 330 / 290); }
 /* Ops has no section tabs (2026-11-06), so the map takes that room back. */
-@media (min-width: 600px) and (max-width: 899px) { .citymap { max-height: max(360px, calc(100dvh - 340px)); max-height: max(360px, calc(100svh - 340px)); } }
-@media (min-width: 900px) { .citymap { max-width: none; max-height: max(400px, calc(100dvh - 230px)); max-height: max(400px, calc(100svh - 230px)); } }
+@media (min-width: 600px) and (max-width: 899px) { .citymap__view { max-width: calc(max(360px, 100dvh - 340px) * 330 / 290); max-width: calc(max(360px, 100svh - 340px) * 330 / 290); } }
+@media (min-width: 900px) { .citymap__view { max-width: calc(max(400px, 100dvh - 290px) * 330 / 290); max-width: calc(max(400px, 100svh - 290px) * 330 / 290); } }
 .citycard ul { margin-top: 0; }
 .citydetails { border: 1px solid var(--line); border-radius: var(--radius); padding: 0 12px; margin-bottom: 6px; }
 .citydetails summary { min-height: var(--tap); display: flex; align-items: center; cursor: pointer; font-weight: 600; }
@@ -1189,15 +1217,14 @@ p > .infobtn { display: inline-grid; vertical-align: 2px; margin-left: 4px; }
 .citycard__art { margin: -12px -12px 12px; overflow: hidden; }
 .citycard__art svg { display: block; width: 100%; height: auto; }
 .citycard__turf { color: var(--turf); }
-.cityrows { display: grid; gap: 6px; }
-.cityrow { position: relative; width: 100%; min-height: var(--tap, 44px); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 12px; text-align: left; background: var(--panel-2); border: 1px solid var(--line); color: var(--text); font: inherit; cursor: pointer; }
-.cityrow.is-on { border-color: var(--accent-2); }
-.cityrow__tab { position: absolute; left: -1px; top: -1px; width: 18px; height: 2px; }
-.cityrow__name { font-family: var(--display); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-.cityrow__meta { display: flex; gap: 10px; align-items: center; font-family: var(--display); color: var(--accent-2); }
-.cityrow__talk, .cityrow__out { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 1px 6px; border: 1px solid; }
-.cityrow__talk { color: var(--warn); }
-.cityrow__out { color: var(--accent-2); }
+/* Ops' Tonight list (2026-11-07): only districts with something worth a tap, each going somewhere the map doesn't. */
+.tonight { display: grid; gap: 6px; }
+.tonight__row { position: relative; width: 100%; min-height: 52px; display: flex; gap: 10px; align-items: center; padding: 6px 12px; text-align: left; background: var(--panel-2); border: 1px solid var(--line); color: var(--text); font: inherit; cursor: pointer; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%); }
+.tonight__row::before { content: ''; position: absolute; left: -1px; top: -1px; width: 16px; height: 2px; background: var(--turf); }
+.tonight__icon { width: 26px; height: 24px; flex: none; }
+.tonight__what { flex: 1; display: grid; min-width: 0; }
+.tonight__where { font: 700 0.8rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.tonight__go { color: var(--accent-2); font: 700 0.78rem var(--display); letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; }
 .cityplaces { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .cityplace { display: grid; gap: 2px; text-align: left; min-height: 56px; }
 /* The Ops card points to the district's write-up on City (2026-11-06). */

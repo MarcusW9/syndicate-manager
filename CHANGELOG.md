@@ -7,6 +7,13 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-07 · The Ops map: smaller labels, a frame, and zoom
+- **District labels are smaller** and stay the same size on any screen; on a computer they were huge. They show only what's there: no more "HEAT 0".
+- **Districts with a hall of ours, and the one you pick, show their landmark** as a small picture on the label.
+- **The map has a frame**, with corner brackets and the legend inside, so it no longer melts into the page.
+- **Tap a district to zoom in on it**: the map eases onto it, its landmark appears, and its card opens beside it (under it on a phone). **× Whole city**, Esc, or a tap on the harbour zooms back out.
+- **"The city tonight" is now "Tonight"**: only districts with work or street talk, each row going somewhere the map doesn't (a job's plan, the job board, the rumour). The rest are one line.
+
 ## 2026-11-06 · A smaller save: old messages are cleared
 - **The inbox no longer keeps every message since day 1.** Read messages go after four weeks, unread ones after eight, and it never holds more than 200. Anything still waiting on you stays however old it is: decisions, raises, heat notices, specialisation offers, call-ins, raid calls, a hall offer you haven't taken, a raid warning before the raid.
 - A year's save was over half a megabyte, nearly all of it old messages; it is now under 200KB. Saves load and write faster and leave more room for backups and slots.

@@ -19,7 +19,7 @@ try {
     await p.locator('[data-action="nav"][data-id="ops"]').filter({ visible: true }).first().click();
     await p.waitForTimeout(400);
     await p.screenshot({ path: `${out}/0${n}-city-${name}.png` });
-    await p.locator('.cm-plate[data-id="docks"]').click();
+    await p.locator('.cm-label[data-id="docks"]').click();
     await p.waitForTimeout(900);
     await p.screenshot({ path: `${out}/0${n + 1}-city-docks-${name}.png` });
   }

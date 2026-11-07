@@ -19,7 +19,7 @@ test('every district has a landmark, drawn the same every time and placed where 
   for (const d of Object.keys(HALL_SITES)) assert.ok(landmark(d, { x: 0, y: 0 }), `${d}: a hall's district has one`);
 });
 
-test('the halls and the raid screens show the hall\'s landmark; the map does not', () => {
+test('the halls and the raid screens show the hall\'s landmark, and so does the map', () => {
   const app = readFileSync(new URL('../src/ui/app.js', import.meta.url), 'utf8');
   const body = (name) => app.slice(app.indexOf(`function ${name}(`), app.indexOf('\n}\n', app.indexOf(`function ${name}(`)));
   assert.match(body('renderHalls'), /hallMark\(h\.district/, 'each hall of ours');
@@ -27,6 +27,8 @@ test('the halls and the raid screens show the hall\'s landmark; the map does not
   assert.match(body('renderRaids'), /hallMark\(r\.district/, 'the raid in Out now');
   assert.match(body('renderRaidWarning'), /raidWhere\(raid\)/, 'the warning');
   assert.match(body('renderRaidCall'), /raidWhere\(raid\)/, 'the call at the door');
+  // Since 2026-11-07 (owner) the map uses them too: on a label for a hall of ours or the picked
+  // district, and on the map once zoomed in (tests/citymap.test.js).
   const map = readFileSync(new URL('../src/ui/citymap.js', import.meta.url), 'utf8');
-  assert.doesNotMatch(map, /from '\.\/landmarks\.js'/, 'kept off the map');
+  assert.match(map, /from '\.\/landmarks\.js'/, 'on the labels and the zoomed map');
 });

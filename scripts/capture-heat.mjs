@@ -26,7 +26,7 @@ try {
   await p.screenshot({ path: `${out}/01-fixer-notice.png` });
   await p.locator('[data-action="nav"][data-id="ops"]').filter({ visible: true }).first().click(); await p.waitForTimeout(500);
   await p.screenshot({ path: `${out}/02-city-map-heat.png` });
-  await p.locator('.cityrows').scrollIntoViewIfNeeded(); await p.waitForTimeout(200);
+  await p.locator('.tonight, .mapframe').first().scrollIntoViewIfNeeded(); await p.waitForTimeout(200);
   await p.screenshot({ path: `${out}/03-city-heat-line.png` });
 } finally {
   await b.close();

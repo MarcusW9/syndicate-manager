@@ -32,7 +32,7 @@ try {
   await load(p, s);
   await tap(p, '[data-action="nav"][data-id="ops"]'); await p.waitForTimeout(500); await top(p);
   await p.screenshot({ path: `${out}/19-ops.png` });
-  await tap(p, 'button.cityrow[data-id="docks"]'); await p.waitForTimeout(800);
+  await tap(p, '.cm-label[data-id="docks"]'); await p.waitForTimeout(800);
   await p.screenshot({ path: `${out}/20-ops-district-card.png` });
   await tap(p, '[data-action="nav"][data-id="lore"]'); await p.waitForTimeout(500); await top(p);
   await p.screenshot({ path: `${out}/21-lore-districts.png` });

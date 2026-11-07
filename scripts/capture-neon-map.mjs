@@ -62,7 +62,7 @@ try {
     await tap(p, '[data-action="nav"][data-id="ops"]'); await p.waitForTimeout(900);
     await p.locator('.citymap').screenshot({ path: `${out}/${name}.png` });
     if (motion === 'no-preference') {
-      await p.locator('.cm-hit').nth(6).click({ force: true }); await p.waitForTimeout(600); // the Docks (MAP_DISTRICTS order)
+      await p.locator('.cm-label[data-id="docks"]').click(); await p.waitForTimeout(600); // the Docks (MAP_DISTRICTS order)
       await p.locator('.citymap').screenshot({ path: `${out}/02-map-docks-picked.png` });
       await p.screenshot({ path: `${out}/04-phone-city.png` });
     }
