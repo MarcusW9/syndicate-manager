@@ -68,6 +68,14 @@ export function renderWatch(ui, state, end = '') {
 /** Is this page already showing this job's watch? Then app.js syncs instead of re-rendering. */
 export const isWatching = (root, am) => !!live && !am.done && live.key === am.jobId && root.contains(live.el);
 
+/**
+ * The job on screen has just finished (this render is its last step): where its map last was, so
+ * the redraw can walk the crew out from there instead of snapping them to the van. Call before stopWatch.
+ */
+export function justFinished(am) {
+  return live && am?.done && live.key === am.jobId ? { zone: live.zone ?? am.zone } : null;
+}
+
 /** Stop the clock (the job ended, or the page changed). */
 export function stopWatch() {
   if (live?.timer) clearTimeout(live.timer);
@@ -79,15 +87,16 @@ export function stopWatch() {
  * Bind a freshly drawn watch (renderWatch) to the state: draw the plan and what has happened so
  * far without animation, then carry on. onAuto: take the next step (app.js: setState(autoStep)).
  */
-export function mountWatch(el, state, { onAuto, ui }) {
+export function mountWatch(el, state, { onAuto, ui, finishing = null }) {
   if (!el) return;
   const am = state.activeMission;
+  const from = finishing?.zone ?? null;
   const out = am.out ?? [];
   const team = opsOf(state, am.crewIds.filter((id) => !out.includes(id)));
   const ow = am.overwatch ? { op: state.crew.find((o) => o.id === am.overwatch.id), kit: am.overwatch.kit } : null;
   const plan = bindSitePlan(el.querySelector('.siteplan'), {
     // a finished job stays where the crew ended up (am.zone)
-    team, overwatch: ow?.op ? ow : null, zone: am.zone ?? 'start',
+    team, overwatch: ow?.op ? ow : null, zone: from ?? am.zone ?? 'start',
     speed: () => speed, site: siteFor(templateById(am.templateId)?.district, am.jobId, am.templateId, am.build),
     wheels: am.wheels ? opsOf(state, [am.wheels])[0] : null,
     standby: am.standby && !am.standby.joined ? opsOf(state, [am.standby.id])[0] : null,
@@ -127,7 +136,44 @@ export function mountWatch(el, state, { onAuto, ui }) {
   sync(state, { animate: false });
   // A job just finished: the page redraws in the same layout, with the summary at the end of the
   // feed (owner, 2026-11-03: "it can stay in the same view with the summary there"). Show it.
+  // Just finished here (playtest, 2026-11-07): walk out from where they were, then the end of the
+  // job gets its moment (ui.finale: the result and the team) before the summary in the feed.
+  if (am.done && finishing) {
+    const me = live;
+    (async () => {
+      if (from !== am.zone && am.zone) await plan.enter(am.zone);
+      if (live !== me || !ui.finale) return;
+      el.insertAdjacentHTML('beforeend', ui.finale(state));
+      const box = el.querySelector('.finale');
+      box?.querySelector('.finale__go')?.focus({ preventScroll: true });
+      countUp(box?.querySelector('[data-count]'));
+    })().catch(() => {});
+    return;
+  }
   if (am.done) autoScroll(el.querySelector('.watch__end'), false);
+}
+
+/** The pay on the end card counts up from nothing. */
+function countUp(node) {
+  if (!node) return;
+  const to = Number(node.dataset.count) || 0;
+  const fmt = node.dataset.fmt ?? '';
+  if (!to || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const t0 = performance.now();
+  const ms = 900;
+  const tick = (now) => {
+    const k = Math.min(1, (now - t0) / ms);
+    node.textContent = `${fmt}${Math.round((to * (1 - (1 - k) ** 3)) / 10) * 10}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    if (k < 1 && node.isConnected) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+/** Close the end card and show the summary in the feed. */
+export function closeFinale() {
+  const el = live?.el ?? document.querySelector('.watch');
+  el?.querySelector('.finale')?.remove();
+  autoScroll(el?.querySelector('.watch__end'), true);
 }
 
 /** A new state for the job on screen: append what's new and schedule the next step. */
@@ -215,6 +261,7 @@ function sync(state, { animate }) {
       const host = el.querySelector('.watch__map');
       const cue = item.cue?.standby ? { ...item.cue, standbyOp: opsOf(state, [item.cue.standby])[0] } : item.cue;
       if (duel) live.chain = live.chain.then(() => playDuel(host, duel, ui.esc, () => speed)).catch(() => {});
+      if (item.type === 'phase') live.zone = item.zone;
       live.chain = live.chain.then(() => (item.type === 'phase' ? plan.enter(item.zone) : item.type === 'card' || (item.type === 'note' && item.cue) ? plan.play(cue) : null)).catch(() => {});
     }
   }

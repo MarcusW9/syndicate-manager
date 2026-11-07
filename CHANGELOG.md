@@ -7,6 +7,10 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-07 · The direct buzz, and the end of a job
+- **Heists ring:** when Madam Rao (or Mr. Szeto) has a big one, their direct line rings over whatever you're doing. Pick up and they tell you the score in their own words, with the prep jobs and the stakes; "We're in" opens the board, "Let me think" leaves it on Today. The finale night rings too.
+- **A job ends properly:** after a live job, the crew walk back to the van instead of jumping there, then a card stamps the result, counts the pay up and brings the team in one by one, each with what the job did to them (a wound, a stat up, promoted). See the report, or head back to the safehouse.
+
 ## 2026-11-07 · Playtest round: the plan bar, gear on the cards, unread filter, faces on the report, grid routes, the face-off
 - **Send them or watch:** the plan bar has Watch live right beside Send them. On a wide screen the orders (when they call you in, and how they decide on their own) sit under the button as chips, so you don't need to open the Orders section.
 - **Gear on the squad cards:** each runner's card shows their main gear, drawn: Grid's rifle, a drone, a deck or a sidearm.

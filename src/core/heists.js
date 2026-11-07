@@ -172,7 +172,7 @@ export function introduceHeists(state) {
   for (const step of def.prep) askStep(state, def, h, step, 0);
   state.inbox.unshift({
     id: `heist-${def.id}-${state.day}`, type: 'job', kind: 'heist', day: state.day,
-    subject: `${contactName(def)} has a big one: ${def.name}`,
+    subject: `Call from ${contactName(def)}: ${def.name}`, // rings as a direct buzz first (ui/app.js renderBuzz)
     body: `${def.intro} Three prep jobs are on the board until the finale's week; each one you finish makes the night easier. The finale is in ${def.weeks} weeks.`,
     payload: { heistId: def.id }, blocking: false, read: false,
   });

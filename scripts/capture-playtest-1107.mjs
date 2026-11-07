@@ -4,6 +4,8 @@
 // Run: node scripts/capture-playtest-1107.mjs <out dir> [only]
 import { createNewGame } from '../src/core/state.js';
 import { loadoutOf } from '../src/core/gear.js';
+import { introduceHeists } from '../src/core/heists.js';
+import { heistById } from '../src/data/heists.js';
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
@@ -70,6 +72,11 @@ try {
           if (await c.count()) await c.first().click().catch(() => {});
           await p.waitForTimeout(100);
         }
+        await p.locator('.finale').waitFor({ timeout: 15000 }).catch(() => {});
+        await p.waitForTimeout(450); await p.screenshot({ path: `${out}/31-job-end-popping.png` });
+        await p.waitForTimeout(1600); await p.screenshot({ path: `${out}/32-job-end-card.png` });
+        await tap(p, '[data-action="finale-close"]').catch(() => {}); await p.waitForTimeout(800);
+        await p.screenshot({ path: `${out}/33-job-end-report-in-feed.png` });
         await p.locator('.watch__end button').filter({ visible: true }).first().click().catch(() => {}); await p.waitForTimeout(500);
         await tap(p, '[data-action="nav"][data-id="inbox"]').catch(() => {}); await p.waitForTimeout(400);
         await p.locator('[data-action="open-message"]:has(.tag--report)').filter({ visible: true }).first().click(); await p.waitForTimeout(500);
@@ -82,6 +89,23 @@ try {
         await p.locator('.inboxfilter').scrollIntoViewIfNeeded().catch(() => {});
         await p.screenshot({ path: `${out}/30-today-unread-phone.png` });
       }
+    }
+  }
+  // The direct buzz: Madam Rao's heist rings over Today, then the call once picked up (phone, then computer).
+  if (want('buzz')) {
+    const h = createNewGame({ seed: 21, startCrew: 'fresh' });
+    h.inbox = h.inbox.filter((m) => m.id !== 'welcome');
+    h.reputation = heistById('raoTable').gate.rep;
+    introduceHeists(h);
+    for (const [w, ht, tag, dpr] of [[390, 844, 'phone', 2], [1440, 900, 'desktop', 1]]) {
+      const p = await b.newPage({ viewport: { width: w, height: ht }, deviceScaleFactor: dpr });
+      p.on('pageerror', (e) => console.error('page error', e.message));
+      await load(p, h);
+      await p.waitForTimeout(1300);
+      await p.screenshot({ path: `${out}/34-buzz-ringing-${tag}.png` });
+      await tap(p, '[data-action="buzz-pickup"]'); await p.waitForTimeout(500);
+      await p.screenshot({ path: `${out}/35-buzz-call-${tag}.png` });
+      if (tag === 'phone') { await tap(p, '[data-action="buzz-in"]'); await p.waitForTimeout(500); await p.screenshot({ path: `${out}/36-buzz-then-the-board.png` }); }
     }
   }
 } finally {

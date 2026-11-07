@@ -8,7 +8,7 @@ import { defenceCut, openRaids, raidOn, raidPrice, canBuyOff, defenders, raidCho
 import { HALL_SITES, HOME_HALL, isOpeningJob } from '../data/halls.js';
 import { billDue, mondayBrief, crewStandard, crewAgainstStandard } from '../core/week.js';
 import { heistFor, heistCard, buyStep, heistEffects, asSentence } from '../core/heists.js';
-import { HEIST_RULES } from '../data/heists.js';
+import { HEIST_RULES, heistById } from '../data/heists.js';
 import { crewLead } from '../core/lead.js';
 import { rankOf } from '../core/tong.js';
 import { TONG_EXPLAINER } from '../data/tong.js';
@@ -59,7 +59,7 @@ import { leanPicks, jobRead, planRead, planTries } from '../core/squad.js';
 import { renderBoard, renderPicker, renderCoverage, assignSlot, planKit } from './board.js';
 import { armouryCard, renderArmoury, renderLoadout, renderGearSheet, gearPlace } from './gear.js';
 import { buyGear, buyOffer, sellGear, equip, unequip, itemName, sellPrice } from '../core/gear.js';
-import { renderWatch, mountWatch, syncWatch, isWatching, stopWatch, togglePause, toggleSpeed, showLatest } from './watch.js';
+import { renderWatch, mountWatch, syncWatch, isWatching, stopWatch, togglePause, toggleSpeed, showLatest, justFinished, closeFinale } from './watch.js';
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
 import { earnedText } from '../core/earned.js';
 import { SPECIALISATIONS, specOf } from '../core/specialisations.js';
@@ -121,6 +121,8 @@ let readBefore = null; // the read before the last change to the plan, for "was 
 let readFresh = false; // this draw is the first since the plan changed: flash what moved
 let jossSig = null; // the plan as Joss picked it (on opening a job, or Joss's picks); their reason shows while it's unchanged
 let whyOpen = false; // the plan bar's notes, all of them, on tap
+let buzzStage = null; // the direct buzz (a heist's call): null ringing, 'open' picked up (playtest, 2026-11-07)
+const buzzLater = new Set(); // calls let ring out this session: they ring again next time
 let inboxUnread = false; // Today's list: only unread messages (playtest, 2026-11-07)
 let planBarHtml = ''; // the plan bar as renderPlan last drew it; the jobs screen places it (under the list on wide screens)
 let meetHidden = null; // the plan's "What they'll likely meet" read folded away; null until first shown (folded on phones)
@@ -332,6 +334,17 @@ function onClick(e) {
     case 'plan-why': whyOpen = !whyOpen; break;
     case 'brief-more': briefOpen = !briefOpen; break;
     case 'toggle-orders': ordersOpen = !ordersOpen; break;
+    // A contact's direct buzz for a heist (playtest, 2026-11-07): pick up, then in or later. Both mark it read.
+    case 'buzz-pickup': buzzStage = 'open'; break;
+    case 'buzz-later': buzzLater.add(id); buzzStage = null; break;
+    case 'buzz-in': case 'buzz-think': {
+      const msg = state.inbox.find((m) => m.id === id);
+      if (msg) msg.read = true;
+      buzzStage = null;
+      if (action === 'buzz-in') { screen = 'jobs'; plan = null; sidePlan = null; } else { screen = 'inbox'; openMessageId = id; }
+      saveGame(state);
+      break;
+    }
     case 'inbox-filter': inboxUnread = id === 'unread'; break;
     case 'board-rules': boardRulesOpen = !boardRulesOpen; break;
     // The squad board (ui/board.js): tap a card, pick who goes there; anyone already placed swaps.
@@ -415,6 +428,7 @@ function onClick(e) {
     case 'choose': return setState(chooseOption(state, id));
     case 'critical': return setState(resolveCritical(state, id));
     case 'close-mission': screen = 'inbox'; return setState(closeMission(state));
+    case 'finale-close': closeFinale(); return;
     // Away crews calling in (core/away.js): take the call, then hand it back or take command.
     case 'take-call': openMessageId = null; return setState(takeCall(state, id));
     case 'raid-pay': return setState(payOffRaid(state, id)); // pay the police off before the day (core/raids.js)
@@ -598,6 +612,7 @@ function render() {
   // A running job's watch screen updates in place, so its animations and timer carry on (ui/watch.js).
   const am = state.activeMission;
   if (am && isWatching(root, am)) return syncWatch(state);
+  const finishing = justFinished(am); // the job ended on this step: walk out, then the end card
   stopWatch();
   // Every render replaces the page, so put keyboard focus back on the same control if it survives.
   const focused = document.activeElement?.closest?.('[data-action]');
@@ -645,8 +660,10 @@ function render() {
     ${dock ? `<div class="dock">${renderContinue(blocked, resting, unread, 'dock__continue')}</div>` : ''}
     ${cue ? renderDayCue(cue) : ''}
     ${leaving ? renderSendOff(leaving) : ''}
+    ${renderBuzz()}
   `;
-  if (am) mountWatch(root.querySelector('.watch'), state, { ui: watchUi, onAuto: () => setState(autoStep(state)) });
+  if (am) mountWatch(root.querySelector('.watch'), state, { ui: watchUi, finishing, onAuto: () => setState(autoStep(state)) });
+  root.querySelector('.buzz__pick, .buzz [data-action="buzz-in"]')?.focus({ preventScroll: true }); // the call has the floor
   if (pickSlot) (root.querySelector('.sheet .cand.is-on') ?? root.querySelector('.sheet .cand:not([disabled])'))?.focus({ preventScroll: true });
   if (mapTo) { animateMap(root.querySelector('.citymap__view'), mapView, mapTo); mapView = mapTo; mapTo = null; }
   if (cityMapDue) { cityMapDue = false; root.querySelector('.mapframe')?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
@@ -2395,6 +2412,109 @@ function renderMission() {
     </section>`;
 }
 
+/**
+ * The end of a job as it happens (playtest, 2026-11-07: "it snaps back and just ends"): once the
+ * crew are back at the van, a card over the job with the result stamped, the pay counting up and
+ * the team popping in one by one, each with what the job did to them. "See the report" closes it
+ * onto the summary in the feed; "Back to the safehouse" goes home.
+ */
+function renderFinale(s) {
+  const am = s.activeMission;
+  const r = am.result;
+  if (!r) return '';
+  const events = am.events ?? [];
+  const SEV = ['light', 'serious', 'critical'];
+  const ids = [...am.crewIds, am.overwatch?.id, am.wheels, am.standby?.joined ? null : am.standby?.id].filter(Boolean);
+  const title = { completed: 'Job done', aborted: 'Walked away', loss: "Someone didn't come home" }[r.outcome] ?? 'Job over';
+  const team = ids.map((id, i) => {
+    const op = s.crew.find((o) => o.id === id) ?? s.memorial?.find((o) => o.id === id);
+    if (!op) return '';
+    const lost = !s.crew.some((o) => o.id === id);
+    const hurt = events.filter((e) => e.injury?.id === id).map((e) => e.injury.severity).sort((a, b) => SEV.indexOf(b) - SEV.indexOf(a))[0];
+    const grew = (r.growth ?? []).filter((g) => g.opId === id);
+    const grad = (r.graduated ?? []).some((g) => g.id === id);
+    const won = events.filter((e) => e.actor?.id === id && e.die != null && e.success === true).length;
+    const tags = [
+      lost ? '<span class="finale__tag is-bad">Lost</span>' : '',
+      !lost && hurt ? `<span class="finale__tag is-warn">${esc(hurt)} wound</span>` : '',
+      grad ? '<span class="finale__tag is-star">★ Pro now</span>' : '',
+      ...grew.slice(0, 2).map((g) => `<span class="finale__tag is-good">▲ ${esc(statName(g.stat))} ${g.to}</span>`),
+      !lost && !hurt && !grad && !grew.length ? `<span class="finale__tag">${won ? `${won} clean roll${won === 1 ? '' : 's'}` : 'Home safe'}</span>` : '',
+    ].join('');
+    return `<li class="finale__op ${lost ? 'is-lost' : ''}" style="--i:${i}">${face(op)}<b>${esc(op.handle)}</b>${tags}</li>`;
+  }).join('');
+  return `
+    <div class="finale finale--${esc(r.outcome)}" role="dialog" aria-modal="false" aria-label="${esc(title)}">
+      <div class="finale__card">
+        <p class="finale__kicker">${esc(templateById(am.templateId)?.name ?? 'The job')}</p>
+        <h2 class="finale__stamp">${esc(title)}</h2>
+        <p class="finale__pay"><span data-count="${r.pay}" data-fmt="${esc(NAMES.currency)}">${esc(money(r.pay))}</span><span class="finale__heat">Heat +${r.heatGain}</span></p>
+        <ul class="finale__team">${team}</ul>
+        ${r.client && r.trustChange ? `<p class="finale__line">${esc(r.client)}: trust ${r.trustChange > 0 ? '+' : ''}${r.trustChange}</p>` : ''}
+        <div class="finale__btns">
+          <button class="btn btn--ghost" data-action="finale-close">See the report</button>
+          <button class="btn btn--primary finale__go" data-action="close-mission">Back to the safehouse</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+/**
+ * The direct buzz (playtest, 2026-11-07: "this just appeared one day, no context"): the day a contact
+ * offers a heist, or its finale goes on, the phone rings over whatever screen you're on. Pick up, and
+ * they say it in their own words with what's at stake; "We're in" opens the board, "Let me think"
+ * leaves it on Today. It rings once: answering marks the message read. Not during a job or a plan.
+ */
+function buzzMessage() {
+  if (state.activeMission || state.founding || plan || sidePlan) return null;
+  return state.inbox.find((m) => m.kind === 'heist' && !m.read && !buzzLater.has(m.id) && heistById(m.payload?.heistId)) ?? null;
+}
+
+/** A contact's face for the call: their own, seeded by who they are, so it's the same every time. */
+const callerFace = (def) => portrait({ id: `client-${def.contact}`, name: clientById(def.contact)?.name ?? def.contact, age: 52 }, { size: 96 });
+
+function renderBuzz() {
+  const m = buzzMessage();
+  if (!m) { buzzStage = null; return ''; }
+  const def = heistById(m.payload.heistId);
+  const who = clientById(def.contact)?.name ?? 'A contact';
+  const finale = !!m.payload.jobId;
+  if (buzzStage !== 'open') {
+    return `
+    <div class="buzz" role="alertdialog" aria-modal="true" aria-label="Direct buzz from ${esc(who)}">
+      <div class="buzz__ring">
+        <p class="buzz__kicker">Direct buzz</p>
+        <span class="buzz__face">${callerFace(def)}</span>
+        <h2 class="buzz__who">${esc(who)}</h2>
+        <p class="buzz__joss"><b>${esc(NAMES.partner)}:</b> ${esc(finale ? `${who} again, on the direct line. It's tonight's business.` : `${who}, on the direct line. That line only rings for the big ones.`)}</p>
+        <button class="btn btn--primary btn--block buzz__pick" data-action="buzz-pickup">Pick up</button>
+        <button class="btn btn--ghost" data-action="buzz-later" data-id="${esc(m.id)}">Let it ring</button>
+      </div>
+    </div>`;
+  }
+  const h = state.heists?.[def.id];
+  const prepared = h ? heistEffects(def, h).lines.length : 0;
+  const quote = finale ? def.finaleLine : def.intro;
+  const stakes = finale
+    ? `<p class="buzz__stake"><b>${esc(def.name)}</b> · the finale is on the board until Sunday</p>
+       <p class="buzz__stake">${prepared ? `Prepared: ${prepared} of ${def.prep.length}.` : 'Nothing was prepared: it will be the hard way.'}</p>`
+    : `<p class="buzz__stake"><b>${esc(def.name)}</b> · the finale in ${def.weeks} weeks · pays about ${money(def.pay)}</p>
+       <ol class="buzz__prep">${def.prep.map((p) => `<li>${esc(p.line)}</li>`).join('')}</ol>
+       <p class="buzz__note">Three prep jobs go on the board. Each one you finish makes the night easier; you can go without them.</p>`;
+  return `
+    <div class="buzz" role="dialog" aria-modal="true" aria-label="${esc(who)}: ${esc(def.name)}">
+      <div class="buzz__call">
+        <div class="buzz__head"><span class="buzz__face buzz__face--sm">${callerFace(def)}</span><div><p class="buzz__kicker">On the line</p><h2 class="buzz__who">${esc(who)}</h2></div></div>
+        <p class="buzz__quote">${esc(quote)}</p>
+        <div class="buzz__stakes">${stakes}</div>
+        <div class="buzz__btns">
+          <button class="btn btn--ghost" data-action="buzz-think" data-id="${esc(m.id)}">${finale ? 'Later' : 'Let me think'}</button>
+          <button class="btn btn--primary" data-action="buzz-in" data-id="${esc(m.id)}">${finale ? 'Open the board' : "We're in"}</button>
+        </div>
+      </div>
+    </div>`;
+}
+
 /** " · Hotwire at the wheel" for someone outside the inside team, or nothing. */
 const outsider = (id, what) => { const op = id ? state.crew.find((o) => o.id === id) : null; return op ? ` · ${esc(op.handle)} ${what}` : ''; };
 
@@ -2454,6 +2574,7 @@ function renderCallIn(s) {
 /** What the watch screen borrows from here (ui/watch.js). */
 const watchUi = {
   esc,
+  finale: (s) => renderFinale(s),
   callIn: (s) => renderCallIn(s),
   brief: (s) => fillBrief(templateById(s.activeMission.templateId)),
   dice: (r) => `
