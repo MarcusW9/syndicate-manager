@@ -4,10 +4,10 @@
 // pulses, as on the City map; nothing else moves (owner: still dots). Pure strings.
 
 import { shapeSvg } from './siteplan.js';
+import { gridSite, cutCorners } from './route.js';
 
 const W = 360;
 const H = 240;
-const pts = (list) => list.map(([x, y]) => `${x},${y}`).join(' ');
 const ORDER = ['start', 'in', 'inside', 'target', 'out'];
 const WORD = { start: 'at the van', in: 'going in', inside: 'inside', target: 'at the target', out: 'getting out' };
 
@@ -39,7 +39,8 @@ function cluster([x, y], n) {
  * The mini map's SVG. zone: where the job is (am.zone); crew: how many inside; overwatch and
  * wheels: whether someone is on the perch or with the van; calling: a call waiting.
  */
-export function crewOutMap({ site, zone = 'start', crew = 1, overwatch = false, wheels = false, calling = false, esc = String }) {
+export function crewOutMap({ site: given, zone = 'start', crew = 1, overwatch = false, wheels = false, calling = false, esc = String }) {
+  const site = gridSite(given); // the route as the watch screen draws it (ui/route.js)
   const z = ORDER.includes(zone) ? zone : 'start';
   const { walked, ahead } = routeSplit(site, z);
   const at = zoneSpot(site, z);
@@ -49,8 +50,8 @@ export function crewOutMap({ site, zone = 'start', crew = 1, overwatch = false, 
   return `<svg class="minimap ${calling ? 'is-call' : ''}" viewBox="${box.join(' ')}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${esc(label)}">
     <rect x="0" y="0" width="${W}" height="${H}" fill="#0b0d11"/>
     ${site.shapes.map(shapeSvg).join('')}
-    ${ahead.length > 1 ? `<polyline class="mm-ahead" points="${pts(ahead)}"/>` : ''}
-    ${walked.length > 1 ? `<polyline class="mm-walked" points="${pts(walked)}"/>` : ''}
+    ${ahead.length > 1 ? `<path class="mm-ahead" d="${cutCorners(ahead, 5)}"/>` : ''}
+    ${walked.length > 1 ? `<path class="mm-walked" d="${cutCorners(walked, 5)}"/>` : ''}
     ${overwatch ? `<circle class="mm-side" cx="${site.points.perch[0]}" cy="${site.points.perch[1]}" r="5"/>` : ''}
     ${wheels && z !== 'start' && z !== 'out' ? `<circle class="mm-side" cx="${site.points.van[0]}" cy="${site.points.van[1]}" r="5"/>` : ''}
     ${calling ? `<circle class="mm-call" cx="${at[0]}" cy="${at[1]}" r="${crew > 1 ? 20 : 13}"/>` : ''}

@@ -5,6 +5,7 @@
 
 import { SITES, pickSite } from '../data/sites.js';
 import { portrait } from './art.js';
+import { gridSite, cutCorners } from './route.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const W = 360;
@@ -75,7 +76,8 @@ export function shapeSvg(s) {
 }
 
 /** The plan's markup for a site. kit: the overwatch kit (its sight is drawn) or null. */
-export function sitePlanSvg({ kit = null, site = SITES.generic } = {}) {
+export function sitePlanSvg({ kit = null, site: given = SITES.generic } = {}) {
+  const site = gridSite(given); // the route across and up/down, corners cut (ui/route.js, 2026-11-07)
   const P = site.points;
   const nodes = [site.paths.in.at(-1), site.paths.inside.at(-1)];
   const sight = !kit ? '' : `<polygon class="sp-sight ${kit === 'drone' ? 'sp-sight--drone' : ''}" points="${pts(site.sight[kit === 'drone' ? 'drone' : 'rifle'])}"/>`;
@@ -83,7 +85,7 @@ export function sitePlanSvg({ kit = null, site = SITES.generic } = {}) {
     <rect width="${W}" height="${H}" fill="#0b0d11"/>
     ${site.shapes.map(shapeSvg).join('')}
     ${sight}
-    <polyline class="sp-route" points="${pts([...site.paths.in, ...site.paths.inside.slice(1), ...site.paths.target.slice(1)])}"/>
+    <path class="sp-route" d="${cutCorners([...site.paths.in, ...site.paths.inside.slice(1), ...site.paths.target.slice(1)])}"/>
     ${nodes.map(([x, y]) => `<circle class="sp-node" cx="${x}" cy="${y}" r="3"/>`).join('')}
     <circle class="sp-node sp-node--target" cx="${P.target[0]}" cy="${P.target[1]}" r="4"/><circle class="sp-node sp-node--perch" cx="${P.perch[0]}" cy="${P.perch[1]}" r="4"/>
     ${site.labels.map((l) => `<text class="sp-label ${l.hi ? 'sp-label--hi' : ''}" x="${l.x}" y="${l.y}">${escAttr(l.text)}</text>`).join('')}
@@ -110,7 +112,8 @@ const later = (ms) => new Promise((r) => setTimeout(r, reduced() ? 0 : ms));
  * out: people already back at the van hurt. speed: a function giving the current pace (1 normal, lower faster).
  * site: the district's site plan (data/sites.js).
  */
-export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = null, standby = null, out = [], zone = 'start', speed = () => 1, site = SITES.generic }) {
+export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = null, standby = null, out = [], zone = 'start', speed = () => 1, site: given = SITES.generic }) {
+  const site = gridSite(given); // walk the line as drawn
   const team = [...inside];
   const P = site.points;
   const PATHS = site.paths;

@@ -70,7 +70,7 @@ test('not before the gate; then on a Monday, once: three prep jobs on the board 
     assert.deepEqual(jobView(s, job).heistStep, { heist: 'raoTable', step: step.id }, 'the board can flag it');
   }
   const msg = s.inbox.find((m) => m.kind === 'heist');
-  assert.match(msg.subject, /Madam Rao has a big one/);
+  assert.match(msg.subject, /Call from Madam Rao: The Big Table/);
   assert.ok(isActionable(s, msg), 'the offer stays in the inbox while the heist is on');
   introduceHeists(s);
   assert.equal(s.jobs.filter((j) => j.heistStep).length, 3, 'offered once');
