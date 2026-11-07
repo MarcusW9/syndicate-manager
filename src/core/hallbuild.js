@@ -32,9 +32,11 @@ export function buildableCells(site) {
   const floor = rects.filter((r) => FLOOR.has(r.cls));
   const taken = rects.filter((r) => TAKEN.has(r.cls));
   const keep = [site.posts.inside, site.paths.out.at(-1), site.paths.inside.at(-1), site.paths.inside[0]];
+  // A hall map with a floor (data/sites.js `grid`, 2026-11-07) builds on that rectangle only.
+  const [gx0, gy0, gx1, gy1] = site.grid ?? [0, 0, HALL_BUILD.cols - 1, HALL_BUILD.rows - 1];
   const out = new Set();
-  for (let y = 0; y < HALL_BUILD.rows; y++) {
-    for (let x = 0; x < HALL_BUILD.cols; x++) {
+  for (let y = gy0; y <= gy1; y++) {
+    for (let x = gx0; x <= gx1; x++) {
       const r = { x: x * C, y: y * C, w: C, h: C };
       if (floor.reduce((n, f) => n + overlap(r, f), 0) < 0.7 * C * C) continue;
       if (taken.some((t) => overlap(r, t) > 4)) continue;
@@ -63,11 +65,32 @@ export const floorUsed = (hall) => (hall?.build ?? []).reduce((n, b) => n + piec
 export const builtCells = (hall) => new Set((hall?.build ?? []).flatMap((b) => pieceCells(b.piece, b.x, b.y, b.rot)));
 /** The piece on a cell, or null. */
 export const pieceAt = (hall, x, y) => (hall?.build ?? []).find((b) => pieceCells(b.piece, b.x, b.y, b.rot).includes(`${x},${y}`)) ?? null;
+/**
+ * The hall's beds as blocks on its floor (owner, 2026-11-07: "blocks already there which represent
+ * the beds"): one cell a bed, as many as the hall's own beds (a bunk room's are inside it), laid from
+ * the map's `bedCorner` row by row, skipping what's built. Worked out, never stored: Expand adds two
+ * more on the next free cells. [{ id, piece: 'bed', x, y, rot }]
+ */
+export function bedsOnFloor(hall, site = hallMap(hall?.district)) {
+  const built = builtCells(hall);
+  const [cx, cy] = site.bedCorner ?? [0, 0];
+  return [...buildableCells(site)].filter((k) => !built.has(k)).map((k) => k.split(',').map(Number))
+    .sort((a, b) => Math.abs(a[1] - cy) - Math.abs(b[1] - cy) || Math.abs(a[0] - cx) - Math.abs(b[0] - cx))
+    .slice(0, hall?.beds ?? 0)
+    .map(([x, y], i) => ({ id: `bed-${i + 1}`, piece: 'bed', x, y, rot: 0 }));
+}
+/** The cells beds stand on, as a Set of "x,y". */
+export const bedCells = (hall) => new Set(bedsOnFloor(hall).map((b) => `${b.x},${b.y}`));
+/** The bed on a cell, or null. */
+export const bedAt = (hall, x, y) => bedsOnFloor(hall).find((b) => b.x === x && b.y === y) ?? null;
+/** Everything on a hall's floor: its beds and what's built. The map a raid there is fought on. */
+export const floorPieces = (hall) => [...bedsOnFloor(hall), ...(hall?.build ?? [])];
+
 /** What removing a piece gives back. */
 export const refundOf = (pieceId) => Math.round((PIECES[pieceId]?.cost ?? 0) * HALL_BUILD.refund);
 
 /** The hall's map with what's built on it: the map its raids are fought on. */
-export const hallSiteFor = (state, district) => pickSite(district, '', `raid:${district}`, hallIn(state, district)?.build ?? []);
+export const hallSiteFor = (state, district) => pickSite(district, '', `raid:${district}`, floorPieces(hallIn(state, district)));
 
 /** Can this piece go here? { ok, reason }. */
 export function canPlace(state, district, pieceId, x, y, rot = 0) {
@@ -83,6 +106,8 @@ export function canPlace(state, district, pieceId, x, y, rot = 0) {
   const built = builtCells(hall);
   if (cells.some((c) => !free.has(c))) return { ok: false, reason: "Can't build there" };
   if (cells.some((c) => built.has(c))) return { ok: false, reason: 'Something is already there' };
+  const beds = bedCells(hall);
+  if (cells.some((c) => beds.has(c))) return { ok: false, reason: 'A bed is there: beds come with the hall' };
   if (floorUsed(hall) + cells.length > floorOf(hall)) return { ok: false, reason: `No floor left (${floorUsed(hall)}/${floorOf(hall)}): expand the hall for more` };
   if (state.cash < p.cost) return { ok: false, reason: `Needs ${money(p.cost)}` };
   return { ok: true, reason: 'ready' };
@@ -131,7 +156,8 @@ export function canTurn(state, district, id) {
   const cells = pieceCells(b.piece, b.x, b.y, b.rot ? 0 : 1);
   const free = buildableCells(hallMap(district));
   const others = builtCells({ build: hall.build.filter((x) => x.id !== id) });
-  return cells.every((c) => free.has(c) && !others.has(c));
+  const beds = bedCells(hall);
+  return cells.every((c) => free.has(c) && !others.has(c) && !beds.has(c));
 }
 
 /** Turn a placed piece 90°. Returns the new state, or prev. */

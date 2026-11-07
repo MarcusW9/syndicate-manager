@@ -469,11 +469,18 @@ const SILK = ['#b48cff', '#ff5fae', '#f2d541', '#3de8d8'];
 const SADDLE = '#4a3424';
 
 export const HALLS = {
+  // Every hall has a floor to build on (2026-11-07, owner: "allow the whole section to be building
+  // blocks"): `grid` is [col0, row0, col1, row1] in build cells (data/hallBuild.js, 30 units), and
+  // every cell in it can take a piece. The hall's own things stand against the walls, between the
+  // floor and the walls, so they're still cover in a raid. The beds aren't drawn here: they're
+  // blocks on the floor, as many as the hall has (core/hallbuild.js bedsOnFloor), from `bedCorner`.
+  //
   // Old Town: the damp room above a noodle shop. Up the front stairs from the street; out by the
   // rusted fire stair on the back wall.
   oldTown: {
-    ...hallSite('the room above the noodle shop', 'Plan of our Old Town hall: the room above the noodle shop, the front stairs up from the street, bunks, the mahjong table, the altar, the stove, the fire stair out the back',
-      { exit: [334, 40], anchor: [272, 72], entry: [44, 168] }),
+    ...hallSite('the room above the noodle shop', 'Plan of our Old Town hall: the room above the noodle shop, the front stairs up from the street, the beds, the mahjong table, the altar, the stove, the fire stair out the back',
+      { exit: [334, 40], anchor: [292, 80], entry: [38, 142] }),
+    grid: [2, 1, 8, 5], bedCorner: [2, 1],
     shapes: [
       ...ROAD,
       { t: 'rect', cls: 'sp-sign', x: 70, y: 206, w: 44, h: 5, fill: '#ff3d5f' },
@@ -482,51 +489,44 @@ export const HALLS = {
       { t: 'row', cls: 'sp-step', x: 26, y: 150, w: 26, h: 1.5, step: 6, n: 8, axis: 'y' },
       { t: 'rect', cls: 'sp-door', x: 313, y: 48, w: 4, h: 16 },
       { t: 'row', cls: 'sp-step', x: 322, y: 30, w: 22, h: 1.5, step: 6, n: 14, axis: 'y' },
-      { t: 'line', cls: 'sp-wall', x1: 16, y1: 100, x2: 140, y2: 100 },
-      { t: 'row', cls: 'sp-cot', x: 70, y: 26, w: 22, h: 8, step: 30, n: 5 },
-      { t: 'row', cls: 'sp-cot', x: 70, y: 52, w: 22, h: 8, step: 30, n: 3 },
-      { t: 'rect', cls: 'sp-desk', x: 160, y: 120, w: 26, h: 18 }, // the mahjong table
-      { t: 'rect', cls: 'sp-cover', x: 234, y: 118, w: 14, h: 10, fill: '#5a1e24' }, // the altar
-      { t: 'rect', cls: 'sp-cover', x: 236, y: 86, w: 14, h: 12, fill: CONTAINER_TONES[3] }, // crates of bitter herbs
-      { t: 'rect', cls: 'sp-cover', x: 290, y: 96, w: 12, h: 12, fill: CONTAINER_TONES[1] },
-      { t: 'rect', cls: 'sp-desk', x: 74, y: 124, w: 34, h: 10 }, // the stove and its counter
-      { t: 'rect', cls: 'sp-cover', x: 70, y: 152, w: 12, h: 12, fill: CONTAINER_TONES[2] }, // noodle crates at the top of the stairs
-      { t: 'rect', cls: 'sp-cover', x: 92, y: 176, w: 14, h: 8, fill: CONTAINER_TONES[0] }, // shoes and umbrellas
-      { t: 'rect', cls: 'sp-cover', x: 236, y: 58, w: 26, h: 6, fill: '#7a2a2a' }, // a lacquer screen by the back door
+      { t: 'rect', cls: 'sp-cover', x: 46, y: 60, w: 10, h: 26, fill: CONTAINER_TONES[0] }, // shoes and umbrellas on a rack
+      { t: 'rect', cls: 'sp-cover', x: 34, y: 104, w: 12, h: 12, fill: CONTAINER_TONES[2] }, // noodle crates at the top of the stairs
+      { t: 'rect', cls: 'sp-desk', x: 120, y: 186, w: 40, h: 10 }, // the stove and its counter, on the front wall
+      { t: 'rect', cls: 'sp-cover', x: 150, y: 16, w: 14, h: 10, fill: '#5a1e24' }, // the altar, on the back wall
+      { t: 'rect', cls: 'sp-cover', x: 280, y: 104, w: 8, h: 26, fill: '#7a2a2a' }, // a lacquer screen
+      { t: 'rect', cls: 'sp-cover', x: 290, y: 140, w: 14, h: 12, fill: CONTAINER_TONES[3] }, // crates of bitter herbs
+      { t: 'rect', cls: 'sp-desk', x: 276, y: 168, w: 26, h: 18 }, // the mahjong table
     ],
-    labels: [{ x: 70, y: 222, text: 'NOODLE SHOP' }, { x: 150, y: 32, text: 'BUNKS' }, { x: 196, y: 90, text: 'OUR HALL', hi: true }, { x: 280, y: 12, text: 'FIRE STAIR' }, { x: 22, y: 146, text: 'STAIRS' }],
+    labels: [{ x: 70, y: 222, text: 'NOODLE SHOP' }, { x: 196, y: 26, text: 'OUR HALL', hi: true }, { x: 280, y: 12, text: 'FIRE STAIR' }, { x: 22, y: 146, text: 'STAIRS' }],
   },
   // The Night Market: two rooms above Madam Rao's sari shop. Up the shop's back stair; out through
   // the roof hatch.
   nightMarket: {
-    ...hallSite('two rooms above her sari shop', 'Plan of our Night Market hall: two rooms above the sari shop, bolts of silk on racks, the cutting table, two beds, the stair up from the shop, the roof hatch',
-      { exit: [312, 26], anchor: [262, 92], entry: [58, 164] }),
+    ...hallSite('two rooms above her sari shop', 'Plan of our Night Market hall: the rooms above the sari shop, bolts of silk on racks, the cutting table, the beds, the stair up from the shop, the roof hatch',
+      { exit: [312, 26], anchor: [300, 110], entry: [58, 164] }),
+    grid: [3, 1, 8, 5], bedCorner: [8, 1],
     shapes: [
       ...ROAD,
       { t: 'rect', cls: 'sp-sign', x: 40, y: 206, w: 60, h: 5, fill: '#ff5fae' },
       { t: 'rect', cls: 'sp-building', x: 30, y: 20, w: 300, h: 182 },
-      { t: 'line', cls: 'sp-wall', x1: 180, y1: 20, x2: 180, y2: 86 },
-      { t: 'line', cls: 'sp-wall', x1: 180, y1: 132, x2: 180, y2: 202 },
       { t: 'row', cls: 'sp-step', x: 42, y: 150, w: 24, h: 1.5, step: 6, n: 8, axis: 'y' },
       { t: 'row', cls: 'sp-step', x: 300, y: 32, w: 22, h: 1.5, step: 5, n: 6, axis: 'y' }, // the ladder to the hatch
       { t: 'rect', cls: 'sp-door', x: 304, y: 20, w: 16, h: 4 },
-      { t: 'row', cls: 'sp-cover', x: 70, y: 40, w: 26, h: 8, step: 34, n: 3, tones: SILK }, // bolts of silk on racks
-      { t: 'row', cls: 'sp-cover', x: 70, y: 66, w: 26, h: 8, step: 34, n: 3, tones: SILK, shift: 1 },
-      { t: 'rect', cls: 'sp-desk', x: 98, y: 110, w: 36, h: 12 }, // the cutting table
-      { t: 'rect', cls: 'sp-cover', x: 84, y: 146, w: 26, h: 8, fill: SILK[1] },
-      { t: 'rect', cls: 'sp-cover', x: 118, y: 168, w: 14, h: 10, fill: CONTAINER_TONES[3] }, // a basket of offcuts
-      { t: 'row', cls: 'sp-cot', x: 214, y: 34, w: 24, h: 8, step: 34, n: 2 },
-      { t: 'rect', cls: 'sp-cover', x: 228, y: 104, w: 14, h: 10, fill: CONTAINER_TONES[1] }, // a camphor chest
-      { t: 'rect', cls: 'sp-cover', x: 278, y: 112, w: 12, h: 12, fill: SILK[0] },
-      { t: 'rect', cls: 'sp-desk', x: 286, y: 160, w: 34, h: 8 }, // a hot plate and a kettle
+      { t: 'row', cls: 'sp-cover', x: 74, y: 40, w: 8, h: 26, step: 34, n: 3, axis: 'y', tones: SILK }, // bolts of silk on racks
+      { t: 'rect', cls: 'sp-desk', x: 36, y: 60, w: 12, h: 34 }, // the cutting table
+      { t: 'rect', cls: 'sp-cover', x: 72, y: 176, w: 12, h: 10, fill: CONTAINER_TONES[3] }, // a basket of offcuts
+      { t: 'rect', cls: 'sp-cover', x: 284, y: 66, w: 8, h: 26, fill: SILK[0] },
+      { t: 'rect', cls: 'sp-cover', x: 282, y: 140, w: 14, h: 10, fill: CONTAINER_TONES[1] }, // a camphor chest
+      { t: 'rect', cls: 'sp-desk', x: 286, y: 176, w: 34, h: 8 }, // a hot plate and a kettle
     ],
-    labels: [{ x: 40, y: 222, text: 'SILK & CREDIT' }, { x: 70, y: 34, text: 'THE SILK ROOM' }, { x: 196, y: 128, text: 'OUR ROOMS', hi: true }, { x: 256, y: 16, text: 'ROOF HATCH' }, { x: 70, y: 144, text: 'SHOP STAIR' }],
+    labels: [{ x: 40, y: 222, text: 'SILK & CREDIT' }, { x: 36, y: 34, text: 'THE SILK ROOM' }, { x: 150, y: 196, text: 'OUR ROOMS', hi: true }, { x: 256, y: 16, text: 'ROOF HATCH' }, { x: 36, y: 144, text: 'SHOP STAIR' }],
   },
-  // The Docks: a container office on the old pier, with a stove. Along the pier from the yard,
-  // between the stacks; out down the ladder to a boat.
+  // The Docks: a container office on the old pier, with a stove. Along the pier from the yard;
+  // out down the ladder to a boat. The pier's deck is the floor; the office is at its end.
   docks: {
-    ...hallSite('a container office on the old pier', 'Plan of our Docks hall: a container office at the end of the old pier, the stove, a desk and two cots, containers and bollards on the pier, the ladder down to a boat',
-      { exit: [338, 202], anchor: [292, 132], entry: [62, 130] }),
+    ...hallSite('a container office on the old pier', 'Plan of our Docks hall: a container office at the end of the old pier, the stove and a desk, the beds out on the deck, crates and pallets by the yard, the ladder down to a boat',
+      { exit: [338, 202], anchor: [290, 134], entry: [22, 134] }),
+    grid: [2, 3, 8, 5], bedCorner: [8, 3],
     shapes: [
       { t: 'rect', cls: 'sp-water', x: 0, y: 0, w: 360, h: 90 },
       { t: 'rect', cls: 'sp-water', x: 0, y: 180, w: 360, h: 60 },
@@ -534,53 +534,49 @@ export const HALLS = {
       { t: 'rect', cls: 'sp-pier', x: 40, y: 90, w: 320, h: 90 }, // the pier's deck: walkable, unlike the job maps' jetties
       { t: 'row', cls: 'sp-step', x: 330, y: 180, w: 14, h: 1.5, step: 5, n: 3, axis: 'y' }, // the ladder down
       { t: 'ellipse', cls: 'sp-cover', cx: 338, cy: 210, rx: 18, ry: 6, fill: '#3a2d22' }, // the boat
-      { t: 'rect', cls: 'sp-building', x: 232, y: 98, w: 98, h: 66 },
-      { t: 'rect', cls: 'sp-door', x: 229, y: 120, w: 4, h: 18 },
-      { t: 'rect', cls: 'sp-desk', x: 300, y: 104, w: 18, h: 10 }, // the stove
-      { t: 'rect', cls: 'sp-desk', x: 250, y: 144, w: 30, h: 10 },
-      { t: 'rect', cls: 'sp-cot', x: 298, y: 148, w: 24, h: 8 },
-      { t: 'rect', cls: 'sp-cover', x: 248, y: 108, w: 14, h: 10, fill: CONTAINER_TONES[3] },
-      { t: 'rect', cls: 'sp-cover', x: 150, y: 98, w: 27, h: 14, fill: CONTAINER_TONES[0] }, // containers on the pier
-      { t: 'rect', cls: 'sp-cover', x: 150, y: 150, w: 27, h: 14, fill: CONTAINER_TONES[2] },
-      { t: 'rect', cls: 'sp-cover', x: 198, y: 104, w: 7, h: 7, fill: '#2f3442' }, // bollards
-      { t: 'rect', cls: 'sp-cover', x: 198, y: 152, w: 7, h: 7, fill: '#2f3442' },
-      { t: 'rect', cls: 'sp-cover', x: 98, y: 138, w: 14, h: 12, fill: CONTAINER_TONES[1] }, // crates by the yard gate
-      { t: 'rect', cls: 'sp-cover', x: 90, y: 100, w: 12, h: 10, fill: CONTAINER_TONES[3] },
-      { t: 'rect', cls: 'sp-cover', x: 92, y: 120, w: 26, h: 8, fill: '#3a2d22' }, // a stack of pallets
+      { t: 'rect', cls: 'sp-building', x: 302, y: 96, w: 54, h: 74 },
+      { t: 'rect', cls: 'sp-door', x: 300, y: 118, w: 4, h: 18 },
+      { t: 'rect', cls: 'sp-desk', x: 336, y: 100, w: 16, h: 10 }, // the stove
+      { t: 'rect', cls: 'sp-desk', x: 308, y: 152, w: 26, h: 8 }, // the desk
+      { t: 'rect', cls: 'sp-cover', x: 310, y: 102, w: 12, h: 10, fill: CONTAINER_TONES[3] },
+      { t: 'rect', cls: 'sp-cover', x: 276, y: 96, w: 14, h: 10, fill: CONTAINER_TONES[0] }, // a cable drum by the office
+      { t: 'rect', cls: 'sp-cover', x: 274, y: 164, w: 26, h: 10, fill: CONTAINER_TONES[2] }, // a net bin
+      { t: 'rect', cls: 'sp-cover', x: 10, y: 98, w: 14, h: 12, fill: CONTAINER_TONES[1] }, // crates by the yard gate
+      { t: 'rect', cls: 'sp-cover', x: 28, y: 146, w: 8, h: 26, fill: '#3a2d22' }, // a stack of pallets
+      { t: 'rect', cls: 'sp-cover', x: 44, y: 100, w: 12, h: 10, fill: CONTAINER_TONES[3] },
+      { t: 'rect', cls: 'sp-cover', x: 46, y: 164, w: 7, h: 7, fill: '#2f3442' }, // a bollard
     ],
-    labels: [{ x: 6, y: 86, text: 'THE YARD' }, { x: 120, y: 192, text: 'THE OLD PIER' }, { x: 240, y: 92, text: 'OUR OFFICE', hi: true }, { x: 300, y: 226, text: 'BOAT' }],
+    labels: [{ x: 6, y: 86, text: 'THE YARD' }, { x: 120, y: 192, text: 'THE OLD PIER' }, { x: 290, y: 92, text: 'OUR OFFICE', hi: true }, { x: 300, y: 226, text: 'BOAT' }],
   },
   // The Basin: a flat over a tack workshop, the Old Stand outside the window. Up through the
   // workshop's trapdoor; out by the stair to the stable yard.
   basin: {
-    ...hallSite('a flat over a tack workshop', 'Plan of our Basin hall: the flat over the tack workshop, saddle racks, the workbench, two cots, the trapdoor up from the workshop, the stair down to the stable yard, the Old Stand through the window',
-      { exit: [12, 118], anchor: [62, 104], entry: [184, 178] }),
+    ...hallSite('a flat over a tack workshop', 'Plan of our Basin hall: the flat over the tack workshop, saddle racks, the workbench, the beds, the trapdoor up from the workshop, the stair down to the stable yard, the Old Stand through the window',
+      { exit: [12, 118], anchor: [56, 104], entry: [150, 202] }),
+    grid: [3, 2, 9, 5], bedCorner: [3, 2],
     shapes: [
       { t: 'rect', cls: 'sp-block', x: 60, y: 2, w: 240, h: 20 }, // the Old Stand across the way
       { t: 'row', cls: 'sp-window', x: 70, y: 8, w: 6, h: 4, step: 14, n: 16, tones: ['#ff9a3d', '#2a303b', '#ff9a3d', '#f2d541'] },
-      { t: 'rect', cls: 'sp-building', x: 20, y: 34, w: 320, h: 170 },
+      { t: 'rect', cls: 'sp-building', x: 20, y: 34, w: 320, h: 180 },
       { t: 'row', cls: 'sp-window', x: 120, y: 33, w: 18, h: 2, step: 40, n: 4, tones: ['#ff9a3d'] },
       { t: 'rect', cls: 'sp-door', x: 17, y: 108, w: 4, h: 18 },
       { t: 'row', cls: 'sp-step', x: 4, y: 128, w: 12, h: 1.5, step: 6, n: 10, axis: 'y' }, // the yard stair
-      { t: 'rect', cls: 'sp-cover', x: 176, y: 182, w: 18, h: 14, fill: '#1a1410' }, // the trapdoor's hatch, thrown open
-      { t: 'row', cls: 'sp-cot', x: 36, y: 46, w: 24, h: 8, step: 34, n: 2 },
-      { t: 'rect', cls: 'sp-cover', x: 84, y: 82, w: 14, h: 10, fill: SADDLE }, // saddle racks
-      { t: 'rect', cls: 'sp-cover', x: 50, y: 136, w: 14, h: 10, fill: '#3a2d22' }, // a tack trunk
-      { t: 'rect', cls: 'sp-cover', x: 100, y: 120, w: 26, h: 8, fill: SADDLE },
-      { t: 'rect', cls: 'sp-desk', x: 146, y: 150, w: 32, h: 10 }, // the workbench
-      { t: 'rect', cls: 'sp-cover', x: 214, y: 160, w: 14, h: 10, fill: SADDLE },
-      { t: 'rect', cls: 'sp-cover', x: 230, y: 130, w: 12, h: 10, fill: '#6b5a2a' }, // hay bales
-      { t: 'rect', cls: 'sp-cover', x: 132, y: 178, w: 12, h: 10, fill: '#6b5a2a' },
-      { t: 'rect', cls: 'sp-desk', x: 286, y: 60, w: 34, h: 9 }, // a kettle on a shelf
-      { t: 'rect', cls: 'sp-cover', x: 196, y: 144, w: 24, h: 14, fill: '#3a2d22' }, // tack trunks, stacked
+      { t: 'rect', cls: 'sp-cover', x: 160, y: 196, w: 18, h: 12, fill: '#1a1410' }, // the trapdoor's hatch, thrown open
+      { t: 'rect', cls: 'sp-desk', x: 40, y: 40, w: 34, h: 9 }, // a kettle on a shelf
+      { t: 'rect', cls: 'sp-cover', x: 74, y: 70, w: 8, h: 26, fill: SADDLE }, // saddle racks
+      { t: 'rect', cls: 'sp-cover', x: 40, y: 140, w: 14, h: 10, fill: '#3a2d22' }, // a tack trunk
+      { t: 'rect', cls: 'sp-desk', x: 96, y: 188, w: 32, h: 10 }, // the workbench
+      { t: 'rect', cls: 'sp-cover', x: 200, y: 192, w: 12, h: 10, fill: '#6b5a2a' }, // hay bales
+      { t: 'rect', cls: 'sp-cover', x: 226, y: 186, w: 24, h: 14, fill: '#3a2d22' }, // tack trunks, stacked
     ],
-    labels: [{ x: 120, y: 30, text: 'THE OLD STAND' }, { x: 60, y: 76, text: 'OUR FLAT', hi: true }, { x: 4, y: 232, text: 'YARD STAIR' }, { x: 200, y: 214, text: 'FROM THE WORKSHOP' }],
+    labels: [{ x: 120, y: 30, text: 'THE OLD STAND' }, { x: 100, y: 52, text: 'OUR FLAT', hi: true }, { x: 4, y: 232, text: 'YARD STAIR' }, { x: 180, y: 228, text: 'FROM THE WORKSHOP' }],
   },
   // Glass Heights: a service floor nobody upstairs remembers. Out of the service lift; away down
   // the maintenance stair.
   heights: {
-    ...hallSite('a service floor nobody upstairs remembers', 'Plan of our Glass Heights hall: a forgotten service floor of server racks and air handlers, cots between the machines, the service lift, the maintenance stair',
-      { exit: [30, 198], anchor: [74, 168], entry: [290, 110] }),
+    ...hallSite('a service floor nobody upstairs remembers', 'Plan of our Glass Heights hall: a forgotten service floor, server racks and air handlers along the walls, the beds, the service lift, the maintenance stair',
+      { exit: [30, 198], anchor: [62, 160], entry: [290, 110] }),
+    grid: [3, 1, 8, 5], bedCorner: [3, 5],
     shapes: [
       { t: 'rect', cls: 'sp-building', x: 10, y: 10, w: 340, h: 200 },
       { t: 'line', cls: 'sp-cable', x1: 10, y1: 30, x2: 350, y2: 30 },
@@ -588,16 +584,14 @@ export const HALLS = {
       { t: 'rect', cls: 'sp-room', x: 300, y: 88, w: 40, h: 44 }, // the service lift
       { t: 'rect', cls: 'sp-door', x: 297, y: 100, w: 4, h: 20 },
       { t: 'row', cls: 'sp-step', x: 18, y: 176, w: 24, h: 1.5, step: 5, n: 6, axis: 'y' }, // the maintenance stair
-      { t: 'row', cls: 'sp-cover', x: 40, y: 50, w: 30, h: 8, step: 44, n: 6, tones: ['#18222c'] }, // server racks
-      { t: 'row', cls: 'sp-cover', x: 40, y: 84, w: 30, h: 8, step: 44, n: 5, skip: [2], tones: ['#18222c'] },
-      { t: 'rect', cls: 'sp-cover', x: 52, y: 132, w: 30, h: 8, fill: '#18222c' },
-      { t: 'rect', cls: 'sp-cover', x: 96, y: 150, w: 30, h: 8, fill: '#18222c' },
-      { t: 'rect', cls: 'sp-cover', x: 156, y: 120, w: 16, h: 16, fill: '#1d2a34' }, // air handlers
-      { t: 'rect', cls: 'sp-cover', x: 244, y: 104, w: 14, h: 14, fill: '#1d2a34' },
-      { t: 'rect', cls: 'sp-cover', x: 236, y: 140, w: 30, h: 8, fill: '#18222c' },
-      { t: 'row', cls: 'sp-cot', x: 104, y: 178, w: 24, h: 8, step: 32, n: 2 },
+      { t: 'row', cls: 'sp-cover', x: 40, y: 46, w: 8, h: 30, step: 26, n: 2, tones: ['#18222c'] }, // server racks
+      { t: 'rect', cls: 'sp-cover', x: 40, y: 100, w: 8, h: 30, fill: '#18222c' },
+      { t: 'rect', cls: 'sp-cover', x: 70, y: 120, w: 8, h: 26, fill: '#18222c' },
+      { t: 'rect', cls: 'sp-cover', x: 276, y: 50, w: 16, h: 16, fill: '#1d2a34' }, // air handlers
+      { t: 'rect', cls: 'sp-cover', x: 278, y: 128, w: 8, h: 26, fill: '#18222c' },
+      { t: 'rect', cls: 'sp-cover', x: 300, y: 150, w: 30, h: 8, fill: '#18222c' },
     ],
-    labels: [{ x: 300, y: 146, text: 'SERVICE LIFT' }, { x: 60, y: 122, text: 'OUR FLOOR', hi: true }, { x: 16, y: 224, text: 'MAINTENANCE STAIR' }, { x: 160, y: 24, text: 'PLANT ROOM' }],
+    labels: [{ x: 300, y: 146, text: 'SERVICE LIFT' }, { x: 16, y: 96, text: 'OUR FLOOR', hi: true }, { x: 16, y: 224, text: 'MAINTENANCE STAIR' }, { x: 160, y: 24, text: 'PLANT ROOM' }],
   },
 };
 

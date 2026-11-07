@@ -3,11 +3,14 @@
 // pieces. Tap a free cell, pick a piece, Place; tap a placed piece to turn or remove it. Markup only:
 // app.js owns the clicks (data-action) and core/hallbuild.js the rules.
 //
-// ui: helpers from app.js { esc, money, cityName }. view: { district, cell: [x, y] | null, piece, rot, picked }.
+// The hall's beds are blocks on the floor (2026-11-07): tap one to see who sleeps in it.
+//
+// ui: helpers from app.js { esc, money, cityName }. view: { district, cell: [x, y] | null, piece, rot, picked }
+// (picked: a built piece's id, or a bed's, 'bed-1' ...).
 
-import { HALL_BUILD, PIECES } from '../data/hallBuild.js';
-import { buildableCells, builtCells, canPlace, canRemove, canTurn, floorOf, floorUsed, hallMap, hallSiteFor, pieceAt, pieceCells, refundOf } from '../core/hallbuild.js';
-import { hallIn } from '../core/halls.js';
+import { BED, HALL_BUILD, PIECES } from '../data/hallBuild.js';
+import { bedsOnFloor, buildableCells, builtCells, canPlace, canRemove, canTurn, floorOf, floorUsed, hallMap, hallSiteFor, pieceAt, pieceCells, refundOf } from '../core/hallbuild.js';
+import { hallIn, residents } from '../core/halls.js';
 import { sitePlanSvg } from './siteplan.js';
 import { defencesIn, defenceCut } from '../core/raids.js';
 
@@ -46,16 +49,20 @@ function grid(state, view, esc) {
   const hall = hallIn(state, view.district);
   const free = buildableCells(hallMap(view.district));
   const built = builtCells(hall);
-  const sel = view.picked ? (hall.build ?? []).find((b) => b.id === view.picked) : null;
+  const beds = bedsOnFloor(hall);
+  const who = residents(state, view.district);
+  const bedAt = (x, y) => beds.findIndex((b) => b.x === x && b.y === y);
+  const sel = view.picked ? [...beds, ...(hall.build ?? [])].find((b) => b.id === view.picked) : null;
   const cells = [...free].map((k) => {
     const [x, y] = k.split(',').map(Number);
     const taken = built.has(k);
+    const bed = bedAt(x, y);
     const on = view.cell && view.cell[0] === x && view.cell[1] === y;
-    const label = taken ? `${PIECES[pieceAt(hall, x, y).piece].name}, row ${y + 1}, column ${x + 1}` : `Free square, row ${y + 1}, column ${x + 1}`;
-    return `<rect x="${x * C + 1.5}" y="${y * C + 1.5}" width="${C - 3}" height="${C - 3}" class="bgrid__cell ${taken ? 'is-built' : ''} ${on ? 'is-on' : ''}" data-action="build-cell" data-id="${x},${y}" role="button" tabindex="0" aria-label="${esc(label)}"/>`;
+    const label = bed >= 0 ? `Bed, ${who[bed] ? `${who[bed].handle} sleeps here` : 'free'}` : taken ? `${PIECES[pieceAt(hall, x, y).piece].name}, row ${y + 1}, column ${x + 1}` : `Free square, row ${y + 1}, column ${x + 1}`;
+    return `<rect x="${x * C + 1.5}" y="${y * C + 1.5}" width="${C - 3}" height="${C - 3}" class="bgrid__cell ${taken ? 'is-built' : ''} ${bed >= 0 ? `is-bed ${who[bed] ? 'is-slept' : ''}` : ''} ${on ? 'is-on' : ''}" data-action="build-cell" data-id="${x},${y}" role="button" tabindex="0" aria-label="${esc(label)}"/>`;
   }).join('');
   const outline = sel ? (() => {
-    const p = PIECES[sel.piece];
+    const p = PIECES[sel.piece] ?? { size: [1, 1] };
     const [w, h] = sel.rot && p.turns ? [p.size[1], p.size[0]] : p.size;
     return `<rect x="${sel.x * C + 0.5}" y="${sel.y * C + 0.5}" width="${w * C - 1}" height="${h * C - 1}" class="bgrid__sel"/>`;
   })() : view.cell ? `<rect x="${view.cell[0] * C + 0.5}" y="${view.cell[1] * C + 0.5}" width="${C - 1}" height="${C - 1}" class="bgrid__sel"/>` : '';
@@ -66,6 +73,13 @@ function grid(state, view, esc) {
 function sheet(state, view, ui) {
   const { esc, money } = ui;
   const hall = hallIn(state, view.district);
+  const beds = bedsOnFloor(hall);
+  const bed = beds.findIndex((b) => b.id === view.picked);
+  if (bed >= 0) {
+    const op = residents(state, view.district)[bed];
+    return `<div class="bsheet"><p class="bsheet__head"><strong>${esc(BED.name)}</strong> <span class="muted small">${bed + 1} of ${beds.length}</span></p>
+      <p class="small">${op ? `<strong>${esc(op.handle)}</strong> sleeps here.` : 'Nobody sleeps here yet.'} ${esc(BED.about)}</p></div>`;
+  }
   const sel = view.picked ? (hall.build ?? []).find((b) => b.id === view.picked) : null;
   if (sel) {
     const p = PIECES[sel.piece];
@@ -77,7 +91,7 @@ function sheet(state, view, ui) {
         <button class="btn" data-action="build-remove" data-id="${esc(sel.id)}" ${rm.ok ? '' : 'disabled'}>Remove · ${money(refundOf(sel.piece))} back</button>
       </div>${rm.ok ? '' : `<p class="small bsheet__why">${esc(rm.reason)}.</p>`}</div>`;
   }
-  if (!view.cell) return '<div class="bsheet"><p class="small muted">Tap a free square on the plan, then pick what goes there. Tap something built to turn or remove it.</p></div>';
+  if (!view.cell) return '<div class="bsheet"><p class="small muted">Tap a free square on the plan, then pick what goes there. Tap something built to turn or remove it, or a bed to see who sleeps there.</p></div>';
   if (!view.piece) return '<div class="bsheet"><p class="small muted">Pick what goes there, below.</p></div>';
   const p = PIECES[view.piece];
   const can = canPlace(state, view.district, view.piece, view.cell[0], view.cell[1], view.rot);
@@ -114,7 +128,7 @@ export function renderHallBuild(ui, state, view) {
     <section class="hallbuild">
       <div class="bhead"><button class="linkbtn" data-action="back">‹ Halls</button><span class="bhead__level">level ${hall.level}</span></div>
       <h1 class="btitle">Build · the ${esc(cityName(view.district).replace(/^The /, ''))} hall</h1>
-      <div class="bbar" role="status"><span>Floor <b>${used}/${floor}</b></span><span class="bbar__seg" aria-hidden="true">${Array.from({ length: floor }, (_, k) => `<i class="${k < used ? 'is-on' : ''}"></i>`).join('')}</span><span>${money(state.cash)}</span></div>
+      <div class="bbar" role="status"><span>Floor <b>${used}/${floor}</b></span><span class="bbar__beds">Beds <b>${residents(state, view.district).length}/${bedsOnFloor(hall).length}</b></span><span class="bbar__seg" aria-hidden="true">${Array.from({ length: floor }, (_, k) => `<i class="${k < used ? 'is-on' : ''}"></i>`).join('')}</span><span>${money(state.cash)}</span></div>
       <div class="bplan">${sitePlanSvg({ site: hallSiteFor(state, view.district) })}${grid(state, view, esc)}</div>
       ${sheet(state, view, ui)}
       <div class="subtabs bsubs" role="group" aria-label="What to build">

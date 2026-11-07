@@ -25,7 +25,7 @@ import { landmark } from './landmarks.js';
 import { renderHallBuild, hallBuildLine } from './hallbuild.js';
 import { crewOutMap } from './minimap.js';
 import { siteFor } from './siteplan.js';
-import { placePiece, removePiece, turnPiece, pieceAt, refundOf, canRemove } from '../core/hallbuild.js';
+import { placePiece, removePiece, turnPiece, pieceAt, bedAt, refundOf, canRemove } from '../core/hallbuild.js';
 import { PIECES } from '../data/hallBuild.js';
 
 import { advanceDay, calendar, isBlocked, seasonStartDay } from '../core/time.js';
@@ -262,7 +262,8 @@ function onClick(e) {
     case 'build-hall': screen = 'crew'; openOperativeId = null; openArmoury = false; buildView = { district: id, cell: null, piece: null, rot: 0, picked: null, tab: 'defence' }; window.scrollTo?.(0, 0); break;
     case 'build-cell': {
       const [x, y] = id.split(',').map(Number);
-      const on = pieceAt(hallIn(state, buildView.district), x, y);
+      const hall = hallIn(state, buildView.district);
+      const on = pieceAt(hall, x, y) ?? bedAt(hall, x, y);
       buildView = on ? { ...buildView, cell: null, picked: on.id } : { ...buildView, cell: [x, y], picked: null };
       break;
     }

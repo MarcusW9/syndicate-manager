@@ -7,6 +7,11 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-07 · Beds on the floor, and a whole floor to build on
+- A hall's beds are now blocks on its build plan, one per bed, instead of a "BUNKS" label over cots that never changed. A bed someone sleeps in is outlined; tap one to see who sleeps there. Expanding a hall adds two more blocks. Nothing can be built on a bed.
+- Every hall's floor is now one clean rectangle of squares to build on. The hall's own things (the altar, the crates, the stove, the silk racks, the server racks) stand along the walls instead of leaving holes in the floor, so they're still cover in a raid. The build screen's top line shows the beds too ("Beds 5/8").
+- In a raid, the beds are on the map as cots, the same half cover the drawn cots gave before.
+
 ## 2026-11-07 · A plan for Phase 3
 - No game change. `drafts/PROPOSAL-phase-3.md` plans what comes after the halls: heists (prep jobs that each change a big finale), the Legend defining job, rival tongs (a league of other tongs, generated each game, with a Lantern List of the city's best runners), then loyalty, runners being tempted away, and retirement. It lists the owner's calls before each part.
 
