@@ -4,7 +4,8 @@
 // Mak Chi-on appears in two crises. The final beat hands over the Basin hall, the Unlisted Rooms
 // above the tack workshop, leased from a small property trust (WORLD.md "The tong's halls").
 // Original stats, difficulties and costs preserved.
-// The opening job for this district's hall (core/halls.js introduceHalls): never dealt to the
+// The opening job for this district's hall (data/halls.js HALL_SITES names it, and the client who
+// asks it; core/halls.js introduceHalls): never dealt to the
 // board at random; the contact asks for it once the tong is welcome. Owner's text (2026-11-06).
 
 /** @type {import('../../core/types.js').MissionTemplate} */
@@ -12,7 +13,6 @@ export const THE_FLAT_DOESNT_EXIST = {
   id: 'the_flat_doesnt_exist',
   name: 'The Flat Doesn\'t Exist',
   district: 'basin',
-  opening: 'basin', // the hall it opens (data/halls.js HALL_SITES)
   threat: 3,
   pay: 5000,
   days: 1,

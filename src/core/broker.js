@@ -13,6 +13,7 @@ import { NAMES } from '../config/names.js';
 import { hashRng, pick } from './rng.js';
 import { adjustTrust } from './clients.js';
 import { hasRoom } from './halls.js';
+import { isOpeningJob } from '../data/halls.js';
 import { hallShut } from './raids.js';
 import { generateRecruit, LEAD_DAYS } from './recruits.js';
 import { money } from './money.js';
@@ -21,7 +22,7 @@ const round50 = (n) => Math.round(n / 50) * 50;
 const inText = (d) => NAMES.districtsInText?.[d] ?? NAMES.districts?.[d] ?? d;
 
 /** The kinds of small work a district's board brokers: its routine and rookie jobs (never an opening job). */
-export const brokeredWork = (district) => MISSIONS.filter((m) => m.district === district && (m.routine || m.rookie) && !m.opening);
+export const brokeredWork = (district) => MISSIONS.filter((m) => m.district === district && (m.routine || m.rookie) && !isOpeningJob(m.id));
 
 /**
  * Sunday, before the bills: every work board brokers its week. Adds the fees to cash and returns

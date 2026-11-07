@@ -5,7 +5,8 @@
 // (data/sites.js HALLS; owner's hall lore 2026-11-07). The job itself is to be rewritten by the owner
 // around the stallholders' association and a disputed arrears notice.
 // Rolls aimed at 8-13. No Silver Fan grudge added.
-// The opening job for this district's hall (core/halls.js introduceHalls): never dealt to the
+// The opening job for this district's hall (data/halls.js HALL_SITES names it, and the client who
+// asks it; core/halls.js introduceHalls): never dealt to the
 // board at random; the contact asks for it once the tong is welcome. Owner's text (2026-11-06).
 
 /** @type {import('../../core/types.js').MissionTemplate} */
@@ -13,7 +14,6 @@ export const BACK_RENT = {
   id: 'back_rent',
   name: 'Back Rent',
   district: 'nightMarket',
-  opening: 'nightMarket', // the hall it opens (data/halls.js HALL_SITES)
   threat: 2,
   pay: 3500,
   days: 1,

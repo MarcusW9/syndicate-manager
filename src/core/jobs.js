@@ -7,6 +7,7 @@ import { raidTemplate } from '../data/raids.js';
 import { MISSIONS } from '../data/missions.js';
 import { TWISTS } from '../data/twists.js';
 import { CLIENTS } from '../data/clients.js';
+import { isOpeningJob } from '../data/halls.js';
 import { pick, makeRng, hashRng } from './rng.js';
 import { NAMED_OFFER, NAMED_TEXT } from '../data/fame.js';
 import { nextRng } from './random.js';
@@ -209,7 +210,7 @@ export function postJobs(state, count = NEW_PER_WEEK, { slot = 0, routineOnly = 
   // owner's "middle version"); a bigger tong's extra offers are mostly routine. Offers are what pay
   // the bills, so the count stays three a week: routine work changes the mix, not the amount.
   // Opening jobs are asked for by a contact (core/halls.js), never dealt at random.
-  const unlocked = MISSIONS.filter((m) => !m.opening && jobUnlocked(state, m.id));
+  const unlocked = MISSIONS.filter((m) => !isOpeningJob(m.id) && jobUnlocked(state, m.id));
   // Routine work comes from clients still calling you, or as walk-in work.
   const calling = callingClients(state);
   const routineClient = (m) => (m.walkIn ? null : calling.find((c) => c.jobs.includes(m.id)) ?? false);

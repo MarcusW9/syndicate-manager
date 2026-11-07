@@ -6,7 +6,8 @@
 // The final beat passes the crew to Forewoman Tse and the Underterrace, the Glass Heights hall
 // (owner's hall lore 2026-11-07). To be replaced by the owner's Still on the Books.
 // Original stats, difficulties, costs and job structure preserved.
-// The opening job for this district's hall (core/halls.js introduceHalls): never dealt to the
+// The opening job for this district's hall (data/halls.js HALL_SITES names it, and the client who
+// asks it; core/halls.js introduceHalls): never dealt to the
 // board at random; the contact asks for it once the tong is welcome. Owner's text (2026-11-06).
 
 /** @type {import('../../core/types.js').MissionTemplate} */
@@ -14,7 +15,6 @@ export const THERE_IS_NO_FORTY_FIRST_FLOOR = {
   id: 'there_is_no_forty_first_floor',
   name: 'There Is No Forty-First Floor',
   district: 'heights',
-  opening: 'heights', // the hall it opens (data/halls.js HALL_SITES)
   threat: 3,
   pay: 5500,
   days: 2,

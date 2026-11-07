@@ -5,7 +5,7 @@ import { heatIn, hottest, HEAT_DISTRICTS } from '../core/heat.js';
 import { buyPrice, buyHall, openingFor, bedsOf, hallIn, residents, freeBeds, canOpenHall, openHall, nextHallExpansion, expandHall, canMove, moveToHall } from '../core/halls.js';
 import { GANGS, GRUDGE, grudgeOf, jobGrudge, grudgeWord, gangsOn } from '../core/gangs.js';
 import { defenceCut, openRaids, raidOn, raidPrice, canBuyOff, defenders, raidChoices, payOffRaid, hallShut, raidWho, raidBy, isGangRaid } from '../core/raids.js';
-import { HALL_SITES, HOME_HALL } from '../data/halls.js';
+import { HALL_SITES, HOME_HALL, isOpeningJob } from '../data/halls.js';
 import { billDue, mondayBrief, crewStandard, crewAgainstStandard } from '../core/week.js';
 import { crewLead } from '../core/lead.js';
 import { rankOf } from '../core/tong.js';
@@ -2592,7 +2592,7 @@ function renderDistrictLore() {
     const c = DISTRICT_CARDS[key];
     const on = loreDistrict === key;
     const turf = DISTRICTS[key]?.turf;
-    const jobs = MISSIONS.filter((m) => m.district === key && !m.opening).map((m) => m.name);
+    const jobs = MISSIONS.filter((m) => m.district === key && !isOpeningJob(m.id)).map((m) => m.name);
     const art = districtArt(key);
     return `
     <li class="lorecard ${on ? 'is-open' : ''}" style="--turf:${turfHex(key) ?? 'var(--line)'}">

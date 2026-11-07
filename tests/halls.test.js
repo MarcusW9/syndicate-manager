@@ -21,7 +21,7 @@ const { importSave } = await import('../src/save/save.js');
 function welcome(seed = 1) {
   const s = createNewGame({ seed, startCrew: 'fresh' });
   s.reputation = HALL_SITES.nightMarket.rep;
-  adjustTrust(s, 'rao', 10);
+  adjustTrust(s, 'ip', 10);
   s.cash = 30000;
   s.openings = { nightMarket: { status: 'done', jobId: null } };
   return s;

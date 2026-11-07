@@ -6,7 +6,7 @@
 // Moving into another hall takes the day, not the trip: they count there at once, but are
 // settling in and can't work until tomorrow (the city crosses in under an hour). Pure logic.
 
-import { HALL_SITES, HALL_EXPANSION, HOME_HALL, OPENING, HALL_BUY } from '../data/halls.js';
+import { HALL_SITES, HALL_EXPANSION, HOME_HALL, OPENING, HALL_BUY, isOpeningJob } from '../data/halls.js';
 import { addOffer, jobUnlocked, templateById } from './jobs.js';
 import { hashRng, pick } from './rng.js';
 import { NAMES } from '../config/names.js';
@@ -200,7 +200,7 @@ function askOpening(state, district, retry = false) {
   let templateId = site.opening;
   if (retry) {
     // The second ask is one of their own jobs, picked by the seed, as the test.
-    const own = (contact?.jobs ?? []).filter((id) => templateById(id) && !templateById(id).routine && !templateById(id).opening && jobUnlocked(state, id));
+    const own = (contact?.jobs ?? []).filter((id) => templateById(id) && !templateById(id).routine && !isOpeningJob(id) && jobUnlocked(state, id));
     templateId = own.length ? pick(hashRng(state.seed, 'opening', district, state.day), own) : site.opening;
   }
   addOffer(state, templateId, { clientId: site.contact });

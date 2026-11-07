@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { createNewGame, SAVE_VERSION } from '../src/core/state.js';
 import { advanceDay } from '../src/core/time.js';
 import { canOpenHall, introduceHalls, openingOf, openingResult } from '../src/core/halls.js';
-import { HALL_SITES, OPENING } from '../src/data/halls.js';
+import { HALL_SITES, OPENING, openingHallOf, isOpeningJob } from '../src/data/halls.js';
 import { CLIENTS } from '../src/data/clients.js';
 import { MISSIONS } from '../src/data/missions.js';
 import { templateById, postJobs } from '../src/core/jobs.js';
@@ -22,7 +22,7 @@ function welcome(seed = 1) {
   const s = createNewGame({ seed, startCrew: 'fresh' });
   s.inbox = [];
   s.reputation = HALL_SITES.nightMarket.rep;
-  adjustTrust(s, 'rao', 10);
+  adjustTrust(s, 'ip', 10);
   s.cash = 30000;
   return s;
 }
@@ -33,12 +33,14 @@ test('every hall outside Old Town has its own opening job, in the game, and neve
     if (site.deposit == null) { assert.equal(site.opening, undefined, `${d}: the home hall needs no favour`); continue; }
     const tpl = templateById(site.opening);
     assert.ok(tpl, `${d}: ${site.opening} exists`);
-    assert.equal(tpl.opening, d);
+    assert.equal(openingHallOf(tpl.id), d, 'the registry is HALL_SITES, not the template (2026-11-07)');
+    assert.equal(tpl.opening, undefined);
+    assert.ok(CLIENTS.some((c) => c.id === site.contact), `${d}: asked by a client`);
     assert.equal(tpl.district, d);
   }
-  assert.equal(MISSIONS.filter((m) => m.opening).length, 4);
+  assert.equal(MISSIONS.filter((m) => isOpeningJob(m.id)).length, 4);
   const s = createNewGame({ seed: 9, startCrew: 'fresh' });
-  for (let i = 0; i < 60; i++) { s.jobs = []; postJobs(s, 3); assert.ok(s.jobs.every((j) => !templateById(j.templateId).opening), 'not on the board by chance'); }
+  for (let i = 0; i < 60; i++) { s.jobs = []; postJobs(s, 3); assert.ok(s.jobs.every((j) => !isOpeningJob(j.templateId)), 'not on the board by chance'); }
 });
 
 test('welcome: on Monday the contact asks the favour instead of offering the hall, once', () => {
@@ -46,7 +48,7 @@ test('welcome: on Monday the contact asks the favour instead of offering the hal
   introduceHalls(s);
   const job = opening(s);
   assert.equal(job.templateId, 'back_rent');
-  assert.equal(job.clientId, 'rao');
+  assert.equal(job.clientId, 'ip', 'Mrs. Ip asks it, and her trust moves (2026-11-07)');
   assert.equal(job.expiresDay, s.day + OPENING.boardDays, 'on the board for two weeks');
   assert.ok(s.inbox.some((m) => m.kind === 'opening' && /favour to ask/.test(m.subject) && /Back Rent/.test(m.body)));
   assert.ok(!s.inbox.some((m) => m.kind === 'hall-offer'), 'no hall yet');
@@ -79,9 +81,11 @@ test('walking away: they ask again in two weeks, with one of their own jobs as t
   s.day = openingOf(s, 'nightMarket').retryDay;
   introduceHalls(s);
   const retry = opening(s);
-  const rao = CLIENTS.find((c) => c.id === 'rao');
-  assert.ok(rao.jobs.includes(retry.templateId), `${retry.templateId} is one of Rao's own jobs`);
-  assert.ok(!templateById(retry.templateId).opening && !templateById(retry.templateId).routine);
+  // The second ask is one of the contact's own bigger jobs; Mrs. Ip (2026-11-07) has only routine work, so she asks Back Rent again.
+  const ip = CLIENTS.find((c) => c.id === 'ip');
+  const own = ip.jobs.filter((id) => !templateById(id).routine);
+  assert.ok(own.length ? own.includes(retry.templateId) : retry.templateId === 'back_rent', `${retry.templateId}: Mrs. Ip's own, or her favour again`);
+  assert.equal(retry.clientId, 'ip', 'her trust, not Rao\'s');
   assert.equal(openingOf(s, 'nightMarket').retry, true);
   assert.ok(s.inbox.some((m) => m.kind === 'opening' && /try us again/.test(m.subject)));
   openingResult(s, retry.id, 'completed');

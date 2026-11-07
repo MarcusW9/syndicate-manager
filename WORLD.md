@@ -216,7 +216,7 @@ The crew's fee is agreed in ¥, usually cash when discretion matters. Expense co
 
 Not every job needs a clean victory. Sometimes the sensible ending is a witnessed handover, a written refusal, a cancelled collection or bringing back half of what was requested. A quiet, incomplete result is better than becoming the explanation for somebody else's misconduct.
 
-There are still only five recurring clients. The people here may call again, remember a kindness or warn the crew away from a bad collection, but they do not become permanent patrons simply because their names are known.
+There are only seven recurring clients, and the newest two (Mrs. Ip and Forewoman Tse) are small ones. The people here may call again, remember a kindness or warn the crew away from a bad collection, but they do not become permanent patrons simply because their names are known.
 
 Someone who buys the crew dinner on Sunday may refuse to recognise them in a lobby on Monday. Both moments can be sincere.
 
@@ -290,7 +290,7 @@ Guns are ordinary kit for anyone who works for money: second-hand pistols in wai
 
 ## The clients
 
-Narrative dossiers for the five recurring clients: who they are, what the street knows, what they hide, and how their story unfolds as the crew's trust with them reaches 60, 75 and 90 (or falls below 20). The trust arcs and introductions are canon but not built yet. When they become in-game messages, trim each moment to 2–4 short lines for the phone.
+Narrative dossiers for the recurring clients: the five big ones, then two small ones promoted from the street (2026-11-07). Who they are, what the street knows, what they hide, and how their story unfolds as the crew's trust with them reaches 60, 75 and 90 (or falls below 20). The trust arcs and introductions are canon but not built yet. When they become in-game messages, trim each moment to 2–4 short lines for the phone.
 
 ### Auntie Fung (Fung Wai-han)
 *Old Town · Brass Anchor Society*
@@ -430,6 +430,22 @@ Ruth Okonkwo brokers the work Aether-Harbour Logistics can't put its name to: fr
 
 **When your name starts to travel (the Amber Reach opens):**
 > "Your crew has a name now, which is inconvenient for both of us. The Amber Reach is where money changes trains. Meet me on the fifth floor of Pearl Haven House, back booth, and order the milk tea."
+
+### Mrs. Ip (a small client)
+*The Night Market · fish-ball stall at the Neon Dragon*
+
+Promoted from the street cast (owner, 2026-11-07). A practical market operator who never stops talking. Her trust is her own: she works on Silver Fan turf without being Silver Fan, and neither Rao nor Fung sponsors her work. She asks Back Rent (the stallholders' association's arrears notice); she knows the people affected and can judge whether the crew handled it properly, and doing it right is how the tong is introduced to Wok Court.
+
+**Her work:** modest and steady. Deliveries, supplier disputes and missing stock; helping market workers and neighbouring stalls; practical jobs where keeping people fed matters more than looking impressive.
+
+### Forewoman Tse (Tse Yuk-lan; a small client)
+*Glass Heights · the Underterrace maintenance cooperative*
+
+Promoted with the Underterrace (owner, 2026-11-07). The cooperative's representative, protecting its home and working arrangements. She deals with Veridian-Apex's estate contractors without working for the corporation, and has nothing to do with Mr. Szeto. She will ask Still on the Books: recovering the cooperative's occupancy agreement and getting it recognised, which opens the Underterrace to the tong.
+
+**Her work:** contractor disputes, equipment recovery and maintenance access; missing records, and workers caught between employers; the infrastructure beneath corporate comfort.
+
+**Trust, standing and access are three things.** A client's trust is "do I trust this crew with another job?"; a faction's view of the tong is its own; a hall opens when the crew has earned the introduction and met the occupancy conditions. Where someone works is not who they work for: two clients may one day belong to the same faction and still disagree about the crew.
 
 ## Street characters
 
@@ -687,9 +703,13 @@ CLIENTS (local powers a small crew can reach, below the corps):
 - Ruth Okonkwo: broker for AHL's off-books arm; trusts nobody; meets in the Spice Route
   Canteen back booth once she trusts you. Secret: keeps a file on every deniable job
   that could sink AHL, and wants out of the city.
+- Small clients (2026-11-07): Mrs. Ip (Night Market fish-ball stall at the Neon Dragon;
+  deliveries, supplier disputes, missing stock; not Silver Fan; asks Back Rent) and
+  Forewoman Tse (Tse Yuk-lan, the Underterrace maintenance cooperative in Glass Heights;
+  contractor disputes, lost records, maintenance access; not Veridian-Apex, not Szeto;
+  asks Still on the Books). A client's trust is personal, not their faction's.
 STREET CAST (rookie work): Doc Siu (Old Town; ex-surgeon, unlicensed clinic under
-Tenement Block 9, dry praise); Mrs. Ip (Night Market fish-ball stall at the Neon Dragon,
-moves crates, tallies Fung's night loads at the old pier); Meena D'Sa (Rao's seamstress and counterkeeper); Tang Wai-chiu (Silver Fan
+Tenement Block 9, dry praise); Meena D'Sa (Rao's seamstress and counterkeeper); Tang Wai-chiu (Silver Fan
 collector, third-floor parlour); Uncle Tariq (remittance booth, Pearl Haven House, backed
 by Rao); Pang Man-ki (Veridian-Apex clinic administrator); Ho Sze-lam (Hoi-Sing field
 supervisor, Old Town); Mak Chi-on (Racing Association stable-access official).

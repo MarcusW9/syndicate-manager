@@ -7,6 +7,10 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-07 · Mrs. Ip and Forewoman Tse are clients
+- Two new, smaller clients with their own trust: **Mrs. Ip** (Night Market) and **Forewoman Tse** (Glass Heights). They're on the Jobs tab's client strip and in Lore › Clients.
+- Mrs. Ip now gives her own routine work (Closing Stack, Crate Return, Inspection Hours, which came from Auntie Fung) and asks Back Rent, so finishing it builds her trust, not Madam Rao's. Forewoman Tse asks the Glass Heights hall's favour; Mr. Szeto has nothing to do with the Underterrace.
+
 ## 2026-11-07 · Two opening jobs brought in line with the halls' lore
 - The Flat Doesn't Exist: Okonkwo now has the flat rented to you through the property trust's contracts man ("On paper it's storage"), not by Aether-Harbour, and the way out is the Buckle Passage, not the old yard stair.
 - Quarter to Two: the Ferryman no longer hands over the office key himself; he calls up to the pier cooperative, whose container office is going.
