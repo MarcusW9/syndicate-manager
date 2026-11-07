@@ -107,7 +107,7 @@ Visiting specialists live in serviced accommodation while local subcontractors h
 
 #### Names and origins
 
-Bellweather and Lin Sau exist beyond the playable city. For now, one is a distant western port and the other an inland manufacturing metropolis; their countries, borders and wider histories remain undefined.
+Bellweather and Lin Sau exist beyond the playable city. For now, one is a distant western port and the other an inland manufacturing metropolis; their countries, borders and wider histories remain undefined. So does **Porto Clara**, a casino island a ferry ride down the coast, where the city's gamblers go when Lantern Bay's tables aren't enough.
 
 Local Cantonese names retain Cantonese romanisation. Foreign firms may carry inherited surnames or established brands; Hang Yuen Systems and Lin Sau use Cantonese-rendered names in Lantern Bay's narration, without establishing how people in their home market pronounce them.
 
@@ -121,7 +121,7 @@ The game shows the **English names**; the Chinese names are flavour for district
 **Open from the start**
 - **Old Town** (舊城, Kau Shing). The damp, ancestral heart of the city: herbal tea shops hiding favour ledgers, rusted tenements clinging to the hillside. *Landmarks:* Auntie Fung's tea shop on Alley 4; the Red Incense Shrine of To Dei Gung; the rusted iron stairwell of Tenement Block 9. *Control:* the Brass Anchor Society; Hoi-Sing nodes and Ghost Circuit tunnels underneath. *Police:* sporadic and corrupt; officers come in pairs and take bribes to ignore unlicensed generators. *3am:* damp concrete, burning joss paper, mahjong tiles clacking down wet alleys. *Custom:* a cup of bitter tea on the doorstep at midnight for the ghosts of the 2052 blackout.
 - **The Docks** (霧港, Mo Kong, "fog harbour"). A deafening sprawl of automated cranes, diesel and saltwater where freighters unload contraband into the city. *Landmarks:* Pier 12 Gantry Gate; the Ferryman's night-boat landing; the Red Lanterns' Warehouse 7. *Control:* Aether-Harbour Logistics on paper, the Red Lanterns on the tarmac. *Police:* heavy; the Harbour Police "Wet Sleeve" unit runs rackets alongside the gangs. *3am:* amber floodlights in harbour fog, screeching cranes, clanking steel. *Custom:* never whistle past the container stacks, or the water ghosts (水鬼, sui gwai) will trip you into the harbour.
-- **The Night Market** (夜光街, Yeh Kwong Kai, "glow street"). A neon maze of dai pai dongs, counterfeit implant clinics and alleys where fortunes go on one hand of mahjong. *Landmarks:* Madam Rao's sari shop, the Silk & Credit Emporium; the Neon Dragon dai pai dong; the third-floor mahjong parlour. *Control:* the Silver Fan Circle; Hoi-Sing nodes. *Police:* rarely seen and fully complicit; they take their cut at the noodle stalls and never go near the back-alley operating rooms. *3am:* wok smoke, flickering holo-ads, murmuring gamblers. *Custom:* if a neon sign flickers three times over your head, toss a coin over your left shoulder.
+- **The Night Market** (夜光街, Yeh Kwong Kai, "glow street"). A neon maze of dai pai dongs, counterfeit implant clinics and alleys where fortunes go on one hand of mahjong. *Landmarks:* Madam Rao's sari shop, the Silk & Credit Emporium; the Neon Dragon dai pai dong; the third-floor mahjong parlour; the *Hei Lok*, a casino airship moored above the market (below). *Control:* the Silver Fan Circle; Hoi-Sing nodes. *Police:* rarely seen and fully complicit; they take their cut at the noodle stalls and never go near the back-alley operating rooms. *3am:* wok smoke, flickering holo-ads, murmuring gamblers. *Custom:* if a neon sign flickers three times over your head, toss a coin over your left shoulder.
 - **Glass Heights** (玻璃山, Po Lei Shan), officially **Apex Ridge** since Veridian-Apex renamed it after the 2035 Annexation; nobody on the street calls it that. Sterile, climate-controlled corporate towers, labs and clinics where the air is filtered and street-level misery is kept out of sight. *Landmarks:* Veridian-Apex Central Tower; the Glass-Bridge Promenade; Executive Spa & Neural Clinic 1. *Control:* Veridian-Apex BioTech. *Police:* none to speak of; security drones and private guards treat anyone without a pass as a biohazard. *3am:* humming air filters, glass monoliths in cold blue light. *Custom:* never press a lift button with a bare index finger, or the lower districts' bad karma rubs off. Tenants, commuters and the work they bring: "Glass Heights: life behind the glass", below.
 
 - **The Basin** (鑊底, Wok Dai, "bottom of the wok"; Cantonese check pending), around **Lantern Course** (燈籠馬場, Dang Lung Ma Cheung). A natural bowl between Old Town and the lower slopes under Glass Heights, its floodlit oval visible from hundreds of cramped balconies. The neighbourhood grew around gambling. Outside the gates: dai pai dongs, old betting shops, cheap bars, pawn shops, tip sellers, back-alley implant clinics, bookmakers, tack workshops, noodle shops, Silver Fan loan runners, and pensioners studying form over tea. Above it all, the corporate boxes: Glass Heights arrives through a private elevated entrance to watch the same horses as somebody who spent their last ¥50 downstairs. *Landmarks:* Lantern Course; the Old Stand; the Undercroft beneath the betting halls. *Control:* the Lantern Bay Racing Association, officially; the Silver Fan Circle owns everything the Association won't take. *Police:* Association security inside the gates, the Harbour Police outside, both very interested in race nights. *3am:* the racing's done; cleaning drones creep through mountains of paper slips, stable hands hose sweat off the horses, drunk punters argue over the last tram, and bookmakers settle up under amber security lights. *Custom:* nobody throws away a winning ticket inside the course. Even after collecting, you fold it twice and carry it out through the gates first, or you throw tomorrow's luck away with today's. Total nonsense; everyone does it. Open. Jobs: **The Favourite** (Auntie Fung: someone is paying stable hands to stop Pepper), **Last Ticket** (Ruth Okonkwo: her ¥800,000 paper ticket vanished in a blackout) and **Wrong Horse** (the Ferryman: the horse he carried has the right chip and the wrong markings).
@@ -150,6 +150,8 @@ The game shows the **English names**; the Chinese names are flavour for district
 - *3am:* night-shift couriers murmuring in the halls, spice sizzling on Floor 5, fluorescent tubes flickering over concrete that smells of cardamom, diesel and sweet tea.
 - *Sunday afternoon:* music spills into the atrium, children run between floors, and domestic workers gather over home cooking to sing, laugh and swap news from home.
 - *Customs:* Filipino residents leave a coin or a bright ribbon on the window frame before going back to work on Sunday evening, for *swerte* (good luck) and a safe return. South Asian shopkeepers hang a lime and seven green chillies on a thread over the door against the evil eye (*nazar*), replaced every Saturday.
+
+**The *Hei Lok*** (喜樂, Hei Lok, "joy"; Cantonese check pending), the Night Market's casino airship. A long, patched-silver hull tethered to a mooring mast above the market, with a sealed micro-reactor in its keel, so it has never needed Hoi-Sing's grid. It belongs to **Hei Lok Leisure**, a small family company that also runs function rooms and hotel bars; the ship is its "private members" baccarat floor. Gaming licences cover premises on the ground, which is the point: the Racing Association keeps trying to close the loophole, and the Silver Fan takes the same floor fee from it as from any stall below. Guests ride a cage lift up the mast; staff, caterers and contractors use the service gantry. In a Signal 8 it comes down onto a cradle on a car-park roof, and the tables keep running. *Rumour:* the reactor's shielding was bought second-hand, from a ship nobody will name.
 
 **Unlocking (planned, not built):** the three reputation promotions open one district each, in order: Street → District opens the Silt (the Ferryman introduces you), District → City opens the Amber Reach (Ruth Okonkwo), City → Regional opens Iron Peak (Mr. Szeto). Promotions are permanent; reputation can slip within a tier but never demotes, so a district never closes again.
 
@@ -272,6 +274,8 @@ Rooms beneath the corporate terraces, opening onto a sunken maintenance court: "
 Street implants are cheap, second-hand and always glitching; Glass Heights wears smooth luxury hardware. Pushing implants too hard brings on neural load: migraines, memory stutter, emotional deadness. Street crews treat it not with corporate therapy patches but with bitter herbal infusions from Auntie Fung's shop, damp cloths and downtime in dim mahjong parlours. The megacorps own the infrastructure; working people treat tech like a rusty outboard motor, duct-taped, prayed over and kept running out of stubbornness.
 
 Getting past people is street kit too, and nothing in it makes anyone invisible: a **ghost kit** is whatever a runner carries for it, picks and shims for the old doors, a lock decoder for the newer ones, a **heat veil** (a hooded poncho of heat-damping cloth with a glare strip: hard to see on thermal, a smear on a camera) or a **lens blinder** (a palm emitter that whites out a camera for a few seconds). Street medics carry a trauma bag; the lucky ones carry a **med gun**, a pistol-grip scanner that reads the wound and fires an injector.
+
+Nothing in Lantern Bay is offline. A runner **on the wire** sits in the van or a stairwell with a deck and rides whatever a place has: loops a camera, holds a door, kills the lights, listens in on a handset, takes a crane, a gantry or a parked car for a few seconds. It runs through the runner's implant, so every move costs neural load. What's there to ride depends on where you are: in Glass Heights, cameras, lifts and permissions, all of them watched; at the Docks, automated cranes, container gantries, trucks and Hang Yuen's half-tested fleet software; in Old Town, handsets, radios, Hoi-Sing meters and a block's streetlights, little security to beat but a crowd of other people's devices; in the Night Market, holo-ads, neon and clinic gear; in the Basin, race-night telemetry and the floodlights. The bypasses come from the Ghost Circuit, for a price.
 
 ## Weapons and drones
 Guns are ordinary kit for anyone who works for money: second-hand pistols in waistbands at the Docks, smartlinked rifles in Glass Heights security lockers, printed receivers sold under the counter in the Night Market. Owning one isn't the crime; being noticed using one is. Shots fired bring the Harbour Police and the cameras, so pros prefer a quiet way in and save the gun for when it goes wrong. Drones are everywhere: corporate delivery swarms, police spotters, and patched-together street drones flown off a cheap implant, which costs the pilot neural load.
@@ -644,6 +648,9 @@ Neural load = migraines, memory stutter, emotional deadness; the street treats i
 herbal infusions and downtime, not corporate therapy.
 Stealth kit is street-level too: picks, lock decoders, heat veils that blur you on
 thermal and on cameras; never true invisibility.
+A runner "on the wire" works a site from outside through whatever is networked there
+(cameras, doors, lights, handsets, power; at the Docks, cranes, gantries and trucks)
+with a deck, at a neural-load cost; each district offers different things to ride.
 WEAPONS: guns and tech are standard kit for mercs and crews (cyberpunk setting); using
 one is what gets noticed, so gunfire brings police and heat. Drones are everywhere
 (corporate, police, patched street drones flown off an implant at a neural-load cost).
@@ -651,7 +658,8 @@ one is what gets noticed, so gunfire brings police and heat. Drones are everywhe
 DISTRICTS (always use these English names):
 - Open at the start: Old Town (damp tenements, tea shops; Brass Anchor Society) · the
   Docks (cranes, containers; Aether-Harbour on paper, Red Lanterns on the tarmac) · the
-  Night Market (dai pai dongs, chrome clinics, mahjong; Silver Fan Circle) · Glass
+  Night Market (dai pai dongs, chrome clinics, mahjong; Silver Fan Circle; the Hei Lok,
+  Hei Lok Leisure's casino airship, tethered above it, off the grid on a micro-reactor) · Glass
   Heights (corporate towers and labs; Veridian-Apex; officially renamed "Apex Ridge"
   but nobody on the street calls it that; foreign firms rent beneath it, and the people
   who keep it running commute up and stay late; the Lower Arcade is public, every door
@@ -683,8 +691,8 @@ well connected; fears race fixing above all). Wildcard: Ghost Circuit (data libe
 drainage tunnels and bomb shelters). Foreign firms (below the megacorps, Glass Heights
 tenants): Morrow & Venn (old merchant-finance house from Bellweather: shipping credit,
 insurance, estates; Venn House) and Hang Yuen Systems (industrial automation from Lin
-Sau, chasing AHL and Hoi-Sing contracts). Bellweather and Lin Sau are offstage and
-undefined.
+Sau, chasing AHL and Hoi-Sing contracts). Bellweather, Lin Sau and Porto Clara (a casino
+island down the coast) are offstage and undefined.
 
 CLIENTS (local powers a small crew can reach, below the corps):
 - Auntie Fung (Fung Wai-han, 71): Old Town tea shops and quiet fencing; senior Brass

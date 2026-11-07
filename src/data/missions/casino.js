@@ -1,22 +1,22 @@
-// Casino con: a face-led job. Low violence, high nerve.
+// Casino con: a face-led job. Low violence, high nerve. Aboard the Hei Lok, Hei Lok Leisure's casino
+// airship tethered above the Night Market (WORLD.md; owner, 2026-11-07): no gang's room, so no grudge.
 
 /** @type {import('../../core/types.js').MissionTemplate} */
 export const CASINO = {
   id: 'casino',
   name: 'Casino Con',
   district: 'nightMarket',
-  against: 'redLanterns', // the job hurts this gang: finishing it adds to their grudge (core/gangs.js)
   threat: 2,
   pay: 4500,
   days: 1,
   crewSize: 3,
   keyStats: ['social', 'tech', 'cool'],
-  brief: 'A floating baccarat room above the Night Market is taking a property developer for everything he has. Win it back from them, quietly.',
+  brief: 'The Hei Lok, the casino airship tethered above the Night Market, is taking a property developer for everything he has. Win it back from them, quietly.',
   beats: [
-    'Red lanterns, cigarette smoke and the click of chips. {face} takes a seat at the high table.',
+    'Paper lanterns sway as the hull turns in the wind; cigarette smoke and the click of chips. {face} takes a seat at the high table.',
     '{tech} is in the back with a laptop, reading the shuffler\'s signals.',
     'The pile of chips in front of {face} keeps growing. The pit boss starts to notice.',
-    'Cash out, slowly, with a smile. Down the stairs into the noise of the market.',
+    'Cash out, slowly, with a smile. The cage lift rattles down the mast into the noise of the market.',
   ],
   crises: [
     {
@@ -56,7 +56,7 @@ export const CASINO = {
     {
       id: 'recognised',
       situations: ['crowd'],
-      text: 'A regular at the table squints at {face}. "Don\'t I know you? You were at the Macau tables last year."',
+      text: 'A regular at the table squints at {face}. "Don\'t I know you? You were at the Porto Clara tables last year."',
       focusRole: 'face',
       choices: [
         { id: 'deny', label: '{face} laughs it off', kind: 'adapt', stat: 'social', difficulty: 12,
@@ -88,19 +88,19 @@ export const CASINO = {
       ],
     },
     {
-      id: 'triad_owner',
+      id: 'triad_owner', // the id kept so a save mid-job still loads; the owner is now Hei Lok Leisure's family
       situations: ['threat'],
-      text: 'The owner comes down to watch. He has a Red Lantern tattoo on his wrist. This is their room.',
+      text: 'The owner\'s son comes down from the observation deck to watch. He grew up on this ship, and he has never lost at his own table.',
       choices: [
         { id: 'respect', label: 'Pay respect: a share of the winnings', kind: 'adapt', stat: 'cool', sure: true, difficulty: 0, cost: { payCut: 0.25 },
-          success: 'A respectful envelope. He nods and goes back upstairs. Business is business.', failure: '', failureInjury: 'none',
-          report: { success: 'The crew offered the owner a respectful envelope, and he returned upstairs. Pay -25%.' } },
+          success: 'A respectful envelope. He nods and climbs back to the deck. Business is business.', failure: '', failureInjury: 'none',
+          report: { success: 'The crew offered the owner\'s son a respectful envelope, and he returned to the observation deck. Pay -25%.' } },
         { id: 'continue', label: 'Keep winning in front of him', kind: 'push', stat: 'social', difficulty: 14, cost: { heat: 1 },
-          success: 'He watches every hand and finds nothing. He even laughs at the end.', failure: 'He sees enough. You\'re escorted out and told never to come back.', failureInjury: 'light', failureCost: { payCut: 0.5 },
-          report: { success: 'The owner watched every hand, found nothing and eventually laughed. Heat +1.', failure: 'The owner saw enough; the crew was thrown out and someone was hurt. Pay -50%, heat +1.' } },
-        { id: 'abort', label: 'Abort: not worth crossing the Red Lanterns', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -5 },
+          success: 'He watches every hand and finds nothing. He even laughs at the end.', failure: 'He sees enough. You\'re walked to the cage lift and told never to come back.', failureInjury: 'light', failureCost: { payCut: 0.5 },
+          report: { success: 'The owner\'s son watched every hand, found nothing and eventually laughed. Heat +1.', failure: 'The owner\'s son saw enough; the crew was thrown off the ship and someone was hurt. Pay -50%, heat +1.' } },
+        { id: 'abort', label: 'Abort: not worth a lifetime ban', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -5 },
           success: 'You fold, thank the dealer and leave.', failure: '', failureInjury: 'none',
-          report: { success: 'The crew folded, thanked the dealer and left rather than cross the Red Lanterns.' } },
+          report: { success: 'The crew folded, thanked the dealer and left rather than risk a lifetime ban.' } },
       ],
     },
     {

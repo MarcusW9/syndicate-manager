@@ -22,7 +22,7 @@ const round50 = (n) => Math.round(n / 50) * 50;
 const inText = (d) => NAMES.districtsInText?.[d] ?? NAMES.districts?.[d] ?? d;
 
 /** The kinds of small work a district's board brokers: its routine and rookie jobs (never an opening job). */
-export const brokeredWork = (district) => MISSIONS.filter((m) => m.district === district && (m.routine || m.rookie) && !isOpeningJob(m.id));
+export const brokeredWork = (district) => MISSIONS.filter((m) => m.district === district && (m.routine || m.rookie) && !isOpeningJob(m.id) && !m.heistOnly);
 
 /**
  * Sunday, before the bills: every work board brokers its week. Adds the fees to cash and returns

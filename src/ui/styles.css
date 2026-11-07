@@ -1781,3 +1781,29 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .secs .sec.is-locked { border-left: 2px dashed var(--line); }
 .secs .sec strong { font-family: var(--display, inherit); letter-spacing: 0.06em; text-transform: uppercase; }
 .hallpage__plan { position: relative; }
+
+/* Heists (2026-11-07, core/heists.js): the heist on, at the top of Ops. A sharp panel with its
+   bottom-right corner cut and a sodium tab (the big score, like a named offer's flag); each prep
+   step a row with its mark, what it's for, what it gives the finale in cyan, and a Plan or Buy. */
+.heist { position: relative; margin: 0 0 16px; padding: 10px 12px 12px; background: var(--panel-2); border: 1px solid var(--line); border-left: 2px solid var(--warn); clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%); }
+.heist::before { content: ''; position: absolute; left: -1px; top: -1px; width: 36px; height: 2px; background: var(--warn); }
+.heist__kicker { margin: 0; color: var(--warn); font-family: var(--display, inherit); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase; }
+.heist__name { margin: 2px 0 4px; font-family: var(--display, inherit); font-weight: 700; font-size: 1.25rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.heist__when { margin: 0 0 8px; color: var(--muted); }
+.heist__steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.heist__step { min-height: 44px; display: flex; align-items: center; gap: 10px; padding: 4px 0 4px 2px; border-top: 1px solid var(--line); }
+.heist__step:first-child { border-top: 0; }
+.heist__mark { flex: 0 0 18px; text-align: center; font-weight: 700; color: var(--muted); }
+.heist__step.is-done .heist__mark, .heist__step.is-bought .heist__mark { color: #5fe0a5; }
+.heist__step.is-failed .heist__mark { color: var(--danger); }
+.heist__text { flex: 1 1 auto; display: grid; gap: 1px; min-width: 0; font-size: 0.9rem; }
+.heist__fx { color: var(--accent-2); font-size: 0.8rem; }
+.heist__step.is-failed .heist__fx { color: var(--muted); }
+.heist__go { flex: none; min-height: 44px; padding: 0 10px; background: none; border: 1px solid var(--line); color: var(--accent-2); font-family: var(--display, inherit); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%); }
+.heist__go.is-quiet { display: inline-flex; align-items: center; border: 0; color: var(--muted); cursor: default; }
+.heist__finale { margin-top: 10px; width: 100%; }
+.heistline__fx { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 2px; }
+.heistline__fx .is-on { color: var(--accent-2); }
+.heistline__fx .is-off { color: var(--muted); }
+.heistline p { margin: 0; }
+.heistnote { display: block; width: 100%; min-height: 44px; margin: 0 0 6px; padding: 6px 10px; text-align: left; background: rgba(242, 213, 65, 0.06); border: 0; border-left: 2px solid var(--warn); color: var(--text); font: inherit; cursor: pointer; }

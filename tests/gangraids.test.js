@@ -51,7 +51,8 @@ const abortAll = { critical: () => 'extract', pending: (o) => (o.includes('out')
 
 test('jobs that hurt a gang say so; every tag names a gang; the Brass Anchor is never one', () => {
   const tagged = MISSIONS.filter((t) => t.against);
-  assert.deepEqual(tagged.map((t) => t.id).sort(), ['casino', 'chrome', 'herbal_run', 'house_advantage', 'inspection_hours', 'protection']);
+  // Casino Con left the list 2026-11-07: its room is the Hei Lok, Hei Lok Leisure's airship, not the Red Lanterns' (owner; DESIGN.md).
+  assert.deepEqual(tagged.map((t) => t.id).sort(), ['chrome', 'herbal_run', 'house_advantage', 'inspection_hours', 'protection']);
   for (const t of tagged) assert.ok(GANGS[t.against], t.id);
   assert.ok(!Object.values(GANGS).some((g) => /Brass Anchor/.test(g.name)));
   assert.deepEqual(gangsOn('oldTown'), [], 'no gang raids Old Town');

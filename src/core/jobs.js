@@ -147,6 +147,11 @@ export function jobView(state, job) {
     hinted: Boolean(job.hinted),
     rumour,
     askedFor: job.askedFor ?? null, // an Elite the client asked for by name (+NAMED_OFFER.payBonus if they go)
+    // A heist (core/heists.js): the finale carries what its prep changed; a prep job names its step.
+    heist: job.heist ?? null,
+    heistStep: job.heistStep ?? null,
+    drop: job.drop ?? [],
+    inside: job.inside ?? null,
   };
 }
 
@@ -210,7 +215,7 @@ export function postJobs(state, count = NEW_PER_WEEK, { slot = 0, routineOnly = 
   // owner's "middle version"); a bigger tong's extra offers are mostly routine. Offers are what pay
   // the bills, so the count stays three a week: routine work changes the mix, not the amount.
   // Opening jobs are asked for by a contact (core/halls.js), never dealt at random.
-  const unlocked = MISSIONS.filter((m) => !isOpeningJob(m.id) && jobUnlocked(state, m.id));
+  const unlocked = MISSIONS.filter((m) => !isOpeningJob(m.id) && !m.heistOnly && jobUnlocked(state, m.id)); // opening and heist jobs come only when asked
   // Routine work comes from clients still calling you, or as walk-in work.
   const calling = callingClients(state);
   const routineClient = (m) => (m.walkIn ? null : calling.find((c) => c.jobs.includes(m.id)) ?? false);

@@ -10,7 +10,7 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 ## 2026-11-07 · New opening jobs for Wok Court and the Underterrace
 - **Back Rent** is new: Mrs. Ip's stallholders' association paid its rent, but a new agent says otherwise and has a contractor ready to lock their spare rooms. Find the payment, get the notice withdrawn and the order cancelled in writing, and Mrs. Ip introduces you to the association and the Late Rooms.
 - **Still on the Books** replaces There Is No Forty-First Floor as Glass Heights' opening job: Forewoman Tse's cooperative has been marked vacant after thirty years. Recover its occupancy agreement and get it recognised, and the Underterrace is open to you.
-- Both build trust with Mrs. Ip and Forewoman Tse. Saves upgrade (v49): an old Forty-First Floor offer on the board becomes Still on the Books.
+- Both build trust with Mrs. Ip and Forewoman Tse. Saves upgrade (v50): an old Forty-First Floor offer on the board becomes Still on the Books.
 
 ## 2026-11-07 · Mrs. Ip and Forewoman Tse are clients
 - Two new, smaller clients with their own trust: **Mrs. Ip** (Night Market) and **Forewoman Tse** (Glass Heights). They're on the Jobs tab's client strip and in Lore › Clients.
@@ -23,20 +23,20 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 ## 2026-11-07 · The four halls get their names and stories
 - The Night Market hall is now **Wok Court**: rooms behind a dai pai dong courtyard, leased from the stallholders' association. Mrs. Ip makes the introduction; the tong no longer lives above Madam Rao's shop. The Docks' hall is **the Stove Pier**, the Basin's **the Unlisted Rooms**, Glass Heights' **the Underterrace**, introduced by Forewoman Tse.
 - Every part, lane, yard, gate and the things lying about outside have their own names and descriptions on the build screen and the hall's page, and each raid opens with a line of its own ("The Cart Gate bangs against its frame...").
-- The Night Market and Glass Heights halls no longer wait on a client's trust: reputation and the opening favour open them. The Night Market now needs reputation 40 (was 25), so it opens about when it did before. Back Rent and There Is No Forty-First Floor now end by pointing you to the new halls; their full rewrites are coming.
+- The Night Market and Glass Heights halls no longer wait on a client's trust: reputation and the opening favour open them. The Night Market still opens at reputation 25. Back Rent and There Is No Forty-First Floor now end by pointing you to the new halls; their full rewrites are coming.
 
 ## 2026-11-07 · Every hall grows into a compound
 - The Night Market, Docks, Basin and Glass Heights halls now grow like Old Town. Each starts as its first building and the lane beside it; Expand takes the building across the lane, then the walled yard behind with its gate, then a small building across the passage. Each part adds two beds (the yard's go in the second building). Prices: ¥20,000, ¥30,000, ¥40,000, a little more in Glass Heights.
 - Each hall has its own ground and look: the Night Market's market lane and cart court, the Docks' walkway and container yard, the Basin's course lane and stable yard, Glass Heights' service corridor and plant deck. The Docks and the Basin are drawn the other way round. The part names are placeholders until their lore is written (`drafts/BRIEF-hall-compounds.md`).
 - In every hall, rooms go inside and defences go outside, where a raid is fought between the buildings. A raid's opening line says which way it came in.
-- Saves upgrade (v48): anything already built in those four halls is cleared and paid back in full, with a note.
+- Saves upgrade (v49): anything already built in those four halls is cleared and paid back in full, with a note.
 
 ## 2026-11-07 · The Old Town hall grows into a compound
 - The Old Town hall is now a block of separate buildings with space between them. You start with the room above the noodle shop and the lane beside it. Each Expand takes the next part: the flat across the lane (¥20,000), the walled yard behind with a gate onto the back alley (¥30,000), then the back kitchen across the passage (¥40,000). Each brings two more beds, and once the whole block is held there's nothing more to expand.
 - No floor allowance in Old Town: every square of the parts you hold is yours to build on. Parts you don't hold yet are hatched on the plan; tap the next one to take it. Squares kept clear for a way in are faintly marked, and tapping one says why.
 - Raids on Old Town are fought outside, between the buildings: up the lane from the street, or, once you hold the yard, through the yard gate. The buildings are solid in a fight, so defences belong in the lane and the yard.
 - The hall's page lists the block's parts, and Expand says which part it takes.
-- Saves upgrade (v47): anything already built in the Old Town hall is cleared and paid back in full, with a note in the inbox. The other halls are unchanged for now.
+- Saves upgrade (v48): anything already built in the Old Town hall is cleared and paid back in full, with a note in the inbox. The other halls are unchanged for now.
 
 ## 2026-11-07 · A mock-up: halls that grow into compounds
 - No game change. `drafts/prototypes/hall-compound.html` shows the Old Town hall growing with each Expand: the room, the flat next door, the yard behind with a gate, then the back kitchen and the street shutter, a compound. You build zoomed in to one part at a time. For the owner to judge before anything is built.
@@ -50,6 +50,27 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - A hall's beds are now blocks on its build plan, one per bed, instead of a "BUNKS" label over cots that never changed. A bed someone sleeps in is outlined; tap one to see who sleeps there. Expanding a hall adds two more blocks. Nothing can be built on a bed.
 - Every hall's floor is now one clean rectangle of squares to build on. The hall's own things (the altar, the crates, the stove, the silk racks, the server racks) stand along the walls instead of leaving holes in the floor, so they're still cover in a raid. The build screen's top line shows the beds too ("Beds 5/8").
 - In a raid, the beds are on the map as cots, the same half cover the drawn cots gave before.
+## 2026-11-07 · Proposals for piloting, medical and leadership
+- No game change. Three proposals in `drafts/` follow the stat-usage results: driving becomes piloting and is worth time (`PROPOSAL-piloting.md`), medical becomes the support stat with named wounds (`PROPOSAL-medical.md`), and leadership and judgment arrive with a Leader slot (`PROPOSAL-leadership.md`). Each lists the owner's calls before anything is built.
+
+## 2026-11-07 · Measuring which stats matter
+- Tools only, no game change. `scripts/sim-stats.mjs` plays a year of the game 60 times under five ways of playing (careful stealth with Joss's picks, loud, mixed approaches, the tong running every crew, and always a Wheels) and counts every roll by stat: how often it's rolled, on how many jobs, how many rolls were close calls, how many failures cost something, and whether specialists use their main stat. It then gives everyone +3 in one stat at a time to see what that changes by week 52. The counting only reads what each job already writes down, so no roll changes; a test checks the same seed ends with the same cash either way. The plan and the agreed thresholds for cutting, reworking or rebalancing a stat are in `drafts/PLAN-stat-usage.md`.
+
+## 2026-11-07 · Madam Rao's own prep jobs, and the Hei Lok
+- **The Big Table now has its own six prep jobs** in place of borrowed ones, two for each step: The Guest Copy or After the Applause (a briefing on the guests, staff and routes), An Old Account or Someone to Cover (the pit boss's night off), and Service Included or Manual Handling (a maintenance window that slows the casino's alerts). They're danger 2 jobs for three, pay ¥3,200–4,000, and only come up as Rao's prep.
+- **The casino is the *Hei Lok*,** a casino airship tethered above the Night Market and owned by a small family company, Hei Lok Leisure. Nobody's gang owns it, so **Casino Con (and Rao's heist) no longer angers the Red Lanterns**; the crisis where the owner comes down to watch is now the owner's son, and the crew leaves by the cage lift down the mast.
+- A regular who recognises your face now remembers you from the Porto Clara tables.
+- **New words throughout:** Madam Rao's and Mr. Szeto's messages, what each prep step is for, and what it gives the finale. Buying a step from a fixer now says what you're buying.
+
+## 2026-11-07 · Heists: Madam Rao's Big Table
+- **The first heist.** Around reputation 15 (about ten weeks in), Madam Rao asks you to the biggest night of a baccarat room over Glow Street: **The Big Table**, three weeks away.
+- **Three prep jobs go on the board at once**, each flagged "Prep · The Big Table". Each one you finish makes the night easier, and the finale's plan shows how: intel (+1 on every roll), the pit boss not watching the table, or the danger one step lower.
+- **Prep that goes wrong isn't the end.** Walk away or fail and she finds you another job for it, once. After that you can **buy it from a fixer** (Ops: Buy) or go without.
+- **The finale goes up in the third week** and stays until Sunday: Casino Con, paying about ¥11,000, at danger 3 (2 with the prep). Send them, watch, or take command. Finish it for the pay and +5 reputation. Walk away, or let the week pass, and it's over.
+- **Ops shows the heist on top:** each step, what it gives, and a Plan or Buy. Monday's briefing and Sunday's summary say how far the prep has got.
+- **A second heist for later:** Mr. Szeto's Seventy-One Floors (the Penthouse Heist, ¥28,000) once you have three halls and reputation 60.
+- Both heists use existing jobs for now; their own stories come later.
+- Save format v47. Older saves carry on; the heist is offered the first Monday you qualify.
 
 ## 2026-11-07 · A plan for Phase 3
 - No game change. `drafts/PROPOSAL-phase-3.md` plans what comes after the halls: heists (prep jobs that each change a big finale), the Legend defining job, rival tongs (a league of other tongs, generated each game, with a Lantern List of the city's best runners), then loyalty, runners being tempted away, and retirement. It lists the owner's calls before each part.

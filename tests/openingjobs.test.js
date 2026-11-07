@@ -147,9 +147,9 @@ test('the owner\'s opening jobs (2026-11-07): Back Rent is Mrs. Ip\'s, Still on 
   assert.ok(!line.includes('{'), 'every token filled');
 });
 
-test('saves from v48: a Forty-First Floor offer becomes Still on the Books, Tse\'s; a Back Rent offer moves to Mrs. Ip', async () => {
+test('saves from v49: a Forty-First Floor offer becomes Still on the Books, Tse\'s; a Back Rent offer moves to Mrs. Ip', async () => {
   const s = createNewGame({ seed: 6 });
-  s.version = 48;
+  s.version = 49;
   s.jobs = [{ id: 'j7', templateId: 'there_is_no_forty_first_floor', clientId: 'szeto', expiresDay: 20 }, { id: 'j8', templateId: 'back_rent', clientId: 'rao', expiresDay: 20 }];
   const up = await importSave({ text: async () => JSON.stringify(s) });
   assert.equal(up.version, SAVE_VERSION);

@@ -1,4 +1,5 @@
 // Development simulation helper: a rookie joins and works regular jobs.
+import { HEISTS } from '../src/data/heists.js';
 import { createNewGame } from '../src/core/state.js';
 import * as M from '../src/core/mission.js';
 import { advanceDay, calendar } from '../src/core/time.js';
@@ -27,6 +28,10 @@ export function makeRookie({ role = 'infiltrator', age = 20, start = 11, ceiling
 export function developRookie(seed, rookieOpts, { jobs = 22, mentor = true } = {}) {
   let s = createNewGame({ seed });
   s.cash = 1e7; // money isn't under test here
+  // Growth on ordinary work: no heist comes to these runs (core/heists.js), so its prep jobs don't
+  // change which jobs the rookie learns on (2026-11-07, DESIGN.md: mentoring is still +0.96 over 120
+  // runs with heists in, but the 15-run sample moved).
+  s.heists = Object.fromEntries(HEISTS.map((h) => [h.id, { status: 'missed', steps: {} }]));
   s.crew.push(makeRookie(rookieOpts));
   const main = ROLE_PRIMARY[rookieOpts?.role ?? 'infiltrator'];
   let done = 0;

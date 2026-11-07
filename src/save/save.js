@@ -615,7 +615,13 @@ function migrate(state) {
     state.version = 46;
   }
   if (state.version === 46) {
-    // v47: the Old Town hall is a compound that grows with Expand (data/sites.js HALLS.oldTown
+    // v47: heists (core/heists.js, DESIGN.md 2026-11-07). No heist has been offered in an older save;
+    // the first Monday that meets a heist's gate offers it.
+    state.heists = state.heists ?? {};
+    state.version = 47;
+  }
+  if (state.version === 47) {
+    // v48: the Old Town hall is a compound that grows with Expand (data/sites.js HALLS.oldTown
     // `parts`, DESIGN.md 2026-11-07), drawn anew, so its squares are not where they were. What was
     // built there is paid back in full, with a note; the beds and the level stay as they are.
     const hall = (state.halls ?? []).find((h) => h.district === 'oldTown');
@@ -632,11 +638,11 @@ function migrate(state) {
         blocking: false, read: false,
       });
     }
-    state.version = 47;
+    state.version = 48;
   }
-  if (state.version === 47) {
-    // v48: the other four halls are compounds too (DESIGN.md 2026-11-07), drawn anew: what was built
-    // in each is paid back in full, with a note, as Old Town's was at v47.
+  if (state.version === 48) {
+    // v49: the other four halls are compounds too (DESIGN.md 2026-11-07), drawn anew: what was built
+    // in each is paid back in full, with a note, as Old Town's was at v48.
     for (const hall of state.halls ?? []) {
       if (hall.district === 'oldTown' || !hall.build?.length) continue;
       const back = hall.build.reduce((n, b) => n + (PIECES[b.piece]?.cost ?? 0), 0);
@@ -650,10 +656,10 @@ function migrate(state) {
         blocking: false, read: false,
       });
     }
-    state.version = 48;
+    state.version = 49;
   }
-  if (state.version === 48) {
-    // v49: Glass Heights' opening favour is Still on the Books, asked by Forewoman Tse (DESIGN.md
+  if (state.version === 49) {
+    // v50: Glass Heights' opening favour is Still on the Books, asked by Forewoman Tse (DESIGN.md
     // 2026-11-07); There Is No Forty-First Floor is retired. An offer of it on the board becomes the
     // new job, Tse's; a run already under way finishes as it was (data/missions.js RETIRED_MISSIONS).
     // The Night Market's favour stays back_rent, now Mrs. Ip's: an offer of it moves to her too.
@@ -661,7 +667,7 @@ function migrate(state) {
       if (job.templateId === 'there_is_no_forty_first_floor') { job.templateId = 'still_on_the_books'; job.clientId = 'tse'; }
       if (job.templateId === 'back_rent') job.clientId = 'ip';
     }
-    state.version = 49;
+    state.version = 50;
   }
   return state;
 }

@@ -296,10 +296,10 @@ test('the raid picks its way in from what the hall holds, and its map shows the 
   assert.ok(pickSite('oldTown', 'r', 'raid:oldTown', st.activeMission.build).shapes.some((x) => x.cls === 'sp-gate'));
 });
 
-test('saves from v46 have what was built in Old Town paid back, with a note', async () => {
+test('saves from v47 have what was built in Old Town paid back, with a note', async () => {
   const { importSave } = await import('../src/save/save.js');
   const s = createNewGame({ seed: 3 });
-  s.version = 46;
+  s.version = 47;
   s.halls[0].build = [{ id: 'oldTown-1', piece: 'plate', x: 3, y: 2, rot: 0, day: 1 }, { id: 'oldTown-2', piece: 'barricade', x: 4, y: 2, rot: 0, day: 1 }];
   const cash = s.cash;
   const up = await importSave({ text: async () => JSON.stringify(s) });
