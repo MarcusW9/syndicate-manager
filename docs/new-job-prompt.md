@@ -49,6 +49,9 @@ Neural load = migraines, memory stutter, emotional deadness; the street treats i
 herbal infusions and downtime, not corporate therapy.
 Stealth kit is street-level too: picks, lock decoders, heat veils that blur you on
 thermal and on cameras; never true invisibility.
+A runner "on the wire" works a site from outside through whatever is networked there
+(cameras, doors, lights, handsets, power; at the Docks, cranes, gantries and trucks)
+with a deck, at a neural-load cost; each district offers different things to ride.
 WEAPONS: guns and tech are standard kit for mercs and crews (cyberpunk setting); using
 one is what gets noticed, so gunfire brings police and heat. Drones are everywhere
 (corporate, police, patched street drones flown off an implant at a neural-load cost).

@@ -225,6 +225,8 @@ Street implants are cheap, second-hand and always glitching; Glass Heights wears
 
 Getting past people is street kit too, and nothing in it makes anyone invisible: a **ghost kit** is whatever a runner carries for it, picks and shims for the old doors, a lock decoder for the newer ones, a **heat veil** (a hooded poncho of heat-damping cloth with a glare strip: hard to see on thermal, a smear on a camera) or a **lens blinder** (a palm emitter that whites out a camera for a few seconds). Street medics carry a trauma bag; the lucky ones carry a **med gun**, a pistol-grip scanner that reads the wound and fires an injector.
 
+Nothing in Lantern Bay is offline. A runner **on the wire** sits in the van or a stairwell with a deck and rides whatever a place has: loops a camera, holds a door, kills the lights, listens in on a handset, takes a crane, a gantry or a parked car for a few seconds. It runs through the runner's implant, so every move costs neural load. What's there to ride depends on where you are: in Glass Heights, cameras, lifts and permissions, all of them watched; at the Docks, automated cranes, container gantries, trucks and Hang Yuen's half-tested fleet software; in Old Town, handsets, radios, Hoi-Sing meters and a block's streetlights, little security to beat but a crowd of other people's devices; in the Night Market, holo-ads, neon and clinic gear; in the Basin, race-night telemetry and the floodlights. The bypasses come from the Ghost Circuit, for a price.
+
 ## Weapons and drones
 Guns are ordinary kit for anyone who works for money: second-hand pistols in waistbands at the Docks, smartlinked rifles in Glass Heights security lockers, printed receivers sold under the counter in the Night Market. Owning one isn't the crime; being noticed using one is. Shots fired bring the Harbour Police and the cameras, so pros prefer a quiet way in and save the gun for when it goes wrong. Drones are everywhere: corporate delivery swarms, police spotters, and patched-together street drones flown off a cheap implant, which costs the pilot neural load.
 
@@ -579,6 +581,9 @@ Neural load = migraines, memory stutter, emotional deadness; the street treats i
 herbal infusions and downtime, not corporate therapy.
 Stealth kit is street-level too: picks, lock decoders, heat veils that blur you on
 thermal and on cameras; never true invisibility.
+A runner "on the wire" works a site from outside through whatever is networked there
+(cameras, doors, lights, handsets, power; at the Docks, cranes, gantries and trucks)
+with a deck, at a neural-load cost; each district offers different things to ride.
 WEAPONS: guns and tech are standard kit for mercs and crews (cyberpunk setting); using
 one is what gets noticed, so gunfire brings police and heat. Drones are everywhere
 (corporate, police, patched street drones flown off an implant at a neural-load cost).
