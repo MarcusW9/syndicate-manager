@@ -91,3 +91,15 @@ What it says, and what it doesn't:
 - **Staffing a Wheels every time barely moves driving** (8.2% → 10.2% of jobs): few jobs ask for it. That supports the getaway step on every job (part 2) over anything about staffing.
 - **Medical is the weaker stat**, not driving: medics roll it on 5.5% of their jobs. Not in this plan's scope yet; it needs its own look.
 - No deaths in any policy.
+
+## 6. Results: the +3 rerun at 300 seeds (2026-11-07; `docs/sims/stat-usage-2026-11-07-300seeds.csv`)
+
+Careful policy, seeds 1-300, 52 weeks, against the same seeds without the boost:
+
+| stat | jobs% | decisive share | spec-util | +3 cash@52 | +3 injuries | +3 heat |
+| --- | --- | --- | --- | --- | --- | --- |
+| medical | 2.7% | 0.7% | 5.1% | -0.9% ±2.2 | -0.1 | +0.4 |
+| driving | 7.9% | 2.1% | 9.9% | +2.4% ±2.7 | +1.1 | +1.9 |
+
+- **Medical: cut or merge.** Its +3 effect lies between about -3% and +1%, so under 2% either way; with 2.7% of jobs and 0.7% of decisive rolls it meets every cut rule. (This plan didn't cover medical; deciding what it merges into is a new call.)
+- **Driving: on the line.** +2.4% just clears the 2% bar by the point estimate, so the script says "rework", but the interval (about -0.3% to +5.1%) covers both nothing and a real effect. It isn't clearly worth keeping as it is, nor clearly worth cutting. As it stands driving decides almost nothing on careful play (7.9% of jobs), so the rework (part 2) goes ahead on the plan's own terms: if piloting with the getaway step still falls below the bar on the rerun, cut it then.
