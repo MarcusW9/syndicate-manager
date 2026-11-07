@@ -7,6 +7,10 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-07 · Two opening jobs brought in line with the halls' lore
+- The Flat Doesn't Exist: Okonkwo now has the flat rented to you through the property trust's contracts man ("On paper it's storage"), not by Aether-Harbour, and the way out is the Buckle Passage, not the old yard stair.
+- Quarter to Two: the Ferryman no longer hands over the office key himself; he calls up to the pier cooperative, whose container office is going.
+
 ## 2026-11-07 · The four halls get their names and stories
 - The Night Market hall is now **Wok Court**: rooms behind a dai pai dong courtyard, leased from the stallholders' association. Mrs. Ip makes the introduction; the tong no longer lives above Madam Rao's shop. The Docks' hall is **the Stove Pier**, the Basin's **the Unlisted Rooms**, Glass Heights' **the Underterrace**, introduced by Forewoman Tse.
 - Every part, lane, yard, gate and the things lying about outside have their own names and descriptions on the build screen and the hall's page, and each raid opens with a line of its own ("The Cart Gate bangs against its frame...").

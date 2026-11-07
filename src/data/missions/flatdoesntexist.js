@@ -1,8 +1,8 @@
 // The Flat Doesn't Exist: the Basin's opening job (drafts/opening-jobs.md).
 // Remove Aether-Harbour's listening equipment from the flat and the Old Stand's
 // camera mast before the last race, without drawing the Association's attention.
-// Mak Chi-on appears in two crises. The final beat hands over the Basin hall
-// above the tack workshop (data/sites.js HALLS).
+// Mak Chi-on appears in two crises. The final beat hands over the Basin hall, the Unlisted Rooms
+// above the tack workshop, leased from a small property trust (WORLD.md "The tong's halls").
 // Original stats, difficulties and costs preserved.
 // The opening job for this district's hall (core/halls.js introduceHalls): never dealt to the
 // board at random; the contact asks for it once the tong is welcome. Owner's text (2026-11-06).
@@ -18,13 +18,13 @@ export const THE_FLAT_DOESNT_EXIST = {
   days: 1,
   crewSize: 3,
   keyStats: ['tech', 'stealth', 'cool'],
-  brief: `{okonkwo} wipes her tablet. "A flat above a tack workshop, facing the Old Stand. Clear the listening gear from it and the Stand's camera mast before the last race. The Association mustn't notice. Then you can have the flat. Aether-Harbour has never rented it. You will."`,
+  brief: `{okonkwo} wipes her tablet. "A flat above a tack workshop, facing the Old Stand. Clear the listening gear from it and the Stand's camera mast before the last race. The Association mustn't notice. Then the trust's contracts man will rent it to you. On paper it's storage. Keep it that way."`,
   beats: [
     `Under the Old Stand, a saddler shakes leather shavings from an apron while the race commentary rattles the workshop window. Outside, somebody tears a losing ticket into pieces too small to pick up.`,
     `The flat smells of saddle soap through the boards and stale cigarettes above them. Tape seals the window edges; pale rectangles mark where somebody took the photographs but left the hooks.`,
     `Beneath a loose board, a relay box warms the dust around it. Its cables run towards the Old Stand, neatly clipped along a pipe somebody still uses to dry towels.`,
     `Above the Old Stand, the camera mast sways against the floodlights, its service lift parked at the base. Aether-Harbour's tap sits beneath an Association camera, painted the same tired green.`,
-    `{okonkwo} leaves the keys on the workbench by the saddle racks: a trapdoor down to the workshop, the yard stair outside, the Old Stand in the window. "The saddler starts at six. Don't promise to sleep through it."`,
+    `{okonkwo} leaves the trust's keys on the workbench by the saddle racks: a trapdoor down to the workshop, the Buckle Passage outside, the Old Stand in the window. "The saddler starts at six. Don't promise to sleep through it."`,
   ],
   crises: [
     {
@@ -218,16 +218,16 @@ export const THE_FLAT_DOESNT_EXIST = {
         },
         {
           id: 'abort',
-          label: 'Abort: leave by the yard stair',
+          label: 'Abort: leave down the Buckle Passage',
           kind: 'abort',
           stat: 'cool',
           difficulty: 0,
           cost: { payCut: 1, clientTrust: -5 },
-          success: `You take the yard stair; below, the saddler waits beside a small stack of folded bills.`,
+          success: `You take the Buckle Passage; at the bottom, the saddler waits beside a small stack of folded bills.`,
           failure: '',
           failureInjury: 'none',
           report: {
-            success: 'The crew abandoned the job and left by the yard stair. Pay -100%. Trust -5.',
+            success: 'The crew abandoned the job and left down the Buckle Passage. Pay -100%. Trust -5.',
           },
         },
       ],
