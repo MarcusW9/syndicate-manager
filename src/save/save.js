@@ -27,6 +27,7 @@ import { nextRng } from '../core/random.js';
 import { refreshFreelancers } from '../core/freelance.js';
 import { GEAR, makeItem } from '../core/gear.js';
 import { CELLS } from '../data/gear.js';
+import { trimInbox } from '../core/inbox.js';
 
 // The one-item-per-slot gear of saves before v45, for the migrations written against it.
 const slotLoadout = () => ({ weapon: null, armour: null, tool: null, implant: null });
@@ -604,6 +605,12 @@ function migrate(state) {
       op.gear = { armour: g.armour ?? null, implants: g.implant ? [g.implant] : [], bag };
     }
     state.version = 45;
+  }
+  if (state.version === 45) {
+    // v46: the inbox is kept bounded (core/inbox.js, DESIGN.md 2026-11-06). Long saves had every
+    // message since day 1; trim them now as the daily tick does. Nothing still waiting is dropped.
+    trimInbox(state);
+    state.version = 46;
   }
   return state;
 }

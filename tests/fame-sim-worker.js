@@ -9,8 +9,16 @@ const dayIn = (line, what) => { const m = line.match(new RegExp(`^Day (\\d+): ${
 const out = [];
 for (const seed of workerData.seeds) {
   let at52 = null;
-  const onDay = (s) => { if (s.day === 52 * 7 + 1) at52 = { cash: s.cash, wages: s.crew.reduce((n, o) => n + o.wage, 0) }; };
+  // Every message the run sent, each once: the inbox drops old news (core/inbox.js, save v46), so
+  // a whole run's offers and asks are counted as they arrive, not read off the inbox at the end.
+  const sent = new Map();
+  const onDay = (s) => {
+    if (s.day === 52 * 7 + 1) at52 = { cash: s.cash, wages: s.crew.reduce((n, o) => n + o.wage, 0) };
+    for (const m of s.inbox) if (!sent.has(m.id)) sent.set(m.id, m);
+  };
   const { state, deaths } = playWeeks(workerData.weeks, seed, carefulPolicy, { startCrew: 'fresh', hireAbove: 10000, onDay });
+  for (const m of state.inbox) if (!sent.has(m.id)) sent.set(m.id, m);
+  const all = [...sent.values()];
   const firsts = (what) => state.crew.flatMap((op) => op.history.map((h) => dayIn(h, what)).filter((d) => d != null));
   const eliteDays = firsts('Elite \\(');
   const vetDays = firsts('became a veteran');
@@ -26,10 +34,10 @@ for (const seed of workerData.seeds) {
     cash52: at52?.cash ?? null, wages52: at52?.wages ?? null,
     // Renown slice 4. playWeeks never answers pay-rise messages, so fame asks are counted, with the
     // weekly cost they'd add if accepted; named offers are counted, and those that paid the bonus.
-    namedOffers: state.inbox.filter((m) => m.id.startsWith('named-')).length,
-    namedPaid: state.inbox.filter((m) => m.type === 'report' && m.timeline?.outcome?.some((o) => / by name: /.test(o.text))).length,
-    fameAsks: state.inbox.filter((m) => m.kind === 'renewal' && m.payload?.reason === 'fame').length,
-    fameAskExtra: state.inbox.filter((m) => m.kind === 'renewal' && m.payload?.reason === 'fame').reduce((n, m) => n + m.payload.ask - m.payload.current, 0),
+    namedOffers: all.filter((m) => m.id.startsWith('named-')).length,
+    namedPaid: all.filter((m) => m.type === 'report' && m.timeline?.outcome?.some((o) => / by name: /.test(o.text))).length,
+    fameAsks: all.filter((m) => m.kind === 'renewal' && m.payload?.reason === 'fame').length,
+    fameAskExtra: all.filter((m) => m.kind === 'renewal' && m.payload?.reason === 'fame').reduce((n, m) => n + m.payload.ask - m.payload.current, 0),
     hiredVeterans: state.crew.filter((o) => o.history.some((h) => /joined/i.test(h)) && o.tier === 'veteran' && !o.history.some((h) => h.includes('became a veteran'))).length,
   });
 }
