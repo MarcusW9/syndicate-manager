@@ -10,7 +10,7 @@ import { jobView, templateById } from '../src/core/jobs.js';
 import { HEISTS, HEIST_RULES, heistById } from '../src/data/heists.js';
 import { MISSIONS } from '../src/data/missions.js';
 import { validateHeists } from '../src/core/validate.js';
-import { postJobs, addOffer } from '../src/core/jobs.js';
+import { postJobs } from '../src/core/jobs.js';
 import { brokeredWork } from '../src/core/broker.js';
 import { playMission, carefulPolicy } from './play.js';
 import { introduceHeists, tickHeists, heistOf, heistResult, finaleWeekStart, canBuyStep, buyStep, stepPrice, heistCard, openHeist } from '../src/core/heists.js';
@@ -97,8 +97,7 @@ test("nothing prepared: the finale still goes up, at its full danger and pay", (
   const v = jobView(s, job);
   assert.equal(v.threat, templateById('casino').threat + RAO.threatDelta);
   assert.equal(v.pay, RAO.pay, 'the heist pays its own price (trust is neutral here)');
-  assert.deepEqual(v.drop, ['triad_owner'], 'only the crisis that doesn\'t fit an independent casino');
-  assert.equal(v.noGrudge, true, 'an independent target');
+  assert.deepEqual(v.drop, []);
   assert.equal(v.inside, null);
   assert.equal(job.expiresDay, heistOf(s, 'raoTable').finaleDay, 'on the board for its week');
   assert.ok(s.inbox.some((m) => /the finale is on/.test(m.subject) && /Nothing was prepared/.test(m.body)));
@@ -111,7 +110,7 @@ test('each step done changes the finale, and the plan shows exactly what the run
   const job = toFinaleWeek(s);
   const v = jobView(s, job);
   assert.equal(v.threat, templateById('casino').threat + RAO.threatDelta - 1, 'one step less dangerous');
-  assert.deepEqual(v.drop, ['triad_owner', 'pit_boss']);
+  assert.deepEqual(v.drop, ['pit_boss']);
   assert.equal(v.inside, "Rao's casino briefing");
   assert.equal(heistCard(s).prepared, 3);
   // The plan's intel is the run's intel.
@@ -123,8 +122,7 @@ test('each step done changes the finale, and the plan shows exactly what the run
     t.rngCounter = seed * 7;
     const run = startMission(t, job.id, crew.map((o) => o.id), 'stealth');
     const am = run.activeMission;
-    assert.ok(!am.queue.some((q) => q.type === 'crisis' && ['pit_boss', 'triad_owner'].includes(q.id)), 'a dropped or excluded crisis never comes up');
-    assert.equal(am.noGrudge, true);
+    assert.ok(!am.queue.some((q) => q.type === 'crisis' && q.id === 'pit_boss'), 'a dropped crisis never comes up');
     assert.equal(am.threat, v.threat);
     assert.equal(am.pay, v.pay);
     assert.deepEqual(intelFor(run, 'nightMarket', am.inside), { bonus: INTEL_BONUS, source: "Rao's casino briefing" });
@@ -156,10 +154,10 @@ test('a step that goes wrong is asked once more with another job, then can be bo
   const t = buyStep(s, 'raoTable', step.id);
   assert.equal(t.cash, s.cash - price);
   assert.equal(heistOf(t, 'raoTable').steps[step.id].status, 'bought');
-  assert.deepEqual(jobView(t, toFinaleWeek(t)).drop, ['triad_owner', 'pit_boss'], 'bought counts as done');
+  assert.deepEqual(jobView(t, toFinaleWeek(t)).drop, ['pit_boss'], 'bought counts as done');
   assert.ok(t.inbox.some((m) => m.body?.startsWith(step.fixer.confirmation)), 'the fixer\'s own words');
   // Done without: the finale still goes up, just without it.
-  assert.deepEqual(jobView(s, toFinaleWeek(s)).drop, ['triad_owner']);
+  assert.deepEqual(jobView(s, toFinaleWeek(s)).drop, []);
 });
 
 test('prep left on the board counts as walked away; too late for a retry means done without', () => {
@@ -241,23 +239,15 @@ test("Rao's six prep jobs are hers alone: never dealt at random, brokered or lis
   for (const d of ['nightMarket', 'oldTown', 'docks']) assert.ok(brokeredWork(d).every((m) => !m.heistOnly));
 });
 
-test('an independent casino: the finale adds no Red Lantern grudge; the ordinary Casino Con still does', () => {
-  const play = (heist, seed) => {
+test("the Hei Lok is no gang's room: Rao's finale, and Casino Con itself, add no grudge", () => {
+  assert.equal(templateById('casino').against, undefined);
+  for (let seed = 1, done = 0; seed <= 30 && done < 2; seed++) {
     let s = ready(seed);
-    let jobId;
-    if (heist) { introduceHeists(s); jobId = toFinaleWeek(s).id; }
-    else { s.jobs = []; addOffer(s, 'casino'); jobId = s.jobs[0].id; }
-    assert.equal(jobView(s, s.jobs.find((j) => j.id === jobId)).noGrudge, heist);
-    s = startMission(s, jobId, s.crew.slice(0, 3).map((o) => o.id), 'stealth');
+    introduceHeists(s);
+    s = startMission(s, toFinaleWeek(s).id, s.crew.slice(0, 3).map((o) => o.id), 'stealth');
     s = playMission(s, carefulPolicy).state;
-    return { done: s.activeMission.result.outcome === 'completed', grudge: s.grudges?.redLanterns ?? 0 };
-  };
-  let heistDone = 0, plainDone = 0;
-  for (let seed = 1; seed <= 30 && (heistDone < 2 || plainDone < 2); seed++) {
-    const h = play(true, seed);
-    if (h.done) { heistDone += 1; assert.equal(h.grudge, 0, `seed ${seed}: no grudge from the heist`); }
-    const p = play(false, seed);
-    if (p.done) { plainDone += 1; assert.ok(p.grudge > 0, `seed ${seed}: the ordinary job keeps its grudge`); }
+    if (s.activeMission.result.outcome !== 'completed') continue;
+    done += 1;
+    assert.deepEqual(Object.values(s.grudges ?? {}).filter((n) => n > 0), [], `seed ${seed}`);
   }
-  assert.ok(heistDone && plainDone, 'both finished at least once');
 });

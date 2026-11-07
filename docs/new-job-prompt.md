@@ -56,7 +56,8 @@ one is what gets noticed, so gunfire brings police and heat. Drones are everywhe
 DISTRICTS (always use these English names):
 - Open at the start: Old Town (damp tenements, tea shops; Brass Anchor Society) · the
   Docks (cranes, containers; Aether-Harbour on paper, Red Lanterns on the tarmac) · the
-  Night Market (dai pai dongs, chrome clinics, mahjong; Silver Fan Circle) · Glass
+  Night Market (dai pai dongs, chrome clinics, mahjong; Silver Fan Circle; the Hei Lok,
+  Hei Lok Leisure's casino airship, tethered above it, off the grid on a micro-reactor) · Glass
   Heights (corporate towers and labs; Veridian-Apex; officially renamed "Apex Ridge"
   but nobody on the street calls it that; foreign firms rent beneath it, and the people
   who keep it running commute up and stay late; the Lower Arcade is public, every door
@@ -88,8 +89,8 @@ well connected; fears race fixing above all). Wildcard: Ghost Circuit (data libe
 drainage tunnels and bomb shelters). Foreign firms (below the megacorps, Glass Heights
 tenants): Morrow & Venn (old merchant-finance house from Bellweather: shipping credit,
 insurance, estates; Venn House) and Hang Yuen Systems (industrial automation from Lin
-Sau, chasing AHL and Hoi-Sing contracts). Bellweather and Lin Sau are offstage and
-undefined.
+Sau, chasing AHL and Hoi-Sing contracts). Bellweather, Lin Sau and Porto Clara (a casino
+island down the coast) are offstage and undefined.
 
 CLIENTS (local powers a small crew can reach, below the corps):
 - Auntie Fung (Fung Wai-han, 71): Old Town tea shops and quiet fencing; senior Brass

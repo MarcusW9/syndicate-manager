@@ -7,9 +7,10 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
-## 2026-11-07 · Madam Rao's own prep jobs, and an independent casino
+## 2026-11-07 · Madam Rao's own prep jobs, and the Hei Lok
 - **The Big Table now has its own six prep jobs** in place of borrowed ones, two for each step: The Guest Copy or After the Applause (a briefing on the guests, staff and routes), An Old Account or Someone to Cover (the pit boss's night off), and Service Included or Manual Handling (a maintenance window that slows the casino's alerts). They're danger 2 jobs for three, pay ¥3,200–4,000, and only come up as Rao's prep.
-- **The casino is independent.** Finishing the heist no longer angers the Red Lanterns, and the crisis where a Red Lantern owner comes down to watch doesn't come up on Rao's night. The ordinary Casino Con job is unchanged.
+- **The casino is the *Hei Lok*,** a casino airship tethered above the Night Market and owned by a small family company, Hei Lok Leisure. Nobody's gang owns it, so **Casino Con (and Rao's heist) no longer angers the Red Lanterns**; the crisis where the owner comes down to watch is now the owner's son, and the crew leaves by the cage lift down the mast.
+- A regular who recognises your face now remembers you from the Porto Clara tables.
 - **New words throughout:** Madam Rao's and Mr. Szeto's messages, what each prep step is for, and what it gives the finale. Buying a step from a fixer now says what you're buying.
 
 ## 2026-11-07 · Heists: Madam Rao's Big Table

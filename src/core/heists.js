@@ -132,9 +132,8 @@ function finaleFields(def, h) {
     heist: def.id,
     threatDelta: (def.threatDelta ?? 0) + fx.threat,
     payMult: Math.round((def.pay / tpl.pay) * (1 + fx.pay) * 100) / 100,
-    drop: [...(def.exclude ?? []), ...fx.drop], // crises that don't fit the target, then those the prep took out
+    drop: fx.drop,
     inside: fx.intel,
-    noGrudge: Boolean(def.independent), // an independent target: no gang grudge from the finale
   };
 }
 
