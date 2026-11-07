@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-07 · Measuring which stats matter
+- Tools only, no game change. `scripts/sim-stats.mjs` plays a year of the game 60 times under five ways of playing (careful stealth with Joss's picks, loud, mixed approaches, the tong running every crew, and always a Wheels) and counts every roll by stat: how often it's rolled, on how many jobs, how many rolls were close calls, how many failures cost something, and whether specialists use their main stat. It then gives everyone +3 in one stat at a time to see what that changes by week 52. The counting only reads what each job already writes down, so no roll changes; a test checks the same seed ends with the same cash either way. The plan and the agreed thresholds for cutting, reworking or rebalancing a stat are in `drafts/PLAN-stat-usage.md`.
+
 ## 2026-11-07 · A plan for Phase 3
 - No game change. `drafts/PROPOSAL-phase-3.md` plans what comes after the halls: heists (prep jobs that each change a big finale), the Legend defining job, rival tongs (a league of other tongs, generated each game, with a Lantern List of the city's best runners), then loyalty, runners being tempted away, and retirement. It lists the owner's calls before each part.
 

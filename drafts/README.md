@@ -7,6 +7,7 @@ Generated text waiting to go into `src/data/`. Not imported by the game. Delete 
 - `mission-log-prototype.md`: what the owner's Container 409 logs settled, checked against the engine; the brief for the first mission-log slice.
 - `earned-traits-backlog.md`: the owner's earned traits not built yet, and what each waits on.
 - `crisis-situations-review.md`: Claude's draft of each crisis's situations, for the owner to skim.
+- `PLAN-stat-usage.md`: the plan for measuring whether each stat decides enough to be a stat (2026-11-07): the metrics, the five policies, the cut / rework / rebalance thresholds agreed before running, the first results, and what follows for driving (piloting and a getaway step), leadership, and what waits for Phase 3. Tool: `scripts/sim-stats.mjs`.
 - `PROPOSAL-phase-3.md`: the plan for Phase 3 (2026-11-07): heists, the Legend defining job, rival tongs (generated, kept at level of detail) and loyalty and mobility, with the owner's calls before each part. Not built.
 - `ops-and-presence.md`: the 2026-11-04 backlog after Phase 1 of the tong direction: districts as presence (the owner's handover idea), one command centre (City becomes it, or an Ops tab), its phone-first map, crews out made visible (4a built, 4b next) and what's parked until the playtest.
 - `core-loop.md`: the first-principles discussion of the core loop (planning, feed, call-ins, route maps), started 2026-10-26.
