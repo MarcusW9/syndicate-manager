@@ -6,7 +6,8 @@
 // - Decisions (core/decisions.js), renewals, heat notices, specialisation offers, call-ins and raid
 //   calls are looked up by id or kind while unresolved: kept whatever their age (isActionable).
 // - A hall offer stands until the hall is opened, a raid warning until the raid is over, and an
-//   opening job's message while its job is on the board: kept while that's true.
+//   opening job's message while its job is on the board, and a heist's offer while the heist is on
+//   (core/heists.js): kept while that's true.
 // - The memorial, runner pages, records and milestones keep their own copies (op.history,
 //   op.record, memorial entries); none of them reads the inbox.
 // Everything else is news: read messages go after INBOX_KEEP.weeks, unread ones after
@@ -24,6 +25,7 @@ export function isActionable(state, m) {
   if (m.blocking && !m.resolved) return true;
   const p = m.payload ?? {};
   if (m.kind === 'hall-offer') return !(state.halls ?? []).some((h) => h.district === p.district);
+  if (m.kind === 'heist') return state.heists?.[p.heistId]?.status === 'open';
   if (m.kind === 'raid-warning') return (state.raids ?? []).some((r) => r.id === p.raidId && !r.done);
   if (p.jobId && (state.jobs ?? []).some((j) => j.id === p.jobId)) return true;
   return false;

@@ -7,6 +7,21 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-07 · Madam Rao's own prep jobs, and an independent casino
+- **The Big Table now has its own six prep jobs** in place of borrowed ones, two for each step: The Guest Copy or After the Applause (a briefing on the guests, staff and routes), An Old Account or Someone to Cover (the pit boss's night off), and Service Included or Manual Handling (a maintenance window that slows the casino's alerts). They're danger 2 jobs for three, pay ¥3,200–4,000, and only come up as Rao's prep.
+- **The casino is independent.** Finishing the heist no longer angers the Red Lanterns, and the crisis where a Red Lantern owner comes down to watch doesn't come up on Rao's night. The ordinary Casino Con job is unchanged.
+- **New words throughout:** Madam Rao's and Mr. Szeto's messages, what each prep step is for, and what it gives the finale. Buying a step from a fixer now says what you're buying.
+
+## 2026-11-07 · Heists: Madam Rao's Big Table
+- **The first heist.** Around reputation 15 (about ten weeks in), Madam Rao asks you to the biggest night of a baccarat room over Glow Street: **The Big Table**, three weeks away.
+- **Three prep jobs go on the board at once**, each flagged "Prep · The Big Table". Each one you finish makes the night easier, and the finale's plan shows how: intel (+1 on every roll), the pit boss not watching the table, or the danger one step lower.
+- **Prep that goes wrong isn't the end.** Walk away or fail and she finds you another job for it, once. After that you can **buy it from a fixer** (Ops: Buy) or go without.
+- **The finale goes up in the third week** and stays until Sunday: Casino Con, paying about ¥11,000, at danger 3 (2 with the prep). Send them, watch, or take command. Finish it for the pay and +5 reputation. Walk away, or let the week pass, and it's over.
+- **Ops shows the heist on top:** each step, what it gives, and a Plan or Buy. Monday's briefing and Sunday's summary say how far the prep has got.
+- **A second heist for later:** Mr. Szeto's Seventy-One Floors (the Penthouse Heist, ¥28,000) once you have three halls and reputation 60.
+- Both heists use existing jobs for now; their own stories come later.
+- Save format v47. Older saves carry on; the heist is offered the first Monday you qualify.
+
 ## 2026-11-07 · A plan for Phase 3
 - No game change. `drafts/PROPOSAL-phase-3.md` plans what comes after the halls: heists (prep jobs that each change a big finale), the Legend defining job, rival tongs (a league of other tongs, generated each game, with a Lantern List of the city's best runners), then loyalty, runners being tempted away, and retirement. It lists the owner's calls before each part.
 

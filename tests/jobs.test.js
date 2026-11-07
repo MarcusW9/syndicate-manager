@@ -1,5 +1,6 @@
 // Job variety: clients and trust, offer variations, hidden twists. Run with: npm test
 
+import { heistById } from '../src/data/heists.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createNewGame, SAVE_VERSION } from '../src/core/state.js';
@@ -37,6 +38,8 @@ test('every client offers only job types that exist', () => {
   // their district's contact (data/halls.js), so they're in no client's list either.
   for (const m of MISSIONS) {
     if (m.opening) { assert.equal(HALL_SITES[m.opening]?.opening, m.id, `${m.id}: its hall's opening job`); assert.ok(!CLIENTS.some((c) => c.jobs.includes(m.id)), `${m.id}: never dealt by a client`); continue; }
+    // Heist prep (2026-11-07) is asked for by the heist's contact (data/heists.js): its own heist's prep, in no client's list.
+    if (m.heistOnly) { assert.ok(heistById(m.heistOnly)?.prep.some((p) => p.templates.includes(m.id)), `${m.id}: prep for ${m.heistOnly}`); assert.ok(!CLIENTS.some((c) => c.jobs.includes(m.id)), `${m.id}: never dealt by a client`); continue; }
     assert.ok(m.walkIn ? !CLIENTS.some((c) => c.jobs.includes(m.id)) : CLIENTS.some((c) => c.jobs.includes(m.id)), `${m.id}: client or walk-in, not neither`);
   }
 });

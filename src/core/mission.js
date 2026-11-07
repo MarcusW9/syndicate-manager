@@ -45,6 +45,7 @@ import { noteOverwatchJob, checkSpecialisations } from './specialisations.js';
 import { noteJobMarks } from './marks.js';
 import { planIncidents, weaveIncidents, incidentById, incidentIn, incidentDifficulty, handlerFor, bestSave, standbySave, decisionChoices, ALERT_MAX, SERIOUS_CHANCE, SERIOUS_PER_ALERT, PATCH_MIN_MEDICAL, ZONES } from './incidents.js';
 import { openingResult } from './halls.js';
+import { heistResult } from './heists.js';
 
 const EXIT_KINDS = new Set(['abort', 'extract']);
 const STABILISE_DIFFICULTY = 9;
@@ -166,7 +167,8 @@ export function startMission(prev, jobId, crewIds, approach, opts = {}) {
   // crises in situations it favours come up more, ones it avoids less (data/approaches.js).
   const ap = APPROACHES[approach];
   const weight = (c) => { const sit = c.situations ?? []; return sit.some((x) => ap.favours?.includes(x)) ? 2 : sit.some((x) => ap.avoids?.includes(x)) ? 0.5 : 1; };
-  const pool = tpl.crises.map((c) => ({ c, key: rng() ** (1 / weight(c)) })).sort((a, b) => b.key - a.key).map((x) => x.c);
+  // A heist finale's prep can take a crisis out of the draw (core/heists.js job.drop; shown on its plan).
+  const pool = tpl.crises.filter((c) => !view.drop.includes(c.id)).map((c) => ({ c, key: rng() ** (1 / weight(c)) })).sort((a, b) => b.key - a.key).map((x) => x.c);
   // Street talk about a district crisis makes it likely to come up (drawn first most of the time).
   const talk = view.rumour?.crisis ? pool.findIndex((c) => c.id === view.rumour.crisis) : -1;
   if (talk > 0 && rng() < RUMOUR_CRISIS_CHANCE) [pool[0], pool[talk]] = [pool[talk], pool[0]];
@@ -211,6 +213,8 @@ export function startMission(prev, jobId, crewIds, approach, opts = {}) {
     alert: 0, out: [], pending: null, wentLoud: false, battle: null, fought: false,
     pay: view.pay, threat: view.threat, threatDelta: view.threatDelta, clientId: job.clientId ?? null, twist: job.twist ?? null,
     askedFor: job.askedFor ?? null, // the runner a client asked for by name (renown slice 4)
+    inside: view.inside, // a heist finale's intel from its prep (core/heists.js), on every roll
+    noGrudge: view.noGrudge, // a heist finale on an independent target: no gang grudge (core/heists.js)
     lead: crewLead(crewIds.map((id) => state.crew.find((o) => o.id === id))), // takes one risky call (core/lead.js)
     queue, step: 0, log: [],
     payCut: 0, extraHeat: 0, clientTrust: 0, watched,
@@ -322,7 +326,7 @@ export function runIncident(prev) {
   }
   const diff = incidentDifficulty(tpl, am, inc);
   // The heat penalty for letting it ride is on the first crisis roll (core/heat.js), so incidents leave it alone.
-  const rollCtx = { approach: am.approach, recommended: tpl.crewSize, intel: intelFor(state, tpl.district), job: incidentContext(state, am, inc, diff), alert: am.alert ?? 0 };
+  const rollCtx = { approach: am.approach, recommended: tpl.crewSize, intel: intelFor(state, tpl.district, am.inside), job: incidentContext(state, am, inc, diff), alert: am.alert ?? 0 };
   const h = handlerFor(able, inc, diff, rollCtx);
   if (!h) {
     exitRun(state, am, { text: 'Nobody left who can carry on.', choice: 'The crew pull out', report: 'With nobody left standing to finish it, the crew pulled out.' });
@@ -548,7 +552,7 @@ function rollerFor(state, am, choice, crew) {
   const recommended = templateById(am.templateId).crewSize;
   const medic = choice.kind === 'stabilise' ? findRole(crew, 'medic') : null;
   const stat = medic ? 'medical' : choice.stat;
-  const intel = intelFor(state, templateById(am.templateId).district);
+  const intel = intelFor(state, templateById(am.templateId).district, am.inside);
   // Wheels takes every driving roll, alone at the wheel: no backup, no short-handed penalty (slice 3).
   const wheels = stat === 'driving' ? driver(state, am) : null;
   if (wheels) {
@@ -907,7 +911,7 @@ function finish(state) {
   state.cash += pay - cuts;
   addHeat(state, tpl.district, heatGain); // in the job's district (heat per district, save v39)
   // A job that hurt a gang: they remember (core/gangs.js); an aborted one doesn't count.
-  const grudge = !am.aborted ? jobGrudge(tpl, threat) : null;
+  const grudge = !am.aborted && !am.noGrudge ? jobGrudge(tpl, threat) : null;
   const grudged = grudge ? addGrudge(state, grudge.gang, grudge.n) : 0;
   // A finished job earns REP_PER_THREAT per threat level (3 until 2026-10-25; x0.4 for
   // the long climb); an abort costs ABORT_REP (unchanged: scaling it too let crews
@@ -1005,6 +1009,7 @@ function finish(state) {
 
   const outcome = deaths.length ? 'loss' : am.aborted ? 'aborted' : 'completed';
   const opened = openingResult(state, am.jobId, outcome); // a district's opening favour (core/halls.js)
+  const heistLines = heistResult(state, am.jobId, outcome); // a heist's prep or finale (core/heists.js)
   const client = clientById(am.clientId);
   am.result = { report: am.report ?? [], outcome, pay, heatGain, injuries, deaths: deaths.map((d) => d.handle), freelance, growth: growthEvents, graduated: graduatedOps.map((o) => ({ id: o.id, handle: o.handle, name: o.name, role: o.role, color: o.color })), client: client?.name ?? null, trustChange };
   am.done = true;
@@ -1030,6 +1035,7 @@ function finish(state) {
     ...patched.map((p) => ({ tone: 'good', text: `${p.medic.handle} patched up ${p.patient.handle} (Clinic Hands): back a day sooner.` })),
     ...(client && trustChange ? [{ tone: trustChange > 0 ? 'good' : 'bad', text: `${client.name} ${trustChange > 0 ? 'thinks more of you' : 'is unhappy with you'} (trust ${trustChange > 0 ? '+' : ''}${trustChange}).` }] : []),
     ...(opened ? [opened] : []),
+    ...heistLines,
   ];
   const id = `report-${state.day}-${state.rngCounter}`;
   const events = am.events ?? [];
