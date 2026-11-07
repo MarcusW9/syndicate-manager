@@ -151,7 +151,6 @@ export function jobView(state, job) {
     heistStep: job.heistStep ?? null,
     drop: job.drop ?? [],
     inside: job.inside ?? null,
-    noGrudge: Boolean(job.noGrudge), // a heist finale on an independent target adds no gang grudge
   };
 }
 

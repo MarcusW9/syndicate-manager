@@ -69,10 +69,8 @@ export function validateHeists(heists, missions) {
         drops.push(e.drop);
       }
     }
-    for (const x of h.exclude ?? []) if (!fin.crises.some((c) => c.id === x)) problems.push(`${h.id}: excludes ${x}, which the finale doesn't have`);
     for (const p of h.prep ?? []) if (p.fixer && !(p.fixer.label && p.fixer.description && p.fixer.confirmation)) problems.push(`${h.id}/${p.id}: fixer copy needs a label, description and confirmation`);
-    const out = new Set([...(h.exclude ?? []), ...drops]);
-    if (fin.crises.length - out.size < 3) problems.push(`${h.id}: leaving out ${[...out].join(', ')} leaves fewer than 3 crises to draw`);
+    if (fin.crises.length - new Set(drops).size < 3) problems.push(`${h.id}: dropping ${drops.join(', ')} leaves fewer than 3 crises to draw`);
   }
   return problems;
 }

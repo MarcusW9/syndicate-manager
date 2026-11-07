@@ -214,7 +214,6 @@ export function startMission(prev, jobId, crewIds, approach, opts = {}) {
     pay: view.pay, threat: view.threat, threatDelta: view.threatDelta, clientId: job.clientId ?? null, twist: job.twist ?? null,
     askedFor: job.askedFor ?? null, // the runner a client asked for by name (renown slice 4)
     inside: view.inside, // a heist finale's intel from its prep (core/heists.js), on every roll
-    noGrudge: view.noGrudge, // a heist finale on an independent target: no gang grudge (core/heists.js)
     lead: crewLead(crewIds.map((id) => state.crew.find((o) => o.id === id))), // takes one risky call (core/lead.js)
     queue, step: 0, log: [],
     payCut: 0, extraHeat: 0, clientTrust: 0, watched,
@@ -911,7 +910,7 @@ function finish(state) {
   state.cash += pay - cuts;
   addHeat(state, tpl.district, heatGain); // in the job's district (heat per district, save v39)
   // A job that hurt a gang: they remember (core/gangs.js); an aborted one doesn't count.
-  const grudge = !am.aborted && !am.noGrudge ? jobGrudge(tpl, threat) : null;
+  const grudge = !am.aborted ? jobGrudge(tpl, threat) : null;
   const grudged = grudge ? addGrudge(state, grudge.gang, grudge.n) : 0;
   // A finished job earns REP_PER_THREAT per threat level (3 until 2026-10-25; x0.4 for
   // the long climb); an abort costs ABORT_REP (unchanged: scaling it too let crews

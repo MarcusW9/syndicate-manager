@@ -10,9 +10,6 @@
 // A heist: { id, name, contact (a client id), gate: { rep, halls }, finale: templateId,
 //   threatDelta (the finale's threat against its template), pay (the finale's pay before trust),
 //   weeks (offer to the finale's last day; the finale's own week is the last one),
-//   independent (optional: the target belongs to no named faction, so the finale adds no gang
-//   grudge even when its template is against one), exclude (optional: crises of the template that
-//   don't fit this heist's target, kept out of the finale's draw and not shown as prep),
 //   intro (the contact's message), finaleLine (the message when the finale is on the board),
 //   prep: [{ id, templates: [first ask, the retry], line (what it's for), effect, shows (what the
 //   finale's plan says once it's done), fixer (optional: { label, description, confirmation },
@@ -38,11 +35,8 @@ export const HEISTS = [
     threatDelta: 1,
     pay: 11000,
     weeks: 3,
-    // An independent casino in the Night Market (owner, 2026-11-07): the crew's first big score,
-    // not a declaration of war. Casino Con's Red Lantern grudge, and its crisis naming the owner as
-    // a Red Lantern, stay with the ordinary job.
-    independent: true,
-    exclude: ['triad_owner'],
+    // The Hei Lok, Hei Lok Leisure's casino airship above the Night Market (WORLD.md; owner,
+    // 2026-11-07): no gang's room, so the crew's first big score, not a declaration of war.
     intro:
       'Madam Rao sets a casino counter beside your tea. "A friend keeps losing upstairs. Now he is borrowing downstairs to pay for it. In three weeks, that room holds its biggest night. I want some of its money leaving with us, beta. Three things would help. We can still go without them; I would rather we did not."',
     finaleLine:

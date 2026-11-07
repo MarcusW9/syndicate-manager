@@ -1753,7 +1753,7 @@ function jobFlags(v) {
   const hz = heistFor(state, v.jobId); // a heist's prep or finale (core/heists.js)
   if (hz) flags.push(['named', hz.step ? `Prep · ${hz.def.name}` : `${hz.def.name} · finale`]);
   if (namedHandle(v)) flags.push(['named', fillNamed(NAMED_TEXT.chip, v)]); // a client asked for an Elite by name (renown slice 4)
-  const g = v.noGrudge ? null : jobGrudge(v.tpl, v.threat);
+  const g = jobGrudge(v.tpl, v.threat);
   if (g) flags.push(['hot', `Against ${GANGS[g.gang].short}`]); // a job that hurts a gang (core/gangs.js)
   const opens = openingFor(state, v.jobId);
   if (opens) flags.push(['named', `Opens the ${cityName(opens).replace(/^The /, '')} hall`]); // a contact's opening favour (core/halls.js)
@@ -2050,7 +2050,7 @@ function renderPlan() {
       <button class="linkbtn" data-action="brief-more" aria-expanded="${briefOpen}">${briefOpen ? 'Show less' : 'Read more'}</button>
       ${(() => { const c = crewAgainstStandard(picked, v.threat); return `<p class="standard ${picked.length ? (c.met ? 'is-met' : 'is-short') : ''} small"><strong>Crew standard: ${esc(c.std.label)}</strong>${picked.length ? ` · ${esc(c.note)}` : ''}</p>`; })()}
       ${(() => { // a job against a gang says what it costs before you take it (shown risk equals used risk)
-        const g = v.noGrudge ? null : jobGrudge(t, v.threat);
+        const g = jobGrudge(t, v.threat);
         if (!g) return '';
         const now = grudgeOf(state, g.gang);
         return `<p class="grudgeline small"><strong>Against ${esc(GANGS[g.gang].name)}:</strong> finishing it adds grudge +${g.n} (now ${now}/10, then ${Math.min(GRUDGE.max, now + g.n)}). From ${GRUDGE.raidAt} they may raid a hall of ours on their turf.</p>`;
