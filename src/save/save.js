@@ -652,5 +652,16 @@ function migrate(state) {
     }
     state.version = 48;
   }
+  if (state.version === 48) {
+    // v49: Glass Heights' opening favour is Still on the Books, asked by Forewoman Tse (DESIGN.md
+    // 2026-11-07); There Is No Forty-First Floor is retired. An offer of it on the board becomes the
+    // new job, Tse's; a run already under way finishes as it was (data/missions.js RETIRED_MISSIONS).
+    // The Night Market's favour stays back_rent, now Mrs. Ip's: an offer of it moves to her too.
+    for (const job of state.jobs ?? []) {
+      if (job.templateId === 'there_is_no_forty_first_floor') { job.templateId = 'still_on_the_books'; job.clientId = 'tse'; }
+      if (job.templateId === 'back_rent') job.clientId = 'ip';
+    }
+    state.version = 49;
+  }
   return state;
 }

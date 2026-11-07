@@ -1,3 +1,5 @@
+// RETIRED 2026-11-07: replaced by Still on the Books (stillonthebooks.js) as Glass Heights' opening job;
+// kept only so a run under way in an old save can finish (data/missions.js RETIRED_MISSIONS).
 // There Is No Forty-First Floor: Glass Heights' opening job (drafts/opening-jobs.md).
 // Over two days, remove a service floor from the tower's tenancy and audit records.
 // Keep its escape routes on the fire drawings as plant access, without a floor number.

@@ -128,3 +128,30 @@ test('a v42 save: halls already offered or opened need no favour; the rest start
   assert.equal(up.openings.basin.status, 'done');
   assert.equal(up.openings.nightMarket, undefined);
 });
+
+test('the owner\'s opening jobs (2026-11-07): Back Rent is Mrs. Ip\'s, Still on the Books is Forewoman Tse\'s; the old Glass Heights job is retired', async () => {
+  const { RETIRED_MISSIONS } = await import('../src/data/missions.js');
+  const { fill } = await import('../src/core/mission.js');
+  const { CAST } = await import('../src/data/cast.js');
+  assert.equal(HALL_SITES.nightMarket.opening, 'back_rent');
+  assert.equal(HALL_SITES.nightMarket.contact, 'ip');
+  assert.equal(HALL_SITES.heights.opening, 'still_on_the_books');
+  assert.equal(HALL_SITES.heights.contact, 'tse');
+  assert.ok(!MISSIONS.some((m) => m.id === 'there_is_no_forty_first_floor'), 'never offered again');
+  assert.ok(RETIRED_MISSIONS.some((m) => m.id === 'there_is_no_forty_first_floor') && templateById('there_is_no_forty_first_floor'), 'but a run under way can still finish');
+  assert.ok(!/szeto/i.test(JSON.stringify(templateById('still_on_the_books'))), 'Szeto has nothing to do with the Underterrace');
+  // Mrs. Ip's closing line in the last beat is one of her own approve lines.
+  const s = createNewGame({ seed: 4, startCrew: 'fresh' });
+  const line = fill(templateById('back_rent').beats.at(-1), s, { jobId: 'j1', templateId: 'back_rent', step: 0, crewIds: [] });
+  assert.ok(CAST.ip.lines.approve.some((l) => line.includes(l)), line);
+  assert.ok(!line.includes('{'), 'every token filled');
+});
+
+test('saves from v48: a Forty-First Floor offer becomes Still on the Books, Tse\'s; a Back Rent offer moves to Mrs. Ip', async () => {
+  const s = createNewGame({ seed: 6 });
+  s.version = 48;
+  s.jobs = [{ id: 'j7', templateId: 'there_is_no_forty_first_floor', clientId: 'szeto', expiresDay: 20 }, { id: 'j8', templateId: 'back_rent', clientId: 'rao', expiresDay: 20 }];
+  const up = await importSave({ text: async () => JSON.stringify(s) });
+  assert.equal(up.version, SAVE_VERSION);
+  assert.deepEqual(up.jobs.filter((j) => j.id === 'j7' || j.id === 'j8').map((j) => [j.templateId, j.clientId]), [['still_on_the_books', 'tse'], ['back_rent', 'ip']]);
+});

@@ -17,7 +17,7 @@ export const HALL_SITES = {
   nightMarket: { opening: 'back_rent', contact: 'ip', rep: 40, trust: null, deposit: 12000, rent: 500, beds: 2, place: 'rooms behind a dai pai dong courtyard, Wok Court' },
   docks: { opening: 'quarter_to_two', contact: 'ferryman', rep: 40, trust: 60, deposit: 15000, rent: 600, beds: 2, place: 'a container office on an old working pier, the Stove Pier' },
   basin: { opening: 'the_flat_doesnt_exist', contact: 'okonkwo', rep: 40, trust: 60, deposit: 15000, rent: 600, beds: 2, place: 'a flat over a tack workshop with a view of the Old Stand, the Unlisted Rooms' },
-  heights: { opening: 'there_is_no_forty_first_floor', contact: 'tse', rep: 60, trust: null, deposit: 20000, rent: 800, beds: 2, place: 'rooms beneath the corporate terraces, the Underterrace' },
+  heights: { opening: 'still_on_the_books', contact: 'tse', rep: 60, trust: null, deposit: 20000, rent: 800, beds: 2, place: 'rooms beneath the corporate terraces, the Underterrace' },
 };
 
 /** Opening jobs (2026-11-06): a favour the contact asks before offering the hall; walk away or fail and they ask again after this many days, with one of their own jobs as the test. */

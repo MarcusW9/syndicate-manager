@@ -7,6 +7,11 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-07 · New opening jobs for Wok Court and the Underterrace
+- **Back Rent** is new: Mrs. Ip's stallholders' association paid its rent, but a new agent says otherwise and has a contractor ready to lock their spare rooms. Find the payment, get the notice withdrawn and the order cancelled in writing, and Mrs. Ip introduces you to the association and the Late Rooms.
+- **Still on the Books** replaces There Is No Forty-First Floor as Glass Heights' opening job: Forewoman Tse's cooperative has been marked vacant after thirty years. Recover its occupancy agreement and get it recognised, and the Underterrace is open to you.
+- Both build trust with Mrs. Ip and Forewoman Tse. Saves upgrade (v49): an old Forty-First Floor offer on the board becomes Still on the Books.
+
 ## 2026-11-07 · Mrs. Ip and Forewoman Tse are clients
 - Two new, smaller clients with their own trust: **Mrs. Ip** (Night Market) and **Forewoman Tse** (Glass Heights). They're on the Jobs tab's client strip and in Lore › Clients.
 - Mrs. Ip now gives her own routine work (Closing Stack, Crate Return, Inspection Hours, which came from Auntie Fung) and asks Back Rent, so finishing it builds her trust, not Madam Rao's. Forewoman Tse asks the Glass Heights hall's favour; Mr. Szeto has nothing to do with the Underterrace.
