@@ -634,5 +634,23 @@ function migrate(state) {
     }
     state.version = 47;
   }
+  if (state.version === 47) {
+    // v48: the other four halls are compounds too (DESIGN.md 2026-11-07), drawn anew: what was built
+    // in each is paid back in full, with a note, as Old Town's was at v47.
+    for (const hall of state.halls ?? []) {
+      if (hall.district === 'oldTown' || !hall.build?.length) continue;
+      const back = hall.build.reduce((n, b) => n + (PIECES[b.piece]?.cost ?? 0), 0);
+      state.cash = (state.cash ?? 0) + back;
+      hall.build = [];
+      state.inbox = state.inbox ?? [];
+      state.inbox.unshift({
+        id: `hall-redrawn-${hall.district}-${state.day ?? 1}`, type: 'finance', day: state.day ?? 1,
+        subject: 'A hall with room to grow',
+        body: `Our hall in ${hall.district === 'nightMarket' ? 'the Night Market' : hall.district === 'docks' ? 'the Docks' : hall.district === 'basin' ? 'the Basin' : 'Glass Heights'} is a block of its own now, with more of it to take as it grows. What we'd built there is cleared and paid back in full: ${money(back)}. Build it again on the new plan.`,
+        blocking: false, read: false,
+      });
+    }
+    state.version = 48;
+  }
   return state;
 }

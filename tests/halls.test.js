@@ -64,11 +64,11 @@ test('opening a hall needs the welcome (reputation, the contact\'s trust) and th
 
 test('each hall expands on its own, the cost growing with its level; the old safehouse expansion is the home hall\'s', () => {
   const o = openHall(welcome(4), 'nightMarket');
+  o.cash = 100000;
   const e = expandHall(o, 'nightMarket');
   assert.equal(hallIn(e, 'nightMarket').beds, HALL_SITES.nightMarket.beds + 2);
   assert.equal(hallIn(e, 'nightMarket').level, 2);
-  assert.equal(e.cash, o.cash - 10000);
-  o.cash = 100000;
+  assert.equal(e.cash, o.cash - 20000, 'each hall takes its next part at that part\'s price (2026-11-07)');
   const home = expandSafehouse(o);
   assert.equal(hallIn(home, 'oldTown').beds, hallIn(o, 'oldTown').beds + 2);
   assert.equal(home.rosterCap, o.rosterCap + 2);

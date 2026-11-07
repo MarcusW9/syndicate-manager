@@ -173,10 +173,10 @@ export function renderHallBuild(ui, state, view) {
         <button class="subtab ${tab === 'defence' ? 'is-on' : ''}" data-action="build-tab" data-id="defence" aria-pressed="${tab === 'defence'}">Defences</button>
         <button class="subtab ${tab === 'room' ? 'is-on' : ''}" data-action="build-tab" data-id="room" aria-pressed="${tab === 'room'}">Rooms</button>
       </div>
-      ${tab === 'defence' ? `<p class="muted small">Cover where our people stand when they hold the hall; a raid is fought on this map. Every ${HALL_BUILD.perThreat} pieces make a raid one step easier.</p>
-      <p class="small bdef">${defenceLine(state, view.district)}</p>` : '<p class="muted small">One of each per hall. A room helps whoever lives here; it isn\'t cover in a raid.</p>'}
+      ${tab === 'defence' ? `<p class="muted small">Cover where our people stand when they hold the hall. A raid is fought outside, between the buildings, so defences go in the outside parts. Every ${HALL_BUILD.perThreat} pieces make a raid one step easier.</p>
+      <p class="small bdef">${defenceLine(state, view.district)}</p>` : '<p class="muted small">One of each per hall, inside. A room helps whoever lives here; it isn\'t cover in a raid.</p>'}
       <div class="btiles">${tiles}</div>
-      <p class="muted small">Removing something gives back half its cost. ${hallMap(view.district).parts ? 'Expanding the hall takes the next part of the block, and all its floor.' : `Expanding the hall gives ${HALL_BUILD.floorPerLevel} more squares.`}</p>
+      <p class="muted small">Removing something gives back half its cost. ${hallMap(view.district).parts ? 'Expanding the hall takes the next part, and all its floor.' : `Expanding the hall gives ${HALL_BUILD.floorPerLevel} more squares.`}</p>
     </section>`;
 }
 

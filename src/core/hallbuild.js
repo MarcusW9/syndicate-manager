@@ -157,6 +157,13 @@ export function canPlace(state, district, pieceId, x, y, rot = 0) {
   if (cells.some((c) => built.has(c))) return { ok: false, reason: 'Something is already there' };
   const beds = bedCells(hall);
   if (cells.some((c) => beds.has(c))) return { ok: false, reason: 'A bed is there: beds come with the hall' };
+  // A compound (2026-11-07): rooms go inside, defences outside, where a raid is fought.
+  const site = hallMap(district);
+  if (site.parts) {
+    const where = cells.map((c) => partAt(site, ...c.split(',').map(Number)));
+    if (p.kind === 'room' && where.some((x) => !x?.inside)) return { ok: false, reason: 'Rooms go inside' };
+    if (p.kind === 'defence' && where.some((x) => x?.inside)) return { ok: false, reason: 'Defences go outside, where a raid is fought' };
+  }
   if (floorUsed(hall) + cells.length > floorOf(hall)) return { ok: false, reason: `No floor left (${floorUsed(hall)}/${floorOf(hall)}): expand the hall for more` };
   if (state.cash < p.cost) return { ok: false, reason: `Needs ${money(p.cost)}` };
   return { ok: true, reason: 'ready' };

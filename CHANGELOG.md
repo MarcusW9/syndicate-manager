@@ -7,6 +7,12 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-07 · Every hall grows into a compound
+- The Night Market, Docks, Basin and Glass Heights halls now grow like Old Town. Each starts as its first building and the lane beside it; Expand takes the building across the lane, then the walled yard behind with its gate, then a small building across the passage. Each part adds two beds (the yard's go in the second building). Prices: ¥20,000, ¥30,000, ¥40,000, a little more in Glass Heights.
+- Each hall has its own ground and look: the Night Market's market lane and cart court, the Docks' walkway and container yard, the Basin's course lane and stable yard, Glass Heights' service corridor and plant deck. The Docks and the Basin are drawn the other way round. The part names are placeholders until their lore is written (`drafts/BRIEF-hall-compounds.md`).
+- In every hall, rooms go inside and defences go outside, where a raid is fought between the buildings. A raid's opening line says which way it came in.
+- Saves upgrade (v48): anything already built in those four halls is cleared and paid back in full, with a note.
+
 ## 2026-11-07 · The Old Town hall grows into a compound
 - The Old Town hall is now a block of separate buildings with space between them. You start with the room above the noodle shop and the lane beside it. Each Expand takes the next part: the flat across the lane (¥20,000), the walled yard behind with a gate onto the back alley (¥30,000), then the back kitchen across the passage (¥40,000). Each brings two more beds, and once the whole block is held there's nothing more to expand.
 - No floor allowance in Old Town: every square of the parts you hold is yours to build on. Parts you don't hold yet are hatched on the plan; tap the next one to take it. Squares kept clear for a way in are faintly marked, and tapping one says why.
