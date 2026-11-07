@@ -107,10 +107,14 @@ export function sendOnSideTask(prev, taskId, crewIds) {
   return state;
 }
 
-/** Intel from an info task on this district, if still fresh: { bonus, source } or null. */
-export function intelFor(state, district) {
+/**
+ * Intel from an info task on this district, if still fresh: { bonus, source } or null. inside: a
+ * heist finale's own intel from its prep (core/heists.js, job.inside / am.inside), the same bonus.
+ */
+export function intelFor(state, district, inside = null) {
   const i = state.intel?.[district];
-  return i && i.until >= state.day ? { bonus: INTEL_BONUS, source: i.source } : null;
+  if (i && i.until >= state.day) return { bonus: INTEL_BONUS, source: i.source };
+  return inside ? { bonus: INTEL_BONUS, source: inside } : null;
 }
 
 /** Daily: side tasks whose crew is back today resolve and report. Mutates the (cloned) state. */

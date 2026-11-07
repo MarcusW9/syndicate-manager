@@ -146,6 +146,11 @@ export function jobView(state, job) {
     hinted: Boolean(job.hinted),
     rumour,
     askedFor: job.askedFor ?? null, // an Elite the client asked for by name (+NAMED_OFFER.payBonus if they go)
+    // A heist (core/heists.js): the finale carries what its prep changed; a prep job names its step.
+    heist: job.heist ?? null,
+    heistStep: job.heistStep ?? null,
+    drop: job.drop ?? [],
+    inside: job.inside ?? null,
   };
 }
 

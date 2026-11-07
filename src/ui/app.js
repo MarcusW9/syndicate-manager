@@ -7,6 +7,8 @@ import { GANGS, GRUDGE, grudgeOf, jobGrudge, grudgeWord, gangsOn } from '../core
 import { defenceCut, openRaids, raidOn, raidPrice, canBuyOff, defenders, raidChoices, payOffRaid, hallShut, raidWho, raidBy, isGangRaid } from '../core/raids.js';
 import { HALL_SITES, HOME_HALL } from '../data/halls.js';
 import { billDue, mondayBrief, crewStandard, crewAgainstStandard } from '../core/week.js';
+import { heistFor, heistCard, buyStep, heistEffects } from '../core/heists.js';
+import { HEIST_RULES } from '../data/heists.js';
 import { crewLead } from '../core/lead.js';
 import { rankOf } from '../core/tong.js';
 import { TONG_EXPLAINER } from '../data/tong.js';
@@ -35,7 +37,7 @@ import { recordOf } from '../core/record.js';
 import { fameOf, fameName, standingOf, standingWord, pathOf, legendProgress } from '../core/fame.js';
 import { FAME_RULES, NAMED_OFFER, NAMED_TEXT } from '../data/fame.js';
 import { templateById, jobView, nextUnlock, JOB_GATES } from '../core/jobs.js';
-import { trustLabel, trustOf } from '../core/clients.js';
+import { trustLabel, trustOf, clientById } from '../core/clients.js';
 import { CLIENTS } from '../data/clients.js';
 import { availability, APPROACHES, traitMods, ratedStat, maxCrew, crewSizeRead } from '../core/crew.js';
 import { rollTarget, successChance, riskLabel } from '../core/risk.js';
@@ -286,6 +288,12 @@ function onClick(e) {
     case 'buy-hall': { // buying a hall outright (core/halls.js)
       const price = buyPrice(state, id);
       if (price != null && confirm(`Buy the ${cityName(id)} hall for ${money(price)}? No more rent on it, and expanding it adds none.`)) return setState(buyHall(state, id));
+      break;
+    }
+    case 'heist-buy': { // a prep step that went wrong, bought from a fixer (core/heists.js)
+      const [hid, step] = id.split('|');
+      const c = heistCard(state)?.steps.find((x) => x.id === step);
+      if (c?.buy?.ok && confirm(`Pay a fixer ${money(c.buy.price)} for this? It counts as done: ${c.effect.toLowerCase()}.`)) return setState(buyStep(state, hid, step));
       break;
     }
     case 'move-hall': { const [opId, d] = id.split('|'); return setState(moveToHall(state, opId, d)); }
@@ -855,6 +863,7 @@ function renderWeekBrief() {
         <div><dt>Free</dt><dd>${b.roster.free}/${b.roster.total}</dd></div>
         <div><dt>Jobs</dt><dd>${b.jobs}</dd></div>
       </dl>
+      ${b.heist ? `<button class="heistnote small" data-action="nav" data-id="ops">${esc(b.heist)}</button>` : ''}
       <p class="small muted">${[b.roster.away && `${b.roster.away} out`, b.roster.hurt && `${b.roster.hurt} hurt`, b.expiring && `${b.expiring} ${b.expiring === 1 ? 'offer ends' : 'offers end'} this week`, short && `${money(b.due - b.cash)} short of Sunday`].filter(Boolean).join(' · ') || 'A clear week.'}</p>
     </div>`;
 }
@@ -1741,6 +1750,8 @@ const fillNamed = (text, v) => text.replace(/\{(\w+)\}/g, (m, k) => namedVars(v)
 
 function jobFlags(v) {
   const flags = [];
+  const hz = heistFor(state, v.jobId); // a heist's prep or finale (core/heists.js)
+  if (hz) flags.push(['named', hz.step ? `Prep · ${hz.def.name}` : `${hz.def.name} · finale`]);
   if (namedHandle(v)) flags.push(['named', fillNamed(NAMED_TEXT.chip, v)]); // a client asked for an Elite by name (renown slice 4)
   const g = jobGrudge(v.tpl, v.threat);
   if (g) flags.push(['hot', `Against ${GANGS[g.gang].short}`]); // a job that hurts a gang (core/gangs.js)
@@ -1750,7 +1761,7 @@ function jobFlags(v) {
   if (v.rumour) flags.push([v.threatDelta > 0 ? 'hot' : v.threatDelta < 0 ? 'good' : 'info', `Street talk: ${v.rumour.tag}`]);
   else if (v.threatDelta > 0) flags.push(['hot', 'Hotter than usual']);
   else if (v.threatDelta < 0) flags.push(['good', 'Quieter than usual']);
-  if (intelFor(state, v.tpl.district)) flags.push(['good', 'Intel here']);
+  if (intelFor(state, v.tpl.district, v.inside)) flags.push(['good', 'Intel here']);
   if (v.days > 1) flags.push(['info', `${v.days}-day job`]);
   return flags.slice(0, 2);
 }
@@ -1936,7 +1947,7 @@ function renderPlan() {
   const freelancers = state.freelancers ?? [];
   const people = [...state.crew, ...freelancers.map(freelancerAsCrew)];
   const picked = plan.crew.map((id) => people.find((o) => o.id === id)).filter(Boolean);
-  const intel = intelFor(state, t.district);
+  const intel = intelFor(state, t.district, v.inside);
   const wheelsOp = state.crew.find((o) => o.id === plan.wheels) ?? null;
   const owOp = state.crew.find((o) => o.id === plan.overwatch) ?? null;
   // The bar shows the worse of the two reads: the crises (risk read) and the incidents (coverage).
@@ -2049,6 +2060,7 @@ function renderPlan() {
         if (!d) return '';
         return `<p class="openingline small"><strong>A favour for ${esc(v.client?.name ?? 'a contact')}:</strong> finish it and ${esc(hallLabel(d))} is ours to take (${esc(HALL_SITES[d].place)}). Walk away, and they ask again in two weeks.</p>`;
       })()}
+      ${heistPlanLine(job)}
       <div class="plangrid">
       <div class="riskcard plangrid__client">
         <p><strong>Client:</strong> ${clientLine(v)}${v.client ? ` <button class="infobtn" data-action="client-info" aria-expanded="${clientOpen}" aria-label="About ${esc(v.client.name)}">${clientOpen ? '×' : 'i'}</button>` : ''}</p>
@@ -2057,7 +2069,7 @@ function renderPlan() {
         ${v.hinted ? '<p class="intel">Intel unreliable: something about this job may not be what you were told.</p>' : ''}
         ${namedHandle(v) ? `<p class="named">${esc(fillNamed(NAMED_TEXT.chip, v))} by name: ${esc(fillNamed(NAMED_TEXT.bonus, v))} (inside, outside or on standby). Without them it pays as usual.</p>` : ''}
         ${v.rumour ? `<p class="talk-tag">Street talk: ${esc(v.rumour.text)}</p>` : ''}
-        ${intel ? `<p class="talk-tag">Intel from ${esc(intel.source)}: +${intel.bonus} on every roll here until day ${state.intel[t.district].until}.</p>` : ''}
+        ${intel ? `<p class="talk-tag">Intel from ${esc(intel.source)}: +${intel.bonus} on every roll ${state.intel?.[t.district]?.until >= state.day ? `here until day ${state.intel[t.district].until}` : 'on this job'}.</p>` : ''}
       </div>
 
       <div class="plangrid__approach">
@@ -2400,6 +2412,58 @@ function cityMap() {
  * The command centre's list (2026-11-05): everyone out, calls first, then side work. Everything can
  * be done from here without the map; picking a district (on the map or a crew's district) narrows it.
  */
+/**
+ * The heist on, at the top of Ops (core/heists.js, 2026-11-07): its prep steps, what each gives
+ * the finale, a Plan or Buy on each, and the finale once it's up. Nothing when no heist is on.
+ */
+function renderHeist() {
+  const c = heistCard(state);
+  if (!c) return '';
+  const onBoard = (id) => id && state.jobs.some((j) => j.id === id);
+  const finUp = onBoard(c.finaleJobId);
+  const days = c.weekStart - state.day;
+  const when = finUp ? `The finale is on the board until ${calendar(c.finaleDay).weekday}.`
+    : c.finaleJobId ? 'The finale is under way.'
+    : `The finale goes up ${days <= 1 ? 'tomorrow' : `${calendar(c.weekStart).weekday}, in ${days} days`}.`;
+  const mark = { done: '✓', bought: '✓', asked: '·', failed: '✗' };
+  const go = (st) => {
+    if (st.status === 'asked') return onBoard(st.jobId) ? `<button class="heist__go" data-action="open-job" data-id="${esc(st.jobId)}">Plan ›</button>` : '<span class="heist__go is-quiet">Out</span>';
+    if (st.status === 'failed' && st.buy) return st.buy.ok ? `<button class="heist__go" data-action="heist-buy" data-id="${esc(c.id)}|${esc(st.id)}">Buy ${money(st.buy.price)}</button>` : `<span class="heist__go is-quiet">${esc(st.buy.reason)}</span>`;
+    return '';
+  };
+  return `
+    <section class="heist" aria-label="Heist: ${esc(c.name)}">
+      <p class="heist__kicker">Heist · ${esc(c.contact)}</p>
+      <h3 class="heist__name">${esc(c.name)}</h3>
+      <p class="heist__when small">${when} ${c.prepared} of ${c.steps.length} prepared.</p>
+      <ol class="heist__steps">
+        ${c.steps.map((st) => `
+        <li class="heist__step is-${st.status}">
+          <span class="heist__mark" aria-hidden="true">${mark[st.status]}</span>
+          <span class="heist__text"><span>${esc(st.line)}</span><span class="heist__fx">${esc(st.effect)}${st.status === 'bought' ? ' · bought' : st.status === 'failed' ? ' · not done' : ''}</span></span>
+          ${go(st)}
+        </li>`).join('')}
+      </ol>
+      ${finUp ? `<button class="btn heist__finale" data-action="open-job" data-id="${esc(c.finaleJobId)}">Plan the finale</button>` : ''}
+    </section>`;
+}
+
+/** On a heist job's plan: what this prep gives the finale, or what the finale has from its prep. */
+function heistPlanLine(job) {
+  const hz = heistFor(state, job.id);
+  if (!hz) return '';
+  const { def, h, step } = hz;
+  if (step) {
+    const again = h.steps[step.id].tries <= HEIST_RULES.retries;
+    return `<p class="openingline heistline small"><strong>Prep for ${esc(def.name)}:</strong> ${esc(step.line)}. Finish it and the finale gets: ${esc(step.shows)}. Walk away and ${again ? `${esc(clientById(def.contact)?.name ?? 'they')} finds another job for it, once` : 'it can be bought from a fixer, or done without'}.</p>`;
+  }
+  const done = heistEffects(def, h).lines.length;
+  return `<div class="openingline heistline small">
+      <p><strong>${esc(def.name)}, the finale:</strong> ${done} of ${def.prep.length} prepared. Finish it and the heist is done; walk away and it's over.</p>
+      <ul class="heistline__fx">${def.prep.map((p) => { const ok = ['done', 'bought'].includes(h.steps[p.id]?.status); return `<li class="${ok ? 'is-on' : 'is-off'}"><span aria-hidden="true">${ok ? '✓' : '✗'}</span> ${esc(p.shows)}${ok ? '' : ' (not prepared)'}</li>`; }).join('')}</ul>
+    </div>`;
+}
+
 function renderOps() {
   const f = cityDistrict;
   const jobs = crewsOut(state).filter((c) => !f || c.district === f).sort((a, b) => b.waiting - a.waiting);
@@ -2421,7 +2485,7 @@ function renderOps() {
         </li>`;
       }).join('')}
     </ul>` : '';
-  return `
+  return `${f ? '' : renderHeist()}
     <div class="ops">
       <div class="ops__head">
         <h2>Out now</h2>

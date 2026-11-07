@@ -612,5 +612,11 @@ function migrate(state) {
     trimInbox(state);
     state.version = 46;
   }
+  if (state.version === 46) {
+    // v47: heists (core/heists.js, DESIGN.md 2026-11-07). No heist has been offered in an older save;
+    // the first Monday that meets a heist's gate offers it.
+    state.heists = state.heists ?? {};
+    state.version = 47;
+  }
   return state;
 }

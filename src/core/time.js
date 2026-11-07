@@ -3,6 +3,7 @@
 import { fadeGrudges } from './gangs.js';
 import { checkRaids } from './raids.js';
 import { introduceHalls } from './halls.js';
+import { introduceHeists, tickHeists } from './heists.js';
 import { tickJobs } from './jobs.js';
 import { trimInbox } from './inbox.js';
 import { driftTrust } from './clients.js';
@@ -99,7 +100,9 @@ export function advanceDay(prev) {
   if (calendar(state.day).isMonday) refreshArmoury(state); // new rifles in the armoury
   if (calendar(state.day).isMonday) rollRumour(state);
   if (calendar(state.day).isMonday) introduceHalls(state); // a contact offers a place once we're welcome (core/halls.js)
+  if (calendar(state.day).isMonday) introduceHeists(state); // a contact offers a heist once the tong is ready (core/heists.js)
   tickJobs(state); // offers expire; new work trickles in through the week
+  tickHeists(state); // prep left undone is asked again; the finale goes up in its week (core/heists.js)
   if (calendar(state.day).weekday === 'Wed') scoutWeek(state);
   state.recruits = (state.recruits ?? []).filter((r) => r.expiresDay >= state.day);
 

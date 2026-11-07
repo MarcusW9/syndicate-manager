@@ -147,7 +147,7 @@ export function bestLine(op, approach) {
 export function planRead(state, job, { crew, approach, overwatch = null, kit = null, wheels = null }) {
   const v = jobView(state, job);
   const tpl = { ...v.tpl, threat: v.threat };
-  const intel = intelFor(state, v.tpl.district);
+  const intel = intelFor(state, v.tpl.district, v.inside);
   const read = assessJob(tpl, crew, approach, { watched: watchedIn(state, v.tpl.district) ? WATCHED_PENALTY : 0, intel, wheels });
   const owKit = overwatch && (kitsFor(overwatch).includes(kit) ? kit : kitsFor(overwatch)[0]);
   const cov = coverage(tpl, crew, approach, { threat: v.threat, overwatch: owKit ? { op: overwatch, kit: owKit } : null, intel, wheels, jobId: job.id });
