@@ -20,6 +20,8 @@ import { seedRecord } from '../core/record.js';
 import { seedMilestones } from '../core/milestones.js';
 import { seedFame } from '../core/fame.js';
 import { nameLook, refreshArmoury, stockShelf } from '../core/looks.js';
+import { PIECES } from '../data/hallBuild.js';
+import { money } from '../core/money.js';
 import { addOffer, templateById } from '../core/jobs.js';
 import { STARTING_ROSTER_CAP } from '../core/recruits.js';
 import { prepareOperative, rollPotential, rollScoutError, scoutFor, potentialRead } from '../core/development.js';
@@ -611,6 +613,26 @@ function migrate(state) {
     // message since day 1; trim them now as the daily tick does. Nothing still waiting is dropped.
     trimInbox(state);
     state.version = 46;
+  }
+  if (state.version === 46) {
+    // v47: the Old Town hall is a compound that grows with Expand (data/sites.js HALLS.oldTown
+    // `parts`, DESIGN.md 2026-11-07), drawn anew, so its squares are not where they were. What was
+    // built there is paid back in full, with a note; the beds and the level stay as they are.
+    const hall = (state.halls ?? []).find((h) => h.district === 'oldTown');
+    const built = hall?.build ?? [];
+    if (built.length) {
+      const back = built.reduce((n, b) => n + (PIECES[b.piece]?.cost ?? 0), 0);
+      state.cash = (state.cash ?? 0) + back;
+      hall.build = [];
+      state.inbox = state.inbox ?? [];
+      state.inbox.unshift({
+        id: `hall-redrawn-oldTown-${state.day ?? 1}`, type: 'finance', day: state.day ?? 1,
+        subject: 'The Old Town hall has room to grow',
+        body: `The hall is a block of its own now: the room, the lane beside it, and the flat, the yard and the back kitchen to take as it grows. What we'd built there is cleared and paid back in full: ${money(back)}. Build it again on the new plan.`,
+        blocking: false, read: false,
+      });
+    }
+    state.version = 47;
   }
   return state;
 }

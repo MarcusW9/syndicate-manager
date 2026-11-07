@@ -17,7 +17,7 @@ const MAP = { x0: 6, y0: 6, x1: 354, y1: 232 }; // where anyone can stand (the r
 // What counts as cover on a site (data/sites.js classes): containers and crates, desks, market
 // stalls, planters, cots, stable blocks. Cover and water are solid (nobody stands in them).
 export const COVER = new Set(['sp-cover', 'sp-desk', 'sp-stall', 'sp-planter', 'sp-cot', 'sp-stable']);
-const BLOCK = new Set([...COVER, 'sp-water', 'sp-jetty', 'sp-block']);
+const BLOCK = new Set([...COVER, 'sp-water', 'sp-jetty', 'sp-block', 'sp-house']); // sp-house: a compound's buildings, fought round, not in (2026-11-07)
 const FULL_AT = 24; // a piece of cover this long or longer (a container) is full cover; smaller is half
 const GAP = 6; // how far behind the cover a spot is
 const APART = 16; // spots at least this far apart

@@ -15,6 +15,7 @@ import { CLIENTS } from '../data/clients.js';
 import { TONG_RANKS } from '../data/tong.js';
 import { money } from './money.js';
 import { PIECES, ROOM_EFFECT } from '../data/hallBuild.js';
+import { HALLS } from '../data/sites.js';
 
 const districtName = (d) => NAMES.districts?.[d] ?? d;
 const districtInText = (d) => NAMES.districtsInText?.[d] ?? districtName(d);
@@ -96,6 +97,12 @@ export function openHall(prev, district) {
 export function nextHallExpansion(state, district) {
   const h = hallIn(state, district);
   if (!h) return null;
+  // A compound (data/sites.js `parts`, 2026-11-07) expands by taking its next part, at that part's price; none left, no expanding.
+  const site = HALLS[district];
+  if (site?.parts) {
+    const part = site.parts.find((p) => p.lvl === h.level + 1);
+    return part ? { cost: part.cost, beds: HALL_EXPANSION.beds, rentIncrease: h.owned ? 0 : HALL_EXPANSION.rent, level: h.level + 1, part: part.id, partName: part.name } : null;
+  }
   return { cost: HALL_EXPANSION.costPerLevel * h.level, beds: HALL_EXPANSION.beds, rentIncrease: h.owned ? 0 : HALL_EXPANSION.rent, level: h.level + 1 }; // a bought hall adds no rent
 }
 
@@ -137,7 +144,7 @@ export function expandHall(prev, district) {
   state.inbox.unshift({
     id: `hall-expand-${district}-${state.day}`, type: 'finance', day: state.day,
     subject: `${districtName(district)} hall expanded: ${h.beds} beds`,
-    body: `We took over the rooms next door. Paid ${money(x.cost)}. Rent for the hall is now ${money(h.rent)} a week.`, blocking: false, read: false,
+    body: `${x.partName ? `${x.partName} is ours now.` : 'We took over the rooms next door.'} Paid ${money(x.cost)}. Rent for the hall is now ${money(h.rent)} a week.`, blocking: false, read: false,
   });
   return state;
 }

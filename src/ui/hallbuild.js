@@ -9,7 +9,7 @@
 // (picked: a built piece's id, or a bed's, 'bed-1' ...).
 
 import { BED, HALL_BUILD, PIECES } from '../data/hallBuild.js';
-import { bedsOnFloor, buildableCells, builtCells, canPlace, canRemove, canTurn, floorOf, floorUsed, hallMap, hallSiteFor, pieceAt, pieceCells, refundOf } from '../core/hallbuild.js';
+import { bedsOnFloor, buildableCells, builtCells, heldParts, nextPart, partCells, partAt, canPlace, canRemove, canTurn, floorOf, floorUsed, hallMap, hallSiteFor, pieceAt, pieceCells, refundOf } from '../core/hallbuild.js';
 import { hallIn, residents } from '../core/halls.js';
 import { sitePlanSvg } from './siteplan.js';
 import { defencesIn, defenceCut } from '../core/raids.js';
@@ -44,10 +44,39 @@ function ghost(view) {
   return p.shapes(x * C, y * C, rot).filter((s) => s.t === 'rect').map((s) => `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" class="bgrid__ghost"/>`).join('');
 }
 
+/**
+ * A compound's parts over its plan (2026-11-07): the name of each part; a part not held yet hatched,
+ * with EXPAND › on the next one and its level on the rest; and, on the build screen, the squares in a
+ * held part kept clear for a way in, faintly marked so the gap is explained. tap: they can be tapped.
+ */
+export function partsOverlay(site, level, { tap = false, free = null, esc = (x) => x } = {}) {
+  if (!site.parts) return '';
+  const nx = nextPart(site, level);
+  const held = new Set(heldParts(site, level).map((p) => p.id));
+  const hatch = '<defs><pattern id="bhatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="rgba(11,13,17,.72)"/><path d="M0 0v6" stroke="#2a303b" stroke-width="1.6"/></pattern></defs>';
+  const act = (id) => (tap ? ` data-action="build-part" data-id="${esc(id)}" role="button" tabindex="0"` : '');
+  const parts = site.parts.map((p) => {
+    const [x0, y0, x1, y1] = p.grid;
+    const [x, y, w, h] = [x0 * C, y0 * C, (x1 - x0 + 1) * C, (y1 - y0 + 1) * C];
+    const name = `<text class="bpart__name ${held.has(p.id) ? '' : 'is-locked'}" x="${x + 3}" y="${y - 2.5}">${esc(p.name.replace(/^The /, '').toUpperCase())}</text>`;
+    if (held.has(p.id)) return name;
+    const isNext = nx?.id === p.id;
+    return `<g class="bpart ${isNext ? 'is-next' : ''}"${act(p.id)} aria-label="${esc(`${p.name}, ${isNext ? 'take it with Expand' : `level ${p.lvl}`}`)}"><rect x="${x + 1}" y="${y + 1}" width="${w - 2}" height="${h - 2}" fill="url(#bhatch)" class="bpart__area"/>
+      <text class="bpart__tag" x="${x + w / 2}" y="${y + h / 2 + 3}" text-anchor="middle">${isNext ? 'EXPAND ›' : `LEVEL ${p.lvl}`}</text></g>${name}`;
+  }).join('');
+  const kept = free ? heldParts(site, level).flatMap(partCells).filter((k) => !free.has(k)).map((k) => {
+    const [cx, cy] = k.split(',').map(Number);
+    const r = { x: cx * C, y: cy * C };
+    return `<rect class="bkeep" x="${r.x + 3}" y="${r.y + 3}" width="${C - 6}" height="${C - 6}"${tap ? ` data-action="build-keep" data-id="${cx},${cy}" role="button" tabindex="0" aria-label="Kept clear: a way in"` : ''}/>`;
+  }).join('') : '';
+  return `${hatch}${kept}${parts}`;
+}
+
 /** The grid over the plan: free cells to tap, built cells to pick, the picked one outlined. */
 function grid(state, view, esc) {
   const hall = hallIn(state, view.district);
-  const free = buildableCells(hallMap(view.district));
+  const site = hallMap(view.district);
+  const free = buildableCells(site, hall.level);
   const built = builtCells(hall);
   const beds = bedsOnFloor(hall);
   const who = residents(state, view.district);
@@ -66,13 +95,22 @@ function grid(state, view, esc) {
     const [w, h] = sel.rot && p.turns ? [p.size[1], p.size[0]] : p.size;
     return `<rect x="${sel.x * C + 0.5}" y="${sel.y * C + 0.5}" width="${w * C - 1}" height="${h * C - 1}" class="bgrid__sel"/>`;
   })() : view.cell ? `<rect x="${view.cell[0] * C + 0.5}" y="${view.cell[1] * C + 0.5}" width="${C - 1}" height="${C - 1}" class="bgrid__sel"/>` : '';
-  return `<svg class="bgrid" viewBox="0 0 360 240">${cells}${ghost(view)}${outline}</svg>`;
+  return `<svg class="bgrid" viewBox="0 0 360 240">${partsOverlay(site, hall.level, { tap: true, free, esc })}${cells}${ghost(view)}${outline}</svg>`;
 }
 
 /** The sheet under the plan: what's picked and what you can do with it. */
 function sheet(state, view, ui) {
   const { esc, money } = ui;
   const hall = hallIn(state, view.district);
+  const site = hallMap(view.district);
+  if (view.part) {
+    const p = site.parts?.find((x) => x.id === view.part);
+    const isNext = nextPart(site, hall.level)?.id === p?.id;
+    if (p) return `<div class="bsheet"><p class="bsheet__head"><strong>${esc(p.name)}</strong> <span class="muted small">level ${p.lvl} · ${partCells(p).length} squares · ${p.inside ? 'inside' : 'outside'}</span></p>
+      <p class="small">${esc(p.about)}</p>
+      ${isNext ? `<div class="bsheet__btns"><button class="btn btn--primary" data-action="expand-hall" data-id="${esc(view.district)}" ${state.cash >= p.cost ? '' : 'disabled'}>Expand: take it · ${money(p.cost)}</button></div>` : `<p class="small muted">Take ${esc(nextPart(site, hall.level)?.name.toLowerCase() ?? 'the part before it')} first.</p>`}</div>`;
+  }
+  if (view.keep) return '<div class="bsheet"><p class="bsheet__head"><strong>Kept clear</strong></p><p class="small">A way in or out, or where one side stands when a raid starts. Nothing is built here, so a raid can always be fought.</p></div>';
   const beds = bedsOnFloor(hall);
   const bed = beds.findIndex((b) => b.id === view.picked);
   if (bed >= 0) {
@@ -138,7 +176,7 @@ export function renderHallBuild(ui, state, view) {
       ${tab === 'defence' ? `<p class="muted small">Cover where our people stand when they hold the hall; a raid is fought on this map. Every ${HALL_BUILD.perThreat} pieces make a raid one step easier.</p>
       <p class="small bdef">${defenceLine(state, view.district)}</p>` : '<p class="muted small">One of each per hall. A room helps whoever lives here; it isn\'t cover in a raid.</p>'}
       <div class="btiles">${tiles}</div>
-      <p class="muted small">Removing something gives back half its cost. Expanding the hall gives ${HALL_BUILD.floorPerLevel} more squares.</p>
+      <p class="muted small">Removing something gives back half its cost. ${hallMap(view.district).parts ? 'Expanding the hall takes the next part of the block, and all its floor.' : `Expanding the hall gives ${HALL_BUILD.floorPerLevel} more squares.`}</p>
     </section>`;
 }
 

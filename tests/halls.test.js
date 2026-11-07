@@ -6,7 +6,7 @@ import { createNewGame, SAVE_VERSION } from '../src/core/state.js';
 import { advanceDay, weeklyBill } from '../src/core/time.js';
 import { availability } from '../src/core/crew.js';
 import { hire, canHire, expandSafehouse, STARTING_ROSTER_CAP } from '../src/core/recruits.js';
-import { hallIn, residents, freeBeds, canOpenHall, openHall, expandHall, canMove, moveToHall, introduceHalls, syncHalls } from '../src/core/halls.js';
+import { hallIn, residents, freeBeds, canOpenHall, openHall, expandHall, nextHallExpansion, canMove, moveToHall, introduceHalls, syncHalls } from '../src/core/halls.js';
 import { HALL_SITES } from '../src/data/halls.js';
 import { rankOf } from '../src/core/tong.js';
 import { adjustTrust } from '../src/core/clients.js';
@@ -68,9 +68,17 @@ test('each hall expands on its own, the cost growing with its level; the old saf
   assert.equal(hallIn(e, 'nightMarket').beds, HALL_SITES.nightMarket.beds + 2);
   assert.equal(hallIn(e, 'nightMarket').level, 2);
   assert.equal(e.cash, o.cash - 10000);
+  o.cash = 100000;
   const home = expandSafehouse(o);
   assert.equal(hallIn(home, 'oldTown').beds, hallIn(o, 'oldTown').beds + 2);
   assert.equal(home.rosterCap, o.rosterCap + 2);
+  // Old Town is a compound (2026-11-07): it expands by taking its next part, at that part's price, until the block is ours.
+  assert.equal(home.cash, o.cash - 20000, 'the flat costs its own price');
+  let all = home;
+  all = expandSafehouse(all); all = expandSafehouse(all);
+  assert.equal(hallIn(all, 'oldTown').level, 4);
+  assert.equal(nextHallExpansion(all, 'oldTown'), null, 'the whole block is ours: nothing left to take');
+  assert.equal(expandSafehouse(all), all);
 });
 
 test('moving in takes the day: they count there at once, can\'t work today, and are free tomorrow', () => {

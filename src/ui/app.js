@@ -22,10 +22,10 @@ import { statIcon, statGlyph, crewIcons, traitGlyph } from './icons.js';
 import { cityMap as drawCityMap, cityMapView, animateMap, FULL_VIEW, MAP_DISTRICTS } from './citymap.js';
 import { districtArt } from './districtArt.js';
 import { landmark } from './landmarks.js';
-import { renderHallBuild, hallBuildLine } from './hallbuild.js';
+import { renderHallBuild, hallBuildLine, partsOverlay } from './hallbuild.js';
 import { crewOutMap } from './minimap.js';
 import { siteFor, sitePlanSvg } from './siteplan.js';
-import { placePiece, removePiece, turnPiece, pieceAt, bedAt, refundOf, canRemove, hallSiteFor } from '../core/hallbuild.js';
+import { placePiece, removePiece, turnPiece, pieceAt, bedAt, refundOf, canRemove, hallSiteFor, hallMap, heldParts, partCells } from '../core/hallbuild.js';
 import { PIECES } from '../data/hallBuild.js';
 
 import { advanceDay, calendar, isBlocked, seasonStartDay } from '../core/time.js';
@@ -257,7 +257,10 @@ function onClick(e) {
     case 'pass': openRecruitId = null; return setState(passRecruit(state, id));
     case 'expand-hall': { // halls (core/halls.js)
       const x = nextHallExpansion(state, id);
-      if (x && confirm(`Expand the ${cityName(id)} hall for ${money(x.cost)}? +${x.beds} beds; its rent goes up by ${money(x.rentIncrease)} a week.`)) return setState(expandHall(state, id));
+      if (x && confirm(`${x.partName ? `Take ${x.partName.toLowerCase()} for the ${cityName(id)} hall` : `Expand the ${cityName(id)} hall`} for ${money(x.cost)}? +${x.beds} beds; ${x.rentIncrease ? `its rent goes up by ${money(x.rentIncrease)} a week` : 'no rent'}.`)) {
+        if (buildView) buildView = { ...buildView, part: null };
+        return setState(expandHall(state, id));
+      }
       break;
     }
     case 'open-hall': {
@@ -272,9 +275,11 @@ function onClick(e) {
       const [x, y] = id.split(',').map(Number);
       const hall = hallIn(state, buildView.district);
       const on = pieceAt(hall, x, y) ?? bedAt(hall, x, y);
-      buildView = on ? { ...buildView, cell: null, picked: on.id } : { ...buildView, cell: [x, y], picked: null };
+      buildView = on ? { ...buildView, cell: null, picked: on.id, part: null, keep: null } : { ...buildView, cell: [x, y], picked: null, part: null, keep: null };
       break;
     }
+    case 'build-part': buildView = { ...buildView, part: id, keep: null, cell: null, picked: null }; break;
+    case 'build-keep': buildView = { ...buildView, keep: id, part: null, cell: null, picked: null }; break;
     case 'build-piece': buildView = { ...buildView, piece: id, picked: null, rot: 0 }; break;
     case 'build-tab': buildView = { ...buildView, tab: id, piece: null }; break;
     case 'build-rot': buildView = { ...buildView, rot: buildView.rot ? 0 : 1 }; break;
@@ -1469,7 +1474,7 @@ function renderHallPage(d) {
         <p class="muted small">${esc(HALL_SITES[d]?.place ?? '')}</p></div>
       </div>
       <p class="small">Level ${h.level} · ${h.owned ? 'no rent' : `${money(h.rent)}/wk`} · heat ${heatIn(state, d)}/10${hallShut(state, d) ? ` · <span class="citycard__shut">shut after a raid until day ${h.shutUntil}</span>` : ''}${live ? ` · <span class="citycard__raid">raid ${esc(raidWhen(raid))}</span>` : ''}</p>
-      <div class="bplan hallpage__plan">${sitePlanSvg({ site: hallSiteFor(state, d) })}</div>
+      <div class="bplan hallpage__plan">${sitePlanSvg({ site: hallSiteFor(state, d) })}${hallMap(d).parts ? `<svg class="bgrid" viewBox="0 0 360 240" aria-hidden="true">${partsOverlay(hallMap(d), h.level)}</svg>` : ''}</div>
       <p class="small muted">${esc(hallBuildLine(h, defenceCut(state, d)))}</p>
       <button class="btn btn--primary btn--block" data-action="build-hall" data-id="${esc(d)}">Build</button>
       <h2>Who sleeps here <span class="muted small">${who.length}/${bedsOf(h)} beds</span></h2>
@@ -1485,9 +1490,12 @@ function renderHallPage(d) {
       <h2>Move someone in <span class="muted small">${free} free ${free === 1 ? 'bed' : 'beds'}</span></h2>
       <p class="muted small">They settle in today and are free tomorrow.</p>
       <div class="stack">${movers.map((op) => `<button class="btn btn--ghost" data-action="move-hall" data-id="${esc(`${op.id}|${d}`)}">${esc(op.handle)} <span class="muted small">· from ${esc(cityName(op.hall ?? HOME_HALL))}</span></button>`).join('')}</div>` : ''}
+      ${hallMap(d).parts ? `
+      <h2>The block <span class="muted small">${heldParts(hallMap(d), h.level).length} of ${hallMap(d).parts.length} parts</span></h2>
+      <ul class="secs">${hallMap(d).parts.map((p) => { const held = p.lvl <= h.level; const nx = x?.part === p.id; return `<li class="sec ${held ? '' : 'is-locked'}"><strong>${esc(p.name)}</strong> <span class="muted small">${held ? `${partCells(p).length} squares · ${p.inside ? 'inside' : 'outside'}` : nx ? `next · ${money(p.cost)}` : `level ${p.lvl}`}</span><br><span class="small ${held ? '' : 'muted'}">${esc(p.about)}</span></li>`; }).join('')}</ul>` : ''}
       <h2>The place</h2>
       <div class="stack">
-        <button class="btn btn--block" data-action="expand-hall" data-id="${esc(d)}" ${state.cash >= x.cost ? '' : 'disabled'}>Expand: +${x.beds} beds for ${money(x.cost)} (${x.rentIncrease ? `rent +${money(x.rentIncrease)}/wk` : 'no rent'})</button>
+        ${x ? `<button class="btn btn--block" data-action="expand-hall" data-id="${esc(d)}" ${state.cash >= x.cost ? '' : 'disabled'}>${x.partName ? `Expand: take ${esc(x.partName.toLowerCase())}` : 'Expand'}: +${x.beds} beds for ${money(x.cost)} (${x.rentIncrease ? `rent +${money(x.rentIncrease)}/wk` : 'no rent'})</button>` : '<p class="small muted">The whole block is ours.</p>'}
         ${price == null ? '' : `<button class="btn btn--block" data-action="buy-hall" data-id="${esc(d)}" ${state.cash >= price ? '' : 'disabled'}>Buy the place: ${money(price)}, then no rent</button>`}
       </div>
     </section>`;

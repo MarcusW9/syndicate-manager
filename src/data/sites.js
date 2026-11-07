@@ -457,13 +457,19 @@ export const HALL = {
 // data/halls.js names, each with our people by the back way out (paths.inside's end) and the
 // raiders' way in (posts). Cover is furniture and the place's own stuff, so a fight there reads as
 // that hall. Checked by tests/hallmaps.test.js (on the map, spots in cover on both sides).
-const hallSite = (name, aria, { exit, anchor, entry, perch = [340, 18] }) => ({
-  name, aria,
-  points: { van: exit, perch, target: anchor },
-  paths: { in: [exit, [(exit[0] + anchor[0]) / 2, (exit[1] + anchor[1]) / 2]], inside: [[(exit[0] + anchor[0]) / 2, (exit[1] + anchor[1]) / 2], anchor], target: [anchor, anchor], out: [anchor, exit] },
+/** A hall's way in for a raid: where the raiders come in (entry), where ours stand (anchor), and ours' way out. */
+export const hallWay = ({ exit, anchor, entry, via = null, perch = [340, 18] }) => {
+  const mid = via ?? [(exit[0] + anchor[0]) / 2, (exit[1] + anchor[1]) / 2];
+  return {
+    points: { van: exit, perch, target: anchor },
+    paths: { in: [exit, mid], inside: [mid, anchor], target: [anchor, anchor], out: [anchor, exit] },
+    posts: { in: entry, inside: entry, target: entry },
+  };
+};
+const hallSite = (name, aria, way) => ({
+  name, aria, ...hallWay(way),
   views: { in: [0, 0, 360, 240], inside: [0, 0, 360, 240], target: [0, 0, 360, 240] },
-  posts: { in: entry, inside: entry, target: entry },
-  sight: { rifle: [perch, [perch[0] - 6, perch[1] + 4], [perch[0] + 6, perch[1] + 4]], drone: [perch, [4, 236], [356, 236], [356, 4], [4, 4]] },
+  sight: { rifle: [way.perch ?? [340, 18], [(way.perch ?? [340, 18])[0] - 6, (way.perch ?? [340, 18])[1] + 4], [(way.perch ?? [340, 18])[0] + 6, (way.perch ?? [340, 18])[1] + 4]], drone: [way.perch ?? [340, 18], [4, 236], [356, 236], [356, 4], [4, 4]] },
 });
 const SILK = ['#b48cff', '#ff5fae', '#f2d541', '#3de8d8'];
 const SADDLE = '#4a3424';
@@ -475,29 +481,51 @@ export const HALLS = {
   // floor and the walls, so they're still cover in a raid. The beds aren't drawn here: they're
   // blocks on the floor, as many as the hall has (core/hallbuild.js bedsOnFloor), from `bedCorner`.
   //
-  // Old Town: the damp room above a noodle shop. Up the front stairs from the street; out by the
-  // rusted fire stair on the back wall.
+  // Old Town: a compound that grows with the hall (owner, 2026-11-07: "grow with expand", "a bit of
+  // gap between some of the buildings ... raids look better because they are fighting between
+  // buildings"). Separate buildings with the lane, the yard and a passage between them; `parts` are
+  // what the hall can hold, each from a level (core/hallbuild.js heldParts), in build cells. The
+  // buildings are solid in a fight (sp-house), so a raid is fought outside: up the lane from the
+  // street, or (with the yard) through the yard gate from the back alley. `ways` are those two. An
+  // inside part's `beds` is how many of the hall's beds stand in it (the yard's two go in the flat).
   oldTown: {
-    ...hallSite('the room above the noodle shop', 'Plan of our Old Town hall: the room above the noodle shop, the front stairs up from the street, the beds, the mahjong table, the altar, the stove, the fire stair out the back',
-      { exit: [334, 40], anchor: [292, 80], entry: [38, 142] }),
-    grid: [2, 1, 8, 5], bedCorner: [2, 1],
-    shapes: [
-      ...ROAD,
-      { t: 'rect', cls: 'sp-sign', x: 70, y: 206, w: 44, h: 5, fill: '#ff3d5f' },
-      { t: 'rect', cls: 'sp-building', x: 16, y: 14, w: 300, h: 188 },
-      { t: 'rect', cls: 'sp-door', x: 30, y: 199, w: 16, h: 4 },
-      { t: 'row', cls: 'sp-step', x: 26, y: 150, w: 26, h: 1.5, step: 6, n: 8, axis: 'y' },
-      { t: 'rect', cls: 'sp-door', x: 313, y: 48, w: 4, h: 16 },
-      { t: 'row', cls: 'sp-step', x: 322, y: 30, w: 22, h: 1.5, step: 6, n: 14, axis: 'y' },
-      { t: 'rect', cls: 'sp-cover', x: 46, y: 60, w: 10, h: 26, fill: CONTAINER_TONES[0] }, // shoes and umbrellas on a rack
-      { t: 'rect', cls: 'sp-cover', x: 34, y: 104, w: 12, h: 12, fill: CONTAINER_TONES[2] }, // noodle crates at the top of the stairs
-      { t: 'rect', cls: 'sp-desk', x: 120, y: 186, w: 40, h: 10 }, // the stove and its counter, on the front wall
-      { t: 'rect', cls: 'sp-cover', x: 150, y: 16, w: 14, h: 10, fill: '#5a1e24' }, // the altar, on the back wall
-      { t: 'rect', cls: 'sp-cover', x: 280, y: 104, w: 8, h: 26, fill: '#7a2a2a' }, // a lacquer screen
-      { t: 'rect', cls: 'sp-cover', x: 290, y: 140, w: 14, h: 12, fill: CONTAINER_TONES[3] }, // crates of bitter herbs
-      { t: 'rect', cls: 'sp-desk', x: 276, y: 168, w: 26, h: 18 }, // the mahjong table
+    ...hallSite('the room above the noodle shop', 'Plan of our Old Town hall: the room above the noodle shop, the lane beside it, the flat across the lane, the yard behind with a gate onto the back alley, and the back kitchen across the passage',
+      { exit: [20, 14], anchor: [180, 80], entry: [180, 226], via: [100, 10] }),
+    ways: {
+      street: { lvl: 1, say: 'come up the lane from the street', ...hallWay({ exit: [20, 14], anchor: [180, 80], entry: [180, 226], via: [100, 10] }) },
+      gate: { lvl: 3, say: 'come through the yard gate', ...hallWay({ exit: [180, 226], anchor: [180, 100], entry: [135, 16], via: [200, 238] }) },
+    },
+    parts: [
+      { id: 'room', lvl: 1, name: 'The room', inside: true, grid: [1, 3, 4, 6], bedCorner: [1, 3], beds: 8, about: 'Where it started, above the noodle shop. Rooms and beds go in here.' },
+      { id: 'lane', lvl: 1, name: 'The lane', inside: false, grid: [5, 3, 6, 6], about: 'The lane between the buildings, up from the street. Outside: a raid from the street is fought here.' },
+      { id: 'flat', lvl: 2, name: 'The flat', inside: true, grid: [7, 3, 10, 6], bedCorner: [10, 6], beds: 4, cost: 20000, about: 'The flat across the lane. Room for a clinic and more beds.' },
+      { id: 'yard', lvl: 3, name: 'The yard', inside: false, grid: [1, 1, 7, 2], cost: 30000, about: 'The yard behind the block, walled in, with a gate onto the back alley. Outside: defences go here, and a raid can come through the gate.',
+        shapes: [{ t: 'line', cls: 'sp-wall', x1: 26, y1: 30, x2: 120, y2: 30 }, { t: 'line', cls: 'sp-wall', x1: 150, y1: 30, x2: 240, y2: 30 }, { t: 'rect', cls: 'sp-gate', x: 120, y: 28, w: 30, h: 4, fill: '#f2d541' }] },
+      { id: 'kitchen', lvl: 4, name: 'The back kitchen', inside: true, grid: [9, 1, 11, 2], bedCorner: [11, 1], beds: 2, cost: 40000, about: 'The old back kitchen across the passage. With it the whole block is ours.' },
     ],
-    labels: [{ x: 70, y: 222, text: 'NOODLE SHOP' }, { x: 196, y: 26, text: 'OUR HALL', hi: true }, { x: 280, y: 12, text: 'FIRE STAIR' }, { x: 22, y: 146, text: 'STAIRS' }],
+    shapes: [
+      { t: 'rect', cls: 'sp-alley', x: 0, y: 0, w: 360, h: 30 },
+      ...ROAD,
+      { t: 'rect', cls: 'sp-house', x: 26, y: 92, w: 128, h: 118 }, // the room, over the noodle shop
+      { t: 'rect', cls: 'sp-house', x: 206, y: 92, w: 128, h: 118 }, // the flat
+      { t: 'rect', cls: 'sp-house', x: 266, y: 32, w: 90, h: 58 }, // the back kitchen
+      { t: 'rect', cls: 'sp-block', x: 0, y: 32, w: 22, h: 178 }, // the next block along
+      { t: 'rect', cls: 'sp-block', x: 338, y: 92, w: 22, h: 118 },
+      { t: 'rect', cls: 'sp-sign', x: 50, y: 206, w: 44, h: 5, fill: '#ff3d5f' }, // the noodle shop's sign
+      { t: 'rect', cls: 'sp-door', x: 151, y: 140, w: 4, h: 16 }, // the room's door onto the lane
+      { t: 'rect', cls: 'sp-door', x: 80, y: 90, w: 16, h: 4 }, // its back door onto the yard
+      { t: 'rect', cls: 'sp-door', x: 205, y: 140, w: 4, h: 16 }, // the flat's door
+      { t: 'rect', cls: 'sp-door', x: 264, y: 52, w: 4, h: 16 }, // the kitchen's door onto the passage
+      { t: 'rect', cls: 'sp-cover', x: 182, y: 40, w: 26, h: 8, fill: '#3a2d22' }, // pallets in the yard
+      { t: 'rect', cls: 'sp-cover', x: 124, y: 66, w: 12, h: 12, fill: CONTAINER_TONES[2] }, // bins
+      { t: 'rect', cls: 'sp-cover', x: 244, y: 60, w: 8, h: 26, fill: CONTAINER_TONES[3] }, // a water tank in the passage
+      { t: 'rect', cls: 'sp-cover', x: 96, y: 16, w: 26, h: 8, fill: CONTAINER_TONES[0] }, // bins in the back alley
+      { t: 'rect', cls: 'sp-cover', x: 170, y: 16, w: 14, h: 8, fill: CONTAINER_TONES[1] }, // crates
+      { t: 'rect', cls: 'sp-cover', x: 96, y: 212, w: 26, h: 8, fill: CONTAINER_TONES[2] }, // noodle crates on the pavement
+      { t: 'rect', cls: 'sp-cover', x: 244, y: 213, w: 14, h: 8, fill: '#7a2a2a' }, // a hawker's cart
+      { t: 'rect', cls: 'sp-cover', x: 300, y: 212, w: 26, h: 8, fill: '#2f3442' }, // a delivery trike, parked
+    ],
+    labels: [{ x: 52, y: 236, text: 'NOODLE SHOP' }, { x: 262, y: 236, text: 'OUR BLOCK', hi: true }, { x: 6, y: 10, text: 'BACK ALLEY' }],
   },
   // The Night Market: two rooms above Madam Rao's sari shop. Up the shop's back stair; out through
   // the roof hatch.
@@ -648,7 +676,11 @@ const hash = (str) => { let h = 2166136261; for (const ch of String(str)) h = Ma
 export function pickSite(district, jobId = '', templateId = null, build = null) {
   if (String(templateId).startsWith('raid:')) { // a raid is fought in the hall itself, with what's built there (data/hallBuild.js)
     const hall = HALLS[String(templateId).slice(5)] ?? HALL;
-    return build?.length ? { ...hall, shapes: [...hall.shapes, ...buildShapes(build)] } : hall;
+    if (!build?.length) return hall;
+    // A compound's parts held (their walls and gate) and the way the raid came in (core/hallbuild.js floorPieces).
+    const way = build.find((b) => b.piece === 'way');
+    const parts = build.filter((b) => b.piece === 'part').flatMap((b) => hall.parts?.find((x) => x.id === b.id)?.shapes ?? []);
+    return { ...hall, ...(way && hall.ways?.[way.id]), shapes: [...hall.shapes, ...parts, ...buildShapes(build)] };
   }
   const plot = PLOTS[district];
   if (!plot) return SITES[district] ?? SITES.generic;

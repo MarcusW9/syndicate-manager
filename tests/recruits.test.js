@@ -80,7 +80,8 @@ test('the roster cap blocks hiring until the safehouse is expanded', () => {
   assert.equal(s.rosterCap, STARTING_ROSTER_CAP + 2);
   assert.equal(s.rent, rent + 1000);
   assert.equal(s.cash, cash - cost);
-  assert.equal(nextExpansion(s).cost, cost * 2, 'each expansion costs more');
+  assert.ok(nextExpansion(s).cost > cost, 'each expansion costs more'); // the home hall's parts: the flat ¥20,000, then the yard ¥30,000 (2026-11-07)
+  assert.equal(nextExpansion(s).cost, 30000);
   assert.equal(canHire(s, s.recruits[0]).ok, true);
 });
 

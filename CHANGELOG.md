@@ -7,6 +7,13 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-07 · The Old Town hall grows into a compound
+- The Old Town hall is now a block of separate buildings with space between them. You start with the room above the noodle shop and the lane beside it. Each Expand takes the next part: the flat across the lane (¥20,000), the walled yard behind with a gate onto the back alley (¥30,000), then the back kitchen across the passage (¥40,000). Each brings two more beds, and once the whole block is held there's nothing more to expand.
+- No floor allowance in Old Town: every square of the parts you hold is yours to build on. Parts you don't hold yet are hatched on the plan; tap the next one to take it. Squares kept clear for a way in are faintly marked, and tapping one says why.
+- Raids on Old Town are fought outside, between the buildings: up the lane from the street, or, once you hold the yard, through the yard gate. The buildings are solid in a fight, so defences belong in the lane and the yard.
+- The hall's page lists the block's parts, and Expand says which part it takes.
+- Saves upgrade (v47): anything already built in the Old Town hall is cleared and paid back in full, with a note in the inbox. The other halls are unchanged for now.
+
 ## 2026-11-07 · A mock-up: halls that grow into compounds
 - No game change. `drafts/prototypes/hall-compound.html` shows the Old Town hall growing with each Expand: the room, the flat next door, the yard behind with a gate, then the back kitchen and the street shutter, a compound. You build zoomed in to one part at a time. For the owner to judge before anything is built.
 
