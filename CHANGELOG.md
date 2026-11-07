@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-07 · A plan for Phase 3
+- No game change. `drafts/PROPOSAL-phase-3.md` plans what comes after the halls: heists (prep jobs that each change a big finale), the Legend defining job, rival tongs (a league of other tongs, generated each game, with a Lantern List of the city's best runners), then loyalty, runners being tempted away, and retirement. It lists the owner's calls before each part.
+
 ## 2026-11-07 · The Ops map: smaller labels, a frame, and zoom
 - **District labels are smaller** and stay the same size on any screen; on a computer they were huge. They show only what's there: no more "HEAT 0".
 - **Districts with a hall of ours, and the one you pick, show their landmark** as a small picture on the label.
