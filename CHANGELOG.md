@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-07 · A mock-up: halls that grow into compounds
+- No game change. `drafts/prototypes/hall-compound.html` shows the Old Town hall growing with each Expand: the room, the flat next door, the yard behind with a gate, then the back kitchen and the street shutter, a compound. You build zoomed in to one part at a time. For the owner to judge before anything is built.
+
 ## 2026-11-07 · A page for each hall
 - Each hall has its own page: where it is, its plan as built (beds included), who sleeps there, moving people in from other halls, and Build, Expand and Buy. Open it from a hall's row on Crew › Halls, or with "Manage the hall ›" on its district's card on Ops; it shows on the tab you opened it from, and back goes there.
 - Crew › Halls is now a short row per hall (beds, level, rent, heat, what's built); tap one for its page. "Open a hall" stays on Crew.

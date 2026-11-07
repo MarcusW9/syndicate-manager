@@ -1,0 +1,211 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Mock-up: the Old Town hall grows into a compound</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Mock-up (2026-11-07, owner: "grow with expand, do the old town mock-up first"). Not game code:
+   one page, its own drawing. The tokens are the street-terminal skin's (ART.md "UI skin"). */
+:root { --bg:#0a0c0f; --panel:#12151b; --panel-2:#161a21; --line:#2a303b; --text:#e9ecf1; --muted:#8a93a6; --accent:#ff3d5f; --accent-2:#3de8d8; --warn:#f2d541; --display:'Rajdhani','Arial Narrow',system-ui,sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg) linear-gradient(rgba(61,232,216,.025) 1px, transparent 1px) 0 0/32px 32px; color: var(--text); font: 15px/1.45 system-ui, sans-serif; padding: 20px; }
+h1 { font: 700 1.5rem var(--display); letter-spacing: .06em; margin: 0 0 4px; }
+.intro { color: var(--muted); max-width: 80ch; margin: 0 0 14px; font-size: .9rem; }
+.intro b { color: var(--text); font-weight: 600; }
+.ctl { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; margin: 0 0 16px; font: 600 .75rem var(--display); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.ctl button { min-height: 36px; padding: 0 12px; background: none; border: 1px solid var(--line); color: var(--muted); font: inherit; letter-spacing: .1em; cursor: pointer; }
+.ctl button.on { border-color: var(--accent-2); color: var(--accent-2); }
+.stage { transition: width .2s; }
+.stage.phone { width: 390px; } .stage.desk { width: 1000px; }
+.panel { background: linear-gradient(var(--panel-2), var(--panel)); border: 1px solid var(--line); padding: 16px; position: relative; clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%); }
+.panel::before { content: ''; position: absolute; top: -1px; left: 16px; width: 36px; height: 2px; background: var(--accent-2); }
+.desk .cols { display: grid; grid-template-columns: minmax(0, 62fr) minmax(300px, 38fr); gap: 20px; align-items: start; }
+.back { color: var(--accent-2); font-size: .95rem; }
+.btitle { font: 700 1.15rem var(--display); letter-spacing: .06em; text-transform: uppercase; margin: 6px 0 2px; }
+.muted { color: var(--muted); } .small { font-size: .85rem; }
+.lvl { font: 700 .72rem var(--display); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); float: right; margin-top: 4px; }
+.bar { display: flex; gap: 12px; font: 600 .82rem var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 8px 0; flex-wrap: wrap; }
+.bar b { color: var(--text); }
+.plan { position: relative; border: 1px solid var(--line); background: #0b0d11; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
+.plan svg { display: block; width: 100%; height: auto; }
+.plan text { font-family: var(--display); pointer-events: none; }
+.out { position: absolute; left: 8px; bottom: 8px; min-height: 36px; padding: 0 12px; background: rgba(10,12,15,.85); border: 1px solid var(--accent-2); color: var(--accent-2); font: 600 .75rem var(--display); letter-spacing: .12em; text-transform: uppercase; cursor: pointer; clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 0 100%); display: none; }
+.out.show { display: block; }
+.sec { cursor: pointer; }
+.sec:focus { outline: none; }
+.sec .hit { fill: transparent; }
+.sec:hover .hit, .sec:focus-visible .hit { fill: rgba(61,232,216,.05); }
+.card { margin: 12px 0; background: var(--panel-2); border-left: 2px solid var(--accent-2); padding: 10px 12px; display: grid; gap: 6px; }
+.card.locked { border-left: 2px dashed var(--line); }
+.card p { margin: 0; }
+.card h3 { margin: 0; font: 700 .95rem var(--display); letter-spacing: .08em; text-transform: uppercase; }
+.btn { min-height: 44px; padding: 0 14px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font: 700 .85rem var(--display); letter-spacing: .1em; text-transform: uppercase; cursor: pointer; clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px)); width: 100%; }
+.btn--primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn:disabled { opacity: .45; cursor: default; }
+h2 { font: 700 .85rem var(--display); letter-spacing: .16em; text-transform: uppercase; color: var(--accent-2); margin: 18px 0 8px; display: flex; align-items: center; gap: 10px; }
+h2::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.secs { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.secs button { width: 100%; min-height: 44px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; padding: 8px 12px; background: var(--panel-2); border: 0; border-left: 2px solid var(--accent-2); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.secs button.locked { border-left: 2px dashed var(--line); color: var(--muted); }
+.secs strong { font: 700 .9rem var(--display); letter-spacing: .08em; text-transform: uppercase; }
+.go { color: var(--accent-2); font: 700 1.2rem var(--display); }
+.notes { max-width: 80ch; color: var(--muted); font-size: .88rem; margin-top: 22px; }
+.notes b { color: var(--text); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style></head><body>
+<h1>The Old Town hall, grown with Expand</h1>
+<p class="intro"><b>A mock-up, not the game.</b> Each Expand takes the next part of the building, and its floor is yours to build on. Level 1 is today's room; by level 4 the tong holds the whole block behind a gate. Pick a level, then tap a part of the plan (or a row under it) to zoom in to its grid. The plan is drawn small on purpose: on a phone you build zoomed in, one part at a time.</p>
+<div class="ctl">
+  <span>Level</span><button data-l="1" class="on">1</button><button data-l="2">2</button><button data-l="3">3</button><button data-l="4">4</button>
+  <span style="margin-left:12px">Screen</span><button data-w="phone" class="on">Phone 390</button><button data-w="desk">Computer</button>
+</div>
+<div class="stage phone" id="stage"></div>
+<div class="notes">
+  <p><b>What changes from the game today.</b> Expand no longer adds four squares to the same room: it takes the next part, with its own floor, and two more beds (the beds land in the part with room for them). The floor allowance goes; each part's floor is all yours. Buying the place could become "buy the building", once the whole block is held.</p>
+  <p><b>Inside and outside.</b> The room, the flat and the back kitchen are inside: rooms (clinic, bunks, den ...) and beds go there. The yard is outside: defences go there, and from level 3 a raid can come through its gate as well as up the front stairs (marked WAY IN in red). The raid is still one fight, at the way in it comes through.</p>
+  <p><b>The order is a guess for you to change:</b> the flat next door (level 2), the yard behind with a gate onto the back alley (level 3), then the back kitchen and the street shutter (level 4). I dropped the roof I first suggested: a plan seen from above can't show a roof over the rooms without layers.</p>
+</div>
+<script>
+const C = 30;
+// The parts of the hall, in plan units. wall: the part's walls; grid: [x, y, cols, rows] of its floor.
+const PARTS = [
+  { id: 'room', lvl: 1, name: 'The room', sub: 'above the noodle shop', inside: true, wall: [195, 135, 270, 210], grid: [210, 150, 8, 6], cost: 0,
+    about: 'Where it started: the beds, the altar, the mahjong table. Rooms and beds go in here.' },
+  { id: 'flat', lvl: 2, name: 'The flat next door', sub: 'knocked through', inside: true, wall: [465, 135, 180, 210], grid: [480, 150, 5, 6], cost: 20000,
+    about: 'Mrs Lo moved to her daughter\'s. Knock through the wall and it\'s ours: room for a clinic and more beds.' },
+  { id: 'yard', lvl: 3, name: 'The yard', sub: 'behind the block, a gate onto the alley', inside: false, wall: [195, 30, 450, 105], grid: [210, 45, 14, 3], cost: 30000,
+    about: 'Bins, a dead scooter, a gate onto the back alley. Outside: defences go here, and a raid can come through the gate.' },
+  { id: 'kitchen', lvl: 4, name: 'The back kitchen', sub: 'and the street shutter', inside: true, wall: [45, 135, 120, 210], grid: [60, 150, 3, 6], cost: 40000,
+    about: 'The noodle shop\'s back kitchen, and the shutter on the street. With it the whole block is ours: a compound.' },
+];
+const WHOLE = [0, 0, 690, 450];
+let level = 1, zoom = null, wide = 'phone';
+const owned = (p) => p.lvl <= level;
+const next = () => PARTS.find((p) => p.lvl === level + 1);
+const beds = () => 8 + 2 * (level - 1);
+
+// What's built at each level, in cells (x, y from the part's grid corner). Beds are worked out.
+const BUILT = {
+  room: (l) => (l >= 4 ? [{ k: 'canteen', x: 2, y: 3, w: 3, h: 2 }] : []),
+  flat: () => [{ k: 'clinic', x: 0, y: 0, w: 2, h: 2 }],
+  yard: () => [{ k: 'plate', x: 5, y: 1 }, { k: 'plate', x: 8, y: 1 }, { k: 'barricade', x: 2, y: 2 }, { k: 'barricade', x: 11, y: 2 }, { k: 'turret', x: 7, y: 0 }],
+  kitchen: () => [{ k: 'workboard', x: 0, y: 0, w: 2, h: 2 }],
+};
+// Beds: the room's top row first, then the flat's bottom rows, then the kitchen.
+function bedCells() {
+  const out = [];
+  for (let i = 0; i < 8; i++) out.push(['room', i, 0]);
+  for (let y = 5; y >= 2; y--) for (let x = 0; x < 5; x++) out.push(['flat', x, y]);
+  for (let y = 5; y >= 2; y--) for (let x = 0; x < 3; x++) out.push(['kitchen', x, y]);
+  return out.filter(([id]) => owned(PARTS.find((p) => p.id === id))).slice(0, beds());
+}
+
+const r = (x, y, w, h, a = '') => `<rect x="${x}" y="${y}" width="${w}" height="${h}" ${a}/>`;
+function piece(p, b) {
+  const [gx, gy] = p.grid; const x = gx + b.x * C, y = gy + b.y * C;
+  if (b.k === 'plate') return r(x + 2, y + 12, 26, 6, 'fill="#5d6b7a"');
+  if (b.k === 'barricade') return r(x + 8, y + 10, 14, 10, 'fill="#6b5a2a"');
+  if (b.k === 'turret') return r(x + 12, y + 12, 6, 6, 'fill="#8b9aab"') + r(x + 17, y + 14, 9, 2, 'fill="#ff3d5f"');
+  const w = b.w * C, h = b.h * C;
+  const room = r(x + 2, y + 2, w - 4, h - 4, 'fill="#1b2130" stroke="#5a6474" stroke-width="1"') + r(x + 2, y + h / 2 - 6, 3, 12, 'fill="#ff3d5f"');
+  if (b.k === 'clinic') return room + r(x + 8, y + 8, 22, 8, 'fill="#8b9aab"') + r(x + 8, y + h - 16, 22, 8, 'fill="#8b9aab"') + r(x + w - 17, y + h - 22, 12, 3, 'fill="#3de8d8"') + r(x + w - 12.5, y + h - 26.5, 3, 12, 'fill="#3de8d8"');
+  if (b.k === 'canteen') return room + r(x + 12, y + h / 2 - 5, w - 24, 10, 'fill="#6b5a2a"') + r(x + w - 16, y + 6, 10, 8, 'fill="#f2d541"');
+  if (b.k === 'workboard') return room + r(x + 6, y + 6, w - 12, 14, 'fill="#6b5a2a"') + r(x + 10, y + 9, 8, 6, 'fill="#e8e2d0"') + r(x + 24, y + 10, 8, 5, 'fill="#e8e2d0"') + r(x + 8, y + h - 14, w - 16, 6, 'fill="#4a5566"');
+  return '';
+}
+function bed(p, cx, cy, slept) {
+  const x = p.grid[0] + cx * C, y = p.grid[1] + cy * C;
+  return r(x + 3, y + 8, 22, 14, 'fill="#3a4352" rx="1.5"') + r(x + 4.5, y + 9.5, 5, 11, 'fill="#8b9aab"') + r(x + 11, y + 9.5, 12.5, 11, 'fill="#4a5566"')
+    + (slept ? r(x + 1.5, y + 1.5, C - 3, C - 3, 'fill="none" stroke="rgba(61,232,216,.45)" stroke-width=".8"') : '');
+}
+const hatch = '<pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#101318"/><path d="M0 0v8" stroke="#2a303b" stroke-width="2"/></pattern>';
+
+function plan() {
+  const parts = PARTS.map((p) => {
+    const [wx, wy, ww, wh] = p.wall; const [gx, gy, cols, rows] = p.grid;
+    const mine = owned(p), isNext = p === next();
+    let body = '';
+    if (mine) {
+      body += r(wx, wy, ww, wh, `fill="${p.inside ? '#171b24' : '#12161d'}" stroke="#5a6474" stroke-width="${p.inside ? 2 : 1.2}" ${p.inside ? '' : 'stroke-dasharray="6 4"'}`);
+      for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) body += r(gx + x * C + 1.5, gy + y * C + 1.5, C - 3, C - 3, 'fill="rgba(61,232,216,.05)" stroke="rgba(61,232,216,.28)" stroke-width=".6" stroke-dasharray="2 2"');
+      body += (BUILT[p.id]?.(level) ?? []).map((b) => piece(p, b)).join('');
+    } else {
+      body += r(wx, wy, ww, wh, `fill="url(#hatch)" stroke="${isNext ? '#3de8d8' : '#2a303b'}" stroke-width="${isNext ? 1.5 : 1}" stroke-dasharray="${isNext ? '5 4' : '0'}" opacity="${isNext ? 1 : .7}"`);
+      body += `<text x="${wx + ww / 2}" y="${wy + wh / 2 + 4}" text-anchor="middle" font-size="12" font-weight="700" letter-spacing="1.5" fill="${isNext ? '#3de8d8' : '#5a6474'}">${isNext ? 'EXPAND ›' : `LEVEL ${p.lvl}`}</text>`;
+    }
+    body += `<text x="${wx + 6}" y="${wy - 5}" font-size="11" font-weight="600" letter-spacing="1.5" fill="${mine ? '#e9ecf1' : '#5a6474'}">${p.name.toUpperCase()}</text>`;
+    return `<g class="sec" tabindex="0" role="button" data-part="${p.id}" aria-label="${p.name}${mine ? '' : `, level ${p.lvl}`}">${body}${r(wx, wy, ww, wh, 'class="hit"')}</g>`;
+  }).join('');
+  const bedSvg = bedCells().map(([id, x, y], i) => bed(PARTS.find((p) => p.id === id), x, y, i < 5)).join('');
+  // Knock-throughs between parts we hold: a gap in the shared wall.
+  const gap = (x, y, w, h) => r(x, y, w, h, 'fill="#171b24"');
+  const doors = (level >= 2 ? gap(462, 225, 6, 30) : '') + (level >= 3 ? gap(300, 132, 30, 6) : '') + (level >= 4 ? gap(162, 180, 6, 30) : '');
+  const wayIn = (x, y, label, dir) => `<g>${r(x - 22, y - 9, 44, 18, 'fill="rgba(255,61,95,.12)" stroke="#ff3d5f" stroke-width="1"')}<text x="${x}" y="${y + 4}" text-anchor="middle" font-size="9" font-weight="700" letter-spacing="1" fill="#ff3d5f">${dir} WAY IN</text><title>${label}</title></g>`;
+  return `<svg viewBox="${(zoom ? zoomBox() : WHOLE).join(' ')}" id="plansvg" aria-label="Plan of the Old Town hall at level ${level}">
+    <defs>${hatch}</defs>
+    ${r(0, 0, 690, 30, 'fill="#0e1116"')}<text x="12" y="20" font-size="10" letter-spacing="2" fill="#5a6474">BACK ALLEY</text>
+    ${r(0, 360, 690, 90, 'fill="#0e1116"')}<path d="M0 405H690" stroke="#2a303b" stroke-dasharray="10 8" stroke-width="2"/>
+    ${r(195, 345, 270, 18, 'fill="#1a1e27"')}${r(240, 350, 70, 6, 'fill="#ff3d5f"')}<text x="320" y="390" font-size="11" letter-spacing="2" fill="#8a93a6">NOODLE SHOP</text>
+    ${r(165, 225, 30, 120, 'fill="#13161d" stroke="#2a303b"')}${Array.from({ length: 12 }, (_, i) => r(170, 232 + i * 9, 20, 1.5, 'fill="#5a6474"')).join('')}<text x="150" y="370" font-size="10" letter-spacing="1.5" fill="#8a93a6">FRONT STAIRS</text>
+    ${parts}${bedSvg}${doors}
+    ${r(206, 137, 14, 10, 'fill="#5a1e24"')}
+    ${level >= 3 ? r(400, 27, 40, 6, 'fill="#f2d541"') + wayIn(420, 14, 'The yard gate', '▼') : ''}
+    ${level >= 4 ? r(60, 342, 60, 6, 'fill="#f2d541"') + wayIn(90, 380, 'The street shutter', '▲') : wayIn(180, 410, 'The front stairs', '▲')}
+  </svg>`;
+}
+function zoomBox() {
+  const p = PARTS.find((x) => x.id === zoom); const [x, y, w, h] = p.wall;
+  const pad = 18, ar = 690 / 450;
+  let bw = w + pad * 2, bh = h + pad * 2 + 10;
+  if (bw / bh > ar) bh = bw / ar; else bw = bh * ar;
+  return [x + w / 2 - bw / 2, y + h / 2 - bh / 2 - 4, bw, bh].map((v) => Math.round(v));
+}
+
+function card() {
+  const p = zoom ? PARTS.find((x) => x.id === zoom) : null;
+  if (!p) return '';
+  const [, , cols, rows] = p.grid;
+  const nb = bedCells().filter(([id]) => id === p.id).length;
+  if (owned(p)) return `<div class="card"><h3>${p.name} <span class="muted small" style="text-transform:none;letter-spacing:0;font-weight:400">${p.sub}</span></h3>
+    <p class="small">${p.about}</p>
+    <p class="small muted">${cols * rows} squares${nb ? ` · ${nb} beds` : ''} · ${p.inside ? 'inside: rooms and beds' : 'outside: defences'}</p>
+    <button class="btn btn--primary">Build here</button></div>`;
+  const isNext = p === next();
+  return `<div class="card locked"><h3>${p.name} <span class="muted small" style="text-transform:none;letter-spacing:0;font-weight:400">level ${p.lvl}</span></h3>
+    <p class="small">${p.about}</p>
+    <p class="small muted">${cols * rows} squares · +2 beds</p>
+    ${isNext ? `<button class="btn" data-expand>Expand: take it for ¥${p.cost.toLocaleString('en')}</button>` : `<p class="small muted">Take ${next()?.name.toLowerCase()} first.</p>`}</div>`;
+}
+
+function render() {
+  const squares = PARTS.filter(owned).reduce((n, p) => n + p.grid[2] * p.grid[3], 0);
+  const nx = next();
+  const page = `
+    <div class="panel">
+      <span class="back">‹ Crew</span><span class="lvl">level ${level}${level === 4 ? ' · compound' : ''}</span>
+      <h1 class="btitle">The Old Town hall</h1>
+      <p class="muted small" style="margin:0">${level === 4 ? 'the whole block over the noodle shop, behind a gate' : `the damp room above a noodle shop${level > 1 ? `, with ${PARTS.filter((p) => owned(p) && p.lvl > 1).map((p) => p.name.toLowerCase()).join(' and ')}` : ''}`}</p>
+      <div class="bar"><span>Parts <b>${PARTS.filter(owned).length}/4</b></span><span>Floor <b>${squares}</b> squares</span><span>Beds <b>5/${beds()}</b></span></div>
+      <div class="cols"><div>
+        <div class="plan">${plan()}<button class="out ${zoom ? 'show' : ''}" data-out>× Whole hall</button></div>
+        ${card()}
+      </div><div>
+        <h2>The parts</h2>
+        <ul class="secs">${PARTS.map((p) => `<li><button class="${owned(p) ? '' : 'locked'}" data-part="${p.id}"><span><strong>${p.name}</strong><br><span class="small ${owned(p) ? '' : 'muted'}">${owned(p) ? `${p.grid[2] * p.grid[3]} squares · ${p.inside ? 'inside' : 'outside'}` : p === nx ? `Expand · ¥${p.cost.toLocaleString('en')}` : `Level ${p.lvl}`}</span></span><span class="go">›</span></button></li>`).join('')}</ul>
+        <h2>Who sleeps here</h2><p class="small muted">Drizzle, Signal, Burner, Lantern, Moth · 5 of ${beds()} beds</p>
+        ${nx ? `<button class="btn" data-expand style="margin-top:10px">Expand: ${nx.name.toLowerCase()} · ¥${nx.cost.toLocaleString('en')}</button>` : '<p class="small muted">The whole block is ours.</p>'}
+      </div></div>
+    </div>`;
+  document.getElementById('stage').innerHTML = page;
+}
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-l],[data-w],[data-part],[data-out],[data-expand]');
+  if (!t) return;
+  if (t.dataset.l) { level = +t.dataset.l; zoom = null; document.querySelectorAll('[data-l]').forEach((b) => b.classList.toggle('on', b === t)); }
+  if (t.dataset.w) { wide = t.dataset.w; document.getElementById('stage').className = `stage ${wide}`; document.querySelectorAll('[data-w]').forEach((b) => b.classList.toggle('on', b === t)); }
+  if (t.dataset.part) zoom = t.dataset.part;
+  if (t.hasAttribute('data-out')) zoom = null;
+  if (t.hasAttribute('data-expand') && level < 4) { level += 1; zoom = PARTS[level - 1].id; document.querySelectorAll('[data-l]').forEach((b) => b.classList.toggle('on', +b.dataset.l === level)); }
+  render();
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && zoom) { zoom = null; render(); } if ((e.key === 'Enter' || e.key === ' ') && e.target.dataset?.part) { zoom = e.target.dataset.part; render(); } });
+render();
+</script>
+</body></html>
