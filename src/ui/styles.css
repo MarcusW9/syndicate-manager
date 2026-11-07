@@ -505,6 +505,24 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .trychip::before { content: ''; position: absolute; inset: -6px 0; } /* 44px tall to the finger */
 .trychip b { color: #5fe0a5; font-weight: 700; }
 .planbar .btn { flex: 0 0 auto; }
+/* Send them with Watch live beside it, and the orders as chips under them (playtest, 2026-11-07).
+   The chips only show where the bar stands in the left column (1400px+); narrower, the Orders fold has them. */
+.planbar__go { display: flex; align-items: center; gap: 12px; flex: 0 0 auto; }
+.planbar__alt { font-size: 0.85rem; white-space: nowrap; }
+@media (max-width: 699px) { .planbar__go { flex-direction: column; align-items: stretch; gap: 0; } .planbar__alt { font-size: 0.78rem; } }
+.qorders { display: none; }
+@media (min-width: 1400px) {
+  .jobsplit__side .planbar__go { display: grid; grid-template-columns: 1fr auto; }
+  .jobsplit__side .planbar__go .planbar__alt { width: auto; padding: 0 14px; border: 1px solid var(--line); }
+  .jobsplit__side .qorders { display: grid; gap: 8px; padding-top: 4px; border-top: 1px solid var(--line); }
+}
+.qorders__row { display: grid; gap: 4px; }
+.qorders__row > span { font: 700 0.68rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.qorders__chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.qchip { min-height: var(--tap); padding: 0 6px; border: 1px solid var(--line); background: #151922; color: var(--muted); font: 600 0.82rem var(--display); letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
+.qchip.is-on { border-color: var(--accent-2); color: var(--accent-2); background: rgba(61, 232, 216, 0.08); }
+.qchip:disabled { opacity: 0.45; cursor: default; }
+.inboxfilter { display: grid; grid-template-columns: repeat(2, minmax(0, 120px)); gap: 6px; margin: 12px 0 8px; }
 .risk--none { background: #262b36; color: var(--muted); }
 @media (min-width: 900px) { .planbar { bottom: 16px; } }
 
@@ -857,6 +875,9 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .dossier__note .kituses { display: block; white-space: nowrap; }
 .dossier__note .kituses__sep { display: none; }
 .dossier__tag { font: 600 0.58rem ui-monospace, 'SF Mono', Menlo, monospace; text-transform: uppercase; color: #fff; background: #1b1d22; border-radius: 3px; padding: 1px 5px; }
+.dossier__gear { display: grid; justify-items: center; gap: 1px; margin-top: 2px; } /* their main gear, drawn (playtest, 2026-11-07) */
+.dossier__gear .gearart { display: block; width: 72px; height: 24px; border-radius: 2px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45); }
+.dossier__gear > span { font: 600 0.56rem ui-monospace, 'SF Mono', Menlo, monospace; text-transform: uppercase; letter-spacing: 0.03em; color: #5a5f6c; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dossier.is-empty { background: transparent; color: var(--muted); border: 2px dashed #3a4254; box-shadow: none; align-content: center; transform: none; }
 .dossier.is-empty::before { display: none; }
 .dossier.is-empty b { font-size: min(0.72rem, 12.5cqi); letter-spacing: min(0.12em, 1.2cqi); text-transform: uppercase; white-space: nowrap; }
@@ -1807,3 +1828,69 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .heistline__fx .is-off { color: var(--muted); }
 .heistline p { margin: 0; }
 .heistnote { display: block; width: 100%; min-height: 44px; margin: 0 0 6px; padding: 6px 10px; text-align: left; background: rgba(242, 213, 65, 0.06); border: 0; border-left: 2px solid var(--warn); color: var(--text); font: inherit; cursor: pointer; }
+
+/* Who went, at the top of a job report (playtest, 2026-11-07): a face each, their rolls and any wound. */
+.rcrew { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 4px 0 12px; padding-bottom: 2px; }
+.rcrew__op { flex: 0 0 84px; display: grid; justify-items: center; gap: 2px; padding: 8px 4px; border: 1px solid var(--line); background: #141820; color: var(--text); font: inherit; text-align: center; cursor: pointer; min-height: var(--tap); }
+.rcrew__op strong { font-size: 0.8rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rcrew__op > span { font: 600 0.7rem var(--display); letter-spacing: 0.06em; color: var(--muted); }
+.rcrew__op .rcrew__hurt { color: var(--warn); text-transform: uppercase; font-size: 0.62rem; }
+.rcrew__op.is-hurt { border-color: rgba(245, 185, 66, 0.45); }
+.rcrew__op.is-lost { opacity: 0.55; cursor: default; }
+.rcrew__op.is-lost > span { color: var(--danger); }
+
+/* The face-off over the map (ui/duel.js, playtest 2026-11-07): your runner against who or what they
+   face, the stat and the d20, then a hit for a win or a jolt for a loss. Durations follow --speed. */
+.duel { position: absolute; left: 50%; top: 50%; z-index: 4; width: min(460px, calc(100% - 16px)); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px;
+  padding: 12px 12px 46px; background: rgba(11, 13, 17, 0.95); border: 1px solid var(--line); border-top: 2px solid var(--accent-2); pointer-events: none;
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+  transform: translate(-50%, -50%) scale(0.92); opacity: 0; transition: transform calc(0.22s * var(--speed, 1)) ease-out, opacity calc(0.22s * var(--speed, 1)); }
+.duel--danger { border-top-color: var(--warn); }
+.duel.is-in { transform: translate(-50%, -50%); opacity: 1; }
+.duel.is-out { opacity: 0; transform: translate(-50%, -50%) scale(0.96); }
+.duel__side { display: grid; justify-items: center; gap: 4px; min-width: 0; transition: transform calc(0.3s * var(--speed, 1)) ease-out, opacity 0.3s, filter 0.3s; }
+.duel__side b { font: 700 0.9rem var(--display); letter-spacing: 0.06em; text-transform: uppercase; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.duel__face { display: block; width: 64px; height: 64px; border: 2px solid #2a3140; background: #141820; overflow: hidden; clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%); }
+.duel__face svg { display: block; width: 100%; height: 100%; }
+.duel__side--me .duel__face { border-color: var(--accent-2); }
+.duel__side--foe .duel__face { border-color: var(--accent); }
+.duel__side--foe.is-thing .duel__face { display: grid; place-items: center; }
+.duel__glyph { fill: rgba(255, 61, 95, 0.12); stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; width: 46px; height: 46px; }
+.duel.is-in .duel__side--me { animation: duel-in-l calc(0.32s * var(--speed, 1)) ease-out; }
+.duel.is-in .duel__side--foe { animation: duel-in-r calc(0.32s * var(--speed, 1)) ease-out; }
+@keyframes duel-in-l { from { transform: translateX(-28px); opacity: 0; } }
+@keyframes duel-in-r { from { transform: translateX(28px); opacity: 0; } }
+.duel__mid { display: grid; justify-items: center; gap: 2px; text-align: center; }
+.duel__stat { font: 700 0.68rem var(--display); letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-2); white-space: nowrap; }
+.duel__vs { font: 700 1.5rem/1 var(--display); letter-spacing: 0.1em; color: #e6e9ef; }
+.duel__die { display: grid; place-items: center; width: 40px; height: 40px; margin: 2px 0; border: 2px solid #4a5266; color: #e6e9ef; font: 700 1.2rem var(--display);
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background: #1b1f29; }
+.duel.is-rolling .duel__die { animation: duel-tumble 0.11s linear infinite; }
+@keyframes duel-tumble { 50% { transform: rotate(18deg) scale(1.06); } }
+.duel__sum { font: 600 0.78rem var(--display); letter-spacing: 0.04em; color: var(--muted); white-space: nowrap; }
+.duel__sum b { color: #e6e9ef; }
+.duel__need { display: block; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; }
+.duel__stamp { position: absolute; left: 50%; bottom: 10px; transform: translate(-50%, 0) scale(1.8) rotate(-4deg); opacity: 0; padding: 2px 10px;
+  font: 700 0.95rem var(--display); letter-spacing: 0.18em; text-transform: uppercase; border: 2px solid currentColor; background: #0b0d11; white-space: nowrap; }
+.duel.is-win .duel__stamp { color: var(--accent-2); }
+.duel.is-lose .duel__stamp { color: var(--danger); }
+.duel.is-landed .duel__stamp { animation: duel-stamp calc(0.28s * var(--speed, 1)) cubic-bezier(0.2, 1.6, 0.4, 1) forwards; }
+@keyframes duel-stamp { to { opacity: 1; transform: translate(-50%, 0) scale(1) rotate(-4deg); } }
+.duel.is-win .duel__die { border-color: var(--accent-2); color: var(--accent-2); }
+.duel.is-lose .duel__die { border-color: var(--danger); color: var(--danger); }
+/* A win: our runner lunges, the other side is knocked back and dims; a flash across the box. */
+.duel.is-win .duel__side--me { transform: translateX(10px) scale(1.06); }
+.duel.is-win .duel__side--foe { transform: translateX(14px) rotate(6deg); opacity: 0.45; filter: grayscale(1); }
+.duel.is-win::after, .duel.is-lose::after { content: ""; position: absolute; inset: 0; pointer-events: none; animation: duel-flash calc(0.45s * var(--speed, 1)) ease-out forwards; }
+.duel.is-win::after { background: radial-gradient(circle at 50% 50%, rgba(61, 232, 216, 0.45), transparent 65%); }
+.duel.is-lose::after { background: radial-gradient(circle at 50% 50%, rgba(255, 90, 90, 0.4), transparent 65%); }
+@keyframes duel-flash { from { opacity: 1; } to { opacity: 0; } }
+/* A loss: the box jolts, our runner is pushed back. */
+.duel.is-lose { animation: duel-shake calc(0.36s * var(--speed, 1)) ease-in-out; }
+.duel.is-lose .duel__side--me { transform: translateX(-12px) rotate(-5deg); filter: saturate(0.5); }
+.duel.is-lose .duel__side--foe { transform: translateX(-8px) scale(1.06); }
+@keyframes duel-shake { 0%, 100% { transform: translate(-50%, -50%); } 20% { transform: translate(calc(-50% - 7px), -50%); } 40% { transform: translate(calc(-50% + 6px), calc(-50% + 2px)); } 60% { transform: translate(calc(-50% - 4px), -50%); } 80% { transform: translate(calc(-50% + 2px), -50%); } }
+.duel.is-crit .duel__stamp::after { content: " · 20"; }
+@media (min-width: 900px) { .duel { width: min(600px, calc(100% - 32px)); gap: 16px; padding: 18px 20px 56px; } .duel__face { width: 96px; height: 96px; } .duel__vs { font-size: 2rem; } .duel__die { width: 52px; height: 52px; font-size: 1.5rem; } .duel__stat { font-size: 0.8rem; } .duel__sum { font-size: 0.95rem; } .duel__side b { font-size: 1.1rem; } .duel__stamp { font-size: 1.2rem; bottom: 14px; } .duel__glyph { width: 66px; height: 66px; } }
+@media (max-width: 480px) { .duel { gap: 4px; padding: 10px 8px 44px; } .duel__face { width: 52px; height: 52px; } .duel__vs { font-size: 1.2rem; } .duel__side b { font-size: 0.78rem; } }
+@media (prefers-reduced-motion: reduce) { .duel, .duel__side, .duel.is-in .duel__side--me, .duel.is-in .duel__side--foe, .duel.is-rolling .duel__die, .duel.is-lose, .duel.is-landed .duel__stamp, .duel::after { animation: none !important; transition: none; } .duel.is-landed .duel__stamp { opacity: 1; transform: translate(-50%, 0) rotate(-4deg); } }

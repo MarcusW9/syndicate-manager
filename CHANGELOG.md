@@ -7,6 +7,14 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-07 · Playtest round: the plan bar, gear on the cards, unread filter, faces on the report, grid routes, the face-off
+- **Send them or watch:** the plan bar has Watch live right beside Send them. On a wide screen the orders (when they call you in, and how they decide on their own) sit under the button as chips, so you don't need to open the Orders section.
+- **Gear on the squad cards:** each runner's card shows their main gear, drawn: Grid's rifle, a drone, a deck or a sidearm.
+- **Unread filter on Today:** All / Unread chips above the messages.
+- **Who went, on the report:** a job report starts with the crew's faces, how many rolls each made and missed, and any wound. Tap a face for their page.
+- **Routes on the grid:** the crew's route on the job map (and on the crew-out cards) runs across and up and down, corners cut at 45°, and goes round buildings instead of across them.
+- **The face-off:** when a moment comes down to one person's roll, it pops up over the map: your runner's face against the guard (or the lock, camera, safe...), the stat they roll, the die landing, then a hit if they make it or a jolt if they don't.
+
 ## 2026-11-07 · New opening jobs for Wok Court and the Underterrace
 - **Back Rent** is new: Mrs. Ip's stallholders' association paid its rent, but a new agent says otherwise and has a contractor ready to lock their spare rooms. Find the payment, get the notice withdrawn and the order cancelled in writing, and Mrs. Ip introduces you to the association and the Late Rooms.
 - **Still on the Books** replaces There Is No Forty-First Floor as Glass Heights' opening job: Forewoman Tse's cooperative has been marked vacant after thirty years. Recover its occupancy agreement and get it recognised, and the Underterrace is open to you.

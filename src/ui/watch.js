@@ -21,6 +21,7 @@ import { templateById } from '../core/jobs.js';
 import { guardPosts } from '../core/battle.js';
 import { currentStep } from '../core/mission.js';
 import { commandView } from './fightorders.js';
+import { duelFor, playDuel, DUEL_MS } from './duel.js';
 
 /** Is a fight waiting for the player's orders (command fights: the panel and the map's overlay)? */
 const fightWaiting = (state) => { const am = state.activeMission; return !!am?.battle && !am.done && !am.pending && !am.critical && currentStep(am)?.type === 'battle' && needsPlayer(state); };
@@ -206,10 +207,14 @@ function sync(state, { animate }) {
     node.innerHTML = itemHtml(ui, item, animate);
     const child = node.firstElementChild;
     feed.append(child);
-    wait += paceOf(item);
+    // One person's roll gets a face-off over the map first (ui/duel.js, playtest 2026-11-07).
+    const duel = animate ? duelFor(item, (id) => opsOf(state, id ? [id] : [])[0], am.jobId) : null;
+    wait += paceOf(item) + (duel ? DUEL_MS : 0);
     if (animate) {
       const plan = live.plan;
+      const host = el.querySelector('.watch__map');
       const cue = item.cue?.standby ? { ...item.cue, standbyOp: opsOf(state, [item.cue.standby])[0] } : item.cue;
+      if (duel) live.chain = live.chain.then(() => playDuel(host, duel, ui.esc, () => speed)).catch(() => {});
       live.chain = live.chain.then(() => (item.type === 'phase' ? plan.enter(item.zone) : item.type === 'card' || (item.type === 'note' && item.cue) ? plan.play(cue) : null)).catch(() => {});
     }
   }

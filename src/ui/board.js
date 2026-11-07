@@ -6,7 +6,8 @@
 // like the rest of the game without copying them.
 
 import { jobGain } from '../core/worth.js';
-import { overwatchKit, kitsFor } from '../core/gear.js';
+import { overwatchKit, kitsFor, carried, itemTitle } from '../core/gear.js';
+import { gearArt } from './art.js';
 import { SPECIALISATIONS } from '../data/specialisations.js';
 
 const SPEC_NAME = Object.fromEntries(Object.entries(SPECIALISATIONS).map(([id, s]) => [id, s.name]));
@@ -56,10 +57,24 @@ function kitLine(op, kitId) {
   return `${statValue(k.stat, effectiveStat(op, k.stat).value + k.bonus)}<span class="kituses"><span class="kituses__sep"> · </span>${k.uses} ${kitId === 'rifle' ? 'shots' : 'actions'}</span>`;
 }
 
+// The one thing a runner carries that says most about them (playtest, 2026-11-07: "Grid has a
+// rifle, can we see it?"): a rifle or drone first, then a deck, a sidearm, anything else drawn.
+const MAIN_GEAR = ['rifle', 'drone', 'deck', 'pistol'];
+function mainGear(op, prefer = null) {
+  const drawn = carried(op).filter((i) => gearArt(i));
+  const rank = (i) => (i.type === prefer ? -1 : MAIN_GEAR.includes(i.type) ? MAIN_GEAR.indexOf(i.type) : MAIN_GEAR.length);
+  return drawn.sort((a, b) => rank(a) - rank(b))[0] ?? null;
+}
+function gearStrip(ui, op, prefer) {
+  const item = mainGear(op, prefer);
+  if (!item) return '';
+  return `<span class="dossier__gear">${gearArt(item, { carrier: op, width: 72 })}<span>${ui.esc(itemTitle(item))}</span></span>`;
+}
+
 const PINS = ['#ff4f7b', '#36d6c3', '#f5b942', '#b48cff', '#5fe0a5', '#ff9a5a'];
 const TILTS = ['-1.5deg', '1deg', '-0.5deg', '1.5deg', '-1deg', '0.5deg'];
 
-function dossier(ui, slot, op, { name, does, line = '', note = '', i = 0 }) {
+function dossier(ui, slot, op, { name, does, line = '', note = '', i = 0, gear = undefined }) {
   const { esc, face } = ui;
   if (!op) {
     return `<button class="dossier is-empty" data-action="pick-slot" data-id="${slot}" aria-label="${esc(name)}: empty. ${esc(does)} Tap to assign.">
@@ -75,6 +90,7 @@ function dossier(ui, slot, op, { name, does, line = '', note = '', i = 0 }) {
       <span class="dossier__real">${esc(op.freelance ? `freelance ${op.role}` : op.role)}</span>
       ${line ? `<span class="dossier__note">${line}</span>` : ''}
       ${note ? `<span class="dossier__tag">${esc(note)}</span>` : ''}
+      ${gear === null || op.freelance ? '' : gearStrip(ui, op, gear)}
     </button>
     <button class="dossier__off" data-action="unassign" data-id="${slot}" aria-label="Take ${esc(op.handle)} off ${esc(name.toLowerCase())}"><span aria-hidden="true">×</span></button>
   </div>`;
@@ -100,7 +116,7 @@ export function renderBoard(ui, { plan, tpl, people, crewSize }) {
   const armed = people.some((o) => kitsFor(o).length);
   const overCard = dossier(ui, 'over', ow, {
     name: 'Overwatch', does: armed ? 'Optional: saves people in trouble. Needs a rifle or a drone.' : 'Nobody carries a rifle or a drone. Buy one in the armoury (Crew).',
-    line: ow && kit ? kitLine(ow, kit) : '', note: kit ? (overwatchKit(ow, kit).spec ? `${kit} · ${SPEC_NAME[overwatchKit(ow, kit).spec]}` : kit) : '', i: 5,
+    line: ow && kit ? kitLine(ow, kit) : '', note: kit ? (overwatchKit(ow, kit).spec ? `${kit} · ${SPEC_NAME[overwatchKit(ow, kit).spec]}` : kit) : '', i: 5, gear: kit,
   });
   const wh = byId(plan.wheels);
   const wheelsCard = dossier(ui, 'wheels', wh, { name: 'Wheels', does: 'Optional: takes every driving roll from the van.', line: wh ? statValue('driving', effectiveStat(wh, 'driving').value) : '', note: wh ? 'in the van' : '', i: 2 });

@@ -121,6 +121,7 @@ let readBefore = null; // the read before the last change to the plan, for "was 
 let readFresh = false; // this draw is the first since the plan changed: flash what moved
 let jossSig = null; // the plan as Joss picked it (on opening a job, or Joss's picks); their reason shows while it's unchanged
 let whyOpen = false; // the plan bar's notes, all of them, on tap
+let inboxUnread = false; // Today's list: only unread messages (playtest, 2026-11-07)
 let planBarHtml = ''; // the plan bar as renderPlan last drew it; the jobs screen places it (under the list on wide screens)
 let meetHidden = null; // the plan's "What they'll likely meet" read folded away; null until first shown (folded on phones)
 
@@ -331,6 +332,7 @@ function onClick(e) {
     case 'plan-why': whyOpen = !whyOpen; break;
     case 'brief-more': briefOpen = !briefOpen; break;
     case 'toggle-orders': ordersOpen = !ordersOpen; break;
+    case 'inbox-filter': inboxUnread = id === 'unread'; break;
     case 'board-rules': boardRulesOpen = !boardRulesOpen; break;
     // The squad board (ui/board.js): tap a card, pick who goes there; anyone already placed swaps.
     case 'info': if (openInfo.has(id)) openInfo.delete(id); else openInfo.add(id); break;
@@ -810,9 +812,18 @@ function backupBanner() {
  */
 function renderInbox() {
   const open = state.inbox.find((m) => m.id === openMessageId);
-  const list = state.inbox.length ? `
+  // All or only unread (playtest, 2026-11-07: find the old unread ones fast). The open message stays
+  // in the list after it's been read, so it doesn't vanish from under the finger.
+  const unread = state.inbox.filter((m) => !m.read).length;
+  const unreadOnly = inboxUnread && unread + (open && open.read ? 1 : 0) > 0;
+  const shown = unreadOnly ? state.inbox.filter((m) => !m.read || m === open) : state.inbox;
+  const filter = state.inbox.length ? `<div class="inboxfilter" role="group" aria-label="Show">
+          <button class="qchip ${unreadOnly ? '' : 'is-on'}" data-action="inbox-filter" data-id="all" aria-pressed="${!unreadOnly}">All</button>
+          <button class="qchip ${unreadOnly ? 'is-on' : ''}" data-action="inbox-filter" data-id="unread" aria-pressed="${unreadOnly}" ${unread || unreadOnly ? '' : 'disabled'}>Unread${unread ? ` (${unread})` : ''}</button>
+        </div>` : '';
+  const list = state.inbox.length ? `${filter}
         <ul class="list">
-          ${state.inbox.map((m) => `
+          ${shown.map((m) => `
             <li>
               <button class="row ${m.read ? 'is-read' : 'is-unread'} ${m === open ? 'is-open' : ''}" data-action="open-message" data-id="${esc(m.id)}">
                 ${m.read ? '' : '<span class="dot" aria-label="Unread"></span>'}
@@ -1184,6 +1195,7 @@ function renderReportTimeline(m) {
   const STEP = 0.8; // seconds per step
   return `
     <div class="report ${play ? 'report--play' : ''}" ${play ? `data-action="skip-report" style="--step:${STEP}s; --end:${(steps.length + 1) * STEP + 0.6}s"` : ''}>
+      ${reportCrew(m)}
       ${renderReportSummary(m.timeline)}
       <ol class="timeline">
         ${steps.map((text, i) => `<li class="timeline__item" style="--i:${i}"><span class="timeline__node" aria-hidden="true">${i + 1}</span><p class="timeline__text">${crewLinks(text)}</p></li>`).join('')}
@@ -1196,6 +1208,30 @@ function renderReportTimeline(m) {
       ${m.timeline?.side ? rollDetail(m.timeline.side) : ''}
       ${renderFullLog(m.timeline)}
     </div>`;
+}
+
+/**
+ * Who went, at the top of a report (playtest, 2026-11-07): each face with their own run, the rolls
+ * they made work and missed, and the worst they were hurt. Tap a face for their page.
+ */
+function reportCrew(m) {
+  const ids = m.back?.crewIds ?? [];
+  if (!ids.length) return '';
+  const events = m.timeline?.events ?? [];
+  const SEV = ['light', 'serious', 'critical'];
+  const cards = ids.map((id) => {
+    const op = state.crew.find((o) => o.id === id) ?? state.memorial?.find((o) => o.id === id);
+    if (!op) return '';
+    const mine = events.filter((e) => e.actor?.id === id && e.die != null && typeof e.success === 'boolean');
+    const won = mine.filter((e) => e.success).length;
+    const lost = mine.length - won;
+    const hurt = events.filter((e) => e.injury?.id === id).map((e) => e.injury.severity).sort((a, b) => SEV.indexOf(b) - SEV.indexOf(a))[0];
+    const gone = !state.crew.some((o) => o.id === id);
+    const line = gone ? 'Lost' : mine.length ? `${won} ✓${lost ? ` · ${lost} ✗` : ''}` : 'Backed them up';
+    return `<button class="rcrew__op ${gone ? 'is-lost' : hurt ? 'is-hurt' : ''}" data-action="op-link" data-id="${esc(id)}" ${gone ? 'disabled' : ''}>
+        ${face(op, 'sm')}<strong>${esc(op.handle)}</strong><span>${esc(line)}</span>${hurt && !gone ? `<span class="rcrew__hurt">${esc(hurt)} wound</span>` : ''}</button>`;
+  }).join('');
+  return `<div class="rcrew" aria-label="Who went">${cards}</div>`;
 }
 
 /** Joss's opener and what the run came down to (core/report.js). Headings with nothing behind them are left out. */
@@ -2100,10 +2136,16 @@ function renderPlan() {
 
       </div>
       ${(() => {
-        const away = plan.mode !== 'live' && handsOffAllowed(t);
-        return `<button class="btn btn--primary" data-action="${away ? 'send-job' : 'start-job'}" ${plan.crew.length ? '' : 'disabled'}>
-        ${plan.crew.length ? `${away ? 'Send them' : 'Go live'} (${plan.crew.length + [plan.overwatch, plan.wheels, plan.standby].filter(Boolean).length})` : 'Pick a crew'}
+        // Send them, with Watch live beside it (playtest, 2026-11-07): the other way to run it is one
+        // tap away instead of inside the Orders fold. Picking one also sets plan.mode, so the fold agrees.
+        const canSend = handsOffAllowed(t);
+        const away = plan.mode !== 'live' && canSend;
+        const n = plan.crew.length + [plan.overwatch, plan.wheels, plan.standby].filter(Boolean).length;
+        const main = `<button class="btn btn--primary" data-action="${away ? 'send-job' : 'start-job'}" ${plan.crew.length ? '' : 'disabled'}>
+        ${plan.crew.length ? `${away ? 'Send them' : 'Go live'} (${n})` : 'Pick a crew'}
       </button>`;
+        const other = !canSend ? '' : `<button class="btn btn--ghost planbar__alt" data-action="${away ? 'start-job' : 'send-job'}" ${plan.crew.length ? '' : 'disabled'}>${away ? 'Watch live' : 'Send them'}</button>`;
+        return `<div class="planbar__go">${main}${other}</div>${planOrdersQuick(t)}`;
       })()}
       ${planTryList.length && whyOpen ? `<div class="planbar__tries"><span>Try</span>${planTryList.map((tr, i) => `<button class="trychip" data-action="plan-try" data-id="${i}">${esc(tryWord(tr))} <b>→ ${esc(riskWord(tr.level))}</b></button>`).join('')}</div>` : ''}
     </div>`;
@@ -2215,6 +2257,20 @@ function freelancersFull() {
   const isF = (id) => (state.freelancers ?? []).some((f) => f.id === id);
   const here = pickSlot?.startsWith('in:') ? plan.crew[Number(pickSlot.split(':')[1])] : null;
   return plan.crew.filter((id) => isF(id) && id !== here).length >= MAX_FREELANCERS_PER_JOB;
+}
+
+/**
+ * The orders as two chip rows under Send (playtest, 2026-11-07: there's room in the left column).
+ * Only shown where the plan bar stands beside the plan (styles.css, 1400px+); the Orders fold in the
+ * plan stays for phones and for the longer descriptions.
+ */
+function planOrdersQuick(t) {
+  if (!handsOffAllowed(t) && plan.mode === 'live') return '';
+  const orders = ORDERS[plan.orders] ? plan.orders : 'steady';
+  const callIn = CALL_IN[plan.callIn] ? plan.callIn : 'risky';
+  const row = (label, list, on, action) => `<div class="qorders__row"><span>${esc(label)}</span><div class="qorders__chips">${Object.entries(list).map(([k, o]) =>
+    `<button class="qchip ${on === k ? 'is-on' : ''}" data-action="${action}" data-id="${k}" aria-pressed="${on === k}">${esc(o.name.replace("When it's risky", 'When risky'))}</button>`).join('')}</div></div>`;
+  return `<div class="qorders">${row('Call me in', CALL_IN, callIn, 'callin')}${callIn === 'every' ? '' : row('On their own', ORDERS, orders, 'orders')}</div>`;
 }
 
 /** When the crew calls you in, and how they decide when they don't (core/autorun.js ORDERS). */
