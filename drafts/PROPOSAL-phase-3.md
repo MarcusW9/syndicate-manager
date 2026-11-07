@@ -1,6 +1,6 @@
 # Phase 3: heists, Legends, rival tongs, loyalty (proposal, 2026-11-07)
 
-**Not built.** The plan for the tong's Phase 3, from the owner's "Guild Direction" handover (written
+**Slice A1 is built** (2026-11-07, save v47; DESIGN.md 2026-11-07 "Heists, slice A1" has the owner's calls, which replace the suggested defaults in section 6 items 1-4: Madam Rao's heist first at reputation 15, Mr. Szeto's at three halls and reputation 60, no rank change, 3 prep in 3 weeks, stand-in jobs; and the "clean exit" effect left out). Everything else is not built. The plan for the tong's Phase 3, from the owner's "Guild Direction" handover (written
 outside the repo against save v29) after checking it against main at save v46. DESIGN.md 2026-11-07
 has the decision row. Each part is built in slices, one PR each, with the owner's calls from section 6
 first.

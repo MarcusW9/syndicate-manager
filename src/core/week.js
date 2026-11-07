@@ -4,6 +4,7 @@
 import { availability } from './crew.js';
 import { TIER_LEVEL } from './record.js';
 import { money } from './money.js';
+import { heistLine } from './heists.js';
 
 const signed = (n) => `${n >= 0 ? '+' : '−'}${money(Math.abs(n))}`;
 
@@ -36,6 +37,7 @@ export function mondayBrief(state) {
     jobs: state.jobs.length,
     expiring: state.jobs.filter((j) => j.expiresDay <= sunday).length,
     crewsOut: (state.awayJobs ?? []).length,
+    heist: heistLine(state), // a heist on: how far the prep has got (core/heists.js)
   };
 }
 
@@ -68,6 +70,7 @@ export function weekSummary(state) {
       `Money: ${signed(earned)} over the week, ${signed(net)} after the bills.`,
       rep ? `Reputation ${start.reputation} → ${state.reputation} (${rep > 0 ? '+' : ''}${rep}).` : `Reputation steady at ${state.reputation ?? 0}.`,
       r.hurt ? `${r.hurt} of ${r.total} hurt going into next week.` : `Everyone's on their feet: ${r.total} on the books.`,
+      ...(heistLine(state) ? [heistLine(state)] : []),
     ],
   };
 }
