@@ -19,7 +19,7 @@ import { TRAITS } from '../data/traits.js';
 import { PARTNER } from '../data/partner.js';
 import { jossIcon, portrait } from './art.js';
 import { statIcon, statGlyph, crewIcons, traitGlyph } from './icons.js';
-import { cityMapSvg, cityMapLegend, MAP_DISTRICTS } from './citymap.js';
+import { cityMap as drawCityMap, cityMapView, animateMap, FULL_VIEW, MAP_DISTRICTS } from './citymap.js';
 import { districtArt } from './districtArt.js';
 import { landmark } from './landmarks.js';
 import { renderHallBuild, hallBuildLine } from './hallbuild.js';
@@ -73,10 +73,11 @@ import { freelancerAsCrew, shareOf, MAX_FREELANCERS_PER_JOB } from '../core/free
 
 let state;
 let screen = 'inbox';
-let cityDistrict = null; // district card open on the Ops map
+let cityDistrict = null; // district card open on the Ops map, and the district the map is zoomed onto
+let mapView = FULL_VIEW; // where the Ops map was looking when last drawn ([x, y, w, h]); it eases from here to the next view
+let mapTo = null; // the view the map is heading for, set while drawing it
 let cityTab = 'districts'; // which Lore section is showing (LORE_TABS)
 let loreDistrict = null; // the district read in full on Lore › Districts
-let cityCardDue = false; // scroll a newly opened district card into view after drawing
 let loreDue = false; // scroll Lore › Districts to the district opened from Ops
 let cityMapDue = false; // scroll the map into view after drawing (a crew's district picked in the list)
 let openMessageId = null;
@@ -128,6 +129,7 @@ export function mountApp(el, initialState) {
   root.addEventListener('keydown', (e) => {
     if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('g[data-action]')) { e.preventDefault(); onClick(e); }
     if (e.key === 'Escape' && pickSlot) { focusNext = { action: 'pick-slot', id: pickSlot }; pickSlot = null; render(); }
+    else if (e.key === 'Escape' && screen === 'ops' && cityDistrict && !state.activeMission) { cityDistrict = null; render(); }
   });
   // The save-file picker lives outside root: render() replaces everything inside root, and the
   // Load button's own click re-renders, so a picker inside would be swapped out mid-pick and its
@@ -160,7 +162,10 @@ function onClick(e) {
       setTimeout(wakeContinue, CONTINUE_REST_MS);
       return setState(next);
     }
-    case 'city-district': cityDistrict = cityDistrict === id ? null : id; cityCardDue = !!cityDistrict; break;
+    // A district on the map: zoom onto it and open its card (2026-11-07). Tapping it again keeps it;
+    // "× Whole city", Esc or the harbour zooms back out.
+    case 'city-district': cityDistrict = id; break;
+    case 'city-whole': cityDistrict = null; break;
     // A crew's district in the list: light it on the map (scrolled into view) and narrow the list to it.
     case 'city-show': cityDistrict = cityDistrict === id ? null : id; cityMapDue = !!cityDistrict; break;
     case 'city-tab': cityTab = id; break;
@@ -168,6 +173,8 @@ function onClick(e) {
     case 'ops-district': screen = 'ops'; cityDistrict = id; cityMapDue = true; break;
     case 'lore-district': loreDistrict = loreDistrict === id ? null : id; break;
     case 'about-district': screen = 'lore'; cityTab = 'districts'; loreDistrict = id; loreDue = true; break;
+    case 'read-message': screen = 'inbox'; // from Ops' Tonight list; then as open-message
+    // falls through
     case 'open-message': {
       openMessageId = id;
       const msg = state.inbox.find((m) => m.id === id);
@@ -617,9 +624,9 @@ function render() {
   `;
   if (am) mountWatch(root.querySelector('.watch'), state, { ui: watchUi, onAuto: () => setState(autoStep(state)) });
   if (pickSlot) (root.querySelector('.sheet .cand.is-on') ?? root.querySelector('.sheet .cand:not([disabled])'))?.focus({ preventScroll: true });
-  if (cityMapDue) { cityMapDue = false; root.querySelector('.citymap')?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
+  if (mapTo) { animateMap(root.querySelector('.citymap__view'), mapView, mapTo); mapView = mapTo; mapTo = null; }
+  if (cityMapDue) { cityMapDue = false; root.querySelector('.mapframe')?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
   if (loreDue) { loreDue = false; root.querySelector('.lorecard.is-open')?.scrollIntoView({ block: 'start' }); }
-  if (cityCardDue) { cityCardDue = false; root.querySelector('.citycard')?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
   const want = focusNext ?? refocus;
   focusNext = null;
   if (want) {
@@ -2383,7 +2390,10 @@ function cityMap() {
         home && 'the home hall is here', hall && 'a hall of ours is here', raidOn(state, key) && 'a raid is coming', heatIn(state, key) > 0 && `heat ${heatIn(state, key)} of 10`, out && `${out} of yours out here`, talk === key && 'street talk about it'].filter(Boolean).join(', '),
     };
   });
-  return cityMapSvg(districts, esc, { portrait }) + cityMapLegend();
+  // Drawn where it was last looking, then eased to the picked district or the whole city after render().
+  mapTo = cityMapView(cityDistrict);
+  const mapPx = root.querySelector('.citymap__view')?.clientWidth || Math.min(window.innerWidth - 40, 720);
+  return drawCityMap(districts, esc, { portrait, view: mapView, mapPx });
 }
 
 /**
@@ -2415,7 +2425,7 @@ function renderOps() {
     <div class="ops">
       <div class="ops__head">
         <h2>Out now</h2>
-        ${f ? `<button class="linkbtn" data-action="city-district" data-id="${esc(f)}">${esc(cityName(f))} only · show all</button>` : ''}
+        ${f ? `<button class="linkbtn" data-action="city-whole">${esc(cityName(f))} only · show all</button>` : ''}
       </div>
       ${jobs.length || side.length || raids.length ? `${renderRaids(raids)}${renderCrewsOut(jobs)}${sideList}`
         : `<p class="muted small">${any ? `Nobody of ours is out in ${esc(cityName(f))}.` : 'Nobody is out. Crews you send away are followed here, day by day.'}</p>
@@ -2423,31 +2433,46 @@ function renderOps() {
     </div>`;
 }
 
-/** The city tonight, beside the map on wide screens and under it on phones. */
+/**
+ * Tonight, beside the map on wide screens and under it on phones (2026-11-07; was "The city tonight",
+ * a row per district that did what tapping the map does). Only districts with something worth a
+ * tap, each going somewhere the map doesn't: work → the job (or the board), street talk → the
+ * rumour. Crews out, calls and raids are in Out now above. Then who's home, and where it's warm.
+ */
 function citySummary() {
-  const talk = activeRumour(state)?.district;
+  const r = activeRumour(state);
+  const talkMsg = r ? state.inbox.find((m) => m.type === 'rumour' && m.id.startsWith('rumour-')) : null;
   const open = MAP_DISTRICTS.filter((k) => !DISTRICT_CARDS[k].locked);
+  const icon = (k) => `<svg class="tonight__icon" viewBox="0 0 48 44" aria-hidden="true">${landmark(k, { x: 24, y: 44, size: 48, light: turfHex(k) ?? '#3de8d8' })}</svg>`;
   const rows = open.map((k) => {
-    const n = jobsIn(k).length;
-    return `<li><button class="cityrow ${cityDistrict === k ? 'is-on' : ''}" data-action="city-district" data-id="${k}" aria-pressed="${cityDistrict === k}">
-      <span class="cityrow__tab" style="background:${turfHex(k) ?? 'var(--line)'}"></span>
-      <span class="cityrow__name">${esc(cityName(k).replace(/^The /, ''))}<span class="muted small"> · ${esc(DISTRICTS[k]?.faction ?? '')}</span></span>
-      <span class="cityrow__meta">${talk === k ? '<span class="cityrow__talk">Talk</span>' : ''}${crewOutIn(k) ? `<span class="cityrow__out">${crewOutIn(k)} out</span>` : ''}${n ? `<b>${n}</b> job${n === 1 ? '' : 's'}` : '<span class="muted">—</span>'}</span>
-    </button></li>`;
-  }).join('');
-  // Your people at home, hall by hall: who's in, who's hurt (the ones out are in the list above).
+    const jobs = jobsIn(k);
+    const talk = r?.district === k;
+    if (!jobs.length && !talk) return '';
+    const heat = heatIn(state, k);
+    const what = [jobs.length ? `${jobs.length} job${jobs.length === 1 ? '' : 's'} on the board` : '', heat >= 3 ? `heat ${heat}` : '', talk ? `street talk: ${r.tag ?? 'word going round'}` : ''].filter(Boolean).join(' · ');
+    // One job opens its plan; several open the board (street talk shows there too); talk alone opens the rumour.
+    const [action, id, go] = jobs.length === 1 ? ['open-job', jobs[0].j.id, 'Plan'] : jobs.length ? ['nav', 'jobs', 'Jobs'] : talkMsg ? ['read-message', talkMsg.id, 'Talk'] : ['nav', 'jobs', 'Jobs'];
+    return `<li><button class="tonight__row" data-action="${action}" data-id="${esc(id)}" style="--turf:${turfHex(k) ?? 'var(--line)'}">
+      ${icon(k)}<span class="tonight__what"><span class="tonight__where">${esc(cityName(k).replace(/^The /, ''))}</span><span>${esc(what.charAt(0).toUpperCase() + what.slice(1))}</span></span>
+      <span class="tonight__go">${go} ›</span></button></li>`;
+  }).filter(Boolean);
+  const inText = (k) => NAMES.districtsInText?.[k] ?? cityName(k);
+  const noWork = open.filter((k) => !jobsIn(k).length && r?.district !== k).map(inText);
+  // Your people at home, hall by hall: who's in, who's hurt (the ones out are in Out now).
   const outIds = new Set([...(state.awayJobs ?? []).flatMap((j) => j.mission.crewIds), ...sideTasksOut(state).flatMap((t) => t.crewIds)]);
   const halls = (state.halls ?? []).map((h) => {
     const who = residents(state, h.district).filter((o) => !outIds.has(o.id));
     const hurt = who.filter((o) => o.condition?.injury && o.condition.injury !== 'healthy').length;
     return `${who.length} in ${cityName(h.district)}${hurt ? ` (${hurt} hurt)` : ''}`;
   });
+  const hot = HEAT_DISTRICTS.filter((d) => heatIn(state, d) > 0).sort((a, b) => heatIn(state, b) - heatIn(state, a));
   return `
-    <h2>The city tonight</h2>
-    <ul class="list list--plain cityrows">${rows}</ul>
-    <p class="muted small">${(() => { const hot = HEAT_DISTRICTS.filter((d) => heatIn(state, d) > 0).sort((a, b) => heatIn(state, b) - heatIn(state, a)); return hot.length ? `Heat: ${hot.map((d) => `${esc(districtName(d))} ${heatIn(state, d)}/10`).join(' · ')}.` : 'No heat anywhere.'; })()}</p>
+    <h2>Tonight</h2>
+    ${rows.length ? `<ul class="list list--plain tonight">${rows.join('')}</ul>` : '<p class="muted small">Nothing on the board anywhere tonight. New work comes in through the week.</p>'}
+    ${noWork.length && rows.length ? `<p class="muted small">No work tonight in ${esc(noWork.length > 1 ? `${noWork.slice(0, -1).join(', ')} and ${noWork.at(-1)}` : noWork[0])}.</p>` : ''}
     <h2>At home</h2>
     <p class="small">${esc(halls.join(' · '))}${outIds.size ? ` · ${outIds.size} out` : ''}.</p>
+    <p class="muted small">${hot.length ? `Heat: ${hot.map((d) => `${esc(districtName(d))} ${heatIn(state, d)}/10`).join(' · ')}.` : 'No heat anywhere.'}</p>
     <h2>Places</h2>
     <div class="cityplaces">
       <button class="btn cityplace" data-action="nav" data-id="crew">Halls<span class="muted small">On Crew</span></button>

@@ -55,7 +55,7 @@ try {
   await tap(p, '[data-action="nav"][data-id="ops"]'); await p.waitForTimeout(500);
   await p.locator('.ops').scrollIntoViewIfNeeded(); await p.waitForTimeout(200);
   await p.screenshot({ path: `${out}/04-out-now-gang-raid.png` });
-  await p.locator('.cm-hit').nth(4).click({ force: true }); await p.waitForTimeout(600); // the Night Market
+  await p.locator('.cm-label[data-id="nightMarket"]').click(); await p.waitForTimeout(600); // the Night Market
   await p.locator('.citycard__grudge').scrollIntoViewIfNeeded();
   await p.screenshot({ path: `${out}/05-night-market-card.png` });
   const warn = warned.inbox.find((m) => m.kind === 'raid-warning');
