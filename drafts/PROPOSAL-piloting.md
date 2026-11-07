@@ -10,7 +10,7 @@ Driving is renamed **piloting** and covers vans, boats and drones. Its value bec
 
 1. **The name.** Proposed: piloting. Drivers, pilots and drone jockeys all sit under it.
 2. **Drones move from tech.** Proposed: drone overwatch rolls piloting; Drone Jockey needs piloting 10. Implant neural load stays.
-3. **Getaway step.** Owner (2026-11-07): only on a job that is leaving heat (a loud job, a failed roll with a heat cost, an overwatch shot), rolled by the Wheels, else the team's best pilot. A quiet job has no getaway roll and is never punished. Open: whether a failed getaway still adds heat (see below).
+3. **Getaway step.** Owner (2026-11-07): only on a job that is leaving heat (a loud job, a failed roll with a heat cost, an overwatch shot), rolled by the Wheels, else the team's best pilot. A quiet job has no getaway roll and is never punished. A failed getaway adds no heat (loud jobs already pay theirs); a bad one leaves a tail.
 4. **Faster jobs.** Proposed: a Wheels at 14+ cuts a day off any job of 2+ days; same pay.
 5. **Moving between halls.** Proposed: with a pilot (10+) driving, same day, no settling-in day.
 6. **Arrival times.** Proposed: the table below, in fight rounds.
@@ -29,10 +29,10 @@ Only rolled when the job is leaving heat. How often that is (stat-usage counter,
 | --- | --- |
 | Clean (success by 5+) | −2 heat, never below zero for the job |
 | Success | −1 heat, never below zero for the job |
-| Failure | nothing (open: or +1) |
+| Failure | nothing |
 | Bad failure (by 5+), or the alert maxed | a tail: the next job there is watched |
 
-With shedding only, the getaway is all upside, so a good pilot pays off on loud work and a bad one costs nothing extra. Failure adding +1 would make it a real roll, but loud jobs already pay their heat.
+With shedding only, the getaway is all upside, so a good pilot pays off on loud work and a bad one costs nothing extra. Failure adds nothing because loud jobs already pay their heat (2026-11-07).
 
 - Need: 10 + the job's difficulty + 1 per alert point.
 - Ghost Driver's clean-getaway heat bonus now runs through this step.
