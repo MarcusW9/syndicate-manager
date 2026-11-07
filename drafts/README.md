@@ -7,6 +7,11 @@ Generated text waiting to go into `src/data/`. Not imported by the game. Delete 
 - `mission-log-prototype.md`: what the owner's Container 409 logs settled, checked against the engine; the brief for the first mission-log slice.
 - `earned-traits-backlog.md`: the owner's earned traits not built yet, and what each waits on.
 - `crisis-situations-review.md`: Claude's draft of each crisis's situations, for the owner to skim.
+- `PROPOSAL-piloting.md`: driving renamed piloting (vans, boats, drones), its value as time: a getaway step on every job, faster jobs, same-day hall moves, arrival rounds for the van, standby, raid support and backup (2026-11-07). Owner's calls first. Not built.
+- `PROPOSAL-medical.md`: medical as the support stat: named wounds, field dressing, triage and neural comedown after jobs, the combat medic, later hall doctors and chrome surgeons (2026-11-07). Owner's calls first. Not built.
+- `PROPOSAL-leadership.md`: leadership (visible) and judgment (hidden), the Leader slot on the squad board, and later the executive roles (2026-11-07). Owner's calls first. Not built.
+- `PLAN-stat-usage.md`: the plan for measuring whether each stat decides enough to be a stat (2026-11-07): the metrics, the five policies, the cut / rework / rebalance thresholds agreed before running, the first results, and what follows for driving (piloting and a getaway step), leadership, and what waits for Phase 3. Tool: `scripts/sim-stats.mjs`.
+- `PROPOSAL-phase-3.md`: the plan for Phase 3 (2026-11-07): heists, the Legend defining job, rival tongs (generated, kept at level of detail) and loyalty and mobility, with the owner's calls before each part. Not built.
 - `PROPOSAL-phase-3.md`: the plan for Phase 3 (2026-11-07): heists, the Legend defining job, rival tongs (generated, kept at level of detail) and loyalty and mobility, with the owner's calls before each part. Slice A1 (heists, with stand-in jobs) is built; the rest is not.
 - `ops-and-presence.md`: the 2026-11-04 backlog after Phase 1 of the tong direction: districts as presence (the owner's handover idea), one command centre (City becomes it, or an Ops tab), its phone-first map, crews out made visible (4a built, 4b next) and what's parked until the playtest.
 - `core-loop.md`: the first-principles discussion of the core loop (planning, feed, call-ins, route maps), started 2026-10-26.

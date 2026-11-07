@@ -55,4 +55,4 @@ Everything that happens in a run is `record(am, event)` into `am.events`. `feed.
 
 ## Tests and scripts
 - `npm run test:fast` (about 40 s: all but four slow files, see `scripts/test-fast.mjs`) while working; `npm test` (about 2 min) before every push. `tests/play.js` has the helpers (`playMission`, `toCrisis`, `arm`, the policies).
-- Tuning sims: `scripts/sim-growth.mjs`, `sim-traits.mjs`, `sim-early-game.mjs`, `sim-battles.mjs`, `sim-districts.mjs` (fights by district, with and without spots). Screenshots: `npm run screenshots -- <slug>`.
+- Tuning sims: `scripts/sim-growth.mjs`, `sim-traits.mjs`, `sim-early-game.mjs`, `sim-battles.mjs`, `sim-districts.mjs` (fights by district, with and without spots). `sim-stats.mjs` (does each stat decide enough to be a stat: rolls, decisive rolls, costly failures and specialist use by stat across five policies, plus +3-in-one-stat counterfactuals; counting in `scripts/lib/stat-usage.mjs` reads report events only, never a roll; plan and thresholds in `drafts/PLAN-stat-usage.md`, CSVs in `docs/sims/`). Screenshots: `npm run screenshots -- <slug>`.

@@ -7,6 +7,12 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-07 · Proposals for piloting, medical and leadership
+- No game change. Three proposals in `drafts/` follow the stat-usage results: driving becomes piloting and is worth time (`PROPOSAL-piloting.md`), medical becomes the support stat with named wounds (`PROPOSAL-medical.md`), and leadership and judgment arrive with a Leader slot (`PROPOSAL-leadership.md`). Each lists the owner's calls before anything is built.
+
+## 2026-11-07 · Measuring which stats matter
+- Tools only, no game change. `scripts/sim-stats.mjs` plays a year of the game 60 times under five ways of playing (careful stealth with Joss's picks, loud, mixed approaches, the tong running every crew, and always a Wheels) and counts every roll by stat: how often it's rolled, on how many jobs, how many rolls were close calls, how many failures cost something, and whether specialists use their main stat. It then gives everyone +3 in one stat at a time to see what that changes by week 52. The counting only reads what each job already writes down, so no roll changes; a test checks the same seed ends with the same cash either way. The plan and the agreed thresholds for cutting, reworking or rebalancing a stat are in `drafts/PLAN-stat-usage.md`.
+
 ## 2026-11-07 · Madam Rao's own prep jobs, and the Hei Lok
 - **The Big Table now has its own six prep jobs** in place of borrowed ones, two for each step: The Guest Copy or After the Applause (a briefing on the guests, staff and routes), An Old Account or Someone to Cover (the pit boss's night off), and Service Included or Manual Handling (a maintenance window that slows the casino's alerts). They're danger 2 jobs for three, pay ¥3,200–4,000, and only come up as Rao's prep.
 - **The casino is the *Hei Lok*,** a casino airship tethered above the Night Market and owned by a small family company, Hei Lok Leisure. Nobody's gang owns it, so **Casino Con (and Rao's heist) no longer angers the Red Lanterns**; the crisis where the owner comes down to watch is now the owner's son, and the crew leaves by the cage lift down the mast.
