@@ -5,7 +5,7 @@
 // the counterfactuals, a breakdown by approach and threat, and the verdict against the plan's agreed
 // thresholds; writes the lot to docs/sims/stat-usage-<date>.csv.
 //
-//   node scripts/sim-stats.mjs [seeds=60] [weeks=52] [policies=careful,loud,mixed,tong,wheels] [--no-boost]
+//   node scripts/sim-stats.mjs [seeds=60] [weeks=52] [policies=careful,loud,mixed,tong,wheels] [--no-boost | --boost=driving,medical] [--tag=name]
 //
 // About 8 s a season (18 s for tong) on one core; it spreads them over every core. 60 seeds of
 // everything is ~660 seasons: about half an hour on four cores.
@@ -34,7 +34,9 @@ if (!isMainThread) {
   const SEEDS = Number(args[0] ?? 60);
   const WEEKS = Number(args[1] ?? 52);
   const policies = (args[2] ?? Object.keys(POLICIES).join(',')).split(',');
-  const boosts = process.argv.includes('--no-boost') ? [] : STATS;
+  const flag = (name) => process.argv.find((a) => a.startsWith(`--${name}=`))?.split('=')[1];
+  const boosts = process.argv.includes('--no-boost') ? [] : flag('boost') ? flag('boost').split(',') : STATS;
+  const tag = flag('tag');
   const tasks = [];
   for (const policy of policies) for (let i = 1; i <= SEEDS; i++) tasks.push({ policy, seed: i, weeks: WEEKS, boost: null });
   for (const boost of boosts) for (let i = 1; i <= SEEDS; i++) tasks.push({ policy: 'careful', seed: i, weeks: WEEKS, boost });
@@ -176,7 +178,7 @@ if (!isMainThread) {
 
   const date = new Date().toISOString().slice(0, 10);
   mkdirSync(new URL('../docs/sims/', import.meta.url), { recursive: true });
-  const file = new URL(`../docs/sims/stat-usage-${date}.csv`, import.meta.url);
+  const file = new URL(`../docs/sims/stat-usage-${date}${tag ? `-${tag}` : ''}.csv`, import.meta.url);
   writeFileSync(file, csv.join('\n') + '\n');
   console.log(`\nWrote ${file.pathname.replace(/.*\/docs\//, 'docs/')} (${results.length} seasons, ${Math.round((Date.now() - started) / 1000)} s)`);
 }
