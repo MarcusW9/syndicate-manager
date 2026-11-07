@@ -1,7 +1,9 @@
 // Back Rent: the Night Market's opening job (drafts/opening-jobs.md).
 // Clear Tang Wai-chiu's counterfeit chrome from Madam Rao's upstairs rooms.
 // Rao has arranged collection from the covered loading bay behind the shop.
-// The final beat hands over the Night Market hall (data/sites.js HALLS).
+// The final beat passes the crew to Mrs. Ip, who introduces them to Wok Court, the Night Market hall
+// (data/sites.js HALLS; owner's hall lore 2026-11-07). The job itself is to be rewritten by the owner
+// around the stallholders' association and a disputed arrears notice.
 // Rolls aimed at 8-13. No Silver Fan grudge added.
 // The opening job for this district's hall (core/halls.js introduceHalls): never dealt to the
 // board at random; the contact asks for it once the tong is welcome. Owner's text (2026-11-06).
@@ -23,7 +25,7 @@ export const BACK_RENT = {
     `{meena} lets you through the shop stair door and ties the bell's clapper with saffron thread. "Mind the silk; Madam can afford to lose it, but the people who pledged it can't."`,
     `Upstairs, counterfeit chrome eyes lie forty to a crate in grey foam, their warranty seals already yellowing. Someone has set a teacup on the cutting table and carefully put a saucer underneath.`,
     `You carry the crates down the shop stair towards the covered loading bay. Behind the silk racks, {meena} presses a customer's sleeve beneath a damp cloth and keeps working.`,
-    `At dawn, {rao} hands you the keys: two rooms with silk racks, a cutting table, a camphor chest and a hot plate; the roof hatch and shop stair are yours to mind. "The bell stays, beta; I like to hear people coming home."`,
+    `At dawn, {rao} counts the banknotes again and says nothing about rent. By noon {ip} has heard: the stallholders at Wok Court have rooms going, for people who pay what they agree and remember that other people work there.`,
   ],
   crises: [
     {

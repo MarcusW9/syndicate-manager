@@ -288,7 +288,9 @@ export function startRaidFight(state, raid) {
   b.foe = raidBy(raid); // who they are, and what the battle lines call one of them (core/battle.js foeWord)
   b.foeOne = raider(raid).one;
   planIntents(b, nextRng(state));
-  const text = `${raidWho(raid)} ${way.say ?? 'come through the door'}: ${b.guards.length} of them, against ${andNames(ops)}.`;
+  // A way with a line of its own (the halls' lore, 2026-11-07) opens with it; else "<who> come ...".
+  const text = way.line ? `${way.line} ${raidWho(raid)}: ${b.guards.length} of them, against ${andNames(ops)}.`
+    : `${raidWho(raid)} ${way.say ?? 'come through the door'}: ${b.guards.length} of them, against ${andNames(ops)}.`;
   state.activeMission = {
     jobId: raid.id, templateId: tpl.id, raid: raid.id, build: floor, crewIds: ops.map((o) => o.id), approach: 'loud', days: 0, bribe: 0,
     overwatch: null, wheels: null, standby: null, callIn: 'every', orders: null,

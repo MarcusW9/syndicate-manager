@@ -118,6 +118,12 @@ GLASS HEIGHTS PEOPLE (one-off job givers, not clients): Chow Nga-man (Veridian-A
 payroll officer); Edith Pryce (Morrow & Venn estates administrator); Kwok Mei-yee
 (visiting Hang Yuen engineer); Poon Hok-yin (shared-tower facilities coordinator); Binta
 Sarr (independent overnight courier). Currency is cash in ¥; no "credits" or "Bits".
+HALLS: the tong's halls grow by lease and negotiated access, never conquest (no claim on
+the district or the businesses next door): Old Town (the room above the noodle shop) ·
+Wok Court, Night Market (rooms behind a dai pai dong court, stallholders' association,
+via Mrs. Ip) · the Stove Pier, Docks (pier cooperative, via the Ferryman) · the Unlisted
+Rooms, Basin (flat over a tack workshop, via Okonkwo) · the Underterrace, Glass Heights
+(maintenance cooperative under the terraces, via Forewoman Tse, not Szeto).
 Reputation tier promotions open the locked districts,
 each introduced by a client: the Silt (the Ferryman), the Amber Reach (Okonkwo), Iron
 Peak (Szeto).

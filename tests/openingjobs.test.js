@@ -22,7 +22,7 @@ function welcome(seed = 1) {
   const s = createNewGame({ seed, startCrew: 'fresh' });
   s.inbox = [];
   s.reputation = HALL_SITES.nightMarket.rep;
-  adjustTrust(s, 'rao', HALL_SITES.nightMarket.trust - 50);
+  adjustTrust(s, 'rao', 10);
   s.cash = 30000;
   return s;
 }
@@ -50,7 +50,7 @@ test('welcome: on Monday the contact asks the favour instead of offering the hal
   assert.equal(job.expiresDay, s.day + OPENING.boardDays, 'on the board for two weeks');
   assert.ok(s.inbox.some((m) => m.kind === 'opening' && /favour to ask/.test(m.subject) && /Back Rent/.test(m.body)));
   assert.ok(!s.inbox.some((m) => m.kind === 'hall-offer'), 'no hall yet');
-  assert.match(canOpenHall(s, 'nightMarket').reason, /Madam Rao wants a favour first: Back Rent, on the board/);
+  assert.match(canOpenHall(s, 'nightMarket').reason, /Mrs\. Ip wants a favour first: Back Rent, on the board/);
   introduceHalls(s);
   assert.equal(s.jobs.filter((j) => j.templateId === 'back_rent').length, 1, 'asked once');
 });
@@ -59,7 +59,7 @@ test('finishing it opens the way: the hall is offered at once, and can be opened
   const s = welcome();
   introduceHalls(s);
   const line = openingResult(s, opening(s).id, 'completed');
-  assert.match(line.text, /Madam Rao has a place for us now/);
+  assert.match(line.text, /Mrs\. Ip has a place for us now/);
   assert.equal(openingOf(s, 'nightMarket').status, 'done');
   assert.ok(s.inbox.some((m) => m.kind === 'hall-offer' && m.payload.district === 'nightMarket'));
   assert.equal(canOpenHall(s, 'nightMarket').ok, true);

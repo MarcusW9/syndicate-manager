@@ -21,7 +21,7 @@ const { importSave } = await import('../src/save/save.js');
 function welcome(seed = 1) {
   const s = createNewGame({ seed, startCrew: 'fresh' });
   s.reputation = HALL_SITES.nightMarket.rep;
-  adjustTrust(s, 'rao', HALL_SITES.nightMarket.trust - 50);
+  adjustTrust(s, 'rao', 10);
   s.cash = 30000;
   s.openings = { nightMarket: { status: 'done', jobId: null } };
   return s;
@@ -41,10 +41,12 @@ test('a new game has one hall, the old safehouse in Old Town: its beds are the r
 test('opening a hall needs the welcome (reputation, the contact\'s trust) and the deposit; it starts small', () => {
   const s = createNewGame({ seed: 2, startCrew: 'fresh' });
   assert.match(canOpenHall(s, 'nightMarket').reason, /reputation/);
-  s.reputation = 30;
-  assert.match(canOpenHall(s, 'nightMarket').reason, /trust/);
-  adjustTrust(s, 'rao', 10);
-  assert.match(canOpenHall(s, 'nightMarket').reason, /favour first/, 'then her opening favour (2026-11-06)');
+  s.reputation = HALL_SITES.nightMarket.rep;
+  // The Night Market's introducer, Mrs. Ip, isn't a client (2026-11-07): no trust check, the favour comes next.
+  assert.match(canOpenHall(s, 'nightMarket').reason, /Mrs\. Ip wants a favour first|Mrs\. Ip will ask a favour first/, 'then the opening favour (2026-11-06)');
+  // A hall whose contact is a client still needs their trust: the Docks and the Ferryman.
+  s.reputation = HALL_SITES.docks.rep;
+  assert.match(canOpenHall(s, 'docks').reason, /trust/);
   s.openings = { nightMarket: { status: 'done', jobId: null } };
   s.cash = 1000;
   assert.match(canOpenHall(s, 'nightMarket').reason, /deposit/);

@@ -58,7 +58,11 @@ export function partsOverlay(site, level, { tap = false, free = null, esc = (x) 
   const parts = site.parts.map((p) => {
     const [x0, y0, x1, y1] = p.grid;
     const [x, y, w, h] = [x0 * C, y0 * C, (x1 - x0 + 1) * C, (y1 - y0 + 1) * C];
-    const name = `<text class="bpart__name ${held.has(p.id) ? '' : 'is-locked'}" x="${x + 3}" y="${y - 2.5}">${esc(p.name.replace(/^The /, '').toUpperCase())}</text>`;
+    // A narrow part (the lane, two squares across) carries its name up its length, so it never runs into the next building's.
+    const label = esc(p.name.replace(/^The /, '').toUpperCase());
+    const name = x1 - x0 < 2
+      ? `<text class="bpart__name ${held.has(p.id) ? '' : 'is-locked'}" x="${x + w / 2}" y="${y + h / 2}" text-anchor="middle" transform="rotate(-90 ${x + w / 2} ${y + h / 2})">${label}</text>`
+      : `<text class="bpart__name ${held.has(p.id) ? '' : 'is-locked'}" x="${x + 3}" y="${y - 2.5}">${label}</text>`;
     if (held.has(p.id)) return name;
     const isNext = nx?.id === p.id;
     return `<g class="bpart ${isNext ? 'is-next' : ''}"${act(p.id)} aria-label="${esc(`${p.name}, ${isNext ? 'take it with Expand' : `level ${p.lvl}`}`)}"><rect x="${x + 1}" y="${y + 1}" width="${w - 2}" height="${h - 2}" fill="url(#bhatch)" class="bpart__area"/>

@@ -135,7 +135,7 @@ test('holding against a gang: a fight with its collectors; nobody dies unless yo
     let s = untilCall(untilWarned(withHall('nightMarket', seed), 'silverFan', 8), 'silverFan', 8);
     s = resolveDecision(s, callOf(s).id, 'hold');
     assert.equal(s.activeMission.battle.foeOne, 'collector');
-    assert.match(s.activeMission.report[0], /^Silver Fan collectors come (up|through|along|out)/); // the way they came in (2026-11-07)
+    assert.match(s.activeMission.report[0], /Silver Fan collectors: \d of them/); // after the way's own line (the halls' lore, 2026-11-07)
     for (let n = 0; s.activeMission && !s.activeMission.done && n < 60; n++) {
       const am = s.activeMission;
       if (am.pending) s = resolvePending(s, am.pending.kind === 'door' ? 'out' : am.pending.kind === 'standoff' ? 'press' : describePending(s).choices[0].id);

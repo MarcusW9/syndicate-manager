@@ -485,8 +485,8 @@ const SADDLE = '#4a3424';
 // part's `beds` is how many of the hall's beds stand in it (the yard's go in the second building).
 // The buildings are solid in a fight (sp-house), so a raid is fought outside: `ways` are up the lane
 // from the bottom strip, and (with the yard) through the yard's gate from the top strip. The names
-// of the other halls' parts are placeholders until the owner writes their lore
-// (drafts/BRIEF-hall-compounds.md).
+// and places of the other four halls are the owner's lore (2026-11-07, after
+// drafts/BRIEF-hall-compounds.md); a way's `line` opens a raid that comes in by it.
 const mirrorX = (shape) => {
   if (shape.t === 'rect') return { ...shape, x: 360 - shape.x - shape.w };
   if (shape.t === 'line') return { ...shape, x1: 360 - shape.x1, x2: 360 - shape.x2 };
@@ -496,8 +496,8 @@ const flipPt = ([x, y]) => [360 - x, y];
 const flipGrid = ([x0, y0, x1, y1]) => [11 - x1, y0, 11 - x0, y1];
 /**
  * A hall drawn as a compound. spec: { name, aria, mirror, top: { cls, label }, bottom: { shapes, label },
- * lit, sign, neighbours, covers: [7 fills], gate, parts: [5 × { name, about }], beds: [3 shares],
- * costs: [3], say: { street, gate } }.
+ * lit, sign, covers: [8 fills], gate, parts: [5 × { name, about }], beds: [3 shares],
+ * costs: [3], say: { street, gate } ("<who> come ...") or line: { street, gate } (a sentence of its own) }.
  */
 function compound(spec) {
   const m = spec.mirror;
@@ -512,8 +512,8 @@ function compound(spec) {
   return {
     ...hallSite(spec.name, spec.aria, street),
     ways: {
-      street: { lvl: 1, say: spec.say.street, ...hallWay(street) },
-      gate: { lvl: 3, say: spec.say.gate, ...hallWay(gate) },
+      street: { lvl: 1, say: spec.say?.street, line: spec.line?.street, ...hallWay(street) },
+      gate: { lvl: 3, say: spec.say?.gate, line: spec.line?.gate, ...hallWay(gate) },
     },
     parts: [
       { id: 'room', lvl: 1, inside: true, grid: G([1, 3, 4, 6]), bedCorner: P([1, 3]).map((v, i) => (i ? v : m ? 11 - 1 : 1)), beds: spec.beds[0], ...room },
@@ -574,72 +574,97 @@ export const HALLS = {
     beds: [8, 4, 2], costs: [20000, 30000, 40000],
     say: { street: 'come up the lane from the street', gate: 'come through the yard gate' },
   }),
-  // The Night Market: the rooms above Madam Rao's sari shop, and the court behind. Placeholder names.
+  // The Night Market: Wok Court (owner's lore, 2026-11-07). Rooms behind a dai pai dong courtyard,
+  // leased from the stallholders' association; Mrs. Ip makes the introduction. The public eating
+  // court is outside the compound, past the Supper Frontage.
   nightMarket: compound({
-    name: 'two rooms above her sari shop',
-    aria: 'Plan of our Night Market hall: the rooms above the sari shop, the back stair beside them, the loft across the stair, the cart court behind with a gate onto the market lane, and the corner stall across the passage',
-    top: { cls: 'sp-alley', label: 'THE MARKET LANE' }, bottom: { shapes: ROADWAY(), label: 'SILK & CREDIT' }, lit: 'OUR ROOMS', sign: '#ff5fae', gate: '#b48cff',
-    covers: [SILK[1], '#3a2d22', CONTAINER_TONES[3], SILK[0], SILK[2], SILK[3], '#7a2a2a', '#2f3442'], // a rack of saris, crates, a water drum, stall awnings, a cart, bolts of silk, a hawker's cart, a scooter
+    name: 'Wok Court',
+    aria: 'Plan of Wok Court, our Night Market hall: the Late Rooms, the Wash Passage beside them, the Prep House across the passage, the Delivery Court behind with the Cart Gate onto the market service lane, and the Rice Store across the way',
+    top: { cls: 'sp-alley', label: 'MARKET SERVICE LANE' }, bottom: { shapes: ROADWAY(), label: 'SUPPER FRONTAGE' }, lit: 'WOK COURT', sign: '#ff5fae', gate: '#8b9aab',
+    // A folded-table rack, a washing-water drum, a washing cabinet, stacked steel delivery crates, an
+    // insulated delivery chest, a shuttered food-service cart, a delivery scooter, a retired refrigerator.
+    covers: ['#6b5a2a', '#2f5f8a', '#8b9aab', '#5d6b7a', '#c8c2b0', '#8b9aab', '#7a2a2a', '#a9b2bc'],
     parts: [
-      { name: 'Our rooms', about: 'The two rooms above the sari shop. Rooms and beds go in here.' },
-      { name: 'The back stair', about: 'Where the shop\'s back stair comes down, between the buildings. Outside: a raid from the street is fought here.' },
-      { name: 'The loft', about: 'The loft across the stair. Room for more beds and a room or two.' },
-      { name: 'The cart court', about: 'The court behind, where hawkers leave their carts, walled in with a gate onto the market lane. Outside: defences go here, and a raid can come through the gate.' },
-      { name: 'The corner stall', about: 'The shuttered stall across the passage. With it the whole court is ours.' },
+      { name: 'The Late Rooms', about: 'Overnight quarters for cooks and delivery workers once: a stubborn ceiling fan, windows on the eating court, faded names on the hooks by the door. Rooms and beds go in here.' },
+      { name: 'The Wash Passage', about: 'Wet paving and drain grilles where the shared washing stations stood, up from the Supper Frontage. Outside: a raid from the front is fought here. Nobody leaves crates blocking it.' },
+      { name: 'The Prep House', about: 'The stalls\' old shared preparation building: pale rectangles where the benches stood, a wall clock seven minutes fast. Room for more beds and a room or two.' },
+      { name: 'The Delivery Court', about: 'The walled receiving yard behind, with the Cart Gate onto the market service lane, its lower panels dented by decades of handcarts. Outside: defences go here, and a raid can come through the gate.' },
+      { name: 'The Rice Store', about: 'A dry store across the passage, emptied when the association changed suppliers. Sack weights still pencilled by the door, and an argument about a missing scoop.' },
     ],
     beds: [2, 4, 2], costs: [20000, 30000, 40000],
-    say: { street: 'come up the back stair from the street', gate: 'come through the court gate from the market' },
+    line: {
+      street: 'Stools scrape across the eating court as the stallholders pull people inside. Footsteps turn into the Wash Passage.',
+      gate: 'The Cart Gate bangs against its frame. Figures push into the Delivery Court from the market service lane.',
+    },
   }),
-  // The Docks: the container office on the old pier, and the deck around it. Placeholder names.
+  // The Docks: the Stove Pier (owner's lore, 2026-11-07). A container office on an old working pier,
+  // leased from the pier cooperative; the Ferryman makes the introduction.
   docks: compound({
     mirror: true,
-    name: 'a container office on the old pier',
-    aria: 'Plan of our Docks hall: the container office on the old pier, the deck beside it, the bunk container across the deck, the fenced pier behind with a gate onto the walkway, and the net loft across the gap',
-    top: { cls: 'sp-pier', label: 'THE WALKWAY' }, bottom: { shapes: ROADWAY('sp-yard'), label: 'THE CONTAINER YARD' }, lit: 'OUR OFFICE', sign: '#ff3d5f', gate: '#ff3d5f',
-    covers: ['#3a2d22', CONTAINER_TONES[1], CONTAINER_TONES[3], '#2f3442', CONTAINER_TONES[0], CONTAINER_TONES[2], '#2f3442', CONTAINER_TONES[1]], // pallets, a crate, a fuel drum, bollards, a crate, a container's end, a bollard, a forklift
+    name: 'the Stove Pier',
+    aria: 'Plan of the Stove Pier, our Docks hall: the Stove Office, the Working Deck beside it, the Relief Box across the deck, the Rope Court behind with the Jetty Gate onto the pier walkway, and the Net House across the way',
+    top: { cls: 'sp-pier', label: 'PIER WALKWAY' }, bottom: { shapes: ROADWAY('sp-yard'), label: 'CONTAINER YARD' }, lit: 'THE STOVE PIER', sign: '#ff3d5f', gate: '#ff3d5f',
+    // A strapped pallet stack, an insulated fish chest, a container door panel on a repair cradle, a
+    // cable-reel stand, a mooring-equipment bin, a retired forklift, a ballast drum, an engine-parts crate.
+    covers: ['#3a2d22', '#c8c2b0', CONTAINER_TONES[0], '#2f3442', '#4a5566', '#8a7440', '#5a1e24', CONTAINER_TONES[1]],
     parts: [
-      { name: 'The office', about: 'The container office with its stove. Rooms and beds go in here.' },
-      { name: 'The deck', about: 'The pier\'s deck between the containers, up from the container yard. Outside: a raid from the yard is fought here.' },
-      { name: 'The bunk container', about: 'The container across the deck, fitted out. Room for more beds and a room or two.' },
-      { name: 'The fenced pier', about: 'The end of the pier behind, fenced, with a gate onto the walkway. Outside: defences go here, and a raid can come through the gate.' },
-      { name: 'The net loft', about: 'The old net loft across the gap. With it the whole pier end is ours.' },
+      { name: 'The Stove Office', about: 'A container office with a narrow stove, a scarred desk and beds behind a partition. Old dispatch numbers show through the paint when the walls sweat. Rooms and beds go in here.' },
+      { name: 'The Working Deck', about: 'The open deck between the containers, up from the container yard; drain channels run to the pier edge. Outside: a raid from the front is fought here.' },
+      { name: 'The Relief Box', about: 'A container fitted out for relief crews between shifts; the cooperative put bunks in after the Grid Blackout. Room for more beds and a room or two.' },
+      { name: 'The Rope Court', about: 'The fenced pier end where mooring lines were sorted, with the Jetty Gate onto the pier walkway. Outside: defences go here, and a raid can come through the gate.' },
+      { name: 'The Net House', about: 'A low net-mending store across the way: salt marks where the drying frames were, a roof patched in three materials.' },
     ],
     beds: [2, 4, 2], costs: [20000, 30000, 40000],
-    say: { street: 'come along the deck from the container yard', gate: 'come through the jetty gate' },
+    line: {
+      street: 'Boots strike the Working Deck from the container yard. A loose chain rings against the office wall.',
+      gate: 'The Jetty Gate jolts sideways. People are pushing through from the pier walkway.',
+    },
   }),
-  // The Basin: the flat over the tack workshop, and the stable yard behind. Placeholder names.
+  // The Basin: the Unlisted Rooms (owner's lore, 2026-11-07). Service premises leased from a small
+  // property trust; the flat "doesn't exist" as a dwelling on paper. Okonkwo arranges access.
   basin: compound({
     mirror: true,
-    name: 'a flat over a tack workshop',
-    aria: 'Plan of our Basin hall: the flat over the tack workshop, the passage beside it, the tack store across the passage, the stable yard behind with a gate onto the course lane, and the hay loft across the way',
-    top: { cls: 'sp-alley', label: 'THE COURSE LANE' }, bottom: { shapes: ROADWAY(), label: 'THE WORKSHOP' }, lit: 'OUR FLAT', sign: '#ff9a3d', gate: '#ff9a3d',
-    covers: ['#6b5a2a', SADDLE, '#3a2d22', '#6b5a2a', SADDLE, '#3a2d22', '#7a2a2a', '#2f3442'], // hay bales, a saddle rack, a water trough, hay, a tack trunk, crates, a tip-seller's cart, a horsebox
+    name: 'the Unlisted Rooms',
+    aria: 'Plan of the Unlisted Rooms, our Basin hall: the Unlisted Flat over the tack workshop, the Buckle Passage beside it, the Saddler\'s Store across the passage, the Wash Yard behind with the Course Gate onto the course lane, and the Chaff House across the way',
+    top: { cls: 'sp-alley', label: 'THE COURSE LANE' }, bottom: { shapes: ROADWAY(), label: 'WORKSHOP ROW' }, lit: 'THE UNLISTED ROOMS', sign: '#ff9a3d', gate: '#ff9a3d',
+    // A compressed straw stack, a feed-storage bin, a steel saddle stand, a transport-crate stack, a
+    // tack trunk, a retired horsebox trailer, an old water trough, a tip-seller's cart.
+    covers: ['#6b5a2a', '#4a5566', '#8b9aab', '#3a2d22', SADDLE, '#2f3442', '#5d6b7a', '#7a2a2a'],
     parts: [
-      { name: 'Our flat', about: 'The flat over the tack workshop. Rooms and beds go in here.' },
-      { name: 'The passage', about: 'The passage between the buildings, up from the street. Outside: a raid from the street is fought here.' },
-      { name: 'The tack store', about: 'The store across the passage. Room for more beds and a room or two.' },
-      { name: 'The stable yard', about: 'The stable yard behind, walled, with a gate onto the lane to the course. Outside: defences go here, and a raid can come through the gate.' },
-      { name: 'The hay loft', about: 'The hay loft across the way. With it the whole yard is ours.' },
+      { name: 'The Unlisted Flat', about: 'Rooms over the tack workshop, up its trapdoor, the windows on the Old Stand; leather dressing and wet coats below. Rooms and beds go in here.' },
+      { name: 'The Buckle Passage', about: 'The passage between the buildings, up from Workshop Row, named for a brass buckle on an old repair-shop sign. Outside: a raid from the front is fought here.' },
+      { name: 'The Saddler\'s Store', about: 'A stockroom with high shelves and chalk outlines where the saddle trees hung. Room for more beds and a room or two.' },
+      { name: 'The Wash Yard', about: 'The walled yard where tack was washed, with the Course Gate onto the course lane. The old fittings stay; no horses. Outside: defences go here, and a raid can come through the gate.' },
+      { name: 'The Chaff House', about: 'A small old feed store across the way, still called a loft by older workers though its room is at yard level.' },
     ],
     beds: [2, 4, 2], costs: [20000, 30000, 40000],
-    say: { street: 'come up the passage from the street', gate: 'come through the stable-yard gate' },
+    line: {
+      street: 'Footsteps come up the Buckle Passage from Workshop Row. Someone knocks the old repair sign against the wall.',
+      gate: 'The Course Gate bangs open. Figures enter the Wash Yard from the service lane.',
+    },
   }),
-  // Glass Heights: a service floor nobody upstairs remembers. "Outside" is the open plant deck between
-  // the rooms on the floor. Placeholder names.
+  // Glass Heights: the Underterrace (owner's lore, 2026-11-07). An old maintenance compound in the
+  // ridge under the corporate terraces, its court open to the sky; a maintenance cooperative holds
+  // the occupancy, and Forewoman Tse makes the introduction. The sealed inspection tunnel is scenery.
   heights: compound({
-    name: 'a service floor nobody upstairs remembers',
-    aria: 'Plan of our Glass Heights hall: the service room on a forgotten floor, the plant deck beside it, the server hall across the deck, the loading bay behind with the freight lift, and the control room across the gap',
-    top: { cls: 'sp-alley', label: 'SERVICE CORRIDOR' }, bottom: { shapes: ROADWAY('sp-yard'), label: 'MAINTENANCE STAIR' }, lit: 'OUR FLOOR', sign: '#3de8d8', gate: '#3de8d8',
-    covers: ['#18222c', '#1d2a34', '#18222c', '#1d2a34', '#18222c', '#18222c', '#1d2a34', '#18222c'], // server racks and air handlers
+    name: 'the Underterrace',
+    aria: 'Plan of the Underterrace, our Glass Heights hall: the Night Rooms, the Rain Passage beside them, the Stores across the passage, the Sunken Court behind with the Delivery Gate onto the service road, and the Survey Room across the way',
+    top: { cls: 'sp-alley', label: 'SERVICE ROAD' }, bottom: { shapes: ROADWAY('sp-yard'), label: 'LOWER APPROACH' }, lit: 'THE UNDERTERRACE', sign: '#3de8d8', gate: '#5d6b7a',
+    // A paving-slab pallet, an inspection-equipment chest, a barrier-panel rack, a drain-cover stack, a
+    // retired pump casing, a cable-reel cradle, a maintenance trolley, a weatherproof storage cabinet.
+    covers: ['#8b8578', '#3a4352', '#a8892a', '#2f3442', '#4a5566', '#3a2d22', '#5d6b7a', '#3a4a3a'],
     parts: [
-      { name: 'The service room', about: 'The room on the floor nobody remembers. Rooms and beds go in here.' },
-      { name: 'The plant deck', about: 'The open deck between the plant, up from the maintenance stair. Outside: a raid from the stair is fought here.' },
-      { name: 'The server hall', about: 'The dead server hall across the deck. Room for more beds and a room or two.' },
-      { name: 'The loading bay', about: 'The loading bay behind, with the freight lift. Defences go here, and a raid can come up in the lift.' },
-      { name: 'The control room', about: 'The old control room across the gap. With it the whole floor is ours.' },
+      { name: 'The Night Rooms', about: 'Rest rooms for maintenance workers on overnight call: duty hooks, a faded storm checklist, a patch where a time clock was. Rooms and beds go in here.' },
+      { name: 'The Rain Passage', about: 'The service approach between the buildings, down from the maintenance steps, drainage channels under removable grilles. Outside: a raid from the front is fought here. It stays clear for inspection.' },
+      { name: 'The Stores', about: 'A former equipment store: work clothes, fittings and tools once signed out against numbered brass tags. Room for more beds and a room or two.' },
+      { name: 'The Sunken Court', about: 'A walled receiving yard open to the sky, with the Delivery Gate onto the service road. Outside: defences go here, and a raid can come through the gate.' },
+      { name: 'The Survey Room', about: 'A small inspection office across the way; pencil height marks still by the door.' },
     ],
     beds: [2, 4, 2], costs: [25000, 35000, 45000],
-    say: { street: 'come up the maintenance stair', gate: 'come out of the freight lift' },
+    line: {
+      street: 'Footsteps descend the maintenance steps. Figures turn into the Rain Passage beneath the terrace lights.',
+      gate: 'The Delivery Gate strikes the retaining wall. People are coming in from the service road.',
+    },
   }),
 };
 

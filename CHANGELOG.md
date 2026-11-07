@@ -7,6 +7,11 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-07 · The four halls get their names and stories
+- The Night Market hall is now **Wok Court**: rooms behind a dai pai dong courtyard, leased from the stallholders' association. Mrs. Ip makes the introduction; the tong no longer lives above Madam Rao's shop. The Docks' hall is **the Stove Pier**, the Basin's **the Unlisted Rooms**, Glass Heights' **the Underterrace**, introduced by Forewoman Tse.
+- Every part, lane, yard, gate and the things lying about outside have their own names and descriptions on the build screen and the hall's page, and each raid opens with a line of its own ("The Cart Gate bangs against its frame...").
+- The Night Market and Glass Heights halls no longer wait on a client's trust: reputation and the opening favour open them. The Night Market now needs reputation 40 (was 25), so it opens about when it did before. Back Rent and There Is No Forty-First Floor now end by pointing you to the new halls; their full rewrites are coming.
+
 ## 2026-11-07 · Every hall grows into a compound
 - The Night Market, Docks, Basin and Glass Heights halls now grow like Old Town. Each starts as its first building and the lane beside it; Expand takes the building across the lane, then the walled yard behind with its gate, then a small building across the passage. Each part adds two beds (the yard's go in the second building). Prices: ¥20,000, ¥30,000, ¥40,000, a little more in Glass Heights.
 - Each hall has its own ground and look: the Night Market's market lane and cart court, the Docks' walkway and container yard, the Basin's course lane and stable yard, Glass Heights' service corridor and plant deck. The Docks and the Basin are drawn the other way round. The part names are placeholders until their lore is written (`drafts/BRIEF-hall-compounds.md`).
