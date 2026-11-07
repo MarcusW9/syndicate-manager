@@ -53,6 +53,64 @@ Rumours are street talk: the game never confirms them (no supernatural, and no p
 | Harbour Police, 4th Precinct | Ghost Circuit | Red Lanterns | Aether-Harbour |
 | Ghost Circuit | Aether-Harbour | Brass Anchor | Veridian-Apex |
 
+### Foreign commercial interests
+
+Lantern Bay is a port city. Money, machinery and people arrive from elsewhere, and some never quite leave.
+
+Foreign firms finance cargo, supply equipment, maintain regional offices and compete for contracts beneath the three megacorps. They bring their own habits and rivalries, but operating here still means dealing with local landlords, local infrastructure and the people who can make a delivery wait all afternoon.
+
+Foreign does not always mean newly arrived. Some overseas firms have employed local families for generations. Nor does a famous name abroad guarantee power here: a prestigious regional office can still spend the morning waiting for Hoi-Sing to reconnect the electricity.
+
+#### Morrow & Venn
+*Glass Heights · Foreign merchant-finance house*
+
+The brass plate outside Venn House has been polished so often that the edges of the letters have softened. Inside, the reception clock ticks above a desk where visitors are still asked to sign their names. There are faster ways to record an arrival. Morrow & Venn prefers this one.
+
+Founded in **Bellweather**, a distant western port city, the firm began with shipping credit and marine insurance. Its Lantern Bay office predates the Reclamation Boom. The company considers this proof that it belongs; people below the ridge consider it proof of how long it has been collecting interest.
+
+It finances voyages, insures cargo, lends against commercial property and administers estates whose owners trusted it more than their relatives. When a shipment disappears, it helps decide who pays. When someone dies, it helps decide who owns what remains.
+
+Its local clerks, surveyors, translators and administrators come from across the city. Visiting partners arrive for important signatures and tend to leave before the disputes become personal.
+
+**What it wants:** to remain the firm people trust with ownership papers, disputed inheritances and losses too expensive to settle with a handshake. Its influence rests on being difficult to replace and harder to surprise.
+
+**How it behaves:** restrained manners, careful records and a strong preference for making someone else accept liability. It can honour a century-old obligation while refusing a desperate person one extra day.
+
+**Ties:** finances and insures legitimate shipping used by AHL and its customers, and considers property lending proposals from developers such as Mr. Szeto. A commercial relationship does not mean it knows what either does out of sight.
+
+**Small crews:** useful for discreet collections, locating signatories and recovering property whose ownership is awkward. A sealed envelope is not proof that the person sending it has a right to what is inside.
+
+**Rumour:** its oldest Lantern Bay strongroom contains ownership documents for land now beneath the harbour, and someone still pays the storage fees.
+
+#### Hang Yuen Systems
+*Glass Heights · Foreign industrial technology supplier*
+
+On the Demonstration Floor, a machine reads a parcel, turns it neatly and sends it down the correct belt. It does this all afternoon without a mistake. Behind the staff door, an engineer is drying saltwater out of the version installed at the Docks.
+
+Hang Yuen Systems is headquartered in **Lin Sau**, an inland manufacturing metropolis in the continental market beyond Lantern Bay's mainland hinterland. It sells industrial automation, machine vision and fleet-control software, and its regional office promises that its equipment can work anywhere.
+
+The engineers usually add conditions. The sales team usually leaves them off the slide.
+
+Equipment sales bring the company into the city; software licences, maintenance agreements and integration contracts are supposed to keep it here. It wants long-term supply deals with AHL, Hoi-Sing and other large operators, rather than another year of expensive demonstrations.
+
+Visiting specialists live in serviced accommodation while local subcontractors handle much of the installation. When a schedule slips, the people closest to the equipment tend to receive the blame first.
+
+**What it wants:** to become part of the city's everyday machinery, expensive to remove and too useful to ignore.
+
+**How it behaves:** technically ambitious, commercially impatient and very interested in what counts as a successful acceptance test. Its engineers and account managers do not always give the same answer.
+
+**Ties:** competes for AHL logistics contracts and Hoi-Sing infrastructure work, while renting premises in Veridian-Apex-dominated Glass Heights. It supplies industrial systems, not a replacement for Veridian-Apex's neural and biotech empire.
+
+**Small crews:** useful for retrieving demonstration equipment, finding missing subcontractors and moving sensitive prototypes without advertising a failed trial. If questions are asked, an unauthorised runner remains an unauthorised runner, even when a manager hired them.
+
+**Rumour:** one of its best local demonstrations used a night-shift team correcting the machine's decisions by hand from the room next door.
+
+#### Names and origins
+
+Bellweather and Lin Sau exist beyond the playable city. For now, one is a distant western port and the other an inland manufacturing metropolis; their countries, borders and wider histories remain undefined.
+
+Local Cantonese names retain Cantonese romanisation. Foreign firms may carry inherited surnames or established brands; Hang Yuen Systems and Lin Sau use Cantonese-rendered names in Lantern Bay's narration, without establishing how people in their home market pronounce them.
+
 ## Geography and districts
 Layout (canon, 2026-10-25): the harbour splits the city. The island holds Iron Peak on the summit, Glass Heights on the ridge below, the Basin in a bowl between the ridge's lower slopes and Old Town, and Old Town and the Night Market down to the water. The Amber Reach is the crossing over the harbour. The mainland side holds the Docks and, out on the mudflats, the Silt.
 
@@ -64,7 +122,7 @@ The game shows the **English names**; the Chinese names are flavour for district
 - **Old Town** (舊城, Kau Shing). The damp, ancestral heart of the city: herbal tea shops hiding favour ledgers, rusted tenements clinging to the hillside. *Landmarks:* Auntie Fung's tea shop on Alley 4; the Red Incense Shrine of To Dei Gung; the rusted iron stairwell of Tenement Block 9. *Control:* the Brass Anchor Society; Hoi-Sing nodes and Ghost Circuit tunnels underneath. *Police:* sporadic and corrupt; officers come in pairs and take bribes to ignore unlicensed generators. *3am:* damp concrete, burning joss paper, mahjong tiles clacking down wet alleys. *Custom:* a cup of bitter tea on the doorstep at midnight for the ghosts of the 2052 blackout.
 - **The Docks** (霧港, Mo Kong, "fog harbour"). A deafening sprawl of automated cranes, diesel and saltwater where freighters unload contraband into the city. *Landmarks:* Pier 12 Gantry Gate; the Ferryman's night-boat landing; the Red Lanterns' Warehouse 7. *Control:* Aether-Harbour Logistics on paper, the Red Lanterns on the tarmac. *Police:* heavy; the Harbour Police "Wet Sleeve" unit runs rackets alongside the gangs. *3am:* amber floodlights in harbour fog, screeching cranes, clanking steel. *Custom:* never whistle past the container stacks, or the water ghosts (水鬼, sui gwai) will trip you into the harbour.
 - **The Night Market** (夜光街, Yeh Kwong Kai, "glow street"). A neon maze of dai pai dongs, counterfeit implant clinics and alleys where fortunes go on one hand of mahjong. *Landmarks:* Madam Rao's sari shop, the Silk & Credit Emporium; the Neon Dragon dai pai dong; the third-floor mahjong parlour. *Control:* the Silver Fan Circle; Hoi-Sing nodes. *Police:* rarely seen and fully complicit; they take their cut at the noodle stalls and never go near the back-alley operating rooms. *3am:* wok smoke, flickering holo-ads, murmuring gamblers. *Custom:* if a neon sign flickers three times over your head, toss a coin over your left shoulder.
-- **Glass Heights** (玻璃山, Po Lei Shan), officially **Apex Ridge** since Veridian-Apex renamed it after the 2035 Annexation; nobody on the street calls it that. Sterile, climate-controlled corporate towers, labs and clinics where the air is filtered and street-level misery is kept out of sight. *Landmarks:* Veridian-Apex Central Tower; the Glass-Bridge Promenade; Executive Spa & Neural Clinic 1. *Control:* Veridian-Apex BioTech. *Police:* none to speak of; security drones and private guards treat anyone without a pass as a biohazard. *3am:* humming air filters, glass monoliths in cold blue light. *Custom:* never press a lift button with a bare index finger, or the lower districts' bad karma rubs off.
+- **Glass Heights** (玻璃山, Po Lei Shan), officially **Apex Ridge** since Veridian-Apex renamed it after the 2035 Annexation; nobody on the street calls it that. Sterile, climate-controlled corporate towers, labs and clinics where the air is filtered and street-level misery is kept out of sight. *Landmarks:* Veridian-Apex Central Tower; the Glass-Bridge Promenade; Executive Spa & Neural Clinic 1. *Control:* Veridian-Apex BioTech. *Police:* none to speak of; security drones and private guards treat anyone without a pass as a biohazard. *3am:* humming air filters, glass monoliths in cold blue light. *Custom:* never press a lift button with a bare index finger, or the lower districts' bad karma rubs off. Tenants, commuters and the work they bring: "Glass Heights: life behind the glass", below.
 
 - **The Basin** (鑊底, Wok Dai, "bottom of the wok"; Cantonese check pending), around **Lantern Course** (燈籠馬場, Dang Lung Ma Cheung). A natural bowl between Old Town and the lower slopes under Glass Heights, its floodlit oval visible from hundreds of cramped balconies. The neighbourhood grew around gambling. Outside the gates: dai pai dongs, old betting shops, cheap bars, pawn shops, tip sellers, back-alley implant clinics, bookmakers, tack workshops, noodle shops, Silver Fan loan runners, and pensioners studying form over tea. Above it all, the corporate boxes: Glass Heights arrives through a private elevated entrance to watch the same horses as somebody who spent their last ¥50 downstairs. *Landmarks:* Lantern Course; the Old Stand; the Undercroft beneath the betting halls. *Control:* the Lantern Bay Racing Association, officially; the Silver Fan Circle owns everything the Association won't take. *Police:* Association security inside the gates, the Harbour Police outside, both very interested in race nights. *3am:* the racing's done; cleaning drones creep through mountains of paper slips, stable hands hose sweat off the horses, drunk punters argue over the last tram, and bookmakers settle up under amber security lights. *Custom:* nobody throws away a winning ticket inside the course. Even after collecting, you fold it twice and carry it out through the gates first, or you throw tomorrow's luck away with today's. Total nonsense; everyone does it. Open. Jobs: **The Favourite** (Auntie Fung: someone is paying stable hands to stop Pepper), **Last Ticket** (Ruth Okonkwo: her ¥800,000 paper ticket vanished in a blackout) and **Wrong Horse** (the Ferryman: the horse he carried has the right chip and the wrong markings).
 
@@ -104,6 +162,63 @@ The game shows the **English names**; the Chinese names are flavour for district
 - *The horses aren't scenery.* The stable hands love them. A horse worth millions to a corporate owner is "Little Bean" to the 58-year-old who has brushed her every morning for seven years. Upstairs she's Asset Twelve; downstairs her name's Pepper, and she likes pears.
 
 Crisis hooks from the district outline wait in `drafts/district-hooks.md` until they're turned into crises.
+
+### Glass Heights: life behind the glass
+
+Officially Apex Ridge, on company letterheads and navigation systems; Glass Heights to everyone who has to get there for work. Veridian-Apex owns the most important towers, clinics and access infrastructure, but not every name above a door belongs to it. Foreign finance houses, technology suppliers, legal practices and regional trading offices rent space beneath its shadow.
+
+From Old Town, the ridge looks like a place where nobody has ordinary problems. Up close, somebody is arguing about a payslip, somebody has missed the last convenient tram, and somebody in a very good suit is checking whether their card will cover lunch.
+
+Glass Heights is not Iron Peak. The people who own the companies go home up the hill. The people who keep them running stay until the work is finished.
+
+#### The people who come up the hill
+
+Laboratory technicians, payroll officers, visiting engineers, receptionists, junior brokers, cleaners, drivers and security contractors fill the district every morning. Most commute from further down the island or across the harbour. A good suit might belong to someone important, someone heavily in debt, or someone whose employer deducts its cost from their wages.
+
+Some live in company-leased rooms or serviced apartments, close enough to be called back when something fails. Visiting specialists arrive with relocation promises and discover that temporary accommodation can remain temporary for a very long time. Wealthier residents stay for the clinics and filtered air; everyone else stays because the contract makes leaving expensive.
+
+The district speaks in different accents, currencies and time zones, but Cantonese street life runs underneath it all. Behind an imported brass nameplate, somebody is eating takeaway noodles over a keyboard. A visiting partner asks for the proper local experience, and the receptionist sends them somewhere with a menu they can read.
+
+#### Where the clean air ends
+
+Inside the towers, the air is filtered and the temperature barely changes. Outside, cleaners eat beside exhaust vents before returning to rooms whose occupants would complain about the smell of their lunch.
+
+The lower commercial arcades are public during opening hours. Beyond them, every lift, bridge and corridor has its own permissions. A collection number might get a runner through the first door; it does not explain why they are standing outside the third.
+
+Private guards and security drones care about authorisation, disruption and whose report an incident will become. A quiet courier with the right reference can pass where a well-dressed stranger cannot. Nobody needs to shout to make it clear that you do not belong.
+
+After midnight, the executive floors go dark, but the district does not sleep. Laboratories keep running, cleaners move between empty desks, and overseas trading teams begin another working day. At 3am, somebody is still waiting for a manager in another time zone to approve going home.
+
+During a Signal 8, the delivery drones are grounded and supplies move by road. Essential staff sleep in offices. Contractors argue over whether the journey home counts as their own risk.
+
+Local employees call it Glass Heights among themselves and Apex Ridge when answering an external call. New arrivals learn the difference before they learn the tram changes.
+
+#### Places below the executive floors
+
+- **The Lower Arcade.** Food counters, parcel lockers, repair kiosks and small shops run beneath several office towers, connected by corridors that smell of coffee, hot oil and floor cleaner. Corporate staff meet runners here because a table beside a noodle counter requires fewer explanations than a visitor pass.
+- **The Transfer Lounge.** A tired café beneath a serviced-apartment block, where visiting engineers sit beside relocation agents and people whose accommodation approval has not arrived. The luggage is expensive; the people sleeping beside it are not necessarily rich.
+- **The Service Steps.** A sheltered stairway between loading entrances, used by cleaners, drivers, couriers and junior staff avoiding the lobby cameras. A small To Dei Gung shrine stands on the lowest landing, maintained by people whose employers describe the space as unused.
+- **Venn House.** Morrow & Venn's old stone-fronted office survives inside the base of a newer tower, its deep window recesses and brass plates looking faintly offended by the glass above. Someone still winds the reception clock by hand.
+- **The Demonstration Floor.** Hang Yuen Systems' showroom is full of spotless machines sorting immaculate sample parcels. Through the staff door, engineers repair equipment that has encountered actual Lantern Bay weather.
+- **The Late Counter.** A small food stall at the edge of the Lower Arcade stays open for laboratory and cleaning shifts. Its owner accepts advance payment for meals and keeps a separate notebook for people whose wages are late.
+
+#### The work nobody puts on the calendar
+
+Not everyone who hires a crew in Glass Heights is hiring on behalf of a company. Sometimes a payroll officer needs her father's belongings collected. Sometimes an engineer has lent out something she should not have taken home. Sometimes somebody cannot leave their desk and does not want their manager knowing why they need to.
+
+These are personal problems, paid for with personal money. The person asking might be embarrassed, frightened or simply tired. They can be genuinely grateful without becoming useful to the crew in any grander way.
+
+Other jobs sit closer to the edge of employment. A misplaced device, a failed demonstration, an unreturned pass, a mistake somebody hopes to correct before an audit. The person briefing the crew may not be lying about what happened; they may simply stop talking before the expensive part.
+
+Then there is company work that cannot honestly appear on company records. A collection reference instead of a contract. A manager who speaks only through an intermediary. Instructions carefully written so that nobody has technically asked for what everyone understands is required.
+
+The crew's fee is agreed in ¥, usually cash when discretion matters. Expense codes, vouchers and promises of future work are not payment unless the fixer chooses to take that risk.
+
+Not every job needs a clean victory. Sometimes the sensible ending is a witnessed handover, a written refusal, a cancelled collection or bringing back half of what was requested. A quiet, incomplete result is better than becoming the explanation for somebody else's misconduct.
+
+There are still only five recurring clients. The people here may call again, remember a kindness or warn the crew away from a bad collection, but they do not become permanent patrons simply because their names are known.
+
+Someone who buys the crew dinner on Sunday may refuse to recognise them in a lobby on Monday. Both moments can be sincere.
 
 ## Tech and neural load
 Street implants are cheap, second-hand and always glitching; Glass Heights wears smooth luxury hardware. Pushing implants too hard brings on neural load: migraines, memory stutter, emotional deadness. Street crews treat it not with corporate therapy patches but with bitter herbal infusions from Auntie Fung's shop, damp cloths and downtime in dim mahjong parlours. The megacorps own the infrastructure; working people treat tech like a rusty outboard motor, duct-taped, prayed over and kept running out of stubbornness.
@@ -279,11 +394,139 @@ Smaller people a new crew meets on rookie work (2026-10-25). Their spoken lines 
 - **Meena D'Sa** (Night Market). Seamstress and counterkeeper in Madam Rao's shop. Rao lets her mind the counter; she returns a customer's deposit rather than promise work the shop can't finish. Wants her own alterations counter, and keeps spending the savings replacing garments Rao accepted as collateral. Knows Mrs. Ip.
 - **Tang Wai-chiu** (Night Market). Silver Fan Circle collector for the third-floor mahjong parlour: spotless bowling shirt, a folding stool he opens before discussing money. Would rather make six patient visits than explain one broken debtor. Secret: he has been advancing small payments from his own pocket to keep his figures tidy, and needs Rao to buy the debts without learning how many there are. The circle doesn't know he is approaching her; Rao is its old enemy.
 - **Uncle Tariq** (Amber Reach): the remittance booth at Pearl Haven House; his dossier is under Pearl Haven House, above.
-- **Pang Man-ki** (Glass Heights). Veridian-Apex clinic administrator. Finds an appointment when a corporate account is attached; an old Veridian-Apex implant doesn't entitle its owner to affordable treatment. Secret: she wants a transfer out of patient administration before an audit finds the appointments she moved between billing categories.
+- **Pang Man-ki** (Glass Heights). Veridian-Apex clinic administrator. Finds an appointment when a corporate account is attached; an old Veridian-Apex implant doesn't entitle its owner to affordable treatment. Secret: she wants a transfer out of patient administration before an audit finds the appointments she moved between billing categories. Her full entry is under "Glass Heights people", below.
 - **Ho Sze-lam** (Old Town). Hoi-Sing Grid & Cable field supervisor. Knows which meters have been repaired past their life, but records a disconnection if that's the order on his screen. Secret: he leaves intermittent faults out of his reports so his section doesn't look badly maintained. Auntie Fung and the Brass Anchor know him by his thermos.
 - **Mak Chi-on** (the Basin). Racing Association stable-access official, checks passes against a paper list despite the scanner on his wrist, and treats unexplained stable access as possible race-fixing. Secret: he once waved a familiar contractor through without checking a replacement pass, and fears admitting it would undermine every inspection he has signed since.
 - **The old radio man on Block 9's roof.** The last tenant Mr. Szeto wants out, broadcasting pirate radio from a tin shack full of tapes. Block 9 is Doc Siu's building.
 - **The Ferryman's habits:** he chews betel nut as well as the clove cigarettes, and he runs a private line to the Silt under Pier 12.
+
+## Glass Heights people
+
+Not everyone who calls the fixer has an organisation behind them. Some have a collection number, an awkward favour and enough cash to make it worth listening.
+
+These are occasional contacts, antagonists and one-off job givers, not additional recurring clients. All are adults. Their private concerns are author-facing canon, not things the crew knows on first meeting. Their spoken lines live in `src/data/cast.js` (`{chow}`, `{edith}`, `{kwok}`, `{poon}`, `{pang}`, `{binta}`).
+
+### Chow Nga-man
+*Glass Heights · Veridian-Apex payroll officer*
+
+By mid-afternoon, the lunch container beside Nga-man's keyboard is still closed. She has explained three missing payments, corrected a manager's overtime submission and been told that payroll questions are distracting the cleaning staff from their work.
+
+She is patient with the cleaners. Less so with the manager.
+
+Outside the office, her father still lives in Old Town, in a building whose lift cannot be relied on. Nga-man wants to move him somewhere easier. He hears every offer as a suggestion that he can no longer manage his own life.
+
+**What the street knows:** she will explain a payslip properly if approached outside work, but cannot make the company pay what it has not approved.
+
+**What she doesn't say:** she has started looking at rooms for her father without telling him, and feels guilty every time she checks the listings.
+
+**Ties:** Veridian-Apex; the Lower Arcade; her father's home in Old Town.
+
+**Work that finds the crew:** belongings left at a closing repair shop, documents that need delivering while she is trapped on a payroll shift, or an accidental overpayment she wants returned before a colleague is accused of theft.
+
+She can be grateful, remember names and buy lunch when the crew next passes through. None of that gives her the power to offer clinic privileges, staff records or protection from security.
+
+### Edith Pryce
+*Glass Heights · Morrow & Venn estates administrator*
+
+Edith can inventory a room without making it feel searched. She asks before opening drawers, writes down the condition of ordinary things and remembers the names of household staff whom her clients introduce only by their jobs.
+
+Her coat is expensive and old. Her shoes are practical. She has spent enough time in bereaved households to know which matters more.
+
+A repaired radio waits for her in the Night Market. It belonged to her late partner. The shop has called more than once, and Edith has found a reason not to collect it every time.
+
+**What the street knows:** she handles disputed possessions and bereaved families, and insists that everyone receives a copy of what they sign.
+
+**What she doesn't say:** bringing the radio home would mean deciding where it belongs in a room that has already learned to be quiet.
+
+**Ties:** Morrow & Venn; Venn House; the Night Market.
+
+**Work that finds the crew:** collecting the radio, locating an executor who has stopped answering calls, or recovering a document case before an estate inventory begins.
+
+Edith pays for care and discretion. She will not defend the crew if they mistake her client's claim for established ownership, however politely the instructions were written.
+
+### Kwok Mei-yee
+*Glass Heights · Visiting Hang Yuen integration engineer*
+
+Mei-yee's serviced room contains unopened relocation boxes, a cheap kettle and equipment worth more than the furniture. She has been meaning to unpack properly once the trial is finished.
+
+The trial keeps being extended.
+
+She knows exactly why the machinery failed. Explaining it without blaming the person who approved the installation takes longer. Local repairers like her because she pays promptly from her own pocket; her expense claims take weeks to come back.
+
+**What the street knows:** she understands the equipment, listens to the people maintaining it and does not pretend harbour weather is an unforeseeable event.
+
+**What she doesn't say:** she wants a permanent local post, but suspects her manager needs a visiting engineer who can be sent home when the trial goes wrong.
+
+**Ties:** Hang Yuen Systems; the Demonstration Floor; the Transfer Lounge; Night Market repair stalls.
+
+**Work that finds the crew:** a personal diagnostic kit lent to the wrong person, a subcontractor who has walked away from a disputed installation, or a failed demonstration unit that must come back before a customer visit.
+
+She may tell the crew the truth about a technical failure over noodles. Once company business begins, there are conditions, limits and no promise that she can cover for them.
+
+### Poon Hok-yin
+*Glass Heights · Shared-tower facilities coordinator*
+
+Hok-yin carries too many keys and a handset that seems to know when he has sat down to eat. Somewhere in the building, a door will not close, a delivery has arrived early or a tenant has discovered that maintenance does not happen by itself.
+
+He keeps spare umbrellas for the cleaners. They try to return them during storms, and he tells them off.
+
+There are jobs with fixed finishing times. He has looked at them. Then he thinks about who would take over the night shift, and closes the listing.
+
+**What the street knows:** he can arrange a legitimate loading slot, but cannot turn a delivery pass into unrestricted access.
+
+**What he doesn't say:** he is tired of being indispensable for things nobody notices until they stop working.
+
+**Ties:** the Lower Arcade; the Service Steps; Hoi-Sing maintenance contractors.
+
+**Work that finds the crew:** a personal delivery while he is stuck on shift, a contractor who has vanished halfway through a repair, or equipment promised to a community workshop before management orders it destroyed.
+
+Hok-yin knows the building's routines, not every tenant's secrets. He might bend a collection time; he will not risk the whole night shift to hide a crew.
+
+### Pang Man-ki
+*Glass Heights · Veridian-Apex clinic administrator*
+
+Man-ki turns her appointment screen away before visitors reach the desk. When a patient flinches under the waiting-room lights, she dims them without being asked.
+
+Then she asks which account will cover the consultation.
+
+She has heard every version of the same argument: the implant came from Veridian-Apex, the damage came from using it, surely the treatment should follow. Her answer is careful, practised and rarely what anyone wants.
+
+**What the street knows:** she can find an appointment when approved funding exists; an old Veridian-Apex implant does not entitle its owner to affordable treatment.
+
+**What she doesn't say:** she wants a transfer before an audit finds the appointments she moved between billing categories to improve her waiting-time figures.
+
+**Ties:** Veridian-Apex; Executive Spa & Neural Clinic 1; Doc Siu in Old Town.
+
+**Work that finds the crew:** a misdirected clinic delivery, leased equipment that has not come back, or an offer that must reach a patient who refuses company contact.
+
+Her considerate gestures are real. So is the moment she ends an arrangement because the crew has become a liability.
+
+### Binta Sarr
+*Glass Heights · Independent overnight courier*
+
+Binta waits beside the Lower Arcade lockers with a folding trolley and a flask wrapped in a towel. Before accepting a parcel, she reads the collection terms. People who complain about the delay are often the reason she reads them.
+
+She knows which reception desks stay staffed overnight, which loading windows are fiction and which route looks shorter until the lifts stop running. She refuses jobs that require pretending to be medical staff.
+
+**What the street knows:** she can get a difficult collection done, but will tell you when the deadline is impossible rather than promise and disappear.
+
+**What she doesn't say:** she wants enough regular customers to stop taking emergency work, but keeps accepting the runs other couriers cannot afford to attempt.
+
+**Ties:** the Lower Arcade; the Late Counter; AHL dispatch subcontractors.
+
+**Work that finds the crew:** covering a collection while her trolley is impounded, finding a recipient whose access has expired, or returning a parcel nobody will formally accept.
+
+Binta shares practical advice, not customer identities. Carrying a sealed case does not mean she knows what is inside it.
+
+### Familiar faces
+
+A person remembers that the crew returned a deposit without being asked. Someone else remembers that they kept a family problem out of a crowded lobby, or accepted a smaller fee rather than make a bad situation worse.
+
+That might earn another call. An honest warning. A meal waiting at the Late Counter.
+
+It does not buy the building.
+
+Glass Heights contains decent people, frightened people and people who have become very good at explaining their own compromises. The companies employ all of them.
 
 ## Joss, the crew's partner
 
@@ -345,7 +588,9 @@ DISTRICTS (always use these English names):
   Docks (cranes, containers; Aether-Harbour on paper, Red Lanterns on the tarmac) · the
   Night Market (dai pai dongs, chrome clinics, mahjong; Silver Fan Circle) · Glass
   Heights (corporate towers and labs; Veridian-Apex; officially renamed "Apex Ridge"
-  but nobody on the street calls it that) · the Basin (a bowl below Glass Heights round
+  but nobody on the street calls it that; foreign firms rent beneath it, and the people
+  who keep it running commute up and stay late; the Lower Arcade is public, every door
+  past it needs a permission) · the Basin (a bowl below Glass Heights round
   Lantern Course, a floodlit 1891 racecourse that still races REAL horses, wrapped in
   2057 telemetry, live odds and illegal betting; Racing Association officially, Silver
   Fan in the Undercroft; jobs from Fung, Okonkwo and the Ferryman).
@@ -370,7 +615,11 @@ the Wet Sleeve, on its own patch, will sell one off). A gang with a grudge again
 raids its hall on the gang's own turf and expects a settlement; the Brass Anchor never
 raids. Institution: Lantern Bay Racing Association (racing, licensed betting, old and
 well connected; fears race fixing above all). Wildcard: Ghost Circuit (data liberators in Old Town's
-drainage tunnels and bomb shelters).
+drainage tunnels and bomb shelters). Foreign firms (below the megacorps, Glass Heights
+tenants): Morrow & Venn (old merchant-finance house from Bellweather: shipping credit,
+insurance, estates; Venn House) and Hang Yuen Systems (industrial automation from Lin
+Sau, chasing AHL and Hoi-Sing contracts). Bellweather and Lin Sau are offstage and
+undefined.
 
 CLIENTS (local powers a small crew can reach, below the corps):
 - Auntie Fung (Fung Wai-han, 71): Old Town tea shops and quiet fencing; senior Brass
@@ -394,8 +643,11 @@ Tenement Block 9, dry praise); Mrs. Ip (Night Market fish-ball stall at the Neon
 moves crates, tallies Fung's night loads at the old pier); Meena D'Sa (Rao's seamstress and counterkeeper); Tang Wai-chiu (Silver Fan
 collector, third-floor parlour); Uncle Tariq (remittance booth, Pearl Haven House, backed
 by Rao); Pang Man-ki (Veridian-Apex clinic administrator); Ho Sze-lam (Hoi-Sing field
-supervisor, Old Town); Mak Chi-on (Racing Association stable-access official). Currency
-is cash in ¥; no "credits" or "Bits".
+supervisor, Old Town); Mak Chi-on (Racing Association stable-access official).
+GLASS HEIGHTS PEOPLE (one-off job givers, not clients): Chow Nga-man (Veridian-Apex
+payroll officer); Edith Pryce (Morrow & Venn estates administrator); Kwok Mei-yee
+(visiting Hang Yuen engineer); Poon Hok-yin (shared-tower facilities coordinator); Binta
+Sarr (independent overnight courier). Currency is cash in ¥; no "credits" or "Bits".
 Reputation tier promotions open the locked districts,
 each introduced by a client: the Silt (the Ferryman), the Amber Reach (Okonkwo), Iron
 Peak (Szeto).

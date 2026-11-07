@@ -58,7 +58,9 @@ DISTRICTS (always use these English names):
   Docks (cranes, containers; Aether-Harbour on paper, Red Lanterns on the tarmac) · the
   Night Market (dai pai dongs, chrome clinics, mahjong; Silver Fan Circle) · Glass
   Heights (corporate towers and labs; Veridian-Apex; officially renamed "Apex Ridge"
-  but nobody on the street calls it that) · the Basin (a bowl below Glass Heights round
+  but nobody on the street calls it that; foreign firms rent beneath it, and the people
+  who keep it running commute up and stay late; the Lower Arcade is public, every door
+  past it needs a permission) · the Basin (a bowl below Glass Heights round
   Lantern Course, a floodlit 1891 racecourse that still races REAL horses, wrapped in
   2057 telemetry, live odds and illegal betting; Racing Association officially, Silver
   Fan in the Undercroft; jobs from Fung, Okonkwo and the Ferryman).
@@ -83,7 +85,11 @@ the Wet Sleeve, on its own patch, will sell one off). A gang with a grudge again
 raids its hall on the gang's own turf and expects a settlement; the Brass Anchor never
 raids. Institution: Lantern Bay Racing Association (racing, licensed betting, old and
 well connected; fears race fixing above all). Wildcard: Ghost Circuit (data liberators in Old Town's
-drainage tunnels and bomb shelters).
+drainage tunnels and bomb shelters). Foreign firms (below the megacorps, Glass Heights
+tenants): Morrow & Venn (old merchant-finance house from Bellweather: shipping credit,
+insurance, estates; Venn House) and Hang Yuen Systems (industrial automation from Lin
+Sau, chasing AHL and Hoi-Sing contracts). Bellweather and Lin Sau are offstage and
+undefined.
 
 CLIENTS (local powers a small crew can reach, below the corps):
 - Auntie Fung (Fung Wai-han, 71): Old Town tea shops and quiet fencing; senior Brass
@@ -107,8 +113,11 @@ Tenement Block 9, dry praise); Mrs. Ip (Night Market fish-ball stall at the Neon
 moves crates, tallies Fung's night loads at the old pier); Meena D'Sa (Rao's seamstress and counterkeeper); Tang Wai-chiu (Silver Fan
 collector, third-floor parlour); Uncle Tariq (remittance booth, Pearl Haven House, backed
 by Rao); Pang Man-ki (Veridian-Apex clinic administrator); Ho Sze-lam (Hoi-Sing field
-supervisor, Old Town); Mak Chi-on (Racing Association stable-access official). Currency
-is cash in ¥; no "credits" or "Bits".
+supervisor, Old Town); Mak Chi-on (Racing Association stable-access official).
+GLASS HEIGHTS PEOPLE (one-off job givers, not clients): Chow Nga-man (Veridian-Apex
+payroll officer); Edith Pryce (Morrow & Venn estates administrator); Kwok Mei-yee
+(visiting Hang Yuen engineer); Poon Hok-yin (shared-tower facilities coordinator); Binta
+Sarr (independent overnight courier). Currency is cash in ¥; no "credits" or "Bits".
 Reputation tier promotions open the locked districts,
 each introduced by a client: the Silt (the Ferryman), the Amber Reach (Okonkwo), Iron
 Peak (Szeto).
@@ -152,7 +161,7 @@ d20 + the operative's stat must reach 10 + difficulty. Stats run about 4-14.
   {op} = whoever acts or rolls. {driver} {tech} {face} {muscle} {medic} {infiltrator} =
   the crew member with that role (only use a role token where the choice requires that
   role, or in beats). {szeto} {ferryman} {rao} {okonkwo} {siu} {ip} {meena} {tang} {tariq} {pang} {ho}
-  {mak} = a client's or street contact's name; {ferryman:approve} (and the same for the others) = one of their
+  {mak} {chow} {edith} {kwok} {poon} {binta} = a client's or street contact's name; {ferryman:approve} (and the same for the others) = one of their
   approving lines (use it in the last beat). Auntie Fung has no token: write her name.
 - Every choice has report: { success, failure }: one plain past-tense sentence for the
   after-action report, no jokes, names via tokens. Plain does not mean legal: use short,
