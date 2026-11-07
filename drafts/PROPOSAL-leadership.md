@@ -1,28 +1,28 @@
 # Proposal: leadership, judgment and the Leader slot
 
-Status: proposal, nothing built. Plan for step 3 of the stat work (after the stat-usage sim and the driving fix). Executive roles come later, with Phase 3. When this is agreed, add a row to the decision log in `DESIGN.md`.
+Status: proposal, nothing built. Owner's calls so far (2026-11-07): veteran calm dropped (no such rule exists; only veterans' `calm` leaning in `data/tags.js`); driving and medical both stay, so leadership is added and judgment maybe; the leader's bonus is a chance, not a flat bonus (call 2, open). Plan for step 3 of the stat work (after the stat-usage sim and the driving fix). Executive roles come later, with Phase 3. When this is agreed, add a row to the decision log in `DESIGN.md`.
 
 ## The idea in one paragraph
 
-Two new attributes. **Leadership** (visible) lifts the rest of the crew and decides how many hard calls a lead makes before calling you. **Judgment** (hidden, hinted at) rolls on calls that are about making the right decision, and makes failures cost less. A new **Leader** slot on the squad board replaces the automatic crew lead and veteran calm. Both attributes grow from the record. Later they decide who can become a coach, scout, hall boss or the fixer's second.
+Two new attributes. **Leadership** (visible) lifts the rest of the crew and decides how many hard calls a lead makes before calling you. **Judgment** (hidden, hinted at) rolls on calls that are about making the right decision, and makes failures cost less. A new **Leader** slot on the squad board replaces the automatic crew lead. Both attributes grow from the record. Later they decide who can become a coach, scout, hall boss or the fixer's second.
 
 ## Owner's calls first
 
 1. **Visible or hidden.** Proposed: leadership shown on the runner's page; judgment hidden, hinted at by scouts and Joss ("reads people well").
-2. **Leader's bonus size.** Proposed: +1 to the crew's rolls at leadership 12, +2 at 16. Never more than +2.
+2. **Leader's bonus.** Owner: a chance of a bonus, not a flat one, because careful runs already pass 85-92% of their rolls (open: see "The leader's bonus" below).
 3. **Who gets the bonus.** Proposed: everyone inside except the leader. The leader rolls their own stat as normal.
 4. **Leading from the van.** Proposed: allowed, half the bonus (rounded down, so +1 at 16 only), out of harm's way.
 5. **Fame gate.** Proposed: anyone can lead and give the bonus; only Respected or better takes risky calls for you.
 6. **Holding together.** Proposed: with a leader of 14+, the first unsaved failure on a job doesn't raise the alert.
 7. **Judgment calls.** Proposed: tag some crisis choices `call: true`; they roll judgment instead of the scene's stat. Start with 10 to 15 existing choices.
 8. **Failing softer.** Proposed: a failed roll by someone with judgment 14+ costs one step less (serious → light, light → heat, heat → nothing). Once per job.
-9. **Veteran calm.** Proposed: retire it; the Leader slot replaces it. Veterans tend to have the leadership to fill it.
-10. **Stat count.** If the stat-usage sim cuts driving, these two take its place. If not, nine stats, and we check nothing dominates.
+9. ~~Veteran calm~~: dropped (owner, 2026-11-07). There is no such rule to retire.
+10. **Stat count.** Owner (2026-11-07): driving (as piloting) and medical both stay; leadership is added, judgment maybe. Eight or nine attributes, and the sim checks nothing dominates.
 
 ## Leadership
 
 **On the job**
-- Leader's bonus to the crew's rolls (call 2), shown in the notes: "Rook leads +1".
+- The leader's bonus (call 2), shown in the notes: "Rook leads +1".
 - Calls taken before calling you in: 1 at leadership 10, 2 at 14, 3 at 18 (replaces the fame-based "one risky call").
 - Holding together (call 6).
 
@@ -34,7 +34,17 @@ Two new attributes. **Leadership** (visible) lifts the rest of the crew and deci
 - Jobs led, crewmates brought home while leading, jobs led that ended clean, Synergies.
 - Slow: about +1 a season for someone who leads every week.
 
-## Judgment
+## The leader's bonus (call 2, open)
+
+A chance of +1 on a roll has to keep shown risk equal to used risk and the run's dice the same. Three ways, for the owner to pick:
+
+| Way | How | Read shows | Note |
+| --- | --- | --- | --- |
+| A. Steady hand (recommended) | Once a job (twice at 16+), a crewmate's roll that misses by 1-2 holds. | "Rook can steady one near-miss" | Limited, so it never makes careful runs certain; no new dice (it reads the same die). The once-a-job pattern is Clean Professional's. |
+| B. Chance of +1 | Each crew roll has a chance (25% at 12, 50% at 16) of +1. | The blended odds | Needs a second die per roll, which shifts every later roll in a run; on average it's just +0.25 or +0.5. |
+| C. Flat +1 / +2 | As first proposed. | +1 in the notes | Simple, but it pushes careful runs towards certain. |
+
+## Judgment (maybe)
 
 **On the job**
 - Rolls on tagged judgment calls (call 7).
@@ -80,7 +90,7 @@ Two new attributes. **Leadership** (visible) lifts the rest of the crew and deci
 ## Build order
 
 1. Attributes, seeding and the save migration; shown on the runner's page. No effects yet.
-2. Leader slot and leader's bonus; retire veteran calm and fame-based leads.
+2. Leader slot and leader's bonus; retire fame-based leads.
 3. Calls taken and holding together.
 4. Judgment calls on 10 to 15 crises, and failing softer.
 5. Re-run the sims; tune.

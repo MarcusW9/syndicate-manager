@@ -1,6 +1,6 @@
 # Proposal: piloting, where driving becomes time
 
-Status: proposal, nothing built. Follows the stat-usage sim (2026-11-07): driving was rolled on 7.9% of careful jobs and 2.1% of close-call rolls, and +3 changed week-52 cash by +2.4% ±2.7, right on the line. A Wheels on every job only lifted it from 8.2% to 10.2% of jobs, so the problem is that few jobs ask for it. Add a row to the decision log in `DESIGN.md` when agreed.
+Status: proposal, nothing built. Owner's calls so far (2026-11-07): the +3 driving rise in injuries and heat is taken as noise (no investigation step); the getaway step only sheds heat when the job is already leaving some (call 3). Follows the stat-usage sim (2026-11-07): driving was rolled on 7.9% of careful jobs and 2.1% of close-call rolls, and +3 changed week-52 cash by +2.4% ±2.7, right on the line. A Wheels on every job only lifted it from 8.2% to 10.2% of jobs, so the problem is that few jobs ask for it. Add a row to the decision log in `DESIGN.md` when agreed.
 
 ## The idea in one paragraph
 
@@ -10,7 +10,7 @@ Driving is renamed **piloting** and covers vans, boats and drones. Its value bec
 
 1. **The name.** Proposed: piloting. Drivers, pilots and drone jockeys all sit under it.
 2. **Drones move from tech.** Proposed: drone overwatch rolls piloting; Drone Jockey needs piloting 10. Implant neural load stays.
-3. **Getaway step.** Proposed: on every job's way out, rolled by the Wheels, else the team's best pilot.
+3. **Getaway step.** Owner (2026-11-07): only on a job that is leaving heat (a loud job, a failed roll with a heat cost, an overwatch shot), rolled by the Wheels, else the team's best pilot. A quiet job has no getaway roll and is never punished. Open: whether a failed getaway still adds heat (see below).
 4. **Faster jobs.** Proposed: a Wheels at 14+ cuts a day off any job of 2+ days; same pay.
 5. **Moving between halls.** Proposed: with a pilot (10+) driving, same day, no settling-in day.
 6. **Arrival times.** Proposed: the table below, in fight rounds.
@@ -23,12 +23,16 @@ Driving is renamed **piloting** and covers vans, boats and drones. Its value bec
 
 **Getaway step**
 
+Only rolled when the job is leaving heat. How often that is (stat-usage counter, 4 seeds × 52 weeks): **15% of careful stealth jobs, 22% tong, 30% mixed, 91% loud**.
+
 | Result | Effect |
 | --- | --- |
-| Clean (success by 5+) | −1 heat in the district |
-| Success | nothing |
-| Failure | +1 heat in the district |
-| Bad failure (by 5+), or the alert maxed | +1 heat and a tail: the next job there is watched |
+| Clean (success by 5+) | −2 heat, never below zero for the job |
+| Success | −1 heat, never below zero for the job |
+| Failure | nothing (open: or +1) |
+| Bad failure (by 5+), or the alert maxed | a tail: the next job there is watched |
+
+With shedding only, the getaway is all upside, so a good pilot pays off on loud work and a bad one costs nothing extra. Failure adding +1 would make it a real roll, but loud jobs already pay their heat.
 
 - Need: 10 + the job's difficulty + 1 per alert point.
 - Ghost Driver's clean-getaway heat bonus now runs through this step.
@@ -66,9 +70,9 @@ Driving is renamed **piloting** and covers vans, boats and drones. Its value bec
 
 | Setting | Default |
 | --- | --- |
-| Getaway difficulty | 10 + job difficulty + alert |
-| Clean getaway | −1 heat in the district |
-| Failed getaway | +1 heat; tail on a bad failure |
+| Getaway | only on a job leaving heat; 10 + job difficulty + alert |
+| Clean getaway | −2 heat (success −1), never below zero for the job |
+| Failed getaway | nothing; tail on a bad failure |
 | Faster jobs | −1 day at Wheels 14+, jobs of 2+ days, never under 1 |
 | Arrival | table above |
 | Boat | −2 on the harbour row |
@@ -85,7 +89,7 @@ A roll count misses speed, so `sim-stats.mjs` gets new figures:
 
 | Check | Target |
 | --- | --- |
-| Jobs where piloting is rolled | 40%+ (the getaway step alone should do this) |
+| Jobs where piloting is rolled | 25%+ over all policies (with the getaway only on heat, careful stealth stays near 20%; its value there is time, below) |
 | Share of close-call rolls | over 5% |
 | Runner-days saved, tong policy | 5%+ |
 | Rounds before backup arrives, median | shown, no target |
@@ -95,7 +99,7 @@ A roll count misses speed, so `sim-stats.mjs` gets new figures:
 
 Keep piloting if it meets the roll targets and saves 5%+ of runner-days, or clearly changes how raids end. Otherwise cut it then.
 
-**Before building:** find out why +3 driving raised injuries (+1.1) and heat (+1.9) in the 300-seed rerun. A better stat shouldn't make things worse. The likely cause is that Joss staffs Wheels differently, changing who goes inside. The getaway step leans on the same staffing, so fix that first.
+The +3 driving rise in injuries (+1.1) and heat (+1.9) at 300 seeds is taken as noise (owner, 2026-11-07): the sim printed error bars for cash only.
 
 ## Saves
 
@@ -118,13 +122,12 @@ Keep piloting if it meets the roll targets and saves 5%+ of runner-days, or clea
 
 ## Build order
 
-1. Investigate the +3 driving result.
-2. Rename, drones to piloting, save migration.
-3. Getaway step; rerun the sim.
-4. Faster jobs and same-day moves; add runner-days to the sim.
-5. Extraction and standby by rounds.
-6. Raid support and backup calls with the arrival table.
-7. Boats, with the Silt.
+1. Rename, drones to piloting, save migration.
+2. Getaway step; rerun the sim.
+3. Faster jobs and same-day moves; add runner-days to the sim.
+4. Extraction and standby by rounds.
+5. Raid support and backup calls with the arrival table.
+6. Boats, with the Silt.
 
 ## Open questions
 

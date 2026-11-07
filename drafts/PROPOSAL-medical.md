@@ -1,6 +1,6 @@
 # Proposal: medical as the support stat
 
-Status: proposal, nothing built. Follows the stat-usage sim (2026-11-07): medical was rolled on 2.7% of careful jobs, took 0.7% of close-call rolls, and +3 changed week-52 cash by −0.9% ±2.2. Every cut rule was met. The owner's call is to fix it, not cut it. Add a row to the decision log in `DESIGN.md` when agreed.
+Status: proposal, nothing built. Owner's calls so far (2026-11-07): concussion's judgment penalty left out; the migration maps old injuries to wounds that don't worsen (call 10); how wounds sit beside `condition.injury` still to discuss (see "Wounds and `condition.injury`"). Follows the stat-usage sim (2026-11-07): medical was rolled on 2.7% of careful jobs, took 0.7% of close-call rolls, and +3 changed week-52 cash by −0.9% ±2.2. Every cut rule was met. The owner's call is to fix it, not cut it. Add a row to the decision log in `DESIGN.md` when agreed.
 
 ## The idea in one paragraph
 
@@ -17,7 +17,7 @@ Medical only acts today once someone is badly hurt, and careful play rarely gets
 7. **Medic in the van.** Proposed: allowed. Triage and comedown work from the van; field dressing needs them inside.
 8. **Hall doctor.** Proposed: a role later (Phase 3); the Clinic room heals at half speed without one.
 9. **Gore level.** Proposed: specific and physical in reports ("a round through the forearm"), never lingering or graphic for its own sake.
-10. **Migration.** Proposed: light injuries become minor bleeding; serious become a bad broken arm. Healing days carry over.
+10. **Migration.** Owner (2026-11-07): old injuries become wounds that don't worsen (light → a minor broken arm, serious → a bad broken arm, not bleeding, which would worsen after the next job). Healing days carry over.
 
 ## Wounds
 
@@ -25,7 +25,7 @@ Medical only acts today once someone is badly hurt, and careful play rarely gets
 | --- | --- | --- |
 | Bleeding | −1 HP a round in a fight; worsens a step if untreated after the job | Gunshot, blade |
 | Broken arm | −2 combat, −1 tech | Fall, close fight |
-| Concussion | −2 tech, −2 judgment | Blast, blow to the head |
+| Concussion | −2 tech | Blast, blow to the head |
 | Burns | −1 cool; heals at half speed | Fire, electrical, chrome failure |
 | Chrome shock | Neural load can't drop below 30 | Implant hit, EMP, overload |
 
@@ -37,6 +37,17 @@ Medical only acts today once someone is badly hurt, and careful play rarely gets
 
 - A wound's penalty shows in the roll notes and the planning read, like Shaky does now.
 - Career marks: a bad or critical wound can still leave a scar.
+
+## Wounds and `condition.injury` (to discuss)
+
+`condition.injury` (`light | serious | critical`) is read in 39 places across 13 core and UI files, and in 14 test files, including the death rule's tests (critical is death's door; only "push on" kills). Two ways:
+
+| Way | Shape | Cost |
+| --- | --- | --- |
+| A. A wound on top (recommended) | Keep `condition.injury` as the severity track, unchanged (light = minor, serious = bad, critical = critical), and add `condition.wound = { kind }` for what it is. The kind gives the penalty and the treatment; severity stays where every rule reads it. | Small: the death rule and its tests don't move; one wound at a time. |
+| B. Replace it | `condition.wounds = [{ kind, severity, days }]`, as first proposed. | Every reader of `injury` changes, and the death rule's tests are rewritten. Allows several wounds at once. |
+
+A can become B later if several wounds at once turns out to matter.
 
 ## Medical on the job
 
@@ -99,7 +110,7 @@ Older medics move into these, as older runners move into coaching.
 ## Saves
 
 - Next save version, with a migration (call 10).
-- Wounds stored per runner as `[{ kind, severity, days }]`, replacing `condition.injury`.
+- Wounds: as decided under "Wounds and `condition.injury`" (recommended: `condition.wound = { kind }` beside the existing `condition.injury`).
 
 ## Where it would live
 

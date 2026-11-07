@@ -100,7 +100,7 @@ function blankRun() {
     byWhere: {}, // where -> stat -> rolls
     // Specialists: runners whose main stat is S, the jobs they went on and those where they rolled S.
     spec: Object.fromEntries(STATS.map((s) => [s, { jobs: 0, rolled: 0 }])),
-    heat: 0, injuries: 0, pay: 0,
+    heat: 0, hotJobs: 0, injuries: 0, pay: 0, // hotJobs: jobs that left any heat
   };
 }
 
@@ -138,7 +138,9 @@ export function makeCounter() {
       }
       const out = m.timeline.outcome ?? [];
       run.pay += m.back.pay ?? 0;
-      run.heat += Number(out.map((o) => o.text.match(/^Heat \+(\d+)/)?.[1]).find(Boolean) ?? 0);
+      const heat = Number(out.map((o) => o.text.match(/^Heat \+(\d+)/)?.[1]).find(Boolean) ?? 0);
+      run.heat += heat;
+      if (heat > 0) run.hotJobs++;
       const hurt = out.map((o) => o.text.match(/^Injured: (.*)\.$/)?.[1]).find(Boolean);
       run.injuries += hurt ? hurt.split(', ').length : 0;
     }
