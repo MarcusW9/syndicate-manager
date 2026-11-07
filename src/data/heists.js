@@ -1,19 +1,22 @@
-// Heists (DESIGN.md 2026-11-07, Phase 3 part A; plan in drafts/PROPOSAL-phase-3.md). A heist is a
-// big score with prep jobs, each of which changes the finale in a way its plan shows. Content only;
-// the rules are in core/heists.js.
+// Heists: multi-job scores whose preparation changes the finale.
+// Rules live in core/heists.js. (DESIGN.md 2026-11-07; plan in drafts/PROPOSAL-phase-3.md.)
 //
-// Slice A1 builds both heists from existing jobs as stand-ins (owner, 2026-11-07): Madam Rao's is
-// the first, the end of the early game and gentler (offered at reputation 15, Casino Con at threat
-// 3, prep can bring it to 2); Mr. Szeto's is mid-game content (three halls and reputation 60,
-// Penthouse Heist at threat 5). Their own stories are written later (Black Sun, slice A2). The
-// text here is a first draft for the owner to rewrite.
+// These finales currently use existing mission templates.
+// Keep template IDs and crisis IDs aligned with those templates.
+//
+// Text: the owner's rewrite (2026-11-07). Madam Rao's prep jobs are her own six, written for the
+// heist (data/missions/theguestcopy.js and the rest, heistOnly). Mr. Szeto's still use stand-ins.
 //
 // A heist: { id, name, contact (a client id), gate: { rep, halls }, finale: templateId,
 //   threatDelta (the finale's threat against its template), pay (the finale's pay before trust),
 //   weeks (offer to the finale's last day; the finale's own week is the last one),
+//   independent (optional: the target belongs to no named faction, so the finale adds no gang
+//   grudge even when its template is against one), exclude (optional: crises of the template that
+//   don't fit this heist's target, kept out of the finale's draw and not shown as prep),
 //   intro (the contact's message), finaleLine (the message when the finale is on the board),
 //   prep: [{ id, templates: [first ask, the retry], line (what it's for), effect, shows (what the
-//   finale's plan says once it's done) }] }.
+//   finale's plan says once it's done), fixer (optional: { label, description, confirmation },
+//   the words for buying it) }] }.
 // An effect is one of: { threat: -1 } (the finale one step less dangerous), { drop: crisisId }
 // (that crisis can't come up), { intel: 'source' } (intel on every roll of the finale, as an info
 // task gives: core/sidetasks.js INTEL_BONUS), { pay: 0.2 } (the score is worth 20% more).
@@ -35,12 +38,52 @@ export const HEISTS = [
     threatDelta: 1,
     pay: 11000,
     weeks: 3,
-    intro: "Madam Rao closes her fan. \"The baccarat room over Glow Street is taking a friend of mine for everything. In three weeks the room plays its biggest night, and I want you at the table. Do me three small things first, beta, and the night will be kinder to you.\"",
-    finaleLine: "Madam Rao's big night is on the board. What you did for her is in the plan.",
+    // An independent casino in the Night Market (owner, 2026-11-07): the crew's first big score,
+    // not a declaration of war. Casino Con's Red Lantern grudge, and its crisis naming the owner as
+    // a Red Lantern, stay with the ordinary job.
+    independent: true,
+    exclude: ['triad_owner'],
+    intro:
+      'Madam Rao sets a casino counter beside your tea. "A friend keeps losing upstairs. Now he is borrowing downstairs to pay for it. In three weeks, that room holds its biggest night. I want some of its money leaving with us, beta. Three things would help. We can still go without them; I would rather we did not."',
+    finaleLine:
+      'Madam Rao slides the casino counter back across the table. "Tonight, beta. What we managed to arrange is in the plan. Read it before you choose who goes."',
     prep: [
-      { id: 'faces', templates: ['ledger', 'chrome'], line: 'Her ledger names everyone who plays that night', effect: { intel: "Madam Rao's ledger" }, shows: 'Intel: +1 on every roll' },
-      { id: 'pitBoss', templates: ['quiet_table', 'fitting_room'], line: 'A quiet room, and the pit boss learns his price', effect: { drop: 'pit_boss' }, shows: "The pit boss won't be watching the table" },
-      { id: 'reader', templates: ['courier', 'chrome'], line: "The card reader's drive, carried across town", effect: { threat: -1 }, shows: 'Danger one step lower' },
+      {
+        id: 'faces',
+        templates: ['the_guest_copy', 'after_the_applause'],
+        line: 'Build a verified briefing on the guests, staff and service routes.',
+        effect: { intel: "Rao's casino briefing" },
+        shows: 'Casino briefing secured: +1 on every finale roll',
+        fixer: {
+          label: 'Buy a verified casino briefing',
+          description: 'Another operator can assemble the guest notes, staff timings and service routes through their own contacts.',
+          confirmation: 'Rao checks the delivered briefing and confirms it is current. The casino intel is ready.',
+        },
+      },
+      {
+        id: 'pitBoss',
+        templates: ['an_old_account', 'someone_to_cover'],
+        line: 'Arrange the pit boss’s confirmed absence during the score.',
+        effect: { drop: 'pit_boss' },
+        shows: 'Pit boss diverted: his crisis cannot appear',
+        fixer: {
+          label: 'Arrange the pit boss’s absence',
+          description: 'A broker can secure an outside appointment and approved shift cover for the required window.',
+          confirmation: 'Rao receives the appointment and approved-cover confirmations. The pit boss will be elsewhere.',
+        },
+      },
+      {
+        id: 'reader',
+        templates: ['service_included', 'manual_handling'],
+        line: 'Secure a maintenance window that slows linked alerts and coordination.',
+        effect: { threat: -1 },
+        shows: 'Maintenance window secured: danger one step lower',
+        fixer: {
+          label: 'Secure a maintenance window',
+          description: 'A specialist can supply compatible equipment and arrange an approved service slot through another contractor.',
+          confirmation: 'Rao receives the accepted service booking. Linked alerts will require manual handling during the score.',
+        },
+      },
     ],
   },
   {
@@ -52,12 +95,32 @@ export const HEISTS = [
     threatDelta: 0,
     pay: 28000,
     weeks: 3,
-    intro: "Mr. Szeto doesn't sit down. \"A man I do business with keeps his vault seventy-one floors up. In three weeks he flies to Singapore for three nights. Prepare properly. I don't pay for improvisation.\"",
-    finaleLine: "Mr. Szeto's three nights are on the board. What you prepared is in the plan.",
+    intro:
+      'Mr. Szeto places a tower photograph on the desk, face down. "A business associate keeps something of mine in his penthouse vault. Seventy-one floors up. In three weeks, he leaves the city for three nights." He rests one finger on the photograph. "Prepare the lift, the power and the route. I am paying for a retrieval, not a story about why it failed."',
+    finaleLine:
+      'Mr. Szeto sends a departure confirmation and nothing else. A second message follows: "The penthouse is empty. The building is not. Check your plan."',
     prep: [
-      { id: 'face', templates: ['access_window', 'relay_cover'], line: 'A registered face for the service lift', effect: { drop: 'facial_scan' }, shows: "The lift's face scanner won't stop them" },
-      { id: 'power', templates: ['relay_cover', 'access_window'], line: 'The backup power, watched on the night', effect: { threat: -1 }, shows: 'Danger one step lower' },
-      { id: 'plans', templates: ['data_pull', 'access_window'], line: "The tower's floor plans", effect: { intel: "the tower's plans" }, shows: 'Intel: +1 on every roll' },
+      {
+        id: 'face',
+        templates: ['access_window', 'relay_cover'],
+        line: 'Arrange a registered service identity for the crew’s lift access. The scanner needs to recognise someone it expects.',
+        effect: { drop: 'facial_scan' },
+        shows: 'Service identity registered: facial-scan crisis cannot appear',
+      },
+      {
+        id: 'power',
+        templates: ['relay_cover', 'access_window'],
+        line: 'Arrange cover at the backup-power controls. If the tower switches supply, someone needs to keep it from closing your route.',
+        effect: { threat: -1 },
+        shows: 'Backup-power cover arranged: danger one step lower',
+      },
+      {
+        id: 'plans',
+        templates: ['data_pull', 'access_window'],
+        line: 'Get the current floor plans, including service routes and alterations. Szeto’s copy predates the owner’s last renovation.',
+        effect: { intel: "the tower's current floor plans" },
+        shows: 'Current floor plans secured: +1 on every finale roll',
+      },
     ],
   },
 ];

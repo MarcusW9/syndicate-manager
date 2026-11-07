@@ -24,6 +24,8 @@ import { money } from './money.js';
 const round50 = (n) => Math.round(n / 50) * 50;
 const stillOut = (state, jobId) => state.jobs.some((j) => j.id === jobId) || state.activeMission?.jobId === jobId || (state.awayJobs ?? []).some((j) => j.mission?.jobId === jobId);
 const contactName = (h) => clientById(h.contact)?.name ?? 'The contact';
+/** A prep line as a sentence: it may already end with its own full stop. */
+export const asSentence = (line) => (/[.!?]$/.test(line) ? line : `${line}.`);
 
 /** A heist's progress, or null if it hasn't been offered. */
 export const heistOf = (state, id) => state.heists?.[id] ?? null;
@@ -104,7 +106,7 @@ export function buyStep(prev, heistId, stepId) {
   state.inbox.unshift({
     id: `heist-buy-${heistId}-${stepId}-${state.day}`, type: 'job', kind: 'heist-news', day: state.day,
     subject: `${def.name}: bought from a fixer`,
-    body: `${step.line}: a fixer sorted it for ${money(check.price)}. In the plan: ${effectText(step)}.`,
+    body: `${step.fixer?.confirmation ?? `${asSentence(step.line)} A fixer sorted it.`} Paid ${money(check.price)}. In the finale's plan: ${effectText(step)}.`,
     payload: { heistId }, blocking: false, read: true,
   });
   return state;
@@ -130,8 +132,9 @@ function finaleFields(def, h) {
     heist: def.id,
     threatDelta: (def.threatDelta ?? 0) + fx.threat,
     payMult: Math.round((def.pay / tpl.pay) * (1 + fx.pay) * 100) / 100,
-    drop: fx.drop,
+    drop: [...(def.exclude ?? []), ...fx.drop], // crises that don't fit the target, then those the prep took out
     inside: fx.intel,
+    noGrudge: Boolean(def.independent), // an independent target: no gang grudge from the finale
   };
 }
 
@@ -205,7 +208,7 @@ function maybeRetry(state, def, h, step) {
   state.inbox.unshift({
     id: `heist-retry-${def.id}-${step.id}-${state.day}`, type: 'job', kind: 'heist-news', day: state.day,
     subject: `${def.name}: another way in`,
-    body: `${step.line}: that didn't come off, so ${contactName(def)} has another job for it: ${templateById(job.templateId).name}, on the board until the finale's week.`,
+    body: `${asSentence(step.line)} That didn't come off, so ${contactName(def)} has another job for it: ${templateById(job.templateId).name}, on the board until the finale's week.`,
     payload: { heistId: def.id, jobId: job.id }, blocking: false, read: false,
   });
 }
@@ -234,7 +237,7 @@ export function heistResult(state, jobId, outcome) {
     const s = h.steps[step.id];
     s.status = outcome === 'completed' ? 'done' : 'failed';
     refreshFinale(state, def, h);
-    if (s.status === 'done') return [{ tone: 'good', text: `${def.name}: ${step.line}. In the finale's plan: ${effectText(step)}.` }];
+    if (s.status === 'done') return [{ tone: 'good', text: `${def.name}: ${asSentence(step.line)} In the finale's plan: ${effectText(step)}.` }];
     const again = s.tries <= HEIST_RULES.retries && state.day + HEIST_RULES.retryBefore <= finaleWeekStart(h) - 1;
     if (again) maybeRetry(state, def, h, step);
     return [{ tone: 'warn', text: `${def.name}: that prep didn't come off. ${again ? `${contactName(def)} has another job for it on the board.` : 'It can still be bought from a fixer, or done without.'}` }];
@@ -260,7 +263,7 @@ export function heistCard(state) {
     steps: def.prep.map((p) => {
       const s = h.steps[p.id] ?? { status: 'asked' };
       const buy = canBuyStep(state, def.id, p.id);
-      return { id: p.id, line: p.line, effect: effectText(p), status: s.status, jobId: s.status === 'asked' ? s.jobId : null, templateId: s.templateId ?? null, buy: s.status === 'failed' ? buy : null };
+      return { id: p.id, line: p.line, effect: effectText(p), fixer: p.fixer ?? null, status: s.status, jobId: s.status === 'asked' ? s.jobId : null, templateId: s.templateId ?? null, buy: s.status === 'failed' ? buy : null };
     }),
     prepared: fx.lines.length,
   };

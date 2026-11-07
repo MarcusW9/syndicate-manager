@@ -7,7 +7,7 @@ import { GANGS, GRUDGE, grudgeOf, jobGrudge, grudgeWord, gangsOn } from '../core
 import { defenceCut, openRaids, raidOn, raidPrice, canBuyOff, defenders, raidChoices, payOffRaid, hallShut, raidWho, raidBy, isGangRaid } from '../core/raids.js';
 import { HALL_SITES, HOME_HALL } from '../data/halls.js';
 import { billDue, mondayBrief, crewStandard, crewAgainstStandard } from '../core/week.js';
-import { heistFor, heistCard, buyStep, heistEffects } from '../core/heists.js';
+import { heistFor, heistCard, buyStep, heistEffects, asSentence } from '../core/heists.js';
 import { HEIST_RULES } from '../data/heists.js';
 import { crewLead } from '../core/lead.js';
 import { rankOf } from '../core/tong.js';
@@ -293,7 +293,7 @@ function onClick(e) {
     case 'heist-buy': { // a prep step that went wrong, bought from a fixer (core/heists.js)
       const [hid, step] = id.split('|');
       const c = heistCard(state)?.steps.find((x) => x.id === step);
-      if (c?.buy?.ok && confirm(`Pay a fixer ${money(c.buy.price)} for this? It counts as done: ${c.effect.toLowerCase()}.`)) return setState(buyStep(state, hid, step));
+      if (c?.buy?.ok && confirm(c.fixer ? `${c.fixer.label}: ${money(c.buy.price)}. ${c.fixer.description} It counts as done: ${c.effect}.` : `Pay a fixer ${money(c.buy.price)} for this? It counts as done: ${c.effect}.`)) return setState(buyStep(state, hid, step));
       break;
     }
     case 'move-hall': { const [opId, d] = id.split('|'); return setState(moveToHall(state, opId, d)); }
@@ -1753,7 +1753,7 @@ function jobFlags(v) {
   const hz = heistFor(state, v.jobId); // a heist's prep or finale (core/heists.js)
   if (hz) flags.push(['named', hz.step ? `Prep · ${hz.def.name}` : `${hz.def.name} · finale`]);
   if (namedHandle(v)) flags.push(['named', fillNamed(NAMED_TEXT.chip, v)]); // a client asked for an Elite by name (renown slice 4)
-  const g = jobGrudge(v.tpl, v.threat);
+  const g = v.noGrudge ? null : jobGrudge(v.tpl, v.threat);
   if (g) flags.push(['hot', `Against ${GANGS[g.gang].short}`]); // a job that hurts a gang (core/gangs.js)
   const opens = openingFor(state, v.jobId);
   if (opens) flags.push(['named', `Opens the ${cityName(opens).replace(/^The /, '')} hall`]); // a contact's opening favour (core/halls.js)
@@ -2050,7 +2050,7 @@ function renderPlan() {
       <button class="linkbtn" data-action="brief-more" aria-expanded="${briefOpen}">${briefOpen ? 'Show less' : 'Read more'}</button>
       ${(() => { const c = crewAgainstStandard(picked, v.threat); return `<p class="standard ${picked.length ? (c.met ? 'is-met' : 'is-short') : ''} small"><strong>Crew standard: ${esc(c.std.label)}</strong>${picked.length ? ` · ${esc(c.note)}` : ''}</p>`; })()}
       ${(() => { // a job against a gang says what it costs before you take it (shown risk equals used risk)
-        const g = jobGrudge(t, v.threat);
+        const g = v.noGrudge ? null : jobGrudge(t, v.threat);
         if (!g) return '';
         const now = grudgeOf(state, g.gang);
         return `<p class="grudgeline small"><strong>Against ${esc(GANGS[g.gang].name)}:</strong> finishing it adds grudge +${g.n} (now ${now}/10, then ${Math.min(GRUDGE.max, now + g.n)}). From ${GRUDGE.raidAt} they may raid a hall of ours on their turf.</p>`;
@@ -2455,7 +2455,7 @@ function heistPlanLine(job) {
   const { def, h, step } = hz;
   if (step) {
     const again = h.steps[step.id].tries <= HEIST_RULES.retries;
-    return `<p class="openingline heistline small"><strong>Prep for ${esc(def.name)}:</strong> ${esc(step.line)}. Finish it and the finale gets: ${esc(step.shows)}. Walk away and ${again ? `${esc(clientById(def.contact)?.name ?? 'they')} finds another job for it, once` : 'it can be bought from a fixer, or done without'}.</p>`;
+    return `<p class="openingline heistline small"><strong>Prep for ${esc(def.name)}:</strong> ${esc(asSentence(step.line))} Finish it, and the finale's plan shows “${esc(step.shows)}”. Walk away and ${again ? `${esc(clientById(def.contact)?.name ?? 'they')} finds another job for it, once` : 'it can be bought from a fixer, or done without'}.</p>`;
   }
   const done = heistEffects(def, h).lines.length;
   return `<div class="openingline heistline small">
@@ -2547,7 +2547,7 @@ function citySummary() {
 function districtCard(key) {
   const c = DISTRICT_CARDS[key];
   const turf = DISTRICTS[key]?.turf;
-  const jobs = MISSIONS.filter((m) => m.district === key).map((m) => m.name);
+  const jobs = MISSIONS.filter((m) => m.district === key && !m.heistOnly).map((m) => m.name); // a heist's prep shows only when asked
   const out = crewOutIn(key);
   return `
     <div class="riskcard citycard" style="--turf:${turfHex(key) ?? 'var(--line)'}">
@@ -2587,7 +2587,7 @@ function renderDistrictLore() {
     const c = DISTRICT_CARDS[key];
     const on = loreDistrict === key;
     const turf = DISTRICTS[key]?.turf;
-    const jobs = MISSIONS.filter((m) => m.district === key && !m.opening).map((m) => m.name);
+    const jobs = MISSIONS.filter((m) => m.district === key && !m.opening && !m.heistOnly).map((m) => m.name);
     const art = districtArt(key);
     return `
     <li class="lorecard ${on ? 'is-open' : ''}" style="--turf:${turfHex(key) ?? 'var(--line)'}">

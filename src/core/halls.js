@@ -190,7 +190,7 @@ function askOpening(state, district, retry = false) {
   let templateId = site.opening;
   if (retry) {
     // The second ask is one of their own jobs, picked by the seed, as the test.
-    const own = (contact?.jobs ?? []).filter((id) => templateById(id) && !templateById(id).routine && !templateById(id).opening && jobUnlocked(state, id));
+    const own = (contact?.jobs ?? []).filter((id) => templateById(id) && !templateById(id).routine && !templateById(id).opening && !templateById(id).heistOnly && jobUnlocked(state, id));
     templateId = own.length ? pick(hashRng(state.seed, 'opening', district, state.day), own) : site.opening;
   }
   addOffer(state, templateId, { clientId: site.contact });
