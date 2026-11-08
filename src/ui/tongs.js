@@ -80,7 +80,7 @@ function tongPage(state, view, id) {
   return '';
 }
 
-const STAT_ORDER = ['combat', 'stealth', 'tech', 'social', 'driving', 'medical', 'cool'];
+const STAT_ORDER = ['combat', 'stealth', 'tech', 'social', 'piloting', 'medical', 'cool'];
 
 /** This month's free name, if one is up: a card to open (Ops › The other tongs). */
 function freeNamesBlock(state, view) {

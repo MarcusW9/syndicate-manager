@@ -593,7 +593,7 @@ function scoutLine(op) {
   return `<span class="scoutline"><span class="iconword">${statGlyph(main)}${esc(statName(main))} ${ratedStat(op, main)}</span></span>`;
 }
 
-/** Crew-list marker: "▲ Tech +2, Combat +1 ▼ Driving −1" for this season. */
+/** Crew-list marker: "▲ Tech +2, Combat +1 ▼ Piloting −1" for this season. */
 function growthMarker(op) {
   const net = Object.entries(seasonChanges(op));
   const up = net.filter(([, n]) => n > 0).map(([k, n]) => `${statName(k)} ${signed(n)}`);

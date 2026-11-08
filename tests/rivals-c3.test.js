@@ -269,12 +269,12 @@ test('the new Word lines have text and no digits or loose braces', () => {
   assert.ok(seen.has('free_name'));
 });
 
-test('a v52 save upgrades: grudge becomes regard, and the free name is scheduled', async () => {
+test('a v53 save upgrades: grudge becomes regard, and the free name is scheduled', async () => {
   const s = game(12);
   const old = structuredClone(s);
   for (const t of old.rivals.tongs) { t.grudge = 0; delete t.regard; delete t.poorWeeks; delete t.splitDay; delete t.foldedDay; }
   delete old.rivals.offer; delete old.rivals.scouted; delete old.rivals.lastScout; delete old.rivals.offerSeq; delete old.rivals.nextOfferDay;
-  old.version = 52;
+  old.version = 53;
   const loaded = await importSave({ text: async () => JSON.stringify(old) });
   assert.equal(loaded.version, SAVE_VERSION);
   assert.ok(loaded.rivals.tongs.every((t) => t.regard === 0 && t.grudge === undefined && t.poorWeeks === 0 && t.foldedDay === null));

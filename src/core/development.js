@@ -14,7 +14,7 @@ import { ROLE_PROFILES } from '../data/recruitPools.js';
 import { NAMES } from '../config/names.js';
 import { emptyLoadout } from './gear.js';
 
-export const STATS = ['combat', 'stealth', 'tech', 'social', 'driving', 'medical', 'cool'];
+export const STATS = ['combat', 'stealth', 'tech', 'social', 'piloting', 'medical', 'cool'];
 
 // Growth points. Tuned with simulations (tests/development.test.js and
 // PLAN-PROGRESSION.md step 0): a founding rookie goes ~9 -> 15 over season one.
@@ -271,7 +271,7 @@ export function applyGrowth(crew, xp, day = 0) {
   return { events, graduated };
 }
 
-/** Net change per stat since a given day, from the growth log: { tech: 2, driving: -1 }. */
+/** Net change per stat since a given day, from the growth log: { tech: 2, piloting: -1 }. */
 export function changesSince(op, sinceDay) {
   const net = {};
   for (const e of op.growthLog ?? []) {

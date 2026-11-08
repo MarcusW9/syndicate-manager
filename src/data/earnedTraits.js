@@ -27,8 +27,8 @@ export const EARNED_TRAITS = {
     history: 'Completed ten jobs without drawing attention to the crew.',
   },
   ghost_driver: {
-    name: 'Ghost Driver', kind: 'lasting', icon: 'driving',
-    desc: '+1 driving in escapes; a clean getaway at the wheel sheds a point of the heat it would cost.',
+    name: 'Ghost Driver', kind: 'lasting', icon: 'piloting',
+    desc: '+1 piloting in escapes; a clean getaway at the wheel sheds a point of the heat it would cost.',
     note: 'Five clean exits, no scraped paint and nobody remembering the plate. We might be getting good at this.',
     history: 'Built a reputation for leaving trouble without a trace.',
   },

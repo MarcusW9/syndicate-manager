@@ -22,7 +22,7 @@ import { NAMES } from '../config/names.js';
 import { money } from './money.js';
 
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
-const STAT_KEYS = ['combat', 'stealth', 'tech', 'social', 'driving', 'medical', 'cool'];
+const STAT_KEYS = ['combat', 'stealth', 'tech', 'social', 'piloting', 'medical', 'cool'];
 const slug = (name) => name.toLowerCase().replace(/&/g, '').replace(/[^a-z]+/g, '-').replace(/^-|-$/g, '');
 const tongOf = (r, id) => (r?.tongs ?? []).find((t) => t.id === id) ?? null;
 

@@ -78,7 +78,7 @@ export const DISTRICT_CRISES = {
       situations: ['weather', 'escape'],
       text: 'The Signal 3 goes up. The dock gates lock themselves for the gale, and Aether-Harbour security starts sweeping the yard.',
       choices: [
-        { id: 'fence', label: '{driver} finds a gap in the fence', kind: 'push', stat: 'driving', difficulty: 12,
+        { id: 'fence', label: '{driver} finds a gap in the fence', kind: 'push', stat: 'piloting', difficulty: 12,
           success: 'Lights off, engine low, out through a gap the wind tore open.', failure: 'The fence rips along the side of the van and the alarm goes.', failureInjury: 'light', failureCost: { heat: 1 },
           report: { success: '{driver} found a section of fence torn open by the gale. Lights off and engine low, the crew slipped out of the locked yard.', failure: '{driver} tried to force the van through a storm-damaged gap. The fence tore along its side, someone was hurt, and the alarm sounded. Heat +1.' } },
         { id: 'hide', label: 'Hide in an empty container until the sweep passes', kind: 'adapt', stat: 'stealth', difficulty: 10, cost: { payCut: 0.2 },

@@ -5,7 +5,7 @@
 // the counterfactuals, a breakdown by approach and threat, and the verdict against the plan's agreed
 // thresholds; writes the lot to docs/sims/stat-usage-<date>.csv.
 //
-//   node scripts/sim-stats.mjs [seeds=60] [weeks=52] [policies=careful,loud,mixed,tong,wheels] [--no-boost | --boost=driving,medical] [--tag=name]
+//   node scripts/sim-stats.mjs [seeds=60] [weeks=52] [policies=careful,loud,mixed,tong,wheels] [--no-boost | --boost=piloting,medical] [--tag=name]
 //
 // About 8 s a season (18 s for tong) on one core; it spreads them over every core. 60 seeds of
 // everything is ~660 seasons: about half an hour on four cores.

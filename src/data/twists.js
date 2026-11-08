@@ -47,7 +47,7 @@ export const TWISTS = [
       { id: 'slip', label: 'Slip out through the back lanes', kind: 'push', stat: 'stealth', difficulty: 12, cost: { payCut: 0.2 },
         success: 'Through a laundry, over a wall, and away. You lose a little of the take on the way.', failure: 'An officer sees you go over the wall.', failureInjury: 'light', failureCost: { heat: 2 },
         report: { success: 'The crew escaped the police cordon through a laundry and over a back wall. Part of the take was lost on the way. Pay -20%.', failure: 'An officer spotted the crew climbing over the back wall. Someone was hurt during the escape. Pay -20%, heat +2.' } },
-      { id: 'drive', label: '{driver} drives through the cordon', kind: 'push', stat: 'driving', difficulty: 14, cost: { heat: 2 },
+      { id: 'drive', label: '{driver} drives through the cordon', kind: 'push', stat: 'piloting', difficulty: 14, cost: { heat: 2 },
         success: 'Sirens behind you for six streets, then nothing.', failure: 'A police car clips the van.', failureInjury: 'serious',
         report: { success: '{driver} broke through the police cordon and carried the pursuit for six streets before the sirens disappeared. Heat +2.', failure: 'A police car clipped the van as {driver} tried to break through the cordon. Someone was badly hurt. Heat +2.' } },
       { id: 'abort', label: 'Abort: dump everything and walk out separately', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1 },

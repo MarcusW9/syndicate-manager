@@ -124,14 +124,14 @@ test('a failed roll still teaches the roller', () => {
 test('the mission report lists growth and the stats really change', () => {
   let s = createNewGame({ seed: 3 });
   s.crew.push(makeRookie({ role: 'driver', ceiling: 19 }));
-  s.crew.find((o) => o.id === 'rookie').progress.driving = pointCost(11, 19) - 1; // one job away from a point
+  s.crew.find((o) => o.id === 'rookie').progress.piloting = pointCost(11, 19) - 1; // one job away from a point
   const job = s.jobs.find((j) => j.templateId === 'courier');
   s = M.startMission(s, job.id, ['rookie', 'teo'], 'stealth');
   const done = playMission(s, carefulPolicy).state;
   const rookie = done.crew.find((o) => o.id === 'rookie');
   if (!done.activeMission.aborted) {
-    assert.ok(rookie.stats.driving > 11);
-    assert.ok(done.activeMission.result.growth.some((e) => e.handle === 'Kid' && e.stat === 'driving' && e.to === e.from + 1));
+    assert.ok(rookie.stats.piloting > 11);
+    assert.ok(done.activeMission.result.growth.some((e) => e.handle === 'Kid' && e.stat === 'piloting' && e.to === e.from + 1));
   }
 });
 
@@ -207,7 +207,7 @@ test('a v3 save upgrades to v4 with development fields', async () => {
 
 test('stats panels show trait bonuses, capped at 20', async () => {
   const { traitMods, ratedStat, effectiveStat } = await import('../src/core/crew.js');
-  const op = { stats: { combat: 15, stealth: 6, tech: 19, social: 8, driving: 9, medical: 4, cool: 7 }, traits: ['hothead', 'chromed'], condition: { fatigue: 0, injury: 'healthy' } };
+  const op = { stats: { combat: 15, stealth: 6, tech: 19, social: 8, piloting: 9, medical: 4, cool: 7 }, traits: ['hothead', 'chromed'], condition: { fatigue: 0, injury: 'healthy' } };
   assert.deepEqual(traitMods(op), { combat: 2, cool: -2, tech: 2 });
   assert.equal(ratedStat(op, 'combat'), 17);
   assert.equal(ratedStat(op, 'cool'), 5);

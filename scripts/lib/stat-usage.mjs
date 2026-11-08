@@ -7,6 +7,7 @@
 // guards' attacks (core/battle.js guardAttack) are written from the guard's side (value = their
 // skill, need = 10 + the runner's cool and cover), so they're turned round here: the runner holds
 // when the guard misses.
+import { FOLLOW } from '../../src/core/piloting.js';
 import { createNewGame } from '../../src/core/state.js';
 import { hire, canHire, nextExpansion, expandSafehouse, STARTING_ROSTER_CAP } from '../../src/core/recruits.js';
 import { primaryStat, MAX_STAT } from '../../src/core/development.js';
@@ -20,7 +21,7 @@ import { makeRng, hash } from '../../src/core/rng.js';
 import { sideTaskById } from '../../src/core/sidetasks.js';
 import { autoFounders, playMission, carefulPolicy } from '../../tests/play.js';
 
-export const STATS = ['combat', 'stealth', 'tech', 'social', 'medical', 'driving', 'cool'];
+export const STATS = ['combat', 'stealth', 'tech', 'social', 'medical', 'piloting', 'cool'];
 export const APPROACH_IDS = ['stealth', 'tech', 'loud', 'con'];
 export const DECISIVE = [0.15, 0.85];
 
@@ -101,6 +102,8 @@ function blankRun() {
     // Specialists: runners whose main stat is S, the jobs they went on and those where they rolled S.
     spec: Object.fromEntries(STATS.map((s) => [s, { jobs: 0, rolled: 0 }])),
     heat: 0, hotJobs: 0, injuries: 0, pay: 0, // hotJobs: jobs that left any heat
+    // The getaway (core/piloting.js): rolls by result and by pilot skill (14+ shakes a plain miss), and the raids it brought.
+    getaway: { rolls: 0, result: { clean: 0, good: 0, fail: 0, bad: 0 }, followed: { fail: 0, bad: 0 }, skilled: { rolls: 0, followed: 0 }, other: { rolls: 0, followed: 0 } },
   };
 }
 
@@ -124,6 +127,11 @@ export function makeCounter() {
       const events = m.timeline.events;
       if (!events || !m.back) continue;
       const rolls = rollsOf(events);
+      for (const e of events.filter((x) => x.kind === 'getaway')) {
+        const g = run.getaway, skilled = e.value >= FOLLOW.skilled, f = e.follow ? 1 : 0; // the getaway led them home (a raid is warned unless one is already open: the sim never answers raids)
+        g.rolls++; g.result[e.result]++;
+        (skilled ? g.skilled : g.other).rolls++; (skilled ? g.skilled : g.other).followed += f;
+      }
       run.jobs++;
       addRolls(run.all, rolls);
       const k = meta.get(`${m.back.templateId}:${m.back.crewIds[0]}`) ?? {};
@@ -159,7 +167,7 @@ function picks(s, job, approach, { alwaysWheels = false } = {}) {
   let wheels = p.wheels;
   if (alwaysWheels && !wheels) {
     const used = new Set([...p.crew, p.overwatch].filter(Boolean));
-    const driver = free.filter((o) => !used.has(o.id)).sort((a, b) => effectiveStat(b, 'driving', { approach }).value - effectiveStat(a, 'driving', { approach }).value)[0];
+    const driver = free.filter((o) => !used.has(o.id)).sort((a, b) => effectiveStat(b, 'piloting', { approach }).value - effectiveStat(a, 'piloting', { approach }).value)[0];
     wheels = driver?.id ?? null;
   }
   const standby = p.standby && p.standby !== wheels ? p.standby : null;
@@ -246,5 +254,7 @@ export function playSeason({ seed, weeks = 52, policy = 'careful', boost = null,
     s = advanceDay(s);
     counter.see(s);
   }
+  const raids = s.raids ?? [];
+  if (counter.run) counter.run.raids = { all: raids.length, followed: raids.filter((r) => r.followed).length, bad: raids.filter((r) => r.followed === 'bad').length };
   return { cash: s.cash, deaths: s.memorial.length, run: counter.run };
 }

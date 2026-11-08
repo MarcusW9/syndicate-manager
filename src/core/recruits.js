@@ -84,7 +84,7 @@ export function generateRecruit(state, { role: forcedRole, quality: forcedQualit
   const profile = ROLE_PROFILES[role];
 
   const stats = {};
-  for (const s of ['combat', 'stealth', 'tech', 'social', 'driving', 'medical', 'cool']) {
+  for (const s of ['combat', 'stealth', 'tech', 'social', 'piloting', 'medical', 'cool']) {
     const band = s === profile.primary ? quality.primary : profile.secondary.includes(s) ? quality.secondary : quality.other;
     stats[s] = between(rng, band);
   }

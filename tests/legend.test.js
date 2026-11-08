@@ -186,10 +186,10 @@ test('a real run: the defining job goes through finish() and the call resolves o
   else assert.equal(dead.legend.posthumous, true);
 });
 
-test('a v51 save upgrades: runners get legend and legendCall', async () => {
+test('a v52 save upgrades: runners get legend and legendCall', async () => {
   const s = game(14);
   for (const o of s.crew) { delete o.legend; delete o.legendCall; }
-  s.version = 51;
+  s.version = 52;
   const loaded = await importSave({ text: async () => JSON.stringify(s) });
   assert.equal(loaded.version, SAVE_VERSION);
   assert.ok(loaded.crew.every((o) => o.legend === null && o.legendCall === null));
