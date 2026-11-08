@@ -927,7 +927,7 @@ function finish(state) {
       : g.tail ? `${g.pilot.handle} can't shake the tail. The next job here will be watched${g.hall ? ', and someone followed them home: a raid is coming' : ''}.` : g.hall ? `${g.pilot.handle} gets them out, but someone follows them home: a raid is coming.` : `${g.pilot.handle} gets them out, but the heat stays.`;
     am.getaway = { handle: g.pilot.handle, result: g.result, shed: g.shed, tail: g.tail, followed: g.hall, die: g.die, value: g.value, need: g.need, text };
     am.log.push({ kind: g.tail ? 'bad' : 'good', text });
-    record(am, { kind: 'getaway', stat: 'piloting', actor: { id: g.pilot.id, handle: g.pilot.handle }, die: g.die, value: g.value, need: g.need, success: g.margin >= 0, result: g.result, shed: g.shed, tail: g.tail, followed: g.hall, text, outcomeCost: {} });
+    record(am, { kind: 'getaway', stat: 'piloting', actor: { id: g.pilot.id, handle: g.pilot.handle }, die: g.die, value: g.value, need: g.need, success: g.margin >= 0, result: g.result, shed: g.shed, tail: g.tail, followed: g.hall, follow: g.followed, text, outcomeCost: {} });
   }
   state.cash += pay - cuts;
   addHeat(state, tpl.district, heatGain); // in the job's district (heat per district, save v39)
