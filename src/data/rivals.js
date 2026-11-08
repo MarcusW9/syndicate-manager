@@ -64,7 +64,18 @@ export const RATING_WORDS = {
   green: 'a name to watch, one day',
 };
 
-export const FAME_LINE = { unknown: 'hardly known', known: 'known', respected: 'respected', elite: 'a big name' };
+export const FAME_LINE = { unknown: 'hardly known', known: 'known', respected: 'respected', elite: 'a big name', legend: 'a legend' };
+
+// How a style reads on the screen: a label and one line.
+export const STYLE_TEXT = {
+  loud: { label: 'Loud', line: 'Likes to be seen, and heard.' },
+  quiet: { label: 'Quiet', line: 'Prefers not to be noticed until it matters.' },
+  corporate: { label: 'Corporate', line: 'Invoices first, and everything else after.' },
+  street: { label: 'Street', line: 'Knows every lane of its patch.' },
+};
+
+// Beside the ladder, not on it (WORLD.md "The other tongs").
+export const ELDER_LINE = 'The Brass Anchor Society is older than all of them, and nobody here is measured against it.';
 
 // The Word: talk, never results (WORLD.md). Keys are `kind`; {tong} {home} {name} {tier} fill in.
 export const WORD_TEXT = {

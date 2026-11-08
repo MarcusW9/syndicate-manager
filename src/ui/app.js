@@ -71,6 +71,7 @@ import {
 import { hire, haggle, passRecruit, canHire, signingFee, nextExpansion, expandSafehouse, STARTING_ROSTER_CAP, FOUNDERS_TO_PICK } from '../core/recruits.js';
 import { potentialRead, potentialTag, primaryStat, scoutFor, ageRate, declineChance, mentoring, changesSince, progressShare, STATS } from '../core/development.js';
 import { GROWTH_LINES, GRADUATION_LINES } from '../data/growthLines.js';
+import { renderTongs, renderWord } from './tongs.js';
 import { freelancerAsCrew, shareOf, MAX_FREELANCERS_PER_JOB } from '../core/freelance.js';
 
 let state;
@@ -89,6 +90,7 @@ let openOperativeId = null;
 let openRecruitId = null;
 let openArmoury = false; // the armoury, from the Crew screen (ui/gear.js)
 let buildView = null; // the hall build screen, from a hall's page (ui/hallbuild.js): { district, cell, piece, rot, picked }
+let tongsView = null; // the other tongs, from Ops › Places: null (closed), '' (the list) or a tong's id (ui/tongs.js)
 let hallPage = null; // a hall's own page (2026-11-07), by district: from Crew › Halls or the district's card on Ops, shown on that tab
 let gearSlot = null; // the place being filled on a runner's page: 'armour', 'implant:0', 'bag:2,1'
 let bagPick = null; // the bag item picked up on a runner's page, to move or take off
@@ -159,7 +161,7 @@ function onClick(e) {
   const { action, id } = t.dataset;
 
   switch (action) {
-    case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; screen = id; returnTo = null; buildView = null; hallPage = null; openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; gearSlot = null; bagPick = null; plan = null; sidePlan = null; pickSlot = null; break;
+    case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; screen = id; returnTo = null; buildView = null; tongsView = null; hallPage = null; openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; gearSlot = null; bagPick = null; plan = null; sidePlan = null; pickSlot = null; break;
     case 'continue': {
       if (isBlocked(state) || Date.now() < continueRestUntil) return;
       const next = advanceDay(state);
@@ -175,6 +177,9 @@ function onClick(e) {
     // A crew's district in the list: light it on the map (scrolled into view) and narrow the list to it.
     case 'city-show': cityDistrict = cityDistrict === id ? null : id; cityMapDue = !!cityDistrict; break;
     case 'city-tab': cityTab = id; break;
+    case 'tongs-open': tongsView = ''; window.scrollTo?.(0, 0); break;
+    case 'tongs-close': tongsView = null; window.scrollTo?.(0, 0); break;
+    case 'tong-page': tongsView = id; window.scrollTo?.(0, 0); break;
     // Lore › Districts: open one district's full write-up (tap again to fold it); from the Ops card, go there.
     case 'ops-district': screen = 'ops'; cityDistrict = id; cityMapDue = true; break;
     case 'lore-district': loreDistrict = loreDistrict === id ? null : id; break;
@@ -802,7 +807,7 @@ function renderScreen() {
     return `<div class="jobsplit"><div class="jobsplit__plan">${body}</div><div class="jobsplit__side"><div class="jobsplit__list">${renderJobs()}</div>${planBarHtml}</div></div>`;
   }
   if (screen === 'jobs') return sidePlan ? renderSidePlan() : renderJobs();
-  if (screen === 'ops') return renderOpsScreen();
+  if (screen === 'ops') return tongsView !== null ? renderTongs(state, tongsView || null) : renderOpsScreen();
   if (screen === 'lore') return renderLore();
   if (screen === 'settings') return renderSettings();
   return '';
@@ -911,6 +916,7 @@ function renderWeekBrief() {
         <div><dt>Free</dt><dd>${b.roster.free}/${b.roster.total}</dd></div>
         <div><dt>Jobs</dt><dd>${b.jobs}</dd></div>
       </dl>
+      ${renderWord(state)}
       ${b.heist ? `<button class="heistnote small" data-action="nav" data-id="ops">${esc(b.heist)}</button>` : ''}
       <p class="small muted">${[b.roster.away && `${b.roster.away} out`, b.roster.hurt && `${b.roster.hurt} hurt`, b.expiring && `${b.expiring} ${b.expiring === 1 ? 'offer ends' : 'offers end'} this week`, short && `${money(b.due - b.cash)} short of Sunday`].filter(Boolean).join(' · ') || 'A clear week.'}</p>
     </div>`;
@@ -2788,6 +2794,7 @@ function citySummary() {
     <h2>Places</h2>
     <div class="cityplaces">
       <button class="btn cityplace" data-action="nav" data-id="crew">Halls<span class="muted small">On Crew</span></button>
+      <button class="btn cityplace" data-action="tongs-open">The other tongs<span class="muted small">Who else is working</span></button>
       <button class="btn cityplace" disabled>Bar · black market<span class="muted small">Later</span></button>
     </div>`;
 }

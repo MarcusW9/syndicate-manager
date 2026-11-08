@@ -38,8 +38,8 @@ export const cardRating = (card) => clamp(Math.round(card.rating ?? 0));
  * (age; a card's form, -5..5). Keys: standout, solid, rising, fading, green.
  */
 export function ratingWord(rating, { age = 30, form = 0 } = {}) {
-  if (age >= 46 || form <= -3) return 'fading';
   if (rating >= 70) return 'standout';
+  if (age >= 50 || form <= -4) return 'fading';
   if (age <= 27 && (form > 0 || rating >= 40)) return 'rising';
   if (rating >= 45) return 'solid';
   return 'green';

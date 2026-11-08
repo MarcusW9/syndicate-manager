@@ -222,7 +222,9 @@ test('rating words are keys from a fixed set', () => {
     assert.ok(keys.has(ratingWord(rating, { age, form })));
   }
   assert.equal(ratingWord(90, { age: 30 }), 'standout');
-  assert.equal(ratingWord(90, { age: 50 }), 'fading');
+  assert.equal(ratingWord(90, { age: 52 }), 'standout', 'an old star is still the best');
+  assert.equal(ratingWord(60, { age: 52 }), 'fading');
+  assert.equal(ratingWord(60, { age: 30, form: -5 }), 'fading');
 });
 
 test('calibration: card ratings sit in the band of generated recruits and the runners they grow into', () => {

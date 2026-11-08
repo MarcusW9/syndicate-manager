@@ -7,6 +7,12 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-08 · You can hear about the other tongs
+- **The Word** on Monday's briefing: up to three lines of street talk about the other tongs (who took what work, whose name is going round, who's gone quiet). Talk, never results or numbers.
+- **Ops › Places › The other tongs:** the city's other tongs grouped by how far their name carries (Back Room to Harbour), each with its style, district and head; tap one for its page.
+- **Names on the street:** six to eight runners people are talking about, unranked. Your own people can be among them once their name carries.
+- Nothing about your jobs, pay, heat or rolls changes.
+
 ## 2026-11-08 · The other tongs, behind the scenes (save v51)
 - No change you can see yet. Lantern Bay now has about six other tongs, made fresh for each game, that rise and fade week by week in the background, with about forty named runners between them. Nothing on screen shows them yet (that's the next slice: the Monday Word, Ops › Tongs and Names on the street), and nothing about your jobs, pay, heat or rolls changes. Old saves get their own set of tongs when they load.
 
