@@ -238,8 +238,8 @@ const invRow = (op) => {
   return `<div class="inv inv--l">${html}${Array.from({ length: blanks }, (_, i) => blank(i)).join('')}${more ? `<span class="inv__more" aria-label="${more} more carried">+${more}</span>` : ''}</div>`;
 };
 const TILT = ['-1.2deg', '0.8deg', '-0.6deg', '1deg'];
-const refined = () => `
-  <div class="board g-cols l-ref">
+const refined = (extra = '') => `
+  <div class="board g-cols l-ref ${extra}">
     <div class="head"><span>3 inside · 3 recommended</span><button class="joss">Joss's picks</button></div>
     <p class="label">Inside team <span>moves as one group</span></p>
     <div class="cols">
@@ -254,6 +254,21 @@ const refined = () => `
     </div>
   </div>`;
 const L_CSS = `
+/* M · L, smaller: photos about the dossier's size up; four across on a phone */
+@media (max-width: 480px) {
+  .l-ref.m-small .cols { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
+  .m-small .pola { padding: 4px 4px 0; }
+  .m-small .pola figcaption { padding: 3px 1px 5px; }
+  .m-small .pola figcaption b { font-size: .74rem; }
+  .m-small .pola figcaption span { display: none; }
+  .m-small .stat .iconword { font-size: .62rem; gap: 2px; } .m-small .stat .iconword svg { width: 11px; height: 11px; }
+  .m-small .inv { padding: 2px; gap: 2px; }
+  .m-small .inv__it > span { display: none; }
+  .m-small .slot { padding: 4px; } .m-small .slot small { display: none; }
+  .m-small .x { width: 22px; height: 22px; top: -7px; right: -6px; }
+}
+@media (min-width: 481px) { .l-ref.m-small .cols { grid-template-columns: repeat(4, minmax(0, 104px)); gap: 14px; } .m-small .pola figcaption b { font-size: .85rem; } }
+
 .l-ref .pola { transform: rotate(var(--tilt, 0deg)); }
 .inv--l { position: relative; }
 .inv__more { display: none; position: absolute; top: -7px; right: -7px; z-index: 2; min-width: 22px; height: 22px; padding: 0 5px; place-items: center; font: 700 .7rem var(--display); color: #0a0c0f; background: var(--accent-2); clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 0 100%); }
@@ -267,6 +282,7 @@ const L_CSS = `
 `;
 
 const VARIANTS = [
+  { name: 'M · L, smaller', note: 'L with the photos scaled down: on a phone four across (the whole inside team and Extra on one row), each photo about 76px, so a 1×1 cell is about 38px, the smallest that still reads a sidearm; on a computer 104px columns. Item names go to the tap (the picker and the runner\'s page) on a phone; the role hides under the name there.', html: () => refined('m-small') },
   { name: 'L · J refined', note: 'J with the two changes: the polaroid keeps a slight tilt and its colour tab (a photo still feels like a photo), the gear stays straight. On a phone only the first row of gear shows, the main item, with "+1 more carried" for the rest, so a column is close to a dossier\'s height; on a computer the whole 2×2.', html: refined },
   { name: 'J · Inventory under the photo', note: 'The drawings without their background, laid on inventory cells under each polaroid, two cells wide. A rifle, drone or deck is 2×1, exactly as wide as the photo; a sidearm, kit or vest is 1×1, half that. Empty cells show the room left.', html: under },
   { name: 'K · Inventory beside the photo', note: 'The same inventory as J, beside the polaroid instead of under it: the photo and a 2×2 grid as one block, so a rifle is as long as the photo is wide. Shorter than J; four runners across on a computer.', html: beside },
