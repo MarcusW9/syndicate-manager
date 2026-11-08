@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-08 · Plan: the other tongs, without a league
+- No game change. The plan for rival tongs (`drafts/PROPOSAL-phase-3.md` part C) is rewritten: there's no league table, ranked list or ratings. The city's other tongs rise and fade in the background, and you hear where you stand through tier words, Monday's Word and who comes knocking. Your own runners can turn up among the names people talk about.
+
 ## 2026-11-08 · The squad board as polaroids and an inventory
 - **Each runner on the squad board is now a polaroid with their kit laid out under it**, on a straight grid two cells wide: a rifle, drone or deck as wide as the photo, a sidearm, kit or vest half that. A small icon before each name shows their role.
 - **On a phone** the whole team fits across one row: the first row of gear shows, with "+1" (or more) for the rest. **On a computer** you see all their gear with names.
