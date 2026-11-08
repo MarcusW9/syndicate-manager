@@ -437,8 +437,7 @@ is a pure function and never prices below the market wage, a buyout never applie
 shows more than it should, the golden file extended, a v52 save migrates. **C3b, screens and the side task:** Ops › Free names,
 the name's page, Scout (side task), Sign, screenshots.
 
-**11. Still open (proposed, the owner may tune):** the 4-week cadence, the three scout levels, the +35% ceiling, the 6-week buyout
-multiple, regard's -2 and +1, and the fold thresholds.
+**11. Built as C3a (2026-11-08), with these changes to the numbers above:** the free name's gap is **random, 3 to 6 weeks** (a hash; owner: "a bit more random"), a name left alone goes to a rival after **3** weeks (was 4), and when none is free a runner leaves a tong so the cadence holds; folding is **prestige under 25 and wealth under ¥6,000** for six Sundays (the proposal's 12 and ¥1,500 never fired in two simulated years); persuasion's demand is 0.3 × the name's rating (was 0.35); a card's career (jobs) is capped by its rating so a low-rated veteran fits the parity. **Still open (the owner may tune):** the three scout levels, the +35% ceiling, the 6-week buyout multiple, regard's -2 and +1.
 
 ## 5. Part D: loyalty and mobility
 

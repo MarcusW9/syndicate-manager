@@ -137,7 +137,7 @@ export function scoutFor(crew, role, excludeId) {
 }
 
 /** Which way the crew reads someone's ceiling: 'peaked' (at or past it) | 'close' | 'legend' | 'special' | 'strong' | 'some'. Uses scoutError, so it can be wrong. */
-function potentialBand(op) {
+export function potentialBand(op) {
   const now = op.stats[primaryStat(op)];
   const seen = clamp((op.potential?.[primaryStat(op)] ?? now) + (op.scoutError ?? 0), now, 20);
   const room = seen - now;

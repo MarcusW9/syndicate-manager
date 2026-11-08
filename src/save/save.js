@@ -30,7 +30,7 @@ import { refreshFreelancers } from '../core/freelance.js';
 import { GEAR, makeItem } from '../core/gear.js';
 import { CELLS } from '../data/gear.js';
 import { trimInbox } from '../core/inbox.js';
-import { seedRivals } from '../core/rivals.js';
+import { seedRivals, offerGapFor } from '../core/rivals.js';
 
 // The one-item-per-slot gear of saves before v45, for the migrations written against it.
 const slotLoadout = () => ({ weapon: null, armour: null, tool: null, implant: null });
@@ -680,6 +680,17 @@ function migrate(state) {
     // `defining`. Nobody is a Legend yet on an old save; the first call comes when someone is ready.
     for (const op of state.crew ?? []) { op.legend ??= null; op.legendCall ??= null; }
     state.version = 52;
+  }
+  if (state.version === 52) {
+    // v53: C3 (DESIGN.md 2026-11-08 "C3 designed"): a tong's `grudge` becomes `regard`; tongs gain poorWeeks, splitDay
+    // and foldedDay; rivals gain the free name's `offer`, `scouted`, `lastScout`, `offerSeq` and `nextOfferDay`.
+    const r = state.rivals;
+    if (r) {
+      for (const t of r.tongs ?? []) { delete t.grudge; t.regard ??= 0; t.poorWeeks ??= 0; t.splitDay ??= 0; t.foldedDay ??= null; }
+      r.offer ??= null; r.scouted ??= {}; r.lastScout ??= null; r.offerSeq ??= 0;
+      if (r.nextOfferDay == null) r.nextOfferDay = state.day + offerGapFor(state, r);
+    }
+    state.version = 53;
   }
   return state;
 }

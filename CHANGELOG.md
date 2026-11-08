@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-08 · The other tongs fold, form and let people go (behind the scenes, save v53)
+- Poor, small tongs now fold, their runners drift free one by one, and a new tong can form from the best of them. Now and then a free name is put forward (every three to six weeks, at random). Nothing is on screen yet: scouting, signing and the buyout fee come with the next slice, and nothing about your jobs, pay, heat or rolls changes. Rival tongs now have a "regard" for you instead of a grudge, which only an explicit poach or a shared job will move.
+
 ## 2026-11-08 · The other tongs turn up on your jobs
 - The "Rival crew" twist now names a real tong and one of its runners ("Dim Hour Society is here for the same job, with Lena Novak out in front"). A tong based in the job's district turns up more often. It's two crews after the same job, not a feud: the choices, odds and costs are exactly as before. The next Monday, the Word may say the tong had people at the same door as yours.
 - Now and then a client mentions on the plan screen that another tong wanted the job ("I would rather you"). Flavour only.

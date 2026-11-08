@@ -9,8 +9,8 @@ import { recordOf } from './record.js';
 
 const clamp = (n, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, n));
 const STAT_KEYS = ['combat', 'stealth', 'tech', 'social', 'driving', 'medical', 'cool'];
-const TIER_BONUS = { rookie: 0, pro: 6, veteran: 12 };
-const FAME_STEP = { unknown: 0, known: 5, respected: 12, elite: 20, legend: 30 };
+export const TIER_BONUS = { rookie: 0, pro: 6, veteran: 12 };
+export const FAME_STEP = { unknown: 0, known: 5, respected: 12, elite: 20, legend: 30 };
 
 /** Skill, 0-100: the main stat plus the best two others (1-20 → 0-100), plus a tier bonus. */
 export function skillOf(op) {

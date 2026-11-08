@@ -51,6 +51,17 @@ export const RIVALS = {
   startWealth: [800, 9000],
   upkeep: 260, // wealth spent per hall a week
   cardAgeRetire: [44, 56],
+  // C3 (DESIGN.md 2026-11-08 "C3 designed"; proposal C.13). Numbers proposed, the owner may tune.
+  freeGap: [3, 6], // weeks between one free name being put forward and the next (random, a hash)
+  freeWeeks: 3, // a free name left alone this long goes to a rival
+  scoutMax: 3, // scout trips that sharpen a read (level 3: the potential read is exact)
+  foldWeeks: 6, foldPrestige: 25, foldWealth: 6000, minTongs: 4, // a tong this poor for this many Sundays folds; never below minTongs
+  formRating: 40, formSeasonRating: 45, formChance: 0.5, // a folded tong's best card may form their own; a season's end may form one
+  newTong: { prestige: 8, wealth: 1280 },
+  regard: { min: -5, max: 5, poach: -2, split: 1, cold: -2, warm: 2, splitMonthDays: 28 },
+  buyout: { weeks: 6, richStep: 10000, richPer: 0.1, richCap: 0.5, cold: 1.25, warm: 0.9 },
+  premiumMax: 0.35, // the most a runner asks over the market wage to be convinced
+  notYet: 15, // persuasion under this: "not yet"
   clientChance: 0.2, // a client job in a tong's own district: the client mentions that tong wanted it (flavour only)
   driftChance: 0.04, // a young name moving tongs, per card per week
 };
@@ -88,6 +99,11 @@ export const WORD_TEXT = {
   slipped: ['{tong} has lost ground. The {tier} crowd is less sure of it.', "People who used to nod at {tong} don't, any more.", '{tong} is getting fewer calls than it did.', "The {tier} crowd has stopped saving {tong} a seat."],
   new_face: ['A new name in {home}: {name}, and nobody can say who taught them.', 'Somebody in {home} has a new runner, {name}, and is not saying where from.', '{name} is new in {home}. Give it a month.'],
   same_door: ['{tong} had people at the same door as yours in {home}.', "Somebody saw {tong} and your crew after the same job in {home}. Nobody says who blinked.", "{tong} wanted the same work in {home} as you did. It happens."],
+  folded: ['{tong} has shut its front room.', 'The lights at {tong} are out for good, they say.', '{tong} is done. People are already asking who has its names.'],
+  went_free: ['{name} is out of work. {tong} has no use for a runner any more.', '{name} left {tong} with a bag and no plan.'],
+  formed: ['A new tong in {home}: {tong}, and {name} is behind it.', '{name} has put a name over a door in {home}: {tong}.'],
+  cold_shoulder: ['{tong} has stopped nodding at us in the street.', "{tong} will remember who took their runner."],
+  warm_nod: ['{tong} has been saying decent things about us.', "People at {tong} nod at us now. It counts."],
   your_name: ['People have started saying your name in {home}.', 'Somebody in {home} asked about your crew by name.', 'Your name came up in {home} today. Nobody said it was bad.'],
   your_tier: ["They're calling yours a {tier} tong now. Somebody had to say it first.", 'The {tier} crowd has started to nod at your tong.', 'Your tong carries further than it did. People say {tier}.'],
 };

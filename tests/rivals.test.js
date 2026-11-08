@@ -109,7 +109,7 @@ test('52 weeks: values stay whole and in range, talk stays bounded, and it is qu
     }
     for (const c of s.rivals.cards) assert.ok(Number.isInteger(c.rating) && c.rating >= 0 && c.rating <= 100 && Math.abs(c.form) <= 5);
     assert.ok(s.rivals.cards.length >= 32 && s.rivals.cards.length <= 52, 'the cast stays about the same size');
-    for (const t of s.rivals.tongs) assert.ok(s.rivals.cards.some((c) => c.id === t.headId), 'heads are replaced when they retire');
+    for (const t of s.rivals.tongs.filter((x) => x.status === 'active')) assert.ok(s.rivals.cards.some((c) => c.id === t.headId), 'heads are replaced when they retire');
   }
   assert.ok((Date.now() - t0) / 40 < 1000, '52 weekly steps in well under a second each');
 });
@@ -120,7 +120,7 @@ test('sim band: the tongs change tier, none sits on top all year, and the city i
   for (let seed = 1; seed <= N; seed++) {
     const s = game(seed);
     const seen = new Map(s.rivals.tongs.map((t) => [t.id, new Set([tongTier(t)])]));
-    for (let w = 0; w < 52; w++) { weeks(s, 1, w); for (const t of s.rivals.tongs) seen.get(t.id).add(tongTier(t)); }
+    for (let w = 0; w < 52; w++) { weeks(s, 1, w); for (const t of s.rivals.tongs.filter((x) => x.status === 'active')) (seen.get(t.id) ?? seen.set(t.id, new Set()).get(t.id)).add(tongTier(t)); }
     if ([...seen.values()].some((set) => set.size > 1)) seedsWithChange++;
     if ([...seen.values()].some((set) => set.size === 1 && set.has('harbour'))) topAllYear++;
     if (new Set(s.rivals.tongs.map(tongTier)).size < 2) flat++;
