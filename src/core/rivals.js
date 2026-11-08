@@ -297,3 +297,48 @@ export function rivalView(state) {
 }
 
 export { tierIndex as tierRank };
+
+// --- Contact (C2, 2026-11-08): the other tongs on your jobs. Names and talk only; nothing here moves
+// a roll, pay, heat or trust, and nobody holds a grudge (DESIGN.md 2026-11-08 "No grudge").
+
+/**
+ * The tong and runner a 'Rival crew' twist names for this job: a hash of the seed and the job, so
+ * the same job always meets the same people and no roll moves. A tong based in the job's district
+ * turns up three times as often as one from elsewhere. Heads are never named (C.12). Returns
+ * { tongId, tong, name } or null when the save has no rivals.
+ */
+export function rivalForJob(state, jobId, district) {
+  const r = state.rivals;
+  const tongs = (r?.tongs ?? []).filter((t) => t.status === 'active').sort((a, b) => (a.id < b.id ? -1 : 1));
+  if (!tongs.length) return null;
+  const rng = hashRng(state.seed, 'rival-twist', jobId);
+  const weights = tongs.map((t) => (t.home === district ? 3 : 1));
+  let roll = rng() * weights.reduce((n, w) => n + w, 0);
+  const tong = tongs.find((t, i) => (roll -= weights[i]) < 0) ?? tongs.at(-1);
+  const cards = r.cards.filter((c) => c.tongId === tong.id && c.id !== tong.headId).sort((a, b) => (a.id < b.id ? -1 : 1));
+  const card = cards.length ? cards[Math.floor(rng() * cards.length)] : null;
+  return { tongId: tong.id, tong: tong.name, name: card?.name ?? null };
+}
+
+/**
+ * A client job in a tong's own district: now and then the client mentions that tong wanted it.
+ * Flavour only (the client never hands you a rival's job). { tong, home } or null. A hash of the seed
+ * and the offer, so it's stable and moves no roll. Not for opening, heist or defining jobs.
+ */
+export function clientRival(state, job, tpl) {
+  const r = state.rivals;
+  if (!r || !job?.clientId || job.heist || job.heistStep || job.defining || tpl?.heistOnly || tpl?.opening) return null;
+  const rng = hashRng(state.seed, 'client-rival', job.id);
+  if (rng() >= RIVALS.clientChance) return null;
+  const home = r.tongs.filter((t) => t.status === 'active' && t.home === tpl?.district).sort((a, b) => (a.id < b.id ? -1 : 1));
+  if (!home.length) return null;
+  const tong = home[Math.floor(rng() * home.length)];
+  return { tong: tong.name, tongId: tong.id, home: tong.home };
+}
+
+/** A finished run that met a rival crew: talk about it, never who won (talk, not results). Mutates. */
+export function noteRivalEncounter(state, am) {
+  const r = state.rivals;
+  if (!r || !am?.rival?.tongId || !(am.events ?? []).some((e) => e.kind === 'twist' && e.text === 'Rival crew')) return;
+  say(r, state.day, 'same_door', [am.rival.tongId, am.rival.district]);
+}

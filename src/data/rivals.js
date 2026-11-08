@@ -51,6 +51,7 @@ export const RIVALS = {
   startWealth: [800, 9000],
   upkeep: 260, // wealth spent per hall a week
   cardAgeRetire: [44, 56],
+  clientChance: 0.2, // a client job in a tong's own district: the client mentions that tong wanted it (flavour only)
   driftChance: 0.04, // a young name moving tongs, per card per week
 };
 
@@ -86,6 +87,7 @@ export const WORD_TEXT = {
   stepped_up: ['{tong} has moved up in the world. People say they are a {tier} tong now.', '{tong} is carrying more weight than it did. The {tier} crowd has noticed.', "{tong} has been seen at tables it wasn't asked to before.", 'More doors open for {tong} than used to.'],
   slipped: ['{tong} has lost ground. The {tier} crowd is less sure of it.', "People who used to nod at {tong} don't, any more.", '{tong} is getting fewer calls than it did.', "The {tier} crowd has stopped saving {tong} a seat."],
   new_face: ['A new name in {home}: {name}, and nobody can say who taught them.', 'Somebody in {home} has a new runner, {name}, and is not saying where from.', '{name} is new in {home}. Give it a month.'],
+  same_door: ['{tong} had people at the same door as yours in {home}.', "Somebody saw {tong} and your crew after the same job in {home}. Nobody says who blinked.", "{tong} wanted the same work in {home} as you did. It happens."],
   your_name: ['People have started saying your name in {home}.', 'Somebody in {home} asked about your crew by name.', 'Your name came up in {home} today. Nobody said it was bad.'],
   your_tier: ["They're calling yours a {tier} tong now. Somebody had to say it first.", 'The {tier} crowd has started to nod at your tong.', 'Your tong carries further than it did. People say {tier}.'],
 };
@@ -103,3 +105,15 @@ export function wordLine(entry) {
 
 // Names a rival's runner never takes: canon people (WORLD.md), so nobody reads as one of them.
 export const RESERVED_NAMES = ['Fung', 'Siu', 'Tang', 'Mak', 'Lo', 'Chow', 'Kwok', 'Ip', 'Tse', 'Ho', 'Lim', 'Po', 'Pang', 'Poon', 'Okonkwo', 'Rao', 'Szeto', 'Leung', 'Sarr', 'Pryce', 'Mila', 'Mateo', 'Prakash', 'Gurung', 'Zainab', 'Binta', 'Meena', 'Edith', 'Lourdes', 'Tariq', 'Wai-chiu', 'Joss'];
+
+// A client's passing remark that a tong wanted this job (flavour; no effect). {client} {tong}.
+export const CLIENT_RIVAL_TEXT = [
+  '{client} mentions that {tong} wanted this one. "I would rather you."',
+  '"{tong} asked about this," says {client}. "I did not like their answer."',
+  '{client} lets slip that {tong} put in for the work first. It is yours now.',
+];
+/** The remark for one job: the variant comes from the job's own id, so it never changes. */
+export function clientRivalLine({ client, tong, jobId }) {
+  const seed = [...String(jobId)].reduce((n, c) => n + c.charCodeAt(0), 0);
+  return fill(CLIENT_RIVAL_TEXT[seed % CLIENT_RIVAL_TEXT.length], { client, tong });
+}

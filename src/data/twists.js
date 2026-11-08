@@ -59,17 +59,20 @@ export const TWISTS = [
     id: 'twist_rival_crew',
     situations: ['threat', 'fight'],
     name: 'Rival crew',
-    text: 'Another crew is here for the same job. Masks, guns, and they look as surprised as you are.',
+    // Another tong's people, after the same job (C2, 2026-11-08; core/rivals.js rivalForJob). {rivalTong}
+    // and {rival} are a real tong and one of its runners, chosen for this run; with no rivals in the
+    // save they read "another crew" and "one of their people". Competitors, not enemies.
+    text: '{rivalTong} is here for the same job, with {rival} out in front, masks down and as surprised as you are.',
     choices: [
       { id: 'deal', label: '{face} offers to split it', kind: 'adapt', stat: 'social', difficulty: 11, cost: { payCut: 0.4 },
-        success: 'Half each, and a nod of respect. You might work with them one day.', failure: 'They don\'t want to share.', failureInjury: 'light', failureCost: { payCut: 0.3 },
-        report: { success: '{face} negotiated a split before either crew made a worse decision. They took separate shares and left with a cautious nod. Pay -40%.', failure: 'The rival crew rejected {face}\'s offer to share. Someone was hurt in the confrontation, and most of the payment was lost. Pay -70%.' } },
+        success: 'Half each, and a nod. {rivalTong} will say the crew was reasonable.', failure: '{rivalTong} wants the whole job, and a shove in the doorway makes the point.', failureInjury: 'light', failureCost: { payCut: 0.3 },
+        report: { success: '{face} negotiated a split with {rivalTong} before either crew made a worse decision. They took separate shares and left with a nod. Pay -40%.', failure: '{rivalTong} rejected {face}\'s offer to share. A shove in the doorway hurt someone, and most of the payment was lost. Pay -70%.' } },
       { id: 'race', label: 'Race them to it', kind: 'push', stat: 'cool', difficulty: 13,
-        success: 'You get there first and they back off.', failure: 'You collide in a doorway. It turns into a brawl.', failureInjury: 'serious',
-        report: { success: 'The crew reached the objective first. The rival crew stopped short, reconsidered and backed away.', failure: 'Both crews reached the same doorway at once. The collision became a brawl, and someone was badly hurt.' } },
+        success: 'You get there first, and {rivalTong} backs off.', failure: 'You reach the same doorway at once. It turns into a brawl.', failureInjury: 'serious',
+        report: { success: 'The crew reached the objective first. {rivalTong} stopped short, reconsidered and backed off.', failure: 'Both crews reached the same doorway at once. The collision became a brawl, and someone was badly hurt.' } },
       { id: 'abort', label: 'Abort: let them have it', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -5 },
-        success: 'You leave them to it. Nobody gets shot tonight.', failure: '', failureInjury: 'none',
-        report: { success: 'The crew left the objective to the rival crew and withdrew before anyone opened fire. Nobody was paid, but everyone came home.' } },
+        success: 'You leave it to {rivalTong}. Nobody gets shot tonight.', failure: '', failureInjury: 'none',
+        report: { success: 'The crew left the objective to {rivalTong} and withdrew before anyone opened fire. Nobody was paid, but everyone came home.' } },
     ],
   },
   {

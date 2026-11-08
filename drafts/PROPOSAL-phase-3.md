@@ -149,7 +149,7 @@ Agreed and unchanged from 2026-11-07:
    `hashRng(seed, 'client-rival', offer.id)` for a client naming one (C2),
    `hashRng(seed, 'rivals:' + week)` for the weekly step.
    **"The same game with and without rivals"** (same `rngCounter`, rolls, missions and cash) is a
-   **C1-only** test: from C2 a grudge changes how often a rival turns up on your jobs, and that is
+   **C1-only** test: from C2 the district a job is in changes how often a tong turns up on it, and that is
    meant to change your game. From C2 the test is narrower: the rival step and the C2 rolls never
    move `rngCounter`.
 4. **Renown never touches a roll** (existing rule). Rivals' talk about a runner costs nothing on a
@@ -271,7 +271,7 @@ throughout, in a fixed array order. In order:
 | Thing | Effect |
 | --- | --- |
 | **Home district** | Their names turn up more on jobs there (C2). Free names tend to come from there. The Word mentions the place. No effect on halls, heat or openings. |
-| **Grudge** | How often they turn up on the player's jobs (C2), extra cost to sign their names (C3/D, shown in ¥: rule 1's exception), the tone of The Word. Never violence. |
+| **Regard (was "grudge"; owner, 2026-11-08)** | **No grudge in C2.** Rival tongs are competitors who notice each other, not enemies, and they hold no memory of the player until there are acts worth remembering. From C3 a hidden regard may move only on explicit acts (signing or poaching a tong's runner, taking work they wanted), either way (respect or resentment), shown only in the Word's tone and in what a signing costs (rule 1's ¥ exception), and a tong may turn hostile after a poach (D). The `grudge` field in the C.2 state shape is unused until then. |
 | **Wealth** | Hidden budget: hall growth, who signs the free name the player passes on, how fast depth grows, who folds (C3). |
 | **Contracts** | Not in C1. Later, `contestOffers` runs after `tickJobs`: once per job id, via `hashRng(seed, 'contest:' + job.id)`, so the board's rolls never move. |
 | **Fame** | No cost on jobs. Its cost is social: pay asks (built), rival interest (D), more talk. |
@@ -312,7 +312,7 @@ throughout, in a fixed array order. In order:
   `rankForHalls`, `data/rivals.js`, the weekly step, The Word, Ops › Tongs, Names on the street.
   Read-only: nothing changes play.
 - **C2 contact:** `twist_rival_crew` names a real tong and one of its names, chosen with
-  `hashRng(seed, 'rival-twist', missionId)` and weighted by home district and grudge. Clients
+  `hashRng(seed, 'rival-twist', missionId)` and weighted by home district (three times as often) alone: **built 2026-11-08, names and talk only.** Clients
   sometimes name a rival when they offer work ("the Mantis wanted this, I'd rather you"): flavour
   only, rolled per offer with `hashRng(seed, 'client-rival', offer.id)`, and only rivals whose home
   is the job's district.

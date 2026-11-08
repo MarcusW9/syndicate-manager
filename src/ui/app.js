@@ -73,6 +73,8 @@ import { hire, haggle, passRecruit, canHire, signingFee, nextExpansion, expandSa
 import { potentialRead, potentialTag, primaryStat, scoutFor, ageRate, declineChance, mentoring, changesSince, progressShare, STATS } from '../core/development.js';
 import { GROWTH_LINES, GRADUATION_LINES } from '../data/growthLines.js';
 import { renderTongs, renderWord } from './tongs.js';
+import { clientRival } from '../core/rivals.js';
+import { clientRivalLine } from '../data/rivals.js';
 import { freelancerAsCrew, shareOf, MAX_FREELANCERS_PER_JOB } from '../core/freelance.js';
 
 let state;
@@ -1876,6 +1878,12 @@ function boardRead(job) {
 const namedHandle = (v) => (v.askedFor ? state.crew.find((o) => o.id === v.askedFor)?.handle ?? null : null);
 /** A defining job's runner (core/legend.js): the city is asking for them by name. */
 const definingHandle = (v) => (v.defining ? state.crew.find((o) => o.id === v.defining)?.handle ?? null : null);
+/** A client's passing remark that another tong wanted this job (core/rivals.js clientRival; flavour only). */
+function rivalRemark(v) {
+  const job = state.jobs.find((j) => j.id === v.jobId);
+  const rv = job && v.client ? clientRival(state, job, v.tpl) : null;
+  return rv ? `<p class="small muted clientrival">${esc(clientRivalLine({ client: v.client.name, tong: rv.tong, jobId: v.jobId }))}</p>` : '';
+}
 const namedVars = (v) => ({ op: namedHandle(v), pct: Math.round(NAMED_OFFER.payBonus * 100) });
 const fillNamed = (text, v) => text.replace(/\{(\w+)\}/g, (m, k) => namedVars(v)[k] ?? m);
 
@@ -2207,6 +2215,7 @@ function renderPlan() {
         ${v.client && clientOpen ? `<p class="muted small">${esc(v.client.desc)}</p>` : ''}
         ${v.threatDelta ? `<p class="muted small">Every roll on this job is ${Math.abs(v.threatDelta) === 1 ? 'one point' : `${Math.abs(v.threatDelta)} points`} ${v.threatDelta > 0 ? 'harder' : 'easier'} than usual.</p>` : ''}
         ${v.hinted ? '<p class="intel">Intel unreliable: something about this job may not be what you were told.</p>' : ''}
+        ${rivalRemark(v)}
         ${definingHandle(v) ? `<p class="named">${esc(LEGEND_TEXT.plan.replace('{op}', definingHandle(v)))}</p>` : ''}
         ${namedHandle(v) ? `<p class="named">${esc(fillNamed(NAMED_TEXT.chip, v))} by name: ${esc(fillNamed(NAMED_TEXT.bonus, v))} (inside, outside or on standby). Without them it pays as usual.</p>` : ''}
         ${v.rumour ? `<p class="talk-tag">Street talk: ${esc(v.rumour.text)}</p>` : ''}

@@ -11,6 +11,11 @@ import { rankForHalls } from '../src/core/tong.js';
 import { seedRivals, weeklyRivals, rivalView, namesOnTheStreet, mondayWord, tongsByTier, tongTier } from '../src/core/rivals.js';
 import { ratingOf, cardRating, ratingWord, tierWord } from '../src/core/rating.js';
 import { generateRecruit, recruitToOperative } from '../src/core/recruits.js';
+import { rivalForJob, clientRival, noteRivalEncounter } from '../src/core/rivals.js';
+import { clientRivalLine, CLIENT_RIVAL_TEXT } from '../src/data/rivals.js';
+import * as M from '../src/core/mission.js';
+import { addOffer } from '../src/core/jobs.js';
+import { playMission, carefulPolicy } from './play.js';
 import { RIVALS, NAMING, WORD_TEXT, wordLine, RIVAL_HOMES, RESERVED_NAMES } from '../src/data/rivals.js';
 import { TONG_RANKS } from '../src/data/tong.js';
 import { CULTURES } from '../src/data/recruitPools.js';
@@ -360,4 +365,104 @@ test('golden: a fixed seed gives the stored snapshot, after seeding and after 4 
   const file = new URL('./golden/rivals-1234.json', import.meta.url);
   if (!existsSync(file)) { writeFileSync(file, JSON.stringify(out, null, 1) + '\n'); }
   assert.deepEqual(out, JSON.parse(readFileSync(file, 'utf8')));
+});
+
+// --- Contact (C2): the other tongs on your jobs, names and talk only ---
+
+test('rivalForJob: the same job meets the same people, never a head, nothing rolls, nothing without rivals', () => {
+  const s = game(70);
+  const a = rivalForJob(s, 'job-5', 'docks');
+  assert.deepEqual(rivalForJob(s, 'job-5', 'docks'), a);
+  assert.ok(a.tong && a.name);
+  const heads = new Set(s.rivals.tongs.map((t) => t.headId));
+  const before = s.rngCounter;
+  for (let i = 1; i <= 200; i++) {
+    const x = rivalForJob(s, `job-${i}`, 'docks');
+    const card = s.rivals.cards.find((c) => c.name === x.name);
+    assert.ok(card && !heads.has(card.id), 'a runner, never a head');
+    assert.equal(card.tongId, x.tongId, 'the runner belongs to that tong');
+  }
+  assert.equal(s.rngCounter, before);
+  const none = game(70); none.rivals = null;
+  assert.equal(rivalForJob(none, 'job-5', 'docks'), null);
+});
+
+test("a tong based in the job's district turns up about three times as often", () => {
+  const s = game(71);
+  const district = s.rivals.tongs[0].home;
+  const homeIds = new Set(s.rivals.tongs.filter((t) => t.home === district).map((t) => t.id));
+  let home = 0; const N = 1200;
+  for (let i = 1; i <= N; i++) if (homeIds.has(rivalForJob(s, `job-${i}`, district).tongId)) home++;
+  const wHome = homeIds.size * 3, wAll = wHome + (s.rivals.tongs.length - homeIds.size);
+  const expected = wHome / wAll;
+  assert.ok(Math.abs(home / N - expected) < 0.06, `${home / N} against about ${expected}`);
+});
+
+test('the twist names a real tong and runner in its text and report, and the same game without rivals plays the same', () => {
+  const run = (withRivals) => {
+    let s = game(72);
+    if (!withRivals) s.rivals = null;
+    s.jobs = []; addOffer(s, 'container409');
+    s.jobs[0].twist = 'twist_rival_crew';
+    const ids = s.crew.slice(0, 3).map((o) => o.id);
+    s = M.startMission(s, s.jobs[0].id, ids, 'stealth');
+    return { start: s, end: playMission(s, carefulPolicy).state };
+  };
+  const a = run(true), b = run(false);
+  const am = a.end.activeMission;
+  const tong = a.start.activeMission.rival.tong;
+  assert.ok(tong && a.start.activeMission.rival.name);
+  const text = JSON.stringify(am.events) + JSON.stringify(am.report);
+  assert.ok(text.includes(tong), 'the report and log name the tong');
+  assert.doesNotMatch(text, /\{rival/, 'no loose token');
+  assert.match(JSON.stringify(b.end.activeMission.report), /Another crew|another crew|one of their people/, 'anonymous without rivals');
+  // Names change words, never rolls, pay, heat or injuries.
+  assert.equal(a.end.rngCounter, b.end.rngCounter);
+  assert.equal(a.end.cash, b.end.cash);
+  assert.deepEqual(a.end.activeMission.result.injuries, b.end.activeMission.result.injuries);
+  assert.equal(a.end.activeMission.result.outcome, b.end.activeMission.result.outcome);
+  assert.equal(a.end.heat, b.end.heat);
+  // Talk afterwards, never a result.
+  const talk = a.end.rivals.word.find((w) => w.kind === 'same_door');
+  assert.ok(talk, 'The Word has it');
+  assert.equal(talk.refs[0], a.start.activeMission.rival.tongId);
+  assert.ok(WORD_TEXT.same_door.every((l) => !/won|lost|beat|paid|hurt|split/i.test(l)), 'talk, not results');
+});
+
+test('a run that did not meet the twist leaves no talk', () => {
+  const s = game(73);
+  noteRivalEncounter(s, { rival: { tongId: s.rivals.tongs[0].id, district: 'docks' }, events: [] });
+  assert.equal(s.rivals.word.some((w) => w.kind === 'same_door'), false);
+  noteRivalEncounter(s, { rival: null, events: [{ kind: 'twist', text: 'Rival crew' }] });
+  assert.equal(s.rivals.word.length, 0);
+});
+
+test('clients now and then mention a tong that wanted the job: client work, the tong at home there, flavour only', () => {
+  const s = game(74);
+  const tpl = { district: s.rivals.tongs[0].home };
+  const homeNames = new Set(s.rivals.tongs.filter((t) => t.home === tpl.district).map((t) => t.name));
+  let hits = 0; const N = 1500;
+  for (let i = 1; i <= N; i++) {
+    const rv = clientRival(s, { id: `job-${i}`, clientId: 'fung' }, tpl);
+    if (rv) { hits++; assert.ok(homeNames.has(rv.tong), 'only a tong based in that district'); }
+  }
+  assert.ok(Math.abs(hits / N - RIVALS.clientChance) < 0.04, `${hits / N} against ${RIVALS.clientChance}`);
+  assert.equal(clientRival(s, { id: 'job-1', clientId: null }, tpl), null, 'no client, no remark');
+  for (const extra of [{ heist: 'raoTable' }, { heistStep: 'x' }, { defining: 'op1' }]) {
+    for (let i = 1; i <= 100; i++) assert.equal(clientRival(s, { id: `job-${i}`, clientId: 'fung', ...extra }, tpl), null);
+  }
+  assert.equal(clientRival(s, { id: 'job-3', clientId: 'fung' }, { ...tpl, heistOnly: 'raoTable' }), null);
+  const none = game(74); none.rivals = null;
+  assert.equal(clientRival(none, { id: 'job-3', clientId: 'fung' }, tpl), null);
+  assert.deepEqual(clientRival(s, { id: 'job-9', clientId: 'fung' }, tpl), clientRival(s, { id: 'job-9', clientId: 'fung' }, tpl), 'stable');
+});
+
+test('the client remark reads cleanly and never promises work from a rival', () => {
+  for (const line of CLIENT_RIVAL_TEXT) assert.doesNotMatch(line, /\d/);
+  for (const id of ['job-1', 'job-2', 'job-3', 'job-4']) {
+    const text = clientRivalLine({ client: 'Auntie Fung', tong: 'Third Mist Society', jobId: id });
+    assert.doesNotMatch(text, /[{}]/);
+    assert.match(text, /Auntie Fung/);
+    assert.match(text, /Third Mist Society/);
+  }
 });

@@ -7,6 +7,11 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-08 · The other tongs turn up on your jobs
+- The "Rival crew" twist now names a real tong and one of its runners ("Dim Hour Society is here for the same job, with Lena Novak out in front"). A tong based in the job's district turns up more often. It's two crews after the same job, not a feud: the choices, odds and costs are exactly as before. The next Monday, the Word may say the tong had people at the same door as yours.
+- Now and then a client mentions on the plan screen that another tong wanted the job ("I would rather you"). Flavour only.
+- Rival tongs hold no grudge against you.
+
 ## 2026-11-08 · The city asks: the Legend defining job (save v52)
 - When a runner has everything it takes to be a Legend (Elite, a veteran, 26 active weeks, 120 jobs at their level and a path's Legend numbers), the city asks for them by name: a hard job (threat 3-4, a step harder, half again the pay) goes on the board for a week, tagged "Their moment". Do it with them on the crew and they become a Legend, for good. If you open a heist and its finale is up, the finale is their moment instead.
 - Fail, abort, skip it or let it expire and the city asks again in four weeks. A runner who dies on it is a Legend for good, and the memorial says so.
