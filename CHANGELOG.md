@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-08 · A lighter crew list
+- The Crew list no longer shows each runner's highlight line or the scout's read of their potential. Both are on the runner's own page: the highlight right under their name, the potential in Development.
+
 ## 2026-11-08 · Free names: scout them, then sign them
 - **Ops › The other tongs › Free names:** every three to six weeks a runner between tongs is put forward. Open their page to see what the street says, what they'd want, and what it would cost.
 - **Scouting:** send someone to watch them for two days (from their page, or from the side-work board on Jobs). A good trip shows their stats and how far they might go; each further trip sharpens that read, up to a sure one.

@@ -70,7 +70,7 @@ import {
   deleteSlot, loadBackup, backupDue, SLOT_COUNT, unreadableSave, restoreUnreadable, exportUnreadable, discardUnreadable,
 } from '../save/save.js';
 import { hire, haggle, passRecruit, canHire, signingFee, nextExpansion, expandSafehouse, STARTING_ROSTER_CAP, FOUNDERS_TO_PICK } from '../core/recruits.js';
-import { potentialRead, potentialTag, primaryStat, scoutFor, ageRate, declineChance, mentoring, changesSince, progressShare, STATS } from '../core/development.js';
+import { potentialRead, primaryStat, scoutFor, ageRate, declineChance, mentoring, changesSince, progressShare, STATS } from '../core/development.js';
 import { GROWTH_LINES, GRADUATION_LINES } from '../data/growthLines.js';
 import { renderTongs, renderWord, scoutRow } from './tongs.js';
 import { sendScout, signCard } from '../core/dossier.js';
@@ -587,10 +587,10 @@ const statName = (k) => k[0].toUpperCase() + k.slice(1);
 /** This season's net change per stat (rises and age decline), from the growth log. */
 const seasonChanges = (op) => changesSince(op, seasonStartDay(state.day));
 
-/** Crew-list one-liner: their best (main) stat and the scout's read of where they're heading. */
+/** Crew-list one-liner: their best (main) stat. The scout's read of their potential and their highlight are on their own page (2026-11-08, owner). */
 function scoutLine(op) {
   const main = primaryStat(op);
-  return `<span class="scoutline"><span class="iconword">${statGlyph(main)}${esc(statName(main))} ${ratedStat(op, main)}</span><span>· ${esc(potentialTag(op))}</span></span>`;
+  return `<span class="scoutline"><span class="iconword">${statGlyph(main)}${esc(statName(main))} ${ratedStat(op, main)}</span></span>`;
 }
 
 /** Crew-list marker: "▲ Tech +2, Combat +1 ▼ Driving −1" for this season. */
@@ -1609,7 +1609,7 @@ function renderCrew() {
           <li>
             <button class="row crewrow" data-action="open-op" data-id="${esc(op.id)}">
               ${face(op)}
-              <span class="crewrow__name"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"${op.record?.highlights?.[0] ? `<small class="muted crewrow__hl">${esc(op.record.highlights[0].text)}</small>` : ''}</span>
+              <span class="crewrow__name"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"</span>
               <span class="crewrow__info muted">${fameOf(op) === 'elite' ? `<span class="fame fame--elite">${esc(fameName('elite'))}</span> · ` : ''}${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age}</span>
               <span class="crewrow__status">${statusChip(availability(state, op))}</span>
               <span class="crewrow__scout">${scoutLine(op)}${growthMarker(op)}</span>
@@ -1785,6 +1785,7 @@ function renderOperative() {
           <h1>${esc(op.name)} <span class="muted">"${esc(op.handle)}"</span></h1>
           <p class="muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age} · ${money(op.wage)}/week</p>
           <div class="ophead__line">${fameBadge(op)}<span class="ophead__status">${statusChip(availability(state, op))}</span></div>
+          ${op.record?.highlights?.[0] ? `<p class="muted small ophead__hl">${esc(op.record.highlights[0].text)}</p>` : ''}
           ${marksText(op) ? `<p class="muted small">Marked: ${esc(marksText(op))}</p>` : ''}
         </div>
       </div>
