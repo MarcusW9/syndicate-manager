@@ -295,11 +295,13 @@ throughout, in a fixed array order. In order:
 | Loud | animal or weapon + Hand/Hall | Iron Mantis Hand |
 | Quiet | weather or time + Society | Third Mist Society |
 | Corporate | initials + Holdings/Partners | K&W Partners |
-| Street | place + Lot/Boys/Crew | Silt Lot |
+| Street | place + Lot/Boys/Crew | Basin Lot |
 
-- **Street names only reuse places** from `config/names.js` (districts, including the locked ones:
-  the Silt, the Amber Reach, Iron Peak) or `WORLD.md`, or C0 adds the place as canon first. (The
-  draft's "Silt Market" isn't a place in canon; "the Silt" is.)
+- **Street names only reuse places** from `config/names.js` or `WORLD.md`, or C0 adds the place as
+  canon first. (The draft's "Silt Market" isn't a place in canon.)
+- **No rival is based in the Silt** (owner, 2026-11-08; `WORLD.md` "The Silt: life at high water"):
+  there isn't the money for a big tong there, not yet. `seedRivals` never gives a rival a home in
+  the Silt, and no name in the kit uses it.
 - **No real triad names and no number names** (no "14", no "Sun Yee", nothing that reads as a real
   society), as `WORLD.md` already requires: everything is invented.
 
@@ -319,7 +321,8 @@ throughout, in a fixed array order. In order:
   the crew's legends and leaders, halls, grudge and money; the first buyouts. **Folding and forming**
   come here too: a folded tong is the natural source of the month's free name.
 - **Later:** contested contracts (`contestOffers`), heist races, then D (loyalty, rivals tempting the
-  player's runners).
+  player's runners). An idea with no rule yet: once the development next to the Silt is written
+  (canon: unnamed, going up now), it gives the other tongs a reason to move towards the Silt.
 
 **Build order:** A1 playtest → C0 + C1 → B → A2 → C2/C3 → D.
 

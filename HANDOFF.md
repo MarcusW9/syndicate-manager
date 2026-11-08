@@ -79,6 +79,7 @@ When a batch comes back: check every line against the game data (ids, costs, inj
 - `drafts/crisis-situations-review.md`: the situation calls (owner skimmed; open to changes).
 - `drafts/mission-log-prototype.md`: eight questions to check hands-off reports against in real play.
 - `drafts/district-hooks.md`: crisis hooks for the locked districts.
+- **Locked districts, build priority (owner, 2026-11-08):** the Silt next, to about the depth of Glass Heights' "life behind the glass" (its lore is canon: `WORLD.md` "The Silt: life at high water"; how it unlocks, now that ranks follow halls, is decided later). Then the Amber Reach (theme: everybody here is going somewhere else, with Pearl Haven House as the place that stays; jobs on movement and interception: meeting trains, swapping lockers, transit security, arrivals). Iron Peak stays sparse until it unlocks (when built: household staff, drivers, tutors, security, board families, old money against new, estates over the foundry ruins, boards that aren't one faction). A development next to the Silt is the owner's to name and write. Unlock order: the Silt (the Ferryman: the city forgot these people) → the Amber Reach (Okonkwo: how the city moves) → Iron Peak (Szeto: who decides where it moves).
 
 ## Parked (owner's call; don't start without asking)
 

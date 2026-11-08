@@ -128,7 +128,7 @@ The game shows the **English names**; the Chinese names are flavour for district
 
 **Lore for now, unlocked later**
 - **Iron Peak** (鐵山頂, Tit Shan Teng). The summit above Glass Heights, where the corps' boards live in walled estates. It was the city's foundry hill until the 2040s; the furnaces were shut, the slag was landscaped, and the name stuck: the richest people in the city live on a hill named after the furnaces they closed. *Landmarks:* the Peak Funicular, the only public way up (last car 10pm); the Slag Garden, manicured lawns over the old slag heaps around Foundry Stack 3, kept as a sculpture; the Peak Gate checkpoint. *Control:* the boards of all three megacorps; neutral ground, guarded by jointly contracted private security. *Police:* the Harbour Police need permission to go up. *3am:* wind, silence, guard dogs, the orange glow of the city far below. *Custom:* household staff still knock three times on a new estate's iron gate before the owners move in, a habit inherited from the foundry men who knocked to drive spirits out of fresh-cast steel.
-- **The Silt** (泥灘, Nai Tan). A sinking shanty shelf of corrugated-iron shacks on unstable landfill that floods twice a day at high tide, rebuilt on the wreckage of the southern piers that the 1994 Great Signal 10 destroyed. *Landmarks:* the Floating Timber Bridge; Uncle Po's scrap-battery yard; the community pump station. *Control:* unclaimed, contested by mutual-aid groups and street runners. *Police:* none; they won't cross the mud without armoured transport. *3am:* water lapping at rusted stilts, diesel generators, low-tide stink. *Custom:* red ribbons on the door posts at high tide, so the water and whatever rides it pass by.
+- **The Silt** (泥灘, Nai Tan). A sinking shanty shelf of corrugated-iron shacks on unstable landfill that floods twice a day at high tide, rebuilt on the wreckage of the southern piers that the 1994 Great Signal 10 destroyed. *Landmarks:* the Floating Timber Bridge; Uncle Po's scrap-battery yard; the community pump station (the Pump House). *Control:* unclaimed, contested by mutual-aid groups and street runners; the pump people, the boat elders and Uncle Po's batteries are who people answer to. *Police:* none; they won't cross the mud without armoured transport. *3am:* water lapping at rusted stilts, diesel generators, low-tide stink. *Custom:* red ribbons on the door posts at high tide, so the water and whatever rides it pass by. Life on the tide clock, who answers and why it's still there: "The Silt: life at high water", below.
 - **The Amber Reach** (琥珀坊, Fu Pak Fong). A frantic transit and money hub where the maglev unloads salarymen and fixers share noodle bars with brokers. *Landmarks:* the Central Maglev Rotunda; the Amber Tower brokerage exchange; the 24-hour Exchange Teahouse; and Pearl Haven House, the tower block that is home to the city's South Asian, African and Filipino communities (see below). *Control:* a corporate transit board under heavy Aether-Harbour influence. *Police:* transit security plus plainclothes detectives hunting counterfeit passes and data runners. *3am:* departure chimes, commuters with glowing optic lines, the hum of rail overhead. *Custom:* buy one steamed bun at the station kiosk and leave it on the turnstile for a safe, profitable trip home.
 
 **Pearl Haven House** (明珠居, Ming Chu Kui; "pearl residence"), in the Amber Reach. A crowded, much-loved tower block of shops, canteens, guesthouses and homes, the heart of the city's South Asian, African and Filipino communities. Like many buildings in the city it has no fourth floor: the lift goes from 3 to 5.
@@ -221,6 +221,93 @@ Not every job needs a clean victory. Sometimes the sensible ending is a witnesse
 There are only seven recurring clients, and the newest two (Mrs. Ip and Forewoman Tse) are small ones. The people here may call again, remember a kindness or warn the crew away from a bad collection, but they do not become permanent patrons simply because their names are known.
 
 Someone who buys the crew dinner on Sunday may refuse to recognise them in a lobby on Monday. Both moments can be sincere.
+
+### The Silt: life at high water
+
+Owner's lore, 2026-11-08. Still locked in the game; how it unlocks is decided later.
+
+#### The tide clock
+
+The Silt runs on time, not territory. Twice a day the mud roads disappear and it becomes a water town.
+
+- **Low water:** carts, handtrucks and duckboards. Deliveries, scrap runs and visitors happen now.
+- **Flood:** sampans, punts and tyre rafts. The Floating Timber Bridge is the only dry link.
+- **Slack water:** the short calm at the turn, when deals get done because nobody can easily leave.
+
+Everyone knows the day's tide table the way the city knows train times. Shops chalk it up and kids recite it. "The water's in" is a real excuse.
+
+*Lore only:* the game runs on days, and jobs don't track the tide. A Silt job's text can say "at low water"; nothing counts the hours.
+
+#### Who lives there
+
+- **The water families:** descendants of people who lived on boats before the 1994 Great Signal 10. They moved onto the wreck shelf when their moorings went. Boat customs survive, and land people still look down on them a little.
+- **The arrivals:** people who came after 2018 and 2052. Burned-out dockworkers, people dodging implant registration, debtors and people who ran out of city.
+- There's quiet friction between them over who was here first, who keeps the pumps running and who brings trouble.
+- People stay for more than cheapness: no leases, no implant registration, informal boat and repair work, mutual aid stronger than anything the city offers, and because it's home.
+
+#### Tech: scarcity, not neon
+
+- **Power:** no Hoi-Sing meter reaches the Silt. It runs on scavenged EV batteries and tidal paddle generators on the old pier pilings. Uncle Po's scrap-battery yard is the de facto power company, and a charged battery pack works as currency. Hoi-Sing calls Uncle Po's packs stolen; Po calls them salvage.
+- **Data:** a mesh of salvaged relay boards on poles and boat masts. Coverage shifts with the tide as boats come and go. The Ghost Circuit keeps a node here and is quietly welcome.
+- **Implants:** where chrome goes to die. Old 2018 dockworker implants are unregistered, unpatched and can't be tracked. Some people have had their telemetry chips cut out.
+- **Water:** the community pump station is the Silt's real government. Whoever keeps the pumps running has authority.
+- **Drones:** AHL survey drones map the mudflats every week. Kids throw nets at them, and a downed drone is stripped by evening.
+- Nothing here is futuristic for show. All tech in the Silt is old, repaired and shared.
+
+#### Who answers (nobody rules)
+
+- No gang boss, and no faction of its own.
+- **The pump people:** an informal rota of operators and repairers with no title. Everyone listens to them. Outsiders are told, "Talk to the pump people."
+- **Boat elders:** heads of the water families. They settle disputes over moorings and marriages.
+- **Uncle Po:** influential because he controls the batteries, whether he wants to be or not.
+- **Mutual aid:** kaifong-style neighbourhood associations, a typhoon fund and shared kitchens.
+- **Street runners:** young runners work the mud for whoever pays, and answer to the pump people like everyone else.
+- **Tongs:** there isn't the money for a big tong here, not yet. At most a small one works out of the Silt, and none grows. A tong doesn't lease in the Silt; there are no leases. The pump people let it have a place for nothing once it has done right by the Silt. A tong in a hurry can pay its way in with pump parts or charged packs, but that buys the room, not the welcome.
+- **Outside powers circle without committing:** AHL wants the flats for the port. The Red Lanterns tax the road in but won't cross the mud. The Wet Sleeve won't enter without armoured transport.
+
+#### Why it's still there
+
+The shelf is sinking wreckage on unclear title, and making it buildable would cost a fortune before anyone could prove they owned it. AHL wants it for the port, which is exactly why Veridian-Apex, Hoi-Sing and the Red Lanterns quietly keep it in limbo. No board will be photographed bulldozing the Signal 10 dead, and an unrecorded shelf next to a port is too useful to the people who don't want records. So it isn't taken. It's surveyed, every week.
+
+- **Bad land:** it would need piling, remediation and seawalls before anything could be built.
+- **Legal limbo:** the 1994 pier company went bankrupt, its records are a mess, and the Municipal District Administration never formally recognised the shelf. *Rumour:* the old pier company's paper, for piers now under water, is in Morrow & Venn's oldest strongroom, and it beats any corp claim.
+- **Corps block each other:** Veridian-Apex and Hoi-Sing fear AHL, and port expansion would cut the Red Lanterns out of the road.
+- **Politically toxic:** clearing it means bulldozing the 1994 memorial.
+- **Useful as it is:** cheap Docks labour, unregistered implants and deniable space. AHL's off-books arm uses it, and the Ferryman's private line runs under Pier 12.
+
+#### "Not yet"
+
+The Silt is being taken slowly, on paper first: weekly survey drones, a reclamation study or "unsafe structures" notice every year, and the edges nibbled. A fenced section, a new floodlight, a "temporary" AHL storage pad that never leaves. The real threat isn't a flood or a gang. It's a surveyor with a tablet.
+
+**Not worth it, yet.** For now the Silt is small, poor and more trouble to build on than it's worth, so nobody big bothers with it, tongs included. That's changing. On the mudflats next to the shelf, a new development is going up, and every year the city's money creeps a little closer to the water. Every boardroom and back room shares the same view: not yet, but as the city spreads, the Silt will be worth having, and whoever already holds paper on it wins. (The development is unnamed until the owner writes it.)
+
+#### Customs
+
+- Red ribbons on the door posts at high tide, so the water and whatever rides it pass by.
+- Boat families never turn a fish over at the table: it's bad luck for boats.
+- Incense at the **Signal 10 marker**, a concrete post showing the 1994 water line, for the people under the shelf.
+- A sea-goddess shrine facing the breakwater, kept alongside To Dei Gung, so both land and sea are hedged.
+- Kids learn to swim before they read. Not being able to swim marks you as a city person.
+
+#### What outsiders get wrong
+
+- They think it's chaotic. It keeps tighter schedules than Glass Heights, because the tide doesn't negotiate.
+- They think people want rescuing. Most want recognition: water, power and a legal right to stay.
+- They think it's lawless. It has rules; they just aren't written down.
+
+#### Places
+
+- **Uncle Po's Yard:** battery packs stacked above the high-water mark. Kids are told not to touch anything blue.
+- **The Pump House:** the closest thing to a civic centre. Someone is always repairing it.
+- **High Water Kitchen:** a communal kitchen built higher than everything around it. When the tide or a storm cuts the streets, people eat there.
+- **The Tide Steps:** concrete remains of the pre-1994 pier, marked with old typhoon waterlines. Boats tie up there when the roads go under.
+- **The Tin Clinic:** basic medicine for infections and flood injuries, run by one exhausted nurse who used to be a paramedic. Not Doc Siu.
+
+#### The Ferryman in the Silt
+
+He ties up at the Tide Steps at flood and talks to people from the deck. Locals treat him as a neighbour who happens never to come ashore, not a legend. "Leung? Tell him he still owes me two filters." "He acts mysterious because you lot let him." His secret is still kept.
+
+Children in the Silt are background only: never named, never in jobs.
 
 ## The tong's halls
 
@@ -668,7 +755,9 @@ DISTRICTS (always use these English names):
   2057 telemetry, live odds and illegal betting; Racing Association officially, Silver
   Fan in the Undercroft; jobs from Fung, Okonkwo and the Ferryman).
 - Unlocked later, by reputation: the Silt (sinking shanty shelf on the 1994 wreckage,
-  floods at high tide, lawless) · the Amber Reach (transit and money hub where the
+  floods twice a day and runs on the tide; no police and no boss: unwritten rules, the
+  pump people, the boat elders and Uncle Po's batteries; too poor for a big tong, not
+  yet worth taking; AHL surveys it every week) · the Amber Reach (transit and money hub where the
   maglev meets trams and ferries) · Iron Peak (the summit where the corp boards live in
   walled estates on the old foundry hill; funicular, gate checkpoint, private security;
   the richest place in the city, NOT an industrial zone).
