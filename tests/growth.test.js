@@ -112,8 +112,8 @@ test('growth is deterministic for a seed', () => {
 test('short-handed: -1 per missing person, on real rolls and in the read', () => {
   const s = createNewGame({ seed: 1 });
   const teo = s.crew.find((o) => o.id === 'teo');
-  const full = crewRoll(s.crew.slice(0, 4), 'driving', { recommended: 4 });
-  const alone = crewRoll([teo], 'driving', { recommended: 4 });
+  const full = crewRoll(s.crew.slice(0, 4), 'piloting', { recommended: 4 });
+  const alone = crewRoll([teo], 'piloting', { recommended: 4 });
   assert.equal(alone.missing, 3);
   assert.equal(alone.value, 17 - 3);
   assert.ok(alone.notes.includes('short-handed -3'));
@@ -125,10 +125,10 @@ test('backup: a second person within 3 of the best adds +1', () => {
   const teo = s.crew.find((o) => o.id === 'teo');
   const close = makeRookie({ role: 'driver', start: 14 });
   const far = makeRookie({ role: 'driver', start: 13 });
-  assert.equal(crewRoll([teo, close], 'driving').value, 18);
-  assert.equal(crewRoll([teo, close], 'driving').backup.id, 'rookie');
-  assert.equal(crewRoll([teo, far], 'driving').value, 17);
-  assert.equal(crewRoll([teo, far], 'driving').backup, null);
+  assert.equal(crewRoll([teo, close], 'piloting').value, 18);
+  assert.equal(crewRoll([teo, close], 'piloting').backup.id, 'rookie');
+  assert.equal(crewRoll([teo, far], 'piloting').value, 17);
+  assert.equal(crewRoll([teo, far], 'piloting').backup, null);
 });
 
 test('the planning read uses the same crew rule as real rolls', () => {
@@ -195,7 +195,7 @@ test('the crew-size badge shows the same penalty the rolls use', async () => {
     const read = crewSizeRead(n, 4);
     assert.equal(read.level, 'short');
     assert.equal(read.penalty, (4 - n) * SHORT_HANDED_PENALTY);
-    assert.equal(crewRoll(s.crew.slice(0, n), 'driving', { recommended: 4 }).missing * SHORT_HANDED_PENALTY, read.penalty);
+    assert.equal(crewRoll(s.crew.slice(0, n), 'piloting', { recommended: 4 }).missing * SHORT_HANDED_PENALTY, read.penalty);
     assert.match(read.text, new RegExp(`−${read.penalty} on every roll`));
   }
 });

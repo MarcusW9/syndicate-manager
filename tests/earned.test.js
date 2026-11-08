@@ -62,13 +62,13 @@ test('Clean Professional: ten clean jobs; then a failed roll of theirs draws one
   assert.ok(saved, 'saw a failed roll');
 });
 
-test('Ghost Driver: five clean driving passes in escapes; +1 driving in escapes only, as written', () => {
+test('Ghost Driver: five clean piloting passes in escapes; +1 piloting in escapes only, as written', () => {
   const s = game(4); const d = s.crew.find((o) => o.role === 'driver');
-  for (let i = 0; i < 5; i++) job(s, [roll(d, 'driving', true)], [d]);
-  assert.ok(!has(d, 'ghost_driver'), 'driving that was not an escape does not count');
-  for (let i = 0; i < 5; i++) job(s, [roll(d, 'driving', true, { situations: ['escape'] })], [d]);
+  for (let i = 0; i < 5; i++) job(s, [roll(d, 'piloting', true)], [d]);
+  assert.ok(!has(d, 'ghost_driver'), 'piloting that was not an escape does not count');
+  for (let i = 0; i < 5; i++) job(s, [roll(d, 'piloting', true, { situations: ['escape'] })], [d]);
   assert.ok(has(d, 'ghost_driver'));
-  const at = (situations) => crewRoll([d], 'driving', { job: { district: 'docks', injured: [], rolled: [d.id], situations } });
+  const at = (situations) => crewRoll([d], 'piloting', { job: { district: 'docks', injured: [], rolled: [d.id], situations } });
   assert.equal(at(['escape']).value, at([]).value + 1);
   assert.match(notes(at(['escape'])), /Ghost Driver \+1/);
 });
@@ -183,11 +183,11 @@ test('progress is hidden: nothing says anything until a trait is earned, then Jo
   const s = game(14); const d = s.crew.find((o) => o.role === 'driver');
   const inbox = s.inbox.length;
   const names = Object.values(EARNED_TRAITS).map((t) => t.name);
-  for (let i = 0; i < 4; i++) job(s, [roll(d, 'driving', true, { situations: ['escape'] })], [d]);
+  for (let i = 0; i < 4; i++) job(s, [roll(d, 'piloting', true, { situations: ['escape'] })], [d]);
   const extra = s.inbox.slice(0, s.inbox.length - inbox);
   assert.ok(!has(d, 'ghost_driver'));
   assert.ok(extra.every((m) => names.some((n) => m.subject === `${d.handle}: ${n}`)), 'only earned notes (here Riding High), no "4/5" progress');
-  job(s, [roll(d, 'driving', true, { situations: ['escape'] })], [d]);
+  job(s, [roll(d, 'piloting', true, { situations: ['escape'] })], [d]);
   const note = s.inbox.find((m) => m.subject.endsWith('Ghost Driver'));
   assert.equal(note.subject, `${d.handle}: Ghost Driver`);
   assert.match(note.body, /Five clean exits/);
@@ -274,7 +274,7 @@ test('a side task that ends with someone held by the police leaves them Rattled 
   for (let seed = 1; seed <= 80 && !rattled; seed++) {
     let s = game(seed);
     s.sideBoard = ['forklift_relief'];
-    const op = s.crew[0]; op.stats.driving = 1;
+    const op = s.crew[0]; op.stats.piloting = 1;
     s = advanceDay(advanceDay(S.sendOnSideTask(s, 'forklift_relief', [op.id])));
     const back = s.crew.find((o) => o.id === op.id);
     if (s.inbox.some((m) => /held by the police/.test(m.body))) { assert.ok(E.earnedOf(back, 'rattled_by_sirens')); rattled = true; }
@@ -337,7 +337,7 @@ test('Ghost Driver sheds a point of heat on a clean getaway that costs heat', ()
     let s = game(seed);
     s.jobs = []; addOffer(s, 'warehouse');
     const d = s.crew.find((o) => o.role === 'driver');
-    d.earned = [{ id: 'ghost_driver', day: 1 }]; d.stats.driving = 20;
+    d.earned = [{ id: 'ghost_driver', day: 1 }]; d.stats.piloting = 20;
     s = M.startMission(s, s.jobs[0].id, [d.id], 'stealth');
     s.activeMission.queue = [{ type: 'crisis', id: 'toll' }, { type: 'beat', index: 0 }]; s.activeMission.step = 0;
     s = M.chooseOption(s, 'ram'); // costs heat +2 whatever the roll

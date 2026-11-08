@@ -28,7 +28,7 @@ export const rollTarget = (template) => STAT_FOR_THREAT(template.threat) - (temp
 /**
  * Overall read for a planned job. Returns { level, reasons[] }.
  * watched: the heat penalty this job will carry on its first crisis roll (state.heatWatched).
- * wheels: the operative in the van, who takes every driving roll (slice 3).
+ * wheels: the operative in the van, who takes every piloting roll (slice 3).
  * Any key stat could be that roll, so it counts in every stat's read, like the real roll.
  */
 export function assessJob(template, crew, approach, { watched = 0, intel = null, wheels = null } = {}) {
@@ -38,8 +38,8 @@ export function assessJob(template, crew, approach, { watched = 0, intel = null,
   let worst = 1;
   let weakest = null; // the key stat the crises are hardest on, with who rolls it (2026-11-05: the plan bar names it)
   for (const stat of template.keyStats) {
-    // Wheels takes the driving rolls alone from the van (core/mission.js rollerFor).
-    const best = stat === 'driving' && wheels
+    // Wheels takes the piloting rolls alone from the van (core/mission.js rollerFor).
+    const best = stat === 'piloting' && wheels
       ? crewRoll([wheels], stat, { approach, watched, intel })
       : crewRoll(crew, stat, { approach, recommended: template.crewSize, watched, intel });
     const chance = successChance(best.value, target);

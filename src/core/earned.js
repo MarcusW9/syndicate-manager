@@ -19,7 +19,7 @@ export const NEEDS = {
   steadyUnderFire: 3, // cool or combat rolls passed after a crewmate is hurt on the job
   clinicHands: 3, // medical rolls passed
   cleanProfessional: 10, // finished jobs without personally causing heat
-  ghostDriver: 5, // driving rolls passed with no heat and no injury
+  ghostDriver: 5, // piloting rolls passed with no heat and no injury
   crewAnchor: 5, // jobs with the same crewmate, both back unhurt
   shakyInjuries: 2, // injuries within a week (or one critical)
   shakyClean: 3, // clean jobs to settle again
@@ -171,7 +171,7 @@ export function jobMods(op, { stat, job }) {
   if (face && stat === 'social') out.push({ value: 1, note: 'Known Face +1' });
   // Group 2: what kind of situation this is.
   const sit = new Set(job.situations ?? []);
-  if (stat === 'driving' && sit.has('escape') && earnedOf(op, 'ghost_driver')) out.push({ value: 1, note: 'Ghost Driver +1' });
+  if (stat === 'piloting' && sit.has('escape') && earnedOf(op, 'ghost_driver')) out.push({ value: 1, note: 'Ghost Driver +1' });
   if (stat === 'cool' && (sit.has('injury') || sit.has('threat')) && earnedOf(op, 'scarred')) out.push({ value: 1, note: 'Scarred +1' });
   if (stat === 'stealth' && sit.has('entry') && !sit.has('escape') && earnedOf(op, 'light_fingered')) out.push({ value: 1, note: 'Light-Fingered +1' });
   if (stat === 'social' && sit.has('crowd') && earnedOf(op, 'crowd_reader')) out.push({ value: 1, note: 'Crowd Reader +1' });
@@ -253,7 +253,7 @@ export function afterJob(state, { events, district, clientId, outcome, crewIds }
     if (t.medPasses >= NEEDS.clinicHands) earn(state, op, 'clinic_hands');
 
     const sitOf = (e) => new Set(e.situations ?? []);
-    t.cleanDrives = (t.cleanDrives ?? 0) + weigh(every.filter((e) => e.stat === 'driving' && e.success && sitOf(e).has('escape') && !heatOf(e) && !e.injury));
+    t.cleanDrives = (t.cleanDrives ?? 0) + weigh(every.filter((e) => e.stat === 'piloting' && e.success && sitOf(e).has('escape') && !heatOf(e) && !e.injury));
     if (t.cleanDrives >= NEEDS.ghostDriver) earn(state, op, 'ghost_driver');
 
     if (done && !causedHeat) t.cleanJobs = (t.cleanJobs ?? 0) + 1;

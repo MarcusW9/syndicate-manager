@@ -15,6 +15,7 @@ const SPEC_NAME = Object.fromEntries(Object.entries(SPECIALISATIONS).map(([id, s
 import { bestLine } from '../core/squad.js';
 import { effectiveStat, maxCrew } from '../core/crew.js';
 import { riskLabel } from '../core/risk.js';
+import { getawayRead } from '../core/piloting.js';
 import { statValue, statGlyph } from './icons.js';
 
 /** Slots on the board: the inside team (recommended, plus one spare card until the most), then overwatch. */
@@ -64,7 +65,7 @@ function kitLine(op, kitId) {
 // take 2×1, as wide as the photo; small things 1×1. Display only: the bag's own sizes are data/gear.js.
 const LONG = new Set(['rifle', 'drone', 'deck']);
 // The role as the stat it leans on, drawn before the handle.
-const ROLE_STAT = { tech: 'tech', face: 'social', muscle: 'combat', medic: 'medical', driver: 'driving', infiltrator: 'stealth' };
+const ROLE_STAT = { tech: 'tech', face: 'social', muscle: 'combat', medic: 'medical', driver: 'piloting', infiltrator: 'stealth' };
 const PINS = ['#ff4f7b', '#36d6c3', '#f5b942', '#b48cff', '#5fe0a5', '#ff9a5a'];
 const TILTS = ['-1.2deg', '0.8deg', '-0.6deg', '1deg', '-0.9deg', '0.5deg'];
 
@@ -182,7 +183,7 @@ export function renderBoard(ui, { plan, tpl, people, crewSize, approachName = ''
     line: ow && kit ? kitLine(ow, kit) : '', note: kit ? (overwatchKit(ow, kit).spec ? `${kit} · ${SPEC_NAME[overwatchKit(ow, kit).spec]}` : kit) : '', i: 5, prefer: kit,
   });
   const wh = byId(plan.wheels);
-  const wheelsCard = column(ui, 'wheels', wh, { name: 'Wheels', does: 'Optional: takes every driving roll from the van.', line: wh ? statValue('driving', effectiveStat(wh, 'driving').value) : '', note: wh ? 'in the van' : '', i: 2 });
+  const wheelsCard = column(ui, 'wheels', wh, { name: 'Wheels', does: 'Optional: takes every piloting roll from the van, and the getaway when the job leaves heat.', line: wh ? statValue('piloting', effectiveStat(wh, 'piloting').value) : '', note: wh ? `in the van · getaway ${riskLabel(getawayRead(wh, tpl, { approach: plan.approach }).chance)} risk` : '', i: 2 });
   const sb = byId(plan.standby);
   const standbyCard = column(ui, 'standby', sb, { name: 'Standby', does: 'Optional: called in when it goes wrong.', line: sb ? `${statValue('combat', effectiveStat(sb, 'combat').value)} ${statValue('medical', effectiveStat(sb, 'medical').value)}` : '', note: sb ? 'on call' : '', i: 3 });
   const count = plan.crew.length;
@@ -207,7 +208,7 @@ export function renderBoard(ui, { plan, tpl, people, crewSize, approachName = ''
             // they don't read as unfinished. Overwatch without a rifle or drone links to the armoury.
             const slots = [
               { slot: 'over', op: ow, card: overCard, name: 'Overwatch', hint: 'saves people in trouble', off: !armed },
-              { slot: 'wheels', op: wh, card: wheelsCard, name: 'Wheels', hint: 'takes the driving rolls' },
+              { slot: 'wheels', op: wh, card: wheelsCard, name: 'Wheels', hint: 'takes the piloting rolls' },
               { slot: 'standby', op: sb, card: standbyCard, name: 'Standby', hint: 'called in when it goes wrong' },
             ];
             const filled = slots.filter((x) => x.op);
@@ -239,7 +240,7 @@ export function renderPicker(ui, { plan, tpl, threat, slot, people, freelancersF
     over: { name: 'overwatch', note: 'Only someone carrying a rifle (combat counts) or a drone (tech counts). Gear goes on from their page on the Crew screen.',
       score: (op) => (planKit(plan, op) ? effectiveStat(op, overwatchKit(op, planKit(plan, op)).stat).value : -50),
       line: (op) => (planKit(plan, op) ? kitLine(op, planKit(plan, op)) : 'no rifle or drone'), needs: (op) => !!planKit(plan, op) },
-    wheels: { name: 'Wheels', note: 'In the van: they take every driving roll, alone.', score: (op) => effectiveStat(op, 'driving').value, line: (op) => statValue('driving', effectiveStat(op, 'driving').value) },
+    wheels: { name: 'Wheels', note: 'In the van: they take every piloting roll, alone.', score: (op) => effectiveStat(op, 'piloting').value, line: (op) => statValue('piloting', effectiveStat(op, 'piloting').value) },
     standby: { name: 'standby', note: 'At the van until called: they can save someone in trouble or get the wounded out.', score: (op) => effectiveStat(op, 'combat').value + effectiveStat(op, 'medical').value / 2, line: (op) => `${statValue('combat', effectiveStat(op, 'combat').value)} · ${statValue('medical', effectiveStat(op, 'medical').value)}` },
   }[slot] ?? { name: 'the inside team', note: null, score: (op) => bestLine(op, plan.approach).value, line: null };
   const stats = !outside && fit ? fit.stats : null;

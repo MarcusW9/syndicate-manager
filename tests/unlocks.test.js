@@ -21,10 +21,10 @@ function at(s, crisisId) {
   return s;
 }
 
-test('rookie jobs give every stat an unlock, and combat, driving and medical at least three', () => {
+test('rookie jobs give every stat an unlock, and combat, piloting and medical at least three', () => {
   const byStat = {};
   for (const { ch } of unlocks()) byStat[ch.requires.value] = (byStat[ch.requires.value] ?? 0) + 1;
-  for (const st of ['combat', 'driving', 'medical']) assert.ok(byStat[st] >= 3, `${st}: ${byStat[st]}`);
+  for (const st of ['combat', 'piloting', 'medical']) assert.ok(byStat[st] >= 3, `${st}: ${byStat[st]}`);
   for (const st of ['tech', 'stealth', 'social', 'cool']) assert.ok(byStat[st] >= 2, `${st}: ${byStat[st]}`);
 });
 

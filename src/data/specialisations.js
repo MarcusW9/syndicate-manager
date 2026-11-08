@@ -16,7 +16,7 @@ export const SPECIALISATIONS = {
     offer: '{op} has the eye for it now. Three jobs behind a scope and they don\'t rush the shot. I can get them proper time on a range: they\'d come back a Marksman.',
   },
   droneJockey: {
-    name: 'Drone Jockey', kit: 'drone', needs: { tech: 10 }, jobs: 3,
+    name: 'Drone Jockey', kit: 'drone', needs: { piloting: 10 }, jobs: 3,
     effect: { uses: 1, bonus: 1, neural: 5 },
     desc: 'On overwatch with a drone: one more action, +1, and half the neural load per action.',
     offer: '{op} flies that drone like it\'s part of them. A racing crew I know could sharpen them up, and they\'d be a Drone Jockey: longer in the air, less of it in their head.',

@@ -135,7 +135,7 @@ test('gear adds to rolls and says so in the breakdown; a pro item adds one more'
   assert.ok(effectiveStat(op, 'combat').notes.some((n) => /Pro sidearm \+2/.test(n)));
   assert.equal(crewRoll([op], 'combat').value, before + 2, 'the crew roll counts it too');
   arm(s, op.id, 'reflex');
-  assert.equal(effectiveStat(op, 'driving').value, op.stats.driving + 1, 'an implant can help two stats');
+  assert.equal(effectiveStat(op, 'piloting').value, op.stats.piloting + 1, 'an implant can help two stats');
 });
 
 test('overwatch needs the kit: carried rifles and drones only, and a pro rifle shoots better', () => {

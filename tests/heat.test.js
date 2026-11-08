@@ -39,8 +39,11 @@ test('a clean stealth or con job adds 0 heat; Loud adds exactly +1', () => {
     for (const approach of ['stealth', 'con', 'loud']) {
       const s = runJob(seed, approach);
       const am = s.activeMission;
-      if (am.aborted) { assert.equal(am.result.heatGain, am.extraHeat, 'aborts add no approach heat'); continue; }
-      assert.equal(am.result.heatGain, am.extraHeat + (approach === 'loud' ? 1 : 0), `${approach}, seed ${seed}`);
+      // The getaway (core/piloting.js, 2026-11-08) may take some of the crew's own heat off; never the Loud +1.
+      const shed = am.getaway?.shed ?? 0;
+      assert.ok(shed <= am.extraHeat, 'only heat the crew earned is shed');
+      if (am.aborted) { assert.equal(am.result.heatGain, am.extraHeat - shed, 'aborts add no approach heat'); continue; }
+      assert.equal(am.result.heatGain, am.extraHeat - shed + (approach === 'loud' ? 1 : 0), `${approach}, seed ${seed}`);
       if (am.extraHeat === 0) {
         clean[approach] += 1;
         assert.equal(s.heat, approach === 'loud' ? 1 : 0);
