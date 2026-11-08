@@ -56,7 +56,7 @@ import { sendOff, ORDERS, handsOffAllowed, autoStep, needsPlayer } from '../core
 import { takeCall, letThemRun, takeCommand, crewsOut, dayDone } from '../core/away.js';
 import { OVERWATCH_KIT, ALERT_MAX } from '../core/incidents.js';
 import { leanPicks, jobRead, planRead, planTries } from '../core/squad.js';
-import { renderBoard, renderPicker, renderCoverage, assignSlot, planKit } from './board.js';
+import { renderBoard, renderPicker, renderCoverage, assignSlot, planKit, fitGearArt } from './board.js';
 import { armouryCard, renderArmoury, renderLoadout, renderGearSheet, gearPlace } from './gear.js';
 import { buyGear, buyOffer, sellGear, equip, unequip, itemName, sellPrice } from '../core/gear.js';
 import { renderWatch, mountWatch, syncWatch, isWatching, stopWatch, togglePause, toggleSpeed, showLatest, justFinished, closeFinale } from './watch.js';
@@ -663,6 +663,7 @@ function render() {
     ${renderBuzz()}
   `;
   if (am) mountWatch(root.querySelector('.watch'), state, { ui: watchUi, finishing, onAuto: () => setState(autoStep(state)) });
+  fitGearArt(root); // the squad board's gear drawings fill their cells
   root.querySelector('.buzz__pick, .buzz [data-action="buzz-in"]')?.focus({ preventScroll: true }); // the call has the floor
   if (pickSlot) (root.querySelector('.sheet .cand.is-on') ?? root.querySelector('.sheet .cand:not([disabled])'))?.focus({ preventScroll: true });
   if (mapTo) { animateMap(root.querySelector('.citymap__view'), mapView, mapTo); mapView = mapTo; mapTo = null; }
@@ -1425,7 +1426,7 @@ function renderHeatNotice(m) {
 // --- founders ------------------------------------------------------------
 /**
  * A new game's first screen: six candidates, pick three (DESIGN.md, 2026-10-28). Each one is a
- * card like the squad board's dossiers, with what the scouts and Joss know about them below.
+ * pinned dossier card (as the squad board had until 2026-11-08), with what the scouts and Joss know below.
  */
 function renderFounding() {
   const cands = state.founding.candidates;
@@ -2099,6 +2100,8 @@ function renderPlan() {
     return out.length ? `“${out.join(', ')}.”` : '';
   })();
   const was = readBefore && picked.length && readBefore.level ? { rows: readBefore.rows, level: readBefore.level, key: rowKey, fresh: readFresh } : null;
+  // The squad board's mat flashes on the same signal (2026-11-08): the bar's level or any encounter moved.
+  const riskMoved = !!was?.fresh && (was.level !== toughest || cov.rows.some((r) => { const b = was.rows.get(rowKey(r)); return b && b !== r.effective; }));
   // The bar's notes (2026-11-04: the crises card folded in here; 2026-11-05: always says what sets the
   // risk). Above low risk the first note names the weakest point: the encounter at the bar's level,
   // and, when the crises' skills read is at that level too, the stat they lean on. Then the skills
@@ -2212,7 +2215,7 @@ function renderPlan() {
       <div class="plangrid__crew">
       <h2>Squad</h2>
       ${(() => { const r = crewSizeRead(plan.crew.length, t.crewSize); return `<p class="sizebadge sizebadge--${r.level} ${r.penalty >= 2 ? 'is-severe' : ''}">${esc(r.text)}</p>`; })()}
-      ${renderBoard(boardUi, { plan, tpl: t, people, crewSize: t.crewSize })}
+      ${renderBoard(boardUi, { plan, tpl: t, people, crewSize: t.crewSize, approachName: APPROACHES[plan.approach].name, flash: riskMoved })}
       ${jossLine ? `<p class="jossline"><b>${esc(NAMES.partner)}:</b> ${esc(jossLine)}</p>` : ''}
       <p class="muted small">Tap a card to pick who goes. <button class="infobtn" data-action="board-rules" aria-expanded="${boardRulesOpen}" aria-label="How the squad works">${boardRulesOpen ? '×' : 'i'}</button></p>
       ${boardRulesOpen ? `<p class="muted small">Each person short of ${t.crewSize}: −1 on every roll. A second person within 3 of whoever rolls backs them up: +1.${freelancers.length ? ` Freelancers (up to ${MAX_FREELANCERS_PER_JOB}) take a share of the pay instead of a wage.` : ''}</p>` : ''}

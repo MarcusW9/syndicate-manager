@@ -174,6 +174,7 @@ try {
           if ((waits === 4 && watchShots === 0) || (waits === 14 && watchShots === 1)) await shot(`watch-${++watchShots}`);
         }
         await shot('mission-end');
+        await click('[data-action="finale-close"]'); // the job-end card (2026-11-07) sits over the page until closed
         if (await click('[data-action="close-mission"]')) {
           await click('[data-action="nav"][data-id="inbox"]');
           const report = visible('[data-action="open-message"]').filter({ hasText: /report/i }).first();
