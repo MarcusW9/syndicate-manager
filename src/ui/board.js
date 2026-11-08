@@ -1,5 +1,6 @@
-// The squad board on the planning screen (PLAN-CORE-LOOP.md, slice 2): dossier cards for the
-// inside team and overwatch, a picker sheet to fill a slot, and the coverage read. Markup only;
+// The squad board on the planning screen (PLAN-CORE-LOOP.md, slice 2): a polaroid and an inventory
+// for each runner inside and outside, on a gear mat (2026-11-08; dossier cards before it), a picker
+// sheet to fill a slot, and the coverage read. Markup, plus fitGearArt to run after a render;
 // app.js owns the plan and the clicks (data-action), core/squad.js the numbers.
 //
 // ui: helpers from app.js { esc, face, riskBadge, statusChip, keyStats } so the board looks
@@ -7,14 +8,14 @@
 
 import { jobGain } from '../core/worth.js';
 import { overwatchKit, kitsFor, carried, itemTitle } from '../core/gear.js';
-import { gearArt } from './art.js';
+import { gearArt, portrait } from './art.js';
 import { SPECIALISATIONS } from '../data/specialisations.js';
 
 const SPEC_NAME = Object.fromEntries(Object.entries(SPECIALISATIONS).map(([id, s]) => [id, s.name]));
 import { bestLine } from '../core/squad.js';
 import { effectiveStat, maxCrew } from '../core/crew.js';
 import { riskLabel } from '../core/risk.js';
-import { statValue } from './icons.js';
+import { statValue, statGlyph } from './icons.js';
 
 /** Slots on the board: the inside team (recommended, plus one spare card until the most), then overwatch. */
 export function insideSlots(plan, tpl) {
@@ -57,47 +58,109 @@ function kitLine(op, kitId) {
   return `${statValue(k.stat, effectiveStat(op, k.stat).value + k.bonus)}<span class="kituses"><span class="kituses__sep"> · </span>${k.uses} ${kitId === 'rifle' ? 'shots' : 'actions'}</span>`;
 }
 
-// The one thing a runner carries that says most about them (playtest, 2026-11-07: "Grid has a
-// rifle, can we see it?"): a rifle or drone first, then a deck, a sidearm, anything else drawn.
-const MAIN_GEAR = ['rifle', 'drone', 'deck', 'pistol'];
-function mainGear(op, prefer = null) {
-  const drawn = carried(op).filter((i) => gearArt(i));
-  const rank = (i) => (i.type === prefer ? -1 : MAIN_GEAR.includes(i.type) ? MAIN_GEAR.indexOf(i.type) : MAIN_GEAR.length);
-  return drawn.sort((a, b) => rank(a) - rank(b))[0] ?? null;
-}
-function gearStrip(ui, op, prefer) {
-  const item = mainGear(op, prefer);
-  if (!item) return '';
-  return `<span class="dossier__gear">${gearArt(item, { carrier: op, width: 72 })}<span>${ui.esc(itemTitle(item))}</span></span>`;
-}
-
+// The squad as polaroids over an inventory (owner, 2026-11-08; mock-up drafts/prototypes/gear-grid.mjs,
+// M, and gear-mat.mjs, N3 without the fit glow): each runner a column, their photo on top and what
+// they carry on a straight grid of cells under it, two cells wide. Long things (rifle, drone, deck)
+// take 2×1, as wide as the photo; small things 1×1. Display only: the bag's own sizes are data/gear.js.
+const LONG = new Set(['rifle', 'drone', 'deck']);
+// The role as the stat it leans on, drawn before the handle.
+const ROLE_STAT = { tech: 'tech', face: 'social', muscle: 'combat', medic: 'medical', driver: 'driving', infiltrator: 'stealth' };
 const PINS = ['#ff4f7b', '#36d6c3', '#f5b942', '#b48cff', '#5fe0a5', '#ff9a5a'];
-const TILTS = ['-1.5deg', '1deg', '-0.5deg', '1.5deg', '-1deg', '0.5deg'];
+const TILTS = ['-1.2deg', '0.8deg', '-0.6deg', '1deg', '-0.9deg', '0.5deg'];
 
-function dossier(ui, slot, op, { name, does, line = '', note = '', i = 0, gear = undefined }) {
-  const { esc, face } = ui;
+/** What they carry that has a drawing: the preferred type first (overwatch's kit), then long things. */
+function invItems(op, prefer = null) {
+  const rank = (i) => (i.type === prefer ? 0 : LONG.has(i.type) ? 1 : 2);
+  return carried(op).filter((i) => gearArt(i)).sort((a, b) => rank(a) - rank(b));
+}
+
+/**
+ * The inventory: two cells across, at least two rows. On a phone only the first row shows, with
+ * "+N" for the rest (the board's container query hides .is-more); wider, the whole grid and names.
+ */
+function inventory(ui, op, prefer) {
+  const items = invItems(op, prefer);
+  let cells = 0;
+  let first = 0;
+  const html = items.map((it) => {
+    const w = LONG.has(it.type) ? 2 : 1;
+    const inFirst = cells + w <= 2;
+    if (inFirst) first += 1;
+    cells += w;
+    return `<span class="inv__it ${w === 2 ? 'is-long' : ''} ${inFirst ? '' : 'is-more'}">${gearArt(it, { carrier: op, bare: true })}<span class="inv__name">${ui.esc(itemTitle(it))}</span></span>`;
+  }).join('');
+  const total = Math.max(4, cells + (cells % 2));
+  const blanks = Array.from({ length: total - cells }, (_, k) => `<span class="inv__cell ${cells + k < 2 ? '' : 'is-more'}"></span>`).join('');
+  const more = items.length - first;
+  return `<span class="inv">${html}${blanks}${more ? `<span class="inv__more" aria-label="${more} more carried">+${more}</span>` : ''}</span>`;
+}
+
+/** The photo: a white frame, the handle in the deep bottom margin after the role's icon, a pin-coloured tab. */
+function polaroid(ui, op) {
+  const stat = ROLE_STAT[op.role];
+  return `<span class="pola">
+      <span class="pola__photo">${portrait(op, { size: 104 })}</span>
+      <span class="pola__cap">${stat ? `<span class="pola__role">${statGlyph(stat)}</span>` : ''}<span class="pola__name">${ui.esc(op.handle)}</span></span>
+    </span>`;
+}
+
+/** One slot on the board: a runner's column, or an empty slot to fill (want: it pulses). */
+function column(ui, slot, op, { name, does, line = '', note = '', i = 0, prefer = null, want = false }) {
+  const { esc } = ui;
   if (!op) {
-    return `<button class="dossier is-empty" data-action="pick-slot" data-id="${slot}" aria-label="${esc(name)}: empty. ${esc(does)} Tap to assign.">
-      <b>${esc(name)}</b><span class="dossier__sil" aria-hidden="true">+</span><small>${esc(does)}</small></button>`;
+    return `<button class="pcol pcol--empty ${want ? 'is-want' : ''}" data-action="pick-slot" data-id="${slot}" aria-label="${esc(name)}: empty. ${esc(does)} Tap to assign.">
+      <b>+ ${esc(name)}</b><small>${esc(does)}</small></button>`;
   }
-  // A filled card: tap it to change who's there, or its × to take them off (owner, 2026-11-06:
-  // removing someone meant opening the picker to leave it empty). Two buttons side by side,
-  // since a button can't hold another.
-  return `<div class="dossierwrap" style="--tilt:${TILTS[i % TILTS.length]}">
-    <button class="dossier ${op.freelance ? 'dossier--freelance' : ''}" data-action="pick-slot" data-id="${slot}" style="--tilt:${TILTS[i % TILTS.length]};--pin:${PINS[i % PINS.length]}" aria-label="${esc(name)}: ${esc(op.handle)}. Tap to change.">
-      <span class="dossier__photo">${face(op)}</span>
-      <span class="dossier__name">${esc(op.handle)}</span>
-      <span class="dossier__real">${esc(op.freelance ? `freelance ${op.role}` : op.role)}</span>
-      ${line ? `<span class="dossier__note">${line}</span>` : ''}
-      ${note ? `<span class="dossier__tag">${esc(note)}</span>` : ''}
-      ${gear === null || op.freelance ? '' : gearStrip(ui, op, gear)}
+  // The column is one button to change who's there; the × beside it takes them off (2026-11-06).
+  return `<div class="pcolwrap" style="--tilt:${TILTS[i % TILTS.length]};--pin:${PINS[i % PINS.length]}">
+    <button class="pcol ${op.freelance ? 'pcol--freelance' : ''}" data-action="pick-slot" data-id="${slot}" aria-label="${esc(name)}: ${esc(op.handle)}, ${esc(op.freelance ? `freelance ${op.role}` : op.role)}. Tap to change.">
+      ${polaroid(ui, op)}
+      ${inventory(ui, op, prefer)}
+      ${line ? `<span class="pcol__line">${line}</span>` : ''}
+      ${note ? `<span class="pcol__tag">${esc(note)}</span>` : ''}
     </button>
-    <button class="dossier__off" data-action="unassign" data-id="${slot}" aria-label="Take ${esc(op.handle)} off ${esc(name.toLowerCase())}"><span aria-hidden="true">×</span></button>
+    <button class="pcol__off" data-action="unassign" data-id="${slot}" aria-label="Take ${esc(op.handle)} off ${esc(name.toLowerCase())}"><span aria-hidden="true">×</span></button>
   </div>`;
 }
 
-/** The board: who's inside, who's on overwatch with which kit, and Joss's picks. */
-export function renderBoard(ui, { plan, tpl, people, crewSize }) {
+/**
+ * Fit each bare gear drawing's viewBox to the item it draws, so a small gun fills its cell
+ * (the mock-up's getBBox, done after each render). Drawings hidden on a phone are measured off-screen.
+ */
+export function fitGearArt(root) {
+  const svgs = [...root.querySelectorAll('.inv__it svg:not([data-fit])')];
+  if (!svgs.length) return;
+  let sandbox = null;
+  for (const svg of svgs) {
+    let b = svg.getBBox();
+    if (!b.width) {
+      if (!sandbox) {
+        sandbox = document.body.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'svg'));
+        sandbox.setAttribute('style', 'position:absolute;left:-9999px;top:0;visibility:hidden');
+      }
+      const copy = sandbox.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'g'));
+      copy.innerHTML = svg.innerHTML;
+      b = copy.getBBox();
+      copy.remove();
+    }
+    if (!b.width) continue;
+    const pad = Math.max(b.width, b.height) * 0.06;
+    svg.setAttribute('viewBox', [b.x - pad, b.y - pad, b.width + 2 * pad, b.height + 2 * pad].join(' '));
+    svg.removeAttribute('width');
+    svg.removeAttribute('height');
+    svg.dataset.fit = '1';
+  }
+  sandbox?.remove();
+}
+
+// The approach's colour washing in from the top of the mat, its name faint in the corner.
+const TINTS = { stealth: '80, 140, 255', loud: '255, 80, 95', con: '245, 185, 66', tech: '61, 232, 216' };
+
+/**
+ * The board: who's inside, who's on overwatch with which kit, and Joss's picks, on a gear mat.
+ * flash: a change to the plan just moved the risk (app.js renderPlan's readBefore), so the mat flashes.
+ */
+export function renderBoard(ui, { plan, tpl, people, crewSize, approachName = '', flash = false }) {
   const { esc } = ui;
   const byId = (id) => people.find((o) => o.id === id);
   const n = insideSlots(plan, tpl);
@@ -105,33 +168,33 @@ export function renderBoard(ui, { plan, tpl, people, crewSize }) {
     const op = byId(plan.crew[i]);
     const extra = i >= crewSize;
     const b = op ? bestLine(op, plan.approach) : null;
-    return dossier(ui, `in:${i}`, op, {
+    return column(ui, `in:${i}`, op, {
       name: extra ? 'Extra' : 'Inside', does: extra ? 'Optional: more backup, more at risk.' : i < 1 ? 'Required.' : 'Recommended.',
-      line: b ? statValue(b.stat, b.value) : '', i,
+      line: b ? statValue(b.stat, b.value) : '', i, want: !extra,
     });
   }).join('');
   const ow = byId(plan.overwatch);
   const kit = ow ? planKit(plan, ow) : null;
   // Overwatch needs someone carrying a rifle or a drone (slice 5: gear).
   const armed = people.some((o) => kitsFor(o).length);
-  const overCard = dossier(ui, 'over', ow, {
+  const overCard = column(ui, 'over', ow, {
     name: 'Overwatch', does: armed ? 'Optional: saves people in trouble. Needs a rifle or a drone.' : 'Nobody carries a rifle or a drone. Buy one in the armoury (Crew).',
-    line: ow && kit ? kitLine(ow, kit) : '', note: kit ? (overwatchKit(ow, kit).spec ? `${kit} · ${SPEC_NAME[overwatchKit(ow, kit).spec]}` : kit) : '', i: 5, gear: kit,
+    line: ow && kit ? kitLine(ow, kit) : '', note: kit ? (overwatchKit(ow, kit).spec ? `${kit} · ${SPEC_NAME[overwatchKit(ow, kit).spec]}` : kit) : '', i: 5, prefer: kit,
   });
   const wh = byId(plan.wheels);
-  const wheelsCard = dossier(ui, 'wheels', wh, { name: 'Wheels', does: 'Optional: takes every driving roll from the van.', line: wh ? statValue('driving', effectiveStat(wh, 'driving').value) : '', note: wh ? 'in the van' : '', i: 2 });
+  const wheelsCard = column(ui, 'wheels', wh, { name: 'Wheels', does: 'Optional: takes every driving roll from the van.', line: wh ? statValue('driving', effectiveStat(wh, 'driving').value) : '', note: wh ? 'in the van' : '', i: 2 });
   const sb = byId(plan.standby);
-  const standbyCard = dossier(ui, 'standby', sb, { name: 'Standby', does: 'Optional: called in when it goes wrong.', line: sb ? `${statValue('combat', effectiveStat(sb, 'combat').value)} ${statValue('medical', effectiveStat(sb, 'medical').value)}` : '', note: sb ? 'on call' : '', i: 3 });
+  const standbyCard = column(ui, 'standby', sb, { name: 'Standby', does: 'Optional: called in when it goes wrong.', line: sb ? `${statValue('combat', effectiveStat(sb, 'combat').value)} ${statValue('medical', effectiveStat(sb, 'medical').value)}` : '', note: sb ? 'on call' : '', i: 3 });
   const count = plan.crew.length;
   return `
-      <div class="board">
+      <div class="board ${flash ? 'is-flash' : ''}" style="--appr:${TINTS[plan.approach] ?? TINTS.stealth}"><div class="board__mat" data-approach="${esc(approachName)}">
         <div class="board__head">
           <p>${count ? `${count} inside · ${crewSize} recommended` : `${crewSize} recommended inside`}</p>
           <button class="btn btn--ghost board__joss" data-action="joss">Joss's picks</button>
         </div>
         <div class="board__group">
           <p class="board__label">Inside team <span>moves as one group</span></p>
-          <div class="dossiers dossiers--inside ${n >= 4 ? 'dossiers--pairs' : ''}" style="--n:${Math.min(4, n)}">${inside}</div>
+          <div class="pcols">${inside}</div>
         </div>
         <div class="board__group">
           <p class="board__label">Outside <span>optional</span></p>
@@ -151,11 +214,11 @@ export function renderBoard(ui, { plan, tpl, people, crewSize }) {
             const chip = (x) => (x.off
               ? `<div class="slotchip is-off"><b>Overwatch</b><small>needs a rifle or a drone</small><button class="slotchip__link" data-action="open-armoury">Armoury →</button></div>`
               : `<button class="slotchip" data-action="pick-slot" data-id="${x.slot}" aria-label="${esc(x.name)}: empty, optional. ${esc(x.hint)}. Tap to assign."><b>+ ${esc(x.name)}</b><small>${esc(x.hint)}</small></button>`);
-            return `${filled.length ? `<div class="dossiers" style="--n:3">${filled.map((x) => x.card).join('')}</div>` : ''}
+            return `${filled.length ? `<div class="pcols">${filled.map((x) => x.card).join('')}</div>` : ''}
           <div class="slotchips">${slots.filter((x) => !x.op).map(chip).join('')}</div>`;
           })()}
         </div>
-      </div>`;
+      </div></div>`;
 }
 
 /**

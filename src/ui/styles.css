@@ -848,18 +848,86 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 /* The squad run (PLAN-CORE-LOOP.md, slice 1): four approaches. */
 .segmented--grid { grid-template-columns: 1fr 1fr; }
 
-/* The squad board (PLAN-CORE-LOOP.md, slice 2, ui/board.js): dossier cards pinned to a board. */
-.board { display: grid; gap: 12px; padding: 14px 12px 12px; border-radius: 12px; border: 1px solid #2a2f3b; background:
-  repeating-linear-gradient(0deg, transparent 0 19px, rgba(139, 147, 167, 0.07) 19px 20px),
-  repeating-linear-gradient(90deg, transparent 0 19px, rgba(139, 147, 167, 0.07) 19px 20px), #12151b; }
+/* The squad board (PLAN-CORE-LOOP.md, slice 2, ui/board.js), 2026-11-08: each runner a polaroid over
+   an inventory, on a gear mat (mock-ups drafts/prototypes/gear-grid.mjs M and gear-mat.mjs N3, without
+   the fit glow). The board is a size container: below 470px it's the phone's four narrow columns. */
+.board { position: relative; container: board / inline-size; border: 1px solid var(--line); background: #0e1117;
+  clip-path: polygon(0 0, calc(100% - var(--cut, 10px)) 0, 100% var(--cut, 10px), 100% 100%, 0 100%); }
+/* The mat: ruled in the inventory's cell size, stronger every four cells; the approach's colour
+   washing in from the top and its name faint in the bottom-right corner. */
+.board__mat { --cell: 49px; position: relative; display: grid; gap: 12px; padding: 14px 12px 12px; overflow: hidden; background-image:
+  linear-gradient(rgba(61, 232, 216, 0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(61, 232, 216, 0.12) 1px, transparent 1px),
+  linear-gradient(rgba(61, 232, 216, 0.055) 1px, transparent 1px), linear-gradient(90deg, rgba(61, 232, 216, 0.055) 1px, transparent 1px);
+  background-size: calc(var(--cell) * 4) calc(var(--cell) * 4), calc(var(--cell) * 4) calc(var(--cell) * 4), var(--cell) var(--cell), var(--cell) var(--cell);
+  background-position: 12px 14px; box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.6); }
+.board__mat::before { content: ""; position: absolute; inset: 0 0 auto; height: 160px; pointer-events: none; background: linear-gradient(rgba(var(--appr), 0.16), transparent); }
+.board__mat::after { content: attr(data-approach); position: absolute; right: 14px; bottom: 8px; pointer-events: none; font: 700 3.2rem/1 var(--display); letter-spacing: 0.1em; text-transform: uppercase; color: rgba(var(--appr), 0.07); }
+.board__mat > * { position: relative; z-index: 1; }
+/* A change that moves the risk flashes the mat (the plan bar's signal, app.js renderPlan). */
+.board.is-flash .board__mat { animation: mat-flash 0.7s ease-out; }
+@keyframes mat-flash { 0% { box-shadow: inset 0 0 0 2px #2fd39a, inset 0 0 80px rgba(47, 211, 154, 0.35); } 100% { box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.6); } }
 .board__head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .board__head p { margin: 0; font-size: 0.8rem; color: var(--muted); min-width: 0; }
-.board__joss { color: var(--accent-2); padding: 0 12px; border: 1px solid #1f4440; border-radius: 8px; background: #10201e; white-space: nowrap; }
-.board__group { display: grid; gap: 6px; }
+.board__joss { color: var(--accent-2); padding: 0 12px; border: 1px solid #1f4440; background: #10201e; white-space: nowrap; }
+.board__group { display: grid; gap: 8px; }
 .board__label { margin: 0; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
 .board__label span { font-weight: 400; letter-spacing: 0; text-transform: none; text-align: right; }
-.dossiers { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 8px; }
-.dossiers--over { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.pcols { display: grid; grid-template-columns: repeat(4, 104px); gap: 14px; }
+/* A runner's column: a lighter patch on the mat where they stand, the whole column one button. */
+.pcolwrap { position: relative; min-width: 0; isolation: isolate; }
+.pcolwrap::before { content: ""; position: absolute; inset: -6px -5px -4px; z-index: -1; background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(255, 255, 255, 0.05); }
+.pcol { width: 100%; display: grid; gap: 6px; align-content: start; padding: 0; border: 0; background: none; color: var(--text); font: inherit; text-align: center; cursor: pointer; }
+.pcol:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 4px; }
+/* The polaroid: a white frame, a deeper bottom margin with the role's icon and the handle, a tab in their pin colour. */
+.pola { position: relative; display: grid; padding: 6px 6px 0; background: #f1ede3; transform: rotate(var(--tilt, 0deg)); box-shadow: 0 6px 12px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.6); }
+.pola::before { content: ""; position: absolute; top: 0; left: 50%; width: 28px; height: 4px; margin-left: -14px; background: var(--pin, var(--accent-2)); }
+.pola__photo { display: block; aspect-ratio: 1; overflow: hidden; background: #1a1d25; }
+.pola__photo svg { display: block; width: 100%; height: 100%; }
+.pola__cap { display: flex; justify-content: center; align-items: center; gap: 3px; min-width: 0; padding: 5px 2px 7px; color: #1b1d22; line-height: 1.1; }
+.pola__role { display: inline-grid; flex: none; color: #5a5f6c; } .pola__role svg { width: 12px; height: 12px; }
+.pola__name { min-width: 0; font: 700 0.85rem var(--display); letter-spacing: 0.04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pcol--freelance .pola { box-shadow: inset 0 -4px 0 #b48cff, 0 6px 12px rgba(0, 0, 0, 0.55); }
+/* The inventory: straight cells two across; a rifle, drone or deck spans both, as wide as the photo. */
+.inv { position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; padding: 3px; background: #0a0c10; border: 1px solid var(--line); }
+.inv__cell, .inv__it { position: relative; min-width: 0; overflow: hidden; aspect-ratio: 1; background: #141821; box-shadow: inset 0 0 0 1px #1f2532; }
+.inv__it { display: grid; place-items: center; background: radial-gradient(circle at 50% 45%, #1d2330, #12151c 70%); box-shadow: inset 0 0 0 1px #2f394b; }
+.inv__it.is-long { grid-column: span 2; aspect-ratio: 2 / 1; }
+.inv__it svg { display: block; width: 84%; height: 64%; max-width: 100%; overflow: visible; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)); }
+.inv__name { position: absolute; left: 3px; right: 3px; bottom: 2px; font: 600 0.5rem ui-monospace, 'SF Mono', Menlo, monospace; text-transform: uppercase; letter-spacing: 0.02em; color: #8a93a6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.inv__more { display: none; position: absolute; top: -7px; right: -7px; z-index: 2; min-width: 22px; height: 22px; padding: 0 5px; place-items: center; font: 700 0.7rem var(--display); color: #0a0c0f; background: var(--accent-2); clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 0 100%); }
+.pcol__line { display: block; font-size: 0.74rem; }
+.pcol__line .kituses { display: block; white-space: nowrap; color: var(--muted); } /* "COMBAT 11" / "2 SHOTS", never split mid-phrase */
+.pcol__line .kituses__sep { display: none; }
+.pcol__tag { justify-self: center; max-width: 100%; padding: 1px 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 0.58rem ui-monospace, 'SF Mono', Menlo, monospace; text-transform: uppercase; color: #0a0c0f; background: var(--pin, var(--accent-2)); }
+/* The × beside a column: a 44px target drawn as a small dark tab on the photo's corner. */
+.pcol__off { position: absolute; top: -12px; right: -14px; z-index: 2; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; background: none; border: 0; cursor: pointer; }
+.pcol__off span { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #1b1f29; color: var(--muted); border: 1px solid #3a4254; font-size: 16px; line-height: 1; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
+.pcol__off:hover span, .pcol__off:focus-visible span { color: var(--text); border-color: var(--danger); background: #2a1a20; }
+/* An empty inside slot; a recommended one pulses, worth filling. */
+.pcol--empty { min-height: 168px; display: grid; place-content: center; gap: 4px; padding: 8px; text-align: center; background: transparent; border: 2px dashed #3a4254; color: var(--muted); }
+.pcol--empty b { font: 700 0.74rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: #c9cfdb; white-space: nowrap; }
+.pcol--empty small { font-size: 0.7rem; }
+.pcol--empty.is-want { animation: slot-pulse 2.2s ease-in-out infinite; }
+@keyframes slot-pulse { 50% { border-color: var(--accent-2); box-shadow: 0 0 14px rgba(61, 232, 216, 0.25); } }
+/* A phone: four narrow columns across, the photo about 76px, only the first row of gear with "+N"
+   for the rest, no item names or slot hints. */
+@container board (max-width: 469px) {
+  .board__mat { --cell: calc((100cqi - 41px) / 8); padding: 12px 10px 10px; background-position: 10px 12px; }
+  .board__mat::after { font-size: 2.4rem; }
+  .pcols { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
+  .pola { padding: 4px 4px 0; }
+  .pola__cap { padding: 3px 1px 5px; gap: 2px; }
+  .pola__name { font-size: 0.74rem; }
+  .pola__role svg { width: 10px; height: 10px; }
+  .inv { padding: 2px; gap: 2px; }
+  .inv__name, .inv .is-more { display: none; }
+  .inv__more { display: grid; }
+  .pcol__line { font-size: 0.62rem; } .pcol__line .icon { width: 11px; height: 11px; }
+  .pcol--empty { min-height: 128px; padding: 4px; } .pcol--empty small { display: none; }
+  .pcol--empty b { font-size: 0.62rem; letter-spacing: 0.08em; }
+}
+@media (prefers-reduced-motion: reduce) { .board.is-flash .board__mat, .pcol--empty.is-want { animation: none; } }
+/* The founder pick's cards are still pinned dossiers (app.js renderFounding). */
 .dossier { position: relative; display: grid; justify-items: center; align-content: start; gap: 3px; padding: 15px 5px 8px; min-height: 150px; text-align: center; border-radius: 4px; cursor: pointer;
   background: #e9e4d8; color: #1b1d22; border: 0; font: inherit; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45); transform: rotate(var(--tilt, 0deg)); transition: transform 0.15s; }
 .dossier > * { max-width: 100%; }
@@ -870,29 +938,10 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .dossier { container-type: inline-size; }
 .dossier__name { font-weight: 700; font-size: min(0.98rem, 15cqi); line-height: 1.05; overflow-wrap: normal; word-break: keep-all; white-space: nowrap; }
 .dossier__real { font-size: 0.66rem; color: #5a5f6c; }
-.dossier__note { font: 500 0.62rem ui-monospace, 'SF Mono', Menlo, monospace; text-transform: uppercase; letter-spacing: 0.04em; color: #4a4f5c; }
-/* On a card the overwatch kit's uses go under the stat ("COMBAT 11" / "2 SHOTS"), never split mid-phrase. */
-.dossier__note .kituses { display: block; white-space: nowrap; }
-.dossier__note .kituses__sep { display: none; }
 .dossier__tag { font: 600 0.58rem ui-monospace, 'SF Mono', Menlo, monospace; text-transform: uppercase; color: #fff; background: #1b1d22; border-radius: 3px; padding: 1px 5px; }
-.dossier__gear { display: grid; justify-items: center; gap: 1px; margin-top: 2px; } /* their main gear, drawn (playtest, 2026-11-07) */
-.dossier__gear .gearart { display: block; width: 72px; height: 24px; border-radius: 2px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45); }
-.dossier__gear > span { font: 600 0.56rem ui-monospace, 'SF Mono', Menlo, monospace; text-transform: uppercase; letter-spacing: 0.03em; color: #5a5f6c; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dossier.is-empty { background: transparent; color: var(--muted); border: 2px dashed #3a4254; box-shadow: none; align-content: center; transform: none; }
-.dossier.is-empty::before { display: none; }
-.dossier.is-empty b { font-size: min(0.72rem, 12.5cqi); letter-spacing: min(0.12em, 1.2cqi); text-transform: uppercase; white-space: nowrap; }
-.dossier.is-empty small { font-size: 0.68rem; padding: 0 4px; }
 /* Empty outside slots as one-line chips (2026-11-05): optional, so they shouldn't look unfinished. */
 .slotchips { display: flex; flex-wrap: wrap; gap: 6px; }
 .slotchips:empty { display: none; }
-.dossiers + .slotchips { margin-top: 8px; }
-/* A filled card and its × (2026-11-06): the × sits on the card's top-right corner, a 44px target
-   drawn as a small dark tab so it doesn't fight the pin. */
-.dossierwrap { position: relative; display: grid; min-width: 0; }
-.dossierwrap > .dossier { width: 100%; }
-.dossier__off { position: absolute; top: -8px; right: -8px; z-index: 1; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; background: none; border: 0; cursor: pointer; }
-.dossier__off span { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #1b1f29; color: var(--muted); border: 1px solid #3a4254; font-size: 16px; line-height: 1; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
-.dossier__off:hover span, .dossier__off:focus-visible span { color: var(--text); border-color: var(--danger); background: #2a1a20; }
 .slotchip { flex: 1 1 140px; display: grid; align-content: center; gap: 1px; min-height: var(--tap, 44px); padding: 5px 10px; text-align: left; border: 1px dashed #3a4254; background: transparent; color: var(--muted); font: inherit; cursor: pointer; }
 .slotchip b { font: 700 0.78rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text); }
 .slotchip small { font-size: 0.72rem; }
@@ -906,25 +955,6 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .orderline { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 10px; width: 100%; min-height: var(--tap, 44px); padding: 8px 12px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font: inherit; font-size: 0.86rem; text-align: left; cursor: pointer; }
 .orderline b { font: 700 0.72rem var(--display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-2); }
 .orders__h { margin: 14px 0 6px; font: 700 0.78rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
-.dossier__sil { width: 40px; height: 40px; border-radius: 50%; border: 2px dashed #3a4254; display: grid; place-items: center; font-size: 1.3rem; color: #4a5266; }
-/* Four or more inside on a phone: two to a row, each card turned landscape (photo left, name and
-   numbers right) so names and stats stay full size (owner, 2026-10-29: "quite tight here maybe we
-   can have 2 on a row"). Measured on the board, so a narrow plan pane on a tablet gets it too. */
-.board { container: board / inline-size; }
-@container board (max-width: 520px) {
-  .dossiers--pairs { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); row-gap: 12px; }
-  .dossiers--pairs .dossier { grid-template-columns: auto minmax(0, 1fr); grid-auto-flow: dense; justify-items: start; align-content: center; column-gap: 9px; row-gap: 1px; min-height: 92px; padding: 14px 9px 9px; text-align: left; }
-  .dossiers--pairs .dossier__photo { grid-column: 1; grid-row: 1 / span 4; align-self: center; }
-  .dossiers--pairs .dossier > :not(.dossier__photo):not(.dossier__sil) { grid-column: 2; }
-  .dossiers--pairs .dossier__name { font-size: min(1.05rem, 13cqi); }
-  .dossiers--pairs .dossier__real { font-size: 0.72rem; }
-  .dossiers--pairs .dossier__note { font-size: min(0.66rem, 7.4cqi); white-space: nowrap; }
-  .dossiers--pairs .dossier__photo .face { width: 44px; height: 44px; }
-  .dossiers--pairs .dossier.is-empty { grid-template-columns: auto minmax(0, 1fr); }
-  .dossiers--pairs .dossier.is-empty .dossier__sil { grid-column: 1; grid-row: 1 / span 2; width: 36px; height: 36px; }
-  .dossiers--pairs .dossier.is-empty b { font-size: 0.72rem; }
-  .dossiers--pairs .dossier.is-empty small { padding: 0; }
-}
 .kitpick { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 3px; }
 .kitpick__btn { min-height: var(--tap); background: transparent; border: 0; border-radius: 7px; color: var(--muted); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
 .kitpick__btn.is-on { background: #16262a; color: var(--accent-2); box-shadow: inset 0 0 0 1px var(--accent-2); }
@@ -1199,11 +1229,9 @@ p > .infobtn { display: inline-grid; vertical-align: 2px; margin-left: 4px; }
 /* Freelancers in the picker and on the board: a violet stripe and tint, and a tag (owner, 2026-10-28). */
 .cand--freelance { border-left: 3px solid #b48cff; background: #1c1928; }
 .cand__hire { display: block; margin-bottom: 2px; font: 600 0.66rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: #b48cff; }
-.dossier--freelance { box-shadow: inset 0 -4px 0 #b48cff, 0 2px 6px rgba(0, 0, 0, 0.4); }
-.dossier--freelance .dossier__real { color: #7a5fc0; font-weight: 600; }
 
 /* The founder pick (DESIGN.md, 2026-10-28): six candidate cards, pick three. Each card is a
-   pinned dossier (the squad board's) over what's known about them; picked ones get the cyan edge. */
+   pinned dossier (as the squad board had) over what's known about them; picked ones get the cyan edge. */
 .founders { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .founder { width: 100%; height: 100%; display: grid; grid-template-rows: auto 1fr; gap: 10px; padding: 12px 10px 10px; text-align: left; background: var(--panel-2); border: 1px solid var(--line); color: var(--text); font: inherit; cursor: pointer;
   clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }

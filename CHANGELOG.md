@@ -7,6 +7,13 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-08 · The squad board as polaroids and an inventory
+- **Each runner on the squad board is now a polaroid with their kit laid out under it**, on a straight grid two cells wide: a rifle, drone or deck as wide as the photo, a sidearm, kit or vest half that. A small icon before each name shows their role.
+- **On a phone** the whole team fits across one row: the first row of gear shows, with "+1" (or more) for the rest. **On a computer** you see all their gear with names.
+- **The board is a gear mat** washed in the approach's colour (Stealth blue, Loud red, Con amber, Tech teal), with its name faint in the corner. An empty slot you should fill pulses, and the mat flashes when a change moves the risk.
+- Overwatch shows the rifle or drone they'll use first. Freelancers keep their violet edge.
+- Screenshots: `docs/screenshots/2026-11-08-polaroid-board/`.
+
 ## 2026-11-07 · The direct buzz, and the end of a job
 - **Heists ring:** when Madam Rao (or Mr. Szeto) has a big one, their direct line rings over whatever you're doing. Pick up and they tell you the score in their own words, with the prep jobs and the stakes; "We're in" opens the board, "Let me think" leaves it on Today. The finale night rings too.
 - **A job ends properly:** after a live job, the crew walk back to the van instead of jumping there, then a card stamps the result, counts the pay up and brings the team in one by one, each with what the job did to them (a wound, a stat up, promoted). See the report, or head back to the safehouse.
