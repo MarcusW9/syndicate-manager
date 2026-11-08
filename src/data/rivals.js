@@ -133,3 +133,33 @@ export function clientRivalLine({ client, tong, jobId }) {
   const seed = [...String(jobId)].reduce((n, c) => n + c.charCodeAt(0), 0);
   return fill(CLIENT_RIVAL_TEXT[seed % CLIENT_RIVAL_TEXT.length], { client, tong });
 }
+
+// Scouting and signing (C3b). {op} the scout, {name} the name they watched.
+export const SCOUT_TEXT = {
+  sent: { subject: '{op} is watching {name}', body: '{op} is out for two days to see what {name} can really do.' },
+  ok: { subject: '{op} is back: a better look at {name}', body: '{op} came back with a better look at {name}. It is on their page now.' },
+  miss: { subject: '{op} is back: nothing on {name}', body: '{op} lost {name} in the crowd and learned nothing. Another try would cost two more days.' },
+  gone: { subject: '{op} is back: {name} has moved on', body: '{op} got there too late. Somebody else had already signed {name}.' },
+};
+export const POTENTIAL_TEXT = {
+  peaked: "They've hit their wall. More comes slow from here.",
+  close: "They're nearly at their wall.",
+  legend: 'Could be one of the best Lantern Bay has ever had.',
+  special: 'Could be top-tier, the kind a crew builds its biggest jobs around.',
+  strong: 'Will grow into the hard jobs, given the work.',
+  some: 'A steady pair of hands, but the big jobs will always be a stretch.',
+};
+export const SCOUT_LEVEL_TEXT = {
+  none: "We only know what the street says. A scout trip would show their stats.",
+  seen: 'A first look. First looks can be wrong about how far they will go.',
+  sharper: 'A fair read of how far they will go, though it could be a point off.',
+  full: 'A sure read.',
+};
+export const SIGN_REASON = {
+  head: "A head doesn't leave their tong.",
+  no_bed: 'No free bed in any hall.',
+  no_cash: 'Not enough cash for the signing fee and any buyout.',
+  not_yet: "Not yet. Our name doesn't carry far enough for them.",
+  gone: 'Somebody else has signed them.',
+};
+export const SCOUT_DAYS_TEXT = '2d · 1 runner';

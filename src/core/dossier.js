@@ -6,7 +6,8 @@
 
 import { hashRng, pick } from './rng.js';
 import { ROLE_PROFILES, HANDLES, BADGE_COLORS } from '../data/recruitPools.js';
-import { RIVALS } from '../data/rivals.js';
+import { RIVALS, SCOUT_TEXT, fill } from '../data/rivals.js';
+import { availability } from './crew.js';
 import { rollPotential, rollScoutError, potentialBand, primaryStat } from './development.js';
 import { marketWage, round50 } from './pricing.js';
 import { ratingOf, cardRating, ratingWord, TIER_BONUS } from './rating.js';
@@ -103,16 +104,10 @@ export function dossierOf(state, card) {
 
 // --- Scouting ---
 
-/**
- * One scout trip by `opId` on a name (a side task's effect, C3b gives it a board entry): a hash roll
- * at the side-task difficulty on the scout's social stat. A success raises the level (to 3); a failure
- * tells them nothing. `state.rivals.lastScout` says how it went. Returns the new state, or prev.
- */
-export function scoutTrip(prev, ref, opId) {
-  const card = findCard(prev, ref);
-  const op = prev.crew.find((o) => o.id === opId);
-  if (!card || !op || (prev.rivals.scouted?.[card.id] ?? 0) >= RIVALS.scoutMax) return prev;
-  const state = structuredClone(prev);
+export const SCOUT_DAYS = 2;
+
+/** One scout trip's roll: a hash at the side-task difficulty on the scout's social stat. Mutates the (cloned) state; true on a good trip. */
+function applyScout(state, card, op) {
   const level = scoutLevel(state, card);
   const roll = 1 + Math.floor(hashRng(state.seed, 'scout-trip', card.id, level, state.day)() * 20);
   const ok = roll + (op.stats.social ?? 0) >= 10 + 6; // SIDE_DIFFICULTY (core/sidetasks.js)
@@ -120,14 +115,58 @@ export function scoutTrip(prev, ref, opId) {
   r.scouted = { ...(r.scouted ?? {}) };
   if (ok) r.scouted[card.id] = level + 1;
   r.lastScout = { cardId: card.id, ok, day: state.day };
+  return ok;
+}
+
+/**
+ * One scout trip by `opId` on a name, at once (what the two-day side task does when the scout is back;
+ * kept for tests and tools). A success raises the level (to 3); a failure tells them nothing.
+ * `state.rivals.lastScout` says how it went. Returns the new state, or prev.
+ */
+export function scoutTrip(prev, ref, opId) {
+  const card = findCard(prev, ref);
+  const op = prev.crew.find((o) => o.id === opId);
+  if (!card || !op || scoutLevel(prev, card) >= RIVALS.scoutMax) return prev;
+  const state = structuredClone(prev);
+  applyScout(state, findCard(state, ref), state.crew.find((o) => o.id === opId));
   return state;
+}
+
+/**
+ * Send someone to watch a name for two days: a side task (the scout is away, `state.sideOut` carries it,
+ * and core/sidetasks.js hands it to `resolveScout` when they're back). One scout per name at a time.
+ */
+export function sendScout(prev, ref, opId) {
+  const card = findCard(prev, ref);
+  const op = prev.crew.find((o) => o.id === opId);
+  if (!card || !op || op.freelance || !availability(prev, op).ok || scoutLevel(prev, card) >= RIVALS.scoutMax) return prev;
+  if ((prev.sideOut ?? []).some((s) => s.scout === card.id)) return prev;
+  const state = structuredClone(prev);
+  const returnDay = state.day + SCOUT_DAYS;
+  state.crew.find((o) => o.id === opId).condition.awayUntil = returnDay;
+  state.sideOut = [...(state.sideOut ?? []), { taskId: 'scout', scout: card.id, crewIds: [opId], returnDay }];
+  state.inbox.unshift({ id: `scout-sent-${card.id}-${state.day}`, type: 'job', day: state.day, subject: fill(SCOUT_TEXT.sent.subject, { op: op.handle, name: card.name }), body: fill(SCOUT_TEXT.sent.body, { op: op.handle, name: card.name }), blocking: false, read: true });
+  return state;
+}
+
+/** A scout is back (core/sidetasks.js returnSideTasks): the trip's result, and a message. Mutates the (cloned) state. */
+export function resolveScout(state, entry) {
+  const op = state.crew.find((o) => o.id === entry.crewIds[0]);
+  const card = findCard(state, entry.scout);
+  if (!op) return;
+  const v = { op: op.handle, name: card?.name ?? 'them' };
+  let key = 'gone';
+  if (card) key = applyScout(state, card, op) ? 'ok' : 'miss';
+  state.inbox.unshift({ id: `scout-back-${entry.scout}-${state.day}`, type: 'job', day: state.day, subject: fill(SCOUT_TEXT[key].subject, v), body: fill(SCOUT_TEXT[key].body, v), blocking: false, read: false });
 }
 
 /** What the player may see of a name at the level scouted: keys and values only (never more than the level allows). */
 export function readFor(state, card) {
   const level = scoutLevel(state, card);
   const d = dossierOf(state, card);
-  const out = { name: card.name, role: card.role, fame: card.fame, word: ratingWord(cardRating(card), card), level: ['none', 'seen', 'sharper', 'full'][level], stats: null, potential: null };
+  const tong = tongOf(state.rivals, card.tongId);
+  const from = tongOf(state.rivals, card.fromTong);
+  const out = { id: slug(card.name), name: card.name, role: card.role, fame: card.fame, word: ratingWord(cardRating(card), card), home: card.home, tong: tong?.name ?? null, from: from?.name ?? null, head: !!tong && tong.headId === card.id, level: ['none', 'seen', 'sharper', 'full'][level], stats: null, potential: null };
   if (level >= 1) {
     out.stats = { ...d.stats };
     out.potential = potentialBand({ ...d, scoutError: scoutErrorAt(state, card, level) });

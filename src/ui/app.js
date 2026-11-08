@@ -72,7 +72,8 @@ import {
 import { hire, haggle, passRecruit, canHire, signingFee, nextExpansion, expandSafehouse, STARTING_ROSTER_CAP, FOUNDERS_TO_PICK } from '../core/recruits.js';
 import { potentialRead, potentialTag, primaryStat, scoutFor, ageRate, declineChance, mentoring, changesSince, progressShare, STATS } from '../core/development.js';
 import { GROWTH_LINES, GRADUATION_LINES } from '../data/growthLines.js';
-import { renderTongs, renderWord } from './tongs.js';
+import { renderTongs, renderWord, scoutRow } from './tongs.js';
+import { sendScout, signCard } from '../core/dossier.js';
 import { clientRival } from '../core/rivals.js';
 import { clientRivalLine } from '../data/rivals.js';
 import { freelancerAsCrew, shareOf, MAX_FREELANCERS_PER_JOB } from '../core/freelance.js';
@@ -183,6 +184,10 @@ function onClick(e) {
     case 'tongs-open': tongsView = ''; window.scrollTo?.(0, 0); break;
     case 'tongs-close': tongsView = null; window.scrollTo?.(0, 0); break;
     case 'tong-page': tongsView = id; window.scrollTo?.(0, 0); break;
+    // A free name or a name in a tong: its page, a scout trip (two days away), and signing (core/dossier.js).
+    case 'tong-name': screen = 'ops'; tongsView = `name:${id}`; window.scrollTo?.(0, 0); break;
+    case 'scout-send': { const [name, opId] = id.split('|'); return setState(sendScout(state, name, opId)); }
+    case 'sign-name': { const next = signCard(state, id); if (next !== state) tongsView = ''; return setState(next); }
     // Lore › Districts: open one district's full write-up (tap again to fold it); from the Ops card, go there.
     case 'ops-district': screen = 'ops'; cityDistrict = id; cityMapDue = true; break;
     case 'lore-district': loreDistrict = loreDistrict === id ? null : id; break;
@@ -1997,7 +2002,8 @@ function renderSideBoard() {
               <span class="siderow__sub">${esc(t.name)} · ${esc(districtName(t.district))} · ${statIcon(t.stat)}</span>
             </button>
           </li>`).join('')}
-      </ul>` : '<p class="muted">Nothing left this week. More on Monday.</p>'}`;
+      </ul>` : '<p class="muted">Nothing left this week. More on Monday.</p>'}
+      ${scoutRow(state) ? `<ul class="list list--cols sidelist">${scoutRow(state)}</ul>` : ''}`;
 }
 
 // A small (i) that opens an explanation under its line on tap (no hover: iOS rules in CLAUDE.md).

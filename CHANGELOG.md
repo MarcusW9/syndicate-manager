@@ -7,6 +7,11 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-08 · Free names: scout them, then sign them
+- **Ops › The other tongs › Free names:** every three to six weeks a runner between tongs is put forward. Open their page to see what the street says, what they'd want, and what it would cost.
+- **Scouting:** send someone to watch them for two days (from their page, or from the side-work board on Jobs). A good trip shows their stats and how far they might go; each further trip sharpens that read, up to a sure one.
+- **Signing:** a runner may want a bit more than their worth to be convinced, depending on your tong's rank, any Legends or Elites on the crew, a leader, a free bed and your cash. A runner still in another tong also costs a buyout fee, which goes to that tong and cools them toward you a little. Heads of tongs won't leave. If you can't sign them, the page says why.
+
 ## 2026-11-08 · The other tongs fold, form and let people go (behind the scenes, save v53)
 - Poor, small tongs now fold, their runners drift free one by one, and a new tong can form from the best of them. Now and then a free name is put forward (every three to six weeks, at random). Nothing is on screen yet: scouting, signing and the buyout fee come with the next slice, and nothing about your jobs, pay, heat or rolls changes. Rival tongs now have a "regard" for you instead of a grudge, which only an explicit poach or a shared job will move.
 

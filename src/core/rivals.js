@@ -376,12 +376,12 @@ export function namesOnTheStreet(state) {
   const bonus = { unknown: 0, known: 5, respected: 10, elite: 18, legend: 25 };
   const pool = r.cards.map((c) => {
     const tong = tongById(r, c.tongId);
-    return { score: cardRating(c) + bonus[c.fame], name: c.name, own: false, tong: tong?.name ?? null, fame: c.fame, home: c.home, role: c.role, word: ratingWord(cardRating(c), c) };
+    return { score: cardRating(c) + bonus[c.fame], id: slug(c.name), name: c.name, own: false, tong: tong?.name ?? null, fame: c.fame, home: c.home, role: c.role, word: ratingWord(cardRating(c), c) };
   });
   for (const op of state.crew ?? []) {
     if (op.freelance || op.condition?.injury === 'dead') continue;
     const rating = ratingOf(op);
-    pool.push({ score: rating + (bonus[fameOf(op)] ?? 0), name: op.name, own: true, tong: null, fame: fameOf(op), home: op.hall ?? 'oldTown', role: op.role, word: ratingWord(rating, op) });
+    pool.push({ score: rating + (bonus[fameOf(op)] ?? 0), id: null, name: op.name, own: true, tong: null, fame: fameOf(op), home: op.hall ?? 'oldTown', role: op.role, word: ratingWord(rating, op) });
   }
   // The street talks about other people too: the player's own runners take at most half the list.
   const ownMax = Math.floor(RIVALS.namesMax / 2);
@@ -407,7 +407,7 @@ export function rivalView(state) {
       const latest = [...r.word].reverse().find((w) => w.refs.includes(t.id) || cards.some((c) => w.refs.includes(c.id)));
       return {
         id: t.id, name: t.name, home: t.home, style: t.style, head: head?.name ?? null,
-        names: cards.filter((c) => c !== head).map((c) => c.name).sort().slice(0, 3),
+        names: cards.filter((c) => c !== head).sort((a, b) => (a.name < b.name ? -1 : 1)).slice(0, 3).map((c) => ({ id: slug(c.name), name: c.name })),
         said: latest ? wordFor(state, latest) ?? null : null,
       };
     }),

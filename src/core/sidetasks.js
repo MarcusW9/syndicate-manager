@@ -22,6 +22,7 @@ import { clampHeat, addHeat } from './heat.js';
 import { money } from './money.js';
 import { pick, makeRng } from './rng.js';
 import { noteInjury, earn } from './earned.js';
+import { resolveScout, findCard } from './dossier.js';
 
 export const SIDE_BOARD_SIZE = 5;
 export const SIDE_DIFFICULTY = 6; // rookie-job level: a 9 in the stat needs a 7 on the die
@@ -122,7 +123,7 @@ export function returnSideTasks(state) {
   const due = (state.sideOut ?? []).filter((s) => s.returnDay <= state.day);
   if (!due.length) return;
   state.sideOut = state.sideOut.filter((s) => s.returnDay > state.day);
-  for (const s of due) resolve(state, s);
+  for (const s of due) (s.scout ? resolveScout(state, s) : resolve(state, s));
 }
 
 function resolve(state, { taskId, crewIds }) {
@@ -200,5 +201,7 @@ function resolve(state, { taskId, crewIds }) {
 
 /** Side tasks still out: [{ returnDay, name, district, crewIds }]. */
 export function sideTasksOut(state) {
-  return (state.sideOut ?? []).map((s) => ({ returnDay: s.returnDay, name: sideTaskById(s.taskId)?.name ?? s.taskId, district: sideTaskById(s.taskId)?.district ?? null, crewIds: s.crewIds }));
+  return (state.sideOut ?? []).map((s) => (s.scout
+    ? { returnDay: s.returnDay, name: `Scout ${findCard(state, s.scout)?.name ?? 'a name'}`, district: findCard(state, s.scout)?.home ?? null, crewIds: s.crewIds }
+    : { returnDay: s.returnDay, name: sideTaskById(s.taskId)?.name ?? s.taskId, district: sideTaskById(s.taskId)?.district ?? null, crewIds: s.crewIds }));
 }

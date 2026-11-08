@@ -42,7 +42,13 @@ test('a card always becomes the same runner, and its rating matches within 2', (
 test('what the player sees depends on the scouting level, never more', () => {
   const s = game(3);
   const card = free(s);
-  assert.deepEqual(readFor(s, card), { name: card.name, role: card.role, fame: card.fame, word: readFor(s, card).word, level: 'none', stats: null, potential: null });
+  const cold = readFor(s, card);
+  assert.equal(cold.level, 'none');
+  assert.equal(cold.stats, null);
+  assert.equal(cold.potential, null);
+  assert.equal(cold.name, card.name);
+  assert.equal(cold.tong, null, 'a free name');
+  assert.doesNotMatch(cold.id, /\d/, 'a slug, no digits');
   const crew = s.crew.find((o) => o.stats.social >= 6) ?? s.crew[0];
   let t = s; let tries = 0;
   while (scoutLevel(t, card) < 3 && tries++ < 60) { t = scoutTrip({ ...t, day: t.day + 1 }, card.id, crew.id); t.day += 0; }
