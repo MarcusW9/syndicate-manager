@@ -21,9 +21,9 @@ iframe { border: 1px solid #2a3140; background: #0d0f14; }
 <h1>Analog dossier against the grid</h1>
 <p>The same squad both ways: Signal (named rifle and a ghost kit... the dossier shows only the rifle), Lantern (drone), Synapse (sidearm, and a vest in the grid), Drizzle on standby (trauma kit).</p>
 <section><h2>On a phone (390)</h2><p>Where the trade-off shows: height. The grid's phone layout keeps one row of gear to stay close to the dossier's height.</p>
-<div class="pair"><div><h3>D · Dossier, loadout foot</h3>${cardFrame('d', 390, 760)}</div><div><h3>L · Polaroid and inventory</h3>${gridFrame('L', 390, 760)}</div></div></section>
+<div class="pair"><div><h3>D · Dossier, loadout foot</h3>${cardFrame('d', 390, 760)}</div><div><h3>L · Polaroid and inventory</h3>${gridFrame('L', 390, 760)}</div><div><h3>M · L, smaller</h3>${gridFrame('M', 390, 760)}</div></div></section>
 <section><h2>On a computer (the plan column, 920)</h2><p>Room for the whole inventory: everything each runner carries, at one scale.</p>
-<div class="pair"><div><h3>D · Dossier, loadout foot</h3>${cardFrame('d', 920, 640)}</div><div><h3>L · Polaroid and inventory</h3>${gridFrame('L', 920, 640)}</div></div></section>
+<div class="pair"><div><h3>D · Dossier, loadout foot</h3>${cardFrame('d', 920, 640)}</div><div><h3>M · L, smaller</h3>${gridFrame('M', 920, 640)}</div><div><h3>L · Polaroid and inventory</h3>${gridFrame('L', 920, 640)}</div></div></section>
 </body></html>`;
 writeFileSync(new URL('./gear-compare.html', import.meta.url), html);
 console.log('wrote gear-compare.html');
