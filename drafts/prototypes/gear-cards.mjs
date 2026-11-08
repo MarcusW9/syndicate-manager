@@ -93,13 +93,13 @@ const VARIANTS = [
 // A variant's board: E also puts the item's name under the stat as a tag.
 const boardFor = (v) => (v.tag ? board.replace(/<span class="dossier__gear">([\s\S]*?)<span>([^<]*)<\/span><\/span>/g, '<span class="dossier__gear">$1<span>$2</span></span><span class="dossier__tag">$2</span>') : board);
 
-const frame = (v, w) => {
+const frame = (v, w, h = null) => {
   const doc = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=${w}">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>${css}
 html, body { background: #0d0f14; margin: 0; } body { padding: 14px; }
 ${v.css}</style></head><body><h2>Squad</h2>${boardFor(v)}</body></html>`;
-  return `<iframe title="${esc(v.name)} at ${w}px" width="${w}" height="${w < 500 ? 680 : 560}" srcdoc="${esc(doc)}"></iframe>`;
+  return `<iframe title="${esc(v.name)} at ${w}px" width="${w}" height="${h ?? (w < 500 ? 680 : 560)}" srcdoc="${esc(doc)}"></iframe>`;
 };
 
 const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -119,3 +119,6 @@ ${VARIANTS.map((v) => `<section><h2>${esc(v.name)}</h2><p>${esc(v.note)}</p><div
 </body></html>`;
 writeFileSync(new URL('./gear-cards.html', import.meta.url), html);
 console.log('wrote gear-cards.html');
+
+/** One variant's frame, for drafts/prototypes/gear-compare.mjs. */
+export const cardFrame = (id, w, h) => frame(VARIANTS.find((v) => v.id === id), w, h);

@@ -218,7 +218,56 @@ for (const svg of document.querySelectorAll('.inv__it svg')) {
 }
 </script>`;
 
+// L · J refined (2026-11-08): the polaroid keeps a slight tilt and its colour tab, the gear grid stays
+// straight; on a phone only the first row of gear shows (the main item), with "+1" for the rest, so
+// the column is about as tall as a dossier; wider, the whole 2×2.
+const invRow = (op) => {
+  const items = invItems(op);
+  let cells = 0; let first = 0;
+  const html = items.map((it) => {
+    const w = LONG.has(it.type) ? 2 : 1;
+    const inFirst = cells + w <= 2;
+    if (inFirst) first += 1;
+    cells += w;
+    return invCell(op, it).replace('class="inv__it', `class="inv__it ${inFirst ? '' : 'is-more'}`);
+  }).join('');
+  const blanks = Math.max(0, 4 - cells);
+  const firstBlanks = Math.max(0, 2 - Math.min(2, cells));
+  const blank = (i) => `<div class="inv__cell ${i < firstBlanks ? '' : 'is-more'}"></div>`;
+  const more = items.length - first;
+  return `<div class="inv inv--l">${html}${Array.from({ length: blanks }, (_, i) => blank(i)).join('')}${more ? `<span class="inv__more" aria-label="${more} more carried">+${more}</span>` : ''}</div>`;
+};
+const TILT = ['-1.2deg', '0.8deg', '-0.6deg', '1deg'];
+const refined = () => `
+  <div class="board g-cols l-ref">
+    <div class="head"><span>3 inside · 3 recommended</span><button class="joss">Joss's picks</button></div>
+    <p class="label">Inside team <span>moves as one group</span></p>
+    <div class="cols">
+      ${inside.map((op, i) => `<div class="col" style="--tilt:${TILT[i]}">${x}${polaroid(op)}${invRow(op)}<p class="stat">${line(op)}</p></div>`).join('')}
+      <div class="col col--empty">${empty('Extra', 'more backup, more at risk')}</div>
+    </div>
+    <p class="label">Outside <span>optional</span></p>
+    <div class="cols">
+      <div class="col" style="--tilt:0.9deg">${x}${polaroid(standby)}${invRow(standby)}<p class="stat"><span class="iconword">On call ·</span> ${statValue('medical', effectiveStat(standby, 'medical').value)}</p></div>
+      <div class="col col--empty">${empty('Overwatch', 'needs a rifle or drone')}</div>
+      <div class="col col--empty">${empty('Wheels', 'takes the driving rolls')}</div>
+    </div>
+  </div>`;
+const L_CSS = `
+.l-ref .pola { transform: rotate(var(--tilt, 0deg)); }
+.inv--l { position: relative; }
+.inv__more { display: none; position: absolute; top: -7px; right: -7px; z-index: 2; min-width: 22px; height: 22px; padding: 0 5px; place-items: center; font: 700 .7rem var(--display); color: #0a0c0f; background: var(--accent-2); clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 0 100%); }
+.l-ref .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: var(--muted); font-size: .85rem; }
+.l-ref .joss { min-height: 44px; padding: 0 14px; background: #10261f; border: 1px solid #1f5a4a; color: var(--accent-2); font: 700 .9rem var(--display); letter-spacing: .12em; text-transform: uppercase; }
+@media (min-width: 481px) { .l-ref .cols { grid-template-columns: repeat(4, minmax(0, 130px)); } }
+@media (max-width: 480px) {
+  .inv--l .is-more { display: none; }
+  .inv__more { display: grid; }
+}
+`;
+
 const VARIANTS = [
+  { name: 'L · J refined', note: 'J with the two changes: the polaroid keeps a slight tilt and its colour tab (a photo still feels like a photo), the gear stays straight. On a phone only the first row of gear shows, the main item, with "+1 more carried" for the rest, so a column is close to a dossier\'s height; on a computer the whole 2×2.', html: refined },
   { name: 'J · Inventory under the photo', note: 'The drawings without their background, laid on inventory cells under each polaroid, two cells wide. A rifle, drone or deck is 2×1, exactly as wide as the photo; a sidearm, kit or vest is 1×1, half that. Empty cells show the room left.', html: under },
   { name: 'K · Inventory beside the photo', note: 'The same inventory as J, beside the polaroid instead of under it: the photo and a 2×2 grid as one block, so a rifle is as long as the photo is wide. Shorter than J; four runners across on a computer.', html: beside },
   { name: 'G · Columns', note: 'Each runner is a column: their polaroid on top, their main gear in a square tile of the same width under it, the stat under both. Photos line up with photos and guns with guns across the squad. Three to a row on a phone.', html: columns },
@@ -226,11 +275,11 @@ const VARIANTS = [
   { name: 'I · Photo and gear side by side', note: 'Each runner is one cell holding two equal squares: the polaroid and their gear, next to each other, the stat under. Compact; four across on a computer, two on a phone.', html: pairs },
 ];
 
-const frame = (v, w) => {
+const frame = (v, w, h = null) => {
   const doc = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=${w}">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<style>${CSS}${INV_CSS}</style></head><body><h2>Squad</h2>${v.html()}${FIT}</body></html>`;
-  return `<iframe title="${esc(v.name)} at ${w}px" width="${w}" height="${w < 500 ? 820 : 700}" srcdoc="${esc(doc)}"></iframe>`;
+<style>${CSS}${INV_CSS}${L_CSS}</style></head><body><h2>Squad</h2>${v.html()}${FIT}</body></html>`;
+  return `<iframe title="${esc(v.name)} at ${w}px" width="${w}" height="${h ?? (w < 500 ? 820 : 700)}" srcdoc="${esc(doc)}"></iframe>`;
 };
 
 const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -250,3 +299,6 @@ ${VARIANTS.map((v) => `<section><h2>${esc(v.name)}</h2><p>${esc(v.note)}</p><div
 </body></html>`;
 writeFileSync(new URL('./gear-grid.html', import.meta.url), html);
 console.log('wrote gear-grid.html');
+
+/** One variant's frame by its letter, for drafts/prototypes/gear-compare.mjs. */
+export const gridFrame = (letter, w, h) => frame(VARIANTS.find((v) => v.name.startsWith(letter)), w, h);
