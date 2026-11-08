@@ -8,6 +8,10 @@ import { rollTarget } from './risk.js';
 import { d20 } from './rng.js';
 
 export const GETAWAY = { clean: 5, shedClean: 2, shedGood: 1, bad: -5 };
+// Followed home (DESIGN.md 2026-11-08): a getaway that fails leads them to the crew's hall. For
+// FOLLOW.days.fail / .bad days a raid there is one threat step harder and the heat it takes to draw one is FOLLOW.heatEase lower (careful play stays clear).
+// A pilot of FOLLOW.skilled or better shakes the lesser tail (a plain failure) and shortens the worse.
+export const FOLLOW = { days: { fail: 3, bad: 6 }, skilled: 14, skilledCut: 3, threat: 1, heatEase: 2 };
 
 /** The roll to beat: 10 + the job's typical difficulty + 1 per alert point. */
 export const getawayDifficulty = (template, alert = 0) => Math.round(rollTarget(template)) + alert;
@@ -42,5 +46,18 @@ export function playGetaway({ pilot, heat, sheddable = heat, template, approach,
   const result = margin >= GETAWAY.clean ? 'clean' : margin >= 0 ? 'good' : margin <= GETAWAY.bad ? 'bad' : 'fail';
   const shed = Math.min(sheddable, result === 'clean' ? GETAWAY.shedClean : result === 'good' ? GETAWAY.shedGood : 0);
   const tail = result === 'bad' || (result !== 'clean' && result !== 'good' && alert >= alertMax && alertMax > 0);
-  return { pilot, die, value: read.value, need: read.need, margin, result, shed, tail };
+  const raw = result === 'fail' ? FOLLOW.days.fail : result === 'bad' ? FOLLOW.days.bad : 0;
+  const followed = raw && read.value >= FOLLOW.skilled ? Math.max(0, raw - FOLLOW.skilledCut) : raw;
+  return { pilot, die, value: read.value, need: read.need, margin, result, shed, tail, followed };
 }
+
+/** Which hall they'd lead the followers to: the one most of the crew live in (null if no hall stands). */
+export function homeHallOf(state, crew, homeDistrict) {
+  const count = {};
+  for (const o of crew) { const d = o.hall ?? homeDistrict; count[d] = (count[d] ?? 0) + 1; }
+  const best = Object.entries(count).sort((a, b) => b[1] - a[1])[0]?.[0];
+  return (state.halls ?? []).find((h) => h.district === best) ?? null;
+}
+
+/** Is this hall being watched by someone who followed the crew home? */
+export const followedIn = (state, district) => ((state.halls ?? []).find((h) => h.district === district)?.followedUntil ?? 0) > state.day;

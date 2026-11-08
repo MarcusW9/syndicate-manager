@@ -7,6 +7,10 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-08 · Piloting: followed home
+- A **failed getaway** now means someone follows the crew home. The hall most of them live in is watched for 3 days (a miss) or 6 (a bad miss). A raid there in that time is one step harder and comes at a lower heat than usual, and the warning says so. A pilot of 14 or better shakes a plain miss and shortens a bad one.
+- Faster jobs and same-day hall moves are dropped from the piloting plan: getting across the city doesn't take a day.
+
 ## 2026-11-08 · Piloting: driving gets a getaway (save v51)
 - Driving is now **piloting**, and drones use it: a drone's overwatch rolls piloting, and Drone Jockey needs piloting 10 instead of tech 10. Old saves are converted.
 - **The getaway.** When a job is leaving heat, the Wheels (or else the best pilot who came home) rolls to get the crew out. A good getaway takes 1 heat off, a clean one 2 (never below zero for the job, and never the Loud approach's own +1). A miss changes nothing; a bad miss leaves a tail, so the next job in that district starts watched. A quiet job has no getaway roll. It shows in the report, and the Wheels card on the squad board shows its risk.

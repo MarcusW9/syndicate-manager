@@ -38,7 +38,8 @@ import { intelFor } from './sidetasks.js';
 import { afterJob, noteInjury, spendSecondWind, earnedOf } from './earned.js';
 import { overwatchKit, seriousGuard, patchBonus } from './gear.js';
 import { BATTLE, loudFightDue } from './battle.js';
-import { playGetaway, getawayPilot } from './piloting.js';
+import { playGetaway, getawayPilot, homeHallOf } from './piloting.js';
+import { HOME_HALL } from '../data/halls.js';
 import { crewOf, actors, overwatchOp, standbyOp, standbyReady, driver, onJob, opById, grow, record, takeWhy, addNeural } from './run.js';
 import { startBattle, runBattle, resolveBattleDecision, guardsUp, guardCount, handOffFight, pullBack } from './runbattle.js';
 export { runBattle, handOffFight, pullBack };
@@ -917,12 +918,16 @@ function finish(state) {
     heatGain -= getaway.shed;
     if (getaway.tail && state.heatWatched !== true) state.heatWatched = tpl.district; // a tail: the next job there is watched
     const g = getaway;
+    // Followed home: the hall most of the crew live in is watched for a few days (core/raids.js reads it).
+    const hall = g.followed ? homeHallOf(state, onJob(state, am).filter((o) => !deaths.includes(o)), HOME_HALL) : null;
+    if (hall) hall.followedUntil = Math.max(hall.followedUntil ?? 0, state.day + g.followed);
+    g.hall = hall?.district ?? null;
     const text = g.result === 'clean' ? `${g.pilot.handle} gets them out clean: heat −${g.shed}.`
       : g.result === 'good' ? `${g.pilot.handle} gets them out: heat −${g.shed}.`
-      : g.tail ? `${g.pilot.handle} can't shake the tail. The next job here will be watched.` : `${g.pilot.handle} gets them out, but the heat stays.`;
-    am.getaway = { handle: g.pilot.handle, result: g.result, shed: g.shed, tail: g.tail, die: g.die, value: g.value, need: g.need, text };
+      : g.tail ? `${g.pilot.handle} can't shake the tail. The next job here will be watched${g.hall ? ', and someone followed them home' : ''}.` : g.hall ? `${g.pilot.handle} gets them out, but someone follows them home.` : `${g.pilot.handle} gets them out, but the heat stays.`;
+    am.getaway = { handle: g.pilot.handle, result: g.result, shed: g.shed, tail: g.tail, followed: g.hall, die: g.die, value: g.value, need: g.need, text };
     am.log.push({ kind: g.tail ? 'bad' : 'good', text });
-    record(am, { kind: 'getaway', stat: 'piloting', actor: { id: g.pilot.id, handle: g.pilot.handle }, die: g.die, value: g.value, need: g.need, success: g.margin >= 0, result: g.result, shed: g.shed, tail: g.tail, text, outcomeCost: {} });
+    record(am, { kind: 'getaway', stat: 'piloting', actor: { id: g.pilot.id, handle: g.pilot.handle }, die: g.die, value: g.value, need: g.need, success: g.margin >= 0, result: g.result, shed: g.shed, tail: g.tail, followed: g.hall, text, outcomeCost: {} });
   }
   state.cash += pay - cuts;
   addHeat(state, tpl.district, heatGain); // in the job's district (heat per district, save v39)
