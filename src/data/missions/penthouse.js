@@ -9,7 +9,7 @@ export const PENTHOUSE = {
   pay: 12000,
   days: 3,
   crewSize: 4,
-  keyStats: ['stealth', 'tech', 'driving'],
+  keyStats: ['stealth', 'tech', 'piloting'],
   brief: 'A Glass Heights executive keeps a vault of crypto keys and jade in his penthouse, 71 floors up. He\'s in Singapore for three nights.',
   beats: [
     'Glass Heights glitters in the rain. {driver} drops the crew at the service entrance of the tower.',
@@ -107,7 +107,7 @@ export const PENTHOUSE = {
       text: 'Tower security locks down the lobby. The only way out is the roof, or the loading dock past two guards.',
       focusRole: 'driver',
       choices: [
-        { id: 'dock', label: '{driver} rams the loading dock gate', kind: 'push', stat: 'driving', difficulty: 13, cost: { heat: 2 },
+        { id: 'dock', label: '{driver} rams the loading dock gate', kind: 'push', stat: 'piloting', difficulty: 13, cost: { heat: 2 },
           success: 'The gate folds like paper. You\'re on the flyover before the guards reach their radios.', failure: 'The van takes the gate badly. Glass everywhere.', failureInjury: 'serious',
           report: { success: '{driver} smashed through the loading-dock gate and reached the flyover before the guards reacted. Heat +2.', failure: 'The van hit the loading-dock gate badly, and someone was badly hurt. Heat +2.' } },
         { id: 'roof', label: 'Out over the roof to the next tower', kind: 'push', stat: 'stealth', difficulty: 14,

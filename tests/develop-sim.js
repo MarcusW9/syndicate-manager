@@ -8,7 +8,7 @@ import { availability } from '../src/core/crew.js';
 import { prepareOperative, STATS } from '../src/core/development.js';
 import { playMission, carefulPolicy } from './play.js';
 
-const ROLE_PRIMARY = { muscle: 'combat', driver: 'driving', tech: 'tech', face: 'social', medic: 'medical', infiltrator: 'stealth' };
+const ROLE_PRIMARY = { muscle: 'combat', driver: 'piloting', tech: 'tech', face: 'social', medic: 'medical', infiltrator: 'stealth' };
 
 /** A rookie with main stat `start` and ceiling `ceiling`. */
 export function makeRookie({ role = 'infiltrator', age = 20, start = 11, ceiling = 17 } = {}) {

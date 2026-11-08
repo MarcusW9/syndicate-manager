@@ -8,7 +8,7 @@
  * @property {number} stealth
  * @property {number} tech
  * @property {number} social
- * @property {number} driving
+ * @property {number} piloting
  * @property {number} medical
  * @property {number} cool      Composure under pressure
  */

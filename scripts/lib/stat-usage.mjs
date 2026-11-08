@@ -20,7 +20,7 @@ import { makeRng, hash } from '../../src/core/rng.js';
 import { sideTaskById } from '../../src/core/sidetasks.js';
 import { autoFounders, playMission, carefulPolicy } from '../../tests/play.js';
 
-export const STATS = ['combat', 'stealth', 'tech', 'social', 'medical', 'driving', 'cool'];
+export const STATS = ['combat', 'stealth', 'tech', 'social', 'medical', 'piloting', 'cool'];
 export const APPROACH_IDS = ['stealth', 'tech', 'loud', 'con'];
 export const DECISIVE = [0.15, 0.85];
 
@@ -159,7 +159,7 @@ function picks(s, job, approach, { alwaysWheels = false } = {}) {
   let wheels = p.wheels;
   if (alwaysWheels && !wheels) {
     const used = new Set([...p.crew, p.overwatch].filter(Boolean));
-    const driver = free.filter((o) => !used.has(o.id)).sort((a, b) => effectiveStat(b, 'driving', { approach }).value - effectiveStat(a, 'driving', { approach }).value)[0];
+    const driver = free.filter((o) => !used.has(o.id)).sort((a, b) => effectiveStat(b, 'piloting', { approach }).value - effectiveStat(a, 'piloting', { approach }).value)[0];
     wheels = driver?.id ?? null;
   }
   const standby = p.standby && p.standby !== wheels ? p.standby : null;

@@ -1,4 +1,4 @@
-// Wheels and standby (PLAN-CORE-LOOP.md, slice 3): Wheels takes every driving roll from the van;
+// Wheels and standby (PLAN-CORE-LOOP.md, slice 3): Wheels takes every piloting roll from the van;
 // standby waits at the van until called in at max alert (they join; the alert stays) or to rescue
 // someone badly hurt (they take their place). The death rule and the exits still hold.
 // Run with: npm test
@@ -61,20 +61,20 @@ test('Wheels and standby are crew of your own, one place each', () => {
   assert.equal(M.startMission(s, job, [a, b], 'stealth', { wheels: 'nobody' }), s, 'someone real');
 });
 
-test('Wheels takes every driving roll from the van, and the read says so', () => {
+test('Wheels takes every piloting roll from the van, and the read says so', () => {
   let checked = 0;
   for (let seed = 1; seed <= 60 && checked < 10; seed++) {
     let s = begin(seed, 'container409', APPROACH_IDS[seed % 4], { wheels: true });
     s = toCrisis(s);
     const odds = M.crisisOdds(s) ?? [];
-    for (const o of odds.filter((x) => x.roller && x.choice.stat === 'driving')) {
+    for (const o of odds.filter((x) => x.roller && x.choice.stat === 'piloting')) {
       assert.equal(o.roller.op.id, s.activeMission.wheels, `seed ${seed}: Wheels drives`);
       assert.ok(o.roller.notes.includes('Wheels'), 'the note says who');
       assert.ok(!o.roller.notes.some((n) => /short-handed|backs up/.test(n)), 'alone at the wheel: no backup, no short-handed');
       checked++;
     }
   }
-  assert.ok(checked >= 3, `saw ${checked} driving choices`);
+  assert.ok(checked >= 3, `saw ${checked} piloting choices`);
 });
 
 test('standby at max alert: they join the team, the alert stays up, and the next call has no standby', () => {

@@ -18,7 +18,7 @@ import { templateById, twistById, jobView, namedBonus } from './jobs.js';
 import { NAMED_OFFER, NAMED_TEXT } from '../data/fame.js';
 import { adjustTrust, clientById, completionTrust, ABORT_TRUST } from './clients.js';
 import { nextRng } from './random.js';
-import { d20 } from './rng.js';
+import { d20, hashRng } from './rng.js';
 import { checkRenewal } from './renewals.js';
 import { APPROACHES, crewRoll, effectiveStat, findRole, worsenInjury, setInjury, maxCrew } from './crew.js';
 import { successChance, riskLabel } from './risk.js';
@@ -38,6 +38,7 @@ import { intelFor } from './sidetasks.js';
 import { afterJob, noteInjury, spendSecondWind, earnedOf } from './earned.js';
 import { overwatchKit, seriousGuard, patchBonus } from './gear.js';
 import { BATTLE, loudFightDue } from './battle.js';
+import { playGetaway, getawayPilot } from './piloting.js';
 import { crewOf, actors, overwatchOp, standbyOp, standbyReady, driver, onJob, opById, grow, record, takeWhy, addNeural } from './run.js';
 import { startBattle, runBattle, resolveBattleDecision, guardsUp, guardCount, handOffFight, pullBack } from './runbattle.js';
 export { runBattle, handOffFight, pullBack };
@@ -134,7 +135,7 @@ export function currentStep(am) {
 
 /**
  * Start a job. opts: { overwatch: { id, kit } (one crew member outside the inside crew, carrying
- * that rifle or drone: core/gear.js), wheels: id (in the van: takes every driving roll), standby: id (at the
+ * that rifle or drone: core/gear.js), wheels: id (in the van: takes every piloting roll), standby: id (at the
  * van until called in), callIn ('every' | 'risky' | 'never'), orders (how the crew decides when
  * it doesn't call you: core/autorun.js ORDERS) }.
  */
@@ -529,8 +530,8 @@ export function resolvePending(prev, optionId) {
 
 // --- crisis choices ----------------------------------------------------------
 
-/** Who counts for a choice's requirement: the inside crew, and Wheels for a driving one. */
-const reqCrew = (state, am, crew, req) => (req?.kind === 'stat' && req.value === 'driving' && driver(state, am) ? [...crew, driver(state, am)] : crew);
+/** Who counts for a choice's requirement: the inside crew, and Wheels for a piloting one. */
+const reqCrew = (state, am, crew, req) => (req?.kind === 'stat' && req.value === 'piloting' && driver(state, am) ? [...crew, driver(state, am)] : crew);
 
 function meetsRequirement(crew, req) {
   if (!req) return { ok: true };
@@ -552,11 +553,11 @@ function rollerFor(state, am, choice, crew) {
   const medic = choice.kind === 'stabilise' ? findRole(crew, 'medic') : null;
   const stat = medic ? 'medical' : choice.stat;
   const intel = intelFor(state, templateById(am.templateId).district, am.inside);
-  // Wheels takes every driving roll, alone at the wheel: no backup, no short-handed penalty (slice 3).
-  const wheels = stat === 'driving' ? driver(state, am) : null;
+  // Wheels takes every piloting roll, alone at the wheel: no backup, no short-handed penalty (slice 3).
+  const wheels = stat === 'piloting' ? driver(state, am) : null;
   if (wheels) {
-    const own = effectiveStat(wheels, 'driving', { approach: am.approach, crew: [wheels] });
-    return crewRoll([wheels], 'driving', { approach: am.approach, lead: { op: wheels, value: own.value, notes: ['Wheels', ...own.notes] }, watched: am.watched ?? 0, intel, job: jobContext(am, choice, crew), alert: am.alert ?? 0 });
+    const own = effectiveStat(wheels, 'piloting', { approach: am.approach, crew: [wheels] });
+    return crewRoll([wheels], 'piloting', { approach: am.approach, lead: { op: wheels, value: own.value, notes: ['Wheels', ...own.notes] }, watched: am.watched ?? 0, intel, job: jobContext(am, choice, crew), alert: am.alert ?? 0 });
   }
   return crewRoll(crew, stat, { approach: am.approach, recommended, lead: medic ? medicLead(medic, am, crew) : namedLead(state, am, crew, stat), watched: am.watched ?? 0, intel, job: jobContext(am, choice, crew), alert: am.alert ?? 0 });
 }
@@ -752,7 +753,7 @@ export function chooseOption(prev, choiceId) {
   if (success) {
     am.log.push({ kind: 'good', text: fill(choice.success, state, voice) });
     // Ghost Driver (earned): a clean getaway at the wheel sheds a point of the heat the move costs.
-    if (choice.stat === 'driving' && (crisis.situations ?? []).includes('escape') && (choice.cost?.heat ?? 0) > 0 && earnedOf(roller.op, 'ghost_driver')) {
+    if (choice.stat === 'piloting' && (crisis.situations ?? []).includes('escape') && (choice.cost?.heat ?? 0) > 0 && earnedOf(roller.op, 'ghost_driver')) {
       am.extraHeat -= 1;
       am.log.push({ kind: 'good', text: `${roller.op.handle} leaves no plate to remember (Ghost Driver): one less heat.` });
       event.saved = 'Ghost Driver: one less heat';
@@ -906,7 +907,23 @@ function finish(state) {
   // Freelancers who make it back take their share of what was actually paid.
   const freelance = crew.filter((o) => isFreelancer(o) && !deaths.includes(o)).map((o) => ({ handle: o.handle, cut: freelanceCut(o, pay) }));
   const cuts = freelance.reduce((n, f) => n + f.cut, 0);
-  const heatGain = (am.aborted ? 0 : tpl.heat + (APPROACHES[am.approach]?.heat ?? 0)) + am.extraHeat;
+  let heatGain = (am.aborted ? 0 : tpl.heat + (APPROACHES[am.approach]?.heat ?? 0)) + am.extraHeat;
+  // The getaway (core/piloting.js): only a job that is leaving heat gets the roll; a quiet one never does.
+  // Any heat at all means a getaway roll, a loud job's included; but only heat the crew earned on the job
+  // (rolls, costs, shots) can be shed: the Loud approach's own +1 is the price of going loud.
+  const pilot = heatGain > 0 ? getawayPilot(onJob(state, am).filter((o) => !deaths.includes(o)), driver(state, am), am.approach) : null;
+  const getaway = pilot ? playGetaway({ pilot, heat: heatGain, sheddable: Math.min(heatGain, am.extraHeat), template: tpl, approach: am.approach, alert: am.alert ?? 0, alertMax: ALERT_MAX, rng: hashRng(state.seed, 'getaway', am.jobId, state.day) }) : null;
+  if (getaway) {
+    heatGain -= getaway.shed;
+    if (getaway.tail && state.heatWatched !== true) state.heatWatched = tpl.district; // a tail: the next job there is watched
+    const g = getaway;
+    const text = g.result === 'clean' ? `${g.pilot.handle} gets them out clean: heat −${g.shed}.`
+      : g.result === 'good' ? `${g.pilot.handle} gets them out: heat −${g.shed}.`
+      : g.tail ? `${g.pilot.handle} can't shake the tail. The next job here will be watched.` : `${g.pilot.handle} gets them out, but the heat stays.`;
+    am.getaway = { handle: g.pilot.handle, result: g.result, shed: g.shed, tail: g.tail, die: g.die, value: g.value, need: g.need, text };
+    am.log.push({ kind: g.tail ? 'bad' : 'good', text });
+    record(am, { kind: 'getaway', stat: 'piloting', actor: { id: g.pilot.id, handle: g.pilot.handle }, die: g.die, value: g.value, need: g.need, success: g.margin >= 0, result: g.result, shed: g.shed, tail: g.tail, text, outcomeCost: {} });
+  }
   state.cash += pay - cuts;
   addHeat(state, tpl.district, heatGain); // in the job's district (heat per district, save v39)
   // A job that hurt a gang: they remember (core/gangs.js); an aborted one doesn't count.
@@ -1023,6 +1040,7 @@ function finish(state) {
     ...(named ? [{ tone: 'good', text: NAMED_TEXT.report.replace('{client}', clientById(am.clientId)?.name ?? 'The client').replace('{op}', opById(state, am.askedFor)?.handle ?? state.memorial.find((m) => m.id === am.askedFor)?.handle ?? 'them').replace('{pct}', Math.round(NAMED_OFFER.payBonus * 100)) }] : []),
     ...(cuts ? [{ tone: 'plain', text: `Freelancers took ${money(cuts)}.` }] : []),
     ...(am.bribe ? [{ tone: 'plain', text: `Props and bribes cost ${money(am.bribe)} up front.` }] : []),
+    ...(am.getaway ? [{ tone: am.getaway.tail ? 'bad' : am.getaway.shed ? 'good' : 'plain', text: am.getaway.text }] : []),
     { tone: heatGain > 0 ? 'warn' : 'plain', text: `Heat +${heatGain}.` },
     ...(grudged ? [{ tone: 'warn', text: `${GANGS[grudge.gang].name[0].toUpperCase()}${GANGS[grudge.gang].name.slice(1)} won't forget this (grudge +${grudged}, now ${grudgeOf(state, grudge.gang)}/10).` }] : []),
     injuries.length ? { tone: 'bad', text: `Injured: ${injuries.join(', ')}.` } : { tone: 'good', text: 'Nobody hurt.' },

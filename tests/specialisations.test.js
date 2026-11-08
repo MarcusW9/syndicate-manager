@@ -16,11 +16,11 @@ import { playMission, carefulPolicy, arm } from './play.js';
 
 const offers = (s) => s.inbox.filter((m) => m.kind === 'spec');
 
-/** A fresh crew; crew[2] can shoot and stay calm, crew[3] knows tech. */
+/** A fresh crew; crew[2] can shoot and stay calm, crew[3] flies drones. */
 function crew(seed = 5) {
   const s = createNewGame({ seed, startCrew: 'fresh' });
   Object.assign(s.crew[2].stats, { combat: 11, cool: 9 });
-  Object.assign(s.crew[3].stats, { tech: 12 });
+  Object.assign(s.crew[3].stats, { piloting: 12 });
   return s;
 }
 
@@ -33,7 +33,7 @@ test('no offer without both the stats and the jobs', () => {
   noteOverwatchJob(shooter, 'rifle');
   assert.deepEqual(eligible(shooter), ['marksman']);
   noteOverwatchJob(shooter, 'drone'); noteOverwatchJob(shooter, 'drone'); noteOverwatchJob(shooter, 'drone');
-  assert.deepEqual(eligible(shooter), ['marksman'], 'drone jobs without the tech: no Drone Jockey');
+  assert.deepEqual(eligible(shooter), ['marksman'], 'drone jobs without the piloting: no Drone Jockey');
   weak.stats.combat = 6; weak.stats.cool = 4;
   for (let i = 0; i < 5; i++) noteOverwatchJob(weak, 'rifle');
   assert.deepEqual(eligible(weak), [], 'jobs without the stats: no Marksman');
@@ -66,7 +66,7 @@ test('Joss offers it once; "Not yet" puts it off for two weeks, then he asks aga
 test('someone who qualifies for both is offered both in one message', () => {
   const s = crew();
   const op = s.crew[2];
-  op.stats.tech = 12;
+  op.stats.piloting = 12;
   for (let i = 0; i < 3; i++) { noteOverwatchJob(op, 'rifle'); noteOverwatchJob(op, 'drone'); }
   checkSpecialisations(s);
   assert.deepEqual(offers(s)[0].options.map((o) => o.id), ['marksman', 'droneJockey', 'later']);

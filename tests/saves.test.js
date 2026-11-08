@@ -220,3 +220,23 @@ test('a v35 save gives each offer on the board its template days', async () => {
   const { templateById } = await import('../src/core/jobs.js');
   for (const j of loaded.jobs) assert.equal(j.days, templateById(j.templateId).days);
 });
+
+// 2026-11-08: driving is piloting (v51).
+test('a v50 save renames driving to piloting everywhere it was kept', async () => {
+  const s = createNewGame({ seed: 47, startCrew: 'fresh' });
+  const op = s.crew[0];
+  op.stats.driving = op.stats.piloting; delete op.stats.piloting;
+  op.potential = { driving: 17 }; op.progress = { driving: 3 };
+  op.growthLog = [{ stat: 'driving', to: 12 }];
+  s.jobs[0].keyStats = ['driving', 'cool'];
+  s.version = 50;
+  const text = JSON.stringify(s);
+  assert.match(text, /driving/);
+  const loaded = await S.importSave({ text: async () => text });
+  assert.equal(loaded.version, SAVE_VERSION);
+  assert.doesNotMatch(JSON.stringify(loaded), /"driving"/);
+  const o = loaded.crew[0];
+  assert.equal(o.stats.piloting, s.crew[0].stats.driving);
+  assert.equal(o.potential.piloting, 17);
+  assert.deepEqual(loaded.jobs[0].keyStats, ['piloting', 'cool']);
+});

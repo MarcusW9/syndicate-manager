@@ -49,8 +49,8 @@ export const GEAR = {
   },
   drone: {
     name: 'Drone', slot: 'tool', price: 3000,
-    desc: 'Lets them take overwatch with the tech stat. Sees everywhere. Every action is neural load +10 for the pilot.',
-    overwatch: { stat: 'tech', uses: 3, heat: 0, neural: 10, indoors: true, damage: 3 },
+    desc: 'Lets them take overwatch with the piloting stat. Sees everywhere. Every action is neural load +10 for the pilot.',
+    overwatch: { stat: 'piloting', uses: 3, heat: 0, neural: 10, indoors: true, damage: 3 },
   },
   deck: {
     name: 'Cyberdeck', slot: 'tool', price: 1000, bonus: { tech: 1 },
@@ -66,7 +66,7 @@ export const GEAR = {
     desc: 'Whatever gets you past a door or a camera unseen: picks and shims, a decoder, a heat veil, a lens blinder.',
   },
   reflex: {
-    name: 'Reflex wiring', slot: 'implant', price: 3500, bonus: { combat: 1, driving: 1 }, neuralFloor: 10,
+    name: 'Reflex wiring', slot: 'implant', price: 3500, bonus: { combat: 1, piloting: 1 }, neuralFloor: 10,
     desc: 'Boosted nerves, but their neural load never rests below 10.',
   },
   cortex: {

@@ -11,7 +11,7 @@ export const LAST_SITTING = {
   pay: 4200,
   days: 1,
   crewSize: 3,
-  keyStats: ['social', 'driving', 'cool'],
+  keyStats: ['social', 'piloting', 'cool'],
   brief: 'Auntie Fung sets two room keys beside your tea. "The parlour has somewhere to go. Four tables, the kettle, the cupboard and anyone pretending they are not upset. Move them before the locks change. Nobody rides in the back with the furniture."',
   beats: [
     'Rain ticks against the parlour awning; upstairs, mahjong tiles knock together beneath a notice giving vacant possession by six.',
@@ -190,7 +190,7 @@ export const LAST_SITTING = {
           id: 'reverse_route',
           label: 'Reverse into the wider service lane',
           kind: 'push',
-          stat: 'driving',
+          stat: 'piloting',
           difficulty: 12,
           success: '{op} reverses between two delivery carts and takes the open route around the block.',
           failure: 'The mirror catches a cart handle; the crew pays for the bent handle and replacement mirror.',

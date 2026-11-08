@@ -49,7 +49,7 @@ export const ROOKIE_CRISES = [
       { id: 'wait', label: 'Wait it out at a dai pai dong', kind: 'adapt', sure: true, stat: 'cool', difficulty: 0, cost: { payCut: 0.2 },
         success: 'Two hours, three bowls of noodles, and the rain stops. You finish late and get paid less.', failure: '', failureInjury: 'none',
         report: { success: 'Typhoon Signal 3; the crew waited it out and finished late.' } },
-      { id: 'drainage', label: '{op} follows the roads with working drains', kind: 'adapt', stat: 'driving', difficulty: 5, requires: { kind: 'stat', value: 'driving', min: 13 }, successCost: { payCut: -0.2 },
+      { id: 'drainage', label: '{op} follows the roads with working drains', kind: 'adapt', stat: 'piloting', difficulty: 5, requires: { kind: 'stat', value: 'piloting', min: 13 }, successCost: { payCut: -0.2 },
         success: '{op} reads the flood and threads the crew home before the low roads go under.', failure: 'A flooded corner stalls them, but {op} gets everyone out dry enough.', failureInjury: 'none',
         report: { success: '{op} followed the working drains and beat the flooding home. Pay +20%.', failure: 'Floodwater stalled them, but {op} got everyone out.' } },
       { id: 'abort', label: 'Abort: everyone home before the roads close', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1 },

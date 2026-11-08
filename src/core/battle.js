@@ -125,7 +125,7 @@ export function buildBattle({ incident, zone, diff, threat, guards, crew, approa
     guards: guardsFor(threat, guards).map((g, i) => onSpot(g, i, 'guards')),
     runners: crew.map((op, i) => onSpot(runnerOf(op, approach), i, 'crew')),
     overwatch: overwatchOf(overwatchOp, ow, zone),
-    wheels: wheels ? { id: wheels.id, handle: wheels.handle, ...effectiveStat(wheels, 'driving', { approach }) } : null,
+    wheels: wheels ? { id: wheels.id, handle: wheels.handle, ...effectiveStat(wheels, 'piloting', { approach }) } : null,
     lights: false, van: false, door: [], intents: null, auto: false,
     turret: turret ? { ...turret } : null, // a hall's auto turret in a raid: { at, aim, damage, left } (data/hallBuild.js TURRET)
   };
@@ -353,7 +353,7 @@ export function playRound(b, rng, orders = {}) {
   if (b.wheels && !b.van && up(b).length) {
     const k = roll(rng, b.wheels.value, b.diff);
     if (k.success) b.van = true;
-    line({ kind: 'van', actor: { id: b.wheels.id, handle: b.wheels.handle }, stat: 'driving', value: b.wheels.value, notes: b.wheels.notes, ...k,
+    line({ kind: 'van', actor: { id: b.wheels.id, handle: b.wheels.handle }, stat: 'piloting', value: b.wheels.value, notes: b.wheels.notes, ...k,
       text: k.success ? `${b.wheels.handle} brings the van round. There's a clean way out.` : `${b.wheels.handle} can't get the van any closer.` });
   }
 

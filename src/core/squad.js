@@ -95,7 +95,7 @@ function squadScore(template, crew, approach, overwatch, threat) {
  * Joss's picks: an inside team of the recommended size and an overwatch (someone carrying a rifle
  * or a drone), chosen one at a time
  * for the best coverage, from the operatives given (free crew; freelancers cost a cut, so Joss
- * leaves them to you). Overwatch only if it helps; Wheels if the job can need driving and they'd
+ * leaves them to you). Overwatch only if it helps; Wheels if the job can need piloting and they'd
  * out-drive the team; standby from whoever's left. Returns { crew, overwatch, kit, wheels, standby }.
  */
 export function jossPicks(template, candidates, approach, { threat = template.threat } = {}) {
@@ -119,11 +119,11 @@ export function jossPicks(template, candidates, approach, { threat = template.th
     }
   }
   if (over) pool.splice(pool.indexOf(over.op), 1);
-  // Wheels: the best driver left, on jobs where driving can come up and they'd beat the team at it.
-  const drives = template.crises?.some((c) => c.choices.some((ch) => ch.stat === 'driving'));
-  const teamDriving = Math.max(0, ...team.map((o) => effectiveStat(o, 'driving', { approach }).value));
-  const driver = drives ? [...pool].sort((a, b) => b.stats.driving - a.stats.driving)[0] : null;
-  const wheels = driver && effectiveStat(driver, 'driving', { approach }).value > teamDriving ? driver : null;
+  // Wheels: the best driver left, on jobs where piloting can come up and they'd beat the team at it.
+  const drives = template.crises?.some((c) => c.choices.some((ch) => ch.stat === 'piloting'));
+  const teamPiloting = Math.max(0, ...team.map((o) => effectiveStat(o, 'piloting', { approach }).value));
+  const driver = drives ? [...pool].sort((a, b) => b.stats.piloting - a.stats.piloting)[0] : null;
+  const wheels = driver && effectiveStat(driver, 'piloting', { approach }).value > teamPiloting ? driver : null;
   if (wheels) pool.splice(pool.indexOf(wheels), 1);
   // Standby: whoever left would be most use coming in at a bad moment (a fighter, then a medic).
   const standby = [...pool].sort((a, b) => (b.stats.combat + b.stats.medical / 2) - (a.stats.combat + a.stats.medical / 2))[0] ?? null;

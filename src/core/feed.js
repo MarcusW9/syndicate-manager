@@ -42,6 +42,7 @@ export function feedItems(events = [], { kit = null } = {}) {
     if (e.kind === 'zone') items.push({ type: 'phase', zone: e.zone, title: e.text });
     else if (e.kind === 'beat') items.push({ type: 'beat', text: e.text });
     else if (e.kind === 'twist') items.push({ type: 'note', text: `Twist: ${e.text}`, tone: 'warn' });
+    else if (e.kind === 'getaway') items.push({ type: 'note', text: e.text, tone: e.tail ? 'bad' : e.shed ? 'good' : 'warn' });
     else if (e.kind === 'aftermath') items.push({ type: 'note', text: e.text, tone: e.death ? 'bad' : 'good' });
     else if (e.kind === 'roll' && e.incident) {
       const inc = incidentById(e.incident);

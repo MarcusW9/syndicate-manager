@@ -13,7 +13,7 @@ export const PARTNER = {
     social: '{name} does the talking',
     combat: '{name} handles anyone who won\'t move',
     medical: '{name} keeps us breathing',
-    driving: '{name} gets us out',
+    piloting: '{name} gets us out',
     cool: '{name} keeps their head when it goes loud',
     overwatch: '{name} watches from up high',
     wheels: '{name} has the van',

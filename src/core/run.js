@@ -9,7 +9,7 @@ export const crewOf = (state, am) => am.crewIds.map((id) => state.crew.find((o) 
 // Who can still act: the inside crew minus anyone an incident has put out of the job.
 export const actors = (state, am) => crewOf(state, am).filter((o) => !(am.out ?? []).includes(o.id) && o.condition.injury !== 'critical');
 export const overwatchOp = (state, am) => (am.overwatch ? state.crew.find((o) => o.id === am.overwatch.id) ?? null : null);
-// Wheels waits in the van and takes every driving roll; standby waits at the van until called in (slice 3).
+// Wheels waits in the van and takes every piloting roll; standby waits at the van until called in (slice 3).
 export const wheelsOp = (state, am) => (am.wheels ? state.crew.find((o) => o.id === am.wheels) ?? null : null);
 export const standbyOp = (state, am) => (am.standby ? state.crew.find((o) => o.id === am.standby.id) ?? null : null);
 /** Standby, if they're still waiting at the van and fit to go in. */

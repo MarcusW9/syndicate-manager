@@ -7,6 +7,11 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-08 · Piloting: driving gets a getaway (save v51)
+- Driving is now **piloting**, and drones use it: a drone's overwatch rolls piloting, and Drone Jockey needs piloting 10 instead of tech 10. Old saves are converted.
+- **The getaway.** When a job is leaving heat, the Wheels (or else the best pilot who came home) rolls to get the crew out. A good getaway takes 1 heat off, a clean one 2 (never below zero for the job, and never the Loud approach's own +1). A miss changes nothing; a bad miss leaves a tail, so the next job in that district starts watched. A quiet job has no getaway roll. It shows in the report, and the Wheels card on the squad board shows its risk.
+- Not yet: faster jobs, same-day hall moves, arrival times for the van, raid support and boats (the rest of `drafts/PROPOSAL-piloting.md`).
+
 ## 2026-11-08 · Plan: the other tongs, without a league
 - No game change. The plan for rival tongs (`drafts/PROPOSAL-phase-3.md` part C) is rewritten: there's no league table, ranked list or ratings. The city's other tongs rise and fade in the background, and you hear where you stand through tier words, Monday's Word and who comes knocking. Your own runners can turn up among the names people talk about.
 

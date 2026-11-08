@@ -669,5 +669,22 @@ function migrate(state) {
     }
     state.version = 50;
   }
+  if (state.version === 50) {
+    // v51: driving is piloting (drafts/PROPOSAL-piloting.md, DESIGN.md 2026-11-08). The stat key moves
+    // everywhere it was stored: stats, potential, progress, growth logs, a job's key stats, a mission in
+    // play. Done as a walk so no copy of the old name is left behind.
+    const walk = (v) => {
+      if (Array.isArray(v)) { v.forEach((x, i) => { if (x === 'driving') v[i] = 'piloting'; else walk(x); }); return; }
+      if (!v || typeof v !== 'object') return;
+      for (const k of Object.keys(v)) {
+        if (k === 'driving') { v.piloting = v.driving; delete v.driving; }
+      }
+      for (const k of Object.keys(v)) {
+        if (v[k] === 'driving') v[k] = 'piloting'; else walk(v[k]);
+      }
+    };
+    walk(state);
+    state.version = 51;
+  }
   return state;
 }
