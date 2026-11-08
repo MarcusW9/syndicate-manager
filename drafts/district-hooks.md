@@ -24,6 +24,7 @@ Crisis beats to keep: the stable hands who love the horses ("They call her Asset
 - The timber walkway collapses while the crew is fleeing, dropping the cargo into the black mud.
 - A generator blows at Uncle Po's yard, and the outage across the shelf blinds the crew's optical feeds.
 - The crew is protecting a whistleblower in the shacks when the tide cuts off every way out and the bounty hunters arrive.
+- From the owner's Silt lore (2026-11-08; canon in WORLD.md "The Silt: life at high water"). Job ideas: someone tapping the community battery bank · pump bearings lost in transit · a shack built across a drainage channel · a family refusing to leave before a Signal 8 · fake high-ground tenancy claims · an AHL survey drone mapping the settlement · contaminated salvage in the scrap trade · an overdue supply boat · two households claiming one generator · an outsider with a deed to land that shouldn't exist. The tide is flavour in the text ("at low water"), not a mechanic: the game runs on days.
 
 ## The Amber Reach (locked)
 - The crew's transit passes are revoked the moment the maglev leaves, locking the carriage doors.

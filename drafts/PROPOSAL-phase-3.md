@@ -1,4 +1,4 @@
-# Phase 3: heists, Legends, rival tongs, loyalty (proposal, 2026-11-07)
+# Phase 3: heists, Legends, the other tongs, loyalty (proposal, 2026-11-07; part C rewritten 2026-11-08)
 
 **Slice A1 is built** (2026-11-07, save v47; DESIGN.md 2026-11-07 "Heists, slice A1" has the owner's calls, which replace the suggested defaults in section 6 items 1-4: Madam Rao's heist first at reputation 15, Mr. Szeto's at three halls and reputation 60, no rank change, 3 prep in 3 weeks, stand-in jobs; and the "clean exit" effect left out). Everything else is not built. The plan for the tong's Phase 3, from the owner's "Guild Direction" handover (written
 outside the repo against save v29) after checking it against main at save v46. DESIGN.md 2026-11-07
@@ -31,10 +31,13 @@ part D, so loyalty doesn't sit beside a second mood bar.
    several districts want several crews out at once.
 2. **B. The Legend defining job** (renown slice 5). Small, already specified, and a heist finale is
    its natural stage.
-3. **C. Rival tongs.** The league around you: who's rising, who's falling, whose runners are
-   famous. Needs its own lore first.
+3. **C. The other tongs.** Peers who work, recruit, rise and fade, felt through tier words and talk,
+   never a table (rewritten 2026-11-08: no league). Needs its own lore first.
 4. **D. Loyalty and mobility.** Needs rival tongs to exist (someone has to make the offer), and
    pairs with retirement (renown slice 6): both are a runner leaving.
+
+**Build order (2026-11-08):** A1 playtest → C0 + C1 → B → A2 → C2/C3 → D. C1 is read-only, so it
+can't move the heist balance being playtested.
 
 ## 2. Part A: heists
 
@@ -104,92 +107,254 @@ heist is the story the game should tell.
 
 Retirement and the Hall of Legends (slice 6) move to part D: both are runners leaving.
 
-## 4. Part C: rival tongs
+## 4. Part C: the other tongs
 
-**Rival tongs are peers, not gangs** (owner, 2026-11-07). Gangs (the Red Lanterns, the Silver Fan
-Circle) are turf powers you can hurt, who raid you for it. Rival tongs run the same business as you:
-they chase the same contracts and the same runners. They compete with you as clubs do in a league;
-they don't raid your halls.
+**Rewritten 2026-11-08 (owner; DESIGN.md 2026-11-08 "No league").** This replaces the 2026-11-07
+plan for a league (a Ledger of tongs, a ranked Lantern List of runners, numbered ratings). Not built.
 
-### What they are
+### C.0 The idea
 
-- **Generated per game**, as a manager game generates its league: 6 tongs at the start, from
-  `hashRng(state.seed, 'rivals')`. Each has `{ id, name, home, style: loud | quiet | corporate | street,
-  rank, prestige, wealth, depth, grudge }`. They use the same rank ladder as yours (Back Room to
-  Harbour), so the Ledger reads "the Golden Tide · District tong" beside you.
-- **Lore first:** one `add-lore` pass for the idea (what a rival tong is; why the big ones "run like
-  companies now"; the Lantern List as the Lantern Course bookies' form that Joss reads) and a
-  naming kit (name patterns per style, home districts) in `src/data/`. After that, no single rival
-  tong needs canon of its own.
-- **The Brass Anchor Society** is canon as "one of the oldest" tongs. Proposed: a fixed elder name on
-  the Ledger, above the competition, never chasing your runners or contracts. Owner's call.
+There is no league. Lantern Bay has other tongs: peers, not gangs. They work, recruit, rise and
+fade, and people talk about them. The player never sees a table, a position or a rating. They feel
+where they stand through:
 
-### Level of detail
+- **Tier words:** the ladder in `data/tong.js` (Back Room to Harbour), the same one the player's
+  rank uses, worked out the same way for rivals (C.2).
+- **Talk:** The Word on Mondays, client remarks, recruits naming who else wanted them.
+- **Who comes knocking:** better runners, better clients and named offers as standing rises.
 
-Each runner is kept in only as much detail as the player can see.
+The aim is to be the tong the city talks about, never "to finish first".
 
-| Tier | Who | Kept | Simulated |
-| --- | --- | --- | --- |
-| Full | Your crew | Everything, as now | Missions, growth, everything |
-| Card | Rival stars and List entries (about 30-50) | `{ id, name, handle, role, tongId, tier, rating, peak, keyStat, age, loyalty, contractEnds, sworn, notes }` (`notes` at most 3 lines) | One weekly update |
-| Number | Each rival's ordinary runners | `depth` on the tong | Folded into the tong's weekly roll |
+Agreed and unchanged from 2026-11-07:
 
-- **Viewing a dossier stores nothing.** The full runner is built on the fly from
-  `hashRng(state.seed, card.id)` and thrown away. The same goes for a rival crew on a job: built for
-  that mission only.
-- **Signing is the only promotion.** The card becomes a stored operative, generated the same way.
-- **The full runner agrees with the card:** generation takes the card's tier, role, key stat and
-  rating as constraints, and the seed fills in the rest, so a 74 on the List looks like a 74.
-- **Leaving demotes.** A runner who leaves you becomes a card with their record counters, peak and
-  one or two highlights, not their full history, so "he's #6 for the Golden Tide now" still works.
-- **Ids are never reused**, including after a tong folds and another forms.
+- Rival tongs are peers. They compete for contracts and runners and never raid halls. The Red
+  Lanterns and the Silver Fan stay the turf powers (`core/gangs.js`, `core/raids.js`).
+- A new set of rivals each game, about 6, from `hashRng(seed, 'rivals')`.
+- Runners are kept only in as much detail as the player can see (C.3).
+- A weekly step on its own random stream that can never move the player's rolls.
 
-### The weekly sim
+### C.1 Rules (lint and test them)
 
-Once, in `settleWeek` (`core/time.js`), in a new `core/rivals.js`:
+1. **No numbers about rivals on screen.** No positions, ratings, prestige figures or hall counts.
+   `core/rivals.js` gives the UI one view, `rivalView(state)`, and `ui/app.js` never reads
+   `state.rivals` directly. The test checks that view: no number values anywhere in it, and no
+   digits in any string except inside proper names.
+   **The one exception (from C3):** the extra cost of signing a name from a tong with a grudge is
+   shown in ¥. That's the player's own money on a price, not a rival statistic, so it's allowed;
+   it's shown on the player's offer, never as a figure on the rival.
+2. **No order beyond tier.** Rivals are grouped by tier and sorted by name inside a tier.
+3. **Isolation.** The rival step never moves `rngCounter`: `core/rivals.js` uses `hashRng` only,
+   never `nextRng`. Every later roll that involves a rival has its own key:
+   `hashRng(seed, 'rival-twist', missionId)` for which tong turns up (C2),
+   `hashRng(seed, 'client-rival', offer.id)` for a client naming one (C2),
+   `hashRng(seed, 'rivals:' + week)` for the weekly step.
+   **"The same game with and without rivals"** (same `rngCounter`, rolls, missions and cash) is a
+   **C1-only** test: from C2 a grudge changes how often a rival turns up on your jobs, and that is
+   meant to change your game. From C2 the test is narrower: the rival step and the C2 rolls never
+   move `rngCounter`.
+4. **Renown never touches a roll** (existing rule). Rivals' talk about a runner costs nothing on a
+   job.
+5. **Rivals never raid, and never touch heat, halls or opening favours.** Their hidden hall count
+   (C.2) is a number on the rival only: no site, no district, nothing in `state.halls` or
+   `HALL_SITES`.
+6. **Keys, not sentences (iOS).** `rivalView` returns word keys and values (a tier id, a talk kind,
+   a place id, a rating-word key, proper names), never finished sentences. A text table in
+   `data/rivals.js` turns keys into lines, so core stays free of wording and a native UI or a
+   translation can drop in. Existing text in core (`core/report.js`) stays as it is; don't add more.
+7. **Portable maths (iOS).** Rival maths uses `hashRng` as it is: 32-bit integer hashing
+   (`Math.imul`, `>>> 0`) over ASCII keys only, so a native port hashes the same bytes. Ratings,
+   prestige and wealth are rounded to integers before they're stored or compared. A fixed-seed
+   golden test (C.11) is what a native build is checked against.
 
-```js
-function simRivals(state) {
-  const rng = hashRng(state.seed, 'rivals', weekOf(state.day)); // never touches rngCounter
-  for (const t of state.rivals.tongs) {          // a fixed array order
-    const strength = t.depth + sum(starsOf(state, t).map((s) => s.rating)) / 10;
-    const week = rollWeek(rng, strength, t.style); // big score / steady / bad week
-    t.prestige = clamp(t.prestige * PRESTIGE_DECAY + week.prestige);
-    t.wealth += week.cash - t.depth * WAGE_EST;
-    for (const s of starsOf(state, t)) s.rating = drift(rng, s, week);
-  }
-  rerankList(state);       // sort about 50 cards plus ours
-  maybeTransfers(state, rng);
-  maybeFoldOrForm(state, rng);
-}
+### C.2 State (save v50 → v51)
+
+`state.rivals` (no "league" anywhere in names, text or files):
+
+```
+state.rivals = {
+  tongs: [{ id, name, home /*district id*/, style /*loud|quiet|corporate|street*/,
+            prestige /*0-100 integer, hidden; same scale as state.reputation*/,
+            wealth /*integer, hidden*/, halls /*1-5, hidden*/,
+            depth /*ordinary runners, a number*/,
+            grudge /*0-10 toward the player*/, headId /*a card*/,
+            status /*'active'|'folded'*/, formedDay }],
+  cards: [{ id /*'c12', or 'op:r7' if they were the player's once*/, name, tongId /*null = free*/,
+            role, rating /*0-100 integer, hidden*/, age, peak, form /*-5..5*/, fame, since /*day*/ }],
+  word:  [{ day, kind, refs }],   // talk for The Word: a kind and ids, no text (rule 6)
+  seq: 0,
+};
 ```
 
-- **Seeded with `hashRng`**, not by XOR-ing the seed with the week: a separate stream, so the rival
-  sim can never shift one of your rolls.
-- **One rating for both kinds.** The List mixes your runners with rival cards, so your runners'
-  rating comes from what exists (standing 0-100, fame, tier, main stat) by the same scale the
-  cards use. Otherwise yours and theirs never compare fairly.
-- **Your prestige on the Ledger** is `state.reputation`. No new ladder.
-- **Fame has a cost:** a runner high on the List adds a little heat to loud work, or makes some
-  stealth work harder (numbers in section 6).
+- **A tier from hidden halls, one rule for one ladder.** Each rival has a hidden hall count that
+  grows with prestige and wealth (the next hall opens when both pass that hall's mark; a long run
+  of losses closes one). Its tier is worked out from that count by the same rule as the player's.
+  Today that rule sits inside `syncHalls` (`core/halls.js`: `TONG_RANKS[clamp(halls, 1, 5) - 1]`,
+  one rank per hall) and `rankOf(state)` reads the result from `state.rank`. C1 lifts it into
+  `rankForHalls(n)` in `core/tong.js`; `syncHalls` and the rivals both call it, and `rankOf` stays
+  as it is for the player. **Checked against the halls code: no clash.** The player's rank already
+  is a pure function of a hall count, rival halls are a count only (rule 5), and both are capped at
+  five because the ladder has five rungs. The tier is worked out each time, never stored.
+- **The week-26 band** (C.11) tunes the hall marks: rivals' tiers should spread around a typical
+  player's rank, not run ahead of it or sit under it.
+- About 40 cards are kept (about 5 per tong plus free and rising names). Ordinary runners are just
+  `depth`.
+- **The Brass Anchor Society is not in `state.rivals`.** It's a fixed elder in `data/rivals.js`:
+  lore and lines for The Word only, never simulated or tiered. It's the ceiling the Legend job (B)
+  points at.
+- **`word` is kept bounded** as the inbox is (`trimInbox`, `INBOX_KEEP`, #106): entries older than
+  4 weeks go on Sundays, and never more than `RIVALS.wordMax` are kept.
+- Loyalty fields (`loyalty`, `contractEnds`, `sworn`) wait for D.
+- **Migration:** v50 saves get `seedRivals(state)` in `migrate`.
 
-### Showing it (phone first: "less to read")
+### C.3 Runners at three levels of detail
 
-- **The Word:** three lines in the Monday briefing at most (a rise, a fall, one thing about you).
-- **The Ledger and the List** one tap away on Ops. The List shows the top 20 on a phone, with yours
-  marked; "show all" for the rest.
+| Who | Kept as | Detail |
+| --- | --- | --- |
+| The player's crew | full operatives | as today |
+| Rival names (~40) | cards | name, tong, role, hidden rating, age, form, fame word |
+| Ordinary rival runners | `tong.depth` | a number, never shown |
 
-### Slices
+- **C1 needs no full rival runners.** Cards are only talked about.
+- **From C3:** `dossierOf(state, card)` builds full stats from `hashRng(seed, card.id)` on demand
+  and is never saved; `cardToOperative` runs on signing; `operativeToCard` runs when a runner
+  leaves (D). Ratings match within ±2 both ways (test, C3).
 
-- **C0. Lore** (`add-lore`): rival tongs, the naming kit, the List's place in the world.
-- **C1. The league:** generated tongs and cards, the weekly sim, the Ledger, the List, The Word.
-  Save bump; old saves get a league generated in `migrate`.
-- **C2. Contact:** `twist_rival_crew` names a real tong and one of its stars (built on the fly); how
-  it ends moves both tongs' prestige and, if you beat them, their grudge against you (kept on the
-  tong, separate from the gangs' grudges; it fades on Sundays as those do).
-- **C3. The market:** a free agent a month (from a folded tong or a released card); signing
-  promotes the card. Buyouts later.
-- **Later:** contested contracts, heist races (a rival preparing the same score).
+### C.4 Files
+
+| File | Job | Slice |
+| --- | --- | --- |
+| `core/rivals.js` | `seedRivals`, `weeklyRivals` (from `settleWeek` after `weeklyFame`), `rivalView`, `tongsByTier`, `namesOnTheStreet`, `wordFor`; later `contestOffers` | C1 |
+| `core/rating.js` | `ratingOf(op)`, `cardRating(card)`, `ratingWords(x)` (a word key), `tierWord(halls)` (a tier id via `rankForHalls`); the only place numbers become words | C1 |
+| `core/tong.js` | `rankForHalls(n)`, lifted out of `syncHalls` | C1 |
+| `core/dossier.js` | `dossierOf`, `cardToOperative`, `operativeToCard` | C3 |
+| `data/rivals.js` | the naming kit by style, the text table for The Word and rating words, the Brass Anchor, tuning (`RIVALS`) | C1 |
+| `ui/app.js` | Ops › Tongs (`renderTongs`, `renderTongPage`), The Word in the Monday briefing; reads `rivalView` only | C1 |
+
+### C.5 Hidden rating (0-100 integer, never shown)
+
+```
+rating = round(0.55·Skill + 0.30·Renown + 0.15·Record)
+```
+
+- **Skill:** main stat plus the best two others (1-20 → 0-100), plus a tier bonus.
+- **Renown:** standing, plus fame-tier steps.
+- **Record:** jobs, clean jobs, milestones and highlights, capped.
+
+`ratingOf(op)` is in C1 so the player's runners can appear in Names on the street. The rating is
+used for the sim, for persuasion (C3/D) and for `ratingWords` keys, which the text table reads as
+"the best driver in the Docks", "on the way up", "past their best", "a name to watch".
+
+**Calibration:** seeded card ratings at each tier are set against `ratingOf` on generated recruits
+at the matching quality (`generateRecruit` in `core/recruits.js`, `quality`), so a card and a runner
+of the same tier read the same and
+the player's runners can realistically make Names on the street. Checked in the sim band (C.11).
+
+### C.6 The city ticks over (`weeklyRivals`, Sundays)
+
+Run from `settleWeek` (`core/time.js`) after `weeklyFame`, on `hashRng(seed, 'rivals:' + week)`
+throughout, in a fixed array order. In order:
+
+1. **Work:** each tong's prestige moves with its style, depth, its names and some noise. Wealth
+   follows. Halls open or close against their marks (C.2).
+2. **Growth:** cards move toward `peak` on an age curve, and `form` drifts.
+3. **Drift:** runners move between tongs as rumours, not transfers. Young names move more and
+   established names rarely. Wealth and tier settle ties. If nobody signs a free name in time, a
+   rival does.
+4. **Age:** names retire at the season's end (the Sunday before `seasonStartDay`) and young names
+   appear.
+5. **Tiers:** a rival's tier may change with its halls. Folding and new tongs forming come with C3;
+   the fields exist now.
+6. **The Word:** add talk to `word` and pick at most three entries for Monday; trim `word` (C.2).
+
+### C.7 What rivals touch
+
+| Thing | Effect |
+| --- | --- |
+| **Home district** | Their names turn up more on jobs there (C2). Free names tend to come from there. The Word mentions the place. No effect on halls, heat or openings. |
+| **Grudge** | How often they turn up on the player's jobs (C2), extra cost to sign their names (C3/D, shown in ¥: rule 1's exception), the tone of The Word. Never violence. |
+| **Wealth** | Hidden budget: hall growth, who signs the free name the player passes on, how fast depth grows, who folds (C3). |
+| **Contracts** | Not in C1. Later, `contestOffers` runs after `tickJobs`: once per job id, via `hashRng(seed, 'contest:' + job.id)`, so the board's rolls never move. |
+| **Fame** | No cost on jobs. Its cost is social: pay asks (built), rival interest (D), more talk. |
+
+### C.8 On screen
+
+- **The Word:** at most three lines in the Monday briefing. These are talk, not results ("Third Mist
+  took the Basin warehouse work off the Hand", "people have started saying Lantern's name in Glass
+  Heights"). Built from `word` keys by the text table.
+- **Ops › Tongs:** dossier cards grouped by tier word. Each shows name, home district, style, the
+  head's name, a few known names and the latest thing said. Tapping one opens its page. No order, no
+  numbers.
+- **Names on the street:** 6-10 talked-about runners, unranked, each with a fame word, their tong and
+  a rating-word line. The player's own crew can appear among them, which is the payoff.
+- The player's own standing shows only as their tier word and as how The Word talks about them.
+
+### C.9 Naming kit (drafted in C0 via `add-lore`; no tong-specific canon)
+
+| Style | Pattern | Example |
+| --- | --- | --- |
+| Loud | animal or weapon + Hand/Hall | Iron Mantis Hand |
+| Quiet | weather or time + Society | Third Mist Society |
+| Corporate | initials + Holdings/Partners | K&W Partners |
+| Street | place + Lot/Boys/Crew | Basin Lot |
+
+- **Street names only reuse places** from `config/names.js` or `WORLD.md`, or C0 adds the place as
+  canon first. (The draft's "Silt Market" isn't a place in canon.)
+- **No rival is based in the Silt** (owner, 2026-11-08; `WORLD.md` "The Silt: life at high water"):
+  there isn't the money for a big tong there, not yet. `seedRivals` never gives a rival a home in
+  the Silt, and no name in the kit uses it.
+- **No real triad names and no number names** (no "14", no "Sun Yee", nothing that reads as a real
+  society), as `WORLD.md` already requires: everything is invented.
+
+### C.10 Slices
+
+- **C0 lore:** the naming kit, styles, the Brass Anchor's place, The Word's voice (`add-lore`).
+- **C1 the other tongs:** save v51, `core/rivals.js`, `core/rating.js` (with `ratingOf`),
+  `rankForHalls`, `data/rivals.js`, the weekly step, The Word, Ops › Tongs, Names on the street.
+  Read-only: nothing changes play.
+- **C2 contact:** `twist_rival_crew` names a real tong and one of its names, chosen with
+  `hashRng(seed, 'rival-twist', missionId)` and weighted by home district and grudge. Clients
+  sometimes name a rival when they offer work ("the Mantis wanted this, I'd rather you"): flavour
+  only, rolled per offer with `hashRng(seed, 'client-rival', offer.id)`, and only rivals whose home
+  is the job's district.
+- **C3 a free name a month:** `core/dossier.js` (`dossierOf`, `cardToOperative`, `operativeToCard`,
+  the ±2 parity test); scout (side task, sharper dossier), approach (message), persuasion from tier,
+  the crew's legends and leaders, halls, grudge and money; the first buyouts. **Folding and forming**
+  come here too: a folded tong is the natural source of the month's free name.
+- **Later:** contested contracts (`contestOffers`), heist races, then D (loyalty, rivals tempting the
+  player's runners). An idea with no rule yet: once the development next to the Silt is written
+  (canon: unnamed, going up now), it gives the other tongs a reason to move towards the Silt.
+
+**Build order:** A1 playtest → C0 + C1 → B → A2 → C2/C3 → D.
+
+### C.11 Tests
+
+- **Isolation (C1):** the same seed with rivals on and off gives the same `rngCounter`, rolls,
+  missions and cash. **From C2:** the rival step and the C2 rolls never move `rngCounter`.
+- **Determinism:** the same seed gives the same rivals; (C3) the same card id gives the same dossier.
+- **Golden (iOS):** a fixed seed gives a stored snapshot of tongs (names, styles, homes, halls,
+  tiers) and card ratings, after seeding and after 4 weekly steps. A native build is checked against
+  the same file.
+- **No numbers:** `rivalView` has no number values and no digits outside proper names; `ui/app.js`
+  doesn't read `state.rivals` (a source lint).
+- **Rating parity (C3):** `cardToOperative` / `operativeToCard` within ±2.
+- **Migration:** a v50 save gets a valid `state.rivals`.
+- **Sim band** (200 seeds × 52 weeks):
+  - no rival stays top tier all year, and at least one tier change per season;
+  - **week 26:** rivals' tiers spread around a typical player's rank (the `scripts/sim-phase2.mjs`
+    player): in most seeds at least one rival above, one level with and one below;
+  - **rating calibration:** card ratings per tier sit in the band of `ratingOf` on generated recruits
+    at the matching quality, and a typical player's best runner makes Names on the street in most seeds by the
+    end of the first year (bands set on the first run and logged in DESIGN.md);
+  - nothing outside 0-100; `word` stays bounded; 52 weekly steps in under a second in Node; under
+    30KB added to a 52-week save.
+
+### C.12 Still open
+
+- **Heads approachable late-game, after B, with a Legend on the crew.** An idea, not a commitment.
+  Heads are never approachable in C or D.
+- **Settled (2026-11-08):** folding and forming come with C3; clients naming a rival is C2 flavour
+  (C.10); about 6 tongs; no List (Names on the street instead); the Brass Anchor is a fixed elder in
+  data; fame has no cost on jobs.
 
 ## 5. Part D: loyalty and mobility
 
@@ -236,11 +401,11 @@ function simRivals(state) {
 **B, Legends**
 5. A heist finale as a ready runner's defining job: yes or no.
 
-**C, rival tongs**
-6. How many tongs (6 proposed); whether they fold and form.
-7. List size (top 20 shown on a phone; about 50 kept).
-8. The Brass Anchor Society: a fixed elder on the Ledger, or left out of the league.
-9. Fame's cost: heat on loud work, harder stealth, or none.
+**C, the other tongs** (settled 2026-11-08; see C.12)
+6. ~~How many tongs; whether they fold and form.~~ About 6; folding and forming with C3.
+7. ~~List size.~~ No List: Names on the street, 6-10 unranked.
+8. ~~The Brass Anchor Society.~~ A fixed elder in `data/rivals.js`, never simulated or tiered.
+9. ~~Fame's cost.~~ None on jobs; its cost is social.
 
 **D, loyalty**
 10. Minimum standing before rivals approach (Street rank? District?).
@@ -254,11 +419,8 @@ function simRivals(state) {
   bump and a migration test with each slice that changes the shape.
 - **Heists:** failed prep never locks the finale; every effect is shown on the finale's plan
   (shown = used); missing the date ends the heist cleanly; the death rule holds on the finale.
-- **Rivals, determinism:** the same seed played with the rival sim on and off gives the same
-  missions, rolls and cash for your crew. The same card always builds the same runner, and that
-  runner matches the card's tier, role, key stat and rating.
-- **Rivals, size and speed:** at most 60 cards and 8 news lines a tong; the league adds under 30KB
-  to a 52-week save; 52 weeks of `simRivals` in under a second in Node.
+- **The other tongs:** see C.11 (isolation, determinism, the golden test, no numbers, rating
+  parity, migration, the sim band, size and speed).
 - **Loyalty:** nobody leaves without a warning and a choice; no approach mid-job, away or hurt;
   sworn runners leave far more rarely than unsworn ones (a long-run sim, wide bands).
 - **Long-run sanity** (wide bands): Elite stays rare, Legends don't come from low-threat repetition,

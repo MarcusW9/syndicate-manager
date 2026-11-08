@@ -69,7 +69,9 @@ DISTRICTS (always use these English names):
   2057 telemetry, live odds and illegal betting; Racing Association officially, Silver
   Fan in the Undercroft; jobs from Fung, Okonkwo and the Ferryman).
 - Unlocked later, by reputation: the Silt (sinking shanty shelf on the 1994 wreckage,
-  floods at high tide, lawless) · the Amber Reach (transit and money hub where the
+  floods twice a day and runs on the tide; no police and no boss: unwritten rules, the
+  pump people, the boat elders and Uncle Po's batteries; too poor for a big tong, not
+  yet worth taking; AHL surveys it every week) · the Amber Reach (transit and money hub where the
   maglev meets trams and ferries) · Iron Peak (the summit where the corp boards live in
   walled estates on the old foundry hill; funicular, gate checkpoint, private security;
   the richest place in the city, NOT an industrial zone).
