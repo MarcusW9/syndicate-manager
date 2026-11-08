@@ -150,7 +150,77 @@ h2 { font: 700 1.1rem var(--display); letter-spacing: .16em; text-transform: upp
 @media (max-width: 900px) { .pairs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 `;
 
+
+// The inventory look (2026-11-08, the owner: the drawings without their background, "a rifle 2×1 as
+// long as the polaroid, small guns half the size, like the inventory"): items laid on cells, long
+// things (rifle, drone, deck) 2×1, small things (sidearm, kits, vest) 1×1. Drawn bare (gearArt bare);
+// a script in the page fits each drawing's box to the item itself.
+const LONG = new Set(['rifle', 'drone', 'deck']);
+const invItems = (op) => [...carried(op)].sort((a, b) => (LONG.has(b.type) ? 1 : 0) - (LONG.has(a.type) ? 1 : 0));
+const invCell = (op, item) => `<div class="inv__it ${LONG.has(item.type) ? 'is-long' : ''}" title="">${gearArt(item, { carrier: op, width: 96, bare: true }) ?? ''}<span>${esc(itemTitle(item))}</span></div>`;
+// An inventory of n rows × 2 columns, the items placed, the rest empty cells.
+const inv = (op, rows = 2) => {
+  const items = invItems(op);
+  const used = items.reduce((n, it) => n + (LONG.has(it.type) ? 2 : 1), 0);
+  const blanks = Math.max(0, rows * 2 - used);
+  return `<div class="inv" style="--rows:${rows}">${items.map((it) => invCell(op, it)).join('')}${'<div class="inv__cell"></div>'.repeat(blanks)}</div>`;
+};
+const under = () => `
+  <div class="board g-cols j-under">
+    <p class="label">Inside team <span>moves as one group</span></p>
+    <div class="cols">
+      ${inside.map((op) => `<div class="col">${x}${polaroid(op)}${inv(op)}<p class="stat">${line(op)}</p></div>`).join('')}
+      <div class="col col--empty">${empty('Extra', 'more backup, more at risk')}</div>
+    </div>
+    <p class="label">Outside <span>optional</span></p>
+    <div class="cols">
+      <div class="col">${x}${polaroid(standby)}${inv(standby)}<p class="stat"><span class="iconword">On call ·</span> ${statValue('medical', effectiveStat(standby, 'medical').value)}</p></div>
+      <div class="col col--empty">${empty('Overwatch', 'needs a rifle or drone')}</div>
+      <div class="col col--empty">${empty('Wheels', 'takes the driving rolls')}</div>
+    </div>
+  </div>`;
+const beside = () => `
+  <div class="board k-beside">
+    <p class="label">Inside team <span>moves as one group</span></p>
+    <div class="kpairs">
+      ${inside.map((op) => `<div class="kpair">${x}<div class="kpair__sq">${polaroid(op, { size: 80, role: false })}${inv(op)}</div><p class="stat">${line(op)}</p></div>`).join('')}
+      <div class="kpair kpair--empty">${empty('Extra', 'more backup, more at risk')}</div>
+    </div>
+    <p class="label">Outside <span>optional</span></p>
+    <div class="kpairs">
+      <div class="kpair">${x}<div class="kpair__sq">${polaroid(standby, { size: 80, role: false })}${inv(standby)}</div><p class="stat"><span class="iconword">On call ·</span> ${statValue('medical', effectiveStat(standby, 'medical').value)}</p></div>
+      <div class="kpair kpair--empty">${empty('Overwatch', 'needs a rifle or drone')}</div>
+    </div>
+  </div>`;
+const INV_CSS = `
+/* the inventory: two columns of square cells; a long item spans both */
+.inv { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; padding: 3px; background: #0a0c10; border: 1px solid var(--line); }
+.inv__cell, .inv__it { position: relative; min-width: 0; overflow: hidden; aspect-ratio: 1; background: #141821; box-shadow: inset 0 0 0 1px #1f2532; }
+.inv__it { display: grid; place-items: center; background: radial-gradient(circle at 50% 45%, #1d2330, #12151c 70%); box-shadow: inset 0 0 0 1px #2f394b; }
+.inv__it.is-long { grid-column: span 2; aspect-ratio: 2 / 1; }
+.inv__it svg { display: block; width: 84%; height: 64%; max-width: 100%; overflow: visible; filter: drop-shadow(0 2px 2px rgba(0,0,0,.6)); }
+.inv__it > span { position: absolute; left: 3px; right: 3px; bottom: 2px; font: 600 .5rem var(--mono); text-transform: uppercase; letter-spacing: .02em; color: #8a93a6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
+.j-under .col .inv { margin-top: 0; }
+.kpairs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.kpair { position: relative; padding: 8px; background: #151922; border: 1px solid var(--line); }
+.kpair__sq { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; align-items: stretch; }
+.kpair .pola { align-self: start; }
+.kpair--empty { padding: 0; border: 0; background: none; }
+@media (max-width: 900px) { .kpairs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .kpairs { grid-template-columns: 1fr; } .kpair__sq { grid-template-columns: 110px minmax(0, 200px); justify-content: start; } .kpair .stat { text-align: left; } }
+`;
+// Fit each bare drawing's viewBox to the item it draws, so a small gun fills its cell.
+const FIT = `<script>
+for (const svg of document.querySelectorAll('.inv__it svg')) {
+  const b = svg.getBBox(); const p = Math.max(b.width, b.height) * 0.06;
+  svg.setAttribute('viewBox', [b.x - p, b.y - p, b.width + 2 * p, b.height + 2 * p].join(' '));
+  svg.removeAttribute('width'); svg.removeAttribute('height');
+}
+</script>`;
+
 const VARIANTS = [
+  { name: 'J · Inventory under the photo', note: 'The drawings without their background, laid on inventory cells under each polaroid, two cells wide. A rifle, drone or deck is 2×1, exactly as wide as the photo; a sidearm, kit or vest is 1×1, half that. Empty cells show the room left.', html: under },
+  { name: 'K · Inventory beside the photo', note: 'The same inventory as J, beside the polaroid instead of under it: the photo and a 2×2 grid as one block, so a rifle is as long as the photo is wide. Shorter than J; four runners across on a computer.', html: beside },
   { name: 'G · Columns', note: 'Each runner is a column: their polaroid on top, their main gear in a square tile of the same width under it, the stat under both. Photos line up with photos and guns with guns across the squad. Three to a row on a phone.', html: columns },
   { name: 'H · Roster sheet', note: 'One row per runner: the polaroid, name and stat, then everything they carry as tiles of one size, so the squad\'s kit reads down the page like a quartermaster\'s sheet. Shows the second item too (Signal\'s ghost kit, Synapse\'s vest).', html: rows },
   { name: 'I · Photo and gear side by side', note: 'Each runner is one cell holding two equal squares: the polaroid and their gear, next to each other, the stat under. Compact; four across on a computer, two on a phone.', html: pairs },
@@ -159,7 +229,7 @@ const VARIANTS = [
 const frame = (v, w) => {
   const doc = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=${w}">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<style>${CSS}</style></head><body><h2>Squad</h2>${v.html()}</body></html>`;
+<style>${CSS}${INV_CSS}</style></head><body><h2>Squad</h2>${v.html()}${FIT}</body></html>`;
   return `<iframe title="${esc(v.name)} at ${w}px" width="${w}" height="${w < 500 ? 820 : 700}" srcdoc="${esc(doc)}"></iframe>`;
 };
 

@@ -1825,7 +1825,7 @@ const GEAR_SHAPES = { rifle: rifleShapes, drone: droneQuad, deck: deckSlab };
 export const hasGearArt = (type) => !!(GEAR_SHAPES[type] || SQUARE_SHAPES[type]);
 
 /** A compact item's drawing in its square 64×64 frame (its box in the UI fits either shape). */
-function squareArt(item, shape, { carrier, width }) {
+function squareArt(item, shape, { carrier, width, bare = false }) {
   const light = carrier ? lightOf(carrier) : STASH_LIGHT;
   const neon = carrier ? faceOf(carrier).chromeColor : '#3de8d8';
   const id = `ga${++uid}`;
@@ -1833,17 +1833,18 @@ function squareArt(item, shape, { carrier, width }) {
   return `<svg class="art gearart gearart--square" viewBox="0 0 64 64" width="${size}" height="${size}" aria-hidden="true" focusable="false">
   <defs><linearGradient id="${id}" x1="1" x2="0"><stop offset="0" stop-color="${light}" stop-opacity="0.22"/><stop offset="0.4" stop-color="${light}" stop-opacity="0.08"/><stop offset="1" stop-color="${light}" stop-opacity="0"/></linearGradient>
   <linearGradient id="${id}h" x1="0" x2="1"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.7"/><stop offset="0.5" stop-color="#b48cff" stop-opacity="0.7"/><stop offset="1" stop-color="#ff5fae" stop-opacity="0.7"/></linearGradient></defs>
-  <rect width="64" height="64" fill="#0d1016"/><rect width="64" height="64" fill="url(#${id})"/>
+  ${bare ? '' : `<rect width="64" height="64" fill="#0d1016"/><rect width="64" height="64" fill="url(#${id})"/>`}
   ${shape({ tier: item.tier ?? 'street', light, neon, holo: `${id}h` })}</svg>`;
 }
 
 /**
  * An item's drawing as an SVG string, or null if it has none yet. carrier: the person carrying
  * it (their light and chrome colour); without one it sits under the safehouse's sodium lamp.
+ * bare: the item alone, without its dark ground and the light across it (to lay on a tile of the UI's own).
  */
-export function gearArt(item, { carrier = null, width = 96 } = {}) {
+export function gearArt(item, { carrier = null, width = 96, bare = false } = {}) {
   const squareShape = SQUARE_SHAPES[item.type]?.[toolFrameOf(item)];
-  if (squareShape) return squareArt(item, squareShape, { carrier, width });
+  if (squareShape) return squareArt(item, squareShape, { carrier, width, bare });
   const build = item.look && { rifle: rifleBuild, pistol: sidearmBuild }[item.type];
   const tool = TOOL_SHAPES[item.type]?.[toolFrameOf(item)];
   const shapes = build ? (o) => build({ ...o, look: item.look }) : tool ?? GEAR_SHAPES[item.type];
@@ -1853,7 +1854,7 @@ export function gearArt(item, { carrier = null, width = 96 } = {}) {
   const id = `ga${++uid}`;
   return `<svg class="art gearart" viewBox="0 0 96 32" width="${width}" height="${Math.round((width * 32) / 96)}" aria-hidden="true" focusable="false">
   <defs><linearGradient id="${id}" x1="1" x2="0"><stop offset="0" stop-color="${light}" stop-opacity="0.2"/><stop offset="0.35" stop-color="${light}" stop-opacity="0.09"/><stop offset="0.75" stop-color="${light}" stop-opacity="0.02"/><stop offset="1" stop-color="${light}" stop-opacity="0"/></linearGradient></defs>
-  <rect width="96" height="32" fill="#0d1016"/><rect width="96" height="32" fill="url(#${id})"/>
+  ${bare ? '' : `<rect width="96" height="32" fill="#0d1016"/><rect width="96" height="32" fill="url(#${id})"/>`}
   ${shapes({ tier: item.tier ?? 'street', light, neon })}</svg>`;
 }
 
