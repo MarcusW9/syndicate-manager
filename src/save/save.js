@@ -675,5 +675,11 @@ function migrate(state) {
     state.rivals = seedRivals(state);
     state.version = 51;
   }
+  if (state.version === 51) {
+    // v52: the Legend defining job (DESIGN.md 2026-11-08): runners gain `legend` and `legendCall`, offers
+    // `defining`. Nobody is a Legend yet on an old save; the first call comes when someone is ready.
+    for (const op of state.crew ?? []) { op.legend ??= null; op.legendCall ??= null; }
+    state.version = 52;
+  }
   return state;
 }

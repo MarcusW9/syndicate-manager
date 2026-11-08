@@ -34,6 +34,7 @@ import { advanceDay, calendar, isBlocked, seasonStartDay } from '../core/time.js
 import { createNewGame, chooseFounders } from '../core/state.js';
 import { marksText } from '../core/marks.js';
 import { recordOf } from '../core/record.js';
+import { LEGEND_TEXT } from '../data/legend.js';
 import { fameOf, fameName, standingOf, standingWord, pathOf, legendProgress } from '../core/fame.js';
 import { FAME_RULES, NAMED_OFFER, NAMED_TEXT } from '../data/fame.js';
 import { templateById, jobView, nextUnlock, JOB_GATES } from '../core/jobs.js';
@@ -1576,7 +1577,7 @@ function renderCrew() {
   const wall = state.memorial.length ? `
       <h2>The wall</h2>
       <ul class="list list--plain">
-        ${state.memorial.map((m) => `<li class="fallen">${face(m, 'sm')}<span><strong>${esc(m.name)}</strong> "${esc(m.handle)}" <span class="muted">· ${esc(m.role)} · ${esc(m.cause)}, day ${m.day}</span></span></li>`).join('')}
+        ${state.memorial.map((m) => `<li class="fallen">${face(m, 'sm')}<span><strong>${esc(m.name)}</strong> "${esc(m.handle)}" <span class="muted">· ${esc(m.role)} · ${esc(m.cause)}, day ${m.day}${m.legend ? ' · a Legend' : ''}</span></span></li>`).join('')}
       </ul>` : '';
   const leads = `
       <h2>Leads (${recruits.length})</h2>
@@ -1729,7 +1730,7 @@ function renderPath(op) {
   if (op.freelance || !recordOf(op).jobs) return '';
   const p = pathOf(op);
   const legend = legendProgress(op);
-  const elite = fameOf(op) === 'elite';
+  const elite = fameOf(op) === 'elite' || fameOf(op) === 'legend';
   const pct = (n) => Math.round(n * 100);
   const meter = (label, n) => `<div class="meter pathbar"><span class="meter__label">${label}</span><span class="meter__track"><span class="meter__fill" style="width:${pct(n)}%"></span></span><span class="meter__value">${pct(n)}%</span></div>`;
   const e = FAME_RULES.elite;
@@ -1745,7 +1746,7 @@ function renderPath(op) {
       ${infoText(`path-${op.id}`, info)}
       ${elite ? '' : meter('To Elite', p.toElite)}
       ${meter('To Legend', p.toLegend)}
-      ${legend.ready ? '<p class="pathcard__ready">Ready for their moment.</p>' : ''}
+      ${op.legend ? `<p class="pathcard__ready">A Legend since day ${op.legend.day}.</p>` : legend.ready ? `<p class="pathcard__ready">${op.legendCall?.offerId ? 'The city is asking: their defining job is up.' : 'Ready for their moment.'}</p>` : ''}
       ${elite ? `<p class="muted small">Standing ${standingOf(op)}: ${esc(standingWord(op))}.</p>` : ''}
     </div>`;
 }
@@ -1873,6 +1874,8 @@ function boardRead(job) {
  * client mood, days left) stay on the planning screen: the card only speaks up when there's news.
  */
 const namedHandle = (v) => (v.askedFor ? state.crew.find((o) => o.id === v.askedFor)?.handle ?? null : null);
+/** A defining job's runner (core/legend.js): the city is asking for them by name. */
+const definingHandle = (v) => (v.defining ? state.crew.find((o) => o.id === v.defining)?.handle ?? null : null);
 const namedVars = (v) => ({ op: namedHandle(v), pct: Math.round(NAMED_OFFER.payBonus * 100) });
 const fillNamed = (text, v) => text.replace(/\{(\w+)\}/g, (m, k) => namedVars(v)[k] ?? m);
 
@@ -1880,6 +1883,7 @@ function jobFlags(v) {
   const flags = [];
   const hz = heistFor(state, v.jobId); // a heist's prep or finale (core/heists.js)
   if (hz) flags.push(['named', hz.step ? `Prep · ${hz.def.name}` : `${hz.def.name} · finale`]);
+  if (definingHandle(v)) flags.push(['named', LEGEND_TEXT.chip.replace('{op}', definingHandle(v))]); // their moment (core/legend.js)
   if (namedHandle(v)) flags.push(['named', fillNamed(NAMED_TEXT.chip, v)]); // a client asked for an Elite by name (renown slice 4)
   const g = jobGrudge(v.tpl, v.threat);
   if (g) flags.push(['hot', `Against ${GANGS[g.gang].short}`]); // a job that hurts a gang (core/gangs.js)
@@ -2203,6 +2207,7 @@ function renderPlan() {
         ${v.client && clientOpen ? `<p class="muted small">${esc(v.client.desc)}</p>` : ''}
         ${v.threatDelta ? `<p class="muted small">Every roll on this job is ${Math.abs(v.threatDelta) === 1 ? 'one point' : `${Math.abs(v.threatDelta)} points`} ${v.threatDelta > 0 ? 'harder' : 'easier'} than usual.</p>` : ''}
         ${v.hinted ? '<p class="intel">Intel unreliable: something about this job may not be what you were told.</p>' : ''}
+        ${definingHandle(v) ? `<p class="named">${esc(LEGEND_TEXT.plan.replace('{op}', definingHandle(v)))}</p>` : ''}
         ${namedHandle(v) ? `<p class="named">${esc(fillNamed(NAMED_TEXT.chip, v))} by name: ${esc(fillNamed(NAMED_TEXT.bonus, v))} (inside, outside or on standby). Without them it pays as usual.</p>` : ''}
         ${v.rumour ? `<p class="talk-tag">Street talk: ${esc(v.rumour.text)}</p>` : ''}
         ${intel ? `<p class="talk-tag">Intel from ${esc(intel.source)}: +${intel.bonus} on every roll ${state.intel?.[t.district]?.until >= state.day ? `here until day ${state.intel[t.district].until}` : 'on this job'}.</p>` : ''}

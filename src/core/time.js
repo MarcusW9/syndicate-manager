@@ -5,6 +5,7 @@ import { checkRaids } from './raids.js';
 import { introduceHalls } from './halls.js';
 import { introduceHeists, tickHeists } from './heists.js';
 import { tickJobs } from './jobs.js';
+import { legendTick } from './legend.js';
 import { trimInbox } from './inbox.js';
 import { driftTrust } from './clients.js';
 import { scoutWeek } from './recruits.js';
@@ -104,6 +105,7 @@ export function advanceDay(prev) {
   if (calendar(state.day).isMonday) introduceHeists(state); // a contact offers a heist once the tong is ready (core/heists.js)
   tickJobs(state); // offers expire; new work trickles in through the week
   tickHeists(state); // prep left undone is asked again; the finale goes up in its week (core/heists.js)
+  legendTick(state); // a ready runner's defining job goes on the board (core/legend.js)
   if (calendar(state.day).weekday === 'Wed') scoutWeek(state);
   state.recruits = (state.recruits ?? []).filter((r) => r.expiresDay >= state.day);
 

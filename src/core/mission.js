@@ -15,6 +15,7 @@ import { jobGrudge, addGrudge, grudgeOf, GANGS } from './gangs.js';
 import { finishRaid } from './raids.js';
 import { crewLead } from './lead.js';
 import { templateById, twistById, jobView, namedBonus } from './jobs.js';
+import { legendResult } from './legend.js';
 import { NAMED_OFFER, NAMED_TEXT } from '../data/fame.js';
 import { adjustTrust, clientById, completionTrust, ABORT_TRUST } from './clients.js';
 import { nextRng } from './random.js';
@@ -213,6 +214,7 @@ export function startMission(prev, jobId, crewIds, approach, opts = {}) {
     alert: 0, out: [], pending: null, wentLoud: false, battle: null, fought: false,
     pay: view.pay, threat: view.threat, threatDelta: view.threatDelta, clientId: job.clientId ?? null, twist: job.twist ?? null,
     askedFor: job.askedFor ?? null, // the runner a client asked for by name (renown slice 4)
+    defining: job.defining ?? null, // the runner whose defining job this is (core/legend.js)
     inside: view.inside, // a heist finale's intel from its prep (core/heists.js), on every roll
     lead: crewLead(crewIds.map((id) => state.crew.find((o) => o.id === id))), // takes one risky call (core/lead.js)
     queue, step: 0, log: [],
@@ -1002,6 +1004,8 @@ function finish(state) {
   const milestoneLines = checkMilestones(state, survivors);
   // Standing for everyone who came home, then fame (one tier at most; core/fame.js). Never a roll, pay or heat.
   const fameLines = afterJobFame(state, survivors, { outcome: deaths.length ? 'loss' : am.aborted ? 'aborted' : 'completed', facts, milestones: milestoneLines, retreat: (am.repCut ?? 0) > 0 });
+  // A defining job done with its runner on the crew makes them a Legend (core/legend.js).
+  const legendLines = legendResult(state, am, { outcome: deaths.length ? 'loss' : am.aborted ? 'aborted' : 'completed', deaths, onJobIds: onJob(state, am).map((o) => o.id), jobName: tpl.name });
   for (const op of state.crew) {
     if (deaths.length && !am.crewIds.includes(op.id)) op.condition.morale = Math.max(0, op.condition.morale - 15);
   }
@@ -1030,6 +1034,7 @@ function finish(state) {
     ...(growthLines.length ? [{ tone: 'good', text: `Improved: ${growthLines.join(', ')}.` }] : []),
     ...milestoneLines.map((m) => ({ tone: 'milestone', text: `Milestone: ${m.text}` })),
     ...fameLines.map((f) => ({ tone: 'milestone', text: `Fame: ${f.text}` })),
+    ...legendLines,
     ...promotedOps.map((o) => ({ tone: 'good', text: `${o.handle} is a veteran now.` })),
     ...patched.map((p) => ({ tone: 'good', text: `${p.medic.handle} patched up ${p.patient.handle} (Clinic Hands): back a day sooner.` })),
     ...(client && trustChange ? [{ tone: trustChange > 0 ? 'good' : 'bad', text: `${client.name} ${trustChange > 0 ? 'thinks more of you' : 'is unhappy with you'} (trust ${trustChange > 0 ? '+' : ''}${trustChange}).` }] : []),
