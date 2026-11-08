@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-08 · The Word reads better
+- Street talk about the other tongs has more ways of being said, no longer repeats the same news about the same tong within a month, and a doubled "the" is fixed. When your own tong climbs a rung (a new hall), the Word says so once. Nothing about jobs, pay, heat or rolls changes.
+
 ## 2026-11-08 · Names on the street, kept honest
 - Your own runners take at most half of Names on the street, and a runner's hidden rating now climbs over a year instead of maxing out in a quarter, so the other tongs' runners stay in the talk. Nothing about jobs, pay, heat or rolls changes.
 

@@ -7,7 +7,7 @@
 // other roll stay exactly where they were. The weekly step runs on its own key, 'rivals:<day>'.
 // Pure logic: 32-bit integer hashing over ASCII keys, whole numbers stored (C.1 rule 7).
 
-import { hashRng, pick } from './rng.js';
+import { hash, hashRng, pick } from './rng.js';
 import { CULTURES, ROLE_PROFILES } from '../data/recruitPools.js';
 import { NAMING, RIVAL_HOMES, RIVALS, STYLES, BRASS_ANCHOR, RESERVED_NAMES } from '../data/rivals.js';
 import { cardRating, ratingOf, ratingWord, tierWord } from './rating.js';
@@ -85,7 +85,7 @@ function tongNameFor(rng, style, used) {
 /** A new set of rivals for this game, from hashRng(seed, 'rivals'). Same seed, same tongs. */
 export function seedRivals(state) {
   const rng = hashRng(state.seed, 'rivals');
-  const r = { tongs: [], cards: [], word: [], seq: 0 };
+  const r = { tongs: [], cards: [], word: [], seq: 0, playerRank: state.rank ?? null };
   const styles = shuffle(rng, [...STYLES, ...Array.from({ length: Math.max(0, RIVALS.tongs - STYLES.length) }, () => pick(rng, STYLES))]);
   const homes = shuffle(rng, [...RIVAL_HOMES, ...RIVAL_HOMES]);
   const usedNames = new Set(); const takenPeople = new Set((state.crew ?? []).map((o) => o.name));
@@ -122,7 +122,11 @@ export function seedRivals(state) {
 
 const tongById = (r, id) => r.tongs.find((t) => t.id === id);
 const cardsOf = (r, tongId) => r.cards.filter((c) => c.tongId === tongId);
-const say = (r, day, kind, refs) => r.word.push({ day, kind, refs });
+/** Add talk, unless the same thing was said about the same tong or name in the last four weeks. */
+const say = (r, day, kind, refs) => {
+  if (r.word.some((w) => w.kind === kind && w.refs[0] === refs[0] && day - w.day < RIVALS.wordWeeks * 7)) return;
+  r.word.push({ day, kind, refs });
+};
 
 /** Sundays, after weeklyFame. Own key per day; never moves rngCounter. Fixed array order throughout. */
 export function weeklyRivals(state) {
@@ -194,6 +198,14 @@ export function weeklyRivals(state) {
     if (names.some((n) => n.own) && rng() < 0.5) say(r, day, 'your_name', [(state.halls ?? [])[0]?.district ?? 'oldTown']);
   }
 
+  // 5b. The player's own tong moving up a rung: the street says so (never a result, never a number).
+  const rung = (id) => TONG_RANKS.findIndex((k) => k.id === id);
+  if (r.playerRank == null) r.playerRank = state.rank;
+  else if (state.rank !== r.playerRank) {
+    if (rung(state.rank) > rung(r.playerRank)) say(r, day, 'your_tier', ['rank:' + state.rank]);
+    r.playerRank = state.rank;
+  }
+
   // 6. Bound the talk like the inbox: old entries go, never more than wordMax.
   r.word = r.word.filter((w) => day - w.day <= RIVALS.wordWeeks * 7).slice(-RIVALS.wordMax);
   return state;
@@ -206,8 +218,9 @@ const tierIndex = (id) => TONG_RANKS.findIndex((k) => k.id === id);
 /** One stored word entry as a view entry: keys only. A line comes from data/rivals.js wordLine. */
 export function wordFor(state, w) {
   const r = state.rivals;
-  const out = { kind: w.kind };
+  const out = { kind: w.kind, v: String.fromCharCode(97 + (hash(w.kind, w.refs.join(','), w.day) % 5)) }; // a letter, not a number
   for (const ref of w.refs) {
+    if (ref.startsWith('rank:')) { out.tier = ref.slice(5); continue; }
     const tong = tongById(r, ref); const card = r.cards.find((c) => c.id === ref);
     if (tong) { out.tong = tong.name; out.home = tong.home; out.tier = tierWord(tong.halls); out.tongId = tong.id; }
     else if (card) { out.name = card.name; out.home ??= card.home; const t = tongById(r, card.tongId); if (t) { out.tong = t.name; out.tongId = t.id; } }

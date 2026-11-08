@@ -79,14 +79,15 @@ export const ELDER_LINE = 'The Brass Anchor Society is older than all of them, a
 
 // The Word: talk, never results (WORLD.md). Keys are `kind`; {tong} {home} {name} {tier} fill in.
 export const WORD_TEXT = {
-  took_work: ['{tong} took the {home} work off somebody else.', 'Word is {tong} has the {home} contracts this month.'],
-  name_travelling: ['{name} is a name people are passing round, and {tong} is not shy about it.', "They're saying {name}'s worth hiring. {tong} would agree."],
-  free_name: ['{name} is looking for a table to sit at.', '{name} is between tongs, for now.'],
-  gone_quiet: ['{tong} has gone quiet lately.', 'Nobody has seen {tong} on a job in a while.'],
-  stepped_up: ['{tong} has moved up in the world. People say they are a {tier} tong now.', "{tong} is carrying more weight than it did. The {tier} crowd has noticed."],
-  slipped: ['{tong} has lost ground. The {tier} crowd is less sure of it.', "People who used to nod at {tong} don't, any more."],
-  new_face: ['A new name in {home}: {name}, and nobody can say who taught them.'],
-  your_name: ['People have started saying your name in {home}.'],
+  took_work: ['{tong} took work in {home} off somebody else.', 'Word is {tong} has the contracts in {home} this month.', 'Somebody in {home} is paying {tong} now, and not the somebody who used to.', 'They say {tong} is the name to call in {home} this month.'],
+  name_travelling: ['{name} is a name people are passing round, and {tong} is not shy about it.', "They're saying {name}'s worth hiring. {tong} would agree.", '{name} was seen at the door of {tong}. Not for the first time.', '{tong} has found a seat for {name}, or the other way round.'],
+  free_name: ['{name} is looking for a table to sit at.', '{name} is between tongs, for now.', 'Nobody has quite signed {name} yet.'],
+  gone_quiet: ['{tong} has gone quiet lately.', 'Nobody has seen {tong} on a job in a while.', 'The lights at {tong} stay low these days.', "{tong} isn't taking calls, they say."],
+  stepped_up: ['{tong} has moved up in the world. People say they are a {tier} tong now.', '{tong} is carrying more weight than it did. The {tier} crowd has noticed.', "{tong} has been seen at tables it wasn't asked to before.", 'More doors open for {tong} than used to.'],
+  slipped: ['{tong} has lost ground. The {tier} crowd is less sure of it.', "People who used to nod at {tong} don't, any more.", '{tong} is getting fewer calls than it did.', "The {tier} crowd has stopped saving {tong} a seat."],
+  new_face: ['A new name in {home}: {name}, and nobody can say who taught them.', 'Somebody in {home} has a new runner, {name}, and is not saying where from.', '{name} is new in {home}. Give it a month.'],
+  your_name: ['People have started saying your name in {home}.', 'Somebody in {home} asked about your crew by name.', 'Your name came up in {home} today. Nobody said it was bad.'],
+  your_tier: ["They're calling yours a {tier} tong now. Somebody had to say it first.", 'The {tier} crowd has started to nod at your tong.', 'Your tong carries further than it did. People say {tier}.'],
 };
 
 /** Fill a template. Pure formatting; the key choices live in core/rivals.js. */
@@ -95,7 +96,8 @@ export const fill = (template, vars) => template.replace(/\{(\w+)\}/g, (_, k) =>
 export function wordLine(entry) {
   const variants = WORD_TEXT[entry.kind] ?? [];
   if (!variants.length) return '';
-  const seed = [...`${entry.tong ?? ''}${entry.name ?? ''}${entry.kind}`].reduce((n, c) => n + c.charCodeAt(0), 0);
+  // `v` is a letter key from the view (a, b, c...); without one, a stable pick from the entry's own text.
+  const seed = entry.v ? entry.v.charCodeAt(0) - 97 : [...`${entry.tong ?? ''}${entry.name ?? ''}${entry.kind}`].reduce((n, c) => n + c.charCodeAt(0), 0);
   return fill(variants[seed % variants.length], entry);
 }
 

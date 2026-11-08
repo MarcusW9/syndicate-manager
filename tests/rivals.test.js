@@ -191,6 +191,56 @@ test('every word kind has a line, and the lines carry no digits or loose braces'
   }
 });
 
+test('the same thing is not said about the same tong twice within four weeks', () => {
+  for (let seed = 1; seed <= 20; seed++) {
+    const s = weeks(game(seed), 40);
+    const seen = new Map();
+    for (const e of s.rivals.word) {
+      const key = e.kind + '|' + e.refs[0];
+      if (seen.has(key)) assert.ok(e.day - seen.get(key) >= RIVALS.wordWeeks * 7, `${key} repeated within four weeks`);
+      seen.set(key, e.day);
+    }
+  }
+});
+
+test('the lines read cleanly: no doubled words, no stray punctuation, variants spread', () => {
+  const all = new Map();
+  for (let seed = 1; seed <= 20; seed++) {
+    const s = weeks(game(seed), 52);
+    for (const e of s.rivals.word) {
+      const view = mondayWord({ ...s, day: e.day + 1 }, 24);
+      for (const w of view) {
+        const line = wordLine({ ...w, home: { oldTown: 'Old Town', docks: 'the Docks', nightMarket: 'the Night Market', heights: 'Glass Heights', basin: 'the Basin' }[w.home] ?? w.home, tier: (w.tier ?? '').toLowerCase() });
+        assert.doesNotMatch(line, /\b(\w+) \1\b/i, line);
+        assert.doesNotMatch(line, /\s{2}|\s[.,]|\{|\}|\bundefined\b/, line);
+        assert.match(line, /[.!?]$/);
+        if (!all.has(w.kind)) all.set(w.kind, new Set());
+        all.get(w.kind).add(w.v);
+      }
+    }
+  }
+  for (const kind of ['took_work', 'gone_quiet', 'stepped_up']) assert.ok(all.get(kind).size >= 3, `${kind} uses several variants`);
+});
+
+test("the player's own tong moving up a rung is talked about, once, with no number", () => {
+  const s = game(61);
+  assert.equal(s.rivals.playerRank, 'backroom');
+  weeks(s, 2);
+  assert.ok(!s.rivals.word.some((w) => w.kind === 'your_tier'));
+  s.halls.push({ ...s.halls[0], district: 'docks' });
+  syncHalls(s);
+  assert.equal(s.rank, 'street');
+  s.day = 7 * 3; weeklyRivals(s);
+  const said = s.rivals.word.filter((w) => w.kind === 'your_tier');
+  assert.equal(said.length, 1);
+  s.day = 7 * 3 + 1;
+  const lines = mondayWord(s).filter((w) => w.kind === 'your_tier');
+  assert.equal(lines.length, 1);
+  assert.equal(lines[0].tier, 'street');
+  s.day = 7 * 4; weeklyRivals(s);
+  assert.equal(s.rivals.word.filter((w) => w.kind === 'your_tier').length, 1, 'said once');
+});
+
 test('Monday talk is at most three lines, newest week only, and mentions no result or number', () => {
   const s = weeks(game(14), 12);
   s.day = 7 * 12 + 1;
