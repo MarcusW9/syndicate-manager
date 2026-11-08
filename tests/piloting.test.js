@@ -84,24 +84,21 @@ test('over whole runs, a getaway is only rolled when heat is left, and heat only
   assert.ok(rolled > 0, 'loud runs roll the getaway');
 });
 
-test('a failed getaway leads them home: a miss is followed, a bad miss more so; a pilot of 14+ shakes a plain miss', () => {
+test('only a bad getaway leads them home; a pilot of 14+ shakes even that', () => {
   const run = (value, die) => playGetaway({ pilot: pilot(value), heat: 3, template: tpl, rng: fixed(die) });
   const need = (v) => getawayRead(pilot(v), tpl).need - v;
-  assert.equal(run(10, need(10) - 1).followed, 'fail');
+  assert.equal(run(10, need(10) - 1).result, 'fail');
+  assert.equal(run(10, need(10) - 1).followed, null, 'a plain miss keeps the heat and nothing more');
   assert.equal(run(10, need(10) + 3).followed, null, 'a success is not followed');
-  assert.equal(run(10, need(10) + 9).followed, null, 'nor a clean one');
   const bad = run(10, 1);
   assert.equal(bad.result, 'bad');
   assert.equal(bad.followed, 'bad');
-  const skilled = run(14, need(14) - 1);
-  assert.equal(skilled.result, 'fail');
-  assert.equal(skilled.followed, null, 'a skilled pilot shakes a plain miss');
-  const worse = run(14, 1);
-  assert.equal(worse.result, 'bad');
-  assert.equal(worse.followed, 'fail', 'and turns a bad miss into a plain one');
+  const skilled = run(14, 1);
+  assert.equal(skilled.result, 'bad');
+  assert.equal(skilled.followed, null, 'a skilled pilot shakes even a bad miss');
 });
 
-test('followers are the raid: followHome warns one on the hall, a threat step harder if the miss was bad', () => {
+test('followers are the raid: followHome warns one on the hall, a threat step harder', () => {
   const s = createNewGame({ seed: 5, startCrew: 'fresh' });
   const d = s.halls[0].district;
   assert.equal((s.raids ?? []).length, 0);
@@ -111,10 +108,10 @@ test('followers are the raid: followHome warns one on the hall, a threat step ha
   assert.equal(raid.by, 'police');
   assert.equal(s.raids.length, 1);
   assert.ok(s.inbox.some((m) => m.kind === 'raid-warning' && /followed the crew home/.test(m.body)));
-  assert.equal(raidThreat(s, d, { ...raid, followed: 'bad' }), raidThreat(s, d, { ...raid, followed: 'fail' }) + 1);
-  assert.equal(followHome(s, d, undefined, 'fail'), null, 'one raid at a time');
+  assert.equal(raidThreat(s, d, { ...raid, followed: 'bad' }), raidThreat(s, d, { ...raid, followed: null }) + 1);
+  assert.equal(followHome(s, d, undefined, 'bad'), null, 'one raid at a time');
   assert.equal(s.raids.length, 1);
-  assert.equal(followHome(createNewGame({ seed: 5, startCrew: 'fresh' }), 'nowhere', undefined, 'fail'), null, 'no hall, nowhere to be followed to');
+  assert.equal(followHome(createNewGame({ seed: 5, startCrew: 'fresh' }), 'nowhere', undefined, 'bad'), null, 'no hall, nowhere to be followed to');
 });
 
 test('homeHallOf picks the hall most of the crew live in', () => {

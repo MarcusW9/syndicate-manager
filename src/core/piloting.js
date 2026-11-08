@@ -8,9 +8,9 @@ import { rollTarget } from './risk.js';
 import { d20 } from './rng.js';
 
 export const GETAWAY = { clean: 5, shedClean: 2, shedGood: 1, bad: -5 };
-// Followed home (DESIGN.md 2026-11-08): a getaway that fails leads them to the crew's hall, and the
-// followers are the raid: one is warned there at once ('fail'), a threat step harder if the miss was
-// bad ('bad'). A pilot of FOLLOW.skilled or better shakes a plain miss and turns a bad one into a plain one.
+// Followed home (DESIGN.md 2026-11-08): only a bad getaway (5+ under) leads them to the crew's hall, and
+// the followers are the raid: one is warned there at once, a threat step harder. A plain miss keeps the heat
+// and nothing more. A pilot of FOLLOW.skilled or better shakes even a bad one.
 export const FOLLOW = { skilled: 14, threat: 1 };
 
 /** The roll to beat: 10 + the job's typical difficulty + 1 per alert point. */
@@ -47,7 +47,7 @@ export function playGetaway({ pilot, heat, sheddable = heat, template, approach,
   const shed = Math.min(sheddable, result === 'clean' ? GETAWAY.shedClean : result === 'good' ? GETAWAY.shedGood : 0);
   const tail = result === 'bad' || (result !== 'clean' && result !== 'good' && alert >= alertMax && alertMax > 0);
   const skilled = read.value >= FOLLOW.skilled;
-  const followed = result === 'bad' ? (skilled ? 'fail' : 'bad') : result === 'fail' ? (skilled ? null : 'fail') : null;
+  const followed = result === 'bad' && !skilled ? 'bad' : null;
   return { pilot, die, value: read.value, need: read.need, margin, result, shed, tail, followed };
 }
 
