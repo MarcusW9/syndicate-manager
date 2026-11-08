@@ -8,10 +8,10 @@ import { rollTarget } from './risk.js';
 import { d20 } from './rng.js';
 
 export const GETAWAY = { clean: 5, shedClean: 2, shedGood: 1, bad: -5 };
-// Followed home (DESIGN.md 2026-11-08): a getaway that fails leads them to the crew's hall. For
-// FOLLOW.days.fail / .bad days a raid there is one threat step harder and the heat it takes to draw one is FOLLOW.heatEase lower (careful play stays clear).
-// A pilot of FOLLOW.skilled or better shakes the lesser tail (a plain failure) and shortens the worse.
-export const FOLLOW = { days: { fail: 3, bad: 6 }, skilled: 14, skilledCut: 3, threat: 1, heatEase: 2 };
+// Followed home (DESIGN.md 2026-11-08): a getaway that fails leads them to the crew's hall, and the
+// followers are the raid: one is warned there at once ('fail'), a threat step harder if the miss was
+// bad ('bad'). A pilot of FOLLOW.skilled or better shakes a plain miss and turns a bad one into a plain one.
+export const FOLLOW = { skilled: 14, threat: 1 };
 
 /** The roll to beat: 10 + the job's typical difficulty + 1 per alert point. */
 export const getawayDifficulty = (template, alert = 0) => Math.round(rollTarget(template)) + alert;
@@ -46,8 +46,8 @@ export function playGetaway({ pilot, heat, sheddable = heat, template, approach,
   const result = margin >= GETAWAY.clean ? 'clean' : margin >= 0 ? 'good' : margin <= GETAWAY.bad ? 'bad' : 'fail';
   const shed = Math.min(sheddable, result === 'clean' ? GETAWAY.shedClean : result === 'good' ? GETAWAY.shedGood : 0);
   const tail = result === 'bad' || (result !== 'clean' && result !== 'good' && alert >= alertMax && alertMax > 0);
-  const raw = result === 'fail' ? FOLLOW.days.fail : result === 'bad' ? FOLLOW.days.bad : 0;
-  const followed = raw && read.value >= FOLLOW.skilled ? Math.max(0, raw - FOLLOW.skilledCut) : raw;
+  const skilled = read.value >= FOLLOW.skilled;
+  const followed = result === 'bad' ? (skilled ? 'fail' : 'bad') : result === 'fail' ? (skilled ? null : 'fail') : null;
   return { pilot, die, value: read.value, need: read.need, margin, result, shed, tail, followed };
 }
 
@@ -59,5 +59,3 @@ export function homeHallOf(state, crew, homeDistrict) {
   return (state.halls ?? []).find((h) => h.district === best) ?? null;
 }
 
-/** Is this hall being watched by someone who followed the crew home? */
-export const followedIn = (state, district) => ((state.halls ?? []).find((h) => h.district === district)?.followedUntil ?? 0) > state.day;

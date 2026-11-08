@@ -28,7 +28,7 @@ import { buildBattle, planIntents } from './battle.js';
 import { spotsForJob } from './fightspots.js';
 import { floorPieces, hallMap, waysIn } from './hallbuild.js';
 import { rollTarget } from './risk.js';
-import { FOLLOW, followedIn } from './piloting.js';
+import { FOLLOW } from './piloting.js';
 import { setInjury } from './crew.js';
 import { recordSummary } from './record.js';
 import { money } from './money.js';
@@ -113,7 +113,7 @@ export function hallTurret(state, district) {
 }
 
 /** A raid's threat: the heat or the grudge, less what the hall's defences take off, never below 1. */
-export const raidThreat = (state, district, raid = null) => Math.max(1, baseThreat(state, district, raid) + (raid?.followed ? FOLLOW.threat : 0) - defenceCut(state, district));
+export const raidThreat = (state, district, raid = null) => Math.max(1, baseThreat(state, district, raid) + (raid?.followed === 'bad' ? FOLLOW.threat : 0) - defenceCut(state, district));
 
 /** What walking out costs: what was kept there (no more than we have) and the repairs. */
 export function withdrawCost(state, district) {
@@ -124,24 +124,31 @@ export function withdrawCost(state, district) {
 
 // --- the warning and the day ---------------------------------------------------------------------
 
-function warn(state, district, by = 'police') {
+function warn(state, district, by = 'police', followed = null) {
   const id = `raid-${district}-${state.day}${by === 'police' ? '' : `-${by}`}`;
   const day = state.day + (hasRoom(hallIn(state, district), 'lookout') ? ROOM_EFFECT.lookoutWarn : RAID.warnDays);
-  const raid = { id, district, by, warnedDay: state.day, day, answer: null, outcome: null, done: false, followed: followedIn(state, district) };
+  const raid = { id, district, by, warnedDay: state.day, day, answer: null, outcome: null, done: false, followed };
   const who = raidBy(raid);
   state.raids = [...(state.raids ?? []), raid];
   const gang = GANGS[by];
   const buy = gang ? ` They'd take a settlement: ${money(raidPrice(state, raid))} now, more at the door.`
     : police(district).onTake ? ` They're on the take here: ${money(raidPrice(state, raid))} would make it go away.` : ' Nobody here can be paid to make it go away.';
-  const why = gang ? `${who} have been asking for us. ${cap(gang.name)} haven't forgotten what we did to them (grudge ${grudgeOf(state, by)}/10), and they mean to come through the door on ${weekday(day)}.`
+  const why = followed ? `${who} followed the crew home from a job, and they mean to come through the door on ${weekday(day)}.`
+    : gang ? `${who} have been asking for us. ${cap(gang.name)} haven't forgotten what we did to them (grudge ${grudgeOf(state, by)}/10), and they mean to come through the door on ${weekday(day)}.`
     : `${who} have been asking about our hall there, and they mean to come through the door on ${weekday(day)}. Heat there is ${heatIn(state, district)}/10.`;
   state.inbox.unshift({
     id: `raid-warn-${id}`, type: 'warning', kind: 'raid-warning', day: state.day,
     subject: `Raid warned: ${hallName(district)}, ${weekday(day)}${gang ? ` (${gang.short})` : ''}`,
-    body: `Word from ${inText(district)}: ${why}${raid.followed ? ' Someone followed the crew home from a job, and they know where to look.' : ''} Whoever is home that day can hold it, or walk out the back.${buy}`,
+    body: `Word from ${inText(district)}: ${why} Whoever is home that day can hold it, or walk out the back.${buy}`,
     payload: { raidId: id, district }, blocking: false, read: false,
   });
   return raid;
+}
+
+/** A failed getaway: the followers are the raid. Warns one on the hall (not if one is already coming). Returns it or null. */
+export function followHome(state, district, by, severity) {
+  if (!hallIn(state, district) || raidOn(state, district)) return null;
+  return warn(state, district, GANGS[by] && gangsOn(district).includes(by) ? by : 'police', severity);
 }
 
 /** The day's call, when they're at the door. Options are live: who's home, what we have. */
@@ -183,7 +190,7 @@ export function checkRaids(state) {
   }
   for (const hall of state.halls ?? []) {
     const d = hall.district;
-    if (heatIn(state, d) < RAID.heatAt - (followedIn(state, d) ? FOLLOW.heatEase : 0) || raidOn(state, d)) continue;
+    if (heatIn(state, d) < RAID.heatAt || raidOn(state, d)) continue;
     const last = (state.raids ?? []).filter((r) => r.district === d).at(-1);
     if (last && state.day - last.warnedDay < RAID.cooldownDays) continue;
     if (hashRng(state.seed, 'raid', d, state.day)() < RAID.dailyChance) warn(state, d);

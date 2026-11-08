@@ -12,7 +12,7 @@
 // leaves them dying, and any exit after that still brings them home.
 
 import { jobGrudge, addGrudge, grudgeOf, GANGS } from './gangs.js';
-import { finishRaid } from './raids.js';
+import { finishRaid, followHome } from './raids.js';
 import { crewLead } from './lead.js';
 import { templateById, twistById, jobView, namedBonus } from './jobs.js';
 import { NAMED_OFFER, NAMED_TEXT } from '../data/fame.js';
@@ -918,13 +918,13 @@ function finish(state) {
     heatGain -= getaway.shed;
     if (getaway.tail && state.heatWatched !== true) state.heatWatched = tpl.district; // a tail: the next job there is watched
     const g = getaway;
-    // Followed home: the hall most of the crew live in is watched for a few days (core/raids.js reads it).
+    // Followed home: the followers are the raid, on the hall most of the crew live in (core/raids.js).
     const hall = g.followed ? homeHallOf(state, onJob(state, am).filter((o) => !deaths.includes(o)), HOME_HALL) : null;
-    if (hall) hall.followedUntil = Math.max(hall.followedUntil ?? 0, state.day + g.followed);
-    g.hall = hall?.district ?? null;
+    const raid = hall ? followHome(state, hall.district, jobGrudge(tpl, am.threat ?? tpl.threat)?.gang, g.followed) : null;
+    g.hall = raid ? hall.district : null;
     const text = g.result === 'clean' ? `${g.pilot.handle} gets them out clean: heat −${g.shed}.`
       : g.result === 'good' ? `${g.pilot.handle} gets them out: heat −${g.shed}.`
-      : g.tail ? `${g.pilot.handle} can't shake the tail. The next job here will be watched${g.hall ? ', and someone followed them home' : ''}.` : g.hall ? `${g.pilot.handle} gets them out, but someone follows them home.` : `${g.pilot.handle} gets them out, but the heat stays.`;
+      : g.tail ? `${g.pilot.handle} can't shake the tail. The next job here will be watched${g.hall ? ', and someone followed them home: a raid is coming' : ''}.` : g.hall ? `${g.pilot.handle} gets them out, but someone follows them home: a raid is coming.` : `${g.pilot.handle} gets them out, but the heat stays.`;
     am.getaway = { handle: g.pilot.handle, result: g.result, shed: g.shed, tail: g.tail, followed: g.hall, die: g.die, value: g.value, need: g.need, text };
     am.log.push({ kind: g.tail ? 'bad' : 'good', text });
     record(am, { kind: 'getaway', stat: 'piloting', actor: { id: g.pilot.id, handle: g.pilot.handle }, die: g.die, value: g.value, need: g.need, success: g.margin >= 0, result: g.result, shed: g.shed, tail: g.tail, followed: g.hall, text, outcomeCost: {} });

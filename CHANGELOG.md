@@ -8,7 +8,7 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 ## 2026-11-08 · Piloting: followed home
-- A **failed getaway** now means someone follows the crew home. The hall most of them live in is watched for 3 days (a miss) or 6 (a bad miss). A raid there in that time is one step harder and comes at a lower heat than usual, and the warning says so. A pilot of 14 or better shakes a plain miss and shortens a bad one.
+- A **failed getaway** now means someone follows the crew home, and the followers are the raid: one is warned at once on the hall most of them live in (the police, or the gang the job crossed), with the usual hold, pay or walk-out choice. A bad miss is a step harder. A pilot of 14 or better shakes a plain miss and softens a bad one.
 - Faster jobs and same-day hall moves are dropped from the piloting plan: getting across the city doesn't take a day.
 
 ## 2026-11-08 · Piloting: driving gets a getaway (save v51)

@@ -91,7 +91,9 @@ test('below the heat line no hall is raided, and after a raid the hall has a qui
 test('careful play is never raided (the tong sims stay clear)', () => {
   for (let seed = 1; seed <= 12; seed++) {
     const { state } = playWeeks(6, seed, undefined, { startCrew: 'fresh' });
-    assert.equal((state.raids ?? []).length, 0, `seed ${seed}`);
+    // Heat never draws a raid on careful play. A failed getaway can: the followers are the raid
+    // (core/piloting.js, 2026-11-08), so those are the only ones allowed.
+    assert.equal((state.raids ?? []).filter((r) => !r.followed).length, 0, `seed ${seed}`);
   }
 });
 
