@@ -138,6 +138,12 @@ Reputation tier promotions open the locked districts,
 each introduced by a client: the Silt (the Ferryman), the Amber Reach (Okonkwo), Iron
 Peak (Szeto).
 
+OTHER TONGS (2026-11-08): peers, not gangs; registered associations that compete for
+work and runners and never raid a hall. Styles: loud (animal or weapon + Hand/Fist), quiet
+(weather or hour + Society), corporate (initials + Holdings/Partners), street (a canon
+place + Lot/Row/Court). Invented names only, no digits, none based in the Silt. The Brass
+Anchor Society stands beside the ladder, not on it. The Word is hedged street talk, never
+results, ranks or numbers.
 TONE: gritty but human. Warmth, loyalty and dark humour are the baseline; darker
 moments arrive as events. All characters 18+. Entries 1–2 sentences, phone-readable.
 Everything is invented: no real companies, triads, people or Hong Kong place names, and

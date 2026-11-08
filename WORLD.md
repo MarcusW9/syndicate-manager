@@ -357,6 +357,19 @@ Rooms beneath the corporate terraces, opening onto a sunken maintenance court: "
 - *Access:* Veridian-Apex contractors use the service road, and security may check occupancy records: a legitimate arrangement, not immunity.
 - *Everyday:* above the wall, gardeners replace plants before residents notice they're dying; below it, someone grows spring onions in a food tub.
 
+## The other tongs
+
+Owner's lore, 2026-11-08. Lantern Bay has other tongs: peers, not gangs. Each is a registered association like yours, with a front room and a ledger, and they work, recruit, rise and fade. They compete for contracts and runners and never raid a hall (raids belong to the gangs and the Wet Sleeve). Nobody posts a standing; a tong's place is felt through the tier words (back room to harbour), through talk, and through who comes knocking.
+
+- **Four styles, four ways to be named.** All names are invented; none has a digit, and none echoes a real society.
+  - *Loud:* an animal or a weapon + Hand or Fist (Black Heron Hand, Cleaver Fist, Jade Mantis Hand).
+  - *Quiet:* weather or an hour + Society (Third Mist Society, Late Rain Society, Grey Hour Society).
+  - *Corporate:* initials + Holdings or Partners (K&W Partners, MT Holdings), never the initials of a canon firm.
+  - *Street:* a canon place + Lot, Row or Court (Basin Lot, Gantry Gate Row, Lower Arcade Court). Places come from this file only.
+- **Where they sit.** Each is based in one of the five open districts. None is based in the Silt, and no name uses a Silt place.
+- **Not a rival: the Brass Anchor Society.** The oldest name anyone measures against. It sits beside the ladder, not on it; no tong ranks above it and none is ever compared with it. The Word mentions it rarely and respectfully.
+- **The Word.** The street's talk, never a scoreboard: unsigned, hedged ("word is", "they're saying"), never confirmed. It tells you who took what work, whose name is travelling and who has gone quiet; it never gives results, ranks or numbers. Joss reads it out on Mondays, in short plain lines.
+
 ## Tech and neural load
 Street implants are cheap, second-hand and always glitching; Glass Heights wears smooth luxury hardware. Pushing implants too hard brings on neural load: migraines, memory stutter, emotional deadness. Street crews treat it not with corporate therapy patches but with bitter herbal infusions from Auntie Fung's shop, damp cloths and downtime in dim mahjong parlours. The megacorps own the infrastructure; working people treat tech like a rusty outboard motor, duct-taped, prayed over and kept running out of stubbornness.
 
@@ -824,6 +837,12 @@ Reputation tier promotions open the locked districts,
 each introduced by a client: the Silt (the Ferryman), the Amber Reach (Okonkwo), Iron
 Peak (Szeto).
 
+OTHER TONGS (2026-11-08): peers, not gangs; registered associations that compete for
+work and runners and never raid a hall. Styles: loud (animal or weapon + Hand/Fist), quiet
+(weather or hour + Society), corporate (initials + Holdings/Partners), street (a canon
+place + Lot/Row/Court). Invented names only, no digits, none based in the Silt. The Brass
+Anchor Society stands beside the ladder, not on it. The Word is hedged street talk, never
+results, ranks or numbers.
 TONE: gritty but human. Warmth, loyalty and dark humour are the baseline; darker
 moments arrive as events. All characters 18+. Entries 1–2 sentences, phone-readable.
 Everything is invented: no real companies, triads, people or Hong Kong place names, and
