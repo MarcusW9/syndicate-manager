@@ -1,0 +1,554 @@
+{
+ "seeded": {
+  "tongs": [
+   {
+    "name": "Salt Cormorant Hand",
+    "style": "loud",
+    "home": "oldTown",
+    "halls": 1,
+    "tier": "backroom"
+   },
+   {
+    "name": "Service Steps Lot",
+    "style": "street",
+    "home": "heights",
+    "halls": 1,
+    "tier": "backroom"
+   },
+   {
+    "name": "Third Mist Society",
+    "style": "quiet",
+    "home": "basin",
+    "halls": 2,
+    "tier": "street"
+   },
+   {
+    "name": "D&L Partners",
+    "style": "corporate",
+    "home": "heights",
+    "halls": 2,
+    "tier": "street"
+   },
+   {
+    "name": "Lower Arcade Lot",
+    "style": "street",
+    "home": "heights",
+    "halls": 1,
+    "tier": "backroom"
+   },
+   {
+    "name": "Jade Mantis Hand",
+    "style": "loud",
+    "home": "oldTown",
+    "halls": 2,
+    "tier": "street"
+   }
+  ],
+  "cards": [
+   {
+    "id": "c1",
+    "name": "Dewi Wijaya",
+    "tongId": "salt-cormorant-hand",
+    "rating": 47
+   },
+   {
+    "id": "c2",
+    "name": "Nia Okoro",
+    "tongId": "salt-cormorant-hand",
+    "rating": 27
+   },
+   {
+    "id": "c3",
+    "name": "Ines Petrov",
+    "tongId": "salt-cormorant-hand",
+    "rating": 30
+   },
+   {
+    "id": "c4",
+    "name": "Mai Tran",
+    "tongId": "salt-cormorant-hand",
+    "rating": 40
+   },
+   {
+    "id": "c5",
+    "name": "Sunita Thapa",
+    "tongId": "service-steps-lot",
+    "rating": 48
+   },
+   {
+    "id": "c6",
+    "name": "Linh Wijaya",
+    "tongId": "service-steps-lot",
+    "rating": 36
+   },
+   {
+    "id": "c7",
+    "name": "Kwame Diallo",
+    "tongId": "service-steps-lot",
+    "rating": 38
+   },
+   {
+    "id": "c8",
+    "name": "Winnie Wong",
+    "tongId": "service-steps-lot",
+    "rating": 38
+   },
+   {
+    "id": "c9",
+    "name": "Rafael Mendoza",
+    "tongId": "third-mist-society",
+    "rating": 52
+   },
+   {
+    "id": "c10",
+    "name": "Zara Ali",
+    "tongId": "third-mist-society",
+    "rating": 39
+   },
+   {
+    "id": "c11",
+    "name": "Hoi-yan Yip",
+    "tongId": "third-mist-society",
+    "rating": 55
+   },
+   {
+    "id": "c12",
+    "name": "Dewi Rahman",
+    "tongId": "third-mist-society",
+    "rating": 50
+   },
+   {
+    "id": "c13",
+    "name": "Karen Ma",
+    "tongId": "third-mist-society",
+    "rating": 41
+   },
+   {
+    "id": "c14",
+    "name": "Paolo Bautista",
+    "tongId": "dl-partners",
+    "rating": 50
+   },
+   {
+    "id": "c15",
+    "name": "Ivy Cheung",
+    "tongId": "dl-partners",
+    "rating": 52
+   },
+   {
+    "id": "c16",
+    "name": "Ines O'Brien",
+    "tongId": "dl-partners",
+    "rating": 38
+   },
+   {
+    "id": "c17",
+    "name": "Ivy Lee",
+    "tongId": "dl-partners",
+    "rating": 50
+   },
+   {
+    "id": "c18",
+    "name": "Gigi Cheung",
+    "tongId": "dl-partners",
+    "rating": 51
+   },
+   {
+    "id": "c19",
+    "name": "Budi Rahman",
+    "tongId": "lower-arcade-lot",
+    "rating": 38
+   },
+   {
+    "id": "c20",
+    "name": "Eason Chan",
+    "tongId": "lower-arcade-lot",
+    "rating": 39
+   },
+   {
+    "id": "c21",
+    "name": "Joy Santos",
+    "tongId": "lower-arcade-lot",
+    "rating": 42
+   },
+   {
+    "id": "c22",
+    "name": "Rafael dela Cruz",
+    "tongId": "lower-arcade-lot",
+    "rating": 40
+   },
+   {
+    "id": "c23",
+    "name": "Linh Nguyen",
+    "tongId": "lower-arcade-lot",
+    "rating": 47
+   },
+   {
+    "id": "c24",
+    "name": "Imran Khan",
+    "tongId": "lower-arcade-lot",
+    "rating": 26
+   },
+   {
+    "id": "c25",
+    "name": "Bikram Rai",
+    "tongId": "jade-mantis-hand",
+    "rating": 56
+   },
+   {
+    "id": "c26",
+    "name": "Eason Lee",
+    "tongId": "jade-mantis-hand",
+    "rating": 28
+   },
+   {
+    "id": "c27",
+    "name": "Pema Singh",
+    "tongId": "jade-mantis-hand",
+    "rating": 40
+   },
+   {
+    "id": "c28",
+    "name": "Amara Kamau",
+    "tongId": "jade-mantis-hand",
+    "rating": 34
+   },
+   {
+    "id": "c29",
+    "name": "Zara Sharma",
+    "tongId": null,
+    "rating": 18
+   },
+   {
+    "id": "c30",
+    "name": "Zuri Adeyemi",
+    "tongId": null,
+    "rating": 45
+   },
+   {
+    "id": "c31",
+    "name": "Dicky Yip",
+    "tongId": null,
+    "rating": 46
+   },
+   {
+    "id": "c32",
+    "name": "Jun Reyes",
+    "tongId": null,
+    "rating": 31
+   },
+   {
+    "id": "c33",
+    "name": "Man-wai Wong",
+    "tongId": null,
+    "rating": 37
+   },
+   {
+    "id": "c34",
+    "name": "Zuri Okoro",
+    "tongId": null,
+    "rating": 46
+   },
+   {
+    "id": "c35",
+    "name": "Amara Adeyemi",
+    "tongId": null,
+    "rating": 37
+   },
+   {
+    "id": "c36",
+    "name": "Arif Rahman",
+    "tongId": null,
+    "rating": 21
+   },
+   {
+    "id": "c37",
+    "name": "Nia Kamau",
+    "tongId": null,
+    "rating": 22
+   },
+   {
+    "id": "c38",
+    "name": "Somchai Rahman",
+    "tongId": null,
+    "rating": 45
+   }
+  ]
+ },
+ "after4": {
+  "tongs": [
+   {
+    "name": "Salt Cormorant Hand",
+    "style": "loud",
+    "home": "oldTown",
+    "halls": 2,
+    "tier": "street"
+   },
+   {
+    "name": "Service Steps Lot",
+    "style": "street",
+    "home": "heights",
+    "halls": 2,
+    "tier": "street"
+   },
+   {
+    "name": "Third Mist Society",
+    "style": "quiet",
+    "home": "basin",
+    "halls": 2,
+    "tier": "street"
+   },
+   {
+    "name": "D&L Partners",
+    "style": "corporate",
+    "home": "heights",
+    "halls": 3,
+    "tier": "district"
+   },
+   {
+    "name": "Lower Arcade Lot",
+    "style": "street",
+    "home": "heights",
+    "halls": 2,
+    "tier": "street"
+   },
+   {
+    "name": "Jade Mantis Hand",
+    "style": "loud",
+    "home": "oldTown",
+    "halls": 2,
+    "tier": "street"
+   }
+  ],
+  "cards": [
+   {
+    "id": "c1",
+    "name": "Dewi Wijaya",
+    "tongId": "salt-cormorant-hand",
+    "rating": 49
+   },
+   {
+    "id": "c2",
+    "name": "Nia Okoro",
+    "tongId": "salt-cormorant-hand",
+    "rating": 23
+   },
+   {
+    "id": "c3",
+    "name": "Ines Petrov",
+    "tongId": "salt-cormorant-hand",
+    "rating": 27
+   },
+   {
+    "id": "c4",
+    "name": "Mai Tran",
+    "tongId": "salt-cormorant-hand",
+    "rating": 39
+   },
+   {
+    "id": "c5",
+    "name": "Sunita Thapa",
+    "tongId": "service-steps-lot",
+    "rating": 51
+   },
+   {
+    "id": "c6",
+    "name": "Linh Wijaya",
+    "tongId": "service-steps-lot",
+    "rating": 36
+   },
+   {
+    "id": "c7",
+    "name": "Kwame Diallo",
+    "tongId": "service-steps-lot",
+    "rating": 39
+   },
+   {
+    "id": "c8",
+    "name": "Winnie Wong",
+    "tongId": "service-steps-lot",
+    "rating": 39
+   },
+   {
+    "id": "c9",
+    "name": "Rafael Mendoza",
+    "tongId": "third-mist-society",
+    "rating": 52
+   },
+   {
+    "id": "c10",
+    "name": "Zara Ali",
+    "tongId": "third-mist-society",
+    "rating": 40
+   },
+   {
+    "id": "c11",
+    "name": "Hoi-yan Yip",
+    "tongId": "third-mist-society",
+    "rating": 54
+   },
+   {
+    "id": "c12",
+    "name": "Dewi Rahman",
+    "tongId": "third-mist-society",
+    "rating": 49
+   },
+   {
+    "id": "c13",
+    "name": "Karen Ma",
+    "tongId": "third-mist-society",
+    "rating": 44
+   },
+   {
+    "id": "c14",
+    "name": "Paolo Bautista",
+    "tongId": "dl-partners",
+    "rating": 50
+   },
+   {
+    "id": "c15",
+    "name": "Ivy Cheung",
+    "tongId": "dl-partners",
+    "rating": 50
+   },
+   {
+    "id": "c16",
+    "name": "Ines O'Brien",
+    "tongId": "dl-partners",
+    "rating": 35
+   },
+   {
+    "id": "c17",
+    "name": "Ivy Lee",
+    "tongId": "dl-partners",
+    "rating": 49
+   },
+   {
+    "id": "c18",
+    "name": "Gigi Cheung",
+    "tongId": "dl-partners",
+    "rating": 50
+   },
+   {
+    "id": "c19",
+    "name": "Budi Rahman",
+    "tongId": "lower-arcade-lot",
+    "rating": 38
+   },
+   {
+    "id": "c20",
+    "name": "Eason Chan",
+    "tongId": "lower-arcade-lot",
+    "rating": 39
+   },
+   {
+    "id": "c21",
+    "name": "Joy Santos",
+    "tongId": "lower-arcade-lot",
+    "rating": 38
+   },
+   {
+    "id": "c22",
+    "name": "Rafael dela Cruz",
+    "tongId": "lower-arcade-lot",
+    "rating": 40
+   },
+   {
+    "id": "c23",
+    "name": "Linh Nguyen",
+    "tongId": "lower-arcade-lot",
+    "rating": 46
+   },
+   {
+    "id": "c24",
+    "name": "Imran Khan",
+    "tongId": "lower-arcade-lot",
+    "rating": 26
+   },
+   {
+    "id": "c25",
+    "name": "Bikram Rai",
+    "tongId": "jade-mantis-hand",
+    "rating": 55
+   },
+   {
+    "id": "c26",
+    "name": "Eason Lee",
+    "tongId": "jade-mantis-hand",
+    "rating": 26
+   },
+   {
+    "id": "c27",
+    "name": "Pema Singh",
+    "tongId": "jade-mantis-hand",
+    "rating": 42
+   },
+   {
+    "id": "c28",
+    "name": "Amara Kamau",
+    "tongId": "jade-mantis-hand",
+    "rating": 35
+   },
+   {
+    "id": "c29",
+    "name": "Zara Sharma",
+    "tongId": null,
+    "rating": 20
+   },
+   {
+    "id": "c30",
+    "name": "Zuri Adeyemi",
+    "tongId": null,
+    "rating": 42
+   },
+   {
+    "id": "c31",
+    "name": "Dicky Yip",
+    "tongId": null,
+    "rating": 49
+   },
+   {
+    "id": "c32",
+    "name": "Jun Reyes",
+    "tongId": null,
+    "rating": 31
+   },
+   {
+    "id": "c33",
+    "name": "Man-wai Wong",
+    "tongId": null,
+    "rating": 36
+   },
+   {
+    "id": "c34",
+    "name": "Zuri Okoro",
+    "tongId": null,
+    "rating": 43
+   },
+   {
+    "id": "c35",
+    "name": "Amara Adeyemi",
+    "tongId": null,
+    "rating": 36
+   },
+   {
+    "id": "c36",
+    "name": "Arif Rahman",
+    "tongId": null,
+    "rating": 22
+   },
+   {
+    "id": "c37",
+    "name": "Nia Kamau",
+    "tongId": null,
+    "rating": 23
+   },
+   {
+    "id": "c38",
+    "name": "Somchai Rahman",
+    "tongId": null,
+    "rating": 46
+   }
+  ]
+ }
+}

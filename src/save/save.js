@@ -30,6 +30,7 @@ import { refreshFreelancers } from '../core/freelance.js';
 import { GEAR, makeItem } from '../core/gear.js';
 import { CELLS } from '../data/gear.js';
 import { trimInbox } from '../core/inbox.js';
+import { seedRivals } from '../core/rivals.js';
 
 // The one-item-per-slot gear of saves before v45, for the migrations written against it.
 const slotLoadout = () => ({ weapon: null, armour: null, tool: null, implant: null });
@@ -668,6 +669,11 @@ function migrate(state) {
       if (job.templateId === 'back_rent') job.clientId = 'ip';
     }
     state.version = 50;
+  }
+  if (state.version === 50) {
+    // v51: the other tongs (DESIGN.md 2026-11-08). hashRng only, so nothing else in the save moves.
+    state.rivals = seedRivals(state);
+    state.version = 51;
   }
   return state;
 }

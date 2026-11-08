@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-08 · The other tongs, behind the scenes (save v51)
+- No change you can see yet. Lantern Bay now has about six other tongs, made fresh for each game, that rise and fade week by week in the background, with about forty named runners between them. Nothing on screen shows them yet (that's the next slice: the Monday Word, Ops › Tongs and Names on the street), and nothing about your jobs, pay, heat or rolls changes. Old saves get their own set of tongs when they load.
+
 ## 2026-11-08 · Plan: the other tongs, without a league
 - No game change. The plan for rival tongs (`drafts/PROPOSAL-phase-3.md` part C) is rewritten: there's no league table, ranked list or ratings. The city's other tongs rise and fade in the background, and you hear where you stand through tier words, Monday's Word and who comes knocking. Your own runners can turn up among the names people talk about.
 

@@ -12,7 +12,7 @@ import { hashRng, pick } from './rng.js';
 import { NAMES } from '../config/names.js';
 import { trustOf } from './clients.js';
 import { CLIENTS } from '../data/clients.js';
-import { TONG_RANKS } from '../data/tong.js';
+import { rankForHalls } from './tong.js';
 import { money } from './money.js';
 import { PIECES, ROOM_EFFECT } from '../data/hallBuild.js';
 import { HALLS } from '../data/sites.js';
@@ -48,7 +48,7 @@ export function syncHalls(state) {
   const halls = state.halls ?? [];
   state.rosterCap = halls.reduce((n, h) => n + bedsOf(h), 0);
   state.rent = halls.reduce((n, h) => n + h.rent, 0);
-  state.rank = TONG_RANKS[Math.min(TONG_RANKS.length, Math.max(1, halls.length)) - 1].id;
+  state.rank = rankForHalls(halls.length).id;
   return state;
 }
 

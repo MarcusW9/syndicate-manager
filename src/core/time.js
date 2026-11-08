@@ -23,6 +23,7 @@ import { refreshSideBoard, returnSideTasks } from './sidetasks.js';
 import { dailyTraits } from './earned.js';
 import { weeklyRecord } from './record.js';
 import { weeklyFame } from './fame.js';
+import { weeklyRivals } from './rivals.js';
 import { neuralFloor } from './gear.js';
 import { checkSpecialisations } from './specialisations.js';
 import { refreshArmoury } from './looks.js';
@@ -141,6 +142,7 @@ function settleWeek(state) {
 
   weeklyRecord(state); // a week they worked counts towards their record
   weeklyFame(state); // standing slips on the bench, Elite can lapse, fame may climb (core/fame.js)
+  weeklyRivals(state); // the other tongs' week, on its own key: no roll moves (core/rivals.js)
 
   // Heat cools the same every week, job or no job (core/heat.js).
   const cooled = coolHeat(state); // every district cools the same (heat per district, save v39)
