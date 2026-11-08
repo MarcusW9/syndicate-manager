@@ -212,6 +212,9 @@ test('ratingOf is a 0-100 integer that grows with skill, tier and record', () =>
   worked.record = { jobs: 20, clean: 15, milestones: ['a', 'b'], highlights: [1, 2, 3] };
   worked.standing = 60; worked.fame = 'respected';
   assert.ok(ratingOf(worked) > ratingOf(rookie) + 15, 'a worked-in runner outranks the same rookie fresh');
+  const grind = structuredClone(rookie);
+  grind.record = { jobs: 24, clean: 20, milestones: [], highlights: [] }; grind.standing = 100; grind.fame = 'respected';
+  assert.ok(ratingOf(grind) - ratingOf(rookie) < 40, 'a quarter of hard work does not max out renown and record (retuned 2026-11-08)');
   assert.equal(cardRating({ rating: 140 }), 100);
   assert.equal(cardRating({}), 0);
 });
@@ -253,6 +256,19 @@ test("the player's own good runner can be among the names on the street", () => 
   const mine = namesOnTheStreet(s).filter((n) => n.own);
   assert.deepEqual(mine.map((n) => n.name), [ace.name]);
   assert.equal(mine[0].tong, null);
+});
+
+test('the player\'s own runners take at most half of Names on the street, however good the crew', () => {
+  const s = game(31);
+  for (const op of s.crew) {
+    op.stats = Object.fromEntries(Object.keys(op.stats).map((k) => [k, 19]));
+    op.tier = 'veteran'; op.fame = 'elite'; op.standing = 100;
+    op.record = { jobs: 120, clean: 100, milestones: ['a', 'b', 'c', 'd'], highlights: [1, 2, 3] };
+  }
+  for (let i = 0; i < 6; i++) s.crew.push({ ...structuredClone(s.crew[0]), id: 'x' + i, name: 'Extra Ace ' + i });
+  const names = namesOnTheStreet(s);
+  assert.equal(names.length, RIVALS.namesMax);
+  assert.equal(names.filter((n) => n.own).length, RIVALS.namesMax / 2);
 });
 
 // --- Saves ---

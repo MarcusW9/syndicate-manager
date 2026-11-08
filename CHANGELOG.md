@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-08 · Names on the street, kept honest
+- Your own runners take at most half of Names on the street, and a runner's hidden rating now climbs over a year instead of maxing out in a quarter, so the other tongs' runners stay in the talk. Nothing about jobs, pay, heat or rolls changes.
+
 ## 2026-11-08 · You can hear about the other tongs
 - **The Word** on Monday's briefing: up to three lines of street talk about the other tongs (who took what work, whose name is going round, who's gone quiet). Talk, never results or numbers.
 - **Ops › Places › The other tongs:** the city's other tongs grouped by how far their name carries (Back Room to Harbour), each with its style, district and head; tap one for its page.

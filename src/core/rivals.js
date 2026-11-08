@@ -249,7 +249,11 @@ export function namesOnTheStreet(state) {
     const rating = ratingOf(op);
     pool.push({ score: rating + (bonus[fameOf(op)] ?? 0), name: op.name, own: true, tong: null, fame: fameOf(op), home: op.hall ?? 'oldTown', role: op.role, word: ratingWord(rating, op) });
   }
-  return pool.sort((a, b) => b.score - a.score || (a.name < b.name ? -1 : 1)).slice(0, RIVALS.namesMax)
+  // The street talks about other people too: the player's own runners take at most half the list.
+  const ownMax = Math.floor(RIVALS.namesMax / 2);
+  let own = 0;
+  return pool.sort((a, b) => b.score - a.score || (a.name < b.name ? -1 : 1))
+    .filter((n) => !n.own || ++own <= ownMax).slice(0, RIVALS.namesMax)
     .map(({ score, ...n }) => n).sort((a, b) => (a.name < b.name ? -1 : 1));
 }
 

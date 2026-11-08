@@ -10,7 +10,7 @@ import { recordOf } from './record.js';
 const clamp = (n, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, n));
 const STAT_KEYS = ['combat', 'stealth', 'tech', 'social', 'driving', 'medical', 'cool'];
 const TIER_BONUS = { rookie: 0, pro: 6, veteran: 12 };
-const FAME_STEP = { unknown: 0, known: 8, respected: 18, elite: 30, legend: 40 };
+const FAME_STEP = { unknown: 0, known: 5, respected: 12, elite: 20, legend: 30 };
 
 /** Skill, 0-100: the main stat plus the best two others (1-20 → 0-100), plus a tier bonus. */
 export function skillOf(op) {
@@ -20,12 +20,12 @@ export function skillOf(op) {
   const avg = ((stats[main] ?? 0) + others[0] + others[1]) / 3;
   return clamp(Math.round(avg * 5 + (TIER_BONUS[op.tier] ?? 0)));
 }
-/** Renown, 0-100: how the street rates them now, plus fame-tier steps. */
-export const renownOf = (op) => clamp(Math.round(standingOf(op) + (FAME_STEP[fameOf(op)] ?? 0)));
-/** Record, 0-100: jobs, clean jobs, milestones and highlights, capped. */
+/** Renown, 0-100: 0.7 of how the street rates them now, plus fame-tier steps. (Retuned 2026-11-08: at 1.0 it was 100 by week 13.) */
+export const renownOf = (op) => clamp(Math.round(0.7 * standingOf(op) + (FAME_STEP[fameOf(op)] ?? 0)));
+/** Record, 0-100: mostly jobs (100 at about 120, like Elite's liferJobs), a little for clean jobs, milestones and highlights. */
 export function recordScore(op) {
   const r = recordOf(op);
-  return clamp(Math.round(r.jobs * 1.5 + r.clean + (r.milestones?.length ?? 0) * 4 + (r.highlights?.length ?? 0) * 3));
+  return clamp(Math.round(r.jobs * 0.6 + r.clean * 0.15 + (r.milestones?.length ?? 0) * 1.5 + (r.highlights?.length ?? 0)));
 }
 
 /** A player's runner. */
