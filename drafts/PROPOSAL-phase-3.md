@@ -36,8 +36,8 @@ part D, so loyalty doesn't sit beside a second mood bar.
 4. **D. Loyalty and mobility.** Needs rival tongs to exist (someone has to make the offer), and
    pairs with retirement (renown slice 6): both are a runner leaving.
 
-**Build order (2026-11-08):** A1 playtest → C0 + C1 → B → A2 → C2/C3 → D. C1 is read-only, so it
-can't move the heist balance being playtested.
+**Build order (2026-11-08, after the A1 playtest):** A1b → C0 + C1 → B → A2 → C2/C3 → D. A1b is small and comes straight
+from the playtest; C1 is read-only, so nothing waits on it.
 
 ## 2. Part A: heists
 
@@ -93,6 +93,23 @@ names a crisis the finale really has.
 - **A1. The engine, with a stand-in.** Penthouse Heist (threat 5, 3 days, Glass Heights) as the
   finale and existing templates as prep, to play the rhythm before anything is written. Ops card,
   plan lines for the effects, the Monday line, the Sunday summary line.
+- **A1b. The finale reads as big** (owner's playtest, 2026-11-08: "practically just 3 normal jobs
+  followed by a big one, but it wasn't very clear it was a big one"). Today the finale is an ordinary
+  threat-5 offer whose plan carries one small heist line (`heistPlanLine`, styled as an opening
+  job's note), and its run, report and end card are any job's; only the direct buzz marks it. No new
+  rules, no save change, no balance change:
+  1. **Marked everywhere:** the finale gets its own frame and a "Heist · finale" kicker on the board
+     and the job list; on its plan a heist header replaces the small line (name, contact, date, the
+     prep checklist up top with what each finished step gives).
+  2. **The run pays off the prep:** when a crisis that prep dropped (`drop`) or exposed (`know`)
+     would have come up, the feed says so in a line naming the prep ("The guard rota from the crew
+     list: shifts change at three"). Lines are data in `data/heists.js`, per step.
+  3. **A moment before and after:** Joss's send-off names it as the one and suggests Watch live; the
+     end card stamps "Heist done" in its own style with the full haul; the Sunday summary leads with
+     it. (Highlights for everyone on the finale stay as planned.)
+  4. **Only if 1-3 aren't enough** (a balance change; rerun `scripts/sim-phase2.mjs`): one more
+     inside slot on the finale, or a heist-only opening crisis that sets the scene.
+  Screenshots of the board, the plan and the end card with it.
 - **A2. Black Sun.** The first written heist: target, client, prep stories and finale. "Black Sun"
   is only a working name today; it's new canon, so it goes through `add-lore` and the owner writes
   it (a writing task with its prompt in `drafts/writing-tasks.md`).
@@ -324,7 +341,7 @@ throughout, in a fixed array order. In order:
   player's runners). An idea with no rule yet: once the development next to the Silt is written
   (canon: unnamed, going up now), it gives the other tongs a reason to move towards the Silt.
 
-**Build order:** A1 playtest → C0 + C1 → B → A2 → C2/C3 → D.
+**Build order:** A1b → C0 + C1 → B → A2 → C2/C3 → D (the A1 playtest is done).
 
 ### C.11 Tests
 
