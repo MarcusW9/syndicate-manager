@@ -10,7 +10,7 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 ## 2026-11-08 · The city asks: the Legend defining job (save v52)
 - When a runner has everything it takes to be a Legend (Elite, a veteran, 26 active weeks, 120 jobs at their level and a path's Legend numbers), the city asks for them by name: a hard job (threat 3-4, a step harder, half again the pay) goes on the board for a week, tagged "Their moment". Do it with them on the crew and they become a Legend, for good. If you open a heist and its finale is up, the finale is their moment instead.
 - Fail, abort, skip it or let it expire and the city asks again in four weeks. A runner who dies on it is a Legend for good, and the memorial says so.
-- The wording is a first, generic pass for the owner to replace. Retirement and the Hall of Legends come later.
+- The call, the earned message and the posthumous one each read differently for a Ghost, an Enforcer, an Earner, an Iron and a Lifer. Retirement and the Hall of Legends come later.
 
 ## 2026-11-08 · The Word reads better
 - Street talk about the other tongs has more ways of being said, no longer repeats the same news about the same tong within a month, and a doubled "the" is fixed. When your own tong climbs a rung (a new hall), the Word says so once. Nothing about jobs, pay, heat or rolls changes.

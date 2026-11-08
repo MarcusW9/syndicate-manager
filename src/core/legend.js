@@ -21,7 +21,14 @@ import { addOffer, jobUnlocked, templateById } from './jobs.js';
 import { legendEligible, pathOf } from './fame.js';
 import { addHighlight } from './milestones.js';
 
-const fill = (text, vars) => text.replace(/\{(\w+)\}/g, (m, k) => vars[k] ?? m);
+/**
+ * Fill {tokens}. "the {job}" and "the {heist}" drop the "the" when the name starts with an article
+ * ("The Favourite", "An Old Account", "A Steady Hand"), keeping a capital "The" at a sentence's start.
+ */
+const ARTICLE = /^(the|a|an)\s/i;
+const fill = (text, vars) => text
+  .replace(/\b(the|The) \{(\w+)\}/g, (m, the, k) => (vars[k] == null ? m : ARTICLE.test(vars[k]) ? vars[k] : `${the} ${vars[k]}`))
+  .replace(/\{(\w+)\}/g, (m, k) => vars[k] ?? m);
 const isFreelancer = (op) => !!op.freelance;
 
 /** Has this runner already been made a Legend? */
@@ -62,10 +69,14 @@ const freeFinale = (state) => {
   return null;
 };
 
+/** The wording for this runner's path: the owner's per-path text, or the generic body. */
+const bodyFor = (t, op) => t.byPath?.[pathOf(op).id] ?? t.body;
+
 function note(state, op, kind, vars = {}) {
   const t = LEGEND_TEXT[kind];
   const v = { op: op.handle, name: op.name, ...vars };
-  state.inbox.unshift({ id: `legend-${kind}-${op.id}-${state.day}`, type: 'crew', day: state.day, subject: fill(t.subject, v), body: fill(t.body, v), blocking: false, read: false });
+  const subject = kind === 'call' && vars.finale ? t.subjectFinale : t.subject;
+  state.inbox.unshift({ id: `legend-${kind}-${op.id}-${state.day}`, type: 'crew', day: state.day, subject: fill(subject, v), body: fill(bodyFor(t, op), v), blocking: false, read: false });
 }
 
 /**
@@ -91,7 +102,7 @@ export function legendTick(state) {
   if (finale) {
     finale.defining = op.id;
     call.offerId = finale.id;
-    note(state, op, 'callFinale', { heist: heistFor(state, finale.id)?.def.name ?? 'the finale' });
+    note(state, op, 'call', { heist: heistFor(state, finale.id)?.def.name ?? templateById(finale.templateId).name, finale: true });
     return state;
   }
   const options = definingTemplates(state);
@@ -104,7 +115,7 @@ export function legendTick(state) {
   job.defining = op.id;
   job.expiresDay = state.day + LEGEND.days;
   call.offerId = job.id;
-  note(state, op, 'call');
+  note(state, op, 'call', { heist: tpl.name });
   return state;
 }
 
@@ -128,7 +139,7 @@ export function legendResult(state, am, { outcome, deaths, onJobIds, jobName }) 
     const path = pathOf(fallen).id;
     if (entry) { entry.legend = { day: state.day, path, jobId: am.jobId, posthumous: true }; entry.fame = 'legend'; }
     const v = { ...vars, op: fallen.handle, name: fallen.name };
-    state.inbox.unshift({ id: `legend-posthumous-${id}-${state.day}`, type: 'crew', day: state.day, subject: fill(LEGEND_TEXT.posthumous.subject, v), body: fill(LEGEND_TEXT.posthumous.body, v), blocking: false, read: false });
+    state.inbox.unshift({ id: `legend-posthumous-${id}-${state.day}`, type: 'crew', day: state.day, subject: fill(LEGEND_TEXT.posthumous.subject, v), body: fill(bodyFor(LEGEND_TEXT.posthumous, { ...fallen }), v), blocking: false, read: false });
     return [{ tone: 'milestone', text: `Legend: ${fill(LEGEND_TEXT.posthumous.report, v)}` }];
   }
   if (!alive) return [];
@@ -140,6 +151,6 @@ export function legendResult(state, am, { outcome, deaths, onJobIds, jobName }) 
   if (alive.legendCall) alive.legendCall.offerId = null;
   alive.history.push(`Day ${state.day}: ${fill(LEGEND_TEXT.history.earned, vars)}`);
   if (alive.record) addHighlight(alive.record, { id: 'legend', day: state.day, text: `${alive.handle} became a Legend.`, weight: LEGEND.highlightWeight });
-  state.inbox.unshift({ id: `legend-earned-${id}-${state.day}`, type: 'crew', day: state.day, subject: fill(LEGEND_TEXT.earned.subject, v), body: fill(LEGEND_TEXT.earned.body, v), blocking: false, read: false });
+  state.inbox.unshift({ id: `legend-earned-${id}-${state.day}`, type: 'crew', day: state.day, subject: fill(LEGEND_TEXT.earned.subject, v), body: fill(bodyFor(LEGEND_TEXT.earned, alive), v), blocking: false, read: false });
   return [{ tone: 'milestone', text: `Legend: ${fill(LEGEND_TEXT.earned.report, v)}` }];
 }

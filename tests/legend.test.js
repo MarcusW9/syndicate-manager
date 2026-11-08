@@ -9,7 +9,9 @@ import { legendEligible, fameOf, weeklyFame, afterJobFame } from '../src/core/fa
 import { legendTick, legendResult, definingTemplates, isLegend } from '../src/core/legend.js';
 import { jobView, namedCandidate, addOffer, templateById } from '../src/core/jobs.js';
 import { recruitQualities } from '../src/core/recruits.js';
-import { LEGEND } from '../src/data/legend.js';
+import { LEGEND, LEGEND_TEXT } from '../src/data/legend.js';
+import { PATHS } from '../src/data/paths.js';
+import { MISSIONS } from '../src/data/missions.js';
 import * as M from '../src/core/mission.js';
 import { playMission, carefulPolicy } from './play.js';
 
@@ -147,7 +149,9 @@ test('a heist finale is the defining job when a heist is open and a ready runner
   assert.equal(fin.defining, op.id, 'the finale is their moment');
   assert.equal(s.jobs.length, before, 'no separate offer');
   assert.notEqual(fin.payMult, LEGEND.payMult, 'the finale keeps its own pay');
-  assert.ok(s.inbox.some((m) => m.id.startsWith('legend-callFinale')));
+  const call = s.inbox.find((m) => m.id.startsWith('legend-call'));
+  assert.match(call.subject, /finale/);
+  assert.match(call.body, /Rao|Big Table/i, 'the heist is named in the brief');
 });
 
 test('while a heist is open but its finale is not up, a ready runner waits for it', () => {
@@ -189,4 +193,75 @@ test('a v51 save upgrades: runners get legend and legendCall', async () => {
   const loaded = await importSave({ text: async () => JSON.stringify(s) });
   assert.equal(loaded.version, SAVE_VERSION);
   assert.ok(loaded.crew.every((o) => o.legend === null && o.legendCall === null));
+});
+
+// --- The owner's wording ---
+
+const fillWith = (text, vars) => {
+  // The same fill as core/legend.js, through a real message: run a call, an earn and a death.
+  return text.replace(/\{(\w+)\}/g, (m, k) => vars[k] ?? m);
+};
+
+test('every path has its own call, earned and posthumous message, and each fills cleanly', () => {
+  for (const path of PATHS.map((p) => p.id)) {
+    for (const kind of ['call', 'earned', 'posthumous']) {
+      const body = LEGEND_TEXT[kind].byPath[path];
+      assert.ok(body && body.length > 80, `${kind}/${path}`);
+      const done = fillWith(body, { op: 'Tram', name: 'Tram Nguyen', job: 'Warehouse Lift', heist: 'Seventy-One Floors' });
+      assert.doesNotMatch(done, /[{}]/, `${kind}/${path} has a loose placeholder`);
+    }
+  }
+  assert.deepEqual(Object.keys(LEGEND_TEXT.call.byPath).sort(), PATHS.map((p) => p.id).sort());
+});
+
+test('the wording keeps to the world rules: no credits, no ICE, no locked districts, no loose tokens', () => {
+  const all = JSON.stringify(LEGEND_TEXT);
+  assert.doesNotMatch(all, /\bcredits?\b/i, 'money is ¥, never credits');
+  assert.doesNotMatch(all, /\bICE\b|black-ICE/i, 'nothing from Cyberpunk or Shadowrun');
+  assert.doesNotMatch(all, /\bSilt\b|Amber Reach|Iron Peak/, 'a locked district is not named');
+  assert.doesNotMatch(all, /—/, 'no em dashes');
+  const tokens = new Set([...all.matchAll(/\{(\w+)\}/g)].map((m) => m[1]));
+  for (const t of tokens) assert.ok(['op', 'name', 'job', 'heist'].includes(t), `unknown token {${t}}`);
+});
+
+test("a call, an earn and a death use the runner's own path and name the job or heist cleanly", () => {
+  const s = game(40);
+  const op = ready(s.crew[0]);
+  const job = withDefining(s, op);
+  const tpl = templateById(job.templateId);
+  const call = s.inbox.find((m) => m.id.startsWith('legend-call'));
+  assert.match(call.body, /grid is humming/, "a Ghost's own brief");
+  assert.doesNotMatch(call.body, /[{}]/);
+  assert.ok(call.body.includes(tpl.name.replace(/^(The|A|An) /, '')), 'the job is named');
+  assert.doesNotMatch(call.body, /\b(the|The) (the|The|A|An) /, 'no doubled articles');
+  legendResult(s, { defining: op.id, jobId: job.id }, { outcome: 'completed', deaths: [], onJobIds: [op.id], jobName: 'The Favourite' });
+  const earned = s.inbox.find((m) => m.id.startsWith('legend-earned'));
+  assert.match(earned.body, /ghost story/);
+  assert.doesNotMatch(earned.body, /[{}]/);
+  const s2 = game(41);
+  const dead = ready(s2.crew[0]);
+  const job2 = withDefining(s2, dead);
+  s2.crew = s2.crew.filter((o) => o.id !== dead.id);
+  s2.memorial.push({ id: dead.id, name: dead.name, handle: dead.handle, role: dead.role, day: s2.day, cause: 'Died of wounds' });
+  legendResult(s2, { defining: dead.id, jobId: job2.id }, { outcome: 'loss', deaths: [dead], onJobIds: [], jobName: 'An Old Account' });
+  const msg = s2.inbox.find((m) => m.id.startsWith('legend-posthumous'));
+  assert.match(msg.body, /signal flatlined/);
+  assert.match(msg.body, /during An Old Account/, 'a job named with an article keeps one article');
+  assert.match(msg.body, new RegExp(dead.name));
+});
+
+test('the call reads cleanly for every job a defining offer can be', () => {
+  const s = game(42);
+  const op = ready(s.crew[0]);
+  for (const tpl of definingTemplates(s)) {
+    s.jobs = []; for (const o of s.crew) o.legendCall = null;
+    s.inbox = [];
+    const m = MISSIONS.find((x) => x.id === tpl.id);
+    assert.ok(m);
+    legendTick(s);
+    const body = s.inbox[0]?.body ?? '';
+    assert.doesNotMatch(body, /[{}]|undefined/, tpl.id);
+    assert.doesNotMatch(body, /\b(the|The) (the|The|A|An) /, `${tpl.id}: ${body}`);
+    assert.ok(op.legendCall.offerId);
+  }
 });
