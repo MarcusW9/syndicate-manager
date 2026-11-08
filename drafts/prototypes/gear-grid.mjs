@@ -8,7 +8,7 @@ import { loadoutOf, carried, itemTitle } from '../../src/core/gear.js';
 import { bestLine } from '../../src/core/squad.js';
 import { effectiveStat } from '../../src/core/crew.js';
 import { portrait, gearArt } from '../../src/ui/art.js';
-import { statValue } from '../../src/ui/icons.js';
+import { statValue, statGlyph } from '../../src/ui/icons.js';
 
 const s = createNewGame({ seed: 21, startCrew: 'fresh' });
 const offers = s.armoury?.offers ?? [];
@@ -28,10 +28,11 @@ const standby = by('Drizzle');
 const line = (op) => { const b = bestLine(op, 'stealth'); return statValue(b.stat, b.value); };
 
 // A polaroid: the portrait in a white frame, the handle written in the deep bottom margin.
+const ROLE_STAT = { tech: 'tech', face: 'social', muscle: 'combat', medic: 'medical', driver: 'driving', infiltrator: 'stealth' };
 const polaroid = (op, { size = 96, role = true } = {}) => `
   <figure class="pola" style="--pin:${PINS[op.handle] ?? '#3de8d8'}">
     <span class="pola__photo">${portrait(op, { size })}</span>
-    <figcaption><b>${esc(op.handle)}</b>${role ? `<span>${esc(op.role)}</span>` : ''}</figcaption>
+    <figcaption><b><i class="pola__role" aria-label="${esc(op.role)}">${statGlyph(ROLE_STAT[op.role] ?? 'tech')}</i>${esc(op.handle)}</b>${role ? `<span>${esc(op.role)}</span>` : ''}</figcaption>
   </figure>`;
 // A gear tile the same size as the photo: wide drawings (rifles, sidearms, drones, decks) turned
 // across the square, square ones (kits, vests) as they are.
@@ -237,23 +238,53 @@ const invRow = (op) => {
   const more = items.length - first;
   return `<div class="inv inv--l">${html}${Array.from({ length: blanks }, (_, i) => blank(i)).join('')}${more ? `<span class="inv__more" aria-label="${more} more carried">+${more}</span>` : ''}</div>`;
 };
+const FIT_OF = { Signal: 'good', Lantern: 'shaky', Synapse: 'good', Drizzle: 'good' };
 const TILT = ['-1.2deg', '0.8deg', '-0.6deg', '1deg'];
 const refined = (extra = '') => `
   <div class="board g-cols l-ref ${extra}">
     <div class="head"><span>3 inside · 3 recommended</span><button class="joss">Joss's picks</button></div>
     <p class="label">Inside team <span>moves as one group</span></p>
     <div class="cols">
-      ${inside.map((op, i) => `<div class="col" style="--tilt:${TILT[i]}">${x}${polaroid(op)}${invRow(op)}<p class="stat">${line(op)}</p></div>`).join('')}
+      ${inside.map((op, i) => `<div class="col" data-fit="${FIT_OF[op.handle] ?? 'good'}" style="--tilt:${TILT[i]}">${x}${polaroid(op)}${invRow(op)}<p class="stat">${line(op)}</p></div>`).join('')}
       <div class="col col--empty">${empty('Extra', 'more backup, more at risk')}</div>
     </div>
     <p class="label">Outside <span>optional</span></p>
     <div class="cols">
-      <div class="col" style="--tilt:0.9deg">${x}${polaroid(standby)}${invRow(standby)}<p class="stat"><span class="iconword">On call ·</span> ${statValue('medical', effectiveStat(standby, 'medical').value)}</p></div>
+      <div class="col" data-fit="good" style="--tilt:0.9deg">${x}${polaroid(standby)}${invRow(standby)}<p class="stat"><span class="iconword">On call ·</span> ${statValue('medical', effectiveStat(standby, 'medical').value)}</p></div>
       <div class="col col--empty">${empty('Overwatch', 'needs a rifle or drone')}</div>
       <div class="col col--empty">${empty('Wheels', 'takes the driving rolls')}</div>
     </div>
   </div>`;
 const L_CSS = `
+/* the role as an icon beside the name (all layouts) */
+.pola__role { display: none; }
+.n-role .pola__role { display: inline-grid; vertical-align: -2px; margin-right: 3px; color: #5a5f6c; } .n-role .pola__role svg { width: 12px; height: 12px; } .n-role .pola figcaption span { display: none; }
+/* N1 · the gear mat: a dark mat ruled in the inventory's cell size, a lighter patch where each runner stands */
+.n-mat { --cell: 38px; background-color: #0e1117; background-image:
+  linear-gradient(rgba(61,232,216,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(61,232,216,.12) 1px, transparent 1px),
+  linear-gradient(rgba(61,232,216,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(61,232,216,.055) 1px, transparent 1px);
+  background-size: calc(var(--cell) * 4) calc(var(--cell) * 4), calc(var(--cell) * 4) calc(var(--cell) * 4), var(--cell) var(--cell), var(--cell) var(--cell);
+  background-position: 13px 13px; box-shadow: inset 0 0 60px rgba(0,0,0,.6); }
+@media (min-width: 481px) { .n-mat { --cell: 49px; } }
+.n-mat .col:not(.col--empty)::before { content: ""; position: absolute; inset: -6px -5px -4px; z-index: -1; background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.05); }
+.n-mat .col { isolation: isolate; }
+.n-mat .pola { box-shadow: 0 6px 12px rgba(0,0,0,.55), 0 1px 2px rgba(0,0,0,.6); }
+/* N2 · the approach's colour washing in from the top (Stealth: cool blue) */
+.n-tint { position: relative; }
+.n-tint::before { content: ""; position: absolute; inset: 0 0 auto; height: 160px; pointer-events: none; background: linear-gradient(rgba(80,140,255,.16), transparent); }
+.n-tint::after { content: "STEALTH"; position: absolute; bottom: 10px; right: 16px; font: 700 3.2rem/1 var(--display); letter-spacing: .1em; color: rgba(120,170,255,.06); pointer-events: none; }
+.n-tint .head { position: relative; }
+/* N3 · the reading: a glow under each runner by fit, a pulse on a slot worth filling, a flash when the risk moves */
+.n-read .col[data-fit]::after { content: ""; position: absolute; left: 4%; right: 4%; bottom: 14px; height: 46%; z-index: -2; filter: blur(16px); opacity: .6; }
+.n-read .col[data-fit="shaky"]::after { opacity: .85; }
+.n-read .col[data-fit="good"]::after { background: #2fd39a; } .n-read .col[data-fit="shaky"]::after { background: #f2b942; } .n-read .col[data-fit="weak"]::after { background: #ff5a5a; }
+.n-read .col[data-fit="shaky"] .stat .iconword { color: #f2d541; }
+.n-read .col.is-want .slot { animation: n-pulse 2.2s ease-in-out infinite; }
+@keyframes n-pulse { 50% { border-color: var(--accent-2); box-shadow: 0 0 14px rgba(61,232,216,.25); } }
+.n-read.is-flash { animation: n-flash .7s ease-out; }
+@keyframes n-flash { 0% { box-shadow: inset 0 0 0 2px #2fd39a, inset 0 0 80px rgba(47,211,154,.35); } 100% { box-shadow: inset 0 0 60px rgba(0,0,0,.6); } }
+.n-demo { margin: 10px 0 0; min-height: 44px; padding: 0 14px; background: #10261f; border: 1px solid #1f5a4a; color: var(--accent-2); font: 700 .8rem var(--display); letter-spacing: .1em; text-transform: uppercase; cursor: pointer; }
+
 /* M · L, smaller: photos about the dossier's size up; four across on a phone */
 @media (max-width: 480px) {
   .l-ref.m-small .cols { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
@@ -281,7 +312,11 @@ const L_CSS = `
 }
 `;
 
+const withDemo = (h) => h.replace('class="col col--empty">', 'class="col col--empty is-want">') + `<button class="n-demo" onclick="const b=document.querySelector('.n-read');b.classList.remove('is-flash');void b.offsetWidth;b.classList.add('is-flash')">Try a change: see the risk flash</button>`;
 const VARIANTS = [
+  { name: 'N1 · Gear mat', note: '', html: () => refined('m-small n-role n-mat') },
+  { name: 'N2 · Gear mat + approach tint', note: '', html: () => refined('m-small n-role n-mat n-tint') },
+  { name: 'N3 · Gear mat + tint + the reading', note: '', html: () => withDemo(refined('m-small n-role n-mat n-tint n-read')) },
   { name: 'M · L, smaller', note: 'L with the photos scaled down: on a phone four across (the whole inside team and Extra on one row), each photo about 76px, so a 1×1 cell is about 38px, the smallest that still reads a sidearm; on a computer 104px columns. Item names go to the tap (the picker and the runner\'s page) on a phone; the role hides under the name there.', html: () => refined('m-small') },
   { name: 'L · J refined', note: 'J with the two changes: the polaroid keeps a slight tilt and its colour tab (a photo still feels like a photo), the gear stays straight. On a phone only the first row of gear shows, the main item, with "+1 more carried" for the rest, so a column is close to a dossier\'s height; on a computer the whole 2×2.', html: refined },
   { name: 'J · Inventory under the photo', note: 'The drawings without their background, laid on inventory cells under each polaroid, two cells wide. A rifle, drone or deck is 2×1, exactly as wide as the photo; a sidearm, kit or vest is 1×1, half that. Empty cells show the room left.', html: under },
