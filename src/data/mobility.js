@@ -17,9 +17,11 @@ export const MOBILITY = {
 export const fill = (text, vars) => text.replace(/\{(\w+)\}/g, (m, k) => vars[k] ?? m);
 
 export const POACH_TEXT = {
-  subject: '{tong} has made an offer for {op}',
-  body: 'Joss: "{tong} has approached {op}. They\'d pay {pay} a week, and {buyout} to us for letting them go. {op} will give us the week. Match it and they stay, or take the money and wish them well."',
-  match: '{op} stays on at {pay} a week.',
-  go: '{op} left for {tong}. {buyout} paid to us.',
-  lapsed: '{op} left for {tong}, as warned. {buyout} paid to us.',
+  subject: '{tong} wants {op}',
+  body: `Joss: "{tong} has made {op} an offer: {pay} a week, and {buyout} to us for letting them go. {op} told us first, which counts for something. We've got a week. Match it and they stay, or take the money and wish them well."`,
+  match: `{op} stays on at {pay} a week. They noticed we fought for them.`,
+  go: `{op} has gone to {tong}. {buyout} paid to us. The crew noticed the empty bunk.`,
+  lapsed: `We let the week run out, so {op} went to {tong}. {buyout} paid to us.`,
+  // Added when the runner who leaves is sworn (everyone else loses loyalty, once); follows go or lapsed, so it opens on the ledger.
+  soldSworn: `Their name is still in the ledger. Nobody at the table says much tonight.`,
 };

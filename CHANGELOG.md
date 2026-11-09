@@ -7,6 +7,12 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · The oath costs eight weeks of wage
+- Holding the ceremony for a sworn runner now costs eight weeks of their wage (it was two), and Joss no longer checks the spelling in the ledger scene; that is the wall's job.
+
+## 2026-11-09 · The oath, the ledger and the wall (wording only)
+- The world notes now say how a runner is sworn in: tea at the founding room above the noodle shop, their own name in the tong's ledger, an offering at the altar, nothing recited. A sworn name stays in the ledger after they leave, and the Hall of Legends is a wall beside the altar where a crew member writes each name and Joss checks the spelling. A runner who retires into the Hall now sees that in the message. No rules changed.
+
 ## 2026-11-09 · Sworn runners (part D4, save v57)
 - A runner with 26 active weeks and loyalty of 80 or more can be **sworn**: a lasting place in the tong, with no stat bonus and no raise. Joss tells you once; after that a "Hold the ceremony" button stays on their page, for two weeks of their wage. Sworn stays even if loyalty later falls. Rivals approach a sworn runner a tenth as often, and selling one costs every other runner 6 loyalty (an ordinary exit costs 2).
 

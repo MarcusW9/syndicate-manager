@@ -55,7 +55,8 @@ function execute(state, op, tong, text) {
   if (state.rivals.cards.filter((c) => c.tongId === tong.id).length < 12) state.rivals.cards.push(card);
   const dent = isSworn(op) ? OATH.leavePenalty : MOBILITY.goLoyalty; // a sworn runner's exit is felt (owner, 2026-11-09)
   for (const o of state.crew) if (!o.freelance) addLoyalty(o, dent);
-  return fill(text, { op: op.handle, tong: tong.name, buyout: money(buyout) });
+  const line = fill(text, { op: op.handle, tong: tong.name, buyout: money(buyout) });
+  return isSworn(op) ? `${line} ${POACH_TEXT.soldSworn}` : line;
 }
 
 /** Sunday: unanswered offers whose week is up take effect; then maybe one new offer. Mutates the (cloned) state. */

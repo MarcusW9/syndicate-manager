@@ -38,7 +38,7 @@ test('one notice only, and the ceremony stays available after "not yet"', () => 
 test('swearing costs two weeks of wage, re-checks eligibility and cash, and survives loyalty falling', () => {
   const { s, op } = ready();
   const cost = oathCost(op);
-  assert.equal(cost, 2 * op.wage);
+  assert.equal(cost, OATH.costWeeks * op.wage);
   const after = swearIn(s, op.id);
   assert.equal(after.cash, s.cash - cost);
   const sworn = after.crew.find((o) => o.id === op.id);
@@ -70,6 +70,7 @@ test('a sworn runner sold costs every other crew member 6 loyalty; an ordinary e
     return after.crew.map((o) => o.loyalty);
   };
   assert.ok(run(false).every((l) => l === 48));
+  assert.ok(run(true).some((l) => l === 44));
   assert.ok(run(true).every((l) => l === 44));
 });
 
@@ -80,4 +81,20 @@ test('a v56 save upgrades; anyone already eligible is not met with a notice', as
   assert.equal(loaded.version, SAVE_VERSION);
   assert.equal(loaded.crew[0].sworn, null);
   assert.equal(loaded.crew[0].oathNotified, true);
+});
+
+test('selling a sworn runner explains the loyalty drop; an ordinary one does not mention the ledger', async () => {
+  const { POACH_TEXT } = await import('../src/data/mobility.js');
+  const run = (sworn) => {
+    const s = createNewGame({ seed: 2, startCrew: 'fresh' });
+    s.halls = [{ district: 'a' }, { district: 'b' }];
+    for (const t of s.rivals.tongs) t.wealth = 60000;
+    for (const op of s.crew) { op.loyalty = 0; op.tier = 'rookie'; }
+    let m;
+    for (let i = 1; i < 300 && !m; i++) { s.day = i * 7; weeklyPoach(s); m = s.inbox.find((x) => x.kind === 'poach'); }
+    if (sworn) s.crew.find((o) => o.id === m.payload.opId).sworn = 1;
+    return resolveDecision(s, m.id, 'go').inbox.find((x) => x.id === m.id).payload.outcome;
+  };
+  assert.ok(run(true).includes(POACH_TEXT.soldSworn));
+  assert.ok(!run(false).includes('ledger'));
 });

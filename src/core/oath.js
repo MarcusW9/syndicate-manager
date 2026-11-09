@@ -1,6 +1,6 @@
 // Sworn runners (part D4; DESIGN.md 2026-11-09): a lasting place in the tong. Not a rank or a stat:
 // no bonus, no permanent raise. Eligible at 26 active weeks and 80 loyalty; the ceremony is the
-// player's choice, costs two weeks of the runner's wage, and stays on the runner's page while they
+// player's choice, costs OATH.costWeeks weeks of the runner's wage, and stays on the runner's page while they
 // are eligible. One eligibility notice per runner, remembered in `op.oathNotified`; sworn is `op.sworn`
 // (the day, or null) and survives loyalty falling. Rival approaches read it (core/mobility.js).
 

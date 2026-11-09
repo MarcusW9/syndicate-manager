@@ -5,7 +5,7 @@
 export const OATH = {
   minWeeks: 26, // active weeks
   minLoyalty: 80, // at the time of swearing; sworn status survives loyalty falling later
-  costWeeks: 2, // the ceremony costs this many weeks of their current wage
+  costWeeks: 8, // the ceremony costs this many weeks of their current wage (was 2: too cheap; owner chose 8, 2026-11-09)
   approachMult: 0.1, // rival approaches happen at this share of the normal rate
   leavePenalty: -6, // every other crew member's loyalty when a sworn runner is released or sold, once per departure
 };
@@ -13,7 +13,13 @@ export const OATH = {
 export const fill = (text, vars) => text.replace(/\{(\w+)\}/g, (m, k) => vars[k] ?? m);
 
 export const OATH_TEXT = {
-  ready: { subject: '{op} could be sworn', body: 'Joss: "{op} has been with us {weeks} weeks and would stand behind the hall. Their page has a Hold the ceremony button, for {cost}, whenever you want it. No hurry."' },
-  sworn: { subject: '{op} is sworn', body: '{op} stood in the front room and took the oath before the crew. It cost {cost} in tea, food and good faith.' },
-  history: 'Day {day}: sworn into the tong',
+  ready: {
+    subject: '{op} could be sworn in',
+    body: `Joss: "{op}'s been with us {weeks} weeks, and I think they'd put their name in the ledger if we asked. It's {cost} for the tea, the food and something for the altar. Hold the ceremony is on their page whenever you're ready. No hurry."`,
+  },
+  sworn: {
+    subject: '{op} is sworn in',
+    body: `In the front room, you poured {op} a cup of tea. They drank it and wrote their name in the ledger in their own hand. Then the crew ate until the noodle shop downstairs closed. {cost}, well spent.`,
+  },
+  history: 'Day {day}: wrote their name in the ledger',
 };
