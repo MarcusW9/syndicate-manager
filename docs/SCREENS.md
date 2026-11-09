@@ -55,6 +55,7 @@ Section names are the headings in the code. "(x)" marks something that shows onl
 - Districts (`renderDistricts`): a row per district (hall, crews out, jobs open, heat). A district's page (`districtCard`): name, who is there (faces), crews out, jobs open, "Manage the hall ›" (x, opens the hall on Tong), "About … on Lore ›".
 - Hall page (`renderHallPage`, on Tong › Halls since step 2): header with landmark, then The place (the plan and beds, Build), Who sleeps here, Move someone in, The block (parts, Expand, Buy).
 - Hall build (`ui/hallbuild.js`): grid over the hall's map, palette, Place / Turn / Remove.
+- 2026-11-09, **a hall's page** (`renderHallPage`): from 1100px two columns, the plan (with the raid's ways in in red, a key, "Start building ›" when empty) on the left and on the right the raid card, Who sleeps here, Build (the palette and sheet inline, Expand, Buy) and Defences; phones stack the column under the plan and Build opens its own screen. Save › Look › Hall art draws Old Town with `ui/hallart.js`.
 - Tongs (`ui/tongs.js` `renderTongs`): tongs grouped by tier, Free names (a card that opens the person in Crew › Leads), Names on the street. A tong's page has The latest and its names; a name's **profile** is read-only (who they are with, What we know, *View in Leads*). Recruiting (`renderLeadName`, on Crew › Leads): What we know, What it would take, Send someone to watch them (2 days), Sign (with the buyout to their tong when they are in one).
 
 **Crew** (`renderCrew`)

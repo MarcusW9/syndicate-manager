@@ -7,6 +7,14 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · The Hall page: two columns, a raid card, and an art layer for Old Town
+- On a tablet (1100px and wider) the hall page is two columns: the plan on the left, and on the right the raid card, who sleeps here (faces, Move someone in), Build (the palette, Expand, Buy) and a Defences line. You build on the plan in place. On a phone the column stacks under the plan and Build still opens its own screen.
+- A pending raid has a card (who, when, caused by what, the threat after our defences, Pay them off or Answer the door) and its ways in are marked red on the plan, labelled with who is coming. Which way a raid takes is still picked when it comes, so every way the hall has open is marked.
+- An empty hall shows a "Start building ›" button where it said "Nothing built yet · floor 0/26".
+- The plan no longer draws the route line and its unexplained circles; there is a small key under it, and a part's name is never under the Expand hatching.
+- New setting, Save › Look › Hall art (off by default, kept on this device, not in the save): draws the Old Town hall with floor tiles, thick walls with a soft shadow, a sprite for every piece, locked areas behind a shutter and neon light. The other halls keep the plain plan for now.
+- The palette says each piece's size, and has an All tab beside Defences and Rooms.
+
 ## 2026-11-09 · The oath costs eight weeks of wage
 - Holding the ceremony for a sworn runner now costs eight weeks of their wage (it was two), and Joss no longer checks the spelling in the ledger scene; that is the wall's job.
 
