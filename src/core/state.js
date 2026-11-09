@@ -14,7 +14,7 @@ import { refreshSideBoard } from './sidetasks.js';
 import { refreshArmoury } from './looks.js';
 import { seedRivals } from './rivals.js';
 
-export const SAVE_VERSION = 57;
+export const SAVE_VERSION = 58;
 
 // A rookie crew's first board: small work only.
 export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];
@@ -81,6 +81,7 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
     rngCounter: 0,
     activeMission: null,
     awayJobs: [], // hands-off jobs out, finished when the crew is back (core/autorun.js)
+    raidCallSeen: false, // the one-off fixer call about raids has been shown (v58, ui/app.js)
     raids: [], // raids on our halls, warned and waiting (core/raids.js; police v40, gangs v41)
     grudges: { redLanterns: 0, silverFan: 0 }, // each gang's grudge against us, 0-10 (core/gangs.js, save v41)
     sideBoard: [], sideOut: [], intel: {}, // side tasks (core/sidetasks.js)

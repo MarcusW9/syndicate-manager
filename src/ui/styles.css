@@ -2026,3 +2026,27 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .clientpage__trust { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 8px 0 12px; }
 .clientpage__trust p { flex: 1 1 220px; margin: 0; }
 .clientrow { align-items: center; }
+
+/* Raids, 2026-11-09: Threats above Out now, the plan buttons, Today's priority line, the one-off fixer call. */
+.threats { display: grid; gap: 8px; margin-bottom: 14px; }
+.threat { display: grid; gap: 8px; }
+.threat__head { margin: 0; display: flex; align-items: center; gap: 8px; color: var(--danger); }
+.threat__meta { margin: 0; }
+.threat__home { display: grid; gap: 4px; }
+.threat__label { margin: 0; color: var(--muted); }
+.threat__faces { display: flex; flex-wrap: wrap; gap: 6px; }
+.threat__plans { display: grid; grid-template-columns: 1fr; gap: 8px; }
+@media (min-width: 480px) { .threat__plans { grid-template-columns: 1fr 1fr; } }
+.planbtn { display: grid; gap: 4px; align-content: start; min-height: 44px; padding: 10px 12px; text-align: left; background: #1b1f28; border: 1px solid var(--line); color: var(--text); font: inherit; cursor: pointer; }
+.planbtn span { font-size: 0.8rem; color: var(--muted); }
+.planbtn.is-on { border-color: var(--accent-2); background: #16262a; }
+.planbtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.choice.is-plan { border-color: var(--accent-2); }
+.threatline { width: 100%; }
+.threatline__sub { display: block; font-size: 0.8rem; opacity: 0.85; }
+.continue__hint.is-warn { color: var(--warn, #ffb347); opacity: 1; font-weight: 600; }
+.raidsheet p { margin: 0 0 8px; }
+.raidsheet__head { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
+.raidsheet__kicker { margin: 0 0 2px; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--danger); }
+.raidsheet .stack { margin-top: 10px; }
+.threat__top { display: flex; gap: 10px; align-items: center; }

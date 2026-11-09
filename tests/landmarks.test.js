@@ -24,7 +24,7 @@ test('the halls and the raid screens show the hall\'s landmark, and so does the 
   const body = (name) => app.slice(app.indexOf(`function ${name}(`), app.indexOf('\n}\n', app.indexOf(`function ${name}(`)));
   assert.match(body('renderHalls'), /hallMark\(h\.district/, 'each hall of ours');
   assert.match(body('renderHalls'), /hallMark\(d, \{ dim: true \}\)/, 'a hall not yet opened, dim');
-  assert.match(body('renderRaids'), /hallMark\(r\.district/, 'the raid in Out now');
+  assert.match(body('renderThreats'), /hallMark\(r\.district/, 'the raid card in Threats');
   assert.match(body('renderRaidWarning'), /raidWhere\(raid\)/, 'the warning');
   assert.match(body('renderRaidCall'), /raidWhere\(raid\)/, 'the call at the door');
   // Since 2026-11-07 (owner) the map uses them too: on a label for a hall of ours or the picked
