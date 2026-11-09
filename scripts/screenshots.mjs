@@ -52,7 +52,9 @@ await new Promise((ok, fail) => {
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
 page.on('pageerror', (e) => console.error(`page error: ${e.message}`));
+page.on('console', (m) => { if (m.text().startsWith('ERR ')) console.error(m.text()); });
 await page.addInitScript(() => {
+  window.addEventListener('error', (e) => console.log(`ERR ${e.error?.stack ?? e.message}`)); // the page's own stack, for the log
   let s = 20261023;
   Math.random = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 2 ** 32; };
 });
