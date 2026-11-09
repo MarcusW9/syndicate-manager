@@ -22,25 +22,25 @@ export const fill = (text, vars) => text.replace(/\{(\w+)\}/g, (m, k) => vars[k]
 export const RETIRE_TEXT = {
   subject: '{op} wants a word',
   bodies: {
-    muscle: '{op} sat down across from you. "My knees say it is time. {weeks} weeks is a long run for this work. I can stay one more season if the money is right, or I can go quietly."',
-    tech: '{op} put a cold cup of tea on your desk. "I have been doing this {weeks} weeks and my hands are not what they were. Pay me more and I will stay a season. Or let me walk."',
-    driver: '{op} turned the keys over in their hand. "{weeks} weeks of other people\'s getaways. I would like to stop, or stay one more season at a better rate. Your call."',
-    face: '{op} smiled the way they do. "{weeks} weeks of talking my way through doors. I am tired. One more season, if you make it worth it, or I step out."',
-    infiltrator: '{op} was already half out of the door. "{weeks} weeks of staying unseen and I would like to be seen once, doing nothing. One more season for more, or let me go."',
-    medic: '{op} washed their hands twice before speaking. "{weeks} weeks of patching this crew. I would stay a season for better pay, or I could put the bag down for good."',
+    muscle: `{op} sat down across from you and rubbed one knee. "{weeks} weeks. My knees have started keeping count. Pay me a bit more and I'll do one more season. Or I go quietly. Your call."`,
+    tech: `{op} put a cup of tea on your desk and let it go cold. "{weeks} weeks of other people's locks, and my hands shake before breakfast now. One more season at a better rate, or let me walk."`,
+    driver: `{op} turned the keys over in their hand. "{weeks} weeks of other people's getaways. I'd like to drive somewhere slowly for once. One more season if the money's better. Otherwise these are yours."`,
+    face: `{op} smiled the way they do when they want something. "{weeks} weeks of talking my way through doors. I'm tired of my own voice. Make it worth it and I'll do one more season. Otherwise I'll leave you my numbers."`,
+    infiltrator: `{op} was already halfway to the door. "{weeks} weeks of nobody seeing me. I'd like to sit at a dai pai dong and be seen doing nothing. One more season, for more. Or let me go."`,
+    medic: `{op} washed their hands twice before they spoke. "{weeks} weeks of stitching this crew back together. I'll stay a season for better pay. Or I put the bag down, and you find someone who still sleeps."`,
   },
-  fallback: '{op} asked for a word. "{weeks} weeks is a long time in this city. I will stay a season for more money, or I will go. Whichever you decide."',
+  fallback: `{op} asked for a word. "{weeks} weeks is a long time in this city. One more season if the money's better, or I go. You decide."`,
 };
 
 export const RETIRE_REPLY = {
-  stay: '{op} nodded. "One more season." The wage is now {wage} a week.',
-  go: '{op} shook your hand and went. Their gear is back in the stash.',
-  goHall: '{op} shook your hand and went. Their gear is back in the stash, and their name goes on the wall of the Hall of Legends.',
+  stay: `{op} nodded. "One more season, then." Their wage is now {wage} a week.`,
+  go: `{op} shook your hand and went. Their gear's back in the stash, and there's an empty hook by the door.`,
+  goHall: `{op} shook your hand and went. Their gear's back in the stash, and Joss has put their name on the wall in the Hall of Legends.`,
 };
 
 /** Lines on the Hall of Legends wall, by fame; the generic one fits anyone. */
 export const HALL_EPITAPH = {
-  legend: 'A Legend. The street still tells it.',
-  elite: 'Elite for as long as it counted.',
-  generic: 'Worked long enough to be missed.',
+  legend: 'Legend. The street still tells it, and gets it wrong.',
+  elite: 'Elite, for as long as it counted.',
+  generic: 'Stayed long enough to be missed.',
 };

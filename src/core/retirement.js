@@ -12,6 +12,7 @@ import { isFreelancer } from './freelance.js';
 import { round50 } from './pricing.js';
 import { carried } from './gear.js';
 import { pathOf } from './fame.js';
+import { money } from './money.js';
 
 const clamp01 = (n, hi) => Math.max(0, Math.min(hi, n));
 
@@ -60,7 +61,7 @@ export function checkRetirement(state) {
     subject: fill(RETIRE_TEXT.subject, vars), body: fill(RETIRE_TEXT.bodies[op.role] ?? RETIRE_TEXT.fallback, vars),
     kind: 'retirement',
     options: [
-      { id: 'stay', label: `Stay one more season (${stayWage(op)} a week)` },
+      { id: 'stay', label: `Stay one more season (${money(stayWage(op))} a week)` },
       { id: 'go', label: 'Let them go' },
     ],
     payload: { opId: op.id, expiresDay: state.day + RETIREMENT.expiryDays, wage: stayWage(op) },
@@ -93,7 +94,7 @@ export function RETIREMENT_RESOLVER(state, msg, optionId) {
     op.retireAsks = (op.retireAsks ?? 0) + 1;
     op.retireSnoozeUntil = state.day + RETIREMENT.snoozeStay;
     op.history.push(`Day ${state.day}: stayed one more season at ${op.wage} a week`);
-    return done(fill(RETIRE_REPLY.stay, { op: op.handle, wage: String(op.wage) }));
+    return done(fill(RETIRE_REPLY.stay, { op: op.handle, wage: money(op.wage) }));
   }
   if (optionId !== 'go') return;
   const worthy = hallWorthy(op);
