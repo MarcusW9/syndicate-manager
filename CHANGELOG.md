@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · Leads count is a badge
+- Crew › Leads shows its count as a badge (like the Today and Jobs tabs) instead of a bare number after the word.
+
 ## 2026-11-09 · Raid warning pass
 - Raids have their own **Threats** section, pinned above Out now on City › Map. Each card reads "Police raid · Docks hall", then the day, days to go and the cause (the district's heat, a gang's grudge, or being followed home); who is at the hall sits on its own line; and the two plans, Hold the hall and Clear out, say what each costs. "View hall roster ›" replaces the old hall link.
 - The first raid you are warned about opens a one-off fixer call (a sheet) explaining the raid; later raids skip it. Hold the hall, Clear out or Decide later.

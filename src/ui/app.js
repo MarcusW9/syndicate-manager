@@ -1770,7 +1770,7 @@ function renderHallPage(d) {
 
 /** The sub-tab row (layout rule 5): `tabs` is [id, label] pairs; `on` the one showing; `action` the click action. */
 function subTabs(label, action, tabs, on) {
-  return `<div class="subtabs" role="group" aria-label="${esc(label)}">${tabs.map(([k, name]) => `<button class="subtab ${k === on ? 'is-on' : ''}" data-action="${action}" data-id="${k}" aria-pressed="${k === on}">${esc(name)}</button>`).join('')}</div>`;
+  return `<div class="subtabs" role="group" aria-label="${esc(label)}">${tabs.map(([k, name, count]) => `<button class="subtab ${k === on ? 'is-on' : ''}" data-action="${action}" data-id="${k}" aria-pressed="${k === on}">${esc(name)}${count ? ` <span class="pill" aria-label="${count} waiting">${count}</span>` : ''}</button>`).join('')}</div>`;
 }
 
 /** Crew: who we have and who we could get. Sub-tabs Roster · Leads · Wall (Halls and the Armoury moved to Tong in step 2). */
@@ -1822,7 +1822,7 @@ function renderCrew() {
         <h1>Crew</h1>
         <span class="muted">${state.crew.length}/${cap} beds</span>
       </div>
-      ${subTabs('Crew sections', 'crew-tab', [['roster', 'Roster'], ['leads', `Leads${recruits.length ? ` ${recruits.length}` : ''}`], ['wall', 'Wall']], tab)}
+      ${subTabs('Crew sections', 'crew-tab', [['roster', 'Roster'], ['leads', 'Leads', recruits.length], ['wall', 'Wall']], tab)}
       ${body}
     </section>`;
 }
