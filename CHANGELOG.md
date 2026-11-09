@@ -7,6 +7,42 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · Tidy: unused styles removed, open items written up
+- Deleted the styles for the removed Lore cards, Clients strip and Places buttons. `docs/nav-rework-open-items.md` lists what to check while playing the rework and the decisions still open; the handoff's stale build-order line now says which parts were already built.
+
+## 2026-11-09 · Navigation, step 5: Today's crews out is one line
+- Today shows one line for the crews out (with the calls waiting), linking to City › Map, where the full cards live. This was already how it worked, so the change is small: the line now says "City ›" and not "Ops ›", the sitemap was corrected, and a test pins it. Take the call works from the call-in message on Today and from the card on the Map.
+
+## 2026-11-09 · Navigation, step 4: the Lore tab's contents move home
+- **Districts:** each district's page (City › Districts) now has what's happening there first (who's at the hall, crews out, work open, street talk), then its picture, pitch and write-up (who runs it, police, at 3am, local custom, landmarks, kinds of work). The lore shows even in a district where nothing is going on. The "About … on Lore" and "See it on Ops" links are gone.
+- **Clients:** Jobs › Clients lists every client, and each has a page: where you stand and what they have on the board above, who they are below. A job's plan links to it. The strip of clients under the job board is gone.
+- **The Book** now holds Who's who and History only, unchanged and in order.
+- Every entry in the migration register is checked off, and `tests/lore-register.test.js` checks that each is reachable with its text intact.
+
+## 2026-11-09 · Lore migration register (nothing moved yet)
+- `docs/SCREENS.md` now lists every Lore entry (91 rows: districts, clients, Who's who, History) with where it is, where it will go and which links point at it, plus four questions for the owner. The Jobs Clients note that said "the Lore tab" now says "the Book".
+
+## 2026-11-09 · Fix: a report from a job with a getaway opened with an error
+- Opening the report of a job that rolled a getaway threw an error in the full log, because that log assumed every event had a choice. The getaway now shows as its own line with its roll, and an event of a kind the log doesn't know no longer breaks it.
+
+## 2026-11-09 · Navigation, step 3: Ops becomes City; recruiting moves to Leads
+- **Ops is now City**, with Map · Districts · Tongs. The old "Places" buttons are gone. Map: the city map, Out now, Tonight. Districts: a card for each district, each opening its page. Tongs: the other tongs by tier, free names, names on the street. The Book link sits in City's header on every sub-tab.
+- **Heists** moved to Jobs › Heists (Jobs is now Board · Heists · Side). The Map keeps a one-line marker that links there.
+- **Scouting, "What it would take" and signing moved to Crew › Leads**, for free names and for names in another tong. Nothing about who you can sign, what it costs (including the buyout to their tong) or how scouting works changed. In City › Tongs a name in a tong has a read-only profile with a "View in Leads" button; a free name opens straight in Leads. The scout row on the side-work board is gone.
+- Today's crews-out line goes to City › Map; the Monday heist line to Jobs › Heists. Back returns.
+
+## 2026-11-09 · Navigation, step 2: a Tong tab, Crew in three parts, Save in the ☰
+- New **Tong** tab, "what we've built": your rank in words (and what the next rung would take), then Halls and the Armoury. The halls (and each hall's page and Build) and the Armoury moved here from Crew.
+- **Crew** is now Roster · Leads · Wall. Today's "See the leads" opens Leads.
+- Five tabs: Today, Ops, Tong, Crew, Jobs. **Save** is the ☰ at the top, **Lore** is behind a **Book** link in Ops' header (the same Lore pages, unchanged for now).
+- Badges: Today counts everything waiting on you (calls, raids, hall offers, decisions, unread), each once. Jobs counts open jobs. Ops and Tong show no number.
+- A job's plan survives a trip to the Armoury: Back puts you in the plan as you left it.
+
+## 2026-11-09 · Navigation, step 1: every page has one home, and Back goes back
+- A hall's page (and its Build screen) now always opens on Crew, wherever the link was: Ops' district card, Today's raid cards or Crew's Halls list. Before, it stayed on whichever tab you opened it from.
+- Back is one control with a memory. It returns to the view you left: the same tab, filters and open page, scrolled to where you were, with a job's plan and squad still as you set them (Plan → Armoury → Back). It never rewinds the game: the page you return to shows today's state. Choosing a tab starts afresh. Root views, like a tab's first screen, show no Back.
+- Nothing in the save or the rules changed.
+
 ## 2026-11-08 · A lighter crew list
 - The Crew list no longer shows each runner's highlight line or the scout's read of their potential. Both are on the runner's own page: the highlight right under their name, the potential in Development.
 

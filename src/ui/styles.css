@@ -217,9 +217,6 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .siderow__meta { grid-row: 1 / 3; grid-column: 2; font-size: 0.8rem; color: var(--muted); white-space: nowrap; display: flex; align-items: center; column-gap: 0.3em; }
 .siderow__sub { font-size: 0.8rem; color: var(--muted); display: flex; flex-wrap: wrap; align-items: center; column-gap: 0.3em; } /* a row, so the stat's icon and word sit on the name's line (owner, iPad, 2026-10-29) */
 /* Clients: a strip of chips. */
-.clientstrip { list-style: none; margin: 0; padding: 0 0 4px; display: flex; gap: 8px; overflow-x: auto; }
-.clientchip { flex: 0 0 auto; display: grid; gap: 2px; padding: 8px 12px; border: 1px solid var(--line); font-size: 0.85rem; }
-.clientchip .trust { font-size: 0.75rem; text-align: left; } /* left, like the rest of the chip (.trust is right-aligned in tables) */
 /* Wide screens: the board stays beside the job being planned. Phones and tablets: the plan replaces
    it, with a back button (owner, 2026-10-29: at iPad width the plan was squeezed; 1100px became 1400px). */
 .jobsplit__list { display: none; }
@@ -240,7 +237,7 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
   .jobsplit__side .planbar__why--more { display: grid; }
   .jobsplit__side .planbar__tries { flex: none; }
   .jobsplit__list .jobslist { grid-template-columns: 1fr; }
-  .jobsplit__list .sidelist, .jobsplit__list .clientstrip, .jobsplit__list h2, .jobsplit__list .infoline:not(.climb), .jobsplit__list .talk { display: none; }
+  .jobsplit__list .sidelist, .jobsplit__list h2, .jobsplit__list .infoline:not(.climb), .jobsplit__list .talk { display: none; }
   .jobsplit__plan [data-action="back"] { display: none; }
 }
 .clients { margin-top: 16px; }
@@ -1275,28 +1272,6 @@ p > .infobtn { display: inline-grid; vertical-align: 2px; margin-left: 4px; }
 .tonight__what { flex: 1; display: grid; min-width: 0; }
 .tonight__where { font: 700 0.8rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 .tonight__go { color: var(--accent-2); font: 700 0.78rem var(--display); letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; }
-.cityplaces { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.cityplace { display: grid; gap: 2px; text-align: left; min-height: 56px; }
-/* The Ops card points to the district's write-up on City (2026-11-06). */
-.citycard__about { display: inline-flex; align-items: center; min-height: var(--tap, 44px); margin-top: 4px; }
-/* City › Districts (2026-11-06): the city as a book, each district led by its picture, its gang's
-   light on the corner as on the map's plates. The whole head is one tap target that opens the rest. */
-.lorecards { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 14px; }
-.lorecard { position: relative; background: var(--panel-2); border: 1px solid var(--line);
-  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); }
-.lorecard::before { content: ''; position: absolute; z-index: 1; top: 0; left: 0; width: 28px; height: 2px; background: var(--turf); }
-.lorecard.is-open { border-color: var(--turf); }
-.lorecard__head { display: grid; gap: 4px; width: 100%; padding: 0 0 12px; text-align: left; background: none; border: 0; color: var(--text); font: inherit; cursor: pointer; }
-.lorecard__head > :not(.lorecard__art) { padding: 0 14px; }
-.lorecard__art { display: block; margin-bottom: 8px; }
-.lorecard__art svg { display: block; width: 100%; height: auto; }
-.lorecard__head > .lorecard__title { padding-top: 12px; }
-.lorecard__art + .lorecard__title { padding-top: 0; }
-.lorecard__title strong { font-family: var(--display); font-size: 1.1rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-2); }
-.lorecard__more { color: var(--accent-2); font-family: var(--display); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; min-height: 28px; display: flex; align-items: end; }
-.lorecard__body { padding: 0 14px 12px; border-top: 1px solid var(--line); }
-.lorecard__body .linkbtn { min-height: var(--tap, 44px); }
-@media (min-width: 900px) { .lorecards { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; } }
 /* Lettering inside the district pictures (ui/districtArt.js): the container stencil, and the neon
    signs' Chinese in the system's CJK font, as the city's name is elsewhere. */
 .da-stencil { font: 700 6.5px var(--display); letter-spacing: 0.12em; fill: #e9e2cf; opacity: 0.85; }
@@ -2025,3 +2000,29 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .streetname { grid-template-columns: auto 1fr; column-gap: 10px; align-items: center; }
 .streetname__face { grid-row: span 3; }
 .streetname > span:not(.streetname__face) { grid-column: 2; }
+
+/* Navigation rework, step 2 (2026-11-09): a Back line over a root view you reached by a link (the Armoury from a plan,
+   Leads from a message), and the Tong tab's standing line. 44px tall for a thumb. */
+.backbar { margin-bottom: 8px; }
+.backbar .linkbtn { min-height: 44px; display: inline-flex; align-items: center; }
+.tongstanding { margin: 4px 0 12px; }
+
+/* Navigation rework, step 3 (2026-11-09): City's sub-tabs. The heist marker over the map links to Jobs › Heists; a district
+   picked on the map says so and offers its page; Districts is a list of rows. All at least 44px tall. */
+.heistmark { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; width: 100%; min-height: var(--tap, 44px); margin: 0 0 12px; padding: 8px 12px; background: var(--panel-2, transparent); border: 1px solid var(--accent, #3de8d8); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.heistmark__kicker { text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.75rem; color: var(--accent, #3de8d8); }
+.heistmark__go { margin-left: auto; color: var(--accent-2, #3de8d8); font-size: 0.8rem; }
+.mappick { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.mappick__acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.mappick .linkbtn { margin: 0; }
+.districtrow { border-left: 3px solid var(--turf, var(--line)); }
+.tongs__title { margin-top: 0; }
+
+/* Navigation rework, step 4 (2026-11-09): a district's lore under its live state, and a client's page. The picture runs the
+   width of the card; the write-up is plain paragraphs (no "read more": it is the page's own content now). */
+.citylore { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 4px; }
+.citylore__art { display: block; margin: 8px 0; }
+.citylore__art svg { display: block; width: 100%; height: auto; }
+.clientpage__trust { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 8px 0 12px; }
+.clientpage__trust p { flex: 1 1 220px; margin: 0; }
+.clientrow { align-items: center; }

@@ -52,7 +52,9 @@ await new Promise((ok, fail) => {
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
 page.on('pageerror', (e) => console.error(`page error: ${e.message}`));
+page.on('console', (m) => { if (m.text().startsWith('ERR ')) console.error(m.text()); });
 await page.addInitScript(() => {
+  window.addEventListener('error', (e) => console.log(`ERR ${e.error?.stack ?? e.message}`)); // the page's own stack, for the log
   let s = 20261023;
   Math.random = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 2 ** 32; };
 });
@@ -101,10 +103,14 @@ try {
   }
 
   // Gear (2026-10-28, slice 5): buy a rifle in the armoury and put it on someone, so overwatch is possible.
-  if (await click('[data-action="nav"][data-id="crew"]') && await click('[data-action="open-armoury"]')) {
+  // The Armoury was on Crew; since the navigation rework (2026-11-09) it is Tong › Armoury. Either way this finds it.
+  const toArmoury = async () => (await click('[data-action="nav"][data-id="crew"]') && await click('[data-action="open-armoury"]'))
+    || (await click('[data-action="nav"][data-id="tong"]') && await click('[data-action="tong-tab"][data-id="armoury"]'));
+  if (await toArmoury()) {
     await top(); await shot('armoury');
     await click('[data-action="buy-offer"]:not([disabled])'); // the first rifle on this week's shelf
     await click('[data-action="back"]');
+    await click('[data-action="nav"][data-id="crew"]');
     if (await click('[data-action="open-op"]:has-text("muscle")') || await click('[data-action="open-op"]')) {
       await click('[data-action="gear-slot"][data-id="weapon"]');
       await shot('gear-sheet');
@@ -188,16 +194,19 @@ try {
     await top(); await shot('crew');
     if (await click('[data-action="open-op"]')) { await top(); await shot('operative'); await click('[data-action="back"]'); }
   }
-  if (await click('[data-action="nav"][data-id="ops"]')) {
+  // Ops became City (navigation rework, step 3, 2026-11-09): the tab is 'city' now, and the other tongs are City › Tongs.
+  const cityId = (await visible('[data-action="nav"][data-id="city"]').count()) ? 'city' : 'ops';
+  if (await click(`[data-action="nav"][data-id="${cityId}"]`)) {
     await top(); await shot('ops');
     // The other tongs (2026-11-08): the list, then one tong's page. Skipped by versions without them.
-    if (await click('[data-action="tongs-open"]')) {
+    if (await click('[data-action="city-tab"][data-id="tongs"]') || await click('[data-action="tongs-open"]')) {
       await top(); await shot('tongs');
       if (await click('[data-action="tong-page"]')) { await top(); await shot('tong-page'); }
-      await click('[data-action="tongs-close"]') || await click('[data-action="nav"][data-id="ops"]');
+      await click('[data-action="tongs-close"]') || await click('[data-action="back"]') || await click(`[data-action="nav"][data-id="${cityId}"]`);
     }
   }
-  if (await click('[data-action="nav"][data-id="lore"]')) { await top(); await shot('lore'); }
+  // Lore was a tab; since step 2 of the navigation rework it is the Book, a link in Ops' header.
+  if (await click('[data-action="nav"][data-id="lore"]') || (await click(`[data-action="nav"][data-id="${cityId}"]`) && await click('[data-action="book"]'))) { await top(); await shot('lore'); }
   if (await click('[data-action="nav"][data-id="today"]')) { await top(); await shot('today'); }
 
   // One wide view of the home screen, to show the desktop layout.
@@ -206,6 +215,60 @@ try {
   await top(); await shot('desktop');
   // Planning a job on desktop: the top bar drops Continue so only Start moves on (2026-10-28).
   if (await click('[data-action="nav"][data-id="jobs"]') && await click('[data-action="open-job"]')) { await top(); await shot('desktop-planning'); }
+
+  // Back on a phone for the navigation rework (2026-11-09): a district's card, then its hall's page, which opens on its
+  // home tab whichever tab it was opened from. These come last so the numbers of the usual shots hold.
+  await page.setViewportSize({ width: 390, height: 844 });
+  // (on City the Map is the first sub-tab, so a district is picked on it and its page is opened from Districts)
+  if (await click(`[data-action="nav"][data-id="${cityId}"]`) && (await click('[data-action="city-tab"][data-id="map"]'), true) && await click('.cm-label[data-action="city-district"][data-id="oldTown"]')) {
+    await click('[data-action="district-open"]'); // on City the pick offers the district's page; before, the card sat beside the map
+    await page.evaluate(() => document.querySelector('.citycard')?.scrollIntoView({ block: 'start' }));
+    await shot('district-card');
+    if (await click('[data-action="hall-page"]')) {
+      await top(); await shot('hall-page');
+      await click('[data-action="back"]');
+      await page.evaluate(() => document.querySelector('.citycard')?.scrollIntoView({ block: 'start' }));
+      await shot('back-to-district');
+    }
+  }
+  // The Tong tab (2026-11-09, step 2): Halls, Armoury, and Crew's sub-tabs. Skipped by versions without them.
+  if (await click('[data-action="nav"][data-id="tong"]')) {
+    await top(); await shot('tong-halls');
+    if (await click('[data-action="tong-tab"][data-id="armoury"]')) { await top(); await shot('tong-armoury'); }
+    if (await click('[data-action="nav"][data-id="crew"]') && await click('[data-action="crew-tab"][data-id="leads"]')) { await top(); await shot('crew-leads'); }
+    if (await click('[data-action="crew-tab"][data-id="wall"]')) { await top(); await shot('crew-wall'); }
+  }
+  // Step 3: City's Districts, and Jobs' Heists and Side. Skipped by versions without them.
+  if (await click(`[data-action="nav"][data-id="${cityId}"]`) && await click('[data-action="city-tab"][data-id="districts"]')) {
+    await top(); await shot('city-districts');
+    if (await click('[data-action="district-open"][data-id="oldTown"]')) { await top(); await shot('district-page'); }
+  }
+  if (await click('[data-action="nav"][data-id="jobs"]') && await click('[data-action="jobs-tab"][data-id="heists"]')) { await top(); await shot('jobs-heists'); }
+  if (await click('[data-action="jobs-tab"][data-id="side"]')) { await top(); await shot('jobs-side'); }
+  if (await click('[data-action="nav"][data-id="crew"]') && await click('[data-action="crew-tab"][data-id="leads"]')) { await top(); await shot('crew-leads-names'); }
+  // Step 4: a district's page with its lore under the live state, the clients, and the Book. Skipped by versions without them.
+  if (await click(`[data-action="nav"][data-id="${cityId}"]`) && await click('[data-action="city-tab"][data-id="districts"]') && await click('[data-action="district-open"][data-id="docks"]')) {
+    await top(); await shot('district-live-then-lore');
+    await page.evaluate(() => document.querySelector('.citylore')?.scrollIntoView({ block: 'start' })); await shot('district-lore');
+  }
+  if (await click('[data-action="nav"][data-id="jobs"]') && await click('[data-action="jobs-tab"][data-id="clients"]')) {
+    await top(); await shot('jobs-clients');
+    if (await click('[data-action="client-open"]')) { await top(); await shot('client-page'); }
+  }
+  if (await click(`[data-action="nav"][data-id="${cityId}"]`) && await click('[data-action="book"]')) {
+    await top(); await shot('book-whos-who');
+    if (await click('[data-action="lore-tab"][data-id="history"]')) { await top(); await shot('book-history'); }
+  }
+  // Step 5: send a crew away, then Today (one line for the crews out) and the City map (the full cards). Skipped by versions without them.
+  if (await click('[data-action="nav"][data-id="jobs"]') && (await click('[data-action="jobs-tab"][data-id="board"]'), true) && await click('[data-action="open-job"]')) {
+    if (await click('[data-action="send-job"]')) {
+      await page.waitForTimeout(1500);
+      if (await click('[data-action="nav"][data-id="inbox"]')) { await page.evaluate(() => document.querySelector('.outnow')?.scrollIntoView({ block: 'center' })); await shot('today-crew-out'); }
+      if (await click(`[data-action="nav"][data-id="${cityId}"]`)) {
+        await page.evaluate(() => document.querySelector('.crewsout')?.scrollIntoView({ block: 'start' })); await shot('city-crew-out');
+      }
+    }
+  }
 } finally {
   await browser.close();
   server.kill();

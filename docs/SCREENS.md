@@ -2,24 +2,42 @@
 
 A sitemap of the app as of 2026-11-09, for rethinking the layout. Source: `renderScreen()` and `render()` in `src/ui/app.js`. Keep it current when content moves between tabs (one line per move). Why something moved goes in the `DESIGN.md` log; how it looked goes in `docs/screenshots/`.
 
+## Layout rules (2026-11-09, the navigation rework)
+
+The target the rework is moving the app towards, one commit at a time (the plan is in `HANDOFF.md`). The sitemap below is the app **as it is now**; "Moves" says what each commit changed.
+
+1. **Tabs are nouns.** Today: what needs me. City: what's happening out there. Tong: what we've built. Crew: who we have and who we could get. Jobs: what work there is.
+2. **One home per page.** A page always opens on its home tab, whichever tab the link was on; links elsewhere are shortcuts to that home. This does not limit actions: take-the-call can still work from several places. The lookup is `HOMES` in `src/ui/nav.js`; a move updates it in the same commit.
+3. **Today owns the attention feed:** inbox, briefing, The Word. It does not duplicate management or world-detail pages; its cards link to those pages' homes.
+4. **Five tabs at most.** Save lives in ☰ in the top bar.
+5. **Segmented sub-tabs** at the top of a tab, not "Places" buttons.
+6. **Live state and lore sit together.** A district or client page shows what's happening now, with the lore below it.
+7. **Back restores where you were in the navigation, and never rewinds the game.** It restores the tab, sub-tab, filters, the open page and scroll, and keeps an in-progress plan or squad selection across a shortcut (Plan → Armoury → Back). It never restores an old snapshot of game state: the page you return to shows the state now. With no history (a direct link, a fresh load) Back opens the root view of the destination's home sub-tab with nothing selected. A root view shows no in-app Back control. Choosing a tab starts fresh navigation (the history is cleared). Code: the stack in `src/ui/nav.js`, `viewNow` / `remember` / `restoreView` / `toRoot` in `ui/app.js`.
+8. **Badges mean different things.** Today owns attention counts (anything waiting on the player: calls, raids, hall offers, decisions). Other tabs show only counts that mean something different and never count the same event twice: Jobs shows open jobs; City shows no number (crews out is activity, shown inside City); Tong shows no badge.
+
+**Recruiting (decided 2026-11-09).** Crew › Leads holds everyone we could sign: recruits, free names *and* names in another tong (the "tong-affiliated recruitment targets"). Scouting, "What it would take" and Sign live there only, with the existing eligibility, scouting and buyout rules unchanged: signing a name in a tong still pays that tong its buyout. City › Tongs only reads: a tong-affiliated name has a read-only profile (who they are with, what we know) with a *View in Leads* button; a free name's card opens straight in Leads. Back from Leads returns to the City profile it came from. This changes where recruiting happens, not who can be recruited or how.
+
+Navigation state (`screen`, `cityTab`, the open page ids) is module state in `ui/app.js`. It is **not** saved and not deep-linked (checked 2026-11-09: no `location`, `history` or storage use under `src/ui`, and nothing in `src/save` or `src/core` reads a view value), so no old value needs mapping.
+
 ## Shell (every screen)
 
 - **Top bar:** day/clock, Cash, Heat, rank, Continue (hidden while planning a job), ☰ Save.
-- **Tab bar:** Today · Ops · Crew · Jobs · Lore · ☰ Save. Pills: unread on Today, calls on Ops, open jobs on Jobs.
+- **Back:** a detail page (a message, a runner, a lead, the Armoury, a hall and its build, a plan, a tong, a name) has one Back control; root views have none.
+- **Tab bar:** Today · City · Tong · Crew · Jobs (five, the most there can be). Pills: Today's attention count (anything waiting on the player, each event once: `attentionCount` in `ui/nav.js`) and open jobs on Jobs; City and Tong show none. Save is the ☰ in the top bar. The **Book** (Who's who · History; was the Lore tab) is a link in City's header, reachable from every City sub-tab.
 - **Dock (phone):** Continue above the tab bar, except while planning or on a job.
 - **During a job:** tabs and Save step aside; the watch screen (`renderMission`) owns the page.
-- **Founding (new game):** only Today (the founder pick) and Save are enabled.
+- **Founding (new game):** only Today (the founder pick) and ☰ Save are enabled.
 
 ## Tabs
 
 | Tab | Holds (in page order) | Sub-views opened from it |
 | --- | --- | --- |
-| **Today** (`inbox`) | Week strip; alerts; Out line; crews out; back cards; briefing; Upcoming list; inbox | A message (job report, Monday brief, Sunday summary, renewal, raid call/warning, heat notice, spec offer); the report timeline, summary and full log |
-| **Ops** | Heist card; **Out now** (raids, crews out, side work) over the city map; **Tonight** list; **At home**; **Places**; one card per district | **Hall page** (from a district card's "Manage the hall"); **Hall build**; **The other tongs** (list, a tong, Free names, a name's page, Names on the street) |
-| **Crew** | Roster rows; Leads (recruits); The wall (memorial); **Halls**; **Armoury** card | A runner's page (record, path, home, gear); a recruit's page; the Armoury and gear sheet; a **hall's page** and **Hall build** (from Halls) |
-| **Jobs** | Runners strip; the job board; Side board; Clients strip | Plan (squad board, approach, inside/outside, Joss's picks, coverage read; beside the board on 1400px+); side-work plan; scout rows for free names |
-| **Lore** | Sub-tabs: Districts · Clients · Who's who · History | A district's lore (from Ops "About … on Lore") |
-| **Save** (`settings`) | Slots, Backups, difficulty / new game | — |
+| **Today** (`inbox`) | Week strip; Joss's briefing with the alerts and call-ins; Monday's brief with The Word; back cards; **one Out line** (crews out, calls waiting; links to City › Map); inbox | A message (job report, Monday brief, Sunday summary, renewal, raid call/warning, heat notice, spec offer); the report timeline, summary and full log |
+| **City** (`city`; was Ops) | Header with a **Book** link; sub-tabs **Map** · **Districts** · **Tongs**. Map: a heist marker (links to Jobs › Heists), the city map, **Out now** (raids, crews out, side work), **Tonight**, **At home**. Districts: a row for each district. Tongs: the other tongs by tier, Free names, Names on the street | A district's page (live state first: faces at the hall, crews out, jobs open, street talk, a hall shortcut that opens the hall on Tong; then its picture, pitch and write-up: who runs it, police, 3am, custom, landmarks, kinds of work); **a tong's page**; **a name's read-only profile** (what we know and who they are with, with *View in Leads*); the **Book** (Who's who · History) |
+| **Tong** | Rank and standing in words; sub-tabs **Halls** · **Armoury** | Halls: a row per hall, buy sites, then a **hall's page** and **Hall build**. Armoury: stash, carried gear, shop. Equipping stays on the runner's page |
+| **Crew** | Sub-tabs **Roster** · **Leads** · **Wall**. Leads: recruits, then **Names** (this month's free name, and anyone in another tong we are watching) | A runner's page (record, path, home, gear); a recruit's page; **a name's recruitment page** (what we know, What it would take, scouting, Sign) |
+| **Jobs** | Sub-tabs **Board** · **Heists** · **Side** · **Clients**. Board: street talk, rep line, runners strip, the job board. Heists: the heist card and its steps. Side: this week's side work. Clients: a row per client | Plan (squad board, approach, inside/outside, Joss's picks, coverage read; beside the board on 1400px+); side-work plan; **a client's page** (trust and the board now, then who they are) |
+| **☰ Save** (`settings`, top bar) | Slots, Backups, difficulty / new game | — |
 
 ## Inside each screen (the small sections)
 
@@ -27,54 +45,195 @@ Section names are the headings in the code. "(x)" marks something that shows onl
 
 **Today** (`renderInbox`)
 - Week strip (`renderUpcoming`), a slim strip across the top.
-- Inbox column: briefing (`renderBriefing`), week brief (Monday), back cards (crews home), Out line (links to Ops), the All / Unread filter, then message rows (tag, subject, preview, day).
+- Inbox column: briefing (`renderBriefing`), week brief (Monday), back cards (crews home), Out line (links to City › Map), the All / Unread filter, then message rows (tag, subject, preview, day).
 - Detail pane (beside the list on wide screens; replaces it on phones): the open message. Types with their own layout: job report (timeline, summary, full log), week summary, renewal, spec offer, raid call, raid warning, heat notice.
 - Also here: day cue (new-day banner), keep-save and backup banners.
 
-**Ops** (`renderOps`)
-- Heist card (x), then Out now: raids, crews out (each with a mini map), side work. A district filter ("… only · show all") narrows it.
+**City** (`renderCity`: header, Book link, sub-tabs)
+- Map (`renderCityMap`): a heist marker (x), the city map with the district you picked on it ("Open the district" / "Whole city"), then Out now: raids, crews out (each with a mini map), side work. A district filter ("… only · show all") narrows it.
 - City map with the district labels and zoom; Tonight list; At home; Places (Halls, The other tongs, a disabled Bar · black market).
-- District cards: name, who is there (faces), crews out, jobs open, "Manage the hall ›" (x), "About … on Lore ›".
-- Hall page (`renderHallPage`): header with landmark, then The place (the plan and beds, Build), Who sleeps here, Move someone in, The block (parts, Expand, Buy).
+- Districts (`renderDistricts`): a row per district (hall, crews out, jobs open, heat). A district's page (`districtCard`): name, who is there (faces), crews out, jobs open, "Manage the hall ›" (x, opens the hall on Tong), "About … on Lore ›".
+- Hall page (`renderHallPage`, on Tong › Halls since step 2): header with landmark, then The place (the plan and beds, Build), Who sleeps here, Move someone in, The block (parts, Expand, Buy).
 - Hall build (`ui/hallbuild.js`): grid over the hall's map, palette, Place / Turn / Remove.
-- The other tongs (`ui/tongs.js`): tongs grouped by tier, Free names, Names on the street. A tong's page has The latest and its names; a name's page has What we know, What it would take, and Send someone to watch them (2 days).
+- Tongs (`ui/tongs.js` `renderTongs`): tongs grouped by tier, Free names (a card that opens the person in Crew › Leads), Names on the street. A tong's page has The latest and its names; a name's **profile** is read-only (who they are with, What we know, *View in Leads*). Recruiting (`renderLeadName`, on Crew › Leads): What we know, What it would take, Send someone to watch them (2 days), Sign (with the buyout to their tong when they are in one).
 
 **Crew** (`renderCrew`)
-- Roster rows (face, role, age, main stat, status, bars), Leads (recruits), The wall (memorial), Halls (a row per hall, buy sites), Armoury card.
+- Sub-tabs: Roster rows (face, role, age, main stat, status, bars); Leads (recruits); The wall (memorial, with an empty line).
+
+**Tong** (`renderTong`)
+- Header: the rank ("Back Room tong", tap for what a tong is) and a standing line in words (halls and beds filled, the next rung). Sub-tabs: Halls (`renderHalls`: a row per hall, Open a hall) and Armoury (`ui/gear.js` `renderArmoury`, embedded).
 - Runner's page (`renderOperative`): header (face, handle, line, status), Specialisation, Traits, Stats, Development (mentoring), Condition, Trust, History; Record, Path and Home cards; Gear (the 2x2 bag, `ui/gear.js`).
 - Recruit's page (`renderRecruit`): Traits, Stats, Scout's view, Terms (the offer).
-- Armoury (`ui/gear.js`): In the stash, Carried, Buy (by slot); a gear sheet picks an item for a slot, with Carried by others.
+- Armoury (`ui/gear.js`, Tong › Armoury): In the stash, Carried, Buy (by slot); a gear sheet picks an item for a slot, with Carried by others.
 
 **Jobs** (`renderJobs`)
-- Runners strip (collapsible), job board (job cards with flags), Side board (scout rows for free names), Clients strip (trust).
+- Sub-tabs. Board: runners strip (collapsible), job board (job cards with flags). Clients: a row each (trust, jobs on the board), and a client's page (`renderClientPage`). Heists: the heist card (`renderHeist`). Side: the side board (the scout rows for free names are gone: scouting is on Crew › Leads).
 - Plan (`renderPlan`): the plan grid holds the approach, the squad board, the orders chips and the risk card, with the client box (and a rival remark) beside them. The plan bar at the bottom has the Send / Watch live buttons, the risk read and the tries count.
 - Squad board (`ui/board.js`): Inside team (moves as one group), Outside (optional), Wheels card with getaway risk, Joss's picks, the coverage read. A runner picker sheet lists "Who's on …?" in groups by fit, plus "Not free today".
 - Side-work plan (`renderSidePlan`): Who goes (up to n), checkbox picker, the Clients list.
 
-**Lore** (`renderLore`): header, then the sub-tab: Districts (one card each; "Everyone knows" and "A short history" are the other two sections' headings), Clients, Who's who, History.
+**Book** (`renderLore`, opened from City's header; was the Lore tab): header, then the sub-tabs Who's who and History ("Everyone knows" and "A short history" are History's two sections). The districts moved to their pages in City › Districts and the clients to Jobs › Clients (step 4).
 
 **Save** (`renderSettings`): New game in slot n (difficulty), Slots (Play / New / Delete), Backups (export and import).
 
 **Watch** (`renderMission`, `ui/watch.js`): site map with the crew moving on it, the feed beside it (phones stack them), crisis choices, the face-off (`ui/duel.js`), command-fight orders (`ui/fightorders.js`), call-ins from away crews, finale and direct-buzz screens, the end card, then the report in the feed.
 
-## The overlaps (the awkward bits)
+## Moves (one line per move, newest first)
 
-| Content | Lives on | Also reachable from | Note |
+- 2026-11-09, step 5: **Today's crews out is one line** and the full cards (with mini maps) are on City › Map only. The code already worked this way (Today's one Out line since 2026-11-06); step 5 only checked it with a test, fixed the line's stale "Ops ›" label to "City ›" and corrected this sitemap, which still listed crew cards on Today. Take-the-call works from the call-in message on Today and from the card on the Map.
+- 2026-11-09, step 4: **Lore › Districts** moved into each district's page (City › Districts): the write-up (picture, who runs it, police, 3am, custom, landmarks, kinds of work) sits **below** the live state; the header text is one copy. "About … on Lore ›" and "See it on Ops ›" are gone.
+- 2026-11-09, step 4: **Lore › Clients** and the Jobs **Clients strip** merged into **Jobs › Clients** (a row each) with a **client page** (`HOMES.client`: jobs › clients): trust and what they have on the board above, their line below. A job's plan links to it.
+- 2026-11-09, step 4: the **Book** keeps **Who's who** and **History** only. The old Lore view and its renderers (`renderDistrictLore`, `renderClientCards`, `renderClients`) are removed; the Book's sub-tab action is `lore-tab`.
+- 2026-11-09, step 3: **Ops renamed City** (tab id `ops` → `city`; no persisted value used it). **Places** (the Halls and The other tongs buttons, and the disabled Bar) is gone: Halls are on Tong, the tongs are City › Tongs.
+- 2026-11-09, step 3: City gets sub-tabs **Map · Districts · Tongs**. The **Map** keeps the city map, Out now, Tonight and At home (not listed in the brief; kept so nothing is lost). The district cards moved to **Districts**: a card for each district, each opening the district's page. `HOMES.district`: ops → city › districts. A district picked on the map is a selection (zoom, Out now narrowed), not a page.
+- 2026-11-09, step 3: **The other tongs** (list, a tong's page, Names on the street) moved Ops › Places → City › Tongs. `HOMES.tong`, `name`: ops → city › tongs. A name in a tong has a **read-only profile** here with *View in Leads*.
+- 2026-11-09, step 3: **Heist card** moved Ops → Jobs › Heists; the Map keeps a one-line marker that links there. Today's Monday heist line links there too. `HOMES.heist`: jobs › heists.
+- 2026-11-09, step 3: Jobs gets sub-tabs **Board · Heists · Side**; the Side board (without its scout row) moved to Side. The Clients strip stays on Board until step 4.
+- 2026-11-09, step 3: **Free-name scouting, What it would take and Sign** moved to **Crew › Leads** (`renderLeadName`, `leadNames` in `ui/tongs.js`): for free names *and* names in another tong, with the buyout rule unchanged. The Jobs side board's scout row is gone. Free names on City › Tongs open straight in Leads; a name in a tong opens a read-only City profile first. `HOMES.leadName`: crew › leads. Leads' Names group lists the free name and any name in a tong we are watching or have sent a scout after; any name can also be opened from its City profile.
+- 2026-11-09, step 3: Today's crews-out line (and its raid line) go to City › Map; the Monday heist line to Jobs › Heists (`goto` shortcuts: a link, so Back returns).
+- 2026-11-09, step 2: new **Tong** tab (Halls · Armoury) with the rank and standing header in words; the rank button moved there from Ops' header.
+- 2026-11-09, step 2: **Halls** (list, Open a hall, a hall's page, Hall build) moved Crew → Tong › Halls. `HOMES.hall`, `hallBuild`: crew → tong.
+- 2026-11-09, step 2: **Armoury** moved Crew → Tong › Armoury (a sub-tab, no longer a page with its own Back). Its Crew card is gone; the squad board's "Armoury →" opens it and Back returns to the plan. `HOMES.armoury`: crew → tong.
+- 2026-11-09, step 2: **Crew** gets sub-tabs Roster · Leads · Wall (the wall was already on Crew; it is now its own sub-tab). Today's "See the leads" opens Crew › Leads.
+- 2026-11-09, step 2: **Save** left the tab bar; it is the ☰ in the top bar only.
+- 2026-11-09, step 2: **Lore** left the tab bar. A **Book** link in Ops' header opens the old Lore view unchanged; Back returns to Ops. (Book gets the other City sub-tabs' headers at step 3, and its content moves home at step 4.)
+- 2026-11-09, step 2: **badges**: Ops' calls count is gone (calls and raids are inbox messages, so Today's count already holds them); Today's pill is the attention count, each event once; Jobs keeps open jobs; Tong none.
+- 2026-11-09, step 1 (routing by home): a **hall's page** now always opens on Crew (its home for now), also from City's district card and Today's raid cards; it used to stay on whichever tab opened it. The **hall build** screen likewise.
+- 2026-11-09, step 1: every **Back** is one control backed by the navigation stack (`ui/nav.js`): it returns to the view you came from, with filters, plan and scroll; the old per-page "‹ Ops / ← Crew / ← Jobs" buttons and `returnTo` are gone. A runner's page, a lead, the Armoury, a message, a plan, a tong and a name all push the view you left.
+
+## The overlaps (what is left)
+
+Every page now has one home (`HOMES` in `ui/nav.js`). What remains is on purpose: a shortcut or a different-sized view of the same thing, never a second copy of a page.
+
+| Content | Home | Also shown in | Why it stays |
 | --- | --- | --- | --- |
-| Halls (list, residents, buy/expand/move in) | Crew | Ops › Places "Halls — On Crew" button; Ops district card | The button only navigates to Crew. A hall's page and Build show on **whichever tab opened them** (Crew or Ops). |
-| Raids on halls | Ops (Out now, rings on the map); Today (alerts, call/warning messages) | — | Fought on the watch screen. |
-| The other tongs, Free names | Ops › Places | Jobs side board (Scout rows); Today's Monday brief (The Word) | Three entry points, one place to read them. |
-| Clients | Jobs (strip) | Lore › Clients | Jobs shows trust; Lore is the who's who. |
-| Districts | Ops (map, district cards) | Lore › Districts | Ops is live state, Lore is the book. |
-| Heists | Ops (heist card); prep and finale jobs on Jobs board | Today (Monday / Sunday lines) | |
-| Armoury / gear | Crew | A runner's page (gear sheet); squad board shows each runner's gear | |
-| Recruiting | Crew › Leads | Today (scout messages link to "See the leads") | |
-| Crews out (away jobs) | Today and Ops | Take the call on either; watch screen opens | Same data, two layouts (`renderCrewsOut`). |
+| Crews out (away jobs) | City › Map (the full cards, mini maps, Take the call) | Today: one line with the count of calls waiting, linking to City › Map | The attention feed points at the page. The call can be taken from either (and from the call-in message on Today). |
+| Raids on halls | City › Map (Out now, rings on the map) | Today: alerts, and the call or warning message | A raid at the door is something waiting on the player (Today's count); it is fought on the watch screen. |
+| Heists | Jobs › Heists (the card and steps; prep and finale jobs on the Board) | City › Map: a marker; Today: Monday's and Sunday's lines | Both link to Jobs › Heists. |
+
+(Halls, the tongs, free names and recruiting, the Armoury, districts and clients each have one home and only links elsewhere: see Moves above.)
+
+## Lore migration register (step 4; written before anything moved, checked off after)
+
+Built 2026-11-09 from the data and renderers, not from screenshots: `data/city.js` (`DISTRICT_CARDS`, `FACTIONS`, `STREET_FACTS`, `HISTORY`), `data/clients.js`, `renderLore` / `renderDistrictLore` / `renderClientCards` / `renderClients` / `districtCard` in `ui/app.js`, and a search of `src` for every link to the Lore view. **91 rows:** 70 for the eight districts, 10 for clients, 11 for Who's who and History. **Done 2026-11-09 (step 4):** every entry has moved and both last columns are checked (`[x]`). Reaching each entry from its new home, with its content intact and Back working, is asserted by `tests/lore-register.test.js` (all eight districts, all seven clients, every Who's who and History entry, a quiet district, a client with no jobs). The "Current location" and "New home" columns are kept as the record of the move.
+
+What the inventory found (the register's rows carry the detail):
+- **Districts (8, five open and three locked).** Each has a header (Chinese name, side, pitch; the five open ones also a picture and a turf line) and six body passages: Who runs it, Police, At 3am, Local custom, Landmarks, and a derived "Kinds of work here" (absent for the three locked ones, which have no job templates). The header passages are **also drawn on the district's own page** (`districtCard`: Chinese name, side, turf, pitch, and the teaser for locked ones): a duplicate rendering of the same text, to keep as one copy. The other passages are drawn only by the Lore card.
+- **"Everyone knows" and "A short history" are not per-district.** They are the two columns of the History sub-tab: 6 street facts and 7 dated entries (1891 to 2052). There is no per-district version of either, so the register has one row for each.
+- **Clients (7).** Book › Clients draws `CLIENTS` itself (name, one line, trust n/100), the same records the board uses, so there is **no lore-only client**. The Jobs strip repeats name and trust. Each client's `affiliation` is in the data but is **shown nowhere today**; nothing below invents a use for it.
+- **Who's who (9 entries in 5 groups).** Two gang entries carry a live grudge gauge; the Brass Anchor entry carries a "never raids a tong's hall" line. These stay with their entries.
+- **Incoming links.** `about-district` ("About … on Lore ›", on every district card, 8), `ops-district` ("See it on Ops ›" inside each open district's lore body, 5), the City header's `book` link, and one piece of text: the Jobs Clients (i) said "Who they are: the Lore tab." (the tab left the bar in step 2; reworded to "the Book" in the commit that added this register). No Today message, rumour or job text links to Lore.
+- **Authored cast against generated rivals.** No generated tong or name matches any Who's who entry, client or cast name (checked over 60 seeds played 40 weeks: 62 distinct tongs, 275 distinct names), and `RESERVED_NAMES` already keeps canon surnames out of rival runners. One authored thing does appear on the rivals side: the Brass Anchor Society is both a Who's who entry (and Auntie Fung's affiliation) and the fixed, non-generated elder in the rivals system (`BRASS_ANCHOR`, the footer line on City › Tongs). **Flagged for a decision, not moved.**
+
+Questions held for the owner before any entry moved (answered by "go" on the recommendations, 2026-11-09):
+1. **Brass Anchor Society (kept as recommended):** keep the Who's who entry and the City › Tongs footer line as two distinct passages (the entry is the lore, the footer is a street remark inside the rivals view)? Recommended: yes, no change.
+2. **Clients' lore is one line each (accepted: enough; `affiliation` stays unshown).** Jobs › Clients can show trust and live information (which of their jobs are open now, their district) above that line. Is that enough "lore" for the page, and should `affiliation` stay unshown?
+3. **"Kinds of work here" (kept in the district's lore section)** is a derived list, not prose, and is not the same as "Jobs open" (it lists work that is not on the board). Keep it in the district's lore section?
+4. **"Everyone knows" / "A short history" (city-wide, confirmed)** as city-wide History sections: confirm, since the brief expected one set per district.
+
+| Entry / identifier | Current location | New home | Incoming links to update | Content preserved | Route and Back tested |
+| --- | --- | --- | --- | --- | --- |
+| D · Old Town · header and pitch: 舊城, “Island side”, turf “Brass Anchor turf”, “The damp, ancestral heart of the city:…” *(duplicate rendering)* | Book › Districts › Old Town › card head; **also** on the district's page (`districtCard`) | City › Districts › Old Town page, lore section (under the live state): **one copy** (the page already shows it; duplicate rendering, not a second passage) | `about-district` "About … on Lore ›" on the district card: repoint to this lore section | [x] | [x] |
+| D · Old Town · picture (`districtArt`) | Book › Districts › Old Town › card head | City › Districts › Old Town page, lore section (under the live state): at the top of the lore section | — | [x] | [x] |
+| D · Old Town · Who runs it “The Brass Anchor Society. Hoi-Sing pow…” | Book › Districts › Old Town › read more | City › Districts › Old Town page, lore section (under the live state) | — | [x] | [x] |
+| D · Old Town · Police “Sporadic and corrupt. Officers come in…” | Book › Districts › Old Town › read more | City › Districts › Old Town page, lore section (under the live state) | — | [x] | [x] |
+| D · Old Town · At 3am “Damp concrete, burning joss paper, mah…” | Book › Districts › Old Town › read more | City › Districts › Old Town page, lore section (under the live state) | — | [x] | [x] |
+| D · Old Town · Local custom “A cup of bitter tea on the doorstep at…” | Book › Districts › Old Town › read more | City › Districts › Old Town page, lore section (under the live state) | — | [x] | [x] |
+| D · Old Town · Landmarks (3): “Auntie Fung's tea shop…”, “The Red Incense Shrine…”, “The rusted iron stairw…” | Book › Districts › Old Town › read more | City › Districts › Old Town page, lore section (under the live state) | — | [x] | [x] |
+| D · Old Town · Kinds of work here (derived from 15 job templates, not authored prose) | Book › Districts › Old Town › read more | City › Districts › Old Town page, lore section (under the live state) (kept: it lists work that is not on the board, unlike "Jobs open") | — | [x] | [x] |
+| D · Old Town · "See it on Ops ›" link *(link)* | Book › Districts › Old Town › read more | Gone: it is this district's page. Remove (stale wording 'Ops') | `ops-district`, from this body | [x] | [x] |
+| D · Night Market · header and pitch: 夜光街, “Island side”, turf “Silver Fan turf”, “A neon maze of dai pai dongs, counterf…” *(duplicate rendering)* | Book › Districts › Night Market › card head; **also** on the district's page (`districtCard`) | City › Districts › Night Market page, lore section (under the live state): **one copy** (the page already shows it; duplicate rendering, not a second passage) | `about-district` "About … on Lore ›" on the district card: repoint to this lore section | [x] | [x] |
+| D · Night Market · picture (`districtArt`) | Book › Districts › Night Market › card head | City › Districts › Night Market page, lore section (under the live state): at the top of the lore section | — | [x] | [x] |
+| D · Night Market · Who runs it “The Silver Fan Circle. Hoi-Sing power…” | Book › Districts › Night Market › read more | City › Districts › Night Market page, lore section (under the live state) | — | [x] | [x] |
+| D · Night Market · Police “Rarely seen and fully complicit. They…” | Book › Districts › Night Market › read more | City › Districts › Night Market page, lore section (under the live state) | — | [x] | [x] |
+| D · Night Market · At 3am “Wok smoke, flickering holo-ads, murmur…” | Book › Districts › Night Market › read more | City › Districts › Night Market page, lore section (under the live state) | — | [x] | [x] |
+| D · Night Market · Local custom “If a neon sign flickers three times ov…” | Book › Districts › Night Market › read more | City › Districts › Night Market page, lore section (under the live state) | — | [x] | [x] |
+| D · Night Market · Landmarks (3): “Madam Rao's sari shop,…”, “The Neon Dragon dai pa…”, “The third-floor mahjon…” | Book › Districts › Night Market › read more | City › Districts › Night Market page, lore section (under the live state) | — | [x] | [x] |
+| D · Night Market · Kinds of work here (derived from 13 job templates, not authored prose) | Book › Districts › Night Market › read more | City › Districts › Night Market page, lore section (under the live state) (kept: it lists work that is not on the board, unlike "Jobs open") | — | [x] | [x] |
+| D · Night Market · "See it on Ops ›" link *(link)* | Book › Districts › Night Market › read more | Gone: it is this district's page. Remove (stale wording 'Ops') | `ops-district`, from this body | [x] | [x] |
+| D · Glass Heights · header and pitch: 玻璃山, “Island side, on the ridge”, turf “Veridian-Apex ground”, “Corporate towers, labs and clinics in…” *(duplicate rendering)* | Book › Districts › Glass Heights › card head; **also** on the district's page (`districtCard`) | City › Districts › Glass Heights page, lore section (under the live state): **one copy** (the page already shows it; duplicate rendering, not a second passage) | `about-district` "About … on Lore ›" on the district card: repoint to this lore section | [x] | [x] |
+| D · Glass Heights · picture (`districtArt`) | Book › Districts › Glass Heights › card head | City › Districts › Glass Heights page, lore section (under the live state): at the top of the lore section | — | [x] | [x] |
+| D · Glass Heights · Who runs it “Veridian-Apex BioTech.…” | Book › Districts › Glass Heights › read more | City › Districts › Glass Heights page, lore section (under the live state) | — | [x] | [x] |
+| D · Glass Heights · Police “None to speak of. Security drones and…” | Book › Districts › Glass Heights › read more | City › Districts › Glass Heights page, lore section (under the live state) | — | [x] | [x] |
+| D · Glass Heights · At 3am “Humming air filters and glass towers i…” | Book › Districts › Glass Heights › read more | City › Districts › Glass Heights page, lore section (under the live state) | — | [x] | [x] |
+| D · Glass Heights · Local custom “Never press a lift button with a bare…” | Book › Districts › Glass Heights › read more | City › Districts › Glass Heights page, lore section (under the live state) | — | [x] | [x] |
+| D · Glass Heights · Landmarks (3): “Veridian-Apex Central…”, “The Glass-Bridge Prome…”, “Executive Spa & Neural…” | Book › Districts › Glass Heights › read more | City › Districts › Glass Heights page, lore section (under the live state) | — | [x] | [x] |
+| D · Glass Heights · Kinds of work here (derived from 7 job templates, not authored prose) | Book › Districts › Glass Heights › read more | City › Districts › Glass Heights page, lore section (under the live state) (kept: it lists work that is not on the board, unlike "Jobs open") | — | [x] | [x] |
+| D · Glass Heights · "See it on Ops ›" link *(link)* | Book › Districts › Glass Heights › read more | Gone: it is this district's page. Remove (stale wording 'Ops') | `ops-district`, from this body | [x] | [x] |
+| D · The Basin · header and pitch: 鑊底, “Island side, in the bowl below Glass Heights”, turf “Racing Association ground”, “Towers packed round Lantern Course, a…” *(duplicate rendering)* | Book › Districts › The Basin › card head; **also** on the district's page (`districtCard`) | City › Districts › The Basin page, lore section (under the live state): **one copy** (the page already shows it; duplicate rendering, not a second passage) | `about-district` "About … on Lore ›" on the district card: repoint to this lore section | [x] | [x] |
+| D · The Basin · picture (`districtArt`) | Book › Districts › The Basin › card head | City › Districts › The Basin page, lore section (under the live state): at the top of the lore section | — | [x] | [x] |
+| D · The Basin · Who runs it “The Lantern Bay Racing Association, of…” | Book › Districts › The Basin › read more | City › Districts › The Basin page, lore section (under the live state) | — | [x] | [x] |
+| D · The Basin · Police “Association security inside the gates,…” | Book › Districts › The Basin › read more | City › Districts › The Basin page, lore section (under the live state) | — | [x] | [x] |
+| D · The Basin · At 3am “Cleaning drones in drifts of paper sli…” | Book › Districts › The Basin › read more | City › Districts › The Basin page, lore section (under the live state) | — | [x] | [x] |
+| D · The Basin · Local custom “Never throw away a winning ticket insi…” | Book › Districts › The Basin › read more | City › Districts › The Basin page, lore section (under the live state) | — | [x] | [x] |
+| D · The Basin · Landmarks (3): “Lantern Course and its…”, “The Old Stand, boxes h…”, “The Undercroft, where…” | Book › Districts › The Basin › read more | City › Districts › The Basin page, lore section (under the live state) | — | [x] | [x] |
+| D · The Basin · Kinds of work here (derived from 8 job templates, not authored prose) | Book › Districts › The Basin › read more | City › Districts › The Basin page, lore section (under the live state) (kept: it lists work that is not on the board, unlike "Jobs open") | — | [x] | [x] |
+| D · The Basin · "See it on Ops ›" link *(link)* | Book › Districts › The Basin › read more | Gone: it is this district's page. Remove (stale wording 'Ops') | `ops-district`, from this body | [x] | [x] |
+| D · The Docks · header and pitch: 霧港, “Mainland side”, turf “Red Lantern turf”, “A deafening sprawl of automated cranes…” *(duplicate rendering)* | Book › Districts › The Docks › card head; **also** on the district's page (`districtCard`) | City › Districts › The Docks page, lore section (under the live state): **one copy** (the page already shows it; duplicate rendering, not a second passage) | `about-district` "About … on Lore ›" on the district card: repoint to this lore section | [x] | [x] |
+| D · The Docks · picture (`districtArt`) | Book › Districts › The Docks › card head | City › Districts › The Docks page, lore section (under the live state): at the top of the lore section | — | [x] | [x] |
+| D · The Docks · Who runs it “Aether-Harbour Logistics on paper, the…” | Book › Districts › The Docks › read more | City › Districts › The Docks page, lore section (under the live state) | — | [x] | [x] |
+| D · The Docks · Police “Heavy. The Harbour Police "Wet Sleeve"…” | Book › Districts › The Docks › read more | City › Districts › The Docks page, lore section (under the live state) | — | [x] | [x] |
+| D · The Docks · At 3am “Amber floodlights in harbour fog, scre…” | Book › Districts › The Docks › read more | City › Districts › The Docks page, lore section (under the live state) | — | [x] | [x] |
+| D · The Docks · Local custom “Never whistle past the container stack…” | Book › Districts › The Docks › read more | City › Districts › The Docks page, lore section (under the live state) | — | [x] | [x] |
+| D · The Docks · Landmarks (3): “Pier 12 Gantry Gate…”, “The Ferryman's night-b…”, “The Red Lanterns' Ware…” | Book › Districts › The Docks › read more | City › Districts › The Docks page, lore section (under the live state) | — | [x] | [x] |
+| D · The Docks · Kinds of work here (derived from 11 job templates, not authored prose) | Book › Districts › The Docks › read more | City › Districts › The Docks page, lore section (under the live state) (kept: it lists work that is not on the board, unlike "Jobs open") | — | [x] | [x] |
+| D · The Docks · "See it on Ops ›" link *(link)* | Book › Districts › The Docks › read more | Gone: it is this district's page. Remove (stale wording 'Ops') | `ops-district`, from this body | [x] | [x] |
+| D · amberReach · header and pitch: 琥珀坊, “The harbour crossing”, “The transit and money hub where the ma…” *(duplicate rendering)* | Book › Districts › amberReach › card head; **also** on the district's page (`districtCard`) | City › Districts › amberReach page, lore section (under the live state): **one copy** (the page already shows it; duplicate rendering, not a second passage) | `about-district` "About … on Lore ›" on the district card: repoint to this lore section | [x] | [x] |
+| D · amberReach · teaser “Not open to your crew yet. Big money m…” *(duplicate rendering)* | Book › Districts › amberReach › card head, under "Not open to us yet"; **also** on the page (`districtCard`) | City › Districts › amberReach page, lore section (under the live state): **one copy** | — | [x] | [x] |
+| D · amberReach · Who runs it “A corporate transit board under heavy…” | Book › Districts › amberReach › read more | City › Districts › amberReach page, lore section (under the live state) | — | [x] | [x] |
+| D · amberReach · Police “Transit security, and plainclothes det…” | Book › Districts › amberReach › read more | City › Districts › amberReach page, lore section (under the live state) | — | [x] | [x] |
+| D · amberReach · At 3am “Departure chimes, commuters with glowi…” | Book › Districts › amberReach › read more | City › Districts › amberReach page, lore section (under the live state) | — | [x] | [x] |
+| D · amberReach · Local custom “Buy one steamed bun at the station kio…” | Book › Districts › amberReach › read more | City › Districts › amberReach page, lore section (under the live state) | — | [x] | [x] |
+| D · amberReach · Landmarks (3): “The Central Maglev Rot…”, “Pearl Haven House, hom…”, “The 24-hour Exchange T…” | Book › Districts › amberReach › read more | City › Districts › amberReach page, lore section (under the live state) | — | [x] | [x] |
+| D · amberReach · Kinds of work here: **absent** (0 job templates; the line only draws when there are some) *(empty state)* | Book › Districts › amberReach › read more (conditional) | City › Districts › amberReach page, lore section (under the live state): stays absent | — | [x] | [x] |
+| D · silt · header and pitch: 泥灘, “Mainland side, on the mudflats”, “A sinking shanty shelf on the wreckage…” *(duplicate rendering)* | Book › Districts › silt › card head; **also** on the district's page (`districtCard`) | City › Districts › silt page, lore section (under the live state): **one copy** (the page already shows it; duplicate rendering, not a second passage) | `about-district` "About … on Lore ›" on the district card: repoint to this lore section | [x] | [x] |
+| D · silt · teaser “Not open to your crew yet. Only one bo…” *(duplicate rendering)* | Book › Districts › silt › card head, under "Not open to us yet"; **also** on the page (`districtCard`) | City › Districts › silt page, lore section (under the live state): **one copy** | — | [x] | [x] |
+| D · silt · Who runs it “Nobody. Mutual-aid groups and street r…” | Book › Districts › silt › read more | City › Districts › silt page, lore section (under the live state) | — | [x] | [x] |
+| D · silt · Police “None. They won't cross the mud without…” | Book › Districts › silt › read more | City › Districts › silt page, lore section (under the live state) | — | [x] | [x] |
+| D · silt · At 3am “Water lapping at rusted stilts, diesel…” | Book › Districts › silt › read more | City › Districts › silt page, lore section (under the live state) | — | [x] | [x] |
+| D · silt · Local custom “Red ribbons on the door posts at high…” | Book › Districts › silt › read more | City › Districts › silt page, lore section (under the live state) | — | [x] | [x] |
+| D · silt · Landmarks (3): “The Floating Timber Br…”, “Uncle Po's scrap-batte…”, “The community pump sta…” | Book › Districts › silt › read more | City › Districts › silt page, lore section (under the live state) | — | [x] | [x] |
+| D · silt · Kinds of work here: **absent** (0 job templates; the line only draws when there are some) *(empty state)* | Book › Districts › silt › read more (conditional) | City › Districts › silt page, lore section (under the live state): stays absent | — | [x] | [x] |
+| D · ironPeak · header and pitch: 鐵山頂, “The island summit”, “Walled estates where the corp boards l…” *(duplicate rendering)* | Book › Districts › ironPeak › card head; **also** on the district's page (`districtCard`) | City › Districts › ironPeak page, lore section (under the live state): **one copy** (the page already shows it; duplicate rendering, not a second passage) | `about-district` "About … on Lore ›" on the district card: repoint to this lore section | [x] | [x] |
+| D · ironPeak · teaser “Not open to your crew yet. You'll need…” *(duplicate rendering)* | Book › Districts › ironPeak › card head, under "Not open to us yet"; **also** on the page (`districtCard`) | City › Districts › ironPeak page, lore section (under the live state): **one copy** | — | [x] | [x] |
+| D · ironPeak · Who runs it “The boards of all three megacorps, gua…” | Book › Districts › ironPeak › read more | City › Districts › ironPeak page, lore section (under the live state) | — | [x] | [x] |
+| D · ironPeak · Police “The Harbour Police need permission to…” | Book › Districts › ironPeak › read more | City › Districts › ironPeak page, lore section (under the live state) | — | [x] | [x] |
+| D · ironPeak · At 3am “Wind, silence, guard dogs, the orange…” | Book › Districts › ironPeak › read more | City › Districts › ironPeak page, lore section (under the live state) | — | [x] | [x] |
+| D · ironPeak · Local custom “Staff knock three times on a new estat…” | Book › Districts › ironPeak › read more | City › Districts › ironPeak page, lore section (under the live state) | — | [x] | [x] |
+| D · ironPeak · Landmarks (3): “The Peak Funicular (la…”, “The Slag Garden and Fo…”, “The Peak Gate checkpoi…” | Book › Districts › ironPeak › read more | City › Districts › ironPeak page, lore section (under the live state) | — | [x] | [x] |
+| D · ironPeak · Kinds of work here: **absent** (0 job templates; the line only draws when there are some) *(empty state)* | Book › Districts › ironPeak › read more (conditional) | City › Districts › ironPeak page, lore section (under the live state): stays absent | — | [x] | [x] |
+| D · group heading "Not open to us yet" over the three locked districts | Book › Districts | Districts list: keep as a heading over the locked rows (the list already puts them last) | — | [x] | [x] |
+| C · Auntie Fung (fung): “Runs three herbal tea shops in Old Town and a quie…”; district Old Town; affiliation "the Brass Anchor Society" (**not shown anywhere today**) *(duplicate rendering)* | Book › Clients (name, line, trust n/100); **also** Jobs › Board › Clients strip (name, trust word · n) | Jobs › Clients › Auntie Fung: trust and live information above, this line below | `Who they are: the Lore tab.` (Jobs › Clients info text; stale since step 2) | [x] | [x] |
+| C · Mr. Szeto (szeto): “Property developer in Glass Heights. Wants his riv…”; district Glass Heights *(duplicate rendering)* | Book › Clients (name, line, trust n/100); **also** Jobs › Board › Clients strip (name, trust word · n) | Jobs › Clients › Mr. Szeto: trust and live information above, this line below | `Who they are: the Lore tab.` (Jobs › Clients info text; stale since step 2) | [x] | [x] |
+| C · The Ferryman (ferryman): “Leung Ka-wai runs boats in and out of the Docks at…”; district The Docks *(duplicate rendering)* | Book › Clients (name, line, trust n/100); **also** Jobs › Board › Clients strip (name, trust word · n) | Jobs › Clients › The Ferryman: trust and live information above, this line below | `Who they are: the Lore tab.` (Jobs › Clients info text; stale since step 2) | [x] | [x] |
+| C · Madam Rao (rao): “Lends money to half the Night Market from a sari s…”; district Night Market *(duplicate rendering)* | Book › Clients (name, line, trust n/100); **also** Jobs › Board › Clients strip (name, trust word · n) | Jobs › Clients › Madam Rao: trust and live information above, this line below | `Who they are: the Lore tab.` (Jobs › Clients info text; stale since step 2) | [x] | [x] |
+| C · Ruth Okonkwo (okonkwo): “Broker for Aether-Harbour Logistics' off-books arm…”; district amberReach; affiliation "Aether-Harbour Logistics, off the books" (**not shown anywhere today**) *(duplicate rendering)* | Book › Clients (name, line, trust n/100); **also** Jobs › Board › Clients strip (name, trust word · n) | Jobs › Clients › Ruth Okonkwo: trust and live information above, this line below | `Who they are: the Lore tab.` (Jobs › Clients info text; stale since step 2) | [x] | [x] |
+| C · Mrs. Ip (ip): “Runs the fish-ball stall at the Neon Dragon and ne…”; district Night Market *(duplicate rendering)* | Book › Clients (name, line, trust n/100); **also** Jobs › Board › Clients strip (name, trust word · n) | Jobs › Clients › Mrs. Ip: trust and live information above, this line below | `Who they are: the Lore tab.` (Jobs › Clients info text; stale since step 2) | [x] | [x] |
+| C · Forewoman Tse (tse): “Tse Yuk-lan, a former maintenance forewoman who st…”; district Glass Heights; affiliation "the Underterrace maintenance cooperative" (**not shown anywhere today**) *(duplicate rendering)* | Book › Clients (name, line, trust n/100); **also** Jobs › Board › Clients strip (name, trust word · n) | Jobs › Clients › Forewoman Tse: trust and live information above, this line below | `Who they are: the Lore tab.` (Jobs › Clients info text; stale since step 2) | [x] | [x] |
+| C · trust note (TRUST_NOTE): "Finished jobs build trust; aborts …" *(duplicate rendering)* | Book › Clients footer; **also** the (i) on the Jobs › Clients strip | Jobs › Clients: keep once, under the trust header; the strip's (i) points to it | — | [x] | [x] |
+| C · info text "… Who they are: the Lore tab." *(link)* | Jobs › Board › Clients strip (i) | Reword to the new Jobs › Clients page | itself | [x] | [x] |
+| C · Lore-only clients (clients with lore but no live record) *(none)* | none found: Book › Clients draws `CLIENTS` itself, the same records the board uses | n/a | — | [x] | [x] |
+| W · Who's who · Megacorps: Aether-Harbour Logistics; Veridian-Apex BioTech; Hoi-Sing Grid & Cable (each: where, line, rumour) | Book › Who's who › Megacorps | Book › Who's who › Megacorps (unchanged order) | — | [x] | [x] |
+| W · Who's who · Gangs: The Red Lanterns; The Silver Fan Circle; The Brass Anchor Society (each: where, line, rumour) | Book › Who's who › Gangs | Book › Who's who › Gangs (unchanged order) | — | [x] | [x] |
+| W · Who's who · Police: Harbour Police, 4th Precinct (each: where, line, rumour) | Book › Who's who › Police | Book › Who's who › Police (unchanged order) | — | [x] | [x] |
+| W · Who's who · Institutions: Lantern Bay Racing Association (each: where, line, rumour) | Book › Who's who › Institutions | Book › Who's who › Institutions (unchanged order) | — | [x] | [x] |
+| W · Who's who · Wildcard: The Ghost Circuit (each: where, line, rumour) | Book › Who's who › Wildcard | Book › Who's who › Wildcard (unchanged order) | — | [x] | [x] |
+| W · The Red Lanterns · live grudge gauge (`grudgeGauge('redLanterns')`) *(live state)* | Book › Who's who › Gangs (live state inside a lore entry) | Stays with its entry | — | [x] | [x] |
+| W · The Silver Fan Circle · live grudge gauge (`grudgeGauge('silverFan')`) *(live state)* | Book › Who's who › Gangs (live state inside a lore entry) | Stays with its entry | — | [x] | [x] |
+| W · The Brass Anchor Society · "Never raids a tong's hall." *(conditional)* | Book › Who's who › Gangs (special-cased on the name) | Stays with its entry | — | [x] | [x] |
+| W · header "Lantern Bay 燈籠灣 2057" and the sub-tab row | Book | Book header stays; the sub-tabs become Who's who · History | `book` (City header, every City sub-tab) | [x] | [x] |
+| H · "Everyone knows" (6 lines: “Never take a night boat…” … “Mr. Szeto's permits come…”) | Book › History, left column (a city-wide section, **not per district**) | Book › History › Everyone knows | — | [x] | [x] |
+| H · "A short history" (7 entries, 1891 to 2052) | Book › History, right column (city-wide, **not per district**) | Book › History › A short history | — | [x] | [x] |
+
+Duplicates that remain, and why each is a shortcut or a distinct overview, not a second home:
+- A district's header text (Chinese name, side, turf, pitch, teaser) is drawn **once**, on the district's page. The Districts list rows show a short summary (side and what is there now): an index into the page.
+- A client's line (`desc`) is drawn once, on the client page. The Jobs › Clients rows show name, trust and how many jobs they have on the board (an index), and the plan's client (i) still peeks the same line in place (owner, 2026-11-04: the same on every job they offer), with a link to the page.
+- The trust note is on the client page and behind the list's (i): the same sentence as an explanation beside different content.
 
 ## Open question: placement
 
-`HANDOFF.md` (2026-10-28) floats an "underground place" (bar / black market: hiring, rumours, gear) that could pull Leads and the Armoury out of Crew. Ops › Places already has a disabled "Bar · black market — Later" button for it.
+`HANDOFF.md` (2026-10-28) floats an "underground place" (bar / black market: hiring, rumours, gear) that could pull Leads and the Armoury out of Crew. The disabled "Bar · black market — Later" button went with Places in step 3. (The Armoury and Leads are no longer both on Crew, so this question is partly answered by the Tong tab.)
 
 ## Where the code is
 
-`ui/app.js` routes and draws every tab (`renderInbox`, `renderCrew`, `renderJobs`, `renderOps`/`renderOpsScreen`, `renderLore`, `renderSettings`, `renderHalls`, `renderHallPage`, `renderOperative`, `renderRecruit`, `renderPlan`, `renderSidePlan`); separate files are `board.js` (squad board), `watch.js` (live job), `hallbuild.js`, `tongs.js`, `citymap.js`, `gear.js`. See `CODEMAP.md` for the rest.
+`ui/app.js` routes and draws every tab (`renderInbox`, `renderTong`, `renderCrew`, `renderJobs`, `renderCity`/`renderOps`, `renderLore`, `renderSettings`, `renderHalls`, `renderHallPage`, `renderOperative`, `renderRecruit`, `renderPlan`, `renderSidePlan`); separate files are `board.js` (squad board), `watch.js` (live job), `hallbuild.js`, `tongs.js`, `citymap.js`, `gear.js`. See `CODEMAP.md` for the rest.
