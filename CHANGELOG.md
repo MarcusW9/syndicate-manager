@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · Rival tongs make offers for your runners (part D3, no save change)
+- Once you are a Street tong or bigger, a rival may approach one of your free, unhurt runners on a Sunday. Joss warns you a week ahead: **Match it** (they stay, on about 15% more than the larger of their wage and market value) or **Let them go** (the rival pays you a buyout, priced the same way you pay theirs). Say nothing and they go at the end of the week, never while they are out on a job. Rookies are approached most, veterans less, Elites and Legends rarely, and loyal runners almost never. The rival lists the leaver among its names.
+
 ## 2026-11-09 · Loyalty is a number that moves (part D2, save v56)
 - Each runner now has loyalty from 0 to 100, which moves every Sunday: up for a week of real work and for fair pay; down for a week on the bench, pay well under market value, a crewmate lost that week, and refusing a raise (a big drop). The pay-rise screen shows it. It still only changes the raise they ask for, and it starts from jobs together (4 points a job), so nothing changes on upgrade.
 

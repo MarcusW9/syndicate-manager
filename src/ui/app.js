@@ -1269,6 +1269,7 @@ function renderMessage(m) {
       ${m.kind === 'heat' ? renderHeatNotice(m) : ''}
       ${m.kind === 'spec' ? renderSpecOffer(m) : ''}
       ${m.kind === 'retirement' ? renderRetirement(m) : ''}
+      ${m.kind === 'poach' ? renderPoach(m) : ''}
       ${m.kind === 'hall-offer' && !hallIn(state, m.payload.district) ? (canOpenHall(state, m.payload.district).ok ? `<button class="btn btn--primary" data-action="open-hall" data-id="${esc(m.payload.district)}">Open the hall · ${money(HALL_SITES[m.payload.district].deposit)}</button>` : `<p class="muted small">${esc(canOpenHall(state, m.payload.district).reason)}.</p>`) : ''}
       ${m.kind === 'callin' && !m.resolved ? `<button class="btn btn--primary" data-action="take-call" data-id="${esc(m.payload.jobId)}">Take the call</button>` : ''}
       ${m.kind === 'raid' ? renderRaidCall(m) : ''}
@@ -1460,6 +1461,16 @@ function renderRenewal(m) {
 }
 
 /** Joss's specialisation offer (core/specialisations.js): what each one does, then take it or not yet. */
+/** A rival tong has made an offer for one of ours (core/mobility.js): match it or take the buyout. */
+function renderPoach(m) {
+  if (m.resolved) return m.payload.outcome ? `<p><strong>${esc(m.payload.outcome)}</strong></p>` : '';
+  return `
+      <div class="stack">
+        ${m.options.map((o) => `<button class="btn ${o.id === 'match' ? 'btn--primary' : 'btn--ghost'}" data-action="decide" data-id="${esc(m.id)}" data-option="${esc(o.id)}">${esc(o.label)}</button>`).join('')}
+      </div>
+      <p class="muted small">Unanswered by day ${m.payload.expiresDay}, they go and the buyout is paid to us.</p>`;
+}
+
 /** A long-serving runner asks to retire (core/retirement.js): stay one more season, or let them go. */
 function renderRetirement(m) {
   if (m.resolved) return m.payload.outcome ? `<p><strong>${esc(m.payload.outcome)}</strong></p>` : '';
