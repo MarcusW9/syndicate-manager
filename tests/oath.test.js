@@ -38,7 +38,7 @@ test('one notice only, and the ceremony stays available after "not yet"', () => 
 test('swearing costs two weeks of wage, re-checks eligibility and cash, and survives loyalty falling', () => {
   const { s, op } = ready();
   const cost = oathCost(op);
-  assert.equal(cost, 2 * op.wage);
+  assert.equal(cost, OATH.costWeeks * op.wage);
   const after = swearIn(s, op.id);
   assert.equal(after.cash, s.cash - cost);
   const sworn = after.crew.find((o) => o.id === op.id);

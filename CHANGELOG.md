@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · The oath costs eight weeks of wage
+- Holding the ceremony for a sworn runner now costs eight weeks of their wage (it was two), and Joss no longer checks the spelling in the ledger scene; that is the wall's job.
+
 ## 2026-11-09 · The oath, the ledger and the wall (wording only)
 - The world notes now say how a runner is sworn in: tea at the founding room above the noodle shop, their own name in the tong's ledger, an offering at the altar, nothing recited. A sworn name stays in the ledger after they leave, and the Hall of Legends is a wall beside the altar where a crew member writes each name and Joss checks the spelling. A runner who retires into the Hall now sees that in the message. No rules changed.
 
