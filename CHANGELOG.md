@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · Sworn runners (part D4, save v57)
+- A runner with 26 active weeks and loyalty of 80 or more can be **sworn**: a lasting place in the tong, with no stat bonus and no raise. Joss tells you once; after that a "Hold the ceremony" button stays on their page, for two weeks of their wage. Sworn stays even if loyalty later falls. Rivals approach a sworn runner a tenth as often, and selling one costs every other runner 6 loyalty (an ordinary exit costs 2).
+
 ## 2026-11-09 · Rival tongs make offers for your runners (part D3, no save change)
 - Once you are a Street tong or bigger, a rival may approach one of your free, unhurt runners on a Sunday. Joss warns you a week ahead: **Match it** (they stay, on about 15% more than the larger of their wage and market value) or **Let them go** (the rival pays you a buyout, priced the same way you pay theirs). Say nothing and they go at the end of the week, never while they are out on a job. Rookies are approached most, veterans less, Elites and Legends rarely, and loyal runners almost never. The rival lists the leaver among its names.
 

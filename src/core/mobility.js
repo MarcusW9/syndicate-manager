@@ -14,6 +14,8 @@ import { marketWage, round50 } from './pricing.js';
 import { buyoutAmount, operativeToCard } from './dossier.js';
 import { carried } from './gear.js';
 import { money } from './money.js';
+import { isSworn } from './oath.js';
+import { OATH } from '../data/oath.js';
 
 const rankIndex = (id) => TONG_RANKS.findIndex((r) => r.id === id);
 
@@ -21,7 +23,7 @@ const rankIndex = (id) => TONG_RANKS.findIndex((r) => r.id === id);
 export function poachChance(op) {
   const base = MOBILITY.base[op.tier] ?? MOBILITY.base.rookie;
   const mult = op.legend || op.fame === 'legend' ? MOBILITY.legendMult : op.fame === 'elite' ? MOBILITY.eliteMult : 1;
-  return base * mult * Math.pow(1 - loyaltyPoints(op) / 100, MOBILITY.loyaltyPower);
+  return base * mult * (isSworn(op) ? OATH.approachMult : 1) * Math.pow(1 - loyaltyPoints(op) / 100, MOBILITY.loyaltyPower);
 }
 
 const busyIds = (state) => new Set([
@@ -51,7 +53,8 @@ function execute(state, op, tong, text) {
   tong.wealth -= buyout;
   const card = { ...operativeToCard(state, op), tongId: tong.id };
   if (state.rivals.cards.filter((c) => c.tongId === tong.id).length < 12) state.rivals.cards.push(card);
-  for (const o of state.crew) if (!o.freelance) addLoyalty(o, MOBILITY.goLoyalty);
+  const dent = isSworn(op) ? OATH.leavePenalty : MOBILITY.goLoyalty; // a sworn runner's exit is felt (owner, 2026-11-09)
+  for (const o of state.crew) if (!o.freelance) addLoyalty(o, dent);
   return fill(text, { op: op.handle, tong: tong.name, buyout: money(buyout) });
 }
 

@@ -727,5 +727,11 @@ function migrate(state) {
     for (const op of state.crew ?? []) if (!op.freelance && op.loyalty == null) op.loyalty = Math.min(100, Math.round((op.jobsWithCrew ?? 0) * 4));
     state.version = 56;
   }
+  if (state.version === 56) {
+    // v57: sworn runners (DESIGN.md 2026-11-09): `op.sworn` (the day, or null) and `op.oathNotified`. A runner already
+    // eligible is marked notified, so an old save is not met with a notice.
+    for (const op of state.crew ?? []) { op.sworn ??= null; op.oathNotified ??= !op.freelance && (op.record?.activeWeeks ?? 0) >= 26 && (op.loyalty ?? 0) >= 80; }
+    state.version = 57;
+  }
   return state;
 }

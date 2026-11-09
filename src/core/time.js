@@ -27,6 +27,7 @@ import { weeklyLoyalty } from './loyalty.js';
 import { weeklyFame } from './fame.js';
 import { checkRetirement } from './retirement.js';
 import { weeklyPoach } from './mobility.js';
+import { weeklyOath } from './oath.js';
 import { weeklyRivals } from './rivals.js';
 import { neuralFloor } from './gear.js';
 import { checkSpecialisations } from './specialisations.js';
@@ -149,6 +150,7 @@ function settleWeek(state) {
   weeklyLoyalty(state); // loyalty drifts with work, pay and losses (core/loyalty.js)
   weeklyFame(state); // standing slips on the bench, Elite can lapse, fame may climb (core/fame.js)
   weeklyRivals(state); // the other tongs' week, on its own key: no roll moves (core/rivals.js)
+  weeklyOath(state); // one notice when a runner could be sworn (core/oath.js)
   weeklyPoach(state); // a rival may make an offer for a runner; unanswered offers take effect (core/mobility.js)
   checkRetirement(state); // at most one long-serving runner asks to retire; hashed, no roll moves (core/retirement.js)
 
