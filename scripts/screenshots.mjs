@@ -188,7 +188,15 @@ try {
     await top(); await shot('crew');
     if (await click('[data-action="open-op"]')) { await top(); await shot('operative'); await click('[data-action="back"]'); }
   }
-  if (await click('[data-action="nav"][data-id="ops"]')) { await top(); await shot('ops'); }
+  if (await click('[data-action="nav"][data-id="ops"]')) {
+    await top(); await shot('ops');
+    // The other tongs (2026-11-08): the list, then one tong's page. Skipped by versions without them.
+    if (await click('[data-action="tongs-open"]')) {
+      await top(); await shot('tongs');
+      if (await click('[data-action="tong-page"]')) { await top(); await shot('tong-page'); }
+      await click('[data-action="tongs-close"]') || await click('[data-action="nav"][data-id="ops"]');
+    }
+  }
   if (await click('[data-action="nav"][data-id="lore"]')) { await top(); await shot('lore'); }
   if (await click('[data-action="nav"][data-id="today"]')) { await top(); await shot('today'); }
 

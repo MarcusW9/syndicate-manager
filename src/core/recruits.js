@@ -68,7 +68,7 @@ const FOUNDER = { id: 'rookie', age: [18, 24], primary: [8, 11], secondary: [5, 
 
 /** Lead quality weights: the usual ones, or better with an Elite on the crew. */
 export function recruitQualities(state) {
-  const elite = (state.crew ?? []).some((o) => !o.freelance && o.fame === 'elite');
+  const elite = (state.crew ?? []).some((o) => !o.freelance && (o.fame === 'elite' || o.fame === 'legend'));
   return elite ? QUALITY.map((q) => ({ ...q, weight: ELITE_RECRUIT_WEIGHTS[q.id] ?? q.weight })) : QUALITY;
 }
 

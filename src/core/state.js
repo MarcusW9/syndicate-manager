@@ -12,8 +12,9 @@ import { refreshFreelancers } from './freelance.js';
 import { ECONOMY } from '../data/economy.js';
 import { refreshSideBoard } from './sidetasks.js';
 import { refreshArmoury } from './looks.js';
+import { seedRivals } from './rivals.js';
 
-export const SAVE_VERSION = 51;
+export const SAVE_VERSION = 54;
 
 // A rookie crew's first board: small work only.
 export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];
@@ -89,6 +90,7 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
     halls: [], // the tong's halls, one per district (core/halls.js); the home hall is set below
     hallOffers: [], // districts whose contact has offered us a place (introduceHalls)
     openings: {}, // each district's opening favour: { status, jobId, retryDay } (core/halls.js, save v43)
+    rivals: null, // the other tongs (core/rivals.js, save v51); seeded below
     heists: {}, // heists taken on: { status, offeredDay, finaleDay, finaleJobId, steps } (core/heists.js, save v47)
     clients: {},
     founding: null, // { candidates } while the player picks the founders (chooseFounders)
@@ -117,6 +119,7 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
   refreshFreelancers(state);
   refreshSideBoard(state);
   refreshArmoury(state);
+  state.rivals = seedRivals(state); // hashRng only: no roll moves (core/rivals.js)
   state.dayStartCash = state.cash;
   state.weekStart = weekStartOf(state); // the Sunday summary measures from here (core/week.js)
   return state;

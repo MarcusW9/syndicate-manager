@@ -111,6 +111,7 @@ const fill = (text, vars) => text.replace(/\{(\w+)\}/g, (m, k) => vars[k] ?? m);
 
 /** Move fame up one tier if the record has reached a higher one. Returns the new tier or null. Mutates. */
 function stepFame(state, op) {
+  if (fameOf(op) === 'legend') return null; // a Legend is never lost (core/legend.js)
   const now = FAME_TIERS.indexOf(fameOf(op));
   const target = FAME_TIERS.indexOf(fameTarget(op));
   if (target <= now) return null;

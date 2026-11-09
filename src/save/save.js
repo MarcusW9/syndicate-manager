@@ -30,6 +30,7 @@ import { refreshFreelancers } from '../core/freelance.js';
 import { GEAR, makeItem } from '../core/gear.js';
 import { CELLS } from '../data/gear.js';
 import { trimInbox } from '../core/inbox.js';
+import { seedRivals, offerGapFor } from '../core/rivals.js';
 
 // The one-item-per-slot gear of saves before v45, for the migrations written against it.
 const slotLoadout = () => ({ weapon: null, armour: null, tool: null, implant: null });
@@ -243,6 +244,21 @@ export function importSave(file) {
 
 export function backupDue(state) {
   return state.day - (state.lastBackupDay ?? 0) >= BACKUP_REMINDER_DAYS;
+}
+
+/** Save v51: the stat key driving became piloting everywhere it was stored (stats, potential, progress, growth logs, a job's key stats, a mission in play). */
+function drivingToPiloting(state) {
+  const walk = (v) => {
+    if (Array.isArray(v)) { v.forEach((x, i) => { if (x === 'driving') v[i] = 'piloting'; else walk(x); }); return; }
+    if (!v || typeof v !== 'object') return;
+    for (const k of Object.keys(v)) {
+      if (k === 'driving') { v.piloting = v.driving; delete v.driving; }
+    }
+    for (const k of Object.keys(v)) {
+      if (v[k] === 'driving') v[k] = 'piloting'; else walk(v[k]);
+    }
+  };
+  walk(state);
 }
 
 // Upgrade old save formats when SAVE_VERSION changes.
@@ -673,18 +689,32 @@ function migrate(state) {
     // v51: driving is piloting (drafts/PROPOSAL-piloting.md, DESIGN.md 2026-11-08). The stat key moves
     // everywhere it was stored: stats, potential, progress, growth logs, a job's key stats, a mission in
     // play. Done as a walk so no copy of the old name is left behind.
-    const walk = (v) => {
-      if (Array.isArray(v)) { v.forEach((x, i) => { if (x === 'driving') v[i] = 'piloting'; else walk(x); }); return; }
-      if (!v || typeof v !== 'object') return;
-      for (const k of Object.keys(v)) {
-        if (k === 'driving') { v.piloting = v.driving; delete v.driving; }
-      }
-      for (const k of Object.keys(v)) {
-        if (v[k] === 'driving') v[k] = 'piloting'; else walk(v[k]);
-      }
-    };
-    walk(state);
+    drivingToPiloting(state);
     state.version = 51;
+  }
+  if (state.version === 51) {
+    // v52: the other tongs (DESIGN.md 2026-11-08). hashRng only, so nothing else in the save moves. (A save
+    // made on the branch where this was v51 skipped the piloting walk above: run it again, it is harmless.)
+    drivingToPiloting(state);
+    state.rivals = seedRivals(state);
+    state.version = 52;
+  }
+  if (state.version === 52) {
+    // v53: the Legend defining job (DESIGN.md 2026-11-08): runners gain `legend` and `legendCall`, offers
+    // `defining`. Nobody is a Legend yet on an old save; the first call comes when someone is ready.
+    for (const op of state.crew ?? []) { op.legend ??= null; op.legendCall ??= null; }
+    state.version = 53;
+  }
+  if (state.version === 53) {
+    // v54: C3 (DESIGN.md 2026-11-08 "C3 designed"): a tong's `grudge` becomes `regard`; tongs gain poorWeeks, splitDay
+    // and foldedDay; rivals gain the free name's `offer`, `scouted`, `lastScout`, `offerSeq` and `nextOfferDay`.
+    const r = state.rivals;
+    if (r) {
+      for (const t of r.tongs ?? []) { delete t.grudge; t.regard ??= 0; t.poorWeeks ??= 0; t.splitDay ??= 0; t.foldedDay ??= null; }
+      r.offer ??= null; r.scouted ??= {}; r.lastScout ??= null; r.offerSeq ??= 0;
+      if (r.nextOfferDay == null) r.nextOfferDay = state.day + offerGapFor(state, r);
+    }
+    state.version = 54;
   }
   return state;
 }

@@ -7,6 +7,41 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-08 · A lighter crew list
+- The Crew list no longer shows each runner's highlight line or the scout's read of their potential. Both are on the runner's own page: the highlight right under their name, the potential in Development.
+
+## 2026-11-08 · Free names: scout them, then sign them
+- **Ops › The other tongs › Free names:** every three to six weeks a runner between tongs is put forward. Open their page to see what the street says, what they'd want, and what it would cost.
+- **Scouting:** send someone to watch them for two days (from their page, or from the side-work board on Jobs). A good trip shows their stats and how far they might go; each further trip sharpens that read, up to a sure one.
+- **Signing:** a runner may want a bit more than their worth to be convinced, depending on your tong's rank, any Legends or Elites on the crew, a leader, a free bed and your cash. A runner still in another tong also costs a buyout fee, which goes to that tong and cools them toward you a little. Heads of tongs won't leave. If you can't sign them, the page says why.
+
+## 2026-11-08 · The other tongs fold, form and let people go (behind the scenes, save v53)
+- Poor, small tongs now fold, their runners drift free one by one, and a new tong can form from the best of them. Now and then a free name is put forward (every three to six weeks, at random). Nothing is on screen yet: scouting, signing and the buyout fee come with the next slice, and nothing about your jobs, pay, heat or rolls changes. Rival tongs now have a "regard" for you instead of a grudge, which only an explicit poach or a shared job will move.
+
+## 2026-11-08 · The other tongs turn up on your jobs
+- The "Rival crew" twist now names a real tong and one of its runners ("Dim Hour Society is here for the same job, with Lena Novak out in front"). A tong based in the job's district turns up more often. It's two crews after the same job, not a feud: the choices, odds and costs are exactly as before. The next Monday, the Word may say the tong had people at the same door as yours.
+- Now and then a client mentions on the plan screen that another tong wanted the job ("I would rather you"). Flavour only.
+- Rival tongs hold no grudge against you.
+
+## 2026-11-08 · The city asks: the Legend defining job (save v52)
+- When a runner has everything it takes to be a Legend (Elite, a veteran, 26 active weeks, 120 jobs at their level and a path's Legend numbers), the city asks for them by name: a hard job (threat 3-4, a step harder, half again the pay) goes on the board for a week, tagged "Their moment". Do it with them on the crew and they become a Legend, for good. If you open a heist and its finale is up, the finale is their moment instead.
+- Fail, abort, skip it or let it expire and the city asks again in four weeks. A runner who dies on it is a Legend for good, and the memorial says so.
+- The call, the earned message and the posthumous one each read differently for a Ghost, an Enforcer, an Earner, an Iron and a Lifer. Retirement and the Hall of Legends come later.
+
+## 2026-11-08 · The Word reads better
+- Street talk about the other tongs has more ways of being said, no longer repeats the same news about the same tong within a month, and a doubled "the" is fixed. When your own tong climbs a rung (a new hall), the Word says so once. Nothing about jobs, pay, heat or rolls changes.
+
+## 2026-11-08 · Names on the street, kept honest
+- Your own runners take at most half of Names on the street, and a runner's hidden rating now climbs over a year instead of maxing out in a quarter, so the other tongs' runners stay in the talk. Nothing about jobs, pay, heat or rolls changes.
+
+## 2026-11-08 · You can hear about the other tongs
+- **The Word** on Monday's briefing: up to three lines of street talk about the other tongs (who took what work, whose name is going round, who's gone quiet). Talk, never results or numbers.
+- **Ops › Places › The other tongs:** the city's other tongs grouped by how far their name carries (Back Room to Harbour), each with its style, district and head; tap one for its page.
+- **Names on the street:** six to eight runners people are talking about, unranked. Your own people can be among them once their name carries.
+- Nothing about your jobs, pay, heat or rolls changes.
+
+## 2026-11-08 · The other tongs, behind the scenes (save v51)
+- No change you can see yet. Lantern Bay now has about six other tongs, made fresh for each game, that rise and fade week by week in the background, with about forty named runners between them. Nothing on screen shows them yet (that's the next slice: the Monday Word, Ops › Tongs and Names on the street), and nothing about your jobs, pay, heat or rolls changes. Old saves get their own set of tongs when they load.
 ## 2026-11-08 · Piloting: followed home
 - A **bad getaway** (5 or more under the number) now means someone follows the crew home, and the followers are the raid: one is warned at once on the hall most of them live in (the police, or the gang the job crossed), one threat step harder, with the usual hold, pay or walk-out choice. A plain miss only keeps the heat. A pilot of 14 or better shakes even a bad miss.
 - Faster jobs and same-day hall moves are dropped from the piloting plan: getting across the city doesn't take a day.

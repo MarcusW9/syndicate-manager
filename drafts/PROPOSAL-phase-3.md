@@ -149,7 +149,7 @@ Agreed and unchanged from 2026-11-07:
    `hashRng(seed, 'client-rival', offer.id)` for a client naming one (C2),
    `hashRng(seed, 'rivals:' + week)` for the weekly step.
    **"The same game with and without rivals"** (same `rngCounter`, rolls, missions and cash) is a
-   **C1-only** test: from C2 a grudge changes how often a rival turns up on your jobs, and that is
+   **C1-only** test: from C2 the district a job is in changes how often a tong turns up on it, and that is
    meant to change your game. From C2 the test is narrower: the rival step and the C2 rolls never
    move `rngCounter`.
 4. **Renown never touches a roll** (existing rule). Rivals' talk about a runner costs nothing on a
@@ -271,7 +271,7 @@ throughout, in a fixed array order. In order:
 | Thing | Effect |
 | --- | --- |
 | **Home district** | Their names turn up more on jobs there (C2). Free names tend to come from there. The Word mentions the place. No effect on halls, heat or openings. |
-| **Grudge** | How often they turn up on the player's jobs (C2), extra cost to sign their names (C3/D, shown in ¥: rule 1's exception), the tone of The Word. Never violence. |
+| **Regard (was "grudge"; owner, 2026-11-08)** | **No grudge in C2.** Rival tongs are competitors who notice each other, not enemies, and they hold no memory of the player until there are acts worth remembering. From C3 a hidden regard may move only on explicit acts (signing or poaching a tong's runner, taking work they wanted), either way (respect or resentment), shown only in the Word's tone and in what a signing costs (rule 1's ¥ exception), and a tong may turn hostile after a poach (D). The `grudge` field in the C.2 state shape is unused until then. |
 | **Wealth** | Hidden budget: hall growth, who signs the free name the player passes on, how fast depth grows, who folds (C3). |
 | **Contracts** | Not in C1. Later, `contestOffers` runs after `tickJobs`: once per job id, via `hashRng(seed, 'contest:' + job.id)`, so the board's rolls never move. |
 | **Fame** | No cost on jobs. Its cost is social: pay asks (built), rival interest (D), more talk. |
@@ -312,7 +312,7 @@ throughout, in a fixed array order. In order:
   `rankForHalls`, `data/rivals.js`, the weekly step, The Word, Ops › Tongs, Names on the street.
   Read-only: nothing changes play.
 - **C2 contact:** `twist_rival_crew` names a real tong and one of its names, chosen with
-  `hashRng(seed, 'rival-twist', missionId)` and weighted by home district and grudge. Clients
+  `hashRng(seed, 'rival-twist', missionId)` and weighted by home district (three times as often) alone: **built 2026-11-08, names and talk only.** Clients
   sometimes name a rival when they offer work ("the Mantis wanted this, I'd rather you"): flavour
   only, rolled per offer with `hashRng(seed, 'client-rival', offer.id)`, and only rivals whose home
   is the job's district.
@@ -355,6 +355,89 @@ throughout, in a fixed array order. In order:
 - **Settled (2026-11-08):** folding and forming come with C3; clients naming a rival is C2 flavour
   (C.10); about 6 tongs; no List (Names on the street instead); the Brass Anchor is a fixed elder in
   data; fame has no cost on jobs.
+
+### C.13 C3 in full: a free name a month, scouting, signing, buyouts, folding and forming (owner's answers 2026-11-08; numbers proposed)
+
+**The owner's calls:** a free name is something the player **scouts**, and scouting also **sharpens the accuracy of the
+potential read**; a runner may want **a bit more pay to be convinced**, which depends on the tong's **tier, the crew's Legends
+and leaders, its halls and its money**; **when a tong folds, its runners become free names over time, and a new tong can form
+(some of its runners may form their own)**; and a runner already in a tong needs **a buyout fee**, not just a bigger offer.
+
+**1. The month's free name.** On the first Monday of each 4-week block, one card is put forward from the free pool
+(`tongId: null`), a folded tong's best name first. It's in `state.rivals.offer { cardId, day }`, shown in Ops › The other tongs
+under "Free names", and in the Word ("X is between tongs, for now"). Left alone for `RIVALS.freeWeeks` (4) it goes to a rival (the
+existing drift rule). Only one offer at a time; passing is free.
+
+**2. Scouting (a side task, and the potential read).** "Scout X" is a one-person side task (`core/sidetasks.js`), 2 days, the
+runner who goes uses their social stat, no cash cost beyond the usual fatigue. Each trip is a level, kept in
+`state.rivals.scouted[cardId]`:
+
+| Level | What the player sees |
+| --- | --- |
+| 0 (never scouted) | Name, trade, fame word, rating word: what Names on the street shows. The wage ask is a guess (±25%). |
+| 1 (one trip) | Full stats (`dossierOf`) and the potential read, with the usual scout error (`rollScoutError`, 45% of the time off by 1-2). |
+| 2 (two trips) | The potential read's error is halved (off by at most 1). The wage ask is exact. |
+| 3 (three trips) | The potential read is exact. |
+
+A trip can fail (the usual side-task roll at `SIDE_DIFFICULTY`); a failed trip tells them nothing and costs the day. Scouting the
+same name a fourth time does nothing. A signed runner keeps the error they were last read with (`scoutError`), so a level-1 read
+can mislead, as hired recruits' reads do today.
+
+**3. `core/dossier.js` (no saved stats).** `dossierOf(state, card)` builds full stats from `hashRng(seed, card.id)` on demand and
+never saves them: the same card always has the same stats, with the main stat set by the card's role and the rating fitting
+`ratingOf` within ±2 (the parity test). `cardToOperative` runs on signing (age, role, the dossier's stats, a potential from the same
+hash, tier from the card's rating band, `op.scoutError` from the scout level, a history line); `operativeToCard` runs when a runner
+leaves (D).
+
+**4. The approach, and what it costs.** Approaching is a message and a screen, never a roll: the answer is worked out from named
+things and shown. **Persuasion** (a hidden score, shown only as words):
+- the signing tong's **tier** (`rankForHalls`): up a rung is worth more than a good wage to a runner who wants a name;
+- **Legends and Elites on the crew** (each draws), and a **leader** (`lead.js crewLead`: a lead on the crew);
+- **halls**: a free bed in a hall in their district;
+- **money**: cash to cover the signing fee and any buyout without leaving the week's bills short.
+
+Persuasion sets the **premium** over the market wage (`pricing.js marketWage`): 0% at best, up to **+35%** at worst, shown in ¥ a
+week ("They want ¥X a week to join, a bit more than their worth. We could be more convincing."). Below a floor the answer is "not
+yet", with the reason in a line (no bed, not enough cash, nothing about our name). The signing fee is one week's wage up front,
+as for any recruit (`signingFee`).
+
+**5. The buyout (a runner in a tong).** A name still in a tong can be approached, but the tong is owed a **buyout** (one-off, paid
+to the tong's wealth, shown in ¥): `6 × weekly market wage`, plus 10% for every full ¥10,000 of the tong's wealth (cap +50%), plus
+**+25% if the tong's regard for us is cold** (below). Heads are never approachable (C.12). Free names owe none.
+
+**6. Regard (replaces the grudge; a hidden `tong.regard`, -5 to +5, 0 at the start).** It moves only on explicit acts:
+**-2 when we buy out their runner** (the poach), **+1 when we split a job with them** ('deal' succeeded; at most once a month),
+and it eases one step toward 0 every other Sunday. Cold (-2 or less) means a buyout from them costs +25% and the Word's tone is
+cooler ("People who used to nod at X don't"); warm (+2 or more) means -10% on a buyout and a warmer line. Nothing else changes,
+and **no violence**: a tong turning hostile after repeated poaching is D's, and not built here. The `grudge` field in the state
+shape becomes `regard` (a migration renames it, save v53).
+
+**7. Folding and forming.**
+- **Folds:** a tong with `halls 1`, `prestige < 12` and `wealth < 1,500` for `RIVALS.foldWeeks` (6) Sundays in a row folds
+  (`status 'folded'`, `foldedDay`). It never folds below four tongs.
+- **Its names go free over time:** each Sunday one of its runners (the lowest rated first) leaves with `tongId: null`, the Word
+  says so; the head last. A folded tong's best card is the first candidate for the month's free name.
+- **Forming:** (a) when a tong folds and its best card has `rating >= 40`, they may **form their own** with one or two other free
+  names (`hashRng`; 50%): a new tong with a kit name in a new style, their old district, `prestige 8`, `wealth 800 + 60 × 8`,
+  `halls 1`; (b) when there are fewer than `RIVALS.tongs` active tongs at a season's end and there's a free card with `rating >= 45`,
+  one forms. The Word says "a new name".
+- A tong never forms in the Silt.
+
+**8. What the player sees.** Ops › The other tongs gains **Free names** (this month's name and a trip button), a name's page
+(its dossier at the level scouted, the potential read, what it would cost), and **Sign**. A scout trip is on the side-work board
+("Scout Nia Okoro", `sideBoard` entry added on the offer). Everything speaks in words except money the player pays.
+
+**9. State (save v53).** `state.rivals.offer`, `state.rivals.scouted { cardId: level }`, tongs gain `regard` (renamed from `grudge`),
+`foldedDay`; cards gain nothing. Signed cards leave `state.rivals.cards`.
+
+**10. Slices.** **C3a, core and tests:** `core/dossier.js`, regard, folding and forming, the monthly offer, the persuasion and
+buyout functions, `cardToOperative`, the scout trip's effect (without the board entry), save v53; tests: parity (±2), determinism,
+isolation (no `rngCounter` moves), folding never below four tongs and always forms or frees, regard moves only on acts, persuasion
+is a pure function and never prices below the market wage, a buyout never applies to a head or a free name, a scouted level never
+shows more than it should, the golden file extended, a v52 save migrates. **C3b, screens and the side task:** Ops › Free names,
+the name's page, Scout (side task), Sign, screenshots.
+
+**11. Built as C3a (2026-11-08), with these changes to the numbers above:** the free name's gap is **random, 3 to 6 weeks** (a hash; owner: "a bit more random"), a name left alone goes to a rival after **3** weeks (was 4), and when none is free a runner leaves a tong so the cadence holds; folding is **prestige under 25 and wealth under ¥6,000** for six Sundays (the proposal's 12 and ¥1,500 never fired in two simulated years); persuasion's demand is 0.3 × the name's rating (was 0.35); a card's career (jobs) is capped by its rating so a low-rated veteran fits the parity. **Still open (the owner may tune):** the three scout levels, the +35% ceiling, the 6-week buyout multiple, regard's -2 and +1.
 
 ## 5. Part D: loyalty and mobility
 

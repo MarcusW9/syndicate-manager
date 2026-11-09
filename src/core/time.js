@@ -5,6 +5,7 @@ import { checkRaids } from './raids.js';
 import { introduceHalls } from './halls.js';
 import { introduceHeists, tickHeists } from './heists.js';
 import { tickJobs } from './jobs.js';
+import { legendTick } from './legend.js';
 import { trimInbox } from './inbox.js';
 import { driftTrust } from './clients.js';
 import { scoutWeek } from './recruits.js';
@@ -23,6 +24,7 @@ import { refreshSideBoard, returnSideTasks } from './sidetasks.js';
 import { dailyTraits } from './earned.js';
 import { weeklyRecord } from './record.js';
 import { weeklyFame } from './fame.js';
+import { weeklyRivals } from './rivals.js';
 import { neuralFloor } from './gear.js';
 import { checkSpecialisations } from './specialisations.js';
 import { refreshArmoury } from './looks.js';
@@ -103,6 +105,7 @@ export function advanceDay(prev) {
   if (calendar(state.day).isMonday) introduceHeists(state); // a contact offers a heist once the tong is ready (core/heists.js)
   tickJobs(state); // offers expire; new work trickles in through the week
   tickHeists(state); // prep left undone is asked again; the finale goes up in its week (core/heists.js)
+  legendTick(state); // a ready runner's defining job goes on the board (core/legend.js)
   if (calendar(state.day).weekday === 'Wed') scoutWeek(state);
   state.recruits = (state.recruits ?? []).filter((r) => r.expiresDay >= state.day);
 
@@ -141,6 +144,7 @@ function settleWeek(state) {
 
   weeklyRecord(state); // a week they worked counts towards their record
   weeklyFame(state); // standing slips on the bench, Elite can lapse, fame may climb (core/fame.js)
+  weeklyRivals(state); // the other tongs' week, on its own key: no roll moves (core/rivals.js)
 
   // Heat cools the same every week, job or no job (core/heat.js).
   const cooled = coolHeat(state); // every district cools the same (heat per district, save v39)

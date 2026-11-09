@@ -21,6 +21,7 @@ files. Rough lines are fine; anything off gets flagged, not silently changed.
 | 9 | ~~Earned traits~~ **20 of 26 in the game 2026-10-26**; the rest in `drafts/earned-traits-backlog.md` | Progression step 2 | — | — |
 | 10 | Jobs for the locked districts | Promotions and districts | 1-2 jobs per district | `drafts/district-hooks.md` |
 | 11 | ~~Incident lines per district (the squad run)~~ **Done 2026-10-28** (all five districts in the game) | `PLAN-CORE-LOOP.md` slice 4 | 12 incidents × 1 district a batch | `src/data/incidents.js` |
+| 12 | Seventy-One Floors: Mr. Szeto's heist, six prep jobs (A2) | Heists (`data/heists.js` `szetoTower`) | 6 jobs, 3 steps × (first ask + retry) | `docs/new-job-prompt.md` box (+ `src/data/missions/theguestcopy.js` as the model) |
 
 Tasks 1 and 2 first: 1 is a prerequisite for everything hands-off, and 2 decides whether
 mission logs get built at all. Tasks 3-6 wait until the first mission-log slice is built and shows where words are missing (decided 2026-10-26).
@@ -431,3 +432,34 @@ lines can name those places.
 **Done 2026-10-28:** all five districts (the Docks, Old Town, the Night Market, Glass Heights, the
 Basin), all 12 incidents, every line, in the game. A district added later falls back to the generic
 lines until it gets its own; a test keeps every district complete.
+
+## Task 12: Seventy-One Floors, Mr. Szeto's heist (A2, 2026-11-08)
+
+**What this is.** Madam Rao's heist, The Big Table, has six prep jobs of its own, written for it (`data/missions/theguestcopy.js`, `aftertheapplause.js`, `anoldaccount.js`, `someonetocover.js`, `serviceincluded.js`, `manualhandling.js`: all `heistOnly`, never dealt at random). Mr. Szeto's heist, **Seventy-One Floors** (`data/heists.js`, id `szetoTower`), is still on stand-ins: `access_window`, `relay_cover` and `data_pull`, routine jobs reused with a heist line on top. This task writes its own six, the same way: three steps, each a first ask and a retry (a different job, in a different place if you like, for when the first goes wrong).
+
+**How to use it.** For each of the six, open a fresh chat, paste the box from `docs/new-job-prompt.md` (it holds the world context, the rules and the format), replace its PITCH with the one below, and check what comes back. Then `/add-job` each in a Claude Code session (Sonnet is enough). Say when all six are in and I'll point the heist at them, add `heistOnly: 'szetoTower'` and run the checks. The finale (`penthouse`, the generic 71st-floor vault job) is not part of this; a heist-only finale of its own is a separate piece if you want one (see the last section).
+
+**The heist, for every pitch.** Mr. Szeto (Glass Heights developer; pays well and on time, never asks how a job was done) says a business associate keeps something of his in a penthouse vault, seventy-one floors up, and leaves the city for three nights in three weeks. Three things to arrange before then, each a prep step that changes the finale on its plan. The jobs are the crew's, not Szeto's: he never appears except through the brief, and he doesn't explain. Gate: reputation 60, three halls, so the crew are well past rookies.
+
+| Step | What the finale gets (the game applies it; the job's text doesn't need to say so) | First ask | Retry |
+| --- | --- | --- | --- |
+| `face` | A registered service identity for the lift: **the facial-scan crisis can't appear** | job A1 | job A2 |
+| `power` | Cover at the backup-power controls: **the finale is one step less dangerous** | job B1 | job B2 |
+| `plans` | The current floor plans, renovations and service routes: **+1 on every finale roll** | job C1 | job C2 |
+
+**What each job should be** (the pitch is yours to bend; these are leads, not requirements):
+- **A, the service identity.** Getting someone the building's scanner already expects. Lead: **Poon Hok-yin** (Glass Heights facilities coordinator, `{poon}`) can arrange a legitimate loading slot but cannot turn a delivery pass into unrestricted access (`WORLD.md`, Glass Heights people). The Lower Arcade, the Service Steps and the Late Counter are places to use. A1 and A2 are two different ways to the same registered face.
+- **B, the power cover.** Someone has to stand at the backup-power controls so a supply switch doesn't close the route. Lead: Hoi-Sing maintenance contractors, a tower's plant room, Poon's keys. **Do not bring in Lo, the electrician** (Szeto's secret; `WORLD.md`, Mr. Szeto), and nothing that hints the crew is being set up around fires.
+- **C, the floor plans.** The owner's copy predates the last renovation. Lead: **Morrow & Venn** (Venn House; estates administrator **Edith Pryce**, `{edith}`) holds property and lending records, and considers property lending proposals from developers such as Szeto; or the Demonstration Floor and Hang Yuen's installation drawings (**Kwok Mei-yee**, `{kwok}`). A sealed envelope is not proof the sender has a right to what is inside.
+
+**Numbers to match** (Rao's six, for the same slot in the game): `district` Glass Heights for most, one retry may sit elsewhere as in Rao's (`manualhandling` is at the Docks); `days: 1`; `crewSize: 3`; `keyStats` three of the seven; **threat 3** for these (Rao's are 2, but this heist's crew is a tier up) and **pay about ¥5,000-6,500** each, the retry a little more (Rao's run ¥3,200-4,000 against a ¥11,000 finale; this finale pays ¥28,000). The rules in the box still apply: an exit on every crisis, difficulty bands by threat, no death without "push on".
+
+**Canon cautions.**
+- **No new named people or places without asking.** Use the cast above, or invent a minor unnamed one ("a night-shift supervisor") that nobody will need to recur. A named recurring person is new canon and goes through the `add-lore` skill: confirm with the owner first.
+- **The associate in the penthouse stays unnamed**, as the heist's intro leaves him.
+- Szeto's briefing voice is dry and exact ("I'm not paying you to understand the job. I'm paying you to finish it."). He doesn't thank anyone. The briefing in each job comes from `{szeto}` (check the token against `src/data/cast.js`).
+- All characters 18+; Cantonese romanisation; ¥ for money; no real companies or places.
+
+**Each job's file** also needs, as in Rao's, a comment at the top (what heist, which step, first ask or retry), `heistOnly: 'szetoTower'`, and **no heist effect inside the job** (`core/heists.js` awards it when the step is done). No `against` (no gang) and no grudge unless you want one. The id is the file's job id (snake_case), and the retry for a step can't be the same job as its first ask.
+
+**Optional, later: the finale.** `penthouse` is the original generic job: a vault in a penthouse while "an executive is in Singapore", with a facial scanner, laser grid, the owner home, a vault timer and a drone. A heist-only finale written for Szeto (the same crises with the associate's real name and the thing in the vault, or new ones) would finish A2. The prep effects name crises by id (`facial_scan` is the one dropped here), so a rewritten finale must keep `facial_scan` or I update the heist data to match.

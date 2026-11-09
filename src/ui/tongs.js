@@ -1,0 +1,157 @@
+// The other tongs on screen (C1b; DESIGN.md 2026-11-08 "No league"): Ops › The other tongs, a tong's
+// page, and Names on the street, plus The Word's lines for Monday's briefing. Reads `rivalView`
+// only: word keys in, wording from data/rivals.js out. No numbers, no order beyond tier.
+import { rivalView } from '../core/rivals.js';
+import { readFor, approachFor, findCard, scoutLevel } from '../core/dossier.js';
+import { availability } from '../core/crew.js';
+import { dossierOf } from '../core/dossier.js';
+import { portrait } from './art.js';
+import { money } from '../core/money.js';
+import { TONG_RANKS } from '../data/tong.js';
+import { NAMES } from '../config/names.js';
+import { RATING_WORDS, FAME_LINE, STYLE_TEXT, ELDER_LINE, POTENTIAL_TEXT, SCOUT_LEVEL_TEXT, SIGN_REASON, SCOUT_DAYS_TEXT, fill, wordLine } from '../data/rivals.js';
+
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const tierName = (id) => TONG_RANKS.find((r) => r.id === id)?.name ?? id;
+const inText = (d) => NAMES.districtsInText?.[d] ?? NAMES.districts?.[d] ?? d ?? '';
+const place = (d) => NAMES.districts?.[d] ?? d ?? '';
+
+/** A view entry as a line of talk: district and tier ids turned into words first. */
+export function wordText(entry) {
+  return wordLine({ ...entry, home: inText(entry.home), tier: tierName(entry.tier ?? '').toLowerCase() });
+}
+
+/** The Word for Monday's briefing: up to three lines of talk. '' when there's none. */
+export function renderWord(state) {
+  const lines = rivalView(state).word.map(wordText).filter(Boolean);
+  if (!lines.length) return '';
+  return `<div class="theword" aria-label="The Word"><p class="theword__title">The Word</p>${lines.map((l) => `<p class="theword__line">${esc(l)}</p>`).join('')}</div>`;
+}
+
+/** A name's portrait, drawn from the runner they would be (the same hash as when signed, so the face doesn't change). */
+function faceOfCard(state, ref, size = 48) {
+  const card = findCard(state, ref);
+  if (!card) return '';
+  const cls = size >= 100 ? ' face--lg' : size <= 32 ? ' face--sm' : '';
+  return `<span class="face${cls}">${portrait(dossierOf(state, card), { size })}</span>`;
+}
+/** Someone of ours in Names on the street: their own face. */
+function faceOfOurs(state, name, size = 48) {
+  const op = state.crew.find((o) => o.name === name);
+  return op ? `<span class="face${size <= 32 ? ' face--sm' : ''}">${portrait(op, { size })}</span>` : '';
+}
+
+const ratingLine = (n) => fill(RATING_WORDS[n.word] ?? '', { role: n.role, home: inText(n.home) });
+
+function namesList(state, names) {
+  return `<ul class="list list--plain streetnames" aria-label="Names on the street">${names.map((n) => `
+    <li class="streetname ${n.own ? 'is-own' : ''}">
+      <span class="streetname__face">${n.own ? faceOfOurs(state, n.name) : faceOfCard(state, n.id)}</span>
+      <span class="streetname__who"><strong>${esc(n.name)}</strong>${n.own ? ' <span class="tongtag">Ours</span>' : ''}</span>
+      <span class="small muted">${esc([n.role, FAME_LINE[n.fame], n.tong ?? (n.own ? 'with us' : 'between tongs')].filter(Boolean).join(' · '))}</span>
+      <span class="small">${esc(ratingLine(n).replace(/^./, (c) => c.toUpperCase()))}.</span>
+    </li>`).join('')}</ul>`;
+}
+
+function tongCard(t) {
+  return `<li><button class="tongcard" data-action="tong-page" data-id="${esc(t.id)}" data-style="${esc(t.style)}">
+    <span class="tongcard__what"><span class="tongcard__name">${esc(t.name)}</span>
+      <span class="small muted">${esc(STYLE_TEXT[t.style].label)} · ${esc(place(t.home))}${t.head ? ` · run by ${esc(t.head)}` : ''}</span>
+      ${t.said ? `<span class="small">${esc(wordText(t.said))}</span>` : ''}</span>
+    <span class="tongcard__go">Open ›</span></button></li>`;
+}
+
+function tongPage(state, view, id) {
+  for (const { tier, tongs } of view.tiers) {
+    const t = tongs.find((x) => x.id === id);
+    if (!t) continue;
+    return `<section class="panel tongs">
+      <button class="linkbtn" data-action="tongs-open">‹ The other tongs</button>
+      <h1 class="cityhead">${esc(t.name)}</h1>
+      <p class="small">A ${esc(tierName(tier).toLowerCase())} tong, ${esc(STYLE_TEXT[t.style].label.toLowerCase())} by style. ${esc(STYLE_TEXT[t.style].line)}</p>
+      <dl class="tongfacts">
+        <div><dt>Based in</dt><dd>${esc(place(t.home))}</dd></div>
+        ${t.head ? `<div><dt>Run by</dt><dd>${esc(t.head)}</dd></div>` : ''}
+        ${t.names.length ? `<div><dt>Names you hear</dt><dd class="namebtns">${t.names.map((n) => `<button class="namebtn" data-action="tong-name" data-id="${esc(n.id)}">${faceOfCard(state, n.id, 32)}${esc(n.name)} ›</button>`).join('')}</dd></div>` : ''}
+      </dl>
+      ${t.said ? `<h2>The latest</h2><p class="small">${esc(wordText(t.said))}</p>` : '<p class="small muted">Nothing much said about them lately.</p>'}
+    </section>`;
+  }
+  return '';
+}
+
+const STAT_ORDER = ['combat', 'stealth', 'tech', 'social', 'piloting', 'medical', 'cool'];
+
+/** This month's free name, if one is up: a card to open (Ops › The other tongs). */
+function freeNamesBlock(state, view) {
+  const o = view.offer;
+  if (!o) return '';
+  return `<h2>Free names</h2><ul class="list list--plain tongs__list"><li><button class="tongcard" data-action="tong-name" data-id="${esc(o.id)}" data-style="free">
+    ${faceOfCard(state, o.id)}
+    <span class="tongcard__what"><span class="tongcard__name">${esc(o.name)}</span>
+      <span class="small muted">${esc([o.role, FAME_LINE[o.fame], o.from ? `lately of ${o.from}` : 'between tongs'].join(' · '))}</span>
+      <span class="small">${esc(fill(RATING_WORDS[o.word] ?? '', { role: o.role, home: inText(o.home) }).replace(/^./, (c) => c.toUpperCase()))}.</span></span>
+    <span class="tongcard__go">Open ›</span></button></li></ul>`;
+}
+
+/** A row for the side-work board (Jobs): scout this month's free name. '' when no name is up. */
+export function scoutRow(state) {
+  const o = rivalView(state).offer;
+  if (!o) return '';
+  const level = scoutLevel(state, findCard(state, o.id) ?? {});
+  if (level >= 3) return '';
+  return `<li><button class="row siderow" data-action="tong-name" data-id="${esc(o.id)}">
+    <strong class="siderow__reward">Scout ${esc(o.name)}</strong>
+    <span class="siderow__meta">${SCOUT_DAYS_TEXT}</span>
+    <span class="siderow__sub">A free name · see what they can do</span></button></li>`;
+}
+
+/** A name's page: what scouting has shown, what signing would cost, who could go and watch them, and Sign. */
+function namePage(state, slugId) {
+  const card = findCard(state, slugId);
+  if (!card) return `<section class="panel tongs"><button class="linkbtn" data-action="tongs-open">‹ The other tongs</button><h1 class="cityhead">Gone</h1><p class="small muted">${esc(SIGN_REASON.gone)}</p></section>`;
+  const r = readFor(state, card);
+  const a = approachFor(state, card.id);
+  const out = (state.sideOut ?? []).some((x) => x.scout === card.id);
+  const stats = r.stats ? `<p class="small namestats">${STAT_ORDER.map((k) => `${k} <strong>${r.stats[k]}</strong>`).join(' · ')}</p>` : '';
+  const potential = r.potential ? `<p class="small">${esc(POTENTIAL_TEXT[r.potential])}</p>` : '';
+  const premium = a.premium > 0 ? 'A bit more than their worth, to be convinced.' : "They'd come for the going rate.";
+  const wageLine = a.reason === 'head' ? '' : `<dl class="tongfacts">
+      <div><dt>They want</dt><dd>${r.level === 'sharper' || r.level === 'full' ? money(a.wage) : `about ${money(a.shown)}`} a week. ${esc(premium)}</dd></div>
+      <div><dt>Signing fee</dt><dd>${money(a.fee)}</dd></div>
+      ${a.buyout ? `<div><dt>Buyout to ${esc(r.tong)}</dt><dd>${money(a.buyout)}</dd></div>` : ''}
+      <div><dt>All in, today</dt><dd>${money(a.total)}</dd></div></dl>`;
+  const free = state.crew.filter((o) => !o.freelance && o.condition?.injury !== 'dead' && availability(state, o).ok);
+  const scout = a.reason === 'head' ? '' : r.level === 'full' ? '<p class="small muted">We have the full picture.</p>'
+    : out ? '<p class="small muted">Someone is already out watching them.</p>'
+    : free.length ? `<h2>Send someone to watch them (two days)</h2><div class="namebtns">${free.map((o) => `<button class="btn" data-action="scout-send" data-id="${esc(`${r.id}|${o.id}`)}">${esc(o.handle)}</button>`).join('')}</div>`
+    : '<p class="small muted">Nobody is free to go and watch them.</p>';
+  return `<section class="panel tongs namepage">
+    <button class="linkbtn" data-action="tongs-open">‹ The other tongs</button>
+    <div class="namehead">${faceOfCard(state, card.id, 104)}<div><h1 class="cityhead">${esc(r.name)}</h1>
+    <p class="small">${esc([r.role, FAME_LINE[r.fame], r.tong ? `with ${r.tong}` : r.from ? `lately of ${r.from}` : 'between tongs'].join(' · '))}. ${esc(fill(RATING_WORDS[r.word] ?? '', { role: r.role, home: inText(r.home) }).replace(/^./, (c) => c.toUpperCase()))}.</p></div></div>
+    <h2>What we know</h2>
+    ${stats}${potential}<p class="small muted">${esc(SCOUT_LEVEL_TEXT[r.level])}</p>
+    <h2>What it would take</h2>
+    ${wageLine}
+    ${a.ok ? `<button class="btn btn--primary signbtn" data-action="sign-name" data-id="${esc(r.id)}">Sign ${esc(r.name)} · ${money(a.total)}</button>` : `<p class="small">${esc(SIGN_REASON[a.reason] ?? '')}${a.reason === 'no_cash' ? ` We are short ${money(a.total - state.cash)}.` : ''}</p>`}
+    ${scout}
+  </section>`;
+}
+
+/** Ops › The other tongs: dossier cards by tier, then Names on the street. `openId` opens one tong's page. */
+export function renderTongs(state, openId = null) {
+  const view = rivalView(state);
+  if (openId?.startsWith('name:')) return namePage(state, openId.slice(5));
+  if (openId) { const page = tongPage(state, view, openId); if (page) return page; }
+  return `<section class="panel tongs">
+    <button class="linkbtn" data-action="tongs-close">‹ Ops</button>
+    <h1 class="cityhead">The other tongs</h1>
+    <p class="small muted">Peers, not gangs: they work, hire and rise like us, and the city talks about them. Nobody keeps a table; you hear where you stand.</p>
+    ${freeNamesBlock(state, view)}
+    ${view.tiers.map(({ tier, tongs }) => `<h2 class="tongs__tier">${esc(tierName(tier))} tongs</h2><ul class="list list--plain tongs__list">${tongs.map(tongCard).join('')}</ul>`).join('')}
+    <h2>Names on the street</h2>
+    ${namesList(state, view.names)}
+    <p class="small muted">${esc(ELDER_LINE)}</p>
+  </section>`;
+}

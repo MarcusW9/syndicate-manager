@@ -34,6 +34,7 @@ import { advanceDay, calendar, isBlocked, seasonStartDay } from '../core/time.js
 import { createNewGame, chooseFounders } from '../core/state.js';
 import { marksText } from '../core/marks.js';
 import { recordOf } from '../core/record.js';
+import { LEGEND_TEXT } from '../data/legend.js';
 import { fameOf, fameName, standingOf, standingWord, pathOf, legendProgress } from '../core/fame.js';
 import { FAME_RULES, NAMED_OFFER, NAMED_TEXT } from '../data/fame.js';
 import { templateById, jobView, nextUnlock, JOB_GATES } from '../core/jobs.js';
@@ -69,8 +70,12 @@ import {
   deleteSlot, loadBackup, backupDue, SLOT_COUNT, unreadableSave, restoreUnreadable, exportUnreadable, discardUnreadable,
 } from '../save/save.js';
 import { hire, haggle, passRecruit, canHire, signingFee, nextExpansion, expandSafehouse, STARTING_ROSTER_CAP, FOUNDERS_TO_PICK } from '../core/recruits.js';
-import { potentialRead, potentialTag, primaryStat, scoutFor, ageRate, declineChance, mentoring, changesSince, progressShare, STATS } from '../core/development.js';
+import { potentialRead, primaryStat, scoutFor, ageRate, declineChance, mentoring, changesSince, progressShare, STATS } from '../core/development.js';
 import { GROWTH_LINES, GRADUATION_LINES } from '../data/growthLines.js';
+import { renderTongs, renderWord, scoutRow } from './tongs.js';
+import { sendScout, signCard } from '../core/dossier.js';
+import { clientRival } from '../core/rivals.js';
+import { clientRivalLine } from '../data/rivals.js';
 import { freelancerAsCrew, shareOf, MAX_FREELANCERS_PER_JOB } from '../core/freelance.js';
 
 let state;
@@ -89,6 +94,7 @@ let openOperativeId = null;
 let openRecruitId = null;
 let openArmoury = false; // the armoury, from the Crew screen (ui/gear.js)
 let buildView = null; // the hall build screen, from a hall's page (ui/hallbuild.js): { district, cell, piece, rot, picked }
+let tongsView = null; // the other tongs, from Ops › Places: null (closed), '' (the list) or a tong's id (ui/tongs.js)
 let hallPage = null; // a hall's own page (2026-11-07), by district: from Crew › Halls or the district's card on Ops, shown on that tab
 let gearSlot = null; // the place being filled on a runner's page: 'armour', 'implant:0', 'bag:2,1'
 let bagPick = null; // the bag item picked up on a runner's page, to move or take off
@@ -159,7 +165,7 @@ function onClick(e) {
   const { action, id } = t.dataset;
 
   switch (action) {
-    case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; screen = id; returnTo = null; buildView = null; hallPage = null; openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; gearSlot = null; bagPick = null; plan = null; sidePlan = null; pickSlot = null; break;
+    case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; screen = id; returnTo = null; buildView = null; tongsView = null; hallPage = null; openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; gearSlot = null; bagPick = null; plan = null; sidePlan = null; pickSlot = null; break;
     case 'continue': {
       if (isBlocked(state) || Date.now() < continueRestUntil) return;
       const next = advanceDay(state);
@@ -175,6 +181,13 @@ function onClick(e) {
     // A crew's district in the list: light it on the map (scrolled into view) and narrow the list to it.
     case 'city-show': cityDistrict = cityDistrict === id ? null : id; cityMapDue = !!cityDistrict; break;
     case 'city-tab': cityTab = id; break;
+    case 'tongs-open': tongsView = ''; window.scrollTo?.(0, 0); break;
+    case 'tongs-close': tongsView = null; window.scrollTo?.(0, 0); break;
+    case 'tong-page': tongsView = id; window.scrollTo?.(0, 0); break;
+    // A free name or a name in a tong: its page, a scout trip (two days away), and signing (core/dossier.js).
+    case 'tong-name': screen = 'ops'; tongsView = `name:${id}`; window.scrollTo?.(0, 0); break;
+    case 'scout-send': { const [name, opId] = id.split('|'); return setState(sendScout(state, name, opId)); }
+    case 'sign-name': { const next = signCard(state, id); if (next !== state) tongsView = ''; return setState(next); }
     // Lore › Districts: open one district's full write-up (tap again to fold it); from the Ops card, go there.
     case 'ops-district': screen = 'ops'; cityDistrict = id; cityMapDue = true; break;
     case 'lore-district': loreDistrict = loreDistrict === id ? null : id; break;
@@ -574,10 +587,10 @@ const statName = (k) => k[0].toUpperCase() + k.slice(1);
 /** This season's net change per stat (rises and age decline), from the growth log. */
 const seasonChanges = (op) => changesSince(op, seasonStartDay(state.day));
 
-/** Crew-list one-liner: their best (main) stat and the scout's read of where they're heading. */
+/** Crew-list one-liner: their best (main) stat. The scout's read of their potential and their highlight are on their own page (2026-11-08, owner). */
 function scoutLine(op) {
   const main = primaryStat(op);
-  return `<span class="scoutline"><span class="iconword">${statGlyph(main)}${esc(statName(main))} ${ratedStat(op, main)}</span><span>· ${esc(potentialTag(op))}</span></span>`;
+  return `<span class="scoutline"><span class="iconword">${statGlyph(main)}${esc(statName(main))} ${ratedStat(op, main)}</span></span>`;
 }
 
 /** Crew-list marker: "▲ Tech +2, Combat +1 ▼ Piloting −1" for this season. */
@@ -802,7 +815,7 @@ function renderScreen() {
     return `<div class="jobsplit"><div class="jobsplit__plan">${body}</div><div class="jobsplit__side"><div class="jobsplit__list">${renderJobs()}</div>${planBarHtml}</div></div>`;
   }
   if (screen === 'jobs') return sidePlan ? renderSidePlan() : renderJobs();
-  if (screen === 'ops') return renderOpsScreen();
+  if (screen === 'ops') return tongsView !== null ? renderTongs(state, tongsView || null) : renderOpsScreen();
   if (screen === 'lore') return renderLore();
   if (screen === 'settings') return renderSettings();
   return '';
@@ -911,6 +924,7 @@ function renderWeekBrief() {
         <div><dt>Free</dt><dd>${b.roster.free}/${b.roster.total}</dd></div>
         <div><dt>Jobs</dt><dd>${b.jobs}</dd></div>
       </dl>
+      ${renderWord(state)}
       ${b.heist ? `<button class="heistnote small" data-action="nav" data-id="ops">${esc(b.heist)}</button>` : ''}
       <p class="small muted">${[b.roster.away && `${b.roster.away} out`, b.roster.hurt && `${b.roster.hurt} hurt`, b.expiring && `${b.expiring} ${b.expiring === 1 ? 'offer ends' : 'offers end'} this week`, short && `${money(b.due - b.cash)} short of Sunday`].filter(Boolean).join(' · ') || 'A clear week.'}</p>
     </div>`;
@@ -1570,7 +1584,7 @@ function renderCrew() {
   const wall = state.memorial.length ? `
       <h2>The wall</h2>
       <ul class="list list--plain">
-        ${state.memorial.map((m) => `<li class="fallen">${face(m, 'sm')}<span><strong>${esc(m.name)}</strong> "${esc(m.handle)}" <span class="muted">· ${esc(m.role)} · ${esc(m.cause)}, day ${m.day}</span></span></li>`).join('')}
+        ${state.memorial.map((m) => `<li class="fallen">${face(m, 'sm')}<span><strong>${esc(m.name)}</strong> "${esc(m.handle)}" <span class="muted">· ${esc(m.role)} · ${esc(m.cause)}, day ${m.day}${m.legend ? ' · a Legend' : ''}</span></span></li>`).join('')}
       </ul>` : '';
   const leads = `
       <h2>Leads (${recruits.length})</h2>
@@ -1595,7 +1609,7 @@ function renderCrew() {
           <li>
             <button class="row crewrow" data-action="open-op" data-id="${esc(op.id)}">
               ${face(op)}
-              <span class="crewrow__name"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"${op.record?.highlights?.[0] ? `<small class="muted crewrow__hl">${esc(op.record.highlights[0].text)}</small>` : ''}</span>
+              <span class="crewrow__name"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"</span>
               <span class="crewrow__info muted">${fameOf(op) === 'elite' ? `<span class="fame fame--elite">${esc(fameName('elite'))}</span> · ` : ''}${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age}</span>
               <span class="crewrow__status">${statusChip(availability(state, op))}</span>
               <span class="crewrow__scout">${scoutLine(op)}${growthMarker(op)}</span>
@@ -1723,7 +1737,7 @@ function renderPath(op) {
   if (op.freelance || !recordOf(op).jobs) return '';
   const p = pathOf(op);
   const legend = legendProgress(op);
-  const elite = fameOf(op) === 'elite';
+  const elite = fameOf(op) === 'elite' || fameOf(op) === 'legend';
   const pct = (n) => Math.round(n * 100);
   const meter = (label, n) => `<div class="meter pathbar"><span class="meter__label">${label}</span><span class="meter__track"><span class="meter__fill" style="width:${pct(n)}%"></span></span><span class="meter__value">${pct(n)}%</span></div>`;
   const e = FAME_RULES.elite;
@@ -1739,7 +1753,7 @@ function renderPath(op) {
       ${infoText(`path-${op.id}`, info)}
       ${elite ? '' : meter('To Elite', p.toElite)}
       ${meter('To Legend', p.toLegend)}
-      ${legend.ready ? '<p class="pathcard__ready">Ready for their moment.</p>' : ''}
+      ${op.legend ? `<p class="pathcard__ready">A Legend since day ${op.legend.day}.</p>` : legend.ready ? `<p class="pathcard__ready">${op.legendCall?.offerId ? 'The city is asking: their defining job is up.' : 'Ready for their moment.'}</p>` : ''}
       ${elite ? `<p class="muted small">Standing ${standingOf(op)}: ${esc(standingWord(op))}.</p>` : ''}
     </div>`;
 }
@@ -1771,6 +1785,7 @@ function renderOperative() {
           <h1>${esc(op.name)} <span class="muted">"${esc(op.handle)}"</span></h1>
           <p class="muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age} · ${money(op.wage)}/week</p>
           <div class="ophead__line">${fameBadge(op)}<span class="ophead__status">${statusChip(availability(state, op))}</span></div>
+          ${op.record?.highlights?.[0] ? `<p class="muted small ophead__hl">${esc(op.record.highlights[0].text)}</p>` : ''}
           ${marksText(op) ? `<p class="muted small">Marked: ${esc(marksText(op))}</p>` : ''}
         </div>
       </div>
@@ -1867,6 +1882,14 @@ function boardRead(job) {
  * client mood, days left) stay on the planning screen: the card only speaks up when there's news.
  */
 const namedHandle = (v) => (v.askedFor ? state.crew.find((o) => o.id === v.askedFor)?.handle ?? null : null);
+/** A defining job's runner (core/legend.js): the city is asking for them by name. */
+const definingHandle = (v) => (v.defining ? state.crew.find((o) => o.id === v.defining)?.handle ?? null : null);
+/** A client's passing remark that another tong wanted this job (core/rivals.js clientRival; flavour only). */
+function rivalRemark(v) {
+  const job = state.jobs.find((j) => j.id === v.jobId);
+  const rv = job && v.client ? clientRival(state, job, v.tpl) : null;
+  return rv ? `<p class="small muted clientrival">${esc(clientRivalLine({ client: v.client.name, tong: rv.tong, jobId: v.jobId }))}</p>` : '';
+}
 const namedVars = (v) => ({ op: namedHandle(v), pct: Math.round(NAMED_OFFER.payBonus * 100) });
 const fillNamed = (text, v) => text.replace(/\{(\w+)\}/g, (m, k) => namedVars(v)[k] ?? m);
 
@@ -1874,6 +1897,7 @@ function jobFlags(v) {
   const flags = [];
   const hz = heistFor(state, v.jobId); // a heist's prep or finale (core/heists.js)
   if (hz) flags.push(['named', hz.step ? `Prep · ${hz.def.name}` : `${hz.def.name} · finale`]);
+  if (definingHandle(v)) flags.push(['named', LEGEND_TEXT.chip.replace('{op}', definingHandle(v))]); // their moment (core/legend.js)
   if (namedHandle(v)) flags.push(['named', fillNamed(NAMED_TEXT.chip, v)]); // a client asked for an Elite by name (renown slice 4)
   const g = jobGrudge(v.tpl, v.threat);
   if (g) flags.push(['hot', `Against ${GANGS[g.gang].short}`]); // a job that hurts a gang (core/gangs.js)
@@ -1979,7 +2003,8 @@ function renderSideBoard() {
               <span class="siderow__sub">${esc(t.name)} · ${esc(districtName(t.district))} · ${statIcon(t.stat)}</span>
             </button>
           </li>`).join('')}
-      </ul>` : '<p class="muted">Nothing left this week. More on Monday.</p>'}`;
+      </ul>` : '<p class="muted">Nothing left this week. More on Monday.</p>'}
+      ${scoutRow(state) ? `<ul class="list list--cols sidelist">${scoutRow(state)}</ul>` : ''}`;
 }
 
 // A small (i) that opens an explanation under its line on tap (no hover: iOS rules in CLAUDE.md).
@@ -2197,6 +2222,8 @@ function renderPlan() {
         ${v.client && clientOpen ? `<p class="muted small">${esc(v.client.desc)}</p>` : ''}
         ${v.threatDelta ? `<p class="muted small">Every roll on this job is ${Math.abs(v.threatDelta) === 1 ? 'one point' : `${Math.abs(v.threatDelta)} points`} ${v.threatDelta > 0 ? 'harder' : 'easier'} than usual.</p>` : ''}
         ${v.hinted ? '<p class="intel">Intel unreliable: something about this job may not be what you were told.</p>' : ''}
+        ${rivalRemark(v)}
+        ${definingHandle(v) ? `<p class="named">${esc(LEGEND_TEXT.plan.replace('{op}', definingHandle(v)))}</p>` : ''}
         ${namedHandle(v) ? `<p class="named">${esc(fillNamed(NAMED_TEXT.chip, v))} by name: ${esc(fillNamed(NAMED_TEXT.bonus, v))} (inside, outside or on standby). Without them it pays as usual.</p>` : ''}
         ${v.rumour ? `<p class="talk-tag">Street talk: ${esc(v.rumour.text)}</p>` : ''}
         ${intel ? `<p class="talk-tag">Intel from ${esc(intel.source)}: +${intel.bonus} on every roll ${state.intel?.[t.district]?.until >= state.day ? `here until day ${state.intel[t.district].until}` : 'on this job'}.</p>` : ''}
@@ -2788,6 +2815,7 @@ function citySummary() {
     <h2>Places</h2>
     <div class="cityplaces">
       <button class="btn cityplace" data-action="nav" data-id="crew">Halls<span class="muted small">On Crew</span></button>
+      <button class="btn cityplace" data-action="tongs-open">The other tongs<span class="muted small">Who else is working</span></button>
       <button class="btn cityplace" disabled>Bar · black market<span class="muted small">Later</span></button>
     </div>`;
 }

@@ -146,6 +146,7 @@ export function jobView(state, job) {
     threatDelta: delta,
     hinted: Boolean(job.hinted),
     rumour,
+    defining: job.defining ?? null, // a runner's defining job (core/legend.js): done with them on the crew, they become a Legend
     askedFor: job.askedFor ?? null, // an Elite the client asked for by name (+NAMED_OFFER.payBonus if they go)
     // A heist (core/heists.js): the finale carries what its prep changed; a prep job names its step.
     heist: job.heist ?? null,
@@ -172,10 +173,10 @@ export function tickJobs(state) {
 const weekOf = (day) => Math.floor((day - 1) / 7);
 const fillIn = (text, vars) => text.replace(/\{(\w+)\}/g, (m, k) => vars[k] ?? m);
 
-/** Who a client would ask for by name: an Elite of yours with standing 50+, the highest first. */
+/** Who a client would ask for by name: an Elite or Legend of yours with standing 50+, the highest first. */
 export function namedCandidate(state) {
   return state.crew
-    .filter((o) => !o.freelance && o.fame === 'elite' && (o.standing ?? 0) >= NAMED_OFFER.standing)
+    .filter((o) => !o.freelance && (o.fame === 'elite' || o.fame === 'legend') && (o.standing ?? 0) >= NAMED_OFFER.standing)
     .sort((a, b) => b.standing - a.standing)[0] ?? null;
 }
 
