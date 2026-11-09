@@ -21,6 +21,7 @@ Text-first crew management game (Football Manager style, endless). Plain JavaScr
 | Traits, growth, specialisations | `data/earnedTraits.js`, `core/earned.js`, `core/development.js` |
 | Side tasks, hands-off runs | `core/sidetasks.js`, `core/autorun.js` |
 | Changing the save shape | `src/save/save.js` (`migrate`) and `SAVE_VERSION` in `core/state.js` |
+| Where content sits across tabs (sitemap) | `docs/SCREENS.md` |
 | Any screen or style | "UI skin" in `ART.md`, newest `docs/screenshots/` set, `ui/app.js`, `ui/board.js` |
 | Writing in-game text, lore, names | `WRITING_GUIDE.md`, `src/config/names.js`, and from `WORLD.md` only the context block at its end plus the one `##` section the text is about (the whole file only when changing canon); any change to canon goes through the `add-lore` skill (`.claude/skills/add-lore/`), which reads all of it |
 | Why something was decided | `DESIGN.md` decision log (grep the topic; rows may be under `docs/design/`) |
