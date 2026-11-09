@@ -235,7 +235,7 @@ function onClick(e) {
   const { action, id } = t.dataset;
   // On a wide screen the hall page builds in place (2026-11-09): its build view starts on the first tap.
   if (['nav', 'hall-page', 'halls-open', 'open-armoury', 'back'].includes(action)) hallInside = null;
-  if (action.startsWith('build-') && action !== 'build-hall' && !buildView && hallPage && (wideHall() || hallInside)) buildView = newBuildView(hallPage, hallInside ?? 'compound');
+  if (action.startsWith('build-') && action !== 'build-hall' && !buildView && hallPage && (wideHall() || hallInside || action === 'build-part')) buildView = newBuildView(hallPage, hallInside ?? 'compound');
 
   switch (action) {
     case 'hall-building': hallInside = id; buildView = null; break;
@@ -1685,7 +1685,7 @@ function renderHallPage(d) {
   const vb = bld ? insideBox(site, bld.id) : '0 0 360 240';
   const planBox = `<div class="bplan hallpage__plan ${bld ? 'is-inside' : ''}">${planSvg(state, d, art, bld ? { inside: bld.id } : { compound: true })}${view
     ? buildGrid(state, view, esc, art)
-    : `<svg class="bgrid" viewBox="${vb}">${compoundOverlay(state, d, { esc, art })}${raidWaysFor(state, d)}</svg>`}</div>`;
+    : `<svg class="bgrid" viewBox="${vb}">${compoundOverlay(state, d, { esc, art, tap: true })}${raidWaysFor(state, d)}</svg>`}</div>`;
   const empty = !(h.build ?? []).length;
   const buildNote = bld ? '' : empty
     ? `<button class="btn btn--primary btn--block hallpage__start" data-action="build-hall" data-id="${esc(d)}">Start building ›</button><p class="small muted">Defences go on the compound outside. To build rooms, open a building.</p>`
@@ -1742,7 +1742,7 @@ function renderHallPage(d) {
         ${facesOf(bld ? bld.who : who, bld ? bld.beds : bedsOf(h))}
         ${movein}
         <h2>${bld ? 'Build rooms here' : 'Build defences'} <span class="muted small">floor ${floorUsed(h)}/${floorOf(h)}</span></h2>
-        ${tapping ? `${buildSheet(state, view, ui)}${buildPalette(state, view, ui)}` : '<p class="small muted">Defences go outside, on the compound. Open the plan to place them.</p>'}
+        ${tapping ? `${buildSheet(state, view, ui)}${buildPalette(state, view, ui)}` : `${mine && buildView.part ? buildSheet(state, buildView, ui) : ''}<p class="small muted">Defences go outside, on the compound. Open the plan to place them.</p>`}
         ${place}
         ${bld ? '' : `<h2>Defences <span class="muted small">${nDef} ${nDef === 1 ? 'piece' : 'pieces'}</span></h2>
         <p class="small bdef">${defenceLine(state, d)}</p>
