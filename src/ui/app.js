@@ -4,7 +4,7 @@
 import { heatIn, hottest, HEAT_DISTRICTS } from '../core/heat.js';
 import { buyPrice, buyHall, openingFor, bedsOf, hallIn, residents, freeBeds, canOpenHall, openHall, nextHallExpansion, expandHall, canMove, moveToHall } from '../core/halls.js';
 import { GANGS, GRUDGE, grudgeOf, jobGrudge, grudgeWord, gangsOn } from '../core/gangs.js';
-import { defenceCut, openRaids, raidOn, raidPrice, canBuyOff, defenders, raidChoices, payOffRaid, hallShut, raidWho, raidBy, isGangRaid } from '../core/raids.js';
+import { defenceCut, openRaids, raidOn, raidPrice, canBuyOff, defenders, raidChoices, payOffRaid, hallShut, raidWho, raidBy, isGangRaid, setRaidPlan, markRaidCallSeen, withdrawCost } from '../core/raids.js';
 import { HALL_SITES, HOME_HALL, isOpeningJob } from '../data/halls.js';
 import { billDue, mondayBrief, crewStandard, crewAgainstStandard } from '../core/week.js';
 import { heistFor, heistCard, buyStep, heistEffects, asSentence } from '../core/heists.js';
@@ -12,7 +12,7 @@ import { HEIST_RULES, heistById } from '../data/heists.js';
 import { crewLead } from '../core/lead.js';
 import { rankOf } from '../core/tong.js';
 import { TONG_EXPLAINER, TONG_RANKS } from '../data/tong.js';
-import { RAID } from '../data/raids.js';
+import { RAID, RAID_CALL } from '../data/raids.js';
 import { NAMES } from '../config/names.js';
 import { DISTRICTS, SAFEHOUSE_DISTRICT } from '../data/districts.js';
 import { DISTRICT_CARDS, FACTIONS, STREET_FACTS, HISTORY } from '../data/city.js';
@@ -119,6 +119,7 @@ let importInput = null; // the hidden save-file picker (see mountApp)
 let focusNext = null; // { action, id }: the control to focus after the next render (going back to a list)
 let traitTip = null; // 'pageId|key': the trait chip or synergy whose card is open (one at a time)
 const nav = createNav(); // the Back stack (ui/nav.js): views to return to, never game state
+let raidCardDue = null; // scroll to this district's raid card after the next render (heat chip, Today, the map)
 let scrollDue = null; // scroll to this after the next render (Back restores where you were)
 let founderPick = []; // candidate ids picked so far on a new game's first screen (renderFounding)
 let runnersHidden = false; // the job board's runners panel, folded away for this session
@@ -234,7 +235,7 @@ function onClick(e) {
     }
     // A district on the map: zoom onto it and open its card (2026-11-07). Tapping it again keeps it;
     // "× Whole city", Esc or the harbour zooms back out.
-    case 'city-district': cityDistrict = id; break;
+    case 'city-district': cityDistrict = id; if (raidOn(state, id)) raidCardDue = id; break;
     case 'city-whole': cityDistrict = null; break;
     // A district's page, from its card in Districts or from the pick on the map.
     case 'district-open': remember(action, id); goHome('district'); tongsView = null; cityDistrict = id; break;
@@ -267,7 +268,11 @@ function onClick(e) {
     case 'client-open': remember(action, id); goHome('client'); clientPage = id; plan = null; sidePlan = null; break;
     case 'read-message': // from City › Map's Tonight list
     case 'open-message': {
+      // Wide screens show the list beside the message, so reading the next one must not jump to the top
+      // (playtest, 2026-11-09). Narrow ones swap the list for the message, which does start at the top.
+      const sideBySide = screen === homeOf('message') && !!window.matchMedia?.('(min-width: 900px)').matches;
       remember(action, id);
+      if (sideBySide) scrollDue = null;
       screen = homeOf('message');
       openMessageId = id;
       const msg = state.inbox.find((m) => m.id === id);
@@ -522,6 +527,14 @@ function onClick(e) {
     case 'finale-close': closeFinale(); return;
     // Away crews calling in (core/away.js): take the call, then hand it back or take command.
     case 'take-call': openMessageId = null; return setState(takeCall(state, id));
+    // A warned raid's plan, set from its card or the one-off fixer call (the call is still made at the door).
+    case 'raid-plan': { const [rid, plan] = id.split('|'); return setState(setRaidPlan(state, rid, plan)); }
+    case 'raid-call': { // the fixer call's buttons: id = "raidId|hold" | "raidId|clear" | "|later"
+      const [rid, plan] = id.split('|');
+      return setState(markRaidCallSeen(plan === 'later' ? state : setRaidPlan(state, rid, plan)));
+    }
+    // The heat chip and Today's priority line: the raid's card, on City › Map.
+    case 'raid-open': remember(action, id); goHome('district'); tongsView = null; cityDistrict = id; raidCardDue = id; break;
     case 'raid-pay': return setState(payOffRaid(state, id)); // pay the police off before the day (core/raids.js)
     // A raid at the door, answered from Ops: its call is a message on Today.
     case 'raid-answer': { remember(action, id); screen = homeOf('message'); openMessageId = id; const m = state.inbox.find((x) => x.id === id); if (m && !m.read) { m.read = true; saveGame(state); } break; }
@@ -650,7 +663,10 @@ const HEAT_CHIP_AT = 3;
 function heatStat() {
   const hot = state.founding || state.heat < HEAT_CHIP_AT ? null : hottest(state);
   if (!hot) return '';
-  return `<button class="heatchip ${state.heat >= RAID.heatAt ? 'is-hot' : ''}" data-action="ops-district" data-id="${esc(hot.district)}" aria-label="Hottest district: ${esc(districtName(hot.district))}, heat ${state.heat} of ${HEAT_MAX}${state.heat >= RAID.heatAt ? ', hot enough for a raid' : ''}. See it on the City map">
+  // A raid in the offing: the chip goes to its card (2026-11-09); otherwise to the district.
+  const raid = openRaids(state).find((r) => r.answer !== 'paid') ?? null;
+  const [action, target] = raid ? ['raid-open', raid.district] : ['ops-district', hot.district];
+  return `<button class="heatchip ${state.heat >= RAID.heatAt ? 'is-hot' : ''}" data-action="${action}" data-id="${esc(target)}" aria-label="Hottest district: ${esc(districtName(hot.district))}, heat ${state.heat} of ${HEAT_MAX}${state.heat >= RAID.heatAt ? ', hot enough for a raid' : ''}. ${raid ? `See the raid on ${esc(hallLabel(raid.district))}` : 'See it on the City map'}">
     <span class="heatchip__l">Heat</span> ${esc(districtName(hot.district).replace(/^The /, ''))} <b>${state.heat}</b></button>`;
 }
 
@@ -752,6 +768,7 @@ function render() {
     ${cue ? renderDayCue(cue) : ''}
     ${leaving ? renderSendOff(leaving) : ''}
     ${renderBuzz()}
+    ${renderRaidCallSheet()}
   `;
   if (am) mountWatch(root.querySelector('.watch'), state, { ui: watchUi, finishing, onAuto: () => setState(autoStep(state)) });
   fitGearArt(root); // the squad board's gear drawings fill their cells
@@ -759,6 +776,7 @@ function render() {
   if (pickSlot) (root.querySelector('.sheet .cand.is-on') ?? root.querySelector('.sheet .cand:not([disabled])'))?.focus({ preventScroll: true });
   if (scrollDue !== null) { window.scrollTo?.(0, scrollDue); scrollDue = null; } // Back puts the scroll back; a new page starts at the top
   if (mapTo) { animateMap(root.querySelector('.citymap__view'), mapView, mapTo); mapView = mapTo; mapTo = null; }
+  if (raidCardDue) { const d = raidCardDue; raidCardDue = null; root.querySelector(`#threat-${d}`)?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
   if (cityMapDue) { cityMapDue = false; root.querySelector('.mapframe')?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
   const want = focusNext ?? refocus;
   focusNext = null;
@@ -805,6 +823,11 @@ function cashDelta() {
 }
 
 /** Continue names the next day and lists what's still waiting; it never asks for a second tap. */
+/** A soft warning on Continue: a raid that comes by tomorrow with no plan set. Never blocks. */
+function raidUnplanned() {
+  const r = openRaids(state).find((x) => x.answer !== 'paid' && !x.called && !x.plan && x.day <= state.day + 1);
+  return r ? `Raid hits ${calendar(r.day).weekday.slice(0, 3)}. No plan: whoever's home will hold.` : '';
+}
 function renderContinue(blocked, resting, unread, where) {
   const label = state.activeMission ? 'On a job' : state.founding ? 'Pick your crew' : blocked ? 'Decision needed'
     : `Continue → ${calendar(state.day + 1).weekday}`;
@@ -812,7 +835,9 @@ function renderContinue(blocked, resting, unread, where) {
     unread ? `${unread} unread` : '',
     state.jobs.length ? `${state.jobs.length} job${state.jobs.length === 1 ? '' : 's'} open` : '',
   ].filter(Boolean).join(' · ');
-  const hint = !blocked && waiting ? `<span class="continue__hint">${esc(waiting)}</span>` : '';
+  const warn = blocked ? '' : raidUnplanned();
+  const hint = warn ? `<span class="continue__hint is-warn">${esc(warn)}</span>`
+    : !blocked && waiting ? `<span class="continue__hint">${esc(waiting)}</span>` : '';
   return `<button class="btn btn--primary continue ${where} ${resting && !blocked ? 'is-resting' : ''}" data-action="continue" ${blocked || resting ? 'disabled' : ''}>
       <span class="continue__label">${esc(label)}</span>${hint}
     </button>`;
@@ -951,6 +976,7 @@ function renderInbox() {
       <div class="inbox__side">
         <section class="panel inbox__list">
           <h1>Today</h1>
+          ${renderThreatLines()}
           ${renderBriefing()}
           ${renderWeekBrief()}
           ${renderBack()}
@@ -1018,15 +1044,9 @@ const raidCalls = () => state.inbox.filter((m) => m.kind === 'raid' && !m.resolv
 /** Today's one line about the crews out; they're followed on Ops, the command centre (2026-11-05; its own tab 2026-11-06). */
 function renderOutLine() {
   const jobs = crewsOut(state).length + sideTasksOut(state).length;
-  // A raid warned or at the door gets a line of its own (raids, 2026-11-05).
-  const raids = openRaids(state).map((r) => `<button class="outnow is-raid" data-action="goto" data-id="city:map">
-      <span class="outnow__light" aria-hidden="true"></span>
-      <span>${r.called ? `<strong>${esc(raidWho(r))} at the door: ${esc(hallLabel(r.district))}</strong>` : `<strong>Raid warned:</strong> ${esc(hallLabel(r.district))}, ${esc(raidWhen(r))}${r.answer === 'paid' ? ' · paid off' : ''}`}</span>
-      <span class="outnow__go">City ›</span>
-    </button>`).join('');
-  if (!jobs) return raids;
+  if (!jobs) return '';
   const n = calls() - raidCalls().length;
-  return `${raids}<button class="outnow ${n ? 'is-call' : ''}" data-action="goto" data-id="city:map">
+  return `<button class="outnow ${n ? 'is-call' : ''}" data-action="goto" data-id="city:map">
       <span class="outnow__light" aria-hidden="true"></span>
       <span>${jobs} ${jobs === 1 ? 'crew' : 'crews'} out${n ? ` · <strong>${n} ${n === 1 ? 'call' : 'calls'} waiting</strong>` : ''}</span>
       <span class="outnow__go">City ›</span>
@@ -1062,34 +1082,95 @@ function grudgeGauge(gang) {
   return `<span class="grudge"><span class="grudge__bar" aria-hidden="true">${seg}</span><span class="grudge__n">${n}/10</span> <span class="grudge__word ${n >= GRUDGE.raidAt ? 'is-hot' : ''}">${esc(grudgeWord(n))}</span></span>`;
 }
 
-/** The command centre's raid items (raids, 2026-11-05): warned, paid off, or at the door now. */
-function renderRaids(raids) {
+/** "Police raid · Docks hall" (a gang's: "Silver Fan collectors raid · Docks hall"). */
+const raidHeadline = (r) => `${isGangRaid(r) ? `${raidWho(r)} raid` : 'Police raid'} · ${hallLabel(r.district).replace(/^the /, '').replace(/^./, (c) => c.toUpperCase())}`;
+/** "Sat · in 3 days". */
+function raidDate(r) {
+  const left = r.day - state.day;
+  return `${calendar(r.day).weekday.slice(0, 3)} · ${left <= 0 ? 'today' : left === 1 ? 'tomorrow' : `in ${left} days`}`;
+}
+/** Why it is coming: the district's heat, a gang's grudge, or the crew's tail. */
+const raidCause = (r) => (r.followed ? 'followed the crew home' : isGangRaid(r) ? `caused by ${GANGS[r.by].short} grudge ${grudgeOf(state, r.by)}/10` : `caused by Heat ${heatIn(state, r.district)}`);
+
+/** Today's priority line for each raid coming (2026-11-09): one tap to its card. */
+function renderThreatLines() {
+  return openRaids(state).map((r) => `<button class="outnow is-raid threatline" data-action="raid-open" data-id="${esc(r.district)}">
+      <span class="outnow__light" aria-hidden="true"></span>
+      <span><strong>${r.day - state.day === 1 && r.answer !== 'paid' ? 'Raid tomorrow · ' : ''}${esc(raidHeadline(r))}</strong><span class="threatline__sub">${esc(raidDate(r))} · ${r.answer === 'paid' ? 'paid off' : r.called ? 'at the door now' : r.plan ? `plan: ${r.plan === 'hold' ? 'hold the hall' : 'clear out'}` : 'no plan: whoever is home holds'}</span></span>
+      <span class="outnow__go">Threats ›</span>
+    </button>`).join('');
+}
+
+/** The one-off fixer call (data/raids.js RAID_CALL), a bottom sheet the first time a raid is warned. */
+function renderRaidCallSheet() {
+  if (state.raidCallSeen || state.founding || state.activeMission) return '';
+  const r = openRaids(state).find((x) => x.answer !== 'paid' && !x.called);
+  if (!r) return '';
+  const client = CLIENTS.find((c) => c.district === r.district);
+  const who = client?.name ?? NAMES.partner;
+  const data = { hall: hallLabel(r.district), heat: heatIn(state, r.district), when: raidDate(r).replace(' · ', ', '), who: raidBy(r) };
+  const lines = isGangRaid(r) ? [RAID_CALL.gang, RAID_CALL.lines[1]] : RAID_CALL.lines;
+  return `
+    <div class="scrim" data-action="raid-call" data-id="|later"></div>
+    <div class="sheet raidsheet" role="dialog" aria-modal="true" aria-label="${esc(RAID_CALL.title)}">
+      <div class="raidsheet__head">
+        <span class="face face--lg">${portrait({ id: `client-${client?.id ?? 'joss'}`, name: who, age: 52 }, { size: 64 })}</span>
+        <div><p class="raidsheet__kicker">${esc(RAID_CALL.kicker)} · ${esc(who)}</p><h2 class="sheet__title">${esc(RAID_CALL.title)}</h2></div>
+      </div>
+      ${lines.map((l) => `<p>${esc(fillLine(l, data))}</p>`).join('')}
+      <p>${esc(canBuyOff(state, r) ? RAID_CALL.buy : RAID_CALL.noBuy)} ${esc(RAID_CALL.deflt)}</p>
+      <div class="stack">
+        <button class="btn btn--primary" data-action="raid-call" data-id="${esc(r.id)}|hold">Hold the hall</button>
+        <button class="btn" data-action="raid-call" data-id="${esc(r.id)}|clear">Clear out</button>
+        <button class="btn btn--ghost" data-action="raid-call" data-id="|later">Decide later</button>
+      </div>
+    </div>`;
+}
+
+/**
+ * Threats (2026-11-09), pinned above Out now: a card per raid, warned, paid off, or at the door.
+ * Headline, date and cause, who is at the hall on its own line, then the two plans with what each costs.
+ */
+function renderThreats(raids) {
   if (!raids.length) return '';
   return `
-    <ul class="crewsout" aria-label="Raids">
+    <section class="threats" aria-label="Threats">
+      <div class="ops__head"><h2>Threats</h2></div>
+      <ul class="crewsout">
       ${raids.map((r) => {
         const home = defenders(state, r.district);
         const call = state.inbox.find((m) => m.kind === 'raid' && !m.resolved && m.payload?.raidId === r.id);
         const price = raidPrice(state, r);
         const buy = canBuyOff(state, r) && !r.answer && !r.called;
+        const cost = withdrawCost(state, r.district);
+        const paid = r.answer === 'paid';
+        const plans = [
+          ['hold', 'Hold the hall', home.length ? 'A fight at the door. Someone could get hurt.' : 'Nobody is home to hold it.', !home.length],
+          ['clear', 'Clear out', `Hall empty and shut a week. We lose what is kept there (${money(cost.kept)}) and ${money(cost.repairs)} in repairs.`, false],
+        ];
         return `
-        <li class="crewsout__job is-raid">
-          <div class="crewsout__top">
-            <span class="crewsout__light" aria-hidden="true"></span>
-            <p class="crewsout__head"><strong>${call ? 'At the door' : 'Raid warned'}</strong> <span class="muted small">${esc(hallLabel(r.district))} · ${esc(raidWhen(r))}${isGangRaid(r) ? ` · ${esc(raidBy(r))}` : ''}</span></p>
-            <span class="crewsout__faces">${home.map((op) => face(op, 'sm')).join('')}</span>
+        <li class="crewsout__job is-raid threat" id="threat-${esc(r.district)}">
+          <div class="threat__top">${hallMark(r.district, { raid: !paid })}<div><p class="threat__head"><span class="crewsout__light" aria-hidden="true"></span><strong>${esc(raidHeadline(r))}</strong></p>
+          <p class="threat__meta muted small">${esc(raidDate(r))} · ${esc(raidCause(r))}${paid || r.called ? '' : ' · decide before the raid'}</p></div></div>
+          <div class="threat__home">
+            <p class="threat__label small">At the hall (${home.length})</p>
+            <div class="threat__faces">${home.length ? home.map((op) => face(op, 'sm')).join('') : '<span class="muted small">Nobody home</span>'}</div>
           </div>
-          <div class="raidwhere">${hallMark(r.district, { raid: r.answer !== 'paid' })}<p class="small">${r.answer === 'paid' ? `${isGangRaid(r) ? 'Settled' : 'Paid off'} (${money(r.paid)}). Nobody will come.`
-            : `${home.length ? `Home: ${esc(andList(home.map((o) => o.handle)))}.` : 'Nobody of ours is home to hold it.'} ${call ? 'They need your call now.' : `Hold it with whoever is home that day, or walk out the back. ${isGangRaid(r) ? `${esc(raidWho(r))} would take a settlement.` : canBuyOff(state, r) ? `${esc(raidWho(r))} are on the take.` : `${esc(raidWho(r))} can\'t be bought.`}`}`}</p></div>
+          ${paid ? `<p class="small">${isGangRaid(r) ? 'Settled' : 'Paid off'} (${money(r.paid)}). Nobody will come.</p>`
+            : call ? `<p class="small"><strong>They need your call now.</strong></p>`
+            : `<div class="threat__plans" role="group" aria-label="Your plan for the raid">
+              ${plans.map(([id, label, text, off]) => `<button class="planbtn ${r.plan === id ? 'is-on' : ''}" data-action="raid-plan" data-id="${esc(r.id)}|${id}" aria-pressed="${r.plan === id}" ${off ? 'disabled' : ''}><strong>${label}</strong><span>${esc(text)}</span></button>`).join('')}
+            </div>
+            <p class="muted small">${r.plan ? 'Plan set. You can change it until the raid.' : 'No plan: whoever is home holds the hall.'} ${isGangRaid(r) ? `${esc(raidWho(r))} would take a settlement.` : canBuyOff(state, r) ? `${esc(raidWho(r))} are on the take.` : `${esc(raidWho(r))} cannot be bought.`}</p>`}
           <div class="crewsout__foot">
             ${call ? `<button class="btn btn--primary" data-action="raid-answer" data-id="${esc(call.id)}">Answer the door</button>` : ''}
             ${buy ? `<button class="btn" data-action="raid-pay" data-id="${esc(r.id)}" ${state.cash < price ? 'disabled' : ''}>${isGangRaid(r) ? 'Settle' : 'Pay them off'} · ${money(price)}</button>` : ''}
-            ${!call && r.answer !== 'paid' ? `<button class="linkbtn" data-action="hall-page" data-id="${esc(r.district)}">Who lives there: the hall ›</button>` : ''}
-            ${whereButton(r.district)}
+            ${!call && !paid ? `<button class="linkbtn" data-action="hall-page" data-id="${esc(r.district)}">View hall roster ›</button>` : ''}
           </div>
         </li>`;
       }).join('')}
-    </ul>`;
+      </ul>
+    </section>`;
 }
 
 /** Crews out on jobs: where each is, what they did today, and a call waiting (core/away.js). */
@@ -1505,8 +1586,8 @@ function renderRaidCall(m) {
       <div class="stack raidcall">
         ${raidWhere(raid)}
         ${raidChoices(state, raid).map((c) => `
-        <button class="choice ${c.exit ? 'choice--exit' : ''}" data-action="decide" data-id="${esc(m.id)}" data-option="${esc(c.id)}" ${c.disabled ? 'disabled' : ''}>
-          <strong>${esc(c.label)}</strong><span>${esc(c.disabled && c.reason ? `${c.reason}. ${c.cost}` : c.cost)}</span>
+        <button class="choice ${c.exit ? 'choice--exit' : ''} ${(raid.plan === 'hold' && c.id === 'hold') || (raid.plan === 'clear' && c.id === 'withdraw') ? 'is-plan' : ''}" data-action="decide" data-id="${esc(m.id)}" data-option="${esc(c.id)}" ${c.disabled ? 'disabled' : ''}>
+          <strong>${esc(c.label)}${(raid.plan === 'hold' && c.id === 'hold') || (raid.plan === 'clear' && c.id === 'withdraw') ? ' · your plan' : ''}</strong><span>${esc(c.disabled && c.reason ? `${c.reason}. ${c.cost}` : c.cost)}</span>
         </button>`).join('')}
       </div>`;
 }
@@ -1689,7 +1770,7 @@ function renderHallPage(d) {
 
 /** The sub-tab row (layout rule 5): `tabs` is [id, label] pairs; `on` the one showing; `action` the click action. */
 function subTabs(label, action, tabs, on) {
-  return `<div class="subtabs" role="group" aria-label="${esc(label)}">${tabs.map(([k, name]) => `<button class="subtab ${k === on ? 'is-on' : ''}" data-action="${action}" data-id="${k}" aria-pressed="${k === on}">${esc(name)}</button>`).join('')}</div>`;
+  return `<div class="subtabs" role="group" aria-label="${esc(label)}">${tabs.map(([k, name, count]) => `<button class="subtab ${k === on ? 'is-on' : ''}" data-action="${action}" data-id="${k}" aria-pressed="${k === on}">${esc(name)}${count ? ` <span class="pill" aria-label="${count} waiting">${count}</span>` : ''}</button>`).join('')}</div>`;
 }
 
 /** Crew: who we have and who we could get. Sub-tabs Roster · Leads · Wall (Halls and the Armoury moved to Tong in step 2). */
@@ -1741,7 +1822,7 @@ function renderCrew() {
         <h1>Crew</h1>
         <span class="muted">${state.crew.length}/${cap} beds</span>
       </div>
-      ${subTabs('Crew sections', 'crew-tab', [['roster', 'Roster'], ['leads', `Leads${recruits.length ? ` ${recruits.length}` : ''}`], ['wall', 'Wall']], tab)}
+      ${subTabs('Crew sections', 'crew-tab', [['roster', 'Roster'], ['leads', 'Leads', recruits.length], ['wall', 'Wall']], tab)}
       ${body}
     </section>`;
 }
@@ -2906,7 +2987,7 @@ function renderOps() {
   const jobs = crewsOut(state).filter((c) => !f || c.district === f).sort((a, b) => b.waiting - a.waiting);
   const side = sideTasksOut(state).filter((t) => !f || t.district === f);
   const raids = openRaids(state).filter((r) => !f || r.district === f);
-  const any = crewsOut(state).length + sideTasksOut(state).length + openRaids(state).length;
+  const any = crewsOut(state).length + sideTasksOut(state).length;
   const sideList = side.length ? `
     <ul class="crewsout" aria-label="Side work out">
       ${side.map((t) => {
@@ -2923,11 +3004,12 @@ function renderOps() {
       }).join('')}
     </ul>` : '';
   return `<div class="ops">
+      ${renderThreats(raids)}
       <div class="ops__head">
         <h2>Out now</h2>
         ${f ? `<button class="linkbtn" data-action="city-whole">${esc(cityName(f))} only · show all</button>` : ''}
       </div>
-      ${jobs.length || side.length || raids.length ? `${renderRaids(raids)}${renderCrewsOut(jobs)}${sideList}`
+      ${jobs.length || side.length ? `${renderCrewsOut(jobs)}${sideList}`
         : `<p class="muted small">${any ? `Nobody of ours is out in ${esc(cityName(f))}.` : 'Nobody is out. Crews you send away are followed here, day by day.'}</p>
            ${any ? '' : '<button class="btn" data-action="nav" data-id="jobs">Find work</button>'}`}
     </div>`;

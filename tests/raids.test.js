@@ -12,7 +12,7 @@ import { setHeat, heatIn } from '../src/core/heat.js';
 import { resolveDecision } from '../src/core/decisions.js';
 import { runBattle, pullBack } from '../src/core/runbattle.js';
 import { resolvePending, closeMission, describePending } from '../src/core/mission.js';
-import { openRaids, raidChoices, payOffRaid, raidPrice, defenders, hallShut, checkRaids } from '../src/core/raids.js';
+import { openRaids, raidChoices, payOffRaid, setRaidPlan, raidPrice, defenders, hallShut, checkRaids } from '../src/core/raids.js';
 import { RAID } from '../src/data/raids.js';
 import { hallIn, canMove } from '../src/core/halls.js';
 import { playWeeks } from './play.js';
@@ -37,6 +37,7 @@ function untilWarned(s, district, heat = 8, days = 60) {
     setHeat(s, district, heat);
     s = advanceDay(s);
     setHeat(s, district, heat);
+    for (const r of openRaids(s)) r.plan = 'ask'; // these tests answer the call themselves
   }
   return s;
 }
@@ -213,4 +214,28 @@ test('a v39 save upgrades with no raids', async () => {
   assert.deepEqual(loaded.raids, []);
   assert.equal(hallIn(loaded, 'oldTown').shutUntil, undefined);
   checkRaids(loaded);
+});
+
+test('not deciding is a decision: with no plan, whoever is home holds the hall at the door', () => {
+  let s = untilWarned(withDocksHall(5), 'docks');
+  for (const r of openRaids(s)) r.plan = null;
+  for (let i = 0; i < 10 && !s.activeMission; i++) { s = advanceDay(s); setHeat(s, 'docks', 8); }
+  assert.ok(s.activeMission?.raid, 'the fight at the hall is on screen');
+  assert.equal(s.raids.at(-1).answer, 'hold');
+});
+
+test('a plan to clear out is carried out at the door: nobody hurt, the hall shut', () => {
+  let s = untilWarned(withDocksHall(5), 'docks');
+  s = setRaidPlan(s, openRaids(s)[0].id, 'clear');
+  for (let i = 0; i < 10 && !hallShut(s, 'docks'); i++) { s = advanceDay(s); setHeat(s, 'docks', 8); }
+  assert.equal(hallShut(s, 'docks'), true);
+  assert.equal(s.raids.at(-1).outcome, 'withdrew');
+});
+
+test('nobody home and no plan: the call waits for the player', () => {
+  let s = untilWarned(withDocksHall(5), 'docks');
+  for (const r of openRaids(s)) r.plan = null;
+  for (const o of s.crew) o.hall = 'home';
+  for (let i = 0; i < 10 && !s.inbox.some((m) => m.kind === 'raid' && !m.resolved); i++) { s = advanceDay(s); setHeat(s, 'docks', 8); }
+  assert.ok(s.inbox.some((m) => m.kind === 'raid' && !m.resolved));
 });

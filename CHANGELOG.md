@@ -7,6 +7,25 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · The oath notice, reworded
+- The "could be sworn in" message now reads: "{runner} has logged {weeks} weeks on the books for us. They're now eligible to be \"sworn\" into our Tong as a permanent member. Drop {cost} to execute the covenant at the shrine, locking their loyalty and permanently etching their name into the ledger."
+
+## 2026-11-09 · Clients list padding
+- Jobs › Clients rows no longer touch the left and right edges of their frame (the row's side padding was being cleared).
+
+## 2026-11-09 · Leads count is a badge
+- Crew › Leads shows its count as a badge (like the Today and Jobs tabs) instead of a bare number after the word.
+
+## 2026-11-09 · Raid warning pass
+- Raids have their own **Threats** section, pinned above Out now on City › Map. Each card reads "Police raid · Docks hall", then the day, days to go and the cause (the district's heat, a gang's grudge, or being followed home); who is at the hall sits on its own line; and the two plans, Hold the hall and Clear out, say what each costs. "View hall roster ›" replaces the old hall link.
+- The first raid you are warned about opens a one-off fixer call (a sheet) explaining the raid; later raids skip it. Hold the hall, Clear out or Decide later.
+- The header heat chip, Today (a priority line per raid) and tapping the raided district on the map all go to the raid card.
+- Continue shows a soft warning ("Raid hits Sat. No plan: whoever's home will hold.") when a raid arrives tomorrow with no plan. It never blocks.
+- Not deciding is a decision: you can set or change the plan any time until the raid. On the day your plan is carried out; with none, whoever is home holds the hall (with nobody home, the call waits for you as before). Today keeps the raid as a priority line, "Raid tomorrow" the day before. Saves upgrade to version 58.
+
+## 2026-11-09 · Reading mail no longer jumps to the top
+- On tablets and other wide screens, opening a message on Today keeps your place in the list, so you can read down the inbox without scrolling back each time. Phones still start a message at the top.
+
 ## 2026-11-09 · The oath costs eight weeks of wage
 - Holding the ceremony for a sworn runner now costs eight weeks of their wage (it was two), and Joss no longer checks the spelling in the ledger scene; that is the wall's job.
 
