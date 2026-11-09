@@ -267,7 +267,11 @@ function onClick(e) {
     case 'client-open': remember(action, id); goHome('client'); clientPage = id; plan = null; sidePlan = null; break;
     case 'read-message': // from City › Map's Tonight list
     case 'open-message': {
+      // Wide screens show the list beside the message, so reading the next one must not jump to the top
+      // (playtest, 2026-11-09). Narrow ones swap the list for the message, which does start at the top.
+      const sideBySide = screen === homeOf('message') && !!window.matchMedia?.('(min-width: 900px)').matches;
       remember(action, id);
+      if (sideBySide) scrollDue = null;
       screen = homeOf('message');
       openMessageId = id;
       const msg = state.inbox.find((m) => m.id === id);

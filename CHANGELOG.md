@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · Reading mail no longer jumps to the top
+- On tablets and other wide screens, opening a message on Today keeps your place in the list, so you can read down the inbox without scrolling back each time. Phones still start a message at the top.
+
 ## 2026-11-09 · The oath costs eight weeks of wage
 - Holding the ceremony for a sworn runner now costs eight weeks of their wage (it was two), and Joss no longer checks the spelling in the ledger scene; that is the wall's job.
 
