@@ -24,6 +24,20 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 ## 2026-11-09 · A one-page guide to the other tongs (docs only)
 - New `docs/RIVAL-TONGS.md`: what is built for the rival tongs, how they behave, the rules the tests protect, where the code lives, and what is still open. No game change.
 
+
+## 2026-11-09 · The hall as a compound: buildings to open, defences outside
+- A hall's page now opens on the compound from above: each building is a rooftop with its name, who sleeps in it and the rooms built in it, and under the plan a card for each (locked ones say when they open). The raid card and the raiders' ways in are on this view, and defences are placed here, outside, where a raid is fought.
+- Tap a building to go inside it: its floor, its beds (laid out as before) and the rooms you can build there. Back (‹ The compound) returns to the compound.
+- The hall's level is shown once, in the compound's header. No change to the rules, the grid or the saves.
+- With Hall art on, Old Town's buildings are drawn as rooftops (skylights, air-conditioners, tanks, laundry) and their insides as before.
+
+## 2026-11-09 · The Hall page: two columns, a raid card, and an art layer for Old Town
+- On a tablet (1100px and wider) the hall page is two columns: the plan on the left, and on the right the raid card, who sleeps here (faces, Move someone in), Build (the palette, Expand, Buy) and a Defences line. You build on the plan in place. On a phone the column stacks under the plan and Build still opens its own screen.
+- A pending raid shows the same Threats card as on City, with the threat after our defences, and its ways in are marked red on the plan, labelled with who is coming. Which way a raid takes is still picked when it comes, so every way the hall has open is marked.
+- An empty hall shows a "Start building ›" button where it said "Nothing built yet · floor 0/26".
+- The plan no longer draws the route line and its unexplained circles; there is a small key under it, and a part's name is never under the Expand hatching.
+- New setting, Save › Look › Hall art (off by default, kept on this device, not in the save): draws the Old Town hall with floor tiles, thick walls with a soft shadow, a sprite for every piece, locked areas behind a shutter and neon light. The other halls keep the plain plan for now.
+- The palette says each piece's size, and has an All tab beside Defences and Rooms.
 ## 2026-11-09 · The oath notice, reworded
 - The "could be sworn in" message now reads: "{runner} has logged {weeks} weeks on the books for us. They're now eligible to be \"sworn\" into our Tong as a permanent member. Drop {cost} to execute the covenant at the shrine, locking their loyalty and permanently etching their name into the ledger."
 

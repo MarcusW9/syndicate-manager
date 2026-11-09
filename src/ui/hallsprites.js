@@ -1,0 +1,40 @@
+// The hall sprite sheet (2026-11-09, the Hall page art pass): one top-down sprite per thing a hall's
+// floor can hold, drawn as SVG <symbol>s in plan units (a cell is 30), light from the top left, a
+// soft shadow falling down and to the right. Markup only: ui/hallart.js places them.
+//
+// Each symbol is the piece UNTURNED, filling its footprint (data/hallBuild.js `size`): hallart turns
+// it with a transform, so a turned piece is the same drawing. Ids: `hs-<piece id>`, and `hs-bed`.
+// Every symbol is `overflow: visible` so its shadow can leave the box.
+
+const SH = (w, h, o = 3) => `<rect x="${o}" y="${o}" width="${w}" height="${h}" rx="1.5" fill="#000" opacity=".38"/>`;
+/** A slab lit from the top left: fill, a light top and left edge, a dark bottom and right edge. */
+const slab = (x, y, w, h, fill, edge = '#0b0d11') => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1" fill="${fill}" stroke="${edge}" stroke-width=".8"/><path d="M${x + .6} ${y + h - .6}V${y + .6}H${x + w - .6}" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width=".8"/>`;
+/** A room's shell: thick wall, floor tint, a door gap on the left (the piece's own door, data/hallBuild.js). */
+const shell = (w, h, floor) => `${SH(w, h, 4)}<rect x="0" y="0" width="${w}" height="${h}" fill="#2e3646" stroke="#0b0d11" stroke-width="1"/><rect x="4" y="4" width="${w - 8}" height="${h - 8}" fill="${floor}"/><path d="M.6 ${h - .6}V.6H${w - .6}" fill="none" stroke="#7b8aa3" stroke-opacity=".5" stroke-width="1"/><rect x="-.5" y="${h / 2 - 6}" width="5" height="12" fill="#0b0d11"/><rect x="-.5" y="${h / 2 - 6}" width="2" height="12" fill="#3de8d8" opacity=".85"/>`;
+const sym = (id, w, h, body) => `<symbol id="hs-${id}" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" overflow="visible">${body}</symbol>`;
+
+const bunk = (x, y, w, h) => `${slab(x, y, w, h, '#4a5566')}${slab(x + 1.5, y + 1.5, 6, h - 3, '#aab6c6')}<rect x="${x + 9}" y="${y + 1.5}" width="${w - 10.5}" height="${h - 3}" fill="#3a4a66"/><rect x="${x + 9}" y="${y + 1.5}" width="${w - 10.5}" height="2" fill="#6f86b0" opacity=".6"/>`;
+
+const SYMBOLS = [
+  // --- defences (one cell) ---
+  sym('barricade', 30, 30, `${SH(20, 14)}${slab(7, 8, 11, 11, '#6b5a2a')}${slab(14, 12, 11, 10, '#8a7440')}<path d="M7.5 8.5l10 10M17.5 8.5l-10 10" stroke="#3a2f14" stroke-width="1"/><path d="M14.5 12.5l10 9M24.5 12.5l-10 9" stroke="#4d3f1c" stroke-width="1"/><rect x="5" y="19" width="22" height="2" fill="#f2d541" opacity=".7"/>`),
+  sym('plate', 30, 30, `${SH(26, 6)}<rect x="2" y="12" width="26" height="6" rx="1" fill="#8b9aab" stroke="#0b0d11" stroke-width=".8"/><rect x="2.6" y="12.4" width="24.8" height="1.6" fill="#d8e2ea" opacity=".55"/><rect x="5" y="18" width="3" height="4" fill="#4a5566"/><rect x="22" y="18" width="3" height="4" fill="#4a5566"/><circle cx="6" cy="15" r=".9" fill="#2a303b"/><circle cx="24" cy="15" r=".9" fill="#2a303b"/>`),
+  sym('wall', 30, 30, `${SH(30, 4)}<rect x="0" y="12" width="30" height="5" fill="#3a4150" stroke="#0b0d11" stroke-width=".8"/><rect x="0" y="12" width="30" height="1.4" fill="#7b8aa3" opacity=".6"/><path d="M10 12v5M20 12v5" stroke="#0b0d11" stroke-opacity=".6" stroke-width=".6"/><rect x="0" y="17" width="30" height="2.4" fill="#1a202b"/>`),
+  sym('turret', 30, 30, `<circle cx="17" cy="17" r="9" fill="#000" opacity=".38"/><rect x="9" y="9" width="12" height="12" rx="2" fill="#3a4352" stroke="#0b0d11" stroke-width=".8"/><circle cx="15" cy="15" r="5" fill="#8b9aab" stroke="#0b0d11" stroke-width=".8"/><rect x="15" y="13.6" width="12" height="2.8" fill="#5d6b7a" stroke="#0b0d11" stroke-width=".6"/><circle cx="15" cy="15" r="1.8" fill="#ff3d5f"/><rect x="26" y="14.4" width="3" height="1.2" fill="#ff3d5f"/><circle cx="11" cy="11" r="1" fill="#3de8d8"/>`),
+  // --- a bed (one cell) ---
+  sym('bed', 30, 30, `${SH(22, 16, 2.5)}${slab(3, 7, 24, 16, '#3a4352')}${slab(4.5, 8.5, 6, 13, '#d8e2ea')}<rect x="12" y="8.5" width="14" height="13" fill="#31507a"/><rect x="12" y="8.5" width="14" height="2.4" fill="#5f88c0" opacity=".7"/><path d="M12 15h14" stroke="#1d2f4a" stroke-width=".8"/>`),
+  // --- rooms ---
+  sym('clinic', 60, 60, `${shell(60, 60, '#1c2a30')}${slab(9, 9, 24, 9, '#aab6c6')}<rect x="10.5" y="10.5" width="7" height="6" fill="#e8eef2"/>${slab(9, 40, 24, 9, '#aab6c6')}<rect x="10.5" y="41.5" width="7" height="6" fill="#e8eef2"/>${slab(46, 9, 8, 18, '#d8e2ea')}<path d="M47.5 14h5M47.5 19h5" stroke="#5d6b7a" stroke-width=".8"/><rect x="40" y="36" width="12" height="3.2" fill="#3de8d8"/><rect x="44.4" y="31.6" width="3.2" height="12" fill="#3de8d8"/><circle cx="46" cy="38" r="12" fill="#3de8d8" opacity=".1"/>`),
+  sym('bunks', 90, 60, `${shell(90, 60, '#231f25')}${[0, 1, 2].map((i) => bunk(10 + i * 25.5, 9, 22, 42)).join('')}`),
+  sym('canteen', 90, 60, `${shell(90, 60, '#27231c')}${slab(14, 22, 62, 16, '#6b5a2a')}<rect x="14.8" y="22.8" width="60.4" height="2" fill="#a68a48" opacity=".6"/>${[20, 36, 52, 66].map((x) => `<circle cx="${x}" cy="17" r="3" fill="#3a4352" stroke="#0b0d11" stroke-width=".6"/><circle cx="${x}" cy="43" r="3" fill="#3a4352" stroke="#0b0d11" stroke-width=".6"/>`).join('')}${slab(72, 8, 10, 9, '#2f3442')}<circle cx="77" cy="12.5" r="2.4" fill="#f2d541"/><circle cx="77" cy="12.5" r="9" fill="#f2d541" opacity=".13"/>`),
+  sym('stash', 60, 60, `${shell(60, 60, '#1f232b')}${slab(17, 17, 28, 28, '#5d6b7a')}<rect x="20" y="20" width="22" height="22" fill="#4a5566" stroke="#0b0d11" stroke-width=".6"/><circle cx="31" cy="31" r="6" fill="#2a303b" stroke="#8b9aab" stroke-width="1"/><circle cx="31" cy="31" r="2" fill="#f2d541"/><path d="M31 25v3M31 34v3M25 31h3M34 31h3" stroke="#8b9aab" stroke-width=".8"/>`),
+  sym('lookout', 60, 60, `${shell(60, 60, '#1b242c')}<rect x="8" y="4" width="44" height="4" fill="#3de8d8" opacity=".85"/><path d="M8 8h44l8 22H0z" fill="#3de8d8" opacity=".09"/><circle cx="30" cy="22" r="7" fill="#6b5a2a" stroke="#0b0d11" stroke-width=".8"/><circle cx="30" cy="22" r="3" fill="#8a7440"/><rect x="40" y="38" width="12" height="12" rx="1" fill="#2f3442" stroke="#0b0d11" stroke-width=".6"/>`),
+  sym('workboard', 60, 60, `${shell(60, 60, '#262119')}${slab(8, 8, 44, 17, '#6b5a2a')}<rect x="12" y="12" width="9" height="7" fill="#e8e2d0"/><rect x="24" y="13" width="9" height="6" fill="#e8e2d0" transform="rotate(-4 28 16)"/><rect x="37" y="11" width="9" height="8" fill="#e8e2d0"/><circle cx="16" cy="12.5" r="1" fill="#ff3d5f"/>${slab(8, 44, 44, 8, '#4a5566')}<rect x="42" y="31" width="7" height="8" rx="1" fill="#8b9aab" stroke="#0b0d11" stroke-width=".6"/>`),
+  sym('den', 90, 60, `${shell(90, 60, '#221a26')}${slab(28, 16, 28, 28, '#2a5a3a')}<rect x="31" y="19" width="22" height="22" fill="#1f4a2e"/>${[[34, 22], [44, 22], [34, 32], [44, 32]].map(([x, y]) => `<rect x="${x}" y="${y}" width="5" height="6" fill="#e8e2d0" stroke="#0b0d11" stroke-width=".4"/>`).join('')}${slab(10, 8, 28, 5, '#2f3442')}<rect x="12" y="9" width="24" height="3" fill="#ff5fae"/><rect x="10" y="3" width="28" height="9" fill="#ff5fae" opacity=".12"/><circle cx="70" cy="40" r="3.4" fill="#3a4352" stroke="#0b0d11" stroke-width=".6"/><circle cx="14" cy="40" r="3.4" fill="#3a4352" stroke="#0b0d11" stroke-width=".6"/>`),
+  sym('cyberdoc', 60, 60, `${shell(60, 60, '#1d1a26')}${slab(20, 16, 20, 28, '#4a5566')}<rect x="23" y="19" width="14" height="14" fill="#2f3442"/><rect x="23" y="34" width="14" height="8" fill="#5d6b7a"/><circle cx="30" cy="8" r="3.4" fill="#b48cff"/><circle cx="30" cy="8" r="10" fill="#b48cff" opacity=".14"/><rect x="45" y="42" width="8" height="10" fill="#b48cff" opacity=".85"/><rect x="45" y="42" width="8" height="2" fill="#fff" opacity=".4"/>`),
+];
+
+/** The sheet, inlined once at the top of a page that uses the sprites. */
+export const SPRITE_SHEET = `<svg class="hallsprites" width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute"><defs>${SYMBOLS.join('')}</defs></svg>`;
+/** Sprite ids available, for the tests: 'barricade', ..., 'bed'. */
+export const SPRITE_IDS = SYMBOLS.map((s) => s.match(/id="hs-([^"]+)"/)[1]);

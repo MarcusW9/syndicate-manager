@@ -2027,6 +2027,71 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .clientpage__trust p { flex: 1 1 220px; margin: 0; }
 .clientrow { align-items: center; }
 
+/* --- The Hall page: two columns, the art layer, the raid card (2026-11-09) ---------------------- */
+.hallpage { max-width: none; }
+.hallpage__cols { display: grid; gap: 14px; }
+.hallpage__map, .hallpage__side { min-width: 0; }
+.hallpage__start { margin-top: 10px; min-height: 48px; }
+.hallpage__names { display: none; margin: 4px 0 0; }
+.hallfaces { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.hallfaces__op { padding: 0; border: 1px solid var(--line); background: var(--panel-2, var(--panel)); min-width: 44px; min-height: 44px; display: grid; place-items: center; cursor: pointer; }
+.hallfaces__free { min-width: 26px; min-height: 44px; display: grid; place-items: center; border: 1px dashed var(--line); color: var(--muted); font-size: 1.2rem; }
+.hallmove summary { list-style: none; cursor: pointer; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+.hallmove summary::-webkit-details-marker { display: none; }
+.hallmove[open] summary { border-color: var(--accent-2); }
+.hallpage__side h2 { margin-top: 16px; }
+.hallpage .btitle { overflow-wrap: anywhere; }
+/* the plan: names on a halo, the raid's ways in, the key */
+.bpart__name { paint-order: stroke; stroke: #0b0d11; stroke-width: 3px; stroke-linejoin: round; }
+.bpart__tag { paint-order: stroke; stroke: #0b0d11; stroke-width: 3px; stroke-linejoin: round; }
+.rway__line { fill: none; stroke: #ff3d5f; stroke-width: 2.4; stroke-dasharray: 6 4; opacity: 0.9; }
+.rway__dot { fill: #2a0d14; stroke: #ff3d5f; stroke-width: 1.6; }
+.rway__arrow { fill: #ff3d5f; }
+.rway__label { font: 700 7px var(--display, inherit); letter-spacing: 1px; fill: #ff8a98; paint-order: stroke; stroke: #0b0d11; stroke-width: 3px; stroke-linejoin: round; }
+.rway__dot { animation: rway-pulse 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes rway-pulse { 50% { transform: scale(1.35); } }
+@media (prefers-reduced-motion: reduce) { .rway__dot { animation: none; } }
+.bkey { display: flex; flex-wrap: wrap; gap: 4px 14px; list-style: none; margin: 6px 0 0; padding: 0; font-size: 0.75rem; color: var(--muted); }
+.bkey li { display: flex; align-items: center; gap: 6px; }
+.bkey__i { width: 12px; height: 12px; display: inline-block; flex: none; }
+.bkey__i.is-raid { border: 2px dashed #ff3d5f; border-radius: 50%; }
+.bkey__i.is-door { background: #3de8d8; height: 4px; }
+.bkey__i.is-bed { background: #31507a; border: 1px solid #d8e2ea; }
+.bkey__i.is-keep { border: 1px dashed #ff3d5f; }
+.bkey__i.is-lock { background: repeating-linear-gradient(0deg, #3a4252 0 1px, #161a22 1px 3px); }
+/* the art layer */
+.hallart .ha-label { font: 600 7px var(--display, inherit); letter-spacing: 1.4px; fill: #7b8aa3; paint-order: stroke; stroke: #05070a; stroke-width: 3px; }
+.hallart .ha-label.is-hi { fill: #ffd2dc; }
+.hallart .ha-slept { fill: none; stroke: #3de8d8; stroke-opacity: 0.6; stroke-width: 1; }
+.btile--sm { min-height: 44px; }
+.bsubs--3 { grid-template-columns: repeat(3, 1fr); }
+@media (min-width: 1100px) {
+  .hallpage__cols { grid-template-columns: minmax(0, 65fr) minmax(300px, 35fr); gap: 22px; align-items: start; }
+  .hallpage__map { position: sticky; top: 12px; }
+  .hallpage .btiles { grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); }
+  .hallpage .btile { grid-template-columns: 1fr; text-align: left; }
+  .hallpage .btile__icon { grid-row: auto; justify-self: start; }
+  .hallpage__names { display: block; }
+}
+/* The compound view and a building's inside (2026-11-09) */
+.bbld { cursor: pointer; }
+.bbld__hit { fill: rgba(61, 232, 216, 0); }
+.bbld:hover .bbld__hit, .bbld:focus-visible .bbld__hit { fill: rgba(61, 232, 216, 0.08); stroke: #3de8d8; stroke-width: 1.2; }
+.bbld__badge { font: 700 6.5px var(--display, inherit); letter-spacing: 1px; fill: #3de8d8; paint-order: stroke; stroke: #0b0d11; stroke-width: 3px; stroke-linejoin: round; }
+.bplan.is-inside { max-width: 560px; margin-inline: auto; }
+.bkey__i.is-roof { background: #7d3a44; border: 1px solid #ff5fae; }
+.bcards { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 8px; }
+.bcard { background: var(--panel-2, var(--panel)); border: 1px solid var(--line); clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%); }
+.bcard.is-locked { padding: 10px 12px; opacity: 0.7; border-style: dashed; }
+.bcard.is-locked p { margin: 4px 0 0; }
+.bcard__main { display: grid; gap: 6px; width: 100%; min-height: 44px; padding: 10px 12px; text-align: left; background: none; border: 0; color: var(--text); font: inherit; cursor: pointer; }
+.bcard__main:focus-visible { outline: 2px solid var(--accent-2); outline-offset: -2px; }
+.bcard__top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.bcard__top strong { font: 700 1rem var(--display, inherit); letter-spacing: 0.06em; text-transform: uppercase; }
+.bcard__go { font: 700 0.8rem var(--display, inherit); letter-spacing: 0.08em; color: var(--accent-2); text-transform: uppercase; }
+.bcard__faces { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; min-height: 26px; }
+@media (min-width: 1100px) { .hallpage:not(.is-inside) .bcards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.bcard.is-locked strong { font: 700 1rem var(--display, inherit); letter-spacing: 0.06em; text-transform: uppercase; }
 /* Raids, 2026-11-09: Threats above Out now, the plan buttons, Today's priority line, the one-off fixer call. */
 .threats { display: grid; gap: 8px; margin-bottom: 14px; }
 .threat { display: grid; gap: 8px; }
@@ -2050,3 +2115,4 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .raidsheet__kicker { margin: 0 0 2px; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--danger); }
 .raidsheet .stack { margin-top: 10px; }
 .threat__top { display: flex; gap: 10px; align-items: center; }
+.hallthreat { margin: 0 0 6px; padding: 0; list-style: none; }
