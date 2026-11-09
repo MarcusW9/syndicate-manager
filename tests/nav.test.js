@@ -393,3 +393,56 @@ test('a report whose job rolled a getaway opens, and its full log shows the geta
   assert.match(html, /Talk past him/, 'a decision still shows its choice');
   assert.match(html, /Something a future version records/, 'an unknown kind with no choice still draws');
 });
+
+// Step 5: Today shows one line for the crews out; the full cards (with mini maps) are on City › Map; the call can be
+// taken from either, and from the call-in message on Today.
+import { addOffer, templateById } from '../src/core/jobs.js';
+import { sendOff } from '../src/core/autorun.js';
+import { advanceDay } from '../src/core/time.js';
+
+function crewWaiting() {
+  let s = createNewGame({ seed: 1, startCrew: 'fresh' });
+  s.jobs = [];
+  addOffer(s, 'clinic');
+  s = sendOff(s, s.jobs[0].id, s.crew.slice(0, templateById('clinic').crewSize).map((o) => o.id), 'stealth', 'steady', { callIn: 'every' });
+  s = advanceDay(s);
+  assert.ok(s.inbox.some((m) => m.kind === 'callin' && !m.resolved), 'a crew is waiting on a call');
+  return s;
+}
+
+test('Today has one line for the crews out and no crew cards; City › Map has the full cards', async () => {
+  const app = await boot({ state: crewWaiting() });
+  app.click('nav', 'inbox');
+  const today = app.html();
+  assert.equal((today.match(/class="outnow[ "]/g) ?? []).length, 1, 'one summary line');
+  assert.match(today, /1 crew out · <strong>1 call waiting<\/strong>/);
+  assert.match(today, /data-action="goto" data-id="city:map"/, 'it links to City › Map');
+  assert.doesNotMatch(today, /class="crewsout"|crewsout__job|minimap/, 'no crew cards or mini maps on Today');
+  assert.doesNotMatch(today, />Ops ›</, 'no stale tab name');
+  app.click('goto', 'city:map');
+  assert.match(app.html(), /class="crewsout/, 'the full cards are on the Map');
+  assert.match(app.html(), /data-action="take-call"/, 'with the call');
+  app.click('back');
+  assert.equal(app.tab(), 'inbox');
+});
+
+test('take the call works from the call-in message on Today and from the card on City › Map, and no tab badge counts it twice', async () => {
+  const s = crewWaiting();
+  const msg = s.inbox.find((m) => m.kind === 'callin' && !m.resolved);
+  const fromToday = await boot({ state: structuredClone(s) });
+  fromToday.click('nav', 'inbox');
+  fromToday.click('open-message', msg.id);
+  assert.match(fromToday.html(), /data-action="take-call"/);
+  fromToday.click('take-call', msg.payload.jobId);
+  assert.match(fromToday.html(), /class="watch/, 'the watch screen takes over');
+  const fromCity = await boot({ state: structuredClone(s) });
+  fromCity.click('nav', 'city');
+  fromCity.click('city-tab', 'map');
+  fromCity.click('take-call', msg.payload.jobId);
+  assert.match(fromCity.html(), /class="watch/, 'the same from the Map');
+  const badges = await import('../src/ui/nav.js');
+  assert.equal(badges.attentionCount(s), s.inbox.filter((m) => !m.read || (m.resolved === false)).length, 'one count per message');
+  const app = await boot({ state: structuredClone(s) });
+  const pills = [...app.html().matchAll(/<span class="pill[^"]*" aria-label="(\d+) ([^"]+)">/g)].map((m) => m[2]);
+  assert.ok(!pills.includes('calling'), 'no separate calls badge');
+});

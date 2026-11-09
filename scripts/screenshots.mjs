@@ -259,6 +259,17 @@ try {
     await top(); await shot('book-whos-who');
     if (await click('[data-action="lore-tab"][data-id="history"]')) { await top(); await shot('book-history'); }
   }
+  // Step 5: send a crew away, then Today (one line for the crews out) and the City map (the full cards). Skipped by versions without them.
+  if (await click('[data-action="nav"][data-id="jobs"]') && (await click('[data-action="jobs-tab"][data-id="board"]'), true) && await click('[data-action="open-job"]')) {
+    console.log('step5: plan open, send-job visible:', await visible('[data-action="send-job"]').count());
+    if (await click('[data-action="send-job"]')) {
+      await page.waitForTimeout(1500);
+      if (await click('[data-action="nav"][data-id="inbox"]')) { await top(); await shot('today-crew-out'); }
+      if (await click(`[data-action="nav"][data-id="${cityId}"]`)) {
+        await page.evaluate(() => document.querySelector('.crewsout')?.scrollIntoView({ block: 'start' })); await shot('city-crew-out');
+      }
+    }
+  }
 } finally {
   await browser.close();
   server.kill();

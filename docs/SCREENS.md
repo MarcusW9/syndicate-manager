@@ -32,7 +32,7 @@ Navigation state (`screen`, `cityTab`, the open page ids) is module state in `ui
 
 | Tab | Holds (in page order) | Sub-views opened from it |
 | --- | --- | --- |
-| **Today** (`inbox`) | Week strip; alerts; Out line; crews out; back cards; briefing; Upcoming list; inbox | A message (job report, Monday brief, Sunday summary, renewal, raid call/warning, heat notice, spec offer); the report timeline, summary and full log |
+| **Today** (`inbox`) | Week strip; Joss's briefing with the alerts and call-ins; Monday's brief with The Word; back cards; **one Out line** (crews out, calls waiting; links to City › Map); inbox | A message (job report, Monday brief, Sunday summary, renewal, raid call/warning, heat notice, spec offer); the report timeline, summary and full log |
 | **City** (`city`; was Ops) | Header with a **Book** link; sub-tabs **Map** · **Districts** · **Tongs**. Map: a heist marker (links to Jobs › Heists), the city map, **Out now** (raids, crews out, side work), **Tonight**, **At home**. Districts: a row for each district. Tongs: the other tongs by tier, Free names, Names on the street | A district's page (live state first: faces at the hall, crews out, jobs open, street talk, a hall shortcut that opens the hall on Tong; then its picture, pitch and write-up: who runs it, police, 3am, custom, landmarks, kinds of work); **a tong's page**; **a name's read-only profile** (what we know and who they are with, with *View in Leads*); the **Book** (Who's who · History) |
 | **Tong** | Rank and standing in words; sub-tabs **Halls** · **Armoury** | Halls: a row per hall, buy sites, then a **hall's page** and **Hall build**. Armoury: stash, carried gear, shop. Equipping stays on the runner's page |
 | **Crew** | Sub-tabs **Roster** · **Leads** · **Wall**. Leads: recruits, then **Names** (this month's free name, and anyone in another tong we are watching) | A runner's page (record, path, home, gear); a recruit's page; **a name's recruitment page** (what we know, What it would take, scouting, Sign) |
@@ -80,6 +80,7 @@ Section names are the headings in the code. "(x)" marks something that shows onl
 
 ## Moves (one line per move, newest first)
 
+- 2026-11-09, step 5: **Today's crews out is one line** and the full cards (with mini maps) are on City › Map only. The code already worked this way (Today's one Out line since 2026-11-06); step 5 only checked it with a test, fixed the line's stale "Ops ›" label to "City ›" and corrected this sitemap, which still listed crew cards on Today. Take-the-call works from the call-in message on Today and from the card on the Map.
 - 2026-11-09, step 4: **Lore › Districts** moved into each district's page (City › Districts): the write-up (picture, who runs it, police, 3am, custom, landmarks, kinds of work) sits **below** the live state; the header text is one copy. "About … on Lore ›" and "See it on Ops ›" are gone.
 - 2026-11-09, step 4: **Lore › Clients** and the Jobs **Clients strip** merged into **Jobs › Clients** (a row each) with a **client page** (`HOMES.client`: jobs › clients): trust and what they have on the board above, their line below. A job's plan links to it.
 - 2026-11-09, step 4: the **Book** keeps **Who's who** and **History** only. The old Lore view and its renderers (`renderDistrictLore`, `renderClientCards`, `renderClients`) are removed; the Book's sub-tab action is `lore-tab`.
@@ -100,18 +101,17 @@ Section names are the headings in the code. "(x)" marks something that shows onl
 - 2026-11-09, step 1 (routing by home): a **hall's page** now always opens on Crew (its home for now), also from City's district card and Today's raid cards; it used to stay on whichever tab opened it. The **hall build** screen likewise.
 - 2026-11-09, step 1: every **Back** is one control backed by the navigation stack (`ui/nav.js`): it returns to the view you came from, with filters, plan and scroll; the old per-page "‹ Ops / ← Crew / ← Jobs" buttons and `returnTo` are gone. A runner's page, a lead, the Armoury, a message, a plan, a tong and a name all push the view you left.
 
-## The overlaps (the awkward bits)
+## The overlaps (what is left)
 
-| Content | Lives on | Also reachable from | Note |
+Every page now has one home (`HOMES` in `ui/nav.js`). What remains is on purpose: a shortcut or a different-sized view of the same thing, never a second copy of a page.
+
+| Content | Home | Also shown in | Why it stays |
 | --- | --- | --- | --- |
-| Halls (list, residents, buy/expand/move in) | Tong › Halls | City district page; Today's raid cards | Every link opens the hall page on Tong › Halls (steps 1-2). |
-| Raids on halls | City › Map (Out now, rings on the map); Today (alerts, call/warning messages) | — | Fought on the watch screen. |
-| The other tongs | City › Tongs | Today's Monday brief (The Word) | |
-| Free names, scouting, signing | Crew › Leads | City › Tongs (Free names card, a name's *View in Leads*) | One place to recruit (recruits, free names and names in another tongs); City only reads. |
-| Heists | Jobs › Heists (card); prep and finale jobs on the Jobs board | City › Map (marker), Today (Monday / Sunday lines) | |
-| Armoury / gear | Tong › Armoury | A runner's page (gear sheet); squad board shows each runner's gear and links to the Armoury | |
-| Recruiting | Crew › Leads | Today (scout messages link to "See the leads" › Crew › Leads) | |
-| Crews out (away jobs) | Today and City › Map | Take the call on either; watch screen opens | Same data, two layouts (`renderCrewsOut`). Step 5 shrinks Today's to one line. |
+| Crews out (away jobs) | City › Map (the full cards, mini maps, Take the call) | Today: one line with the count of calls waiting, linking to City › Map | The attention feed points at the page. The call can be taken from either (and from the call-in message on Today). |
+| Raids on halls | City › Map (Out now, rings on the map) | Today: alerts, and the call or warning message | A raid at the door is something waiting on the player (Today's count); it is fought on the watch screen. |
+| Heists | Jobs › Heists (the card and steps; prep and finale jobs on the Board) | City › Map: a marker; Today: Monday's and Sunday's lines | Both link to Jobs › Heists. |
+
+(Halls, the tongs, free names and recruiting, the Armoury, districts and clients each have one home and only links elsewhere: see Moves above.)
 
 ## Lore migration register (step 4; written before anything moved, checked off after)
 

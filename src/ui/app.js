@@ -82,7 +82,7 @@ import { createNav, homeOf, homeSub, pageKind, placeLabel, rootOf, tabOf, tabBad
 let state;
 let screen = 'inbox';
 let cityDistrict = null; // the district picked on the City map (the map zooms onto it), or the district page open on City › Districts
-let mapView = FULL_VIEW; // where the Ops map was looking when last drawn ([x, y, w, h]); it eases from here to the next view
+let mapView = FULL_VIEW; // where the City map was looking when last drawn ([x, y, w, h]); it eases from here to the next view
 let mapTo = null; // the view the map is heading for, set while drawing it
 let cityTab = 'map'; // City's sub-tab: 'map' | 'districts' | 'tongs'
 let loreTab = 'factions'; // which Book section is showing (LORE_TABS)
@@ -99,7 +99,7 @@ let tongTab = 'halls'; // Tong's sub-tab: 'halls' | 'armoury' (ui/gear.js draws 
 let crewTab = 'roster'; // Crew's sub-tab: 'roster' | 'leads' | 'wall'
 let buildView = null; // the hall build screen, from a hall's page (ui/hallbuild.js): { district, cell, piece, rot, picked }
 let tongsView = null; // City › Tongs: null (the list), a tong's id or `name:<id>` (a name's profile) (ui/tongs.js)
-let hallPage = null; // a hall's own page (2026-11-07), by district: from Crew › Halls or the district's card on Ops, shown on that tab
+let hallPage = null; // a hall's own page (2026-11-07), by district: from Tong › Halls, a district page or a raid card; always on Tong
 let gearSlot = null; // the place being filled on a runner's page: 'armour', 'implant:0', 'bag:2,1'
 let bagPick = null; // the bag item picked up on a runner's page, to move or take off
 let newGameSlot = null; // slot number while picking a difficulty
@@ -264,7 +264,7 @@ function onClick(e) {
       goHome('district'); tongsView = null; cityDistrict = id; break;
     // A client's page (Jobs › Clients), from its row or from a job's plan: the same page from anywhere.
     case 'client-open': remember(action, id); goHome('client'); clientPage = id; plan = null; sidePlan = null; break;
-    case 'read-message': // from Ops' Tonight list
+    case 'read-message': // from City › Map's Tonight list
     case 'open-message': {
       remember(action, id);
       screen = homeOf('message');
@@ -648,7 +648,7 @@ const HEAT_CHIP_AT = 3;
 function heatStat() {
   const hot = state.founding || state.heat < HEAT_CHIP_AT ? null : hottest(state);
   if (!hot) return '';
-  return `<button class="heatchip ${state.heat >= RAID.heatAt ? 'is-hot' : ''}" data-action="ops-district" data-id="${esc(hot.district)}" aria-label="Hottest district: ${esc(districtName(hot.district))}, heat ${state.heat} of ${HEAT_MAX}${state.heat >= RAID.heatAt ? ', hot enough for a raid' : ''}. See it on Ops">
+  return `<button class="heatchip ${state.heat >= RAID.heatAt ? 'is-hot' : ''}" data-action="ops-district" data-id="${esc(hot.district)}" aria-label="Hottest district: ${esc(districtName(hot.district))}, heat ${state.heat} of ${HEAT_MAX}${state.heat >= RAID.heatAt ? ', hot enough for a raid' : ''}. See it on the City map">
     <span class="heatchip__l">Heat</span> ${esc(districtName(hot.district).replace(/^The /, ''))} <b>${state.heat}</b></button>`;
 }
 
@@ -1020,14 +1020,14 @@ function renderOutLine() {
   const raids = openRaids(state).map((r) => `<button class="outnow is-raid" data-action="goto" data-id="city:map">
       <span class="outnow__light" aria-hidden="true"></span>
       <span>${r.called ? `<strong>${esc(raidWho(r))} at the door: ${esc(hallLabel(r.district))}</strong>` : `<strong>Raid warned:</strong> ${esc(hallLabel(r.district))}, ${esc(raidWhen(r))}${r.answer === 'paid' ? ' · paid off' : ''}`}</span>
-      <span class="outnow__go">Ops ›</span>
+      <span class="outnow__go">City ›</span>
     </button>`).join('');
   if (!jobs) return raids;
   const n = calls() - raidCalls().length;
   return `${raids}<button class="outnow ${n ? 'is-call' : ''}" data-action="goto" data-id="city:map">
       <span class="outnow__light" aria-hidden="true"></span>
       <span>${jobs} ${jobs === 1 ? 'crew' : 'crews'} out${n ? ` · <strong>${n} ${n === 1 ? 'call' : 'calls'} waiting</strong>` : ''}</span>
-      <span class="outnow__go">Ops ›</span>
+      <span class="outnow__go">City ›</span>
     </button>`;
 }
 

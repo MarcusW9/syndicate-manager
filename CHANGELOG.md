@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · Navigation, step 5: Today's crews out is one line
+- Today shows one line for the crews out (with the calls waiting), linking to City › Map, where the full cards live. This was already how it worked, so the change is small: the line now says "City ›" and not "Ops ›", the sitemap was corrected, and a test pins it. Take the call works from the call-in message on Today and from the card on the Map.
+
 ## 2026-11-09 · Navigation, step 4: the Lore tab's contents move home
 - **Districts:** each district's page (City › Districts) now has what's happening there first (who's at the hall, crews out, work open, street talk), then its picture, pitch and write-up (who runs it, police, at 3am, local custom, landmarks, kinds of work). The lore shows even in a district where nothing is going on. The "About … on Lore" and "See it on Ops" links are gone.
 - **Clients:** Jobs › Clients lists every client, and each has a page: where you stand and what they have on the board above, who they are below. A job's plan links to it. The strip of clients under the job board is gone.
