@@ -1,6 +1,6 @@
 // District pictures (DESIGN.md, 2026-10-28/29; option C of the City map session): a street
 // scene per district, drawn like the portraits: flat colour planes and hard light, the district
-// gang's light from the right, no outlines. Each leads its district's card on Lore › Districts
+// gang's light from the right, no outlines. Each leads its district's lore on City › Districts
 // (2026-11-06; it was on the map's district card before Ops had its own tab). Pure strings, no DOM.
 //
 // The Docks: the sky lit red from the right, Lantern Bay across the harbour (Glass Heights'

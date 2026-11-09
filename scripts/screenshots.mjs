@@ -246,6 +246,19 @@ try {
   if (await click('[data-action="nav"][data-id="jobs"]') && await click('[data-action="jobs-tab"][data-id="heists"]')) { await top(); await shot('jobs-heists'); }
   if (await click('[data-action="jobs-tab"][data-id="side"]')) { await top(); await shot('jobs-side'); }
   if (await click('[data-action="nav"][data-id="crew"]') && await click('[data-action="crew-tab"][data-id="leads"]')) { await top(); await shot('crew-leads-names'); }
+  // Step 4: a district's page with its lore under the live state, the clients, and the Book. Skipped by versions without them.
+  if (await click(`[data-action="nav"][data-id="${cityId}"]`) && await click('[data-action="city-tab"][data-id="districts"]') && await click('[data-action="district-open"][data-id="docks"]')) {
+    await top(); await shot('district-live-then-lore');
+    await page.evaluate(() => document.querySelector('.citylore')?.scrollIntoView({ block: 'start' })); await shot('district-lore');
+  }
+  if (await click('[data-action="nav"][data-id="jobs"]') && await click('[data-action="jobs-tab"][data-id="clients"]')) {
+    await top(); await shot('jobs-clients');
+    if (await click('[data-action="client-open"]')) { await top(); await shot('client-page'); }
+  }
+  if (await click(`[data-action="nav"][data-id="${cityId}"]`) && await click('[data-action="book"]')) {
+    await top(); await shot('book-whos-who');
+    if (await click('[data-action="lore-tab"][data-id="history"]')) { await top(); await shot('book-history'); }
+  }
 } finally {
   await browser.close();
   server.kill();

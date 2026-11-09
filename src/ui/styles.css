@@ -2042,3 +2042,12 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .mappick .linkbtn { margin: 0; }
 .districtrow { border-left: 3px solid var(--turf, var(--line)); }
 .tongs__title { margin-top: 0; }
+
+/* Navigation rework, step 4 (2026-11-09): a district's lore under its live state, and a client's page. The picture runs the
+   width of the card; the write-up is plain paragraphs (no "read more": it is the page's own content now). */
+.citylore { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 4px; }
+.citylore__art { display: block; margin: 8px 0; }
+.citylore__art svg { display: block; width: 100%; height: auto; }
+.clientpage__trust { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 8px 0 12px; }
+.clientpage__trust p { flex: 1 1 220px; margin: 0; }
+.clientrow { align-items: center; }

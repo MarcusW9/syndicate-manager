@@ -22,14 +22,14 @@ export const HOMES = Object.freeze({
   name: ['city', 'tongs'],        // a name's read-only profile: what we know and who they are with
   district: ['city', 'districts'],// a district's page
   heist: ['jobs', 'heists'],      // the heist card and its steps (Jobs › Heists since step 3)
-  client: ['jobs', 'board'],      // a client's page (the strip on the job board until step 4)
+  client: ['jobs', 'clients'],    // a client's page: trust and the board now, then who they are (Jobs › Clients since step 4)
   runner: ['crew', 'roster'],     // a runner's page
   recruit: ['crew', 'leads'],     // a lead's page
   leadName: ['crew', 'leads'],    // a name's recruitment page: scouting, what it would take, Sign (free names and names in a tong)
   message: ['inbox', null],       // a message on Today
   plan: ['jobs', 'board'],        // a job's plan and the squad board
   sidePlan: ['jobs', 'side'],     // a side job's plan
-  book: ['city', 'map'],          // the Book (the old Lore view until step 4), opened from a link in City's header
+  book: ['city', 'map'],          // the Book (Who's who and History since step 4), opened from a link in City's header
 });
 
 /** The home tab for a page kind, or null for a kind with no entry. */
@@ -68,7 +68,7 @@ export function tabBadges(state) {
 export function pageKind(ui) {
   const { screen } = ui;
   if (screen === 'inbox') return ui.openMessageId ? 'message' : null;
-  if (screen === 'jobs') return ui.plan ? 'plan' : ui.sidePlan ? 'sidePlan' : null;
+  if (screen === 'jobs') return ui.plan ? 'plan' : ui.sidePlan ? 'sidePlan' : ui.clientPage ? 'client' : null;
   if (screen === 'crew') return ui.openRecruitId ? 'recruit' : ui.leadName ? 'leadName' : ui.openOperativeId ? 'runner' : null;
   if (screen === 'tong') return ui.buildView ? 'hallBuild' : ui.hallPage ? 'hall' : null;
   if (screen === 'lore') return 'book';
@@ -80,7 +80,7 @@ export function pageKind(ui) {
 }
 
 /** What a root view has open: nothing. */
-const NOTHING_OPEN = Object.freeze({ openMessageId: null, openOperativeId: null, openRecruitId: null, leadName: null, hallPage: null, buildView: null, tongsView: null, cityDistrict: null, loreDistrict: null, plan: null, sidePlan: null });
+const NOTHING_OPEN = Object.freeze({ openMessageId: null, openOperativeId: null, openRecruitId: null, leadName: null, hallPage: null, buildView: null, tongsView: null, cityDistrict: null, clientPage: null, plan: null, sidePlan: null });
 
 /**
  * Back with no history (a direct link, a fresh load): the root view of the page's home tab, with no page
@@ -98,10 +98,10 @@ export function placeLabel(ui) {
   const kind = pageKind(ui);
   if (!kind) {
     const sub = ui[SUB_KEY[ui.screen]];
-    return { city: { map: 'City', districts: 'Districts', tongs: 'Tongs' }, tong: { halls: 'Halls', armoury: 'the Armoury' }, crew: { roster: 'Crew', leads: 'Leads', wall: 'the Wall' }, jobs: { board: 'Jobs', heists: 'Heists', side: 'Side work' } }[ui.screen]?.[sub] ?? TAB_NAMES[ui.screen] ?? 'back';
+    return { city: { map: 'City', districts: 'Districts', tongs: 'Tongs' }, tong: { halls: 'Halls', armoury: 'the Armoury' }, crew: { roster: 'Crew', leads: 'Leads', wall: 'the Wall' }, jobs: { board: 'Jobs', heists: 'Heists', side: 'Side work', clients: 'Clients' } }[ui.screen]?.[sub] ?? TAB_NAMES[ui.screen] ?? 'back';
   }
   if (kind === 'tong' || kind === 'name') return 'the tongs';
-  return { message: 'the message', plan: 'the job', sidePlan: 'the side job', runner: 'the runner', recruit: 'the lead', leadName: 'the lead', book: 'the Book', hall: 'the hall', hallBuild: 'the build', district: 'the district' }[kind];
+  return { message: 'the message', plan: 'the job', sidePlan: 'the side job', client: 'the client', runner: 'the runner', recruit: 'the lead', leadName: 'the lead', book: 'the Book', hall: 'the hall', hallBuild: 'the build', district: 'the district' }[kind];
 }
 
 /** The Back stack. `limit` keeps a long wander from growing for ever. */

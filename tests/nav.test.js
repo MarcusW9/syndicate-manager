@@ -57,7 +57,7 @@ test('a hall opens on its home tab whichever tab the link was on, and Back retur
 test('Back with no history opens the root of the destination\'s home tab, nothing selected', async () => {
   const { rootOf } = await import('../src/ui/nav.js');
   const view = { screen: 'tong', hallPage: 'oldTown', cityDistrict: 'docks', tongsView: null, plan: null, sidePlan: null, cityTab: 'clients', inboxUnread: true };
-  assert.deepEqual(rootOf({ ...view, screen: 'city', cityTab: 'tongs', hallPage: null, tongsView: 'name:x' }), { ...view, screen: 'city', cityTab: 'tongs', hallPage: null, tongsView: null, cityDistrict: null, loreDistrict: null, openMessageId: null, openOperativeId: null, openRecruitId: null, leadName: null, buildView: null });
+  assert.deepEqual(rootOf({ ...view, screen: 'city', cityTab: 'tongs', hallPage: null, tongsView: 'name:x' }), { ...view, screen: 'city', cityTab: 'tongs', hallPage: null, tongsView: null, cityDistrict: null, clientPage: null, openMessageId: null, openOperativeId: null, openRecruitId: null, leadName: null, buildView: null });
   const hall = rootOf({ ...view, tongTab: 'armoury' });
   assert.equal(hall.screen, 'tong');
   assert.equal(hall.tongTab, 'halls', 'the home sub-tab of a hall');

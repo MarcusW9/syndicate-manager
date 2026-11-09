@@ -85,11 +85,10 @@ let cityDistrict = null; // the district picked on the City map (the map zooms o
 let mapView = FULL_VIEW; // where the Ops map was looking when last drawn ([x, y, w, h]); it eases from here to the next view
 let mapTo = null; // the view the map is heading for, set while drawing it
 let cityTab = 'map'; // City's sub-tab: 'map' | 'districts' | 'tongs'
-let loreTab = 'districts'; // which Book section is showing (LORE_TABS)
+let loreTab = 'factions'; // which Book section is showing (LORE_TABS)
 let jobsTab = 'board'; // Jobs' sub-tab: 'board' | 'heists' | 'side'
 let leadName = null; // a name opened in Crew › Leads (scouting, what it would take, Sign): a card id
-let loreDistrict = null; // the district read in full on Lore › Districts
-let loreDue = false; // scroll the Book's districts to the one opened from a district page
+let clientPage = null; // a client's page on Jobs › Clients: a client id
 let cityMapDue = false; // scroll the map into view after drawing (a crew's district picked in the list)
 let openMessageId = null;
 let sidePlan = null; // { taskId, crew: [] } while planning a side task (Jobs tab)
@@ -167,7 +166,7 @@ function setState(next) {
 // --- navigation (ui/nav.js) --------------------------------------------
 /** The view as it is now: everything Back has to put back. Plan objects are kept by reference (the plan is UI, not game state). */
 function viewNow() {
-  return { screen, openMessageId, openOperativeId, openRecruitId, leadName, tongTab, crewTab, jobsTab, hallPage, buildView, tongsView, cityDistrict, cityTab, loreTab, loreDistrict, inboxUnread, plan, sidePlan };
+  return { screen, openMessageId, openOperativeId, openRecruitId, leadName, tongTab, crewTab, jobsTab, hallPage, buildView, tongsView, cityDistrict, cityTab, loreTab, clientPage, inboxUnread, plan, sidePlan };
 }
 
 /** A link to a page: remember this view (and the control that was tapped) so Back can return to it. */
@@ -178,11 +177,12 @@ function remember(action, id) {
 
 /** Put a remembered view back. Pages that have gone since (a lead hired, a job taken) fall back to their list. */
 function restoreView(v) {
-  ({ screen, openMessageId, openOperativeId, openRecruitId, leadName, tongTab, crewTab, jobsTab, hallPage, buildView, tongsView, cityDistrict, cityTab, loreTab, loreDistrict, inboxUnread, plan, sidePlan } = v);
+  ({ screen, openMessageId, openOperativeId, openRecruitId, leadName, tongTab, crewTab, jobsTab, hallPage, buildView, tongsView, cityDistrict, cityTab, loreTab, clientPage, inboxUnread, plan, sidePlan } = v);
   if (openMessageId && !state.inbox.some((m) => m.id === openMessageId)) openMessageId = null;
   if (openOperativeId && ![...state.crew, ...state.memorial].some((o) => o.id === openOperativeId)) openOperativeId = null;
   if (openRecruitId && !(state.recruits ?? []).some((r) => r.id === openRecruitId)) openRecruitId = null;
   if (plan && !state.jobs.some((j) => j.id === plan.jobId)) plan = null;
+  if (clientPage && !CLIENTS.some((c) => c.id === clientPage)) clientPage = null;
   gearSlot = null; bagPick = null; pickSlot = null;
 }
 
@@ -222,7 +222,7 @@ function onClick(e) {
   const { action, id } = t.dataset;
 
   switch (action) {
-    case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; screen = id; nav.clear(); scrollDue = 0; buildView = null; tongsView = null; cityDistrict = null; leadName = null; hallPage = null; openMessageId = null; openOperativeId = null; openRecruitId = null; gearSlot = null; bagPick = null; plan = null; sidePlan = null; pickSlot = null; break;
+    case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; screen = id; nav.clear(); scrollDue = 0; buildView = null; tongsView = null; cityDistrict = null; leadName = null; clientPage = null; hallPage = null; openMessageId = null; openOperativeId = null; openRecruitId = null; gearSlot = null; bagPick = null; plan = null; sidePlan = null; pickSlot = null; break;
     case 'continue': {
       if (isBlocked(state) || Date.now() < continueRestUntil) return;
       const next = advanceDay(state);
@@ -241,7 +241,7 @@ function onClick(e) {
     case 'city-show': cityTab = 'map'; cityDistrict = cityDistrict === id ? null : id; cityMapDue = !!cityDistrict; break;
     // City's sub-tabs (the Book's own are 'lore-tab'): a different part of the tab, so no page stays open.
     case 'city-tab': cityTab = id; cityDistrict = null; tongsView = null; break;
-    case 'jobs-tab': jobsTab = id; break;
+    case 'jobs-tab': jobsTab = id; clientPage = null; break;
     case 'lore-tab': loreTab = id; break;
     case 'tong-page': remember(action, id); goHome('tong'); tongsView = id; break;
     // A free name or a name in a tong: its page, a scout trip (two days away), and signing (core/dossier.js).
@@ -262,8 +262,8 @@ function onClick(e) {
     case 'ops-district': // a shortcut to the district's page (the heat chip, a Book link)
       if (!(screen === homeOf('district') && cityTab === homeSub('district') && cityDistrict === id)) remember(action, id);
       goHome('district'); tongsView = null; cityDistrict = id; break;
-    case 'lore-district': loreDistrict = loreDistrict === id ? null : id; break;
-    case 'about-district': remember(action, id); screen = 'lore'; loreTab = 'districts'; loreDistrict = id; loreDue = true; break;
+    // A client's page (Jobs › Clients), from its row or from a job's plan: the same page from anywhere.
+    case 'client-open': remember(action, id); goHome('client'); clientPage = id; plan = null; sidePlan = null; break;
     case 'read-message': // from Ops' Tonight list
     case 'open-message': {
       remember(action, id);
@@ -758,7 +758,6 @@ function render() {
   if (scrollDue !== null) { window.scrollTo?.(0, scrollDue); scrollDue = null; } // Back puts the scroll back; a new page starts at the top
   if (mapTo) { animateMap(root.querySelector('.citymap__view'), mapView, mapTo); mapView = mapTo; mapTo = null; }
   if (cityMapDue) { cityMapDue = false; root.querySelector('.mapframe')?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
-  if (loreDue) { loreDue = false; root.querySelector('.lorecard.is-open')?.scrollIntoView({ block: 'start' }); }
   const want = focusNext ?? refocus;
   focusNext = null;
   if (want) {
@@ -862,7 +861,7 @@ function renderDayCue(cue) {
     </div>`;
 }
 
-// While the founders are being picked there's nothing to see on Crew, Jobs, Ops or Lore: those tabs are
+// While the founders are being picked there's nothing to see on Crew, Jobs, City or Tong: those tabs are
 // off, Today shows the pick, and Save stays open so another slot can still be loaded.
 const FOUNDING_TABS = ['inbox', 'settings']; // the tab bar has no Save button now: ☰ in the top bar is the way to 'settings'
 
@@ -893,7 +892,7 @@ function renderScreen() {
     if (!plan) return body; // the job has gone: renderPlan showed the board
     return `<div class="jobsplit"><div class="jobsplit__plan">${body}</div><div class="jobsplit__side"><div class="jobsplit__list">${renderJobs('board')}</div>${planBarHtml}</div></div>`;
   }
-  if (screen === 'jobs') return sidePlan ? renderSidePlan() : rootBack() + renderJobs();
+  if (screen === 'jobs') return sidePlan ? renderSidePlan() : clientPage ? renderClientPage() : rootBack() + renderJobs();
   if (screen === 'city') return renderCity();
   if (screen === 'lore') return renderLore();
   if (screen === 'settings') return renderSettings();
@@ -2073,24 +2072,24 @@ function jobCard(j) {
       </li>`;
 }
 
-/** Jobs: what work there is. Sub-tabs Board · Heists · Side (the Clients strip stays on the Board until step 4). `tab` overrides the sub-tab (the list beside a plan). */
+/** Jobs: what work there is. Sub-tabs Board · Heists · Side · Clients. `tab` overrides the sub-tab (the list beside a plan). */
 function renderJobs(tab = jobsTab) {
-  const which = ['board', 'heists', 'side'].includes(tab) ? tab : 'board';
+  const which = ['board', 'heists', 'side', 'clients'].includes(tab) ? tab : 'board';
   // Ending soonest first, then the better pay.
   const jobs = [...state.jobs].sort((a, b) => a.expiresDay - b.expiresDay || jobView(state, b).pay - jobView(state, a).pay);
   const body = {
     board: () => `${streetTalk()}
       ${climbLine()}
       ${renderRunners()}
-      ${jobs.length ? `<ul class="list list--cols jobslist">${jobs.map(jobCard).join('')}</ul>` : '<p class="muted">No work on the board. New work comes in through the week.</p>'}
-      ${renderClients()}`,
+      ${jobs.length ? `<ul class="list list--cols jobslist">${jobs.map(jobCard).join('')}</ul>` : '<p class="muted">No work on the board. New work comes in through the week.</p>'}`,
     heists: () => renderHeist() || '<p class="muted">No heist on right now.</p>',
     side: () => renderSideBoard(),
+    clients: () => renderClientList(),
   }[which]();
   return `
     <section class="panel jobsboard">
       <h1>Jobs</h1>
-      ${subTabs('Jobs sections', 'jobs-tab', [['board', 'Board'], ['heists', 'Heists'], ['side', 'Side']], which)}
+      ${subTabs('Jobs sections', 'jobs-tab', [['board', 'Board'], ['heists', 'Heists'], ['side', 'Side'], ['clients', 'Clients']], which)}
       ${body}
     </section>`;
 }
@@ -2178,31 +2177,44 @@ function renderSidePlan() {
 const trustTone = (t) => (t >= 60 ? 'good' : t >= 40 ? 'mid' : 'bad');
 const TRUST_NOTE = 'Finished jobs build trust; aborts and "client unhappy" choices cost it. High trust pays up to 15% more; below 20, a client stops calling. Trust drifts back towards neutral each week.';
 
-/** Jobs tab: the clients as a strip of chips under the board. Full write-ups are in the Book. */
-function renderClients() {
+/** Jobs › Clients: a row for each client (trust and what they have on the board now), each opening the client's page. */
+function renderClientList() {
   return `
-      <h2>Clients</h2>
       <div class="infoline"><p class="muted small">Where you stand with each.</p>${infoButton('clients', 'About client trust')}</div>
-      ${infoText('clients', `${TRUST_NOTE} Who they are: the Book, on City.`)}
-      <ul class="clientstrip">
+      ${infoText('clients', TRUST_NOTE)}
+      <ul class="list list--cols clientlist">
         ${CLIENTS.map((c) => {
           const t = trustOf(state, c.id);
-          return `<li class="clientchip"><strong>${esc(c.name)}</strong><span class="trust trust--${trustTone(t)}">${esc(trustLabel(t))} · ${t}</span></li>`;
+          const open = state.jobs.filter((j) => j.clientId === c.id).length;
+          return `<li><button class="row clientrow" data-action="client-open" data-id="${esc(c.id)}">
+            <span class="row__main"><strong>${esc(c.name)}</strong><br><span class="muted small">${open ? `${open} on the board` : 'Nothing on the board'}</span></span>
+            <span class="trust trust--${trustTone(t)}">${esc(trustLabel(t))}<br><span class="small">${t}/100</span></span></button></li>`;
         }).join('')}
       </ul>`;
 }
 
-/** Lore › Clients: who each client is, with where you stand. */
-function renderClientCards() {
+/**
+ * A client's page (Jobs › Clients, the one home of a client from any link): where you stand and what they have on the
+ * board now, then who they are (the line from data/clients.js, unchanged). Shown for a client with no jobs too.
+ */
+function renderClientPage() {
+  const c = CLIENTS.find((x) => x.id === clientPage);
+  if (!c) { clientPage = null; return renderJobs(); }
+  const t = trustOf(state, c.id);
+  const theirs = state.jobs.filter((j) => j.clientId === c.id).map((j) => ({ j, v: jobView(state, j) }));
   return `
-      <ul class="list list--plain">
-        ${CLIENTS.map((c) => {
-          const t = trustOf(state, c.id);
-          return `<li class="clientrow"><span><strong>${esc(c.name)}</strong><br><span class="muted small">${esc(c.desc)}</span></span>
-            <span class="trust trust--${trustTone(t)}">${esc(trustLabel(t))}<br><span class="small">${t}/100</span></span></li>`;
-        }).join('')}
-      </ul>
-      <p class="muted small">${esc(TRUST_NOTE)}</p>`;
+    <section class="panel clientpage">
+      <button class="linkbtn" data-action="back">‹ ${esc(backLabel())}</button>
+      <h1>${esc(c.name)}</h1>
+      <p class="muted small">${esc(cityName(c.district))}</p>
+      <div class="clientpage__trust"><span class="trust trust--${trustTone(t)}">${esc(trustLabel(t))}<br><span class="small">${t}/100</span></span>
+        <p class="muted small">${esc(TRUST_NOTE)}</p></div>
+      <h2>On the board now</h2>
+      ${theirs.length ? `<div class="stack">${theirs.map(({ j, v }) => `<button class="btn" data-action="open-job" data-id="${esc(j.id)}">${esc(v.tpl.name)} · ${money(v.pay)} · ${daysLeft(j.expiresDay)}</button>`).join('')}</div>`
+        : '<p class="muted small">Nothing from them on the board right now.</p>'}
+      <h2>About them</h2>
+      <p class="body">${esc(c.desc)}</p>
+    </section>`;
 }
 
 function renderPlan() {
@@ -2339,6 +2351,7 @@ function renderPlan() {
       <div class="riskcard plangrid__client">
         <p><strong>Client:</strong> ${clientLine(v)}${v.client ? ` <button class="infobtn" data-action="client-info" aria-expanded="${clientOpen}" aria-label="About ${esc(v.client.name)}">${clientOpen ? '×' : 'i'}</button>` : ''}</p>
         ${v.client && clientOpen ? `<p class="muted small">${esc(v.client.desc)}</p>` : ''}
+        ${v.client ? `<button class="linkbtn" data-action="client-open" data-id="${esc(v.client.id)}">${esc(v.client.name)}'s page ›</button>` : ''}
         ${v.threatDelta ? `<p class="muted small">Every roll on this job is ${Math.abs(v.threatDelta) === 1 ? 'one point' : `${Math.abs(v.threatDelta)} points`} ${v.threatDelta > 0 ? 'harder' : 'easier'} than usual.</p>` : ''}
         ${v.hinted ? '<p class="intel">Intel unreliable: something about this job may not be what you were told.</p>' : ''}
         ${rivalRemark(v)}
@@ -2933,17 +2946,24 @@ function citySummary() {
     `;
 }
 
+/**
+ * A district's page (City › Districts): what is happening there now (who is at the hall, our crews out, work open,
+ * street talk, the gangs' grudge), then the district itself below it (its picture, pitch and the Book's write-up:
+ * who runs it, police, 3am, custom, landmarks, kinds of work). The lore shows even when nothing is going on.
+ */
 function districtCard(key) {
   const c = DISTRICT_CARDS[key];
   const turf = DISTRICTS[key]?.turf;
   const jobs = MISSIONS.filter((m) => m.district === key && !m.heistOnly).map((m) => m.name); // a heist's prep shows only when asked
+  const kinds = MISSIONS.filter((m) => m.district === key && !isOpeningJob(m.id) && !m.heistOnly).map((m) => m.name);
   const out = crewOutIn(key);
+  const art = districtArt(key);
+  const inText = NAMES.districtsInText?.[key] ?? cityName(key);
   return `
     <div class="riskcard citycard" style="--turf:${turfHex(key) ?? 'var(--line)'}">
       ${canGoBack() ? `<button class="linkbtn" data-action="back">‹ ${esc(backLabel())}</button>` : ''}
       <h2 class="nomargin">${esc(cityName(key))} <span class="muted">${esc(c.chinese)}</span></h2>
       <p class="muted small">${esc(c.side)}${turf ? ` · <span class="citycard__turf">${esc(turf)}</span>` : ''}${key === SAFEHOUSE_DISTRICT ? ' · our home hall' : hallIn(state, key) ? ' · a hall of ours' : ''}${out ? ` · ${out} of yours out here` : ''}${heatIn(state, key) ? ` · heat ${heatIn(state, key)}/10` : ''}</p>
-      <p class="body">${esc(c.pitch)}</p>
       ${c.locked ? '' : gangsOn(key).map((g) => `<p class="small citycard__grudge">${esc(GANGS[g].short)} grudge: ${grudgeGauge(g)}${hallIn(state, key) ? ` <span class="muted">· from ${GRUDGE.raidAt} they may raid our hall here</span>` : ''}</p>`).join('')}
       ${(() => {
         const h = hallIn(state, key);
@@ -2954,58 +2974,27 @@ function districtCard(key) {
           ${who.length ? `<span class="citycard__faces">${who.map((op) => { const away = !!op.condition?.awayUntil && op.condition.awayUntil > state.day; return `<button class="citycard__face ${away ? 'is-out' : ''}" data-action="op-link" data-id="${esc(op.id)}" aria-label="${esc(op.handle)}${away ? ', out' : ''}">${face(op, 'sm')}</button>`; }).join('')}</span>` : '<p class="muted small">Nobody lives here yet.</p>'}
           <button class="btn btn--block citycard__hallbtn" data-action="hall-page" data-id="${esc(key)}">Manage the hall ›</button></div>`;
       })()}
-      ${c.locked ? `<p class="intel">${esc(c.teaser)}</p>` : (() => {
+      ${c.locked ? '' : (() => {
         const now = jobsIn(key);
         return now.length ? `<div class="stack">${now.map(({ j, v }) => `<button class="btn" data-action="open-job" data-id="${esc(j.id)}">${esc(v.tpl.name)} · ${money(v.pay)} · ${daysLeft(j.expiresDay)}</button>`).join('')}</div>`
           : jobs.length ? `<p class="small muted">No work on the board here right now. New work comes in through the week.</p>`
             : '<p class="small muted">Nobody here is hiring crews like yours yet.</p>';
       })()}
       ${activeRumour(state)?.district === key ? `<p class="talk-tag">Street talk: ${esc(activeRumour(state).text)}</p>` : ''}
-      <button class="linkbtn citycard__about" data-action="about-district" data-id="${esc(key)}">About ${esc(NAMES.districtsInText?.[key] ?? cityName(key))} on Lore ›</button>
-    </div>`;
-}
-
-/**
- * Lore › Districts (2026-11-06, when Ops became its own tab and City became Lore): the city's places as a book, each
- * led by its picture (ui/districtArt.js), with the write-up a tap away. Locked districts are a
- * line each, with what the street says about them.
- */
-function renderDistrictLore() {
-  // Home first, then the rest as the map lists them.
-  const open = MAP_DISTRICTS.filter((k) => !DISTRICT_CARDS[k].locked).sort((a, b) => (b === SAFEHOUSE_DISTRICT) - (a === SAFEHOUSE_DISTRICT));
-  const locked = MAP_DISTRICTS.filter((k) => DISTRICT_CARDS[k].locked);
-  const entry = (key) => {
-    const c = DISTRICT_CARDS[key];
-    const on = loreDistrict === key;
-    const turf = DISTRICTS[key]?.turf;
-    const jobs = MISSIONS.filter((m) => m.district === key && !isOpeningJob(m.id) && !m.heistOnly).map((m) => m.name);
-    const art = districtArt(key);
-    return `
-    <li class="lorecard ${on ? 'is-open' : ''}" style="--turf:${turfHex(key) ?? 'var(--line)'}">
-      <button class="lorecard__head" data-action="lore-district" data-id="${esc(key)}" aria-expanded="${on}">
-        ${art ? `<span class="lorecard__art" aria-hidden="true">${art}</span>` : ''}
-        <span class="lorecard__title"><strong>${esc(cityName(key))}</strong> <span class="muted">${esc(c.chinese)}</span></span>
-        <span class="muted small lorecard__side">${esc(c.side)}${turf ? ` · <span class="citycard__turf">${esc(turf)}</span>` : ''}</span>
-        <span class="body lorecard__pitch">${esc(c.pitch)}</span>
-        ${c.locked ? `<span class="intel lorecard__teaser">${esc(c.teaser)}</span>` : ''}
-        <span class="lorecard__more small">${on ? 'Less ▴' : 'Read more ▾'}</span>
-      </button>
-      ${on ? `<div class="lorecard__body">
+      <div class="citylore">
+        <h2>About ${esc(inText)}</h2>
+        ${art ? `<div class="citylore__art" aria-hidden="true">${art}</div>` : ''}
+        <p class="body">${esc(c.pitch)}</p>
+        ${c.locked ? `<p class="intel">${esc(c.teaser)}</p>` : ''}
         <p class="small"><strong>Who runs it:</strong> ${esc(c.control)}</p>
         <p class="small"><strong>Police:</strong> ${esc(c.police)}</p>
         <p class="small"><strong>At 3am:</strong> ${esc(c.night)}</p>
         <p class="small"><strong>Local custom:</strong> ${esc(c.custom)}</p>
         <p class="small"><strong>Landmarks:</strong></p>
         <ul class="small">${c.landmarks.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>
-        ${jobs.length ? `<p class="small"><strong>Kinds of work here:</strong> ${esc(jobs.join(', '))}</p>` : ''}
-        ${c.locked ? '' : `<button class="linkbtn" data-action="ops-district" data-id="${esc(key)}">See it on Ops ›</button>`}
-      </div>` : ''}
-    </li>`;
-  };
-  return `
-    <ul class="lorecards">${open.map(entry).join('')}</ul>
-    <h2>Not open to us yet</h2>
-    <ul class="lorecards">${locked.map(entry).join('')}</ul>`;
+        ${kinds.length ? `<p class="small"><strong>Kinds of work here:</strong> ${esc(kinds.join(', '))}</p>` : ''}
+      </div>
+    </div>`;
 }
 
 /**
@@ -3056,15 +3045,13 @@ function renderDistricts() {
   return `<ul class="list list--cols districts">${[...open, ...locked].map(card).join('')}</ul>`;
 }
 
-/** Lore's sections: the city as a book (the live map is on Ops). The tab was City until 2026-11-06. */
-const LORE_TABS = { districts: 'Districts', clients: 'Clients', factions: "Who's who", history: 'History' };
+/** The Book (was the Lore tab): Who's who and History. The districts moved to City › Districts pages and the clients to Jobs › Clients pages (navigation rework, step 4). */
+const LORE_TABS = { factions: "Who's who", history: 'History' };
 
 function renderLore() {
-  const tab = LORE_TABS[loreTab] ? loreTab : 'districts';
+  const tab = LORE_TABS[loreTab] ? loreTab : 'factions';
   const groups = [...new Set(FACTIONS.map((f) => f.group))];
   const body = {
-    districts: renderDistrictLore,
-    clients: () => renderClientCards(),
     factions: () => `
       <div class="cols2 cols2--flow">
       ${groups.map((g) => `

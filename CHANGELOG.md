@@ -7,6 +7,12 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · Navigation, step 4: the Lore tab's contents move home
+- **Districts:** each district's page (City › Districts) now has what's happening there first (who's at the hall, crews out, work open, street talk), then its picture, pitch and write-up (who runs it, police, at 3am, local custom, landmarks, kinds of work). The lore shows even in a district where nothing is going on. The "About … on Lore" and "See it on Ops" links are gone.
+- **Clients:** Jobs › Clients lists every client, and each has a page: where you stand and what they have on the board above, who they are below. A job's plan links to it. The strip of clients under the job board is gone.
+- **The Book** now holds Who's who and History only, unchanged and in order.
+- Every entry in the migration register is checked off, and `tests/lore-register.test.js` checks that each is reachable with its text intact.
+
 ## 2026-11-09 · Lore migration register (nothing moved yet)
 - `docs/SCREENS.md` now lists every Lore entry (91 rows: districts, clients, Who's who, History) with where it is, where it will go and which links point at it, plus four questions for the owner. The Jobs Clients note that said "the Lore tab" now says "the Book".
 
