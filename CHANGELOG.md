@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · Retirement and the Hall of Legends (part D1, save v55)
+- A runner with 52 or more active weeks may now ask to retire, at most one request a week across the crew and never while they are out on a job or hurt. You answer: **Stay one more season** (they ask 20% more, 35% from the second time, and don't ask again for eight weeks) or **Let them go** (their gear goes back to the stash). Leave it a week and they stay on. Anyone who was Elite or a Legend, or worked 26 weeks or more, is written onto the **Hall of Legends**, shown under the Wall on Crew. Saves upgrade with an empty Hall.
+
 ## 2026-11-09 · Tidy: unused styles removed, open items written up
 - Deleted the styles for the removed Lore cards, Clients strip and Places buttons. `docs/nav-rework-open-items.md` lists what to check while playing the rework and the decisions still open; the handoff's stale build-order line now says which parts were already built.
 

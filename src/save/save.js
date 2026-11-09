@@ -716,5 +716,10 @@ function migrate(state) {
     }
     state.version = 54;
   }
+  if (state.version === 54) {
+    // v55: retirement and the Hall of Legends (DESIGN.md 2026-11-09): `state.hall`, empty until someone retires.
+    state.hall ??= [];
+    state.version = 55;
+  }
   return state;
 }
