@@ -35,7 +35,7 @@ export const RETIRE_TEXT = {
 export const RETIRE_REPLY = {
   stay: `{op} nodded. "One more season, then." Their wage is now {wage} a week.`,
   go: `{op} shook your hand and went. Their gear's back in the stash, and there's an empty hook by the door.`,
-  goHall: `{op} shook your hand and went. Their gear's back in the stash, and Joss has put their name on the wall in the Hall of Legends.`,
+  goHall: `{op} shook your hand and went. Their gear's back in the stash, and their name goes up on the wall beside the altar. Joss checked the spelling.`,
 };
 
 /** Lines on the Hall of Legends wall, by fame; the generic one fits anyone. */

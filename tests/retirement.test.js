@@ -83,6 +83,7 @@ test('Stay one more season: a rise, then 35% the next time; Let them go: gear to
   assert.ok(!s.crew.some((o) => o.id === leaving.id));
   assert.ok(s.stash.some((i) => i.uid === 'gx'));
   assert.equal(s.hall.length, 1);
+  assert.ok(s.inbox.find((x) => x.id === m.id).payload.outcome.includes('beside the altar')); // the Hall's wording is for the Hall only
   assert.equal(s.hall[0].id, leaving.id);
   assert.equal(s.memorial.length, 0);
 });
