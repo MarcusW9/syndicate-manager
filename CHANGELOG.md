@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · Lore migration register (nothing moved yet)
+- `docs/SCREENS.md` now lists every Lore entry (91 rows: districts, clients, Who's who, History) with where it is, where it will go and which links point at it, plus four questions for the owner. The Jobs Clients note that said "the Lore tab" now says "the Book".
+
 ## 2026-11-09 · Fix: a report from a job with a getaway opened with an error
 - Opening the report of a job that rolled a getaway threw an error in the full log, because that log assumed every event had a choice. The getaway now shows as its own line with its roll, and an event of a kind the log doesn't know no longer breaks it.
 

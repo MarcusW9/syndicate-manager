@@ -2178,12 +2178,12 @@ function renderSidePlan() {
 const trustTone = (t) => (t >= 60 ? 'good' : t >= 40 ? 'mid' : 'bad');
 const TRUST_NOTE = 'Finished jobs build trust; aborts and "client unhappy" choices cost it. High trust pays up to 15% more; below 20, a client stops calling. Trust drifts back towards neutral each week.';
 
-/** Jobs tab: the clients as a strip of chips under the board. Full write-ups are on Lore. */
+/** Jobs tab: the clients as a strip of chips under the board. Full write-ups are in the Book. */
 function renderClients() {
   return `
       <h2>Clients</h2>
       <div class="infoline"><p class="muted small">Where you stand with each.</p>${infoButton('clients', 'About client trust')}</div>
-      ${infoText('clients', `${TRUST_NOTE} Who they are: the Lore tab.`)}
+      ${infoText('clients', `${TRUST_NOTE} Who they are: the Book, on City.`)}
       <ul class="clientstrip">
         ${CLIENTS.map((c) => {
           const t = trustOf(state, c.id);
