@@ -239,6 +239,18 @@ test("Rao's six prep jobs are hers alone: never dealt at random, brokered or lis
   for (const d of ['nightMarket', 'oldTown', 'docks']) assert.ok(brokeredWork(d).every((m) => !m.heistOnly));
 });
 
+test("Szeto's six prep jobs are his alone: heist-only, six different jobs, never dealt or brokered", () => {
+  const SZETO = heistById('szetoTower');
+  const ids = SZETO.prep.flatMap((p) => p.templates);
+  assert.equal(new Set(ids).size, 6);
+  for (const id of ids) assert.equal(templateById(id).heistOnly, 'szetoTower', id);
+  assert.ok(ids.every((id) => !['access_window', 'relay_cover', 'data_pull'].includes(id)), 'no stand-ins left');
+  const s = createNewGame({ seed: 9, startCrew: 'fresh' });
+  s.reputation = 100;
+  for (let i = 0; i < 60; i++) { s.jobs = []; postJobs(s, 5); assert.ok(s.jobs.every((j) => !templateById(j.templateId).heistOnly)); }
+  for (const d of ['heights', 'oldTown', 'nightMarket']) assert.ok(brokeredWork(d).every((m) => !m.heistOnly));
+});
+
 test("the Hei Lok is no gang's room: Rao's finale, and Casino Con itself, add no grudge", () => {
   assert.equal(templateById('casino').against, undefined);
   for (let seed = 1, done = 0; seed <= 30 && done < 2; seed++) {

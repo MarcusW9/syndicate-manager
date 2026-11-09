@@ -5,7 +5,8 @@
 // Keep template IDs and crisis IDs aligned with those templates.
 //
 // Text: the owner's rewrite (2026-11-07). Madam Rao's prep jobs are her own six, written for the
-// heist (data/missions/theguestcopy.js and the rest, heistOnly). Mr. Szeto's still use stand-ins.
+// heist (data/missions/theguestcopy.js and the rest, heistOnly). Mr. Szeto's six are his own too
+// (loadingslot.js, relaycourier.js, halfarepair.js, thetestrota.js, beforetheinventory.js, thewronghands.js).
 //
 // A heist: { id, name, contact (a client id), gate: { rep, halls }, finale: templateId,
 //   threatDelta (the finale's threat against its template), pay (the finale's pay before trust),
@@ -96,21 +97,21 @@ export const HEISTS = [
     prep: [
       {
         id: 'face',
-        templates: ['access_window', 'relay_cover'],
+        templates: ['loading_slot', 'relay_courier'],
         line: 'Arrange a registered service identity for the crew’s lift access. The scanner needs to recognise someone it expects.',
         effect: { drop: 'facial_scan' },
         shows: 'Service identity registered: facial-scan crisis cannot appear',
       },
       {
         id: 'power',
-        templates: ['relay_cover', 'access_window'],
+        templates: ['half_a_repair', 'the_test_rota'],
         line: 'Arrange cover at the backup-power controls. If the tower switches supply, someone needs to keep it from closing your route.',
         effect: { threat: -1 },
         shows: 'Backup-power cover arranged: danger one step lower',
       },
       {
         id: 'plans',
-        templates: ['data_pull', 'access_window'],
+        templates: ['before_the_inventory', 'the_wrong_hands'],
         line: 'Get the current floor plans, including service routes and alterations. Szeto’s copy predates the owner’s last renovation.',
         effect: { intel: "the tower's current floor plans" },
         shows: 'Current floor plans secured: +1 on every finale roll',

@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · Mr. Szeto's heist gets its own six prep jobs
+- Seventy-One Floors no longer borrows routine jobs. Each of its three steps now has a first ask and a retry written for it: Loading Slot and Relay Courier (the service identity, Poon and Binta), Half a Repair and The Test Rota (cover at the backup power, Poon and Ho), Before the Inventory and The Wrong Hands (the floor plans, Edith and Kwok). Three crew, one day, threat 3, about ¥5,200-6,500, six crises each with a way out. They are never dealt to the board; they appear only as the heist's prep. What each step gives the finale is unchanged.
+
 ## 2026-11-09 · The oath costs eight weeks of wage
 - Holding the ceremony for a sworn runner now costs eight weeks of their wage (it was two), and Joss no longer checks the spelling in the ledger scene; that is the wall's job.
 
