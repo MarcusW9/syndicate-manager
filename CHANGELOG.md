@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · Clients list padding
+- Jobs › Clients rows no longer touch the left and right edges of their frame (the row's side padding was being cleared).
+
 ## 2026-11-09 · Leads count is a badge
 - Crew › Leads shows its count as a badge (like the Today and Jobs tabs) instead of a bare number after the word.
 

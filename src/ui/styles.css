@@ -460,7 +460,7 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .intel { color: var(--warn); font-size: 0.8rem; font-weight: 600; }
 .tag-up { color: #ff9a5a; font-size: 0.75rem; }
 .tag-down { color: #5fe0a5; font-size: 0.75rem; }
-.clientrow { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.clientrow { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; padding: 10px 12px; border-bottom: 1px solid var(--line); }
 .clientrow:last-child { border-bottom: 0; }
 .trust { text-align: right; font-size: 0.8rem; font-weight: 600; white-space: nowrap; }
 .trust--good { color: #5fe0a5; }
