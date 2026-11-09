@@ -32,7 +32,7 @@ function withHall(district = 'nightMarket', seed = 1) {
 }
 /** Hold a grudge up and move day by day until a raid is warned. */
 function untilWarned(s, gang, n = 8, days = 60) {
-  for (let i = 0; i < days && !openRaids(s).length; i++) { s.grudges[gang] = n; s = advanceDay(s); s.grudges[gang] = n; }
+  for (let i = 0; i < days && !openRaids(s).length; i++) { s.grudges[gang] = n; s = advanceDay(s); s.grudges[gang] = n; for (const r of openRaids(s)) r.plan = 'ask'; }
   return s;
 }
 function untilCall(s, gang, n = 8) {

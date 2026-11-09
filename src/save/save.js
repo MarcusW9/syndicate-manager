@@ -741,5 +741,12 @@ function migrate(state) {
     for (const op of state.crew ?? []) { op.sworn ??= null; op.oathNotified ??= !op.freelance && (op.record?.activeWeeks ?? 0) >= 26 && (op.loyalty ?? 0) >= 80; }
     state.version = 57;
   }
+  if (state.version === 57) {
+    // v58: raid warnings get a stated plan (`raid.plan`: 'hold' | 'clear' | null) and the one-off fixer call
+    // is remembered (`raidCallSeen`). A save that already has raids has been through the warnings: skip the call.
+    for (const r of state.raids ?? []) r.plan ??= null;
+    state.raidCallSeen ??= (state.raids ?? []).length > 0;
+    state.version = 58;
+  }
   return state;
 }

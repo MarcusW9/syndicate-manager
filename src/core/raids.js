@@ -127,7 +127,7 @@ export function withdrawCost(state, district) {
 function warn(state, district, by = 'police', followed = null) {
   const id = `raid-${district}-${state.day}${by === 'police' ? '' : `-${by}`}`;
   const day = state.day + (hasRoom(hallIn(state, district), 'lookout') ? ROOM_EFFECT.lookoutWarn : RAID.warnDays);
-  const raid = { id, district, by, warnedDay: state.day, day, answer: null, outcome: null, done: false, followed };
+  const raid = { id, district, by, warnedDay: state.day, day, answer: null, outcome: null, done: false, followed, plan: null };
   const who = raidBy(raid);
   state.raids = [...(state.raids ?? []), raid];
   const gang = GANGS[by];
@@ -152,6 +152,25 @@ export function followHome(state, district, by, severity) {
 }
 
 /** The day's call, when they're at the door. Options are live: who's home, what we have. */
+/**
+ * The player's stated plan for a warned raid: 'hold' or 'clear' (2026-11-09). At the door it is carried out;
+ * with no plan, whoever is home holds. Mutates a clone.
+ */
+export function setRaidPlan(prev, raidId, plan) {
+  if (!['hold', 'clear'].includes(plan)) return prev;
+  const state = structuredClone(prev);
+  const raid = (state.raids ?? []).find((r) => r.id === raidId && !r.done);
+  if (!raid) return prev;
+  raid.plan = plan;
+  return state;
+}
+
+/** The one-off fixer call about raids has been shown, whatever the player chose. */
+export function markRaidCallSeen(prev) {
+  if (prev.raidCallSeen) return prev;
+  return { ...prev, raidCallSeen: true };
+}
+
 export function raidChoices(state, raid) {
   const home = defenders(state, raid.district);
   const cost = withdrawCost(state, raid.district);
@@ -186,7 +205,13 @@ export function checkRaids(state) {
       continue;
     }
     raid.called = true;
-    state.inbox.unshift(callMessage(state, raid));
+    const call = callMessage(state, raid);
+    state.inbox.unshift(call);
+    // Not deciding is a decision (owner, 2026-11-09): the stated plan stands, and with none, whoever is home
+    // holds the hall. With nobody home to hold it (or a job on screen) the call stays for the player.
+    // plan 'ask' (no button for it yet) leaves the call to the player.
+    const pick = raid.plan === 'clear' ? 'withdraw' : 'hold';
+    if (raid.plan !== 'ask' && raidChoices(state, raid).find((c) => c.id === pick && !c.disabled)) RAID_RESOLVER(state, call, pick);
   }
   for (const hall of state.halls ?? []) {
     const d = hall.district;

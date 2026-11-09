@@ -25,6 +25,7 @@ raid = placePiece(raid, 'oldTown', 'plate', ...yardish[0], 1);
 raid = placePiece(raid, 'oldTown', 'barricade', ...yardish[3]);
 raid = placePiece(raid, 'oldTown', 'barricade', ...yardish.at(-1));
 raid = placePiece(raid, 'oldTown', 'workboard', ...roomish.find(([x, y]) => outside.some(([a, b]) => a === x + 1 && b === y) && outside.some(([a, b]) => a === x && b === y + 1) && outside.some(([a, b]) => a === x + 1 && b === y + 1)) ?? roomish[0]);
+raid.raidCallSeen = true;
 raid.raids = [{ id: 'raid-oldTown-3', district: 'oldTown', by: 'police', warnedDay: raid.day, day: raid.day + 3, answer: null, outcome: null, done: false, followed: null }];
 
 const root = new URL('..', import.meta.url).pathname;

@@ -15,7 +15,7 @@ export const fill = (text, vars) => text.replace(/\{(\w+)\}/g, (m, k) => vars[k]
 export const OATH_TEXT = {
   ready: {
     subject: '{op} could be sworn in',
-    body: `Joss: "{op}'s been with us {weeks} weeks, and I think they'd put their name in the ledger if we asked. It's {cost} for the tea, the food and something for the altar. Hold the ceremony is on their page whenever you're ready. No hurry."`,
+    body: `{op} has logged {weeks} weeks on the books for us. They're now eligible to be "sworn" into our Tong as a permanent member. Drop {cost} to execute the covenant at the shrine, locking their loyalty and permanently etching their name into the ledger.`,
   },
   sworn: {
     subject: '{op} is sworn in',

@@ -460,7 +460,7 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .intel { color: var(--warn); font-size: 0.8rem; font-weight: 600; }
 .tag-up { color: #ff9a5a; font-size: 0.75rem; }
 .tag-down { color: #5fe0a5; font-size: 0.75rem; }
-.clientrow { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.clientrow { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; padding: 10px 12px; border-bottom: 1px solid var(--line); }
 .clientrow:last-child { border-bottom: 0; }
 .trust { text-align: right; font-size: 0.8rem; font-weight: 600; white-space: nowrap; }
 .trust--good { color: #5fe0a5; }
@@ -2041,14 +2041,6 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .hallmove[open] summary { border-color: var(--accent-2); }
 .hallpage__side h2 { margin-top: 16px; }
 .hallpage .btitle { overflow-wrap: anywhere; }
-/* the raid card */
-.raidcard { border: 1px solid var(--danger); background: linear-gradient(180deg, rgba(255, 61, 95, 0.1), rgba(255, 61, 95, 0.03)); padding: 12px; display: grid; gap: 6px; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
-.raidcard p { margin: 0; }
-.raidcard__top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-.raidcard__title { font: 700 1.1rem var(--display, inherit); letter-spacing: 0.06em; text-transform: uppercase; color: var(--danger); }
-.raidcard__when { font: 700 0.85rem var(--display, inherit); letter-spacing: 0.08em; color: var(--danger); }
-.raidcard__btns { display: flex; flex-wrap: wrap; gap: 8px; }
-.raidcard__btns .btn { flex: 1 1 140px; min-height: 44px; }
 /* the plan: names on a halo, the raid's ways in, the key */
 .bpart__name { paint-order: stroke; stroke: #0b0d11; stroke-width: 3px; stroke-linejoin: round; }
 .bpart__tag { paint-order: stroke; stroke: #0b0d11; stroke-width: 3px; stroke-linejoin: round; }
@@ -2100,3 +2092,27 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .bcard__faces { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; min-height: 26px; }
 @media (min-width: 1100px) { .hallpage:not(.is-inside) .bcards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .bcard.is-locked strong { font: 700 1rem var(--display, inherit); letter-spacing: 0.06em; text-transform: uppercase; }
+/* Raids, 2026-11-09: Threats above Out now, the plan buttons, Today's priority line, the one-off fixer call. */
+.threats { display: grid; gap: 8px; margin-bottom: 14px; }
+.threat { display: grid; gap: 8px; }
+.threat__head { margin: 0; display: flex; align-items: center; gap: 8px; color: var(--danger); }
+.threat__meta { margin: 0; }
+.threat__home { display: grid; gap: 4px; }
+.threat__label { margin: 0; color: var(--muted); }
+.threat__faces { display: flex; flex-wrap: wrap; gap: 6px; }
+.threat__plans { display: grid; grid-template-columns: 1fr; gap: 8px; }
+@media (min-width: 480px) { .threat__plans { grid-template-columns: 1fr 1fr; } }
+.planbtn { display: grid; gap: 4px; align-content: start; min-height: 44px; padding: 10px 12px; text-align: left; background: #1b1f28; border: 1px solid var(--line); color: var(--text); font: inherit; cursor: pointer; }
+.planbtn span { font-size: 0.8rem; color: var(--muted); }
+.planbtn.is-on { border-color: var(--accent-2); background: #16262a; }
+.planbtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.choice.is-plan { border-color: var(--accent-2); }
+.threatline { width: 100%; }
+.threatline__sub { display: block; font-size: 0.8rem; opacity: 0.85; }
+.continue__hint.is-warn { color: var(--warn, #ffb347); opacity: 1; font-weight: 600; }
+.raidsheet p { margin: 0 0 8px; }
+.raidsheet__head { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
+.raidsheet__kicker { margin: 0 0 2px; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--danger); }
+.raidsheet .stack { margin-top: 10px; }
+.threat__top { display: flex; gap: 10px; align-items: center; }
+.hallthreat { margin: 0 0 6px; padding: 0; list-style: none; }
