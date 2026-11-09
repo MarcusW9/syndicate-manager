@@ -372,6 +372,9 @@ test('golden: a fixed seed gives the stored snapshot, after seeding and after 4 
   c4.inbox.unshift(msg);
   POACH_RESOLVER(c4, msg, 'go');
   weeks(c4, 12, 4);
+  // C5: the Anchor's Book at week 8 (two slates: weeks 4 and 8), as letters, moves and names.
+  const c5 = weeks(game(1234), 8).rivals.book;
+  out.c5 = { month: c5.absMonth, entries: c5.entries.map((e) => `${e.grade}:${e.name}:${e.move}`), watch: c5.watch, gone: c5.gone.map((g) => g.name) };
   out.c4 = {
     threads: c4.rivals.threads.map((t) => ({ id: t.id, family: t.family, stage: t.stage, open: t.open })),
     formers: c4.rivals.cards.filter((c) => c.formerOf).map((c) => ({ id: c.id, runnerId: c.runnerId, tongId: c.tongId, formerOf: c.formerOf })),

@@ -129,6 +129,8 @@ export const WORD_TEXT = {
   former_tier: ['{name}, one of yours once, has stepped up a level.', 'Bigger work is coming to {name} now. You may remember them.', 'Someone you let go is moving up: {name}.'],
   former_fame: ["People are saying {name}'s name more than they did. One of yours, once.", '{name}, who used to work for you, is a bigger name than they were.', '{name} is getting known. Not for your sake, but you were there first.'],
   former_free: ['{name}, one of yours once, is out of work.', '{name} is between tongs again. You know the name.', 'Nobody holds {name} now. They used to be yours.'],
+  // C5: the Monday lead when the Book is published (the Anchor's slate), counted in the three lines.
+  book_up: ["The Anchor's slate is up. Half the street read it before the tea was poured.", "The Anchor's slate is up in Old Town, and the elders are already arguing over it.", "The Anchor's slate is up. Somebody will not like what the chalk says."],
   your_tier: ["They're calling yours a {tier} tong now. Somebody had to say it first.", 'The {tier} crowd has started to nod at your tong.', 'Your tong carries further than it did. People say {tier}.'],
 };
 
@@ -172,6 +174,7 @@ export function clientRivalLine({ client, tong, jobId, mood = null }) {
 
 // Word kinds by how Monday treats them (C4.4): a story continuing, a name of ours, or ordinary talk.
 export const THREAD_CONTINUES = ['decline_middle', 'decline_folded', 'decline_recovered', 'founding_middle', 'founding_end', 'rise_end'];
+export const BOOK_LEAD = 'book_up';
 export const FORMER_KINDS = ['former_signed', 'former_tier', 'former_fame', 'former_free'];
 
 // Scouting and signing (C3b). {op} the scout, {name} the name they watched.
@@ -203,3 +206,37 @@ export const SIGN_REASON = {
   gone: 'Somebody else has signed them.',
 };
 export const SCOUT_DAYS_TEXT = '2d · 1 runner';
+
+// --- C5, the Anchor's Book (DESIGN.md 2026-11-09 "C5: the Anchor's Book"; WORLD.md "The Anchor's Book") ---
+// The street's opinion of the city's runners, chalked monthly: built from what is public (fame, form, age) plus
+// a lasting bias and a small monthly wobble, never from the hidden rating. Letters, no numbers. Numbers are tuning.
+export const BOOK = {
+  grades: ['S', 'A', 'B', 'C', 'D'],
+  caps: { S: 3, A: 5, B: 6, C: 6, D: 5 }, // 25 names at most
+  listSize: 25,
+  thresholds: { S: 43, A: 34, B: 25, C: 17, D: 10 }, // street score needed for a grade (caps then push the overflow down)
+  famePoints: { unknown: 0, known: 14, respected: 30, elite: 46, legend: 60 },
+  formWeight: 3,
+  ageTrend: [[24, 4], [34, 0], [44, -3], [99, -7]], // [up to this age, points]
+  biasSpread: 7, // a runner's lasting bias, from -spread to +spread (hashRng 'book-bias:' + runnerId)
+  styleSkew: { loud: 4, quiet: -4, corporate: 0, street: 0 }, // loud tongs are overrated, quiet ones underrated
+  fameSkew: { unknown: 0, known: 0, respected: 1, elite: 3, legend: 3 }, // and the better known, the more
+  wobble: 3, // a monthly +/- (hashRng 'book:' + absMonth + ':' + runnerId)
+  watchMax: 5, prospectAge: 24, goneMax: 3,
+};
+
+export const BOOK_TEXT = {
+  moves: { up: 'Up', down: 'Down', new: 'New', returns: 'Back', steady: 'Steady' },
+  // Joss, once per Book, if one of ours went up, reached S, or is down as one to watch. First pass for the owner to rewrite.
+  joss: {
+    subject: "The Anchor's slate is up",
+    intro: "The Anchor elders chalked their slate this morning. It's their opinion, not the truth, but people read it.",
+    up: '{op} moved up.',
+    top: '{op} is chalked S. Expect people to start asking about them.',
+    watch: 'The elders have {op} down as one to watch.',
+  },
+  // Added to a rival's offer when the runner was on the slate (wording only: the odds do not read the Book).
+  poachNote: 'The slate put a target on them.',
+  empty: "The Anchor hasn't chalked a slate yet. The elders do it on the first Monday of the month.",
+  note: "The Anchor's elders chalk this once a month. It's their opinion, not the truth: it flatters some, misses others. Scouting is how you know.",
+};

@@ -9,9 +9,10 @@
 
 import { hash, hashRng, pick } from './rng.js';
 import { CULTURES, ROLE_PROFILES } from '../data/recruitPools.js';
-import { NAMING, RIVAL_HOMES, RIVALS, STYLES, BRASS_ANCHOR, RESERVED_NAMES, THREAD_CONTINUES, FORMER_KINDS } from '../data/rivals.js';
+import { NAMING, RIVAL_HOMES, RIVALS, STYLES, BRASS_ANCHOR, RESERVED_NAMES, THREAD_CONTINUES, FORMER_KINDS, BOOK_LEAD } from '../data/rivals.js';
 import { cardRating, ratingOf, ratingWord, tierWord } from './rating.js';
 import { rankForHalls } from './tong.js';
+import { publishBook } from './book.js';
 import { fameOf } from './fame.js';
 import { TONG_RANKS } from '../data/tong.js';
 import { NAMES } from '../config/names.js';
@@ -87,7 +88,7 @@ function tongNameFor(rng, style, used) {
 /** A new set of rivals for this game, from hashRng(seed, 'rivals'). Same seed, same tongs. */
 export function seedRivals(state) {
   const rng = hashRng(state.seed, 'rivals');
-  const r = { tongs: [], cards: [], word: [], threads: [], seq: 0, playerRank: state.rank ?? null, offer: null, scouted: {}, lastScout: null, offerSeq: 0, nextOfferDay: 0 };
+  const r = { tongs: [], cards: [], word: [], threads: [], book: null, seq: 0, playerRank: state.rank ?? null, offer: null, scouted: {}, lastScout: null, offerSeq: 0, nextOfferDay: 0 };
   const styles = shuffle(rng, [...STYLES, ...Array.from({ length: Math.max(0, RIVALS.tongs - STYLES.length) }, () => pick(rng, STYLES))]);
   const homes = shuffle(rng, [...RIVAL_HOMES, ...RIVAL_HOMES]);
   const usedNames = new Set(); const takenPeople = new Set((state.crew ?? []).map((o) => o.name));
@@ -287,6 +288,7 @@ export function weeklyRivals(state) {
 
   // 6. Bound the talk like the inbox: old entries go, never more than wordMax.
   threadsStep(r, day);
+  publishBook(state); // C5: the Anchor's slate, on the Sunday before a month's first Monday (core/book.js)
   r.word = r.word.filter((w) => day - w.day <= RIVALS.wordWeeks * 7).slice(-RIVALS.wordMax);
   return state;
 }
@@ -428,12 +430,13 @@ export function wordFor(state, w) {
 export function mondayWord(state, max = RIVALS.mondayLines) {
   const r = state.rivals; if (!r) return [];
   const recent = r.word.filter((w) => state.day - w.day < 7).reverse();
+  const lead = recent.filter((w) => w.kind === BOOK_LEAD).slice(0, 1); // C5: the Anchor's slate leads, and counts in the cap
   const views = (list, n) => list.map((w) => wordFor(state, w)).filter(Boolean).slice(0, n);
   const continuing = recent.filter((w) => THREAD_CONTINUES.includes(w.kind));
   const ours = recent.filter((w) => FORMER_KINDS.includes(w.kind));
   const seen = new Set(); const first = []; const rest = [];
-  for (const w of recent.filter((x) => !continuing.includes(x) && !ours.includes(x))) (seen.has(w.kind) ? rest : first).push(w) && seen.add(w.kind);
-  return [...views(continuing, RIVALS.threadMonday), ...views(ours, RIVALS.formerMonday), ...views([...first, ...rest], max)].slice(0, max);
+  for (const w of recent.filter((x) => !continuing.includes(x) && !ours.includes(x) && !lead.includes(x))) (seen.has(w.kind) ? rest : first).push(w) && seen.add(w.kind);
+  return [...views(lead, 1), ...views(continuing, RIVALS.threadMonday), ...views(ours, RIVALS.formerMonday), ...views([...first, ...rest], max)].slice(0, max);
 }
 
 /** Tiers, high to low, each with its tongs sorted by name. No order beyond tier (C.1 rule 2). */

@@ -35,6 +35,7 @@ import { createNewGame, chooseFounders } from '../core/state.js';
 import { marksText } from '../core/marks.js';
 import { recordOf } from '../core/record.js';
 import { LEGEND_TEXT } from '../data/legend.js';
+import { bookGrade } from '../core/book.js';
 import { fameOf, fameName, standingOf, standingWord, pathOf, legendProgress } from '../core/fame.js';
 import { FAME_RULES, NAMED_OFFER, NAMED_TEXT } from '../data/fame.js';
 import { templateById, jobView, nextUnlock, JOB_GATES } from '../core/jobs.js';
@@ -1870,7 +1871,8 @@ function fameBadge(op) {
   const fame = fameOf(op);
   if (fame === 'unknown') return '';
   const word = fame === 'elite' ? ` · <span class="fame__standing">${esc(standingWord(op))}</span>` : '';
-  return `<p class="famebadge"><span class="fame fame--${esc(fame)}">${esc(fameName(fame))}</span> · ${esc(op.tier ?? '')}${word}</p>`;
+  const slate = bookGrade(state, op.runnerId ?? op.id);
+  return `<p class="famebadge"><span class="fame fame--${esc(fame)}">${esc(fameName(fame))}</span> · ${esc(op.tier ?? '')}${word}${slate ? ` · <span class="muted">Anchor's slate ${esc(slate)}</span>` : ''}</p>`;
 }
 
 /** Their path (core/fame.js) and how far it is to Elite and Legend; the numbers behind a tap. */

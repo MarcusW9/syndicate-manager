@@ -15,7 +15,9 @@ import { buyoutAmount, operativeToCard } from './dossier.js';
 import { carried } from './gear.js';
 import { money } from './money.js';
 import { isSworn } from './oath.js';
+import { bookGrade } from './book.js';
 import { OATH } from '../data/oath.js';
+import { BOOK_TEXT } from '../data/rivals.js';
 
 const rankIndex = (id) => TONG_RANKS.findIndex((r) => r.id === id);
 
@@ -82,7 +84,7 @@ export function weeklyPoach(state) {
   op.poachSnoozeUntil = state.day + MOBILITY.snoozeDays;
   state.inbox.unshift({
     id: `poach-${op.id}-${state.day}`, type: 'crew', day: state.day,
-    subject: fill(POACH_TEXT.subject, vars), body: fill(POACH_TEXT.body, vars), kind: 'poach',
+    subject: fill(POACH_TEXT.subject, vars), body: fill(POACH_TEXT.body, vars) + (bookGrade(state, op.runnerId ?? op.id) ? ` ${BOOK_TEXT.poachNote}` : ''), kind: 'poach', // the slate is wording only: no odds read it
     options: [{ id: 'match', label: `Match it (${money(matchPay(op))} a week)` }, { id: 'go', label: `Let them go (${money(buyout)} to us)` }],
     payload: { opId: op.id, tongId: tong.id, expiresDay: state.day + MOBILITY.expiryDays, pay: matchPay(op), buyout },
     blocking: false, resolved: false, read: false,

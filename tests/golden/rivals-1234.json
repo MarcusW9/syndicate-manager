@@ -551,6 +551,39 @@
    }
   ]
  },
+ "c5": {
+  "month": 2,
+  "entries": [
+   "S:Dicky Yip:up",
+   "S:Pema Singh:up",
+   "A:Gigi Cheung:up",
+   "A:Zuri Okoro:up",
+   "B:Bikram Rai:up",
+   "B:Dewi Rahman:steady",
+   "B:Dewi Wijaya:steady",
+   "B:Hoi-yan Yip:steady",
+   "B:Linh Nguyen:up",
+   "B:Sunita Thapa:down",
+   "C:Budi Rahman:up",
+   "C:Imran Khan:up",
+   "C:Ivy Cheung:steady",
+   "C:Jun Reyes:steady",
+   "C:Karen Ma:up",
+   "C:Somchai Rahman:up",
+   "D:Amara Adeyemi:new",
+   "D:Amara Kamau:down",
+   "D:Ines O'Brien:new",
+   "D:Ivy Lee:down",
+   "D:Paolo Bautista:new"
+  ],
+  "watch": [
+   "c13",
+   "c6",
+   "c24",
+   "c32"
+  ],
+  "gone": []
+ },
  "c4": {
   "threads": [
    {
@@ -594,13 +627,15 @@
   ],
   "word": [
    "took_work:jade-mantis-hand",
+   "book_up:",
    "gone_quiet:jade-mantis-hand",
    "free_name:op:r1",
    "took_work:salt-cormorant-hand",
    "gone_quiet:salt-cormorant-hand",
    "rise_begin:third-mist-society",
    "went_free:c29,salt-cormorant-hand",
-   "former_signed:op:r1,salt-cormorant-hand"
+   "former_signed:op:r1,salt-cormorant-hand",
+   "book_up:"
   ]
  }
 }

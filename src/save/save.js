@@ -746,5 +746,10 @@ function migrate(state) {
     }
     state.version = 58;
   }
+  if (state.version === 58) {
+    // v59: C5, the Anchor's Book (DESIGN.md 2026-11-09): `state.rivals.book`, null until the first slate goes up.
+    if (state.rivals) state.rivals.book ??= null;
+    state.version = 59;
+  }
   return state;
 }

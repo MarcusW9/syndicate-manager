@@ -275,7 +275,7 @@ test('the card bands match the tiers a card signs as', () => {
 });
 
 test('v57 saves upgrade: threads, runnerId and formerOf appear; a card made by a leaver is marked ours', async () => {
-  assert.equal(SAVE_VERSION, 58);
+  assert.ok(SAVE_VERSION >= 58);
   const s = game(24);
   const old = JSON.parse(JSON.stringify(s));
   old.version = 57; delete old.rivals.threads;
@@ -283,7 +283,7 @@ test('v57 saves upgrade: threads, runnerId and formerOf appear; a card made by a
   for (const o of old.crew) delete o.runnerId;
   old.rivals.cards.push({ ...old.rivals.cards[0], id: 'op:xc12', name: 'Left Us' });
   const up = await importSave({ text: async () => JSON.stringify(old) });
-  assert.equal(up.version, 58);
+  assert.equal(up.version, SAVE_VERSION, 'upgraded all the way');
   assert.deepEqual(up.rivals.threads, []);
   assert.ok(up.crew.every((o) => o.runnerId === o.id));
   assert.ok(up.rivals.cards.every((c) => 'formerOf' in c && c.runnerId));

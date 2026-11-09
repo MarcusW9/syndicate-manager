@@ -7,6 +7,13 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · The Anchor's Book (save v59)
+- **A monthly slate of the city's runners.** On the first Monday of each month the Brass Anchor Society's elders chalk letter grades, S down to D, for up to 25 runners: other tongs' people, free names and yours. Open it from the new **The Anchor's Book** card at the top of City › Tongs. It shows this month's grades, who moved (up, down, steady, new, back), who has gone quiet, and **Ones to watch**: young names to go and scout (a Scout button on each). A runner's page and a name's profile show their grade.
+- **It is the street's opinion, not the truth.** It goes by how well known someone is, how they've been doing lately and their age, plus a bias the street holds about them. It flatters loud tongs and well-known names and misses quiet ones, so scouting still tells you more. It never uses anyone's real worth, and it changes nothing about fame, pay, jobs, heat, loyalty or who gets approached.
+- **The Monday Word leads with "The Anchor's slate is up"** (inside the three-line cap). Joss writes once if one of yours moved up, reached S or is down as one to watch. If a rival makes an offer for a runner who is on the slate, the offer says "the slate put a target on them" (the odds don't change).
+- Lore: the elders chalk the slate at the Anchor's teahouse in Old Town (never the Silt); see WORLD.md.
+- The slate against the truth (`node scripts/sim-book.mjs`, 80 seeds): its top-or-not call matches the real ranking about 72% of the time; the three-band match is about 46% and the exact grade about 23%. Nearly every slate has an over-graded S/A name (about 90 to 94%) and a missed quiet runner (100%).
+
 ## 2026-11-09 · The other tongs feel alive (save v58)
 - **Stories, not one-off lines.** When a tong loses a hall, The Word now follows it: it takes any work it can get, then it either folds or finds its feet again. A new tong hangs its lantern, opens its first room, then takes its first name from outside. A tong that climbs a rung is later talked about as picking up names. Each story is a few lines over a few weeks, and only ever talk, never results.
 - **People you let go stay in the story.** A runner who leaves for another tong (you let them go, or you said nothing) is remembered: The Word says when they sign somewhere, step up, get better known or are let go again, in an "one of yours, once" line. Crew › Wall has a new **Gone elsewhere** list (up to ten names, where they are now). Between two free names of equal worth, one of yours may be put forward first.
