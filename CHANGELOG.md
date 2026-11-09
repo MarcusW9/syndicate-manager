@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · Fix: a report from a job with a getaway opened with an error
+- Opening the report of a job that rolled a getaway threw an error in the full log, because that log assumed every event had a choice. The getaway now shows as its own line with its roll, and an event of a kind the log doesn't know no longer breaks it.
+
 ## 2026-11-09 · Navigation, step 3: Ops becomes City; recruiting moves to Leads
 - **Ops is now City**, with Map · Districts · Tongs. The old "Places" buttons are gone. Map: the city map, Out now, Tonight. Districts: a card for each district, each opening its page. Tongs: the other tongs by tier, free names, names on the street. The Book link sits in City's header on every sub-tab.
 - **Heists** moved to Jobs › Heists (Jobs is now Board · Heists · Side). The Map keeps a one-line marker that links there.

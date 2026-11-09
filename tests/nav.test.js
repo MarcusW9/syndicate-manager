@@ -370,3 +370,26 @@ test('Today\'s crews-out line goes to City › Map and Back returns to Today', a
   app.click('back');
   assert.equal(app.tab(), 'inbox');
 });
+
+// The report's full log drew every event it did not know as a crisis with a choice; the getaway (core/piloting.js)
+// has none, so a report from a job that rolled one threw `e.choice.startsWith` (found while taking screenshots).
+test('a report whose job rolled a getaway opens, and its full log shows the getaway', async () => {
+  const state = createNewGame({ seed: 3, startCrew: 'fresh' });
+  const text = 'Kettle gets them out clean: heat −1.';
+  state.inbox.unshift({ id: 'report-x', type: 'report', kind: 'report', day: 1, read: true, subject: 'Report: a job', body: 'Done.',
+    timeline: { result: 'completed', steps: ['They went in.'], outcome: [{ tone: 'plain', text: 'Paid ¥1,000.' }], events: [
+      { kind: 'beat', text: 'They went in.', first: true },
+      { kind: 'decision', text: 'A guard.', choice: 'Talk past him', actor: { id: 'a', handle: 'Kettle' } },
+      { kind: 'getaway', stat: 'piloting', actor: { id: 'a', handle: 'Kettle' }, die: 14, value: 3, need: 10, success: true, result: 'clean', shed: 1, text },
+      { kind: 'invented-later', text: 'Something a future version records.' },
+    ] } });
+  const app = await boot({ state });
+  app.click('nav', 'inbox');
+  app.click('open-message', 'report-x');
+  const html = app.html();
+  assert.match(html, /class="flog"/, 'the full log drew');
+  assert.ok(html.includes(text.replace('−', '−')), 'the getaway line is in it');
+  assert.match(html, /Die 14 \+ piloting 3 = 17/, 'with its roll');
+  assert.match(html, /Talk past him/, 'a decision still shows its choice');
+  assert.match(html, /Something a future version records/, 'an unknown kind with no choice still draws');
+});

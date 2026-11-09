@@ -1407,6 +1407,12 @@ function renderFullLog(t) {
           ${e.phase === 'start' || e.phase === 'end' ? `<p class="flog__line ${e.phase === 'start' || e.hurt?.length ? 'tone--warn' : 'tone--good'}">${esc(e.report ?? e.text)}</p>` : ''}
           ${e.phase === 'retreat' ? `<p class="flog__line tone--warn">${esc(e.text)}</p>` : ''}
         </div>`,
+      // The getaway (core/piloting.js): one line and its roll. It has no crisis or choice, so the catch-all below can't draw it.
+      getaway: () => `
+        <div class="flog__step">
+          <p class="flog__line ${e.success === false ? 'tone--bad' : 'tone--good'}">${esc(e.text)}</p>
+          ${rollDetail(e)}
+        </div>`,
       critical: () => `
         <div class="flog__step">
           <p class="flog__crisis">${esc(e.patient)} is critical.</p>
@@ -1417,7 +1423,7 @@ function renderFullLog(t) {
     }[e.kind] ?? (() => `
         <div class="flog__step">
           <p class="flog__crisis">${esc(e.text)}</p>
-          <p class="flog__choice">${e.actor && !e.choice.startsWith(e.actor.handle) ? `<strong>${esc(e.actor.handle)}</strong> · ` : ''}${esc(e.choice)}</p>
+          ${e.choice != null ? `<p class="flog__choice">${e.actor && !e.choice.startsWith(e.actor.handle) ? `<strong>${esc(e.actor.handle)}</strong> · ` : ''}${esc(e.choice)}</p>` : ''}
           ${e.why ? `<p class="flog__why">${esc(e.why)}</p>` : ''}
           ${e.report ? `<p class="flog__line ${e.kind === 'exit' ? 'tone--warn' : e.success === false ? 'tone--bad' : 'tone--good'}">${esc(e.report)}</p>` : ''}
           ${rollDetail(e)}
