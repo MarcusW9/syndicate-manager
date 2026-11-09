@@ -40,3 +40,20 @@ export const raidTemplate = (district) => ({
   keyStats: ['combat', 'cool'], beats: ['They are at the door.'], crises: [],
   brief: 'They are at the hall\'s door, and whoever is home is holding it.',
 });
+
+/**
+ * The one-off fixer call (2026-11-09): shown the first time a raid is warned, from a contact in the
+ * hall's district. Slots: {hall} {heat} {when} {who}. `buy` / `noBuy` is the line about paying them off.
+ */
+export const RAID_CALL = {
+  kicker: 'Fixer call',
+  title: 'The police are coming for the hall',
+  lines: [
+    'Word from {hall}: {who} are coming for it. Heat there is {heat}, and that is what drew them.',
+    'They will come {when}. The date does not move.',
+  ],
+  buy: 'Some of them take money. The notice will say if these do.',
+  noBuy: 'Nobody there can be bought off. It is the hall or the door.',
+  deflt: 'Decide any time before then, or not at all: if you do not call it, whoever is home holds.',
+  gang: 'Word from {hall}: {who} want it. They have a grudge with us, and it is not forgotten.',
+};

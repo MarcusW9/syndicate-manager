@@ -255,7 +255,7 @@ export function cardToOperative(state, card, { wage, level = scoutLevel(state, c
     history: [`Day ${state.day}: joined the crew`],
   });
   op.fame = d.career.fame; op.standing = d.career.standing; op.record = d.career.record;
-  op.runnerId = card.runnerId ?? card.id; // the same person, whichever side of the door they are on (v58)
+  op.runnerId = card.runnerId ?? card.id; // the same person, whichever side of the door they are on (v59)
   return op;
 }
 

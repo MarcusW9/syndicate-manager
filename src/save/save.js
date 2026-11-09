@@ -734,7 +734,14 @@ function migrate(state) {
     state.version = 57;
   }
   if (state.version === 57) {
-    // v58: C4, rivals feel alive (DESIGN.md 2026-11-09). `state.rivals.threads` (stories told in beats), every card gains
+    // v58: raid warnings get a stated plan (`raid.plan`: 'hold' | 'clear' | null) and the one-off fixer call
+    // is remembered (`raidCallSeen`). A save that already has raids has been through the warnings: skip the call.
+    for (const r of state.raids ?? []) r.plan ??= null;
+    state.raidCallSeen ??= (state.raids ?? []).length > 0;
+    state.version = 58;
+  }
+  if (state.version === 58) {
+    // v59: C4, rivals feel alive (DESIGN.md 2026-11-09). `state.rivals.threads` (stories told in beats), every card gains
     // `runnerId` and `formerOf`, every runner gains `runnerId`. A card made when a runner of ours left (its id starts
     // 'op:') is marked as theirs; the rest are null. One stable id per person: drop the 'op:' and 'x' prefixes
     // that signing and leaving add ('xc12' is the runner signed from card 'c12').
@@ -744,12 +751,12 @@ function migrate(state) {
       state.rivals.threads ??= [];
       for (const c of state.rivals.cards ?? []) { c.runnerId ??= base(c.id); c.formerOf ??= String(c.id).startsWith('op:') ? 'player' : null; }
     }
-    state.version = 58;
-  }
-  if (state.version === 58) {
-    // v59: C5, the Anchor's Book (DESIGN.md 2026-11-09): `state.rivals.book`, null until the first slate goes up.
-    if (state.rivals) state.rivals.book ??= null;
     state.version = 59;
+  }
+  if (state.version === 59) {
+    // v60: C5, the Anchor's Book (DESIGN.md 2026-11-09): `state.rivals.book`, null until the first slate goes up.
+    if (state.rivals) state.rivals.book ??= null;
+    state.version = 60;
   }
   return state;
 }

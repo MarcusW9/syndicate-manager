@@ -163,11 +163,11 @@ test('the lore is in step: the prompt copy and WORLD.md say the Anchor keeps a b
   assert.match(world, /teahouse in Old Town \(not in the Silt\)/);
 });
 
-test('v58 saves upgrade to v59 with no Book yet', async () => {
-  assert.equal(SAVE_VERSION, 59);
-  const old = JSON.parse(JSON.stringify(game(9))); old.version = 58; delete old.rivals.book;
+test('v59 saves upgrade to v60 with no Book yet', async () => {
+  assert.ok(SAVE_VERSION >= 60);
+  const old = JSON.parse(JSON.stringify(game(9))); old.version = 59; delete old.rivals.book;
   const up = await importSave({ text: async () => JSON.stringify(old) });
-  assert.equal(up.version, 59);
+  assert.equal(up.version, SAVE_VERSION);
   assert.equal(up.rivals.book, null);
   assert.deepEqual(bookView(up), { published: false, groups: [], watch: [], gone: [] });
 });

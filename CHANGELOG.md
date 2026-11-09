@@ -7,14 +7,14 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
-## 2026-11-09 · The Anchor's Book (save v59)
+## 2026-11-09 · The Anchor's Book (save v60)
 - **A monthly slate of the city's runners.** On the first Monday of each month the Brass Anchor Society's elders chalk letter grades, S down to D, for up to 25 runners: other tongs' people, free names and yours. Open it from the new **The Anchor's Book** card at the top of City › Tongs. It shows this month's grades, who moved (up, down, steady, new, back), who has gone quiet, and **Ones to watch**: young names to go and scout (a Scout button on each). A runner's page and a name's profile show their grade.
 - **It is the street's opinion, not the truth.** It goes by how well known someone is, how they've been doing lately and their age, plus a bias the street holds about them. It flatters loud tongs and well-known names and misses quiet ones, so scouting still tells you more. It never uses anyone's real worth, and it changes nothing about fame, pay, jobs, heat, loyalty or who gets approached.
 - **The Monday Word leads with "The Anchor's slate is up"** (inside the three-line cap). Joss writes once if one of yours moved up, reached S or is down as one to watch. If a rival makes an offer for a runner who is on the slate, the offer says "the slate put a target on them" (the odds don't change).
 - Lore: the elders chalk the slate at the Anchor's teahouse in Old Town (never the Silt); see WORLD.md.
 - The slate against the truth (`node scripts/sim-book.mjs`, 80 seeds): its top-or-not call matches the real ranking about 72% of the time; the three-band match is about 46% and the exact grade about 23%. Nearly every slate has an over-graded S/A name (about 90 to 94%) and a missed quiet runner (100%).
 
-## 2026-11-09 · The other tongs feel alive (save v58)
+## 2026-11-09 · The other tongs feel alive (save v59)
 - **Stories, not one-off lines.** When a tong loses a hall, The Word now follows it: it takes any work it can get, then it either folds or finds its feet again. A new tong hangs its lantern, opens its first room, then takes its first name from outside. A tong that climbs a rung is later talked about as picking up names. Each story is a few lines over a few weeks, and only ever talk, never results.
 - **People you let go stay in the story.** A runner who leaves for another tong (you let them go, or you said nothing) is remembered: The Word says when they sign somewhere, step up, get better known or are let go again, in an "one of yours, once" line. Crew › Wall has a new **Gone elsewhere** list (up to ten names, where they are now). Between two free names of equal worth, one of yours may be put forward first.
 - **The Word on Monday is capped at three lines:** one story carrying on, one name of yours, then the rest.
@@ -23,6 +23,25 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 ## 2026-11-09 · A one-page guide to the other tongs (docs only)
 - New `docs/RIVAL-TONGS.md`: what is built for the rival tongs, how they behave, the rules the tests protect, where the code lives, and what is still open. No game change.
+
+## 2026-11-09 · The oath notice, reworded
+- The "could be sworn in" message now reads: "{runner} has logged {weeks} weeks on the books for us. They're now eligible to be \"sworn\" into our Tong as a permanent member. Drop {cost} to execute the covenant at the shrine, locking their loyalty and permanently etching their name into the ledger."
+
+## 2026-11-09 · Clients list padding
+- Jobs › Clients rows no longer touch the left and right edges of their frame (the row's side padding was being cleared).
+
+## 2026-11-09 · Leads count is a badge
+- Crew › Leads shows its count as a badge (like the Today and Jobs tabs) instead of a bare number after the word.
+
+## 2026-11-09 · Raid warning pass
+- Raids have their own **Threats** section, pinned above Out now on City › Map. Each card reads "Police raid · Docks hall", then the day, days to go and the cause (the district's heat, a gang's grudge, or being followed home); who is at the hall sits on its own line; and the two plans, Hold the hall and Clear out, say what each costs. "View hall roster ›" replaces the old hall link.
+- The first raid you are warned about opens a one-off fixer call (a sheet) explaining the raid; later raids skip it. Hold the hall, Clear out or Decide later.
+- The header heat chip, Today (a priority line per raid) and tapping the raided district on the map all go to the raid card.
+- Continue shows a soft warning ("Raid hits Sat. No plan: whoever's home will hold.") when a raid arrives tomorrow with no plan. It never blocks.
+- Not deciding is a decision: you can set or change the plan any time until the raid. On the day your plan is carried out; with none, whoever is home holds the hall (with nobody home, the call waits for you as before). Today keeps the raid as a priority line, "Raid tomorrow" the day before. Saves upgrade to version 58.
+
+## 2026-11-09 · Reading mail no longer jumps to the top
+- On tablets and other wide screens, opening a message on Today keeps your place in the list, so you can read down the inbox without scrolling back each time. Phones still start a message at the top.
 
 ## 2026-11-09 · The oath costs eight weeks of wage
 - Holding the ceremony for a sworn runner now costs eight weeks of their wage (it was two), and Joss no longer checks the spelling in the ledger scene; that is the wall's job.
