@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · Tidy: unused styles removed, open items written up
+- Deleted the styles for the removed Lore cards, Clients strip and Places buttons. `docs/nav-rework-open-items.md` lists what to check while playing the rework and the decisions still open; the handoff's stale build-order line now says which parts were already built.
+
 ## 2026-11-09 · Navigation, step 5: Today's crews out is one line
 - Today shows one line for the crews out (with the calls waiting), linking to City › Map, where the full cards live. This was already how it worked, so the change is small: the line now says "City ›" and not "Ops ›", the sitemap was corrected, and a test pins it. Take the call works from the call-in message on Today and from the card on the Map.
 

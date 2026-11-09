@@ -217,9 +217,6 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .siderow__meta { grid-row: 1 / 3; grid-column: 2; font-size: 0.8rem; color: var(--muted); white-space: nowrap; display: flex; align-items: center; column-gap: 0.3em; }
 .siderow__sub { font-size: 0.8rem; color: var(--muted); display: flex; flex-wrap: wrap; align-items: center; column-gap: 0.3em; } /* a row, so the stat's icon and word sit on the name's line (owner, iPad, 2026-10-29) */
 /* Clients: a strip of chips. */
-.clientstrip { list-style: none; margin: 0; padding: 0 0 4px; display: flex; gap: 8px; overflow-x: auto; }
-.clientchip { flex: 0 0 auto; display: grid; gap: 2px; padding: 8px 12px; border: 1px solid var(--line); font-size: 0.85rem; }
-.clientchip .trust { font-size: 0.75rem; text-align: left; } /* left, like the rest of the chip (.trust is right-aligned in tables) */
 /* Wide screens: the board stays beside the job being planned. Phones and tablets: the plan replaces
    it, with a back button (owner, 2026-10-29: at iPad width the plan was squeezed; 1100px became 1400px). */
 .jobsplit__list { display: none; }
@@ -240,7 +237,7 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
   .jobsplit__side .planbar__why--more { display: grid; }
   .jobsplit__side .planbar__tries { flex: none; }
   .jobsplit__list .jobslist { grid-template-columns: 1fr; }
-  .jobsplit__list .sidelist, .jobsplit__list .clientstrip, .jobsplit__list h2, .jobsplit__list .infoline:not(.climb), .jobsplit__list .talk { display: none; }
+  .jobsplit__list .sidelist, .jobsplit__list h2, .jobsplit__list .infoline:not(.climb), .jobsplit__list .talk { display: none; }
   .jobsplit__plan [data-action="back"] { display: none; }
 }
 .clients { margin-top: 16px; }
@@ -1275,28 +1272,6 @@ p > .infobtn { display: inline-grid; vertical-align: 2px; margin-left: 4px; }
 .tonight__what { flex: 1; display: grid; min-width: 0; }
 .tonight__where { font: 700 0.8rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 .tonight__go { color: var(--accent-2); font: 700 0.78rem var(--display); letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; }
-.cityplaces { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.cityplace { display: grid; gap: 2px; text-align: left; min-height: 56px; }
-/* The Ops card points to the district's write-up on City (2026-11-06). */
-.citycard__about { display: inline-flex; align-items: center; min-height: var(--tap, 44px); margin-top: 4px; }
-/* City › Districts (2026-11-06): the city as a book, each district led by its picture, its gang's
-   light on the corner as on the map's plates. The whole head is one tap target that opens the rest. */
-.lorecards { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 14px; }
-.lorecard { position: relative; background: var(--panel-2); border: 1px solid var(--line);
-  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); }
-.lorecard::before { content: ''; position: absolute; z-index: 1; top: 0; left: 0; width: 28px; height: 2px; background: var(--turf); }
-.lorecard.is-open { border-color: var(--turf); }
-.lorecard__head { display: grid; gap: 4px; width: 100%; padding: 0 0 12px; text-align: left; background: none; border: 0; color: var(--text); font: inherit; cursor: pointer; }
-.lorecard__head > :not(.lorecard__art) { padding: 0 14px; }
-.lorecard__art { display: block; margin-bottom: 8px; }
-.lorecard__art svg { display: block; width: 100%; height: auto; }
-.lorecard__head > .lorecard__title { padding-top: 12px; }
-.lorecard__art + .lorecard__title { padding-top: 0; }
-.lorecard__title strong { font-family: var(--display); font-size: 1.1rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-2); }
-.lorecard__more { color: var(--accent-2); font-family: var(--display); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; min-height: 28px; display: flex; align-items: end; }
-.lorecard__body { padding: 0 14px 12px; border-top: 1px solid var(--line); }
-.lorecard__body .linkbtn { min-height: var(--tap, 44px); }
-@media (min-width: 900px) { .lorecards { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; } }
 /* Lettering inside the district pictures (ui/districtArt.js): the container stencil, and the neon
    signs' Chinese in the system's CJK font, as the city's name is elsewhere. */
 .da-stencil { font: 700 6.5px var(--display); letter-spacing: 0.12em; fill: #e9e2cf; opacity: 0.85; }
