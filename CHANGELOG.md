@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · A one-page guide to the other tongs (docs only)
+- New `docs/RIVAL-TONGS.md`: what is built for the rival tongs, how they behave, the rules the tests protect, where the code lives, and what is still open. No game change.
+
 ## 2026-11-09 · The oath costs eight weeks of wage
 - Holding the ceremony for a sworn runner now costs eight weeks of their wage (it was two), and Joss no longer checks the spelling in the ledger scene; that is the wall's job.
 

@@ -2,7 +2,7 @@
 
 Where things live and how a run flows, so you can read a few functions instead of whole files. Rules (architecture, tests, docs, commits) are in `CLAUDE.md`; status and what's next in `HANDOFF.md`; why each choice was made in `DESIGN.md` (decision log rows in `docs/design/`). Keep this file short and current: when you move something, fix its line here.
 
-See also `docs/ARCHITECTURE.md` (state shapes, economy loop, `finish()`, saves, tests).
+See also `docs/ARCHITECTURE.md` (state shapes, economy loop, `finish()`, saves, tests). For the other tongs (rivals, free names, scouting, buyouts, rival offers) start at `docs/RIVAL-TONGS.md`.
 
 ## Layers (from CLAUDE.md)
 - `src/core/` game logic, pure: state in, new state out. `src/ui/` the only DOM. `src/save/save.js` the only storage. `src/data/` content as data. `src/config/names.js` all placeholder names.

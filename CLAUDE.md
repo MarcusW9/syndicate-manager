@@ -18,6 +18,7 @@ Text-first crew management game (Football Manager style, endless). Plain JavaScr
 | A job, crisis or beat (content) | `src/data/missions/<job>.js`, then `core/validate.js` and `core/jobcheck.js` for the rules it must meet (`node scripts/check-job.mjs <file>`) |
 | A run's flow, `finish()`, pay/heat/reputation | `CODEMAP.md` "The run, in order", then `core/mission.js` |
 | Planning read, risk numbers | `core/squad.js`, `core/risk.js` |
+| The other tongs (rivals, free names, scouting, buyouts, rival offers) | `docs/RIVAL-TONGS.md` |
 | Traits, growth, specialisations | `data/earnedTraits.js`, `core/earned.js`, `core/development.js` |
 | Side tasks, hands-off runs | `core/sidetasks.js`, `core/autorun.js` |
 | Changing the save shape | `src/save/save.js` (`migrate`) and `SAVE_VERSION` in `core/state.js` |
