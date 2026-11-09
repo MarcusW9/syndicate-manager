@@ -61,12 +61,12 @@ function tongCard(t) {
     <span class="tongcard__go">Open ›</span></button></li>`;
 }
 
-function tongPage(state, view, id) {
+function tongPage(state, view, id, back) {
   for (const { tier, tongs } of view.tiers) {
     const t = tongs.find((x) => x.id === id);
     if (!t) continue;
     return `<section class="panel tongs">
-      <button class="linkbtn" data-action="tongs-open">‹ The other tongs</button>
+      <button class="linkbtn" data-action="back">‹ ${esc(back)}</button>
       <h1 class="cityhead">${esc(t.name)}</h1>
       <p class="small">A ${esc(tierName(tier).toLowerCase())} tong, ${esc(STYLE_TEXT[t.style].label.toLowerCase())} by style. ${esc(STYLE_TEXT[t.style].line)}</p>
       <dl class="tongfacts">
@@ -107,9 +107,9 @@ export function scoutRow(state) {
 }
 
 /** A name's page: what scouting has shown, what signing would cost, who could go and watch them, and Sign. */
-function namePage(state, slugId) {
+function namePage(state, slugId, back) {
   const card = findCard(state, slugId);
-  if (!card) return `<section class="panel tongs"><button class="linkbtn" data-action="tongs-open">‹ The other tongs</button><h1 class="cityhead">Gone</h1><p class="small muted">${esc(SIGN_REASON.gone)}</p></section>`;
+  if (!card) return `<section class="panel tongs"><button class="linkbtn" data-action="back">‹ ${esc(back)}</button><h1 class="cityhead">Gone</h1><p class="small muted">${esc(SIGN_REASON.gone)}</p></section>`;
   const r = readFor(state, card);
   const a = approachFor(state, card.id);
   const out = (state.sideOut ?? []).some((x) => x.scout === card.id);
@@ -127,7 +127,7 @@ function namePage(state, slugId) {
     : free.length ? `<h2>Send someone to watch them (two days)</h2><div class="namebtns">${free.map((o) => `<button class="btn" data-action="scout-send" data-id="${esc(`${r.id}|${o.id}`)}">${esc(o.handle)}</button>`).join('')}</div>`
     : '<p class="small muted">Nobody is free to go and watch them.</p>';
   return `<section class="panel tongs namepage">
-    <button class="linkbtn" data-action="tongs-open">‹ The other tongs</button>
+    <button class="linkbtn" data-action="back">‹ ${esc(back)}</button>
     <div class="namehead">${faceOfCard(state, card.id, 104)}<div><h1 class="cityhead">${esc(r.name)}</h1>
     <p class="small">${esc([r.role, FAME_LINE[r.fame], r.tong ? `with ${r.tong}` : r.from ? `lately of ${r.from}` : 'between tongs'].join(' · '))}. ${esc(fill(RATING_WORDS[r.word] ?? '', { role: r.role, home: inText(r.home) }).replace(/^./, (c) => c.toUpperCase()))}.</p></div></div>
     <h2>What we know</h2>
@@ -140,12 +140,12 @@ function namePage(state, slugId) {
 }
 
 /** Ops › The other tongs: dossier cards by tier, then Names on the street. `openId` opens one tong's page. */
-export function renderTongs(state, openId = null) {
+export function renderTongs(state, openId = null, back = 'Ops') {
   const view = rivalView(state);
-  if (openId?.startsWith('name:')) return namePage(state, openId.slice(5));
-  if (openId) { const page = tongPage(state, view, openId); if (page) return page; }
+  if (openId?.startsWith('name:')) return namePage(state, openId.slice(5), back);
+  if (openId) { const page = tongPage(state, view, openId, back); if (page) return page; }
   return `<section class="panel tongs">
-    <button class="linkbtn" data-action="tongs-close">‹ Ops</button>
+    <button class="linkbtn" data-action="back">‹ ${esc(back)}</button>
     <h1 class="cityhead">The other tongs</h1>
     <p class="small muted">Peers, not gangs: they work, hire and rise like us, and the city talks about them. Nobody keeps a table; you hear where you stand.</p>
     ${freeNamesBlock(state, view)}

@@ -2,9 +2,25 @@
 
 A sitemap of the app as of 2026-11-09, for rethinking the layout. Source: `renderScreen()` and `render()` in `src/ui/app.js`. Keep it current when content moves between tabs (one line per move). Why something moved goes in the `DESIGN.md` log; how it looked goes in `docs/screenshots/`.
 
+## Layout rules (2026-11-09, the navigation rework)
+
+The target the rework is moving the app towards, one commit at a time (the plan is in `HANDOFF.md`). The sitemap below is the app **as it is now**; "Moves" says what each commit changed.
+
+1. **Tabs are nouns.** Today: what needs me. City: what's happening out there. Tong: what we've built. Crew: who we have and who we could get. Jobs: what work there is.
+2. **One home per page.** A page always opens on its home tab, whichever tab the link was on; links elsewhere are shortcuts to that home. This does not limit actions: take-the-call can still work from several places. The lookup is `HOMES` in `src/ui/nav.js`; a move updates it in the same commit.
+3. **Today owns the attention feed:** inbox, briefing, The Word. It does not duplicate management or world-detail pages; its cards link to those pages' homes.
+4. **Five tabs at most.** Save lives in ☰ in the top bar.
+5. **Segmented sub-tabs** at the top of a tab, not "Places" buttons.
+6. **Live state and lore sit together.** A district or client page shows what's happening now, with the lore below it.
+7. **Back restores where you were in the navigation, and never rewinds the game.** It restores the tab, sub-tab, filters, the open page and scroll, and keeps an in-progress plan or squad selection across a shortcut (Plan → Armoury → Back). It never restores an old snapshot of game state: the page you return to shows the state now. With no history (a direct link, a fresh load) Back opens the root view of the destination's home sub-tab with nothing selected. A root view shows no in-app Back control. Choosing a tab starts fresh navigation (the history is cleared). Code: the stack in `src/ui/nav.js`, `viewNow` / `remember` / `restoreView` / `toRoot` in `ui/app.js`.
+8. **Badges mean different things.** Today owns attention counts (anything waiting on the player: calls, raids, hall offers, decisions). Other tabs show only counts that mean something different and never count the same event twice: Jobs shows open jobs; City shows no number (crews out is activity, shown inside City); Tong shows no badge.
+
+Navigation state (`screen`, `cityTab`, the open page ids) is module state in `ui/app.js`. It is **not** saved and not deep-linked (checked 2026-11-09: no `location`, `history` or storage use under `src/ui`, and nothing in `src/save` or `src/core` reads a view value), so no old value needs mapping.
+
 ## Shell (every screen)
 
 - **Top bar:** day/clock, Cash, Heat, rank, Continue (hidden while planning a job), ☰ Save.
+- **Back:** a detail page (a message, a runner, a lead, the Armoury, a hall and its build, a plan, a tong, a name) has one Back control; root views have none.
 - **Tab bar:** Today · Ops · Crew · Jobs · Lore · ☰ Save. Pills: unread on Today, calls on Ops, open jobs on Jobs.
 - **Dock (phone):** Continue above the tab bar, except while planning or on a job.
 - **During a job:** tabs and Save step aside; the watch screen (`renderMission`) owns the page.
@@ -15,8 +31,8 @@ A sitemap of the app as of 2026-11-09, for rethinking the layout. Source: `rende
 | Tab | Holds (in page order) | Sub-views opened from it |
 | --- | --- | --- |
 | **Today** (`inbox`) | Week strip; alerts; Out line; crews out; back cards; briefing; Upcoming list; inbox | A message (job report, Monday brief, Sunday summary, renewal, raid call/warning, heat notice, spec offer); the report timeline, summary and full log |
-| **Ops** | Heist card; **Out now** (raids, crews out, side work) over the city map; **Tonight** list; **At home**; **Places**; one card per district | **Hall page** (from a district card's "Manage the hall"); **Hall build**; **The other tongs** (list, a tong, Free names, a name's page, Names on the street) |
-| **Crew** | Roster rows; Leads (recruits); The wall (memorial); **Halls**; **Armoury** card | A runner's page (record, path, home, gear); a recruit's page; the Armoury and gear sheet; a **hall's page** and **Hall build** (from Halls) |
+| **Ops** | Heist card; **Out now** (raids, crews out, side work) over the city map; **Tonight** list; **At home**; **Places**; one card per district | The district's card (its hall button opens the hall on Crew); **The other tongs** (list, a tong, Free names, a name's page, Names on the street) |
+| **Crew** | Roster rows; Leads (recruits); The wall (memorial); **Halls**; **Armoury** card | A runner's page (record, path, home, gear); a recruit's page; the Armoury and gear sheet; a **hall's page** and **Hall build** (from Halls, the district card or a raid card: always here) |
 | **Jobs** | Runners strip; the job board; Side board; Clients strip | Plan (squad board, approach, inside/outside, Joss's picks, coverage read; beside the board on 1400px+); side-work plan; scout rows for free names |
 | **Lore** | Sub-tabs: Districts · Clients · Who's who · History | A district's lore (from Ops "About … on Lore") |
 | **Save** (`settings`) | Slots, Backups, difficulty / new game | — |
@@ -35,7 +51,7 @@ Section names are the headings in the code. "(x)" marks something that shows onl
 - Heist card (x), then Out now: raids, crews out (each with a mini map), side work. A district filter ("… only · show all") narrows it.
 - City map with the district labels and zoom; Tonight list; At home; Places (Halls, The other tongs, a disabled Bar · black market).
 - District cards: name, who is there (faces), crews out, jobs open, "Manage the hall ›" (x), "About … on Lore ›".
-- Hall page (`renderHallPage`): header with landmark, then The place (the plan and beds, Build), Who sleeps here, Move someone in, The block (parts, Expand, Buy).
+- Hall page (`renderHallPage`, on Crew since step 1): header with landmark, then The place (the plan and beds, Build), Who sleeps here, Move someone in, The block (parts, Expand, Buy).
 - Hall build (`ui/hallbuild.js`): grid over the hall's map, palette, Place / Turn / Remove.
 - The other tongs (`ui/tongs.js`): tongs grouped by tier, Free names, Names on the street. A tong's page has The latest and its names; a name's page has What we know, What it would take, and Send someone to watch them (2 days).
 
@@ -57,11 +73,16 @@ Section names are the headings in the code. "(x)" marks something that shows onl
 
 **Watch** (`renderMission`, `ui/watch.js`): site map with the crew moving on it, the feed beside it (phones stack them), crisis choices, the face-off (`ui/duel.js`), command-fight orders (`ui/fightorders.js`), call-ins from away crews, finale and direct-buzz screens, the end card, then the report in the feed.
 
+## Moves (one line per move, newest first)
+
+- 2026-11-09, step 1 (routing by home): a **hall's page** now always opens on Crew (its home for now), also from Ops' district card and Today's raid cards; it used to stay on whichever tab opened it. The **hall build** screen likewise.
+- 2026-11-09, step 1: every **Back** is one control backed by the navigation stack (`ui/nav.js`): it returns to the view you came from, with filters, plan and scroll; the old per-page "‹ Ops / ← Crew / ← Jobs" buttons and `returnTo` are gone. A runner's page, a lead, the Armoury, a message, a plan, a tong and a name all push the view you left.
+
 ## The overlaps (the awkward bits)
 
 | Content | Lives on | Also reachable from | Note |
 | --- | --- | --- | --- |
-| Halls (list, residents, buy/expand/move in) | Crew | Ops › Places "Halls — On Crew" button; Ops district card | The button only navigates to Crew. A hall's page and Build show on **whichever tab opened them** (Crew or Ops). |
+| Halls (list, residents, buy/expand/move in) | Crew | Ops › Places "Halls — On Crew" button; Ops district card; Today's raid cards | Every link opens the hall page on Crew (step 1). Moves to Tong › Halls in step 2. |
 | Raids on halls | Ops (Out now, rings on the map); Today (alerts, call/warning messages) | — | Fought on the watch screen. |
 | The other tongs, Free names | Ops › Places | Jobs side board (Scout rows); Today's Monday brief (The Word) | Three entry points, one place to read them. |
 | Clients | Jobs (strip) | Lore › Clients | Jobs shows trust; Lore is the who's who. |

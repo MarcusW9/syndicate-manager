@@ -77,6 +77,7 @@ import { sendScout, signCard } from '../core/dossier.js';
 import { clientRival } from '../core/rivals.js';
 import { clientRivalLine } from '../data/rivals.js';
 import { freelancerAsCrew, shareOf, MAX_FREELANCERS_PER_JOB } from '../core/freelance.js';
+import { createNav, homeOf, pageKind, placeLabel, rootOf, TAB_NAMES } from './nav.js';
 
 let state;
 let screen = 'inbox';
@@ -113,7 +114,8 @@ const backPlayed = new Set(); // back cards whose faces have already slid home: 
 let importInput = null; // the hidden save-file picker (see mountApp)
 let focusNext = null; // { action, id }: the control to focus after the next render (going back to a list)
 let traitTip = null; // 'pageId|key': the trait chip or synergy whose card is open (one at a time)
-let returnTo = null; // { screen, messageId }: where a runner's page opened from a name link goes back to
+const nav = createNav(); // the Back stack (ui/nav.js): views to return to, never game state
+let scrollDue = null; // scroll to this after the next render (Back restores where you were)
 let founderPick = []; // candidate ids picked so far on a new game's first screen (renderFounding)
 let runnersHidden = false; // the job board's runners panel, folded away for this session
 let clientOpen = false; // the plan's client background, shown on tap (owner, 2026-11-04: the same on every job they offer)
@@ -158,6 +160,44 @@ function setState(next) {
   render();
 }
 
+// --- navigation (ui/nav.js) --------------------------------------------
+/** The view as it is now: everything Back has to put back. Plan objects are kept by reference (the plan is UI, not game state). */
+function viewNow() {
+  return { screen, openMessageId, openOperativeId, openRecruitId, openArmoury, hallPage, buildView, tongsView, cityDistrict, cityTab, loreDistrict, inboxUnread, plan, sidePlan };
+}
+
+/** A link to a page: remember this view (and the control that was tapped) so Back can return to it. */
+function remember(action, id) {
+  nav.push({ ...viewNow(), via: { action, id }, scrollY: window.scrollY ?? 0 });
+  scrollDue = 0;
+}
+
+/** Put a remembered view back. Pages that have gone since (a lead hired, a job taken) fall back to their list. */
+function restoreView(v) {
+  ({ screen, openMessageId, openOperativeId, openRecruitId, openArmoury, hallPage, buildView, tongsView, cityDistrict, cityTab, loreDistrict, inboxUnread, plan, sidePlan } = v);
+  if (openMessageId && !state.inbox.some((m) => m.id === openMessageId)) openMessageId = null;
+  if (openOperativeId && ![...state.crew, ...state.memorial].some((o) => o.id === openOperativeId)) openOperativeId = null;
+  if (openRecruitId && !(state.recruits ?? []).some((r) => r.id === openRecruitId)) openRecruitId = null;
+  if (plan && !state.jobs.some((j) => j.id === plan.jobId)) plan = null;
+  gearSlot = null; bagPick = null; pickSlot = null;
+}
+
+/** Back with nothing to go back to (a direct link, a fresh load): the root of the page's home tab, no page opened. */
+function toRoot() {
+  restoreView(rootOf(viewNow()));
+  scrollDue = 0;
+}
+
+/** Is Back showing on this view? Never at a root view; on a district only when a shortcut brought you (the map has its own "Whole city"). */
+const canGoBack = () => { const k = pageKind(viewNow()); return !!k && (k !== 'district' || nav.depth > 0); };
+
+/** The Back control's words: where it will land. */
+function backLabel() {
+  const top = nav.peek();
+  if (top) { const l = placeLabel(top); return /^[A-Z]/.test(l) ? l : `Back to ${l}`; }
+  return TAB_NAMES[homeOf(pageKind(viewNow())) ?? screen] ?? 'Back';
+}
+
 // --- events ------------------------------------------------------------
 function onClick(e) {
   const t = e.target.closest('[data-action]');
@@ -165,7 +205,7 @@ function onClick(e) {
   const { action, id } = t.dataset;
 
   switch (action) {
-    case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; screen = id; returnTo = null; buildView = null; tongsView = null; hallPage = null; openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; gearSlot = null; bagPick = null; plan = null; sidePlan = null; pickSlot = null; break;
+    case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; screen = id; nav.clear(); scrollDue = 0; buildView = null; tongsView = null; hallPage = null; openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; gearSlot = null; bagPick = null; plan = null; sidePlan = null; pickSlot = null; break;
     case 'continue': {
       if (isBlocked(state) || Date.now() < continueRestUntil) return;
       const next = advanceDay(state);
@@ -181,20 +221,26 @@ function onClick(e) {
     // A crew's district in the list: light it on the map (scrolled into view) and narrow the list to it.
     case 'city-show': cityDistrict = cityDistrict === id ? null : id; cityMapDue = !!cityDistrict; break;
     case 'city-tab': cityTab = id; break;
-    case 'tongs-open': tongsView = ''; window.scrollTo?.(0, 0); break;
-    case 'tongs-close': tongsView = null; window.scrollTo?.(0, 0); break;
-    case 'tong-page': tongsView = id; window.scrollTo?.(0, 0); break;
+    case 'tongs-open': remember(action, id); screen = homeOf('tong'); tongsView = ''; break;
+    case 'tong-page': remember(action, id); screen = homeOf('tong'); tongsView = id; break;
     // A free name or a name in a tong: its page, a scout trip (two days away), and signing (core/dossier.js).
-    case 'tong-name': screen = 'ops'; tongsView = `name:${id}`; window.scrollTo?.(0, 0); break;
+    case 'tong-name': remember(action, id); screen = homeOf('name'); tongsView = `name:${id}`; break;
     case 'scout-send': { const [name, opId] = id.split('|'); return setState(sendScout(state, name, opId)); }
-    case 'sign-name': { const next = signCard(state, id); if (next !== state) tongsView = ''; return setState(next); }
+    case 'sign-name': { // signed: the name's page is gone, so go back to where it was opened from
+      const next = signCard(state, id);
+      if (next !== state) { const view = nav.pop(); if (view) { restoreView(view); scrollDue = view.scrollY; } else toRoot(); }
+      return setState(next);
+    }
     // Lore › Districts: open one district's full write-up (tap again to fold it); from the Ops card, go there.
-    case 'ops-district': screen = 'ops'; cityDistrict = id; cityMapDue = true; break;
+    case 'ops-district': // a shortcut to the district's page; from Ops itself it just selects the district
+      if (screen !== homeOf('district') || pageKind(viewNow()) !== null) remember(action, id);
+      screen = homeOf('district'); tongsView = null; cityDistrict = id; cityMapDue = true; break;
     case 'lore-district': loreDistrict = loreDistrict === id ? null : id; break;
-    case 'about-district': screen = 'lore'; cityTab = 'districts'; loreDistrict = id; loreDue = true; break;
-    case 'read-message': screen = 'inbox'; // from Ops' Tonight list; then as open-message
-    // falls through
+    case 'about-district': remember(action, id); screen = 'lore'; cityTab = 'districts'; loreDistrict = id; loreDue = true; break;
+    case 'read-message': // from Ops' Tonight list
     case 'open-message': {
+      remember(action, id);
+      screen = homeOf('message');
       openMessageId = id;
       const msg = state.inbox.find((m) => m.id === id);
       // A hands-off report you haven't read plays out once: you didn't watch that job.
@@ -202,36 +248,20 @@ function onClick(e) {
       if (msg && !msg.read) { msg.read = true; saveGame(state); }
       break;
     }
-    case 'back':
-      // A runner's page opened from a name in a message, or from the runners on the job board, goes back there.
-      if (returnTo && openOperativeId) {
-        focusNext = { action: 'op-link', id: openOperativeId };
-        ({ screen } = returnTo); openMessageId = returnTo.messageId; openOperativeId = null; gearSlot = null; bagPick = null; returnTo = null;
-        break;
-      }
-      // A hall's page goes back to the tab it was opened on (Crew or Ops); what was opened from it comes back to it.
-      if (hallPage && !openOperativeId && !openRecruitId && !openArmoury && !buildView) {
-        focusNext = { action: 'hall-page', id: hallPage };
-        hallPage = null;
-        break;
-      }
-      // Land keyboard focus back on the row that was opened.
-      focusNext = openMessageId ? { action: 'open-message', id: openMessageId }
-        : openRecruitId ? { action: 'open-recruit', id: openRecruitId }
-        : openOperativeId ? { action: 'open-op', id: openOperativeId }
-        : openArmoury ? { action: 'open-armoury' }
-        : buildView ? { action: 'build-hall', id: buildView.district }
-        : plan ? { action: 'open-job', id: plan.jobId }
-        : sidePlan ? { action: 'open-side', id: sidePlan.taskId } : null;
-      openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; buildView = null; gearSlot = null; bagPick = null; plan = null; sidePlan = null; pickSlot = null;
+    // Back puts the view you came from back (ui/nav.js): its tab, page, filters, plan and scroll. With nothing to
+    // go back to (a direct link, a fresh load) it opens the root of the page's home tab. The game is never rewound.
+    case 'back': {
+      const view = nav.pop();
+      if (view) { restoreView(view); focusNext = view.via; scrollDue = view.scrollY; } else toRoot();
       break;
+    }
     case 'decide': return setState(resolveDecision(state, id, t.dataset.option));
-    case 'open-op': screen = 'crew'; openArmoury = false; openOperativeId = id; returnTo = null; bagPick = null; break;
     // A crew member's name in a message: open their page, remembering the message to come back to.
     case 'trait-tip': traitTip = traitTip === id ? null : id; break;
-    case 'op-link': returnTo = { screen, messageId: openMessageId }; screen = 'crew'; openArmoury = false; openRecruitId = null; openOperativeId = id; break;
+    // A runner's name or face anywhere (a message, a job board strip, a hall, a district card): their page, on Crew.
+    case 'open-op': case 'op-link': remember(action, id); screen = homeOf('runner'); openArmoury = false; openRecruitId = null; openOperativeId = id; bagPick = null; break;
     // Gear (ui/gear.js, core/gear.js): the armoury, and a runner's slots.
-    case 'open-armoury': screen = 'crew'; openArmoury = true; openOperativeId = null; gearSlot = null; break;
+    case 'open-armoury': remember(action, id); screen = homeOf('armoury'); openArmoury = true; openOperativeId = null; openRecruitId = null; gearSlot = null; break;
     case 'buy': return setState(buyGear(state, id, t.dataset.tier || 'street'));
     case 'buy-offer': return setState(buyOffer(state, id));
     case 'sell': {
@@ -258,7 +288,7 @@ function onClick(e) {
       break;
     }
     case 'bag-off': { const uid = bagPick; bagPick = null; return setState(unequip(state, openOperativeId, uid)); }
-    case 'open-recruit': openRecruitId = id; break;
+    case 'open-recruit': remember(action, id); screen = homeOf('recruit'); openRecruitId = id; break;
     case 'founder-toggle':
       if (founderPick.includes(id)) founderPick = founderPick.filter((x) => x !== id);
       else if (founderPick.length < FOUNDERS_TO_PICK) founderPick = [...founderPick, id];
@@ -267,7 +297,7 @@ function onClick(e) {
     case 'found-crew': {
       const next = chooseFounders(state, founderPick);
       if (next === state) return;
-      founderPick = []; screen = 'inbox';
+      founderPick = []; nav.clear(); screen = 'inbox';
       return setState(next);
     }
     case 'hire': openRecruitId = null; return setState(hire(state, id));
@@ -287,8 +317,9 @@ function onClick(e) {
       break;
     }
     // Building up a hall (ui/hallbuild.js, core/hallbuild.js).
-    case 'hall-page': if (screen !== 'ops') screen = 'crew'; hallPage = id; openOperativeId = null; openRecruitId = null; openArmoury = false; buildView = null; returnTo = null; window.scrollTo?.(0, 0); break;
-    case 'build-hall': if (screen !== 'ops') screen = 'crew'; hallPage = id; openOperativeId = null; openArmoury = false; buildView = { district: id, cell: null, piece: null, rot: 0, picked: null, tab: 'defence' }; window.scrollTo?.(0, 0); break;
+    // A hall's page opens on its home tab whichever tab the link was on (ui/nav.js HOMES).
+    case 'hall-page': remember(action, id); screen = homeOf('hall'); hallPage = id; openOperativeId = null; openRecruitId = null; openArmoury = false; buildView = null; break;
+    case 'build-hall': remember(action, id); screen = homeOf('hallBuild'); hallPage = id; openOperativeId = null; openArmoury = false; buildView = { district: id, cell: null, piece: null, rot: 0, picked: null, tab: 'defence' }; break;
     case 'build-cell': {
       const [x, y] = id.split(',').map(Number);
       const hall = hallIn(state, buildView.district);
@@ -329,7 +360,8 @@ function onClick(e) {
     case 'move-hall': { const [opId, d] = id.split('|'); return setState(moveToHall(state, opId, d)); }
     case 'open-job': { // also from Today's alerts
       // The plan starts as Joss's read from the board card, so the risk the card showed is the risk here.
-      screen = 'jobs';
+      if (!plan) remember(action, id); // choosing another job from the list beside a plan swaps the plan, not a new page
+      screen = homeOf('plan');
       const job = state.jobs.find((j) => j.id === id);
       const r = job ? boardRead(job) : null;
       // The brief in full the first time this session, then two lines (2026-11-05).
@@ -354,7 +386,7 @@ function onClick(e) {
       const msg = state.inbox.find((m) => m.id === id);
       if (msg) msg.read = true;
       buzzStage = null;
-      if (action === 'buzz-in') { screen = 'jobs'; plan = null; sidePlan = null; } else { screen = 'inbox'; openMessageId = id; }
+      nav.clear(); if (action === 'buzz-in') { screen = 'jobs'; plan = null; sidePlan = null; } else { screen = 'inbox'; openMessageId = id; }
       saveGame(state);
       break;
     }
@@ -394,7 +426,7 @@ function onClick(e) {
     case 'callin': plan.callIn = id; break;
     case 'mode': plan.mode = id; break; // send them away, or watch live (DESIGN.md 2026-11-04)
     case 'kit': plan.kit = id; break;
-    case 'open-side': sidePlan = { taskId: id, crew: [] }; break;
+    case 'open-side': if (!sidePlan) remember(action, id); screen = homeOf('sidePlan'); sidePlan = { taskId: id, crew: [] }; break;
     case 'toggle-side-crew': {
       const task = sideTaskById(sidePlan.taskId);
       if (sidePlan.crew.includes(id)) sidePlan.crew = sidePlan.crew.filter((x) => x !== id);
@@ -405,6 +437,7 @@ function onClick(e) {
     case 'send-side': {
       const next = sendOnSideTask(state, sidePlan.taskId, sidePlan.crew);
       sidePlan = null;
+      nav.clear();
       screen = 'ops';
       return setState(next);
     }
@@ -415,6 +448,7 @@ function onClick(e) {
       if (out) sendOffCue = { jobId: plan.jobId, name: templateById(out.mission.templateId).name, returnDay: out.returnDay,
         crewIds: [...out.mission.crewIds, out.mission.overwatch?.id, out.mission.wheels, out.mission.standby?.id].filter(Boolean) };
       plan = null;
+      nav.clear();
       screen = 'ops';
       openMessageId = null;
       return setState(next);
@@ -440,14 +474,14 @@ function onClick(e) {
     case 'fight-pull': takeOrders(); return setState(pullBack(state));
     case 'choose': return setState(chooseOption(state, id));
     case 'critical': return setState(resolveCritical(state, id));
-    case 'close-mission': screen = 'inbox'; return setState(closeMission(state));
+    case 'close-mission': nav.clear(); screen = 'inbox'; return setState(closeMission(state));
     case 'finale-close': closeFinale(); return;
     // Away crews calling in (core/away.js): take the call, then hand it back or take command.
     case 'take-call': openMessageId = null; return setState(takeCall(state, id));
     case 'raid-pay': return setState(payOffRaid(state, id)); // pay the police off before the day (core/raids.js)
     // A raid at the door, answered from Ops: its call is a message on Today.
-    case 'raid-answer': { screen = 'inbox'; openMessageId = id; const m = state.inbox.find((x) => x.id === id); if (m && !m.read) { m.read = true; saveGame(state); } break; }
-    case 'let-run': screen = 'ops'; return setState(letThemRun(state));
+    case 'raid-answer': { remember(action, id); screen = homeOf('message'); openMessageId = id; const m = state.inbox.find((x) => x.id === id); if (m && !m.read) { m.read = true; saveGame(state); } break; }
+    case 'let-run': nav.clear(); screen = 'ops'; return setState(letThemRun(state));
     case 'take-command': return setState(takeCommand(state));
     case 'sendoff-close': t.remove(); return;
     case 'export':
@@ -467,7 +501,7 @@ function onClick(e) {
         break;
       }
       setActiveSlot(n);
-      screen = 'inbox'; plan = null; openMessageId = null; openOperativeId = null; openRecruitId = null;
+      nav.clear(); screen = 'inbox'; plan = null; openMessageId = null; openOperativeId = null; openRecruitId = null;
       return setState(loaded);
     }
     case 'slot-new': newGameSlot = Number(id); break;
@@ -481,7 +515,7 @@ function onClick(e) {
       deleteSlot(slot);
       setActiveSlot(slot);
       newGameSlot = null;
-      screen = 'inbox'; plan = null; openMessageId = null; openOperativeId = null; openRecruitId = null;
+      nav.clear(); screen = 'inbox'; plan = null; openMessageId = null; openOperativeId = null; openRecruitId = null;
       founderPick = [];
       return setState(createNewGame({ difficulty, startCrew: 'pick' }));
     }
@@ -495,7 +529,7 @@ function onClick(e) {
       try {
         const restored = restoreUnreadable(n);
         setActiveSlot(n);
-        screen = 'inbox'; plan = null; openMessageId = null; openOperativeId = null; openRecruitId = null;
+        nav.clear(); screen = 'inbox'; plan = null; openMessageId = null; openOperativeId = null; openRecruitId = null;
         return setState(restored);
       } catch (err) { alert(`Could not restore it yet: ${err.message}`); }
       break;
@@ -507,7 +541,7 @@ function onClick(e) {
     case 'restore-backup': {
       const backup = loadBackup();
       if (backup && confirm(`Go back to the automatic backup from day ${backup.day}? Everything since then will be lost.`)) {
-        screen = 'inbox';
+        nav.clear(); screen = 'inbox';
         return setState(backup);
       }
       break;
@@ -522,7 +556,7 @@ const planOpts = () => ({ overwatch: plan.overwatch ? { id: plan.overwatch, kit:
 function onImportFile() {
   if (!importInput.files[0]) return;
   importSave(importInput.files[0])
-    .then((loaded) => { screen = 'inbox'; plan = null; setState(loaded); })
+    .then((loaded) => { nav.clear(); screen = 'inbox'; plan = null; setState(loaded); })
     .catch((err) => alert(`Could not load that file: ${err.message}`));
 }
 
@@ -679,6 +713,7 @@ function render() {
   fitGearArt(root); // the squad board's gear drawings fill their cells
   root.querySelector('.buzz__pick, .buzz [data-action="buzz-in"]')?.focus({ preventScroll: true }); // the call has the floor
   if (pickSlot) (root.querySelector('.sheet .cand.is-on') ?? root.querySelector('.sheet .cand:not([disabled])'))?.focus({ preventScroll: true });
+  if (scrollDue !== null) { window.scrollTo?.(0, scrollDue); scrollDue = null; } // Back puts the scroll back; a new page starts at the top
   if (mapTo) { animateMap(root.querySelector('.citymap__view'), mapView, mapTo); mapView = mapTo; mapTo = null; }
   if (cityMapDue) { cityMapDue = false; root.querySelector('.mapframe')?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
   if (loreDue) { loreDue = false; root.querySelector('.lorecard.is-open')?.scrollIntoView({ block: 'start' }); }
@@ -799,12 +834,12 @@ function navButton(id, label, count = 0, countWord = '') {
 function renderScreen() {
   if (state.founding && screen !== 'settings') return renderFounding(); // nothing else until the founders are picked
   if (screen === 'inbox') return renderInbox();
-  // A hall's page and its build screen show on the tab they were opened from (Crew or Ops).
-  if ((screen === 'crew' || screen === 'ops') && !openOperativeId && !openRecruitId && !openArmoury) {
-    if (buildView && hallIn(state, buildView.district)) return renderHallBuild({ esc, money, cityName }, state, buildView);
+  // A hall's page and its build screen are on their home tab (ui/nav.js HOMES).
+  if (screen === 'crew' && !openOperativeId && !openRecruitId && !openArmoury) {
+    if (buildView && hallIn(state, buildView.district)) return renderHallBuild({ esc, money, cityName, backLabel: backLabel() }, state, buildView);
     if (hallPage && hallIn(state, hallPage)) return renderHallPage(hallPage);
   }
-  if (screen === 'crew') return openRecruitId ? renderRecruit() : openOperativeId ? renderOperative() : openArmoury ? renderArmoury(gearUi, state) : renderCrew();
+  if (screen === 'crew') return openRecruitId ? renderRecruit() : openOperativeId ? renderOperative() : openArmoury ? renderArmoury({ ...gearUi, backLabel: backLabel() }, state) : renderCrew();
   // Jobs: on wide screens the board stays beside the job being planned (styles.css hides it on phones).
   if (screen === 'jobs' && plan) {
     // The plan, then the job list with the plan bar under it: from 1400px wide the list and the bar
@@ -815,7 +850,7 @@ function renderScreen() {
     return `<div class="jobsplit"><div class="jobsplit__plan">${body}</div><div class="jobsplit__side"><div class="jobsplit__list">${renderJobs()}</div>${planBarHtml}</div></div>`;
   }
   if (screen === 'jobs') return sidePlan ? renderSidePlan() : renderJobs();
-  if (screen === 'ops') return tongsView !== null ? renderTongs(state, tongsView || null) : renderOpsScreen();
+  if (screen === 'ops') return tongsView !== null ? renderTongs(state, tongsView || null, backLabel()) : renderOpsScreen();
   if (screen === 'lore') return renderLore();
   if (screen === 'settings') return renderSettings();
   return '';
@@ -1183,7 +1218,7 @@ function renderMessage(m) {
   const jobLink = (m.type === 'job' || m.id === 'welcome') && state.jobs.length ? `<button class="btn" data-action="nav" data-id="jobs">Open the job board</button>`
     : m.type === 'scout' && (state.recruits ?? []).length ? `<button class="btn" data-action="nav" data-id="crew">See the leads</button>` : '';
   return `
-      <button class="btn btn--ghost inbox__back" data-action="back">← Today</button>
+      <button class="btn btn--ghost inbox__back" data-action="back">← ${esc(backLabel())}</button>
       <h1>${crewLinks(m.subject)}</h1>
       <p class="muted">${esc(m.type.charAt(0).toUpperCase() + m.type.slice(1))} · Day ${m.day}</p>
       ${m.type === 'report' ? renderReportTimeline(m) : m.kind === 'week' && m.payload?.lines ? renderWeekSummary(m) : `<p class="body">${crewLinks(m.body)}</p>`}
@@ -1545,7 +1580,7 @@ function renderHallPage(d) {
   const free = freeBeds(state, d);
   return `
     <section class="panel hallpage">
-      <button class="linkbtn" data-action="back">‹ ${screen === 'ops' ? 'Ops' : 'Crew'}</button>
+      <button class="linkbtn" data-action="back">‹ ${esc(backLabel())}</button>
       <div class="hallpage__head">${hallMark(d, { raid: live })}
         <div><h1 class="btitle">The ${esc(cityName(d).replace(/^The /, ''))} hall${d === HOME_HALL ? ' <span class="hall__home">home</span>' : ''}${h.owned ? ' <span class="hall__home hall__owned">ours</span>' : ''}</h1>
         <p class="muted small">${esc(HALL_SITES[d]?.place ?? '')}</p></div>
@@ -1634,7 +1669,7 @@ function renderRecruit() {
   const can = canHire(state, r);
   return `
     <section class="panel">
-      <button class="btn btn--ghost" data-action="back">← Crew</button>
+      <button class="btn btn--ghost" data-action="back">← ${esc(backLabel())}</button>
       <div class="ophead">
         ${face(r, 'lg')}
         <div>
@@ -1778,7 +1813,7 @@ function renderOperative() {
   const nameOf = (id) => state.crew.find((x) => x.id === id)?.handle ?? state.memorial.find((x) => x.id === id)?.handle ?? id;
   return `
     <section class="panel">
-      <button class="btn btn--ghost" data-action="back">${returnTo ? (returnTo.screen === 'jobs' ? '← Back to the job' : '← Back to the message') : '← Crew'}</button>
+      <button class="btn btn--ghost" data-action="back">← ${esc(backLabel())}</button>
       <div class="ophead">
         ${face(op, 'lg')}
         <div class="ophead__who">
@@ -2021,7 +2056,7 @@ function renderSidePlan() {
   const odds = sidePlan.crew.length ? sideOdds(state, t, sidePlan.crew) : null;
   return `
     <section class="panel">
-      <button class="btn btn--ghost" data-action="back">← Jobs</button>
+      <button class="btn btn--ghost" data-action="back">← ${esc(backLabel())}</button>
       <h1>${esc(t.name)}</h1>
       <p class="muted">${esc(districtName(t.district))} · ${esc(PURPOSE[t.purpose])} · ${t.days} day${t.days > 1 ? 's' : ''} away · up to ${t.crew}</p>
       <p class="body">${esc(sidePitch(t))}</p>
@@ -2197,7 +2232,7 @@ function renderPlan() {
 
   return `
     <section class="panel">
-      <button class="btn btn--ghost" data-action="back">← Jobs</button>
+      <button class="btn btn--ghost" data-action="back">← ${esc(backLabel())}</button>
       <h1>${esc(t.name)}</h1>
       <p class="muted">${esc(districtName(t.district))}${districtTurf(t.district)} · threat ${threatHtml(v)} · pays ${money(v.pay)} · crew away ${v.days}d · ${daysLeft(job.expiresDay)}</p>
       ${DISTRICTS[t.district] && briefOpen ? `<p class="muted small">${esc(DISTRICTS[t.district].pitch)}</p>` : ''}
@@ -2827,6 +2862,7 @@ function districtCard(key) {
   const out = crewOutIn(key);
   return `
     <div class="riskcard citycard" style="--turf:${turfHex(key) ?? 'var(--line)'}">
+      ${canGoBack() ? `<button class="linkbtn" data-action="back">‹ ${esc(backLabel())}</button>` : ''}
       <h2 class="nomargin">${esc(cityName(key))} <span class="muted">${esc(c.chinese)}</span></h2>
       <p class="muted small">${esc(c.side)}${turf ? ` · <span class="citycard__turf">${esc(turf)}</span>` : ''}${key === SAFEHOUSE_DISTRICT ? ' · our home hall' : hallIn(state, key) ? ' · a hall of ours' : ''}${out ? ` · ${out} of yours out here` : ''}${heatIn(state, key) ? ` · heat ${heatIn(state, key)}/10` : ''}</p>
       <p class="body">${esc(c.pitch)}</p>

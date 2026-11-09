@@ -96,7 +96,7 @@ export function renderArmoury(ui, state) {
   const bySlot = (list, slotOf) => Object.entries(SLOTS).map(([slot, s]) => [s.name, list.filter((x) => slotOf(x) === slot)]).filter(([, l]) => l.length);
   return `
     <section class="panel">
-      <button class="btn btn--ghost" data-action="back">← Crew</button>
+      <button class="btn btn--ghost" data-action="back">← ${ui.esc(ui.backLabel ?? 'Crew')}</button>
       <h1>Armoury</h1>
       <p class="muted small">Gear stays on whoever carries it, job after job. Put it on someone from their page on the Crew screen. Overwatch needs a rifle or a drone.</p>
       <div class="cols2">

@@ -194,7 +194,7 @@ try {
     if (await click('[data-action="tongs-open"]')) {
       await top(); await shot('tongs');
       if (await click('[data-action="tong-page"]')) { await top(); await shot('tong-page'); }
-      await click('[data-action="tongs-close"]') || await click('[data-action="nav"][data-id="ops"]');
+      await click('[data-action="tongs-close"]') || await click('[data-action="back"]') || await click('[data-action="nav"][data-id="ops"]');
     }
   }
   if (await click('[data-action="nav"][data-id="lore"]')) { await top(); await shot('lore'); }
@@ -206,6 +206,21 @@ try {
   await top(); await shot('desktop');
   // Planning a job on desktop: the top bar drops Continue so only Start moves on (2026-10-28).
   if (await click('[data-action="nav"][data-id="jobs"]') && await click('[data-action="open-job"]')) { await top(); await shot('desktop-planning'); }
+
+  // Back on a phone for the navigation rework (2026-11-09): a district's card, then its hall's page, which opens on its
+  // home tab whichever tab it was opened from. These come last so the numbers of the usual shots hold.
+  await page.setViewportSize({ width: 390, height: 844 });
+  const cityTab = (await visible('[data-action="nav"][data-id="city"]').count()) ? 'city' : 'ops';
+  if (await click(`[data-action="nav"][data-id="${cityTab}"]`) && await click('.cm-label[data-action="city-district"][data-id="oldTown"]')) {
+    await page.evaluate(() => document.querySelector('.citycard')?.scrollIntoView({ block: 'start' }));
+    await shot('district-card');
+    if (await click('[data-action="hall-page"]')) {
+      await top(); await shot('hall-page');
+      await click('[data-action="back"]');
+      await page.evaluate(() => document.querySelector('.citycard')?.scrollIntoView({ block: 'start' }));
+      await shot('back-to-district');
+    }
+  }
 } finally {
   await browser.close();
   server.kill();

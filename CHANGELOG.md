@@ -7,6 +7,11 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · Navigation, step 1: every page has one home, and Back goes back
+- A hall's page (and its Build screen) now always opens on Crew, wherever the link was: Ops' district card, Today's raid cards or Crew's Halls list. Before, it stayed on whichever tab you opened it from.
+- Back is one control with a memory. It returns to the view you left: the same tab, filters and open page, scrolled to where you were, with a job's plan and squad still as you set them (Plan → Armoury → Back). It never rewinds the game: the page you return to shows today's state. Choosing a tab starts afresh. Root views, like a tab's first screen, show no Back.
+- Nothing in the save or the rules changed.
+
 ## 2026-11-08 · A lighter crew list
 - The Crew list no longer shows each runner's highlight line or the scout's read of their potential. Both are on the runner's own page: the highlight right under their name, the potential in Development.
 
