@@ -43,6 +43,7 @@ import { CLIENTS } from '../data/clients.js';
 import { availability, APPROACHES, traitMods, ratedStat, maxCrew, crewSizeRead } from '../core/crew.js';
 import { rollTarget, successChance, riskLabel } from '../core/risk.js';
 import { resolveDecision } from '../core/decisions.js';
+import { swearIn, isSworn, oathRead, oathEligible } from '../core/oath.js';
 import { WATCHED_PENALTY, HEAT_MAX, heatChoices } from '../core/heat.js';
 import { activeRumour } from '../core/rumours.js';
 import { alerts, upcoming } from '../core/upcoming.js';
@@ -283,6 +284,7 @@ function onClick(e) {
       break;
     }
     case 'decide': return setState(resolveDecision(state, id, t.dataset.option));
+    case 'swear-in': return setState(swearIn(state, id));
     // A crew member's name in a message: open their page, remembering the message to come back to.
     case 'trait-tip': traitTip = traitTip === id ? null : id; break;
     // A runner's name or face anywhere (a message, a job board strip, a hall, a district card): their page, on Crew.
@@ -1268,6 +1270,8 @@ function renderMessage(m) {
       ${m.kind === 'renewal' ? renderRenewal(m) : ''}
       ${m.kind === 'heat' ? renderHeatNotice(m) : ''}
       ${m.kind === 'spec' ? renderSpecOffer(m) : ''}
+      ${m.kind === 'retirement' ? renderRetirement(m) : ''}
+      ${m.kind === 'poach' ? renderPoach(m) : ''}
       ${m.kind === 'hall-offer' && !hallIn(state, m.payload.district) ? (canOpenHall(state, m.payload.district).ok ? `<button class="btn btn--primary" data-action="open-hall" data-id="${esc(m.payload.district)}">Open the hall · ${money(HALL_SITES[m.payload.district].deposit)}</button>` : `<p class="muted small">${esc(canOpenHall(state, m.payload.district).reason)}.</p>`) : ''}
       ${m.kind === 'callin' && !m.resolved ? `<button class="btn btn--primary" data-action="take-call" data-id="${esc(m.payload.jobId)}">Take the call</button>` : ''}
       ${m.kind === 'raid' ? renderRaidCall(m) : ''}
@@ -1448,7 +1452,7 @@ function renderRenewal(m) {
           <div><dt>Market value</dt><dd>${money(p.market)}</dd></div>
         </dl>
         ${p.reason === 'fame' ? '<p class="muted small">They became Elite: the street knows the name. Loyal runners ask less often; greedy ones more.</p>'
-          : `<p class="muted small">Loyalty: ${p.jobs} job${p.jobs === 1 ? '' : 's'} with the crew, ${pct}% off the raise${pct >= 25 ? ' (the most loyalty buys)' : ''}.</p>`}
+          : `<p class="muted small">Loyalty ${Math.round(p.loyalty * 100)}/100 (${p.jobs} job${p.jobs === 1 ? '' : 's'} with the crew), ${pct}% off the raise${pct >= 25 ? ' (the most loyalty buys)' : ''}.</p>`}
         ${p.haggleResult ? `<p class="muted">${esc(p.haggleResult)}</p>` : ''}
         ${p.outcome ? `<p><strong>${esc(p.outcome)}</strong></p>` : ''}
       </div>
@@ -1459,6 +1463,27 @@ function renderRenewal(m) {
 }
 
 /** Joss's specialisation offer (core/specialisations.js): what each one does, then take it or not yet. */
+/** A rival tong has made an offer for one of ours (core/mobility.js): match it or take the buyout. */
+function renderPoach(m) {
+  if (m.resolved) return m.payload.outcome ? `<p><strong>${esc(m.payload.outcome)}</strong></p>` : '';
+  return `
+      <div class="stack">
+        ${m.options.map((o) => `<button class="btn ${o.id === 'match' ? 'btn--primary' : 'btn--ghost'}" data-action="decide" data-id="${esc(m.id)}" data-option="${esc(o.id)}">${esc(o.label)}</button>`).join('')}
+      </div>
+      <p class="muted small">Unanswered by day ${m.payload.expiresDay}, they go and the buyout is paid to us.</p>`;
+}
+
+/** A long-serving runner asks to retire (core/retirement.js): stay one more season, or let them go. */
+function renderRetirement(m) {
+  if (m.resolved) return m.payload.outcome ? `<p><strong>${esc(m.payload.outcome)}</strong></p>` : '';
+  const lapsed = state.day > m.payload.expiresDay;
+  return lapsed ? '<p class="muted small">This has passed; they are staying on.</p>' : `
+      <div class="stack">
+        ${m.options.map((o) => `<button class="btn ${o.id === 'stay' ? 'btn--primary' : 'btn--ghost'}" data-action="decide" data-id="${esc(m.id)}" data-option="${esc(o.id)}">${esc(o.label)}</button>`).join('')}
+      </div>
+      <p class="muted small">No answer within a week and they stay on at the current wage.</p>`;
+}
+
 function renderSpecOffer(m) {
   const p = m.payload;
   return `
@@ -1704,7 +1729,11 @@ function renderCrew() {
       <h2>The wall</h2>
       ${state.memorial.length ? `<ul class="list list--plain">
         ${state.memorial.map((m) => `<li class="fallen">${face(m, 'sm')}<span><strong>${esc(m.name)}</strong> "${esc(m.handle)}" <span class="muted">· ${esc(m.role)} · ${esc(m.cause)}, day ${m.day}${m.legend ? ' · a Legend' : ''}</span></span></li>`).join('')}
-      </ul>` : '<p class="muted small">Nobody on the wall.</p>'}`,
+      </ul>` : '<p class="muted small">Nobody on the wall.</p>'}
+      <h2>Hall of Legends</h2>
+      ${(state.hall ?? []).length ? `<ul class="list list--plain">
+        ${state.hall.map((m) => `<li class="fallen">${face(m, 'sm')}<span><strong>${esc(m.name)}</strong> "${esc(m.handle)}" <span class="muted">· ${esc(m.role)} · retired day ${m.day}${m.legend ? ' · a Legend' : ''}</span><br><span class="muted small">${esc(m.epitaph)}${m.record ? ` ${m.record.jobs} jobs, ${m.record.activeWeeks} active weeks.` : ''}</span>${(m.highlights ?? []).length ? `<br><span class="muted small">${esc(m.highlights[0])}</span>` : ''}</span></li>`).join('')}
+      </ul>` : '<p class="muted small">Nobody has retired yet.</p>'}`,
   }[tab]();
   return `
     <section class="panel">
@@ -1896,6 +1925,7 @@ function renderOperative() {
           <h1>${esc(op.name)} <span class="muted">"${esc(op.handle)}"</span></h1>
           <p class="muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age} · ${money(op.wage)}/week</p>
           <div class="ophead__line">${fameBadge(op)}<span class="ophead__status">${statusChip(availability(state, op))}</span></div>
+          ${isSworn(op) ? '<p class="muted small"><strong>Sworn</strong> since day ' + op.sworn + '. A lasting place in the tong.</p>' : oathRead(state, op).ok ? `<button class="btn btn--primary" data-action="swear-in" data-id="${esc(op.id)}">Hold the ceremony · ${money(oathRead(state, op).cost)}</button>` : oathEligible(op) ? `<p class="muted small">Could be sworn. ${esc(oathRead(state, op).reason)}</p>` : ''}
           ${op.record?.highlights?.[0] ? `<p class="muted small ophead__hl">${esc(op.record.highlights[0].text)}</p>` : ''}
           ${marksText(op) ? `<p class="muted small">Marked: ${esc(marksText(op))}</p>` : ''}
         </div>

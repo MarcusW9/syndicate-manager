@@ -716,5 +716,22 @@ function migrate(state) {
     }
     state.version = 54;
   }
+  if (state.version === 54) {
+    // v55: retirement and the Hall of Legends (DESIGN.md 2026-11-09): `state.hall`, empty until someone retires.
+    state.hall ??= [];
+    state.version = 55;
+  }
+  if (state.version === 55) {
+    // v56: loyalty becomes `op.loyalty` 0-100 (DESIGN.md 2026-11-09). Seeded from jobs together at 4 points
+    // a job, the old rule exactly, so no renewal changes on upgrade.
+    for (const op of state.crew ?? []) if (!op.freelance && op.loyalty == null) op.loyalty = Math.min(100, Math.round((op.jobsWithCrew ?? 0) * 4));
+    state.version = 56;
+  }
+  if (state.version === 56) {
+    // v57: sworn runners (DESIGN.md 2026-11-09): `op.sworn` (the day, or null) and `op.oathNotified`. A runner already
+    // eligible is marked notified, so an old save is not met with a notice.
+    for (const op of state.crew ?? []) { op.sworn ??= null; op.oathNotified ??= !op.freelance && (op.record?.activeWeeks ?? 0) >= 26 && (op.loyalty ?? 0) >= 80; }
+    state.version = 57;
+  }
   return state;
 }

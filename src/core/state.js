@@ -14,7 +14,7 @@ import { refreshSideBoard } from './sidetasks.js';
 import { refreshArmoury } from './looks.js';
 import { seedRivals } from './rivals.js';
 
-export const SAVE_VERSION = 54;
+export const SAVE_VERSION = 57;
 
 // A rookie crew's first board: small work only.
 export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];
@@ -75,6 +75,7 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
       },
     ],
     memorial: [],
+    hall: [], // the Hall of Legends: runners who retired with a name (core/retirement.js, save v55)
     jobs: [],
     jobSeq: 0,
     rngCounter: 0,

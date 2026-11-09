@@ -7,6 +7,18 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · Sworn runners (part D4, save v57)
+- A runner with 26 active weeks and loyalty of 80 or more can be **sworn**: a lasting place in the tong, with no stat bonus and no raise. Joss tells you once; after that a "Hold the ceremony" button stays on their page, for two weeks of their wage. Sworn stays even if loyalty later falls. Rivals approach a sworn runner a tenth as often, and selling one costs every other runner 6 loyalty (an ordinary exit costs 2).
+
+## 2026-11-09 · Rival tongs make offers for your runners (part D3, no save change)
+- Once you are a Street tong or bigger, a rival may approach one of your free, unhurt runners on a Sunday. Joss warns you a week ahead: **Match it** (they stay, on about 15% more than the larger of their wage and market value) or **Let them go** (the rival pays you a buyout, priced the same way you pay theirs). Say nothing and they go at the end of the week, never while they are out on a job. Rookies are approached most, veterans less, Elites and Legends rarely, and loyal runners almost never. The rival lists the leaver among its names.
+
+## 2026-11-09 · Loyalty is a number that moves (part D2, save v56)
+- Each runner now has loyalty from 0 to 100, which moves every Sunday: up for a week of real work and for fair pay; down for a week on the bench, pay well under market value, a crewmate lost that week, and refusing a raise (a big drop). The pay-rise screen shows it. It still only changes the raise they ask for, and it starts from jobs together (4 points a job), so nothing changes on upgrade.
+
+## 2026-11-09 · Retirement and the Hall of Legends (part D1, save v55)
+- A runner with 52 or more active weeks may now ask to retire, at most one request a week across the crew and never while they are out on a job or hurt. You answer: **Stay one more season** (they ask 20% more, 35% from the second time, and don't ask again for eight weeks) or **Let them go** (their gear goes back to the stash). Leave it a week and they stay on. Anyone who was Elite or a Legend, or worked 26 weeks or more, is written onto the **Hall of Legends**, shown under the Wall on Crew. Saves upgrade with an empty Hall.
+
 ## 2026-11-09 · Tidy: unused styles removed, open items written up
 - Deleted the styles for the removed Lore cards, Clients strip and Places buttons. `docs/nav-rework-open-items.md` lists what to check while playing the rework and the decisions still open; the handoff's stale build-order line now says which parts were already built.
 

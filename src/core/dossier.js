@@ -202,11 +202,16 @@ export function persuasion(state, card) {
 function buyoutFeeFor(state, card, d) {
   const tong = tongOf(state.rivals, card.tongId);
   if (!tong || card.id === tong.headId) return 0;
+  return buyoutAmount(tong, d.wage);
+}
+
+/** The buyout between us and a tong for a runner on this wage, either way round (part D3): the tong's wealth and regard set it. */
+export function buyoutAmount(tong, wage) {
   const B = RIVALS.buyout;
   const rich = Math.min(B.richCap, Math.floor(tong.wealth / B.richStep) * B.richPer);
   const regard = tong.regard ?? 0;
   const mood = regard <= RIVALS.regard.cold ? B.cold : regard >= RIVALS.regard.warm ? B.warm : 1;
-  return round50(d.wage * B.weeks * (1 + rich) * mood);
+  return round50(wage * B.weeks * (1 + rich) * mood);
 }
 
 /** The buyout owed to the tong a name is in; 0 for a free name; null for a head (never approachable). */

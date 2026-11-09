@@ -3,7 +3,7 @@
 // at most one notice per person every 8 weeks, no notice unless the market pays more.
 
 import { marketWage, round50 } from './pricing.js';
-import { loyaltyDiscount, loyalty } from './loyalty.js';
+import { loyaltyDiscount, loyalty, addLoyalty, LOYALTY_RULES } from './loyalty.js';
 import { primaryStat } from './development.js';
 import { addStatus, hasStatus } from './statuses.js';
 import { bestFor } from './crew.js';
@@ -95,6 +95,7 @@ export function RENEWAL_RESOLVER(state, msg, optionId) {
   } else if (optionId === 'refuse') {
     addStatus(op, 'unhappy', state.day + UNHAPPY_DAYS);
     op.renewalAgain = true; // asks again once the unhappy spell and the cooldown are over
+    addLoyalty(op, LOYALTY_RULES.refusedRaise);
     op.history.push(`Day ${state.day}: pay rise refused`);
     p.outcome = `Refused. ${op.handle}'s head isn't in it for four weeks (−1 on their rolls).`;
   } else return;
