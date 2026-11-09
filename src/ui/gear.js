@@ -73,19 +73,6 @@ function offerRow(ui, state, offer) {
     </li>`;
 }
 
-/** The Crew screen's card: what's in the stash, and the way in. */
-export function armouryCard(ui, state) {
-  const { esc } = ui;
-  const stash = state.stash ?? [];
-  const worn = state.crew.reduce((n, op) => n + carried(op).length, 0);
-  return `
-      <h2>Armoury</h2>
-      <div class="riskcard">
-        <p class="small">${stash.length ? `${stash.length} in the stash` : 'The stash is empty'} · ${worn} carried by the crew</p>
-        <button class="btn btn--block" data-action="open-armoury">${esc(stash.length || worn ? 'Open the armoury' : 'Buy gear')}</button>
-      </div>`;
-}
-
 /** The armoury: the stash (sell, or put it on someone from their page) and what's for sale. */
 export function renderArmoury(ui, state) {
   const { esc, money } = ui;
@@ -94,10 +81,11 @@ export function renderArmoury(ui, state) {
   const forSale = Object.keys(GEAR).filter((type) => !HAS_LOOKS[type]); // guns come from the weekly shelf
   const offers = state.armoury?.offers ?? [];
   const bySlot = (list, slotOf) => Object.entries(SLOTS).map(([slot, s]) => [s.name, list.filter((x) => slotOf(x) === slot)]).filter(([, l]) => l.length);
+  // On Tong › Armoury the tab's own header and sub-tabs frame it (ui.embedded); alone it keeps a heading.
   return `
-    <section class="panel">
-      <button class="btn btn--ghost" data-action="back">← ${ui.esc(ui.backLabel ?? 'Crew')}</button>
-      <h1>Armoury</h1>
+    <section class="${ui.embedded ? 'armoury' : 'panel'}">
+      ${ui.embedded ? '' : `<button class="btn btn--ghost" data-action="back">← ${ui.esc(ui.backLabel ?? 'Crew')}</button>
+      <h1>Armoury</h1>`}
       <p class="muted small">Gear stays on whoever carries it, job after job. Put it on someone from their page on the Crew screen. Overwatch needs a rifle or a drone.</p>
       <div class="cols2">
       <div>

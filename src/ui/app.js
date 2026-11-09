@@ -11,7 +11,7 @@ import { heistFor, heistCard, buyStep, heistEffects, asSentence } from '../core/
 import { HEIST_RULES, heistById } from '../data/heists.js';
 import { crewLead } from '../core/lead.js';
 import { rankOf } from '../core/tong.js';
-import { TONG_EXPLAINER } from '../data/tong.js';
+import { TONG_EXPLAINER, TONG_RANKS } from '../data/tong.js';
 import { RAID } from '../data/raids.js';
 import { NAMES } from '../config/names.js';
 import { DISTRICTS, SAFEHOUSE_DISTRICT } from '../data/districts.js';
@@ -58,7 +58,7 @@ import { takeCall, letThemRun, takeCommand, crewsOut, dayDone } from '../core/aw
 import { OVERWATCH_KIT, ALERT_MAX } from '../core/incidents.js';
 import { leanPicks, jobRead, planRead, planTries } from '../core/squad.js';
 import { renderBoard, renderPicker, renderCoverage, assignSlot, planKit, fitGearArt } from './board.js';
-import { armouryCard, renderArmoury, renderLoadout, renderGearSheet, gearPlace } from './gear.js';
+import { renderArmoury, renderLoadout, renderGearSheet, gearPlace } from './gear.js';
 import { buyGear, buyOffer, sellGear, equip, unequip, itemName, sellPrice } from '../core/gear.js';
 import { renderWatch, mountWatch, syncWatch, isWatching, stopWatch, togglePause, toggleSpeed, showLatest, justFinished, closeFinale } from './watch.js';
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
@@ -77,7 +77,7 @@ import { sendScout, signCard } from '../core/dossier.js';
 import { clientRival } from '../core/rivals.js';
 import { clientRivalLine } from '../data/rivals.js';
 import { freelancerAsCrew, shareOf, MAX_FREELANCERS_PER_JOB } from '../core/freelance.js';
-import { createNav, homeOf, pageKind, placeLabel, rootOf, TAB_NAMES } from './nav.js';
+import { createNav, homeOf, homeSub, pageKind, placeLabel, rootOf, tabOf, tabBadges, SUB_KEY, TAB_NAMES } from './nav.js';
 
 let state;
 let screen = 'inbox';
@@ -93,7 +93,8 @@ let sidePlan = null; // { taskId, crew: [] } while planning a side task (Jobs ta
 let playReportId = null; // a hands-off report playing out on its first open (renderReportTimeline)
 let openOperativeId = null;
 let openRecruitId = null;
-let openArmoury = false; // the armoury, from the Crew screen (ui/gear.js)
+let tongTab = 'halls'; // Tong's sub-tab: 'halls' | 'armoury' (ui/gear.js draws the Armoury)
+let crewTab = 'roster'; // Crew's sub-tab: 'roster' | 'leads' | 'wall'
 let buildView = null; // the hall build screen, from a hall's page (ui/hallbuild.js): { district, cell, piece, rot, picked }
 let tongsView = null; // the other tongs, from Ops › Places: null (closed), '' (the list) or a tong's id (ui/tongs.js)
 let hallPage = null; // a hall's own page (2026-11-07), by district: from Crew › Halls or the district's card on Ops, shown on that tab
@@ -163,7 +164,7 @@ function setState(next) {
 // --- navigation (ui/nav.js) --------------------------------------------
 /** The view as it is now: everything Back has to put back. Plan objects are kept by reference (the plan is UI, not game state). */
 function viewNow() {
-  return { screen, openMessageId, openOperativeId, openRecruitId, openArmoury, hallPage, buildView, tongsView, cityDistrict, cityTab, loreDistrict, inboxUnread, plan, sidePlan };
+  return { screen, openMessageId, openOperativeId, openRecruitId, tongTab, crewTab, hallPage, buildView, tongsView, cityDistrict, cityTab, loreDistrict, inboxUnread, plan, sidePlan };
 }
 
 /** A link to a page: remember this view (and the control that was tapped) so Back can return to it. */
@@ -174,7 +175,7 @@ function remember(action, id) {
 
 /** Put a remembered view back. Pages that have gone since (a lead hired, a job taken) fall back to their list. */
 function restoreView(v) {
-  ({ screen, openMessageId, openOperativeId, openRecruitId, openArmoury, hallPage, buildView, tongsView, cityDistrict, cityTab, loreDistrict, inboxUnread, plan, sidePlan } = v);
+  ({ screen, openMessageId, openOperativeId, openRecruitId, tongTab, crewTab, hallPage, buildView, tongsView, cityDistrict, cityTab, loreDistrict, inboxUnread, plan, sidePlan } = v);
   if (openMessageId && !state.inbox.some((m) => m.id === openMessageId)) openMessageId = null;
   if (openOperativeId && ![...state.crew, ...state.memorial].some((o) => o.id === openOperativeId)) openOperativeId = null;
   if (openRecruitId && !(state.recruits ?? []).some((r) => r.id === openRecruitId)) openRecruitId = null;
@@ -190,6 +191,15 @@ function toRoot() {
 
 /** Is Back showing on this view? Never at a root view; on a district only when a shortcut brought you (the map has its own "Whole city"). */
 const canGoBack = () => { const k = pageKind(viewNow()); return !!k && (k !== 'district' || nav.depth > 0); };
+/** A root view you got to by a link (the Armoury from the plan, Leads from a message) says where Back goes; one you chose has none. */
+const rootBack = () => (!pageKind(viewNow()) && nav.depth > 0 ? `<div class="backbar"><button class="linkbtn" data-action="back">‹ ${esc(backLabel())}</button></div>` : '');
+
+/** Open a kind of page on its home tab and sub-tab (ui/nav.js HOMES). */
+function goHome(kind) {
+  screen = homeOf(kind);
+  const sub = homeSub(kind);
+  if (sub) { if (screen === 'tong') tongTab = sub; else if (screen === 'crew') crewTab = sub; }
+}
 
 /** The Back control's words: where it will land. */
 function backLabel() {
@@ -205,7 +215,7 @@ function onClick(e) {
   const { action, id } = t.dataset;
 
   switch (action) {
-    case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; screen = id; nav.clear(); scrollDue = 0; buildView = null; tongsView = null; hallPage = null; openMessageId = null; openOperativeId = null; openRecruitId = null; openArmoury = false; gearSlot = null; bagPick = null; plan = null; sidePlan = null; pickSlot = null; break;
+    case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; screen = id; nav.clear(); scrollDue = 0; buildView = null; tongsView = null; hallPage = null; openMessageId = null; openOperativeId = null; openRecruitId = null; gearSlot = null; bagPick = null; plan = null; sidePlan = null; pickSlot = null; break;
     case 'continue': {
       if (isBlocked(state) || Date.now() < continueRestUntil) return;
       const next = advanceDay(state);
@@ -259,9 +269,16 @@ function onClick(e) {
     // A crew member's name in a message: open their page, remembering the message to come back to.
     case 'trait-tip': traitTip = traitTip === id ? null : id; break;
     // A runner's name or face anywhere (a message, a job board strip, a hall, a district card): their page, on Crew.
-    case 'open-op': case 'op-link': remember(action, id); screen = homeOf('runner'); openArmoury = false; openRecruitId = null; openOperativeId = id; bagPick = null; break;
+    case 'open-op': case 'op-link': remember(action, id); goHome('runner'); openRecruitId = null; openOperativeId = id; bagPick = null; break;
     // Gear (ui/gear.js, core/gear.js): the armoury, and a runner's slots.
-    case 'open-armoury': remember(action, id); screen = homeOf('armoury'); openArmoury = true; openOperativeId = null; openRecruitId = null; gearSlot = null; break;
+    // The Armoury is a sub-tab of Tong; the squad board's link to it keeps the plan (Back returns to it).
+    case 'open-armoury': remember(action, id); goHome('armoury'); hallPage = null; buildView = null; openOperativeId = null; openRecruitId = null; gearSlot = null; break;
+    case 'tong-tab': tongTab = id; break;
+    case 'crew-tab': crewTab = id; break;
+    // Shortcuts to a sub-tab's home from another page (a link, not a tab choice: Back returns).
+    case 'halls-open': remember(action, id); goHome('hall'); hallPage = null; buildView = null; break;
+    case 'leads-open': remember(action, id); goHome('recruit'); openRecruitId = null; openOperativeId = null; break;
+    case 'book': remember(action, id); screen = 'lore'; break;
     case 'buy': return setState(buyGear(state, id, t.dataset.tier || 'street'));
     case 'buy-offer': return setState(buyOffer(state, id));
     case 'sell': {
@@ -288,7 +305,7 @@ function onClick(e) {
       break;
     }
     case 'bag-off': { const uid = bagPick; bagPick = null; return setState(unequip(state, openOperativeId, uid)); }
-    case 'open-recruit': remember(action, id); screen = homeOf('recruit'); openRecruitId = id; break;
+    case 'open-recruit': remember(action, id); goHome('recruit'); openRecruitId = id; break;
     case 'founder-toggle':
       if (founderPick.includes(id)) founderPick = founderPick.filter((x) => x !== id);
       else if (founderPick.length < FOUNDERS_TO_PICK) founderPick = [...founderPick, id];
@@ -318,8 +335,8 @@ function onClick(e) {
     }
     // Building up a hall (ui/hallbuild.js, core/hallbuild.js).
     // A hall's page opens on its home tab whichever tab the link was on (ui/nav.js HOMES).
-    case 'hall-page': remember(action, id); screen = homeOf('hall'); hallPage = id; openOperativeId = null; openRecruitId = null; openArmoury = false; buildView = null; break;
-    case 'build-hall': remember(action, id); screen = homeOf('hallBuild'); hallPage = id; openOperativeId = null; openArmoury = false; buildView = { district: id, cell: null, piece: null, rot: 0, picked: null, tab: 'defence' }; break;
+    case 'hall-page': remember(action, id); goHome('hall'); hallPage = id; openOperativeId = null; openRecruitId = null; buildView = null; break;
+    case 'build-hall': remember(action, id); goHome('hallBuild'); hallPage = id; openOperativeId = null; buildView = { district: id, cell: null, piece: null, rot: 0, picked: null, tab: 'defence' }; break;
     case 'build-cell': {
       const [x, y] = id.split(',').map(Number);
       const hall = hallIn(state, buildView.district);
@@ -667,6 +684,7 @@ function render() {
   const blocked = isBlocked(state);
   const resting = Date.now() < continueRestUntil;
   const unread = state.inbox.filter((m) => !m.read).length;
+  const badges = tabBadges(state);
   const cue = dayCue;
   dayCue = null;
   const leaving = sendOffCue;
@@ -695,12 +713,11 @@ function render() {
     </header>
 
     <nav class="nav" aria-label="Main">
-      ${navButton('inbox', 'Today', unread, 'unread')}
-      ${navButton('ops', 'Ops', calls(), 'calling')}
+      ${navButton('inbox', 'Today', badges.inbox)}
+      ${navButton('ops', 'Ops')}
+      ${navButton('tong', 'Tong')}
       ${navButton('crew', 'Crew')}
-      ${navButton('jobs', 'Jobs', state.jobs.length, 'open')}
-      ${navButton('lore', 'Lore')}
-      ${state.activeMission ? '' : navButton('settings', '☰ Save').replace('class="nav__btn', 'class="nav__btn nav__btn--save')}
+      ${navButton('jobs', 'Jobs', badges.jobs)}
     </nav>
 
     <main class="main ${wide ? 'main--wide' : ''} ${!state.activeMission && screen === 'jobs' && plan ? 'main--split' : ''}">${state.activeMission ? renderMission() : `${keptBanner()}${renderScreen()}`}</main>
@@ -822,24 +839,26 @@ function renderDayCue(cue) {
 
 // While the founders are being picked there's nothing to see on Crew, Jobs, Ops or Lore: those tabs are
 // off, Today shows the pick, and Save stays open so another slot can still be loaded.
-const FOUNDING_TABS = ['inbox', 'settings'];
+const FOUNDING_TABS = ['inbox', 'settings']; // the tab bar has no Save button now: ☰ in the top bar is the way to 'settings'
 
-function navButton(id, label, count = 0, countWord = '') {
+/** A tab button. `badge` ({ count, word }) is only for the tabs that own a count (layout rule 8: Today and Jobs). */
+function navButton(id, label, badge = null) {
   const off = state.founding && !FOUNDING_TABS.includes(id);
-  const on = state.founding ? id === (screen === 'settings' ? 'settings' : 'inbox') : screen === id;
-  const pill = count && !off ? ` <span class="pill ${id === 'inbox' ? 'pill--new' : ''}" aria-label="${count} ${countWord}">${count}</span>` : '';
+  const on = state.founding ? id === (screen === 'settings' ? 'settings' : 'inbox') : tabOf(screen) === id;
+  const pill = badge?.count && !off ? ` <span class="pill ${id === 'inbox' ? 'pill--new' : ''}" aria-label="${badge.count} ${badge.word}">${badge.count}</span>` : '';
   return `<button class="nav__btn ${on ? 'is-active' : ''}" data-action="nav" data-id="${id}" ${off ? 'disabled' : ''}>${esc(label)}${pill}</button>`;
 }
 
 function renderScreen() {
   if (state.founding && screen !== 'settings') return renderFounding(); // nothing else until the founders are picked
-  if (screen === 'inbox') return renderInbox();
-  // A hall's page and its build screen are on their home tab (ui/nav.js HOMES).
-  if (screen === 'crew' && !openOperativeId && !openRecruitId && !openArmoury) {
+  if (screen === 'inbox') return rootBack() + renderInbox();
+  // A hall's page and its build screen are on their home tab (ui/nav.js HOMES): Tong › Halls.
+  if (screen === 'tong') {
     if (buildView && hallIn(state, buildView.district)) return renderHallBuild({ esc, money, cityName, backLabel: backLabel() }, state, buildView);
     if (hallPage && hallIn(state, hallPage)) return renderHallPage(hallPage);
+    return rootBack() + renderTong();
   }
-  if (screen === 'crew') return openRecruitId ? renderRecruit() : openOperativeId ? renderOperative() : openArmoury ? renderArmoury({ ...gearUi, backLabel: backLabel() }, state) : renderCrew();
+  if (screen === 'crew') return openRecruitId ? renderRecruit() : openOperativeId ? renderOperative() : rootBack() + renderCrew();
   // Jobs: on wide screens the board stays beside the job being planned (styles.css hides it on phones).
   if (screen === 'jobs' && plan) {
     // The plan, then the job list with the plan bar under it: from 1400px wide the list and the bar
@@ -849,8 +868,8 @@ function renderScreen() {
     if (!plan) return body; // the job has gone: renderPlan showed the board
     return `<div class="jobsplit"><div class="jobsplit__plan">${body}</div><div class="jobsplit__side"><div class="jobsplit__list">${renderJobs()}</div>${planBarHtml}</div></div>`;
   }
-  if (screen === 'jobs') return sidePlan ? renderSidePlan() : renderJobs();
-  if (screen === 'ops') return tongsView !== null ? renderTongs(state, tongsView || null, backLabel()) : renderOpsScreen();
+  if (screen === 'jobs') return sidePlan ? renderSidePlan() : rootBack() + renderJobs();
+  if (screen === 'ops') return tongsView !== null ? renderTongs(state, tongsView || null, backLabel()) : rootBack() + renderOpsScreen();
   if (screen === 'lore') return renderLore();
   if (screen === 'settings') return renderSettings();
   return '';
@@ -1216,7 +1235,7 @@ function crewLinks(text) {
 function renderMessage(m) {
   // The welcome message points a new player at their first job.
   const jobLink = (m.type === 'job' || m.id === 'welcome') && state.jobs.length ? `<button class="btn" data-action="nav" data-id="jobs">Open the job board</button>`
-    : m.type === 'scout' && (state.recruits ?? []).length ? `<button class="btn" data-action="nav" data-id="crew">See the leads</button>` : '';
+    : m.type === 'scout' && (state.recruits ?? []).length ? `<button class="btn" data-action="leads-open">See the leads</button>` : '';
   return `
       <button class="btn btn--ghost inbox__back" data-action="back">← ${esc(backLabel())}</button>
       <h1>${crewLinks(m.subject)}</h1>
@@ -1613,32 +1632,18 @@ function renderHallPage(d) {
     </section>`;
 }
 
+/** The sub-tab row (layout rule 5): `tabs` is [id, label] pairs; `on` the one showing; `action` the click action. */
+function subTabs(label, action, tabs, on) {
+  return `<div class="subtabs" role="group" aria-label="${esc(label)}">${tabs.map(([k, name]) => `<button class="subtab ${k === on ? 'is-on' : ''}" data-action="${action}" data-id="${k}" aria-pressed="${k === on}">${esc(name)}</button>`).join('')}</div>`;
+}
+
+/** Crew: who we have and who we could get. Sub-tabs Roster · Leads · Wall (Halls and the Armoury moved to Tong in step 2). */
 function renderCrew() {
   const cap = state.rosterCap ?? STARTING_ROSTER_CAP;
   const recruits = state.recruits ?? [];
-  const wall = state.memorial.length ? `
-      <h2>The wall</h2>
-      <ul class="list list--plain">
-        ${state.memorial.map((m) => `<li class="fallen">${face(m, 'sm')}<span><strong>${esc(m.name)}</strong> "${esc(m.handle)}" <span class="muted">· ${esc(m.role)} · ${esc(m.cause)}, day ${m.day}${m.legend ? ' · a Legend' : ''}</span></span></li>`).join('')}
-      </ul>` : '';
-  const leads = `
-      <h2>Leads (${recruits.length})</h2>
-      ${recruits.length ? `<ul class="list">
-        ${recruits.map((r) => `
-          <li>
-            <button class="row" data-action="open-recruit" data-id="${esc(r.id)}">
-              ${face(r)}
-              <span class="row__main"><strong>${esc(r.name)}</strong> "${esc(r.handle)}"<br><span class="muted">${esc(r.quality)} ${esc(r.role)} · ${r.age}</span></span>
-              <span class="row__meta"><strong>${money(r.wage)}</strong>/wk<br>${daysLeft(r.expiresDay)}</span>
-            </button>
-          </li>`).join('')}
-      </ul>` : '<p class="muted small">No leads right now. Scouts report every Wednesday.</p>'}`;
-  return `
-    <section class="panel">
-      <div class="crewhead">
-        <h1>Crew</h1>
-        <span class="muted">${state.crew.length}/${cap} beds</span>
-      </div>
+  const tab = ['roster', 'leads', 'wall'].includes(crewTab) ? crewTab : 'roster';
+  const body = {
+    roster: () => `
       <ul class="list list--cols">
         ${state.crew.map((op) => `
           <li>
@@ -1651,17 +1656,57 @@ function renderCrew() {
               <span class="crewrow__bars">${conditionBars(op)}</span>
             </button>
           </li>`).join('')}
-      </ul>
-      <div class="cols2">
-      <div>${leads}</div>
-      <div>
-      ${renderHalls()}
-      ${armouryCard(gearUi, state)}
+      </ul>`,
+    leads: () => `
+      <h2>Leads (${recruits.length})</h2>
+      ${recruits.length ? `<ul class="list">
+        ${recruits.map((r) => `
+          <li>
+            <button class="row" data-action="open-recruit" data-id="${esc(r.id)}">
+              ${face(r)}
+              <span class="row__main"><strong>${esc(r.name)}</strong> "${esc(r.handle)}"<br><span class="muted">${esc(r.quality)} ${esc(r.role)} · ${r.age}</span></span>
+              <span class="row__meta"><strong>${money(r.wage)}</strong>/wk<br>${daysLeft(r.expiresDay)}</span>
+            </button>
+          </li>`).join('')}
+      </ul>` : '<p class="muted small">No leads right now. Scouts report every Wednesday.</p>'}`,
+    wall: () => `
+      <h2>The wall</h2>
+      ${state.memorial.length ? `<ul class="list list--plain">
+        ${state.memorial.map((m) => `<li class="fallen">${face(m, 'sm')}<span><strong>${esc(m.name)}</strong> "${esc(m.handle)}" <span class="muted">· ${esc(m.role)} · ${esc(m.cause)}, day ${m.day}${m.legend ? ' · a Legend' : ''}</span></span></li>`).join('')}
+      </ul>` : '<p class="muted small">Nobody on the wall.</p>'}`,
+  }[tab]();
+  return `
+    <section class="panel">
+      <div class="crewhead">
+        <h1>Crew</h1>
+        <span class="muted">${state.crew.length}/${cap} beds</span>
       </div>
-      </div>
-      ${wall}
+      ${subTabs('Crew sections', 'crew-tab', [['roster', 'Roster'], ['leads', `Leads${recruits.length ? ` ${recruits.length}` : ''}`], ['wall', 'Wall']], tab)}
+      ${body}
     </section>`;
 }
+
+const HALL_COUNT_WORDS = ['No halls', 'One hall', 'Two halls', 'Three halls', 'Four halls', 'Five halls'];
+
+/** Tong: what we've built. The rank and where we stand in words, then Halls · Armoury. */
+function renderTong() {
+  const tab = ['halls', 'armoury'].includes(tongTab) ? tongTab : 'halls';
+  const halls = (state.halls ?? []).length;
+  const rank = rankOf(state);
+  const next = TONG_RANKS[TONG_RANKS.findIndex((r) => r.id === rank.id) + 1];
+  const standing = `${HALL_COUNT_WORDS[Math.min(halls, HALL_COUNT_WORDS.length - 1)]}, ${residentsTotal()} of ${totalBeds()} beds filled. ${next ? `Another hall would make us a ${next.name} tong.` : 'We are as high as a tong goes.'}`;
+  return `
+    <section class="panel">
+      <div class="opshead"><h1 class="cityhead">Tong</h1>
+        <button class="tierbtn" data-action="info" data-id="tong" aria-expanded="${openInfo.has('tong')}" aria-label="The tong's rank: ${esc(rank.name)}. What's a tong?"><span class="tier">${esc(rank.name)} tong</span></button></div>
+      ${infoText('tong', TONG_EXPLAINER)}
+      <p class="small tongstanding">${esc(standing)}</p>
+      ${subTabs('Tong sections', 'tong-tab', [['halls', 'Halls'], ['armoury', 'Armoury']], tab)}
+      ${tab === 'halls' ? renderHalls() : renderArmoury({ ...gearUi, embedded: true }, state)}
+    </section>`;
+}
+const totalBeds = () => (state.halls ?? []).reduce((n, h) => n + bedsOf(h), 0);
+const residentsTotal = () => (state.halls ?? []).reduce((n, h) => n + residents(state, h.district).length, 0);
 
 function renderRecruit() {
   const r = (state.recruits ?? []).find((x) => x.id === openRecruitId);
@@ -2849,7 +2894,7 @@ function citySummary() {
     <p class="muted small">${hot.length ? `Heat: ${hot.map((d) => `${esc(districtName(d))} ${heatIn(state, d)}/10`).join(' · ')}.` : 'No heat anywhere.'}</p>
     <h2>Places</h2>
     <div class="cityplaces">
-      <button class="btn cityplace" data-action="nav" data-id="crew">Halls<span class="muted small">On Crew</span></button>
+      <button class="btn cityplace" data-action="halls-open">Halls<span class="muted small">On Tong</span></button>
       <button class="btn cityplace" data-action="tongs-open">The other tongs<span class="muted small">Who else is working</span></button>
       <button class="btn cityplace" disabled>Bar · black market<span class="muted small">Later</span></button>
     </div>`;
@@ -2938,8 +2983,7 @@ function renderOpsScreen() {
   return `
     <section class="panel">
       <div class="opshead"><h1 class="cityhead">Ops <span class="muted small">${esc(NAMES.city)} tonight</span></h1>
-        <button class="tierbtn" data-action="info" data-id="tong" aria-expanded="${openInfo.has('tong')}" aria-label="The tong's rank: ${esc(rankOf(state).name)}. What's a tong?"><span class="tier">${esc(rankOf(state).name)} tong</span></button></div>
-      ${infoText('tong', TONG_EXPLAINER)}
+        <button class="tierbtn" data-action="book" aria-label="The Book: the city's districts, clients, who's who and history"><span class="tier">Book</span></button></div>
       <div class="cols2 cols2--map">
         <div>${cityMap()}</div>
         <div>${cityDistrict ? districtCard(cityDistrict) : ''}${renderOps()}${citySummary()}</div>
@@ -2984,6 +3028,7 @@ function renderLore() {
   }[tab]();
   return `
     <section class="panel">
+      ${canGoBack() ? `<button class="linkbtn" data-action="back">‹ ${esc(backLabel())}</button>` : ''}
       <h1 class="cityhead">${esc(NAMES.city)} <span class="muted">燈籠灣</span> <span class="muted small">2057</span></h1>
       <div class="subtabs" role="group" aria-label="Lore sections">
         ${Object.entries(LORE_TABS).map(([k, label]) => `<button class="subtab ${k === tab ? 'is-on' : ''}" data-action="city-tab" data-id="${k}" aria-pressed="${k === tab}">${esc(label)}</button>`).join('')}

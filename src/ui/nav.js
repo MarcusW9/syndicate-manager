@@ -8,26 +8,56 @@
 //     sub-tab, filters, the open page, an in-progress plan, scroll). Back puts that view back. It is
 //     navigation only: nothing here holds a copy of the game, so a page returned to shows the state now.
 
-/** Page kind → the tab it opens on. */
+import { isActionable } from '../core/inbox.js';
+
+/**
+ * Page kind → [the tab it opens on, the sub-tab it opens on (or null)]. Update an entry in the same commit
+ * that moves the page, and never point one at a tab or sub-tab that doesn't exist yet.
+ */
 export const HOMES = Object.freeze({
-  hall: 'crew',      // a hall's own page (moves to Tong › Halls in step 2)
-  hallBuild: 'crew', // the hall build screen, reached from the hall page
-  tong: 'ops',       // another tong's page
-  name: 'ops',       // a name's page (a free name or one in a tong)
-  district: 'ops',   // a district's page (the card on the map)
-  client: 'jobs',    // a client's page (the strip on the job board for now)
-  runner: 'crew',    // a runner's page
-  recruit: 'crew',   // a lead's page
-  armoury: 'crew',   // the armoury and its gear sheet
-  message: 'inbox',  // a message on Today
-  plan: 'jobs',      // a job's plan and the squad board
-  sidePlan: 'jobs',  // a side job's plan
+  hall: ['tong', 'halls'],      // a hall's own page (Tong › Halls since step 2)
+  hallBuild: ['tong', 'halls'], // the hall build screen, reached from the hall page
+  armoury: ['tong', 'armoury'], // the Armoury: stash, carried gear, shop (a sub-tab, not a page)
+  tong: ['ops', null],          // another tong's page
+  name: ['ops', null],          // a name's page (a free name or one in a tong)
+  district: ['ops', null],      // a district's page (the card on the map)
+  client: ['jobs', null],       // a client's page (the strip on the job board for now)
+  runner: ['crew', 'roster'],   // a runner's page
+  recruit: ['crew', 'leads'],   // a lead's page
+  message: ['inbox', null],     // a message on Today
+  plan: ['jobs', null],         // a job's plan and the squad board
+  sidePlan: ['jobs', null],     // a side job's plan
+  book: ['ops', null],          // the Book (the old Lore view until step 4), opened from a link in Ops' header
 });
 
 /** The home tab for a page kind, or null for a kind with no entry. */
-export const homeOf = (kind) => HOMES[kind] ?? null;
+export const homeOf = (kind) => HOMES[kind]?.[0] ?? null;
+/** The home sub-tab for a page kind, or null when its tab has none. */
+export const homeSub = (kind) => HOMES[kind]?.[1] ?? null;
+/** The UI field that holds a tab's sub-tab. */
+export const SUB_KEY = Object.freeze({ tong: 'tongTab', crew: 'crewTab' });
 
-export const TAB_NAMES = Object.freeze({ inbox: 'Today', ops: 'Ops', crew: 'Crew', jobs: 'Jobs', lore: 'Lore', settings: 'Save' });
+export const TAB_NAMES = Object.freeze({ inbox: 'Today', ops: 'Ops', tong: 'Tong', crew: 'Crew', jobs: 'Jobs', lore: 'Book', settings: 'Save' });
+
+/** Which tab is lit for a screen: the Book is City's (Ops') page, and Save is the ☰ in the top bar. */
+export const tabOf = (screen) => (screen === 'lore' ? 'ops' : screen);
+
+const NEEDS_THE_PLAYER = new Set(['hall-offer', 'raid-warning']);
+/**
+ * Today's badge (layout rule 8): what is waiting on the player, each event once. A message counts if it is
+ * unread, or if something still has to be answered (a decision, a call-in, a raid at the door, a hall offer,
+ * a raid warning). Calls and raids are inbox messages, so an unread call is one count, not two.
+ * Jobs show their own number; City and Tong show none.
+ */
+export function attentionCount(state) {
+  const waiting = (m) => m.resolved === false || (m.blocking && !m.resolved) || (NEEDS_THE_PLAYER.has(m.kind) && isActionable(state, m));
+  return state.inbox.filter((m) => !m.read || waiting(m)).length;
+}
+
+/** Tab id → { count, word } for the pill on its button; tabs with no entry show none. */
+export function tabBadges(state) {
+  return { inbox: { count: attentionCount(state), word: 'waiting on you' }, jobs: { count: state.jobs.length, word: 'open' } };
+}
 
 /**
  * The page a view is showing, as a kind in HOMES, or null at a root view (nothing opened).
@@ -37,14 +67,9 @@ export function pageKind(ui) {
   const { screen } = ui;
   if (screen === 'inbox') return ui.openMessageId ? 'message' : null;
   if (screen === 'jobs') return ui.plan ? 'plan' : ui.sidePlan ? 'sidePlan' : null;
-  if (screen === 'crew') {
-    if (ui.openRecruitId) return 'recruit';
-    if (ui.openOperativeId) return 'runner';
-    if (ui.openArmoury) return 'armoury';
-    if (ui.buildView) return 'hallBuild';
-    if (ui.hallPage) return 'hall';
-    return null;
-  }
+  if (screen === 'crew') return ui.openRecruitId ? 'recruit' : ui.openOperativeId ? 'runner' : null;
+  if (screen === 'tong') return ui.buildView ? 'hallBuild' : ui.hallPage ? 'hall' : null;
+  if (screen === 'lore') return 'book';
   if (screen === 'ops') {
     if (typeof ui.tongsView === 'string') return ui.tongsView.startsWith('name:') ? 'name' : 'tong'; // '' is the list of tongs
     return ui.cityDistrict ? 'district' : null;
@@ -53,22 +78,28 @@ export function pageKind(ui) {
 }
 
 /** What a root view has open: nothing. */
-const NOTHING_OPEN = Object.freeze({ openMessageId: null, openOperativeId: null, openRecruitId: null, openArmoury: false, hallPage: null, buildView: null, tongsView: null, cityDistrict: null, loreDistrict: null, plan: null, sidePlan: null });
+const NOTHING_OPEN = Object.freeze({ openMessageId: null, openOperativeId: null, openRecruitId: null, hallPage: null, buildView: null, tongsView: null, cityDistrict: null, loreDistrict: null, plan: null, sidePlan: null });
 
 /**
  * Back with no history (a direct link, a fresh load): the root view of the page's home tab, with no page
  * selected. A view that is already a root stays on its own tab.
  */
 export function rootOf(ui) {
-  return { ...ui, ...NOTHING_OPEN, screen: homeOf(pageKind(ui)) ?? ui.screen };
+  const kind = pageKind(ui);
+  const screen = homeOf(kind) ?? ui.screen;
+  const sub = homeSub(kind);
+  return { ...ui, ...NOTHING_OPEN, screen, ...(sub ? { [SUB_KEY[screen]]: sub } : {}) };
 }
 
 /** A short name for where a view is, for the Back control: "Today", or "the hall". */
 export function placeLabel(ui) {
   const kind = pageKind(ui);
-  if (!kind) return TAB_NAMES[ui.screen] ?? 'back';
+  if (!kind) {
+    const sub = ui[SUB_KEY[ui.screen]];
+    return { tong: { halls: 'Halls', armoury: 'the Armoury' }, crew: { roster: 'Crew', leads: 'Leads', wall: 'the Wall' } }[ui.screen]?.[sub] ?? TAB_NAMES[ui.screen] ?? 'back';
+  }
   if (kind === 'tong' || kind === 'name') return 'the tongs';
-  return { message: 'the message', plan: 'the job', sidePlan: 'the side job', runner: 'the runner', recruit: 'the lead', armoury: 'the Armoury', hall: 'the hall', hallBuild: 'the build', district: 'the district' }[kind];
+  return { message: 'the message', plan: 'the job', sidePlan: 'the side job', runner: 'the runner', recruit: 'the lead', book: 'the Book', hall: 'the hall', hallBuild: 'the build', district: 'the district' }[kind];
 }
 
 /** The Back stack. `limit` keeps a long wander from growing for ever. */

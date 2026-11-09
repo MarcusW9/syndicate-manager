@@ -103,10 +103,14 @@ try {
   }
 
   // Gear (2026-10-28, slice 5): buy a rifle in the armoury and put it on someone, so overwatch is possible.
-  if (await click('[data-action="nav"][data-id="crew"]') && await click('[data-action="open-armoury"]')) {
+  // The Armoury was on Crew; since the navigation rework (2026-11-09) it is Tong › Armoury. Either way this finds it.
+  const toArmoury = async () => (await click('[data-action="nav"][data-id="crew"]') && await click('[data-action="open-armoury"]'))
+    || (await click('[data-action="nav"][data-id="tong"]') && await click('[data-action="tong-tab"][data-id="armoury"]'));
+  if (await toArmoury()) {
     await top(); await shot('armoury');
     await click('[data-action="buy-offer"]:not([disabled])'); // the first rifle on this week's shelf
     await click('[data-action="back"]');
+    await click('[data-action="nav"][data-id="crew"]');
     if (await click('[data-action="open-op"]:has-text("muscle")') || await click('[data-action="open-op"]')) {
       await click('[data-action="gear-slot"][data-id="weapon"]');
       await shot('gear-sheet');
@@ -199,7 +203,8 @@ try {
       await click('[data-action="tongs-close"]') || await click('[data-action="back"]') || await click('[data-action="nav"][data-id="ops"]');
     }
   }
-  if (await click('[data-action="nav"][data-id="lore"]')) { await top(); await shot('lore'); }
+  // Lore was a tab; since step 2 of the navigation rework it is the Book, a link in Ops' header.
+  if (await click('[data-action="nav"][data-id="lore"]') || (await click('[data-action="nav"][data-id="ops"]') && await click('[data-action="book"]'))) { await top(); await shot('lore'); }
   if (await click('[data-action="nav"][data-id="today"]')) { await top(); await shot('today'); }
 
   // One wide view of the home screen, to show the desktop layout.
@@ -222,6 +227,13 @@ try {
       await page.evaluate(() => document.querySelector('.citycard')?.scrollIntoView({ block: 'start' }));
       await shot('back-to-district');
     }
+  }
+  // The Tong tab (2026-11-09, step 2): Halls, Armoury, and Crew's sub-tabs. Skipped by versions without them.
+  if (await click('[data-action="nav"][data-id="tong"]')) {
+    await top(); await shot('tong-halls');
+    if (await click('[data-action="tong-tab"][data-id="armoury"]')) { await top(); await shot('tong-armoury'); }
+    if (await click('[data-action="nav"][data-id="crew"]') && await click('[data-action="crew-tab"][data-id="leads"]')) { await top(); await shot('crew-leads'); }
+    if (await click('[data-action="crew-tab"][data-id="wall"]')) { await top(); await shot('crew-wall'); }
   }
 } finally {
   await browser.close();

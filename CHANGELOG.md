@@ -7,6 +7,13 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · Navigation, step 2: a Tong tab, Crew in three parts, Save in the ☰
+- New **Tong** tab, "what we've built": your rank in words (and what the next rung would take), then Halls and the Armoury. The halls (and each hall's page and Build) and the Armoury moved here from Crew.
+- **Crew** is now Roster · Leads · Wall. Today's "See the leads" opens Leads.
+- Five tabs: Today, Ops, Tong, Crew, Jobs. **Save** is the ☰ at the top, **Lore** is behind a **Book** link in Ops' header (the same Lore pages, unchanged for now).
+- Badges: Today counts everything waiting on you (calls, raids, hall offers, decisions, unread), each once. Jobs counts open jobs. Ops and Tong show no number.
+- A job's plan survives a trip to the Armoury: Back puts you in the plan as you left it.
+
 ## 2026-11-09 · Navigation, step 1: every page has one home, and Back goes back
 - A hall's page (and its Build screen) now always opens on Crew, wherever the link was: Ops' district card, Today's raid cards or Crew's Halls list. Before, it stayed on whichever tab you opened it from.
 - Back is one control with a memory. It returns to the view you left: the same tab, filters and open page, scrolled to where you were, with a job's plan and squad still as you set them (Plan → Armoury → Back). It never rewinds the game: the page you return to shows today's state. Choosing a tab starts afresh. Root views, like a tab's first screen, show no Back.

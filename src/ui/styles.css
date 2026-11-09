@@ -2025,3 +2025,9 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .streetname { grid-template-columns: auto 1fr; column-gap: 10px; align-items: center; }
 .streetname__face { grid-row: span 3; }
 .streetname > span:not(.streetname__face) { grid-column: 2; }
+
+/* Navigation rework, step 2 (2026-11-09): a Back line over a root view you reached by a link (the Armoury from a plan,
+   Leads from a message), and the Tong tab's standing line. 44px tall for a thumb. */
+.backbar { margin-bottom: 8px; }
+.backbar .linkbtn { min-height: 44px; display: inline-flex; align-items: center; }
+.tongstanding { margin: 4px 0 12px; }

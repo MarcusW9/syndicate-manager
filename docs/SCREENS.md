@@ -21,21 +21,21 @@ Navigation state (`screen`, `cityTab`, the open page ids) is module state in `ui
 
 - **Top bar:** day/clock, Cash, Heat, rank, Continue (hidden while planning a job), ☰ Save.
 - **Back:** a detail page (a message, a runner, a lead, the Armoury, a hall and its build, a plan, a tong, a name) has one Back control; root views have none.
-- **Tab bar:** Today · Ops · Crew · Jobs · Lore · ☰ Save. Pills: unread on Today, calls on Ops, open jobs on Jobs.
+- **Tab bar:** Today · Ops · Tong · Crew · Jobs (five, the most there can be). Pills: Today's attention count (anything waiting on the player, each event once: `attentionCount` in `ui/nav.js`) and open jobs on Jobs; Ops and Tong show none. Save is the ☰ in the top bar. Lore is the **Book**, a link in Ops' header (the old Lore view, unchanged, until step 4).
 - **Dock (phone):** Continue above the tab bar, except while planning or on a job.
 - **During a job:** tabs and Save step aside; the watch screen (`renderMission`) owns the page.
-- **Founding (new game):** only Today (the founder pick) and Save are enabled.
+- **Founding (new game):** only Today (the founder pick) and ☰ Save are enabled.
 
 ## Tabs
 
 | Tab | Holds (in page order) | Sub-views opened from it |
 | --- | --- | --- |
 | **Today** (`inbox`) | Week strip; alerts; Out line; crews out; back cards; briefing; Upcoming list; inbox | A message (job report, Monday brief, Sunday summary, renewal, raid call/warning, heat notice, spec offer); the report timeline, summary and full log |
-| **Ops** | Heist card; **Out now** (raids, crews out, side work) over the city map; **Tonight** list; **At home**; **Places**; one card per district | The district's card (its hall button opens the hall on Crew); **The other tongs** (list, a tong, Free names, a name's page, Names on the street) |
-| **Crew** | Roster rows; Leads (recruits); The wall (memorial); **Halls**; **Armoury** card | A runner's page (record, path, home, gear); a recruit's page; the Armoury and gear sheet; a **hall's page** and **Hall build** (from Halls, the district card or a raid card: always here) |
+| **Ops** | Header with a **Book** link; Heist card; **Out now** (raids, crews out, side work) over the city map; **Tonight** list; **At home**; **Places** (Halls → Tong, The other tongs); one card per district | The district's card (its hall button opens the hall on Tong); **The other tongs** (list, a tong, Free names, a name's page, Names on the street); **Book** (the old Lore view: Districts · Clients · Who's who · History) |
+| **Tong** | Rank and standing in words; sub-tabs **Halls** · **Armoury** | Halls: a row per hall, buy sites, then a **hall's page** and **Hall build**. Armoury: stash, carried gear, shop. Equipping stays on the runner's page |
+| **Crew** | Sub-tabs **Roster** · **Leads** · **Wall** | A runner's page (record, path, home, gear); a recruit's page |
 | **Jobs** | Runners strip; the job board; Side board; Clients strip | Plan (squad board, approach, inside/outside, Joss's picks, coverage read; beside the board on 1400px+); side-work plan; scout rows for free names |
-| **Lore** | Sub-tabs: Districts · Clients · Who's who · History | A district's lore (from Ops "About … on Lore") |
-| **Save** (`settings`) | Slots, Backups, difficulty / new game | — |
+| **☰ Save** (`settings`, top bar) | Slots, Backups, difficulty / new game | — |
 
 ## Inside each screen (the small sections)
 
@@ -51,15 +51,18 @@ Section names are the headings in the code. "(x)" marks something that shows onl
 - Heist card (x), then Out now: raids, crews out (each with a mini map), side work. A district filter ("… only · show all") narrows it.
 - City map with the district labels and zoom; Tonight list; At home; Places (Halls, The other tongs, a disabled Bar · black market).
 - District cards: name, who is there (faces), crews out, jobs open, "Manage the hall ›" (x), "About … on Lore ›".
-- Hall page (`renderHallPage`, on Crew since step 1): header with landmark, then The place (the plan and beds, Build), Who sleeps here, Move someone in, The block (parts, Expand, Buy).
+- Hall page (`renderHallPage`, on Tong › Halls since step 2): header with landmark, then The place (the plan and beds, Build), Who sleeps here, Move someone in, The block (parts, Expand, Buy).
 - Hall build (`ui/hallbuild.js`): grid over the hall's map, palette, Place / Turn / Remove.
 - The other tongs (`ui/tongs.js`): tongs grouped by tier, Free names, Names on the street. A tong's page has The latest and its names; a name's page has What we know, What it would take, and Send someone to watch them (2 days).
 
 **Crew** (`renderCrew`)
-- Roster rows (face, role, age, main stat, status, bars), Leads (recruits), The wall (memorial), Halls (a row per hall, buy sites), Armoury card.
+- Sub-tabs: Roster rows (face, role, age, main stat, status, bars); Leads (recruits); The wall (memorial, with an empty line).
+
+**Tong** (`renderTong`)
+- Header: the rank ("Back Room tong", tap for what a tong is) and a standing line in words (halls and beds filled, the next rung). Sub-tabs: Halls (`renderHalls`: a row per hall, Open a hall) and Armoury (`ui/gear.js` `renderArmoury`, embedded).
 - Runner's page (`renderOperative`): header (face, handle, line, status), Specialisation, Traits, Stats, Development (mentoring), Condition, Trust, History; Record, Path and Home cards; Gear (the 2x2 bag, `ui/gear.js`).
 - Recruit's page (`renderRecruit`): Traits, Stats, Scout's view, Terms (the offer).
-- Armoury (`ui/gear.js`): In the stash, Carried, Buy (by slot); a gear sheet picks an item for a slot, with Carried by others.
+- Armoury (`ui/gear.js`, Tong › Armoury): In the stash, Carried, Buy (by slot); a gear sheet picks an item for a slot, with Carried by others.
 
 **Jobs** (`renderJobs`)
 - Runners strip (collapsible), job board (job cards with flags), Side board (scout rows for free names), Clients strip (trust).
@@ -67,7 +70,7 @@ Section names are the headings in the code. "(x)" marks something that shows onl
 - Squad board (`ui/board.js`): Inside team (moves as one group), Outside (optional), Wheels card with getaway risk, Joss's picks, the coverage read. A runner picker sheet lists "Who's on …?" in groups by fit, plus "Not free today".
 - Side-work plan (`renderSidePlan`): Who goes (up to n), checkbox picker, the Clients list.
 
-**Lore** (`renderLore`): header, then the sub-tab: Districts (one card each; "Everyone knows" and "A short history" are the other two sections' headings), Clients, Who's who, History.
+**Book** (`renderLore`, opened from Ops' header; was the Lore tab): header, then the sub-tab: Districts (one card each; "Everyone knows" and "A short history" are the other two sections' headings), Clients, Who's who, History.
 
 **Save** (`renderSettings`): New game in slot n (difficulty), Slots (Play / New / Delete), Backups (export and import).
 
@@ -75,6 +78,13 @@ Section names are the headings in the code. "(x)" marks something that shows onl
 
 ## Moves (one line per move, newest first)
 
+- 2026-11-09, step 2: new **Tong** tab (Halls · Armoury) with the rank and standing header in words; the rank button moved there from Ops' header.
+- 2026-11-09, step 2: **Halls** (list, Open a hall, a hall's page, Hall build) moved Crew → Tong › Halls. `HOMES.hall`, `hallBuild`: crew → tong.
+- 2026-11-09, step 2: **Armoury** moved Crew → Tong › Armoury (a sub-tab, no longer a page with its own Back). Its Crew card is gone; the squad board's "Armoury →" opens it and Back returns to the plan. `HOMES.armoury`: crew → tong.
+- 2026-11-09, step 2: **Crew** gets sub-tabs Roster · Leads · Wall (the wall was already on Crew; it is now its own sub-tab). Today's "See the leads" opens Crew › Leads.
+- 2026-11-09, step 2: **Save** left the tab bar; it is the ☰ in the top bar only.
+- 2026-11-09, step 2: **Lore** left the tab bar. A **Book** link in Ops' header opens the old Lore view unchanged; Back returns to Ops. (Book gets the other City sub-tabs' headers at step 3, and its content moves home at step 4.)
+- 2026-11-09, step 2: **badges**: Ops' calls count is gone (calls and raids are inbox messages, so Today's count already holds them); Today's pill is the attention count, each event once; Jobs keeps open jobs; Tong none.
 - 2026-11-09, step 1 (routing by home): a **hall's page** now always opens on Crew (its home for now), also from Ops' district card and Today's raid cards; it used to stay on whichever tab opened it. The **hall build** screen likewise.
 - 2026-11-09, step 1: every **Back** is one control backed by the navigation stack (`ui/nav.js`): it returns to the view you came from, with filters, plan and scroll; the old per-page "‹ Ops / ← Crew / ← Jobs" buttons and `returnTo` are gone. A runner's page, a lead, the Armoury, a message, a plan, a tong and a name all push the view you left.
 
@@ -82,20 +92,20 @@ Section names are the headings in the code. "(x)" marks something that shows onl
 
 | Content | Lives on | Also reachable from | Note |
 | --- | --- | --- | --- |
-| Halls (list, residents, buy/expand/move in) | Crew | Ops › Places "Halls — On Crew" button; Ops district card; Today's raid cards | Every link opens the hall page on Crew (step 1). Moves to Tong › Halls in step 2. |
+| Halls (list, residents, buy/expand/move in) | Tong › Halls | Ops › Places "Halls — On Tong" button; Ops district card; Today's raid cards | Every link opens the hall page on Tong › Halls (steps 1-2). |
 | Raids on halls | Ops (Out now, rings on the map); Today (alerts, call/warning messages) | — | Fought on the watch screen. |
 | The other tongs, Free names | Ops › Places | Jobs side board (Scout rows); Today's Monday brief (The Word) | Three entry points, one place to read them. |
 | Clients | Jobs (strip) | Lore › Clients | Jobs shows trust; Lore is the who's who. |
 | Districts | Ops (map, district cards) | Lore › Districts | Ops is live state, Lore is the book. |
 | Heists | Ops (heist card); prep and finale jobs on Jobs board | Today (Monday / Sunday lines) | |
-| Armoury / gear | Crew | A runner's page (gear sheet); squad board shows each runner's gear | |
-| Recruiting | Crew › Leads | Today (scout messages link to "See the leads") | |
+| Armoury / gear | Tong › Armoury | A runner's page (gear sheet); squad board shows each runner's gear and links to the Armoury | |
+| Recruiting | Crew › Leads | Today (scout messages link to "See the leads" › Crew › Leads) | |
 | Crews out (away jobs) | Today and Ops | Take the call on either; watch screen opens | Same data, two layouts (`renderCrewsOut`). |
 
 ## Open question: placement
 
-`HANDOFF.md` (2026-10-28) floats an "underground place" (bar / black market: hiring, rumours, gear) that could pull Leads and the Armoury out of Crew. Ops › Places already has a disabled "Bar · black market — Later" button for it.
+`HANDOFF.md` (2026-10-28) floats an "underground place" (bar / black market: hiring, rumours, gear) that could pull Leads and the Armoury out of Crew. Ops › Places already has a disabled "Bar · black market — Later" button for it. (The Armoury and Leads are no longer both on Crew, so this question is partly answered by the Tong tab.)
 
 ## Where the code is
 
-`ui/app.js` routes and draws every tab (`renderInbox`, `renderCrew`, `renderJobs`, `renderOps`/`renderOpsScreen`, `renderLore`, `renderSettings`, `renderHalls`, `renderHallPage`, `renderOperative`, `renderRecruit`, `renderPlan`, `renderSidePlan`); separate files are `board.js` (squad board), `watch.js` (live job), `hallbuild.js`, `tongs.js`, `citymap.js`, `gear.js`. See `CODEMAP.md` for the rest.
+`ui/app.js` routes and draws every tab (`renderInbox`, `renderTong`, `renderCrew`, `renderJobs`, `renderOps`/`renderOpsScreen`, `renderLore`, `renderSettings`, `renderHalls`, `renderHallPage`, `renderOperative`, `renderRecruit`, `renderPlan`, `renderSidePlan`); separate files are `board.js` (squad board), `watch.js` (live job), `hallbuild.js`, `tongs.js`, `citymap.js`, `gear.js`. See `CODEMAP.md` for the rest.
