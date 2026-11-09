@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · Loyalty is a number that moves (part D2, save v56)
+- Each runner now has loyalty from 0 to 100, which moves every Sunday: up for a week of real work and for fair pay; down for a week on the bench, pay well under market value, a crewmate lost that week, and refusing a raise (a big drop). The pay-rise screen shows it. It still only changes the raise they ask for, and it starts from jobs together (4 points a job), so nothing changes on upgrade.
+
 ## 2026-11-09 · Retirement and the Hall of Legends (part D1, save v55)
 - A runner with 52 or more active weeks may now ask to retire, at most one request a week across the crew and never while they are out on a job or hurt. You answer: **Stay one more season** (they ask 20% more, 35% from the second time, and don't ask again for eight weeks) or **Let them go** (their gear goes back to the stash). Leave it a week and they stay on. Anyone who was Elite or a Legend, or worked 26 weeks or more, is written onto the **Hall of Legends**, shown under the Wall on Crew. Saves upgrade with an empty Hall.
 

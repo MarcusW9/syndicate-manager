@@ -23,6 +23,7 @@ import { weekSummary, weekStartOf } from './week.js';
 import { refreshSideBoard, returnSideTasks } from './sidetasks.js';
 import { dailyTraits } from './earned.js';
 import { weeklyRecord } from './record.js';
+import { weeklyLoyalty } from './loyalty.js';
 import { weeklyFame } from './fame.js';
 import { checkRetirement } from './retirement.js';
 import { weeklyRivals } from './rivals.js';
@@ -144,6 +145,7 @@ function settleWeek(state) {
   const broke = state.cash < 0;
 
   weeklyRecord(state); // a week they worked counts towards their record
+  weeklyLoyalty(state); // loyalty drifts with work, pay and losses (core/loyalty.js)
   weeklyFame(state); // standing slips on the bench, Elite can lapse, fame may climb (core/fame.js)
   weeklyRivals(state); // the other tongs' week, on its own key: no roll moves (core/rivals.js)
   checkRetirement(state); // at most one long-serving runner asks to retire; hashed, no roll moves (core/retirement.js)

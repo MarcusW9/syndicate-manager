@@ -721,5 +721,11 @@ function migrate(state) {
     state.hall ??= [];
     state.version = 55;
   }
+  if (state.version === 55) {
+    // v56: loyalty becomes `op.loyalty` 0-100 (DESIGN.md 2026-11-09). Seeded from jobs together at 4 points
+    // a job, the old rule exactly, so no renewal changes on upgrade.
+    for (const op of state.crew ?? []) if (!op.freelance && op.loyalty == null) op.loyalty = Math.min(100, Math.round((op.jobsWithCrew ?? 0) * 4));
+    state.version = 56;
+  }
   return state;
 }

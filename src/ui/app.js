@@ -1449,7 +1449,7 @@ function renderRenewal(m) {
           <div><dt>Market value</dt><dd>${money(p.market)}</dd></div>
         </dl>
         ${p.reason === 'fame' ? '<p class="muted small">They became Elite: the street knows the name. Loyal runners ask less often; greedy ones more.</p>'
-          : `<p class="muted small">Loyalty: ${p.jobs} job${p.jobs === 1 ? '' : 's'} with the crew, ${pct}% off the raise${pct >= 25 ? ' (the most loyalty buys)' : ''}.</p>`}
+          : `<p class="muted small">Loyalty ${Math.round(p.loyalty * 100)}/100 (${p.jobs} job${p.jobs === 1 ? '' : 's'} with the crew), ${pct}% off the raise${pct >= 25 ? ' (the most loyalty buys)' : ''}.</p>`}
         ${p.haggleResult ? `<p class="muted">${esc(p.haggleResult)}</p>` : ''}
         ${p.outcome ? `<p><strong>${esc(p.outcome)}</strong></p>` : ''}
       </div>
