@@ -7,6 +7,9 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · The oath notice, reworded
+- The "could be sworn in" message now reads: "{runner} has logged {weeks} weeks on the books for us. They're now eligible to be \"sworn\" into our Tong as a permanent member. Drop {cost} to execute the covenant at the shrine, locking their loyalty and permanently etching their name into the ledger."
+
 ## 2026-11-09 · Clients list padding
 - Jobs › Clients rows no longer touch the left and right edges of their frame (the row's side padding was being cleared).
 
