@@ -9,6 +9,7 @@
 //   syndicate-slot-N-unreadable    a save in slot N that couldn't be opened, kept aside with its backup
 //   syndicate-ironman-progress     { [ironmanId]: highest save counter seen }
 //   syndicate-save-v1              legacy single save, moved into slot 1 on first load
+//   syndicate-pref-<name>          a viewing preference ('1' or '0'): how the game looks, never part of a save
 
 import { syncHeat } from '../core/heat.js';
 import { homeHall, syncHalls } from '../core/halls.js';
@@ -62,6 +63,13 @@ const readJson = (key) => {
   if (!raw) return null;
   try { return JSON.parse(raw); } catch { return null; }
 };
+
+/**
+ * A viewing preference (2026-11-09: the hall art layer): how the game looks on this device, not
+ * part of any save and not in the state, so no SAVE_VERSION. `fallback` when nothing is stored.
+ */
+export const getPref = (name, fallback = false) => { const v = storageGet(`syndicate-pref-${name}`); return v === null ? fallback : v === '1'; };
+export const setPref = (name, on) => { storageSet(`syndicate-pref-${name}`, on ? '1' : '0'); };
 
 /** Move the pre-slots single save into slot 1, once. */
 function migrateLegacy() {

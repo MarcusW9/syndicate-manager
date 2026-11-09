@@ -4,7 +4,7 @@
 import { heatIn, hottest, HEAT_DISTRICTS } from '../core/heat.js';
 import { buyPrice, buyHall, openingFor, bedsOf, hallIn, residents, freeBeds, canOpenHall, openHall, nextHallExpansion, expandHall, canMove, moveToHall } from '../core/halls.js';
 import { GANGS, GRUDGE, grudgeOf, jobGrudge, grudgeWord, gangsOn } from '../core/gangs.js';
-import { defenceCut, openRaids, raidOn, raidPrice, canBuyOff, defenders, raidChoices, payOffRaid, hallShut, raidWho, raidBy, isGangRaid, setRaidPlan, markRaidCallSeen, withdrawCost } from '../core/raids.js';
+import { defenceCut, defencesIn, raidThreat, openRaids, raidOn, raidPrice, canBuyOff, defenders, raidChoices, payOffRaid, hallShut, raidWho, raidBy, isGangRaid, setRaidPlan, markRaidCallSeen, withdrawCost } from '../core/raids.js';
 import { HALL_SITES, HOME_HALL, isOpeningJob } from '../data/halls.js';
 import { billDue, mondayBrief, crewStandard, crewAgainstStandard } from '../core/week.js';
 import { heistFor, heistCard, buyStep, heistEffects, asSentence } from '../core/heists.js';
@@ -24,10 +24,11 @@ import { statIcon, statGlyph, crewIcons, traitGlyph } from './icons.js';
 import { cityMap as drawCityMap, cityMapView, animateMap, FULL_VIEW, MAP_DISTRICTS } from './citymap.js';
 import { districtArt } from './districtArt.js';
 import { landmark } from './landmarks.js';
-import { renderHallBuild, hallBuildLine, partsOverlay } from './hallbuild.js';
+import { renderHallBuild, hallBuildLine, partsOverlay, planSvg, planKey, buildGrid, buildSheet, buildPalette, defenceLine, raidWaysFor, compoundOverlay, buildingsOf } from './hallbuild.js';
+import { hasHallArt, insideBox, SPRITE_SHEET } from './hallart.js';
 import { crewOutMap } from './minimap.js';
 import { siteFor, sitePlanSvg } from './siteplan.js';
-import { placePiece, removePiece, turnPiece, pieceAt, bedAt, refundOf, canRemove, hallSiteFor, hallMap, heldParts, partCells } from '../core/hallbuild.js';
+import { placePiece, removePiece, turnPiece, pieceAt, bedAt, refundOf, canRemove, hallSiteFor, hallMap, heldParts, partCells, partAt, floorUsed, floorOf } from '../core/hallbuild.js';
 import { PIECES } from '../data/hallBuild.js';
 
 import { advanceDay, calendar, isBlocked, seasonStartDay } from '../core/time.js';
@@ -68,7 +69,7 @@ import { SPECIALISATIONS, specOf } from '../core/specialisations.js';
 import { sideTaskById, sideTasksOut, sideOdds, sendOnSideTask, sideReward, sideCost, sidePitch, intelFor, SIDE_TRUST } from '../core/sidetasks.js';
 import {
   saveGame, loadGame, exportSave, importSave, listSlots, getActiveSlot, setActiveSlot,
-  deleteSlot, loadBackup, backupDue, SLOT_COUNT, unreadableSave, restoreUnreadable, exportUnreadable, discardUnreadable,
+  deleteSlot, loadBackup, backupDue, getPref, setPref, SLOT_COUNT, unreadableSave, restoreUnreadable, exportUnreadable, discardUnreadable,
 } from '../save/save.js';
 import { hire, haggle, passRecruit, canHire, signingFee, nextExpansion, expandSafehouse, STARTING_ROSTER_CAP, FOUNDERS_TO_PICK } from '../core/recruits.js';
 import { potentialRead, primaryStat, scoutFor, ageRate, declineChance, mentoring, changesSince, progressShare, STATS } from '../core/development.js';
@@ -98,6 +99,7 @@ let openOperativeId = null;
 let openRecruitId = null;
 let tongTab = 'halls'; // Tong's sub-tab: 'halls' | 'armoury' (ui/gear.js draws the Armoury)
 let crewTab = 'roster'; // Crew's sub-tab: 'roster' | 'leads' | 'wall'
+let hallInside = null; // inside one building of the open hall (a part's id), or null for the compound (2026-11-09; UI only, never saved)
 let buildView = null; // the hall build screen, from a hall's page (ui/hallbuild.js): { district, cell, piece, rot, picked }
 let tongsView = null; // City › Tongs: null (the list), a tong's id or `name:<id>` (a name's profile) (ui/tongs.js)
 let hallPage = null; // a hall's own page (2026-11-07), by district: from Tong › Halls, a district page or a raid card; always on Tong
@@ -156,6 +158,8 @@ export function mountApp(el, initialState) {
   importInput = Object.assign(document.createElement('input'), { type: 'file', id: 'import-file', accept: 'application/json,.json', hidden: true });
   importInput.addEventListener('change', onImportFile);
   root.after(importInput);
+  // The hall page changes layout at 1100px: draw it again when the window crosses that line.
+  if (typeof matchMedia === 'function') matchMedia('(min-width: 1100px)').addEventListener?.('change', () => { if (screen === 'tong' && (hallPage || buildView)) render(); });
   render();
 }
 
@@ -217,13 +221,27 @@ function backLabel() {
   return TAB_NAMES[homeOf(pageKind(viewNow())) ?? screen] ?? 'Back';
 }
 
+// --- the hall page's wide layout and art (2026-11-09) ---
+/** Is the screen wide enough for the hall page's two columns, with the build tools in the right one? */
+const wideHall = () => typeof matchMedia === 'function' && !!matchMedia('(min-width: 1100px)').matches;
+/** Is the hall art layer on (Settings › Hall art)? A viewing preference, not part of a save. */
+const hallArtOn = () => getPref('hallart');
+/** A build view scoped to the compound (defences, outside) or to one building (its rooms): `scope` 'compound' or a part id. */
+const newBuildView = (district, scope = 'compound') => ({ district, cell: null, piece: null, rot: 0, picked: null, tab: scope === 'compound' ? 'defence' : 'room', scope });
+
 // --- events ------------------------------------------------------------
 function onClick(e) {
   const t = e.target.closest('[data-action]');
   if (!t || t.disabled) return;
   const { action, id } = t.dataset;
+  // On a wide screen the hall page builds in place (2026-11-09): its build view starts on the first tap.
+  if (['nav', 'hall-page', 'halls-open', 'open-armoury', 'back'].includes(action)) hallInside = null;
+  if (action.startsWith('build-') && action !== 'build-hall' && !buildView && hallPage && (wideHall() || hallInside || action === 'build-part')) buildView = newBuildView(hallPage, hallInside ?? 'compound');
 
   switch (action) {
+    case 'hall-building': hallInside = id; buildView = null; break;
+    case 'hall-compound': hallInside = null; buildView = null; break;
+    case 'toggle-hallart': setPref('hallart', !getPref('hallart')); break;
     case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; screen = id; nav.clear(); scrollDue = 0; buildView = null; tongsView = null; cityDistrict = null; leadName = null; clientPage = null; hallPage = null; openMessageId = null; openOperativeId = null; openRecruitId = null; gearSlot = null; bagPick = null; plan = null; sidePlan = null; pickSlot = null; break;
     case 'continue': {
       if (isBlocked(state) || Date.now() < continueRestUntil) return;
@@ -368,7 +386,7 @@ function onClick(e) {
     // Building up a hall (ui/hallbuild.js, core/hallbuild.js).
     // A hall's page opens on its home tab whichever tab the link was on (ui/nav.js HOMES).
     case 'hall-page': remember(action, id); goHome('hall'); hallPage = id; openOperativeId = null; openRecruitId = null; buildView = null; break;
-    case 'build-hall': remember(action, id); goHome('hallBuild'); hallPage = id; openOperativeId = null; buildView = { district: id, cell: null, piece: null, rot: 0, picked: null, tab: 'defence' }; break;
+    case 'build-hall': if (wideHall()) { hallPage = id; buildView = newBuildView(id, hallInside ?? 'compound'); break; } remember(action, id); goHome('hallBuild'); hallPage = id; hallInside = null; openOperativeId = null; buildView = { ...newBuildView(id, 'compound'), screen: true }; break;
     case 'build-cell': {
       const [x, y] = id.split(',').map(Number);
       const hall = hallIn(state, buildView.district);
@@ -905,7 +923,7 @@ function renderScreen() {
   if (screen === 'inbox') return rootBack() + renderInbox();
   // A hall's page and its build screen are on their home tab (ui/nav.js HOMES): Tong › Halls.
   if (screen === 'tong') {
-    if (buildView && hallIn(state, buildView.district)) return renderHallBuild({ esc, money, cityName, backLabel: backLabel() }, state, buildView);
+    if (buildView?.screen && hallIn(state, buildView.district) && !wideHall()) return renderHallBuild({ esc, money, cityName, backLabel: backLabel(), art: hallArtOn() }, state, buildView);
     if (hallPage && hallIn(state, hallPage)) return renderHallPage(hallPage);
     return rootBack() + renderTong();
   }
@@ -1137,7 +1155,13 @@ function renderThreats(raids) {
     <section class="threats" aria-label="Threats">
       <div class="ops__head"><h2>Threats</h2></div>
       <ul class="crewsout">
-      ${raids.map((r) => {
+      ${raids.map((r) => threatItem(r)).join('')}
+      </ul>
+    </section>`;
+}
+
+/** One raid's Threats card: also on the hall's own page (`onHall` leaves out the link back to it; `note` adds a line). */
+function threatItem(r, { onHall = false, note = '' } = {}) {
         const home = defenders(state, r.district);
         const call = state.inbox.find((m) => m.kind === 'raid' && !m.resolved && m.payload?.raidId === r.id);
         const price = raidPrice(state, r);
@@ -1156,6 +1180,7 @@ function renderThreats(raids) {
             <p class="threat__label small">At the hall (${home.length})</p>
             <div class="threat__faces">${home.length ? home.map((op) => face(op, 'sm')).join('') : '<span class="muted small">Nobody home</span>'}</div>
           </div>
+          ${note}
           ${paid ? `<p class="small">${isGangRaid(r) ? 'Settled' : 'Paid off'} (${money(r.paid)}). Nobody will come.</p>`
             : call ? `<p class="small"><strong>They need your call now.</strong></p>`
             : `<div class="threat__plans" role="group" aria-label="Your plan for the raid">
@@ -1165,12 +1190,9 @@ function renderThreats(raids) {
           <div class="crewsout__foot">
             ${call ? `<button class="btn btn--primary" data-action="raid-answer" data-id="${esc(call.id)}">Answer the door</button>` : ''}
             ${buy ? `<button class="btn" data-action="raid-pay" data-id="${esc(r.id)}" ${state.cash < price ? 'disabled' : ''}>${isGangRaid(r) ? 'Settle' : 'Pay them off'} · ${money(price)}</button>` : ''}
-            ${!call && !paid ? `<button class="linkbtn" data-action="hall-page" data-id="${esc(r.district)}">View hall roster ›</button>` : ''}
+            ${!call && !paid && !onHall ? `<button class="linkbtn" data-action="hall-page" data-id="${esc(r.district)}">View hall roster ›</button>` : ''}
           </div>
         </li>`;
-      }).join('')}
-      </ul>
-    </section>`;
 }
 
 /** Crews out on jobs: where each is, what they did today, and a call waiting (core/away.js). */
@@ -1733,39 +1755,98 @@ function renderHallPage(d) {
   const live = raid && raid.answer !== 'paid' && !raid.done;
   const movers = state.crew.filter((o) => (o.hall ?? HOME_HALL) !== d && canMove(state, o.id, d).ok);
   const free = freeBeds(state, d);
-  return `
-    <section class="panel hallpage">
-      <button class="linkbtn" data-action="back">‹ ${esc(backLabel())}</button>
-      <div class="hallpage__head">${hallMark(d, { raid: live })}
-        <div><h1 class="btitle">The ${esc(cityName(d).replace(/^The /, ''))} hall${d === HOME_HALL ? ' <span class="hall__home">home</span>' : ''}${h.owned ? ' <span class="hall__home hall__owned">ours</span>' : ''}</h1>
-        <p class="muted small">${esc(HALL_SITES[d]?.place ?? '')}</p></div>
-      </div>
-      <p class="small">Level ${h.level} · ${h.owned ? 'no rent' : `${money(h.rent)}/wk`} · heat ${heatIn(state, d)}/10${hallShut(state, d) ? ` · <span class="citycard__shut">shut after a raid until day ${h.shutUntil}</span>` : ''}${live ? ` · <span class="citycard__raid">raid ${esc(raidWhen(raid))}</span>` : ''}</p>
-      <div class="bplan hallpage__plan">${sitePlanSvg({ site: hallSiteFor(state, d) })}${hallMap(d).parts ? `<svg class="bgrid" viewBox="0 0 360 240" aria-hidden="true">${partsOverlay(hallMap(d), h.level)}</svg>` : ''}</div>
-      <p class="small muted">${esc(hallBuildLine(h, defenceCut(state, d)))}</p>
-      <button class="btn btn--primary btn--block" data-action="build-hall" data-id="${esc(d)}">Build</button>
-      <h2>Who sleeps here <span class="muted small">${who.length}/${bedsOf(h)} beds</span></h2>
-      ${who.length ? `<ul class="list">
-        ${who.map((op) => `
-          <li><button class="row" data-action="open-op" data-id="${esc(op.id)}">
-            ${face(op)}
-            <span class="row__main"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"<br><span class="muted">${esc(op.tier ?? '')} ${esc(op.role)}</span></span>
-            <span class="row__meta">${statusChip(availability(state, op))}</span>
-          </button></li>`).join('')}
-      </ul>` : '<p class="muted small">Nobody sleeps here yet.</p>'}
-      ${free && movers.length ? `
-      <h2>Move someone in <span class="muted small">${free} free ${free === 1 ? 'bed' : 'beds'}</span></h2>
+  const wide = wideHall();
+  const art = hallArtOn() && hasHallArt(d);
+  const ui = { esc, money, cityName };
+  const site = hallMap(d);
+  const buildings = buildingsOf(state, d);
+  // The compound (default) or the inside of one of its buildings (2026-11-09).
+  const bld = hallInside ? buildings.find((b) => b.id === hallInside) ?? null : null;
+  const scope = bld ? bld.id : 'compound';
+  // The plan's tap grid is live inside a building, and on a wide screen on the compound too (defences).
+  const tapping = wide || !!bld;
+  const mine = buildView && buildView.district === d && buildView.scope === scope;
+  const view = tapping ? (mine ? buildView : newBuildView(d, scope)) : null;
+  const vb = bld ? insideBox(site, bld.id) : '0 0 360 240';
+  const planBox = `<div class="bplan hallpage__plan ${bld ? 'is-inside' : ''}">${planSvg(state, d, art, bld ? { inside: bld.id } : { compound: true })}${view
+    ? buildGrid(state, view, esc, art)
+    : `<svg class="bgrid" viewBox="${vb}">${compoundOverlay(state, d, { esc, art, tap: true })}${raidWaysFor(state, d)}</svg>`}</div>`;
+  const empty = !(h.build ?? []).length;
+  const buildNote = bld ? '' : empty
+    ? `<button class="btn btn--primary btn--block hallpage__start" data-action="build-hall" data-id="${esc(d)}">Start building ›</button><p class="small muted">Defences go on the compound outside. To build rooms, open a building.</p>`
+    : `<p class="small muted">${esc(hallBuildLine(h, defenceCut(state, d)))}</p>${wide ? '' : `<button class="btn btn--primary btn--block" data-action="build-hall" data-id="${esc(d)}">Build defences</button>`}`;
+  const facesOf = (list, total) => (list.length ? `<div class="hallfaces">${list.map((op) => `<button class="hallfaces__op" data-action="open-op" data-id="${esc(op.id)}" aria-label="${esc(`${op.name} "${op.handle}", ${op.tier ?? ''} ${op.role}`)}">${face(op)}</button>`).join('')}${Array.from({ length: Math.max(0, total - list.length) }, () => '<span class="hallfaces__free" aria-hidden="true">+</span>').join('')}</div>
+      <ul class="list hallpage__names">${list.map((op) => `<li class="small"><strong>${esc(op.handle)}</strong> <span class="muted">${esc(op.tier ?? '')} ${esc(op.role)}</span> ${statusChip(availability(state, op))}</li>`).join('')}</ul>` : '<p class="muted small">Nobody sleeps here yet.</p>');
+  const movein = free && movers.length ? `
+      <details class="hallmove"><summary class="btn btn--ghost btn--block">Move someone in <span class="muted small">· ${free} free ${free === 1 ? 'bed' : 'beds'}</span></summary>
       <p class="muted small">They settle in today and are free tomorrow.</p>
-      <div class="stack">${movers.map((op) => `<button class="btn btn--ghost" data-action="move-hall" data-id="${esc(`${op.id}|${d}`)}">${esc(op.handle)} <span class="muted small">· from ${esc(cityName(op.hall ?? HOME_HALL))}</span></button>`).join('')}</div>` : ''}
-      ${hallMap(d).parts ? `
-      <h2>The block <span class="muted small">${heldParts(hallMap(d), h.level).length} of ${hallMap(d).parts.length} parts</span></h2>
-      <ul class="secs">${hallMap(d).parts.map((p) => { const held = p.lvl <= h.level; const nx = x?.part === p.id; return `<li class="sec ${held ? '' : 'is-locked'}"><strong>${esc(p.name)}</strong> <span class="muted small">${held ? `${partCells(p).length} squares · ${p.inside ? 'inside' : 'outside'}` : nx ? `next · ${money(p.cost)}` : `level ${p.lvl}`}</span><br><span class="small ${held ? '' : 'muted'}">${esc(p.about)}</span></li>`; }).join('')}</ul>` : ''}
-      <h2>The place</h2>
-      <div class="stack">
+      <div class="stack">${movers.map((op) => `<button class="btn btn--ghost" data-action="move-hall" data-id="${esc(`${op.id}|${d}`)}">${esc(op.handle)} <span class="muted small">· from ${esc(cityName(op.hall ?? HOME_HALL))}</span></button>`).join('')}</div></details>` : '';
+  const place = `<div class="stack">
         ${x ? `<button class="btn btn--block" data-action="expand-hall" data-id="${esc(d)}" ${state.cash >= x.cost ? '' : 'disabled'}>${x.partName ? `Expand: take ${esc(x.partName.toLowerCase())}` : 'Expand'}: +${x.beds} beds for ${money(x.cost)} (${x.rentIncrease ? `rent +${money(x.rentIncrease)}/wk` : 'no rent'})</button>` : '<p class="small muted">The whole block is ours.</p>'}
         ${price == null ? '' : `<button class="btn btn--block" data-action="buy-hall" data-id="${esc(d)}" ${state.cash >= price ? '' : 'disabled'}>Buy the place: ${money(price)}, then no rent</button>`}
+      </div>`;
+  const nDef = defencesIn(state, d);
+  // The buildings as cards: name, who sleeps there, the rooms built. Locked ones say when they open.
+  const cards = `<h2>Buildings</h2><ul class="bcards">${(site.parts ?? []).filter((p) => p.inside).map((p) => {
+    const b = buildings.find((y) => y.id === p.id);
+    if (!b) return `<li class="bcard is-locked"><strong>${esc(p.name)}</strong> <span class="muted small">${x?.part === p.id ? `next · ${money(p.cost)}` : `opens at level ${p.lvl}`}</span><p class="small muted">${esc(p.about)}</p></li>`;
+    return `<li class="bcard"><button class="bcard__main" data-action="hall-building" data-id="${esc(b.id)}" aria-label="${esc(`Open ${b.name}`)}">
+      <span class="bcard__top"><strong>${esc(b.name)}</strong><span class="bcard__go">Open ›</span></span>
+      <span class="bcard__faces">${b.who.map((op) => face(op, 'sm')).join('') || '<span class="muted small">Nobody sleeps here</span>'}</span>
+      <span class="small">${b.beds} ${b.beds === 1 ? 'bed' : 'beds'} · ${b.rooms.length ? esc(b.rooms.join(', ')) : '<span class="muted">no rooms built</span>'}</span></button></li>`;
+  }).join('')}</ul>`;
+  const outside = (site.parts ?? []).filter((p) => !p.inside).map((p) => {
+    const held = p.lvl <= h.level;
+    const n = (h.build ?? []).filter((b) => PIECES[b.piece]?.kind === 'defence' && partAt(site, b.x, b.y)?.id === p.id).length;
+    return `<li class="sec ${held ? '' : 'is-locked'}"><strong>${esc(p.name)}</strong> <span class="muted small">${held ? `${n} ${n === 1 ? 'defence' : 'defences'}` : x?.part === p.id ? `next · ${money(p.cost)}` : `opens at level ${p.lvl}`}</span><br><span class="small ${held ? '' : 'muted'}">${esc(p.about)}</span></li>`;
+  }).join('');
+  const head = bld
+    ? `<button class="linkbtn" data-action="hall-compound">‹ The compound</button>
+        <div class="hallpage__head"><div><h1 class="btitle">${esc(bld.name)}</h1><p class="muted small">The ${esc(cityName(d).replace(/^The /, ''))} hall · ${bld.who.length} of ${bld.beds} ${bld.beds === 1 ? 'bed' : 'beds'} slept in · ${bld.rooms.length ? esc(bld.rooms.join(', ')) : 'no rooms built'}</p></div></div>
+        <p class="small">${esc(bld.about)}</p>`
+    : `<button class="linkbtn" data-action="back">‹ ${esc(backLabel())}</button>
+        <div class="hallpage__head">${hallMark(d, { raid: live })}
+          <div><h1 class="btitle">The ${esc(cityName(d).replace(/^The /, ''))} hall${d === HOME_HALL ? ' <span class="hall__home">home</span>' : ''}${h.owned ? ' <span class="hall__home hall__owned">ours</span>' : ''}</h1>
+          <p class="muted small">${esc(HALL_SITES[d]?.place ?? '')}</p></div>
+        </div>
+        <p class="small">Level ${h.level} · ${h.owned ? 'no rent' : `${money(h.rent)}/wk`} · heat ${heatIn(state, d)}/10${hallShut(state, d) ? ` · <span class="citycard__shut">shut after a raid until day ${h.shutUntil}</span>` : ''}${live ? ` · <span class="citycard__raid">raid ${esc(raidWhen(raid))}</span>` : ''}</p>`;
+  return `
+    <section class="panel hallpage ${wide ? 'is-wide' : ''} ${bld ? 'is-inside' : ''}">
+      ${art ? SPRITE_SHEET : ''}
+      <div class="hallpage__cols">
+      <div class="hallpage__map">
+        ${head}
+        ${planBox}
+        ${planKey(state, d, { building: !!view, compound: !bld, inside: !!bld })}
+        ${buildNote}
+        ${bld ? '' : cards}
+      </div>
+      <div class="hallpage__side">
+        ${hallThreat(d, raid, !bld)}
+        <h2>${bld ? 'Sleeps in this building' : 'Who sleeps here'} <span class="muted small">${bld ? `${bld.who.length}/${bld.beds} beds` : `${who.length}/${bedsOf(h)} beds`}</span></h2>
+        ${facesOf(bld ? bld.who : who, bld ? bld.beds : bedsOf(h))}
+        ${movein}
+        <h2>${bld ? 'Build rooms here' : 'Build defences'} <span class="muted small">floor ${floorUsed(h)}/${floorOf(h)}</span></h2>
+        ${tapping ? `${buildSheet(state, view, ui)}${buildPalette(state, view, ui)}` : `${mine && buildView.part ? buildSheet(state, buildView, ui) : ''}<p class="small muted">Defences go outside, on the compound. Open the plan to place them.</p>`}
+        ${place}
+        ${bld ? '' : `<h2>Defences <span class="muted small">${nDef} ${nDef === 1 ? 'piece' : 'pieces'}</span></h2>
+        <p class="small bdef">${defenceLine(state, d)}</p>
+        <h2>Outside</h2><ul class="secs">${outside}</ul>`}
+      </div>
       </div>
     </section>`;
+}
+
+
+/**
+ * The hall page's raid card (2026-11-09): the same Threats card as on City and Today (`threatItem`), plus
+ * how hard it is with our defences and where to see the ways in.
+ */
+function hallThreat(d, r, onCompound) {
+  if (!r || r.answer === 'paid' || r.done) return '';
+  const cut = defenceCut(state, d);
+  const note = `<p class="small">Threat <strong>${raidThreat(state, d, r)}</strong>${cut ? ` (our defences take off ${cut})` : ''}. ${onCompound ? 'The ways in are marked red on the plan.' : 'It comes at the compound from outside: the ways in are on the compound view.'}</p>`;
+  return `<ul class="crewsout hallthreat" aria-label="Raid on this hall">${threatItem(r, { onHall: true, note })}</ul>`;
 }
 
 /** The sub-tab row (layout rule 5): `tabs` is [id, label] pairs; `on` the one showing; `action` the click action. */
@@ -3332,6 +3413,13 @@ function renderSettings() {
         <button class="btn btn--block" data-action="restore-backup" ${backup.day === state.day ? 'disabled' : ''}>Restore backup from day ${backup.day}</button>
       </div>` : ''}
       </div>
+      </div>
+
+      <h2>Look</h2>
+      <div class="riskcard">
+        <p>Hall art: <strong>${getPref('hallart') ? 'on' : 'off'}</strong></p>
+        <p class="muted small">Draws the Old Town hall as a street-terminal picture, with tiles, walls and a sprite for everything built. Other halls keep the plain plan for now. Only changes how it looks, and is kept on this device, not in the save.</p>
+        <button class="btn btn--block" data-action="toggle-hallart" aria-pressed="${getPref('hallart')}">${getPref('hallart') ? 'Turn hall art off' : 'Turn hall art on'}</button>
       </div>
 
       <p class="muted small">Playing: ${esc(DIFFICULTIES[state.difficulty]?.name ?? state.difficulty)} · Save format v${state.version} · ${SLOT_COUNT} slots</p>
