@@ -9,7 +9,8 @@ import { weeklyRivals, rivalView } from '../src/core/rivals.js';
 import { sendScout, scoutLevel, findCard, readFor, signCard, dossierOf, SCOUT_DAYS } from '../src/core/dossier.js';
 import { sideTasksOut } from '../src/core/sidetasks.js';
 import { availability } from '../src/core/crew.js';
-import { renderTongs, scoutRow } from '../src/ui/tongs.js';
+import * as tongsUi from '../src/ui/tongs.js';
+import { renderTongs, renderLeadName, leadNames } from '../src/ui/tongs.js';
 import { POTENTIAL_TEXT, SIGN_REASON, SCOUT_LEVEL_TEXT } from '../src/data/rivals.js';
 
 const game = (seed = 42) => { const s = createNewGame({ seed, startCrew: 'fresh' }); s.cash = 60000; return s; };
@@ -68,15 +69,16 @@ test('a name that was signed away before the scout got there says so, and nothin
   assert.match(m.subject, /moved on/);
 });
 
-test('Ops › The other tongs shows this month\'s free name and opens its page', () => {
+test('City › Tongs shows this month\'s free name and sends it to Crew › Leads, where its page is', () => {
   const s = withOffer(4);
   const view = rivalView(s);
   const html = renderTongs(s, null);
   assert.match(html, /Free names/);
-  assert.ok(html.includes(`data-id="${view.offer.id}"`));
+  assert.match(html, new RegExp(`data-action="lead-name" data-id="${view.offer.id}"`), 'the free name opens straight in Leads');
+  assert.doesNotMatch(html, /data-action="tong-name" data-id="[^"]*" data-style="free"/);
   assert.ok(html.includes(view.offer.name));
   assert.doesNotMatch(html, /undefined|NaN|\[object/);
-  const page = renderTongs(s, `name:${view.offer.id}`);
+  const page = renderLeadName(s, view.offer.id);
   assert.ok(page.includes(view.offer.name));
   assert.match(page, /What we know/);
   assert.match(page, /What it would take/);
@@ -84,16 +86,29 @@ test('Ops › The other tongs shows this month\'s free name and opens its page',
   assert.doesNotMatch(page, /undefined|NaN|\[object/);
 });
 
+test('a name\'s profile on City › Tongs is read-only: who they are with and what we know, a View in Leads button, no price, scouting or Sign', () => {
+  const s = withOffer(4);
+  const tong = rivalView(s).tiers[0].tongs[0];
+  const name = tong.names[0];
+  const profile = renderTongs(Object.assign(structuredClone(s), { cash: 200000 }), `name:${name.id}`);
+  assert.ok(profile.includes(name.name));
+  assert.match(profile, /with /, 'the tong they are with');
+  assert.match(profile, /What we know/);
+  assert.match(profile, new RegExp(`data-action="lead-name" data-id="${findCard(s, name.id).id}"`));
+  assert.doesNotMatch(profile, /What it would take|Signing fee|Buyout|sign-name|scout-send/);
+  assert.doesNotMatch(renderLeadName(s, name.id), /View in Leads/, 'the Leads page is not a second profile');
+});
+
 test("a name's page shows no stats until they are scouted, and never more than the level allows", () => {
   const s = withOffer(5);
   const card = findCard(s, s.rivals.offer.cardId);
-  const cold = renderTongs(s, `name:${readFor(s, card).id}`);
+  const cold = renderLeadName(s, readFor(s, card).id);
   assert.doesNotMatch(cold, /namestats/);
   assert.match(cold, new RegExp(SCOUT_LEVEL_TEXT.none.slice(0, 20)));
   assert.match(cold, /about ¥/, 'the wage is a guess before a trip');
   for (const level of [1, 2, 3]) {
     const t = structuredClone(s); t.rivals.scouted = { [card.id]: level };
-    const html = renderTongs(t, `name:${readFor(t, card).id}`);
+    const html = renderLeadName(t, readFor(t, card).id);
     assert.match(html, /namestats/);
     const band = readFor(t, card).potential;
     const safe = POTENTIAL_TEXT[band].split("'").at(-1).slice(0, 14); // the page escapes apostrophes
@@ -107,16 +122,16 @@ test('the name page offers Sign when it can be signed, the reason when it cannot
   const card = findCard(s, s.rivals.offer.cardId);
   const id = readFor(s, card).id;
   const rich = structuredClone(s); rich.cash = 200000; rich.crew[0].fame = 'legend'; rich.crew[1].fame = 'elite';
-  const page = renderTongs(rich, `name:${id}`);
+  const page = renderLeadName(rich, id);
   assert.match(page, /data-action="sign-name"/);
   assert.match(page, /data-action="scout-send"/);
   const broke = structuredClone(s); broke.cash = 5;
-  assert.match(renderTongs(broke, `name:${id}`), new RegExp(SIGN_REASON.no_cash.slice(0, 20)));
-  assert.doesNotMatch(renderTongs(broke, `name:${id}`), /data-action="sign-name"/);
+  assert.match(renderLeadName(broke, id), new RegExp(SIGN_REASON.no_cash.slice(0, 20)));
+  assert.doesNotMatch(renderLeadName(broke, id), /data-action="sign-name"/);
   const full = structuredClone(s); full.halls[0].beds = full.crew.length;
-  assert.match(renderTongs(full, `name:${id}`), new RegExp(SIGN_REASON.no_bed.slice(0, 15)));
+  assert.match(renderLeadName(full, id), new RegExp(SIGN_REASON.no_bed.slice(0, 15)));
   const done = signCard(rich, id);
-  assert.match(renderTongs(done, `name:${id}`), /Gone/, 'once signed, the page says they are gone');
+  assert.match(renderLeadName(done, id), /Gone/, 'once signed, the page says they are gone');
 });
 
 test('a head has no price and no Sign; a name in a tong shows the buyout', () => {
@@ -124,27 +139,31 @@ test('a head has no price and no Sign; a name in a tong shows the buyout', () =>
   const view = rivalView(s);
   const tong = view.tiers[0].tongs[0];
   const name = tong.names[0];
-  const html = renderTongs(Object.assign(structuredClone(s), { cash: 200000 }), `name:${name.id}`);
+  const html = renderLeadName(Object.assign(structuredClone(s), { cash: 200000 }), name.id);
   assert.match(html, /Buyout to /);
   const headCard = s.rivals.cards.find((c) => c.id === s.rivals.tongs.find((t) => t.name === tong.name).headId);
-  const headPage = renderTongs(s, `name:${headCard.name.toLowerCase().replace(/[^a-z]+/g, '-')}`);
+  const headPage = renderLeadName(s, headCard.name.toLowerCase().replace(/[^a-z]+/g, '-'));
   assert.doesNotMatch(headPage, /data-action="sign-name"|Signing fee/);
   assert.match(headPage, new RegExp(SIGN_REASON.head.slice(0, 12)));
   assert.doesNotMatch(headPage, /scout-send/, 'no scouting a head');
+  assert.doesNotMatch(renderTongs(s, `name:${headCard.name.toLowerCase().replace(/[^a-z]+/g, '-')}`), /What it would take/);
   // The tong's page links its names.
   assert.match(renderTongs(s, tong.id), new RegExp(`data-action="tong-name" data-id="${name.id}"`));
 });
 
-test('the side-work board gets a Scout row for the free name, until they are fully scouted', () => {
+test('the Jobs side board has no scout row any more; Crew › Leads lists the free name, and anyone in a tong we are watching', () => {
+  assert.equal(tongsUi.scoutRow, undefined, 'scouting free names lives on Crew › Leads only');
   const s = withOffer(8);
-  const row = scoutRow(s);
-  assert.match(row, /data-action="tong-name"/);
-  assert.match(row, /Scout /);
-  const card = findCard(s, s.rivals.offer.cardId);
-  const full = structuredClone(s); full.rivals.scouted = { [card.id]: 3 };
-  assert.equal(scoutRow(full), '');
+  const view = rivalView(s);
+  const list = leadNames(s);
+  assert.match(list, new RegExp(`data-action="lead-name" data-id="${view.offer.id}"`));
+  const tongName = view.tiers[0].tongs[0].names[0];
+  const cardId = findCard(s, tongName.id).id;
+  assert.doesNotMatch(list, new RegExp(`data-id="${tongName.id}"`), 'a name in a tong is not listed until we have an eye on them');
+  const watched = structuredClone(s); watched.rivals.scouted = { [cardId]: 1 };
+  assert.match(leadNames(watched), new RegExp(`data-action="lead-name" data-id="${tongName.id}"`));
   const none = game(8); none.rivals.offer = null;
-  assert.equal(scoutRow(none), '');
+  assert.equal(leadNames(none), '');
 });
 
 test('the tong list has no number or stray token', () => {
@@ -161,7 +180,7 @@ test('free names, name pages, a tong\'s names and Names on the street all carry 
   const view = rivalView(s);
   const list = renderTongs(s, null);
   assert.ok((list.match(/class="face/g) ?? []).length >= view.names.length + 1, 'a face for the free name and every name on the street');
-  const page = renderTongs(s, `name:${view.offer.id}`);
+  const page = renderLeadName(s, view.offer.id);
   assert.match(page, /class="face face--lg"/);
   assert.match(page, /<svg/);
   const tong = view.tiers[0].tongs[0];

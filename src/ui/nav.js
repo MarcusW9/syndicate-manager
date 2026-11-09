@@ -15,19 +15,21 @@ import { isActionable } from '../core/inbox.js';
  * that moves the page, and never point one at a tab or sub-tab that doesn't exist yet.
  */
 export const HOMES = Object.freeze({
-  hall: ['tong', 'halls'],      // a hall's own page (Tong › Halls since step 2)
-  hallBuild: ['tong', 'halls'], // the hall build screen, reached from the hall page
-  armoury: ['tong', 'armoury'], // the Armoury: stash, carried gear, shop (a sub-tab, not a page)
-  tong: ['ops', null],          // another tong's page
-  name: ['ops', null],          // a name's page (a free name or one in a tong)
-  district: ['ops', null],      // a district's page (the card on the map)
-  client: ['jobs', null],       // a client's page (the strip on the job board for now)
-  runner: ['crew', 'roster'],   // a runner's page
-  recruit: ['crew', 'leads'],   // a lead's page
-  message: ['inbox', null],     // a message on Today
-  plan: ['jobs', null],         // a job's plan and the squad board
-  sidePlan: ['jobs', null],     // a side job's plan
-  book: ['ops', null],          // the Book (the old Lore view until step 4), opened from a link in Ops' header
+  hall: ['tong', 'halls'],        // a hall's own page (Tong › Halls since step 2)
+  hallBuild: ['tong', 'halls'],   // the hall build screen, reached from the hall page
+  armoury: ['tong', 'armoury'],   // the Armoury: stash, carried gear, shop (a sub-tab, not a page)
+  tong: ['city', 'tongs'],        // another tong's page (City › Tongs since step 3)
+  name: ['city', 'tongs'],        // a name's read-only profile: what we know and who they are with
+  district: ['city', 'districts'],// a district's page
+  heist: ['jobs', 'heists'],      // the heist card and its steps (Jobs › Heists since step 3)
+  client: ['jobs', 'board'],      // a client's page (the strip on the job board until step 4)
+  runner: ['crew', 'roster'],     // a runner's page
+  recruit: ['crew', 'leads'],     // a lead's page
+  leadName: ['crew', 'leads'],    // a name's recruitment page: scouting, what it would take, Sign (free names and names in a tong)
+  message: ['inbox', null],       // a message on Today
+  plan: ['jobs', 'board'],        // a job's plan and the squad board
+  sidePlan: ['jobs', 'side'],     // a side job's plan
+  book: ['city', 'map'],          // the Book (the old Lore view until step 4), opened from a link in City's header
 });
 
 /** The home tab for a page kind, or null for a kind with no entry. */
@@ -35,12 +37,12 @@ export const homeOf = (kind) => HOMES[kind]?.[0] ?? null;
 /** The home sub-tab for a page kind, or null when its tab has none. */
 export const homeSub = (kind) => HOMES[kind]?.[1] ?? null;
 /** The UI field that holds a tab's sub-tab. */
-export const SUB_KEY = Object.freeze({ tong: 'tongTab', crew: 'crewTab' });
+export const SUB_KEY = Object.freeze({ city: 'cityTab', tong: 'tongTab', crew: 'crewTab', jobs: 'jobsTab' });
 
-export const TAB_NAMES = Object.freeze({ inbox: 'Today', ops: 'Ops', tong: 'Tong', crew: 'Crew', jobs: 'Jobs', lore: 'Book', settings: 'Save' });
+export const TAB_NAMES = Object.freeze({ inbox: 'Today', city: 'City', tong: 'Tong', crew: 'Crew', jobs: 'Jobs', lore: 'Book', settings: 'Save' });
 
-/** Which tab is lit for a screen: the Book is City's (Ops') page, and Save is the ☰ in the top bar. */
-export const tabOf = (screen) => (screen === 'lore' ? 'ops' : screen);
+/** Which tab is lit for a screen: the Book is City's page, and Save is the ☰ in the top bar. */
+export const tabOf = (screen) => (screen === 'lore' ? 'city' : screen);
 
 const NEEDS_THE_PLAYER = new Set(['hall-offer', 'raid-warning']);
 /**
@@ -67,18 +69,18 @@ export function pageKind(ui) {
   const { screen } = ui;
   if (screen === 'inbox') return ui.openMessageId ? 'message' : null;
   if (screen === 'jobs') return ui.plan ? 'plan' : ui.sidePlan ? 'sidePlan' : null;
-  if (screen === 'crew') return ui.openRecruitId ? 'recruit' : ui.openOperativeId ? 'runner' : null;
+  if (screen === 'crew') return ui.openRecruitId ? 'recruit' : ui.leadName ? 'leadName' : ui.openOperativeId ? 'runner' : null;
   if (screen === 'tong') return ui.buildView ? 'hallBuild' : ui.hallPage ? 'hall' : null;
   if (screen === 'lore') return 'book';
-  if (screen === 'ops') {
-    if (typeof ui.tongsView === 'string') return ui.tongsView.startsWith('name:') ? 'name' : 'tong'; // '' is the list of tongs
-    return ui.cityDistrict ? 'district' : null;
+  if (screen === 'city') {
+    if (ui.cityTab === 'tongs') return ui.tongsView ? (ui.tongsView.startsWith('name:') ? 'name' : 'tong') : null;
+    return ui.cityTab === 'districts' && ui.cityDistrict ? 'district' : null; // on the Map a district is only picked, not opened
   }
   return null;
 }
 
 /** What a root view has open: nothing. */
-const NOTHING_OPEN = Object.freeze({ openMessageId: null, openOperativeId: null, openRecruitId: null, hallPage: null, buildView: null, tongsView: null, cityDistrict: null, loreDistrict: null, plan: null, sidePlan: null });
+const NOTHING_OPEN = Object.freeze({ openMessageId: null, openOperativeId: null, openRecruitId: null, leadName: null, hallPage: null, buildView: null, tongsView: null, cityDistrict: null, loreDistrict: null, plan: null, sidePlan: null });
 
 /**
  * Back with no history (a direct link, a fresh load): the root view of the page's home tab, with no page
@@ -96,10 +98,10 @@ export function placeLabel(ui) {
   const kind = pageKind(ui);
   if (!kind) {
     const sub = ui[SUB_KEY[ui.screen]];
-    return { tong: { halls: 'Halls', armoury: 'the Armoury' }, crew: { roster: 'Crew', leads: 'Leads', wall: 'the Wall' } }[ui.screen]?.[sub] ?? TAB_NAMES[ui.screen] ?? 'back';
+    return { city: { map: 'City', districts: 'Districts', tongs: 'Tongs' }, tong: { halls: 'Halls', armoury: 'the Armoury' }, crew: { roster: 'Crew', leads: 'Leads', wall: 'the Wall' }, jobs: { board: 'Jobs', heists: 'Heists', side: 'Side work' } }[ui.screen]?.[sub] ?? TAB_NAMES[ui.screen] ?? 'back';
   }
   if (kind === 'tong' || kind === 'name') return 'the tongs';
-  return { message: 'the message', plan: 'the job', sidePlan: 'the side job', runner: 'the runner', recruit: 'the lead', book: 'the Book', hall: 'the hall', hallBuild: 'the build', district: 'the district' }[kind];
+  return { message: 'the message', plan: 'the job', sidePlan: 'the side job', runner: 'the runner', recruit: 'the lead', leadName: 'the lead', book: 'the Book', hall: 'the hall', hallBuild: 'the build', district: 'the district' }[kind];
 }
 
 /** The Back stack. `limit` keeps a long wander from growing for ever. */

@@ -72,8 +72,8 @@ import {
 import { hire, haggle, passRecruit, canHire, signingFee, nextExpansion, expandSafehouse, STARTING_ROSTER_CAP, FOUNDERS_TO_PICK } from '../core/recruits.js';
 import { potentialRead, primaryStat, scoutFor, ageRate, declineChance, mentoring, changesSince, progressShare, STATS } from '../core/development.js';
 import { GROWTH_LINES, GRADUATION_LINES } from '../data/growthLines.js';
-import { renderTongs, renderWord, scoutRow } from './tongs.js';
-import { sendScout, signCard } from '../core/dossier.js';
+import { renderTongs, renderWord, renderLeadName, leadNames } from './tongs.js';
+import { sendScout, signCard, findCard } from '../core/dossier.js';
 import { clientRival } from '../core/rivals.js';
 import { clientRivalLine } from '../data/rivals.js';
 import { freelancerAsCrew, shareOf, MAX_FREELANCERS_PER_JOB } from '../core/freelance.js';
@@ -81,12 +81,15 @@ import { createNav, homeOf, homeSub, pageKind, placeLabel, rootOf, tabOf, tabBad
 
 let state;
 let screen = 'inbox';
-let cityDistrict = null; // district card open on the Ops map, and the district the map is zoomed onto
+let cityDistrict = null; // the district picked on the City map (the map zooms onto it), or the district page open on City › Districts
 let mapView = FULL_VIEW; // where the Ops map was looking when last drawn ([x, y, w, h]); it eases from here to the next view
 let mapTo = null; // the view the map is heading for, set while drawing it
-let cityTab = 'districts'; // which Lore section is showing (LORE_TABS)
+let cityTab = 'map'; // City's sub-tab: 'map' | 'districts' | 'tongs'
+let loreTab = 'districts'; // which Book section is showing (LORE_TABS)
+let jobsTab = 'board'; // Jobs' sub-tab: 'board' | 'heists' | 'side'
+let leadName = null; // a name opened in Crew › Leads (scouting, what it would take, Sign): a card id
 let loreDistrict = null; // the district read in full on Lore › Districts
-let loreDue = false; // scroll Lore › Districts to the district opened from Ops
+let loreDue = false; // scroll the Book's districts to the one opened from a district page
 let cityMapDue = false; // scroll the map into view after drawing (a crew's district picked in the list)
 let openMessageId = null;
 let sidePlan = null; // { taskId, crew: [] } while planning a side task (Jobs tab)
@@ -96,7 +99,7 @@ let openRecruitId = null;
 let tongTab = 'halls'; // Tong's sub-tab: 'halls' | 'armoury' (ui/gear.js draws the Armoury)
 let crewTab = 'roster'; // Crew's sub-tab: 'roster' | 'leads' | 'wall'
 let buildView = null; // the hall build screen, from a hall's page (ui/hallbuild.js): { district, cell, piece, rot, picked }
-let tongsView = null; // the other tongs, from Ops › Places: null (closed), '' (the list) or a tong's id (ui/tongs.js)
+let tongsView = null; // City › Tongs: null (the list), a tong's id or `name:<id>` (a name's profile) (ui/tongs.js)
 let hallPage = null; // a hall's own page (2026-11-07), by district: from Crew › Halls or the district's card on Ops, shown on that tab
 let gearSlot = null; // the place being filled on a runner's page: 'armour', 'implant:0', 'bag:2,1'
 let bagPick = null; // the bag item picked up on a runner's page, to move or take off
@@ -144,7 +147,7 @@ export function mountApp(el, initialState) {
   root.addEventListener('keydown', (e) => {
     if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('g[data-action]')) { e.preventDefault(); onClick(e); }
     if (e.key === 'Escape' && pickSlot) { focusNext = { action: 'pick-slot', id: pickSlot }; pickSlot = null; render(); }
-    else if (e.key === 'Escape' && screen === 'ops' && cityDistrict && !state.activeMission) { cityDistrict = null; render(); }
+    else if (e.key === 'Escape' && screen === 'city' && cityTab === 'map' && cityDistrict && !state.activeMission) { cityDistrict = null; render(); }
   });
   // The save-file picker lives outside root: render() replaces everything inside root, and the
   // Load button's own click re-renders, so a picker inside would be swapped out mid-pick and its
@@ -164,7 +167,7 @@ function setState(next) {
 // --- navigation (ui/nav.js) --------------------------------------------
 /** The view as it is now: everything Back has to put back. Plan objects are kept by reference (the plan is UI, not game state). */
 function viewNow() {
-  return { screen, openMessageId, openOperativeId, openRecruitId, tongTab, crewTab, hallPage, buildView, tongsView, cityDistrict, cityTab, loreDistrict, inboxUnread, plan, sidePlan };
+  return { screen, openMessageId, openOperativeId, openRecruitId, leadName, tongTab, crewTab, jobsTab, hallPage, buildView, tongsView, cityDistrict, cityTab, loreTab, loreDistrict, inboxUnread, plan, sidePlan };
 }
 
 /** A link to a page: remember this view (and the control that was tapped) so Back can return to it. */
@@ -175,7 +178,7 @@ function remember(action, id) {
 
 /** Put a remembered view back. Pages that have gone since (a lead hired, a job taken) fall back to their list. */
 function restoreView(v) {
-  ({ screen, openMessageId, openOperativeId, openRecruitId, tongTab, crewTab, hallPage, buildView, tongsView, cityDistrict, cityTab, loreDistrict, inboxUnread, plan, sidePlan } = v);
+  ({ screen, openMessageId, openOperativeId, openRecruitId, leadName, tongTab, crewTab, jobsTab, hallPage, buildView, tongsView, cityDistrict, cityTab, loreTab, loreDistrict, inboxUnread, plan, sidePlan } = v);
   if (openMessageId && !state.inbox.some((m) => m.id === openMessageId)) openMessageId = null;
   if (openOperativeId && ![...state.crew, ...state.memorial].some((o) => o.id === openOperativeId)) openOperativeId = null;
   if (openRecruitId && !(state.recruits ?? []).some((r) => r.id === openRecruitId)) openRecruitId = null;
@@ -189,16 +192,20 @@ function toRoot() {
   scrollDue = 0;
 }
 
-/** Is Back showing on this view? Never at a root view; on a district only when a shortcut brought you (the map has its own "Whole city"). */
-const canGoBack = () => { const k = pageKind(viewNow()); return !!k && (k !== 'district' || nav.depth > 0); };
+/** Is Back showing on this view? On any opened page, never at a root view (a district only picked on the map is not a page: it has "Whole city"). */
+const canGoBack = () => !!pageKind(viewNow());
 /** A root view you got to by a link (the Armoury from the plan, Leads from a message) says where Back goes; one you chose has none. */
 const rootBack = () => (!pageKind(viewNow()) && nav.depth > 0 ? `<div class="backbar"><button class="linkbtn" data-action="back">‹ ${esc(backLabel())}</button></div>` : '');
+
+function setSub(tab, sub) {
+  if (tab === 'city') cityTab = sub; else if (tab === 'tong') tongTab = sub; else if (tab === 'crew') crewTab = sub; else if (tab === 'jobs') jobsTab = sub;
+}
 
 /** Open a kind of page on its home tab and sub-tab (ui/nav.js HOMES). */
 function goHome(kind) {
   screen = homeOf(kind);
   const sub = homeSub(kind);
-  if (sub) { if (screen === 'tong') tongTab = sub; else if (screen === 'crew') crewTab = sub; }
+  if (sub) setSub(screen, sub);
 }
 
 /** The Back control's words: where it will land. */
@@ -215,7 +222,7 @@ function onClick(e) {
   const { action, id } = t.dataset;
 
   switch (action) {
-    case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; screen = id; nav.clear(); scrollDue = 0; buildView = null; tongsView = null; hallPage = null; openMessageId = null; openOperativeId = null; openRecruitId = null; gearSlot = null; bagPick = null; plan = null; sidePlan = null; pickSlot = null; break;
+    case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; screen = id; nav.clear(); scrollDue = 0; buildView = null; tongsView = null; cityDistrict = null; leadName = null; hallPage = null; openMessageId = null; openOperativeId = null; openRecruitId = null; gearSlot = null; bagPick = null; plan = null; sidePlan = null; pickSlot = null; break;
     case 'continue': {
       if (isBlocked(state) || Date.now() < continueRestUntil) return;
       const next = advanceDay(state);
@@ -228,25 +235,35 @@ function onClick(e) {
     // "× Whole city", Esc or the harbour zooms back out.
     case 'city-district': cityDistrict = id; break;
     case 'city-whole': cityDistrict = null; break;
+    // A district's page, from its card in Districts or from the pick on the map.
+    case 'district-open': remember(action, id); goHome('district'); tongsView = null; cityDistrict = id; break;
     // A crew's district in the list: light it on the map (scrolled into view) and narrow the list to it.
-    case 'city-show': cityDistrict = cityDistrict === id ? null : id; cityMapDue = !!cityDistrict; break;
-    case 'city-tab': cityTab = id; break;
-    case 'tongs-open': remember(action, id); screen = homeOf('tong'); tongsView = ''; break;
-    case 'tong-page': remember(action, id); screen = homeOf('tong'); tongsView = id; break;
+    case 'city-show': cityTab = 'map'; cityDistrict = cityDistrict === id ? null : id; cityMapDue = !!cityDistrict; break;
+    // City's sub-tabs (the Book's own are 'lore-tab'): a different part of the tab, so no page stays open.
+    case 'city-tab': cityTab = id; cityDistrict = null; tongsView = null; break;
+    case 'jobs-tab': jobsTab = id; break;
+    case 'lore-tab': loreTab = id; break;
+    case 'tong-page': remember(action, id); goHome('tong'); tongsView = id; break;
     // A free name or a name in a tong: its page, a scout trip (two days away), and signing (core/dossier.js).
-    case 'tong-name': remember(action, id); screen = homeOf('name'); tongsView = `name:${id}`; break;
+    case 'tong-name': remember(action, id); goHome('name'); tongsView = `name:${findCard(state, id)?.id ?? id}`; break;
     case 'scout-send': { const [name, opId] = id.split('|'); return setState(sendScout(state, name, opId)); }
-    case 'sign-name': { // signed: the name's page is gone, so go back to where it was opened from
+    // A name in Crew › Leads (also the "View in Leads" shortcut on a City profile): scouting, what it would take, Sign.
+    case 'lead-name': remember(action, id); goHome('leadName'); leadName = findCard(state, id)?.id ?? id; openRecruitId = null; openOperativeId = null; break;
+    case 'sign-name': { // signed: their page is gone, so go back to where it was opened from (past any page of theirs)
       const next = signCard(state, id);
-      if (next !== state) { const view = nav.pop(); if (view) { restoreView(view); scrollDue = view.scrollY; } else toRoot(); }
+      if (next !== state) {
+        let view;
+        const cid = findCard(state, id)?.id ?? id;
+        while ((view = nav.pop()) && (view.leadName === cid || view.tongsView === `name:${cid}`)) { /* their own pages are gone */ }
+        if (view) { restoreView(view); scrollDue = view.scrollY; } else { leadName = null; toRoot(); }
+      }
       return setState(next);
     }
-    // Lore › Districts: open one district's full write-up (tap again to fold it); from the Ops card, go there.
-    case 'ops-district': // a shortcut to the district's page; from Ops itself it just selects the district
-      if (screen !== homeOf('district') || pageKind(viewNow()) !== null) remember(action, id);
-      screen = homeOf('district'); tongsView = null; cityDistrict = id; cityMapDue = true; break;
+    case 'ops-district': // a shortcut to the district's page (the heat chip, a Book link)
+      if (!(screen === homeOf('district') && cityTab === homeSub('district') && cityDistrict === id)) remember(action, id);
+      goHome('district'); tongsView = null; cityDistrict = id; break;
     case 'lore-district': loreDistrict = loreDistrict === id ? null : id; break;
-    case 'about-district': remember(action, id); screen = 'lore'; cityTab = 'districts'; loreDistrict = id; loreDue = true; break;
+    case 'about-district': remember(action, id); screen = 'lore'; loreTab = 'districts'; loreDistrict = id; loreDue = true; break;
     case 'read-message': // from Ops' Tonight list
     case 'open-message': {
       remember(action, id);
@@ -279,6 +296,14 @@ function onClick(e) {
     case 'halls-open': remember(action, id); goHome('hall'); hallPage = null; buildView = null; break;
     case 'leads-open': remember(action, id); goHome('recruit'); openRecruitId = null; openOperativeId = null; break;
     case 'book': remember(action, id); screen = 'lore'; break;
+    // A shortcut to a tab's home from a card elsewhere ("tab:sub"), e.g. Today's crews-out line → City › Map. A link, not a tab choice: Back returns.
+    case 'goto': {
+      remember(action, id);
+      const [tab, sub] = id.split(':');
+      restoreView({ ...rootOf({ ...viewNow(), screen: tab }), screen: tab });
+      if (sub) setSub(tab, sub);
+      break;
+    }
     case 'buy': return setState(buyGear(state, id, t.dataset.tier || 'street'));
     case 'buy-offer': return setState(buyOffer(state, id));
     case 'sell': {
@@ -378,7 +403,7 @@ function onClick(e) {
     case 'open-job': { // also from Today's alerts
       // The plan starts as Joss's read from the board card, so the risk the card showed is the risk here.
       if (!plan) remember(action, id); // choosing another job from the list beside a plan swaps the plan, not a new page
-      screen = homeOf('plan');
+      goHome('plan');
       const job = state.jobs.find((j) => j.id === id);
       const r = job ? boardRead(job) : null;
       // The brief in full the first time this session, then two lines (2026-11-05).
@@ -443,7 +468,7 @@ function onClick(e) {
     case 'callin': plan.callIn = id; break;
     case 'mode': plan.mode = id; break; // send them away, or watch live (DESIGN.md 2026-11-04)
     case 'kit': plan.kit = id; break;
-    case 'open-side': if (!sidePlan) remember(action, id); screen = homeOf('sidePlan'); sidePlan = { taskId: id, crew: [] }; break;
+    case 'open-side': if (!sidePlan) remember(action, id); goHome('sidePlan'); sidePlan = { taskId: id, crew: [] }; break;
     case 'toggle-side-crew': {
       const task = sideTaskById(sidePlan.taskId);
       if (sidePlan.crew.includes(id)) sidePlan.crew = sidePlan.crew.filter((x) => x !== id);
@@ -455,7 +480,7 @@ function onClick(e) {
       const next = sendOnSideTask(state, sidePlan.taskId, sidePlan.crew);
       sidePlan = null;
       nav.clear();
-      screen = 'ops';
+      screen = 'city'; cityTab = 'map'; cityDistrict = null;
       return setState(next);
     }
     case 'send-job': {
@@ -466,7 +491,7 @@ function onClick(e) {
         crewIds: [...out.mission.crewIds, out.mission.overwatch?.id, out.mission.wheels, out.mission.standby?.id].filter(Boolean) };
       plan = null;
       nav.clear();
-      screen = 'ops';
+      screen = 'city'; cityTab = 'map'; cityDistrict = null;
       openMessageId = null;
       return setState(next);
     }
@@ -498,7 +523,7 @@ function onClick(e) {
     case 'raid-pay': return setState(payOffRaid(state, id)); // pay the police off before the day (core/raids.js)
     // A raid at the door, answered from Ops: its call is a message on Today.
     case 'raid-answer': { remember(action, id); screen = homeOf('message'); openMessageId = id; const m = state.inbox.find((x) => x.id === id); if (m && !m.read) { m.read = true; saveGame(state); } break; }
-    case 'let-run': nav.clear(); screen = 'ops'; return setState(letThemRun(state));
+    case 'let-run': nav.clear(); screen = 'city'; cityTab = 'map'; cityDistrict = null; return setState(letThemRun(state));
     case 'take-command': return setState(takeCommand(state));
     case 'sendoff-close': t.remove(); return;
     case 'export':
@@ -714,7 +739,7 @@ function render() {
 
     <nav class="nav" aria-label="Main">
       ${navButton('inbox', 'Today', badges.inbox)}
-      ${navButton('ops', 'Ops')}
+      ${navButton('city', 'City')}
       ${navButton('tong', 'Tong')}
       ${navButton('crew', 'Crew')}
       ${navButton('jobs', 'Jobs', badges.jobs)}
@@ -858,7 +883,7 @@ function renderScreen() {
     if (hallPage && hallIn(state, hallPage)) return renderHallPage(hallPage);
     return rootBack() + renderTong();
   }
-  if (screen === 'crew') return openRecruitId ? renderRecruit() : openOperativeId ? renderOperative() : rootBack() + renderCrew();
+  if (screen === 'crew') return openRecruitId ? renderRecruit() : leadName ? renderLeadName(state, leadName, backLabel()) : openOperativeId ? renderOperative() : rootBack() + renderCrew();
   // Jobs: on wide screens the board stays beside the job being planned (styles.css hides it on phones).
   if (screen === 'jobs' && plan) {
     // The plan, then the job list with the plan bar under it: from 1400px wide the list and the bar
@@ -866,10 +891,10 @@ function renderScreen() {
     // bottom of the plan (2026-11-05). The plan comes first, so on a phone nothing moves.
     const body = renderPlan();
     if (!plan) return body; // the job has gone: renderPlan showed the board
-    return `<div class="jobsplit"><div class="jobsplit__plan">${body}</div><div class="jobsplit__side"><div class="jobsplit__list">${renderJobs()}</div>${planBarHtml}</div></div>`;
+    return `<div class="jobsplit"><div class="jobsplit__plan">${body}</div><div class="jobsplit__side"><div class="jobsplit__list">${renderJobs('board')}</div>${planBarHtml}</div></div>`;
   }
   if (screen === 'jobs') return sidePlan ? renderSidePlan() : rootBack() + renderJobs();
-  if (screen === 'ops') return tongsView !== null ? renderTongs(state, tongsView || null, backLabel()) : rootBack() + renderOpsScreen();
+  if (screen === 'city') return renderCity();
   if (screen === 'lore') return renderLore();
   if (screen === 'settings') return renderSettings();
   return '';
@@ -979,7 +1004,7 @@ function renderWeekBrief() {
         <div><dt>Jobs</dt><dd>${b.jobs}</dd></div>
       </dl>
       ${renderWord(state)}
-      ${b.heist ? `<button class="heistnote small" data-action="nav" data-id="ops">${esc(b.heist)}</button>` : ''}
+      ${b.heist ? `<button class="heistnote small" data-action="goto" data-id="jobs:heists">${esc(b.heist)}</button>` : ''}
       <p class="small muted">${[b.roster.away && `${b.roster.away} out`, b.roster.hurt && `${b.roster.hurt} hurt`, b.expiring && `${b.expiring} ${b.expiring === 1 ? 'offer ends' : 'offers end'} this week`, short && `${money(b.due - b.cash)} short of Sunday`].filter(Boolean).join(' · ') || 'A clear week.'}</p>
     </div>`;
 }
@@ -993,14 +1018,14 @@ const raidCalls = () => state.inbox.filter((m) => m.kind === 'raid' && !m.resolv
 function renderOutLine() {
   const jobs = crewsOut(state).length + sideTasksOut(state).length;
   // A raid warned or at the door gets a line of its own (raids, 2026-11-05).
-  const raids = openRaids(state).map((r) => `<button class="outnow is-raid" data-action="nav" data-id="ops">
+  const raids = openRaids(state).map((r) => `<button class="outnow is-raid" data-action="goto" data-id="city:map">
       <span class="outnow__light" aria-hidden="true"></span>
       <span>${r.called ? `<strong>${esc(raidWho(r))} at the door: ${esc(hallLabel(r.district))}</strong>` : `<strong>Raid warned:</strong> ${esc(hallLabel(r.district))}, ${esc(raidWhen(r))}${r.answer === 'paid' ? ' · paid off' : ''}`}</span>
       <span class="outnow__go">Ops ›</span>
     </button>`).join('');
   if (!jobs) return raids;
   const n = calls() - raidCalls().length;
-  return `${raids}<button class="outnow ${n ? 'is-call' : ''}" data-action="nav" data-id="ops">
+  return `${raids}<button class="outnow ${n ? 'is-call' : ''}" data-action="goto" data-id="city:map">
       <span class="outnow__light" aria-hidden="true"></span>
       <span>${jobs} ${jobs === 1 ? 'crew' : 'crews'} out${n ? ` · <strong>${n} ${n === 1 ? 'call' : 'calls'} waiting</strong>` : ''}</span>
       <span class="outnow__go">Ops ›</span>
@@ -1466,7 +1491,7 @@ function renderRaidWarning(m) {
         ${raidWhere(raid)}
         ${canBuyOff(state, raid) && !raid.answer && !raid.called ? `<button class="btn btn--primary" data-action="raid-pay" data-id="${esc(raid.id)}" ${state.cash < price ? 'disabled' : ''}>${isGangRaid(raid) ? 'Settle' : 'Pay them off'} · ${money(price)}</button>` : ''}
         ${raid.answer === 'paid' ? `<p class="small"><strong>${isGangRaid(raid) ? 'Settled' : 'Paid off'} (${money(raid.paid)}).</strong> Nobody will come.</p>` : ''}
-        <button class="btn" data-action="nav" data-id="ops">See it on Ops</button>
+        <button class="btn" data-action="goto" data-id="city:map">See it on the City map</button>
         <p class="muted small">Until then: move people into or out of the hall on Crew › Halls (moving takes the day), and keep crews home or send them out. On the day, whoever is home can hold it.</p>
       </div>`;
 }
@@ -1668,7 +1693,8 @@ function renderCrew() {
               <span class="row__meta"><strong>${money(r.wage)}</strong>/wk<br>${daysLeft(r.expiresDay)}</span>
             </button>
           </li>`).join('')}
-      </ul>` : '<p class="muted small">No leads right now. Scouts report every Wednesday.</p>'}`,
+      </ul>` : '<p class="muted small">No leads right now. Scouts report every Wednesday.</p>'}
+      ${leadNames(state)}`,
     wall: () => `
       <h2>The wall</h2>
       ${state.memorial.length ? `<ul class="list list--plain">
@@ -2041,18 +2067,25 @@ function jobCard(j) {
       </li>`;
 }
 
-function renderJobs() {
+/** Jobs: what work there is. Sub-tabs Board · Heists · Side (the Clients strip stays on the Board until step 4). `tab` overrides the sub-tab (the list beside a plan). */
+function renderJobs(tab = jobsTab) {
+  const which = ['board', 'heists', 'side'].includes(tab) ? tab : 'board';
   // Ending soonest first, then the better pay.
   const jobs = [...state.jobs].sort((a, b) => a.expiresDay - b.expiresDay || jobView(state, b).pay - jobView(state, a).pay);
-  return `
-    <section class="panel jobsboard">
-      <h1>Jobs</h1>
-      ${streetTalk()}
+  const body = {
+    board: () => `${streetTalk()}
       ${climbLine()}
       ${renderRunners()}
       ${jobs.length ? `<ul class="list list--cols jobslist">${jobs.map(jobCard).join('')}</ul>` : '<p class="muted">No work on the board. New work comes in through the week.</p>'}
-      ${renderSideBoard()}
-      ${renderClients()}
+      ${renderClients()}`,
+    heists: () => renderHeist() || '<p class="muted">No heist on right now.</p>',
+    side: () => renderSideBoard(),
+  }[which]();
+  return `
+    <section class="panel jobsboard">
+      <h1>Jobs</h1>
+      ${subTabs('Jobs sections', 'jobs-tab', [['board', 'Board'], ['heists', 'Heists'], ['side', 'Side']], which)}
+      ${body}
     </section>`;
 }
 
@@ -2084,7 +2117,7 @@ function renderSideBoard() {
             </button>
           </li>`).join('')}
       </ul>` : '<p class="muted">Nothing left this week. More on Monday.</p>'}
-      ${scoutRow(state) ? `<ul class="list list--cols sidelist">${scoutRow(state)}</ul>` : ''}`;
+`;
 }
 
 // A small (i) that opens an explanation under its line on tap (no hover: iOS rules in CLAUDE.md).
@@ -2840,8 +2873,7 @@ function renderOps() {
         </li>`;
       }).join('')}
     </ul>` : '';
-  return `${f ? '' : renderHeist()}
-    <div class="ops">
+  return `<div class="ops">
       <div class="ops__head">
         <h2>Out now</h2>
         ${f ? `<button class="linkbtn" data-action="city-whole">${esc(cityName(f))} only · show all</button>` : ''}
@@ -2892,12 +2924,7 @@ function citySummary() {
     <h2>At home</h2>
     <p class="small">${esc(halls.join(' · '))}${outIds.size ? ` · ${outIds.size} out` : ''}.</p>
     <p class="muted small">${hot.length ? `Heat: ${hot.map((d) => `${esc(districtName(d))} ${heatIn(state, d)}/10`).join(' · ')}.` : 'No heat anywhere.'}</p>
-    <h2>Places</h2>
-    <div class="cityplaces">
-      <button class="btn cityplace" data-action="halls-open">Halls<span class="muted small">On Tong</span></button>
-      <button class="btn cityplace" data-action="tongs-open">The other tongs<span class="muted small">Who else is working</span></button>
-      <button class="btn cityplace" disabled>Bar · black market<span class="muted small">Later</span></button>
-    </div>`;
+    `;
 }
 
 function districtCard(key) {
@@ -2979,23 +3006,55 @@ function renderDistrictLore() {
  * Ops, the command centre (2026-11-05; its own tab 2026-11-06, owner: City "more seems like
  * lore"): the map, the picked district's card, everyone out, and the city tonight.
  */
-function renderOpsScreen() {
-  return `
+/** City: what's happening out there. Sub-tabs Map · Districts · Tongs (Places is gone); the Book is a link in the header. */
+function renderCity() {
+  const tab = ['map', 'districts', 'tongs'].includes(cityTab) ? cityTab : 'map';
+  // A district's page, a tong's page and a name's profile each replace the sub-tab (and carry their own Back).
+  if (tab === 'districts' && cityDistrict) return `<section class="panel">${districtCard(cityDistrict)}</section>`;
+  if (tab === 'tongs' && tongsView) return renderTongs(state, tongsView, backLabel());
+  const body = { map: renderCityMap, districts: renderDistricts, tongs: () => renderTongs(state, null, backLabel()) }[tab]();
+  return `${rootBack()}
     <section class="panel">
-      <div class="opshead"><h1 class="cityhead">Ops <span class="muted small">${esc(NAMES.city)} tonight</span></h1>
+      <div class="opshead"><h1 class="cityhead">City <span class="muted small">${esc(NAMES.city)} tonight</span></h1>
         <button class="tierbtn" data-action="book" aria-label="The Book: the city's districts, clients, who's who and history"><span class="tier">Book</span></button></div>
+      ${subTabs('City sections', 'city-tab', [['map', 'Map'], ['districts', 'Districts'], ['tongs', 'Tongs']], tab)}
+      ${body}
+    </section>`;
+}
+
+/** City › Map: the heist marker, the map with a district picked on it, Out now and Tonight. */
+function renderCityMap() {
+  const heist = heistCard(state);
+  const pick = cityDistrict ? `<div class="mappick"><span><strong>${esc(cityName(cityDistrict))}</strong></span>
+        <span class="mappick__acts"><button class="btn btn--ghost" data-action="district-open" data-id="${esc(cityDistrict)}">Open the district ›</button>
+        <button class="linkbtn" data-action="city-whole">× Whole city</button></span></div>` : '';
+  return `${heist ? `<button class="heistmark" data-action="goto" data-id="jobs:heists"><span class="heistmark__kicker">Heist</span> <strong>${esc(heist.name)}</strong> <span class="heistmark__go">Jobs › Heists ›</span></button>` : ''}
       <div class="cols2 cols2--map">
         <div>${cityMap()}</div>
-        <div>${cityDistrict ? districtCard(cityDistrict) : ''}${renderOps()}${citySummary()}</div>
-      </div>
-    </section>`;
+        <div>${pick}${renderOps()}${citySummary()}</div>
+      </div>`;
+}
+
+/** City › Districts: a card for each district, opening its page (districtCard: what's there now, then the rest). */
+function renderDistricts() {
+  const open = MAP_DISTRICTS.filter((k) => !DISTRICT_CARDS[k].locked).sort((a, b) => (b === SAFEHOUSE_DISTRICT) - (a === SAFEHOUSE_DISTRICT));
+  const locked = MAP_DISTRICTS.filter((k) => DISTRICT_CARDS[k].locked);
+  const card = (k) => {
+    const c = DISTRICT_CARDS[k];
+    const jobs = jobsIn(k).length;
+    const bits = [hallIn(state, k) ? `${residents(state, k).length} at our hall` : '', crewOutIn(k) ? `${crewOutIn(k)} of ours out` : '', jobs ? `${jobs} job${jobs === 1 ? '' : 's'} open` : '', heatIn(state, k) ? `heat ${heatIn(state, k)}/10` : ''].filter(Boolean);
+    return `<li><button class="row districtrow" data-action="district-open" data-id="${esc(k)}" style="--turf:${turfHex(k) ?? 'var(--line)'}">
+      <span class="row__main"><strong>${esc(cityName(k))}</strong> <span class="muted">${esc(c.chinese)}</span><br><span class="muted small">${esc(c.locked ? c.teaser : c.side)}</span>${bits.length ? `<br><span class="small">${esc(bits.join(' · '))}</span>` : ''}</span>
+      <span class="row__meta" aria-hidden="true">›</span></button></li>`;
+  };
+  return `<ul class="list list--cols districts">${[...open, ...locked].map(card).join('')}</ul>`;
 }
 
 /** Lore's sections: the city as a book (the live map is on Ops). The tab was City until 2026-11-06. */
 const LORE_TABS = { districts: 'Districts', clients: 'Clients', factions: "Who's who", history: 'History' };
 
 function renderLore() {
-  const tab = LORE_TABS[cityTab] ? cityTab : 'districts';
+  const tab = LORE_TABS[loreTab] ? loreTab : 'districts';
   const groups = [...new Set(FACTIONS.map((f) => f.group))];
   const body = {
     districts: renderDistrictLore,
@@ -3031,7 +3090,7 @@ function renderLore() {
       ${canGoBack() ? `<button class="linkbtn" data-action="back">‹ ${esc(backLabel())}</button>` : ''}
       <h1 class="cityhead">${esc(NAMES.city)} <span class="muted">燈籠灣</span> <span class="muted small">2057</span></h1>
       <div class="subtabs" role="group" aria-label="Lore sections">
-        ${Object.entries(LORE_TABS).map(([k, label]) => `<button class="subtab ${k === tab ? 'is-on' : ''}" data-action="city-tab" data-id="${k}" aria-pressed="${k === tab}">${esc(label)}</button>`).join('')}
+        ${Object.entries(LORE_TABS).map(([k, label]) => `<button class="subtab ${k === tab ? 'is-on' : ''}" data-action="lore-tab" data-id="${k}" aria-pressed="${k === tab}">${esc(label)}</button>`).join('')}
       </div>
       ${body}
     </section>`;

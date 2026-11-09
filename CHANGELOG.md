@@ -7,6 +7,12 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · Navigation, step 3: Ops becomes City; recruiting moves to Leads
+- **Ops is now City**, with Map · Districts · Tongs. The old "Places" buttons are gone. Map: the city map, Out now, Tonight. Districts: a card for each district, each opening its page. Tongs: the other tongs by tier, free names, names on the street. The Book link sits in City's header on every sub-tab.
+- **Heists** moved to Jobs › Heists (Jobs is now Board · Heists · Side). The Map keeps a one-line marker that links there.
+- **Scouting, "What it would take" and signing moved to Crew › Leads**, for free names and for names in another tong. Nothing about who you can sign, what it costs (including the buyout to their tong) or how scouting works changed. In City › Tongs a name in a tong has a read-only profile with a "View in Leads" button; a free name opens straight in Leads. The scout row on the side-work board is gone.
+- Today's crews-out line goes to City › Map; the Monday heist line to Jobs › Heists. Back returns.
+
 ## 2026-11-09 · Navigation, step 2: a Tong tab, Crew in three parts, Save in the ☰
 - New **Tong** tab, "what we've built": your rank in words (and what the next rung would take), then Halls and the Armoury. The halls (and each hall's page and Build) and the Armoury moved here from Crew.
 - **Crew** is now Roster · Leads · Wall. Today's "See the leads" opens Leads.
