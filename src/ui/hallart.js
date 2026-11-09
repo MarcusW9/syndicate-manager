@@ -31,6 +31,7 @@ const DEFS = `<defs>
   <pattern id="hf-street" width="20" height="20" patternUnits="userSpaceOnUse"><rect width="20" height="20" fill="#101217"/><circle cx="4" cy="6" r=".6" fill="#1a1d25"/><circle cx="14" cy="15" r=".6" fill="#1a1d25"/></pattern>
   <pattern id="hf-alley" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#13161c"/><path d="M0 4H8" stroke="#0d0f14" stroke-width="1"/></pattern>
   <pattern id="hf-roof" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="#10131a"/><path d="M0 9.6H10" stroke="#171b24" stroke-width=".8"/></pattern>
+  <pattern id="hr-tiles" width="8" height="6" patternUnits="userSpaceOnUse"><path d="M0 5.6H8M4 0V5.6" stroke="#000" stroke-opacity=".28" stroke-width=".8"/><path d="M0 .6H8" stroke="#fff" stroke-opacity=".06" stroke-width=".6"/></pattern>
   <pattern id="hf-shutter" width="8" height="5" patternUnits="userSpaceOnUse"><rect width="8" height="5" fill="#161a22"/><rect width="8" height="1.2" fill="#3a4252"/><rect y="1.2" width="8" height="1" fill="#0b0d11"/></pattern>
   <radialGradient id="hl-red"><stop offset="0" stop-color="#ff3d5f" stop-opacity=".5"/><stop offset="1" stop-color="#ff3d5f" stop-opacity="0"/></radialGradient>
   <radialGradient id="hl-cyan"><stop offset="0" stop-color="#3de8d8" stop-opacity=".34"/><stop offset="1" stop-color="#3de8d8" stop-opacity="0"/></radialGradient>
@@ -68,8 +69,56 @@ function sprite(id, b) {
   return `<g class="ha-piece" data-piece="${id}" transform="${turned ? `translate(${x + h * C} ${y}) rotate(90)` : `translate(${x} ${y})`}">${ref}</g>`;
 }
 
-/** The art plan for a hall: an <svg class="siteplan hallart"> over the same 360 × 240 plan. */
-export function hallArtSvg(state, district) {
+/** A part's box in plan units. */
+export const partBox = (part) => { const [x0, y0, x1, y1] = part.grid; return { x: x0 * C, y: y0 * C, w: (x1 - x0 + 1) * C, h: (y1 - y0 + 1) * C }; };
+/** The viewBox that frames one building's inside (the plan, a little past its walls). */
+export function insideBox(site, partId, pad = 6) {
+  const p = site.parts?.find((x) => x.id === partId);
+  if (!p) return '0 0 360 240';
+  const { x, y, w, h } = partBox(p);
+  const x0 = Math.max(0, x - pad), y0 = Math.max(0, y - pad);
+  return `${x0} ${y0} ${Math.min(360, x + w + pad) - x0} ${Math.min(240, y + h + pad) - y0}`;
+}
+
+/** Colours of each building's roof: the noodle-shop room (rust), the flat (teal), the back kitchen (ochre). */
+const ROOFS = { room: ['#4f2630', '#7d3a44', '#ff5fae'], flat: ['#1d4446', '#2c6a6a', '#3de8d8'], kitchen: ['#4a3d1f', '#7a6430', '#f2d541'] };
+
+/**
+ * A building seen from above (the compound view): a shadow, a roof with a lit parapet, and what is
+ * on a roof in Lantern Bay: a skylight that glows from inside, air-conditioners, a tank, a dish,
+ * pipes, laundry, a plant or two. Details are placed from the roof's own box, so they never move.
+ */
+function roof(r, id) {
+  const [dark, light, glow] = ROOFS[id] ?? ROOFS.flat;
+  const { x, y, w, h } = r;
+  const ac = (ax, ay) => `<rect x="${ax + 2}" y="${ay + 2}" width="16" height="12" fill="#000" opacity=".35"/><rect x="${ax}" y="${ay}" width="16" height="12" fill="#5d6b7a" stroke="#0b0d11" stroke-width=".7"/><circle cx="${ax + 8}" cy="${ay + 6}" r="4" fill="#2a303b" stroke="#8b9aab" stroke-width=".6"/><path d="M${ax + 8} ${ay + 2.5}v7M${ax + 4.5} ${ay + 6}h7" stroke="#8b9aab" stroke-width=".6"/>`;
+  const tank = (cx, cy) => `<circle cx="${cx + 3}" cy="${cy + 3}" r="9" fill="#000" opacity=".35"/><circle cx="${cx}" cy="${cy}" r="9" fill="#7a6430" stroke="#0b0d11" stroke-width=".8"/><circle cx="${cx}" cy="${cy}" r="6.5" fill="#9a8040"/><path d="M${cx - 5} ${cy - 4}q5-3 10 0" stroke="#fff" stroke-opacity=".35" fill="none"/>`;
+  const skylight = (sx, sy, sw, sh) => `<rect x="${sx - 6}" y="${sy - 6}" width="${sw + 12}" height="${sh + 12}" fill="${glow}" opacity=".1"/><rect x="${sx}" y="${sy}" width="${sw}" height="${sh}" fill="#0b1c20" stroke="#8b9aab" stroke-width="1"/><rect x="${sx + 1.5}" y="${sy + 1.5}" width="${sw - 3}" height="${sh - 3}" fill="${glow}" opacity=".4"/><path d="M${sx + sw / 2} ${sy}v${sh}M${sx} ${sy + sh / 2}h${sw}" stroke="#0b0d11" stroke-width=".8"/>`;
+  const laundry = (lx, ly, len) => `<path d="M${lx} ${ly}h${len}" stroke="#aab6c6" stroke-width=".6" stroke-dasharray="2 1"/>${['#ff5fae', '#f2d541', '#3de8d8', '#e8e2d0'].map((c, i) => `<rect x="${lx + 3 + i * (len / 4.4)}" y="${ly}" width="5" height="7" fill="${c}" opacity=".9"/>`).join('')}`;
+  const plant = (px, py) => `<circle cx="${px}" cy="${py}" r="4.5" fill="#1f5a3a" stroke="#0b0d11" stroke-width=".6"/><circle cx="${px - 1}" cy="${py - 1}" r="2.5" fill="#2f8a52"/><rect x="${px - 5}" y="${py + 3}" width="10" height="3" fill="#6b4a2a"/>`;
+  const details = {
+    room: `${skylight(x + 16, y + 16, 26, 18)}${ac(x + w - 34, y + 14)}${ac(x + w - 34, y + 32)}${tank(x + 22, y + h - 24)}${laundry(x + 54, y + h - 22, 52)}<path d="M${x + 4} ${y + 60}h12v20" stroke="#8b9aab" stroke-width="2" fill="none"/>`,
+    flat: `${skylight(x + 20, y + 22, 24, 26)}${plant(x + w - 20, y + 20)}${plant(x + w - 36, y + 30)}<rect x="${x + 60}" y="${y + 62}" width="44" height="26" fill="#1a2f3a" stroke="#0b0d11" stroke-width=".7"/>${[0, 1, 2, 3].map((i) => `<rect x="${x + 62 + i * 10.5}" y="${y + 64}" width="9" height="22" fill="#2a5a7a" stroke="#0b0d11" stroke-width=".4"/>`).join('')}${ac(x + 18, y + h - 28)}${laundry(x + 60, y + 12, 48)}`,
+    kitchen: `${skylight(x + 12, y + 12, 18, 14)}<rect x="${x + 44}" y="${y + 10}" width="12" height="12" fill="#3a4352" stroke="#0b0d11" stroke-width=".7"/><circle cx="${x + 50}" cy="${y + 16}" r="3" fill="#0b0d11"/><circle cx="${x + 54}" cy="${y + 6}" r="6" fill="#fff" opacity=".07"/><circle cx="${x + 58}" cy="${y - 2}" r="8" fill="#fff" opacity=".05"/>${ac(x + w - 30, y + h - 24)}<path d="M${x + 6} ${y + h - 10}h60" stroke="#8b9aab" stroke-width="2"/>`,
+  }[id] ?? '';
+  return `<g class="ha-roof" data-roof="${id}">
+    <rect x="${x + 8}" y="${y + 8}" width="${w}" height="${h}" fill="#000" opacity=".45"/>
+    <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${dark}"/>
+    <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#hr-tiles)"/>
+    <rect x="${x + 3}" y="${y + 3}" width="${w - 6}" height="${h - 6}" fill="none" stroke="${light}" stroke-width="1.4" stroke-opacity=".8"/>
+    <path d="M${x + .7} ${y + h - .7}V${y + .7}H${x + w - .7}" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="1.4"/>
+    <path d="M${x + w - 1} ${y + 1}V${y + h - 1}H${x + 1}" fill="none" stroke="#000" stroke-opacity=".55" stroke-width="2.4"/>
+    ${details}
+  </g>`;
+}
+
+/**
+ * The art plan for a hall: an <svg class="siteplan hallart"> on the same 360 × 240 plan.
+ * `inside: null` is the compound seen from above: rooftops, the lane, the yard and the street, with
+ * what stands outside (the defences). `inside: <part id>` is that building's inside, cropped to it:
+ * its floor, its beds and its rooms.
+ */
+export function hallArtSvg(state, district, { inside = null } = {}) {
   const site = hallMap(district);
   const hall = hallIn(state, district);
   const level = hall?.level ?? 1;
@@ -99,14 +148,16 @@ export function hallArtSvg(state, district) {
     <rect x="${lane.x}" y="${lane.y}" width="${lane.w}" height="${lane.h}" fill="none" stroke="#000" stroke-opacity=".25" stroke-width="6"/>
     <rect x="${lane.x + 4}" y="${lane.y + 4}" width="${lane.w - 8}" height="${lane.h - 8}" fill="none" stroke="#3de8d8" stroke-opacity=".06" stroke-width="10"/>`;
   const neighbours = blocks.map((r) => `<rect x="${r.x + 5}" y="${r.y + 5}" width="${r.w}" height="${r.h}" fill="#000" opacity=".4"/><rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="url(#hf-roof)" stroke="#2a3140" stroke-width="1"/><path d="M${r.x + 3} ${r.y + 6}h8M${r.x + 3} ${r.y + 14}h8" stroke="#2a3140" stroke-width="2"/>`).join('');
-  const buildings = houses.map(({ r, id }) => building(r, FLOOR[id])).join('');
+  const buildings = houses.map(({ r, id }) => (inside ? building(r, FLOOR[id]) : roof(r, id))).join('');
   const yardGear = held.has('yard') ? yardWalls.map(yardLine).join('') : '';
   const props = covers.map((s) => `<g class="ha-prop"><rect x="${s.x + 2.5}" y="${s.y + 2.5}" width="${s.w}" height="${s.h}" rx="1.5" fill="#000" opacity=".4"/><rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="1.5" fill="${s.fill}" stroke="#0b0d11" stroke-width=".8"/><rect x="${s.x + .6}" y="${s.y + .6}" width="${s.w - 1.2}" height="1.4" fill="#fff" opacity=".18"/></g>`).join('');
   const doorsSvg = doors.map((s) => `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" fill="#0b0d11"/><rect x="${s.x + (s.w > s.h ? 0 : 1)}" y="${s.y + (s.w > s.h ? 1 : 0)}" width="${s.w > s.h ? s.w : 1.6}" height="${s.w > s.h ? 1.6 : s.h}" fill="#3de8d8" opacity=".85"/>`).join('');
   const signsSvg = signs.map((s) => `<ellipse cx="${s.x + s.w / 2}" cy="${s.y + s.h + 12}" rx="${s.w * 1.2}" ry="16" fill="url(#hl-red)"/><rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" fill="${s.fill}"/><rect x="${s.x}" y="${s.y}" width="${s.w}" height="1.2" fill="#fff" opacity=".5"/>`).join('');
   const gate = shapesOf('sp-gate')[0] ?? yardWalls.find((s) => s.cls === 'sp-gate');
 
-  const floorThings = [...bedsOnFloor(hall), ...(hall?.build ?? [])];
+  // From above, what stands outside is the defences; inside, it is the beds and the rooms.
+  const isDefence = (b) => PIECES[b.piece]?.kind === 'defence';
+  const floorThings = inside ? [...bedsOnFloor(hall), ...(hall?.build ?? []).filter((b) => !isDefence(b))] : (hall?.build ?? []).filter(isDefence);
   const sleepers = new Set(residents(state, district).map((_, i) => `bed-${i + 1}`));
   const things = floorThings.map((b) => sprite(b.piece, b) + (b.piece === 'bed' && sleepers.has(b.id) ? `<rect class="ha-slept" x="${b.x * C + 2}" y="${b.y * C + 2}" width="${C - 4}" height="${C - 4}" rx="2"/>` : '')).join('');
 
@@ -125,9 +176,11 @@ export function hallArtSvg(state, district) {
     ${signs.map((s) => `<ellipse cx="${s.x + s.w / 2}" cy="${s.y + 18}" rx="64" ry="26" fill="url(#hl-red)"/>`).join('')}
     <circle cx="340" cy="20" r="34" fill="url(#hl-violet)"/>
   </g>`;
-  const labels = site.labels.map((l) => `<text class="ha-label ${l.hi ? 'is-hi' : ''}" x="${l.x}" y="${l.y}">${esc(l.text)}</text>`).join('');
+  // The street's and alley's names go on the compound; inside a building they would be cut across.
+  const labels = inside ? '' : site.labels.map((l) => `<text class="ha-label ${l.hi ? 'is-hi' : ''}" x="${l.x}" y="${l.y}">${esc(l.text)}</text>`).join('');
+  const vb = inside ? insideBox(site, inside) : '0 0 360 240';
 
-  return `<svg class="siteplan hallart" viewBox="0 0 360 240" role="img" aria-label="${esc(site.aria)}">${DEFS}${ground}${neighbours}${buildings}${doorsSvg}${yardGear}${props}${things}${shutters}${signsSvg}${light}${labels}<rect width="360" height="240" fill="none" stroke="#000" stroke-opacity=".55" stroke-width="10"/></svg>`;
+  return `<svg class="siteplan hallart ${inside ? 'is-inside' : ''}" viewBox="${vb}" role="img" aria-label="${esc(inside ? `Inside ${part(site, inside)?.name ?? 'the building'}` : site.aria)}">${DEFS}${ground}${neighbours}${buildings}${doorsSvg}${yardGear}${props}${things}${shutters}${signsSvg}${light}${labels}<rect width="360" height="240" fill="none" stroke="#000" stroke-opacity=".55" stroke-width="10"/></svg>`;
 }
 
 /** The names the raid's approach is labelled with, by way id. */

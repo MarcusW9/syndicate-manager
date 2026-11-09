@@ -7,6 +7,12 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · The hall as a compound: buildings to open, defences outside
+- A hall's page now opens on the compound from above: each building is a rooftop with its name, who sleeps in it and the rooms built in it, and under the plan a card for each (locked ones say when they open). The raid card and the raiders' ways in are on this view, and defences are placed here, outside, where a raid is fought.
+- Tap a building to go inside it: its floor, its beds (laid out as before) and the rooms you can build there. Back (‹ The compound) returns to the compound.
+- The hall's level is shown once, in the compound's header. No change to the rules, the grid or the saves.
+- With Hall art on, Old Town's buildings are drawn as rooftops (skylights, air-conditioners, tanks, laundry) and their insides as before.
+
 ## 2026-11-09 · The Hall page: two columns, a raid card, and an art layer for Old Town
 - On a tablet (1100px and wider) the hall page is two columns: the plan on the left, and on the right the raid card, who sleeps here (faces, Move someone in), Build (the palette, Expand, Buy) and a Defences line. You build on the plan in place. On a phone the column stacks under the plan and Build still opens its own screen.
 - A pending raid has a card (who, when, caused by what, the threat after our defences, Pay them off or Answer the door) and its ways in are marked red on the plan, labelled with who is coming. Which way a raid takes is still picked when it comes, so every way the hall has open is marked.

@@ -23,7 +23,11 @@ test('the art draws the plan on the same 360 × 240 box, a shutter on each locke
   const html = hallArtSvg(s, 'oldTown');
   assert.match(html, /viewBox="0 0 360 240"/);
   assert.equal((html.match(/class="ha-shutter"/g) ?? []).length, 3, 'flat, yard and back kitchen locked at level 1');
-  assert.equal((html.match(/data-piece="bed"/g) ?? []).length, s.halls[0].beds);
+  assert.equal((html.match(/data-roof="/g) ?? []).length, 3, 'the compound is three rooftops');
+  assert.equal((html.match(/data-piece="bed"/g) ?? []).length, 0, 'no beds on a roof');
+  const room = hallArtSvg(s, 'oldTown', { inside: 'room' });
+  assert.equal((room.match(/data-piece="bed"/g) ?? []).length, s.halls[0].beds, 'the beds are inside the room');
+  assert.doesNotMatch(room, /viewBox="0 0 360 240"/, 'cropped to the building');
   const up = expandHall(s, 'oldTown');
   assert.equal((hallArtSvg(up, 'oldTown').match(/class="ha-shutter"/g) ?? []).length, 2);
 });
@@ -39,4 +43,23 @@ test('a pending raid marks only the ways in the hall has opened, in red, and say
   assert.equal((waysOverlay(hallMap('oldTown'), 3, 'Police').match(/class="rway__way"/g) ?? []).length, 2, 'the yard gate opens at level 3');
   s.raids[0].answer = 'paid';
   assert.equal(raidWaysFor(s, 'oldTown'), '');
+});
+
+import { buildingsOf, compoundOverlay, planSvg } from '../src/ui/hallbuild.js';
+import { placePiece, hallMap as hm, buildableCells, partAt } from '../src/core/hallbuild.js';
+
+test('the compound lists only the hall\'s own parts as buildings, with who sleeps in each and the rooms built', () => {
+  let s = tong();
+  const site = hm('oldTown');
+  assert.deepEqual(buildingsOf(s, 'oldTown').map((b) => b.id), ['room'], 'level 1 holds the room only');
+  const up = expandHall(s, 'oldTown');
+  const names = buildingsOf(up, 'oldTown').map((b) => b.name);
+  for (const n of names) assert.ok(site.parts.some((p) => p.name === n), `${n} is a part of the compound`);
+  const [room] = buildingsOf(s, 'oldTown');
+  assert.equal(room.who.length, s.crew.length, 'everyone sleeps in the one building there is');
+  assert.deepEqual(room.rooms, []);
+  const cell = [...buildableCells(site, 1)].map((k) => k.split(',').map(Number)).find(([x, y]) => partAt(site, x, y).inside && [[1, 0], [0, 1], [1, 1]].every(([a, b]) => buildableCells(site, 1).has(`${x + a},${y + b}`)));
+  s = placePiece(s, 'oldTown', 'workboard', ...(cell ?? [3, 5]));
+  assert.ok(compoundOverlay(s, 'oldTown', {}).includes('data-action="hall-building"'));
+  assert.doesNotMatch(planSvg(s, 'oldTown', false, { compound: true }), /sp-cot/, 'beds are not drawn on the compound');
 });

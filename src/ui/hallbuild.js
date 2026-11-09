@@ -13,7 +13,8 @@ import { bedsOnFloor, buildableCells, builtCells, heldParts, nextPart, partCells
 import { hallIn, residents } from '../core/halls.js';
 import { sitePlanSvg } from './siteplan.js';
 import { defencesIn, defenceCut, raidOn, raidWho } from '../core/raids.js';
-import { hasHallArt, hallArtSvg, waysOverlay, SPRITE_SHEET } from './hallart.js';
+import { hasHallArt, hallArtSvg, waysOverlay, insideBox, SPRITE_SHEET } from './hallart.js';
+import { pickSite } from '../data/sites.js';
 
 const C = HALL_BUILD.cell;
 
@@ -50,7 +51,7 @@ function ghost(view) {
  * with EXPAND › on the next one and its level on the rest; and, on the build screen, the squares in a
  * held part kept clear for a way in, faintly marked so the gap is explained. tap: they can be tapped.
  */
-export function partsOverlay(site, level, { tap = false, free = null, esc = (x) => x, art = false } = {}) {
+export function partsOverlay(site, level, { tap = false, free = null, esc = (x) => x, art = false, buildings = true } = {}) {
   if (!site.parts) return '';
   const nx = nextPart(site, level);
   const held = new Set(heldParts(site, level).map((p) => p.id));
@@ -65,6 +66,7 @@ export function partsOverlay(site, level, { tap = false, free = null, esc = (x) 
     const { x, y, w, h } = rect(p);
     const label = esc(p.name.replace(/^The /, '').toUpperCase());
     if (held.has(p.id)) {
+      if (!buildings && p.inside) return '';
       names.push(x1Narrow(p)
         ? `<text class="bpart__name" x="${x + w / 2}" y="${y + h / 2}" text-anchor="middle" transform="rotate(-90 ${x + w / 2} ${y + h / 2})">${label}</text>`
         : `<text class="bpart__name" x="${x + 7}" y="${y + h - 7}">${label}</text>`);
@@ -84,9 +86,62 @@ export function partsOverlay(site, level, { tap = false, free = null, esc = (x) 
 }
 const x1Narrow = (p) => p.grid[2] - p.grid[0] < 2;
 
-/** The plan under the grid: the art picture (Old Town, when the setting is on) or the plain plan without its route. */
-export function planSvg(state, district, art = false) {
-  return art && hasHallArt(district) ? hallArtSvg(state, district) : sitePlanSvg({ site: hallSiteFor(state, district), clean: true });
+/**
+ * The plan under the grid. `inside`: a building's part id, its inside, cropped to it. `compound`: the
+ * compound from above (the buildings' roofs, what stands outside), with nothing inside drawn. With
+ * neither, the whole plan with everything on it (the old Build screen). The art picture when the
+ * setting is on (Old Town), else the plain plan without its route.
+ */
+export function planSvg(state, district, art = false, { inside = null, compound = false } = {}) {
+  if (art && hasHallArt(district)) return hallArtSvg(state, district, { inside });
+  const site = hallMap(district);
+  const hall = hallIn(state, district);
+  let svg;
+  if (compound && site.parts) {
+    // Seen from above only the parts (their walls) and the defences stand in the open: no beds, no rooms.
+    const pieces = [...heldParts(site, hall?.level ?? 1).filter((p) => p.shapes).map((p) => ({ piece: 'part', id: p.id })), ...(hall?.build ?? []).filter((b) => PIECES[b.piece]?.kind === 'defence')];
+    svg = sitePlanSvg({ site: pickSite(district, '', `raid:${district}`, pieces), clean: true });
+  } else svg = sitePlanSvg({ site: hallSiteFor(state, district), clean: true });
+  return inside ? svg.replace(/viewBox="[^"]*"/, `viewBox="${insideBox(site, inside)}"`) : svg;
+}
+
+/**
+ * The compound's buildings, from the hall's parts it holds (data/sites.js `parts`, `inside`): who sleeps
+ * in each (the residents whose bed is in it, as `bedsOnFloor` lays them) and the rooms built in it.
+ * [{ id, name, about, who: [operative], beds, rooms: [piece name] }]
+ */
+export function buildingsOf(state, district) {
+  const site = hallMap(district);
+  const hall = hallIn(state, district);
+  if (!site.parts || !hall) return [];
+  const beds = bedsOnFloor(hall);
+  const who = residents(state, district);
+  const inPart = (p, b) => partAt(site, b.x, b.y)?.id === p.id;
+  return heldParts(site, hall.level ?? 1).filter((p) => p.inside).map((p) => ({
+    id: p.id, name: p.name, about: p.about,
+    who: who.filter((_, i) => beds[i] && inPart(p, beds[i])),
+    beds: beds.filter((b) => inPart(p, b)).length,
+    rooms: (hall.build ?? []).filter((b) => PIECES[b.piece]?.kind === 'room' && inPart(p, b)).map((b) => PIECES[b.piece].name),
+  }));
+}
+
+/**
+ * On the compound: each held building a tap target (opens its inside) with its name and a short count,
+ * and every other part (locked ones with EXPAND ›, the lane and the yard by name) as `partsOverlay` has it.
+ */
+export function compoundOverlay(state, district, { tap = false, free = null, esc = (x) => x, art = false } = {}) {
+  const site = hallMap(district);
+  const hall = hallIn(state, district);
+  const info = buildingsOf(state, district);
+  const rect = (p) => { const [x0, y0, x1, y1] = p.grid; return { x: x0 * C, y: y0 * C, w: (x1 - x0 + 1) * C, h: (y1 - y0 + 1) * C }; };
+  const roofs = info.map((b) => {
+    const { x, y, w, h } = rect(site.parts.find((p) => p.id === b.id));
+    const said = `${b.name}: ${b.who.length ? `${b.who.length} sleeping` : 'nobody sleeping'}, ${b.rooms.length ? b.rooms.join(', ') : 'no rooms yet'}. Open it.`;
+    return `<g class="bbld" data-action="hall-building" data-id="${esc(b.id)}" role="button" tabindex="0" aria-label="${esc(said)}"><rect class="bbld__hit" x="${x}" y="${y}" width="${w}" height="${h}"/>
+      <text class="bpart__name" x="${x + 7}" y="${y + h - 14}">${esc(b.name.replace(/^The /, '').toUpperCase())}</text>
+      <text class="bbld__badge" x="${x + 7}" y="${y + h - 5}">${b.who.length} IN · ${b.rooms.length} ${b.rooms.length === 1 ? 'ROOM' : 'ROOMS'} ›</text></g>`;
+  }).join('');
+  return `${partsOverlay(site, hall.level, { tap, free: null, esc, art, buildings: false })}${roofs}`;
 }
 
 /** A pending raid's ways in over the plan, in red, labelled with who comes; '' when none is pending. */
@@ -97,10 +152,10 @@ export function raidWaysFor(state, district) {
 }
 
 /** A small key for the markers on the plan: nothing on the map is unexplained. */
-export function planKey(state, district, { building = false } = {}) {
-  const raid = !!raidWaysFor(state, district);
+export function planKey(state, district, { building = false, compound = false, inside = false } = {}) {
+  const raid = !inside && !!raidWaysFor(state, district);
   const item = (cls, text) => `<li><i class="bkey__i ${cls}" aria-hidden="true"></i>${text}</li>`;
-  return `<ul class="bkey" aria-label="Key to the plan">${raid ? item('is-raid', 'Raiders\' way in') : ''}${item('is-door', 'Door')}${item('is-bed', 'Bed')}${building ? item('is-keep', 'Kept clear: a way in') : ''}${item('is-lock', 'Locked: Expand')}</ul>`;
+  return `<ul class="bkey" aria-label="Key to the plan">${raid ? item('is-raid', 'Raiders\' way in') : ''}${item('is-door', 'Door')}${compound ? item('is-roof', 'Building: tap to go in') : ''}${compound ? '' : item('is-bed', 'Bed')}${building && !inside ? item('is-keep', 'Kept clear: a way in') : ''}${inside ? '' : item('is-lock', 'Locked: Expand')}</ul>`;
 }
 
 /** The grid over the plan: free cells to tap, built cells to pick, the picked one outlined. */
@@ -113,7 +168,11 @@ export function buildGrid(state, view, esc, art = false) {
   const who = residents(state, view.district);
   const bedAt = (x, y) => beds.findIndex((b) => b.x === x && b.y === y);
   const sel = view.picked ? [...beds, ...(hall.build ?? [])].find((b) => b.id === view.picked) : null;
-  const cells = [...free].map((k) => {
+  // Scoped (2026-11-09): the compound's outside squares (defences) or one building's squares (rooms).
+  const scope = view.scope ?? null;
+  const inside = scope && scope !== 'compound' ? scope : null;
+  const inScope = (k) => { if (!scope) return true; const pt = partAt(site, ...k.split(',').map(Number)); return inside ? pt?.id === inside : !pt?.inside; };
+  const cells = [...free].filter(inScope).map((k) => {
     const [x, y] = k.split(',').map(Number);
     const taken = built.has(k);
     const bed = bedAt(x, y);
@@ -126,7 +185,8 @@ export function buildGrid(state, view, esc, art = false) {
     const [w, h] = sel.rot && p.turns ? [p.size[1], p.size[0]] : p.size;
     return `<rect x="${sel.x * C + 0.5}" y="${sel.y * C + 0.5}" width="${w * C - 1}" height="${h * C - 1}" class="bgrid__sel"/>`;
   })() : view.cell ? `<rect x="${view.cell[0] * C + 0.5}" y="${view.cell[1] * C + 0.5}" width="${C - 1}" height="${C - 1}" class="bgrid__sel"/>` : '';
-  return `<svg class="bgrid" viewBox="0 0 360 240">${partsOverlay(site, hall.level, { tap: true, free, esc, art })}${raidWaysFor(state, view.district)}${cells}${ghost(view)}${outline}</svg>`;
+  const under = inside ? '' : scope === 'compound' ? `${compoundOverlay(state, view.district, { tap: true, free, esc, art })}${raidWaysFor(state, view.district)}` : `${partsOverlay(site, hall.level, { tap: true, free, esc, art })}${raidWaysFor(state, view.district)}`;
+  return `<svg class="bgrid" viewBox="${inside ? insideBox(site, inside) : '0 0 360 240'}">${under}${cells}${ghost(view)}${outline}</svg>`;
 }
 
 /** The sheet under the plan: what's picked and what you can do with it. */
@@ -190,16 +250,18 @@ const TABS = [['all', 'All'], ['defence', 'Defences'], ['room', 'Rooms']];
  */
 export function buildPalette(state, view, ui, { all = false } = {}) {
   const { esc, money } = ui;
-  const tab = all && (view.tab ?? 'all') === 'all' ? 'all' : view.tab === 'room' ? 'room' : 'defence';
-  const tabs = all ? TABS : TABS.filter(([k]) => k !== 'all');
+  // Scoped: the compound builds defences, a building builds rooms, so there is no tab to choose.
+  const scoped = !!view.scope;
+  const tab = scoped ? (view.scope === 'compound' ? 'defence' : 'room') : all && (view.tab ?? 'all') === 'all' ? 'all' : view.tab === 'room' ? 'room' : 'defence';
+  const tabs = all && !scoped ? TABS : TABS.filter(([k]) => k !== 'all');
   const tiles = Object.entries(PIECES).filter(([, p]) => tab === 'all' || p.kind === tab).map(([id, p]) => `
       <button class="btile ${view.piece === id ? 'is-on' : ''}" data-action="build-piece" data-id="${esc(id)}" aria-pressed="${view.piece === id}">
         ${icon(id)}<strong>${esc(p.name)}</strong><span class="btile__what"><span class="btile__price">${money(p.cost)}</span> · ${p.size[0]} × ${p.size[1]} · ${esc(p.what)}</span>
       </button>`).join('');
   return `
-      <div class="subtabs bsubs ${all ? 'bsubs--3' : ''}" role="group" aria-label="What to build">
+      ${scoped ? '' : `<div class="subtabs bsubs ${all ? 'bsubs--3' : ''}" role="group" aria-label="What to build">
         ${tabs.map(([k, name]) => `<button class="subtab ${tab === k ? 'is-on' : ''}" data-action="build-tab" data-id="${k}" aria-pressed="${tab === k}">${name}</button>`).join('')}
-      </div>
+      </div>`}
       ${tab === 'room' ? '<p class="muted small">One of each per hall, inside. A room helps whoever lives here; it isn\'t cover in a raid.</p>'
     : tab === 'defence' ? `<p class="muted small">Cover where our people stand when they hold the hall. A raid is fought outside, between the buildings, so defences go in the outside parts. Every ${HALL_BUILD.perThreat} pieces make a raid one step easier.</p>
       <p class="small bdef">${defenceLine(state, view.district)}</p>`
@@ -218,11 +280,11 @@ export function renderHallBuild(ui, state, view) {
   return `
     <section class="hallbuild">
       ${art ? SPRITE_SHEET : ''}
-      <div class="bhead"><button class="linkbtn" data-action="back">‹ ${esc(ui.backLabel ?? 'The hall')}</button><span class="bhead__level">level ${hall.level}</span></div>
+      <div class="bhead"><button class="linkbtn" data-action="back">‹ ${esc(ui.backLabel ?? 'The hall')}</button><span class="bhead__level">${view.scope === 'compound' ? 'the compound' : `level ${hall.level}`}</span></div>
       <h1 class="btitle">Build · the ${esc(cityName(view.district).replace(/^The /, ''))} hall</h1>
       <div class="bbar" role="status"><span>Floor <b>${used}/${floor}</b></span><span class="bbar__beds">Beds <b>${residents(state, view.district).length}/${bedsOnFloor(hall).length}</b></span><span class="bbar__seg" aria-hidden="true">${Array.from({ length: floor }, (_, k) => `<i class="${k < used ? 'is-on' : ''}"></i>`).join('')}</span><span>${money(state.cash)}</span></div>
-      <div class="bplan">${planSvg(state, view.district, art)}${buildGrid(state, view, esc, art)}</div>
-      ${planKey(state, view.district, { building: true })}
+      <div class="bplan">${planSvg(state, view.district, art, { compound: view.scope === 'compound' })}${buildGrid(state, view, esc, art)}</div>
+      ${planKey(state, view.district, { building: true, compound: view.scope === 'compound' })}
       ${buildSheet(state, view, ui)}
       ${buildPalette(state, view, ui)}
       <p class="muted small">Removing something gives back half its cost. ${hallMap(view.district).parts ? 'Expanding the hall takes the next part, and all its floor.' : `Expanding the hall gives ${HALL_BUILD.floorPerLevel} more squares.`}</p>

@@ -46,6 +46,11 @@ try {
       await tap(p, '[data-action="nav"][data-id="tong"]'); await p.waitForTimeout(300);
       await tap(p, '[data-action="hall-page"][data-id="oldTown"]'); await p.waitForTimeout(500);
       await p.screenshot({ path: `${out}/${tag}-${name}-hall.png`, fullPage: tag === '390' });
+      if (name === 'raid' && await p.locator('[data-action="hall-building"]').count()) {
+        await tap(p, '[data-action="hall-building"][data-id="room"]'); await p.waitForTimeout(400);
+        await p.screenshot({ path: `${out}/${tag}-${name}-inside-room.png`, fullPage: tag === '390' });
+        await tap(p, '[data-action="hall-compound"]'); await p.waitForTimeout(300);
+      }
       if (tag === '1180' && name === 'empty') {
         await tap(p, '[data-action="build-hall"][data-id="oldTown"]'); await p.waitForTimeout(300);
         await tap(p, '[data-action="build-piece"][data-id="plate"]'); await p.waitForTimeout(200);
