@@ -469,6 +469,7 @@ the name's page, Scout (side task), Sign, screenshots.
   and the old tong holds a grudge.
 - **A rival that takes ours pays a buyout the same way we pay theirs** (owner, 2026-11-09): same formula as `buyoutFeeFor` (6 weeks of wage, scaled by the buyer's wealth and regard), paid to us from the tong's wealth; a tong that can't cover it can't make the offer. Matching keeps the runner at no buyout.
 - **Poaching theirs** adds to that tong's grudge.
+- **Retirement is not the only exit** (owner, 2026-11-09, later slice): a runner can move into a back-room role instead: hall hands, onsite medic, leader (judgment as another stat), scout, haggler (negotiation), or a mentor to rookies. See the decision log row of that date. D1 builds the decision message so a third option can be added.
 - **Retirement and the Hall of Legends** (renown slice 6, `drafts/PROPOSAL-runner-renown.md` 2.8 and
   review decision 3) are built in this part: a decision message, never without the player's choice.
 
