@@ -64,6 +64,15 @@ export const RIVALS = {
   notYet: 15, // persuasion under this: "not yet"
   clientChance: 0.2, // a client job in a tong's own district: the client mentions that tong wanted it (flavour only)
   driftChance: 0.04, // a young name moving tongs, per card per week
+  // C4 (DESIGN.md 2026-11-09 "C4: rivals feel alive").
+  cardBands: [30, 55], // a card's rating bands (rookie, pro, veteran): the same cut-offs as core/dossier.js tierForRating
+  threadTimeout: 4, // weeks without a new beat before a story thread closes
+  calmWeeks: 4, // Sundays out of the fold-risk condition that end a decline as "recovered"
+  threadKeep: 24, // threads kept (open ones, then the newest closed ones)
+  formerFreeWeight: 0.5, // between two free names of equal rating, the chance a former runner of ours is put forward first
+  formerMax: 10, // names shown under "Gone elsewhere"
+  formerMonday: 1, // former-runner lines per Monday
+  threadMonday: 1, // continued-thread lines per Monday
 };
 
 // Rating words (core/rating.js ratingWord) → what the street says. {name} is the runner, {home} the
@@ -105,6 +114,21 @@ export const WORD_TEXT = {
   cold_shoulder: ['{tong} has stopped nodding at us in the street.', "{tong} will remember who took their runner."],
   warm_nod: ['{tong} has been saying decent things about us.', "People at {tong} nod at us now. It counts."],
   your_name: ['People have started saying your name in {home}.', 'Somebody in {home} asked about your crew by name.', 'Your name came up in {home} today. Nobody said it was bad.'],
+  // C4 threads: one story told in up to three beats (decline, founding, rise). Talk, never results.
+  decline_begin: ['{tong} has given up a hall. People are watching to see whether it stops there.', '{tong} let a hall go this week. Nobody says why.', 'One of the halls {tong} used to keep has gone dark.'],
+  decline_middle: ['{tong} is taking any work it can get now, and not asking who pays.', 'Word is {tong} has started saying yes to jobs it would have laughed at.', 'People in {home} say {tong} will take anything this month.'],
+  decline_folded: ['It ended the way people said it would: {tong} has shut its doors.', '{tong} could not stop the slide. Its front room is empty.', 'The last hall {tong} was holding on to is gone. That is the end of {tong}.'],
+  decline_recovered: ['{tong} has stopped sliding. People were wrong to write it off.', 'The lights at {tong} are steady again.', '{tong} is back on its feet. Nobody is calling it finished now.'],
+  founding_begin: ['Somebody has hung a lantern over a door in {home}: {tong}. That is {name}\'s doing.', '{tong} is new in {home}. {name} is the face of it.', 'A new sign in {home}: {tong}, and {name} is the reason.'],
+  founding_middle: ['{tong} has a front room in {home} and is keeping it open.', 'The door at {tong} stays open after dark now.', '{tong} is more than a rumour in {home}. It has a room, and a kettle.'],
+  founding_end: ['{name} has joined {tong}. It is not just a sign over a door any more.', '{tong} has a name from outside now: {name}.', 'They say {name} went to {tong}, and not for the money.'],
+  rise_begin: ['{tong} is a {tier} tong now, and acting like it.', 'The {tier} crowd is talking about {tong}. Not all of it kindly.', '{tong} has grown a hall and people have noticed.'],
+  rise_end: ['With {tong} climbing, people say it is picking up names. {name} is the latest.', "{tong} is making offers to other tongs' people. {name} took one.", 'The talk is that {tong} has money to spend on runners. {name} said yes.'],
+  // Names you let go (C4.3): the street still remembers whose they were.
+  former_signed: ['{name}, one of yours once, has signed with {tong}.', 'You will remember {name}. {tong} has them now.', '{name} is at {tong} these days. One of yours, once.'],
+  former_tier: ['{name}, one of yours once, has stepped up a level.', 'Bigger work is coming to {name} now. You may remember them.', 'Someone you let go is moving up: {name}.'],
+  former_fame: ["People are saying {name}'s name more than they did. One of yours, once.", '{name}, who used to work for you, is a bigger name than they were.', '{name} is getting known. Not for your sake, but you were there first.'],
+  former_free: ['{name}, one of yours once, is out of work.', '{name} is between tongs again. You know the name.', 'Nobody holds {name} now. They used to be yours.'],
   your_tier: ["They're calling yours a {tier} tong now. Somebody had to say it first.", 'The {tier} crowd has started to nod at your tong.', 'Your tong carries further than it did. People say {tier}.'],
 };
 
@@ -128,11 +152,27 @@ export const CLIENT_RIVAL_TEXT = [
   '"{tong} asked about this," says {client}. "I did not like their answer."',
   '{client} lets slip that {tong} put in for the work first. It is yours now.',
 ];
-/** The remark for one job: the variant comes from the job's own id, so it never changes. */
-export function clientRivalLine({ client, tong, jobId }) {
+// The same remark when the tong's real state is known (C4.1): a tong that is busy, or stretched. No digits.
+export const CLIENT_RIVAL_MOOD_TEXT = {
+  busy: [
+    '{client} says {tong} would have taken this, but they have more work than hands right now. "So, you."',
+    '"{tong} is overbooked," says {client}. "That is your luck."',
+  ],
+  stretched: [
+    '{client} says {tong} would have been the first call once. "They are stretched now."',
+    '"I used to give this to {tong}," says {client}. "I am not sure they are up to it any more."',
+  ],
+};
+/** The remark for one job: the variant comes from the job's own id, so it never changes. `mood` is 'busy' or 'stretched' when the tong's state is known. */
+export function clientRivalLine({ client, tong, jobId, mood = null }) {
   const seed = [...String(jobId)].reduce((n, c) => n + c.charCodeAt(0), 0);
-  return fill(CLIENT_RIVAL_TEXT[seed % CLIENT_RIVAL_TEXT.length], { client, tong });
+  const list = CLIENT_RIVAL_MOOD_TEXT[mood] ?? CLIENT_RIVAL_TEXT;
+  return fill(list[seed % list.length], { client, tong });
 }
+
+// Word kinds by how Monday treats them (C4.4): a story continuing, a name of ours, or ordinary talk.
+export const THREAD_CONTINUES = ['decline_middle', 'decline_folded', 'decline_recovered', 'founding_middle', 'founding_end', 'rise_end'];
+export const FORMER_KINDS = ['former_signed', 'former_tier', 'former_fame', 'former_free'];
 
 // Scouting and signing (C3b). {op} the scout, {name} the name they watched.
 export const SCOUT_TEXT = {

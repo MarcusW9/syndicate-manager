@@ -550,5 +550,57 @@
     "rating": 46
    }
   ]
+ },
+ "c4": {
+  "threads": [
+   {
+    "id": "service-steps-lot:rise:0",
+    "family": "rise",
+    "stage": "tier_up",
+    "open": false
+   },
+   {
+    "id": "salt-cormorant-hand:rise:2",
+    "family": "rise",
+    "stage": "poaching",
+    "open": false
+   },
+   {
+    "id": "dl-partners:rise:3",
+    "family": "rise",
+    "stage": "poaching",
+    "open": false
+   },
+   {
+    "id": "lower-arcade-lot:rise:3",
+    "family": "rise",
+    "stage": "tier_up",
+    "open": false
+   },
+   {
+    "id": "third-mist-society:rise:15",
+    "family": "rise",
+    "stage": "tier_up",
+    "open": true
+   }
+  ],
+  "formers": [
+   {
+    "id": "op:r1",
+    "runnerId": "r1",
+    "tongId": "salt-cormorant-hand",
+    "formerOf": "player"
+   }
+  ],
+  "word": [
+   "took_work:jade-mantis-hand",
+   "gone_quiet:jade-mantis-hand",
+   "free_name:op:r1",
+   "took_work:salt-cormorant-hand",
+   "gone_quiet:salt-cormorant-hand",
+   "rise_begin:third-mist-society",
+   "went_free:c29,salt-cormorant-hand",
+   "former_signed:op:r1,salt-cormorant-hand"
+  ]
  }
 }

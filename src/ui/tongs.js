@@ -29,6 +29,19 @@ export function renderWord(state) {
   return `<div class="theword" aria-label="The Word"><p class="theword__title">The Word</p>${lines.map((l) => `<p class="theword__line">${esc(l)}</p>`).join('')}</div>`;
 }
 
+/** People who left us for another tong or for the street (C4.3): name, where they are now, a fame word. Never a rating. '' when nobody has. */
+export function renderGoneElsewhere(state) {
+  const gone = rivalView(state).gone;
+  if (!gone.length) return '';
+  return `<h2>Gone elsewhere</h2>
+    <ul class="list list--plain streetnames" aria-label="Gone elsewhere">${gone.map((n) => `
+      <li class="streetname">
+        <span class="streetname__face">${faceOfCard(state, n.id, 32)}</span>
+        <span class="streetname__who"><strong>${esc(n.name)}</strong></span>
+        <span class="small muted">${esc([n.role, FAME_LINE[n.fame], n.tong ?? 'between tongs'].filter(Boolean).join(' · '))}</span>
+      </li>`).join('')}</ul>`;
+}
+
 /** A name's portrait, drawn from the runner they would be (the same hash as when signed, so the face doesn't change). */
 function faceOfCard(state, ref, size = 48) {
   const card = findCard(state, ref);
@@ -48,7 +61,7 @@ function namesList(state, names) {
   return `<ul class="list list--plain streetnames" aria-label="Names on the street">${names.map((n) => `
     <li class="streetname ${n.own ? 'is-own' : ''}">
       <span class="streetname__face">${n.own ? faceOfOurs(state, n.name) : faceOfCard(state, n.id)}</span>
-      <span class="streetname__who"><strong>${esc(n.name)}</strong>${n.own ? ' <span class="tongtag">Ours</span>' : ''}</span>
+      <span class="streetname__who"><strong>${esc(n.name)}</strong>${n.own ? ' <span class="tongtag">Ours</span>' : ''}${n.former ? ' <span class="tongtag">Yours, once</span>' : ''}</span>
       <span class="small muted">${esc([n.role, FAME_LINE[n.fame], n.tong ?? (n.own ? 'with us' : 'between tongs')].filter(Boolean).join(' · '))}</span>
       <span class="small">${esc(ratingLine(n).replace(/^./, (c) => c.toUpperCase()))}.</span>
     </li>`).join('')}</ul>`;

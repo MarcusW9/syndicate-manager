@@ -51,7 +51,7 @@ function execute(state, op, tong, text) {
   state.crew = state.crew.filter((o) => o.id !== op.id);
   state.cash += buyout;
   tong.wealth -= buyout;
-  const card = { ...operativeToCard(state, op), tongId: tong.id };
+  const card = { ...operativeToCard(state, op), tongId: tong.id, formerOf: 'player' }; // the street remembers whose they were (C4.3)
   if (state.rivals.cards.filter((c) => c.tongId === tong.id).length < 12) state.rivals.cards.push(card);
   const dent = isSworn(op) ? OATH.leavePenalty : MOBILITY.goLoyalty; // a sworn runner's exit is felt (owner, 2026-11-09)
   for (const o of state.crew) if (!o.freelance) addLoyalty(o, dent);

@@ -7,6 +7,13 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 
+## 2026-11-09 · The other tongs feel alive (save v58)
+- **Stories, not one-off lines.** When a tong loses a hall, The Word now follows it: it takes any work it can get, then it either folds or finds its feet again. A new tong hangs its lantern, opens its first room, then takes its first name from outside. A tong that climbs a rung is later talked about as picking up names. Each story is a few lines over a few weeks, and only ever talk, never results.
+- **People you let go stay in the story.** A runner who leaves for another tong (you let them go, or you said nothing) is remembered: The Word says when they sign somewhere, step up, get better known or are let go again, in an "one of yours, once" line. Crew › Wall has a new **Gone elsewhere** list (up to ten names, where they are now). Between two free names of equal worth, one of yours may be put forward first.
+- **The Word on Monday is capped at three lines:** one story carrying on, one name of yours, then the rest.
+- **A client's remark about a rival follows that tong's real state** ("they are stretched now", "they have more work than hands"). Clients still do not belong to any tong. A folded tong is never named.
+- Nothing about jobs, pay, heat, rolls or loyalty changes. Old saves upgrade on load; a runner of yours who already left is marked as one of yours.
+
 ## 2026-11-09 · A one-page guide to the other tongs (docs only)
 - New `docs/RIVAL-TONGS.md`: what is built for the rival tongs, how they behave, the rules the tests protect, where the code lives, and what is still open. No game change.
 

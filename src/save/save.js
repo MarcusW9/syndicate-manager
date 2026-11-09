@@ -733,5 +733,18 @@ function migrate(state) {
     for (const op of state.crew ?? []) { op.sworn ??= null; op.oathNotified ??= !op.freelance && (op.record?.activeWeeks ?? 0) >= 26 && (op.loyalty ?? 0) >= 80; }
     state.version = 57;
   }
+  if (state.version === 57) {
+    // v58: C4, rivals feel alive (DESIGN.md 2026-11-09). `state.rivals.threads` (stories told in beats), every card gains
+    // `runnerId` and `formerOf`, every runner gains `runnerId`. A card made when a runner of ours left (its id starts
+    // 'op:') is marked as theirs; the rest are null. One stable id per person: drop the 'op:' and 'x' prefixes
+    // that signing and leaving add ('xc12' is the runner signed from card 'c12').
+    const base = (id) => { let x = String(id); for (;;) { const y = x.replace(/^op:/, '').replace(/^x(?=c\d|op:)/, ''); if (y === x) return x; x = y; } };
+    for (const op of state.crew ?? []) op.runnerId ??= base(op.id);
+    if (state.rivals) {
+      state.rivals.threads ??= [];
+      for (const c of state.rivals.cards ?? []) { c.runnerId ??= base(c.id); c.formerOf ??= String(c.id).startsWith('op:') ? 'player' : null; }
+    }
+    state.version = 58;
+  }
   return state;
 }

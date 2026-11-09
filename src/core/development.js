@@ -71,6 +71,7 @@ const defaultHeadroom = (age) => (age < 25 ? 2 : age < 35 ? 1 : 0);
 /** Fill in any missing development fields. Mutates and returns op. */
 export function prepareOperative(op) {
   op.tier = op.tier ?? inferTier(op);
+  op.runnerId = op.runnerId ?? op.id; // one id for the person across signing and leaving (v58)
   const room = defaultHeadroom(op.age);
   op.potential = { ...op.potential };
   for (const s of STATS) op.potential[s] = clamp(op.potential[s] ?? op.stats[s] + room, op.stats[s], 20);

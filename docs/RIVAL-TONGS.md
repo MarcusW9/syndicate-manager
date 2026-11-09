@@ -1,6 +1,6 @@
 # The other tongs (rival tongs): state of play
 
-One page to pick the work up from. Written 2026-11-09 from the code, `CHANGELOG.md`, `HANDOFF.md` and the decision log. If this page and the code disagree, the code wins; fix this page.
+One page to pick the work up from. Written 2026-11-09, updated for C4 the same day, from the code, `CHANGELOG.md`, `HANDOFF.md` and the decision log. If this page and the code disagree, the code wins; fix this page.
 
 Spec and history live elsewhere: `drafts/PROPOSAL-phase-3.md` part C (C.0 to C.13) is the original design and part D the loyalty and mobility half. It is long and parts of it are out of date (its slice list and "Later"). The "why" for each step is in the decision log, `docs/design/2026-11.md` (search "other tongs", "C3", "D3"). Lore is in `WORLD.md` "The other tongs".
 
@@ -23,8 +23,9 @@ Spec and history live elsewhere: `drafts/PROPOSAL-phase-3.md` part C (C.0 to C.1
 | C3a | Core: dossiers, scouting, persuasion, buyouts, regard, folding and forming, the free name, signing | 2026-11-08 | v53 |
 | C3b | Screens: Free names, a name's page, Scout (side task), Sign | 2026-11-08 | none |
 | D3 | Rivals approach your runners; Match it or Let them go (they pay you a buyout) | 2026-11-09 | none |
+| C4 | Rivals feel alive: stories in The Word (decline, founding, rise), names we let go stay alive (`formerOf`, "Gone elsewhere" on Crew › Wall), the Monday cap, a client remark that follows the tong's real state, a stable `runnerId` | 2026-11-09 | v58 |
 
-Related and built: B, the Legend defining job (rivals' fame words feed off the same fame tiers); D1 retirement and the Hall; D2 loyalty (`op.loyalty`); D4 sworn runners (rivals approach a sworn runner a tenth as often). Current save version: **57** (`SAVE_VERSION` in `core/state.js`).
+Related and built: B, the Legend defining job (rivals' fame words feed off the same fame tiers); D1 retirement and the Hall; D2 loyalty (`op.loyalty`); D4 sworn runners (rivals approach a sworn runner a tenth as often). Current save version: **58** (`SAVE_VERSION` in `core/state.js`).
 
 ## How it behaves
 
@@ -37,6 +38,14 @@ Related and built: B, the Legend defining job (rivals' fame words feed off the s
 **Scouting:** a two-day side task using the scout's social stat. Level 1 shows full stats and the potential read (with the usual error), level 2 halves the error and makes the wage exact, level 3 is exact. A failed trip tells you nothing.
 
 **Signing:** never a roll. `persuasion` is a pure score from the player's tier, Legends/Elites and a leader on the crew, a free bed, and cash. It sets a premium over market wage (up to +35%) shown in ¥. A runner in a tong also costs a **buyout**: 6 weeks of market wage, +10% per ¥10,000 of the tong's wealth (cap +50%), +25% if their regard is cold, -10% if warm. Heads of tongs can't be approached. Signing a tong's runner costs 2 regard; splitting a job with them gives +1 (at most monthly); regard eases toward 0 every other Sunday.
+
+**Stories (C4):** `state.rivals.threads` tells a tong's change as up to three beats instead of one-off lines. *Decline*: a hall lost, then taking any work, then folded or recovered (a hall regained, or four calm Sundays out of the fold-risk condition). *Founding*: a new tong, its first room (the Sunday after), its first outside name. *Rise*: a hall gained, then a name really moving to that tong. One open thread per tong per family; a thread closes after `RIVALS.threadTimeout` (4) weeks with no new beat. A beat replaces the plain line it would have been (`slipped`, `stepped_up`, `folded`, `formed`), it never doubles it. No rolls: every beat is read off what the weekly step already changed.
+
+**Names we let go (C4):** a runner who leaves through D3 (Let them go, or an unanswered offer) becomes a card with `formerOf: 'player'` and the same `runnerId`. The Word tells their beats (signed, stepped up a band, a bigger name, released to free) with an "one of yours, once" line. Crew › Wall lists up to 10 under "Gone elsewhere" (name, tong or "between tongs", a fame word). Between two free names of equal rating, one of ours may be put forward first (`RIVALS.formerFreeWeight`, key `'freename-former:' + absWeek`). Re-signing removes the card; the new runner keeps the `runnerId`.
+
+**Monday cap (C4):** at most 3 rival lines: one continued story, one name of ours, then ordinary talk (a story beginning counts as ordinary, so continuing wins over starting). The Book's lead line (C5) will go first.
+
+**Client remark (C4):** clients are not tied to a tong (they hire whoever fits), so there is no affiliation. The existing "another tong wanted this job" remark now reads the tong's real state: stretched if it has an open decline story, busy if a rise or founding story, else the plain lines. A folded tong is never named.
 
 **Folding and forming:** a small tong (one hall, prestige under 25, wealth under ¥6,000) for 6 Sundays folds, never below 4 tongs. Its runners go free one by one, lowest rated first. A folded tong's best card (rating 40+) may form a new tong (50%); a season's end can form one if fewer than 6 are active.
 
@@ -66,8 +75,8 @@ Related and built: B, the Legend defining job (rivals' fame words feed off the s
 | `src/data/tong.js` | The rank ladder: Back Room, Street, District, City, Harbour |
 | `src/ui/tongs.js` | City › Tongs, a tong's page, a name's read-only profile, Names on the street, The Word |
 | `src/ui/app.js` | Crew › Leads draws scouting, "what it would take" and Sign (`renderLeadName`, `leadNames`) |
-| `tests/rivals.test.js`, `rivals-c3.test.js`, `rivals-c3b.test.js`, `mobility.test.js` | Tests |
-| `tests/golden/rivals-1234.json` | Golden snapshot for iOS |
+| `tests/rivals.test.js`, `rivals-c3.test.js`, `rivals-c3b.test.js`, `rivals-c4.test.js`, `mobility.test.js` | Tests |
+| `tests/golden/rivals-1234.json` | Golden snapshot for iOS (C4 adds a `c4` section after a scripted D3 departure) |
 | `scripts/sim-names.mjs`, `scripts/sim-phase2.mjs` | Sims that check Names on the street and the week-26 tier spread |
 
 ## Open and not built
@@ -85,7 +94,7 @@ Related and built: B, the Legend defining job (rivals' fame words feed off the s
 - Rivals moving toward the Silt once the development next to it is written.
 - Back-room roles (hall hands, medic, leader, scout, haggler, mentor) as a third option beside retirement.
 
-**Known loose ends:** a client's `affiliation` in `data/clients.js` is shown nowhere. The Brass Anchor is both a Who's who entry and the fixed elder under City › Tongs (kept as two passages, owner's call). `docs/ARCHITECTURE.md` still says save v54; the real version is 57.
+**Known loose ends:** a client's `affiliation` in `data/clients.js` stays unshown on purpose (decided with C4: clients belong to the city, not to a tong). The Brass Anchor is both a Who's who entry and the fixed elder under City › Tongs (kept as two passages, owner's call).
 
 ## Working on it: checklist
 
