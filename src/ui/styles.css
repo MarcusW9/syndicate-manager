@@ -1914,13 +1914,13 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
    stacked in heavy block capitals, rough ink edges (the #seal-ink filter in renderFinale) and a slam. */
 @font-face { font-family: 'Seal'; font-weight: 900; font-display: swap; src: url('./fonts/seal-tc.woff2') format('woff2'); }
 .finale__ink { position: absolute; }
-.finale__stamp { --ink: #e0402f; margin: 6px 0 4px; padding: 8px 16px 6px; display: grid; justify-items: center; color: var(--ink); border: 3px solid currentColor; outline: 1.5px solid currentColor; outline-offset: -7px;
+.finale__stamp { --ink: #e0402f; margin: 6px 0 4px; padding: 6px 12px 5px; display: grid; justify-items: center; color: var(--ink); border: 2.5px solid currentColor; outline: 1px solid currentColor; outline-offset: -6px;
   filter: url(#seal-ink); transform: rotate(-4deg); animation: finale-stamp 0.45s 0.15s cubic-bezier(0.2, 1.5, 0.4, 1) both; }
 .finale--aborted .finale__stamp { --ink: var(--warn); }
 .finale--loss .finale__stamp { --ink: #c9c2b4; }
-.seal__line { display: block; font: 700 clamp(1.9rem, 10vw, 2.7rem)/0.95 var(--display); letter-spacing: 0.05em; text-transform: uppercase; }
-.finale__stamp[data-lines="3"] .seal__line { font-size: clamp(1.3rem, 7vw, 1.8rem); }
-.seal__zh { margin-top: 5px; padding-top: 4px; border-top: 2px solid currentColor; align-self: stretch; text-align: center; font: 900 1.05rem/1 'Seal', 'Noto Serif TC', 'Songti TC', serif; letter-spacing: 0.6em; text-indent: 0.6em; }
+.seal__line { display: block; font: 700 clamp(1.4rem, 7.5vw, 2rem)/0.95 var(--display); letter-spacing: 0.05em; text-transform: uppercase; }
+.finale__stamp[data-lines="3"] .seal__line { font-size: clamp(1rem, 5.5vw, 1.4rem); }
+.seal__zh { margin-top: 3px; padding-top: 3px; border-top: 2px solid currentColor; align-self: stretch; text-align: center; font: 900 0.9rem/1 'Seal', 'Noto Serif TC', 'Songti TC', serif; letter-spacing: 0.6em; text-indent: 0.6em; }
 @keyframes finale-stamp { 0% { transform: rotate(-9deg) scale(2.4); opacity: 0; } 55% { opacity: 1; } 75% { transform: rotate(-3deg) scale(0.96); } 100% { transform: rotate(-4deg) scale(1); } }
 .finale__pay { margin: 4px 0 0; display: flex; align-items: baseline; gap: 12px; font: 700 1.6rem var(--display); letter-spacing: 0.04em; }
 .finale__heat { font-size: 0.85rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }

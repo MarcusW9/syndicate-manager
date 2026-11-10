@@ -179,6 +179,7 @@ try {
           waits++;
           if ((waits === 4 && watchShots === 0) || (waits === 14 && watchShots === 1)) await shot(`watch-${++watchShots}`);
         }
+        await page.waitForTimeout(1500); // let the job-end card's pop-in animation finish so the crew show
         await shot('mission-end');
         await click('[data-action="finale-close"]'); // the job-end card (2026-11-07) sits over the page until closed
         if (await click('[data-action="close-mission"]')) {
