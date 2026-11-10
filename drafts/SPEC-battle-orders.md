@@ -1,0 +1,686 @@
+# Battle rework: threats, goals and orders (consolidated spec)
+
+Status: **design only, not built** (2026-11-10). This file merges the owner's prototype brief
+("Threats, goals and orders"), amendment v2 (the orders layer), the amendment "Battle rework:
+threats, goals and orders" (suppression removed, shield, interruptible work), and the clarifications
+agreed in the 2026-11-10 session. Where they conflicted, the later one wins; the review notes that
+led here are summarised in section 26.
+
+**Do not treat this as permission to invent missing rules during implementation.** Everything
+marked **OPEN** is the owner's call (section 25), and the implementation gate (section 24) must be
+met before coding starts.
+
+---
+
+## 0. Purpose
+
+Fights today are a damage race: identical guards, killing is both offence and defence, and "shoot
+the most hurt" is nearly always right. The rework turns a fight into a **triage problem under
+orders**:
+
+- each round there are more visible threats than runners can answer;
+- the player commands the crew (responsibilities, priorities, risk), not individual attacks;
+- one resolver runs the crew whether the player is watching or not;
+- Take Command = editing orders at round boundaries.
+
+Prototype scope: two fight types (`holdHack`, `holdExtract`), three enemy kinds (`hired`, `corp`,
+`drone`).
+
+The prototype must establish:
+
+1. Does adapting the plan improve outcomes?
+2. Does protecting or supporting the crew sometimes beat attacking?
+3. Can players understand and trust how their orders were carried out?
+
+Removing suppression does **not** by itself make protection competitive with attacking. That is
+what the prototype has to show.
+
+## 1. Before you start
+
+- Read `CODEMAP.md`; `DESIGN.md` (battles, command fights, raids); `core/battle.js`,
+  `core/runbattle.js`, `core/fightspots.js`, `core/autorun.js`, `core/mission.js` (fight start and
+  end, call-ins), `data/battle.js`, `data/gear.js`, `data/incidents.js`; then every file you change.
+- Meet the implementation gate (section 24) first: the numbers sheet, the validation gate and the
+  open decisions are settled before Step 0.
+- **Step 0, paper prototype:** play about 10 fights (5 holdHack, 5 holdExtract) with cards, pips and
+  a d20, using these rules and the numbers sheet. Record the findings as a decision-log row before
+  coding. Adjust numbers in data only.
+
+## 2. Rules that stay true
+
+- Roll rule: `d20 + stat >= 10 + difficulty`.
+- Shown risk equals used risk: previews, chances, "if nothing" and the planning read call the same
+  functions as the round.
+- Seeded RNG through the existing battle streams. No `Math.random`. `state.rngCounter` behaviour
+  unchanged from today's battle code.
+- Death only after a player choice (`fightOn` -> `am.untreated`). Hands-off crews extract at a
+  critical. Pull back is always available, at every decision point, including call-ins.
+- Layering: core is pure; all wording lives in data (`BATTLE_TEXT`, `DILEMMAS`); the UI reads views
+  only. Phone-first (360px), 44px taps, no hover-only information.
+- State-shape change: bump `SAVE_VERSION`, add a migration and a test, add a DESIGN.md row
+  (supersede, never rewrite), update CHANGELOG. Never loosen tests.
+- Strategic heat unchanged; no in-fight heat track.
+
+## 3. Terms
+
+- **Pips:** individual health for runners and enemies, small integers. Triggers use pip counts
+  (`pipsAtMost: 1`); risk thresholds are defined in pips (section 10).
+- **Threat:** what an enemy will do this round, drawn and shown before orders resolve, with **its
+  chance and its effect if unanswered**. Effects that are guaranteed are marked as guaranteed.
+- **Duty:** a runner's standing responsibility (section 4).
+- **Action:** the concrete thing the resolver picks from a duty this round.
+- **Response:** an action aimed at a threat (shield a shot, jam a call, attack its source).
+- **Reservation:** a response or planned damage already committed this round (section 14). A
+  reservation is not a success: rolls can still fail.
+- **Dilemma:** an authored situation with explicit conditions that can pause an unwatched fight as a
+  call-in (section 16).
+- **friendlyReinforce / enemyReinforce:** separate flags (can we send help / can enemy backup arrive).
+
+## 4. Duties
+
+Six duties. **Suppression is removed** (duty, action, priorities, defaults, gear references and
+threat-answer entries), and nothing replaces it as a generic "cancel attack" action.
+
+| Duty | Responsibility | Candidate actions |
+| --- | --- | --- |
+| Attack | Damage or remove an enemy (internal id `drop` may stay) | attack |
+| Protect | Shield a designated teammate from an incoming shot | shield; else patch the target (if able) |
+| Support | Treat injuries, stabilise where permitted, jam radio threats, use equipment | stabilise, patch, jam, specials |
+| Hold | Reduce personal exposure | hunker, move (where the site allows) |
+| Push | Work the current objective (hack, boarding) | work, board |
+| Withdraw | Disengage under the fight's safety and extraction rules | withdraw |
+
+**OPEN:** talk. The brief had talking an enemy down as an answer; it isn't one of the six duties.
+Either a face's talk-down is an attack variant (non-lethal removal, still counted in `defeated`), or
+talk is out of the prototype.
+
+## 5. Incoming shots, cover and hunker
+
+An `aim` threat shows:
+
+- its target;
+- its hit chance under current conditions;
+- its damage if it hits;
+- how the planned response changes that exposure (shield, hunker, a reserved attack on its source).
+
+Rules:
+
+- **Cover reduces the chance of being hit. It never grants immunity.**
+- **Hunker** further reduces the runner's own exposure for the round and uses their ordinary action.
+  It does not cancel the shot.
+- **Flank** removes the target's cover benefit, at the published point in the round (section 15).
+  Moving can restore or change position where the site allows it.
+- The incoming-shot formula is fixed before Step 0 (numbers sheet). Previews and resolution use the
+  same function. Today's `guardHitChance` (the fight's base and the guard step against the runner's
+  cool, cover, hunker and the lights) is the starting shape.
+
+## 6. Protect and shield
+
+The protective action is named **shield** (the brief's `cover` action), so it can't be confused with
+positional cover.
+
+- Shield redirects **one** eligible incoming shot from the protected teammate to the protector.
+- Taking the shielding position is certain when legal.
+- The redirected shot then resolves against the **protector's** cover and armour. It is not erased,
+  and the protector is not guaranteed to avoid damage.
+- Shield uses the protector's ordinary action.
+- The preview names which shot is redirected and the protector's resulting exposure.
+- Shield can reduce damage actually taken (better cover, unused armour on the protector) and keeps a
+  nearly-down runner standing, which keeps their future actions.
+- The resolver never silently swaps in an attack because killing the enemy might work better.
+- When no useful protection is available, the order's fallback runs (section 13).
+
+Protection is expected to be most valuable when someone must work or board instead of defending
+themselves. Protect-heavy plans don't need to be best in both encounters.
+
+## 7. Attack, enemy durability and planned damage
+
+- Attacking is the route to permanent removal, but must not be better than protection or objective
+  work everywhere. It must not be made a bad choice just to show variety.
+- **No focus-fire bonus** in the prototype.
+- Weak enemies may legitimately go down fast; tougher enemies need more commitment.
+- **Planned damage is reserved separately from threat responses.** An attack on a 2-pip enemy for 1
+  pip leaves that enemy's shot fully in play: the resolver must not treat it as cancelled.
+- Removal is shown as **conditional** on the required attacks succeeding ("Rook attacks guard 2; if
+  it lands, guard 2 is down before it shoots"). An enemy's threat is never described as certainly
+  cancelled before the removal has happened.
+- When planning, an attack counts as its normal damage (1 pip). A strong hit's extra pip is a bonus
+  if it lands; the plan never assumes it.
+- Armoured enemies need armour piercing to take damage (`ap` gear tag), as the numbers sheet sets.
+
+**OPEN:** once the attacks already planned on an enemy cover its remaining pips, do later attackers
+skip it (no doubling up to raise the odds) or may they pile on? This changes how attack-heavy plans
+behave in the sims, so it is settled before Step 0.
+
+Tune against the question: **can protecting the specialist long enough to finish be better than
+eliminating every enemy first?**
+
+## 8. Objective work
+
+**Hack (holdHack):**
+
+- Working uses the technician's ordinary action and gives **one guaranteed progress** for that
+  round, provided the technician is still standing and still on the job when the round's resolution
+  ends. A technician who works and then goes down to that round's shots makes no progress that round.
+- Any other ordinary action (jam, attack, shield, hold) means no progress from them that round.
+  Progress already made is kept unless the encounter says otherwise.
+- The technician goes back to work when their orders return them to the objective.
+- "Hold the connection for four rounds" means four rounds of actual work, not four rounds passing.
+
+The hack's uncertainty is whether the crew can protect the technician and afford uninterrupted work,
+not a failure roll on the work itself.
+
+**Boarding (holdExtract stage 2):** rolled progress on the objective's stat (`cool` unless the fight
+says otherwise) at `pushStep`.
+
+## 9. Jamming
+
+- **Anyone carrying a jammer may try to jam, using their tech stat.** A tech specialist is better
+  through their stat, not by exclusive permission.
+- A jam answers `backup` and `alarm` threats (and takes a drone out where its kind says
+  `jamTakesOut`), on a roll.
+- Bringing a technician gives no radio cover while they are working: a technician who jams makes no
+  hack progress that round.
+- The plan screen shows who can jam and whether jamming interrupts objective progress.
+
+## 10. Withdrawal, safety and risk
+
+- An **ordinary runner** may disengage on their own while the crew carries on. Their actions and
+  abilities leave the fight with them.
+- If the **essential specialist** withdraws from holdHack, the crew abandons the objective and
+  extracts.
+- A runner **going down in an unwatched fight** means the crew extracts. It never quietly becomes
+  permission to fight on. In a watched or commanded fight, death's door is the call-in it is today.
+- Death stays possible only through the existing explicit player choice.
+- The protected specialist obeys the safety rules: protection orders never override withdrawal
+  thresholds.
+- Risk is crew-wide: `cautious`, `steady`, `committed`. Thresholds are **defined in pips** so they
+  behave differently on the small pip pools (with shares, "steady" at 0.25 never triggers on a
+  3-pip runner). The UI shows each runner's threshold.
+- `press` (push past at the fight deadline) stays a risk-level property.
+
+**OPEN:** the exact pip thresholds per risk level; what an individual withdrawal costs and where the
+runner goes (clean exit, parting shots, still counts as on the job for pay and career?).
+
+## 11. Fight types, stages and clocks
+
+```js
+FIGHTS = {
+  holdHack: {
+    goal: 'work', work: 4,                 // rounds of actual work by the protected specialist
+    protect: 'role:tech', failIf: 'protectedDown|protectedWithdrawn',
+    deadline: n,                           // OPEN: overall round limit
+    clock: 'alarm', friendlyReinforce: true, enemyReinforce: true,
+  },
+  holdExtract: {
+    goal: 'hold+board',
+    stages: [ { hold: 'vanArrival', vanRound: 3 },        // driver skill may shift by 1 (OPEN: rule)
+              { board: 2, boardStat: 'cool' } ],
+    deadline: n,                           // OPEN
+    clock: 'pressure', friendlyReinforce: true, enemyReinforce: true,
+  },
+};
+```
+
+- Stages are counted from 0 in data (`stage: 0` hold, `stage: 1` board) and called "hold for the
+  van" and "board" in text.
+- **holdExtract needs the van.** Leaving before it arrives is a retreat, never a shortcut to a
+  successful extraction. The on-foot escape is deferred.
+- The **driver special `vanRound`** brings the van **one round earlier** than scheduled. It never
+  summons it at once. **OPEN:** its cost (the driver's action that round, or exposing the van), or
+  whether the crew simply fires it on its own; a special with no cost is not a decision.
+- **The fight deadline is separate from escalation clocks.** At the deadline: call-in, push past
+  (alert and heat cost; `press`) or pull back (parting shots, never below 1 pip).
+- Escalation clocks (`CLOCKS.alarm`, `CLOCKS.pressure`): each clock's effect, reset behaviour and
+  limit are fixed before Step 0 (**OPEN**, numbers sheet).
+- Jobs and incidents name a fight type. **OPEN:** which 2-3 existing jobs use each type.
+
+## 12. Orders
+
+```js
+am.battle.orders = {
+  [opId]: {
+    duty: 'attack'|'protect'|'support'|'hold'|'push'|'withdraw',
+    target: opId | enemyN | 'goal' | null,
+    priority: [ ... ],                    // tie-breaks within the duty (OPEN: the word list)
+    fallback: { duty, target } | null,
+    special: { kind, when: TRIGGER } | null,
+    byStage: { [stage]: { duty, target, priority, fallback } } | null, // stage-aware orders
+  },
+};
+am.battle.risk = { level: 'cautious'|'steady'|'committed' };
+```
+
+- **Stage-aware orders:** in holdExtract the crew switches from holding to boarding at the stage
+  change without manual intervention. The preview explains the change and each runner's new
+  intended action.
+- **Target selection when the target is null:** protect -> the protected runner, else the lowest
+  pips (ties: lowest opId); push -> goal; attack -> the enemy whose threat targets the lowest-pips
+  runner (ties: lowest n).
+- **Priority words:** the brief's list (`windup`, `protected`, `backup`, `low`, `push`) assumed
+  suppression and a later threat. **OPEN:** the prototype's list. Proposal: `protected` (threats on
+  the protected runner), `radio` (sources of backup and alarm), `low` (the lowest-pips runner),
+  `exposed` (the highest shown hit chance).
+- **Defaults** are crew-made at launch, visible and editable in the plan, never hidden optimal play:
+  - holdHack: the technician works; a suitable protector shields the technician; other runners get
+    support or attack by capability.
+  - holdExtract: stage 0 favours survival; stage 1 favours boarding, with protection and support
+    where assigned.
+  - **OPEN:** the fixed rule for "by capability" and "suitable protector" (for example: support if
+    max(medical, tech with a jammer) beats combat, ties to attack; protector = most pips plus
+    armour, ties lowest opId), so defaults don't drift between builds.
+
+## 13. Resolver
+
+`core/battle.js resolveOrders(snapshot) -> actions`, per runner:
+
+1. Down, pinned, or no legal action -> none.
+2. Withdraw duty, or the risk threshold reached for this runner -> withdraw (overrides duties).
+3. Assigned duty, if it is **useful** now.
+4. Otherwise the fallback (its target, or the selection rule). Never retry an impossible action.
+5. Otherwise hunker.
+
+**Useful** means the action can materially contribute in the current state: shield needs an
+eligible shot on the target; patch needs a hurt target and the means; jam needs a backup or alarm
+threat and a jammer; attack needs a reachable enemy it can damage; push needs an objective that
+takes progress this stage. "Hold" with no shot on the runner is not useful, so it reaches its
+fallback.
+
+Specials fire when their trigger holds at round start (by hand at a round boundary when commanded).
+
+## 14. Coordination (deterministic)
+
+- One shared round-start snapshot: shown threats with their chances and effects, pips, goal, clocks,
+  spots. Never future deck draws or roll results.
+- Fixed resolution order: protect duties first, then other duties, then by opId.
+- **Reservations, not outcomes.** A response or planned damage, once committed, is reserved. A later
+  runner whose action would only repeat a reserved response (a second shield on the same shot, a
+  second jam on the same call, a second patch on the same runner) moves to the next item in its
+  priority, then its fallback. Only where the rules make the repeat pointless; never re-plan
+  strategy. Planned damage follows section 7 (and the OPEN item there).
+- A failed roll does not release a reservation: the crew committed one response and it missed.
+- Opening the command screen, building previews, generating "if nothing" text and checking dilemmas
+  never draw combat RNG.
+
+## 15. Round order
+
+1. **Draw and reveal** each enemy's threat(s) from its deck (seeded per fight and round) and pick
+   targets by the targeting rule. (`aim`/`flank` go to the protected runner if the fight says so;
+   else the lowest-pips runner with chance `targetFocus`, else any standing runner; seeded.)
+2. **Build intentions:** snapshot, `resolveOrders`, queue triggered specials. This is the preview.
+3. **Check authored dilemmas** (unwatched fights) or wait for orders (commanded fights).
+4. **Intervene or carry on.** Changed orders rebuild step 2.
+5. **Resolve:** specials and moves -> overwatch -> runner actions in the fixed order -> reinforcements
+   arrive -> threats resolve (shots against current cover and armour, flank, backup, alarm) ->
+   enemies break or flee.
+6. **Progress, escalation and end:** objective progress (hack work if the technician is still
+   standing and on the job; boarding rolls), clocks, the deadline, end checks.
+
+End: goal met -> win; all runners down -> loss (death rule applies); the essential specialist down or
+withdrawn -> objective abandoned, extract; deadline -> call-in (push past or pull back).
+
+## 16. Intervention, dilemmas and call-ins
+
+- Commanded or watched job: edit orders and risk at any round boundary; fire specials by hand. No
+  one-off per-runner actions in the prototype.
+- Unwatched job: pauses **only** on authored dilemmas (and death's door, which extracts: section 10).
+  - That battle waits while the call-in is open; the day and other jobs go on.
+  - On expiry: carry on with current orders.
+  - Before applying an answer, revalidate the dilemma; if it no longer holds, discard the answer and
+    carry on.
+  - Each dilemma fires at most once per unresolved situation (key = dilemma id + subject ids; resets
+    only once the situation clears).
+  - The one-per-job-per-day cap limits interruptions only. Withdraw, fallback and risk rules always
+    run.
+  - **OPEN:** the response window for same-day jobs (a same-day run plays its fight in one tick) and
+    for away jobs (`dayDone`).
+- Pacing guide: 2-4 meaningful decisions per commanded fight (not a quota).
+- **Dilemmas are authored.** Each has explicit conditions; the engine evaluates only those. It never
+  infers "serious danger" or "exceptional risk". Situations worth authoring: a serious threat with no
+  response assigned; an exceptional risk despite one; a real conflict between safety, progress and
+  limited resources.
+- A call-in shows: what changed; what the crew intends now; the trade-off of changing orders; **Carry
+  on**; **Pull back** (added by the screen to every call-in, and checked by `validate.js`).
+- Options change real orders and responsibilities. All authored text uses role or runner
+  placeholders, never fixed names.
+
+```js
+DILEMMAS = {
+  techUnderFire: {
+    fight: ['holdHack'],
+    when: { pipsAtMost: 1, of: 'protected', and: { threat: 'backup', responded: false } },
+    changed: '{protected} is nearly down and a radio call is going out.',
+    conflict: ['protect {protected}', 'stop the call'],
+    options: [
+      { label: 'Everyone on {protected}', ordersPatch: { all: { duty: 'protect', target: 'protected' } } },
+      { label: 'Kill the radio',          ordersPatch: { bestAttacker: { duty: 'attack', target: 'backupSource' } } },
+      { label: '{protected} jams it',     ordersPatch: { protected: { duty: 'support', target: 'backupSource' } } },
+        // tries to stop the call; no hack progress this round
+      { label: 'Carry on', ordersPatch: null },
+    ],
+  },
+  boardUnderFire: {               // replaces vanLate (its choices were redundant once on foot was deferred)
+    fight: ['holdExtract'],
+    when: { stage: 1, enemiesUpAtLeast: 2, and: { hitChanceAtLeast: X, on: 'any' } },  // X: OPEN
+    changed: 'The van is here. {exposed} is in the open and two of them are still shooting.',
+    conflict: ['board now', 'clear them first'],
+    options: [
+      { label: 'Board now',            ordersPatch: { all: { duty: 'push' } } },
+      { label: 'One more round',       ordersPatch: { exposed: { duty: 'hold' }, bestProtector: { duty: 'protect', target: 'exposed' }, others: { duty: 'attack' } } },
+      { label: 'Carry on', ordersPatch: null },
+    ],
+  },
+};
+```
+
+"Board now" means committing runners to boarding under fire, not everyone safely disappearing.
+
+**OPEN:** the trigger grammar. The base `TRIGGER` is `{ threatsOn, min }`, `{ pipsAtMost, of }`,
+`{ round }`; dilemmas also use `and`, `threat` + `responded`, `stage`, `enemiesUpAtLeast` and
+`hitChanceAtLeast` + `on`. The `ordersPatch` selectors (`all`, `others`, `protected`, `exposed`,
+`bestAttacker`, `bestProtector`, `backupSource`) need fixed definitions. Both are written down as a
+grammar before Step 0.
+
+## 17. Feed, "if nothing" and wording
+
+- Every preview and feed line names the order behind the action: "Rook shields Switch (protecting
+  Switch)", "Vex attacks corp 2 (attack, priority: radio)".
+- "If nothing" is generated from current orders and shown threats, never authored: the intended
+  actions and the exposure left. It never promises an uncertain outcome.
+  Good: "Rook keeps shielding Switch. The radio call has no one on it."
+  Not: "...backup arrives" (unless certain); not "...guard 2 won't shoot" (unless already down).
+- All wording in `data/battle.js BATTLE_TEXT` and `data/dilemmas.js`.
+
+## 18. Reinforcements (if friendlyReinforce)
+
+"Send help" call-in option: choose standby or free runners. `arriveRound = current + 2` (district
+distance later). They arrive with full pips and default orders (support, fallback protect). They
+count as on the job (career, fatigue, pay share).
+
+## 19. Data shapes
+
+All numbers are **provisional** until the numbers sheet (section 25) settles them.
+
+```js
+// data/battle.js BATTLE (prototype keys)
+BATTLE = {
+  runnerBasePips: 3, toughCool: 14, musclePips: 1, lightWoundPips: 1,
+  hit: 1, strongHit: 2,                      // OPEN: when a hit is strong
+  armourAbsorb: { light: 1, heavy: 2 },      // hits absorbed per fight; OPEN: against ap
+  cover: { open: 0, half: 2, full: 4 }, startCover: 'half', hunkerStep: 4,
+  attackStep: -4, jamStep: 0, pushStep: 0, patchStep: 0, overwatchStep: -1,
+  targetFocus: 0.5,
+  lightBelow: 0.5, seriousBelow: 0.25,       // pip share -> injury; down = critical as today (OPEN: confirm)
+  partingShotFloor: 1,
+  retreat: { heat: 1, rep: 2 }, press: { alert: 1, heat: 1 },
+  risk: { cautious: { pullAtPips: OPEN, press: false }, steady: { pullAtPips: OPEN, press: false },
+          committed: { pullAtPips: 0, press: true } },
+  oddsRuns: 120,
+};
+// maxPips = runnerBasePips + (cool >= toughCool ? 1 : 0) + (role muscle ? musclePips : 0)
+//   + trait bonuses - (light injury ? lightWoundPips : 0). Combat never changes max pips.
+
+ENEMIES = {
+  hired: { pips: 1, threats: 1, talk: -2, fleeBelow: 0.6, cover: 'half', deck: ['aim','aim','alarm'] },
+  corp:  { pips: 2, threats: 1, talk: null, cover: 'half', deck: ['aim','backup','aim','flank'] },
+  drone: { pips: 1, threats: 1, talk: null, armoured: true, cover: 'open', jamTakesOut: true, deck: ['aim','alarm'] },
+};
+// fleeBelow is side-wide (OPEN: confirm): when the standing share of that kind falls below it, the rest flee.
+SITE_ENEMIES = { docks: ['hired'], heights: ['corp','drone'], /* ... */ };
+COUNT_BY_THREAT = [0, 2, 2, 3, 3, 4];       // index = threat 1-5, capped by fight type
+
+THREATS = {
+  aim:    { target: 'runner', effect: { pips: 1 }, chance: 'incoming-shot formula',
+            responses: ['shield', 'hunker', 'move', 'attack source'] },
+  backup: { target: null, effect: { addEnemy: 1 }, responses: ['jam', 'attack source'] },  // needs enemyReinforce
+  alarm:  { target: null, effect: { clock: 1 },    responses: ['jam', 'attack source'] },
+  flank:  { target: 'runner', effect: { cover: 'open' }, responses: ['move', 'attack source'] },
+};
+
+ACTIONS = {
+  attack: { stat: 'combat', diff: 'base + attackStep + enemy cover', pips: 1, armouredNeeds: 'ap' },
+  shield: { sure: true, redirects: 'one aim on the target to self (resolves against own cover and armour)' },
+  hunker: { sure: true, exposure: 'cover +1 step and hunkerStep this round' },
+  move:   { sure: true, to: 'spot', restores: 'cover' },
+  jam:    { stat: 'tech', needs: 'item:jammer', diff: 'base + jamStep', answers: ['backup','alarm'], drone: 'out' },
+  patch:  { stat: 'medical', needs: 'role:medic|item:traumaKit', heals: 1, orStabilise: 'fightOn runner' },
+  work:   { sure: true, progress: 1 },                       // hack (section 8)
+  board:  { stat: 'byGoal', diff: 'base + pushStep' },        // boarding (section 8)
+  withdraw: { sure: true },
+};
+
+SPECIALS = {   // once per fight; trigger or manual
+  smoke:    { needs: 'item:smoke' },  // OPEN: was "cancel all aim"; proposal: everyone's cover +1 step this round
+  stim:     { needs: 'item:stims', revives: 'down -> 1 pip' },
+  vanRound: { role: 'driver', effect: 'van arrives one round earlier' },   // OPEN: cost
+};
+
+GEAR_TAGS = { ap: { pierce: true }, jammer: { enables: 'jam' }, smoke: { special: 'smoke' },
+              stims: { special: 'stim' }, vest: { absorb: 'light' }, plate: { absorb: 'heavy' },
+              baton: { attackNonLethal: true } };
+// Tiers stay: a tier adds +1 chance per step, never a new rule.
+// OPEN: how today's sidearms (damage, pierce, tiers) and armour (flat soak) map onto these tags,
+// so gear the player already owns keeps a job.
+
+CLOCKS = { alarm: { startsAt: 5, tickPerRound: 1, extraTick: 'alarm threat', onZero: 'addEnemy' },
+           pressure: { everyRounds: 2, addEnemy: 1 } };   // OPEN: reset and limit for each
+```
+
+**Future-proofing (amendment v2; optional fields, all default off, unused in the prototype):**
+enemies may carry `threats > 1`; `phases: [{ atPips, threats, deck, effect? }]`; `weakPoint: { every,
+window, pipsPerHit, revealedBy? }` (rename `window` here or on the battle enemy, e.g. `weakOpen`, so
+one name doesn't mean both a number and a flag); `escorts`, `protectsWith`; `boss: true` (pips above
+6, shown as a bar with phase marks). The battle enemy gains `phase: 0` and `weakOpen: false`. A phase
+check runs right after pips change; threats already shown still resolve as shown. Dilemmas may
+trigger on `{ enemyPhase }`; goals may set `dropBonus`. Test: an enemy with phase or weak-point
+fields but `boss: false` behaves exactly like one without.
+
+**Battle object (`am.battle`, save v61):**
+
+```js
+am.battle = {
+  engine: 2, type, stage: 0, round: 0, deadline,
+  clocks: [{ kind, at }],
+  goal: { kind, track, at, protect: opId|null, vanRound: n|null },
+  enemies: [{ n, kind, pips, max, armoured, out, fled, cover, spot, phase: 0, weakOpen: false,
+              threats: [{ id, kind, target, chance }] }],
+  runners: [{ id, handle, role, pips, max, absorb, cover, spot, now,
+              down, fightOn, stable, pinned, withdrawn, specialUsed, stats, gearTags }],
+  orders: { [opId]: ORDER }, risk: { level },
+  reserved: { responses: [], damage: { [enemyN]: n } },
+  reinforce: [{ ids, arriveRound }] | null,
+  overwatch: { id, handle, kit, value, left } | null,   // OPEN: what overwatch does now (proposal: one attack a round)
+  wheels: { id, handle, value, notes } | null,
+  spots, dilemmasFired: { [key]: true }, watched: bool,
+};
+```
+
+**Round result:** `playRound(b, rng) -> { lines, actions: [{ opId, action, target, from:
+'duty'|'priority'|'fallback'|'safety'|'special' }], unanswered: [{ threat, target }], defeated: [{ by,
+enemy, how }], goalDelta, down, fled, withdrawn, heat }`. Each line names its order.
+
+## 20. UI (phone, 360px)
+
+**Plan screen:** fight type line ("Hack: 4 rounds of work. Keep {tech} working."), likely enemy kinds,
+gaps ("No jammer: radio calls can only be stopped by attacking the caller"), who can jam and whether
+it stops the hack, each runner's order (duty, target, per stage where it changes), their withdrawal
+threshold, risk, specials.
+
+**Round screen** (watched or commanded):
+
+- goal track and clocks ("Hack ●●○○ · alarm 3 · deadline 6");
+- enemies: kind word, pips, threat with target, chance and effect;
+- runners: pips, current order, this round's intended action from the preview, their exposure;
+- the "if nothing" line;
+- buttons: Next round · Change orders · Specials · Pull back.
+
+**Report:** one cause line ("No one had a jammer, so the radio call went out") and the full log with
+rolls.
+
+## 21. Planning read
+
+`fightOdds(args, orders, risk)` runs `playRound` N times on fixed seeds with the given orders.
+Returns `{ win, down, pulledBack, gaps }`. Cache key: type, enemy kinds and counts, runner pips,
+absorb, stats, roles, gear tags, specials, overwatch, wheels, orders, risk. Same functions as the
+round (shown = used).
+
+## 22. Save, migration and what stays
+
+- **Save v60 -> v61.** v60 is taken (the Anchor's Book, #124); the brief's "v59 -> v60" and the
+  amendment's "migration v60" are corrected here.
+- **Fights in progress at upgrade (proposal, owner to confirm):** tag them `engine: 1` and let them finish on the old code, which
+  stays in the repo for raids anyway, instead of resolving them inside `save.js` at load (that would
+  run combat in the storage layer and move `rngCounter`). New fights get `engine: 2`.
+- Career `defeated` counts carry over. Saved standing orders already use `cautious`, `steady`,
+  `committed` ids, which map straight onto risk levels.
+- **Kept:** d20 rule, shown = used, seeded RNG, site spots, overwatch, call-ins, pull back with
+  parting shots, death rule, pips left -> injury, strategic heat.
+- **Replaced:** `guardsFor` and guard arrays -> `ENEMIES`; `actionFor` -> `resolveOrders`; damage
+  numbers and flat soak -> pips and absorb; the fixed 3-round standoff -> fight deadline and clocks;
+  per-runner action orders each round (command fights, slice 6c) -> the orders layer.
+- **Removed:** suppression (duty, action, priorities, threat answers).
+- The old raid fight (`core/raids.js`) stays on engine 1 until `defendHall` is built.
+- The new sim is `scripts/sim-orders.mjs`; `scripts/sim-battles.mjs` keeps measuring engine 1.
+
+## 23. Tests
+
+- Death only after `fightOn` (random orders, many seeds, both types).
+- Pull back always possible; parting shots never below 1 pip.
+- Shown = used: preview chances equal roll odds; `fightOdds` calls `playRound`.
+- Determinism: same state + seed + orders -> same fight. Previews, "if nothing" and dilemma checks
+  never move RNG. `rngCounter` behaviour unchanged.
+- Resolver: precedence holds; never an impossible or useless action; fallback targets always
+  defined; reservations stop pointless repeats; a failed roll keeps its reservation; an attack that
+  doesn't cover an enemy's pips never marks its shot as answered; every action's feed line names its
+  order.
+- Shield: redirects exactly one shot; it resolves against the protector's cover and armour.
+- Hunker never cancels a shot; cover never makes a shot impossible.
+- Hack: progress only for rounds actually worked by a technician standing at the end of resolution;
+  progress kept when interrupted.
+- holdExtract: no successful extraction before the van; `vanRound` moves arrival by exactly one round.
+- Withdrawal: an ordinary runner leaves alone; the specialist leaving ends holdHack's objective; a
+  runner going down unwatched extracts the crew.
+- Dilemmas: fire once per situation; evaluated only on their authored conditions; revalidated
+  before applying; expire -> carry on; the per-day cap never blocks withdraw, fallback or risk;
+  every call-in offers Pull back; no fixed names in authored text.
+- Pips: the max-pips formula; absorb used up correctly.
+- Engine 1 fights in a v60 save finish unchanged after migration to v61.
+
+## 24. Validation and the implementation gate
+
+**Before coding:**
+
+1. Reconcile the amendment with the full brief (this file).
+2. Settle the numbers sheet and the open timing rules (section 25).
+3. Verify repo-specific version, migration and compatibility claims (section 22).
+4. Record the removal of suppression and the replacement of direct actions as design decisions
+   (DESIGN.md rows, 2026-11-10).
+5. Run the paper prototype, then the seeded sims.
+
+**Sims (`scripts/sim-orders.mjs`).** Compare across both encounters, varied crews and fixed seeds:
+
+- attack-only plans;
+- hold-only plans;
+- protection-heavy plans;
+- support-heavy plans;
+- encounter-adapted plans;
+- one unchanged plan used in both encounters.
+
+Measure objective success, downed runners and injuries, resources used (specials, consumables) and
+extraction outcome.
+
+Test several enemy-durability and exposure settings, not one tuned until a preferred answer wins.
+The aim is different viable plans, not encounters built to demand a set answer: holding and boarding
+should be able to beat clearing the opposition under some reasonable conditions, while attacking
+stays useful under others. A toughness check: tough squads do better against aim-heavy fights but not
+against backup and alarm (toughness must not replace responses).
+
+**The gate.** Declared and recorded **before** the run, not chosen after seeing results:
+
+- the crew groups, seeds, comparison plans and the durability/exposure settings;
+- the acceptable differences (tolerances) for objective success, downed runners and resource use;
+- how many settings and crew groups must show a benefit from adapting.
+
+Outcome:
+
+- **Rework** if one unchanged plan is effectively as successful, safe and economical as the adapted
+  plans across both encounters and most of the tested crew groups.
+- **Proceed to playtesting** if adapting gives repeatable, practically meaningful benefits without one
+  universal plan dominating.
+- One plan sometimes winning both encounters is not by itself a failure.
+- Passing sims do not replace the playtest. Results and the declared targets go in CHANGELOG.
+
+## 25. Open (owner)
+
+**Numbers sheet (before Step 0):**
+
+- base difficulty by encounter threat level (today a fight takes the incident's difficulty, which
+  scales with the job's tier);
+- the incoming-shot formula and the aim step;
+- attack difficulty; enemy durability by kind;
+- strong-hit conditions; armour absorb against `ap`;
+- `toughCool`; armour absorb by tier; enemy decks and counts per threat;
+- risk thresholds in pips;
+- each clock's effect, reset and limit; each fight type's deadline; the driver's shift on `vanRound`;
+- the boarding dilemma's exposure threshold `X`.
+
+**Decisions:**
+
+- planned damage that already covers an enemy's pips: do later attackers skip it, or pile on?
+  (section 7);
+- talk: an attack variant or out of the prototype (section 4);
+- smoke's effect without a generic cancel (section 19);
+- what overwatch does now (section 19);
+- `vanRound`'s cost (section 11);
+- what an individual withdrawal costs and where the runner goes (section 10);
+- the priority word list (section 12);
+- the fixed default-orders rule (section 12);
+- the trigger grammar and `ordersPatch` selectors (section 16);
+- the call-in response window for same-day and away jobs (section 16);
+- the gear mapping from today's sidearms and armour (section 19);
+- whether `fleeBelow` is side-wide (section 19); whether down still counts as critical;
+- the validation gate's tolerances and settings (section 24);
+- which 2-3 existing jobs use each fight type;
+- whether one-off per-runner actions are ever added (after the playtest);
+- `defeated` counts talk-downs and non-lethal attacks (recommended yes, as Phase 1).
+
+## 26. How this was reconciled (2026-11-10)
+
+- **Suppression removed.** In the brief, attacking a 1-pip enemy was an easier roll than suppressing
+  (attack -4 + half cover 2 against suppress 0) and removed every future threat, so suppression was
+  dominated. Removing it removes that comparison only; it does not show attack and protect are
+  balanced.
+- **Shots got chances.** The brief's threats had certain effects and hunker cancelled aim for sure,
+  so "everyone hold" answered every shot, and a runner's cover (and so flank, move and the site
+  spots) did nothing. Now cover and hunker lower the hit chance; flank strips cover.
+- **Focus fire dropped,** but the question it raised stays: planned damage is reserved separately and
+  a partial attack never cancels a shot.
+- **The technician can be interrupted,** and anyone with a jammer can jam, so jam is usable in
+  holdHack at the cost of hack progress (the brief's protected tech took no action, so jam was never
+  available there).
+- **`vanRound`** brings the van one round earlier instead of ending the hold stage at once.
+- **Stage-aware orders,** a separate deadline and clocks, a defined "useful" so `hold` reaches its
+  fallback.
+- **Withdrawal by role;** death's door unwatched extracts; risk in pips.
+- **Dilemmas checked before resolution;** authored conditions only; `vanLate` replaced by
+  `boardUnderFire`; the technician can jam in `techUnderFire`; placeholders, not names.
+- **Save v61, engine tagging** instead of resolving fights at load; `sim-orders.mjs` beside the
+  existing `sim-battles.mjs`.
+- **Validation** has a gate declared before the run, over success, safety and resources, not win rate
+  alone.
+
+## 27. Later (not in the prototype)
+
+Fight types: getOut, holdHelp, rescue, grab, ambush, boss, standoff, defendHall. Enemies: heavy,
+enforcer, marksman, lieutenant, boss (phases, weak point, escorts). Threats: windup, pin, door.
+Specials: suppressAll, bluff (each needs a design that isn't a generic cancel). Gear tags: shotgun,
+smart, suppressor. Per-runner direct control, more duties, the on-foot escape, generic dilemma
+detection, district-based arrival times.
+
+## 28. Playtest (after code)
+
+Play holdHack then holdExtract: once commanded, once fully hands-off with a dilemma.
+
+- **Attribution:** can I explain how my crew and orders shaped the result?
+- **Tension:** did I face a genuinely difficult decision?
+- **Trust:** when I let it run, did the crew follow my intent reasonably, even when it lost?

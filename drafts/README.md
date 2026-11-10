@@ -2,6 +2,7 @@
 
 Generated text waiting to go into `src/data/`. Not imported by the game. Delete each file once its content has shipped.
 
+- `SPEC-battle-orders.md`: the battle rework as one spec (2026-11-10): threats, goals and orders, the owner's brief merged with both amendments and the agreed clarifications; suppression removed; six duties, shield, reserved damage, interruptible hack, authored dilemmas, save v61. Not built: the numbers sheet, the open decisions (section 25) and the validation gate come first.
 - `district-hooks.md`: crisis hooks for the locked districts.
 - `writing-tasks.md`: writing the owner can do in other chats, with a prompt per task. Its source files are in `writing/` (generated from the game data on 2026-10-26; regenerate if the crises change).
 - `mission-log-prototype.md`: what the owner's Container 409 logs settled, checked against the engine; the brief for the first mission-log slice.
