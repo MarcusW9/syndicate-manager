@@ -1,0 +1,309 @@
+# Battle rework: numbers sheet (first values)
+
+Status: **proposal for the owner** (2026-11-10). First values for every number and timing rule
+that `drafts/SPEC-battle-orders.md` section 25 says must be settled before Step 0. Nothing here is
+built or decided. Where a value needed a rule the spec left open, the rule is marked **(rule
+proposal)** so it isn't mistaken for a number.
+
+All values go in data (`data/battle.js BATTLE`, `ENEMIES`, `FIGHTS`, `CLOCKS`); Step 0 adjusts
+them there.
+
+---
+
+## 1. The scale everything sits on
+
+**Base difficulty = today's fight difficulty, unchanged:** the incident's difficulty,
+`round(6 + 2.5 x threat)`, minus 2.5 on rookie work, plus the incident's own step and the alert
+(`core/incidents.js incidentDifficulty`). So fights stay on the same scale as every other roll.
+
+| Threat | 1 | 2 | 3 | 4 | 5 |
+| --- | --- | --- | --- | --- | --- |
+| Base (rookie work) | 9 (6) | 11 (9) | 14 (11) | 16 (14) | 19 (16) |
+
+A runner's **margin** `m` = their stat minus the base. Every runner action uses
+`fightChance(stat, base + step)` = `(11 + m - step) / 20`. A stat equal to the base (`m = 0`) is
+55% on a step-0 action.
+
+Where today's crews sit (measured: 200 fresh starting crews):
+
+| Stat | 10th pct | median | 90th pct | max |
+| --- | --- | --- | --- | --- |
+| combat | 2 | 5 | 9 | 11 |
+| tech | 2 | 5 | 10 | 11 |
+| medical | 2 | 4 | 9 | 11 |
+| social | 2 | 5 | 9 | 11 |
+| cool | 5 | 7 | 9 | 9 |
+
+So on a threat-1 rookie job (base 6) a specialist is about `m = +4` in their own stat and `m = -1`
+in the rest; cool sits around `m = +1`. On threat 3 (base 14) the same runners need about four
+points of growth to be at `m = 0`.
+
+**Crew groups for the sims** (by margin against the fight's base, so one set covers every tier):
+
+| Group | Main stat | Other stats | Cool |
+| --- | --- | --- | --- |
+| Under | m = 0 | m = -5 | m = -2 |
+| On level | m = +3 | m = -2 | m = 0 |
+| Over | m = +6 | m = +1 | m = +3 |
+
+Each group is run with three line-ups: (a) tech, muscle, medic, gunner; (b) tech, muscle, two
+gunners (no medic); (c) tech, face, medic, gunner (no muscle). The jammer goes to the tech, and in
+(a) a second jammer to the medic. That gives 9 crew groups.
+
+## 2. Pips, armour, injury
+
+| Key | Value | Notes |
+| --- | --- | --- |
+| `runnerBasePips` | 3 | |
+| `toughCool` | **12** | was 14. No fresh runner has more than 9 cool, so 14 would rarely happen before a long career; 12 is a grown runner with good cool |
+| `musclePips` | 1 | muscle role |
+| `lightWoundPips` | 1 | starting with a light injury |
+| `hit` | 1 | |
+| `strongHit` | 2 | runners only; enemies never land strong hits in the prototype (their shots read "55%, 1 pip") |
+
+**Armour absorbs hits (rule proposal, one rule for both sides):** `absorb` is the number of hits
+soaked per fight. A soaked hit does nothing. **`ap` ignores absorb.**
+
+| Armour | absorb |
+| --- | --- |
+| None | 0 |
+| Street vest (today `armour: 1`) | 1 |
+| Pro vest (today `armour: 2`) | 2 |
+| Drone (enemy) | 1 |
+
+This replaces the spec's "an armoured enemy needs `ap`": without armour piercing a drone takes two
+hits, the first soaked. That gives crews without `ap` a slow way through, and makes `ap` a speed-up
+rather than a key.
+
+**Injury from pips left** (share of max at the end): `lightBelow: 0.5`, `seriousBelow: 0.25`; down
+(0 pips) = **critical**, as today's death's door. For a 3-pip runner: 3 or 2 left = fine, 1 = light,
+0 = critical. For 4 pips: 4 or 3 = fine, 2 or 1 = light, 0 = critical.
+
+## 3. Incoming shots (the exposure formula)
+
+Same shape as today's `guardHitChance`, with a floor and a ceiling so cover never makes anyone
+immune:
+
+```
+aimChance(target) = clamp( (11 + aimStep - mCool - coverStep - (hunker ? hunkerStep : 0)) / 20,
+                           aimFloor, aimCeil )
+mCool     = target's cool - base
+coverStep = BATTLE.cover[target's cover this round]   // open 0, half 2, full 4
+hunker    = cover goes one step better AND hunkerStep on top (as today)
+```
+
+| Key | Value |
+| --- | --- |
+| `aimStep` | **+2** |
+| `cover` | open 0, half 2, full 4 (unchanged) |
+| `hunkerStep` | 4 (unchanged) |
+| `aimFloor` / `aimCeil` | 0.10 / 0.90 |
+
+What a shot looks like on a runner with `mCool = 0`:
+
+| Position | Open | Half | Full | Hunker from open (-> half) | Hunker from half (-> full) | Flanked (-> open) |
+| --- | --- | --- | --- | --- | --- | --- |
+| Hit chance | 65% | 55% | 45% | 35% | 25% | 65% |
+
+Each cover step is 10 points; hunkering is worth 30 points. That is a big cut but never a cancel.
+High cool matters, which makes good-cool runners the natural shields: a muscle with `mCool = +3`
+in half cover is hit 40% of the time, against 55% for the tech.
+
+**Flank timing:** a flank changes the target's cover when threats resolve, after every runner
+action, so it affects **next round's** shots. A runner can `move` that next round to get cover back.
+(A flank landing the same round would make the shown chance wrong; this way shown = used.)
+
+## 4. Runner actions
+
+| Action | Stat | Difficulty | m = 0 | m = +3 | Notes |
+| --- | --- | --- | --- | --- | --- |
+| attack (enemy in half cover) | combat | base - 2 + 2 | 55% | 70% | `attackStep: -2` |
+| attack (enemy in the open: drone) | combat | base - 2 | 65% | 80% | |
+| talk (hired) | social | base + 2 - 2 | 55% | 70% | if talk stays: non-lethal, hired only |
+| jam | tech | base + 0 | 55% | 70% | jammer tier: +1 per step |
+| patch (+1 pip) | medical | base + 0 | 55% | 70% | needs medic role or trauma kit |
+| stabilise | medical | base + 2 | 45% | 60% | today's stabilise is harder than a patch too |
+| board (+1 progress) | cool | base + 0 | 55% | 70% | |
+| work (hack) | | | 100% | 100% | one progress, if standing at the end of the round |
+| shield, hunker, move, withdraw | | | 100% | 100% | |
+| overwatch attack (half cover) | kit stat | base - 2 - 1 + 2 | 60% | 75% | one attack a round (rule proposal) |
+
+`attackStep` moves from the brief's -4 to **-2**. At -4 an on-level gunner hits a half-cover enemy
+65% of the time, and because runner actions resolve before shots, every kill also cancels a shot.
+At -2 attacking is still the better roll than enemies get on you, but not by much.
+
+**Strong hit (rule proposal):** a hit is strong when the roll beats what was needed by
+`strongMargin` or more. Default `strongMargin: 10` (5% for an on-level gunner, 20% for `m = +3`).
+Sidearms set it by today's damage, so owned guns keep a job:
+
+| Sidearm damage (today) | 2 | 3 | 4 | 5 |
+| --- | --- | --- | --- | --- |
+| `strongMargin` | 12 | 10 | 8 | 6 |
+
+Sidearm `aim` stays a combat bonus. `pierce >= 1` (machine pistol, coil) gives the `ap` tag. The
+street piece (no weapon) is damage 2.
+
+## 5. Enemies
+
+Three durability settings for the sims (the spec asks for several, not one tuned until a plan
+wins). **D2 is the proposed default.**
+
+| Kind | D1 light | D2 default | D3 heavy | cover | deck |
+| --- | --- | --- | --- | --- | --- |
+| hired | 1 pip | 1 pip | 2 pips | half | aim, aim, alarm |
+| corp | 1 pip | 2 pips | 3 pips | half | aim, backup, aim, flank |
+| drone | 1 pip, absorb 0 | 1 pip, absorb 1 | 2 pips, absorb 1 | open | aim, alarm |
+
+| Key | Value | Notes |
+| --- | --- | --- |
+| `COUNT_BY_THREAT` | 2, 2, 3, 3, 4 | threat 1 to 5 (unchanged); both prototype types capped at 4 |
+| `hired.fleeBelow` | **0.4, side-wide** | when standing hired / hired at the start falls below it, the rest flee at the break step. With 3 hired: the third runs once two are down |
+| `hired.talk` | -2 | if talk stays |
+| `targetFocus` | 0.5 | share of aim/flank on the lowest-pips runner (rest: any standing runner) |
+| `protectFocus` | **0.75** (new) | in a fight with a protected runner, share of aim/flank on them (rest by `targetFocus`). At 1.0 every shot goes at the tech and nothing else matters; at 0.5 the tech is barely in danger |
+
+Decks are shuffled per enemy per fight (seeded) and drawn in order, reshuffled when empty. A
+`backup` drawn in a fight without `enemyReinforce` is drawn again.
+
+## 6. Risk thresholds (in pips)
+
+A runner withdraws at round start once their pips are **at or below** the threshold:
+
+| Level | Threshold | 3-pip runner | 4-pip runner | 5-pip runner | press at deadline |
+| --- | --- | --- | --- | --- | --- |
+| Cautious | `ceil(max / 2)` | after 1 hit (at 2) | after 2 hits (at 2) | after 2 hits (at 3) | no |
+| Steady | 1 | after 2 hits | after 3 hits | after 4 hits | no |
+| Committed | 0 (never) | fights until down | | | yes |
+
+The three levels now differ on every pool size. A cautious tech leaves after one hit, which ends
+holdHack's objective: that cost is what makes cautious a real choice in that fight.
+
+**Individual withdrawal (rule proposal):** the runner leaves at the start of resolution. A shot
+already aimed at them this round still resolves (they leave under fire) but can't take them below
+1 pip (`partingShotFloor`). They count as on the job for pay, fatigue and career, but not as
+finishing the fight.
+
+## 7. Fight types, deadlines and clocks
+
+| Key | holdHack | holdExtract |
+| --- | --- | --- |
+| `work` / `board` | 4 rounds of work | 2 boarding progress |
+| `deadline` | 7 rounds | 7 rounds |
+| `vanRound` | | 3 |
+| driver shift | | piloting `m >= +3`: round 2; `m <= -3`: round 4 |
+| clock | alarm | pressure |
+
+**Clocks:**
+
+| Clock | Rule |
+| --- | --- |
+| `alarm` | starts at 5; -1 at the end of each round; -1 more per unanswered `alarm` threat. At 0: one enemy of the site's kinds arrives at the start of next round and the clock resets to 3 |
+| `pressure` | one enemy of the site's kinds arrives at the start of rounds 3, 5 and 7 |
+| `backup` threat | unanswered: one enemy of the same kind arrives at the start of next round |
+| shared limit | **`maxExtraEnemies: 2`** per fight, across clocks and backup together; past it, clocks stop and backup draws are redrawn |
+
+Arrivals come in at half cover, with their threat drawn the round they arrive (shown before
+orders, like everyone's).
+
+**Deadline:** at the end of round `deadline`, if the goal isn't met: the call-in (push past: alert
++1, heat +1; or pull back: parting shots, never below 1 pip). Committed risk presses on its own on a
+hands-off job.
+
+**`vanRound` special (rule proposal for its cost):** the driver brings the van one round earlier
+(never before round 1) for **+1 heat** on the job (driving hard through the district). Default
+orders fire it when a runner is at 1 pip in stage 0 or two or more enemies are up at the start of
+round 2. The alternative is no cost and always on, but then it isn't a choice and should leave the
+specials list.
+
+## 8. Specials (first values)
+
+| Special | Effect |
+| --- | --- |
+| smoke | **everyone's cover +1 step this round** (half -> full); enemies' too. Not a cancel (rule proposal) |
+| stim | down -> 1 pip, once; the runner acts from next round |
+| vanRound | as above |
+
+## 9. Dilemma thresholds
+
+| Dilemma | Number |
+| --- | --- |
+| `techUnderFire` | protected runner at 1 pip and an unanswered `backup` shown |
+| `boardUnderFire` | stage 1 (board), 2+ enemies up, a runner with shown `aimChance >= 0.6` (open, or half with `mCool <= -1`) |
+
+## 10. What to expect (arithmetic, not results)
+
+Rough expected values from the numbers above, to check before Step 0 that the trade-offs exist.
+Step 0 and the sims are what count.
+
+**holdHack, threat 3, heights (corp and drone), D2, on-level crew, tech `mCool = 0`, half cover:**
+
+- About 1.5 aims a round (3 enemies, about half their draws are `aim`), 75% of them at the tech:
+  about 1.1 a round, 55% each.
+- **Nobody protecting:** about 0.6 hits on the tech a round, so about 2.5 over four rounds of work.
+  A 3-pip tech with a street vest (absorb 1) is down or at 1 pip most fights.
+- **One shield a round:** the tech's share drops to about 0.1 to 0.2 aims; the protector takes the
+  redirected shot at 40 to 55%. The tech usually finishes. Two protectors make it nearly certain,
+  at the cost of the radio (backup, alarm) going unanswered.
+- **Attack-first:** a corp needs two hits at 55% (two attackers in a round, both landing: 30%), so
+  the enemies' shots mostly keep coming for two rounds. Against D1 (corp at 1 pip) attacking first
+  catches up with protection.
+- **The tech jamming:** each jam is a round with no work, so the fight runs a round longer, with
+  one more round of shots at the tech.
+
+**holdExtract, threat 3, docks (hired), D2, four on-level runners:**
+
+- About 2 aims a round at 55%: about 1.1 hits a round if nobody acts.
+- **All hold for 3 rounds:** about 0.5 hits a round (hunkered, 25%) = about 1.5 hits spread over
+  four runners; then boarding in the open for about a round (about 1.1 hits). Total about 2.6
+  hits; no enemies down; the pressure clock adds one in round 3.
+- **All attack:** round 1 about 1.6 hired down (55% each, one attacker per enemy), and the third
+  flees at 0.4; about 0.5 hits taken. Then boarding unopposed apart from the round-3 arrival.
+  Total about 1 hit. **At D2, attacking clearly beats holding against hired.**
+- **At D3 (hired 2 pips):** round 1 kills about one; about 0.8 hits a round for three rounds, so
+  attacking costs about as much as holding, and the clock adds to both. Holding and boarding
+  should compete here.
+
+So with these numbers the expected picture is: protection wins holdHack against corp (D2), attack
+wins holdExtract against hired at D1 and D2, and holdExtract is close at D3. That is "different
+viable plans", but it hangs on the hired durability and `attackStep`. Those two numbers are where
+Step 0 should look first.
+
+## 11. The validation gate (proposed tolerances)
+
+To be confirmed and recorded before the sims run (spec section 24).
+
+| Item | Proposal |
+| --- | --- |
+| Seeds | 400 per cell |
+| Crew groups | the 9 in section 1 (3 margins x 3 line-ups) |
+| Settings | durability D1, D2, D3 x exposure E1, E2, E3 = 9 (`aimStep` 0, +2, +4) |
+| Encounters | holdHack (heights: corp, drone), holdExtract (docks: hired), threat 3 |
+| Plans | attack-only; hold-only; protection-heavy; support-heavy; the crew's defaults; adapted (best of a small fixed set per encounter, chosen per cell); one unchanged plan (each single plan above, used in both encounters) |
+| "Effectively as good" | within **5 points** of the adapted plan's objective success, **and** within **0.25 downed runners** per fight, **and** within **0.3 specials or consumables** per fight |
+| Rework | some unchanged plan is effectively as good as the adapted plans in **both** encounters in **at least two thirds** of the cells (crew group x setting) |
+| Proceed to playtest | in **at least two thirds** of the cells, the adapted plan beats every unchanged plan by **10+ points** of objective success **or 0.5+ fewer downed runners** in at least one encounter, and no single unchanged plan is effectively as good in both |
+| Toughness check | the Over group's gain over On level is at least twice as big in aim-heavy cells (E3) as in radio-heavy ones (decks weighted to backup and alarm), so toughness doesn't replace answering the radio |
+| Reporting | the full cell table goes to `docs/sims/`, the summary and the declared targets to CHANGELOG |
+
+## 12. Summary of the BATTLE keys
+
+```js
+BATTLE = {
+  runnerBasePips: 3, toughCool: 12, musclePips: 1, lightWoundPips: 1,
+  hit: 1, strongHit: 2, strongMargin: 10, strongMarginByDamage: { 2: 12, 3: 10, 4: 8, 5: 6 },
+  absorb: { none: 0, street: 1, pro: 2 }, droneAbsorb: 1,          // ap ignores absorb
+  cover: { open: 0, half: 2, full: 4 }, startCover: 'half', hunkerStep: 4,
+  aimStep: 2, aimFloor: 0.1, aimCeil: 0.9,
+  attackStep: -2, talkStep: 2, jamStep: 0, patchStep: 0, stabiliseStep: 2, boardStep: 0, overwatchStep: -1,
+  targetFocus: 0.5, protectFocus: 0.75,
+  lightBelow: 0.5, seriousBelow: 0.25,                             // 0 pips = critical
+  partingShotFloor: 1,
+  retreat: { heat: 1, rep: 2 }, press: { alert: 1, heat: 1 },
+  risk: { cautious: { pullAt: 'half', press: false }, steady: { pullAt: 1, press: false }, committed: { pullAt: 0, press: true } },
+  maxExtraEnemies: 2, vanRoundHeat: 1,
+  oddsRuns: 120,
+};
+FIGHTS.holdHack.deadline = 7;  FIGHTS.holdExtract.deadline = 7;  FIGHTS.holdExtract.vanRound = 3;
+CLOCKS = { alarm: { startsAt: 5, tickPerRound: 1, extraTick: 'alarm', onZero: 'addEnemy', resetTo: 3 },
+           pressure: { arriveRounds: [3, 5, 7] } };
+```

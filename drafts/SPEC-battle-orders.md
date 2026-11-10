@@ -612,6 +612,9 @@ Outcome:
 
 ## 25. Open (owner)
 
+First values for the numbers sheet and the gate's tolerances, with rule proposals where a number
+needed one: `drafts/NUMBERS-battle-orders.md` (2026-11-10, proposal).
+
 **Numbers sheet (before Step 0):**
 
 - base difficulty by encounter threat level (today a fight takes the incident's difficulty, which
