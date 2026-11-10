@@ -8,8 +8,8 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 ## 2026-11-10 · Job done is a seal
-- **The end-of-job result is now stamped like a Chinese chop.** The old tilted word is a red ink seal with a double border, four characters read down the right column then the left (任務完成 for Job done, 全身而退 for Walked away, 有人未歸 for Someone didn't come home), the English line above them, rough ink edges and a slam-down animation. Walked away is amber ink and a loss is pale bone ink. Reduced motion still turns the animation off.
-- The characters come from a 3 KB subset of Noto Serif TC Black bundled with the game (`src/ui/fonts/seal-tc.woff2`), so it works offline and on iOS.
+- **The end-of-job result is now stamped like an ink chop.** The tilted word became a red seal with a double border and rough ink edges, the result in big stacked block capitals (JOB / DONE, WALKED / AWAY, SOMEONE / DIDN'T COME / HOME) and a slam-down animation. A small line of Cantonese sits under a rule at the bottom: 搞掂 (sorted), 收手 (hands off), 未歸 (not back). Walked away is amber ink and a loss is pale bone ink. Reduced motion still turns the animation off.
+- The characters come from a 2 KB subset of Noto Serif TC Black bundled with the game (`src/ui/fonts/seal-tc.woff2`), so it works offline and on iOS.
 
 ## 2026-11-09 · The Anchor's Book (save v60)
 - **A monthly slate of the city's runners.** On the first Monday of each month the Brass Anchor Society's elders chalk letter grades, S down to D, for up to 25 runners: other tongs' people, free names and yours. Open it from the new **The Anchor's Book** card at the top of City › Tongs. It shows this month's grades, who moved (up, down, steady, new, back), who has gone quiet, and **Ones to watch**: young names to go and scout (a Scout button on each). A runner's page and a name's profile show their grade.
