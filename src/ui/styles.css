@@ -1910,11 +1910,21 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .finale--aborted .finale__card { border-top-color: var(--warn); }
 .finale--loss .finale__card { border-top-color: var(--danger); }
 .finale__kicker { margin: 0; font: 700 0.75rem var(--display); letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
-.finale__stamp { margin: 0; padding: 4px 16px; font: 700 clamp(1.6rem, 7vw, 2.4rem)/1.1 var(--display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-2); border: 3px solid currentColor;
-  transform: rotate(-3deg); animation: finale-stamp 0.4s 0.15s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
-.finale--aborted .finale__stamp { color: var(--warn); }
-.finale--loss .finale__stamp { color: var(--danger); }
-@keyframes finale-stamp { from { transform: rotate(-3deg) scale(2.2); opacity: 0; } }
+/* The result as a seal (2026-11-10): an ink chop in English, like a name chop: double border, the words
+   stacked in heavy block capitals, rough ink edges (the #seal-ink filter in renderFinale) and a slam. */
+@font-face { font-family: 'Seal'; font-weight: 900; font-display: swap; src: url('./fonts/seal-tc.woff2') format('woff2'); }
+.finale__ink { position: absolute; }
+.finale__stamp { --ink: #e0402f; position: relative; margin: 6px 0 4px; padding: 6px 12px 5px; display: grid; justify-items: center; color: var(--ink); border: 2.5px solid currentColor; outline: 1px solid currentColor; outline-offset: -6px;
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%); filter: url(#seal-ink) drop-shadow(0 0 5px color-mix(in srgb, currentColor 55%, transparent));
+  transform: rotate(-4deg); animation: finale-stamp 0.45s 0.15s cubic-bezier(0.2, 1.5, 0.4, 1) both; }
+.finale__stamp::after { content: ""; position: absolute; top: -2.5px; right: -2.5px; width: 18.5px; height: 18.5px;
+  background: linear-gradient(to top right, transparent calc(50% - 1.4px), currentColor calc(50% - 1.4px), currentColor calc(50% + 1.4px), transparent calc(50% + 1.4px)); }
+.finale--aborted .finale__stamp { --ink: var(--warn); }
+.seal__line { display: block; font: 700 clamp(1.4rem, 7.5vw, 2rem)/0.95 var(--display); letter-spacing: 0.05em; text-transform: uppercase; }
+.seal__zh { margin-top: 3px; padding-top: 3px; border-top: 2px solid currentColor; align-self: stretch; text-align: center; font: 900 0.9rem/1 'Seal', 'Noto Serif TC', 'Songti TC', serif; letter-spacing: 0.6em; text-indent: 0.6em; }
+/* A death is not stamped: a plain title that fades in slowly. */
+.finale__title { margin: 8px 0 4px; font: 700 clamp(1.3rem, 6vw, 1.7rem)/1.15 var(--display); letter-spacing: 0.12em; text-transform: uppercase; color: #c9c2b4; animation: finale-fade 1.2s 0.2s ease-out both; }
+@keyframes finale-stamp { 0% { transform: rotate(-9deg) scale(2.4); opacity: 0; } 55% { opacity: 1; } 75% { transform: rotate(-3deg) scale(0.96); } 100% { transform: rotate(-4deg) scale(1); } }
 .finale__pay { margin: 4px 0 0; display: flex; align-items: baseline; gap: 12px; font: 700 1.6rem var(--display); letter-spacing: 0.04em; }
 .finale__heat { font-size: 0.85rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
 .finale__team { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
@@ -1928,7 +1938,7 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .finale__line { margin: 0; color: var(--muted); font-size: 0.9rem; }
 .finale__btns { width: 100%; display: grid; grid-template-columns: 1fr 1.4fr; gap: 10px; margin-top: 8px; }
 .finale__btns .btn--ghost { border: 1px solid var(--line); }
-@media (prefers-reduced-motion: reduce) { .finale, .finale__card, .finale__stamp, .finale__op { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .finale, .finale__card, .finale__stamp, .finale__title, .finale__op { animation: none; } }
 
 /* The direct buzz (playtest, 2026-11-07): a heist's contact rings over any screen, then speaks.
    Sodium ringing, as the crews' call-ins on the City map. */
