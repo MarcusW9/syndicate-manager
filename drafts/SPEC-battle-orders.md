@@ -90,9 +90,7 @@ threat-answer entries), and nothing replaces it as a generic "cancel attack" act
 | Push | Work the current objective (hack, boarding) | work, board |
 | Withdraw | Disengage under the fight's safety and extraction rules | withdraw |
 
-**OPEN:** talk. The brief had talking an enemy down as an answer; it isn't one of the six duties.
-Either a face's talk-down is an attack variant (non-lethal removal, still counted in `defeated`), or
-talk is out of the prototype.
+**Talk is out of the prototype** (owner, 2026-11-10).
 
 ## 5. Incoming shots, cover and hunker
 
@@ -148,9 +146,8 @@ themselves. Protect-heavy plans don't need to be best in both encounters.
   if it lands; the plan never assumes it.
 - Armoured enemies need armour piercing to take damage (`ap` gear tag), as the numbers sheet sets.
 
-**OPEN:** once the attacks already planned on an enemy cover its remaining pips, do later attackers
-skip it (no doubling up to raise the odds) or may they pile on? This changes how attack-heavy plans
-behave in the sims, so it is settled before Step 0.
+**Owner's call (2026-11-10):** once the attacks already planned on an enemy cover its remaining
+pips (and armour), later attackers skip it. No doubling up to raise the odds.
 
 Tune against the question: **can protecting the specialist long enough to finish be better than
 eliminating every enemy first?**
@@ -199,8 +196,12 @@ says otherwise) at `pushStep`.
   3-pip runner). The UI shows each runner's threshold.
 - `press` (push past at the fight deadline) stays a risk-level property.
 
-**OPEN:** the exact pip thresholds per risk level; what an individual withdrawal costs and where the
-runner goes (clean exit, parting shots, still counts as on the job for pay and career?).
+**Owner's call (2026-11-10):** a runner withdrawing alone still takes the shots aimed at them that
+round, **can be taken below 1 pip and can die** (a runner downed while leaving alone has no one to
+drag them out). This sits against "death only after a player choice" (section 2): it needs either
+the owner's confirmation that setting the risk level or ordering a withdrawal counts as that choice,
+or a narrower rule. Step 0 found it makes cautious the deadliest risk level (`drafts/NUMBERS-battle-orders.md`
+section 12). Thresholds: first values in the numbers sheet.
 
 ## 11. Fight types, stages and clocks
 

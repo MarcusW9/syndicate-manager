@@ -285,7 +285,63 @@ To be confirmed and recorded before the sims run (spec section 24).
 | Toughness check | the Over group's gain over On level is at least twice as big in aim-heavy cells (E3) as in radio-heavy ones (decks weighted to backup and alarm), so toughness doesn't replace answering the radio |
 | Reporting | the full cell table goes to `docs/sims/`, the summary and the declared targets to CHANGELOG |
 
-## 12. Summary of the BATTLE keys
+## 12. Step 0 findings (2026-11-10)
+
+Step 0 was played by script: `node scripts/sim-step0.mjs 400 2026-11-10 first` (these values) and
+`... hard` (the same with four enemies at the start and no toughness pip). Reports:
+`docs/sims/step0-2026-11-10.md` (with ten narrated fights) and `docs/sims/step0-2026-11-10-hard.md`;
+every cell in the matching `.csv`. The rules played as written (shields, flanks, armour soak, jams,
+clocks and backup all checked in the narrated fights); the sim's own assumptions are listed at the
+top of each report.
+
+**Gate verdict: neither rework nor proceed, on either profile.**
+
+1. **These values make fights too easy.** Almost every sensible plan wins 95-100% in both
+   encounters, so adapting has nothing to beat (proceed condition met in 0% of cells). No plan is
+   universal either (the best, `mixed`, matches the adapted plan in both encounters in 57% of cells,
+   under the two-thirds line).
+2. **`toughCool: 12` gives everyone the extra pip at threat 3** (base 14, so even the Under group's
+   cool of 12 clears it). Runners have 4 pips and muscle 5, not the 3 the arithmetic in section 10
+   assumed. An absolute stat threshold can't stay a mark of toughness on a relative fight scale:
+   make it relative (cool >= base + 3) or drop it.
+3. **With teeth (the hard profile), the plans separate the way the spec wants:**
+   - holdHack: **protect** is best in nearly every cell (86-96%); attacking collapses as enemies get
+     tougher (77% -> 43% -> 25% from D1 to D3); hold-only loses (6%: nobody stops the shots at the
+     tech).
+   - holdExtract: **attack / mixed** win at D1-D2 (92-93%); at D3 attack drops to 58% and support,
+     hold and the defaults take over.
+   - So no plan is right everywhere (the most universal, `support`, matches in 28% of cells), and the
+     answer flips with the encounter and with enemy toughness. But the proceed condition is met in
+     only 31% of cells: in many cells the second-best plan is within 10 points and 0.5 downs. The
+     gate's "clearly beaten" bar (10 points or 0.5 downs per fight) may be too high for fights that
+     are already mostly won; worth a second look before the real sims.
+4. **The withdrawal rule kills more than it saves.** With a runner leaving alone able to die to the
+   shots already aimed at them, **cautious is the deadliest risk level**: hard profile, holdExtract,
+   0.48 deaths per fight on cautious against 0.18 on steady and 0 on committed; holdHack cautious
+   also abandons 63% of hacks (the tech leaves after one hit). Hold-only plans lose about a quarter of
+   a runner per fight to it. Every one of those deaths is on a hands-off fight with no fight-on
+   choice. See the decision row: this needs the owner's look before it is built.
+5. **The defaults are weak.** In holdHack (hard, D2) the crew's defaults win 62% where protect wins
+   89%: one protector on the tech isn't enough when 75% of the shots go at them. In holdExtract the
+   defaults sit with hold, well behind mixed. Defaults that lose this often to an obvious plan will
+   hurt trust on hands-off jobs.
+6. **Pacing.** Fights are short (3.5-4 rounds), so the 7-round deadline never matters. The
+   `techUnderFire` conditions almost never come up (0% on these values, 7% hard): the tech at 1 pip
+   *and* an unanswered backup shown at once is too narrow. `boardUnderFire` comes up in about 30% of
+   holdExtract fights, a reasonable rate.
+7. **Boarding is crew-wide progress** ("board: 2"), so two runners reaching the door finishes the
+   extraction even if a third didn't (the narrated fights show "everyone is in the van" with one
+   runner short). Per-runner boarding would read truer.
+8. **Toughness doesn't replace answers:** better crews gain much more in aim-heavy fights than in
+   radio-heavy ones (hard: +21 points against +6). The check is met on both profiles.
+
+**Suggested changes for the next pass (owner's call):** start from the hard profile (four enemies;
+toughness relative to the base or off); defaults with two protectors on the tech in holdHack and
+`mixed`-style orders in holdExtract; a withdrawal rule that doesn't make cautious the deadliest
+setting (the 2026-11-10 decision row lists options); a wider `techUnderFire` (tech at 1 pip *or*
+2+ shots on them); per-runner boarding; then re-run Step 0 and look again at the gate's bars.
+
+## 13. Summary of the BATTLE keys
 
 ```js
 BATTLE = {
