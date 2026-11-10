@@ -2783,6 +2783,8 @@ function renderFinale(s) {
   const SEV = ['light', 'serious', 'critical'];
   const ids = [...am.crewIds, am.overwatch?.id, am.wheels, am.standby?.joined ? null : am.standby?.id].filter(Boolean);
   const title = { completed: 'Job done', aborted: 'Walked away', loss: "Someone didn't come home" }[r.outcome] ?? 'Job over';
+  // The seal's four characters, read down the right column then down the left, like a chop (2026-11-10).
+  const seal = { completed: '任務完成', aborted: '全身而退', loss: '有人未歸' }[r.outcome] ?? '任務完成';
   const team = ids.map((id, i) => {
     const op = s.crew.find((o) => o.id === id) ?? s.memorial?.find((o) => o.id === id);
     if (!op) return '';
@@ -2804,7 +2806,8 @@ function renderFinale(s) {
     <div class="finale finale--${esc(r.outcome)}" role="dialog" aria-modal="false" aria-label="${esc(title)}">
       <div class="finale__card">
         <p class="finale__kicker">${esc(templateById(am.templateId)?.name ?? 'The job')}</p>
-        <h2 class="finale__stamp">${esc(title)}</h2>
+        <svg class="finale__ink" width="0" height="0" aria-hidden="true" focusable="false"><filter id="seal-ink" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.2" result="d"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -9 6.6" result="m"/><feComposite in="d" in2="m" operator="in"/></filter></svg>
+        <h2 class="finale__stamp"><span class="seal__en">${esc(title)}</span><span class="seal__zh" aria-hidden="true">${[...seal].map((c) => `<span>${c}</span>`).join('')}</span></h2>
         <p class="finale__pay"><span data-count="${r.pay}" data-fmt="${esc(NAMES.currency)}">${esc(money(r.pay))}</span><span class="finale__heat">Heat +${r.heatGain}</span></p>
         <ul class="finale__team">${team}</ul>
         ${r.client && r.trustChange ? `<p class="finale__line">${esc(r.client)}: trust ${r.trustChange > 0 ? '+' : ''}${r.trustChange}</p>` : ''}

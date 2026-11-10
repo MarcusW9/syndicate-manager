@@ -1910,11 +1910,19 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .finale--aborted .finale__card { border-top-color: var(--warn); }
 .finale--loss .finale__card { border-top-color: var(--danger); }
 .finale__kicker { margin: 0; font: 700 0.75rem var(--display); letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
-.finale__stamp { margin: 0; padding: 4px 16px; font: 700 clamp(1.6rem, 7vw, 2.4rem)/1.1 var(--display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-2); border: 3px solid currentColor;
-  transform: rotate(-3deg); animation: finale-stamp 0.4s 0.15s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
-.finale--aborted .finale__stamp { color: var(--warn); }
-.finale--loss .finale__stamp { color: var(--danger); }
-@keyframes finale-stamp { from { transform: rotate(-3deg) scale(2.2); opacity: 0; } }
+/* The result as a seal (2026-11-10): an ink chop with a double border, four Chinese characters read
+   down the right column then the left, the English underneath, rough ink edges (the #seal-ink filter in
+   renderFinale) and a slam. The characters are a 12-glyph subset of Noto Serif TC Black. */
+@font-face { font-family: 'Seal'; font-weight: 900; font-display: swap; src: url('./fonts/seal-tc.woff2') format('woff2'); }
+.finale__ink { position: absolute; }
+.finale__stamp { --ink: #e0402f; margin: 6px 0 4px; padding: 7px; display: grid; gap: 5px; justify-items: center; color: var(--ink); border: 3px solid currentColor; outline: 1.5px solid currentColor; outline-offset: -8px;
+  filter: url(#seal-ink); transform: rotate(-4deg); animation: finale-stamp 0.45s 0.15s cubic-bezier(0.2, 1.5, 0.4, 1) both; }
+.finale--aborted .finale__stamp { --ink: var(--warn); }
+.finale--loss .finale__stamp { --ink: #c9c2b4; }
+.seal__en { padding: 5px 12px 0; font: 700 clamp(1rem, 4.2vw, 1.25rem)/1.1 var(--display); letter-spacing: 0.2em; text-transform: uppercase; }
+.seal__zh { display: grid; grid-template-rows: 1fr 1fr; grid-auto-flow: column; direction: rtl; gap: 0 6px; padding: 2px 12px 8px; font: 900 clamp(2.6rem, 14vw, 4rem)/1.08 'Seal', 'Noto Serif TC', 'Songti TC', serif; }
+.seal__zh > span { direction: ltr; text-align: center; }
+@keyframes finale-stamp { 0% { transform: rotate(-9deg) scale(2.4); opacity: 0; } 55% { opacity: 1; } 75% { transform: rotate(-3deg) scale(0.96); } 100% { transform: rotate(-4deg) scale(1); } }
 .finale__pay { margin: 4px 0 0; display: flex; align-items: baseline; gap: 12px; font: 700 1.6rem var(--display); letter-spacing: 0.04em; }
 .finale__heat { font-size: 0.85rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
 .finale__team { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
