@@ -142,7 +142,9 @@ OTHER TONGS (2026-11-08): peers, not gangs; registered associations that compete
 work and runners and never raid a hall. Styles: loud (animal or weapon + Hand/Fist), quiet
 (weather or hour + Society), corporate (initials + Holdings/Partners), street (a canon
 place + Lot/Row/Court). Invented names only, no digits, none based in the Silt. The Brass
-Anchor Society stands beside the ladder, not on it. The Word is hedged street talk, never
+Anchor Society stands beside the ladder, not on it; its elders keep a book of runners' grades,
+chalked once a month on a slate at the Anchor's teahouse in Old Town (never the Silt): the
+elders' opinion, not the truth, and it grades people, never tongs. The Word is hedged street talk, never
 results, ranks or numbers.
 TONGS: runners swear in at the founding room above the noodle shop, regardless of their hall, by drinking tea poured by the fixer, writing their own name in the tong's ledger before the crew and altar, and leaving an offering; the ceremony has no recitation, blood, numbers or ranks, sworn names remain after departure, and long-serving runners are remembered on the wall beside the altar (the Hall of Legends), with a crew member writing each name and Joss checking the spelling.
 TONE: gritty but human. Warmth, loyalty and dark humour are the baseline; darker

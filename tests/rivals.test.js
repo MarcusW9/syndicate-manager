@@ -16,6 +16,7 @@ import { clientRivalLine, CLIENT_RIVAL_TEXT } from '../src/data/rivals.js';
 import * as M from '../src/core/mission.js';
 import { addOffer } from '../src/core/jobs.js';
 import { playMission, carefulPolicy } from './play.js';
+import { POACH_RESOLVER } from '../src/core/mobility.js';
 import { RIVALS, NAMING, WORD_TEXT, wordLine, RIVAL_HOMES, RESERVED_NAMES } from '../src/data/rivals.js';
 import { TONG_RANKS } from '../src/data/tong.js';
 import { CULTURES } from '../src/data/recruitPools.js';
@@ -224,7 +225,8 @@ test('the lines read cleanly: no doubled words, no stray punctuation, variants s
       }
     }
   }
-  for (const kind of ['took_work', 'gone_quiet', 'stepped_up']) assert.ok(all.get(kind).size >= 3, `${kind} uses several variants`);
+  // C4: a tong climbing a rung is now told as the start of a story ('rise_begin'), which replaces 'stepped_up' there.
+  for (const kind of ['took_work', 'gone_quiet', 'rise_begin']) assert.ok((all.get(kind)?.size ?? 0) >= 3, `${kind} uses several variants`);
 });
 
 test("the player's own tong moving up a rung is talked about, once, with no number", () => {
@@ -362,6 +364,22 @@ test('golden: a fixed seed gives the stored snapshot, after seeding and after 4 
   });
   const s = game(1234);
   const out = { seeded: snap(s.rivals), after4: snap(weeks(s, 4).rivals) };
+  // C4: stories and names we let go, after a SCRIPTED D3 departure (D3 needs Street rank, so the seed can't be relied on to make one).
+  const c4 = game(1234);
+  weeks(c4, 4);
+  const leaver = c4.crew[0]; const buyer = c4.rivals.tongs[0]; buyer.wealth = 80000;
+  const msg = { id: 'golden-poach', kind: 'poach', payload: { opId: leaver.id, tongId: buyer.id, expiresDay: 35, pay: 500, buyout: 1000 }, resolved: false };
+  c4.inbox.unshift(msg);
+  POACH_RESOLVER(c4, msg, 'go');
+  weeks(c4, 12, 4);
+  // C5: the Anchor's Book at week 8 (two slates: weeks 4 and 8), as letters, moves and names.
+  const c5 = weeks(game(1234), 8).rivals.book;
+  out.c5 = { month: c5.absMonth, entries: c5.entries.map((e) => `${e.grade}:${e.name}:${e.move}`), watch: c5.watch, gone: c5.gone.map((g) => g.name) };
+  out.c4 = {
+    threads: c4.rivals.threads.map((t) => ({ id: t.id, family: t.family, stage: t.stage, open: t.open })),
+    formers: c4.rivals.cards.filter((c) => c.formerOf).map((c) => ({ id: c.id, runnerId: c.runnerId, tongId: c.tongId, formerOf: c.formerOf })),
+    word: c4.rivals.word.map((w) => `${w.kind}:${w.refs.join(',')}`),
+  };
   const file = new URL('./golden/rivals-1234.json', import.meta.url);
   if (!existsSync(file)) { writeFileSync(file, JSON.stringify(out, null, 1) + '\n'); }
   assert.deepEqual(out, JSON.parse(readFileSync(file, 'utf8')));

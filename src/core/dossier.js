@@ -255,13 +255,14 @@ export function cardToOperative(state, card, { wage, level = scoutLevel(state, c
     history: [`Day ${state.day}: joined the crew`],
   });
   op.fame = d.career.fame; op.standing = d.career.standing; op.record = d.career.record;
+  op.runnerId = card.runnerId ?? card.id; // the same person, whichever side of the door they are on (v59)
   return op;
 }
 
 /** A runner as a card (part D: someone leaving): the same rating within a point or two. */
 export function operativeToCard(state, op) {
   const rating = ratingOf(op);
-  return { id: `op:${op.id}`, name: op.name, tongId: null, home: op.hall ?? HOME_HALL, role: op.role, rating, age: op.age, peak: clamp(rating + 8, rating, 95), form: 0, fame: op.fame ?? 'unknown', since: state.day };
+  return { id: `op:${op.id}`, name: op.name, tongId: null, home: op.hall ?? HOME_HALL, role: op.role, rating, age: op.age, peak: clamp(rating + 8, rating, 95), form: 0, fame: op.fame ?? 'unknown', since: state.day, runnerId: op.runnerId ?? op.id, formerOf: null };
 }
 
 /**

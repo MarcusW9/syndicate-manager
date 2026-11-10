@@ -36,6 +36,7 @@ import { createNewGame, chooseFounders } from '../core/state.js';
 import { marksText } from '../core/marks.js';
 import { recordOf } from '../core/record.js';
 import { LEGEND_TEXT } from '../data/legend.js';
+import { bookGrade } from '../core/book.js';
 import { fameOf, fameName, standingOf, standingWord, pathOf, legendProgress } from '../core/fame.js';
 import { FAME_RULES, NAMED_OFFER, NAMED_TEXT } from '../data/fame.js';
 import { templateById, jobView, nextUnlock, JOB_GATES } from '../core/jobs.js';
@@ -74,7 +75,7 @@ import {
 import { hire, haggle, passRecruit, canHire, signingFee, nextExpansion, expandSafehouse, STARTING_ROSTER_CAP, FOUNDERS_TO_PICK } from '../core/recruits.js';
 import { potentialRead, primaryStat, scoutFor, ageRate, declineChance, mentoring, changesSince, progressShare, STATS } from '../core/development.js';
 import { GROWTH_LINES, GRADUATION_LINES } from '../data/growthLines.js';
-import { renderTongs, renderWord, renderLeadName, leadNames } from './tongs.js';
+import { renderTongs, renderWord, renderLeadName, leadNames, renderGoneElsewhere } from './tongs.js';
 import { sendScout, signCard, findCard } from '../core/dossier.js';
 import { clientRival } from '../core/rivals.js';
 import { clientRivalLine } from '../data/rivals.js';
@@ -1895,7 +1896,8 @@ function renderCrew() {
       <h2>Hall of Legends</h2>
       ${(state.hall ?? []).length ? `<ul class="list list--plain">
         ${state.hall.map((m) => `<li class="fallen">${face(m, 'sm')}<span><strong>${esc(m.name)}</strong> "${esc(m.handle)}" <span class="muted">· ${esc(m.role)} · retired day ${m.day}${m.legend ? ' · a Legend' : ''}</span><br><span class="muted small">${esc(m.epitaph)}${m.record ? ` ${m.record.jobs} jobs, ${m.record.activeWeeks} active weeks.` : ''}</span>${(m.highlights ?? []).length ? `<br><span class="muted small">${esc(m.highlights[0])}</span>` : ''}</span></li>`).join('')}
-      </ul>` : '<p class="muted small">Nobody has retired yet.</p>'}`,
+      </ul>` : '<p class="muted small">Nobody has retired yet.</p>'}
+      ${renderGoneElsewhere(state)}`,
   }[tab]();
   return `
     <section class="panel">
@@ -2031,7 +2033,8 @@ function fameBadge(op) {
   const fame = fameOf(op);
   if (fame === 'unknown') return '';
   const word = fame === 'elite' ? ` · <span class="fame__standing">${esc(standingWord(op))}</span>` : '';
-  return `<p class="famebadge"><span class="fame fame--${esc(fame)}">${esc(fameName(fame))}</span> · ${esc(op.tier ?? '')}${word}</p>`;
+  const slate = bookGrade(state, op.runnerId ?? op.id);
+  return `<p class="famebadge"><span class="fame fame--${esc(fame)}">${esc(fameName(fame))}</span> · ${esc(op.tier ?? '')}${word}${slate ? ` · <span class="muted">Anchor's slate ${esc(slate)}</span>` : ''}</p>`;
 }
 
 /** Their path (core/fame.js) and how far it is to Elite and Legend; the numbers behind a tap. */
@@ -2191,7 +2194,7 @@ const definingHandle = (v) => (v.defining ? state.crew.find((o) => o.id === v.de
 function rivalRemark(v) {
   const job = state.jobs.find((j) => j.id === v.jobId);
   const rv = job && v.client ? clientRival(state, job, v.tpl) : null;
-  return rv ? `<p class="small muted clientrival">${esc(clientRivalLine({ client: v.client.name, tong: rv.tong, jobId: v.jobId }))}</p>` : '';
+  return rv ? `<p class="small muted clientrival">${esc(clientRivalLine({ client: v.client.name, tong: rv.tong, jobId: v.jobId, mood: rv.mood }))}</p>` : '';
 }
 const namedVars = (v) => ({ op: namedHandle(v), pct: Math.round(NAMED_OFFER.payBonus * 100) });
 const fillNamed = (text, v) => text.replace(/\{(\w+)\}/g, (m, k) => namedVars(v)[k] ?? m);

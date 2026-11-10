@@ -3,6 +3,7 @@
 // (scouting, what it would take, Sign) is on Crew › Leads (renderLeadName, leadNames; navigation rework 2026-11-09). Reads `rivalView`
 // only: word keys in, wording from data/rivals.js out. No numbers, no order beyond tier.
 import { rivalView } from '../core/rivals.js';
+import { bookView, bookGrade } from '../core/book.js';
 import { readFor, approachFor, findCard, scoutLevel } from '../core/dossier.js';
 import { availability } from '../core/crew.js';
 import { dossierOf } from '../core/dossier.js';
@@ -10,7 +11,7 @@ import { portrait } from './art.js';
 import { money } from '../core/money.js';
 import { TONG_RANKS } from '../data/tong.js';
 import { NAMES } from '../config/names.js';
-import { RATING_WORDS, FAME_LINE, STYLE_TEXT, ELDER_LINE, POTENTIAL_TEXT, SCOUT_LEVEL_TEXT, SIGN_REASON, fill, wordLine } from '../data/rivals.js';
+import { BOOK_TEXT, RATING_WORDS, FAME_LINE, STYLE_TEXT, ELDER_LINE, POTENTIAL_TEXT, SCOUT_LEVEL_TEXT, SIGN_REASON, fill, wordLine } from '../data/rivals.js';
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const tierName = (id) => TONG_RANKS.find((r) => r.id === id)?.name ?? id;
@@ -27,6 +28,54 @@ export function renderWord(state) {
   const lines = rivalView(state).word.map(wordText).filter(Boolean);
   if (!lines.length) return '';
   return `<div class="theword" aria-label="The Word"><p class="theword__title">The Word</p>${lines.map((l) => `<p class="theword__line">${esc(l)}</p>`).join('')}</div>`;
+}
+
+/** People who left us for another tong or for the street (C4.3): name, where they are now, a fame word. Never a rating. '' when nobody has. */
+export function renderGoneElsewhere(state) {
+  const gone = rivalView(state).gone;
+  if (!gone.length) return '';
+  return `<h2>Gone elsewhere</h2>
+    <ul class="list list--plain streetnames" aria-label="Gone elsewhere">${gone.map((n) => `
+      <li class="streetname">
+        <span class="streetname__face">${faceOfCard(state, n.id, 32)}</span>
+        <span class="streetname__who"><strong>${esc(n.name)}</strong></span>
+        <span class="small muted">${esc([n.role, FAME_LINE[n.fame], n.tong ?? 'between tongs'].filter(Boolean).join(' · '))}</span>
+      </li>`).join('')}</ul>`;
+}
+
+/** The Anchor's Book (C5): this month's slate, S to D, names in order inside a grade, Ones to watch. Letters and words, never a number. */
+function bookPage(state, back) {
+  const v = bookView(state);
+  const where = (n) => (n.yours ? 'Yours' : n.tong ?? (n.free ? 'Between tongs' : ''));
+  const opIdOf = (n) => state.crew.find((o) => o.name === n.name)?.id;
+  const nameBtn = (n) => (n.yours && opIdOf(n) ? `<button class="namebtn" data-action="open-op" data-id="${esc(opIdOf(n))}">${esc(n.name)}</button>`
+    : n.id ? `<button class="namebtn" data-action="tong-name" data-id="${esc(n.id)}">${esc(n.name)}</button>` : `<span class="namebtn">${esc(n.name)}</span>`);
+  const groups = v.groups.map((g) => `<h2 class="bookgrade">${esc(g.grade)}</h2>
+    <ul class="list list--plain streetnames" aria-label="Grade ${esc(g.grade)}">${g.entries.map((n) => `
+      <li class="streetname ${n.yours ? 'is-own' : ''}">
+        <span class="streetname__who">${nameBtn(n)}${n.yours ? ' <span class="tongtag">Ours</span>' : ''}</span>
+        <span class="small muted">${esc([where(n), BOOK_TEXT.moves[n.move]].filter(Boolean).join(' · '))}</span>
+      </li>`).join('')}</ul>`).join('');
+  const watch = v.watch.length ? `<h2>Ones to watch</h2>
+    <ul class="list list--plain streetnames" aria-label="Ones to watch">${v.watch.map((n) => `
+      <li class="streetname ${n.yours ? 'is-own' : ''}">
+        <span class="streetname__who">${nameBtn(n)}</span>
+        <span class="small muted">${esc(where(n))}</span>
+        ${n.id && !n.yours ? `<button class="btn" data-action="lead-name" data-id="${esc(n.id)}">Scout ›</button>` : ''}
+      </li>`).join('')}</ul>` : '';
+  const quiet = v.gone.length ? `<p class="small muted">Gone quiet this month: ${esc(v.gone.map((g) => g.name).join(', '))}.</p>` : '';
+  return `<section class="panel tongs bookpage">
+    <button class="linkbtn" data-action="back">‹ ${esc(back)}</button>
+    <h1 class="cityhead">The Anchor's Book</h1>
+    <p class="small muted">${esc(BOOK_TEXT.note)}</p>
+    ${v.published ? groups + watch + quiet : `<p class="small">${esc(BOOK_TEXT.empty)}</p>`}
+  </section>`;
+}
+
+/** Where a runner stands on the slate, as a line ('' when they are not on it). */
+export function bookLine(state, runnerId) {
+  const g = bookGrade(state, runnerId);
+  return g ? `On the Anchor's slate: ${g}.` : '';
 }
 
 /** A name's portrait, drawn from the runner they would be (the same hash as when signed, so the face doesn't change). */
@@ -48,7 +97,7 @@ function namesList(state, names) {
   return `<ul class="list list--plain streetnames" aria-label="Names on the street">${names.map((n) => `
     <li class="streetname ${n.own ? 'is-own' : ''}">
       <span class="streetname__face">${n.own ? faceOfOurs(state, n.name) : faceOfCard(state, n.id)}</span>
-      <span class="streetname__who"><strong>${esc(n.name)}</strong>${n.own ? ' <span class="tongtag">Ours</span>' : ''}</span>
+      <span class="streetname__who"><strong>${esc(n.name)}</strong>${n.own ? ' <span class="tongtag">Ours</span>' : ''}${n.former ? ' <span class="tongtag">Yours, once</span>' : ''}</span>
       <span class="small muted">${esc([n.role, FAME_LINE[n.fame], n.tong ?? (n.own ? 'with us' : 'between tongs')].filter(Boolean).join(' · '))}</span>
       <span class="small">${esc(ratingLine(n).replace(/^./, (c) => c.toUpperCase()))}.</span>
     </li>`).join('')}</ul>`;
@@ -97,8 +146,9 @@ function freeNamesBlock(state, view) {
 
 /** The top of a name's page, shared by the City profile and the Leads page: who they are, who they are with, what the street says. */
 function nameHead(state, card, r) {
+  const slate = bookLine(state, card.runnerId ?? card.id);
   return `<div class="namehead">${faceOfCard(state, card.id, 104)}<div><h1 class="cityhead">${esc(r.name)}</h1>
-    <p class="small">${esc([r.role, FAME_LINE[r.fame], r.tong ? `with ${r.tong}` : r.from ? `lately of ${r.from}` : 'between tongs'].join(' · '))}. ${esc(fill(RATING_WORDS[r.word] ?? '', { role: r.role, home: inText(r.home) }).replace(/^./, (c) => c.toUpperCase()))}.</p></div></div>`;
+    <p class="small">${esc([r.role, FAME_LINE[r.fame], r.tong ? `with ${r.tong}` : r.from ? `lately of ${r.from}` : 'between tongs'].join(' · '))}. ${esc(fill(RATING_WORDS[r.word] ?? '', { role: r.role, home: inText(r.home) }).replace(/^./, (c) => c.toUpperCase()))}.</p>${slate ? `<p class="small muted">${esc(slate)}</p>` : ''}</div></div>`;
 }
 
 /** What scouting has shown so far (the same words wherever a name is read). */
@@ -182,11 +232,13 @@ export function leadNames(state) {
 /** City › Tongs: dossier cards by tier, then Names on the street. `openId` opens one tong's page, or `name:<id>` a name's profile. */
 export function renderTongs(state, openId = null, back = 'City') {
   const view = rivalView(state);
+  if (openId === 'book') return bookPage(state, back);
   if (openId?.startsWith('name:')) return nameProfile(state, openId.slice(5), back);
   if (openId) { const page = tongPage(state, view, openId, back); if (page) return page; }
   return `<section class="tongs">
     <h2 class="tongs__title">The other tongs</h2>
     <p class="small muted">Peers, not gangs: they work, hire and rise like us, and the city talks about them. Nobody keeps a table; you hear where you stand.</p>
+    <button class="tongcard bookcard" data-action="tong-page" data-id="book" data-style="elder"><span class="tongcard__what"><span class="tongcard__name">The Anchor's Book</span><span class="small muted">${esc(bookView(state).published ? 'The elders\' slate for this month' : BOOK_TEXT.empty)}</span></span></button>
     ${freeNamesBlock(state, view)}
     ${view.tiers.map(({ tier, tongs }) => `<h2 class="tongs__tier">${esc(tierName(tier))} tongs</h2><ul class="list list--plain tongs__list">${tongs.map(tongCard).join('')}</ul>`).join('')}
     <h2>Names on the street</h2>
