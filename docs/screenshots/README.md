@@ -22,6 +22,7 @@ Then add a row to the top of the table below and commit the folder with the chan
 
 | Date | Version | Commit | What's new on screen | Folder |
 | --- | --- | --- | --- | --- |
+| 2026-11-10 | Job done seal, cut corner and glow; no stamp for a loss | (this change; supersedes the two rows below) | `16-mission-end.png`: the Job done chop with a cut corner and a faint glow. A loss and Walked away are not in the script's run; the tests and CSS cover them. |  [`2026-11-10-job-done-seal-hybrid/`](2026-11-10-job-done-seal-hybrid/) |
 | 2026-11-10 | Job done seal, English first | (this change; supersedes the row below) | `16-mission-end.png`: the result stacked in big block capitals in the ink chop, with a small Cantonese caption (搞掂) under a rule. |  [`2026-11-10-job-done-seal-english/`](2026-11-10-job-done-seal-english/) |
 | 2026-11-10 | Job done as a seal | (this change) | The end-of-job card (`16-mission-end.png`): the result is a red ink chop with four Chinese characters and the English title, instead of a tilted word. |  [`2026-11-10-job-done-seal/`](2026-11-10-job-done-seal/) |
 | 2026-11-09 | Compound view after merging main's raid warning pass | (the merge commit) | Old Town at 390 and 1180 with Hall art on: the hall page now shows main's Threats card (Hold the hall / Clear out, who is at the hall) with a threat line and the raiders' ways in on the plan. | [`2026-11-09-compound-merged/`](2026-11-09-compound-merged/) |

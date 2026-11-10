@@ -2784,8 +2784,13 @@ function renderFinale(s) {
   const ids = [...am.crewIds, am.overwatch?.id, am.wheels, am.standby?.joined ? null : am.standby?.id].filter(Boolean);
   const title = { completed: 'Job done', aborted: 'Walked away', loss: "Someone didn't come home" }[r.outcome] ?? 'Job over';
   // The result stacked in block capitals like a chop, one word group a line (2026-11-10).
-  const zh = { completed: '搞掂', aborted: '收手', loss: '未歸' }[r.outcome] ?? '搞掂'; // Cantonese: sorted, hands off, not back
-  const lines = { completed: ['Job', 'Done'], aborted: ['Walked', 'Away'], loss: ['Someone', "didn't come", 'home'] }[r.outcome] ?? ['Job', 'Over'];
+  const zh = { completed: '搞掂', aborted: '收手' }[r.outcome] ?? '搞掂'; // Cantonese: sorted, hands off
+  const lines = { completed: ['Job', 'Done'], aborted: ['Walked', 'Away'] }[r.outcome] ?? ['Job', 'Over'];
+  // A death is never stamped (2026-11-10): that outcome gets a plain, quiet title instead of a chop.
+  const heading = r.outcome === 'loss'
+    ? `<h2 class="finale__title">${esc(title)}</h2>`
+    : `<svg class="finale__ink" width="0" height="0" aria-hidden="true" focusable="false"><filter id="seal-ink" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.2" result="d"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -9 6.6" result="m"/><feComposite in="d" in2="m" operator="in"/></filter></svg>
+        <h2 class="finale__stamp">${lines.map((l) => `<span class="seal__line">${esc(l)}</span> `).join('')}<span class="seal__zh" aria-hidden="true">${zh}</span></h2>`;
   const team = ids.map((id, i) => {
     const op = s.crew.find((o) => o.id === id) ?? s.memorial?.find((o) => o.id === id);
     if (!op) return '';
@@ -2807,8 +2812,7 @@ function renderFinale(s) {
     <div class="finale finale--${esc(r.outcome)}" role="dialog" aria-modal="false" aria-label="${esc(title)}">
       <div class="finale__card">
         <p class="finale__kicker">${esc(templateById(am.templateId)?.name ?? 'The job')}</p>
-        <svg class="finale__ink" width="0" height="0" aria-hidden="true" focusable="false"><filter id="seal-ink" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.2" result="d"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -9 6.6" result="m"/><feComposite in="d" in2="m" operator="in"/></filter></svg>
-        <h2 class="finale__stamp" data-lines="${lines.length}">${lines.map((l) => `<span class="seal__line">${esc(l)}</span> `).join('')}<span class="seal__zh" aria-hidden="true">${zh}</span></h2>
+        ${heading}
         <p class="finale__pay"><span data-count="${r.pay}" data-fmt="${esc(NAMES.currency)}">${esc(money(r.pay))}</span><span class="finale__heat">Heat +${r.heatGain}</span></p>
         <ul class="finale__team">${team}</ul>
         ${r.client && r.trustChange ? `<p class="finale__line">${esc(r.client)}: trust ${r.trustChange > 0 ? '+' : ''}${r.trustChange}</p>` : ''}

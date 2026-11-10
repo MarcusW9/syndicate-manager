@@ -8,7 +8,8 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 
 
 ## 2026-11-10 · Job done is a seal
-- **The end-of-job result is now stamped like an ink chop.** The tilted word became a red seal with a double border and rough ink edges, the result in big stacked block capitals (JOB / DONE, WALKED / AWAY, SOMEONE / DIDN'T COME / HOME) and a slam-down animation. A small line of Cantonese sits under a rule at the bottom: 搞掂 (sorted), 收手 (hands off), 未歸 (not back). Walked away is amber ink and a loss is pale bone ink. Reduced motion still turns the animation off.
+- **The end-of-job result is stamped like an ink chop.** The tilted word became a red seal: rough ink edges, a double border with one cut corner like the game's panels, a faint neon glow, the result in stacked block capitals (JOB / DONE, WALKED / AWAY) and a slam-down animation. A small line of Cantonese sits under a rule: 搞掂 (sorted) and 收手 (hands off). Walked away is amber. Reduced motion turns the animation off.
+- **A death is not stamped.** "Someone didn't come home" is a plain title in pale type that fades in slowly, with no chop and no slam.
 - The characters come from a 2 KB subset of Noto Serif TC Black bundled with the game (`src/ui/fonts/seal-tc.woff2`), so it works offline and on iOS.
 
 ## 2026-11-09 · The Anchor's Book (save v60)
