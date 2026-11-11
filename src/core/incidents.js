@@ -107,11 +107,12 @@ export function bestSave({ victim, able, overwatch, overwatchOp, zone, diff }) {
  * (slice 3): at max alert they can join the inside team (the alert stays up); for someone badly
  * hurt they can go in, get them out and take their place.
  */
-export function decisionChoices(pending, { patient = null, standby = null, raid = false } = {}) {
+export function decisionChoices(pending, { patient = null, standby = null, raid = false, engine2 = false } = {}) {
   // A fight's call-ins (slice 6; core/battle.js). At death's door the safe way is listed first.
   // In a raid on a hall (core/raids.js) pulling back is walking out the back: the hall's costs.
   const pullBack = raid ? 'Everyone gets out the back stairs (a parting shot can hurt, never kill). We lose what was kept there, pay for repairs, and the hall is shut for a week.'
-    : `Everyone comes home. No pay, heat +${BATTLE.retreat.heat}, reputation −${BATTLE.retreat.rep}, and the guards get a parting shot as you run (it can hurt, never kill).`;
+    : engine2 ? `Everyone comes home. No pay, heat +${BATTLE.retreat.heat}, reputation −${BATTLE.retreat.rep}. No parting shots: the whole crew pulls back together.`
+      : `Everyone comes home. No pay, heat +${BATTLE.retreat.heat}, reputation −${BATTLE.retreat.rep}, and the guards get a parting shot as you run (it can hurt, never kill).`;
   if (pending.kind === 'door') {
     const who = patient?.handle ?? 'them';
     return [

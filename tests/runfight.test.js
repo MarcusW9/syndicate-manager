@@ -275,6 +275,24 @@ test('left behind: missing for a week, back badly hurt (slice 1; the rescue and 
   assert.equal(op.condition.injury, 'serious', 'and back badly hurt');
 });
 
+test('the missing week is counted from the day the job finishes, however long the job ran', () => {
+  const s = atFight(9, 'warehouse', 'never', 'committed');
+  const am = s.activeMission;
+  const b = am.battle;
+  b.stage = 1; b.goal.vanLeaves = b.round + 1; b.round += 1; b.drawn = false; b.risk.level = 'steady';
+  b.enemies.forEach((e) => { e.out = true; });
+  const [a, ...rest] = b.runners;
+  a.down = true; a.pips = 0; a.downRound = b.round; a.stable = true;
+  for (const r of rest) r.aboard = true;
+  s.day += 1; // the job runs on: it finishes a day after the fight
+  const finishDay = s.day;
+  const done = autoRun(s, 'steady');
+  const op = done.crew.find((o) => o.id === a.id);
+  assert.equal(op.condition.missing.until, finishDay + FIGHT.missingDays);
+  assert.equal(op.condition.awayUntil, finishDay + FIGHT.missingDays, 'a full week missing');
+  assert.equal(op.condition.injuryDays, FIGHT.missingDays + 14);
+});
+
 test('an engine-2 death reaches the memorial through finish()', () => {
   let found = false;
   for (let seed = 1; seed <= 400 && !found; seed++) {
@@ -332,4 +350,38 @@ test('an engine-1 fight in progress (a v60 save tagged engine 1) finishes on the
   const done = autoRun(loaded, 'steady');
   assert.equal(done.activeMission.done, true);
   assert.ok(done.activeMission.events.some((e) => e.kind === 'battle' && e.phase === 'round' && e.lines.some((l) => l.kind === 'guard' || l.kind === 'shoot')));
+});
+
+// --- review fixes (PR 129) ----------------------------------------------------------------------------------
+
+test('a pushed-on runner a medic stabilises is no longer untreated (engine 1\'s rule), so they cannot die at finish()', () => {
+  const s = findCall('warehouse', 'door', { orders: 'steady', to: 400 });
+  assert.ok(s);
+  const id = s.activeMission.pending.opId;
+  const pushed = M.resolvePending(s, 'fight');
+  assert.ok(pushed.activeMission.untreated.includes(id));
+  pushed.activeMission.battle.runners.find((r) => r.id === id).stable = true; // the medic got to them
+  const next = M.runBattle(pushed);
+  assert.ok(!next.activeMission.untreated.includes(id), 'out of the untreated list');
+  assert.equal(next.crew.find((o) => o.id === id).condition.injury, 'serious');
+});
+
+test('someone who died in the fight is not also rolled for as untreated: one death, one memorial entry, no "pulls through"', () => {
+  const s = atFight(4, 'warehouse', 'never');
+  const am = s.activeMission;
+  const x = am.battle.runners[0];
+  x.dead = true; x.fightOn = true;
+  am.fightDead = [x.id]; am.untreated = [x.id];
+  const out = M.pullBack(s);
+  assert.equal(out.activeMission.result.deaths.length, 1);
+  assert.equal(out.memorial.filter((m) => m.id === x.id).length, 1, 'one memorial entry');
+  assert.ok(!out.activeMission.log.some((l) => /pulls through/.test(l.text)), 'the dead do not pull through');
+});
+
+test('engine 2\'s pull-back cost says what it does: no parting shots', async () => {
+  const { decisionChoices } = await import('../src/core/incidents.js');
+  const text = (engine2) => decisionChoices({ kind: 'door' }, { patient: { handle: 'Vex' }, engine2 }).find((c) => c.exit).cost;
+  assert.match(text(true), /No parting shots/);
+  assert.doesNotMatch(text(true), /guards get a parting shot/);
+  assert.match(text(false), /parting shot/);
 });

@@ -22,7 +22,7 @@ import { ALERT_MAX } from './incidents.js';
 import { overwatchOf } from './battle.js';
 import { FIGHT, FIGHT_JOBS } from '../data/fights.js';
 import { DILEMMAS } from '../data/dilemmas.js';
-import { lineText } from '../data/fightText.js';
+import { lineText } from './fighttext.js';
 import * as Fight from './fight.js';
 import { actors, overwatchOp, driver, standbyReady, opById, grow, record, takeWhy, addNeural } from './run.js';
 import { currentStep, advance, exitRun } from './mission.js';
@@ -123,6 +123,11 @@ function playOn(state, am, rng) {
     if (r.neural) addNeural(opById(state, b.overwatch.id), r.neural);
   }
   am.extraHeat += r.heat;
+  // Someone dying who has been stabilised is back to a serious wound and out of danger (engine 1's rule, core/runbattle.js).
+  for (const x of b.runners.filter((y) => y.stable && !y.dead && (am.untreated ?? []).includes(y.id))) {
+    am.untreated = am.untreated.filter((id) => id !== x.id);
+    setInjury(opById(state, x.id), 'serious');
+  }
   for (const l of lines) if (l.actor && GROWS[l.kind] && l.roll) grow(state, am, opById(state, l.actor), GROWS[l.kind], XP.incident);
   const up = enemiesLeft(b);
   const text = `Round ${b.round}: ${up ? `${up} still up` : 'nobody left shooting'}.`;
@@ -162,7 +167,7 @@ function fightInjuries(state, am, b) {
     if (!op) continue;
     if (o.dead) { out(op.id); hurt.push({ id: op.id, handle: op.handle, severity: 'dead' }); continue; }
     if (o.missing) {
-      am.missing = [...(am.missing ?? []), { id: op.id, until: state.day + FIGHT.missingDays, down: o.down }];
+      am.missing = [...(am.missing ?? []), { id: op.id, down: o.down }]; // the week is counted from the day the job finishes (mission.js finish)
       out(op.id); hurt.push({ id: op.id, handle: op.handle, severity: 'missing' });
       continue;
     }
