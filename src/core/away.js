@@ -15,6 +15,7 @@
 
 import { templateById } from './jobs.js';
 import { closeMission, resolvePending } from './mission.js';
+import { expiryAnswer } from './runfight.js';
 import { autoStep, needsPlayer, dayDone, beatsByDay } from './autorun.js';
 
 export { dayDone };
@@ -62,7 +63,7 @@ export function advanceAway(prev) {
       j.waiting = false;
       for (const m of s.inbox) if (m.kind === 'callin' && m.payload?.jobId === j.mission.jobId) { m.resolved = true; m.read = true; }
       s.activeMission = j.mission;
-      s = resolvePending(s, 'carryOn');
+      s = resolvePending(s, expiryAnswer(j.mission.pending));
       j.mission = s.activeMission;
       s.activeMission = null;
     }

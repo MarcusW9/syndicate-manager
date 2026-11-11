@@ -70,7 +70,7 @@ Section names are the headings in the code. "(x)" marks something that shows onl
 
 **Jobs** (`renderJobs`)
 - Sub-tabs. Board: runners strip (collapsible), job board (job cards with flags). Clients: a row each (trust, jobs on the board), and a client's page (`renderClientPage`). Heists: the heist card (`renderHeist`). Side: the side board (the scout rows for free names are gone: scouting is on Crew › Leads).
-- Plan (`renderPlan`): the plan grid holds the approach, the squad board, the orders chips and the risk card, with the client box (and a rival remark) beside them. The plan bar at the bottom has the Send / Watch live buttons, the risk read and the tries count.
+- Plan (`renderPlan`): the plan grid holds the approach, the squad board, the orders chips and the risk card, with the client box (and a rival remark) beside them. On the five engine-2 jobs a **fight block** (`renderFightPlan`, `ui/fightscreen.js`) leads the risk card: the fight type and objective, likely enemies, gaps (no jammer, no medic, no armour on the tech), each runner's order and pull-out threshold, the risk picker (the same chips as "On their own") and the chance of losing someone. The plan bar at the bottom has the Send / Watch live buttons, the risk read and the tries count.
 - Squad board (`ui/board.js`): Inside team (moves as one group), Outside (optional), Wheels card with getaway risk, Joss's picks, the coverage read. A runner picker sheet lists "Who's on …?" in groups by fit, plus "Not free today".
 - Side-work plan (`renderSidePlan`): Who goes (up to n), checkbox picker, the Clients list.
 
@@ -78,7 +78,7 @@ Section names are the headings in the code. "(x)" marks something that shows onl
 
 **Save** (`renderSettings`): New game in slot n (difficulty), Slots (Play / New / Delete), Backups (export and import).
 
-**Watch** (`renderMission`, `ui/watch.js`): site map with the crew moving on it, the feed beside it (phones stack them), crisis choices, the face-off (`ui/duel.js`), command-fight orders (`ui/fightorders.js`), call-ins from away crews, finale and direct-buzz screens, the end card, then the report in the feed.
+**Watch** (`renderMission`, `ui/watch.js`): site map with the crew moving on it, the feed beside it (phones stack them), crisis choices, the face-off (`ui/duel.js`), command-fight orders (`ui/fightorders.js` for engine 1; `ui/fightscreen.js` for the five engine-2 jobs: the round screen, the call-in cards), call-ins from away crews, finale and direct-buzz screens, the end card, then the report in the feed.
 
 ## Moves (one line per move, newest first)
 

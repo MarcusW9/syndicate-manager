@@ -438,6 +438,7 @@ function holds(b, cond) {
     if (k === 'vanLastRound') { if ((b.round === b.goal.vanLeaves && boardingStage(b) && !b.vanHeld) !== v) return false; continue; }
     if (k === 'outsideAtLeast') { if (standing(b).length + outsideDown(b).length < v) return false; continue; }
     if (k === 'radioShown') { if (b.threats.some((t) => RADIO(t) && !t.cancelled) !== v) return false; continue; }
+    if (k === 'protectedCanJam') { if (!!(prot && present(prot) && prot.jammer) !== v) return false; continue; }
     if (!prot || !present(prot)) return false; // the rest are about the specialist
     if (k === 'pipsAtMost' && !(prot.pips <= v)) return false;
     if (k === 'pipsAtMostShare' && !(prot.pips <= prot.max * v)) return false;
@@ -466,10 +467,17 @@ export function dueDilemmas(b) {
   return out;
 }
 
+/** Is this dilemma option offered right now? An option with `requires` needs those conditions to hold. Never draws. */
+export const optionAvailable = (b, opt) => !opt?.requires || holds(b, { of: 'protected', ...opt.requires });
+
 /** The enemy a radio call comes from: the lowest-numbered backup, else alarm. */
 const backupSource = (b) => (b.threats.filter((t) => t.kind === 'backup' && !t.cancelled)[0] ?? b.threats.filter((t) => t.kind === 'alarm' && !t.cancelled)[0])?.enemy ?? null;
 
-/** Apply a dilemma option's ordersPatch to the orders (selectors: all, others, protected, exposed, bestAttacker, bestProtector, backupSource). Returns the ids changed. */
+/**
+ * Apply a dilemma option's ordersPatch to the orders (selectors: all, others, protected, exposed, bestAttacker, bestProtector, backupSource).
+ * Returns the ids changed. The change lasts one resolved round: the orders it replaces are kept in b.override and
+ * playRound puts them back at the round's end (expireOverride), unless the player has since set that runner's order.
+ */
 export function applyPatch(b, patch) {
   if (!patch) return [];
   const prot = b.goal.protect ? runner(b, b.goal.protect) : null;
@@ -488,6 +496,8 @@ export function applyPatch(b, patch) {
   const apply = (r, p) => {
     const target = p.target === 'backupSource' ? backupSource(b) : p.target === 'exposed' ? exp[0]?.target ?? null : p.target;
     const old = orderOf(b, r);
+    b.override ??= { prev: {} };
+    if (!(r.id in b.override.prev)) b.override.prev[r.id] = structuredClone(b.orders[r.id] ?? null); // the raw order (null: the crew's default)
     const next = { ...old, duty: p.duty, target, byStage: null };
     if (b.orders[r.id]?.byStage) b.orders[r.id] = { ...b.orders[r.id], byStage: { ...b.orders[r.id].byStage, [b.stage]: next } };
     else b.orders[r.id] = next;
@@ -500,7 +510,30 @@ export function applyPatch(b, patch) {
 
 /** Set the crew-wide risk level and the orders of one runner by hand (Take Command; orders are validated by the screen). */
 export function setRisk(b, level) { b.risk = { level }; }
-export function setOrder(b, id, ord) { b.orders[id] = { priority: PRIORITY, fallback: null, byStage: null, ...ord }; }
+export function setOrder(b, id, ord) {
+  b.orders[id] = { priority: PRIORITY, fallback: null, byStage: null, ...ord };
+  if (b.override) delete b.override.prev[id]; // an order the player sets stands: the call-in's change no longer undoes it
+}
+
+/**
+ * The order a runner would have if the player changed their duty and target now, for setOrder: it edits the order for
+ * the stage the fight is in and keeps everything else (the crew's stage plan, priority, fallback), so changing a
+ * holdExtract runner's duty in the holding stage does not lose the switch to boarding. Pure; changes nothing.
+ */
+export function editOrder(b, id, { duty, target = null }) {
+  const r = runner(b, id);
+  const cur = b.orders[id] ?? defaultOrderFor(b, r);
+  const here = orderOf(b, r);
+  const next = { ...here, duty, target, byStage: null, fallback: duty === here.duty ? here.fallback : null }; // a new duty drops the old duty's fallback
+  return cur.byStage ? { ...cur, byStage: { ...cur.byStage, [b.stage]: next } } : next;
+}
+
+/** A call-in's order change is over once its round is resolved: put back the orders it replaced (nothing to restore in a fight that has ended). */
+function expireOverride(b) {
+  if (!b.override) return;
+  if (!b.end) for (const [id, was] of Object.entries(b.override.prev)) { if (was) b.orders[id] = was; else delete b.orders[id]; }
+  delete b.override;
+}
 
 // --- one round -------------------------------------------------------------------------------------
 
@@ -728,6 +761,7 @@ export function playRound(b, rng) {
   result.unanswered = b.threats.filter((t) => !t.cancelled && !t.shieldedBy && (t.kind === 'aim' || RADIO(t))).map((t) => ({ threat: t.id, target: t.target }));
   b.drawn = false;
   checkEnd(b, rng, say);
+  expireOverride(b);
   result.ended = b.end;
   // The heat since the last round was reported, including the early van, which startRound adds before playRound (core/runfight.js calls it first).
   result.heat = b.heat - (b.heatReported ?? 0);
@@ -799,8 +833,8 @@ export function outcomeOf(b) {
  * arguments). { win, down, dead, left }. Hands-off on the orders given (the crew's defaults), at the risk level given.
  */
 export function fightOddsFor(args, { builds = 6, runs = 20 } = {}) {
-  const acc = { win: 0, down: 0, dead: 0, left: 0 };
-  if (!args.crew.length) return { win: 0, down: 1, dead: 0, left: 0 };
+  const acc = { win: 0, down: 0, dead: 0, left: 0, lost: 0 };
+  if (!args.crew.length) return { win: 0, down: 1, dead: 0, left: 0, lost: 0 };
   for (let i = 0; i < builds; i++) {
     const r = fightOdds(buildFight(args, makeRng(0xf1647 + i * 104729)), runs);
     for (const k of Object.keys(acc)) acc[k] += r[k] / builds;
@@ -815,6 +849,26 @@ export function playFight(b, rng, maxRounds = 30) {
   return b;
 }
 
+/**
+ * The van call-in's read (leave on time or hold): how often someone who is outside now ends up left behind, each way, played
+ * with the same round function on fixed seeds from the fight as it stands (orders, risk and the drawn threats as they are).
+ * { outside: [ids], leaveOnTime, hold } as shares. Not cached (the fight's state changes round to round); never touches the run's stream.
+ */
+export function vanOdds(b0, runs = FIGHT.oddsRuns) {
+  const outside = [...standing(b0), ...outsideDown(b0)].map((r) => r.id);
+  const read = (hold) => {
+    let left = 0;
+    for (let i = 0; i < runs; i++) {
+      const b = structuredClone(b0);
+      b.vanHold = hold;
+      playFight(b, makeRng(0x7a11 + i * 7919));
+      if (outside.some((id) => b.left.includes(id))) left += 1;
+    }
+    return left / runs;
+  };
+  return { outside, leaveOnTime: read(false), hold: read(true) };
+}
+
 const oddsCache = new Map();
 
 /**
@@ -823,10 +877,10 @@ const oddsCache = new Map();
  * someone was left behind). The planning read shows these; shown = used.
  */
 export function fightOdds(b0, runs = FIGHT.oddsRuns) {
-  if (!b0.runners.length) return { win: 0, down: 1, dead: 0, left: 0 };
+  if (!b0.runners.length) return { win: 0, down: 1, dead: 0, left: 0, lost: 0 };
   const key = JSON.stringify([b0.type, b0.diff, b0.risk, b0.goal, b0.enemies.map((e) => [e.kind, e.pips, e.cover, e.deck]), b0.runners.map((r) => [r.id, r.pips, r.max, r.absorb, r.ap, r.strong, r.jammer, r.healer, Object.values(r.stats).map((s) => s.value)]), b0.orders, b0.overwatch && [b0.overwatch.value, b0.overwatch.damage, b0.overwatch.left], !!b0.wheels, !!b0.standby, runs]);
   if (oddsCache.has(key)) return oddsCache.get(key);
-  const n = { win: 0, down: 0, dead: 0, left: 0 };
+  const n = { win: 0, down: 0, dead: 0, left: 0, lost: 0 };
   for (let i = 0; i < runs; i++) {
     const b = structuredClone(b0);
     playFight(b, makeRng(0x5eed + i * 7919));
@@ -834,8 +888,9 @@ export function fightOdds(b0, runs = FIGHT.oddsRuns) {
     if (b.runners.some((r) => r.down || r.dead)) n.down += 1;
     if (b.runners.some((r) => r.dead)) n.dead += 1;
     if (b.left.length) n.left += 1;
+    if (b.runners.some((r) => r.dead) || b.left.length) n.lost += 1; // someone died or was left behind (the plan's "chance of losing someone")
   }
-  const out = { win: n.win / runs, down: n.down / runs, dead: n.dead / runs, left: n.left / runs };
+  const out = { win: n.win / runs, down: n.down / runs, dead: n.dead / runs, left: n.left / runs, lost: n.lost / runs };
   if (oddsCache.size > 2000) oddsCache.clear();
   oddsCache.set(key, out);
   return out;

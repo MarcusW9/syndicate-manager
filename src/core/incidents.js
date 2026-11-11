@@ -12,6 +12,7 @@ import { crewRoll, effectiveStat } from './crew.js';
 import { successChance, rollTarget } from './risk.js';
 import { overwatchKit, baseKit } from './gear.js';
 import { BATTLE } from '../data/battle.js';
+import { FIGHT } from '../data/fights.js';
 
 export { ZONES, ALERT_MAX };
 export const incidentById = (id) => INCIDENTS[id] ?? null;
@@ -111,7 +112,7 @@ export function decisionChoices(pending, { patient = null, standby = null, raid 
   // A fight's call-ins (slice 6; core/battle.js). At death's door the safe way is listed first.
   // In a raid on a hall (core/raids.js) pulling back is walking out the back: the hall's costs.
   const pullBack = raid ? 'Everyone gets out the back stairs (a parting shot can hurt, never kill). We lose what was kept there, pay for repairs, and the hall is shut for a week.'
-    : engine2 ? `Everyone comes home. No pay, heat +${BATTLE.retreat.heat}, reputation −${BATTLE.retreat.rep}. No parting shots: the whole crew pulls back together.`
+    : engine2 ? `Everyone comes home. No pay, heat +${FIGHT.retreat.heat}, reputation −${FIGHT.retreat.rep}. No parting shots: the whole crew pulls back together.`
       : `Everyone comes home. No pay, heat +${BATTLE.retreat.heat}, reputation −${BATTLE.retreat.rep}, and the guards get a parting shot as you run (it can hurt, never kill).`;
   if (pending.kind === 'door') {
     const who = patient?.handle ?? 'them';

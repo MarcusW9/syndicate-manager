@@ -22,7 +22,7 @@ import { ALERT_MAX } from './incidents.js';
 import { overwatchOf } from './battle.js';
 import { FIGHT, FIGHT_JOBS } from '../data/fights.js';
 import { DILEMMAS } from '../data/dilemmas.js';
-import { lineText, nameList } from './fighttext.js';
+import { lineText, nameList, chanceWord } from './fighttext.js';
 import * as Fight from './fight.js';
 import { actors, overwatchOp, driver, standbyReady, opById, grow, record, takeWhy, addNeural } from './run.js';
 import { currentStep, advance, exitRun } from './mission.js';
@@ -80,9 +80,22 @@ export function startFight(state, am, tpl, inc, id, zone, diff, able, { ambush =
   am.report = [...(am.report ?? []), text];
   am.queue.splice(am.step + 1, 0, { type: 'battle' });
   advance(state);
+  drawAhead(state, am);
 }
 
 // --- playing a round -------------------------------------------------------------------------------
+
+/** Does this fight wait for the player's orders each round? The same rule as core/autorun.js needsPlayer: not hands-off, not handed off, not an away crew without command. */
+export const waitsForOrders = (am) => !!am.battle && am.callIn !== 'never' && !am.battle.auto && !(am.away && !am.away.command);
+
+/**
+ * A fight that waits for orders draws the coming round's threats first, so the screen can show what each enemy means
+ * to do (and the chances) before the player gives orders. Hands-off and away fights draw when the round is played, as ever.
+ */
+function drawAhead(state, am) {
+  const b = am.battle;
+  if (b && !b.end && !b.drawn && waitsForOrders(am)) b.startLines.push(...Fight.startRound(b, nextRng(state)));
+}
 
 /**
  * Play the fight's next round (the same call as engine 1's runBattle). change: Take Command at the round's
@@ -145,7 +158,7 @@ const GOES_ON = new Set(['won', 'lostRunner', 'leftBehind']);
 function afterRound(state, am) {
   const b = am.battle;
   const end = b.end;
-  if (!end) return state;
+  if (!end) { drawAhead(state, am); return state; }
   // Death's door: someone went down and the crew would pull back. A watched crew asks first (the player's call;
   // the death rule); a hands-off one pulls back on its own, as hands-off crews always have.
   if (end.result === 'extracted' && am.callIn !== 'never') {
@@ -198,7 +211,7 @@ function endFight(state, am) {
   const hurt = fightInjuries(state, am, b);
   const text = b.end.text;
   const report = `${text}${hurt.length ? ` ${hurtLine(hurt)}.` : ' Nobody badly hurt.'}`;
-  record(am, { kind: 'battle', phase: 'end', how: b.end.result, text, report, hurt, ...fightSnapshot(b) });
+  record(am, { kind: 'battle', phase: 'end', how: b.end.result, text, cause: text, report, hurt, ...fightSnapshot(b) });
   am.log.push({ kind: hurt.length ? 'bad' : 'good', text: report });
   am.report = [...(am.report ?? []), report];
   am.battle = null;
@@ -220,13 +233,13 @@ function endFight(state, am) {
  * Pull back from a fight: an exit, so everyone comes home (anyone left dying is saved by it). No parting shots (spec 30);
  * the job, its pay, heat and reputation are the cost, as in engine 1 (owner's calls, 2026-10-29).
  */
-function retreatFight(state, am, { text, choice, why }) {
+function retreatFight(state, am, { text, choice, why, cause = text }) {
   const b = am.battle;
   const hurt = fightInjuries(state, am, b);
   am.payCut = Math.max(am.payCut, 1);
   am.extraHeat += FIGHT.retreat.heat;
   am.repCut = (am.repCut ?? 0) + FIGHT.retreat.rep;
-  record(am, { kind: 'battle', phase: 'retreat', text, lines: [], hurt, forced: false, ...fightSnapshot(b) });
+  record(am, { kind: 'battle', phase: 'retreat', text, cause, lines: [], hurt, forced: false, ...fightSnapshot(b) });
   am.battle = null;
   const report = `The crew pulled back from the fight. ${text}.${hurt.length ? ` ${hurtLine(hurt)}.` : ''} No pay, heat +${FIGHT.retreat.heat}, reputation −${FIGHT.retreat.rep}.`;
   exitRun(state, am, { text, choice, why, report });
@@ -238,8 +251,8 @@ export function pullBackFight(prev) {
   const am0 = prev.activeMission;
   if (!am0?.battle || am0.battle.engine !== 2 || currentStep(am0)?.type !== 'battle' || am0.pending || am0.critical) return prev;
   const state = structuredClone(prev);
-  Fight.pullBack(state.activeMission.battle);
-  return retreatFight(state, state.activeMission, { text: 'You call the crew back', choice: 'They pull back', why: 'You called them back.' });
+  const end = Fight.pullBack(state.activeMission.battle);
+  return retreatFight(state, state.activeMission, { text: 'You call the crew back', choice: 'They pull back', why: 'You called them back.', cause: end.text });
 }
 
 // --- call-ins ----------------------------------------------------------------------------------------
@@ -250,16 +263,25 @@ function slotsFor(b, due) {
 }
 
 /** The choices of a dilemma call-in: its authored options (placeholder wording), then Pull back, which every call-in offers. */
-export function fightChoices(pending) {
+export function fightChoices(pending, b) {
   const d = DILEMMAS[pending.id];
   // The hold's length and heat are the rules' numbers, so the trade-off lines read them (also for a call-in saved before they were slots).
   const slots = { rounds: FIGHT.holdRounds, heat: FIGHT.holdHeat, ...pending.slots };
+  // The van call shows the odds of leaving whoever is outside, each way (core/fight.js vanOdds: the round function, fixed seeds).
+  const van = pending.id === 'vanCantWait' && b ? Fight.vanOdds(b) : null;
+  const oddsOf = (id) => (van && (id === 'goNow' || id === 'hold') ? lineText('callin.leaveOdds', { chance: chanceWord(id === 'hold' ? van.hold : van.leaveOnTime) }) : '');
   const said = (key) => { const t = lineText(key, slots); return t === key ? '' : t; }; // keeping the orders needs no trade-off line
   return [
-    ...d.options.map((o) => ({ id: o.id, label: lineText(`dilemma.${pending.id}.${o.id}`, slots), tradeoff: said(`dilemma.${pending.id}.${o.id}.tradeoff`), cost: o.cost ? lineText('callin.cost', { heat: o.cost.heat }) : '', push: false })),
+    ...d.options.filter((o) => !b || Fight.optionAvailable(b, o)).map((o) => ({ id: o.id, label: lineText(`dilemma.${pending.id}.${o.id}`, slots), tradeoff: said(`dilemma.${pending.id}.${o.id}.tradeoff`), odds: oddsOf(o.id), cost: o.cost ? lineText('callin.cost', { heat: o.cost.heat }) : '', push: false })),
     { id: 'out', label: lineText('callin.pullBack'), cost: lineText('callin.pullBackCost', { heat: FIGHT.retreat.heat, rep: FIGHT.retreat.rep }), exit: true },
   ];
 }
+
+/** The answer the standing orders give when an away crew's call-in runs out at the end of its day: the van goes on time, anything else carries on. */
+export const expiryAnswer = (pending) => (pending.id === 'vanCantWait' ? 'goNow' : 'carryOn');
+
+/** The van call's outside list, for the card: the people not aboard, as handles. */
+const pendingOutside = (am) => (am.pending.id === 'vanCantWait' ? [...Fight.standing(am.battle), ...am.battle.runners.filter((r) => r.down && !r.aboard && !r.dead && !r.withdrawn)].map((r) => r.handle) : []);
 
 /** What a dilemma call-in shows: what changed, the options, the crew's health. */
 export function describeFightPending(state) {
@@ -267,8 +289,8 @@ export function describeFightPending(state) {
   const b = am.battle;
   const snap = fightSnapshot(b);
   return {
-    kind: 'dilemma', text: lineText(`dilemma.${am.pending.id}.changed`, am.pending.slots), choices: fightChoices(am.pending).map((c) => ({ ...c, available: true, risk: c.exit ? 'safe' : null })),
-    standby: null, fight: { runners: snap.runners.map((r) => ({ handle: r.handle, hp: r.hp, max: r.max, down: r.down })), guards: snap.guards.map((g) => ({ n: g.n, hp: g.hp, max: g.max, out: g.out })) },
+    kind: 'dilemma', text: lineText(`dilemma.${am.pending.id}.changed`, am.pending.slots), choices: fightChoices(am.pending, b).map((c) => ({ ...c, available: true, risk: c.exit ? 'safe' : null })),
+    standby: null, outside: pendingOutside(am), fight: { runners: snap.runners.map((r) => ({ handle: r.handle, hp: r.hp, max: r.max, down: r.down })), guards: snap.guards.map((g) => ({ n: g.n, hp: g.hp, max: g.max, out: g.out })) },
   };
 }
 
@@ -293,7 +315,8 @@ export function fightAnswer(am) {
 export function resolveFightDecision(state, am, choice, view) {
   const b = am.battle;
   const why = takeWhy(am);
-  if (choice.exit) return retreatFight(state, am, { text: view.text, choice: choice.label, why });
+  // Pulling back at a call-in: the cause line is the fight's own (someone down, or the crew pulled back).
+  if (choice.exit) return retreatFight(state, am, { text: view.text, choice: choice.label, why, cause: lineText(am.pending.kind === 'door' ? 'end.extracted' : 'end.pulledBack') });
   if (am.pending.kind === 'door') {
     // Keep fighting with them down: the push-on rule (they could die, am.untreated), and they bleed in the fight.
     const x = b.runners.find((r) => r.id === am.pending.opId);
@@ -307,18 +330,18 @@ export function resolveFightDecision(state, am, choice, view) {
     am.log.push({ kind: 'bad', text: report });
     am.report = [...(am.report ?? []), report];
     am.pending = null;
+    drawAhead(state, am);
     return state; // the next round is the run's next step
   }
   // A dilemma. Revalidate first: if the situation has passed, the answer is discarded and the crew carries on.
   const id = am.pending.id;
   const opt = DILEMMAS[id].options.find((o) => o.id === choice.id);
-  const holds = Fight.dilemmaHolds(b, id);
+  const holds = Fight.dilemmaHolds(b, id) && Fight.optionAvailable(b, opt);
   let report = `The crew carried on.`;
   let heat = 0;
   if (holds && opt) {
     if (opt.ordersPatch) Fight.applyPatch(b, opt.ordersPatch);
     if (opt.vanWait) { b.vanHold = !!opt.vanWait.hold; if (opt.vanWait.hold) heat = opt.cost?.heat ?? 0; }
-    else if (id === 'vanCantWait') b.vanHold = false; // "carry on" is going on time
     report = `${choice.label}.`;
   }
   record(am, { kind: 'decision', text: view.text, choice: choice.label, why, report, choiceCost: heat ? { heat } : {} });

@@ -544,3 +544,15 @@ lines until it gets its own; a test keeps every district complete.
 2. **The duplicate van choice.** "Leave on time" and "Keep current orders" do the same thing. Either drop one or make them differ. Whichever stays, the text keeps this: leaving on time still plays the round, so runners can board before the van departs.
 3. **`callin.deadline`.** The key exists, no call-in uses it (the holdHack deadline ends the fight, spec 30). Decide whether to give it a consumer or remove it.
 
+### Task 13: status after slice 2 (2026-11-11)
+
+**Wired and no longer held** (now in `src/data/fightText.js`, read by the screens): the plan-screen lines, the risk-picker labels and explanations, the button text (Next round, Change orders, Auto fight, Pull back), the call-in lead-in "The crew is set to:", and the plural kind words (for "Likely enemies"). Three lines are Claude's, because the screens needed them and the owner's text had none: "Likely enemies: {kinds}.", "{who} can jam radio calls.", "If the tech jams, they stop working the hack that round." Plus the call-in lines "Outside: {outside}." and "Chance anyone outside is left behind: {chance}." Owner to skim.
+
+**Done:** `{chance}` and `{pips}` come from the screens with units and the right singular or plural ("60%", "1 pip", "2 pips"), tested; the jam eligibility, one-round overrides, the two-option van call and the removal of `callin.deadline` are in (see the DESIGN.md row, 2026-11-11, "Battle rework slice 2").
+
+**Still open:**
+- **Special actions button:** in the approved list, not built: the engine has no specials (nothing for a button to fire). Needs the owner's call on what specials are before it exists.
+- **"Chance of losing someone"** counts someone killed *or left behind* (missing for 7 days). On cautious and steady the risk line says a death only follows a call you make; the chance can still be above zero there, from being left behind. Owner: is "losing someone" the right word, or should the line say "killed or left behind"?
+- **The radio option ("Hit the caller")** is still offered when no radio call is shown (the dilemma can fire on two shots at the tech). Its text says "if one is shown". Owner: offer it only with a call, as the jam now is?
+- The 360px checks were run on the captures in `docs/screenshots/2026-11-11-battle-orders/` (round, one-pip threat, tech under fire, death's door, van with someone outside, plan block): no horizontal overflow and no tap under 44px at 360 and 390 wide. They were checked on those still captures, not played through on a device.
+

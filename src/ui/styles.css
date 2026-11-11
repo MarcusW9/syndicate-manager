@@ -2126,3 +2126,64 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .raidsheet .stack { margin-top: 10px; }
 .threat__top { display: flex; gap: 10px; align-items: center; }
 .hallthreat { margin: 0 0 6px; padding: 0; list-style: none; }
+
+/* --- Engine 2's screens (ui/fightscreen.js; battle rework slice 2): the round screen, the call-ins and the plan's fight block.
+   Phone first (360px): one column, 44px taps, a cut corner on the panel, display caps for structure. Nothing is hover-only. */
+.fs { display: grid; gap: 8px; border: 1px solid var(--line); background: linear-gradient(var(--panel-2), var(--panel)); padding: 12px; clip-path: polygon(0 0, calc(100% - var(--cut, 10px)) 0, 100% var(--cut, 10px), 100% 100%, 0 100%); min-width: 0; padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+.fs--plan { margin: 0 0 12px; }
+.fs-title { margin: 0; font: 700 0.95rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-2); }
+.fs-h { margin: 4px 0 0; font: 700 0.74rem var(--display); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+.fs-goal { margin: 0; display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: baseline; font-size: 0.86rem; color: var(--muted); }
+.fs-goal b { font: 700 0.9rem var(--display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--text); }
+.fs-dots { color: var(--accent-2); letter-spacing: 0.1em; }
+.fs-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.fs-enemy, .fs-runner { display: grid; gap: 3px; border: 1px solid var(--line); background: var(--panel-2); padding: 6px 8px; min-width: 0; clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 0 100%); }
+.fs-enemy.is-out, .fs-runner.is-off { opacity: 0.55; }
+.fs-runner.is-sel { border-color: var(--accent-2); background: #12262a; }
+.fs-enemy__top, .fs-runner__top { display: flex; align-items: center; gap: 8px; min-width: 0; flex-wrap: wrap; }
+.fs-enemy strong, .fs-runner strong { font: 700 0.86rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; overflow-wrap: anywhere; min-width: 0; }
+.fs-runner__top .face { width: 28px; height: 28px; flex: none; }
+.fs-pips { display: inline-flex; gap: 1px; margin-left: auto; flex: none; }
+.fs-pips i { display: block; width: 8px; height: 10px; background: #262c38; }
+.fs-pips i.is-on { background: #5fe0a5; }
+.fs-tag { font: 700 0.62rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; padding: 0 4px; border: 1px solid var(--accent-2); color: var(--accent-2); font-style: normal; }
+.fs-state, .fs-enemy small { color: var(--warn); font-size: 0.74rem; }
+.fs-threats { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.fs-threat { font-size: 0.86rem; line-height: 1.35; padding-left: 8px; border-left: 2px solid var(--accent); overflow-wrap: anywhere; }
+.fs-threat--flank, .fs-threat--backup, .fs-threat--alarm { border-left-color: var(--warn); }
+.fs-order { font-size: 0.86rem; } .fs-order small { color: var(--muted); font: 600 0.66rem var(--display); letter-spacing: 0.12em; text-transform: uppercase; }
+.fs-intent { font-size: 0.86rem; color: var(--text); line-height: 1.35; overflow-wrap: anywhere; }
+.fs-shots { color: #ff8a98; font-size: 0.78rem; } .fs-thr { color: var(--muted); font-size: 0.74rem; }
+.fs-ifnothing { border-left: 2px solid var(--accent-2); padding: 2px 0 2px 10px; display: grid; gap: 2px; }
+.fs-ifnothing b { font: 700 0.72rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.fs-ifnothing p { margin: 0; font-size: 0.86rem; line-height: 1.35; }
+.fs-seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+.fs-segbtn, .fs-chip, .fs-duty { min-height: 44px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); font: 700 0.82rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; padding: 4px 8px; clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 0 100%); }
+.fs-segbtn.is-on, .fs-chip.is-on, .fs-duty.is-on { border-color: var(--accent-2); color: var(--accent-2); background: #12262a; }
+.fs-chip.is-set { border-color: var(--warn); }
+.fs-riskdesc { margin: 4px 0 0; font-size: 0.82rem; color: var(--muted); line-height: 1.4; } .fs-riskdesc b { color: var(--warn); }
+.fs-panel { display: grid; gap: 6px; border-top: 1px solid var(--line); padding-top: 8px; }
+.fs-chips, .fs-targets { display: flex; flex-wrap: wrap; gap: 4px; }
+.fs-duties { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+.fs-link { min-height: 44px; background: none; border: 0; color: var(--accent-2); font: 600 0.82rem var(--display); letter-spacing: 0.08em; text-align: left; cursor: pointer; padding: 0; }
+.fs-last { font-size: 0.82rem; color: var(--muted); } .fs-last summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+.fs-last p { margin: 2px 0 0; color: var(--text); } .fs-last .tone--bad { color: #ff8a98; }
+.fs-bar { display: grid; gap: 6px; } .fs-bar .btn { min-height: 44px; }
+.fs-bar--confirm, .fs-confirm .fs-bar { grid-template-columns: 1fr 1fr; }
+.fs-bar__more { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.fs-bar .btn--ghost { border: 1px solid var(--line); background: var(--panel-2); padding: 4px 6px; text-align: center; font: 700 0.78rem var(--display); letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.15; }
+.fs-next { font: 700 0.95rem var(--display); letter-spacing: 0.12em; text-transform: uppercase; } .fs-next small { opacity: 0.8; }
+.fs-confirm p { margin: 0 0 6px; font-size: 0.86rem; }
+.fs-changed { margin: 0; font-size: 0.95rem; line-height: 1.4; }
+.fs-outside { margin: 0; color: var(--warn); font-size: 0.86rem; }
+.fs-mini { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 0.8rem; }
+.fs-mini li { display: inline-flex; align-items: center; gap: 6px; } .fs-mini li.is-off { opacity: 0.6; } .fs-mini .fs-pips { margin-left: 0; }
+.fs-lead { margin: 0; font: 700 0.72rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.fs-intents { margin: 0; padding-left: 18px; font-size: 0.84rem; line-height: 1.4; display: grid; gap: 2px; }
+.fs-choice { display: grid; gap: 4px; text-align: left; min-height: 44px; }
+.fs-tradeoff { font-size: 0.84rem; color: var(--text); line-height: 1.35; font-weight: 400; }
+.fs-cost { font: 700 0.78rem var(--display); letter-spacing: 0.08em; color: var(--warn); }
+.fs-choice--exit .fs-tradeoff { color: var(--muted); }
+.fs-planline { margin: 0; font-size: 0.92rem; } .fs-muted { margin: 0; font-size: 0.84rem; color: var(--muted); line-height: 1.4; }
+.fs-gaps { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; } .fs-gaps li { font-size: 0.84rem; border-left: 2px solid var(--warn); padding-left: 8px; line-height: 1.35; }
+.fs-loss { margin: 0; font-size: 0.9rem; }

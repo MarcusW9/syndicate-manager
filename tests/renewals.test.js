@@ -103,7 +103,10 @@ test('refusal makes them unhappy: -1 in the risk read and the real roll, then th
 
 test('no death without push on, with renewals in the game', () => {
   for (let seed = 1; seed <= 20; seed++) {
-    const { deaths } = playWeeks(4, seed, { ...randomPolicy(seed), critical: (opts) => (opts.includes('stabilise') ? 'stabilise' : 'extract') });
+    // Never push on: keeping on fighting at death's door ('fight') is the player's accepted risk, and a death after it is allowed. The random picks
+    // move whenever a call-in's options change, so this policy takes the other way out there instead of leaving it to the seed.
+    const random = randomPolicy(seed);
+    const { deaths } = playWeeks(4, seed, { ...random, critical: (opts) => (opts.includes('stabilise') ? 'stabilise' : 'extract'), pending: (opts, g) => random.pending(opts.filter((o) => o !== 'fight'), g) });
     assert.equal(deaths, 0, `seed ${seed}`);
   }
 });
