@@ -63,6 +63,7 @@ what the prototype has to show.
 
 ## 3. Terms
 
+- **Endurance:** a runner's physical attribute (1-20), the source of their pips (section 10a).
 - **Pips:** individual health for runners and enemies, small integers. Triggers use pip counts
   (`pipsAtMost: 1`); risk thresholds are defined in pips (section 10).
 - **Threat:** what an enemy will do this round, drawn and shown before orders resolve, with **its
@@ -203,6 +204,27 @@ the owner's confirmation that setting the risk level or ordering a withdrawal co
 or a narrower rule. Step 0 found it makes cautious the deadliest risk level (`drafts/NUMBERS-battle-orders.md`
 section 12). Thresholds: first values in the numbers sheet.
 
+## 10a. Endurance (the physical attribute, 2026-11-11)
+
+- **One physical attribute, endurance (1-20)**, visible on the runner's page. It replaces the
+  brief's cool threshold (`toughCool`), which counted cool twice (cool already lowers the chance of
+  being hit) and, as an absolute number on a fight scale that rises with the work, ended up giving
+  everyone the extra pip at threat 3. It also replaces the muscle role's pip: the role is a job, the
+  body is endurance (muscle recruits roll high endurance instead).
+- **In fights:** max pips = 3, +1 at endurance 13, +2 at 17, -1 for a light injury, plus trait
+  bonuses. Endurance is read against itself, not against the fight's difficulty: it is the person,
+  not the job.
+- **Outside fights (a later slice; numbers OPEN):** how fast fatigue builds and recovers, how fast
+  injuries heal, holding up on multi-day away work, and decline with age, so it decides enough to
+  pass the stat-usage rule (`drafts/PLAN-stat-usage.md`).
+- **Strength and speed are traits, not attributes.** Proposals: *Strong* (a shield also gives the
+  protector +1 absorb), *Quick* (+1 to boarding; can move and act in the same round), *Iron lungs*
+  (fatigue builds slower on away jobs). Speed gets a second look as an attribute if the on-foot
+  escape is built and movement decides fights.
+- **Generation and growth (OPEN):** every runner (crew, free names, rival tongs' runners) gets a
+  seeded endurance in the v61 migration, by role; Step 0 used about 14 for muscle and 11 for
+  everyone else, spread about 2.5. It grows slowly and falls with age.
+
 ## 11. Fight types, stages and clocks
 
 ```js
@@ -336,6 +358,12 @@ withdrawn -> objective abandoned, extract; deadline -> call-in (push past or pul
   - **OPEN:** the response window for same-day jobs (a same-day run plays its fight in one tick) and
     for away jobs (`dayDone`).
 - Pacing guide: 2-4 meaningful decisions per commanded fight (not a quota).
+- **Hooks for leadership and judgment (later slice, `drafts/PROPOSAL-leadership.md`):** on an
+  unwatched fight, the crew lead settles some dilemmas before calling you (how many: leadership),
+  and when a call-in expires the lead picks an option instead of "carry on" (which one: the lead's
+  judgment, with a good lead choosing the option with the better shown outcome). The resolver stays
+  deterministic and keeps following the orders; these only answer authored dilemmas. The prototype
+  builds neither, but the call-in code leaves room for a lead's answer.
 - **Dilemmas are authored.** Each has explicit conditions; the engine evaluates only those. It never
   infers "serious danger" or "exceptional risk". Situations worth authoring: a serious threat with no
   response assigned; an exceptional risk despite one; a real conflict between safety, progress and
@@ -405,7 +433,7 @@ All numbers are **provisional** until the numbers sheet (section 25) settles the
 ```js
 // data/battle.js BATTLE (prototype keys)
 BATTLE = {
-  runnerBasePips: 3, toughCool: 14, musclePips: 1, lightWoundPips: 1,
+  runnerBasePips: 3, endurancePips: [[17, 2], [13, 1]], lightWoundPips: 1,
   hit: 1, strongHit: 2,                      // OPEN: when a hit is strong
   armourAbsorb: { light: 1, heavy: 2 },      // hits absorbed per fight; OPEN: against ap
   cover: { open: 0, half: 2, full: 4 }, startCover: 'half', hunkerStep: 4,
@@ -418,7 +446,7 @@ BATTLE = {
           committed: { pullAtPips: 0, press: true } },
   oddsRuns: 120,
 };
-// maxPips = runnerBasePips + (cool >= toughCool ? 1 : 0) + (role muscle ? musclePips : 0)
+// maxPips = runnerBasePips + (endurance >= 17 ? 2 : endurance >= 13 ? 1 : 0)
 //   + trait bonuses - (light injury ? lightWoundPips : 0). Combat never changes max pips.
 
 ENEMIES = {
@@ -528,7 +556,8 @@ round (shown = used).
 ## 22. Save, migration and what stays
 
 - **Save v60 -> v61.** v60 is taken (the Anchor's Book, #124); the brief's "v59 -> v60" and the
-  amendment's "migration v60" are corrected here.
+  amendment's "migration v60" are corrected here. The same migration gives every runner (crew, free
+  names, rival tongs' runners) a seeded endurance (section 10a); no existing stat changes.
 - **Fights in progress at upgrade (proposal, owner to confirm):** tag them `engine: 1` and let them finish on the old code, which
   stays in the repo for raids anyway, instead of resolving them inside `save.js` at load (that would
   run combat in the storage layer and move `rngCounter`). New fights get `engine: 2`.
@@ -564,7 +593,9 @@ round (shown = used).
 - Dilemmas: fire once per situation; evaluated only on their authored conditions; revalidated
   before applying; expire -> carry on; the per-day cap never blocks withdraw, fallback or risk;
   every call-in offers Pull back; no fixed names in authored text.
-- Pips: the max-pips formula; absorb used up correctly.
+- Pips: the max-pips formula from endurance; absorb used up correctly.
+- Endurance: every runner has one after migration, the same for the same save; cool no longer
+  changes pips.
 - Engine 1 fights in a v60 save finish unchanged after migration to v61.
 
 ## 24. Validation and the implementation gate
@@ -613,40 +644,57 @@ Outcome:
 
 ## 25. Open (owner)
 
-First values for the numbers sheet and the gate's tolerances, with rule proposals where a number
-needed one: `drafts/NUMBERS-battle-orders.md` (2026-11-10, proposal).
+First values and rule proposals: `drafts/NUMBERS-battle-orders.md`. Step 0 findings: its section
+12. Updated 2026-11-11.
 
-**Numbers sheet (before Step 0):**
+**Settled (owner, 2026-11-10 and 11):** planned damage that covers an enemy stops later attackers;
+talk out; overwatch one attack a round; smoke = cover +1 step for everyone; the early van costs +1
+heat; a runner withdrawing alone takes the shots aimed at them and can die (scope still open, A3);
+endurance as the one physical attribute, with strength and speed as traits (section 10a).
 
-- base difficulty by encounter threat level (today a fight takes the incident's difficulty, which
-  scales with the job's tier);
-- the incoming-shot formula and the aim step;
-- attack difficulty; enemy durability by kind;
-- strong-hit conditions; armour absorb against `ap`;
-- `toughCool`; armour absorb by tier; enemy decks and counts per threat;
-- risk thresholds in pips;
-- each clock's effect, reset and limit; each fight type's deadline; the driver's shift on `vanRound`;
-- the boarding dilemma's exposure threshold `X`.
+**A. Before the next Step 0 pass** (each changes how a fight plays):
 
-**Decisions:**
+1. **Base difficulty profile:** the numbers sheet as written, or four enemies at the start (the
+   "hard" profile). With endurance, the first values still let protect, support and the defaults win 84-100% of holdHack fights and most plans 90%+ of holdExtract.
+2. **The default-orders rule.** Proposal: holdHack, two protectors on the technician and the rest
+   support or attack by capability (support if medic, or jammer with tech at least combat); holdExtract,
+   one protector on the lowest-pips runner and the rest attack, then board. Today's defaults lose
+   clearly to obvious plans.
+3. **How far the withdrawal death rule reaches** (it sits against "death only after a player
+   choice"; cautious is the deadliest level). Options: death only when the player ordered the
+   withdrawal by hand; a downed withdrawer at death's door, not dead; withdrawing before the shots
+   resolve; or as is, with the owner confirming that setting the risk level is the choice.
+4. **`techUnderFire` conditions:** wider (tech at 1 pip *or* two or more shots on them) so it comes
+   up (2-6% of fights now).
+5. **Boarding:** per runner (each must reach the door) or crew-wide progress (today: two successes
+   finish it, even with a runner short).
+6. **The sim's assumptions** (listed at the top of each Step 0 report): what a jam does to drones;
+   an alarm in a pressure fight; whether specials cost an action; parting shots on a crew pull-back;
+   a runner down while boarding = retreat; the deadline always fails the objective (pressing on);
+   sidearm aim bonuses.
+7. **The gate's bars:** "clearly beaten" at 10 points or 0.5 downs a fight may be too high for
+   fights that are mostly won.
+8. **Endurance numbers:** +1 pip at 13 and +2 at 17; dropping the muscle role's pip.
 
-- planned damage that already covers an enemy's pips: do later attackers skip it, or pile on?
-  (section 7);
-- talk: an attack variant or out of the prototype (section 4);
-- smoke's effect without a generic cancel (section 19);
-- what overwatch does now (section 19);
-- `vanRound`'s cost (section 11);
-- what an individual withdrawal costs and where the runner goes (section 10);
-- the priority word list (section 12);
-- the fixed default-orders rule (section 12);
-- the trigger grammar and `ordersPatch` selectors (section 16);
+**B. Before code** (they don't change a paper fight):
+
+- the trigger grammar and `ordersPatch` selectors (section 16); the priority word list (section 12);
 - the call-in response window for same-day and away jobs (section 16);
-- the gear mapping from today's sidearms and armour (section 19);
-- whether `fleeBelow` is side-wide (section 19); whether down still counts as critical;
-- the validation gate's tolerances and settings (section 24);
+- the gear mapping from today's sidearms and armour (numbers sheet section 4, proposal);
+- `fleeBelow` side-wide; down still counts as critical;
+- tagging fights in progress `engine: 1` at upgrade (section 22);
 - which 2-3 existing jobs use each fight type;
-- whether one-off per-runner actions are ever added (after the playtest);
-- `defeated` counts talk-downs and non-lethal attacks (recommended yes, as Phase 1).
+- endurance: generation by role (crew, free names, rivals), growth and age decline, its place on the
+  runner's page, and whether the Anchor's Book and worth read it.
+
+**C. After the playtest:**
+
+- one-off per-runner actions; more fight types and enemy kinds; raids on the new engine
+  (`defendHall`);
+- endurance's off-fight uses (fatigue, healing, away jobs, age), with numbers;
+- leadership and judgment (`drafts/PROPOSAL-leadership.md`, with the hooks in section 16);
+- speed as an attribute, only if the on-foot escape is built and movement decides fights;
+- `defeated` counts non-lethal attacks (recommended yes).
 
 ## 26. How this was reconciled (2026-11-10)
 
@@ -688,3 +736,23 @@ Play holdHack then holdExtract: once commanded, once fully hands-off with a dile
 - **Attribution:** can I explain how my crew and orders shaped the result?
 - **Tension:** did I face a genuinely difficult decision?
 - **Trust:** when I let it run, did the crew follow my intent reasonably, even when it lost?
+
+## 29. Roadmap (2026-11-11)
+
+1. **Settle list A** (section 25), then **Step 0 again** (`scripts/sim-step0.mjs`), with the owner
+   playing three or four of its fights by hand for feel. Repeat until the gate says proceed or
+   rework. A decision row records the outcome.
+2. **Settle list B.**
+3. **Slice 1, the engine (save v61):** endurance on every runner (migration, recruits, free names,
+   rivals, the runner's page); `data/battle.js` keys, `ENEMIES`, `THREATS`, `FIGHTS`, `CLOCKS`,
+   `data/dilemmas.js`; the resolver, round, previews and `fightOdds` as engine 2; fights in progress
+   stay engine 1; the tests in section 23. Wired to the two fight types on the chosen jobs only;
+   every other fight and raids stay on engine 1.
+4. **Slice 2, the screens:** plan screen orders, the round screen, call-ins and the report
+   (section 20), phone first; screenshots and CHANGELOG.
+5. **Slice 3, the sims on the real code:** `scripts/sim-orders.mjs` against the gate declared in
+   section 24; results in CHANGELOG.
+6. **Playtest** (section 28): attribution, tension, trust. Then decide list C's first items: per-runner
+   actions, more fight types, moving more jobs and raids to engine 2, retiring engine 1.
+7. **Attributes:** endurance's off-fight uses, then leadership and judgment as their own slice, then
+   the stat-usage sim again for all three new attributes.

@@ -55,8 +55,7 @@ gunners (no medic); (c) tech, face, medic, gunner (no muscle). The jammer goes t
 | Key | Value | Notes |
 | --- | --- | --- |
 | `runnerBasePips` | 3 | |
-| `toughCool` | **12** | was 14. No fresh runner has more than 9 cool, so 14 would rarely happen before a long career; 12 is a grown runner with good cool |
-| `musclePips` | 1 | muscle role |
+| `endurancePips` | **+1 at endurance 13, +2 at 17** | replaces `toughCool` and `musclePips` (2026-11-11, spec section 10a). In Step 0, endurance was rolled per runner around 14 for muscle and 11 for everyone else (spread about 2.5): about a quarter of non-muscle runners and three quarters of muscle get +1 (one in six muscle +2) |
 | `lightWoundPips` | 1 | starting with a light injury |
 | `hit` | 1 | |
 | `strongHit` | 2 | runners only; enemies never land strong hits in the prototype (their shots read "55%, 1 pip") |
@@ -300,7 +299,7 @@ top of each report.
    encounters, so adapting has nothing to beat (proceed condition met in 0% of cells). No plan is
    universal either (the best, `mixed`, matches the adapted plan in both encounters in 57% of cells,
    under the two-thirds line).
-2. **`toughCool: 12` gives everyone the extra pip at threat 3** (base 14, so even the Under group's
+2. **(Superseded by endurance, pass 2 below.) `toughCool: 12` gives everyone the extra pip at threat 3** (base 14, so even the Under group's
    cool of 12 clears it). Runners have 4 pips and muscle 5, not the 3 the arithmetic in section 10
    assumed. An absolute stat threshold can't stay a mark of toughness on a relative fight scale:
    make it relative (cool >= base + 3) or drop it.
@@ -341,11 +340,28 @@ toughness relative to the base or off); defaults with two protectors on the tech
 setting (the 2026-11-10 decision row lists options); a wider `techUnderFire` (tech at 1 pip *or*
 2+ shots on them); per-runner boarding; then re-run Step 0 and look again at the gate's bars.
 
+**Pass 2 (2026-11-11): pips from endurance.** Same rules, with `toughCool` and the muscle pip replaced
+by endurance (`docs/sims/step0-2026-11-11.md`, `...-hard.md`). Runners mostly have 3 pips again
+(muscle often 4), so the first values bite harder:
+
+- **First values:** still no verdict (proceed in 7% of cells; the most universal plan, `mixed`, in
+  37%). But the plans now separate: holdHack protect 97-100% against attack 91% / 71% / 54% (D1-D3),
+  hold-only 23%; holdExtract mixed 93-98%, attack 95% falling to 74% at D3, hold-type plans about
+  90% with five to seven times the downs of mixed.
+- **Hard profile:** much as before (proceed 26%; `support` the most universal at 30%).
+- **Unchanged findings:** the withdrawal rule makes cautious the deadliest level (hard holdExtract:
+  0.42 deaths a fight on cautious, 0 on committed); the defaults lose to obvious plans (hard holdHack
+  D2: 67% against protect's 92%); `techUnderFire` comes up in 2-6% of fights.
+
+So endurance fixes the "everyone is tough" problem, and the first values plus endurance are close to
+the hard profile in shape. What keeps the gate from proceeding is now mostly list A in the spec's
+section 25 (defaults, the withdrawal rule, the gate's bars), not the numbers.
+
 ## 13. Summary of the BATTLE keys
 
 ```js
 BATTLE = {
-  runnerBasePips: 3, toughCool: 12, musclePips: 1, lightWoundPips: 1,
+  runnerBasePips: 3, endurancePips: [[17, 2], [13, 1]], lightWoundPips: 1,
   hit: 1, strongHit: 2, strongMargin: 10, strongMarginByDamage: { 2: 12, 3: 10, 4: 8, 5: 6 },
   absorb: { none: 0, street: 1, pro: 2 }, droneAbsorb: 1,          // ap ignores absorb
   cover: { open: 0, half: 2, full: 4 }, startCover: 'half', hunkerStep: 4,

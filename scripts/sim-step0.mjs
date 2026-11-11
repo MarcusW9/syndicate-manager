@@ -9,7 +9,9 @@
 //   node scripts/sim-step0.mjs [seeds=400] [date=2026-11-10] [profile=first]
 //
 // Profiles: `first` is the numbers sheet as written; `hard` is the same with four enemies at the
-// start and no toughness pip (a sensitivity check: are the plans different once fights have teeth?).
+// start (a sensitivity check: are the plans different once fights have teeth?). Pips come from
+// endurance (+1 at 13, +2 at 17), rolled per runner from a fixed seed, so a crew's bodies differ
+// between seeds but are the same for every plan.
 // The hard profile writes step0-<date>-hard.md / .csv.
 //
 // Owner's calls used here (2026-11-10): planned damage that already covers an enemy's pips stops
@@ -23,7 +25,7 @@ import { makeRng, d20, hash } from '../src/core/rng.js';
 const SEEDS = Number(process.argv[2] ?? 400);
 const DATE = process.argv[3] ?? '2026-11-10';
 const PROFILE = process.argv[4] ?? 'first';
-const PROFILES = { first: {}, hard: { startEnemies: 4, toughCool: 99 } };
+const PROFILES = { first: {}, hard: { startEnemies: 4 } };
 
 const ASSUMPTIONS = [
   'Threat 3 for every fight (base difficulty 14, three enemies at the start).',
@@ -39,7 +41,11 @@ const ASSUMPTIONS = [
 // ---- numbers (drafts/NUMBERS-battle-orders.md) ------------------------------------------------
 const N = {
   base: 14, startEnemies: 3,
-  runnerBasePips: 3, toughCool: 12, musclePips: 1,
+  runnerBasePips: 3,
+  // Endurance (2026-11-11) replaces the cool threshold and the muscle role's pip: +1 pip at 13, +2 at 17.
+  endurancePips: [[17, 2], [13, 1]],
+  // Runners' endurance in the sims: about normal, spread 2.5, clamped 3-18; muscle around 14, everyone else 11.
+  enduranceMean: { muscle: 14, other: 11 }, enduranceSpread: 5,
   cover: { open: 0, half: 2, full: 4 }, hunkerStep: 4,
   aimFloor: 0.1, aimCeil: 0.9,
   attackStep: -2, jamStep: 0, patchStep: 0, boardStep: 0,
@@ -86,7 +92,13 @@ const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
 const chanceOf = (value, diff) => clamp((11 + value - diff) / 20, 0, 1);
 
 // ---- building a fight ---------------------------------------------------------------------------
-function buildCrew(group, lineup) {
+function enduranceRoll(rng, role) {
+  const mean = N.enduranceMean[role] ?? N.enduranceMean.other;
+  return clamp(Math.round(mean + (rng() + rng() + rng() - 1.5) * N.enduranceSpread), 3, 18);
+}
+const endurancePips = (e) => (N.endurancePips.find(([at]) => e >= at)?.[1] ?? 0);
+
+function buildCrew(group, lineup, rng) {
   const g = CREW_GROUPS[group];
   const seen = {};
   return LINEUPS[lineup].map((x, i) => {
@@ -94,7 +106,8 @@ function buildCrew(group, lineup) {
     const stats = {};
     for (const s of ['combat', 'tech', 'medical', 'social']) stats[s] = N.base + (MAIN[x.role] === s ? g.main : g.other);
     stats.cool = N.base + g.cool;
-    const max = N.runnerBasePips + (stats.cool >= N.toughCool ? 1 : 0) + (x.role === 'muscle' ? N.musclePips : 0);
+    stats.endurance = enduranceRoll(rng, x.role);
+    const max = N.runnerBasePips + endurancePips(stats.endurance);
     return {
       id: i + 1, role: x.role, handle: HANDLES[x.role] + (seen[x.role] > 1 ? ' 2' : ''), stats, max, pips: max,
       absorb: x.absorb ?? 0, jammer: !!x.jammer, ap: !!x.ap, strong: STRONG[x.role] ?? 12,
@@ -121,7 +134,7 @@ function buildFight({ enc, dur, exp, group, lineup, plan, seed, deckStyle = 'nor
   const F = {
     enc, type: ENCOUNTERS[enc].type, dur, aimStep: EXPOSURE[exp], deckStyle, plan,
     rDeck: makeRng(hash('deck', ...key)), rRoll: makeRng(hash('roll', ...key)),
-    crew: buildCrew(group, lineup), enemies: [], hiredTotal: 0,
+    crew: buildCrew(group, lineup, makeRng(hash('endurance', group, lineup, seed))), enemies: [], hiredTotal: 0,
     round: 0, stage: 0, work: 0, board: 0, vanRound: N.vanRound, clock: N.alarmStart, nextPressure: N.pressureFirst,
     extras: 0, arriving: [], smoke: 1, smokeUsed: 0, vanUsed: 0, heat: 0, end: null,
     dilemmas: { techUnderFire: 0, boardUnderFire: 0 }, log: log ? [] : null,
@@ -471,7 +484,7 @@ function finish(F, end, text) {
 function play(args) {
   const F = buildFight(args);
   F.risk = args.risk ?? 'steady';
-  say(F, `${F.crew.map((r) => `${r.handle} (${r.role}, ${r.max} pips${r.absorb ? ', vest' : ''}${r.jammer ? ', jammer' : ''}${r.ap ? ', ap' : ''})`).join(', ')} against ${F.enemies.map((e) => `${e.kind} ${e.n} (${e.pips} pip${e.pips > 1 ? 's' : ''}${e.absorb ? ', armoured' : ''})`).join(', ')}.`);
+  say(F, `${F.crew.map((r) => `${r.handle} (${r.role}, endurance ${r.stats.endurance}, ${r.max} pips${r.absorb ? ', vest' : ''}${r.jammer ? ', jammer' : ''}${r.ap ? ', ap' : ''})`).join(', ')} against ${F.enemies.map((e) => `${e.kind} ${e.n} (${e.pips} pip${e.pips > 1 ? 's' : ''}${e.absorb ? ', armoured' : ''})`).join(', ')}.`);
   while (!F.end) playRound(F);
   return F;
 }
@@ -570,7 +583,7 @@ const D = (x) => x.toFixed(2);
 const lines = [];
 lines.push(`# Step 0: the battle rework's paper rules, played by script (${DATE}${SUFFIX ? `, profile ${PROFILE}` : ''})`);
 lines.push('');
-lines.push(`Generated by \`node scripts/sim-step0.mjs ${SEEDS} ${DATE} ${PROFILE}\`. Profile **${PROFILE}**${PROFILE === 'hard' ? ' (four enemies at the start, no toughness pip)' : ' (the numbers sheet as written)'}. The paper rules of \`drafts/SPEC-battle-orders.md\` with the first values of \`drafts/NUMBERS-battle-orders.md\`, standalone (not the game's fight code). ${SEEDS} seeds per cell; every cell is in \`step0-${DATE}${SUFFIX}.csv\`.`);
+lines.push(`Generated by \`node scripts/sim-step0.mjs ${SEEDS} ${DATE} ${PROFILE}\`. Profile **${PROFILE}**${PROFILE === 'hard' ? ' (four enemies at the start)' : ' (the numbers sheet as written)'}. The paper rules of \`drafts/SPEC-battle-orders.md\` with the first values of \`drafts/NUMBERS-battle-orders.md\`, standalone (not the game's fight code). ${SEEDS} seeds per cell; every cell is in \`step0-${DATE}${SUFFIX}.csv\`.`);
 lines.push('');
 lines.push('Fights are hands-off (no dilemmas raised; their conditions are counted). Risk is steady unless stated.');
 lines.push('');
