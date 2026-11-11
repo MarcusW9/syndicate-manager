@@ -4,6 +4,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-11 · The new fight rules, on their own (battle rework, slice 1b)
+- **Nothing changes in the game yet.** The rules of the new fights (pips from endurance, enemy threats shown before orders, orders that carry out the crew's plan, protecting and shielding, the hack, the van, carrying the wounded, bleeding out, the medic's aura) are built and tested, but no job uses them. The five jobs that will (Office Data Pull, Data Scrub, Quiet Hours, Warehouse Lift, Protection Run) still play their fights the old way until slice 1c.
+- New files: `core/fight.js`, `data/fights.js` (all the numbers), `data/dilemmas.js`, `data/fightText.js` (placeholder wording; the owner writes the real text), `tests/fight.test.js`.
+
 ## 2026-11-11 · Endurance, the eighth stat (battle rework, slice 1a)
 - **Every runner has endurance (1-20), shown on their page with the other stats.** It is the body: in the new fights (coming in slice 1b-1c) it will set how many hits someone can take. Nothing rolls it yet.
 - **Muscle are built for it.** A new muscle's decent stats are now endurance and cool (piloting drops to a low stat; drivers cover it): a pro muscle has about 9-12, a veteran 10-14. Everyone else has it as a low stat. It grows and fades with age like any stat.

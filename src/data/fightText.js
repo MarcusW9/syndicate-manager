@@ -1,0 +1,99 @@
+// Engine 2's wording: PLACEHOLDER keys only (drafts/SPEC-battle-orders.md section 30: the owner writes
+// the real text; the brief for it goes in drafts/writing-tasks.md when slice 2 needs the screens). Each
+// line the fight plays carries a `key` and its slots; lineText fills a placeholder from here. Nothing
+// in core/ reads these strings, so the owner's wording replaces them without touching the rules.
+//
+// Slots are {name}. An unknown key reads as the key itself, so nothing breaks while the text is pending.
+
+export const FIGHT_TEXT = {
+  // Round feed (one per thing that happens)
+  'arrive': '[arrive] {kind} {n} arrives',
+  'pressure': '[pressure] {kind} {n} arrives',
+  'standbyOut': '[standbyOut] {who} goes out to help',
+  'climbBack': '[climbBack] {who} climbs back out for {target}',
+  'vanEarly': '[vanEarly] van arrives end of round {round}',
+  'vanIn': '[vanIn] the van pulls in, waits until round {leaves}',
+  'vanCantWait': '[vanCantWait] {outside} outside, the van goes this round',
+  'vanHeld': '[vanHeld] van held {rounds} more rounds',
+  'overwatchHit': '[overwatchHit] {who} hits {enemy}',
+  'overwatchMiss': '[overwatchMiss] {who} misses {enemy}',
+  'overwatchOut': '[overwatchOut] {who} takes out {enemy}',
+  'attackHit': '[attackHit] {who} hits {enemy}',
+  'attackOut': '[attackOut] {who} takes out {enemy}',
+  'attackMiss': '[attackMiss] {who} misses {enemy}',
+  'attackGone': '[attackGone] {who}: target already down',
+  'jamOk': '[jamOk] {who} jams the radio',
+  'jamFail': '[jamFail] {who} fails to jam',
+  'stabilise': '[stabilise] {who} stabilises {target}',
+  'stabiliseFail': '[stabiliseFail] {who} cannot stabilise {target}',
+  'patch': '[patch] {who} patches {target}',
+  'patchFail': '[patchFail] {who} cannot patch {target}',
+  'board': '[board] {who} reaches the van',
+  'boardFail': '[boardFail] {who} does not reach the van',
+  'carry': '[carry] {who} gets {target} to the van',
+  'carryFail': '[carryFail] {who} cannot get {target} to the van',
+  'inVan': '[inVan] {who} is in the van',
+  'carriedInVan': '[carriedInVan] {target} is in the van, carried',
+  'shotMiss': '[shotMiss] {enemy} misses {who}',
+  'shotHit': '[shotHit] {enemy} hits {who}',
+  'shotAbsorbed': '[shotAbsorbed] {enemy} hits {who}, the vest takes it',
+  'shotDown': '[shotDown] {enemy} puts {who} down',
+  'shotDead': '[shotDead] {enemy} hits {who} pulling out: dead',
+  'flanked': '[flanked] {enemy} gets round {who}',
+  'backupCalled': '[backupCalled] {enemy} calls for backup',
+  'alarmClock': '[alarmClock] the alarm runs out, one more on the way',
+  'withdrew': '[withdrew] {who} is out of the fight',
+  'enemyFled': '[enemyFled] the rest of the hired run',
+  'aura': '[aura] {who} keeps {target} going: +1',
+  'bleedOut': '[bleedOut] {who} bleeds out',
+  'leftDead': '[leftDead] {who} left behind, did not make it',
+  // Threat wording (a shown threat)
+  'threat.aim': '[aim] {enemy} aims at {who} ({chance}, {pips})',
+  'threat.flank': '[flank] {enemy} works round {who}',
+  'threat.backup': '[backup] {enemy} radios for backup',
+  'threat.alarm': '[alarm] {enemy} goes for the alarm',
+  // Intent wording (what an order will do)
+  'intent.attack': '[intent] {who} attacks {enemy} ({why})',
+  'intent.shield': '[intent] {who} shields {target} ({why})',
+  'intent.patch': '[intent] {who} patches {target} ({why})',
+  'intent.stabilise': '[intent] {who} stabilises {target} ({why})',
+  'intent.jam': '[intent] {who} jams the radio ({why})',
+  'intent.work': '[intent] {who} works the hack ({why})',
+  'intent.board': '[intent] {who} makes for the van ({why})',
+  'intent.carry': '[intent] {who} goes back for {target} ({why})',
+  'intent.move': '[intent] {who} moves to cover ({why})',
+  'intent.hunker': '[intent] {who} hunkers ({why})',
+  'intent.withdraw': '[intent] {who} pulls out ({why})',
+  // "If nothing" (generated from the orders, never authored)
+  'ifNothing.shielded': '[ifNothing] {n} shot(s) taken by a shield',
+  'ifNothing.radio': '[ifNothing] {n} radio call(s) with no one on them',
+  'ifNothing.shots': '[ifNothing] {n} shot(s) with no response',
+  'ifNothing.clear': '[ifNothing] every shown threat has a response',
+  // Ends (one cause line each)
+  'end.won': '[won]', 'end.lost': '[lost] {who} is down: the hack is lost',
+  'end.abandoned': '[abandoned] {who} pulled out: the hack is abandoned',
+  'end.extracted': '[extracted] someone is down: the crew pulls back',
+  'end.pulledBack': '[pulledBack] the crew pulled back',
+  'end.deadline': '[deadline] out of time',
+  'end.leftBehind': '[leftBehind] {who} left behind',
+  'end.gone': '[gone] nobody left in the fight',
+  'end.lostRunner': '[lostRunner] the van goes without {who}',
+  // Dilemmas and call-ins
+  'dilemma.techUnderFire.changed': '[techUnderFire] {protected} is under fire',
+  'dilemma.techUnderFire.cover': '[option] Everyone on {protected}',
+  'dilemma.techUnderFire.radio': '[option] Kill the radio',
+  'dilemma.techUnderFire.jam': '[option] {protected} jams it',
+  'dilemma.techUnderFire.carryOn': '[option] Carry on',
+  'dilemma.vanCantWait.changed': "[vanCantWait] The van can't wait, {outside} outside",
+  'dilemma.vanCantWait.goNow': '[option] Go now',
+  'dilemma.vanCantWait.hold': '[option] Hold the van',
+  'dilemma.vanCantWait.carryOn': '[option] Carry on',
+  'callin.deathsDoor': "[deathsDoor] {who} is at death's door",
+  'callin.deadline': '[deadline] the hack is out of time',
+  'callin.pullBack': '[pullBack] Pull back',
+};
+
+const fillText = (text, slots) => text.replace(/\{(\w+)\}/g, (_, k) => (slots[k] ?? `{${k}}`));
+
+/** A line or threat as text: its key's placeholder with its slots. An unknown key reads as the key. */
+export const lineText = (key, slots = {}) => (FIGHT_TEXT[key] ? fillText(FIGHT_TEXT[key], slots) : key);
