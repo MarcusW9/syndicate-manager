@@ -138,7 +138,7 @@ test('every roll in a fight is the rule: die + value against need decides it, an
   for (let seed = 1; seed <= 300; seed++) {
     const am = autoRun(begin(seed, 'exit_interview', 'loud', { n: 3 }), 'committed').activeMission;
     for (const e of am.events.filter((x) => x.kind === 'battle')) {
-      if (e.phase === 'round') assert.ok(e.round <= BATTLE.rounds, `seed ${seed}: round ${e.round}`);
+      if (e.phase === 'round') assert.ok(e.round <= BATTLE.skirmishRounds, `seed ${seed}: round ${e.round}`);
       for (const l of e.lines ?? []) {
         if (l.kind === 'flee') { assert.equal(l, e.lines.at(-1), 'a guard runs at the end of a round'); continue; } // no roll
         if (l.kind === 'ambush') { assert.equal(e.round, 1, 'the jump is only the first round'); continue; } // no roll
@@ -259,8 +259,9 @@ test('the orders in a fight: Cautious pulls back once someone is hurt, Steady on
       assert.ok(rounds.at(-1).runners.some((r) => !r.down && r.hp < r.max * share), `seed ${seed}: someone was under ${share}`);
       seen[orders]++;
     }
-    // Nobody fights on past the share their orders allow.
-    for (const r of rounds.slice(0, -1)) assert.ok(!r.runners.some((x) => !x.down && x.hp < x.max * BATTLE.orders[orders].pullAtHurt), `seed ${seed}: ${orders} fought on`);
+    // Nobody fights on past the share their orders allow (within each fight: its last round may end it by a win, and a later fight starts afresh).
+    const fights = []; for (const e of am.events.filter((x) => x.kind === 'battle')) { if (e.phase === 'start') fights.push([]); else if (e.phase === 'round') fights.at(-1).push(e); }
+    for (const r of fights.flatMap((f) => f.slice(0, -1))) assert.ok(!r.runners.some((x) => !x.down && x.hp < x.max * BATTLE.orders[orders].pullAtHurt), `seed ${seed}: ${orders} fought on`);
   }
   assert.ok(seen.cautious > 10 && seen.steady > 0, JSON.stringify(seen)); // Steady's line is rarely the first thing to give
 });
@@ -291,11 +292,13 @@ test('the planning read quotes the fight from the run\'s own round function', ()
   const mixed = loud.chance * jump.win + (1 - loud.chance) * plain.win;
   assert.ok(Math.abs(loud.fight.win - mixed) < 1e-9, 'the read mixes the jump and the plain fight by the roll');
   assert.ok(jump.win >= plain.win, 'the first round is worth something');
-  // Better kit, better odds.
-  const before = loud.fight.win;
+  // Better kit, better odds. Fights play out now, so rookie work is mostly won: this is read on a hard version of it (threat 5).
+  const hard = { ...tpl, threat: 5 };
+  const before = coverage(hard, crew, 'loud').rows.find((r) => r.id === 'backup').fight;
+  assert.ok(before.win < 1, `a hard fight can be lost: ${before.win}`);
   for (const op of crew) arm(s, op.id, 'pistol:pro', 'vest:pro');
-  const armed = coverage(tpl, crew, 'loud').rows.find((r) => r.id === 'backup');
-  assert.ok(armed.fight.win > before, `${armed.fight.win} > ${before}`);
+  const armed = coverage(hard, crew, 'loud').rows.find((r) => r.id === 'backup').fight;
+  assert.ok(armed.win > before.win, `${armed.win} > ${before.win}`);
 });
 
 // --- the watch feed (slice 6b) ------------------------------------------------------------------
@@ -365,10 +368,11 @@ test('guards on their posts are the guards the run meets: one per danger inciden
       const ahead = guardPosts(am);
       for (const p of ahead) assert.ok(p.step >= am.step, 'only what is still ahead');
       const step = am.step;
+      const post = ahead.find((p) => p.step === step); // as they stand now: an earlier fight inserts its own step and shifts the queue
       s = autoStep(s, { force: true });
       // A fight that starts from a posted incident brings exactly the guards the post showed.
       const start = s.activeMission.events.at(-1)?.kind === 'battle' && s.activeMission.events.at(-1).phase === 'start' ? s.activeMission.events.at(-1) : null;
-      if (start && posted.has(step) && !s.activeMission.wentLoud) { assert.equal(start.guards.length, posted.get(step).guards, `seed ${seed}`); checked++; }
+      if (start && post && !s.activeMission.wentLoud) { assert.equal(start.guards.length, post.guards, `seed ${seed}`); checked++; }
     }
     assert.deepEqual(guardPosts(s.activeMission), [], 'nobody waits once the job is done');
   }

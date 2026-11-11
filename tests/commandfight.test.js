@@ -99,14 +99,14 @@ test('an order that can\'t be done is the crew\'s own call (someone who can\'t p
   assert.equal(ordersFor(b, 'nobody').length, 0);
 });
 
-test('giving orders is worth it: a plain player beats hands-off on the test fight, and gets fewer people hurt', () => {
+test('giving orders is worth it: a plain player is never worse than hands-off on the test fight, and loses a tenth less health', () => {
   const play = (policy) => {
     const t = { won: 0, lost: 0 };
     for (let seed = 1; seed <= 400; seed++) {
       const b = testFight(1 + (seed % 5));
       const rng = makeRng(seed * 7919);
       const hp0 = b.runners.reduce((n, r) => n + r.hp, 0);
-      while (b.round < BATTLE.rounds && b.guards.some((g) => !g.out) && b.runners.some((r) => !r.down)) {
+      while (b.round < b.cap && b.guards.some((g) => !g.out) && b.runners.some((r) => !r.down)) {
         planIntents(b, rng);
         playRound(b, rng, policy(b));
       }
@@ -117,8 +117,9 @@ test('giving orders is worth it: a plain player beats hands-off on the test figh
   };
   const auto = play(() => ({}));
   const cmd = play(commandOrders);
-  assert.ok(cmd.won >= auto.won + 0.08 * 400, `orders win ${cmd.won}, hands-off ${auto.won} of 400`);
-  assert.ok(cmd.lost < auto.lost, 'and lose less health');
+  // Fights play out now (no three-round cap), so the test fight is won either way; what orders buy is health (about 14% less lost: 2199 against 2569 of 400 fights).
+  assert.ok(cmd.won >= auto.won, `orders win ${cmd.won}, hands-off ${auto.won} of 400`);
+  assert.ok(cmd.lost < auto.lost * 0.9, `and lose at least 10% less health: ${cmd.lost} against ${auto.lost}`);
 });
 
 test('a run takes the player\'s orders, and a v27 save mid-fight upgrades and carries on', async () => {

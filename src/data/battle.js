@@ -7,7 +7,8 @@
 // (the job's typical roll, the incident's step and the alert), so fights scale with the work.
 
 export const BATTLE = {
-  rounds: 3, // after this many with guards still up, the crew calls in (push past or pull back)
+  rounds: 3, // a raid's cap: after this many with guards still up, the crew calls in (hold the door or walk out)
+  skirmishRounds: 12, // every other fight plays out; this many rounds with guards still up is a stalemate backstop, and the crew calls in (push past or pull back)
 
   // Runners' health: base + cool / perCool (rounded down). Someone already lightly hurt starts
   // `lightWound` down.
