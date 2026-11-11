@@ -149,7 +149,7 @@ function enduranceRoll(rng, role) {
   const mean = N.enduranceMean[role] ?? N.enduranceMean.other;
   return clamp(Math.round(mean + (rng() + rng() + rng() - 1.5) * N.enduranceSpread), 3, 18);
 }
-const pipsFor = (e) => Math.max(1, Math.floor(e / N.endurancePerPip));
+const pipsFor = (e) => Math.max(N.minPips ?? 1, Math.floor(e / N.endurancePerPip));
 
 function buildCrew(group, lineup, rng) {
   const g = CREW_GROUPS[group];

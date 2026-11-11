@@ -517,11 +517,27 @@ for the plans, all settings for deaths:
   (defaults 62%, support 53%; the rework line is two thirds), so this is the value to watch when the
   gate is re-run on the real code.
 
+**Endurance on the owner's scale (2026-11-11).** Endurance is a stat like the others: a solid muscle
+12-13, the best 19-20, an off-stat for other roles. On the pass 9 baseline (`medic`), 200 seeds:
+
+| Endurance (muscle / others) | Pip floor | Enemies at start | holdHack defaults | holdExtract defaults | Committed deaths |
+| --- | --- | --- | --- | --- | --- |
+| 14 / 11 (the sims so far) | 1 | 4 | 86% | 77% | 1 in 19 holdExtract |
+| 13 / 8 (grown, owner's scale) | 1 | 4 | 53% | 38% | 1 in 9 |
+| 10 / 5 (fresh, owner's scale) | 1 | 4 | 11% | 4% | 1 in 4 |
+| 13 / 8 | **3** | 4 | 69% | 66% | 1 in 11 |
+| 13 / 8 | **3** | **3** | 88% | 78% | 1 in 22 |
+| 10 / 5 | **3** | **3** | 77% | 69% | 1 in 13 |
+
+So: a **3-pip floor** (off-stat endurance otherwise gives 2-4 pips, half of it gone to one 2-pip
+shot) and **enemy count by threat** as the difficulty dial (three at the start for grown crews here;
+the fresh row is still threat-3 work, harder than fresh crews would take).
+
 ## 13. Summary of the BATTLE keys
 
 ```js
 BATTLE = {
-  endurancePerPip: 2, patchHeal: 2, lightWoundPips: 1,   // pips = floor(endurance / 2), at least 1
+  endurancePerPip: 2, minPips: 3, patchHeal: 2, lightWoundPips: 1,   // pips = max(3, floor(endurance / 2))
   // shots by kind: ENEMY_HIT = { hired: 1, drone: 1, corp: 2, enforcer: 2 }
   doorSlots: 3, boardStep: -4, carryStep: 2, vanWait: 4, holdRounds: 2, holdHeat: 1,   // contested boarding (pass 6)
   bleedGrace: 2, bleedChance: 0.08, stabiliseStep: 2, leftDownDeath: 0.1,            // bleeding out (pass 8; committed only)

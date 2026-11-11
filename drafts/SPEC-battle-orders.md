@@ -285,9 +285,20 @@ fewer, committed never.
   protector +1 absorb), *Quick* (+1 to boarding; can move and act in the same round), *Iron lungs*
   (fatigue builds slower on away jobs). Speed gets a second look as an attribute if the on-foot
   escape is built and movement decides fights.
-- **Generation and growth (OPEN):** every runner (crew, free names, rival tongs' runners) gets a
-  seeded endurance in the v61 migration, by role; Step 0 used about 14 for muscle and 11 for
-  everyone else, spread about 2.5. It grows slowly and falls with age.
+- **A stat like the others (owner, 2026-11-11):** endurance is the eighth stat on the 1-20 scale. It
+  is generated, grows and declines with age exactly as the others do; a solid muscle has 12-13, the
+  best in the world 19-20. For other roles it is an off-stat (about 5 fresh, about 8 grown), so
+  **pips have a floor of 3** (proposal, Step 0 below): endurance 6 or less = 3 pips, then one pip per
+  two points (8 = 4, 12-13 = 6, 19-20 = 9-10).
+- **Difficulty follows enemy count, not pips:** with this scale, four enemies at the start was too
+  hard for grown crews (defaults 69% / 66%); **three** gives grown crews 88% / 78% and fresh crews
+  77% / 69% (numbers sheet, endurance check). The real code keeps `COUNT_BY_THREAT` (2, 2, 3, 3, 4)
+  and Step 0's four was for threat 3-4 work with stronger bodies.
+- **The hidden rating** counts endurance like any stat (main plus the best two others), so a muscle's
+  endurance can lift it. **The Anchor's Book is unaffected:** it never reads stats (fame, form, age
+  and a bias only).
+- The v61 migration gives every runner (crew, free names, rival tongs' runners) a seeded endurance,
+  generated the way their other stats were; no existing stat changes.
 
 ## 10b. Bleeding out (owner, 2026-11-11)
 
@@ -355,7 +366,19 @@ FIGHTS = {
   (alert and heat cost; `press`) or pull back (parting shots, never below 1 pip).
 - Escalation clocks (`CLOCKS.alarm`, `CLOCKS.pressure`): each clock's effect, reset behaviour and
   limit are fixed before Step 0 (**OPEN**, numbers sheet).
-- Jobs and incidents name a fight type. **OPEN:** which 2-3 existing jobs use each type.
+- Jobs and incidents name a fight type. **Shortlist (2026-11-11, for the owner to pick 2-3 each):**
+  - **holdHack** (keep the tech working): **Office Data Pull** (`data_pull`, Glass Heights, threat
+    3, crew 3: copy the offline payroll), **Data Scrub** (`data_scrub`, Glass Heights, threat 2, crew
+    2: take the chip, wipe the drive; one protector only), **Quiet Hours** (`quiet_hours`, the Docks,
+    threat 3: pull the voice-logger cartridge before the reset; hired and enforcers, not corp).
+    Also possible: The Flat Doesn't Exist (the Basin, threat 3: clear the listening gear); Penthouse
+    Heist (threat 5, too high for the prototype).
+  - **holdExtract** (hold for the van, then board): **Warehouse Lift** (`warehouse`, the Docks,
+    threat 4, crew 4: take the crates before they ship), **Protection Run** (`protection`, the Docks,
+    threat 3: the herbalist's van through Red Lantern streets), **Kidnap Rescue** (`kidnap`, Old Town,
+    threat 4: get the accountant out to the van; Old Town needs an enemy list). Also possible: Exit
+    Interview (Glass Heights, threat 4: walk a clerk out; corp enemies), Borrowed Glory (the Basin:
+    the horse box is the van), Quarter to Two (the Docks: a boat, not a van).
 
 ## 12. Orders
 
