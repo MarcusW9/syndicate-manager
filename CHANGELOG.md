@@ -15,6 +15,14 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - **The messages move up.** Coming up no longer runs across the top of Today, and Monday's week numbers and The Word no longer sit above the list. Only Joss, the alerts, crews back and the Out line come before the messages now.
 - **A rail for the week.** On a computer, Monday's numbers with The Word and Coming up sit in a column to the right of the open message (under the messages on mid-size screens). On a phone they come after the message list.
 - The messages themselves look as before. Mockups of the options that led here are in `docs/mockups/`.
+## 2026-11-11 · What moves the left-behind rate (sensitivity sim, no game change)
+- `scripts/sim-vanlevers.mjs` and `docs/sims/vanlevers-2026-11-11.md`: the two holdExtract jobs at their real difficulty, the game's own starting rosters (the planning read's best team), the defaults hands-off, 400 seeds, one van number changed at a time in the script only. Declared bar: cut "someone left behind" by 10+ points without raising downs by more than 0.2 or heat by more than 0.3.
+- **Base (steady): someone is left behind in 56% of extractions** (fresh roster 39-46%, authored 62-78%), 1.7 downs a fight, clean wins 10%.
+- **The van arriving later is the lever that works:** round 4 instead of 3 cuts it to 37% (-19 points, downs -0.45, heat -0.14); round 5 to 27% (-29, downs -0.63). Clean wins drop a little (10% to 8% and 7%).
+- **Door slots do nothing** (4 or 5 slots: no change; the door is never the bottleneck). **The van waiting longer barely helps** (waits 5, 6 or 8: -2 to -4 points, and about +0.1 downs). **Holding the van three rounds: no change.**
+- **Easier boarding makes it worse** (boarding step -2: +4 points left behind; 0: +8). Not understood yet; runners probably leave cover for the van sooner and are shot in the open.
+- **Committed risk on starting crews kills far more than the target:** someone dies in 15-49% of these extractions (fresh Warehouse 49%, Protection 37%; authored 22% and 15%), against about 1 in 25 for the stronger sim crews in the gate.
+- Nothing was changed; this is evidence for the owner's call.
 
 ## 2026-11-11 · Hits land, and the stamp has weight
 - **A guard that is shot now reacts:** on a hit the token shakes and flashes white for a moment, at the instant the shot lands (rifle, drone, turret and crew shots; a miss does nothing). With reduced motion on, it only flashes.
