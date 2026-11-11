@@ -533,31 +533,52 @@ So: a **3-pip floor** (off-stat endurance otherwise gives 2-4 pips, half of it g
 shot) and **enemy count by threat** as the difficulty dial (three at the start for grown crews here;
 the fresh row is still threat-3 work, harder than fresh crews would take).
 
-## 13. Summary of the BATTLE keys
+## 13. Summary of the BATTLE keys (the single source for slice 1, 2026-11-11)
+
+Earlier tables in this file are the history of how each number was reached; where they differ, this
+block and spec section 30 win.
 
 ```js
-BATTLE = {
-  endurancePerPip: 2, minPips: 3,   // pips = max(3, floor(endurance / 2)); light wound and patch below
-  // shots by kind: ENEMY_HIT = { hired: 1, drone: 1, corp: 2, enforcer: 2 }
-  doorSlots: 3, boardStep: -4, carryStep: 2, vanWait: 4, holdRounds: 2, holdHeat: 1,   // contested boarding (pass 6)
-  bleedGrace: 2, bleedChance: 0.1, stabiliseStep: 2, leftDownDeath: 0.1,             // bleeding out (10% settled 2026-11-11; committed only)
-  lightWoundPips: 2, patchHeal: 1, overwatchUsesAtVan: 1,                            // settled 2026-11-11 (spec section 30)
-  missingDays: 7, ransomWeeks: 3, missingDeath: 0.1,                                 // left behind (spec section 8; proposals)
-  medicAura: { heal: 1, target: 'most hurt', stopsBleeding: true },                 // version C (pass 9)
-  hit: 1, strongHit: 2, strongMargin: 10, strongMarginByDamage: { 2: 12, 3: 10, 4: 8, 5: 6 },
-  absorb: { none: 0, street: 1, pro: 2 }, droneAbsorb: 1,          // ap ignores absorb
-  cover: { open: 0, half: 2, full: 4 }, startCover: 'half', hunkerStep: 4,
+FIGHT = {
+  // Pips (spec 10a): pips = max(minPips, floor(endurance / endurancePerPip)); a light wound starts a fight 2 down.
+  endurancePerPip: 2, minPips: 3, lightWoundPips: 2,
+  // Shots (section 3): aimChance = clamp((11 + aimStep - (cool - base) - cover - (hunker ? hunkerStep : 0)) / 20, aimFloor, aimCeil);
+  // hunker also raises cover one step. Damage by enemy kind (ENEMY_HIT); armour absorbs whole hits; ap ignores absorb.
   aimStep: 2, aimFloor: 0.1, aimCeil: 0.9,
-  attackStep: -2, talkStep: 2, jamStep: 0, patchStep: 0, stabiliseStep: 2, boardStep: 0, overwatchStep: -1,
+  cover: { open: 0, half: 2, full: 4 }, startCover: 'half', hunkerStep: 4,
+  absorb: { none: 0, street: 1, pro: 2 }, droneAbsorb: 1,
+  // Runner actions: d20 + stat >= 10 + base + step (+ the target's cover for attacks). base = today's incident difficulty.
+  attackStep: -2, jamStep: 0, patchStep: 0, stabiliseStep: 2, boardStep: -4, carryStep: 2, overwatchStep: -1,
+  hit: 1, strongHit: 2, strongMarginByDamage: { 2: 12, 3: 10, 4: 8, 5: 6 },   // a runner's hit; strong on that margin
+  patchHeal: 1,
+  medicAura: { heal: 1, target: 'most hurt', stopsBleeding: true },   // while a medic stands in the fight
+  // Targeting
   targetFocus: 0.5, protectFocus: 0.75,
-  lightBelow: 0.5, seriousBelow: 0.25,                             // 0 pips = critical
-  partingShotFloor: 1,
-  retreat: { heat: 1, rep: 2 }, press: { alert: 1, heat: 1 },
-  risk: { cautious: { pullAt: 'half', press: false }, steady: { pullAt: 1, press: false }, committed: { pullAt: 0, press: true } },
-  maxExtraEnemies: 2, vanRoundHeat: 1,
-  oddsRuns: 120,
+  // Risk (spec 10): pull out at or below these pips at round start
+  risk: { cautious: { pullAt: 'half' }, steady: { pullAt: 2 }, committed: { pullAt: 0, press: true, fightsOnWithDown: true } },
+  // Bleeding (spec 10b; committed only)
+  bleedGrace: 2, bleedChance: 0.1, leftDownDeath: 0.1,
+  // The van (spec 8)
+  vanRound: 3, vanEarlyHeat: 1, doorSlots: 3, vanWait: 4, holdRounds: 2, holdHeat: 1, overwatchUsesAtVan: 1,
+  // Left behind (spec 8; owner to confirm the proposals)
+  missingDays: 7, ransomWeeks: 3, missingDeath: 0.1,
+  // Injury from pips left (share of max); 0 pips = critical
+  lightBelow: 0.5, seriousBelow: 0.25,
+  // Ends
+  partingShotFloor: 1, retreat: { heat: 1, rep: 2 }, press: { alert: 1, heat: 1 },
+  deadline: { holdHack: 7 },   // holdExtract ends when the van leaves
+  workNeeded: 4,
+  maxExtraEnemies: 2, oddsRuns: 120,
 };
-FIGHTS.holdHack.deadline = 7;  FIGHTS.holdExtract.deadline = 7;  FIGHTS.holdExtract.vanRound = 3;
+ENEMIES = {   // pips at default toughness; cover; deck
+  hired:    { pips: 1, cover: 'half', deck: ['aim', 'aim', 'alarm'], fleeBelow: 0.4 },   // fleeing is side-wide
+  corp:     { pips: 2, cover: 'half', deck: ['aim', 'backup', 'aim', 'flank'] },
+  drone:    { pips: 1, cover: 'open', deck: ['aim', 'alarm'], absorb: 1, jamTakesOut: true },
+  enforcer: { pips: 2, cover: 'half', deck: ['aim', 'aim', 'flank'] },
+};
+ENEMY_HIT = { hired: 1, drone: 1, corp: 2, enforcer: 2 };
+SITE_ENEMIES = { heights: ['corp', 'drone'], docks: ['hired', 'hired', 'enforcer'] };
+COUNT_BY_THREAT = [0, 2, 2, 3, 3, 4];   // threat 1-5: the difficulty dial
 CLOCKS = { alarm: { startsAt: 5, tickPerRound: 1, extraTick: 'alarm', onZero: 'addEnemy', resetTo: 3 },
-           pressure: { arriveRounds: [3, 5, 7] } };
+           pressure: { firstRound: 3, every: 2, alarmBringsForward: 1 } };
 ```

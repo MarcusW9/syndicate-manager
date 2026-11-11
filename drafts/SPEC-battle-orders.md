@@ -574,7 +574,9 @@ count as on the job (career, fatigue, pay share).
 
 ## 19. Data shapes
 
-All numbers are **provisional** until the numbers sheet (section 25) settles them.
+**The numbers in the blocks below are the first draft (2026-11-10) and are stale; the values to build
+with are `drafts/NUMBERS-battle-orders.md` section 13 and section 30 here.** The shapes (fields,
+objects, the battle object, the round result) still hold.
 
 ```js
 // data/battle.js BATTLE (prototype keys)
@@ -793,7 +795,9 @@ Outcome:
 - One plan sometimes winning both encounters is not by itself a failure.
 - Passing sims do not replace the playtest. Results and the declared targets go in CHANGELOG.
 
-## 25. Open (owner)
+## 25. Open (owner) — superseded by section 30
+
+Kept as the record of what was open and how it was answered; section 30 is what's settled.
 
 First values and rule proposals: `drafts/NUMBERS-battle-orders.md`. Step 0 findings: its section
 12. Updated 2026-11-11.
@@ -895,7 +899,7 @@ Play holdHack then holdExtract: once commanded, once fully hands-off with a dile
 - **Tension:** did I face a genuinely difficult decision?
 - **Trust:** when I let it run, did the crew follow my intent reasonably, even when it lost?
 
-## 29. Roadmap (2026-11-11)
+## 29. Roadmap (2026-11-11) — superseded by `drafts/PLAN-battle-slices.md`
 
 1. **Settle list A** (section 25), then **Step 0 again** (`scripts/sim-step0.mjs`), with the owner
    playing three or four of its fights by hand for feel. Repeat until the gate says proceed or
