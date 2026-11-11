@@ -5,6 +5,10 @@ Where each came from: slice 2 ([PR #132](https://github.com/MarcusW9/syndicate-m
 
 ## Decisions
 
+- [ ] **Slice 3 verdict is neither** (`docs/sims/orders-2026-11-11.md`; decision row 2026-11-11). Go to the formal playtest anyway, or change something first? The defaults match the adapted plans in 54% of cells (rework line 67%); adapting clears the bar in 23% (proceed line 67%).
+- [ ] **`techUnderFire` fires in 82% of hacks** (about one call a fight): the "two or more shots on the tech" condition is nearly always true. Narrow it (the tech at half pips with a radio call shown, or three shots)?
+- [ ] **Left behind is about half of steady extractions for the game's own starting crews** (49% fresh, 56% authored; 9% for the sim crews). Look at the van timing or door slots before slice 4 builds the rescue around it?
+- [ ] **Committed deaths are about 1 in 56** (target about 1 in 25), all in holdExtract. Fine, or raise `bleedChance`/`leftDownDeath`?
 - [ ] **"Chance of losing someone"** counts someone killed *or left behind* (missing for 7 days). On cautious and steady the risk line says a death only follows a call you make, yet the chance can be above zero there (left behind). Keep "losing someone", or say "killed or left behind"?
 - [ ] **"Hit the caller"** (techUnderFire) is still offered when no radio call is shown (the dilemma also fires on two shots at the tech). Offer it only with a call, as the jam now is?
 - [ ] **Special actions button:** in the approved list, not built, because the engine has no specials. What should a special be (spec 12 mentions `order.special`), or drop the button?

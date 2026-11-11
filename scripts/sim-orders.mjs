@@ -364,10 +364,38 @@ const dilemmaRows = ENC.map((enc) => {
   for (const group of GROUPS) for (const lineup of LINEUPS) for (let seed = 1; seed <= Math.min(SEEDS, 100); seed++) {
     const r = playOne({ enc, group, lineup, seed, plan: 'defaults' });
     c.fights++;
-    for (const k of Object.keys(r.asked)) c[k] = (c[k] ?? 0) + 1;
+    for (const k of Object.keys(r.asked)) { c[k] = (c[k] ?? 0) + 1; c[`${k}_calls`] = (c[`${k}_calls`] ?? 0) + r.asked[k]; }
   }
   return { enc, ...c };
 });
+restoreSettings();
+
+// ---- the game's own starting crews (not part of the declared gate) -------------------------------------
+// The sim crews above are built to a spec; the real fresh crew is weaker. The defaults, D2 E2 (the shipped data),
+// the first four of createNewGame({ startCrew: 'fresh' }) and of the authored crew, threat 3, per risk level.
+applySettings('D2', 'E2');
+const realRows = [];
+for (const startCrew of ['fresh', 'authored']) for (const risk of ['cautious', 'steady', 'committed']) for (const enc of ENC) {
+  const a = { n: 0, won: 0, left: 0, people: 0, down: 0, dead: 0, done: 0 };
+  for (let seed = 1; seed <= SEEDS; seed++) {
+    const crew = createNewGame({ seed, startCrew }).crew.slice(0, 4);
+    const E = GATE.encounters[enc];
+    const b = Fight.buildFight({ type: enc, diff: GATE.diff, threat: GATE.threat, site: E.site, crew, approach: 'loud', risk, watched: true }, makeRng(hash('real', enc, seed)));
+    const rng = makeRng(hash('realplay', enc, seed));
+    const ever = new Set();
+    while (!b.end && b.round < 30) {
+      if (!b.drawn) Fight.startRound(b, rng);
+      for (const key of Object.keys(b.dilemmasFired)) if (!Fight.dilemmaHolds(b, key.split(':')[0])) delete b.dilemmasFired[key];
+      const due = Fight.dueDilemmas(b)[0];
+      if (due) { b.dilemmasFired[due.key] = true; const id = fightAnswer({ battle: b, pending: { id: due.id } }).id; const opt = DILEMMAS[due.id].options.find((o) => o.id === id); if (opt?.ordersPatch) Fight.applyPatch(b, opt.ordersPatch); if (opt?.vanWait) b.vanHold = !!opt.vanWait.hold; }
+      Fight.playRound(b, rng);
+      for (const r of b.runners) if (r.down || r.dead) ever.add(r.id);
+    }
+    const r = b.end.result;
+    a.n++; a.won += r === 'won' ? 1 : 0; a.done += ['won', 'lostRunner', 'leftBehind'].includes(r) ? 1 : 0; a.left += b.left.length ? 1 : 0; a.people += b.left.length; a.down += ever.size; a.dead += b.runners.filter((x) => x.dead).length ? 1 : 0;
+  }
+  realRows.push({ startCrew, risk, enc, ...Object.fromEntries(Object.entries(a).map(([k, v]) => [k, k === 'n' ? v : v / a.n])) });
+}
 restoreSettings();
 
 // ---- run-level check: the real wiring (runFight, resolvePending) over fresh-crew runs ------------------
@@ -520,15 +548,23 @@ L('## How often each dilemma comes up');
 L();
 L('The defaults with the standing answers, D2 E2, all 9 crews x up to 100 seeds: the share of fights that raise it at least once.');
 L();
-L('| Encounter | Fights | techUnderFire | vanCantWait |');
-L('| --- | --- | --- | --- |');
-for (const r of dilemmaRows) L(`| ${r.enc} | ${r.fights} | ${P((r.techUnderFire ?? 0) / r.fights)} | ${P((r.vanCantWait ?? 0) / r.fights)} |`);
+L('| Encounter | Fights | techUnderFire (fights) | calls a fight | vanCantWait (fights) | calls a fight |');
+L('| --- | --- | --- | --- | --- | --- |');
+for (const r of dilemmaRows) L(`| ${r.enc} | ${r.fights} | ${P((r.techUnderFire ?? 0) / r.fights)} | ${D((r.techUnderFire_calls ?? 0) / r.fights)} | ${P((r.vanCantWait ?? 0) / r.fights)} | ${D((r.vanCantWait_calls ?? 0) / r.fights)} |`);
 L();
 {
   const m = (id, enc) => { const rs = results.filter((r) => r.enc === enc && !r.layer); return rs.reduce((a, r) => a + (r.asked[id] ?? 0), 0) / rs.length; };
   L(`Across every setting and fixed plan: holdHack techUnderFire ${P(m('techUnderFire', 'holdHack'))}; holdExtract vanCantWait ${P(m('vanCantWait', 'holdExtract'))}.`);
   L();
 }
+L('## The game\'s own starting crews');
+L();
+L('Not part of the declared gate. The defaults on the first four runners of a fresh crew and of the authored crew, D2 E2 (the shipped data), threat 3, hands-off (the standing orders answer call-ins), ' + SEEDS + ' seeds. The sim crews above are built to a spec and are stronger than the fresh crew.');
+L();
+L('| Crew | Risk | Encounter | Clean win | Job done | Someone left behind | People left a fight | Downs | Died |');
+L('| --- | --- | --- | --- | --- | --- | --- | --- | --- |');
+for (const r of realRows) L(`| ${r.startCrew} | ${r.risk} | ${r.enc} | ${P(r.won)} | ${P(r.done)} | ${P(r.left)} | ${D(r.people)} | ${D(r.down)} | ${P(r.dead)} |`);
+L();
 L('## Run-level check (the real wiring)');
 L();
 L('Fresh-crew runs through `startMission`, `runFight`, `describePending` and `resolvePending` (call-ins answered Leave on time / Carry on, death\'s door Pull back), 40 per job, to show the sim\'s loop is the run\'s loop and nothing in the wiring throws or sticks:');
