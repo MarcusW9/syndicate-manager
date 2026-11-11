@@ -2,6 +2,10 @@
 
 Generated text waiting to go into `src/data/`. Not imported by the game. Delete each file once its content has shipped.
 
+- `SPEC-battle-orders.md`: the battle rework as one spec (2026-11-10): threats, goals and orders, the owner's brief merged with both amendments and the agreed clarifications; suppression removed; six duties, shield, reserved damage, interruptible hack, authored dilemmas, save v61. Not built: the numbers sheet, the open decisions (section 25) and the validation gate come first.
+- `PLAN-battle-slices.md`: the build plan for the battle rework (2026-11-11): four slices (the engine and endurance at save v61; the screens; the sims on the real code with call-ins; left behind), principles, and the owner's writing pauses.
+- `HANDOFF-battle-rework.md`: a paste-ready prompt for the session that builds slice 1.
+- `NUMBERS-battle-orders.md`: first values for the battle rework's numbers sheet (2026-11-10): base difficulty on today's scale, the shot formula, action steps, pips and armour, enemy durability settings, risk in pips, clocks and deadlines, the validation gate's tolerances, and the expected trade-offs. Proposal for the owner. Section 12 holds Step 0's findings (played by `scripts/sim-step0.mjs`; reports in `docs/sims/step0-2026-11-10*.md`).
 - `district-hooks.md`: crisis hooks for the locked districts.
 - `writing-tasks.md`: writing the owner can do in other chats, with a prompt per task. Its source files are in `writing/` (generated from the game data on 2026-10-26; regenerate if the crises change).
 - `mission-log-prototype.md`: what the owner's Container 409 logs settled, checked against the engine; the brief for the first mission-log slice.
