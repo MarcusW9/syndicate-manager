@@ -29,7 +29,7 @@ h1{font:700 1.6rem var(--d);text-transform:uppercase;letter-spacing:.04em;margin
 .msg{display:flex;gap:10px;align-items:center;border:1px solid var(--line);background:var(--panel-2);padding:8px 10px;margin-top:6px}
 .tag{border:1px solid #8a6cff;color:#b9a6ff;font:700 .7rem var(--d);padding:1px 8px;letter-spacing:.1em}.msg small{color:var(--muted)}
 .hl{outline:2px dashed var(--accent);outline-offset:3px}
-.detail{min-height:230px}.detail h3{font:700 1.3rem var(--d);text-transform:uppercase;margin:0 0 6px}
+.cols3{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,5fr) minmax(0,3fr);gap:12px;align-items:start}.phone{width:300px;border:1px solid var(--line);padding:10px;display:grid;gap:10px;background:#0d1015}.detail{min-height:230px}.detail h3{font:700 1.3rem var(--d);text-transform:uppercase;margin:0 0 6px}
 .ghost{color:var(--muted);font-style:italic}
 .note{font-size:.8rem;color:var(--accent);margin-top:6px;font-family:var(--d);letter-spacing:.06em;text-transform:uppercase}
 </style></head><body>
@@ -58,7 +58,11 @@ const opts=[
 ['C: The Word as a pinned message','The Word becomes one pinned row at the top of the inbox and opens like any message. Coming up is the same slim card as A, on the left under Joss. Cleanest list, but The Word is hidden until tapped.',
  `<div class="cols"><div class="stack">${P('','',joss+alert)}${P('hl','Coming up',`<div class="days v">${days(key,1)}</div><div class="more" style="margin-top:6px">+4 more ›</div>`)}${P('','Week 19',stats)}${P('','Messages',`<div class="hl">${wordC}</div>${msgs}`)}</div>${detail}</div>`],
 ['D: A, plus the week stats as one row','Everything in A, and Cash / Due Sunday / Free / Jobs collapse into one compact row, so the messages start a further ~60px higher.',
- `<div class="row2">${P('hl','Coming up',`<div class="days">${days(key,1)}</div><div class="more" style="margin-top:6px">+4 more ›</div>`)}${P('hl','The Word',word)}</div><div class="cols"><div class="stack">${P('','',joss+alert)}${P('hl','',statsOne)}${P('','Messages',msgs)}</div>${detail}</div>`],
+ `<div class="row2">${P('hl','Coming up',`<div class="days">${days(key,1)}</div><div class="more" style="margin-top:6px">+4 more ›</div>`)}${P('hl','The Word',word)}</div><div class="cols"><div class="stack">${P('','',joss+alert)}${P('hl','',statsOne)}${P('','Messages',msgs)}</div>${detail}</div>`],,
+['E: messages first, context moves to a side rail (new)','Messages are the first thing under Joss and the alert, in the left column. The open report is in the middle. Coming up (key dates), the week stats and The Word sit in a narrow right rail, always visible but never pushing the messages down. On a phone it stacks: Joss, alert, messages, then Week, Coming up and The Word below the list.',
+ `<div class="cols3"><div class="stack">${P('','',joss+alert)}${P('hl','Messages',msgs+msgs)}</div>${detail}<div class="stack">${P('hl','Week 19',stats.replace('repeat(4,1fr)','repeat(2,1fr)'))}${P('hl','Coming up',`<div class="days v">${days(key,1)}</div><div class="more" style="margin-top:6px">+4 more ›</div>`)}${P('hl','The Word',word)}</div></div>`],
+['E on a phone (360-430px)','Single column: the messages come straight after Joss and the alert. The context cards follow below, so the list is never pushed down.',
+ `<div class="phone">${P('','',joss+alert)}${P('hl','Messages',msgs)}${P('hl','Week 19',stats)}${P('hl','Coming up',`<div class="days v">${days(key,1)}</div>`)}${P('hl','The Word',word)}</div>`]
 ];
 document.body.insertAdjacentHTML('beforeend',opts.map(([h,p,b])=>`<div class="opt"><h2>${h.replace('(recommended)','<span class="rec">· recommended</span>')}</h2><p>${p}</p><div class="screen">${b}</div></div>`).join(''));
 </script></body></html>
