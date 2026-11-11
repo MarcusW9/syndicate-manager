@@ -24,7 +24,7 @@
 
 import { FIGHT, ENEMIES, ENEMY_HIT, SITE_ENEMIES, COUNT_BY_THREAT, CLOCKS, FIGHTS, THREATS } from '../data/fights.js';
 import { DILEMMAS } from '../data/dilemmas.js';
-import { lineText } from '../data/fightText.js';
+import { lineText } from './fighttext.js';
 import { effectiveStat } from './crew.js';
 import { weaponOf, armourOf } from './battle.js';
 import { patchBonus, counted } from './gear.js';
@@ -435,7 +435,7 @@ function holds(b, cond) {
     if (k === 'of') continue;
     if (k === 'any') { if (!v.some((c) => holds(b, { of: cond.of, ...c }))) return false; continue; }
     if (k === 'stage') { if (b.stage !== v) return false; continue; }
-    if (k === 'vanLastRound') { if ((b.round === b.goal.vanLeaves && boardingStage(b)) !== v) return false; continue; }
+    if (k === 'vanLastRound') { if ((b.round === b.goal.vanLeaves && boardingStage(b) && !b.vanHeld) !== v) return false; continue; }
     if (k === 'outsideAtLeast') { if (standing(b).length + outsideDown(b).length < v) return false; continue; }
     if (k === 'radioShown') { if (b.threats.some((t) => RADIO(t) && !t.cancelled) !== v) return false; continue; }
     if (!prot || !present(prot)) return false; // the rest are about the specialist
@@ -566,7 +566,6 @@ export function playRound(b, rng) {
   const lines = [];
   const defeated = []; const down = []; const fled = []; const withdrawn = [];
   const result = { lines, actions: [], unanswered: [], defeated, goalDelta: 0, down, fled, withdrawn, heat: 0, neural: 0, ended: null };
-  const heat0 = b.heat;
   if (!b.drawn) lines.push(...startRound(b, rng));
   const say = (kind, key, slots = {}, extra = {}) => { const l = { kind, key, ...extra, text: lineText(key, slots) }; lines.push(l); return l; };
   const E = (n) => `${b.enemies.find((x) => x.n === n).kind} ${n}`;
@@ -730,7 +729,9 @@ export function playRound(b, rng) {
   b.drawn = false;
   checkEnd(b, rng, say);
   result.ended = b.end;
-  result.heat = b.heat - heat0;
+  // The heat since the last round was reported, including the early van, which startRound adds before playRound (core/runfight.js calls it first).
+  result.heat = b.heat - (b.heatReported ?? 0);
+  b.heatReported = b.heat;
   return result;
 }
 
@@ -749,8 +750,8 @@ function checkEnd(b, rng, say) {
   if (prot && (prot.down || prot.dead)) return finish(b, 'lost', 'end.lost', { who: prot.handle });
   if (prot && prot.withdrawn) return finish(b, 'abandoned', 'end.abandoned', { who: prot.handle });
   const outside = outsideDown(b);
-  const fightsOn = committed(b) || b.runners.some((r) => r.down && r.fightOn);
-  if (!boardingStage(b) && !fightsOn && b.runners.some((r) => r.down && !r.dead)) return finish(b, 'extracted', 'end.extracted');
+  // Someone down whom nobody has chosen to fight on for pulls the crew back (a watched crew is asked first, runfight.js); a runner already pushed on for does not.
+  if (!boardingStage(b) && !committed(b) && b.runners.some((r) => r.down && !r.dead && !r.fightOn)) return finish(b, 'extracted', 'end.extracted');
   const leave = (who) => {
     // Left behind: standing or down, they are missing (spec 8). On committed a runner left down may not make it.
     for (const r of who) { r.left = true; b.left.push(r.id); }
