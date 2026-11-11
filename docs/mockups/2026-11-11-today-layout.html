@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Today layout options (mockup)</title>
+<style>
+:root{--bg:#0a0c0f;--panel:#12151b;--panel-2:#161a21;--line:#2a303b;--text:#e9ecf1;--muted:#8a93a6;--accent:#ff3d5f;--accent-2:#3de8d8;--warn:#f2d541;--d:'Rajdhani','Barlow Condensed','Arial Narrow',system-ui,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 system-ui,sans-serif;padding:24px}
+h1{font:700 1.6rem var(--d);text-transform:uppercase;letter-spacing:.04em;margin:0 0 4px}
+.lead{color:var(--muted);margin:0 0 28px;max-width:70ch}
+.opt{margin:0 0 44px}.opt>h2{font:700 1.15rem var(--d);letter-spacing:.1em;text-transform:uppercase;color:var(--accent-2);margin:0 0 2px}
+.opt>p{margin:0 0 10px;color:var(--muted);max-width:80ch}
+.rec{color:var(--warn);font-family:var(--d);letter-spacing:.08em}
+.screen{border:1px solid var(--line);padding:14px;background:#0d1015;max-width:1100px;display:grid;gap:12px}
+.panel{background:var(--panel);border:1px solid var(--line);padding:10px 14px;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%);position:relative}
+.panel::before{content:'';position:absolute;left:0;top:0;width:44px;height:2px;background:var(--accent-2)}
+.t{font:700 .8rem var(--d);letter-spacing:.2em;text-transform:uppercase;color:var(--accent-2);margin:0 0 6px}
+.cols{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:12px;align-items:start}
+.stack{display:grid;gap:12px;align-content:start}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.days{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:12px}.days.v{grid-auto-flow:row}
+.day{border-left:1px solid var(--line);padding-left:9px;font-size:.85rem}.day b{display:block;font:700 .8rem var(--d);letter-spacing:.1em;color:var(--accent-2);text-transform:uppercase}
+.warn{color:#ff8a8a}
+.chips{display:flex;gap:8px;flex-wrap:wrap}.chip{border:1px solid var(--line);background:var(--panel-2);padding:4px 10px;font-size:.85rem}.chip b{font:700 .75rem var(--d);letter-spacing:.1em;color:var(--accent-2);margin-right:6px}
+.more{color:var(--muted);font-size:.8rem}
+.joss{display:flex;gap:10px;align-items:center}.av{width:36px;height:36px;background:#1c2b2e;border:1px solid var(--accent-2);flex:none}
+.alert{border:1px solid #6b5f1c;background:#2a2713;color:var(--warn);font:700 .85rem var(--d);letter-spacing:.06em;text-transform:uppercase;padding:8px 12px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.stats span{display:block;font:.7rem var(--d);letter-spacing:.1em;color:var(--muted);text-transform:uppercase}.stats b{font:700 1.05rem var(--d)}
+.stats.one{display:flex;gap:16px;align-items:baseline;font-family:var(--d);font-size:.9rem;flex-wrap:wrap}.stats.one i{font-style:normal;color:var(--muted);margin-right:4px;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase}
+.word{border-left:2px solid var(--accent-2);padding-left:10px;font-size:.85rem}.word p{margin:0 0 4px}
+.msg{display:flex;gap:10px;align-items:center;border:1px solid var(--line);background:var(--panel-2);padding:8px 10px;margin-top:6px}
+.tag{border:1px solid #8a6cff;color:#b9a6ff;font:700 .7rem var(--d);padding:1px 8px;letter-spacing:.1em}.msg small{color:var(--muted)}
+.hl{outline:2px dashed var(--accent);outline-offset:3px}
+.cols3{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,5fr) minmax(0,3fr);gap:12px;align-items:start}.phone{width:300px;border:1px solid var(--line);padding:10px;display:grid;gap:10px;background:#0d1015}.detail{min-height:230px}.detail h3{font:700 1.3rem var(--d);text-transform:uppercase;margin:0 0 6px}
+.ghost{color:var(--muted);font-style:italic}
+.note{font-size:.8rem;color:var(--accent);margin-top:6px;font-family:var(--d);letter-spacing:.06em;text-transform:uppercase}
+</style></head><body>
+<h1>Today: where Coming up and The Word go</h1>
+<p class="lead">Mockups of the four options (desktop width, same data as the screenshot). Dashed red outline = what moved or changed. The messages and the open report are the point of the screen, so each option is judged by how high the messages start.</p>
+<script>
+const days = (keys) => keys.map(([w,l,x])=>`<div class="day"><b>${w}</b>${l.map(s=>`<div class="${x&&s.startsWith('Bills')?'warn':''}">${s}</div>`).join('')}</div>`).join('');
+const full=[['Wed',['Scout report: new leads','Last day to sign Minibus (driver)']],['Thu',['3 back from the job ▸','Last day for Rent Round']],['Fri',['Last day for Dry Shelf']],['Sun',['Last day for Landing Hands','Bills: ¥5,900 (wages ¥3,900, rent ¥2,000)']],['Next Mon',['New freelancers and street talk']]];
+const key=[['Sun',['Bills ¥5,900']],['Wed',['Last day to sign Minibus']],['Fri',['Last day for Dry Shelf']]];
+const joss=`<div class="joss"><div class="av"></div><div><div class="t" style="margin:0">Joss · online</div>We're short-handed today. We'll find work that leaves room for people to recover.</div></div>`;
+const alert=`<div class="alert">Unavailable today: Grid (hurt). We'll plan with the others. ›</div>`;
+const stats=`<div class="stats"><div><span>Cash</span><b>¥27,070</b></div><div><span>Due Sunday</span><b>¥5,900</b></div><div><span>Free</span><b>6/10</b></div><div><span>Jobs</span><b>3</b></div></div>`;
+const statsOne=`<div class="stats one"><span><i>Wk 19</i></span><span><i>Cash</i><b>¥27,070</b></span><span><i>Due Sun</i><b>¥5,900</b></span><span><i>Free</i><b>6/10</b></span><span><i>Jobs</i><b>3</b></span></div>`;
+const word=`<div class="word"><p>BL Holdings is making offers to other tongs' people. Kwame Mensah took one.</p><p>BL Holdings is a district tong now, and acting like it.</p><p>Jade Mantis Hand took work in the Night Market off somebody else.</p></div>`;
+const wordC=`<div class="msg"><span class="tag">WORD</span><div><b>The Word</b> · 3 lines <small>BL Holdings is making offers to other tongs' people…</small></div></div>`;
+const msgs=`<div class="msg"><span class="tag">CREW</span><div><b>Sensor: Riding High</b><br><small>Three clean jobs and they have started walk…</small></div></div><div class="msg"><span class="tag">JOB</span><div><b>Protection run: report</b><br><small>Day 127</small></div></div><div class="msg"><span class="tag">CREW</span><div><b>Grid: hurt</b><br><small>Back in 2 days</small></div></div>`;
+const detail=`<section class="panel detail"><h3>Protection run completed</h3><div class="ghost">Report · Day 127 · crew faces, Joss's read, turning point, timeline…</div></section>`;
+const P=(cls,t,b)=>`<section class="panel ${cls||''}">${t?`<div class="t">${t}</div>`:''}${b}</section>`;
+const opts=[
+['Today now (for comparison)','Full-width Coming up, then Joss, alert, stats, The Word, and only then the messages. Messages start about 640px down.',
+ `${P('','Coming up',`<div class="days">${days(full,1)}</div>`)}<div class="cols"><div class="stack">${P('','',joss+alert)}${P('','Week 19',stats+`<div style="margin-top:8px">${word}</div>`)}${P('','Messages',msgs)}</div>${detail}</div>`],
+['A: slim Coming up left, The Word top right (recommended)','A short top row: key dates on the left, The Word level with it on the right. The messages start straight under it, and the open report keeps the right-hand column. Coming up shows only bills, raids, last-day deadlines and the season turn; routine items fold into "+4 more".',
+ `<div class="row2">${P('hl','Coming up',`<div class="days">${days(key,1)}</div><div class="more" style="margin-top:6px">+4 more ›</div>`)}${P('hl','The Word',word)}</div><div class="cols"><div class="stack">${P('','',joss+alert)}${P('','Week 19',stats)}${P('','Messages',msgs)}</div>${detail}</div>`],
+['B: one-line strip, The Word beside the report','Coming up shrinks to a single row of chips (key dates only). The Word moves into the right-hand panel above the open message. The left column stays as it is, minus The Word.',
+ `${P('hl','',`<div class="chips"><span class="t" style="margin:0 8px 0 0;align-self:center">Coming up</span><span class="chip"><b>WED</b>Last day to sign Minibus</span><span class="chip"><b>FRI</b>Last day for Dry Shelf</span><span class="chip"><b>SUN</b>Bills ¥5,900</span><span class="chip more">+4 more ›</span></div>`)}<div class="cols"><div class="stack">${P('','',joss+alert)}${P('','Week 19',stats)}${P('','Messages',msgs)}</div><div class="stack">${P('hl','The Word',word)}${detail}</div></div>`],
+['C: The Word as a pinned message','The Word becomes one pinned row at the top of the inbox and opens like any message. Coming up is the same slim card as A, on the left under Joss. Cleanest list, but The Word is hidden until tapped.',
+ `<div class="cols"><div class="stack">${P('','',joss+alert)}${P('hl','Coming up',`<div class="days v">${days(key,1)}</div><div class="more" style="margin-top:6px">+4 more ›</div>`)}${P('','Week 19',stats)}${P('','Messages',`<div class="hl">${wordC}</div>${msgs}`)}</div>${detail}</div>`],
+['D: A, plus the week stats as one row','Everything in A, and Cash / Due Sunday / Free / Jobs collapse into one compact row, so the messages start a further ~60px higher.',
+ `<div class="row2">${P('hl','Coming up',`<div class="days">${days(key,1)}</div><div class="more" style="margin-top:6px">+4 more ›</div>`)}${P('hl','The Word',word)}</div><div class="cols"><div class="stack">${P('','',joss+alert)}${P('hl','',statsOne)}${P('','Messages',msgs)}</div>${detail}</div>`],,
+['E: messages first, context moves to a side rail (new)','Messages are the first thing under Joss and the alert, in the left column. The open report is in the middle. Coming up (key dates), the week stats and The Word sit in a narrow right rail, always visible but never pushing the messages down. On a phone it stacks: Joss, alert, messages, then Week, Coming up and The Word below the list.',
+ `<div class="cols3"><div class="stack">${P('','',joss+alert)}${P('hl','Messages',msgs+msgs)}</div>${detail}<div class="stack">${P('hl','Week 19',stats.replace('repeat(4,1fr)','repeat(2,1fr)'))}${P('hl','Coming up',`<div class="days v">${days(key,1)}</div><div class="more" style="margin-top:6px">+4 more ›</div>`)}${P('hl','The Word',word)}</div></div>`],
+['E on a phone (360-430px)','Single column: the messages come straight after Joss and the alert. The context cards follow below, so the list is never pushed down.',
+ `<div class="phone">${P('','',joss+alert)}${P('hl','Messages',msgs)}${P('hl','Week 19',stats)}${P('hl','Coming up',`<div class="days v">${days(key,1)}</div>`)}${P('hl','The Word',word)}</div>`]
+];
+document.body.insertAdjacentHTML('beforeend',opts.map(([h,p,b])=>`<div class="opt"><h2>${h.replace('(recommended)','<span class="rec">· recommended</span>')}</h2><p>${p}</p><div class="screen">${b}</div></div>`).join(''));
+</script></body></html>

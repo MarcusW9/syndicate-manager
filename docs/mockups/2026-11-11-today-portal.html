@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Today: messages first (mockup F)</title>
+<style>
+:root{--bg:#0a0c0f;--panel:#12151b;--panel-2:#161a21;--line:#2a303b;--text:#e9ecf1;--muted:#8a93a6;--accent:#ff3d5f;--accent-2:#3de8d8;--warn:#f2d541;--d:'Rajdhani','Barlow Condensed','Arial Narrow',system-ui,sans-serif;
+  --c-crew:#b9a6ff;--c-job:#3de8d8;--c-call:#ff3d5f;--c-money:#f2d541;--c-word:#7fb8ff;--c-scout:#7ee08a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 system-ui,sans-serif;padding:24px}
+h1{font:700 1.6rem var(--d);text-transform:uppercase;letter-spacing:.04em;margin:0 0 4px}
+.lead{color:var(--muted);margin:0 0 20px;max-width:80ch}
+.opt{margin:0 0 40px}.opt>h2{font:700 1.15rem var(--d);letter-spacing:.1em;text-transform:uppercase;color:var(--accent-2);margin:0 0 2px}
+.opt>p{margin:0 0 10px;color:var(--muted);max-width:85ch}
+.screen{border:1px solid var(--line);padding:14px;background:#0d1015;max-width:1180px}
+.panel{background:var(--panel);border:1px solid var(--line);padding:10px 14px;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%);position:relative}
+.panel::before{content:'';position:absolute;left:0;top:0;width:44px;height:2px;background:var(--accent-2)}
+.t{font:700 .8rem var(--d);letter-spacing:.2em;text-transform:uppercase;color:var(--accent-2);margin:0 0 8px;display:flex;justify-content:space-between;align-items:baseline}
+.t a{color:var(--muted);font-weight:600;letter-spacing:.08em;text-decoration:none}
+.cols3{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,5fr) minmax(0,3fr);gap:12px;align-items:start}
+.stack{display:grid;gap:12px;align-content:start}
+.joss{display:flex;gap:10px;align-items:center}.av{width:36px;height:36px;background:#1c2b2e;border:1px solid var(--accent-2);flex:none}
+.alert{margin-top:8px;border:1px solid #6b5f1c;background:#2a2713;color:var(--warn);font:700 .85rem var(--d);letter-spacing:.06em;text-transform:uppercase;padding:8px 12px;min-height:44px;display:flex;align-items:center}
+/* filters */
+.filters{display:flex;gap:6px;margin-bottom:8px}
+.filters button{flex:1;min-height:44px;background:var(--panel-2);border:1px solid var(--line);color:var(--muted);font:700 .8rem var(--d);letter-spacing:.12em;text-transform:uppercase}
+.filters .on{border-color:var(--accent-2);color:var(--text);background:#123234}
+.filters .need{color:var(--accent)}.filters b{display:inline-block;min-width:20px;margin-left:4px;padding:0 5px;background:var(--accent);color:#fff;font-size:.75rem}
+/* list */
+.dayh{font:700 .75rem var(--d);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:8px 2px 4px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.m{display:grid;grid-template-columns:4px 1fr auto;gap:0 10px;align-items:center;min-height:52px;padding:6px 10px 6px 0;background:var(--panel-2);border:1px solid var(--line);margin-bottom:4px}
+.m .bar{align-self:stretch}
+.m small{display:block;color:var(--muted);font-size:.75rem}
+.m strong{font-weight:600;font-size:.92rem}
+.m.unread strong{font-weight:800}.m.unread small::after{content:' ●';color:var(--accent-2)}
+.m.open{border-color:var(--accent-2);background:#14262a}
+.tag{font:700 .68rem var(--d);letter-spacing:.12em;padding:1px 7px;border:1px solid currentColor;text-transform:uppercase;white-space:nowrap;justify-self:end}
+.m .act{display:block;color:var(--accent);font:700 .7rem var(--d);letter-spacing:.1em;text-transform:uppercase;margin-top:2px}
+.k-crew{color:var(--c-crew)}.k-job{color:var(--c-job)}.k-call{color:var(--c-call)}.k-money{color:var(--c-money)}.k-word{color:var(--c-word)}.k-scout{color:var(--c-scout)}
+.b-crew{background:var(--c-crew)}.b-job{background:var(--c-job)}.b-call{background:var(--c-call)}.b-money{background:var(--c-money)}.b-word{background:var(--c-word)}.b-scout{background:var(--c-scout)}
+/* detail */
+.detail h3{font:700 1.35rem var(--d);text-transform:uppercase;margin:0 0 2px}
+.detail .sub{color:var(--muted);margin:0 0 10px;font-size:.9rem}
+.faces{display:flex;gap:8px;margin-bottom:10px}.face{border:1px solid var(--line);padding:8px 10px;text-align:center;font:700 .85rem var(--d);min-width:74px}.face span{display:block;color:var(--muted);font-weight:500;font-size:.75rem}
+.jq{border-left:3px solid var(--accent-2);background:#13282a;padding:8px 12px;margin-bottom:10px}.jq b{font:700 .72rem var(--d);letter-spacing:.14em;color:var(--accent-2);display:block}
+.lbl{font:600 .75rem var(--d);letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-top:8px}
+.inline{border:1px solid var(--line);background:var(--panel-2);padding:8px 10px;margin-top:10px}
+.btns{display:flex;gap:8px;margin-top:8px}.btn{min-height:44px;padding:0 14px;border:1px solid var(--line);background:var(--panel-2);color:var(--text);font:700 .8rem var(--d);letter-spacing:.1em;text-transform:uppercase}.btn.p{background:var(--accent);border-color:var(--accent)}
+/* rail */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stats span{display:block;font:.7rem var(--d);letter-spacing:.1em;color:var(--muted);text-transform:uppercase}.stats b{font:700 1.1rem var(--d)}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.wd{min-height:58px;border:1px solid var(--line);background:var(--panel-2);display:grid;justify-items:center;align-content:start;gap:3px;padding:4px 0;font:700 .7rem var(--d);letter-spacing:.08em;color:var(--muted)}
+.wd.today{border-color:var(--accent-2);color:var(--accent-2)}
+.wd.sel{background:#14262a;border-color:var(--accent-2);color:var(--text)}
+.dot{width:8px;height:8px}
+.wd.past{opacity:.45}
+.wdetail{margin-top:8px;border-left:2px solid var(--accent-2);padding-left:8px;font-size:.85rem}
+.wdetail b{font:700 .75rem var(--d);letter-spacing:.12em;color:var(--accent-2);text-transform:uppercase;display:block}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;font-size:.72rem;color:var(--muted)}.legend i{display:inline-block;width:8px;height:8px;margin-right:4px}
+.word p{margin:0 0 6px;font-size:.85rem;border-left:2px solid var(--c-word);padding-left:8px}
+.note{font:600 .72rem var(--d);letter-spacing:.08em;color:var(--accent);text-transform:uppercase;margin:4px 0 0}
+.pin{outline:2px dashed var(--accent);outline-offset:3px}
+.phonewrap{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+.phone{width:390px;border:1px solid var(--line);padding:10px;display:grid;gap:10px;background:#0d1015}
+.callouts{max-width:520px;color:var(--muted);font-size:.9rem}.callouts li{margin-bottom:8px}.callouts b{color:var(--text)}
+</style></head><body>
+<h1>Today: messages first (mockup F)</h1>
+<p class="lead">Option E with what we took from FM27's Portal: messages lead, the open message beside them, and the week's context in a side rail that shows information rather than acting as buttons. Same data as the Day 127 screenshot. Numbered red notes match the list under the phone view.</p>
+<script>
+const msg=(k,tag,from,subj,o={})=>`<div class="m ${o.unread?'unread':''} ${o.open?'open':''}"><span class="bar b-${k}"></span><div><small>${from}</small><strong>${subj}</strong>${o.act?`<span class="act">${o.act}</span>`:''}</div><span class="tag k-${k}">${tag}</span></div>`;
+const list=(n)=>`
+ <div class="filters"><button class="on">All</button><button class="need">Needs you<b>2</b></button><button>Unread<b style="background:var(--muted)">3</b></button></div>
+ <div class="dayh">Today · Day 127</div>
+ ${msg('call','Call','Raster · Dry Shelf','They need a call: back out or push on?',{unread:1,act:'Waiting on you'})}
+ ${msg('job','Job','Joss','Protection run: report',{open:n!=='phone'})}
+ ${msg('crew','Crew','Sensor','Riding High',{unread:1})}
+ ${msg('crew','Crew','Joss','3 back from the job: Raster, Plug, Sensor')}
+ <div class="dayh">Yesterday · Day 126</div>
+ ${msg('money','Money','Grid','Asks about a raise',{unread:1,act:'Waiting on you'})}
+ ${msg('scout','Scout','Your scout','2 new leads: Minibus (driver), Ledger (fixer)')}
+ ${msg('crew','Crew','Joss','Grid hurt: back in 2 days')}
+ <div class="dayh">Monday · Day 125</div>
+ ${msg('word','Word','The street','Monday brief: The Word, 3 lines')}`;
+const joss=`<section class="panel"><div class="joss"><div class="av"></div><div><div class="t" style="margin:0">Joss · online</div>We're short-handed today. We'll find work that leaves room for people to recover.</div></div><div class="alert">Unavailable today: Grid (hurt). We'll plan with the others. ›</div></section>`;
+const days=[['Mon',[],'past'],['Tue',[],'past'],['Wed',['scout','job'],'today'],['Thu',['crew','job']],['Fri',['job']],['Sat',[]],['Sun',['money','job'],'sel']];
+const week=(sel='Sun')=>`<div class="week">${days.map(([d,ks,c])=>`<div class="wd ${c&&c!=='sel'?c:''} ${d===sel?'sel':''}">${d}${ks.map(k=>`<span class="dot b-${k}"></span>`).join('')}</div>`).join('')}</div>
+ <div class="wdetail"><b>Sun</b>Bills ¥5,900 (wages ¥3,900, rent ¥2,000)<br>Last day for Landing Hands</div>
+ <div class="legend"><span><i class="b-money"></i>money</span><span><i class="b-job"></i>job deadline</span><span><i class="b-crew"></i>crew</span><span><i class="b-scout"></i>leads</span><span><i class="b-call"></i>raid</span></div>`;
+const stats=`<div class="stats"><div><span>Cash</span><b>¥27,070</b></div><div><span>Due Sunday</span><b>¥5,900</b></div><div><span>Free</span><b>6/10</b></div><div><span>Jobs open</span><b>3</b></div></div>`;
+const word=`<div class="word"><p>BL Holdings is making offers to other tongs' people. Kwame Mensah took one.</p><p>BL Holdings is a district tong now, and acting like it.</p><p>Jade Mantis Hand took work in the Night Market off somebody else.</p></div>`;
+const detail=`<section class="panel detail"><h3>Protection run completed</h3><p class="sub">Job · Day 127</p>
+ <div class="faces"><div class="face">Raster<span>2 ✓ · 1 ✗</span></div><div class="face">Plug<span>Backed them up</span></div><div class="face">Sensor<span>1 ✓</span></div></div>
+ <div class="jq"><b>Joss</b>Not everything held together. Let's read it through and see what we can learn.</div>
+ <div class="lbl">Turning point</div>Raster's stealth let them down. Boots ring on the office steps and Raster takes only what they can reach before leaving.
+ <div class="lbl">What hurt us</div>"Pay the fee" cost ¥800 whatever the roll.
+ <div class="inline pin"><div class="lbl" style="margin:0">Raster earned something</div>Raster can learn <b>Light Feet</b> (stealth +1 on quiet approaches).<div class="btns"><button class="btn p">Train it · ¥600</button><button class="btn">Not now</button></div></div>
+ <p class="note">⑥ decisions are made inside the message</p>
+ <div class="lbl">Timeline</div><span class="muted" style="color:var(--muted)">1 · Raster waits behind a container corner… (rest of the report as now)</span></section>`;
+const P=(t,b,cls='')=>`<section class="panel ${cls}">${t?`<div class="t">${t}</div>`:''}${b}</section>`;
+document.body.insertAdjacentHTML('beforeend',`
+<div class="opt"><h2>Desktop</h2><p>Three columns: messages, the open message, the week's context. Nothing above the message list but Joss and today's alert.</p>
+<div class="screen"><div class="cols3">
+ <div class="stack">${joss}${P('Messages',list()+'<p class="note">① needs-you filter · ② colour by kind · ③ day headers · ④ merged lines</p>','pin')}</div>
+ ${detail}
+ <div class="stack">${P('Week 19',stats)}${P('This week <a>tap a day</a>',week()+'<p class="note">⑤ week strip: tap a day to read it</p>','pin')}${P('The Word',word)}</div>
+</div></div></div>
+<div class="opt"><h2>Phone (390px)</h2><p>One column. Joss, the alert, then the messages. The week, stats and The Word come after the list. Opening a message replaces the list (as now), with Back.</p>
+<div class="phonewrap"><div class="phone">${joss}${P('Messages',list('phone'))}${P('This week',week())}${P('Week 19',stats)}${P('The Word',word)}</div>
+<ol class="callouts">
+ <li><b>Needs you (2)</b>: the same count as Today's tab badge: calls, raid calls, renewals, raise asks. The FM27 "Tasks" filter.</li>
+ <li><b>Colour by kind</b>: a stripe and tag per kind (call, job, crew, money, scout, word) so a call stands out from a crew note. Colour is backed by the tag word, never colour alone.</li>
+ <li><b>Day headers</b> replace the day on every row; each row is sender, then the subject in bold.</li>
+ <li><b>Merged lines</b>: "3 back from the job" and "2 new leads" arrive as one message each, not three and two.</li>
+ <li><b>Week strip</b> replaces the Coming up text block: seven days, a dot per kind of thing on that day, tap a day to read its lines. Today is outlined, past days are faded.</li>
+ <li><b>Decide inside the message</b>: offers, calls and raises carry their buttons in the message itself (already true for call-ins, renewals and hall offers; this makes it the rule).</li>
+ <li>The rail is <b>information only</b>: no card on Today doubles as a big button; a small "›" link goes to the page's home where there is one.</li>
+</ol></div></div>`);
+</script></body></html>
