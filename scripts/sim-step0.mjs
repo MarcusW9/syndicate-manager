@@ -37,6 +37,10 @@ const PROFILES = {
   enforcersHalf: { startEnemies: 4, hitsByKind: true, docksEnforcers: true, docksHalf: true },
   // Contested boarding and the van that can't wait (owner, 2026-11-11), on the `enforcers` mix.
   contested: { startEnemies: 4, hitsByKind: true, docksEnforcers: true, contested: true },
+  // The van, complete (2026-11-11): contested boarding with three door slots, holding the van is two
+  // rounds for +1 heat and no extra enemy, no boardUnderFire dilemma. Standby (at the van) and
+  // overwatch (covering the door) are compared in their own table.
+  van: { startEnemies: 4, hitsByKind: true, docksEnforcers: true, contested: true, doorSlots: 3, holdRounds: 2, holdAddsEnemy: false, noBoardUnderFire: true },
 };
 
 const ASSUMPTIONS = [
@@ -69,6 +73,11 @@ const N = {
   // doorSlots a round, and is in the open while they run for it. The van waits vanWait rounds after
   // it pulls in; holding it one more round costs holdHeat and brings one more enemy.
   doorSlots: 2, contestedBoardStep: -4, vanWait: 4, holdHeat: 1, // tuned in a sweep, 2026-11-11
+  holdRounds: 1, holdAddsEnemy: true, // what holding the van one more time buys and costs
+  overwatchStep: -1, // overwatch shoots from a better angle (as today)
+  // Overwatch (owner: one attack a round): the docks get a rifle (2 uses, strong on a margin of 6),
+  // the heights a drone (3 uses, strong on 10); the operator is a specialist (the group's main margin).
+  overwatchKit: { holdExtract: { kit: 'rifle', uses: 2, strong: 6 }, holdHack: { kit: 'drone', uses: 3, strong: 10 } },
   // While boarding, a downed runner doesn't end the fight: a teammate can carry them (a cool roll
   // carryStep harder than boarding, one door slot); on success both are in the van.
   carryStep: 2,
@@ -153,7 +162,7 @@ function shuffle(a, rng) {
   return a;
 }
 
-function buildFight({ enc, dur, exp, group, lineup, plan, seed, deckStyle = 'normal', log = false }) {
+function buildFight({ enc, dur, exp, group, lineup, plan, seed, deckStyle = 'normal', log = false, standby = false, overwatch = false }) {
   const key = [enc, dur, exp, group, lineup, deckStyle, seed];
   const F = {
     enc, type: ENCOUNTERS[enc].type, dur, aimStep: EXPOSURE[exp], deckStyle, plan,
@@ -162,8 +171,17 @@ function buildFight({ enc, dur, exp, group, lineup, plan, seed, deckStyle = 'nor
     round: 0, stage: 0, work: 0, board: 0, vanRound: N.vanRound, clock: N.alarmStart, nextPressure: N.pressureFirst,
     extras: 0, arriving: [], smoke: 1, smokeUsed: 0, vanUsed: 0, heat: 0, end: null,
     dilemmas: { techUnderFire: 0, boardUnderFire: 0, vanCantWait: 0 }, log: log ? [] : null,
-    vanLeaves: null, held: 0, leftBehind: 0,
+    vanLeaves: null, held: 0, leftBehind: 0, standby: null, standbyOut: false, ow: null,
   };
+  if (standby) {
+    // The standby rides with the van: a gunner, rolled like the rest of the crew.
+    const sb = buildCrew(group, 'b', makeRng(hash('standby', group, lineup, seed)))[2];
+    F.standby = { ...sb, id: F.crew.length + 1, handle: 'Kit' };
+  }
+  if (overwatch) {
+    const k = N.overwatchKit[ENCOUNTERS[enc].type];
+    F.ow = { ...k, value: N.base + CREW_GROUPS[group].main, left: k.uses, handle: 'Hawk' };
+  }
   F.protect = F.type === 'holdHack' ? F.crew.find((r) => r.role === 'tech').id : null;
   const kinds = ENCOUNTERS[enc].kinds;
   const rComp = makeRng(hash('comp', ...key));
@@ -289,6 +307,9 @@ function enemyOrder(F, list, priority) {
   });
 }
 
+// Door slots this round: the standby at the van door helps one more in, until they go out themselves.
+const doorSlots = (F) => N.doorSlots + (F.standby && !F.standbyOut ? 1 : 0);
+
 function tryDuty(F, r, duty, target, priority, res) {
   switch (duty) {
     case 'withdraw': return { kind: 'withdraw' };
@@ -296,7 +317,7 @@ function tryDuty(F, r, duty, target, priority, res) {
       if (F.type === 'holdHack') return r.id === F.protect && F.work < N.workNeeded ? { kind: 'work' } : null;
       if (F.stage !== 1) return null;
       if (N.contested) {
-        if (res.doors >= N.doorSlots) return null;
+        if (res.doors >= doorSlots(F)) return null;
         res.doors++;
         // The crew's own call: the boarder with the best cool goes back for a downed teammate.
         const hurt = [...res.carriers].find(([id, by]) => by === r.id && !res.carried.has(id));
@@ -314,7 +335,7 @@ function tryDuty(F, r, duty, target, priority, res) {
       // An order to protect a teammate who is down at the van means carrying them (2026-11-11).
       const downMate = typeof target === 'number' && F.crew.find((x) => x.id === target && x.down && !x.aboard && !x.dead);
       if (downMate) {
-        if (!(N.contested && F.type === 'holdExtract' && F.stage === 1) || res.doors >= N.doorSlots || res.carried.has(downMate.id)) return null;
+        if (!(N.contested && F.type === 'holdExtract' && F.stage === 1) || res.doors >= doorSlots(F) || res.carried.has(downMate.id)) return null;
         res.doors++; res.carried.add(downMate.id); return { kind: 'carry', target: downMate.id };
       }
       const T = target === 'protected' ? F.protect : target ?? (F.protect && F.protect !== r.id ? F.protect : lowestPips(standing(F).filter((x) => x.id !== r.id))?.id);
@@ -414,6 +435,16 @@ function playRound(F) {
   if (F.type === 'holdExtract' && F.round >= F.nextPressure && F.extras < N.maxExtraEnemies) {
     F.extras++; F.nextPressure += N.pressureEvery; const e = newEnemy(F, 'hired'); arrivals.push(`pressure: ${e.kind} ${e.n} arrives`);
   }
+  if (F.standby && !F.standbyOut && N.contested && F.type === 'holdExtract' && F.stage === 1 && F.crew.some((r) => r.down && !r.aboard && !r.dead)) {
+    F.standbyOut = true; F.crew.push(F.standby); arrivals.push(`${F.standby.handle} jumps down from the van to help`);
+  }
+  // Nobody is left outside to carry a downed runner: the best-cool runner in the van climbs back out
+  // (owner, 2026-11-11: someone goes back for them). Only while the van is still there.
+  if (N.contested && F.type === 'holdExtract' && F.stage === 1 && !standing(F).length && F.round <= F.vanLeaves) {
+    const downed = F.crew.filter((r) => r.down && !r.aboard && !r.dead);
+    const inVan = F.crew.filter((r) => r.aboard && !r.down && !r.dead).sort((a, b) => b.stats.cool - a.stats.cool || a.id - b.id);
+    for (const d of downed) { const back = inVan.shift(); if (back) { back.aboard = false; arrivals.push(`${back.handle} climbs back out for ${d.handle}`); } }
+  }
   for (const r of F.crew) r.hunker = false;
   telegraph(F);
   say(F, `\n**Round ${F.round}**${F.type === 'holdExtract' ? (F.stage === 0 ? ' (holding for the van)' : ' (boarding)') : ''}. ${F.crew.map((r) => `${r.handle} ${r.dead ? 'dead' : r.down ? 'down' : r.out ? 'out' : `${r.pips}/${r.max}${r.cover === 'open' ? ' open' : ''}`}`).join(', ')}.`);
@@ -432,8 +463,8 @@ function playRound(F) {
   if (N.contested && F.type === 'holdExtract' && F.stage === 1 && F.round === F.vanLeaves && (standing(F).length || F.crew.some((r) => r.down && !r.aboard))) {
     F.dilemmas.vanCantWait++;
     if (F.vanHold && !F.held) {
-      F.held = 1; F.vanLeaves++; F.heat += N.holdHeat; F.arriving.push(ENCOUNTERS[F.enc].kinds[0]);
-      say(F, `- The van can't wait: ${standing(F).length} still outside. Hold one more round (+${N.holdHeat} heat, one more of them on the way).`);
+      F.held = 1; F.vanLeaves += N.holdRounds; F.heat += N.holdHeat; if (N.holdAddsEnemy) F.arriving.push(ENCOUNTERS[F.enc].kinds[0]);
+      say(F, `- The van can't wait: ${standing(F).length} still outside. Hold ${N.holdRounds} more round${N.holdRounds > 1 ? 's' : ''} (+${N.holdHeat} heat${N.holdAddsEnemy ? ', one more of them on the way' : ''}).`);
     } else say(F, `- The van can't wait: ${standing(F).length} still outside, and it leaves at the end of this round.`);
   }
   const { actions, res } = resolveOrders(F);
@@ -444,7 +475,18 @@ function playRound(F) {
   // Dilemma conditions (counted, not raised: hands-off fights carry on).
   const prot = F.protect && runner(F, F.protect);
   if (prot && !prot.down && prot.pips <= 1 && F.threats.some((t) => t.kind === 'backup') && !res.jam) F.dilemmas.techUnderFire++;
-  if (F.type === 'holdExtract' && F.stage === 1 && enemiesUp(F).length >= 2 && F.threats.some((t) => t.kind === 'aim' && t.shown >= 0.6)) F.dilemmas.boardUnderFire++;
+  if (!N.noBoardUnderFire && F.type === 'holdExtract' && F.stage === 1 && enemiesUp(F).length >= 2 && F.threats.some((t) => t.kind === 'aim' && t.shown >= 0.6)) F.dilemmas.boardUnderFire++;
+  // Overwatch picks its shot now (it fires before the crew): whoever threatens a runner in the open
+  // worst (boarders, carriers, the flanked), else the protected runner, else the lowest-numbered.
+  let owShot = null;
+  if (F.ow && F.ow.left > 0) {
+    const up = enemiesUp(F).filter((e) => !covered(F, e, res));
+    const threatOf = (e) => F.threats.find((t) => t.enemy === e.n && t.kind === 'aim');
+    const exposed = (e) => { const t = threatOf(e); const v = t && runner(F, t.target); return t && v && (v.boarding || v.cover === 'open') ? t.shown * t.hit : 0; };
+    const onProt = (e) => { const t = threatOf(e); return t && F.protect && t.target === F.protect ? 1 : 0; };
+    owShot = [...up].sort((a, b) => exposed(b) - exposed(a) || onProt(b) - onProt(a) || a.n - b.n)[0] ?? null;
+    if (owShot) { (res.damage[owShot.n] ??= []).push(false); say(F, `- Overwatch: ${F.ow.handle}'s ${F.ow.kit} on ${eName(F, owShot.n)}.`); }
+  }
   say(F, `- Orders: ${actions.map((a) => intentLine(F, a)).join('; ')}.`);
   say(F, `- ${ifNothing(F, actions, res)}`);
 
@@ -456,6 +498,20 @@ function playRound(F) {
   }
   let workBy = null; let boards = []; const carries = [];
   const out = [];
+  if (owShot) {
+    F.ow.left--; F.owUsed = (F.owUsed ?? 0) + 1;
+    const die = d20(F.rRoll); let cover = owShot.cover; if (smokeNow) cover = better(cover);
+    const need = 10 + N.base + N.attackStep + N.overwatchStep + N.cover[cover];
+    if (owShot.out || owShot.fled) out.push(`${F.ow.handle}'s target is already gone`);
+    else if (die + F.ow.value < need) out.push(`${F.ow.handle} misses ${eName(F, owShot.n)} from overwatch`);
+    else {
+      let dmg = die + F.ow.value >= need + F.ow.strong ? 2 : 1;
+      if (owShot.absorb > 0) { owShot.absorb--; dmg--; }
+      owShot.pips -= dmg;
+      if (owShot.pips <= 0) { owShot.out = true; out.push(`${F.ow.handle} takes out ${eName(F, owShot.n)} from overwatch`); }
+      else out.push(`${F.ow.handle} hits ${eName(F, owShot.n)} from overwatch${dmg === 0 ? ', armour soaks it' : ''} (${owShot.pips} left)`);
+    }
+  }
   for (const a of actions) {
     const r = a.r;
     const rollIt = (value, diff, margin = 99) => { const die = d20(F.rRoll); const need = 10 + diff; return { die, need, ok: die + value >= need, strong: die + value >= need + margin }; };
@@ -550,8 +606,11 @@ function playRound(F) {
   const outsideDown = F.crew.filter((r) => r.down && !r.aboard);
   const boardingStage = N.contested && F.type === 'holdExtract' && F.stage === 1;
   if (!boardingStage && F.crew.some((r) => r.down)) return finish(F, 'extracted', 'Someone is down: the crew pulls back.');
-  if (boardingStage && !standing(F).length && outsideDown.length) { F.leftBehind = outsideDown.length; return finish(F, 'leftBehind', `Nobody is left to carry ${outsideDown.map((r) => r.handle).join(', ')}.`); }
-  if (!standing(F).length) return finish(F, 'gone', 'Nobody left in the fight.');
+  // Nobody standing outside with someone down: next round someone climbs back out of the van; only if
+  // nobody in the van can do it is the downed runner left behind.
+  if (boardingStage && !standing(F).length && outsideDown.length && !F.crew.some((r) => r.aboard && !r.down && !r.dead)) { F.leftBehind = outsideDown.length; return finish(F, 'leftBehind', `Nobody is left to carry ${outsideDown.map((r) => r.handle).join(', ')}.`); }
+  const someoneCanGoBack = boardingStage && outsideDown.length && F.crew.some((r) => r.aboard && !r.down && !r.dead);
+  if (!standing(F).length && !someoneCanGoBack) return finish(F, 'gone', 'Nobody left in the fight.');
   if (N.contested && F.type === 'holdExtract' && F.stage === 1 && F.round >= F.vanLeaves) {
     const left = [...standing(F), ...F.crew.filter((r) => r.down && !r.aboard)];
     F.leftBehind = left.length;
@@ -569,6 +628,7 @@ function play(args) {
   const F = buildFight(args);
   F.risk = args.risk ?? 'steady';
   F.vanHold = !!args.vanHold;
+  if (F.standby || F.ow) say(F, `${F.standby ? `${F.standby.handle} rides with the van (standby). ` : ''}${F.ow ? `${F.ow.handle} on overwatch with a ${F.ow.kit} (${F.ow.left} uses).` : ''}`);
   say(F, `${F.crew.map((r) => `${r.handle} (${r.role}, endurance ${r.stats.endurance}, ${r.max} pips${r.absorb ? ', vest' : ''}${r.jammer ? ', jammer' : ''}${r.ap ? ', ap' : ''})`).join(', ')} against ${F.enemies.map((e) => `${e.kind} ${e.n} (${e.pips} pip${e.pips > 1 ? 's' : ''}${e.absorb ? ', armoured' : ''})`).join(', ')}.`);
   while (!F.end) playRound(F);
   return F;
@@ -756,7 +816,9 @@ for (const enc of Object.keys(ENCOUNTERS)) {
 lines.push('');
 
 if (N.contested) {
-  lines.push('## The van can\'t wait: go on time or hold one more round (holdExtract, D2 E2, all crews)');
+  lines.push(`## The van can't wait: go on time or hold ${N.holdRounds === 1 ? 'one more round' : `${N.holdRounds} more rounds`} (holdExtract, D2 E2, all crews)`);
+  lines.push('');
+  lines.push(`Holding costs +${N.holdHeat} heat${N.holdAddsEnemy ? ' and brings one more enemy' : ''}.`);
   lines.push('');
   lines.push('Every plan with each answer to the call-in. A hands-off crew carries on (the van goes on time).');
   lines.push('');
@@ -776,10 +838,31 @@ if (N.contested) {
   lines.push('');
 }
 
+if (N.contested) {
+  lines.push('## Standby at the van and overwatch on the door (D2 E2, all crews)');
+  lines.push('');
+  lines.push('holdExtract: won / downs / left behind a fight. holdHack has no van, so only overwatch (a drone) is compared there.');
+  lines.push('');
+  lines.push('| Plan | holdExtract alone | + standby | + overwatch | + both | holdHack alone | holdHack + overwatch |');
+  lines.push('| --- | --- | --- | --- | --- | --- | --- |');
+  for (const plan of PLAN_NAMES) {
+    const avg = (enc, extra) => {
+      const s = { won: 0, down: 0, left: 0 }; let n = 0;
+      for (const group of Object.keys(CREW_GROUPS)) for (const lineup of Object.keys(LINEUPS)) {
+        const c = cell({ enc, dur: 'D2', exp: 'E2', group, lineup, plan, ...extra });
+        for (const k of Object.keys(s)) s[k] += c[k]; n++;
+      }
+      return enc === 'holdExtract' ? `${P(s.won / n)} / ${D(s.down / n)} / ${D(s.left / n)}` : `${P(s.won / n)} / ${D(s.down / n)}`;
+    };
+    lines.push(`| ${plan} | ${avg('holdExtract', {})} | ${avg('holdExtract', { standby: true })} | ${avg('holdExtract', { overwatch: true })} | ${avg('holdExtract', { standby: true, overwatch: true })} | ${avg('holdHack', {})} | ${avg('holdHack', { overwatch: true })} |`);
+  }
+  lines.push('');
+}
+
 lines.push('## Ten fights, narrated (defaults plan, On level, line-up a, D2 E2, steady)');
 lines.push('');
 for (const enc of Object.keys(ENCOUNTERS)) for (let seed = 1; seed <= 5; seed++) {
-  const F = play({ enc, dur: 'D2', exp: 'E2', group: 'On', lineup: 'a', plan: 'defaults', seed, log: true });
+  const F = play({ enc, dur: 'D2', exp: 'E2', group: 'On', lineup: 'a', plan: 'defaults', seed, log: true, ...(PROFILE === 'van' ? { standby: enc === 'holdExtract', overwatch: true } : {}) });
   lines.push(`### ${enc}, seed ${seed}`);
   lines.push('');
   lines.push(...F.log);

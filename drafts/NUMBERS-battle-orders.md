@@ -429,13 +429,33 @@ regenerated): `mixed` 68%, `hold` 66-67% (twice the downs), attack 58% falling t
 universal plan (23% at most); adapting clearly pays in 22% of cells; still neither verdict. A runner
 left behind is counted as missing and badly hurt, not dead.
 
+**Pass 6 (2026-11-11): the van, complete.** Three door slots; holding the van is two rounds for +1
+heat and no extra enemy; `boardUnderFire` dropped; standby at the van and overwatch on the door
+compared in their own table. Report: `docs/sims/step0-2026-11-11-pips-van.md`.
+
+- **Two sim fixes from the narrated fights:** when everyone standing was aboard and someone was down
+  outside, the fight ended at once with the van still there ("nobody left in the fight", 22-44% of
+  holdExtract fights); now the best-cool runner in the van climbs back out for them (spec section
+  8), and only the van leaving or nobody able leaves them behind.
+- **holdExtract:** `mixed` 78% (0.45 downs) at D1-D2, `hold` 74-75% (0.80) and best at D3, support
+  73-74%, attack 62% falling to 30% at D3, protect 59%, the defaults 62%.
+- **Holding the van is now a real choice:** +5 to 10 points for every plan, for +0.3 to 0.5 heat and
+  0.15 to 0.4 more downs a fight. It comes up in 46% of fights.
+- **Overwatch** (rifle, 2 uses, aimed at whoever threatens a runner in the open): +6 to 13 points in
+  holdExtract and fewer downs; a drone in holdHack +2 to 14. **Standby** at the van: +1 to 6 points,
+  fewer left behind. Both: +7 to 15.
+- **Gate:** still neither (proceed 10% of cells); `support` is now the most universal plan (43%),
+  `mixed` 25%. The toughness check is met (+25 against +10).
+- What blocks the gate now is no longer holdExtract's shape: it's the open items in spec list A
+  (the defaults, the gate's bars, the risk thresholds, the withdrawal rule).
+
 ## 13. Summary of the BATTLE keys
 
 ```js
 BATTLE = {
   endurancePerPip: 2, patchHeal: 2, lightWoundPips: 1,   // pips = floor(endurance / 2), at least 1
   // shots by kind: ENEMY_HIT = { hired: 1, drone: 1, corp: 2, enforcer: 2 }
-  doorSlots: 2, boardStep: -4, carryStep: 2, vanWait: 4, holdHeat: 1,   // contested boarding (pass 5)
+  doorSlots: 3, boardStep: -4, carryStep: 2, vanWait: 4, holdRounds: 2, holdHeat: 1,   // contested boarding (pass 6)
   hit: 1, strongHit: 2, strongMargin: 10, strongMarginByDamage: { 2: 12, 3: 10, 4: 8, 5: 6 },
   absorb: { none: 0, street: 1, pro: 2 }, droneAbsorb: 1,          // ap ignores absorb
   cover: { open: 0, half: 2, full: 4 }, startCover: 'half', hunkerStep: 4,

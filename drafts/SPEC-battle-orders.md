@@ -187,13 +187,17 @@ someone goes back for them.
   van; carrying them is the way out.
 - **Pulling out once the van is there** means making for it (the first door slot), not walking off
   on foot.
+- **Nobody abandons a downed runner while the van is there:** if nobody is left outside to carry
+  them, the runner in the van with the best cool climbs back out (in the open) to go for them. Only
+  the van leaving, or nobody able in the van, leaves them behind.
 
 **Left behind (owner, 2026-11-11).** A runner left behind, standing or down, is **missing, not
 dead**: they come back after some days with a **serious injury** (how long: OPEN). Later, a runner
 left behind could instead be **taken**, which opens a **rescue job** (section 27). This keeps
 "death only after a player choice": leaving someone costs them, it doesn't kill them.
 
-**Standby and overwatch at the van (proposals, 2026-11-11; not yet in Step 0):**
+**Standby and overwatch at the van (owner's go-ahead to test, 2026-11-11; simulated in Step 0
+pass 6):**
 
 - **Standby rides with the van** (if the job has one and they haven't already come in). When the van
   pulls in, they are at the door: **one more door slot**, and they can go out to **carry** a downed
@@ -208,8 +212,9 @@ left behind could instead be **taken**, which opens a **rescue job** (section 27
 
 **The van can't wait (owner, 2026-11-11).** The van waits `vanWait` rounds after it pulls in. In its
 last round, with anyone still outside (standing or down), the call-in `vanCantWait` comes: **go on
-time** (whoever is outside is left behind) or **hold one more round** (+1 heat, and one more enemy
-arrives). Hands-off, the crew carries on: the van goes on time. Leaving before the van arrives is
+time** (whoever is outside is left behind) or **hold the van two more rounds for +1 heat** (owner,
+2026-11-11; superseded: one round, +1 heat and one more enemy, which barely helped). Hands-off, the
+crew carries on: the van goes on time. **Three door slots** a round (was two). Leaving before the van arrives is
 still a retreat.
 
 ## 9. Jamming
@@ -449,7 +454,7 @@ DILEMMAS = {
       { label: 'Carry on', ordersPatch: null },                         // = go on time
     ],
   },
-  boardUnderFire: {               // replaces vanLate (its choices were redundant once on foot was deferred)
+  boardUnderFire: {               // DROPPED 2026-11-11 (came up in two thirds of fights once boarders ran in the open; vanCantWait carries the decision)
     fight: ['holdExtract'],
     when: { stage: 1, enemiesUpAtLeast: 2, and: { hitChanceAtLeast: X, on: 'any' } },  // X: OPEN
     changed: 'The van is here. {exposed} is in the open and two of them are still shooting.',
@@ -749,8 +754,12 @@ endurance as the one physical attribute, with strength and speed as traits (sect
    it, or drop it for `vanCantWait`); **pulling out once the van is there** should mean making for
    the van (first door slot), not walking off on foot (proposal; the sim does this since pass 5);
    holdExtract may now be **too hard overall** (most plans 45-69%, 0.6-0.8 downs a fight).
-10. **Standby and overwatch at the van** (section 8 proposals): standby as an extra door slot and
-   carrier; overwatch aimed at whoever shoots a runner in the open. Not yet simulated.
+10. **Standby and overwatch at the van** (section 8): simulated in pass 6. Overwatch helps a lot
+   (+6 to 13 points in holdExtract, up to +14 in holdHack), the standby a little (+1 to 6). Confirm
+   both as rules, and whether overwatch is too strong for a 2-3 use kit.
+12. **`vanCantWait` comes up in 46% of holdExtract fights** with three door slots and a four-round
+   wait: fine for a commanded fight (one real decision), but on a hands-off job it's a call-in in
+   nearly half of them. Tune the wait, or accept it as holdExtract's one call.
 11. **Left behind:** how many days missing, and whether it is ever "taken" (a rescue job) in the
    prototype or only later.
 
