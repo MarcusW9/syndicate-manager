@@ -194,12 +194,23 @@ someone goes back for them.
   them, the runner in the van with the best cool climbs back out (in the open) to go for them. Only
   the van leaving, or nobody able in the van, leaves them behind.
 
-**Left behind (owner, 2026-11-11).** A runner left behind, standing or down, is **missing, not
-dead**: they come back after some days with a **serious injury** (how long: OPEN). Later, a runner
-left behind could instead be **taken**, which opens a **rescue job** (section 27). **Except on
-committed:** a runner left behind *while down* doesn't make it with `leftDownDeath` (10%); the van
-call-in shows it ("Leave Vex: missing, or worse"). Hands-off, the risk level answers the van call:
-cautious and steady hold the van for a downed teammate; committed lets it go on time.
+**Left behind (owner, 2026-11-11, extended the same day).** A runner left behind, standing or down,
+is **missing for 7 days**, and the player has three ways through it, shown on the runner's card with
+their odds:
+
+- **Go and get them:** a **rescue job** appears on the board within a day (a holdExtract-style fight
+  at the place they were left; slice 4). Success brings them back with the injury they had; failure
+  leaves them missing, the clock still running.
+- **Pay to get them back:** a ransom through the fixer (proposal: 3 weeks of their wage); they're
+  back the next day with a light injury.
+- **Wait:** at the end of the 7 days they come back with a **serious injury**, or, with a small
+  chance shown on the card (proposal: 10%), they don't come back. That is a death the player was shown
+  and could have prevented.
+
+**On committed only**, a runner left behind *while down* may not make it at all (`leftDownDeath`,
+10%, at the moment the van goes); the van call-in shows it ("Leave Vex: missing, or worse").
+Hands-off, the risk level answers the van call: cautious and steady hold the van for a downed
+teammate; committed lets it go on time.
 
 **Standby and overwatch at the van (owner's go-ahead to test, 2026-11-11; simulated in Step 0
 pass 6):**
@@ -903,3 +914,33 @@ Play holdHack then holdExtract: once commanded, once fully hands-off with a dile
    actions, more fight types, moving more jobs and raids to engine 2, retiring engine 1.
 7. **Attributes:** endurance's off-fight uses, then leadership and judgment as their own slice, then
    the stat-usage sim again for all three new attributes.
+
+## 30. Settled for the build (2026-11-11)
+
+Step 0 is **ended** (owner, 2026-11-11): its last verdict was neither, and the gate is re-run on the
+real code with call-ins in slice 3 (section 24), then the playtest (section 28). Everything in list A
+(section 25) is settled as follows; list B is settled except the wording, which the owner writes.
+
+| Item | Settled |
+| --- | --- |
+| Jobs per fight type | **holdHack:** Office Data Pull (`data_pull`), Data Scrub (`data_scrub`), Quiet Hours (`quiet_hours`). **holdExtract:** Warehouse Lift (`warehouse`), Protection Run (`protection`). Kidnap Rescue waits for an Old Town enemy list. |
+| Enemies | Four kinds: hired, corp, drone, enforcer; shots by kind (1 or 2 pips); count by threat (`COUNT_BY_THREAT` 2, 2, 3, 3, 4), the difficulty dial; Glass Heights corp and drones, the Docks hired and enforcers (about one slot in three). |
+| Endurance and pips | Endurance is the eighth stat, like the others; pips = max(3, endurance / 2); a light injury starts a fight 2 pips down. |
+| Risk | Cautious pulls out at half their pips, steady at 2, committed never; committed fights on with someone down (bleeding, section 10b). |
+| Bleeding out | 10% a round from the second round down (raised from 8% to land in the 20-30 target); a medic stabilises first; the medic's aura (C). |
+| Patch | Heals 1 pip. |
+| Withdrawal | Death on pulling out only when the player ordered it by hand. |
+| `techUnderFire` | Comes up when the tech has two or more shots on them, or is at half pips or below with a radio call shown. |
+| `vanCantWait` | Go on time, or hold two rounds for +1 heat; three door slots; per-runner boarding; carrying; climbing back out. |
+| Standby and overwatch | Standby rides with the van (an extra door slot, a carrier). Overwatch covers the door, **one shot at the van** (it was strong); elsewhere one attack a round, uses as today. |
+| Left behind | Missing 7 days: rescue job, ransom, or wait (serious injury, or a shown 10% chance they don't come back). |
+| Default orders | Section 12 (two protectors on the tech; one protector and attackers, then boarding). |
+| Rules from the sim | A jam takes out one drone; an alarm in holdExtract brings the next pressure arrival a round earlier; specials cost no action; no parting shots when the whole crew pulls back; sidearm aim bonuses count; the holdHack deadline fails the objective. |
+| Call-in window | Away jobs: until the end of that day. Same-day jobs: the fight waits for the answer; if the day ends first, the crew carries on with its orders. Hands-off risk answers the van call. |
+| Fights in progress at upgrade | Tagged `engine: 1` and finished on the old code. |
+| Plumbing | Claude writes the trigger grammar, the `ordersPatch` selectors, the priority words (`protected`, `radio`, `low`, `exposed`) and side-wide fleeing into the code and this spec; the owner skims them. |
+| Wording | **The owner writes it** (2026-11-11): for any wording-heavy task (feed lines, "if nothing" phrasing, dilemma and call-in text, the risk picker, the report's cause lines, the missing card, ransom and rescue job), the building session prepares a writing brief (ids, slots, counts, house style) in `drafts/writing-tasks.md` and **pauses** for the owner, using placeholder keys meanwhile. |
+
+The build order and the handoff for the next session: `drafts/PLAN-battle-slices.md` and
+`drafts/HANDOFF-battle-rework.md`.
+

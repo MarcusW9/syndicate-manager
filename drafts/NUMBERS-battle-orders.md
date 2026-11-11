@@ -537,10 +537,12 @@ the fresh row is still threat-3 work, harder than fresh crews would take).
 
 ```js
 BATTLE = {
-  endurancePerPip: 2, minPips: 3, patchHeal: 2, lightWoundPips: 1,   // pips = max(3, floor(endurance / 2))
+  endurancePerPip: 2, minPips: 3,   // pips = max(3, floor(endurance / 2)); light wound and patch below
   // shots by kind: ENEMY_HIT = { hired: 1, drone: 1, corp: 2, enforcer: 2 }
   doorSlots: 3, boardStep: -4, carryStep: 2, vanWait: 4, holdRounds: 2, holdHeat: 1,   // contested boarding (pass 6)
-  bleedGrace: 2, bleedChance: 0.08, stabiliseStep: 2, leftDownDeath: 0.1,            // bleeding out (pass 8; committed only)
+  bleedGrace: 2, bleedChance: 0.1, stabiliseStep: 2, leftDownDeath: 0.1,             // bleeding out (10% settled 2026-11-11; committed only)
+  lightWoundPips: 2, patchHeal: 1, overwatchUsesAtVan: 1,                            // settled 2026-11-11 (spec section 30)
+  missingDays: 7, ransomWeeks: 3, missingDeath: 0.1,                                 // left behind (spec section 8; proposals)
   medicAura: { heal: 1, target: 'most hurt', stopsBleeding: true },                 // version C (pass 9)
   hit: 1, strongHit: 2, strongMargin: 10, strongMarginByDamage: { 2: 12, 3: 10, 4: 8, 5: 6 },
   absorb: { none: 0, street: 1, pro: 2 }, droneAbsorb: 1,          // ap ignores absorb
