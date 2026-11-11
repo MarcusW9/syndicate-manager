@@ -211,9 +211,15 @@ section 12). Thresholds: first values in the numbers sheet.
   being hit) and, as an absolute number on a fight scale that rises with the work, ended up giving
   everyone the extra pip at threat 3. It also replaces the muscle role's pip: the role is a job, the
   body is endurance (muscle recruits roll high endurance instead).
-- **In fights:** max pips = 3, +1 at endurance 13, +2 at 17, -1 for a light injury, plus trait
-  bonuses. Endurance is read against itself, not against the fight's difficulty: it is the person,
-  not the job.
+- **In fights (owner, 2026-11-11): one pip for every two points of endurance**, rounded down (at
+  least 1), plus trait bonuses, less a light injury. So endurance 8 = 4 pips, 11 = 5, 14 = 7, 18 = 9:
+  every two points shows. Endurance is read against itself, not the fight's difficulty: it is the
+  person, not the job. (Superseded first proposal: 3 pips, +1 at 13, +2 at 17.)
+- **The bigger pools need bigger hits.** At 1 pip a shot, 5-7 pips make fights too easy (Step 0:
+  one plan matched adapting in 74% of cases). Proposal, from Step 0's `heavy` profile: **an enemy
+  shot takes 2 pips** and **a patch gives 2 back**, with four enemies at the start. Still open: a
+  light injury's cost (-1 or -2 pips), and the risk thresholds (steady at 1 pip is one shot from down
+  when shots take 2).
 - **Outside fights (a later slice; numbers OPEN):** how fast fatigue builds and recovers, how fast
   injuries heal, holding up on multi-day away work, and decline with age, so it decides enough to
   pass the stat-usage rule (`drafts/PLAN-stat-usage.md`).
@@ -433,7 +439,7 @@ All numbers are **provisional** until the numbers sheet (section 25) settles the
 ```js
 // data/battle.js BATTLE (prototype keys)
 BATTLE = {
-  runnerBasePips: 3, endurancePips: [[17, 2], [13, 1]], lightWoundPips: 1,
+  endurancePerPip: 2, enemyHit: 2, patchHeal: 2, lightWoundPips: 1,   // pips = floor(endurance / 2), at least 1
   hit: 1, strongHit: 2,                      // OPEN: when a hit is strong
   armourAbsorb: { light: 1, heavy: 2 },      // hits absorbed per fight; OPEN: against ap
   cover: { open: 0, half: 2, full: 4 }, startCover: 'half', hunkerStep: 4,
@@ -446,8 +452,8 @@ BATTLE = {
           committed: { pullAtPips: 0, press: true } },
   oddsRuns: 120,
 };
-// maxPips = runnerBasePips + (endurance >= 17 ? 2 : endurance >= 13 ? 1 : 0)
-//   + trait bonuses - (light injury ? lightWoundPips : 0). Combat never changes max pips.
+// maxPips = max(1, floor(endurance / endurancePerPip)) + trait bonuses - (light injury ? lightWoundPips : 0).
+// Combat never changes max pips.
 
 ENEMIES = {
   hired: { pips: 1, threats: 1, talk: -2, fleeBelow: 0.6, cover: 'half', deck: ['aim','aim','alarm'] },
@@ -674,7 +680,10 @@ endurance as the one physical attribute, with strength and speed as traits (sect
    sidearm aim bonuses.
 7. **The gate's bars:** "clearly beaten" at 10 points or 0.5 downs a fight may be too high for
    fights that are mostly won.
-8. **Endurance numbers:** +1 pip at 13 and +2 at 17; dropping the muscle role's pip.
+8. **The pip scale's knock-ons** (pips = endurance / 2, owner): enemy shots at 2 pips and patches at 2
+   (proposed); a light injury at -1 or -2; risk thresholds that still mean something when a shot
+   takes 2 (proposal: steady pulls out at 2 or fewer, cautious at half); dropping the muscle role's
+   pip.
 
 **B. Before code** (they don't change a paper fight):
 

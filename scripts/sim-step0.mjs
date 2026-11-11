@@ -9,8 +9,9 @@
 //   node scripts/sim-step0.mjs [seeds=400] [date=2026-11-10] [profile=first]
 //
 // Profiles: `first` is the numbers sheet as written; `hard` is the same with four enemies at the
-// start (a sensitivity check: are the plans different once fights have teeth?). Pips come from
-// endurance (+1 at 13, +2 at 17), rolled per runner from a fixed seed, so a crew's bodies differ
+// start; `heavy` is hard with enemy shots taking 2 pips (patches give 2 back), to match the bigger
+// pip pools (a sensitivity check: are the plans different once fights have teeth?). Pips come from
+// endurance (one per two points), rolled per runner from a fixed seed, so a crew's bodies differ
 // between seeds but are the same for every plan.
 // The hard profile writes step0-<date>-hard.md / .csv.
 //
@@ -25,7 +26,7 @@ import { makeRng, d20, hash } from '../src/core/rng.js';
 const SEEDS = Number(process.argv[2] ?? 400);
 const DATE = process.argv[3] ?? '2026-11-10';
 const PROFILE = process.argv[4] ?? 'first';
-const PROFILES = { first: {}, hard: { startEnemies: 4 } };
+const PROFILES = { first: {}, hard: { startEnemies: 4 }, heavy: { startEnemies: 4, enemyHit: 2, patchHeal: 2 } };
 
 const ASSUMPTIONS = [
   'Threat 3 for every fight (base difficulty 14, three enemies at the start).',
@@ -41,9 +42,10 @@ const ASSUMPTIONS = [
 // ---- numbers (drafts/NUMBERS-battle-orders.md) ------------------------------------------------
 const N = {
   base: 14, startEnemies: 3,
-  runnerBasePips: 3,
-  // Endurance (2026-11-11) replaces the cool threshold and the muscle role's pip: +1 pip at 13, +2 at 17.
-  endurancePips: [[17, 2], [13, 1]],
+  // Endurance (owner, 2026-11-11): one pip for every two points of endurance (rounded down, at
+  // least 1). It replaces the cool threshold and the muscle role's pip.
+  endurancePerPip: 2,
+  enemyHit: 1, patchHeal: 1, // pips an enemy's shot takes, and a patch gives back
   // Runners' endurance in the sims: about normal, spread 2.5, clamped 3-18; muscle around 14, everyone else 11.
   enduranceMean: { muscle: 14, other: 11 }, enduranceSpread: 5,
   cover: { open: 0, half: 2, full: 4 }, hunkerStep: 4,
@@ -96,7 +98,7 @@ function enduranceRoll(rng, role) {
   const mean = N.enduranceMean[role] ?? N.enduranceMean.other;
   return clamp(Math.round(mean + (rng() + rng() + rng() - 1.5) * N.enduranceSpread), 3, 18);
 }
-const endurancePips = (e) => (N.endurancePips.find(([at]) => e >= at)?.[1] ?? 0);
+const pipsFor = (e) => Math.max(1, Math.floor(e / N.endurancePerPip));
 
 function buildCrew(group, lineup, rng) {
   const g = CREW_GROUPS[group];
@@ -107,7 +109,7 @@ function buildCrew(group, lineup, rng) {
     for (const s of ['combat', 'tech', 'medical', 'social']) stats[s] = N.base + (MAIN[x.role] === s ? g.main : g.other);
     stats.cool = N.base + g.cool;
     stats.endurance = enduranceRoll(rng, x.role);
-    const max = N.runnerBasePips + endurancePips(stats.endurance);
+    const max = pipsFor(stats.endurance);
     return {
       id: i + 1, role: x.role, handle: HANDLES[x.role] + (seen[x.role] > 1 ? ' 2' : ''), stats, max, pips: max,
       absorb: x.absorb ?? 0, jammer: !!x.jammer, ap: !!x.ap, strong: STRONG[x.role] ?? 12,
@@ -327,7 +329,7 @@ const pct = (x) => `${Math.round(x * 100)}%`;
 const eName = (F, n) => { const e = F.enemies.find((x) => x.n === n); return `${e.kind} ${n}`; };
 function threatLine(F, t) {
   const who = t.target ? runner(F, t.target).handle : null;
-  return t.kind === 'aim' ? `${eName(F, t.enemy)} aims at ${who} (${pct(t.shown)}, 1 pip)`
+  return t.kind === 'aim' ? `${eName(F, t.enemy)} aims at ${who} (${pct(t.shown)}, ${N.enemyHit} pip${N.enemyHit > 1 ? 's' : ''})`
     : t.kind === 'flank' ? `${eName(F, t.enemy)} works round ${who}'s cover`
       : t.kind === 'backup' ? `${eName(F, t.enemy)} radios for backup`
         : `${eName(F, t.enemy)} goes for the alarm`;
@@ -415,7 +417,7 @@ function playRound(F) {
       } else out.push(`${r.handle}'s jam fails`);
     } else if (a.kind === 'patch') {
       const x = rollIt(r.stats.medical, N.base + N.patchStep); const t = runner(F, a.target);
-      if (x.ok && !t.down) { t.pips = Math.min(t.max, t.pips + 1); out.push(`${r.handle} patches ${t.handle} (+1)`); } else out.push(`${r.handle}'s patch on ${t.handle} doesn't take`);
+      if (x.ok && !t.down) { t.pips = Math.min(t.max, t.pips + N.patchHeal); out.push(`${r.handle} patches ${t.handle} (+${N.patchHeal})`); } else out.push(`${r.handle}'s patch on ${t.handle} doesn't take`);
     } else if (a.kind === 'board') {
       const x = rollIt(r.stats.cool, N.base + N.boardStep);
       if (x.ok) boards.push(r); out.push(`${r.handle} ${x.ok ? 'makes' : "doesn't make"} it to the van door`);
@@ -437,7 +439,7 @@ function playRound(F) {
       const hit = F.rRoll() < c;
       if (!hit) { out.push(`${eName(F, e.n)} misses ${v.handle}${t.shieldedBy ? ' (shielding)' : ''} (${pct(c)})`); continue; }
       if (v.absorb > 0) { v.absorb--; out.push(`${eName(F, e.n)} hits ${v.handle}; the vest takes it`); continue; }
-      v.pips--; F.pipsLost = (F.pipsLost ?? 0) + 1;
+      const dmg = Math.min(v.pips, N.enemyHit); v.pips -= dmg; F.pipsLost = (F.pipsLost ?? 0) + dmg;
       if (v.pips <= 0) {
         if (v.leaving) { v.dead = true; out.push(`${eName(F, e.n)} hits ${v.handle} as they pull out alone: **dead**`); }
         else { v.down = true; out.push(`${eName(F, e.n)} hits ${v.handle}: **down**`); }
@@ -583,7 +585,7 @@ const D = (x) => x.toFixed(2);
 const lines = [];
 lines.push(`# Step 0: the battle rework's paper rules, played by script (${DATE}${SUFFIX ? `, profile ${PROFILE}` : ''})`);
 lines.push('');
-lines.push(`Generated by \`node scripts/sim-step0.mjs ${SEEDS} ${DATE} ${PROFILE}\`. Profile **${PROFILE}**${PROFILE === 'hard' ? ' (four enemies at the start)' : ' (the numbers sheet as written)'}. The paper rules of \`drafts/SPEC-battle-orders.md\` with the first values of \`drafts/NUMBERS-battle-orders.md\`, standalone (not the game's fight code). ${SEEDS} seeds per cell; every cell is in \`step0-${DATE}${SUFFIX}.csv\`.`);
+lines.push(`Generated by \`node scripts/sim-step0.mjs ${SEEDS} ${DATE} ${PROFILE}\`. Profile **${PROFILE}**${PROFILE !== 'first' ? ({ hard: ' (four enemies at the start)', heavy: ' (four enemies at the start; enemy shots take 2 pips, patches give 2 back)' }[PROFILE] ?? '') : ' (the numbers sheet as written)'}. The paper rules of \`drafts/SPEC-battle-orders.md\` with the first values of \`drafts/NUMBERS-battle-orders.md\`, standalone (not the game's fight code). ${SEEDS} seeds per cell; every cell is in \`step0-${DATE}${SUFFIX}.csv\`.`);
 lines.push('');
 lines.push('Fights are hands-off (no dilemmas raised; their conditions are counted). Risk is steady unless stated.');
 lines.push('');

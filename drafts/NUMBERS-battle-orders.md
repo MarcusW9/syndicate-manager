@@ -55,7 +55,9 @@ gunners (no medic); (c) tech, face, medic, gunner (no muscle). The jammer goes t
 | Key | Value | Notes |
 | --- | --- | --- |
 | `runnerBasePips` | 3 | |
-| `endurancePips` | **+1 at endurance 13, +2 at 17** | replaces `toughCool` and `musclePips` (2026-11-11, spec section 10a). In Step 0, endurance was rolled per runner around 14 for muscle and 11 for everyone else (spread about 2.5): about a quarter of non-muscle runners and three quarters of muscle get +1 (one in six muscle +2) |
+| `endurancePerPip` | **2** (owner, 2026-11-11) | pips = endurance / 2, rounded down, at least 1; replaces `runnerBasePips`, `toughCool` and `musclePips` (spec section 10a). In Step 0 endurance was rolled per runner around 14 for muscle and 11 for everyone else (spread about 2.5): most runners have 4-6 pips, muscle 6-8. (First proposal, superseded: 3 pips, +1 at 13, +2 at 17.) |
+| `enemyHit` | **2** (proposal) | pips an enemy's shot takes; 1 is too little against 5-7 pips (pass 3 below) |
+| `patchHeal` | **2** (proposal) | pips a patch gives back, matched to `enemyHit` |
 | `lightWoundPips` | 1 | starting with a light injury |
 | `hit` | 1 | |
 | `strongHit` | 2 | runners only; enemies never land strong hits in the prototype (their shots read "55%, 1 pip") |
@@ -357,11 +359,27 @@ So endurance fixes the "everyone is tough" problem, and the first values plus en
 the hard profile in shape. What keeps the gate from proceeding is now mostly list A in the spec's
 section 25 (defaults, the withdrawal rule, the gate's bars), not the numbers.
 
+**Pass 3 (2026-11-11): one pip per two points of endurance (owner).** Most runners now have 4-6
+pips and muscle 6-8 (`docs/sims/step0-2026-11-11-pips*.md`).
+
+- **With shots still at 1 pip, fights are too easy:** first values give **REWORK** (`mixed` matches
+  the adapted plan in both encounters in 74% of cells; most plans win 94-100%). Four enemies alone
+  doesn't fix it (protect and support each match in 47%).
+- **`heavy` profile (four enemies, enemy shots take 2 pips, patches give 2):** the plans separate as
+  well as in any pass. holdHack: protect best at D1, support at D2-D3; attack 79% / 47% / 30%;
+  hold-only 9%. holdExtract: `mixed` best at D1-D2 (87-88%), support at D3; hold and protect plans
+  about 67% with three times the downs of `mixed`. No universal plan (`support` the most, 33%);
+  adapting clearly pays in 26% of cells; the toughness check is met (+23 against +9).
+- **Still unchanged:** cautious is the deadliest level (heavy holdExtract: 0.51 deaths a fight on
+  cautious, 0 on committed); the defaults trail the best plan; `techUnderFire` comes up in 4%.
+- Every two points of endurance is now a pip, so endurance visibly matters; the section 10
+  arithmetic (3-pip runners, 1-pip shots) is superseded.
+
 ## 13. Summary of the BATTLE keys
 
 ```js
 BATTLE = {
-  runnerBasePips: 3, endurancePips: [[17, 2], [13, 1]], lightWoundPips: 1,
+  endurancePerPip: 2, enemyHit: 2, patchHeal: 2, lightWoundPips: 1,   // pips = floor(endurance / 2), at least 1
   hit: 1, strongHit: 2, strongMargin: 10, strongMarginByDamage: { 2: 12, 3: 10, 4: 8, 5: 6 },
   absorb: { none: 0, street: 1, pro: 2 }, droneAbsorb: 1,          // ap ignores absorb
   cover: { open: 0, half: 2, full: 4 }, startCover: 'half', hunkerStep: 4,
