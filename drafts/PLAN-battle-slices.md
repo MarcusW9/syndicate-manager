@@ -138,6 +138,8 @@ the screens come in slice 2.
    a call-in; attribution, tension, trust.
 2. The owner's calls from it: one-off per-runner actions, more fight types and jobs (Kidnap Rescue
    with an Old Town enemy list), raids on engine 2 (`defendHall`), retiring engine 1.
-3. Endurance's off-fight uses (fatigue, healing, away-job stamina), then leadership and judgment
-   (`drafts/PROPOSAL-leadership.md`, with the hooks in spec section 16), then `scripts/sim-stats.mjs`
+3. Endurance's off-fight uses (fatigue, healing, away-job stamina), then **leadership and judgment as
+   stats** (owner, 2026-11-11: on the 1-20 scale, in wages and the rating, judgment hidden behind
+   words, grown from the record, little decline with age; `drafts/PROPOSAL-leadership.md`, with the
+   hooks in spec section 16), with their own migration and wage rescale, then `scripts/sim-stats.mjs`
    again for the new stats.

@@ -2,6 +2,14 @@
 
 Status: proposal, nothing built. Owner's calls so far (2026-11-07): veteran calm dropped (no such rule exists; only veterans' `calm` leaning in `data/tags.js`); driving and medical both stay, so leadership is added and judgment maybe; the leader's bonus is a steady hand (call 2). Plan for step 3 of the stat work (after the stat-usage sim and the driving fix). Executive roles come later, with Phase 3. When this is agreed, add a row to the decision log in `DESIGN.md`.
 
+**Owner's calls, 2026-11-11 (battle rework session):** leadership and judgment are **stats** on the
+1-20 scale like the others (in wages and the hidden rating; judgment stays hidden, shown as words and
+sharpened by scouting); low for everyone at the start and grown mostly from the record (jobs led,
+crewmates brought home); **neither declines much with age** (unlike the physical side). They're added
+in their own slice after the battle rework's playtest, with their effects (this proposal, plus the
+fight hooks in `drafts/SPEC-battle-orders.md` section 16: a steady hand in fights, the lead settling
+call-ins, judgment answering an expired call-in), and a save migration and wage rescale of their own.
+
 ## The idea in one paragraph
 
 Two new attributes. **Leadership** (visible) lifts the rest of the crew and decides how many hard calls a lead makes before calling you. **Judgment** (hidden, hinted at) rolls on calls that are about making the right decision, and makes failures cost less. A new **Leader** slot on the squad board replaces the automatic crew lead. Both attributes grow from the record. Later they decide who can become a coach, scout, hall boss or the fixer's second.
