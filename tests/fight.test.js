@@ -659,25 +659,24 @@ test('the shown chance of a death is the played one: fightOdds dead = deaths in 
 
 // --- dilemmas ---------------------------------------------------------------------------------------------------------
 
-test('dilemmas: techUnderFire holds on two shots at the tech, or half pips with a radio call; once per situation', () => {
+test('dilemmas: techUnderFire holds on half pips with a radio call shown, not on shots alone; once per situation', () => {
   const b = fixture('holdHack', [ids.static, ids.jax, ids.stitch], { set: { wing: { endurance: 12 } } });
-  b.enemies = [foe(1), foe(2)];
+  b.enemies = [foe(1), foe(2), foe(3)];
   draw(b, [{ enemy: 1, kind: 'aim', target: 'wing' }]);
   assert.deepEqual(F.dueDilemmas(b), [], 'one shot, full pips: nothing');
+  draw(b, [{ enemy: 1, kind: 'aim', target: 'wing' }, { enemy: 2, kind: 'aim', target: 'wing' }, { enemy: 3, kind: 'aim', target: 'wing' }]);
+  assert.deepEqual(F.dueDilemmas(b), [], 'shots alone, even three, no longer call the crew in');
+  R(b, 'wing').pips = 3;
   draw(b, [{ enemy: 1, kind: 'aim', target: 'wing' }, { enemy: 2, kind: 'aim', target: 'wing' }]);
+  assert.deepEqual(F.dueDilemmas(b), [], 'half pips but no radio call shown: nothing');
+  draw(b, [{ enemy: 1, kind: 'backup' }, { enemy: 2, kind: 'aim', target: 'wing' }]);
   const due = F.dueDilemmas(b);
   assert.equal(due.length, 1);
   assert.equal(due[0].id, 'techUnderFire');
   b.dilemmasFired[due[0].key] = true;
   assert.deepEqual(F.dueDilemmas(b), [], 'not again for the same situation');
-  // The other trigger: half pips and a radio call shown.
-  const c = fixture('holdHack', [ids.static, ids.jax], { set: { wing: { endurance: 12 } } });
-  c.enemies = [foe(1)];
-  R(c, 'wing').pips = 3;
-  draw(c, [{ enemy: 1, kind: 'backup' }]);
-  assert.equal(F.dueDilemmas(c)[0].id, 'techUnderFire');
-  R(c, 'wing').pips = 4;
-  assert.deepEqual(F.dueDilemmas(c), [], 'revalidated: above half pips it no longer holds');
+  R(b, 'wing').pips = 4;
+  assert.deepEqual(F.dueDilemmas(b), [], 'revalidated: above half pips it no longer holds');
 });
 
 test('dilemmas: vanCantWait only in the last round with someone outside', () => {

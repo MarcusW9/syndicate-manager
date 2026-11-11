@@ -6,11 +6,11 @@ Where each came from: slice 2 ([PR #132](https://github.com/MarcusW9/syndicate-m
 ## Decisions
 
 - [ ] **Slice 3 verdict is neither** (`docs/sims/orders-2026-11-11.md`; decision row 2026-11-11). Go to the formal playtest anyway, or change something first? The defaults match the adapted plans in 54% of cells (rework line 67%); adapting clears the bar in 23% (proceed line 67%).
-- [ ] **`techUnderFire` fires in 82% of hacks** (about one call a fight): the "two or more shots on the tech" condition is nearly always true. Narrow it (the tech at half pips with a radio call shown, or three shots)?
-- [ ] **Left behind is about half of steady extractions for the game's own starting crews** (49% fresh, 56% authored; 9% for the sim crews). Look at the van timing or door slots before slice 4 builds the rescue around it?
+- [x] **`techUnderFire` narrowed** to the tech at half pips with a radio call shown: 82% of hacks down to 2% (decision row 2026-11-11). Also settles "Hit the caller" without a call.
+- [ ] **Left behind is about half of steady extractions for the game's own starting crews** (49% fresh, 56% authored; 9% for the sim crews). Diagnosed: weak starting stats (combat 2-10, cool 5-8, endurance 3-6) against difficulty 14; 5% with endurance 13 and combat and cool 14, 17% at difficulty 9, 39% at 11; nearly all of those left are downed runners. Decide: van timing or door slots, how hard these jobs are for fresh crews, or accept and let slice 4's rescue carry it.
 - [ ] **Committed deaths are about 1 in 56** (target about 1 in 25), all in holdExtract. Fine, or raise `bleedChance`/`leftDownDeath`?
 - [ ] **"Chance of losing someone"** counts someone killed *or left behind* (missing for 7 days). On cautious and steady the risk line says a death only follows a call you make, yet the chance can be above zero there (left behind). Keep "losing someone", or say "killed or left behind"?
-- [ ] **"Hit the caller"** (techUnderFire) is still offered when no radio call is shown (the dilemma also fires on two shots at the tech). Offer it only with a call, as the jam now is?
+- [x] **"Hit the caller"** is now offered only with a call shown (the dilemma needs one).
 - [ ] **Special actions button:** in the approved list, not built, because the engine has no specials. What should a special be (spec 12 mentions `order.special`), or drop the button?
 - [ ] **Four lines Claude wrote** because the screens needed them: "Likely enemies: {kinds}.", "{who} can jam radio calls.", "If the tech jams, they stop working the hack that round.", and the van call's "Outside: …" and "Chance anyone outside is left behind: …". Skim and replace.
 - [ ] **One test changed** (`tests/renewals.test.js`, "no death without push on"): its random policy now never answers "fight" at death's door. Skim it.
