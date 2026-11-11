@@ -44,7 +44,7 @@ Navigation state (`screen`, `cityTab`, the open page ids) is module state in `ui
 Section names are the headings in the code. "(x)" marks something that shows only sometimes.
 
 **Today** (`renderInbox`)
-- Inbox column, messages first: briefing (`renderBriefing`), back cards (crews home), Out line (links to City › Map), the All / Unread filter, then message rows (tag, subject, preview, day).
+- Inbox column, messages first: briefing (`renderBriefing`; Joss's line folds to one line on a tap, for the day), the next-up line (`renderNextUp`, phones only: the soonest raid, bills or last day; a tap scrolls to Coming up), back cards (crews home), Out line (links to City › Map), the All / Unread filter, then message rows (tag, subject, preview, day).
 - Rail (`.inbox__rail`): week brief (Monday: numbers and The Word), then Coming up (`renderUpcoming`), a day per row. A third column from 1200px, under the messages from 900px, after the list on a phone.
 - Detail pane (beside the list on wide screens; replaces it on phones): the open message. Types with their own layout: job report (timeline, summary, full log), week summary, renewal, spec offer, raid call, raid warning, heat notice.
 - Also here: day cue (new-day banner), keep-save and backup banners.

@@ -148,6 +148,21 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .inbox__list h1 { margin-top: 0; }
 /* Joss, the crew's AI partner: one line of briefing at the top of Today. */
 .joss { display: flex; gap: 12px; align-items: flex-start; margin: 4px 0 12px; }
+/* Joss's line is a button: tap to fold it to one line for the day, tap again to open it (owner, 2026-11-11). */
+button.joss { width: 100%; min-height: var(--tap); padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.joss__body { flex: 1; }
+.joss__line { display: block; }
+.joss__fold { flex: 0 0 auto; align-self: center; color: var(--muted); font-size: 0.85rem; padding: 0 2px; }
+.joss.is-folded { align-items: center; }
+.joss.is-folded .joss__line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
+/* "Next up" on Today, phones only: the soonest date that matters, a tap to Coming up (in the rail beside it on wider screens). */
+.nextup { display: flex; align-items: center; gap: 10px; width: 100%; min-height: var(--tap); margin: 0 0 12px; padding: 6px 12px; border: 1px solid var(--line); border-left: 2px solid var(--accent-2); background: var(--panel-2, var(--panel)); color: inherit; font: inherit; font-size: 0.9rem; text-align: left; cursor: pointer; }
+.nextup__when { flex: 0 0 auto; font-family: var(--display, inherit); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-2); }
+.nextup__text { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nextup__go { color: var(--muted); }
+.nextup.is-short { border-left-color: var(--danger); }
+.nextup.is-short .nextup__text { color: #ff8a8a; }
+@media (min-width: 900px) { .nextup { display: none; } }
 .joss__badge { flex: 0 0 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--accent-2); background: #14262a; }
 /* Joss blinks now and then, and their antenna light breathes. Still for reduced motion. */
 .joss-eyes { transform-box: fill-box; transform-origin: center; animation: joss-blink 6s infinite; }
