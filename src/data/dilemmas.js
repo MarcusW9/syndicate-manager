@@ -22,8 +22,9 @@
 export const DILEMMAS = {
   techUnderFire: {
     fight: ['holdHack'],
-    // Owner, 2026-11-11: two or more shots on the tech, or the tech at half pips or below with a radio call shown.
-    when: { of: 'protected', any: [{ shotsOnAtLeast: 2 }, { pipsAtMostShare: 0.5, radioShown: true }] },
+    // Owner, 2026-11-11 (narrowed after the slice 3 sim, where "two or more shots on the tech" came up in 82% of hacks):
+    // the tech at half pips or below with a radio call shown. A radio call is always shown, so Hit the caller always has a caller.
+    when: { of: 'protected', pipsAtMostShare: 0.5, radioShown: true },
     options: [
       { id: 'cover', ordersPatch: { all: { duty: 'protect', target: 'protected' } } },
       { id: 'radio', ordersPatch: { bestAttacker: { duty: 'attack', target: 'backupSource' } } },
