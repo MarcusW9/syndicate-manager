@@ -4,6 +4,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-11 · Hits land, and the stamp has weight
+- **A guard that is shot now reacts:** on a hit the token shakes and flashes white for a moment, at the instant the shot lands (rifle, drone, turret and crew shots; a miss does nothing). With reduced motion on, it only flashes.
+- **The Job done stamp comes last:** it waits until the card and the team have shown (longer with a bigger team), then drops fast from above, lands with a squash, and wobbles to rest; the whole card jolts a little on the hit. A loss is still not stamped. With reduced motion on, the stamp just appears.
+
 ## 2026-11-11 · Skirmishes play out (no three-round stand-off)
 - **A fight that is not a raid no longer stops after three rounds.** It used to call the crew in with "Push past them (alert +1, heat +1) or Pull back" while guards were still up, even for a lone runner who was winning. Now it plays until the guards are down, a runner is at death's door (the usual call-in) or the crew's orders pull back. A 12-round backstop still calls in a true stalemate. Raids keep their three rounds ("Hold the door"), and a fight already in progress in an old save keeps the cap it had.
 - **Side effect, for the owner:** with the cap gone, the engine-1 test fight is won either way, so what commanding a fight buys is health, not wins (about 14% less health lost, 2,199 against 2,569 over 400 fights; before, orders won 309 of 400 against 246). The planning read's stand-off share is about zero for these fights.
