@@ -47,6 +47,12 @@ const PROFILES = {
   // "clearly beaten" bar at 7 points or 0.3 downs.
   next: { startEnemies: 4, hitsByKind: true, docksEnforcers: true, contested: true, doorSlots: 3, holdRounds: 2, holdAddsEnemy: false, noBoardUnderFire: true,
     strongDefaults: true, steadyAt: 2, deathOnlyOnOrderedWithdraw: true, gateGain: 0.07, gateDowns: 0.3 },
+  // Bleeding out (owner, 2026-11-11): death is possible without an order in the moment, but only
+  // through a risk the player accepted and was shown. Committed keeps fighting with someone down; a
+  // downed runner who isn't stabilised (a medic) or got into the van can bleed out; a runner left
+  // behind while down may not make it. Cautious and steady pull back at a critical, as before.
+  bleed: { startEnemies: 4, hitsByKind: true, docksEnforcers: true, contested: true, doorSlots: 3, holdRounds: 2, holdAddsEnemy: false, noBoardUnderFire: true,
+    strongDefaults: true, steadyAt: 2, deathOnlyOnOrderedWithdraw: true, gateGain: 0.07, gateDowns: 0.3, bleed: true },
 };
 
 const ASSUMPTIONS = [
@@ -81,6 +87,10 @@ const N = {
   doorSlots: 2, contestedBoardStep: -4, vanWait: 4, holdHeat: 1, // tuned in a sweep, 2026-11-11
   holdRounds: 1, holdAddsEnemy: true, // what holding the van one more time buys and costs
   overwatchStep: -1, // overwatch shoots from a better angle (as today)
+  // Bleeding out: from the second round after going down, each round an unstabilised downed runner
+  // (not in the van) dies with bleedChance. Stabilising: a medic's medical roll at stabiliseStep.
+  // A runner left behind while down dies with leftDownDeath.
+  bleedGrace: 2, bleedChance: 0.08, stabiliseStep: 2, leftDownDeath: 0.1, // left behind while down: committed only
   // Overwatch (owner: one attack a round): the docks get a rifle (2 uses, strong on a margin of 6),
   // the heights a drone (3 uses, strong on 10); the operator is a specialist (the group's main margin).
   overwatchKit: { holdExtract: { kit: 'rifle', uses: 2, strong: 6 }, holdHack: { kit: 'drone', uses: 3, strong: 10 } },
@@ -363,6 +373,10 @@ function tryDuty(F, r, duty, target, priority, res) {
       return null;
     }
     case 'support': {
+      if (r.medic && N.bleed) {
+        const bleeding = F.crew.find((x) => x.down && !x.stable && !x.aboard && !x.dead && !res.patches.has(x.id));
+        if (bleeding) { res.patches.add(bleeding.id); return { kind: 'stabilise', target: bleeding.id }; }
+      }
       if (r.medic) {
         const hurt = standing(F).filter((x) => x.pips < x.max && !res.patches.has(x.id)).sort((a, b) => a.pips / a.max - b.pips / b.max || a.id - b.id)[0];
         if (hurt) { res.patches.add(hurt.id); return { kind: 'patch', target: hurt.id }; }
@@ -405,6 +419,11 @@ function resolveOrders(F) {
       if (!act) act = { kind: 'withdraw' };
       from = 'safety';
     }
+    // A medic stabilises a bleeding teammate before anything else (as today's actionFor), whatever their duty.
+    if (!act && N.bleed && r.medic) {
+      const bleeding = F.crew.find((x) => x.down && !x.stable && !x.aboard && !x.dead && !res.patches.has(x.id));
+      if (bleeding) { res.patches.add(bleeding.id); act = { kind: 'stabilise', target: bleeding.id }; from = 'safety'; }
+    }
     if (!act) { act = tryDuty(F, r, ord.duty, ord.target, ord.priority, res); from = 'duty'; }
     if (!act && ord.fallback) { act = tryDuty(F, r, ord.fallback.duty, ord.fallback.target, ord.priority, res); from = 'fallback'; }
     if (!act) { act = { kind: 'hunker' }; from = 'last'; }
@@ -426,7 +445,7 @@ function threatLine(F, t) {
 function intentLine(F, a) {
   const why = a.from === 'safety' ? 'risk: pulling out' : `${a.order.duty}${a.from === 'fallback' ? `, fallback ${a.order.fallback.duty}` : a.from === 'last' ? ', nothing useful' : ''}`;
   const what = a.kind === 'attack' ? `attacks ${eName(F, a.enemy)}` : a.kind === 'shield' ? `shields ${runner(F, a.for).handle}`
-    : a.kind === 'patch' ? `patches ${runner(F, a.target).handle}` : a.kind === 'jam' ? 'jams the radio'
+    : a.kind === 'patch' ? `patches ${runner(F, a.target).handle}` : a.kind === 'stabilise' ? `stabilises ${runner(F, a.target).handle}` : a.kind === 'jam' ? 'jams the radio'
       : a.kind === 'work' ? 'works the hack' : a.kind === 'board' ? 'boards the van' : a.kind === 'carry' ? `carries ${runner(F, a.target).handle} to the van` : a.kind === 'move' ? 'moves to cover'
         : a.kind === 'withdraw' ? 'withdraws' : 'hunkers';
   return `${a.r.handle} ${what} (${why})`;
@@ -478,7 +497,10 @@ function playRound(F) {
 
   if (N.contested && F.type === 'holdExtract' && F.stage === 1 && F.round === F.vanLeaves && (standing(F).length || F.crew.some((r) => r.down && !r.aboard))) {
     F.dilemmas.vanCantWait++;
-    if (F.vanHold && !F.held) {
+    // Hands-off, the risk level answers: cautious and steady hold the van for a downed teammate (bleed
+    // rules); committed lets it go on time.
+    const autoHold = N.bleed && F.risk !== 'committed' && F.crew.some((r) => r.down && !r.aboard && !r.dead);
+    if ((F.vanHold || autoHold) && !F.held) {
       F.held = 1; F.vanLeaves += N.holdRounds; F.heat += N.holdHeat; if (N.holdAddsEnemy) F.arriving.push(ENCOUNTERS[F.enc].kinds[0]);
       say(F, `- The van can't wait: ${standing(F).length} still outside. Hold ${N.holdRounds} more round${N.holdRounds > 1 ? 's' : ''} (+${N.holdHeat} heat${N.holdAddsEnemy ? ', one more of them on the way' : ''}).`);
     } else say(F, `- The van can't wait: ${standing(F).length} still outside, and it leaves at the end of this round.`);
@@ -550,6 +572,9 @@ function playRound(F) {
         if (drone) drone.out = true;
         out.push(`${r.handle} jams the radio${drone ? ` and drops ${eName(F, drone.n)}` : ''}`);
       } else out.push(`${r.handle}'s jam fails`);
+    } else if (a.kind === 'stabilise') {
+      const x = rollIt(r.stats.medical, N.base + N.stabiliseStep); const t = runner(F, a.target);
+      if (x.ok && t.down && !t.dead) { t.stable = true; out.push(`${r.handle} stabilises ${t.handle}`); } else out.push(`${r.handle} can't stop ${t.handle}'s bleeding yet`);
     } else if (a.kind === 'patch') {
       const x = rollIt(r.stats.medical, N.base + N.patchStep); const t = runner(F, a.target);
       if (x.ok && !t.down) { t.pips = Math.min(t.max, t.pips + N.patchHeal); out.push(`${r.handle} patches ${t.handle} (+${N.patchHeal})`); } else out.push(`${r.handle}'s patch on ${t.handle} doesn't take`);
@@ -581,8 +606,8 @@ function playRound(F) {
       const dmg = Math.min(v.pips, t.hit); v.pips -= dmg; F.pipsLost = (F.pipsLost ?? 0) + dmg;
       if (v.pips <= 0) {
         if (v.leaving && (!N.deathOnlyOnOrderedWithdraw || v.ordered)) { v.dead = true; out.push(`${eName(F, e.n)} hits ${v.handle} as they pull out alone: **dead**`); }
-        else if (v.leaving) { v.down = true; out.push(`${eName(F, e.n)} hits ${v.handle} as they pull out: **down** (death's door)`); }
-        else { v.down = true; out.push(`${eName(F, e.n)} hits ${v.handle}: **down**`); }
+        else if (v.leaving) { v.down = true; v.downRound = F.round; out.push(`${eName(F, e.n)} hits ${v.handle} as they pull out: **down** (death's door)`); }
+        else { v.down = true; v.downRound = F.round; out.push(`${eName(F, e.n)} hits ${v.handle}: **down**`); }
       } else out.push(`${eName(F, e.n)} hits ${v.handle}${t.shieldedBy ? ' (shielding)' : ''} (${v.pips} left)`);
     } else if (t.kind === 'flank') {
       const v = runner(F, t.target);
@@ -598,6 +623,13 @@ function playRound(F) {
   if (hiredUp.length && hiredUp.length / F.hiredTotal < N.hiredFleeBelow) { for (const e of hiredUp) e.fled = true; out.push('the last of the hired run'); }
   if (out.length) say(F, `- ${out.join('; ')}.`);
 
+  // Bleeding out (committed only: cautious and steady have already pulled back at a critical).
+  if (N.bleed && F.risk === 'committed') {
+    for (const r of F.crew) {
+      if (!r.down || r.stable || r.aboard || r.dead || F.round - r.downRound < N.bleedGrace) continue;
+      if (F.rRoll() < N.bleedChance) { r.dead = true; say(F, `- ${r.handle} bleeds out. **Dead.**`); }
+    }
+  }
   // Progress, clocks, end.
   if (workBy && !workBy.down && !workBy.dead && !workBy.out) F.work++;
   if (N.contested) {
@@ -620,17 +652,23 @@ function playRound(F) {
   }
   if (prot2 && (prot2.down || prot2.dead)) return finish(F, 'lost', `${prot2.handle} is down: the hack is lost, the crew pulls out.`);
   if (prot2 && prot2.out) return finish(F, 'abandoned', `${prot2.handle} pulled out: the hack is abandoned.`);
-  const outsideDown = F.crew.filter((r) => r.down && !r.aboard);
+  const outsideDown = F.crew.filter((r) => r.down && !r.aboard && !r.dead);
   const boardingStage = N.contested && F.type === 'holdExtract' && F.stage === 1;
-  if (!boardingStage && F.crew.some((r) => r.down)) return finish(F, 'extracted', 'Someone is down: the crew pulls back.');
+  const fightsOn = N.bleed && F.risk === 'committed';
+  if (!boardingStage && !fightsOn && F.crew.some((r) => r.down && !r.dead)) return finish(F, 'extracted', 'Someone is down: the crew pulls back.');
   // Nobody standing outside with someone down: next round someone climbs back out of the van; only if
   // nobody in the van can do it is the downed runner left behind.
-  if (boardingStage && !standing(F).length && outsideDown.length && !F.crew.some((r) => r.aboard && !r.down && !r.dead)) { F.leftBehind = outsideDown.length; return finish(F, 'leftBehind', `Nobody is left to carry ${outsideDown.map((r) => r.handle).join(', ')}.`); }
+  if (boardingStage && !standing(F).length && outsideDown.length && !F.crew.some((r) => r.aboard && !r.down && !r.dead)) {
+    F.leftBehind = outsideDown.length;
+    if (N.bleed && F.risk === 'committed') for (const r of outsideDown) if (!r.dead && F.rRoll() < N.leftDownDeath) { r.dead = true; say(F, `- ${r.handle} was left behind down, and doesn't make it. **Dead.**`); }
+    return finish(F, 'leftBehind', `Nobody is left to carry ${outsideDown.map((r) => r.handle).join(', ')}.`);
+  }
   const someoneCanGoBack = boardingStage && outsideDown.length && F.crew.some((r) => r.aboard && !r.down && !r.dead);
   if (!standing(F).length && !someoneCanGoBack) return finish(F, 'gone', 'Nobody left in the fight.');
   if (N.contested && F.type === 'holdExtract' && F.stage === 1 && F.round >= F.vanLeaves) {
-    const left = [...standing(F), ...F.crew.filter((r) => r.down && !r.aboard)];
+    const left = [...standing(F), ...F.crew.filter((r) => r.down && !r.aboard && !r.dead)];
     F.leftBehind = left.length;
+    if (N.bleed && F.risk === 'committed') for (const r of left) if (r.down && F.rRoll() < N.leftDownDeath) { r.dead = true; say(F, `- ${r.handle} was left behind down, and doesn't make it. **Dead.**`); }
     return finish(F, 'leftBehind', `The van goes. ${F.leftBehind} left behind, missing and badly hurt: ${left.map((r) => r.handle).join(', ')}.`);
   }
   if (F.round >= N.deadline && !(N.contested && F.type === 'holdExtract')) return finish(F, 'deadline', 'Out of time.');
@@ -817,6 +855,27 @@ lines.push('| --- | --- | --- |');
 for (const r of riskRows) lines.push(`| ${r.risk} | ${P(r.holdHack.won)} / ${P(r.holdHack.abandoned)} / ${D(r.holdHack.down)} / ${D(r.holdHack.dead)} | ${P(r.holdExtract.won)} / ${D(r.holdExtract.down)} / ${D(r.holdExtract.dead)} |`);
 lines.push('');
 
+if (N.bleed) {
+  lines.push('## Deaths (bleeding out and left behind while down)');
+  lines.push('');
+  lines.push(`Every plan, crew margin and toughness, exposure E2, ${Math.min(SEEDS, 100)} seeds each. Line-ups a and c carry a medic; b has none. Target: about one death per 20-30 committed fights, next to none on cautious or steady.`);
+  lines.push('');
+  lines.push('| Risk | Encounter | Won | Downs a fight | Deaths a fight | Fights per death | With a medic | Without |');
+  lines.push('| --- | --- | --- | --- | --- | --- | --- | --- |');
+  for (const risk of ['cautious', 'steady', 'committed']) for (const enc of Object.keys(ENCOUNTERS)) {
+    const t = { won: 0, down: 0, dead: 0, n: 0, medDead: 0, medN: 0, noDead: 0, noN: 0 };
+    for (const plan of PLAN_NAMES) for (const dur of Object.keys(DURABILITY)) for (const group of Object.keys(CREW_GROUPS)) for (const lineup of Object.keys(LINEUPS))
+      for (let seed = 1; seed <= Math.min(SEEDS, 100); seed++) {
+        const r = outcome(play({ enc, dur, exp: 'E2', group, lineup, plan, seed, risk }));
+        t.won += r.won; t.down += r.down; t.dead += r.dead; t.n++;
+        if (lineup === 'b') { t.noDead += r.dead; t.noN++; } else { t.medDead += r.dead; t.medN++; }
+      }
+    const per = t.dead / t.n;
+    lines.push(`| ${risk} | ${enc} | ${P(t.won / t.n)} | ${D(t.down / t.n)} | ${(per).toFixed(3)} | ${per > 0 ? Math.round(1 / per) : 'none'} | ${(t.medDead / t.medN).toFixed(3)} | ${(t.noDead / t.noN).toFixed(3)} |`);
+  }
+  lines.push('');
+}
+
 lines.push('## Toughness check');
 lines.push('');
 lines.push(`Over vs On, defaults plan, D2: success gain **${P(tough.aimHeavy)}** in aim-heavy fights (E3) and **${P(tough.radioHeavy)}** in radio-heavy fights (decks weighted to backup and alarm, E2). The gate asks for the first to be at least twice the second: **${tough.aimHeavy >= 2 * tough.radioHeavy ? 'met' : 'not met'}**.`);
@@ -879,7 +938,7 @@ if (N.contested) {
 lines.push('## Ten fights, narrated (defaults plan, On level, line-up a, D2 E2, steady)');
 lines.push('');
 for (const enc of Object.keys(ENCOUNTERS)) for (let seed = 1; seed <= 5; seed++) {
-  const F = play({ enc, dur: 'D2', exp: 'E2', group: 'On', lineup: 'a', plan: 'defaults', seed, log: true, ...(PROFILE === 'van' || PROFILE === 'next' ? { standby: enc === 'holdExtract', overwatch: true } : {}) });
+  const F = play({ enc, dur: 'D2', exp: 'E2', group: 'On', lineup: 'a', plan: 'defaults', seed, log: true, ...(['van', 'next', 'bleed'].includes(PROFILE) ? { standby: enc === 'holdExtract', overwatch: true } : {}) });
   lines.push(`### ${enc}, seed ${seed}`);
   lines.push('');
   lines.push(...F.log);

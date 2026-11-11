@@ -53,8 +53,11 @@ what the prototype has to show.
   functions as the round.
 - Seeded RNG through the existing battle streams. No `Math.random`. `state.rngCounter` behaviour
   unchanged from today's battle code.
-- Death only after a player choice (`fightOn` -> `am.untreated`). Hands-off crews extract at a
-  critical. Pull back is always available, at every decision point, including call-ins.
+- **Death only follows a risk the player accepted and was shown** (owner, 2026-11-11; supersedes
+  "death only after a player choice" for the new engine): pushing on at death's door (`fightOn` ->
+  `am.untreated`) as today, or the **committed** risk level, which keeps fighting with someone down
+  (section 10a). Cautious and steady crews extract at a critical, as today. Pull back is always
+  available, at every decision point, including call-ins.
 - Layering: core is pure; all wording lives in data (`BATTLE_TEXT`, `DILEMMAS`); the UI reads views
   only. Phone-first (360px), 44px taps, no hover-only information.
 - State-shape change: bump `SAVE_VERSION`, add a migration and a test, add a DESIGN.md row
@@ -193,8 +196,10 @@ someone goes back for them.
 
 **Left behind (owner, 2026-11-11).** A runner left behind, standing or down, is **missing, not
 dead**: they come back after some days with a **serious injury** (how long: OPEN). Later, a runner
-left behind could instead be **taken**, which opens a **rescue job** (section 27). This keeps
-"death only after a player choice": leaving someone costs them, it doesn't kill them.
+left behind could instead be **taken**, which opens a **rescue job** (section 27). **Except on
+committed:** a runner left behind *while down* doesn't make it with `leftDownDeath` (10%); the van
+call-in shows it ("Leave Vex: missing, or worse"). Hands-off, the risk level answers the van call:
+cautious and steady hold the van for a downed teammate; committed lets it go on time.
 
 **Standby and overwatch at the van (owner's go-ahead to test, 2026-11-11; simulated in Step 0
 pass 6):**
@@ -233,9 +238,12 @@ still a retreat.
   abilities leave the fight with them.
 - If the **essential specialist** withdraws from holdHack, the crew abandons the objective and
   extracts.
-- A runner **going down in an unwatched fight** means the crew extracts. It never quietly becomes
-  permission to fight on. In a watched or commanded fight, death's door is the call-in it is today.
-- Death stays possible only through the existing explicit player choice.
+- A runner **going down in an unwatched fight** means the crew extracts on cautious and steady. On
+  **committed** the crew fights on, and the downed runner can bleed out (section 10a): the one
+  setting where a death can happen without a call-in, and the risk picker says so. In a watched or
+  commanded fight, death's door is the call-in it is today.
+- Death is otherwise only through an explicit player choice (pushing on, ordering a withdrawal by
+  hand).
 - The protected specialist obeys the safety rules: protection orders never override withdrawal
   thresholds.
 - Risk is crew-wide: `cautious`, `steady`, `committed`. Thresholds are **defined in pips** so they
@@ -280,6 +288,33 @@ fewer, committed never.
 - **Generation and growth (OPEN):** every runner (crew, free names, rival tongs' runners) gets a
   seeded endurance in the v61 migration, by role; Step 0 used about 14 for muscle and 11 for
   everyone else, spread about 2.5. It grows slowly and falls with age.
+
+## 10b. Bleeding out (owner, 2026-11-11)
+
+Death should be possible without a decision in the moment, but rare and always from a risk the
+player accepted and was shown.
+
+- **Only on committed** (or after pushing on by hand). Cautious and steady pull back as soon as
+  someone goes down, so a hands-off crew on those settings never loses a runner.
+- **Bleeding:** a downed runner who isn't stabilised, carried into the van, or out of the fight
+  starts bleeding from the second round after they went down (`bleedGrace: 2`): each round after
+  that they die with `bleedChance` (8%). Stabilising stops it: a medic's medical roll at
+  `stabiliseStep` (+2), and **a medic stabilises a bleeding teammate before anything else**, whatever
+  their duty (today's `actionFor` does the same).
+- **Left behind while down** on committed: `leftDownDeath` (10%), shown on the van call-in.
+- **Shown = used:** the planning read shows the chance of a death ("Chance of losing someone: about
+  4%") from the same rounds the fight plays; the risk picker says "Committed: fights on with someone
+  down; can cost a life".
+- **Step 0 pass 8** (`docs/sims/step0-2026-11-11-pips-bleed.md`): cautious and steady, no deaths in
+  either fight; committed, about one death in 14 holdExtract fights and almost none in holdHack (one
+  in about 1,000), so about one in 27 committed fights across both, the target. Committed wins more
+  (holdHack 73% against 63% on steady), so it is a real trade.
+- **What changes in the project when this is built (slice 1):** the design rule in `CLAUDE.md`
+  ("Death only follows a choice the player made") becomes "death only follows a risk the player
+  accepted and was shown"; the tests that encode "no death without push on" become "no death on
+  cautious or steady without push on, and every death follows push on, a hand-ordered withdrawal or
+  committed risk", with a test that the shown chance of a death equals the played one. Tests are
+  updated, never loosened, and the change is logged.
 
 ## 11. Fight types, stages and clocks
 
@@ -646,7 +681,9 @@ round (shown = used).
 
 ## 23. Tests
 
-- Death only after `fightOn` (random orders, many seeds, both types).
+- Death only after `fightOn`, a hand-ordered withdrawal, or committed risk (random orders, many
+  seeds, both types); none on cautious or steady without `fightOn`. The shown chance of a death
+  equals the played one.
 - Pull back always possible; parting shots never below 1 pip.
 - Shown = used: preview chances equal roll odds; `fightOdds` calls `playRound`.
 - Determinism: same state + seed + orders -> same fight. Previews, "if nothing" and dilemma checks
@@ -743,6 +780,9 @@ risk thresholds (section 10); per-runner contested boarding, carrying, the van t
    whoever threatens a runner in the open: +6 to 13 points, strong for a 2-3 use kit); the runner in
    the van climbing back out for a downed teammate.
 6. **Left behind:** days missing (proposal: 7, then back with a serious injury); rescue jobs later.
+13. **Bleeding out** (section 10b): confirm the numbers (8% a round from the second round down;
+   10% for a downed runner left behind on committed) and the target (about one death in 25-30
+   committed fights). Most committed deaths happen at the van in holdExtract.
 7. **The sim's remaining assumptions** (top of each report): a jam takes out one drone; an alarm in
    holdExtract brings the next pressure arrival a round earlier; specials cost no action; no parting
    shots when the crew pulls back; the holdHack deadline fails the objective; sidearm aim bonuses

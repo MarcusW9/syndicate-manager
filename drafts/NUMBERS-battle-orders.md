@@ -469,6 +469,22 @@ while pulling out alone goes to death's door unless the withdrawal was ordered b
   measure is mid-fight adapting (call-ins, Take Command), so the gate is better re-run on the real
   code in slice 3 than chased further here.
 
+**Pass 8 (2026-11-11): bleeding out (owner: deaths possible without an order in the moment, but
+rare and from an accepted risk).** Report: `docs/sims/step0-2026-11-11-pips-bleed.md` (Deaths table).
+
+- **Tuning:** first try (bleeding 20% a round from the first round down; a downed runner left behind
+  dies 25% on any risk level) killed one runner in 4 committed holdExtract fights and one in 10 even
+  on cautious and steady. Changes: the risk level answers the van call hands-off (cautious and steady
+  hold for a downed teammate); left behind while down kills only on committed (10%); bleeding 8% a
+  round from the **second** round down; a medic stabilises a bleeding teammate first.
+- **Result:** cautious and steady, **no deaths**; committed, **one death in 14 holdExtract fights and
+  one in about 1,000 holdHack fights**, about one in 27 committed fights across both. Committed wins
+  more (holdHack 73% against steady's 63%; holdExtract 68% against 63%). Most committed deaths
+  happen at the van: runners bleeding while waiting to be carried, and the van going on time.
+- Crews with a medic don't die less (0.080 against 0.057 in holdExtract): the line-up without a medic
+  has two gunners and clears the yard faster. Worth a look when the real code exists.
+- The gate is unchanged (neither; defaults 54%).
+
 ## 13. Summary of the BATTLE keys
 
 ```js
@@ -476,6 +492,7 @@ BATTLE = {
   endurancePerPip: 2, patchHeal: 2, lightWoundPips: 1,   // pips = floor(endurance / 2), at least 1
   // shots by kind: ENEMY_HIT = { hired: 1, drone: 1, corp: 2, enforcer: 2 }
   doorSlots: 3, boardStep: -4, carryStep: 2, vanWait: 4, holdRounds: 2, holdHeat: 1,   // contested boarding (pass 6)
+  bleedGrace: 2, bleedChance: 0.08, stabiliseStep: 2, leftDownDeath: 0.1,            // bleeding out (pass 8; committed only)
   hit: 1, strongHit: 2, strongMargin: 10, strongMarginByDamage: { 2: 12, 3: 10, 4: 8, 5: 6 },
   absorb: { none: 0, street: 1, pro: 2 }, droneAbsorb: 1,          // ap ignores absorb
   cover: { open: 0, half: 2, full: 4 }, startCover: 'half', hunkerStep: 4,
