@@ -449,6 +449,26 @@ compared in their own table. Report: `docs/sims/step0-2026-11-11-pips-van.md`.
 - What blocks the gate now is no longer holdExtract's shape: it's the open items in spec list A
   (the defaults, the gate's bars, the risk thresholds, the withdrawal rule).
 
+**Pass 7 (2026-11-11): Claude's leanings, taken by the owner.** Stronger defaults (two protectors on
+the tech in holdHack; mixed-style orders in holdExtract); steady pulls out at 2 pips; a runner downed
+while pulling out alone goes to death's door unless the withdrawal was ordered by hand; the gate's
+"clearly beaten" bar at 7 points or 0.3 downs. Report: `docs/sims/step0-2026-11-11-pips-next.md`.
+
+- **No deaths** in any plan or risk level.
+- **The defaults are now the best or near-best plan:** holdHack 89% / 81% / 76% (D1-D3, protect
+  91-83%); holdExtract 72% (the same orders as `mixed`). They match the adapted plan in both
+  encounters in 54% of cells (the rework line is two thirds).
+- **Gate:** neither (proceed 15% of cells). Measured against the defaults only, picking the best fixed
+  plan for the encounter adds 5 points in holdHack and 4 in holdExtract on average, and clearly pays
+  (7 points or 0.3 downs) in 31% of cells.
+- **Committed now does best** on hands-off fights (89% / 82%; cautious 76% / 72% and abandons 13% of
+  hacks), since a downed runner is no longer killed by pulling out.
+- `vanCantWait` comes up in 28% of fights; `techUnderFire` in 0%.
+- **Reading:** Step 0 has answered the design questions it can (no universal plan; each encounter
+  favours different orders; toughness doesn't replace answers; death only by choice). What it can't
+  measure is mid-fight adapting (call-ins, Take Command), so the gate is better re-run on the real
+  code in slice 3 than chased further here.
+
 ## 13. Summary of the BATTLE keys
 
 ```js

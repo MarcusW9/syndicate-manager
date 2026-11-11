@@ -243,12 +243,13 @@ still a retreat.
   3-pip runner). The UI shows each runner's threshold.
 - `press` (push past at the fight deadline) stays a risk-level property.
 
-**Owner's call (2026-11-10):** a runner withdrawing alone still takes the shots aimed at them that
-round, **can be taken below 1 pip and can die** (a runner downed while leaving alone has no one to
-drag them out). This sits against "death only after a player choice" (section 2): it needs either
-the owner's confirmation that setting the risk level or ordering a withdrawal counts as that choice,
-or a narrower rule. Step 0 found it makes cautious the deadliest risk level (`drafts/NUMBERS-battle-orders.md`
-section 12). Thresholds: first values in the numbers sheet.
+**Withdrawing alone (owner, 2026-11-10, narrowed 2026-11-11):** a runner withdrawing alone still
+takes the shots aimed at them that round and can be taken below 1 pip. **They die only if the player
+ordered that withdrawal by hand**; a runner pulled out by the risk setting who is downed on the way
+goes to death's door like anyone else. This keeps "death only after a player choice" (section 2).
+(The first version, where any withdrawer could die, made cautious the deadliest risk level.)
+**Risk thresholds (2026-11-11):** cautious pulls out at half their pips (rounded up), steady at 2 or
+fewer, committed never.
 
 ## 10a. Endurance (the physical attribute, 2026-11-11)
 
@@ -340,13 +341,15 @@ am.battle.risk = { level: 'cautious'|'steady'|'committed' };
   the protected runner), `radio` (sources of backup and alarm), `low` (the lowest-pips runner),
   `exposed` (the highest shown hit chance).
 - **Defaults** are crew-made at launch, visible and editable in the plan, never hidden optimal play:
-  - holdHack: the technician works; a suitable protector shields the technician; other runners get
-    support or attack by capability.
-  - holdExtract: stage 0 favours survival; stage 1 favours boarding, with protection and support
-    where assigned.
-  - **OPEN:** the fixed rule for "by capability" and "suitable protector" (for example: support if
-    max(medical, tech with a jammer) beats combat, ties to attack; protector = most pips plus
-    armour, ties lowest opId), so defaults don't drift between builds.
+  - **holdHack (2026-11-11):** the technician works; the **two** runners with the most pips plus
+    armour (ties: lowest id) protect the technician (fallback attack); everyone else supports if a
+    medic, or carries a jammer with tech at least their combat, else attacks (fallback protect the
+    technician).
+  - **holdExtract (2026-11-11):** stage 0, the best protector covers the lowest-pips runner
+    (fallback attack) and the rest attack, the lowest-pips runner's attackers first; stage 1, the
+    protector covers (fallback board) and the rest board (fallback hold).
+  - Step 0 pass 7: these defaults are the best or near-best plan in most settings (as good as the
+    adapted plan in both encounters in 54% of cells).
 
 ## 13. Resolver
 
@@ -508,7 +511,7 @@ BATTLE = {
   lightBelow: 0.5, seriousBelow: 0.25,       // pip share -> injury; down = critical as today (OPEN: confirm)
   partingShotFloor: 1,
   retreat: { heat: 1, rep: 2 }, press: { alert: 1, heat: 1 },
-  risk: { cautious: { pullAtPips: OPEN, press: false }, steady: { pullAtPips: OPEN, press: false },
+  risk: { cautious: { pullAt: 'half', press: false }, steady: { pullAt: 2, press: false },
           committed: { pullAtPips: 0, press: true } },
   oddsRuns: 120,
 };
@@ -721,47 +724,30 @@ talk out; overwatch one attack a round; smoke = cover +1 step for everyone; the 
 heat; a runner withdrawing alone takes the shots aimed at them and can die (scope still open, A3);
 endurance as the one physical attribute, with strength and speed as traits (section 10a).
 
-**A. Before the next Step 0 pass** (each changes how a fight plays):
+**A. Step 0 (2026-11-11, after pass 7).** Settled: four enemies at the start, shots by kind, the
+enforcer at the docks (about one slot in three); the defaults (section 12); the withdrawal rule and
+risk thresholds (section 10); per-runner contested boarding, carrying, the van that can't wait
+(section 8); the gate's bar at 7 points or 0.3 downs. Still open:
 
-1. **Base difficulty profile:** the numbers sheet as written, or four enemies at the start (the
-   "hard" profile). With endurance, the first values still let protect, support and the defaults win 84-100% of holdHack fights and most plans 90%+ of holdExtract.
-2. **The default-orders rule.** Proposal: holdHack, two protectors on the technician and the rest
-   support or attack by capability (support if medic, or jammer with tech at least combat); holdExtract,
-   one protector on the lowest-pips runner and the rest attack, then board. Today's defaults lose
-   clearly to obvious plans.
-3. **How far the withdrawal death rule reaches** (it sits against "death only after a player
-   choice"; cautious is the deadliest level). Options: death only when the player ordered the
-   withdrawal by hand; a downed withdrawer at death's door, not dead; withdrawing before the shots
-   resolve; or as is, with the owner confirming that setting the risk level is the choice.
-4. **`techUnderFire` conditions:** wider (tech at 1 pip *or* two or more shots on them) so it comes
-   up (2-6% of fights now).
-5. ~~Boarding per runner or crew-wide~~: settled, per runner and contested (section 8).
-6. **The sim's assumptions** (listed at the top of each Step 0 report): what a jam does to drones;
-   an alarm in a pressure fight; whether specials cost an action; parting shots on a crew pull-back;
-   a runner down while boarding = retreat; the deadline always fails the objective (pressing on);
-   sidearm aim bonuses.
-7. **The gate's bars:** "clearly beaten" at 10 points or 0.5 downs a fight may be too high for
-   fights that are mostly won.
-8. **The pip scale's knock-ons** (pips = endurance / 2, owner): enemy shots at 2 pips and patches at 2
-   (proposed); a light injury at -1 or -2; risk thresholds that still mean something when a shot
-   takes 2 (proposal: steady pulls out at 2 or fewer, cautious at half); dropping the muscle role's
-   pip.
-9. ~~holdExtract's shape~~: settled (owner, 2026-11-11): contested boarding and the van that can't
-   wait (section 8). Open from Step 0 pass 5: **holding one more round barely helps** (+1-3 points),
-   so the van-can't-wait call isn't yet a real choice (options: a longer hold, a cheaper one, or a
-   hold that also stops the extra enemy); **carrying the wounded** (Claude's proposal) to confirm;
-   **`boardUnderFire` comes up in two thirds of fights** now that boarders are in the open (narrow
-   it, or drop it for `vanCantWait`); **pulling out once the van is there** should mean making for
-   the van (first door slot), not walking off on foot (proposal; the sim does this since pass 5);
-   holdExtract may now be **too hard overall** (most plans 45-69%, 0.6-0.8 downs a fight).
-10. **Standby and overwatch at the van** (section 8): simulated in pass 6. Overwatch helps a lot
-   (+6 to 13 points in holdExtract, up to +14 in holdHack), the standby a little (+1 to 6). Confirm
-   both as rules, and whether overwatch is too strong for a 2-3 use kit.
-12. **`vanCantWait` comes up in 46% of holdExtract fights** with three door slots and a four-round
-   wait: fine for a commanded fight (one real decision), but on a hands-off job it's a call-in in
-   nearly half of them. Tune the wait, or accept it as holdExtract's one call.
-11. **Left behind:** how many days missing, and whether it is ever "taken" (a rescue job) in the
-   prototype or only later.
+1. **Ending Step 0.** Pass 7 still gives neither verdict, and Claude recommends accepting that and
+   moving on: the defaults are now good (as they should be for hands-off trust), so picking another
+   fixed plan before the fight adds 4-5 points on average; but the sim compares fixed plans only and
+   can't see mid-fight decisions (the van hold alone is worth 5-10 points). Re-run the gate on the
+   real code in slice 3 with call-ins included, and judge adapting there and in the playtest.
+2. **`techUnderFire`** never comes up (0-2% of fights). Proposal: the tech has two or more shots on
+   them, or is at half pips or below with a radio call shown.
+3. **Light injury:** -1 or -2 pips at the start of a fight. Proposal: -2 (one heavy shot's worth).
+4. **Patch:** heals 1 or 2 pips. Step 0 used 1 from pass 4 on. Proposal: 1 (shots are 1 or 2 now).
+5. **Confirm the rules Claude added in Step 0:** the muscle role's pip dropped for endurance;
+   standby at the van (an extra door slot, a carrier); overwatch on the door (one attack a round, at
+   whoever threatens a runner in the open: +6 to 13 points, strong for a 2-3 use kit); the runner in
+   the van climbing back out for a downed teammate.
+6. **Left behind:** days missing (proposal: 7, then back with a serious injury); rescue jobs later.
+7. **The sim's remaining assumptions** (top of each report): a jam takes out one drone; an alarm in
+   holdExtract brings the next pressure arrival a round earlier; specials cost no action; no parting
+   shots when the crew pulls back; the holdHack deadline fails the objective; sidearm aim bonuses
+   left out. Proposal: keep the first four as rules, add a fail-forward "press" at the deadline later,
+   and include aim bonuses in the real code.
 
 **B. Before code** (they don't change a paper fight):
 

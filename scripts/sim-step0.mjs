@@ -41,6 +41,12 @@ const PROFILES = {
   // rounds for +1 heat and no extra enemy, no boardUnderFire dilemma. Standby (at the van) and
   // overwatch (covering the door) are compared in their own table.
   van: { startEnemies: 4, hitsByKind: true, docksEnforcers: true, contested: true, doorSlots: 3, holdRounds: 2, holdAddsEnemy: false, noBoardUnderFire: true },
+  // Claude's leanings, taken by the owner (2026-11-11): stronger defaults (two protectors on the tech
+  // in holdHack; mixed-style orders in holdExtract); steady pulls out at 2 pips; a runner downed while
+  // pulling out alone goes to death's door unless the player ordered the withdrawal; the gate's
+  // "clearly beaten" bar at 7 points or 0.3 downs.
+  next: { startEnemies: 4, hitsByKind: true, docksEnforcers: true, contested: true, doorSlots: 3, holdRounds: 2, holdAddsEnemy: false, noBoardUnderFire: true,
+    strongDefaults: true, steadyAt: 2, deathOnlyOnOrderedWithdraw: true, gateGain: 0.07, gateDowns: 0.3 },
 };
 
 const ASSUMPTIONS = [
@@ -262,6 +268,16 @@ const PLANS = {
     return F.stage === 0 ? o('support', null, fb('hold')) : o('push', null, fb('support'));
   },
   defaults: (F, r) => {
+    if (N.strongDefaults) {
+      if (F.type === 'holdHack') {
+        // Two protectors on the tech (the two with the most pips and armour); the rest by capability.
+        if (r.id === F.protect) return o('push', null, fb('hold'));
+        const guards = [...F.crew].filter((x) => x.id !== F.protect).sort((a, b) => (b.max + b.absorb) - (a.max + a.absorb) || a.id - b.id).slice(0, 2).map((x) => x.id);
+        if (guards.includes(r.id)) return o('protect', 'protected', fb('attack'));
+        return capableSupport(r) ? o('support', null, fb('protect', 'protected')) : o('attack', null, fb('protect', 'protected'));
+      }
+      return PLANS.mixed(F, r); // holdExtract: one protector, the rest attack, then board
+    }
     if (F.type === 'holdHack') {
       if (r.id === F.protect) return o('push', null, fb('hold'));
       if (r.id === bestProtector(F)) return o('protect', 'protected', fb('attack'));
@@ -285,7 +301,7 @@ const PLAN_NAMES = Object.keys(PLANS);
 // ---- the resolver ------------------------------------------------------------------------------------
 function riskThreshold(F, r) {
   const level = F.risk ?? 'steady';
-  return level === 'cautious' ? Math.ceil(r.max / 2) : level === 'steady' ? 1 : 0;
+  return level === 'cautious' ? Math.ceil(r.max / 2) : level === 'steady' ? (N.steadyAt ?? 1) : 0;
 }
 function covered(F, e, res) {
   const plans = res.damage[e.n] ?? [];
@@ -494,7 +510,7 @@ function playRound(F) {
   for (const a of actions) {
     if (a.kind === 'hunker') a.r.hunker = true;
     if (a.kind === 'move') a.r.cover = 'half';
-    if (a.kind === 'withdraw') a.r.leaving = true;
+    if (a.kind === 'withdraw') { a.r.leaving = true; a.r.ordered = a.from !== 'safety'; }
   }
   let workBy = null; let boards = []; const carries = [];
   const out = [];
@@ -564,7 +580,8 @@ function playRound(F) {
       if (v.absorb > 0) { v.absorb--; out.push(`${eName(F, e.n)} hits ${v.handle}; the vest takes it`); continue; }
       const dmg = Math.min(v.pips, t.hit); v.pips -= dmg; F.pipsLost = (F.pipsLost ?? 0) + dmg;
       if (v.pips <= 0) {
-        if (v.leaving) { v.dead = true; out.push(`${eName(F, e.n)} hits ${v.handle} as they pull out alone: **dead**`); }
+        if (v.leaving && (!N.deathOnlyOnOrderedWithdraw || v.ordered)) { v.dead = true; out.push(`${eName(F, e.n)} hits ${v.handle} as they pull out alone: **dead**`); }
+        else if (v.leaving) { v.down = true; out.push(`${eName(F, e.n)} hits ${v.handle} as they pull out: **down** (death's door)`); }
         else { v.down = true; out.push(`${eName(F, e.n)} hits ${v.handle}: **down**`); }
       } else out.push(`${eName(F, e.n)} hits ${v.handle}${t.shieldedBy ? ' (shielding)' : ''} (${v.pips} left)`);
     } else if (t.kind === 'flank') {
@@ -686,7 +703,7 @@ for (const dur of Object.keys(DURABILITY)) for (const exp of Object.keys(EXPOSUR
   // Adapting pays: every unchanged plan is clearly beaten by the adapted plan in at least one encounter.
   const gain = PLAN_NAMES.every((plan) => Object.keys(ENCOUNTERS).some((enc) => {
     const p = find({ enc, dur, exp, group, lineup, plan });
-    return best[enc].won - p.won >= 0.10 || p.down - best[enc].down >= 0.5;
+    return best[enc].won - p.won >= (N.gateGain ?? 0.10) || p.down - best[enc].down >= (N.gateDowns ?? 0.5);
   }));
   cells.push({ dur, exp, group, lineup, best, universal, matches, gain });
 }
@@ -749,7 +766,7 @@ lines.push('| Unchanged plan | Cells where it is as good as the adapted plan in 
 lines.push('| --- | --- |');
 for (const [p, s] of reworkBy) lines.push(`| ${p} | ${P(s)} |`);
 lines.push('');
-lines.push(`Proceed condition (adapting gains 10+ points or 0.5+ fewer downs in an encounter, and no universal plan): **${P(proceedShare)}** of cells (needs two thirds).`);
+lines.push(`Proceed condition (adapting gains ${Math.round((N.gateGain ?? 0.1) * 100)}+ points or ${N.gateDowns ?? 0.5}+ fewer downs in an encounter, and no universal plan): **${P(proceedShare)}** of cells (needs two thirds).`);
 lines.push('');
 lines.push(`**Verdict on these numbers: ${rework.length ? `REWORK (${rework.map(([p]) => p).join(', ')} is as good as adapting in two thirds or more of cells)` : proceedShare >= 2 / 3 ? 'PROCEED to the playtest' : 'NEITHER: no universal plan, but adapting does not pay enough often enough'}.**`);
 lines.push('');
@@ -862,7 +879,7 @@ if (N.contested) {
 lines.push('## Ten fights, narrated (defaults plan, On level, line-up a, D2 E2, steady)');
 lines.push('');
 for (const enc of Object.keys(ENCOUNTERS)) for (let seed = 1; seed <= 5; seed++) {
-  const F = play({ enc, dur: 'D2', exp: 'E2', group: 'On', lineup: 'a', plan: 'defaults', seed, log: true, ...(PROFILE === 'van' ? { standby: enc === 'holdExtract', overwatch: true } : {}) });
+  const F = play({ enc, dur: 'D2', exp: 'E2', group: 'On', lineup: 'a', plan: 'defaults', seed, log: true, ...(PROFILE === 'van' || PROFILE === 'next' ? { standby: enc === 'holdExtract', overwatch: true } : {}) });
   lines.push(`### ${enc}, seed ${seed}`);
   lines.push('');
   lines.push(...F.log);
