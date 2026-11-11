@@ -51,7 +51,7 @@ the death rule and **battle growth** (1d-1h below). A review pass before each me
 - Migration: every operative, free name and rival card gets a seeded endurance generated the way
   their other stats were (rival cards are built from a hash in `core/dossier.js`: add it there).
 
-**1b. Data.** `data/fights.js` with the settled numbers (numbers sheet section 13 and spec section
+**1b. Data. (Built: `data/fights.js`, `data/dilemmas.js`, `data/fightText.js`; the five jobs' `fightType` is `FIGHT_JOBS` in `data/fights.js`, to be read by 1c.)** `data/fights.js` with the settled numbers (numbers sheet section 13 and spec section
 30): pips = max(3, endurance / 2), light wound -2, enemies and shots by kind, cover, steps, risk
 thresholds, door slots 3, van wait 4, hold 2 rounds +1 heat, bleeding 10% from the second round,
 patch 1, the medic's aura, overwatch (one shot at the van), standby at the van, clocks and deadlines.
@@ -59,7 +59,7 @@ patch 1, the medic's aura, overwatch (one shot at the van), standby at the van, 
 keys. The five jobs get `fightType` (`data_pull`, `data_scrub`, `quiet_hours` holdHack;
 `warehouse`, `protection` holdExtract).
 
-**1c. Rules (`core/fight.js`).** `buildFight`, `telegraph`, `resolveOrders` (precedence, usefulness,
+**1c. Rules (`core/fight.js`). (Built in the 1b PR, with `tests/fight.test.js`; the run's side below is the next PR.)** `buildFight`, `telegraph`, `resolveOrders` (precedence, usefulness,
 reservations, default orders, stage-aware orders, the safety and medic rules), `playRound` returning
 the round result (spec section 19) with each line naming its order, `previewRound` (shown chances,
 "if nothing", no RNG), `fightOdds` (cached). Gear: sidearm damage sets the strong-hit margin, pierce
