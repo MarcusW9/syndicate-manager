@@ -46,6 +46,8 @@ export function coverage(template, crew, approach, { threat = template.threat, o
   const am = { threat, alert: 0 };
   const kit = overwatch?.op ? overwatchKit(overwatch.op, overwatch.kit) : null;
   const ow = kit ? { kit: overwatch.kit, left: kit.uses } : null;
+  // The five jobs' fights (engine 2) are read from these arguments: the coverage rows and the plan screen's fight block (ui/fightscreen.js) share them.
+  const fightArgs = (diff, zone) => ({ type: FIGHT_JOBS[template.id], diff, threat, site: template.district, crew, approach, overwatch: ow ? overwatchOf(overwatch.op, ow, zone) : null, wheels: wheels ? { id: wheels.id, handle: wheels.handle, value: effectiveStat(wheels, 'piloting', { approach }).value } : null });
   const rows = likelyIncidents(approach).map(({ id, zone, sometimes }) => {
     const inc = incidentById(id);
     const diff = incidentDifficulty(template, am, inc);
@@ -63,7 +65,7 @@ export function coverage(template, crew, approach, { threat = template.threat, o
     // the line-up is drawn when the run starts, so it is averaged over several (core/fight.js fightOddsFor). No ambush there yet.
     const type = FIGHT_JOBS[template.id];
     const odds = (extra = {}) => (type
-      ? { standoff: 0, ...fightOddsFor({ type, diff, threat, site: template.district, crew, approach, overwatch: ow ? overwatchOf(overwatch.op, ow, zone) : null, wheels: wheels ? { id: wheels.id, handle: wheels.handle, value: effectiveStat(wheels, 'piloting', { approach }).value } : null }) }
+      ? { standoff: 0, ...fightOddsFor(fightArgs(diff, zone)) }
       : battleOdds({ ...fargs, ...extra }));
     let fight = inc.danger && inc.guards ? odds() : null;
     if (forced) {
@@ -83,7 +85,8 @@ export function coverage(template, crew, approach, { threat = template.threat, o
     };
   });
   const spotted = APPROACHES[approach]?.detect && crew.length > template.crewSize ? crew.length - template.crewSize : 0;
-  return { rows, spotted, toughest: worstRisk(rows.map((r) => r.effective)) };
+  const first = rows.find((r) => r.fight);
+  return { rows, spotted, toughest: worstRisk(rows.map((r) => r.effective)), fight2: FIGHT_JOBS[template.id] && first && crew.length ? fightArgs(first.diff, first.zone) : null };
 }
 
 /** How well a squad covers a job: the mean effective odds over the likely incidents and the job's key stats. */

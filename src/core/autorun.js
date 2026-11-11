@@ -93,9 +93,9 @@ export function needsPlayer(state) {
   if (am.critical || am.pending) return true;
   // Command fights (2026-10-30): a fight waits for your orders each round, unless you left it to the
   // crew. An away crew fights on its own unless you've taken command (core/away.js).
-  // An engine-2 fight (the five jobs of the battle rework) plays itself round by round until its screen is built (slice 2),
-  // pausing only for its call-ins (am.pending above); its orders are the crew's own.
-  if (currentStep(am)?.type === 'battle') return !!am.battle && am.battle.engine !== 2 && !am.battle.auto && !(am.away && !am.away.command);
+  // An engine-2 fight (the five jobs of the battle rework) waits the same way: its screen (ui/fightscreen.js) takes the
+  // orders and risk each round; "Auto fight" hands the rest of it to the crew, and its call-ins are am.pending above.
+  if (currentStep(am)?.type === 'battle') return !!am.battle && !am.battle.auto && !(am.away && !am.away.command);
   if (currentStep(am)?.type !== 'crisis') return false;
   return wouldCall(state) && !leadTakes(state);
 }

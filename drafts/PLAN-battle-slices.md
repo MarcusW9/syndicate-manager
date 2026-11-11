@@ -100,6 +100,8 @@ the screens come in slice 2.
 
 ## Slice 2: the screens
 
+**Status (2026-11-11): built** (PR for slice 2). Not built: the Special actions button (no specials in the engine), a map overlay (no site spots). Open items for the owner: `drafts/OWNER-ITEMS-battle.md`; Task 13's status is in `drafts/writing-tasks.md`.
+
 - **Plan screen** (`ui/board.js`, the squad board): the fight type line, likely enemy kinds, gaps
   ("No jammer: radio calls can only be stopped by attacking the caller"), who can jam and whether it
   stops the hack, each runner's order (duty, target, per stage), their pull-out threshold, the risk

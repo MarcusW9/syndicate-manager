@@ -56,6 +56,7 @@ import {
   runBattle, handOffFight, pullBack,
 } from '../core/mission.js';
 import { renderFightOrders, fightTap, takeOrders } from './fightorders.js';
+import { renderFightRound, renderFightCallIn, renderFightPlan, fightScreenTap, takeFightChange } from './fightscreen.js';
 import { sendOff, ORDERS, handsOffAllowed, autoStep, needsPlayer } from '../core/autorun.js';
 import { takeCall, letThemRun, takeCommand, crewsOut, dayDone } from '../core/away.js';
 import { OVERWATCH_KIT, ALERT_MAX } from '../core/incidents.js';
@@ -536,6 +537,13 @@ function onClick(e) {
     case 'fight-sel': case 'fight-target': case 'fight-clear': case 'fight-order': case 'fight-pull-ask': case 'fight-pull-no': case 'fight-rules': case 'fight-more': case 'fight-log':
       fightTap(state.activeMission, action, { id, kind: t.dataset.kind, target: t.dataset.target });
       break;
+    // Engine 2's screen (ui/fightscreen.js): the draft is an order or two and a risk level; Next round plays on them.
+    case 'fs-panel': case 'fs-sel': case 'fs-order': case 'fs-clear': case 'fs-risk': case 'fs-pull-ask': case 'fs-pull-no':
+      fightScreenTap(state.activeMission, action, { id, duty: t.dataset.duty, target: t.dataset.target });
+      break;
+    case 'fs-next': return setState(runBattle(state, takeFightChange(state.activeMission)));
+    case 'fs-handoff': return setState(runBattle(handOffFight(state), takeFightChange(state.activeMission)));
+    case 'fs-pull': takeFightChange(state.activeMission); return setState(pullBack(state));
     case 'fight-go': return setState(runBattle(state, takeOrders()));
     case 'fight-auto': takeOrders(); return setState(runBattle(state, {}));
     case 'fight-hand-off': takeOrders(); return setState(runBattle(handOffFight(state), {}));
@@ -1459,6 +1467,7 @@ function renderReportSummary(t) {
   const orders = t.orders && ORDERS[t.orders] ? `<p class="muted small">Hands-off · ${esc(ORDERS[t.orders].name)} orders</p>`
     : t.callIn && t.callIn !== 'every' && ORDERS[t.liveOrders] ? `<p class="muted small">Called in ${esc(CALL_IN[t.callIn].name.toLowerCase())} · ${esc(ORDERS[t.liveOrders].name)} orders decided the rest</p>` : '';
   const rows = [
+    sum.cause && ['How the fight ended', sum.cause],
     sum.turning && ['Turning point', sum.turning.text],
     sum.standout && ['Standout', sum.standout.text],
     sum.hurt?.length && ['What hurt us', sum.hurt.join(' ')],
@@ -2577,6 +2586,7 @@ function renderPlan() {
       </div>
 
       <div class="plangrid__risk">
+      ${cov.fight2 ? renderFightPlan(esc, cov.fight2, ['cautious', 'steady', 'committed'].includes(plan.orders) ? plan.orders : 'steady') : ''}
       ${renderMeet(cov, owOp, was)}
       </div>
 
@@ -2913,6 +2923,7 @@ function renderCallIn(s) {
         <div class="choices">${v.choices.map((c) => choiceButton(c, 'critical')).join('')}</div>
       </div>`;
   }
+  if (am.pending && am.battle?.engine === 2 && ['dilemma', 'door'].includes(am.pending.kind)) return renderFightCallIn(s, esc, (id) => { const op = s.crew.find((o) => o.id === id); return op ? face(op, 'sm') : ''; });
   if (am.pending) {
     const v = describePending(s);
     return `
@@ -2923,6 +2934,7 @@ function renderCallIn(s) {
         <div class="choices">${v.choices.map((c) => choiceButton({ ...c, risk: c.exit ? 'safe' : c.push ? 'extreme' : 'moderate', riskReason: c.cost, cost: '' }, 'pending')).join('')}</div>
       </div>`;
   }
+  if (am.battle?.engine === 2 && currentStep(am)?.type === 'battle' && needsPlayer(s)) return renderFightRound(s, esc, (id) => { const op = s.crew.find((o) => o.id === id); return op ? face(op, 'sm') : ''; });
   if (am.battle && currentStep(am)?.type === 'battle' && needsPlayer(s)) return renderFightOrders(s, esc, (id) => { const op = s.crew.find((o) => o.id === id); return op ? face(op, 'sm') : ''; });
   if (currentStep(am)?.type === 'crisis' && needsPlayer(s)) {
     const v = describeCrisis(s);

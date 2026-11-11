@@ -11,11 +11,14 @@ import { autoStep, autoRun, needsPlayer } from '../src/core/autorun.js';
 import { advanceDay } from '../src/core/time.js';
 import { sendOff } from '../src/core/autorun.js';
 import { coverage } from '../src/core/squad.js';
-import { fightOddsFor } from '../src/core/fight.js';
-import { fightSnapshot, fightView, fightAnswer } from '../src/core/runfight.js';
+import { fightOddsFor, optionAvailable } from '../src/core/fight.js';
+import { DILEMMAS } from '../src/data/dilemmas.js';
+import { fightSnapshot, fightView, fightAnswer, expiryAnswer } from '../src/core/runfight.js';
 import { FIGHT, FIGHT_JOBS } from '../src/data/fights.js';
 import { feedItems } from '../src/core/feed.js';
 import { importSave } from '../src/save/save.js';
+import { summariseRun } from '../src/core/report.js';
+import { FIGHT_TEXT } from '../src/data/fightText.js';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 
@@ -83,10 +86,27 @@ test('an engine-2 fight shows on the feed like any fight: a note when it starts,
   assert.ok(round.results.length > 0, 'every line is a result');
 });
 
-test('an engine-2 fight waits for no round screen yet: needsPlayer is false for it, and true for its call-ins', () => {
-  let s = atFight(5, 'data_pull', 'every');
+test('a watched engine-2 fight waits for orders each round unless handed off; hands-off and away crews do not wait', () => {
+  const s = atFight(5, 'data_pull', 'every');
   assert.equal(s.activeMission.battle.engine, 2);
-  assert.equal(needsPlayer(s), false, 'the round plays itself until slice 2 builds the screen');
+  assert.equal(needsPlayer(s), true, 'a watched fight waits for the round\'s orders');
+  assert.equal(autoStep(s), s, 'and autoStep leaves it for the player');
+  // One round on the player's say-so, then it waits again.
+  const next = M.runBattle(s, {});
+  assert.ok(next.activeMission.done || next.activeMission.pending || next.activeMission.battle?.round > s.activeMission.battle.round, 'the round played');
+  if (!next.activeMission.done && next.activeMission.battle && !next.activeMission.pending) assert.equal(needsPlayer(next), true, 'and the next round waits too');
+  // Handed off: it plays itself.
+  const off = M.handOffFight(s);
+  assert.equal(off.activeMission.battle.auto, true);
+  assert.equal(needsPlayer(off), false, 'Auto fight leaves the rest of it to the crew');
+  // Hands-off (callIn never) and an away crew without command: unchanged, they never wait for a round.
+  const hands = atFight(5, 'data_pull', 'never');
+  assert.equal(needsPlayer(hands), false);
+  const away = structuredClone(s);
+  away.activeMission.away = { beats: 99 };
+  assert.equal(needsPlayer(away), false, 'an away crew fights on its own');
+  away.activeMission.away.command = true;
+  assert.equal(needsPlayer(away), true, 'unless you have taken command');
   assert.equal(fightView(s.activeMission.battle).guards.length, s.activeMission.battle.enemies.length);
   assert.equal(fightView({ engine: 1, guards: [1] }).guards.length, 1, 'engine 1 is returned as it is');
 });
@@ -155,7 +175,8 @@ test('a dilemma call-in: what changed, the options, Pull back; carry on plays th
   assert.ok(v.text.includes('under fire'), 'the wording for what changed');
   assert.ok(v.choices.filter((c) => !c.exit && c.id !== 'carryOn').every((c) => c.tradeoff), 'every option that changes something says what it does');
   const ids = v.choices.map((c) => c.id);
-  assert.deepEqual(ids, ['cover', 'radio', 'jam', 'carryOn', 'out'], 'every authored option, then Pull back');
+  const jamOffered = optionAvailable(s.activeMission.battle, DILEMMAS.techUnderFire.options.find((o) => o.id === 'jam'));
+  assert.deepEqual(ids, ['cover', 'radio', ...(jamOffered ? ['jam'] : []), 'carryOn', 'out'], 'every option that can work, then Pull back');
   assert.equal(v.choices.at(-1).exit, true, 'every call-in offers Pull back');
   assert.equal(v.choices.at(-1).cost, `No pay. Heat +${FIGHT.retreat.heat}, reputation −${FIGHT.retreat.rep}.`, 'Pull back shows its real cost');
   assert.ok(!v.choices.some((c) => /\[\w+\]/.test(`${c.label}${c.cost}${c.tradeoff}`)), 'no placeholder tags in a call-in');
@@ -163,7 +184,7 @@ test('a dilemma call-in: what changed, the options, Pull back; carry on plays th
   const key = s.activeMission.pending.key;
   // Answering one: the orders change, the call-in clears, and it doesn't come up again for the same situation.
   const before = JSON.stringify(s.activeMission.battle.orders);
-  const next = M.resolvePending(s, 'jam'); // the tech stops the call: their order changes from working to supporting
+  const next = M.resolvePending(s, ids.includes('jam') ? 'jam' : 'cover'); // the tech stops the call (their order changes from working to supporting), or the crew covers them
   assert.equal(next.activeMission.pending, null);
   assert.notEqual(JSON.stringify(next.activeMission.battle.orders), before, 'the orders changed');
   assert.equal(next.activeMission.battle.dilemmasFired[key], true);
@@ -387,4 +408,83 @@ test('engine 2\'s pull-back cost says what it does: no parting shots', async () 
   assert.match(text(true), /No parting shots/);
   assert.doesNotMatch(text(true), /guards get a parting shot/);
   assert.match(text(false), /parting shot/);
+});
+
+// --- the approved call-in changes (owner, 2026-11-11) ---------------------------------------------------------------------
+
+const radioShown = (x) => x.activeMission.battle.threats.some((t) => ['backup', 'alarm'].includes(t.kind) && !t.cancelled);
+
+test('the jam is a choice only when a radio call is shown and the tech can jam; the other options are always there', () => {
+  let withCall = 0; let without = 0;
+  for (const wantCall of [true, false]) {
+    const s = findCall('data_pull', 'dilemma', { orders: 'steady', to: 400, filter: (x) => x.activeMission.pending.id === 'techUnderFire' && radioShown(x) === wantCall });
+    if (!s) continue;
+    const ids = M.describePending(s).choices.map((c) => c.id);
+    const tech = s.activeMission.battle.runners.find((r) => r.id === s.activeMission.battle.goal.protect);
+    assert.equal(ids.includes('jam'), wantCall && tech.jammer, `call shown ${wantCall}, tech can jam ${tech.jammer}`);
+    for (const id of ['cover', 'radio', 'carryOn', 'out']) assert.ok(ids.includes(id), id);
+    if (wantCall) withCall += 1; else without += 1;
+  }
+  assert.ok(withCall + without >= 1, 'saw at least one call-in');
+  // A stale answer to an option that is not offered is discarded, as any answer that no longer holds.
+  const s = findCall('data_pull', 'dilemma', { orders: 'steady', to: 400, filter: (x) => x.activeMission.pending.id === 'techUnderFire' });
+  const b = s.activeMission.battle;
+  b.runners.find((r) => r.id === b.goal.protect).jammer = false;
+  const before = JSON.stringify(b.orders);
+  assert.equal(JSON.stringify(M.resolvePending(s, 'jam').activeMission.battle.orders), before, 'jam is not a choice for a tech who cannot jam');
+});
+
+test('a call-in answer lasts one round in a real run: the crew\'s orders come back after the next round', () => {
+  const s = findCall('data_pull', 'dilemma', { orders: 'steady', to: 400, filter: (x) => x.activeMission.pending.id === 'techUnderFire' });
+  assert.ok(s);
+  const before = JSON.stringify(s.activeMission.battle.orders);
+  // The first answer that changes anything for this crew (the default orders may already be the cover).
+  const answered = ['cover', 'radio', 'jam'].map((id) => M.resolvePending(s, id)).find((x) => JSON.stringify(x.activeMission.battle.orders) !== before);
+  assert.ok(answered, 'some answer changes the orders for the round');
+  const played = M.runBattle(answered, {});
+  const b = played.activeMission.battle;
+  if (b) assert.equal(JSON.stringify(b.orders), before, 'back to the crew\'s plan once the round is played');
+});
+
+test('a player\'s orders given at the boundary after a call-in stand', () => {
+  const s = findCall('data_pull', 'dilemma', { orders: 'steady', to: 400, filter: (x) => x.activeMission.pending.id === 'techUnderFire' });
+  const answered = M.resolvePending(s, 'cover');
+  const b0 = answered.activeMission.battle;
+  const mate = b0.runners.find((r) => r.id !== b0.goal.protect);
+  const played = M.runBattle(answered, { orders: { [mate.id]: { duty: 'hold', target: null } } });
+  const b = played.activeMission.battle;
+  if (b) assert.equal(b.orders[mate.id].duty, 'hold');
+});
+
+test('the van call-in is leave on time or hold; an away crew whose call-in runs out leaves on time', () => {
+  const s = atFight(2, 'warehouse', 'every');
+  const am = s.activeMission;
+  am.pending = { kind: 'dilemma', id: 'vanCantWait', key: 'x', day: s.day, slots: { outside: 'Jax', n: 1 } };
+  const v = M.describePending(s);
+  assert.deepEqual(v.choices.map((c) => c.id), ['goNow', 'hold', 'out']);
+  assert.equal(v.choices.find((c) => c.id === 'hold').cost, `Heat +${FIGHT.holdHeat}`);
+  assert.equal(v.choices.find((c) => c.id === 'goNow').cost, '');
+  assert.ok(!v.choices.find((c) => c.id === 'hold').tradeoff.includes('Heat'), 'the heat is not printed twice');
+  assert.equal(expiryAnswer(am.pending), 'goNow');
+  assert.equal(expiryAnswer({ id: 'techUnderFire' }), 'carryOn');
+});
+
+test('the report of an engine-2 fight has one cause line (past tense) and the feed lines unchanged in its log', () => {
+  // Each end line as a pattern: its template with the slots as wildcards.
+  const ends = Object.entries(FIGHT_TEXT).filter(([k]) => k.startsWith('end.')).map(([, t]) => new RegExp(`^${t.replace(/[.*+?^$()|[\]\\]/g, '\\$&').replace(/\{\w+\}/g, '.+')}$`));
+  let withCause = 0;
+  for (let seed = 1; seed <= 40; seed++) for (const id of FIVE) {
+    const done = autoRun(begin(seed, id, 'loud', { opts: { callIn: 'never', orders: seed % 2 ? 'committed' : 'steady' } }), seed % 2 ? 'committed' : 'steady');
+    const am = done.activeMission;
+    const fights = am.events.filter((e) => e.kind === 'battle');
+    if (!fights.length) continue;
+    const sum = summariseRun(am.events, { outcome: am.aborted ? 'aborted' : 'completed' });
+    assert.ok(sum.cause, `${id} seed ${seed}: a cause line`);
+    assert.ok(!/^\[/.test(sum.cause) && /[.]$/.test(sum.cause), `${id}: reads as a sentence: ${sum.cause}`);
+    assert.ok(ends.some((re) => re.test(sum.cause)), `${sum.cause} is one of the end lines`);
+    for (const e of fights.filter((x) => x.phase === 'round')) for (const l of e.lines) assert.ok(l.text && !/^\[/.test(l.text), 'the log carries the feed line as it was shown');
+    withCause += 1;
+  }
+  assert.ok(withCause > 50, `${withCause} fights checked`);
+  assert.equal(summariseRun([{ kind: 'beat', text: 'x' }], { outcome: 'completed' }).cause, null, 'no fight, no cause line');
 });

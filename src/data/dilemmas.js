@@ -14,6 +14,9 @@
 //   any: [ ...conditions ]         at least one of these holds; all other keys must hold too
 // ordersPatch selectors: all, others, protected, exposed, bestAttacker, bestProtector, backupSource
 //   (a patch is { selector: { duty, target } }; targets may be 'protected', 'backupSource', 'exposed').
+//   protectedCanJam: true          the specialist can jam (canJam); only used in an option's `requires`
+// An option's `requires` uses the same conditions; an option whose requirement fails is not offered.
+// An ordersPatch lasts one resolved round: core/fight.js applyPatch records the orders it replaces and playRound restores them.
 // vanWait: a change to the van's wait ({ hold: true } holds it holdRounds more rounds for +holdHeat).
 
 export const DILEMMAS = {
@@ -24,7 +27,8 @@ export const DILEMMAS = {
     options: [
       { id: 'cover', ordersPatch: { all: { duty: 'protect', target: 'protected' } } },
       { id: 'radio', ordersPatch: { bestAttacker: { duty: 'attack', target: 'backupSource' } } },
-      { id: 'jam', ordersPatch: { protected: { duty: 'support', target: 'backupSource' } } }, // no hack progress that round
+      // The tech stops working to jam: no hack progress that round. Offered only when a radio call is shown and the tech can jam (canJam).
+      { id: 'jam', requires: { radioShown: true, protectedCanJam: true }, ordersPatch: { protected: { duty: 'support', target: 'backupSource' } } },
       { id: 'carryOn', ordersPatch: null },
     ],
   },
@@ -32,9 +36,8 @@ export const DILEMMAS = {
     fight: ['holdExtract'],
     when: { stage: 1, vanLastRound: true, outsideAtLeast: 1 },
     options: [
-      { id: 'goNow', ordersPatch: null, vanWait: { hold: false } }, // whoever is outside is left behind
+      { id: 'goNow', ordersPatch: null, vanWait: { hold: false } }, // the round still plays; whoever is not aboard at its end is left behind
       { id: 'hold', ordersPatch: null, vanWait: { hold: true }, cost: { heat: 1 } },
-      { id: 'carryOn', ordersPatch: null }, // = go on time
     ],
   },
 };

@@ -281,7 +281,7 @@ function sync(state, { animate }) {
   // A fight on: a bigger map; waiting for orders: the overlay, once the round's moments have played.
   el.classList.toggle('is-fighting', !!am.battle);
   el.style.setProperty('--live-h', `${el.querySelector('.watch__live')?.offsetHeight ?? 0}px`);
-  const view = fightWaiting(state) ? commandView(am) : null;
+  const view = fightWaiting(state) && am.battle.engine !== 2 ? commandView(am) : null; // engine 2's screen has no map overlay (no site spots yet)
   live.chain = live.chain.then(() => live?.plan.command(view)).catch(() => {});
   schedule(state, wait || PACE.result);
 }

@@ -4,6 +4,14 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-11 · The new fights get their screens (battle rework, slice 2)
+- **A watched fight on one of the five jobs now waits for your orders every round** (Office Data Pull, Data Scrub, Quiet Hours, Warehouse Lift, Protection Run). Hands-off and away crews play as before. The screen shows the goal and clocks, each enemy with what it means to do and the chance, each runner's order and what they will do, an "if nothing changes" line, and a risk picker. **Next round**, **Change orders** (pick someone, a duty and a target; the crew's plan for the next stage is kept), **Auto fight** and **Pull back**. The round's threats are shown before you give orders.
+- **Call-ins have their own cards:** what changed, who is outside, "The crew is set to:", each option with what it does and what it costs, and Pull back. The van call shows the odds of leaving whoever is outside, each way.
+- **The plan screen shows the fight:** the type and objective, likely enemies, gaps (no jammer, no medic, no armour on the tech), each runner's order and pull-out point, the risk picker, and the chance of losing someone (killed or left behind) at that risk.
+- **Call-in changes:** the jam is only offered when a radio call is shown and the tech can jam. Cover, Hit the caller and Jam now last one round, then the crew's orders come back (an order you give yourself stands). The van call has two options: Leave on time (the round still plays, so runners can still board) and Hold the van. The unused deadline call-in text is gone.
+- **The report has one cause line** ("How the fight ended") above the full log.
+- Not built: the Special actions button (the engine has no specials yet) and a map overlay (engine 2 has no site spots yet).
+
 ## 2026-11-11 · Battle wording close-out (Task 13)
 - **Call-in costs read in words:** "Heat +1" on holding the van, "No pay. Heat +1, reputation −2." on Pull back, from the real numbers.
 - **"If nothing" says what is assigned, not what will happen:** incoming shots with no shield assigned, radio calls with no jam assigned, and "nothing shown this round" in place of "nothing to answer".

@@ -723,7 +723,7 @@ test('wording is placeholders in data: every key a line or dilemma uses has text
   for (const [id, d] of Object.entries(DILEMMAS)) {
     assert.ok(FIGHT_TEXT[`dilemma.${id}.changed`], id);
     for (const o of d.options) assert.ok(FIGHT_TEXT[`dilemma.${id}.${o.id}`], `${id}.${o.id}`);
-    assert.ok(d.options.some((o) => o.ordersPatch === null && o.id === 'carryOn') || id === 'vanCantWait', `${id} offers carry on`);
+    assert.ok(d.options.some((o) => o.ordersPatch === null && o.id === 'carryOn') || id === 'vanCantWait', `${id} offers keeping the orders (the van call-in has leave on time instead)`);
   }
   assert.ok(FIGHT_TEXT['callin.pullBack'], 'every call-in offers Pull back');
   const names = [...STARTING_CREW.flatMap((o) => [o.handle, o.name.split(' ')[0]])];
@@ -789,4 +789,102 @@ test('the van is held once: no second vanCantWait call-in for a hold that cannot
   b.vanHeld = true;
   assert.deepEqual(F.dueDilemmas(b), [], 'already held once');
   assert.equal(F.dilemmaHolds(b, 'vanCantWait'), false);
+});
+
+// --- call-in overrides last one resolved round, and the jam is offered only when it can work (owner, 2026-11-11) -------------
+
+/** A hack fight at the tech's call-in: Static works, three more protect or attack, a radio call and a shot on the tech. */
+function underFire(radio = true) {
+  const b = fixture('holdHack', [ids.static, ids.jax, ids.stitch, ids.velvet], { set: { wing: { endurance: 12 } } });
+  b.enemies = [foe(1), foe(2)];
+  draw(b, [radio ? { enemy: 1, kind: 'backup' } : { enemy: 1, kind: 'aim', target: 'mei' }, { enemy: 2, kind: 'aim', target: 'wing' }]);
+  return b;
+}
+const techOpts = () => Object.fromEntries(DILEMMAS.techUnderFire.options.map((o) => [o.id, o]));
+
+test('the jam is offered only with a radio call shown and a tech who can jam', () => {
+  const o = techOpts();
+  const withCall = underFire(true);
+  assert.ok(R(withCall, 'wing').jammer, 'the authored tech can jam');
+  assert.equal(F.optionAvailable(withCall, o.jam), true, 'a call and a jammer: offered');
+  assert.equal(F.optionAvailable(underFire(false), o.jam), false, 'no radio call shown: not offered');
+  const cannot = underFire(true);
+  R(cannot, 'wing').jammer = false;
+  assert.equal(F.optionAvailable(cannot, o.jam), false, 'a tech who cannot jam: not offered');
+  const cancelled = underFire(true);
+  cancelled.threats.forEach((t) => { if (t.kind === 'backup') t.cancelled = true; });
+  assert.equal(F.optionAvailable(cancelled, o.jam), false, 'a call already stopped is not a call to jam');
+  for (const id of ['cover', 'radio', 'carryOn']) assert.equal(F.optionAvailable(withCall, o[id]), true, `${id} has no requirement`);
+});
+
+test('cover, radio and jam last one resolved round, then the previous orders come back', () => {
+  for (const id of ['cover', 'radio', 'jam']) {
+    const b = underFire(true);
+    const before = JSON.stringify(b.orders);
+    const changed = F.applyPatch(b, techOpts()[id].ordersPatch);
+    assert.ok(changed.length, `${id} changes someone`);
+    assert.notEqual(JSON.stringify(b.orders), before, `${id}: the orders are changed for the round`);
+    F.playRound(b, always(0.999));
+    assert.equal(JSON.stringify(b.orders), before, `${id}: the crew's own orders are back after one round`);
+    assert.equal(b.override, undefined, `${id}: nothing left to restore`);
+  }
+});
+
+test('two patches before the round restore the first orders, not the first patch', () => {
+  const b = underFire(true);
+  const before = JSON.stringify(b.orders);
+  F.applyPatch(b, techOpts().cover.ordersPatch);
+  F.applyPatch(b, techOpts().radio.ordersPatch);
+  F.playRound(b, always(0.999));
+  assert.equal(JSON.stringify(b.orders), before);
+});
+
+test('an order the player sets after the call-in stands; the rest are restored', () => {
+  const b = underFire(true);
+  const before = JSON.parse(JSON.stringify(b.orders));
+  F.applyPatch(b, techOpts().cover.ordersPatch);
+  F.setOrder(b, 'jax', { duty: 'attack', target: 2 });
+  F.playRound(b, always(0.999));
+  assert.equal(b.orders.jax.duty, 'attack', "Jax keeps the player's order");
+  assert.equal(b.orders.jax.target, 2);
+  for (const id of ['mei', 'cherry']) assert.deepEqual(b.orders[id] ?? null, before[id] ?? null, `${id} goes back to the crew's plan`);
+});
+
+test('a fight that ends in the round is not given its old orders back', () => {
+  const b = underFire(true);
+  b.goal.work = FIGHT.workNeeded - 1; // the tech keeps working under cover: this round finishes the hack
+  F.applyPatch(b, techOpts().cover.ordersPatch);
+  F.playRound(b, always(0.999));
+  assert.equal(b.end.result, 'won');
+  assert.equal(b.override, undefined);
+  assert.equal(b.orders.jax.duty, 'protect', 'nothing is restored into a finished fight');
+});
+
+test('the withdrawal rule still outranks a call-in order, and a restored order does not undo it', () => {
+  const b = underFire(true);
+  R(b, 'jax').pips = 1; // under the steady threshold (2)
+  F.applyPatch(b, techOpts().cover.ordersPatch);
+  assert.equal(kinds(F.previewRound(b)).jax, 'withdraw', 'a runner at the threshold still pulls out');
+  F.playRound(b, always(0.999));
+  assert.ok(R(b, 'jax').withdrawn, 'and does');
+});
+
+test('previews, option checks and dilemma checks never draw', () => {
+  const b = underFire(true);
+  const real = Math.random;
+  Math.random = () => { throw new Error('Math.random'); };
+  try {
+    const rng = counting(5);
+    F.previewRound(b); F.dueDilemmas(b); F.dilemmaHolds(b, 'techUnderFire');
+    for (const o of Object.values(techOpts())) F.optionAvailable(b, o);
+    F.applyPatch(b, techOpts().jam.ordersPatch); F.previewRound(b);
+    assert.equal(rng.n, 0);
+  } finally { Math.random = real; }
+});
+
+test('the van call-in has two options: leave on time and hold', () => {
+  assert.deepEqual(DILEMMAS.vanCantWait.options.map((o) => o.id), ['goNow', 'hold']);
+  assert.ok(!FIGHT_TEXT['dilemma.vanCantWait.carryOn'] && !FIGHT_TEXT['callin.deadline'], 'removed keys are gone');
+  assert.ok(/board/i.test(FIGHT_TEXT['dilemma.vanCantWait.goNow.tradeoff']), 'leaving on time still plays the round: runners can board');
+  assert.ok(!/\{heat\}|Heat/.test(FIGHT_TEXT['dilemma.vanCantWait.hold.tradeoff']), 'the heat is shown once, as the cost');
 });

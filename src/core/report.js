@@ -89,5 +89,8 @@ export function summariseRun(events, { id = '', outcome, deaths = 0 }) {
   const alerts = events.filter((e) => typeof e.alert === 'number').map((e) => e.alert);
   const alert = alerts.length ? Math.max(...alerts) : null;
 
-  return { intro, introKind: kind, turning, standout, hurt, saves, alert };
+  // An engine-2 fight's one cause line (core/runfight.js records it on the fight's last event): past tense, the owner's wording.
+  const cause = events.filter((e) => e.kind === 'battle' && e.cause).at(-1)?.cause ?? null;
+
+  return { intro, introKind: kind, turning, standout, hurt, saves, alert, cause };
 }

@@ -496,7 +496,7 @@ export function describePending(state) {
 export function resolvePending(prev, optionId) {
   const am0 = prev.activeMission;
   if (!am0?.pending) return prev;
-  const choices = am0.pending.kind === 'dilemma' ? fightChoices(am0.pending) : decisionChoices(am0.pending, { patient: am0.pending.opId ? opById(prev, am0.pending.opId) : null, standby: am0.battle?.engine === 2 ? null : standbyReady(prev, am0), raid: !!am0.raid, engine2: am0.battle?.engine === 2 });
+  const choices = am0.pending.kind === 'dilemma' ? fightChoices(am0.pending, am0.battle) : decisionChoices(am0.pending, { patient: am0.pending.opId ? opById(prev, am0.pending.opId) : null, standby: am0.battle?.engine === 2 ? null : standbyReady(prev, am0), raid: !!am0.raid, engine2: am0.battle?.engine === 2 });
   const choice = choices.find((c) => c.id === optionId);
   if (!choice) return prev;
   const state = structuredClone(prev);
