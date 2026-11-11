@@ -43,6 +43,7 @@ import { BATTLE, loudFightDue } from './battle.js';
 import { playGetaway, getawayPilot, homeHallOf } from './piloting.js';
 import { HOME_HALL } from '../data/halls.js';
 import { crewOf, actors, overwatchOp, standbyOp, standbyReady, driver, onJob, opById, grow, record, takeWhy, addNeural } from './run.js';
+import { FIGHT } from '../data/fights.js';
 import { startBattle, runBattle, resolveBattleDecision, guardsUp, guardCount, handOffFight, pullBack } from './runbattle.js';
 import { describeFightPending, fightChoices, fightSnapshot } from './runfight.js';
 export { runBattle, handOffFight, pullBack };
@@ -1044,10 +1045,11 @@ function finish(state) {
   for (const m of am.missing ?? []) {
     const op = opById(state, m.id);
     if (!op || deaths.includes(op)) continue;
-    op.condition.awayUntil = m.until;
-    op.condition.missing = { since: state.day, until: m.until };
+    const until = state.day + FIGHT.missingDays; // a week from the day the job ends, however many days it ran
+    op.condition.awayUntil = until;
+    op.condition.missing = { since: state.day, until };
     setInjury(op, 'serious');
-    op.condition.injuryDays = (m.until - state.day) + INJURY_DAYS.serious;
+    op.condition.injuryDays = FIGHT.missingDays + INJURY_DAYS.serious;
     op.history.push(`Day ${state.day}: left behind at the ${tpl.name}`);
   }
   // The record may have crossed a line: milestones for those who came home (core/milestones.js).
