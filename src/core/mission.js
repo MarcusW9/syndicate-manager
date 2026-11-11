@@ -39,7 +39,7 @@ import { summariseRun, REPORT_LOGS_KEPT } from './report.js';
 import { intelFor } from './sidetasks.js';
 import { afterJob, noteInjury, spendSecondWind, earnedOf } from './earned.js';
 import { overwatchKit, seriousGuard, patchBonus } from './gear.js';
-import { BATTLE, loudFightDue } from './battle.js';
+import { loudFightDue } from './battle.js';
 import { playGetaway, getawayPilot, homeHallOf } from './piloting.js';
 import { lineText } from './fighttext.js';
 import { HOME_HALL } from '../data/halls.js';
@@ -482,7 +482,7 @@ export function describePending(state) {
   const text = am.pending.kind === 'alert'
     ? 'They know you\'re here. Lights are coming on and someone is shouting into a radio.'
     : am.pending.kind === 'door' ? (engine2 ? lineText('callin.deathsDoor', { who: patient?.handle ?? 'Someone' }) : `${patient?.handle ?? 'Someone'} is down and bleeding. They'll live if you get them out now.`)
-      : am.pending.kind === 'standoff' ? `${BATTLE.rounds} rounds in and ${guardCount(guardsUp(am.battle), am.battle)} still standing.`
+      : am.pending.kind === 'standoff' ? `${am.battle.round} rounds in and ${guardCount(guardsUp(am.battle), am.battle)} still standing.`
         : `${patient?.handle ?? 'Someone'} is badly hurt and out of the job.`;
   const choices = decisionChoices(am.pending, { patient, standby: engine2 ? null : standbyReady(state, am), raid: !!am.raid, engine2 }).map((c) => ({ ...c, available: true, risk: c.exit ? 'safe' : null }));
   // A fight's call-ins show everyone's health (the watch screen's call-in card).
