@@ -157,6 +157,8 @@ test('a dilemma call-in: what changed, the options, Pull back; carry on plays th
   const ids = v.choices.map((c) => c.id);
   assert.deepEqual(ids, ['cover', 'radio', 'jam', 'carryOn', 'out'], 'every authored option, then Pull back');
   assert.equal(v.choices.at(-1).exit, true, 'every call-in offers Pull back');
+  assert.equal(v.choices.at(-1).cost, `No pay. Heat +${FIGHT.retreat.heat}, reputation −${FIGHT.retreat.rep}.`, 'Pull back shows its real cost');
+  assert.ok(!v.choices.some((c) => /\[\w+\]/.test(`${c.label}${c.cost}${c.tradeoff}`)), 'no placeholder tags in a call-in');
   assert.ok(v.fight.runners.length && v.fight.guards.length, 'the call-in card shows everyone\'s health');
   const key = s.activeMission.pending.key;
   // Answering one: the orders change, the call-in clears, and it doesn't come up again for the same situation.

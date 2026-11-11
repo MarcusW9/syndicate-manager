@@ -73,10 +73,10 @@ export const FIGHT_TEXT = {
   'intent.withdraw': '{who} pulls out ({why}).',
   // "If nothing" (generated from the orders, never authored). Counts only what the orders leave open:
   // an attack on a caller is not counted as an answer (it can miss), only a jam is.
-  'ifNothing.shielded': '{n} {n:shot|shots} will be taken by a runner shielding someone.',
-  'ifNothing.radio': '{n} radio {n:call|calls} with no jam assigned.',
-  'ifNothing.shots': '{n} {n:shot|shots} with no shield assigned.',
-  'ifNothing.clear': 'No shots or radio calls to answer.',
+  'ifNothing.shielded': '{n} {n:shot is|shots are} aimed at a runner who is shielding someone.',
+  'ifNothing.radio': '{n} radio {n:call|calls} with no jam assigned (hitting the caller is not counted).',
+  'ifNothing.shots': '{n} incoming {n:shot|shots} with no shield assigned.',
+  'ifNothing.clear': 'No incoming shots or radio calls are shown this round.',
   // Ends (one cause line each, past tense)
   'end.won': 'The crew completed the objective.',
   'end.lost': 'The hack was lost when {who} could no longer keep it running.',
@@ -90,11 +90,11 @@ export const FIGHT_TEXT = {
   // Dilemmas and call-ins (an option's label, and under `.tradeoff` what it does)
   'dilemma.techUnderFire.changed': '{protected} is under fire while working the hack.',
   'dilemma.techUnderFire.cover': 'Cover {protected}',
-  'dilemma.techUnderFire.cover.tradeoff': 'Everyone else covers {protected} and drops their current orders. {protected} stays on theirs.',
+  'dilemma.techUnderFire.cover.tradeoff': 'Everyone else covers {protected}, dropping their current orders until you change them. {protected} stays on theirs.',
   'dilemma.techUnderFire.radio': 'Hit the caller',
-  'dilemma.techUnderFire.radio.tradeoff': 'Your best shot goes for the radio caller, if one is shown. The shot can miss.',
+  'dilemma.techUnderFire.radio.tradeoff': 'Your best shot goes for the radio caller, if one is shown, until you change orders. Shots can miss.',
   'dilemma.techUnderFire.jam': 'Have {protected} jam',
-  'dilemma.techUnderFire.jam.tradeoff': '{protected} tries to jam the radio instead of working: no hack progress this round.',
+  'dilemma.techUnderFire.jam.tradeoff': '{protected} stops working the hack to jam the radio, until you change orders. With no call to jam, or if they cannot jam, they take cover instead.',
   'dilemma.techUnderFire.carryOn': 'Keep current orders',
   'dilemma.vanCantWait.changed': 'The van is ready to leave; {outside} still outside.',
   'dilemma.vanCantWait.goNow': 'Leave on time',
@@ -106,4 +106,6 @@ export const FIGHT_TEXT = {
   'callin.deathsDoor': "{who} is at death's door; fighting on can cost their life.",
   'callin.deadline': 'Time is up on the hack.',
   'callin.pullBack': 'Pull back',
+  'callin.cost': 'Heat +{heat}',
+  'callin.pullBackCost': 'No pay. Heat +{heat}, reputation −{rep}.',
 };

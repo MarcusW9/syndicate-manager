@@ -732,9 +732,9 @@ test('wording is placeholders in data: every key a line or dilemma uses has text
   assert.equal(lineText('attackHit', { who: 'Jax', enemy: 'security guard 1' }), 'Jax gets a hit in on security guard 1.');
   // A line starts with a capital whatever its first slot; a count switches the plural.
   assert.equal(lineText('shotMiss', { enemy: 'drone 2', who: 'Jax' }), 'Drone 2 fires wide of Jax.');
-  assert.equal(lineText('ifNothing.shots', { n: 1 }), '1 shot with no shield assigned.');
-  assert.equal(lineText('ifNothing.shots', { n: 2 }), '2 shots with no shield assigned.');
-  assert.equal(lineText('ifNothing.radio', { n: 1 }), '1 radio call with no jam assigned.');
+  assert.equal(lineText('ifNothing.shots', { n: 1 }), '1 incoming shot with no shield assigned.');
+  assert.equal(lineText('ifNothing.shots', { n: 2 }), '2 incoming shots with no shield assigned.');
+  assert.equal(lineText('ifNothing.radio', { n: 1 }), '1 radio call with no jam assigned (hitting the caller is not counted).');
 });
 
 test('wording keeps its slots: nothing a line needs is left unfilled, and every trade-off and kind word exists', () => {
@@ -742,6 +742,9 @@ test('wording keeps its slots: nothing a line needs is left unfilled, and every 
   for (const [k, slots] of Object.entries(need)) for (const sl of slots) assert.ok(FIGHT_TEXT[k].includes(`{${sl}}`), `${k} keeps {${sl}}`);
   for (const kind of ['hired', 'corp', 'drone', 'enforcer']) assert.ok(FIGHT_TEXT[`kind.${kind}`], `a word for ${kind}`);
   for (const [id, d] of Object.entries(DILEMMAS)) for (const o of d.options) if (o.ordersPatch || o.vanWait || id === 'vanCantWait') assert.ok(FIGHT_TEXT[`dilemma.${id}.${o.id}.tradeoff`], `${id}.${o.id} says what it does`);
+  // The hold's heat is shown from the dilemma's cost and charged from the rules: they must agree.
+  assert.equal(DILEMMAS.vanCantWait.options.find((o) => o.id === 'hold').cost.heat, FIGHT.holdHeat, 'the call-in shows the heat the van charges');
+  for (const k of ['callin.cost', 'callin.pullBackCost']) assert.ok(FIGHT_TEXT[k], k);
   // Placeholders are gone: no key reads as a bracketed tag.
   for (const [k, text] of Object.entries(FIGHT_TEXT)) assert.ok(!/^\[/.test(text), `${k} is still a placeholder`);
   // Hit lines carry no numbers, and a downed or out line never says dead.

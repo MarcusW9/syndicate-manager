@@ -526,3 +526,21 @@ lines until it gets its own; a test keeps every district complete.
 - Call-in lead-in: "The crew is set to:".
 - Kind words, plural: hired guns, security guards, drones, enforcers.
 
+### Task 13: close-out (2026-11-11)
+
+**The runtime wording pass is not complete: one blocker is open (the jam option, below).** The battle-screen task stays open until the lines below are wired and reviewed.
+
+**Still open until the screens (slice 2) wire them.** No runtime keys are added for these before a screen reads them:
+- [ ] Plan-screen copy (the fight type lines and gap lines above).
+- [ ] Risk-picker labels and explanations.
+- [ ] Buttons (Next round, Change orders, Special actions, Pull back).
+- [ ] Call-in intent lead-in ("The crew is set to:").
+- [ ] Plural kind words, wherever a screen needs them (hired guns, security guards, drones, enforcers).
+- [ ] **`{chance}` and `{pips}` in `threat.aim`:** the screen must supply them with their units and the right singular or plural: `{chance}` as "60%" (no second percent sign in the line), `{pips}` as "1 pip" or "2 pips". The line itself adds neither. A test on the screen's output should cover a 1-pip threat.
+- [ ] Visual check at 360 px (not done: the new screens do not exist yet): the death's-door call-in, and a van departure with someone outside.
+
+**Follow-ups kept outside the wording pass** (each its own change):
+1. **Jam-option eligibility (blocker for a clean pass).** "Have {protected} jam" rewrites the tech's order to `support` for the rest of the fight, not for one round (`applyPatch` keeps it until the orders are changed). Played out on 60 seeds: with a jammer and a radio call shown the tech jams while calls keep coming, but the hack never advances in those rounds; once there is no call, or if the tech cannot jam, the tech hunkers, shields a teammate or pulls out under the safety rule instead, with no hack progress, round after round. The option is offered whether or not a call is shown and whether or not the tech can jam. The trade-off line now says what happens, but the option can still waste the tech's rounds. Fix options for the owner: offer it only when a call is shown and the tech can jam, and/or make it last one round. Not changed here.
+2. **The duplicate van choice.** "Leave on time" and "Keep current orders" do the same thing. Either drop one or make them differ. Whichever stays, the text keeps this: leaving on time still plays the round, so runners can board before the van departs.
+3. **`callin.deadline`.** The key exists, no call-in uses it (the holdHack deadline ends the fight, spec 30). Decide whether to give it a consumer or remove it.
+

@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-11 · Battle wording close-out (Task 13)
+- **Call-in costs read in words:** "Heat +1" on holding the van, "No pay. Heat +1, reputation −2." on Pull back, from the real numbers.
+- **"If nothing" says what is assigned, not what will happen:** incoming shots with no shield assigned, radio calls with no jam assigned, and "nothing shown this round" in place of "nothing to answer".
+- **The tech-under-fire options say they last until you change orders.** The jam option can leave the tech unable to work the hack (found in checking; the fix is a separate change, noted in `drafts/writing-tasks.md`).
+
 ## 2026-11-11 · Battle wording for the five new-fight jobs (Task 13)
 - **The placeholder tags are gone.** Office Data Pull, Data Scrub, Quiet Hours, Warehouse Lift and Protection Run now read in full sentences: the round feed ("Velvet breaks for the van."), what enemies are about to do, what each order will do, the "if nothing" line, the end of the fight ("The hack was lost when Static could no longer keep it running."), and the two call-ins with a line under each option saying what it does.
 - **Enemies have names:** hired gun, security guard, drone, enforcer, with their number.

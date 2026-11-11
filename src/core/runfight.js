@@ -256,8 +256,8 @@ export function fightChoices(pending) {
   const slots = { rounds: FIGHT.holdRounds, heat: FIGHT.holdHeat, ...pending.slots };
   const said = (key) => { const t = lineText(key, slots); return t === key ? '' : t; }; // keeping the orders needs no trade-off line
   return [
-    ...d.options.map((o) => ({ id: o.id, label: lineText(`dilemma.${pending.id}.${o.id}`, slots), tradeoff: said(`dilemma.${pending.id}.${o.id}.tradeoff`), cost: o.cost ? `[cost] heat +${o.cost.heat}` : '', push: false })),
-    { id: 'out', label: lineText('callin.pullBack'), cost: `[pullBackCost] no pay, heat +${FIGHT.retreat.heat}, reputation −${FIGHT.retreat.rep}`, exit: true },
+    ...d.options.map((o) => ({ id: o.id, label: lineText(`dilemma.${pending.id}.${o.id}`, slots), tradeoff: said(`dilemma.${pending.id}.${o.id}.tradeoff`), cost: o.cost ? lineText('callin.cost', { heat: o.cost.heat }) : '', push: false })),
+    { id: 'out', label: lineText('callin.pullBack'), cost: lineText('callin.pullBackCost', { heat: FIGHT.retreat.heat, rep: FIGHT.retreat.rep }), exit: true },
   ];
 }
 
