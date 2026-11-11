@@ -623,8 +623,25 @@ function playRound(F) {
   if (hiredUp.length && hiredUp.length / F.hiredTotal < N.hiredFleeBelow) { for (const e of hiredUp) e.fled = true; out.push('the last of the hired run'); }
   if (out.length) say(F, `- ${out.join('; ')}.`);
 
+  // Medic aura (owner's idea, 2026-11-11; two versions under test, off unless set):
+  //  auraAll: while a medic is standing in the fight, every standing runner regains 1 pip a round.
+  //  auraField: a field station: only while the medic isn't attacking, boarding, carrying or pulling
+  //  out this round, the most-hurt standing runner regains 1 pip, and downed teammates don't bleed.
+  F.fieldUp = false;
+  for (const m of F.crew.filter((r) => r.medic && !r.down && !r.dead && !r.out && !r.aboard)) {
+    if (N.auraAll) {
+      for (const r of standing(F)) if (r.pips < r.max) { r.pips++; F.auraHealed = (F.auraHealed ?? 0) + 1; }
+    } else if (N.auraField || N.auraOne) {
+      // auraOne: the same as the field station, but always on, whatever the medic is doing.
+      const act = actions.find((a) => a.r.id === m.id)?.kind;
+      if (N.auraField && ['attack', 'board', 'carry', 'withdraw'].includes(act)) continue;
+      F.fieldUp = true;
+      const hurt = standing(F).filter((r) => r.pips < r.max).sort((a, b) => a.pips / a.max - b.pips / b.max || a.id - b.id)[0];
+      if (hurt) { hurt.pips++; F.auraHealed = (F.auraHealed ?? 0) + 1; say(F, `- ${m.handle}'s field station: ${hurt.handle} +1.`); }
+    }
+  }
   // Bleeding out (committed only: cautious and steady have already pulled back at a critical).
-  if (N.bleed && F.risk === 'committed') {
+  if (N.bleed && F.risk === 'committed' && !F.fieldUp) {
     for (const r of F.crew) {
       if (!r.down || r.stable || r.aboard || r.dead || F.round - r.downRound < N.bleedGrace) continue;
       if (F.rRoll() < N.bleedChance) { r.dead = true; say(F, `- ${r.handle} bleeds out. **Dead.**`); }

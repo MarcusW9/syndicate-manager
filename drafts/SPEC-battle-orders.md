@@ -783,6 +783,10 @@ risk thresholds (section 10); per-runner contested boarding, carrying, the van t
 13. **Bleeding out** (section 10b): confirm the numbers (8% a round from the second round down;
    10% for a downed runner left behind on committed) and the target (about one death in 25-30
    committed fights). Most committed deaths happen at the van in holdExtract.
+14. **Medic aura** (owner's idea, 2026-11-11; tested, not adopted; numbers sheet section 12): A, every
+   runner +1 pip a round (strong, plays itself); B, a field station while the medic isn't attacking or
+   boarding (a decision, small effect); C, always on, the most-hurt runner +1 and no bleeding (Claude's
+   pick: fixes "a medic doesn't save lives" without making fights easy).
 7. **The sim's remaining assumptions** (top of each report): a jam takes out one drone; an alarm in
    holdExtract brings the next pressure arrival a round earlier; specials cost no action; no parting
    shots when the crew pulls back; the holdHack deadline fails the objective; sidearm aim bonuses

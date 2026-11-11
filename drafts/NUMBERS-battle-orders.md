@@ -485,6 +485,28 @@ rare and from an accepted risk).** Report: `docs/sims/step0-2026-11-11-pips-blee
   has two gunners and clears the yard faster. Worth a look when the real code exists.
 - The gate is unchanged (neither; defaults 54%).
 
+**Medic aura test (2026-11-11; owner's idea; nothing adopted yet).** The pass 8 setting with three
+versions, flags in `scripts/sim-step0.mjs` (`STEP0_SET='{"auraAll":true}'` etc.); 400 seeds, D2 E2
+for the plans, all settings for deaths:
+
+| Version | holdHack defaults | holdExtract defaults (won / downs) | Committed deaths, holdExtract (medic / none) | Defaults as good as adapting |
+| --- | --- | --- | --- | --- |
+| No aura (pass 8) | 81% | 73% / 0.57 | 0.080 / 0.057 | 54% |
+| **A. Aura:** every standing runner +1 pip a round while the medic stands | 88% | 79% / 0.35 | 0.039 / 0.057 | 64% |
+| **B. Field station:** most-hurt runner +1 and no bleeding, only while the medic isn't attacking, boarding or carrying | 86% | 73% / 0.53 | 0.060 / 0.057 | 51% |
+| **C. Always-on, one target:** most-hurt runner +1 and no bleeding while the medic stands | 87% | 77% / 0.43 | 0.049 / 0.057 | 62% |
+
+- **A** is strong: every plan gains 5 to 14 points, downs fall by about 40%, and crews with a medic
+  die least; but fights get easier across the board and the defaults approach the rework line
+  (64% against 67%). It plays itself: no decision attaches to it.
+- **B** keeps a decision (hold the medic back to run the station, or send them in), but the gain is
+  small, and in holdExtract the default orders send the medic in, so it barely helps there and medic
+  crews still don't die less.
+- **C** sits between: +4 to 6 points, downs down about a quarter, and crews with a medic now die less
+  than crews without (0.049 against 0.057), which fixes the pass 8 oddity.
+- Every version pushes the support-type plans towards universal (53-59% for `support`), because the
+  medic's value no longer depends on the orders.
+
 ## 13. Summary of the BATTLE keys
 
 ```js
