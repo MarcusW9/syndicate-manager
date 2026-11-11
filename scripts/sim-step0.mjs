@@ -53,6 +53,10 @@ const PROFILES = {
   // behind while down may not make it. Cautious and steady pull back at a critical, as before.
   bleed: { startEnemies: 4, hitsByKind: true, docksEnforcers: true, contested: true, doorSlots: 3, holdRounds: 2, holdAddsEnemy: false, noBoardUnderFire: true,
     strongDefaults: true, steadyAt: 2, deathOnlyOnOrderedWithdraw: true, gateGain: 0.07, gateDowns: 0.3, bleed: true },
+  // The current baseline (2026-11-11): bleed, plus the medic's aura C (owner's pick): while a medic
+  // stands in the fight, the most-hurt runner regains 1 pip a round and downed teammates don't bleed.
+  medic: { startEnemies: 4, hitsByKind: true, docksEnforcers: true, contested: true, doorSlots: 3, holdRounds: 2, holdAddsEnemy: false, noBoardUnderFire: true,
+    strongDefaults: true, steadyAt: 2, deathOnlyOnOrderedWithdraw: true, gateGain: 0.07, gateDowns: 0.3, bleed: true, auraOne: true },
 };
 
 const ASSUMPTIONS = [
@@ -955,7 +959,7 @@ if (N.contested) {
 lines.push('## Ten fights, narrated (defaults plan, On level, line-up a, D2 E2, steady)');
 lines.push('');
 for (const enc of Object.keys(ENCOUNTERS)) for (let seed = 1; seed <= 5; seed++) {
-  const F = play({ enc, dur: 'D2', exp: 'E2', group: 'On', lineup: 'a', plan: 'defaults', seed, log: true, ...(['van', 'next', 'bleed'].includes(PROFILE) ? { standby: enc === 'holdExtract', overwatch: true } : {}) });
+  const F = play({ enc, dur: 'D2', exp: 'E2', group: 'On', lineup: 'a', plan: 'defaults', seed, log: true, ...(['van', 'next', 'bleed', 'medic'].includes(PROFILE) ? { standby: enc === 'holdExtract', overwatch: true } : {}) });
   lines.push(`### ${enc}, seed ${seed}`);
   lines.push('');
   lines.push(...F.log);

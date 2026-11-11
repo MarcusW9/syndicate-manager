@@ -302,6 +302,14 @@ player accepted and was shown.
   `stabiliseStep` (+2), and **a medic stabilises a bleeding teammate before anything else**, whatever
   their duty (today's `actionFor` does the same).
 - **Left behind while down** on committed: `leftDownDeath` (10%), shown on the van call-in.
+- **The medic's aura (owner, 2026-11-11; version C of three tested):** while a medic is standing in
+  the fight, at the end of each round the most-hurt standing runner regains 1 pip (ties: lowest
+  id), and **downed teammates don't bleed**. It's always on, whatever the medic's orders, and costs
+  no action; the medic's own action still goes on their duty (and stabilising first). The round
+  screen shows it ("Lotus keeps Vex going: +1"). It stops when the medic is down, out or in the van.
+  Rejected: every runner +1 a round (version A: fights get easy and it plays itself) and a field
+  station that works only while the medic stays back (version B: a decision, but too small to
+  matter, and medic crews still didn't die less).
 - **Shown = used:** the planning read shows the chance of a death ("Chance of losing someone: about
   4%") from the same rounds the fight plays; the risk picker says "Committed: fights on with someone
   down; can cost a life".
@@ -783,10 +791,9 @@ risk thresholds (section 10); per-runner contested boarding, carrying, the van t
 13. **Bleeding out** (section 10b): confirm the numbers (8% a round from the second round down;
    10% for a downed runner left behind on committed) and the target (about one death in 25-30
    committed fights). Most committed deaths happen at the van in holdExtract.
-14. **Medic aura** (owner's idea, 2026-11-11; tested, not adopted; numbers sheet section 12): A, every
-   runner +1 pip a round (strong, plays itself); B, a field station while the medic isn't attacking or
-   boarding (a decision, small effect); C, always on, the most-hurt runner +1 and no bleeding (Claude's
-   pick: fixes "a medic doesn't save lives" without making fights easy).
+14. ~~Medic aura~~: settled, version C (section 10b). With it, committed loses a runner in about one
+   in 39 fights (one in 19 holdExtract), a little under the 20-30 target; fine as is, or bleeding
+   could rise to 10%.
 7. **The sim's remaining assumptions** (top of each report): a jam takes out one drone; an alarm in
    holdExtract brings the next pressure arrival a round earlier; specials cost no action; no parting
    shots when the crew pulls back; the holdHack deadline fails the objective; sidearm aim bonuses

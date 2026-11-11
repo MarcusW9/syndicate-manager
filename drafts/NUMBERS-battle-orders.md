@@ -485,7 +485,7 @@ rare and from an accepted risk).** Report: `docs/sims/step0-2026-11-11-pips-blee
   has two gunners and clears the yard faster. Worth a look when the real code exists.
 - The gate is unchanged (neither; defaults 54%).
 
-**Medic aura test (2026-11-11; owner's idea; nothing adopted yet).** The pass 8 setting with three
+**Medic aura test (2026-11-11; owner's idea; the owner picked C).** The pass 8 setting with three
 versions, flags in `scripts/sim-step0.mjs` (`STEP0_SET='{"auraAll":true}'` etc.); 400 seeds, D2 E2
 for the plans, all settings for deaths:
 
@@ -507,6 +507,16 @@ for the plans, all settings for deaths:
 - Every version pushes the support-type plans towards universal (53-59% for `support`), because the
   medic's value no longer depends on the orders.
 
+**Pass 9 (2026-11-11): the current baseline, bleeding out plus the medic's aura C.** Report:
+`docs/sims/step0-2026-11-11-pips-medic.md` (profile `medic`).
+
+- No deaths on cautious or steady. Committed: one death in 19 holdExtract fights and one in about
+  1,600 holdHack fights, about one in 39 committed fights across both (a little under the 20-30
+  target); crews with a medic now die less (0.049 against 0.057).
+- Gate: still neither. The aura pushes the support-type plans and the defaults towards universal
+  (defaults 62%, support 53%; the rework line is two thirds), so this is the value to watch when the
+  gate is re-run on the real code.
+
 ## 13. Summary of the BATTLE keys
 
 ```js
@@ -515,6 +525,7 @@ BATTLE = {
   // shots by kind: ENEMY_HIT = { hired: 1, drone: 1, corp: 2, enforcer: 2 }
   doorSlots: 3, boardStep: -4, carryStep: 2, vanWait: 4, holdRounds: 2, holdHeat: 1,   // contested boarding (pass 6)
   bleedGrace: 2, bleedChance: 0.08, stabiliseStep: 2, leftDownDeath: 0.1,            // bleeding out (pass 8; committed only)
+  medicAura: { heal: 1, target: 'most hurt', stopsBleeding: true },                 // version C (pass 9)
   hit: 1, strongHit: 2, strongMargin: 10, strongMarginByDamage: { 2: 12, 3: 10, 4: 8, 5: 6 },
   absorb: { none: 0, street: 1, pro: 2 }, droneAbsorb: 1,          // ap ignores absorb
   cover: { open: 0, half: 2, full: 4 }, startCover: 'half', hunkerStep: 4,
