@@ -393,12 +393,42 @@ enforcer, 2 pips and a 2-pip shot, in about one in three docks slots), `-enforce
 - Recommended for now: enforcers in a third of docks slots, and a design change to holdExtract
   before the next pass.
 
+**Pass 5 (2026-11-11): contested boarding and the van that can't wait (owner).** On the `enforcers`
+mix (an enforcer in about one docks slot in three). Each runner boards for themselves, two a round
+through the door, in the open while they run; a boarder can carry a downed teammate (Claude's
+proposal); the van waits four rounds, then the call-in: go, or hold one more round (+1 heat, one more
+enemy). Report: `docs/sims/step0-2026-11-11-pips-contested.md`.
+
+- **Tuning sweep** (100 seeds; door slots 2-3, boarding step -2/-4, van wait 3-4): with the van
+  waiting three rounds it leaves someone behind in 70-88% of fights; with **two door slots, boarding
+  at -4 (75% on level) and a four-round wait** it comes up in about 30%, which is the setting used.
+  Before carrying, most losses were a runner going down at the van door (the old "down = retreat"
+  assumption).
+- **Two fixes found in the narrated fights:** a fight where a runner died or walked off is no
+  longer scored as a win; and while the van is there, a runner at their risk threshold makes for the
+  van (first door slot) instead of walking off alone on foot (proposal: "pulling out" means the van
+  once it's there). Deaths in holdExtract fall to about 0.00-0.05 a fight.
+- **holdExtract now separates the plans** (hard: everyone must reach the van): `mixed` 69% (0.38
+  downs) at D1-D2; `hold` 65-66% but with twice the downs (0.74), and the best at D3; attack 61-62%
+  falling to 28% at D3; support 59%; protect and the defaults 45-48%. holdHack unchanged (protect,
+  then support).
+- **Gate:** no universal plan (the most, `mixed`, matches the adapted plan in both encounters in 23%
+  of cells; protect and the defaults 0%); adapting clearly pays in 21% of cells. **Neither
+  verdict.** The toughness check is met (+26 against +13).
+- **The van can't wait** comes up in 30% of fights, but **holding one more round barely helps**
+  (+0 to 3 points for every plan): by the last round whoever is still outside is mostly down with
+  nobody free to carry them. The call needs a hold worth taking (spec list A item 9).
+- **Also new:** `boardUnderFire` comes up in 67% of fights (boarders are in the open), too often for
+  a dilemma; both cautious and committed risk do badly in holdExtract (46-47%); downs are high for
+  every plan but `mixed` and attack (0.6-0.8 a fight), so holdExtract may now be too hard overall.
+
 ## 13. Summary of the BATTLE keys
 
 ```js
 BATTLE = {
   endurancePerPip: 2, patchHeal: 2, lightWoundPips: 1,   // pips = floor(endurance / 2), at least 1
   // shots by kind: ENEMY_HIT = { hired: 1, drone: 1, corp: 2, enforcer: 2 }
+  doorSlots: 2, boardStep: -4, carryStep: 2, vanWait: 4, holdHeat: 1,   // contested boarding (pass 5)
   hit: 1, strongHit: 2, strongMargin: 10, strongMarginByDamage: { 2: 12, 3: 10, 4: 8, 5: 6 },
   absorb: { none: 0, street: 1, pro: 2 }, droneAbsorb: 1,          // ap ignores absorb
   cover: { open: 0, half: 2, full: 4 }, startCover: 'half', hunkerStep: 4,

@@ -168,8 +168,18 @@ eliminating every enemy first?**
 The hack's uncertainty is whether the crew can protect the technician and afford uninterrupted work,
 not a failure roll on the work itself.
 
-**Boarding (holdExtract stage 2):** rolled progress on the objective's stat (`cool` unless the fight
-says otherwise) at `pushStep`.
+**Boarding (holdExtract stage 2): contested (owner, 2026-11-11).** Each runner boards for
+themselves: a cool roll at `boardStep`, and at most `doorSlots` runners a round (the most hurt get the
+slots first). A runner making for the van is **in the open** that round, and the shots at them are
+shown that way. On a success they are in the van (out of the fight, safe). **Carrying (Claude's
+proposal, used in Step 0):** while boarding, a downed runner doesn't end the fight; a boarder can
+carry them instead (harder by `carryStep`, one door slot), and on a success both are in the van.
+
+**The van can't wait (owner, 2026-11-11).** The van waits `vanWait` rounds after it pulls in. In its
+last round, with anyone still outside (standing or down), the call-in `vanCantWait` comes: **go on
+time** (whoever is outside is left behind) or **hold one more round** (+1 heat, and one more enemy
+arrives). Hands-off, the crew carries on: the van goes on time. Leaving before the van arrives is
+still a retreat.
 
 ## 9. Jamming
 
@@ -247,8 +257,8 @@ FIGHTS = {
   holdExtract: {
     goal: 'hold+board',
     stages: [ { hold: 'vanArrival', vanRound: 3 },        // driver skill may shift by 1 (OPEN: rule)
-              { board: 2, boardStat: 'cool' } ],
-    deadline: n,                           // OPEN
+              { board: 'each', boardStat: 'cool', doorSlots: 2, vanWait: 4 } ],   // contested (section 8)
+    deadline: null,                        // the van leaving is the deadline
     clock: 'pressure', friendlyReinforce: true, enemyReinforce: true,
   },
 };
@@ -395,6 +405,17 @@ DILEMMAS = {
       { label: '{protected} jams it',     ordersPatch: { protected: { duty: 'support', target: 'backupSource' } } },
         // tries to stop the call; no hack progress this round
       { label: 'Carry on', ordersPatch: null },
+    ],
+  },
+  vanCantWait: {                  // owner, 2026-11-11 (section 8)
+    fight: ['holdExtract'],
+    when: { stage: 1, vanLastRound: true, and: { outsideAtLeast: 1 } },
+    changed: "The van can't wait. {outside} still outside.",
+    conflict: ['go on time', 'hold one more round'],
+    options: [
+      { label: 'Go now',               ordersPatch: null, vanWait: 0 },   // whoever is outside is left behind
+      { label: 'Hold one more round',  ordersPatch: null, vanWait: +1, cost: { heat: 1, addEnemy: 1 } },
+      { label: 'Carry on', ordersPatch: null },                         // = go on time
     ],
   },
   boardUnderFire: {               // replaces vanLate (its choices were redundant once on foot was deferred)
@@ -678,20 +699,21 @@ endurance as the one physical attribute, with strength and speed as traits (sect
    resolve; or as is, with the owner confirming that setting the risk level is the choice.
 4. **`techUnderFire` conditions:** wider (tech at 1 pip *or* two or more shots on them) so it comes
    up (2-6% of fights now).
-5. **Boarding:** per runner (each must reach the door) or crew-wide progress (today: two successes
-   finish it, even with a runner short).
+5. ~~Boarding per runner or crew-wide~~: settled, per runner and contested (section 8).
 6. **The sim's assumptions** (listed at the top of each Step 0 report): what a jam does to drones;
    an alarm in a pressure fight; whether specials cost an action; parting shots on a crew pull-back;
    a runner down while boarding = retreat; the deadline always fails the objective (pressing on);
    sidearm aim bonuses.
 7. **The gate's bars:** "clearly beaten" at 10 points or 0.5 downs a fight may be too high for
    fights that are mostly won.
-9. **holdExtract's shape.** Step 0 (2026-11-11) found its plans converge: with more damage every
-   plan lands within a few points (76-90%), so one plan passes as good enough everywhere. The fight
-   is "survive three rounds, then board", and few orders change that. Options: make the van's
-   arrival depend on the crew (the driver, holding a spot, keeping the alarm down), contest the
-   boarding (each boarder exposed in the open; enemies rush the van), or a mid-fight choice (the van
-   can't wait: leave someone, or hold one more round).
+9. ~~holdExtract's shape~~: settled (owner, 2026-11-11): contested boarding and the van that can't
+   wait (section 8). Open from Step 0 pass 5: **holding one more round barely helps** (+1-3 points),
+   so the van-can't-wait call isn't yet a real choice (options: a longer hold, a cheaper one, or a
+   hold that also stops the extra enemy); **carrying the wounded** (Claude's proposal) to confirm;
+   **`boardUnderFire` comes up in two thirds of fights** now that boarders are in the open (narrow
+   it, or drop it for `vanCantWait`); **pulling out once the van is there** should mean making for
+   the van (first door slot), not walking off on foot (proposal; the sim does this since pass 5);
+   holdExtract may now be **too hard overall** (most plans 45-69%, 0.6-0.8 downs a fight).
 8. **The pip scale's knock-ons** (pips = endurance / 2, owner): enemy shots at 2 pips and patches at 2
    (proposed); a light injury at -1 or -2; risk thresholds that still mean something when a shot
    takes 2 (proposal: steady pulls out at 2 or fewer, cautious at half); dropping the muscle role's
