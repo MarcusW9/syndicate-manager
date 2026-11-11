@@ -4,6 +4,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-11 · Stat tiles line up
+- **The numbers on a stats panel now sit on one line.** A tile with a trait note ("6 +2 Hothead") used to sit higher than its neighbours, because a spacing rule meant for the progress bar landed on the label or the number instead. It now applies only above a bar.
+
 ## 2026-11-11 · Hits land, and the stamp has weight
 - **A guard that is shot now reacts:** on a hit the token shakes and flashes white for a moment, at the instant the shot lands (rifle, drone, turret and crew shots; a miss does nothing). With reduced motion on, it only flashes.
 - **The Job done stamp comes last:** it waits until the card and the team have shown (longer with a bigger team), then drops fast from above, lands with a squash, and wobbles to rest; the whole card jolts a little on the hit. A loss is still not stamped. With reduced motion on, the stamp just appears.

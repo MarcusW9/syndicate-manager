@@ -259,7 +259,7 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .stats { grid-auto-rows: 1fr; }
 .stats div { display: flex; flex-direction: column; }
 .stats div > .nextbar { margin-top: auto; }
-.stats div > :nth-last-child(2) { margin-bottom: 6px; }
+.stats div > :has(+ .nextbar) { margin-bottom: 6px; } /* only above a bar: else it shifts the number on tiles with a note */
 .climb { margin: 8px 0 12px; }
 .growth { font-size: 0.8rem; font-weight: 600; color: var(--accent-2); }
 .growth.is-down { color: var(--danger); }
