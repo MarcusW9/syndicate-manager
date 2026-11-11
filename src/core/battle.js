@@ -117,11 +117,11 @@ export function overwatchOf(op, ow, zone) {
  * Build a fight. crew: the inside team still standing (operatives). overwatchOp/ow: the run's
  * overwatch (am.overwatch). wheels: the driver in the van, who can bring it round.
  */
-export function buildBattle({ incident, zone, diff, threat, guards, crew, approach, overwatchOp = null, ow = null, wheels = null, ambush = false, spots = null, turret = null }) {
+export function buildBattle({ incident, zone, diff, threat, guards, crew, approach, overwatchOp = null, ow = null, wheels = null, ambush = false, spots = null, turret = null, cap = BATTLE.skirmishRounds }) {
   // On a site with spots, each side takes the best cover going (spots come best first).
   const onSpot = (x, i, side) => (spots?.[side]?.[i] ? { ...x, spot: i, cover: spots[side][i].cover } : { ...x, spot: null });
   return {
-    incident, zone, diff, round: 0, ambush, spots,
+    incident, zone, diff, round: 0, ambush, spots, cap, // cap: the round after which a fight with guards up calls in (a fight saved before this had none: BATTLE.rounds)
     guards: guardsFor(threat, guards).map((g, i) => onSpot(g, i, 'guards')),
     runners: crew.map((op, i) => onSpot(runnerOf(op, approach), i, 'crew')),
     overwatch: overwatchOf(overwatchOp, ow, zone),
@@ -453,7 +453,7 @@ export function battleOdds(args) {
     const b = structuredClone(b0);
     const rng = makeRng(0x5eed + i * 7919);
     let end = 'standoff';
-    while (b.round < BATTLE.rounds) {
+    while (b.round < (b.cap ?? BATTLE.rounds)) {
       const r = playRound(b, rng);
       if (r.down.length) { end = 'down'; break; }
       if (!up(b).length) { end = 'win'; break; }
