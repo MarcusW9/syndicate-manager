@@ -4,6 +4,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-11 · Stat tiles line up
+- **The numbers on a stats panel now sit on one line.** A tile with a trait note ("6 +2 Hothead") used to sit higher than its neighbours, because a spacing rule meant for the progress bar landed on the label or the number instead. It now applies only above a bar.
+
 ## 2026-11-11 · Today on a phone: Joss folds, and the next date up top
 - **Joss's line folds.** Tap Joss to shrink their line to one line; tap again to open it. It stays folded for the rest of the day and opens again on a new day. The alerts under Joss never fold. Works on computers too.
 - **"Next up" line (phones).** Under Joss and the alerts, one line with the soonest date that matters: a raid, the bills, a last day for a job or a lead, a new season (for example "Sun · Bills ¥2,250"). It turns red when the bills are short. Tap it to jump to Coming up. Computers don't show it, because Coming up is already in view beside the messages.
