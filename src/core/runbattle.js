@@ -13,6 +13,7 @@ import { buildBattle, playRound, planIntents, partingShots, injuryFromHp, runner
 import { spotsForJob } from './fightspots.js';
 import { actors, overwatchOp, driver, standbyReady, opById, grow, record, takeWhy, addNeural } from './run.js';
 import { currentStep, advance, exitRun } from './mission.js';
+import { startFight, fightTypeOf, runFight, pullBackFight, resolveFightDecision } from './runfight.js';
 
 // --- battles (slice 6; core/battle.js) ----------------------------------------------------------
 
@@ -28,6 +29,8 @@ export const guardCount = (n, b = null) => (n === 1 ? `one ${foeWord(b)}` : `${n
 
 /** An unsaved danger incident turns into a fight: build both sides and put a battle step next in the queue. */
 export function startBattle(state, am, tpl, inc, id, zone, diff, able, { ambush = false } = {}) {
+  // The five jobs of the battle rework play their fights on engine 2 (core/fight.js); everything else, and raids, stay here.
+  if (fightTypeOf(am.templateId) && !am.raid) return startFight(state, am, tpl, inc, id, zone, diff, able, { ambush });
   const b = buildBattle({ ambush,
     incident: id, zone, diff, threat: am.threat ?? tpl.threat, guards: inc.guards, crew: able, approach: am.approach,
     overwatchOp: overwatchOp(state, am), ow: am.overwatch, wheels: driver(state, am),
@@ -54,6 +57,7 @@ export function startBattle(state, am, tpl, inc, id, zone, diff, able, { ambush 
  * (Cautious pulls back once someone is hurt, Steady once someone is badly hurt).
  */
 export function runBattle(prev, orders = {}) {
+  if (prev.activeMission?.battle?.engine === 2) return runFight(prev, orders); // orders: { risk, orders } for Take Command
   const am0 = prev.activeMission;
   if (!am0?.battle || currentStep(am0)?.type !== 'battle' || am0.pending || am0.critical) return prev;
   const state = structuredClone(prev);
@@ -96,6 +100,7 @@ export function handOffFight(prev) {
 
 /** The player pulls the crew back from a fight between rounds: an exit, at the usual cost (retreat). */
 export function pullBack(prev) {
+  if (prev.activeMission?.battle?.engine === 2) return pullBackFight(prev);
   const am0 = prev.activeMission;
   if (!am0?.battle || currentStep(am0)?.type !== 'battle' || am0.pending || am0.critical) return prev;
   const state = structuredClone(prev);
@@ -201,6 +206,7 @@ function retreat(state, am, { text, choice, why, forced = false }) {
 
 /** The fight's call-ins: at death's door (pull back or keep fighting) and after the last round (push past or pull back). */
 export function resolveBattleDecision(state, am, choice, view) {
+  if (am.battle?.engine === 2) return resolveFightDecision(state, am, choice, view);
   const b = am.battle;
   const why = takeWhy(am);
   if (choice.exit) return retreat(state, am, { text: view.text, choice: choice.label, why });

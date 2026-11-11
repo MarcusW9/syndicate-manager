@@ -22,6 +22,7 @@ import { guardPosts } from '../core/battle.js';
 import { currentStep } from '../core/mission.js';
 import { commandView } from './fightorders.js';
 import { duelFor, playDuel, DUEL_MS } from './duel.js';
+import { fightView, enemiesLeft } from '../core/runfight.js';
 
 /** Is a fight waiting for the player's orders (command fights: the panel and the map's overlay)? */
 const fightWaiting = (state) => { const am = state.activeMission; return !!am?.battle && !am.done && !am.pending && !am.critical && currentStep(am)?.type === 'battle' && needsPlayer(state); };
@@ -132,7 +133,7 @@ export function mountWatch(el, state, { onAuto, ui, finishing = null }) {
     const off = me.unlisten;
     me.unlisten = () => { off(); ro.disconnect(); };
   }
-  if (am.battle) plan.syncFight(am.battle); // a page opened mid-fight draws it as it stands
+  if (am.battle) plan.syncFight(fightView(am.battle)); // a page opened mid-fight draws it as it stands
   sync(state, { animate: false });
   // A job just finished: the page redraws in the same layout, with the summary at the end of the
   // feed (owner, 2026-11-03: "it can stay in the same view with the summary there"). Show it.
@@ -316,7 +317,7 @@ function tally(state) {
     <span class="${saves ? 'is-good' : ''}">Saves ${saves}</span>
     <span class="${hurt ? 'is-bad' : ''}">Hurt ${hurt}</span>
     ${am.extraHeat ? `<span class="is-bad">Heat +${am.extraHeat}</span>` : ''}
-    ${am.battle ? `<span class="is-bad">Guards ${am.battle.guards.filter((g) => !g.out).length} up</span>` : ''}
+    ${am.battle ? `<span class="is-bad">Guards ${enemiesLeft(am.battle)} up</span>` : ''}
     ${kit ? `<span>${ui.esc(kit.name)} ${'●'.repeat(Math.max(0, am.overwatch.left))}${'○'.repeat(Math.max(0, kit.uses - am.overwatch.left))}</span>` : ''}`;
 }
 

@@ -124,7 +124,7 @@ test('giving orders is worth it: a plain player beats hands-off on the test figh
 test('a run takes the player\'s orders, and a v27 save mid-fight upgrades and carries on', async () => {
   let s = createNewGame({ seed: 4, startCrew: 'fresh' });
   s.jobs = [];
-  addOffer(s, 'warehouse');
+  addOffer(s, 'low_water');
   s = M.startMission(s, s.jobs[0].id, s.crew.slice(0, 4).map((o) => o.id), 'loud');
   for (let g = 0; g < 200 && !(s.activeMission.battle && M.currentStep(s.activeMission)?.type === 'battle' && !s.activeMission.pending); g++) {
     if (s.activeMission.done) break;
@@ -151,7 +151,7 @@ test('a run takes the player\'s orders, and a v27 save mid-fight upgrades and ca
 function docksFight(seed = 4) {
   let s = createNewGame({ seed, startCrew: 'fresh' });
   s.jobs = [];
-  addOffer(s, 'warehouse');
+  addOffer(s, 'low_water');
   s = M.startMission(s, s.jobs[0].id, s.crew.slice(0, 4).map((o) => o.id), 'loud', { callIn: 'every' });
   for (let g = 0; g < 200 && !s.activeMission.done && !s.activeMission.battle; g++) {
     const next = autoStep(s);
@@ -228,7 +228,7 @@ test('shown equals used: the planning read works each fight out on the spots the
     s = M.startMission(s, j.id, crew.map((o) => o.id), 'loud', { callIn: 'every' });
     for (let g = 0; g < 200 && !s.activeMission.done && !s.activeMission.battle; g++) { const n = autoStep(s); s = n !== s ? n : autoStep(s, { force: true }); }
     const am = s.activeMission;
-    if (am.battle) assert.deepEqual(am.battle.spots, spotsForJob(tpl.district, j.id, tpl.id, am.battle.zone, am.battle.runners.length), `${job}: the run's spots are the read's`);
+    if (am.battle && am.battle.engine !== 2) assert.deepEqual(am.battle.spots, spotsForJob(tpl.district, j.id, tpl.id, am.battle.zone, am.battle.runners.length), `${job}: the run's spots are the read's`);
   }
   assert.ok(differs > 0, 'the spots change the read somewhere (it isn\'t still half cover everywhere)');
 });

@@ -65,7 +65,7 @@ the round result (spec section 19) with each line naming its order, `previewRoun
 "if nothing", no RNG), `fightOdds` (cached). Gear: sidearm damage sets the strong-hit margin, pierce
 is `ap`, vest tiers absorb 1 or 2 hits, aim bonuses count.
 
-**1d. The run (`core/runfight.js`, `core/mission.js`).** When a fight starts on a job with
+**1d. The run (`core/runfight.js`, `core/mission.js`). (Built in the 1c PR; see the decision row "Engine 2 wired into the five jobs" for what was decided, what is not built (the deadline call-in, a round screen, battle growth) and why.)** When a fight starts on a job with
 `fightType`, build an engine-2 fight (`am.battle.engine = 2`); everything else stays engine 1.
 Call-ins through the existing `am.pending` / `describePending` / `resolvePending` path: death's door
 (watched), the deadline, `vanCantWait`, `techUnderFire`, pull back; hands-off answers by risk

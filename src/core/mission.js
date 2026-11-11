@@ -22,7 +22,7 @@ import { adjustTrust, clientById, completionTrust, ABORT_TRUST } from './clients
 import { nextRng } from './random.js';
 import { d20, hashRng } from './rng.js';
 import { checkRenewal } from './renewals.js';
-import { APPROACHES, crewRoll, effectiveStat, findRole, worsenInjury, setInjury, maxCrew } from './crew.js';
+import { APPROACHES, crewRoll, effectiveStat, findRole, worsenInjury, setInjury, maxCrew, INJURY_DAYS } from './crew.js';
 import { successChance, riskLabel } from './risk.js';
 import { clampHeat, WATCHED_PENALTY, addHeat, watchedIn } from './heat.js';
 import { XP, applyGrowth, primaryStat, promoteVeteran } from './development.js';
@@ -44,6 +44,7 @@ import { playGetaway, getawayPilot, homeHallOf } from './piloting.js';
 import { HOME_HALL } from '../data/halls.js';
 import { crewOf, actors, overwatchOp, standbyOp, standbyReady, driver, onJob, opById, grow, record, takeWhy, addNeural } from './run.js';
 import { startBattle, runBattle, resolveBattleDecision, guardsUp, guardCount, handOffFight, pullBack } from './runbattle.js';
+import { describeFightPending, fightChoices, fightSnapshot } from './runfight.js';
 export { runBattle, handOffFight, pullBack };
 import { noteOverwatchJob, checkSpecialisations } from './specialisations.js';
 import { noteJobMarks } from './marks.js';
@@ -473,30 +474,33 @@ export function runIncident(prev) {
 export function describePending(state) {
   const am = state.activeMission;
   if (!am?.pending) return null;
+  if (am.pending.kind === 'dilemma') return describeFightPending(state); // engine 2's authored call-ins (core/runfight.js)
   const patient = am.pending.opId ? opById(state, am.pending.opId) : null;
+  const engine2 = am.battle?.engine === 2; // its standby rides with the van, so no "send standby in"
   const text = am.pending.kind === 'alert'
     ? 'They know you\'re here. Lights are coming on and someone is shouting into a radio.'
     : am.pending.kind === 'door' ? `${patient?.handle ?? 'Someone'} is down and bleeding. They'll live if you get them out now.`
       : am.pending.kind === 'standoff' ? `${BATTLE.rounds} rounds in and ${guardCount(guardsUp(am.battle), am.battle)} still standing.`
         : `${patient?.handle ?? 'Someone'} is badly hurt and out of the job.`;
-  const choices = decisionChoices(am.pending, { patient, standby: standbyReady(state, am), raid: !!am.raid }).map((c) => ({ ...c, available: true, risk: c.exit ? 'safe' : null }));
+  const choices = decisionChoices(am.pending, { patient, standby: engine2 ? null : standbyReady(state, am), raid: !!am.raid }).map((c) => ({ ...c, available: true, risk: c.exit ? 'safe' : null }));
   // A fight's call-ins show everyone's health (the watch screen's call-in card).
   const b = am.battle;
   const fight = b && (am.pending.kind === 'door' || am.pending.kind === 'standoff')
-    ? { runners: b.runners.map((r) => ({ handle: r.handle, hp: r.hp, max: r.max, down: r.down })), guards: b.guards.map((g) => ({ n: g.n, hp: g.hp, max: g.max, out: g.out })) } : null;
-  return { kind: am.pending.kind, text, choices, standby: standbyReady(state, am)?.handle ?? null, fight };
+    ? (({ runners, guards }) => ({ runners: runners.map((r) => ({ handle: r.handle, hp: r.hp, max: r.max, down: r.down })), guards: guards.map((g) => ({ n: g.n, hp: g.hp, max: g.max, out: g.out })) }))(engine2 ? fightSnapshot(b) : b) : null;
+  return { kind: am.pending.kind, text, choices, standby: engine2 ? null : standbyReady(state, am)?.handle ?? null, fight };
 }
 
 /** Answer the decision: go loud or keep going, or take the exit (everyone comes home). */
 export function resolvePending(prev, optionId) {
   const am0 = prev.activeMission;
   if (!am0?.pending) return prev;
-  const choice = decisionChoices(am0.pending, { patient: am0.pending.opId ? opById(prev, am0.pending.opId) : null, standby: standbyReady(prev, am0), raid: !!am0.raid }).find((c) => c.id === optionId);
+  const choices = am0.pending.kind === 'dilemma' ? fightChoices(am0.pending) : decisionChoices(am0.pending, { patient: am0.pending.opId ? opById(prev, am0.pending.opId) : null, standby: am0.battle?.engine === 2 ? null : standbyReady(prev, am0), raid: !!am0.raid });
+  const choice = choices.find((c) => c.id === optionId);
   if (!choice) return prev;
   const state = structuredClone(prev);
   const am = state.activeMission;
   const view = describePending(state);
-  if (am.pending.kind === 'door' || am.pending.kind === 'standoff') return resolveBattleDecision(state, am, choice, view);
+  if (am.pending.kind === 'door' || am.pending.kind === 'standoff' || am.pending.kind === 'dilemma') return resolveBattleDecision(state, am, choice, view);
   const why = takeWhy(am);
   if (choice.exit) {
     exitRun(state, am, { text: view.text, choice: choice.label, why, report: am.pending.kind === 'alert' ? 'The alarm went up and the crew pulled out.' : 'With someone badly hurt, the crew pulled out.' });
@@ -890,6 +894,14 @@ function finish(state) {
   const crew = crewOf(state, am);
   const medic = findRole(crew.filter((o) => !am.untreated.includes(o.id)), 'medic');
   const deaths = [];
+  // Engine 2 fights kill in the moment (bleeding out on committed, left behind down, a hand-ordered withdrawal): core/runfight.js.
+  for (const id of am.fightDead ?? []) {
+    const op = opById(state, id);
+    if (!op || deaths.includes(op)) continue;
+    deaths.push(op);
+    am.log.push({ kind: 'death', text: `${op.name} "${op.handle}" died in the fight.` });
+    record(am, { kind: 'aftermath', death: true, text: `${op.name} "${op.handle}" died in the fight.` });
+  }
 
   for (const id of am.untreated) {
     const op = opById(state, id);
@@ -1026,6 +1038,16 @@ function finish(state) {
         subject: `${op.handle}'s neural load is in the danger zone`,
         body: `${op.name} is at ${c.neuralLoad}/100. Rest brings it down; pushing harder risks a breakdown.`, blocking: false, read: false });
     }
+  }
+  // Left behind in a fight (slice 1 of the battle rework): missing for a week, then back badly hurt. Slice 4 builds the rescue, the ransom and the waiting.
+  for (const m of am.missing ?? []) {
+    const op = opById(state, m.id);
+    if (!op || deaths.includes(op)) continue;
+    op.condition.awayUntil = m.until;
+    op.condition.missing = { since: state.day, until: m.until };
+    setInjury(op, 'serious');
+    op.condition.injuryDays = (m.until - state.day) + INJURY_DAYS.serious;
+    op.history.push(`Day ${state.day}: left behind at the ${tpl.name}`);
   }
   // The record may have crossed a line: milestones for those who came home (core/milestones.js).
   const milestoneLines = checkMilestones(state, survivors);

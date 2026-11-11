@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-11 · The five jobs play the new fights (battle rework, slice 1c)
+- **Office Data Pull, Data Scrub, Quiet Hours, Warehouse Lift and Protection Run now play their fights the new way:** enemies show what they will do before orders, the crew follows its plan (protect the tech, then board the van), and a fight can end at the objective, at the van, or in a pull back. Every other job, and raids, fight as before. The fight shows on the watch screen as it always has; its own round screen and plan screen come in the next slice.
+- **Two new call-ins** (placeholder wording for now): the tech under fire, and the van that can't wait. Hands-off crews answer by their orders: cautious and steady hold the van for someone down, committed goes on time. Pull back is always there. On a crew away on a job, a call-in is open until the end of that day, then the crew carries on.
+- **The death rule changed.** Cautious and steady crews still never lose anyone without a call-in. On **committed** orders a crew fights on with someone down, and that runner can bleed out or be left behind and not make it (about one fight in 27). A runner left behind is missing for a week and comes back badly hurt. The planning read for these five jobs now quotes the new fights, including the chance of losing someone.
+
 ## 2026-11-11 · The new fight rules, on their own (battle rework, slice 1b)
 - **Nothing changes in the game yet.** The rules of the new fights (pips from endurance, enemy threats shown before orders, orders that carry out the crew's plan, protecting and shielding, the hack, the van, carrying the wounded, bleeding out, the medic's aura) are built and tested, but no job uses them. The five jobs that will (Office Data Pull, Data Scrub, Quiet Hours, Warehouse Lift, Protection Run) still play their fights the old way until slice 1c.
 - New files: `core/fight.js`, `data/fights.js` (all the numbers), `data/dilemmas.js`, `data/fightText.js` (placeholder wording; the owner writes the real text), `tests/fight.test.js`.

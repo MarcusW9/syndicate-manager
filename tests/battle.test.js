@@ -42,7 +42,7 @@ function toPending(s, kind) {
 }
 
 /** Runs that reached a call-in of this kind, from these seeds. */
-function findPending(kind, { from = 1, to = 1500, job = 'warehouse', n = 2, want = 5 } = {}) {
+function findPending(kind, { from = 1, to = 1500, job = 'exit_interview', n = 2, want = 5 } = {}) {
   const found = [];
   for (let seed = from; seed <= to && found.length < want; seed++) {
     const s = toPending(begin(seed, job, APPROACHES[seed % 4], { n }), kind);
@@ -83,7 +83,7 @@ test('a fight starts when a danger incident goes unsaved, or on a loud run for t
   let fights = 0;
   let loudWins = 0;
   for (let seed = 1; seed <= 400; seed++) {
-    const am = autoRun(begin(seed, 'warehouse', APPROACHES[seed % 4], { n: 2 + (seed % 2) }), 'steady').activeMission;
+    const am = autoRun(begin(seed, 'exit_interview', APPROACHES[seed % 4], { n: 2 + (seed % 2) }), 'steady').activeMission;
     const ev = am.events;
     let first = true;
     ev.forEach((e, i) => {
@@ -136,7 +136,7 @@ test('the jump: on the first round the guards get no shot in, and only then', ()
 test('every roll in a fight is the rule: die + value against need decides it, and it never runs past the last round', () => {
   let lines = 0;
   for (let seed = 1; seed <= 300; seed++) {
-    const am = autoRun(begin(seed, 'warehouse', 'loud', { n: 3 }), 'committed').activeMission;
+    const am = autoRun(begin(seed, 'exit_interview', 'loud', { n: 3 }), 'committed').activeMission;
     for (const e of am.events.filter((x) => x.kind === 'battle')) {
       if (e.phase === 'round') assert.ok(e.round <= BATTLE.rounds, `seed ${seed}: round ${e.round}`);
       for (const l of e.lines ?? []) {
@@ -154,7 +154,7 @@ test('every roll in a fight is the rule: die + value against need decides it, an
 test('armour shows on the feed: a hit on armour says so and does damage less armour, at least 1', () => {
   let seen = 0;
   for (let seed = 1; seed <= 300 && seen < 10; seed++) {
-    let s = begin(seed, 'warehouse', 'loud', { n: 3 });
+    let s = begin(seed, 'exit_interview', 'loud', { n: 3 });
     for (const op of s.crew.slice(0, 3)) arm(s, op.id, 'vest');
     const am = autoRun(s, 'committed').activeMission;
     for (const e of am.events.filter((x) => x.kind === 'battle' && x.phase === 'round')) {
@@ -205,7 +205,7 @@ test('keeping on fighting is the only way anyone dies; a later exit still saves 
   let fought = 0;
   let died = 0;
   for (let seed = 1; seed <= 3000; seed++) {
-    const s = begin(seed, seed % 2 ? 'warehouse' : 'container409', APPROACHES[seed % 4], { n: 1 + (seed % 3) });
+    const s = begin(seed, seed % 2 ? 'exit_interview' : 'container409', APPROACHES[seed % 4], { n: 1 + (seed % 3) });
     const { state, pushed } = playMission(s, randomPolicy(seed));
     const am = state.activeMission;
     if (am.events.some((e) => e.kind === 'decision' && e.push)) fought++;
@@ -241,7 +241,7 @@ test('hands-off never keeps fighting with someone down, under any orders', () =>
   assert.equal(ordersDecision('standoff', 'committed').id, 'press');
   assert.equal(ordersDecision('standoff', 'steady').id, 'out');
   for (let seed = 1; seed <= 300; seed++) {
-    const am = autoRun(begin(seed, 'warehouse', APPROACHES[seed % 4], { n: 1 + (seed % 3) }), ['cautious', 'steady', 'committed'][seed % 3]).activeMission;
+    const am = autoRun(begin(seed, 'exit_interview', APPROACHES[seed % 4], { n: 1 + (seed % 3) }), ['cautious', 'steady', 'committed'][seed % 3]).activeMission;
     assert.ok(!am.events.some((e) => e.push), `seed ${seed}`);
     assert.deepEqual(am.result.deaths, []);
   }
@@ -251,7 +251,7 @@ test('the orders in a fight: Cautious pulls back once someone is hurt, Steady on
   const seen = { cautious: 0, steady: 0 };
   for (let seed = 1; seed <= 600; seed++) {
     const orders = seed % 2 ? 'steady' : 'cautious';
-    const am = autoRun(begin(seed, 'warehouse', 'loud', { n: 2 }), orders).activeMission;
+    const am = autoRun(begin(seed, 'exit_interview', 'loud', { n: 2 }), orders).activeMission;
     const rounds = am.events.filter((e) => e.kind === 'battle' && e.phase === 'round');
     const pulled = am.events.find((e) => e.kind === 'exit' && /orders: someone was/.test(e.why ?? ''));
     if (pulled) {
@@ -304,7 +304,7 @@ test('a fight on the feed: guards appear on a note, every round is a card with h
   let rounds = 0;
   let starts = 0;
   for (let seed = 1; seed <= 200; seed++) {
-    const am = autoRun(begin(seed, 'warehouse', 'loud', { n: 3 }), 'committed').activeMission;
+    const am = autoRun(begin(seed, 'exit_interview', 'loud', { n: 3 }), 'committed').activeMission;
     const items = feedItems(am.events);
     const battle = items.filter((i) => i.cue?.battle);
     const shown = am.events.filter((e) => e.kind === 'battle').length;
@@ -357,7 +357,7 @@ test('more guards on bigger work: the incident\'s own count, plus more by threat
 test('guards on their posts are the guards the run meets: one per danger incident ahead, and the fight starts with as many', () => {
   let checked = 0;
   for (let seed = 1; seed <= 200; seed++) {
-    let s = begin(seed, 'warehouse', APPROACHES[seed % 4], { n: 3 });
+    let s = begin(seed, 'exit_interview', APPROACHES[seed % 4], { n: 3 });
     const posted = new Map(guardPosts(s.activeMission).map((p) => [p.step, p]));
     for (const p of posted.values()) assert.ok(INCIDENTS[p.incident].danger, 'only danger incidents');
     for (let g = 0; g < 300 && !s.activeMission.done; g++) {
@@ -378,7 +378,7 @@ test('guards on their posts are the guards the run meets: one per danger inciden
 // --- saves ---------------------------------------------------------------------------------------
 
 test('a v25 or v26 save upgrades: jobs get no fight on, and know if they have fought; a job saved mid-fight carries on', async () => {
-  const s = begin(2, 'warehouse', 'loud', { n: 2 });
+  const s = begin(2, 'exit_interview', 'loud', { n: 2 });
   const old = structuredClone(s);
   old.version = 25;
   delete old.activeMission.battle;

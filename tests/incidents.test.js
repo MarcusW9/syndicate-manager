@@ -14,7 +14,7 @@ import { INCIDENTS, ZONE_POOLS } from '../src/data/incidents.js';
 import { SITUATIONS } from '../src/data/situations.js';
 import { MISSIONS } from '../src/data/missions.js';
 import { makeRng } from '../src/core/rng.js';
-import { playMission, toCrisis, randomPolicy, carefulPolicy, arm } from './play.js';
+import { playMission, toCrisis, randomPolicy, carefulPolicy, arm, mayLoseSomeone } from './play.js';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 const { importSave } = await import('../src/save/save.js');
@@ -117,8 +117,9 @@ test('every decision a run stops for has an exit, and taking it brings everyone 
 test('a hands-off crew decides every decision and still never loses anyone', () => {
   for (let seed = 1; seed <= 200; seed++) {
     const s = begin(seed, 'warehouse', APPROACH_IDS[seed % 4], { n: 1 + (seed % 2) });
-    const done = autoRun(s, ['cautious', 'steady', 'committed'][seed % 3]);
-    assert.deepEqual(done.activeMission.result.deaths, []);
+    const orders = ['cautious', 'steady', 'committed'][seed % 3];
+    const done = autoRun(s, orders);
+    if (!mayLoseSomeone('warehouse', orders)) assert.deepEqual(done.activeMission.result.deaths, []);
     for (const e of done.activeMission.events.filter((x) => x.kind === 'decision' || x.kind === 'exit')) assert.ok(e.why || e.kind === 'exit', `seed ${seed}: ${e.choice} says why`);
   }
 });
