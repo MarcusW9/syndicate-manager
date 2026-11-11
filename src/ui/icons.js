@@ -13,6 +13,7 @@ const PATHS = {
   piloting: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2"/><path d="M4.5 10.5l5.6 1M19.5 10.5l-5.6 1M12 14v6"/>', // a steering wheel
   medical: '<path d="M9 4h6v5h5v6h-5v5H9v-5H4V9h5z"/>', // a cross
   cool: '<path d="M3 12h4l2-4 3 8 2-4h7"/>', // a steady pulse
+  endurance: '<path d="M7 9v6M17 9v6M4 11v2M20 11v2M7 12h10"/>', // a dumbbell: the body (save v61)
   person: '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.8 3.6-6 7-6s6.2 2.2 7 6"/>',
   // Gear (slice 5): one per item type in data/gear.js.
   rifle: '<path d="M2 12h15l2-1.5h3M5 12l-1.5 5h3L8 12M11 12v2.5M9 9h5"/>', // a long gun with a scope

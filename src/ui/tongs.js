@@ -130,7 +130,7 @@ function tongPage(state, view, id, back) {
   return '';
 }
 
-const STAT_ORDER = ['combat', 'stealth', 'tech', 'social', 'piloting', 'medical', 'cool'];
+const STAT_ORDER = ['combat', 'stealth', 'tech', 'social', 'piloting', 'medical', 'cool', 'endurance'];
 
 /** This month's free name, if one is up: a card that opens them in Crew › Leads (where scouting and signing are). */
 function freeNamesBlock(state, view) {

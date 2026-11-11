@@ -73,7 +73,7 @@ import {
   deleteSlot, loadBackup, backupDue, getPref, setPref, SLOT_COUNT, unreadableSave, restoreUnreadable, exportUnreadable, discardUnreadable,
 } from '../save/save.js';
 import { hire, haggle, passRecruit, canHire, signingFee, nextExpansion, expandSafehouse, STARTING_ROSTER_CAP, FOUNDERS_TO_PICK } from '../core/recruits.js';
-import { potentialRead, primaryStat, scoutFor, ageRate, declineChance, mentoring, changesSince, progressShare, STATS } from '../core/development.js';
+import { potentialRead, primaryStat, scoutFor, ageRate, declineChance, mentoring, changesSince, progressShare, ROLL_STATS } from '../core/development.js';
 import { GROWTH_LINES, GRADUATION_LINES } from '../data/growthLines.js';
 import { renderTongs, renderWord, renderLeadName, leadNames, renderGoneElsewhere } from './tongs.js';
 import { sendScout, signCard, findCard } from '../core/dossier.js';
@@ -2171,7 +2171,7 @@ function climbLine() {
     ${infoButton('reputation', 'About reputation and job cards')}
   </div>
   ${infoHtml('reputation', `<p class="infotext small">${esc(`Bigger work opens up once people know your name. Finished jobs build it; aborts cost it. Rookie jobs are open from the start; the rest open at ${ladder}.`)}</p>
-  <p class="infotext small">On job cards, the corner is Joss's read of the risk (bigger and redder is riskier), then how many runners Joss would send and the job's key stats: ${STATS.map(statIcon).join(' ')}</p>`)}`;
+  <p class="infotext small">On job cards, the corner is Joss's read of the risk (bigger and redder is riskier), then how many runners Joss would send and the job's key stats: ${ROLL_STATS.map(statIcon).join(' ')}</p>`)}`;
 }
 
 /** Joss's read of one job for the board (core/squad.js jobRead), worked out once per state. */

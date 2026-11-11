@@ -41,7 +41,7 @@ export const HANDLES = [
 // Primary stat per role, plus what they're decent at.
 export const ROLE_PROFILES = {
   medic: { primary: 'medical', secondary: ['cool', 'social'] },
-  muscle: { primary: 'combat', secondary: ['cool', 'piloting'] },
+  muscle: { primary: 'combat', secondary: ['endurance', 'cool'] }, // the body, not the wheel (2026-11-11; drivers cover piloting)
   tech: { primary: 'tech', secondary: ['stealth', 'cool'] },
   driver: { primary: 'piloting', secondary: ['cool', 'combat'] },
   face: { primary: 'social', secondary: ['stealth', 'cool'] },

@@ -14,7 +14,7 @@ import { marketWage, round50 } from './pricing.js';
 import { ECONOMY } from '../data/economy.js';
 import { pickTiered } from './tiered.js';
 import { CLASHES, TRAIT_TAGS } from '../data/tags.js';
-import { rollPotential, rollScoutError, scoutFor, potentialRead, prepareOperative } from './development.js';
+import { rollPotential, rollCeiling, rollScoutError, scoutFor, potentialRead, prepareOperative, ROLL_STATS } from './development.js';
 import { money } from './money.js';
 import { RECRUIT_GEAR } from '../data/gear.js';
 import { loadoutOf } from './gear.js';
@@ -66,6 +66,19 @@ function withoutClashes(lines, tags) {
 // The founding crew: raw rookies, below the rookies you can hire later (PLAN-PROGRESSION.md).
 const FOUNDER = { id: 'rookie', age: [18, 24], primary: [8, 11], secondary: [5, 9], other: [2, 6] };
 
+/**
+ * Endurance for someone who has none yet (the save v61 migration), rolled from the bands their other
+ * stats came from: a muscle's secondary band, everyone else's low one, by tier (founders by the founder
+ * bands). Returns { value, ceiling }. The caller passes a hash generator so no saved roll moves.
+ */
+export function rollEndurance(rng, { role, tier, founder = false }) {
+  const quality = founder ? FOUNDER : QUALITY.find((q) => q.id === tier) ?? QUALITY[1];
+  const known = ROLE_PROFILES[role] ? role : 'face'; // an unknown role reads as one with endurance as a low stat
+  const band = ROLE_PROFILES[known].secondary.includes('endurance') ? quality.secondary : quality.other;
+  const value = between(rng, band);
+  return { value, ceiling: rollCeiling(rng, 'endurance', value, quality.id, known) };
+}
+
 /** Lead quality weights: the usual ones, or better with an Elite on the crew. */
 export function recruitQualities(state) {
   const elite = (state.crew ?? []).some((o) => !o.freelance && (o.fame === 'elite' || o.fame === 'legend'));
@@ -83,11 +96,9 @@ export function generateRecruit(state, { role: forcedRole, quality: forcedQualit
   const role = forcedRole ?? rolledRole;
   const profile = ROLE_PROFILES[role];
 
+  const band = (s) => (s === profile.primary ? quality.primary : profile.secondary.includes(s) ? quality.secondary : quality.other);
   const stats = {};
-  for (const s of ['combat', 'stealth', 'tech', 'social', 'piloting', 'medical', 'cool']) {
-    const band = s === profile.primary ? quality.primary : profile.secondary.includes(s) ? quality.secondary : quality.other;
-    stats[s] = between(rng, band);
-  }
+  for (const s of ROLL_STATS) stats[s] = between(rng, band(s));
 
 
   const takenHandles = new Set([...state.crew, ...state.memorial, ...(state.recruits ?? []), ...(state.freelancers ?? []), ...(state.founding?.candidates ?? [])].map((o) => o.handle));
@@ -100,10 +111,6 @@ export function generateRecruit(state, { role: forcedRole, quality: forcedQualit
   const originLine = pickTiered(rng, origins);
   const origin = originLine.text.replace('{district}', district);
   const traits = pickTraits(rng, originLine.tags);
-
-  // Market price: rookies ~500, stars cost more. The founding crew work for street wages, and
-  // rookie leads for a share of market too (ECONOMY.rookieLeadWage).
-  const wage = round50(marketWage({ role, stats }) * (founder ? ECONOMY.streetWage : quality.id === 'rookie' ? ECONOMY.rookieLeadWage : 1));
 
   const name = `${pick(rng, culture.given)} ${pick(rng, culture.surnames)}`;
   const age = between(rng, quality.age);
@@ -125,6 +132,15 @@ export function generateRecruit(state, { role: forcedRole, quality: forcedQualit
   const roll = offer.length ? rng() : 1;
   let edge = 0;
   const brings = offer.filter(([chance]) => { const hit = roll >= edge && roll < edge + chance; edge += chance; return hit; }).map(([, type]) => type);
+
+  // Endurance (save v61) is rolled last of all, from the same band rules, so adding it moved no
+  // other roll. It counts in the wage like any stat (core/pricing.js).
+  stats.endurance = between(rng, band('endurance'));
+  potential.endurance = rollCeiling(rng, 'endurance', stats.endurance, quality.id, role);
+
+  // Market price: rookies ~500, stars cost more. The founding crew work for street wages, and
+  // rookie leads for a share of market too (ECONOMY.rookieLeadWage).
+  const wage = round50(marketWage({ role, stats }) * (founder ? ECONOMY.streetWage : quality.id === 'rookie' ? ECONOMY.rookieLeadWage : 1));
 
   state.recruitSeq = (state.recruitSeq ?? 0) + 1;
   return {

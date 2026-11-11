@@ -22,7 +22,7 @@ import { NAMES } from '../config/names.js';
 import { money } from './money.js';
 
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
-const STAT_KEYS = ['combat', 'stealth', 'tech', 'social', 'piloting', 'medical', 'cool'];
+const STAT_KEYS = ['combat', 'stealth', 'tech', 'social', 'piloting', 'medical', 'cool', 'endurance'];
 const slug = (name) => name.toLowerCase().replace(/&/g, '').replace(/[^a-z]+/g, '-').replace(/^-|-$/g, '');
 const tongOf = (r, id) => (r?.tongs ?? []).find((t) => t.id === id) ?? null;
 
@@ -46,7 +46,7 @@ function careerOf(card) {
 }
 
 /** The stats a card would have as a runner, fitted so ratingOf matches the card's rating within a point or two. */
-function statsFor(card, career, rng) {
+function statsFor(card, career, rng, seed) {
   const tier = tierForRating(cardRating(card));
   const profile = ROLE_PROFILES[card.role];
   const [sec1, sec2] = profile.secondary;
@@ -67,9 +67,12 @@ function statsFor(card, career, rng) {
     }
   }
   const stats = { ...(fits.length ? fits[Math.floor(rng() * fits.length)] : best.stats) };
-  // The four stats outside the role's own: low, never above the second-best one.
+  // The stats outside the role's own: low, never above the second-best one. Endurance (save v61) draws
+  // from its own hash when it is one of them, so the card's other stats and handle stay as they were.
   const cap = Math.min(8, stats[sec2]);
-  for (const k of STAT_KEYS) if (![profile.primary, sec1, sec2].includes(k)) stats[k] = clamp(2 + Math.floor(rng() * (cap - 1)), 1, cap);
+  const low = (r) => clamp(2 + Math.floor(r() * (cap - 1)), 1, cap);
+  for (const k of STAT_KEYS) if (k !== 'endurance' && ![profile.primary, sec1, sec2].includes(k)) stats[k] = low(rng);
+  if (![profile.primary, sec1, sec2].includes('endurance')) stats.endurance = low(hashRng(seed, 'dossier-endurance', card.id));
   return stats;
 }
 
@@ -85,7 +88,7 @@ export function dossierOf(state, card) {
   const rng = hashRng(state.seed, 'dossier', card.id);
   const career = careerOf(card);
   const tier = tierForRating(cardRating(card));
-  const stats = statsFor(card, career, rng);
+  const stats = statsFor(card, career, rng, state.seed);
   const taken = new Set([...state.crew, ...state.memorial].map((o) => o.handle));
   const free = HANDLES.filter((h) => !taken.has(h));
   const handle = (free.length ? pick(rng, free) : pick(rng, HANDLES));

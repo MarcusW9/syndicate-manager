@@ -24,7 +24,7 @@ import { nameLook, refreshArmoury, stockShelf } from '../core/looks.js';
 import { PIECES } from '../data/hallBuild.js';
 import { money } from '../core/money.js';
 import { addOffer, templateById } from '../core/jobs.js';
-import { STARTING_ROSTER_CAP } from '../core/recruits.js';
+import { STARTING_ROSTER_CAP, rollEndurance } from '../core/recruits.js';
 import { prepareOperative, rollPotential, rollScoutError, scoutFor, potentialRead } from '../core/development.js';
 import { nextRng } from '../core/random.js';
 import { refreshFreelancers } from '../core/freelance.js';
@@ -32,6 +32,7 @@ import { GEAR, makeItem } from '../core/gear.js';
 import { CELLS } from '../data/gear.js';
 import { trimInbox } from '../core/inbox.js';
 import { seedRivals, offerGapFor } from '../core/rivals.js';
+import { hashRng } from '../core/rng.js';
 
 // The one-item-per-slot gear of saves before v45, for the migrations written against it.
 const slotLoadout = () => ({ weapon: null, armour: null, tool: null, implant: null });
@@ -765,6 +766,25 @@ function migrate(state) {
     // v60: C5, the Anchor's Book (DESIGN.md 2026-11-09): `state.rivals.book`, null until the first slate goes up.
     if (state.rivals) state.rivals.book ??= null;
     state.version = 60;
+  }
+  if (state.version === 60) {
+    // v61: endurance, the eighth stat (battle rework slice 1; spec section 10a). Every stored runner (crew, the
+    // fallen, freelancers, leads, founder candidates) gets one rolled the way their other stats were, from a
+    // hash of the save's seed and their id, so no saved roll moves and no other stat changes. Rival names need
+    // nothing: their runner is built from a hash on demand (core/dossier.js). A fight in progress is tagged
+    // `engine: 1` and finishes on the old fight code.
+    const people = [...(state.crew ?? []), ...(state.memorial ?? []), ...(state.hall ?? []), ...(state.freelancers ?? []),
+      ...(state.recruits ?? []), ...(state.founding?.candidates ?? [])];
+    for (const op of people) {
+      if (!op?.stats || op.stats.endurance != null) continue;
+      const tier = op.tier ?? op.quality ?? 'pro';
+      const { value, ceiling } = rollEndurance(hashRng(state.seed, 'endurance-v61', op.runnerId ?? op.id), { role: op.role, tier, founder: !!state.founding?.candidates?.includes(op) });
+      op.stats.endurance = value;
+      if (op.potential) op.potential.endurance = ceiling;
+      if (op.startStats) op.startStats.endurance = value;
+    }
+    for (const am of [state.activeMission, ...(state.awayJobs ?? []).map((j) => j.mission)]) if (am?.battle) am.battle.engine ??= 1;
+    state.version = 61;
   }
   return state;
 }
