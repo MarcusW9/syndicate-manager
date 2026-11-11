@@ -187,21 +187,30 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
     requestAnimationFrame(step);
   }
 
+  /** A hit lands on a guard: the token shakes and flashes white for a moment (styles.css .is-struck). Decoration; the feed has the numbers. */
+  const struck = (node) => {
+    if (!node) return;
+    node.classList.remove('is-struck');
+    void node.getBoundingClientRect(); // restart the animation if it is hit again straight away
+    node.classList.add('is-struck');
+    setTimeout(() => node.classList.remove('is-struck'), 420);
+  };
   const flash = async (at, tone = 'hit') => { const c = el('circle', { class: `sp-flash sp-flash--${tone}`, cx: at[0], cy: at[1], r: 5 }); fx.append(c); await wait(450); c.remove(); };
   const ring = async (at, ok) => { const c = el('circle', { class: `sp-ring ${ok ? 'sp-ring--ok' : 'sp-ring--bad'}`, cx: at[0], cy: at[1], r: 9 }); fx.append(c); await wait(700); c.remove(); };
   const spawn = (at, cls, mark) => { const g = el('g', { class: cls }); g.append(el('circle', { r: 6 }), el('text', {}, mark)); place(g, at); fx.append(g); return g; };
   const pulse = async (at, ms = 1600) => { alarm.setAttribute('cx', at[0]); alarm.setAttribute('cy', at[1]); alarm.classList.add('is-on'); await wait(ms); alarm.classList.remove('is-on'); };
 
-  async function shot(to, hit) {
+  async function shot(to, hit, victim = null) {
     const end = hit ? to : [to[0] + 9, to[1] - 7];
     const l = el('line', { class: 'sp-shot', x1: P.perch[0], y1: P.perch[1], x2: end[0], y2: end[1] });
-    fx.append(l); await wait(350); await flash(end, hit ? 'hit' : 'miss'); l.remove();
+    fx.append(l); await wait(350); if (hit) struck(victim); await flash(end, hit ? 'hit' : 'miss'); l.remove();
   }
-  async function drone(to, hit) {
+  async function drone(to, hit, victim = null) {
     const d = el('g', { class: 'sp-drone' });
     d.append(el('circle', { r: 3.5 }), el('circle', { r: 7, class: 'sp-drone__rotor' }));
     place(d, P.perch); fx.append(d);
     await wait(60); place(d, hit ? to : [to[0] + 14, to[1] - 12]); await wait(700);
+    if (hit) struck(victim);
     await flash(to, hit ? 'zap' : 'miss');
     place(d, P.perch); await wait(500); d.remove();
   }
@@ -277,10 +286,11 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
     command(null);
     if (fightAt.size) { fightAt.clear(); svg.classList.remove('is-fight'); moveGroup(here); panTo(zoneNow); }
   }
-  async function bolt(from, to, hit) {
+  async function bolt(from, to, hit, victim = null) {
     const l = el('line', { class: 'sp-shot', x1: from[0], y1: from[1], x2: to[0] + (hit ? 0 : 8), y2: to[1] + (hit ? 0 : -6) });
     fx.append(l);
     await wait(260);
+    if (hit) struck(victim);
     await flash(to, hit ? 'hit' : 'miss');
     l.remove();
   }
@@ -289,13 +299,13 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
     const foeAt = l.guard ? foePos(l.guard) : here;
     const key = `g${l.guard}`;
     if (l.kind === 'turret') {
-      await (l.at ? bolt(l.at, foeAt, l.success) : shot(foeAt, l.success));
+      await (l.at ? bolt(l.at, foeAt, l.success, foes.get(l.guard)) : shot(foeAt, l.success, foes.get(l.guard)));
       if (l.success && hurtBy(key, l.damage) <= 0) foes.get(l.guard)?.classList.add('is-dead');
     } else if (l.kind === 'overwatch') {
-      await (l.kit === 'drone' ? drone(foeAt, l.success) : shot(foeAt, l.success));
+      await (l.kit === 'drone' ? drone(foeAt, l.success, foes.get(l.guard)) : shot(foeAt, l.success, foes.get(l.guard)));
       if (l.success && hurtBy(key, l.damage) <= 0) foes.get(l.guard)?.classList.add('is-dead');
     } else if (l.kind === 'shoot') {
-      await bolt(posOf(l.actor), foeAt, l.success);
+      await bolt(posOf(l.actor), foeAt, l.success, foes.get(l.guard));
       if (l.success && hurtBy(key, l.damage) <= 0) foes.get(l.guard)?.classList.add('is-dead');
     } else if (l.kind === 'guard') {
       const to = posOf(l.targetId);

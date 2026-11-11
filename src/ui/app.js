@@ -2819,7 +2819,7 @@ function renderFinale(s) {
     return `<li class="finale__op ${lost ? 'is-lost' : ''}" style="--i:${i}">${face(op)}<b>${esc(op.handle)}</b>${tags}</li>`;
   }).join('');
   return `
-    <div class="finale finale--${esc(r.outcome)}" role="dialog" aria-modal="false" aria-label="${esc(title)}">
+    <div class="finale finale--${esc(r.outcome)}${r.outcome === 'loss' ? '' : ' finale--stamped'}" style="--stamp-at:${(0.5 + 0.12 * Math.max(0, ids.length - 1)).toFixed(2)}s" role="dialog" aria-modal="false" aria-label="${esc(title)}">
       <div class="finale__card">
         <p class="finale__kicker">${esc(templateById(am.templateId)?.name ?? 'The job')}</p>
         ${heading}
