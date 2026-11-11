@@ -10,7 +10,8 @@ import { makeRng } from '../src/core/rng.js';
 import * as F from '../src/core/fight.js';
 import { FIGHT, ENEMIES, ENEMY_HIT, SITE_ENEMIES, COUNT_BY_THREAT, FIGHT_JOBS, FIGHTS } from '../src/data/fights.js';
 import { DILEMMAS } from '../src/data/dilemmas.js';
-import { FIGHT_TEXT, lineText } from '../src/data/fightText.js';
+import { FIGHT_TEXT } from '../src/data/fightText.js';
+import { lineText } from '../src/core/fighttext.js';
 import { STARTING_CREW } from '../src/data/operatives.js';
 
 const crewOf = (seed = 1) => createNewGame({ seed }).crew;
@@ -729,4 +730,43 @@ test('wording is placeholders in data: every key a line or dilemma uses has text
   for (const [k, text] of Object.entries(FIGHT_TEXT)) for (const n of names) assert.ok(!text.includes(n), `${k} has the name ${n}`);
   assert.equal(lineText('nope.unknown'), 'nope.unknown');
   assert.equal(lineText('attackHit', { who: 'A', enemy: 'B' }), '[attackHit] A hits B');
+});
+
+// --- review fixes (PR 129) ----------------------------------------------------------------------------------
+
+test('heat is reported once, even when startRound ran first (the run calls it before playRound): the early van\'s +1 is not lost', () => {
+  const b = fixture('holdExtract', [ids.jax, ids.stitch, ids.velvet], { wheels: { id: 'teo', handle: 'Wheels', value: 17 } });
+  b.enemies = [foe(1, 'hired'), foe(2, 'hired')];
+  R(b, 'jax').pips = 1; // someone nearly down: the driver brings the van a round early
+  const rng = makeRng(5);
+  F.startRound(b, rng);
+  assert.equal(b.vanUsed, true);
+  const r1 = F.playRound(b, rng);
+  assert.equal(r1.heat, FIGHT.vanEarlyHeat, 'the early van\'s heat reaches the round result');
+  assert.equal(F.playRound(b, rng).heat, 0, 'and is reported once');
+});
+
+test('someone down whom nobody pushed on for pulls the crew back, even after another runner was pushed on for', () => {
+  const b = fixture('holdHack', [ids.static, ids.jax, ids.stitch]);
+  R(b, 'jax').down = true; R(b, 'jax').fightOn = true; R(b, 'jax').downRound = 1; R(b, 'jax').pips = 0;
+  draw(b, []);
+  F.playRound(b, always(0.5));
+  assert.equal(b.end, null, 'the one pushed on for does not pull the crew back');
+  const c = fixture('holdHack', [ids.static, ids.jax, ids.stitch]);
+  R(c, 'jax').down = true; R(c, 'jax').fightOn = true; R(c, 'jax').downRound = 1; R(c, 'jax').pips = 0;
+  R(c, 'mei').down = true; R(c, 'mei').downRound = 1; R(c, 'mei').pips = 0;
+  draw(c, []);
+  F.playRound(c, always(0.5));
+  assert.equal(c.end.result, 'extracted', 'the second one down is the death\'s-door call');
+});
+
+test('the van is held once: no second vanCantWait call-in for a hold that cannot happen', () => {
+  const b = fixture('holdExtract', [ids.jax, ids.velvet, ids.stitch], { risk: 'steady' });
+  b.stage = 1; b.round = 5; b.goal.vanLeaves = 5;
+  R(b, 'mei').down = true; R(b, 'mei').pips = 0; R(b, 'mei').downRound = 3;
+  draw(b, []);
+  assert.equal(F.dueDilemmas(b).length, 1);
+  b.vanHeld = true;
+  assert.deepEqual(F.dueDilemmas(b), [], 'already held once');
+  assert.equal(F.dilemmaHolds(b, 'vanCantWait'), false);
 });

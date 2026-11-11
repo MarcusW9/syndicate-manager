@@ -333,3 +333,37 @@ test('an engine-1 fight in progress (a v60 save tagged engine 1) finishes on the
   assert.equal(done.activeMission.done, true);
   assert.ok(done.activeMission.events.some((e) => e.kind === 'battle' && e.phase === 'round' && e.lines.some((l) => l.kind === 'guard' || l.kind === 'shoot')));
 });
+
+// --- review fixes (PR 129) ----------------------------------------------------------------------------------
+
+test('a pushed-on runner a medic stabilises is no longer untreated (engine 1\'s rule), so they cannot die at finish()', () => {
+  const s = findCall('warehouse', 'door', { orders: 'steady', to: 400 });
+  assert.ok(s);
+  const id = s.activeMission.pending.opId;
+  const pushed = M.resolvePending(s, 'fight');
+  assert.ok(pushed.activeMission.untreated.includes(id));
+  pushed.activeMission.battle.runners.find((r) => r.id === id).stable = true; // the medic got to them
+  const next = M.runBattle(pushed);
+  assert.ok(!next.activeMission.untreated.includes(id), 'out of the untreated list');
+  assert.equal(next.crew.find((o) => o.id === id).condition.injury, 'serious');
+});
+
+test('someone who died in the fight is not also rolled for as untreated: one death, one memorial entry, no "pulls through"', () => {
+  const s = atFight(4, 'warehouse', 'never');
+  const am = s.activeMission;
+  const x = am.battle.runners[0];
+  x.dead = true; x.fightOn = true;
+  am.fightDead = [x.id]; am.untreated = [x.id];
+  const out = M.pullBack(s);
+  assert.equal(out.activeMission.result.deaths.length, 1);
+  assert.equal(out.memorial.filter((m) => m.id === x.id).length, 1, 'one memorial entry');
+  assert.ok(!out.activeMission.log.some((l) => /pulls through/.test(l.text)), 'the dead do not pull through');
+});
+
+test('engine 2\'s pull-back cost says what it does: no parting shots', async () => {
+  const { decisionChoices } = await import('../src/core/incidents.js');
+  const text = (engine2) => decisionChoices({ kind: 'door' }, { patient: { handle: 'Vex' }, engine2 }).find((c) => c.exit).cost;
+  assert.match(text(true), /No parting shots/);
+  assert.doesNotMatch(text(true), /guards get a parting shot/);
+  assert.match(text(false), /parting shot/);
+});

@@ -3,7 +3,7 @@
 // line the fight plays carries a `key` and its slots; lineText fills a placeholder from here. Nothing
 // in core/ reads these strings, so the owner's wording replaces them without touching the rules.
 //
-// Slots are {name}. An unknown key reads as the key itself, so nothing breaks while the text is pending.
+// Slots are {name}. core/fighttext.js lineText fills them; an unknown key reads as the key itself, so nothing breaks while the text is pending.
 
 export const FIGHT_TEXT = {
   // Round feed (one per thing that happens)
@@ -92,8 +92,3 @@ export const FIGHT_TEXT = {
   'callin.deadline': '[deadline] the hack is out of time',
   'callin.pullBack': '[pullBack] Pull back',
 };
-
-const fillText = (text, slots) => text.replace(/\{(\w+)\}/g, (_, k) => (slots[k] ?? `{${k}}`));
-
-/** A line or threat as text: its key's placeholder with its slots. An unknown key reads as the key. */
-export const lineText = (key, slots = {}) => (FIGHT_TEXT[key] ? fillText(FIGHT_TEXT[key], slots) : key);

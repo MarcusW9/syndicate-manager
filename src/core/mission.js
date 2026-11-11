@@ -482,7 +482,7 @@ export function describePending(state) {
     : am.pending.kind === 'door' ? `${patient?.handle ?? 'Someone'} is down and bleeding. They'll live if you get them out now.`
       : am.pending.kind === 'standoff' ? `${BATTLE.rounds} rounds in and ${guardCount(guardsUp(am.battle), am.battle)} still standing.`
         : `${patient?.handle ?? 'Someone'} is badly hurt and out of the job.`;
-  const choices = decisionChoices(am.pending, { patient, standby: engine2 ? null : standbyReady(state, am), raid: !!am.raid }).map((c) => ({ ...c, available: true, risk: c.exit ? 'safe' : null }));
+  const choices = decisionChoices(am.pending, { patient, standby: engine2 ? null : standbyReady(state, am), raid: !!am.raid, engine2 }).map((c) => ({ ...c, available: true, risk: c.exit ? 'safe' : null }));
   // A fight's call-ins show everyone's health (the watch screen's call-in card).
   const b = am.battle;
   const fight = b && (am.pending.kind === 'door' || am.pending.kind === 'standoff')
@@ -494,7 +494,7 @@ export function describePending(state) {
 export function resolvePending(prev, optionId) {
   const am0 = prev.activeMission;
   if (!am0?.pending) return prev;
-  const choices = am0.pending.kind === 'dilemma' ? fightChoices(am0.pending) : decisionChoices(am0.pending, { patient: am0.pending.opId ? opById(prev, am0.pending.opId) : null, standby: am0.battle?.engine === 2 ? null : standbyReady(prev, am0), raid: !!am0.raid });
+  const choices = am0.pending.kind === 'dilemma' ? fightChoices(am0.pending) : decisionChoices(am0.pending, { patient: am0.pending.opId ? opById(prev, am0.pending.opId) : null, standby: am0.battle?.engine === 2 ? null : standbyReady(prev, am0), raid: !!am0.raid, engine2: am0.battle?.engine === 2 });
   const choice = choices.find((c) => c.id === optionId);
   if (!choice) return prev;
   const state = structuredClone(prev);
@@ -905,6 +905,7 @@ function finish(state) {
 
   for (const id of am.untreated) {
     const op = opById(state, id);
+    if (deaths.includes(op)) continue; // already died in the fight (bled out after being pushed on for)
     // Aborting later still gets them out in time: an exit always saves lives.
     const chance = state.difficulty === 'story' || am.aborted ? 1 : 0.35 + (medic ? 0.3 : 0);
     if (nextRng(state)() < chance) {
