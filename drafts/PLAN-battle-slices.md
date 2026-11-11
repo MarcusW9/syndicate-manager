@@ -115,6 +115,9 @@ the screens come in slice 2.
 - **Stop for the owner: wording.** Write the brief (feed lines by action and outcome, "if nothing"
   phrasing, threat words, dilemma and call-in text, risk picker, report cause lines) in
   `drafts/writing-tasks.md` and pause.
+- The screens must fill `{chance}` and `{pips}` in `threat.aim` with their units and singular/plural
+  ("60%", "1 pip", "2 pips"); the line adds neither. The wording left open for the screens is listed under
+  Task 13's close-out in `drafts/writing-tasks.md`.
 - Screenshots (`npm run screenshots -- battle-orders`, plus 1x Playwright captures of the mid-fight
   screens; README row), CHANGELOG.
 

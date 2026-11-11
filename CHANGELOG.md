@@ -4,6 +4,17 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-11 · Battle wording close-out (Task 13)
+- **Call-in costs read in words:** "Heat +1" on holding the van, "No pay. Heat +1, reputation −2." on Pull back, from the real numbers.
+- **"If nothing" says what is assigned, not what will happen:** incoming shots with no shield assigned, radio calls with no jam assigned, and "nothing shown this round" in place of "nothing to answer".
+- **The tech-under-fire options say they last until you change orders.** The jam option can leave the tech unable to work the hack (found in checking; the fix is a separate change, noted in `drafts/writing-tasks.md`).
+
+## 2026-11-11 · Battle wording for the five new-fight jobs (Task 13)
+- **The placeholder tags are gone.** Office Data Pull, Data Scrub, Quiet Hours, Warehouse Lift and Protection Run now read in full sentences: the round feed ("Velvet breaks for the van."), what enemies are about to do, what each order will do, the "if nothing" line, the end of the fight ("The hack was lost when Static could no longer keep it running."), and the two call-ins with a line under each option saying what it does.
+- **Enemies have names:** hired gun, security guard, drone, enforcer, with their number.
+- **Call-ins:** the tech under fire (Cover, Hit the caller, Have them jam, Keep current orders) and the van that can't wait (Leave on time, Hold the van, Keep current orders). Death's door reads in the new voice on these jobs. Leaving on time means the van goes at the end of the round, so runners can still board in it.
+- Name lists read "Jax and Velvet". Nothing about the rules, odds or saves changed. The plan screen, risk picker and buttons wait for the screens (slice 2).
+
 ## 2026-11-11 · The five jobs play the new fights (battle rework, slice 1c)
 - **Office Data Pull, Data Scrub, Quiet Hours, Warehouse Lift and Protection Run now play their fights the new way:** enemies show what they will do before orders, the crew follows its plan (protect the tech, then board the van), and a fight can end at the objective, at the van, or in a pull back. Every other job, and raids, fight as before. The fight shows on the watch screen as it always has; its own round screen and plan screen come in the next slice.
 - **Two new call-ins** (placeholder wording for now): the tech under fire, and the van that can't wait. Hands-off crews answer by their orders: cautious and steady hold the van for someone down, committed goes on time. Pull back is always there. On a crew away on a job, a call-in is open until the end of that day, then the crew carries on.

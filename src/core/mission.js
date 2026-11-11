@@ -41,6 +41,7 @@ import { afterJob, noteInjury, spendSecondWind, earnedOf } from './earned.js';
 import { overwatchKit, seriousGuard, patchBonus } from './gear.js';
 import { BATTLE, loudFightDue } from './battle.js';
 import { playGetaway, getawayPilot, homeHallOf } from './piloting.js';
+import { lineText } from './fighttext.js';
 import { HOME_HALL } from '../data/halls.js';
 import { crewOf, actors, overwatchOp, standbyOp, standbyReady, driver, onJob, opById, grow, record, takeWhy, addNeural } from './run.js';
 import { FIGHT } from '../data/fights.js';
@@ -480,7 +481,7 @@ export function describePending(state) {
   const engine2 = am.battle?.engine === 2; // its standby rides with the van, so no "send standby in"
   const text = am.pending.kind === 'alert'
     ? 'They know you\'re here. Lights are coming on and someone is shouting into a radio.'
-    : am.pending.kind === 'door' ? `${patient?.handle ?? 'Someone'} is down and bleeding. They'll live if you get them out now.`
+    : am.pending.kind === 'door' ? (engine2 ? lineText('callin.deathsDoor', { who: patient?.handle ?? 'Someone' }) : `${patient?.handle ?? 'Someone'} is down and bleeding. They'll live if you get them out now.`)
       : am.pending.kind === 'standoff' ? `${BATTLE.rounds} rounds in and ${guardCount(guardsUp(am.battle), am.battle)} still standing.`
         : `${patient?.handle ?? 'Someone'} is badly hurt and out of the job.`;
   const choices = decisionChoices(am.pending, { patient, standby: engine2 ? null : standbyReady(state, am), raid: !!am.raid, engine2 }).map((c) => ({ ...c, available: true, risk: c.exit ? 'safe' : null }));

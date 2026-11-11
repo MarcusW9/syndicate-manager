@@ -24,7 +24,7 @@
 
 import { FIGHT, ENEMIES, ENEMY_HIT, SITE_ENEMIES, COUNT_BY_THREAT, CLOCKS, FIGHTS, THREATS } from '../data/fights.js';
 import { DILEMMAS } from '../data/dilemmas.js';
-import { lineText } from './fighttext.js';
+import { lineText, kindWord, enemyName, nameList } from './fighttext.js';
 import { effectiveStat } from './crew.js';
 import { weaponOf, armourOf } from './battle.js';
 import { patchBonus, counted } from './gear.js';
@@ -513,11 +513,11 @@ export function startRound(b, rng) {
   const lines = [];
   const say = (kind, key, slots = {}, extra = {}) => lines.push({ kind, key, ...extra, text: lineText(key, slots) });
   b.round += 1;
-  for (const kind of b.arriving.splice(0)) { const e = newEnemy(b, kind, rng); say('arrive', 'arrive', { kind: e.kind, n: e.n }); }
+  for (const kind of b.arriving.splice(0)) { const e = newEnemy(b, kind, rng); say('arrive', 'arrive', { kind: kindWord(e.kind), n: e.n }); }
   if (b.type === 'holdExtract' && b.round >= b.nextPressure && b.extras < FIGHT.maxExtraEnemies) {
     b.extras += 1; b.nextPressure += CLOCKS.pressure.every;
     const e = newEnemy(b, SITE_ENEMIES[b.site]?.[0] ?? 'hired', rng);
-    say('arrive', 'pressure', { kind: e.kind, n: e.n });
+    say('arrive', 'pressure', { kind: kindWord(e.kind), n: e.n });
   }
   if (b.standby && !b.standbyOut && boardingStage(b) && outsideDown(b).length) {
     b.standbyOut = true; b.runners.push(b.standby);
@@ -568,7 +568,7 @@ export function playRound(b, rng) {
   const result = { lines, actions: [], unanswered: [], defeated, goalDelta: 0, down, fled, withdrawn, heat: 0, neural: 0, ended: null };
   if (!b.drawn) lines.push(...startRound(b, rng));
   const say = (kind, key, slots = {}, extra = {}) => { const l = { kind, key, ...extra, text: lineText(key, slots) }; lines.push(l); return l; };
-  const E = (n) => `${b.enemies.find((x) => x.n === n).kind} ${n}`;
+  const E = (n) => enemyName(b.enemies.find((x) => x.n === n).kind, n);
 
   const vl = vanDecision(b);
   if (vl) lines.push(vl);
@@ -745,7 +745,7 @@ function checkEnd(b, rng, say) {
   if (b.type === 'holdHack' && b.goal.work >= FIGHT.workNeeded) return finish(b, 'won', 'end.won');
   if (boardingStage(b) && !standing(b).length && !outsideDown(b).length) {
     const lost = b.runners.filter((r) => r.dead || r.withdrawn);
-    return lost.length ? finish(b, 'lostRunner', 'end.lostRunner', { who: lost.map((r) => r.handle).join(', ') }) : finish(b, 'won', 'end.won');
+    return lost.length ? finish(b, 'lostRunner', 'end.lostRunner', { who: nameList(lost.map((r) => r.handle)) }) : finish(b, 'won', 'end.won');
   }
   if (prot && (prot.down || prot.dead)) return finish(b, 'lost', 'end.lost', { who: prot.handle });
   if (prot && prot.withdrawn) return finish(b, 'abandoned', 'end.abandoned', { who: prot.handle });
@@ -756,7 +756,7 @@ function checkEnd(b, rng, say) {
     // Left behind: standing or down, they are missing (spec 8). On committed a runner left down may not make it.
     for (const r of who) { r.left = true; b.left.push(r.id); }
     if (committed(b)) for (const r of who) if (r.down && !r.dead && rng() < FIGHT.leftDownDeath) { r.dead = true; say('death', 'leftDead', { who: r.handle }, { target: r.id, dead: true }); }
-    return finish(b, 'leftBehind', 'end.leftBehind', { who: who.map((r) => r.handle).join(', ') });
+    return finish(b, 'leftBehind', 'end.leftBehind', { who: nameList(who.map((r) => r.handle)) });
   };
   // Nobody standing outside with someone down, and nobody in the van able to climb back out: they are left.
   if (boardingStage(b) && !standing(b).length && outside.length && !b.runners.some((r) => r.aboard && !r.down && !r.dead)) return leave(outside);

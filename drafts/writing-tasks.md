@@ -22,6 +22,7 @@ files. Rough lines are fine; anything off gets flagged, not silently changed.
 | 10 | Jobs for the locked districts | Promotions and districts | 1-2 jobs per district | `drafts/district-hooks.md` |
 | 11 | ~~Incident lines per district (the squad run)~~ **Done 2026-10-28** (all five districts in the game) | `PLAN-CORE-LOOP.md` slice 4 | 12 incidents × 1 district a batch | `src/data/incidents.js` |
 | 12 | Seventy-One Floors: Mr. Szeto's heist, six prep jobs (A2) | Heists (`data/heists.js` `szetoTower`) | 6 jobs, 3 steps × (first ask + retry) | `docs/new-job-prompt.md` box (+ `src/data/missions/theguestcopy.js` as the model) |
+| 13 | Battle screens: fight feed, threats, orders, call-ins, risk picker, report causes (engine 2) | Battle rework slice 2 (the screens); the five engine-2 jobs show placeholders today | ~110 short strings | `src/data/fightText.js` (the keys), `src/data/dilemmas.js` |
 
 Tasks 1 and 2 first: 1 is a prerequisite for everything hands-off, and 2 decides whether
 mission logs get built at all. Tasks 3-6 wait until the first mission-log slice is built and shows where words are missing (decided 2026-10-26).
@@ -463,3 +464,83 @@ lines until it gets its own; a test keeps every district complete.
 **Each job's file** also needs, as in Rao's, a comment at the top (what heist, which step, first ask or retry), `heistOnly: 'szetoTower'`, and **no heist effect inside the job** (`core/heists.js` awards it when the step is done). No `against` (no gang) and no grudge unless you want one. The id is the file's job id (snake_case), and the retry for a step can't be the same job as its first ask.
 
 **Optional, later: the finale.** `penthouse` is the original generic job: a vault in a penthouse while "an executive is in Singapore", with a facial scanner, laser grid, the owner home, a vault timer and a drone. A heist-only finale written for Szeto (the same crises with the associate's real name and the thing in the vault, or new ones) would finish A2. The prep effects name crises by id (`facial_scan` is the one dropped here), so a rewritten finale must keep `facial_scan` or I update the heist data to match.
+
+## Task 13: Battle screens wording (engine 2, 2026-11-11)
+
+**What this is.** The five jobs that play on engine 2 (`data_pull`, `data_scrub`, `quiet_hours`, `warehouse`, `protection`) show placeholder text today: `[attackHit] Jax hits corp 1`. The screens (slice 2) cannot ship until the words are real. The rules never read these strings, so replacing them changes no mechanics. Every id below is a key in `src/data/fightText.js`; keep the key, replace the string. Section 17 and 20 of `drafts/SPEC-battle-orders.md` say where each line shows.
+
+**Voice and rules (same as the shared rules above, plus these).**
+- Round feed and threats: **present tense**, plain, one short line, under ~14 words (it is read at 360 px, many lines a round). Report cause lines: **past tense**, one sentence. If you would rather have the feed in past tense, say so and it goes that way everywhere.
+- Slots are `{name}` and must stay in the line (a test checks they are kept; a line may use fewer if noted "optional"). `{who}` and `{target}` are runner handles. `{enemy}` is the kind word plus its number ("corp 2", "hired 1"; see "Kind words" below). `{n}`, `{round}`, `{leaves}`, `{rounds}`, `{chance}`, `{pips}`, `{why}`, `{outside}`, `{protected}` are shown as given.
+- Hits are in pips, not hit points: "puts down" means the last pip. Never mention numbers in a hit line (the numbers sit beside it).
+- The crew only knows what it saw. No unseen motives, no naming who sent a guard.
+- No new names, places, factions or tech. Lantern Bay only (Glass Heights corp security and drones, Docks hired hands and enforcers).
+- Deaths are plain and short, no gore ("{who} hits ... dead" is the whole line).
+- Gender-neutral, always 18+.
+
+**A. Kind words (4, plus a short plural each).** `hired`, `corp`, `drone`, `enforcer`. Today they read "hired 1", "corp 2". Give each a short noun phrase for a single one, e.g. "hired gun", "security guard", "drone", "enforcer". The number stays after it. *(4 × 2 forms.)*
+
+**B. Round feed (39 lines, id: slots, shows in the watch feed and the report log).** Each has a hit/miss/out variant where listed; write them as a set so they do not repeat.
+- Arrivals: `arrive` {kind} {n}; `pressure` {kind} {n} (a reinforcement walks in mid-fight); `standbyOut` {who}; `climbBack` {who} {target}.
+- Van: `vanEarly` {round}; `vanIn` {leaves}; `vanCantWait` {outside}; `vanHeld` {rounds}.
+- Overwatch (the covering shot at the door): `overwatchHit`, `overwatchMiss`, `overwatchOut`: {who} {enemy}.
+- Attacks: `attackHit`, `attackOut`, `attackMiss`: {who} {enemy}; `attackGone` {who} (the target went down first).
+- Work and medicine: `jamOk`, `jamFail` {who}; `stabilise`, `stabiliseFail`, `patch`, `patchFail`: {who} {target}.
+- Boarding: `board`, `boardFail` {who}; `carry`, `carryFail` {who} {target}; `inVan` {who}; `carriedInVan` {target}.
+- Enemy shots: `shotMiss`, `shotHit`, `shotAbsorbed` (vest takes it), `shotDown`: {enemy} {who}; `shotDead` {enemy} {who} (dies pulling out).
+- Enemy moves: `flanked` {enemy} {who}; `backupCalled` {enemy}; `alarmClock` (no slots).
+- Others: `withdrew` {who}; `enemyFled` (the rest of the hired run); `aura` {who} {target} (the medic keeps someone going, +1); `bleedOut` {who}; `leftDead` {who}.
+
+**C. Threat words (4, shown before the round with a chance).** `threat.aim` {enemy} {who} {chance} {pips}; `threat.flank` {enemy} {who}; `threat.backup` {enemy}; `threat.alarm` {enemy}. Example shape: "corp 2 aims at Jax (60%, 2 pips)". Keep chance and pips in the line.
+
+**D. What each order will do (11, the "intent" line under each runner).** `intent.attack` {who} {enemy} {why}; `.shield` {who} {target} {why}; `.patch`; `.stabilise`; `.jam` {who} {why}; `.work` {who} {why} (works the hack); `.board`; `.carry` {who} {target} {why}; `.move`; `.hunker`; `.withdraw`. `{why}` is the order behind it, short ("protecting Switch", "priority: radio", "fallback", "pull-out threshold"), which I fill; do not write it. Example: "Rook shields Switch (protecting Switch)".
+
+**E. "If nothing" (4, generated from the orders, never promises an outcome).** `ifNothing.shielded` {n} (shots a shield takes); `.radio` {n} (calls with no one on them); `.shots` {n} (shots with no response); `.clear`. Say what is left uncovered, never what will happen. Good: "The radio call has no one on it." Not: "Backup arrives."
+
+**F. Ends: the cause line on the report (8, past tense, one sentence).** `end.won`; `end.lost` {who} (hack lost); `end.abandoned` {who}; `end.extracted` (someone down, the crew pulls back); `end.pulledBack`; `end.deadline`; `end.leftBehind` {who}; `end.gone` (nobody left); `end.lostRunner` {who} (the van goes without them). Example from the spec: "No one had a jammer, so the radio call went out."
+
+**G. Call-ins (the two authored dilemmas and the two door calls).**
+- `techUnderFire` (hack: the tech is in trouble) shows **what changed** (`.changed`, {protected}) and four options: `.cover` {protected} (everyone covers them), `.radio` (an attacker takes out the radio), `.jam` {protected} (they jam it, no hack progress this round), `.carryOn`. Each option label under ~4 words, plus **one line each** saying the trade-off ("no hack progress this round"). *(1 + 4 labels + 3 trade-offs.)*
+- `vanCantWait` (extract: the van leaves with people outside) shows `.changed` {outside}, and `.goNow` (they are left behind), `.hold` (+1 heat, holds the van two more rounds), `.carryOn`. One trade-off line each; the screen also shows the odds of leaving them.
+- `callin.deathsDoor` {who} (at death's door: fight on or pull back); `callin.deadline` (the hack is out of time, shown if kept); `callin.pullBack` (the button, 2 words).
+- Also one line each for the crew's intent in a call-in ("The crew is set to ...", built from the intent lines in D, so only write the lead-in: 1 line).
+
+**H. Risk picker (3 labels plus 3 one-line explainers, shown on the plan screen and the round screen).** `cautious` (pulls out at half their pips), `steady` (pulls out at 2 pips), `committed` (never pulls out, fights on with someone down, **can cost a life**). The explainers must say plainly when someone can die: "Committed: fights on with someone down; can cost a life." is the spec's example. *(3 + 3.)*
+
+**I. Plan screen lines (about 12).** The fight type line for **hack** ("Hack: 4 rounds of work. Keep {tech} working.") and **extract** (guess: "Extract: hold the door, then get everyone into the van."); gap lines: no jammer, no medic, no armour on the tech (each: what it means, one line, e.g. "No jammer: radio calls can only be stopped by attacking the caller."); the labels for the chance of losing someone ("Chance of losing someone: 4%", short form and a plain one for 0%); and the buttons **Next round**, **Change orders**, **Specials**, **Pull back** (2-3 words each).
+
+**Where it goes.** `src/data/fightText.js` (the strings above), `src/data/dilemmas.js` (the call-in text), and `src/ui/` for button and label text. Paste the results back as `key: "text"` lines in the same order; anything off is flagged, not changed. Rough lines are fine.
+
+**Order if short on time:** B (the feed, it shows every round), then G (the call-ins), then F, C, D, E, H, I, A. Anything left on a placeholder reads as `[key]`, which the owner can see is pending.
+
+### Task 13: what came back (2026-11-11)
+
+**In the game now** (`src/data/fightText.js`, `src/data/dilemmas.js` unchanged): the round feed (B), the threat words (C), the order intents (D), "if nothing" (E), the end causes (F), the call-in text with a trade-off line per option (G), and the four enemy kind words (A, singular; the number follows: "security guard 2"). The five engine-2 jobs show them now. The report's event log reuses the feed lines as they are.
+
+**Adjusted against the rules** (the engine says otherwise, so the line changed; details in the DESIGN.md row of 2026-11-11, "Battle wording"): `arrive`/`pressure` (one enemy arrives, `{n}` is its number, not a count); `vanIn` (`{leaves}` is a round number); `vanEarly` (the van arrives at the end of the round); `board` ("climbs into" is only true once `inVan` follows); `overwatch*` (it is not always at a doorway); `attackHit`/`shotHit`/`stabilise`/`flanked` (drones, and "they" pointing at the enemy); `leftDead`; `ifNothing.*` (the counts are shots a shield takes, shots with no shield, and radio calls with no *jam* assigned: an attack on a caller is not counted as an answer, it can miss; "clear" means no shots or calls at all); `intent.*` (jam, carry and board are attempts); `techUnderFire.radio` ("Hit the caller": the shot can miss); `vanCantWait.goNow` ("Leave on time": the van goes at the end of the round, so runners can still board in it); `vanCantWait.carryOn` (it is the same as leaving on time).
+
+**Held for the screens** (no key exists and nothing reads them yet; they go into `fightText.js` with the screens that show them). Corrected where the rules differ from the supplied text:
+- Risk picker. Cautious: "Pulls out at half their pips or fewer (rounded up). Someone can still go down; a death only follows a call you make." Steady: "Pulls out at 2 pips or fewer. Someone can still go down; a death only follows a call you make." Committed: "Never pulls out on their own, even with someone down. Fighting on can cost a life." (The supplied "not a guarantee of survival" was dropped: on cautious and steady nobody dies without a call-in, which the design promises.)
+- Plan: "Hack: {work} rounds of work; keep {tech} working." (four today, `FIGHT.workNeeded`); "Extract: hold until the van arrives, then get everyone aboard."; "No jammer: radio calls can only be stopped by hitting the caller first."; "No medic: nobody keeps the hurt on their feet." (patching and stabilising also work for anyone with a patch bonus; the aura is the medic's); "No armour on {tech}: nothing soaks a hit."; "Chance of losing someone: {chance}"; short "Loss risk: {chance}"; zero "No chance of losing someone in this forecast." (the forecast is the plan's odds at these orders, not a promise for the job).
+- Buttons: Next round, Change orders, Special actions, Pull back.
+- Call-in lead-in: "The crew is set to:".
+- Kind words, plural: hired guns, security guards, drones, enforcers.
+
+### Task 13: close-out (2026-11-11)
+
+**The runtime wording pass is not complete: one blocker is open (the jam option, below).** The battle-screen task stays open until the lines below are wired and reviewed.
+
+**Still open until the screens (slice 2) wire them.** No runtime keys are added for these before a screen reads them:
+- [ ] Plan-screen copy (the fight type lines and gap lines above).
+- [ ] Risk-picker labels and explanations.
+- [ ] Buttons (Next round, Change orders, Special actions, Pull back).
+- [ ] Call-in intent lead-in ("The crew is set to:").
+- [ ] Plural kind words, wherever a screen needs them (hired guns, security guards, drones, enforcers).
+- [ ] **`{chance}` and `{pips}` in `threat.aim`:** the screen must supply them with their units and the right singular or plural: `{chance}` as "60%" (no second percent sign in the line), `{pips}` as "1 pip" or "2 pips". The line itself adds neither. A test on the screen's output should cover a 1-pip threat.
+- [ ] Visual check at 360 px (not done: the new screens do not exist yet): the death's-door call-in, and a van departure with someone outside.
+
+**Follow-ups kept outside the wording pass** (each its own change):
+1. **Jam-option eligibility (blocker for a clean pass).** "Have {protected} jam" rewrites the tech's order to `support` for the rest of the fight, not for one round (`applyPatch` keeps it until the orders are changed). Played out on 60 seeds: with a jammer and a radio call shown the tech jams while calls keep coming, but the hack never advances in those rounds; once there is no call, or if the tech cannot jam, the tech hunkers, shields a teammate or pulls out under the safety rule instead, with no hack progress, round after round. The option is offered whether or not a call is shown and whether or not the tech can jam. The trade-off line now says what happens, but the option can still waste the tech's rounds. Fix options for the owner: offer it only when a call is shown and the tech can jam, and/or make it last one round. Not changed here.
+2. **The duplicate van choice.** "Leave on time" and "Keep current orders" do the same thing. Either drop one or make them differ. Whichever stays, the text keeps this: leaving on time still plays the round, so runners can board before the van departs.
+3. **`callin.deadline`.** The key exists, no call-in uses it (the holdHack deadline ends the fight, spec 30). Decide whether to give it a consumer or remove it.
+
