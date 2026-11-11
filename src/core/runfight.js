@@ -167,7 +167,7 @@ function fightInjuries(state, am, b) {
     if (!op) continue;
     if (o.dead) { out(op.id); hurt.push({ id: op.id, handle: op.handle, severity: 'dead' }); continue; }
     if (o.missing) {
-      am.missing = [...(am.missing ?? []), { id: op.id, until: state.day + FIGHT.missingDays, down: o.down }];
+      am.missing = [...(am.missing ?? []), { id: op.id, down: o.down }]; // the week is counted from the day the job finishes (mission.js finish)
       out(op.id); hurt.push({ id: op.id, handle: op.handle, severity: 'missing' });
       continue;
     }

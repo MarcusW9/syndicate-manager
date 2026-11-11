@@ -275,6 +275,24 @@ test('left behind: missing for a week, back badly hurt (slice 1; the rescue and 
   assert.equal(op.condition.injury, 'serious', 'and back badly hurt');
 });
 
+test('the missing week is counted from the day the job finishes, however long the job ran', () => {
+  const s = atFight(9, 'warehouse', 'never', 'committed');
+  const am = s.activeMission;
+  const b = am.battle;
+  b.stage = 1; b.goal.vanLeaves = b.round + 1; b.round += 1; b.drawn = false; b.risk.level = 'steady';
+  b.enemies.forEach((e) => { e.out = true; });
+  const [a, ...rest] = b.runners;
+  a.down = true; a.pips = 0; a.downRound = b.round; a.stable = true;
+  for (const r of rest) r.aboard = true;
+  s.day += 1; // the job runs on: it finishes a day after the fight
+  const finishDay = s.day;
+  const done = autoRun(s, 'steady');
+  const op = done.crew.find((o) => o.id === a.id);
+  assert.equal(op.condition.missing.until, finishDay + FIGHT.missingDays);
+  assert.equal(op.condition.awayUntil, finishDay + FIGHT.missingDays, 'a full week missing');
+  assert.equal(op.condition.injuryDays, FIGHT.missingDays + 14);
+});
+
 test('an engine-2 death reaches the memorial through finish()', () => {
   let found = false;
   for (let seed = 1; seed <= 400 && !found; seed++) {
