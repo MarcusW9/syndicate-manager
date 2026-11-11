@@ -560,7 +560,7 @@ FIGHT = {
   bleedGrace: 2, bleedChance: 0.1, leftDownDeath: 0.1,
   // The van (spec 8)
   vanRound: 3, vanEarlyHeat: 1, doorSlots: 3, vanWait: 4, holdRounds: 2, holdHeat: 1, overwatchUsesAtVan: 1,
-  // Left behind (spec 8; owner to confirm the proposals)
+  // Left behind (spec 8; confirmed by the owner 2026-11-11)
   missingDays: 7, ransomWeeks: 3, missingDeath: 0.1,
   // Injury from pips left (share of max); 0 pips = critical
   lightBelow: 0.5, seriousBelow: 0.25,

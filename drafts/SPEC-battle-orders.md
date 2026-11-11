@@ -930,6 +930,8 @@ real code with call-ins in slice 3 (section 24), then the playtest (section 28).
 | Jobs per fight type | **holdHack:** Office Data Pull (`data_pull`), Data Scrub (`data_scrub`), Quiet Hours (`quiet_hours`). **holdExtract:** Warehouse Lift (`warehouse`), Protection Run (`protection`). Kidnap Rescue waits for an Old Town enemy list. |
 | Enemies | Four kinds: hired, corp, drone, enforcer; shots by kind (1 or 2 pips); count by threat (`COUNT_BY_THREAT` 2, 2, 3, 3, 4), the difficulty dial; Glass Heights corp and drones, the Docks hired and enforcers (about one slot in three). |
 | Endurance and pips | Endurance is the eighth stat, like the others; pips = max(3, endurance / 2); a light injury starts a fight 2 pips down. |
+| Endurance in recruits | Muscle's decent stats become **endurance and cool** (piloting drops to a low stat; drivers cover it). Every other role has endurance as a low stat. |
+| Endurance in wages | It counts like any stat in `marketWage`, and the per-stat rate is scaled down so average wages stay where they are today. |
 | Risk | Cautious pulls out at half their pips, steady at 2, committed never; committed fights on with someone down (bleeding, section 10b). |
 | Bleeding out | 10% a round from the second round down (raised from 8% to land in the 20-30 target); a medic stabilises first; the medic's aura (C). |
 | Patch | Heals 1 pip. |
@@ -937,7 +939,7 @@ real code with call-ins in slice 3 (section 24), then the playtest (section 28).
 | `techUnderFire` | Comes up when the tech has two or more shots on them, or is at half pips or below with a radio call shown. |
 | `vanCantWait` | Go on time, or hold two rounds for +1 heat; three door slots; per-runner boarding; carrying; climbing back out. |
 | Standby and overwatch | Standby rides with the van (an extra door slot, a carrier). Overwatch covers the door, **one shot at the van** (it was strong); elsewhere one attack a round, uses as today. |
-| Left behind | Missing 7 days: rescue job, ransom, or wait (serious injury, or a shown 10% chance they don't come back). |
+| Left behind | Missing 7 days: rescue job, ransom (3 weeks of their wage; back next day, light injury), or wait (serious injury, or a shown 10% chance they don't come back). Numbers confirmed by the owner. |
 | Default orders | Section 12 (two protectors on the tech; one protector and attackers, then boarding). |
 | Rules from the sim | A jam takes out one drone; an alarm in holdExtract brings the next pressure arrival a round earlier; specials cost no action; no parting shots when the whole crew pulls back; sidearm aim bonuses count; the holdHack deadline fails the objective. |
 | Call-in window | Away jobs: until the end of that day. Same-day jobs: the fight waits for the answer; if the day ends first, the crew carries on with its orders. Hands-off risk answers the van call. |

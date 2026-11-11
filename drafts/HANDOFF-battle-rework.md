@@ -25,7 +25,9 @@ fight engine and the endurance stat (save v61)**, as one PR on a fresh branch fr
 
 **What slice 1 is** (details in the plan):
 - Endurance as the eighth stat, everywhere stats are listed; generated, grown and aged like the
-  others; a solid muscle 12-13, the best 19-20; shown on the runner's page.
+  others (muscle's decent stats become endurance and cool); a solid muscle 12-13, the best 19-20;
+  shown on the runner's page; counted in wages with the per-stat rate scaled so average wages don't
+  move.
 - Engine 2 beside engine 1: `core/fight.js` (rules), `core/runfight.js` (the run's side),
   `data/fights.js`, `data/dilemmas.js`, `data/fightText.js` (placeholder wording keys). Only the five
   chosen jobs use it (`data_pull`, `data_scrub`, `quiet_hours` holdHack; `warehouse`, `protection`

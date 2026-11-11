@@ -37,7 +37,13 @@ One PR per slice; the owner merges. Run `npm test` before every push. Never loos
   `STAT_KEYS`, `core/jobcheck.js`, `data/operatives.js` (the named starting crew), `src/ui/tongs.js`
   and the stat tiles in `src/ui/app.js`, `tests/development.test.js`. `grep -rn "'medical', 'cool'"`
   finds the lists.
-- Generation like the other stats; muscle tends high (a solid muscle 12-13; the best 19-20).
+- Generation like the other stats: in `data/recruitPools.js` `ROLE_PROFILES`, muscle's secondaries
+  become `['endurance', 'cool']` (piloting drops to a low stat); every other role has it as a low
+  stat. A pro muscle rolls about 9-12, a veteran 10-14 (the owner's "solid muscle 12-13"; the best
+  19-20 come from growth).
+- Wages: `core/pricing.js marketWage` sums every stat, so scale `ECONOMY.wage.perStat` down so the
+  average wage stays where it is today (check with `scripts/sim-tong.mjs` or the fame sim's cash
+  band, and say the before and after in the PR).
 - Not a crisis or incident stat yet (its off-fight uses come later); it shows on the runner's page.
 - Migration: every operative, free name and rival card gets a seeded endurance generated the way
   their other stats were (rival cards are built from a hash in `core/dossier.js`: add it there).
