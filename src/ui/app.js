@@ -969,9 +969,9 @@ function backupBanner() {
 }
 
 /**
- * Today: the week ahead in a slim strip across the top, then alerts (only when something
- * needs you) and the inbox. Phones show that, or one open message without the strip.
- * Wide screens keep the strip and put the open message beside the inbox (styles.css).
+ * Today: alerts (only when something needs you) and the inbox first, then a rail with the
+ * week (Monday's brief, Coming up). Phones show that, or one open message alone. Wide screens
+ * put the open message beside the inbox and the rail beside it (styles.css).
  */
 function renderInbox() {
   const open = state.inbox.find((m) => m.id === openMessageId);
@@ -996,16 +996,18 @@ function renderInbox() {
               </button>
             </li>`).join('')}
         </ul>` : '<p class="muted">Nothing new. Press Continue.</p>';
+  // Messages first (owner, 2026-11-11): only Joss, the alerts and today's lines sit above the list.
+  // The week's context (Monday's numbers and The Word, Coming up) is a rail beside the open
+  // message when wide, and comes after the list on a phone.
+  const week = renderWeekBrief();
   return `
     ${backupBanner()}
-    ${renderUpcoming(open ? 'upcoming--strip has-open' : 'upcoming--strip')}
     <div class="inbox ${open ? 'has-open' : ''}">
       <div class="inbox__side">
         <section class="panel inbox__list">
           <h1>Today</h1>
           ${renderThreatLines()}
           ${renderBriefing()}
-          ${renderWeekBrief()}
           ${renderBack()}
           ${renderOutLine()}
           ${list}
@@ -1014,6 +1016,10 @@ function renderInbox() {
       <section class="panel inbox__detail">
         ${open ? renderMessage(open) : '<p class="muted inbox__empty">Tap a message to read it here.</p>'}
       </section>
+      <aside class="inbox__rail" aria-label="This week">
+        ${week ? `<section class="panel">${week}</section>` : ''}
+        ${renderUpcoming('upcoming--rail')}
+      </aside>
     </div>`;
 }
 

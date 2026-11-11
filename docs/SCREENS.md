@@ -32,7 +32,7 @@ Navigation state (`screen`, `cityTab`, the open page ids) is module state in `ui
 
 | Tab | Holds (in page order) | Sub-views opened from it |
 | --- | --- | --- |
-| **Today** (`inbox`) | Week strip; Joss's briefing with the alerts and call-ins; Monday's brief with The Word; back cards; **a priority line per raid** (links to its card on City › Map); **one Out line** (crews out, calls waiting; links to City › Map); inbox | A message (job report, Monday brief, Sunday summary, renewal, raid call/warning, heat notice, spec offer); the report timeline, summary and full log |
+| **Today** (`inbox`) | Joss's briefing with the alerts and call-ins; back cards; **a priority line per raid** (links to its card on City › Map); **one Out line** (crews out, calls waiting; links to City › Map); inbox; a rail with Monday's brief (The Word) and Coming up | A message (job report, Monday brief, Sunday summary, renewal, raid call/warning, heat notice, spec offer); the report timeline, summary and full log |
 | **City** (`city`; was Ops) | Header with a **Book** link; sub-tabs **Map** · **Districts** · **Tongs**. Map: a heist marker (links to Jobs › Heists), the city map, **Threats** (a card per raid; plan Hold or Clear out), **Out now** (crews out, side work), **Tonight**, **At home**. Districts: a row for each district. Tongs: the other tongs by tier, Free names, Names on the street | A district's page (live state first: faces at the hall, crews out, jobs open, street talk, a hall shortcut that opens the hall on Tong; then its picture, pitch and write-up: who runs it, police, 3am, custom, landmarks, kinds of work); **a tong's page**; **a name's read-only profile** (what we know and who they are with, with *View in Leads*); the **Book** (Who's who · History) |
 | **Tong** | Rank and standing in words; sub-tabs **Halls** · **Armoury** | Halls: a row per hall, buy sites, then a **hall's page** and **Hall build**. Armoury: stash, carried gear, shop. Equipping stays on the runner's page |
 | **Crew** | Sub-tabs **Roster** · **Leads** · **Wall**. Leads: recruits, then **Names** (this month's free name, and anyone in another tong we are watching). Wall: the fallen, the Hall of Legends, then **Gone elsewhere** (runners we let go, with where they are now; C4). City › Tongs opens with a card for **The Anchor's Book** (C5): the monthly slate S to D, Ones to watch (with Scout), who has gone quiet; a runner's page and a name's profile show their grade | A runner's page (record, path, home, gear); a recruit's page; **a name's recruitment page** (what we know, What it would take, scouting, Sign) |
@@ -44,8 +44,8 @@ Navigation state (`screen`, `cityTab`, the open page ids) is module state in `ui
 Section names are the headings in the code. "(x)" marks something that shows only sometimes.
 
 **Today** (`renderInbox`)
-- Week strip (`renderUpcoming`), a slim strip across the top.
-- Inbox column: briefing (`renderBriefing`), week brief (Monday), back cards (crews home), Out line (links to City › Map), the All / Unread filter, then message rows (tag, subject, preview, day).
+- Inbox column, messages first: briefing (`renderBriefing`), back cards (crews home), Out line (links to City › Map), the All / Unread filter, then message rows (tag, subject, preview, day).
+- Rail (`.inbox__rail`): week brief (Monday: numbers and The Word), then Coming up (`renderUpcoming`), a day per row. A third column from 1200px, under the messages from 900px, after the list on a phone.
 - Detail pane (beside the list on wide screens; replaces it on phones): the open message. Types with their own layout: job report (timeline, summary, full log), week summary, renewal, spec offer, raid call, raid warning, heat notice.
 - Also here: day cue (new-day banner), keep-save and backup banners.
 

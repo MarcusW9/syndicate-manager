@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-11 · Today: messages first
+- **The messages move up.** Coming up no longer runs across the top of Today, and Monday's week numbers and The Word no longer sit above the list. Only Joss, the alerts, crews back and the Out line come before the messages now.
+- **A rail for the week.** On a computer, Monday's numbers with The Word and Coming up sit in a column to the right of the open message (under the messages on mid-size screens). On a phone they come after the message list.
+- The messages themselves look as before. Mockups of the options that led here are in `docs/mockups/`.
+
 ## 2026-11-11 · The validation gate on the real code (battle rework, slice 3): verdict neither
 - **No game change.** `scripts/sim-orders.mjs` plays the gate from spec section 24 on the real fight code (`buildFight`, `startRound`, `playRound`, `previewRound`, the dilemmas and their patches, `vanOdds`, `outcomeOf`), with mid-fight adapting. Full table: `docs/sims/orders-2026-11-11.md` and `.csv` (1,944 cells).
 - **Declared before the run** (the `GATE` block at the top of the script, committed on its own first; the owner confirmed the bar): 400 seeds a cell, the same seeds for every plan; both encounters (holdHack at Glass Heights, holdExtract at the Docks), threat 3, steady risk; 9 crew groups (Under / On / Over x three line-ups, a grown crew's endurance); 9 settings (enemy durability D1-D3 x exposure E1-E3, D2 E2 being the shipped data); six unchanged plans (attack, hold, protect, support, mixed, the crew's defaults); adapted = the best of those six and the same six with a mid-fight layer (call-in answers and Take Command between rounds), chosen per cell and encounter. "As good" = within 5 points of clean wins, 0.25 downs and 0.3 heat (heat is the only resource a fight spends; specials and consumables do not exist yet). Bar: adapting beats an unchanged plan by 7+ points or 0.3+ fewer downs in one encounter. Rework if one unchanged plan is as good in both encounters in two thirds of cells; proceed if adapting clears the bar in two thirds and no plan is as good in both.
