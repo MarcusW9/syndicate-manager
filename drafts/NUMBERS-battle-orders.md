@@ -422,6 +422,13 @@ enemy). Report: `docs/sims/step0-2026-11-11-pips-contested.md`.
   a dilemma; both cautious and committed risk do badly in holdExtract (46-47%); downs are high for
   every plan but `mixed` and attack (0.6-0.8 a fight), so holdExtract may now be too hard overall.
 
+**Pass 5b (2026-11-11): the carrier is the boarder with the best cool** (owner; was whoever took a
+door slot first, often the most hurt), and an order to protect a downed teammate at the van means
+carry them. Results move by a point or two (`docs/sims/step0-2026-11-11-pips-contested.md`
+regenerated): `mixed` 68%, `hold` 66-67% (twice the downs), attack 58% falling to 26% at D3; no
+universal plan (23% at most); adapting clearly pays in 22% of cells; still neither verdict. A runner
+left behind is counted as missing and badly hurt, not dead.
+
 ## 13. Summary of the BATTLE keys
 
 ```js

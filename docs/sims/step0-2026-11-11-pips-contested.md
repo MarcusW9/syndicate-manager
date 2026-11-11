@@ -24,14 +24,14 @@ Cells: 81 (3 durability x 3 exposure x 3 crew margins x 3 line-ups). Tolerances:
 
 | Unchanged plan | Cells where it is as good as the adapted plan in both encounters |
 | --- | --- |
-| attack | 11% |
+| attack | 10% |
 | hold | 0% |
 | protect | 0% |
-| support | 17% |
+| support | 19% |
 | defaults | 0% |
 | mixed | 23% |
 
-Proceed condition (adapting gains 10+ points or 0.5+ fewer downs in an encounter, and no universal plan): **21%** of cells (needs two thirds).
+Proceed condition (adapting gains 10+ points or 0.5+ fewer downs in an encounter, and no universal plan): **22%** of cells (needs two thirds).
 
 **Verdict on these numbers: NEITHER: no universal plan, but adapting does not pay enough often enough.**
 
@@ -52,24 +52,24 @@ Proceed condition (adapting gains 10+ points or 0.5+ fewer downs in an encounter
 
 | Plan | D1 won / down / dead | D2 won / down / dead | D3 won / down / dead |
 | --- | --- | --- | --- |
-| attack | 62% / 0.24 / 0.03 | 61% / 0.24 / 0.03 | 28% / 0.71 / 0.05 |
-| hold | 66% / 0.74 / 0.03 | 65% / 0.73 / 0.03 | 66% / 0.74 / 0.03 |
-| protect | 46% / 0.81 / 0.00 | 45% / 0.82 / 0.00 | 46% / 0.82 / 0.00 |
-| support | 59% / 0.62 / 0.00 | 59% / 0.62 / 0.00 | 58% / 0.63 / 0.00 |
-| defaults | 48% / 0.74 / 0.01 | 48% / 0.73 / 0.00 | 48% / 0.74 / 0.00 |
-| mixed | 69% / 0.38 / 0.00 | 69% / 0.38 / 0.01 | 54% / 0.68 / 0.01 |
+| attack | 58% / 0.24 / 0.03 | 58% / 0.24 / 0.03 | 26% / 0.71 / 0.05 |
+| hold | 67% / 0.73 / 0.03 | 66% / 0.73 / 0.03 | 67% / 0.73 / 0.03 |
+| protect | 44% / 0.81 / 0.00 | 43% / 0.82 / 0.00 | 44% / 0.82 / 0.00 |
+| support | 59% / 0.62 / 0.00 | 59% / 0.62 / 0.00 | 59% / 0.62 / 0.00 |
+| defaults | 46% / 0.74 / 0.01 | 45% / 0.73 / 0.00 | 45% / 0.74 / 0.00 |
+| mixed | 68% / 0.38 / 0.00 | 68% / 0.38 / 0.01 | 53% / 0.68 / 0.01 |
 
 ## Which plan is best, by setting (the adapted plan, most common across the 9 crews)
 
 | Setting | holdHack | holdExtract |
 | --- | --- | --- |
-| D1 E1 | protect 7, attack 1, mixed 1 | mixed 5, hold 4 |
-| D1 E2 | protect 6, attack 2, mixed 1 | mixed 8, hold 1 |
-| D1 E3 | protect 6, mixed 2, attack 1 | mixed 6, attack 2, hold 1 |
+| D1 E1 | protect 7, attack 1, mixed 1 | hold 5, mixed 4 |
+| D1 E2 | protect 6, attack 2, mixed 1 | mixed 5, hold 4 |
+| D1 E3 | protect 6, mixed 2, attack 1 | mixed 6, hold 2, attack 1 |
 | D2 E1 | support 5, protect 4 | mixed 6, hold 3 |
-| D2 E2 | support 6, protect 3 | mixed 7, hold 2 |
-| D2 E3 | support 6, protect 3 | mixed 6, attack 2, hold 1 |
-| D3 E1 | support 9 | hold 8, support 1 |
+| D2 E2 | support 6, protect 3 | mixed 6, hold 3 |
+| D2 E3 | support 6, protect 3 | mixed 7, hold 2 |
+| D3 E1 | support 9 | hold 9 |
 | D3 E2 | support 9 | hold 8, mixed 1 |
 | D3 E3 | support 8, protect 1 | hold 9 |
 
@@ -77,17 +77,17 @@ Proceed condition (adapting gains 10+ points or 0.5+ fewer downs in an encounter
 
 | Crew | holdHack won / down | holdExtract won / down |
 | --- | --- | --- |
-| Under | 59% / 0.34 | 25% / 1.13 |
-| On | 75% / 0.21 | 42% / 0.78 |
-| Over | 89% / 0.08 | 76% / 0.30 |
+| Under | 59% / 0.34 | 23% / 1.12 |
+| On | 75% / 0.21 | 40% / 0.78 |
+| Over | 89% / 0.08 | 74% / 0.30 |
 
 ## Risk levels (defaults plan, On level, line-up a, D2 E2)
 
 | Risk | holdHack won / abandoned / down / dead | holdExtract won / down / dead |
 | --- | --- | --- |
-| cautious | 66% / 20% / 0.07 / 0.10 | 47% / 0.56 / 0.02 |
-| steady | 81% / 5% / 0.14 / 0.04 | 46% / 0.66 / 0.01 |
-| committed | 84% / 0% / 0.18 / 0.00 | 46% / 0.68 / 0.00 |
+| cautious | 66% / 20% / 0.07 / 0.10 | 45% / 0.56 / 0.02 |
+| steady | 81% / 5% / 0.14 / 0.04 | 43% / 0.66 / 0.01 |
+| committed | 84% / 0% / 0.18 / 0.00 | 44% / 0.67 / 0.00 |
 
 ## Toughness check
 
@@ -97,7 +97,7 @@ Over vs On, defaults plan, D2: success gain **26%** in aim-heavy fights (E3) and
 
 - holdHack: techUnderFire in 2% of fights; average length 3.81 rounds.
 - holdExtract: boardUnderFire in 67% of fights; average length 5.16 rounds.
-- holdExtract: the van can't wait (someone still outside in its last round) in 30% of fights; 0.69 runners left behind a fight on average.
+- holdExtract: the van can't wait (someone still outside in its last round) in 30% of fights; 0.70 runners left behind a fight on average.
 
 ## The van can't wait: go on time or hold one more round (holdExtract, D2 E2, all crews)
 
@@ -105,12 +105,12 @@ Every plan with each answer to the call-in. A hands-off crew carries on (the van
 
 | Plan | Go: won / left behind / down / heat | Hold: won / left behind / down / heat |
 | --- | --- | --- |
-| attack | 62% / 0.60 / 0.23 / 0.82 | 62% / 0.53 / 0.26 / 1.35 |
-| hold | 67% / 0.44 / 0.72 / 0.98 | 68% / 0.42 / 0.74 / 1.17 |
-| protect | 45% / 0.73 / 0.81 / 1.00 | 46% / 0.71 / 0.86 / 1.28 |
-| support | 59% / 0.54 / 0.61 / 1.00 | 59% / 0.53 / 0.64 / 1.17 |
-| defaults | 47% / 0.69 / 0.73 / 1.00 | 48% / 0.66 / 0.79 / 1.30 |
-| mixed | 69% / 0.37 / 0.37 / 0.92 | 72% / 0.33 / 0.40 / 1.19 |
+| attack | 59% / 0.67 / 0.23 / 0.82 | 59% / 0.61 / 0.26 / 1.35 |
+| hold | 68% / 0.41 / 0.71 / 0.98 | 68% / 0.39 / 0.74 / 1.17 |
+| protect | 43% / 0.74 / 0.81 / 1.00 | 44% / 0.72 / 0.86 / 1.28 |
+| support | 59% / 0.52 / 0.60 / 1.00 | 60% / 0.51 / 0.63 / 1.17 |
+| defaults | 45% / 0.70 / 0.73 / 1.00 | 45% / 0.68 / 0.79 / 1.30 |
+| mixed | 69% / 0.37 / 0.37 / 0.92 | 71% / 0.33 / 0.40 / 1.19 |
 
 ## Ten fights, narrated (defaults plan, On level, line-up a, D2 E2, steady)
 

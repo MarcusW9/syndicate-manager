@@ -298,8 +298,9 @@ function tryDuty(F, r, duty, target, priority, res) {
       if (N.contested) {
         if (res.doors >= N.doorSlots) return null;
         res.doors++;
-        const hurt = F.crew.find((x) => x.down && !x.aboard && !x.dead && !res.carried.has(x.id));
-        if (hurt) { res.carried.add(hurt.id); return { kind: 'carry', target: hurt.id }; }
+        // The crew's own call: the boarder with the best cool goes back for a downed teammate.
+        const hurt = [...res.carriers].find(([id, by]) => by === r.id && !res.carried.has(id));
+        if (hurt) { res.carried.add(hurt[0]); return { kind: 'carry', target: hurt[0] }; }
       }
       return { kind: 'board' };
     case 'attack': {
@@ -310,6 +311,12 @@ function tryDuty(F, r, duty, target, priority, res) {
       return { kind: 'attack', enemy: e.n };
     }
     case 'protect': {
+      // An order to protect a teammate who is down at the van means carrying them (2026-11-11).
+      const downMate = typeof target === 'number' && F.crew.find((x) => x.id === target && x.down && !x.aboard && !x.dead);
+      if (downMate) {
+        if (!(N.contested && F.type === 'holdExtract' && F.stage === 1) || res.doors >= N.doorSlots || res.carried.has(downMate.id)) return null;
+        res.doors++; res.carried.add(downMate.id); return { kind: 'carry', target: downMate.id };
+      }
       const T = target === 'protected' ? F.protect : target ?? (F.protect && F.protect !== r.id ? F.protect : lowestPips(standing(F).filter((x) => x.id !== r.id))?.id);
       if (!T || T === r.id || !standing(F).some((x) => x.id === T)) return null;
       const shot = F.threats.filter((t) => t.kind === 'aim' && t.target === T && !res.shields.has(t.id)).sort((a, b) => b.shown * b.hit - a.shown * a.hit || a.enemy - b.enemy)[0];
@@ -338,8 +345,13 @@ function tryDuty(F, r, duty, target, priority, res) {
 }
 
 function resolveOrders(F) {
-  const res = { damage: {}, shields: new Set(), patches: new Set(), jam: false, doors: 0, carried: new Set() };
+  const res = { damage: {}, shields: new Set(), patches: new Set(), jam: false, doors: 0, carried: new Set(), carriers: new Map() };
   const orders = new Map(standing(F).map((r) => [r.id, PLANS[F.plan](F, r)]));
+  // Who goes back for each downed runner at the van: the boarder with the best cool (ties: lowest id).
+  if (N.contested && F.type === 'holdExtract' && F.stage === 1) {
+    const boarders = standing(F).filter((r) => orders.get(r.id).duty === 'push').sort((a, b) => b.stats.cool - a.stats.cool || a.id - b.id);
+    for (const d of F.crew.filter((x) => x.down && !x.aboard && !x.dead)) { const by = boarders.shift(); if (by) res.carriers.set(d.id, by.id); }
+  }
   // Protect duties first; with contested boarding, then boarders, the most hurt first (they get the
   // door slots); then everyone else by id.
   const boardingStage = N.contested && F.type === 'holdExtract' && F.stage === 1;
@@ -543,7 +555,7 @@ function playRound(F) {
   if (N.contested && F.type === 'holdExtract' && F.stage === 1 && F.round >= F.vanLeaves) {
     const left = [...standing(F), ...F.crew.filter((r) => r.down && !r.aboard)];
     F.leftBehind = left.length;
-    return finish(F, 'leftBehind', `The van goes. ${F.leftBehind} left behind: ${left.map((r) => r.handle).join(', ')}.`);
+    return finish(F, 'leftBehind', `The van goes. ${F.leftBehind} left behind, missing and badly hurt: ${left.map((r) => r.handle).join(', ')}.`);
   }
   if (F.round >= N.deadline && !(N.contested && F.type === 'holdExtract')) return finish(F, 'deadline', 'Out of time.');
   return null;

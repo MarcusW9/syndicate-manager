@@ -171,9 +171,40 @@ not a failure roll on the work itself.
 **Boarding (holdExtract stage 2): contested (owner, 2026-11-11).** Each runner boards for
 themselves: a cool roll at `boardStep`, and at most `doorSlots` runners a round (the most hurt get the
 slots first). A runner making for the van is **in the open** that round, and the shots at them are
-shown that way. On a success they are in the van (out of the fight, safe). **Carrying (Claude's
-proposal, used in Step 0):** while boarding, a downed runner doesn't end the fight; a boarder can
-carry them instead (harder by `carryStep`, one door slot), and on a success both are in the van.
+shown that way. On a success they are in the van (out of the fight, safe).
+
+**Carrying the wounded (owner, 2026-11-11).** While boarding, a downed runner doesn't end the fight:
+someone goes back for them.
+
+- **Who:** by default the boarder with the **best cool** (ties: lowest id), one carrier per downed
+  runner. Or the player orders it: **protect a downed teammate** at the van means carry them, so
+  going back for someone is a choice the player can make and see in the preview ("Rook goes back for
+  Vex: 65%, in the open").
+- **The roll:** cool, `carryStep` harder than boarding alone; it uses one door slot. The carrier is
+  in the open that round. On a success, and if the carrier isn't downed by that round's shots, both
+  are in the van; on a failure both are still outside and can try again next round.
+- A downed runner isn't shot again while they wait. A medic can't get them back on their feet at the
+  van; carrying them is the way out.
+- **Pulling out once the van is there** means making for it (the first door slot), not walking off
+  on foot.
+
+**Left behind (owner, 2026-11-11).** A runner left behind, standing or down, is **missing, not
+dead**: they come back after some days with a **serious injury** (how long: OPEN). Later, a runner
+left behind could instead be **taken**, which opens a **rescue job** (section 27). This keeps
+"death only after a player choice": leaving someone costs them, it doesn't kill them.
+
+**Standby and overwatch at the van (proposals, 2026-11-11; not yet in Step 0):**
+
+- **Standby rides with the van** (if the job has one and they haven't already come in). When the van
+  pulls in, they are at the door: **one more door slot**, and they can go out to **carry** a downed
+  runner with their own cool roll, in the open like anyone else. If they go down, they are outside
+  too. Their place in the plan becomes "standby / at the van" on holdExtract jobs.
+- **Overwatch covers the door:** one attack a round (the owner's call), with uses as today (rifle 2,
+  drone 3), aimed first at the enemy whose shot threatens a runner in the open (highest shown chance
+  x pips): the boarders and carriers. Not a cancel: it can miss, and removal is shown as conditional.
+  A rifle needs an outdoor site (as today); a drone works anywhere.
+- **The driver** stays in the van (the early van, `vanRound`); a later idea is the driver bringing
+  the van closer as a special (fewer rounds in the open).
 
 **The van can't wait (owner, 2026-11-11).** The van waits `vanWait` rounds after it pulls in. In its
 last round, with anyone still outside (standing or down), the call-in `vanCantWait` comes: **go on
@@ -706,6 +737,10 @@ endurance as the one physical attribute, with strength and speed as traits (sect
    sidearm aim bonuses.
 7. **The gate's bars:** "clearly beaten" at 10 points or 0.5 downs a fight may be too high for
    fights that are mostly won.
+8. **The pip scale's knock-ons** (pips = endurance / 2, owner): enemy shots at 2 pips and patches at 2
+   (proposed); a light injury at -1 or -2; risk thresholds that still mean something when a shot
+   takes 2 (proposal: steady pulls out at 2 or fewer, cautious at half); dropping the muscle role's
+   pip.
 9. ~~holdExtract's shape~~: settled (owner, 2026-11-11): contested boarding and the van that can't
    wait (section 8). Open from Step 0 pass 5: **holding one more round barely helps** (+1-3 points),
    so the van-can't-wait call isn't yet a real choice (options: a longer hold, a cheaper one, or a
@@ -714,10 +749,10 @@ endurance as the one physical attribute, with strength and speed as traits (sect
    it, or drop it for `vanCantWait`); **pulling out once the van is there** should mean making for
    the van (first door slot), not walking off on foot (proposal; the sim does this since pass 5);
    holdExtract may now be **too hard overall** (most plans 45-69%, 0.6-0.8 downs a fight).
-8. **The pip scale's knock-ons** (pips = endurance / 2, owner): enemy shots at 2 pips and patches at 2
-   (proposed); a light injury at -1 or -2; risk thresholds that still mean something when a shot
-   takes 2 (proposal: steady pulls out at 2 or fewer, cautious at half); dropping the muscle role's
-   pip.
+10. **Standby and overwatch at the van** (section 8 proposals): standby as an extra door slot and
+   carrier; overwatch aimed at whoever shoots a runner in the open. Not yet simulated.
+11. **Left behind:** how many days missing, and whether it is ever "taken" (a rescue job) in the
+   prototype or only later.
 
 **B. Before code** (they don't change a paper fight):
 
@@ -766,7 +801,7 @@ endurance as the one physical attribute, with strength and speed as traits (sect
 
 ## 27. Later (not in the prototype)
 
-Fight types: getOut, holdHelp, rescue, grab, ambush, boss, standoff, defendHall. Enemies: heavy,
+Fight types: getOut, holdHelp, rescue (including getting back a runner left behind and taken), grab, ambush, boss, standoff, defendHall. Enemies: heavy,
 enforcer, marksman, lieutenant, boss (phases, weak point, escorts). Threats: windup, pin, door.
 Specials: suppressAll, bluff (each needs a design that isn't a generic cancel). Gear tags: shotgun,
 smart, suppressor. Per-runner direct control, more duties, the on-foot escape, generic dilemma
