@@ -80,7 +80,7 @@ test('Wheels takes every piloting roll from the van, and the read says so', () =
 test('standby at max alert: they join the team, the alert stays up, and the next call has no standby', () => {
   let seen = 0;
   for (let seed = 1; seed <= 400 && seen < 6; seed++) {
-    let s = toPending(begin(seed, 'warehouse', APPROACH_IDS[seed % 4], { n: 1, standby: true }), 'alert');
+    let s = toPending(begin(seed, 'low_water', APPROACH_IDS[seed % 4], { n: 1, standby: true }), 'alert');
     if (s.activeMission.pending?.kind !== 'alert') continue;
     const view = M.describePending(s);
     assert.ok(view.choices.some((c) => c.id === 'standby'), 'standby is offered');
@@ -104,7 +104,7 @@ test('a rescue: standby gets the wounded out and takes their place', () => {
   // Badly hurt after a fight, or down in one (slice 6): standby can go in either way.
   for (let seed = 1; seed <= 800 && seen < 5; seed++) {
     const kind = seed % 2 ? 'door' : 'injury';
-    let s = toPending(begin(seed, 'warehouse', APPROACH_IDS[seed % 4], { n: 2, standby: true }), kind);
+    let s = toPending(begin(seed, 'low_water', APPROACH_IDS[seed % 4], { n: 2, standby: true }), kind);
     if (s.activeMission.pending?.kind !== kind) continue;
     const patient = s.activeMission.pending.opId;
     assert.ok(M.describePending(s).choices.some((c) => c.id === 'rescue'));
@@ -123,7 +123,7 @@ test('a rescue: standby gets the wounded out and takes their place', () => {
 test('once standby is in, a failed save gets a second try from them, never more', () => {
   let second = 0;
   for (let seed = 1; seed <= 300; seed++) {
-    const s = begin(seed, 'warehouse', 'loud', { n: 2, standby: true });
+    const s = begin(seed, 'low_water', 'loud', { n: 2, standby: true });
     // Committed: on Steady orders a lost fight ends the job before standby meets another incident (slice 6).
     const am = autoRun(s, 'committed').activeMission;
     const ev = am.events;
@@ -152,7 +152,7 @@ test('the orders: Cautious never calls standby; Steady and Committed do while th
 test('nobody dies without "push on", and every exit brings everyone home, with Wheels and standby', () => {
   const rookieJobs = MISSIONS.filter((m) => m.rookie).map((m) => m.id);
   for (let seed = 1; seed <= 1500; seed++) {
-    const s = begin(seed, seed % 3 ? rookieJobs[seed % rookieJobs.length] : 'warehouse', APPROACH_IDS[seed % 4], { n: 1 + (seed % 2), wheels: seed % 2 === 0, standby: true });
+    const s = begin(seed, seed % 3 ? rookieJobs[seed % rookieJobs.length] : 'low_water', APPROACH_IDS[seed % 4], { n: 1 + (seed % 2), wheels: seed % 2 === 0, standby: true });
     const policy = { ...randomPolicy(seed), critical: (o) => (o.includes('extract') ? 'extract' : o[0]) };
     const { state, pushed } = playMission(s, policy);
     if (!pushed) assert.deepEqual(state.activeMission.result.deaths, [], `seed ${seed}`);

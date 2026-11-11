@@ -11,7 +11,9 @@ import { availability, MAX_EXTRA_CREW, maxCrew } from './crew.js';
 import { jobView } from './jobs.js';
 import { intelFor } from './sidetasks.js';
 import { WATCHED_PENALTY, watchedIn } from './heat.js';
-import { battleOdds } from './battle.js';
+import { battleOdds, overwatchOf } from './battle.js';
+import { fightOddsFor } from './fight.js';
+import { FIGHT_JOBS } from '../data/fights.js';
 import { spotsForJob } from './fightspots.js';
 import { crewValue } from './worth.js';
 
@@ -57,9 +59,15 @@ export function coverage(template, crew, approach, { threat = template.threat, o
     const spots = jobId && inc.danger && inc.guards ? spotsForJob(template.district, jobId, template.id, zone, crew.length) : null;
     const fargs = { incident: id, zone, diff, threat, guards: inc.guards, crew, approach, overwatchOp: ow ? overwatch.op : null, ow, wheels, spots };
     const forced = approach === 'loud' && Boolean(inc.danger && inc.guards);
-    let fight = inc.danger && inc.guards ? battleOdds(fargs) : null;
+    // The five jobs of the battle rework play their fights on engine 2: the read runs that engine on the same orders (shown = used);
+    // the line-up is drawn when the run starts, so it is averaged over several (core/fight.js fightOddsFor). No ambush there yet.
+    const type = FIGHT_JOBS[template.id];
+    const odds = (extra = {}) => (type
+      ? { standoff: 0, ...fightOddsFor({ type, diff, threat, site: template.district, crew, approach, overwatch: ow ? overwatchOf(overwatch.op, ow, zone) : null, wheels: wheels ? { id: wheels.id, handle: wheels.handle, value: effectiveStat(wheels, 'piloting', { approach }).value } : null }) }
+      : battleOdds({ ...fargs, ...extra }));
+    let fight = inc.danger && inc.guards ? odds() : null;
     if (forced) {
-      const jump = battleOdds({ ...fargs, ambush: true });
+      const jump = odds({ ambush: true });
       const mix = (k) => h.chance * jump[k] + (1 - h.chance) * fight[k];
       fight = { win: mix('win'), down: mix('down'), standoff: mix('standoff') };
     }

@@ -14,7 +14,7 @@
 // the player made; crews on "never" extract on their own, as hands-off crews always have.
 
 import { templateById } from './jobs.js';
-import { closeMission } from './mission.js';
+import { closeMission, resolvePending } from './mission.js';
 import { autoStep, needsPlayer, dayDone, beatsByDay } from './autorun.js';
 
 export { dayDone };
@@ -57,6 +57,15 @@ export function advanceAway(prev) {
   let s = structuredClone(prev);
   const keep = [];
   for (const j of s.awayJobs) {
+    // An engine-2 dilemma (core/runfight.js) is open until the end of the day it came in; then the crew carries on with its orders (spec 30).
+    if (j.waiting && j.mission.pending?.kind === 'dilemma' && (j.mission.pending.day ?? s.day) < s.day) {
+      j.waiting = false;
+      for (const m of s.inbox) if (m.kind === 'callin' && m.payload?.jobId === j.mission.jobId) { m.resolved = true; m.read = true; }
+      s.activeMission = j.mission;
+      s = resolvePending(s, 'carryOn');
+      j.mission = s.activeMission;
+      s.activeMission = null;
+    }
     if (j.waiting) { keep.push(j); continue; }
     const am = j.mission;
     if (!am.away) am.away = { beats: 0 }; // a job sent before v35 (save.js) gets one on its first day

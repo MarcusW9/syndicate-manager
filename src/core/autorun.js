@@ -14,6 +14,7 @@
 // on its own; needsPlayer says when the run waits for the player (a call-in).
 
 import { templateById } from './jobs.js';
+import { fightAnswer } from './runfight.js';
 import { crisisOdds, chooseOption, revealBeat, resolveCritical, currentStep, startMission, enterZone, runIncident, runBattle, resolvePending, describePending, RISKY_BELOW } from './mission.js';
 import { ordersDecision } from './incidents.js';
 
@@ -92,7 +93,9 @@ export function needsPlayer(state) {
   if (am.critical || am.pending) return true;
   // Command fights (2026-10-30): a fight waits for your orders each round, unless you left it to the
   // crew. An away crew fights on its own unless you've taken command (core/away.js).
-  if (currentStep(am)?.type === 'battle') return !!am.battle && !am.battle.auto && !(am.away && !am.away.command);
+  // An engine-2 fight (the five jobs of the battle rework) plays itself round by round until its screen is built (slice 2),
+  // pausing only for its call-ins (am.pending above); its orders are the crew's own.
+  if (currentStep(am)?.type === 'battle') return !!am.battle && am.battle.engine !== 2 && !am.battle.auto && !(am.away && !am.away.command);
   if (currentStep(am)?.type !== 'crisis') return false;
   return wouldCall(state) && !leadTakes(state);
 }
@@ -152,7 +155,7 @@ export function autoStep(prev, { force = false } = {}) {
     return resolveCritical(s, 'extract');
   }
   if (am.pending) {
-    const { id, why } = ordersDecision(am.pending.kind, orders, { standby: !!describePending(s).standby });
+    const { id, why } = am.pending.kind === 'dilemma' ? fightAnswer(am) : ordersDecision(am.pending.kind, orders, { standby: !!describePending(s).standby });
     am.nextWhy = why;
     return resolvePending(s, id);
   }

@@ -8,7 +8,7 @@ import { addOffer, templateById } from '../src/core/jobs.js';
 import { autoRun, ORDERS } from '../src/core/autorun.js';
 import { REPORT_LOGS_KEPT, introKind } from '../src/core/report.js';
 import { MISSIONS } from '../src/data/missions.js';
-import { playMission, carefulPolicy } from './play.js';
+import { playMission, carefulPolicy, mayLoseSomeone } from './play.js';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 const { importSave } = await import('../src/save/save.js');
@@ -42,11 +42,14 @@ test('a hands-off crew never pushes on and never loses anyone, under any orders'
   }
 });
 
-test('even the harder jobs, short-handed and on Committed orders, bring everyone home', () => {
+test('even the harder jobs, short-handed, bring everyone home: on Committed orders on engine 1 jobs, and on cautious and steady on the new fights', () => {
   for (let seed = 1; seed <= 60; seed++) {
     for (const id of ['kidnap', 'penthouse', 'warehouse']) {
-      const { done } = sendOff(seed, id, 'committed', { n: 1 });
-      assert.deepEqual(done.activeMission.result.deaths, [], `${id} seed ${seed}`);
+      for (const orders of ['cautious', 'steady', 'committed']) {
+        if (mayLoseSomeone(id, orders)) continue; // committed fights on with someone down: a death is the risk the player accepted (core/fight.js)
+        const { done } = sendOff(seed, id, orders, { n: 1 });
+        assert.deepEqual(done.activeMission.result.deaths, [], `${id} ${orders} seed ${seed}`);
+      }
     }
   }
 });
@@ -240,7 +243,9 @@ test('every job can be sent hands-off, and every job under every order brings ev
       for (const orders of Object.keys(ORDERS)) {
         const { done } = sendOff(seed, m.id, orders, { n: seed % 2 ? 1 : undefined }); // short-handed on odd seeds
         assert.equal(done.activeMission.done, true, `${m.id} ${orders} seed ${seed}`);
-        assert.deepEqual(done.activeMission.result.deaths, [], `${m.id} ${orders} seed ${seed}`);
+        if (mayLoseSomeone(m.id, orders)) {
+          for (const d of done.activeMission.result.deaths) assert.ok(done.activeMission.events.some((e) => e.kind === 'battle'), `${m.id} seed ${seed}: a death only follows a fight`);
+        } else assert.deepEqual(done.activeMission.result.deaths, [], `${m.id} ${orders} seed ${seed}`);
       }
     }
   }

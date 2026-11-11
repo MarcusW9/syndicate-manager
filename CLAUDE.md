@@ -36,7 +36,7 @@ Text-first crew management game (Football Manager style, endless). Plain JavaScr
 - Randomness goes through `core/rng.js` (seeded), never `Math.random()` in core.
 
 ## Design rules
-- Every crisis has an `abort` or `extract` choice. Death only follows a choice the player made.
+- Every crisis has an `abort` or `extract` choice. Death only follows a risk the player accepted and was shown: pushing on at death's door, a withdrawal ordered by hand, or (in the new fights, `core/fight.js`) the **committed** risk level, which fights on with someone down and says so where it is picked. Cautious and steady crews never lose anyone without a call-in.
 - Operatives are always 18+.
 - Bump `SAVE_VERSION` in `core/state.js` and add a migration in `save.js` whenever the state shape changes.
 
@@ -49,7 +49,7 @@ Text-first crew management game (Football Manager style, endless). Plain JavaScr
 `DESIGN.md` holds the narrative, tone, cast and a dated decision log (decision, why, rejected alternatives). The world's lore and the context block for worldbuilding prompts live in `WORLD.md`; the visual style, art rules and art prompts live in `ART.md`; canon changes there still get a DESIGN.md log row. Whenever a design or technical decision is made or changed in a session, add a row to the top of the log in the same change. Never rewrite past entries; supersede them with a new row. The log is split by date into `docs/design/`; new rows go at the top of the newest file there (listed under `## Decision log` in `DESIGN.md`), not in the cast table.
 
 ## Tests
-Run `npm test` before every push. The tests encode the design promises in DESIGN.md (no death without "push on", exits always save everyone, saves upgrade). Never loosen a test to make a change pass; if a rule changes on purpose, update the test and log the change in DESIGN.md.
+Run `npm test` before every push. The tests encode the design promises in DESIGN.md (no death on cautious or steady without "push on", and every death follows push on, a hand-ordered withdrawal or committed risk; exits always save everyone; saves upgrade). Never loosen a test to make a change pass; if a rule changes on purpose, update the test and log the change in DESIGN.md.
 
 ## Keep the changelog current
 Every change that ships gets an entry at the top of `CHANGELOG.md` (date, what changed, in plain words). DESIGN.md says why; CHANGELOG.md says what.

@@ -446,6 +446,9 @@ function holds(b, cond) {
   return true;
 }
 
+/** Whether one authored dilemma's conditions hold right now (for revalidating an answer, and clearing a fired key once the situation has passed). Never draws. */
+export const dilemmaHolds = (b, id) => !!b.drawn && !b.end && !!DILEMMAS[id] && DILEMMAS[id].fight.includes(b.type) && holds(b, DILEMMAS[id].when);
+
 /**
  * The authored dilemmas that hold right now, in the order they are written: [{ id, key, subjects }].
  * Checks never draw. A dilemma fires at most once per unresolved situation: its key (id + subjects) is
@@ -594,13 +597,13 @@ export function playRound(b, rng) {
       ow.left -= 1; if (boardingStage(b)) ow.vanShots += 1;
       b.heat += ow.heat ?? 0; result.neural += ow.neural ?? 0;
       const x = roll(ow.value, b.diff + FIGHT.attackStep + FIGHT.overwatchStep + FIGHT.cover[e.cover], strongMargin(ow.damage));
-      if (!x.ok) say('overwatch', 'overwatchMiss', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, roll: rollOf(x) });
+      if (!x.ok) say('overwatch', 'overwatchMiss', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: false, damage: 0, roll: rollOf(x) });
       else {
         let dmg = x.strong ? FIGHT.strongHit : FIGHT.hit;
         if (e.absorb > 0) { e.absorb -= 1; dmg -= 1; }
         e.pips -= dmg;
-        if (e.pips <= 0) { e.out = true; defeated.push({ by: ow.id, enemy: e.n, how: 'overwatch' }); say('overwatch', 'overwatchOut', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, roll: rollOf(x) }); }
-        else say('overwatch', 'overwatchHit', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, roll: rollOf(x), left: e.pips });
+        if (e.pips <= 0) { e.out = true; defeated.push({ by: ow.id, enemy: e.n, how: 'overwatch' }); say('overwatch', 'overwatchOut', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, dropped: true, roll: rollOf(x) }); }
+        else say('overwatch', 'overwatchHit', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, roll: rollOf(x), left: e.pips });
       }
     }
   }
@@ -611,14 +614,14 @@ export function playRound(b, rng) {
     switch (a.kind) {
       case 'attack': {
         const e = b.enemies.find((x) => x.n === a.enemy);
-        if (e.out || e.fled) { say('attack', 'attackGone', { who: r.handle }, named); break; }
+        if (e.out || e.fled) { say('attack', 'attackGone', { who: r.handle }, { ...named, enemy: e.n, success: false, damage: 0 }); break; }
         const x = roll(sv(r, 'combat'), b.diff + FIGHT.attackStep + FIGHT.cover[e.cover], r.strong);
-        if (!x.ok) { say('attack', 'attackMiss', { who: r.handle, enemy: E(e.n) }, { ...named, roll: rollOf(x) }); break; }
+        if (!x.ok) { say('attack', 'attackMiss', { who: r.handle, enemy: E(e.n) }, { ...named, enemy: e.n, success: false, damage: 0, roll: rollOf(x) }); break; }
         let dmg = x.strong ? FIGHT.strongHit : FIGHT.hit;
         if (e.absorb > 0 && !r.ap) { e.absorb -= 1; dmg -= 1; }
         e.pips -= dmg;
-        if (e.pips <= 0) { e.out = true; defeated.push({ by: r.id, enemy: e.n, how: 'attack' }); say('attack', 'attackOut', { who: r.handle, enemy: E(e.n) }, { ...named, roll: rollOf(x), strong: x.strong }); }
-        else say('attack', 'attackHit', { who: r.handle, enemy: E(e.n) }, { ...named, roll: rollOf(x), left: e.pips });
+        if (e.pips <= 0) { e.out = true; defeated.push({ by: r.id, enemy: e.n, how: 'attack' }); say('attack', 'attackOut', { who: r.handle, enemy: E(e.n) }, { ...named, enemy: e.n, success: true, damage: dmg, dropped: true, roll: rollOf(x), strong: x.strong }); }
+        else say('attack', 'attackHit', { who: r.handle, enemy: E(e.n) }, { ...named, enemy: e.n, success: true, damage: dmg, roll: rollOf(x), left: e.pips });
         break;
       }
       case 'jam': {
@@ -632,14 +635,14 @@ export function playRound(b, rng) {
       }
       case 'stabilise': {
         const x = roll(sv(r, 'medical'), b.diff + FIGHT.stabiliseStep); const t = runner(b, a.target);
-        if (x.ok && t.down && !t.dead) { t.stable = true; say('stabilise', 'stabilise', { who: r.handle, target: t.handle }, { ...named, roll: rollOf(x), target: t.id }); }
-        else say('stabilise', 'stabiliseFail', { who: r.handle, target: t.handle }, { ...named, roll: rollOf(x), target: t.id });
+        if (x.ok && t.down && !t.dead) { t.stable = true; say('stabilise', 'stabilise', { who: r.handle, target: t.handle }, { ...named, roll: rollOf(x), target: t.id, targetId: t.id, success: true }); }
+        else say('stabilise', 'stabiliseFail', { who: r.handle, target: t.handle }, { ...named, roll: rollOf(x), target: t.id, targetId: t.id, success: false });
         break;
       }
       case 'patch': {
         const x = roll(sv(r, 'medical'), b.diff + FIGHT.patchStep); const t = runner(b, a.target);
-        if (x.ok && !t.down) { t.pips = Math.min(t.max, t.pips + FIGHT.patchHeal); say('patch', 'patch', { who: r.handle, target: t.handle }, { ...named, roll: rollOf(x), target: t.id, heal: FIGHT.patchHeal }); }
-        else say('patch', 'patchFail', { who: r.handle, target: t.handle }, { ...named, roll: rollOf(x), target: t.id });
+        if (x.ok && !t.down) { t.pips = Math.min(t.max, t.pips + FIGHT.patchHeal); say('patch', 'patch', { who: r.handle, target: t.handle }, { ...named, roll: rollOf(x), target: t.id, targetId: t.id, success: true, heal: FIGHT.patchHeal }); }
+        else say('patch', 'patchFail', { who: r.handle, target: t.handle }, { ...named, roll: rollOf(x), target: t.id, targetId: t.id, success: false });
         break;
       }
       case 'board': {
@@ -672,14 +675,14 @@ export function playRound(b, rng) {
       const hit = rng() < c;
       const slots = { enemy: E(e.n), who: v.handle };
       const named = { actor: null, target: v.id, enemy: e.n, chance: c, shieldedBy: t.shieldedBy };
-      if (!hit) { say('shot', 'shotMiss', slots, named); continue; }
-      if (v.absorb > 0) { v.absorb -= 1; say('shot', 'shotAbsorbed', slots, named); continue; }
+      if (!hit) { say('shot', 'shotMiss', slots, { ...named, targetId: v.id, success: false, damage: 0 }); continue; }
+      if (v.absorb > 0) { v.absorb -= 1; say('shot', 'shotAbsorbed', slots, { ...named, targetId: v.id, success: false, damage: 0 }); continue; }
       const dmg = Math.min(v.pips, t.hit); v.pips -= dmg; b.pipsLost += dmg;
       if (v.pips <= 0) {
         // A runner pulling out alone dies only when the player ordered that withdrawal by hand; otherwise death's door like anyone else.
-        if (v.leaving && v.ordered) { v.dead = true; down.push(v.id); say('shot', 'shotDead', slots, { ...named, dead: true }); }
-        else { v.down = true; v.downRound = b.round; down.push(v.id); say('shot', 'shotDown', slots, { ...named, down: true }); }
-      } else say('shot', 'shotHit', slots, { ...named, left: v.pips });
+        if (v.leaving && v.ordered) { v.dead = true; down.push(v.id); say('shot', 'shotDead', slots, { ...named, targetId: v.id, success: true, damage: dmg, dead: true }); }
+        else { v.down = true; v.downRound = b.round; down.push(v.id); say('shot', 'shotDown', slots, { ...named, targetId: v.id, success: true, damage: dmg, down: true }); }
+      } else say('shot', 'shotHit', slots, { ...named, targetId: v.id, success: true, damage: dmg, left: v.pips });
     } else if (t.kind === 'flank') {
       const v = runner(b, t.target);
       if (v && present(v)) { v.cover = 'open'; say('shot', 'flanked', { enemy: E(e.n), who: v.handle }, { target: v.id, enemy: e.n }); }
@@ -788,6 +791,21 @@ export function outcomeOf(b) {
 }
 
 // --- hands-off play and the planning read -----------------------------------------------------------
+
+/**
+ * The planning read's odds for a fight not yet built (the run draws the enemies' line-up and decks when it starts): the
+ * same read averaged over several line-ups on fixed seeds, `builds` of them with `runs` fights each (buildFight's own
+ * arguments). { win, down, dead, left }. Hands-off on the orders given (the crew's defaults), at the risk level given.
+ */
+export function fightOddsFor(args, { builds = 6, runs = 20 } = {}) {
+  const acc = { win: 0, down: 0, dead: 0, left: 0 };
+  if (!args.crew.length) return { win: 0, down: 1, dead: 0, left: 0 };
+  for (let i = 0; i < builds; i++) {
+    const r = fightOdds(buildFight(args, makeRng(0xf1647 + i * 104729)), runs);
+    for (const k of Object.keys(acc)) acc[k] += r[k] / builds;
+  }
+  return acc;
+}
 
 /** Play a whole fight on its orders, round by round, until it ends (hands-off: the risk level answers the van). */
 export function playFight(b, rng, maxRounds = 30) {

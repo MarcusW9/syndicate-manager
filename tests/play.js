@@ -8,6 +8,7 @@ import { advanceDay, calendar } from '../src/core/time.js';
 import { templateById } from '../src/core/jobs.js';
 import { availability } from '../src/core/crew.js';
 import { GEAR } from '../src/data/gear.js';
+import { FIGHT_JOBS } from '../src/data/fights.js';
 import { emptyLoadout, firstFit, placeOf } from '../src/core/gear.js';
 import { buildBattle, ordersFor, hitFor } from '../src/core/battle.js';
 
@@ -84,6 +85,14 @@ export function playMission(state, policy) {
   if (!s.activeMission.done) throw new Error('Mission got stuck');
   return { state: s, pushed };
 }
+
+/**
+ * The new death rule (battle rework, 2026-11-11): death follows a risk the player accepted and was shown. On the five jobs
+ * that play on engine 2 (data/fights.js FIGHT_JOBS) the committed risk level fights on with someone down, so a hands-off
+ * crew on committed orders can lose a runner there (a bleed, or being left behind down); on cautious and steady, and on
+ * every other job, hands-off still loses nobody.
+ */
+export const mayLoseSomeone = (templateId, orders) => orders === 'committed' && templateId in FIGHT_JOBS;
 
 export const randomPolicy = (seed) => ({
   critical: (opts, g) => opts[(seed + g) % opts.length],
