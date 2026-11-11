@@ -141,6 +141,8 @@ let whyOpen = false; // the plan bar's notes, all of them, on tap
 let buzzStage = null; // the direct buzz (a heist's call): null ringing, 'open' picked up (playtest, 2026-11-07)
 const buzzLater = new Set(); // calls let ring out this session: they ring again next time
 let inboxUnread = false; // Today's list: only unread messages (playtest, 2026-11-07)
+let jossFoldedDay = null; // Joss's line folded to one line for this day; a new day opens it again (owner, 2026-11-11)
+let upcomingDue = false; // scroll to Coming up after the next render (Today's "next up" line on a phone)
 let planBarHtml = ''; // the plan bar as renderPlan last drew it; the jobs screen places it (under the list on wide screens)
 let meetHidden = null; // the plan's "What they'll likely meet" read folded away; null until first shown (folded on phones)
 
@@ -460,6 +462,8 @@ function onClick(e) {
       break;
     }
     case 'inbox-filter': inboxUnread = id === 'unread'; break;
+    case 'joss-fold': jossFoldedDay = jossFoldedDay === state.day ? null : state.day; break;
+    case 'next-up': upcomingDue = true; break;
     case 'board-rules': boardRulesOpen = !boardRulesOpen; break;
     // The squad board (ui/board.js): tap a card, pick who goes there; anyone already placed swaps.
     case 'info': if (openInfo.has(id)) openInfo.delete(id); else openInfo.add(id); break;
@@ -804,6 +808,7 @@ function render() {
   if (scrollDue !== null) { window.scrollTo?.(0, scrollDue); scrollDue = null; } // Back puts the scroll back; a new page starts at the top
   if (mapTo) { animateMap(root.querySelector('.citymap__view'), mapView, mapTo); mapView = mapTo; mapTo = null; }
   if (raidCardDue) { const d = raidCardDue; raidCardDue = null; root.querySelector(`#threat-${d}`)?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
+  if (upcomingDue) { upcomingDue = false; root.querySelector('.upcoming--rail')?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
   if (cityMapDue) { cityMapDue = false; root.querySelector('.mapframe')?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
   const want = focusNext ?? refocus;
   focusNext = null;
@@ -969,9 +974,9 @@ function backupBanner() {
 }
 
 /**
- * Today: the week ahead in a slim strip across the top, then alerts (only when something
- * needs you) and the inbox. Phones show that, or one open message without the strip.
- * Wide screens keep the strip and put the open message beside the inbox (styles.css).
+ * Today: alerts (only when something needs you) and the inbox first, then a rail with the
+ * week (Monday's brief, Coming up). Phones show that, or one open message alone. Wide screens
+ * put the open message beside the inbox and the rail beside it (styles.css).
  */
 function renderInbox() {
   const open = state.inbox.find((m) => m.id === openMessageId);
@@ -996,16 +1001,19 @@ function renderInbox() {
               </button>
             </li>`).join('')}
         </ul>` : '<p class="muted">Nothing new. Press Continue.</p>';
+  // Messages first (owner, 2026-11-11): only Joss, the alerts and today's lines sit above the list.
+  // The week's context (Monday's numbers and The Word, Coming up) is a rail beside the open
+  // message when wide, and comes after the list on a phone.
+  const week = renderWeekBrief();
   return `
     ${backupBanner()}
-    ${renderUpcoming(open ? 'upcoming--strip has-open' : 'upcoming--strip')}
     <div class="inbox ${open ? 'has-open' : ''}">
       <div class="inbox__side">
         <section class="panel inbox__list">
           <h1>Today</h1>
           ${renderThreatLines()}
           ${renderBriefing()}
-          ${renderWeekBrief()}
+          ${renderNextUp()}
           ${renderBack()}
           ${renderOutLine()}
           ${list}
@@ -1014,6 +1022,10 @@ function renderInbox() {
       <section class="panel inbox__detail">
         ${open ? renderMessage(open) : '<p class="muted inbox__empty">Tap a message to read it here.</p>'}
       </section>
+      <aside class="inbox__rail" aria-label="This week">
+        ${week ? `<section class="panel">${week}</section>` : ''}
+        ${renderUpcoming('upcoming--rail')}
+      </aside>
     </div>`;
 }
 
@@ -1278,45 +1290,72 @@ function renderBriefing() {
     : has('bills-short') ? 'short' : has('crew-out') ? 'hurt' : c.isSunday ? 'sunday' : c.isMonday ? 'monday' : 'quiet';
   const opener = pickLine(PARTNER.moods[mood], `${state.day}-${mood}`);
   const face = { broke: 'worried', short: 'worried', hurt: 'worried', sunday: 'smug', first: 'happy', quiet: 'happy' }[mood] ?? 'neutral';
+  // Open at the start of each day; a tap folds it to one line for the rest of the day. The alerts
+  // under it never fold: they are what needs the player.
+  const folded = jossFoldedDay === state.day;
   return `
-    <div class="joss">
+    <button class="joss ${folded ? 'is-folded' : ''}" data-action="joss-fold" aria-expanded="${!folded}">
       <span class="joss__badge">${jossIcon({ mood: face, size: 32 })}</span>
-      <div class="joss__body">
+      <span class="joss__body">
         <span class="joss__name">${esc(NAMES.partner)}</span>
-        <p class="joss__line">${esc(opener)}</p>
-      </div>
-    </div>
+        <span class="joss__line">${esc(opener)}</span>
+      </span>
+      <span class="joss__fold" aria-hidden="true">${folded ? '▸' : '▾'}</span>
+    </button>
     ${list.length ? `<ul class="alerts">${list.map((a) => {
       const [text, action, id] = line(a) ?? [];
       return text ? `<li><button class="alert alert--${a.tone}" data-action="${action}" data-id="${esc(id)}">${esc(text)} <span aria-hidden="true">›</span></button></li>` : '';
     }).join('')}</ul>` : ''}`;
 }
 
+/** A day ahead as Coming up says it: "Tomorrow", "Wed", "Next Mon". */
+function upcomingWhen(day) {
+  const n = day - state.day;
+  const wd = calendar(day).weekday;
+  return n === 1 ? 'Tomorrow' : n === 7 ? `Next ${wd}` : wd;
+}
+
+/** One thing coming up (core/upcoming.js), in words. */
+function upcomingText(i) {
+  switch (i.kind) {
+    case 'season': return `Season ${i.season} begins: everyone a year older`;
+    case 'board': return 'New freelancers and street talk';
+    case 'scout': return 'Scout report: new leads';
+    case 'raid': return `Raid on ${hallLabel(i.district)}: ${raidBy(i)} at the door`;
+    case 'bills': return `Bills: ${money(i.total)} (wages ${money(i.wages)}, rent ${money(i.rent)})${state.cash < i.total ? `, ${money(i.total - state.cash)} short` : ''}`;
+    case 'job-last': return `Last day for ${i.names.join(', ')}`;
+    case 'lead-last': return `Last day to sign ${i.name} (${i.role})`;
+    case 'back': return `${i.name} back from the job`;
+    case 'report': return i.names.length ? `${i.names.join(' and ')} back with the ${i.name} report` : `Report from ${i.name}`;
+    case 'healed': return `${i.name} over their ${i.injury} injury`;
+    case 'rested': return `${i.name} rested enough to work`;
+    case 'reask': return `${i.name} asks about their raise again`;
+    default: return '';
+  }
+}
+
+/**
+ * Today's "next up" line, on a phone only (the rail is in view on wider screens): the soonest
+ * date that matters (a raid, the bills, a last day, a new season), and a tap scrolls to Coming up.
+ */
+function renderNextUp() {
+  const RANK = ['raid', 'bills', 'job-last', 'lead-last', 'season'];
+  const key = upcoming(state).filter((i) => RANK.includes(i.kind));
+  if (!key.length) return '';
+  const day = Math.min(...key.map((i) => i.day));
+  const first = key.filter((i) => i.day === day).sort((a, b) => RANK.indexOf(a.kind) - RANK.indexOf(b.kind))[0];
+  const item = first.kind === 'job-last' ? { ...first, names: key.filter((i) => i.day === day && i.kind === 'job-last').map((i) => i.name) } : first;
+  const short = item.kind === 'bills' && state.cash < item.total;
+  // The bills line in short; the full split is one tap away in Coming up.
+  const text = item.kind === 'bills' ? `Bills ${money(item.total)}${short ? `, ${money(item.total - state.cash)} short` : ''}` : upcomingText(item);
+  return `<button class="nextup ${short ? 'is-short' : ''}" data-action="next-up"><span class="nextup__when">${esc(upcomingWhen(day))}</span><span class="nextup__text">${esc(text)}</span><span class="nextup__go" aria-hidden="true">›</span></button>`;
+}
+
 /** The week ahead, one cell per day with a line per thing the game will do. */
 function renderUpcoming(where) {
   const items = upcoming(state);
-  const when = (day) => {
-    const n = day - state.day;
-    const wd = calendar(day).weekday;
-    return n === 1 ? 'Tomorrow' : n === 7 ? `Next ${wd}` : wd;
-  };
-  const text = (i) => {
-    switch (i.kind) {
-      case 'season': return `Season ${i.season} begins: everyone a year older`;
-      case 'board': return 'New freelancers and street talk';
-      case 'scout': return 'Scout report: new leads';
-      case 'raid': return `Raid on ${hallLabel(i.district)}: ${raidBy(i)} at the door`;
-      case 'bills': return `Bills: ${money(i.total)} (wages ${money(i.wages)}, rent ${money(i.rent)})${state.cash < i.total ? `, ${money(i.total - state.cash)} short` : ''}`;
-      case 'job-last': return `Last day for ${i.names.join(', ')}`;
-      case 'lead-last': return `Last day to sign ${i.name} (${i.role})`;
-      case 'back': return `${i.name} back from the job`;
-      case 'report': return i.names.length ? `${i.names.join(' and ')} back with the ${i.name} report` : `Report from ${i.name}`;
-      case 'healed': return `${i.name} over their ${i.injury} injury`;
-      case 'rested': return `${i.name} rested enough to work`;
-      case 'reask': return `${i.name} asks about their raise again`;
-      default: return '';
-    }
-  };
+  const when = upcomingWhen;
+  const text = upcomingText;
   // Jobs ending the same day share one line.
   for (const d of new Set(items.filter((i) => i.kind === 'job-last').map((i) => i.day))) {
     const same = items.filter((i) => i.kind === 'job-last' && i.day === d);

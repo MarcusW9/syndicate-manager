@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Today: quieter message styles (mockup G1-G4)</title>
+<style>
+:root{--bg:#0a0c0f;--panel:#12151b;--panel-2:#161a21;--line:#2a303b;--text:#e9ecf1;--muted:#8a93a6;--dim:#5d6577;--accent:#ff3d5f;--accent-2:#3de8d8;--warn:#f2d541;--d:'Rajdhani','Barlow Condensed','Arial Narrow',system-ui,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 system-ui,sans-serif;padding:24px}
+h1{font:700 1.6rem var(--d);text-transform:uppercase;letter-spacing:.04em;margin:0 0 4px}
+.lead{color:var(--muted);margin:0 0 20px;max-width:90ch}
+.grid{display:grid;grid-template-columns:repeat(2,390px);gap:28px 40px}
+.v>h2{font:700 1.1rem var(--d);letter-spacing:.1em;text-transform:uppercase;color:var(--accent-2);margin:0 0 2px}
+.v>p{margin:0 0 10px;color:var(--muted);font-size:.85rem;min-height:3.2em}
+.phone{border:1px solid var(--line);padding:10px;display:grid;gap:10px;background:#0d1015}
+.panel{background:var(--panel);border:1px solid var(--line);padding:10px 12px;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%);position:relative}
+.panel::before{content:'';position:absolute;left:0;top:0;width:44px;height:2px;background:var(--accent-2)}
+.t{font:700 .8rem var(--d);letter-spacing:.2em;text-transform:uppercase;color:var(--accent-2);margin:0 0 8px}
+.filters{display:flex;gap:6px;margin-bottom:8px}
+.filters button{flex:1;min-height:44px;background:var(--panel-2);border:1px solid var(--line);color:var(--muted);font:700 .78rem var(--d);letter-spacing:.12em;text-transform:uppercase}
+.filters .on{border-color:var(--accent-2);color:var(--text);background:#123234}
+.filters b{margin-left:5px;color:var(--text)}
+.dayh{font:700 .72rem var(--d);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:8px 2px 4px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.m{display:grid;grid-template-columns:auto 1fr auto;gap:0 10px;align-items:center;min-height:52px;padding:6px 10px;background:var(--panel-2);border:1px solid var(--line);margin-bottom:4px;position:relative}
+.m small{display:block;color:var(--muted);font-size:.75rem}
+.m strong{font-weight:600;font-size:.9rem}
+.m.unread strong{font-weight:800}
+.m.open{border-color:var(--accent-2);background:#14262a}
+.act{display:block;font:700 .68rem var(--d);letter-spacing:.1em;text-transform:uppercase;margin-top:2px}
+.tag{font:700 .66rem var(--d);letter-spacing:.12em;padding:1px 7px;border:1px solid var(--line);color:var(--muted);text-transform:uppercase;white-space:nowrap}
+.ico{width:22px;text-align:center;color:var(--dim);font-size:.95rem}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.wd{min-height:54px;border:1px solid var(--line);background:var(--panel-2);display:grid;justify-items:center;align-content:start;gap:3px;padding:5px 0;font:700 .7rem var(--d);letter-spacing:.08em;color:var(--muted)}
+.wd.past{opacity:.4}.wd.today{color:var(--text)}.wd.sel{border-color:var(--accent-2);background:#14262a;color:var(--text)}
+.wdetail{margin-top:8px;border-left:2px solid var(--accent-2);padding-left:8px;font-size:.84rem}
+.wdetail b{font:700 .72rem var(--d);letter-spacing:.12em;color:var(--accent-2);text-transform:uppercase;display:block}
+
+/* G1 mono + one signal: everything grey, red only where you must act */
+.g1 .m.need{border-left:3px solid var(--accent)}.g1 .act{color:var(--accent)}
+.g1 .m.unread::after{content:'';position:absolute;right:6px;top:6px;width:6px;height:6px;background:var(--accent-2)}
+.g1 .pip{width:6px;height:6px;background:var(--muted)}.g1 .pip.hot{background:var(--accent)}
+
+/* G2 glyphs: a small mark per kind in grey, no tags, needs-you is a red dot only */
+.g2 .tag{display:none}.g2 .m{grid-template-columns:22px 1fr auto}
+.g2 .m.need .ico{color:var(--accent)}.g2 .act{color:var(--muted)}
+.g2 .need-dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.g2 .wd .n{font:700 1rem var(--d);color:var(--text)}.g2 .wd .n.z{color:var(--dim)}
+
+/* G3 typographic: no boxes, a list with rules; kind is a small-caps word before the sender */
+.g3 .m{background:none;border:0;border-bottom:1px solid var(--line);margin:0;grid-template-columns:1fr auto;padding:8px 2px}
+.g3 .m.open{background:#14262a;border-left:2px solid var(--accent-2);padding-left:8px}
+.g3 .kind{font:700 .66rem var(--d);letter-spacing:.14em;color:var(--dim);text-transform:uppercase;margin-right:6px}
+.g3 .tag{display:none}
+.g3 .act{color:var(--warn)}
+.g3 .m.need strong::before{content:'▸ ';color:var(--warn)}
+.g3 .wd{background:none;border:0;border-top:2px solid var(--line);min-height:44px}.g3 .wd.sel{border-top-color:var(--accent-2);background:none}
+.g3 .wd .bar{width:60%;height:3px;background:var(--muted)}.g3 .wd .bar.hot{background:var(--warn)}
+
+/* G4 teal family: the skin's own two colours, kinds as tints of teal, red reserved for danger */
+.g4 .m{border-left:3px solid #1f3a3c}.g4 .m.need{border-left-color:var(--accent-2)}
+.g4 .tag{border-color:#245457;color:#7fbfba}
+.g4 .m.need .tag{border-color:var(--accent-2);color:var(--accent-2)}
+.g4 .act{color:var(--accent-2)}
+.g4 .pip{width:7px;height:7px;background:#2c6b6a}.g4 .pip.hot{background:var(--accent-2)}
+</style></head><body>
+<h1>Today: quieter message styles</h1>
+<p class="lead">Same layout as mockup F (messages first, Needs you filter, day headers, merged lines, week strip). Only the styling changes: four ways to keep the list calm and let the one thing that needs you stand out. Shown at phone width; the desktop's left column and rail use the same pieces.</p>
+<div class="grid" id="g"></div>
+<script>
+const MSGS=[
+ ['Today · Day 127'],
+ ['call','Call','☎','Raster · Dry Shelf','They need a call: back out or push on?',{need:1,unread:1}],
+ ['job','Job','◆','Joss','Protection run: report',{open:1}],
+ ['crew','Crew','●','Sensor','Riding High',{unread:1}],
+ ['crew','Crew','●','Joss','3 back from the job: Raster, Plug, Sensor',{}],
+ ['Yesterday · Day 126'],
+ ['money','Money','¥','Grid','Asks about a raise',{need:1,unread:1}],
+ ['scout','Leads','◎','Your scout','2 new leads: Minibus (driver), Ledger (fixer)',{}],
+ ['crew','Crew','●','Joss','Grid hurt: back in 2 days',{}],
+];
+const DAYS=[['Mon',0,0,'past'],['Tue',0,0,'past'],['Wed',2,0,'today'],['Thu',2,0],['Fri',1,0],['Sat',0,0],['Sun',2,1,'sel']];
+const V=[
+ ['g1','G1 · Grey, with one red signal','Tags and dots all grey. Red only marks what waits on you (left rule, "Waiting on you", the bills day). A small teal square marks unread.',
+   (k,tag,ico,from,subj,o)=>`<span></span><div><small>${from}</small><strong>${subj}</strong>${o.need?'<span class="act">Waiting on you</span>':''}</div><span class="tag">${tag}</span>`,
+   ([d,n,hot])=>Array.from({length:n},(_,i)=>`<span class="pip ${hot&&i===0?'hot':''}"></span>`).join('')],
+ ['g2','G2 · Glyphs, no tags','A small grey mark per kind instead of a tag (☎ call, ◆ job, ● crew, ¥ money, ◎ leads). A red dot is the only colour in the list. The week shows a count per day.',
+   (k,tag,ico,from,subj,o)=>`<span class="ico" aria-label="${tag}">${ico}</span><div><small>${from}</small><strong>${subj}</strong>${o.need?'<span class="act">Waiting on you</span>':''}</div>${o.need?'<span class="need-dot" aria-hidden="true"></span>':'<span></span>'}`,
+   ([d,n])=>`<span class="n ${n?'':'z'}">${n||'·'}</span>`],
+ ['g3','G3 · Typographic list','No boxes: a ruled list like a printed log. The kind is a small grey word before the sender. What waits on you gets a sodium-yellow ▸; the week strip is a line per day.',
+   (k,tag,ico,from,subj,o)=>`<div><small><span class="kind">${tag}</span>${from}</small><strong>${subj}</strong>${o.need?'<span class="act">Waiting on you</span>':''}</div><span></span>`,
+   ([d,n,hot])=>n?`<span class="bar ${hot?'hot':''}"></span>`:''],
+ ['g4','G4 · Teal only','Uses the skin\'s own teal for everything: quiet tints for ordinary rows, full teal for what waits on you. Red stays reserved for danger (raids, someone down).',
+   (k,tag,ico,from,subj,o)=>`<span></span><div><small>${from}</small><strong>${subj}</strong>${o.need?'<span class="act">Waiting on you</span>':''}</div><span class="tag">${tag}</span>`,
+   ([d,n,hot])=>Array.from({length:n},(_,i)=>`<span class="pip ${hot&&i===0?'hot':''}"></span>`).join('')],
+];
+document.getElementById('g').innerHTML=V.map(([cls,h,p,row,mark])=>{
+  const list=MSGS.map(m=>m.length===1?`<div class="dayh">${m[0]}</div>`:`<div class="m ${m[5].need?'need':''} ${m[5].unread?'unread':''} ${m[5].open?'open':''}">${row(...m)}</div>`).join('');
+  const week=`<div class="week">${DAYS.map(x=>`<div class="wd ${x[3]||''}">${x[0]}${mark(x)}</div>`).join('')}</div><div class="wdetail"><b>Sun</b>Bills ¥5,900 (wages ¥3,900, rent ¥2,000)<br>Last day for Landing Hands</div>`;
+  return `<div class="v ${cls}"><h2>${h}</h2><p>${p}</p><div class="phone">
+   <section class="panel"><div class="t">Messages</div><div class="filters"><button class="on">All</button><button>Needs you<b>2</b></button><button>Unread<b>3</b></button></div>${list}</section>
+   <section class="panel"><div class="t">This week</div>${week}</section></div></div>`;
+}).join('');
+</script></body></html>
