@@ -22,7 +22,7 @@ import { ALERT_MAX } from './incidents.js';
 import { overwatchOf } from './battle.js';
 import { FIGHT, FIGHT_JOBS } from '../data/fights.js';
 import { DILEMMAS } from '../data/dilemmas.js';
-import { lineText } from './fighttext.js';
+import { lineText, nameList } from './fighttext.js';
 import * as Fight from './fight.js';
 import { actors, overwatchOp, driver, standbyReady, opById, grow, record, takeWhy, addNeural } from './run.js';
 import { currentStep, advance, exitRun } from './mission.js';
@@ -52,7 +52,7 @@ const feedLine = (l) => ({
   ...(l.order ? { order: l.order, from: l.from } : {}),
 });
 
-const names = (b, ids) => ids.map((id) => b.runners.find((r) => r.id === id)?.handle ?? id).join(', ');
+const names = (b, ids) => nameList(ids.map((id) => b.runners.find((r) => r.id === id)?.handle ?? id));
 
 // --- starting a fight ------------------------------------------------------------------------------
 
@@ -252,8 +252,11 @@ function slotsFor(b, due) {
 /** The choices of a dilemma call-in: its authored options (placeholder wording), then Pull back, which every call-in offers. */
 export function fightChoices(pending) {
   const d = DILEMMAS[pending.id];
+  // The hold's length and heat are the rules' numbers, so the trade-off lines read them (also for a call-in saved before they were slots).
+  const slots = { rounds: FIGHT.holdRounds, heat: FIGHT.holdHeat, ...pending.slots };
+  const said = (key) => { const t = lineText(key, slots); return t === key ? '' : t; }; // keeping the orders needs no trade-off line
   return [
-    ...d.options.map((o) => ({ id: o.id, label: lineText(`dilemma.${pending.id}.${o.id}`, pending.slots), cost: o.cost ? `[cost] heat +${o.cost.heat}` : '', push: false })),
+    ...d.options.map((o) => ({ id: o.id, label: lineText(`dilemma.${pending.id}.${o.id}`, slots), tradeoff: said(`dilemma.${pending.id}.${o.id}.tradeoff`), cost: o.cost ? `[cost] heat +${o.cost.heat}` : '', push: false })),
     { id: 'out', label: lineText('callin.pullBack'), cost: `[pullBackCost] no pay, heat +${FIGHT.retreat.heat}, reputation −${FIGHT.retreat.rep}`, exit: true },
   ];
 }

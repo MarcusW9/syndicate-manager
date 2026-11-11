@@ -729,7 +729,24 @@ test('wording is placeholders in data: every key a line or dilemma uses has text
   const names = [...STARTING_CREW.flatMap((o) => [o.handle, o.name.split(' ')[0]])];
   for (const [k, text] of Object.entries(FIGHT_TEXT)) for (const n of names) assert.ok(!text.includes(n), `${k} has the name ${n}`);
   assert.equal(lineText('nope.unknown'), 'nope.unknown');
-  assert.equal(lineText('attackHit', { who: 'A', enemy: 'B' }), '[attackHit] A hits B');
+  assert.equal(lineText('attackHit', { who: 'Jax', enemy: 'security guard 1' }), 'Jax gets a hit in on security guard 1.');
+  // A line starts with a capital whatever its first slot; a count switches the plural.
+  assert.equal(lineText('shotMiss', { enemy: 'drone 2', who: 'Jax' }), 'Drone 2 fires wide of Jax.');
+  assert.equal(lineText('ifNothing.shots', { n: 1 }), '1 shot with no shield assigned.');
+  assert.equal(lineText('ifNothing.shots', { n: 2 }), '2 shots with no shield assigned.');
+  assert.equal(lineText('ifNothing.radio', { n: 1 }), '1 radio call with no jam assigned.');
+});
+
+test('wording keeps its slots: nothing a line needs is left unfilled, and every trade-off and kind word exists', () => {
+  const need = { arrive: ['kind', 'n'], pressure: ['kind', 'n'], vanEarly: ['round'], vanIn: ['leaves'], vanHeld: ['rounds'], vanCantWait: ['outside'], 'threat.aim': ['enemy', 'who', 'chance', 'pips'], 'end.lost': ['who'], 'end.abandoned': ['who'], 'end.leftBehind': ['who'], 'end.lostRunner': ['who'], shotDead: ['enemy', 'who'] };
+  for (const [k, slots] of Object.entries(need)) for (const sl of slots) assert.ok(FIGHT_TEXT[k].includes(`{${sl}}`), `${k} keeps {${sl}}`);
+  for (const kind of ['hired', 'corp', 'drone', 'enforcer']) assert.ok(FIGHT_TEXT[`kind.${kind}`], `a word for ${kind}`);
+  for (const [id, d] of Object.entries(DILEMMAS)) for (const o of d.options) if (o.ordersPatch || o.vanWait || id === 'vanCantWait') assert.ok(FIGHT_TEXT[`dilemma.${id}.${o.id}.tradeoff`], `${id}.${o.id} says what it does`);
+  // Placeholders are gone: no key reads as a bracketed tag.
+  for (const [k, text] of Object.entries(FIGHT_TEXT)) assert.ok(!/^\[/.test(text), `${k} is still a placeholder`);
+  // Hit lines carry no numbers, and a downed or out line never says dead.
+  for (const k of ['attackHit', 'attackOut', 'overwatchHit', 'overwatchOut', 'shotHit', 'shotDown']) assert.ok(!/\d|pip/.test(FIGHT_TEXT[k]), `${k} has no damage numbers`);
+  for (const k of ['attackOut', 'overwatchOut', 'shotDown']) assert.ok(!/dead|dies|kill/.test(FIGHT_TEXT[k]), `${k} does not claim a death`);
 });
 
 // --- review fixes (PR 129) ----------------------------------------------------------------------------------

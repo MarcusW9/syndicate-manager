@@ -512,3 +512,17 @@ lines until it gets its own; a test keeps every district complete.
 **Where it goes.** `src/data/fightText.js` (the strings above), `src/data/dilemmas.js` (the call-in text), and `src/ui/` for button and label text. Paste the results back as `key: "text"` lines in the same order; anything off is flagged, not changed. Rough lines are fine.
 
 **Order if short on time:** B (the feed, it shows every round), then G (the call-ins), then F, C, D, E, H, I, A. Anything left on a placeholder reads as `[key]`, which the owner can see is pending.
+
+### Task 13: what came back (2026-11-11)
+
+**In the game now** (`src/data/fightText.js`, `src/data/dilemmas.js` unchanged): the round feed (B), the threat words (C), the order intents (D), "if nothing" (E), the end causes (F), the call-in text with a trade-off line per option (G), and the four enemy kind words (A, singular; the number follows: "security guard 2"). The five engine-2 jobs show them now. The report's event log reuses the feed lines as they are.
+
+**Adjusted against the rules** (the engine says otherwise, so the line changed; details in the DESIGN.md row of 2026-11-11, "Battle wording"): `arrive`/`pressure` (one enemy arrives, `{n}` is its number, not a count); `vanIn` (`{leaves}` is a round number); `vanEarly` (the van arrives at the end of the round); `board` ("climbs into" is only true once `inVan` follows); `overwatch*` (it is not always at a doorway); `attackHit`/`shotHit`/`stabilise`/`flanked` (drones, and "they" pointing at the enemy); `leftDead`; `ifNothing.*` (the counts are shots a shield takes, shots with no shield, and radio calls with no *jam* assigned: an attack on a caller is not counted as an answer, it can miss; "clear" means no shots or calls at all); `intent.*` (jam, carry and board are attempts); `techUnderFire.radio` ("Hit the caller": the shot can miss); `vanCantWait.goNow` ("Leave on time": the van goes at the end of the round, so runners can still board in it); `vanCantWait.carryOn` (it is the same as leaving on time).
+
+**Held for the screens** (no key exists and nothing reads them yet; they go into `fightText.js` with the screens that show them). Corrected where the rules differ from the supplied text:
+- Risk picker. Cautious: "Pulls out at half their pips or fewer (rounded up). Someone can still go down; a death only follows a call you make." Steady: "Pulls out at 2 pips or fewer. Someone can still go down; a death only follows a call you make." Committed: "Never pulls out on their own, even with someone down. Fighting on can cost a life." (The supplied "not a guarantee of survival" was dropped: on cautious and steady nobody dies without a call-in, which the design promises.)
+- Plan: "Hack: {work} rounds of work; keep {tech} working." (four today, `FIGHT.workNeeded`); "Extract: hold until the van arrives, then get everyone aboard."; "No jammer: radio calls can only be stopped by hitting the caller first."; "No medic: nobody keeps the hurt on their feet." (patching and stabilising also work for anyone with a patch bonus; the aura is the medic's); "No armour on {tech}: nothing soaks a hit."; "Chance of losing someone: {chance}"; short "Loss risk: {chance}"; zero "No chance of losing someone in this forecast." (the forecast is the plan's odds at these orders, not a promise for the job).
+- Buttons: Next round, Change orders, Special actions, Pull back.
+- Call-in lead-in: "The crew is set to:".
+- Kind words, plural: hired guns, security guards, drones, enforcers.
+
