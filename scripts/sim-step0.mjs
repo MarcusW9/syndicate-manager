@@ -10,7 +10,8 @@
 //
 // Profiles: `first` is the numbers sheet as written; `hard` is the same with four enemies at the
 // start; `heavy` is hard with enemy shots taking 2 pips (patches give 2 back), to match the bigger
-// pip pools (a sensitivity check: are the plans different once fights have teeth?). Pips come from
+// pip pools; `varied` sets shot damage by kind (hired and drones 1, corp 2); `enforcers` adds a
+// 2-pip-shot enforcer to the docks (a sensitivity check: are the plans different once fights have teeth?). Pips come from
 // endurance (one per two points), rolled per runner from a fixed seed, so a crew's bodies differ
 // between seeds but are the same for every plan.
 // The hard profile writes step0-<date>-hard.md / .csv.
@@ -26,7 +27,15 @@ import { makeRng, d20, hash } from '../src/core/rng.js';
 const SEEDS = Number(process.argv[2] ?? 400);
 const DATE = process.argv[3] ?? '2026-11-10';
 const PROFILE = process.argv[4] ?? 'first';
-const PROFILES = { first: {}, hard: { startEnemies: 4 }, heavy: { startEnemies: 4, enemyHit: 2, patchHeal: 2 } };
+const PROFILES = {
+  first: {}, hard: { startEnemies: 4 }, heavy: { startEnemies: 4, enemyHit: 2, patchHeal: 2 },
+  // Shot damage by kind (owner, 2026-11-11: some enemies hit for 1, the tough ones for 2, never more).
+  varied: { startEnemies: 4, hitsByKind: true },
+  // The same, with the enforcer (a hired heavy) in about one in three docks slots.
+  enforcers: { startEnemies: 4, hitsByKind: true, docksEnforcers: true },
+  // Half the docks slots enforcers.
+  enforcersHalf: { startEnemies: 4, hitsByKind: true, docksEnforcers: true, docksHalf: true },
+};
 
 const ASSUMPTIONS = [
   'Threat 3 for every fight (base difficulty 14, three enemies at the start).',
@@ -45,7 +54,8 @@ const N = {
   // Endurance (owner, 2026-11-11): one pip for every two points of endurance (rounded down, at
   // least 1). It replaces the cool threshold and the muscle role's pip.
   endurancePerPip: 2,
-  enemyHit: 1, patchHeal: 1, // pips an enemy's shot takes, and a patch gives back
+  enemyHit: 1, patchHeal: 1, // pips an enemy's shot takes (when not by kind), and a patch gives back
+  hitByKind: { hired: 1, drone: 1, corp: 2, enforcer: 2 }, // with hitsByKind: 2 is the most any shot does
   // Runners' endurance in the sims: about normal, spread 2.5, clamped 3-18; muscle around 14, everyone else 11.
   enduranceMean: { muscle: 14, other: 11 }, enduranceSpread: 5,
   cover: { open: 0, half: 2, full: 4 }, hunkerStep: 4,
@@ -59,20 +69,21 @@ const N = {
   lightBelow: 0.5, seriousBelow: 0.25,
 };
 Object.assign(N, PROFILES[PROFILE]);
+const hitOf = (kind) => (N.hitsByKind ? N.hitByKind[kind] : N.enemyHit);
 const SUFFIX = PROFILE === 'first' ? '' : `-${PROFILE}`;
 const EXPOSURE = { E1: 0, E2: 2, E3: 4 }; // aimStep
 const DURABILITY = {
-  D1: { hired: [1, 0], corp: [1, 0], drone: [1, 0] }, // [pips, absorb]
-  D2: { hired: [1, 0], corp: [2, 0], drone: [1, 1] },
-  D3: { hired: [2, 0], corp: [3, 0], drone: [2, 1] },
+  D1: { hired: [1, 0], corp: [1, 0], drone: [1, 0], enforcer: [2, 0] }, // [pips, absorb]
+  D2: { hired: [1, 0], corp: [2, 0], drone: [1, 1], enforcer: [2, 0] },
+  D3: { hired: [2, 0], corp: [3, 0], drone: [2, 1], enforcer: [3, 0] },
 };
 const DECKS = {
-  normal: { hired: ['aim', 'aim', 'alarm'], corp: ['aim', 'backup', 'aim', 'flank'], drone: ['aim', 'alarm'] },
-  radio: { hired: ['alarm', 'alarm', 'aim'], corp: ['backup', 'alarm', 'aim', 'backup'], drone: ['alarm', 'alarm', 'aim'] },
+  normal: { hired: ['aim', 'aim', 'alarm'], corp: ['aim', 'backup', 'aim', 'flank'], drone: ['aim', 'alarm'], enforcer: ['aim', 'aim', 'flank'] },
+  radio: { hired: ['alarm', 'alarm', 'aim'], corp: ['backup', 'alarm', 'aim', 'backup'], drone: ['alarm', 'alarm', 'aim'], enforcer: ['aim', 'alarm', 'flank'] },
 };
 const ENCOUNTERS = {
   holdHack: { type: 'holdHack', kinds: ['corp', 'drone'], cover: { corp: 'half', drone: 'open' } },
-  holdExtract: { type: 'holdExtract', kinds: ['hired'], cover: { hired: 'half' } },
+  holdExtract: { type: 'holdExtract', kinds: N.docksEnforcers ? (N.docksHalf ? ['hired', 'enforcer'] : ['hired', 'hired', 'enforcer']) : ['hired'], cover: { hired: 'half', enforcer: 'half' } },
 };
 const CREW_GROUPS = {
   Under: { main: 0, other: -5, cool: -2 },
@@ -188,7 +199,7 @@ function telegraph(F) {
       else target = up[Math.floor(F.rDeck() * up.length)].id;
     }
     const t = { id: `${F.round}.${e.n}`, kind, enemy: e.n, target, shieldedBy: null, cancelled: false };
-    if (kind === 'aim') t.shown = aimChance(F, runner(F, target));
+    if (kind === 'aim') { t.shown = aimChance(F, runner(F, target)); t.hit = hitOf(e.kind); }
     F.threats.push(t);
   }
 }
@@ -282,7 +293,7 @@ function tryDuty(F, r, duty, target, priority, res) {
     case 'protect': {
       const T = target === 'protected' ? F.protect : target ?? (F.protect && F.protect !== r.id ? F.protect : lowestPips(standing(F).filter((x) => x.id !== r.id))?.id);
       if (!T || T === r.id || !standing(F).some((x) => x.id === T)) return null;
-      const shot = F.threats.filter((t) => t.kind === 'aim' && t.target === T && !res.shields.has(t.id)).sort((a, b) => b.shown - a.shown || a.enemy - b.enemy)[0];
+      const shot = F.threats.filter((t) => t.kind === 'aim' && t.target === T && !res.shields.has(t.id)).sort((a, b) => b.shown * b.hit - a.shown * a.hit || a.enemy - b.enemy)[0];
       if (shot) { res.shields.add(shot.id); return { kind: 'shield', threat: shot.id, for: T }; }
       const mate = runner(F, T);
       if (r.medic && mate.pips < mate.max && !res.patches.has(T)) { res.patches.add(T); return { kind: 'patch', target: T }; }
@@ -294,7 +305,7 @@ function tryDuty(F, r, duty, target, priority, res) {
         if (hurt) { res.patches.add(hurt.id); return { kind: 'patch', target: hurt.id }; }
       }
       if (r.jammer && !res.jam && F.threats.some((t) => RADIO.has(t.kind))) { res.jam = true; return { kind: 'jam' }; }
-      const shot = F.threats.filter((t) => t.kind === 'aim' && t.target !== r.id && !res.shields.has(t.id)).sort((a, b) => b.shown - a.shown || a.enemy - b.enemy)[0];
+      const shot = F.threats.filter((t) => t.kind === 'aim' && t.target !== r.id && !res.shields.has(t.id)).sort((a, b) => b.shown * b.hit - a.shown * a.hit || a.enemy - b.enemy)[0];
       if (shot) { res.shields.add(shot.id); return { kind: 'shield', threat: shot.id, for: shot.target }; }
       return null;
     }
@@ -329,7 +340,7 @@ const pct = (x) => `${Math.round(x * 100)}%`;
 const eName = (F, n) => { const e = F.enemies.find((x) => x.n === n); return `${e.kind} ${n}`; };
 function threatLine(F, t) {
   const who = t.target ? runner(F, t.target).handle : null;
-  return t.kind === 'aim' ? `${eName(F, t.enemy)} aims at ${who} (${pct(t.shown)}, ${N.enemyHit} pip${N.enemyHit > 1 ? 's' : ''})`
+  return t.kind === 'aim' ? `${eName(F, t.enemy)} aims at ${who} (${pct(t.shown)}, ${t.hit} pip${t.hit > 1 ? 's' : ''})`
     : t.kind === 'flank' ? `${eName(F, t.enemy)} works round ${who}'s cover`
       : t.kind === 'backup' ? `${eName(F, t.enemy)} radios for backup`
         : `${eName(F, t.enemy)} goes for the alarm`;
@@ -439,7 +450,7 @@ function playRound(F) {
       const hit = F.rRoll() < c;
       if (!hit) { out.push(`${eName(F, e.n)} misses ${v.handle}${t.shieldedBy ? ' (shielding)' : ''} (${pct(c)})`); continue; }
       if (v.absorb > 0) { v.absorb--; out.push(`${eName(F, e.n)} hits ${v.handle}; the vest takes it`); continue; }
-      const dmg = Math.min(v.pips, N.enemyHit); v.pips -= dmg; F.pipsLost = (F.pipsLost ?? 0) + dmg;
+      const dmg = Math.min(v.pips, t.hit); v.pips -= dmg; F.pipsLost = (F.pipsLost ?? 0) + dmg;
       if (v.pips <= 0) {
         if (v.leaving) { v.dead = true; out.push(`${eName(F, e.n)} hits ${v.handle} as they pull out alone: **dead**`); }
         else { v.down = true; out.push(`${eName(F, e.n)} hits ${v.handle}: **down**`); }
@@ -585,7 +596,7 @@ const D = (x) => x.toFixed(2);
 const lines = [];
 lines.push(`# Step 0: the battle rework's paper rules, played by script (${DATE}${SUFFIX ? `, profile ${PROFILE}` : ''})`);
 lines.push('');
-lines.push(`Generated by \`node scripts/sim-step0.mjs ${SEEDS} ${DATE} ${PROFILE}\`. Profile **${PROFILE}**${PROFILE !== 'first' ? ({ hard: ' (four enemies at the start)', heavy: ' (four enemies at the start; enemy shots take 2 pips, patches give 2 back)' }[PROFILE] ?? '') : ' (the numbers sheet as written)'}. The paper rules of \`drafts/SPEC-battle-orders.md\` with the first values of \`drafts/NUMBERS-battle-orders.md\`, standalone (not the game's fight code). ${SEEDS} seeds per cell; every cell is in \`step0-${DATE}${SUFFIX}.csv\`.`);
+lines.push(`Generated by \`node scripts/sim-step0.mjs ${SEEDS} ${DATE} ${PROFILE}\`. Profile **${PROFILE}**${PROFILE !== 'first' ? ({ hard: ' (four enemies at the start)', heavy: ' (four enemies at the start; enemy shots take 2 pips, patches give 2 back)', varied: ' (four enemies at the start; shots by kind: hired and drones 1 pip, corp 2)', enforcers: ' (as varied, with an enforcer, 2 pips and a 2-pip shot, in about one in three docks slots)', enforcersHalf: ' (as varied, with enforcers in about half the docks slots)' }[PROFILE] ?? '') : ' (the numbers sheet as written)'}. The paper rules of \`drafts/SPEC-battle-orders.md\` with the first values of \`drafts/NUMBERS-battle-orders.md\`, standalone (not the game's fight code). ${SEEDS} seeds per cell; every cell is in \`step0-${DATE}${SUFFIX}.csv\`.`);
 lines.push('');
 lines.push('Fights are hands-off (no dilemmas raised; their conditions are counted). Risk is steady unless stated.');
 lines.push('');

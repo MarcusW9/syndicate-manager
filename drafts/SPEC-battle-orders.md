@@ -215,9 +215,12 @@ section 12). Thresholds: first values in the numbers sheet.
   least 1), plus trait bonuses, less a light injury. So endurance 8 = 4 pips, 11 = 5, 14 = 7, 18 = 9:
   every two points shows. Endurance is read against itself, not the fight's difficulty: it is the
   person, not the job. (Superseded first proposal: 3 pips, +1 at 13, +2 at 17.)
-- **The bigger pools need bigger hits.** At 1 pip a shot, 5-7 pips make fights too easy (Step 0:
-  one plan matched adapting in 74% of cases). Proposal, from Step 0's `heavy` profile: **an enemy
-  shot takes 2 pips** and **a patch gives 2 back**, with four enemies at the start. Still open: a
+- **The bigger pools need bigger hits, varied by enemy (owner, 2026-11-11):** each kind's shot
+  takes 1 or 2 pips, and 2 is the most any shot does. Prototype: hired and drones 1, corp security 2,
+  and a new **enforcer** (a hired heavy: 2 pips, a 2-pip shot) in about one in three docks slots.
+  Shields go to the worst shot first (shown chance x pips). Four enemies at the start. (At 1 pip a
+  shot everywhere, 5-7 pips made fights too easy; at 2 everywhere, the `heavy` profile, it worked but
+  with no variety.) Still open: a
   light injury's cost (-1 or -2 pips), and the risk thresholds (steady at 1 pip is one shot from down
   when shots take 2).
 - **Outside fights (a later slice; numbers OPEN):** how fast fatigue builds and recovers, how fast
@@ -459,9 +462,12 @@ ENEMIES = {
   hired: { pips: 1, threats: 1, talk: -2, fleeBelow: 0.6, cover: 'half', deck: ['aim','aim','alarm'] },
   corp:  { pips: 2, threats: 1, talk: null, cover: 'half', deck: ['aim','backup','aim','flank'] },
   drone: { pips: 1, threats: 1, talk: null, armoured: true, cover: 'open', jamTakesOut: true, deck: ['aim','alarm'] },
+  enforcer: { pips: 2, threats: 1, talk: null, cover: 'half', deck: ['aim','aim','flank'] },   // 2026-11-11, docks
 };
+// Shot damage by kind (owner, 2026-11-11; 2 is the most): hired 1, drone 1, corp 2, enforcer 2.
+ENEMY_HIT = { hired: 1, drone: 1, corp: 2, enforcer: 2 };
 // fleeBelow is side-wide (OPEN: confirm): when the standing share of that kind falls below it, the rest flee.
-SITE_ENEMIES = { docks: ['hired'], heights: ['corp','drone'], /* ... */ };
+SITE_ENEMIES = { docks: ['hired','hired','enforcer'], heights: ['corp','drone'], /* ... */ };
 COUNT_BY_THREAT = [0, 2, 2, 3, 3, 4];       // index = threat 1-5, capped by fight type
 
 THREATS = {
@@ -680,6 +686,12 @@ endurance as the one physical attribute, with strength and speed as traits (sect
    sidearm aim bonuses.
 7. **The gate's bars:** "clearly beaten" at 10 points or 0.5 downs a fight may be too high for
    fights that are mostly won.
+9. **holdExtract's shape.** Step 0 (2026-11-11) found its plans converge: with more damage every
+   plan lands within a few points (76-90%), so one plan passes as good enough everywhere. The fight
+   is "survive three rounds, then board", and few orders change that. Options: make the van's
+   arrival depend on the crew (the driver, holding a spot, keeping the alarm down), contest the
+   boarding (each boarder exposed in the open; enemies rush the van), or a mid-fight choice (the van
+   can't wait: leave someone, or hold one more round).
 8. **The pip scale's knock-ons** (pips = endurance / 2, owner): enemy shots at 2 pips and patches at 2
    (proposed); a light injury at -1 or -2; risk thresholds that still mean something when a shot
    takes 2 (proposal: steady pulls out at 2 or fewer, cautious at half); dropping the muscle role's

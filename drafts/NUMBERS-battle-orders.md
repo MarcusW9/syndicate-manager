@@ -56,7 +56,7 @@ gunners (no medic); (c) tech, face, medic, gunner (no muscle). The jammer goes t
 | --- | --- | --- |
 | `runnerBasePips` | 3 | |
 | `endurancePerPip` | **2** (owner, 2026-11-11) | pips = endurance / 2, rounded down, at least 1; replaces `runnerBasePips`, `toughCool` and `musclePips` (spec section 10a). In Step 0 endurance was rolled per runner around 14 for muscle and 11 for everyone else (spread about 2.5): most runners have 4-6 pips, muscle 6-8. (First proposal, superseded: 3 pips, +1 at 13, +2 at 17.) |
-| `enemyHit` | **2** (proposal) | pips an enemy's shot takes; 1 is too little against 5-7 pips (pass 3 below) |
+| `enemyHit` | **by kind** (owner, 2026-11-11) | hired 1, drone 1, corp 2, enforcer 2; 2 is the most any shot does (pass 4 below). A flat 1 is too little against 5-7 pips; a flat 2 works but has no variety |
 | `patchHeal` | **2** (proposal) | pips a patch gives back, matched to `enemyHit` |
 | `lightWoundPips` | 1 | starting with a light injury |
 | `hit` | 1 | |
@@ -375,11 +375,30 @@ pips and muscle 6-8 (`docs/sims/step0-2026-11-11-pips*.md`).
 - Every two points of endurance is now a pip, so endurance visibly matters; the section 10
   arithmetic (3-pip runners, 1-pip shots) is superseded.
 
+**Pass 4 (2026-11-11): shot damage by enemy kind (owner: some 1, some 2, the toughest 2).** Four
+enemies at the start; hired and drones hit for 1, corp for 2; shields take the worst shot first
+(shown chance x pips). Reports: `docs/sims/step0-2026-11-11-pips-varied.md`, `-enforcers.md` (an
+enforcer, 2 pips and a 2-pip shot, in about one in three docks slots), `-enforcersHalf.md` (half).
+
+- **holdHack (corp 2s and drone 1s) works as intended:** protect best at D1 (92%), support at D2-D3
+  (86-87%); attack 84% / 55% / 39%; hold-only 17%. The crew's defaults trail (89% / 74% / 66%).
+- **holdExtract with hired only is too easy again** (every plan 91-99%): all its shots are 1 pip.
+- **With enforcers in a third of the docks slots** it bites (83-94%): `mixed` best at D1-D2, the
+  defaults best at D3. No verdict (proceed 0%; `protect` matches in 65% of cells, just under the
+  rework line).
+- **With enforcers in half the slots** every holdExtract plan lands at 76-90%, so `protect` matches
+  the adapted plan in 70% of cells: **REWORK**. More damage makes holdExtract's plans converge; its
+  shape (survive three rounds, then board) gives orders too little to change. That's now list A
+  item 9 in the spec.
+- Recommended for now: enforcers in a third of docks slots, and a design change to holdExtract
+  before the next pass.
+
 ## 13. Summary of the BATTLE keys
 
 ```js
 BATTLE = {
-  endurancePerPip: 2, enemyHit: 2, patchHeal: 2, lightWoundPips: 1,   // pips = floor(endurance / 2), at least 1
+  endurancePerPip: 2, patchHeal: 2, lightWoundPips: 1,   // pips = floor(endurance / 2), at least 1
+  // shots by kind: ENEMY_HIT = { hired: 1, drone: 1, corp: 2, enforcer: 2 }
   hit: 1, strongHit: 2, strongMargin: 10, strongMarginByDamage: { 2: 12, 3: 10, 4: 8, 5: 6 },
   absorb: { none: 0, street: 1, pro: 2 }, droneAbsorb: 1,          // ap ignores absorb
   cover: { open: 0, half: 2, full: 4 }, startCover: 'half', hunkerStep: 4,
