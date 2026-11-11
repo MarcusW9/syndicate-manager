@@ -24,7 +24,7 @@ import { heatIn, setHeat } from './heat.js';
 import { hallIn, residents, hasRoom } from './halls.js';
 import { hashRng } from './rng.js';
 import { nextRng } from './random.js';
-import { buildBattle, planIntents } from './battle.js';
+import { buildBattle, planIntents, BATTLE } from './battle.js';
 import { spotsForJob } from './fightspots.js';
 import { floorPieces, hallMap, waysIn } from './hallbuild.js';
 import { rollTarget } from './risk.js';
@@ -316,7 +316,7 @@ export function startRaidFight(state, raid) {
   const b = buildBattle({
     incident: 'raid', zone: 'inside', diff, threat, guards: RAID.raiders, crew: ops, approach: 'loud',
     spots: spotsForJob(d, raid.id, tpl.id, 'inside', ops.length, floor),
-    turret: hallTurret(state, d),
+    turret: hallTurret(state, d), cap: BATTLE.rounds,
   });
   b.foe = raidBy(raid); // who they are, and what the battle lines call one of them (core/battle.js foeWord)
   b.foeOne = raider(raid).one;

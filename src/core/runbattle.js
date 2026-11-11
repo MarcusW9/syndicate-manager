@@ -115,7 +115,7 @@ function afterRound(state, am, { orders = true } = {}) {
     return retreat(state, am, { text: 'Nobody is left standing.', choice: 'The van comes in and gets them all out', why: 'Nobody was left standing, so they were all dragged out.', forced: true });
   }
   if (b.door.length) { am.pending = { kind: 'door', opId: b.door[0] }; return state; }
-  if (b.round >= BATTLE.rounds) { am.pending = { kind: 'standoff' }; return state; }
+  if (b.round >= (b.cap ?? BATTLE.rounds)) { am.pending = { kind: 'standoff' }; return state; }
   const o = orders && am.orders ? BATTLE.orders[am.orders] : null;
   const name = o && ORDER_NAMES[am.orders];
   if (o?.pullAtHurt && b.runners.some((x) => !x.down && x.hp < x.max * o.pullAtHurt)) {
