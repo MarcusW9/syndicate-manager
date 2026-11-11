@@ -8,7 +8,7 @@ import { rankForHalls } from './tong.js';
 import { recordOf } from './record.js';
 
 const clamp = (n, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, n));
-const STAT_KEYS = ['combat', 'stealth', 'tech', 'social', 'piloting', 'medical', 'cool'];
+const STAT_KEYS = ['combat', 'stealth', 'tech', 'social', 'piloting', 'medical', 'cool', 'endurance']; // endurance counts like any stat (spec section 10a)
 export const TIER_BONUS = { rookie: 0, pro: 6, veteran: 12 };
 export const FAME_STEP = { unknown: 0, known: 5, respected: 12, elite: 20, legend: 30 };
 

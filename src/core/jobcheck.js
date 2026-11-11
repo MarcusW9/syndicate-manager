@@ -4,7 +4,7 @@
 // job or the canon; warnings are taste, for a person to look at. Run it on a pasted file with
 // `node scripts/check-job.mjs <file>`; the tests run it on every job in the game.
 
-import { STATS } from './development.js';
+import { ROLL_STATS as STATS } from './development.js'; // endurance isn't rolled or keyed on yet (spec section 10a)
 import { ROLE_PROFILES } from '../data/recruitPools.js';
 import { CAST } from '../data/cast.js';
 import { SITUATIONS } from '../data/situations.js';

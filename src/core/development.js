@@ -14,7 +14,11 @@ import { ROLE_PROFILES } from '../data/recruitPools.js';
 import { NAMES } from '../config/names.js';
 import { emptyLoadout } from './gear.js';
 
-export const STATS = ['combat', 'stealth', 'tech', 'social', 'piloting', 'medical', 'cool'];
+// Endurance (save v61; battle rework spec section 10a) is the eighth stat: generated, grown and aged
+// like the others, but nothing rolls it yet. It sets a runner's pips in the new fights (core/fight.js).
+export const STATS = ['combat', 'stealth', 'tech', 'social', 'piloting', 'medical', 'cool', 'endurance'];
+/** The stats a crisis, side task or job can roll or key on (every stat but endurance, for now). */
+export const ROLL_STATS = STATS.filter((s) => s !== 'endurance');
 
 // Growth points. Tuned with simulations (tests/development.test.js and
 // PLAN-PROGRESSION.md step 0): a founding rookie goes ~9 -> 15 over season one.
@@ -74,7 +78,7 @@ export function prepareOperative(op) {
   op.runnerId = op.runnerId ?? op.id; // one id for the person across signing and leaving (v59)
   const room = defaultHeadroom(op.age);
   op.potential = { ...op.potential };
-  for (const s of STATS) op.potential[s] = clamp(op.potential[s] ?? op.stats[s] + room, op.stats[s], 20);
+  for (const s of STATS) if (op.stats[s] !== undefined) op.potential[s] = clamp(op.potential[s] ?? op.stats[s] + room, op.stats[s], 20);
   op.progress = op.progress ?? {};
   op.startStats = op.startStats ?? { ...op.stats };
   op.scoutError = op.scoutError ?? 0;
@@ -100,23 +104,29 @@ function weightedCeiling(rng) {
   return 16;
 }
 
-/** Hidden ceilings per stat. Rookies have the most room; veterans are near their peak. */
-export function rollPotential(rng, stats, tier, role) {
+/** One stat's hidden ceiling (rollPotential's rule for a single stat). */
+export function rollCeiling(rng, s, now, tier, role) {
   const { primary, secondary } = ROLE_PROFILES[role];
-  const potential = {};
-  for (const s of STATS) {
-    const now = stats[s];
-    let ceiling;
-    if (s === primary) {
-      ceiling = tier === 'rookie' ? Math.max(now + 1, weightedCeiling(rng))
-        : tier === 'pro' ? Math.max(now, between(rng, 15, 17))
-        : now + (rng() < 0.5 ? 0 : 1);
-    } else {
-      const [lo, hi] = tier === 'rookie' ? (secondary.includes(s) ? [1, 4] : [0, 3]) : tier === 'pro' ? [0, 2] : [0, 1];
-      ceiling = now + between(rng, lo, hi);
-    }
-    potential[s] = clamp(ceiling, now, 20);
+  let ceiling;
+  if (s === primary) {
+    ceiling = tier === 'rookie' ? Math.max(now + 1, weightedCeiling(rng))
+      : tier === 'pro' ? Math.max(now, between(rng, 15, 17))
+      : now + (rng() < 0.5 ? 0 : 1);
+  } else {
+    const [lo, hi] = tier === 'rookie' ? (secondary.includes(s) ? [1, 4] : [0, 3]) : tier === 'pro' ? [0, 2] : [0, 1];
+    ceiling = now + between(rng, lo, hi);
   }
+  return clamp(ceiling, now, 20);
+}
+
+/**
+ * Hidden ceilings for the stats given (in STATS order). Rookies have the most room; veterans are near
+ * their peak. Only the stats present are rolled, so a caller can roll endurance after everything else
+ * (core/recruits.js) and no older roll moves.
+ */
+export function rollPotential(rng, stats, tier, role) {
+  const potential = {};
+  for (const s of STATS) if (stats[s] !== undefined) potential[s] = rollCeiling(rng, s, stats[s], tier, role);
   return potential;
 }
 

@@ -240,3 +240,27 @@ test('a v50 save renames driving to piloting everywhere it was kept', async () =
   assert.equal(o.potential.piloting, 17);
   assert.deepEqual(loaded.jobs[0].keyStats, ['piloting', 'cool']);
 });
+
+// 2026-11-11: endurance, the eighth stat (v61; battle rework spec section 10a).
+test('a v60 save gives every stored runner a seeded endurance and changes no other stat', async () => {
+  const s = createNewGame({ seed: 61, startCrew: 'fresh' });
+  const strip = (op) => { delete op.stats.endurance; if (op.potential) delete op.potential.endurance; if (op.startStats) delete op.startStats.endurance; };
+  for (const op of [...s.crew, ...(s.freelancers ?? []), ...(s.recruits ?? [])]) strip(op);
+  s.activeMission = { battle: { round: 1 } };
+  s.version = 60;
+  const text = JSON.stringify(s);
+  const loaded = await S.importSave({ text: async () => text });
+  const again = await S.importSave({ text: async () => text });
+  assert.equal(loaded.version, SAVE_VERSION);
+  for (const [i, op] of loaded.crew.entries()) {
+    const was = s.crew[i];
+    for (const k of Object.keys(was.stats)) assert.equal(op.stats[k], was.stats[k], `${op.handle} ${k} unchanged`);
+    assert.ok(op.stats.endurance >= 1 && op.stats.endurance <= 20, `${op.handle} endurance ${op.stats.endurance}`);
+    assert.ok(op.potential.endurance >= op.stats.endurance, 'a ceiling at or above it');
+    assert.equal(op.startStats.endurance, op.stats.endurance, 'counted from the day they joined, so no growth is invented');
+    assert.equal(op.stats.endurance, again.crew[i].stats.endurance, 'the same save gives the same endurance');
+  }
+  for (const op of [...loaded.freelancers, ...loaded.recruits]) assert.ok(op.stats.endurance >= 1);
+  assert.equal(loaded.activeMission.battle.engine, 1, 'a fight in progress finishes on the old code');
+  assert.equal(loaded.rngCounter, s.rngCounter, 'no roll moved');
+});

@@ -4,6 +4,13 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-11 · Endurance, the eighth stat (battle rework, slice 1a)
+- **Every runner has endurance (1-20), shown on their page with the other stats.** It is the body: in the new fights (coming in slice 1b-1c) it will set how many hits someone can take. Nothing rolls it yet.
+- **Muscle are built for it.** A new muscle's decent stats are now endurance and cool (piloting drops to a low stat; drivers cover it): a pro muscle has about 9-12, a veteran 10-14. Everyone else has it as a low stat. It grows and fades with age like any stat.
+- **Wages barely move.** Endurance counts in a runner's market price like every stat, and the price per stat point went from 5 to 4.5, so the average new lead costs the same (¥628 before, ¥627 after, over 4,000 leads); a tough muscle costs a little more.
+- **Old saves upgrade (save v61).** Everyone already on the books gets an endurance rolled the way their other stats were; no other stat changes. The founding crew of the authored start (Stitch, Jax, Static, Wheels, Velvet) have theirs set by hand (Jax 12).
+- **Rival names** read an endurance too, when scouted.
+
 
 
 

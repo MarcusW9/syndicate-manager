@@ -6,7 +6,10 @@ played in Step 0 `scripts/sim-step0.mjs` (profile `medic`; the reference impleme
 below, standalone and simplified). The decision log rows are in `docs/design/2026-11.md`
 (2026-11-10 and 2026-11-11). The session handoff is `drafts/HANDOFF-battle-rework.md`.
 
-One PR per slice; the owner merges. Run `npm test` before every push. Never loosen a test.
+One PR per slice; the owner merges. **Slice 1 is split into three PRs (owner, 2026-11-11):** 1a endurance
+(done: the stat, recruits, wages, save v61, which also tags fights in progress `engine: 1`); 1b the engine
+on its own with its tests, not wired to any job (1b-1c below); 1c wiring it into the five jobs, call-ins,
+the death rule and **battle growth** (1d-1h below). A review pass before each merge. Run `npm test` before every push. Never loosen a test.
 
 ## Principles for every slice
 
@@ -69,7 +72,10 @@ Call-ins through the existing `am.pending` / `describePending` / `resolvePending
 (cautious and steady pull back at a critical and hold the van; committed fights on and lets the van
 go). `autorun.js needsPlayer` and the away-job day rules as spec section 30. Left behind in slice 1:
 mark the runner missing for 7 days, back with a serious injury (slice 4 adds rescue, ransom and the
-death chance). Fight end: pips left become the injury (light below half, serious below a quarter,
+death chance). **Battle growth (owner, 2026-11-11):** endurance is rolled nowhere else, so engine-2 fights award it
+growth points at the fight's end (through `development.js applyGrowth`, like a job's XP), which is how the
+19-20 bodies come about; the amounts are tuned in slice 3's sim (propose numbers, ask the owner).
+Fight end: pips left become the injury (light below half, serious below a quarter,
 down = critical), the career `defeated` count, heat.
 
 **1e. The death rule.** Update `CLAUDE.md`'s design rule to "death only follows a risk the player

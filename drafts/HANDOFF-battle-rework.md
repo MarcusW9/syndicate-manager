@@ -1,5 +1,12 @@
 # Handoff: build the battle rework, slice 1 (2026-11-11)
 
+> **Update (2026-11-11):** slice 1 is split into three PRs (`drafts/PLAN-battle-slices.md`). **1a, endurance, is built**
+> (save v61, which also tags fights in progress `engine: 1`). The next session does **1b: the engine on its own**
+> (`core/fight.js`, `data/fights.js`, `data/dilemmas.js`, `data/fightText.js` and `tests/fight.test.js`, wired
+> to no job), on a fresh branch from `main` after 1a merges. 1c then wires it in and adds **battle growth**:
+> fights award endurance growth points (owner, 2026-11-11). Read the block below with that in mind; skip
+> its endurance items.
+
 Paste the block below into a new session as its first message. It is written to stand alone.
 
 ---
