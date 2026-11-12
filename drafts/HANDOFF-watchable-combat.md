@@ -112,7 +112,8 @@ exists, different odds).
 - `runfight.js feedLine` carries `key` and `slots` through to the recorded event, so the director and a
   report can be re-read from saved events.
 - Retention reuses `REPORT_LOGS_KEPT` (`core/report.js`, 20): the newest reports keep their full
-  `timeline.events`, older ones keep the summary, as now. See Flag F8 for the spotlight exception.
+  `timeline.events`, older ones keep the summary, as now. No exception for spotlight or showcase fights
+  (owner, F8): a showcase lasts in `op.showcases` and its run-report line.
 
 ### 0e. Preview tests (owner decision 7)
 
@@ -276,7 +277,7 @@ FIGHT.overdrive = { base: 2, maxCap: 5, usesPerFight: 1, minTargets: 2 }
 - **When it fires (automatic, deterministic, holds):** in `resolveOrders`, in `tryDuty('attack')`, when
   the runner is eligible and either
   - 2 or more **approaching** enemies are up, or
-  - no recipe waves remain to come and 3 or more enemies are up.
+  - no recipe waves remain to come, 3 or more enemies are up, and it is round 2 or later (owner, F7).
   Then return `{ kind: 'overdrive', targets: [n...] }`.
 - **Targets:** up to `cap` from `enemyOrder` with the runner's priority, skipping enemies already covered
   by other attackers' reservations, and reserving damage on each (`res.damage`).
@@ -372,12 +373,10 @@ export const SHOWCASES = {
   hold in holdExtract.
 - **F6. Per-group flee is a balance change everywhere hired backup arrives** (docks fights), not only
   with waves. A lone hired arrival is a group of one and never flees. The Slice 3 re-baseline measures it.
-- **F7. Overdrive in fights without a recipe.** "No recipe waves remain" is always true there, so at
-  threat 3-5 (3 or 4 starting enemies) Overdrive still fires in round 1. Owner's call: accept, or require
-  a recipe (or a round >= 2) for the second trigger.
-- **F8. Full-line retention for spotlight and showcase fights has nowhere to live.** `REPORT_LOGS_KEPT`
-  works per report (the newest 20 keep `timeline.events`); there is no per-fight store. **Recommended:**
-  drop the "spotlight or showcase fights kept beyond that" exception; a showcase's record lives in
+- **F7. Overdrive in fights without a recipe (decided).** "No recipe waves remain" is always true there,
+  so at threat 3-5 it would fire in round 1. Owner: the second trigger also needs round 2 or later.
+- **F8. Full lines for spotlight and showcase fights (decided).** `REPORT_LOGS_KEPT` works per report and
+  there is no per-fight store. Owner: the exception is dropped; a showcase's record lives in
   `op.showcases` and its run-report line.
 - **F9. Reputation has no per-run accumulator.** The bonus is added straight to `state.reputation` in
   `endFight`/`retreatFight`; the per-run cap is tracked on `am` (`am.showcaseRep`).
@@ -393,7 +392,7 @@ export const SHOWCASES = {
 1. All new `lineText` keys: `approach`, `overdriveStart`, the `showcase.holdTheLine.*` keys, the
    director's spotlight keys. Use placeholders.
 2. Wave recipes per job, and Hold the Line's stat threshold.
-3. The calls in Flags F2, F7 and F8.
+3. The call in Flag F2 (where pace is stored).
 
 ## Acceptance
 
