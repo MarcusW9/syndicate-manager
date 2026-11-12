@@ -240,11 +240,12 @@ function onClick(e) {
   const { action, id } = t.dataset;
   // On a wide screen the hall page builds in place (2026-11-09): its build view starts on the first tap.
   if (['nav', 'hall-page', 'halls-open', 'open-armoury', 'back'].includes(action)) hallInside = null;
-  if (action.startsWith('build-') && action !== 'build-hall' && !buildView && hallPage && (wideHall() || hallInside || action === 'build-part')) buildView = newBuildView(hallPage, hallInside ?? 'compound');
+  if (action.startsWith('build-') && action !== 'build-hall' && !buildView && hallPage && (wideHall() || hallInside || action === 'build-part')) buildView = { ...newBuildView(hallPage, hallInside ?? 'compound'), on: action !== 'build-part' };
 
   switch (action) {
     case 'hall-building': hallInside = id; buildView = null; break;
     case 'hall-compound': hallInside = null; buildView = null; break;
+    case 'build-done': buildView = null; break;
     case 'toggle-hallart': setPref('hallart', !getPref('hallart')); break;
     case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; screen = id; nav.clear(); scrollDue = 0; buildView = null; tongsView = null; cityDistrict = null; leadName = null; clientPage = null; hallPage = null; openMessageId = null; openOperativeId = null; openRecruitId = null; gearSlot = null; bagPick = null; plan = null; sidePlan = null; pickSlot = null; break;
     case 'continue': {
@@ -390,7 +391,7 @@ function onClick(e) {
     // Building up a hall (ui/hallbuild.js, core/hallbuild.js).
     // A hall's page opens on its home tab whichever tab the link was on (ui/nav.js HOMES).
     case 'hall-page': remember(action, id); goHome('hall'); hallPage = id; openOperativeId = null; openRecruitId = null; buildView = null; break;
-    case 'build-hall': if (wideHall()) { hallPage = id; buildView = newBuildView(id, hallInside ?? 'compound'); break; } remember(action, id); goHome('hallBuild'); hallPage = id; hallInside = null; openOperativeId = null; buildView = { ...newBuildView(id, 'compound'), screen: true }; break;
+    case 'build-hall': if (wideHall()) { hallPage = id; buildView = { ...newBuildView(id, hallInside ?? 'compound'), on: true }; break; } remember(action, id); goHome('hallBuild'); hallPage = id; hallInside = null; openOperativeId = null; buildView = { ...newBuildView(id, 'compound'), screen: true }; break;
     case 'build-cell': {
       const [x, y] = id.split(',').map(Number);
       const hall = hallIn(state, buildView.district);
@@ -1812,18 +1813,18 @@ function renderHallPage(d) {
   // The compound (default) or the inside of one of its buildings (2026-11-09).
   const bld = hallInside ? buildings.find((b) => b.id === hallInside) ?? null : null;
   const scope = bld ? bld.id : 'compound';
-  // The plan's tap grid is live inside a building, and on a wide screen on the compound too (defences).
-  const tapping = wide || !!bld;
+  // Two modes (2026-11-12): looking (the default: buildings, who is in them, what's next) and building.
+  // The plan's tap grid is live inside a building, and on the compound once Start building is pressed
+  // (wide screens; a phone has its own Build screen).
   const mine = buildView && buildView.district === d && buildView.scope === scope;
-  const view = tapping ? (mine ? buildView : newBuildView(d, scope)) : null;
+  const view = bld ? (mine ? buildView : newBuildView(d, scope)) : wide && mine && buildView.on ? buildView : null;
   const vb = bld ? insideBox(site, bld.id) : '0 0 360 240';
   const planBox = `<div class="bplan hallpage__plan ${bld ? 'is-inside' : ''}">${planSvg(state, d, art, bld ? { inside: bld.id } : { compound: true })}${view
     ? buildGrid(state, view, esc, art)
     : `<svg class="bgrid" viewBox="${vb}">${compoundOverlay(state, d, { esc, art, tap: true })}${raidWaysFor(state, d)}</svg>`}</div>`;
-  const empty = !(h.build ?? []).length;
-  const buildNote = bld ? '' : empty
-    ? `<button class="btn btn--primary btn--block hallpage__start" data-action="build-hall" data-id="${esc(d)}">Start building ›</button><p class="small muted">Defences go on the compound outside. To build rooms, open a building.</p>`
-    : `<p class="small muted">${esc(hallBuildLine(h, defenceCut(state, d)))}</p>${wide ? '' : `<button class="btn btn--primary btn--block" data-action="build-hall" data-id="${esc(d)}">Build defences</button>`}`;
+  const buildNote = bld ? ''
+    : view ? `<button class="btn btn--block hallpage__start" data-action="build-done">Done</button>`
+    : `<button class="btn btn--primary btn--block hallpage__start" data-action="build-hall" data-id="${esc(d)}">Build defences ›</button><p class="small muted">Defences go on the compound outside. To build rooms, open a building.</p>`;
   const facesOf = (list, total) => (list.length ? `<div class="hallfaces">${list.map((op) => `<button class="hallfaces__op" data-action="open-op" data-id="${esc(op.id)}" aria-label="${esc(`${op.name} "${op.handle}", ${op.tier ?? ''} ${op.role}`)}">${face(op)}</button>`).join('')}${Array.from({ length: Math.max(0, total - list.length) }, () => '<span class="hallfaces__free" aria-hidden="true">+</span>').join('')}</div>
       <ul class="list hallpage__names">${list.map((op) => `<li class="small"><strong>${esc(op.handle)}</strong> <span class="muted">${esc(op.tier ?? '')} ${esc(op.role)}</span> ${statusChip(availability(state, op))}</li>`).join('')}</ul>` : '<p class="muted small">Nobody sleeps here yet.</p>');
   const movein = free && movers.length ? `
@@ -1860,7 +1861,7 @@ function renderHallPage(d) {
         </div>
         <p class="small">Level ${h.level} · ${h.owned ? 'no rent' : `${money(h.rent)}/wk`} · heat ${heatIn(state, d)}/10${hallShut(state, d) ? ` · <span class="citycard__shut">shut after a raid until day ${h.shutUntil}</span>` : ''}${live ? ` · <span class="citycard__raid">raid ${esc(raidWhen(raid))}</span>` : ''}</p>`;
   return `
-    <section class="panel hallpage ${wide ? 'is-wide' : ''} ${bld ? 'is-inside' : ''}">
+    <section class="panel hallpage ${wide ? 'is-wide' : ''} ${bld ? 'is-inside' : ''} ${view && !bld ? 'is-building' : ''}">
       ${art ? SPRITE_SHEET : ''}
       <div class="hallpage__cols">
       <div class="hallpage__map">
@@ -1875,12 +1876,13 @@ function renderHallPage(d) {
         <h2>${bld ? 'Sleeps in this building' : 'Who sleeps here'} <span class="muted small">${bld ? `${bld.who.length}/${bld.beds} beds` : `${who.length}/${bedsOf(h)} beds`}</span></h2>
         ${facesOf(bld ? bld.who : who, bld ? bld.beds : bedsOf(h))}
         ${movein}
-        <h2>${bld ? 'Build rooms here' : 'Build defences'} <span class="muted small">floor ${floorUsed(h)}/${floorOf(h)}</span></h2>
-        ${tapping ? `${buildSheet(state, view, ui)}${buildPalette(state, view, ui)}` : `${mine && buildView.part ? buildSheet(state, buildView, ui) : ''}<p class="small muted">Defences go outside, on the compound. Open the plan to place them.</p>`}
-        ${place}
-        ${bld ? '' : `<h2>Defences <span class="muted small">${nDef} ${nDef === 1 ? 'piece' : 'pieces'}</span></h2>
-        <p class="small bdef">${defenceLine(state, d)}</p>
-        <h2>Outside</h2><ul class="secs">${outside}</ul>`}
+        ${view
+    ? `<h2>${bld ? 'Build rooms here' : 'Build defences'} <span class="muted small">floor ${floorUsed(h)}/${floorOf(h)}</span></h2>${buildSheet(state, view, ui)}${buildPalette(state, view, ui)}`
+    : `${mine && buildView.part ? buildSheet(state, buildView, ui) : ''}`}
+        ${bld || view ? '' : `<h2>Defences <span class="muted small">${nDef} ${nDef === 1 ? 'piece' : 'pieces'}</span></h2>
+        <p class="small bdef">${defenceLine(state, d)}</p>`}
+        ${view ? '' : `<h2>Grow the hall</h2>${place}`}
+        ${bld || view ? '' : `<h2>Outside</h2><ul class="secs">${outside}</ul>`}
       </div>
       </div>
     </section>`;

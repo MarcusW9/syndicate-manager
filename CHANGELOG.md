@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-12 · Hall plans are clearer
+- **Looking and building are two modes on a computer.** A hall's page now opens on the plan, who is in each building, what's next and one defences line. **Build defences ›** switches to building (the grid, the pieces, and a Done button). Before, the pieces and "tap a free square" sat beside a plan with no grid.
+- **One look for each thing.** The part you can take next is dashed cyan with its price on it. Parts for later are a plain faint outline, with no hatching and no "level 4" labels (the cards below still say when they open). Doors are cyan, like the key says; squares kept clear for a raid are grey. Red is left for buttons and raids.
+- **Not changed yet:** how much room there is for defences. That needs the hall's layout and the raid fight changed together, so it's the next step (see DESIGN.md).
+
 ## 2026-11-11 · Stat tiles line up
 - **The numbers on a stats panel now sit on one line.** A tile with a trait note ("6 +2 Hothead") used to sit higher than its neighbours, because a spacing rule meant for the progress bar landed on the label or the number instead. It now applies only above a bar.
 

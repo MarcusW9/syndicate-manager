@@ -15,6 +15,7 @@ import { sitePlanSvg } from './siteplan.js';
 import { defencesIn, defenceCut, raidOn, raidWho } from '../core/raids.js';
 import { hasHallArt, hallArtSvg, waysOverlay, insideBox, SPRITE_SHEET } from './hallart.js';
 import { pickSite } from '../data/sites.js';
+import { money } from '../core/money.js';
 
 const C = HALL_BUILD.cell;
 
@@ -55,7 +56,6 @@ export function partsOverlay(site, level, { tap = false, free = null, esc = (x) 
   if (!site.parts) return '';
   const nx = nextPart(site, level);
   const held = new Set(heldParts(site, level).map((p) => p.id));
-  const hatch = '<defs><pattern id="bhatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="rgba(11,13,17,.72)"/><path d="M0 0v6" stroke="#2a303b" stroke-width="1.6"/></pattern></defs>';
   const act = (id) => (tap ? ` data-action="build-part" data-id="${esc(id)}" role="button" tabindex="0"` : '');
   const rect = (p) => { const [x0, y0, x1, y1] = p.grid; return { x: x0 * C, y: y0 * C, w: (x1 - x0 + 1) * C, h: (y1 - y0 + 1) * C }; };
   // Names are drawn last, on a dark halo, so nothing (the hatching, a neighbour's, a route) is over one.
@@ -72,17 +72,19 @@ export function partsOverlay(site, level, { tap = false, free = null, esc = (x) 
         : `<text class="bpart__name" x="${x + 7}" y="${y + h - 7}">${label}</text>`);
       return '';
     }
+    // Three looks (2026-11-12): ours is the plain building, the next part is dashed cyan with its name
+    // and price, and the rest are a faint outline with no words (the cards below say when they open).
     const isNext = nx?.id === p.id;
-    names.push(`<text class="bpart__name is-locked" x="${x + w / 2}" y="${y + h / 2 - 6}" text-anchor="middle">${label}</text>`);
-    return `<g class="bpart ${isNext ? 'is-next' : ''}"${act(p.id)} aria-label="${esc(`${p.name}, ${isNext ? 'take it with Expand' : `level ${p.lvl}`}`)}"><rect x="${x + 1}" y="${y + 1}" width="${w - 2}" height="${h - 2}" fill="${art ? 'rgba(0,0,0,0)' : 'url(#bhatch)'}" class="bpart__area"/>
-      <text class="bpart__tag" x="${x + w / 2}" y="${y + h / 2 + 9}" text-anchor="middle">${isNext ? 'EXPAND ›' : `LEVEL ${p.lvl}`}</text></g>`;
+    if (isNext) names.push(`<text class="bpart__name is-next" x="${x + w / 2}" y="${y + h / 2 - 6}" text-anchor="middle">${label}</text>`);
+    return `<g class="bpart ${isNext ? 'is-next' : 'is-later'}"${act(p.id)} aria-label="${esc(`${p.name}, ${isNext ? `take it with Expand, ${money(p.cost)}` : `opens at level ${p.lvl}`}`)}"><rect x="${x + 1}" y="${y + 1}" width="${w - 2}" height="${h - 2}" fill="${art || isNext ? 'rgba(0,0,0,0)' : 'rgba(11,13,17,.5)'}" class="bpart__area"/>
+      ${isNext ? `<text class="bpart__tag" x="${x + w / 2}" y="${y + h / 2 + 9}" text-anchor="middle">EXPAND › <tspan class="bpart__price">${money(p.cost)}</tspan></text>` : ''}</g>`;
   }).join('');
   const kept = free ? heldParts(site, level).flatMap(partCells).filter((k) => !free.has(k)).map((k) => {
     const [cx, cy] = k.split(',').map(Number);
     const r = { x: cx * C, y: cy * C };
     return `<rect class="bkeep" x="${r.x + 3}" y="${r.y + 3}" width="${C - 6}" height="${C - 6}"${tap ? ` data-action="build-keep" data-id="${cx},${cy}" role="button" tabindex="0" aria-label="Kept clear: a way in"` : ''}/>`;
   }).join('') : '';
-  return `${hatch}${kept}${areas}${names.join('')}`;
+  return `${kept}${areas}${names.join('')}`;
 }
 const x1Narrow = (p) => p.grid[2] - p.grid[0] < 2;
 
@@ -154,8 +156,9 @@ export function raidWaysFor(state, district) {
 /** A small key for the markers on the plan: nothing on the map is unexplained. */
 export function planKey(state, district, { building = false, compound = false, inside = false } = {}) {
   const raid = !inside && !!raidWaysFor(state, district);
+  const next = !inside && !!nextPart(hallMap(district), hallIn(state, district)?.level ?? 1);
   const item = (cls, text) => `<li><i class="bkey__i ${cls}" aria-hidden="true"></i>${text}</li>`;
-  return `<ul class="bkey" aria-label="Key to the plan">${raid ? item('is-raid', 'Raiders\' way in') : ''}${item('is-door', 'Door')}${compound ? item('is-roof', 'Building: tap to go in') : ''}${compound ? '' : item('is-bed', 'Bed')}${building && !inside ? item('is-keep', 'Kept clear: a way in') : ''}${inside ? '' : item('is-lock', 'Locked: Expand')}</ul>`;
+  return `<ul class="bkey" aria-label="Key to the plan">${raid ? item('is-raid', 'Raiders\' way in') : ''}${item('is-door', 'Door')}${compound ? item('is-roof', 'Building: tap to go in') : ''}${compound ? '' : item('is-bed', 'Bed')}${next ? item('is-next', 'Next: tap to Expand') : ''}${building && !inside ? item('is-keep', 'Kept clear: a way in') : ''}${inside ? '' : item('is-lock', 'Later')}</ul>`;
 }
 
 /** The grid over the plan: free cells to tap, built cells to pick, the picked one outlined. */
