@@ -16,7 +16,7 @@ After a change that alters how the game looks, before committing:
 npm run screenshots -- <short-slug>
 ```
 
-Then add a row to the top of the table below and commit the folder with the change. Playwright's Chromium is needed once: `npx playwright install chromium`.
+Then add a row to the top of the table below and commit the folder with the change. If the fixer's raid call opens during the run, the script puts it off ("Decide later") and carries on, so it no longer stops the run part-way. Playwright's Chromium is needed once: `npx playwright install chromium`.
 
 ## Versions
 

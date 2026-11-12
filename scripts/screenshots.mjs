@@ -68,7 +68,15 @@ async function shot(name) {
   shots.push(file);
 }
 const visible = (sel) => page.locator(sel).filter({ visible: true });
+/** The fixer's raid call (app.js renderRaidCallSheet) can open over any screen once a raid is
+ *  warned, and it takes every click. Put it off ("Decide later": no answer is given, the raid stays
+ *  open), so the run carries on the same whenever the call comes. */
+async function closeRaidCall() {
+  const later = visible('.raidsheet [data-action="raid-call"][data-id="|later"]').first();
+  if (await later.count()) { await later.click(); await page.waitForTimeout(150); console.log("put off the raid call"); }
+}
 async function click(sel) {
+  await closeRaidCall();
   const el = visible(sel).first();
   if (!(await el.count()) || !(await el.isEnabled())) return false;
   await el.scrollIntoViewIfNeeded();
