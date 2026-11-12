@@ -39,13 +39,36 @@ the core roll, duties, risk levels or the death-risk contract.
 5. **Wording goes through `lineText` keys** in `data/fightText.js`. Use placeholder keys; the owner
    writes the text.
 
-## Order of work
+## Order of work (owner, 2026-11-12)
 
-1. **Point 1 first, with its test** (Slice 0a below): always draw ahead, then the determinism test.
-   Nothing else starts until that test passes.
-2. The rest of Slice 0, **including the odds cache key (Slice 0c)**.
-3. Slices 1 to 5 in order. **Slice 3 includes the per-group flee (3c)**: it is built before waves, never
-   after.
+Slices 3 to 5 are **not** built straight after Slice 2. A playtest sits between them, because the slice 3
+validation sim of the base rules came back "neither" (`docs/sims/orders-*.md`): adding rules that change
+balance before readable fights have been tried would tune two things at once.
+
+1. **Slice 0a first, with its test:** always draw ahead, then the determinism test. Nothing else starts
+   until that test passes.
+2. **The rest of Slice 0**, including the odds cache key (0c).
+3. **Slice 1, the director (text only).** In parallel, the owner writes the director's spotlight wording
+   (content question 1): with placeholder keys spotlights read flat and a playtest would undersell them.
+4. **Slice 2, the map and Fast mode.** Before any map code, a **phone-width mockup** (360px, then wider)
+   with six runners and six or more enemies, protectors fanned beside teammates and attackers on lanes;
+   the owner approves it, and `data/fightLayouts.js` follows it. Read "UI skin" in `ART.md` and the newest
+   `docs/screenshots/` set first.
+5. **Playtest gate (owner).** Play holdHack and holdExtract fights at Watch and Fast on today's rules
+   against success criteria 1-3: a fight can be understood without the log; the combat specialist and the
+   protector can be told apart without names or the log; a good result traces back to the player's own
+   orders. Record the findings in DESIGN.md. **The owner decides here how much of Slices 3-5 is still
+   needed;** nothing below starts without that call.
+6. **Slice 3, in two steps, each its own PR:**
+   - **3-i: the approach stage, the `approaching` priority, per-group flee, then waves** (3a, 3b, 3c, 3d;
+     3c before 3d, never after). These serve the pillar most directly: "Rook on the door" is an order.
+   - **3-ii: Reflex Overdrive** (3e), after 3-i has been played. Content question 3 first.
+   - Re-baseline the sims after each step (0f).
+7. **Slice 4, showcases, only once the frequency numbers support them.** First a sim of how many eligible
+   holdHack fights a player meets per in-game week (only three jobs are holdHack, and a fight starts only
+   from an unsaved danger incident), with the 14-day cooldown; set Hold the Line's chance from that, not
+   from the "1 per 3-6 eligible fights" guess. Content question 4 first.
+8. **Slice 5, reuse in holdExtract** (configuration only).
 
 Each slice is its own PR, with `npm test` green, a CHANGELOG entry and a DESIGN.md row.
 
@@ -393,6 +416,14 @@ export const SHOWCASES = {
 1. All new `lineText` keys: `approach`, `overdriveStart`, the `showcase.holdTheLine.*` keys, the
    director's spotlight keys. Use placeholders.
 2. Wave recipes per job, and Hold the Line's stat threshold.
+3. **Overdrive's source (before 3-ii).** As written only Reflex wiring unlocks it, so a muscle runner
+   without the implant never dominates. Should a combat specialisation also unlock it?
+4. **What Hold the Line does that Overdrive doesn't (before Slice 4).** As written both are a burst of
+   attacks on arriving enemies, so a player won't feel the difference. A showcase should do something
+   the normal rules can't, within the safeguards (no runner pips changed, no fight ended directly).
+5. **Raids next? (no slice here).** Raids and every other fight stay on Engine 1, so the game has two
+   looks for fights. If raids are the next Engine 2 port, the layout format in `data/fightLayouts.js`
+   should allow for a hall's map.
 
 ## Acceptance
 
