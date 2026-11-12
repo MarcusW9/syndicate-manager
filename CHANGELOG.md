@@ -4,6 +4,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-12 · Fight groundwork: seeds, odds key, line slots
+- **No change you can see yet.** Fights now carry a stored seed for future showcase moments, the planning odds already take account of the rules still to come, and each recorded fight line keeps the key and slots it was written from. Tests now check that previews never change a fight.
+
 ## 2026-11-12 · Fights draw the same at every pace
 - **A fight now plays out the same whether you watch it, hand it off or send the crew hands-off.** Before, hands-off and away fights drew their rounds differently from watched ones, so the same seed could end differently. Fights saved mid-way before this keep working. Hands-off and away fights will roll differently from before (a one-off shift).
 
