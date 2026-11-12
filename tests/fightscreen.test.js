@@ -157,9 +157,9 @@ test('changing a holdExtract runner\'s duty edits the stage they are in and keep
   assert.ok(orderChoices(b, r).every((c) => c.label && Array.isArray(c.targets)));
 });
 
-// --- watched fights wait; hands-off ones draw as they always did --------------------------------------
+// --- every fight draws ahead; only watched ones wait for orders --------------------------------------
 
-test('a watched fight draws the round\'s threats before it waits for orders; a hands-off fight does not', () => {
+test('every fight draws the round\'s threats ahead, watched or hands-off (the same seed gives the same fight at every pace)', () => {
   const s = find('data_pull', inFight);
   assert.equal(s.activeMission.battle.drawn, true, 'the threats are drawn, so the screen shows them before orders');
   assert.equal(needsPlayer(s), true);
@@ -167,7 +167,7 @@ test('a watched fight draws the round\'s threats before it waits for orders; a h
   const am = next.activeMission;
   if (!am.done && am.battle && !am.pending) assert.equal(am.battle.drawn, true, 'and the next round is drawn when this one ends');
   const hands = find('data_pull', inFight, { opts: { callIn: 'never' } });
-  assert.equal(hands.activeMission.battle.drawn, false, 'a hands-off fight draws when it plays the round');
+  assert.equal(hands.activeMission.battle.drawn, true, 'a hands-off fight draws ahead too, so pace never changes the rolls');
 });
 
 // --- the markup ---------------------------------------------------------------------------------------
