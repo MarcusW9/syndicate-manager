@@ -4,6 +4,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-12 · Fights know where everyone stands on the map
+- **No change you can see yet.** The five jobs that use the new fights now work out where each runner and enemy stands on the job's real site map, behind cover that matches the cover the fight's rules give them. Where the site has too little cover for that, a low barrier will be drawn so the map still tells the truth. This is the groundwork for watching fights live on the map. Saves upgrade on their own (a fight in progress gets its places on load); rules and odds are unchanged.
+
 ## 2026-11-12 · The director tells each fight round
 - **Each fight round is now recorded as moments** (routine, notable, spotlight), so the screens can slow down for the good bits. Spotlights are things like a runner dropping three enemies in two rounds, a protector covering the same teammate again and again, a last stand on one pip, a hack finished at the last moment, a jam that kills two radio calls, and a carry into the van. The spotlight sentences are plain drafts for now, and nothing on screen shows them yet. Rules and odds are unchanged.
 
