@@ -12,6 +12,8 @@ import { BATTLE } from '../src/data/battle.js';
 import { postSlots, canPlacePost, placePost, removePiece, refundOf } from '../src/core/hallbuild.js';
 import { defencesIn, defenceCut, postAssignments, setRaidPost, cycleRaidPost, startRaidFight, defenders } from '../src/core/raids.js';
 import { buildBattle, ordersFor, guardHitChance } from '../src/core/battle.js';
+import { runBattle } from '../src/core/runbattle.js';
+import { hallShut } from '../src/core/raids.js';
 import { renderHallBuild } from '../src/ui/hallbuild.js';
 
 const D = 'nightMarket';
@@ -159,4 +161,19 @@ test('the build screen\'s Posts tab: a place on the plan to tap for each slot he
   const sheet = renderHallBuild(ui, built, { ...view, picked: id });
   assert.match(sheet, /Window post<\/strong> <span class="muted small">built day/);
   assert.match(sheet, /Remove · ¥1,250 back/);
+});
+
+test('no fall-back lines yet: if the people on the posts are beaten they retreat, and the hall pays for it as for any walk-out (2026-11-12)', () => {
+  let s = tong(2);
+  for (const [piece, slot] of [['nest', 'room-roof'], ['window', 'room-window'], ['gate', 'gate-left']]) s = placePost(s, D, piece, slot);
+  s.raids = [raidOf(s)];
+  startRaidFight(s, s.raids[0]);
+  assert.ok(s.activeMission.battle.runners.every((r) => r.post), 'everyone on a post');
+  for (const r of s.activeMission.battle.runners) { r.hp = 0; r.down = true; } // beaten
+  const cash = s.cash;
+  for (let n = 0; s.activeMission && !s.activeMission.done && n < 20; n++) s = runBattle(s);
+  assert.equal(s.raids[0].outcome, 'withdrew', 'beaten, they pull back');
+  assert.equal(s.activeMission.aborted, true);
+  assert.equal(hallShut(s, D), true, 'the hall is shut for the week');
+  assert.ok(s.cash < cash, 'what was kept there and the repairs are paid');
 });
