@@ -7,6 +7,7 @@ import { SITES, pickSite, siteHeight } from '../data/sites.js';
 import { portrait } from './art.js';
 import { gridSite, cutCorners } from './route.js';
 import { DRAWN, GROUND, LOOKS, SITE_LIGHT, glowSvg, litSvg, pavingSvg, rectsOf, shadowsSvg, textureSvg } from './siteart.js';
+import { propsSvg } from './siteprops.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const W = 360;
@@ -94,6 +95,7 @@ export function sitePlanSvg({ kit = null, site: given = SITES.generic, clean = f
     ${glowSvg(site)}
     ${shadowsSvg(site.shapes)}
     ${site.shapes.filter((x) => !GROUND.has(x.cls)).map((x) => shapeSvg(x, light, site.look)).join('')}
+    ${propsSvg(site)}
     ${sight}
     ${clean ? '' : `<path class="sp-route-case" d="${route}"/><path class="sp-route" d="${route}"/>
     ${nodes.map(([x, y]) => `<circle class="sp-node" cx="${x}" cy="${y}" r="3"/>`).join('')}

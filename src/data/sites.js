@@ -28,6 +28,13 @@ const ROAD = [
 // The plan every job used before slice 4, still used for any district without its own.
 const GENERIC = {
   name: 'a job site',
+  // The city's tech dotted round (ui/siteprops.js): decoration only, never cover, never on the route.
+  props: [
+    { kind: 'car', x: 150, y: 216 }, { kind: 'car', x: 252, y: 218, c: '#ff3d5f' },
+    { kind: 'holo', x: 14, y: 14, w: 44, h: 14, c: '#3de8d8' }, { kind: 'drone', x: 76, y: 20 },
+    { kind: 'billboard', x: 284, y: 42, w: 20, h: 7, c: '#ff3d5f' }, { kind: 'dish', x: 242, y: 42 },
+    { kind: 'vending', x: 336, y: 184 }, { kind: 'junction', x: 10, y: 186 },
+  ],
   aria: 'Site plan: the way in through the gate, the grounds inside, the target building, the overwatch perch and the van',
   points: { van: [40, 224], perch: [176, 24], target: [272, 74] },
   paths: {
@@ -64,6 +71,13 @@ const GENERIC = {
 // a mahjong parlour. Overwatch on the footbridge over the market.
 const NIGHT_MARKET = {
   name: 'a night market',
+  // The city's tech dotted round (ui/siteprops.js): decoration only, never cover, never on the route.
+  props: [
+    { kind: 'holo', x: 18, y: 18, w: 56, h: 16, c: '#ff3d5f' }, { kind: 'drone', x: 96, y: 34, c: '#ff3d5f' },
+    { kind: 'car', x: 132, y: 216, c: '#b48cff' }, { kind: 'car', x: 300, y: 218 },
+    { kind: 'billboard', x: 274, y: 44, w: 18, h: 6, c: '#b48cff' }, { kind: 'vending', x: 6, y: 180, c: '#f2d541' },
+    { kind: 'junction', x: 250, y: 190 }, { kind: 'vent', x: 228, y: 196 },
+  ],
   aria: 'Site plan of a night market: the gate and the van, lanes of stalls with crowds, a mahjong parlour with a back room, and a footbridge for overwatch',
   points: { van: [40, 224], perch: [196, 26], target: [318, 72] },
   paths: {
@@ -118,6 +132,12 @@ const NIGHT_MARKET = {
 // server room. Overwatch on the next tower's roof.
 const HEIGHTS = {
   name: 'a corporate tower',
+  // The city's tech dotted round (ui/siteprops.js): decoration only, never cover, never on the route.
+  props: [
+    { kind: 'holo', x: 124, y: 14, w: 64, h: 22, c: '#3de8d8' }, { kind: 'holo', x: 196, y: 44, w: 24, h: 10, c: '#ff3d5f' },
+    { kind: 'car', x: 190, y: 216, c: '#f2d541' }, { kind: 'car', x: 296, y: 218, c: '#3de8d8' },
+    { kind: 'vending', x: 204, y: 200 }, { kind: 'junction', x: 8, y: 200 }, { kind: 'drone', x: 92, y: 40 },
+  ],
   aria: 'Site plan of a corporate tower: the service road and the van, the loading bay, a plaza with planters, the tower with a server room, and the next tower\'s roof for overwatch',
   // How it's drawn (ui/siteart.js): cyan off the tower's glass across a tiled plaza, sodium in the loading bay.
   look: 'heights', light: '#3de8d8',
@@ -164,6 +184,12 @@ const HEIGHTS = {
 // Overwatch up a floodlight tower.
 const BASIN = {
   name: 'the racecourse stables',
+  // The city's tech dotted round (ui/siteprops.js): decoration only, never cover, never on the route.
+  props: [
+    { kind: 'holo', x: 10, y: 108, w: 44, h: 16, c: '#f2d541' }, { kind: 'drone', x: 30, y: 20, c: '#f2d541' },
+    { kind: 'car', x: 60, y: 216 }, { kind: 'car', x: 150, y: 218, c: '#ff3d5f' },
+    { kind: 'vending', x: 336, y: 150, c: '#f2d541' }, { kind: 'junction', x: 188, y: 104 },
+  ],
   // How it's drawn (ui/siteart.js): the floodlight's cream light, a cone of it over the stables, gravel yards.
   look: 'basin', light: '#f7efc8',
   texture: [{ kind: 'gravel', x: 160, y: 112, w: 200, h: 86 }, { kind: 'gravel', x: 236, y: 0, w: 124, h: 112 }],
@@ -231,6 +257,12 @@ const BASIN = {
 const DOCKS = {
   name: 'a container yard',
   aria: 'Site plan of a container yard on the harbour',
+  // The city's tech dotted round (ui/siteprops.js): decoration only, never cover, never on the route.
+  props: [
+    { kind: 'holo', x: 322, y: 146, w: 32, h: 14, c: '#ff3d5f' }, { kind: 'drone', x: 334, y: 16, c: '#ff3d5f' },
+    { kind: 'car', x: 150, y: 216 }, { kind: 'car', x: 196, y: 218, c: '#f2d541' },
+    { kind: 'billboard', x: 20, y: 14, w: 40, h: 9, c: '#ff3d5f' }, { kind: 'junction', x: 8, y: 200 }, { kind: 'dish', x: 70, y: 14 },
+  ],
   // How it's drawn (ui/siteart.js): Red Lantern red off the harbour, sodium yard lamps, concrete slabs.
   look: 'docks', light: '#ff3d5f',
   texture: [{ kind: 'concrete', x: 0, y: 0, w: 318, h: 212 }],
@@ -377,6 +409,13 @@ const OLD_TOWN_TARGET = {
 const OLD_TOWN = {
   name: 'a tenement',
   aria: 'Site plan of a tenement in Old Town',
+  // The city's tech dotted round (ui/siteprops.js): decoration only, never cover, never on the route.
+  props: [
+    { kind: 'billboard', x: 234, y: 26, w: 8, h: 36, c: '#ff3d5f' }, { kind: 'dish', x: 320, y: 36 },
+    { kind: 'cables', points: [[120, 36], [135, 41], [150, 36]] }, { kind: 'cables', points: [[226, 70], [238, 75], [250, 72]] },
+    { kind: 'car', x: 60, y: 216, c: '#f2d541' }, { kind: 'car', x: 130, y: 218 },
+    { kind: 'vending', x: 300, y: 186, c: '#ff3d5f' }, { kind: 'junction', x: 8, y: 200 }, { kind: 'vent', x: 14, y: 150 },
+  ],
   // How it's drawn (ui/siteart.js): sodium street light, a cobbled courtyard, the red sign at the alley's foot.
   look: 'oldTown', light: '#f2b544', paving: true,
   texture: [{ kind: 'cobble', x: 132, y: 100, w: 170, h: 52 }],
@@ -758,6 +797,7 @@ export function assemble(plot, approach, cover, target) {
   return {
     name: plot.name,
     look: plot.look, light: plot.light, paving: plot.paving, texture: plot.texture, glow: plot.glow,
+    props: plot.props,
     aria: `${plot.aria}: ${approach.aria}, ${cover.aria}, ${target.aria}`,
     parts: { approach: approach.id, cover: cover.id, target: target.id },
     points: { van: approach.van, perch: plot.perch, target: target.point },

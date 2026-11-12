@@ -4,6 +4,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-12 · The city's tech on every job map
+- **Every job map now has the city's tech dotted round it:** auto-taxis on the roads with light bars and headlight beams, AR adverts hanging in the air (over the market gate, between the towers, over the harbour, an odds board on the racecourse), rooftop neon and a tall Old Town sign, satellite dishes, vending machines throwing colour on the ground, parked delivery drones, junction boxes, steam vents and cables strung between the tenements.
+- **They're only scenery:** none is cover, none sits on the crew's route or where the guards wait, and a test keeps it that way.
+
 ## 2026-11-12 · Lantern Course at its real size
 - **The racecourse on the Basin map is far bigger now:** only its near bend shows, sweeping across the top-left corner and off the edges, so it reads as a real track beside the stables, not a small oval. The dirt track sits between two white rails with the infield's mown grass inside.
 
