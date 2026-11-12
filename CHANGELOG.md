@@ -4,6 +4,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-12 · Trait notes use the name
+- **Joss's notes on a new trait name the person** ("Cortex has stopped asking where the clean bandages are") instead of opening with "They", which had nothing to point at. A Synergy names both ("Fog and Crow have learned each other's pauses"). Notes already in the inbox keep their old wording.
+
 ## 2026-11-12 · Crew news in one message
 - **A day's crew news is one message.** Traits and Synergies earned on the same day now share a single "Crew updates (4)" message; open it to read each one. A single note still reads as itself. A Synergy is one line for the pair, not one for each of them.
 
