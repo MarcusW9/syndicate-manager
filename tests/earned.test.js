@@ -188,7 +188,8 @@ test('progress is hidden: nothing says anything until a trait is earned, then Jo
   assert.ok(!has(d, 'ghost_driver'));
   assert.ok(extra.every((m) => names.some((n) => m.subject === `${d.handle}: ${n}`)), 'only earned notes (here Riding High), no "4/5" progress');
   job(s, [roll(d, 'piloting', true, { situations: ['escape'] })], [d]);
-  const note = s.inbox.find((m) => m.subject.endsWith('Ghost Driver'));
+  // A day's crew news shares one message (2026-11-12): the note is one of its lines.
+  const note = s.inbox.filter((m) => m.kind === 'crewnotes').flatMap((m) => m.payload.lines).find((l) => l.subject.endsWith('Ghost Driver'));
   assert.equal(note.subject, `${d.handle}: Ghost Driver`);
   assert.match(note.body, /Five clean exits/);
   assert.ok(d.history.some((h) => /Ghost Driver/.test(h)));
@@ -380,7 +381,20 @@ test('everyone on the job counts towards traits, outside the inside team too', (
   for (const id of [c, d]) assert.ok(Object.keys(s.crew.find((o) => o.id === id).track?.together ?? {}).length > 0, `${id} worked the job with the others`);
 });
 
-test('two Synergies on one day are two messages you can open, each naming the partner', async () => {
+test('a day\'s crew news is one message; a Synergy is one line for the pair', async () => {
+  const s = game(3);
+  const [a, b, c] = s.crew;
+  const { crewNote } = await import('../src/core/earned.js');
+  crewNote(s, { key: 'k1', who: [a.id], subject: `${a.handle}: One`, body: 'x' });
+  assert.equal(s.inbox[0].subject, `${a.handle}: One`, 'one line reads as itself');
+  crewNote(s, { key: 'k2', who: [b.id, c.id], subject: `${b.handle}: Two`, body: 'y' });
+  crewNote(s, { key: 'k2', who: [b.id, c.id], subject: `${c.handle}: Two`, body: 'y' });
+  assert.equal(s.inbox.filter((m) => m.kind === 'crewnotes').length, 1);
+  assert.equal(s.inbox[0].subject, 'Crew updates (2)', 'the repeated pair key adds no line');
+  assert.equal(s.inbox[0].read, false);
+});
+
+test('two Synergies on one day keep unique inbox ids', async () => {
   let s = game(3);
   const [a, b, c] = s.crew;
   for (const p of [b, c]) a.track = { ...(a.track ?? {}), together: { ...(a.track?.together ?? {}), [p.id]: 99 } };

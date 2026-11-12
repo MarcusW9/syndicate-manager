@@ -4,6 +4,19 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-12 · Overwatch picker says who is best
+- **Each overwatch candidate now shows what they do to the job's read** ("Lowers the read: High to Moderate", or "Read stays Moderate"), and the list is ordered by that first, then by the kit's stat. Before, it ranked by the kit's stat alone, so a drone driver's Piloting 17 sat above a rifle-carrying fighter on a combat job and nothing said why.
+- **"Piloting 17 · 3 actions" sits on one line,** centred together instead of the second half dropping below the first.
+
+## 2026-11-12 · Trait notes use the name
+- **Joss's notes on a new trait name the person** ("Cortex has stopped asking where the clean bandages are") instead of opening with "They", which had nothing to point at. A Synergy names both ("Fog and Crow have learned each other's pauses"). Notes already in the inbox keep their old wording.
+
+## 2026-11-12 · Crew news in one message
+- **A day's crew news is one message.** Traits and Synergies earned on the same day now share a single "Crew updates (4)" message; open it to read each one. A single note still reads as itself. A Synergy is one line for the pair, not one for each of them.
+
+## 2026-11-12 · Scout report names the name
+- **"Cortex is back: them has moved on" fixed.** When a scout came back and the name had already been signed elsewhere, the message lost the name and said "them". The trip now remembers who it was sent after, so it reads "Cortex is back: Mist has moved on".
+
 ## 2026-11-12 · How battles work, written down
 - **New `docs/BATTLES.md`.** One page on how fights play now: the two engines and which jobs use which, pips and HP, enemies, the round in order, every roll and chance, orders and the risk level, how a fight ends, the death rule, call-ins, and the old engine's rules. Checked against the code; no game change.
 

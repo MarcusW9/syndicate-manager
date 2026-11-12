@@ -64,7 +64,7 @@ import { OVERWATCH_KIT, ALERT_MAX } from '../core/incidents.js';
 import { leanPicks, jobRead, planRead, planTries } from '../core/squad.js';
 import { renderBoard, renderPicker, renderCoverage, assignSlot, planKit, fitGearArt } from './board.js';
 import { renderArmoury, renderLoadout, renderGearSheet, gearPlace } from './gear.js';
-import { buyGear, buyOffer, sellGear, equip, unequip, itemName, sellPrice } from '../core/gear.js';
+import { buyGear, buyOffer, sellGear, equip, unequip, itemName, sellPrice, kitsFor } from '../core/gear.js';
 import { renderWatch, mountWatch, syncWatch, isWatching, stopWatch, togglePause, toggleSpeed, showLatest, justFinished, closeFinale } from './watch.js';
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
 import { earnedText } from '../core/earned.js';
@@ -1431,7 +1431,7 @@ function renderMessage(m) {
       <button class="btn btn--ghost inbox__back" data-action="back">← ${esc(backLabel())}</button>
       <h1>${crewLinks(m.subject)}</h1>
       <p class="muted">${esc(m.type.charAt(0).toUpperCase() + m.type.slice(1))} · Day ${m.day}</p>
-      ${m.type === 'report' ? renderReportTimeline(m) : m.kind === 'week' && m.payload?.lines ? renderWeekSummary(m) : `<p class="body">${crewLinks(m.body)}</p>`}
+      ${m.type === 'report' ? renderReportTimeline(m) : m.kind === 'crewnotes' && m.payload?.lines?.length > 1 ? renderCrewNotes(m) : m.kind === 'week' && m.payload?.lines ? renderWeekSummary(m) : `<p class="body">${crewLinks(m.body)}</p>`}
       ${m.kind === 'renewal' ? renderRenewal(m) : ''}
       ${m.kind === 'heat' ? renderHeatNotice(m) : ''}
       ${m.kind === 'spec' ? renderSpecOffer(m) : ''}
@@ -1442,6 +1442,11 @@ function renderMessage(m) {
       ${m.kind === 'raid' ? renderRaidCall(m) : ''}
       ${m.kind === 'raid-warning' ? renderRaidWarning(m) : ''}
       ${jobLink}`;
+}
+
+/** A day's crew news in one message (core/earned.js crewNote): each line's heading, then its text. */
+function renderCrewNotes(m) {
+  return `<div class="crewnotes">${m.payload.lines.map((l) => `<section><h2 class="crewnotes__head">${crewLinks(l.subject)}</h2><p class="body">${crewLinks(l.body)}</p></section>`).join('')}</div>`;
 }
 
 /** The Sunday summary (core/week.js): the week's lines, then what was paid. */
@@ -2664,7 +2669,7 @@ function renderPlan() {
       </div>
     </section>
 
-    ${pickSlot ? renderPicker(boardUi, { plan, tpl: t, threat: v.threat, slot: pickSlot, people: pickerPeople(), freelancersFull: freelancersFull(), fit: pickerFit(t, v.threat), sortBy: pickSort, jossId: jossFor(pickSlot) }) : ''}`;
+    ${pickSlot ? renderPicker(boardUi, { plan, tpl: t, threat: v.threat, slot: pickSlot, people: pickerPeople(), freelancersFull: freelancersFull(), fit: pickerFit(t, v.threat), sortBy: pickSort, jossId: jossFor(pickSlot), overRead: pickSlot === 'over' ? overReadFor() : null }) : ''}`;
 }
 
 /** Helpers the squad board borrows (ui/board.js), so it looks like the rest of the game. */
@@ -2687,6 +2692,26 @@ function pickerFit(tpl, threat) {
 }
 
 /** Who Joss would put in a slot: from his picks for the whole squad, the one not placed yet (core/squad.js leanPicks). */
+/** For the overwatch picker: what each candidate would do to the plan's read (core/squad.js planRead). */
+function overReadFor() {
+  const job = state.jobs.find((j) => j.id === plan?.jobId);
+  if (!job) return null;
+  const ORDER = ['low', 'moderate', 'high', 'extreme'];
+  const crew = plan.crew.map((id) => [...state.crew, ...(state.freelancers ?? []).map(freelancerAsCrew)].find((o) => o.id === id)).filter(Boolean);
+  const wheels = state.crew.find((o) => o.id === plan.wheels) ?? null;
+  const read = (overwatch, kit) => planRead(state, job, { crew, approach: plan.approach, overwatch, kit, wheels }).level;
+  const baseLevel = read(null, null);
+  const memo = new Map();
+  return (op) => {
+    if (!memo.has(op.id)) {
+      const kit = kitsFor(op).includes(plan.kit) ? plan.kit : kitsFor(op)[0] ?? null;
+      const level = kit ? read(op, kit) : baseLevel;
+      memo.set(op.id, { level, rank: ORDER.indexOf(level), baseLevel, baseRank: ORDER.indexOf(baseLevel) });
+    }
+    return memo.get(op.id);
+  };
+}
+
 function jossFor(slot) {
   const job = state.jobs.find((j) => j.id === plan?.jobId);
   if (!job) return null;

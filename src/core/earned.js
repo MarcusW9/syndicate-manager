@@ -50,6 +50,9 @@ export function uniqueInboxId(state, base) {
 const districtText = (d) => NAMES.districtsInText?.[d] ?? NAMES.districts?.[d] ?? d;
 const clientName = (id) => CLIENTS.find((c) => c.id === id)?.name ?? id;
 
+/** A trait's note (Joss's voice) with the name in place of "they": {op}, and {partner} for a Synergy. */
+const noteText = (state, note, op, extra) => note.replaceAll('{op}', op.handle).replaceAll('{partner}', state.crew.find((o) => o.id === extra.partner)?.handle ?? 'a partner');
+
 /** Their entry for a trait, if they have it (and it matches, for district/client/partner traits). */
 export function earnedOf(op, id, where = {}) {
   return (op.earned ?? []).find((e) => e.id === id && Object.entries(where).every(([k, v]) => e[k] === v)) ?? null;
@@ -94,16 +97,44 @@ export function earn(state, op, id, extra = {}) {
   op.earned = [...(op.earned ?? []), entry];
   RESTART[id]?.(track(op), extra); // a temporary trait comes back only after a fresh run of the same
   op.history.push(`Day ${state.day}: ${def.name}. ${earnedText(state, entry, 'history')}`);
-  // One message per trait earned, even two of the same on one day (a Synergy with two
-  // partners): the id and the subject name who or where it's about (owner's save, 2026-10-28).
+  // Crew news of one day shares one message (owner, 2026-11-12): a single note reads as before,
+  // two or more become "Crew updates (n)". A Synergy is one line for the pair, not one each.
   const about = extra.partner ? ` with ${state.crew.find((o) => o.id === extra.partner)?.handle ?? 'a partner'}`
     : extra.district ? ` (${districtText(extra.district)})` : extra.client ? ` (${clientName(extra.client)})` : '';
-  state.inbox.unshift({
-    id: uniqueInboxId(state, ['earned', op.id, id, ...Object.values(extra), state.day].join('-')), type: 'crew', day: state.day,
+  const pair = extra.partner ? [op.id, extra.partner].sort().join('+') : null;
+  crewNote(state, {
+    key: pair ? `${id}:${pair}` : `${id}:${op.id}:${Object.values(extra).join(':')}`,
+    who: pair ? [op.id, extra.partner] : [op.id],
     subject: `${op.handle}: ${def.name}${about}`,
-    body: `${def.note} (${op.handle}: ${earnedText(state, entry)})`,
-    blocking: false, read: false,
+    body: `${noteText(state, def.note, op, extra)} (${op.handle}: ${earnedText(state, entry)})`,
   });
+}
+
+/**
+ * Add a line of crew news to today's single "crew notes" message (kind 'crewnotes',
+ * payload.lines). One line: the message reads as that line. Two or more: "Crew updates (n)",
+ * moved to the top and unread again. A line with a key already there is dropped (the other half
+ * of a pair). Mutates the (cloned) state.
+ */
+export function crewNote(state, line) {
+  const handles = (ids) => ids.map((i) => state.crew.find((o) => o.id === i)?.handle).filter(Boolean);
+  let m = state.inbox.find((x) => x.kind === 'crewnotes' && x.day === state.day);
+  if (!m) {
+    m = { id: uniqueInboxId(state, `crew-notes-${state.day}`), type: 'crew', day: state.day, kind: 'crewnotes', payload: { lines: [] }, blocking: false, read: false };
+  } else {
+    if (m.payload.lines.some((l) => l.key === line.key)) return;
+    state.inbox = state.inbox.filter((x) => x !== m);
+    m.read = false;
+  }
+  m.payload.lines.push({ key: line.key, who: line.who, subject: line.subject, body: line.body });
+  const lines = m.payload.lines;
+  if (lines.length === 1) { m.subject = line.subject; m.body = line.body; }
+  else {
+    const names = [...new Set(lines.flatMap((l) => handles(l.who)))];
+    m.subject = `Crew updates (${lines.length})`;
+    m.body = names.join(', ');
+  }
+  state.inbox.unshift(m);
 }
 
 /** Short Fuse a third time: it sticks. They take the Hothead trait for good. */

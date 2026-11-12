@@ -147,7 +147,7 @@ export function sendScout(prev, ref, opId) {
   const state = structuredClone(prev);
   const returnDay = state.day + SCOUT_DAYS;
   state.crew.find((o) => o.id === opId).condition.awayUntil = returnDay;
-  state.sideOut = [...(state.sideOut ?? []), { taskId: 'scout', scout: card.id, crewIds: [opId], returnDay }];
+  state.sideOut = [...(state.sideOut ?? []), { taskId: 'scout', scout: card.id, scoutName: card.name, crewIds: [opId], returnDay }];
   state.inbox.unshift({ id: `scout-sent-${card.id}-${state.day}`, type: 'job', day: state.day, subject: fill(SCOUT_TEXT.sent.subject, { op: op.handle, name: card.name }), body: fill(SCOUT_TEXT.sent.body, { op: op.handle, name: card.name }), blocking: false, read: true });
   return state;
 }
@@ -157,7 +157,7 @@ export function resolveScout(state, entry) {
   const op = state.crew.find((o) => o.id === entry.crewIds[0]);
   const card = findCard(state, entry.scout);
   if (!op) return;
-  const v = { op: op.handle, name: card?.name ?? 'them' };
+  const v = { op: op.handle, name: card?.name ?? entry.scoutName ?? 'that name' };
   let key = 'gone';
   if (card) key = applyScout(state, card, op) ? 'ok' : 'miss';
   state.inbox.unshift({ id: `scout-back-${entry.scout}-${state.day}`, type: 'job', day: state.day, subject: fill(SCOUT_TEXT[key].subject, v), body: fill(SCOUT_TEXT[key].body, v), blocking: false, read: false });
