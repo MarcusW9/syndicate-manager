@@ -4,6 +4,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-12 · Scout report names the name
+- **"Cortex is back: them has moved on" fixed.** When a scout came back and the name had already been signed elsewhere, the message lost the name and said "them". The trip now remembers who it was sent after, so it reads "Cortex is back: Mist has moved on".
+
 ## 2026-11-11 · Stat tiles line up
 - **The numbers on a stats panel now sit on one line.** A tile with a trait note ("6 +2 Hothead") used to sit higher than its neighbours, because a spacing rule meant for the progress bar landed on the label or the number instead. It now applies only above a bar.
 
