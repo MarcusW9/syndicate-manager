@@ -2269,3 +2269,5 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .postrow { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; min-height: 52px; padding: 8px 12px; background: var(--panel-2); border: 1px solid var(--line); }
 .postrow.is-empty { border-color: rgba(242, 213, 65, 0.5); }
 .postrow__none { color: var(--warn); }
+
+.kitline { display: inline-flex; align-items: center; gap: 0.4em; flex-wrap: wrap; } /* "Piloting 17 · 3 actions" on one line, centred together (2026-11-12) */

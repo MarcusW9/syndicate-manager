@@ -56,7 +56,7 @@ export function planKit(plan, op) {
 function kitLine(op, kitId) {
   const k = overwatchKit(op, kitId);
   // The uses on a line of their own (owner, 2026-11-06: "combat 11 · 2 shots" wrapped mid-phrase on the card).
-  return `${statValue(k.stat, effectiveStat(op, k.stat).value + k.bonus)}<span class="kituses"><span class="kituses__sep"> · </span>${k.uses} ${kitId === 'rifle' ? 'shots' : 'actions'}</span>`;
+  return `<span class="kitline">${statValue(k.stat, effectiveStat(op, k.stat).value + k.bonus)}<span class="kituses"><span class="kituses__sep"> · </span>${k.uses} ${kitId === 'rifle' ? 'shots' : 'actions'}</span></span>`;
 }
 
 // The squad as polaroids over an inventory (owner, 2026-11-08; mock-up drafts/prototypes/gear-grid.mjs,
@@ -231,14 +231,14 @@ export function renderBoard(ui, { plan, tpl, people, crewSize, approachName = ''
  * people: [{ op, status (availability), freelance: { share, left } | null }].
  * fit: { want, stats(op) → [{ key, name, glyph, value, fit: good|shaky|weak, mark }] } for this job.
  */
-export function renderPicker(ui, { plan, tpl, threat, slot, people, freelancersFull, fit = null, sortBy = 'fit', jossId = null }) {
+export function renderPicker(ui, { plan, tpl, threat, slot, people, freelancersFull, fit = null, sortBy = 'fit', jossId = null, overRead = null }) {
   const { esc, face, statusChip } = ui;
   const outside = !!OUTSIDE[slot];
   const current = outside ? plan[OUTSIDE[slot]] ?? null : plan.crew[Number(slot.split(':')[1])] ?? null;
   // What counts for this slot, best first.
   const FIT = {
     over: { name: 'overwatch', note: 'Only someone carrying a rifle (combat counts) or a drone (tech counts). Gear goes on from their page on the Crew screen.',
-      score: (op) => (planKit(plan, op) ? effectiveStat(op, overwatchKit(op, planKit(plan, op)).stat).value : -50),
+      score: (op) => (planKit(plan, op) ? effectiveStat(op, overwatchKit(op, planKit(plan, op)).stat).value + (overRead ? (3 - overRead(op).rank) * 100 : 0) : -50),
       line: (op) => (planKit(plan, op) ? kitLine(op, planKit(plan, op)) : 'no rifle or drone'), needs: (op) => !!planKit(plan, op) },
     wheels: { name: 'Wheels', note: 'In the van: they take every piloting roll, alone.', score: (op) => effectiveStat(op, 'piloting').value, line: (op) => statValue('piloting', effectiveStat(op, 'piloting').value) },
     standby: { name: 'standby', note: 'At the van until called: they can save someone in trouble or get the wounded out.', score: (op) => effectiveStat(op, 'combat').value + effectiveStat(op, 'medical').value / 2, line: (op) => `${statValue('combat', effectiveStat(op, 'combat').value)} · ${statValue('medical', effectiveStat(op, 'medical').value)}` },
@@ -264,7 +264,13 @@ export function renderPicker(ui, { plan, tpl, threat, slot, people, freelancersF
   const off = rest.filter((p) => !p.freelance && !p.status.ok);
   // What this job does for each candidate (core/worth.js), with the others already inside.
   const insideOps = people.filter((p) => plan.crew.includes(p.op.id)).map((p) => p.op);
-  const gain = (op) => jobGain(op, threat, insideOps.filter((o) => o.id !== op.id));
+  // Overwatch: what this person on it does to the job's read (owner, 2026-11-12: "which guy is the best here?").
+  const overGain = (op) => {
+    if (!overRead || !planKit(plan, op)) return null;
+    const r = overRead(op);
+    return r.rank < r.baseRank ? { tone: 'good', text: `Lowers the read: ${r.baseLevel} to ${r.level}` } : { tone: 'flat', text: `Read stays ${r.level}` };
+  };
+  const gain = (op) => (slot === 'over' ? overGain(op) : jobGain(op, threat, insideOps.filter((o) => o.id !== op.id)));
   const parts = ({ op, status, freelance }) => {
     const w = where(op.id);
     const here = current === op.id;
