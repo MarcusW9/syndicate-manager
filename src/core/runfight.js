@@ -47,7 +47,7 @@ const GROWS = { attack: 'combat', jam: 'tech', stabilise: 'medical', patch: 'med
 const CUE = { attack: 'shoot', shot: 'guard', overwatch: 'overwatch', stabilise: 'stabilise', patch: 'patch' };
 // Only what the feed, the plan and the report read, so a year of saved reports stays small.
 const feedLine = (l) => ({
-  kind: CUE[l.kind] ?? 'note', text: l.text, actor: l.actor ? { id: l.actor, handle: l.actor } : null, guard: l.enemy ?? null, targetId: l.targetId ?? null,
+  kind: CUE[l.kind] ?? 'note', key: l.key ?? null, slots: l.slots ?? {}, text: l.text, actor: l.actor ? { id: l.actor, handle: l.actor } : null, guard: l.enemy ?? null, targetId: l.targetId ?? null,
   success: l.success ?? null, damage: l.damage ?? 0, heal: l.heal ?? 0, kit: l.kit ?? null, dropped: !!l.dropped, ...(l.roll ? { die: l.roll.die, need: l.roll.need, value: l.roll.value } : {}),
   ...(l.order ? { order: l.order, from: l.from } : {}),
 });

@@ -28,7 +28,7 @@ import { lineText, kindWord, enemyName, nameList } from './fighttext.js';
 import { effectiveStat } from './crew.js';
 import { weaponOf, armourOf } from './battle.js';
 import { patchBonus, counted } from './gear.js';
-import { d20, makeRng } from './rng.js';
+import { d20, makeRng, hash } from './rng.js';
 
 export { FIGHT };
 
@@ -114,6 +114,8 @@ export function buildFight({ type, diff, threat = 3, site = 'docks', crew, appro
   const count = COUNT_BY_THREAT[clamp(Math.round(threat), 1, 5)];
   for (let i = 0; i < count; i++) newEnemy(b, kinds[Math.floor(rng() * kinds.length)], rng);
   b.orders = defaultOrders(b);
+  // The showcase seed (0b): the build's last draw, so it moves no other roll. Showcase rolls are a pure hash of it.
+  b.showcaseSeed = Math.floor(rng() * 2 ** 32);
   return b;
 }
 
@@ -554,7 +556,7 @@ function expireOverride(b) {
  */
 export function startRound(b, rng) {
   const lines = [];
-  const say = (kind, key, slots = {}, extra = {}) => lines.push({ kind, key, ...extra, text: lineText(key, slots) });
+  const say = (kind, key, slots = {}, extra = {}) => lines.push({ kind, key, slots, ...extra, text: lineText(key, slots) });
   b.round += 1;
   for (const r of b.runners) if (r.stayPips != null && r.pips > riskThreshold(b, r)) r.stayPips = null; // healed past their point: asked afresh next time
   for (const kind of b.arriving.splice(0)) { const e = newEnemy(b, kind, rng); say('arrive', 'arrive', { kind: kindWord(e.kind), n: e.n }); }
@@ -611,7 +613,7 @@ export function playRound(b, rng) {
   const defeated = []; const down = []; const fled = []; const withdrawn = [];
   const result = { lines, actions: [], unanswered: [], defeated, goalDelta: 0, down, fled, withdrawn, heat: 0, neural: 0, ended: null };
   if (!b.drawn) lines.push(...startRound(b, rng));
-  const say = (kind, key, slots = {}, extra = {}) => { const l = { kind, key, ...extra, text: lineText(key, slots) }; lines.push(l); return l; };
+  const say = (kind, key, slots = {}, extra = {}) => { const l = { kind, key, slots, ...extra, text: lineText(key, slots) }; lines.push(l); return l; };
   const E = (n) => enemyName(b.enemies.find((x) => x.n === n).kind, n);
 
   const vl = vanDecision(b);
@@ -871,6 +873,7 @@ export function vanOdds(b0, runs = FIGHT.oddsRuns) {
     let left = 0;
     for (let i = 0; i < runs; i++) {
       const b = structuredClone(b0);
+      b.showcaseSeed = hash('van', hold, i); // reseeded, never drawn: the odds streams do not move
       b.vanHold = hold;
       playFight(b, makeRng(0x7a11 + i * 7919));
       if (outside.some((id) => b.left.includes(id))) left += 1;
@@ -878,6 +881,20 @@ export function vanOdds(b0, runs = FIGHT.oddsRuns) {
     return left / runs;
   };
   return { outside, leaveOnTime: read(false), hold: read(true) };
+}
+
+/**
+ * What the odds depend on (the cache key). Everything the round function reads that planning can change: the fight's type, risk and goal,
+ * each enemy (including the approach stage and its group, which the flee rule reads), each runner (including Overdrive), the orders,
+ * overwatch, and the rules a recipe adds (waves still to come, the reinforcement cap, showcase eligibility). showcaseSeed is not in it:
+ * every run reseeds it.
+ */
+export function oddsKey(b0, runs = FIGHT.oddsRuns) {
+  return JSON.stringify([b0.type, b0.diff, b0.risk, b0.goal,
+    b0.enemies.map((e) => [e.kind, e.pips, e.cover, e.deck, e.approaching ?? false, e.group ?? 0]),
+    b0.runners.map((r) => [r.id, r.pips, r.max, r.absorb, r.ap, r.strong, r.jammer, r.healer, Object.values(r.stats).map((s) => s.value), r.overdrive ?? null]),
+    b0.orders, b0.overwatch && [b0.overwatch.value, b0.overwatch.damage, b0.overwatch.left], !!b0.wheels, !!b0.standby,
+    b0.showcaseEligible ?? null, b0.maxExtra ?? null, b0.recipe ?? null, runs]);
 }
 
 const oddsCache = new Map();
@@ -889,11 +906,12 @@ const oddsCache = new Map();
  */
 export function fightOdds(b0, runs = FIGHT.oddsRuns) {
   if (!b0.runners.length) return { win: 0, down: 1, dead: 0, left: 0, lost: 0 };
-  const key = JSON.stringify([b0.type, b0.diff, b0.risk, b0.goal, b0.enemies.map((e) => [e.kind, e.pips, e.cover, e.deck]), b0.runners.map((r) => [r.id, r.pips, r.max, r.absorb, r.ap, r.strong, r.jammer, r.healer, Object.values(r.stats).map((s) => s.value)]), b0.orders, b0.overwatch && [b0.overwatch.value, b0.overwatch.damage, b0.overwatch.left], !!b0.wheels, !!b0.standby, runs]);
+  const key = oddsKey(b0, runs);
   if (oddsCache.has(key)) return oddsCache.get(key);
   const n = { win: 0, down: 0, dead: 0, left: 0, lost: 0 };
   for (let i = 0; i < runs; i++) {
     const b = structuredClone(b0);
+    b.showcaseSeed = hash('odds', i); // reseeded, never drawn, and so not in the cache key
     playFight(b, makeRng(0x5eed + i * 7919));
     if (b.end.result === 'won') n.win += 1;
     if (b.runners.some((r) => r.down || r.dead)) n.down += 1;
