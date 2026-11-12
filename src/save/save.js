@@ -33,6 +33,7 @@ import { CELLS } from '../data/gear.js';
 import { trimInbox } from '../core/inbox.js';
 import { seedRivals, offerGapFor } from '../core/rivals.js';
 import { hashRng } from '../core/rng.js';
+import { fightStage } from '../core/runfight.js';
 
 // The one-item-per-slot gear of saves before v45, for the migrations written against it.
 const slotLoadout = () => ({ weapon: null, armour: null, tool: null, implant: null });
@@ -791,6 +792,19 @@ function migrate(state) {
     // nothing to move; a warned raid gains `raid.posts` (who stands on which post: slot id -> runner id or null).
     for (const r of state.raids ?? []) r.posts ??= {};
     state.version = 62;
+  }
+  if (state.version === 62) {
+    // v63: the live battle view (DESIGN.md 2026-11-12). An engine-2 fight carries its staging on the site map
+    // (`b.spots`, core/fightmap.js stageSpots): a fight in progress gets it now, from its job's site and the zone the
+    // fight started in. Staging only; no rule reads it, so nothing in the fight moves.
+    for (const am of [state.activeMission, ...(state.awayJobs ?? []).map((j) => j.mission)]) {
+      const b = am?.battle;
+      if (b?.engine !== 2 || b.spots !== undefined) continue;
+      const start = [...(am.events ?? [])].reverse().find((e) => e.kind === 'battle' && e.phase === 'start');
+      const district = templateById(am.templateId)?.district;
+      b.spots = district && start?.zone ? fightStage(district, am, start.zone, b.runners.length) : null;
+    }
+    state.version = 63;
   }
   return state;
 }

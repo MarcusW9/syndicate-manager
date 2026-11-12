@@ -16,6 +16,9 @@
 
 import { nextRng } from './random.js';
 import { direct } from './director.js';
+import { stageSpots, stageNeed } from './fightmap.js';
+import { pickSite } from '../data/sites.js';
+import { BATTLE } from '../data/battle.js';
 import { setInjury, worsenInjury, effectiveStat } from './crew.js';
 import { XP } from './development.js';
 import { noteInjury } from './earned.js';
@@ -57,6 +60,16 @@ const names = (b, ids) => nameList(ids.map((id) => b.runners.find((r) => r.id ==
 
 // --- starting a fight ------------------------------------------------------------------------------
 
+/**
+ * Where the fight is staged on the site map (core/fightmap.js stageSpots; the live battle view): the job's site, as
+ * engine 1 picks it (data/sites.js pickSite from the job's id), where the district stands its fights on the map. Staging
+ * only: no rule reads it. null where the district has no fight spots. Also used by the save migration (v63).
+ */
+export function fightStage(district, am, zone, crew) {
+  if (!BATTLE.spotsIn.includes(district)) return null;
+  return stageSpots(pickSite(district, am.jobId, am.templateId, null), zone, stageNeed(crew));
+}
+
 /** An unsaved danger incident on one of the five jobs turns into an engine-2 fight (core/runbattle.js startBattle hands it here). */
 export function startFight(state, am, tpl, inc, id, zone, diff, able, { ambush = false } = {}) {
   const type = fightTypeOf(am.templateId);
@@ -72,6 +85,7 @@ export function startFight(state, am, tpl, inc, id, zone, diff, able, { ambush =
   }, rng);
   b.auto = false;
   b.startLines = [];
+  b.spots = fightStage(tpl.district, am, zone, able.length);
   am.battle = b;
   am.fought = true;
   if (am.alert >= ALERT_MAX && !am.wentLoud) am.alertDue = true;
