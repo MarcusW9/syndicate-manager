@@ -4,6 +4,12 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-12 · Steady pull-out at a share of max pips (sim, no game change)
+- `scripts/sim-pullout.mjs` and `docs/sims/pullout-2026-11-12.md`: on a patched copy of the fight code (the game's own files untouched), steady pulls out at a share of the runner's maximum instead of a flat 2 pips. The game's starting crews at the real job difficulty (the planning read's best team), and the gate's strong crews as a check, 400 seeds. Variants and the bar were declared in the script before the run.
+- **By the declared bar: none.** The bar required that nobody more is left behind in extractions, and left-behind rose from 56% to 57% (a third of max) or 58% (flat 1, a quarter), which is within the noise of 286-330 fights, but it is over the line I set, so it does not pass.
+- **What it does, in numbers (a third of max, rounded up, minimum 1; steady):** the starting crews' clean wins rise from 29% to 35% (+7 points, hack with the fresh roster 15% to 31%, authored 73% to 83%); the hack is abandoned in 2% of fights instead of 14%; deaths stay at 0%; downs rise by 0.17 a fight (runners stay in longer); the strong crews' clean wins rise 6 points (82% to 88%). A quarter of max or flat 1 do slightly more (+8) with slightly more downs (+0.2).
+- **It does not fix extractions:** holdExtract clean wins stay at 4-6% (fresh) and 22% (authored), and left-behind is unchanged or a little higher (authored 66% to 70%). The pull-out rule mostly fixes hacks; the left-behind lever is the van's arrival round (see "What moves the left-behind rate").
+
 ## 2026-11-11 · What moves the left-behind rate (sensitivity sim, no game change)
 - `scripts/sim-vanlevers.mjs` and `docs/sims/vanlevers-2026-11-11.md`: the two holdExtract jobs at their real difficulty, the game's own starting rosters (the planning read's best team), the defaults hands-off, 400 seeds, one van number changed at a time in the script only. Declared bar: cut "someone left behind" by 10+ points without raising downs by more than 0.2 or heat by more than 0.3.
 - **Base (steady): someone is left behind in 56% of extractions** (fresh roster 39-46%, authored 62-78%), 1.7 downs a fight, clean wins 10%.
