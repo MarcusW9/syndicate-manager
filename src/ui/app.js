@@ -65,7 +65,7 @@ import { leanPicks, jobRead, planRead, planTries } from '../core/squad.js';
 import { renderBoard, renderPicker, renderCoverage, assignSlot, planKit, fitGearArt } from './board.js';
 import { renderArmoury, renderLoadout, renderGearSheet, gearPlace } from './gear.js';
 import { buyGear, buyOffer, sellGear, equip, unequip, itemName, sellPrice, kitsFor } from '../core/gear.js';
-import { renderWatch, mountWatch, syncWatch, isWatching, stopWatch, togglePause, toggleSpeed, showLatest, justFinished, closeFinale } from './watch.js';
+import { renderWatch, mountWatch, syncWatch, isWatching, stopWatch, togglePause, toggleSpeed, showLatest, justFinished, closeFinale, paceChanged } from './watch.js';
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
 import { earnedText } from '../core/earned.js';
 import { SPECIALISATIONS, specOf } from '../core/specialisations.js';
@@ -558,6 +558,8 @@ function onClick(e) {
     case 'fs-panel': case 'fs-sel': case 'fs-order': case 'fs-clear': case 'fs-risk': case 'fs-pull-ask': case 'fs-pull-no':
       fightScreenTap(state.activeMission, action, { id, duty: t.dataset.duty, target: t.dataset.target });
       break;
+    // The live battle view's pace (ui/fightscreen.js fightPace): Fast or Watch, a viewing preference; Resolve is fs-handoff.
+    case 'fs-pace': setPref('fight-watch', id === 'watch'); render(); return paceChanged(state);
     case 'fs-next': return setState(runBattle(state, takeFightChange(state.activeMission)));
     case 'fs-handoff': return setState(runBattle(handOffFight(state), takeFightChange(state.activeMission)));
     case 'fs-pull': takeFightChange(state.activeMission); return setState(pullBack(state));
@@ -815,7 +817,7 @@ function render() {
     ${renderBuzz()}
     ${renderRaidCallSheet()}
   `;
-  if (am) mountWatch(root.querySelector('.watch'), state, { ui: watchUi, finishing, onAuto: () => setState(autoStep(state)) });
+  if (am) mountWatch(root.querySelector('.watch'), state, { ui: watchUi, finishing, onAuto: () => setState(autoStep(state)), onFightNext: () => setState(runBattle(state, takeFightChange(state.activeMission))) });
   fitGearArt(root); // the squad board's gear drawings fill their cells
   root.querySelector('.buzz__pick, .buzz [data-action="buzz-in"]')?.focus({ preventScroll: true }); // the call has the floor
   if (pickSlot) (root.querySelector('.sheet .cand.is-on') ?? root.querySelector('.sheet .cand:not([disabled])'))?.focus({ preventScroll: true });

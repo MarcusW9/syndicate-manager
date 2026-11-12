@@ -69,10 +69,12 @@ export function feedItems(events = [], { kit = null } = {}) {
       // A fight (slice 6): a note when it starts (the guards appear on the plan), one card per round
       // and for pulling back (each moment plays on the plan), a note when it's over. The cue carries
       // everyone's health after the round, so the plan can draw the bars without the run's state.
-      // Where each one stands (at, cover) so the map can put the fight on its spots and show the faces.
+      // Where each one stands (at, cover) so the map can put the fight on its spots and show the faces. An engine-2 fight
+      // also carries its stage (core/runfight.js stageOf: everyone's place and stance) and the director's beats, for the
+      // live battle view (ui/fightstage.js).
       const state = { guards: (e.guards ?? []).map((g) => ({ n: g.n, hp: g.hp, max: g.max, armour: g.armour, out: g.out, at: g.at ?? null, cover: g.cover ?? null })), runners: (e.runners ?? []).map((r) => ({ id: r.id, handle: r.handle, hp: r.hp, max: r.max, armour: r.armour, down: r.down, at: r.at ?? null, cover: r.cover ?? null })) };
       if (e.phase === 'start' || e.phase === 'end') {
-        items.push({ type: 'note', text: e.phase === 'end' ? e.report ?? e.text : e.text, tone: e.phase === 'start' ? 'warn' : e.hurt?.length ? 'bad' : 'good', cue: { battle: { phase: e.phase, ...state } } });
+        items.push({ type: 'note', text: e.phase === 'end' ? e.report ?? e.text : e.text, tone: e.phase === 'start' ? 'warn' : e.hurt?.length ? 'bad' : 'good', cue: { battle: { phase: e.phase, ...state, ...(e.stage ? { stage: e.stage } : {}) } } });
         continue;
       }
       const up = state.guards.filter((g) => !g.out).length;
@@ -81,7 +83,7 @@ export function feedItems(events = [], { kit = null } = {}) {
         setup: e.phase === 'retreat' ? e.text : `${up ? `${up} guard${up === 1 ? '' : 's'} up` : 'Last guard down'} · ${state.runners.map((r) => `${r.handle} ${r.down ? 'down' : `${r.hp}/${r.max}`}`).join(', ')}`,
         hp: state,
         results: (e.lines ?? []).map((l) => ({ headline: l.text, detail: '', tone: l.kind === 'guard' ? (l.damage ? 'bad' : 'good') : l.kind === 'flee' || l.kind === 'ambush' || l.kind === 'hunker' ? 'good' : l.success ? 'good' : 'bad', roll: roll(l), why: null })),
-        cue: { battle: { phase: e.phase, ...state, lines: (e.lines ?? []).map((l) => ({ kind: l.kind, actor: l.actor?.id ?? null, targetId: l.targetId ?? null, guard: l.guard ?? null, success: l.success ?? null, damage: l.damage ?? 0, heal: l.heal ?? 0, kit: l.kit ?? null, dropped: !!l.dropped, to: l.to ?? null, flank: !!l.flank })) } },
+        cue: { battle: { phase: e.phase, ...state, lines: (e.lines ?? []).map((l) => ({ kind: l.kind, actor: l.actor?.id ?? null, targetId: l.targetId ?? null, guard: l.guard ?? null, success: l.success ?? null, damage: l.damage ?? 0, heal: l.heal ?? 0, kit: l.kit ?? null, dropped: !!l.dropped, to: l.to ?? null, flank: !!l.flank, rule: l.rule ?? null, key: l.key ?? null, slots: l.slots ?? null, text: l.text ?? '', burst: !!l.burst })), ...(e.stage ? { stage: e.stage, beats: e.beats ?? [], round: e.round ?? null } : {}) } },
       });
     } else if (e.kind === 'critical') {
       items.push({
