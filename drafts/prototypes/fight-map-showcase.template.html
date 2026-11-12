@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Showcase mock-up: the star takes over the map</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap">
+<style>
+/* Mock-up only. A showcase is the rules' burst of attacks (one line per target, in order) drawn three ways. The drawing never decides who is hit. */
+:root { --bg:#0a0c0f; --panel:#12151b; --panel-2:#161a21; --line:#2a303b; --text:#e9ecf1; --muted:#8a93a6; --accent:#ff3d5f; --accent-2:#3de8d8; --warn:#f2d541; --ok:#5fe0a5;
+  --display:'Rajdhani','Barlow Condensed','Arial Narrow',system-ui,sans-serif; color-scheme:dark; }
+* { box-sizing:border-box; } body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,sans-serif; }
+.wrap { max-width:430px; margin:0 auto; padding-bottom:24px; }
+@media (min-width:900px) { .wrap { max-width:1000px; display:grid; grid-template-columns:minmax(0,520px) minmax(0,1fr); gap:16px; padding:16px; align-items:start; } }
+.hd { display:grid; gap:2px; padding:10px 12px 6px; } .hd h1 { margin:0; font:700 .95rem var(--display); letter-spacing:.14em; text-transform:uppercase; color:var(--accent-2); }
+.hd .goal { font:700 .82rem var(--display); letter-spacing:.12em; text-transform:uppercase; }
+.row3 { display:flex; margin:0 12px 6px; } .row3 button { flex:1; min-height:44px; background:var(--panel-2); color:var(--muted); border:1px solid var(--line); font:700 .8rem var(--display); letter-spacing:.14em; text-transform:uppercase; cursor:pointer; }
+.row3 button.on { color:var(--accent-2); background:#12262a; border-color:var(--accent-2); } .row3.scn button.on { color:var(--warn); background:#1c1a10; border-color:var(--warn); }
+.stage { position:relative; border-block:1px solid var(--line); background:#0d1016; overflow:hidden; } .stage svg { display:block; width:100%; height:auto; }
+#cam { transform-origin:0 0; } .mk { } .g-name { font:700 9px var(--display); letter-spacing:.08em; fill:var(--text); text-transform:uppercase; }
+.g-id { font:700 10px var(--display); } .z { font:600 8px var(--display); letter-spacing:.14em; fill:#46505f; text-transform:uppercase; } .fl { font:700 11px var(--display); letter-spacing:.08em; }
+.big { font:700 15px var(--display); letter-spacing:.28em; text-transform:uppercase; }
+.beat { margin:8px 12px 0; padding:8px 10px; border:1px solid var(--line); border-left:2px solid var(--accent-2); background:var(--panel-2); min-height:64px; display:grid; gap:2px; align-content:start; }
+.beat.show { border-left-color:var(--warn); background:#1c1a10; } .beat small { font:700 .68rem var(--display); letter-spacing:.16em; text-transform:uppercase; color:var(--muted); } .beat.show small { color:var(--warn); } .beat p { margin:0; font-size:.92rem; }
+.log { list-style:none; margin:8px 12px 0; padding:0; display:grid; gap:2px; font-size:.78rem; color:var(--muted); max-height:230px; overflow:auto; } .log li { padding:2px 6px; border-left:2px solid var(--line); } .log li.cur { color:var(--text); border-left-color:var(--accent-2); } .log li.sh { border-left-color:var(--warn); }
+.ctl { display:flex; gap:8px; padding:8px 12px 0; } .ctl button { flex:1; min-height:44px; background:var(--panel-2); color:var(--text); border:1px solid var(--line); font:700 .8rem var(--display); letter-spacing:.12em; text-transform:uppercase; cursor:pointer; }
+.note { margin:8px 12px 0; font-size:.78rem; color:var(--muted); line-height:1.4; }
+</style></head>
+<body><div class="wrap">
+<section>
+  <div class="hd"><h1 id="title">Round 4</h1><div class="goal" id="goal">HACK ●●●○ · ALARM 3 · ROUND 7 DEADLINE</div></div>
+  <div class="row3 scn" role="group" aria-label="Showcase"><button data-s="ricochet" class="on">Ricochet</button><button data-s="slash">Slash</button><button data-s="swarm">Swarm</button></div>
+  <div class="row3 pc" role="group" aria-label="Pace"><button data-p="fast">Fast</button><button data-p="watch" class="on">Watch</button><button data-p="resolve">Resolve</button></div>
+  <div class="stage"><svg id="svg" viewBox="0 0 360 400" role="img" aria-label="A showcase played on the map"></svg></div>
+  <div class="beat" id="beat"><small>Ready</small><p>Pick a showcase and press Replay.</p></div>
+</section>
+<section>
+  <div class="ctl"><button id="replay">Replay</button></div>
+  <ol class="log" id="log" aria-label="The round's lines"></ol>
+  <p class="note">The log is what the rules recorded: one attack line per target, in order. The picture only draws that list. At Resolve it jumps to the same end.</p>
+</section></div>
+<script>window.FACES = /*FACES*/{};</script>
+<script>
+const W = 360, H = 400, C = { crew:'#3de8d8', foe:'#ff3d5f', warn:'#f2d541', ok:'#5fe0a5' }, NS = 'http://www.w3.org/2000/svg';
+const $ = (id) => document.getElementById(id), P = (x, y) => [x * W, y * H];
+let K = 1, SLOW = 1, run = 0, pace = 'watch', scene = 'ricochet'; const M = {};
+const F = () => K * SLOW, sleep = (ms) => new Promise((r) => setTimeout(r, ms * F()));
+const clip = (crew, h) => crew ? `M${-h} ${-h} H${h-8} L${h} ${-h+8} V${h} H${-h} Z` : `M${-h} ${-h} H${h} V${h} H${-h} Z`;
+const nest = (svg, S) => svg.replace(/<svg class="art portrait" viewBox="9 6 46 46" width="\d+" height="\d+"/, `<svg x="${-S/2}" y="${-S/2}" width="${S}" height="${S}" viewBox="9 6 46 46"`);
+const rnd = (n) => { let h = 2166136261; for (const ch of String(n)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return ((h >>> 0) % 1000) / 1000; };
+function packSVG(m) { // one rules enemy shown as a knot of small bodies (the count is staging, the enemy is the unit that goes down)
+  const id = m.id; let o = `<g class="inner" id="in-${id}"><g id="img-${id}">`;
+  for (let k = 0; k < m.pack; k++) { const a = rnd(id + 'a' + k) * 6.283, r = 4 + rnd(id + 'r' + k) * 9, x = Math.cos(a) * r, y = Math.sin(a) * r * .8, t = rnd(id + 't' + k);
+    o += `<ellipse cx="${x}" cy="${y + 1.5}" rx="3.6" ry="2.6" fill="${t > .5 ? '#6b2a34' : '#7a3a2c'}"/><circle cx="${x}" cy="${y - 1.2}" r="2.1" fill="#d6b49a"/>`; }
+  return o + `</g><circle id="fl-${id}" r="15" fill="#fff" opacity="0"/></g><path id="x-${id}" d="M0 0" stroke="#ff4a4a" opacity="0"/>`;
+}
+function markerSVG(m) {
+  if (m.pack) return packSVG(m);
+  const crew = m.side === 'crew', S = m.size, h = S / 2, col = crew ? C.crew : C.foe, id = m.id;
+  let o = `<defs><clipPath id="cp-${id}"><path d="${clip(crew, h)}"/></clipPath></defs><g class="inner" id="in-${id}"><g clip-path="url(#cp-${id})" id="img-${id}">${nest(window.FACES[m.face] || '', S)}${crew ? '' : `<rect x="${-h}" y="${-h}" width="${S}" height="${S}" fill="${C.foe}" opacity=".28"/>`}<rect id="fl-${id}" x="${-h}" y="${-h}" width="${S}" height="${S}" fill="#fff" opacity="0"/></g>`;
+  o += `<path d="${clip(crew, h)}" fill="none" stroke="${col}" stroke-width="${crew ? 2 : 1.6}"/><path id="x-${id}" d="M${-h} ${-h} L${h} ${h} M${h} ${-h} L${-h} ${h}" stroke="#ff4a4a" stroke-width="2.5" opacity="0"/></g>`;
+  if (crew) o += `<text class="g-name" y="${h + 14}" text-anchor="middle">${m.tag}</text>`;
+  return o;
+}
+function build(cfg) {
+  const s = $('svg');
+  s.innerHTML = `<defs><pattern id="gr" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="rgba(61,232,216,.05)"/></pattern><radialGradient id="lp"><stop offset="0" stop-color="#f2b544" stop-opacity=".35"/><stop offset="1" stop-color="#f2b544" stop-opacity="0"/></radialGradient><filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect width="${W}" height="${H}" fill="url(#gr)"/><g id="cam"></g><rect id="bar1" x="0" y="0" width="${W}" height="0" fill="#000"/><rect id="bar2" x="0" y="${H}" width="${W}" height="0" fill="#000"/><text id="bigtxt" class="big" x="${W/2}" y="${H/2 - 70}" text-anchor="middle" fill="${C.warn}" opacity="0"></text>`;
+  let h = `<path d="M${P(.14,.97)} L${P(.5,.52)} L${P(.86,.97)}" fill="none" stroke="#1a212b" stroke-width="12" stroke-linejoin="round" stroke-linecap="round"/>`;
+  for (const c of [[.09,.42],[.91,.42],[.09,.56],[.91,.56]]) { const [x, y] = P(...c); h += `<rect x="${x-15}" y="${y-8}" width="30" height="16" fill="#171b24" stroke="#2f3744"/><text class="z" x="${x}" y="${y+3}" text-anchor="middle">cover</text>`; }
+  for (const e of [[.14,.97],[.86,.97]]) { const [x, y] = P(...e); h += `<path d="M${x-18} ${y+8} V${y-12} H${x+18} V${y+8}" fill="none" stroke="#3a4352" stroke-width="2" stroke-dasharray="3 3"/>`; }
+  { const [x, y] = P(.5, .1); h += `<rect x="${x-26}" y="${y-18}" width="52" height="38" fill="none" stroke="${C.crew}" stroke-dasharray="5 3" opacity=".7"/><text class="z" x="${x}" y="${y-23}" text-anchor="middle" style="fill:${C.crew}">terminal</text>`; }
+  h += `<g id="trail"></g>`;
+  for (const m of cfg) h += `<g class="mk" id="mk-${m.id}" style="transform:translate(${m.at[0]}px,${m.at[1]}px)">${markerSVG(m)}</g>`;
+  h += `<g id="fx" style="filter:url(#glow)"></g><g id="fx2"></g>`;
+  $('cam').innerHTML = h;
+  for (const m of cfg) M[m.id] = { ...m, x: m.at[0], y: m.at[1], el: $('mk-' + m.id), state: 'up' };
+}
+const anim = (el, kf, ms, o = {}) => el.animate(kf, { duration: ms * F(), easing: 'ease-out', fill: 'forwards', ...o });
+const add = (parent, html) => { const g = document.createElementNS(NS, 'g'); g.innerHTML = html; $(parent).appendChild(g); return g; };
+function move(id, x, y, ms = 600, ease = 'cubic-bezier(.3,.7,.3,1)') { const m = M[id]; m.x = x; m.y = y; m.el.style.transition = `transform ${ms * F()}ms ${ease}`; m.el.style.transform = `translate(${x}px,${y}px)`; }
+function flash(id, col = '#fff', ms = 240) { const r = $('fl-' + id); r.setAttribute('fill', col); anim(r, [{ opacity: .9 }, { opacity: 0 }], ms); }
+function float(id, text, col = '#fff') { const m = M[id]; const g = add('fx2', `<text class="fl" x="${m.x}" y="${m.y - m.size / 2 - 4}" text-anchor="middle" fill="${col}">${text}</text>`); anim(g, [{ transform: 'translateY(0)', opacity: 1 }, { transform: 'translateY(-26px)', opacity: 0 }], 800).onfinish = () => g.remove(); }
+function ring(x, y, col, r0 = 8, r1 = 46, ms = 450, w = 2) { const g = add('fx', `<circle cx="${x}" cy="${y}" r="${r0}" fill="none" stroke="${col}" stroke-width="${w}"/>`); anim(g.firstChild, [{ r: r0, opacity: 1 }, { r: r1, opacity: 0 }], ms).onfinish = () => g.remove(); }
+function fall(id, fromX, fromY) { const m = M[id]; m.state = 'out'; if (m.pack) { const g = add('trail', `<ellipse cx="${m.x}" cy="${m.y}" rx="13" ry="8" fill="#5a1020" opacity=".55"/>`); } const dx = m.x - fromX, dy = m.y - fromY, d = Math.hypot(dx, dy) || 1; move(id, m.x + dx / d * 10, m.y + dy / d * 10, 260, 'ease-out'); $('img-' + id).style.filter = 'grayscale(1) brightness(.55)'; m.el.style.opacity = .55; anim($('x-' + id), [{ opacity: 0 }, { opacity: 1 }], 200); }
+function cam(x, y, s, ms = 700) { const c = $('cam'); c.style.transition = `transform ${ms * F()}ms cubic-bezier(.3,.7,.3,1)`; c.style.transform = x == null ? 'translate(0,0) scale(1)' : `translate(${W / 2 - s * x}px,${H / 2 - s * y}px) scale(${s})`; }
+function bars(on, ms = 500) { anim($('bar1'), [{ height: on ? 0 : 26 }, { height: on ? 26 : 0 }], ms); anim($('bar2'), [{ y: on ? H : H - 26, height: on ? 0 : 26 }, { y: on ? H - 26 : H, height: on ? 26 : 0 }], ms); }
+function big(text) { const t = $('bigtxt'); t.textContent = text; anim(t, [{ opacity: 0 }, { opacity: 1, offset: .2 }, { opacity: 1, offset: .8 }, { opacity: 0 }], 1600); }
+function beat(kind, label, text) { const b = $('beat'); b.className = 'beat ' + (kind === 'show' ? 'show' : ''); b.innerHTML = `<small>${label}</small><p>${text}</p>`; }
+function logLine(text, sh) { document.querySelectorAll('#log li.cur').forEach((l) => l.classList.remove('cur')); const li = document.createElement('li'); li.className = 'cur' + (sh ? ' sh' : ''); li.textContent = text; $('log').appendChild(li); li.scrollIntoView({ block: 'nearest' }); }
+async function bolt(a, b, col = C.warn, ms = 220, w = 2.6) { // a glowing line that draws from a to b with a bright head, and lingers faintly
+  const g = add('fx', `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${col}" stroke-width="${w}" stroke-linecap="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"/><circle r="4" cx="${a.x}" cy="${a.y}" fill="#fff"/>`);
+  const ln = g.children[0], dot = g.children[1];
+  anim(ln, [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], ms, { easing: 'linear' });
+  await anim(dot, [{ transform: 'translate(0,0)' }, { transform: `translate(${b.x - a.x}px,${b.y - a.y}px)` }], ms, { easing: 'linear' }).finished;
+  dot.remove(); anim(ln, [{ opacity: 1 }, { opacity: 0 }], 900).onfinish = () => g.remove();
+}
+
+/* ---- the scenes: crew, enemies, and the star's choreography over the rules' ordered attack lines ---- */
+const crewBase = [ { id:'W', side:'crew', face:'Wing', tag:'Wing', size:44, at:P(.5,.1) }, { id:'M', side:'crew', face:'Mei', tag:'Mei', size:44, at:P(.34,.19) }, { id:'J', side:'crew', face:'Jax', tag:'Jax', size:44, at:P(.66,.19) } ];
+const foe = (i, at, from, size = 32) => ({ id:'e' + i, side:'foe', face:'e' + ((i - 1) % 7 + 1), tag:'' + i, size, at: from });
+const SCENES = {
+  ricochet: {
+    title: 'Round 4', star: { id:'S', side:'crew', face:'Pax', tag:'Pax', size:50, at:P(.5,.36) },
+    foes: [[1,.4,.62],[2,.52,.7],[3,.3,.7],[4,.64,.62],[5,.46,.78],[6,.6,.78],[7,.74,.7]], order: [3,1,5,2,6,4,7], weak: false,
+    text: 'Pax is on attack. Seven hired guns are coming through both doors.', name: 'Pax',
+  },
+  slash: {
+    title: 'Round 4', star: { id:'S', side:'crew', face:'Sal', tag:'Sal', size:50, at:P(.5,.4) },
+    foes: [[1,.36,.62],[2,.5,.7],[3,.26,.7],[4,.64,.62],[5,.42,.8],[6,.58,.78],[7,.74,.72]], order: [1,3,5,2,6,4,7], weak: false,
+    text: 'Sal is on attack. Seven hired guns are coming through both doors.', name: 'Sal',
+  },
+  swarm: {
+    title: 'Round 4', star: { id:'S', side:'crew', face:'Rook', tag:'Rook', size:50, at:P(.5,.46) },
+    foes: [[1,.3,.62],[2,.42,.68],[3,.54,.64],[4,.66,.68],[5,.74,.6],[6,.22,.72],[7,.36,.78],[8,.5,.8],[9,.3,.55],[10,.7,.55]], order: null, weak: true, packs: 8,
+    text: 'Rook is on attack. A swarm comes through both doors, and two big ones with it.', name: 'Rook',
+  },
+};
+function setup() {
+  const sc = SCENES[scene]; const cfg = [...crewBase, sc.star];
+  sc.foes.forEach(([i, x, y], n) => { const f = foe(i, n % 2 ? P(.86, .99) : P(.14, .99), P(.5, 1.1), 32); if (sc.packs) { if (i <= sc.packs) { f.pack = 5; f.size = 26; } else { f.size = 42; f.brute = true; } } cfg.push(f); });
+  build(cfg);
+  for (const m of cfg) if (m.side === 'foe') M[m.id].el.style.opacity = .6;
+}
+async function play() {
+  const my = ++run, live = () => my === run, sc = SCENES[scene], star = M.S, foes = sc.foes.map(([i, x, y]) => ({ id: 'e' + i, to: P(x, y), n: i }));
+  const say = async (kind, label, text, hold = 0) => { if (!live()) return false; beat(kind, label, text); logLine(text, kind === 'show'); if (hold) await sleep(hold); return live(); };
+  // the approach: a pack runs in from the doors (staging; the rules only know they arrive)
+  SLOW = 1;
+  foes.forEach((f, n) => setTimeout(() => { if (!live()) return; M[f.id].el.style.opacity = 1; move(f.id, f.to[0], f.to[1], 1300, 'cubic-bezier(.2,.6,.3,1)'); }, n * 90 * K));
+  if (!await say('', 'Round 4', sc.text, 1700 + foes.length * 90)) return;
+  // the showcase starts: the director gives these lines the showcase tier
+  SLOW = pace === 'watch' ? 2.4 : pace === 'fast' ? 1.4 : 1;
+  bars(true); big('Showcase'); ring(star.x, star.y, C.warn, 20, 70, 700, 3);
+  cam(star.x, star.y, 1.5, 600);
+  if (!await say('show', 'Showcase · Hold the Line', `${sc.name} has the whole pack in sight and takes the shot.`, 700)) return;
+  if (scene === 'ricochet') {
+    let prev = star; const order = sc.order.map((n) => M['e' + n]);
+    for (const e of order) {
+      cam((prev.x + e.x) / 2, (prev.y + e.y) / 2, 1.9, 220);
+      await bolt(prev, e, C.warn, 230); if (!live()) return;
+      flash(e.id, '#fff', 260); ring(e.x, e.y, '#fff', 4, 26, 380); fall(e.id, prev.x, prev.y); float(e.id, 'DOWN', C.foe);
+      logLine(`${sc.name} hits hired gun ${e.tag}: down.`, true); beat('show', 'Showcase · Hold the Line', `The round bounces on: hired gun ${e.tag} is down.`);
+      prev = e; await sleep(130);
+    }
+  } else if (scene === 'slash') {
+    const order = sc.order.map((n) => M['e' + n]);
+    let prev = { x: star.x, y: star.y };
+    for (const e of order) {
+      const dx = e.x - prev.x, dy = e.y - prev.y, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d;
+      cam((star.x + e.x) / 2, (star.y + e.y) / 2, 1.8, 260);
+      const tr = add('trail', `<line x1="${star.x}" y1="${star.y}" x2="${e.x - ux * 12}" y2="${e.y - uy * 12}" stroke="${C.crew}" stroke-width="10" stroke-linecap="round" opacity=".35"/>`); anim(tr, [{ opacity: 1 }, { opacity: 0 }], 700).onfinish = () => tr.remove();
+      move('S', e.x - ux * 14, e.y - uy * 14, 150, 'cubic-bezier(.1,.8,.2,1)'); await sleep(150); if (!live()) return;
+      const a = Math.atan2(uy, ux) * 180 / Math.PI;
+      const sl = add('fx', `<g transform="translate(${e.x} ${e.y}) rotate(${a})"><path d="M-16 -22 Q 22 0 -16 22" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"/></g>`);
+      anim(sl.firstChild.firstChild, [{ strokeDashoffset: 1, opacity: 1 }, { strokeDashoffset: 0, opacity: 1, offset: .5 }, { strokeDashoffset: 0, opacity: 0 }], 360).onfinish = () => sl.remove();
+      flash(e.id, '#fff', 260); fall(e.id, star.x, star.y); float(e.id, 'DOWN', C.foe);
+      logLine(`${sc.name} cuts down hired gun ${e.tag}.`, true); beat('show', 'Showcase · Hold the Line', `Sal cuts through: hired gun ${e.tag} is down.`);
+      prev = e; await sleep(110);
+    }
+  } else {
+    const order = foes.map((f) => M[f.id]).sort((p, q) => (p.brute ? 1 : 0) - (q.brute ? 1 : 0) || Math.hypot(p.x - star.x, p.y - star.y) - Math.hypot(q.x - star.x, q.y - star.y));
+    const pool = add('trail', `<circle cx="${star.x}" cy="${star.y}" r="70" fill="url(#lp)"/>`); anim(pool, [{ opacity: 0 }, { opacity: 1 }], 400);
+    ring(star.x, star.y, C.warn, 10, 150, 900, 2); cam(star.x, star.y, 1.2, 500);
+    let k = 0;
+    for (const e of order) {
+      const hits = e.brute ? 2 : 1;
+      for (let h = 0; h < hits; h++) {
+        const dx = e.x - star.x, dy = e.y - star.y, d = Math.hypot(dx, dy) || 1, ang = Math.atan2(dy, dx) * 180 / Math.PI;
+        const mz = add('fx', `<path transform="translate(${star.x + dx / d * 18} ${star.y + dy / d * 18}) rotate(${ang})" d="M0 0 L16 -5 L11 0 L16 5 Z" fill="#fff3b0"/>`); anim(mz, [{ opacity: 1 }, { opacity: 0 }], 150).onfinish = () => mz.remove();
+        bolt(star, e, C.warn, 170, 1.6); await sleep(e.brute ? 150 : 65 + (k % 3) * 10); if (!live()) return;
+        flash(e.id, '#fff', 200); if (e.brute && h === 0) { float(e.id, 'TOUGH', C.warn); }
+      }
+      fall(e.id, star.x, star.y); k++;
+      logLine(`${sc.name} hits ${e.brute ? 'enforcer ' + e.tag + ' (twice)' : 'hired gun ' + e.tag}: down.`, true);
+      if (e.brute) await sleep(180);
+    }
+    float('S', 'ALL DOWN', C.warn); beat('show', 'Showcase · Hold the Line', 'Rook cuts the swarm down, then the two big ones. Ten down.');
+    await sleep(500);
+  }
+  if (!live()) return;
+  // after: the camera pulls back, the star has not moved far
+  cam(null); bars(false); SLOW = 1; await sleep(500);
+  const n = sc.foes.length;
+  await say('', 'End of round 4', `${n} down in one round, all by ${sc.name}. Nobody on the crew was hit.`, 0);
+}
+function reset() { run++; $('log').innerHTML = ''; setup(); beat('', 'Ready', 'Press Replay.'); }
+function setPace(p) { pace = p; K = p === 'resolve' ? 0 : p === 'watch' ? 1 : .6; document.querySelectorAll('.pc button').forEach((b) => b.classList.toggle('on', b.dataset.p === p)); }
+async function replay() { reset(); await new Promise((r) => setTimeout(r, 100)); play(); }
+document.querySelectorAll('.pc button').forEach((b) => b.addEventListener('click', () => { setPace(b.dataset.p); replay(); }));
+document.querySelectorAll('.scn button').forEach((b) => b.addEventListener('click', () => { scene = b.dataset.s; document.querySelectorAll('.scn button').forEach((x) => x.classList.toggle('on', x === b)); replay(); }));
+$('replay').addEventListener('click', replay);
+const q = new URLSearchParams(location.search); scene = q.get('s') || 'ricochet'; document.querySelectorAll('.scn button').forEach((x) => x.classList.toggle('on', x.dataset.s === scene)); setPace(q.get('pace') || 'watch'); reset(); setTimeout(play, 300);
+window.__state = () => Object.fromEntries(Object.entries(M).map(([k, m]) => [k, m.state]));
+</script></body></html>

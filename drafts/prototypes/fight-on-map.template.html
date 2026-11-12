@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>A fight played live on the site map (watchable combat mock-up)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap">
+<style>/*CSS*/</style>
+<style>
+/* Mock-up only, on top of the game's own stylesheet above. The site plan, its shapes and its fight spots are the game's; the tokens, the
+   running and the shooting are staging for what the script engine decides (the rules have no positions). */
+body { margin:0; background:var(--bg,#0a0c0f); color:#e9ecf1; }
+.m-wrap { max-width:430px; margin:0 auto; padding-bottom:24px; }
+@media (min-width:900px) { .m-wrap { max-width:1000px; display:grid; grid-template-columns:minmax(0,560px) minmax(0,1fr); gap:16px; padding:16px; align-items:start; } }
+.m-hd { display:flex; justify-content:space-between; align-items:baseline; padding:10px 12px 6px; font-family:'Rajdhani',system-ui,sans-serif; text-transform:uppercase; letter-spacing:.12em; }
+.m-hd h1 { margin:0; font-size:.95rem; color:#3de8d8; } .m-hd b { font-size:.85rem; }
+.m-clock { font-variant-numeric:tabular-nums; color:#8a93a6; }
+.m-chips { display:flex; margin:0 12px 6px; } .m-chips button { flex:1; min-height:44px; background:#161a21; color:#8a93a6; border:1px solid #2a303b; font:700 .8rem 'Rajdhani',sans-serif; letter-spacing:.14em; text-transform:uppercase; cursor:pointer; }
+.m-chips button.on { color:#3de8d8; background:#12262a; border-color:#3de8d8; }
+.m-stage { position:relative; border-block:1px solid #2a303b; background:#0b0d11; overflow:hidden; }
+.m-stage svg.siteplan { display:block; width:100%; height:auto; aspect-ratio:360/400; }
+.m-bars { position:absolute; left:0; right:0; background:#000; height:0; pointer-events:none; } .m-bars.t { top:0; } .m-bars.b { bottom:0; }
+.m-big { position:absolute; left:0; right:0; top:14%; text-align:center; font:700 15px 'Rajdhani',sans-serif; letter-spacing:.3em; text-transform:uppercase; color:#f2d541; opacity:0; pointer-events:none; }
+.m-beat { margin:8px 12px 0; padding:8px 10px; border:1px solid #2a303b; border-left:2px solid #3de8d8; background:#161a21; min-height:60px; }
+.m-beat.show { border-left-color:#f2d541; background:#1c1a10; } .m-beat small { display:block; font:700 .68rem 'Rajdhani',sans-serif; letter-spacing:.16em; text-transform:uppercase; color:#8a93a6; } .m-beat.show small { color:#f2d541; } .m-beat p { margin:2px 0 0; font-size:.92rem; }
+.m-log { list-style:none; margin:8px 12px 0; padding:0; font-size:.78rem; color:#8a93a6; display:grid; gap:2px; max-height:260px; overflow:auto; } .m-log li { padding:2px 6px; border-left:2px solid #2a303b; } .m-log li.cur { color:#e9ecf1; border-left-color:#3de8d8; } .m-log li.sh { border-left-color:#f2d541; } .m-log time { color:#5c6577; margin-right:6px; font-variant-numeric:tabular-nums; }
+.m-note { margin:8px 12px 0; font-size:.78rem; color:#8a93a6; line-height:1.4; }
+.m-ctl { display:flex; gap:8px; padding:8px 12px 0; } .m-ctl button { flex:1; min-height:44px; background:#161a21; color:#e9ecf1; border:1px solid #2a303b; font:700 .8rem 'Rajdhani',sans-serif; letter-spacing:.12em; text-transform:uppercase; cursor:pointer; }
+.sp-token.m, .sp-token.mf { transition:none; } .m-fl { font:700 5px 'Rajdhani',sans-serif; letter-spacing:.06em; }
+.sp-token.mf .m-ring { fill:none; stroke:#ff3d5f; stroke-width:1.6; } .sp-token.mf circle.bg { fill:#3a1018; }
+.sp-token.m .m-ring { fill:none; stroke:#3de8d8; stroke-width:1.6; }
+.sp-token.dead > g, .sp-token.dead .m-ring { filter:grayscale(1) brightness(.55); } .sp-token.dead .m-ring { stroke:#ff4a4a; }
+.sp-token.lowhp .m-ring { stroke:#f2d541; }
+.m-body { fill:#5a1020; opacity:.6; }
+</style></head>
+<body><div class="m-wrap">
+<section>
+  <div class="m-hd"><h1>Round 4</h1><b>HOLD · VAN HERE · LEAVES ROUND 6</b><span class="m-clock" id="clock">0:00</span></div>
+  <div class="m-chips" id="pace" role="group" aria-label="Pace"><button data-p="fast">Fast</button><button data-p="watch" class="on">Watch</button><button data-p="resolve">Resolve</button></div>
+  <div class="m-stage"><!--SVG--><div class="m-bars t" id="bt"></div><div class="m-bars b" id="bb"></div><div class="m-big" id="big">Showcase</div></div>
+  <div class="m-beat" id="beat"><small>Ready</small><p>Press Replay.</p></div>
+</section>
+<section>
+  <div class="m-ctl"><button id="replay">Replay</button></div>
+  <ol class="m-log" id="log" aria-label="Commentary"></ol>
+  <p class="m-note">The real warehouse yard, its real cover. Everyone runs and shoots all the time, like a match view; the commentary is what the script engine decided, and the picture only shows it.</p>
+</section></div>
+<script>
+const D = /*DATA*/{};
+const NS = 'http://www.w3.org/2000/svg', $ = (i) => document.getElementById(i), svg = document.querySelector('svg.siteplan');
+const tokens = svg.querySelector('.sp-tokens'), fxg = svg.querySelector('.sp-fx');
+const el = (t, a = {}, h = '') => { const e = document.createElementNS(NS, t); for (const [k, v] of Object.entries(a)) e.setAttribute(k, v); if (h) e.innerHTML = h; return e; };
+const CREW = [ ['Pax', 0], ['Kit', 1], ['Sal', 2], ['Nia', 3], ['Mei', 4], ['Doc', 5] ];   // name, crew spot
+const FOE = [1, 2, 3, 4, 5, 6, 7, 8, 9];                                                      // enemies, drawn from the guards' spots
+let K = 1, SLOW = 1, run = 0, pace = 'watch', t0 = 0; const U = {};
+const F = () => K * SLOW, sleep = (ms) => new Promise((r) => setTimeout(r, ms * F()));
+const mkToken = (id, face, at, foe, tag) => {
+  const g = el('g', { class: 'sp-token ' + (foe ? 'mf' : 'm') });
+  g.innerHTML = (foe ? `<circle class="bg" r="6.5"/>` : '') + `<g clip-path="url(#sp-face-clip)">${D.faces[face].replace('<svg ', '<svg x="-6.5" y="-6.5" ')}${foe ? '<rect x="-7" y="-7" width="14" height="14" fill="#ff3d5f" opacity=".28"/>' : ''}</g><circle class="m-ring" r="6.5"/>` + (tag ? `<text x="5.5" y="6.5" style="fill:#ff3d5f;font-size:5px">${tag}</text>` : '');
+  g.style.transform = `translate(${at[0]}px,${at[1]}px)`; tokens.append(g);
+  return { id, g, x: at[0], y: at[1], foe, hp: 1, dead: false, home: at };
+};
+const go = (u, x, y, ms = 700, ease = 'cubic-bezier(.3,.7,.3,1)') => { u.x = x; u.y = y; u.g.style.transition = `transform ${ms * F()}ms ${ease}`; u.g.style.transform = `translate(${x}px,${y}px)`; };
+const anim = (e, kf, ms, o = {}) => e.animate(kf, { duration: ms * F(), easing: 'ease-out', fill: 'forwards', ...o });
+const add = (h) => { const g = el('g'); g.innerHTML = h; fxg.append(g); return g; };
+function tracer(a, b, { col = '#f2d541', ms = 150, w = .9, miss = false } = {}) {
+  let tx = b.x, ty = b.y; if (miss) { tx += (Math.random() - .5) * 18; ty += (Math.random() - .5) * 18; }
+  const g = add(`<line x1="${a.x}" y1="${a.y}" x2="${tx}" y2="${ty}" stroke="${col}" stroke-width="${w}" stroke-linecap="round" pathLength="1" stroke-dasharray=".25 1" stroke-dashoffset=".25"/><circle cx="${a.x}" cy="${a.y}" r="2.2" fill="#fff3b0"/>`);
+  anim(g.children[0], [{ strokeDashoffset: .25 }, { strokeDashoffset: -1 }], ms, { easing: 'linear' }); anim(g.children[1], [{ opacity: 1, r: 2.4 }, { opacity: 0, r: 4 }], 130);
+  setTimeout(() => g.remove(), ms * F() + 60); return g;
+}
+const flashTok = (u, c = '#fff') => { const r = el('circle', { r: 7, fill: c, opacity: .9 }); u.g.append(r); anim(r, [{ opacity: .9 }, { opacity: 0 }], 260).onfinish = () => r.remove(); };
+const float = (u, text, col = '#fff') => { const g = add(`<text class="m-fl" x="${u.x}" y="${u.y - 10}" text-anchor="middle" fill="${col}">${text}</text>`); anim(g, [{ transform: 'translateY(0)', opacity: 1 }, { transform: 'translateY(-9px)', opacity: 0 }], 800).onfinish = () => g.remove(); };
+const ringfx = (x, y, col, r1 = 24, ms = 600) => { const g = add(`<circle cx="${x}" cy="${y}" r="5" fill="none" stroke="${col}" stroke-width="1"/>`); anim(g.firstChild, [{ r: 5, opacity: 1 }, { r: r1, opacity: 0 }], ms).onfinish = () => g.remove(); };
+function kill(u, from) { u.dead = true; u.g.classList.add('dead'); const dx = u.x - from.x, dy = u.y - from.y, d = Math.hypot(dx, dy) || 1; go(u, u.x + dx / d * 3, u.y + dy / d * 3, 240, 'ease-out'); const b = el('ellipse', { class: 'm-body', cx: u.x, cy: u.y, rx: 7, ry: 4.5 }); svg.querySelector('.sp-fx').prepend(b); }
+// the fight camera (the game's own idea: a box round the fight spots); animated by hand on the viewBox
+let cam = [60, 52, 178, 198];
+function camTo(box, ms = 700) { const from = [...cam], start = performance.now(), dur = ms * F(), id = ++camTo.id; const step = (now) => { if (id !== camTo.id) return; const k = dur <= 0 ? 1 : Math.min(1, (now - start) / dur), e = 1 - Math.pow(1 - k, 3); cam = from.map((v, i) => v + (box[i] - v) * e); svg.setAttribute('viewBox', cam.join(' ')); if (k < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); } camTo.id = 0;
+const boxAround = (pts, pad = 34) => { const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]); const x0 = Math.min(...xs) - pad, x1 = Math.max(...xs) + pad, y0 = Math.min(...ys) - pad, y1 = Math.max(...ys) + pad; let w = x1 - x0, h = y1 - y0; const ar = 360 / 400; if (w / h > ar) { const nh = w / ar; return [x0, y0 - (nh - h) / 2, w, nh]; } const nw = h * ar; return [x0 - (nw - w) / 2, y0, nw, h]; };
+const bars = (on, ms = 500) => { for (const id of ['bt', 'bb']) $(id).animate([{ height: on ? '0' : '9%' }, { height: on ? '9%' : '0' }], { duration: ms * F(), fill: 'forwards', easing: 'ease-out' }); };
+const big = (t) => { const b = $('big'); b.textContent = t; b.animate([{ opacity: 0 }, { opacity: 1, offset: .2 }, { opacity: 1, offset: .8 }, { opacity: 0 }], { duration: 1600 * F() }); };
+const clockOf = () => { const s = Math.floor((performance.now() - t0) / 1000 * (K ? 1 / Math.max(K, .01) : 1) / (SLOW || 1)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+function say(kind, label, text) { const b = $('beat'); b.className = 'm-beat ' + (kind === 'show' ? 'show' : ''); b.innerHTML = `<small>${label}</small><p>${text}</p>`; document.querySelectorAll('#log li.cur').forEach((l) => l.classList.remove('cur')); const li = document.createElement('li'); li.className = 'cur' + (kind === 'show' ? ' sh' : ''); li.innerHTML = `<time>${String(Math.floor(U._n = (U._n || 0) + 1)).padStart(2, '0')}</time>${text}`; $('log').append(li); li.scrollIntoView({ block: 'nearest' }); }
+
+/* ---- the live view: everyone is always doing something small; the engine's decisions are the punctuation ---- */
+let ambient = null;
+function startAmbient(my) {
+  const tick = () => {
+    if (my !== run || !K) return;
+    const live = Object.values(U).filter((u) => u.id && !u.dead);
+    for (const u of live) if (Math.random() < .5) go(u, u.home[0] + (Math.random() - .5) * 4, u.home[1] + (Math.random() - .5) * 4, 600, 'ease-in-out');
+    const a = live.filter((u) => !u.foe), b = live.filter((u) => u.foe);
+    if (a.length && b.length) { const s = Math.random() < .5 ? a[Math.floor(Math.random() * a.length)] : b[Math.floor(Math.random() * b.length)], t = s.foe ? a[Math.floor(Math.random() * a.length)] : b[Math.floor(Math.random() * b.length)]; tracer(s, t, { col: s.foe ? '#ff8a98' : '#f2d541', miss: true, w: .7 }); }
+  };
+  ambient = setInterval(tick, 380 * Math.max(K, .4));
+}
+function setup() {
+  tokens.innerHTML = ''; fxg.innerHTML = ''; svg.querySelectorAll('.m-body').forEach((b) => b.remove()); svg.classList.add('is-fight'); for (const k of Object.keys(U)) delete U[k];
+  const van = [200, 230];
+  CREW.forEach(([n, i], k) => { U[n] = mkToken(n, n, [van[0] - 30 + k * 12, van[1]], false); U[n].home = D.spots.crew[i].at; });
+  FOE.forEach((n, k) => { const west = k >= 6, g = D.spots.guards[k % D.spots.guards.length]; U['e' + n] = mkToken('e' + n, 'e' + n, west ? [-6, 120 + (k - 6) * 18] : g.at, true, String(n)); U['e' + n].home = g.at; if (west) U['e' + n].g.style.opacity = .6; });
+  cam = [0, 0, 360, 240]; svg.setAttribute('viewBox', cam.join(' ')); $('log').innerHTML = ''; U._n = 0; $('beat').className = 'm-beat'; $('beat').innerHTML = '<small>Ready</small><p>Press Replay.</p>';
+}
+async function play() {
+  const my = ++run, live = () => my === run; t0 = performance.now(); clearInterval(ambient); SLOW = 1;
+  const pts = () => [...D.spots.crew.map((s) => s.at), ...D.spots.guards.map((s) => s.at)];
+  camTo(boxAround(pts()), 900);
+  say('', 'Round 4 · 0:00', 'Hired guns hold the yard. The crew comes in from the van.');
+  // the crew runs to its cover
+  CREW.forEach(([n], k) => setTimeout(() => live() && go(U[n], ...U[n].home, 1100 + k * 80, 'cubic-bezier(.2,.6,.3,1)'), k * 110 * K));
+  await sleep(1500); if (!live()) return; startAmbient(my);
+  // reinforcements run in from the west, and take the cover nearest them
+  for (const n of [7, 8, 9]) { const u = U['e' + n]; u.g.style.opacity = 1; go(u, ...u.home, 1500, 'cubic-bezier(.2,.6,.3,1)'); }
+  say('', 'Round 4 · 0:02', 'Three more come in from the west and dive behind the stacks.'); await sleep(1700); if (!live()) return;
+  // punctuation 1: Kit is hit and falls back a step
+  tracer(U.e2, U.Kit, { col: '#ff3d5f', w: 1.4 }); await sleep(180); flashTok(U.Kit, '#ff3d5f'); float(U.Kit, 'HIT', '#ff4a4a'); U.Kit.g.classList.add('lowhp'); go(U.Kit, U.Kit.home[0] - 4, U.Kit.home[1] + 4, 300);
+  say('', 'Round 4 · 0:04', 'A hired gun lands one on Kit. Kit is down to one pip.'); await sleep(1100); if (!live()) return;
+  // punctuation 2: Mei steps beside Kit and the next shot hits her armour
+  go(U.Mei, U.Kit.home[0] + 9, U.Kit.home[1] - 6, 500); ringfx(U.Mei.x, U.Mei.y, '#3de8d8', 14, 500); await sleep(700);
+  tracer(U.e5, U.Mei, { col: '#ff3d5f', w: 1.4 }); await sleep(180); flashTok(U.Mei, '#f2d541'); float(U.Mei, 'ABSORBED', '#f2d541');
+  say('', 'Round 4 · 0:06', 'Mei steps in beside Kit. The next shot hits her armour instead.'); await sleep(1100); if (!live()) return;
+  // punctuation 3: Sal takes one down
+  tracer(U.Sal, U.e1, { col: '#fff3b0', w: 1.6 }); await sleep(160); flashTok(U.e1); kill(U.e1, U.Sal); float(U.e1, 'DOWN', '#ff3d5f');
+  say('', 'Round 4 · 0:08', 'Sal drops hired gun 1.'); await sleep(1000); if (!live()) return;
+  // the showcase: the director gives Pax's burst the showcase tier
+  clearInterval(ambient); SLOW = pace === 'watch' ? 2.4 : pace === 'fast' ? 1.4 : 1;
+  bars(true); big('Showcase'); ringfx(U.Pax.x, U.Pax.y, '#f2d541', 34, 800); camTo(boxAround([[U.Pax.x, U.Pax.y], ...FOE.filter((n) => !U['e' + n].dead).map((n) => [U['e' + n].x, U['e' + n].y])], 24), 700);
+  say('show', 'Showcase · Hold the Line', 'Pax has the whole yard in the sights and takes the shot.'); await sleep(900); if (!live()) return;
+  let prev = U.Pax; const order = [2, 5, 3, 4, 6, 7, 8, 9].map((n) => U['e' + n]).filter((u) => !u.dead);
+  for (const e of order) {
+    camTo(boxAround([[prev.x, prev.y], [e.x, e.y]], 40), 260);
+    const g = add(`<line x1="${prev.x}" y1="${prev.y}" x2="${e.x}" y2="${e.y}" stroke="#f2d541" stroke-width="1.8" stroke-linecap="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"/><circle r="2.6" cx="${prev.x}" cy="${prev.y}" fill="#fff"/>`);
+    anim(g.children[0], [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], 230, { easing: 'linear' });
+    await anim(g.children[1], [{ transform: 'translate(0,0)' }, { transform: `translate(${e.x - prev.x}px,${e.y - prev.y}px)` }], 230, { easing: 'linear' }).finished; if (!live()) return;
+    g.children[1].remove(); anim(g.children[0], [{ opacity: 1 }, { opacity: 0 }], 900).onfinish = () => g.remove();
+    flashTok(e); ringfx(e.x, e.y, '#fff', 14, 360); kill(e, prev); float(e, 'DOWN', '#ff3d5f');
+    say('show', 'Showcase · Hold the Line', `The round bounces on: hired gun ${e.id.slice(1)} is down.`); prev = e; await sleep(110);
+  }
+  camTo(boxAround(pts()), 800); bars(false); SLOW = 1; await sleep(900); if (!live()) return;
+  say('', 'End of round 4 · 0:14', 'Nine down, eight of them to Pax in one burst. Kit is on one pip.');
+}
+function reset() { run++; clearInterval(ambient); setup(); }
+function setPace(p) { pace = p; K = p === 'resolve' ? 0 : p === 'watch' ? 1 : .6; document.querySelectorAll('#pace button').forEach((b) => b.classList.toggle('on', b.dataset.p === p)); }
+async function replay() { reset(); await new Promise((r) => setTimeout(r, 100)); play(); }
+document.querySelectorAll('#pace button').forEach((b) => b.addEventListener('click', () => { setPace(b.dataset.p); replay(); }));
+$('replay').addEventListener('click', replay);
+setInterval(() => { if ($('clock')) $('clock').textContent = clockOf(); }, 500);
+setPace(new URLSearchParams(location.search).get('pace') || 'watch'); reset(); setTimeout(play, 300);
+window.__state = () => Object.fromEntries(Object.entries(U).filter(([k, u]) => u && u.id).map(([k, u]) => [k, u.dead ? 'down' : u.g.classList.contains('lowhp') ? 'low' : 'up']));
+</script></body></html>
