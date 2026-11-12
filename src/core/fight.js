@@ -172,11 +172,19 @@ const boardingStage = (b) => b.type === 'holdExtract' && b.stage === 1;
 const committed = (b) => b.risk.level === 'committed';
 const doorSlots = (b) => FIGHT.doorSlots + (b.standby && !b.standbyOut ? 1 : 0);
 
-/** Pips at or under which this runner pulls out at round start (spec 10: cautious half rounded up, steady 2, committed never). */
+/** Pips at or under which this runner pulls out at round start (cautious half rounded up, steady a third rounded up and at least 1, committed never). */
 export function riskThreshold(b, r) {
   const level = b.risk.level;
-  return level === 'cautious' ? Math.ceil(r.max / 2) : level === 'steady' ? FIGHT.risk.steady.pullAt : FIGHT.risk.committed.pullAt;
+  return level === 'cautious' ? Math.ceil(r.max / 2) : level === 'steady' ? Math.max(FIGHT.risk.steady.minPips, Math.ceil(r.max / FIGHT.risk.steady.pullDiv)) : FIGHT.risk.committed.pullAt;
 }
+/** A runner the player chose to keep in at their pull-out point stays in until they lose another pip (r.stayPips, set by keepIn). */
+const keptIn = (r) => r.stayPips != null && r.pips >= r.stayPips;
+/** Is this runner at the point where their risk level pulls them out, and not kept in? */
+export const atPullOut = (b, r) => r.pips <= riskThreshold(b, r) && !keptIn(r);
+/** The runners standing at their pull-out point (not while the van is there: pulling out then means boarding). */
+export const pullOutSubjects = (b) => (boardingStage(b) ? [] : standing(b).filter((r) => atPullOut(b, r)));
+/** The player's answer "keep them in": these runners fight on until they lose another pip. */
+export function keepIn(b, ids) { for (const r of b.runners) if (ids.includes(r.id)) r.stayPips = r.pips; }
 
 // --- the incoming-shot formula ---------------------------------------------------------------------
 
@@ -335,7 +343,7 @@ export function resolveOrders(b) {
     for (const d of outsideDown(b)) { const by = boarders.shift(); if (by) res.carriers.set(d.id, by.id); }
   }
   // Protect duties first; while boarding, then boarders (the most hurt get the door slots), then the rest by seat.
-  const safety = (r) => r.pips <= riskThreshold(b, r);
+  const safety = (r) => atPullOut(b, r);
   const group = (r) => (boarding && safety(r) ? -1 : orders.get(r.id).duty === 'protect' ? 0 : boarding && orders.get(r.id).duty === 'push' ? 1 : 2);
   const queue = [...standing(b)].sort((x, y) => group(x) - group(y) || (group(x) === 1 ? x.pips - y.pips : 0) || bySeat(x, y));
   const actions = [];
@@ -437,6 +445,7 @@ function holds(b, cond) {
     if (k === 'stage') { if (b.stage !== v) return false; continue; }
     if (k === 'vanLastRound') { if ((b.round === b.goal.vanLeaves && boardingStage(b) && !b.vanHeld) !== v) return false; continue; }
     if (k === 'outsideAtLeast') { if (standing(b).length + outsideDown(b).length < v) return false; continue; }
+    if (k === 'atPullOut') { if ((pullOutSubjects(b).length > 0) !== v) return false; continue; }
     if (k === 'radioShown') { if (b.threats.some((t) => RADIO(t) && !t.cancelled) !== v) return false; continue; }
     if (k === 'protectedCanJam') { if (!!(prot && present(prot) && prot.jammer) !== v) return false; continue; }
     if (!prot || !present(prot)) return false; // the rest are about the specialist
@@ -460,8 +469,9 @@ export function dueDilemmas(b) {
   const out = [];
   for (const [id, d] of Object.entries(DILEMMAS)) {
     if (!d.fight.includes(b.type) || !holds(b, d.when)) continue;
-    const subjects = id === 'vanCantWait' ? [...standing(b), ...outsideDown(b)].map((r) => r.id).sort() : [b.goal.protect];
-    const key = `${id}:${subjects.join(',')}`;
+    const subjects = id === 'vanCantWait' ? [...standing(b), ...outsideDown(b)].map((r) => r.id).sort() : id === 'pullOutPoint' ? pullOutSubjects(b).map((r) => r.id).sort() : [b.goal.protect];
+    // The pull-out call comes up again each time someone at their point loses another pip, so its key carries their pips.
+    const key = `${id}:${subjects.join(',')}${id === 'pullOutPoint' ? `:${subjects.map((s) => runner(b, s).pips).join(',')}` : ''}`;
     if (!b.dilemmasFired[key]) out.push({ id, key, subjects });
   }
   return out;
@@ -546,6 +556,7 @@ export function startRound(b, rng) {
   const lines = [];
   const say = (kind, key, slots = {}, extra = {}) => lines.push({ kind, key, ...extra, text: lineText(key, slots) });
   b.round += 1;
+  for (const r of b.runners) if (r.stayPips != null && r.pips > riskThreshold(b, r)) r.stayPips = null; // healed past their point: asked afresh next time
   for (const kind of b.arriving.splice(0)) { const e = newEnemy(b, kind, rng); say('arrive', 'arrive', { kind: kindWord(e.kind), n: e.n }); }
   if (b.type === 'holdExtract' && b.round >= b.nextPressure && b.extras < FIGHT.maxExtraEnemies) {
     b.extras += 1; b.nextPressure += CLOCKS.pressure.every;

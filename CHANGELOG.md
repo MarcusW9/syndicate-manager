@@ -15,6 +15,26 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - **The messages move up.** Coming up no longer runs across the top of Today, and Monday's week numbers and The Word no longer sit above the list. Only Joss, the alerts, crews back and the Out line come before the messages now.
 - **A rail for the week.** On a computer, Monday's numbers with The Word and Coming up sit in a column to the right of the open message (under the messages on mid-size screens). On a phone they come after the message list.
 - The messages themselves look as before. Mockups of the options that led here are in `docs/mockups/`.
+## 2026-11-12 · Steady pulls out at a third of their pips, and a watched crew asks you first
+- **Steady now pulls a runner out at a third of their maximum pips (rounded up, at least 1)** instead of a flat 2. A 3-pip starting runner leaves at 1 pip, not after the first hit; a 9-pip runner at 3. Cautious (half) and committed (never) are unchanged. In the sim (`docs/sims/pullout-2026-11-12.md`) this raised starting crews' clean wins from 29% to 35% and cut abandoned hacks from 14% to 2%.
+- **A new call-in: "at the pull-out point".** When a watched crew has a runner at the point where their risk level pulls them out, you are told and choose: **Pull {who} out** or **Keep {who} in** (or Pull back). If it is the tech, the card says the hack is abandoned if they leave. Keeping someone in lasts until they lose another pip, then you are asked again. Not asked while the van is there (pulling out then means boarding) or on committed. Hands-off crews and away crews whose call-in runs out pull out, as the risk level says.
+- The risk picker's words say so ("a third of their pips", "a watched crew asks you first"). The call-in's lines and those two sentences are mine, for you to rewrite.
+- The gate and the other sims were run on the old flat 2; their numbers are what they were then.
+
+## 2026-11-12 · Steady pull-out at a share of max pips (sim, no game change)
+- `scripts/sim-pullout.mjs` and `docs/sims/pullout-2026-11-12.md`: on a patched copy of the fight code (the game's own files untouched), steady pulls out at a share of the runner's maximum instead of a flat 2 pips. The game's starting crews at the real job difficulty (the planning read's best team), and the gate's strong crews as a check, 400 seeds. Variants and the bar were declared in the script before the run.
+- **By the declared bar: none.** The bar required that nobody more is left behind in extractions, and left-behind rose from 56% to 57% (a third of max) or 58% (flat 1, a quarter), which is within the noise of 286-330 fights, but it is over the line I set, so it does not pass.
+- **What it does, in numbers (a third of max, rounded up, minimum 1; steady):** the starting crews' clean wins rise from 29% to 35% (+7 points, hack with the fresh roster 15% to 31%, authored 73% to 83%); the hack is abandoned in 2% of fights instead of 14%; deaths stay at 0%; downs rise by 0.17 a fight (runners stay in longer); the strong crews' clean wins rise 6 points (82% to 88%). A quarter of max or flat 1 do slightly more (+8) with slightly more downs (+0.2).
+- **It does not fix extractions:** holdExtract clean wins stay at 4-6% (fresh) and 22% (authored), and left-behind is unchanged or a little higher (authored 66% to 70%). The pull-out rule mostly fixes hacks; the left-behind lever is the van's arrival round (see "What moves the left-behind rate").
+
+## 2026-11-11 · What moves the left-behind rate (sensitivity sim, no game change)
+- `scripts/sim-vanlevers.mjs` and `docs/sims/vanlevers-2026-11-11.md`: the two holdExtract jobs at their real difficulty, the game's own starting rosters (the planning read's best team), the defaults hands-off, 400 seeds, one van number changed at a time in the script only. Declared bar: cut "someone left behind" by 10+ points without raising downs by more than 0.2 or heat by more than 0.3.
+- **Base (steady): someone is left behind in 56% of extractions** (fresh roster 39-46%, authored 62-78%), 1.7 downs a fight, clean wins 10%.
+- **The van arriving later is the lever that works:** round 4 instead of 3 cuts it to 37% (-19 points, downs -0.45, heat -0.14); round 5 to 27% (-29, downs -0.63). Clean wins drop a little (10% to 8% and 7%).
+- **Door slots do nothing** (4 or 5 slots: no change; the door is never the bottleneck). **The van waiting longer barely helps** (waits 5, 6 or 8: -2 to -4 points, and about +0.1 downs). **Holding the van three rounds: no change.**
+- **Easier boarding makes it worse** (boarding step -2: +4 points left behind; 0: +8). Not understood yet; runners probably leave cover for the van sooner and are shot in the open.
+- **Committed risk on starting crews kills far more than the target:** someone dies in 15-49% of these extractions (fresh Warehouse 49%, Protection 37%; authored 22% and 15%), against about 1 in 25 for the stronger sim crews in the gate.
+- Nothing was changed; this is evidence for the owner's call.
 
 ## 2026-11-11 · Hits land, and the stamp has weight
 - **A guard that is shot now reacts:** on a hit the token shakes and flashes white for a moment, at the instant the shot lands (rifle, drone, turret and crew shots; a miss does nothing). With reduced motion on, it only flashes.
