@@ -14,7 +14,7 @@ import { hallIn, residents } from '../core/halls.js';
 import { sitePlanSvg } from './siteplan.js';
 import { defencesIn, defenceCut, raidOn, raidWho } from '../core/raids.js';
 import { hasHallArt, hallArtSvg, waysOverlay, insideBox, SPRITE_SHEET } from './hallart.js';
-import { pickSite } from '../data/sites.js';
+import { pickSite, siteHeight } from '../data/sites.js';
 import { money } from '../core/money.js';
 
 const C = HALL_BUILD.cell;
@@ -189,7 +189,7 @@ export function buildGrid(state, view, esc, art = false) {
     return `<rect x="${sel.x * C + 0.5}" y="${sel.y * C + 0.5}" width="${w * C - 1}" height="${h * C - 1}" class="bgrid__sel"/>`;
   })() : view.cell ? `<rect x="${view.cell[0] * C + 0.5}" y="${view.cell[1] * C + 0.5}" width="${C - 1}" height="${C - 1}" class="bgrid__sel"/>` : '';
   const under = inside ? '' : scope === 'compound' ? `${compoundOverlay(state, view.district, { tap: true, free, esc, art })}${raidWaysFor(state, view.district)}` : `${partsOverlay(site, hall.level, { tap: true, free, esc, art })}${raidWaysFor(state, view.district)}`;
-  return `<svg class="bgrid" viewBox="${inside ? insideBox(site, inside) : '0 0 360 240'}">${under}${cells}${ghost(view)}${outline}</svg>`;
+  return `<svg class="bgrid" viewBox="${inside ? insideBox(site, inside) : `0 0 360 ${siteHeight(site)}`}">${under}${cells}${ghost(view)}${outline}</svg>`;
 }
 
 /** The sheet under the plan: what's picked and what you can do with it. */

@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-12 · A walled forecourt for every hall
+- **Room to build defences.** Every hall now has a walled forecourt between its buildings and the street, with its own gate. Before, the only outside ground at levels 1 and 2 was a narrow passage with four free squares; the forecourt adds 30. The hall's plan is taller to fit it (12 × 11 squares instead of 12 × 8), and the plan scales to fit your screen.
+- **Raids from the street are held in the forecourt.** The raiders come in at the front gate and our people hold the forecourt, so barricades and plates you put there are cover for your side. Each hall keeps two crates of its own there, so a hall with nothing built still has some cover. Raids from behind (once the yard is ours) are unchanged.
+- **"The Forecourt" is a placeholder name** in every hall until it's written properly.
+
 ## 2026-11-12 · Hall plans are clearer
 - **Looking and building are two modes on a computer.** A hall's page now opens on the plan, who is in each building, what's next and one defences line. **Build defences ›** switches to building (the grid, the pieces, and a Done button). Before, the pieces and "tap a free square" sat beside a plan with no grid.
 - **One look for each thing.** The part you can take next is dashed cyan with its price on it. Parts for later are a plain faint outline, with no hatching and no "level 4" labels (the cards below still say when they open). Doors are cyan, like the key says; squares kept clear for a raid are grey. Red is left for buttons and raids.

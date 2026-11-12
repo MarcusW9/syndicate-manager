@@ -11,6 +11,7 @@ import { HALL_BUILD, PIECES } from '../data/hallBuild.js';
 import { bedsOnFloor, hallMap, heldParts, waysIn } from '../core/hallbuild.js';
 import { hallIn, residents } from '../core/halls.js';
 import { SPRITE_SHEET } from './hallsprites.js';
+import { siteHeight } from '../data/sites.js';
 
 const C = HALL_BUILD.cell;
 /** Districts that have the art layer so far. */
@@ -74,10 +75,10 @@ export const partBox = (part) => { const [x0, y0, x1, y1] = part.grid; return { 
 /** The viewBox that frames one building's inside (the plan, a little past its walls). */
 export function insideBox(site, partId, pad = 6) {
   const p = site.parts?.find((x) => x.id === partId);
-  if (!p) return '0 0 360 240';
+  if (!p) return `0 0 360 ${siteHeight(site)}`;
   const { x, y, w, h } = partBox(p);
   const x0 = Math.max(0, x - pad), y0 = Math.max(0, y - pad);
-  return `${x0} ${y0} ${Math.min(360, x + w + pad) - x0} ${Math.min(240, y + h + pad) - y0}`;
+  return `${x0} ${y0} ${Math.min(360, x + w + pad) - x0} ${Math.min(siteHeight(site), y + h + pad) - y0}`;
 }
 
 /** Colours of each building's roof: the noodle-shop room (rust), the flat (teal), the back kitchen (ochre). */
@@ -138,11 +139,15 @@ export function hallArtSvg(state, district, { inside = null } = {}) {
   const yardWalls = part(site, 'yard').shapes ?? [];
   const yardLine = (s) => (s.t === 'line' ? `<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" stroke="#2e3646" stroke-width="6" stroke-linecap="square"/><line x1="${s.x1}" y1="${s.y1 - 2}" x2="${s.x2}" y2="${s.y2 - 2}" stroke="#8798b4" stroke-opacity=".5" stroke-width="1"/>` : `<rect x="${s.x}" y="${s.y - 1}" width="${s.w}" height="${s.h + 2}" fill="${s.fill}" stroke="#0b0d11" stroke-width=".8"/>`);
 
+  const H = siteHeight(site);
+  const sy = H - 28; // the street strip is the last 28 units (a compound is taller than the usual map: its forecourt is above it)
+  const fore = shapesOf('sp-wall').map((s) => `<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" stroke="#2e3646" stroke-width="6" stroke-linecap="square"/><line x1="${s.x1 + 1.5}" y1="${s.y1 - 1.5}" x2="${s.x2 + 1.5}" y2="${s.y2 - 1.5}" stroke="#8798b4" stroke-opacity=".5" stroke-width="1"/>`).join('');
   const ground = `
-    <rect width="360" height="240" fill="#0b0d11"/>
+    <rect width="360" height="${H}" fill="#0b0d11"/>
     <rect x="0" y="0" width="360" height="30" fill="url(#hf-alley)"/>
-    <rect x="0" y="212" width="360" height="28" fill="url(#hf-street)"/>
-    <line x1="0" y1="226" x2="360" y2="226" stroke="#3a4152" stroke-width="1.4" stroke-dasharray="9 7" opacity=".7"/>
+    <rect x="0" y="${sy}" width="360" height="28" fill="url(#hf-street)"/>
+    <line x1="0" y1="${sy + 14}" x2="360" y2="${sy + 14}" stroke="#3a4152" stroke-width="1.4" stroke-dasharray="9 7" opacity=".7"/>
+    ${shapesOf('sp-yard').map((r) => `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="url(#hf-yard)"/>`).join('')}
     <rect x="${yard.x}" y="${yard.y}" width="${yard.w}" height="${yard.h}" fill="url(#hf-yard)"/>
     <rect x="${lane.x}" y="${lane.y}" width="${lane.w}" height="${lane.h}" fill="url(#hf-lane)"/>
     <rect x="${lane.x}" y="${lane.y}" width="${lane.w}" height="${lane.h}" fill="none" stroke="#000" stroke-opacity=".25" stroke-width="6"/>
@@ -153,7 +158,7 @@ export function hallArtSvg(state, district, { inside = null } = {}) {
   const props = covers.map((s) => `<g class="ha-prop"><rect x="${s.x + 2.5}" y="${s.y + 2.5}" width="${s.w}" height="${s.h}" rx="1.5" fill="#000" opacity=".4"/><rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="1.5" fill="${s.fill}" stroke="#0b0d11" stroke-width=".8"/><rect x="${s.x + .6}" y="${s.y + .6}" width="${s.w - 1.2}" height="1.4" fill="#fff" opacity=".18"/></g>`).join('');
   const doorsSvg = doors.map((s) => `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" fill="#0b0d11"/><rect x="${s.x + (s.w > s.h ? 0 : 1)}" y="${s.y + (s.w > s.h ? 1 : 0)}" width="${s.w > s.h ? s.w : 1.6}" height="${s.w > s.h ? 1.6 : s.h}" fill="#3de8d8" opacity=".85"/>`).join('');
   const signsSvg = signs.map((s) => `<ellipse cx="${s.x + s.w / 2}" cy="${s.y + s.h + 12}" rx="${s.w * 1.2}" ry="16" fill="url(#hl-red)"/><rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" fill="${s.fill}"/><rect x="${s.x}" y="${s.y}" width="${s.w}" height="1.2" fill="#fff" opacity=".5"/>`).join('');
-  const gate = shapesOf('sp-gate')[0] ?? yardWalls.find((s) => s.cls === 'sp-gate');
+  const gate = yardWalls.find((s) => s.cls === 'sp-gate') ?? shapesOf('sp-gate')[0];
 
   // From above, what stands outside is the defences; inside, it is the beds and the rooms.
   const isDefence = (b) => PIECES[b.piece]?.kind === 'defence';
@@ -178,9 +183,9 @@ export function hallArtSvg(state, district, { inside = null } = {}) {
   </g>`;
   // The street's and alley's names go on the compound; inside a building they would be cut across.
   const labels = inside ? '' : site.labels.map((l) => `<text class="ha-label ${l.hi ? 'is-hi' : ''}" x="${l.x}" y="${l.y}">${esc(l.text)}</text>`).join('');
-  const vb = inside ? insideBox(site, inside) : '0 0 360 240';
+  const vb = inside ? insideBox(site, inside) : `0 0 360 ${H}`;
 
-  return `<svg class="siteplan hallart ${inside ? 'is-inside' : ''}" viewBox="${vb}" role="img" aria-label="${esc(inside ? `Inside ${part(site, inside)?.name ?? 'the building'}` : site.aria)}">${DEFS}${ground}${neighbours}${buildings}${doorsSvg}${yardGear}${props}${things}${shutters}${signsSvg}${light}${labels}<rect width="360" height="240" fill="none" stroke="#000" stroke-opacity=".55" stroke-width="10"/></svg>`;
+  return `<svg class="siteplan hallart ${inside ? 'is-inside' : ''}" viewBox="${vb}" role="img" aria-label="${esc(inside ? `Inside ${part(site, inside)?.name ?? 'the building'}` : site.aria)}">${DEFS}${ground}${neighbours}${buildings}${doorsSvg}${inside ? '' : fore}${yardGear}${props}${things}${shutters}${signsSvg}${light}${labels}<rect width="360" height="${H}" fill="none" stroke="#000" stroke-opacity=".55" stroke-width="10"/></svg>`;
 }
 
 /** The names the raid's approach is labelled with, by way id. */
@@ -201,7 +206,7 @@ export function waysOverlay(site, level, who) {
     const via = [ex, ay];
     const name = WAY_NAMES[w.id] ?? String(w.id).toUpperCase();
     const down = ey > ay; // starts below the heart: label above the start would run off the plan, so put it beside
-    const lx = Math.min(300, Math.max(6, ex + 8)), ly = Math.min(236, Math.max(10, ey + (down ? -4 : 12)));
+    const lx = Math.min(300, Math.max(6, ex + 8)), ly = Math.min(siteHeight(site) - 4, Math.max(10, ey + (down ? -4 : 12)));
     return `<g class="rway__way"><path class="rway__line" d="M${ex} ${ey}L${via[0]} ${via[1]}L${ax} ${ay}"/><circle class="rway__dot" cx="${ex}" cy="${ey}" r="5"/><path class="rway__arrow" d="M${ex} ${ey - 3}l3 4h-6z"/><text class="rway__label" x="${lx}" y="${ly}">${esc(`${String(who).toUpperCase()} · ${name}`)}</text></g>`;
   }).join('')}</g>`;
 }

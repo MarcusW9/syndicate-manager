@@ -11,9 +11,9 @@
 // were caught where they stood, one of them on the post itself, in the open.
 
 import { BATTLE } from '../data/battle.js';
-import { pickSite } from '../data/sites.js';
+import { pickSite, siteHeight } from '../data/sites.js';
 
-const MAP = { x0: 6, y0: 6, x1: 354, y1: 232 }; // where anyone can stand (the road too)
+const MAP = { x0: 6, y0: 6, x1: 354, y1: 232 }; // where anyone can stand (the road too); y1 is for the usual 240-high map: see mapOf
 // What counts as cover on a site (data/sites.js classes): containers and crates, desks, market
 // stalls, planters, cots, stable blocks. Cover and water are solid (nobody stands in them).
 export const COVER = new Set(['sp-cover', 'sp-desk', 'sp-stall', 'sp-planter', 'sp-cot', 'sp-stable']);
@@ -25,6 +25,9 @@ const SIDE = 8; // two behind a container stand this far either side of its midd
 const REACH = 72; // cover this far from a side's anchor counts
 const RANK = { full: 0, half: 1, open: 2 };
 const MIN_SPLIT = 60; // the guards stand at least this far from the crew
+
+/** Where anyone can stand on this site: the usual box, with its floor where the map's floor is (a hall compound is taller). */
+const mapOf = (site) => ({ ...MAP, y1: siteHeight(site) - 8 });
 
 /** Every rect on the site, rows expanded: [{ cls, x, y, w, h }]. */
 export function siteRects(site) {
@@ -81,6 +84,7 @@ function travel(site, zone) {
  * what cover can't.
  */
 export function fightSpots(site, zone, need = { crew: 6, guards: 4 }) {
+  const MAP = mapOf(site);
   const post = site.posts?.[zone];
   const C0 = crewAnchor(site, zone);
   if (!C0 || !post) return null;

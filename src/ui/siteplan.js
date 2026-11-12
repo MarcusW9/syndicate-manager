@@ -3,7 +3,7 @@
 // what happens there (guards, patrols, cameras, saves). Decoration only: everything shown here is
 // also in the feed as text.
 
-import { SITES, pickSite } from '../data/sites.js';
+import { SITES, pickSite, siteHeight } from '../data/sites.js';
 import { portrait } from './art.js';
 import { gridSite, cutCorners } from './route.js';
 
@@ -23,7 +23,7 @@ export const EDGE_PAD = 16;
  * over height), at least 150 x 100, with room for the tokens. It may run up to EDGE_PAD past the
  * site's edge so a token standing near it is never cut in half (owner's capture, 2026-11-03).
  */
-export function frameFight(pts, ar = 1.5) {
+export function frameFight(pts, ar = 1.5, H = 240) {
   if (!pts.length) return null;
   const xs = pts.map((p) => p[0]); const ys = pts.map((p) => p[1]);
   let [x0, y0, x1, y1] = [Math.min(...xs) - 22, Math.min(...ys) - 24, Math.max(...xs) + 22, Math.max(...ys) + 22];
@@ -78,10 +78,11 @@ export function shapeSvg(s) {
 /** The plan's markup for a site. kit: the overwatch kit (its sight is drawn) or null. */
 export function sitePlanSvg({ kit = null, site: given = SITES.generic, clean = false } = {}) {
   const site = gridSite(given); // the route across and up/down, corners cut (ui/route.js, 2026-11-07)
+  const H = siteHeight(site);
   const P = site.points;
   const nodes = [site.paths.in.at(-1), site.paths.inside.at(-1)];
   const sight = !kit ? '' : `<polygon class="sp-sight ${kit === 'drone' ? 'sp-sight--drone' : ''}" points="${pts(site.sight[kit === 'drone' ? 'drone' : 'rifle'])}"/>`;
-  return `<svg class="siteplan" viewBox="${FULL.join(' ')}" role="img" aria-label="${escAttr(site.aria)}">
+  return `<svg class="siteplan" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escAttr(site.aria)}">
     <rect width="${W}" height="${H}" fill="#0b0d11"/>
     ${site.shapes.map(shapeSvg).join('')}
     ${sight}
@@ -118,6 +119,8 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
   const P = site.points;
   const PATHS = site.paths;
   const ZONE_END = { start: P.van, in: PATHS.in.at(-1), inside: PATHS.inside.at(-1), target: P.target, out: P.van };
+  const H = siteHeight(site); // a hall compound is taller than the usual map
+  const FULL = [0, 0, W, H];
   const VB = { full: FULL, ...site.views, out: FULL };
   // Beside the van, clear of the group, towards the middle of the map.
   const side = P.van[0] < W / 2 ? 1 : -1;
@@ -238,7 +241,7 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
     // ended) and the guards still standing.
     const at = (node) => { const m = /translate\(([-\d.]+)px, ([-\d.]+)px\)/.exec(node?.style.transform ?? ''); return m ? [Number(m[1]), Number(m[2])] : null; };
     const drawn = [...tokens.querySelectorAll('[data-op]'), ...foes.values()].filter((n) => !n.classList.contains('is-dead')).map(at).filter(Boolean);
-    return frameFight([...fightAt.values(), ...drawn], ar);
+    return frameFight([...fightAt.values(), ...drawn], ar, H);
   }
   const hostOf = (key) => (key.startsWith('g') ? foes.get(Number(key.slice(1))) : tok(key));
   function setHp(key, hp, max) {

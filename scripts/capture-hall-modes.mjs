@@ -2,7 +2,9 @@
 // phone (the hall page, then the Build screen) and on a computer (looking, then building in place).
 // Run: node scripts/capture-hall-modes.mjs <out dir>
 import { createNewGame } from '../src/core/state.js';
-import { syncHalls, hallIn } from '../src/core/halls.js';
+import { syncHalls, hallIn, moveToHall } from '../src/core/halls.js';
+import { advanceDay } from '../src/core/time.js';
+import { setHeat } from '../src/core/heat.js';
 import { placePiece } from '../src/core/hallbuild.js';
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
@@ -17,6 +19,14 @@ syncHalls(s);
 s.cash = 1e6;
 for (const [id, x, y, rot = 0] of [['barricade', 5, 4], ['plate', 6, 5, 1]]) s = placePiece(s, 'nightMarket', id, x, y, rot);
 s.cash = 24500;
+// A raid on the hall, with three of the crew moved in to hold it.
+let r = structuredClone(s);
+for (const op of r.crew.slice(0, 3)) r = moveToHall(r, op.id, 'nightMarket');
+// (With people home and no plan given, the hall is held at once: the fight is on screen.)
+for (let i = 0; i < 80 && !r.activeMission?.raid && !r.inbox.some((m) => m.kind === 'raid' && !m.resolved && m.payload?.raidId); i++) {
+  setHeat(r, 'nightMarket', 9); r = advanceDay(r); setHeat(r, 'nightMarket', 9);
+  for (const m of r.inbox) if (m.blocking && m.kind !== 'raid') { m.blocking = false; m.resolved = true; }
+}
 
 const root = new URL('..', import.meta.url).pathname;
 const srv = spawn(`${root}node_modules/.bin/vite`, ['--port', '5197', '--strictPort'], { cwd: root, stdio: 'ignore', detached: true });
@@ -39,6 +49,12 @@ try {
   await p.screenshot({ path: `${out}/03-desktop-looking.png` });
   await tap(p, '[data-action="build-hall"][data-id="nightMarket"]'); await p.waitForTimeout(400);
   await p.screenshot({ path: `${out}/04-desktop-building.png` });
+  if (r.activeMission?.raid) {
+    await p.setViewportSize({ width: 390, height: 844 });
+    await load(p, r);
+    await p.waitForTimeout(1500);
+    await p.screenshot({ path: `${out}/05-holding-the-forecourt.png` });
+  } else console.error('no raid fight started');
 } finally {
   await b.close();
   process.kill(-srv.pid);

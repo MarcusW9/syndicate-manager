@@ -18,16 +18,16 @@ test('the sheet has a sprite for every piece and the bed, and the art is Old Tow
   assert.ok(!hasHallArt('docks'));
 });
 
-test('the art draws the plan on the same 360 × 240 box, a shutter on each locked part and a sprite for each bed', () => {
+test('the art draws the plan on the same 360 × 330 box (the height of a compound), a shutter on each locked part and a sprite for each bed', () => {
   const s = tong();
   const html = hallArtSvg(s, 'oldTown');
-  assert.match(html, /viewBox="0 0 360 240"/);
+  assert.match(html, /viewBox="0 0 360 330"/);
   assert.equal((html.match(/class="ha-shutter"/g) ?? []).length, 3, 'flat, yard and back kitchen locked at level 1');
   assert.equal((html.match(/data-roof="/g) ?? []).length, 3, 'the compound is three rooftops');
   assert.equal((html.match(/data-piece="bed"/g) ?? []).length, 0, 'no beds on a roof');
   const room = hallArtSvg(s, 'oldTown', { inside: 'room' });
   assert.equal((room.match(/data-piece="bed"/g) ?? []).length, s.halls[0].beds, 'the beds are inside the room');
-  assert.doesNotMatch(room, /viewBox="0 0 360 240"/, 'cropped to the building');
+  assert.doesNotMatch(room, /viewBox="0 0 360 330"/, 'cropped to the building');
   const up = expandHall(s, 'oldTown');
   assert.equal((hallArtSvg(up, 'oldTown').match(/class="ha-shutter"/g) ?? []).length, 2);
 });

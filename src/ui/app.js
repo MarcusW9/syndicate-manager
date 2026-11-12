@@ -29,6 +29,7 @@ import { hasHallArt, insideBox, SPRITE_SHEET } from './hallart.js';
 import { crewOutMap } from './minimap.js';
 import { siteFor, sitePlanSvg } from './siteplan.js';
 import { placePiece, removePiece, turnPiece, pieceAt, bedAt, refundOf, canRemove, hallSiteFor, hallMap, heldParts, partCells, partAt, floorUsed, floorOf } from '../core/hallbuild.js';
+import { siteHeight } from '../data/sites.js';
 import { PIECES } from '../data/hallBuild.js';
 
 import { advanceDay, calendar, isBlocked, seasonStartDay } from '../core/time.js';
@@ -1818,7 +1819,7 @@ function renderHallPage(d) {
   // (wide screens; a phone has its own Build screen).
   const mine = buildView && buildView.district === d && buildView.scope === scope;
   const view = bld ? (mine ? buildView : newBuildView(d, scope)) : wide && mine && buildView.on ? buildView : null;
-  const vb = bld ? insideBox(site, bld.id) : '0 0 360 240';
+  const vb = bld ? insideBox(site, bld.id) : `0 0 360 ${siteHeight(site)}`;
   const planBox = `<div class="bplan hallpage__plan ${bld ? 'is-inside' : ''}">${planSvg(state, d, art, bld ? { inside: bld.id } : { compound: true })}${view
     ? buildGrid(state, view, esc, art)
     : `<svg class="bgrid" viewBox="${vb}">${compoundOverlay(state, d, { esc, art, tap: true })}${raidWaysFor(state, d)}</svg>`}</div>`;
