@@ -4,6 +4,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-12 · The director tells each fight round
+- **Each fight round is now recorded as moments** (routine, notable, spotlight), so the screens can slow down for the good bits. Spotlights are things like a runner dropping three enemies in two rounds, a protector covering the same teammate again and again, a last stand on one pip, a hack finished at the last moment, a jam that kills two radio calls, and a carry into the van. The spotlight sentences are plain drafts for now, and nothing on screen shows them yet. Rules and odds are unchanged.
+
 ## 2026-11-12 · Fight groundwork: seeds, odds key, line slots
 - **No change you can see yet.** Fights now carry a stored seed for future showcase moments, the planning odds already take account of the rules still to come, and each recorded fight line keeps the key and slots it was written from. Tests now check that previews never change a fight.
 

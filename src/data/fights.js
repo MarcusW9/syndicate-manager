@@ -43,6 +43,10 @@ export const FIGHT = {
   partingShotFloor: 1, retreat: { heat: 1, rep: 2 }, press: { alert: 1, heat: 1 },
   deadline: { holdHack: 7 }, // holdExtract ends when the van leaves
   workNeeded: 4,
+  // The director (Slice 1): how long a beat holds at playback (ms; a hint only), and how many spotlights a pace plays as spotlights
+  // (the rest play as notable; Resolve plays none but still lists them). Applied by the UI, never by core.
+  beatMs: { routine: 600, notable: 1200, spotlight: 2200, showcase: 3000 },
+  spotlightBudget: { watch: 4, fast: 3, resolve: 0 },
   maxExtraEnemies: 2, oddsRuns: 120,
 };
 

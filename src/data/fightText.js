@@ -18,6 +18,13 @@ export const FIGHT_TEXT = {
   'kind.corp.plural': 'security guards',
   'kind.drone.plural': 'drones',
   'kind.enforcer.plural': 'enforcers',
+  // The director's spotlights (DRAFT sentences so the keys read; the owner writes the wording, content question 1; Slice 1). Slots: {who}, {target}, {n}, {round}.
+  'director.streak': '{who} drops {n} in two rounds.',
+  'director.shieldWall': '{who} covers {target} again.',
+  'director.lastStand': '{who} keeps fighting on one pip.',
+  'director.clutchHack': '{who} finishes the job in round {round}.',
+  'director.denied': '{who} cuts the radio: {n} calls go nowhere.',
+  'director.carryHome': '{target} is carried home.',
   // Round feed (one per thing that happens)
   'arrive': '{kind} {n} arrives.',
   'pressure': '{kind} {n} joins the fight.',
