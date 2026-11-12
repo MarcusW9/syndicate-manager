@@ -119,6 +119,13 @@ const NIGHT_MARKET = {
 const HEIGHTS = {
   name: 'a corporate tower',
   aria: 'Site plan of a corporate tower: the service road and the van, the loading bay, a plaza with planters, the tower with a server room, and the next tower\'s roof for overwatch',
+  // How it's drawn (ui/siteart.js): cyan off the tower's glass across a tiled plaza, sodium in the loading bay.
+  look: 'heights', light: '#3de8d8',
+  texture: [{ kind: 'tiles', x: 16, y: 96, w: 212, h: 102 }],
+  glow: [
+    { points: [[232, 24], [232, 196], [16, 198], [50, 120]], color: '#3de8d8', op: 0.06 },
+    { points: [[110, 198], [176, 198], [190, 212], [100, 212]], color: '#f2b544', op: 0.1 },
+  ],
   points: { van: [52, 224], perch: [80, 30], target: [310, 56] },
   paths: {
     in: [[52, 224], [120, 224], [120, 198]],
@@ -157,6 +164,13 @@ const HEIGHTS = {
 // Overwatch up a floodlight tower.
 const BASIN = {
   name: 'the racecourse stables',
+  // How it's drawn (ui/siteart.js): the floodlight's cream light, a cone of it over the stables, gravel yards.
+  look: 'basin', light: '#f7efc8',
+  texture: [{ kind: 'gravel', x: 160, y: 112, w: 200, h: 86 }, { kind: 'gravel', x: 236, y: 0, w: 124, h: 112 }],
+  glow: [
+    { points: [[192, 28], [208, 28], [340, 196], [164, 196]], color: '#f7efc8', op: 0.05 },
+    { points: [[250, 198], [300, 198], [316, 212], [236, 212]], color: '#f2b544', op: 0.07 },
+  ],
   aria: 'Site plan of the racecourse stables: the service gate and the van, the edge of the track, rows of stables, the vet block, and a floodlight tower for overwatch',
   points: { van: [300, 224], perch: [200, 30], target: [300, 70] },
   paths: {
@@ -215,6 +229,15 @@ const BASIN = {
 const DOCKS = {
   name: 'a container yard',
   aria: 'Site plan of a container yard on the harbour',
+  // How it's drawn (ui/siteart.js): Red Lantern red off the harbour, sodium yard lamps, concrete slabs.
+  look: 'docks', light: '#ff3d5f',
+  texture: [{ kind: 'concrete', x: 0, y: 0, w: 318, h: 212 }],
+  glow: [
+    { points: [[318, 40], [318, 110], [90, 120], [120, 50]], color: '#ff3d5f', op: 0.07 },
+    { points: [[318, 120], [318, 190], [40, 196], [70, 130]], color: '#f2b544', op: 0.06 },
+    { points: [[60, 213], [110, 213], [96, 239], [46, 239]], color: '#f2b544', op: 0.07 },
+    { points: [[200, 213], [240, 213], [226, 239], [186, 239]], color: '#ff3d5f', op: 0.07 },
+  ],
   perch: [176, 24],
   hub: [186, 135],
   drone: [[176, 24], [8, 12], [8, 212], [352, 212], [352, 12]],
@@ -352,6 +375,14 @@ const OLD_TOWN_TARGET = {
 const OLD_TOWN = {
   name: 'a tenement',
   aria: 'Site plan of a tenement in Old Town',
+  // How it's drawn (ui/siteart.js): sodium street light, a cobbled courtyard, the red sign at the alley's foot.
+  look: 'oldTown', light: '#f2b544', paving: true,
+  texture: [{ kind: 'cobble', x: 132, y: 100, w: 170, h: 52 }],
+  glow: [
+    { points: [[302, 100], [302, 150], [132, 152], [160, 100]], color: '#f2b544', op: 0.07 },
+    { points: [[256, 202], [286, 202], [280, 212], [236, 212]], color: '#ff3d5f', op: 0.14 },
+    { points: [[226, 40], [226, 90], [132, 98], [150, 48]], color: '#3de8d8', op: 0.05 },
+  ],
   perch: [292, 40],
   hub: [140, 118],
   drone: [[292, 40], [8, 12], [8, 212], [352, 212], [352, 12]],
@@ -724,6 +755,7 @@ export function assemble(plot, approach, cover, target) {
   const rev = (path) => [...path].reverse();
   return {
     name: plot.name,
+    look: plot.look, light: plot.light, paving: plot.paving, texture: plot.texture, glow: plot.glow,
     aria: `${plot.aria}: ${approach.aria}, ${cover.aria}, ${target.aria}`,
     parts: { approach: approach.id, cover: cover.id, target: target.id },
     points: { van: approach.van, perch: plot.perch, target: target.point },

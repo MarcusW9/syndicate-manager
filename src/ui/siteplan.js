@@ -6,7 +6,7 @@
 import { SITES, pickSite, siteHeight } from '../data/sites.js';
 import { portrait } from './art.js';
 import { gridSite, cutCorners } from './route.js';
-import { DRAWN, GROUND, SITE_LIGHT, glowSvg, litSvg, pavingSvg, rectsOf, shadowsSvg } from './siteart.js';
+import { DRAWN, GROUND, LOOKS, SITE_LIGHT, glowSvg, litSvg, pavingSvg, rectsOf, shadowsSvg, textureSvg } from './siteart.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const W = 360;
@@ -53,20 +53,23 @@ const escAttr = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<'
 export const siteFor = (district, jobId, templateId, build = null) => pickSite(district, jobId, templateId, build);
 
 /** One shape from a site's data as SVG, lit from the right (ui/siteart.js). light: the site's city
- *  light (map() passes an index here, so anything but a colour means the default). */
-export function shapeSvg(s, light = SITE_LIGHT) {
+ *  light; look: its district's own drawings (LOOKS). map() passes an index and the array here, so
+ *  anything but a string means the default. */
+export function shapeSvg(s, light = SITE_LIGHT, look = null) {
   if (typeof light !== 'string') light = SITE_LIGHT;
+  const own = typeof look === 'string' ? LOOKS[look]?.[s.cls] : null;
   const cls = `class="${escAttr(s.cls ?? '')}"`;
   const fill = s.fill ? ` fill="${escAttr(s.fill)}"` : '';
   if (s.t === 'rect' || s.t === 'row') {
-    const draw = DRAWN[s.cls];
+    const draw = own ?? DRAWN[s.cls];
     return rectsOf(s).map((r) => {
-      if (draw) return draw(r);
+      if (draw) return draw(r, light);
       const rx = s.t === 'rect' ? (s.rx ?? 1.5) : Math.min(1.5, s.w / 3, s.h / 3);
       const tone = r.fill ? ` fill="${escAttr(r.fill)}"` : '';
       return `<rect ${cls} x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="${rx}"${tone}/>${litSvg(s.cls, r, light)}`;
     }).join('');
   }
+  if (own) return own(s, light);
   if (s.t === 'line') return `<line ${cls} x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}"/>`;
   if (s.t === 'poly') return s.closed ? `<polygon ${cls} points="${pts(s.points)}"${fill}/>` : `<polyline ${cls} points="${pts(s.points)}"/>`;
   if (s.t === 'circle') return `<circle ${cls} cx="${s.cx}" cy="${s.cy}" r="${s.r}"${fill}/>`;
@@ -86,10 +89,11 @@ export function sitePlanSvg({ kit = null, site: given = SITES.generic, clean = f
   return `<svg class="siteplan" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escAttr(site.aria)}">
     <rect width="${W}" height="${H}" fill="#0b0d11"/>
     ${pavingSvg(site, H)}
-    ${site.shapes.filter((x) => GROUND.has(x.cls)).map((x) => shapeSvg(x, light)).join('')}
+    ${site.shapes.filter((x) => GROUND.has(x.cls)).map((x) => shapeSvg(x, light, site.look)).join('')}
+    ${textureSvg(site)}
     ${glowSvg(site)}
     ${shadowsSvg(site.shapes)}
-    ${site.shapes.filter((x) => !GROUND.has(x.cls)).map((x) => shapeSvg(x, light)).join('')}
+    ${site.shapes.filter((x) => !GROUND.has(x.cls)).map((x) => shapeSvg(x, light, site.look)).join('')}
     ${sight}
     ${clean ? '' : `<path class="sp-route-case" d="${route}"/><path class="sp-route" d="${route}"/>
     ${nodes.map(([x, y]) => `<circle class="sp-node" cx="${x}" cy="${y}" r="3"/>`).join('')}

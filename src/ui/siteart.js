@@ -96,6 +96,166 @@ function bridge(r) {
 /** Shapes with a drawing of their own (in place of a plain rect). */
 export const DRAWN = { 'sp-stall': stall, 'sp-crowd': person, 'sp-bridge': bridge };
 
+// --- each district's own drawings (site.look) --------------------------------------------------
+// The things only one district has, drawn in place of the plain shape. A drawer takes the shape's
+// rect (or the shape itself, for lines, circles and ellipses) and the site's light.
+
+const lines = (segs, stroke, w = 0.5, op = 1) => (segs.length ? `<path d="${segs.join('')}" stroke="${stroke}" stroke-width="${w}" opacity="${op}" fill="none"/>` : '');
+
+/** A shipping container: ribs across its length, the doors at one end catching the light. */
+function container(r, light) {
+  const tone = r.fill ?? '#1b2433';
+  if (r.w < 16 && r.h < 16) return crate(r, light);
+  const across = r.w >= r.h;
+  const ribs = [];
+  if (across) for (let x = r.x + 2; x < r.x + r.w - 3; x += 2.4) ribs.push(`M${x} ${r.y + 0.6}V${r.y + r.h - 0.6}`);
+  else for (let y = r.y + 2; y < r.y + r.h - 3; y += 2.4) ribs.push(`M${r.x + 0.6} ${y}H${r.x + r.w - 0.6}`);
+  const door = across ? `<rect x="${r.x + r.w - 2.4}" y="${r.y}" width="2.4" height="${r.h}" fill="${mix(tone, light, 0.3)}"/>` : `<rect x="${r.x}" y="${r.y + r.h - 2.4}" width="${r.w}" height="2.4" fill="${mix(tone, light, 0.3)}"/>`;
+  return `<g class="sp-art"><rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${tone}"/>${lines(ribs, '#000', 0.6, 0.3)}${door}
+    <rect x="${r.x}" y="${r.y}" width="${r.w}" height="1" fill="${mix(tone, '#ffffff', 0.12)}"/></g>`;
+}
+
+/** A crate or bin: planks across, lit on its right third. */
+function crate(r, light) {
+  const tone = r.fill ?? '#2a303b';
+  const planks = [];
+  for (let y = r.y + 2.5; y < r.y + r.h - 1; y += 2.5) planks.push(`M${r.x + 0.5} ${y}H${r.x + r.w - 0.5}`);
+  return `<g class="sp-art"><rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${tone}"/>${lines(planks, '#000', 0.5, 0.3)}
+    <rect x="${r.x + r.w * 0.65}" y="${r.y}" width="${r.w * 0.35}" height="${r.h}" fill="${light}" opacity="0.14"/></g>`;
+}
+
+/** The harbour: dark water, the swell in short strokes, the city's lights broken up on it. */
+function water(r) {
+  const swell = []; const glints = [];
+  for (let y = r.y + 6; y < r.y + r.h; y += 7) for (let x = r.x + 2 + ((y / 7) % 2) * 5; x < r.x + r.w - 6; x += 12) swell.push(`M${x} ${y}h6`);
+  for (let y = r.y + 30; y < r.y + r.h - 20; y += 46) for (let k = 0; k < 5; k++) glints.push(`M${r.x + 6 + hash(y, k) * (r.w - 16)} ${y + k * 3}h${2 + hash(k, y) * 5}`);
+  return `<g class="sp-art"><rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="#0d1620"/>${lines(swell, '#1f3346', 0.6)}${lines(glints, '#f2b544', 0.8, 0.5)}</g>`;
+}
+
+/** A jetty or pier: boards across it. */
+function jetty(r) {
+  const boards = [];
+  for (let x = r.x + 2; x < r.x + r.w; x += 2.5) boards.push(`M${x} ${r.y}V${r.y + r.h}`);
+  return `<g class="sp-art"><rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="#2a2f3b"/>${lines(boards, '#12151c', 0.6)}<rect x="${r.x}" y="${r.y}" width="${r.w}" height="1" fill="#3a4152"/></g>`;
+}
+
+/** A flat roof from above: a parapet, and what stands on it (air-con units, a vent, a hatch). */
+function roof(r, light, { helipad = false } = {}) {
+  const bits = [];
+  if (helipad) {
+    const cx = r.x + r.w * 0.42; const cy = r.y + r.h / 2; const rad = Math.min(r.w, r.h) * 0.32;
+    bits.push(`<circle cx="${cx}" cy="${cy}" r="${rad}" fill="#1a2029" stroke="#f2d541" stroke-opacity="0.55" stroke-width="0.8"/>`,
+      `<path d="M${cx - 3} ${cy - 4}v8M${cx + 3} ${cy - 4}v8M${cx - 3} ${cy}h6" stroke="#f2d541" stroke-opacity="0.6" stroke-width="1.1" fill="none"/>`);
+  }
+  const n = Math.max(2, Math.floor(r.w / 26));
+  for (let k = 0; k < n; k++) {
+    const x = r.x + 5 + hash(r.x + k, r.y) * (r.w - 16); const y = r.y + 5 + hash(r.y + k, r.x) * (r.h - 16);
+    if (helipad && Math.abs(x - (r.x + r.w * 0.42)) < Math.min(r.w, r.h) * 0.4) continue;
+    bits.push(`<polygon points="${x + 7},${y} ${x + 7},${y + 6} ${x + 5},${y + 7.2} ${x - 2},${y + 7.2} ${x - 2},${y + 1.2} ${x},${y}" fill="${NAVY}" opacity="0.8"/>`,
+      `<rect x="${x}" y="${y}" width="7" height="6" fill="#222835"/><rect x="${x + 4.6}" y="${y}" width="2.4" height="6" fill="${mix('#222835', light, 0.25)}"/><circle cx="${x + 2.6}" cy="${y + 3}" r="1.7" fill="none" stroke="#131720" stroke-width="0.6"/>`);
+  }
+  return `<g class="sp-art"><rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="#141820"/>
+    <rect x="${r.x + 1.5}" y="${r.y + 1.5}" width="${r.w - 3}" height="${r.h - 3}" fill="none" stroke="#0e1117" stroke-width="1.2"/>${bits.join('')}
+    <rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="none" stroke="#2f3644" stroke-width="1"/></g>${litSvg('sp-block', r, light)}`;
+}
+
+/** A rooftop water tank: a drum seen from above, its lid ringed, lit on the right. */
+function tank(s, light) {
+  return `<g class="sp-art"><circle cx="${s.cx}" cy="${s.cy}" r="${s.r}" fill="#1b2230"/><path d="M${s.cx} ${s.cy - s.r}a${s.r} ${s.r} 0 0 1 0 ${s.r * 2}z" fill="${mix('#1b2230', light, 0.22)}"/>
+    <circle cx="${s.cx}" cy="${s.cy}" r="${s.r * 0.6}" fill="none" stroke="#0e1117" stroke-width="0.7"/><circle cx="${s.cx}" cy="${s.cy}" r="${s.r}" fill="none" stroke="#7a6430" stroke-width="1.2"/></g>`;
+}
+
+const CLOTH = ['#8a3a48', '#2f6a74', '#b8a988', '#4a4f7a', '#7a6a3a', '#c9c3b6'];
+/** A washing line: the line, and what's pegged on it (each piece lit on its right). */
+function laundry(s) {
+  const out = [`<polyline points="${s.points.map((p) => p.join(',')).join(' ')}" fill="none" stroke="#5a6272" stroke-width="0.5"/>`];
+  for (let i = 0; i + 1 < s.points.length; i++) {
+    const [a, b] = [s.points[i], s.points[i + 1]];
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    for (let d = 5; d < len - 4; d += 9) {
+      const t = d / len; const x = a[0] + (b[0] - a[0]) * t; const y = a[1] + (b[1] - a[1]) * t;
+      if (hash(x, y) < 0.25) continue;
+      const c = CLOTH[Math.floor(hash(y, x) * CLOTH.length)]; const w = 3 + hash(x + 1, y) * 3;
+      out.push(`<rect x="${x}" y="${y}" width="${w}" height="3.4" fill="${mix(c, NAVY, 0.3)}"/><rect x="${x + w * 0.6}" y="${y}" width="${w * 0.4}" height="3.4" fill="${c}"/>`);
+    }
+  }
+  return `<g class="sp-art">${out.join('')}</g>`;
+}
+
+/** A planter: a concrete bed, shrubs in it, each lit on its right. */
+function planter(r, light) {
+  const shrubs = [];
+  for (let x = r.x + 3.5; x < r.x + r.w - 2; x += 5) {
+    const rad = 2.2 + hash(x, r.y) * 1.2; const cy = r.y + r.h / 2 + (hash(r.y, x) - 0.5) * 2;
+    shrubs.push(`<circle cx="${x}" cy="${cy}" r="${rad}" fill="#1f3a2c"/><path d="M${x} ${cy - rad}a${rad} ${rad} 0 0 1 0 ${rad * 2}z" fill="${mix('#2e5a40', light, 0.15)}"/>`);
+  }
+  return `<g class="sp-art"><rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="#2a2f38"/><rect x="${r.x + 1}" y="${r.y + 1}" width="${r.w - 2}" height="${r.h - 2}" fill="#141a14"/>${shrubs.join('')}</g>`;
+}
+
+/** A stable block: a pitched roof along its length, the far half in shadow, the near half lit, a ridge. */
+function stable(r, light) {
+  const half = r.h / 2;
+  return `<g class="sp-art"><rect x="${r.x}" y="${r.y}" width="${r.w}" height="${half}" fill="#16130f"/><rect x="${r.x}" y="${r.y + half}" width="${r.w}" height="${half}" fill="${mix('#1a1712', light, 0.1)}"/>
+    <rect x="${r.x}" y="${r.y + half - 0.6}" width="${r.w}" height="1.2" fill="#4a3f2a"/><rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="none" stroke="#4a3f2a" stroke-width="1"/></g>${litSvg('sp-stable', r, light)}`;
+}
+
+/** The infield: grass mown in rings. */
+function infield(s) {
+  const rings = [];
+  for (let k = 0; k < 8; k++) {
+    const f = 1 - k * 0.12; if (f <= 0.1) break;
+    rings.push(`<ellipse cx="${s.cx}" cy="${s.cy}" rx="${s.rx * f}" ry="${s.ry * f}" fill="${k % 2 ? '#0f1a14' : '#122019'}"/>`);
+  }
+  return `<g class="sp-art">${rings.join('')}</g>`;
+}
+
+/** Drawers by district (site.look), by class. */
+export const LOOKS = {
+  docks: { 'sp-cover': container, 'sp-water': water, 'sp-jetty': jetty, 'sp-pier': jetty },
+  oldTown: { 'sp-block': (r, l) => roof(r, l), 'sp-tank': tank, 'sp-laundry': laundry, 'sp-cover': crate },
+  heights: { 'sp-planter': planter, 'sp-block': (r, l) => roof(r, l, { helipad: true }) },
+  basin: { 'sp-stable': stable, 'sp-infield': infield, 'sp-cover': crate },
+};
+
+// --- ground textures (site.texture: [{ kind, x, y, w, h }], drawn over the flat ground shapes) --
+const TEXTURE = {
+  /** Poured concrete in big slabs, the odd crack. */
+  concrete: ({ x, y, w, h }) => {
+    const seg = []; const cracks = [];
+    for (let gx = x + 30; gx < x + w; gx += 30) seg.push(`M${gx} ${y}V${y + h}`);
+    for (let gy = y + 30; gy < y + h; gy += 30) seg.push(`M${x} ${gy}H${x + w}`);
+    for (let gx = x; gx < x + w; gx += 30) for (let gy = y; gy < y + h; gy += 30) if (hash(gx, gy) < 0.3) cracks.push(`M${gx + 6 + hash(gy, gx) * 14} ${gy + 4}l3 5l-2 4l4 6`);
+    return lines(seg, '#161a22', 0.7) + lines(cracks, '#151920', 0.5);
+  },
+  /** Cobbles: short stones in offset courses. */
+  cobble: ({ x, y, w, h }) => {
+    const seg = [];
+    for (let gy = y; gy < y + h; gy += 5) {
+      seg.push(`M${x} ${gy}H${x + w}`);
+      for (let gx = x + ((gy - y) / 5 % 2) * 4; gx < x + w; gx += 8) seg.push(`M${gx} ${gy}V${Math.min(gy + 5, y + h)}`);
+    }
+    return lines(seg, '#0b0e13', 0.5, 0.9);
+  },
+  /** Big square plaza tiles. */
+  tiles: ({ x, y, w, h }) => {
+    const seg = [];
+    for (let gx = x + 16; gx < x + w; gx += 16) seg.push(`M${gx} ${y}V${y + h}`);
+    for (let gy = y + 16; gy < y + h; gy += 16) seg.push(`M${x} ${gy}H${x + w}`);
+    return lines(seg, '#1c222c', 0.6);
+  },
+  /** Gravel: a scatter of small stones. */
+  gravel: ({ x, y, w, h }) => {
+    const dots = [];
+    for (let k = 0, n = Math.floor((w * h) / 60); k < n; k++) dots.push(`M${(x + hash(k, x) * w).toFixed(1)} ${(y + hash(y, k) * h).toFixed(1)}h0.8`);
+    return lines(dots, '#262b33', 0.8);
+  },
+};
+/** A site's ground textures (site.texture), over its flat ground shapes. */
+export function textureSvg(site) {
+  const t = site.texture ?? [];
+  return t.length ? `<g class="sp-ground">${t.map((x) => TEXTURE[x.kind]?.(x) ?? '').join('')}</g>` : '';
+}
+
 /** Paving under a site that has it: big slabs, every other one a shade lighter. */
 export function pavingSvg(site, H) {
   if (!site.paving) return '';

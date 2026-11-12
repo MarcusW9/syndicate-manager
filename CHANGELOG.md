@@ -4,6 +4,12 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-12 · Every district's map has its own detail
+- **Docks:** shipping containers with ribs and lit doors, concrete slabs, the harbour with its swell and broken lights, a planked jetty, and Red Lantern red coming off the water.
+- **Old Town:** the tenement roofs have air-con units on them, the water tank is a drum, washing hangs on the lines, the courtyard is cobbled, and the red sign at the foot of the alley lights the ground.
+- **Glass Heights:** shrubs in the planters, a tiled plaza in the tower's cyan light, sodium in the loading bay, and a helipad on the next tower's roof.
+- **Basin:** the stables have pitched roofs, the infield is mown in rings, the yards are gravel, and the floodlight throws a cone over the stable rows.
+
 ## 2026-11-12 · Job maps drawn with hard light
 - **The job maps are drawn like the portraits now:** flat colour, the city light from the right, and a hard navy shadow falling left from everything that stands up (buildings, containers, crates, stalls, desks, the footbridge). The right side of each thing catches the light. No outlines on cover.
 - **The Night Market got its own detail:** stalls with awnings, shadowed on one side and lit on the other, with a lamp under each; the crowd drawn as people from above; a footbridge with rails and lamps; paving slabs; and the stalls' neon falling across the lanes and the wet road.
