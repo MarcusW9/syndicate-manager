@@ -52,7 +52,7 @@ h2.t { margin:10px 12px 0; font:700 .74rem var(--display); letter-spacing:.16em;
 const W = 360, H = 400;
 const LAYOUT = {
   holdHack: { terminal:[.5,.13], centre:[.5,.47], cover:[[.09,.42],[.91,.42],[.09,.56],[.91,.56]], entrances:[[.14,.93],[.86,.93]], lane:[[.14,.93],[.5,.47],[.86,.93]], title:'HACK' },
-  holdExtract: { holdPoint:[.5,.4], centre:[.5,.47], cover:[[.22,.3],[.78,.3],[.22,.6],[.78,.6]], entrances:[[.12,.05],[.88,.05]], van:[.5,.9], title:'HOLD' },
+  holdExtract: { holdPoint:[.5,.4], centre:[.5,.47], cover:[[.22,.3],[.78,.3],[.22,.6],[.78,.6]], entrances:[[.1,.03],[.9,.03]], van:[.5,.9], title:'HOLD' },
 };
 const px = (p) => [p[0]*W, p[1]*H];
 const COL = { crew:'#3de8d8', crewDim:'#1b4a49', foe:'#ff3d5f', foeDim:'#5a1d29', warn:'#f2d541', ok:'#5fe0a5' };
@@ -60,7 +60,27 @@ const ICON = { // 24-grid line icons in the game's style (combat blade, tech chi
   combat:'M5 19 L17 7 M14 4 L20 10 M4 20 l2-2', tech:'M8 8h8v8H8z M10 4v4 M14 4v4 M10 16v4 M14 16v4 M4 10h4 M4 14h4 M16 10h4 M16 14h4',
   guard:'M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z', medic:'M10 4h4v6h6v4h-6v6h-4v-6H4v-4h6z', jam:'M4 12h3l2-5 3 10 2-7 2 2h4',
 };
+const FACES = window.FACES || null; // set by fight-map.mjs: real portraits from ui/art.js, keyed by the marker's tag (crew) or 'e'+id (enemy)
+const faceKey = (m) => (m.side==='crew' ? m.tag : 'e'+m.id);
+const nest = (svg, x, y, size) => svg.replace(/<svg class="art portrait" viewBox="9 6 46 46" width="\d+" height="\d+"/, `<svg x="${x}" y="${y}" width="${size}" height="${size}" viewBox="9 6 46 46"`);
+const faceGlyph = (m, sel) => { // a portrait tile: crew 44px with the top-right corner cut in cyan, enemy 32px in red with its number
+  const [x,y] = px(m.at); const crew = m.side==='crew'; const S = crew ? 44 : 32, h = S/2, c = 8;
+  const gone = m.state==='down'||m.state==='out'||m.state==='fled', arr = m.state==='approaching';
+  const col = crew ? COL.crew : COL.foe, id = `c${m.side[0]}${m.id}`;
+  const clip = crew ? `M${x-h} ${y-h} H${x+h-c} L${x+h} ${y-h+c} V${y+h} H${x-h} Z` : `M${x-h} ${y-h} H${x+h} V${y+h} H${x-h} Z`;
+  let o = `<defs><clipPath id="${id}"><path d="${clip}"/></clipPath></defs>`;
+  o += `<g clip-path="url(#${id})" style="${gone?'filter:grayscale(1) brightness(.6)':''}" opacity="${arr?.55:1}">${nest(FACES[faceKey(m)], x-h, y-h, S)}${crew?'':`<rect x="${x-h}" y="${y-h}" width="${S}" height="${S}" fill="${COL.foe}" opacity=".28"/>`}</g>`;
+  o += `<path d="${clip}" fill="none" stroke="${col}" stroke-width="${sel?3:2}" ${arr?'stroke-dasharray="4 3"':''}/>`;
+  if (!crew) o += `<rect x="${x+h-12}" y="${y+h-12}" width="14" height="14" fill="#0a0c0f" stroke="${COL.foe}"/><text class="g-id" x="${x+h-5}" y="${y+h-1}" text-anchor="middle" style="fill:${COL.foe};font-size:11px">${m.id}</text>`;
+  if (m.state==='down') o += `<path d="M${x-h} ${y-h} L${x+h} ${y+h} M${x+h} ${y-h} L${x-h} ${y+h}" stroke="#ff4a4a" stroke-width="3"/>`;
+  if (m.state==='out') o += `<path d="M${x-h} ${y} H${x+h}" stroke="#ff4a4a" stroke-width="3"/>`;
+  if (m.max) { const n = m.max, w = 5, gap = 1, tw = n*(w+gap)-gap; for (let i=0;i<n;i++) { const on = i < m.pips; o += `<rect x="${x-tw/2+i*(w+gap)}" y="${y+h+3}" width="${w}" height="4" fill="${on ? (m.pips<=1&&crew?COL.warn:(crew?COL.ok:COL.foe)) : '#2a303b'}"/>`; } }
+  if (m.absorb) o += `<path d="M${x-h-4} ${y-h-4} l8 3 v6 c0 4 -3 6 -8 9 -5-3 -8-5 -8-9 v-6z" fill="#0a0c0f" stroke="${COL.warn}" stroke-width="1.4" transform="translate(4 2)"/>`;
+  if (m.tag) o += `<text class="g-name" x="${x}" y="${y+h+16}" text-anchor="middle">${m.tag}</text>`;
+  return `<g>${o}</g>`;
+};
 const glyph = (m, sel) => { // crew: cut-corner square; enemy: diamond
+  if (FACES && FACES[faceKey(m)]) return faceGlyph(m, sel);
   const [x,y] = px(m.at); const s = m.side==='crew' ? 14 : 12; const dead = m.state==='down'||m.state==='out'||m.state==='fled';
   const stroke = m.side==='crew' ? COL.crew : COL.foe, fill = m.side==='crew' ? (dead?COL.crewDim:COL.crew) : (dead?COL.foeDim:COL.foe);
   let shape;
@@ -90,11 +110,12 @@ const field = (L, extra='') => {
   if (L.lane) s += `<path d="M${px(L.lane[0]).join(' ')} L${px(L.lane[1]).join(' ')} L${px(L.lane[2]).join(' ')}" fill="none" stroke="#1d2530" stroke-width="12" stroke-linejoin="round" stroke-linecap="round"/>`;
   for (const c of L.cover) { const [x,y]=px(c); s += `<rect x="${x-15}" y="${y-8}" width="30" height="16" fill="#171b24" stroke="#2f3744"/><text class="z" x="${x}" y="${y+3}" text-anchor="middle">cover</text>`; }
   for (const e of L.entrances) { const [x,y]=px(e); s += `<path d="M${x-18} ${y+10} V${y-10} H${x+18} V${y+10}" fill="none" stroke="#3a4352" stroke-width="2" stroke-dasharray="3 3"/><text class="z" x="${x}" y="${y+22}" text-anchor="middle">entrance</text>`; }
-  if (L.terminal) { const [x,y]=px(L.terminal); s += `<rect x="${x-26}" y="${y-20}" width="52" height="40" fill="none" stroke="${COL.crew}" stroke-dasharray="5 3" opacity=".7"/><text class="z" x="${x}" y="${y-25}" text-anchor="middle" style="fill:${COL.crew}">terminal</text>`; }
+  if (L.terminal) { const [x,y]=px(L.terminal); s += `<rect x="${x-26}" y="${y-20}" width="52" height="40" fill="none" stroke="${COL.crew}" stroke-dasharray="5 3" opacity=".7"/><text class="z" x="${x}" y="${y-25}" text-anchor="middle" style="fill:${COL.crew}">terminal ${window.FACES ? "●●○○" : ""}</text>`; }
   if (L.van) { const [x,y]=px(L.van); s += `<rect x="${x-50}" y="${y-26}" width="100" height="54" fill="#161a21" stroke="${COL.warn}" stroke-dasharray="5 3"/><text class="z" x="${x}" y="${y-31}" text-anchor="middle" style="fill:${COL.warn}">van · leaves round 6</text>`; }
   if (L.holdPoint) { const [x,y]=px(L.holdPoint); s += `<circle cx="${x}" cy="${y}" r="62" fill="none" stroke="${COL.crew}" stroke-dasharray="5 4" opacity=".4"/><text class="z" x="${x}" y="${y-68}" text-anchor="middle" style="fill:${COL.crew}">hold point</text>`; }
   return s + extra;
 };
+const rowFace = (m) => (FACES && FACES[m.tag] ? `<span style="display:block;width:34px;height:34px;clip-path:polygon(0 0,calc(100% - 7px) 0,100% 7px,100% 100%,0 100%);outline:1px solid ${COL.crew}">${FACES[m.tag].replace(/width="\d+" height="\d+"/, 'width="34" height="34"')}</span>` : ic(m.icon, m.role==='attack'?COL.foe:'#3de8d8'));
 const pipsRow = (n, max, low) => `<span class="pips">${Array.from({length:max},(_,i)=>`<i class="${i<n?(low?'low':'on'):''}"></i>`).join('')}</span>`;
 const ic = (k, c='#3de8d8') => `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${ICON[k]}"/></svg>`;
 
@@ -121,7 +142,7 @@ function frameA(spot) {
   links += link(crew[3].at,foe[1].at,'target') + link(crew[4].at,foe[3].at,'target');
   if (spot) { crew[4].pips = 1; }
   const stage = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Fight map: six runners hold the terminal against seven enemies">${field(L, links + mark([...foe, ...crew]) + (spot ? `<circle cx="${px(crew[3].at)[0]}" cy="${px(crew[3].at)[1]}" r="30" fill="none" stroke="${COL.warn}" stroke-width="2"/>` : ''))}</svg>`;
-  const rows = crew.map((m,i) => `<div class="row ${i===3&&spot?'sel':''}">${ic(m.icon, m.role==='attack'?COL.foe:'#3de8d8')}<div><b>${m.tag}</b> <span>${m.order}</span></div>${pipsRow(m.pips,m.max,m.pips<=1)}</div>`).join('');
+  const rows = crew.map((m,i) => `<div class="row ${i===3&&spot?'sel':''}">${rowFace(m)}<div><b>${m.tag}</b> <span>${m.order}</span></div>${pipsRow(m.pips,m.max,m.pips<=1)}</div>`).join('');
   const beat = spot
     ? `<div class="beat spot"><small>Spotlight · streak</small><p>Cog drops 3 in two rounds.</p></div>`
     : `<div class="beat"><small>Next: round 3 · threats drawn</small><p>Hired gun 7 is coming through the left door. 2 shots on Wing (Mei covers).</p></div>`;
@@ -132,19 +153,19 @@ function frameC() {
   const L = LAYOUT.holdExtract;
   const crew = [
     {id:'R',tag:'Rook',at:[.5,.9],pips:3,max:4,side:'crew',state:'aboard',order:'Driving',icon:'combat'},
-    {id:'K',tag:'Kit',at:[.4,.44],pips:3,max:3,side:'crew',state:'up',order:'Holds the door',icon:'guard'},
-    {id:'S',tag:'Sal',at:[.6,.4],pips:2,max:3,side:'crew',state:'up',order:'Carries Lin',icon:'combat'},
-    {id:'L',tag:'Lin',at:[.54,.54],pips:0,max:3,side:'crew',state:'down',order:'Down · stable',icon:'medic'},
-    {id:'P',tag:'Pax',at:[.3,.36],pips:3,max:3,side:'crew',state:'up',order:'Attacks · exposed first',icon:'combat'},
-    {id:'N',tag:'Nia',at:[.7,.5],pips:3,max:3,side:'crew',state:'up',order:'Boards',icon:'jam'},
+    {id:'K',tag:'Kit',at:[.36,.52],pips:3,max:3,side:'crew',state:'up',order:'Holds the door',icon:'guard'},
+    {id:'S',tag:'Sal',at:[.62,.36],pips:2,max:3,side:'crew',state:'up',order:'Carries Lin',icon:'combat'},
+    {id:'L',tag:'Lin',at:[.5,.56],pips:0,max:3,side:'crew',state:'down',order:'Down · stable',icon:'medic'},
+    {id:'P',tag:'Pax',at:[.22,.38],pips:3,max:3,side:'crew',state:'up',order:'Attacks · exposed first',icon:'combat'},
+    {id:'N',tag:'Nia',at:[.78,.52],pips:3,max:3,side:'crew',state:'up',order:'Boards',icon:'jam'},
   ];
   const foe = [
-    {id:'1',at:[.2,.24],pips:2,max:2,side:'enemy',state:'up',kind:'C'},{id:'2',at:[.32,.14],pips:3,max:3,side:'enemy',state:'up',kind:'E'},{id:'3',at:[.8,.24],pips:2,max:2,side:'enemy',state:'up',kind:'H'},
-    {id:'4',at:[.68,.14],pips:1,max:2,side:'enemy',state:'up',kind:'H'},{id:'5',at:[.12,.12],pips:2,max:2,side:'enemy',state:'approaching',kind:'H'},{id:'6',at:[.88,.12],pips:2,max:2,side:'enemy',state:'approaching',kind:'C'},
+    {id:'1',at:[.16,.26],pips:2,max:2,side:'enemy',state:'up',kind:'C'},{id:'2',at:[.32,.14],pips:3,max:3,side:'enemy',state:'up',kind:'E'},{id:'3',at:[.84,.26],pips:2,max:2,side:'enemy',state:'up',kind:'H'},
+    {id:'4',at:[.68,.14],pips:1,max:2,side:'enemy',state:'up',kind:'H'},{id:'5',at:[.1,.1],pips:2,max:2,side:'enemy',state:'approaching',kind:'H'},{id:'6',at:[.9,.1],pips:2,max:2,side:'enemy',state:'approaching',kind:'C'},
   ];
-  const links = link([.6,.4],[.54,.54],'shield') + link([.2,.24],[.4,.44],'threat',{bend:-10}) + link([.8,.24],[.6,.4],'threat',{bend:12}) + link([.3,.36],[.32,.14],'target');
+  const links = link([.62,.36],[.5,.56],'shield') + link([.2,.24],[.36,.52],'threat',{bend:-10}) + link([.8,.24],[.62,.36],'threat',{bend:12}) + link([.22,.38],[.32,.14],'target');
     const stage = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Fight map: hold for the van">${field(L, links + mark([...foe, ...crew]))}</svg>`;
-  const rows = crew.map((m,i) => `<div class="row ${m.state==='down'?'off':''}">${ic(m.icon, '#3de8d8')}<div><b>${m.tag}</b> <span>${m.order}</span></div>${pipsRow(m.pips,m.max,m.pips<=1&&m.pips>0)}</div>`).join('');
+  const rows = crew.map((m,i) => `<div class="row ${m.state==='down'?'off':''}">${rowFace(m)}<div><b>${m.tag}</b> <span>${m.order}</span></div>${pipsRow(m.pips,m.max,m.pips<=1&&m.pips>0)}</div>`).join('');
   return {title:'Round 4', goal:`HOLD <span class="dots">●●●○</span> · VAN HERE · leaves round 6`, stage, rows, beat:`<div class="beat"><small>Next: round 4</small><p>Two more come through the doors. Sal carries Lin to the van.</p></div>`, legend:true};
 }
 function legend() {
