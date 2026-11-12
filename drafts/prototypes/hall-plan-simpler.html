@@ -1,0 +1,162 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Hall Plan, Simpler: Mock-up</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet"><style>
+:root { --bg:#0a0c0f; --panel:#12151b; --panel2:#161a21; --line:#2a303b; --text:#e9ecf1; --muted:#8a93a6; --cyan:#3de8d8; --red:#ff3d5f; --sodium:#f2d541; --display:'Rajdhani','Arial Narrow',system-ui,sans-serif; }
+* { box-sizing: border-box; } body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.4 system-ui, sans-serif; padding: 24px; }
+.note { max-width: 78ch; color: var(--muted); margin: 0 0 18px; } .note b { color: var(--text); }
+.wrap { display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-start; }
+.phone { width: 390px; background: var(--panel); border: 1px solid var(--line); padding: 16px; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
+.cap { color: var(--muted); font-size: .8rem; margin: 0 0 10px; font-style: italic; }
+h1 { font: 700 1.25rem var(--display); letter-spacing: .1em; text-transform: uppercase; margin: 0; }
+.sub { color: var(--muted); font-size: .85rem; margin: 0 0 4px; }
+.stats { font: 600 .82rem var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; } .stats b { color: var(--text); font-weight: 700; }
+.mode { display: inline-block; font: 700 .7rem var(--display); letter-spacing: .16em; text-transform: uppercase; color: var(--cyan); border: 1px solid var(--cyan); padding: 1px 7px; margin-left: 8px; vertical-align: middle; }
+svg.plan { display: block; width: 100%; height: auto; background: #0b0d11; border: 1px solid #343b48; }
+svg text { font-family: var(--display); text-transform: uppercase; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 8px 0 14px; font-size: .78rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; } .legend i { display: inline-block; width: 14px; height: 10px; }
+.btn { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; border: 0; font: 700 .9rem var(--display); letter-spacing: .14em; text-transform: uppercase; cursor: pointer; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%); }
+.btn.red { background: var(--red); color: #fff; }
+.btn.cyan { background: var(--cyan); color: #0a0c0f; }
+.btn.line { background: none; color: var(--cyan); border: 1px solid var(--cyan); }
+.row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; background: var(--panel2); border: 1px solid var(--line); padding: 10px 12px; margin: 8px 0; min-height: 52px; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%); }
+.row strong { font: 700 .9rem var(--display); letter-spacing: .1em; text-transform: uppercase; display: block; }
+.row small { color: var(--muted); font-size: .8rem; }
+.row .go { font: 700 .8rem var(--display); letter-spacing: .12em; color: var(--cyan); text-transform: uppercase; }
+.price { color: var(--sodium); font-weight: 700; }
+h2 { font: 700 .9rem var(--display); letter-spacing: .16em; text-transform: uppercase; color: var(--cyan); margin: 18px 0 6px; display: flex; justify-content: space-between; align-items: baseline; }
+h2 span { color: var(--muted); font-size: .75rem; }
+.gauge { display: flex; gap: 2px; margin: 4px 0 2px; } .gauge i { width: 22px; height: 6px; background: #232a35; } .gauge i.on { background: var(--cyan); }
+.small { font-size: .82rem; color: var(--muted); margin: 0; }
+.more { font-size: .82rem; color: var(--muted); margin: 10px 0 0; } .more a { color: var(--cyan); text-decoration: none; }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tile { background: var(--panel2); border: 1px solid var(--line); padding: 8px; min-height: 64px; display: grid; grid-template-columns: 32px 1fr; gap: 8px; align-items: center; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%); }
+.tile.on { border-color: var(--cyan); box-shadow: inset 0 0 0 1px var(--cyan); }
+.tile b { font: 700 .82rem var(--display); letter-spacing: .1em; text-transform: uppercase; display: block; }
+.tile small { color: var(--muted); font-size: .74rem; }
+.tile svg { background: #0b0d11; }
+.bar { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; background: var(--panel2); border: 1px solid var(--cyan); padding: 8px 10px; margin: 10px 0; font-size: .85rem; }
+.bar .btn { width: auto; padding: 0 16px; min-height: 44px; }
+.changes { max-width: 78ch; color: var(--muted); margin-top: 26px; } .changes h3 { color: var(--text); font: 700 .95rem var(--display); letter-spacing: .14em; text-transform: uppercase; } .changes li { margin: 4px 0; }
+</style></head><body>
+<p class="note"><b>Hall plan, simpler.</b> The Night Market hall split into two modes. <b>Looking</b> shows only the buildings, who is in them and what's next. <b>Building defences</b> adds the grid, the way in that must stay clear, and the cover already there. One look per meaning: solid = ours, dashed cyan = next, faint outline = later. Red is used for actions only.</p>
+<div class="wrap">
+
+<section class="phone">
+  <p class="cap">1 · Looking (the default)</p>
+  <h1>The Night Market Hall</h1>
+  <p class="sub">rooms behind a dai pai dong courtyard, Wok Court</p>
+  <p class="stats">Level <b>2</b> · <b>¥1,500</b>/wk · heat <b>0</b>/10 · beds <b>2</b>/4</p>
+  <svg class="plan" id="view" viewBox="0 0 360 300" role="img" aria-label="Plan of the hall"></svg>
+  <div class="legend"><span><i style="background:#1b2130;outline:1.5px solid #8b97a8"></i>Ours: tap to go in</span><span><i style="outline:1.5px dashed var(--cyan)"></i>Next to take</span><span><i style="outline:1px solid #2a303b"></i>Later</span></div>
+  <button class="btn red">Build defences ›</button>
+  <h2>Defences <span>0 pieces</span></h2>
+  <div class="gauge"><i></i><i></i><i></i></div>
+  <p class="small">3 more pieces make a raid one step easier.</p>
+  <h2>Grow the hall</h2>
+  <div class="row"><div><strong>Take the Delivery Court</strong><small>+2 beds · rent +¥1,000/wk</small></div><span class="price">¥30,000</span></div>
+  <p class="more">Or <a href="#">buy the place outright: ¥39,000, then no rent ›</a></p>
+</section>
+
+<section class="phone">
+  <p class="cap">2 · Building defences (after the button)</p>
+  <h1>The Night Market Hall <span class="mode">Building</span></h1>
+  <p class="stats" style="margin-top:4px">Floor <b>3</b>/32 · <b>¥24,500</b> to spend</p>
+  <svg class="plan" id="build" viewBox="0 0 360 300" role="img" aria-label="Plan of the hall with a build grid"></svg>
+  <div class="legend"><span><i style="background:rgba(61,232,216,.08);outline:1px dashed rgba(61,232,216,.6)"></i>Free square</span><span><i style="background:repeating-linear-gradient(90deg,#8a93a6 0 3px,transparent 3px 6px);height:2px"></i>Way in: kept clear</span><span><i style="background:#4a5566"></i>Cover already there</span></div>
+  <div class="bar"><span>Square picked · <b>Barricade</b> · half cover</span><button class="btn cyan">Place ¥2,000</button></div>
+  <div class="tiles" id="tiles"></div>
+  <p class="small" style="margin-top:10px">0 built · 3 more for a raid −1</p>
+  <button class="btn line" style="margin-top:12px">Done</button>
+</section>
+
+</div>
+
+<div class="changes"><h3>What changed from the current screen</h3><ul>
+<li><b>Two modes.</b> The palette, the grid, the "kept clear" squares and the cover only appear while building. Looking at the hall shows the buildings and who sleeps there.</li>
+<li><b>Three looks for parts.</b> Ours = solid panel with a lit name, faces and OPEN ›. Next = dashed cyan, with what it gives and its price. Later = a faint outline with no name and no level. The hatching is gone.</li>
+<li><b>Doors are gaps in the wall</b> instead of red bars. Red now only means "do something" (the main button).</li>
+<li><b>The way in is one dotted line</b> from the gate to each door, so "kept clear" is a route you can follow, not scattered red squares.</li>
+<li><b>Street furniture is quiet.</b> Bins and carts are dim outlines while looking and filled in while building, where they matter as cover.</li>
+<li><b>One of everything.</b> One defences line (with a 3-step gauge), one Expand row, and Buy as a quiet text link. Only the street you come in from is named.</li>
+</ul></div>
+
+<script>
+const NS = 'http://www.w3.org/2000/svg';
+const B = {
+  late:  { x: 20,  y: 120, w: 128, h: 120, name: 'Late Rooms', door: [148, 168, 3, 22], faces: ['F', 'R'], rooms: 0 },
+  prep:  { x: 212, y: 120, w: 128, h: 120, name: 'Prep House', door: [209, 168, 3, 22], faces: [], rooms: 0 },
+  court: { x: 20,  y: 40,  w: 210, h: 64 },
+  rice:  { x: 250, y: 40,  w: 90,  h: 64 },
+};
+const cut = (b, c = 10) => `${b.x},${b.y} ${b.x + b.w - c},${b.y} ${b.x + b.w},${b.y + c} ${b.x + b.w},${b.y + b.h} ${b.x},${b.y + b.h}`;
+// Street furniture: bins, a cart, crates (fight cover).
+const COVER = [[60, 12, 26, 10], [120, 14, 14, 10], [60, 256, 26, 10], [276, 256, 30, 10], [240, 258, 12, 10], [290, 12, 22, 10]];
+// The way in: from the gate on Wok Court to each door.
+const ROUTE = 'M180 292 V250 H180 V179 M180 179 H150 M180 179 H210';
+
+function plan(svg, mode) {
+  const building = mode === 'build';
+  let s = '';
+  // Ground and lanes
+  s += `<rect width="360" height="300" fill="#0e1116"/>`;
+  s += `<rect x="0" y="0" width="360" height="30" fill="#0b0d11"/><rect x="0" y="248" width="360" height="52" fill="#0b0d11"/>`;
+  s += `<rect x="172" y="290" width="16" height="4" fill="${building ? '#8a93a6' : '#5a6474'}"/>`;
+  s += `<text x="${building ? 196 : 180}" y="284" text-anchor="${building ? "start" : "middle"}" font-size="8" letter-spacing="2" fill="#8a93a6">Wok Court · way in</text>`;
+  // Later: Rice Store, a faint outline only
+  s += `<polygon points="${cut(B.rice)}" fill="none" stroke="#2a303b" stroke-width="1"/>`;
+  // Next: Delivery Court
+  if (!building) {
+    s += `<rect x="${B.court.x}" y="${B.court.y}" width="${B.court.w}" height="${B.court.h}" fill="rgba(61,232,216,.04)" stroke="#3de8d8" stroke-width="1.5" stroke-dasharray="6 4"/>`;
+    s += `<text x="125" y="68" text-anchor="middle" font-size="11" font-weight="700" letter-spacing="2.5" fill="#3de8d8">Next · Delivery Court</text>`;
+    s += `<text x="125" y="84" text-anchor="middle" font-size="9" font-weight="600" letter-spacing="1.5" fill="#8a93a6">+2 beds · <tspan fill="#f2d541">¥30,000</tspan> ›</text>`;
+  } else {
+    s += `<rect x="${B.court.x}" y="${B.court.y}" width="${B.court.w}" height="${B.court.h}" fill="none" stroke="#2a303b"/>`;
+  }
+  // Buildings we hold
+  for (const k of ['late', 'prep']) {
+    const b = B[k];
+    s += `<polygon points="${cut(b)}" fill="${building ? '#151a24' : '#1b2130'}" stroke="${building ? '#3a4352' : '#8b97a8'}" stroke-width="1.5"/>`;
+    const [dx, dy, dw, dh] = b.door; s += `<rect x="${dx}" y="${dy}" width="${dw}" height="${dh}" fill="#0e1116"/>`;
+    if (building) { s += `<text x="${b.x + b.w / 2}" y="${b.y + b.h / 2 + 3}" text-anchor="middle" font-size="9" letter-spacing="2" fill="#5a6474">${b.name}</text>`; continue; }
+    s += `<text x="${b.x + 10}" y="${b.y + 20}" font-size="12" font-weight="700" letter-spacing="2" fill="#e9ecf1">${b.name}</text>`;
+    s += `<text x="${b.x + 10}" y="${b.y + 34}" font-size="8.5" font-weight="600" letter-spacing="1.5" fill="#8a93a6">${b.faces.length} in · ${b.rooms} rooms</text>`;
+    b.faces.forEach((f, i) => { const cx = b.x + 22 + i * 18, cy = b.y + 58; s += `<circle cx="${cx}" cy="${cy}" r="9" fill="#232a35" stroke="#3de8d8" stroke-width="1.2"/><text x="${cx}" y="${cy + 3.5}" text-anchor="middle" font-size="9" font-weight="700" fill="#e9ecf1">${f}</text>`; });
+    if (!b.faces.length) s += `<text x="${b.x + 10}" y="${b.y + 62}" font-size="8.5" letter-spacing="1" fill="#5a6474">empty</text>`;
+    const cx = b.x + b.w - 60, cy = b.y + b.h - 26;
+    s += `<polygon points="${cx},${cy} ${cx + 50},${cy} ${cx + 50},${cy + 12} ${cx + 44},${cy + 18} ${cx},${cy + 18}" fill="none" stroke="#3de8d8"/>`;
+    s += `<text x="${cx + 25}" y="${cy + 12.5}" text-anchor="middle" font-size="9" font-weight="700" letter-spacing="2" fill="#3de8d8">Open ›</text>`;
+  }
+  // Build grid on the outside ground
+  if (building) {
+    const clear = (x, y) => (x >= 170 && x < 190 && y >= 30) || (y >= 168 && y < 190 && x >= 148 && x < 212);
+    const coverAt = (x, y) => COVER.some(([cx, cy, cw, ch]) => x < cx + cw && x + 20 > cx && y < cy + ch && y + 20 > cy);
+    const cells = [];
+    for (let x = 20; x < 340; x += 20) { cells.push([x, 6]); cells.push([x, 252]); }
+    for (let y = 120; y < 240; y += 20) cells.push([160, y]); for (let y = 120; y < 240; y += 20) cells.push([180, y]);
+    for (let x = 140; x < 240; x += 20) if (x >= 230 || x < 160) {} // spare
+    cells.push([232, 60], [232, 80]);
+    for (const [x, y] of cells) {
+      if (clear(x, y) || coverAt(x, y)) continue;
+      const picked = x === 200 && y === 252;
+      s += `<rect x="${x + 1.5}" y="${y + 1.5}" width="17" height="17" fill="rgba(61,232,216,${picked ? .15 : .05})" stroke="${picked ? '#3de8d8' : 'rgba(61,232,216,.45)'}" stroke-width="${picked ? 2.2 : .8}" ${picked ? '' : 'stroke-dasharray="3 2"'}/>`;
+      if (picked) s += `<rect x="${x + 4}" y="${y + 6}" width="7" height="8" fill="rgba(61,232,216,.5)"/><rect x="${x + 11}" y="${y + 8}" width="6" height="6" fill="rgba(61,232,216,.5)"/>`;
+    }
+    s += `<path d="${ROUTE}" fill="none" stroke="#8a93a6" stroke-width="2" stroke-dasharray="2 4" stroke-linecap="round"/>`;
+  }
+  // Cover: quiet while looking, filled while building
+  for (const [x, y, w, h] of COVER) s += building ? `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#4a5566"/>` : `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="#2a303b"/>`;
+  svg.innerHTML = s;
+}
+plan(document.getElementById('view'), 'view');
+plan(document.getElementById('build'), 'build');
+
+const ICON = {
+  barricade: '<rect x="5" y="9" width="8" height="8" fill="#6b5a2a"/><rect x="13" y="11" width="8" height="6" fill="#8a7440"/>',
+  plate: '<rect x="3" y="11" width="20" height="4" fill="#8b9aab"/><rect x="6" y="15" width="2" height="5" fill="#5d6b7a"/><rect x="18" y="15" width="2" height="5" fill="#5d6b7a"/>',
+  wall: '<rect x="3" y="11" width="20" height="4" fill="#3a4150"/><rect x="3" y="11" width="20" height="1" fill="#5a6474"/>',
+  turret: '<rect x="11" y="13" width="4" height="9" fill="#5d6b7a"/><circle cx="13" cy="12" r="4" fill="#8b9aab"/><rect x="15" y="10" width="8" height="2" fill="#ff3d5f"/>',
+};
+const T = [['barricade', 'Barricade', '¥2,000', 'half cover', true], ['plate', 'Steel plate', '¥4,000', 'full cover'], ['wall', 'Inner wall', '¥3,000', 'solid'], ['turret', 'Auto turret', '¥12,000', 'fires on its own']];
+document.getElementById('tiles').innerHTML = T.map(([id, n, p, w, on]) => `<div class="tile${on ? ' on' : ''}"><svg viewBox="0 0 26 26" width="32" height="32">${ICON[id]}</svg><div><b>${n}</b><small><span class="price">${p}</span> · ${w}</small></div></div>`).join('');
+</script>
+</body></html>
