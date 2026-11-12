@@ -25,6 +25,19 @@ export const FIGHT_TEXT = {
   'director.clutchHack': '{who} finishes the job in round {round}.',
   'director.denied': '{who} cuts the radio: {n} calls go nowhere.',
   'director.carryHome': '{target} is carried home.',
+  // The live battle view (DRAFT wording so the keys read; the owner writes the final text). The pace chips, and the short
+  // marks that float over a token on the map (each is also in the round's feed lines).
+  'pace.label': 'Pace',
+  'pace.fast': 'Fast',
+  'pace.watch': 'Watch',
+  'pace.resolve': 'Resolve',
+  'pace.fastNote': 'Fast: the next round plays on these orders by itself. Change orders or pick Watch to stop and decide.',
+  'stage.hit': 'Hit',
+  'stage.down': 'Down',
+  'stage.out': 'Out',
+  'stage.absorbed': 'Armour',
+  'stage.flanked': 'Flanked',
+  'stage.special': '{who} cuts loose.',
   // Round feed (one per thing that happens)
   'arrive': '{kind} {n} arrives.',
   'pressure': '{kind} {n} joins the fight.',
