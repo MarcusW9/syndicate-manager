@@ -15,6 +15,21 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - **The messages move up.** Coming up no longer runs across the top of Today, and Monday's week numbers and The Word no longer sit above the list. Only Joss, the alerts, crews back and the Out line come before the messages now.
 - **A rail for the week.** On a computer, Monday's numbers with The Word and Coming up sit in a column to the right of the open message (under the messages on mid-size screens). On a phone they come after the message list.
 - The messages themselves look as before. Mockups of the options that led here are in `docs/mockups/`.
+## 2026-11-12 · Van timing sweep: no setting fixes extractions for starting crews (no game change)
+- `scripts/sim-vantiming.mjs` and `docs/sims/vantiming-2026-11-12.md`: the van's arrival round, the pressure clock and the wait, swept at the two extraction jobs' real difficulty with the game's own starting rosters, 400 seeds, on the current rules. Reports the whole outcome mix, which my earlier van-levers summary left out. Nothing was changed (`vanRound` stays 3).
+- **It is a straight trade, not a fix** (mean over both jobs and rosters, steady): a later van fails more jobs, an earlier one leaves more people.
+
+| Van arrives | Job done | Failed (pulled back, no pay) | Someone left behind | Everyone home and done |
+| --- | --- | --- | --- | --- |
+| Round 2 | 84% | 16% | 69% | 13% |
+| Round 3 (now) | 67% | 33% | 51% | 11% |
+| Round 4 | 43% | 57% | 30% | 9% |
+| Round 5 | 30% | 70% | 18% | 7% |
+| Round 6 | 22% | 78% | 12% | 6% |
+
+- Starting crews cannot both finish the job and bring everyone home at these fights' difficulty; the van timing only chooses which one to lose. A later pressure clock (an extra enemy from round 4, every 3 rounds) is a small gain with no loss (everyone-home-and-done 11% to 14%, job done 67% to 69%). Nothing met the declared bar.
+- The strong sim crews (endurance 13, combat and cool 14) get everyone home and done most of the time; the gap is the starting crews' strength against difficulty 14-18, not the van.
+
 ## 2026-11-12 · The gate re-run on the new steady pull-out: rework (by a hair)
 - Same declared gate (`scripts/sim-orders.mjs`, hash `f440deff`), 400 seeds, on the current code (steady pulls out at a third of max pips; the new pull-out call-in answered "Pull out", as the risk level does). Report `docs/sims/orders-2026-11-12-pullout.md`. Before: neither (defaults as good as adapting in 53% of cells).
 - **Verdict now: REWORK.** The crew's defaults are as good as the adapted plans in both encounters in **69%** of cells, over the two-thirds line (67%); adapting clears the bar in 15% of cells (was 23%). Adapting by choice alone: defaults match in 81% of cells.
