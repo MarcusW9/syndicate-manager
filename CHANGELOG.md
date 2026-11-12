@@ -4,6 +4,31 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-12 · The Old Stand, and drones that float
+- **The floodlight on the Basin map is gone.** Drawn from the side in a view from above, it looked odd. Overwatch now sits on the roof of the **Old Stand**, the racecourse's grandstand, drawn from above with its concrete ribs; the sniper's spot and what they can see are the same as before.
+- **The drones are spheres now:** a ball hovering over its own shadow, dark on one side and lit on the other, a ring of light round its middle and one sensor eye, in place of the four-rotor drones of today.
+
+## 2026-11-12 · The city's tech on every job map
+- **Every job map now has the city's tech dotted round it:** auto-taxis on the roads with light bars and headlight beams, AR adverts hanging in the air (over the market gate, between the towers, over the harbour, an odds board on the racecourse), rooftop neon and a tall Old Town sign, satellite dishes, vending machines throwing colour on the ground, parked delivery drones, junction boxes, steam vents and cables strung between the tenements.
+- **They're only scenery:** none is cover, none sits on the crew's route or where the guards wait, and a test keeps it that way.
+
+## 2026-11-12 · Lantern Course at its real size
+- **The racecourse on the Basin map is far bigger now:** only its near bend shows, sweeping across the top-left corner and off the edges, so it reads as a real track beside the stables, not a small oval. The dirt track sits between two white rails with the infield's mown grass inside.
+
+## 2026-11-12 · Every district's map has its own detail
+- **Docks:** shipping containers with ribs and lit doors, concrete slabs, the harbour with its swell and broken lights, a planked jetty, and Red Lantern red coming off the water.
+- **Old Town:** the tenement roofs have air-con units on them, the water tank is a drum, washing hangs on the lines, the courtyard is cobbled, and the red sign at the foot of the alley lights the ground.
+- **Glass Heights:** shrubs in the planters, a tiled plaza in the tower's cyan light, sodium in the loading bay, and a helipad on the next tower's roof.
+- **Basin:** the stables have pitched roofs, the infield is mown in rings, the yards are gravel, and the floodlight throws a cone over the stable rows.
+
+## 2026-11-12 · Job maps drawn with hard light
+- **The job maps are drawn like the portraits now:** flat colour, the city light from the right, and a hard navy shadow falling left from everything that stands up (buildings, containers, crates, stalls, desks, the footbridge). The right side of each thing catches the light. No outlines on cover.
+- **The Night Market got its own detail:** stalls with awnings, shadowed on one side and lit on the other, with a lamp under each; the crowd drawn as people from above; a footbridge with rails and lamps; paving slabs; and the stalls' neon falling across the lanes and the wet road.
+- **The route is a solid cyan line** with a dark edge, and the map labels are in the display font with a dark halo, so both read over the busier ground.
+
+## 2026-11-12 · Faces on the map the whole run
+- **The crew's tokens on the job map show their portraits from the start,** not initials that turn into faces when a fight begins. Initials remain only for a token with no stats to draw from.
+
 ## 2026-11-12 · Today: Coming up over a reader that stays in view
 - **On wide screens the right side of Today stays put as you scroll the inbox.** Coming up is a strip across its top, and the open message sits under it, so a message opened from far down the list is already in view. No more scrolling back up to read it.
 - **The reader has a bar:** "Message 3 of 10" with ‹ › to step through the messages (All or Unread, as listed) and ✕ to close it. When nothing is open it shows the week's brief (cash, due Sunday, free crew, jobs, The Word) instead of an empty box, on any day.

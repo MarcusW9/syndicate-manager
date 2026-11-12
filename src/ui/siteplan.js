@@ -6,6 +6,8 @@
 import { SITES, pickSite, siteHeight } from '../data/sites.js';
 import { portrait } from './art.js';
 import { gridSite, cutCorners } from './route.js';
+import { DRAWN, GROUND, LOOKS, SITE_LIGHT, glowSvg, litSvg, pavingSvg, rectsOf, shadowsSvg, textureSvg } from './siteart.js';
+import { propsSvg } from './siteprops.js';
 import { createStage } from './fightstage.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -52,27 +54,28 @@ const escAttr = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<'
 /** The site for a job: its district's place, put together from parts picked by the job's id (data/sites.js pickSite). */
 export const siteFor = (district, jobId, templateId, build = null) => pickSite(district, jobId, templateId, build);
 
-/** One shape from a site's data as SVG. */
-export function shapeSvg(s) {
+/** One shape from a site's data as SVG, lit from the right (ui/siteart.js). light: the site's city
+ *  light; look: its district's own drawings (LOOKS). map() passes an index and the array here, so
+ *  anything but a string means the default. */
+export function shapeSvg(s, light = SITE_LIGHT, look = null) {
+  if (typeof light !== 'string') light = SITE_LIGHT;
+  const own = typeof look === 'string' ? LOOKS[look]?.[s.cls] : null;
   const cls = `class="${escAttr(s.cls ?? '')}"`;
   const fill = s.fill ? ` fill="${escAttr(s.fill)}"` : '';
-  if (s.t === 'rect') return `<rect ${cls} x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="${s.rx ?? 1.5}"${fill}/>`;
+  if (s.t === 'rect' || s.t === 'row') {
+    const draw = own ?? DRAWN[s.cls];
+    return rectsOf(s).map((r) => {
+      if (draw) return draw(r, light);
+      const rx = s.t === 'rect' ? (s.rx ?? 1.5) : Math.min(1.5, s.w / 3, s.h / 3);
+      const tone = r.fill ? ` fill="${escAttr(r.fill)}"` : '';
+      return `<rect ${cls} x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="${rx}"${tone}/>${litSvg(s.cls, r, light)}`;
+    }).join('');
+  }
+  if (own) return own(s, light);
   if (s.t === 'line') return `<line ${cls} x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}"/>`;
   if (s.t === 'poly') return s.closed ? `<polygon ${cls} points="${pts(s.points)}"${fill}/>` : `<polyline ${cls} points="${pts(s.points)}"/>`;
   if (s.t === 'circle') return `<circle ${cls} cx="${s.cx}" cy="${s.cy}" r="${s.r}"${fill}/>`;
   if (s.t === 'ellipse') return `<ellipse ${cls} cx="${s.cx}" cy="${s.cy}" rx="${s.rx}" ry="${s.ry}"${fill}/>`;
-  if (s.t === 'row') {
-    // n copies of a rect, `step` apart along x (or y), skipping some, filled from `tones` in turn.
-    const out = [];
-    for (let i = 0; i < s.n; i++) {
-      if (s.skip?.includes(i)) continue;
-      const x = s.axis === 'y' ? s.x : s.x + i * s.step;
-      const y = s.axis === 'y' ? s.y + i * s.step : s.y;
-      const tone = s.tones ? ` fill="${escAttr(s.tones[(i + (s.shift ?? 0)) % s.tones.length])}"` : '';
-      out.push(`<rect ${cls} x="${x}" y="${y}" width="${s.w}" height="${s.h}" rx="${Math.min(1.5, s.w / 3, s.h / 3)}"${tone}/>`);
-    }
-    return out.join('');
-  }
   return '';
 }
 
@@ -82,12 +85,20 @@ export function sitePlanSvg({ kit = null, site: given = SITES.generic, clean = f
   const H = siteHeight(site);
   const P = site.points;
   const nodes = [site.paths.in.at(-1), site.paths.inside.at(-1)];
+  const light = site.light ?? SITE_LIGHT;
+  const route = cutCorners([...site.paths.in, ...site.paths.inside.slice(1), ...site.paths.target.slice(1)]);
   const sight = !kit ? '' : `<polygon class="sp-sight ${kit === 'drone' ? 'sp-sight--drone' : ''}" points="${pts(site.sight[kit === 'drone' ? 'drone' : 'rifle'])}"/>`;
   return `<svg class="siteplan" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escAttr(site.aria)}">
     <rect width="${W}" height="${H}" fill="#0b0d11"/>
-    ${site.shapes.map(shapeSvg).join('')}
+    ${pavingSvg(site, H)}
+    ${site.shapes.filter((x) => GROUND.has(x.cls)).map((x) => shapeSvg(x, light, site.look)).join('')}
+    ${textureSvg(site)}
+    ${glowSvg(site)}
+    ${shadowsSvg(site.shapes)}
+    ${site.shapes.filter((x) => !GROUND.has(x.cls)).map((x) => shapeSvg(x, light, site.look)).join('')}
+    ${propsSvg(site)}
     ${sight}
-    ${clean ? '' : `<path class="sp-route" d="${cutCorners([...site.paths.in, ...site.paths.inside.slice(1), ...site.paths.target.slice(1)])}"/>
+    ${clean ? '' : `<path class="sp-route-case" d="${route}"/><path class="sp-route" d="${route}"/>
     ${nodes.map(([x, y]) => `<circle class="sp-node" cx="${x}" cy="${y}" r="3"/>`).join('')}
     <circle class="sp-node sp-node--target" cx="${P.target[0]}" cy="${P.target[1]}" r="4"/><circle class="sp-node sp-node--perch" cx="${P.perch[0]}" cy="${P.perch[1]}" r="4"/>`}
     ${site.labels.map((l) => `<text class="sp-label ${l.hi ? 'sp-label--hi' : ''}" x="${l.x}" y="${l.y}">${escAttr(l.text)}</text>`).join('')}
@@ -150,8 +161,9 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
   const addToken = (op, at) => {
     const g = el('g', { class: 'sp-token', 'data-op': op.id });
     g.append(el('circle', { r: 6.5, fill: op.color ?? '#8b93a7' }), el('text', {}, initials(op)));
-    // Their face, shown in a fight (the token's initials elsewhere, where it's too small to read).
+    // Their face, the whole run (the initials stay only for anyone drawn without stats).
     if (op.stats) {
+      g.classList.add('has-face');
       const face = el('g', { class: 'sp-face', 'clip-path': 'url(#sp-face-clip)' });
       face.innerHTML = portrait(op, { size: 13 }).replace('<svg ', '<svg x="-6.5" y="-6.5" ');
       g.append(face, el('circle', { r: 6.5, class: 'sp-face__ring' }));

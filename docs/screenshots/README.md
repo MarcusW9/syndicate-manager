@@ -16,12 +16,17 @@ After a change that alters how the game looks, before committing:
 npm run screenshots -- <short-slug>
 ```
 
-Then add a row to the top of the table below and commit the folder with the change. Playwright's Chromium is needed once: `npx playwright install chromium`.
+Then add a row to the top of the table below and commit the folder with the change. If the fixer's raid call opens during the run, the script puts it off ("Decide later") and carries on, so it no longer stops the run part-way. Playwright's Chromium is needed once: `npx playwright install chromium`.
 
 ## Versions
 
 | Date | Version | Commit | What's new on screen | Folder |
 | --- | --- | --- | --- | --- |
+| 2026-11-12 | Old Stand and drones | (this change) | The drones as hovering spheres with a light ring (Night Market watch, `13-watch-1.png`); the Basin with the Old Stand's roof as overwatch in place of the floodlight, and close-ups of the stand and the drones, in `2026-11-12-map-districts/04-old-stand-and-drones.png`. | `2026-11-12-old-stand-drones/` |
+| 2026-11-12 | Map props | (this change) | The city's tech on the job maps (`ui/siteprops.js`): on the Night Market watch screen an AR advert over the gate, a drone, auto-taxis on the road, a vending machine, rooftop neon (`13-watch-1.png`, `14-watch-2.png`); every district's map with its props is in `2026-11-12-map-districts/03-district-props.png`. | `2026-11-12-map-props/` |
+| 2026-11-12 | Map districts | (this change) | Design-session capture: the site plans of every district drawn with their own detail (`ui/siteart.js` `LOOKS`): Docks (two parts), Old Town (two targets), Glass Heights, Basin, the Night Market and the generic site (`01-district-maps.png`); then the Basin with Lantern Course at its real size, only its near bend in view (`02-basin-course.png`). The screenshot run plays a Night Market job, so the other districts aren't in its sets. | `2026-11-12-map-districts/` |
+| 2026-11-12 | Map art B | (this change) | The job maps drawn with hard light (`ui/siteart.js`): navy shadows falling left, lit right edges, and on the Night Market awnings, people, a lamp-lit footbridge, paving and neon across the ground (`13-watch-1.png`, `14-watch-2.png`). | `2026-11-12-map-art-b/` |
+| 2026-11-12 | Map faces | (this change) | The crew's tokens on the job map are their portraits from the start of the run, not initials until a fight (`13-watch-1.png`: two faces at the van). | `2026-11-12-map-faces/` |
 | 2026-11-12 | Today: Coming up strip over a sticky reader | (this change) | The standard run after Today's right side became one sticky stack: on a wide screen Coming up is a strip across the top and the open message (or the week's brief) sits under it, with a bar for Message N of M, ‹ › and ✕; the list's dates read weekday over day number. Phones keep the list and Coming up. | [2026-11-12-inbox-stack](2026-11-12-inbox-stack/) |
 | 2026-11-12 | Live battle view: commentary and life between rounds (frames) | (this change) | From `scripts/preview-livebattle.mjs` at Watch: the commentary strip under the map saying each moment as it plays, the folded Commentary log with round and clock, arrivals running in from their door, and between rounds a small seeded shuffle on each spot with faint covering fire that goes wide. Captions in the folder's README. | [2026-11-12-live-battle-commentary-fight](2026-11-12-live-battle-commentary-fight/) |
 | 2026-11-12 | Live battle view, step 3 (captured set) | (this change) | The standard run after step 3, to keep the history complete; it hands any fight off (Resolve), where ambient life is off. | [2026-11-12-live-battle-commentary](2026-11-12-live-battle-commentary/) |
