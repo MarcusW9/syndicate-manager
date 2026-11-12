@@ -168,8 +168,8 @@ Tiers:
 
 The director is pace-free in core: it tags every detected spotlight. The spotlight budget
 (`FIGHT.spotlightBudget = { watch: 4, fast: 3, resolve: 0 }`) is applied at playback; over budget a
-spotlight plays as notable. Resolve still lists spotlights in the timeline. (Flag F2 asks the owner to
-confirm the budget moves out of core.)
+spotlight plays as notable. Resolve still lists spotlights in the timeline. (Owner, F2: the budget lives
+in the UI, not core.)
 
 Wire it in `runfight.js playOn`: `direct` runs after `playRound`, its beats go on the round's recorded
 event, and `b.director` holds the memory. Nothing it returns feeds back into the rules.
@@ -208,7 +208,8 @@ Link = { type: 'threat' | 'shield' | 'target', from, to, threatKind? }
   them on the telegraph or on selection.
 - UI: `ui/fightmap.js` renders SVG/DOM glyphs and animates between layouts at each beat. Down, absorbed
   and fled marks persist. Teams of up to 6.
-- **Pace** (Flag F2 for where it is stored):
+- **Pace** (owner, F2): Watch or Fast is a UI preference (`save.js getPref`/`setPref`, like Hall art),
+  never in the save and never read by core; no save bump for it. Resolve is the existing `b.auto`.
   - Watch: as today (`waitsForOrders`).
   - Fast: the same core path; the UI plays the round with the current orders when the last beat's
     `holdMs` has passed. Call-ins (dilemmas, death's door) still pause, because `runFight` raises them
@@ -354,10 +355,10 @@ export const SHOWCASES = {
 - **F1. The showcase seed moves nothing in live fights.** `buildFight`'s rng is a fresh `nextRng` used
   only for the build (and fixed seeds in `fightOddsFor`), so drawing the seed last shifts no later roll.
   The only real sequence shift in this work is 0a.
-- **F2. Where pace lives (owner's call).** `am.pace` in core would be a saved state change (save bump)
-  for what Fast's design says is UI only. It would also make the spotlight budget, and so what a report
-  keeps, depend on pace. **Recommended:** pace is a UI preference (`save.js getPref`, like Hall art);
-  Resolve stays `b.auto`; the director tags spotlights pace-free and the budget is applied at playback.
+- **F2. Where pace lives (decided).** `am.pace` in core would have been a save change for what is UI only,
+  and would have made the spotlight budget depend on pace. Owner: Watch or Fast is a UI preference
+  (`save.js getPref`, like Hall art); Resolve stays `b.auto`; the director tags spotlights pace-free and
+  the budget is applied at playback.
 - **F3. Resolve is one-way today.** `handOffFight` sets `b.auto = true` and nothing sets it back.
   "Switchable mid-fight" out of Resolve needs a new `takeBackFight` in `runbattle.js` (sets `b.auto = false`;
   after 0a the round is already drawn). Small, but it is new.
@@ -392,7 +393,6 @@ export const SHOWCASES = {
 1. All new `lineText` keys: `approach`, `overdriveStart`, the `showcase.holdTheLine.*` keys, the
    director's spotlight keys. Use placeholders.
 2. Wave recipes per job, and Hold the Line's stat threshold.
-3. The call in Flag F2 (where pace is stored).
 
 ## Acceptance
 
