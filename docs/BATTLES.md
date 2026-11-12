@@ -9,8 +9,22 @@ Checked against the code on 2026-11-12 (`src/core/fight.js`, `runfight.js`, `bat
 | Plays | Five jobs only: `data_pull`, `data_scrub`, `quiet_hours` (**hold the hack**) and `warehouse`, `protection` (**hold and extract**). `FIGHT_JOBS` in `data/fights.js`. | Every other fight, and every raid on a hall. |
 | Health | **Pips**: one per 2 endurance, at least 3. | **HP**: 10 + cool ÷ 4. |
 | Player's input | A standing **order** for each runner, a crew-wide **risk level**, and call-ins. | A one-off order per runner each round (shoot, flank, hunker, move, patch, talk, lights). |
-| Code | `core/fight.js` (rules), `core/runfight.js` (the run's side), `core/fightview.js` (what the screen reads) | `core/battle.js` (rules), `core/runbattle.js` (the run's side) |
-| Numbers | `data/fights.js`, `data/dilemmas.js` | `data/battle.js` |
+| What you see | Each enemy's threat and the chance it hits, shown before you decide. | The guards' intended targets. |
+| Objectives | Real goals: protect the tech while they hack, or hold for the van and board it. | Beat the guards or pull back. |
+| Death and pulling out | A risk level, a pull-out point, bleeding, and runners left behind at the van. | Parting shots when you pull back; death only through "push on". |
+| Numbers | `data/fights.js`, `data/dilemmas.js`, wording in `data/fightText.js` | `data/battle.js` |
+
+### Which files belong to which
+
+| | Engine 2 | Engine 1 |
+| --- | --- | --- |
+| Rules | `core/fight.js` | `core/battle.js` |
+| The run's side (start, call-ins, pulling back) | `core/runfight.js` | `core/runbattle.js` |
+| Screen view | `core/fightview.js`, `ui/fightscreen.js` | `ui/fightorders.js` (orders panel and map overlay) |
+| Wording | `core/fighttext.js`, `data/fightText.js` | written inline in `core/battle.js` |
+| Data | `data/fights.js`, `data/dilemmas.js` | `data/battle.js` |
+
+**Shared by both:** `core/fightspots.js` (where people stand on the map), `core/gear.js`, `core/crew.js`, `core/mission.js` (the run), `core/autorun.js` (hands-off play), `ui/watch.js`, `ui/siteplan.js`. Engine 2 also imports `weaponOf`, `armourOf` and `overwatchOf` from `core/battle.js`, so it depends on engine 1 for reading gear.
 
 Both use the game's one roll, **d20 + stat ≥ 10 + difficulty**. A fight's difficulty is the job's typical roll, so fights scale with the work. Randomness is always the run's seeded stream; previews, "if nothing" text and dilemma checks never draw.
 
