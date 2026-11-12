@@ -4,6 +4,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-12 · Lantern Course at its real size
+- **The racecourse on the Basin map is far bigger now:** only its near bend shows, sweeping across the top-left corner and off the edges, so it reads as a real track beside the stables, not a small oval. The dirt track sits between two white rails with the infield's mown grass inside.
+
 ## 2026-11-12 · Every district's map has its own detail
 - **Docks:** shipping containers with ribs and lit doors, concrete slabs, the harbour with its swell and broken lights, a planked jetty, and Red Lantern red coming off the water.
 - **Old Town:** the tenement roofs have air-con units on them, the water tank is a drum, washing hangs on the lines, the courtyard is cobbled, and the red sign at the foot of the alley lights the ground.

@@ -199,14 +199,18 @@ function stable(r, light) {
     <rect x="${r.x}" y="${r.y + half - 0.6}" width="${r.w}" height="1.2" fill="#4a3f2a"/><rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="none" stroke="#4a3f2a" stroke-width="1"/></g>${litSvg('sp-stable', r, light)}`;
 }
 
-/** The infield: grass mown in rings. */
+/** The track: packed dirt with the harrow's lines in it, and the outer rail. */
+function track(s) {
+  const e = (d, rest) => `<ellipse cx="${s.cx}" cy="${s.cy}" rx="${s.rx - d}" ry="${s.ry - d}" ${rest}/>`;
+  return `<g class="sp-art">${e(0, 'fill="#2b2418"')}${e(5, 'fill="none" stroke="#3a3122" stroke-width="0.6" stroke-dasharray="5 4"')}${e(10, 'fill="none" stroke="#3a3122" stroke-width="0.6" stroke-dasharray="5 4"')}
+    ${e(0, 'fill="none" stroke="#f7efc8" stroke-width="1.3" opacity="0.75"')}</g>`;
+}
+
+/** The infield: grass mown in bands, and the inner rail round it. */
 function infield(s) {
   const rings = [];
-  for (let k = 0; k < 8; k++) {
-    const f = 1 - k * 0.12; if (f <= 0.1) break;
-    rings.push(`<ellipse cx="${s.cx}" cy="${s.cy}" rx="${s.rx * f}" ry="${s.ry * f}" fill="${k % 2 ? '#0f1a14' : '#122019'}"/>`);
-  }
-  return `<g class="sp-art">${rings.join('')}</g>`;
+  for (let k = 0; k * 12 < Math.min(s.rx, s.ry); k++) rings.push(`<ellipse cx="${s.cx}" cy="${s.cy}" rx="${s.rx - k * 12}" ry="${s.ry - k * 12}" fill="${k % 2 ? '#0f1a14' : '#122019'}"/>`);
+  return `<g class="sp-art">${rings.join('')}<ellipse cx="${s.cx}" cy="${s.cy}" rx="${s.rx}" ry="${s.ry}" fill="none" stroke="#f7efc8" stroke-width="1" opacity="0.6"/></g>`;
 }
 
 /** Drawers by district (site.look), by class. */
@@ -214,7 +218,7 @@ export const LOOKS = {
   docks: { 'sp-cover': container, 'sp-water': water, 'sp-jetty': jetty, 'sp-pier': jetty },
   oldTown: { 'sp-block': (r, l) => roof(r, l), 'sp-tank': tank, 'sp-laundry': laundry, 'sp-cover': crate },
   heights: { 'sp-planter': planter, 'sp-block': (r, l) => roof(r, l, { helipad: true }) },
-  basin: { 'sp-stable': stable, 'sp-infield': infield, 'sp-cover': crate },
+  basin: { 'sp-stable': stable, 'sp-track': track, 'sp-infield': infield, 'sp-cover': crate },
 };
 
 // --- ground textures (site.texture: [{ kind, x, y, w, h }], drawn over the flat ground shapes) --
