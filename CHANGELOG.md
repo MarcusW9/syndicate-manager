@@ -4,6 +4,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-12 · How battles work, written down
+- **New `docs/BATTLES.md`.** One page on how fights play now: the two engines and which jobs use which, pips and HP, enemies, the round in order, every roll and chance, orders and the risk level, how a fight ends, the death rule, call-ins, and the old engine's rules. Checked against the code; no game change.
+
 ## 2026-11-12 · Posts: where your people stand in a raid
 - **Posts on every hall.** Each hall has six places to build one: a window and a roof on each building, and two at the front gate. A **window post** (¥2,500) gives full cover, a **rooftop nest** (¥6,000, level 2 hall) gives full cover and height (a shot is a little easier, and a hit on you a little harder), and a **gate post** (¥3,000) gives half cover. They count as defences, so three of them make a raid one step easier, like any three pieces. Build them on the new **Posts** tab; the squares for barricades and plates are on **Forecourt**.
 - **You put people on them.** When a raid is warned, the hall's page shows each post and who stands there. Tap **Change ›** to hand a post to someone else, or to nobody. Left alone, your best fighters take the best posts.
