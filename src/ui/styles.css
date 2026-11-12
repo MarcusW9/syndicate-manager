@@ -2271,3 +2271,51 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .postrow__none { color: var(--warn); }
 
 .kitline { display: inline-flex; align-items: center; gap: 0.4em; flex-wrap: wrap; } /* "Piloting 17 · 3 actions" on one line, centred together (2026-11-12) */
+
+/* ---------------------------------------------------------------------------------------------------
+   The live battle view (ui/fightstage.js, 2026-11-12): an engine-2 fight on the site map. Circular faces
+   for both sides (the crew's teal-grey ring, the enemies' red), pips under each, low barriers where the
+   rules give cover the site has no spot for, bodies left on the ground, tracers for the rules' shots.
+   Transform-only motion; reduced motion cuts (the stage sets no transition then).
+   --------------------------------------------------------------------------------------------------- */
+.fs-foe__bg { fill: #3a1018; }
+.fs-foe__tint { fill: var(--accent); opacity: 0.22; pointer-events: none; }
+.siteplan.is-fight .sp-token .fs-foe__ring { stroke: var(--accent); stroke-width: 1.3; }
+.siteplan.is-fight .sp-token.fs-foe > text.fs-foe__n { display: inline; }
+.fs-foe__n { fill: var(--accent) !important; font-size: 5px !important; font-family: var(--display); paint-order: stroke; stroke: #0b0d11; stroke-width: 1.4px; }
+.siteplan.is-staged .sp-token:not(.fs-foe) .sp-face__ring { stroke: var(--accent-2); stroke-width: 1.1; }
+.fs-pips rect { fill: #2a303b; } .fs-pips rect.is-on { fill: var(--accent-2); } .fs-foe .fs-pips rect.is-on { fill: var(--accent); }
+.sp-token.fs-hunker > *:not(.fs-pips) { transform: scale(1.05) translateY(1px); }
+.siteplan.is-fight .sp-token.fs-hunker .sp-face__ring { stroke-dasharray: 2 1.2; }
+.sp-token.fs-down .sp-face, .sp-token.fs-dead .sp-face { filter: grayscale(1) brightness(0.55); }
+.sp-token.fs-dead .sp-face__ring { stroke: var(--danger) !important; }
+.sp-token.fs-hidden { opacity: 0; pointer-events: none; }
+.fs-body { fill: #5a1020; opacity: 0.55; }
+.fs-barrier { fill: #566074; stroke: #a3acbd; stroke-width: 0.7; }
+.fs-barrier--full { fill: #6b7588; }
+.fs-tracer { stroke: var(--warn); stroke-width: 0.9; stroke-linecap: round; opacity: 0.95; }
+.fs-tracer.is-foe { stroke: #ff8a98; }
+.fs-tracer.is-burst { stroke: #fff3b0; stroke-width: 1.6; }
+.fs-muzzle { fill: #fff3b0; }
+.fs-link { stroke-width: 0.9; stroke-dasharray: 2 1.5; fill: none; }
+.fs-link--shield { stroke: var(--accent-2); } .fs-link--heal { stroke: #7be38b; }
+.fs-ping { fill: none; stroke: #6b7385; stroke-width: 1; transform-box: fill-box; transform-origin: center; animation: fs-ping 0.5s ease-out forwards; }
+.fs-ping.is-ok { stroke: var(--accent-2); }
+.fs-special { fill: none; stroke: var(--warn); stroke-width: 1.2; transform-box: fill-box; transform-origin: center; animation: fs-ping 0.8s ease-out forwards; }
+@keyframes fs-ping { from { transform: scale(0.6); opacity: 1; } to { transform: scale(3); opacity: 0; } }
+.fs-float { font: 700 5px var(--display); letter-spacing: 0.08em; text-transform: uppercase; text-anchor: middle; paint-order: stroke; stroke: #0b0d11; stroke-width: 1.4px; animation: fs-float 0.9s ease-out forwards; }
+.fs-float.is-hit { fill: var(--danger); } .fs-float.is-down { fill: var(--accent); } .fs-float.is-absorbed { fill: var(--warn); }
+@keyframes fs-float { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-8px); opacity: 0; } }
+.watch__caption { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); max-width: calc(100% - 24px); padding: 4px 10px; font: 700 0.82rem var(--display); letter-spacing: 0.06em; color: var(--text); background: rgba(11, 13, 17, 0.9); border: 1px solid var(--line); border-left: 2px solid var(--warn); clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); pointer-events: none; }
+.watch__caption[data-tier="special"] { border-left-color: var(--accent); color: var(--warn); }
+.fs-pace { display: grid; grid-template-columns: repeat(3, 1fr); margin: 0 0 6px; }
+.fs-pace__chip { min-height: 44px; background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); font: 700 0.8rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; }
+.fs-pace__chip + .fs-pace__chip { border-left: 0; }
+.fs-pace__chip.is-on { color: var(--accent-2); background: #12262a; border-color: var(--accent-2); }
+.fs-pace__note { margin: 0 0 6px; font-size: 0.78rem; color: var(--muted); }
+/* The map is the main view of a staged fight (the proposal): taller on phones while the round screen is open. */
+@media (max-width: 699px) { .watch.is-fighting.is-calling .siteplan.is-staged { height: min(50svh, 440px); } }
+@media (prefers-reduced-motion: reduce) {
+  .fs-ping, .fs-special, .fs-float { animation: none; }
+  .fs-float { display: none; }
+}

@@ -1106,7 +1106,9 @@ function finish(state) {
     timeline: {
       result: outcome, steps, outcome: results,
       // The full log and its summary (save v16). Hands-off runs also name their orders.
-      events, summary: summariseRun(events, { id, outcome, deaths: deaths.length }),
+      // A fight's stage (where everyone stood on the map, core/runfight.js stageOf) is for the live view only: the report
+      // keeps the lines and the beats, not the staging, so a year of reports stays small.
+      events: events.map((e) => (e.stage ? (({ stage, ...rest }) => rest)(e) : e)), summary: summariseRun(events, { id, outcome, deaths: deaths.length }),
       // Hands-off runs name their orders (the report plays out on first open); a live run says how it was called.
       orders: am.callIn === 'never' || !am.callIn ? am.orders ?? null : null, callIn: am.callIn ?? null, liveOrders: am.callIn && am.callIn !== 'never' ? am.orders ?? null : null,
     },

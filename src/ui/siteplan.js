@@ -6,6 +6,7 @@
 import { SITES, pickSite, siteHeight } from '../data/sites.js';
 import { portrait } from './art.js';
 import { gridSite, cutCorners } from './route.js';
+import { createStage } from './fightstage.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const W = 360;
@@ -113,7 +114,7 @@ const later = (ms) => new Promise((r) => setTimeout(r, reduced() ? 0 : ms));
  * out: people already back at the van hurt. speed: a function giving the current pace (1 normal, lower faster).
  * site: the district's site plan (data/sites.js).
  */
-export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = null, standby = null, out = [], zone = 'start', speed = () => 1, site: given = SITES.generic }) {
+export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = null, standby = null, out = [], zone = 'start', speed = () => 1, site: given = SITES.generic, pace = () => 'watch', caption = null }) {
   const site = gridSite(given); // walk the line as drawn
   const team = [...inside];
   const P = site.points;
@@ -287,7 +288,7 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
     hpNow.clear();
     tokens.querySelectorAll('.sp-hp').forEach((b) => b.remove());
     command(null);
-    if (fightAt.size) { fightAt.clear(); svg.classList.remove('is-fight'); moveGroup(here); panTo(zoneNow); }
+    if (fightAt.size || svg.classList.contains('is-fight')) { fightAt.clear(); svg.classList.remove('is-fight'); moveGroup(here); panTo(zoneNow); }
   }
   async function bolt(from, to, hit, victim = null) {
     const l = el('line', { class: 'sp-shot', x1: from[0], y1: from[1], x2: to[0] + (hit ? 0 : 8), y2: to[1] + (hit ? 0 : -6) });
@@ -342,6 +343,27 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
     } else if (l.kind === 'ambush') {
       ring(here, true);
       await wait(500);
+    }
+  }
+
+  // --- engine 2: the live battle view (ui/fightstage.js) ------------------------------------------
+  // An engine-2 event carries its stage (everyone's place on the fight spots); the stage plays it. Engine 1 keeps the
+  // moments above.
+  let stage = null;
+  const staged = () => stage ??= createStage(svg, {
+    tok,
+    at: (id) => { const m = /translate\(([-\d.]+)px, ([-\d.]+)px\)/.exec(tok(id)?.style.transform ?? ''); return m ? [Number(m[1]), Number(m[2])] : null; },
+    pin: (id, at) => { if (at) fightAt.set(id, at); else fightAt.delete(id); },
+    frame: (list) => { const ar = svg.clientWidth > 0 && svg.clientHeight > 0 ? svg.clientWidth / svg.clientHeight : 1.5; const box = frameFight(list, ar, H); if (box) panTo(box, reduced() || pace() === 'resolve' ? 0 : 700); },
+    pace, reduced, caption: (text, tier) => caption?.(text, tier),
+  });
+  async function stagedFight(c) {
+    const st = staged();
+    await st.play(c);
+    if (c.phase === 'end' || c.phase === 'retreat') {
+      await wait(300);
+      st.reset();
+      clearFight();
     }
   }
 
@@ -445,6 +467,7 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
     posts: setPosts,
     /** A fight on the plan: the guards appear (start), a round plays out, pulling back or the end clears it. */
     async fight(c) {
+      if (c.stage) return stagedFight(c);
       if (c.phase === 'start') { clearFight(); showFight(c); await wait(500); return; }
       if (c.phase === 'end') { await wait(250); clearFight(); return; }
       for (const l of c.lines ?? []) await moment(l);
@@ -454,7 +477,7 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
     /** The orders overlay while a fight waits for the player (ui/fightorders.js commandView), or null to clear it. */
     command: (v) => command(v),
     /** The fight as it stands, drawn at once (a page that mounts mid-fight). */
-    syncFight: (c) => (c ? showFight(c) : clearFight()),
+    syncFight: (c) => (c?.stage ? staged().snap(c) : c ? showFight(c) : (stage?.reset(), clearFight())),
     /** Walk the group into a zone and pan the camera there. */
     async enter(zone) {
       zoneNow = zone;
