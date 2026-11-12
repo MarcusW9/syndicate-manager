@@ -131,15 +131,29 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 
 /* Inbox: one pane at a time on phones, list and message side by side when wide. */
 @media (max-width: 899px) {
-  .inbox.has-open .inbox__side, .inbox.has-open .inbox__rail, .inbox:not(.has-open) .inbox__detail { display: none; }
+  .inbox.has-open .inbox__side, .inbox.has-open .upcoming--strip, .inbox .inbox__detail.is-quiet { display: none; }
   .inbox { display: grid; gap: 12px; }
+  .reader__btn[data-action="msg-close"] { display: none; } /* the message's own Back button does that on a phone */
 }
-.inbox__side, .inbox__rail { display: grid; gap: 12px; align-content: start; }
-/* Monday's numbers sit in their own panel in the rail, so the block drops its own frame there. */
-.inbox__rail .weekbrief { border: 0; background: none; padding: 0; margin: 0; }
-.upcoming--rail { padding: 10px 16px 12px; }
+.inbox__side, .inbox__stack { display: grid; gap: 12px; align-content: start; }
+/* The reader (2026-11-12): a bar with where you are and ‹ › ✕ over the message or the week's brief. */
+.inbox__detail { padding: 0; }
+.reader__head { display: flex; align-items: center; gap: 6px; padding: 6px 8px 6px 16px; border-bottom: 1px solid var(--line); }
+.reader__where { flex: 1; font-family: var(--display, inherit); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.reader__btn { min-width: var(--tap); min-height: var(--tap); border: 1px solid var(--line); background: none; color: var(--accent-2); font: inherit; font-size: 1.1rem; cursor: pointer; }
+.reader__btn:disabled { opacity: 0.3; cursor: default; }
+.reader__body { padding: 14px 16px; min-width: 0; }
+.inbox__detail .weekbrief { border: 0; background: none; padding: 0; margin: 0; }
+.row__meta { display: grid; justify-items: end; line-height: 1.25; }
+.row__wd { font-weight: 600; color: var(--text); }
+/* Coming up as a strip: a cell a day, side by side; on a phone it is the plain list of days under the messages. */
+.upcoming--strip { padding: 10px 16px 12px; }
+.upcoming__day.is-raid .upcoming__when { color: var(--danger); }
+.upcoming__day.is-linked { background: #2a1218; box-shadow: inset 0 -3px 0 var(--danger); }
+.upcoming__more > summary { cursor: pointer; list-style: none; color: var(--muted); font-size: 0.8rem; min-height: 28px; }
+.upcoming__more > summary::-webkit-details-marker { display: none; }
 /* Grid children shrink to fit, so a long one-line preview clips instead of widening the page. */
-.main, .inbox > *, .inbox__side > *, .inbox__rail > *, .list > li, .row__main--clip { min-width: 0; }
+.main, .inbox > *, .inbox__side > *, .inbox__stack > *, .list > li, .row__main--clip { min-width: 0; }
 .inbox__title { margin-top: 0; }
 .row__main--clip { min-width: 0; }
 .preview { display: block; font-size: 0.8rem; font-weight: 400; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -327,19 +341,15 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
   .plangrid__crew { grid-area: crew; }
   .plangrid__approach { grid-area: approach; }
   .plangrid__risk { grid-area: risk; }
-  /* Messages and the open message side by side; the week's rail under the messages, then
-     beside the message as a third column once there's room (owner, 2026-11-11). */
-  .inbox { display: grid; grid-template-columns: minmax(300px, 2fr) 3fr; grid-template-areas: "side detail" "rail detail"; gap: 16px; align-items: start; }
-  .inbox__side { grid-area: side; }
-  .inbox__detail { grid-area: detail; }
-  .inbox__rail { grid-area: rail; }
-  .upcoming--rail .upcoming__days { grid-template-columns: minmax(0, 1fr); }
+  /* Messages on the left; on the right one sticky stack: Coming up as a strip, the open message (or the
+     week's brief) under it, scrolling inside itself. Opening a message from far down the list needs no
+     scrolling back up (owner, 2026-11-12; was a third column for the rail). */
+  .inbox { display: grid; grid-template-columns: minmax(300px, 2fr) 3fr; gap: 16px; align-items: start; }
+  .inbox__stack { position: sticky; top: 84px; max-height: calc(100dvh - 150px); grid-template-rows: auto minmax(0, 1fr); }
+  .inbox__detail { overflow: auto; min-height: 0; }
+  .upcoming--strip .upcoming__days { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px 10px; }
   .inbox__back { display: none; }
   .inbox__empty { margin: 0; }
-}
-
-@media (min-width: 1200px) {
-  .inbox { grid-template-columns: minmax(300px, 4fr) minmax(0, 5fr) minmax(240px, 3fr); grid-template-areas: "side detail rail"; }
 }
 
 /* --- Jobs, planning and missions --- */
