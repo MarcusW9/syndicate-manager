@@ -181,7 +181,8 @@ const HEIGHTS = {
 };
 
 // The Basin: in at the service gate by Lantern Course, along the stable rows, into the vet block.
-// Overwatch up a floodlight tower.
+// Overwatch on the roof of the Old Stand (the grandstand, WORLD.md; 2026-11-12, after the owner
+// found a floodlight drawn from the side odd in a view from above).
 const BASIN = {
   name: 'the racecourse stables',
   // The city's tech dotted round (ui/siteprops.js): decoration only, never cover, never on the route.
@@ -190,14 +191,13 @@ const BASIN = {
     { kind: 'car', x: 60, y: 216 }, { kind: 'car', x: 150, y: 218, c: '#ff3d5f' },
     { kind: 'vending', x: 336, y: 150, c: '#f2d541' }, { kind: 'junction', x: 188, y: 104 },
   ],
-  // How it's drawn (ui/siteart.js): the floodlight's cream light, a cone of it over the stables, gravel yards.
+  // How it's drawn (ui/siteart.js): race-night cream light, gravel yards, the Old Stand's roof.
   look: 'basin', light: '#f7efc8',
   texture: [{ kind: 'gravel', x: 160, y: 112, w: 200, h: 86 }, { kind: 'gravel', x: 236, y: 0, w: 124, h: 112 }],
   glow: [
-    { points: [[192, 28], [208, 28], [340, 196], [164, 196]], color: '#f7efc8', op: 0.05 },
     { points: [[250, 198], [300, 198], [316, 212], [236, 212]], color: '#f2b544', op: 0.07 },
   ],
-  aria: 'Site plan of the racecourse stables: the service gate and the van, the edge of the track, rows of stables, the vet block, and a floodlight tower for overwatch',
+  aria: 'Site plan of the racecourse stables: the service gate and the van, the edge of the track, rows of stables, the vet block, and the roof of the Old Stand for overwatch',
   points: { van: [300, 224], perch: [200, 30], target: [300, 70] },
   paths: {
     in: [[300, 224], [250, 224], [250, 198]],
@@ -212,7 +212,7 @@ const BASIN = {
     ...ROAD,
     // Lantern Course at its real size (owner, 2026-11-12): only the near bend of a far bigger oval,
     // running off the top and left edges; the dirt between two rails, the infield inside. It still
-    // stops short of the stable rows (owner, 2026-11-06) and the floodlight.
+    // stops short of the stable rows (owner, 2026-11-06) and the Old Stand.
     { t: 'ellipse', cls: 'sp-track', cx: -50, cy: -70, rx: 240, ry: 250 },
     { t: 'ellipse', cls: 'sp-infield', cx: -50, cy: -70, rx: 224, ry: 234 },
     { t: 'poly', cls: 'sp-fence', points: [[8, 198], [236, 198]] },
@@ -224,8 +224,8 @@ const BASIN = {
     { t: 'rect', cls: 'sp-building', x: 250, y: 40, w: 90, h: 70 },
     { t: 'rect', cls: 'sp-door', x: 247, y: 90, w: 5, h: 12 },
     { t: 'rect', cls: 'sp-room', x: 276, y: 52, w: 52, h: 36 },
-    { t: 'line', cls: 'sp-pole', x1: 200, y1: 30, x2: 200, y2: 110 },
-    { t: 'rect', cls: 'sp-lamp', x: 190, y: 22, w: 20, h: 6 },
+    // The Old Stand's roof, the end of it nearest the stables: overwatch is up here.
+    { t: 'rect', cls: 'sp-stand', x: 190, y: 8, w: 54, h: 34 },
     // Cover for fights (core/fightspots.js, 2026-10-30): a horse trailer and hay at the service gate, a trailer and a feed bin by the vet block, the vet's table inside.
     { t: 'rect', cls: 'sp-cover', x: 258, y: 204, w: 26, h: 9, fill: CONTAINER_TONES[3] },
     { t: 'rect', cls: 'sp-cover', x: 300, y: 200, w: 14, h: 10, fill: '#6b5a2e' },
@@ -235,7 +235,7 @@ const BASIN = {
   ],
   labels: [
     { x: 178, y: 210, text: 'SERVICE GATE' }, { x: 176, y: 124, text: 'STABLES' },
-    { x: 262, y: 34, text: 'VET BLOCK', hi: true }, { x: 214, y: 20, text: 'FLOODLIGHT' }, { x: 16, y: 60, text: 'LANTERN COURSE' },
+    { x: 262, y: 34, text: 'VET BLOCK', hi: true }, { x: 192, y: 52, text: 'OLD STAND' }, { x: 16, y: 60, text: 'LANTERN COURSE' },
     { x: 300, y: 236, text: 'VAN' },
   ],
 };

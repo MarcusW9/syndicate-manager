@@ -15,11 +15,11 @@ const hash = (a, b) => { const v = Math.sin(a * 12.9898 + b * 78.233) * 43758.54
 
 /** How tall each kind of thing stands: the length of its shadow, in map units. */
 const HEIGHT = {
-  'sp-building': 8, 'sp-house': 8, 'sp-tower': 10, 'sp-block': 7, 'sp-stable': 5, 'sp-bridge': 10,
+  'sp-building': 8, 'sp-house': 8, 'sp-stand': 9, 'sp-tower': 10, 'sp-block': 7, 'sp-stable': 5, 'sp-bridge': 10,
   'sp-stall': 4, 'sp-cover': 3, 'sp-tank': 4, 'sp-planter': 2, 'sp-desk': 2, 'sp-turret': 2, 'sp-post': 2, 'sp-cot': 1.5,
 };
 /** Big things take the light as a strip down their right edge; small ones on their right third. */
-const TALL = new Set(['sp-building', 'sp-house', 'sp-tower', 'sp-block', 'sp-stable']);
+const TALL = new Set(['sp-building', 'sp-house', 'sp-tower', 'sp-block', 'sp-stable', 'sp-stand']);
 
 /** The rects a shape stands for (a row is n of them). */
 export function rectsOf(s) {
@@ -206,6 +206,18 @@ function track(s) {
     ${e(0, 'fill="none" stroke="#f7efc8" stroke-width="1.3" opacity="0.75"')}</g>`;
 }
 
+/** A grandstand's roof from above: a concrete cantilever, ribs running back from the lip over the
+ *  track, plant on top (a hatch, a mast), lit on its right. */
+function stand(r, light) {
+  const ribs = [];
+  for (let x = r.x + 4; x < r.x + r.w - 2; x += 4.5) ribs.push(`M${x} ${r.y + 3}V${r.y + r.h - 1}`);
+  return `<g class="sp-art"><rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="#1a1d24"/>
+    <path d="${ribs.join('')}" stroke="#12151b" stroke-width="0.9" fill="none"/>
+    <rect x="${r.x}" y="${r.y + r.h - 3}" width="${r.w}" height="3" fill="#2a2f3a"/><rect x="${r.x}" y="${r.y}" width="${r.w}" height="2" fill="#141820"/>
+    <rect x="${r.x + r.w * 0.62}" y="${r.y + 6}" width="7" height="6" fill="#232935"/><rect x="${r.x + r.w * 0.62 + 4.6}" y="${r.y + 6}" width="2.4" height="6" fill="${mix('#232935', light, 0.25)}"/>
+    <rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="none" stroke="#3a4152" stroke-width="1"/></g>${litSvg('sp-stand', r, light)}`;
+}
+
 /** The infield: grass mown in bands, and the inner rail round it. */
 function infield(s) {
   const rings = [];
@@ -218,7 +230,7 @@ export const LOOKS = {
   docks: { 'sp-cover': container, 'sp-water': water, 'sp-jetty': jetty, 'sp-pier': jetty },
   oldTown: { 'sp-block': (r, l) => roof(r, l), 'sp-tank': tank, 'sp-laundry': laundry, 'sp-cover': crate },
   heights: { 'sp-planter': planter, 'sp-block': (r, l) => roof(r, l, { helipad: true }) },
-  basin: { 'sp-stable': stable, 'sp-track': track, 'sp-infield': infield, 'sp-cover': crate },
+  basin: { 'sp-stand': stand, 'sp-stable': stable, 'sp-track': track, 'sp-infield': infield, 'sp-cover': crate },
 };
 
 // --- ground textures (site.texture: [{ kind, x, y, w, h }], drawn over the flat ground shapes) --

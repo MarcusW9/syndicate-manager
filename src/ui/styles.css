@@ -1203,6 +1203,7 @@ p > .infobtn { display: inline-grid; vertical-align: 2px; margin-left: 4px; }
 .sp-track { fill: none; stroke: #f7efc8; stroke-width: 3; opacity: 0.55; }
 .sp-stable { fill: #1a1712; stroke: #4a3f2a; stroke-width: 1; }
 .sp-pole { stroke: #4a5266; stroke-width: 2; }
+.sp-stand { fill: #1a1d24; stroke: #3a4152; stroke-width: 1; }
 .sp-lamp { fill: #f7efc8; opacity: 0.9; }
 
 /* Gear (ui/gear.js, slice 5): the armoury's rows and a runner's four slots. Sharp, bottom-right cut. */

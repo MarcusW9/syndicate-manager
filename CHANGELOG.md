@@ -4,6 +4,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-12 · The Old Stand, and drones that float
+- **The floodlight on the Basin map is gone.** Drawn from the side in a view from above, it looked odd. Overwatch now sits on the roof of the **Old Stand**, the racecourse's grandstand, drawn from above with its concrete ribs; the sniper's spot and what they can see are the same as before.
+- **The drones are spheres now:** a ball hovering over its own shadow, dark on one side and lit on the other, a ring of light round its middle and one sensor eye, in place of the four-rotor drones of today.
+
 ## 2026-11-12 · The city's tech on every job map
 - **Every job map now has the city's tech dotted round it:** auto-taxis on the roads with light bars and headlight beams, AR adverts hanging in the air (over the market gate, between the towers, over the harbour, an odds board on the racecourse), rooftop neon and a tall Old Town sign, satellite dishes, vending machines throwing colour on the ground, parked delivery drones, junction boxes, steam vents and cables strung between the tenements.
 - **They're only scenery:** none is cover, none sits on the crew's route or where the guards wait, and a test keeps it that way.

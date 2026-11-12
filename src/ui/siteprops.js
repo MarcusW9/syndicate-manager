@@ -82,17 +82,19 @@ export const PROPS = {
       <rect x="${x}" y="${y}" width="8" height="5" fill="#1d222c"/><rect x="${x + 5.4}" y="${y}" width="2.6" height="5" fill="#262c38"/>
       <rect x="${x}" y="${y + 3.6}" width="8" height="1.4" fill="${c}"/><rect x="${x + 1}" y="${y + 1}" width="1" height="1" fill="#f2d541"/><rect x="${x + 2.6}" y="${y + 1}" width="1" height="1" fill="#ff3d5f"/>`,
   },
-  /** A delivery drone parked on the ground: four rotors on an X, a status light. */
+  /** A drone hovering: a sphere, its far side in shadow and its near side lit, a ring of light round
+   *  its middle and one sensor eye; the shadow sits off below it, since it doesn't touch the ground. */
   drone: {
     box: (p) => [p.x, p.y, 10, 10],
     draw: ({ x, y, c = '#3de8d8' }) => {
-      const cx = x + 5; const cy = y + 5;
-      const rotor = (dx, dy) => `<circle cx="${cx + dx}" cy="${cy + dy}" r="2" fill="#141922" stroke="#5a6272" stroke-width="0.5"/>`;
-      return `<ellipse cx="${cx - 2}" cy="${cy + 2}" rx="5" ry="3.6" fill="${NAVY}" opacity="0.7"/>
-        <path d="M${cx - 3} ${cy - 3}L${cx + 3} ${cy + 3}M${cx + 3} ${cy - 3}L${cx - 3} ${cy + 3}" stroke="#3a4152" stroke-width="1"/>
-        ${rotor(-3, -3)}${rotor(3, -3)}${rotor(-3, 3)}${rotor(3, 3)}
-        <rect x="${cx - 1.4}" y="${cy - 1.4}" width="2.8" height="2.8" fill="#262c38"/><rect x="${cx}" y="${cy - 1.4}" width="1.4" height="2.8" fill="#323a4a"/>
-        <circle cx="${cx}" cy="${cy}" r="0.6" fill="${c}"/>`;
+      const cx = x + 5.5; const cy = y + 4.2; const r = 3.2;
+      return `<ellipse cx="${cx - 3.2}" cy="${cy + 4.4}" rx="2.8" ry="1.3" fill="${NAVY}" opacity="0.75"/>
+        <circle cx="${cx}" cy="${cy}" r="${r + 1.5}" fill="${c}" opacity="0.12"/>
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="${mix('#3a4152', NAVY, 0.45)}"/>
+        <path d="M${cx} ${cy - r}a${r} ${r} 0 0 1 0 ${r * 2}a${r * 0.55} ${r} 0 0 0 0 ${-r * 2}z" fill="#4a5266"/>
+        <path d="M${cx + r * 0.25} ${cy - r * 0.85}a${r} ${r} 0 0 1 ${r * 0.6} ${r * 0.55}" fill="none" stroke="#c9d3e0" stroke-width="0.5" opacity="0.7"/>
+        <ellipse cx="${cx}" cy="${cy}" rx="${r + 0.9}" ry="${r * 0.42}" fill="none" stroke="${c}" stroke-width="0.6" opacity="0.85"/>
+        <circle cx="${cx + r * 0.35}" cy="${cy + r * 0.3}" r="0.95" fill="#05070a"/><circle cx="${cx + r * 0.35}" cy="${cy + r * 0.3}" r="0.45" fill="${c}"/>`;
     },
   },
   /** A junction box: a grey cabinet, lit on the right, three status lights. */
