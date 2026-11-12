@@ -2249,3 +2249,17 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .bpart__name.is-next { fill: var(--accent-2); }
 .bpart__price { fill: var(--warn); }
 .bplan .sp-door { fill: var(--accent-2); opacity: 0.75; }
+
+/* Posts on a hall (2026-11-12): a small dark block with a cyan edge, where our people stand. Not cover on the map. */
+.sp-post { fill: #3a4352; stroke: var(--accent-2); stroke-width: 1.4; }
+
+.bslot { cursor: pointer; }
+.bslot__hit { fill: rgba(61, 232, 216, 0); }
+.bslot__box { fill: rgba(61, 232, 216, 0.06); stroke: var(--accent-2); stroke-width: 1; stroke-dasharray: 2.5 2; }
+.bslot__plus { font: 700 11px var(--display, inherit); fill: var(--accent-2); pointer-events: none; }
+.bslot.is-on .bslot__box { fill: rgba(61, 232, 216, 0.3); stroke-width: 2.4; stroke-dasharray: none; }
+.bslot.is-built.is-on .bslot__hit { stroke: var(--accent-2); stroke-width: 2; fill: rgba(61, 232, 216, 0.15); }
+.postlist { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 6px; }
+.postrow { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; min-height: 52px; padding: 8px 12px; background: var(--panel-2); border: 1px solid var(--line); }
+.postrow.is-empty { border-color: rgba(242, 213, 65, 0.5); }
+.postrow__none { color: var(--warn); }

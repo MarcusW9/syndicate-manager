@@ -135,6 +135,18 @@ export const floorPieces = (hall, way = null) => [
   ...bedsOnFloor(hall), ...(hall?.build ?? []),
 ];
 
+/**
+ * A compound's post slots the hall holds at its level (data/sites.js `stands`): those whose part is held.
+ * [{ id, part, kind, at, name, built: the post built there or null }].
+ */
+export function postSlots(hall, site = hallMap(hall?.district)) {
+  const held = new Set(heldParts(site, hall?.level ?? 1).map((p) => p.id));
+  const built = new Map((hall?.build ?? []).filter((b) => b.slot).map((b) => [b.slot, b]));
+  return (site.stands ?? []).filter((p) => held.has(p.part)).map((p) => ({ ...p, built: built.get(p.id) ?? null }));
+}
+/** The posts built on a hall, as { id, piece, slot, px, py }. */
+export const postsBuilt = (hall) => (hall?.build ?? []).filter((b) => b.slot);
+
 /** What removing a piece gives back. */
 export const refundOf = (pieceId) => Math.round((PIECES[pieceId]?.cost ?? 0) * HALL_BUILD.refund);
 
@@ -167,6 +179,36 @@ export function canPlace(state, district, pieceId, x, y, rot = 0) {
   if (floorUsed(hall) + cells.length > floorOf(hall)) return { ok: false, reason: `No floor left (${floorUsed(hall)}/${floorOf(hall)}): expand the hall for more` };
   if (state.cash < p.cost) return { ok: false, reason: `Needs ${money(p.cost)}` };
   return { ok: true, reason: 'ready' };
+}
+
+/** Can this post be built in this slot? { ok, reason }. A slot takes one post, of the kind its place allows. */
+export function canPlacePost(state, district, pieceId, slotId) {
+  const hall = hallIn(state, district);
+  const p = PIECES[pieceId];
+  if (!hall || p?.kind !== 'post') return { ok: false, reason: 'No such hall or post' };
+  if (hallShut(state, district)) return { ok: false, reason: 'The hall is shut after a raid' };
+  const slot = postSlots(hall).find((x) => x.id === slotId);
+  if (!slot) return { ok: false, reason: 'No such place for a post' };
+  if (slot.built) return { ok: false, reason: 'There is a post here already' };
+  const where = { window: 'window', roof: 'roof', gate: 'gate' }[slot.kind];
+  if (p.where !== where) return { ok: false, reason: `A ${p.name.toLowerCase()} doesn't go in a ${slot.kind}` };
+  if (p.needs && hall.level < p.needs) return { ok: false, reason: `Needs a level ${p.needs} hall` };
+  if (state.cash < p.cost) return { ok: false, reason: `Needs ${money(p.cost)}` };
+  return { ok: true, reason: 'ready' };
+}
+
+/** Build a post in a slot: pay for it and put it on the hall. Returns the new state, or prev. */
+export function placePost(prev, district, pieceId, slotId) {
+  if (!canPlacePost(prev, district, pieceId, slotId).ok) return prev;
+  const state = structuredClone(prev);
+  const hall = hallIn(state, district);
+  const slot = postSlots(hall).find((x) => x.id === slotId);
+  hall.build = hall.build ?? [];
+  const n = hall.build.reduce((m, b) => Math.max(m, Number(String(b.id).split('-').at(-1)) || 0), 0) + 1;
+  const [px, py] = slot.at;
+  hall.build.push({ id: `${district}-${n}`, piece: pieceId, slot: slotId, px, py, x: Math.floor(px / C), y: Math.floor(py / C), rot: 0, day: state.day });
+  state.cash -= PIECES[pieceId].cost;
+  return state;
 }
 
 /** Place a piece: pay for it and put it on the hall. Returns the new state, or prev. */

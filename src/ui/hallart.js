@@ -61,6 +61,7 @@ function building(r, floor) {
 
 /** One thing on the floor (a piece or a bed): its sprite at its footprint, turned if it is. */
 function sprite(id, b) {
+  if (b.slot) return `<g class="ha-piece" data-piece="${id}" transform="translate(${b.px - C / 2} ${b.py - C / 2})"><use href="#hs-${id}" width="${C}" height="${C}"/></g>`; // a post: centred on its slot
   const p = id === 'bed' ? { size: [1, 1], turns: false } : PIECES[id];
   const [w, h] = p.size;
   const turned = !!(b.rot && p.turns);
@@ -161,7 +162,7 @@ export function hallArtSvg(state, district, { inside = null } = {}) {
   const gate = yardWalls.find((s) => s.cls === 'sp-gate') ?? shapesOf('sp-gate')[0];
 
   // From above, what stands outside is the defences; inside, it is the beds and the rooms.
-  const isDefence = (b) => PIECES[b.piece]?.kind === 'defence';
+  const isDefence = (b) => ['defence', 'post'].includes(PIECES[b.piece]?.kind);
   const floorThings = inside ? [...bedsOnFloor(hall), ...(hall?.build ?? []).filter((b) => !isDefence(b))] : (hall?.build ?? []).filter(isDefence);
   const sleepers = new Set(residents(state, district).map((_, i) => `bed-${i + 1}`));
   const things = floorThings.map((b) => sprite(b.piece, b) + (b.piece === 'bed' && sleepers.has(b.id) ? `<rect class="ha-slept" x="${b.x * C + 2}" y="${b.y * C + 2}" width="${C - 4}" height="${C - 4}" rx="2"/>` : '')).join('');

@@ -536,6 +536,17 @@ function compound(spec) {
       street: { lvl: 1, say: spec.say?.street, line: spec.line?.street, ...hallWay(street) },
       gate: { lvl: 3, say: spec.say?.gate, line: spec.line?.gate, ...hallWay(gate) },
     },
+    // Stands for posts (2026-11-12; `stands`, not `posts`, which is where each side starts a fight): where our people can stand to hold the front gate. `part`: the part it belongs to
+    // (held from that part's level); `kind`: which post goes there ('window', 'roof', 'gate'); `at`: the
+    // spot on the plan (a rooftop's is on the roof, a window's just outside the wall).
+    stands: [
+      { id: 'room-window', part: 'room', kind: 'window', at: P([90, 216]), name: `${room.name} window` },
+      { id: 'room-roof', part: 'room', kind: 'roof', at: P([90, 114]), name: `${room.name} roof` },
+      { id: 'flat-window', part: 'flat', kind: 'window', at: P([270, 216]), name: `${flat.name} window` },
+      { id: 'flat-roof', part: 'flat', kind: 'roof', at: P([270, 114]), name: `${flat.name} roof` },
+      { id: 'gate-left', part: 'front', kind: 'gate', at: P([148, 286]), name: 'Gate post, left' },
+      { id: 'gate-right', part: 'front', kind: 'gate', at: P([212, 286]), name: 'Gate post, right' },
+    ],
     parts: [
       { id: 'room', lvl: 1, inside: true, grid: G([1, 3, 4, 6]), bedCorner: P([1, 3]).map((v, i) => (i ? v : m ? 11 - 1 : 1)), beds: spec.beds[0], ...room },
       { id: 'lane', lvl: 1, inside: false, grid: G([5, 3, 6, 6]), ...lane },

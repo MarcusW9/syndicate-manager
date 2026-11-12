@@ -4,7 +4,7 @@
 import { heatIn, hottest, HEAT_DISTRICTS } from '../core/heat.js';
 import { buyPrice, buyHall, openingFor, bedsOf, hallIn, residents, freeBeds, canOpenHall, openHall, nextHallExpansion, expandHall, canMove, moveToHall } from '../core/halls.js';
 import { GANGS, GRUDGE, grudgeOf, jobGrudge, grudgeWord, gangsOn } from '../core/gangs.js';
-import { defenceCut, defencesIn, raidThreat, openRaids, raidOn, raidPrice, canBuyOff, defenders, raidChoices, payOffRaid, hallShut, raidWho, raidBy, isGangRaid, setRaidPlan, markRaidCallSeen, withdrawCost } from '../core/raids.js';
+import { defenceCut, defencesIn, raidThreat, openRaids, raidOn, raidPrice, canBuyOff, defenders, raidChoices, payOffRaid, hallShut, raidWho, raidBy, isGangRaid, setRaidPlan, markRaidCallSeen, withdrawCost, postAssignments, cycleRaidPost } from '../core/raids.js';
 import { HALL_SITES, HOME_HALL, isOpeningJob } from '../data/halls.js';
 import { billDue, mondayBrief, crewStandard, crewAgainstStandard } from '../core/week.js';
 import { heistFor, heistCard, buyStep, heistEffects, asSentence } from '../core/heists.js';
@@ -28,7 +28,7 @@ import { renderHallBuild, hallBuildLine, partsOverlay, planSvg, planKey, buildGr
 import { hasHallArt, insideBox, SPRITE_SHEET } from './hallart.js';
 import { crewOutMap } from './minimap.js';
 import { siteFor, sitePlanSvg } from './siteplan.js';
-import { placePiece, removePiece, turnPiece, pieceAt, bedAt, refundOf, canRemove, hallSiteFor, hallMap, heldParts, partCells, partAt, floorUsed, floorOf } from '../core/hallbuild.js';
+import { placePiece, placePost, removePiece, turnPiece, pieceAt, bedAt, refundOf, canRemove, hallSiteFor, hallMap, heldParts, partCells, partAt, floorUsed, floorOf } from '../core/hallbuild.js';
 import { siteHeight } from '../data/sites.js';
 import { PIECES } from '../data/hallBuild.js';
 
@@ -232,7 +232,7 @@ const wideHall = () => typeof matchMedia === 'function' && !!matchMedia('(min-wi
 /** Is the hall art layer on (Settings › Hall art)? A viewing preference, not part of a save. */
 const hallArtOn = () => getPref('hallart');
 /** A build view scoped to the compound (defences, outside) or to one building (its rooms): `scope` 'compound' or a part id. */
-const newBuildView = (district, scope = 'compound') => ({ district, cell: null, piece: null, rot: 0, picked: null, tab: scope === 'compound' ? 'defence' : 'room', scope });
+const newBuildView = (district, scope = 'compound') => ({ district, cell: null, piece: null, rot: 0, picked: null, tab: scope === 'compound' ? 'post' : 'room', scope });
 
 // --- events ------------------------------------------------------------
 function onClick(e) {
@@ -400,13 +400,24 @@ function onClick(e) {
       buildView = on ? { ...buildView, cell: null, picked: on.id, part: null, keep: null } : { ...buildView, cell: [x, y], picked: null, part: null, keep: null };
       break;
     }
+    case 'build-slot': { // a place for a post: pick it, or pick the post built there to remove it
+      const built = hallIn(state, buildView.district)?.build?.find((b) => b.slot === id);
+      buildView = built ? { ...buildView, slot: null, picked: built.id, cell: null, part: null, keep: null } : { ...buildView, slot: id, picked: null, cell: null, part: null, keep: null };
+      break;
+    }
     case 'build-part': buildView = { ...buildView, part: id, keep: null, cell: null, picked: null }; break;
     case 'build-keep': buildView = { ...buildView, keep: id, part: null, cell: null, picked: null }; break;
     case 'build-piece': buildView = { ...buildView, piece: id, picked: null, rot: 0 }; break;
-    case 'build-tab': buildView = { ...buildView, tab: id, piece: null }; break;
+    case 'build-tab': buildView = { ...buildView, tab: id, piece: null, slot: null, picked: null, cell: null }; break;
     case 'build-rot': buildView = { ...buildView, rot: buildView.rot ? 0 : 1 }; break;
     case 'build-place': {
       const { district, piece, cell, rot } = buildView;
+      if (PIECES[piece]?.kind === 'post') { // a post goes in its slot, not on a square
+        const next = placePost(state, district, piece, buildView.slot);
+        if (next === state) break;
+        buildView = { ...buildView, slot: null };
+        return setState(next);
+      }
       const next = placePiece(state, district, piece, cell[0], cell[1], rot);
       if (next === state) break;
       buildView = { ...buildView, cell: null };
@@ -561,6 +572,7 @@ function onClick(e) {
     // Away crews calling in (core/away.js): take the call, then hand it back or take command.
     case 'take-call': openMessageId = null; return setState(takeCall(state, id));
     // A warned raid's plan, set from its card or the one-off fixer call (the call is still made at the door).
+    case 'raid-post': { const [rid, slot] = id.split('|'); return setState(cycleRaidPost(state, rid, slot)); }
     case 'raid-plan': { const [rid, plan] = id.split('|'); return setState(setRaidPlan(state, rid, plan)); }
     case 'raid-call': { // the fixer call's buttons: id = "raidId|hold" | "raidId|clear" | "|later"
       const [rid, plan] = id.split('|');
@@ -1873,7 +1885,7 @@ function renderHallPage(d) {
         ${bld ? '' : cards}
       </div>
       <div class="hallpage__side">
-        ${hallThreat(d, raid, !bld)}
+        ${hallThreat(d, raid, !bld)}${bld ? '' : postsPanel(d, raid)}
         <h2>${bld ? 'Sleeps in this building' : 'Who sleeps here'} <span class="muted small">${bld ? `${bld.who.length}/${bld.beds} beds` : `${who.length}/${bedsOf(h)} beds`}</span></h2>
         ${facesOf(bld ? bld.who : who, bld ? bld.beds : bedsOf(h))}
         ${movein}
@@ -1899,6 +1911,20 @@ function hallThreat(d, r, onCompound) {
   const cut = defenceCut(state, d);
   const note = `<p class="small">Threat <strong>${raidThreat(state, d, r)}</strong>${cut ? ` (our defences take off ${cut})` : ''}. ${onCompound ? 'The ways in are marked red on the plan.' : 'It comes at the compound from outside: the ways in are on the compound view.'}</p>`;
   return `<ul class="crewsout hallthreat" aria-label="Raid on this hall">${threatItem(r, { onHall: true, note })}</ul>`;
+}
+
+/**
+ * Who stands where if the raid comes by the front gate (2026-11-12): one row per post built on the hall, with
+ * the runner on it (ours to set; left alone, the best at home fill them) and a button to hand it to the next.
+ * '' with no raid warned or no posts built.
+ */
+function postsPanel(d, r) {
+  if (!r || r.answer === 'paid' || r.done) return '';
+  const list = postAssignments(state, d, r);
+  if (!list.length) return '';
+  const rows = list.map((a) => `<li class="postrow ${a.op ? '' : 'is-empty'}"><span class="postrow__main"><strong>${esc(a.name)}</strong> <span class="muted small">${esc(PIECES[a.piece].name.toLowerCase())}${a.high ? ' · from above' : ''}</span><br>${a.op ? `${face(a.op, 'sm')} <span class="small">${esc(a.op.handle)}</span>` : '<span class="small postrow__none">Nobody</span>'}</span>
+      <button class="btn btn--ghost" data-action="raid-post" data-id="${esc(`${r.id}|${a.slot}`)}" aria-label="${esc(`Change who stands at ${a.name}`)}">Change ›</button></li>`).join('');
+  return `<h2>Posts <span class="muted small">if they come by the front gate</span></h2><ul class="postlist">${rows}</ul>`;
 }
 
 /** The sub-tab row (layout rule 5): `tabs` is [id, label] pairs; `on` the one showing; `action` the click action. */

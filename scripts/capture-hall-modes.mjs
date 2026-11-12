@@ -5,7 +5,7 @@ import { createNewGame } from '../src/core/state.js';
 import { syncHalls, hallIn, moveToHall } from '../src/core/halls.js';
 import { advanceDay } from '../src/core/time.js';
 import { setHeat } from '../src/core/heat.js';
-import { placePiece } from '../src/core/hallbuild.js';
+import { placePiece, placePost } from '../src/core/hallbuild.js';
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
@@ -18,10 +18,19 @@ s.halls.push({ district: 'nightMarket', beds: 4, rent: 1500, level: 2, opened: 1
 syncHalls(s);
 s.cash = 1e6;
 for (const [id, x, y, rot = 0] of [['barricade', 5, 4], ['plate', 6, 5, 1]]) s = placePiece(s, 'nightMarket', id, x, y, rot);
+s.cash = 1e6;
+for (const [id, slot] of [['window', 'room-window'], ['nest', 'room-roof'], ['gate', 'gate-left']]) s = placePost(s, 'nightMarket', id, slot);
 s.cash = 24500;
-// A raid on the hall, with three of the crew moved in to hold it.
+// A raid on the hall, with three of the crew moved in to hold it: first warned (the posts panel), then at the door.
 let r = structuredClone(s);
 for (const op of r.crew.slice(0, 3)) r = moveToHall(r, op.id, 'nightMarket');
+let warned = structuredClone(r);
+for (let i = 0; i < 80 && !(warned.raids ?? []).some((x) => !x.done); i++) {
+  setHeat(warned, 'nightMarket', 9); warned = advanceDay(warned); setHeat(warned, 'nightMarket', 9);
+  for (const m of warned.inbox) if (m.blocking && m.kind !== 'raid') { m.blocking = false; m.resolved = true; }
+}
+if (warned.raids?.[0]) warned.raids[0].plan = 'ask'; // so it waits at the door for us
+warned.raidCallSeen = true; // the one-off fixer call has been shown
 // (With people home and no plan given, the hall is held at once: the fight is on screen.)
 for (let i = 0; i < 80 && !r.activeMission?.raid && !r.inbox.some((m) => m.kind === 'raid' && !m.resolved && m.payload?.raidId); i++) {
   setHeat(r, 'nightMarket', 9); r = advanceDay(r); setHeat(r, 'nightMarket', 9);
@@ -49,6 +58,14 @@ try {
   await p.screenshot({ path: `${out}/03-desktop-looking.png` });
   await tap(p, '[data-action="build-hall"][data-id="nightMarket"]'); await p.waitForTimeout(400);
   await p.screenshot({ path: `${out}/04-desktop-building.png` });
+  if ((warned.raids ?? []).some((x) => !x.done)) {
+    await p.setViewportSize({ width: 1280, height: 900 });
+    await load(p, warned);
+    await page(p);
+    await p.screenshot({ path: `${out}/06-desktop-posts-for-a-raid.png`, fullPage: true });
+    await p.locator('[data-action="raid-post"]').first().click(); await p.waitForTimeout(300);
+    await p.screenshot({ path: `${out}/07-desktop-posts-changed.png`, fullPage: true });
+  } else console.error('no raid was warned');
   if (r.activeMission?.raid) {
     await p.setViewportSize({ width: 390, height: 844 });
     await load(p, r);

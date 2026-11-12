@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-12 · Posts: where your people stand in a raid
+- **Posts on every hall.** Each hall has six places to build one: a window and a roof on each building, and two at the front gate. A **window post** (¥2,500) gives full cover, a **rooftop nest** (¥6,000, level 2 hall) gives full cover and height (a shot is a little easier, and a hit on you a little harder), and a **gate post** (¥3,000) gives half cover. They count as defences, so three of them make a raid one step easier, like any three pieces. Build them on the new **Posts** tab; the squares for barricades and plates are on **Forecourt**.
+- **You put people on them.** When a raid is warned, the hall's page shows each post and who stands there. Tap **Change ›** to hand a post to someone else, or to nobody. Left alone, your best fighters take the best posts.
+- **The fight starts from them.** If the raid comes by the front gate, your people begin on their posts, and the rest take cover in the forecourt. Raids from behind (once you hold the yard) are unchanged for now.
+
 ## 2026-11-12 · A walled forecourt for every hall
 - **Room to build defences.** Every hall now has a walled forecourt between its buildings and the street, with its own gate. Before, the only outside ground at levels 1 and 2 was a narrow passage with four free squares; the forecourt adds 30. The hall's plan is taller to fit it (12 × 11 squares instead of 12 × 8), and the plan scales to fit your screen.
 - **Raids from the street are held in the forecourt.** The raiders come in at the front gate and our people hold the forecourt, so barricades and plates you put there are cover for your side. Each hall keeps two crates of its own there, so a hall with nothing built still has some cover. Raids from behind (once the yard is ours) are unchanged.
