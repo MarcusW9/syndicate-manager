@@ -60,10 +60,12 @@ const fights = (() => {
 function play(cues, pace, opts = {}) {
   let drawn = {};
   let spent = 0;
+  let clock = 0;
   const all = [];
   for (const cue of cues) {
-    const sc = stageScript(drawn, cue, { pace, spent, ...opts });
+    const sc = stageScript(drawn, cue, { pace, spent, clock, ...opts });
     spent = sc.spent;
+    clock = sc.clock;
     drawn = Object.fromEntries(Object.entries(sc.final).map(([k, v]) => [k, { at: v.at, stance: v.stance }]));
     all.push(sc);
   }
@@ -193,4 +195,59 @@ test('the round screen offers the pace as three 44px chips; Watch or Fast is a v
   const handed = structuredClone(s); handed.activeMission.battle.auto = true;
   assert.equal(fightPace(handed.activeMission), 'resolve');
   assert.ok(!JSON.stringify(s).includes('fight-watch'), 'the pace is not in the save');
+});
+
+// --- step 3: camera, ambient life, commentary -------------------------------------------------------------
+
+const { ambientTick, AMBIENT_REACH, clockText } = await import('../src/ui/fightstage.js');
+
+test('the commentary says each of the director\'s beats once, in order, with the same words and times at every pace', () => {
+  for (const f of fights) {
+    const said = (pace) => play(f.cues, pace).flatMap((x) => x.steps).filter((s) => s.do === 'say').map((s) => [s.round, s.clock, s.tier, s.texts.join(' '), s.key]);
+    const watch = said('watch');
+    const beats = f.cues.reduce((a, c) => a + (c.beats ?? []).filter((b) => b.lines?.length).length, 0);
+    assert.equal(watch.length, beats, `${f.id} ${f.seed}: one line per beat`);
+    for (let i = 1; i < watch.length; i++) assert.ok(watch[i][1] >= watch[i - 1][1], 'the clock never runs back');
+    for (const pace of ['fast', 'resolve']) assert.deepEqual(said(pace).map((x) => x.slice(0, 2).concat(x.slice(3))), watch.map((x) => x.slice(0, 2).concat(x.slice(3))), `${pace}: the same commentary`);
+    assert.ok(watch.every((x) => x[3].length > 0), 'every line says something');
+  }
+  assert.equal(clockText(2, 4200), 'R2 0:04');
+  assert.equal(clockText(5, 65000), 'R5 1:05');
+});
+
+test('the camera only ever looks at units the rules hold, and pulls back after it pushes in', () => {
+  for (const f of fights) {
+    play(f.cues, 'watch').forEach((sc, i) => {
+      const cams = sc.steps.filter((s) => s.do === 'camera');
+      for (const c of cams) if (c.focus) for (const id of c.focus) assert.ok(f.cues[i].stage.units[id], `camera on ${id}`);
+      if (cams.length) assert.equal(cams.at(-1).focus, null, 'the camera ends the round pulled back');
+    });
+  }
+});
+
+test('ambient life is seeded, stays on its spot, and its fire never lands or involves the fallen', () => {
+  let shots = 0;
+  for (const f of fights.slice(0, 6)) {
+    let drawn = {};
+    for (const sc of play(f.cues, 'watch')) {
+      drawn = Object.fromEntries(Object.entries(sc.final).map(([k, v]) => [k, { at: v.at, stance: v.stance }]));
+      for (let k = 0; k < 30; k++) {
+        const a = ambientTick(drawn, 77, 3, k);
+        assert.deepEqual(ambientTick(drawn, 77, 3, k), a, 'the same tick twice');
+        for (const x of a.strafe) {
+          const home = drawn[x.id];
+          assert.equal(home.stance, 'up', 'only the standing shuffle');
+          assert.ok(Math.abs(x.at[0] - home.at[0]) <= AMBIENT_REACH && Math.abs(x.at[1] - home.at[1]) <= AMBIENT_REACH, 'never off their spot');
+        }
+        if (a.tracer) {
+          shots += 1;
+          const from = drawn[a.tracer.from]; const to = drawn[a.tracer.to];
+          for (const u of [from, to]) assert.ok(['up', 'hunker'].includes(u.stance), 'between live units only');
+          assert.notEqual(a.tracer.from.startsWith('e:'), a.tracer.to.startsWith('e:'), 'across the line, not at their own side');
+          assert.ok(Math.hypot(a.tracer.end[0] - to.at[0], a.tracer.end[1] - to.at[1]) >= 10, 'wide: it never lands');
+        }
+      }
+    }
+  }
+  assert.ok(shots > 20, `${shots} ambient shots`);
 });

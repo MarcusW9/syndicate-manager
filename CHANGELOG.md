@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-12 · Fights on the map: commentary, camera and life between rounds
+- **A commentary line under the map** says what the fight just did, one moment at a time, and a folded **Commentary** log keeps every moment with its round and time, so you can follow a fight without watching the map.
+- **The camera moves in** on the people in a standout moment, then pulls back to the whole fight.
+- **Nobody stands still between rounds:** people shift a little behind their cover and trade covering fire that goes wide. It never hits anyone and never moves anyone out of their cover; only the real shots count. It is switched off with reduced motion and at Resolve.
+
 ## 2026-11-12 · Fights play live on the job's map
 - **The five jobs with the new fights now play them on the job's own map.** Your crew and the enemies show as round portraits, run to cover, shoot at the targets the rules picked, and fall where they were hit. Bodies stay on the ground. Where the place has too little cover for what the rules give someone, a low barrier is drawn so the map still tells the truth.
 - **Pace chips on the round screen: Fast, Watch, Resolve.** Fast (the default) plays the next round by itself on your orders once the last one has played out. It stops for every call-in, and while you have the orders open. Watch waits for you each round. Resolve hands the rest of the fight to the crew, as before. The pace never changes what happens.

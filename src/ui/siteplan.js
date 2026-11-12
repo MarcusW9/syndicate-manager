@@ -114,7 +114,7 @@ const later = (ms) => new Promise((r) => setTimeout(r, reduced() ? 0 : ms));
  * out: people already back at the van hurt. speed: a function giving the current pace (1 normal, lower faster).
  * site: the district's site plan (data/sites.js).
  */
-export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = null, standby = null, out = [], zone = 'start', speed = () => 1, site: given = SITES.generic, pace = () => 'watch', caption = null }) {
+export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = null, standby = null, out = [], zone = 'start', speed = () => 1, site: given = SITES.generic, pace = () => 'watch', caption = null, say = null }) {
   const site = gridSite(given); // walk the line as drawn
   const team = [...inside];
   const P = site.points;
@@ -354,8 +354,9 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
     tok,
     at: (id) => { const m = /translate\(([-\d.]+)px, ([-\d.]+)px\)/.exec(tok(id)?.style.transform ?? ''); return m ? [Number(m[1]), Number(m[2])] : null; },
     pin: (id, at) => { if (at) fightAt.set(id, at); else fightAt.delete(id); },
-    frame: (list) => { const ar = svg.clientWidth > 0 && svg.clientHeight > 0 ? svg.clientWidth / svg.clientHeight : 1.5; const box = frameFight(list, ar, H); if (box) panTo(box, reduced() || pace() === 'resolve' ? 0 : 700); },
-    pace, reduced, caption: (text, tier) => caption?.(text, tier),
+    // The fight box round everyone; pushed in (tight) round a few for a spotlight or a special move, a quicker move.
+    frame: (list, { tight = false } = {}) => { const ar = svg.clientWidth > 0 && svg.clientHeight > 0 ? svg.clientWidth / svg.clientHeight : 1.5; const box = frameFight(list, ar, H); if (box) panTo(box, reduced() || pace() === 'resolve' ? 0 : tight ? 420 : 700); },
+    pace, reduced, caption: (text, tier) => caption?.(text, tier), say: (entry) => say?.(entry),
   });
   async function stagedFight(c) {
     const st = staged();

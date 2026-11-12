@@ -55,6 +55,8 @@ export function renderWatch(ui, state, end = '') {
           <span class="watch__caption" aria-live="polite" hidden></span>
           <span class="watch__alert" role="img"></span>
         </div>
+        <p class="watch__strip" aria-live="polite" hidden></p>
+        <details class="watch__log" hidden><summary>Commentary</summary><ol></ol></details>
         <div class="watch__tally"></div>
       </div>
       <div class="watch__side">
@@ -111,6 +113,7 @@ export function mountWatch(el, state, { onAuto, onFightNext = null, ui, finishin
     out: opsOf(state, out),
     pace: () => fightPace(live?.state?.activeMission ?? state.activeMission),
     caption: (text, tier) => showCaption(el, text, tier),
+    say: (entry) => commentary(el, entry),
   });
   live?.unlisten?.();
   live = { key: am.jobId, el, plan, shown: 0, timer: null, chain: Promise.resolve(), onAuto, onFightNext, ui, callKey: null, unseen: 0, pinned: true, autoUntil: 0, state, fastTimer: null };
@@ -296,6 +299,28 @@ function sync(state, { animate }) {
   live.state = state;
   fastFight(state);
   schedule(state, wait || PACE.result);
+}
+
+/**
+ * The commentary (the live battle view): the director's beat as it plays, one line under the map, and the fight's log with
+ * the round and the fight's clock, so a fight can be followed without watching the map. null starts a new fight's log.
+ */
+function commentary(el, entry) {
+  const strip = el.querySelector('.watch__strip');
+  const log = el.querySelector('.watch__log');
+  if (!strip || !log) return;
+  const list = log.querySelector('ol');
+  if (!entry) { list.replaceChildren(); strip.hidden = true; log.hidden = true; return; }
+  strip.hidden = false;
+  log.hidden = false;
+  strip.dataset.tier = entry.tier ?? '';
+  strip.textContent = entry.text;
+  const li = document.createElement('li');
+  li.dataset.tier = entry.tier ?? '';
+  const when = document.createElement('time');
+  when.textContent = entry.when;
+  li.append(when, document.createTextNode(` ${entry.text}`));
+  list.append(li);
 }
 
 /** A spotlight's or special move's line over the map, for as long as the beat holds (the director's beats, ui/fightstage.js). */

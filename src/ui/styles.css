@@ -2313,6 +2313,15 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .fs-pace__chip + .fs-pace__chip { border-left: 0; }
 .fs-pace__chip.is-on { color: var(--accent-2); background: #12262a; border-color: var(--accent-2); }
 .fs-pace__note { margin: 0 0 6px; font-size: 0.78rem; color: var(--muted); }
+.fs-ambient { stroke: var(--warn); stroke-width: 0.45; opacity: 0.35; stroke-linecap: round; } .fs-ambient.is-foe { stroke: #ff8a98; }
+.watch__strip { margin: 0; padding: 6px 10px; min-height: 44px; display: flex; align-items: center; font-size: 0.86rem; line-height: 1.3; background: var(--panel-2); border: 1px solid var(--line); border-left: 2px solid var(--accent-2); }
+.watch__strip[data-tier="notable"] { border-left-color: var(--warn); } .watch__strip[data-tier="spotlight"] { border-left-color: var(--accent); background: #1c1a10; }
+.watch__log { margin: 0; border: 1px solid var(--line); border-top: 0; background: var(--panel); }
+.watch__log > summary { min-height: 44px; display: flex; align-items: center; padding: 0 10px; cursor: pointer; font: 700 0.72rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.watch__log ol { list-style: none; margin: 0; padding: 0 10px 8px; display: grid; gap: 2px; max-height: 220px; overflow: auto; font-size: 0.78rem; color: var(--muted); }
+.watch__log li { padding: 2px 6px; border-left: 2px solid var(--line); } .watch__log li[data-tier="spotlight"] { border-left-color: var(--accent); color: var(--text); } .watch__log li[data-tier="notable"] { border-left-color: var(--warn); }
+.watch__log time { color: #5c6577; margin-right: 6px; font-variant-numeric: tabular-nums; }
+.watch:not(.is-fighting) .watch__strip, .watch:not(.is-fighting) .watch__log { display: none; }
 /* The map is the main view of a staged fight (the proposal): taller on phones while the round screen is open. */
 @media (max-width: 699px) { .watch.is-fighting.is-calling .siteplan.is-staged { height: min(50svh, 440px); } }
 @media (prefers-reduced-motion: reduce) {

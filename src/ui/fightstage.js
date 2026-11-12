@@ -41,7 +41,7 @@ function during(u, before, van) {
  * already played this fight, for the director's budget). Returns { steps, end, final, spent }: steps in time order,
  * each { t, dur, do, ... }; final, everyone's place and stance when the round is over (the same at every pace).
  */
-export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent = 0 } = {}) {
+export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent = 0, clock = 0 } = {}) {
   const stage = cue.stage;
   const units = stage.units;
   const K = PACE_K[pace] ?? 1;
@@ -49,7 +49,9 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
   const ms = (x) => Math.round(x * K);
   const steps = [];
   let t = 0;
+  let tw = clock; // the fight's clock, in Watch time whatever the pace, so the commentary's times read the same at every pace
   const push = (s) => { steps.push({ t, ...s, dur: tween ? s.dur ?? 0 : 0 }); };
+  const adv = (x) => { t += ms(x); tw += x; };
   const final = Object.fromEntries(Object.entries(units).map(([id, u]) => [id, { at: HIDDEN.has(u.stance) ? (u.side === 'enemy' ? u.entrance ?? u.at : stage.van) : u.at, stance: u.stance, hidden: HIDDEN.has(u.stance) }]));
   const fresh = !Object.keys(prev ?? {}).length;
   const starting = cue.phase === 'start'; // the enemies were caught where they stood; the crew runs to cover from the walk
@@ -57,7 +59,7 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
   // A first draw (a page opens mid-fight, or nothing drawn yet): everyone where they stand, at once.
   if (fresh) {
     for (const [id, u] of Object.entries(units)) push({ do: 'place', id, at: final[id].at, stance: u.stance, hidden: final[id].hidden });
-    return { steps, end: 0, final, spent };
+    return { steps, end: 0, final, spent, clock };
   }
 
   // 1. Re-stance: arrivals run in from their door (enemies) or the van (the standby); everyone else takes the round's place.
@@ -75,7 +77,7 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
       moved = Math.max(moved, MS.move);
     } else if (u.stance === 'hunker' && before.stance !== 'hunker') push({ do: 'stance', id, stance: 'hunker' });
   }
-  t += ms(moved);
+  adv(moved);
   // Orders in motion: a protector leans towards who they cover, a medic towards the patient (a gesture, not a new spot).
   let leant = false;
   for (const [id, u] of Object.entries(units)) {
@@ -84,7 +86,7 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
     push({ do: 'lean', id, toward: a.target, kind: a.kind === 'shield' ? 'shield' : 'heal', dur: ms(MS.lean) });
     leant = true;
   }
-  if (leant) t += ms(MS.lean);
+  if (leant) adv(MS.lean);
 
   // 2. The exchange: each line in the order the rules resolved it. Beats hold where the director says.
   const lines = cue.lines ?? [];
@@ -99,43 +101,59 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
     if (tier === 'spotlight') { if (budget >= cap) tier = 'notable'; else budget += 1; }
     beatAfter.set(Math.max(...b.lines), { ...b, tier, holdMs: tier === 'notable' && b.tier === 'spotlight' ? FIGHT.beatMs.notable : b.holdMs });
   }
+  const beatAt = new Map();
+  for (const b of beatAfter.values()) beatAt.set(Math.min(...b.lines), b);
+  const unitOf = (f) => (typeof f === 'number' ? enemyId(f) : f);
   const seed = stage.seed ?? 0;
   let burstFrom = null; // a special move: each attack starts where the last one landed (the rules' order is the picture's order)
   lines.forEach((l, i) => {
     const rule = l.rule ?? l.kind;
+    // Commentary: the director's beat, said as it starts (the strip and the log read it; a fight can be followed without watching).
+    const opening = beatAt.get(i);
+    if (opening) {
+      push({ do: 'say', clock: tw, round: cue.round ?? stage.round, tier: opening.tier, key: opening.tier === 'spotlight' ? opening.key ?? null : null, slots: opening.slots ?? {}, texts: opening.lines.map((k) => lines[k]?.text).filter(Boolean) });
+      // A spotlight pushes the camera in on who it is about; it pulls back once the beat has held.
+      const focus = (opening.focus ?? []).map(unitOf).filter((f) => units[f]);
+      if (opening.tier === 'spotlight' && focus.length) push({ do: 'camera', focus });
+    }
     const wide = [hash01(seed, stage.round, i, 'x') - 0.5, hash01(seed, stage.round, i, 'y') - 0.5]; // a miss goes wide, the same way every replay
-    if (l.burst && !burstFrom) { push({ do: 'special', id: l.actor, key: 'stage.special', dur: ms(MS.special * 4) }); t += ms(MS.special * 4); }
+    if (l.burst && !burstFrom) { push({ do: 'special', id: l.actor, key: 'stage.special', dur: ms(MS.special * 4) }); adv(MS.special * 4); }
     if (rule === 'attack' && l.key !== 'attackGone' && l.guard != null) {
       const from = l.burst && burstFrom ? burstFrom : l.actor;
+      if (l.burst && units[from] && units[enemyId(l.guard)]) push({ do: 'camera', focus: [from, enemyId(l.guard)] });
       push({ do: 'fire', from, to: enemyId(l.guard), hit: !!l.success, fell: !!l.dropped, damage: l.damage ?? 0, wide, burst: !!l.burst, dur: ms(l.burst ? MS.fire * 1.6 : MS.fire) });
-      t += ms((l.burst ? MS.fire * 1.6 : MS.fire) + MS.gap);
+      adv((l.burst ? MS.fire * 1.6 : MS.fire) + MS.gap);
     } else if (rule === 'overwatch' && l.guard != null) {
       push({ do: 'fire', from: 'perch', to: enemyId(l.guard), hit: !!l.success, fell: !!l.dropped, damage: l.damage ?? 0, wide, dur: ms(MS.fire * 1.4) });
-      t += ms(MS.fire * 1.4 + MS.gap);
+      adv(MS.fire * 1.4 + MS.gap);
     } else if (rule === 'shot' && l.key === 'flanked') {
       push({ do: 'flank', id: l.targetId, by: enemyId(l.guard), dur: ms(MS.flank) });
-      t += ms(MS.flank);
+      adv(MS.flank);
     } else if (rule === 'shot' && l.guard != null && l.targetId) {
       const fell = l.key === 'shotDown' || l.key === 'shotDead';
       push({ do: 'fire', from: enemyId(l.guard), to: l.targetId, hit: (l.damage ?? 0) > 0, absorbed: l.key === 'shotAbsorbed', fell, dead: l.key === 'shotDead', damage: l.damage ?? 0, wide, foe: true, dur: ms(MS.fire) });
-      t += ms(MS.fire + MS.gap);
+      adv(MS.fire + MS.gap);
     } else if (['stabilise', 'patch', 'aura'].includes(rule) && l.targetId) {
       push({ do: 'heal', id: l.targetId, by: l.actor, ok: rule === 'aura' || !!l.success, dur: ms(MS.heal) });
-      t += ms(MS.heal);
+      adv(MS.heal);
     } else if (rule === 'jam' && l.actor) {
       push({ do: 'ping', id: l.actor, ok: l.key === 'jamOk', dur: ms(MS.ping) });
-      t += ms(MS.ping);
+      adv(MS.ping);
     } else if (rule === 'death' && l.targetId) {
       push({ do: 'fall', id: l.targetId, dead: true, dur: ms(MS.fire) });
-      t += ms(MS.fire + MS.gap);
+      adv(MS.fire + MS.gap);
     }
+    const wasBurst = !!burstFrom || !!l.burst;
     burstFrom = l.burst && rule === 'attack' && l.guard != null ? enemyId(l.guard) : null;
+    if (wasBurst && !burstFrom) push({ do: 'camera', focus: null }); // the special move is over: pull back
     const beat = beatAfter.get(i);
     if (beat) {
       if (beat.tier === 'spotlight' && beat.key) push({ do: 'caption', key: beat.key, slots: beat.slots ?? {}, tier: beat.tier, focus: beat.focus ?? [], dur: ms(beat.holdMs ?? 0) });
-      if (beat.tier !== 'routine') t += ms(beat.holdMs ?? 0);
+      if (beat.tier !== 'routine') adv(beat.holdMs ?? 0);
+      if (beat.tier === 'spotlight' && (beat.focus ?? []).some((f) => units[unitOf(f)])) push({ do: 'camera', focus: null });
     }
   });
+  if (burstFrom) push({ do: 'camera', focus: null });
 
   // 3. Settle: into the van, out of the fight, the fled run for their door.
   let settled = false;
@@ -144,11 +162,43 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
     push({ do: 'leave', id, at: final[id].at, stance: u.stance, dur: ms(MS.settle) });
     settled = true;
   }
-  if (settled) t += ms(MS.settle);
+  if (settled) adv(MS.settle);
   // Whatever the lines left out, as the rules have it (a fall nobody saw, a stance).
   for (const [id, u] of Object.entries(units)) push({ do: 'final', id, at: final[id].at, stance: u.stance, hidden: final[id].hidden });
-  return { steps, end: t, final, spent: budget };
+  return { steps, end: t, final, spent: budget, clock: tw };
 }
+
+// --- ambient life -------------------------------------------------------------------------------------
+// Between decisions nobody stands still (the proposal 5.2): a small seeded shuffle round their own spot (never off it, so
+// the cover shown stays the rules'), and now and then suppressive fire between two live units that goes wide and leaves
+// no mark, so it implies no result. Quieter than the real events; off with reduced motion and at Resolve.
+
+export const AMBIENT_REACH = 2; // how far a unit shuffles from its spot, either way
+export const AMBIENT_MS = 480; // one tick at Watch
+
+/** One tick of ambient life, pure: who shuffles where, and the one suppressive shot (or none). drawn: { [id]: { at, stance } }. */
+export function ambientTick(drawn, seed, round, k) {
+  const live = Object.entries(drawn).filter(([, d]) => d.at && (d.stance === 'up' || d.stance === 'hunker')).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  const h = (...p) => hash01(seed, round, k, ...p);
+  const strafe = live.filter(([id, d]) => d.stance === 'up' && h(id, 'go') < 0.5)
+    .map(([id, d]) => ({ id, at: [d.at[0] + (h(id, 'x') - 0.5) * 2 * AMBIENT_REACH, d.at[1] + (h(id, 'y') - 0.5) * 2 * AMBIENT_REACH] }));
+  const crew = live.filter(([id]) => !id.startsWith('e:'));
+  const foes = live.filter(([id]) => id.startsWith('e:'));
+  let tracer = null;
+  if (crew.length && foes.length && h('fire') < 0.6) {
+    const foeShoots = h('side') < 0.5;
+    const [a, b] = foeShoots ? [foes, crew] : [crew, foes];
+    const from = a[Math.floor(h('from') * a.length)];
+    const to = b[Math.floor(h('to') * b.length)];
+    const ang = h('ang') * Math.PI * 2;
+    const off = 10 + h('off') * 8; // always wide: ambient fire never lands
+    tracer = { from: from[0], to: to[0], foe: foeShoots, end: [to[1].at[0] + Math.cos(ang) * off, to[1].at[1] + Math.sin(ang) * off] };
+  }
+  return { strafe, tracer };
+}
+
+/** The commentary's time stamp: the round and the fight's clock (Watch time), "R2 0:04". */
+export const clockText = (round, ms) => { const sec = Math.floor(ms / 1000); return `R${round} ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`; };
 
 // --- the player ---------------------------------------------------------------------------------------
 
@@ -162,8 +212,9 @@ const node = (tag, attrs = {}, text = '') => {
 const word = (key, slots = {}) => lineText(key, slots);
 
 /**
- * Bind a stage to the plan's SVG. deps (from ui/siteplan.js): tok(id) the crew's token, pin(id, at) to keep a runner on
- * their fight spot, frame(points) to point the camera, pace() 'watch' | 'fast' | 'resolve', reduced().
+ * Bind a stage to the plan's SVG. deps (from ui/siteplan.js): tok(id) the crew's token, at(id) where it is drawn, pin(id, at)
+ * to keep a runner on their fight spot, frame(points, { tight }) to point the camera, pace() 'watch' | 'fast' | 'resolve',
+ * reduced(), caption(text, tier) for a spotlight's line over the map, say(entry | null) for the commentary.
  */
 export function createStage(svg, deps) {
   const fx = svg.querySelector('.sp-fx');
@@ -175,7 +226,31 @@ export function createStage(svg, deps) {
   let drawn = {}; // { [unitId]: { at, stance } }
   let points = null;
   let spent = 0;
+  let clock = 0;
   let playing = 0;
+  let ambient = null;
+  let tick = 0;
+  function stopAmbient() { if (ambient) { clearInterval(ambient); ambient = null; } }
+  function startAmbient() {
+    stopAmbient();
+    if (deps.reduced() || deps.pace() === 'resolve' || !points) return;
+    const me = playing;
+    ambient = setInterval(() => {
+      if (me !== playing || !svg.isConnected) { stopAmbient(); return; }
+      if (typeof document !== 'undefined' && document.hidden) return;
+      const { strafe, tracer: shot } = ambientTick(drawn, points.seed ?? 0, points.round ?? 0, tick++);
+      for (const x of strafe) put(host(x.id), x.at, AMBIENT_MS * 1.2);
+      if (shot) {
+        const a = pos(shot.from);
+        if (a) { const l = node('line', { class: `fs-ambient ${shot.foe ? 'is-foe' : ''}`, x1: a[0], y1: a[1], x2: shot.end[0], y2: shot.end[1] }); fx.append(l); setTimeout(() => l.remove(), 220); }
+      }
+    }, AMBIENT_MS * (deps.pace() === 'fast' ? PACE_K.fast : 1));
+  }
+  // The camera: the whole fight, or pushed in on a few (a spotlight, a special move).
+  function look(ids) {
+    const list = ids ? ids.map((id) => pos(id)).filter(Boolean) : Object.values(drawn).filter((d) => !HIDDEN.has(d.stance)).map((d) => d.at);
+    if (list.length) deps.frame(list, { tight: !!ids });
+  }
 
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const host = (id) => (id.startsWith('e:') ? foes.get(id) : deps.tok(id));
@@ -309,6 +384,8 @@ export function createStage(svg, deps) {
       case 'leave': { const g = host(s.id); put(g, s.at, s.dur); setTimeout(() => setStance(s.id, s.stance, true), s.dur); if (!s.id.startsWith('e:')) deps.pin(s.id, null); drawn[s.id] = { at: s.at, stance: s.stance }; break; }
       case 'special': { const b = pos(s.id); if (b) { const c = node('circle', { class: 'fs-special', cx: b[0], cy: b[1], r: 8 }); fx.append(c); setTimeout(() => c.remove(), Math.max(600, s.dur)); } deps.caption?.(word(s.key), 'special'); break; }
       case 'caption': deps.caption?.(word(s.key, s.slots), s.tier); break;
+      case 'say': deps.say?.({ when: clockText(s.round, s.clock), tier: s.tier, text: s.key ? `${word(s.key, s.slots)} ${s.texts.join(' ')}` : s.texts.join(' ') }); break;
+      case 'camera': if (!deps.reduced() && deps.pace() !== 'resolve') look(s.focus); break;
       default: break;
     }
   }
@@ -333,8 +410,11 @@ export function createStage(svg, deps) {
         svg.classList.add('is-fight', 'is-staged');
         for (const [id, u] of Object.entries(stage.units)) { const at = u.side === 'crew' ? deps.at(id) : null; if (at) drawn[id] = { at, stance: 'up' }; }
       }
-      const script = stageScript(drawn, cue, { pace, reduced: deps.reduced(), spent });
+      stopAmbient();
+      if (cue.phase === 'start') { clock = 0; deps.say?.(null); }
+      const script = stageScript(drawn, cue, { pace, reduced: deps.reduced(), spent, clock });
       spent = script.spent;
+      clock = script.clock;
       deps.frame([...Object.values(drawn).filter((d) => !HIDDEN.has(d.stance)).map((d) => d.at), ...Object.values(script.final).filter((f) => !f.hidden).map((f) => f.at)]);
       marks(stage);
       const t0 = performance.now();
@@ -346,7 +426,10 @@ export function createStage(svg, deps) {
       }
       const rest = script.end - (performance.now() - t0);
       if (rest > 4) await sleep(rest);
+      if (me !== playing) return;
       health(cue);
+      look(null);
+      if (cue.phase !== 'end' && cue.phase !== 'retreat') startAmbient();
     },
     /** The fight as it stands, drawn at once (a page that opens mid-fight). */
     snap(cue) {
@@ -360,10 +443,12 @@ export function createStage(svg, deps) {
       marks(cue.stage);
       health(cue);
       deps.frame(Object.values(script.final).filter((f) => !f.hidden).map((f) => f.at));
+      startAmbient();
     },
     /** The fight is over: the enemies, the bodies and the barriers go; the crew's pins are let go. */
     reset(full = true) {
       playing += 1;
+      stopAmbient();
       for (const g of foes.values()) g.remove();
       foes.clear();
       ground.replaceChildren();
