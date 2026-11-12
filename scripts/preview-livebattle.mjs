@@ -71,7 +71,7 @@ try {
   for (let r = 1; r <= rounds; r++) {
     const next = page.locator('[data-action="fs-next"]').filter({ visible: true }).first();
     if (pace === 'watch') {
-      if (!(await next.count())) { const p = page.locator('[data-action="pending"]').filter({ visible: true }).first(); if (await p.count()) { await p.click(); continue; } break; }
+      if (!(await next.count())) { const p = page.locator('[data-action="pending"]:not([data-id="out"])').filter({ visible: true }).first(); if (await p.count()) { await p.click(); continue; } break; }
       await next.click();
     }
     await page.waitForTimeout(1300);
