@@ -1326,10 +1326,8 @@ p > .infobtn { display: inline-grid; vertical-align: 2px; margin-left: 4px; }
 .siteplan.is-fight .sp-token > *, .siteplan.is-fight .sp-enemy > * { transform: scale(1.2); }
 .watch.is-fighting.is-calling .watch__live { position: sticky; }
 .watch.is-fighting .watch__callin { scroll-margin-top: calc(var(--live-top, 0px) + var(--live-h, 0px) + 8px); }
-.sp-face, .sp-face__ring { display: none; }
 .siteplan.is-fight .sp-enemy--post { display: none; } /* the guards still ahead step aside while a fight is on */
-.siteplan.is-fight .sp-token .sp-face, .siteplan.is-fight .sp-token .sp-face__ring { display: inline; }
-.siteplan.is-fight .sp-token > text { display: none; }
+.sp-token.has-face > text { display: none; }
 .sp-face__ring { fill: none; stroke: #8a93a6; stroke-width: 1; }
 .siteplan.is-fight .sp-token.is-down .sp-face { opacity: 0.4; }
 .siteplan.is-command [data-action] { cursor: pointer; }

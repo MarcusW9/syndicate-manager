@@ -149,8 +149,9 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
   const addToken = (op, at) => {
     const g = el('g', { class: 'sp-token', 'data-op': op.id });
     g.append(el('circle', { r: 6.5, fill: op.color ?? '#8b93a7' }), el('text', {}, initials(op)));
-    // Their face, shown in a fight (the token's initials elsewhere, where it's too small to read).
+    // Their face, the whole run (the initials stay only for anyone drawn without stats).
     if (op.stats) {
+      g.classList.add('has-face');
       const face = el('g', { class: 'sp-face', 'clip-path': 'url(#sp-face-clip)' });
       face.innerHTML = portrait(op, { size: 13 }).replace('<svg ', '<svg x="-6.5" y="-6.5" ');
       g.append(face, el('circle', { r: 6.5, class: 'sp-face__ring' }));

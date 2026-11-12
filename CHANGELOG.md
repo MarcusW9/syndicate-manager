@@ -4,6 +4,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-12 · Faces on the map the whole run
+- **The crew's tokens on the job map show their portraits from the start,** not initials that turn into faces when a fight begins. Initials remain only for a token with no stats to draw from.
+
 ## 2026-11-12 · Overwatch picker says who is best
 - **Each overwatch candidate now shows what they do to the job's read** ("Lowers the read: High to Moderate", or "Read stays Moderate"), and the list is ordered by that first, then by the kit's stat. Before, it ranked by the kit's stat alone, so a drone driver's Piloting 17 sat above a rifle-carrying fighter on a combat job and nothing said why.
 - **"Piloting 17 · 3 actions" sits on one line,** centred together instead of the second half dropping below the first.
