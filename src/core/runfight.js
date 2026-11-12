@@ -15,6 +15,7 @@
 //     missing for FIGHT.missingDays, back with a serious injury; slice 4 builds the rescue and the ransom).
 
 import { nextRng } from './random.js';
+import { direct } from './director.js';
 import { setInjury, worsenInjury, effectiveStat } from './crew.js';
 import { XP } from './development.js';
 import { noteInjury } from './earned.js';
@@ -145,7 +146,11 @@ function playOn(state, am, rng) {
   for (const l of lines) if (l.actor && GROWS[l.kind] && l.roll) grow(state, am, opById(state, l.actor), GROWS[l.kind], XP.incident);
   const up = enemiesLeft(b);
   const text = `Round ${b.round}: ${up ? `${up} still up` : 'nobody left shooting'}.`;
-  record(am, { kind: 'battle', phase: 'round', round: b.round, text, lines: lines.map(feedLine), ...fightSnapshot(b) });
+  // The director tells the round (core/director.js): it reads the round and changes no rule. Its beats point at the event's lines by index.
+  const told = direct(b, { ...r, lines }, b.director);
+  b.director = told.memory;
+  const beats = told.beats.map((x) => ({ tier: x.tier, lines: x.lines.map((l) => lines.indexOf(l)), focus: x.focus, key: x.key, slots: x.slots, holdMs: x.holdMs }));
+  record(am, { kind: 'battle', phase: 'round', round: b.round, text, lines: lines.map(feedLine), beats, ...fightSnapshot(b) });
   am.log.push({ kind: up ? 'bad' : 'good', text });
   for (const id of b.runners.filter((x) => x.dead).map((x) => x.id)) if (!(am.fightDead ?? []).includes(id)) am.fightDead = [...(am.fightDead ?? []), id];
   return afterRound(state, am);
