@@ -11,7 +11,7 @@
 import { ZONES } from '../data/incidents.js';
 import { incidentById } from './incidents.js';
 
-const roll = (e) => (e.die == null ? null : { die: e.die, value: e.value, need: e.need, stat: e.stat, notes: e.notes ?? [] });
+const roll = (e) => (e.die != null ? { die: e.die, value: e.value, need: e.need, stat: e.stat, notes: e.notes ?? [] } : e.chance != null ? { chance: e.chance, stat: 'cool', notes: [] } : null);
 const tone = (e) => (e.success === false ? 'bad' : 'good');
 
 function injuryLine(e) {

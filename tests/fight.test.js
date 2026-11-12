@@ -920,3 +920,40 @@ test('the van call-in has two options: leave on time and hold', () => {
   assert.ok(/board/i.test(FIGHT_TEXT['dilemma.vanCantWait.goNow.tradeoff']), 'leaving on time still plays the round: runners can board');
   assert.ok(!/\{heat\}|Heat/.test(FIGHT_TEXT['dilemma.vanCantWait.hold.tradeoff']), 'the heat is shown once, as the cost');
 });
+
+// --- what the log says: the stat behind a roll, and why someone pulled out ----------------------------------
+
+test('every roll line names the stat it is made on; the aim shots carry their chance', () => {
+  const stats = new Set(); let shots = 0;
+  for (let seed = 1; seed <= 20; seed++) for (const type of ['holdHack', 'holdExtract']) {
+    const r = makeRng(seed);
+    const b = F.buildFight({ type, diff: 14, threat: 4, site: type === 'holdHack' ? 'heights' : 'docks', crew: crewOf(seed), approach: 'loud', risk: 'committed', wheels: { id: 'teo', handle: 'Wheels', value: 17 } }, r);
+    while (!b.end && b.round < 20) {
+      for (const l of F.playRound(b, r).lines) {
+        if (l.roll) { assert.ok(['combat', 'tech', 'medical', 'cool'].includes(l.roll.stat) || l.kind === 'overwatch', `${l.key} names a stat: ${l.roll.stat}`); stats.add(l.roll.stat); }
+        if (l.kind === 'shot' && l.chance != null) { assert.ok(l.chance > 0 && l.chance <= 1, `a shot's chance: ${l.key} ${l.chance}`); shots += 1; }
+      }
+    }
+  }
+  assert.ok(['combat', 'cool'].every((s) => stats.has(s)), `rolls on ${[...stats]}`);
+  assert.ok(shots > 0, 'aim shots carry their chance');
+});
+
+test('a pulled-out runner\'s line says why: the pips they were at and the point their risk level pulls out, or that it was ordered', () => {
+  const b = fixture('holdHack', [ids.static, ids.jax, ids.stitch], { risk: 'steady', set: { jax: { endurance: 12 }, wing: { endurance: 12 }, mei: { endurance: 12 } } });
+  b.enemies = [foe(1)];
+  draw(b, []);
+  R(b, 'jax').pips = 2; // max 6: steady pulls out at 2
+  const r = F.playRound(b, always(0.999));
+  const line = r.lines.find((l) => l.kind === 'withdraw');
+  assert.ok(line, 'they pulled out');
+  assert.match(line.text, /down to 2 pips/);
+  assert.match(line.text, /steady crew pulls out at 2 pips or fewer/);
+  // By hand: "as ordered".
+  const c = fixture('holdHack', [ids.static, ids.jax, ids.stitch], { risk: 'committed', set: { jax: { endurance: 12 }, wing: { endurance: 12 }, mei: { endurance: 12 } } });
+  c.enemies = [foe(1)];
+  draw(c, []);
+  F.setOrder(c, 'jax', { duty: 'withdraw', target: null });
+  const o = F.playRound(c, always(0.999)).lines.find((l) => l.kind === 'withdraw');
+  assert.match(o.text, /as ordered/);
+});

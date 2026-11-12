@@ -48,7 +48,8 @@ const CUE = { attack: 'shoot', shot: 'guard', overwatch: 'overwatch', stabilise:
 // Only what the feed, the plan and the report read, so a year of saved reports stays small.
 const feedLine = (l) => ({
   kind: CUE[l.kind] ?? 'note', text: l.text, actor: l.actor ? { id: l.actor, handle: l.actor } : null, guard: l.enemy ?? null, targetId: l.targetId ?? null,
-  success: l.success ?? null, damage: l.damage ?? 0, heal: l.heal ?? 0, kit: l.kit ?? null, dropped: !!l.dropped, ...(l.roll ? { die: l.roll.die, need: l.roll.need, value: l.roll.value } : {}),
+  success: l.success ?? null, damage: l.damage ?? 0, heal: l.heal ?? 0, kit: l.kit ?? null, dropped: !!l.dropped, ...(l.roll ? { die: l.roll.die, need: l.roll.need, value: l.roll.value, stat: l.roll.stat ?? null } : {}),
+  ...(l.kind === 'shot' && l.chance != null ? { chance: Math.round(l.chance * 100) } : {}), // a shot at a runner: the chance it had, against their cool
   ...(l.order ? { order: l.order, from: l.from } : {}),
 });
 

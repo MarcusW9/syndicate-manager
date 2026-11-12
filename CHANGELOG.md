@@ -15,6 +15,11 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - **The messages move up.** Coming up no longer runs across the top of Today, and Monday's week numbers and The Word no longer sit above the list. Only Joss, the alerts, crews back and the Out line come before the messages now.
 - **A rail for the week.** On a computer, Monday's numbers with The Word and Coming up sit in a column to the right of the open message (under the messages on mid-size screens). On a phone they come after the message list.
 - The messages themselves look as before. Mockups of the options that led here are in `docs/mockups/`.
+## 2026-11-12 · The fight log says why someone pulled out, and which stat a roll is on
+- **A pull-out line gives its reason:** "Siphon pulls out: down to 2 pips, and a steady crew pulls out at 2 pips or fewer." A withdrawal you ordered by hand reads "Rook pulls out, as ordered."
+- **The dice detail names the stat.** A roll in a fight now says what it was made on ("Die 12 + combat 14 = 26 · needed 20"); it used to leave the stat out. A shot at one of your runners shows "Odds: a 62% shot, against their cool". Tap a fight line to open it, as before.
+- The wording of the pull-out lines is mine, for you to rewrite.
+
 ## 2026-11-12 · Steady pulls out at a third of their pips, and a watched crew asks you first
 - **Steady now pulls a runner out at a third of their maximum pips (rounded up, at least 1)** instead of a flat 2. A 3-pip starting runner leaves at 1 pip, not after the first hit; a 9-pip runner at 3. Cautious (half) and committed (never) are unchanged. In the sim (`docs/sims/pullout-2026-11-12.md`) this raised starting crews' clean wins from 29% to 35% and cut abandoned hacks from 14% to 2%.
 - **A new call-in: "at the pull-out point".** When a watched crew has a runner at the point where their risk level pulls them out, you are told and choose: **Pull {who} out** or **Keep {who} in** (or Pull back). If it is the tech, the card says the hack is abandoned if they leave. Keeping someone in lasts until they lose another pip, then you are asked again. Not asked while the van is there (pulling out then means boarding) or on committed. Hands-off crews and away crews whose call-in runs out pull out, as the risk level says.

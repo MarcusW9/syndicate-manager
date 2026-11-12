@@ -2993,11 +2993,15 @@ const watchUi = {
   finale: (s) => renderFinale(s),
   callIn: (s) => renderCallIn(s),
   brief: (s) => fillBrief(templateById(s.activeMission.templateId)),
-  dice: (r) => `
+  dice: (r) => (r.chance != null ? `
+        <details class="flog__roll">
+          <summary>Odds</summary>
+          <p class="small">A ${r.chance}% shot, against their ${esc(r.stat)}</p>
+        </details>` : `
         <details class="flog__roll">
           <summary>Dice</summary>
-          <p class="small">Die ${r.die} + ${esc(r.stat)} ${r.value} = ${r.die + r.value} · needed ${r.need}${r.notes?.length ? `<br><span class="muted">${esc(r.stat)} ${r.value}: ${esc(r.notes.join(', '))}</span>` : ''}</p>
-        </details>`,
+          <p class="small">Die ${r.die} + ${esc(r.stat ?? 'stat')} ${r.value} = ${r.die + r.value} · needed ${r.need}${r.notes?.length ? `<br><span class="muted">${esc(r.stat)} ${r.value}: ${esc(r.notes.join(', '))}</span>` : ''}</p>
+        </details>`),
 };
 
 // --- save --------------------------------------------------------------

@@ -527,3 +527,15 @@ test('a hands-off crew is never asked about the pull-out point: the risk level a
     assert.ok(s.activeMission?.done ?? true, `seed ${seed}: the run finished without waiting on a call`);
   }
 });
+
+test('the feed carries the stat on a fight roll and the odds of a shot, so the dice detail can say what was rolled', () => {
+  let rolled = 0; let shots = 0;
+  for (let seed = 1; seed <= 10; seed++) {
+    const s = autoRun(begin(seed, 'data_pull', 'loud', { opts: { callIn: 'never', orders: 'steady' } }), 'steady');
+    for (const it of feedItems(s.activeMission.events).filter((x) => x.type === 'card' && x.kind === 'battle')) for (const r of it.results) {
+      if (r.roll?.die != null) { rolled += 1; assert.ok(r.roll.stat, 'a rolled line names its stat'); }
+      if (r.roll?.chance != null) { shots += 1; assert.equal(r.roll.stat, 'cool'); }
+    }
+  }
+  assert.ok(rolled > 0 && shots > 0, `saw ${rolled} rolls and ${shots} shots`);
+});

@@ -24,7 +24,7 @@
 
 import { FIGHT, ENEMIES, ENEMY_HIT, SITE_ENEMIES, COUNT_BY_THREAT, CLOCKS, FIGHTS, THREATS } from '../data/fights.js';
 import { DILEMMAS } from '../data/dilemmas.js';
-import { lineText, kindWord, enemyName, nameList } from './fighttext.js';
+import { lineText, kindWord, enemyName, nameList, pipsWord } from './fighttext.js';
 import { effectiveStat } from './crew.js';
 import { weaponOf, armourOf } from './battle.js';
 import { patchBonus, counted } from './gear.js';
@@ -624,13 +624,13 @@ export function playRound(b, rng) {
     if (a.kind === 'board' || a.kind === 'carry') a.r.boarding = true;
     if (a.kind === 'hunker') a.r.hunker = true;
     if (a.kind === 'move') a.r.cover = 'half';
-    if (a.kind === 'withdraw') { a.r.leaving = true; a.r.ordered = a.from === 'duty'; } // a hand-ordered withdrawal can cost a life
+    if (a.kind === 'withdraw') { a.r.leaving = true; a.r.ordered = a.from === 'duty'; a.r.leaveAt = { pips: a.r.pips, at: riskThreshold(b, a.r) }; } // a hand-ordered withdrawal can cost a life
   }
   // What was shown is what is rolled: refresh each shot's shown chance with the round's stances (previewRound reads the same).
   for (const x of exposures(b, actions)) { const t = b.threats.find((y) => y.id === x.id); if (t) t.shown = x.chance; }
 
-  const roll = (value, diff, margin = 99) => { const die = d20(rng); const need = 10 + diff; return { die, need, value, ok: die + value >= need, strong: die + value >= need + margin }; };
-  const rollOf = (r) => ({ die: r.die, need: r.need, value: r.value, success: r.ok });
+  const roll = (value, diff, margin = 99, stat = null) => { const die = d20(rng); const need = 10 + diff; return { die, need, value, stat, ok: die + value >= need, strong: die + value >= need + margin }; };
+  const rollOf = (r) => ({ die: r.die, need: r.need, value: r.value, stat: r.stat, success: r.ok }); // the stat is what the roll is made on, for the dice detail
 
   // Overwatch: one attack a round (at the van, overwatchUsesAtVan), before the crew.
   if (overwatchReady(b)) {
@@ -639,7 +639,7 @@ export function playRound(b, rng) {
       const ow = b.overwatch;
       ow.left -= 1; if (boardingStage(b)) ow.vanShots += 1;
       b.heat += ow.heat ?? 0; result.neural += ow.neural ?? 0;
-      const x = roll(ow.value, b.diff + FIGHT.attackStep + FIGHT.overwatchStep + FIGHT.cover[e.cover], strongMargin(ow.damage));
+      const x = roll(ow.value, b.diff + FIGHT.attackStep + FIGHT.overwatchStep + FIGHT.cover[e.cover], strongMargin(ow.damage), ow.stat ?? null);
       if (!x.ok) say('overwatch', 'overwatchMiss', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: false, damage: 0, roll: rollOf(x) });
       else {
         let dmg = x.strong ? FIGHT.strongHit : FIGHT.hit;
@@ -658,7 +658,7 @@ export function playRound(b, rng) {
       case 'attack': {
         const e = b.enemies.find((x) => x.n === a.enemy);
         if (e.out || e.fled) { say('attack', 'attackGone', { who: r.handle }, { ...named, enemy: e.n, success: false, damage: 0 }); break; }
-        const x = roll(sv(r, 'combat'), b.diff + FIGHT.attackStep + FIGHT.cover[e.cover], r.strong);
+        const x = roll(sv(r, 'combat'), b.diff + FIGHT.attackStep + FIGHT.cover[e.cover], r.strong, 'combat');
         if (!x.ok) { say('attack', 'attackMiss', { who: r.handle, enemy: E(e.n) }, { ...named, enemy: e.n, success: false, damage: 0, roll: rollOf(x) }); break; }
         let dmg = x.strong ? FIGHT.strongHit : FIGHT.hit;
         if (e.absorb > 0 && !r.ap) { e.absorb -= 1; dmg -= 1; }
@@ -668,7 +668,7 @@ export function playRound(b, rng) {
         break;
       }
       case 'jam': {
-        const x = roll(sv(r, 'tech'), b.diff + FIGHT.jamStep);
+        const x = roll(sv(r, 'tech'), b.diff + FIGHT.jamStep, 99, 'tech');
         if (!x.ok) { say('jam', 'jamFail', { who: r.handle }, { ...named, roll: rollOf(x) }); break; }
         for (const t of b.threats) if (RADIO(t)) t.cancelled = true;
         const drone = enemiesUp(b).find((e) => ENEMIES[e.kind].jamTakesOut);
@@ -677,25 +677,25 @@ export function playRound(b, rng) {
         break;
       }
       case 'stabilise': {
-        const x = roll(sv(r, 'medical'), b.diff + FIGHT.stabiliseStep); const t = runner(b, a.target);
+        const x = roll(sv(r, 'medical'), b.diff + FIGHT.stabiliseStep, 99, 'medical'); const t = runner(b, a.target);
         if (x.ok && t.down && !t.dead) { t.stable = true; say('stabilise', 'stabilise', { who: r.handle, target: t.handle }, { ...named, roll: rollOf(x), target: t.id, targetId: t.id, success: true }); }
         else say('stabilise', 'stabiliseFail', { who: r.handle, target: t.handle }, { ...named, roll: rollOf(x), target: t.id, targetId: t.id, success: false });
         break;
       }
       case 'patch': {
-        const x = roll(sv(r, 'medical'), b.diff + FIGHT.patchStep); const t = runner(b, a.target);
+        const x = roll(sv(r, 'medical'), b.diff + FIGHT.patchStep, 99, 'medical'); const t = runner(b, a.target);
         if (x.ok && !t.down) { t.pips = Math.min(t.max, t.pips + FIGHT.patchHeal); say('patch', 'patch', { who: r.handle, target: t.handle }, { ...named, roll: rollOf(x), target: t.id, targetId: t.id, success: true, heal: FIGHT.patchHeal }); }
         else say('patch', 'patchFail', { who: r.handle, target: t.handle }, { ...named, roll: rollOf(x), target: t.id, targetId: t.id, success: false });
         break;
       }
       case 'board': {
-        const x = roll(sv(r, 'cool'), b.diff + FIGHT.boardStep);
+        const x = roll(sv(r, 'cool'), b.diff + FIGHT.boardStep, 99, 'cool');
         if (x.ok) boards.push(r);
         say('board', x.ok ? 'board' : 'boardFail', { who: r.handle }, { ...named, roll: rollOf(x) });
         break;
       }
       case 'carry': {
-        const x = roll(sv(r, 'cool'), b.diff + FIGHT.boardStep + FIGHT.carryStep); const t = runner(b, a.target);
+        const x = roll(sv(r, 'cool'), b.diff + FIGHT.boardStep + FIGHT.carryStep, 99, 'cool'); const t = runner(b, a.target);
         if (x.ok) { boards.push(r); carries.push({ by: r, t }); }
         say('carry', x.ok ? 'carry' : 'carryFail', { who: r.handle, target: t.handle }, { ...named, roll: rollOf(x), target: t.id });
         break;
@@ -733,7 +733,7 @@ export function playRound(b, rng) {
       if (b.extras < FIGHT.maxExtraEnemies) { b.extras += 1; b.arriving.push(e.kind); say('radio', 'backupCalled', { enemy: E(e.n) }, { enemy: e.n }); }
     } else if (t.kind === 'alarm') alarms += 1;
   }
-  for (const r of b.runners) if (r.leaving && !r.dead && !r.down) { r.withdrawn = true; withdrawn.push(r.id); say('withdraw', 'withdrew', { who: r.handle }, { actor: r.id }); }
+  for (const r of b.runners) if (r.leaving && !r.dead && !r.down) { r.withdrawn = true; withdrawn.push(r.id); say('withdraw', r.ordered ? 'withdrewOrdered' : 'withdrew', { who: r.handle, pips: pipsWord(r.leaveAt?.pips ?? r.pips), at: pipsWord(r.leaveAt?.at ?? 0), level: b.risk.level }, { actor: r.id }); }
   for (const r of b.runners) { r.leaving = false; r.ordered = false; }
   // The hired break and run when too few are left (side-wide).
   const hiredUp = enemiesUp(b).filter((e) => e.kind === 'hired');
