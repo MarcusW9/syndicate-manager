@@ -72,6 +72,17 @@ const NIGHT_MARKET = {
     target: [[240, 120], [266, 120], [300, 110], [318, 72]],
     out: [[318, 72], [300, 110], [266, 120], [240, 120], [180, 138], [92, 138], [92, 196], [92, 224], [40, 224]],
   },
+  // How it's lit (ui/siteart.js): paving slabs, and the stalls' neon falling across the lanes and the
+  // wet road from the right, in hard-edged planes (signal red, sodium, violet).
+  paving: true,
+  glow: [
+    { points: [[360, 138], [360, 206], [96, 212], [132, 150]], color: '#ff3d5f', op: 0.09 },
+    { points: [[360, 58], [360, 122], [70, 128], [104, 86]], color: '#f2b544', op: 0.07 },
+    { points: [[360, 0], [360, 50], [150, 54], [170, 16]], color: '#9b8cff', op: 0.06 },
+    { points: [[40, 213], [100, 213], [86, 239], [26, 239]], color: '#ff3d5f', op: 0.07 },
+    { points: [[150, 213], [180, 213], [166, 239], [136, 239]], color: '#3de8d8', op: 0.07 },
+    { points: [[250, 213], [320, 213], [306, 239], [236, 239]], color: '#f2b544', op: 0.07 },
+  ],
   views: { in: [0, 112, 192, 128], inside: [10, 40, 270, 180], target: [180, 20, 180, 120] },
   posts: { in: [112, 184], inside: [228, 138], target: [300, 118] },
   sight: { rifle: [[196, 26], [16, 80], [16, 198], [262, 198], [262, 40]], drone: [[196, 26], [6, 14], [6, 206], [354, 206], [354, 14]] },

@@ -1066,15 +1066,17 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 /* Site plan (ui/siteplan.js) in the street-terminal style. */
 .sp-road { fill: #12141a; } .sp-road__line { stroke: #2a2f3b; stroke-dasharray: 6 6; }
 .sp-fence { fill: none; stroke: #4a5266; stroke-width: 1.5; stroke-dasharray: 1.5 2; }
-.sp-cover { stroke: #2b3240; stroke-width: 0.8; }
+.sp-cover { stroke: none; } /* flat planes, no outlines (siteart.js, 2026-11-12) */
+.sp-shade, .sp-lit, .sp-ground, .sp-art { pointer-events: none; }
 .sp-building { fill: #171b24; stroke: #4a5266; stroke-width: 1.5; } .sp-door { fill: var(--accent); opacity: 0.6; }
 .sp-house { fill: #171b24; stroke: #4a5266; stroke-width: 1.5; } .sp-gate { opacity: 0.9; }
 .sp-perch { stroke: #7a6430; stroke-width: 2.5; stroke-linecap: round; }
 .sp-sight { fill: rgba(245, 185, 66, 0.06); stroke: rgba(245, 185, 66, 0.3); stroke-dasharray: 3 4; }
 .sp-sight--drone { fill: rgba(54, 214, 195, 0.05); stroke: rgba(54, 214, 195, 0.3); }
-.sp-route { fill: none; stroke: var(--accent-2); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: 0.5; }
+.sp-route { fill: none; stroke: var(--accent-2); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; opacity: 0.9; }
+.sp-route-case { fill: none; stroke: #0b0d11; stroke-width: 3.6; stroke-linecap: round; stroke-linejoin: round; }
 .sp-node { fill: #0b0d11; stroke: var(--accent-2); stroke-width: 1.2; } .sp-node--target { stroke: var(--accent); fill: #2a1520; } .sp-node--perch { stroke: var(--warn); }
-.sp-label { fill: #6b7385; font: 7.5px ui-monospace, 'SF Mono', Menlo, monospace; letter-spacing: 0.08em; } .sp-label--hi { fill: var(--text); }
+.sp-label { fill: #8a93a6; font: 700 7.4px var(--display); letter-spacing: 0.13em; stroke: #0b0d11; stroke-width: 2.6px; paint-order: stroke; } .sp-label--hi { fill: var(--text); }
 .sp-token, .sp-enemy, .sp-npc, .sp-cam, .sp-drone { transition: transform calc(0.45s * var(--speed, 1)) ease-in-out, opacity 0.5s; }
 .sp-token circle { stroke: #0b0d11; stroke-width: 1.5; }
 .sp-token text, .sp-enemy text, .sp-npc text, .sp-cam text { fill: #0b0d11; font-weight: 700; font-size: 6.5px; text-anchor: middle; dominant-baseline: central; }
@@ -1192,9 +1194,6 @@ p > .infobtn { display: inline-grid; vertical-align: 2px; margin-left: 4px; }
 .sp-sign { opacity: 0.85; }
 .sp-gatepost { stroke: #4a5266; stroke-width: 2.5; stroke-linecap: round; }
 .sp-neon { stroke: #ff3d5f; stroke-width: 1.5; stroke-linecap: round; opacity: 0.9; }
-.sp-stall { stroke: #0b0d11; stroke-width: 1; opacity: 0.55; }
-.sp-crowd { opacity: 0.9; }
-.sp-bridge { fill: #1b2230; stroke: #7a6430; stroke-width: 1.5; }
 .sp-plaza { fill: #10151a; stroke: #232a35; stroke-width: 1; }
 .sp-planter { stroke: #2b4a3a; stroke-width: 1; }
 .sp-barrier { stroke: #f2d541; stroke-width: 2; stroke-dasharray: 4 3; }

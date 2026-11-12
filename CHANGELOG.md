@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-12 · Job maps drawn with hard light
+- **The job maps are drawn like the portraits now:** flat colour, the city light from the right, and a hard navy shadow falling left from everything that stands up (buildings, containers, crates, stalls, desks, the footbridge). The right side of each thing catches the light. No outlines on cover.
+- **The Night Market got its own detail:** stalls with awnings, shadowed on one side and lit on the other, with a lamp under each; the crowd drawn as people from above; a footbridge with rails and lamps; paving slabs; and the stalls' neon falling across the lanes and the wet road.
+- **The route is a solid cyan line** with a dark edge, and the map labels are in the display font with a dark halo, so both read over the busier ground.
+
 ## 2026-11-12 · Faces on the map the whole run
 - **The crew's tokens on the job map show their portraits from the start,** not initials that turn into faces when a fight begins. Initials remain only for a token with no stats to draw from.
 
