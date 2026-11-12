@@ -162,6 +162,7 @@ const setPlan = (b, plan) => { for (const r of b.runners) Fight.setOrder(b, r.id
 // pips, the shots drawn at them and the radio call. Take Command uses previewRound (what the round screen shows)
 // and changes orders with editOrder/setOrder, the Take Command path of runFight(state, { orders }).
 function answerSmart(b, due) {
+  if (due.id === 'pullOutPoint') return 'pullOut'; // the pull-out call-in (2026-11-12) did not exist when the gate was declared: the layer lets the risk level act, as the standing orders do
   const d = DILEMMAS[due.id];
   const offered = d.options.filter((o) => Fight.optionAvailable(b, o)).map((o) => o.id);
   if (due.id === 'vanCantWait') {

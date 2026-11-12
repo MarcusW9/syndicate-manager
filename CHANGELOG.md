@@ -15,6 +15,15 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - **The messages move up.** Coming up no longer runs across the top of Today, and Monday's week numbers and The Word no longer sit above the list. Only Joss, the alerts, crews back and the Out line come before the messages now.
 - **A rail for the week.** On a computer, Monday's numbers with The Word and Coming up sit in a column to the right of the open message (under the messages on mid-size screens). On a phone they come after the message list.
 - The messages themselves look as before. Mockups of the options that led here are in `docs/mockups/`.
+## 2026-11-12 · The gate re-run on the new steady pull-out: rework (by a hair)
+- Same declared gate (`scripts/sim-orders.mjs`, hash `f440deff`), 400 seeds, on the current code (steady pulls out at a third of max pips; the new pull-out call-in answered "Pull out", as the risk level does). Report `docs/sims/orders-2026-11-12-pullout.md`. Before: neither (defaults as good as adapting in 53% of cells).
+- **Verdict now: REWORK.** The crew's defaults are as good as the adapted plans in both encounters in **69%** of cells, over the two-thirds line (67%); adapting clears the bar in 15% of cells (was 23%). Adapting by choice alone: defaults match in 81% of cells.
+- **Why:** the pull-out change helps every plan, but it helps the defaults most. They now win 91% of hacks and 82% of extractions across the 9 sim crews (before 88% and 73%), so there is less for orders to add. Adapting still pays for weak crews (the Under group: clears the bar in 44% of cells) and not for On or Over (0%).
+- **The mid-fight layer** adds +3.8 points in holdHack and +2.6 in holdExtract.
+- **Unchanged:** the toughness check is met (8 points against 3); no deaths on cautious or steady except after a push on or a hand-ordered withdrawal; committed about 1 in 113 in the sim crews. `techUnderFire` comes up in 1% of hacks, `vanCantWait` in 18% of extractions.
+- **The game's own starting crews, steady, defaults (not part of the gate):** fresh roster hacks 28% clean wins (was 14%), authored 79% (was 70%); extractions leave someone behind in 53% (fresh) and 62% (authored) of fights (was 49% and 56%), with a few more downs, because runners now stay in longer.
+- **What the owner decides** (nothing changed): per the gate this is "rework", but the spec also says one plan sometimes winning is not a failure, and the sim crews skew strong. Options are in the decision row.
+
 ## 2026-11-12 · The fight log says why someone pulled out, and which stat a roll is on
 - **A pull-out line gives its reason:** "Siphon pulls out: down to 2 pips, and a steady crew pulls out at 2 pips or fewer." A withdrawal you ordered by hand reads "Rook pulls out, as ordered."
 - **The dice detail names the stat.** A roll in a fight now says what it was made on ("Die 12 + combat 14 = 26 · needed 20"); it used to leave the stat out. A shot at one of your runners shows "Odds: a 62% shot, against their cool". Tap a fight line to open it, as before.
