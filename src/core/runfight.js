@@ -119,7 +119,7 @@ export function runFight(prev, change = {}) {
   const due = Fight.dueDilemmas(b)[0];
   if (due) {
     b.dilemmasFired[due.key] = true;
-    am.pending = { kind: 'dilemma', id: due.id, key: due.key, day: state.day, slots: slotsFor(b, due) };
+    am.pending = { kind: 'dilemma', id: due.id, key: due.key, day: state.day, slots: slotsFor(b, due), subjects: due.subjects };
     return state;
   }
   return playOn(state, am, rng);
@@ -259,7 +259,8 @@ export function pullBackFight(prev) {
 
 function slotsFor(b, due) {
   const prot = b.runners.find((r) => r.id === b.goal.protect);
-  return { protected: prot?.handle ?? '', outside: names(b, due.subjects), n: due.subjects.length };
+  const techOut = due.id === 'pullOutPoint' && b.type === 'holdHack' && due.subjects.includes(b.goal.protect);
+  return { protected: prot?.handle ?? '', outside: names(b, due.subjects), n: due.subjects.length, who: names(b, due.subjects), level: b.risk.level, techNote: techOut ? lineText('dilemma.pullOutPoint.techNote') : '' };
 }
 
 /** The choices of a dilemma call-in: its authored options (placeholder wording), then Pull back, which every call-in offers. */
@@ -278,7 +279,7 @@ export function fightChoices(pending, b) {
 }
 
 /** The answer the standing orders give when an away crew's call-in runs out at the end of its day: the van goes on time, anything else carries on. */
-export const expiryAnswer = (pending) => (pending.id === 'vanCantWait' ? 'goNow' : 'carryOn');
+export const expiryAnswer = (pending) => (pending.id === 'vanCantWait' ? 'goNow' : pending.id === 'pullOutPoint' ? 'pullOut' : 'carryOn');
 
 /** The van call's outside list, for the card: the people not aboard, as handles. */
 const pendingOutside = (am) => (am.pending.id === 'vanCantWait' ? [...Fight.standing(am.battle), ...am.battle.runners.filter((r) => r.down && !r.aboard && !r.dead && !r.withdrawn)].map((r) => r.handle) : []);
@@ -308,6 +309,7 @@ export function fightAnswer(am) {
       ? { id: 'hold', why: 'Someone was down at the van, and cautious and steady crews hold it for them.' }
       : { id: 'goNow', why: level === 'committed' ? 'Committed orders: the van went on time.' : 'Nobody was down outside, so the van went on time.' };
   }
+  if (am.pending.id === 'pullOutPoint') return { id: 'pullOut', why: 'The risk level stood: they pulled out at their point.' };
   return { id: 'carryOn', why: 'The orders stood: they carried on.' };
 }
 
@@ -341,6 +343,7 @@ export function resolveFightDecision(state, am, choice, view) {
   let heat = 0;
   if (holds && opt) {
     if (opt.ordersPatch) Fight.applyPatch(b, opt.ordersPatch);
+    if (opt.keepIn) Fight.keepIn(b, am.pending.subjects ?? []);
     if (opt.vanWait) { b.vanHold = !!opt.vanWait.hold; if (opt.vanWait.hold) heat = opt.cost?.heat ?? 0; }
     report = `${choice.label}.`;
   }

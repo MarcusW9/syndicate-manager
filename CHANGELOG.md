@@ -4,6 +4,12 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-12 · Steady pulls out at a third of their pips, and a watched crew asks you first
+- **Steady now pulls a runner out at a third of their maximum pips (rounded up, at least 1)** instead of a flat 2. A 3-pip starting runner leaves at 1 pip, not after the first hit; a 9-pip runner at 3. Cautious (half) and committed (never) are unchanged. In the sim (`docs/sims/pullout-2026-11-12.md`) this raised starting crews' clean wins from 29% to 35% and cut abandoned hacks from 14% to 2%.
+- **A new call-in: "at the pull-out point".** When a watched crew has a runner at the point where their risk level pulls them out, you are told and choose: **Pull {who} out** or **Keep {who} in** (or Pull back). If it is the tech, the card says the hack is abandoned if they leave. Keeping someone in lasts until they lose another pip, then you are asked again. Not asked while the van is there (pulling out then means boarding) or on committed. Hands-off crews and away crews whose call-in runs out pull out, as the risk level says.
+- The risk picker's words say so ("a third of their pips", "a watched crew asks you first"). The call-in's lines and those two sentences are mine, for you to rewrite.
+- The gate and the other sims were run on the old flat 2; their numbers are what they were then.
+
 ## 2026-11-12 · Steady pull-out at a share of max pips (sim, no game change)
 - `scripts/sim-pullout.mjs` and `docs/sims/pullout-2026-11-12.md`: on a patched copy of the fight code (the game's own files untouched), steady pulls out at a share of the runner's maximum instead of a flat 2 pips. The game's starting crews at the real job difficulty (the planning read's best team), and the gate's strong crews as a check, 400 seeds. Variants and the bar were declared in the script before the run.
 - **By the declared bar: none.** The bar required that nobody more is left behind in extractions, and left-behind rose from 56% to 57% (a third of max) or 58% (flat 1, a quarter), which is within the noise of 286-330 fights, but it is over the line I set, so it does not pass.

@@ -101,7 +101,9 @@ test('the risk picker says what the rules do: cautious half rounded up, steady t
   const [c, st, co] = RISK_ORDER.map(riskWords);
   assert.match(c.description, /half/i);
   assert.match(c.description, /rounded up/i);
-  assert.ok(st.description.includes(`${FIGHT.risk.steady.pullAt} pips`), 'the steady number is the rule\'s');
+  assert.match(st.description, /third of their pips/i, 'steady says a third');
+  assert.ok(FIGHT.risk.steady.pullDiv === 3 && FIGHT.risk.steady.minPips === 1, 'and the rule\'s numbers are those');
+  assert.match(c.description + st.description, /asks you first/i, 'a watched crew asks first');
   assert.match(co.description, /never/i);
   assert.match(co.description, /life/i);
   for (const d of [c.description, st.description]) assert.match(d, /call you make/i, 'a death only follows a call the player makes');
@@ -126,7 +128,7 @@ test('the plan view: type line, likely enemies, gaps from the crew, orders and t
   assert.match(p.line, new RegExp(`${FIGHT.workNeeded} rounds`), 'the work rounds are the rule\'s number');
   assert.match(p.kindsLine, /security guards/);
   assert.equal(p.runners.length, crew.length);
-  assert.ok(p.runners.every((r) => r.threshold === FIGHT.risk.steady.pullAt));
+  assert.ok(p.runners.every((r) => r.threshold === Math.max(FIGHT.risk.steady.minPips, Math.ceil(r.pips / FIGHT.risk.steady.pullDiv))), 'each runner\'s point is a third of their own pips');
   assert.deepEqual(Object.keys(p.loss), RISK_ORDER);
   for (const level of RISK_ORDER) {
     const o = p.odds[level];
