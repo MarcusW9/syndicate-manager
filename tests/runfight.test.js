@@ -349,11 +349,13 @@ test('an away job\'s dilemma call-in is open until the end of the day it came in
       if (j?.waiting && j.mission.pending?.kind === 'dilemma') {
         tried += 1;
         const day = j.mission.pending.day;
+        const was = j.mission.pending;
         assert.equal(day, s.day, 'raised today');
         s = advanceDay(s); // the next morning
         const k = s.awayJobs.find((x) => x.mission.jobId === j.mission.jobId);
         // Expired: the crew carried on. (The same situation can come up again the next day, as a new call-in.)
-        assert.ok(!k || !k.waiting || (k.mission.pending?.day ?? 0) > day, 'the open call expired: the crew carried on');
+        // (What comes next may be a different call-in, such as someone hurt, which carries no day.)
+        assert.ok(!k || !k.waiting || !k.mission.pending || k.mission.pending.key !== was.key || (k.mission.pending.day ?? 0) > day, 'the open call expired: the crew carried on');
         break;
       }
     }
@@ -441,7 +443,9 @@ test('a call-in answer lasts one round in a real run: the crew\'s orders come ba
   // The first answer that changes anything for this crew (the default orders may already be the cover).
   const answered = ['cover', 'radio', 'jam'].map((id) => M.resolvePending(s, id)).find((x) => JSON.stringify(x.activeMission.battle.orders) !== before);
   assert.ok(answered, 'some answer changes the orders for the round');
-  const played = M.runBattle(answered, {});
+  let played = M.runBattle(answered, {});
+  // A runner reaching their pull-out point asks first (a call-in of its own): let them pull out, as the risk level says, and play the round.
+  while (played.activeMission.pending?.id === 'pullOutPoint') played = M.runBattle(M.resolvePending(played, 'pullOut'), {});
   const b = played.activeMission.battle;
   if (b) assert.equal(JSON.stringify(b.orders), before, 'back to the crew\'s plan once the round is played');
 });
@@ -487,4 +491,39 @@ test('the report of an engine-2 fight has one cause line (past tense) and the fe
   }
   assert.ok(withCause > 50, `${withCause} fights checked`);
   assert.equal(summariseRun([{ kind: 'beat', text: 'x' }], { outcome: 'completed' }).cause, null, 'no fight, no cause line');
+});
+
+// --- the pull-out call (owner, 2026-11-12) -----------------------------------------------------------
+
+test('the pull-out call in a real run: who is at their point, pull out or keep them in, Pull back; hands-off crews pull out', () => {
+  const s = findCall('data_pull', 'dilemma', { orders: 'steady', to: 400, filter: (x) => x.activeMission.pending.id === 'pullOutPoint' });
+  assert.ok(s, 'a runner reaches their pull-out point in some fight');
+  const am = s.activeMission;
+  const v = M.describePending(s);
+  assert.deepEqual(v.choices.map((c) => c.id), ['pullOut', 'stayIn', 'out']);
+  assert.match(v.text, /steady crew pulls out/);
+  assert.ok(v.choices.filter((c) => c.id !== 'out').every((c) => c.tradeoff), 'each option says what it does');
+  const who = am.pending.subjects;
+  assert.ok(who.length >= 1 && who.every((id) => am.battle.runners.find((r) => r.id === id).pips <= Math.max(1, Math.ceil(am.battle.runners.find((r) => r.id === id).max / 3))), 'only runners at their point');
+  assert.equal(fightAnswer(am).id, 'pullOut', 'the standing orders (risk level) pull out');
+  assert.equal(expiryAnswer(am.pending), 'pullOut');
+  // Keep them in: they are still in the next round; they have a stay mark at their pips.
+  const kept = M.resolvePending(s, 'stayIn');
+  for (const id of who) assert.equal(kept.activeMission.battle.runners.find((r) => r.id === id).stayPips, am.battle.runners.find((r) => r.id === id).pips);
+  const played = M.runBattle(kept, {});
+  const b = played.activeMission.battle;
+  if (b && !played.activeMission.pending) for (const id of who) assert.equal(b.runners.find((r) => r.id === id).withdrawn, false, 'kept in, so they did not pull out');
+  // Pull out: the risk level acts, as for a hands-off crew.
+  const out = M.runBattle(M.resolvePending(s, 'pullOut'), {});
+  const b2 = out.activeMission.battle;
+  if (b2 && !out.activeMission.pending) assert.ok(who.some((id) => b2.runners.find((r) => r.id === id).withdrawn) || out.activeMission.done, 'they pulled out');
+});
+
+test('a hands-off crew is never asked about the pull-out point: the risk level answers, and the fights still end', () => {
+  for (let seed = 1; seed <= 30; seed++) {
+    let s = begin(seed, 'data_pull', 'loud', { opts: { callIn: 'never', orders: 'steady' } });
+    s.activeMission.orders = 'steady';
+    s = autoRun(s, 'steady');
+    assert.ok(s.activeMission?.done ?? true, `seed ${seed}: the run finished without waiting on a call`);
+  }
 });

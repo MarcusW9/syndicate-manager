@@ -160,12 +160,45 @@ test('precedence: withdraw beats duty; the risk threshold beats duty; a stabilis
   assert.equal(stab.target, 'wing');
 });
 
-test('risk thresholds in pips: cautious half rounded up, steady 2, committed never', () => {
+test('risk thresholds in pips: cautious half rounded up, steady a third rounded up (at least 1), committed never', () => {
   const b = fixture('holdHack', [ids.static, ids.jax]);
-  const r = R(b, 'jax'); r.max = 7;
-  b.risk.level = 'cautious'; assert.equal(F.riskThreshold(b, r), 4);
-  b.risk.level = 'steady'; assert.equal(F.riskThreshold(b, r), 2);
-  b.risk.level = 'committed'; assert.equal(F.riskThreshold(b, r), 0);
+  const r = R(b, 'jax');
+  const at = (level, max) => { r.max = max; b.risk.level = level; return F.riskThreshold(b, r); };
+  assert.deepEqual([3, 4, 6, 7, 9, 12, 20].map((m) => at('cautious', m)), [2, 2, 3, 4, 5, 6, 10]);
+  assert.deepEqual([1, 3, 4, 6, 7, 9, 12, 20].map((m) => at('steady', m)), [1, 1, 2, 2, 3, 3, 4, 7], 'a 3-pip runner pulls out at 1, not after the first hit');
+  assert.deepEqual([3, 9, 20].map((m) => at('committed', m)), [0, 0, 0]);
+});
+
+test('the pull-out call: comes up for a runner at their point (not committed, not at the van), again when they lose another pip; keeping them in stops the safety pull-out', () => {
+  const mk = (risk = 'steady') => {
+    const b = fixture('holdHack', [ids.static, ids.jax, ids.stitch], { risk, set: { jax: { endurance: 12 }, wing: { endurance: 12 }, mei: { endurance: 12 } } });
+    b.enemies = [foe(1), foe(2)];
+    draw(b, []);
+    return b;
+  };
+  const b = mk();
+  assert.deepEqual(F.dueDilemmas(b).map((d) => d.id), [], 'full pips: nothing');
+  R(b, 'jax').pips = 2; // max 6, a third is 2
+  const due = F.dueDilemmas(b);
+  assert.deepEqual(due.map((d) => d.id), ['pullOutPoint']);
+  assert.deepEqual(due[0].subjects, ['jax']);
+  b.dilemmasFired[due[0].key] = true;
+  assert.deepEqual(F.dueDilemmas(b), [], 'not again for the same situation');
+  // Pulling out: the safety rule acts.
+  assert.equal(kinds(F.previewRound(b)).jax, 'withdraw');
+  // Keeping them in: no pull-out, until they lose a pip.
+  F.keepIn(b, ['jax']);
+  assert.notEqual(kinds(F.previewRound(b)).jax, 'withdraw');
+  assert.deepEqual(F.dueDilemmas(b), []);
+  R(b, 'jax').pips = 1;
+  assert.deepEqual(F.dueDilemmas(b).map((d) => d.id), ['pullOutPoint'], 'another pip lost: asked again');
+  assert.equal(kinds(F.previewRound(b)).jax, 'withdraw', 'and the crew pulls them out unless told to keep them in');
+  // Healed past their point: asked afresh next time.
+  R(b, 'jax').pips = 5; F.startRound(b, makeRng(1));
+  assert.equal(R(b, 'jax').stayPips, null);
+  // Committed never pulls out, so never asks; the van stage pulls out by boarding, so it does not ask either.
+  const c = mk('committed'); R(c, 'jax').pips = 1;
+  assert.deepEqual(F.dueDilemmas(c).filter((d) => d.id === 'pullOutPoint'), []);
 });
 
 test('a useless duty falls back, then hunkers; never an impossible action', () => {
@@ -722,7 +755,7 @@ test('wording is placeholders in data: every key a line or dilemma uses has text
   for (const [id, d] of Object.entries(DILEMMAS)) {
     assert.ok(FIGHT_TEXT[`dilemma.${id}.changed`], id);
     for (const o of d.options) assert.ok(FIGHT_TEXT[`dilemma.${id}.${o.id}`], `${id}.${o.id}`);
-    assert.ok(d.options.some((o) => o.ordersPatch === null && o.id === 'carryOn') || id === 'vanCantWait', `${id} offers keeping the orders (the van call-in has leave on time instead)`);
+    assert.ok(d.options.some((o) => o.ordersPatch === null && o.id === 'carryOn') || id === 'vanCantWait' || id === 'pullOutPoint', `${id} offers keeping the orders (the van call-in has leave on time instead, the pull-out call keep them in)`);
   }
   assert.ok(FIGHT_TEXT['callin.pullBack'], 'every call-in offers Pull back');
   const names = [...STARTING_CREW.flatMap((o) => [o.handle, o.name.split(' ')[0]])];

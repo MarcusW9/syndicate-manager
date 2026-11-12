@@ -26,9 +26,10 @@ export const FIGHT = {
   medicAura: { heal: 1, stopsBleeding: true }, // while a medic stands in the fight: the most hurt standing runner +1 a round
   // Targeting: the chance a shot goes at the protected runner, then at the lowest-pips runner.
   targetFocus: 0.5, protectFocus: 0.75,
-  // Risk (spec 10): pull out at or below these pips at round start. Committed never pulls out, fights
-  // on with someone down (bleeding, below) and presses past the deadline.
-  risk: { cautious: { pullAt: 'half' }, steady: { pullAt: 2 }, committed: { pullAt: 0, press: true, fightsOnWithDown: true } },
+  // Risk (spec 10): pull out at or below these pips at round start. Cautious: half of their pips, rounded up. Steady: a third of
+  // their pips, rounded up, at least minPips (owner, 2026-11-12: a flat 2 made a 3-pip runner leave after one hit; sims/pullout-2026-11-12.md).
+  // Committed never pulls out, fights on with someone down (bleeding, below) and presses past the deadline.
+  risk: { cautious: { pullAt: 'half' }, steady: { pullDiv: 3, minPips: 1 }, committed: { pullAt: 0, press: true, fightsOnWithDown: true } },
   // Bleeding (spec 10b; committed only): a downed runner not stabilised, carried or out of the fight
   // starts bleeding from the second round after going down; each round after, they die with bleedChance.
   bleedGrace: 2, bleedChance: 0.1, leftDownDeath: 0.1,
