@@ -126,6 +126,31 @@ PIECES.turret = {
   ],
 };
 
+// Posts (2026-11-12, the hall as a fortress): where our people stand when they hold the front gate, in
+// fixed slots on the compound (data/sites.js `stands`): windows on the buildings' fronts, a nest on a
+// roof, the gate. Built like a piece (hall.build, with `slot`), no squares of floor; they count as
+// defences for lowering a raid's threat; a raid by the front gate stands whoever we put on them
+// there (core/raids.js postAssignments). `where`: the kind of slot it goes in; cover and `high` are
+// what the person standing there gets in the fight (core/battle.js: high shoots easier, is harder to hit).
+const post = (x, y, w, h, fill) => ({ t: 'rect', cls: 'sp-post', x: x - w / 2, y: y - h / 2, w, h, ...(fill ? { fill } : {}) });
+Object.assign(PIECES, {
+  window: {
+    name: 'Window post', kind: 'post', cost: 2500, size: [0, 0], turns: false, where: 'window', cover: 'full', high: false, what: 'full cover',
+    about: 'A window on a building\'s front with sandbags on the sill. Whoever stands here fights from full cover.',
+    shapes: (x, y) => [post(x, y, 18, 8)],
+  },
+  nest: {
+    name: 'Rooftop nest', kind: 'post', cost: 6000, size: [0, 0], turns: false, where: 'roof', needs: 2, cover: 'full', high: true, what: 'full cover, from above',
+    about: 'A sandbagged corner on a roof, looking down on the forecourt. Whoever stands here fights from full cover and from height: shoots a little easier, is a little harder to hit.',
+    shapes: (x, y) => [post(x, y, 16, 16)],
+  },
+  gate: {
+    name: 'Gate post', kind: 'post', cost: 3000, size: [0, 0], turns: false, where: 'gate', cover: 'half', high: false, what: 'half cover, at the gate',
+    about: 'A guard post beside the front gate. Whoever stands here fights from half cover, close to the raiders as they come in.',
+    shapes: (x, y) => [post(x, y, 10, 14)],
+  },
+});
+
 /**
  * A bed (owner, 2026-11-07): not a piece you build but one of the hall's own, a block on its floor
  * (core/hallbuild.js bedsOnFloor). A cot is half cover in a raid, as the cots drawn on the hall maps
@@ -144,5 +169,6 @@ export const BED = {
 /** The site shapes for a hall's pieces and beds: [{ piece, x, y, rot }], x and y in cells. */
 export function buildShapes(build = []) {
   const c = HALL_BUILD.cell;
-  return build.flatMap((b) => (b.piece === 'bed' ? BED : PIECES[b.piece])?.shapes(b.x * c, b.y * c, b.rot ?? 0) ?? []);
+  // A post stands in a slot, at the slot's own point on the plan (`px`, `py`), not on a square.
+  return build.flatMap((b) => (b.slot ? PIECES[b.piece]?.shapes(b.px, b.py) : (b.piece === 'bed' ? BED : PIECES[b.piece])?.shapes(b.x * c, b.y * c, b.rot ?? 0)) ?? []);
 }

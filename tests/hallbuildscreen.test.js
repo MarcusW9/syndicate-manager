@@ -62,3 +62,22 @@ test('a placed piece picked: Turn and Remove with half back; the halls list says
   assert.equal(hallBuildLine(s.halls.find((h) => h.district === 'nightMarket')), `Built: 1 inner wall · floor 1/${floor}`);
   assert.equal(hallBuildLine({ level: 1, build: [] }), 'Nothing built yet · floor 0/6');
 });
+
+test('hall plans have one look per meaning (2026-11-12): no hatching, the next part dashed with its price, later parts a bare outline', async () => {
+  const { partsOverlay, planKey } = await import('../src/ui/hallbuild.js');
+  const { nextPart, heldParts } = await import('../src/core/hallbuild.js');
+  const site = hallMap('nightMarket');
+  const html = partsOverlay(site, 1, { esc });
+  assert.doesNotMatch(html, /bhatch|<pattern/, 'no hatching');
+  const next = nextPart(site, 1);
+  assert.match(html, new RegExp(`class="bpart is-next"[^>]*aria-label="[^"]*take it with Expand, ¥${next.cost.toLocaleString()}`), 'the next part says what it costs');
+  assert.match(html, new RegExp(`EXPAND › <tspan class="bpart__price">¥${next.cost.toLocaleString()}`));
+  assert.doesNotMatch(html, /LEVEL \d/, 'later parts carry no words on the plan');
+  const later = site.parts.filter((p) => p.lvl > 2);
+  assert.equal((html.match(/class="bpart is-later"/g) ?? []).length, later.length, 'every part beyond the next is a bare outline');
+  for (const p of heldParts(site, 1)) assert.doesNotMatch(html, new RegExp(`aria-label="${p.name}, `), 'a part we hold is plain, not a tap target');
+  const key = planKey(tong(), 'nightMarket', { building: true, compound: true });
+  assert.match(key, /Later</);
+  assert.match(key, /Next: tap to Expand/);
+  assert.doesNotMatch(key, /Locked/);
+});

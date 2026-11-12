@@ -1837,7 +1837,7 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .bpart[data-action] { cursor: pointer; }
 .bpart__tag { font: 700 9px var(--display, inherit); letter-spacing: 1.4px; fill: #5a6474; pointer-events: none; }
 .bpart.is-next .bpart__tag { fill: var(--accent-2); }
-.bkeep { fill: none; stroke: rgba(255, 61, 95, 0.35); stroke-width: 0.8; stroke-dasharray: 2 3; }
+.bkeep { fill: none; stroke: rgba(138, 147, 166, 0.45); stroke-width: 0.8; stroke-dasharray: 2 3; }
 .bkeep[data-action] { cursor: pointer; pointer-events: all; }
 .secs { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .secs .sec { padding: 8px 12px; background: var(--panel-2, var(--panel)); border-left: 2px solid var(--accent-2); }
@@ -2119,8 +2119,9 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .bkey__i.is-raid { border: 2px dashed #ff3d5f; border-radius: 50%; }
 .bkey__i.is-door { background: #3de8d8; height: 4px; }
 .bkey__i.is-bed { background: #31507a; border: 1px solid #d8e2ea; }
-.bkey__i.is-keep { border: 1px dashed #ff3d5f; }
-.bkey__i.is-lock { background: repeating-linear-gradient(0deg, #3a4252 0 1px, #161a22 1px 3px); }
+.bkey__i.is-keep { border: 1px dashed rgba(138, 147, 166, 0.7); }
+.bkey__i.is-lock { border: 1px solid #2a303b; }
+.bkey__i.is-next { border: 1.5px dashed var(--accent-2); }
 /* the art layer */
 .hallart .ha-label { font: 600 7px var(--display, inherit); letter-spacing: 1.4px; fill: #7b8aa3; paint-order: stroke; stroke: #05070a; stroke-width: 3px; }
 .hallart .ha-label.is-hi { fill: #ffd2dc; }
@@ -2239,3 +2240,26 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .fs-planline { margin: 0; font-size: 0.92rem; } .fs-muted { margin: 0; font-size: 0.84rem; color: var(--muted); line-height: 1.4; }
 .fs-gaps { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; } .fs-gaps li { font-size: 0.84rem; border-left: 2px solid var(--warn); padding-left: 8px; line-height: 1.35; }
 .fs-loss { margin: 0; font-size: 0.9rem; }
+
+/* Hall plans, simpler (2026-11-12): one look per meaning. Ours is plain, the next part is dashed cyan with its
+   price, later parts a faint outline with no hatching; doors are cyan (as the key says), so red is for actions
+   and raids only; kept-clear squares are grey. */
+.bpart.is-next .bpart__area { fill: rgba(61, 232, 216, 0.05); }
+.bpart.is-later .bpart__area { stroke: #232a35; }
+.bpart__name.is-next { fill: var(--accent-2); }
+.bpart__price { fill: var(--warn); }
+.bplan .sp-door { fill: var(--accent-2); opacity: 0.75; }
+
+/* Posts on a hall (2026-11-12): a small dark block with a cyan edge, where our people stand. Not cover on the map. */
+.sp-post { fill: #3a4352; stroke: var(--accent-2); stroke-width: 1.4; }
+
+.bslot { cursor: pointer; }
+.bslot__hit { fill: rgba(61, 232, 216, 0); }
+.bslot__box { fill: rgba(61, 232, 216, 0.06); stroke: var(--accent-2); stroke-width: 1; stroke-dasharray: 2.5 2; }
+.bslot__plus { font: 700 11px var(--display, inherit); fill: var(--accent-2); pointer-events: none; }
+.bslot.is-on .bslot__box { fill: rgba(61, 232, 216, 0.3); stroke-width: 2.4; stroke-dasharray: none; }
+.bslot.is-built.is-on .bslot__hit { stroke: var(--accent-2); stroke-width: 2; fill: rgba(61, 232, 216, 0.15); }
+.postlist { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 6px; }
+.postrow { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; min-height: 52px; padding: 8px 12px; background: var(--panel-2); border: 1px solid var(--line); }
+.postrow.is-empty { border-color: rgba(242, 213, 65, 0.5); }
+.postrow__none { color: var(--warn); }

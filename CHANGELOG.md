@@ -4,6 +4,21 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-12 · Posts: where your people stand in a raid
+- **Posts on every hall.** Each hall has six places to build one: a window and a roof on each building, and two at the front gate. A **window post** (¥2,500) gives full cover, a **rooftop nest** (¥6,000, level 2 hall) gives full cover and height (a shot is a little easier, and a hit on you a little harder), and a **gate post** (¥3,000) gives half cover. They count as defences, so three of them make a raid one step easier, like any three pieces. Build them on the new **Posts** tab; the squares for barricades and plates are on **Forecourt**.
+- **You put people on them.** When a raid is warned, the hall's page shows each post and who stands there. Tap **Change ›** to hand a post to someone else, or to nobody. Left alone, your best fighters take the best posts.
+- **The fight starts from them.** If the raid comes by the front gate, your people begin on their posts, and the rest take cover in the forecourt. Raids from behind (once you hold the yard) are unchanged for now.
+
+## 2026-11-12 · A walled forecourt for every hall
+- **Room to build defences.** Every hall now has a walled forecourt between its buildings and the street, with its own gate. Before, the only outside ground at levels 1 and 2 was a narrow passage with four free squares; the forecourt adds 30. The hall's plan is taller to fit it (12 × 11 squares instead of 12 × 8), and the plan scales to fit your screen.
+- **Raids from the street are held in the forecourt.** The raiders come in at the front gate and our people hold the forecourt, so barricades and plates you put there are cover for your side. Each hall keeps two crates of its own there, so a hall with nothing built still has some cover. Raids from behind (once the yard is ours) are unchanged.
+- **"The Forecourt" is a placeholder name** in every hall until it's written properly.
+
+## 2026-11-12 · Hall plans are clearer
+- **Looking and building are two modes on a computer.** A hall's page now opens on the plan, who is in each building, what's next and one defences line. **Build defences ›** switches to building (the grid, the pieces, and a Done button). Before, the pieces and "tap a free square" sat beside a plan with no grid.
+- **One look for each thing.** The part you can take next is dashed cyan with its price on it. Parts for later are a plain faint outline, with no hatching and no "level 4" labels (the cards below still say when they open). Doors are cyan, like the key says; squares kept clear for a raid are grey. Red is left for buttons and raids.
+- **Not changed yet:** how much room there is for defences. That needs the hall's layout and the raid fight changed together, so it's the next step (see DESIGN.md).
+
 ## 2026-11-11 · Stat tiles line up
 - **The numbers on a stats panel now sit on one line.** A tile with a trait note ("6 +2 Hothead") used to sit higher than its neighbours, because a spacing rule meant for the progress bar landed on the label or the number instead. It now applies only above a bar.
 
