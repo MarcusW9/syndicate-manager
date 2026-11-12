@@ -4,6 +4,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-12 · Crew news in one message
+- **A day's crew news is one message.** Traits and Synergies earned on the same day now share a single "Crew updates (4)" message; open it to read each one. A single note still reads as itself. A Synergy is one line for the pair, not one for each of them.
+
 ## 2026-11-12 · Scout report names the name
 - **"Cortex is back: them has moved on" fixed.** When a scout came back and the name had already been signed elsewhere, the message lost the name and said "them". The trip now remembers who it was sent after, so it reads "Cortex is back: Mist has moved on".
 

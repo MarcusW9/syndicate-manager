@@ -2239,3 +2239,9 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .fs-planline { margin: 0; font-size: 0.92rem; } .fs-muted { margin: 0; font-size: 0.84rem; color: var(--muted); line-height: 1.4; }
 .fs-gaps { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; } .fs-gaps li { font-size: 0.84rem; border-left: 2px solid var(--warn); padding-left: 8px; line-height: 1.35; }
 .fs-loss { margin: 0; font-size: 0.9rem; }
+
+/* Crew notes: a day's crew news in one message (2026-11-12). */
+.crewnotes { display: grid; gap: 14px; }
+.crewnotes section { border-left: 2px solid #4a3f6b; padding-left: 12px; }
+.crewnotes__head { font: 700 16px/1.2 Rajdhani, system-ui, sans-serif; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 4px; }
+.crewnotes .body { margin: 0; }

@@ -1417,7 +1417,7 @@ function renderMessage(m) {
       <button class="btn btn--ghost inbox__back" data-action="back">← ${esc(backLabel())}</button>
       <h1>${crewLinks(m.subject)}</h1>
       <p class="muted">${esc(m.type.charAt(0).toUpperCase() + m.type.slice(1))} · Day ${m.day}</p>
-      ${m.type === 'report' ? renderReportTimeline(m) : m.kind === 'week' && m.payload?.lines ? renderWeekSummary(m) : `<p class="body">${crewLinks(m.body)}</p>`}
+      ${m.type === 'report' ? renderReportTimeline(m) : m.kind === 'crewnotes' && m.payload?.lines?.length > 1 ? renderCrewNotes(m) : m.kind === 'week' && m.payload?.lines ? renderWeekSummary(m) : `<p class="body">${crewLinks(m.body)}</p>`}
       ${m.kind === 'renewal' ? renderRenewal(m) : ''}
       ${m.kind === 'heat' ? renderHeatNotice(m) : ''}
       ${m.kind === 'spec' ? renderSpecOffer(m) : ''}
@@ -1428,6 +1428,11 @@ function renderMessage(m) {
       ${m.kind === 'raid' ? renderRaidCall(m) : ''}
       ${m.kind === 'raid-warning' ? renderRaidWarning(m) : ''}
       ${jobLink}`;
+}
+
+/** A day's crew news in one message (core/earned.js crewNote): each line's heading, then its text. */
+function renderCrewNotes(m) {
+  return `<div class="crewnotes">${m.payload.lines.map((l) => `<section><h2 class="crewnotes__head">${crewLinks(l.subject)}</h2><p class="body">${crewLinks(l.body)}</p></section>`).join('')}</div>`;
 }
 
 /** The Sunday summary (core/week.js): the week's lines, then what was paid. */
