@@ -89,12 +89,13 @@ export function startFight(state, am, tpl, inc, id, zone, diff, able, { ambush =
 export const waitsForOrders = (am) => !!am.battle && am.callIn !== 'never' && !am.battle.auto && !(am.away && !am.away.command);
 
 /**
- * A fight that waits for orders draws the coming round's threats first, so the screen can show what each enemy means
- * to do (and the chances) before the player gives orders. Hands-off and away fights draw when the round is played, as ever.
+ * Every fight draws the coming round's threats first, at every pace, so the screen can show what each enemy means
+ * to do (and the chances) before the player gives orders, and so the same seed gives the same fight whether or not
+ * anyone watched. runFight keeps a fallback draw for fights saved before this (mid-fight saves).
  */
 function drawAhead(state, am) {
   const b = am.battle;
-  if (b && !b.end && !b.drawn && waitsForOrders(am)) b.startLines.push(...Fight.startRound(b, nextRng(state)));
+  if (b && !b.end && !b.drawn) b.startLines.push(...Fight.startRound(b, nextRng(state)));
 }
 
 /**
