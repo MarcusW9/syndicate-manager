@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Fight map in motion (watchable combat mock-up)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap">
+<style>
+/* Mock-up only, not wired to the game. One scripted round (the order playRound resolves it in) played as motion over the map.
+   The rules do not move anyone: every move below is staging for something the round's lines already say happened. */
+:root { --bg:#0a0c0f; --panel:#12151b; --panel-2:#161a21; --line:#2a303b; --text:#e9ecf1; --muted:#8a93a6; --accent:#ff3d5f; --accent-2:#3de8d8; --warn:#f2d541; --ok:#5fe0a5;
+  --display:'Rajdhani','Barlow Condensed','Arial Narrow',system-ui,sans-serif; color-scheme:dark; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,sans-serif; }
+.wrap { max-width:430px; margin:0 auto; padding-bottom:24px; }
+@media (min-width:900px) { .wrap { max-width:1000px; display:grid; grid-template-columns:minmax(0,520px) minmax(0,1fr); gap:16px; padding:16px; align-items:start; } }
+.hd { display:grid; gap:2px; padding:10px 12px 6px; }
+.hd h1 { margin:0; font:700 .95rem var(--display); letter-spacing:.14em; text-transform:uppercase; color:var(--accent-2); }
+.hd .goal { font:700 .82rem var(--display); letter-spacing:.12em; text-transform:uppercase; white-space:nowrap; }
+.pace { display:flex; margin:0 12px 8px; }
+.pace button { flex:1; min-height:44px; background:var(--panel-2); color:var(--muted); border:1px solid var(--line); font:700 .8rem var(--display); letter-spacing:.14em; text-transform:uppercase; cursor:pointer; }
+.pace button.on { color:var(--accent-2); background:#12262a; border-color:var(--accent-2); }
+.stage { position:relative; border-block:1px solid var(--line); background:#0d1016; overflow:hidden; }
+.stage svg { display:block; width:100%; height:auto; }
+#cam { transition:transform var(--cam,700ms) cubic-bezier(.3,.7,.3,1); transform-origin:0 0; }
+.mk { transition:transform var(--mv,600ms) cubic-bezier(.3,.7,.3,1); }
+.spot-ring { fill:none; stroke:var(--warn); stroke-width:2; opacity:0; }
+.g-name { font:700 9px var(--display); letter-spacing:.08em; fill:var(--text); text-transform:uppercase; }
+.g-id { font:700 11px var(--display); }
+.z { font:600 8px var(--display); letter-spacing:.14em; fill:#46505f; text-transform:uppercase; }
+.fl { font:700 11px var(--display); letter-spacing:.08em; pointer-events:none; }
+.beat { margin:8px 12px 0; padding:8px 10px; border:1px solid var(--line); border-left:2px solid var(--accent-2); background:var(--panel-2); min-height:64px; display:grid; gap:2px; align-content:start; }
+.beat.spot { border-left-color:var(--warn); background:#1c1a10; }
+.beat small { font:700 .68rem var(--display); letter-spacing:.16em; text-transform:uppercase; color:var(--muted); }
+.beat.spot small { color:var(--warn); } .beat p { margin:0; font-size:.92rem; }
+.log { list-style:none; margin:8px 12px 0; padding:0; display:grid; gap:2px; font-size:.78rem; color:var(--muted); max-height:190px; overflow:auto; }
+.log li { padding:2px 6px; border-left:2px solid var(--line); } .log li.cur { color:var(--text); border-left-color:var(--accent-2); } .log li.sp { border-left-color:var(--warn); }
+.ctl { display:flex; gap:8px; padding:8px 12px 0; } .ctl button { flex:1; min-height:44px; background:var(--panel-2); color:var(--text); border:1px solid var(--line); font:700 .8rem var(--display); letter-spacing:.12em; text-transform:uppercase; cursor:pointer; }
+.note { margin:8px 12px 0; font-size:.78rem; color:var(--muted); line-height:1.4; }
+@media (prefers-reduced-motion:reduce) { .mk, #cam { transition:none !important; } }
+</style></head>
+<body><div class="wrap">
+<section>
+  <div class="hd"><h1 id="title">Round 3</h1><div class="goal" id="goal">HACK ●●○○ · ALARM 3 · ROUND 7 DEADLINE</div></div>
+  <div class="pace" role="group" aria-label="Pace"><button data-p="fast" class="on">Fast</button><button data-p="watch">Watch</button><button data-p="resolve">Resolve</button></div>
+  <div class="stage"><svg id="svg" viewBox="0 0 360 400" role="img" aria-label="One round of the fight, played as motion"></svg></div>
+  <div class="beat" id="beat"><small>Ready</small><p>Press Replay to play round 3.</p></div>
+</section>
+<section>
+  <div class="ctl"><button id="replay">Replay</button></div>
+  <ol class="log" id="log" aria-label="The round's lines"></ol>
+  <p class="note">Same round at every pace: Fast plays it quicker and skips the slow hold, Watch holds each beat, Resolve jumps straight to the end. They end in exactly the same state.</p>
+</section></div>
+<script>window.FACES = /*FACES*/{};</script>
+<script>
+const W = 360, H = 400, C = { crew:'#3de8d8', foe:'#ff3d5f', warn:'#f2d541', ok:'#5fe0a5' };
+const $ = (id) => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+const P = (x, y) => [x * W, y * H];
+// id, side, face key, home position, pips, max, tag
+const START = [
+  { id:'W', side:'crew', face:'Wing', at:P(.5,.14),  pips:3, max:3, tag:'Wing' },
+  { id:'M', side:'crew', face:'Mei',  at:P(.34,.19), pips:3, max:4, tag:'Mei', absorb:1 },
+  { id:'J', side:'crew', face:'Jax',  at:P(.66,.19), pips:2, max:4, tag:'Jax' },
+  { id:'C', side:'crew', face:'Cog',  at:P(.3,.44),  pips:3, max:3, tag:'Cog' },
+  { id:'A', side:'crew', face:'Abe',  at:P(.7,.44),  pips:1, max:3, tag:'Abe' },
+  { id:'D', side:'crew', face:'Doc',  at:P(.5,.31),  pips:3, max:3, tag:'Doc' },
+  { id:'e1', side:'foe', face:'e1', at:P(.22,.7),  pips:2, max:2, tag:'1' }, { id:'e2', side:'foe', face:'e2', at:P(.36,.62), pips:1, max:2, tag:'2' },
+  { id:'e3', side:'foe', face:'e3', at:P(.15,.8),  pips:2, max:3, tag:'3' }, { id:'e4', side:'foe', face:'e4', at:P(.78,.7),  pips:2, max:2, tag:'4' },
+  { id:'e5', side:'foe', face:'e5', at:P(.64,.62), pips:0, max:2, tag:'5', state:'out' }, { id:'e6', side:'foe', face:'e6', at:P(.85,.8),  pips:1, max:1, tag:'6' },
+  { id:'e7', side:'foe', face:'e7', at:P(.14,.97), pips:2, max:2, tag:'7', state:'arriving' },
+];
+const M = {}; let run = 0, K = .55, pace = 'fast';
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms * K));
+const clip = (crew, h, c) => crew ? `M${-h} ${-h} H${h-c} L${h} ${-h+c} V${h} H${-h} Z` : `M${-h} ${-h} H${h} V${h} H${-h} Z`;
+const nest = (svg, S) => svg.replace(/<svg class="art portrait" viewBox="9 6 46 46" width="\d+" height="\d+"/, `<svg x="${-S/2}" y="${-S/2}" width="${S}" height="${S}" viewBox="9 6 46 46"`);
+function markerSVG(m) {
+  const crew = m.side === 'crew', S = crew ? 44 : 32, h = S / 2, col = crew ? C.crew : C.foe;
+  let o = `<defs><clipPath id="cp-${m.id}"><path d="${clip(crew, h, 8)}"/></clipPath></defs>`;
+  o += `<g class="inner" id="in-${m.id}"><g clip-path="url(#cp-${m.id})" id="img-${m.id}">${nest(window.FACES[m.face] || '', S)}${crew ? '' : `<rect x="${-h}" y="${-h}" width="${S}" height="${S}" fill="${C.foe}" opacity=".28"/>`}<rect id="fl-${m.id}" x="${-h}" y="${-h}" width="${S}" height="${S}" fill="#fff" opacity="0"/></g>`;
+  o += `<path id="fr-${m.id}" d="${clip(crew, h, 8)}" fill="none" stroke="${col}" stroke-width="2"/>`;
+  if (!crew) o += `<rect x="${h-12}" y="${h-12}" width="14" height="14" fill="#0a0c0f" stroke="${C.foe}"/><text class="g-id" x="${h-5}" y="${h-1}" text-anchor="middle" fill="${C.foe}">${m.tag}</text>`;
+  o += `<path id="x-${m.id}" d="M${-h} ${-h} L${h} ${h} M${h} ${-h} L${-h} ${h}" stroke="#ff4a4a" stroke-width="3" opacity="0"/>`;
+  o += `<path id="st-${m.id}" d="M${-h} 0 H${h}" stroke="#ff4a4a" stroke-width="3" opacity="0"/></g>`;
+  o += `<g id="pp-${m.id}">${Array.from({ length: m.max }, (_, i) => `<rect x="${-(m.max * 6 - 1) / 2 + i * 6}" y="${h + 3}" width="5" height="4" data-i="${i}"/>`).join('')}</g>`;
+  if (crew) o += `<text class="g-name" x="0" y="${h + 16}" text-anchor="middle">${m.tag}</text>`;
+  o += `<g id="ab-${m.id}" opacity="${m.absorb ? 1 : 0}"><path d="M${-h - 4} ${-h - 4} l8 3 v6 c0 4 -3 6 -8 9 -5-3 -8-5 -8-9 v-6z" fill="#0a0c0f" stroke="${C.warn}" stroke-width="1.4" transform="translate(4 2)"/></g>`;
+  return o;
+}
+function build() {
+  const s = $('svg');
+  s.innerHTML = `<defs><pattern id="gr" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="rgba(61,232,216,.05)"/></pattern></defs><rect width="${W}" height="${H}" fill="url(#gr)"/><g id="cam"></g>`;
+  const cam = $('cam'); let h = '';
+  h += `<path d="M${P(.14,.93)} L${P(.5,.47)} L${P(.86,.93)}" fill="none" stroke="#1a212b" stroke-width="12" stroke-linejoin="round" stroke-linecap="round"/>`;
+  for (const c of [[.09,.42],[.91,.42],[.09,.56],[.91,.56]]) { const [x, y] = P(...c); h += `<rect x="${x-15}" y="${y-8}" width="30" height="16" fill="#171b24" stroke="#2f3744"/><text class="z" x="${x}" y="${y+3}" text-anchor="middle">cover</text>`; }
+  for (const e of [[.14,.93],[.86,.93]]) { const [x, y] = P(...e); h += `<path d="M${x-18} ${y+10} V${y-10} H${x+18} V${y+10}" fill="none" stroke="#3a4352" stroke-width="2" stroke-dasharray="3 3"/><text class="z" x="${x}" y="${y+22}" text-anchor="middle">entrance</text>`; }
+  { const [x, y] = P(.5, .14); h += `<rect x="${x-26}" y="${y-20}" width="52" height="40" fill="none" stroke="${C.crew}" stroke-dasharray="5 3" opacity=".7"/><text class="z" id="termlbl" x="${x}" y="${y-25}" text-anchor="middle" style="fill:${C.crew}">terminal ●●○○</text>`; }
+  h += `<g id="links"></g>`;
+  for (const m of START) h += `<g class="mk" id="mk-${m.id}" style="transform:translate(${m.at[0]}px,${m.at[1]}px)">${markerSVG(m)}</g>`;
+  h += `<g id="fx"></g><circle class="spot-ring" id="spot" r="34"/>`;
+  cam.innerHTML = h;
+  for (const m of START) { M[m.id] = { ...m, x: m.at[0], y: m.at[1], el: $('mk-' + m.id), state: m.state || 'up' }; setPips(m.id, m.pips); if (m.state === 'out') outMark(m.id, true); if (m.state === 'arriving') $('mk-' + m.id).style.opacity = .55; }
+  $('fr-e7').setAttribute('stroke-dasharray', '4 3');
+}
+function setPips(id, n) { const m = M[id]; m.pips = n; $('pp-' + id).querySelectorAll('rect').forEach((r, i) => r.setAttribute('fill', i < n ? (m.side === 'crew' ? (n <= 1 ? C.warn : C.ok) : C.foe) : '#2a303b')); }
+const mvDur = (ms) => $('svg').style.setProperty('--mv', ms * K + 'ms');
+function move(id, x, y, ms = 600) { const m = M[id]; mvDur(ms); m.x = x; m.y = y; m.el.style.transform = `translate(${x}px,${y}px)`; }
+function anim(el, kf, ms, o = {}) { return el.animate(kf, { duration: ms * K, easing: 'ease-out', fill: 'forwards', ...o }); }
+const fx = (html) => { const g = document.createElementNS(NS, 'g'); g.innerHTML = html; $('fx').appendChild(g); return g; };
+function flash(id, col = '#fff', ms = 260) { const r = $('fl-' + id); r.setAttribute('fill', col); anim(r, [{ opacity: .85 }, { opacity: 0 }], ms); }
+function shake(id, ms = 260) { anim($('in-' + id), [{ transform: 'translate(0,0)' }, { transform: 'translate(-3px,1px)' }, { transform: 'translate(3px,-1px)' }, { transform: 'translate(-2px,0)' }, { transform: 'translate(0,0)' }], ms); }
+function float(id, text, col = '#fff', dy = -34) { const m = M[id]; const g = fx(`<text class="fl" x="${m.x}" y="${m.y - 24}" text-anchor="middle" fill="${col}">${text}</text>`); anim(g, [{ transform: 'translateY(0)', opacity: 1 }, { transform: `translateY(${dy}px)`, opacity: 0 }], 900).onfinish = () => g.remove(); }
+function ring(id, col, ms = 520) { const m = M[id]; const g = fx(`<circle cx="${m.x}" cy="${m.y}" r="20" fill="none" stroke="${col}" stroke-width="2"/>`); anim(g.firstChild, [{ r: 20, opacity: .9 }, { r: 40, opacity: 0 }], ms).onfinish = () => g.remove(); }
+async function shoot(from, to, { hit = true, col = C.crew, miss = 'side' } = {}) {
+  const a = M[from], b = M[to]; let tx = b.x, ty = b.y;
+  if (!hit) { const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1; tx = b.x + 26 * (-dy / d) + dx * .25; ty = b.y + 26 * (dx / d) + dy * .25; }
+  const g = fx(`<line x1="${a.x}" y1="${a.y}" x2="${tx}" y2="${ty}" stroke="${col}" stroke-width="1.5" opacity=".0"/><circle r="3.5" cx="${a.x}" cy="${a.y}" fill="${col}"/>`);
+  const [ln, dot] = [g.children[0], g.children[1]];
+  anim(ln, [{ opacity: .7 }, { opacity: 0 }], 520);
+  await anim(dot, [{ transform: 'translate(0,0)' }, { transform: `translate(${tx - a.x}px,${ty - a.y}px)` }], 240, { easing: 'linear' }).finished;
+  dot.remove(); setTimeout(() => g.remove(), 600 * K);
+  if (hit) { flash(to, '#fff'); shake(to); } else float(to, 'MISS', '#8a93a6');
+}
+async function lunge(id, tid, ms = 150) { const a = M[id], t = M[tid]; const dx = t.x - a.x, dy = t.y - a.y, d = Math.hypot(dx, dy) || 1; const ox = a.x, oy = a.y; move(id, ox + dx / d * 9, oy + dy / d * 9, ms); await sleep(ms); move(id, ox, oy, ms + 60); }
+function outMark(id, quiet) { const m = M[id]; m.state = 'out'; m.el.style.opacity = .5; $('img-' + id).style.filter = 'grayscale(1) brightness(.6)'; anim($('st-' + id), [{ opacity: 0 }, { opacity: 1 }], quiet ? 0 : 300); }
+function downMark(id) { const m = M[id]; m.state = 'down'; $('img-' + id).style.filter = 'grayscale(1) brightness(.6)'; anim($('x-' + id), [{ opacity: 0 }, { opacity: 1 }], 300); anim($('in-' + id), [{ transform: 'scale(1)' }, { transform: 'scale(.9)' }], 300); }
+function drawLinks(list) { // list of [from, to, kind]
+  $('links').innerHTML = list.map(([f, t, k]) => { const a = M[f], b = M[t]; const col = k === 'flank' ? C.warn : k === 'cover' ? C.crew : C.foe; return `<path d="M${a.x} ${a.y} Q${(a.x + b.x) / 2 - 14} ${(a.y + b.y) / 2} ${b.x} ${b.y}" fill="none" stroke="${col}" stroke-width="${k === 'cover' ? 3 : 1.6}" stroke-dasharray="${k === 'cover' ? '' : '6 4'}" opacity=".8"/>`; }).join('');
+}
+function cam(id, s = 1.55) { const m = id ? M[id] : null; const c = $('cam'); $('svg').style.setProperty('--cam', 700 * K + 'ms'); c.style.transform = m ? `translate(${W / 2 - s * m.x}px,${H / 2 - s * m.y}px) scale(${s})` : 'translate(0,0) scale(1)'; }
+function spot(id, on) { const r = $('spot'); const m = M[id]; r.setAttribute('cx', m?.x ?? 0); r.setAttribute('cy', m?.y ?? 0); anim(r, [{ opacity: on ? 0 : 1 }, { opacity: on ? 1 : 0 }], 300); }
+function beat(tier, text) { const b = $('beat'); b.className = 'beat ' + (tier === 'spotlight' ? 'spot' : ''); b.innerHTML = `<small>${tier === 'spotlight' ? 'Spotlight · streak' : tier === 'notable' ? 'Notable' : 'Round 3'}</small><p>${text}</p>`; }
+function logLine(text, sp) { document.querySelectorAll('#log li.cur').forEach((l) => l.classList.remove('cur')); const li = document.createElement('li'); li.className = 'cur' + (sp ? ' sp' : ''); li.textContent = text; $('log').appendChild(li); li.scrollIntoView({ block: 'nearest' }); }
+
+/* ---- the round, in the order playRound resolves it: arrivals, the crew's actions in seat order, the threats, the end ---- */
+async function play() {
+  const my = ++run; const live = () => my === run;
+  const say = async (tier, text, hold) => { if (!live()) return false; beat(tier, text); logLine(text, tier === 'spotlight'); await sleep(hold); return live(); };
+  // 0. start of round: an arrival, and the telegraph (the shots and the flank, drawn before orders)
+  move('e7', ...P(.26, .8), 900); M.e7.state = 'up'; $('mk-e7').style.opacity = 1; $('fr-e7').removeAttribute('stroke-dasharray');
+  if (!await say('routine', 'Hired gun 7 comes through the left door.', 900)) return;
+  drawLinks([['e1', 'W', 'shot'], ['e4', 'A', 'shot'], ['e6', 'C', 'flank']]);
+  if (!await say('routine', 'Threats drawn: security guard 1 aims at Wing, hired gun 4 at Abe, drone 6 is flanking Cog.', 1100)) return;
+  // 1. the crew, in seat order
+  ring('W', C.crew); $('termlbl').textContent = 'terminal ●●●○'; $('goal').textContent = 'HACK ●●●○ · ALARM 3 · ROUND 7 DEADLINE';
+  if (!await say('routine', 'Wing works the terminal.', 500)) return;
+  move('M', M.M.x + 10, M.M.y + 16, 500); ring('M', C.crew); drawLinks([['e1', 'M', 'shot'], ['e4', 'A', 'shot'], ['e6', 'C', 'flank'], ['M', 'W', 'cover']]);
+  if (!await say('notable', 'Mei steps in front of Wing. The shot on Wing is now on her.', 900)) return;
+  await Promise.all([lunge('C', 'e2'), shoot('C', 'e2', { hit: true })]); if (!live()) return;
+  setPips('e2', 0); outMark('e2'); float('e2', 'DOWN', C.foe);
+  // the director sees Cog's third defeat in two rounds
+  cam('C', 1.5); spot('C', true);
+  if (!await say('spotlight', 'Cog drops security guard 2: three down in two rounds.', 1800)) return;
+  cam(null); spot('C', false);
+  await Promise.all([lunge('A', 'e4'), shoot('A', 'e4', { hit: false })]); if (!live()) return;
+  if (!await say('routine', 'Abe misses hired gun 4.', 500)) return;
+  ring('D', C.ok); setPips('J', 3); float('J', '+1', C.ok);
+  if (!await say('notable', 'Doc patches Jax.', 700)) return;
+  // 2. the threats resolve
+  await shoot('e1', 'M', { hit: false, col: C.foe }); if (!live()) return;
+  $('ab-M').setAttribute('opacity', 0); float('M', 'ABSORBED', C.warn); flash('M', C.warn);
+  if (!await say('notable', 'Security guard 1 fires at Wing: Mei takes it. Her armour holds.', 900)) return;
+  await shoot('e4', 'A', { hit: true, col: C.foe }); if (!live()) return;
+  setPips('A', 0); downMark('A'); float('A', 'DOWN', '#ff4a4a');
+  if (!await say('notable', 'Hired gun 4 shoots Abe. Abe is down.', 1100)) return;
+  drawLinks([]); flash('C', C.warn); float('C', 'IN THE OPEN', C.warn);
+  if (!await say('notable', 'Drone 6 flanks Cog. Cog is in the open.', 900)) return;
+  if (!await say('routine', 'End of round 3: five of seven enemies standing, Abe down.', 600)) return;
+  document.querySelectorAll('#log li.cur').forEach((l) => l.classList.remove('cur'));
+}
+function reset() { run++; $('log').innerHTML = ''; $('title').textContent = 'Round 3'; $('goal').textContent = 'HACK ●●○○ · ALARM 3 · ROUND 7 DEADLINE'; build(); cam(null); beat('routine', 'Ready.'); }
+function setPace(p) { pace = p; K = p === 'resolve' ? 0 : p === 'watch' ? 1 : .55; document.querySelectorAll('.pace button').forEach((b) => b.classList.toggle('on', b.dataset.p === p)); }
+async function replay() { reset(); await new Promise((r) => setTimeout(r, 120)); play(); }
+document.querySelectorAll('.pace button').forEach((b) => b.addEventListener('click', () => { setPace(b.dataset.p); replay(); }));
+$('replay').addEventListener('click', replay);
+const q = new URLSearchParams(location.search); setPace(q.get('pace') || 'fast'); reset(); setTimeout(play, 400);
+window.__state = () => Object.fromEntries(Object.entries(M).map(([k, m]) => [k, [m.pips, m.state]]));
+</script></body></html>

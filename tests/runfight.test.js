@@ -527,3 +527,28 @@ test('a hands-off crew is never asked about the pull-out point: the risk level a
     assert.ok(s.activeMission?.done ?? true, `seed ${seed}: the run finished without waiting on a call`);
   }
 });
+
+// --- the director, wired in (watchable combat Slice 1) ----------------------------------------------------
+
+test('each played round records its director beats, pointing at the event\'s lines; the memory rides on the fight', () => {
+  let rounds = 0;
+  for (const id of ['data_pull', 'warehouse']) for (let seed = 1; seed <= 4; seed++) {
+    let s = atFight(seed, id, 'never');
+    for (let g = 0; g < 60 && s.activeMission.battle && !s.activeMission.done; g++) {
+      const next = autoStep(s, { force: true });
+      if (next === s) break;
+      s = next;
+      const ev = s.activeMission.events.filter((e) => e.phase === 'round').at(-1);
+      if (!ev || ev.seen) continue;
+      ev.seen = true;
+      for (const beat of ev.beats) {
+        assert.ok(['routine', 'notable', 'spotlight', 'showcase'].includes(beat.tier));
+        for (const i of beat.lines) assert.ok(i >= 0 && i < ev.lines.length, 'an index into the event\'s lines');
+        assert.ok(beat.holdMs > 0);
+      }
+      assert.equal(ev.beats.flatMap((x) => x.lines).length, ev.lines.length, 'every line is in some beat');
+      rounds++;
+    }
+  }
+  assert.ok(rounds > 5, `checked ${rounds} rounds`);
+});

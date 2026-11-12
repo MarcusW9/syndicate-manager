@@ -8,6 +8,8 @@ import { createNewGame } from '../src/core/state.js';
 import { templateById } from '../src/core/jobs.js';
 import { makeRng } from '../src/core/rng.js';
 import * as F from '../src/core/fight.js';
+import { layoutFight, stageSpots } from '../src/core/fightmap.js';
+import { pickSite } from '../src/data/sites.js';
 import { FIGHT, ENEMIES, ENEMY_HIT, SITE_ENEMIES, COUNT_BY_THREAT, FIGHT_JOBS, FIGHTS } from '../src/data/fights.js';
 import { DILEMMAS } from '../src/data/dilemmas.js';
 import { FIGHT_TEXT } from '../src/data/fightText.js';
@@ -919,4 +921,75 @@ test('the van call-in has two options: leave on time and hold', () => {
   assert.ok(!FIGHT_TEXT['dilemma.vanCantWait.carryOn'] && !FIGHT_TEXT['callin.deadline'], 'removed keys are gone');
   assert.ok(/board/i.test(FIGHT_TEXT['dilemma.vanCantWait.goNow.tradeoff']), 'leaving on time still plays the round: runners can board');
   assert.ok(!/\{heat\}|Heat/.test(FIGHT_TEXT['dilemma.vanCantWait.hold.tradeoff']), 'the heat is shown once, as the cost');
+});
+
+// --- watchable combat, slice 0: seeds, odds key, line slots, previews ---------------------------------
+
+import { hash, hash01 } from '../src/core/rng.js';
+
+test('hash01 is a pure number in [0, 1) from its keys', () => {
+  assert.equal(hash01('a', 1), hash01('a', 1));
+  assert.notEqual(hash01('a', 1), hash01('a', 2));
+  for (let i = 0; i < 200; i++) { const v = hash01('x', i); assert.ok(v >= 0 && v < 1); }
+  assert.equal(hash01('a', 1), hash('a', 1) / 2 ** 32);
+});
+
+test('buildFight draws the showcase seed last, so it moves no other roll; the odds reseed without drawing', () => {
+  const mk = () => fixture('holdHack', [ids.stitch, ids.jax, ids.static], { threat: 4 });
+  const a = mk(), c = mk();
+  assert.ok(Number.isInteger(a.showcaseSeed) && a.showcaseSeed >= 0 && a.showcaseSeed < 2 ** 32);
+  assert.equal(a.showcaseSeed, c.showcaseSeed, 'same build rng, same seed');
+  // It is the build's last draw: the last number the rng gave is the seed.
+  let last = null;
+  const rec = makeRng(3); const rng = () => (last = rec());
+  const crew = crewOf().filter((o) => [ids.stitch, ids.jax, ids.static].includes(o.id));
+  const built = F.buildFight({ type: 'holdHack', diff: 14, threat: 4, site: 'heights', crew, approach: 'loud' }, rng);
+  assert.equal(built.showcaseSeed, Math.floor(last * 2 ** 32));
+  // The odds do not depend on the stored seed, nor change it.
+  const b = fixture('holdHack', [ids.stitch, ids.jax, ids.static]);
+  b.enemies.push(foe(1));
+  const seed0 = b.showcaseSeed;
+  const o1 = F.fightOdds(b, 8);
+  b.showcaseSeed = 12345;
+  assert.deepEqual(F.fightOdds(b, 8), o1);
+  assert.equal(b.showcaseSeed, 12345);
+  assert.notEqual(seed0, undefined);
+});
+
+test('the odds key reads Overdrive, showcase eligibility, the extras cap, the recipe, and each enemy\'s approach and group', () => {
+  const b = fixture('holdHack', [ids.stitch, ids.jax, ids.static]);
+  b.enemies.push(foe(1));
+  const k0 = F.oddsKey(b, 8);
+  const change = (f) => { const c = structuredClone(b); f(c); return F.oddsKey(c, 8); };
+  assert.equal(F.oddsKey(structuredClone(b), 8), k0, 'a copy has the same key');
+  assert.notEqual(change((c) => { c.runners[0].overdrive = { cap: 3, uses: 1 }; }), k0, 'Overdrive');
+  assert.notEqual(change((c) => { c.showcaseEligible = { holdTheLine: [c.runners[0].id] }; }), k0, 'showcase eligibility');
+  assert.notEqual(change((c) => { c.maxExtra = 4; }), k0, 'maxExtra');
+  assert.notEqual(change((c) => { c.recipe = { waves: [{ round: 3, kind: 'hired', count: 2 }] }; }), k0, 'recipe and waves');
+  assert.notEqual(change((c) => { c.enemies[0].approaching = true; }), k0, 'approaching');
+  assert.notEqual(change((c) => { c.enemies[0].group = 2; }), k0, 'group');
+  assert.equal(change((c) => { c.showcaseSeed = 99; }), k0, 'the showcase seed is not in the key');
+});
+
+test('lines keep their key and slots, and the run\'s recorded event carries them', () => {
+  const b = fixture('holdHack', [ids.stitch, ids.jax, ids.static]);
+  b.enemies.push(foe(1), foe(2));
+  const rng = makeRng(7);
+  const lines = [...F.startRound(b, rng), ...F.playRound(b, rng).lines];
+  assert.ok(lines.length > 0);
+  for (const l of lines) { assert.equal(typeof l.key, 'string', l.kind); assert.equal(typeof l.slots, 'object', l.kind); }
+});
+
+test('previews leave the fight exactly as they found it and never show a showcase or Overdrive burst', () => {
+  const b = fixture('holdHack', [ids.stitch, ids.jax, ids.static]);
+  b.enemies.push(foe(1), foe(2));
+  F.startRound(b, makeRng(5));
+  b.spots = stageSpots(pickSite('docks', 'job-a', 'warehouse'), 'inside');
+  const frozen = structuredClone(b);
+  const outputs = [F.previewRound(b), F.resolveOrders(b), F.dueDilemmas(b), F.exposures(b, F.resolveOrders(b).actions ?? []), layoutFight(b)];
+  assert.ok(outputs.at(-1).units, 'the layout placed the fight');
+  assert.deepEqual(b, frozen, 'b is deep-equal after every preview');
+  const banned = new Set(['showcaseStart', 'showcaseEnd', 'overdriveStart', 'showcase']);
+  const walk = (v) => { if (Array.isArray(v)) v.forEach(walk); else if (v && typeof v === 'object') { if (banned.has(v.kind)) assert.fail(`preview contains ${v.kind}`); Object.values(v).forEach(walk); } };
+  outputs.forEach(walk);
 });

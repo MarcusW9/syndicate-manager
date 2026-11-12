@@ -15,6 +15,10 @@
 //     missing for FIGHT.missingDays, back with a serious injury; slice 4 builds the rescue and the ransom).
 
 import { nextRng } from './random.js';
+import { direct } from './director.js';
+import { stageSpots, stageNeed, layoutFight, enemyUnit } from './fightmap.js';
+import { pickSite } from '../data/sites.js';
+import { BATTLE } from '../data/battle.js';
 import { setInjury, worsenInjury, effectiveStat } from './crew.js';
 import { XP } from './development.js';
 import { noteInjury } from './earned.js';
@@ -37,6 +41,23 @@ export const fightSnapshot = (b) => ({
   guards: b.enemies.map((e) => ({ n: e.n, hp: Math.max(0, e.pips), max: e.max, out: e.out || e.fled })),
   runners: b.runners.map((r) => ({ id: r.id, handle: r.handle, hp: r.pips, max: r.max, down: r.down || r.dead })),
 });
+/**
+ * Where everyone stands on the site map, for the live battle view (ui/fightstage.js): core/fightmap.js layoutFight,
+ * kept compact for the record (null fields left out). actions: the round's resolved actions (playRound's result), so
+ * the picture can show a protector leaning to who they cover. null when the fight has no spots. Staging only.
+ */
+export function stageOf(b, actions = null) {
+  const lay = layoutFight(b);
+  if (!lay) return null;
+  const act = new Map((actions ?? []).map((a) => [a.opId, { kind: a.action, target: a.target ?? null }]));
+  const trim = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v != null && v !== false));
+  const units = {};
+  for (const r of b.runners) { const u = lay.units[r.id]; units[r.id] = trim({ side: 'crew', at: u.at, cover: u.cover, mark: u.mark, stance: u.stance, from: u.from, act: act.get(r.id) }); }
+  for (const e of b.enemies) { const u = lay.units[enemyUnit(e.n)]; units[enemyUnit(e.n)] = trim({ side: 'enemy', n: e.n, kind: e.kind, at: u.at, cover: u.cover, mark: u.mark, stance: u.stance, entrance: u.entrance }); }
+  const p = lay.points;
+  return { seed: b.showcaseSeed ?? 0, round: b.round, type: b.type, van: p.van, perch: p.perch, target: p.target, units };
+}
+
 /** The screens' view of any fight: engine 2 as the snapshot, engine 1 as it is. */
 export const fightView = (b) => (b?.engine === 2 ? fightSnapshot(b) : b);
 export const enemiesLeft = (b) => (b.engine === 2 ? Fight.enemiesUp(b).length : b.guards.filter((g) => !g.out).length);
@@ -47,7 +68,8 @@ const GROWS = { attack: 'combat', jam: 'tech', stabilise: 'medical', patch: 'med
 const CUE = { attack: 'shoot', shot: 'guard', overwatch: 'overwatch', stabilise: 'stabilise', patch: 'patch' };
 // Only what the feed, the plan and the report read, so a year of saved reports stays small.
 const feedLine = (l) => ({
-  kind: CUE[l.kind] ?? 'note', text: l.text, actor: l.actor ? { id: l.actor, handle: l.actor } : null, guard: l.enemy ?? null, targetId: l.targetId ?? null,
+  kind: CUE[l.kind] ?? 'note', rule: l.kind, key: l.key ?? null, slots: l.slots ?? {}, text: l.text, actor: l.actor ? { id: l.actor, handle: l.actor } : null, guard: l.enemy ?? null, targetId: l.targetId ?? (typeof l.target === 'string' ? l.target : null),
+  ...(l.burst ? { burst: true } : {}),
   success: l.success ?? null, damage: l.damage ?? 0, heal: l.heal ?? 0, kit: l.kit ?? null, dropped: !!l.dropped, ...(l.roll ? { die: l.roll.die, need: l.roll.need, value: l.roll.value } : {}),
   ...(l.order ? { order: l.order, from: l.from } : {}),
 });
@@ -55,6 +77,16 @@ const feedLine = (l) => ({
 const names = (b, ids) => nameList(ids.map((id) => b.runners.find((r) => r.id === id)?.handle ?? id));
 
 // --- starting a fight ------------------------------------------------------------------------------
+
+/**
+ * Where the fight is staged on the site map (core/fightmap.js stageSpots; the live battle view): the job's site, as
+ * engine 1 picks it (data/sites.js pickSite from the job's id), where the district stands its fights on the map. Staging
+ * only: no rule reads it. null where the district has no fight spots. Also used by the save migration (v63).
+ */
+export function fightStage(district, am, zone, crew) {
+  if (!BATTLE.spotsIn.includes(district)) return null;
+  return stageSpots(pickSite(district, am.jobId, am.templateId, null), zone, stageNeed(crew));
+}
 
 /** An unsaved danger incident on one of the five jobs turns into an engine-2 fight (core/runbattle.js startBattle hands it here). */
 export function startFight(state, am, tpl, inc, id, zone, diff, able, { ambush = false } = {}) {
@@ -71,11 +103,12 @@ export function startFight(state, am, tpl, inc, id, zone, diff, able, { ambush =
   }, rng);
   b.auto = false;
   b.startLines = [];
+  b.spots = fightStage(tpl.district, am, zone, able.length);
   am.battle = b;
   am.fought = true;
   if (am.alert >= ALERT_MAX && !am.wentLoud) am.alertDue = true;
   const text = `It's a fight: ${b.enemies.length} against ${b.runners.map((r) => r.handle).join(', ')}.${ambush ? ' They have the jump on them.' : ''} ${type === 'holdHack' ? `Keep ${b.runners.find((r) => r.id === b.goal.protect)?.handle ?? 'the tech'} working.` : 'Hold for the van, then get out.'}`;
-  record(am, { kind: 'battle', phase: 'start', from: id, zone, text, report: text, ...fightSnapshot(b) });
+  record(am, { kind: 'battle', phase: 'start', from: id, zone, text, report: text, ...fightSnapshot(b), stage: stageOf(b) });
   am.log.push({ kind: 'bad', text });
   am.report = [...(am.report ?? []), text];
   am.queue.splice(am.step + 1, 0, { type: 'battle' });
@@ -89,12 +122,13 @@ export function startFight(state, am, tpl, inc, id, zone, diff, able, { ambush =
 export const waitsForOrders = (am) => !!am.battle && am.callIn !== 'never' && !am.battle.auto && !(am.away && !am.away.command);
 
 /**
- * A fight that waits for orders draws the coming round's threats first, so the screen can show what each enemy means
- * to do (and the chances) before the player gives orders. Hands-off and away fights draw when the round is played, as ever.
+ * Every fight draws the coming round's threats first, at every pace, so the screen can show what each enemy means
+ * to do (and the chances) before the player gives orders, and so the same seed gives the same fight whether or not
+ * anyone watched. runFight keeps a fallback draw for fights saved before this (mid-fight saves).
  */
 function drawAhead(state, am) {
   const b = am.battle;
-  if (b && !b.end && !b.drawn && waitsForOrders(am)) b.startLines.push(...Fight.startRound(b, nextRng(state)));
+  if (b && !b.end && !b.drawn) b.startLines.push(...Fight.startRound(b, nextRng(state)));
 }
 
 /**
@@ -144,7 +178,11 @@ function playOn(state, am, rng) {
   for (const l of lines) if (l.actor && GROWS[l.kind] && l.roll) grow(state, am, opById(state, l.actor), GROWS[l.kind], XP.incident);
   const up = enemiesLeft(b);
   const text = `Round ${b.round}: ${up ? `${up} still up` : 'nobody left shooting'}.`;
-  record(am, { kind: 'battle', phase: 'round', round: b.round, text, lines: lines.map(feedLine), ...fightSnapshot(b) });
+  // The director tells the round (core/director.js): it reads the round and changes no rule. Its beats point at the event's lines by index.
+  const told = direct(b, { ...r, lines }, b.director);
+  b.director = told.memory;
+  const beats = told.beats.map((x) => ({ tier: x.tier, lines: x.lines.map((l) => lines.indexOf(l)), focus: x.focus, key: x.key, slots: x.slots, holdMs: x.holdMs }));
+  record(am, { kind: 'battle', phase: 'round', round: b.round, text, lines: lines.map(feedLine), beats, ...fightSnapshot(b), stage: stageOf(b, r.actions) });
   am.log.push({ kind: up ? 'bad' : 'good', text });
   for (const id of b.runners.filter((x) => x.dead).map((x) => x.id)) if (!(am.fightDead ?? []).includes(id)) am.fightDead = [...(am.fightDead ?? []), id];
   return afterRound(state, am);
@@ -211,7 +249,7 @@ function endFight(state, am) {
   const hurt = fightInjuries(state, am, b);
   const text = b.end.text;
   const report = `${text}${hurt.length ? ` ${hurtLine(hurt)}.` : ' Nobody badly hurt.'}`;
-  record(am, { kind: 'battle', phase: 'end', how: b.end.result, text, cause: text, report, hurt, ...fightSnapshot(b) });
+  record(am, { kind: 'battle', phase: 'end', how: b.end.result, text, cause: text, report, hurt, ...fightSnapshot(b), stage: stageOf(b) });
   am.log.push({ kind: hurt.length ? 'bad' : 'good', text: report });
   am.report = [...(am.report ?? []), report];
   am.battle = null;
@@ -239,7 +277,7 @@ function retreatFight(state, am, { text, choice, why, cause = text }) {
   am.payCut = Math.max(am.payCut, 1);
   am.extraHeat += FIGHT.retreat.heat;
   am.repCut = (am.repCut ?? 0) + FIGHT.retreat.rep;
-  record(am, { kind: 'battle', phase: 'retreat', text, cause, lines: [], hurt, forced: false, ...fightSnapshot(b) });
+  record(am, { kind: 'battle', phase: 'retreat', text, cause, lines: [], hurt, forced: false, ...fightSnapshot(b), stage: stageOf(b) });
   am.battle = null;
   const report = `The crew pulled back from the fight. ${text}.${hurt.length ? ` ${hurtLine(hurt)}.` : ''} No pay, heat +${FIGHT.retreat.heat}, reputation −${FIGHT.retreat.rep}.`;
   exitRun(state, am, { text, choice, why, report });

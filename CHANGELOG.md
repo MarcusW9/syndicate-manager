@@ -29,6 +29,35 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 ## 2026-11-12 · Faces on the map the whole run
 - **The crew's tokens on the job map show their portraits from the start,** not initials that turn into faces when a fight begins. Initials remain only for a token with no stats to draw from.
 
+## 2026-11-12 · Today: Coming up over a reader that stays in view
+- **On wide screens the right side of Today stays put as you scroll the inbox.** Coming up is a strip across its top, and the open message sits under it, so a message opened from far down the list is already in view. No more scrolling back up to read it.
+- **The reader has a bar:** "Message 3 of 10" with ‹ › to step through the messages (All or Unread, as listed) and ✕ to close it. When nothing is open it shows the week's brief (cash, due Sunday, free crew, jobs, The Word) instead of an empty box, on any day.
+- **Coming up's cells** show the first thing for each day, with "+1 more" for the rest. The cell for the open message's day lights up (a raid warning lights the raid's day).
+- **The list's dates** read "Wed" over "Day 164", like Coming up.
+- Phones keep their layout: the list, then Coming up, or one open message alone.
+
+## 2026-11-12 · Fights on the map: commentary, camera and life between rounds
+- **A commentary line under the map** says what the fight just did, one moment at a time, and a folded **Commentary** log keeps every moment with its round and time, so you can follow a fight without watching the map.
+- **The camera moves in** on the people in a standout moment, then pulls back to the whole fight.
+- **Nobody stands still between rounds:** people shift a little behind their cover and trade covering fire that goes wide. It never hits anyone and never moves anyone out of their cover; only the real shots count. It is switched off with reduced motion and at Resolve.
+
+## 2026-11-12 · Fights play live on the job's map
+- **The five jobs with the new fights now play them on the job's own map.** Your crew and the enemies show as round portraits, run to cover, shoot at the targets the rules picked, and fall where they were hit. Bodies stay on the ground. Where the place has too little cover for what the rules give someone, a low barrier is drawn so the map still tells the truth.
+- **Pace chips on the round screen: Fast, Watch, Resolve.** Fast (the default) plays the next round by itself on your orders once the last one has played out. It stops for every call-in, and while you have the orders open. Watch waits for you each round. Resolve hands the rest of the fight to the crew, as before. The pace never changes what happens.
+- The round screen still has the orders, the risk level and the call-ins; on phones the map gets more room while a fight is on. The new words on the map and the chips are drafts for now.
+
+## 2026-11-12 · Fights know where everyone stands on the map
+- **No change you can see yet.** The five jobs that use the new fights now work out where each runner and enemy stands on the job's real site map, behind cover that matches the cover the fight's rules give them. Where the site has too little cover for that, a low barrier will be drawn so the map still tells the truth. This is the groundwork for watching fights live on the map. Saves upgrade on their own (a fight in progress gets its places on load); rules and odds are unchanged.
+
+## 2026-11-12 · The director tells each fight round
+- **Each fight round is now recorded as moments** (routine, notable, spotlight), so the screens can slow down for the good bits. Spotlights are things like a runner dropping three enemies in two rounds, a protector covering the same teammate again and again, a last stand on one pip, a hack finished at the last moment, a jam that kills two radio calls, and a carry into the van. The spotlight sentences are plain drafts for now, and nothing on screen shows them yet. Rules and odds are unchanged.
+
+## 2026-11-12 · Fight groundwork: seeds, odds key, line slots
+- **No change you can see yet.** Fights now carry a stored seed for future showcase moments, the planning odds already take account of the rules still to come, and each recorded fight line keeps the key and slots it was written from. Tests now check that previews never change a fight.
+
+## 2026-11-12 · Fights draw the same at every pace
+- **A fight now plays out the same whether you watch it, hand it off or send the crew hands-off.** Before, hands-off and away fights drew their rounds differently from watched ones, so the same seed could end differently. Fights saved mid-way before this keep working. Hands-off and away fights will roll differently from before (a one-off shift).
+
 ## 2026-11-12 · Overwatch picker says who is best
 - **Each overwatch candidate now shows what they do to the job's read** ("Lowers the read: High to Moderate", or "Read stays Moderate"), and the list is ordered by that first, then by the kit's stat. Before, it ranked by the kit's stat alone, so a drone driver's Piloting 17 sat above a rifle-carrying fighter on a combat job and nothing said why.
 - **"Piloting 17 · 3 actions" sits on one line,** centred together instead of the second half dropping below the first.

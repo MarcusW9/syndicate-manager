@@ -32,5 +32,8 @@ export function hash(...parts) {
   return h >>> 0;
 }
 
+/** hash() as a number in [0, 1): a roll that is a pure function of its keys, drawing from no stream (showcases, watchable-combat 0b). */
+export const hash01 = (...parts) => hash(...parts) / 2 ** 32;
+
 /** A generator seeded from hash(...parts): the same keys always give the same numbers. */
 export const hashRng = (...parts) => makeRng(hash(...parts));

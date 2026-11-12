@@ -131,15 +131,29 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 
 /* Inbox: one pane at a time on phones, list and message side by side when wide. */
 @media (max-width: 899px) {
-  .inbox.has-open .inbox__side, .inbox.has-open .inbox__rail, .inbox:not(.has-open) .inbox__detail { display: none; }
+  .inbox.has-open .inbox__side, .inbox.has-open .upcoming--strip, .inbox .inbox__detail.is-quiet { display: none; }
   .inbox { display: grid; gap: 12px; }
+  .reader__btn[data-action="msg-close"] { display: none; } /* the message's own Back button does that on a phone */
 }
-.inbox__side, .inbox__rail { display: grid; gap: 12px; align-content: start; }
-/* Monday's numbers sit in their own panel in the rail, so the block drops its own frame there. */
-.inbox__rail .weekbrief { border: 0; background: none; padding: 0; margin: 0; }
-.upcoming--rail { padding: 10px 16px 12px; }
+.inbox__side, .inbox__stack { display: grid; gap: 12px; align-content: start; }
+/* The reader (2026-11-12): a bar with where you are and ‹ › ✕ over the message or the week's brief. */
+.inbox__detail { padding: 0; }
+.reader__head { display: flex; align-items: center; gap: 6px; padding: 6px 8px 6px 16px; border-bottom: 1px solid var(--line); }
+.reader__where { flex: 1; font-family: var(--display, inherit); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.reader__btn { min-width: var(--tap); min-height: var(--tap); border: 1px solid var(--line); background: none; color: var(--accent-2); font: inherit; font-size: 1.1rem; cursor: pointer; }
+.reader__btn:disabled { opacity: 0.3; cursor: default; }
+.reader__body { padding: 14px 16px; min-width: 0; }
+.inbox__detail .weekbrief { border: 0; background: none; padding: 0; margin: 0; }
+.row__meta { display: grid; justify-items: end; line-height: 1.25; }
+.row__wd { font-weight: 600; color: var(--text); }
+/* Coming up as a strip: a cell a day, side by side; on a phone it is the plain list of days under the messages. */
+.upcoming--strip { padding: 10px 16px 12px; }
+.upcoming__day.is-raid .upcoming__when { color: var(--danger); }
+.upcoming__day.is-linked { background: #2a1218; box-shadow: inset 0 -3px 0 var(--danger); }
+.upcoming__more > summary { cursor: pointer; list-style: none; color: var(--muted); font-size: 0.8rem; min-height: 28px; }
+.upcoming__more > summary::-webkit-details-marker { display: none; }
 /* Grid children shrink to fit, so a long one-line preview clips instead of widening the page. */
-.main, .inbox > *, .inbox__side > *, .inbox__rail > *, .list > li, .row__main--clip { min-width: 0; }
+.main, .inbox > *, .inbox__side > *, .inbox__stack > *, .list > li, .row__main--clip { min-width: 0; }
 .inbox__title { margin-top: 0; }
 .row__main--clip { min-width: 0; }
 .preview { display: block; font-size: 0.8rem; font-weight: 400; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -327,19 +341,15 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
   .plangrid__crew { grid-area: crew; }
   .plangrid__approach { grid-area: approach; }
   .plangrid__risk { grid-area: risk; }
-  /* Messages and the open message side by side; the week's rail under the messages, then
-     beside the message as a third column once there's room (owner, 2026-11-11). */
-  .inbox { display: grid; grid-template-columns: minmax(300px, 2fr) 3fr; grid-template-areas: "side detail" "rail detail"; gap: 16px; align-items: start; }
-  .inbox__side { grid-area: side; }
-  .inbox__detail { grid-area: detail; }
-  .inbox__rail { grid-area: rail; }
-  .upcoming--rail .upcoming__days { grid-template-columns: minmax(0, 1fr); }
+  /* Messages on the left; on the right one sticky stack: Coming up as a strip, the open message (or the
+     week's brief) under it, scrolling inside itself. Opening a message from far down the list needs no
+     scrolling back up (owner, 2026-11-12; was a third column for the rail). */
+  .inbox { display: grid; grid-template-columns: minmax(300px, 2fr) 3fr; gap: 16px; align-items: start; }
+  .inbox__stack { position: sticky; top: 84px; max-height: calc(100dvh - 150px); grid-template-rows: auto minmax(0, 1fr); }
+  .inbox__detail { overflow: auto; min-height: 0; }
+  .upcoming--strip .upcoming__days { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px 10px; }
   .inbox__back { display: none; }
   .inbox__empty { margin: 0; }
-}
-
-@media (min-width: 1200px) {
-  .inbox { grid-template-columns: minmax(300px, 4fr) minmax(0, 5fr) minmax(240px, 3fr); grid-template-areas: "side detail rail"; }
 }
 
 /* --- Jobs, planning and missions --- */
@@ -2269,3 +2279,60 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .postrow__none { color: var(--warn); }
 
 .kitline { display: inline-flex; align-items: center; gap: 0.4em; flex-wrap: wrap; } /* "Piloting 17 · 3 actions" on one line, centred together (2026-11-12) */
+
+/* ---------------------------------------------------------------------------------------------------
+   The live battle view (ui/fightstage.js, 2026-11-12): an engine-2 fight on the site map. Circular faces
+   for both sides (the crew's teal-grey ring, the enemies' red), pips under each, low barriers where the
+   rules give cover the site has no spot for, bodies left on the ground, tracers for the rules' shots.
+   Transform-only motion; reduced motion cuts (the stage sets no transition then).
+   --------------------------------------------------------------------------------------------------- */
+.fs-foe__bg { fill: #3a1018; }
+.fs-foe__tint { fill: var(--accent); opacity: 0.22; pointer-events: none; }
+.siteplan.is-fight .sp-token .fs-foe__ring { stroke: var(--accent); stroke-width: 1.3; }
+.siteplan.is-fight .sp-token.fs-foe > text.fs-foe__n { display: inline; }
+.fs-foe__n { fill: var(--accent) !important; font-size: 5px !important; font-family: var(--display); paint-order: stroke; stroke: #0b0d11; stroke-width: 1.4px; }
+.siteplan.is-staged .sp-token:not(.fs-foe) .sp-face__ring { stroke: var(--accent-2); stroke-width: 1.1; }
+.fs-pips rect { fill: #2a303b; } .fs-pips rect.is-on { fill: var(--accent-2); } .fs-foe .fs-pips rect.is-on { fill: var(--accent); }
+.sp-token.fs-hunker > *:not(.fs-pips) { transform: scale(1.05) translateY(1px); }
+.siteplan.is-fight .sp-token.fs-hunker .sp-face__ring { stroke-dasharray: 2 1.2; }
+.sp-token.fs-down .sp-face, .sp-token.fs-dead .sp-face { filter: grayscale(1) brightness(0.55); }
+.sp-token.fs-dead .sp-face__ring { stroke: var(--danger) !important; }
+.sp-token.fs-hidden { opacity: 0; pointer-events: none; }
+.fs-body { fill: #5a1020; opacity: 0.55; }
+.fs-barrier { fill: #566074; stroke: #a3acbd; stroke-width: 0.7; }
+.fs-barrier--full { fill: #6b7588; }
+.fs-tracer { stroke: var(--warn); stroke-width: 0.9; stroke-linecap: round; opacity: 0.95; }
+.fs-tracer.is-foe { stroke: #ff8a98; }
+.fs-tracer.is-burst { stroke: #fff3b0; stroke-width: 1.6; }
+.fs-muzzle { fill: #fff3b0; }
+.fs-link { stroke-width: 0.9; stroke-dasharray: 2 1.5; fill: none; }
+.fs-link--shield { stroke: var(--accent-2); } .fs-link--heal { stroke: #7be38b; }
+.fs-ping { fill: none; stroke: #6b7385; stroke-width: 1; transform-box: fill-box; transform-origin: center; animation: fs-ping 0.5s ease-out forwards; }
+.fs-ping.is-ok { stroke: var(--accent-2); }
+.fs-special { fill: none; stroke: var(--warn); stroke-width: 1.2; transform-box: fill-box; transform-origin: center; animation: fs-ping 0.8s ease-out forwards; }
+@keyframes fs-ping { from { transform: scale(0.6); opacity: 1; } to { transform: scale(3); opacity: 0; } }
+.fs-float { font: 700 5px var(--display); letter-spacing: 0.08em; text-transform: uppercase; text-anchor: middle; paint-order: stroke; stroke: #0b0d11; stroke-width: 1.4px; animation: fs-float 0.9s ease-out forwards; }
+.fs-float.is-hit { fill: var(--danger); } .fs-float.is-down { fill: var(--accent); } .fs-float.is-absorbed { fill: var(--warn); }
+@keyframes fs-float { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-8px); opacity: 0; } }
+.watch__caption { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); max-width: calc(100% - 24px); padding: 4px 10px; font: 700 0.82rem var(--display); letter-spacing: 0.06em; color: var(--text); background: rgba(11, 13, 17, 0.9); border: 1px solid var(--line); border-left: 2px solid var(--warn); clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); pointer-events: none; }
+.watch__caption[data-tier="special"] { border-left-color: var(--accent); color: var(--warn); }
+.fs-pace { display: grid; grid-template-columns: repeat(3, 1fr); margin: 0 0 6px; }
+.fs-pace__chip { min-height: 44px; background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); font: 700 0.8rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; }
+.fs-pace__chip + .fs-pace__chip { border-left: 0; }
+.fs-pace__chip.is-on { color: var(--accent-2); background: #12262a; border-color: var(--accent-2); }
+.fs-pace__note { margin: 0 0 6px; font-size: 0.78rem; color: var(--muted); }
+.fs-ambient { stroke: var(--warn); stroke-width: 0.45; opacity: 0.35; stroke-linecap: round; } .fs-ambient.is-foe { stroke: #ff8a98; }
+.watch__strip { margin: 0; padding: 6px 10px; min-height: 44px; display: flex; align-items: center; font-size: 0.86rem; line-height: 1.3; background: var(--panel-2); border: 1px solid var(--line); border-left: 2px solid var(--accent-2); }
+.watch__strip[data-tier="notable"] { border-left-color: var(--warn); } .watch__strip[data-tier="spotlight"] { border-left-color: var(--accent); background: #1c1a10; }
+.watch__log { margin: 0; border: 1px solid var(--line); border-top: 0; background: var(--panel); }
+.watch__log > summary { min-height: 44px; display: flex; align-items: center; padding: 0 10px; cursor: pointer; font: 700 0.72rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.watch__log ol { list-style: none; margin: 0; padding: 0 10px 8px; display: grid; gap: 2px; max-height: 220px; overflow: auto; font-size: 0.78rem; color: var(--muted); }
+.watch__log li { padding: 2px 6px; border-left: 2px solid var(--line); } .watch__log li[data-tier="spotlight"] { border-left-color: var(--accent); color: var(--text); } .watch__log li[data-tier="notable"] { border-left-color: var(--warn); }
+.watch__log time { color: #5c6577; margin-right: 6px; font-variant-numeric: tabular-nums; }
+.watch:not(.is-fighting) .watch__strip, .watch:not(.is-fighting) .watch__log { display: none; }
+/* The map is the main view of a staged fight (the proposal): taller on phones while the round screen is open. */
+@media (max-width: 699px) { .watch.is-fighting.is-calling .siteplan.is-staged { height: min(50svh, 440px); } }
+@media (prefers-reduced-motion: reduce) {
+  .fs-ping, .fs-special, .fs-float { animation: none; }
+  .fs-float { display: none; }
+}

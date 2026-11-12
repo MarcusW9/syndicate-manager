@@ -10,6 +10,7 @@ import { roundView, planView, orderChoices, RISK_ORDER, riskWords } from '../cor
 import { lineText } from '../core/fighttext.js';
 import { describePending } from '../core/mission.js';
 import { FIGHT } from '../data/fights.js';
+import { getPref } from '../save/save.js';
 
 let draft = { key: null, sel: null, orders: {}, risk: null, panel: false, pullAsk: false };
 
@@ -18,6 +19,24 @@ function current(am) {
   const key = keyOf(am);
   if (draft.key !== key) draft = { key, sel: null, orders: {}, risk: null, panel: false, pullAsk: false };
   return draft;
+}
+
+/**
+ * The live battle view's pace (drafts/PROPOSAL-live-battle-view.md 5.2): Watch or Fast is a viewing preference
+ * (save.js getPref 'fight-watch', never in the save, never read by core); Resolve is the fight handed off (b.auto).
+ * Pace never changes what happens, only how long the picture takes and whether Next round waits for a tap.
+ */
+export const fightPace = (am) => (am?.battle?.auto ? 'resolve' : getPref('fight-watch', false) ? 'watch' : 'fast');
+
+/** Is the player changing orders right now (Fast waits for them)? */
+export const editingOrders = (am) => !!am?.battle && draft.key === keyOf(am) && (draft.panel || draft.pullAsk);
+
+/** The pace chips: Fast and Watch set the preference (app.js fs-pace); Resolve hands the fight off (fs-handoff). */
+function paceChips(esc, am) {
+  const pace = fightPace(am);
+  const chip = (p, action) => `<button class="fs-pace__chip ${pace === p ? 'is-on' : ''}" data-action="${action}" data-id="${p}" aria-pressed="${pace === p}">${esc(word(`pace.${p}`))}</button>`;
+  return `<div class="fs-pace" role="group" aria-label="${esc(word('pace.label'))}">${chip('fast', 'fs-pace')}${chip('watch', 'fs-pace')}${chip('resolve', 'fs-handoff')}</div>
+    ${pace === 'fast' ? `<p class="fs-pace__note">${esc(word('pace.fastNote'))}</p>` : ''}`;
 }
 
 /** A tap on the screen (app.js hands every fs-* action here). */
@@ -153,6 +172,7 @@ export function renderFightRound(state, esc, face = () => '') {
       </div>`;
   return `
     <div class="fs" data-callin="fs:${esc(d.key)}">
+      ${paceChips(esc, am)}
       <p class="fs-title">Round ${v.round}</p>
       ${goalLine(esc, v.goal)}
       <h4 class="fs-h">Enemies</h4>

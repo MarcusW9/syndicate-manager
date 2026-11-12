@@ -22,10 +22,15 @@ import { guardPosts } from '../core/battle.js';
 import { currentStep } from '../core/mission.js';
 import { commandView } from './fightorders.js';
 import { duelFor, playDuel, DUEL_MS } from './duel.js';
-import { fightView, enemiesLeft } from '../core/runfight.js';
+import { fightView, enemiesLeft, stageOf } from '../core/runfight.js';
+import { editingOrders, fightPace } from './fightscreen.js';
 
 /** Is a fight waiting for the player's orders (command fights: the panel and the map's overlay)? */
 const fightWaiting = (state) => { const am = state.activeMission; return !!am?.battle && !am.done && !am.pending && !am.critical && currentStep(am)?.type === 'battle' && needsPlayer(state); };
+
+// The live battle view's pace (ui/fightscreen.js fightPace): Fast is the watched path plus a timer, the next round
+// played on the orders as they stand once the round's picture is done. Call-ins still stop it (am.pending).
+const FAST_HOLD = 900; // ms after a round's picture before Fast plays the next one
 
 const FAST = 0.35;
 // How long each kind of moment stays before the next step (ms at normal speed): routine moments
@@ -47,8 +52,11 @@ export function renderWatch(ui, state, end = '') {
       <div class="watch__live">
         <div class="watch__map">${sitePlanSvg({ kit: am.overwatch?.kit ?? null, site: siteFor(templateById(am.templateId)?.district, am.jobId, am.templateId, am.build) })}
           <span class="watch__phase" aria-live="polite"></span>
+          <span class="watch__caption" aria-live="polite" hidden></span>
           <span class="watch__alert" role="img"></span>
         </div>
+        <p class="watch__strip" aria-live="polite" hidden></p>
+        <details class="watch__log" hidden><summary>Commentary</summary><ol></ol></details>
         <div class="watch__tally"></div>
       </div>
       <div class="watch__side">
@@ -80,6 +88,7 @@ export function justFinished(am) {
 /** Stop the clock (the job ended, or the page changed). */
 export function stopWatch() {
   if (live?.timer) clearTimeout(live.timer);
+  if (live?.fastTimer) clearTimeout(live.fastTimer);
   live?.unlisten?.();
   live = null;
 }
@@ -88,7 +97,7 @@ export function stopWatch() {
  * Bind a freshly drawn watch (renderWatch) to the state: draw the plan and what has happened so
  * far without animation, then carry on. onAuto: take the next step (app.js: setState(autoStep)).
  */
-export function mountWatch(el, state, { onAuto, ui, finishing = null }) {
+export function mountWatch(el, state, { onAuto, onFightNext = null, ui, finishing = null }) {
   if (!el) return;
   const am = state.activeMission;
   const from = finishing?.zone ?? null;
@@ -102,9 +111,12 @@ export function mountWatch(el, state, { onAuto, ui, finishing = null }) {
     wheels: am.wheels ? opsOf(state, [am.wheels])[0] : null,
     standby: am.standby && !am.standby.joined ? opsOf(state, [am.standby.id])[0] : null,
     out: opsOf(state, out),
+    pace: () => fightPace(live?.state?.activeMission ?? state.activeMission),
+    caption: (text, tier) => showCaption(el, text, tier),
+    say: (entry) => commentary(el, entry),
   });
   live?.unlisten?.();
-  live = { key: am.jobId, el, plan, shown: 0, timer: null, chain: Promise.resolve(), onAuto, ui, callKey: null, unseen: 0, pinned: true, autoUntil: 0 };
+  live = { key: am.jobId, el, plan, shown: 0, timer: null, chain: Promise.resolve(), onAuto, onFightNext, ui, callKey: null, unseen: 0, pinned: true, autoUntil: 0, state, fastTimer: null };
   // Following: pinned to the newest moment until the reader scrolls. Scroll events while our own
   // scroll is still moving don't count; a wheel, a touch or a key means the reader took over.
   const me = live;
@@ -133,7 +145,7 @@ export function mountWatch(el, state, { onAuto, ui, finishing = null }) {
     const off = me.unlisten;
     me.unlisten = () => { off(); ro.disconnect(); };
   }
-  if (am.battle) plan.syncFight(fightView(am.battle)); // a page opened mid-fight draws it as it stands
+  if (am.battle) plan.syncFight({ ...fightView(am.battle), ...(am.battle.engine === 2 && am.battle.spots ? { stage: stageOf(am.battle) } : {}) }); // a page opened mid-fight draws it as it stands
   sync(state, { animate: false });
   // A job just finished: the page redraws in the same layout, with the summary at the end of the
   // feed (owner, 2026-11-03: "it can stay in the same view with the summary there"). Show it.
@@ -184,6 +196,7 @@ export function syncWatch(state) {
 
 export function togglePause(state) {
   paused = !paused;
+  if (live && !paused) fastFight(state);
   const b = live?.el.querySelector('[data-action="watch-pause"]');
   if (b) { b.textContent = paused ? 'Resume' : 'Pause'; b.setAttribute('aria-pressed', String(paused)); }
   live?.el.querySelector('.watch__bar [data-action="step"]')?.toggleAttribute('hidden', !paused);
@@ -281,9 +294,73 @@ function sync(state, { animate }) {
   // A fight on: a bigger map; waiting for orders: the overlay, once the round's moments have played.
   el.classList.toggle('is-fighting', !!am.battle);
   el.style.setProperty('--live-h', `${el.querySelector('.watch__live')?.offsetHeight ?? 0}px`);
-  const view = fightWaiting(state) && am.battle.engine !== 2 ? commandView(am) : null; // engine 2's screen has no map overlay (no site spots yet)
+  const view = fightWaiting(state) && am.battle.engine !== 2 ? commandView(am) : null; // engine 2 is played on the map by the stage (ui/fightstage.js); its orders are the round screen
   live.chain = live.chain.then(() => live?.plan.command(view)).catch(() => {});
+  live.state = state;
+  fastFight(state);
   schedule(state, wait || PACE.result);
+}
+
+/**
+ * The commentary (the live battle view): the director's beat as it plays, one line under the map, and the fight's log with
+ * the round and the fight's clock, so a fight can be followed without watching the map. null starts a new fight's log.
+ */
+function commentary(el, entry) {
+  const strip = el.querySelector('.watch__strip');
+  const log = el.querySelector('.watch__log');
+  if (!strip || !log) return;
+  const list = log.querySelector('ol');
+  if (!entry) { list.replaceChildren(); strip.hidden = true; log.hidden = true; return; }
+  strip.hidden = false;
+  log.hidden = false;
+  strip.dataset.tier = entry.tier ?? '';
+  strip.textContent = entry.text;
+  const li = document.createElement('li');
+  li.dataset.tier = entry.tier ?? '';
+  const when = document.createElement('time');
+  when.textContent = entry.when;
+  li.append(when, document.createTextNode(` ${entry.text}`));
+  list.append(li);
+}
+
+/** A spotlight's or special move's line over the map, for as long as the beat holds (the director's beats, ui/fightstage.js). */
+function showCaption(el, text, tier) {
+  const c = el.querySelector('.watch__caption');
+  if (!c || !text) return;
+  c.textContent = text;
+  c.dataset.tier = tier ?? '';
+  c.hidden = false;
+  clearTimeout(c._t);
+  c._t = setTimeout(() => { c.hidden = true; }, 2600);
+}
+
+/**
+ * Fast: once this round's picture has played, the next round plays on the orders as they stand (the same call as
+ * Next round; ui/fightscreen.js takeFightChange). Not while the player has the orders open, a call-in is waiting,
+ * the watch is paused, or the pace is Watch. Checked again when the timer fires, against the newest state.
+ */
+function fastFight(state) {
+  const me = live;
+  if (me.fastTimer) { clearTimeout(me.fastTimer); me.fastTimer = null; }
+  const ready = (s) => {
+    const am = s.activeMission;
+    return !paused && me.onFightNext && am?.battle?.engine === 2 && fightPace(am) === 'fast' && fightWaiting(s) && !editingOrders(am);
+  };
+  if (!ready(state)) return;
+  const round = state.activeMission.battle.round;
+  me.chain.then(() => {
+    if (live !== me) return;
+    me.fastTimer = setTimeout(() => {
+      me.fastTimer = null;
+      const now = me.state;
+      if (live === me && ready(now) && now.activeMission.battle.round === round) me.onFightNext();
+    }, FAST_HOLD * speed);
+  });
+}
+
+/** The pace changed (a chip on the round screen): Fast starts playing on its own straight away. */
+export function paceChanged(state) {
+  if (live) fastFight(state);
 }
 
 function paceOf(item) {

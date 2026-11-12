@@ -65,7 +65,7 @@ import { leanPicks, jobRead, planRead, planTries } from '../core/squad.js';
 import { renderBoard, renderPicker, renderCoverage, assignSlot, planKit, fitGearArt } from './board.js';
 import { renderArmoury, renderLoadout, renderGearSheet, gearPlace } from './gear.js';
 import { buyGear, buyOffer, sellGear, equip, unequip, itemName, sellPrice, kitsFor } from '../core/gear.js';
-import { renderWatch, mountWatch, syncWatch, isWatching, stopWatch, togglePause, toggleSpeed, showLatest, justFinished, closeFinale } from './watch.js';
+import { renderWatch, mountWatch, syncWatch, isWatching, stopWatch, togglePause, toggleSpeed, showLatest, justFinished, closeFinale, paceChanged } from './watch.js';
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
 import { earnedText } from '../core/earned.js';
 import { SPECIALISATIONS, specOf } from '../core/specialisations.js';
@@ -305,8 +305,20 @@ function onClick(e) {
       if (msg && !msg.read) { msg.read = true; saveGame(state); }
       break;
     }
+    // The reader's ‹ › (2026-11-12): the next or previous message in the list as shown, without going back to it.
+    case 'msg-step': {
+      const { shown } = inboxView();
+      const m = shown[shown.findIndex((x) => x.id === openMessageId) + Number(id)];
+      if (!m) return;
+      openMessageId = m.id;
+      scrollDue = null;
+      if (m.type === 'report' && !m.read && m.timeline?.orders) playReportId = m.id;
+      if (!m.read) { m.read = true; saveGame(state); }
+      break;
+    }
     // Back puts the view you came from back (ui/nav.js): its tab, page, filters, plan and scroll. With nothing to
     // go back to (a direct link, a fresh load) it opens the root of the page's home tab. The game is never rewound.
+    case 'msg-close':
     case 'back': {
       const view = nav.pop();
       if (view) { restoreView(view); focusNext = view.via; scrollDue = view.scrollY; } else toRoot();
@@ -558,6 +570,8 @@ function onClick(e) {
     case 'fs-panel': case 'fs-sel': case 'fs-order': case 'fs-clear': case 'fs-risk': case 'fs-pull-ask': case 'fs-pull-no':
       fightScreenTap(state.activeMission, action, { id, duty: t.dataset.duty, target: t.dataset.target });
       break;
+    // The live battle view's pace (ui/fightscreen.js fightPace): Fast or Watch, a viewing preference; Resolve is fs-handoff.
+    case 'fs-pace': setPref('fight-watch', id === 'watch'); render(); return paceChanged(state);
     case 'fs-next': return setState(runBattle(state, takeFightChange(state.activeMission)));
     case 'fs-handoff': return setState(runBattle(handOffFight(state), takeFightChange(state.activeMission)));
     case 'fs-pull': takeFightChange(state.activeMission); return setState(pullBack(state));
@@ -815,14 +829,14 @@ function render() {
     ${renderBuzz()}
     ${renderRaidCallSheet()}
   `;
-  if (am) mountWatch(root.querySelector('.watch'), state, { ui: watchUi, finishing, onAuto: () => setState(autoStep(state)) });
+  if (am) mountWatch(root.querySelector('.watch'), state, { ui: watchUi, finishing, onAuto: () => setState(autoStep(state)), onFightNext: () => setState(runBattle(state, takeFightChange(state.activeMission))) });
   fitGearArt(root); // the squad board's gear drawings fill their cells
   root.querySelector('.buzz__pick, .buzz [data-action="buzz-in"]')?.focus({ preventScroll: true }); // the call has the floor
   if (pickSlot) (root.querySelector('.sheet .cand.is-on') ?? root.querySelector('.sheet .cand:not([disabled])'))?.focus({ preventScroll: true });
   if (scrollDue !== null) { window.scrollTo?.(0, scrollDue); scrollDue = null; } // Back puts the scroll back; a new page starts at the top
   if (mapTo) { animateMap(root.querySelector('.citymap__view'), mapView, mapTo); mapView = mapTo; mapTo = null; }
   if (raidCardDue) { const d = raidCardDue; raidCardDue = null; root.querySelector(`#threat-${d}`)?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
-  if (upcomingDue) { upcomingDue = false; root.querySelector('.upcoming--rail')?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
+  if (upcomingDue) { upcomingDue = false; root.querySelector('.upcoming--strip')?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
   if (cityMapDue) { cityMapDue = false; root.querySelector('.mapframe')?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
   const want = focusNext ?? refocus;
   focusNext = null;
@@ -988,17 +1002,12 @@ function backupBanner() {
 }
 
 /**
- * Today: alerts (only when something needs you) and the inbox first, then a rail with the
- * week (Monday's brief, Coming up). Phones show that, or one open message alone. Wide screens
- * put the open message beside the inbox and the rail beside it (styles.css).
+ * Today: alerts (only when something needs you) and the inbox first, then the week (Coming up, the
+ * brief). Phones show that, or one open message alone. Wide screens put the inbox on the left and a
+ * sticky stack on the right: Coming up as a strip, the open message (or the brief) under it (styles.css).
  */
 function renderInbox() {
-  const open = state.inbox.find((m) => m.id === openMessageId);
-  // All or only unread (playtest, 2026-11-07: find the old unread ones fast). The open message stays
-  // in the list after it's been read, so it doesn't vanish from under the finger.
-  const unread = state.inbox.filter((m) => !m.read).length;
-  const unreadOnly = inboxUnread && unread + (open && open.read ? 1 : 0) > 0;
-  const shown = unreadOnly ? state.inbox.filter((m) => !m.read || m === open) : state.inbox;
+  const { shown, open, unreadOnly, unread } = inboxView();
   const filter = state.inbox.length ? `<div class="inboxfilter" role="group" aria-label="Show">
           <button class="qchip ${unreadOnly ? '' : 'is-on'}" data-action="inbox-filter" data-id="all" aria-pressed="${!unreadOnly}">All</button>
           <button class="qchip ${unreadOnly ? 'is-on' : ''}" data-action="inbox-filter" data-id="unread" aria-pressed="${unreadOnly}" ${unread || unreadOnly ? '' : 'disabled'}>Unread${unread ? ` (${unread})` : ''}</button>
@@ -1011,14 +1020,26 @@ function renderInbox() {
                 ${m.read ? '' : '<span class="dot" aria-label="Unread"></span>'}
                 <span class="row__tag tag--${esc(m.type)}">${esc(m.type)}</span>
                 <span class="row__main row__main--clip">${esc(m.subject)}${m.body ? `<span class="preview">${esc(m.body)}</span>` : ''}</span>
-                <span class="row__meta">Day ${m.day}</span>
+                <span class="row__meta"><strong class="row__wd">${esc(calendar(m.day).weekday)}</strong><span>Day ${m.day}</span></span>
               </button>
             </li>`).join('')}
         </ul>` : '<p class="muted">Nothing new. Press Continue.</p>';
   // Messages first (owner, 2026-11-11): only Joss, the alerts and today's lines sit above the list.
-  // The week's context (Monday's numbers and The Word, Coming up) is a rail beside the open
-  // message when wide, and comes after the list on a phone.
+  // Wide screens (2026-11-12): the right side is one sticky stack, Coming up as a strip over the reader,
+  // so a message opened from far down the list is already in view. The reader's default is the week's
+  // brief (Monday's numbers and The Word). A phone shows the list, then the strip and the brief, or one
+  // open message alone.
   const week = renderWeekBrief();
+  const at = open ? shown.indexOf(open) : -1;
+  const reader = open ? `
+        <div class="reader__head">
+          <span class="reader__where">${at >= 0 ? `Message ${at + 1} of ${shown.length}` : 'Message'}</span>
+          <button class="reader__btn" data-action="msg-step" data-id="-1" aria-label="Newer message" ${at <= 0 ? 'disabled' : ''}>‹</button>
+          <button class="reader__btn" data-action="msg-step" data-id="1" aria-label="Older message" ${at < 0 || at >= shown.length - 1 ? 'disabled' : ''}>›</button>
+          <button class="reader__btn" data-action="msg-close" aria-label="Close message">✕</button>
+        </div>
+        <div class="reader__body">${renderMessage(open)}</div>`
+    : `<div class="reader__body">${week || '<p class="muted inbox__empty">Tap a message to read it here.</p>'}</div>`;
   return `
     ${backupBanner()}
     <div class="inbox ${open ? 'has-open' : ''}">
@@ -1033,14 +1054,24 @@ function renderInbox() {
           ${list}
         </section>
       </div>
-      <section class="panel inbox__detail">
-        ${open ? renderMessage(open) : '<p class="muted inbox__empty">Tap a message to read it here.</p>'}
-      </section>
-      <aside class="inbox__rail" aria-label="This week">
-        ${week ? `<section class="panel">${week}</section>` : ''}
-        ${renderUpcoming('upcoming--rail')}
-      </aside>
+      <div class="inbox__stack">
+        ${renderUpcoming('upcoming--strip', open)}
+        <section class="panel inbox__detail ${open || calendar(state.day).isMonday ? '' : 'is-quiet'}">
+          ${reader}
+        </section>
+      </div>
     </div>`;
+}
+
+/** The inbox as shown now: the list (All or Unread), the open message, and the counts. */
+function inboxView() {
+  const open = state.inbox.find((m) => m.id === openMessageId);
+  // All or only unread (playtest, 2026-11-07: find the old unread ones fast). The open message stays
+  // in the list after it's been read, so it doesn't vanish from under the finger.
+  const unread = state.inbox.filter((m) => !m.read).length;
+  const unreadOnly = inboxUnread && unread + (open && open.read ? 1 : 0) > 0;
+  const shown = unreadOnly ? state.inbox.filter((m) => !m.read || m === open) : state.inbox;
+  return { shown, open, unreadOnly, unread };
 }
 
 /** Crews back today from jobs sent away (2026-11-04): their faces home again and a stamp, then the report. */
@@ -1069,9 +1100,8 @@ function renderBack() {
     </ul>`;
 }
 
-/** Monday's briefing (core/week.js): the numbers that frame the week, in one block. */
+/** The week's briefing (core/week.js), Monday's numbers: the reader's default view on a wide screen any day, on a phone Mondays only. */
 function renderWeekBrief() {
-  if (!calendar(state.day).isMonday) return '';
   const b = mondayBrief(state);
   const short = b.cash < b.due;
   return `
@@ -1366,7 +1396,7 @@ function renderNextUp() {
 }
 
 /** The week ahead, one cell per day with a line per thing the game will do. */
-function renderUpcoming(where) {
+function renderUpcoming(where, open = null) {
   const items = upcoming(state);
   const when = upcomingWhen;
   const text = upcomingText;
@@ -1391,15 +1421,24 @@ function renderUpcoming(where) {
     ? `<li><details class="upcoming__group"><summary>${esc(i.text)}</summary><span class="small muted">${esc(i.names.join(', '))}</span></details></li>`
     : `<li class="${i.kind === 'bills' && state.cash < i.total ? 'is-short' : ''}">${esc(text(i))}</li>`);
   const days = [...new Set(items.map((i) => i.day))];
+  // The open message's own date lights up its cell (2026-11-12): a raid warning lights that raid's day.
+  const p = open?.payload;
+  const linked = (i) => (open?.kind === 'raid-warning' && i.kind === 'raid' && i.district === p?.district) || (open?.type === 'scout' && i.kind === 'scout');
+  // The strip is one line to a day: the first thing in full, the rest a tap away ("+1 more").
+  const cell = (d) => {
+    const here = items.filter((i) => i.day === d);
+    const [first, ...rest] = here;
+    return `
+          <li class="upcoming__day ${here.some(linked) ? 'is-linked' : ''} ${here.some((i) => i.kind === 'raid') ? 'is-raid' : ''}">
+            <span class="upcoming__when">${esc(when(d))}</span>
+            <ul class="upcoming__items">${line(first)}</ul>
+            ${rest.length ? `<details class="upcoming__more"><summary>+${rest.length} more</summary><ul class="upcoming__items">${rest.map(line).join('')}</ul></details>` : ''}
+          </li>`;
+  };
   return `
     <section class="panel upcoming ${where}">
       <h2 class="upcoming__title">Coming up</h2>
-      <ul class="upcoming__days">
-        ${days.map((d) => `
-          <li class="upcoming__day">
-            <span class="upcoming__when">${esc(when(d))}</span>
-            <ul class="upcoming__items">${items.filter((i) => i.day === d).map(line).join('')}</ul>
-          </li>`).join('')}
+      <ul class="upcoming__days">${days.map(cell).join('')}
       </ul>
     </section>`;
 }
