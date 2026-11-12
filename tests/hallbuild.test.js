@@ -308,3 +308,37 @@ test('saves from v47 have what was built in Old Town paid back, with a note', as
   assert.equal(up.cash, cash + PIECES.plate.cost + PIECES.barricade.cost);
   assert.ok(up.inbox.some((m) => m.id.startsWith('hall-redrawn-oldTown')));
 });
+
+test('every hall has a walled forecourt in front of its buildings, ours from level 1: room for defences, and the street raid is held there (2026-11-12)', async () => {
+  const { siteHeight } = await import('../src/data/sites.js');
+  const { heldParts, partCells, partAt } = await import('../src/core/hallbuild.js');
+  for (const d of Object.keys(HALLS)) {
+    const site = HALLS[d];
+    assert.equal(siteHeight(site), 330, `${d}: a compound is 12 × 11 squares`);
+    const front = site.parts.find((p) => p.id === 'front');
+    assert.ok(front && !front.inside && front.lvl === 1, `${d}: the forecourt is outside and held from level 1`);
+    assert.equal(partCells(front).length, 30, `${d}: three rows across the front`);
+    assert.ok(site.parts.every((p) => p.grid[3] <= 10), `${d}: every part on the 12 × 11 grid`);
+    const outside = [...buildableCells(site, 1)].filter((k) => !partAt(site, ...k.split(',').map(Number)).inside);
+    assert.ok(outside.length >= 24, `${d}: ${outside.length} squares for defences at level 1 (was 4)`);
+    assert.ok(heldParts(site, 1).some((p) => p.id === 'front'));
+    // The street way: raiders at the gate off the street, ours inside it, in the forecourt.
+    const way = site.ways.street;
+    assert.ok(way.posts.inside[1] > 298, `${d}: the raiders hold the street, past the forecourt's gate`);
+    assert.ok(way.paths.inside.at(-1)[1] > 210 && way.paths.inside.at(-1)[1] < 298, `${d}: our people hold the forecourt`);
+    const sp = spotsForJob(d, 'raid-x', `raid:${d}`, 'inside', 4, [{ piece: 'way', id: 'street' }]);
+    assert.ok(sp.crew.slice(0, 2).every((x) => x.at[1] > 210 && x.at[1] < 298), `${d}: our first two stand in the forecourt`);
+    assert.ok(sp.guards.every((x) => x.at[1] > 210), `${d}: the raiders are at the front, none in the buildings' yard`);
+  }
+});
+
+test('a defence in the forecourt is cover on our side of a raid at the front gate (2026-11-12)', () => {
+  const site = HALLS.nightMarket;
+  const bare = spotsForJob('nightMarket', 'raid-x', 'raid:nightMarket', 'inside', 4, [{ piece: 'way', id: 'street' }]);
+  const plates = [[5, 7, 1], [6, 7, 1], [4, 8, 1]].map(([x, y, rot], i) => ({ id: `n-${i}`, piece: 'plate', x, y, rot }));
+  const built = spotsForJob('nightMarket', 'raid-x', 'raid:nightMarket', 'inside', 4, [{ piece: 'way', id: 'street' }, ...plates]);
+  const full = (sp) => sp.crew.filter((x) => x.cover === 'full').length;
+  assert.ok(full(built) > full(bare), `plates in the forecourt give us more full cover (${full(bare)} → ${full(built)})`);
+  assert.equal(built.guards.filter((x) => x.cover === 'full').length >= 1, true, 'the raiders still have cover in the street');
+  assert.ok(siteRects(pickSite('nightMarket', 'r', 'raid:nightMarket', plates.map((p) => ({ ...p })))).filter((r) => r.cls === 'sp-cover').length > siteRects(site).filter((r) => r.cls === 'sp-cover').length);
+});

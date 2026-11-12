@@ -1,7 +1,7 @@
 // Site plans for the watch screen (PLAN-CORE-LOOP.md, slice 4): one per district, drawn as data.
 // Content only: ui/siteplan.js draws the shapes and walks the crew along the paths.
 //
-// The map is 360 x 240. Every site has:
+// The map is 360 x 240 (a hall compound is taller, 360 x 330: `h`, see siteHeight). Every site has:
 // - points.van and points.perch (overwatch), and a path per zone (core/incidents.js zones: in,
 //   inside, target, out). Each zone's path starts where the last one ended; the out path walks
 //   from the target back to the van.
@@ -471,6 +471,10 @@ const hallSite = (name, aria, way) => ({
   views: { in: [0, 0, 360, 240], inside: [0, 0, 360, 240], target: [0, 0, 360, 240] },
   sight: { rifle: [way.perch ?? [340, 18], [(way.perch ?? [340, 18])[0] - 6, (way.perch ?? [340, 18])[1] + 4], [(way.perch ?? [340, 18])[0] + 6, (way.perch ?? [340, 18])[1] + 4]], drone: [way.perch ?? [340, 18], [4, 236], [356, 236], [356, 4], [4, 4]] },
 });
+/** The usual map height; a hall compound is taller (`h`: 330, 12 × 11 squares, with a walled forecourt in front of the buildings, 2026-11-12). */
+export const SITE_H = 240;
+export const siteHeight = (site) => site?.h ?? SITE_H;
+const FORECOURT = 90; // how much taller a compound is than the usual map: three rows of squares in front of the buildings
 const SILK = ['#b48cff', '#ff5fae', '#f2d541', '#3de8d8'];
 const SADDLE = '#4a3424';
 
@@ -494,6 +498,8 @@ const mirrorX = (shape) => {
 };
 const flipPt = ([x, y]) => [360 - x, y];
 const flipGrid = ([x0, y0, x1, y1]) => [11 - x1, y0, 11 - x0, y1];
+/** The forecourt part, the same in every hall until its words are written (add-lore): ours, inside the front gate. */
+const FORECOURT_PART = { name: 'The Forecourt', about: 'The walled ground inside the front gate, between the buildings and the street. Outside: defences go here, and a raid comes in through the front gate.' };
 /**
  * A hall drawn as a compound. spec: { name, aria, mirror, top: { cls, label }, bottom: { shapes, label },
  * lit, sign, covers: [8 fills], gate, parts: [5 × { name, about }], beds: [3 shares],
@@ -505,19 +511,46 @@ function compound(spec) {
   const P = (pt) => (m ? flipPt(pt) : pt);
   const G = (g) => (m ? flipGrid(g) : g);
   const way = (w) => ({ ...w, exit: P(w.exit), anchor: P(w.anchor), entry: P(w.entry), via: P(w.via) });
-  const street = way({ exit: [20, 14], anchor: [180, 80], entry: [180, 226], via: [100, 10] });
-  const gate = way({ exit: [180, 226], anchor: [180, 100], entry: [135, 16], via: [200, 238] });
+  // The street way (2026-11-12): raiders come in at the front gate off the street and our people hold
+  // the forecourt inside it, so what's built there is cover on our side of the fight. The gate way is
+  // from behind, as before; its crew gather in the lane.
+  const street = way({ exit: [180, 326], anchor: [180, 262], entry: [180, 318], via: [180, 300] });
+  const gate = way({ exit: [180, 318], anchor: [180, 100], entry: [135, 16], via: [180, 262] });
   const [room, lane, flat, yard, kitchen] = spec.parts;
+  const down = (sh) => (sh.t === 'rect' ? { ...sh, y: sh.y + FORECOURT } : sh.t === 'line' ? { ...sh, y1: sh.y1 + FORECOURT, y2: sh.y2 + FORECOURT } : sh);
+  // The forecourt: ours, walled in, one gate onto the street. Its ground and walls, then the street strip below it.
+  const forecourt = [
+    { t: 'rect', cls: 'sp-yard', x: 22, y: 210, w: 316, h: 90 },
+    { t: 'line', cls: 'sp-wall', x1: 22, y1: 210, x2: 22, y2: 298 },
+    { t: 'line', cls: 'sp-wall', x1: 338, y1: 210, x2: 338, y2: 298 },
+    { t: 'line', cls: 'sp-wall', x1: 22, y1: 298, x2: 165, y2: 298 },
+    { t: 'line', cls: 'sp-wall', x1: 195, y1: 298, x2: 338, y2: 298 },
+    { t: 'rect', cls: 'sp-gate', x: 165, y: 296, w: 30, h: 4, fill: spec.gate },
+  ];
   const fill = spec.covers;
   return {
     ...hallSite(spec.name, spec.aria, street),
+    h: SITE_H + FORECOURT,
+    views: { in: [0, 0, 360, SITE_H + FORECOURT], inside: [0, 0, 360, SITE_H + FORECOURT], target: [0, 0, 360, SITE_H + FORECOURT] },
     ways: {
       street: { lvl: 1, say: spec.say?.street, line: spec.line?.street, ...hallWay(street) },
       gate: { lvl: 3, say: spec.say?.gate, line: spec.line?.gate, ...hallWay(gate) },
     },
+    // Stands for posts (2026-11-12; `stands`, not `posts`, which is where each side starts a fight): where our people can stand to hold the front gate. `part`: the part it belongs to
+    // (held from that part's level); `kind`: which post goes there ('window', 'roof', 'gate'); `at`: the
+    // spot on the plan (a rooftop's is on the roof, a window's just outside the wall).
+    stands: [
+      { id: 'room-window', part: 'room', kind: 'window', at: P([90, 216]), name: `${room.name} window` },
+      { id: 'room-roof', part: 'room', kind: 'roof', at: P([90, 114]), name: `${room.name} roof` },
+      { id: 'flat-window', part: 'flat', kind: 'window', at: P([270, 216]), name: `${flat.name} window` },
+      { id: 'flat-roof', part: 'flat', kind: 'roof', at: P([270, 114]), name: `${flat.name} roof` },
+      { id: 'gate-left', part: 'front', kind: 'gate', at: P([148, 286]), name: 'Gate post, left' },
+      { id: 'gate-right', part: 'front', kind: 'gate', at: P([212, 286]), name: 'Gate post, right' },
+    ],
     parts: [
       { id: 'room', lvl: 1, inside: true, grid: G([1, 3, 4, 6]), bedCorner: P([1, 3]).map((v, i) => (i ? v : m ? 11 - 1 : 1)), beds: spec.beds[0], ...room },
       { id: 'lane', lvl: 1, inside: false, grid: G([5, 3, 6, 6]), ...lane },
+      { id: 'front', lvl: 1, inside: false, grid: G([1, 7, 10, 9]), ...FORECOURT_PART },
       { id: 'flat', lvl: 2, inside: true, grid: G([7, 3, 10, 6]), bedCorner: [m ? 1 : 10, 6], beds: spec.beds[1], cost: spec.costs[0], ...flat },
       { id: 'yard', lvl: 3, inside: false, grid: G([1, 1, 7, 2]), cost: spec.costs[1], ...yard,
         shapes: [{ t: 'line', cls: 'sp-wall', x1: 26, y1: 30, x2: 120, y2: 30 }, { t: 'line', cls: 'sp-wall', x1: 150, y1: 30, x2: 240, y2: 30 }, { t: 'rect', cls: 'sp-gate', x: 120, y: 28, w: 30, h: 4, fill: spec.gate }].map(S) },
@@ -525,13 +558,14 @@ function compound(spec) {
     ],
     shapes: [
       { t: 'rect', cls: spec.top.cls, x: 0, y: 0, w: 360, h: 30 },
-      ...spec.bottom.shapes,
+      ...spec.bottom.shapes.map(down),
+      ...forecourt.map(S),
       ...[
         { t: 'rect', cls: 'sp-house', x: 26, y: 92, w: 128, h: 118 },
         { t: 'rect', cls: 'sp-house', x: 206, y: 92, w: 128, h: 118 },
         { t: 'rect', cls: 'sp-house', x: 266, y: 32, w: 90, h: 58 },
-        { t: 'rect', cls: 'sp-block', x: 0, y: 32, w: 22, h: 178 },
-        { t: 'rect', cls: 'sp-block', x: 338, y: 92, w: 22, h: 118 },
+        { t: 'rect', cls: 'sp-block', x: 0, y: 32, w: 22, h: 268 },
+        { t: 'rect', cls: 'sp-block', x: 338, y: 92, w: 22, h: 208 },
         { t: 'rect', cls: 'sp-sign', x: 50, y: 206, w: 44, h: 5, fill: spec.sign },
         { t: 'rect', cls: 'sp-door', x: 151, y: 140, w: 4, h: 16 },
         { t: 'rect', cls: 'sp-door', x: 80, y: 90, w: 16, h: 4 },
@@ -543,14 +577,17 @@ function compound(spec) {
         { t: 'rect', cls: 'sp-cover', x: 244, y: 60, w: 8, h: 26, fill: fill[2] },
         { t: 'rect', cls: 'sp-cover', x: 96, y: 16, w: 26, h: 8, fill: fill[3] },
         { t: 'rect', cls: 'sp-cover', x: 170, y: 16, w: 14, h: 8, fill: fill[4] },
-        { t: 'rect', cls: 'sp-cover', x: 96, y: 212, w: 26, h: 8, fill: fill[5] },
-        { t: 'rect', cls: 'sp-cover', x: 244, y: 213, w: 14, h: 8, fill: fill[6] },
-        { t: 'rect', cls: 'sp-cover', x: 300, y: 212, w: 26, h: 8, fill: fill[7] ?? '#2f3442' },
+        // The forecourt's own things, a hall with nothing built still has some cover on our side of the gate.
+        { t: 'rect', cls: 'sp-cover', x: 120, y: 228, w: 26, h: 8, fill: fill[3] },
+        { t: 'rect', cls: 'sp-cover', x: 214, y: 228, w: 26, h: 8, fill: fill[1] },
+        { t: 'rect', cls: 'sp-cover', x: 124, y: 212 + FORECOURT, w: 26, h: 8, fill: fill[5] },
+        { t: 'rect', cls: 'sp-cover', x: 244, y: 213 + FORECOURT, w: 14, h: 8, fill: fill[6] },
+        { t: 'rect', cls: 'sp-cover', x: 300, y: 212 + FORECOURT, w: 26, h: 8, fill: fill[7] ?? '#2f3442' },
       ].map(S),
     ],
     labels: [
-      { x: m ? 250 : 52, y: 236, text: spec.bottom.label },
-      { x: m ? 20 : 262, y: 236, text: spec.lit, hi: true },
+      { x: m ? 250 : 52, y: 236 + FORECOURT, text: spec.bottom.label },
+      { x: m ? 20 : 262, y: 236 + FORECOURT, text: spec.lit, hi: true },
       { x: m ? 250 : 6, y: 10, text: spec.top.label },
     ],
   };

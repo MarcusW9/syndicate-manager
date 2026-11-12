@@ -9,12 +9,13 @@
 // (picked: a built piece's id, or a bed's, 'bed-1' ...).
 
 import { BED, HALL_BUILD, PIECES } from '../data/hallBuild.js';
-import { bedsOnFloor, buildableCells, builtCells, heldParts, nextPart, partCells, partAt, canPlace, canRemove, canTurn, floorOf, floorUsed, hallMap, hallSiteFor, pieceAt, pieceCells, refundOf } from '../core/hallbuild.js';
+import { bedsOnFloor, postSlots, canPlacePost, buildableCells, builtCells, heldParts, nextPart, partCells, partAt, canPlace, canRemove, canTurn, floorOf, floorUsed, hallMap, hallSiteFor, pieceAt, pieceCells, refundOf } from '../core/hallbuild.js';
 import { hallIn, residents } from '../core/halls.js';
 import { sitePlanSvg } from './siteplan.js';
 import { defencesIn, defenceCut, raidOn, raidWho } from '../core/raids.js';
 import { hasHallArt, hallArtSvg, waysOverlay, insideBox, SPRITE_SHEET } from './hallart.js';
-import { pickSite } from '../data/sites.js';
+import { pickSite, siteHeight } from '../data/sites.js';
+import { money } from '../core/money.js';
 
 const C = HALL_BUILD.cell;
 
@@ -31,6 +32,9 @@ export const PIECE_ICON = {
   stash: '<rect x="4" y="4" width="18" height="18" fill="#1f2633" stroke="#5a6474"/><rect x="8" y="8" width="10" height="10" fill="#5d6b7a"/><circle cx="13" cy="13" r="2" fill="#f2d541"/>',
   den: '<rect x="4" y="4" width="18" height="18" fill="#1f2633" stroke="#5a6474"/><rect x="7" y="8" width="6" height="9" fill="#e8e2d0"/><rect x="13" y="10" width="6" height="9" fill="#e8e2d0"/><circle cx="10" cy="12" r="1.2" fill="#ff3d5f"/><circle cx="16" cy="14" r="1.2" fill="#3de8d8"/>',
   cyberdoc: '<rect x="4" y="4" width="18" height="18" fill="#1f2633" stroke="#5a6474"/><rect x="8" y="8" width="10" height="10" fill="none" stroke="#b48cff" stroke-width="1.5"/><path d="M13 5v3M13 18v3M5 13h3M18 13h3" stroke="#b48cff" stroke-width="1.5"/>',
+  window: '<rect x="4" y="8" width="18" height="9" fill="#3a4352"/><rect x="7" y="10" width="12" height="3" fill="#3de8d8"/><rect x="4" y="16" width="18" height="3" fill="#8a7440"/>',
+  nest: '<rect x="4" y="4" width="18" height="18" fill="#3a4352"/><rect x="7" y="7" width="12" height="12" fill="#1f2633" stroke="#3de8d8"/><circle cx="13" cy="13" r="2.4" fill="#8b9aab"/>',
+  gate: '<rect x="8" y="4" width="10" height="18" fill="#3a4352"/><rect x="10" y="7" width="6" height="4" fill="#3de8d8"/><circle cx="13" cy="16" r="2" fill="#8b9aab"/>',
   lookout: '<rect x="4" y="4" width="18" height="18" fill="#1f2633" stroke="#5a6474"/><path d="M6 13q7-7 14 0q-7 7-14 0z" fill="none" stroke="#3de8d8" stroke-width="1.5"/><circle cx="13" cy="13" r="2" fill="#3de8d8"/>',
 };
 const icon = (id) => `<svg class="btile__icon" viewBox="0 0 26 26" width="32" height="32" aria-hidden="true">${PIECE_ICON[id] ?? ''}</svg>`;
@@ -55,7 +59,6 @@ export function partsOverlay(site, level, { tap = false, free = null, esc = (x) 
   if (!site.parts) return '';
   const nx = nextPart(site, level);
   const held = new Set(heldParts(site, level).map((p) => p.id));
-  const hatch = '<defs><pattern id="bhatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="rgba(11,13,17,.72)"/><path d="M0 0v6" stroke="#2a303b" stroke-width="1.6"/></pattern></defs>';
   const act = (id) => (tap ? ` data-action="build-part" data-id="${esc(id)}" role="button" tabindex="0"` : '');
   const rect = (p) => { const [x0, y0, x1, y1] = p.grid; return { x: x0 * C, y: y0 * C, w: (x1 - x0 + 1) * C, h: (y1 - y0 + 1) * C }; };
   // Names are drawn last, on a dark halo, so nothing (the hatching, a neighbour's, a route) is over one.
@@ -72,17 +75,19 @@ export function partsOverlay(site, level, { tap = false, free = null, esc = (x) 
         : `<text class="bpart__name" x="${x + 7}" y="${y + h - 7}">${label}</text>`);
       return '';
     }
+    // Three looks (2026-11-12): ours is the plain building, the next part is dashed cyan with its name
+    // and price, and the rest are a faint outline with no words (the cards below say when they open).
     const isNext = nx?.id === p.id;
-    names.push(`<text class="bpart__name is-locked" x="${x + w / 2}" y="${y + h / 2 - 6}" text-anchor="middle">${label}</text>`);
-    return `<g class="bpart ${isNext ? 'is-next' : ''}"${act(p.id)} aria-label="${esc(`${p.name}, ${isNext ? 'take it with Expand' : `level ${p.lvl}`}`)}"><rect x="${x + 1}" y="${y + 1}" width="${w - 2}" height="${h - 2}" fill="${art ? 'rgba(0,0,0,0)' : 'url(#bhatch)'}" class="bpart__area"/>
-      <text class="bpart__tag" x="${x + w / 2}" y="${y + h / 2 + 9}" text-anchor="middle">${isNext ? 'EXPAND ›' : `LEVEL ${p.lvl}`}</text></g>`;
+    if (isNext) names.push(`<text class="bpart__name is-next" x="${x + w / 2}" y="${y + h / 2 - 6}" text-anchor="middle">${label}</text>`);
+    return `<g class="bpart ${isNext ? 'is-next' : 'is-later'}"${act(p.id)} aria-label="${esc(`${p.name}, ${isNext ? `take it with Expand, ${money(p.cost)}` : `opens at level ${p.lvl}`}`)}"><rect x="${x + 1}" y="${y + 1}" width="${w - 2}" height="${h - 2}" fill="${art || isNext ? 'rgba(0,0,0,0)' : 'rgba(11,13,17,.5)'}" class="bpart__area"/>
+      ${isNext ? `<text class="bpart__tag" x="${x + w / 2}" y="${y + h / 2 + 9}" text-anchor="middle">EXPAND › <tspan class="bpart__price">${money(p.cost)}</tspan></text>` : ''}</g>`;
   }).join('');
   const kept = free ? heldParts(site, level).flatMap(partCells).filter((k) => !free.has(k)).map((k) => {
     const [cx, cy] = k.split(',').map(Number);
     const r = { x: cx * C, y: cy * C };
     return `<rect class="bkeep" x="${r.x + 3}" y="${r.y + 3}" width="${C - 6}" height="${C - 6}"${tap ? ` data-action="build-keep" data-id="${cx},${cy}" role="button" tabindex="0" aria-label="Kept clear: a way in"` : ''}/>`;
   }).join('') : '';
-  return `${hatch}${kept}${areas}${names.join('')}`;
+  return `${kept}${areas}${names.join('')}`;
 }
 const x1Narrow = (p) => p.grid[2] - p.grid[0] < 2;
 
@@ -99,7 +104,7 @@ export function planSvg(state, district, art = false, { inside = null, compound 
   let svg;
   if (compound && site.parts) {
     // Seen from above only the parts (their walls) and the defences stand in the open: no beds, no rooms.
-    const pieces = [...heldParts(site, hall?.level ?? 1).filter((p) => p.shapes).map((p) => ({ piece: 'part', id: p.id })), ...(hall?.build ?? []).filter((b) => PIECES[b.piece]?.kind === 'defence')];
+    const pieces = [...heldParts(site, hall?.level ?? 1).filter((p) => p.shapes).map((p) => ({ piece: 'part', id: p.id })), ...(hall?.build ?? []).filter((b) => ['defence', 'post'].includes(PIECES[b.piece]?.kind))];
     svg = sitePlanSvg({ site: pickSite(district, '', `raid:${district}`, pieces), clean: true });
   } else svg = sitePlanSvg({ site: hallSiteFor(state, district), clean: true });
   return inside ? svg.replace(/viewBox="[^"]*"/, `viewBox="${insideBox(site, inside)}"`) : svg;
@@ -154,8 +159,9 @@ export function raidWaysFor(state, district) {
 /** A small key for the markers on the plan: nothing on the map is unexplained. */
 export function planKey(state, district, { building = false, compound = false, inside = false } = {}) {
   const raid = !inside && !!raidWaysFor(state, district);
+  const next = !inside && !!nextPart(hallMap(district), hallIn(state, district)?.level ?? 1);
   const item = (cls, text) => `<li><i class="bkey__i ${cls}" aria-hidden="true"></i>${text}</li>`;
-  return `<ul class="bkey" aria-label="Key to the plan">${raid ? item('is-raid', 'Raiders\' way in') : ''}${item('is-door', 'Door')}${compound ? item('is-roof', 'Building: tap to go in') : ''}${compound ? '' : item('is-bed', 'Bed')}${building && !inside ? item('is-keep', 'Kept clear: a way in') : ''}${inside ? '' : item('is-lock', 'Locked: Expand')}</ul>`;
+  return `<ul class="bkey" aria-label="Key to the plan">${raid ? item('is-raid', 'Raiders\' way in') : ''}${item('is-door', 'Door')}${compound ? item('is-roof', 'Building: tap to go in') : ''}${compound ? '' : item('is-bed', 'Bed')}${next ? item('is-next', 'Next: tap to Expand') : ''}${building && !inside ? item('is-keep', 'Kept clear: a way in') : ''}${inside ? '' : item('is-lock', 'Later')}</ul>`;
 }
 
 /** The grid over the plan: free cells to tap, built cells to pick, the picked one outlined. */
@@ -172,7 +178,14 @@ export function buildGrid(state, view, esc, art = false) {
   const scope = view.scope ?? null;
   const inside = scope && scope !== 'compound' ? scope : null;
   const inScope = (k) => { if (!scope) return true; const pt = partAt(site, ...k.split(',').map(Number)); return inside ? pt?.id === inside : !pt?.inside; };
-  const cells = [...free].filter(inScope).map((k) => {
+  const onPosts = scope === 'compound' && view.tab !== 'defence';
+  const slots = onPosts ? postSlots(hall, site).map((x) => {
+    const built = x.built;
+    const on = view.slot === x.id || (built && view.picked === built.id);
+    const [px, py] = x.at;
+    return `<g class="bslot ${built ? 'is-built' : ''} ${on ? 'is-on' : ''}" data-action="build-slot" data-id="${esc(x.id)}" role="button" tabindex="0" aria-label="${esc(`${x.name}: ${built ? PIECES[built.piece].name : 'nothing built'}`)}"><rect class="bslot__hit" x="${px - 14}" y="${py - 14}" width="28" height="28"/>${built ? '' : `<rect class="bslot__box" x="${px - 8}" y="${py - 8}" width="16" height="16"/><text class="bslot__plus" x="${px}" y="${py + 4}" text-anchor="middle">+</text>`}</g>`;
+  }).join('') : '';
+  const cells = onPosts ? '' : [...free].filter(inScope).map((k) => {
     const [x, y] = k.split(',').map(Number);
     const taken = built.has(k);
     const bed = bedAt(x, y);
@@ -180,13 +193,13 @@ export function buildGrid(state, view, esc, art = false) {
     const label = bed >= 0 ? `Bed, ${who[bed] ? `${who[bed].handle} sleeps here` : 'free'}` : taken ? `${PIECES[pieceAt(hall, x, y).piece].name}, row ${y + 1}, column ${x + 1}` : `Free square, row ${y + 1}, column ${x + 1}`;
     return `<rect x="${x * C + 1.5}" y="${y * C + 1.5}" width="${C - 3}" height="${C - 3}" class="bgrid__cell ${taken ? 'is-built' : ''} ${bed >= 0 ? `is-bed ${who[bed] ? 'is-slept' : ''}` : ''} ${on ? 'is-on' : ''}" data-action="build-cell" data-id="${x},${y}" role="button" tabindex="0" aria-label="${esc(label)}"/>`;
   }).join('');
-  const outline = sel ? (() => {
+  const outline = sel && !sel.slot ? (() => {
     const p = PIECES[sel.piece] ?? { size: [1, 1] };
     const [w, h] = sel.rot && p.turns ? [p.size[1], p.size[0]] : p.size;
     return `<rect x="${sel.x * C + 0.5}" y="${sel.y * C + 0.5}" width="${w * C - 1}" height="${h * C - 1}" class="bgrid__sel"/>`;
   })() : view.cell ? `<rect x="${view.cell[0] * C + 0.5}" y="${view.cell[1] * C + 0.5}" width="${C - 1}" height="${C - 1}" class="bgrid__sel"/>` : '';
   const under = inside ? '' : scope === 'compound' ? `${compoundOverlay(state, view.district, { tap: true, free, esc, art })}${raidWaysFor(state, view.district)}` : `${partsOverlay(site, hall.level, { tap: true, free, esc, art })}${raidWaysFor(state, view.district)}`;
-  return `<svg class="bgrid" viewBox="${inside ? insideBox(site, inside) : '0 0 360 240'}">${under}${cells}${ghost(view)}${outline}</svg>`;
+  return `<svg class="bgrid" viewBox="${inside ? insideBox(site, inside) : `0 0 360 ${siteHeight(site)}`}">${under}${cells}${slots}${onPosts ? '' : ghost(view)}${outline}</svg>`;
 }
 
 /** The sheet under the plan: what's picked and what you can do with it. */
@@ -220,7 +233,18 @@ export function buildSheet(state, view, ui) {
         <button class="btn" data-action="build-remove" data-id="${esc(sel.id)}" ${rm.ok ? '' : 'disabled'}>Remove · ${money(refundOf(sel.piece))} back</button>
       </div>${rm.ok ? '' : `<p class="small bsheet__why">${esc(rm.reason)}.</p>`}</div>`;
   }
-  if (!view.cell) return '<div class="bsheet"><p class="small muted">Tap a free square on the plan, then pick what goes there. Tap something built to turn or remove it, or a bed to see who sleeps there.</p></div>';
+  if (view.slot) {
+    const slot = postSlots(hall, site).find((x) => x.id === view.slot);
+    if (!slot) return '';
+    const head = `<p class="bsheet__head"><strong>${esc(slot.name)}</strong> <span class="muted small">${esc({ window: 'a window', roof: 'a roof', gate: 'by the gate' }[slot.kind])}</span></p>`;
+    if (!view.piece || PIECES[view.piece]?.kind !== 'post') return `<div class="bsheet">${head}<p class="small muted">Pick a post for this place, below.</p></div>`;
+    const p = PIECES[view.piece];
+    const can = canPlacePost(state, view.district, view.piece, view.slot);
+    return `<div class="bsheet">${head}<p class="small"><strong>${esc(p.name)}</strong>: ${esc(p.about)}</p>
+      ${can.ok ? '' : `<p class="small bsheet__why">${esc(can.reason)}.</p>`}
+      <div class="bsheet__btns"><button class="btn btn--primary" data-action="build-place" ${can.ok ? '' : 'disabled'}>Build · ${money(p.cost)}</button></div></div>`;
+  }
+  if (!view.cell) return `<div class="bsheet"><p class="small muted">${view.scope === 'compound' && view.tab !== 'defence' ? 'Tap a place on the plan, then pick a post. Tap a post built to remove it.' : 'Tap a free square on the plan, then pick what goes there. Tap something built to turn or remove it, or a bed to see who sleeps there.'}</p></div>`;
   if (!view.piece) return '<div class="bsheet"><p class="small muted">Pick what goes there, below.</p></div>';
   const p = PIECES[view.piece];
   const can = canPlace(state, view.district, view.piece, view.cell[0], view.cell[1], view.rot);
@@ -250,20 +274,24 @@ const TABS = [['all', 'All'], ['defence', 'Defences'], ['room', 'Rooms']];
  */
 export function buildPalette(state, view, ui, { all = false } = {}) {
   const { esc, money } = ui;
-  // Scoped: the compound builds defences, a building builds rooms, so there is no tab to choose.
+  // Scoped: a building builds rooms, so there is no tab to choose; the compound has Posts (on the buildings and
+  // the gate) and the Forecourt (cover in it).
   const scoped = !!view.scope;
-  const tab = scoped ? (view.scope === 'compound' ? 'defence' : 'room') : all && (view.tab ?? 'all') === 'all' ? 'all' : view.tab === 'room' ? 'room' : 'defence';
-  const tabs = all && !scoped ? TABS : TABS.filter(([k]) => k !== 'all');
+  const compound = view.scope === 'compound';
+  const tab = compound ? (view.tab === 'defence' ? 'defence' : 'post') : scoped ? 'room' : all && (view.tab ?? 'all') === 'all' ? 'all' : view.tab === 'room' ? 'room' : 'defence';
+  const tabs = compound ? [['post', 'Posts'], ['defence', 'Forecourt']] : all && !scoped ? TABS : TABS.filter(([k]) => k !== 'all');
   const tiles = Object.entries(PIECES).filter(([, p]) => tab === 'all' || p.kind === tab).map(([id, p]) => `
       <button class="btile ${view.piece === id ? 'is-on' : ''}" data-action="build-piece" data-id="${esc(id)}" aria-pressed="${view.piece === id}">
-        ${icon(id)}<strong>${esc(p.name)}</strong><span class="btile__what"><span class="btile__price">${money(p.cost)}</span> · ${p.size[0]} × ${p.size[1]} · ${esc(p.what)}</span>
+        ${icon(id)}<strong>${esc(p.name)}</strong><span class="btile__what"><span class="btile__price">${money(p.cost)}</span> · ${p.kind === 'post' ? '' : `${p.size[0]} × ${p.size[1]} · `}${esc(p.what)}</span>
       </button>`).join('');
   return `
-      ${scoped ? '' : `<div class="subtabs bsubs ${all ? 'bsubs--3' : ''}" role="group" aria-label="What to build">
+      ${scoped && !compound ? '' : `<div class="subtabs bsubs ${all && !scoped ? 'bsubs--3' : ''}" role="group" aria-label="What to build">
         ${tabs.map(([k, name]) => `<button class="subtab ${tab === k ? 'is-on' : ''}" data-action="build-tab" data-id="${k}" aria-pressed="${tab === k}">${name}</button>`).join('')}
       </div>`}
       ${tab === 'room' ? '<p class="muted small">One of each per hall, inside. A room helps whoever lives here; it isn\'t cover in a raid.</p>'
-    : tab === 'defence' ? `<p class="muted small">Cover where our people stand when they hold the hall. A raid is fought outside, between the buildings, so defences go in the outside parts. Every ${HALL_BUILD.perThreat} pieces make a raid one step easier.</p>
+    : tab === 'post' ? `<p class="muted small">Where our people stand when a raid comes by the front gate: windows on the buildings, a nest on a roof, the gate. Put someone on each when a raid is warned. Every post counts as a defence.</p>
+      <p class="small bdef">${defenceLine(state, view.district)}</p>`
+    : tab === 'defence' ? `<p class="muted small">Cover in the forecourt, between the gate and the buildings, where our people stand when they hold the hall. Every ${HALL_BUILD.perThreat} pieces make a raid one step easier.</p>
       <p class="small bdef">${defenceLine(state, view.district)}</p>`
       : '<p class="muted small">Defences go outside, rooms inside. Tap a free square on the plan, then a piece.</p>'}
       <div class="btiles">${tiles}</div>`;

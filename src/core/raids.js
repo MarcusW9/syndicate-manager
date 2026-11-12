@@ -26,7 +26,7 @@ import { hashRng } from './rng.js';
 import { nextRng } from './random.js';
 import { buildBattle, planIntents, BATTLE } from './battle.js';
 import { spotsForJob } from './fightspots.js';
-import { floorPieces, hallMap, waysIn } from './hallbuild.js';
+import { floorPieces, hallMap, waysIn, postSlots } from './hallbuild.js';
 import { rollTarget } from './risk.js';
 import { FOLLOW } from './piloting.js';
 import { setInjury } from './crew.js';
@@ -102,9 +102,59 @@ const baseThreat = (state, district, raid) => (isGangRaid(raid)
   ? Math.max(1, Math.min(4, grudgeOf(state, raid.by) - 4)) // a gang's: grudge 6: 2 … grudge 8+: 4
   : Math.max(1, Math.min(4, heatIn(state, district) - 6))); // the police's: heat 7: 1 … heat 10: 4 (measured: 2 rookies hold ~1 in 5 at heat 9)
 /** Defence pieces built in a hall (data/hallBuild.js). */
-export const defencesIn = (state, district) => (hallIn(state, district)?.build ?? []).filter((b) => PIECES[b.piece]?.kind === 'defence').length;
+export const defencesIn = (state, district) => (hallIn(state, district)?.build ?? []).filter((b) => ['defence', 'post'].includes(PIECES[b.piece]?.kind)).length;
 /** How much a hall's defences lower a raid's threat: 1 for every HALL_BUILD.perThreat pieces (2026-11-06). */
 export const defenceCut = (state, district) => Math.floor(defencesIn(state, district) / HALL_BUILD.perThreat);
+/**
+ * Who stands on which of the hall's posts when a raid comes by the front gate (2026-11-12). The posts are
+ * the hall's (core/hallbuild.js postSlots with a post built); `raid.posts` is what the player set, a slot's
+ * runner id or null for "nobody" (a slot not in it is left to us: the best of whoever is home, nests
+ * first, then windows, then the gate). Someone who can't stand there (not home, hurt, away) is dropped.
+ * [{ slot, name, piece, at, cover, high, op: operative | null, set: whether the player chose }]
+ */
+export function postAssignments(state, district, raid = null, ops = defenders(state, district)) {
+  const hall = hallIn(state, district);
+  const posts = postSlots(hall).filter((x) => x.built);
+  const set = raid?.posts ?? {};
+  const byId = new Map(ops.map((o) => [o.id, o]));
+  const used = new Set();
+  const out = posts.map((x) => {
+    const p = PIECES[x.built.piece];
+    const op = x.id in set ? (byId.get(set[x.id]) ?? null) : undefined;
+    if (op) used.add(op.id);
+    return { slot: x.id, name: x.name, piece: x.built.piece, at: x.at, cover: p.cover, high: !!p.high, op, set: x.id in set };
+  });
+  // The rest are ours to fill: the best shooters first, on the best posts first.
+  const order = { roof: 0, window: 1, gate: 2 };
+  const free = ops.filter((o) => !used.has(o.id)).sort((a, b) => (b.stats?.combat?.value ?? b.stats?.combat ?? 0) - (a.stats?.combat?.value ?? a.stats?.combat ?? 0));
+  const open = out.filter((a) => a.op === undefined).sort((a, b) => order[postSlots(hall).find((x) => x.id === a.slot).kind] - order[postSlots(hall).find((x) => x.id === b.slot).kind]);
+  for (const a of open) a.op = free.shift() ?? null;
+  return out;
+}
+
+/** Set who stands on a post for a warned raid (a runner's id, or null for nobody). Mutates a clone. */
+export function setRaidPost(prev, raidId, slotId, opId) {
+  const state = structuredClone(prev);
+  const raid = (state.raids ?? []).find((r) => r.id === raidId && !r.done);
+  if (!raid) return prev;
+  raid.posts = { ...(raid.posts ?? {}), [slotId]: opId ?? null };
+  return state;
+}
+
+/** Hand a post to the next person at home who isn't on another post, then to nobody, then round again. */
+export function cycleRaidPost(prev, raidId, slotId) {
+  const raid = (prev.raids ?? []).find((r) => r.id === raidId && !r.done);
+  if (!raid) return prev;
+  const ops = defenders(prev, raid.district);
+  const now = postAssignments(prev, raid.district, raid, ops);
+  const here = now.find((a) => a.slot === slotId);
+  if (!here) return prev;
+  const taken = new Set(now.filter((a) => a.slot !== slotId && a.op).map((a) => a.op.id));
+  const choices = [...ops.filter((o) => !taken.has(o.id)).map((o) => o.id), null];
+  const next = choices[(choices.indexOf(here.op?.id ?? null) + 1) % choices.length];
+  return setRaidPost(prev, raidId, slotId, next);
+}
+
 /** A hall's auto turret for a raid's fight, where it stands on the map, or null (data/hallBuild.js TURRET). */
 export function hallTurret(state, district) {
   const t = (hallIn(state, district)?.build ?? []).find((b) => b.piece === 'turret');
@@ -127,7 +177,7 @@ export function withdrawCost(state, district) {
 function warn(state, district, by = 'police', followed = null) {
   const id = `raid-${district}-${state.day}${by === 'police' ? '' : `-${by}`}`;
   const day = state.day + (hasRoom(hallIn(state, district), 'lookout') ? ROOM_EFFECT.lookoutWarn : RAID.warnDays);
-  const raid = { id, district, by, warnedDay: state.day, day, answer: null, outcome: null, done: false, followed, plan: null };
+  const raid = { id, district, by, warnedDay: state.day, day, answer: null, outcome: null, done: false, followed, plan: null, posts: {} };
   const who = raidBy(raid);
   state.raids = [...(state.raids ?? []), raid];
   const gang = GANGS[by];
@@ -313,19 +363,27 @@ export function startRaidFight(state, raid) {
   const ways = waysIn(hallMap(d), hallIn(state, d)?.level ?? 1);
   const way = ways[[...String(raid.id)].reduce((n, ch) => (n * 31 + ch.charCodeAt(0)) >>> 0, 7) % ways.length];
   const floor = floorPieces(hallIn(state, d), way.id);
+  // By the front gate (2026-11-12) our people stand on the hall's posts, then wherever there's cover.
+  const posted = way.id === 'street' ? postAssignments(state, d, raid, ops).filter((a) => a.op) : [];
+  const crew = [...posted.map((a) => a.op), ...ops.filter((o) => !posted.some((a) => a.op.id === o.id))];
+  let spots = spotsForJob(d, raid.id, tpl.id, 'inside', crew.length, floor);
+  if (spots && posted.length) {
+    const at = posted.map((a) => ({ at: a.at, cover: a.cover, ...(a.high ? { high: true } : {}), post: a.slot }));
+    spots = { ...spots, crew: [...at, ...spots.crew.filter((x) => at.every((p) => Math.hypot(p.at[0] - x.at[0], p.at[1] - x.at[1]) >= 16))] };
+  }
   const b = buildBattle({
-    incident: 'raid', zone: 'inside', diff, threat, guards: RAID.raiders, crew: ops, approach: 'loud',
-    spots: spotsForJob(d, raid.id, tpl.id, 'inside', ops.length, floor),
+    incident: 'raid', zone: 'inside', diff, threat, guards: RAID.raiders, crew, approach: 'loud',
+    spots,
     turret: hallTurret(state, d), cap: BATTLE.rounds,
   });
   b.foe = raidBy(raid); // who they are, and what the battle lines call one of them (core/battle.js foeWord)
   b.foeOne = raider(raid).one;
   planIntents(b, nextRng(state));
   // A way with a line of its own (the halls' lore, 2026-11-07) opens with it; else "<who> come ...".
-  const text = way.line ? `${way.line} ${raidWho(raid)}: ${b.guards.length} of them, against ${andNames(ops)}.`
-    : `${raidWho(raid)} ${way.say ?? 'come through the door'}: ${b.guards.length} of them, against ${andNames(ops)}.`;
+  const text = way.line ? `${way.line} ${raidWho(raid)}: ${b.guards.length} of them, against ${andNames(crew)}.`
+    : `${raidWho(raid)} ${way.say ?? 'come through the door'}: ${b.guards.length} of them, against ${andNames(crew)}.`;
   state.activeMission = {
-    jobId: raid.id, templateId: tpl.id, raid: raid.id, build: floor, crewIds: ops.map((o) => o.id), approach: 'loud', days: 0, bribe: 0,
+    jobId: raid.id, templateId: tpl.id, raid: raid.id, build: floor, crewIds: crew.map((o) => o.id), approach: 'loud', days: 0, bribe: 0,
     overwatch: null, wheels: null, standby: null, callIn: 'every', orders: null,
     alert: 0, out: [], pending: null, wentLoud: true, battle: b, fought: true,
     pay: 0, threat, threatDelta: 0, clientId: null, twist: null, askedFor: null, lead: null,

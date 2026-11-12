@@ -4,6 +4,7 @@
 // pulses, as on the City map; nothing else moves (owner: still dots). Pure strings.
 
 import { shapeSvg } from './siteplan.js';
+import { siteHeight } from '../data/sites.js';
 import { gridSite, cutCorners } from './route.js';
 
 const W = 360;
@@ -44,6 +45,7 @@ export function crewOutMap({ site: given, zone = 'start', crew = 1, overwatch = 
   const z = ORDER.includes(zone) ? zone : 'start';
   const { walked, ahead } = routeSplit(site, z);
   const at = zoneSpot(site, z);
+  const H = siteHeight(site);
   const box = (z === 'start' || z === 'out' ? null : site.views?.[z]) ?? [0, 0, W, H];
   const dots = cluster(at, crew).map(([x, y]) => `<circle class="mm-dot" cx="${x}" cy="${y}" r="7"/>`).join('');
   const label = `Map of ${site.name ?? 'the job'}: the crew ${WORD[z]}${calling ? ', waiting on your call' : ''}.`;

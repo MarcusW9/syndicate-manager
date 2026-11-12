@@ -119,7 +119,7 @@ export function overwatchOf(op, ow, zone) {
  */
 export function buildBattle({ incident, zone, diff, threat, guards, crew, approach, overwatchOp = null, ow = null, wheels = null, ambush = false, spots = null, turret = null, cap = BATTLE.skirmishRounds }) {
   // On a site with spots, each side takes the best cover going (spots come best first).
-  const onSpot = (x, i, side) => (spots?.[side]?.[i] ? { ...x, spot: i, cover: spots[side][i].cover } : { ...x, spot: null });
+  const onSpot = (x, i, side) => (spots?.[side]?.[i] ? { ...x, spot: i, cover: spots[side][i].cover, ...(spots[side][i].high ? { high: true } : {}), ...(spots[side][i].post ? { post: spots[side][i].post } : {}) } : { ...x, spot: null });
   return {
     incident, zone, diff, round: 0, ambush, spots, cap, // cap: the round after which a fight with guards up calls in (a fight saved before this had none: BATTLE.rounds)
     guards: guardsFor(threat, guards).map((g, i) => onSpot(g, i, 'guards')),
@@ -147,7 +147,7 @@ export const coverNow = (x) => x.now ?? x.cover ?? BATTLE.startCover;
 const coverStep = (x) => BATTLE.cover[coverNow(x)];
 const better = (c) => COVERS[Math.min(COVERS.length - 1, COVERS.indexOf(c) + 1)];
 /** A shot's difficulty at a guard: the fight's, shootStep, and their cover. */
-const shotDiff = (b, g) => b.diff + BATTLE.shootStep + coverStep(g);
+const shotDiff = (b, g, r = null) => b.diff + BATTLE.shootStep + coverStep(g) - (r?.high ? BATTLE.highAim : 0);
 
 /** The one hit rule: armour (less what the shot pierces) comes off every hit, and a hit that lands always does at least 1. */
 export const hitFor = (damage, armour, pierce = 0) => Math.max(1, damage - Math.max(0, armour - pierce));
@@ -209,7 +209,7 @@ export function ordersFor(b, id) {
   const auto = actionFor(r, b);
   const out = [];
   const add = (o) => out.push({ ...o, auto: o.kind === auto.kind && (o.target ?? null) === (auto.target ?? null) });
-  for (const g of up(b)) add({ kind: 'shoot', target: g.n, stat: 'combat', chance: fightChance(s('combat'), shotDiff(b, g)), cover: coverNow(g) });
+  for (const g of up(b)) add({ kind: 'shoot', target: g.n, stat: 'combat', chance: fightChance(s('combat'), shotDiff(b, g, r)), cover: coverNow(g) });
   for (const g of up(b)) add({ kind: 'flank', target: g.n, stat: 'combat', chance: fightChance(s('combat'), b.diff + BATTLE.shootStep + BATTLE.cover.open), cover: 'open' });
   add({ kind: 'hunker', target: null, stat: null, chance: 1, cover: better(coverNow(r)) });
   for (const i of freeSpots(b)) add({ kind: 'move', target: i, stat: null, chance: 1, cover: b.spots.crew[i].cover, at: b.spots.crew[i].at });
@@ -267,6 +267,7 @@ export function playRound(b, rng, orders = {}) {
     else if (o?.kind === 'move') {
       r.spot = o.target;
       r.cover = b.spots.crew[o.target].cover;
+      r.high = !!b.spots.crew[o.target].high;
       line({ kind: 'move', actor: { id: r.id, handle: r.handle }, spot: o.target, to: b.spots.crew[o.target].at, cover: r.cover, text: `${r.handle} moves ${r.cover === 'open' ? 'out into the open' : `into ${r.cover} cover`}.` });
     }
     if (o?.kind === 'flank') { r.now = 'open'; b.guards.find((g) => g.n === o.target).now = 'open'; }
@@ -339,7 +340,7 @@ export function playRound(b, rng, orders = {}) {
       const g = up(b).find((x) => x.n === act.target) ?? targetOf(b);
       if (!g) continue;
       const flank = act.kind === 'flank';
-      const k = roll(rng, st.value, shotDiff(b, g));
+      const k = roll(rng, st.value, shotDiff(b, g, r));
       const dmg = k.success ? hitFor(r.damage, g.armour, r.pierce ?? 0) : 0;
       g.hp = Math.max(0, g.hp - dmg);
       if (g.hp === 0) g.out = true;
@@ -385,7 +386,7 @@ export function playRound(b, rng, orders = {}) {
 }
 
 /** A guard's chance to hit a runner standing in this cover (theirs now unless given): shown on the guards' intent lines. */
-export const guardHitChance = (b, t, cover = coverNow(t), hunker = !!t.hunker) => fightChance(b.diff + BATTLE.guardStep, t.stats.cool.value + BATTLE.cover[cover] + (hunker ? BATTLE.hunkerStep : 0) + (b.lights ? BATTLE.lightsOff : 0));
+export const guardHitChance = (b, t, cover = coverNow(t), hunker = !!t.hunker) => fightChance(b.diff + BATTLE.guardStep, t.stats.cool.value + BATTLE.cover[cover] + (t.high ? BATTLE.highCover : 0) + (hunker ? BATTLE.hunkerStep : 0) + (b.lights ? BATTLE.lightsOff : 0));
 
 /** Who a guard goes for: often whoever is already hurt worst (guardsFocus), otherwise anyone standing. */
 function guardTarget(b, rng) {
@@ -400,7 +401,7 @@ function guardTarget(b, rng) {
 function guardAttack(b, g, t, rng, down, { floor = 0 } = {}) {
   const def = t.stats.cool;
   const shift = b.lights ? BATTLE.lightsOff : 0;
-  const cover = coverStep(t) + (t.hunker ? BATTLE.hunkerStep : 0);
+  const cover = coverStep(t) + (t.high ? BATTLE.highCover : 0) + (t.hunker ? BATTLE.hunkerStep : 0);
   const die = d20(rng);
   const skill = b.diff + BATTLE.guardStep;
   const need = 10 + def.value + cover + shift;

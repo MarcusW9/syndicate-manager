@@ -786,5 +786,11 @@ function migrate(state) {
     for (const am of [state.activeMission, ...(state.awayJobs ?? []).map((j) => j.mission)]) if (am?.battle) am.battle.engine ??= 1;
     state.version = 61;
   }
+  if (state.version === 61) {
+    // v62: posts on a hall (DESIGN.md 2026-11-12). A hall's posts are `hall.build` entries with a `slot`, so
+    // nothing to move; a warned raid gains `raid.posts` (who stands on which post: slot id -> runner id or null).
+    for (const r of state.raids ?? []) r.posts ??= {};
+    state.version = 62;
+  }
   return state;
 }

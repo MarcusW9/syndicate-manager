@@ -35,6 +35,9 @@ export const BATTLE = {
   // Cover (command fights, 2026-10-30, after XCOM): everyone stands somewhere, and a shot at them is
   // this much harder. Everyone starts a fight in startCover until the site map gives them spots.
   cover: { open: 0, half: 2, full: 4 },
+  // Height (2026-11-12, a rooftop nest on a hall): whoever fights from above shoots this much easier, and is
+  // this much harder to hit, on top of their cover. Only a hall's post gives it (core/raids.js).
+  highAim: 1, highCover: 1,
   // Districts whose fights stand on spots read off the site map (core/fightspots.js; step 2 the
   // Docks, step 3 the rest). Anywhere else everyone stands in startCover.
   spotsIn: ['docks', 'oldTown', 'nightMarket', 'heights', 'basin'],
