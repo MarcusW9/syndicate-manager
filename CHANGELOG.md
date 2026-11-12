@@ -4,6 +4,13 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-12 · Today: Coming up over a reader that stays in view
+- **On wide screens the right side of Today stays put as you scroll the inbox.** Coming up is a strip across its top, and the open message sits under it, so a message opened from far down the list is already in view. No more scrolling back up to read it.
+- **The reader has a bar:** "Message 3 of 10" with ‹ › to step through the messages (All or Unread, as listed) and ✕ to close it. When nothing is open it shows the week's brief (cash, due Sunday, free crew, jobs, The Word) instead of an empty box, on any day.
+- **Coming up's cells** show the first thing for each day, with "+1 more" for the rest. The cell for the open message's day lights up (a raid warning lights the raid's day).
+- **The list's dates** read "Wed" over "Day 164", like Coming up.
+- Phones keep their layout: the list, then Coming up, or one open message alone.
+
 ## 2026-11-12 · Fights on the map: commentary, camera and life between rounds
 - **A commentary line under the map** says what the fight just did, one moment at a time, and a folded **Commentary** log keeps every moment with its round and time, so you can follow a fight without watching the map.
 - **The camera moves in** on the people in a standout moment, then pulls back to the whole fight.
