@@ -456,16 +456,33 @@ test('carrying: the best cool goes back for the downed runner; on a success both
   assert.equal(b.end.result, 'won');
 });
 
-test('a downed runner can be ordered carried (protect a downed teammate), and a failed carry leaves both outside', () => {
+// Rule changed on purpose (2026-11-13, docs/design/2026-11.md): boarding and carrying need no roll.
+test('a downed runner can be ordered carried (protect a downed teammate); a carry needs no roll, so the worst dice still get both in', () => {
   const b = atTheVan();
   draw(b, []);
   F.setOrder(b, 'jax', { duty: 'protect', target: 'mei', fallback: { duty: 'push', target: null } });
   F.setOrder(b, 'cherry', { duty: 'hold', target: null, fallback: null });
   assert.equal(F.previewRound(b).actions.find((a) => a.who === 'jax').kind, 'carry');
-  F.playRound(b, always(0)); // every d20 is a 1: the carry fails
-  assert.equal(R(b, 'mei').aboard, false);
-  assert.equal(R(b, 'jax').aboard, false, 'both still outside');
-  assert.equal(b.end, null, 'still on, the van waits');
+  const r = F.playRound(b, always(0)); // every d20 is a 1
+  assert.equal(R(b, 'mei').aboard, true);
+  assert.equal(R(b, 'jax').aboard, true, 'both in the van');
+  assert.ok(r.lines.filter((l) => ['board', 'carry'].includes(l.kind)).every((l) => !l.roll), 'no roll is recorded for the van');
+});
+
+test('boarding needs no roll, but a boarder is in the open that round and one shot down on the way stays outside', () => {
+  const b = atTheVan();
+  for (const x of b.runners) F.setOrder(b, x.id, { duty: 'push', target: null, fallback: { duty: 'hold', target: null } });
+  draw(b, []);
+  F.playRound(b, always(0));
+  assert.ok(b.runners.filter((x) => !x.down).every((x) => x.aboard), 'everyone standing who had a door slot is aboard on the worst dice');
+  const c = atTheVan();
+  const jax = R(c, 'jax');
+  assert.ok(F.aimChance(c, jax, { open: true }) > F.aimChance(c, jax), 'making for the van is the open');
+});
+
+test('a fight is played FIGHT.ease below the job difficulty, in the run and in the planning read alike', () => {
+  assert.equal(F.fightDiff(16), 16 - FIGHT.ease);
+  assert.equal(FIGHT.ease, 2);
 });
 
 test('nobody abandons a downed runner while the van is there: someone in the van climbs back out', () => {

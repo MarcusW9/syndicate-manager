@@ -96,7 +96,7 @@ export function startFight(state, am, tpl, inc, id, zone, diff, able, { ambush =
   const ow = overwatchOf(overwatchOp(state, am), am.overwatch, zone);
   const rng = nextRng(state);
   const b = Fight.buildFight({
-    type, diff, threat: am.threat ?? tpl.threat, site: tpl.district, crew: able, approach: am.approach,
+    type, diff: Fight.fightDiff(diff), threat: am.threat ?? tpl.threat, site: tpl.district, crew: able, approach: am.approach,
     overwatch: ow, wheels: wheels ? { id: wheels.id, handle: wheels.handle, value: effectiveStat(wheels, 'piloting', { approach: am.approach }).value } : null,
     standbyOp: sb, risk: ['cautious', 'steady', 'committed'].includes(am.orders) ? am.orders : 'steady',
     watched: am.callIn !== 'never' && !(am.away && !am.away.command),
