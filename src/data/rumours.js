@@ -46,14 +46,14 @@ export const RUMOURS = [
 // The city talks about what your crew did. {job} is the job's name.
 export const REACTIONS = {
   loud: {
-    oldTown: ['Old Town is talking about the noise on the {job} job. The Brass Anchor elders want to know who.'],
-    docks: ['Somebody made a mess of the dock road on the {job} job. The Red Lanterns are asking around.'],
-    nightMarket: ['The whole Night Market heard about the {job} job. The Silver Fan is asking whose crew it was.'],
-    heights: ['Veridian-Apex security is going through the footage from the {job} job, frame by frame.'],
+    oldTown: ['Old Town is talking about the noise on the {job} run. The Brass Anchor elders want to know who.'],
+    docks: ['Somebody made a mess of the dock road on the {job} run. The Red Lanterns are asking around.'],
+    nightMarket: ['The whole Night Market heard about the {job} run. The Silver Fan is asking whose crew it was.'],
+    heights: ['Veridian-Apex security is going through the footage from the {job} run, frame by frame.'],
   },
   clean: [
-    'Street talk: whoever did the {job} job was a ghost. Nobody saw a thing.',
-    'People are talking about the {job} job. Clean in, clean out, and nobody knows who.',
-    'Word is a crew did the {job} job so quietly the client had to check it happened.',
+    'Street talk: whoever did the {job} run was a ghost. Nobody saw a thing.',
+    'People are talking about the {job} run. Clean in, clean out, and nobody knows who.',
+    'Word is a crew did the {job} run so quietly the client had to check it happened.',
   ],
 };
