@@ -8,6 +8,7 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - **A new game asks for the tong's name** on the first screen, above the six candidates. Leave it blank for the default, **The Back Room**.
 - **Running games get the default name** and can change it with the pencil beside the name on the Tong screen. Names are up to 24 characters and can't match another tong's.
 - **The founder pick's candidates are polaroids now**, the same photos as the squad board, in place of the old cream pinned cards.
+- **The three stats on each candidate sit one to a line**, so the cards line up (some used to share a line, others wrapped).
 - **The name shows** on Names on the street and in the Anchor's Book, where our people used to read "Yours" or "with us". It changes nothing in play.
 
 ## 2026-11-13 · The "Ours" tag sits level

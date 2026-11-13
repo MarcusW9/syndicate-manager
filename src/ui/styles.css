@@ -1287,7 +1287,7 @@ p > .infobtn { display: inline-grid; vertical-align: 2px; margin-left: 4px; }
 .founder__in { position: absolute; top: -6px; right: -6px; z-index: 2; padding: 1px 8px; font: 700 0.7rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; color: #0a0c0f; background: var(--accent-2); clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 0 100%); }
 .founder__role { font: 600 0.78rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 .founder__about { display: grid; gap: 6px; align-content: start; }
-.founder__stats { display: flex; flex-wrap: wrap; gap: 4px 10px; font-family: var(--display); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.founder__stats { display: grid; grid-template-columns: 1fr; gap: 2px; font-family: var(--display); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .founder__stats b { color: var(--text); font-size: 1rem; }
 .founder__line { font-size: 0.85rem; line-height: 1.4; }
 .founding__bar { justify-content: space-between; flex-wrap: wrap; }
