@@ -17,6 +17,7 @@ Now and next, on one screen. Read `CLAUDE.md` first; its rules are not repeated 
 3. **Battles:** the owner's open items are in `drafts/OWNER-ITEMS-battle.md` (the slice 3 verdict, wording to rewrite, the Special actions button). Not built: slice 4, left behind (rescue job, ransom, the 7-day wait; `drafts/PLAN-battle-slices.md`), then the formal playtest and what follows it ("After the slices" there). Watchable combat's slices 3-5 (Overdrive, showcases) wait behind a playtest (`drafts/HANDOFF-watchable-combat.md`).
 4. **Owner's writing:** `drafts/writing-tasks.md` (A2: Mr. Szeto's heist and its six prep jobs is task 12; the oath ceremony goes through `add-lore`). Hall part names: `drafts/BRIEF-hall-compounds.md`.
 5. **Later, ask first:** back-room roles, leadership and judgment as stats, piloting, medical (`drafts/PROPOSAL-*.md`); the locked districts (the Silt first); everything under "Parked" in the archive.
+6. **The iOS app, not scheduled:** scoped in `PLAN-IOS.md` (wrapper, saves, privacy, App Store checks, analytics); seven decisions are open with the owner at its top. Its Phase 1, the phone audit on the web build, can be done any time.
 
 ## Open branches
 
