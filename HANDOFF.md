@@ -6,13 +6,13 @@ Now and next, on one screen. Read `CLAUDE.md` first; its rules are not repeated 
 
 ## State
 
-- **`main`:** up to [#155](https://github.com/MarcusW9/syndicate-manager/pull/155), **save v63**. PRs are squash-merged, one per feature, and the owner merges. No PR is open (2026-11-13).
+- **`main`:** up to [#156](https://github.com/MarcusW9/syndicate-manager/pull/156), **save v63**. PRs are squash-merged, one per feature, and the owner merges. No PR is open (2026-11-13).
 - **Built and in the game:** the tong (halls with compounds, posts and forecourts, heat per district, police and gang raids, heists slice A1, the other tongs C0-C5 with the Anchor's Book, retirement, loyalty, rival offers, the oath); the navigation rework (`docs/SCREENS.md`); the battle rework slices 1-3 (Engine 2, `core/fight.js`, on five jobs; raids and every other fight stay on Engine 1, `docs/BATTLES.md`); watchable combat slices 0-1 and the live battle view steps 1-3 (fights play on the job's own map); job maps in hard light.
 - **Tests:** 1020 passing (2026-11-13). `npm run test:fast` while working; `npm test` before every push (it takes several minutes).
 
 ## Next
 
-1. **Session-cost restructure (2026-11-13):** steps 1 to 3 are done (docs trimmed and de-duplicated; `ui/app.js` split into 14 modules, `CODEMAP.md` "UI files"). Left: `ui/art.js` (146 KB; a natural cut exists, faces and guns/gear, but 30 files import it: its own PR, ask first), and step 4 (a review written to `drafts/REVIEW-<date>.md`). Left as it was: `onClick` in `ui/actions.js` is one 28 KB `switch` (splitting it is a restructure, the owner's call).
+1. **Session-cost restructure (2026-11-13): all four steps done.** The review is `drafts/REVIEW-2026-11-13.md` (nothing fixed; four findings rated high for the iOS wrapper: silent save failures and the storage limit, synchronous `save.js`, `confirm()` dialogs, exporting a save). The owner picks what to fix. Also open, ask first: splitting `ui/art.js` (146 KB) and `ui/styles.css` (204 KB), and `onClick` in `ui/actions.js` (one 28 KB `switch`).
 2. **The other tongs, deeper:** slice E0 (the Tongs screens; no rules, no save change) is ready to build from `drafts/HANDOFF-tongs-screens.md`; then E1-E4 (`drafts/PROPOSAL-tong-depth.md`, the owner took every call in section 9 as proposed).
 3. **Battles:** the owner's open items are in `drafts/OWNER-ITEMS-battle.md` (the slice 3 verdict, wording to rewrite, the Special actions button). Not built: slice 4, left behind (rescue job, ransom, the 7-day wait; `drafts/PLAN-battle-slices.md`), then the formal playtest and what follows it ("After the slices" there). Watchable combat's slices 3-5 (Overdrive, showcases) wait behind a playtest (`drafts/HANDOFF-watchable-combat.md`).
 4. **Owner's writing:** `drafts/writing-tasks.md` (A2: Mr. Szeto's heist and its six prep jobs is task 12; the oath ceremony goes through `add-lore`). Hall part names: `drafts/BRIEF-hall-compounds.md`.
