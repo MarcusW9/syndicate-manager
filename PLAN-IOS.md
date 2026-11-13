@@ -13,6 +13,8 @@ What the repo already has going for it (checked 2026-11-13):
 - `viewport-fit=cover` in `index.html`; only six `:hover` rules in `src/ui/styles.css`.
 - No accounts, no purchases, no analytics, no ads.
 
+**Read with this:** `drafts/REVIEW-2026-11-13.md`, the code review for the phone made the same day. It measured several things this plan depends on; its item numbers are cited below as (review N).
+
 ## Decisions for the owner
 
 | # | Decision | Recommendation | Status |
@@ -41,6 +43,8 @@ Cheap, needs no Mac, and everything it fixes also improves the web game.
 - Check the six `:hover` rules and any `title=` attributes: nothing may be shown on hover only.
 - Check every fixed or sticky bar uses `env(safe-area-inset-*)`.
 - Long-run check: play 200+ days hands-off in one page and watch memory and DOM size, because a WebView that runs out of memory is killed without warning.
+- Start from what the review already found: controls under 44px at 360px (review 5), touch behaviour not set for the whole page (review 10), two hints that exist only as hover titles (review 11).
+- Two fixes that belong here because they are plain web work and the app depends on them: **an in-game confirm sheet** in place of the 13 `confirm()` and `alert()` calls, which show as system alerts in a wrapper (review 3); and **a banner when a save fails**, since `saveGame`'s result is ignored today and three full slots can pass the browser's storage limit (review 1).
 - Output: a list of fixes, then the fixes, with a screenshot set as usual.
 
 ### Phase 2 · The shell
@@ -51,6 +55,7 @@ Cheap, needs no Mac, and everything it fixes also improves the web game.
 - Add a build flag (for example `VITE_TARGET=ios`) so the app build: skips the service worker (`src/offline/serviceWorker.js`; the files ship inside the app), and hides web-only wording ("reload the page").
 - Fix the app's WebView address (scheme and hostname) on day one and never change it. Anything stored by the WebView is tied to it.
 - Plugins expected: Filesystem (saves), Share (export a save), App (pause and resume events), Status Bar, Splash Screen. Haptics is optional.
+- Oldest iOS supported: **16**, set by the CSS and JavaScript already in use (review 9). State it in the Xcode project and the store listing.
 - Lock to portrait unless the phone audit shows landscape works.
 - Things to test only on a device: the keyboard pushing the layout, rubber-band scrolling, the notch and home bar, the swipe-back gesture, text selection and the long-press menu on buttons.
 
@@ -62,16 +67,17 @@ Two separate problems.
 
 - Not in the WebView's `localStorage`: iOS can clear it when the phone is short on space.
 - Store each key as a file in the app's Documents folder. That folder is included in the phone's iCloud and computer backups, so a new phone restores the saves with no code from us.
-- The three storage functions are synchronous and native storage is not. Keep the rest of `save.js` untouched by: reading every save key into memory at start, before the first screen is drawn; serving reads from memory; writing through to disk in the background.
+- The three storage functions are synchronous and native storage is not, so this is more than swapping three functions: `main.js` loads and mounts at once, and prefs are read while screens draw (review 2). Keep the rest of `save.js` untouched by: reading every save key into memory at start, before the first screen is drawn; serving reads from memory; writing through to disk in the background.
 - Write safely: write to a temporary file, then rename over the old one, so a crash mid-write cannot leave half a save. The per-slot backup stays as the second line of defence.
 - Flush pending writes when the app goes to the background (the App plugin's pause event). iOS may kill a backgrounded app at any time.
-- Measure save size at day 500+ to confirm writes stay fast.
+- Save size: measured at about 270,000 characters after 52 weeks, the same again for the backup, and mostly inbox (review 1 and 8). Files have no 5 MB limit, but every tap writes the whole save (review 7): measure again at day 500+ and write behind, not on every tap.
 - Keys to carry (from `save.js`): `syndicate-slot-N`, `-backup`, `-unreadable`, `syndicate-active-slot`, `syndicate-ironman-progress`, `syndicate-pref-*`, and the legacy `syndicate-save-v1`.
 
 **B. Getting a web save into the app.**
 
 - The app cannot read Safari's storage for the GitHub Pages site. The only route is the file: export on the web, import in the app.
 - Web side, before launch: make export easy to find, and tell players why.
+- **Export does not work in a WebView as written:** it clicks a download link, which `WKWebView` ignores (review 4). In the app, export hands the file to the share sheet (a fourth function in `save.js` beside the storage three). The backup reminder points at this button, so it must work.
 - App side: import through the Files picker, and accept a save file opened from Files, Mail or AirDrop ("Open in..."), which needs a declared file type. Give exported saves their own extension then, and keep reading the old one.
 - `migrate` is the same code in both, so a v1 web save loads in the app exactly as it does on the web.
 

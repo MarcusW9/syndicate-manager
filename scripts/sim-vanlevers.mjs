@@ -39,11 +39,10 @@ const VARIANTS = [
   { name: 'van waits 8', set: { vanWait: 8 } },
   { name: '4 door slots', set: { doorSlots: 4 } },
   { name: '5 door slots', set: { doorSlots: 5 } },
-  { name: 'boarding step -2 (easier)', set: { boardStep: -2 } },
-  { name: 'boarding step 0 (easier)', set: { boardStep: 0 } },
+  // The boarding rows are gone (2026-11-13): boarding needs no roll now. They were also mislabelled: steps -2 and 0
+  // made boarding harder than the base -4, so the reports' "easier boarding makes it worse" read backwards.
   { name: 'hold the van 3 rounds', set: { holdRounds: 3 } },
   { name: 'waits 6 + 4 door slots', set: { vanWait: 6, doorSlots: 4 } },
-  { name: 'waits 6 + 4 slots + boarding -2', set: { vanWait: 6, doorSlots: 4, boardStep: -2 } },
 ];
 const P = (x) => `${Math.round(x * 100)}%`;
 const D = (x) => x.toFixed(2);

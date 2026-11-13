@@ -78,7 +78,7 @@ Related and built: B, the Legend defining job (rivals' fame words feed off the s
 | `src/data/mobility.js` | D3 numbers and wording (first pass) |
 | `src/data/tong.js` | The rank ladder: Back Room, Street, District, City, Harbour |
 | `src/ui/tongs.js` | City › Tongs, a tong's page, a name's read-only profile, Names on the street, The Word |
-| `src/ui/app.js` | Crew › Leads draws scouting, "what it would take" and Sign (`renderLeadName`, `leadNames`) |
+| `src/ui/crew.js` | Crew › Leads draws scouting, "what it would take" and Sign (`renderLeadName`, `leadNames`) |
 | `tests/rivals.test.js`, `rivals-c3.test.js`, `rivals-c3b.test.js`, `rivals-c4.test.js`, `book.test.js`, `mobility.test.js` | Tests |
 | `tests/golden/rivals-1234.json` | Golden snapshot for iOS (C4 adds a `c4` section after a scripted D3 departure; C5 a `c5` section, the week-8 Book) |
 | `scripts/sim-names.mjs`, `scripts/sim-phase2.mjs`, `scripts/sim-book.mjs` | Sims that check Names on the street, the week-26 tier spread, and the Book against the truth |
@@ -94,6 +94,8 @@ Related and built: B, the Legend defining job (rivals' fame words feed off the s
 - The Book's accuracy. With fame, form and age as its only inputs, its three-band agreement with the true ranking is about 46% (top-or-not about 72%, exact grade about 23%); the brief's 65-80% is met only for top-or-not. Raising it means giving the street a finer public signal than fame's four words, or accepting the Book as a loose opinion. Tuning knobs: `BOOK` in `data/rivals.js`.
 - Joss's Book message and the poach note are first-pass wording.
 - The Book is a card at the top of City › Tongs that opens its page (like a tong's page), not a sub-tab.
+
+**Agreed, not built (owner, 2026-11-13; E0's brief is `drafts/HANDOFF-tongs-screens.md`):** `drafts/PROPOSAL-tong-depth.md` (slices E0 to E4: the screens redrawn, habits, overreach, stale reads and watching a house, contested offers and regard with teeth). It would take up `contestOffers` and the hostile-tong idea below.
 
 **Ideas, no rule yet (don't start without asking):**
 - `contestOffers`: rivals competing for the board's contracts (once per job id via `hashRng(seed, 'contest:' + job.id)`).
@@ -111,4 +113,4 @@ Related and built: B, the Legend defining job (rivals' fame words feed off the s
 - Any new rival roll gets its own `hashRng` key and must not move `rngCounter`.
 - Any state change: bump `SAVE_VERSION`, add a migration in `save/save.js`, extend the golden file if tongs or cards change.
 - New player-facing words go in `data/rivals.js` or `data/mobility.js`, not core. Canon changes go through the `add-lore` skill.
-- `npm test`, then add a `CHANGELOG.md` entry and a decision-log row. Screenshots if the look changes.
+- `npm test`, then add a changelog entry (top of the newest file in `docs/changelog/`) and a decision-log row. Screenshots if the look changes.
