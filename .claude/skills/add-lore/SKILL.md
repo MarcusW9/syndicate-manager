@@ -41,7 +41,7 @@ Every canon change also gets a row at the top of the newest file in `docs/design
 ## 4. Check, log, commit
 
 - `npm test` (the prompt and checker sync tests must pass). If job text changed, also `node scripts/check-job.mjs --all`.
-- `CHANGELOG.md` only if something a player sees changed (a name on screen, job text). Lore in the docs alone doesn't ship.
+- The changelog (newest file in `docs/changelog/`) only if something a player sees changed (a name on screen, job text). Lore in the docs alone doesn't ship.
 - Commit as the owner, with no co-author or session lines:
   `git -c user.name=marcusw -c user.email=160358373+MarcusW9@users.noreply.github.com commit -m "Lore: <what>"`
   If this ran inside another task (like `/add-job`), commit with that task instead.

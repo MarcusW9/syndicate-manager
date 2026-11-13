@@ -52,7 +52,7 @@ balance before readable fights have been tried would tune two things at once.
    (content question 1): with placeholder keys spotlights read flat and a playtest would undersell them.
 4. **Slice 2, the map and Fast mode.** Before any map code, a **phone-width mockup** (360px, then wider)
    with six runners and six or more enemies, protectors fanned beside teammates and attackers on lanes;
-   the owner approves it, and `data/fightLayouts.js` follows it. Read "UI skin" in `ART.md` and the newest
+   the owner approves it, and `data/fightLayouts.js` follows it. Read `docs/UI-SKIN.md` and the newest
    `docs/screenshots/` set first.
 5. **Playtest gate (owner).** Play holdHack and holdExtract fights at Watch and Fast on today's rules
    against success criteria 1-3: a fight can be understood without the log; the combat specialist and the

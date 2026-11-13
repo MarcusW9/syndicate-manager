@@ -17,7 +17,7 @@ change to what the simulation does. One PR on a fresh branch from `main`.
 4. The mock-up: open `drafts/prototypes/tongs-depth.html`, and look at the stills in
    `docs/screenshots/2026-11-13-design-session-tongs-depth/`. Its generator,
    `drafts/prototypes/tongs-depth.mjs`, holds the CSS; lift it rather than rewriting it.
-5. "UI skin" in `ART.md`, and the newest captured set in `docs/screenshots/` (`21-tongs.png`,
+5. `docs/UI-SKIN.md`, and the newest captured set in `docs/screenshots/` (`21-tongs.png`,
    `22-tong-page.png` are today's screens).
 6. The code: `src/ui/tongs.js` (all of it), `rivalView` and the views in `src/core/rivals.js`,
    `bookView` in `src/core/book.js`, the tong rules in `src/ui/styles.css` (search `.tongcard`), and

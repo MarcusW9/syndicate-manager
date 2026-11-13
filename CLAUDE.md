@@ -23,10 +23,10 @@ Text-first crew management game (Football Manager style, endless). Plain JavaScr
 | Side tasks, hands-off runs | `core/sidetasks.js`, `core/autorun.js` |
 | Changing the save shape | `src/save/save.js` (`migrate`) and `SAVE_VERSION` in `core/state.js` |
 | Where content sits across tabs (sitemap) | `docs/SCREENS.md` |
-| Any screen or style | "UI skin" in `ART.md`, newest `docs/screenshots/` set, `ui/app.js`, `ui/board.js` |
+| Any screen or style | `docs/UI-SKIN.md`, newest `docs/screenshots/` set, `ui/app.js`, `ui/board.js` |
 | Writing in-game text, lore, names | `WRITING_GUIDE.md`, `src/config/names.js`, and from `WORLD.md` only the context block at its end plus the one `##` section the text is about (the whole file only when changing canon); any change to canon goes through the `add-lore` skill (`.claude/skills/add-lore/`), which reads all of it |
 | Why something was decided | `DESIGN.md` decision log (grep the topic; rows may be under `docs/design/`) |
-| What shipped / what's next | `CHANGELOG.md` / `HANDOFF.md` (`STATE-OF-PLAY.md` is a 2026-10-26 snapshot) |
+| What shipped / what's next | newest file in `docs/changelog/` (grep, don't read whole) / `HANDOFF.md` |
 
 ## iOS-ready rules
 - No information that only appears on hover. Tap/click to reveal.
@@ -41,18 +41,18 @@ Text-first crew management game (Football Manager style, endless). Plain JavaScr
 - Bump `SAVE_VERSION` in `core/state.js` and add a migration in `save.js` whenever the state shape changes.
 
 ## Before any UI work or mockup
-- Read the "UI skin" section of `ART.md` and look at the newest set in `docs/screenshots/` (its README lists them, newest first). That is the current look: sharp panels with a cut corner, Rajdhani for structure, no rounded cards.
+- Read `docs/UI-SKIN.md` and look at the newest set in `docs/screenshots/` (its README lists them, newest first). That is the current look: sharp panels with a cut corner, Rajdhani for structure, no rounded cards.
 - In `src/ui/styles.css` the first `:root` block is the old plain look; the street-terminal skin further down (search "Skin: street-terminal") overrides its colours and shapes. Read both before borrowing a token.
 - Main jobs are planned on the squad board (`src/ui/board.js`: approach, inside team, outside, Joss's picks, the coverage read). The checkbox picker in `renderSidePlan` is only for side work; don't model new screens on it.
 
 ## Keep the design log current
-`DESIGN.md` holds the narrative, tone, cast and a dated decision log (decision, why, rejected alternatives). The world's lore and the context block for worldbuilding prompts live in `WORLD.md`; the visual style, art rules and art prompts live in `ART.md`; canon changes there still get a DESIGN.md log row. Whenever a design or technical decision is made or changed in a session, add a row to the top of the log in the same change. Never rewrite past entries; supersede them with a new row. The log is split by date into `docs/design/`; new rows go at the top of the newest file there (listed under `## Decision log` in `DESIGN.md`), not in the cast table.
+`DESIGN.md` holds the narrative, tone, cast and a dated decision log (decision, why, rejected alternatives). The world's lore and the context block for worldbuilding prompts live in `WORLD.md`; the visual style, art rules and art prompts live in `ART.md` (the UI skin in `docs/UI-SKIN.md`); canon changes there still get a DESIGN.md log row. Whenever a design or technical decision is made or changed in a session, add a row to the top of the log in the same change. Never rewrite past entries; supersede them with a new row. The log is split by date into `docs/design/`; new rows go at the top of the newest file there (listed under `## Decision log` in `DESIGN.md`), not in the cast table.
 
 ## Tests
 Run `npm test` before every push. The tests encode the design promises in DESIGN.md (no death on cautious or steady without "push on", and every death follows push on, a hand-ordered withdrawal or committed risk; exits always save everyone; saves upgrade). Never loosen a test to make a change pass; if a rule changes on purpose, update the test and log the change in DESIGN.md.
 
 ## Keep the changelog current
-Every change that ships gets an entry at the top of `CHANGELOG.md` (date, what changed, in plain words). DESIGN.md says why; CHANGELOG.md says what.
+Every change that ships gets an entry at the top of the newest file in `docs/changelog/` (date, what changed, in plain words; `CHANGELOG.md` is only the index). DESIGN.md says why; the changelog says what.
 
 ## Keep the screenshot log current
 `docs/screenshots/` is the visual history of the game (index and how-to in its `README.md`). After any change that alters how the game looks, run `npm run screenshots -- <slug>` and add a row to the top of the README's Versions table in the same change. Screenshots the owner shares in a session go into their own `<date>-owner-captures` folder with a row of their own. Never delete or overwrite an old set; that's the history.
