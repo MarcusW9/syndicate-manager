@@ -10,6 +10,10 @@ Live build: https://marcusw9.github.io/syndicate-manager/
 - **Why:** with the crew a tong really has when these jobs unlock, the best team left someone behind in about half of Warehouse Lift and Protection fights, and committed risk killed someone in about 1 fight in 6. After the change (`docs/sims/gate-teams-2026-11-13.md`) the best team leaves someone behind in 8% (Warehouse Lift) and 12% (Protection) on steady, and committed risk costs a life in 3.6% and 5.0% of those fights. A carelessly picked team on committed still loses someone in about 1 fight in 5; the plan screen shows that chance before you send them.
 - New sim: `node scripts/sim-gate-teams.mjs`. The older team sims used the day-one roster, which never meets these jobs.
 
+## 2026-11-13 · A plan for deeper rival tongs (no game change)
+- **No game change.** A proposal, `drafts/PROPOSAL-tong-depth.md`: each tong gets a way of running its people (Grinder, Short table, Workshop, Old house), so names move between houses for reasons; a house of any size can overspend and have to sell; what we know about a name fades unless we keep watching, and a whole house can be watched; other tongs can want the same job, and how they look at us starts to matter. The owner has agreed it as written; none of it is built yet, and the screens come first (`drafts/HANDOFF-tongs-screens.md`).
+- **A mock-up of a fuller Tongs menu** (`drafts/prototypes/tongs-depth.html`): a ladder showing every tong on its rung with ours among them, who has come and gone this month, house cards with faces, a house's page as a file, and the Anchor's Book as a slate of faces.
+
 ## 2026-11-12 · The Old Stand, and drones that float
 - **The floodlight on the Basin map is gone.** Drawn from the side in a view from above, it looked odd. Overwatch now sits on the roof of the **Old Stand**, the racecourse's grandstand, drawn from above with its concrete ribs; the sniper's spot and what they can see are the same as before.
 - **The drones are spheres now:** a ball hovering over its own shadow, dark on one side and lit on the other, a ring of light round its middle and one sensor eye, in place of the four-rotor drones of today.
