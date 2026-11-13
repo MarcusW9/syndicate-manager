@@ -97,7 +97,7 @@ function inventory(ui, op, prefer) {
 }
 
 /** The photo: a white frame, the handle in the deep bottom margin after the role's icon, a pin-coloured tab. */
-function polaroid(ui, op) {
+export function polaroid(ui, op) {
   const stat = ROLE_STAT[op.role];
   return `<span class="pola">
       <span class="pola__photo">${portrait(op, { size: 104 })}</span>

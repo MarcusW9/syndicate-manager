@@ -63,7 +63,7 @@ import { sendOff, ORDERS, handsOffAllowed, autoStep, needsPlayer } from '../core
 import { takeCall, letThemRun, takeCommand, crewsOut, dayDone } from '../core/away.js';
 import { OVERWATCH_KIT, ALERT_MAX } from '../core/incidents.js';
 import { leanPicks, jobRead, planRead, planTries } from '../core/squad.js';
-import { renderBoard, renderPicker, renderCoverage, assignSlot, planKit, fitGearArt } from './board.js';
+import { polaroid, renderBoard, renderPicker, renderCoverage, assignSlot, planKit, fitGearArt } from './board.js';
 import { renderArmoury, renderLoadout, renderGearSheet, gearPlace } from './gear.js';
 import { buyGear, buyOffer, sellGear, equip, unequip, itemName, sellPrice, kitsFor } from '../core/gear.js';
 import { renderWatch, mountWatch, syncWatch, isWatching, stopWatch, togglePause, toggleSpeed, showLatest, justFinished, closeFinale, paceChanged } from './watch.js';
@@ -101,6 +101,8 @@ let sidePlan = null; // { taskId, crew: [] } while planning a side task (Jobs ta
 let playReportId = null; // a hands-off report playing out on its first open (renderReportTimeline)
 let openOperativeId = null;
 let openRecruitId = null;
+const FOUNDER_TILTS = ['-1.2deg', '0.8deg', '-0.6deg', '1deg', '-0.9deg', '0.5deg'];
+const FOUNDER_PINS = ['#ff4f7b', '#36d6c3', '#f5b942', '#b48cff', '#5fe0a5', '#ff9a5a'];
 let tongNaming = null; // the draft while the Tong screen's name is being edited (null when it isn't)
 let foundingTongName = ''; // what's typed in the founder pick's name field
 let tongTab = 'halls'; // Tong's sub-tab: 'halls' | 'armoury' (ui/gear.js draws the Armoury)
@@ -1809,13 +1811,12 @@ function renderFounding() {
           const on = picked.includes(r.id);
           const full = !on && n >= FOUNDERS_TO_PICK;
           return `<li><button class="founder ${on ? 'is-on' : ''}" data-action="founder-toggle" data-id="${esc(r.id)}" aria-pressed="${on}" ${full ? 'disabled' : ''}>
-            <span class="founder__file dossier" style="--tilt:${['-1.2deg', '0.8deg', '-0.4deg', '1.1deg', '-0.9deg', '0.5deg'][i % 6]}">
-              <span class="dossier__photo">${face(r)}</span>
-              <span class="dossier__name">${esc(r.handle)}</span>
-              <span class="dossier__real">${esc(r.role)} · ${r.age}</span>
-              ${on ? '<span class="dossier__tag">In</span>' : ''}
+            <span class="founder__file" style="--tilt:${FOUNDER_TILTS[i % 6]};--pin:${FOUNDER_PINS[i % 6]}">
+              ${polaroid({ esc }, r)}
+              ${on ? '<span class="founder__in">In</span>' : ''}
             </span>
             <span class="founder__about">
+              <span class="founder__role">${esc(r.role)} · ${r.age}</span>
               <span class="founder__stats">${best(r).map(([k, v]) => `<span><b>${v}</b> ${esc(statName(k))}</span>`).join('')}</span>
               <span class="founder__line">${esc(r.origin)}</span>
               <span class="founder__traits muted small">${esc(r.traits.map((t) => TRAITS[t]?.name ?? t).join(' · '))}</span>
