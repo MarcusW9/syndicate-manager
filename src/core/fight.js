@@ -202,6 +202,13 @@ export function aimChance(b, r, { hunker = false, open = false } = {}) {
   return clamp((11 + FIGHT.aimStep - cool - FIGHT.cover[cover] - (hunker ? FIGHT.hunkerStep : 0)) / 20, FIGHT.aimFloor, FIGHT.aimCeil);
 }
 
+/**
+ * A fight's difficulty from the job's (the incident's) difficulty: FIGHT.ease lower, because a job's roll is taken by
+ * the crew's best with their bonuses and a fight tests every runner on their own stats. The run (runfight.js) and the
+ * planning read (squad.js) both come through here, so shown is used.
+ */
+export const fightDiff = (jobDiff) => jobDiff - FIGHT.ease;
+
 /** A roll's chance, exactly as the round makes it (d20 + value >= 10 + diff). */
 export const rollChance = (value, diff) => clamp((11 + value - diff) / 20, 0, 1);
 
@@ -690,16 +697,16 @@ export function playRound(b, rng) {
         else say('patch', 'patchFail', { who: r.handle, target: t.handle }, { ...named, roll: rollOf(x), target: t.id, targetId: t.id, success: false });
         break;
       }
+      // Reaching the van needs no roll (2026-11-13): the cost is the round spent in the open, and the door slots.
       case 'board': {
-        const x = roll(sv(r, 'cool'), b.diff + FIGHT.boardStep);
-        if (x.ok) boards.push(r);
-        say('board', x.ok ? 'board' : 'boardFail', { who: r.handle }, { ...named, roll: rollOf(x) });
+        boards.push(r);
+        say('board', 'board', { who: r.handle }, named);
         break;
       }
       case 'carry': {
-        const x = roll(sv(r, 'cool'), b.diff + FIGHT.boardStep + FIGHT.carryStep); const t = runner(b, a.target);
-        if (x.ok) { boards.push(r); carries.push({ by: r, t }); }
-        say('carry', x.ok ? 'carry' : 'carryFail', { who: r.handle, target: t.handle }, { ...named, roll: rollOf(x), target: t.id });
+        const t = runner(b, a.target);
+        boards.push(r); carries.push({ by: r, t });
+        say('carry', 'carry', { who: r.handle, target: t.handle }, { ...named, target: t.id });
         break;
       }
       case 'work': workBy = r; break;

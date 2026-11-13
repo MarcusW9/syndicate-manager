@@ -552,3 +552,24 @@ test('each played round records its director beats, pointing at the event\'s lin
   }
   assert.ok(rounds > 5, `checked ${rounds} rounds`);
 });
+
+// 2026-11-13: fights are played FIGHT.ease below the job's difficulty (core/fight.js fightDiff). Shown = used.
+test('the run starts a fight FIGHT.ease below the incident difficulty, and the planning read quotes the same fight', async () => {
+  const { incidentDifficulty, incidentById } = await import('../src/core/incidents.js');
+  let seen = 0;
+  for (const id of FIVE) for (let seed = 1; seed <= 8; seed++) {
+    const s = until(begin(seed, id, APPROACHES[seed % 4]), inFight);
+    const am = s.activeMission;
+    if (!inFight(s)) continue;
+    const start = am.events.findLast((e) => e.kind === 'battle' && e.phase === 'start');
+    // Starting a fight can raise the alert one step afterwards, so the incident is read at this alert or one below; an ease of 2 cannot hide in that.
+    const at = (alert) => incidentDifficulty(templateById(id), { ...am, alert }, incidentById(start.from)) - FIGHT.ease;
+    assert.ok([at(am.alert ?? 0), at((am.alert ?? 0) - 1)].includes(am.battle.diff), `${id} seed ${seed}: ${am.battle.diff}`);
+    seen++;
+  }
+  assert.ok(seen >= 5, 'fights were seen');
+  const tpl = templateById('warehouse');
+  const cov = coverage(tpl, createNewGame({ seed: 3, startCrew: 'fresh' }).crew.slice(0, tpl.crewSize), 'loud', { threat: tpl.threat });
+  const row = cov.rows.find((r) => r.fight);
+  assert.equal(cov.fight2.diff, row.diff - FIGHT.ease, 'the plan screen reads the eased fight');
+});

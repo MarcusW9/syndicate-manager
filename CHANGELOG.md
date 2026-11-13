@@ -4,6 +4,12 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-13 · Fights you can get out of
+- **Reaching the van no longer needs a roll.** A runner ordered to board gets in, and so does one carrying a downed teammate. The cost is the same as before: they are in the open for that round's shots, only three can use the doors a round, and anyone shot down on the way stays outside.
+- **The five new-style fights are 2 easier than the job's own difficulty.** A job's roll is taken by your best person; a fight tests everyone. The plan screen's odds use the same number.
+- **Why:** with the crew a tong really has when these jobs unlock, the best team left someone behind in about half of Warehouse Lift and Protection fights, and committed risk killed someone in about 1 fight in 6. After the change (`docs/sims/gate-teams-2026-11-13.md`) the best team leaves someone behind in 8% (Warehouse Lift) and 12% (Protection) on steady, and committed risk costs a life in 3.6% and 5.0% of those fights. A carelessly picked team on committed still loses someone in about 1 fight in 5; the plan screen shows that chance before you send them.
+- New sim: `node scripts/sim-gate-teams.mjs`. The older team sims used the day-one roster, which never meets these jobs.
+
 ## 2026-11-12 · The Old Stand, and drones that float
 - **The floodlight on the Basin map is gone.** Drawn from the side in a view from above, it looked odd. Overwatch now sits on the roof of the **Old Stand**, the racecourse's grandstand, drawn from above with its concrete ribs; the sniper's spot and what they can see are the same as before.
 - **The drones are spheres now:** a ball hovering over its own shadow, dark on one side and lit on the other, a ring of light round its middle and one sensor eye, in place of the four-rotor drones of today.
