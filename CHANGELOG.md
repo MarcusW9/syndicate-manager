@@ -4,6 +4,10 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-13 · A plan for deeper rival tongs (no game change)
+- **No game change.** A proposal, `drafts/PROPOSAL-tong-depth.md`: each tong gets a way of running its people (Grinder, Short table, Workshop, Old house), so names move between houses for reasons; a house of any size can overspend and have to sell; what we know about a name fades unless we keep watching, and a whole house can be watched; other tongs can want the same job, and how they look at us starts to matter. Nothing is decided until the owner's calls at its end.
+- **A mock-up of a fuller Tongs menu** (`drafts/prototypes/tongs-depth.html`): a ladder showing every tong on its rung with ours among them, who has come and gone this month, house cards with faces, a house's page as a file, and the Anchor's Book as a slate of faces.
+
 ## 2026-11-12 · The Old Stand, and drones that float
 - **The floodlight on the Basin map is gone.** Drawn from the side in a view from above, it looked odd. Overwatch now sits on the roof of the **Old Stand**, the racecourse's grandstand, drawn from above with its concrete ribs; the sniper's spot and what they can see are the same as before.
 - **The drones are spheres now:** a ball hovering over its own shadow, dark on one side and lit on the other, a ring of light round its middle and one sensor eye, in place of the four-rotor drones of today.

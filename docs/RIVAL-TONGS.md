@@ -95,6 +95,8 @@ Related and built: B, the Legend defining job (rivals' fame words feed off the s
 - Joss's Book message and the poach note are first-pass wording.
 - The Book is a card at the top of City › Tongs that opens its page (like a tong's page), not a sub-tab.
 
+**Proposed, waiting on the owner (2026-11-13):** `drafts/PROPOSAL-tong-depth.md` (slices E0 to E4: the screens redrawn, habits, overreach, stale reads and watching a house, contested offers and regard with teeth). It would take up `contestOffers` and the hostile-tong idea below.
+
 **Ideas, no rule yet (don't start without asking):**
 - `contestOffers`: rivals competing for the board's contracts (once per job id via `hashRng(seed, 'contest:' + job.id)`).
 - Heist races against a rival.
