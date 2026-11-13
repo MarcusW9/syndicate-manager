@@ -86,11 +86,16 @@ export const CLOCKS = {
   pressure: { firstRound: 3, every: 2, alarmBringsForward: 1, enemy: 'first' },
 };
 
-// The two fight types (spec 11). Stages count from 0: holdExtract's 0 is "hold for the van", 1 "board".
+// The fight types (spec 11; holdYard added 2026-11-13). Stages count from 0: holdExtract's 0 is "hold for the van", 1 "board".
 export const FIGHTS = {
   holdHack: {
     goal: 'work', protect: 'tech', stages: 1, clock: 'alarm', friendlyReinforce: true, enemyReinforce: true,
     overwatchKit: 'drone',
+  },
+  // holdYard (2026-11-13): no van. The crew wins by rout: every enemy down or broken, and none still on the way. The pressure clock still brings more.
+  holdYard: {
+    goal: 'rout', stages: 1, clock: 'pressure', friendlyReinforce: true, enemyReinforce: true,
+    overwatchKit: 'rifle',
   },
   holdExtract: {
     goal: 'hold+board', stages: 2, clock: 'pressure', friendlyReinforce: true, enemyReinforce: true,
@@ -101,7 +106,7 @@ export const FIGHTS = {
 // The five jobs that play on engine 2 (spec section 30). Everything else stays on engine 1.
 export const FIGHT_JOBS = {
   data_pull: 'holdHack', data_scrub: 'holdHack', quiet_hours: 'holdHack',
-  warehouse: 'holdExtract', protection: 'holdExtract',
+  warehouse: 'holdExtract', protection: 'holdYard',
 };
 
 // The priority words an order's tie-breaks may use (spec 12; the grammar is core/fight.js enemyOrder).

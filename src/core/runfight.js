@@ -109,7 +109,7 @@ export function startFight(state, am, tpl, inc, id, zone, diff, able, { ambush =
   am.battle = b;
   am.fought = true;
   if (am.alert >= ALERT_MAX && !am.wentLoud) am.alertDue = true;
-  const text = `It's a fight: ${b.enemies.length} against ${b.runners.map((r) => r.handle).join(', ')}.${ambush ? ' You have the jump on them: they get no shot in round one.' : ''} ${type === 'holdHack' ? `Keep ${b.runners.find((r) => r.id === b.goal.protect)?.handle ?? 'the tech'} working.` : 'Hold the line until the van pulls in, then everyone boards.'}`;
+  const text = `It's a fight: ${b.enemies.length} against ${b.runners.map((r) => r.handle).join(', ')}.${ambush ? ' You have the jump on them: they get no shot in round one.' : ''} ${type === 'holdHack' ? `Keep ${b.runners.find((r) => r.id === b.goal.protect)?.handle ?? 'the tech'} working.` : type === 'holdYard' ? 'Put them down or break them: more keep coming.' : 'Hold the line until the van pulls in, then everyone boards.'}`;
   record(am, { kind: 'battle', phase: 'start', from: id, zone, text, report: text, ...fightSnapshot(b), stage: stageOf(b) });
   am.log.push({ kind: 'bad', text });
   am.report = [...(am.report ?? []), text];
