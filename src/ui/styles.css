@@ -2343,3 +2343,12 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
   .fs-ping, .fs-special, .fs-float { animation: none; }
   .fs-float { display: none; }
 }
+
+/* Stat bands (2026-11-13): the number on a stat tile is coloured by its value. Good 10+ green, great 16+ gold, elite 18+ gold with a glow.
+   A bar under the number says it without colour: one for good, two for great and elite. */
+.stats .stat--good dd, .stats .stat--great dd, .stats .stat--elite dd { position: relative; width: fit-content; }
+.stats .stat--good dd::after, .stats .stat--great dd::after, .stats .stat--elite dd::after { content: ""; display: block; height: 2px; margin-top: 2px; background: currentColor; opacity: 0.7; }
+.stats .stat--great dd::after, .stats .stat--elite dd::after { height: 5px; background: linear-gradient(currentColor 0 2px, transparent 2px 3px, currentColor 3px 5px); }
+.stats .stat--good dd { color: #5fe0a5; }
+.stats .stat--great dd { color: #f5c542; }
+.stats .stat--elite dd { color: #ffd45e; text-shadow: 0 0 10px rgba(255, 200, 70, 0.55); }
