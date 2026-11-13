@@ -4,6 +4,9 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-13 · The "Ours" tag sits level
+- **The small "Ours" tag beside a name on Names on the street** is now centred on the name's line instead of hanging slightly low.
+
 ## 2026-11-13 · Fights you can get out of
 - **Reaching the van no longer needs a roll.** A runner ordered to board gets in, and so does one carrying a downed teammate. The cost is the same as before: they are in the open for that round's shots, only three can use the doors a round, and anyone shot down on the way stays outside.
 - **The five new-style fights are 2 easier than the job's own difficulty.** A job's roll is taken by your best person; a fight tests everyone. The plan screen's odds use the same number.
