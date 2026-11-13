@@ -42,4 +42,4 @@ Playable and endless. What's in the game is listed, newest first, in `CHANGELOG.
 - `ART.md`: the visual style and art rules; `docs/screenshots/`: how the game looked over time
 - `DATA.md`: data shapes
 - `WRITING_GUIDE.md`: how to write new crises and jobs; `docs/new-job-prompt.md`: a prompt for drafting jobs outside a session
-- `PLAN-*.md`: step-by-step plans (core loop, progression, renewals, personality)
+- `PLAN-*.md`: step-by-step plans (core loop, progression, renewals, personality; `PLAN-IOS.md` scopes the iOS app, not started)

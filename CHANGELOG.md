@@ -4,6 +4,11 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-13 · A plan for the iOS app (docs only)
+- **`PLAN-IOS.md` scopes turning the game into an iPhone app,** for when that time comes. Nothing in the game changes.
+- It covers: the wrapper (Capacitor recommended), keeping saves safe and bringing a web save into the app, a phone audit, privacy and data (the game collects nothing; what Apple still asks for), what to check before App Store review, and analytics (Apple's own figures first, an event layer with nothing attached, and the funnels worth measuring later).
+- Seven decisions are left open for the owner at the top of the file.
+
 ## 2026-11-12 · The Old Stand, and drones that float
 - **The floodlight on the Basin map is gone.** Drawn from the side in a view from above, it looked odd. Overwatch now sits on the roof of the **Old Stand**, the racecourse's grandstand, drawn from above with its concrete ribs; the sniper's spot and what they can see are the same as before.
 - **The drones are spheres now:** a ball hovering over its own shadow, dark on one side and lit on the other, a ring of light round its middle and one sensor eye, in place of the four-rotor drones of today.
