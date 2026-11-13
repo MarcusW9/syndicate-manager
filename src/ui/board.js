@@ -159,7 +159,7 @@ const TINTS = { stealth: '80, 140, 255', loud: '255, 80, 95', con: '245, 185, 66
 
 /**
  * The board: who's inside, who's on overwatch with which kit, and Joss's picks, on a gear mat.
- * flash: a change to the plan just moved the risk (app.js renderPlan's readBefore), so the mat flashes.
+ * flash: a change to the plan just moved the risk (plan.js renderPlan's readBefore), so the mat flashes.
  */
 export function renderBoard(ui, { plan, tpl, people, crewSize, approachName = '', flash = false }) {
   const { esc } = ui;
