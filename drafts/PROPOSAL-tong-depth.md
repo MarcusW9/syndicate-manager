@@ -1,6 +1,6 @@
 # The other tongs, deeper (proposal, 2026-11-13)
 
-**Status: proposal. Nothing here is built, and no decision in it is made until the owner makes it.** The calls are listed in section 9. Read `docs/RIVAL-TONGS.md` first: this builds on C0 to C5 and D3 and keeps every rule there unless a section below says "changes".
+**Status: agreed, not built.** The owner took every call in section 9 as proposed (2026-11-13). E0 is handed off in `drafts/HANDOFF-tongs-screens.md`; E1 to E4 follow in order, each with its own sim gate. Read `docs/RIVAL-TONGS.md` first: this builds on C0 to C5 and D3 and keeps every rule there unless a section below says "changes".
 
 Mock-up of the screens: `drafts/prototypes/tongs-depth.html` (section 6).
 
@@ -287,6 +287,8 @@ New, by slice:
 - **Design promises:** untouched. Nothing here goes near a fight, a death rule or an exit.
 
 ## 9. The owner's calls
+
+**All taken as proposed (owner, 2026-11-13: "I'd go with your suggestions").** Kept as a list so each can be superseded by name. Wording (call 11) stays the owner's to rewrite at any time.
 
 1. **The order,** and whether E0 (screens only) goes first.
 2. **Habits:** the four, their labels and lines. Is habit public from the start (proposed), or learned by watching the house?
