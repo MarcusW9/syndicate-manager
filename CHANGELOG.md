@@ -8,5 +8,5 @@ The entries are split by month into `docs/changelog/` (newest file first). **Add
 
 | File | Entries | Covers |
 | --- | --- | --- |
-| [`docs/changelog/2026-11.md`](docs/changelog/2026-11.md) | 167 | 2026-11-01 onwards: the tong (halls, raids, heists, the other tongs, retirement, the oath), the navigation rework, the battle rework (Engine 2) and live fights on the map, hard-light job maps |
+| [`docs/changelog/2026-11.md`](docs/changelog/2026-11.md) | 168 | 2026-11-01 onwards: the tong (halls, raids, heists, the other tongs, retirement, the oath), the navigation rework, the battle rework (Engine 2) and live fights on the map, hard-light job maps |
 | [`docs/changelog/2026-10.md`](docs/changelog/2026-10.md) | 124 | 2026-10-23 to 2026-10-31: project start, development and renewals, the squad run (approaches, incidents, overwatch), traits, gear, district art, battles and command fights |

@@ -78,7 +78,7 @@ Related and built: B, the Legend defining job (rivals' fame words feed off the s
 | `src/data/mobility.js` | D3 numbers and wording (first pass) |
 | `src/data/tong.js` | The rank ladder: Back Room, Street, District, City, Harbour |
 | `src/ui/tongs.js` | City › Tongs, a tong's page, a name's read-only profile, Names on the street, The Word |
-| `src/ui/app.js` | Crew › Leads draws scouting, "what it would take" and Sign (`renderLeadName`, `leadNames`) |
+| `src/ui/crew.js` | Crew › Leads draws scouting, "what it would take" and Sign (`renderLeadName`, `leadNames`) |
 | `tests/rivals.test.js`, `rivals-c3.test.js`, `rivals-c3b.test.js`, `rivals-c4.test.js`, `book.test.js`, `mobility.test.js` | Tests |
 | `tests/golden/rivals-1234.json` | Golden snapshot for iOS (C4 adds a `c4` section after a scripted D3 departure; C5 a `c5` section, the week-8 Book) |
 | `scripts/sim-names.mjs`, `scripts/sim-phase2.mjs`, `scripts/sim-book.mjs` | Sims that check Names on the street, the week-26 tier spread, and the Book against the truth |

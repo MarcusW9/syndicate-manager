@@ -25,9 +25,9 @@ mountApp(document.getElementById('app'), state);
 ---
 ## 2. GAME STATE
 
-**Where it lives.** One module-level `let state` in `ui/app.js`; saved to localStorage after every change. **Update pattern:** core functions take `prev`, `structuredClone` it, mutate, return it. UI: 
+**Where it lives.** One live binding `state` in `ui/view.js`, set only by `setGame` from `ui/app.js setState`; saved to localStorage after every change. **Update pattern:** core functions take `prev`, `structuredClone` it, mutate, return it. UI: 
 ```js
-setState(next){ state = next; saveGame(state); render(); }
+setState(next){ setGame(next); saveGame(state); render(); }
 ```
 `render()` replaces `root.innerHTML` wholesale (topbar, nav, main, dock). Exception: a running job's watch screen is patched in place (`isWatching`/`syncWatch`). Click handling is delegated: `onClick` finds `[data-action]` + `data-id` and switches on the action.
 

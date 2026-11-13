@@ -20,7 +20,8 @@ test('every district has a landmark, drawn the same every time and placed where 
 });
 
 test('the halls and the raid screens show the hall\'s landmark, and so does the map', () => {
-  const app = readFileSync(new URL('../src/ui/app.js', import.meta.url), 'utf8');
+  // The screens were split out of app.js on 2026-11-13: these functions live in three of its modules.
+  const app = ['hallscreens', 'raidcards', 'messages'].map((f) => readFileSync(new URL(`../src/ui/${f}.js`, import.meta.url), 'utf8')).join('\n');
   const body = (name) => app.slice(app.indexOf(`function ${name}(`), app.indexOf('\n}\n', app.indexOf(`function ${name}(`)));
   assert.match(body('renderHalls'), /hallMark\(h\.district/, 'each hall of ours');
   assert.match(body('renderHalls'), /hallMark\(d, \{ dim: true \}\)/, 'a hall not yet opened, dim');
