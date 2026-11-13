@@ -2292,6 +2292,13 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .siteplan.is-fight .sp-token.fs-foe > text.fs-foe__n { display: inline; }
 .fs-foe__n { fill: var(--accent) !important; font-size: 5px !important; font-family: var(--display); paint-order: stroke; stroke: #0b0d11; stroke-width: 1.4px; }
 .siteplan.is-staged .sp-token:not(.fs-foe) .sp-face__ring { stroke: var(--accent-2); stroke-width: 1.1; }
+/* A staged foe that is hit (fightstage.js struck): the token shakes (the individual `translate` property composes with its transform) and its face flashes white. The old .sp-enemy rules above don't match these tokens. */
+.fs-foe.is-struck .fs-foe__tint { animation: fs-struck-tint 0.32s ease-out; }
+.fs-foe.is-struck .fs-foe__ring { animation: sp-struck-flash 0.32s ease-out; }
+@keyframes fs-struck-tint { 0%, 45% { fill: #fff; opacity: 0.85; } }
+@media (prefers-reduced-motion: no-preference) {
+  .fs-foe.is-struck { animation: sp-struck-shake 0.32s linear; }
+}
 .fs-pips rect { fill: #2a303b; } .fs-pips rect.is-on { fill: var(--accent-2); } .fs-foe .fs-pips rect.is-on { fill: var(--accent); }
 .sp-token.fs-hunker > *:not(.fs-pips) { transform: scale(1.05) translateY(1px); }
 .siteplan.is-fight .sp-token.fs-hunker .sp-face__ring { stroke-dasharray: 2 1.2; }

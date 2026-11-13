@@ -720,6 +720,7 @@ export function playRound(b, rng) {
   for (const t of b.threats) {
     const e = b.enemies.find((x) => x.n === t.enemy);
     if (e.out || e.fled || t.cancelled) continue;
+    if (b.ambush && b.round === 1 && t.kind === 'aim') continue; // the crew had the jump on them: no shot in round 1 (b.ambush is set by runfight.js startFight)
     if (t.kind === 'aim') {
       const v = runner(b, t.target);
       if (!v || v.down || v.dead || v.withdrawn || v.aboard) continue;

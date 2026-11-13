@@ -101,13 +101,15 @@ export function startFight(state, am, tpl, inc, id, zone, diff, able, { ambush =
     standbyOp: sb, risk: ['cautious', 'steady', 'committed'].includes(am.orders) ? am.orders : 'steady',
     watched: am.callIn !== 'never' && !(am.away && !am.away.command),
   }, rng);
+  // A passed roll on a loud run's first guard (mission.js): that guard is put down quietly, and the rest get no shot in round 1.
+  if (ambush) { b.ambush = true; if (b.enemies.length > 1 && b.enemies.at(-1).kind === 'hired') b.hiredTotal -= 1; if (b.enemies.length > 1) b.enemies.pop(); }
   b.auto = false;
   b.startLines = [];
   b.spots = fightStage(tpl.district, am, zone, able.length);
   am.battle = b;
   am.fought = true;
   if (am.alert >= ALERT_MAX && !am.wentLoud) am.alertDue = true;
-  const text = `It's a fight: ${b.enemies.length} against ${b.runners.map((r) => r.handle).join(', ')}.${ambush ? ' They have the jump on them.' : ''} ${type === 'holdHack' ? `Keep ${b.runners.find((r) => r.id === b.goal.protect)?.handle ?? 'the tech'} working.` : 'Hold for the van, then get out.'}`;
+  const text = `It's a fight: ${b.enemies.length} against ${b.runners.map((r) => r.handle).join(', ')}.${ambush ? ' You have the jump on them: they get no shot in round one.' : ''} ${type === 'holdHack' ? `Keep ${b.runners.find((r) => r.id === b.goal.protect)?.handle ?? 'the tech'} working.` : 'Hold the line until the van pulls in, then everyone boards.'}`;
   record(am, { kind: 'battle', phase: 'start', from: id, zone, text, report: text, ...fightSnapshot(b), stage: stageOf(b) });
   am.log.push({ kind: 'bad', text });
   am.report = [...(am.report ?? []), text];
