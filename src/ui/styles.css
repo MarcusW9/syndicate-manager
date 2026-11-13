@@ -2336,3 +2336,10 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
   .fs-ping, .fs-special, .fs-float { animation: none; }
   .fs-float { display: none; }
 }
+
+/* The tong's name (2026-11-13): the field on the founder pick, and the name with its pencil on the Tong screen. */
+.tongname { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0; }
+.tongname__label { font: 700 0.75rem var(--display, inherit); letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-2); }
+.tongname__input { flex: 1 1 200px; min-height: 44px; padding: 0 10px; font: 600 1rem var(--display, inherit); color: inherit; background: transparent; border: 1px solid var(--accent-2); }
+.tongname__shown { display: flex; align-items: center; gap: 4px; margin: 4px 0; font: 700 1.1rem var(--display, inherit); }
+.iconbtn { min-width: 44px; min-height: 44px; background: none; border: 0; color: var(--accent-2); font-size: 1.1rem; cursor: pointer; }

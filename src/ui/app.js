@@ -34,6 +34,7 @@ import { PIECES } from '../data/hallBuild.js';
 
 import { advanceDay, calendar, isBlocked, seasonStartDay } from '../core/time.js';
 import { createNewGame, chooseFounders } from '../core/state.js';
+import { tongNameOf, cleanTongName, tongNameProblem, setTongName, TONG_NAME_MAX } from '../core/tongname.js';
 import { marksText } from '../core/marks.js';
 import { recordOf } from '../core/record.js';
 import { LEGEND_TEXT } from '../data/legend.js';
@@ -100,6 +101,8 @@ let sidePlan = null; // { taskId, crew: [] } while planning a side task (Jobs ta
 let playReportId = null; // a hands-off report playing out on its first open (renderReportTimeline)
 let openOperativeId = null;
 let openRecruitId = null;
+let tongNaming = null; // the draft while the Tong screen's name is being edited (null when it isn't)
+let foundingTongName = ''; // what's typed in the founder pick's name field
 let tongTab = 'halls'; // Tong's sub-tab: 'halls' | 'armoury' (ui/gear.js draws the Armoury)
 let crewTab = 'roster'; // Crew's sub-tab: 'roster' | 'leads' | 'wall'
 let hallInside = null; // inside one building of the open hall (a part's id), or null for the compound (2026-11-09; UI only, never saved)
@@ -152,7 +155,12 @@ export function mountApp(el, initialState) {
   state = initialState;
   root.addEventListener('click', onClick);
   // Map districts are SVG groups, not buttons: let Enter and Space open them too.
+  // Typing in a name field keeps the draft without drawing again (a redraw would drop focus).
+  root.addEventListener('input', (e) => {
+    if (e.target.id === 'tongname') { if (tongNaming !== null) tongNaming = e.target.value; else foundingTongName = e.target.value; }
+  });
   root.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.id === 'tongname' && tongNaming !== null) { e.preventDefault(); root.querySelector('[data-action="tong-name-save"]')?.click(); }
     if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('g[data-action]')) { e.preventDefault(); onClick(e); }
     if (e.key === 'Escape' && pickSlot) { focusNext = { action: 'pick-slot', id: pickSlot }; pickSlot = null; render(); }
     else if (e.key === 'Escape' && screen === 'city' && cityTab === 'map' && cityDistrict && !state.activeMission) { cityDistrict = null; render(); }
@@ -380,9 +388,22 @@ function onClick(e) {
       focusNext = { action, id };
       break;
     case 'found-crew': {
-      const next = chooseFounders(state, founderPick);
+      const typed = cleanTongName(foundingTongName);
+      const problem = typed ? tongNameProblem(state, typed) : null;
+      if (problem) { alert(problem); break; }
+      const next = chooseFounders(state, founderPick, typed || undefined);
       if (next === state) return;
+      foundingTongName = '';
       founderPick = []; nav.clear(); screen = 'inbox';
+      return setState(next);
+    }
+    case 'tong-rename': tongNaming = tongNameOf(state); break;
+    case 'tong-name-cancel': tongNaming = null; focusNext = { action: 'tong-rename', id: undefined }; break;
+    case 'tong-name-save': {
+      const problem = tongNameProblem(state, tongNaming);
+      if (problem) { alert(problem); break; }
+      const next = setTongName(state, tongNaming);
+      tongNaming = null;
       return setState(next);
     }
     case 'hire': openRecruitId = null; return setState(hire(state, id));
@@ -838,6 +859,7 @@ function render() {
   if (raidCardDue) { const d = raidCardDue; raidCardDue = null; root.querySelector(`#threat-${d}`)?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
   if (upcomingDue) { upcomingDue = false; root.querySelector('.upcoming--strip')?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
   if (cityMapDue) { cityMapDue = false; root.querySelector('.mapframe')?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
+  if (tongNaming !== null) { const f = root.querySelector('#tongname'); if (f && document.activeElement !== f) f.focus({ preventScroll: true }); }
   const want = focusNext ?? refocus;
   focusNext = null;
   if (want) {
@@ -1778,6 +1800,10 @@ function renderFounding() {
           <p class="joss__line">Six people will work for street wages, and the room sleeps three. Pick who you want to grow with. We hire the rest later.</p>
         </div>
       </div>
+      <label class="tongname">
+        <span class="tongname__label">Name your tong</span>
+        <input id="tongname" class="tongname__input" type="text" maxlength="${TONG_NAME_MAX}" autocomplete="off" placeholder="${esc(NAMES.defaultTong)}" value="${esc(foundingTongName)}">
+      </label>
       <ul class="founders" role="group" aria-label="Candidates: pick ${FOUNDERS_TO_PICK}">
         ${cands.map((r, i) => {
           const on = picked.includes(r.id);
@@ -2045,6 +2071,12 @@ function renderTong() {
       <div class="opshead"><h1 class="cityhead">Tong</h1>
         <button class="tierbtn" data-action="info" data-id="tong" aria-expanded="${openInfo.has('tong')}" aria-label="The tong's rank: ${esc(rank.name)}. What's a tong?"><span class="tier">${esc(rank.name)} tong</span></button></div>
       ${infoText('tong', TONG_EXPLAINER)}
+      ${tongNaming !== null ? `<div class="tongname tongname--edit">
+        <input id="tongname" class="tongname__input" type="text" maxlength="${TONG_NAME_MAX}" autocomplete="off" aria-label="Your tong's name" value="${esc(tongNaming)}">
+        <button class="btn btn--primary" data-action="tong-name-save">Save</button>
+        <button class="btn" data-action="tong-name-cancel">Cancel</button>
+      </div>` : `<p class="tongname__shown"><strong>${esc(tongNameOf(state))}</strong>
+        <button class="iconbtn" data-action="tong-rename" aria-label="Rename the tong" title="Rename">✎</button></p>`}
       <p class="small tongstanding">${esc(standing)}</p>
       ${subTabs('Tong sections', 'tong-tab', [['halls', 'Halls'], ['armoury', 'Armoury']], tab)}
       ${tab === 'halls' ? renderHalls() : renderArmoury({ ...gearUi, embedded: true }, state)}
