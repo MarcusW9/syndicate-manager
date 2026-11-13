@@ -1,6 +1,6 @@
 # Core loop from first principles (discussion, 2026-10-26)
 
-Open discussion with the owner. Nothing here is agreed except where it says so; agreed points get `DESIGN.md` log rows. Started from `STATE-OF-PLAY.md`.
+Open discussion with the owner. Nothing here is agreed except where it says so; agreed points get `DESIGN.md` log rows. Started from `STATE-OF-PLAY.md` (now `docs/STATE-OF-PLAY-2026-10-26.md`).
 
 ## Agreed so far
 

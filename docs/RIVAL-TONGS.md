@@ -113,4 +113,4 @@ Related and built: B, the Legend defining job (rivals' fame words feed off the s
 - Any new rival roll gets its own `hashRng` key and must not move `rngCounter`.
 - Any state change: bump `SAVE_VERSION`, add a migration in `save/save.js`, extend the golden file if tongs or cards change.
 - New player-facing words go in `data/rivals.js` or `data/mobility.js`, not core. Canon changes go through the `add-lore` skill.
-- `npm test`, then add a `CHANGELOG.md` entry and a decision-log row. Screenshots if the look changes.
+- `npm test`, then add a changelog entry (top of the newest file in `docs/changelog/`) and a decision-log row. Screenshots if the look changes.
