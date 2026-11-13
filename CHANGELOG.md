@@ -4,6 +4,12 @@ What changed in each update, newest first. For *why* a decision was made, see th
 
 Live build: https://marcusw9.github.io/syndicate-manager/
 
+## 2026-11-13 · Fights you can get out of
+- **Reaching the van no longer needs a roll.** A runner ordered to board gets in, and so does one carrying a downed teammate. The cost is the same as before: they are in the open for that round's shots, only three can use the doors a round, and anyone shot down on the way stays outside.
+- **The five new-style fights are 2 easier than the job's own difficulty.** A job's roll is taken by your best person; a fight tests everyone. The plan screen's odds use the same number.
+- **Why:** with the crew a tong really has when these jobs unlock, the best team left someone behind in about half of Warehouse Lift and Protection fights, and committed risk killed someone in about 1 fight in 6. After the change (`docs/sims/gate-teams-2026-11-13.md`) the best team leaves someone behind in 8% (Warehouse Lift) and 12% (Protection) on steady, and committed risk costs a life in 3.6% and 5.0% of those fights. A carelessly picked team on committed still loses someone in about 1 fight in 5; the plan screen shows that chance before you send them.
+- New sim: `node scripts/sim-gate-teams.mjs`. The older team sims used the day-one roster, which never meets these jobs.
+
 ## 2026-11-13 · A plan for deeper rival tongs (no game change)
 - **No game change.** A proposal, `drafts/PROPOSAL-tong-depth.md`: each tong gets a way of running its people (Grinder, Short table, Workshop, Old house), so names move between houses for reasons; a house of any size can overspend and have to sell; what we know about a name fades unless we keep watching, and a whole house can be watched; other tongs can want the same job, and how they look at us starts to matter. The owner has agreed it as written; none of it is built yet, and the screens come first (`drafts/HANDOFF-tongs-screens.md`).
 - **A mock-up of a fuller Tongs menu** (`drafts/prototypes/tongs-depth.html`): a ladder showing every tong on its rung with ours among them, who has come and gone this month, house cards with faces, a house's page as a file, and the Anchor's Book as a slate of faces.

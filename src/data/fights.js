@@ -8,6 +8,8 @@
 // data once slice 3's sim runs on the real code.
 
 export const FIGHT = {
+  // A fight is played this much below the job's difficulty (core/fight.js fightDiff; 2026-11-13, sims/gate-teams-2026-11-13.md).
+  ease: 2,
   // Pips (spec 10a): pips = max(minPips, floor(endurance / endurancePerPip)); a light wound starts a fight 2 down.
   endurancePerPip: 2, minPips: 3, lightWoundPips: 2,
   // Shots: aimChance = clamp((11 + aimStep - (cool - base) - cover - (hunker ? hunkerStep : 0)) / 20, aimFloor, aimCeil);
@@ -17,7 +19,8 @@ export const FIGHT = {
   cover: { open: 0, half: 2, full: 4 }, startCover: 'half', hunkerStep: 4,
   absorb: { none: 0, street: 1, pro: 2 }, droneAbsorb: 1,
   // Runner actions: d20 + stat >= 10 + base + step (+ the target's cover for attacks).
-  attackStep: -2, jamStep: 0, patchStep: 0, stabiliseStep: 2, boardStep: -4, carryStep: 2, overwatchStep: -1,
+  // Boarding and carrying need no roll (2026-11-13): a boarder spends the round in the open and takes a door slot.
+  attackStep: -2, jamStep: 0, patchStep: 0, stabiliseStep: 2, overwatchStep: -1,
   hit: 1, strongHit: 2,
   // A runner's hit is strong (2 pips) on this margin over the roll's need, by their sidearm's damage
   // (damage 2 or less reads as 2, 5 or more as 5): a harder-hitting gun is strong more often.

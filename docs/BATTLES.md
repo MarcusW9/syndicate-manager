@@ -1,6 +1,6 @@
 # How battles work
 
-Checked against the code on 2026-11-12 (`src/core/fight.js`, `runfight.js`, `battle.js`, `data/fights.js`, `data/dilemmas.js`, `data/battle.js`). The code and the data files win if this ever disagrees; fix this file when they change. Why each rule is what it is: `DESIGN.md` decision log (`docs/design/2026-11.md`, rows from 2026-11-10 on) and `drafts/SPEC-battle-orders.md` (section 30 is what was settled). Where things live: `CODEMAP.md`.
+Checked against the code on 2026-11-13 (`src/core/fight.js`, `runfight.js`, `battle.js`, `data/fights.js`, `data/dilemmas.js`, `data/battle.js`). The code and the data files win if this ever disagrees; fix this file when they change. Why each rule is what it is: `DESIGN.md` decision log (`docs/design/2026-11.md`, rows from 2026-11-10 on) and `drafts/SPEC-battle-orders.md` (section 30 is what was settled). Where things live: `CODEMAP.md`.
 
 ## Two engines
 
@@ -12,7 +12,7 @@ Checked against the code on 2026-11-12 (`src/core/fight.js`, `runfight.js`, `bat
 | Code | `core/fight.js` (rules), `core/runfight.js` (the run's side), `core/fightview.js` (what the screen reads) | `core/battle.js` (rules), `core/runbattle.js` (the run's side) |
 | Numbers | `data/fights.js`, `data/dilemmas.js` | `data/battle.js` |
 
-Both use the game's one roll, **d20 + stat ≥ 10 + difficulty**. A fight's difficulty is the job's typical roll, so fights scale with the work. Randomness is always the run's seeded stream; previews, "if nothing" text and dilemma checks never draw.
+Both use the game's one roll, **d20 + stat ≥ 10 + difficulty**. A fight's difficulty is the job's typical roll, so fights scale with the work; engine 2 plays it **2 lower** (`FIGHT.ease`, `fight.js fightDiff`), because a job's roll is taken by the crew's best and a fight tests every runner on their own stats. `diff` below means the fight's. Randomness is always the run's seeded stream; previews, "if nothing" text and dilemma checks never draw.
 
 **When a fight starts** (`runbattle.js startBattle`): an incident with danger that the crew fails to save starts one, and on a loud run the first guarded danger incident always does (`loudFightDue`). If the job is one of the five, `runfight.js startFight` builds an engine 2 fight; otherwise engine 1.
 
@@ -59,7 +59,7 @@ The Heights send corp and drones; the Docks send hired, hired, enforcers (in rot
 | Jam | d20 + tech ≥ 10 + diff. Cancels every radio threat this round; a drone is out. Costs the jammer their action. |
 | Patch | d20 + medical ≥ 10 + diff. Heals 1 pip. |
 | Stabilise | d20 + medical ≥ 10 + diff + 2. Stops a downed runner bleeding. |
-| Board the van | d20 + cool ≥ 10 + diff − 4. Carrying a downed teammate is 2 easier than that. |
+| Board the van | No roll (2026-11-13). The boarder takes a door slot and is in the open for that round's shots; one shot down on the way stays outside. Carrying a downed teammate is the same: both are in if the carrier makes it. |
 
 ### Orders
 Every runner has a **duty**, a **target**, a **priority** list and a **fallback**. The crew's own default is already set and visible; the player can edit any of it.
@@ -158,6 +158,6 @@ Used for every fight not listed above, and for raids on the halls.
 
 ## Tuning
 
-All numbers are first values in data. Engine 2's are checked by `scripts/sim-orders.mjs` (the validation gate on the real code; reports in `docs/sims/`) and the pull-out change by `docs/sims/pullout-2026-11-12.md`. Engine 1: `scripts/sim-battles.mjs`, `sim-districts.mjs`.
+All numbers are first values in data. Engine 2's are checked by `scripts/sim-gate-teams.mjs` (the five jobs with the roster a campaign has when each unlocks; `docs/sims/gate-teams-*.md`), `scripts/sim-orders.mjs` (the validation gate on the real code; reports in `docs/sims/`) and the pull-out change by `docs/sims/pullout-2026-11-12.md`. Engine 1: `scripts/sim-battles.mjs`, `sim-districts.mjs`.
 
 Tests: `tests/fight.test.js`, `runfight.test.js`, `fightscreen.test.js`, `fightcamera.test.js`, `fightspots.test.js`, `commandfight.test.js`, `battle.test.js`.

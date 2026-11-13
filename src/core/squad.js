@@ -12,7 +12,7 @@ import { jobView } from './jobs.js';
 import { intelFor } from './sidetasks.js';
 import { WATCHED_PENALTY, watchedIn } from './heat.js';
 import { battleOdds, overwatchOf } from './battle.js';
-import { fightOddsFor } from './fight.js';
+import { fightOddsFor, fightDiff } from './fight.js';
 import { FIGHT_JOBS } from '../data/fights.js';
 import { spotsForJob } from './fightspots.js';
 import { crewValue } from './worth.js';
@@ -47,7 +47,7 @@ export function coverage(template, crew, approach, { threat = template.threat, o
   const kit = overwatch?.op ? overwatchKit(overwatch.op, overwatch.kit) : null;
   const ow = kit ? { kit: overwatch.kit, left: kit.uses } : null;
   // The five jobs' fights (engine 2) are read from these arguments: the coverage rows and the plan screen's fight block (ui/fightscreen.js) share them.
-  const fightArgs = (diff, zone) => ({ type: FIGHT_JOBS[template.id], diff, threat, site: template.district, crew, approach, overwatch: ow ? overwatchOf(overwatch.op, ow, zone) : null, wheels: wheels ? { id: wheels.id, handle: wheels.handle, value: effectiveStat(wheels, 'piloting', { approach }).value } : null });
+  const fightArgs = (diff, zone) => ({ type: FIGHT_JOBS[template.id], diff: fightDiff(diff), threat, site: template.district, crew, approach, overwatch: ow ? overwatchOf(overwatch.op, ow, zone) : null, wheels: wheels ? { id: wheels.id, handle: wheels.handle, value: effectiveStat(wheels, 'piloting', { approach }).value } : null });
   const rows = likelyIncidents(approach).map(({ id, zone, sometimes }) => {
     const inc = incidentById(id);
     const diff = incidentDifficulty(template, am, inc);
