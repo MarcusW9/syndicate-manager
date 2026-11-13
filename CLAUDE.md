@@ -3,7 +3,7 @@
 Text-first crew management game (Football Manager style, endless). Plain JavaScript + Vite. Hosted on GitHub Pages; will be wrapped for iOS later.
 
 ## Architecture (do not break)
-- `CODEMAP.md` says where things live and how a run flows: read it before reading `src/core/` files, and keep it current when you move things.
+- `CODEMAP.md` says where things live and how a run flows: find a file's line there before reading it, and keep the map current when you move things.
 - `src/core/` = game logic only. No DOM, no `localStorage`, no `window`. Functions take state and return new state.
 - `src/ui/` = the only code that touches the DOM.
 - `src/save/save.js` = the only code that touches storage. iOS swaps its three storage functions.
@@ -11,22 +11,27 @@ Text-first crew management game (Football Manager style, endless). Plain JavaScr
 - `src/config/names.js` = all placeholder names (title, city, districts). Rename there only.
 
 ## Where to read for a task
+Read the smallest thing that answers the question: grep for a file name or topic before opening a whole doc.
+
 | Working on | Read first |
 | --- | --- |
-| Anything in `src/core/` | `CODEMAP.md` |
-| State shape, saves, economy loop, tests, how things connect | `docs/ARCHITECTURE.md` |
+| A file in `src/core/` or `src/ui/` | Its line in `CODEMAP.md` (`grep -n "<name>.js" CODEMAP.md`; one file per line) |
+| A run's flow, `finish()`, pay/heat/reputation | `CODEMAP.md` "The run, in order"; `docs/ARCHITECTURE.md` section 5 "The finish function"; then `core/mission.js` |
+| State shape (root, a runner, a job in progress) | `docs/ARCHITECTURE.md` sections 2, 3 and 5 |
+| The day tick, the week, money and heat | `docs/ARCHITECTURE.md` section 4 |
+| Changing the save shape | `docs/ARCHITECTURE.md` section 8, the newest blocks of `migrate` in `src/save/save.js`, `SAVE_VERSION` in `core/state.js` |
+| Tests, sims, helpers | `CODEMAP.md` "Tests and scripts"; `docs/ARCHITECTURE.md` section 10 |
+| Fights (both engines) | `docs/BATTLES.md` |
 | A job, crisis or beat (content) | `src/data/missions/<job>.js`, then `core/validate.js` and `core/jobcheck.js` for the rules it must meet (`node scripts/check-job.mjs <file>`) |
-| A run's flow, `finish()`, pay/heat/reputation | `CODEMAP.md` "The run, in order", then `core/mission.js` |
 | Planning read, risk numbers | `core/squad.js`, `core/risk.js` |
 | The other tongs (rivals, free names, scouting, buyouts, rival offers) | `docs/RIVAL-TONGS.md` |
 | Traits, growth, specialisations | `data/earnedTraits.js`, `core/earned.js`, `core/development.js` |
 | Side tasks, hands-off runs | `core/sidetasks.js`, `core/autorun.js` |
-| Changing the save shape | `src/save/save.js` (`migrate`) and `SAVE_VERSION` in `core/state.js` |
-| Where content sits across tabs (sitemap) | `docs/SCREENS.md` |
-| Any screen or style | `docs/UI-SKIN.md`, newest `docs/screenshots/` set, `ui/app.js`, `ui/board.js` |
+| What is on which tab | `docs/SCREENS.md` "Tabs" and "Inside each screen" |
+| Any screen or style | `docs/UI-SKIN.md` (the token table, then the bullet for that screen), the newest `docs/screenshots/` set, `CODEMAP.md` "UI files" for the function that draws it |
 | Writing in-game text, lore, names | `WRITING_GUIDE.md`, `src/config/names.js`, and from `WORLD.md` only the context block at its end plus the one `##` section the text is about (the whole file only when changing canon); any change to canon goes through the `add-lore` skill (`.claude/skills/add-lore/`), which reads all of it |
-| Why something was decided | `DESIGN.md` decision log (grep the topic; rows may be under `docs/design/`) |
-| What shipped / what's next | newest file in `docs/changelog/` (grep, don't read whole) / `HANDOFF.md` |
+| Why something was decided | Grep the topic in `docs/design/` (the decision log; index in `DESIGN.md`) |
+| What's next / what shipped | `HANDOFF.md` / grep `docs/changelog/` (never read a whole month) |
 
 ## iOS-ready rules
 - No information that only appears on hover. Tap/click to reveal.

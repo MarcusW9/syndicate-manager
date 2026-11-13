@@ -117,3 +117,14 @@ When a batch comes back: check every line against the game data (ids, costs, inj
 - **Force-push is denied** by the permission system. After a PR merges, branch fresh from `main` instead of resetting the old branch. When the session must reuse the same branch name (PRs here are squash-merged, so the old remote branch isn't an ancestor of `main`): restart from `main`, commit, then `git merge origin/<branch>` and keep your side (`git checkout --ours -- .`; check first that `git diff origin/main origin/<branch>` is empty), then push normally (done for slice 3).
 - github.io isn't reachable from the container; check deploys with the GitHub Actions runs instead.
 - **Stacked PRs don't retarget themselves** unless the lower PR's branch is deleted when it merges. On 2026-10-26 #14-#17 were merged into each other's branches instead of `main`, and #18 had to carry them over. Either ask the owner to delete each branch on merge, or after the bottom PR merges, retarget the next PR to `main` (`update_pull_request` with `base: main`) before it's merged.
+
+---
+
+# Playtest status (moved word for word from `docs/ARCHITECTURE.md` section 12, 2026-11-13)
+
+CHANGELOG.md has no section titled "first playtest"; the playtest notes are mostly in DESIGN.md.
+- **First playtest (2026-10-25, DESIGN.md):** owner felt "no sense of a climb" and no investment in crew development (the Five started near their ceilings with every job open). Changes after: five generated raw rookies, rent ¥1,500, gated job board (`jobGates`, save v12), reputation 0.75/threat, rookie jobs, growth cost ×2.5, then career/earned traits and the City map.
+- **2026-10-27 owner playtest feedback (CHANGELOG + DESIGN):** squad picker separates free crew from the squad ("Already on the squad" greyed, slot tags); run feed is one line per moment with details on tap; "less to read" on Today and the job board (grouped "back from the job" lines, side-work one-liner, stat icons); crises name the right person (fixed 2026-10-28).
+- **2026-10-28 owner feedback:** smaller (i) buttons, a reputation line styled like the Heat meter, tidier job-card icons.
+- **2026-11-05 owner playtest of the tong's Phase 1 (HANDOFF + DESIGN):** call-ins about right; Take Command nice to have; outcomes readable; money fine; Today busy. Not happening yet: sending "the cheapest crew I trust" (the owner sent the best) and the bench mostly sat; lean picks (#75) were the first answer, districts as presence (Phase 2) the next.
+- Later notes: owner feedback that hands-off results arrive too quickly led to animated/next-day report playback; open DESIGN question on whether heat "earns its place" (cut it if nobody notices). No later formal playtest is recorded — **unclear**.
