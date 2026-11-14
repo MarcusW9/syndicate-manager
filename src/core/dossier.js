@@ -6,7 +6,7 @@
 
 import { hashRng, pick } from './rng.js';
 import { ROLE_PROFILES, HANDLES, BADGE_COLORS } from '../data/recruitPools.js';
-import { RIVALS, HABIT, SCOUT_TEXT, fill } from '../data/rivals.js';
+import { RIVALS, HABIT, REACH, SCOUT_TEXT, fill } from '../data/rivals.js';
 import { RECRUIT_GEAR } from '../data/gear.js';
 import { loadoutOf } from './gear.js';
 import { availability } from './crew.js';
@@ -19,6 +19,7 @@ import { hallWithRoom, freeBeds } from './halls.js';
 import { HOME_HALL } from '../data/halls.js';
 import { crewLead } from './lead.js';
 import { rankForHalls } from './tong.js';
+import { isSelling } from './houses.js';
 import { TONG_RANKS } from '../data/tong.js';
 import { NAMES } from '../config/names.js';
 import { money } from './money.js';
@@ -212,16 +213,16 @@ export function persuasion(state, card) {
 function buyoutFeeFor(state, card, d) {
   const tong = tongOf(state.rivals, card.tongId);
   if (!tong || card.id === tong.headId) return 0;
-  return buyoutAmount(tong, d.wage);
+  return buyoutAmount(tong, d.wage, isSelling(state.rivals, tong));
 }
 
 /** The buyout between us and a tong for a runner on this wage, either way round (part D3): the tong's wealth and regard set it. */
-export function buyoutAmount(tong, wage) {
+export function buyoutAmount(tong, wage, selling = false) {
   const B = RIVALS.buyout;
   const rich = Math.min(B.richCap, Math.floor(tong.wealth / B.richStep) * B.richPer);
   const regard = tong.regard ?? 0;
   const mood = regard <= RIVALS.regard.cold ? B.cold : regard >= RIVALS.regard.warm ? B.warm : 1;
-  return round50(wage * B.weeks * (1 + rich) * mood * (tong.habit === 'boutique' ? HABIT.buyoutBoutique : 1)); // E1: a short table's names cost more
+  return round50(wage * B.weeks * (1 + rich) * mood * (tong.habit === 'boutique' ? HABIT.buyoutBoutique : 1) * (selling ? REACH.sellBuyout : 1)); // E1: a short table's names cost more; E2: a house that is selling asks less
 }
 
 /** The buyout owed to the tong a name is in; 0 for a free name; null for a head (never approachable). */

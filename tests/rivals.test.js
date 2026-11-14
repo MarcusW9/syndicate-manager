@@ -387,6 +387,14 @@ test('golden: a fixed seed gives the stored snapshot, after seeding and after 4 
     paths: e1.cards.filter((c) => c.path.length).map((c) => `${c.id}:${c.tongId ?? 'free'}:${c.path.map((p) => p.tongId).join('>')}`),
     word: e1.word.map((w) => `${w.kind}:${w.refs.join(',')}`),
   };
+  // E2: overreach after 30 weeks: the books, strain, the stories, the sale and the talk (wages, strain and the sale are portable integers and ids).
+  const e2 = weeks(game(1234), 30).rivals;
+  out.e2 = {
+    books: e2.tongs.map((t) => `${t.name}:${t.status}:${t.halls}:${t.wealth}:${t.strain}:${t.bills.join('/')}:${t.income.join('/')}:${t.shoppedDay}`),
+    threads: e2.threads.filter((t) => t.family === 'overreach').map((t) => `${t.id}:${t.stage}:${t.open}`),
+    sale: e2.sale ? { tongId: e2.sale.tongId, cardIds: e2.sale.cardIds, untilDay: e2.sale.untilDay } : null,
+    word: e2.word.filter((w) => /^overreach|^bought$/.test(w.kind)).map((w) => `${w.kind}:${w.refs.join(',')}`),
+  };
   const file = new URL('./golden/rivals-1234.json', import.meta.url);
   if (!existsSync(file)) { writeFileSync(file, JSON.stringify(out, null, 1) + '\n'); }
   assert.deepEqual(out, JSON.parse(readFileSync(file, 'utf8')));
