@@ -13,7 +13,7 @@ import { TONG_RANKS } from '../data/tong.js';
 import { NAMES } from '../config/names.js';
 import { tongNameOf } from '../core/tongname.js';
 import { seal, assignSeals, SEAL_COLOUR } from './seal.js';
-import { BOOK_TEXT, SCREEN_TEXT, HABITS, HABIT_NOTE, RATING_WORDS, FAME_LINE, STYLE_TEXT, ELDER_LINE, POTENTIAL_TEXT, SCOUT_LEVEL_TEXT, SIGN_REASON, fill, wordLine } from '../data/rivals.js';
+import { BOOK_TEXT, SCREEN_TEXT, HABITS, HABIT_NOTE, RATING_WORDS, FAME_LINE, STYLE_TEXT, ELDER_LINE, POTENTIAL_TEXT, SCOUT_LEVEL_TEXT, SIGN_REASON, HOUSE_STATE, HOUSE_UNKNOWN, HOUSE_READ_TEXT, READ_AGE, OTHERS_LINE, QUIET_LINE, UNSETTLED_LINE, LOOKING, SLATE_MARK, SLATE_TAG, CHANGED_LINE, WATCH_TEXT, fill, wordLine } from '../data/rivals.js';
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const tierName = (id) => TONG_RANKS.find((r) => r.id === id)?.name ?? id;
@@ -53,9 +53,9 @@ function slateTile(state, n, opId) {
   const corner = n.yours ? seal({ ours: true, name: tongNameOf(state) }, 20) : n.free ? seal('free', 20) : n.tong ? seal({ name: n.tong, style: n.style }, 20) : '';
   const mark = MOVE_MARK[n.move];
   const face = n.yours ? faceOfOurs(state, n.name, 44) : n.id ? faceOfCard(state, n.id, 44) : '';
-  const body = `${face}<span class="stile__corner">${corner}</span>${mark ? `<i class="mv mv--${mark[1]}" title="${esc(BOOK_TEXT.moves[n.move])}">${mark[0]}</i>` : ''}<span class="tile__name">${esc(firstName(n.name))}</span>`;
+  const body = `${face}<span class="stile__corner">${corner}</span>${mark ? `<i class="mv mv--${mark[1]}" title="${esc(BOOK_TEXT.moves[n.move])}">${mark[0]}</i>` : ''}<span class="tile__name">${esc(firstName(n.name))}</span>${n.mark ? `<span class="tile__tag tile__tag--${esc(n.mark)}">${esc(SLATE_TAG[n.mark])}</span>` : ''}`;
   const cls = `stile${n.yours ? ' stile--ours' : ''}`;
-  const label = `${n.name}${n.move && BOOK_TEXT.moves[n.move] ? `, ${BOOK_TEXT.moves[n.move]}` : ''}`;
+  const label = `${n.name}${n.move && BOOK_TEXT.moves[n.move] ? `, ${BOOK_TEXT.moves[n.move]}` : ''}${n.mark ? `, ${SLATE_MARK[n.mark]}` : ''}`;
   if (n.yours && opId) return `<button class="${cls}" data-action="open-op" data-id="${esc(opId)}" aria-label="${esc(label)}">${body}</button>`;
   if (n.id) return `<button class="${cls}" data-action="tong-name" data-id="${esc(n.id)}" aria-label="${esc(label)}">${body}</button>`;
   return `<span class="${cls}">${body}</span>`;
@@ -155,7 +155,7 @@ function tongCard(state, t) {
       <span class="house__what"><span class="tongcard__name">${esc(t.name)}</span>
         <span class="small muted">${esc(place(t.home))}${t.head ? ` · run by ${esc(t.head)}` : ''}</span></span>
       <span class="tongcard__go">Open ›</span></button>
-    <div class="chips"><span class="chip">${esc(STYLE_TEXT[t.style].label)}</span>${HABITS[t.habit] ? `<span class="chip chip--habit">${esc(HABITS[t.habit].label)}</span>` : ''}</div>
+    <div class="chips"><span class="chip">${esc(STYLE_TEXT[t.style].label)}</span>${HABITS[t.habit] ? `<span class="chip chip--habit">${esc(HABITS[t.habit].label)}</span>` : ''}<span class="chip chip--state chip--${esc(t.state ?? 'unknown')}" aria-label="${t.state ? `Doing: ${esc(HOUSE_STATE[t.state])}` : 'Not watched yet'}">${esc(t.state ? HOUSE_STATE[t.state] : HOUSE_UNKNOWN)}</span></div>
     ${faces.length ? `<div class="faces">${faces.map((n) => `<button class="facebtn" data-action="tong-name" data-id="${esc(n.id)}" aria-label="${esc(n.name)}">${faceOfCard(state, n.id, 36)}</button>`).join('')}</div>` : ''}
     ${t.said ? `<p class="small house__said">${esc(wordText(t.said))}</p>` : ''}
     ${t.story ? `<div class="story">${pips(t.story.beat)}<span class="story__word">${esc(storyWord(t.story))}</span></div>` : ''}
@@ -164,8 +164,25 @@ function tongCard(state, t) {
 
 /** A face tile for a table: portrait, first name, role, and the Anchor's grade when on the slate. Opens the name's profile. */
 function tableTile(state, n) {
-  return `<button class="tile" data-action="tong-name" data-id="${esc(n.id)}" aria-label="${esc(n.name)}">${n.grade ? `<span class="grade grade--${esc(n.grade)}">${esc(n.grade)}</span>` : ''}${faceOfCard(state, n.id, 44)}
-    <span class="tile__name">${esc(firstName(n.name))}</span><span class="tile__role">${esc(n.head ? `Head · ${n.role}` : n.role)}</span></button>`;
+  const note = n.quiet ? QUIET_LINE : n.unsettled ? UNSETTLED_LINE : '';
+  return `<button class="tile${n.unsettled ? ' tile--unsettled' : ''}${n.quiet ? ' tile--quiet' : ''}" aria-label="${esc(n.name)}${note ? `, ${esc(note)}` : ''}" data-action="tong-name" data-id="${esc(n.id)}">${n.grade ? `<span class="grade grade--${esc(n.grade)}">${esc(n.grade)}</span>` : ''}${faceOfCard(state, n.id, 44)}
+    <span class="tile__name">${esc(firstName(n.name))}</span><span class="tile__role">${esc(n.head ? `Head · ${n.role}` : n.role)}</span>${n.quiet ? `<span class="tile__tag">${esc(QUIET_LINE)}</span>` : n.unsettled ? `<span class="tile__tag">Unsettled</span>` : ''}</button>`;
+}
+
+/** What we know of a tong, in words: how, how old, what it is doing and what it is after. */
+function houseReadBlock(state, t) {
+  const age = t.read.age ? ` ${esc(READ_AGE[t.read.age].replace(/^./, (c) => c.toUpperCase()))}.` : '';
+  const doing = t.state ? `<p class="small">${esc(`${HOUSE_STATE[t.state]}.`)} ${esc(LOOKING[t.looking] ?? '')}</p>` : '';
+  return `<p class="small muted">${esc(HOUSE_READ_TEXT[t.read.level])}${age}</p>${doing}`;
+}
+
+/** Watch this tong: a side task, three days, one scout; the buttons name who could go. */
+function watchBlock(state, t) {
+  if (t.read.level === 'inside') return `<p class="small muted">${esc(WATCH_TEXT.done)}</p>`;
+  if ((state.sideOut ?? []).some((x) => x.house === t.id)) return `<p class="small muted">${esc(WATCH_TEXT.busy)}</p>`;
+  const free = state.crew.filter((o) => !o.freelance && o.condition?.injury !== 'dead' && availability(state, o).ok);
+  return free.length ? `<h2>${esc(WATCH_TEXT.button)}</h2><div class="namebtns">${free.map((o) => `<button class="btn" data-action="watch-send" data-id="${esc(`${t.id}|${o.id}`)}">${esc(o.handle)}</button>`).join('')}</div>`
+    : `<p class="small muted">${esc(WATCH_TEXT.none)}</p>`;
 }
 
 function tongPage(state, view, id, back) {
@@ -177,9 +194,12 @@ function tongPage(state, view, id, back) {
       <div class="filehead">${seal(t, 60)}<div><h1 class="cityhead filename">${esc(t.name)}</h1>
         <p class="small muted">${esc(tierName(tier))} tong · ${esc(STYLE_TEXT[t.style].label)} · ${esc(place(t.home))}</p></div></div>
       <p class="small">${esc(STYLE_TEXT[t.style].line)}${HABITS[t.habit] ? ` ${esc(HABITS[t.habit].line)}` : ''}</p>
+      ${houseReadBlock(state, t)}
       <h2>Their story</h2>
       ${t.track.length ? `<ol class="track">${t.track.map((e, i) => `<li class="${i === 0 ? 'on' : ''}"><b>${esc(SCREEN_TEXT.when[e.when])}</b>${esc(wordText(e))}</li>`).join('')}</ol>` : `<p class="small muted">${esc(SCREEN_TEXT.quietTrack)}</p>`}
       ${t.table.length ? `<h2>The table</h2><div class="tiles">${t.table.map((n) => tableTile(state, n)).join('')}</div>` : ''}
+      ${t.others ? `<p class="small muted">${esc(OTHERS_LINE.replace(/^./, (c) => c.toUpperCase()))}.</p>` : ''}
+      ${watchBlock(state, t)}
     </section>`;
   }
   return '';
@@ -215,7 +235,10 @@ function nameKnow(r) {
   const stats = r.stats ? `<p class="small namestats">${STAT_ORDER.map((k) => `${k} <strong>${r.stats[k]}</strong>`).join(' · ')}</p>` : '';
   const potential = r.potential ? `<p class="small">${esc(POTENTIAL_TEXT[r.potential])}</p>` : '';
   const note = r.note ? `<p class="small">${esc(HABIT_NOTE[r.note])}</p>` : '';
-  return `<h2>What we know</h2>${stats}${potential}${note}<p class="small muted">${esc(SCOUT_LEVEL_TEXT[r.level])}</p>`;
+  const slate = r.slate ? `<p class="small slatemark slatemark--${esc(r.slate)}">${esc(SLATE_MARK[r.slate])}</p>` : '';
+  const unsettled = r.unsettled ? `<p class="small">${esc(UNSETTLED_LINE)}</p>` : '';
+  const old = r.age ? `<p class="small muted">${esc(READ_AGE[r.age].replace(/^./, (c) => c.toUpperCase()))}.${r.changed ? ` ${esc(CHANGED_LINE)}` : ''}</p>` : '';
+  return `<h2>What we know</h2>${stats}${potential}${note}${slate}${unsettled}<p class="small muted">${esc(SCOUT_LEVEL_TEXT[r.level])}</p>${old}`;
 }
 
 const goneCard = (back) => `<section class="panel tongs"><button class="linkbtn" data-action="back">‹ ${esc(back)}</button><h1 class="cityhead">Gone</h1><p class="small muted">${esc(SIGN_REASON.gone)}</p></section>`;

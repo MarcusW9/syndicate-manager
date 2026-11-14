@@ -26,7 +26,7 @@ import { togglePause, toggleSpeed, showLatest, paceChanged, closeFinale } from '
 import { sideTaskById, sendOnSideTask } from '../core/sidetasks.js';
 import { setPref, getPref, saveGame, exportSave, getActiveSlot, loadGame, unreadableSave, setActiveSlot, listSlots, deleteSlot, restoreUnreadable, exportUnreadable, discardUnreadable, loadBackup, importSave } from '../save/save.js';
 import { FOUNDERS_TO_PICK, hire, haggle, passRecruit } from '../core/recruits.js';
-import { findCard, sendScout, signCard } from '../core/dossier.js';
+import { findCard, sendScout, sendWatch, signCard } from '../core/dossier.js';
 import { homeOf, homeSub, rootOf } from './nav.js';
 import { FOUNDING_TABS, dayCueFor, wakeContinue, setState, render } from './app.js';
 import { wideHall, newBuildView } from './hallscreens.js';
@@ -76,6 +76,7 @@ export function onClick(e) {
     case 'tong-page': remember(action, id); goHome('tong'); V.tongsView = id; break;
     // A free name or a name in a tong: its page, a scout trip (two days away), and signing (core/dossier.js).
     case 'tong-name': remember(action, id); goHome('name'); V.tongsView = `name:${findCard(state, id)?.id ?? id}`; break;
+    case 'watch-send': { const [tongId, opId] = id.split('|'); return setState(sendWatch(state, tongId, opId)); } // E3: three days away, a read of a tong
     case 'scout-send': { const [name, opId] = id.split('|'); return setState(sendScout(state, name, opId)); }
     // A name in Crew › Leads (also the "View in Leads" shortcut on a City profile): scouting, what it would take, Sign.
     case 'lead-name': remember(action, id); goHome('leadName'); V.leadName = findCard(state, id)?.id ?? id; V.openRecruitId = null; V.openOperativeId = null; break;

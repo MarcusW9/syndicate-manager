@@ -740,5 +740,36 @@
   "word": [
    "overreach_selling:lower-arcade-lot"
   ]
+ },
+ "e3": {
+  "quiet": [],
+  "shapes": [
+   "Salt Cormorant Hand:steady:full",
+   "Neon Dragon Court:stretched:young",
+   "Grey Hour Society:steady:local",
+   "D&L Partners:steady:local",
+   "Lower Arcade Lot:stretched:full",
+   "Cleaver Hand:stretched:young"
+  ],
+  "unsettled": [
+   "salt-cormorant-hand:c38",
+   "neon-dragon-court:c5,c9",
+   "grey-hour-society:",
+   "dl-partners:",
+   "lower-arcade-lot:c39,c22",
+   "cleaver-hand:c35,c29"
+  ],
+  "nameRead": [
+   1,
+   0,
+   0,
+   0
+  ],
+  "houseRead": [
+   2,
+   1,
+   0,
+   0
+  ]
  }
 }

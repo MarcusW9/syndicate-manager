@@ -926,5 +926,24 @@ function migrate(state) {
     }
     state.version = 71;
   }
+  if (state.version === 71) {
+    // v72: what we know goes stale (core/reads.js, DESIGN.md 2026-11-14 "E3"). A read of a name was a level 0-3; it is now
+    // { level, day, band, tongId }, dated today (an old read starts fresh and ages from the day it is loaded) with the name's band and tong as they are now.
+    // Tongs gain a read of their own (`houseRead`, none yet). No card is kept quiet on an old save: `quietSince` is the day it loaded, and only a name who joins a house after it is looked at.
+    const r = state.rivals;
+    if (r) {
+      const bandOf = (c) => { const x = c.rating; return x < 30 ? 'rookie' : x < 55 ? 'pro' : 'veteran'; };
+      const old = r.scouted ?? {};
+      r.scouted = {};
+      for (const [id, level] of Object.entries(old)) {
+        if (typeof level !== 'number') { r.scouted[id] = level; continue; }
+        const c = (r.cards ?? []).find((x) => x.id === id);
+        if (c && level > 0) r.scouted[id] = { level, day: state.day, band: bandOf(c), tongId: c.tongId ?? null };
+      }
+      r.houseRead ??= {};
+      r.quietSince ??= state.day; // nobody already at a house is looked at for a quiet name (a save seeded afresh above keeps 0)
+    }
+    state.version = 72;
+  }
   return state;
 }

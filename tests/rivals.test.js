@@ -20,6 +20,8 @@ import { POACH_RESOLVER } from '../src/core/mobility.js';
 import { RIVALS, NAMING, WORD_TEXT, wordLine, RIVAL_HOMES, RESERVED_NAMES } from '../src/data/rivals.js';
 import { TONG_RANKS } from '../src/data/tong.js';
 import { CULTURES } from '../src/data/recruitPools.js';
+import { isQuiet, houseShape, lookingFor, unsettledOf } from '../src/core/houses.js';
+import { raisedRead, raisedHouseRead, levelInEffect, houseLevel } from '../src/core/reads.js';
 
 const game = (seed = 42) => createNewGame({ seed, startCrew: 'fresh' });
 /** Run the weekly step as Sundays: day 7, 14, ... */
@@ -394,6 +396,20 @@ test('golden: a fixed seed gives the stored snapshot, after seeding and after 4 
     threads: e2.threads.filter((t) => t.family === 'overreach').map((t) => `${t.id}:${t.stage}:${t.open}`),
     sale: e2.sale ? { tongId: e2.sale.tongId, cardIds: e2.sale.cardIds, untilDay: e2.sale.untilDay } : null,
     word: e2.word.filter((w) => /^overreach|^bought$/.test(w.kind)).map((w) => `${w.kind}:${w.refs.join(',')}`),
+  };
+  // E3: after 40 weeks, who is kept quiet, how each tong reads (the chip's word), who is unsettled at a full read; and how a dated read
+  // falls (a name's level in effect every 12 weeks, a tong's every 8), all integers, ids and words a native build must match.
+  const e3 = weeks(game(1234), 40); const e3r = e3.rivals;
+  const probe = e3r.cards.find((c) => c.tongId);
+  e3r.scouted[probe.id] = raisedRead(e3, probe);
+  const t0 = e3r.tongs.find((t) => t.status === 'active'); e3r.houseRead[t0.id] = raisedHouseRead(e3, t0.id); e3r.houseRead[t0.id] = raisedHouseRead(e3, t0.id);
+  const at = (days, f) => { const x = structuredClone(e3); x.day += days; return f(x); };
+  out.e3 = {
+    quiet: e3r.cards.filter(isQuiet).map((c) => `${c.id}:${c.tongId}`),
+    shapes: e3r.tongs.filter((t) => t.status === 'active').map((t) => `${t.name}:${houseShape(e3r, t)}:${lookingFor(e3r, t)}`),
+    unsettled: e3r.tongs.filter((t) => t.status === 'active').map((t) => `${t.id}:${unsettledOf(e3r, t, e3.day).map((c) => c.id).join(',')}`),
+    nameRead: [0, 84, 168, 252].map((d) => at(d, (x) => levelInEffect(x, x.rivals.cards.find((c) => c.id === probe.id)))),
+    houseRead: [0, 56, 112, 168].map((d) => at(d, (x) => houseLevel(x, t0.id))),
   };
   const file = new URL('./golden/rivals-1234.json', import.meta.url);
   if (!existsSync(file)) { writeFileSync(file, JSON.stringify(out, null, 1) + '\n'); }
