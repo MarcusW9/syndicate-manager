@@ -856,13 +856,48 @@ export function outcomeOf(b) {
  * arguments). { win, down, dead, left }. Hands-off on the orders given (the crew's defaults), at the risk level given.
  */
 export function fightOddsFor(args, { builds = 6, runs = 20 } = {}) {
+  const tallies = fightTallies(args, { builds, runs });
+  if (!tallies) return { win: 0, down: 1, dead: 0, left: 0, lost: 0 };
+  for (const t of tallies) finishTally(t);
+  return oddsOfBuilds(tallies.map((t) => t.out));
+}
+
+/** fightOddsFor's sum over the line-ups' odds (in order, so a bound made from it holds to the last bit). */
+function oddsOfBuilds(outs) {
   const acc = { win: 0, down: 0, dead: 0, left: 0, lost: 0 };
-  if (!args.crew.length) return { win: 0, down: 1, dead: 0, left: 0, lost: 0 };
-  for (let i = 0; i < builds; i++) {
-    const r = fightOdds(buildFight(args, makeRng(0xf1647 + i * 104729)), runs);
-    for (const k of Object.keys(acc)) acc[k] += r[k] / builds;
-  }
+  for (const r of outs) for (const k of Object.keys(acc)) acc[k] += r[k] / outs.length;
   return acc;
+}
+
+/**
+ * fightOddsFor a few fights at a time (2026-11-14, the board's search: core/squad.js plays a fight only as far as its
+ * answer matters). The line-ups' tallies (fightTally), or null with nobody to send. winRange(tallies) bounds the win share
+ * from the fights played so far; once every tally is finished, fightOddsFor's answer is oddsOfBuilds of their outs.
+ */
+export function fightTallies(args, { builds = 6, runs = 20 } = {}) {
+  if (!args.crew.length) return null;
+  const out = [];
+  for (let i = 0; i < builds; i++) out.push(fightTally(buildFight(args, makeRng(0xf1647 + i * 104729)), runs));
+  return out;
+}
+
+/** The win share fightOddsFor would give, at least and at most, from the fights its tallies have played so far: [lo, hi]. */
+export function winRange(tallies) {
+  if (!tallies) return [0, 0];
+  const lo = oddsOfBuilds(tallies.map((t) => ({ win: t.out ? t.out.win : t.n.win / t.runs, down: 0, dead: 0, left: 0, lost: 0 }))).win;
+  const hi = oddsOfBuilds(tallies.map((t) => ({ win: t.out ? t.out.win : (t.n.win + t.runs - t.done) / t.runs, down: 0, dead: 0, left: 0, lost: 0 }))).win;
+  return [lo, hi];
+}
+
+/** The whole answer once every tally is finished (fightOddsFor's), or null while any is still playing. */
+export const talliesOdds = (tallies) => (!tallies ? { win: 0, down: 1, dead: 0, left: 0, lost: 0 } : tallies.every((t) => t.out) ? oddsOfBuilds(tallies.map((t) => t.out)) : null);
+
+/** Play up to `k` more fights in each unfinished tally. Returns false once all are finished. */
+export function stepTallies(tallies, k) {
+  if (!tallies) return false;
+  let more = false;
+  for (const t of tallies) if (!t.out) { stepTally(t, k); more ||= !t.out; }
+  return more;
 }
 
 /** Play a whole fight on its orders, round by round, until it ends (hands-off: the risk level answers the van). */
@@ -908,6 +943,9 @@ export function oddsKey(b0, runs = FIGHT.oddsRuns) {
 }
 
 const oddsCache = new Map();
+// Fights played so far for odds not yet finished (stepTally), by the same key. Never read as odds: only a finished tally's
+// answer goes into oddsCache. Kept so a read that stopped early can carry on later without playing the same fights again.
+const partial = new Map();
 
 /**
  * How a fight goes on its orders with this team, played FIGHT.oddsRuns times with the same round function on
@@ -915,11 +953,30 @@ const oddsCache = new Map();
  * someone was left behind). The planning read shows these; shown = used.
  */
 export function fightOdds(b0, runs = FIGHT.oddsRuns) {
-  if (!b0.runners.length) return { win: 0, down: 1, dead: 0, left: 0, lost: 0 };
+  return finishTally(fightTally(b0, runs)).out;
+}
+
+/**
+ * fightOdds as a tally that can be played a few fights at a time (2026-11-14): { b0, key, runs, done, n, out }. `out` is
+ * fightOdds' answer once all `runs` fights are played (from the cache if they were before), else null. Each fight is the
+ * same fight, on the same seed, as fightOdds plays, so the order they are played in changes nothing.
+ */
+export function fightTally(b0, runs = FIGHT.oddsRuns) {
+  if (!b0.runners.length) return { b0, key: null, runs, done: runs, n: null, out: { win: 0, down: 1, dead: 0, left: 0, lost: 0 } };
   const key = oddsKey(b0, runs);
-  if (oddsCache.has(key)) return oddsCache.get(key);
-  const n = { win: 0, down: 0, dead: 0, left: 0, lost: 0 };
-  for (let i = 0; i < runs; i++) {
+  if (oddsCache.has(key)) return { b0, key, runs, done: runs, n: null, out: oddsCache.get(key) };
+  const t = partial.get(key) ?? { b0, key, runs, done: 0, n: { win: 0, down: 0, dead: 0, left: 0, lost: 0 }, out: null };
+  if (partial.size > 2000) partial.clear();
+  partial.set(key, t);
+  return t;
+}
+
+/** Play up to `k` more of a tally's fights; when the last is played, its answer goes into the cache. Returns the tally. */
+export function stepTally(t, k = Infinity) {
+  if (t.out) return t;
+  const { b0, n, runs } = t;
+  for (const end = Math.min(runs, t.done + k); t.done < end; t.done++) {
+    const i = t.done;
     const b = structuredClone(b0);
     b.showcaseSeed = hash('odds', i); // reseeded, never drawn, and so not in the cache key
     playFight(b, makeRng(0x5eed + i * 7919));
@@ -929,8 +986,11 @@ export function fightOdds(b0, runs = FIGHT.oddsRuns) {
     if (b.left.length) n.left += 1;
     if (b.runners.some((r) => r.dead) || b.left.length) n.lost += 1; // someone died or was left behind (the plan's "chance of losing someone")
   }
-  const out = { win: n.win / runs, down: n.down / runs, dead: n.dead / runs, left: n.left / runs, lost: n.lost / runs };
+  if (t.done < runs) return t;
+  t.out = { win: n.win / runs, down: n.down / runs, dead: n.dead / runs, left: n.left / runs, lost: n.lost / runs };
+  partial.delete(t.key);
   if (oddsCache.size > 2000) oddsCache.clear();
-  oddsCache.set(key, out);
-  return out;
+  oddsCache.set(t.key, t.out);
+  return t;
 }
+const finishTally = (t) => stepTally(t, Infinity);
