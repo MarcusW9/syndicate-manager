@@ -136,10 +136,11 @@ The game shows the **English names**; the Chinese names are flavour for district
 - *Who owns it, who runs it:* on paper, a web of offshore shells secretly controlled by Mr. Szeto, who keeps inventing safety violations to clear the site for commercial towers. In practice, a resident council of shopkeepers, elders and veteran workers settles disputes, runs security and keeps the Silver Fan Circle's loan sharks and the "Wet Sleeve" police from getting a permanent foothold.
 - *Floors worth knowing:*
   - **Floor 1:** Mama Lourdes' Sari-Sari, a bright grocery that becomes the Sunday haven for Filipino domestic workers on their day off; the best adobo in the building.
-  - **Floor 2:** Tariq & Sons Remittance, Uncle Tariq's family exchange and money-transfer booth, open since the 1994 typhoon; wire transfers home and shipping paper nobody logs.
+  - **Floor 2:** Tariq & Sons Remittance, Uncle Tariq's family exchange and money-transfer booth, open since the 1994 typhoon; wire transfers home, shipping paper nobody logs, and a blind eye to unlogged scrip for three generations of runners.
   - **Floor 3:** Zainab's clinic, a cramped blue-lit workbench where fried wrist ports, glitchy ear implants and burner-phone firmware are fixed cheaply, no questions asked.
   - **Floor 5:** the Spice Route Canteen, run by a Somali family for two generations: goat and rice, and the Cantonese milk tea they added for the neighbours. Ruth Okonkwo takes meetings in the back booth.
   - **Floor 6:** the Quiet Room, a clean multi-faith room for prayer and reflection. Weapons and crew business stay outside the curtain.
+  - **Floor 7:** Amina's Glitch-Fix, a flickering workbench where tracking firmware is scrubbed off bootleg chrome and sub-dermal gear is flashed, and nobody asks where it came from. Uncle Tariq sends people up when his paper can't fix the problem: "If your cargo paper doesn't match the hull weight, or your implant is pinging Veridian-Apex, don't bring it to any desk but Amina's."
   - **Floor 9:** the Horizon Rest Lodge, a maze of cheap capsule rooms where couriers, night-shift staff and tired runners sleep without corporate check-in logs.
 - *People a crew might deal with:*
   - **Tita Mila** (Filipino), domestic workers' organiser who hears every secret whispered in Glass Heights dining rooms. Wants safe, untracked passage for a young helper fleeing an abusive corporate household.

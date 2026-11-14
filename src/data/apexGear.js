@@ -52,13 +52,13 @@ export const APEX_GEAR = {
   },
   secondshift: {
     type: 'reflex', name: 'Second Shift',
-    history: 'Fitted to a dockworker in the first wave after the Neural Integration Act, and pulled out when the burnouts began. It has been through more hands since than anyone has kept count of.',
+    history: 'Fitted to a dockworker in the first wave after the Neural Integration Act, and pulled out when the burnouts began. Amina\'s Glitch-Fix, on Floor 7 of Pearl Haven House, scrubbed its tracking firmware, and it has been through more hands since than anyone has kept count of.',
     look: { frame: 'harness' },
     perk: { name: 'Worn in', desc: 'Years of other people\'s nerves have worn it smooth. Their neural load rests 10 lower than the implants would hold it.', effect: { floor: 10 } },
   },
   ridgelock: {
     type: 'cortex', name: 'Ridge Lock',
-    history: 'Lifted from a Veridian-Apex clinic\'s reject bin and flashed in a Night Market chrome clinic. The corporate lock was never fully cut, so it still behaves as if it is on the ridge.',
+    history: 'Lifted from a Veridian-Apex clinic\'s reject bin and flashed on a bench at Amina\'s Glitch-Fix, on Floor 7 of Pearl Haven House. The corporate lock was never fully cut, so it still behaves as if it is on the ridge.',
     look: { frame: 'chip' },
     perk: { name: 'Still on the ridge', desc: 'The old corporate calibration is still in there. Their hits do 1 more in a fight, and Stealth +1.', effect: { damage: 1, bonus: { stealth: 1 } } },
   },
