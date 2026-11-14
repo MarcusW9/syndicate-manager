@@ -13,9 +13,9 @@ Now and next, on one screen. Read `CLAUDE.md` first; its rules are not repeated 
 ## Next
 
 1. **Session-cost restructure (2026-11-13): all four steps done.** The review is `drafts/REVIEW-2026-11-13.md` (nothing fixed; four findings rated high for the iOS wrapper: silent save failures and the storage limit, synchronous `save.js`, `confirm()` dialogs, exporting a save). The owner picks what to fix. Also open, ask first: splitting `ui/art.js` (146 KB) and `ui/styles.css` (204 KB), and `onClick` in `ui/actions.js` (one 28 KB `switch`).
-2. **The other tongs, deeper:** slice E0 (the Tongs screens; no rules, no save change) is ready to build from `drafts/HANDOFF-tongs-screens.md`; then E1-E4 (`drafts/PROPOSAL-tong-depth.md`, the owner took every call in section 9 as proposed).
+2. **The other tongs, deeper:** E0-E3 are built (E3 save v72, branch `claude/tongs-stale-reads-e3`); E4 (contested offers, regard with teeth) is next: (`drafts/PROPOSAL-tong-depth.md`, the owner took every call in section 9 as proposed).
 3. **Battles:** the owner's open items are in `drafts/OWNER-ITEMS-battle.md` (the slice 3 verdict, wording to rewrite, the Special actions button). Not built: slice 4, left behind (rescue job, ransom, the 7-day wait; `drafts/PLAN-battle-slices.md`), then the formal playtest and what follows it ("After the slices" there). Watchable combat's slices 3-5 (Overdrive, showcases) wait behind a playtest (`drafts/HANDOFF-watchable-combat.md`).
-4. **Owner's writing:** `drafts/writing-tasks.md` (A2: Mr. Szeto's heist and its six prep jobs is task 12; the oath ceremony goes through `add-lore`). Hall part names: `drafts/BRIEF-hall-compounds.md`.
+4. **Owner's writing:** `drafts/writing-tasks.md` (task 14 is the E3 tong wording, first pass in `src/data/rivals.js`; A2: Mr. Szeto's heist and its six prep jobs is task 12; the oath ceremony goes through `add-lore`). Hall part names: `drafts/BRIEF-hall-compounds.md`.
 5. **Later, ask first:** back-room roles, leadership and judgment as stats, piloting, medical (`drafts/PROPOSAL-*.md`); the locked districts (the Silt first); everything under "Parked" in the archive.
 6. **The iOS app, not scheduled:** scoped in `PLAN-IOS.md` (wrapper, saves, privacy, App Store checks, analytics); seven decisions are open with the owner at its top. Its Phase 1, the phone audit on the web build, can be done any time.
 
