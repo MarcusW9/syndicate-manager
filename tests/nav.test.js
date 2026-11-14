@@ -152,10 +152,13 @@ test('Back puts the scroll position back; a new page starts at the top', async (
   assert.equal(app.win.scrollY, 640);
 });
 
-test('five tabs: Today, City, Tong, Crew, Jobs; Save is the ☰ in the top bar and Lore is behind Book', async () => {
+test('five tabs: Today, City, Tong, Crew, Jobs; Save is the ☰ in the top bar on phones and the sidebar\'s last button on wide screens; Lore is behind Book', async () => {
   const app = await boot();
   const tabs = [...app.html().matchAll(/class="nav__btn[^"]*" data-action="nav" data-id="([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(tabs, ['inbox', 'city', 'tong', 'crew', 'jobs']);
+  // Save is drawn twice and the stylesheet shows one: ☰ in the top bar under 900px, the sidebar's foot from 900px
+  // (decision log 2026-11-06; the sidebar button was restored on 2026-11-13).
+  assert.deepEqual(tabs, ['inbox', 'city', 'tong', 'crew', 'jobs', 'settings']);
+  assert.match(app.html(), /class="nav__btn nav__btn--save[^"]*" data-action="nav" data-id="settings"/, 'the sidebar\'s Save, after the five tabs');
   assert.match(app.html(), /class="savebtn[^"]*" data-action="nav" data-id="settings"/);
   app.click('nav', 'city');
   app.click('city-tab', 'map');

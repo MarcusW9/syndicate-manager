@@ -26,7 +26,7 @@ export const JOSS_ACCEPTS = 'moderate';
  * swap), at most this many candidates have their fights played, the ones the cheap read (no fights) rates best, so the
  * board's cost stops growing with the roster. Infinity is the full search (tests/squadsearch.test.js).
  */
-export const JOSS_SHORTLIST = 6;
+export const JOSS_SHORTLIST = 8; // 6 at first; 8 since the owner's call the same day (one differing pick in 76 jobs, about 8% more fights)
 export const worstRisk = (levels) => levels.reduce((a, b) => (RISK_ORDER.indexOf(b) > RISK_ORDER.indexOf(a) ? b : a), 'low');
 
 /** Every incident this approach can meet, zone by zone, once each: [{ id, zone, sometimes }]. */
