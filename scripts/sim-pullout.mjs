@@ -116,9 +116,9 @@ const strongCrew = (group, lineup, seed) => {
     stats.cool = 14 + g.cool;
     stats.endurance = Math.max(3, Math.min(20, Math.round((x.role === 'muscle' ? 13 : 8) + (rng() + rng() + rng() - 1.5) * 5)));
     const bag = [];
-    if (x.gun) bag.push({ item: { uid: `g${i}`, type: 'pistol', tier: 'street', look: { frame: x.gun } }, x: 0, y: 0 });
-    if (x.deck) bag.push({ item: { uid: `d${i}`, type: 'deck', tier: 'street' }, x: 0, y: 1 });
-    Object.assign(op, { id: `${x.role}${i}`, handle: `${x.role}${i}`, role: x.role, stats, traits: [], status: [], marks: [], gear: { armour: x.vest ? { uid: `v${i}`, type: 'vest', tier: 'street' } : null, implants: [], bag } });
+    if (x.gun) bag.push({ item: { uid: `g${i}`, type: 'pistol', tier: 'standard', look: { frame: x.gun } }, x: 0, y: 0 });
+    if (x.deck) bag.push({ item: { uid: `d${i}`, type: 'deck', tier: 'standard' }, x: 0, y: 1 });
+    Object.assign(op, { id: `${x.role}${i}`, handle: `${x.role}${i}`, role: x.role, stats, traits: [], status: [], marks: [], gear: { armour: x.vest ? { uid: `v${i}`, type: 'vest', tier: 'standard' } : null, implants: [], bag } });
     op.condition = { ...op.condition, fatigue: 0, injury: 'healthy', injuryDays: 0 };
     return op;
   });

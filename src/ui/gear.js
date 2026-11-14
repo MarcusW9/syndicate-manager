@@ -4,8 +4,8 @@
 //
 // ui: helpers from app.js { esc, money, face, statusChip }.
 
-import { GEAR, SLOTS, TIERS, carried, itemName, itemTitle, buyPrice, sellPrice, canChangeGear, kitsFor, sidearmStats, placeOf, cellsOf, fitsAt, bagUsed } from '../core/gear.js';
-import { BAG, SOCKETS } from '../data/gear.js';
+import { GEAR, SLOTS, TIERS, PERKS, perksOf, carried, itemName, itemTitle, buyPrice, sellPrice, canChangeGear, kitsFor, sidearmStats, placeOf, cellsOf, fitsAt, bagUsed } from '../core/gear.js';
+import { BAG, SOCKETS, BASE_TIER } from '../data/gear.js';
 import { HAS_LOOKS, lookText } from '../core/looks.js';
 import { gearGlyph } from './icons.js';
 import { gearArt } from './art.js';
@@ -23,12 +23,44 @@ export function itemEffect(item) {
   return bonus.join(' · ').replace(/^./, (c) => c.toUpperCase());
 }
 
+/**
+ * The item's tier as a short coloured tag (the tier's name is always in the text; the colour is
+ * only extra: data/gear.js TIERS, --tier-* tokens in styles.css). An item with no tier is Standard.
+ */
+export function tierTag(item) {
+  const id = TIERS[item?.tier] ? item.tier : BASE_TIER;
+  const t = TIERS[id];
+  return `<span class="tiertag tiertag--${t.colour}" data-tier="${id}">${t.name}</span>`;
+}
+
+/**
+ * The tier as the colour of the picture's outline (owner, 2026-11-14): a picture carries its tier in
+ * its frame, so the tag is only drawn where there is no picture (`tagIfBare`). Standard keeps the plain frame.
+ */
+export const tierFrame = (item) => `tierframe tierframe--${(TIERS[item?.tier] ?? TIERS[BASE_TIER]).colour}`;
+const tagIfBare = (item, carrier = null) => (gearArt(item, { carrier, width: 96 }) ? '' : tierTag(item));
+
+/**
+ * An item's perks (Custom 1, Premium 2; data/gearPerks.js) as a list under its row: each perk's name is
+ * always shown, and tapping it opens its line (a native <details>, so no hover, and the tap target is
+ * the whole 44px row). Takes an item, or a list of perk ids (the report's loot line). Empty if none.
+ */
+export function perkList(source, tier = source?.tier) {
+  const ids = Array.isArray(source) ? source : source?.perks ?? [];
+  const perks = ids.filter((id) => PERKS[id]).map((id) => ({ id, ...PERKS[id] }));
+  if (!perks.length) return '';
+  const colour = TIERS[tier]?.colour ?? 'grey';
+  return `<ul class="perks perks--${colour}" aria-label="Perks">${perks.map((p) => `<li><details class="perk"><summary><span class="perk__name">${p.name}</span></summary><p class="perk__desc small">${p.desc}</p></details></li>`).join('')}</ul>`;
+}
+/** Just the perk names, for a tile that is itself a button (nothing to open inside it). */
+const perkNames = (item) => perksOf(item).map((p) => p.name).join(' · ');
+
 const glyphFor = (item) => gearGlyph(item.type, GEAR[item.type].slot);
 
 /** The item's picture for a row: its drawing (ui/art.js) where it has one, else its line icon. */
 const thumb = (item, carrier = null) => {
   const art = gearArt(item, { carrier, width: 96 });
-  return art ? `<span class="gearrow__art" aria-hidden="true">${art}</span>` : `<span class="gearrow__icon" aria-hidden="true">${glyphFor(item)}</span>`;
+  return art ? `<span class="gearrow__art ${tierFrame(item)}" aria-hidden="true">${art}</span>` : `<span class="gearrow__icon" aria-hidden="true">${glyphFor(item)}</span>`;
 };
 
 /** One item as a row: name, what it does, and an action button. */
@@ -37,25 +69,26 @@ function itemRow(ui, item, { action, label, sub = '', disabled = false, id = ite
   return `
     <li class="gearrow">
       ${thumb(item, carrier)}
-      <span class="gearrow__main"><strong>${esc(itemTitle(item))}</strong>
+      <span class="gearrow__main"><span class="gearrow__head"><strong>${esc(itemTitle(item))}</strong>${tagIfBare(item, carrier)}</span>
         <span class="gearrow__eff">${esc(itemEffect(item))}</span>
         ${lookText(item) ? `<span class="gearrow__sub muted small">${item.name ? `${esc(itemName(item))} · ` : ''}${esc(lookText(item))}</span>` : ''}
         ${sub ? `<span class="gearrow__sub muted small">${sub}</span>` : ''}</span>
       ${action ? `<button class="btn gearrow__btn" data-action="${action}" data-id="${esc(id)}" ${item.tier ? `data-tier="${esc(item.tier)}"` : ''} ${disabled ? 'disabled' : ''}>${esc(label)}</button>` : ''}
+      ${perkList(item)}
     </li>`;
 }
 
-/** An item for sale: what it does, then a button per tier ("¥2,500", "Pro +1 ¥6,250"). */
+/** An item for sale: what it does, then a button per tier ("Standard ¥2,500", "Verified +1 ¥6,250"). */
 function buyRow(ui, state, type) {
   const { esc, money } = ui;
   const g = GEAR[type];
   return `
     <li class="gearrow gearrow--buy">
-      ${thumb({ type, tier: 'street' })}
-      <span class="gearrow__main"><strong>${esc(g.name)}</strong>
-        <span class="gearrow__eff">${esc(itemEffect({ type, tier: 'street' }))}</span>
+      ${thumb({ type, tier: BASE_TIER })}
+      <span class="gearrow__main"><span class="gearrow__head"><strong>${esc(g.name)}</strong></span>
+        <span class="gearrow__eff">${esc(itemEffect({ type, tier: BASE_TIER }))}</span>
         <span class="gearrow__sub muted small">${esc(g.desc)}</span></span>
-      <span class="gearrow__buy">${Object.entries(TIERS).map(([tier, t]) => `<button class="btn gearrow__btn" data-action="buy" data-id="${esc(type)}" data-tier="${esc(tier)}" ${state.cash < buyPrice(state, type, tier) ? 'disabled' : ''} aria-label="Buy ${esc(t.step ? `a ${t.name.toLowerCase()} ` : '')}${esc(g.name.toLowerCase())} for ${esc(money(buyPrice(state, type, tier)))}">${t.step ? `${esc(t.name)} +${t.step} ` : ''}${esc(money(buyPrice(state, type, tier)))}</button>`).join('')}</span>
+      <span class="gearrow__buy">${Object.entries(TIERS).filter(([, t]) => t.sold).map(([tier, t]) => `<button class="btn gearrow__btn gearrow__btn--tier tiertag--${t.colour}" data-action="buy" data-id="${esc(type)}" data-tier="${esc(tier)}" ${state.cash < buyPrice(state, type, tier) ? 'disabled' : ''} aria-label="Buy a ${esc(t.name.toLowerCase())} ${esc(g.name.toLowerCase())} for ${esc(money(buyPrice(state, type, tier)))}">${esc(t.name)}${t.step ? ` +${t.step}` : ''} ${esc(money(buyPrice(state, type, tier)))}</button>`).join('')}</span>
     </li>`;
 }
 
@@ -66,7 +99,7 @@ function offerRow(ui, state, offer) {
   return `
     <li class="gearrow gearrow--buy">
       ${thumb(offer)}
-      <span class="gearrow__main"><strong>${esc(offer.name)}</strong>
+      <span class="gearrow__main"><span class="gearrow__head"><strong>${esc(offer.name)}</strong>${tagIfBare(offer)}</span>
         <span class="gearrow__eff">${esc(itemEffect(offer))}</span>
         <span class="gearrow__sub muted small">${esc(itemName(offer))} · ${esc(lookText(offer))}</span></span>
       <span class="gearrow__buy"><button class="btn gearrow__btn" data-action="buy-offer" data-id="${esc(offer.oid)}" ${state.cash < price ? 'disabled' : ''} aria-label="Buy the ${esc(offer.name)} for ${esc(money(price))}">${esc(money(price))}</button></span>
@@ -114,11 +147,13 @@ export function renderArmoury(ui, state) {
 function wornTile(ui, op, { id, label, item, can }) {
   const { esc } = ui;
   const art = item ? gearArt(item, { carrier: op, width: 96 }) : null;
-  return `<li><button class="loadout__tile loadout__tile--worn ${item ? '' : 'is-empty'}" data-action="gear-slot" data-id="${id}" ${can.ok ? '' : 'disabled'} aria-label="${esc(label)}: ${esc(item ? itemTitle(item) : 'empty')}. Tap to change.">
+  return `<li><button class="loadout__tile loadout__tile--worn ${item ? '' : 'is-empty'}" data-action="gear-slot" data-id="${id}" ${can.ok ? '' : 'disabled'} aria-label="${esc(label)}: ${esc(item ? `${TIERS[item.tier]?.name ?? TIERS[BASE_TIER].name} ${itemTitle(item)}` : 'empty')}. Tap to change.">
       <span class="loadout__name">${esc(label)}</span>
-      <span class="loadout__cell ${art ? '' : 'loadout__pic--icon'}" aria-hidden="true">${item ? art ?? glyphFor(item) : '+'}</span>
+      <span class="loadout__cell ${art ? tierFrame(item) : 'loadout__pic--icon'}" aria-hidden="true">${item ? art ?? glyphFor(item) : '+'}</span>
       <strong class="loadout__item">${item ? esc(itemTitle(item)) : 'Empty'}</strong>
+      ${item && !art ? tierTag(item) : ''}
       ${item ? `<span class="loadout__eff">${esc(itemEffect(item))}</span>` : ''}
+      ${item && item.perks?.length ? `<span class="loadout__perks perks--${TIERS[item.tier]?.colour ?? 'blue'}">${esc(perkNames(item))}</span>` : ''}
     </button></li>`;
 }
 
@@ -141,7 +176,7 @@ export function renderLoadout(ui, state, op, { picked = null } = {}) {
     const ok = held ? fitsAt(op, held, x, y) : true;
     cells.push(`<button class="bag__cell ${held && ok ? 'is-free' : ''}" style="grid-column:${x + 1};grid-row:${y + 1}" data-action="bag-cell" data-id="${x},${y}" ${can.ok && ok ? '' : 'disabled'} aria-label="${held ? `Move ${esc(itemTitle(held))} here` : 'Empty space: put something here'}"></button>`);
   }
-  const items = bag.map((b) => `<button class="bag__item ${b.item.uid === picked ? 'is-picked' : ''}" style="grid-column:${b.x + 1} / span ${cellsOf(b.item.type)};grid-row:${b.y + 1}" data-action="bag-pick" data-id="${esc(b.item.uid)}" ${can.ok ? '' : 'disabled'} aria-pressed="${b.item.uid === picked}" aria-label="${esc(itemTitle(b.item))}: tap to move it or take it off">${gearArt(b.item, { carrier: op, width: 96 }) ?? `<span class="bag__icon">${glyphFor(b.item)}</span>`}</button>`).join('');
+  const items = bag.map((b) => `<button class="bag__item ${tierFrame(b.item)} ${b.item.uid === picked ? 'is-picked' : ''}" style="grid-column:${b.x + 1} / span ${cellsOf(b.item.type)};grid-row:${b.y + 1}" data-action="bag-pick" data-id="${esc(b.item.uid)}" ${can.ok ? '' : 'disabled'} aria-pressed="${b.item.uid === picked}" aria-label="${esc(TIERS[b.item.tier]?.name ?? TIERS[BASE_TIER].name)} ${esc(itemTitle(b.item))}: tap to move it or take it off">${gearArt(b.item, { carrier: op, width: 96 }) ?? `<span class="bag__icon">${glyphFor(b.item)}</span>`}</button>`).join('');
   return `
       <h2>Gear</h2>
       <ul class="list list--plain loadout loadout--worn">
@@ -153,7 +188,7 @@ export function renderLoadout(ui, state, op, { picked = null } = {}) {
       <div class="bag" style="--cols:${BAG.cols};--rows:${BAG.rows}">${cells.join('')}${items}</div>
       ${held ? `<div class="bag__bar"><span><strong>${esc(itemTitle(held))}</strong> · tap a free space to move it</span>
         <button class="btn btn--ghost" data-action="bag-off">Take it off</button><button class="btn btn--ghost" data-action="bag-pick" data-id="${esc(held.uid)}">Done</button></div>` : ''}
-      ${bag.length ? `<ul class="list list--plain bag__list">${bag.map((b) => `<li><strong>${esc(itemTitle(b.item))}</strong> <span class="loadout__eff">${esc(itemEffect(b.item))}</span></li>`).join('')}</ul>`
+      ${bag.length ? `<ul class="list list--plain bag__list">${bag.map((b) => `<li><strong>${esc(itemTitle(b.item))}</strong> ${tierTag(b.item)} <span class="loadout__eff">${esc(itemEffect(b.item))}</span>${perkList(b.item)}</li>`).join('')}</ul>`
         : '<p class="muted small">Nothing carried. Tap a space to pack a weapon or a tool.</p>'}
       ${can.ok ? '' : `<p class="muted small">Their gear can't change while they're ${esc(can.reason)}.</p>`}
       ${kitsFor(op).length ? '' : '<p class="muted small">No rifle or drone: they can\'t take overwatch.</p>'}`;
@@ -190,7 +225,8 @@ export function renderGearSheet(ui, state, op, slot) {
     <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(place.title)} for ${esc(op.handle)}">
       <div class="sheet__head">
         <div><h2 class="sheet__title">${esc(place.title)} for ${esc(op.handle)}</h2>
-        <p class="muted small">${why}</p></div>
+        <p class="muted small">${why}</p>
+        ${current ? perkList(current) : ''}</div>
         <button class="btn btn--ghost sheet__x" data-action="close-gear" aria-label="Close">✕</button>
       </div>
       <ul class="list list--plain gearlist">${stash.length ? stash.map((item) => itemRow(ui, item, { action: 'equip', label: place.kind === 'bag' ? 'Pack' : 'Carry' })).join('') : `<li class="muted small">Nothing in the stash ${place.kind === 'bag' ? 'fits here' : 'for this'}. Buy it in the armoury.</li>`}</ul>

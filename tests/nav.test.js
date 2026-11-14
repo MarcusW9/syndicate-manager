@@ -154,11 +154,10 @@ test('Back puts the scroll position back; a new page starts at the top', async (
 
 test('five tabs: Today, City, Tong, Crew, Jobs; Save is the ☰ in the top bar and Lore is behind Book', async () => {
   const app = await boot();
-  const buttons = [...app.html().matchAll(/class="nav__btn([^"]*)" data-action="nav" data-id="([^"]+)"/g)];
-  // Save also sits at the foot of the sidebar on wide screens (nav__btn--save, hidden on phones): not a tab.
-  const tabs = buttons.filter((m) => !m[1].includes('nav__btn--save')).map((m) => m[2]);
+  // The sidebar's own Save button (wide screens only, hidden on a phone: changelog 2026-11-13) is not a tab.
+  const tabs = [...app.html().matchAll(/class="nav__btn(?! nav__btn--save)[^"]*" data-action="nav" data-id="([^"]+)"/g)].map((m) => m[1]);
   assert.deepEqual(tabs, ['inbox', 'city', 'tong', 'crew', 'jobs']);
-  assert.deepEqual(buttons.filter((m) => m[1].includes('nav__btn--save')).map((m) => m[2]), ['settings'], 'one Save in the sidebar');
+  assert.match(app.html(), /class="nav__btn nav__btn--save[^"]*" data-action="nav" data-id="settings"/, 'Save at the foot of the sidebar on wide screens');
   assert.match(app.html(), /class="savebtn[^"]*" data-action="nav" data-id="settings"/);
   app.click('nav', 'city');
   app.click('city-tab', 'map');

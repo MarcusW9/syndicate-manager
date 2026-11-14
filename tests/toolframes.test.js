@@ -36,8 +36,8 @@ test('the rest of the armoury: a usual build and rarer ones; implants evenly', (
 });
 
 test('compact gear is drawn square, long gear wide', () => {
-  for (const type of ['vest', 'medkit', 'picks', 'reflex', 'cortex']) assert.match(gearArt({ uid: 'g1', type, tier: 'street' }), /viewBox="0 0 64 64"/, type);
-  for (const type of ['rifle', 'drone', 'deck']) assert.match(gearArt({ uid: 'g1', type, tier: 'street' }), /viewBox="0 0 96 32"/, type);
+  for (const type of ['vest', 'medkit', 'picks', 'reflex', 'cortex']) assert.match(gearArt({ uid: 'g1', type, tier: 'standard' }), /viewBox="0 0 64 64"/, type);
+  for (const type of ['rifle', 'drone', 'deck']) assert.match(gearArt({ uid: 'g1', type, tier: 'standard' }), /viewBox="0 0 96 32"/, type);
 });
 
 test('decks: slab, case and brick about evenly', () => {
@@ -51,7 +51,7 @@ test('the frame is kept, and an item from before frames gets a fixed one', () =>
   s = buyGear(s, 'deck');
   const item = s.stash.at(-1);
   assert.equal(toolFrameOf(item), item.look.frame);
-  const old = { uid: 'g42', type: 'drone', tier: 'street' };
+  const old = { uid: 'g42', type: 'drone', tier: 'standard' };
   assert.equal(toolFrameOf(old), toolFrameOf({ ...old }), 'same uid, same frame');
   assert.ok(TOOL_FRAMES.drone[toolFrameOf(old)]);
   assert.equal(toolFrameOf({ type: 'drone' }), 'quad', 'a catalogue row shows the usual one');
@@ -61,7 +61,7 @@ test('the frame is kept, and an item from before frames gets a fixed one', () =>
 test('each frame has its own drawing', () => {
   assert.ok(hasGearArt('drone') && hasGearArt('deck'));
   for (const [type, frames] of Object.entries(TOOL_FRAMES)) {
-    const drawn = Object.keys(frames).map((frame) => gearArt({ uid: 'g1', type, tier: 'street', look: { frame } }).replace(/ga\d+/g, ''));
+    const drawn = Object.keys(frames).map((frame) => gearArt({ uid: 'g1', type, tier: 'standard', look: { frame } }).replace(/ga\d+/g, ''));
     assert.equal(new Set(drawn).size, drawn.length, `${type}: every frame different`);
   }
 });

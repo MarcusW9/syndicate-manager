@@ -11,7 +11,7 @@
 
 import { makeRng, pick } from './rng.js';
 import { RIFLE_LOOKS, SIDEARM_LOOKS, GLOWS, ARMOURY_STOCK, TOOL_FRAMES } from '../data/gearLooks.js';
-import { SIDEARM_QUIRKS } from '../data/gear.js';
+import { SIDEARM_QUIRKS, TIERS } from '../data/gear.js';
 
 /** Types that have looks. */
 export const HAS_LOOKS = { rifle: RIFLE_LOOKS, pistol: SIDEARM_LOOKS };
@@ -32,11 +32,11 @@ function lightsUp(type, look) {
 }
 
 /** A gun's look and name for this tier, from its own seed. */
-export function rollLook(state, key, tier = 'street', type = 'rifle') {
+export function rollLook(state, key, tier = 'standard', type = 'rifle') {
   const rng = makeRng(seedOf(state, key));
   const L = HAS_LOOKS[type];
   const [slot, table] = EXTRA[type];
-  const shelf = tier === 'pro' ? 'pro' : 'street';
+  const shelf = (TIERS[tier]?.step ?? 0) > 0 ? 'verified' : 'standard'; // a look shelf: plain or dressed up (a tier above Verified wears the Verified shelf for now)
   const odds = L.odds[shelf];
   const onShelf = (t) => Object.keys(L[t]).filter((k) => !L[t][k].tier || L[t][k].tier === shelf);
   const frame = pick(rng, onShelf('frames'));
@@ -116,7 +116,8 @@ export function stockShelf(state, type) {
   const offers = [];
   for (const [tier, n] of Object.entries(ARMOURY_STOCK[type] ?? {})) {
     for (let i = 0; i < n; i++) {
-      const oid = `o${state.day}-${type}-${tier}-${i}`;
+      // The id keeps the old shelf names (street, pro) so an offer's look and name seed never moved.
+      const oid = `o${state.day}-${type}-${tier === 'verified' ? 'pro' : 'street'}-${i}`;
       // Reroll (from the same seed, so it stays fixed) until it differs from the others.
       let roll;
       for (let t = 0; t < 12; t++) {

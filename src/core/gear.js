@@ -4,25 +4,68 @@
 // op.gear       { armour: item | null, implants: [item] (at most SOCKETS), bag: [{ item, x, y }] }:
 //               what they wear, their chrome, and what they carry in a BAG of cells (save v45; it
 //               was one item per slot, { weapon, armour, tool, implant }). Stays on them between jobs.
-// item          { uid, type, tier, look?, name? }  type: data/gear.js GEAR; tier: TIERS; rifles
-//               also have a look and a name (core/looks.js)
+// item          { uid, type, tier, look?, name?, quirk?, perks? }  type: data/gear.js GEAR; tier: TIERS; rifles
+//               also have a look and a name (core/looks.js); perks: ids from data/gearPerks.js (Custom 1,
+//               Premium 2, rolled when the item is made)
 //
 // Gear is a bonus, never a gate, except that overwatch needs a rifle or a drone (as it always
 // needed the kit). A runner who dies takes their gear with them.
 
-import { GEAR, SLOTS, TIERS, SIDEARM_FRAMES, SIDEARM_QUIRKS, SIDEARM_PRICE_PER_POINT, BAG, SOCKETS, CELLS } from '../data/gear.js';
+import { GEAR, SLOTS, TIERS, BASE_TIER, SIDEARM_FRAMES, SIDEARM_QUIRKS, SIDEARM_PRICE_PER_POINT, BAG, SOCKETS, CELLS } from '../data/gear.js';
+import { PERKS, PERK_CAPS } from '../data/gearPerks.js';
+import { hashRng } from './rng.js';
 import { SPECIALISATIONS } from '../data/specialisations.js';
 import { giveLook } from './looks.js';
 import { ROOM_EFFECT } from '../data/hallBuild.js';
 
-export { GEAR, SLOTS, TIERS };
+export { GEAR, SLOTS, TIERS, PERKS };
 
 export const SELL_SHARE = 0.5; // what the fence pays back for something from the stash
 
+// --- perks (data/gearPerks.js) ---------------------------------------------------------------------
+
+/** The keys a perk effect touches ('bonus:cool', 'armour'...), to tell whether it would stack on an item's own stat. */
+const effectKeys = (e) => Object.entries(e).flatMap(([k, v]) => (k === 'bonus' ? Object.keys(v).map((s) => `bonus:${s}`) : [k]));
+/** The stats a type's tier step already boosts (or that it is built around): a perk never adds to these. */
+export function mainKeys(type) {
+  const g = GEAR[type] ?? {};
+  const out = new Set(Object.keys(g.bonus ?? {}).map((s) => `bonus:${s}`));
+  if (g.overwatch) out.add(`bonus:${g.overwatch.stat}`);
+  if (g.damage || g.overwatch) out.add('damage');
+  for (const k of ['armour', 'serious', 'patch']) if (g[k]) out.add(k);
+  return out;
+}
+/** The perks an item type can roll: [{ id, ...perk }], in the data's order, none that would add to the item's own stat. */
+export function perksFor(type) {
+  const main = mainKeys(type);
+  return Object.entries(PERKS).filter(([, p]) => p.types.includes(type) && !effectKeys(p.effect).some((k) => main.has(k))).map(([id, p]) => ({ id, ...p }));
+}
+/** A tier's perks, rolled for a new item: `n` different ones by weight, from the item's own seeded hash (never the shared stream). */
+export function rollPerks(seed, uid, type, n) {
+  const rng = hashRng(seed, 'perks', uid);
+  const pool = perksFor(type);
+  const out = [];
+  while (out.length < n && pool.length) {
+    let at = rng() * pool.reduce((t, p) => t + p.weight, 0);
+    let i = pool.findIndex((p) => (at -= p.weight) < 0);
+    if (i < 0) i = pool.length - 1;
+    out.push(pool[i].id);
+    pool.splice(i, 1);
+  }
+  return out;
+}
+/** An item's perks as data: [{ id, name, desc, effect, ... }]. Unknown ids are skipped. */
+export const perksOf = (item) => (item?.perks ?? []).filter((id) => PERKS[id]).map((id) => ({ id, ...PERKS[id] }));
+/** What one effect key adds up to across these items, held to its cap (PERK_CAPS). */
+export const perkSum = (items, key) => {
+  const n = items.reduce((t, i) => t + perksOf(i).reduce((u, p) => u + (p.effect[key] ?? 0), 0), 0);
+  return PERK_CAPS[key] != null ? Math.min(PERK_CAPS[key], n) : n;
+};
+
 /** What it costs: the type's price by tier, and for a sidearm its strengths (an item or an offer, when given). */
-export const priceOf = (type, tier = 'street', item = null) => {
+export const priceOf = (type, tier = BASE_TIER, item = null) => {
   const base = GEAR[type].price * TIERS[tier].price;
-  const s = type === 'pistol' && item ? sidearmStats({ ...item, tier: 'street' }) : null;
+  const s = type === 'pistol' && item ? sidearmStats({ ...item, tier: BASE_TIER }) : null;
   const points = s ? (s.aim - 1) + (s.damage - 3) + s.pierce / 2 : 0;
   return Math.round((base * Math.max(0.5, 1 + points * SIDEARM_PRICE_PER_POINT)) / 50) * 50;
 };
@@ -44,10 +87,10 @@ export function sidearmStats(item) {
   };
 }
 
-/** "Rifle", "Pro rifle". */
+/** "Rifle", "Verified rifle". */
 export function itemName(item) {
   const name = GEAR[item.type]?.name ?? item.type;
-  return item.tier && item.tier !== 'street' ? `${TIERS[item.tier].name} ${name.charAt(0).toLowerCase()}${name.slice(1)}` : name;
+  return item.tier && item.tier !== BASE_TIER && TIERS[item.tier] ? `${TIERS[item.tier].name} ${name.charAt(0).toLowerCase()}${name.slice(1)}` : name;
 }
 
 /** What to call it on screen: its own name if it has one ("Vermilion Heron"), else itemName. */
@@ -68,7 +111,7 @@ export const placeOf = (type) => ({ armour: 'armour', implant: 'implant' }[GEAR[
 export const cellsOf = (type) => CELLS[type] ?? 1;
 
 /** How good an item is of its kind, to pick the one that counts when someone carries two. */
-const worth = (item) => (item.type === 'pistol' ? sidearmStats(item).damage * 10 + sidearmStats(item).aim : TIERS[item.tier]?.step ?? 0);
+const worth = (item) => (item.type === 'pistol' ? sidearmStats(item).damage * 10 + sidearmStats(item).aim : (TIERS[item.tier]?.step ?? 0) * 10 + (item.perks?.length ?? 0));
 /**
  * What counts: the best item of each kind they carry (owner, 2026-11-06: different kinds add up,
  * the same kind counts once; two ghost kits are still +1 stealth).
@@ -104,17 +147,24 @@ export const bagUsed = (op) => covered(op).size;
 /** Roll bonuses from their gear for one stat: [{ value, note }]. Overwatch items add nothing here. */
 export function gearMods(op, stat) {
   const out = [];
+  let perk = 0; // what perks have given this stat so far, held to PERK_CAPS.bonus
   for (const item of counted(op)) {
     // A sidearm's aim is its combat bonus, whatever its frame and quirk make it (and it can be a minus).
     if (item.type === 'pistol') {
       const aim = stat === 'combat' ? sidearmStats(item).aim : 0;
       if (aim) out.push({ value: aim, note: `${itemTitle(item)} ${aim > 0 ? '+' : '−'}${Math.abs(aim)}` });
-      continue;
+    } else {
+      const base = GEAR[item.type]?.bonus?.[stat];
+      if (base) {
+        const value = base + (TIERS[item.tier]?.step ?? 0);
+        out.push({ value, note: `${itemName(item)} +${value}` });
+      }
     }
-    const base = GEAR[item.type]?.bonus?.[stat];
-    if (!base) continue;
-    const value = base + (TIERS[item.tier]?.step ?? 0);
-    out.push({ value, note: `${itemName(item)} +${value}` });
+    // A perk's bonus is in another stat than the item's own, and is named in the breakdown.
+    for (const p of perksOf(item)) {
+      const value = Math.min(p.effect.bonus?.[stat] ?? 0, PERK_CAPS.bonus - perk);
+      if (value > 0) { perk += value; out.push({ value, note: `${p.name} +${value}` }); }
+    }
   }
   return out;
 }
@@ -134,6 +184,9 @@ export function overwatchKit(op, kitId) {
   const step = TIERS[item.tier]?.step ?? 0;
   const kit = { id: kitId, name: g.name, ...g.overwatch, bonus: step, notes: step ? [`${itemName(item)} +${step}`] : [], desc: g.desc, heatOnHit: false, spec: null };
   // Their specialisation, if it's for this kit (slice 5b; data/specialisations.js).
+  // The kit's own perks: a spare magazine, a suppressor.
+  kit.uses += perkSum([item], 'uses');
+  kit.heat = Math.max(0, kit.heat + perkSum([item], 'heat'));
   const spec = op.spec && SPECIALISATIONS[op.spec.id];
   if (spec?.kit === kitId) {
     const e = spec.effect;
@@ -147,20 +200,23 @@ export function overwatchKit(op, kitId) {
   return kit;
 }
 
-/** The base kit (street, no specialist), for reads that need a number before anyone's picked. */
+/** The base kit (standard, no specialist), for reads that need a number before anyone's picked. */
 export function baseKit(kitId) {
   const g = GEAR[kitId];
   return g?.overwatch ? { id: kitId, name: g.name, ...g.overwatch, bonus: 0, notes: [], desc: g.desc } : null;
 }
 
 /** How much their armour takes off the chance of a serious wound from an incident. */
-export const seriousGuard = (op) => counted(op).reduce((n, i) => n + (GEAR[i.type]?.serious ?? 0) * (1 + (TIERS[i.tier]?.step ?? 0) * 0.5), 0);
+export const seriousGuard = (op) => counted(op).reduce((n, i) => n + (GEAR[i.type]?.serious ?? 0) * (1 + (TIERS[i.tier]?.step ?? 0) * 0.5), 0) + perkSum(counted(op), 'serious');
 
-/** Extra medical counted towards patching a serious wound (a trauma kit). */
-export const patchBonus = (op) => counted(op).reduce((n, i) => n + (GEAR[i.type]?.patch ?? 0), 0);
+/**
+ * Extra medical counted towards patching a serious wound (a trauma kit, and a suture-strip perk). perks: false
+ * leaves the perks out: a perk helps someone who already patches, it does not make a healer of a runner (core/fight.js).
+ */
+export const patchBonus = (op, { perks = true } = {}) => counted(op).reduce((n, i) => n + (GEAR[i.type]?.patch ?? 0), 0) + (perks ? perkSum(counted(op), 'patch') : 0);
 
 /** Their implants keep neural load from resting below this; two implants' floors add up (owner, 2026-11-06). */
-export const neuralFloor = (op) => carried(op).reduce((n, i) => n + (GEAR[i.type]?.neuralFloor ?? 0), 0);
+export const neuralFloor = (op) => Math.max(0, carried(op).reduce((n, i) => n + (GEAR[i.type]?.neuralFloor ?? 0), 0) - perkSum(carried(op), 'floor'));
 
 /**
  * Can their loadout change today? Returns { ok, reason }. Only while they're out on a job whose
@@ -179,23 +235,26 @@ export function canChangeGear(state, op) {
 }
 
 /** A new item of this type and tier, with its look or build rolled (core/looks.js). Bumps gearSeq. */
-export const makeItem = (state, type, tier = 'street') => newItem(state, type, tier);
+export const makeItem = (state, type, tier = BASE_TIER) => newItem(state, type, tier);
 const newItem = (state, type, tier) => {
   state.gearSeq = (state.gearSeq ?? 0) + 1;
-  return giveLook(state, { uid: `g${state.gearSeq}`, type, tier });
+  const item = giveLook(state, { uid: `g${state.gearSeq}`, type, tier });
+  const n = TIERS[tier]?.perks ?? 0;
+  if (n) item.perks = rollPerks(state.seed, item.uid, type, n); // Custom and Premium, from jobs only
+  return item;
 };
 
 /** Buy an item into the stash. Returns the new state, or prev if it can't be bought. */
 /** Does the tong have a cyber doc (a hall room, core/hallbuild.js)? */
 export const hasCyberDoc = (state) => (state?.halls ?? []).some((h) => (h.build ?? []).some((b) => b.piece === 'cyberdoc'));
 /** What buying costs the tong: the price, and implants a quarter less with a cyber doc. */
-export const buyPrice = (state, type, tier = 'street', item = null) => {
+export const buyPrice = (state, type, tier = BASE_TIER, item = null) => {
   const p = priceOf(type, tier, item);
   return GEAR[type]?.slot === 'implant' && hasCyberDoc(state) ? Math.round((p * ROOM_EFFECT.docShare) / 50) * 50 : p;
 };
 
-export function buyGear(prev, type, tier = 'street') {
-  if (!GEAR[type] || !TIERS[tier] || prev.cash < buyPrice(prev, type, tier)) return prev;
+export function buyGear(prev, type, tier = BASE_TIER) {
+  if (!GEAR[type] || !TIERS[tier]?.sold || prev.cash < buyPrice(prev, type, tier)) return prev;
   const state = structuredClone(prev);
   state.cash -= buyPrice(prev, type, tier);
   (state.stash ??= []).push(newItem(state, type, tier));
@@ -301,17 +360,17 @@ export function unequip(prev, opId, uid) {
 
 export const emptyLoadout = () => ({ armour: null, implants: [], bag: [] });
 
-/** A loadout holding these item types (street), for recruits who bring their own. */
+/** A loadout holding these item types (standard), for recruits who bring their own. */
 export function loadoutOf(state, types = []) {
   const op = { gear: emptyLoadout() };
   for (const type of types) {
     if (!GEAR[type]) continue;
     const where = placeOf(type);
-    if (where === 'armour') { if (!op.gear.armour) op.gear.armour = newItem(state, type, 'street'); continue; }
-    if (where === 'implant') { if (op.gear.implants.length < SOCKETS && !op.gear.implants.some((i) => i.type === type)) op.gear.implants.push(newItem(state, type, 'street')); continue; }
+    if (where === 'armour') { if (!op.gear.armour) op.gear.armour = newItem(state, type, BASE_TIER); continue; }
+    if (where === 'implant') { if (op.gear.implants.length < SOCKETS && !op.gear.implants.some((i) => i.type === type)) op.gear.implants.push(newItem(state, type, BASE_TIER)); continue; }
     const probe = { uid: '?', type };
     const at = firstFit(op, probe);
-    if (at) op.gear.bag.push({ item: newItem(state, type, 'street'), ...at });
+    if (at) op.gear.bag.push({ item: newItem(state, type, BASE_TIER), ...at });
   }
   return op.gear;
 }

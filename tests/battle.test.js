@@ -68,7 +68,7 @@ test('gear in a fight: weapons do damage, armour soaks it flat, a hit that lands
   arm(s, op.id, 'pistol', 'vest');
   assert.equal(weaponOf(op).damage, 3);
   assert.equal(armourOf(op).value, 1);
-  arm(s, op.id, 'pistol:pro', 'vest:pro');
+  arm(s, op.id, 'pistol:verified', 'vest:verified');
   assert.equal(weaponOf(op).damage, 4, 'pro adds one');
   assert.equal(armourOf(op).value, 2, 'pro vest: armour 2');
   assert.equal(hitFor(3, 1), 2);
@@ -296,7 +296,7 @@ test('the planning read quotes the fight from the run\'s own round function', ()
   const hard = { ...tpl, threat: 5 };
   const before = coverage(hard, crew, 'loud').rows.find((r) => r.id === 'backup').fight;
   assert.ok(before.win < 1, `a hard fight can be lost: ${before.win}`);
-  for (const op of crew) arm(s, op.id, 'pistol:pro', 'vest:pro');
+  for (const op of crew) arm(s, op.id, 'pistol:verified', 'vest:verified');
   const armed = coverage(hard, crew, 'loud').rows.find((r) => r.id === 'backup').fight;
   assert.ok(armed.win > before.win, `${armed.win} > ${before.win}`);
 });
