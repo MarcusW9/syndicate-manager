@@ -2,6 +2,7 @@
 // shown is what is used; the screens (ui/fightscreen.js) draw it. Run with: npm test
 
 import { test } from 'node:test';
+import { incidentById } from '../src/core/incidents.js';
 import assert from 'node:assert/strict';
 import { createNewGame } from '../src/core/state.js';
 import * as M from '../src/core/mission.js';
@@ -30,7 +31,10 @@ const inFight = (s) => !!s.activeMission.battle && M.currentStep(s.activeMission
 function find(id, stop, { to = 300, opts } = {}) {
   for (let seed = 1; seed <= to; seed++) {
     let s = begin(seed, id, opts);
-    for (let g = 0; g < 500 && !s.activeMission.done && !stop(s); g++) { const n = autoStep(s, { force: true }); if (n === s) break; s = n; }
+    for (let g = 0; g < 500 && !s.activeMission.done && !stop(s); g++) {
+      const am = s.activeMission, cur = am.queue[am.step];
+      if (id === 'warehouse' && cur?.type === 'incident' && incidentById(cur.id).danger && am.queue.length > am.step + 2) { s = structuredClone(s); s.activeMission.queue.splice(am.step + 1, s.activeMission.queue.length, { type: 'zone', zone: 'out' }); }
+      const n = autoStep(s, { force: true }); if (n === s) break; s = n; }
     if (!s.activeMission.done && stop(s)) return s;
   }
   return null;

@@ -161,15 +161,17 @@ function renderFinale(s) {
     if (!op) return '';
     const lost = !s.crew.some((o) => o.id === id);
     const hurt = events.filter((e) => e.injury?.id === id).map((e) => e.injury.severity).sort((a, b) => SEV.indexOf(b) - SEV.indexOf(a))[0];
+    const left = !lost && !!op.condition?.missing && op.condition.missing.until > s.day;
     const grew = (r.growth ?? []).filter((g) => g.opId === id);
     const grad = (r.graduated ?? []).some((g) => g.id === id);
     const won = events.filter((e) => e.actor?.id === id && e.die != null && e.success === true).length;
     const tags = [
       lost ? '<span class="finale__tag is-bad">Lost</span>' : '',
+      !lost && left ? '<span class="finale__tag is-bad">Left behind</span>' : '',
       !lost && hurt ? `<span class="finale__tag is-warn">${esc(hurt)} wound</span>` : '',
       grad ? '<span class="finale__tag is-star">★ Pro now</span>' : '',
       ...grew.slice(0, 2).map((g) => `<span class="finale__tag is-good">▲ ${esc(statName(g.stat))} ${g.to}</span>`),
-      !lost && !hurt && !grad && !grew.length ? `<span class="finale__tag">${won ? `${won} clean roll${won === 1 ? '' : 's'}` : 'Home safe'}</span>` : '',
+      !lost && !left && !hurt && !grad && !grew.length ? `<span class="finale__tag">${won ? `${won} clean roll${won === 1 ? '' : 's'}` : 'Home safe'}</span>` : '',
     ].join('');
     return `<li class="finale__op ${lost ? 'is-lost' : ''}" style="--i:${i}">${face(op)}<b>${esc(op.handle)}</b>${tags}</li>`;
   }).join('');
