@@ -218,6 +218,15 @@ test('the board adds 3 new jobs a week, the first routine and the rest not, and 
   }
 });
 
+// 2026-11-14: routine offers carried the whole client record as their clientId, so their trust was lost.
+test("an offer's clientId is always a client's id or null", () => {
+  const s = createNewGame({ seed: 13, startCrew: 'fresh' });
+  for (let i = 0; i < 60; i++) {
+    s.jobs = []; postJobs(s);
+    for (const j of s.jobs) assert.ok(j.clientId === null || typeof j.clientId === 'string', `clientId is ${JSON.stringify(j.clientId)}`);
+  }
+});
+
 test('a finished job earns REP_PER_THREAT per threat level; an abort costs ABORT_REP', async () => {
   const M = await import('../src/core/mission.js');
   const { playMission, carefulPolicy } = await import('./play.js');

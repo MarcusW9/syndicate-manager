@@ -41,7 +41,8 @@ function play(seed) {
     const lead = [...(s.recruits ?? [])].filter((r) => canHire(s, r).ok).sort((a, b) => b.stats[primaryStat(b)] - a.stats[primaryStat(a)])[0];
     const wages = s.crew.reduce((n, o) => n + o.wage, 0);
     if (lead && s.cash - (wages + lead.wage + s.rent) * 2 > 0) s = hire(s, lead.id);
-    if (s.crew.length >= (s.rosterCap ?? STARTING_ROSTER_CAP) && s.cash > nextExpansion(s).cost + (wages + s.rent) * 3) s = expandSafehouse(s);
+    const x = nextExpansion(s); // null once the home hall has every part: nothing left to take
+    if (s.crew.length >= (s.rosterCap ?? STARTING_ROSTER_CAP) && x && s.cash > x.cost + (wages + s.rent) * 3) s = expandSafehouse(s);
     s = advanceDay(s);
     const wk = (day + 1) / 7;
     if (SNAP.includes(wk)) snaps[wk] = { s, jobs };

@@ -103,11 +103,11 @@ function buildCrew(group, lineup, seed, enduranceMode = 'grown') {
     stats.cool = GATE.diff + g.cool;
     stats.endurance = clamp(Math.round(mean + (rng() + rng() + rng() - 1.5) * GATE.endurance.spread), 3, 20);
     const bag = [];
-    if (x.gun) bag.push({ item: { uid: `g${i}`, type: 'pistol', tier: 'street', look: { frame: x.gun } }, x: 0, y: 0 });
-    if (x.deck) bag.push({ item: { uid: `d${i}`, type: 'deck', tier: 'street' }, x: 0, y: 1 });
+    if (x.gun) bag.push({ item: { uid: `g${i}`, type: 'pistol', tier: 'standard', look: { frame: x.gun } }, x: 0, y: 0 });
+    if (x.deck) bag.push({ item: { uid: `d${i}`, type: 'deck', tier: 'standard' }, x: 0, y: 1 });
     Object.assign(op, {
       id: `${x.role}${seen[x.role]}`, handle: HANDLES[x.role] + (seen[x.role] > 1 ? ' 2' : ''), role: x.role, stats, traits: [], status: [], marks: [],
-      gear: { armour: x.vest ? { uid: `v${i}`, type: 'vest', tier: 'street' } : null, implants: [], bag },
+      gear: { armour: x.vest ? { uid: `v${i}`, type: 'vest', tier: 'standard' } : null, implants: [], bag },
     });
     op.condition = { ...op.condition, fatigue: 0, injury: 'healthy', injuryDays: 0 };
     return op;

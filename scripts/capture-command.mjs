@@ -29,7 +29,7 @@ function fightState() {
     // Grown a season or so (every stat +4, as in scripts/sim-battles.mjs), so threat-4 work is a fair fight.
     for (const op of s.crew) for (const k of Object.keys(op.stats)) op.stats[k] = Math.min(20, op.stats[k] + 4);
     // Mixed kit, so the panel shows what gear does: a pro sidearm and a vest, a sidearm, then nothing.
-    arm(s, s.crew[0].id, 'pistol:pro', 'vest');
+    arm(s, s.crew[0].id, 'pistol:verified', 'vest');
     arm(s, s.crew[1].id, 'pistol');
     s.jobs = [];
     addOffer(s, JOB);

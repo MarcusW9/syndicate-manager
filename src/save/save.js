@@ -17,6 +17,7 @@ import { STARTING_RANK } from '../data/tong.js';
 import { refreshSideBoard } from '../core/sidetasks.js';
 import { SAVE_VERSION } from '../core/state.js';
 import { NAMES } from '../config/names.js';
+import { pickHabit } from '../core/houses.js';
 import { TATTOO_JOBS } from '../core/marks.js';
 import { seedRecord } from '../core/record.js';
 import { seedMilestones } from '../core/milestones.js';
@@ -29,8 +30,8 @@ import { STARTING_ROSTER_CAP, rollEndurance } from '../core/recruits.js';
 import { prepareOperative, rollPotential, rollScoutError, scoutFor, potentialRead } from '../core/development.js';
 import { nextRng } from '../core/random.js';
 import { refreshFreelancers } from '../core/freelance.js';
-import { GEAR, makeItem } from '../core/gear.js';
-import { CELLS } from '../data/gear.js';
+import { GEAR, makeItem, rollPerks } from '../core/gear.js';
+import { CELLS, TIERS } from '../data/gear.js';
 import { trimInbox } from '../core/inbox.js';
 import { seedRivals, offerGapFor } from '../core/rivals.js';
 import { hashRng } from '../core/rng.js';
@@ -38,7 +39,7 @@ import { fightStage } from '../core/runfight.js';
 
 // The one-item-per-slot gear of saves before v45, for the migrations written against it.
 const slotLoadout = () => ({ weapon: null, armour: null, tool: null, implant: null });
-const slotItem = (state, type) => makeItem(state, type, 'street');
+const slotItem = (state, type) => makeItem(state, type, 'standard');
 
 export const SLOT_COUNT = 3;
 export const BACKUP_REMINDER_DAYS = 28;
@@ -811,6 +812,90 @@ function migrate(state) {
     // v64: our tong has a name (core/tongname.js). A running game gets the default; the Tong screen's pencil changes it.
     state.tongName ??= NAMES.defaultTong;
     state.version = 64;
+  }
+  if (state.version === 64) {
+    // v65: the gear rarity ladder (DESIGN.md 2026-11-13). An item's tier `street` is now `standard` and `pro` is
+    // `verified`: the stash, everything worn or carried (the fallen's and a retired runner's too), the armoury's
+    // offers, and any copy inside a job in progress. Only gear is touched: an item (or offer) is an object with a
+    // gear `type` and a `uid` or `oid`; a tong's rank `street` and a runner's tier `pro` are left alone.
+    const renamed = { street: 'standard', pro: 'verified' };
+    const walk = (v) => {
+      if (!v || typeof v !== 'object') return;
+      if (Array.isArray(v)) { v.forEach(walk); return; }
+      if (GEAR[v.type] && (typeof v.uid === 'string' || typeof v.oid === 'string') && renamed[v.tier]) v.tier = renamed[v.tier];
+      Object.values(v).forEach(walk);
+    };
+    walk(state);
+    state.version = 65;
+  }
+  if (state.version === 65) {
+    // v66: gear perks (DESIGN.md 2026-11-14). A Custom or Premium item carries `perks` (ids from data/gearPerks.js).
+    // Nothing in a v65 save has a Custom or Premium tier (they were not live), so nothing is normally rewritten; an
+    // item of one of those tiers that somehow has no perks (a hand-made save) is given the ones its own hash rolls.
+    const walkPerks = (v) => {
+      if (!v || typeof v !== 'object') return;
+      if (Array.isArray(v)) { v.forEach(walkPerks); return; }
+      const n = TIERS[v.tier]?.perks ?? 0;
+      if (n && GEAR[v.type] && typeof v.uid === 'string' && !Array.isArray(v.perks)) v.perks = rollPerks(state.seed, v.uid, v.type, n);
+      Object.values(v).forEach(walkPerks);
+    };
+    walkPerks(state);
+    state.version = 66;
+  }
+  if (state.version === 66) {
+    // v67: houses have habits (core/houses.js, DESIGN.md 2026-11-14 "E1"). Each tong gets the habit its own hash draws (the
+    // same rule as a new game, in order, so a running game gets the same spread); each card remembers its best rating
+    // (today's), the day it last rose, and its last house if it is between tongs. Nothing moves on screen until the Sundays.
+    const r = state.rivals;
+    if (r) {
+      const seen = { ...r, tongs: [] };
+      for (const t of r.tongs) {
+        t.habit ??= pickHabit(state.seed, seen, t.id);
+        seen.tongs.push(t);
+        t.releasedDay ??= null; t.signedSeason ??= null;
+      }
+      for (const c of r.cards) {
+        c.best ??= c.rating; c.bestDay ??= state.day;
+        c.path ??= c.fromTong ? [{ tongId: c.fromTong, day: state.day }] : [];
+      }
+      r.keptSeason ??= null;
+    }
+    state.version = 67;
+  }
+  if (state.version === 67) {
+    // v68: a repair, no new shape. Routine offers were given the whole client record as `clientId` instead of its
+    // id (core/jobs.js), so their trust went to a key "[object Object]" and a Client's Favourite earned on one read
+    // "[object Object]" for the client. Every `clientId`, and every earned entry's `client`, is an id again; the
+    // text already written (crew notes, a runner's history) gets the client's name; the stray trust key and job
+    // counts are dropped (they cannot be told apart by client).
+    const BAD = '[object Object]';
+    const idOf = (v) => (v && typeof v === 'object' ? v.id ?? null : v);
+    const fixIds = (v) => {
+      if (!v || typeof v !== 'object') return;
+      if (Array.isArray(v)) { v.forEach(fixIds); return; }
+      if ('clientId' in v) v.clientId = idOf(v.clientId);
+      Object.values(v).forEach(fixIds);
+    };
+    for (const op of [...(state.crew ?? []), ...(state.memorial ?? []), ...(state.hall ?? [])]) {
+      for (const e of op.earned ?? []) {
+        if (e.id !== 'client_favourite' || !e.client || typeof e.client !== 'object') continue;
+        const name = e.client.name ?? 'the client';
+        e.client = idOf(e.client);
+        op.history = (op.history ?? []).map((h) => (h.startsWith(`Day ${e.day}: `) ? h.replaceAll(BAD, name) : h));
+        for (const m of (state.inbox ?? []).filter((x) => x.kind === 'crewnotes' && x.day === e.day)) {
+          for (const l of m.payload?.lines ?? []) {
+            if (!l.key?.startsWith(`client_favourite:${op.id}:`)) continue;
+            l.subject = l.subject.replaceAll(BAD, name);
+            l.body = l.body.replaceAll(BAD, name);
+            if (m.payload.lines.length === 1) { m.subject = l.subject; m.body = l.body; }
+          }
+        }
+      }
+      if (op.track?.clientJobs) delete op.track.clientJobs[BAD];
+    }
+    fixIds(state);
+    if (state.clients) delete state.clients[BAD];
+    state.version = 68;
   }
   return state;
 }

@@ -9,6 +9,7 @@ import { dossierOf, cardToOperative, operativeToCard, scoutTrip, readFor, scoutE
 import { ratingOf, cardRating } from '../src/core/rating.js';
 import { RIVALS, WORD_TEXT } from '../src/data/rivals.js';
 import { marketWage } from '../src/core/pricing.js';
+import { placeFor } from '../src/core/houses.js';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 const { importSave } = await import('../src/save/save.js');
@@ -199,7 +200,8 @@ test('the free name: one at a time, a card with no tong, every 3 to 6 weeks, and
   const id = s.rivals.offer.cardId;
   s.day += RIVALS.freeWeeks * 7 + 14; weeklyRivals(s);
   const c = s.rivals.cards.find((x) => x.id === id);
-  assert.ok(!c || c.tongId, 'a rival has signed it');
+  // E1 (signing by fit): a rival signs it if a house wants it and it fits; a name nobody wants stays free.
+  assert.ok(!c || c.tongId || !placeFor(s.rivals, c, s.day), 'a rival has signed it, or no house wants it');
 });
 
 test('a poor, small tong folds after six Sundays, its names go free one a Sunday with the head last', () => {

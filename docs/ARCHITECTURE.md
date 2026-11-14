@@ -134,6 +134,7 @@ const gain = (am.aborted ? -ABORT_REP : threat * REP_PER_THREAT) - (am.repCut ??
 state.reputation = Math.round(Math.max(0, Math.min(100, state.reputation + gain)) * 10) / 10;
 // REP_PER_THREAT = 0.75, ABORT_REP = 3
 ```
+- **Loot (2026-11-13):** a `completed` outcome calls `lootFor` (`core/loot.js`): one gear item into `state.stash`, or scrap cash (`LOOT.scrap`), plus one report line (tone `good` with a `tier`, or `plain`). `hashRng` only. Side tasks never reach `finish()`; hands-off runs do. A Custom or Premium drop is made by `makeItem` with its `perks` (`rollPerks`, `hashRng(seed, 'perks', uid)`, never the shared stream); the report line carries them as `perks`. Perks (`data/gearPerks.js`) are read by the same functions as the rest of the gear (`gearMods`, `seriousGuard`, `patchBonus`, `neuralFloor`, `overwatchKit`, and `weaponOf`/`armourOf` in `core/battle.js`, which both fight engines use), each held to `PERK_CAPS`; none adds to the stat its item already boosts (`perksFor` drops any that would).
 - **Client trust:** `adjustTrust(clientId, base + am.clientTrust + favourite)`, base = −3 on abort else `completionTrust(threat) = 4 + threat`.
 - **Survivors:** `jobsWithCrew++`, growth (`XP.job`, `XP.craft`), graduation inbox message, `checkRenewal`, specialisations, fatigue `+10+threat*6`, `awayUntil`, morale ±, `history` line, marks, neural warning.
 - **Result:** `am.result {report, outcome:'loss'|'aborted'|'completed', pay, heatGain, injuries, deaths, freelance, growth, graduated, client, trustChange}`; inbox report message with `timeline {result, steps, outcome, events, summary: summariseRun(...), orders, callIn, liveOrders}` (old full logs trimmed to `REPORT_LOGS_KEPT`).
@@ -171,8 +172,12 @@ Seeded and saved. `makeRng(seed)` is mulberry32 (`core/rng.js`). `nextRng(state)
 
 Format: JSON of the state in `localStorage`. Keys: `syndicate-active-slot`, `syndicate-slot-N`, `…-backup` (weekly), `…-unreadable`, `syndicate-ironman-progress`, legacy `syndicate-save-v1`. `storageGet/Set/Remove` are the only storage calls (swap for iOS). `saveGame` writes slot + weekly backup (not in Ironman). `loadGame` migrates; on failure `keepUnreadable` and returns null. `exportSave` downloads JSON; `importSave(file)` migrates then `checkIronman`; `loadBackup`.
 
-**Versioning:** `SAVE_VERSION` 64 in `core/state.js`. What each version added, newest first (one per line; grep `v52:`):
+**Versioning:** `SAVE_VERSION` 68 in `core/state.js`. What each version added, newest first (one per line; grep `v52:`):
 
+- v68: a repair, no new shape: every `clientId` (offers, a job in progress) and every Client's Favourite `client` is a client's id again (routine offers had stored the whole record); crew notes and history lines that read "[object Object]" get the client's name; the stray `clients['[object Object]']` and `track.clientJobs` key are dropped.
+- v67: E1, each rival tong gains `habit` ('grinder' | 'boutique' | 'workshop' | 'oldhouse'), `releasedDay`, `signedSeason`; each card gains `best`, `bestDay`, `path` [{ tongId, day }] (and `fromTier` while it is between tongs); `state.rivals.keptSeason`; migration draws each habit by the new-game rule, `best` = today's rating, `path` from `fromTong` (`core/houses.js`).
+- v66: gear perks: an item may carry `perks` (ids from `data/gearPerks.js`): a Custom item one, a Premium item two. Nothing in a v65 save has either tier, so the migration normally rewrites nothing; a Custom or Premium item with no `perks` is given the ones `rollPerks` makes from its own uid and the save's seed.
+- v65: gear tiers renamed: an item's (or armoury offer's) tier `street` is now `standard`, `pro` is `verified` (stash, worn and carried, the fallen's, offers, copies inside a job in progress). A tong rank `street` and a runner tier `pro` are left alone. Drops on a completed main job (`core/loot.js`) need no state.
 - v64: `state.tongName`, our tong's name (`core/tongname.js`); old saves get `NAMES.defaultTong`.
 - v63: an engine-2 fight in progress gains `am.battle.spots`, its staging on the site map (`core/fightmap.js stageSpots`), computed from the job's site and the fight's start zone; staging only.
 - v62: `raid.posts`.

@@ -10,6 +10,7 @@ import { CALL_IN } from '../core/mission.js';
 import { ORDERS } from '../core/autorun.js';
 import { ALERT_MAX } from '../core/incidents.js';
 import { SPECIALISATIONS } from '../core/specialisations.js';
+import { tierTag, perkList } from './gear.js';
 import { raidWhere } from './raidcards.js';
 import { esc, face, districtName } from './shared.js';
 import { state, backLabel, V } from './view.js';
@@ -41,7 +42,7 @@ export function renderMessage(m) {
       <button class="btn btn--ghost inbox__back" data-action="back">← ${esc(backLabel())}</button>
       <h1>${crewLinks(m.subject)}</h1>
       <p class="muted">${esc(m.type.charAt(0).toUpperCase() + m.type.slice(1))} · Day ${m.day}</p>
-      ${m.type === 'report' ? renderReportTimeline(m) : m.kind === 'crewnotes' && m.payload?.lines?.length > 1 ? renderCrewNotes(m) : m.kind === 'week' && m.payload?.lines ? renderWeekSummary(m) : `<p class="body">${crewLinks(m.body)}</p>`}
+      ${m.type === 'report' ? renderReportTimeline(m) : m.kind === 'crewnotes' && m.payload?.lines?.length ? renderCrewNotes(m) : m.kind === 'week' && m.payload?.lines ? renderWeekSummary(m) : `<p class="body">${crewLinks(m.body)}</p>`}
       ${m.kind === 'renewal' ? renderRenewal(m) : ''}
       ${m.kind === 'heat' ? renderHeatNotice(m) : ''}
       ${m.kind === 'spec' ? renderSpecOffer(m) : ''}
@@ -54,9 +55,18 @@ export function renderMessage(m) {
       ${jobLink}`;
 }
 
-/** A day's crew news in one message (core/earned.js crewNote): each line's heading, then its text. */
+/**
+ * A day's crew news in one message (core/earned.js crewNote). Each line: who and what as a heading (the name is the
+ * link), what happened, then what it does on a quieter line of its own. One line alone has no heading: the message's
+ * title already says it. A line's body is "What happened. (Handle: what it does.)".
+ */
 function renderCrewNotes(m) {
-  return `<div class="crewnotes">${m.payload.lines.map((l) => `<section><h2 class="crewnotes__head">${crewLinks(l.subject)}</h2><p class="body">${crewLinks(l.body)}</p></section>`).join('')}</div>`;
+  const lines = m.payload.lines;
+  const one = (l) => {
+    const [, note, effect] = /^(.*?) \([^:()]+: (.*)\)$/s.exec(l.body) ?? [null, l.body, ''];
+    return `<section>${lines.length > 1 ? `<h3 class="crewnotes__head">${crewLinks(l.subject)}</h3>` : ''}<p class="body">${esc(note)}</p>${effect ? `<p class="crewnotes__fx">${esc(effect)}</p>` : ''}</section>`;
+  };
+  return `<div class="crewnotes ${lines.length > 1 ? '' : 'crewnotes--one'}">${lines.map(one).join('')}</div>`;
 }
 
 /** The Sunday summary (core/week.js): the week's lines, then what was paid. */
@@ -96,7 +106,7 @@ function renderReportTimeline(m) {
         ${outcome.length ? `<li class="timeline__item timeline__item--end timeline__item--${esc(result ?? 'plain')}" style="--i:${steps.length}">
           <span class="timeline__node" aria-hidden="true">${end[0]}</span>
           <div class="timeline__text"><p class="timeline__label">${esc(end[1])}</p>
-            <ul class="timeline__results">${outcome.map((o, i) => `<li class="tone--${esc(o.tone)}" style="--r:${i}">${esc(o.text)}</li>`).join('')}</ul></div>
+            <ul class="timeline__results">${outcome.map((o, i) => `<li class="tone--${esc(o.tone)}" style="--r:${i}">${esc(o.text)}${o.tier ? ` ${tierTag({ tier: o.tier })}` : ''}${o.perks?.length ? perkList(o.perks, o.tier) : ''}</li>`).join('')}</ul></div>
         </li>` : ''}
       </ol>
       ${m.timeline?.side ? rollDetail(m.timeline.side) : ''}

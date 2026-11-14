@@ -40,6 +40,8 @@ export function onClick(e) {
   const t = e.target.closest('[data-action]');
   if (!t || t.disabled) return;
   const { action, id } = t.dataset;
+  // A perk on a report's loot line opens on its own tap: it doesn't count as the tap that ends the play-in.
+  if (action === 'skip-report' && e.target.closest('.perk')) return;
   // On a wide screen the hall page builds in place (2026-11-09): its build view starts on the first tap.
   if (['nav', 'hall-page', 'halls-open', 'open-armoury', 'back'].includes(action)) V.hallInside = null;
   if (action.startsWith('build-') && action !== 'build-hall' && !V.buildView && V.hallPage && (wideHall() || V.hallInside || action === 'build-part')) V.buildView = { ...newBuildView(V.hallPage, V.hallInside ?? 'compound'), on: action !== 'build-part' };
@@ -149,7 +151,7 @@ export function onClick(e) {
       if (sub) setSub(tab, sub);
       break;
     }
-    case 'buy': return setState(buyGear(state, id, t.dataset.tier || 'street'));
+    case 'buy': return setState(buyGear(state, id, t.dataset.tier || 'standard'));
     case 'buy-offer': return setState(buyOffer(state, id));
     case 'sell': {
       const item = (state.stash ?? []).find((i) => i.uid === id);

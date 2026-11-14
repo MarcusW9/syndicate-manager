@@ -142,7 +142,7 @@ export function renderRecruit() {
       <p class="body">${esc(r.origin)}</p>
       <p class="body muted">${esc(r.bio)}</p>
 
-      ${r.brings?.length ? `<p class="body"><strong>Brings their own:</strong> ${esc(r.brings.map((type) => itemName({ type, tier: 'street' }).toLowerCase()).join(', '))}.</p>` : ''}
+      ${r.brings?.length ? `<p class="body"><strong>Brings their own:</strong> ${esc(r.brings.map((type) => itemName({ type, tier: 'standard' }).toLowerCase()).join(', '))}.</p>` : ''}
       <h2>Traits</h2>
       ${traitChips(r.id, r.traits.map(bornChip))}
       </div>

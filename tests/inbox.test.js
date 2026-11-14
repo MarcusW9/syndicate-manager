@@ -11,7 +11,7 @@ import { playWeeks } from './play.js';
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 const { importSave } = await import('../src/save/save.js');
 
-const SAVE_BUDGET = 250_000; // characters of JSON after a year (was 542KB before the trim)
+const SAVE_BUDGET = 270_000; // characters of JSON after a year (was 542KB before the trim; 250k until loot, 2026-11-13: dropped gear piles up in the stash, about 3k a year; 260k until 2026-11-14, when routine jobs began to earn their client's trust as designed: ten seeds average 247k, up from 244k, and run from 229k to 265k)
 
 const waiting = (m) => m.blocking && !m.resolved || m.resolved === false;
 

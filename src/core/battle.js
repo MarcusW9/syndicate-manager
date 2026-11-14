@@ -24,7 +24,7 @@
 import { BATTLE } from '../data/battle.js';
 import { GEAR, TIERS } from '../data/gear.js';
 import { ZONES, INCIDENTS } from '../data/incidents.js';
-import { carried, counted, itemName, itemTitle, overwatchKit, patchBonus, sidearmStats } from './gear.js';
+import { carried, counted, itemName, itemTitle, overwatchKit, patchBonus, perkSum, perksOf, sidearmStats } from './gear.js';
 import { effectiveStat } from './crew.js';
 import { d20, makeRng } from './rng.js';
 
@@ -69,15 +69,18 @@ export function weaponOf(op) {
   const guns = carried(op).filter((i) => GEAR[i.type]?.slot === 'weapon');
   const item = guns.filter((i) => sidearmStats(i)).sort((a, b) => sidearmStats(b).damage - sidearmStats(a).damage)[0] ?? guns.find((i) => GEAR[i.type]?.damage) ?? null;
   const s = sidearmStats(item);
-  if (s) return { name: itemTitle(item), damage: s.damage, pierce: s.pierce };
+  const perk = { damage: perkSum(counted(op), 'damage'), pierce: perkSum(counted(op), 'pierce') }; // gear perks (data/gearPerks.js)
+  if (s) return { name: itemTitle(item), damage: s.damage + perk.damage, pierce: s.pierce + perk.pierce };
   const dmg = item && GEAR[item.type]?.damage;
-  return dmg ? { name: itemName(item), damage: dmg + step(item), pierce: 0 } : { ...BATTLE.unarmed, pierce: 0 };
+  return dmg ? { name: itemName(item), damage: dmg + step(item) + perk.damage, pierce: perk.pierce } : { ...BATTLE.unarmed, damage: BATTLE.unarmed.damage + perk.damage, pierce: perk.pierce };
 }
 
 /** Their armour in a fight: { name, value } (flat soak per hit), value 0 if none. */
 export function armourOf(op) {
   const item = carried(op).find((i) => GEAR[i.type]?.armour);
-  return item ? { name: itemName(item), value: GEAR[item.type].armour + step(item) } : { name: null, value: 0 };
+  const extra = perkSum(counted(op), 'armour'); // a skin weave (data/gearPerks.js): on top of a vest, or alone
+  const weave = counted(op).flatMap(perksOf).find((p) => p.effect.armour);
+  return item ? { name: itemName(item), value: GEAR[item.type].armour + step(item) + extra } : extra ? { name: weave.name.toLowerCase(), value: extra } : { name: null, value: 0 };
 }
 
 /** The guards a fight starts with: the incident's count, more on bigger work (at most maxGuards), toughened by threat. */

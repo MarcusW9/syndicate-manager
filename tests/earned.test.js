@@ -157,6 +157,33 @@ test("Client's Favourite: three clean jobs for one client; fades when one of the
   assert.ok(!has(op, 'client_favourite'));
 });
 
+test("Client's Favourite: the note names the client; a save with the client stored whole is repaired (v68)", async () => {
+  const s = game(11); const op = s.crew[0];
+  for (let i = 0; i < 3; i++) job(s, [roll(op, 'social', true)], [op], { clientId: 'fung' });
+  const line = (st) => st.inbox.find((x) => x.kind === 'crewnotes').payload.lines.find((l) => l.key.startsWith('client_favourite:'));
+  const m = line(s);
+  assert.equal(m.subject, `${op.handle}: Client's Favourite (Auntie Fung)`);
+  assert.ok(m.body.startsWith(`Auntie Fung considers ${op.handle} a favourite now. (`));
+  // The same save as the bug wrote it: the record where the id belongs, and its text.
+  const { CLIENTS } = await import('../src/data/clients.js');
+  const fung = CLIENTS.find((c) => c.id === 'fung');
+  const old = structuredClone(s);
+  old.version = 67;
+  const bad = (t) => t.replaceAll('Auntie Fung', '[object Object]');
+  old.crew[0].earned.find((e) => e.id === 'client_favourite').client = structuredClone(fung);
+  old.crew[0].history = old.crew[0].history.map(bad);
+  for (const x of old.inbox.filter((y) => y.kind === 'crewnotes')) { x.subject = bad(x.subject); x.body = bad(x.body); x.payload.lines.forEach((l) => { l.subject = bad(l.subject); l.body = bad(l.body); }); }
+  old.jobs.push({ id: 'job-x', templateId: old.jobs[0].templateId, clientId: structuredClone(fung), days: 1, payMult: 1, threatDelta: 0, twist: null, hinted: false, offeredDay: old.day, expiresDay: old.day + 6 });
+  old.clients = { ...old.clients, '[object Object]': 60 };
+  const r = await importSave({ text: async () => JSON.stringify(old) });
+  const up = r.state ?? r;
+  assert.equal(up.version, SAVE_VERSION);
+  assert.doesNotMatch(JSON.stringify(up), /\[object Object\]/);
+  assert.ok(E.earnedOf(up.crew[0], 'client_favourite', { client: 'fung' }));
+  assert.equal(up.jobs.find((j) => j.id === 'job-x').clientId, 'fung');
+  assert.deepEqual(line(up), m);
+});
+
 test('Synergy (crew_anchor): five jobs together, both unhurt; +1 cool together; shaken for a job after the partner goes critical', () => {
   const s = game(12); const [a, b] = s.crew;
   for (let i = 0; i < 5; i++) job(s, [], [a, b]);
