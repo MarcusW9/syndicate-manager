@@ -11,7 +11,7 @@ mkdirSync(out, { recursive: true });
 const st = createNewGame({ seed: 21, startCrew: 'fresh' });
 st.inbox = st.inbox.filter((m) => m.id !== 'welcome');
 const op = [...st.crew].sort((a, b) => b.stats.combat - a.stats.combat)[0];
-op.gear = { ...op.gear, weapon: { uid: 'g900', type: 'rifle', tier: 'street' } };
+op.gear = { ...op.gear, weapon: { uid: 'g900', type: 'rifle', tier: 'standard' } };
 const root = new URL('..', import.meta.url).pathname;
 const srv = spawn(`${root}node_modules/.bin/vite`, ['--port', '5189', '--strictPort'], { cwd: root, stdio: 'ignore', detached: true });
 await new Promise((r) => setTimeout(r, 4000));

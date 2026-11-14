@@ -16,20 +16,20 @@ s.inbox = s.inbox.filter((m) => m.id !== 'welcome');
 s.cash = 40000;
 let n = 100;
 s.stash = [];
-for (const [type, frames] of Object.entries(TOOL_FRAMES)) for (const frame of Object.keys(frames)) for (const tier of ['street', 'pro']) s.stash.push({ uid: `g${n++}`, type, tier, look: { frame } });
+for (const [type, frames] of Object.entries(TOOL_FRAMES)) for (const frame of Object.keys(frames)) for (const tier of ['standard', 'verified']) s.stash.push({ uid: `g${n++}`, type, tier, look: { frame } });
 const op = s.crew[0];
 // The carry grid (save v45): worn armour, two sockets, and a bag with a drone, a sidearm and a ghost kit.
 op.gear = {
-  armour: { uid: `g${n++}`, type: 'vest', tier: 'street', look: { frame: 'jacket' } },
-  implants: [{ uid: `g${n++}`, type: 'reflex', tier: 'pro', look: { frame: 'harness' } }, { uid: `g${n++}`, type: 'cortex', tier: 'street', look: { frame: 'chip' } }],
+  armour: { uid: `g${n++}`, type: 'vest', tier: 'standard', look: { frame: 'jacket' } },
+  implants: [{ uid: `g${n++}`, type: 'reflex', tier: 'verified', look: { frame: 'harness' } }, { uid: `g${n++}`, type: 'cortex', tier: 'standard', look: { frame: 'chip' } }],
   bag: [
-    { item: { uid: `g${n++}`, type: 'drone', tier: 'pro', look: { frame: 'kite' } }, x: 0, y: 0 },
-    { item: { uid: `g${n++}`, type: 'picks', tier: 'street', look: { frame: 'veil' } }, x: 3, y: 0 },
-    { item: { uid: `g${n++}`, type: 'pistol', tier: 'street', look: { frame: 'revolver', finish: 'blued' }, quirk: 'none', name: 'Old Tiger' }, x: 0, y: 1 },
+    { item: { uid: `g${n++}`, type: 'drone', tier: 'verified', look: { frame: 'kite' } }, x: 0, y: 0 },
+    { item: { uid: `g${n++}`, type: 'picks', tier: 'standard', look: { frame: 'veil' } }, x: 3, y: 0 },
+    { item: { uid: `g${n++}`, type: 'pistol', tier: 'standard', look: { frame: 'revolver', finish: 'blued' }, quirk: 'none', name: 'Old Tiger' }, x: 0, y: 1 },
   ],
 };
 const op2 = s.crew[1];
-op2.gear = { armour: null, implants: [], bag: [{ item: { uid: `g${n++}`, type: 'deck', tier: 'street', look: { frame: 'case' } }, x: 0, y: 0 }] };
+op2.gear = { armour: null, implants: [], bag: [{ item: { uid: `g${n++}`, type: 'deck', tier: 'standard', look: { frame: 'case' } }, x: 0, y: 0 }] };
 s.gearSeq = n;
 
 const root = new URL('..', import.meta.url).pathname;

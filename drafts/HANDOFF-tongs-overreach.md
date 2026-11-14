@@ -22,7 +22,7 @@ no change to the player's money, heat, halls or rolls. One PR on a fresh branch 
    thread functions `startThread` / `beat` / `threadsStep`, `wordFor`, `movesView`, `rivalView`),
    `src/data/rivals.js` (`RIVALS`, `HABIT`, `HABITS`, `WORD_TEXT`), `buyoutAmount` in
    `src/core/dossier.js`, and `scripts/sim-tongs.mjs` (the gate script you will extend).
-5. The newest `migrate` blocks in `src/save/save.js` (v65 is E1's), `SAVE_VERSION` in
+5. The newest `migrate` blocks in `src/save/save.js` (v67 is E1's), `SAVE_VERSION` in
    `src/core/state.js`, and `docs/ARCHITECTURE.md` section 8 (how to add a version).
 6. The tests that encode the rules: `tests/rivals*.test.js`, `tests/rivals-e1.test.js`,
    `tests/golden/rivals-1234.json`.
@@ -76,7 +76,7 @@ works", regard with teeth (E4); the state and mood chips on cards; a habit chang
   `'rivals-e:' + week`) and never moves `rngCounter`. With the player doing nothing, cash, heat and
   halls must match a run without E2 (a test).
 - **`src/ui/` reads only `rivalView` and `bookView`.** Wording stays in `src/data/rivals.js`.
-- **Save.** Bump `SAVE_VERSION` (65 today) once, add a migration (zeros and nulls; `rivals.sale: null`),
+- **Save.** Bump `SAVE_VERSION` (67 today) once, add a migration (zeros and nulls; `rivals.sale: null`),
   and add the version line to `docs/ARCHITECTURE.md` section 8. Regenerate
   `tests/golden/rivals-1234.json` **once**, on purpose, add an `e2` section, and log it.
 - **Never loosen a test to make a change pass.** If a rule changes on purpose, change the test and say
@@ -101,7 +101,7 @@ background, or say you could not.
 (`tests/nav.test.js` "five tabs" fails on `main` itself as of 2026-11-14; if it still does, say so, do not
 touch it). A decision-log row at the top of `docs/design/2026-11.md`; an entry at the top of
 `docs/changelog/2026-11.md`; update "Habits (E1)"'s neighbour, a new "Overreach (E2)" paragraph and the
-E2 row in `docs/RIVAL-TONGS.md`; `CODEMAP.md` (houses.js grows, the weekly step); the v66 line in
+E2 row in `docs/RIVAL-TONGS.md`; `CODEMAP.md` (houses.js grows, the weekly step); the v68 line in
 `docs/ARCHITECTURE.md`. If the look changes (the sale in Free names, a new story word), run
 `npm run screenshots -- tongs-overreach` and, because the standard run stops at week 1, add a populated
 set the way E1's `2026-11-14-tongs-habits` was made (build a state in node, load it into

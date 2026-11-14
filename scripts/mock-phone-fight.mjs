@@ -21,7 +21,7 @@ function fightState() {
   for (let seed = 1; seed < 3000; seed++) {
     let s = createNewGame({ seed, startCrew: 'fresh' });
     for (const op of s.crew) for (const k of Object.keys(op.stats)) op.stats[k] = Math.min(20, op.stats[k] + 4);
-    arm(s, s.crew[0].id, 'pistol:pro', 'vest'); arm(s, s.crew[1].id, 'pistol');
+    arm(s, s.crew[0].id, 'pistol:verified', 'vest'); arm(s, s.crew[1].id, 'pistol');
     s.jobs = []; addOffer(s, 'warehouse');
     s = M.startMission(s, s.jobs[0].id, s.crew.slice(0, 4).map((o) => o.id), 'loud', { callIn: 'risky', orders: 'steady' });
     for (let g = 0; g < 300 && !s.activeMission.done; g++) {

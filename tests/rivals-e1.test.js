@@ -109,7 +109,7 @@ test('the house rules: a short table asks more to let one go, an old house asks 
   t.habit = 'grinder'; const p1 = persuasion(s, card).premium;
   t.habit = 'oldhouse'; const p2 = persuasion(s, card).premium;
   assert.equal(p2, Math.min(0.35, Math.round((p1 + HABIT.oldHousePremium) * 100) / 100));
-  // A workshop name brings one piece of street-tier kit, for a role that has some.
+  // A workshop name brings one piece of standard-tier kit, for a role that has some.
   t.habit = 'workshop';
   const kitRole = r.cards.find((c) => ['muscle', 'tech', 'medic', 'face', 'driver'].includes(c.role));
   const kitTong = pick('workshop') ?? t;
@@ -142,14 +142,14 @@ test('the view shows a house\'s habit as an id and the profile notes a workshop 
   assert.equal(readFor(s, card).note, null);
 });
 
-test('a v64 save upgrades: every tong gets a habit (two at most alike), every card its best and trail', async () => {
+test('a v66 save upgrades: every tong gets a habit (two at most alike), every card its best and trail', async () => {
   const store = new Map();
   globalThis.localStorage = { getItem: (k) => (store.has(k) ? store.get(k) : null), setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k) };
   const S = await import('../src/save/save.js');
   const s = game(3);
   for (let w = 0; w < 12; w++) step(s, w);
   const old = structuredClone(s);
-  old.version = 64;
+  old.version = 66;
   for (const t of old.rivals.tongs) { delete t.habit; delete t.releasedDay; delete t.signedSeason; }
   for (const c of old.rivals.cards) { delete c.best; delete c.bestDay; delete c.path; }
   delete old.rivals.keptSeason;

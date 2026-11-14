@@ -10,6 +10,7 @@ import { CALL_IN } from '../core/mission.js';
 import { ORDERS } from '../core/autorun.js';
 import { ALERT_MAX } from '../core/incidents.js';
 import { SPECIALISATIONS } from '../core/specialisations.js';
+import { tierTag, perkList } from './gear.js';
 import { raidWhere } from './raidcards.js';
 import { esc, face, districtName } from './shared.js';
 import { state, backLabel, V } from './view.js';
@@ -96,7 +97,7 @@ function renderReportTimeline(m) {
         ${outcome.length ? `<li class="timeline__item timeline__item--end timeline__item--${esc(result ?? 'plain')}" style="--i:${steps.length}">
           <span class="timeline__node" aria-hidden="true">${end[0]}</span>
           <div class="timeline__text"><p class="timeline__label">${esc(end[1])}</p>
-            <ul class="timeline__results">${outcome.map((o, i) => `<li class="tone--${esc(o.tone)}" style="--r:${i}">${esc(o.text)}</li>`).join('')}</ul></div>
+            <ul class="timeline__results">${outcome.map((o, i) => `<li class="tone--${esc(o.tone)}" style="--r:${i}">${esc(o.text)}${o.tier ? ` ${tierTag({ tier: o.tier })}` : ''}${o.perks?.length ? perkList(o.perks, o.tier) : ''}</li>`).join('')}</ul></div>
         </li>` : ''}
       </ol>
       ${m.timeline?.side ? rollDetail(m.timeline.side) : ''}

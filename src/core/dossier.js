@@ -260,7 +260,7 @@ export function cardToOperative(state, card, { wage, level = scoutLevel(state, c
   const d = dossierOf(state, card);
   const r = { ...d, wage: wage ?? d.wage, scoutError: scoutErrorAt(state, card, level), scoutReport: '' };
   delete r.career;
-  // E1: a workshop's name brings one piece of street-tier kit (which, a hash of the card; nothing if the role has none).
+  // E1: a workshop's name brings one piece of standard-tier kit (which, a hash of the card; nothing if the role has none).
   const kits = tongOf(state.rivals, card.tongId)?.habit === 'workshop' ? (RECRUIT_GEAR[card.role] ?? []).map(([, type]) => type) : [];
   const kit = kits.length ? [kits[Math.floor(hashRng(state.seed, 'workshop-kit', card.id)() * kits.length)]] : [];
   const op = recruitToOperative(r, {

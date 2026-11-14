@@ -24,18 +24,18 @@ export const RIFLE_LOOKS = {
   },
   // tier: which shop shelf it turns up on (street or pro).
   finishes: {
-    street: { name: 'gunmetal and old wood', tier: 'street', words: ['Old', 'Dockyard', 'Workhorse'] },
-    rust: { name: 'rust', tier: 'street', words: ['Rusty', 'Ghost', 'Scrapyard'] },
-    urban: { name: 'urban camo', tier: 'street', words: ['Concrete', 'Overpass', 'Grey'] },
-    bamboo: { name: 'bamboo', tier: 'street', words: ['Bamboo', "Hermit's", 'Green'] },
-    candy: { name: 'candy-pink paint', tier: 'street', words: ['Candy', 'Night Market', 'Neon'] },
-    rosewood: { name: 'rosewood and brass', tier: 'pro', words: ['Rosewood', 'Teahouse', 'Parlour'] },
-    carbon: { name: 'carbon', tier: 'pro', glows: true, words: ['Midnight', 'Black', 'Shadow'] },
-    cinnabar: { name: 'cinnabar lacquer', tier: 'pro', words: ['Vermilion', 'Cinnabar', 'Red'] },
-    jade: { name: 'jade and bronze', tier: 'pro', words: ['Jade', 'Emerald', 'Bureau'] },
-    bronze: { name: 'temple bronze', tier: 'pro', words: ['Temple', 'Bronze', "Abbot's"] },
-    blackgold: { name: 'black lacquer and gold', tier: 'pro', words: ['Golden', 'Triad', 'Gilded'] },
-    ceramic: { name: 'white ceramic', tier: 'pro', glows: true, words: ['Porcelain', 'Glass', 'White'] },
+    street: { name: 'gunmetal and old wood', tier: 'standard', words: ['Old', 'Dockyard', 'Workhorse'] },
+    rust: { name: 'rust', tier: 'standard', words: ['Rusty', 'Ghost', 'Scrapyard'] },
+    urban: { name: 'urban camo', tier: 'standard', words: ['Concrete', 'Overpass', 'Grey'] },
+    bamboo: { name: 'bamboo', tier: 'standard', words: ['Bamboo', "Hermit's", 'Green'] },
+    candy: { name: 'candy-pink paint', tier: 'standard', words: ['Candy', 'Night Market', 'Neon'] },
+    rosewood: { name: 'rosewood and brass', tier: 'verified', words: ['Rosewood', 'Teahouse', 'Parlour'] },
+    carbon: { name: 'carbon', tier: 'verified', glows: true, words: ['Midnight', 'Black', 'Shadow'] },
+    cinnabar: { name: 'cinnabar lacquer', tier: 'verified', words: ['Vermilion', 'Cinnabar', 'Red'] },
+    jade: { name: 'jade and bronze', tier: 'verified', words: ['Jade', 'Emerald', 'Bureau'] },
+    bronze: { name: 'temple bronze', tier: 'verified', words: ['Temple', 'Bronze', "Abbot's"] },
+    blackgold: { name: 'black lacquer and gold', tier: 'verified', words: ['Golden', 'Triad', 'Gilded'] },
+    ceramic: { name: 'white ceramic', tier: 'verified', glows: true, words: ['Porcelain', 'Glass', 'White'] },
   },
   engravings: {
     clouds: { name: 'gold clouds', words: ['Cloud', 'Auspicious'] },
@@ -53,8 +53,8 @@ export const RIFLE_LOOKS = {
   },
   // How often each tier has an engraving or a charm, and which charms each shelf stocks.
   odds: {
-    street: { engraving: 0.15, charm: 0.55, charms: ['talisman', 'sticker', 'hazard', 'coin', 'mahjong', 'tassel'] },
-    pro: { engraving: 0.6, charm: 0.5, charms: ['tassel', 'coin', 'mala', 'mahjong', 'talisman'] },
+    standard: { engraving: 0.15, charm: 0.55, charms: ['talisman', 'sticker', 'hazard', 'coin', 'mahjong', 'tassel'] },
+    verified: { engraving: 0.6, charm: 0.5, charms: ['tassel', 'coin', 'mala', 'mahjong', 'talisman'] },
   },
 };
 
@@ -67,24 +67,24 @@ export const SIDEARM_LOOKS = {
     machine: { name: 'machine pistol', nouns: ['Cicada', 'Hailstorm', 'Rattle', 'Firecracker'] },
     heritage: { name: 'heritage pistol', nouns: ['Magistrate', 'Old Consul', 'Elder Brother', 'Lamplighter'] },
     cannon: { name: 'hand cannon', nouns: ['Harbour Hammer', 'Bull', 'Thunderclap', 'Pile Driver'] },
-    smart: { name: 'smart pistol', tier: 'pro', glows: true, nouns: ['Ghost Link', 'Synapse', 'Familiar', 'Echo'] },
-    coil: { name: 'coil pistol', tier: 'pro', glows: true, nouns: ['Storm Coil', 'Arc', 'Volt Fox', 'Lightning'] },
+    smart: { name: 'smart pistol', tier: 'verified', glows: true, nouns: ['Ghost Link', 'Synapse', 'Familiar', 'Echo'] },
+    coil: { name: 'coil pistol', tier: 'verified', glows: true, nouns: ['Storm Coil', 'Arc', 'Volt Fox', 'Lightning'] },
   },
   finishes: {
-    blued: { name: 'blued steel', tier: 'street', words: ['Blue', 'Steel', 'Plain'] },
-    stainless: { name: 'stainless steel and walnut', tier: 'street', words: ['Silver', 'Bright', 'Walnut'] },
-    polymer: { name: 'black polymer', tier: 'street', words: ['Service', 'Black', 'Issue'] },
-    tan: { name: 'desert tan', tier: 'street', words: ['Desert', 'Dust', 'Sand'] },
-    hazard: { name: 'hazard yellow', tier: 'street', words: ['Hazard', 'Dockside', 'Caution'] },
-    neon: { name: 'black with neon edges', tier: 'street', glows: true, words: ['Neon', 'Glow', 'Afterhours'] },
-    cinnabar: { name: 'cinnabar lacquer', tier: 'pro', words: ['Vermilion', 'Cinnabar', 'Red'] },
-    jade: { name: 'jade grips and bronze', tier: 'pro', words: ['Jade', 'Emerald', 'Bureau'] },
-    pearl: { name: 'pearl grips', tier: 'pro', words: ['Pearl', 'Moon', 'Opal'] },
-    rosewood: { name: 'rosewood and brass', tier: 'pro', words: ['Rosewood', 'Teahouse', 'Parlour'] },
-    blackgold: { name: 'black and gold', tier: 'pro', words: ['Golden', 'Triad', 'Gilded'] },
-    holo: { name: 'holographic chrome', tier: 'pro', words: ['Prism', 'Holo', 'Mirage'] },
-    synth: { name: 'clinic white with a light strip', tier: 'pro', glows: true, words: ['White', 'Clinic', 'Sterile'] },
-    ronin: { name: 'matte black with a wrapped grip', tier: 'pro', words: ['Ronin', 'Red-Eye', 'Midnight'] },
+    blued: { name: 'blued steel', tier: 'standard', words: ['Blue', 'Steel', 'Plain'] },
+    stainless: { name: 'stainless steel and walnut', tier: 'standard', words: ['Silver', 'Bright', 'Walnut'] },
+    polymer: { name: 'black polymer', tier: 'standard', words: ['Service', 'Black', 'Issue'] },
+    tan: { name: 'desert tan', tier: 'standard', words: ['Desert', 'Dust', 'Sand'] },
+    hazard: { name: 'hazard yellow', tier: 'standard', words: ['Hazard', 'Dockside', 'Caution'] },
+    neon: { name: 'black with neon edges', tier: 'standard', glows: true, words: ['Neon', 'Glow', 'Afterhours'] },
+    cinnabar: { name: 'cinnabar lacquer', tier: 'verified', words: ['Vermilion', 'Cinnabar', 'Red'] },
+    jade: { name: 'jade grips and bronze', tier: 'verified', words: ['Jade', 'Emerald', 'Bureau'] },
+    pearl: { name: 'pearl grips', tier: 'verified', words: ['Pearl', 'Moon', 'Opal'] },
+    rosewood: { name: 'rosewood and brass', tier: 'verified', words: ['Rosewood', 'Teahouse', 'Parlour'] },
+    blackgold: { name: 'black and gold', tier: 'verified', words: ['Golden', 'Triad', 'Gilded'] },
+    holo: { name: 'holographic chrome', tier: 'verified', words: ['Prism', 'Holo', 'Mirage'] },
+    synth: { name: 'clinic white with a light strip', tier: 'verified', glows: true, words: ['White', 'Clinic', 'Sterile'] },
+    ronin: { name: 'matte black with a wrapped grip', tier: 'verified', words: ['Ronin', 'Red-Eye', 'Midnight'] },
   },
   mods: {
     laser: { name: 'a laser sight', words: ['Laser', 'Red Line'] },
@@ -106,13 +106,13 @@ export const SIDEARM_LOOKS = {
     cat: { name: 'a hologram lucky cat', words: ['Lucky Cat', 'Waving'] },
   },
   odds: {
-    street: { mod: 0.45, charm: 0.5, mods: ['laser', 'vents', 'ledmag', 'circuit', 'holo'], charms: ['sticker', 'cube', 'coin', 'talisman', 'shard', 'mahjong'] },
-    pro: { mod: 0.75, charm: 0.5, mods: ['laser', 'holo', 'vents', 'ledmag', 'scales', 'clouds', 'circuit'], charms: ['tassel', 'coin', 'cat', 'shard', 'mahjong', 'talisman'] },
+    standard: { mod: 0.45, charm: 0.5, mods: ['laser', 'vents', 'ledmag', 'circuit', 'holo'], charms: ['sticker', 'cube', 'coin', 'talisman', 'shard', 'mahjong'] },
+    verified: { mod: 0.75, charm: 0.5, mods: ['laser', 'holo', 'vents', 'ledmag', 'scales', 'clouds', 'circuit'], charms: ['tassel', 'coin', 'cat', 'shard', 'mahjong', 'talisman'] },
   },
 };
 
 // Guns on the armoury's shelf each week, by type and tier.
-export const ARMOURY_STOCK = { rifle: { street: 2, pro: 1 }, pistol: { street: 1, pro: 1 } };
+export const ARMOURY_STOCK = { rifle: { standard: 2, verified: 1 }, pistol: { standard: 1, verified: 1 } };
 
 // Item frames (2026-11-06; first the tools, then the rest of the armoury). The drone "quad A ... the others can be rarer instances"; the
 // decks "all are fine and can be varied"): the drone and the cyberdeck come in more than one build.
