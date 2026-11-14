@@ -447,6 +447,26 @@ export function jobRead(state, job, { shortlist = JOSS_SHORTLIST } = {}) {
 }
 
 /**
+ * Kept reads (2026-11-14): everything jobRead reads for a job, as a string. Two states that give a job the same key give it
+ * the same read, so a read can be kept across states (a day passing, a change elsewhere) instead of searched again. In it:
+ * the offer (id, template, threat after any rumour, inside help), the intel and heat on its district, the cap, and the free
+ * crew in order, everything on them (stats, traits, condition, gear, tier, fame, track, the lot) but their history, the days
+ * an injury has left (only an unavailable runner's reason reads it) and fatigue, which counts only as over 60 or not (the
+ * roll rule, core/crew.js; over 85 takes them off the free list). Over-inclusive on purpose: a field that doesn't change the
+ * read only costs a fresh search. The UI keeps reads by it (ui/jobs.js); never saved.
+ */
+export function readKey(state, job, { shortlist = JOSS_SHORTLIST } = {}) {
+  const ctx = readContext(state, job);
+  const free = state.crew.filter((op) => availability(state, op).ok);
+  return JSON.stringify([job.id, job.templateId, ctx.tpl.threat, ctx.v.inside, ctx.intel, ctx.watched, String(shortlist), free.map(({ history, ...op }) => ({ ...op, condition: { ...op.condition, fatigue: op.condition.fatigue > 60, injuryDays: null } }))]);
+}
+
+/** A kept read (jobRead's answer under the same readKey) with its crew as this state's people, so nothing stale is shown. */
+export function keptRead(read, state) {
+  return { ...read, crew: read.crew.map((op) => state.crew.find((o) => o.id === op.id) ?? op) };
+}
+
+/**
  * What to try to lower the plan's risk (2026-11-05, the plan bar's "Try"): one change at a time
  * from the plan as it stands: another approach, one inside runner swapped for someone free, one
  * more inside (up to the most allowed), someone free on overwatch (with kit they carry) or at the

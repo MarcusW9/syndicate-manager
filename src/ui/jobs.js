@@ -14,7 +14,7 @@ import { CLIENTS } from '../data/clients.js';
 import { availability } from '../core/crew.js';
 import { activeRumour } from '../core/rumours.js';
 import { money } from '../core/money.js';
-import { jobRead } from '../core/squad.js';
+import { jobRead, readKey, keptRead } from '../core/squad.js';
 import { intelFor, SIDE_TRUST, sideReward, sideTaskById, sideOdds, sidePitch, sideCost } from '../core/sidetasks.js';
 import { ROLL_STATS } from '../core/development.js';
 import { clientRival } from '../core/rivals.js';
@@ -51,6 +51,15 @@ function climbLine() {
 
 /** Joss's read of one job for the board (core/squad.js jobRead), worked out once per state. */
 const readCache = new WeakMap();
+/**
+ * Kept reads (2026-11-14): a job's read by core/squad.js readKey, so a read survives a new state (a day passing, a change
+ * elsewhere) while nothing it reads has changed. Never saved; cleared when it gets big.
+ */
+const kept = new Map();
+export function keepRead(key, read) {
+  if (kept.size > 300) kept.clear();
+  kept.set(key, read);
+}
 let warmTimer = null;
 /**
  * Reading the board plays hundreds of practice fights per job (core/fight.js fightOdds, cached by team and orders), which
@@ -69,11 +78,24 @@ export function warmBoard() {
   };
   warmTimer = setTimeout(step, 150);
 }
-export function boardRead(job) {
+/** The read if it is already known for this state (worked out, or kept from an earlier state under the same key), else null. */
+export function knownRead(job) {
   let reads = readCache.get(state);
   if (!reads) readCache.set(state, (reads = new Map()));
-  if (!reads.has(job.id)) reads.set(job.id, jobRead(state, job));
-  return reads.get(job.id);
+  if (reads.has(job.id)) return reads.get(job.id);
+  const key = readKey(state, job);
+  if (!kept.has(key)) return null;
+  const r = keptRead(kept.get(key), state);
+  reads.set(job.id, r);
+  return r;
+}
+export function boardRead(job) {
+  const known = knownRead(job);
+  if (known) return known;
+  const r = jobRead(state, job);
+  keepRead(readKey(state, job), r);
+  readCache.get(state).set(job.id, r);
+  return r;
 }
 
 /**
