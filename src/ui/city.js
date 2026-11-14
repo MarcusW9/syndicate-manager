@@ -219,7 +219,7 @@ export function renderCity() {
   const tab = ['map', 'districts', 'tongs'].includes(V.cityTab) ? V.cityTab : 'map';
   // A district's page, a tong's page and a name's profile each replace the sub-tab (and carry their own Back).
   if (tab === 'districts' && V.cityDistrict) return `<section class="panel">${districtCard(V.cityDistrict)}</section>`;
-  if (tab === 'tongs' && V.tongsView) return renderTongs(state, V.tongsView, backLabel());
+  if (tab === 'tongs' && V.tongsView) return renderTongs(state, V.tongsView, backLabel(), V.bookFilter);
   const body = { map: renderCityMap, districts: renderDistricts, tongs: () => renderTongs(state, null, backLabel()) }[tab]();
   return `${rootBack()}
     <section class="panel">

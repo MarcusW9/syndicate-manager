@@ -172,10 +172,12 @@ export function bookView(state) {
   if (!book) return { published: false, groups: [], watch: [], gone: [] };
   const crew = new Map((state.crew ?? []).map((o) => [o.runnerId ?? o.id, o]));
   const cards = new Map((r.cards ?? []).map((c) => [c.runnerId ?? c.id, c]));
-  const tongName = (card) => r.tongs.find((t) => t.id === card?.tongId && t.status === 'active')?.name ?? null;
+  const tongOf = (card) => r.tongs.find((t) => t.id === card?.tongId && t.status === 'active') ?? null;
+  const tongName = (card) => tongOf(card)?.name ?? null;
   const who = (runnerId, name) => { // letters and words only: no ids with digits leave here (ours are found by name)
     const op = crew.get(runnerId); const card = cards.get(runnerId);
-    return { name, yours: !!op, id: card ? slug(card.name) : null, tong: op ? null : tongName(card), free: !op && !!card && !card.tongId };
+    const t = op ? null : tongOf(card);
+    return { name, yours: !!op, id: card ? slug(card.name) : null, tong: op ? null : tongName(card), tongId: t?.id ?? null, style: t?.style ?? null, free: !op && !!card && !card.tongId };
   };
   const groups = BOOK.grades.map((grade) => ({
     grade, entries: book.entries.filter((e) => e.grade === grade).map((e) => ({ ...who(e.runnerId, e.name), move: e.move })),

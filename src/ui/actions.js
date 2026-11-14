@@ -70,6 +70,7 @@ export function onClick(e) {
     case 'city-tab': V.cityTab = id; V.cityDistrict = null; V.tongsView = null; break;
     case 'jobs-tab': V.jobsTab = id; V.clientPage = null; break;
     case 'lore-tab': V.loreTab = id; break;
+    case 'book-filter': V.bookFilter = id; break;
     case 'tong-page': remember(action, id); goHome('tong'); V.tongsView = id; break;
     // A free name or a name in a tong: its page, a scout trip (two days away), and signing (core/dossier.js).
     case 'tong-name': remember(action, id); goHome('name'); V.tongsView = `name:${findCard(state, id)?.id ?? id}`; break;
