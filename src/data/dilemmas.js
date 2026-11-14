@@ -46,7 +46,7 @@ export const DILEMMAS = {
   // The crew's pull-out point (owner, 2026-11-12: "make it a notified choice"): a watched player is told when a runner reaches the point
   // where their risk level pulls them out, and chooses. Hands-off crews pull out, as the risk level says. Asked again if they lose another pip.
   pullOutPoint: {
-    fight: ['holdHack', 'holdExtract'],
+    fight: ['holdHack', 'holdExtract', 'holdYard'],
     when: { atPullOut: true },
     options: [
       { id: 'pullOut', ordersPatch: null },

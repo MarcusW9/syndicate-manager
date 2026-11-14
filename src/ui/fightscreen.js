@@ -81,6 +81,7 @@ function goalLine(esc, g) {
     const dots = `${'●'.repeat(g.work)}${'○'.repeat(Math.max(0, g.needed - g.work))}`;
     return `<p class="fs-goal"><b>Hack</b> <span class="fs-dots" aria-label="${g.work} of ${g.needed} rounds of work">${dots}</span> <span>alarm ${g.alarm}</span> <span>deadline round ${g.deadline}</span></p>`;
   }
+  if (g.type === 'yard') return `<p class="fs-goal"><b>Hold the yard</b> <span>${g.up} still standing</span></p>`;
   return `<p class="fs-goal">${g.stage === 0 ? `<b>Hold</b> <span>van arrives end of round ${g.vanRound}</span>` : `<b>Van here</b> <span>leaves end of round ${g.vanLeaves}</span>${g.held ? ' <span>held</span>' : ''}`}</p>`;
 }
 

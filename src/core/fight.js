@@ -87,7 +87,7 @@ function newEnemy(b, kind, rng) {
 }
 
 /**
- * Build a fight. type: 'holdHack' | 'holdExtract'. diff: the fight's base difficulty (the job's typical
+ * Build a fight. type: 'holdHack' | 'holdExtract' | 'holdYard'. diff: the fight's base difficulty (the job's typical
  * roll). threat: the job's threat 1-5 (how many enemies start). site: a district id (who they are).
  * crew: the inside team (operatives, still standing). overwatch: an overwatchOf() read from core/battle.js
  * or null; wheels: { id, handle, value } for the driver in the van; standbyOp: the standby, who rides with
@@ -567,7 +567,7 @@ export function startRound(b, rng) {
   b.round += 1;
   for (const r of b.runners) if (r.stayPips != null && r.pips > riskThreshold(b, r)) r.stayPips = null; // healed past their point: asked afresh next time
   for (const kind of b.arriving.splice(0)) { const e = newEnemy(b, kind, rng); say('arrive', 'arrive', { kind: kindWord(e.kind), n: e.n }); }
-  if (b.type === 'holdExtract' && b.round >= b.nextPressure && b.extras < FIGHT.maxExtraEnemies) {
+  if ((b.type === 'holdExtract' || b.type === 'holdYard') && b.round >= b.nextPressure && b.extras < FIGHT.maxExtraEnemies) {
     b.extras += 1; b.nextPressure += CLOCKS.pressure.every;
     const e = newEnemy(b, SITE_ENEMIES[b.site]?.[0] ?? 'hired', rng);
     say('arrive', 'pressure', { kind: kindWord(e.kind), n: e.n });
@@ -720,6 +720,7 @@ export function playRound(b, rng) {
   for (const t of b.threats) {
     const e = b.enemies.find((x) => x.n === t.enemy);
     if (e.out || e.fled || t.cancelled) continue;
+    if (b.ambush && b.round === 1 && t.kind === 'aim') continue; // the crew had the jump on them: no shot in round 1 (b.ambush is set by runfight.js startFight)
     if (t.kind === 'aim') {
       const v = runner(b, t.target);
       if (!v || v.down || v.dead || v.withdrawn || v.aboard) continue;
@@ -774,7 +775,7 @@ export function playRound(b, rng) {
     if (b.clock <= 0) { if (b.extras < FIGHT.maxExtraEnemies) { b.extras += 1; b.arriving.push(SITE_ENEMIES[b.site]?.[0] ?? 'hired'); say('clock', 'alarmClock'); } b.clock = CLOCKS.alarm.resetTo; }
   } else {
     b.nextPressure -= alarms * CLOCKS.pressure.alarmBringsForward;
-    if (b.stage === 0 && b.round >= b.goal.vanRound) { b.stage = 1; b.goal.vanLeaves = b.round + FIGHT.vanWait; say('van', 'vanIn', { leaves: b.goal.vanLeaves }); }
+    if (b.type === 'holdExtract' && b.stage === 0 && b.round >= b.goal.vanRound) { b.stage = 1; b.goal.vanLeaves = b.round + FIGHT.vanWait; say('van', 'vanIn', { leaves: b.goal.vanLeaves }); }
   }
 
   // Unanswered threats (for the report): shots not shielded, radio calls not jammed.
@@ -797,6 +798,8 @@ function finish(b, result, key, slots = {}) { b.end = { result, key, text: lineT
 function checkEnd(b, rng, say) {
   const prot = b.goal.protect ? runner(b, b.goal.protect) : null;
   if (b.type === 'holdHack' && b.goal.work >= FIGHT.workNeeded) return finish(b, 'won', 'end.won');
+  // The yard: won by rout, every enemy out or fled and none on the way (the pressure clock may still bring more before then).
+  if (b.type === 'holdYard' && !enemiesUp(b).length && !b.arriving.length) return finish(b, 'won', 'end.routed');
   if (boardingStage(b) && !standing(b).length && !outsideDown(b).length) {
     const lost = b.runners.filter((r) => r.dead || r.withdrawn);
     return lost.length ? finish(b, 'lostRunner', 'end.lostRunner', { who: nameList(lost.map((r) => r.handle)) }) : finish(b, 'won', 'end.won');
