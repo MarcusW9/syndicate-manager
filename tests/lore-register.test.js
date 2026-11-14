@@ -1,4 +1,4 @@
-// The lore migration register (docs/SCREENS.md, navigation rework step 4): every entry that lived on the old Lore
+// The lore migration register (docs/screens-lore-register.md, navigation rework step 4): every entry that lived on the old Lore
 // view can be reached from its new home, with its content intact, and Back returns to where it was opened.
 import test from 'node:test';
 import assert from 'node:assert/strict';

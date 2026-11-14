@@ -322,4 +322,4 @@ Idea: [one or two sentences: what the client wants and what makes it interesting
 - Adds its id to the client's `jobs` in `src/data/clients.js`. Walk-in jobs need no client; Doc Siu's and Mrs. Ip's are rookie work, offered by Auntie Fung or as walk-ins.
 - Runs the tests: `core/validate.js` checks every crisis has an exit and every choice has its lines.
 - Routine work (`routine: true`): the checker warns if it's past threat 2, a crew of 2 or 2 days. Until the board treats routine work specially, it is offered like any other job of its tier.
-- Adds a CHANGELOG entry. New canon in the job (a person, a place) also gets a line in `WORLD.md` and a DESIGN.md row.
+- Adds a changelog entry (newest file in `docs/changelog/`). New canon in the job (a person, a place) also gets a line in `WORLD.md` and a DESIGN.md row.

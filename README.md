@@ -22,7 +22,7 @@ npm run build
 Output goes to `dist/`. Pushing to `main` deploys to GitHub Pages automatically (see `.github/workflows/deploy.yml`).
 
 ## Status
-Playable and endless. What's in the game is listed, newest first, in `CHANGELOG.md`; what's next is in `HANDOFF.md`. In short:
+Playable and endless. What's in the game is listed, newest first, in `docs/changelog/` (indexed by `CHANGELOG.md`); what's next is in `HANDOFF.md`. In short:
 - The squad run: pick an approach, an inside team, overwatch, wheels and standby; watch the job on the district's map; the crew calls you in for decisions.
 - Command fights in every district, with gear, cover and orders each round.
 - Recruiting, contract renewals, earned traits, specialisations, growth from rookie to veteran.
@@ -35,11 +35,11 @@ Playable and endless. What's in the game is listed, newest first, in `CHANGELOG.
 ## Docs
 - `CLAUDE.md`: project rules for working on the code, and where to read for each kind of task
 - `HANDOFF.md`: where the project stands and what's next
-- `CHANGELOG.md`: what changed in each update
+- `CHANGELOG.md`: index of what changed in each update (entries by month in `docs/changelog/`)
 - `DESIGN.md`: narrative, tone, cast, and the decision log (rows in `docs/design/`)
 - `CODEMAP.md` and `docs/ARCHITECTURE.md`: where code lives, how a run flows, state and saves
 - `WORLD.md`: the world bible and the context block for worldbuilding prompts
 - `ART.md`: the visual style and art rules; `docs/screenshots/`: how the game looked over time
 - `DATA.md`: data shapes
 - `WRITING_GUIDE.md`: how to write new crises and jobs; `docs/new-job-prompt.md`: a prompt for drafting jobs outside a session
-- `PLAN-*.md`: step-by-step plans (core loop, progression, renewals, personality)
+- `PLAN-*.md`: step-by-step plans (core loop, progression, renewals, personality; `PLAN-IOS.md` scopes the iOS app, not started)

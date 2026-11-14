@@ -1,6 +1,6 @@
 # The other tongs, deeper (proposal, 2026-11-13)
 
-**Status: agreed, not built.** The owner took every call in section 9 as proposed (2026-11-13). E0 is handed off in `drafts/HANDOFF-tongs-screens.md`; E1 to E4 follow in order, each with its own sim gate. Read `docs/RIVAL-TONGS.md` first: this builds on C0 to C5 and D3 and keeps every rule there unless a section below says "changes".
+**Status: agreed, not built; merged to `main` in #153 (2026-11-13).** The owner took every call in section 9 as proposed (2026-11-13). E0 is handed off in `drafts/HANDOFF-tongs-screens.md`; E1 to E4 follow in order, each with its own sim gate. Read `docs/RIVAL-TONGS.md` first: this builds on C0 to C5 and D3 and keeps every rule there unless a section below says "changes".
 
 Mock-up of the screens: `drafts/prototypes/tongs-depth.html` (section 6).
 
@@ -270,7 +270,7 @@ Each slice bumps `SAVE_VERSION` (63 today) once and adds a migration in `save/sa
 | `src/core/sidetasks.js` | the Watch a house task |
 | `src/data/rivals.js` | `HABITS`, `HABIT_TEXT`, new `WORD_TEXT` kinds, state and mood words, all new numbers |
 | `src/ui/tongs.js`, `src/ui/seal.js` (new), `src/ui/styles.css` | section 6 |
-| `CODEMAP.md`, `docs/RIVAL-TONGS.md`, `docs/SCREENS.md`, `ART.md` | kept current with each slice |
+| `CODEMAP.md`, `docs/RIVAL-TONGS.md`, `docs/SCREENS.md`, `docs/UI-SKIN.md` | kept current with each slice |
 
 Every new roll has its own `hashRng` key (`'habit:'`, `'reach:'`, `'quiet:'`, `'contest:'`, `'house-trip'`, and `'rivals-e:' + week` for the weekly additions) and never moves `rngCounter`. `tests/golden/rivals-1234.json` gains a section per slice; the existing sections change in E1 (names move differently) and are regenerated once, on purpose, with a log row.
 

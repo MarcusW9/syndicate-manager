@@ -133,7 +133,7 @@ and flagged for the playtest.
 | `src/core/raids.js` | `withdrawCost` halves `kept` with a stash; `checkRaids` uses 4 warning days with a lookout. |
 | `src/ui/hallbuild.js` (new) | The build screen: the plan (`siteplan.js sitePlanSvg` with the pieces drawn), the grid overlay, the selected cell, the palette, Place / Rotate / Remove, the floor and cash bar. |
 | `src/ui/app.js` | The Build button on each hall; the screen's route and actions (`build-cell`, `build-piece`, `build-place`, `build-rotate`, `build-remove`, `build-close`). |
-| `src/ui/styles.css` | The grid, the selected cell, the palette (sharp panels, a cut corner, Rajdhani; ART.md "UI skin"). |
+| `src/ui/styles.css` | The grid, the selected cell, the palette (sharp panels, a cut corner, Rajdhani; `docs/UI-SKIN.md`). |
 
 ## 7. Slices (one PR each)
 

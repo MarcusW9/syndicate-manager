@@ -17,9 +17,9 @@ change to what the simulation does. One PR on a fresh branch from `main`.
 4. The mock-up: open `drafts/prototypes/tongs-depth.html`, and look at the stills in
    `docs/screenshots/2026-11-13-design-session-tongs-depth/`. Its generator,
    `drafts/prototypes/tongs-depth.mjs`, holds the CSS; lift it rather than rewriting it.
-5. "UI skin" in `ART.md`, and the newest captured set in `docs/screenshots/` (`21-tongs.png`,
+5. `docs/UI-SKIN.md`, and the newest captured set in `docs/screenshots/` (`21-tongs.png`,
    `22-tong-page.png` are today's screens).
-6. The code: `src/ui/tongs.js` (all of it), `rivalView` and the views in `src/core/rivals.js`,
+6. The code: `src/ui/tongs.js` (all of it; the `tong-page`, `tong-name` and `city-tab` actions are in `src/ui/actions.js`), `rivalView` and the views in `src/core/rivals.js`,
    `bookView` in `src/core/book.js`, the tong rules in `src/ui/styles.css` (search `.tongcard`), and
    `tests/rivals.test.js` ("rivalView has no number values and no digits outside proper names").
 
@@ -84,8 +84,8 @@ the page without error.
 **Before you push:** `npm test`; `npm run screenshots -- tongs-screens` (check that
 `scripts/screenshots.mjs` still finds the Tongs tab and a tong's page, and add a shot of the slate
 if it is not taken; the standard run is at week 1, where no slate is chalked yet, so say so in the
-row) and a row at the top of `docs/screenshots/README.md`; a `CHANGELOG.md` entry; a decision-log
-row at the top of `docs/design/2026-11.md`; update "The other tongs" in `ART.md`, the Tongs lines in
+row) and a row at the top of `docs/screenshots/README.md`; an entry at the top of the newest file in `docs/changelog/`; a decision-log
+row at the top of `docs/design/2026-11.md`; update "The other tongs" in `docs/UI-SKIN.md`, the Tongs lines in
 `docs/SCREENS.md` and `CODEMAP.md` (the new `ui/seal.js`), and move E0 to "What is built" in
 `docs/RIVAL-TONGS.md`. Commits follow `CLAUDE.md`: the owner's name and noreply address, no
 co-author or session lines.
