@@ -143,6 +143,8 @@ function movesBlock(state, view) {
     <span class="move__note">${esc(SCREEN_TEXT.moves[m.word])}</span></button>`).join('')}</div>`;
 }
 
+/** The word under a story's pips: a family's word, or for overreach the word of the beat it is at (Stretched, Selling, Broken). */
+const storyWord = (story) => { const w = SCREEN_TEXT.story[story.family]; return typeof w === 'string' ? w : w[story.beat]; };
 const pips = (beat) => { const n = SCREEN_TEXT.beats.indexOf(beat) + 1; return `<span class="pips" aria-hidden="true">${SCREEN_TEXT.beats.map((_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</span>`; };
 
 /** A house card: seal, name, district and head, a style chip, a row of faces, the latest talk, a story's pips. */
@@ -156,7 +158,7 @@ function tongCard(state, t) {
     <div class="chips"><span class="chip">${esc(STYLE_TEXT[t.style].label)}</span>${HABITS[t.habit] ? `<span class="chip chip--habit">${esc(HABITS[t.habit].label)}</span>` : ''}</div>
     ${faces.length ? `<div class="faces">${faces.map((n) => `<button class="facebtn" data-action="tong-name" data-id="${esc(n.id)}" aria-label="${esc(n.name)}">${faceOfCard(state, n.id, 36)}</button>`).join('')}</div>` : ''}
     ${t.said ? `<p class="small house__said">${esc(wordText(t.said))}</p>` : ''}
-    ${t.story ? `<div class="story">${pips(t.story.beat)}<span class="story__word">${esc(SCREEN_TEXT.story[t.story.family])}</span></div>` : ''}
+    ${t.story ? `<div class="story">${pips(t.story.beat)}<span class="story__word">${esc(storyWord(t.story))}</span></div>` : ''}
   </li>`;
 }
 
@@ -185,16 +187,20 @@ function tongPage(state, view, id, back) {
 
 const STAT_ORDER = ['combat', 'stealth', 'tech', 'social', 'piloting', 'medical', 'cool', 'endurance'];
 
-/** This month's free name, if one is up: a card that opens them in Crew › Leads (where scouting and signing are). */
-function freeNamesBlock(state, view) {
-  const o = view.offer;
-  if (!o) return '';
-  return `<h2>Free names</h2><ul class="list list--plain tongs__list"><li><button class="tongcard" data-action="lead-name" data-id="${esc(o.id)}" data-style="free">
+/** One free name as a row that opens them in Leads. `tail` is the label on the right. */
+function freeRow(state, o, tail) {
+  return `<li><button class="tongcard" data-action="lead-name" data-id="${esc(o.id)}" data-style="free">
     ${faceOfCard(state, o.id)}
     <span class="tongcard__what"><span class="tongcard__name">${esc(o.name)}</span>
       <span class="small muted">${esc([o.role, FAME_LINE[o.fame], o.from ? `lately of ${o.from}` : 'between tongs'].join(' · '))}</span>
       <span class="small">${esc(fill(RATING_WORDS[o.word] ?? '', { role: o.role, home: inText(o.home) }).replace(/^./, (c) => c.toUpperCase()))}.</span></span>
-    <span class="tongcard__go">In Leads ›</span></button></li></ul>`;
+    <span class="tongcard__go">${tail} ›</span></button></li>`;
+}
+
+/** This month's free name, and (E2) the names a house in trouble has let go, all open in Leads. */
+function freeNamesBlock(state, view) {
+  const rows = [...(view.offer ? [freeRow(state, view.offer, 'In Leads')] : []), ...view.sale.map((n) => freeRow(state, n, SCREEN_TEXT.sale))];
+  return rows.length ? `<h2>Free names</h2><ul class="list list--plain tongs__list">${rows.join('')}</ul>` : '';
 }
 
 /** The top of a name's page, shared by the City profile and the Leads page: who they are, who they are with, what the street says. */
@@ -269,17 +275,18 @@ export function renderLeadName(state, slugId, back = 'Leads') {
 export function leadNames(state) {
   const view = rivalView(state);
   const o = view.offer;
+  const sale = view.sale; const saleIds = sale.map((n) => findCard(state, n.id)?.id);
   const out = (state.sideOut ?? []).map((x) => x.scout).filter(Boolean);
   const seen = new Set();
   const watching = [...view.tiers.flatMap((t) => t.tongs.flatMap((g) => g.names)), ...view.names.filter((n) => !n.own)]
-    .map((n) => findCard(state, n.id)).filter((c) => c && c.id !== o?.id && !seen.has(c.id) && seen.add(c.id) && (scoutLevel(state, c) > 0 || out.includes(c.id)))
+    .map((n) => findCard(state, n.id)).filter((c) => c && c.id !== o?.id && !saleIds.includes(c.id) && !seen.has(c.id) && seen.add(c.id) && (scoutLevel(state, c) > 0 || out.includes(c.id)))
     .map((c) => readFor(state, c));
   const row = (n, tail) => `<li><button class="tongcard" data-action="lead-name" data-id="${esc(n.id)}" data-style="${n.tong ? 'tong' : 'free'}">
     ${faceOfCard(state, n.id)}
     <span class="tongcard__what"><span class="tongcard__name">${esc(n.name)}</span>
       <span class="small muted">${esc([n.role, FAME_LINE[n.fame], n.tong ?? (n.from ? `lately of ${n.from}` : 'between tongs')].join(' · '))}</span></span>
     <span class="tongcard__go">${tail} ›</span></button></li>`;
-  const rows = [...(o ? [row(o, 'Free name')] : []), ...watching.map((n) => row(n, 'Watching'))];
+  const rows = [...(o ? [row(o, 'Free name')] : []), ...sale.map((n) => row(n, SCREEN_TEXT.sale)), ...watching.map((n) => row(n, 'Watching'))];
   return rows.length ? `<h2>Names</h2><p class="muted small">Free names, and anyone in another tong we have an eye on. A name from the street can be opened from City › Tongs.</p><ul class="list list--plain tongs__list">${rows.join('')}</ul>` : '';
 }
 

@@ -64,7 +64,8 @@ test('moves are this month\'s names, at most six, and never end at a folded tong
         assert.ok(m.from || m.to || m.free);
         assert.ok(['let_go', 'signed', 'moved'].includes(m.word));
       }
-      for (const t of v.tiers.flatMap((x) => x.tongs)) if (t.story) { sawStory = true; assert.ok(['first', 'second', 'third'].includes(t.story.beat)); assert.ok(['decline', 'founding', 'rise'].includes(t.story.family)); }
+      // E2 adds the overreach family to the stories a house card can show.
+      for (const t of v.tiers.flatMap((x) => x.tongs)) if (t.story) { sawStory = true; assert.ok(['first', 'second', 'third'].includes(t.story.beat)); assert.ok(['decline', 'founding', 'rise', 'overreach'].includes(t.story.family)); }
     }
   }
   assert.ok(sawMove && sawStory, 'the sample saw movement and a story');

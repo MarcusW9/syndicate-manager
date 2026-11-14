@@ -862,5 +862,16 @@ function migrate(state) {
     }
     state.version = 67;
   }
+  if (state.version === 67) {
+    // v68: overreach (core/overreach.js, DESIGN.md 2026-11-14 "E2"). Each tong gets a wage ledger (four-Sunday rings of bills and
+    // income, empty until the Sundays fill them), no strain and no shopping yet; the rivals gain no sale. Zeros and nulls: a house
+    // cannot strain until it has four Sundays of books, so nothing happens on the day it is loaded.
+    const r = state.rivals;
+    if (r) {
+      for (const t of r.tongs) { t.strain ??= 0; t.bills ??= []; t.income ??= []; t.shoppedDay ??= null; }
+      r.sale ??= null;
+    }
+    state.version = 68;
+  }
   return state;
 }

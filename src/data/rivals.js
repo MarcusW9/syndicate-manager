@@ -41,15 +41,16 @@ export const RIVALS = {
   closeBelow: 8, // prestige this far under the held hall's mark closes it
   // Weekly drift by style: how far prestige pulls toward `aim`, noise, and wealth per prestige point.
   styles: {
-    loud: { noise: 7, pull: 0.07, wealth: 22, aim: [20, 75] },
-    quiet: { noise: 3, pull: 0.1, wealth: 26, aim: [30, 68] },
-    corporate: { noise: 4, pull: 0.06, wealth: 38, aim: [25, 72] },
-    street: { noise: 5, pull: 0.08, wealth: 18, aim: [15, 60] },
+    loud: { noise: 7, pull: 0.07, wealth: 40, aim: [20, 75] }, // E2: +18 a prestige point on every style, the average wage bill, so the balance holds
+    quiet: { noise: 3, pull: 0.1, wealth: 44, aim: [30, 68] },
+    corporate: { noise: 4, pull: 0.06, wealth: 56, aim: [25, 72] },
+    street: { noise: 5, pull: 0.08, wealth: 36, aim: [15, 60] },
   },
   aimEvery: 8, // weeks between a tong picking a new aim
   startPrestige: [8, 46],
   startWealth: [800, 9000],
   upkeep: 260, // wealth spent per hall a week
+  wage: { per: 4 }, // E2: a house pays this x each name's rating every Sunday, on top of hall upkeep
   cardAgeRetire: [44, 56],
   // C3 (DESIGN.md 2026-11-08 "C3 designed"; proposal C.13). Numbers proposed, the owner may tune.
   freeGap: [3, 6], // weeks between one free name being put forward and the next (random, a hash)
@@ -97,6 +98,23 @@ export const HABIT = {
   oldHouseRetire: 3, // an old house's names retire this many years later
   trail: 3, // houses a card remembers
 };
+// E2 (DESIGN.md 2026-11-14 "E2"; drafts/PROPOSAL-tong-depth.md section 3): overreach. A house with a wage bill and an appetite
+// can buy more than it can keep. First values; the sim gate (scripts/sim-tongs.mjs) is what tunes them.
+export const REACH = {
+  youngWeeks: 12, // a house this young cannot strain
+  window: 4, // Sundays of bills and income kept
+  coverWeeks: 8, // strained only while wealth is under this many weeks of bills
+  stretched: 3, selling: 6, // strain that starts each beat
+  calm: 4, // calm Sundays that end the story
+  sellEvery: 2, // weeks between a selling house's releases
+  sellBuyout: 0.75, // a buyout from a selling house
+  brokeSundays: 2, // Sundays at zero wealth, while selling, that break a house
+  keep: 3, // a broken house keeps this many names
+  saleWeeks: 3, // a released name is open to us this long
+  shopEvery: 8, // weeks between a house's shopping trips
+  shopAt: 1.5, shopAtLoud: 1.2, // wealth over this multiple of the next hall's mark sends a house shopping (loud and boutique at the lower)
+  shopFit: 8, // a name it buys is not further below its own average than this
+};
 // What a profile says once a name has been watched (level 1): the habit of the house they came from.
 export const HABIT_NOTE = { workshop: 'Leans on the kit.', oldhouse: 'Has been there a long time.' };
 
@@ -125,7 +143,8 @@ export const SCREEN_TEXT = {
   nobody: 'nobody, yet',
   ours: 'Ours',
   moves: { let_go: 'Let go', signed: 'Signed', moved: 'Moved' },
-  story: { decline: 'Slipping', founding: 'Opening', rise: 'Rising' },
+  story: { decline: 'Slipping', founding: 'Opening', rise: 'Rising', overreach: { first: 'Stretched', second: 'Selling', third: 'Broken' } },
+  sale: 'Let go lately',
   beats: ['first', 'second', 'third'],
   when: { week: 'This week', month: 'This month', earlier: 'Earlier' },
   quietTrack: 'Nothing much said about them lately.',
@@ -169,6 +188,12 @@ export const WORD_TEXT = {
   let_go: ['{tong} has let {name} go. They do that.', '{name} is no longer one of the few at {tong}.', '{name} has been shown the door at {tong}, politely.'],
   landed: ['{name}, lately of {from}, has a seat at {tong}.', '{tong} has found room for {name}, who was at {from} not long ago.', '{name} walked out of {from} and into {tong}.'],
   kept_on: ['{tong} still has {name}, long after most would have moved them on.', 'Nobody at {tong} has ever told {name} to go.'],
+  // E2: overreach. A house that bought more than it could keep; talk, never figures.
+  overreach_begin: ['{tong} has been spending like a bigger tong than it is.', 'People say {tong} has more names than money.', '{tong} is paying for a table it may not be able to keep.'],
+  overreach_selling: ['{tong} is letting names go, and not by choice.', 'The people at {tong} are looking for buyers, quietly, one name at a time.', '{tong} has started selling off its good names.'],
+  overreach_broken: ['{tong} has run out. A hall is shut and most of the table is going.', 'It broke {tong} in the end: the doors are half closed and the names are loose.', '{tong} could not carry what it bought. Whoever is left is not saying much.'],
+  overreach_steadied: ['{tong} has stopped selling.', 'The bills at {tong} are being paid again. It has stopped letting names go.', '{tong} has found its feet, with fewer names than it wanted.'],
+  bought: ['{tong} paid {from} for {name}. Nobody is saying how much.', '{name} left {from} with a price on them, and {tong} paid it.', '{tong} bought {name} out of {from}. People are counting what that left.'],
   // C5: the Monday lead when the Book is published (the Anchor's slate), counted in the three lines.
   book_up: ["The Anchor's slate is up. Half the street read it before the tea was poured.", "The Anchor's slate is up in Old Town, and the elders are already arguing over it.", "The Anchor's slate is up. Somebody will not like what the chalk says."],
   your_tier: ["They're calling yours a {tier} tong now. Somebody had to say it first.", 'The {tier} crowd has started to nod at your tong.', 'Your tong carries further than it did. People say {tier}.'],
@@ -213,7 +238,7 @@ export function clientRivalLine({ client, tong, jobId, mood = null }) {
 }
 
 // Word kinds by how Monday treats them (C4.4): a story continuing, a name of ours, or ordinary talk.
-export const THREAD_CONTINUES = ['decline_middle', 'decline_folded', 'decline_recovered', 'founding_middle', 'founding_end', 'rise_end'];
+export const THREAD_CONTINUES = ['decline_middle', 'decline_folded', 'decline_recovered', 'founding_middle', 'founding_end', 'rise_end', 'overreach_selling', 'overreach_broken', 'overreach_steadied'];
 export const BOOK_LEAD = 'book_up';
 export const FORMER_KINDS = ['former_signed', 'former_tier', 'former_fame', 'former_free'];
 
