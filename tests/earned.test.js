@@ -157,7 +157,7 @@ test("Client's Favourite: three clean jobs for one client; fades when one of the
   assert.ok(!has(op, 'client_favourite'));
 });
 
-test("Client's Favourite: the note names the client; a save with the client stored whole is repaired (v67)", async () => {
+test("Client's Favourite: the note names the client; a save with the client stored whole is repaired (v68)", async () => {
   const s = game(11); const op = s.crew[0];
   for (let i = 0; i < 3; i++) job(s, [roll(op, 'social', true)], [op], { clientId: 'fung' });
   const line = (st) => st.inbox.find((x) => x.kind === 'crewnotes').payload.lines.find((l) => l.key.startsWith('client_favourite:'));
@@ -168,7 +168,7 @@ test("Client's Favourite: the note names the client; a save with the client stor
   const { CLIENTS } = await import('../src/data/clients.js');
   const fung = CLIENTS.find((c) => c.id === 'fung');
   const old = structuredClone(s);
-  old.version = 66;
+  old.version = 67;
   const bad = (t) => t.replaceAll('Auntie Fung', '[object Object]');
   old.crew[0].earned.find((e) => e.id === 'client_favourite').client = structuredClone(fung);
   old.crew[0].history = old.crew[0].history.map(bad);

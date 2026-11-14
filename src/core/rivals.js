@@ -9,10 +9,11 @@
 
 import { hash, hashRng, pick } from './rng.js';
 import { CULTURES, ROLE_PROFILES } from '../data/recruitPools.js';
-import { NAMING, RIVAL_HOMES, RIVALS, STYLES, BRASS_ANCHOR, RESERVED_NAMES, THREAD_CONTINUES, FORMER_KINDS, BOOK_LEAD } from '../data/rivals.js';
+import { HABIT, HABITS, NAMING, RIVAL_HOMES, RIVALS, STYLES, BRASS_ANCHOR, RESERVED_NAMES, THREAD_CONTINUES, FORMER_KINDS, BOOK_LEAD } from '../data/rivals.js';
 import { cardRating, ratingOf, ratingWord, tierWord } from './rating.js';
 import { rankForHalls } from './tong.js';
 import { publishBook } from './book.js';
+import { pickHabit, topTierFor, tierIndexOf, noteBest, releaseFor, placeFor, wants, pushPath, ceilingOf, rosterOf, seasonOf, stalled } from './houses.js';
 import { fameOf } from './fame.js';
 import { TONG_RANKS } from '../data/tong.js';
 import { NAMES } from '../config/names.js';
@@ -64,7 +65,7 @@ function makeCard(r, rng, taken, { tong = null, home, day, head = false, young =
   return {
     id: `c${r.seq}`, name: makeName(rng, taken), tongId: tong, home, role: pick(rng, Object.keys(ROLE_PROFILES)),
     rating, age, peak, form: between(rng, [-2, 2]), fame: fameForRating(rating), since: day,
-    runnerId: `c${r.seq}`, formerOf: null,
+    runnerId: `c${r.seq}`, formerOf: null, best: rating, bestDay: day, path: [],
   };
 }
 
@@ -88,7 +89,7 @@ function tongNameFor(rng, style, used) {
 /** A new set of rivals for this game, from hashRng(seed, 'rivals'). Same seed, same tongs. */
 export function seedRivals(state) {
   const rng = hashRng(state.seed, 'rivals');
-  const r = { tongs: [], cards: [], word: [], threads: [], book: null, seq: 0, playerRank: state.rank ?? null, offer: null, scouted: {}, lastScout: null, offerSeq: 0, nextOfferDay: 0 };
+  const r = { tongs: [], cards: [], word: [], threads: [], book: null, seq: 0, playerRank: state.rank ?? null, offer: null, scouted: {}, keptSeason: null, lastScout: null, offerSeq: 0, nextOfferDay: 0 };
   const styles = shuffle(rng, [...STYLES, ...Array.from({ length: Math.max(0, RIVALS.tongs - STYLES.length) }, () => pick(rng, STYLES))]);
   const homes = shuffle(rng, [...RIVAL_HOMES, ...RIVAL_HOMES]);
   const usedNames = new Set(); const takenPeople = new Set((state.crew ?? []).map((o) => o.name));
@@ -100,13 +101,14 @@ export function seedRivals(state) {
     const home = named.home ?? homes[h++ % homes.length];
     const prestige = between(rng, RIVALS.startPrestige);
     const wealth = between(rng, RIVALS.startWealth) + prestige * 60;
+    const habit = pickHabit(state.seed, r, slug(named.name));
     const tong = {
-      id: slug(named.name), name: named.name, home, style, prestige, wealth, halls: hallsFor(prestige, wealth),
+      id: slug(named.name), name: named.name, home, style, habit, releasedDay: null, signedSeason: null, prestige, wealth, halls: hallsFor(prestige, wealth),
       depth: 0, regard: 0, poorWeeks: 0, splitDay: 0, foldedDay: null, headId: null, status: 'active', formedDay: state.day ?? 1,
       aim: between(rng, RIVALS.styles[style].aim), aimDay: state.day ?? 1,
     };
     tong.depth = Math.round(2 + tong.halls * 3 + rng() * 3);
-    const n = between(rng, RIVALS.perTong);
+    const n = between(rng, HABITS[habit].roster);
     const base = 20 + prestige * 0.8;
     for (let i = 0; i < n; i++) {
       const card = makeCard(r, rng, takenPeople, { tong: tong.id, home, day: state.day ?? 1, head: i === 0, base: i === 0 ? base + 8 : base });
@@ -159,17 +161,21 @@ function beat(r, th, day, stage, kind, refs, close = false) {
 }
 /** A card joins a tong: a beat for an open founding or rise story there, else ordinary talk; and a line if it was ours. */
 export function moveCard(r, day, card, to) {
-  card.tongId = to.id; card.home = to.home; card.since = day; delete card.fromTong;
+  const from = card.tongId ?? card.fromTong;
+  if (card.tongId) pushPath(card, card.tongId, day);
+  card.tongId = to.id; card.home = to.home; card.since = day; delete card.fromTong; delete card.fromTier; card.bestDay = day; to.signedSeason = seasonOf(day); // a new house, a fresh half-year before a name counts as stalled
   const story = openThread(r, to.id, 'founding') ?? openThread(r, to.id, 'rise');
   if (story?.family === 'founding') beat(r, story, day, 'first_runner', 'founding_end', [to.id, card.id], true);
   else if (story) beat(r, story, day, 'poaching', 'rise_end', [to.id, card.id], true);
-  else if (!card.formerOf) say(r, day, 'name_travelling', [card.id, to.id]);
+  else if (!card.formerOf) { if (from && from !== to.id) say(r, day, 'landed', [card.id, to.id, 'from:' + from]); else say(r, day, 'name_travelling', [card.id, to.id]); }
   if (card.formerOf) say(r, day, 'former_signed', [card.id, to.id]);
 }
 /** A card leaves a tong for the free pool. */
-function release(r, day, card, tongId) {
+function release(r, day, card, tongId, kind = 'went_free') {
   card.tongId = null; card.fromTong = tongId; card.since = day;
-  say(r, day, 'went_free', [card.id, tongId]);
+  const origin = tongById(r, tongId); if (origin) card.fromTier = tierIndexOf(origin); // the rung they left from
+  pushPath(card, tongId, day);
+  say(r, day, kind, [card.id, tongId]);
   if (card.formerOf) say(r, day, 'former_free', [card.id]);
 }
 /** End of the week: calm ends a decline, a new tong's first room, timeouts, and a bounded list. */
@@ -207,7 +213,7 @@ export function weeklyRivals(state) {
     const conf = RIVALS.styles[t.style];
     if (absWeek(day) - absWeek(t.aimDay) >= RIVALS.aimEvery) { t.aim = between(rng, conf.aim); t.aimDay = day; }
     const names = cardsOf(r, t.id);
-    const bench = names.length ? names.reduce((n, c) => n + cardRating(c), 0) / names.length : t.prestige;
+    const bench = names.length ? names.reduce((n, c) => n + cardRating(c), 0) / names.length + (t.habit === 'workshop' ? HABIT.workshopKit : 0) : t.prestige;
     const before = t.prestige; const hallsBefore = t.halls;
     t.prestige = clamp(Math.round(t.prestige + (t.aim - t.prestige) * conf.pull + (bench - t.prestige) * 0.02 + (rng() * 2 - 1) * conf.noise), 0, 100);
     t.wealth = Math.max(0, Math.round(t.wealth + t.prestige * conf.wealth - t.halls * RIVALS.upkeep + (rng() * 2 - 1) * 300));
@@ -235,35 +241,38 @@ export function weeklyRivals(state) {
     c.rating = clamp(c.rating + clamp(target - c.rating, -2, 2), 5, 95);
     c.form = clamp(c.form + between(rng, [-1, 1]), -5, 5);
     c.fame = fameForRating(c.rating);
+    noteBest(c, day);
     if (c.formerOf) {
       if (bandOf(c.rating) > bandBefore) say(r, day, 'former_tier', [c.id]);
       else if (FAME_ORDER.indexOf(c.fame) > FAME_ORDER.indexOf(fameBefore)) say(r, day, 'former_fame', [c.id]);
     }
   }
 
-  // 3. Drift: young names move as rumours; a free name nobody signs for six weeks goes to the richest tong with room.
+  // 3. Drift: young names move as rumours; a free name nobody signs for six weeks goes to the house that wants it and fits (E1).
   for (const c of r.cards) {
     if (c.age > 27 || rng() >= RIVALS.driftChance) continue;
-    const others = r.tongs.filter((t) => t.status === 'active' && t.id !== c.tongId && cardsOf(r, t.id).length < RIVALS.perTong[1]);
+    const top = topTierFor(r, c, day);
+    const others = r.tongs.filter((t) => t.id !== c.tongId && tierIndexOf(t) <= top && wants(r, t, c, day));
     if (!others.length) continue;
     const to = pick(rng, others);
     moveCard(r, day, c, to);
   }
   for (const c of r.cards) {
     if (c.tongId || absWeek(day) - absWeek(c.since) < 6) continue;
-    const open = r.tongs.filter((t) => t.status === 'active' && cardsOf(r, t.id).length < RIVALS.perTong[1]).sort((a, b) => b.wealth - a.wealth || (a.id < b.id ? -1 : 1));
-    if (!open.length) continue;
-    moveCard(r, day, c, open[0]);
+    const to = placeFor(r, c, day); // E1: by fit (the house's habit and tier), not by wealth
+    if (to) moveCard(r, day, c, to);
   }
 
   // 4. Age: at the season's end names grow a year older, the oldest retire, young names appear.
   if (isSeasonEnd(day)) {
     const taken = new Set([...r.cards.map((c) => c.name), ...(state.crew ?? []).map((o) => o.name)]);
-    const quitting = r.cards.filter((c) => { c.age += 1; return c.age >= between(rng, RIVALS.cardAgeRetire); });
+    const quitting = r.cards.filter((c) => { c.age += 1; return c.age >= between(rng, RIVALS.cardAgeRetire) + (tongById(r, c.tongId)?.habit === 'oldhouse' ? HABIT.oldHouseRetire : 0); });
     r.cards = r.cards.filter((c) => !quitting.includes(c));
     for (const t of r.tongs) if (!r.cards.some((c) => c.id === t.headId)) t.headId = [...cardsOf(r, t.id)].sort((a, b) => cardRating(b) - cardRating(a))[0]?.id ?? null;
     for (let i = 0; i < quitting.length; i++) {
-      const card = makeCard(r, rng, taken, { home: pick(rng, RIVAL_HOMES), day, young: true, base: 22 + rng() * 26 });
+      // E1: a grinder with room takes the season's new faces first.
+      const grinder = r.tongs.filter((t) => t.status === 'active' && t.habit === 'grinder' && rosterOf(r, t).length < ceilingOf(t)).sort((a, b) => (a.id < b.id ? -1 : 1))[0];
+      const card = makeCard(r, rng, taken, { tong: grinder?.id ?? null, home: grinder?.home ?? pick(rng, RIVAL_HOMES), day, young: true, base: 22 + rng() * 26 });
       r.cards.push(card);
       say(r, day, 'new_face', [card.id]);
     }
@@ -306,13 +315,14 @@ function formTong(state, r, rng, day, { founder, mates = [], styleHint = null })
   if (!named) return null;
   const conf = RIVALS.styles[style];
   const home = named.home ?? founder.home ?? pick(rng, RIVAL_HOMES);
+  const avoid = tongById(r, founder.tongId)?.habit ?? tongById(r, founder.fromTong)?.habit ?? null; // a new house runs its people differently from the one it left
   const tong = {
-    id: slug(named.name), name: named.name, home, style, prestige: RIVALS.newTong.prestige, wealth: RIVALS.newTong.wealth,
+    id: slug(named.name), name: named.name, home, style, habit: pickHabit(state.seed, r, slug(named.name), avoid), releasedDay: null, signedSeason: null, prestige: RIVALS.newTong.prestige, wealth: RIVALS.newTong.wealth,
     halls: 1, depth: 3, regard: 0, poorWeeks: 0, splitDay: 0, foldedDay: null, headId: founder.id, status: 'active', formedDay: day,
     aim: between(rng, conf.aim), aimDay: day,
   };
   r.tongs.push(tong);
-  for (const c of [founder, ...mates]) { c.tongId = tong.id; c.home = home; c.since = day; delete c.fromTong; }
+  for (const c of [founder, ...mates]) { if (c.tongId) pushPath(c, c.tongId, day); c.tongId = tong.id; c.home = home; c.since = day; delete c.fromTong; }
   if (startThread(r, day, tong.id, 'founding', 'begin')) say(r, day, 'founding_begin', [tong.id, founder.id]);
   else say(r, day, 'formed', [tong.id, founder.id]);
   return tong;
@@ -358,6 +368,21 @@ function freeNamesStep(state, r, day) {
     release(r, day, next, t.id);
   }
 
+  // E1: each house may let one name go this Sunday, by its habit (never a head, never twice in four weeks).
+  for (const t of r.tongs.filter((x) => x.status === 'active').sort((a, b) => (a.id < b.id ? -1 : 1))) {
+    const gone = releaseFor(r, t, day);
+    if (!gone) continue;
+    release(r, day, gone, t.id, 'let_go');
+    t.releasedDay = day;
+  }
+  // E1: an old house keeping someone past their best is colour, at most one a season.
+  if (r.keptSeason !== seasonOf(day)) {
+    for (const t of r.tongs.filter((x) => x.status === 'active' && x.habit === 'oldhouse').sort((a, b) => (a.id < b.id ? -1 : 1))) {
+      const kept = r.cards.find((c) => c.tongId === t.id && c.id !== t.headId && c.age >= 36 && stalled(c, day));
+      if (kept) { say(r, day, 'kept_on', [kept.id, t.id]); r.keptSeason = seasonOf(day); break; }
+    }
+  }
+
   // A season's end with too few tongs: a good free name forms one.
   if (isNewSeason && activeCount(r) < RIVALS.tongs) {
     const free = r.cards.filter((c) => !c.tongId && cardRating(c) >= RIVALS.formSeasonRating).sort((a, b) => cardRating(b) - cardRating(a) || (a.id < b.id ? -1 : 1));
@@ -367,31 +392,14 @@ function freeNamesStep(state, r, day) {
   // The free name: one put forward every 3-6 weeks (a hash), a folded tong's names first; left alone, a rival signs it.
   if (r.offer && !r.cards.some((c) => c.id === r.offer.cardId && !c.tongId)) r.offer = null;
   if (r.offer && day >= r.offer.expiresDay) {
-    // Left alone, a rival signs the name: the richest tong with room, or else it makes room by letting its weakest go.
+    // Left alone, a rival signs the name if a house wants it and it fits (E1); else it stays free and can be put forward again.
     const card = r.cards.find((c) => c.id === r.offer.cardId);
-    const count = (t) => r.cards.filter((c) => c.tongId === t.id).length;
-    const byWealth = r.tongs.filter((t) => t.status === 'active').sort((a, b) => b.wealth - a.wealth || (a.id < b.id ? -1 : 1));
-    let to = byWealth.find((t) => count(t) < RIVALS.perTong[1]);
-    if (!to && card) {
-      to = byWealth.find((t) => count(t) >= 2);
-      const weakest = to && r.cards.filter((c) => c.tongId === to.id && c.id !== to.headId).sort((a, b) => cardRating(a) - cardRating(b) || (a.id < b.id ? -1 : 1))[0];
-      if (weakest) release(r, day, weakest, to.id); else to = null;
-    }
+    const to = card ? placeFor(r, card, day) : null;
     if (card && to) moveCard(r, day, card, to);
     r.lastOffer = r.offer.cardId;
     r.offer = null;
   }
   if (!r.offer && day >= (r.nextOfferDay ?? 0)) {
-    // Nobody free? Somebody leaves a tong (the fullest first, never a head): runners come and go.
-    if (!r.cards.some((c) => !c.tongId)) {
-      const fullest = r.tongs.filter((t) => t.status === 'active' && r.cards.filter((c) => c.tongId === t.id).length >= 4)
-        .sort((a, b) => r.cards.filter((c) => c.tongId === b.id).length - r.cards.filter((c) => c.tongId === a.id).length || (a.id < b.id ? -1 : 1))[0];
-      const leavers = fullest ? r.cards.filter((c) => c.tongId === fullest.id && c.id !== fullest.headId).sort((a, b) => (a.id < b.id ? -1 : 1)) : [];
-      if (leavers.length) {
-        const gone = leavers[Math.floor(rng() * leavers.length)];
-        release(r, day, gone, fullest.id);
-      }
-    }
     // A folded tong's names first, then the better rated; between equals, a name of ours may go first (its own key).
     const formerFirst = hashRng(state.seed, 'freename-former:' + absWeek(day))() < RIVALS.formerFreeWeight;
     const free = r.cards.filter((c) => !c.tongId && c.id !== r.lastOffer).sort((a, b) => (!!b.fromTong - !!a.fromTong) || cardRating(b) - cardRating(a) || (formerFirst ? !!b.formerOf - !!a.formerOf : 0) || (a.id < b.id ? -1 : 1));
@@ -414,6 +422,7 @@ export function wordFor(state, w) {
   const out = { kind: w.kind, v: String.fromCharCode(97 + (hash(w.kind, w.refs.join(','), w.day) % 5)) }; // a letter, not a number
   for (const ref of w.refs) {
     if (ref.startsWith('rank:')) { out.tier = ref.slice(5); continue; }
+    if (ref.startsWith('from:')) { const t = tongById(r, ref.slice(5)); if (t) out.from = t.name; else return null; continue; }
     const tong = tongById(r, ref); const card = r.cards.find((c) => c.id === ref);
     if (tong) { out.tong = tong.name; out.home = tong.home; out.tier = tierWord(tong.halls); out.tongId = tong.id; }
     else if (card) { out.name = card.name; out.home ??= card.home; if (card.formerOf) out.former = true; const t = tongById(r, card.tongId); if (t) { out.tong = t.name; out.tongId = t.id; } }
@@ -484,7 +493,7 @@ export function ladderView(state) {
   }));
 }
 
-const MOVE_KINDS = { name_travelling: 'moved', went_free: 'let_go', rise_end: 'signed', founding_end: 'signed', former_signed: 'signed', former_free: 'let_go' };
+const MOVE_KINDS = { name_travelling: 'moved', landed: 'moved', let_go: 'let_go', went_free: 'let_go', rise_end: 'signed', founding_end: 'signed', former_signed: 'signed', former_free: 'let_go' };
 /** Come and gone (E0): this month's movement of names, newest first, at most six, read off The Word. Only the side an entry carries is shown. */
 export function movesView(state, max = 6) {
   const r = state.rivals; if (!r) return [];
@@ -494,12 +503,13 @@ export function movesView(state, max = 6) {
     if (!word || state.day - w.day > 28) continue;
     const card = r.cards.find((c) => w.refs.includes(c.id));
     if (!card) continue;
-    const tong = w.refs.map((ref) => tongById(r, ref)).find(Boolean) ?? null;
+    const tong = w.refs.filter((ref) => !ref.startsWith('from:')).map((ref) => tongById(r, ref)).find(Boolean) ?? null;
     let from = null; let to = null;
-    if (w.kind === 'went_free') from = tong;
+    if (w.kind === 'went_free' || w.kind === 'let_go') from = tong;
     else if (w.kind !== 'former_free') { if (!tong || tong.status !== 'active') continue; to = tong; }
+    if (w.kind === 'landed') { const f = tongById(r, (w.refs.find((x) => x.startsWith('from:')) ?? '').slice(5)); from = f ?? null; }
     if (out.some((m) => m.id === slug(card.name) && m.word === word)) continue;
-    out.push({ id: slug(card.name), name: card.name.split(' ')[0], word, from: from ? sealOf(from) : null, to: to ? sealOf(to) : null, free: w.kind === 'went_free' || w.kind === 'former_free' });
+    out.push({ id: slug(card.name), name: card.name.split(' ')[0], word, from: from ? sealOf(from) : null, to: to ? sealOf(to) : null, free: w.kind === 'went_free' || w.kind === 'let_go' || w.kind === 'former_free' });
     if (out.length >= max) break;
   }
   return out;
@@ -541,7 +551,7 @@ export function rivalView(state) {
       const head = cards.find((c) => c.id === t.headId);
       const latest = [...r.word].reverse().find((w) => w.refs.includes(t.id) || cards.some((c) => w.refs.includes(c.id)));
       return {
-        id: t.id, name: t.name, home: t.home, style: t.style, head: head?.name ?? null,
+        id: t.id, name: t.name, home: t.home, style: t.style, habit: t.habit ?? null, head: head?.name ?? null,
         names: cards.filter((c) => c !== head).sort((a, b) => (a.name < b.name ? -1 : 1)).slice(0, 3).map((c) => ({ id: slug(c.name), name: c.name, former: !!c.formerOf })),
         said: latest ? wordFor(state, latest) ?? null : null,
         story: storyOf(r, t.id), ...fileOf(state, t, head),
