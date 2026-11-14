@@ -9,7 +9,7 @@ import * as M from '../src/core/mission.js';
 import { addOffer, templateById } from '../src/core/jobs.js';
 import { autoStep } from '../src/core/autorun.js';
 import { runFight, fightAnswer, fightStage } from '../src/core/runfight.js';
-import { stageSpots, layoutFight, enemyUnit } from '../src/core/fightmap.js';
+import { stageSpots, layoutFight, enemyUnit, specialLook } from '../src/core/fightmap.js';
 import { siteRects, BLOCK } from '../src/core/fightspots.js';
 import { pickSite, siteHeight } from '../src/data/sites.js';
 
@@ -170,4 +170,24 @@ test('a fight saved before v63 gets its staging on load, and nothing in the figh
   const am = s.activeMission;
   const start = am.events.find((e) => e.kind === 'battle' && e.phase === 'start');
   assert.deepEqual(fightStage(templateById(am.templateId).district, am, start.zone, am.battle.runners.length), spots);
+});
+
+// --- step 4: the special move's look (data/fightLooks.js) ----------------------------------------------------
+
+test('a runner\'s special-move look comes from their gear first, then their role, and a fight saved before v70 gets it on load', async () => {
+  const op = (role, gear = {}, extra = {}) => ({ id: 'x', role, gear, ...extra });
+  assert.equal(specialLook(op('muscle')), 'ricochet', 'the default');
+  assert.equal(specialLook(op('tech')), 'ping', 'a tech pings');
+  assert.equal(specialLook(op('tech', { bag: [{ item: { uid: 'r', type: 'rifle' }, x: 0, y: 0 }] })), 'ricochet', 'the weapon before the role');
+  assert.equal(specialLook(op('muscle', { implants: [{ uid: 'i', type: 'reflex' }] })), 'slash', 'reflex wiring stands in for a blade');
+  assert.equal(specialLook(op('face', { bag: [{ item: { uid: 'p', type: 'pistol', look: { frame: 'coil' } }, x: 0, y: 0 }] })), 'ping', 'a coil pistol pings');
+  assert.equal(specialLook(op('medic', {}, { spec: { id: 'marksman' } })), 'ricochet');
+  const { s } = fights.find((f) => f.id === 'warehouse') ?? fights[0];
+  for (const r of s.activeMission.battle.runners) assert.ok(['ricochet', 'slash', 'ping'].includes(r.look), `${r.handle} has a look`);
+  const old = structuredClone(s);
+  for (const r of old.activeMission.battle.runners) delete r.look;
+  old.version = 69;
+  const loaded = await S.importSave({ text: async () => JSON.stringify(old) });
+  assert.equal(loaded.version, SAVE_VERSION);
+  assert.deepEqual(loaded.activeMission.battle, s.activeMission.battle, 'the same looks a new fight gives, and nothing else moves');
 });

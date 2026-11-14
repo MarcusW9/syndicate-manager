@@ -28,6 +28,7 @@ import { lineText, kindWord, enemyName, nameList } from './fighttext.js';
 import { effectiveStat } from './crew.js';
 import { weaponOf, armourOf } from './battle.js';
 import { patchBonus, counted } from './gear.js';
+import { specialLook } from './fightmap.js';
 import { d20, makeRng, hash } from './rng.js';
 
 export { FIGHT };
@@ -64,6 +65,7 @@ export function runnerOf(op, approach, seat = 0) {
   return {
     id: op.id, handle: op.handle, role: op.role, seat, pips: Math.max(1, max - hurt), max,
     absorb: absorbOf(a.value), armourName: a.name, weapon: w.name, ap: (w.pierce ?? 0) > 0, strong: strongMargin(w.damage),
+    look: specialLook(op), // the stage's special-move look (data/fightLooks.js); picture only, no rule reads it
     jammer: canJam(op), healer: op.role === 'medic' || patchBonus(op, { perks: false }) > 0, medic: op.role === 'medic', // a kit makes a healer; a suture-strip perk only helps one
     cover: FIGHT.startCover, down: false, withdrawn: false, dead: false, aboard: false, stable: false, fightOn: false, downRound: null, left: false,
     stats: Object.fromEntries(FIGHT_STATS.map((s) => [s, effectiveStat(op, s, { approach })])),

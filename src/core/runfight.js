@@ -52,7 +52,7 @@ export function stageOf(b, actions = null) {
   const act = new Map((actions ?? []).map((a) => [a.opId, { kind: a.action, target: a.target ?? null }]));
   const trim = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v != null && v !== false));
   const units = {};
-  for (const r of b.runners) { const u = lay.units[r.id]; units[r.id] = trim({ side: 'crew', at: u.at, cover: u.cover, mark: u.mark, stance: u.stance, from: u.from, act: act.get(r.id) }); }
+  for (const r of b.runners) { const u = lay.units[r.id]; units[r.id] = trim({ side: 'crew', at: u.at, cover: u.cover, mark: u.mark, stance: u.stance, from: u.from, act: act.get(r.id), look: r.look }); }
   for (const e of b.enemies) { const u = lay.units[enemyUnit(e.n)]; units[enemyUnit(e.n)] = trim({ side: 'enemy', n: e.n, kind: e.kind, at: u.at, cover: u.cover, mark: u.mark, stance: u.stance, entrance: u.entrance }); }
   const p = lay.points;
   return { seed: b.showcaseSeed ?? 0, round: b.round, type: b.type, van: p.van, perch: p.perch, target: p.target, units };
