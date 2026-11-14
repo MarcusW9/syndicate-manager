@@ -127,6 +127,7 @@ export function render() {
       ${navButton('tong', 'Tong')}
       ${navButton('crew', 'Crew')}
       ${navButton('jobs', 'Jobs', badges.jobs)}
+      <button class="nav__btn nav__btn--save ${V.screen === 'settings' ? 'is-active' : ''}" data-action="nav" data-id="settings" aria-pressed="${V.screen === 'settings'}">Save</button>
     </nav>
 
     <main class="main ${wide ? 'main--wide' : ''} ${!state.activeMission && V.screen === 'jobs' && V.plan ? 'main--split' : ''}">${state.activeMission ? renderMission() : `${keptBanner()}${renderScreen()}`}</main>
