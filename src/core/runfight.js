@@ -90,7 +90,11 @@ export function fightStage(district, am, zone, crew) {
 
 /** An unsaved danger incident on one of the five jobs turns into an engine-2 fight (core/runbattle.js startBattle hands it here). */
 export function startFight(state, am, tpl, inc, id, zone, diff, able, { ambush = false } = {}) {
-  const type = fightTypeOf(am.templateId);
+  // The van is the way out, not a random encounter: it only plays when this fight is the run's last (nothing but the
+  // walk out is queued after it). A fight earlier in the run is a rout like the yard's: put them down, then carry on.
+  const later = am.queue.slice(am.step + 1).some((q) => q.type !== 'zone' || q.zone !== 'out');
+  const wayOut = fightTypeOf(am.templateId) === 'holdExtract' && !later;
+  const type = fightTypeOf(am.templateId) === 'holdExtract' && !wayOut ? 'holdYard' : fightTypeOf(am.templateId);
   const wheels = driver(state, am);
   const sb = type === 'holdExtract' ? standbyReady(state, am) : null; // standby rides with the van
   const ow = overwatchOf(overwatchOp(state, am), am.overwatch, zone);
@@ -109,7 +113,7 @@ export function startFight(state, am, tpl, inc, id, zone, diff, able, { ambush =
   am.battle = b;
   am.fought = true;
   if (am.alert >= ALERT_MAX && !am.wentLoud) am.alertDue = true;
-  const text = `It's a fight: ${b.enemies.length} against ${b.runners.map((r) => r.handle).join(', ')}.${ambush ? ' You have the jump on them: they get no shot in round one.' : ''} ${type === 'holdHack' ? `Keep ${b.runners.find((r) => r.id === b.goal.protect)?.handle ?? 'the tech'} working.` : type === 'holdYard' ? 'Put them down or break them: more keep coming.' : 'Hold the line until the van pulls in, then everyone boards.'}`;
+  const text = `It's a fight: ${b.enemies.length} against ${b.runners.map((r) => r.handle).join(', ')}.${ambush ? ' You have the jump on them: they get no shot in round one.' : ''} ${type === 'holdHack' ? `Keep ${b.runners.find((r) => r.id === b.goal.protect)?.handle ?? 'the tech'} working.` : type === 'holdYard' ? 'Put them down or break them: more keep coming.' : 'The way out: this is the last stand before the van. Hold the line until it pulls in, then everyone boards. Anyone not aboard when it leaves is left behind.'}`;
   record(am, { kind: 'battle', phase: 'start', from: id, zone, text, report: text, ...fightSnapshot(b), stage: stageOf(b) });
   am.log.push({ kind: 'bad', text });
   am.report = [...(am.report ?? []), text];
@@ -243,14 +247,15 @@ function fightInjuries(state, am, b) {
   for (const r of b.runners.filter((x) => x.withdrawn && !x.dead)) out(r.id);
   return hurt;
 }
-const hurtLine = (hurt) => hurt.map((h) => `${h.handle} ${h.severity === 'dead' ? 'died' : h.severity === 'missing' ? 'was left behind' : h.down ? 'went down' : h.severity === 'serious' ? 'is badly hurt' : 'is hurt'}`).join(', ');
+const hurtLine = (hurt, skipMissing = false) => hurt.filter((h) => !(skipMissing && h.severity === 'missing')).map((h) => `${h.handle} ${h.severity === 'dead' ? 'died' : h.severity === 'missing' ? 'was left behind' : h.down ? 'went down' : h.severity === 'serious' ? 'is badly hurt' : 'is hurt'}`).join(', ');
 
 /** The fight is over and the run goes on. */
 function endFight(state, am) {
   const b = am.battle;
   const hurt = fightInjuries(state, am, b);
   const text = b.end.text;
-  const report = `${text}${hurt.length ? ` ${hurtLine(hurt)}.` : ' Nobody badly hurt.'}`;
+  const told = hurtLine(hurt, b.end.result === 'leftBehind'); // "The crew left X behind." already says who
+  const report = `${text}${told ? ` ${told}.` : hurt.length ? '' : ' Nobody badly hurt.'}`;
   record(am, { kind: 'battle', phase: 'end', how: b.end.result, text, cause: text, report, hurt, ...fightSnapshot(b), stage: stageOf(b) });
   am.log.push({ kind: hurt.length ? 'bad' : 'good', text: report });
   am.report = [...(am.report ?? []), report];

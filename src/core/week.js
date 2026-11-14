@@ -58,7 +58,8 @@ export function weekSummary(state) {
   const bill = billDue(state);
   const earned = state.cash - start.cash;
   const net = earned - bill.total;
-  const rep = (state.reputation ?? 0) - start.reputation;
+  const r1 = (n) => Math.round(n * 10) / 10;
+  const rep = r1((state.reputation ?? 0) - start.reputation);
   const r = rosterNow(state);
   const jobLine = jobs.total
     ? `Jobs: ${jobs.done} done${jobs.aborted ? `, ${jobs.aborted} walked away from` : ''}${jobs.badly ? `, ${jobs.badly} went badly` : ''}${jobs.lost ? `, ${jobs.lost} with someone lost` : ''}${(state.awayJobs ?? []).length ? `; ${(state.awayJobs ?? []).length} still out` : ''}.`
@@ -68,7 +69,7 @@ export function weekSummary(state) {
     lines: [
       jobLine,
       `Money: ${signed(earned)} over the week, ${signed(net)} after the bills.`,
-      rep ? `Reputation ${start.reputation} → ${state.reputation} (${rep > 0 ? '+' : ''}${rep}).` : `Reputation steady at ${state.reputation ?? 0}.`,
+      rep ? `Reputation ${r1(start.reputation)} → ${r1(state.reputation)} (${rep > 0 ? '+' : ''}${rep}).` : `Reputation steady at ${state.reputation ?? 0}.`,
       r.hurt ? `${r.hurt} of ${r.total} hurt going into next week.` : `Everyone's on their feet: ${r.total} on the books.`,
       ...(heistLine(state) ? [heistLine(state)] : []),
     ],
