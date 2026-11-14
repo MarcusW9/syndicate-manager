@@ -75,6 +75,31 @@ export const RIVALS = {
   threadMonday: 1, // continued-thread lines per Monday
 };
 
+// E1 (DESIGN.md 2026-11-14 "E1"; drafts/PROPOSAL-tong-depth.md section 2): houses have habits. A tong's habit is how
+// it runs its people; it is hidden in state as an id and public on screen as a label and a line. First-pass wording.
+export const HABITS = {
+  grinder: { weight: 3, label: 'Grinder', line: 'Signs them young and cheap, and keeps the ones who last.', roster: [6, 8] },
+  boutique: { weight: 2, label: 'Short table', line: 'A handful of names, all of them good, none of them cheap.', roster: [3, 4] },
+  workshop: { weight: 2, label: 'Workshop', line: 'Ordinary hands, extraordinary kit.', roster: [4, 6] },
+  oldhouse: { weight: 3, label: 'Old house', line: 'Keeps its people until they choose to go.', roster: [4, 6] },
+};
+export const HABIT_IDS = Object.keys(HABITS);
+export const HABIT = {
+  maxShared: 2, // at most this many active tongs with one habit
+  stallAge: 24, stallWeeks: 26, stallGain: 2, // a name is stalled at this age with no rise of this much in this many weeks
+  releaseGapWeeks: 4, // a house releases at most one name, and not twice inside this
+  boutiqueBehind: 12, // a short table lets go whoever is this far behind its best
+  workshopStalledAge: 30,
+  grinderAge: 24, boutiqueNear: 5, workshopSteady: 30, fitTier: 8, // who a house wants
+  workshopKit: 6, // a workshop's names count this much toward the house's own average
+  buyoutBoutique: 1.3, // a short table's buyout, before the wealth and regard terms
+  oldHousePremium: 0.1, // an old house's names ask this much more to be convinced (the premium cap is unchanged)
+  oldHouseRetire: 3, // an old house's names retire this many years later
+  trail: 3, // houses a card remembers
+};
+// What a profile says once a name has been watched (level 1): the habit of the house they came from.
+export const HABIT_NOTE = { workshop: 'Leans on the kit.', oldhouse: 'Has been there a long time.' };
+
 // Rating words (core/rating.js ratingWord) → what the street says. {name} is the runner, {home} the
 // district as it reads mid-sentence, {role} their trade.
 export const RATING_WORDS = {
@@ -140,6 +165,10 @@ export const WORD_TEXT = {
   former_tier: ['{name}, one of yours once, has stepped up a level.', 'Bigger work is coming to {name} now. You may remember them.', 'Someone you let go is moving up: {name}.'],
   former_fame: ["People are saying {name}'s name more than they did. One of yours, once.", '{name}, who used to work for you, is a bigger name than they were.', '{name} is getting known. Not for your sake, but you were there first.'],
   former_free: ['{name}, one of yours once, is out of work.', '{name} is between tongs again. You know the name.', 'Nobody holds {name} now. They used to be yours.'],
+  // E1: names move for reasons. {from} is the house they left.
+  let_go: ['{tong} has let {name} go. They do that.', '{name} is no longer one of the few at {tong}.', '{name} has been shown the door at {tong}, politely.'],
+  landed: ['{name}, lately of {from}, has a seat at {tong}.', '{tong} has found room for {name}, who was at {from} not long ago.', '{name} walked out of {from} and into {tong}.'],
+  kept_on: ['{tong} still has {name}, long after most would have moved them on.', 'Nobody at {tong} has ever told {name} to go.'],
   // C5: the Monday lead when the Book is published (the Anchor's slate), counted in the three lines.
   book_up: ["The Anchor's slate is up. Half the street read it before the tea was poured.", "The Anchor's slate is up in Old Town, and the elders are already arguing over it.", "The Anchor's slate is up. Somebody will not like what the chalk says."],
   your_tier: ["They're calling yours a {tier} tong now. Somebody had to say it first.", 'The {tier} crowd has started to nod at your tong.', 'Your tong carries further than it did. People say {tier}.'],
@@ -230,6 +259,7 @@ export const BOOK = {
   formWeight: 3,
   ageTrend: [[24, 4], [34, 0], [44, -3], [99, -7]], // [up to this age, points]
   biasSpread: 7, // a runner's lasting bias, from -spread to +spread (hashRng 'book-bias:' + runnerId)
+  habitSkew: { workshop: 3 }, // E1: the slate flatters a workshop's names (its kit makes them look better than they are)
   styleSkew: { loud: 4, quiet: -4, corporate: 0, street: 0 }, // loud tongs are overrated, quiet ones underrated
   fameSkew: { unknown: 0, known: 0, respected: 1, elite: 3, legend: 3 }, // and the better known, the more
   wobble: 3, // a monthly +/- (hashRng 'book:' + absMonth + ':' + runnerId)
