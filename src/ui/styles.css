@@ -2251,10 +2251,12 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .fs-loss { margin: 0; font-size: 0.9rem; }
 
 /* Crew notes: a day's crew news in one message (2026-11-12). */
-.crewnotes { display: grid; gap: 14px; }
+.crewnotes { display: grid; gap: 16px; }
 .crewnotes section { border-left: 2px solid #4a3f6b; padding-left: 12px; }
-.crewnotes__head { font: 700 16px/1.2 Rajdhani, system-ui, sans-serif; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 4px; }
+.crewnotes--one section { border-left: 0; padding-left: 0; }
+.crewnotes__head { display: block; font: 700 16px/1.2 Rajdhani, system-ui, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text); margin: 0 0 4px; }
 .crewnotes .body { margin: 0; }
+.crewnotes__fx { margin: 4px 0 0; font-size: 0.85rem; line-height: 1.45; color: var(--muted); }
 
 /* Hall plans, simpler (2026-11-12): one look per meaning. Ours is plain, the next part is dashed cyan with its
    price, later parts a faint outline with no hatching; doors are cyan (as the key says), so red is for actions

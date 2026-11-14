@@ -219,7 +219,8 @@ export function postJobs(state, count = NEW_PER_WEEK, { slot = 0, routineOnly = 
   const unlocked = MISSIONS.filter((m) => !isOpeningJob(m.id) && !m.heistOnly && jobUnlocked(state, m.id)); // opening and heist jobs come only when asked
   // Routine work comes from clients still calling you, or as walk-in work.
   const calling = callingClients(state);
-  const routineClient = (m) => (m.walkIn ? null : calling.find((c) => c.jobs.includes(m.id)) ?? false);
+  // The client's id (an offer's `clientId` is always an id or null), null for walk-in work, false when nobody is calling.
+  const routineClient = (m) => (m.walkIn ? null : calling.find((c) => c.jobs.includes(m.id))?.id ?? false);
   const routine = unlocked.filter((m) => m.routine && routineClient(m) !== false);
   const open = unlocked.filter((m) => !m.routine);
   const regular = (id) => !templateById(id).routine && jobUnlocked(state, id);

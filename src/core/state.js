@@ -15,7 +15,7 @@ import { refreshArmoury } from './looks.js';
 import { seedRivals } from './rivals.js';
 import { cleanTongName, tongNameProblem } from './tongname.js';
 
-export const SAVE_VERSION = 66;
+export const SAVE_VERSION = 67;
 
 // A rookie crew's first board: small work only.
 export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];

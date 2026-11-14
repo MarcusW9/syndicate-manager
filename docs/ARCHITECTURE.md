@@ -172,8 +172,9 @@ Seeded and saved. `makeRng(seed)` is mulberry32 (`core/rng.js`). `nextRng(state)
 
 Format: JSON of the state in `localStorage`. Keys: `syndicate-active-slot`, `syndicate-slot-N`, `…-backup` (weekly), `…-unreadable`, `syndicate-ironman-progress`, legacy `syndicate-save-v1`. `storageGet/Set/Remove` are the only storage calls (swap for iOS). `saveGame` writes slot + weekly backup (not in Ironman). `loadGame` migrates; on failure `keepUnreadable` and returns null. `exportSave` downloads JSON; `importSave(file)` migrates then `checkIronman`; `loadBackup`.
 
-**Versioning:** `SAVE_VERSION` 66 in `core/state.js`. What each version added, newest first (one per line; grep `v52:`):
+**Versioning:** `SAVE_VERSION` 67 in `core/state.js`. What each version added, newest first (one per line; grep `v52:`):
 
+- v67: a repair, no new shape: every `clientId` (offers, a job in progress) and every Client's Favourite `client` is a client's id again (routine offers had stored the whole record); crew notes and history lines that read "[object Object]" get the client's name; the stray `clients['[object Object]']` and `track.clientJobs` key are dropped.
 - v66: gear perks: an item may carry `perks` (ids from `data/gearPerks.js`): a Custom item one, a Premium item two. Nothing in a v65 save has either tier, so the migration normally rewrites nothing; a Custom or Premium item with no `perks` is given the ones `rollPerks` makes from its own uid and the save's seed.
 - v65: gear tiers renamed: an item's (or armoury offer's) tier `street` is now `standard`, `pro` is `verified` (stash, worn and carried, the fallen's, offers, copies inside a job in progress). A tong rank `street` and a runner tier `pro` are left alone. Drops on a completed main job (`core/loot.js`) need no state.
 - v64: `state.tongName`, our tong's name (`core/tongname.js`); old saves get `NAMES.defaultTong`.
