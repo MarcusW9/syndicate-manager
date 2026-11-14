@@ -223,6 +223,12 @@ button.joss { width: 100%; min-height: var(--tap); padding: 0; border: 0; backgr
 .riskcorner--moderate { border-color: var(--warn); }
 .riskcorner--high { border-color: #ff9a5a; }
 .riskcorner--extreme { border-color: var(--danger); }
+/* Joss's read still on its way (ui/boardwork.js): the same bracket in the muted line colour, breathing; the card keeps its shape. */
+.riskcorner--reading { border-color: var(--muted); opacity: 0.35; animation: riskcorner-wait 1.1s ease-in-out infinite alternate; }
+@keyframes riskcorner-wait { to { opacity: 0.12; } }
+@media (prefers-reduced-motion: reduce) { .riskcorner--reading { animation: none; } }
+.jobcard__n { display: inline-block; min-width: 1ch; text-align: center; } /* the count's place is kept while the read is on its way */
+.jobcard__wait { opacity: 0.6; }
 /* Who can run a job today: open by default, folds to one line. */
 .runners { border: 1px solid var(--line); background: #141820; margin: 4px 0 12px; }
 .runners__head { width: 100%; min-height: var(--tap); display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 12px; background: none; border: 0; color: var(--muted); font: inherit; font-size: 0.9rem; text-align: left; cursor: pointer; }

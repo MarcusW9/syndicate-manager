@@ -130,6 +130,8 @@ try {
   }
 
   if (await click('[data-action="nav"][data-id="jobs"]')) {
+    // Since 2026-11-14 the board's reads come from a worker and each card fills in when its read lands: wait for them.
+    await page.waitForFunction(() => !document.querySelector('.jobcard.is-reading'), null, { timeout: 15000 }).catch(() => {});
     await top(); await shot('job-board');
     if (await click('[data-action="open-job"]')) {
       await top(); await shot('planning');

@@ -4,12 +4,12 @@
 //   npm run test:fast
 //
 // Slow = over about 30 seconds on their own (measured 2026-10-29): development (growth sims), heat
-// (season sims), fame-sim (60 runs of 78 weeks, on worker threads), rules (3,000 random missions) and startcrew (early-game sims). If a file here
+// (season sims), fame-sim (60 runs of 78 weeks, on worker threads), rules (3,000 random missions), startcrew (early-game sims) and squadsearch (the board's search against the full one it replaced). If a file here
 // becomes quick, take it off the list; if a new one gets slow, add it.
 import { readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 
-const SLOW = new Set(['development.test.js', 'fame-sim.test.js', 'heat.test.js', 'rules.test.js', 'startcrew.test.js']);
+const SLOW = new Set(['development.test.js', 'fame-sim.test.js', 'heat.test.js', 'rules.test.js', 'startcrew.test.js', 'squadsearch.test.js']);
 const dir = new URL('../tests/', import.meta.url).pathname;
 const files = readdirSync(dir).filter((f) => f.endsWith('.test.js') && !SLOW.has(f)).map((f) => dir + f);
 console.log(`Fast set: ${files.length} files (skipping ${[...SLOW].join(', ')}). Run npm test before pushing.`);
