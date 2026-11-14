@@ -11,8 +11,8 @@ import { SIDEARM_FRAMES, SIDEARM_QUIRKS } from '../src/data/gear.js';
 import { makeRng } from '../src/core/rng.js';
 
 test('a sidearm with no frame or quirk is the sidearm as it always was: aim 1, damage 3 (pro 2 and 4)', () => {
-  assert.deepEqual(sidearmStats({ type: 'pistol', tier: 'street' }), { aim: 1, damage: 3, pierce: 0, trait: 'steady', quirk: null });
-  const pro = sidearmStats({ type: 'pistol', tier: 'pro' });
+  assert.deepEqual(sidearmStats({ type: 'pistol', tier: 'standard' }), { aim: 1, damage: 3, pierce: 0, trait: 'steady', quirk: null });
+  const pro = sidearmStats({ type: 'pistol', tier: 'verified' });
   assert.equal(pro.aim, 2);
   assert.equal(pro.damage, 4);
   assert.equal(sidearmStats({ type: 'vest' }), null);
@@ -22,19 +22,19 @@ test('every sidearm rolls a quirk with its look, the same every time, without ch
   const s = createNewGame({ seed: 5, startCrew: 'fresh' });
   const seen = new Set();
   for (let i = 0; i < 400; i++) {
-    const a = rollLook(s, `t|${i}`, i % 3 ? 'street' : 'pro', 'pistol');
-    assert.deepEqual(rollLook(s, `t|${i}`, i % 3 ? 'street' : 'pro', 'pistol'), a, 'the same seed, the same gun');
+    const a = rollLook(s, `t|${i}`, i % 3 ? 'standard' : 'verified', 'pistol');
+    assert.deepEqual(rollLook(s, `t|${i}`, i % 3 ? 'standard' : 'verified', 'pistol'), a, 'the same seed, the same gun');
     assert.ok(SIDEARM_QUIRKS[a.quirk], `${a.quirk} is a quirk`);
     seen.add(a.quirk);
-    const st = sidearmStats({ type: 'pistol', tier: i % 3 ? 'street' : 'pro', ...a });
+    const st = sidearmStats({ type: 'pistol', tier: i % 3 ? 'standard' : 'verified', ...a });
     assert.ok(st.damage >= 1 && st.aim >= -2);
   }
   assert.equal(seen.size, Object.keys(SIDEARM_QUIRKS).length, 'every quirk turns up');
-  assert.equal(rollLook(s, 'r|1', 'street', 'rifle').quirk, undefined, 'rifles have no quirk');
+  assert.equal(rollLook(s, 'r|1', 'standard', 'rifle').quirk, undefined, 'rifles have no quirk');
 });
 
 test('frames have their own character, and a quirk adds to it', () => {
-  const st = (frame, quirk = 'none', tier = 'street') => sidearmStats({ type: 'pistol', tier, look: { frame }, quirk });
+  const st = (frame, quirk = 'none', tier = 'standard') => sidearmStats({ type: 'pistol', tier, look: { frame }, quirk });
   assert.ok(st('compact').aim > st('cannon').aim && st('compact').damage < st('cannon').damage, 'accurate and light, or heavy and kicking');
   assert.equal(st('coil').pierce, SIDEARM_FRAMES.coil.pierce);
   assert.equal(st('heritage', 'sights').aim, 2);
@@ -44,26 +44,26 @@ test('frames have their own character, and a quirk adds to it', () => {
 });
 
 test('the price follows the strength: a better roll costs more, a worn one less', () => {
-  const p = (frame, quirk) => priceOf('pistol', 'street', { type: 'pistol', look: { frame }, quirk });
-  assert.equal(p('heritage', 'none'), priceOf('pistol', 'street'), 'the plain sidearm costs what it did');
+  const p = (frame, quirk) => priceOf('pistol', 'standard', { type: 'pistol', look: { frame }, quirk });
+  assert.equal(p('heritage', 'none'), priceOf('pistol', 'standard'), 'the plain sidearm costs what it did');
   assert.ok(p('heritage', 'sights') > p('heritage', 'none'));
   assert.ok(p('heritage', 'worn') < p('heritage', 'none'));
-  assert.ok(priceOf('pistol', 'pro', { type: 'pistol', look: { frame: 'heritage' }, quirk: 'none' }) > p('heritage', 'none'));
+  assert.ok(priceOf('pistol', 'verified', { type: 'pistol', look: { frame: 'heritage' }, quirk: 'none' }) > p('heritage', 'none'));
 });
 
 test('a sidearm\'s aim is the carrier\'s combat bonus, its damage and pierce are what a hit does', () => {
   const s = createNewGame({ seed: 8, startCrew: 'fresh' });
   const op = s.crew[0];
-  op.gear.weapon = { uid: 'x', type: 'pistol', tier: 'street', look: { frame: 'coil' }, quirk: 'hotloads', name: 'Storm Arc' };
+  op.gear.weapon = { uid: 'x', type: 'pistol', tier: 'standard', look: { frame: 'coil' }, quirk: 'hotloads', name: 'Storm Arc' };
   assert.deepEqual(gearMods(op, 'combat').map((m) => m.value), [1]);
   assert.match(gearMods(op, 'combat')[0].note, /Storm Arc/);
   assert.deepEqual(weaponOf(op), { name: 'Storm Arc', damage: 4, pierce: 2 });
   assert.equal(hitFor(4, 1, 2), 4, 'pierce takes armour off first');
   assert.equal(hitFor(4, 3, 2), 3);
-  op.gear.weapon = { uid: 'y', type: 'pistol', tier: 'street', look: { frame: 'cannon' }, quirk: 'worn' };
+  op.gear.weapon = { uid: 'y', type: 'pistol', tier: 'standard', look: { frame: 'cannon' }, quirk: 'worn' };
   assert.deepEqual(gearMods(op, 'combat').map((m) => m.value), [SIDEARM_FRAMES.cannon.aim - 1], 'a kicking gun with a worn barrel is a minus');
   // In a fight against armoured guards, the shot does what the rule says.
-  op.gear.weapon = { uid: 'z', type: 'pistol', tier: 'street', look: { frame: 'coil' }, quirk: 'none' };
+  op.gear.weapon = { uid: 'z', type: 'pistol', tier: 'standard', look: { frame: 'coil' }, quirk: 'none' };
   const b = buildBattle({ incident: 'guard', zone: 'inside', diff: 0, threat: 5, guards: 1, crew: [op], approach: 'loud' });
   const r = playRound(b, makeRng(4));
   for (const l of r.lines.filter((x) => x.kind === 'shoot' && x.success)) assert.equal(l.damage, hitFor(3, b.guards[0].armour, 2));

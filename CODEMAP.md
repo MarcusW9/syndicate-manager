@@ -89,6 +89,7 @@ How battles work (both engines, every number, the death rule): `docs/BATTLES.md`
   - `pricing.js` (wages)
   - `statuses.js` (timed statuses)
   - `tiered.js` (two-stage weighted picks)
+  - `loot.js` (gear drops on a completed main job: `lootFor` from `mission.js finish()`; tier first from `data/gear.js TIERS` odds, falls to the next live tier, then a weighted type from `LOOT.pool`; a miss is scrap cash; `hashRng` only, so no roll moves)
   - `marks.js` (career marks: scars, chrome, the crew's tattoo)
   - `looks.js` (gun looks)
   - `validate.js` (content validators, run at dev boot and in tests)
@@ -124,7 +125,7 @@ How battles work (both engines, every number, the death rule): `docs/BATTLES.md`
 - `ui/hallart.js` + `ui/hallsprites.js` the hall art layer (Old Town, behind Save › Look › Hall art, `save.js getPref`) and `waysOverlay`, the raid's ways in drawn on either look; the hall page (`hallscreens.js renderHallPage`, `hallThreat` (the Threats card, `threatItem`)) opens on the compound (rooftops, `hallbuild.js buildingsOf` / `compoundOverlay`; defences go outside) and `hallInside` (UI only) opens one building's inside for its rooms (`buildView.scope`: 'compound' or a part id); two columns from 1100px (`wideHall`), where the page is in one of two modes (2026-11-12): looking (the default) or building in place (`buildView.on`, set by Build defences ›, left by `build-done`)
 - `ui/landmarks.js` the district landmarks (beside the halls on Tong › Halls and the raid screens, `raidcards.js hallMark`)
 - `ui/tongs.js` (the other tongs: City › Tongs `renderTongs` with Free names, a tong's page, a name's read-only profile (`nameProfile`, with View in Leads) and Names on the street; Crew › Leads' recruiting: `renderLeadName` (what scouting has shown via `readFor`, the price via `approachFor`, a scout picker and Sign) and `leadNames` (the Names group); and The Word's block for Monday's briefing; reads `rivalView` and the `dossier.js` readers only, wording from `data/rivals.js`; UI state `V.tongsView` and `V.leadName` in `view.js`)
-- `ui/gear.js` (the Armoury, Tong › Armoury, `renderArmoury` with `embedded`; a runner's loadout and the gear sheet)
+- `ui/gear.js` (`tierTag`, the coloured tier tag every item shows; the Armoury, Tong › Armoury, `renderArmoury` with `embedded`; a runner's loadout and the gear sheet)
 - `ui/art.js` (faces)
 - `ui/icons.js`
 - `ui/styles.css` (the street-terminal skin is the second half).
@@ -143,7 +144,7 @@ Everything that happens in a run is `record(am, event)` into `am.events`. `feed.
 - **A client:** data only, `data/clients.js` (+ `data/cast.js` for `{id}` tokens); the checklist is `docs/ARCHITECTURE.md` "Adding a client", `tests/clients.test.js` checks it.
 - **A job:** a file in `data/missions/`, imported in `data/missions.js` and listed in `MISSIONS`, its id in a client's `jobs` (`data/clients.js`); a hall's opening favour instead in `data/halls.js` (`HALL_SITES[d].opening`, asked by `.contact`; `isOpeningJob`). Check it first with `node scripts/check-job.mjs <file>` (`core/jobcheck.js`; `--all` checks every job). Drafting prompt: `docs/new-job-prompt.md`; adding a drafted job: `/add-job` (`.claude/commands/add-job.md`).
 - **An incident:** `data/incidents.js` (and `ZONE_POOLS`), district lines in `data/districtIncidents.js`; `tests/incidents.test.js` checks the shape.
-- **Gear:** `data/gear.js`; the rules read it in `core/gear.js` (and `core/battle.js` for fights). Looks and names: `core/looks.js`, `data/gearLooks.js`. A sidearm's strengths: its frame and rolled quirk, `core/gear.js` `sidearmStats` (`SIDEARM_FRAMES`, `SIDEARM_QUIRKS`); perks would sit beside the quirk.
+- **Gear:** `data/gear.js` (the five-tier ladder `TIERS`, only Standard and Verified live; `LOOT`: drop chance, pools, scrap); the rules read it in `core/gear.js` (and `core/battle.js` for fights). Looks and names: `core/looks.js`, `data/gearLooks.js`. A sidearm's strengths: its frame and rolled quirk, `core/gear.js` `sidearmStats` (`SIDEARM_FRAMES`, `SIDEARM_QUIRKS`); perks would sit beside the quirk.
 - **Changing the state's shape:** bump `SAVE_VERSION` in `core/state.js` and add a migration in `save/save.js`.
 - **A roll modifier:** it must show in the roll's notes and in the planning read (`coverage`), or the shown risk lies.
 

@@ -6,6 +6,10 @@
 import { CULTURES } from '../data/recruitPools.js';
 import { toolFrameOf } from '../core/looks.js';
 import { carried } from '../core/gear.js';
+import { TIERS } from '../data/gear.js';
+
+/** Is it dressed above the plain item? (Standard is not; Verified and up are.) */
+const upTier = (tier) => (TIERS[tier]?.step ?? 0) > 0;
 
 // Shared drawing style: one palette, one line weight, everything on a 64×64 grid.
 export const ART = {
@@ -876,9 +880,9 @@ export const lightOf = (op) => CITY_LIGHT[hash(`${op.id}|light`) % CITY_LIGHT.le
 
 const STASH_LIGHT = '#f2b544'; // sodium: the safehouse's own lamp, for gear nobody carries
 
-/** The rifle's shapes in its 96×32 frame. pro: carbon with a neon line; street: gunmetal and wood. */
+/** The rifle's shapes in its 96×32 frame. a tier above Standard: carbon with a neon line; Standard: gunmetal and wood. */
 function rifleShapes({ tier, light, neon }) {
-  const pro = tier === 'pro';
+  const pro = upTier(tier);
   const metal = pro ? '#1d2129' : '#454c57';
   const dark = pro ? '#121519' : '#2b3038';
   const lit = (c, t = 0.45) => mix(c, light, t);
@@ -1401,7 +1405,7 @@ const toolGlow = (d, c, w = 0.5) => `<path d="${d}" stroke="${c}" stroke-width="
 // A: the quad. Side view: a pod body, two arms out to rotor hubs with their spinning discs, a
 // camera gimbal hung under the nose. Street: grey plastic, a taped arm, one odd orange guard.
 function droneQuad({ tier, light, neon }) {
-  const pro = tier === 'pro';
+  const pro = upTier(tier);
   const body = pro ? '#1f242c' : '#5a616b';
   const dark = pro ? '#121519' : '#30353d';
   const arm = pro ? '#191d24' : '#3d434c';
@@ -1434,7 +1438,7 @@ function droneQuad({ tier, light, neon }) {
 // B: the kite. A flying wing seen from the side and a little above: a long swept wing, a pusher
 // prop at the tail, a camera blister under the nose. Street: patched foam, a sticker; pro: carbon.
 function droneKite({ tier, light, neon }) {
-  const pro = tier === 'pro';
+  const pro = upTier(tier);
   const wing = pro ? '#1d2229' : '#8a8f96';
   const dark = pro ? '#111418' : '#3a3f47';
   const lit = (c, t = 0.45) => mix(c, light, t);
@@ -1461,7 +1465,7 @@ function droneKite({ tier, light, neon }) {
 // C: the ducted fan. A drum-shaped shroud seen side-on with the fan's blur showing through the
 // top grille, a sensor eye on the front, a short skid. Street: a dented shroud, a zip-tied light.
 function droneDuct({ tier, light, neon }) {
-  const pro = tier === 'pro';
+  const pro = upTier(tier);
   const shell = pro ? '#1d2229' : '#4f5660';
   const dark = pro ? '#111418' : '#2d3239';
   const lit = (c, t = 0.45) => mix(c, light, t);
@@ -1489,7 +1493,7 @@ function droneDuct({ tier, light, neon }) {
 // A: the slab. A thick keyboard slab seen from the front and a little above, a small flip-up
 // screen at the back, a coiled cable out to a neural jack. Street: mismatched keycaps, tape.
 function deckSlab({ tier, light, neon }) {
-  const pro = tier === 'pro';
+  const pro = upTier(tier);
   const shell = pro ? '#1c2027' : '#5d554a';
   const dark = pro ? '#111418' : '#2e2b27';
   const lit = (c, t = 0.45) => mix(c, light, t);
@@ -1521,7 +1525,7 @@ function deckSlab({ tier, light, neon }) {
 // B: the case. A hard-shell carry case, open: the lid stands up with the screen in it, the keys
 // and a patch of boards in the base, an antenna. Street: stickers, a dented corner; pro: carbon.
 function deckCase({ tier, light, neon }) {
-  const pro = tier === 'pro';
+  const pro = upTier(tier);
   const shell = pro ? '#1b1f26' : '#3e5560';
   const dark = pro ? '#0f1216' : '#24323a';
   const lit = (c, t = 0.45) => mix(c, light, t);
@@ -1549,7 +1553,7 @@ function deckCase({ tier, light, neon }) {
 // C: the brick. A handheld deck, held sideways: a chunky body with a small screen and thumb
 // keys, a whip antenna, and the trode cable looping out to a jack. Street: taped, a cracked screen.
 function deckBrick({ tier, light, neon }) {
-  const pro = tier === 'pro';
+  const pro = upTier(tier);
   const shell = pro ? '#1d2229' : '#6a5d4b';
   const dark = pro ? '#111418' : '#2f2a24';
   const lit = (c, t = 0.45) => mix(c, light, t);
@@ -1587,7 +1591,7 @@ const sqRim = (d, light, w = 1) => `<path d="${d}" stroke="${light}" stroke-widt
 
 // --- armoured vest ------------------------------------------------------------------------
 function vestCarrier({ tier, light, neon }) {
-  const pro = tier === 'pro';
+  const pro = upTier(tier);
   const cloth = pro ? '#1f242b' : '#55604a';
   const dark = pro ? '#121519' : '#343b2e';
   return [
@@ -1602,7 +1606,7 @@ function vestCarrier({ tier, light, neon }) {
   ].join('');
 }
 function vestJacket({ tier, light, neon }) {
-  const pro = tier === 'pro';
+  const pro = upTier(tier);
   const cloth = pro ? '#1b1f26' : '#7a2f2a';
   const dark = pro ? '#101317' : '#4f1e1b';
   return [
@@ -1615,7 +1619,7 @@ function vestJacket({ tier, light, neon }) {
   ].join('');
 }
 function vestWeave({ tier, light, neon }) {
-  const pro = tier === 'pro';
+  const pro = upTier(tier);
   const cloth = pro ? '#20262e' : '#4b5059';
   const hexes = [];
   for (let r = 0; r < 7; r++) for (let k = 0; k < 6; k++) hexes.push(`<path d="M${17.5 + k * 5 + (r % 2) * 2.5} ${21 + r * 4.6} l2.2 -1.3 l2.2 1.3 v2.4 l-2.2 1.3 l-2.2 -1.3 Z" fill="none" stroke="${pro ? mix(cloth, neon, 0.28) : sqShade(cloth, 0.3)}" stroke-width="0.45"/>`);
@@ -1631,7 +1635,7 @@ function vestWeave({ tier, light, neon }) {
 
 // --- trauma kit ---------------------------------------------------------------------------
 function kitBag({ tier, light, neon }) {
-  const pro = tier === 'pro';
+  const pro = upTier(tier);
   const cloth = pro ? '#1d2229' : '#7a6a4c';
   return [
     `<path d="M14 26 Q32 2 50 26" stroke="${sqShade(cloth, 0.3)}" stroke-width="3" fill="none"/>${sqRim('M33 8 Q44 12 50 26', light, 0.8)}`,
@@ -1643,7 +1647,7 @@ function kitBag({ tier, light, neon }) {
   ].join('');
 }
 function kitBox({ tier, light, neon }) {
-  const pro = tier === 'pro';
+  const pro = upTier(tier);
   const shell = pro ? '#232831' : '#d9d3c4';
   const foam = pro ? '#14171c' : '#2b2f36';
   return [
@@ -1658,7 +1662,7 @@ function kitBox({ tier, light, neon }) {
   ].join('');
 }
 function kitRoll({ tier, light, neon }) {
-  const pro = tier === 'pro';
+  const pro = upTier(tier);
   const cloth = pro ? '#1d2229' : '#3f5a4a';
   return [
     sqBox(6, 10, 52, 44, cloth, light, { r: 1.4, top: 1.4 }),
@@ -1675,7 +1679,7 @@ function kitRoll({ tier, light, neon }) {
 }
 // D: the med gun. A pistol-grip scanner that reads the wound and fires an injector cartridge.
 function kitGun({ tier, light, neon }) {
-  const pro = tier === 'pro';
+  const pro = upTier(tier);
   const shell = pro ? '#e3e6ea' : '#9aa0a8';
   const dark = pro ? '#1d2229' : '#3a3f47';
   return [
@@ -1694,7 +1698,7 @@ function kitGun({ tier, light, neon }) {
 
 // --- ghost kit ----------------------------------------------------------------------------
 function ghostRoll({ tier, light, neon }) {
-  const pro = tier === 'pro';
+  const pro = upTier(tier);
   const leather = pro ? '#1d2229' : '#6b4a2e';
   const steel = pro ? '#c9ccd3' : '#9aa0a8';
   const tips = ['M0 0 l2.6 -2', 'M0 0 q1.3 -2.6 2.6 0 q1.3 2.6 2.6 0', 'M0 0 l1.3 -1.4 l1.3 1.4 l1.3 -1.4 l1.3 1.4', 'M0 0 l3 -2.6'];
@@ -1709,7 +1713,7 @@ function ghostRoll({ tier, light, neon }) {
   ].join('');
 }
 function ghostDecoder({ tier, light, neon }) {
-  const pro = tier === 'pro';
+  const pro = upTier(tier);
   const shell = pro ? '#1d2229' : '#c2a23a';
   return [
     `<path d="M38 22 a9 9 0 0 1 18 0 v5" stroke="#9aa0a8" stroke-width="3" fill="none"/>`,
@@ -1725,7 +1729,7 @@ function ghostDecoder({ tier, light, neon }) {
 // C: the heat veil. A hooded poncho of heat-damping cloth, front-on, with a glare strip across the
 // shoulders that smears a camera's picture. Not invisibility: hard to see on thermal, blurry on a lens.
 function ghostVeil({ tier, light, neon, holo = 'holo' }) {
-  const pro = tier === 'pro';
+  const pro = upTier(tier);
   const cloth = pro ? '#1b2129' : '#565a55';
   const dark = sqShade(cloth, 0.35);
   return [
@@ -1740,7 +1744,7 @@ function ghostVeil({ tier, light, neon, holo = 'holo' }) {
 // D: the lens blinder. A palm-sized emitter with a ring of bright diodes; the camera it's aimed at
 // gets nothing but white for a few seconds.
 function ghostBlinder({ tier, light, neon }) {
-  const pro = tier === 'pro';
+  const pro = upTier(tier);
   const shell = pro ? '#1d2229' : '#3a3f47';
   return [
     `<path d="M14 40 L24 30 L36 42 L26 52 Z" fill="${sqShade(shell, 0.2)}"/>${pro ? '' : `<path d="M16 42 l8 -8 M19 45 l8 -8" stroke="${TAPE}" stroke-width="1.2" opacity="0.7"/>`}`,
@@ -1759,7 +1763,7 @@ const implantPack = (pro, light, neon) => (pro
   : `<path d="M6 6 H58 V58 H6 Z" fill="#e9ecf1" opacity="0.06"/><path d="M6 6 H58" stroke="#e9ecf1" stroke-width="1.4" opacity="0.25"/><path d="M6 9 H58" stroke="#ff3d5f" stroke-width="0.8" opacity="0.4"/>
      <rect x="36" y="44" width="18" height="10" fill="#e9e2cf" transform="rotate(-6 45 49)"/><path d="M38.6 47.6 q2.4 -1.2 4.8 0 t4.8 0 M38.6 51 q3.4 -1.2 7 0" stroke="#2b5fa8" stroke-width="0.7" fill="none" transform="rotate(-6 45 49)"/>`);
 function reflexHarness({ tier, light, neon }) {
-  const pro = tier === 'pro';
+  const pro = upTier(tier);
   const node = pro ? '#2a2f38' : '#5a5f68';
   const wire = pro ? neon : '#c97a2e';
   return [
@@ -1770,7 +1774,7 @@ function reflexHarness({ tier, light, neon }) {
   ].join('');
 }
 function reflexSleeve({ tier, light, neon }) {
-  const pro = tier === 'pro';
+  const pro = upTier(tier);
   const mesh = pro ? '#1f242b' : '#6a6f77';
   const wire = pro ? neon : '#c97a2e';
   return [
@@ -1783,7 +1787,7 @@ function reflexSleeve({ tier, light, neon }) {
   ].join('');
 }
 function cortexChip({ tier, light, neon }) {
-  const pro = tier === 'pro';
+  const pro = upTier(tier);
   const body = pro ? '#1a1e24' : '#2f6b4a';
   return [
     implantPack(pro, light, neon),
@@ -1794,7 +1798,7 @@ function cortexChip({ tier, light, neon }) {
   ].join('');
 }
 function cortexBud({ tier, light, neon }) {
-  const pro = tier === 'pro';
+  const pro = upTier(tier);
   const shell = pro ? '#e3e6ea' : '#8a8f96';
   return [
     implantPack(pro, light, neon),
@@ -1834,7 +1838,7 @@ function squareArt(item, shape, { carrier, width, bare = false }) {
   <defs><linearGradient id="${id}" x1="1" x2="0"><stop offset="0" stop-color="${light}" stop-opacity="0.22"/><stop offset="0.4" stop-color="${light}" stop-opacity="0.08"/><stop offset="1" stop-color="${light}" stop-opacity="0"/></linearGradient>
   <linearGradient id="${id}h" x1="0" x2="1"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.7"/><stop offset="0.5" stop-color="#b48cff" stop-opacity="0.7"/><stop offset="1" stop-color="#ff5fae" stop-opacity="0.7"/></linearGradient></defs>
   ${bare ? '' : `<rect width="64" height="64" fill="#0d1016"/><rect width="64" height="64" fill="url(#${id})"/>`}
-  ${shape({ tier: item.tier ?? 'street', light, neon, holo: `${id}h` })}</svg>`;
+  ${shape({ tier: item.tier ?? 'standard', light, neon, holo: `${id}h` })}</svg>`;
 }
 
 /**
@@ -1855,7 +1859,7 @@ export function gearArt(item, { carrier = null, width = 96, bare = false } = {})
   return `<svg class="art gearart" viewBox="0 0 96 32" width="${width}" height="${Math.round((width * 32) / 96)}" aria-hidden="true" focusable="false">
   <defs><linearGradient id="${id}" x1="1" x2="0"><stop offset="0" stop-color="${light}" stop-opacity="0.2"/><stop offset="0.35" stop-color="${light}" stop-opacity="0.09"/><stop offset="0.75" stop-color="${light}" stop-opacity="0.02"/><stop offset="1" stop-color="${light}" stop-opacity="0"/></linearGradient></defs>
   ${bare ? '' : `<rect width="96" height="32" fill="#0d1016"/><rect width="96" height="32" fill="url(#${id})"/>`}
-  ${shapes({ tier: item.tier ?? 'street', light, neon })}</svg>`;
+  ${shapes({ tier: item.tier ?? 'standard', light, neon })}</svg>`;
 }
 
 // What shows on a portrait: one item at a time (owner's call), the most telling first. Only the
@@ -1866,8 +1870,8 @@ const ON_PORTRAIT = ['rifle'];
 function portraitGear(op, c, f) {
   const item = carried(op).find((i) => ON_PORTRAIT.includes(i.type));
   if (!item) return { back: '', front: '' };
-  const tier = item.tier ?? 'street';
-  const sling = tier === 'pro' ? '#1a1d24' : '#3a3125';
+  const tier = item.tier ?? 'standard';
+  const sling = upTier(tier) ? '#1a1d24' : '#3a3125';
   return {
     back: `<g class="gear-rifle" transform="translate(4 72) rotate(-44) scale(0.9) translate(0 -16)">${item.look ? rifleBuild({ light: c.light, neon: f.chromeColor, look: item.look }) : rifleShapes({ tier, light: c.light, neon: f.chromeColor })}</g>`,
     front: `<path d="M46 48.5 L18 57" stroke="${sling}" stroke-width="1.8"/><path d="M46 47.8 L18 56.3" stroke="${mix(sling, c.light, 0.35)}" stroke-width="0.4"/>`,

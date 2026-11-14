@@ -10,14 +10,14 @@ import { RIFLE_LOOKS, SIDEARM_LOOKS, ARMOURY_STOCK } from '../src/data/gearLooks
 const game = (seed = 31) => createNewGame({ seed });
 const toMonday = (s) => { do { s = advanceDay(s); } while (!calendar(s.day).isMonday); return s; };
 
-const stocked = (type) => ARMOURY_STOCK[type].street + ARMOURY_STOCK[type].pro;
+const stocked = (type) => ARMOURY_STOCK[type].standard + ARMOURY_STOCK[type].verified;
 
 test('a new game opens with a shelf of guns, rifles and sidearms, the same for the same seed', () => {
   const s = game();
   for (const type of ['rifle', 'pistol']) {
     const shelf = s.armoury.offers.filter((o) => o.type === type);
     assert.equal(shelf.length, stocked(type), `${type}s on the shelf`);
-    assert.equal(shelf.filter((o) => o.tier === 'pro').length, ARMOURY_STOCK[type].pro);
+    assert.equal(shelf.filter((o) => o.tier === 'verified').length, ARMOURY_STOCK[type].verified);
     assert.equal(new Set(shelf.map((o) => o.look.finish)).size, shelf.length, `${type}s differ in finish`);
   }
   const offers = s.armoury.offers.filter((o) => o.type === 'rifle');
@@ -25,7 +25,7 @@ test('a new game opens with a shelf of guns, rifles and sidearms, the same for t
   assert.equal(new Set(offers.map((o) => o.look.finish)).size, offers.length, 'different finishes');
   for (const o of offers) {
     assert.match(o.name, /^\S.* \S.*$/, 'a two-part name');
-    assert.equal(RIFLE_LOOKS.finishes[o.look.finish].tier, o.tier, 'street finishes on street rifles, pro on pro');
+    assert.equal(RIFLE_LOOKS.finishes[o.look.finish].tier, o.tier, 'standard finishes on standard rifles, verified on verified');
     assert.ok(lookText(o).length > 5);
   }
   assert.deepEqual(game().armoury, s.armoury, 'same seed, same shelf');
@@ -38,12 +38,12 @@ test('only guns with something that lights up glow, and then in their own colour
   for (const type of ['rifle', 'pistol']) {
     const L = type === 'rifle' ? RIFLE_LOOKS : SIDEARM_LOOKS;
     for (let i = 0; i < 400; i++) {
-      const { look } = rollLook(s, `t${i}`, i % 2 ? 'pro' : 'street', type);
+      const { look } = rollLook(s, `t${i}`, i % 2 ? 'verified' : 'standard', type);
       const extra = type === 'rifle' ? L.engravings[look.engraving] : L.mods[look.mod];
       const lightsUp = Boolean(L.frames[look.frame].glows || L.finishes[look.finish].glows || extra?.glows || L.charms[look.charm]?.glows);
       assert.equal(Boolean(look.glow), lightsUp, `${type} ${JSON.stringify(look)}`);
       (look.glow ? lit : dark)[type]++;
-      if (L.frames[look.frame].tier) assert.equal(i % 2 ? 'pro' : 'street', L.frames[look.frame].tier, 'smart and coil pistols are pro only');
+      if (L.frames[look.frame].tier) assert.equal(i % 2 ? 'verified' : 'standard', L.frames[look.frame].tier, 'smart and coil pistols are pro only');
     }
   }
   assert.ok(dark.rifle > lit.rifle * 2, `most rifles don't glow (${lit.rifle} lit, ${dark.rifle} not)`);
@@ -82,7 +82,7 @@ test('buying a rifle off the shelf keeps its look and name, costs its price, and
 
 test('every rifle has a look, however it arrives; other gear has only a build', () => {
   const s = game();
-  const bought = buyGear(s, 'rifle', 'pro').stash.at(-1);
+  const bought = buyGear(s, 'rifle', 'verified').stash.at(-1);
   assert.ok(bought.look && bought.name, 'bought by type');
   const brought = loadoutOf(structuredClone(s), ['rifle', 'pistol']);
   assert.ok(brought.bag.length === 2 && brought.bag.every((b) => b.item.look), 'brought by a recruit (both fit the bag)');

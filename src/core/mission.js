@@ -53,6 +53,7 @@ import { noteJobMarks } from './marks.js';
 import { planIncidents, weaveIncidents, incidentById, incidentIn, incidentDifficulty, handlerFor, bestSave, standbySave, decisionChoices, ALERT_MAX, SERIOUS_CHANCE, SERIOUS_PER_ALERT, PATCH_MIN_MEDICAL, ZONES } from './incidents.js';
 import { openingResult } from './halls.js';
 import { heistResult } from './heists.js';
+import { lootFor } from './loot.js';
 
 const EXIT_KINDS = new Set(['abort', 'extract']);
 const STABILISE_DIFFICULTY = 9;
@@ -1067,6 +1068,8 @@ function finish(state) {
   const outcome = deaths.length ? 'loss' : am.aborted ? 'aborted' : 'completed';
   const opened = openingResult(state, am.jobId, outcome); // a district's opening favour (core/halls.js)
   const heistLines = heistResult(state, am.jobId, outcome); // a heist's prep or finale (core/heists.js)
+  // A clean main job may leave gear in the stash, or scrap to fence (core/loot.js). Side tasks never reach finish().
+  const loot = outcome === 'completed' ? lootFor(state, am.jobId) : null;
   const client = clientById(am.clientId);
   am.result = { report: am.report ?? [], outcome, pay, heatGain, injuries, deaths: deaths.map((d) => d.handle), freelance, growth: growthEvents, graduated: graduatedOps.map((o) => ({ id: o.id, handle: o.handle, name: o.name, role: o.role, color: o.color })), client: client?.name ?? null, trustChange };
   am.done = true;
@@ -1095,6 +1098,7 @@ function finish(state) {
     ...(client && trustChange ? [{ tone: trustChange > 0 ? 'good' : 'bad', text: `${client.name} ${trustChange > 0 ? 'thinks more of you' : 'is unhappy with you'} (trust ${trustChange > 0 ? '+' : ''}${trustChange}).` }] : []),
     ...(opened ? [opened] : []),
     ...heistLines,
+    ...(loot ? [loot] : []),
   ];
   const id = `report-${state.day}-${state.rngCounter}`;
   const events = am.events ?? [];

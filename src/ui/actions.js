@@ -147,7 +147,7 @@ export function onClick(e) {
       if (sub) setSub(tab, sub);
       break;
     }
-    case 'buy': return setState(buyGear(state, id, t.dataset.tier || 'street'));
+    case 'buy': return setState(buyGear(state, id, t.dataset.tier || 'standard'));
     case 'buy-offer': return setState(buyOffer(state, id));
     case 'sell': {
       const item = (state.stash ?? []).find((i) => i.uid === id);

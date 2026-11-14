@@ -28,9 +28,34 @@ export const SLOTS = {
   implant: { name: 'Implant' },
 };
 
+// The rarity ladder (2026-11-13, owner; docs/design). Lowest to highest. step: added to the item's
+// bonus, damage and armour; price: multiplies the type's price; desc: one line; colour: the key of
+// the --tier-<colour> tokens in ui/styles.css; drop: percent odds of this tier when a job drops
+// gear (Standard takes the rest; core/loot.js rolls the tier first, then the type, so adding item
+// types never changes how often a tier drops); live: false until its slice ships. Nothing may make
+// an item of a tier that isn't live (the shop, drops and recruits all read `liveTiers`). Custom,
+// Premium and Apex take their step-1 like Verified so nothing breaks if one ever appears; their
+// perks are for a later slice.
 export const TIERS = {
-  street: { name: 'Street', step: 0, price: 1 },
-  pro: { name: 'Pro', step: 1, price: 2.5 },
+  standard: { name: 'Standard', step: 0, price: 1, colour: 'grey', drop: null, live: true, desc: 'Off the shelf.' },
+  verified: { name: 'Verified', step: 1, price: 2.5, colour: 'green', drop: 28, live: true, desc: 'Checked and test-fired by a specialist.' },
+  custom: { name: 'Custom', step: 1, price: 2.5, colour: 'blue', drop: 10, live: false, desc: 'Street-modified.' },
+  premium: { name: 'Premium', step: 1, price: 2.5, colour: 'purple', drop: 4, live: false, desc: 'Clean corporate hardware.' },
+  apex: { name: 'Apex', step: 1, price: 2.5, colour: 'gold', drop: 1, live: false, desc: 'A named piece with a history.' },
+};
+/** The lowest tier: what anything is when it has no tier. */
+export const BASE_TIER = 'standard';
+
+// Loot (2026-11-13): what a successful main job may leave behind. chance: of a drop on a success.
+// pool: item type weights within a tier (add a type here and no tier's odds move). scrap: the flat
+// cash the crew fences when nothing drops.
+export const LOOT = {
+  chance: 0.35,
+  scrap: 50,
+  pool: {
+    standard: { pistol: 22, vest: 16, deck: 14, medkit: 14, picks: 14, rifle: 8, drone: 4, reflex: 4, cortex: 4 },
+    verified: { pistol: 22, vest: 16, deck: 14, medkit: 14, picks: 14, rifle: 8, drone: 4, reflex: 4, cortex: 4 },
+  },
 };
 
 export const GEAR = {

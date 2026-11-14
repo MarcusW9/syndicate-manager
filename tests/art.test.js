@@ -118,12 +118,12 @@ test('a rifle carried shows on the portrait, the same every time; nothing else c
   const bare = withoutIds(portrait(op));
   const empty = { weapon: null, armour: null, tool: null, implant: null };
   assert.equal(withoutIds(portrait({ ...op, gear: empty })), bare, 'an empty loadout draws the same face');
-  assert.equal(withoutIds(portrait({ ...op, gear: { ...empty, weapon: { uid: 'x', type: 'pistol', tier: 'street' } } })), bare, 'gear without a drawing shows nothing yet');
-  const armed = { ...op, gear: { ...empty, weapon: { uid: 'x', type: 'rifle', tier: 'street' } } };
+  assert.equal(withoutIds(portrait({ ...op, gear: { ...empty, weapon: { uid: 'x', type: 'pistol', tier: 'standard' } } })), bare, 'gear without a drawing shows nothing yet');
+  const armed = { ...op, gear: { ...empty, weapon: { uid: 'x', type: 'rifle', tier: 'standard' } } };
   const withRifle = withoutIds(portrait(armed));
   assert.ok(withRifle.includes('gear-rifle') && !bare.includes('gear-rifle'));
   assert.equal(withoutIds(portrait(armed)), withRifle, 'stable');
-  const pro = withoutIds(portrait({ ...op, gear: { ...empty, weapon: { uid: 'x', type: 'rifle', tier: 'pro' } } }));
+  const pro = withoutIds(portrait({ ...op, gear: { ...empty, weapon: { uid: 'x', type: 'rifle', tier: 'verified' } } }));
   assert.notEqual(pro, withRifle, 'a pro rifle looks different');
 });
 
@@ -131,10 +131,10 @@ test('item drawings: the rifle has one, lit by whoever carries it; others fall b
   assert.ok(hasGearArt('rifle'));
   // Every item in the armoury has a drawing now (2026-11-06: the drone, the deck, then the rest);
   // a type without one still gets null, so the UI falls back to its icon.
-  assert.equal(gearArt({ type: 'no-such-item', tier: 'street' }), null);
+  assert.equal(gearArt({ type: 'no-such-item', tier: 'standard' }), null);
   const op = { id: 'g9', name: 'Kit Lau' };
-  const stash = gearArt({ type: 'rifle', tier: 'street' });
-  const carried = gearArt({ type: 'rifle', tier: 'street' }, { carrier: op });
+  const stash = gearArt({ type: 'rifle', tier: 'standard' });
+  const carried = gearArt({ type: 'rifle', tier: 'standard' }, { carrier: op });
   assert.ok(stash.startsWith('<svg') && stash.includes('aria-hidden="true"'));
   assert.ok(carried.includes(lightOf(op)), 'their own city light');
 });
@@ -168,7 +168,7 @@ test('rifle looks: a look draws from the kit, the same every time; items without
   // The data names every part the art can draw, and the art draws every part the data names.
   for (const k of ['frames', 'finishes']) assert.deepEqual(Object.keys(RIFLE_LOOKS[k]).sort(), Object.keys({ frames: RIFLE_FRAMES, finishes: RIFLE_FINISHES }[k]).sort(), k);
   const clean = (svg) => svg.replace(/(ga|rb)\d+/g, 'x');
-  const plain = { uid: 'r1', type: 'rifle', tier: 'street' };
+  const plain = { uid: 'r1', type: 'rifle', tier: 'standard' };
   assert.equal(clean(gearArt(plain)), clean(gearArt({ ...plain, look: undefined })), 'no look, the original drawing');
   for (const frame of Object.keys(RIFLE_FRAMES)) for (const finish of Object.keys(RIFLE_FINISHES)) {
     for (const [engraving, charm] of [[null, null], ...Object.keys(RIFLE_ENGRAVINGS).map((e, i) => [e, Object.keys(RIFLE_CHARMS)[i]]), [null, 'hazard'], [null, 'sticker'], [null, 'mahjong'], [null, 'mala']]) {
@@ -188,7 +188,7 @@ test('sidearm looks: every frame, finish, mod and charm draws, the same every ti
   const mods = [null, ...Object.keys(SIDEARM_LOOKS.mods)], charms = [null, ...Object.keys(SIDEARM_LOOKS.charms)];
   for (const frame of Object.keys(SIDEARM_FRAMES)) for (const finish of Object.keys(SIDEARM_FINISHES)) {
     for (let i = 0; i < charms.length; i++) {
-      const item = { uid: 'p', type: 'pistol', tier: 'street', look: { frame, finish, mod: mods[i % mods.length], charm: charms[i] } };
+      const item = { uid: 'p', type: 'pistol', tier: 'standard', look: { frame, finish, mod: mods[i % mods.length], charm: charms[i] } };
       const svg = gearArt(item);
       assert.ok(svg.startsWith('<svg') && !svg.includes('undefined') && !svg.includes('NaN'), `${JSON.stringify(item.look)} draws`);
       assert.equal(clean(svg), clean(gearArt(item)));
@@ -197,10 +197,10 @@ test('sidearm looks: every frame, finish, mod and charm draws, the same every ti
   const { GLOW_COLOURS } = await import('../src/ui/art.js');
   const { GLOWS } = await import('../src/data/gearLooks.js');
   assert.deepEqual(Object.keys(GLOWS).sort(), Object.keys(GLOW_COLOURS).sort(), 'the data names every glow the art draws');
-  const lit = (glow) => gearArt({ uid: 'p', type: 'pistol', tier: 'street', look: { frame: 'smart', finish: 'synth', glow } });
+  const lit = (glow) => gearArt({ uid: 'p', type: 'pistol', tier: 'standard', look: { frame: 'smart', finish: 'synth', glow } });
   for (const [g, hex] of Object.entries(GLOW_COLOURS)) assert.ok(lit(g).includes(hex), `${g} glows ${hex}`);
-  assert.equal(clean(lit(undefined)), clean(gearArt({ uid: 'p', type: 'pistol', tier: 'street', look: { frame: 'smart', finish: 'synth' } })), 'no glow: the carrier decides');
+  assert.equal(clean(lit(undefined)), clean(gearArt({ uid: 'p', type: 'pistol', tier: 'standard', look: { frame: 'smart', finish: 'synth' } })), 'no glow: the carrier decides');
   // Sidearms stay off faces (owner's call): only a rifle shows on a portrait.
   const op = { ...createNewGame({ seed: 3 }).crew[0], gear: {} };
-  assert.equal(clean(portrait({ ...op, gear: { weapon: { uid: 'p', type: 'pistol', tier: 'street', look: { frame: 'compact', finish: 'neon', glow: 'violet' } } } })), clean(portrait(op)));
+  assert.equal(clean(portrait({ ...op, gear: { weapon: { uid: 'p', type: 'pistol', tier: 'standard', look: { frame: 'compact', finish: 'neon', glow: 'violet' } } } })), clean(portrait(op)));
 });

@@ -2336,3 +2336,24 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
   .fs-ping, .fs-special, .fs-float { animation: none; }
   .fs-float { display: none; }
 }
+
+/* Gear tiers (2026-11-13): one colour per rarity tier (data/gear.js TIERS `colour`). Colour is never
+   the only signal: the tag always spells the tier's name. Custom, Premium and Apex are defined for
+   later; only Standard and Verified are live. */
+:root {
+  --tier-grey: #9aa3b2;
+  --tier-green: #4fd67e;
+  --tier-blue: #5aa9ff;
+  --tier-purple: #b98aff;
+  --tier-gold: #f0bd3f;
+}
+.tiertag { --tc: var(--muted); display: inline-block; width: fit-content; padding: 1px 7px 1px 6px; border: 1px solid var(--tc); color: var(--tc); background: color-mix(in srgb, var(--tc) 12%, transparent); font: 700 0.68rem/1.3 var(--display); letter-spacing: 0.08em; text-transform: uppercase; vertical-align: middle; clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 0 100%); }
+.tiertag--grey { --tc: var(--tier-grey); }
+.tiertag--green { --tc: var(--tier-green); }
+.tiertag--blue { --tc: var(--tier-blue); }
+.tiertag--purple { --tc: var(--tier-purple); }
+.tiertag--gold { --tc: var(--tier-gold); }
+/* A buy button carries its tier's colour on its edge and in its text, not as a tag. */
+.gearrow__btn.tiertag--grey, .gearrow__btn.tiertag--green, .gearrow__btn.tiertag--blue, .gearrow__btn.tiertag--purple, .gearrow__btn.tiertag--gold { border-color: var(--tc); border-left-width: 4px; clip-path: none; padding: 0 12px; font-size: 0.8rem; line-height: inherit; letter-spacing: inherit; text-transform: inherit; }
+.gearrow__head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.loadout__tile .tiertag { margin-top: 2px; }

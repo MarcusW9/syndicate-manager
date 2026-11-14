@@ -6,7 +6,7 @@ Now and next, on one screen. Read `CLAUDE.md` first; its rules are not repeated 
 
 ## State
 
-- **`main`:** up to [#156](https://github.com/MarcusW9/syndicate-manager/pull/156), **save v63**. PRs are squash-merged, one per feature, and the owner merges. No PR is open (2026-11-13).
+- **`main`:** up to [#156](https://github.com/MarcusW9/syndicate-manager/pull/156), **save v64** (gear tiers renamed Standard/Verified, drops on completed main jobs; on its branch until merged). PRs are squash-merged, one per feature, and the owner merges. No PR is open (2026-11-13).
 - **Built and in the game:** the tong (halls with compounds, posts and forecourts, heat per district, police and gang raids, heists slice A1, the other tongs C0-C5 with the Anchor's Book, retirement, loyalty, rival offers, the oath); the navigation rework (`docs/SCREENS.md`); the battle rework slices 1-3 (Engine 2, `core/fight.js`, on five jobs; raids and every other fight stay on Engine 1, `docs/BATTLES.md`); watchable combat slices 0-1 and the live battle view steps 1-3 (fights play on the job's own map); job maps in hard light.
 - **Tests:** 1020 passing (2026-11-13). `npm run test:fast` while working; `npm test` before every push (it takes several minutes).
 

@@ -37,7 +37,7 @@ import { fightStage } from '../core/runfight.js';
 
 // The one-item-per-slot gear of saves before v45, for the migrations written against it.
 const slotLoadout = () => ({ weapon: null, armour: null, tool: null, implant: null });
-const slotItem = (state, type) => makeItem(state, type, 'street');
+const slotItem = (state, type) => makeItem(state, type, 'standard');
 
 export const SLOT_COUNT = 3;
 export const BACKUP_REMINDER_DAYS = 28;
@@ -805,6 +805,21 @@ function migrate(state) {
       b.spots = district && start?.zone ? fightStage(district, am, start.zone, b.runners.length) : null;
     }
     state.version = 63;
+  }
+  if (state.version === 63) {
+    // v64: the gear rarity ladder (DESIGN.md 2026-11-13). An item's tier `street` is now `standard` and `pro` is
+    // `verified`: the stash, everything worn or carried (the fallen's and a retired runner's too), the armoury's
+    // offers, and any copy inside a job in progress. Only gear is touched: an item (or offer) is an object with a
+    // gear `type` and a `uid` or `oid`; a tong's rank `street` and a runner's tier `pro` are left alone.
+    const renamed = { street: 'standard', pro: 'verified' };
+    const walk = (v) => {
+      if (!v || typeof v !== 'object') return;
+      if (Array.isArray(v)) { v.forEach(walk); return; }
+      if (GEAR[v.type] && (typeof v.uid === 'string' || typeof v.oid === 'string') && renamed[v.tier]) v.tier = renamed[v.tier];
+      Object.values(v).forEach(walk);
+    };
+    walk(state);
+    state.version = 64;
   }
   return state;
 }

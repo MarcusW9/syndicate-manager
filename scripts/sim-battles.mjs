@@ -61,7 +61,7 @@ for (const [job, label] of JOBS) {
 console.log('\nGear on loud runs (steady): nothing, sidearm and vest, pro sidearm and pro vest.');
 for (const [job] of JOBS) {
   for (const grown of [false, true]) {
-    for (const [name, kit] of [['nothing', []], ['street', ['pistol', 'vest']], ['pro', ['pistol:pro', 'vest:pro']]]) {
+    for (const [name, kit] of [['nothing', []], ['standard', ['pistol', 'vest']], ['verified', ['pistol:verified', 'vest:verified']]]) {
       console.log(`${job} · ${grown ? 'pros' : 'rookies'} · ${name}`, JSON.stringify(run({ job, grown, approach: 'loud', kit })));
     }
   }

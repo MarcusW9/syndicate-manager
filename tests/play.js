@@ -16,7 +16,7 @@ import { buildBattle, ordersFor, hitFor } from '../src/core/battle.js';
 export function arm(state, opId, ...types) {
   const op = state.crew.find((o) => o.id === opId);
   for (const type of types) {
-    const [t, tier = 'street'] = type.split(':');
+    const [t, tier = 'standard'] = type.split(':');
     state.gearSeq = (state.gearSeq ?? 0) + 1;
     const item = { uid: `t${state.gearSeq}`, type: t, tier };
     // Where it goes on them (the carry grid, save v45): worn, in a socket, or the bag's first free place.

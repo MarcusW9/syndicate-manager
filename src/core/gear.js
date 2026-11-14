@@ -10,7 +10,7 @@
 // Gear is a bonus, never a gate, except that overwatch needs a rifle or a drone (as it always
 // needed the kit). A runner who dies takes their gear with them.
 
-import { GEAR, SLOTS, TIERS, SIDEARM_FRAMES, SIDEARM_QUIRKS, SIDEARM_PRICE_PER_POINT, BAG, SOCKETS, CELLS } from '../data/gear.js';
+import { GEAR, SLOTS, TIERS, BASE_TIER, SIDEARM_FRAMES, SIDEARM_QUIRKS, SIDEARM_PRICE_PER_POINT, BAG, SOCKETS, CELLS } from '../data/gear.js';
 import { SPECIALISATIONS } from '../data/specialisations.js';
 import { giveLook } from './looks.js';
 import { ROOM_EFFECT } from '../data/hallBuild.js';
@@ -20,9 +20,9 @@ export { GEAR, SLOTS, TIERS };
 export const SELL_SHARE = 0.5; // what the fence pays back for something from the stash
 
 /** What it costs: the type's price by tier, and for a sidearm its strengths (an item or an offer, when given). */
-export const priceOf = (type, tier = 'street', item = null) => {
+export const priceOf = (type, tier = BASE_TIER, item = null) => {
   const base = GEAR[type].price * TIERS[tier].price;
-  const s = type === 'pistol' && item ? sidearmStats({ ...item, tier: 'street' }) : null;
+  const s = type === 'pistol' && item ? sidearmStats({ ...item, tier: BASE_TIER }) : null;
   const points = s ? (s.aim - 1) + (s.damage - 3) + s.pierce / 2 : 0;
   return Math.round((base * Math.max(0.5, 1 + points * SIDEARM_PRICE_PER_POINT)) / 50) * 50;
 };
@@ -44,10 +44,10 @@ export function sidearmStats(item) {
   };
 }
 
-/** "Rifle", "Pro rifle". */
+/** "Rifle", "Verified rifle". */
 export function itemName(item) {
   const name = GEAR[item.type]?.name ?? item.type;
-  return item.tier && item.tier !== 'street' ? `${TIERS[item.tier].name} ${name.charAt(0).toLowerCase()}${name.slice(1)}` : name;
+  return item.tier && item.tier !== BASE_TIER && TIERS[item.tier] ? `${TIERS[item.tier].name} ${name.charAt(0).toLowerCase()}${name.slice(1)}` : name;
 }
 
 /** What to call it on screen: its own name if it has one ("Vermilion Heron"), else itemName. */
@@ -147,7 +147,7 @@ export function overwatchKit(op, kitId) {
   return kit;
 }
 
-/** The base kit (street, no specialist), for reads that need a number before anyone's picked. */
+/** The base kit (standard, no specialist), for reads that need a number before anyone's picked. */
 export function baseKit(kitId) {
   const g = GEAR[kitId];
   return g?.overwatch ? { id: kitId, name: g.name, ...g.overwatch, bonus: 0, notes: [], desc: g.desc } : null;
@@ -179,7 +179,7 @@ export function canChangeGear(state, op) {
 }
 
 /** A new item of this type and tier, with its look or build rolled (core/looks.js). Bumps gearSeq. */
-export const makeItem = (state, type, tier = 'street') => newItem(state, type, tier);
+export const makeItem = (state, type, tier = BASE_TIER) => newItem(state, type, tier);
 const newItem = (state, type, tier) => {
   state.gearSeq = (state.gearSeq ?? 0) + 1;
   return giveLook(state, { uid: `g${state.gearSeq}`, type, tier });
@@ -189,13 +189,13 @@ const newItem = (state, type, tier) => {
 /** Does the tong have a cyber doc (a hall room, core/hallbuild.js)? */
 export const hasCyberDoc = (state) => (state?.halls ?? []).some((h) => (h.build ?? []).some((b) => b.piece === 'cyberdoc'));
 /** What buying costs the tong: the price, and implants a quarter less with a cyber doc. */
-export const buyPrice = (state, type, tier = 'street', item = null) => {
+export const buyPrice = (state, type, tier = BASE_TIER, item = null) => {
   const p = priceOf(type, tier, item);
   return GEAR[type]?.slot === 'implant' && hasCyberDoc(state) ? Math.round((p * ROOM_EFFECT.docShare) / 50) * 50 : p;
 };
 
-export function buyGear(prev, type, tier = 'street') {
-  if (!GEAR[type] || !TIERS[tier] || prev.cash < buyPrice(prev, type, tier)) return prev;
+export function buyGear(prev, type, tier = BASE_TIER) {
+  if (!GEAR[type] || !TIERS[tier]?.live || prev.cash < buyPrice(prev, type, tier)) return prev;
   const state = structuredClone(prev);
   state.cash -= buyPrice(prev, type, tier);
   (state.stash ??= []).push(newItem(state, type, tier));
@@ -301,17 +301,17 @@ export function unequip(prev, opId, uid) {
 
 export const emptyLoadout = () => ({ armour: null, implants: [], bag: [] });
 
-/** A loadout holding these item types (street), for recruits who bring their own. */
+/** A loadout holding these item types (standard), for recruits who bring their own. */
 export function loadoutOf(state, types = []) {
   const op = { gear: emptyLoadout() };
   for (const type of types) {
     if (!GEAR[type]) continue;
     const where = placeOf(type);
-    if (where === 'armour') { if (!op.gear.armour) op.gear.armour = newItem(state, type, 'street'); continue; }
-    if (where === 'implant') { if (op.gear.implants.length < SOCKETS && !op.gear.implants.some((i) => i.type === type)) op.gear.implants.push(newItem(state, type, 'street')); continue; }
+    if (where === 'armour') { if (!op.gear.armour) op.gear.armour = newItem(state, type, BASE_TIER); continue; }
+    if (where === 'implant') { if (op.gear.implants.length < SOCKETS && !op.gear.implants.some((i) => i.type === type)) op.gear.implants.push(newItem(state, type, BASE_TIER)); continue; }
     const probe = { uid: '?', type };
     const at = firstFit(op, probe);
-    if (at) op.gear.bag.push({ item: newItem(state, type, 'street'), ...at });
+    if (at) op.gear.bag.push({ item: newItem(state, type, BASE_TIER), ...at });
   }
   return op.gear;
 }
