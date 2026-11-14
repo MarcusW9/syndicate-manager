@@ -118,3 +118,14 @@ test('a seal is two letters in the style colour; ours is solid, a free name dash
   assert.match(seal({ ours: true, name: 'Lantern Bay Crew' }, 34), /seal--ours/);
   assert.match(seal('free', 24), /seal--free/);
 });
+
+test('no two houses on the ladder share a seal', () => {
+  for (let seed = 1; seed <= 12; seed++) {
+    const s = weeks(game(seed), 30);
+    const html = renderTongs(s, null);
+    const labels = [...html.matchAll(/class="rung__seals">(.*?)<\/span><\/div>/gs)].length;
+    assert.ok(labels > 0);
+    const marks = [...html.split('class="ladder"')[1].split('<h2')[0].matchAll(/aria-label="([^"]+)">([A-Z]{1,3})<\/span>/g)].map((m) => m[2]);
+    assert.equal(new Set(marks).size, marks.length, `duplicate seal in seed ${seed}: ${marks}`);
+  }
+});

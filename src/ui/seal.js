@@ -14,6 +14,24 @@ export function letters(name) {
   return (w[0].length <= 3 ? w[0] : w[0][0] + (w[1]?.[0] ?? '')).toUpperCase().slice(0, 2);
 }
 
+const taken = new Map(); // name -> its letters, so no two houses on a screen share a seal
+
+/** Give every named house its own two letters: the default first, then other pairs from its words, in name order. Call before drawing a list of tongs. */
+export function assignSeals(names) {
+  taken.clear();
+  const used = new Set();
+  for (const name of [...new Set(names)].sort()) {
+    const w = String(name).replace(/&/g, '').split(' ').filter(Boolean);
+    const L = (x) => (x ?? '').toUpperCase();
+    const tries = [letters(name)];
+    for (let i = 1; i < w.length; i++) tries.push(L(w[0][0]) + L(w[i][0]));
+    for (let i = 1; i < (w[0]?.length ?? 0); i++) tries.push(L(w[0][0]) + L(w[0][i]));
+    for (let i = 1; i < w.length; i++) for (let j = 1; j < w[i].length; j++) tries.push(L(w[0][0]) + L(w[i][j]));
+    const pick = tries.find((t) => t.length === 2 && !used.has(t)) ?? tries[0];
+    used.add(pick); taken.set(name, pick);
+  }
+}
+
 /**
  * @param {{name?: string, style?: string, ours?: boolean}|'free'|null} t  a tong; `ours: true` for our own (name = our tong's); 'free' or null for between tongs
  * @param {number} size one of SEAL_SIZES
@@ -21,6 +39,6 @@ export function letters(name) {
 export function seal(t, size = 34) {
   const px = `width:${size}px;height:${size}px;font-size:${Math.round(size * 0.32)}px`;
   if (!t || t === 'free') return `<span class="seal seal--free" style="${px}" role="img" aria-label="Between tongs"></span>`;
-  if (t.ours) return `<span class="seal seal--ours" style="${px}" role="img" aria-label="Ours">${esc(letters(t.name))}</span>`;
-  return `<span class="seal" style="${px};--tong:${SEAL_COLOUR[t.style] ?? '#8a93a6'}" role="img" aria-label="${esc(t.name)}">${esc(letters(t.name))}</span>`;
+  if (t.ours) return `<span class="seal seal--ours" style="${px}" role="img" aria-label="Ours">${esc(taken.get(t.name) ?? letters(t.name))}</span>`;
+  return `<span class="seal" style="${px};--tong:${SEAL_COLOUR[t.style] ?? '#8a93a6'}" role="img" aria-label="${esc(t.name)}">${esc(taken.get(t.name) ?? letters(t.name))}</span>`;
 }

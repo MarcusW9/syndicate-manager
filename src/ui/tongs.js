@@ -12,7 +12,7 @@ import { money } from '../core/money.js';
 import { TONG_RANKS } from '../data/tong.js';
 import { NAMES } from '../config/names.js';
 import { tongNameOf } from '../core/tongname.js';
-import { seal, SEAL_COLOUR } from './seal.js';
+import { seal, assignSeals, SEAL_COLOUR } from './seal.js';
 import { BOOK_TEXT, SCREEN_TEXT, RATING_WORDS, FAME_LINE, STYLE_TEXT, ELDER_LINE, POTENTIAL_TEXT, SCOUT_LEVEL_TEXT, SIGN_REASON, fill, wordLine } from '../data/rivals.js';
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -290,6 +290,7 @@ function bookCard(state) {
 /** City › Tongs: the Book, the ladder, come and gone, house cards by tier, then Names on the street. `openId` opens one tong's page, or `name:<id>` a name's profile. */
 export function renderTongs(state, openId = null, back = 'City', bookFilter = 'all') {
   const view = rivalView(state);
+  assignSeals([tongNameOf(state), ...view.ladder.flatMap((r) => r.tongs.map((t) => t.name))]);
   if (openId === 'book') return bookPage(state, back, bookFilter);
   if (openId?.startsWith('name:')) return nameProfile(state, openId.slice(5), back);
   if (openId) { const page = tongPage(state, view, openId, back); if (page) return page; }
