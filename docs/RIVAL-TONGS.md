@@ -26,7 +26,7 @@ Spec and history live elsewhere: `drafts/PROPOSAL-phase-3.md` part C (C.0 to C.1
 | C5 | The Anchor's Book: once a month the Brass Anchor chalks letter grades S to D for up to 25 runners (rivals, free names and ours), from public fame, form and age plus a lasting bias, never the hidden rating; Ones to watch; moves; Joss writes once. Flavour only | 2026-11-09 | v60 |
 | C4 | Rivals feel alive: stories in The Word (decline, founding, rise), names we let go stay alive (`formerOf`, "Gone elsewhere" on Crew › Wall), the Monday cap, a client remark that follows the tong's real state, a stable `runnerId` | 2026-11-09 | v59 |
 
-Related and built: B, the Legend defining job (rivals' fame words feed off the same fame tiers); D1 retirement and the Hall; D2 loyalty (`op.loyalty`); D4 sworn runners (rivals approach a sworn runner a tenth as often). Current save version: **60** (`SAVE_VERSION` in `core/state.js`).
+Related and built: B, the Legend defining job (rivals' fame words feed off the same fame tiers); D1 retirement and the Hall; D2 loyalty (`op.loyalty`); D4 sworn runners (rivals approach a sworn runner a tenth as often). The other tongs' own migrations ended at **v60** (C5); the game's current version is `SAVE_VERSION` in `core/state.js` (63 on 2026-11-13), and the tongs' next change (E1) bumps from whatever it is then.
 
 ## How it behaves
 
