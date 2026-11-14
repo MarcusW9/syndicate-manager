@@ -36,13 +36,16 @@ export const SLOTS = {
 // live never drops; it falls to the next live one below). sold: the shop and the weekly shelf may
 // make it (only Standard and Verified: Custom and Premium come from jobs alone). perks: how many
 // different perks an item of the tier rolls (data/gearPerks.js). Custom and Premium take +1 step
-// like Verified and add their perks. Apex (named unique pieces) is a later slice.
+// like Verified and add their perks. Apex (2026-11-14) takes +1 step too but rolls no ordinary perks: it
+// is one of the hand-written named pieces in data/apexGear.js, each with a fixed unique perk, each found
+// at most once a save (core/loot.js picks which); it has no pool in LOOT, and once every piece has been
+// found an Apex roll falls down to Premium as it did before it was live.
 export const TIERS = {
   standard: { name: 'Standard', step: 0, price: 1, colour: 'grey', drop: null, live: true, sold: true, perks: 0, desc: 'Off the shelf.' },
   verified: { name: 'Verified', step: 1, price: 2.5, colour: 'green', drop: 28, live: true, sold: true, perks: 0, desc: 'Checked and test-fired by a specialist.' },
   custom: { name: 'Custom', step: 1, price: 3.5, colour: 'blue', drop: 10, live: true, sold: false, perks: 1, desc: 'Street-modified, with one extra.' },
   premium: { name: 'Premium', step: 1, price: 5, colour: 'purple', drop: 4, live: true, sold: false, perks: 2, desc: 'Clean corporate hardware, with two extras.' },
-  apex: { name: 'Apex', step: 1, price: 8, colour: 'gold', drop: 1, live: false, sold: false, perks: 2, desc: 'A named piece with a history.' },
+  apex: { name: 'Apex', step: 1, price: 8, colour: 'gold', drop: 1, live: true, sold: false, perks: 0, desc: 'A named piece with a history.' },
 };
 /** The lowest tier: what anything is when it has no tier. */
 export const BASE_TIER = 'standard';

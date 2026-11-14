@@ -4,7 +4,7 @@
 //
 // ui: helpers from app.js { esc, money, face, statusChip }.
 
-import { GEAR, SLOTS, TIERS, PERKS, perksOf, carried, itemName, itemTitle, buyPrice, sellPrice, canChangeGear, kitsFor, sidearmStats, placeOf, cellsOf, fitsAt, bagUsed } from '../core/gear.js';
+import { GEAR, SLOTS, TIERS, APEX_GEAR, perkById, perksOf, apexSwapOut, carried, itemName, itemTitle, buyPrice, sellPrice, canChangeGear, kitsFor, sidearmStats, placeOf, cellsOf, fitsAt, bagUsed } from '../core/gear.js';
 import { BAG, SOCKETS, BASE_TIER } from '../data/gear.js';
 import { HAS_LOOKS, lookText } from '../core/looks.js';
 import { gearGlyph } from './icons.js';
@@ -41,16 +41,20 @@ export const tierFrame = (item) => `tierframe tierframe--${(TIERS[item?.tier] ??
 const tagIfBare = (item, carrier = null) => (gearArt(item, { carrier, width: 96 }) ? '' : tierTag(item));
 
 /**
- * An item's perks (Custom 1, Premium 2; data/gearPerks.js) as a list under its row: each perk's name is
- * always shown, and tapping it opens its line (a native <details>, so no hover, and the tap target is
- * the whole 44px row). Takes an item, or a list of perk ids (the report's loot line). Empty if none.
+ * An item's perks (Custom 1, Premium 2, or a named Apex piece's one unique perk; data/gearPerks.js, data/apexGear.js) as a
+ * list under its row: each perk's name is always shown, and tapping it opens its line (a native <details>, so no hover,
+ * and the tap target is the whole 44px row). Takes an item, or a list of perk ids (the report's loot line). Empty if none.
  */
 export function perkList(source, tier = source?.tier) {
-  const ids = Array.isArray(source) ? source : source?.perks ?? [];
-  const perks = ids.filter((id) => PERKS[id]).map((id) => ({ id, ...PERKS[id] }));
+  const perks = (Array.isArray(source) ? source.map(perkById) : perksOf(source)).filter(Boolean);
   if (!perks.length) return '';
   const colour = TIERS[tier]?.colour ?? 'grey';
   return `<ul class="perks perks--${colour}" aria-label="Perks">${perks.map((p) => `<li><details class="perk"><summary><span class="perk__name">${p.name}</span></summary><p class="perk__desc small">${p.desc}</p></details></li>`).join('')}</ul>`;
+}
+/** A named Apex piece's history, as a line of plain text under its name (an item, or a piece's id). Empty for anything else. */
+export function apexHistory(source) {
+  const piece = APEX_GEAR[typeof source === 'string' ? source : source?.apex];
+  return piece ? `<span class="apex__history small">${piece.history}</span>` : '';
 }
 /** Just the perk names, for a tile that is itself a button (nothing to open inside it). */
 const perkNames = (item) => perksOf(item).map((p) => p.name).join(' · ');
@@ -71,8 +75,9 @@ function itemRow(ui, item, { action, label, sub = '', disabled = false, id = ite
       ${thumb(item, carrier)}
       <span class="gearrow__main"><span class="gearrow__head"><strong>${esc(itemTitle(item))}</strong>${tagIfBare(item, carrier)}</span>
         <span class="gearrow__eff">${esc(itemEffect(item))}</span>
+        ${apexHistory(item)}
         ${lookText(item) ? `<span class="gearrow__sub muted small">${item.name ? `${esc(itemName(item))} · ` : ''}${esc(lookText(item))}</span>` : ''}
-        ${sub ? `<span class="gearrow__sub muted small">${sub}</span>` : ''}</span>
+        ${sub ? `<span class="gearrow__sub ${item.apex ? 'apex__swap' : 'muted'} small">${sub}</span>` : ''}</span>
       ${action ? `<button class="btn gearrow__btn" data-action="${action}" data-id="${esc(id)}" ${item.tier ? `data-tier="${esc(item.tier)}"` : ''} ${disabled ? 'disabled' : ''}>${esc(label)}</button>` : ''}
       ${perkList(item)}
     </li>`;
@@ -153,7 +158,7 @@ function wornTile(ui, op, { id, label, item, can }) {
       <strong class="loadout__item">${item ? esc(itemTitle(item)) : 'Empty'}</strong>
       ${item && !art ? tierTag(item) : ''}
       ${item ? `<span class="loadout__eff">${esc(itemEffect(item))}</span>` : ''}
-      ${item && item.perks?.length ? `<span class="loadout__perks perks--${TIERS[item.tier]?.colour ?? 'blue'}">${esc(perkNames(item))}</span>` : ''}
+      ${item && perksOf(item).length ? `<span class="loadout__perks perks--${TIERS[item.tier]?.colour ?? 'blue'}">${esc(perkNames(item))}</span>` : ''}
     </button></li>`;
 }
 
@@ -188,7 +193,7 @@ export function renderLoadout(ui, state, op, { picked = null } = {}) {
       <div class="bag" style="--cols:${BAG.cols};--rows:${BAG.rows}">${cells.join('')}${items}</div>
       ${held ? `<div class="bag__bar"><span><strong>${esc(itemTitle(held))}</strong> · tap a free space to move it</span>
         <button class="btn btn--ghost" data-action="bag-off">Take it off</button><button class="btn btn--ghost" data-action="bag-pick" data-id="${esc(held.uid)}">Done</button></div>` : ''}
-      ${bag.length ? `<ul class="list list--plain bag__list">${bag.map((b) => `<li><strong>${esc(itemTitle(b.item))}</strong> ${tierTag(b.item)} <span class="loadout__eff">${esc(itemEffect(b.item))}</span>${perkList(b.item)}</li>`).join('')}</ul>`
+      ${bag.length ? `<ul class="list list--plain bag__list">${bag.map((b) => `<li><strong>${esc(itemTitle(b.item))}</strong> ${tierTag(b.item)} <span class="loadout__eff">${esc(itemEffect(b.item))}</span>${apexHistory(b.item) ? `<br>${apexHistory(b.item)}` : ''}${perkList(b.item)}</li>`).join('')}</ul>`
         : '<p class="muted small">Nothing carried. Tap a space to pack a weapon or a tool.</p>'}
       ${can.ok ? '' : `<p class="muted small">Their gear can't change while they're ${esc(can.reason)}.</p>`}
       ${kitsFor(op).length ? '' : '<p class="muted small">No rifle or drone: they can\'t take overwatch.</p>'}`;
@@ -202,6 +207,25 @@ export function gearPlace(id) {
   return { kind: 'armour', title: 'Armour' };
 }
 
+/**
+ * itemRow options for putting this item on this runner. A second Apex piece is not refused: its button reads "Swap in"
+ * and the row says which piece goes back to the stash, so a new find can always be tried (the sheet's top notice,
+ * `apexConflict`, says why).
+ */
+function apexBlock(esc, op, item, replacing, label, disabled = false) {
+  const out = apexSwapOut(op, item, replacing);
+  return out
+    ? { label: label === 'Pack' || label === 'Carry' ? 'Swap in' : `Swap in · ${label.toLowerCase()}`, disabled, sub: `Swaps out ${esc(itemTitle(out))}, back to the stash.` }
+    : { label, disabled };
+}
+
+/** The notice above a sheet that lists a second Apex piece (owner's wording, 2026-11-14): what is in the way, and what swapping does. */
+const apexConflict = (esc, out) => `<div class="apex__conflict" role="note">
+        <strong class="apex__conflict-head">Apex equipment conflict</strong>
+        <p>Already carrying ${esc(itemTitle(out))}. A runner can carry only one Apex piece. Swapping puts it back in the stash.</p>
+        <p class="apex__flavour">Street wisdom says a runner carrying two pieces of legend-grade iron is just walking target practice for the fixers who lost them.</p>
+      </div>`;
+
 /** The sheet for one place: what's in the stash that goes there, what others carry, or take it off. */
 export function renderGearSheet(ui, state, op, slot) {
   const { esc } = ui;
@@ -212,7 +236,10 @@ export function renderGearSheet(ui, state, op, slot) {
   const fits = (item) => {
     if (placeOf(item.type) !== place.kind) return false;
     if (place.kind === 'implant') return item.type !== otherImplant?.type;
-    if (place.kind === 'bag') return fitsAt(op, item, place.x, place.y);
+    if (place.kind === 'bag') {
+      const out = apexSwapOut(op, item, current); // a swapped-out piece frees the cells it holds
+      return fitsAt(out ? { ...op, gear: { ...g, bag: (g.bag ?? []).filter((b) => b.item.uid !== out.uid) } } : op, item, place.x, place.y);
+    }
     return true;
   };
   const stash = (state.stash ?? []).filter(fits);
@@ -220,6 +247,7 @@ export function renderGearSheet(ui, state, op, slot) {
   const why = place.kind === 'bag' ? 'Weapons and tools that fit here: a rifle, sidearm, drone or deck takes 3 spaces, a trauma kit or ghost kit 1.'
     : place.kind === 'implant' ? `${otherImplant ? `Not a second ${esc(itemName(otherImplant).toLowerCase())}: the same implant twice does nothing twice. ` : ''}Each implant keeps neural load up; two keep it higher.`
     : current ? `Wearing: ${esc(itemTitle(current))}. Whatever you pick swaps with it.` : 'Nothing worn.';
+  const swapOut = [...stash, ...others.map((x) => x.item)].map((i) => apexSwapOut(op, i, current)).find(Boolean) ?? null;
   return `
     <div class="scrim" data-action="close-gear"></div>
     <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(place.title)} for ${esc(op.handle)}">
@@ -229,9 +257,10 @@ export function renderGearSheet(ui, state, op, slot) {
         ${current ? perkList(current) : ''}</div>
         <button class="btn btn--ghost sheet__x" data-action="close-gear" aria-label="Close">✕</button>
       </div>
-      <ul class="list list--plain gearlist">${stash.length ? stash.map((item) => itemRow(ui, item, { action: 'equip', label: place.kind === 'bag' ? 'Pack' : 'Carry' })).join('') : `<li class="muted small">Nothing in the stash ${place.kind === 'bag' ? 'fits here' : 'for this'}. Buy it in the armoury.</li>`}</ul>
+      ${swapOut ? apexConflict(esc, swapOut) : ''}
+      <ul class="list list--plain gearlist">${stash.length ? stash.map((item) => itemRow(ui, item, { action: 'equip', ...apexBlock(esc, op, item, current, place.kind === 'bag' ? 'Pack' : 'Carry') })).join('') : `<li class="muted small">Nothing in the stash ${place.kind === 'bag' ? 'fits here' : 'for this'}. Buy it in the armoury.</li>`}</ul>
       ${others.length ? `<h3 class="sheet__group">Carried by others <span>takes it off them</span></h3>
-      <ul class="list list--plain gearlist">${others.map(({ item, o }) => itemRow(ui, item, { action: 'equip', label: `From ${o.handle}`, disabled: !canChangeGear(state, o).ok, carrier: o })).join('')}</ul>` : ''}
+      <ul class="list list--plain gearlist">${others.map(({ item, o }) => itemRow(ui, item, { action: 'equip', carrier: o, ...apexBlock(esc, op, item, current, `From ${o.handle}`, !canChangeGear(state, o).ok) })).join('')}</ul>` : ''}
       ${current ? `<button class="btn btn--ghost btn--block" data-action="unequip" data-id="${esc(current.uid)}">Put it back in the stash</button>` : ''}
       <button class="btn btn--block" data-action="open-armoury">Go to the armoury</button>
     </div>`;

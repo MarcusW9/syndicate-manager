@@ -4,15 +4,18 @@
 // One roll for whether anything drops (LOOT.chance); then the TIER first (each tier's `drop` is a
 // percentage, Standard takes the rest), then an item type from that tier's weighted pool (LOOT.pool).
 // A tier that isn't live yet falls down to the next live tier below it, as core/tiered.js does for
-// its tiers. Tier-first is the point: adding item types to a pool never changes how often a tier
+// its tiers. Apex (2026-11-14) is live while a named piece is left to find: it picks one of them, uniformly,
+// from those the save has not found (state.apexFound; data/apexGear.js), and once all are found it falls
+// to Premium as it did before. Tier-first is the point: adding item types to a pool never changes how often a tier
 // drops. A miss is not nothing: the crew fences scrap for LOOT.scrap cash.
 //
 // hashRng only (rng.js), keyed by the save's seed, the job and the day: no roll in the shared stream
 // moves, so every seeded test and sim keeps its sequence.
 
 import { TIERS, LOOT } from '../data/gear.js';
+import { APEX_GEAR } from '../data/apexGear.js';
 import { hashRng } from './rng.js';
-import { makeItem, itemName } from './gear.js';
+import { makeItem, makeApex, itemName } from './gear.js';
 import { money } from './money.js';
 
 const LADDER = Object.keys(TIERS); // lowest to highest
@@ -28,11 +31,14 @@ export function tierAt(r) {
   return LADDER[0];
 }
 
-/** The nearest live tier at or below this one that has something in its pool. */
-export function liveTierFor(tier) {
+/**
+ * The nearest live tier at or below this one that has something in its pool. Apex has no pool: it counts
+ * only when `apexLeft` says a piece is still to be found (default: none, so it falls to Premium).
+ */
+export function liveTierFor(tier, apexLeft = false) {
   for (let i = LADDER.indexOf(tier); i >= 0; i--) {
     const t = LADDER[i];
-    if (TIERS[t].live && Object.keys(LOOT.pool[t] ?? {}).length) return t;
+    if (t === 'apex' ? TIERS.apex.live && apexLeft : TIERS[t].live && Object.keys(LOOT.pool[t] ?? {}).length) return t;
   }
   return LADDER[0];
 }
@@ -46,13 +52,20 @@ export function typeAt(tier, r) {
 }
 
 /**
- * The drop for a job: { tier, type } or null (scrap). rng: any () => [0, 1) generator; it is read
- * in a fixed order (does it drop, which tier, which type).
+ * The drop for a job: { tier, type } (an Apex drop also names its piece: { tier: 'apex', type, apex }) or null
+ * (scrap). rng: any () => [0, 1) generator; it is read in a fixed order (does it drop, which tier, which
+ * type or piece). found: ids of the Apex pieces already found in this save; none left means Apex falls to Premium.
  */
-export function rollDrop(rng) {
+export function rollDrop(rng, found = []) {
   if (rng() >= LOOT.chance) return null;
-  const tier = liveTierFor(tierAt(rng()));
-  return { tier, type: typeAt(tier, rng()) };
+  const left = Object.keys(APEX_GEAR).filter((id) => !found.includes(id));
+  const tier = liveTierFor(tierAt(rng()), left.length > 0);
+  const r = rng();
+  if (tier === 'apex') {
+    const apex = left[Math.min(left.length - 1, Math.floor(r * left.length))];
+    return { tier, type: APEX_GEAR[apex].type, apex };
+  }
+  return { tier, type: typeAt(tier, r) };
 }
 
 /**
@@ -61,13 +74,15 @@ export function rollDrop(rng) {
  * Premium item's perks come from core/gear.js makeItem, on the item's own hash).
  */
 export function lootFor(state, jobKey) {
-  const drop = rollDrop(hashRng(state.seed, 'loot', jobKey, state.day));
+  const drop = rollDrop(hashRng(state.seed, 'loot', jobKey, state.day), state.apexFound ?? []);
   if (!drop) {
     state.cash += LOOT.scrap;
     return { tone: 'plain', text: `No gear this time. The crew fenced scrap for ${money(LOOT.scrap)}.` };
   }
-  const item = makeItem(state, drop.type, drop.tier);
+  const item = drop.apex ? makeApex(state, drop.apex) : makeItem(state, drop.type, drop.tier);
   (state.stash ??= []).push(item);
   const what = item.name ? `${item.name} (${itemName({ ...item, tier: null }).toLowerCase()})` : itemName({ ...item, tier: null });
+  // An Apex piece's line names the piece (the report shows its history and its unique perk from data/apexGear.js).
+  if (item.apex) return { tone: 'good', text: `Gear from the job: ${what}. A named piece.`, tier: item.tier, apex: item.apex, perks: [`apex:${item.apex}`] };
   return { tone: 'good', text: `Gear from the job: ${what}.`, tier: item.tier, ...(item.perks?.length ? { perks: [...item.perks] } : {}) };
 }
