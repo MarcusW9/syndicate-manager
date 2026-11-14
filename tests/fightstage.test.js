@@ -16,7 +16,9 @@ const { addOffer, templateById } = await import('../src/core/jobs.js');
 const { autoStep } = await import('../src/core/autorun.js');
 const { runFight, fightAnswer } = await import('../src/core/runfight.js');
 const { feedItems } = await import('../src/core/feed.js');
-const { stageScript, PACES } = await import('../src/ui/fightstage.js');
+const { stageScript, PACES, forceSpecial } = await import('../src/ui/fightstage.js');
+const { SPECIAL_MOVES, ENEMY_LOOKS } = await import('../src/data/fightLooks.js');
+const { ENEMIES } = await import('../src/data/fights.js');
 const { renderFightRound, fightPace } = await import('../src/ui/fightscreen.js');
 const { FIGHT } = await import('../src/data/fights.js');
 
@@ -145,29 +147,69 @@ test('the spotlight budget holds across a fight', () => {
   }
 });
 
-test('a forced special move: its attacks are drawn in the rules\' order, each from where the last landed, at the rules\' targets only', () => {
-  // The rules side of the special move is not built (owner, 2026-11-12): force the flag on a recorded round's attacks.
-  const f = fights.find((x) => x.cues.some((c) => (c.lines ?? []).filter((l) => l.rule === 'attack' && l.key !== 'attackGone').length >= 2));
+test('a forced special move, in each of its three looks: the rules\' targets in the rules\' order, hits and falls as the dice had them, the same final picture', () => {
+  // The rules side of the special move is not built (owner, 2026-11-12): force the flag on a recorded round's attacks
+  // (forceSpecial, the preview's forced flag). The look is the star's (data/fightLooks.js), never the rules'.
+  const two = (c) => (c.lines ?? []).filter((l) => l.rule === 'attack' && l.key !== 'attackGone' && l.guard != null).length >= 2;
+  const f = fights.find((x) => x.cues.some(two));
   assert.ok(f, 'a round with two attacks');
-  const i = f.cues.findIndex((c) => (c.lines ?? []).filter((l) => l.rule === 'attack' && l.key !== 'attackGone').length >= 2);
-  const cue = structuredClone(f.cues[i]);
-  const actor = cue.lines.find((l) => l.rule === 'attack' && l.key !== 'attackGone').actor;
-  const burst = cue.lines.filter((l) => l.rule === 'attack' && l.key !== 'attackGone');
-  burst.forEach((l) => { l.burst = true; l.actor = actor; });
+  const i = f.cues.findIndex(two);
   const prev = play(f.cues.slice(0, i), 'watch').at(-1).final;
   const drawn = Object.fromEntries(Object.entries(prev).map(([k, v]) => [k, { at: v.at, stance: v.stance }]));
-  for (const pace of ['watch', 'fast', 'resolve']) {
-    const sc = stageScript(drawn, cue, { pace });
-    const special = sc.steps.findIndex((s) => s.do === 'special');
-    const fires = sc.steps.filter((s) => s.burst);
-    assert.ok(special >= 0 && sc.steps.indexOf(fires[0]) > special, 'the special move is announced first');
-    assert.deepEqual(fires.map((s) => s.to), burst.map((l) => `e:${l.guard}`), 'the rules\' targets, in the rules\' order');
-    assert.equal(fires[0].from, actor, 'the first attack starts from the star');
-    for (let k = 1; k < fires.length; k++) assert.equal(fires[k].from, fires[k - 1].to, 'each next attack starts where the last landed');
-    assert.deepEqual(fires.map((s) => [s.hit, s.fell]), burst.map((l) => [!!l.success, !!l.dropped]), 'hits and falls as the dice had them');
-    // The same final picture as the round without the flag: the choreography decides nothing.
-    assert.deepEqual(sc.final, stageScript(drawn, f.cues[i], { pace }).final);
+  for (const look of ['ricochet', 'slash', 'ping']) {
+    const cue = forceSpecial(f.cues[i], look);
+    const burst = cue.lines.filter((l) => l.burst);
+    const star = burst[0].actor;
+    const lengths = {};
+    for (const pace of ['watch', 'fast', 'resolve']) {
+      for (const reduced of [false, true]) {
+        const sc = stageScript(drawn, cue, { pace, reduced });
+        const at = (s) => sc.steps.indexOf(s);
+        const specials = sc.steps.filter((s) => s.do === 'special');
+        assert.equal(specials.length, 1, `${look}: announced once`);
+        assert.equal(specials[0].look, look);
+        assert.equal(specials[0].key, SPECIAL_MOVES[look].title);
+        assert.equal(specials[0].slots.who, cue.runners.find((r) => r.id === star).handle, 'the title names the star');
+        const fires = sc.steps.filter((s) => s.burst);
+        assert.ok(at(fires[0]) > at(specials[0]), 'the move is announced before its first attack');
+        assert.deepEqual(fires.map((s) => s.to), burst.map((l) => `e:${l.guard}`), `${look}: the rules' targets, in the rules' order`);
+        assert.ok(fires.every((s) => s.look === look));
+        if (look === 'ping') assert.ok(fires.every((s) => s.from === star), 'ping: every bolt from the star');
+        else {
+          assert.equal(fires[0].from, star, 'the first attack starts from the star');
+          for (let k = 1; k < fires.length; k++) assert.equal(fires[k].from, fires[k - 1].to, `${look}: each from where the last landed`);
+        }
+        assert.deepEqual(fires.map((s) => [s.hit, s.fell]), burst.map((l) => [!!l.success, !!l.dropped]), 'hits and falls as the dice had them');
+        const waves = sc.steps.filter((s) => s.do === 'wave');
+        assert.equal(waves.length, look === 'ping' ? 1 : 0, 'only ping has a shockwave');
+        if (waves.length) assert.ok(at(waves[0]) < at(fires[0]), 'the shockwave comes before the bolts');
+        const ends = sc.steps.filter((s) => s.do === 'specialEnd');
+        assert.equal(ends.length, 1, 'the bars go once');
+        assert.ok(at(ends[0]) > at(fires.at(-1)), 'after the last attack');
+        assert.deepEqual(sc.steps[at(ends[0]) + 1], { t: ends[0].t, do: 'camera', focus: null, dur: 0 }, 'and the camera pulls back');
+        if (pace === 'resolve' || reduced) assert.ok(sc.steps.every((s) => s.dur === 0), `${pace}${reduced ? ', reduced' : ''}: it cuts`);
+        if (pace === 'resolve') assert.ok(sc.steps.every((s) => s.t === 0), 'Resolve plays nothing out');
+        // The choreography decides nothing: the same final picture as the round without the flag, at every pace.
+        assert.deepEqual(sc.final, stageScript(drawn, f.cues[i], { pace }).final);
+        if (!reduced) lengths[pace] = ends[0].t - specials[0].t;
+        // The fight's clock (the commentary's times) counts Watch time at every pace.
+        assert.equal(sc.clock, stageScript(drawn, cue, { pace: 'watch' }).clock);
+      }
+    }
+    assert.ok(lengths.fast < lengths.watch * 0.6, `${look}: Fast plays it shorter (${lengths.fast} against ${lengths.watch} ms)`);
+    assert.equal(lengths.resolve, 0);
   }
+});
+
+test('swarm knots are data, 4 to 6 bodies, only for a kind the owner chose (the planned swarm drone), and today\'s kinds stay one token each', () => {
+  for (const kind of Object.keys(ENEMIES)) assert.ok(!ENEMY_LOOKS[kind], `${kind} is one token per enemy (owner, 2026-11-14)`);
+  for (const [kind, look] of Object.entries(ENEMY_LOOKS)) {
+    assert.ok(ENEMIES[kind] || look.planned, `${kind} is an enemy kind, or marked as planned`);
+    assert.ok(look.bodies[0] >= 4 && look.bodies[1] <= 6 && look.bodies[0] <= look.bodies[1], `${kind}: 4 to 6 bodies`);
+  }
+  // A knot is one rules unit: the stage keys every enemy token by the rules' enemy, never one per body.
+  const src = readFileSync(new URL('../src/ui/fightstage.js', import.meta.url), 'utf8');
+  assert.match(src, /function knotToken\(id, u, seed, look\)[\s\S]*?foes\.set\(id, g\)/, 'one token (and one entry) per rules enemy');
 });
 
 test('the stage draws no unseeded randomness', () => {

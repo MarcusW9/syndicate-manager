@@ -41,9 +41,11 @@ export const SPECIAL_FAST_CUT = 0.6; // Fast plays a special move at this share 
 // Swarms (5.4): an enemy kind drawn as a knot of small bodies instead of one portrait token. A knot is ONE rules
 // enemy: it is shot at as one, carries that enemy's pips and number, and falls all together when that enemy goes
 // down. bodies: [fewest, most], picked by hash of the fight's seed and the enemy's number. rotor: drawn as small
-// drones. A kind with no entry is a single portrait token (a brute). PENDING the owner (2026-11-14): these two kinds are
-// the recommendation only, until the owner has seen knots against one token each on the real map. Nothing reads it yet.
+// drones. A kind with no entry is a single portrait token.
+// Owner, 2026-11-14 (after seeing knots against one token each on the real map): knots are for one new enemy only, a
+// swarm of drones; hired guns and drones stay one token each, and an actual crowd of people or drones is shown as many
+// tokens (many rules enemies), not as knots. The swarm-drone kind is not in the rules yet (data/fights.js ENEMIES), so
+// `planned` marks it: nothing draws a knot until that kind exists. The preview's --knots flag can still show one.
 export const ENEMY_LOOKS = {
-  hired: { bodies: [4, 6] },
-  drone: { bodies: [4, 5], rotor: true },
+  swarmDrone: { bodies: [4, 6], rotor: true, planned: true },
 };

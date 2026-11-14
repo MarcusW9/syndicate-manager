@@ -2348,9 +2348,33 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .watch:not(.is-fighting) .watch__strip, .watch:not(.is-fighting) .watch__log { display: none; }
 /* The map is the main view of a staged fight (the proposal): taller on phones while the round screen is open. */
 @media (max-width: 699px) { .watch.is-fighting.is-calling .siteplan.is-staged { height: min(50svh, 440px); } }
+/* Step 4 (2026-11-14). Swarms: a weak enemy kind drawn as a knot of small bodies (data/fightLooks.js ENEMY_LOOKS), one rules unit:
+   a faint red zone and ring hold it together, its number and pips are the unit's, and it falls as one. */
+.sp-token .fs-knot__zone { fill: #3a1018; opacity: 0.5; stroke: none; }
+.siteplan.is-fight .sp-token .fs-knot__ring { stroke-width: 0.8; stroke-dasharray: 2.4 1.6; opacity: 0.8; }
+.sp-token .fs-knot__torso { fill: #c2424f; stroke: #0b0d11; stroke-width: 0.4; } .sp-token .fs-knot__head { fill: #e3c2a6; stroke: #0b0d11; stroke-width: 0.4; }
+.sp-token .fs-knot__drone { fill: #2a2f3a; stroke: var(--accent); stroke-width: 0.5; } .fs-knot__rotor { stroke: #8a93a6; stroke-width: 0.45; }
+.fs-knot.is-struck .fs-knot__zone { animation: fs-struck-tint 0.32s ease-out; }
+.sp-token.fs-knot.fs-down .fs-knot__bodies, .sp-token.fs-knot.fs-dead .fs-knot__bodies { filter: grayscale(1) brightness(0.55); opacity: 0.75; }
+.sp-token.fs-knot.fs-down .fs-knot__ring { stroke-dasharray: none; opacity: 0.4; }
+/* A special move (data/fightLooks.js SPECIAL_MOVES): letterbox bars over the map, the title in the caption slot inside the top bar. */
+.watch__map::before, .watch__map::after { content: ""; position: absolute; left: 0; right: 0; height: 0; background: #000; z-index: 2; pointer-events: none; transition: height 0.35s ease-out; }
+.watch__map::before { top: 0; } .watch__map::after { bottom: 0; }
+.watch__map.fs-letterbox::before, .watch__map.fs-letterbox::after { height: 40px; }
+.watch__map.fs-letterbox .watch__caption[data-tier="special"] { top: 5px; bottom: auto; z-index: 3; width: max-content; }
+.fs-round { fill: #fff; }
+.fs-spark { fill: #fff3b0; }
+.fs-ghost { fill: rgba(61, 232, 216, 0.18); stroke: var(--accent-2); stroke-width: 1.4; opacity: 0.75; animation: fs-ghost 0.36s ease-out forwards; }
+@keyframes fs-ghost { to { opacity: 0; } }
+.fs-slash { fill: none; stroke: #fff; stroke-width: 1.6; stroke-linecap: round; animation: fs-ghost 0.42s ease-in forwards; }
+.fs-bolt { stroke: #b8fff6; stroke-width: 1.2; stroke-linecap: round; }
+.fs-wave { fill: none; stroke: var(--accent-2); stroke-width: 1.2; transform-box: fill-box; transform-origin: center; animation: fs-wave 0.65s ease-out forwards; }
+@keyframes fs-wave { from { transform: scale(0.08); opacity: 1; } to { transform: scale(1); opacity: 0; } }
+.watch__strip[data-tier="special"], .watch__log li[data-tier="special"] { border-left-color: var(--warn); color: var(--warn); }
 @media (prefers-reduced-motion: reduce) {
-  .fs-ping, .fs-special, .fs-float { animation: none; }
-  .fs-float { display: none; }
+  .fs-ping, .fs-special, .fs-float, .fs-ghost, .fs-slash, .fs-wave { animation: none; }
+  .fs-float, .fs-ghost, .fs-wave { display: none; }
+  .watch__map::before, .watch__map::after { transition: none; }
 }
 
 /* Stat bands (2026-11-13): the number on a stat tile is coloured by its value, the tile gets a faint wash, and sharp diamonds in the corner
