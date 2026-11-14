@@ -2293,6 +2293,13 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .siteplan.is-fight .sp-token.fs-foe > text.fs-foe__n { display: inline; }
 .fs-foe__n { fill: var(--accent) !important; font-size: 5px !important; font-family: var(--display); paint-order: stroke; stroke: #0b0d11; stroke-width: 1.4px; }
 .siteplan.is-staged .sp-token:not(.fs-foe) .sp-face__ring { stroke: var(--accent-2); stroke-width: 1.1; }
+/* A staged foe that is hit (fightstage.js struck): the token shakes (the individual `translate` property composes with its transform) and its face flashes white. The old .sp-enemy rules above don't match these tokens. */
+.fs-foe.is-struck .fs-foe__tint { animation: fs-struck-tint 0.32s ease-out; }
+.fs-foe.is-struck .fs-foe__ring { animation: sp-struck-flash 0.32s ease-out; }
+@keyframes fs-struck-tint { 0%, 45% { fill: #fff; opacity: 0.85; } }
+@media (prefers-reduced-motion: no-preference) {
+  .fs-foe.is-struck { animation: sp-struck-shake 0.32s linear; }
+}
 .fs-pips rect { fill: #2a303b; } .fs-pips rect.is-on { fill: var(--accent-2); } .fs-foe .fs-pips rect.is-on { fill: var(--accent); }
 .sp-token.fs-hunker > *:not(.fs-pips) { transform: scale(1.05) translateY(1px); }
 .siteplan.is-fight .sp-token.fs-hunker .sp-face__ring { stroke-dasharray: 2 1.2; }
@@ -2337,6 +2344,21 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
   .fs-ping, .fs-special, .fs-float { animation: none; }
   .fs-float { display: none; }
 }
+
+/* Stat bands (2026-11-13): the number on a stat tile is coloured by its value, the tile gets a faint wash, and sharp diamonds in the corner
+   say the band without colour: one for good (10+), two for great (16+) and elite (18+, which also glows). Nothing changes the tile's height. */
+.stats .stat--good, .stats .stat--great, .stats .stat--elite { position: relative; }
+.stats .stat--good::after, .stats .stat--great::after, .stats .stat--elite::after {
+  content: ""; position: absolute; right: 9px; top: 9px; width: 6px; height: 6px; background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 6'%3E%3Cpath d='M3 0L6 3L3 6L0 3Z'/%3E%3C/svg%3E") 0 0 / 9px 6px repeat-x;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 6'%3E%3Cpath d='M3 0L6 3L3 6L0 3Z'/%3E%3C/svg%3E") 0 0 / 9px 6px repeat-x;
+}
+.stats .stat--great::after, .stats .stat--elite::after { width: 15px; } /* 6 + 3 gap + 6, the mask tiles at 9px */
+.stats .stat--good { color: #5fe0a5; background: rgba(95, 224, 165, 0.07); }
+.stats .stat--great { color: #f5c542; background: rgba(245, 197, 66, 0.08); }
+.stats .stat--elite { color: #ffd45e; background: rgba(245, 197, 66, 0.08); }
+.stats .stat--good dd, .stats .stat--great dd, .stats .stat--elite dd { color: inherit; }
+.stats .stat--elite dd { text-shadow: 0 0 10px rgba(255, 200, 70, 0.55); }
 
 /* The tong's name (2026-11-13): the field on the founder pick, and the name with its pencil on the Tong screen. */
 .tongname { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0; }

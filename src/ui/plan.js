@@ -20,7 +20,7 @@ import { money } from '../core/money.js';
 import { fillBrief, CALL_IN } from '../core/mission.js';
 import { renderFightPlan } from './fightscreen.js';
 import { handsOffAllowed, ORDERS } from '../core/autorun.js';
-import { planRead, planTries, leanPicks } from '../core/squad.js';
+import { planRead, planTries, leanPicks as leanPicksRaw } from '../core/squad.js';
 import { renderBoard, renderPicker, renderCoverage } from './board.js';
 import { kitsFor } from '../core/gear.js';
 import { intelFor } from '../core/sidetasks.js';
@@ -57,9 +57,38 @@ function renderMentoring(crew) {
   return `<p class="small mentor">${pairs.map(({ op, mentors }) => `${esc(op.handle)} learns faster with ${esc(mentors.map((m) => m.handle).join(' and '))} on the job.`).join(' ')}</p>`;
 }
 
+/**
+ * Joss's squad for this job and approach, remembered per game state (2026-11-14). leanPicks tries every mix of overwatch, van and extras
+ * (60 to 600 ms with a full roster), and a render asked for it every time the plan changed, so a tap on an approach froze the screen and
+ * a second tap landed mid-render. The picks depend only on the state, the job and the approach, so the same three give the same answer.
+ */
+const leanMemo = new WeakMap();
+export function leanPicks(state, job, approach) {
+  let m = leanMemo.get(state);
+  if (!m) { m = new Map(); leanMemo.set(state, m); }
+  const key = `${job.id}|${approach}|${state.day}|${state.crew.map((o) => o.id).join(',')}`;
+  if (!m.has(key)) m.set(key, leanPicksRaw(state, job, approach));
+  return m.get(key);
+}
+
+/** After a plan draws, work out Joss's picks for the other approaches one at a time while the screen is idle, so switching approach finds them ready. */
+function warmLean(job) {
+  const st = state;
+  const todo = Object.keys(APPROACHES);
+  const next = () => {
+    if (state !== st || !V.plan || V.plan.jobId !== job.id) return;
+    const ap = todo.shift();
+    if (!ap) return;
+    leanPicks(st, job, ap);
+    setTimeout(next, 30);
+  };
+  setTimeout(next, 250);
+}
+
 export function renderPlan() {
   const job = state.jobs.find((j) => j.id === V.plan.jobId);
   if (!job) { V.plan = null; return renderJobs(); }
+  warmLean(job);
   const v = jobView(state, job);
   const t = v.tpl;
   const freelancers = state.freelancers ?? [];

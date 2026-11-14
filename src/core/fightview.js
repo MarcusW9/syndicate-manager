@@ -76,6 +76,7 @@ function goalOf(b) {
     const tech = b.goal.protect ? handleOf(b, b.goal.protect) : null;
     return { type: 'hack', work: b.goal.work, needed: FIGHT.workNeeded, alarm: b.clock, deadline: b.deadline, tech, round: b.round };
   }
+  if (b.type === 'holdYard') return { type: 'yard', round: b.round, up: b.enemies.filter((e) => !e.out && !e.fled).length, coming: b.arriving.length };
   return { type: 'extract', stage: b.stage, vanRound: b.goal.vanRound, vanLeaves: b.goal.vanLeaves, round: b.round, held: !!b.vanHeld };
 }
 
@@ -153,7 +154,7 @@ export function planView(args, risk = 'steady') {
   const stage = 0;
   return {
     type: b.type,
-    line: lineText(b.type === 'holdHack' ? 'plan.hack' : 'plan.extract', { work: FIGHT.workNeeded, tech: tech?.handle ?? 'the tech' }),
+    line: lineText(b.type === 'holdHack' ? 'plan.hack' : b.type === 'holdYard' ? 'plan.yard' : 'plan.extract', { work: FIGHT.workNeeded, tech: tech?.handle ?? 'the tech' }),
     kinds: kinds.map((k) => kindWord(k)),
     kindsLine: lineText('plan.likely', { kinds: nameList(kinds.map(kindPlural)) }),
     gaps,
