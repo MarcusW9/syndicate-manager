@@ -51,6 +51,24 @@ function climbLine() {
 
 /** Joss's read of one job for the board (core/squad.js jobRead), worked out once per state. */
 const readCache = new WeakMap();
+let warmTimer = null;
+/**
+ * Reading the board plays hundreds of practice fights per job (core/fight.js fightOdds, cached by team and orders), which
+ * is slow the first time after a day moves on. Warm that cache in the background, one job per tick, so the Jobs tab
+ * opens on a hot cache. Safe to call on every render: it restarts for the current state.
+ */
+export function warmBoard() {
+  clearTimeout(warmTimer);
+  if (state.founding || state.activeMission) return;
+  const queue = [...state.jobs];
+  const step = () => {
+    const j = queue.shift();
+    if (!j) return;
+    try { boardRead(j); } catch { /* the real draw will report it */ }
+    warmTimer = setTimeout(step, 30);
+  };
+  warmTimer = setTimeout(step, 150);
+}
 export function boardRead(job) {
   let reads = readCache.get(state);
   if (!reads) readCache.set(state, (reads = new Map()));
