@@ -2,7 +2,7 @@
 // and prints, per job tier, crew and orders: how often a run turns into a fight, how fights end
 // (won, pushed past, pulled back), how often someone hits death's door, rounds per fight, and the
 // share of jobs aborted. Then the gear check: the same fights with every runner in a sidearm and
-// a vest, and in pro kit.
+// a vest, in Verified kit, and in Custom and Premium kit with the perks that reach a fight.
 //
 //   node scripts/sim-battles.mjs [seeds=400]
 import { createNewGame } from '../src/core/state.js';
@@ -61,7 +61,11 @@ for (const [job, label] of JOBS) {
 console.log('\nGear on loud runs (steady): nothing, sidearm and vest, pro sidearm and pro vest.');
 for (const [job] of JOBS) {
   for (const grown of [false, true]) {
-    for (const [name, kit] of [['nothing', []], ['standard', ['pistol', 'vest']], ['verified', ['pistol:verified', 'vest:verified']]]) {
+    for (const [name, kit] of [['nothing', []], ['standard', ['pistol', 'vest']], ['verified', ['pistol:verified', 'vest:verified']],
+      // Perks (2026-11-14): the same step as Verified, plus the perks that reach a fight, in a sidearm, a vest and an implant. The first row is the control.
+      ['verified+implant', ['pistol:verified', 'vest:verified', 'reflex:verified']],
+      ['custom (1 perk each)', ['pistol:custom:hardened', 'vest:custom:sutures', 'reflex:custom:weave']],
+      ['premium (2 perks each)', ['pistol:premium:hardened+padded', 'vest:premium:sutures+muffled', 'reflex:premium:weave+overlay']]]) {
       console.log(`${job} · ${grown ? 'pros' : 'rookies'} · ${name}`, JSON.stringify(run({ job, grown, approach: 'loud', kit })));
     }
   }

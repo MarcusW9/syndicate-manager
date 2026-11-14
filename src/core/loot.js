@@ -57,7 +57,8 @@ export function rollDrop(rng) {
 
 /**
  * Settle a finished successful main job (mutates state; call from mission.js finish()). The item goes
- * to the stash, or the crew fences scrap. Returns the report line: { tone, text, tier? }.
+ * to the stash, or the crew fences scrap. Returns the report line: { tone, text, tier?, perks? } (a Custom or
+ * Premium item's perks come from core/gear.js makeItem, on the item's own hash).
  */
 export function lootFor(state, jobKey) {
   const drop = rollDrop(hashRng(state.seed, 'loot', jobKey, state.day));
@@ -68,5 +69,5 @@ export function lootFor(state, jobKey) {
   const item = makeItem(state, drop.type, drop.tier);
   (state.stash ??= []).push(item);
   const what = item.name ? `${item.name} (${itemName({ ...item, tier: null }).toLowerCase()})` : itemName({ ...item, tier: null });
-  return { tone: 'good', text: `Gear from the job: ${what}.`, tier: item.tier };
+  return { tone: 'good', text: `Gear from the job: ${what}.`, tier: item.tier, ...(item.perks?.length ? { perks: [...item.perks] } : {}) };
 }

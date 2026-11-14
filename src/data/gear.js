@@ -32,16 +32,17 @@ export const SLOTS = {
 // bonus, damage and armour; price: multiplies the type's price; desc: one line; colour: the key of
 // the --tier-<colour> tokens in ui/styles.css; drop: percent odds of this tier when a job drops
 // gear (Standard takes the rest; core/loot.js rolls the tier first, then the type, so adding item
-// types never changes how often a tier drops); live: false until its slice ships. Nothing may make
-// an item of a tier that isn't live (the shop, drops and recruits all read `liveTiers`). Custom,
-// Premium and Apex take their step-1 like Verified so nothing breaks if one ever appears; their
-// perks are for a later slice.
+// types never changes how often a tier drops); live: false until its slice ships (a tier that isn't
+// live never drops; it falls to the next live one below). sold: the shop and the weekly shelf may
+// make it (only Standard and Verified: Custom and Premium come from jobs alone). perks: how many
+// different perks an item of the tier rolls (data/gearPerks.js). Custom and Premium take +1 step
+// like Verified and add their perks. Apex (named unique pieces) is a later slice.
 export const TIERS = {
-  standard: { name: 'Standard', step: 0, price: 1, colour: 'grey', drop: null, live: true, desc: 'Off the shelf.' },
-  verified: { name: 'Verified', step: 1, price: 2.5, colour: 'green', drop: 28, live: true, desc: 'Checked and test-fired by a specialist.' },
-  custom: { name: 'Custom', step: 1, price: 2.5, colour: 'blue', drop: 10, live: false, desc: 'Street-modified.' },
-  premium: { name: 'Premium', step: 1, price: 2.5, colour: 'purple', drop: 4, live: false, desc: 'Clean corporate hardware.' },
-  apex: { name: 'Apex', step: 1, price: 2.5, colour: 'gold', drop: 1, live: false, desc: 'A named piece with a history.' },
+  standard: { name: 'Standard', step: 0, price: 1, colour: 'grey', drop: null, live: true, sold: true, perks: 0, desc: 'Off the shelf.' },
+  verified: { name: 'Verified', step: 1, price: 2.5, colour: 'green', drop: 28, live: true, sold: true, perks: 0, desc: 'Checked and test-fired by a specialist.' },
+  custom: { name: 'Custom', step: 1, price: 3.5, colour: 'blue', drop: 10, live: true, sold: false, perks: 1, desc: 'Street-modified, with one extra.' },
+  premium: { name: 'Premium', step: 1, price: 5, colour: 'purple', drop: 4, live: true, sold: false, perks: 2, desc: 'Clean corporate hardware, with two extras.' },
+  apex: { name: 'Apex', step: 1, price: 8, colour: 'gold', drop: 1, live: false, sold: false, perks: 2, desc: 'A named piece with a history.' },
 };
 /** The lowest tier: what anything is when it has no tier. */
 export const BASE_TIER = 'standard';
@@ -55,6 +56,8 @@ export const LOOT = {
   pool: {
     standard: { pistol: 22, vest: 16, deck: 14, medkit: 14, picks: 14, rifle: 8, drone: 4, reflex: 4, cortex: 4 },
     verified: { pistol: 22, vest: 16, deck: 14, medkit: 14, picks: 14, rifle: 8, drone: 4, reflex: 4, cortex: 4 },
+    custom: { pistol: 22, vest: 16, deck: 14, medkit: 14, picks: 14, rifle: 8, drone: 4, reflex: 4, cortex: 4 },
+    premium: { pistol: 22, vest: 16, deck: 14, medkit: 14, picks: 14, rifle: 8, drone: 4, reflex: 4, cortex: 4 },
   },
 };
 
@@ -114,7 +117,7 @@ export const RECRUIT_GEAR = {
 // its look (core/looks.js). aim: added to the carrier's combat rolls (the sidearm's bonus); damage:
 // what a hit does; pierce: armour points a hit ignores. A pro sidearm adds its tier step to aim and
 // damage, as every pro item does. A sidearm with no frame (old saves, tests) is a heritage pistol:
-// aim 1, damage 3, the sidearm as it always was. Perks are for later: they'd sit beside the quirk.
+// aim 1, damage 3, the sidearm as it always was. Perks (data/gearPerks.js) sit beside the quirk.
 export const SIDEARM_FRAMES = {
   compact: { aim: 2, damage: 2, pierce: 0, trait: 'light and accurate' },
   heritage: { aim: 1, damage: 3, pierce: 0, trait: 'steady' },

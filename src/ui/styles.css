@@ -2338,8 +2338,8 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 }
 
 /* Gear tiers (2026-11-13): one colour per rarity tier (data/gear.js TIERS `colour`). Colour is never
-   the only signal: the tag always spells the tier's name. Custom, Premium and Apex are defined for
-   later; only Standard and Verified are live. */
+   the only signal: the tag always spells the tier's name. Apex is defined for later; Standard,
+   Verified, Custom and Premium are live. */
 :root {
   --tier-grey: #9aa3b2;
   --tier-green: #4fd67e;
@@ -2357,3 +2357,27 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .gearrow__btn.tiertag--grey, .gearrow__btn.tiertag--green, .gearrow__btn.tiertag--blue, .gearrow__btn.tiertag--purple, .gearrow__btn.tiertag--gold { border-color: var(--tc); border-left-width: 4px; clip-path: none; padding: 0 12px; font-size: 0.8rem; line-height: inherit; letter-spacing: inherit; text-transform: inherit; }
 .gearrow__head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
 .loadout__tile .tiertag { margin-top: 2px; }
+/* On a phone (2026-11-14, perks): the 3-cell picture, the text and a button side by side left the text
+   a hundred pixels wide (and clipped the tier tag at 360). The button, or the shop's tier buttons, go on a
+   row of their own under the picture and text; the perks list already spans the row. */
+@media (max-width: 480px) {
+  .gearrow:has(.gearrow__art) { grid-template-columns: calc(var(--cell) * 3) minmax(0, 1fr); align-items: start; }
+  .gearrow:has(.gearrow__art) > .gearrow__btn, .gearrow:has(.gearrow__art) > .gearrow__buy { grid-column: 1 / -1; }
+  .gearrow:has(.gearrow__art) > .gearrow__buy { display: flex; flex-wrap: wrap; gap: 6px; }
+  .gearrow:has(.gearrow__art) > .gearrow__buy .gearrow__btn { flex: 1 1 auto; }
+}
+.tiertag { white-space: nowrap; }
+/* Perks (2026-11-14): a Custom or Premium item's extras, listed under its row. The name is always
+   shown; a tap on it opens its line (native <details>, no hover). The whole row is a 44px target. */
+.perks { grid-column: 1 / -1; --tc: var(--tier-blue); display: grid; gap: 0; margin: 2px 0 0; padding: 0; list-style: none; min-width: 0; }
+.perks--purple { --tc: var(--tier-purple); }
+.perks--gold { --tc: var(--tier-gold); }
+.perk summary { display: flex; align-items: center; gap: 8px; min-height: var(--tap); padding: 0 4px 0 8px; border-left: 3px solid var(--tc); cursor: pointer; list-style: none; color: var(--tc); font: 600 0.78rem/1.25 var(--display); letter-spacing: 0.06em; text-transform: uppercase; }
+.perk summary::-webkit-details-marker { display: none; }
+.perk summary::after { content: '+'; margin-left: auto; padding-right: 4px; color: var(--muted); font-weight: 400; }
+.perk[open] summary::after { content: '\2212'; }
+.perk__name { min-width: 0; overflow-wrap: anywhere; }
+.perk__desc { margin: 0; padding: 2px 8px 8px 11px; border-left: 3px solid var(--tc); color: var(--text); line-height: 1.35; }
+.loadout__perks { font-size: 0.72rem; color: var(--tier-blue); line-height: 1.25; overflow-wrap: anywhere; }
+.bag__list li { min-width: 0; }
+.timeline__results .perks { margin-top: 4px; }

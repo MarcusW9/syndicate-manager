@@ -28,8 +28,8 @@ import { STARTING_ROSTER_CAP, rollEndurance } from '../core/recruits.js';
 import { prepareOperative, rollPotential, rollScoutError, scoutFor, potentialRead } from '../core/development.js';
 import { nextRng } from '../core/random.js';
 import { refreshFreelancers } from '../core/freelance.js';
-import { GEAR, makeItem } from '../core/gear.js';
-import { CELLS } from '../data/gear.js';
+import { GEAR, makeItem, rollPerks } from '../core/gear.js';
+import { CELLS, TIERS } from '../data/gear.js';
 import { trimInbox } from '../core/inbox.js';
 import { seedRivals, offerGapFor } from '../core/rivals.js';
 import { hashRng } from '../core/rng.js';
@@ -820,6 +820,20 @@ function migrate(state) {
     };
     walk(state);
     state.version = 64;
+  }
+  if (state.version === 64) {
+    // v65: gear perks (DESIGN.md 2026-11-14). A Custom or Premium item carries `perks` (ids from data/gearPerks.js).
+    // Nothing in a v64 save has a Custom or Premium tier (they were not live), so nothing is normally rewritten; an
+    // item of one of those tiers that somehow has no perks (a hand-made save) is given the ones its own hash rolls.
+    const walkPerks = (v) => {
+      if (!v || typeof v !== 'object') return;
+      if (Array.isArray(v)) { v.forEach(walkPerks); return; }
+      const n = TIERS[v.tier]?.perks ?? 0;
+      if (n && GEAR[v.type] && typeof v.uid === 'string' && !Array.isArray(v.perks)) v.perks = rollPerks(state.seed, v.uid, v.type, n);
+      Object.values(v).forEach(walkPerks);
+    };
+    walkPerks(state);
+    state.version = 65;
   }
   return state;
 }

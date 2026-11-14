@@ -66,7 +66,7 @@ Section names are the headings in the code. "(x)" marks something that shows onl
 - Header: the rank ("Back Room tong", tap for what a tong is) and a standing line in words (halls and beds filled, the next rung). Sub-tabs: Halls (`renderHalls`: a row per hall, Open a hall) and Armoury (`ui/gear.js` `renderArmoury`, embedded).
 - Runner's page (`renderOperative`): header (face, handle, line, status), Specialisation, Traits, Stats, Development (mentoring), Condition, Trust, History; Record, Path and Home cards; Gear (the 2x2 bag, `ui/gear.js`).
 - Recruit's page (`renderRecruit`): Traits, Stats, Scout's view, Terms (the offer).
-- Armoury (`ui/gear.js`, Tong › Armoury): In the stash, Carried, Buy (by slot); a gear sheet picks an item for a slot, with Carried by others.
+- Armoury (`ui/gear.js`, Tong › Armoury): In the stash, Carried, Buy (by slot); a gear sheet picks an item for a slot, with Carried by others. A Custom or Premium item lists its perks under its row (tap one for its line); the shop sells Standard and Verified only.
 
 **Jobs** (`renderJobs`)
 - Sub-tabs. Board: runners strip (collapsible), job board (job cards with flags). Clients: a row each (trust, jobs on the board), and a client's page (`renderClientPage`). Heists: the heist card (`renderHeist`). Side: the side board (the scout rows for free names are gone: scouting is on Crew › Leads).

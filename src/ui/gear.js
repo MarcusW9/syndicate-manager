@@ -4,7 +4,7 @@
 //
 // ui: helpers from app.js { esc, money, face, statusChip }.
 
-import { GEAR, SLOTS, TIERS, carried, itemName, itemTitle, buyPrice, sellPrice, canChangeGear, kitsFor, sidearmStats, placeOf, cellsOf, fitsAt, bagUsed } from '../core/gear.js';
+import { GEAR, SLOTS, TIERS, PERKS, perksOf, carried, itemName, itemTitle, buyPrice, sellPrice, canChangeGear, kitsFor, sidearmStats, placeOf, cellsOf, fitsAt, bagUsed } from '../core/gear.js';
 import { BAG, SOCKETS, BASE_TIER } from '../data/gear.js';
 import { HAS_LOOKS, lookText } from '../core/looks.js';
 import { gearGlyph } from './icons.js';
@@ -33,6 +33,21 @@ export function tierTag(item) {
   return `<span class="tiertag tiertag--${t.colour}" data-tier="${id}">${t.name}</span>`;
 }
 
+/**
+ * An item's perks (Custom 1, Premium 2; data/gearPerks.js) as a list under its row: each perk's name is
+ * always shown, and tapping it opens its line (a native <details>, so no hover, and the tap target is
+ * the whole 44px row). Takes an item, or a list of perk ids (the report's loot line). Empty if none.
+ */
+export function perkList(source, tier = source?.tier) {
+  const ids = Array.isArray(source) ? source : source?.perks ?? [];
+  const perks = ids.filter((id) => PERKS[id]).map((id) => ({ id, ...PERKS[id] }));
+  if (!perks.length) return '';
+  const colour = TIERS[tier]?.colour ?? 'grey';
+  return `<ul class="perks perks--${colour}" aria-label="Perks">${perks.map((p) => `<li><details class="perk"><summary><span class="perk__name">${p.name}</span></summary><p class="perk__desc small">${p.desc}</p></details></li>`).join('')}</ul>`;
+}
+/** Just the perk names, for a tile that is itself a button (nothing to open inside it). */
+const perkNames = (item) => perksOf(item).map((p) => p.name).join(' · ');
+
 const glyphFor = (item) => gearGlyph(item.type, GEAR[item.type].slot);
 
 /** The item's picture for a row: its drawing (ui/art.js) where it has one, else its line icon. */
@@ -52,6 +67,7 @@ function itemRow(ui, item, { action, label, sub = '', disabled = false, id = ite
         ${lookText(item) ? `<span class="gearrow__sub muted small">${item.name ? `${esc(itemName(item))} · ` : ''}${esc(lookText(item))}</span>` : ''}
         ${sub ? `<span class="gearrow__sub muted small">${sub}</span>` : ''}</span>
       ${action ? `<button class="btn gearrow__btn" data-action="${action}" data-id="${esc(id)}" ${item.tier ? `data-tier="${esc(item.tier)}"` : ''} ${disabled ? 'disabled' : ''}>${esc(label)}</button>` : ''}
+      ${perkList(item)}
     </li>`;
 }
 
@@ -65,7 +81,7 @@ function buyRow(ui, state, type) {
       <span class="gearrow__main"><span class="gearrow__head"><strong>${esc(g.name)}</strong></span>
         <span class="gearrow__eff">${esc(itemEffect({ type, tier: BASE_TIER }))}</span>
         <span class="gearrow__sub muted small">${esc(g.desc)}</span></span>
-      <span class="gearrow__buy">${Object.entries(TIERS).filter(([, t]) => t.live).map(([tier, t]) => `<button class="btn gearrow__btn gearrow__btn--tier tiertag--${t.colour}" data-action="buy" data-id="${esc(type)}" data-tier="${esc(tier)}" ${state.cash < buyPrice(state, type, tier) ? 'disabled' : ''} aria-label="Buy a ${esc(t.name.toLowerCase())} ${esc(g.name.toLowerCase())} for ${esc(money(buyPrice(state, type, tier)))}">${esc(t.name)}${t.step ? ` +${t.step}` : ''} ${esc(money(buyPrice(state, type, tier)))}</button>`).join('')}</span>
+      <span class="gearrow__buy">${Object.entries(TIERS).filter(([, t]) => t.sold).map(([tier, t]) => `<button class="btn gearrow__btn gearrow__btn--tier tiertag--${t.colour}" data-action="buy" data-id="${esc(type)}" data-tier="${esc(tier)}" ${state.cash < buyPrice(state, type, tier) ? 'disabled' : ''} aria-label="Buy a ${esc(t.name.toLowerCase())} ${esc(g.name.toLowerCase())} for ${esc(money(buyPrice(state, type, tier)))}">${esc(t.name)}${t.step ? ` +${t.step}` : ''} ${esc(money(buyPrice(state, type, tier)))}</button>`).join('')}</span>
     </li>`;
 }
 
@@ -130,6 +146,7 @@ function wornTile(ui, op, { id, label, item, can }) {
       <strong class="loadout__item">${item ? esc(itemTitle(item)) : 'Empty'}</strong>
       ${item ? tierTag(item) : ''}
       ${item ? `<span class="loadout__eff">${esc(itemEffect(item))}</span>` : ''}
+      ${item && item.perks?.length ? `<span class="loadout__perks">${esc(perkNames(item))}</span>` : ''}
     </button></li>`;
 }
 
@@ -164,7 +181,7 @@ export function renderLoadout(ui, state, op, { picked = null } = {}) {
       <div class="bag" style="--cols:${BAG.cols};--rows:${BAG.rows}">${cells.join('')}${items}</div>
       ${held ? `<div class="bag__bar"><span><strong>${esc(itemTitle(held))}</strong> · tap a free space to move it</span>
         <button class="btn btn--ghost" data-action="bag-off">Take it off</button><button class="btn btn--ghost" data-action="bag-pick" data-id="${esc(held.uid)}">Done</button></div>` : ''}
-      ${bag.length ? `<ul class="list list--plain bag__list">${bag.map((b) => `<li><strong>${esc(itemTitle(b.item))}</strong> ${tierTag(b.item)} <span class="loadout__eff">${esc(itemEffect(b.item))}</span></li>`).join('')}</ul>`
+      ${bag.length ? `<ul class="list list--plain bag__list">${bag.map((b) => `<li><strong>${esc(itemTitle(b.item))}</strong> ${tierTag(b.item)} <span class="loadout__eff">${esc(itemEffect(b.item))}</span>${perkList(b.item)}</li>`).join('')}</ul>`
         : '<p class="muted small">Nothing carried. Tap a space to pack a weapon or a tool.</p>'}
       ${can.ok ? '' : `<p class="muted small">Their gear can't change while they're ${esc(can.reason)}.</p>`}
       ${kitsFor(op).length ? '' : '<p class="muted small">No rifle or drone: they can\'t take overwatch.</p>'}`;
@@ -201,7 +218,8 @@ export function renderGearSheet(ui, state, op, slot) {
     <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(place.title)} for ${esc(op.handle)}">
       <div class="sheet__head">
         <div><h2 class="sheet__title">${esc(place.title)} for ${esc(op.handle)}</h2>
-        <p class="muted small">${why}</p></div>
+        <p class="muted small">${why}</p>
+        ${current ? perkList(current) : ''}</div>
         <button class="btn btn--ghost sheet__x" data-action="close-gear" aria-label="Close">✕</button>
       </div>
       <ul class="list list--plain gearlist">${stash.length ? stash.map((item) => itemRow(ui, item, { action: 'equip', label: place.kind === 'bag' ? 'Pack' : 'Carry' })).join('') : `<li class="muted small">Nothing in the stash ${place.kind === 'bag' ? 'fits here' : 'for this'}. Buy it in the armoury.</li>`}</ul>

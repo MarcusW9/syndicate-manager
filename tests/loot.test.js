@@ -17,13 +17,16 @@ const { importSave } = await import('../src/save/save.js');
 
 const LIVE = Object.keys(TIERS).filter((t) => TIERS[t].live);
 
-test('the ladder is five tiers in order, each with a colour, a line and odds; only Standard and Verified are live', () => {
+test('the ladder is five tiers in order, each with a colour, a line and odds; Apex is the one that is not live yet', () => {
   assert.deepEqual(Object.keys(TIERS), ['standard', 'verified', 'custom', 'premium', 'apex']);
   assert.deepEqual(Object.values(TIERS).map((t) => t.colour), ['grey', 'green', 'blue', 'purple', 'gold']);
-  assert.deepEqual(LIVE, ['standard', 'verified']);
+  assert.deepEqual(LIVE, ['standard', 'verified', 'custom', 'premium']);
   for (const t of Object.values(TIERS)) assert.ok(t.name && t.desc && typeof t.live === 'boolean' && t.step >= 0 && t.price >= 1);
   assert.equal(TIERS.verified.price, 2.5, 'Verified costs what Pro did');
-  for (const id of ['custom', 'premium', 'apex']) assert.equal(TIERS[id].step, 1, `${id} takes step 1 like Verified`);
+  for (const id of ['verified', 'custom', 'premium', 'apex']) assert.equal(TIERS[id].step, 1, `${id} takes step 1: perks are the extra, not a bigger step`);
+  assert.deepEqual(Object.values(TIERS).map((t) => t.perks), [0, 0, 1, 2, 2], 'Custom one perk, Premium two');
+  const prices = Object.values(TIERS).map((t) => t.price);
+  assert.deepEqual([...prices].sort((a, b) => a - b), prices, 'each tier costs more than the one below');
 });
 
 test('a tier tag always spells the tier name, with its colour class', () => {
@@ -39,6 +42,7 @@ test('the shop only sells live tiers', () => {
   s.cash = 1e6;
   assert.equal(buyGear(s, 'vest', 'verified').stash.at(-1).tier, 'verified');
   for (const t of ['custom', 'premium', 'apex']) assert.equal(buyGear(s, 'vest', t), s, `${t} is not for sale`);
+  assert.deepEqual(Object.keys(TIERS).filter((t) => TIERS[t].sold), ['standard', 'verified'], 'the shop sells two tiers');
   assert.equal(itemName({ type: 'vest', tier: 'verified' }), 'Verified armoured vest');
 });
 
@@ -47,9 +51,12 @@ test('tier first: odds hold whatever the pool holds, and a tier that is not live
   const rng = makeRng(7);
   const counts = {};
   for (let i = 0; i < N; i++) { const t = liveTierFor(tierAt(rng())); counts[t] = (counts[t] ?? 0) + 1; }
-  assert.deepEqual(Object.keys(counts).sort(), ['standard', 'verified'], 'no tier that is not live ever drops');
-  // Verified 28 + the Custom 10, Premium 4 and Apex 1 that fall down to it = 43%.
-  assert.ok(Math.abs(counts.verified / N - 0.43) < 0.02, `verified ${counts.verified / N}`);
+  assert.deepEqual(Object.keys(counts).sort(), ['custom', 'premium', 'standard', 'verified'], 'no tier that is not live ever drops');
+  // Verified 28, Custom 10, Premium 4 plus the Apex 1 that falls down to it (Apex is not live yet) = 5%, Standard 57%.
+  assert.ok(Math.abs(counts.verified / N - 0.28) < 0.02, `verified ${counts.verified / N}`);
+  assert.ok(Math.abs(counts.custom / N - 0.10) < 0.015, `custom ${counts.custom / N}`);
+  assert.ok(Math.abs(counts.premium / N - 0.05) < 0.01, `premium ${counts.premium / N}`);
+  assert.ok(Math.abs(counts.standard / N - 0.57) < 0.02, `standard ${counts.standard / N}`);
   // Adding item types to a pool moves no tier's odds (the tier is rolled before the type).
   const before = JSON.stringify(LOOT.pool);
   const roll = () => { const r = makeRng(11); return Array.from({ length: 500 }, () => liveTierFor(tierAt(r()))); };
@@ -161,7 +168,7 @@ test('a v63 save upgrades gear tiers (street to standard, pro to verified) and n
   s.armoury.offers = [{ oid: 'o1-rifle-pro-0', type: 'rifle', tier: 'pro', look: { frame: 'marksman', finish: 'carbon' }, name: 'X' }, { oid: 'o1-rifle-street-0', type: 'rifle', tier: 'street', look: { frame: 'marksman', finish: 'street' }, name: 'Y' }];
   const loaded = await importSave({ text: async () => JSON.stringify(s) });
   assert.equal(loaded.version, SAVE_VERSION);
-  assert.equal(SAVE_VERSION, 64);
+  assert.equal(SAVE_VERSION, 65);
   assert.deepEqual(loaded.stash.map((i) => i.tier), ['standard', 'verified']);
   const g = loaded.crew[0].gear;
   assert.equal(g.armour.tier, 'verified');

@@ -12,13 +12,13 @@ import { FIGHT_JOBS } from '../src/data/fights.js';
 import { emptyLoadout, firstFit, placeOf } from '../src/core/gear.js';
 import { buildBattle, ordersFor, hitFor } from '../src/core/battle.js';
 
-/** Put gear on someone for a test (no cost, no stash): arm(state, opId, 'rifle', 'drone'). Returns state. */
+/** Put gear on someone for a test (no cost, no stash): arm(state, opId, 'rifle', 'drone', 'vest:custom:muffled'). Returns state. */
 export function arm(state, opId, ...types) {
   const op = state.crew.find((o) => o.id === opId);
   for (const type of types) {
-    const [t, tier = 'standard'] = type.split(':');
+    const [t, tier = 'standard', perks] = type.split(':'); // 'vest:custom:muffled' names the perks a Custom or Premium item carries
     state.gearSeq = (state.gearSeq ?? 0) + 1;
-    const item = { uid: `t${state.gearSeq}`, type: t, tier };
+    const item = { uid: `t${state.gearSeq}`, type: t, tier, ...(perks ? { perks: perks.split('+') } : {}) };
     // Where it goes on them (the carry grid, save v45): worn, in a socket, or the bag's first free place.
     op.gear = { ...emptyLoadout(), ...(op.gear ?? {}) };
     const where = placeOf(t);
