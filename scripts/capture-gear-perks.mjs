@@ -97,12 +97,17 @@ try {
     await load(q, rep.state);
     await tap(q, '[data-action="nav"][data-id="inbox"]'); await q.waitForTimeout(300);
     await q.locator('[data-action="open-message"]').filter({ visible: true, hasText: /completed/i }).first().click(); await q.waitForTimeout(800);
-    await q.waitForTimeout(3500); // the report plays its steps in turn
-    await q.evaluate(() => (document.querySelector('.timeline__results') ?? document.body).scrollIntoView({ block: 'center' }));
+    // The report plays its steps in turn and follows them down the page: wait for the loot line's perks, then for the scrolling to stop.
+    await q.locator('.timeline__results .perk summary').first().waitFor({ state: 'visible', timeout: 30000 });
+    await q.evaluate(() => Promise.all([...document.querySelectorAll('.timeline li')].flatMap((li) => li.getAnimations()).map((x) => x.finished.catch(() => {}))));
+    await q.waitForTimeout(500);
+    await q.evaluate(() => document.querySelector('.timeline__results .perk')?.scrollIntoView({ block: 'center' }));
+    await q.waitForTimeout(300);
     await q.screenshot({ path: `${out}/55-report-loot-line-${w}.png` });
     await audit(q, 'report loot line', w);
     await tap(q, '.timeline__results .perk summary'); await q.waitForTimeout(200);
     await q.evaluate(() => document.querySelector('.timeline__results .perk[open]')?.scrollIntoView({ block: 'center' }));
+    await q.waitForTimeout(300);
     await q.screenshot({ path: `${out}/56-report-loot-perk-opened-${w}.png` });
     await audit(q, 'report, a perk open', w);
     await q.close();

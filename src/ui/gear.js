@@ -34,6 +34,13 @@ export function tierTag(item) {
 }
 
 /**
+ * The tier as the colour of the picture's outline (owner, 2026-11-14): a picture carries its tier in
+ * its frame, so the tag is only drawn where there is no picture (`tagIfBare`). Standard keeps the plain frame.
+ */
+export const tierFrame = (item) => `tierframe tierframe--${(TIERS[item?.tier] ?? TIERS[BASE_TIER]).colour}`;
+const tagIfBare = (item, carrier = null) => (gearArt(item, { carrier, width: 96 }) ? '' : tierTag(item));
+
+/**
  * An item's perks (Custom 1, Premium 2; data/gearPerks.js) as a list under its row: each perk's name is
  * always shown, and tapping it opens its line (a native <details>, so no hover, and the tap target is
  * the whole 44px row). Takes an item, or a list of perk ids (the report's loot line). Empty if none.
@@ -53,7 +60,7 @@ const glyphFor = (item) => gearGlyph(item.type, GEAR[item.type].slot);
 /** The item's picture for a row: its drawing (ui/art.js) where it has one, else its line icon. */
 const thumb = (item, carrier = null) => {
   const art = gearArt(item, { carrier, width: 96 });
-  return art ? `<span class="gearrow__art" aria-hidden="true">${art}</span>` : `<span class="gearrow__icon" aria-hidden="true">${glyphFor(item)}</span>`;
+  return art ? `<span class="gearrow__art ${tierFrame(item)}" aria-hidden="true">${art}</span>` : `<span class="gearrow__icon" aria-hidden="true">${glyphFor(item)}</span>`;
 };
 
 /** One item as a row: name, what it does, and an action button. */
@@ -62,7 +69,7 @@ function itemRow(ui, item, { action, label, sub = '', disabled = false, id = ite
   return `
     <li class="gearrow">
       ${thumb(item, carrier)}
-      <span class="gearrow__main"><span class="gearrow__head"><strong>${esc(itemTitle(item))}</strong>${tierTag(item)}</span>
+      <span class="gearrow__main"><span class="gearrow__head"><strong>${esc(itemTitle(item))}</strong>${tagIfBare(item, carrier)}</span>
         <span class="gearrow__eff">${esc(itemEffect(item))}</span>
         ${lookText(item) ? `<span class="gearrow__sub muted small">${item.name ? `${esc(itemName(item))} · ` : ''}${esc(lookText(item))}</span>` : ''}
         ${sub ? `<span class="gearrow__sub muted small">${sub}</span>` : ''}</span>
@@ -92,7 +99,7 @@ function offerRow(ui, state, offer) {
   return `
     <li class="gearrow gearrow--buy">
       ${thumb(offer)}
-      <span class="gearrow__main"><span class="gearrow__head"><strong>${esc(offer.name)}</strong>${tierTag(offer)}</span>
+      <span class="gearrow__main"><span class="gearrow__head"><strong>${esc(offer.name)}</strong>${tagIfBare(offer)}</span>
         <span class="gearrow__eff">${esc(itemEffect(offer))}</span>
         <span class="gearrow__sub muted small">${esc(itemName(offer))} · ${esc(lookText(offer))}</span></span>
       <span class="gearrow__buy"><button class="btn gearrow__btn" data-action="buy-offer" data-id="${esc(offer.oid)}" ${state.cash < price ? 'disabled' : ''} aria-label="Buy the ${esc(offer.name)} for ${esc(money(price))}">${esc(money(price))}</button></span>
@@ -142,11 +149,11 @@ function wornTile(ui, op, { id, label, item, can }) {
   const art = item ? gearArt(item, { carrier: op, width: 96 }) : null;
   return `<li><button class="loadout__tile loadout__tile--worn ${item ? '' : 'is-empty'}" data-action="gear-slot" data-id="${id}" ${can.ok ? '' : 'disabled'} aria-label="${esc(label)}: ${esc(item ? `${TIERS[item.tier]?.name ?? TIERS[BASE_TIER].name} ${itemTitle(item)}` : 'empty')}. Tap to change.">
       <span class="loadout__name">${esc(label)}</span>
-      <span class="loadout__cell ${art ? '' : 'loadout__pic--icon'}" aria-hidden="true">${item ? art ?? glyphFor(item) : '+'}</span>
+      <span class="loadout__cell ${art ? tierFrame(item) : 'loadout__pic--icon'}" aria-hidden="true">${item ? art ?? glyphFor(item) : '+'}</span>
       <strong class="loadout__item">${item ? esc(itemTitle(item)) : 'Empty'}</strong>
-      ${item ? tierTag(item) : ''}
+      ${item && !art ? tierTag(item) : ''}
       ${item ? `<span class="loadout__eff">${esc(itemEffect(item))}</span>` : ''}
-      ${item && item.perks?.length ? `<span class="loadout__perks">${esc(perkNames(item))}</span>` : ''}
+      ${item && item.perks?.length ? `<span class="loadout__perks perks--${TIERS[item.tier]?.colour ?? 'blue'}">${esc(perkNames(item))}</span>` : ''}
     </button></li>`;
 }
 
@@ -169,7 +176,7 @@ export function renderLoadout(ui, state, op, { picked = null } = {}) {
     const ok = held ? fitsAt(op, held, x, y) : true;
     cells.push(`<button class="bag__cell ${held && ok ? 'is-free' : ''}" style="grid-column:${x + 1};grid-row:${y + 1}" data-action="bag-cell" data-id="${x},${y}" ${can.ok && ok ? '' : 'disabled'} aria-label="${held ? `Move ${esc(itemTitle(held))} here` : 'Empty space: put something here'}"></button>`);
   }
-  const items = bag.map((b) => `<button class="bag__item ${b.item.uid === picked ? 'is-picked' : ''}" style="grid-column:${b.x + 1} / span ${cellsOf(b.item.type)};grid-row:${b.y + 1}" data-action="bag-pick" data-id="${esc(b.item.uid)}" ${can.ok ? '' : 'disabled'} aria-pressed="${b.item.uid === picked}" aria-label="${esc(TIERS[b.item.tier]?.name ?? TIERS[BASE_TIER].name)} ${esc(itemTitle(b.item))}: tap to move it or take it off">${gearArt(b.item, { carrier: op, width: 96 }) ?? `<span class="bag__icon">${glyphFor(b.item)}</span>`}</button>`).join('');
+  const items = bag.map((b) => `<button class="bag__item ${tierFrame(b.item)} ${b.item.uid === picked ? 'is-picked' : ''}" style="grid-column:${b.x + 1} / span ${cellsOf(b.item.type)};grid-row:${b.y + 1}" data-action="bag-pick" data-id="${esc(b.item.uid)}" ${can.ok ? '' : 'disabled'} aria-pressed="${b.item.uid === picked}" aria-label="${esc(TIERS[b.item.tier]?.name ?? TIERS[BASE_TIER].name)} ${esc(itemTitle(b.item))}: tap to move it or take it off">${gearArt(b.item, { carrier: op, width: 96 }) ?? `<span class="bag__icon">${glyphFor(b.item)}</span>`}</button>`).join('');
   return `
       <h2>Gear</h2>
       <ul class="list list--plain loadout loadout--worn">
