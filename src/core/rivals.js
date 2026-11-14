@@ -471,13 +471,68 @@ export function namesOnTheStreet(state) {
     .map(({ score, ...n }) => n).sort((a, b) => (a.name < b.name ? -1 : 1));
 }
 
+const STORY_BEAT = { lost_hall: 'first', taking_work: 'second', tier_up: 'first', poaching: 'second', begin: 'first', first_hall: 'second' };
+const sealOf = (t) => ({ id: t.id, name: t.name, style: t.style });
+
+/** The five rungs, Harbour at the top: every active tong once on the rung tongTier gives, sorted by name; ours on state.rank (E0). */
+export function ladderView(state) {
+  const r = state.rivals; if (!r) return [];
+  return [...TONG_RANKS].reverse().map((rank) => ({
+    tier: rank.id,
+    tongs: r.tongs.filter((t) => t.status === 'active' && tongTier(t) === rank.id).sort((a, b) => (a.name < b.name ? -1 : 1)).map(sealOf),
+    ours: state.rank === rank.id,
+  }));
+}
+
+const MOVE_KINDS = { name_travelling: 'moved', went_free: 'let_go', rise_end: 'signed', founding_end: 'signed', former_signed: 'signed', former_free: 'let_go' };
+/** Come and gone (E0): this month's movement of names, newest first, at most six, read off The Word. Only the side an entry carries is shown. */
+export function movesView(state, max = 6) {
+  const r = state.rivals; if (!r) return [];
+  const out = [];
+  for (const w of [...r.word].reverse()) {
+    const word = MOVE_KINDS[w.kind];
+    if (!word || state.day - w.day > 28) continue;
+    const card = r.cards.find((c) => w.refs.includes(c.id));
+    if (!card) continue;
+    const tong = w.refs.map((ref) => tongById(r, ref)).find(Boolean) ?? null;
+    let from = null; let to = null;
+    if (w.kind === 'went_free') from = tong;
+    else if (w.kind !== 'former_free') { if (!tong || tong.status !== 'active') continue; to = tong; }
+    if (out.some((m) => m.id === slug(card.name) && m.word === word)) continue;
+    out.push({ id: slug(card.name), name: card.name.split(' ')[0], word, from: from ? sealOf(from) : null, to: to ? sealOf(to) : null, free: w.kind === 'went_free' || w.kind === 'former_free' });
+    if (out.length >= max) break;
+  }
+  return out;
+}
+
+/** A tong's open story thread as word keys, never a number: { family, beat }. */
+function storyOf(r, tongId) {
+  const th = r.threads.find((x) => x.open && x.tongId === tongId);
+  return th ? { family: th.family, beat: STORY_BEAT[th.stage] ?? 'first' } : null;
+}
+
+/** How long ago a line of talk was: a word, never a count. */
+const whenWord = (days) => (days < 7 ? 'week' : days < 28 ? 'month' : 'earlier');
+
+/** A tong's file (E0): its story as a track of talk, newest first, and the whole table as tiles. Public names only. */
+function fileOf(state, t, head) {
+  const r = state.rivals;
+  const cards = cardsOf(r, t.id);
+  const ids = new Set(cards.map((c) => c.id));
+  const track = [...r.word].reverse().filter((w) => w.kind !== BOOK_LEAD && (w.refs.includes(t.id) || w.refs.some((x) => ids.has(x))))
+    .map((w) => { const e = wordFor(state, w); return e ? { ...e, when: whenWord(state.day - w.day) } : null; }).filter(Boolean).slice(0, 6);
+  const grade = (c) => r.book?.entries.find((e) => e.runnerId === (c.runnerId ?? c.id))?.grade ?? null;
+  const table = [...cards].sort((a, b) => (a.name < b.name ? -1 : 1)).map((c) => ({ id: slug(c.name), name: c.name, role: c.role, head: c === head, grade: grade(c), former: !!c.formerOf }));
+  return { track, table };
+}
+
 /**
  * Everything the UI may show about the other tongs. Word keys and values only: tier ids, styles,
  * district ids, rating-word keys, proper names. No number values, no digits outside proper names.
  */
 export function rivalView(state) {
   const r = state.rivals;
-  const view = { elder: { ...BRASS_ANCHOR }, tiers: [], names: [], word: [], offer: null, gone: [] };
+  const view = { elder: { ...BRASS_ANCHOR }, tiers: [], ladder: [], moves: [], names: [], word: [], offer: null, gone: [] };
   if (!r) return view;
   view.tiers = tongsByTier(state).map(({ tier, tongs }) => ({
     tier,
@@ -489,9 +544,12 @@ export function rivalView(state) {
         id: t.id, name: t.name, home: t.home, style: t.style, head: head?.name ?? null,
         names: cards.filter((c) => c !== head).sort((a, b) => (a.name < b.name ? -1 : 1)).slice(0, 3).map((c) => ({ id: slug(c.name), name: c.name, former: !!c.formerOf })),
         said: latest ? wordFor(state, latest) ?? null : null,
+        story: storyOf(r, t.id), ...fileOf(state, t, head),
       };
     }),
   }));
+  view.ladder = ladderView(state);
+  view.moves = movesView(state);
   view.names = namesOnTheStreet(state);
   view.word = mondayWord(state);
   // People we let go (C4.3): where they are now. A name, a tong or "free", a fame word. No ratings.

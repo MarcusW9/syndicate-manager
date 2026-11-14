@@ -17,6 +17,7 @@ import { getPref } from '../save/save.js';
 import { hallMark, raidWhen, threatItem } from './raidcards.js';
 import { esc, cityName, face, statusChip, infoText, subTabs, gearUi } from './shared.js';
 import { state, backLabel, openInfo, V } from './view.js';
+import { tongNameOf, TONG_NAME_MAX } from '../core/tongname.js';
 
 // --- the hall page's wide layout and art (2026-11-09) ---
 /** Is the screen wide enough for the hall page's two columns, with the build tools in the right one? */
@@ -205,6 +206,12 @@ export function renderTong() {
       <div class="opshead"><h1 class="cityhead">Tong</h1>
         <button class="tierbtn" data-action="info" data-id="tong" aria-expanded="${openInfo.has('tong')}" aria-label="The tong's rank: ${esc(rank.name)}. What's a tong?"><span class="tier">${esc(rank.name)} tong</span></button></div>
       ${infoText('tong', TONG_EXPLAINER)}
+      ${V.tongNaming !== null ? `<div class="tongname tongname--edit">
+        <input id="tongname" class="tongname__input" type="text" maxlength="${TONG_NAME_MAX}" autocomplete="off" aria-label="Your tong's name" value="${esc(V.tongNaming)}">
+        <button class="btn btn--primary" data-action="tong-name-save">Save</button>
+        <button class="btn" data-action="tong-name-cancel">Cancel</button>
+      </div>` : `<p class="tongname__shown"><strong>${esc(tongNameOf(state))}</strong>
+        <button class="iconbtn" data-action="tong-rename" aria-label="Rename the tong" title="Rename">✎</button></p>`}
       <p class="small tongstanding">${esc(standing)}</p>
       ${subTabs('Tong sections', 'tong-tab', [['halls', 'Halls'], ['armoury', 'Armoury']], tab)}
       ${tab === 'halls' ? renderHalls() : renderArmoury({ ...gearUi, embedded: true }, state)}

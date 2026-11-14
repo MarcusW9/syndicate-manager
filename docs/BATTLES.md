@@ -93,6 +93,8 @@ A runner at their pull-out point is **asked** about when the fight is watched: *
 ### The two fight types
 **Hold the hack.** Keep the tech (the *protected* runner) alive while they work. Four rounds of work win. Deadline: round 7. An alarm clock starts at 5, ticks down each round (one more per alarm that gets through); at 0 another enemy is on its way and it resets to 3. Overwatch kit: a drone.
 
+**Hold the yard** (Protection Run, 2026-11-13). One stage, no van. The pressure clock adds enemies as in hold and extract. Won (`end.routed`) when every enemy is down or fled and none is on the way; ends otherwise as the others (someone down, pull back, gone). Overwatch kit: a rifle.
+
 **Hold and extract.** Two stages. *Hold* (stage 0) until the van comes, on round 3, or a round early if the driver sees someone near down or two or more enemies up (+1 heat, once). *Board* (stage 1): the van waits 4 rounds. Three door slots (four with a standby). Runners board; the best cool goes back for a downed teammate. Overwatch kit: a rifle.
 
 ### How it ends (`checkEnd`)

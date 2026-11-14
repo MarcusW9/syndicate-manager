@@ -13,8 +13,9 @@ import { ECONOMY } from '../data/economy.js';
 import { refreshSideBoard } from './sidetasks.js';
 import { refreshArmoury } from './looks.js';
 import { seedRivals } from './rivals.js';
+import { cleanTongName, tongNameProblem } from './tongname.js';
 
-export const SAVE_VERSION = 65;
+export const SAVE_VERSION = 66;
 
 // A rookie crew's first board: small work only.
 export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];
@@ -61,6 +62,7 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
     weekStart: null, // where the week started (core/week.js), set below // the tong's rank (data/tong.js; replaced tier in v34)
     rent: 4000,
     difficulty,
+    tongName: NAMES.defaultTong, // our tong's name (core/tongname.js, save v64)
     crew,
     stash: [], // gear bought and not on anyone (core/gear.js); a new crew starts with none
     inbox: [
@@ -133,13 +135,14 @@ const pickWelcome = () => `Before anything else: who's in? I found six people wh
  * The player's founders: FOUNDERS_TO_PICK ids from state.founding.candidates. Returns the new
  * state, or prev if the pick isn't valid. Day 1 can't start until this is done (time.js).
  */
-export function chooseFounders(prev, ids) {
+export function chooseFounders(prev, ids, tongName) {
   const candidates = prev.founding?.candidates ?? [];
   const picked = [...new Set(ids)].map((id) => candidates.find((c) => c.id === id)).filter(Boolean);
   if (picked.length !== FOUNDERS_TO_PICK || ids.length !== FOUNDERS_TO_PICK) return prev;
   const state = structuredClone(prev);
   state.crew = picked.map((r) => recruitToOperative(structuredClone(r), { condition: freshCondition(), history: ['Day 1: one of the founding crew'] }));
   state.founding = null;
+  if (tongName !== undefined && !tongNameProblem(state, tongName)) state.tongName = cleanTongName(tongName);
   const names = state.crew.map((o) => o.handle);
   const welcome = state.inbox.find((m) => m.id === 'welcome');
   if (welcome) welcome.body = `${names.slice(0, -1).join(', ')} and ${names.at(-1)}. Three on the crew, you, me, and one damp room above a noodle shop. Rent's due Sunday. Nobody in ${NAMES.city} knows our names yet, and the board only has small work. So we take it, learn, get noticed, and hire when we can. I'll keep the numbers honest and wake you if anything's on fire. — ${NAMES.partner}`;

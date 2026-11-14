@@ -16,6 +16,7 @@ import { homeHall, syncHalls } from '../core/halls.js';
 import { STARTING_RANK } from '../data/tong.js';
 import { refreshSideBoard } from '../core/sidetasks.js';
 import { SAVE_VERSION } from '../core/state.js';
+import { NAMES } from '../config/names.js';
 import { TATTOO_JOBS } from '../core/marks.js';
 import { seedRecord } from '../core/record.js';
 import { seedMilestones } from '../core/milestones.js';
@@ -807,7 +808,12 @@ function migrate(state) {
     state.version = 63;
   }
   if (state.version === 63) {
-    // v64: the gear rarity ladder (DESIGN.md 2026-11-13). An item's tier `street` is now `standard` and `pro` is
+    // v64: our tong has a name (core/tongname.js). A running game gets the default; the Tong screen's pencil changes it.
+    state.tongName ??= NAMES.defaultTong;
+    state.version = 64;
+  }
+  if (state.version === 64) {
+    // v65: the gear rarity ladder (DESIGN.md 2026-11-13). An item's tier `street` is now `standard` and `pro` is
     // `verified`: the stash, everything worn or carried (the fallen's and a retired runner's too), the armoury's
     // offers, and any copy inside a job in progress. Only gear is touched: an item (or offer) is an object with a
     // gear `type` and a `uid` or `oid`; a tong's rank `street` and a runner's tier `pro` are left alone.
@@ -819,11 +825,11 @@ function migrate(state) {
       Object.values(v).forEach(walk);
     };
     walk(state);
-    state.version = 64;
+    state.version = 65;
   }
-  if (state.version === 64) {
-    // v65: gear perks (DESIGN.md 2026-11-14). A Custom or Premium item carries `perks` (ids from data/gearPerks.js).
-    // Nothing in a v64 save has a Custom or Premium tier (they were not live), so nothing is normally rewritten; an
+  if (state.version === 65) {
+    // v66: gear perks (DESIGN.md 2026-11-14). A Custom or Premium item carries `perks` (ids from data/gearPerks.js).
+    // Nothing in a v65 save has a Custom or Premium tier (they were not live), so nothing is normally rewritten; an
     // item of one of those tiers that somehow has no perks (a hand-made save) is given the ones its own hash rolls.
     const walkPerks = (v) => {
       if (!v || typeof v !== 'object') return;
@@ -833,7 +839,7 @@ function migrate(state) {
       Object.values(v).forEach(walkPerks);
     };
     walkPerks(state);
-    state.version = 65;
+    state.version = 66;
   }
   return state;
 }

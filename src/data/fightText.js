@@ -102,6 +102,7 @@ export const FIGHT_TEXT = {
   'ifNothing.clear': 'No incoming shots or radio calls are shown this round.',
   // Ends (one cause line each, past tense)
   'end.won': 'The crew completed the objective.',
+  'end.routed': 'The yard is theirs: every enemy is down or running.',
   'end.lost': 'The hack was lost when {who} could no longer keep it running.',
   'end.abandoned': '{who} pulled out, and the hack was abandoned.',
   'end.extracted': 'With someone down, the crew pulled back.',
@@ -137,6 +138,7 @@ export const FIGHT_TEXT = {
   'callin.leaveOdds': 'Chance anyone outside is left behind: {chance}.',
   // The plan screen (the fight block under the squad board). {chance} and {pips} elsewhere come with their units from the screens.
   'plan.hack': 'Hack: {work} rounds of work; keep {tech} working.',
+  'plan.yard': 'Hold the yard: put down or break every enemy. More keep coming, so win it fast.',
   'plan.extract': 'Extract: hold until the van arrives, then get everyone aboard.',
   'plan.likely': 'Likely enemies: {kinds}.',
   'plan.noJammer': 'No jammer: radio calls can only be stopped by hitting the caller first.',

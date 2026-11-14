@@ -8,6 +8,7 @@ import { pieceAt, bedAt, placePost, placePiece, turnPiece, canRemove, refundOf, 
 import { PIECES } from '../data/hallBuild.js';
 import { isBlocked, advanceDay } from '../core/time.js';
 import { chooseFounders, createNewGame } from '../core/state.js';
+import { tongNameOf, cleanTongName, tongNameProblem, setTongName } from '../core/tongname.js';
 import { templateById } from '../core/jobs.js';
 import { resolveDecision } from '../core/decisions.js';
 import { swearIn } from '../core/oath.js';
@@ -17,8 +18,8 @@ import { fightTap, takeOrders } from './fightorders.js';
 import { fightScreenTap, takeFightChange } from './fightscreen.js';
 import { sendOff, autoStep } from '../core/autorun.js';
 import { takeCall, letThemRun, takeCommand } from '../core/away.js';
-import { leanPicks } from '../core/squad.js';
 import { assignSlot, planKit } from './board.js';
+import { leanPicks } from './plan.js';
 import { gearPlace } from './gear.js';
 import { buyGear, buyOffer, itemName, sellPrice, sellGear, equip, unequip } from '../core/gear.js';
 import { togglePause, toggleSpeed, showLatest, paceChanged, closeFinale } from './watch.js';
@@ -71,6 +72,7 @@ export function onClick(e) {
     case 'city-tab': V.cityTab = id; V.cityDistrict = null; V.tongsView = null; break;
     case 'jobs-tab': V.jobsTab = id; V.clientPage = null; break;
     case 'lore-tab': V.loreTab = id; break;
+    case 'book-filter': V.bookFilter = id; break;
     case 'tong-page': remember(action, id); goHome('tong'); V.tongsView = id; break;
     // A free name or a name in a tong: its page, a scout trip (two days away), and signing (core/dossier.js).
     case 'tong-name': remember(action, id); goHome('name'); V.tongsView = `name:${findCard(state, id)?.id ?? id}`; break;
@@ -182,9 +184,22 @@ export function onClick(e) {
       V.focusNext = { action, id };
       break;
     case 'found-crew': {
-      const next = chooseFounders(state, V.founderPick);
+      const typed = cleanTongName(V.foundingTongName);
+      const problem = typed ? tongNameProblem(state, typed) : null;
+      if (problem) { alert(problem); break; }
+      const next = chooseFounders(state, V.founderPick, typed || undefined);
       if (next === state) return;
+      V.foundingTongName = '';
       V.founderPick = []; nav.clear(); V.screen = 'inbox';
+      return setState(next);
+    }
+    case 'tong-rename': V.tongNaming = tongNameOf(state); break;
+    case 'tong-name-cancel': V.tongNaming = null; V.focusNext = { action: 'tong-rename', id: undefined }; break;
+    case 'tong-name-save': {
+      const problem = tongNameProblem(state, V.tongNaming);
+      if (problem) { alert(problem); break; }
+      const next = setTongName(state, V.tongNaming);
+      V.tongNaming = null;
       return setState(next);
     }
     case 'hire': V.openRecruitId = null; return setState(hire(state, id));

@@ -1010,3 +1010,18 @@ test('previews leave the fight exactly as they found it and never show a showcas
   const walk = (v) => { if (Array.isArray(v)) v.forEach(walk); else if (v && typeof v === 'object') { if (banned.has(v.kind)) assert.fail(`preview contains ${v.kind}`); Object.values(v).forEach(walk); } };
   outputs.forEach(walk);
 });
+
+test('holdYard: no van, ever; won only when every enemy is down or fled and none is on the way', () => {
+  const b = fixture('holdYard', ['mei', 'jax', 'wing'], { site: 'docks' });
+  assert.equal(FIGHT_JOBS.protection, 'holdYard');
+  b.enemies = [foe(1, 'hired'), foe(2, 'hired')]; b.nextPressure = 99;
+  for (let i = 0; i < 6 && !b.end; i++) { F.startRound(b, always(0.5)); assert.equal(b.stage, 0, 'the van never comes'); b.round += 0; F.playRound(b, always(0.5)); if (i === 1) b.enemies.forEach((e) => { e.fled = true; }); }
+  assert.equal(b.stage, 0);
+  assert.equal(b.end?.result, 'won');
+  assert.equal(b.end.key, 'end.routed');
+  const c = fixture('holdYard', ['mei', 'jax', 'wing'], { site: 'docks' });
+  c.enemies = [foe(1, 'hired')]; c.enemies[0].out = true; c.nextPressure = 99;
+  F.startRound(c, always(0.5)); c.arriving = ['hired']; // an arrival is called for after the round has started
+  F.playRound(c, always(0.5));
+  assert.equal(c.end, null, 'an enemy still on the way: not yet routed');
+});

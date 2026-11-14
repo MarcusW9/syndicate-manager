@@ -50,12 +50,16 @@ function growthMarker(op) {
  * One stat on a stats panel: the number used on jobs (with trait bonuses), the bonus,
  * and (for crew) this season's change in green/red plus a smaller career figure.
  */
+/** A stat's band for colouring (2026-11-13): normal 9 and under, good 10 to 15, great 16 and up, elite 18 and up (the scout's "top-tier" line; core/development.js potentialBand). */
+export const statBand = (v) => (v >= 18 ? 'elite' : v >= 16 ? 'great' : v >= 10 ? 'good' : '');
+
 function statCell(op, k, { growth = false } = {}) {
   const mod = traitMods(op)[k] ?? 0;
   const season = growth ? seasonChanges(op)[k] ?? 0 : 0;
   const career = growth ? op.stats[k] - (op.startStats?.[k] ?? op.stats[k]) : 0;
   const traitNames = op.traits.filter((t) => typeof TRAITS[t]?.effects?.[k] === 'number').map((t) => TRAITS[t].name).join(', ');
-  return `<div>
+  const band = statBand(ratedStat(op, k));
+  return `<div${band ? ` class="stat--${band}"` : ''}>
     <dt class="iconword">${statGlyph(k)}${esc(k)}</dt>
     <dd>${ratedStat(op, k)}${season ? ` <span class="growth ${season < 0 ? 'is-down' : ''}">${signed(season)}</span>` : ''}</dd>
     ${mod ? `<span class="statnote ${mod < 0 ? 'is-down' : ''}">${op.stats[k]} ${mod > 0 ? '+' : '−'}${Math.abs(mod)} ${esc(traitNames)}</span>` : ''}

@@ -37,7 +37,12 @@ export function mountApp(el, initialState) {
   setGame(initialState);
   root.addEventListener('click', onClick);
   // Map districts are SVG groups, not buttons: let Enter and Space open them too.
+  // Typing in a name field keeps the draft without drawing again (a redraw would drop focus).
+  root.addEventListener('input', (e) => {
+    if (e.target.id === 'tongname') { if (V.tongNaming !== null) V.tongNaming = e.target.value; else V.foundingTongName = e.target.value; }
+  });
   root.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.id === 'tongname' && V.tongNaming !== null) { e.preventDefault(); root.querySelector('[data-action="tong-name-save"]')?.click(); }
     if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('g[data-action]')) { e.preventDefault(); onClick(e); }
     if (e.key === 'Escape' && V.pickSlot) { V.focusNext = { action: 'pick-slot', id: V.pickSlot }; V.pickSlot = null; render(); }
     else if (e.key === 'Escape' && V.screen === 'city' && V.cityTab === 'map' && V.cityDistrict && !state.activeMission) { V.cityDistrict = null; render(); }
@@ -122,6 +127,7 @@ export function render() {
       ${navButton('tong', 'Tong')}
       ${navButton('crew', 'Crew')}
       ${navButton('jobs', 'Jobs', badges.jobs)}
+      <button class="nav__btn nav__btn--save ${V.screen === 'settings' ? 'is-active' : ''}" data-action="nav" data-id="settings" aria-pressed="${V.screen === 'settings'}">Save</button>
     </nav>
 
     <main class="main ${wide ? 'main--wide' : ''} ${!state.activeMission && V.screen === 'jobs' && V.plan ? 'main--split' : ''}">${state.activeMission ? renderMission() : `${keptBanner()}${renderScreen()}`}</main>
@@ -140,6 +146,7 @@ export function render() {
   if (V.raidCardDue) { const d = V.raidCardDue; V.raidCardDue = null; root.querySelector(`#threat-${d}`)?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
   if (V.upcomingDue) { V.upcomingDue = false; root.querySelector('.upcoming--strip')?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
   if (V.cityMapDue) { V.cityMapDue = false; root.querySelector('.mapframe')?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
+  if (V.tongNaming !== null) { const f = root.querySelector('#tongname'); if (f && document.activeElement !== f) f.focus({ preventScroll: true }); }
   const want = V.focusNext ?? refocus;
   V.focusNext = null;
   if (want) {

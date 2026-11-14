@@ -172,10 +172,11 @@ Seeded and saved. `makeRng(seed)` is mulberry32 (`core/rng.js`). `nextRng(state)
 
 Format: JSON of the state in `localStorage`. Keys: `syndicate-active-slot`, `syndicate-slot-N`, `…-backup` (weekly), `…-unreadable`, `syndicate-ironman-progress`, legacy `syndicate-save-v1`. `storageGet/Set/Remove` are the only storage calls (swap for iOS). `saveGame` writes slot + weekly backup (not in Ironman). `loadGame` migrates; on failure `keepUnreadable` and returns null. `exportSave` downloads JSON; `importSave(file)` migrates then `checkIronman`; `loadBackup`.
 
-**Versioning:** `SAVE_VERSION` 65 in `core/state.js`. What each version added, newest first (one per line; grep `v52:`):
+**Versioning:** `SAVE_VERSION` 66 in `core/state.js`. What each version added, newest first (one per line; grep `v52:`):
 
-- v65: gear perks: an item may carry `perks` (ids from `data/gearPerks.js`): a Custom item one, a Premium item two. Nothing in a v64 save has either tier, so the migration normally rewrites nothing; a Custom or Premium item with no `perks` is given the ones `rollPerks` makes from its own uid and the save's seed.
-- v64: gear tiers renamed: an item's (or armoury offer's) tier `street` is now `standard`, `pro` is `verified` (stash, worn and carried, the fallen's, offers, copies inside a job in progress). A tong rank `street` and a runner tier `pro` are left alone. Drops on a completed main job (`core/loot.js`) need no state.
+- v66: gear perks: an item may carry `perks` (ids from `data/gearPerks.js`): a Custom item one, a Premium item two. Nothing in a v65 save has either tier, so the migration normally rewrites nothing; a Custom or Premium item with no `perks` is given the ones `rollPerks` makes from its own uid and the save's seed.
+- v65: gear tiers renamed: an item's (or armoury offer's) tier `street` is now `standard`, `pro` is `verified` (stash, worn and carried, the fallen's, offers, copies inside a job in progress). A tong rank `street` and a runner tier `pro` are left alone. Drops on a completed main job (`core/loot.js`) need no state.
+- v64: `state.tongName`, our tong's name (`core/tongname.js`); old saves get `NAMES.defaultTong`.
 - v63: an engine-2 fight in progress gains `am.battle.spots`, its staging on the site map (`core/fightmap.js stageSpots`), computed from the job's site and the fight's start zone; staging only.
 - v62: `raid.posts`.
 - v61: endurance, the eighth stat (`op.stats.endurance`, with its `potential` and `startStats`), on every stored runner (crew, freelancers, leads, founder candidates), rolled from a hash of the seed and the runner's id with the bands their other stats came from (`core/recruits.js rollEndurance`); a fight in progress gets `am.battle.engine = 1` (the old fight code; battle rework slice 1).

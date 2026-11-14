@@ -95,6 +95,17 @@ export const STYLE_TEXT = {
   street: { label: 'Street', line: 'Knows every lane of its patch.' },
 };
 
+// E0 screens (2026-11-14): words for the ladder, the strip, a story's pips and a track's dates. No digits.
+export const SCREEN_TEXT = {
+  nobody: 'nobody, yet',
+  ours: 'Ours',
+  moves: { let_go: 'Let go', signed: 'Signed', moved: 'Moved' },
+  story: { decline: 'Slipping', founding: 'Opening', rise: 'Rising' },
+  beats: ['first', 'second', 'third'],
+  when: { week: 'This week', month: 'This month', earlier: 'Earlier' },
+  quietTrack: 'Nothing much said about them lately.',
+};
+
 // Beside the ladder, not on it (WORLD.md "The other tongs").
 export const ELDER_LINE = 'The Brass Anchor Society is older than all of them, and nobody here is measured against it.';
 

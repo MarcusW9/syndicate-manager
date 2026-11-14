@@ -11,7 +11,9 @@ import { portrait } from './art.js';
 import { money } from '../core/money.js';
 import { TONG_RANKS } from '../data/tong.js';
 import { NAMES } from '../config/names.js';
-import { BOOK_TEXT, RATING_WORDS, FAME_LINE, STYLE_TEXT, ELDER_LINE, POTENTIAL_TEXT, SCOUT_LEVEL_TEXT, SIGN_REASON, fill, wordLine } from '../data/rivals.js';
+import { tongNameOf } from '../core/tongname.js';
+import { seal, assignSeals, SEAL_COLOUR } from './seal.js';
+import { BOOK_TEXT, SCREEN_TEXT, RATING_WORDS, FAME_LINE, STYLE_TEXT, ELDER_LINE, POTENTIAL_TEXT, SCOUT_LEVEL_TEXT, SIGN_REASON, fill, wordLine } from '../data/rivals.js';
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const tierName = (id) => TONG_RANKS.find((r) => r.id === id)?.name ?? id;
@@ -43,24 +45,43 @@ export function renderGoneElsewhere(state) {
       </li>`).join('')}</ul>`;
 }
 
-/** The Anchor's Book (C5): this month's slate, S to D, names in order inside a grade, Ones to watch. Letters and words, never a number. */
-function bookPage(state, back) {
+const MOVE_MARK = { up: ['▲', 'up'], down: ['▼', 'down'], new: ['NEW', 'new'], returns: ['BACK', 'new'] };
+const firstName = (name) => String(name).split(' ')[0];
+const cap = (w) => String(w ?? '').replace(/^./, (c) => c.toUpperCase());
+/** A tile for a slate name: portrait, first name, the tong's seal in the corner and the move mark. */
+function slateTile(state, n, opId) {
+  const corner = n.yours ? seal({ ours: true, name: tongNameOf(state) }, 20) : n.free ? seal('free', 20) : n.tong ? seal({ name: n.tong, style: n.style }, 20) : '';
+  const mark = MOVE_MARK[n.move];
+  const face = n.yours ? faceOfOurs(state, n.name, 44) : n.id ? faceOfCard(state, n.id, 44) : '';
+  const body = `${face}<span class="stile__corner">${corner}</span>${mark ? `<i class="mv mv--${mark[1]}" title="${esc(BOOK_TEXT.moves[n.move])}">${mark[0]}</i>` : ''}<span class="tile__name">${esc(firstName(n.name))}</span>`;
+  const cls = `stile${n.yours ? ' stile--ours' : ''}`;
+  const label = `${n.name}${n.move && BOOK_TEXT.moves[n.move] ? `, ${BOOK_TEXT.moves[n.move]}` : ''}`;
+  if (n.yours && opId) return `<button class="${cls}" data-action="open-op" data-id="${esc(opId)}" aria-label="${esc(label)}">${body}</button>`;
+  if (n.id) return `<button class="${cls}" data-action="tong-name" data-id="${esc(n.id)}" aria-label="${esc(label)}">${body}</button>`;
+  return `<span class="${cls}">${body}</span>`;
+}
+
+/** The Anchor's Book (C5, E0 screens): a chalk slate, S to D, each grade a band of face tiles, names in order inside a grade. Letters and words, never a number. */
+function bookPage(state, back, filter = 'all') {
   const v = bookView(state);
-  const where = (n) => (n.yours ? 'Yours' : n.tong ?? (n.free ? 'Between tongs' : ''));
+  const where = (n) => (n.yours ? tongNameOf(state) : n.tong ?? (n.free ? 'Between tongs' : ''));
   const opIdOf = (n) => state.crew.find((o) => o.name === n.name)?.id;
   const nameBtn = (n) => (n.yours && opIdOf(n) ? `<button class="namebtn" data-action="open-op" data-id="${esc(opIdOf(n))}">${esc(n.name)}</button>`
     : n.id ? `<button class="namebtn" data-action="tong-name" data-id="${esc(n.id)}">${esc(n.name)}</button>` : `<span class="namebtn">${esc(n.name)}</span>`);
-  const groups = v.groups.map((g) => `<h2 class="bookgrade">${esc(g.grade)}</h2>
-    <ul class="list list--plain streetnames" aria-label="Grade ${esc(g.grade)}">${g.entries.map((n) => `
-      <li class="streetname ${n.yours ? 'is-own' : ''}">
-        <span class="streetname__who">${nameBtn(n)}${n.yours ? ' <span class="tongtag">Ours</span>' : ''}</span>
-        <span class="small muted">${esc([where(n), BOOK_TEXT.moves[n.move]].filter(Boolean).join(' · '))}</span>
-      </li>`).join('')}</ul>`).join('');
+  const chipsOf = new Map();
+  for (const g of v.groups) for (const e of g.entries) if (e.tongId) chipsOf.set(e.tongId, { id: e.tongId, name: e.tong, style: e.style });
+  const tongChips = [...chipsOf.values()].sort((a, b) => (a.name < b.name ? -1 : 1));
+  const keep = (n) => filter === 'all' || (filter === 'ours' && n.yours) || (filter === 'free' && n.free) || n.tongId === filter;
+  const chip = (id, label) => `<button class="fchip${filter === id ? ' on' : ''}" data-action="book-filter" data-id="${esc(id)}" aria-pressed="${filter === id}">${label}</button>`;
+  const filters = `<div class="filters" role="group" aria-label="Show">${chip('all', 'All')}${chip('ours', 'Ours')}${chip('free', 'Free')}${tongChips.map((t) => chip(t.id, `${seal(t, 24)}<span class="sr">${esc(t.name)}</span>`)).join('')}</div>`;
+  const bands = v.groups.map((g) => ({ grade: g.grade, entries: g.entries.filter(keep) })).filter((g) => g.entries.length);
+  const slate = `<div class="slate">${bands.map((g) => `<div class="band band--${esc(g.grade)}" aria-label="Grade ${esc(g.grade)}"><span class="band__letter">${esc(g.grade)}</span>
+      <div class="band__names">${g.entries.map((n) => slateTile(state, n, opIdOf(n))).join('')}</div></div>`).join('') || '<p class="small muted slate__none">Nobody on the slate matches.</p>'}</div>`;
   const watch = v.watch.length ? `<h2>Ones to watch</h2>
-    <ul class="list list--plain streetnames" aria-label="Ones to watch">${v.watch.map((n) => `
-      <li class="streetname ${n.yours ? 'is-own' : ''}">
-        <span class="streetname__who">${nameBtn(n)}</span>
-        <span class="small muted">${esc(where(n))}</span>
+    <ul class="list list--plain watchrows" aria-label="Ones to watch">${v.watch.map((n) => `
+      <li class="watchrow ${n.yours ? 'is-own' : ''}">
+        ${n.yours ? faceOfOurs(state, n.name, 44) : n.id ? faceOfCard(state, n.id, 44) : ''}
+        <span class="watchrow__who">${nameBtn(n)}<span class="small muted">${esc(where(n))}</span></span>
         ${n.id && !n.yours ? `<button class="btn" data-action="lead-name" data-id="${esc(n.id)}">Scout ›</button>` : ''}
       </li>`).join('')}</ul>` : '';
   const quiet = v.gone.length ? `<p class="small muted">Gone quiet this month: ${esc(v.gone.map((g) => g.name).join(', '))}.</p>` : '';
@@ -68,7 +89,7 @@ function bookPage(state, back) {
     <button class="linkbtn" data-action="back">‹ ${esc(back)}</button>
     <h1 class="cityhead">The Anchor's Book</h1>
     <p class="small muted">${esc(BOOK_TEXT.note)}</p>
-    ${v.published ? groups + watch + quiet : `<p class="small">${esc(BOOK_TEXT.empty)}</p>`}
+    ${v.published ? filters + slate + watch + quiet : `<p class="small">${esc(BOOK_TEXT.empty)}</p>`}
   </section>`;
 }
 
@@ -98,17 +119,51 @@ function namesList(state, names) {
     <li class="streetname ${n.own ? 'is-own' : ''}">
       <span class="streetname__face">${n.own ? faceOfOurs(state, n.name) : faceOfCard(state, n.id)}</span>
       <span class="streetname__who"><strong>${esc(n.name)}</strong>${n.own ? ' <span class="tongtag">Ours</span>' : ''}${n.former ? ' <span class="tongtag">Yours, once</span>' : ''}</span>
-      <span class="small muted">${esc([n.role, FAME_LINE[n.fame], n.tong ?? (n.own ? 'with us' : 'between tongs')].filter(Boolean).join(' · '))}</span>
+      <span class="small muted">${esc([n.role, FAME_LINE[n.fame], n.tong ?? (n.own ? tongNameOf(state) : 'between tongs')].filter(Boolean).join(' · '))}</span>
       <span class="small">${esc(ratingLine(n).replace(/^./, (c) => c.toUpperCase()))}.</span>
     </li>`).join('')}</ul>`;
 }
 
-function tongCard(t) {
-  return `<li><button class="tongcard" data-action="tong-page" data-id="${esc(t.id)}" data-style="${esc(t.style)}">
-    <span class="tongcard__what"><span class="tongcard__name">${esc(t.name)}</span>
-      <span class="small muted">${esc(STYLE_TEXT[t.style].label)} · ${esc(place(t.home))}${t.head ? ` · run by ${esc(t.head)}` : ''}</span>
-      ${t.said ? `<span class="small">${esc(wordText(t.said))}</span>` : ''}</span>
-    <span class="tongcard__go">Open ›</span></button></li>`;
+/** A seal that opens its house: a 44px target around the mark. */
+const sealBtn = (state, t, size = 34) => `<button class="sealbtn" data-action="tong-page" data-id="${esc(t.id)}" aria-label="${esc(t.name)}">${seal(t, size)}</button>`;
+
+/** The ladder: five rungs, Harbour at the top; every tong's seal on its rung, ours marked. No order inside a rung but the name. */
+function ladderBlock(state, view) {
+  if (!view.ladder.length) return '';
+  return `<div class="ladder" aria-label="Where the tongs stand">${view.ladder.map((r) => `<div class="rung${r.ours ? ' rung--ours' : ''}"><span class="rung__name">${esc(tierName(r.tier))}</span>
+    <span class="rung__seals">${r.tongs.map((t) => sealBtn(state, t)).join('')}${r.ours ? `<span class="sealwrap">${seal({ ours: true, name: tongNameOf(state) }, 34)}<b class="ourtag">${esc(SCREEN_TEXT.ours)}</b></span>` : ''}${!r.tongs.length && !r.ours ? `<span class="rung__none">${esc(SCREEN_TEXT.nobody)}</span>` : ''}</span></div>`).join('')}</div>`;
+}
+
+/** Come and gone: this month's movement of names, newest first. Hidden when nothing has moved. */
+function movesBlock(state, view) {
+  if (!view.moves.length) return '';
+  return `<h2>Come and gone</h2><div class="moves" aria-label="Come and gone">${view.moves.map((m) => `<button class="move" data-action="tong-name" data-id="${esc(m.id)}">
+    ${faceOfCard(state, m.id, 44)}<span class="move__who">${esc(m.name)}</span>
+    <span class="move__path">${m.from ? seal(m.from, 24) : ''}${m.from && (m.to || m.free) ? '<i>→</i>' : ''}${m.to ? seal(m.to, 24) : m.free ? seal('free', 24) : ''}</span>
+    <span class="move__note">${esc(SCREEN_TEXT.moves[m.word])}</span></button>`).join('')}</div>`;
+}
+
+const pips = (beat) => { const n = SCREEN_TEXT.beats.indexOf(beat) + 1; return `<span class="pips" aria-hidden="true">${SCREEN_TEXT.beats.map((_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</span>`; };
+
+/** A house card: seal, name, district and head, a style chip, a row of faces, the latest talk, a story's pips. */
+function tongCard(state, t) {
+  const faces = [...(t.head ? [{ id: t.table.find((x) => x.head)?.id, name: t.head, head: true }] : []), ...t.names].filter((n) => n.id);
+  return `<li class="house" data-style="${esc(t.style)}" style="--tong:${SEAL_COLOUR[t.style] ?? 'var(--accent-2)'}">
+    <button class="house__top" data-action="tong-page" data-id="${esc(t.id)}" data-style="${esc(t.style)}">${seal(t, 44)}
+      <span class="house__what"><span class="tongcard__name">${esc(t.name)}</span>
+        <span class="small muted">${esc(place(t.home))}${t.head ? ` · run by ${esc(t.head)}` : ''}</span></span>
+      <span class="tongcard__go">Open ›</span></button>
+    <div class="chips"><span class="chip">${esc(STYLE_TEXT[t.style].label)}</span></div>
+    ${faces.length ? `<div class="faces">${faces.map((n) => `<button class="facebtn" data-action="tong-name" data-id="${esc(n.id)}" aria-label="${esc(n.name)}">${faceOfCard(state, n.id, 36)}</button>`).join('')}</div>` : ''}
+    ${t.said ? `<p class="small house__said">${esc(wordText(t.said))}</p>` : ''}
+    ${t.story ? `<div class="story">${pips(t.story.beat)}<span class="story__word">${esc(SCREEN_TEXT.story[t.story.family])}</span></div>` : ''}
+  </li>`;
+}
+
+/** A face tile for a table: portrait, first name, role, and the Anchor's grade when on the slate. Opens the name's profile. */
+function tableTile(state, n) {
+  return `<button class="tile" data-action="tong-name" data-id="${esc(n.id)}" aria-label="${esc(n.name)}">${n.grade ? `<span class="grade grade--${esc(n.grade)}">${esc(n.grade)}</span>` : ''}${faceOfCard(state, n.id, 44)}
+    <span class="tile__name">${esc(firstName(n.name))}</span><span class="tile__role">${esc(n.head ? `Head · ${n.role}` : n.role)}</span></button>`;
 }
 
 function tongPage(state, view, id, back) {
@@ -117,14 +172,12 @@ function tongPage(state, view, id, back) {
     if (!t) continue;
     return `<section class="panel tongs">
       <button class="linkbtn" data-action="back">‹ ${esc(back)}</button>
-      <h1 class="cityhead">${esc(t.name)}</h1>
-      <p class="small">A ${esc(tierName(tier).toLowerCase())} tong, ${esc(STYLE_TEXT[t.style].label.toLowerCase())} by style. ${esc(STYLE_TEXT[t.style].line)}</p>
-      <dl class="tongfacts">
-        <div><dt>Based in</dt><dd>${esc(place(t.home))}</dd></div>
-        ${t.head ? `<div><dt>Run by</dt><dd>${esc(t.head)}</dd></div>` : ''}
-        ${t.names.length ? `<div><dt>Names you hear</dt><dd class="namebtns">${t.names.map((n) => `<button class="namebtn" data-action="tong-name" data-id="${esc(n.id)}">${faceOfCard(state, n.id, 32)}${esc(n.name)} ›</button>`).join('')}</dd></div>` : ''}
-      </dl>
-      ${t.said ? `<h2>The latest</h2><p class="small">${esc(wordText(t.said))}</p>` : '<p class="small muted">Nothing much said about them lately.</p>'}
+      <div class="filehead">${seal(t, 60)}<div><h1 class="cityhead filename">${esc(t.name)}</h1>
+        <p class="small muted">${esc(tierName(tier))} tong · ${esc(STYLE_TEXT[t.style].label)} · ${esc(place(t.home))}</p></div></div>
+      <p class="small">${esc(STYLE_TEXT[t.style].line)}</p>
+      <h2>Their story</h2>
+      ${t.track.length ? `<ol class="track">${t.track.map((e, i) => `<li class="${i === 0 ? 'on' : ''}"><b>${esc(SCREEN_TEXT.when[e.when])}</b>${esc(wordText(e))}</li>`).join('')}</ol>` : `<p class="small muted">${esc(SCREEN_TEXT.quietTrack)}</p>`}
+      ${t.table.length ? `<h2>The table</h2><div class="tiles">${t.table.map((n) => tableTile(state, n)).join('')}</div>` : ''}
     </section>`;
   }
   return '';
@@ -229,18 +282,26 @@ export function leadNames(state) {
   return rows.length ? `<h2>Names</h2><p class="muted small">Free names, and anyone in another tong we have an eye on. A name from the street can be opened from City › Tongs.</p><ul class="list list--plain tongs__list">${rows.join('')}</ul>` : '';
 }
 
-/** City › Tongs: dossier cards by tier, then Names on the street. `openId` opens one tong's page, or `name:<id>` a name's profile. */
-export function renderTongs(state, openId = null, back = 'City') {
+/** The Book card: a large S, the title, one line. */
+function bookCard(state) {
+  return `<button class="tongcard bookcard slatecard" data-action="tong-page" data-id="book" data-style="elder"><span class="slatecard__s">S</span><span class="tongcard__what"><span class="tongcard__name">The Anchor's Book</span><span class="small muted">${esc(bookView(state).published ? 'The elders\' slate for this month' : BOOK_TEXT.empty)}</span></span><span class="tongcard__go">Open ›</span></button>`;
+}
+
+/** City › Tongs: the Book, the ladder, come and gone, house cards by tier, then Names on the street. `openId` opens one tong's page, or `name:<id>` a name's profile. */
+export function renderTongs(state, openId = null, back = 'City', bookFilter = 'all') {
   const view = rivalView(state);
-  if (openId === 'book') return bookPage(state, back);
+  assignSeals([tongNameOf(state), ...view.ladder.flatMap((r) => r.tongs.map((t) => t.name))]);
+  if (openId === 'book') return bookPage(state, back, bookFilter);
   if (openId?.startsWith('name:')) return nameProfile(state, openId.slice(5), back);
   if (openId) { const page = tongPage(state, view, openId, back); if (page) return page; }
   return `<section class="tongs">
     <h2 class="tongs__title">The other tongs</h2>
     <p class="small muted">Peers, not gangs: they work, hire and rise like us, and the city talks about them. Nobody keeps a table; you hear where you stand.</p>
-    <button class="tongcard bookcard" data-action="tong-page" data-id="book" data-style="elder"><span class="tongcard__what"><span class="tongcard__name">The Anchor's Book</span><span class="small muted">${esc(bookView(state).published ? 'The elders\' slate for this month' : BOOK_TEXT.empty)}</span></span></button>
+    ${bookCard(state)}
+    ${ladderBlock(state, view)}
+    ${movesBlock(state, view)}
     ${freeNamesBlock(state, view)}
-    ${view.tiers.map(({ tier, tongs }) => `<h2 class="tongs__tier">${esc(tierName(tier))} tongs</h2><ul class="list list--plain tongs__list">${tongs.map(tongCard).join('')}</ul>`).join('')}
+    ${view.tiers.map(({ tier, tongs }) => `<h2 class="tongs__tier">${esc(tierName(tier))} tongs</h2><ul class="list list--plain tongs__list">${tongs.map((t) => tongCard(state, t)).join('')}</ul>`).join('')}
     <h2>Names on the street</h2>
     ${namesList(state, view.names)}
     <p class="small muted">${esc(ELDER_LINE)}</p>

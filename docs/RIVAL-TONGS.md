@@ -24,9 +24,10 @@ Spec and history live elsewhere: `drafts/PROPOSAL-phase-3.md` part C (C.0 to C.1
 | C3b | Screens: Free names, a name's page, Scout (side task), Sign | 2026-11-08 | none |
 | D3 | Rivals approach your runners; Match it or Let them go (they pay you a buyout) | 2026-11-09 | none |
 | C5 | The Anchor's Book: once a month the Brass Anchor chalks letter grades S to D for up to 25 runners (rivals, free names and ours), from public fame, form and age plus a lasting bias, never the hidden rating; Ones to watch; moves; Joss writes once. Flavour only | 2026-11-09 | v60 |
+| E0 | The screens redrawn (screens only, no save change): seals (`ui/seal.js`), the ladder, Come and gone, house cards with faces and story pips, the house file (Their story, The table), the Anchor's Book as a slate of face tiles with filters. `rivalView` gains `ladder`, `moves`, and per tong `story`, `track`, `table`; `bookView` entries gain `tongId`, `style`. Brief: `drafts/HANDOFF-tongs-screens.md` | 2026-11-14 | none |
 | C4 | Rivals feel alive: stories in The Word (decline, founding, rise), names we let go stay alive (`formerOf`, "Gone elsewhere" on Crew › Wall), the Monday cap, a client remark that follows the tong's real state, a stable `runnerId` | 2026-11-09 | v59 |
 
-Related and built: B, the Legend defining job (rivals' fame words feed off the same fame tiers); D1 retirement and the Hall; D2 loyalty (`op.loyalty`); D4 sworn runners (rivals approach a sworn runner a tenth as often). Current save version: **60** (`SAVE_VERSION` in `core/state.js`).
+Related and built: B, the Legend defining job (rivals' fame words feed off the same fame tiers); D1 retirement and the Hall; D2 loyalty (`op.loyalty`); D4 sworn runners (rivals approach a sworn runner a tenth as often). The other tongs' own migrations ended at **v60** (C5); the game's current version is `SAVE_VERSION` in `core/state.js` (63 on 2026-11-13), and the tongs' next change (E1) bumps from whatever it is then.
 
 ## How it behaves
 
@@ -77,7 +78,8 @@ Related and built: B, the Legend defining job (rivals' fame words feed off the s
 | `src/data/rivals.js` | Naming kit, text tables, the Brass Anchor, all the `RIVALS` tuning numbers |
 | `src/data/mobility.js` | D3 numbers and wording (first pass) |
 | `src/data/tong.js` | The rank ladder: Back Room, Street, District, City, Harbour |
-| `src/ui/tongs.js` | City › Tongs, a tong's page, a name's read-only profile, Names on the street, The Word |
+| `src/ui/seal.js` | E0: a tong's seal, the mark used wherever a tong is named |
+| `src/ui/tongs.js` | City › Tongs (ladder, Come and gone, house cards), a tong's file, a name's read-only profile, Names on the street, The Word |
 | `src/ui/crew.js` | Crew › Leads draws scouting, "what it would take" and Sign (`renderLeadName`, `leadNames`) |
 | `tests/rivals.test.js`, `rivals-c3.test.js`, `rivals-c3b.test.js`, `rivals-c4.test.js`, `book.test.js`, `mobility.test.js` | Tests |
 | `tests/golden/rivals-1234.json` | Golden snapshot for iOS (C4 adds a `c4` section after a scripted D3 departure; C5 a `c5` section, the week-8 Book) |
@@ -95,7 +97,7 @@ Related and built: B, the Legend defining job (rivals' fame words feed off the s
 - Joss's Book message and the poach note are first-pass wording.
 - The Book is a card at the top of City › Tongs that opens its page (like a tong's page), not a sub-tab.
 
-**Agreed, not built (owner, 2026-11-13; E0's brief is `drafts/HANDOFF-tongs-screens.md`):** `drafts/PROPOSAL-tong-depth.md` (slices E0 to E4: the screens redrawn, habits, overreach, stale reads and watching a house, contested offers and regard with teeth). It would take up `contestOffers` and the hostile-tong idea below.
+**Agreed (owner, 2026-11-13; E0 built 2026-11-14, brief `drafts/HANDOFF-tongs-screens.md`):** `drafts/PROPOSAL-tong-depth.md` (slices E0 to E4; E1 to E4 not built: the screens redrawn, habits, overreach, stale reads and watching a house, contested offers and regard with teeth). It would take up `contestOffers` and the hostile-tong idea below.
 
 **Ideas, no rule yet (don't start without asking):**
 - `contestOffers`: rivals competing for the board's contracts (once per job id via `hashRng(seed, 'contest:' + job.id)`).

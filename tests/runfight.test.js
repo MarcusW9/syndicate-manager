@@ -168,7 +168,7 @@ function findCall(id, kind, { from = 1, to = 200, callIn = 'every', orders = 'st
 }
 
 test('a dilemma call-in: what changed, the options, Pull back; carry on plays the round, pull back exits at the usual cost', () => {
-  const s = findCall('data_pull', 'dilemma', { orders: 'steady' });
+  const s = findCall('data_pull', 'dilemma', { orders: 'steady', filter: (x) => x.activeMission.pending.id === 'techUnderFire' });
   assert.ok(s, 'techUnderFire comes up in some fight');
   const v = M.describePending(s);
   assert.equal(v.kind, 'dilemma');
@@ -199,7 +199,7 @@ test('a dilemma call-in: what changed, the options, Pull back; carry on plays th
 });
 
 test('an answer is revalidated: if the situation no longer holds, it is discarded and the crew carries on', () => {
-  const s = findCall('data_pull', 'dilemma', { orders: 'steady' });
+  const s = findCall('data_pull', 'dilemma', { orders: 'steady', filter: (x) => x.activeMission.pending.id === 'techUnderFire' });
   const b = s.activeMission.battle;
   const prot = b.runners.find((r) => r.id === b.goal.protect);
   // Make the situation pass: the tech is back at full pips and nothing is shot at them or called in.
