@@ -47,7 +47,7 @@ export function bookCandidates(state) {
     const tong = tongs.get(c.tongId);
     out.push({
       runnerId: c.runnerId ?? c.id, name: c.name, age: c.age, fame: c.fame, form: c.form ?? 0,
-      style: tong?.status === 'active' ? tong.style : null, rating: c.rating, own: false,
+      style: tong?.status === 'active' ? tong.style : null, habit: tong?.status === 'active' ? tong.habit ?? null : null, rating: c.rating, own: false,
     });
   }
   for (const op of state.crew ?? []) {
@@ -64,7 +64,7 @@ const ageTrend = (age) => (BOOK.ageTrend.find(([upTo]) => age <= upTo) ?? [0, 0]
 /** The score without this month's wobble: public fame, form and age, plus a lasting bias for this runner. */
 export function baseScore(state, cand) {
   const u = hashRng(state.seed, 'book-bias:' + cand.runnerId)();
-  const bias = Math.round((u * 2 - 1) * BOOK.biasSpread + (BOOK.styleSkew[cand.style] ?? 0) + (BOOK.fameSkew[cand.fame] ?? 0));
+  const bias = Math.round((u * 2 - 1) * BOOK.biasSpread + (BOOK.styleSkew[cand.style] ?? 0) + (BOOK.habitSkew?.[cand.habit] ?? 0) + (BOOK.fameSkew[cand.fame] ?? 0));
   return (BOOK.famePoints[cand.fame] ?? 0) + cand.form * BOOK.formWeight + ageTrend(cand.age) + bias;
 }
 const wobbleOf = (state, absMonth, cand) => Math.round((hashRng(state.seed, 'book:' + absMonth + ':' + cand.runnerId)() * 2 - 1) * BOOK.wobble);

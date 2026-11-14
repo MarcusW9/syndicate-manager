@@ -13,7 +13,7 @@ import { TONG_RANKS } from '../data/tong.js';
 import { NAMES } from '../config/names.js';
 import { tongNameOf } from '../core/tongname.js';
 import { seal, assignSeals, SEAL_COLOUR } from './seal.js';
-import { BOOK_TEXT, SCREEN_TEXT, RATING_WORDS, FAME_LINE, STYLE_TEXT, ELDER_LINE, POTENTIAL_TEXT, SCOUT_LEVEL_TEXT, SIGN_REASON, fill, wordLine } from '../data/rivals.js';
+import { BOOK_TEXT, SCREEN_TEXT, HABITS, HABIT_NOTE, RATING_WORDS, FAME_LINE, STYLE_TEXT, ELDER_LINE, POTENTIAL_TEXT, SCOUT_LEVEL_TEXT, SIGN_REASON, fill, wordLine } from '../data/rivals.js';
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const tierName = (id) => TONG_RANKS.find((r) => r.id === id)?.name ?? id;
@@ -153,7 +153,7 @@ function tongCard(state, t) {
       <span class="house__what"><span class="tongcard__name">${esc(t.name)}</span>
         <span class="small muted">${esc(place(t.home))}${t.head ? ` · run by ${esc(t.head)}` : ''}</span></span>
       <span class="tongcard__go">Open ›</span></button>
-    <div class="chips"><span class="chip">${esc(STYLE_TEXT[t.style].label)}</span></div>
+    <div class="chips"><span class="chip">${esc(STYLE_TEXT[t.style].label)}</span>${HABITS[t.habit] ? `<span class="chip chip--habit">${esc(HABITS[t.habit].label)}</span>` : ''}</div>
     ${faces.length ? `<div class="faces">${faces.map((n) => `<button class="facebtn" data-action="tong-name" data-id="${esc(n.id)}" aria-label="${esc(n.name)}">${faceOfCard(state, n.id, 36)}</button>`).join('')}</div>` : ''}
     ${t.said ? `<p class="small house__said">${esc(wordText(t.said))}</p>` : ''}
     ${t.story ? `<div class="story">${pips(t.story.beat)}<span class="story__word">${esc(SCREEN_TEXT.story[t.story.family])}</span></div>` : ''}
@@ -174,7 +174,7 @@ function tongPage(state, view, id, back) {
       <button class="linkbtn" data-action="back">‹ ${esc(back)}</button>
       <div class="filehead">${seal(t, 60)}<div><h1 class="cityhead filename">${esc(t.name)}</h1>
         <p class="small muted">${esc(tierName(tier))} tong · ${esc(STYLE_TEXT[t.style].label)} · ${esc(place(t.home))}</p></div></div>
-      <p class="small">${esc(STYLE_TEXT[t.style].line)}</p>
+      <p class="small">${esc(STYLE_TEXT[t.style].line)}${HABITS[t.habit] ? ` ${esc(HABITS[t.habit].line)}` : ''}</p>
       <h2>Their story</h2>
       ${t.track.length ? `<ol class="track">${t.track.map((e, i) => `<li class="${i === 0 ? 'on' : ''}"><b>${esc(SCREEN_TEXT.when[e.when])}</b>${esc(wordText(e))}</li>`).join('')}</ol>` : `<p class="small muted">${esc(SCREEN_TEXT.quietTrack)}</p>`}
       ${t.table.length ? `<h2>The table</h2><div class="tiles">${t.table.map((n) => tableTile(state, n)).join('')}</div>` : ''}
@@ -208,7 +208,8 @@ function nameHead(state, card, r) {
 function nameKnow(r) {
   const stats = r.stats ? `<p class="small namestats">${STAT_ORDER.map((k) => `${k} <strong>${r.stats[k]}</strong>`).join(' · ')}</p>` : '';
   const potential = r.potential ? `<p class="small">${esc(POTENTIAL_TEXT[r.potential])}</p>` : '';
-  return `<h2>What we know</h2>${stats}${potential}<p class="small muted">${esc(SCOUT_LEVEL_TEXT[r.level])}</p>`;
+  const note = r.note ? `<p class="small">${esc(HABIT_NOTE[r.note])}</p>` : '';
+  return `<h2>What we know</h2>${stats}${potential}${note}<p class="small muted">${esc(SCOUT_LEVEL_TEXT[r.level])}</p>`;
 }
 
 const goneCard = (back) => `<section class="panel tongs"><button class="linkbtn" data-action="back">‹ ${esc(back)}</button><h1 class="cityhead">Gone</h1><p class="small muted">${esc(SIGN_REASON.gone)}</p></section>`;
