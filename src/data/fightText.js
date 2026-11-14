@@ -38,6 +38,10 @@ export const FIGHT_TEXT = {
   'stage.absorbed': 'Armour',
   'stage.flanked': 'Flanked',
   'stage.special': '{who} cuts loose.',
+  // A special move's title over the map (data/fightLooks.js SPECIAL_MOVES; draft text, the owner's to write).
+  'stage.special.ricochet': '{who} lines up one round for all of them.',
+  'stage.special.slash': '{who} goes through them.',
+  'stage.special.ping': '{who} pings the whole pack.',
   // Round feed (one per thing that happens)
   'arrive': '{kind} {n} arrives.',
   'pressure': '{kind} {n} joins the fight.',

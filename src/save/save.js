@@ -31,6 +31,7 @@ import { prepareOperative, rollPotential, rollScoutError, scoutFor, potentialRea
 import { nextRng } from '../core/random.js';
 import { refreshFreelancers } from '../core/freelance.js';
 import { GEAR, makeItem, rollPerks } from '../core/gear.js';
+import { specialLook } from '../core/fightmap.js';
 import { CELLS, TIERS } from '../data/gear.js';
 import { trimInbox } from '../core/inbox.js';
 import { seedRivals, offerGapFor } from '../core/rivals.js';
@@ -904,7 +905,18 @@ function migrate(state) {
     state.version = 69;
   }
   if (state.version === 69) {
-    // v70: overreach (core/overreach.js, DESIGN.md 2026-11-14 "E2"). Each tong gets a wage ledger (four-Sunday rings of bills and
+    // v70: the live battle view's special moves (DESIGN.md 2026-11-14). An engine-2 runner carries `look`, how the stage
+    // draws their special move (core/fightmap.js specialLook, from their gear and role). A fight in progress gets it now
+    // from the runner as they are; someone no longer on the roster gets the default. Picture only; no rule reads it.
+    for (const am of [state.activeMission, ...(state.awayJobs ?? []).map((j) => j.mission)]) {
+      const b = am?.battle;
+      if (b?.engine !== 2) continue;
+      for (const r of b.runners ?? []) r.look ??= specialLook((state.crew ?? []).find((o) => o.id === r.id) ?? { id: r.id, role: r.role });
+    }
+    state.version = 70;
+  }
+  if (state.version === 70) {
+    // v71: overreach (core/overreach.js, DESIGN.md 2026-11-14 "E2"). Each tong gets a wage ledger (four-Sunday rings of bills and
     // income, empty until the Sundays fill them), no strain and no shopping yet; the rivals gain no sale. Zeros and nulls: a house
     // cannot strain until it has four Sundays of books, so nothing happens on the day it is loaded.
     const r = state.rivals;
@@ -912,7 +924,7 @@ function migrate(state) {
       for (const t of r.tongs) { t.strain ??= 0; t.bills ??= []; t.income ??= []; t.shoppedDay ??= null; }
       r.sale ??= null;
     }
-    state.version = 70;
+    state.version = 71;
   }
   return state;
 }
