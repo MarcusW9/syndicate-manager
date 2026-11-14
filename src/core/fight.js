@@ -64,7 +64,7 @@ export function runnerOf(op, approach, seat = 0) {
   return {
     id: op.id, handle: op.handle, role: op.role, seat, pips: Math.max(1, max - hurt), max,
     absorb: absorbOf(a.value), armourName: a.name, weapon: w.name, ap: (w.pierce ?? 0) > 0, strong: strongMargin(w.damage),
-    jammer: canJam(op), healer: op.role === 'medic' || patchBonus(op) > 0, medic: op.role === 'medic',
+    jammer: canJam(op), healer: op.role === 'medic' || patchBonus(op, { perks: false }) > 0, medic: op.role === 'medic', // a kit makes a healer; a suture-strip perk only helps one
     cover: FIGHT.startCover, down: false, withdrawn: false, dead: false, aboard: false, stable: false, fightOn: false, downRound: null, left: false,
     stats: Object.fromEntries(FIGHT_STATS.map((s) => [s, effectiveStat(op, s, { approach })])),
   };

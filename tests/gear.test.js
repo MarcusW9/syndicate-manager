@@ -35,7 +35,7 @@ test('buying costs its price and goes to the stash; you can\'t buy what you can\
   assert.equal(s.cash, cash - priceOf('rifle'));
   assert.equal(s.stash.length, 1);
   assert.equal(s.stash[0].type, 'rifle');
-  assert.ok(priceOf('rifle', 'pro') > priceOf('rifle'), 'pro costs more');
+  assert.ok(priceOf('rifle', 'verified') > priceOf('rifle'), 'pro costs more');
   const poor = { ...s, cash: 10 };
   assert.equal(buyGear(poor, 'drone'), poor);
   assert.equal(buyGear(s, 'mortar'), s, 'only what exists');
@@ -97,7 +97,7 @@ test('two implant sockets: their neural-load floors add up; never the same impla
 test('different kinds add up; the same kind counts once', () => {
   const s = fresh();
   const op = s.crew[0];
-  arm(s, op.id, 'deck', 'picks', 'picks:pro');
+  arm(s, op.id, 'deck', 'picks', 'picks:verified');
   assert.equal(gearMods(op, 'tech').reduce((n, m) => n + m.value, 0), 1, 'the deck');
   assert.equal(gearMods(op, 'stealth').reduce((n, m) => n + m.value, 0), 2, 'the better ghost kit, once');
 });
@@ -130,9 +130,9 @@ test('gear adds to rolls and says so in the breakdown; a pro item adds one more'
   const armed = effectiveStat(op, 'combat');
   assert.equal(armed.value, before + GEAR.pistol.bonus.combat);
   assert.ok(armed.notes.some((n) => /Sidearm \+1/.test(n)));
-  arm(s, op.id, 'pistol:pro');
+  arm(s, op.id, 'pistol:verified');
   assert.equal(effectiveStat(op, 'combat').value, before + 2);
-  assert.ok(effectiveStat(op, 'combat').notes.some((n) => /Pro sidearm \+2/.test(n)));
+  assert.ok(effectiveStat(op, 'combat').notes.some((n) => /Verified sidearm \+2/.test(n)));
   assert.equal(crewRoll([op], 'combat').value, before + 2, 'the crew roll counts it too');
   arm(s, op.id, 'reflex');
   assert.equal(effectiveStat(op, 'piloting').value, op.stats.piloting + 1, 'an implant can help two stats');
@@ -149,10 +149,10 @@ test('overwatch needs the kit: carried rifles and drones only, and a pro rifle s
   assert.equal(M.startMission(s, s.jobs[0].id, [a.id, b.id], 'stealth', { overwatch: { id: c.id, kit: 'drone' } }), s, 'a rifle isn\'t a drone');
   assert.ok(M.startMission(s, s.jobs[0].id, [a.id, b.id], 'stealth', { overwatch: { id: c.id, kit: 'rifle' } }).activeMission);
   const street = bestSave({ victim: a, able: [a], overwatch: { kit: 'rifle', left: 2 }, overwatchOp: c, zone: 'inside', diff: 6 });
-  arm(s, c.id, 'rifle:pro');
+  arm(s, c.id, 'rifle:verified');
   const pro = bestSave({ victim: a, able: [a], overwatch: { kit: 'rifle', left: 2 }, overwatchOp: c, zone: 'inside', diff: 6 });
   assert.equal(pro.value, street.value + 1);
-  assert.ok(pro.notes.some((n) => /Pro rifle \+1/.test(n)));
+  assert.ok(pro.notes.some((n) => /Verified rifle \+1/.test(n)));
   assert.equal(overwatchKit(a, 'rifle'), null);
 });
 
@@ -227,11 +227,11 @@ test('a v44 save upgrades: the weapon and tool go in the bag, the implant in a s
   const s = fresh(16);
   const old = structuredClone(s);
   old.version = 44;
-  const rifle = { uid: 'o1', type: 'rifle', tier: 'street' };
-  const kit = { uid: 'o2', type: 'medkit', tier: 'street' };
-  const deck = { uid: 'o3', type: 'deck', tier: 'pro' };
-  const vest = { uid: 'o4', type: 'vest', tier: 'street' };
-  const reflex = { uid: 'o5', type: 'reflex', tier: 'street' };
+  const rifle = { uid: 'o1', type: 'rifle', tier: 'standard' };
+  const kit = { uid: 'o2', type: 'medkit', tier: 'standard' };
+  const deck = { uid: 'o3', type: 'deck', tier: 'verified' };
+  const vest = { uid: 'o4', type: 'vest', tier: 'standard' };
+  const reflex = { uid: 'o5', type: 'reflex', tier: 'standard' };
   old.crew[0].gear = { weapon: rifle, armour: vest, tool: kit, implant: reflex };
   old.crew[1].gear = { weapon: rifle && { ...rifle, uid: 'o6' }, armour: null, tool: deck, implant: null };
   old.crew[2].gear = { weapon: null, armour: null, tool: null, implant: null };

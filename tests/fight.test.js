@@ -72,9 +72,9 @@ test('gear: a vest absorbs 1 or 2 hits, a sidearm sets the strong margin, pierce
   assert.deepEqual([2, 3, 4, 5, 6].map(F.strongMargin), [12, 10, 8, 6, 6]);
   const [stitch] = crewOf().filter((o) => o.id === 'mei');
   assert.equal(F.runnerOf(stitch, 'loud').absorb, 0);
-  stitch.gear = { armour: { uid: 'v', type: 'vest', tier: 'street' }, implants: [], bag: [] };
+  stitch.gear = { armour: { uid: 'v', type: 'vest', tier: 'standard' }, implants: [], bag: [] };
   assert.equal(F.runnerOf(stitch, 'loud').absorb, 1);
-  stitch.gear.armour.tier = 'pro';
+  stitch.gear.armour.tier = 'verified';
   assert.equal(F.runnerOf(stitch, 'loud').absorb, 2);
   assert.equal(F.runnerOf(stitch, 'loud').ap, false);
 });

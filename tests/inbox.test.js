@@ -11,7 +11,7 @@ import { playWeeks } from './play.js';
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 const { importSave } = await import('../src/save/save.js');
 
-const SAVE_BUDGET = 250_000; // characters of JSON after a year (was 542KB before the trim)
+const SAVE_BUDGET = 260_000; // characters of JSON after a year (was 542KB before the trim; 250k until loot, 2026-11-13: dropped gear piles up in the stash, about 3k a year)
 
 const waiting = (m) => m.blocking && !m.resolved || m.resolved === false;
 
