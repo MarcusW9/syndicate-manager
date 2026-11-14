@@ -2344,11 +2344,17 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
   .fs-float { display: none; }
 }
 
-/* Stat bands (2026-11-13): the number on a stat tile is coloured by its value. Good 10+ green, great 16+ gold, elite 18+ gold with a glow.
-   A bar under the number says it without colour: one for good, two for great and elite. */
-.stats .stat--good dd, .stats .stat--great dd, .stats .stat--elite dd { position: relative; width: fit-content; }
-.stats .stat--good dd::after, .stats .stat--great dd::after, .stats .stat--elite dd::after { content: ""; display: block; height: 2px; margin-top: 2px; background: currentColor; opacity: 0.7; }
-.stats .stat--great dd::after, .stats .stat--elite dd::after { height: 5px; background: linear-gradient(currentColor 0 2px, transparent 2px 3px, currentColor 3px 5px); }
-.stats .stat--good dd { color: #5fe0a5; }
-.stats .stat--great dd { color: #f5c542; }
-.stats .stat--elite dd { color: #ffd45e; text-shadow: 0 0 10px rgba(255, 200, 70, 0.55); }
+/* Stat bands (2026-11-13): the number on a stat tile is coloured by its value, the tile gets a faint wash, and sharp diamonds in the corner
+   say the band without colour: one for good (10+), two for great (16+) and elite (18+, which also glows). Nothing changes the tile's height. */
+.stats .stat--good, .stats .stat--great, .stats .stat--elite { position: relative; }
+.stats .stat--good::after, .stats .stat--great::after, .stats .stat--elite::after {
+  content: ""; position: absolute; right: 9px; top: 9px; width: 6px; height: 6px; background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 6'%3E%3Cpath d='M3 0L6 3L3 6L0 3Z'/%3E%3C/svg%3E") 0 0 / 9px 6px repeat-x;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 6'%3E%3Cpath d='M3 0L6 3L3 6L0 3Z'/%3E%3C/svg%3E") 0 0 / 9px 6px repeat-x;
+}
+.stats .stat--great::after, .stats .stat--elite::after { width: 15px; } /* 6 + 3 gap + 6, the mask tiles at 9px */
+.stats .stat--good { color: #5fe0a5; background: rgba(95, 224, 165, 0.07); }
+.stats .stat--great { color: #f5c542; background: rgba(245, 197, 66, 0.08); }
+.stats .stat--elite { color: #ffd45e; background: rgba(245, 197, 66, 0.08); }
+.stats .stat--good dd, .stats .stat--great dd, .stats .stat--elite dd { color: inherit; }
+.stats .stat--elite dd { text-shadow: 0 0 10px rgba(255, 200, 70, 0.55); }
