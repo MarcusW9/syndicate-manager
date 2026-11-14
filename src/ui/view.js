@@ -33,6 +33,7 @@ export const V = {
   crewTab: 'roster', // Crew's sub-tab: 'roster' | 'leads' | 'wall'
   hallInside: null, // inside one building of the open hall (a part's id), or null for the compound (2026-11-09; UI only, never saved)
   buildView: null, // the hall build screen, from a hall's page (ui/hallbuild.js): { district, cell, piece, rot, picked }
+  bookFilter: 'all', // the Anchor's slate's filter: 'all' | 'ours' | 'free' | a tong id (ui/tongs.js)
   tongsView: null, // City › Tongs: null (the list), a tong's id or `name:<id>` (a name's profile) (ui/tongs.js)
   hallPage: null, // a hall's own page (2026-11-07), by district: from Tong › Halls, a district page or a raid card; always on Tong
   gearSlot: null, // the place being filled on a runner's page: 'armour', 'implant:0', 'bag:2,1'

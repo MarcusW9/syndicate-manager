@@ -184,7 +184,7 @@ test('free names, name pages, a tong\'s names and Names on the street all carry 
   assert.match(page, /class="face face--lg"/);
   assert.match(page, /<svg/);
   const tong = view.tiers[0].tongs[0];
-  assert.match(renderTongs(s, tong.id), /class="namebtn"[^>]*><span class="face face--sm">/);
+  assert.match(renderTongs(s, tong.id), /class="tile"[^>]*>(?:<span class="grade[^>]*>[A-D S]<\/span>)?<span class="face">/); // E0: the table is face tiles
   // The face is drawn from the dossier's runner, the very one that is signed.
   const card = findCard(s, view.offer.id);
   const rich = structuredClone(s); rich.cash = 200000; rich.crew[0].fame = 'legend'; rich.crew[1].fame = 'elite';

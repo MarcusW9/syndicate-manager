@@ -210,7 +210,9 @@ try {
     // The other tongs (2026-11-08): the list, then one tong's page. Skipped by versions without them.
     if (await click('[data-action="city-tab"][data-id="tongs"]') || await click('[data-action="tongs-open"]')) {
       await top(); await shot('tongs');
-      if (await click('[data-action="tong-page"]')) { await top(); await shot('tong-page'); }
+      // E0: a house's file (not the Book card, which is also a tong-page action), then the Anchor's slate (empty at week 1: no Book is chalked yet).
+      if (await click('[data-action="tong-page"][data-style]:not([data-id="book"])')) { await top(); await shot('tong-page'); await click('[data-action="back"]'); }
+      if (await click('[data-action="tong-page"][data-id="book"]')) { await top(); await shot('tongs-slate'); await click('[data-action="back"]'); }
       await click('[data-action="tongs-close"]') || await click('[data-action="back"]') || await click(`[data-action="nav"][data-id="${cityId}"]`);
     }
   }
