@@ -78,10 +78,10 @@ function bookPage(state, back, filter = 'all') {
   const slate = `<div class="slate">${bands.map((g) => `<div class="band band--${esc(g.grade)}" aria-label="Grade ${esc(g.grade)}"><span class="band__letter">${esc(g.grade)}</span>
       <div class="band__names">${g.entries.map((n) => slateTile(state, n, opIdOf(n))).join('')}</div></div>`).join('') || '<p class="small muted slate__none">Nobody on the slate matches.</p>'}</div>`;
   const watch = v.watch.length ? `<h2>Ones to watch</h2>
-    <ul class="list list--plain streetnames" aria-label="Ones to watch">${v.watch.map((n) => `
-      <li class="streetname ${n.yours ? 'is-own' : ''}">
-        <span class="streetname__who">${nameBtn(n)}</span>
-        <span class="small muted">${esc(where(n))}</span>
+    <ul class="list list--plain watchrows" aria-label="Ones to watch">${v.watch.map((n) => `
+      <li class="watchrow ${n.yours ? 'is-own' : ''}">
+        ${n.yours ? faceOfOurs(state, n.name, 44) : n.id ? faceOfCard(state, n.id, 44) : ''}
+        <span class="watchrow__who">${nameBtn(n)}<span class="small muted">${esc(where(n))}</span></span>
         ${n.id && !n.yours ? `<button class="btn" data-action="lead-name" data-id="${esc(n.id)}">Scout ›</button>` : ''}
       </li>`).join('')}</ul>` : '';
   const quiet = v.gone.length ? `<p class="small muted">Gone quiet this month: ${esc(v.gone.map((g) => g.name).join(', '))}.</p>` : '';

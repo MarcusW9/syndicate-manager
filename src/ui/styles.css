@@ -2424,3 +2424,9 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .stile--ours .face { box-shadow: 0 0 0 2px var(--accent-2); }
 .stile--ours .tile__name { color: var(--accent-2); }
 @media (min-width: 560px) { .tiles { grid-template-columns: repeat(6, 1fr); } }
+.watchrows { display: grid; gap: 6px; }
+.watchrow { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--panel-2); border: 1px solid var(--line); min-height: var(--tap, 44px); }
+.watchrow.is-own { border-color: var(--accent-2); }
+.watchrow .face { width: 44px; height: 44px; }
+.watchrow__who { flex: 1; min-width: 0; display: grid; gap: 2px; justify-items: start; }
+.watchrow .btn { margin: 0; flex: none; }
