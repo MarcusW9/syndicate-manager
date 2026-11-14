@@ -16,6 +16,7 @@ import { homeHall, syncHalls } from '../core/halls.js';
 import { STARTING_RANK } from '../data/tong.js';
 import { refreshSideBoard } from '../core/sidetasks.js';
 import { SAVE_VERSION } from '../core/state.js';
+import { NAMES } from '../config/names.js';
 import { TATTOO_JOBS } from '../core/marks.js';
 import { seedRecord } from '../core/record.js';
 import { seedMilestones } from '../core/milestones.js';
@@ -805,6 +806,11 @@ function migrate(state) {
       b.spots = district && start?.zone ? fightStage(district, am, start.zone, b.runners.length) : null;
     }
     state.version = 63;
+  }
+  if (state.version === 63) {
+    // v64: our tong has a name (core/tongname.js). A running game gets the default; the Tong screen's pencil changes it.
+    state.tongName ??= NAMES.defaultTong;
+    state.version = 64;
   }
   return state;
 }

@@ -11,6 +11,7 @@ import { portrait } from './art.js';
 import { money } from '../core/money.js';
 import { TONG_RANKS } from '../data/tong.js';
 import { NAMES } from '../config/names.js';
+import { tongNameOf } from '../core/tongname.js';
 import { BOOK_TEXT, RATING_WORDS, FAME_LINE, STYLE_TEXT, ELDER_LINE, POTENTIAL_TEXT, SCOUT_LEVEL_TEXT, SIGN_REASON, fill, wordLine } from '../data/rivals.js';
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -46,7 +47,7 @@ export function renderGoneElsewhere(state) {
 /** The Anchor's Book (C5): this month's slate, S to D, names in order inside a grade, Ones to watch. Letters and words, never a number. */
 function bookPage(state, back) {
   const v = bookView(state);
-  const where = (n) => (n.yours ? 'Yours' : n.tong ?? (n.free ? 'Between tongs' : ''));
+  const where = (n) => (n.yours ? tongNameOf(state) : n.tong ?? (n.free ? 'Between tongs' : ''));
   const opIdOf = (n) => state.crew.find((o) => o.name === n.name)?.id;
   const nameBtn = (n) => (n.yours && opIdOf(n) ? `<button class="namebtn" data-action="open-op" data-id="${esc(opIdOf(n))}">${esc(n.name)}</button>`
     : n.id ? `<button class="namebtn" data-action="tong-name" data-id="${esc(n.id)}">${esc(n.name)}</button>` : `<span class="namebtn">${esc(n.name)}</span>`);
@@ -98,7 +99,7 @@ function namesList(state, names) {
     <li class="streetname ${n.own ? 'is-own' : ''}">
       <span class="streetname__face">${n.own ? faceOfOurs(state, n.name) : faceOfCard(state, n.id)}</span>
       <span class="streetname__who"><strong>${esc(n.name)}</strong>${n.own ? ' <span class="tongtag">Ours</span>' : ''}${n.former ? ' <span class="tongtag">Yours, once</span>' : ''}</span>
-      <span class="small muted">${esc([n.role, FAME_LINE[n.fame], n.tong ?? (n.own ? 'with us' : 'between tongs')].filter(Boolean).join(' · '))}</span>
+      <span class="small muted">${esc([n.role, FAME_LINE[n.fame], n.tong ?? (n.own ? tongNameOf(state) : 'between tongs')].filter(Boolean).join(' · '))}</span>
       <span class="small">${esc(ratingLine(n).replace(/^./, (c) => c.toUpperCase()))}.</span>
     </li>`).join('')}</ul>`;
 }
