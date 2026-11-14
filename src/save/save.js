@@ -863,10 +863,45 @@ function migrate(state) {
     state.version = 67;
   }
   if (state.version === 67) {
-    // v68: Apex gear (DESIGN.md 2026-11-14). `apexFound` lists the named pieces (data/apexGear.js) the save has found. Apex was not
+    // v68: a repair, no new shape. Routine offers were given the whole client record as `clientId` instead of its
+    // id (core/jobs.js), so their trust went to a key "[object Object]" and a Client's Favourite earned on one read
+    // "[object Object]" for the client. Every `clientId`, and every earned entry's `client`, is an id again; the
+    // text already written (crew notes, a runner's history) gets the client's name; the stray trust key and job
+    // counts are dropped (they cannot be told apart by client).
+    const BAD = '[object Object]';
+    const idOf = (v) => (v && typeof v === 'object' ? v.id ?? null : v);
+    const fixIds = (v) => {
+      if (!v || typeof v !== 'object') return;
+      if (Array.isArray(v)) { v.forEach(fixIds); return; }
+      if ('clientId' in v) v.clientId = idOf(v.clientId);
+      Object.values(v).forEach(fixIds);
+    };
+    for (const op of [...(state.crew ?? []), ...(state.memorial ?? []), ...(state.hall ?? [])]) {
+      for (const e of op.earned ?? []) {
+        if (e.id !== 'client_favourite' || !e.client || typeof e.client !== 'object') continue;
+        const name = e.client.name ?? 'the client';
+        e.client = idOf(e.client);
+        op.history = (op.history ?? []).map((h) => (h.startsWith(`Day ${e.day}: `) ? h.replaceAll(BAD, name) : h));
+        for (const m of (state.inbox ?? []).filter((x) => x.kind === 'crewnotes' && x.day === e.day)) {
+          for (const l of m.payload?.lines ?? []) {
+            if (!l.key?.startsWith(`client_favourite:${op.id}:`)) continue;
+            l.subject = l.subject.replaceAll(BAD, name);
+            l.body = l.body.replaceAll(BAD, name);
+            if (m.payload.lines.length === 1) { m.subject = l.subject; m.body = l.body; }
+          }
+        }
+      }
+      if (op.track?.clientJobs) delete op.track.clientJobs[BAD];
+    }
+    fixIds(state);
+    if (state.clients) delete state.clients[BAD];
+    state.version = 68;
+  }
+  if (state.version === 68) {
+    // v69: Apex gear (DESIGN.md 2026-11-14). `apexFound` lists the named pieces (data/apexGear.js) the save has found. Apex was not
     // live before, so none could have dropped: an old save starts with an empty list.
     state.apexFound ??= [];
-    state.version = 68;
+    state.version = 69;
   }
   return state;
 }

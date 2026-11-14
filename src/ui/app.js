@@ -23,7 +23,7 @@ import { onClick, onImportFile } from './actions.js';
 import { renderCity, renderLore } from './city.js';
 import { renderRecruit, renderOperative, renderCrew } from './crew.js';
 import { wideHall, hallArtOn, renderHallPage, renderTong } from './hallscreens.js';
-import { renderJobs, renderSidePlan, renderClientPage } from './jobs.js';
+import { renderJobs, renderSidePlan, renderClientPage, warmBoard } from './jobs.js';
 import { renderMission, renderBuzz, watchUi } from './jobscreen.js';
 import { renderPlan } from './plan.js';
 import { renderRaidCallSheet } from './raidcards.js';
@@ -138,6 +138,7 @@ export function render() {
     ${renderRaidCallSheet()}
   `;
   if (am) mountWatch(root.querySelector('.watch'), state, { ui: watchUi, finishing, onAuto: () => setState(autoStep(state)), onFightNext: () => setState(runBattle(state, takeFightChange(state.activeMission))) });
+  warmBoard(); // Joss's board reads, in the background, so the Jobs tab opens fast
   fitGearArt(root); // the squad board's gear drawings fill their cells
   root.querySelector('.buzz__pick, .buzz [data-action="buzz-in"]')?.focus({ preventScroll: true }); // the call has the floor
   if (V.pickSlot) (root.querySelector('.sheet .cand.is-on') ?? root.querySelector('.sheet .cand:not([disabled])'))?.focus({ preventScroll: true });

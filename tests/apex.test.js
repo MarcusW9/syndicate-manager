@@ -328,13 +328,13 @@ test('a fenced piece pays and does not come back', () => {
   assert.ok(!apexLeft(sold).includes('ridgelock'));
 });
 
-test('a v67 save upgrades: no pieces found yet, and ones already listed are kept', async () => {
+test('a v68 save upgrades: no pieces found yet, and ones already listed are kept', async () => {
   const s = createNewGame({ seed: 70 });
-  s.version = 67;
+  s.version = 68;
   delete s.apexFound;
   const loaded = await importSave({ text: async () => JSON.stringify(s) });
   assert.equal(loaded.version, SAVE_VERSION);
-  assert.equal(SAVE_VERSION, 68);
+  assert.equal(SAVE_VERSION, 69);
   assert.deepEqual(loaded.apexFound, []);
   const t = createNewGame({ seed: 71 });
   t.apexFound = ['lastword'];

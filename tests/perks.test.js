@@ -258,7 +258,7 @@ test('a v65 save loads at the new version; a Custom item missing its perks is gi
   s.stash = [{ uid: 'g1', type: 'vest', tier: 'verified' }, { uid: 'g2', type: 'reflex', tier: 'custom' }, { uid: 'g3', type: 'deck', tier: 'premium', perks: ['padded', 'muffled'] }];
   const loaded = await importSave({ text: async () => JSON.stringify(s) });
   assert.equal(loaded.version, SAVE_VERSION);
-  assert.equal(SAVE_VERSION, 68);
+  assert.equal(SAVE_VERSION, 69);
   assert.equal(loaded.stash[0].perks, undefined, 'a Verified item stays plain');
   assert.deepEqual(loaded.stash[1].perks, rollPerks(s.seed, 'g2', 'reflex', 1));
   assert.deepEqual(loaded.stash[2].perks, ['padded', 'muffled'], 'perks already there are kept');

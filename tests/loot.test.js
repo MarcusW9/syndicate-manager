@@ -168,7 +168,7 @@ test('a v64 save upgrades gear tiers (street to standard, pro to verified) and n
   s.armoury.offers = [{ oid: 'o1-rifle-pro-0', type: 'rifle', tier: 'pro', look: { frame: 'marksman', finish: 'carbon' }, name: 'X' }, { oid: 'o1-rifle-street-0', type: 'rifle', tier: 'street', look: { frame: 'marksman', finish: 'street' }, name: 'Y' }];
   const loaded = await importSave({ text: async () => JSON.stringify(s) });
   assert.equal(loaded.version, SAVE_VERSION);
-  assert.equal(SAVE_VERSION, 68);
+  assert.equal(SAVE_VERSION, 69);
   assert.deepEqual(loaded.stash.map((i) => i.tier), ['standard', 'verified']);
   const g = loaded.crew[0].gear;
   assert.equal(g.armour.tier, 'verified');

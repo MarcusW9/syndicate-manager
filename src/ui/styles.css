@@ -223,6 +223,12 @@ button.joss { width: 100%; min-height: var(--tap); padding: 0; border: 0; backgr
 .riskcorner--moderate { border-color: var(--warn); }
 .riskcorner--high { border-color: #ff9a5a; }
 .riskcorner--extreme { border-color: var(--danger); }
+/* Joss's read still on its way (ui/boardwork.js): the same bracket in the muted line colour, breathing; the card keeps its shape. */
+.riskcorner--reading { border-color: var(--muted); opacity: 0.35; animation: riskcorner-wait 1.1s ease-in-out infinite alternate; }
+@keyframes riskcorner-wait { to { opacity: 0.12; } }
+@media (prefers-reduced-motion: reduce) { .riskcorner--reading { animation: none; } }
+.jobcard__n { display: inline-block; min-width: 1ch; text-align: center; } /* the count's place is kept while the read is on its way */
+.jobcard__wait { opacity: 0.6; }
 /* Who can run a job today: open by default, folds to one line. */
 .runners { border: 1px solid var(--line); background: #141820; margin: 4px 0 12px; }
 .runners__head { width: 100%; min-height: var(--tap); display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 12px; background: none; border: 0; color: var(--muted); font: inherit; font-size: 0.9rem; text-align: left; cursor: pointer; }
@@ -2251,10 +2257,12 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .fs-loss { margin: 0; font-size: 0.9rem; }
 
 /* Crew notes: a day's crew news in one message (2026-11-12). */
-.crewnotes { display: grid; gap: 14px; }
+.crewnotes { display: grid; gap: 16px; }
 .crewnotes section { border-left: 2px solid #4a3f6b; padding-left: 12px; }
-.crewnotes__head { font: 700 16px/1.2 Rajdhani, system-ui, sans-serif; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 4px; }
+.crewnotes--one section { border-left: 0; padding-left: 0; }
+.crewnotes__head { display: block; font: 700 16px/1.2 Rajdhani, system-ui, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text); margin: 0 0 4px; }
 .crewnotes .body { margin: 0; }
+.crewnotes__fx { margin: 4px 0 0; font-size: 0.85rem; line-height: 1.45; color: var(--muted); }
 
 /* Hall plans, simpler (2026-11-12): one look per meaning. Ours is plain, the next part is dashed cyan with its
    price, later parts a faint outline with no hatching; doors are cyan (as the key says), so red is for actions

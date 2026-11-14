@@ -26,7 +26,8 @@ import { kitsFor } from '../core/gear.js';
 import { intelFor } from '../core/sidetasks.js';
 import { mentoring } from '../core/development.js';
 import { freelancerAsCrew, MAX_FREELANCERS_PER_JOB, shareOf } from '../core/freelance.js';
-import { renderJobs, rivalRemark, definingHandle, namedHandle, fillNamed } from './jobs.js';
+import { renderJobs, rivalRemark, definingHandle, namedHandle, fillNamed, knownPicks } from './jobs.js';
+import { canWork, ask } from './boardwork.js';
 import { renderCallIns } from './jobscreen.js';
 import { esc, statName, riskBadge, riskWord, districtName, daysLeft, hallLabel, face, statusChip } from './shared.js';
 import { state, backLabel, V } from './view.js';
@@ -63,18 +64,40 @@ function renderMentoring(crew) {
  * a second tap landed mid-render. The picks depend only on the state, the job and the approach, so the same three give the same answer.
  */
 const leanMemo = new WeakMap();
-export function leanPicks(state, job, approach) {
+const leanAsked = new WeakMap(); // per state, the picks out with the worker
+const leanKey = (state, job, approach) => `${job.id}|${approach}|${state.day}|${state.crew.map((o) => o.id).join(',')}`;
+function memoOf(state) {
   let m = leanMemo.get(state);
   if (!m) { m = new Map(); leanMemo.set(state, m); }
-  const key = `${job.id}|${approach}|${state.day}|${state.crew.map((o) => o.id).join(',')}`;
-  if (!m.has(key)) m.set(key, leanPicksRaw(state, job, approach));
+  return m;
+}
+export function leanPicks(state, job, approach) {
+  const m = memoOf(state);
+  const key = leanKey(state, job, approach);
+  // The board's read already holds Joss's picks for its own approach (core/squad.js jobRead is leanPicks for each approach).
+  if (!m.has(key)) m.set(key, knownPicks(state, job, approach) ?? leanPicksRaw(state, job, approach));
   return m.get(key);
 }
 
-/** After a plan draws, work out Joss's picks for the other approaches one at a time while the screen is idle, so switching approach finds them ready. */
+/**
+ * After a plan draws, get Joss's picks for the other approaches ready, so switching approach finds them: off the main thread
+ * where there is a worker (ui/boardwork.js, 2026-11-14), else one at a time while the screen is idle.
+ */
 function warmLean(job) {
   const st = state;
-  const todo = Object.keys(APPROACHES);
+  const m = memoOf(st);
+  const todo = Object.keys(APPROACHES).filter((ap) => !m.has(leanKey(st, job, ap)));
+  if (canWork()) {
+    let out = leanAsked.get(st);
+    if (!out) leanAsked.set(st, (out = new Set()));
+    for (const ap of todo) {
+      const key = leanKey(st, job, ap);
+      if (out.has(key)) continue;
+      out.add(key);
+      ask(st, { kind: 'lean', jobId: job.id, approach: ap }).then((p) => { if (!m.has(key)) m.set(key, p); }, () => out.delete(key));
+    }
+    return;
+  }
   const next = () => {
     if (state !== st || !V.plan || V.plan.jobId !== job.id) return;
     const ap = todo.shift();

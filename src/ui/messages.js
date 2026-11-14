@@ -42,7 +42,7 @@ export function renderMessage(m) {
       <button class="btn btn--ghost inbox__back" data-action="back">← ${esc(backLabel())}</button>
       <h1>${crewLinks(m.subject)}</h1>
       <p class="muted">${esc(m.type.charAt(0).toUpperCase() + m.type.slice(1))} · Day ${m.day}</p>
-      ${m.type === 'report' ? renderReportTimeline(m) : m.kind === 'crewnotes' && m.payload?.lines?.length > 1 ? renderCrewNotes(m) : m.kind === 'week' && m.payload?.lines ? renderWeekSummary(m) : `<p class="body">${crewLinks(m.body)}</p>`}
+      ${m.type === 'report' ? renderReportTimeline(m) : m.kind === 'crewnotes' && m.payload?.lines?.length ? renderCrewNotes(m) : m.kind === 'week' && m.payload?.lines ? renderWeekSummary(m) : `<p class="body">${crewLinks(m.body)}</p>`}
       ${m.kind === 'renewal' ? renderRenewal(m) : ''}
       ${m.kind === 'heat' ? renderHeatNotice(m) : ''}
       ${m.kind === 'spec' ? renderSpecOffer(m) : ''}
@@ -55,9 +55,18 @@ export function renderMessage(m) {
       ${jobLink}`;
 }
 
-/** A day's crew news in one message (core/earned.js crewNote): each line's heading, then its text. */
+/**
+ * A day's crew news in one message (core/earned.js crewNote). Each line: who and what as a heading (the name is the
+ * link), what happened, then what it does on a quieter line of its own. One line alone has no heading: the message's
+ * title already says it. A line's body is "What happened. (Handle: what it does.)".
+ */
 function renderCrewNotes(m) {
-  return `<div class="crewnotes">${m.payload.lines.map((l) => `<section><h2 class="crewnotes__head">${crewLinks(l.subject)}</h2><p class="body">${crewLinks(l.body)}</p></section>`).join('')}</div>`;
+  const lines = m.payload.lines;
+  const one = (l) => {
+    const [, note, effect] = /^(.*?) \([^:()]+: (.*)\)$/s.exec(l.body) ?? [null, l.body, ''];
+    return `<section>${lines.length > 1 ? `<h3 class="crewnotes__head">${crewLinks(l.subject)}</h3>` : ''}<p class="body">${esc(note)}</p>${effect ? `<p class="crewnotes__fx">${esc(effect)}</p>` : ''}</section>`;
+  };
+  return `<div class="crewnotes ${lines.length > 1 ? '' : 'crewnotes--one'}">${lines.map(one).join('')}</div>`;
 }
 
 /** The Sunday summary (core/week.js): the week's lines, then what was paid. */
