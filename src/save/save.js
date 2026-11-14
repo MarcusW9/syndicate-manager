@@ -17,6 +17,7 @@ import { STARTING_RANK } from '../data/tong.js';
 import { refreshSideBoard } from '../core/sidetasks.js';
 import { SAVE_VERSION } from '../core/state.js';
 import { NAMES } from '../config/names.js';
+import { pickHabit } from '../core/houses.js';
 import { TATTOO_JOBS } from '../core/marks.js';
 import { seedRecord } from '../core/record.js';
 import { seedMilestones } from '../core/milestones.js';
@@ -811,6 +812,26 @@ function migrate(state) {
     // v64: our tong has a name (core/tongname.js). A running game gets the default; the Tong screen's pencil changes it.
     state.tongName ??= NAMES.defaultTong;
     state.version = 64;
+  }
+  if (state.version === 64) {
+    // v65: houses have habits (core/houses.js, DESIGN.md 2026-11-14 "E1"). Each tong gets the habit its own hash draws (the
+    // same rule as a new game, in order, so a running game gets the same spread); each card remembers its best rating
+    // (today's), the day it last rose, and its last house if it is between tongs. Nothing moves on screen until the Sundays.
+    const r = state.rivals;
+    if (r) {
+      const seen = { ...r, tongs: [] };
+      for (const t of r.tongs) {
+        t.habit ??= pickHabit(state.seed, seen, t.id);
+        seen.tongs.push(t);
+        t.releasedDay ??= null; t.signedSeason ??= null;
+      }
+      for (const c of r.cards) {
+        c.best ??= c.rating; c.bestDay ??= state.day;
+        c.path ??= c.fromTong ? [{ tongId: c.fromTong, day: state.day }] : [];
+      }
+      r.keptSeason ??= null;
+    }
+    state.version = 65;
   }
   return state;
 }

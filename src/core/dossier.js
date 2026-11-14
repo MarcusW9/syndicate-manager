@@ -6,7 +6,9 @@
 
 import { hashRng, pick } from './rng.js';
 import { ROLE_PROFILES, HANDLES, BADGE_COLORS } from '../data/recruitPools.js';
-import { RIVALS, SCOUT_TEXT, fill } from '../data/rivals.js';
+import { RIVALS, HABIT, SCOUT_TEXT, fill } from '../data/rivals.js';
+import { RECRUIT_GEAR } from '../data/gear.js';
+import { loadoutOf } from './gear.js';
 import { availability } from './crew.js';
 import { rollPotential, rollScoutError, potentialBand, primaryStat } from './development.js';
 import { marketWage, round50 } from './pricing.js';
@@ -170,7 +172,10 @@ export function readFor(state, card) {
   const tong = tongOf(state.rivals, card.tongId);
   const from = tongOf(state.rivals, card.fromTong);
   const out = { id: slug(card.name), name: card.name, role: card.role, fame: card.fame, word: ratingWord(cardRating(card), card), home: card.home, tong: tong?.name ?? null, from: from?.name ?? null, head: !!tong && tong.headId === card.id, level: ['none', 'seen', 'sharper', 'full'][level], stats: null, potential: null };
+  out.note = null;
   if (level >= 1) {
+    const house = tong ?? from;
+    out.note = house?.habit === 'workshop' || house?.habit === 'oldhouse' ? house.habit : null; // E1: what a watched name's house says about them
     out.stats = { ...d.stats };
     out.potential = potentialBand({ ...d, scoutError: scoutErrorAt(state, card, level) });
   }
@@ -199,7 +204,9 @@ export function persuasion(state, card) {
   const cash = clamp(Math.round(20 * (state.cash - needed) / Math.max(1, 4 * bills(state) + 1)) , 0, 20);
   const parts = { tier: 7.5 * rank, stars: Math.min(3, stars) * 8, lead, bed, cash: spare >= 0 ? 20 : cash };
   const score = clamp(Math.round(Object.values(parts).reduce((n, v) => n + v, 0) - 0.3 * cardRating(card)), 0, 100);
-  return { score, premium: Math.round(RIVALS.premiumMax * (1 - score / 100) * 100) / 100, parts };
+  let premium = Math.round(RIVALS.premiumMax * (1 - score / 100) * 100) / 100;
+  if (tong?.habit === 'oldhouse') premium = Math.min(RIVALS.premiumMax, Math.round((premium + HABIT.oldHousePremium) * 100) / 100); // E1: an old house's names ask more to be convinced
+  return { score, premium, parts };
 }
 
 function buyoutFeeFor(state, card, d) {
@@ -214,7 +221,7 @@ export function buyoutAmount(tong, wage) {
   const rich = Math.min(B.richCap, Math.floor(tong.wealth / B.richStep) * B.richPer);
   const regard = tong.regard ?? 0;
   const mood = regard <= RIVALS.regard.cold ? B.cold : regard >= RIVALS.regard.warm ? B.warm : 1;
-  return round50(wage * B.weeks * (1 + rich) * mood);
+  return round50(wage * B.weeks * (1 + rich) * mood * (tong.habit === 'boutique' ? HABIT.buyoutBoutique : 1)); // E1: a short table's names cost more
 }
 
 /** The buyout owed to the tong a name is in; 0 for a free name; null for a head (never approachable). */
@@ -253,9 +260,13 @@ export function cardToOperative(state, card, { wage, level = scoutLevel(state, c
   const d = dossierOf(state, card);
   const r = { ...d, wage: wage ?? d.wage, scoutError: scoutErrorAt(state, card, level), scoutReport: '' };
   delete r.career;
+  // E1: a workshop's name brings one piece of street-tier kit (which, a hash of the card; nothing if the role has none).
+  const kits = tongOf(state.rivals, card.tongId)?.habit === 'workshop' ? (RECRUIT_GEAR[card.role] ?? []).map(([, type]) => type) : [];
+  const kit = kits.length ? [kits[Math.floor(hashRng(state.seed, 'workshop-kit', card.id)() * kits.length)]] : [];
   const op = recruitToOperative(r, {
     condition: { fatigue: 0, morale: 60, neuralLoad: 0, burnout: 0, injury: 'healthy', injuryDays: 0 },
     history: [`Day ${state.day}: joined the crew`],
+    ...(kit.length ? { gear: loadoutOf(state, kit) } : {}),
   });
   op.fame = d.career.fame; op.standing = d.career.standing; op.record = d.career.record;
   op.runnerId = card.runnerId ?? card.id; // the same person, whichever side of the door they are on (v59)

@@ -218,6 +218,7 @@ test('a former runner released to the free pool is talked about, and may be put 
   s.rivals.offer = null; s.rivals.nextOfferDay = 0;
   const saved = RIVALS.formerFreeWeight; const drift = RIVALS.driftChance; RIVALS.driftChance = 0;
   card.since = 105; stranger.since = 105;
+  for (const x of s.rivals.tongs) x.releasedDay = 100; // E1: no house lets a name go this Sunday, so the pool is only these two
   try {
     RIVALS.formerFreeWeight = 1;
     const a = structuredClone(s); a.day = 105; weeklyRivals(a);

@@ -171,8 +171,9 @@ Seeded and saved. `makeRng(seed)` is mulberry32 (`core/rng.js`). `nextRng(state)
 
 Format: JSON of the state in `localStorage`. Keys: `syndicate-active-slot`, `syndicate-slot-N`, `…-backup` (weekly), `…-unreadable`, `syndicate-ironman-progress`, legacy `syndicate-save-v1`. `storageGet/Set/Remove` are the only storage calls (swap for iOS). `saveGame` writes slot + weekly backup (not in Ironman). `loadGame` migrates; on failure `keepUnreadable` and returns null. `exportSave` downloads JSON; `importSave(file)` migrates then `checkIronman`; `loadBackup`.
 
-**Versioning:** `SAVE_VERSION` 64 in `core/state.js`. What each version added, newest first (one per line; grep `v52:`):
+**Versioning:** `SAVE_VERSION` 65 in `core/state.js`. What each version added, newest first (one per line; grep `v52:`):
 
+- v65: E1, each rival tong gains `habit` ('grinder' | 'boutique' | 'workshop' | 'oldhouse'), `releasedDay`, `signedSeason`; each card gains `best`, `bestDay`, `path` [{ tongId, day }] (and `fromTier` while it is between tongs); `state.rivals.keptSeason`; migration draws each habit by the new-game rule, `best` = today's rating, `path` from `fromTong` (`core/houses.js`).
 - v64: `state.tongName`, our tong's name (`core/tongname.js`); old saves get `NAMES.defaultTong`.
 - v63: an engine-2 fight in progress gains `am.battle.spots`, its staging on the site map (`core/fightmap.js stageSpots`), computed from the job's site and the fight's start zone; staging only.
 - v62: `raid.posts`.

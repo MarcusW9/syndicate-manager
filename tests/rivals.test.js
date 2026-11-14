@@ -359,7 +359,7 @@ test('a year of rivals adds under 30KB to a save', () => {
 
 test('golden: a fixed seed gives the stored snapshot, after seeding and after 4 weekly steps', () => {
   const snap = (r) => ({
-    tongs: r.tongs.map((t) => ({ name: t.name, style: t.style, home: t.home, halls: t.halls, tier: tongTier(t) })),
+    tongs: r.tongs.map((t) => ({ name: t.name, style: t.style, habit: t.habit, home: t.home, halls: t.halls, tier: tongTier(t) })),
     cards: r.cards.map((c) => ({ id: c.id, name: c.name, tongId: c.tongId, rating: c.rating })),
   });
   const s = game(1234);
@@ -379,6 +379,13 @@ test('golden: a fixed seed gives the stored snapshot, after seeding and after 4 
     threads: c4.rivals.threads.map((t) => ({ id: t.id, family: t.family, stage: t.stage, open: t.open })),
     formers: c4.rivals.cards.filter((c) => c.formerOf).map((c) => ({ id: c.id, runnerId: c.runnerId, tongId: c.tongId, formerOf: c.formerOf })),
     word: c4.rivals.word.map((w) => `${w.kind}:${w.refs.join(',')}`),
+  };
+  // E1: habits at work after half a year: who is stalled, where names have been (their path), what the talk was.
+  const e1 = weeks(game(1234), 26).rivals;
+  out.e1 = {
+    habits: e1.tongs.map((t) => `${t.name}:${t.habit}:${t.status}`),
+    paths: e1.cards.filter((c) => c.path.length).map((c) => `${c.id}:${c.tongId ?? 'free'}:${c.path.map((p) => p.tongId).join('>')}`),
+    word: e1.word.map((w) => `${w.kind}:${w.refs.join(',')}`),
   };
   const file = new URL('./golden/rivals-1234.json', import.meta.url);
   if (!existsSync(file)) { writeFileSync(file, JSON.stringify(out, null, 1) + '\n'); }
