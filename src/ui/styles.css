@@ -2519,6 +2519,10 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
    a second one for a runner who already has one says why in words (no hover). The report's loot line for one is a gold-edged
    panel with the cut corner, so it stands out a little among the plain lines without leaving the skin. */
 .apex__history { display: block; margin-top: 2px; color: var(--text); line-height: 1.35; font-style: italic; }
-.apex__why { display: block; margin-top: 2px; color: var(--warn); line-height: 1.3; }
+.apex__swap { display: block; margin-top: 2px; color: var(--text); line-height: 1.3; }
+.apex__conflict { margin: 4px 0 10px; padding: 8px 10px 8px 12px; border-left: 3px solid var(--tier-gold); background: color-mix(in srgb, var(--tier-gold) 8%, transparent); clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); }
+.apex__conflict p { margin: 4px 0 0; line-height: 1.35; }
+.apex__conflict-head { display: block; color: var(--tier-gold); font: 700 0.74rem/1.2 var(--display); letter-spacing: 0.1em; text-transform: uppercase; }
+.apex__flavour { color: var(--muted); font-style: italic; font-size: 0.85em; }
 .timeline__results li.loot--apex { margin-top: 4px; padding: 8px 10px 6px 12px; border: 1px solid var(--tier-gold); border-left-width: 4px; background: color-mix(in srgb, var(--tier-gold) 10%, var(--panel-2, var(--panel))); clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%); font-weight: 600; }
 .timeline__results li.loot--apex .apex__history { font-weight: 400; }

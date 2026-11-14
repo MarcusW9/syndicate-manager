@@ -273,14 +273,14 @@ export const apexLeft = (state) => Object.keys(APEX_GEAR).filter((id) => !(state
 /** The Apex pieces a runner wears or carries. */
 export const apexOn = (op) => carried(op).filter((i) => i.apex);
 /**
- * Can this item go on this runner? A runner wears or carries at most one Apex piece (owner, 2026-11-14), so a
- * second is refused: { ok: false, reason }. replacing: the item it would push off (a worn vest or an implant in
- * its socket), which then no longer counts. Anything else is ok.
+ * A runner wears or carries at most one Apex piece (owner, 2026-11-14). Putting a second on them swaps the first out
+ * (owner, 2026-11-14, so a new find can always be tried on a favourite): this is the piece that would go back to the
+ * stash, or null when nothing needs to go. replacing: the item it would push off anyway (a worn vest, an implant in
+ * its socket), which then does not count.
  */
-export function canCarry(op, item, replacing = null) {
-  if (!item?.apex) return { ok: true, reason: '' };
-  const other = apexOn(op).find((i) => i.uid !== item.uid && i.uid !== replacing?.uid);
-  return other ? { ok: false, reason: `Already carrying ${itemTitle(other)}. A runner can carry only one Apex piece.` } : { ok: true, reason: '' };
+export function apexSwapOut(op, item, replacing = null) {
+  if (!item?.apex) return null;
+  return apexOn(op).find((i) => i.uid !== item.uid && i.uid !== replacing?.uid) ?? null;
 }
 
 /** Buy an item into the stash. Returns the new state, or prev if it can't be bought. */
@@ -347,8 +347,8 @@ function takeOff(op, uid) {
  * target: armour and implants need none (an implant may name its { socket }: whatever is there goes
  * back to the stash); a weapon or tool goes where it's put in the bag ({ x, y }), or the first place
  * it fits. Refused (prev returned) if it doesn't fit, both sockets are full, the other socket holds
- * the same implant, it is a second Apex piece for that runner (canCarry), or either person can't change
- * their gear today.
+ * the same implant, or either person can't change their gear today. A second Apex piece swaps the
+ * runner's first one out to the stash (apexSwapOut).
  */
 export function equip(prev, uid, opId, target = null) {
   const state = structuredClone(prev);
@@ -359,9 +359,10 @@ export function equip(prev, uid, opId, target = null) {
   op.gear = { ...emptyLoadout(), ...(op.gear ?? {}) };
   const item = found.item;
   const where = placeOf(item.type);
-  // At most one Apex piece on a runner (what an armour or socket swap pushes off does not count).
+  // At most one Apex piece on a runner: a second swaps the first out to the stash (what an armour or socket swap pushes off does not count).
   const pushed = where === 'armour' ? op.gear.armour : where === 'implant' ? (op.gear.implants ?? [])[target?.socket ?? (op.gear.implants.length < SOCKETS ? op.gear.implants.length : -1)] : null;
-  if (found.owner !== op && !canCarry(op, item, pushed).ok) return prev;
+  const oldApex = found.owner !== op ? apexSwapOut(op, item, pushed) : null;
+  if (oldApex) { takeOff(op, oldApex.uid); state.stash.push(oldApex); } // before the fit and socket checks: it frees its place
   if (where === 'bag') {
     const at = target?.x != null ? (fitsAt(op, item, target.x, target.y) ? { x: target.x, y: target.y } : null) : (op.gear.bag.some((b) => b.item.uid === uid) ? null : firstFit(op, item));
     if (!at) return prev;

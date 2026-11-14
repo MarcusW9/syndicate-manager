@@ -4,7 +4,7 @@
 //
 // ui: helpers from app.js { esc, money, face, statusChip }.
 
-import { GEAR, SLOTS, TIERS, APEX_GEAR, perkById, perksOf, canCarry, carried, itemName, itemTitle, buyPrice, sellPrice, canChangeGear, kitsFor, sidearmStats, placeOf, cellsOf, fitsAt, bagUsed } from '../core/gear.js';
+import { GEAR, SLOTS, TIERS, APEX_GEAR, perkById, perksOf, apexSwapOut, carried, itemName, itemTitle, buyPrice, sellPrice, canChangeGear, kitsFor, sidearmStats, placeOf, cellsOf, fitsAt, bagUsed } from '../core/gear.js';
 import { BAG, SOCKETS, BASE_TIER } from '../data/gear.js';
 import { HAS_LOOKS, lookText } from '../core/looks.js';
 import { gearGlyph } from './icons.js';
@@ -77,7 +77,7 @@ function itemRow(ui, item, { action, label, sub = '', disabled = false, id = ite
         <span class="gearrow__eff">${esc(itemEffect(item))}</span>
         ${apexHistory(item)}
         ${lookText(item) ? `<span class="gearrow__sub muted small">${item.name ? `${esc(itemName(item))} · ` : ''}${esc(lookText(item))}</span>` : ''}
-        ${sub ? `<span class="gearrow__sub ${item.apex ? 'apex__why' : 'muted'} small">${sub}</span>` : ''}</span>
+        ${sub ? `<span class="gearrow__sub ${item.apex ? 'apex__swap' : 'muted'} small">${sub}</span>` : ''}</span>
       ${action ? `<button class="btn gearrow__btn" data-action="${action}" data-id="${esc(id)}" ${item.tier ? `data-tier="${esc(item.tier)}"` : ''} ${disabled ? 'disabled' : ''}>${esc(label)}</button>` : ''}
       ${perkList(item)}
     </li>`;
@@ -207,11 +207,24 @@ export function gearPlace(id) {
   return { kind: 'armour', title: 'Armour' };
 }
 
-/** itemRow options for putting this item on this runner: unavailable, with the reason in words, when it is a second Apex piece. */
-function apexBlock(op, item, replacing, disabled = false) {
-  const can = canCarry(op, item, replacing);
-  return { disabled: disabled || !can.ok, ...(can.ok ? {} : { sub: can.reason }) };
+/**
+ * itemRow options for putting this item on this runner. A second Apex piece is not refused: its button reads "Swap in"
+ * and the row says which piece goes back to the stash, so a new find can always be tried (the sheet's top notice,
+ * `apexConflict`, says why).
+ */
+function apexBlock(esc, op, item, replacing, label, disabled = false) {
+  const out = apexSwapOut(op, item, replacing);
+  return out
+    ? { label: label === 'Pack' || label === 'Carry' ? 'Swap in' : `Swap in · ${label.toLowerCase()}`, disabled, sub: `Swaps out ${esc(itemTitle(out))}, back to the stash.` }
+    : { label, disabled };
 }
+
+/** The notice above a sheet that lists a second Apex piece (owner's wording, 2026-11-14): what is in the way, and what swapping does. */
+const apexConflict = (esc, out) => `<div class="apex__conflict" role="note">
+        <strong class="apex__conflict-head">Apex equipment conflict</strong>
+        <p>Already carrying ${esc(itemTitle(out))}. A runner can carry only one Apex piece. Swapping puts it back in the stash.</p>
+        <p class="apex__flavour">Street wisdom says a runner carrying two pieces of legend-grade iron is just walking target practice for the fixers who lost them.</p>
+      </div>`;
 
 /** The sheet for one place: what's in the stash that goes there, what others carry, or take it off. */
 export function renderGearSheet(ui, state, op, slot) {
@@ -223,7 +236,10 @@ export function renderGearSheet(ui, state, op, slot) {
   const fits = (item) => {
     if (placeOf(item.type) !== place.kind) return false;
     if (place.kind === 'implant') return item.type !== otherImplant?.type;
-    if (place.kind === 'bag') return fitsAt(op, item, place.x, place.y);
+    if (place.kind === 'bag') {
+      const out = apexSwapOut(op, item, current); // a swapped-out piece frees the cells it holds
+      return fitsAt(out ? { ...op, gear: { ...g, bag: (g.bag ?? []).filter((b) => b.item.uid !== out.uid) } } : op, item, place.x, place.y);
+    }
     return true;
   };
   const stash = (state.stash ?? []).filter(fits);
@@ -231,6 +247,7 @@ export function renderGearSheet(ui, state, op, slot) {
   const why = place.kind === 'bag' ? 'Weapons and tools that fit here: a rifle, sidearm, drone or deck takes 3 spaces, a trauma kit or ghost kit 1.'
     : place.kind === 'implant' ? `${otherImplant ? `Not a second ${esc(itemName(otherImplant).toLowerCase())}: the same implant twice does nothing twice. ` : ''}Each implant keeps neural load up; two keep it higher.`
     : current ? `Wearing: ${esc(itemTitle(current))}. Whatever you pick swaps with it.` : 'Nothing worn.';
+  const swapOut = [...stash, ...others.map((x) => x.item)].map((i) => apexSwapOut(op, i, current)).find(Boolean) ?? null;
   return `
     <div class="scrim" data-action="close-gear"></div>
     <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(place.title)} for ${esc(op.handle)}">
@@ -240,9 +257,10 @@ export function renderGearSheet(ui, state, op, slot) {
         ${current ? perkList(current) : ''}</div>
         <button class="btn btn--ghost sheet__x" data-action="close-gear" aria-label="Close">✕</button>
       </div>
-      <ul class="list list--plain gearlist">${stash.length ? stash.map((item) => itemRow(ui, item, { action: 'equip', label: place.kind === 'bag' ? 'Pack' : 'Carry', ...apexBlock(op, item, current) })).join('') : `<li class="muted small">Nothing in the stash ${place.kind === 'bag' ? 'fits here' : 'for this'}. Buy it in the armoury.</li>`}</ul>
+      ${swapOut ? apexConflict(esc, swapOut) : ''}
+      <ul class="list list--plain gearlist">${stash.length ? stash.map((item) => itemRow(ui, item, { action: 'equip', ...apexBlock(esc, op, item, current, place.kind === 'bag' ? 'Pack' : 'Carry') })).join('') : `<li class="muted small">Nothing in the stash ${place.kind === 'bag' ? 'fits here' : 'for this'}. Buy it in the armoury.</li>`}</ul>
       ${others.length ? `<h3 class="sheet__group">Carried by others <span>takes it off them</span></h3>
-      <ul class="list list--plain gearlist">${others.map(({ item, o }) => itemRow(ui, item, { action: 'equip', label: `From ${o.handle}`, carrier: o, ...apexBlock(op, item, current, !canChangeGear(state, o).ok) })).join('')}</ul>` : ''}
+      <ul class="list list--plain gearlist">${others.map(({ item, o }) => itemRow(ui, item, { action: 'equip', carrier: o, ...apexBlock(esc, op, item, current, `From ${o.handle}`, !canChangeGear(state, o).ok) })).join('')}</ul>` : ''}
       ${current ? `<button class="btn btn--ghost btn--block" data-action="unequip" data-id="${esc(current.uid)}">Put it back in the stash</button>` : ''}
       <button class="btn btn--block" data-action="open-armoury">Go to the armoury</button>
     </div>`;

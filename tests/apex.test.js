@@ -11,7 +11,7 @@ import { APEX_GEAR } from '../src/data/apexGear.js';
 import { PERK_CAPS } from '../src/data/gearPerks.js';
 import { SIDEARM_LOOKS, RIFLE_LOOKS, TOOL_FRAMES } from '../src/data/gearLooks.js';
 import { GEAR, TIERS, LOOT } from '../src/data/gear.js';
-import { makeApex, makeItem, mainKeys, perksOf, perkSum, perkById, gearMods, seriousGuard, patchBonus, neuralFloor, overwatchKit, buyGear, sellGear, equip, canCarry, apexLeft, carried, itemTitle } from '../src/core/gear.js';
+import { makeApex, makeItem, mainKeys, perksOf, perkSum, perkById, gearMods, seriousGuard, patchBonus, neuralFloor, overwatchKit, buyGear, sellGear, equip, apexSwapOut, apexLeft, carried, itemTitle } from '../src/core/gear.js';
 import { weaponOf, armourOf } from '../src/core/battle.js';
 import { runnerOf as fightRunner } from '../src/core/fight.js';
 import { refreshArmoury } from '../src/core/looks.js';
@@ -165,7 +165,9 @@ test('an Apex drop moves no roll in the shared stream', () => {
   assert.ok(checked >= 3);
 });
 
-test('a runner wears or carries one Apex piece: a second is refused with the first left where it was', () => {
+const apexUids = (op) => carried(op).filter((i) => i.apex).map((i) => i.uid);
+
+test('a runner wears or carries one Apex piece: a second swaps the first out to the stash', () => {
   const s = fresh(2);
   const [a, b] = s.crew;
   const one = wear(s, a, 'signalten');
@@ -173,35 +175,46 @@ test('a runner wears or carries one Apex piece: a second is refused with the fir
   const vest = makeApex(s, 'generatorcoat');
   const chip = makeApex(s, 'ridgelock');
   s.stash.push(two, vest, chip);
-  assert.equal(canCarry(a, two).ok, false);
-  assert.match(canCarry(a, two).reason, /Signal Ten/);
-  assert.equal(canCarry(b, two).ok, true);
-  for (const item of [two, vest, chip]) assert.equal(equip(s, item.uid, a.id), s, `${item.name} refused: the state comes back unchanged`);
-  assert.equal(equip(s, chip.uid, a.id, { socket: 0 }), s);
-  assert.deepEqual(carried(a).filter((i) => i.apex).map((i) => i.uid), [one.uid], 'the first stays');
+  assert.equal(apexSwapOut(a, two).uid, one.uid, 'the sheet is told which piece goes');
+  assert.equal(apexSwapOut(b, two), null, 'another runner has nothing to swap out');
+  assert.equal(apexSwapOut(a, makeItem(s, 'rifle', 'verified')), null, 'ordinary gear never swaps anything');
+  // Every kind of place: a bag cell, armour, an implant socket. Always one Apex piece after, and the old one in the stash.
+  for (const [item, target] of [[two, undefined], [vest, undefined], [chip, { socket: 0 }]]) {
+    const next = equip(s, item.uid, a.id, target);
+    assert.notEqual(next, s, `${item.name} goes on: a new find can always be tried`);
+    assert.deepEqual(apexUids(next.crew[0]), [item.uid], `${item.name} is the one piece they carry`);
+    assert.ok(next.stash.some((i) => i.uid === one.uid), 'Signal Ten is back in the stash');
+    assert.ok(!next.stash.some((i) => i.uid === item.uid), `${item.name} left the stash`);
+    assert.equal(next.stash.length, s.stash.length, 'nothing is lost or made');
+  }
+  // The new piece takes the cells the old one held.
+  const into = equip(s, two.uid, a.id, { x: 0, y: 0 });
+  assert.notEqual(into, s, 'a rifle can go where the sidearm was');
+  assert.deepEqual(apexUids(into.crew[0]), [two.uid]);
+  // Off another runner it swaps too, and that runner loses it.
+  const t = structuredClone(s);
+  t.crew[1].gear = { armour: null, implants: [], bag: [{ item: t.stash.find((i) => i.uid === chip.uid), x: 0, y: 0 }] };
+  t.stash = t.stash.filter((i) => i.uid !== chip.uid);
+  const taken = equip(t, chip.uid, a.id);
+  assert.deepEqual(apexUids(taken.crew[1]), [], 'the lender no longer carries it');
+  assert.ok(taken.stash.some((i) => i.uid === one.uid));
+  // Moving the piece they already have inside their own bag is not a second one.
+  assert.notEqual(equip(s, one.uid, a.id, { x: 1, y: 1 }), s);
   // Another runner can have it, and one runner can still carry any ordinary gear.
   const moved = equip(s, two.uid, b.id);
-  assert.notEqual(moved, s);
   assert.ok(carried(moved.crew[1]).some((i) => i.uid === two.uid));
-  // Moving the piece they already have inside their own bag is not a second one.
-  const bagItem = a.gear.bag[0];
-  assert.notEqual(equip(s, one.uid, a.id, { x: 1, y: 1 }), s);
-  assert.ok(bagItem);
-  // Putting the piece back, they may take another.
-  const off = structuredClone(s);
-  off.crew[0].gear.bag = [];
-  off.stash.push(one);
-  assert.notEqual(equip(off, two.uid, a.id), off);
-  // A worn Apex piece swapped for another in the same place is one for one, not two.
-  const t = fresh(2);
-  const w = wear(t, t.crew[0], 'generatorcoat');
-  const other = makeApex(t, 'signalten');
-  t.stash.push(other);
-  assert.equal(equip(t, other.uid, t.crew[0].id), t, 'a sidearm is a second piece beside the coat');
-  assert.ok(w);
+  assert.deepEqual(apexUids(moved.crew[0]), [one.uid], 'the first runner keeps theirs');
+  // A worn Apex piece pushed off by one for the same place is one for one; a different place swaps the worn one to the stash.
+  const u = fresh(2);
+  const w = wear(u, u.crew[0], 'generatorcoat');
+  const other = makeApex(u, 'signalten');
+  u.stash.push(other);
+  const swapped = equip(u, other.uid, u.crew[0].id);
+  assert.deepEqual(apexUids(swapped.crew[0]), [other.uid]);
+  assert.ok(swapped.stash.some((i) => i.uid === w.uid), 'the coat goes back to the stash');
 });
 
-test('the gear sheet shows a second Apex piece as unavailable and says why in words', () => {
+test('the gear sheet offers a second Apex piece as a swap and says what goes back, in words', () => {
   const s = fresh(2);
   const a = s.crew[0];
   wear(s, a, 'generatorcoat');
@@ -210,13 +223,27 @@ test('the gear sheet shows a second Apex piece as unavailable and says why in wo
   s.stash.push(second, plain);
   const html = renderGearSheet(ui, s, a, 'bag:0,0');
   const row = html.split('<li class="gearrow">').find((r) => r.includes('Winning Post'));
-  assert.ok(row, 'the Apex rifle is listed, not hidden');
-  assert.match(row, /<button[^>]*data-action="equip"[^>]*disabled/, row.slice(row.indexOf("<button")));
-  assert.match(row, /A runner can carry only one Apex piece/);
-  assert.match(row, /Generator Coat/);
+  assert.ok(row, 'the Apex rifle is listed');
+  const button = row.slice(row.indexOf('<button'), row.indexOf('</button>'));
+  assert.match(button, /data-action="equip"/);
+  assert.ok(!/disabled/.test(button), 'it can be tapped: a new find is never locked out');
+  assert.match(button, />Swap in$/);
+  assert.match(row, /Swaps out Generator Coat, back to the stash/, 'the row says which piece goes');
+  // The owner's notice, once, above the list.
+  assert.equal((html.match(/Apex equipment conflict/g) ?? []).length, 1, 'one notice, not one per row');
+  assert.match(html, /Already carrying Generator Coat\. A runner can carry only one Apex piece\. Swapping puts it back in the stash\./);
+  assert.match(html, /walking target practice/);
   assert.ok(!/title=|:hover/.test(html), 'no hover-only text');
   const open = html.split('<li class="gearrow">').find((r) => r.includes('Verified rifle'));
-  assert.ok(!/disabled/.test(open ?? ''), 'an ordinary rifle is still ok to pack');
+  assert.ok(!/disabled|Swap in/.test(open ?? ''), 'an ordinary rifle is just packed');
+  // No second piece listed, no notice.
+  const calm = fresh(2);
+  calm.stash.push(makeItem(calm, 'rifle', 'verified'));
+  assert.ok(!/Apex equipment conflict/.test(renderGearSheet(ui, calm, calm.crew[0], 'bag:0,0')));
+  // Tapping it through the same rules the button calls.
+  const next = equip(s, second.uid, a.id, { x: 0, y: 0 });
+  assert.deepEqual(apexUids(next.crew[0]), [second.uid]);
+  assert.ok(next.stash.some((i) => i.name === 'Generator Coat' || itemTitle(i).includes('Generator Coat')));
 });
 
 test('the Armoury row and the gear sheet show the history and the unique perk (name always, line on a tap)', () => {

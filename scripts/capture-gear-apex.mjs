@@ -1,6 +1,6 @@
 // Capture (2026-11-14, Apex gear): stages what a normal scripted run almost never shows, because an Apex piece is a
 // 1-in-100 drop. An Armoury stash holding Apex pieces with their history and unique perk, a perk opened by a tap, a runner
-// carrying one, the gear sheet refusing a second one with its reason, and a real job report whose gear line is an Apex find
+// carrying one, the gear sheet offering a second one as a swap, saying which piece goes back to the stash, and a real job report whose gear line is an Apex find
 // (the job is played for real in this script with the tier odds forced to Apex, so the report and the stash are what a
 // lucky drop would give). Checks every screen at 360 and 390 wide for sideways overflow and prints the height of every perk row.
 // Run: node scripts/capture-gear-apex.mjs <out dir>
@@ -17,7 +17,7 @@ import { mkdirSync } from 'node:fs';
 const [out] = process.argv.slice(2);
 mkdirSync(out, { recursive: true });
 
-// The stash: three Apex pieces among ordinary gear. One runner carries Signal Ten, so the gear sheet has a second to refuse.
+// The stash: three Apex pieces among ordinary gear. One runner carries Signal Ten, so the gear sheet has a second to swap in.
 const s = createNewGame({ seed: 21, startCrew: 'fresh' });
 s.inbox = s.inbox.filter((m) => m.id !== 'welcome');
 s.cash = 40000;
@@ -87,15 +87,16 @@ try {
     await p.evaluate(() => [...document.querySelectorAll('h2')].find((x) => /Gear/i.test(x.textContent))?.scrollIntoView({ block: 'start' }));
     await p.evaluate(() => document.querySelector('.bag__list')?.scrollIntoView({ block: 'center' }));
     await tap(p, '.bag__list .perk summary'); await p.waitForTimeout(200);
-    await p.screenshot({ path: `${out}/62-runner-wearing-apex-${w}.png` });
+    await p.screenshot({ path: `${out}/62-runner-carrying-apex-${w}.png` });
     await audit(p, 'a runner carrying Signal Ten', w);
     await p.evaluate(() => window.scrollTo(0, 0));
     await tap(p, '[data-action="bag-cell"][data-id="0,1"]'); await p.waitForTimeout(400);
-    await p.screenshot({ path: `${out}/63-gear-sheet-second-apex-refused-${w}.png` });
-    const refused = await p.evaluate(() => [...document.querySelectorAll('.sheet .gearrow')].map((r) => ({ name: r.querySelector('strong')?.textContent, disabled: r.querySelector('[data-action="equip"]')?.disabled, why: r.querySelector('.apex__why')?.textContent ?? null })));
-    console.log(`${w}px gear sheet rows: ${JSON.stringify(refused)}`);
-    if (!refused.some((r) => r.name === 'Winning Post' && r.disabled && r.why)) problems.push(`${w} sheet does not refuse the second Apex piece`);
-    await audit(p, 'gear sheet refusing a second Apex piece', w);
+    await p.screenshot({ path: `${out}/63-gear-sheet-second-apex-swap-${w}.png` });
+    const swaps = await p.evaluate(() => [...document.querySelectorAll('.sheet .gearrow')].map((r) => ({ name: r.querySelector('strong')?.textContent, button: r.querySelector('[data-action="equip"]')?.textContent, disabled: r.querySelector('[data-action="equip"]')?.disabled, why: r.querySelector('.apex__swap')?.textContent ?? null })));
+    console.log(`${w}px gear sheet rows: ${JSON.stringify(swaps)}`);
+    if (!swaps.some((r) => r.name === 'Winning Post' && !r.disabled && r.button === 'Swap in' && /back to the stash/.test(r.why ?? ''))) problems.push(`${w} sheet does not offer the second Apex piece as a swap`);
+    if (!(await p.locator('.sheet .apex__conflict').first().isVisible())) problems.push(`${w} sheet shows no conflict notice`);
+    await audit(p, 'gear sheet swapping in a second Apex piece', w);
     await p.close();
     const q = await b.newPage({ viewport: { width: w, height: 844 }, deviceScaleFactor: 2 });
     q.on('pageerror', (e) => console.error('page error', e.message));
