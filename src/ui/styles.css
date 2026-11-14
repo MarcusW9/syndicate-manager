@@ -2430,3 +2430,4 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .watchrow .face { width: 44px; height: 44px; }
 .watchrow__who { flex: 1; min-width: 0; display: grid; gap: 2px; justify-items: start; }
 .watchrow .btn { margin: 0; flex: none; }
+.watchrows .watchrow { padding: 8px 14px 8px 12px; gap: 12px; }
