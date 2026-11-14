@@ -21,6 +21,12 @@ const ZONE_NOTE = { in: 'The way in', inside: 'Inside', target: 'The target' };
 const RISK_ORDER = ['low', 'moderate', 'high', 'extreme'];
 /** The most risk Joss accepts to keep a more valuable runner home (2026-11-05); never past the best read if that's worse. */
 export const JOSS_ACCEPTS = 'moderate';
+/**
+ * Bounded search (2026-11-14): at each choice Joss makes for a job (each pick of the team, overwatch, each extra, each
+ * swap), at most this many candidates have their fights played, the ones the cheap read (no fights) rates best, so the
+ * board's cost stops growing with the roster. Infinity is the full search (tests/squadsearch.test.js).
+ */
+export const JOSS_SHORTLIST = 6;
 export const worstRisk = (levels) => levels.reduce((a, b) => (RISK_ORDER.indexOf(b) > RISK_ORDER.indexOf(a) ? b : a), 'low');
 
 /** Every incident this approach can meet, zone by zone, once each: [{ id, zone, sometimes }]. */
@@ -96,7 +102,9 @@ function coverRows(template, crew, approach, { threat = template.threat, overwat
       const more = tallies.fight.step(tallies.fight.t, k);
       return (tallies.jump ? tallies.jump.step(tallies.jump.t, k) : false) || more;
     };
-    return { base, zone, diff, h, save, fights, forced, missed, fightOf, winRangeOf, refine, engine2: Boolean(type) };
+    // The cheap read's guess at the win share, with no fight played (the shortlist's order): every fight half won.
+    const cheapWin = winOf(0.5, 0.5);
+    return { base, zone, diff, h, save, fights, forced, missed, fightOf, winRangeOf, refine, cheapWin, winOf, engine2: Boolean(type) };
   });
   return { rows, fightArgs };
 }
@@ -163,7 +171,7 @@ function coverageOf(template, crew, approach, { rows: lazy, fightArgs }) {
  * are left; exact() is the score with every fight played.
  */
 function squadScore(template, crew, approach, overwatch, threat) {
-  if (!crew.length) return { hi: () => 0, refine: () => false, exact: () => 0 };
+  if (!crew.length) return { hi: () => 0, mid: () => 0, refine: () => false, exact: () => 0 };
   const { rows } = coverRows(template, crew, approach, { threat, overwatch });
   const target = rollTarget({ ...template, threat });
   const keys = template.keyStats.map((stat) => {
@@ -178,6 +186,7 @@ function squadScore(template, crew, approach, overwatch, threat) {
   const open = rows.filter((r) => r.h && r.fights);
   return {
     hi: () => mean((r) => r.winRangeOf()[1]),
+    mid: () => mean((r) => r.cheapWin),
     refine: () => open.map(refineRow).some(Boolean),
     exact: () => mean((r) => r.fightOf().win),
   };
@@ -188,9 +197,15 @@ function squadScore(template, crew, approach, overwatch, threat) {
  * playing an item's fights only while its upper bound could still win (squadScore). items: [{ hi(), refine(), exact() }].
  * The most promising (by the bound before any fight) are played first, so the rest stop early. Returns { i, s } or null.
  */
-function firstBest(items, floor = -Infinity) {
+function firstBest(items, floor = -Infinity, shortlist = Infinity) {
   const start = items.map((it) => it.hi());
-  const order = items.map((_, i) => i).sort((a, b) => start[b] - start[a] || a - b);
+  let order = items.map((_, i) => i).sort((a, b) => start[b] - start[a] || a - b);
+  if (order.length > shortlist) {
+    // Bounded search (2026-11-14): only the `shortlist` most promising by the cheap read (every fight half won) are played.
+    const cheap = items.map((it) => it.mid());
+    const keep = new Set(items.map((_, i) => i).sort((a, b) => cheap[b] - cheap[a] || a - b).slice(0, shortlist));
+    order = order.filter((i) => keep.has(i));
+  }
   let best = null;
   for (const i of order) {
     if (start[i] <= floor) break;
@@ -214,18 +229,18 @@ function firstBest(items, floor = -Infinity) {
  * leaves them to you). Overwatch only if it helps; Wheels if the job can need piloting and they'd
  * out-drive the team; standby from whoever's left. Returns { crew, overwatch, kit, wheels, standby }.
  */
-export function jossPicks(template, candidates, approach, { threat = template.threat } = {}) {
+export function jossPicks(template, candidates, approach, { threat = template.threat, shortlist = JOSS_SHORTLIST } = {}) {
   const team = [];
   const pool = [...candidates];
   while (team.length < template.crewSize && pool.length) {
-    const best = firstBest(pool.map((op) => squadScore(template, [...team, op], approach, null, threat)));
+    const best = firstBest(pool.map((op) => squadScore(template, [...team, op], approach, null, threat)), -Infinity, shortlist);
     const op = pool[best.i];
     team.push(op);
     pool.splice(best.i, 1);
   }
   const without = squadScore(template, team, approach, null, threat).exact();
   const tries = pool.flatMap((op) => kitsFor(op).map((kit) => ({ op, kit })));
-  const found = firstBest(tries.map(({ op, kit }) => squadScore(template, team, approach, { op, kit }, threat)), without + 0.005);
+  const found = firstBest(tries.map(({ op, kit }) => squadScore(template, team, approach, { op, kit }, threat)), without + 0.005, shortlist);
   const over = found ? tries[found.i] : null;
   if (over) pool.splice(pool.indexOf(over.op), 1);
   // Wheels: the best driver left, on jobs where piloting can come up and they'd beat the team at it.
@@ -295,6 +310,25 @@ function rankIn(parts, cap = Infinity) {
 }
 
 /**
+ * A plan's cheap read, no fight played (the bounded search's shortlist order, 2026-11-14): [best, worst, odds], best and
+ * worst the level with every fight won and lost, odds the mean row odds with every fight half won. Never depends on what
+ * was played before, so the shortlist is the same whatever the caches hold.
+ */
+function cheapIn(parts) {
+  const { read, rows, crew } = parts;
+  const floor = RISK_ORDER.indexOf(read.level);
+  if (!crew.length) return [floor, floor, 0];
+  let best = floor, worst = floor, odds = 0;
+  for (const r of rows) {
+    if (!r.h) { best = worst = 3; continue; }
+    const at = (win) => RISK_ORDER.indexOf(riskLabel(1 - r.missed * (1 - win)));
+    if (r.fights) { best = Math.max(best, at(r.winOf(1, 1))); worst = Math.max(worst, at(r.winOf(0, 0))); } else { best = Math.max(best, at(0)); worst = Math.max(worst, at(0)); }
+    odds += 1 - r.missed * (1 - (r.fights ? r.cheapWin : 0));
+  }
+  return [best, worst, odds / rows.length];
+}
+
+/**
  * The read the planning screen shows for a plan: the worse of the crises read (assessJob) and the
  * incidents (coverage). One function for the planner and the job board, so they always agree.
  * plan: { crew: [op], approach, overwatch: op | null, kit, wheels: op | null }.
@@ -320,17 +354,25 @@ export function planRead(state, job, plan) {
  * only when the cheap reads around them leave its level open against what it is compared with, and each squad is read once.
  * Returns { crew, overwatch, kit, wheels, standby: null, level }.
  */
-export function leanPicks(state, job, approach, ctx = readContext(state, job)) {
+export function leanPicks(state, job, approach, { shortlist = JOSS_SHORTLIST, ctx = readContext(state, job) } = {}) {
   const { tpl } = ctx;
   const free = ctx.free ??= state.crew.filter((op) => availability(state, op).ok);
   const byId = (id) => free.find((o) => o.id === id) ?? null;
-  const base = jossPicks(tpl, free, approach, { threat: tpl.threat });
+  const base = jossPicks(tpl, free, approach, { threat: tpl.threat, shortlist });
   const reads = new Map();
-  const rank = (sq, cap) => {
+  const partsOf = (sq) => {
     const owKit = sq.overwatch && (kitsFor(sq.overwatch).includes(sq.kit) ? sq.kit : kitsFor(sq.overwatch)[0]);
     const key = `${sq.crew.map((o) => o.id).join(',')}|${sq.overwatch?.id ?? ''}|${owKit || ''}|${sq.wheels?.id ?? ''}`;
     if (!reads.has(key)) reads.set(key, planParts(ctx, { ...sq, approach }));
-    return rankIn(reads.get(key), cap);
+    return reads.get(key);
+  };
+  const rank = (sq, cap) => rankIn(partsOf(sq), cap);
+  /** Bounded search: of the candidates the cheap read leaves open (it can't rule them out), the `shortlist` it rates best, in their own order. */
+  const shortlisted = (ops, squadOf, bar) => {
+    const open = ops.map((op, i) => ({ op, i, c: cheapIn(partsOf(squadOf(op))) })).filter((x) => x.c[0] < bar);
+    if (open.length <= shortlist) return ops;
+    const keep = new Set(open.sort((a, b) => a.c[1] - b.c[1] || a.c[0] - b.c[0] || b.c[2] - a.c[2] || a.i - b.i).slice(0, shortlist).map((x) => x.op));
+    return ops.filter((op) => keep.has(op));
   };
   const people = (sq) => sq.crew.length + (sq.overwatch ? 1 : 0) + (sq.wheels ? 1 : 0);
   // Every mix of overwatch and the van (they can help together where neither does alone), then
@@ -342,7 +384,8 @@ export function leanPicks(state, job, approach, ctx = readContext(state, job)) {
       const sq = { crew: base.crew.map(byId), overwatch, kit: base.kit, wheels };
       let r = rank(sq);
       for (let n = 0; n < MAX_EXTRA_CREW && sq.crew.length >= tpl.crewSize; n++) {
-        const left = free.filter((o) => !sq.crew.includes(o) && o !== sq.overwatch && o !== sq.wheels);
+        const all = free.filter((o) => !sq.crew.includes(o) && o !== sq.overwatch && o !== sq.wheels);
+        const left = shortlisted(all, (op) => ({ ...sq, crew: [...sq.crew, op] }), r);
         let pick = null;
         for (const op of left) {
           // Only a level below the best so far counts, so the read stops as soon as it can't be.
@@ -365,8 +408,13 @@ export function leanPicks(state, job, approach, ctx = readContext(state, job)) {
   const inSquad = (op) => squad.crew.includes(op) || op === squad.overwatch || op === squad.wheels;
   for (const member of [...squad.crew].sort((a, b) => crewValue(b) - crewValue(a))) {
     const cheaper = free.filter((o) => !inSquad(o) && crewValue(o) < crewValue(member)).sort((a, b) => crewValue(a) - crewValue(b));
+    let played = 0;
     for (const op of cheaper) {
       const crew = squad.crew.map((o) => (o === member ? op : o));
+      // Bounded search: a swap the cheap read can't settle plays its fights, and at most `shortlist` of those are tried.
+      const [cBest, cWorst] = cheapIn(partsOf({ ...squad, crew }));
+      if (cBest > accept) continue;
+      if (cWorst > accept && played++ >= shortlist) break;
       if (rank({ ...squad, crew }, accept + 1) <= accept) { squad.crew = crew; break; }
     }
   }
@@ -382,13 +430,13 @@ export function leanPicks(state, job, approach, ctx = readContext(state, job)) {
  * for other jobs, since most jobs take a day and the same people can run them back to back.
  * Returns { approach, picks, crew: [op] (inside), level, size (everyone Joss would send), short }.
  */
-export function jobRead(state, job) {
+export function jobRead(state, job, { shortlist = JOSS_SHORTLIST } = {}) {
   const ctx = readContext(state, job);
   const free = ctx.free = state.crew.filter((op) => availability(state, op).ok);
   let best = null;
   for (const approach of Object.keys(APPROACHES)) {
     if (best?.level === 'low') break;
-    const picks = leanPicks(state, job, approach, ctx);
+    const picks = leanPicks(state, job, approach, { shortlist, ctx });
     if (!best || RISK_ORDER.indexOf(picks.level) < RISK_ORDER.indexOf(best.level)) {
       const crew = picks.crew.map((id) => free.find((o) => o.id === id));
       const size = picks.crew.length + (picks.overwatch ? 1 : 0) + (picks.wheels ? 1 : 0);
