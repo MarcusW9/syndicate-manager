@@ -24,5 +24,6 @@ export const NAMES = {
     ironPeak: 'Iron Peak',
   },
   currency: '¥', // display symbol only
+  defaultTong: 'The Back Room', // our tong's name until the player picks one (core/tongname.js)
   partner: 'Joss', // the crew's bootleg AI (WORLD.md); they/them
 };

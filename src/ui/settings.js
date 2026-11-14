@@ -5,13 +5,17 @@ import { jossIcon } from './art.js';
 import { money } from '../core/money.js';
 import { unreadableSave, listSlots, getActiveSlot, loadBackup, SLOT_COUNT, backupDue, getPref } from '../save/save.js';
 import { FOUNDERS_TO_PICK } from '../core/recruits.js';
-import { esc, face, statName } from './shared.js';
+import { esc, statName } from './shared.js';
+import { polaroid } from './board.js';
+import { TONG_NAME_MAX } from '../core/tongname.js';
 import { state, V } from './view.js';
 
 // --- founders ------------------------------------------------------------
+const FOUNDER_TILTS = ['-1.2deg', '0.8deg', '-0.6deg', '1deg', '-0.9deg', '0.5deg'];
+const FOUNDER_PINS = ['#ff4f7b', '#36d6c3', '#f5b942', '#b48cff', '#5fe0a5', '#ff9a5a'];
 /**
  * A new game's first screen: six candidates, pick three (DESIGN.md, 2026-10-28). Each one is a
- * pinned dossier card (as the squad board had until 2026-11-08), with what the scouts and Joss know below.
+ * polaroid (as on the squad board), with what the scouts and Joss know below.
  */
 export function renderFounding() {
   const cands = state.founding.candidates;
@@ -30,18 +34,21 @@ export function renderFounding() {
           <p class="joss__line">Six people will work for street wages, and the room sleeps three. Pick who you want to grow with. We hire the rest later.</p>
         </div>
       </div>
+      <label class="tongname">
+        <span class="tongname__label">Name your tong</span>
+        <input id="tongname" class="tongname__input" type="text" maxlength="${TONG_NAME_MAX}" autocomplete="off" placeholder="${esc(NAMES.defaultTong)}" value="${esc(V.foundingTongName)}">
+      </label>
       <ul class="founders" role="group" aria-label="Candidates: pick ${FOUNDERS_TO_PICK}">
         ${cands.map((r, i) => {
           const on = picked.includes(r.id);
           const full = !on && n >= FOUNDERS_TO_PICK;
           return `<li><button class="founder ${on ? 'is-on' : ''}" data-action="founder-toggle" data-id="${esc(r.id)}" aria-pressed="${on}" ${full ? 'disabled' : ''}>
-            <span class="founder__file dossier" style="--tilt:${['-1.2deg', '0.8deg', '-0.4deg', '1.1deg', '-0.9deg', '0.5deg'][i % 6]}">
-              <span class="dossier__photo">${face(r)}</span>
-              <span class="dossier__name">${esc(r.handle)}</span>
-              <span class="dossier__real">${esc(r.role)} · ${r.age}</span>
-              ${on ? '<span class="dossier__tag">In</span>' : ''}
+            <span class="founder__file" style="--tilt:${FOUNDER_TILTS[i % 6]};--pin:${FOUNDER_PINS[i % 6]}">
+              ${polaroid({ esc }, r)}
+              ${on ? '<span class="founder__in">In</span>' : ''}
             </span>
             <span class="founder__about">
+              <span class="founder__role">${esc(r.role)} · ${r.age}</span>
               <span class="founder__stats">${best(r).map(([k, v]) => `<span><b>${v}</b> ${esc(statName(k))}</span>`).join('')}</span>
               <span class="founder__line">${esc(r.origin)}</span>
               <span class="founder__traits muted small">${esc(r.traits.map((t) => TRAITS[t]?.name ?? t).join(' · '))}</span>

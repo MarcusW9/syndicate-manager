@@ -27,6 +27,8 @@ export const V = {
   playReportId: null, // a hands-off report playing out on its first open (renderReportTimeline)
   openOperativeId: null,
   openRecruitId: null,
+  tongNaming: null, // the draft while the Tong screen's name is being edited (null when it isn't)
+  foundingTongName: '', // what's typed in the founder pick's name field
   tongTab: 'halls', // Tong's sub-tab: 'halls' | 'armoury' (ui/gear.js draws the Armoury)
   crewTab: 'roster', // Crew's sub-tab: 'roster' | 'leads' | 'wall'
   hallInside: null, // inside one building of the open hall (a part's id), or null for the compound (2026-11-09; UI only, never saved)

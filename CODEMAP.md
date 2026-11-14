@@ -78,7 +78,7 @@ How battles work (both engines, every number, the death rule): `docs/BATTLES.md`
   - `rating.js` (the hidden 0-100 rating: `ratingOf(op)`, `cardRating`, `ratingWord` keys, `tierWord`; the only place numbers become words)
   - `gangs.js` (gangs' grudges, save v41: `addGrudge`, `jobGrudge` from a template's `against`, `fadeGrudges` on Sundays, `gangsOn`; data in `data/gangs.js`)
   - `raids.js` (raids on the halls, police v40 and gangs v41: `raider(raid)` says who's coming; `checkRaids` in the day tick warns and knocks, `raidThreat` less `defenceCut` (1 for every 3 defence pieces built, never below 1), `hallTurret` (a hall's auto turret for the fight: `battle.js` fires `b.turret` each round on its own), `payOffRaid`, `RAID_RESOLVER` for the day's call, `startRaidFight` puts the hold on screen as a job of its own, `raid:<district>` from `data/raids.js raidTemplate`, and `finish()` hands its end to `finishRaid`; the fight is the usual one, with `b.foe` naming the raiders and the hall's own map, `data/sites.js` HALLS by district, HALL as the fallback)
-  - `state.js` (new game, `SAVE_VERSION`)
+  - `state.js` (new game, `SAVE_VERSION`), `tongname.js` (our tong's name: `tongNameOf`, `setTongName`; display only, save v64)
   - `report.js` (the report summary)
   - `feed.js` (a run's events as watch cards)
   - `upcoming.js` (Today's list).

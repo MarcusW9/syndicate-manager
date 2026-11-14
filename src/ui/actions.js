@@ -8,6 +8,7 @@ import { pieceAt, bedAt, placePost, placePiece, turnPiece, canRemove, refundOf, 
 import { PIECES } from '../data/hallBuild.js';
 import { isBlocked, advanceDay } from '../core/time.js';
 import { chooseFounders, createNewGame } from '../core/state.js';
+import { tongNameOf, cleanTongName, tongNameProblem, setTongName } from '../core/tongname.js';
 import { templateById } from '../core/jobs.js';
 import { resolveDecision } from '../core/decisions.js';
 import { swearIn } from '../core/oath.js';
@@ -180,9 +181,22 @@ export function onClick(e) {
       V.focusNext = { action, id };
       break;
     case 'found-crew': {
-      const next = chooseFounders(state, V.founderPick);
+      const typed = cleanTongName(V.foundingTongName);
+      const problem = typed ? tongNameProblem(state, typed) : null;
+      if (problem) { alert(problem); break; }
+      const next = chooseFounders(state, V.founderPick, typed || undefined);
       if (next === state) return;
+      V.foundingTongName = '';
       V.founderPick = []; nav.clear(); V.screen = 'inbox';
+      return setState(next);
+    }
+    case 'tong-rename': V.tongNaming = tongNameOf(state); break;
+    case 'tong-name-cancel': V.tongNaming = null; V.focusNext = { action: 'tong-rename', id: undefined }; break;
+    case 'tong-name-save': {
+      const problem = tongNameProblem(state, V.tongNaming);
+      if (problem) { alert(problem); break; }
+      const next = setTongName(state, V.tongNaming);
+      V.tongNaming = null;
       return setState(next);
     }
     case 'hire': V.openRecruitId = null; return setState(hire(state, id));
