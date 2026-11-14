@@ -18,6 +18,9 @@ export const rosterOf = (r, t) => r.cards.filter((c) => c.tongId === t.id);
 export const tierIndexOf = (t) => TONG_RANKS.findIndex((k) => k.id === rankForHalls(t.halls).id);
 export const seasonOf = (day) => Math.floor((day - 1) / SEASON_DAYS);
 
+/** Is this house selling (E2): its overreach story is at Selling, so a buyout from it costs less. */
+export const isSelling = (r, t) => !!r?.threads?.some((x) => x.open && x.tongId === t.id && x.family === 'overreach' && x.stage === 'selling');
+
 /** A new tong's habit: weighted, never more than two active tongs with the same one, never `avoid` (the house a founder left). */
 export function pickHabit(seed, r, tongId, avoid = null) {
   const rng = hashRng(seed, 'habit:' + tongId);
@@ -38,7 +41,7 @@ export function noteBest(card, day) {
 
 export const stalled = (card, day) => card.age >= HABIT.stallAge && day - (card.bestDay ?? day) >= HABIT.stallWeeks * DAYS_PER_WEEK;
 
-const average = (r, t) => {
+export const average = (r, t) => {
   const names = rosterOf(r, t);
   return names.length ? names.reduce((n, c) => n + cardRating(c), 0) / names.length : 20 + t.prestige * 0.8;
 };
