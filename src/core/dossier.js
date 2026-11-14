@@ -6,7 +6,7 @@
 
 import { hashRng, pick } from './rng.js';
 import { ROLE_PROFILES, HANDLES, BADGE_COLORS } from '../data/recruitPools.js';
-import { RIVALS, HABIT, REACH, SCOUT_TEXT, fill } from '../data/rivals.js';
+import { RIVALS, HABIT, REACH, WATCH, SCOUT_TEXT, WATCH_TEXT, fill } from '../data/rivals.js';
 import { RECRUIT_GEAR } from '../data/gear.js';
 import { loadoutOf } from './gear.js';
 import { availability } from './crew.js';
@@ -20,6 +20,8 @@ import { HOME_HALL } from '../data/halls.js';
 import { crewLead } from './lead.js';
 import { rankForHalls } from './tong.js';
 import { isSelling } from './houses.js';
+import { levelInEffect, readOf, ageOf, changedSince, raisedRead, raisedHouseRead, houseLevel, isUnsettled, slateMark } from './reads.js';
+import { bookGrade } from './book.js';
 import { TONG_RANKS } from '../data/tong.js';
 import { NAMES } from '../config/names.js';
 import { money } from './money.js';
@@ -84,7 +86,8 @@ export function scoutErrorAt(state, card, level) {
   const full = rollScoutError(hashRng(state.seed, 'scout-error', card.id));
   return level >= RIVALS.scoutMax ? 0 : level === 2 ? clamp(full, -1, 1) : full;
 }
-export const scoutLevel = (state, card) => state.rivals?.scouted?.[card.id] ?? 0;
+/** The level of our read of a name in effect today, 0 to 3 (it falls with time and with change: core/reads.js). */
+export const scoutLevel = (state, card) => levelInEffect(state, card);
 
 /** The full runner for a card: same card, same runner, every time. Not saved. Recruit-shaped, so signing reuses recruitToOperative. */
 export function dossierOf(state, card) {
@@ -119,7 +122,7 @@ function applyScout(state, card, op) {
   const ok = roll + (op.stats.social ?? 0) >= 10 + 6; // SIDE_DIFFICULTY (core/sidetasks.js)
   const r = state.rivals;
   r.scouted = { ...(r.scouted ?? {}) };
-  if (ok) r.scouted[card.id] = level + 1;
+  if (ok) r.scouted[card.id] = raisedRead(state, card);
   r.lastScout = { cardId: card.id, ok, day: state.day };
   return ok;
 }
@@ -166,14 +169,56 @@ export function resolveScout(state, entry) {
   state.inbox.unshift({ id: `scout-back-${entry.scout}-${state.day}`, type: 'job', day: state.day, subject: fill(SCOUT_TEXT[key].subject, v), body: fill(SCOUT_TEXT[key].body, v), blocking: false, read: false });
 }
 
+// --- Watching a tong (E3) ---
+
+export const WATCH_DAYS = WATCH.days;
+const tongRef = (state, ref) => (state.rivals?.tongs ?? []).find((t) => t.id === ref && t.status === 'active') ?? null;
+
+/** One trip to watch a tong: its own hash key 'house-trip', the same difficulty as a name. Mutates the (cloned) state; true on a good trip. */
+function applyWatch(state, tong, op) {
+  const level = houseLevel(state, tong.id);
+  const roll = 1 + Math.floor(hashRng(state.seed, 'house-trip', tong.id, level, state.day)() * 20);
+  const ok = roll + (op.stats.social ?? 0) >= 10 + 6; // SIDE_DIFFICULTY (core/sidetasks.js)
+  if (ok) state.rivals.houseRead = { ...(state.rivals.houseRead ?? {}), [tong.id]: raisedHouseRead(state, tong.id) };
+  return ok;
+}
+
+/** Send someone to watch a tong for three days (a side task; core/sidetasks.js hands it to `resolveWatch` when they are back). One at a time per tong. */
+export function sendWatch(prev, tongId, opId) {
+  const tong = tongRef(prev, tongId);
+  const op = prev.crew.find((o) => o.id === opId);
+  if (!tong || !op || op.freelance || !availability(prev, op).ok || houseLevel(prev, tong.id) >= WATCH.houseMax) return prev;
+  if ((prev.sideOut ?? []).some((s) => s.house === tong.id)) return prev;
+  const state = structuredClone(prev);
+  const returnDay = state.day + WATCH_DAYS;
+  state.crew.find((o) => o.id === opId).condition.awayUntil = returnDay;
+  state.sideOut = [...(state.sideOut ?? []), { taskId: 'house', house: tong.id, houseName: tong.name, crewIds: [opId], returnDay }];
+  state.inbox.unshift({ id: `watch-sent-${tong.id}-${state.day}`, type: 'job', day: state.day, subject: fill(WATCH_TEXT.sent.subject, { op: op.handle, name: tong.name }), body: fill(WATCH_TEXT.sent.body, { op: op.handle, name: tong.name }), blocking: false, read: true });
+  return state;
+}
+
+/** A watcher is back: the trip's result and a message. Mutates the (cloned) state. */
+export function resolveWatch(state, entry) {
+  const op = state.crew.find((o) => o.id === entry.crewIds[0]);
+  const tong = tongRef(state, entry.house);
+  if (!op) return;
+  const v = { op: op.handle, name: tong?.name ?? entry.houseName ?? 'that tong' };
+  const key = tong ? (applyWatch(state, tong, op) ? 'ok' : 'miss') : 'gone';
+  state.inbox.unshift({ id: `watch-back-${entry.house}-${state.day}`, type: 'job', day: state.day, subject: fill(WATCH_TEXT[key].subject, v), body: fill(WATCH_TEXT[key].body, v), blocking: false, read: false });
+}
+
 /** What the player may see of a name at the level scouted: keys and values only (never more than the level allows). */
 export function readFor(state, card) {
   const level = scoutLevel(state, card);
   const d = dossierOf(state, card);
   const tong = tongOf(state.rivals, card.tongId);
   const from = tongOf(state.rivals, card.fromTong);
+  const read = readOf(state, card);
   const out = { id: slug(card.name), name: card.name, role: card.role, fame: card.fame, word: ratingWord(cardRating(card), card), home: card.home, tong: tong?.name ?? null, from: from?.name ?? null, head: !!tong && tong.headId === card.id, level: ['none', 'seen', 'sharper', 'full'][level], stats: null, potential: null };
   out.note = null;
+  // E3: how old our read is (a word), whether they have changed since we looked, whether the house has told us they are unsettled, and the slate against what we saw.
+  out.age = ageOf(state, read); out.changed = changedSince(card, read); out.unsettled = isUnsettled(state, card);
+  out.slate = slateMark(state, card, bookGrade(state, card.runnerId ?? card.id));
   if (level >= 1) {
     const house = tong ?? from;
     out.note = house?.habit === 'workshop' || house?.habit === 'oldhouse' ? house.habit : null; // E1: what a watched name's house says about them
@@ -207,22 +252,23 @@ export function persuasion(state, card) {
   const score = clamp(Math.round(Object.values(parts).reduce((n, v) => n + v, 0) - 0.3 * cardRating(card)), 0, 100);
   let premium = Math.round(RIVALS.premiumMax * (1 - score / 100) * 100) / 100;
   if (tong?.habit === 'oldhouse') premium = Math.min(RIVALS.premiumMax, Math.round((premium + HABIT.oldHousePremium) * 100) / 100); // E1: an old house's names ask more to be convinced
+  if (isUnsettled(state, card)) premium = Math.max(0, Math.round((premium - WATCH.unsettledPremium) * 100) / 100); // E3: an unsettled name, which we know only after watching their house to level 2, asks less (after the old house's extra, then the cap)
   return { score, premium, parts };
 }
 
 function buyoutFeeFor(state, card, d) {
   const tong = tongOf(state.rivals, card.tongId);
   if (!tong || card.id === tong.headId) return 0;
-  return buyoutAmount(tong, d.wage, isSelling(state.rivals, tong));
+  return buyoutAmount(tong, d.wage, isSelling(state.rivals, tong), isUnsettled(state, card));
 }
 
 /** The buyout between us and a tong for a runner on this wage, either way round (part D3): the tong's wealth and regard set it. */
-export function buyoutAmount(tong, wage, selling = false) {
+export function buyoutAmount(tong, wage, selling = false, unsettled = false) {
   const B = RIVALS.buyout;
   const rich = Math.min(B.richCap, Math.floor(tong.wealth / B.richStep) * B.richPer);
   const regard = tong.regard ?? 0;
   const mood = regard <= RIVALS.regard.cold ? B.cold : regard >= RIVALS.regard.warm ? B.warm : 1;
-  return round50(wage * B.weeks * (1 + rich) * mood * (tong.habit === 'boutique' ? HABIT.buyoutBoutique : 1) * (selling ? REACH.sellBuyout : 1)); // E1: a short table's names cost more; E2: a house that is selling asks less
+  return round50(wage * B.weeks * (1 + rich) * mood * (tong.habit === 'boutique' ? HABIT.buyoutBoutique : 1) * (selling ? REACH.sellBuyout : 1) * (unsettled ? WATCH.unsettledBuyout : 1)); // E1: a short table's names cost more; E2: a house that is selling asks less; E3: an unsettled name (only when we know, and only for us) x0.85, last
 }
 
 /** The buyout owed to the tong a name is in; 0 for a free name; null for a head (never approachable). */

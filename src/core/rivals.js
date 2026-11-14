@@ -14,7 +14,8 @@ import { cardRating, ratingOf, ratingWord, tierWord } from './rating.js';
 import { rankForHalls } from './tong.js';
 import { publishBook } from './book.js';
 import { overreachStep, noteBooks, wageBill, upkeepOf, inSale, addToSale } from './overreach.js';
-import { pickHabit, topTierFor, tierIndexOf, noteBest, releaseFor, placeFor, wants, pushPath, ceilingOf, rosterOf, seasonOf, stalled } from './houses.js';
+import { pickHabit, topTierFor, tierIndexOf, noteBest, releaseFor, placeFor, wants, pushPath, ceilingOf, rosterOf, seasonOf, stalled, isQuiet, quietStep, houseShape, lookingFor, unsettledOf } from './houses.js';
+import { houseLevel, houseReadOf, ageOf as readAge } from './reads.js';
 import { fameOf } from './fame.js';
 import { TONG_RANKS } from '../data/tong.js';
 import { NAMES } from '../config/names.js';
@@ -90,7 +91,7 @@ function tongNameFor(rng, style, used) {
 /** A new set of rivals for this game, from hashRng(seed, 'rivals'). Same seed, same tongs. */
 export function seedRivals(state) {
   const rng = hashRng(state.seed, 'rivals');
-  const r = { tongs: [], cards: [], word: [], threads: [], book: null, seq: 0, playerRank: state.rank ?? null, offer: null, scouted: {}, keptSeason: null, sale: null, lastScout: null, offerSeq: 0, nextOfferDay: 0 };
+  const r = { tongs: [], cards: [], word: [], threads: [], book: null, seq: 0, playerRank: state.rank ?? null, offer: null, scouted: {}, houseRead: {}, quietSince: 0, keptSeason: null, sale: null, lastScout: null, offerSeq: 0, nextOfferDay: 0 };
   const styles = shuffle(rng, [...STYLES, ...Array.from({ length: Math.max(0, RIVALS.tongs - STYLES.length) }, () => pick(rng, STYLES))]);
   const homes = shuffle(rng, [...RIVAL_HOMES, ...RIVAL_HOMES]);
   const usedNames = new Set(); const takenPeople = new Set((state.crew ?? []).map((o) => o.name));
@@ -164,7 +165,7 @@ function beat(r, th, day, stage, kind, refs, close = false) {
 export function moveCard(r, day, card, to, kind = null) {
   const from = card.tongId ?? card.fromTong;
   if (card.tongId) pushPath(card, card.tongId, day);
-  card.tongId = to.id; card.home = to.home; card.since = day; delete card.fromTong; delete card.fromTier; card.bestDay = day; to.signedSeason = seasonOf(day); // a new house, a fresh half-year before a name counts as stalled
+  delete card.quiet; card.tongId = to.id; card.home = to.home; card.since = day; delete card.fromTong; delete card.fromTier; card.bestDay = day; to.signedSeason = seasonOf(day); // a new house, a fresh half-year before a name counts as stalled
   const story = openThread(r, to.id, 'founding') ?? openThread(r, to.id, 'rise');
   if (story?.family === 'founding') beat(r, story, day, 'first_runner', 'founding_end', [to.id, card.id], true);
   else if (story) beat(r, story, day, 'poaching', 'rise_end', [to.id, card.id], true);
@@ -173,7 +174,7 @@ export function moveCard(r, day, card, to, kind = null) {
 }
 /** A card leaves a tong for the free pool. */
 function release(r, day, card, tongId, kind = 'went_free') {
-  card.tongId = null; card.fromTong = tongId; card.since = day;
+  delete card.quiet; card.tongId = null; card.fromTong = tongId; card.since = day;
   const origin = tongById(r, tongId); if (origin) card.fromTier = tierIndexOf(origin); // the rung they left from
   pushPath(card, tongId, day);
   say(r, day, kind, [card.id, tongId]);
@@ -312,6 +313,7 @@ export function weeklyRivals(state) {
 
   // 6. Bound the talk like the inbox: old entries go, never more than wordMax.
   threadsStep(r, day);
+  quietStep(state, r); // E3: a house may keep one rising name off the street (before the Book is chalked)
   publishBook(state); // C5: the Anchor's slate, on the Sunday before a month's first Monday (core/book.js)
   r.word = r.word.filter((w) => day - w.day <= RIVALS.wordWeeks * 7).slice(-RIVALS.wordMax);
   return state;
@@ -484,7 +486,7 @@ export function tongsByTier(state) {
 export function namesOnTheStreet(state) {
   const r = state.rivals; if (!r) return [];
   const bonus = { unknown: 0, known: 5, respected: 10, elite: 18, legend: 25 };
-  const pool = r.cards.map((c) => {
+  const pool = r.cards.filter((c) => !isQuiet(c)).map((c) => { // E3: a quiet name is not on the street
     const tong = tongById(r, c.tongId);
     return { score: cardRating(c) + bonus[c.fame], id: slug(c.name), name: c.name, own: false, former: !!c.formerOf, tong: tong?.name ?? null, fame: c.fame, home: c.home, role: c.role, word: ratingWord(cardRating(c), c) };
   });
@@ -546,15 +548,20 @@ function storyOf(r, tongId) {
 const whenWord = (days) => (days < 7 ? 'week' : days < 28 ? 'month' : 'earlier');
 
 /** A tong's file (E0): its story as a track of talk, newest first, and the whole table as tiles. Public names only. */
-function fileOf(state, t, head) {
+function fileOf(state, t, head, level) {
   const r = state.rivals;
-  const cards = cardsOf(r, t.id);
+  const all = cardsOf(r, t.id);
+  // E3: without a read of the tong only what is public shows (its head, and names on the slate or at least known); a quiet name only at level 1.
+  const onSlate = (c) => !!r.book?.entries.some((e) => e.runnerId === (c.runnerId ?? c.id));
+  const cards = level >= 1 ? all : all.filter((c) => c === head || (!isQuiet(c) && (onSlate(c) || c.fame !== 'unknown')));
+  const others = cards.length < all.length;
+  const unsettled = level >= 2 ? new Set(unsettledOf(r, t, state.day).map((c) => c.id)) : new Set();
   const ids = new Set(cards.map((c) => c.id));
   const track = [...r.word].reverse().filter((w) => w.kind !== BOOK_LEAD && (w.refs.includes(t.id) || w.refs.some((x) => ids.has(x))))
     .map((w) => { const e = wordFor(state, w); return e ? { ...e, when: whenWord(state.day - w.day) } : null; }).filter(Boolean).slice(0, 6);
   const grade = (c) => r.book?.entries.find((e) => e.runnerId === (c.runnerId ?? c.id))?.grade ?? null;
-  const table = [...cards].sort((a, b) => (a.name < b.name ? -1 : 1)).map((c) => ({ id: slug(c.name), name: c.name, role: c.role, head: c === head, grade: grade(c), former: !!c.formerOf }));
-  return { track, table };
+  const table = [...cards].sort((a, b) => (a.name < b.name ? -1 : 1)).map((c) => ({ id: slug(c.name), name: c.name, role: c.role, head: c === head, grade: grade(c), former: !!c.formerOf, quiet: level >= 1 && isQuiet(c), unsettled: unsettled.has(c.id) }));
+  return { track, table, others, cards };
 }
 
 /**
@@ -571,11 +578,18 @@ export function rivalView(state) {
       const cards = cardsOf(r, t.id);
       const head = cards.find((c) => c.id === t.headId);
       const latest = [...r.word].reverse().find((w) => w.refs.includes(t.id) || cards.some((c) => w.refs.includes(c.id)));
+      const level = houseLevel(state, t.id); // E3: what we know of this tong, 0 to 2
+      const file = fileOf(state, t, head, level);
+      const { cards: shown, ...rest } = file;
       return {
         id: t.id, name: t.name, home: t.home, style: t.style, habit: t.habit ?? null, head: head?.name ?? null,
-        names: cards.filter((c) => c !== head).sort((a, b) => (a.name < b.name ? -1 : 1)).slice(0, 3).map((c) => ({ id: slug(c.name), name: c.name, former: !!c.formerOf })),
+        names: shown.filter((c) => c !== head).sort((a, b) => (a.name < b.name ? -1 : 1)).slice(0, 3).map((c) => ({ id: slug(c.name), name: c.name, former: !!c.formerOf })),
         said: latest ? wordFor(state, latest) ?? null : null,
-        story: storyOf(r, t.id), ...fileOf(state, t, head),
+        story: storyOf(r, t.id), ...rest,
+        // E3: how we know it. `state` is a word (flush, steady, stretched, selling) once we have watched the tong, else null (the card shows "?").
+        read: { level: ['none', 'roster', 'inside'][level], age: readAge(state, houseReadOf(state, t.id)) },
+        state: level >= 1 ? houseShape(r, t) : null,
+        looking: level >= 1 ? lookingFor(r, t) : null,
       };
     }),
   }));

@@ -6,7 +6,7 @@ import { hashRng } from './rng.js';
 import { cardRating } from './rating.js';
 import { rankForHalls } from './tong.js';
 import { TONG_RANKS } from '../data/tong.js';
-import { HABITS, HABIT_IDS, HABIT } from '../data/rivals.js';
+import { HABITS, HABIT_IDS, HABIT, WATCH, RIVALS } from '../data/rivals.js';
 
 const DAYS_PER_WEEK = 7;
 const SEASON_DAYS = 364;
@@ -97,4 +97,65 @@ export function placeFor(r, card, day, exclude = null) {
 /** A card remembers its last houses and the day it left each (newest last, free spells left out). */
 export function pushPath(card, tongId, day) {
   card.path = [...(card.path ?? []), { tongId, day }].slice(-HABIT.trail);
+}
+
+// --- E3 (DESIGN.md 2026-11-14 "E3"): the name a house keeps quiet, how a house is doing, who in it is unsettled. ---
+// State only (no roll except the quiet draw, which has its own key 'quiet:' + card.id and never moves rngCounter).
+
+/** A card kept off the street: `quiet` is set, they are still at the house. Leaving it, or turning Elite, ends it (see quietStep, moveCard, release). */
+export const isQuiet = (c) => c.quiet === true && !!c.tongId;
+
+/**
+ * Each Sunday, before the Book is chalked: a quiet-style or short-table house may keep one rising name off the street. A card is looked at once
+ * per stay (`quiet` undefined until then; moveCard and release clear it; `r.quietSince` is the day the rule came to a save: nobody who was already seated is looked at): aged 26 or under and rated above the house's average of the others,
+ * the house has no quiet name yet, and a hash says so. An Elite name is out in the open for good.
+ */
+export function quietStep(state, r) {
+  const taken = new Set();
+  for (const c of r.cards) if (c.quiet === true && c.fame === 'elite') c.quiet = false;
+  for (const c of r.cards) if (isQuiet(c)) taken.add(c.tongId);
+  for (const c of [...r.cards].sort(byId)) {
+    if (c.quiet !== undefined || !c.tongId || c.since <= (r.quietSince ?? 0)) continue; // a card that was at its house before this rule existed is never looked at
+    const t = r.tongs.find((x) => x.id === c.tongId);
+    if (!t || t.status !== 'active') continue;
+    c.quiet = false;
+    if (!(t.style === 'quiet' || t.habit === 'boutique') || taken.has(t.id) || c.id === t.headId) continue;
+    const others = rosterOf(r, t).filter((x) => x !== c);
+    const avg = others.length ? others.reduce((n, x) => n + cardRating(x), 0) / others.length : 20 + t.prestige * 0.8;
+    if (c.age > WATCH.quietAge || cardRating(c) <= avg) continue;
+    if (hashRng(state.seed, 'quiet:' + c.id)() < WATCH.quietChance) { c.quiet = true; taken.add(t.id); }
+  }
+}
+
+/** How a house is doing, as a word: flush, steady, stretched or selling. A little ahead of the street: one strained Sunday already reads as stretched. */
+export function houseShape(r, t) {
+  const th = r.threads?.find((x) => x.open && x.tongId === t.id && x.family === 'overreach');
+  if (th) return th.stage === 'stretched' ? 'stretched' : th.stage === 'steadied' ? 'steady' : 'selling'; // selling and broken both read as selling
+  if ((t.strain ?? 0) >= 1) return 'stretched';
+  const mark = (RIVALS.marks[t.halls] ?? RIVALS.marks.at(-1)).wealth;
+  return t.wealth > WATCH.flushAt * mark ? 'flush' : 'steady';
+}
+
+/** What a house is looking for, as a key: young, near, steady, local, any, or full (no room at the table). */
+export function lookingFor(r, t) {
+  if (rosterOf(r, t).length >= ceilingOf(t)) return 'full';
+  return { grinder: 'young', boutique: 'near', workshop: 'steady', oldhouse: 'local' }[t.habit] ?? 'any';
+}
+
+/**
+ * Who in a house is unsettled, at most two (never the head, never a name already listed for sale): a stalled name at a grinder, the one
+ * furthest behind at a short table, and at a house that is stretched or selling its two best names (the ones the money is slipping away from).
+ */
+export function unsettledOf(r, t, day) {
+  const pool = rosterOf(r, t).filter((c) => c.id !== t.headId && c.listedDay == null);
+  const low = (a, b) => cardRating(a) - cardRating(b) || byId(a, b);
+  const shape = houseShape(r, t);
+  if (shape === 'stretched' || shape === 'selling') return [...pool].sort((a, b) => cardRating(b) - cardRating(a) || byId(a, b)).slice(0, WATCH.unsettledMax);
+  if (t.habit === 'grinder') return pool.filter((c) => stalled(c, day)).sort(low).slice(0, WATCH.unsettledMax);
+  if (t.habit === 'boutique') {
+    const best = Math.max(0, ...rosterOf(r, t).map(cardRating));
+    const behind = pool.filter((c) => best - cardRating(c) >= WATCH.unsettledBehind).sort((a, b) => cardRating(a) - cardRating(b) || byId(a, b));
+    return behind.slice(0, 1);
+  }
+  return [];
 }

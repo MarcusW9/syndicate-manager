@@ -116,6 +116,54 @@ export const REACH = {
   shopAt: 1.5, shopAtLoud: 1.2, // wealth over this multiple of the next hall's mark sends a house shopping (loud and boutique at the lower)
   shopFit: 8, // a name it buys is not further below its own average than this
 };
+// E3 (DESIGN.md 2026-11-14 "E3"; drafts/PROPOSAL-tong-depth.md section 4): what we know goes stale, watching a tong, the name they keep quiet.
+// First values; the sim gate (scripts/sim-tongs.mjs) is what tunes them. First-pass wording is the owner's to rewrite.
+export const WATCH = {
+  staleWeeks: 12, // a read of a name loses a level for every this many weeks since the last good trip
+  houseStaleWeeks: 8, // a read of a tong loses a level for every this many weeks
+  houseMax: 2, // the most a tong can be read to
+  days: 3, // a trip to watch a tong
+  ageDays: [28, 182], // a read's age as a word: under the first "this month", under the second "last season", else "a long while"
+  quietAge: 26, quietChance: 0.75, // a name that may be kept quiet: this young or younger, above the tong's average; the draw is a hash
+  unsettledMax: 2, unsettledBehind: 6, // at most two names; at a short table, the one this far behind its best
+  unsettledBuyout: 0.85, unsettledPremium: 0.05, // an unsettled name's buyout, and the premium points they ask less
+  flushAt: 2, // a tong is flush when its wealth is over this multiple of the next hall's mark and nothing is open
+  // What each grade is, as a rating, for our own read (E3 rule 7): the slate against what we have seen. Not the Book's own score.
+  seenGrade: { S: 58, A: 50, B: 43, C: 34, D: 0 },
+  markGap: 2, // the slate and our read must differ by this many grades or more
+};
+export const READ_AGE = { month: 'watched this month', season: 'watched last season', long: 'not watched in a long while' };
+export const HOUSE_STATE = { flush: 'Flush', steady: 'Steady', stretched: 'Stretched', selling: 'Selling' };
+export const HOUSE_UNKNOWN = '?';
+export const HOUSE_READ_TEXT = {
+  none: 'We only know what is said in the street: the head, and the names people repeat.',
+  roster: 'We have watched their door: the whole table, how they are doing, who they are after.',
+  inside: 'We know the house from the inside, and who in it is not settled.',
+};
+export const OTHERS_LINE = 'and others we have not put a name to';
+export const QUIET_LINE = "one they don't talk about";
+export const UNSETTLED_LINE = 'Not settled there. They would come for less.';
+export const LOOKING = {
+  young: 'Looking for young hands, cheap.',
+  near: 'Looking for a name close to its own level.',
+  steady: 'Looking for steady, proven hands.',
+  local: 'Looking at its own district, one signing a season.',
+  any: 'Looking for anyone who fits.',
+  full: 'No room at the table.',
+};
+export const SLATE_TAG = { flatters: 'Flattered', sells_short: 'Sold short' };
+export const SLATE_MARK = { flatters: 'The slate flatters them.', sells_short: 'The slate sells them short.' };
+export const CHANGED_LINE = 'Changed since we looked.';
+export const WATCH_TEXT = {
+  button: 'Watch this tong (three days)',
+  busy: 'Someone is already out watching them.',
+  none: 'Nobody is free to go and watch them.',
+  done: 'We know all there is to know of the inside.',
+  sent: { subject: '{op} is watching {name}', body: '{op} is out for three days, near the door of {name}, to see who comes and goes.' },
+  ok: { subject: '{op} is back: a look at {name}', body: '{op} came back with a look at {name}. It is on their page now.' },
+  miss: { subject: '{op} is back: nothing on {name}', body: '{op} could not get close enough to {name} to tell us anything. Another try would cost three more days.' },
+  gone: { subject: '{op} is back: {name} is gone', body: '{op} found nothing at the door of {name}. They have closed.' },
+};
 // What a profile says once a name has been watched (level 1): the habit of the house they came from.
 export const HABIT_NOTE = { workshop: 'Leans on the kit.', oldhouse: 'Has been there a long time.' };
 

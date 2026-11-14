@@ -14,6 +14,8 @@ import { BOOK, BOOK_TEXT, BOOK_LEAD, fill } from '../data/rivals.js';
 import { ratingOf } from './rating.js';
 import { fameOf } from './fame.js';
 import { recordOf } from './record.js';
+import { isQuiet } from './houses.js';
+import { slateMark } from './reads.js';
 
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 const slug = (name) => name.toLowerCase().replace(/&/g, '').replace(/[^a-z]+/g, '-').replace(/^-|-$/g, '');
@@ -44,6 +46,7 @@ export function bookCandidates(state) {
   const tongs = new Map((r?.tongs ?? []).map((t) => [t.id, t]));
   const out = [];
   for (const c of r?.cards ?? []) {
+    if (isQuiet(c)) continue; // E3: a name a house keeps quiet is not chalked
     const tong = tongs.get(c.tongId);
     out.push({
       runnerId: c.runnerId ?? c.id, name: c.name, age: c.age, fame: c.fame, form: c.form ?? 0,
@@ -174,13 +177,14 @@ export function bookView(state) {
   const cards = new Map((r.cards ?? []).map((c) => [c.runnerId ?? c.id, c]));
   const tongOf = (card) => r.tongs.find((t) => t.id === card?.tongId && t.status === 'active') ?? null;
   const tongName = (card) => tongOf(card)?.name ?? null;
-  const who = (runnerId, name) => { // letters and words only: no ids with digits leave here (ours are found by name)
+  const who = (runnerId, name, grade = null) => { // letters and words only: no ids with digits leave here (ours are found by name)
     const op = crew.get(runnerId); const card = cards.get(runnerId);
     const t = op ? null : tongOf(card);
-    return { name, yours: !!op, id: card ? slug(card.name) : null, tong: op ? null : tongName(card), tongId: t?.id ?? null, style: t?.style ?? null, free: !op && !!card && !card.tongId };
+    const mark = !op && card ? slateMark(state, card, grade) : null; // E3: only our own read can say the slate is wrong (never the Book itself)
+    return { name, yours: !!op, mark, id: card ? slug(card.name) : null, tong: op ? null : tongName(card), tongId: t?.id ?? null, style: t?.style ?? null, free: !op && !!card && !card.tongId };
   };
   const groups = BOOK.grades.map((grade) => ({
-    grade, entries: book.entries.filter((e) => e.grade === grade).map((e) => ({ ...who(e.runnerId, e.name), move: e.move })),
+    grade, entries: book.entries.filter((e) => e.grade === grade).map((e) => ({ ...who(e.runnerId, e.name, e.grade), move: e.move })),
   })).filter((g) => g.entries.length);
   const nameOf = (id) => crew.get(id)?.name ?? cards.get(id)?.name ?? null;
   return {
