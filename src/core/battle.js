@@ -445,24 +445,51 @@ const oddsCache = new Map();
  * with nobody at death's door; down: someone hits 0 HP; standoff: guards still up after the last round.
  */
 export function battleOdds(args) {
+  return finishBattleTally(battleTally(args)).out;
+}
+
+// Fights played so far for odds not yet finished, by the same key; never read as odds (only a finished tally goes into oddsCache).
+const partial = new Map();
+
+/**
+ * battleOdds as a tally that can be played a few fights at a time (2026-11-14, the board's search: core/squad.js plays a
+ * fight only as far as its answer matters): { key, done, n, out }; `out` is battleOdds' answer once all BATTLE.oddsRuns
+ * fights are played, else null. Each fight is the one battleOdds plays on that seed, so the order changes nothing.
+ */
+export function battleTally(args) {
   const b0 = buildBattle(args);
   const key = JSON.stringify([b0.diff, b0.ambush, b0.guards, b0.runners.map((r) => [r.hp, r.max, r.armour, r.damage, r.pierce, r.patch, r.cover, FIGHT_STATS.map((s) => r.stats[s].value)]), b0.overwatch && [b0.overwatch.value, b0.overwatch.damage, b0.overwatch.left], b0.wheels?.value]);
-  if (oddsCache.has(key)) return oddsCache.get(key);
-  const n = { win: 0, down: 0, standoff: 0 };
-  if (!b0.runners.length) return { win: 0, down: 1, standoff: 0 };
-  for (let i = 0; i < BATTLE.oddsRuns; i++) {
+  if (oddsCache.has(key)) return { key, runs: BATTLE.oddsRuns, done: BATTLE.oddsRuns, out: oddsCache.get(key) };
+  if (!b0.runners.length) return { key, runs: BATTLE.oddsRuns, done: BATTLE.oddsRuns, out: { win: 0, down: 1, standoff: 0 } };
+  const t = partial.get(key) ?? { b0, key, runs: BATTLE.oddsRuns, done: 0, n: { win: 0, down: 0, standoff: 0 }, out: null };
+  if (partial.size > 2000) partial.clear();
+  partial.set(key, t);
+  return t;
+}
+
+/** Play up to `k` more of a battle tally's fights; the last one puts its answer in the cache. Returns the tally. */
+export function stepBattleTally(t, k = Infinity) {
+  if (t.out) return t;
+  const { b0, n } = t;
+  for (const end = Math.min(t.runs, t.done + k); t.done < end; t.done++) {
     const b = structuredClone(b0);
-    const rng = makeRng(0x5eed + i * 7919);
-    let end = 'standoff';
+    const rng = makeRng(0x5eed + t.done * 7919);
+    let result = 'standoff';
     while (b.round < (b.cap ?? BATTLE.rounds)) {
       const r = playRound(b, rng);
-      if (r.down.length) { end = 'down'; break; }
-      if (!up(b).length) { end = 'win'; break; }
+      if (r.down.length) { result = 'down'; break; }
+      if (!up(b).length) { result = 'win'; break; }
     }
-    n[end] += 1;
+    n[result] += 1;
   }
-  const out = { win: n.win / BATTLE.oddsRuns, down: n.down / BATTLE.oddsRuns, standoff: n.standoff / BATTLE.oddsRuns };
+  if (t.done < t.runs) return t;
+  t.out = { win: n.win / BATTLE.oddsRuns, down: n.down / BATTLE.oddsRuns, standoff: n.standoff / BATTLE.oddsRuns };
+  partial.delete(t.key);
   if (oddsCache.size > 2000) oddsCache.clear();
-  oddsCache.set(key, out);
-  return out;
+  oddsCache.set(t.key, t.out);
+  return t;
 }
+const finishBattleTally = (t) => stepBattleTally(t, Infinity);
+
+/** The win share battleOdds would give, at least and at most, from the fights a tally has played so far: [lo, hi]. */
+export const battleWinRange = (t) => (t.out ? [t.out.win, t.out.win] : [t.n.win / BATTLE.oddsRuns, (t.n.win + t.runs - t.done) / BATTLE.oddsRuns]);
