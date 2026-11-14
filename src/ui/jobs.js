@@ -15,6 +15,7 @@ import { availability } from '../core/crew.js';
 import { activeRumour } from '../core/rumours.js';
 import { money } from '../core/money.js';
 import { jobRead, readKey, keptRead } from '../core/squad.js';
+import { canWork, ask } from './boardwork.js';
 import { intelFor, SIDE_TRUST, sideReward, sideTaskById, sideOdds, sidePitch, sideCost } from '../core/sidetasks.js';
 import { ROLL_STATS } from '../core/development.js';
 import { clientRival } from '../core/rivals.js';
@@ -61,15 +62,22 @@ export function keepRead(key, read) {
   kept.set(key, read);
 }
 let warmTimer = null;
+/** The board's order: ending soonest first, then the better pay. */
+const boardOrder = () => [...state.jobs].sort((a, b) => a.expiresDay - b.expiresDay || jobView(state, b).pay - jobView(state, a).pay);
 /**
- * Reading the board plays hundreds of practice fights per job (core/fight.js fightOdds, cached by team and orders), which
- * is slow the first time after a day moves on. Warm that cache in the background, one job per tick, so the Jobs tab
- * opens on a hot cache. Safe to call on every render: it restarts for the current state.
+ * Get the board's reads ready before they are needed. Reading the board plays practice fights (core/fight.js), slow the
+ * first time after a change. With a worker (ui/boardwork.js, 2026-11-14) every job not yet known is read off the main
+ * thread, in the board's order, and its card fills in when it lands. Without one (Node, an old webview), the old way:
+ * one job per tick on the page. Safe to call on every render.
  */
 export function warmBoard() {
   clearTimeout(warmTimer);
   if (state.founding || state.activeMission) return;
-  const queue = [...state.jobs];
+  if (canWork()) {
+    for (const j of boardOrder()) if (!knownRead(j)) readOffThread(j);
+    return;
+  }
+  const queue = boardOrder();
   const step = () => {
     const j = queue.shift();
     if (!j) return;
@@ -89,6 +97,7 @@ export function knownRead(job) {
   reads.set(job.id, r);
   return r;
 }
+/** The read now, worked out on the page if it isn't known yet (the plan screen and anything else that can't wait). */
 export function boardRead(job) {
   const known = knownRead(job);
   if (known) return known;
@@ -96,6 +105,41 @@ export function boardRead(job) {
   keepRead(readKey(state, job), r);
   readCache.get(state).set(job.id, r);
   return r;
+}
+/** Joss's picks for this approach if the board's read already has them (jobRead's picks are leanPicks' for its approach). */
+export function knownPicks(st, job, approach) {
+  if (st !== state) return null;
+  const r = knownRead(job);
+  return r && r.approach === approach ? r.picks : null;
+}
+
+const asking = new Set(); // read keys out with the worker
+/** Ask the worker for a job's read; when it lands it is kept and the job's card fills in. */
+function readOffThread(job) {
+  const key = readKey(state, job);
+  if (asking.has(key)) return;
+  asking.add(key);
+  ask(state, { kind: 'board', jobId: job.id }).then(
+    (r) => { asking.delete(key); keepRead(key, r); fillCards(); },
+    (why) => {
+      asking.delete(key);
+      if (why?.error) console.error(`board read: ${why.error}`);
+      // A newer state went to the worker first: ask again for whatever the board still lacks. A broken worker: read here.
+      if (why?.stale) warmBoard(); else fillCards();
+    },
+  );
+}
+/** Fill in every card still waiting for its read, once the read is known (or, with no worker any more, read it here). */
+function fillCards() {
+  if (typeof document === 'undefined') return;
+  for (const el of document.querySelectorAll('.jobcard.is-reading')) {
+    const job = state.jobs.find((j) => j.id === el.dataset.id);
+    if (!job || (!knownRead(job) && canWork())) continue;
+    const focused = document.activeElement === el;
+    const li = el.closest('li');
+    li.outerHTML = jobCard(job);
+    if (focused) document.querySelector(`.jobcard[data-id="${CSS.escape(job.id)}"]`)?.focus({ preventScroll: true });
+  }
 }
 
 /**
@@ -162,22 +206,25 @@ function renderRunners() {
 function jobCard(j) {
   const v = jobView(state, j);
   const t = v.tpl;
-  const r = boardRead(j);
+  // With a worker the read may not be in yet: the card draws at once with a quiet corner and fills in when it lands (warmBoard).
+  const r = knownRead(j) ?? (canWork() ? (readOffThread(j), null) : boardRead(j));
   const flags = jobFlags(v);
   // A note only when Joss's squad has a catch: someone missing, or someone tired or hurt.
-  const worn = r.crew.map((op) => ({ op, a: availability(state, op) })).find((x) => x.a.reason === 'fatigued' || x.a.reason === 'light injury');
-  const note = r.short ? `short ${r.short}` : worn ? `${worn.op.handle} is ${worn.a.reason === 'fatigued' ? 'tired' : 'hurt'}` : '';
+  const worn = r?.crew.map((op) => ({ op, a: availability(state, op) })).find((x) => x.a.reason === 'fatigued' || x.a.reason === 'light injury');
+  const note = !r ? '' : r.short ? `short ${r.short}` : worn ? `${worn.op.handle} is ${worn.a.reason === 'fatigued' ? 'tired' : 'hurt'}` : '';
   // The job's key skills, each an icon with its name (2026-11-05: the icons alone didn't say what they were).
   const stats = t.keyStats.map((k) => `<span class="keyglyph">${statGlyph(k)}<span>${esc(statName(k).toLowerCase())}</span></span>`).join('');
-  const risk = riskWord(r.level);
+  const risk = r ? riskWord(r.level) : null;
+  const size = r ? r.size || t.crewSize : null;
   return `
       <li>
-        <button class="row jobcard ${V.plan?.jobId === j.id ? 'is-selected' : ''}" data-action="open-job" data-id="${esc(j.id)}">
+        <button class="row jobcard ${V.plan?.jobId === j.id ? 'is-selected' : ''} ${r ? '' : 'is-reading'}" data-action="open-job" data-id="${esc(j.id)}">
           <strong class="jobcard__name">${esc(t.name)}</strong><strong class="jobcard__pay">${money(v.pay)}</strong>
           <span class="jobcard__client">${esc(v.client?.name ?? 'Walk-in job')}</span>${j.expiresDay === state.day ? '<span class="jobcard__left">ends today</span>' : ''}
           ${flags.length ? `<span class="jobcard__flags">${flags.map(([tone, text]) => `<span class="flag flag--${tone}">${esc(text)}</span>`).join('')}</span>` : ''}
-          <span class="jobcard__facts">${r.size || t.crewSize} ${(r.size || t.crewSize) === 1 ? 'runner' : 'runners'} · ${esc(crewStandard(v.threat).label)} · <span class="keyglyphs">${stats}</span>${note ? ` · <span class="jobcard__note">${esc(note)}</span>` : ''}</span>
-          <span class="riskcorner riskcorner--${esc(r.level)}" role="img" aria-label="${esc(risk)} risk" title="${esc(risk[0].toUpperCase() + risk.slice(1))} risk"></span>
+          <span class="jobcard__facts"><span>${r ? `<span class="jobcard__n">${size}</span> ${size === 1 ? 'runner' : 'runners'}` : '<span class="jobcard__n jobcard__wait" aria-label="Joss is still counting">–</span> runners'} · ${esc(crewStandard(v.threat).label)} · </span><span class="keyglyphs">${stats}</span>${note ? ` · <span class="jobcard__note">${esc(note)}</span>` : ''}</span>
+          ${r ? `<span class="riskcorner riskcorner--${esc(r.level)}" role="img" aria-label="${esc(risk)} risk" title="${esc(risk[0].toUpperCase() + risk.slice(1))} risk"></span>`
+    : '<span class="riskcorner riskcorner--reading" role="img" aria-label="Joss is still reading the risk"></span>'}
         </button>
       </li>`;
 }
@@ -185,8 +232,7 @@ function jobCard(j) {
 /** Jobs: what work there is. Sub-tabs Board · Heists · Side · Clients. `tab` overrides the sub-tab (the list beside a plan). */
 export function renderJobs(tab = V.jobsTab) {
   const which = ['board', 'heists', 'side', 'clients'].includes(tab) ? tab : 'board';
-  // Ending soonest first, then the better pay.
-  const jobs = [...state.jobs].sort((a, b) => a.expiresDay - b.expiresDay || jobView(state, b).pay - jobView(state, a).pay);
+  const jobs = boardOrder();
   const body = {
     board: () => `${streetTalk()}
       ${climbLine()}
