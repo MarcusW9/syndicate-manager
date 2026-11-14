@@ -13,12 +13,13 @@
 
 import { GEAR, SLOTS, TIERS, BASE_TIER, SIDEARM_FRAMES, SIDEARM_QUIRKS, SIDEARM_PRICE_PER_POINT, BAG, SOCKETS, CELLS } from '../data/gear.js';
 import { PERKS, PERK_CAPS } from '../data/gearPerks.js';
+import { APEX_GEAR } from '../data/apexGear.js';
 import { hashRng } from './rng.js';
 import { SPECIALISATIONS } from '../data/specialisations.js';
 import { giveLook } from './looks.js';
 import { ROOM_EFFECT } from '../data/hallBuild.js';
 
-export { GEAR, SLOTS, TIERS, PERKS };
+export { GEAR, SLOTS, TIERS, PERKS, APEX_GEAR };
 
 export const SELL_SHARE = 0.5; // what the fence pays back for something from the stash
 
@@ -54,8 +55,20 @@ export function rollPerks(seed, uid, type, n) {
   }
   return out;
 }
-/** An item's perks as data: [{ id, name, desc, effect, ... }]. Unknown ids are skipped. */
-export const perksOf = (item) => (item?.perks ?? []).filter((id) => PERKS[id]).map((id) => ({ id, ...PERKS[id] }));
+/** A perk by its id, as data: an ordinary perk's id, or 'apex:<piece>' for a named piece's unique perk. Null if unknown. */
+export function perkById(id) {
+  if (typeof id === 'string' && id.startsWith('apex:')) {
+    const perk = APEX_GEAR[id.slice(5)]?.perk;
+    return perk ? { id, ...perk, unique: true } : null;
+  }
+  return PERKS[id] ? { id, ...PERKS[id] } : null;
+}
+/**
+ * An item's perks as data: [{ id, name, desc, effect, ... }]: the ordinary ones it rolled (Custom,
+ * Premium), and a named Apex piece's one fixed unique perk (data/apexGear.js; `unique: true`). Unknown ids are
+ * skipped. Everything that reads perks goes through here, so the unique perk counts like any other.
+ */
+export const perksOf = (item) => [...(item?.perks ?? []).map(perkById), item?.apex ? perkById(`apex:${item.apex}`) : null].filter(Boolean);
 /** What one effect key adds up to across these items, held to its cap (PERK_CAPS). */
 export const perkSum = (items, key) => {
   const n = items.reduce((t, i) => t + perksOf(i).reduce((u, p) => u + (p.effect[key] ?? 0), 0), 0);
@@ -111,7 +124,7 @@ export const placeOf = (type) => ({ armour: 'armour', implant: 'implant' }[GEAR[
 export const cellsOf = (type) => CELLS[type] ?? 1;
 
 /** How good an item is of its kind, to pick the one that counts when someone carries two. */
-const worth = (item) => (item.type === 'pistol' ? sidearmStats(item).damage * 10 + sidearmStats(item).aim : (TIERS[item.tier]?.step ?? 0) * 10 + (item.perks?.length ?? 0));
+const worth = (item) => (item.type === 'pistol' ? sidearmStats(item).damage * 10 + sidearmStats(item).aim : (TIERS[item.tier]?.step ?? 0) * 10 + perksOf(item).length + (item.apex ? 3 : 0));
 /**
  * What counts: the best item of each kind they carry (owner, 2026-11-06: different kinds add up,
  * the same kind counts once; two ghost kits are still +1 stealth).
@@ -244,6 +257,32 @@ const newItem = (state, type, tier) => {
   return item;
 };
 
+/**
+ * A named Apex piece as a new item (data/apexGear.js), recorded as found so it never drops again, whatever
+ * becomes of it. Mutates state (gearSeq, apexFound). Returns the item: { uid, type, tier: 'apex', apex, name, look }.
+ */
+export function makeApex(state, pieceId) {
+  const piece = APEX_GEAR[pieceId];
+  state.gearSeq = (state.gearSeq ?? 0) + 1;
+  const found = (state.apexFound ??= []);
+  if (!found.includes(pieceId)) found.push(pieceId);
+  return { uid: `g${state.gearSeq}`, type: piece.type, tier: 'apex', apex: pieceId, name: piece.name, look: structuredClone(piece.look) };
+}
+/** The named pieces not yet found in this save, in the data's order. */
+export const apexLeft = (state) => Object.keys(APEX_GEAR).filter((id) => !(state?.apexFound ?? []).includes(id));
+/** The Apex pieces a runner wears or carries. */
+export const apexOn = (op) => carried(op).filter((i) => i.apex);
+/**
+ * Can this item go on this runner? A runner wears or carries at most one Apex piece (owner, 2026-11-14), so a
+ * second is refused: { ok: false, reason }. replacing: the item it would push off (a worn vest or an implant in
+ * its socket), which then no longer counts. Anything else is ok.
+ */
+export function canCarry(op, item, replacing = null) {
+  if (!item?.apex) return { ok: true, reason: '' };
+  const other = apexOn(op).find((i) => i.uid !== item.uid && i.uid !== replacing?.uid);
+  return other ? { ok: false, reason: `Already carrying ${itemTitle(other)}. A runner can carry only one Apex piece.` } : { ok: true, reason: '' };
+}
+
 /** Buy an item into the stash. Returns the new state, or prev if it can't be bought. */
 /** Does the tong have a cyber doc (a hall room, core/hallbuild.js)? */
 export const hasCyberDoc = (state) => (state?.halls ?? []).some((h) => (h.build ?? []).some((b) => b.piece === 'cyberdoc'));
@@ -308,7 +347,8 @@ function takeOff(op, uid) {
  * target: armour and implants need none (an implant may name its { socket }: whatever is there goes
  * back to the stash); a weapon or tool goes where it's put in the bag ({ x, y }), or the first place
  * it fits. Refused (prev returned) if it doesn't fit, both sockets are full, the other socket holds
- * the same implant, or either person can't change their gear today.
+ * the same implant, it is a second Apex piece for that runner (canCarry), or either person can't change
+ * their gear today.
  */
 export function equip(prev, uid, opId, target = null) {
   const state = structuredClone(prev);
@@ -319,6 +359,9 @@ export function equip(prev, uid, opId, target = null) {
   op.gear = { ...emptyLoadout(), ...(op.gear ?? {}) };
   const item = found.item;
   const where = placeOf(item.type);
+  // At most one Apex piece on a runner (what an armour or socket swap pushes off does not count).
+  const pushed = where === 'armour' ? op.gear.armour : where === 'implant' ? (op.gear.implants ?? [])[target?.socket ?? (op.gear.implants.length < SOCKETS ? op.gear.implants.length : -1)] : null;
+  if (found.owner !== op && !canCarry(op, item, pushed).ok) return prev;
   if (where === 'bag') {
     const at = target?.x != null ? (fitsAt(op, item, target.x, target.y) ? { x: target.x, y: target.y } : null) : (op.gear.bag.some((b) => b.item.uid === uid) ? null : firstFit(op, item));
     if (!at) return prev;

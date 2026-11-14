@@ -17,14 +17,14 @@ const { importSave } = await import('../src/save/save.js');
 
 const LIVE = Object.keys(TIERS).filter((t) => TIERS[t].live);
 
-test('the ladder is five tiers in order, each with a colour, a line and odds; Apex is the one that is not live yet', () => {
+test('the ladder is five tiers in order, each with a colour, a line and odds; Apex is live, with named pieces instead of a pool', () => {
   assert.deepEqual(Object.keys(TIERS), ['standard', 'verified', 'custom', 'premium', 'apex']);
   assert.deepEqual(Object.values(TIERS).map((t) => t.colour), ['grey', 'green', 'blue', 'purple', 'gold']);
-  assert.deepEqual(LIVE, ['standard', 'verified', 'custom', 'premium']);
+  assert.deepEqual(LIVE, ['standard', 'verified', 'custom', 'premium', 'apex']);
   for (const t of Object.values(TIERS)) assert.ok(t.name && t.desc && typeof t.live === 'boolean' && t.step >= 0 && t.price >= 1);
   assert.equal(TIERS.verified.price, 2.5, 'Verified costs what Pro did');
   for (const id of ['verified', 'custom', 'premium', 'apex']) assert.equal(TIERS[id].step, 1, `${id} takes step 1: perks are the extra, not a bigger step`);
-  assert.deepEqual(Object.values(TIERS).map((t) => t.perks), [0, 0, 1, 2, 2], 'Custom one perk, Premium two');
+  assert.deepEqual(Object.values(TIERS).map((t) => t.perks), [0, 0, 1, 2, 0], 'Custom one perk, Premium two, Apex none of its own (a named piece has one fixed unique perk)');
   const prices = Object.values(TIERS).map((t) => t.price);
   assert.deepEqual([...prices].sort((a, b) => a - b), prices, 'each tier costs more than the one below');
 });
@@ -52,7 +52,7 @@ test('tier first: odds hold whatever the pool holds, and a tier that is not live
   const counts = {};
   for (let i = 0; i < N; i++) { const t = liveTierFor(tierAt(rng())); counts[t] = (counts[t] ?? 0) + 1; }
   assert.deepEqual(Object.keys(counts).sort(), ['custom', 'premium', 'standard', 'verified'], 'no tier that is not live ever drops');
-  // Verified 28, Custom 10, Premium 4 plus the Apex 1 that falls down to it (Apex is not live yet) = 5%, Standard 57%.
+  // Verified 28, Custom 10, Premium 4 plus the Apex 1 that falls down to it (with no piece left to find: tests/apex.test.js) = 5%, Standard 57%.
   assert.ok(Math.abs(counts.verified / N - 0.28) < 0.02, `verified ${counts.verified / N}`);
   assert.ok(Math.abs(counts.custom / N - 0.10) < 0.015, `custom ${counts.custom / N}`);
   assert.ok(Math.abs(counts.premium / N - 0.05) < 0.01, `premium ${counts.premium / N}`);
@@ -74,7 +74,7 @@ test('tier first: odds hold whatever the pool holds, and a tier that is not live
 });
 
 test('every pooled type is real, every live tier has a pool, and a drop picks by weight', () => {
-  for (const t of LIVE) {
+  for (const t of LIVE.filter((x) => x !== 'apex')) { // Apex drops a named piece (data/apexGear.js), not a type from a pool
     assert.ok(Object.keys(LOOT.pool[t]).length, `${t} has a pool`);
     for (const type of Object.keys(LOOT.pool[t])) assert.ok(GEAR[type], `${type} is a gear type`);
   }
@@ -168,7 +168,7 @@ test('a v64 save upgrades gear tiers (street to standard, pro to verified) and n
   s.armoury.offers = [{ oid: 'o1-rifle-pro-0', type: 'rifle', tier: 'pro', look: { frame: 'marksman', finish: 'carbon' }, name: 'X' }, { oid: 'o1-rifle-street-0', type: 'rifle', tier: 'street', look: { frame: 'marksman', finish: 'street' }, name: 'Y' }];
   const loaded = await importSave({ text: async () => JSON.stringify(s) });
   assert.equal(loaded.version, SAVE_VERSION);
-  assert.equal(SAVE_VERSION, 67);
+  assert.equal(SAVE_VERSION, 68);
   assert.deepEqual(loaded.stash.map((i) => i.tier), ['standard', 'verified']);
   const g = loaded.crew[0].gear;
   assert.equal(g.armour.tier, 'verified');

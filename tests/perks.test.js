@@ -10,6 +10,7 @@ import { addOffer, templateById } from '../src/core/jobs.js';
 import { autoRun } from '../src/core/autorun.js';
 import { effectiveStat } from '../src/core/crew.js';
 import { PERKS, PERK_CAPS } from '../src/data/gearPerks.js';
+import { APEX_GEAR } from '../src/data/apexGear.js';
 import { GEAR, TIERS, LOOT } from '../src/data/gear.js';
 import { makeItem, perksFor, mainKeys, rollPerks, perksOf, perkSum, gearMods, seriousGuard, patchBonus, neuralFloor, overwatchKit, buyGear, sellPrice, priceOf } from '../src/core/gear.js';
 import { weaponOf, armourOf, runnerOf as battleRunner, BATTLE } from '../src/core/battle.js';
@@ -177,10 +178,10 @@ test('only jobs make Custom and Premium: the shop, the weekly shelf and recruits
   }
   assert.ok(buyGear(s, 'vest', 'verified').stash.every((i) => !i.perks));
   for (const op of fresh(4).crew) for (const i of [op.gear.armour, ...op.gear.implants, ...op.gear.bag.map((b) => b.item)].filter(Boolean)) assert.equal(i.perks, undefined);
-  // Apex is not live: it falls to Premium, and drops carry perks on their tier.
-  assert.equal(TIERS.apex.live, false);
+  // Apex is live, but only while a named piece is left to find (tests/apex.test.js): with every piece found it falls to Premium.
+  assert.equal(TIERS.apex.live, true);
   const r = makeRng(2); const tiers = new Set();
-  for (let i = 0; i < 4000; i++) { const d = rollDrop(r); if (d) tiers.add(d.tier); }
+  for (let i = 0; i < 4000; i++) { const d = rollDrop(r, Object.keys(APEX_GEAR)); if (d) tiers.add(d.tier); }
   assert.deepEqual([...tiers].sort(), ['custom', 'premium', 'standard', 'verified']);
 });
 
@@ -257,7 +258,7 @@ test('a v65 save loads at the new version; a Custom item missing its perks is gi
   s.stash = [{ uid: 'g1', type: 'vest', tier: 'verified' }, { uid: 'g2', type: 'reflex', tier: 'custom' }, { uid: 'g3', type: 'deck', tier: 'premium', perks: ['padded', 'muffled'] }];
   const loaded = await importSave({ text: async () => JSON.stringify(s) });
   assert.equal(loaded.version, SAVE_VERSION);
-  assert.equal(SAVE_VERSION, 67);
+  assert.equal(SAVE_VERSION, 68);
   assert.equal(loaded.stash[0].perks, undefined, 'a Verified item stays plain');
   assert.deepEqual(loaded.stash[1].perks, rollPerks(s.seed, 'g2', 'reflex', 1));
   assert.deepEqual(loaded.stash[2].perks, ['padded', 'muffled'], 'perks already there are kept');
@@ -265,7 +266,7 @@ test('a v65 save loads at the new version; a Custom item missing its perks is gi
   assert.equal(perkSum([loaded.stash[2]], 'serious'), 0);
 });
 
-test('Custom and Premium have pools, and Apex has none (it falls to Premium)', () => {
+test('Custom and Premium have pools, and Apex has none (its pieces are data/apexGear.js)', () => {
   for (const t of ['custom', 'premium']) assert.ok(Object.keys(LOOT.pool[t]).length);
   assert.equal(LOOT.pool.apex, undefined);
 });

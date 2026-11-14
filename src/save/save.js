@@ -862,5 +862,11 @@ function migrate(state) {
     }
     state.version = 67;
   }
+  if (state.version === 67) {
+    // v68: Apex gear (DESIGN.md 2026-11-14). `apexFound` lists the named pieces (data/apexGear.js) the save has found. Apex was not
+    // live before, so none could have dropped: an old save starts with an empty list.
+    state.apexFound ??= [];
+    state.version = 68;
+  }
   return state;
 }

@@ -15,7 +15,7 @@ import { refreshArmoury } from './looks.js';
 import { seedRivals } from './rivals.js';
 import { cleanTongName, tongNameProblem } from './tongname.js';
 
-export const SAVE_VERSION = 67;
+export const SAVE_VERSION = 68;
 
 // A rookie crew's first board: small work only.
 export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];
@@ -65,6 +65,7 @@ export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'st
     tongName: NAMES.defaultTong, // our tong's name (core/tongname.js, save v64)
     crew,
     stash: [], // gear bought and not on anyone (core/gear.js); a new crew starts with none
+    apexFound: [], // ids of the named Apex pieces this save has found; a found piece never drops again (core/loot.js, save v68)
     inbox: [
       {
         id: 'welcome',
