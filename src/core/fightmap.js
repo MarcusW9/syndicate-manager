@@ -22,6 +22,21 @@
 
 import { fightSpots, siteRects, BLOCK } from './fightspots.js';
 import { siteHeight } from '../data/sites.js';
+import { carried } from './gear.js';
+import { SPECIAL_LOOK_RULES, SPECIAL_LOOK_DEFAULT } from '../data/fightLooks.js';
+
+/**
+ * How the stage draws this runner's special move (data/fightLooks.js SPECIAL_LOOK_RULES: their gear's archetype first,
+ * then their role): 'ricochet', 'slash' or 'ping'. Picture only; read once as they enter a fight (core/fight.js runnerOf).
+ */
+export function specialLook(op) {
+  const items = carried(op);
+  const has = (r) => (r.gear && items.some((i) => i.type === r.gear))
+    || (r.frame && items.some((i) => i.type === 'pistol' && i.look?.frame === r.frame))
+    || (r.spec && op?.spec?.id === r.spec)
+    || (r.role && op?.role === r.role);
+  return SPECIAL_LOOK_RULES.find(has)?.look ?? SPECIAL_LOOK_DEFAULT;
+}
 
 export const enemyUnit = (n) => `e:${n}`;
 

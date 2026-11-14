@@ -16,12 +16,13 @@ import { hash01 } from '../core/rng.js';
 import { FIGHT } from '../data/fights.js';
 import { lineText } from '../core/fighttext.js';
 import { portrait } from './art.js';
+import { SPECIAL_MOVES, SPECIAL_FAST_CUT, SPECIAL_LOOK_DEFAULT, ENEMY_LOOKS } from '../data/fightLooks.js';
 
 /** How long a step takes at each pace (Watch is 1). Resolve cuts to the end of the round. */
 export const PACE_K = { watch: 1, fast: 0.6, resolve: 0 };
 export const PACES = ['fast', 'watch', 'resolve'];
 // Step lengths at Watch, in ms.
-const MS = { enter: 900, move: 600, lean: 320, fire: 240, gap: 160, heal: 450, ping: 450, flank: 450, settle: 600, special: 200 };
+const MS = { enter: 900, move: 600, lean: 320, fire: 240, gap: 160, heal: 450, ping: 450, flank: 450, settle: 600 };
 const HIDDEN = new Set(['aboard', 'gone', 'fled']);
 
 const mid = (a, b) => [Math.round((a[0] + b[0]) / 2), Math.round((a[1] + b[1]) / 2)];
@@ -51,7 +52,7 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
   let t = 0;
   let tw = clock; // the fight's clock, in Watch time whatever the pace, so the commentary's times read the same at every pace
   const push = (s) => { steps.push({ t, ...s, dur: tween ? s.dur ?? 0 : 0 }); };
-  const adv = (x) => { t += ms(x); tw += x; };
+  const adv = (x, k = 1) => { t += ms(x * k); tw += x; }; // k: a shorter play at this pace (a special move in Fast); the clock still counts Watch time
   const final = Object.fromEntries(Object.entries(units).map(([id, u]) => [id, { at: HIDDEN.has(u.stance) ? (u.side === 'enemy' ? u.entrance ?? u.at : stage.van) : u.at, stance: u.stance, hidden: HIDDEN.has(u.stance) }]));
   const fresh = !Object.keys(prev ?? {}).length;
   const starting = cue.phase === 'start'; // the enemies were caught where they stood; the crew runs to cover from the walk
@@ -105,7 +106,11 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
   for (const b of beatAfter.values()) beatAt.set(Math.min(...b.lines), b);
   const unitOf = (f) => (typeof f === 'number' ? enemyId(f) : f);
   const seed = stage.seed ?? 0;
-  let burstFrom = null; // a special move: each attack starts where the last one landed (the rules' order is the picture's order)
+  // A special move (lines flagged `burst`, a run of them in the rules' order): its look is the star's (data/fightLooks.js,
+  // core/fightmap.js specialLook), never the rules'. It only draws the rules' attack lines: who, in what order, hit or not.
+  let special = null; // { star, look, mv, cut, from }
+  const cut = pace === 'fast' ? SPECIAL_FAST_CUT : 1;
+  const handle = (id) => (cue.runners ?? []).find((r) => r.id === id)?.handle ?? id;
   lines.forEach((l, i) => {
     const rule = l.rule ?? l.kind;
     // Commentary: the director's beat, said as it starts (the strip and the log read it; a fight can be followed without watching).
@@ -117,12 +122,29 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
       if (opening.tier === 'spotlight' && focus.length) push({ do: 'camera', focus });
     }
     const wide = [hash01(seed, stage.round, i, 'x') - 0.5, hash01(seed, stage.round, i, 'y') - 0.5]; // a miss goes wide, the same way every replay
-    if (l.burst && !burstFrom) { push({ do: 'special', id: l.actor, key: 'stage.special', dur: ms(MS.special * 4) }); adv(MS.special * 4); }
+    if (l.burst && !special) {
+      const look = SPECIAL_MOVES[units[l.actor]?.look] ? units[l.actor].look : SPECIAL_LOOK_DEFAULT;
+      const mv = SPECIAL_MOVES[look];
+      let k = i; const targets = [];
+      while (lines[k]?.burst) { if ((lines[k].rule ?? lines[k].kind) === 'attack' && lines[k].guard != null && units[enemyId(lines[k].guard)]) targets.push(enemyId(lines[k].guard)); k += 1; }
+      special = { star: l.actor, look, mv, from: l.actor };
+      const slots = { who: handle(l.actor) };
+      push({ do: 'special', id: l.actor, look, key: mv.title, slots, targets, dur: ms(mv.lead * cut) });
+      push({ do: 'say', clock: tw, round: cue.round ?? stage.round, tier: 'special', key: mv.title, slots, texts: [] });
+      if (units[l.actor]) push({ do: 'camera', focus: [l.actor, ...targets] });
+      adv(mv.lead, cut);
+      if (mv.wave) { push({ do: 'wave', id: l.actor, targets, dur: ms(mv.wave * cut) }); adv(mv.wave, cut); }
+    }
     if (rule === 'attack' && l.key !== 'attackGone' && l.guard != null) {
-      const from = l.burst && burstFrom ? burstFrom : l.actor;
-      if (l.burst && units[from] && units[enemyId(l.guard)]) push({ do: 'camera', focus: [from, enemyId(l.guard)] });
-      push({ do: 'fire', from, to: enemyId(l.guard), hit: !!l.success, fell: !!l.dropped, damage: l.damage ?? 0, wide, burst: !!l.burst, dur: ms(l.burst ? MS.fire * 1.6 : MS.fire) });
-      adv((l.burst ? MS.fire * 1.6 : MS.fire) + MS.gap);
+      const sp = l.burst ? special : null;
+      // Ricochet and slash: each attack from where the last landed. Ping: every bolt from the star.
+      const from = sp ? (sp.look === 'ping' ? sp.star : sp.from) : l.actor;
+      const to = enemyId(l.guard);
+      if (sp && sp.look !== 'ping' && units[from] && units[to]) push({ do: 'camera', focus: [from, to] });
+      const fly = sp ? MS.fire * sp.mv.slow : MS.fire;
+      push({ do: 'fire', from, to, hit: !!l.success, fell: !!l.dropped, damage: l.damage ?? 0, wide, ...(sp ? { burst: true, look: sp.look } : {}), dur: ms(fly * (sp ? cut : 1)) });
+      adv(fly + (sp ? sp.mv.gap : MS.gap), sp ? cut : 1);
+      if (sp) sp.from = to;
     } else if (rule === 'overwatch' && l.guard != null) {
       push({ do: 'fire', from: 'perch', to: enemyId(l.guard), hit: !!l.success, fell: !!l.dropped, damage: l.damage ?? 0, wide, dur: ms(MS.fire * 1.4) });
       adv(MS.fire * 1.4 + MS.gap);
@@ -143,9 +165,12 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
       push({ do: 'fall', id: l.targetId, dead: true, dur: ms(MS.fire) });
       adv(MS.fire + MS.gap);
     }
-    const wasBurst = !!burstFrom || !!l.burst;
-    burstFrom = l.burst && rule === 'attack' && l.guard != null ? enemyId(l.guard) : null;
-    if (wasBurst && !burstFrom) push({ do: 'camera', focus: null }); // the special move is over: pull back
+    if (special && !lines[i + 1]?.burst) { // the special move is over: a hold (Watch only), the bars go, the camera pulls back
+      adv(special.mv.after, pace === 'fast' ? 0 : 1);
+      push({ do: 'specialEnd', id: special.star, look: special.look });
+      push({ do: 'camera', focus: null });
+      special = null;
+    }
     const beat = beatAfter.get(i);
     if (beat) {
       if (beat.tier === 'spotlight' && beat.key) push({ do: 'caption', key: beat.key, slots: beat.slots ?? {}, tier: beat.tier, focus: beat.focus ?? [], dur: ms(beat.holdMs ?? 0) });
@@ -153,7 +178,6 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
       if (beat.tier === 'spotlight' && (beat.focus ?? []).some((f) => units[unitOf(f)])) push({ do: 'camera', focus: null });
     }
   });
-  if (burstFrom) push({ do: 'camera', focus: null });
 
   // 3. Settle: into the van, out of the fight, the fled run for their door.
   let settled = false;
@@ -210,6 +234,23 @@ const node = (tag, attrs = {}, text = '') => {
   return e;
 };
 const word = (key, slots = {}) => lineText(key, slots);
+// Preview only (scripts/preview-livebattle.mjs sets it; the game never does): { knots: [kinds] } draws those kinds as knots,
+// { special: look } forces a special move on a round's attacks. It changes a copy of the cue the stage draws, never core or the save.
+const preview = () => (typeof window !== 'undefined' ? window.__stagePreview ?? null : null);
+/** A copy of a round's cue with its attacks flagged as one runner's special move (the preview's forced flag; tests do the same). */
+export function forceSpecial(cue, look) {
+  const c = structuredClone(cue);
+  const hits = (c.lines ?? []).filter((l) => (l.rule ?? l.kind) === 'attack' && l.key !== 'attackGone' && l.guard != null);
+  if (hits.length < 2) return cue;
+  const star = hits[0].actor;
+  hits.forEach((l) => { l.burst = true; l.actor = star; });
+  // The attacks run together in the rules' order: move them to where the first one was, keeping their order.
+  const at = c.lines.indexOf(hits[0]);
+  c.lines = [...c.lines.slice(0, at).filter((l) => !hits.includes(l)), ...hits, ...c.lines.slice(at).filter((l) => !hits.includes(l))];
+  c.beats = []; // the director's indices would point at moved lines
+  if (c.stage?.units?.[star]) c.stage.units[star].look = look;
+  return c;
+}
 
 /**
  * Bind a stage to the plan's SVG. deps (from ui/siteplan.js): tok(id) the crew's token, at(id) where it is drawn, pin(id, at)
@@ -249,6 +290,11 @@ export function createStage(svg, deps) {
   // The camera: the whole fight, or pushed in on a few (a spotlight, a special move).
   function look(ids) {
     const list = ids ? ids.map((id) => pos(id)).filter(Boolean) : Object.values(drawn).filter((d) => !HIDDEN.has(d.stance)).map((d) => d.at);
+    // Under the letterbox bars, leave room above and below so nobody the camera is about sits behind a bar.
+    if (list.length && mapBox?.classList.contains('fs-letterbox')) {
+      const ys = list.map((p) => p[1]); const x = list[0][0];
+      list.push([x, Math.min(...ys) - 24], [x, Math.max(...ys) + 24]);
+    }
     if (list.length) deps.frame(list, { tight: !!ids });
   }
 
@@ -260,7 +306,31 @@ export function createStage(svg, deps) {
     g.style.transition = ms > 0 ? `transform ${ms}ms cubic-bezier(.25,.7,.3,1), opacity 300ms` : 'none';
     g.style.transform = `translate(${at[0]}px, ${at[1]}px)`;
   }
+  // A swarm (data/fightLooks.js ENEMY_LOOKS): one rules enemy drawn as a knot of small bodies, one group, so it is shot,
+  // flashes, moves and falls as the one unit it is. How many bodies and where is hash01 of the fight's seed (the same every replay).
+  function knotToken(id, u, seed, look) {
+    const g = node('g', { class: `sp-token fs-foe fs-knot${look.rotor ? ' fs-knot--rotor' : ''}`, 'data-unit': id, 'data-pip-y': 10 });
+    const [lo, hi] = look.bodies;
+    const count = lo + Math.floor(hash01(seed, 'knot', u.n) * (hi - lo + 1));
+    g.append(node('circle', { r: 9.5, class: 'fs-knot__zone' }));
+    const bodies = node('g', { class: 'fs-knot__bodies' });
+    for (let k = 0; k < count; k++) {
+      const a = (k / count) * Math.PI * 2 + hash01(seed, 'knot', u.n, k, 'a') * 0.9;
+      const r = k === 0 ? 0 : 4 + hash01(seed, 'knot', u.n, k, 'r') * 3;
+      const [x, y] = [Math.cos(a) * r, Math.sin(a) * r * 0.8];
+      const b = node('g', { class: 'fs-knot__b', transform: `translate(${x.toFixed(1)} ${y.toFixed(1)})` });
+      if (look.rotor) b.append(node('circle', { r: 2.1, class: 'fs-knot__drone' }), node('path', { d: 'M-3 -3 L3 3 M3 -3 L-3 3', class: 'fs-knot__rotor' }));
+      else b.append(node('ellipse', { cx: 0, cy: 1.3, rx: 2.4, ry: 1.7, class: 'fs-knot__torso' }), node('circle', { cx: 0, cy: -0.8, r: 1.45, class: 'fs-knot__head' }));
+      bodies.append(b);
+    }
+    g.append(bodies, node('circle', { r: 9.5, class: 'sp-face__ring fs-foe__ring fs-knot__ring' }), node('text', { x: 9, y: 9, class: 'fs-foe__n' }, String(u.n)));
+    tokens.append(g);
+    foes.set(id, g);
+    return g;
+  }
   function foeToken(id, u, seed) {
+    const look = (preview()?.knots ? (preview().knots.includes(u.kind) ? { bodies: [4, 6], rotor: u.kind === 'drone' } : null) : ENEMY_LOOKS[u.kind]);
+    if (look?.bodies) return knotToken(id, u, seed, look);
     const g = node('g', { class: 'sp-token fs-foe', 'data-unit': id });
     g.append(node('circle', { r: 6.5, class: 'fs-foe__bg' }));
     const face = node('g', { class: 'sp-face', 'clip-path': 'url(#sp-face-clip)' });
@@ -275,7 +345,8 @@ export function createStage(svg, deps) {
     if (!g || !max) return;
     let bar = g.querySelector(':scope > .fs-pips');
     if (!bar) { bar = node('g', { class: 'fs-pips' }); g.append(bar); }
-    if (bar.childElementCount !== max) { bar.replaceChildren(...Array.from({ length: max }, (_, i) => node('rect', { x: -max * 2 + i * 4, y: 8.5, width: 3, height: 2 }))); }
+    const y = Number(g.dataset?.pipY ?? g.getAttribute('data-pip-y') ?? 8.5);
+    if (bar.childElementCount !== max) { bar.replaceChildren(...Array.from({ length: max }, (_, i) => node('rect', { x: -max * 2 + i * 4, y, width: 3, height: 2 }))); }
     [...bar.children].forEach((r, i) => r.classList.toggle('is-on', i < hp));
   }
   function setStance(id, stance, hidden = false) {
@@ -285,7 +356,10 @@ export function createStage(svg, deps) {
     g.classList.toggle('is-down', stance === 'down' || stance === 'dead');
     g.classList.toggle('fs-hidden', hidden);
   }
-  function body(at) { ground.append(node('ellipse', { class: 'fs-body', cx: at[0], cy: at[1] + 2, rx: 6.5, ry: 3.5 })); }
+  function body(at, id = null) {
+    const big = id && host(id)?.classList.contains('fs-knot'); // a fallen knot leaves a wider mark
+    ground.append(node('ellipse', { class: 'fs-body', cx: at[0], cy: at[1] + 2, rx: big ? 10 : 6.5, ry: big ? 5 : 3.5 }));
+  }
   // A low barrier where the rules give cover the site does not have (core/fightmap.js `mark`), facing the other side.
   function marks(stage) {
     ground.querySelectorAll('.fs-barrier').forEach((n) => n.remove());
@@ -318,6 +392,37 @@ export function createStage(svg, deps) {
     return end;
   }
 
+  // --- the special move's drawing (data/fightLooks.js SPECIAL_MOVES) ---
+  const mapBox = svg.closest('.watch__map') ?? svg.parentElement;
+  const cinema = (on) => { mapBox?.classList.toggle('fs-letterbox', on); svg.classList.toggle('fs-slowmo', on); };
+  const gone = (el, ms) => { fx.append(el); setTimeout(() => el.remove(), ms); return el; };
+  const toward = (a, b, k) => { const d = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1; return [a[0] + ((b[0] - a[0]) / d) * k, a[1] + ((b[1] - a[1]) / d) * k]; };
+  /** Where an attack lands: on the target, or wide as the dice had it. */
+  const landing = (b, s) => (s.hit || s.absorbed ? b : [b[0] + s.wide[0] * 22, b[1] + s.wide[1] * 22]);
+  // Ricochet: the round is a bright dot flying from the last landing to this one, with its trace, and a spark where it bounces.
+  function ricochet(a, b, s) {
+    const end = landing(b, s);
+    gone(node('line', { class: 'fs-tracer is-burst', x1: a[0], y1: a[1], x2: end[0], y2: end[1] }), s.dur + 260);
+    const dot = gone(node('circle', { class: 'fs-round', r: 1.6 }), s.dur + 40);
+    put(dot, a, 0); void dot.getBoundingClientRect(); put(dot, end, s.dur);
+    setTimeout(() => flash(end, 'fs-spark'), s.dur);
+  }
+  // Slash: afterimages of the star along the dash (the star's own token stays on its spot), and an arc where the blade lands.
+  function slash(a, b, s) {
+    const end = landing(b, s);
+    const ang = (Math.atan2(end[1] - a[1], end[0] - a[0]) * 180) / Math.PI;
+    for (let k = 1; k <= 3; k++) {
+      const at = [a[0] + (end[0] - a[0]) * (k / 3.4), a[1] + (end[1] - a[1]) * (k / 3.4)];
+      setTimeout(() => gone(node('circle', { class: 'fs-ghost', cx: at[0], cy: at[1], r: 6.5 }), 380), (s.dur * (k - 1)) / 3);
+    }
+    setTimeout(() => gone(node('path', { class: 'fs-slash', d: 'M-8 -4 Q0 5 8 -4', transform: `translate(${end[0]} ${end[1]}) rotate(${ang + 90})` }), 420), s.dur * 0.75);
+  }
+  // Ping: a quick thin bolt from the star.
+  function bolt(a, b, s) {
+    const end = landing(b, s);
+    gone(node('line', { class: 'fs-bolt', x1: a[0], y1: a[1], x2: end[0], y2: end[1] }), Math.max(160, s.dur + 120));
+  }
+
   const ensure = (id, u, seed) => (id.startsWith('e:') ? foes.get(id) ?? foeToken(id, u, seed) : deps.tok(id));
 
   /** Run one step (the script says what and where). */
@@ -331,8 +436,8 @@ export function createStage(svg, deps) {
         const was = drawn[s.id]?.stance;
         drawn[s.id] = { at: s.at, stance: s.stance };
         setStance(s.id, s.stance, s.hidden);
-        if ((s.stance === 'down' || s.stance === 'dead') && was !== 'down' && was !== 'dead' && s.do === 'final') body(s.at);
-        if (s.do === 'place' && (s.stance === 'down' || s.stance === 'dead')) body(s.at);
+        if ((s.stance === 'down' || s.stance === 'dead') && was !== 'down' && was !== 'dead' && s.do === 'final') body(s.at, s.id);
+        if (s.do === 'place' && (s.stance === 'down' || s.stance === 'dead')) body(s.at, s.id);
         break;
       }
       case 'enter': {
@@ -366,13 +471,16 @@ export function createStage(svg, deps) {
       case 'fire': {
         const a = pos(s.from); const b = pos(s.to);
         if (!a || !b) break;
-        tracer(a, b, s);
+        if (s.look === 'ricochet') ricochet(a, b, s);
+        else if (s.look === 'slash') slash(a, b, s);
+        else if (s.look === 'ping') bolt(a, b, s);
+        else tracer(a, b, s);
         setTimeout(() => {
           const g = host(s.to);
           if (s.hit) { struck(g); flash(b, 'sp-flash--hit'); }
           else if (s.absorbed) { flash(b, 'sp-flash--zap'); float(b, word('stage.absorbed'), 'is-absorbed'); }
           else flash([b[0] + s.wide[0] * 22, b[1] + s.wide[1] * 22], 'sp-flash--miss');
-          if (s.fell) { setStance(s.to, s.dead ? 'dead' : 'down'); drawn[s.to] = { ...drawn[s.to], stance: s.dead ? 'dead' : 'down' }; body(b); float(b, word(s.to.startsWith('e:') ? 'stage.out' : 'stage.down'), 'is-down'); }
+          if (s.fell) { setStance(s.to, s.dead ? 'dead' : 'down'); drawn[s.to] = { ...drawn[s.to], stance: s.dead ? 'dead' : 'down' }; body(b, s.to); float(b, word(s.to.startsWith('e:') ? 'stage.out' : 'stage.down'), 'is-down'); }
           else if (s.hit) float(b, word('stage.hit'), 'is-hit');
         }, s.dur);
         break;
@@ -380,9 +488,26 @@ export function createStage(svg, deps) {
       case 'flank': { const b = pos(s.id); flash(b, 'sp-flash--miss'); float(b, word('stage.flanked'), 'is-hit'); break; }
       case 'heal': { const b = pos(s.id); if (b) { const c = node('circle', { class: `sp-ring ${s.ok ? 'sp-ring--ok' : 'sp-ring--bad'}`, cx: b[0], cy: b[1], r: 9 }); fx.append(c); setTimeout(() => c.remove(), Math.max(400, s.dur)); } break; }
       case 'ping': { const b = pos(s.id); if (b) { const c = node('circle', { class: `fs-ping ${s.ok ? 'is-ok' : ''}`, cx: b[0], cy: b[1], r: 6 }); fx.append(c); setTimeout(() => c.remove(), Math.max(400, s.dur)); } break; }
-      case 'fall': { const b = pos(s.id); setStance(s.id, s.dead ? 'dead' : 'down'); if (drawn[s.id]) drawn[s.id] = { ...drawn[s.id], stance: s.dead ? 'dead' : 'down' }; if (b) body(b); break; }
+      case 'fall': { const b = pos(s.id); setStance(s.id, s.dead ? 'dead' : 'down'); if (drawn[s.id]) drawn[s.id] = { ...drawn[s.id], stance: s.dead ? 'dead' : 'down' }; if (b) body(b, s.id); break; }
       case 'leave': { const g = host(s.id); put(g, s.at, s.dur); setTimeout(() => setStance(s.id, s.stance, true), s.dur); if (!s.id.startsWith('e:')) deps.pin(s.id, null); drawn[s.id] = { at: s.at, stance: s.stance }; break; }
-      case 'special': { const b = pos(s.id); if (b) { const c = node('circle', { class: 'fs-special', cx: b[0], cy: b[1], r: 8 }); fx.append(c); setTimeout(() => c.remove(), Math.max(600, s.dur)); } deps.caption?.(word(s.key), 'special'); break; }
+      case 'special': {
+        // Letterbox bars and slow motion while the move plays (not at Resolve or with reduced motion: there it cuts).
+        const b = pos(s.id);
+        if (b) gone(node('circle', { class: 'fs-special', cx: b[0], cy: b[1], r: 8 }), Math.max(600, s.dur));
+        if (s.dur > 0 && !deps.reduced()) cinema(true);
+        if (s.look === 'slash' && b && s.dur > 0) { const t = pos(s.targets?.[0]); if (t) put(host(s.id), toward(b, t, 4), s.dur / 2); } // a lunge; the star stays in their cover
+        deps.caption?.(word(s.key, s.slots), 'special');
+        break;
+      }
+      case 'wave': {
+        const b = pos(s.id);
+        if (!b) break;
+        const reach = Math.max(14, ...(s.targets ?? []).map((t) => pos(t)).filter(Boolean).map((t) => Math.hypot(t[0] - b[0], t[1] - b[1]) + 8));
+        const c = gone(node('circle', { class: 'fs-wave', cx: b[0], cy: b[1], r: reach }), Math.max(300, s.dur + 120));
+        c.style.animationDuration = `${Math.max(1, s.dur)}ms`;
+        break;
+      }
+      case 'specialEnd': cinema(false); put(host(s.id), drawn[s.id]?.at, 260); break;
       case 'caption': deps.caption?.(word(s.key, s.slots), s.tier); break;
       case 'say': deps.say?.({ when: clockText(s.round, s.clock), tier: s.tier, text: s.key ? `${word(s.key, s.slots)} ${s.texts.join(' ')}` : s.texts.join(' ') }); break;
       case 'camera': if (!deps.reduced() && deps.pace() !== 'resolve') look(s.focus); break;
@@ -399,6 +524,7 @@ export function createStage(svg, deps) {
   return {
     /** Play an event's cue (start, round, retreat, end). Resolves when the round's picture is done. */
     async play(cue) {
+      if (preview()?.special && cue.phase === 'round') cue = forceSpecial(cue, preview().special);
       const me = ++playing;
       const stage = cue.stage;
       points = stage;
@@ -452,6 +578,7 @@ export function createStage(svg, deps) {
       for (const g of foes.values()) g.remove();
       foes.clear();
       ground.replaceChildren();
+      cinema(false);
       for (const id of Object.keys(drawn)) if (!id.startsWith('e:')) { deps.pin(id, null); setStance(id, null); deps.tok(id)?.querySelector(':scope > .fs-pips')?.remove(); }
       drawn = {};
       if (full) { spent = 0; svg.classList.remove('is-staged'); }
