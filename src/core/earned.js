@@ -50,8 +50,8 @@ export function uniqueInboxId(state, base) {
 const districtText = (d) => NAMES.districtsInText?.[d] ?? NAMES.districts?.[d] ?? d;
 const clientName = (id) => CLIENTS.find((c) => c.id === id)?.name ?? id;
 
-/** A trait's note (Joss's voice) with the name in place of "they": {op}, and {partner} for a Synergy. */
-const noteText = (state, note, op, extra) => note.replaceAll('{op}', op.handle).replaceAll('{partner}', state.crew.find((o) => o.id === extra.partner)?.handle ?? 'a partner');
+/** A trait's note (Joss's voice) with the name in place of "they": {op}, {client}, and {partner} for a Synergy. */
+const noteText = (state, note, op, extra) => note.replaceAll('{op}', op.handle).replaceAll('{client}', clientName(extra.client)).replaceAll('{partner}', state.crew.find((o) => o.id === extra.partner)?.handle ?? 'a partner');
 
 /** Their entry for a trait, if they have it (and it matches, for district/client/partner traits). */
 export function earnedOf(op, id, where = {}) {

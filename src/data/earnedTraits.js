@@ -77,7 +77,7 @@ export const EARNED_TRAITS = {
   client_favourite: {
     name: 'Client\'s Favourite', kind: 'temporary', icon: 'coin',
     desc: '+1 trust from {client}\'s jobs they work. Fades if one of those jobs goes wrong, or after five jobs for others.',
-    note: 'The client asked whether {op} was coming. Not the crew. {op}. That can open doors and close others.',
+    note: '{client} considers {op} a favourite now.',
     history: 'Became a preferred operative of {client}.',
   },
 
