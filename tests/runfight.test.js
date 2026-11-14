@@ -3,6 +3,7 @@
 // everything else. The rules themselves are tests/fight.test.js. Run with: npm test
 
 import { test } from 'node:test';
+import { incidentById } from '../src/core/incidents.js';
 import assert from 'node:assert/strict';
 import { createNewGame } from '../src/core/state.js';
 import * as M from '../src/core/mission.js';
@@ -33,9 +34,13 @@ function begin(seed, templateId, approach = 'loud', { n, opts } = {}) {
 }
 
 /** Step the run until `stop(s)` holds or it ends. Decisions are left to the orders (force). */
-function until(s, stop, limit = 400) {
+// The van is the way out: it only plays when the fight is the run's last. lastEncounter makes the incident the crew is about
+// to face the last thing queued (before the walk out), so a warehouse fight is the van's.
+function until(s, stop, limit = 400, lastEncounter = false) {
   for (let g = 0; g < limit && !s.activeMission.done; g++) {
     if (stop(s)) return s;
+    const am = s.activeMission, cur = am.queue[am.step];
+    if (lastEncounter && cur?.type === 'incident' && incidentById(cur.id).danger && am.queue.length > am.step + 2) { s = structuredClone(s); s.activeMission.queue.splice(am.step + 1, s.activeMission.queue.length, { type: 'zone', zone: 'out' }); }
     const next = autoStep(s, { force: true });
     if (next === s) throw new Error('stuck');
     s = next;
@@ -47,7 +52,7 @@ const inFight = (s) => !!s.activeMission.battle && M.currentStep(s.activeMission
 function atFight(seed, id, callIn = 'every', orders = 'steady') {
   const s = begin(seed, id, 'loud', { opts: { callIn, orders } });
   s.activeMission.orders = orders;
-  return until(s, inFight);
+  return until(s, inFight, 400, id === 'warehouse');
 }
 
 // --- the five jobs, and everything else ---------------------------------------------------------------
