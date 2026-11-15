@@ -50,6 +50,10 @@ export const FIGHT_TEXT = {
   // Round feed (one per thing that happens)
   'arrive': '{kind} {n} arrives.',
   'pressure': '{kind} {n} joins the fight.',
+  // Slice 3 (draft text, the owner's to write): a wave arrives; an arrival spends its first round coming in (no shot); the round screen's tag for it.
+  'wave': '{kind} {n} comes in with the wave.',
+  'approach': '{enemy} is still coming in.',
+  'view.approaching': 'Coming in: no shot this round',
   'standbyOut': '{who} steps out to help.',
   'climbBack': '{who} climbs back out to reach {target}.',
   'vanEarly': 'The driver brings the van in early: it arrives at the end of round {round}. This is the planned way out, not a new threat.',
