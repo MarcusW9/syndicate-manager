@@ -1,12 +1,3 @@
-/* FIGHT
-type: holdExtract
-opposition: none
-waves:
-  round 2: 2 hired, because the collectors following Tang reach the pickup.
-  round 4: 2 hired, because a second collection crew answers the call from a nearby street.
-reinforcement cap: 2
-*/
-
 // The Last Collection: recover a disputed collection book for Madam Rao in
 // the Night Market. Client: rao. Tang's departure is narrative, not an escort unit.
 // A clean extraction can end before the round-4 wave arrives.

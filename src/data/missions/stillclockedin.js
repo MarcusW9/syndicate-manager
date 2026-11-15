@@ -1,14 +1,5 @@
-/* FIGHT
-type: holdHack
-opposition: corporate
-waves:
-  round 2: 2 secforce, because the records terminal's access alert brings the nearby patrol.
-  round 3: 2 secforce, because the first patrol reports armed resistance and security sends another pair from the next terrace.
-reinforcement cap: 2
-*/
-
 // Still Clocked In: recover disputed maintenance shifts for Forewoman Tse in
-// Glass Heights. Client: tse. Fight wiring is described above, not executed here.
+// Glass Heights. Client: tse.
 
 /** @type {import('../../core/types.js').MissionTemplate} */
 export const STILL_CLOCKED_IN = {
@@ -84,7 +75,7 @@ export const STILL_CLOCKED_IN = {
       ],
     },
     {
-      id: 'borrowed_pass',
+      id: 'lent_pass',
       situations: ['law', 'threat'],
       after: 1,
       order: -1,
