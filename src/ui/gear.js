@@ -152,7 +152,7 @@ export function renderArmoury(ui, state) {
 function wornTile(ui, op, { id, label, item, can }) {
   const { esc } = ui;
   const art = item ? gearArt(item, { carrier: op, width: 96 }) : null;
-  return `<li><button class="loadout__tile loadout__tile--worn ${item ? '' : 'is-empty'}" data-action="gear-slot" data-id="${id}" ${can.ok ? '' : 'disabled'} aria-label="${esc(label)}: ${esc(item ? `${TIERS[item.tier]?.name ?? TIERS[BASE_TIER].name} ${itemTitle(item)}` : 'empty')}. Tap to change.">
+  return `<li><button class="loadout__tile loadout__tile--worn ${item ? '' : 'is-empty'}" data-action="gear-slot" data-id="${can.ok ? id : item ? `item:${item.uid}` : id}" ${can.ok || item ? '' : 'disabled'} aria-label="${esc(label)}: ${esc(item ? `${TIERS[item.tier]?.name ?? TIERS[BASE_TIER].name} ${itemTitle(item)}` : 'empty')}. ${can.ok ? 'Tap to change.' : 'Tap to see it.'}">
       <span class="loadout__name">${esc(label)}</span>
       <span class="loadout__cell ${art ? tierFrame(item) : 'loadout__pic--icon'}" aria-hidden="true">${item ? art ?? glyphFor(item) : '+'}</span>
       <strong class="loadout__item">${item ? esc(itemTitle(item)) : 'Empty'}</strong>
@@ -181,7 +181,7 @@ export function renderLoadout(ui, state, op, { picked = null } = {}) {
     const ok = held ? fitsAt(op, held, x, y) : true;
     cells.push(`<button class="bag__cell ${held && ok ? 'is-free' : ''}" style="grid-column:${x + 1};grid-row:${y + 1}" data-action="bag-cell" data-id="${x},${y}" ${can.ok && ok ? '' : 'disabled'} aria-label="${held ? `Move ${esc(itemTitle(held))} here` : 'Empty space: put something here'}"></button>`);
   }
-  const items = bag.map((b) => `<button class="bag__item ${tierFrame(b.item)} ${b.item.uid === picked ? 'is-picked' : ''}" style="grid-column:${b.x + 1} / span ${cellsOf(b.item.type)};grid-row:${b.y + 1}" data-action="bag-pick" data-id="${esc(b.item.uid)}" ${can.ok ? '' : 'disabled'} aria-pressed="${b.item.uid === picked}" aria-label="${esc(TIERS[b.item.tier]?.name ?? TIERS[BASE_TIER].name)} ${esc(itemTitle(b.item))}: tap to move it or take it off">${gearArt(b.item, { carrier: op, width: 96 }) ?? `<span class="bag__icon">${glyphFor(b.item)}</span>`}</button>`).join('');
+  const items = bag.map((b) => `<button class="bag__item ${tierFrame(b.item)} ${b.item.uid === picked ? 'is-picked' : ''}" style="grid-column:${b.x + 1} / span ${cellsOf(b.item.type)};grid-row:${b.y + 1}" data-action="${can.ok ? 'bag-pick' : 'gear-slot'}" data-id="${can.ok ? esc(b.item.uid) : `item:${esc(b.item.uid)}`}" aria-pressed="${b.item.uid === picked}" aria-label="${esc(TIERS[b.item.tier]?.name ?? TIERS[BASE_TIER].name)} ${esc(itemTitle(b.item))}: ${can.ok ? 'tap to move it or take it off' : 'tap to see it'}">${gearArt(b.item, { carrier: op, width: 96 }) ?? `<span class="bag__icon">${glyphFor(b.item)}</span>`}</button>`).join('');
   return `
       <h2>Gear</h2>
       <ul class="list list--plain loadout loadout--worn">
@@ -202,6 +202,7 @@ export function renderLoadout(ui, state, op, { picked = null } = {}) {
 /** What a place on a runner takes, from the sheet's id: 'armour', 'implant:1' or 'bag:2,0'. */
 export function gearPlace(id) {
   const [kind, rest = ''] = String(id).split(':');
+  if (kind === 'item') return { kind, uid: rest, title: 'Carried' };
   if (kind === 'implant') return { kind, socket: Number(rest), title: `Implant socket ${Number(rest) + 1}` };
   if (kind === 'bag') { const [x, y] = rest.split(',').map(Number); return { kind, x, y, title: 'Carried' }; }
   return { kind: 'armour', title: 'Armour' };
@@ -226,11 +227,34 @@ const apexConflict = (esc, out) => `<div class="apex__conflict" role="note">
         <p class="apex__flavour">Street wisdom says a runner carrying two pieces of legend-grade iron is just walking target practice for the fixers who lost them.</p>
       </div>`;
 
+/**
+ * One item a runner has on them, opened from the board or their page: what it is and does, and, if their gear
+ * can change right now, a way to take it off or go to their page to swap it; if not, why not (owner, 2026-11-15).
+ */
+function renderItemSheet(ui, state, op, uid) {
+  const { esc } = ui;
+  const item = carried(op).find((i) => i.uid === uid);
+  const can = canChangeGear(state, op);
+  return `
+    <div class="scrim" data-action="close-gear"></div>
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(item ? itemTitle(item) : 'Gear')} on ${esc(op.handle)}">
+      <div class="sheet__head">
+        <div><h2 class="sheet__title">${item ? esc(itemTitle(item)) : 'Gone'} · ${esc(op.handle)}</h2>
+        <p class="muted small">${can.ok ? 'Take it off, or change it from their page.' : `Their gear can't change while they're ${esc(can.reason)}. You can still look.`}</p></div>
+        <button class="btn btn--ghost sheet__x" data-action="close-gear" aria-label="Close">✕</button>
+      </div>
+      ${item ? `<ul class="list list--plain gearlist">${itemRow(ui, item, { carrier: op })}</ul>` : ''}
+      ${item && can.ok ? `<button class="btn btn--ghost btn--block" data-action="unequip" data-id="${esc(item.uid)}">Put it back in the stash</button>` : ''}
+      <button class="btn btn--block" data-action="open-op" data-id="${esc(op.id)}">Open ${esc(op.handle)}'s page</button>
+    </div>`;
+}
+
 /** The sheet for one place: what's in the stash that goes there, what others carry, or take it off. */
 export function renderGearSheet(ui, state, op, slot) {
   const { esc } = ui;
   const place = gearPlace(slot);
   const g = op.gear ?? {};
+  if (place.kind === 'item') return renderItemSheet(ui, state, op, place.uid);
   const current = place.kind === 'armour' ? g.armour ?? null : place.kind === 'implant' ? (g.implants ?? [])[place.socket] ?? null : null;
   const otherImplant = place.kind === 'implant' ? (g.implants ?? []).find((_, i) => i !== place.socket) : null;
   const fits = (item) => {

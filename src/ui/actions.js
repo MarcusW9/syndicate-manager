@@ -134,7 +134,7 @@ export function onClick(e) {
     // A crew member's name in a message: open their page, remembering the message to come back to.
     case 'trait-tip': V.traitTip = V.traitTip === id ? null : id; break;
     // A runner's name or face anywhere (a message, a job board strip, a hall, a district card): their page, on Crew.
-    case 'open-op': case 'op-link': remember(action, id); goHome('runner'); V.openRecruitId = null; V.openOperativeId = id; V.bagPick = null; break;
+    case 'open-op': case 'op-link': remember(action, id); goHome('runner'); V.gearSlot = null; V.gearFor = null; V.openRecruitId = null; V.openOperativeId = id; V.bagPick = null; break;
     // Gear (ui/gear.js, core/gear.js): the armoury, and a runner's slots.
     // The Armoury is a sub-tab of Tong; the squad board's link to it keeps the plan (Back returns to it).
     case 'open-armoury': remember(action, id); goHome('armoury'); V.hallPage = null; V.buildView = null; V.openOperativeId = null; V.openRecruitId = null; V.gearSlot = null; break;
@@ -160,7 +160,8 @@ export function onClick(e) {
       break;
     }
     case 'gear-slot': V.gearSlot = id; break;
-    case 'close-gear': V.focusNext = { action: 'gear-slot', id: V.gearSlot }; V.gearSlot = null; break;
+    case 'board-gear': V.gearFor = id; V.gearSlot = `item:${t.dataset.uid}`; break;
+    case 'close-gear': V.focusNext = V.gearFor ? null : { action: 'gear-slot', id: V.gearSlot }; V.gearSlot = null; V.gearFor = null; break;
     case 'equip': {
       // Into the place the sheet was opened for (core/gear.js equip): a socket, or a cell in the bag.
       const place = gearPlace(V.gearSlot);
@@ -168,7 +169,7 @@ export function onClick(e) {
       V.focusNext = place.kind === 'bag' ? null : { action: 'gear-slot', id: V.gearSlot }; V.gearSlot = null;
       return setState(equip(state, id, V.openOperativeId, target));
     }
-    case 'unequip': V.focusNext = { action: 'gear-slot', id: V.gearSlot }; V.gearSlot = null; return setState(unequip(state, V.openOperativeId, id));
+    case 'unequip': V.focusNext = { action: 'gear-slot', id: V.gearSlot }; V.gearSlot = null; const who = V.gearFor ?? V.openOperativeId; V.gearFor = null; return setState(unequip(state, who, id));
     // The bag (the carry grid, 2026-11-06): tap an item to pick it up; a free cell moves it there,
     // or, with nothing picked up, opens what fits there.
     case 'bag-pick': V.bagPick = V.bagPick === id ? null : id; break;
