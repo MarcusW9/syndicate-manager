@@ -34,7 +34,7 @@ export const CLIENTS = [
     district: 'docks',
     affiliation: null,
     desc: 'Leung Ka-wai runs boats in and out of the Docks at night. Nobody has seen him on dry land in years.',
-    jobs: ['container409', 'cable', 'warehouse', 'protection', 'courier', 'wrong_horse', 'low_water', 'landing_hands', 'mooring_watch'],
+    jobs: ['container409', 'cable', 'warehouse', 'protection', 'courier', 'wrong_horse', 'low_water', 'landing_hands', 'mooring_watch', 'dead_air', 'not_for_sale'],
   },
   {
     id: 'rao',

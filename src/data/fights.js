@@ -115,10 +115,12 @@ export const FIGHTS = {
   },
 };
 
-// The five jobs that play on engine 2 (spec section 30). Everything else stays on engine 1.
+// The jobs that play on engine 2: the five of spec section 30, then new jobs drafted with a /* FIGHT */ block (/add-job,
+// 2026-11-15). Everything else stays on engine 1.
 export const FIGHT_JOBS = {
   data_pull: 'holdHack', data_scrub: 'holdHack', quiet_hours: 'holdHack',
   warehouse: 'holdExtract', protection: 'holdYard',
+  dead_air: 'holdExtract', still_connected: 'holdHack', not_for_sale: 'holdExtract', one_more_song: 'holdHack',
 };
 
 // The priority words an order's tie-breaks may use (spec 12; the grammar is core/fight.js enemyOrder).
@@ -129,7 +131,13 @@ export const PRIORITY_WORDS = ['protected', 'radio', 'low', 'exposed', 'approach
 // fight's `extras`). kind: an ENEMIES kind; left out, a wave sends who the clocks send (core/fight.js reinforceKind: the
 // job's opposition's grunt, else the district's first kind; owner, 2026-11-15). maxExtraEnemies: the cap on backup calls,
 // the alarm clock and the pressure clock, else FIGHT.maxExtraEnemies. Which jobs get waves is the owner's to write
-// (the handoff's content question 2): none yet. The format and a checklist: docs/fight-recipe-template.md.
-export const FIGHT_RECIPES = {};
+// (the handoff's content question 2). The format and a checklist: docs/fight-recipe-template.md.
+export const FIGHT_RECIPES = {
+  still_connected: {
+    waves: [
+      { round: 3, count: 2, kind: 'secforce' }, // the shift office sends another pair to reclaim the crane's maintenance station
+    ],
+  },
+};
 export const DUTIES = ['attack', 'protect', 'support', 'hold', 'push', 'withdraw'];
 export const RISK_LEVELS = ['cautious', 'steady', 'committed'];

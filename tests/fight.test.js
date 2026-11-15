@@ -107,8 +107,9 @@ test('holdExtract defaults are stage-aware: hold, then board', () => {
   for (const r of b.runners.filter((x) => x.id !== prot.id)) { assert.deepEqual(hold[r.id], ['attack', 'hold']); assert.deepEqual(board[r.id], ['push', 'hold']); }
 });
 
-test('the five jobs name a fight type and exist, with the type and site the spec set', () => {
-  assert.deepEqual(Object.keys(FIGHT_JOBS).sort(), ['data_pull', 'data_scrub', 'protection', 'quiet_hours', 'warehouse']);
+test('the fight jobs name a fight type and exist, with the type and site the spec set', () => {
+  // The five of spec section 30, then the jobs added with a /* FIGHT */ block (2026-11-15): the list grows on purpose.
+  assert.deepEqual(Object.keys(FIGHT_JOBS).sort(), ['data_pull', 'data_scrub', 'dead_air', 'not_for_sale', 'one_more_song', 'protection', 'quiet_hours', 'still_connected', 'warehouse']);
   for (const [id, type] of Object.entries(FIGHT_JOBS)) {
     const t = templateById(id);
     assert.ok(t, `${id} exists`);
