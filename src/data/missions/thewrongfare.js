@@ -1,26 +1,14 @@
-/* FIGHT
-type: holdExtract
-opposition: corporate
-waves:
-  round 3: 2 secforce, because the vehicle checkpoint sends a response pair to the stopped taxi.
-reinforcement cap: 2
-*/
-
-// HELD BACK (2026-11-15): wired and simmed, the fight broke the declared bars (best team: left behind 44%
-// on steady, over 15%; a death in 32.5% on committed, over 8%). See docs/sims/newjobs-2026-11-15.md.
-// Re-simmed the same day with OPPOSITION extra 0: still over (left behind 62% on steady, a death in 26.0% on committed).
-// Owner to choose a lever, then add it again with /add-job.
-
 // The Wrong Fare: an anonymous taxi driver hires the crew after security
 // stops a passenger leaving Glass Heights. Walk-in work.
 // The passenger leaves separately in the story, not as a combat escort unit.
+// Fight (engine 2): holdHack against corporate security, one wave (data/fights.js FIGHT_RECIPES).
 
 /** @type {import('../../core/types.js').MissionTemplate} */
 export const THE_WRONG_FARE = {
   id: 'the_wrong_fare',
   name: 'The Wrong Fare',
   district: 'heights',
-  threat: 4,
+  threat: 3,
   opposition: 'corporate',
   walkIn: true,
   pay: 6500,
@@ -32,7 +20,7 @@ export const THE_WRONG_FARE = {
     '{binta} meets the crew below the forecourt and points out the taxi beneath the reception lights.',
     'The passenger sits beside an open door while security argues with the driver about ownership.',
     '{binta} takes the passenger through a service route; the crew stays with the taxi long enough to draw security away.',
-    'At the pickup, the crew can see the vehicle checkpoint above the ramp and guards moving between its barriers.',
+    'At the ramp, the crew holds the barriers while the checkpoint\'s lock is worked open, and guards move between them.',
     '{binta} sends word that the passenger reached a place of their choosing; the driver finally stops the meter.',
   ],
   crises: [
@@ -88,7 +76,7 @@ export const THE_WRONG_FARE = {
       after: 1, order: 0,
       text: 'The forecourt controller has locked the taxi\'s exit authorisation; the driver can move the car, but the barrier will report it stolen.',
       choices: [
-        { id: 'clear_flag', label: 'Clear the forecourt hold locally', kind: 'push', stat: 'tech', difficulty: 15, neural: 12,
+        { id: 'clear_flag', label: 'Clear the forecourt hold locally', kind: 'push', stat: 'tech', difficulty: 14, neural: 12,
           success: '{op} clears the local hold without changing the taxi\'s ownership record.',
           failure: 'The controller flags {op}\'s connection and copies the taxi details to security.',
           failureInjury: 'none', failureCost: { heat: 1 },
@@ -157,7 +145,7 @@ export const THE_WRONG_FARE = {
       after: 2, order: 1,
       text: 'Guards block the ramp to the crew\'s pickup; one watches the service passage while another calls the vehicle checkpoint.',
       choices: [
-        { id: 'force_gap', label: 'Force a gap towards the pickup', kind: 'push', stat: 'combat', difficulty: 15,
+        { id: 'force_gap', label: 'Force a gap towards the pickup', kind: 'push', stat: 'combat', difficulty: 14,
           success: '{op} drives the nearest guard behind a barrier and opens the ramp.',
           failure: 'A guard catches {op} against the barrier before the crew makes space.',
           failureInjury: 'serious',
