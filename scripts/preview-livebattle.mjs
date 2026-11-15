@@ -58,11 +58,11 @@ function atFight() {
   throw new Error('no engine-2 fight found');
 }
 const save = atFight();
-// A crowd for the frame rate: more hired guns, each a copy of the first enemy at the next number, on the enemies' spots.
+// A crowd for the frame rate (standard-force police, plated, so the armour crack shows): more guns, each a copy of the first enemy at the next number, on the enemies' spots.
 {
   const b = save.activeMission.battle;
   const first = b.enemies[0];
-  for (let n = b.enemies.length + 1; n <= foes; n++) b.enemies.push({ ...structuredClone(first), n, kind: 'hired', pips: 1, max: 1, out: false, fled: false });
+  for (let n = b.enemies.length + 1; n <= foes; n++) b.enemies.push({ ...structuredClone(first), n, kind: 'police', pips: 1, max: 1, absorb: 1, out: false, fled: false });
 }
 console.log(`fight: ${job}, ${save.activeMission.battle.enemies.length} enemies, ${save.activeMission.battle.runners.length} runners`);
 

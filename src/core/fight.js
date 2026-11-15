@@ -22,7 +22,7 @@
 // Ids: a runner's id is a string (the operative's), an enemy's n a number. "Lowest id" in a tie is the
 // lowest seat (crew order).
 
-import { FIGHT, ENEMIES, ENEMY_HIT, SITE_ENEMIES, COUNT_BY_THREAT, CLOCKS, FIGHTS, THREATS } from '../data/fights.js';
+import { FIGHT, ENEMIES, ENEMY_HIT, SITE_ENEMIES, COUNT_BY_THREAT, OPPOSITION, CLOCKS, FIGHTS, THREATS } from '../data/fights.js';
 import { DILEMMAS } from '../data/dilemmas.js';
 import { lineText, kindWord, enemyName, nameList } from './fighttext.js';
 import { effectiveStat } from './crew.js';
@@ -80,6 +80,9 @@ const lowestPips = (list) => [...list].sort((a, b) => a.pips - b.pips || bySeat(
 
 const shuffle = (a, rng) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
+/** Who the clocks send: the job's force's grunt when it has an opposition, else the district's first kind. */
+const reinforceKind = (b) => OPPOSITION[b.opposition]?.grunt ?? SITE_ENEMIES[b.site]?.[0] ?? 'hired';
+
 function newEnemy(b, kind, rng) {
   const def = ENEMIES[kind];
   const e = { n: b.enemies.length + 1, kind, pips: def.pips, max: def.pips, absorb: def.absorb ?? 0, cover: def.cover, out: false, fled: false, deck: shuffle([...def.deck], rng), di: 0 };
@@ -96,7 +99,7 @@ function newEnemy(b, kind, rng) {
  * the van. rng: the run's stream (the enemies' decks are shuffled from it). Orders start as the crew's
  * defaults, visible and editable.
  */
-export function buildFight({ type, diff, threat = 3, site = 'docks', crew, approach, overwatch = null, wheels = null, standbyOp = null, risk = 'steady', watched = false }, rng) {
+export function buildFight({ type, diff, threat = 3, site = 'docks', opposition = null, crew, approach, overwatch = null, wheels = null, standbyOp = null, risk = 'steady', watched = false }, rng) {
   const def = FIGHTS[type];
   const b = {
     engine: 2, type, stage: 0, round: 0, diff, deadline: type === 'holdHack' ? FIGHT.deadline.holdHack : null, drawn: false, end: null,
@@ -105,7 +108,7 @@ export function buildFight({ type, diff, threat = 3, site = 'docks', crew, appro
     enemies: [], runners: crew.map((op, i) => runnerOf(op, approach, i)), threats: [],
     orders: {}, risk: { level: risk }, vanHold: null, enemyReinforce: def.enemyReinforce, friendlyReinforce: def.friendlyReinforce,
     overwatch: overwatch ? { ...overwatch, vanShots: 0 } : null, wheels, standby: null, standbyOut: false, vanUsed: false,
-    heat: 0, pipsLost: 0, left: [], dilemmasFired: {}, watched, site,
+    heat: 0, pipsLost: 0, left: [], dilemmasFired: {}, watched, site, opposition: OPPOSITION[opposition] ? opposition : null,
   };
   if (standbyOp) b.standby = runnerOf(standbyOp, approach, b.runners.length);
   if (type === 'holdHack') {
@@ -114,7 +117,12 @@ export function buildFight({ type, diff, threat = 3, site = 'docks', crew, appro
   }
   const kinds = SITE_ENEMIES[site] ?? SITE_ENEMIES.docks;
   const count = COUNT_BY_THREAT[clamp(Math.round(threat), 1, 5)];
-  for (let i = 0; i < count; i++) newEnemy(b, kinds[Math.floor(rng() * kinds.length)], rng);
+  const force = OPPOSITION[opposition];
+  if (force) {
+    // The leader is the district's own kind; everyone else is the force's grunt, and there are more of them.
+    newEnemy(b, kinds[Math.floor(rng() * kinds.length)], rng);
+    for (let i = 1; i < count + force.extra; i++) newEnemy(b, force.grunt, rng);
+  } else for (let i = 0; i < count; i++) newEnemy(b, kinds[Math.floor(rng() * kinds.length)], rng);
   b.orders = defaultOrders(b);
   // The showcase seed (0b): the build's last draw, so it moves no other roll. Showcase rolls are a pure hash of it.
   b.showcaseSeed = Math.floor(rng() * 2 ** 32);
@@ -571,7 +579,7 @@ export function startRound(b, rng) {
   for (const kind of b.arriving.splice(0)) { const e = newEnemy(b, kind, rng); say('arrive', 'arrive', { kind: kindWord(e.kind), n: e.n }); }
   if ((b.type === 'holdExtract' || b.type === 'holdYard') && b.round >= b.nextPressure && b.extras < FIGHT.maxExtraEnemies) {
     b.extras += 1; b.nextPressure += CLOCKS.pressure.every;
-    const e = newEnemy(b, SITE_ENEMIES[b.site]?.[0] ?? 'hired', rng);
+    const e = newEnemy(b, reinforceKind(b), rng);
     say('arrive', 'pressure', { kind: kindWord(e.kind), n: e.n });
   }
   if (b.standby && !b.standbyOut && boardingStage(b) && outsideDown(b).length) {
@@ -654,10 +662,11 @@ export function playRound(b, rng) {
       if (!x.ok) say('overwatch', 'overwatchMiss', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: false, damage: 0, roll: rollOf(x) });
       else {
         let dmg = x.strong ? FIGHT.strongHit : FIGHT.hit;
-        if (e.absorb > 0) { e.absorb -= 1; dmg -= 1; }
+        const cracked = e.absorb > 0;
+        if (cracked) { e.absorb -= 1; dmg -= 1; }
         e.pips -= dmg;
-        if (e.pips <= 0) { e.out = true; defeated.push({ by: ow.id, enemy: e.n, how: 'overwatch' }); say('overwatch', 'overwatchOut', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, dropped: true, roll: rollOf(x) }); }
-        else say('overwatch', 'overwatchHit', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, roll: rollOf(x), left: e.pips });
+        if (e.pips <= 0) { e.out = true; defeated.push({ by: ow.id, enemy: e.n, how: 'overwatch' }); say('overwatch', 'overwatchOut', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, dropped: true, roll: rollOf(x), cracked }); }
+        else say('overwatch', dmg === 0 ? 'overwatchCrack' : 'overwatchHit', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, roll: rollOf(x), left: e.pips, cracked });
       }
     }
   }
@@ -672,10 +681,11 @@ export function playRound(b, rng) {
         const x = roll(sv(r, 'combat'), b.diff + FIGHT.attackStep + FIGHT.cover[e.cover], r.strong);
         if (!x.ok) { say('attack', 'attackMiss', { who: r.handle, enemy: E(e.n) }, { ...named, enemy: e.n, success: false, damage: 0, roll: rollOf(x) }); break; }
         let dmg = x.strong ? FIGHT.strongHit : FIGHT.hit;
-        if (e.absorb > 0 && !r.ap) { e.absorb -= 1; dmg -= 1; }
+        const cracked = e.absorb > 0 && !r.ap; // the plate took a hit: a plain shot only cracks it (damage 0), a strong one cracks it and drops a pip
+        if (cracked) { e.absorb -= 1; dmg -= 1; }
         e.pips -= dmg;
-        if (e.pips <= 0) { e.out = true; defeated.push({ by: r.id, enemy: e.n, how: 'attack' }); say('attack', 'attackOut', { who: r.handle, enemy: E(e.n) }, { ...named, enemy: e.n, success: true, damage: dmg, dropped: true, roll: rollOf(x), strong: x.strong }); }
-        else say('attack', 'attackHit', { who: r.handle, enemy: E(e.n) }, { ...named, enemy: e.n, success: true, damage: dmg, roll: rollOf(x), left: e.pips });
+        if (e.pips <= 0) { e.out = true; defeated.push({ by: r.id, enemy: e.n, how: 'attack' }); say('attack', 'attackOut', { who: r.handle, enemy: E(e.n) }, { ...named, enemy: e.n, success: true, damage: dmg, dropped: true, roll: rollOf(x), strong: x.strong, cracked }); }
+        else say('attack', dmg === 0 ? 'attackCrack' : 'attackHit', { who: r.handle, enemy: E(e.n) }, { ...named, enemy: e.n, success: true, damage: dmg, roll: rollOf(x), left: e.pips, cracked });
         break;
       }
       case 'jam': {
@@ -774,7 +784,7 @@ export function playRound(b, rng) {
   for (const c of carries) if (c.by.aboard) { c.t.aboard = true; say('van', 'carriedInVan', { target: c.t.handle }, { target: c.t.id }); }
   if (b.type === 'holdHack') {
     b.clock -= CLOCKS.alarm.tickPerRound + alarms;
-    if (b.clock <= 0) { if (b.extras < FIGHT.maxExtraEnemies) { b.extras += 1; b.arriving.push(SITE_ENEMIES[b.site]?.[0] ?? 'hired'); say('clock', 'alarmClock'); } b.clock = CLOCKS.alarm.resetTo; }
+    if (b.clock <= 0) { if (b.extras < FIGHT.maxExtraEnemies) { b.extras += 1; b.arriving.push(reinforceKind(b)); say('clock', 'alarmClock'); } b.clock = CLOCKS.alarm.resetTo; }
   } else {
     b.nextPressure -= alarms * CLOCKS.pressure.alarmBringsForward;
     if (b.type === 'holdExtract' && b.stage === 0 && b.round >= b.goal.vanRound) { b.stage = 1; b.goal.vanLeaves = b.round + FIGHT.vanWait; say('van', 'vanIn', { leaves: b.goal.vanLeaves }); }

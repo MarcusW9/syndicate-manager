@@ -98,6 +98,7 @@
  * @property {string} id
  * @property {string} name
  * @property {string} district         Key from config/names.js
+ * @property {'police'|'corporate'} [opposition]  Optional (engine-2 fights only): who stands against the crew; fills the fight with that force's grunts (data/fights.js OPPOSITION). Absent = the district's own enemies.
  * @property {1|2|3|4|5} threat
  * @property {number} pay
  * @property {number} days             Days the crew is away

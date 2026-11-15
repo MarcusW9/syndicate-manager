@@ -321,6 +321,7 @@ const BASE_MISSIONS = [
     id: 'warehouse',
     name: 'Warehouse Lift',
     district: 'docks',
+    opposition: 'police', // prototype 2026-11-15: standard-force grunts in numbers (data/fights.js OPPOSITION); placeholder, not canon
     threat: 4,
     pay: 6000,
     days: 2,
