@@ -83,11 +83,14 @@ const shuffle = (a, rng) => { for (let i = a.length - 1; i > 0; i--) { const j =
 /** Who the clocks send: the job's force's grunt when it has an opposition, else the district's first kind. */
 const reinforceKind = (b) => OPPOSITION[b.opposition]?.grunt ?? SITE_ENEMIES[b.site]?.[0] ?? 'hired';
 
+/** Does this kind break and run when too few of its sort are left? (hired guns and the standard force; `hiredTotal` counts them all, the name kept for saved fights.) */
+export const breaks = (kind) => ENEMIES[kind]?.fleeBelow != null;
+
 function newEnemy(b, kind, rng) {
   const def = ENEMIES[kind];
   const e = { n: b.enemies.length + 1, kind, pips: def.pips, max: def.pips, absorb: def.absorb ?? 0, cover: def.cover, out: false, fled: false, deck: shuffle([...def.deck], rng), di: 0 };
   b.enemies.push(e);
-  if (kind === 'hired') b.hiredTotal += 1;
+  if (breaks(kind)) b.hiredTotal += 1;
   return e;
 }
 
@@ -757,8 +760,8 @@ export function playRound(b, rng) {
   }
   for (const r of b.runners) if (r.leaving && !r.dead && !r.down) { r.withdrawn = true; withdrawn.push(r.id); say('withdraw', 'withdrew', { who: r.handle }, { actor: r.id }); }
   for (const r of b.runners) { r.leaving = false; r.ordered = false; }
-  // The hired break and run when too few are left (side-wide).
-  const hiredUp = enemiesUp(b).filter((e) => e.kind === 'hired');
+  // The hired and the standard force break and run when too few of them are left (side-wide, one threshold: hired's).
+  const hiredUp = enemiesUp(b).filter((e) => breaks(e.kind));
   if (hiredUp.length && hiredUp.length / b.hiredTotal < ENEMIES.hired.fleeBelow) { for (const e of hiredUp) { e.fled = true; fled.push(e.n); } say('flee', 'enemyFled'); }
 
   // The medic's aura: while a medic stands in the fight, the most hurt standing runner regains a pip a

@@ -1056,3 +1056,16 @@ test('armour crack: a plain shot on a plated grunt is tagged cracked and takes n
   assert.notEqual(seen[1].key, 'attackCrack');
   assert.ok(c.enemies[0].out);
 });
+
+test('standard force breaks like the hired: too few left and the rest run; a kind without fleeBelow never does', () => {
+  assert.ok(F.breaks('hired') && F.breaks('police') && F.breaks('secforce'));
+  assert.ok(!F.breaks('corp') && !F.breaks('drone') && !F.breaks('enforcer'));
+  const b = F.buildFight({ type: 'holdYard', diff: 12, threat: 5, site: 'docks', opposition: 'police', crew: crewOf().slice(0, 4), approach: 'loud' }, makeRng(2));
+  const total = b.enemies.filter((e) => F.breaks(e.kind)).length;
+  assert.equal(b.hiredTotal, total, 'every body that can break is counted');
+  const up = b.enemies.filter((e) => F.breaks(e.kind));
+  for (const e of up.slice(0, up.length - 1)) e.out = true; // one left of the breaking sort: well under 40%
+  b.orders = F.defaultOrders(b);
+  const r = F.playRound(b, always(0.5));
+  assert.ok(up.at(-1).fled || up.at(-1).out, 'the last one ran (or fell)');
+});

@@ -106,7 +106,7 @@ export function startFight(state, am, tpl, inc, id, zone, diff, able, { ambush =
     watched: am.callIn !== 'never' && !(am.away && !am.away.command),
   }, rng);
   // A passed roll on a loud run's first guard (mission.js): that guard is put down quietly, and the rest get no shot in round 1.
-  if (ambush) { b.ambush = true; if (b.enemies.length > 1 && b.enemies.at(-1).kind === 'hired') b.hiredTotal -= 1; if (b.enemies.length > 1) b.enemies.pop(); }
+  if (ambush) { b.ambush = true; if (b.enemies.length > 1 && Fight.breaks(b.enemies.at(-1).kind)) b.hiredTotal -= 1; if (b.enemies.length > 1) b.enemies.pop(); }
   b.auto = false;
   b.startLines = [];
   b.spots = fightStage(tpl.district, am, zone, able.length);

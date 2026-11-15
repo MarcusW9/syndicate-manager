@@ -17,4 +17,6 @@
 | data_scrub | new | steady | 3.0 | 99% | 2% | 0% | 0% | 4.0 |
 | data_scrub | new | committed | 3.0 | 99% | 2% | 0% | 0% | 4.0 |
 
+Rerun after the flee fix (grunts break like the hired): win, down, dead and lost are unchanged on every row; rounds on Warehouse Lift (new) fall by 0.1 to 0.2 (5.3, 5.4, 5.5 for cautious, steady, committed). The table above is the pre-fix run.
+
 Reads: deaths are 0 on cautious and steady (the death rule holds); the only deaths are committed (2%). 'Someone lost' on cautious/steady is a runner left behind at the van, not a death. Fight length barely moves because the work clock and the van end these fights, not the body count. Standard force is a damage sponge (2 plain hits each: crack, then drop), so the crew fires more shots per fight and downs rise; the win rate on Warehouse Lift steady drops 97% to 89%.

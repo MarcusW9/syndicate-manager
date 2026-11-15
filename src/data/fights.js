@@ -63,6 +63,7 @@ export const ENEMIES = {
   // Standard force (prototype, 2026-11-15): the rank and file of a job's `opposition`. One pip behind one plate of armour,
   // so a plain hit only cracks the plate and a second one drops them; they come in numbers. The two kinds are the same body in
   // a different uniform (names and looks are placeholders, not canon).
+  // fleeBelow marks a kind that breaks; the threshold itself is hired's (core/fight.js `breaks`).
   police: { pips: 1, cover: 'half', deck: ['aim', 'aim', 'alarm'], absorb: 1, fleeBelow: 0.4 },
   secforce: { pips: 1, cover: 'half', deck: ['aim', 'aim', 'backup'], absorb: 1, fleeBelow: 0.4 },
 };
