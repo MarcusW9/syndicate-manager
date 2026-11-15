@@ -18,7 +18,7 @@ import { fightSnapshot, fightView, fightAnswer, expiryAnswer } from '../src/core
 import { FIGHT, FIGHT_JOBS } from '../src/data/fights.js';
 import { feedItems } from '../src/core/feed.js';
 import { importSave } from '../src/save/save.js';
-import { summariseRun } from '../src/core/report.js';
+import { summariseRun, reportEvent } from '../src/core/report.js';
 import { FIGHT_TEXT } from '../src/data/fightText.js';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
@@ -577,4 +577,31 @@ test('the run starts a fight FIGHT.ease below the incident difficulty, and the p
   const cov = coverage(tpl, createNewGame({ seed: 3, startCrew: 'fresh' }).crew.slice(0, tpl.crewSize), 'loud', { threat: tpl.threat });
   const row = cov.rows.find((r) => r.fight);
   assert.equal(cov.fight2.diff, row.diff - FIGHT.ease, 'the plan screen reads the eased fight');
+});
+
+// --- what a report keeps of a fight (2026-11-15) -----------------------------------------------------------
+
+test('a report keeps a fight lean: the lines the log draws, no staging, beats or pips', () => {
+  let checked = 0;
+  for (const id of FIVE) for (let seed = 1; seed <= 6 && checked < 12; seed++) {
+    let s = atFight(seed, id, 'never');
+    s = until(s, (x) => (x.activeMission.events ?? []).some((e) => e.kind === 'battle' && e.phase === 'round' && e.lines?.length));
+    for (const e of (s.activeMission.events ?? []).filter((x) => x.kind === 'battle')) {
+      const kept = reportEvent(e);
+      for (const k of ['stage', 'beats', 'guards', 'runners']) assert.equal(kept[k], undefined, `${id}: the report drops ${k}`);
+      for (const k of ['phase', 'text', 'round', 'report', 'cause', 'hurt']) assert.deepEqual(kept[k], e[k], `${id}: the report keeps ${k}`);
+      assert.equal(kept.lines?.length, e.lines?.length, `${id}: every line kept`);
+      (e.lines ?? []).forEach((l, i) => {
+        const k = kept.lines[i];
+        assert.equal(k.text, l.text); assert.equal(k.kind, l.kind);
+        assert.equal(k.success === false, l.success === false, 'the tone reads the same'); assert.equal(!!k.damage, !!l.damage);
+        for (const f of ['die', 'need', 'value']) assert.equal(k[f], l[f], `the roll's ${f} kept`);
+        for (const f of ['key', 'slots', 'actor', 'guard', 'targetId']) assert.equal(k[f], undefined, `${f} left out`);
+      });
+      checked++;
+    }
+  }
+  assert.ok(checked >= 6, `checked ${checked} fight events`);
+  const beat = { kind: 'beat', text: 'Fog off the water.', first: true };
+  assert.equal(reportEvent(beat), beat, 'everything else is kept as it is');
 });

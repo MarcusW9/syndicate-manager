@@ -85,7 +85,7 @@ for (const job of JOBS) {
       if (!real) continue;
       seen.push(real);
       const roster = createNewGame({ seed, startCrew }).crew;
-      const base = { type: real.type, diff: real.diff, threat: tpl.threat, site: real.site, approach: real.approach, risk: 'steady' };
+      const base = { type: real.type, diff: real.diff, threat: tpl.threat, site: real.site, approach: real.approach, risk: 'steady', opposition: tpl.opposition ?? null, job }; // as core/squad.js fights it: the job's force and recipe
       const first = roster.slice(0, tpl.crewSize);
       let best = null;
       for (const team of subsets(roster, Math.min(tpl.crewSize, roster.length))) {

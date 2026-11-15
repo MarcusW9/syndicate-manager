@@ -82,7 +82,7 @@ How battles work (both engines, every number, the death rule): `docs/BATTLES.md`
   - `gangs.js` (gangs' grudges, save v41: `addGrudge`, `jobGrudge` from a template's `against`, `fadeGrudges` on Sundays, `gangsOn`; data in `data/gangs.js`)
   - `raids.js` (raids on the halls, police v40 and gangs v41: `raider(raid)` says who's coming; `checkRaids` in the day tick warns and knocks, `raidThreat` less `defenceCut` (1 for every 3 defence pieces built, never below 1), `hallTurret` (a hall's auto turret for the fight: `battle.js` fires `b.turret` each round on its own), `payOffRaid`, `RAID_RESOLVER` for the day's call, `startRaidFight` puts the hold on screen as a job of its own, `raid:<district>` from `data/raids.js raidTemplate`, and `finish()` hands its end to `finishRaid`; the fight is the usual one, with `b.foe` naming the raiders and the hall's own map, `data/sites.js` HALLS by district, HALL as the fallback)
   - `state.js` (new game, `SAVE_VERSION`), `tongname.js` (our tong's name: `tongNameOf`, `setTongName`; display only, save v64)
-  - `report.js` (the report summary)
+  - `report.js` (the report summary; `reportEvent`: what a stored report keeps of each event, fights lean)
   - `feed.js` (a run's events as watch cards)
   - `upcoming.js` (Today's list).
   - `book.js` (C5, 2026-11-09): the Anchor's Book, a monthly slate of letter grades from public fame, form and age plus a lasting bias (never the hidden rating): `publishBook` is called at the end of `weeklyRivals`, `bookView` is what the UI reads; flavour only, no roll reads it. Audit with `node scripts/sim-book.mjs`.
@@ -143,7 +143,7 @@ How battles work (both engines, every number, the death rule): `docs/BATTLES.md`
 `data/sites.js`: plain sites, and districts drawn as parts (`PLOTS`: a plot with approaches, covers and targets; a target with `jobs` is that job's own place). `pickSite(district, jobId, templateId)` picks the parts from the job's id (stable, nothing stored) and `assemble()` makes them a site. The core reads a site only for fights: `core/fightspots.js` `fightSpots(site, zone)` puts both sides on spots behind the drawn cover (every district: `data/battle.js` `spotsIn`); `node scripts/preview-fightspots.mjs <district> <png>` draws them, `tests/fightspots.test.js` checks them. `ui/siteplan.js` draws it. `node scripts/preview-sites.mjs <district>` draws every combination; `tests/sites.test.js` checks each (geometry, routes clear of cover, a job's own target).
 
 ## Events and the record
-Everything that happens in a run is `record(am, event)` into `am.events`. `feed.js` turns events into watch cards; `report.js` and the report's full log (`ui/messages.js` `renderFullLog`) read the same events. A new kind of moment needs its event, a card in `feed.js` and a line in `renderFullLog`.
+Everything that happens in a run is `record(am, event)` into `am.events`. `feed.js` turns events into watch cards; `report.js` and the report's full log (`ui/messages.js` `renderFullLog`) read the same events, as the report stores them (`report.js reportEvent` drops a fight's staging and keeps its lines lean, so a field the log draws must be in its `LINE_KEEPS`). A new kind of moment needs its event, a card in `feed.js` and a line in `renderFullLog`.
 
 ## Adding things
 - **A call-in (pending kind):** `decisionChoices` and `ordersDecision` (`incidents.js`), `describePending` and `resolvePending` (`mission.js`), the title in `ui/jobscreen.js` (search `calling in`), a test that it has an exit.

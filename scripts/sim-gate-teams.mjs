@@ -28,7 +28,9 @@ globalThis.localStorage ??= { getItem: () => null, setItem: () => {}, removeItem
 const SEEDS = Number(process.argv[2] ?? 24);
 const FIGHTS = Number(process.argv[3] ?? 100);
 const DATE = process.argv[4] ?? new Date().toISOString().slice(0, 10);
-const JOB_DIFF = { data_scrub: 11, data_pull: 14, quiet_hours: 14, protection: 14, warehouse: 16 };
+const JOB_DIFF = { data_scrub: 11, data_pull: 14, quiet_hours: 14, protection: 14, warehouse: 16,
+  // the /add-job fight jobs (2026-11-15): their roll target (core/risk.js rollTarget), rounded
+  dead_air: 16, still_connected: 16, not_for_sale: 16, one_more_song: 14 };
 // Declared before the run (owner's targets, drafts/OWNER-ITEMS-battle.md): for the best team at the gate, someone
 // left behind in at most 15% of steady extractions, and a death in about 1 in 25 committed fights (at most 8%).
 const TARGET = { left: 0.15, dead: 0.08 };
@@ -111,7 +113,7 @@ const verdict = [];
 for (const job of Object.keys(FIGHT_JOBS)) {
   const tpl = templateById(job);
   const gate = JOB_GATES[tpl.threat];
-  const base = { type: FIGHT_JOBS[job], diff: Fight.fightDiff(JOB_DIFF[job]), threat: tpl.threat, site: tpl.district, approach: 'stealth' };
+  const base = { type: FIGHT_JOBS[job], diff: Fight.fightDiff(JOB_DIFF[job]), threat: tpl.threat, site: tpl.district, approach: 'stealth', opposition: tpl.opposition ?? null, job }; // as core/squad.js fights it: the job's force and recipe
   const teams = [];
   for (const { seed, snaps } of rosters) {
     const roster = (snaps[gate]?.crew ?? []).filter((o) => !o.injury || o.injury.severity === 'light');

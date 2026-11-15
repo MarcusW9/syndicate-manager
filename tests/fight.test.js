@@ -10,7 +10,7 @@ import { makeRng } from '../src/core/rng.js';
 import * as F from '../src/core/fight.js';
 import { layoutFight, stageSpots } from '../src/core/fightmap.js';
 import { pickSite } from '../src/data/sites.js';
-import { FIGHT, ENEMIES, ENEMY_HIT, SITE_ENEMIES, COUNT_BY_THREAT, FIGHT_JOBS, FIGHTS } from '../src/data/fights.js';
+import { FIGHT, ENEMIES, ENEMY_HIT, SITE_ENEMIES, COUNT_BY_THREAT, FIGHT_JOBS, FIGHTS, OPPOSITION } from '../src/data/fights.js';
 import { DILEMMAS } from '../src/data/dilemmas.js';
 import { FIGHT_TEXT } from '../src/data/fightText.js';
 import { lineText } from '../src/core/fighttext.js';
@@ -107,8 +107,9 @@ test('holdExtract defaults are stage-aware: hold, then board', () => {
   for (const r of b.runners.filter((x) => x.id !== prot.id)) { assert.deepEqual(hold[r.id], ['attack', 'hold']); assert.deepEqual(board[r.id], ['push', 'hold']); }
 });
 
-test('the five jobs name a fight type and exist, with the type and site the spec set', () => {
-  assert.deepEqual(Object.keys(FIGHT_JOBS).sort(), ['data_pull', 'data_scrub', 'protection', 'quiet_hours', 'warehouse']);
+test('the fight jobs name a fight type and exist, with the type and site the spec set', () => {
+  // The five of spec section 30, then the jobs added with a /* FIGHT */ block (2026-11-15): the list grows on purpose.
+  assert.deepEqual(Object.keys(FIGHT_JOBS).sort(), ['data_pull', 'data_scrub', 'dead_air', 'not_for_sale', 'one_more_song', 'protection', 'quiet_hours', 'still_connected', 'warehouse']);
   for (const [id, type] of Object.entries(FIGHT_JOBS)) {
     const t = templateById(id);
     assert.ok(t, `${id} exists`);
@@ -1028,7 +1029,7 @@ test('holdYard: no van, ever; won only when every enemy is down or fled and none
 
 // --- standard force and the armour crack (prototype, 2026-11-15) ----------------------------------------
 
-test('opposition: a job without one builds as before; one fills the fight with that force\'s grunts, one more body, a district leader first', () => {
+test('opposition: a job without one builds as before; one fills the fight with that force\'s grunts, a district leader first', () => {
   const crew = crewOf().slice(0, 4);
   const args = { type: 'holdYard', diff: 12, threat: 4, site: 'docks', crew, approach: 'loud' };
   const plain = F.buildFight(args, makeRng(7));
@@ -1036,7 +1037,7 @@ test('opposition: a job without one builds as before; one fills the fight with t
   assert.ok(plain.enemies.every((e) => SITE_ENEMIES.docks.includes(e.kind)));
   assert.deepEqual(F.buildFight({ ...args, opposition: 'nope' }, makeRng(7)).enemies.map((e) => e.kind), plain.enemies.map((e) => e.kind));
   const police = F.buildFight({ ...args, opposition: 'police' }, makeRng(7));
-  assert.equal(police.enemies.length, COUNT_BY_THREAT[4] + 1);
+  assert.equal(police.enemies.length, COUNT_BY_THREAT[4] + OPPOSITION.police.extra);
   assert.ok(SITE_ENEMIES.docks.includes(police.enemies[0].kind));
   assert.ok(police.enemies.slice(1).every((e) => e.kind === 'police' && e.pips === 1 && e.absorb === 1));
   assert.equal(ENEMY_HIT.police, 1);
