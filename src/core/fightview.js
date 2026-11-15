@@ -91,7 +91,7 @@ export function roundView(b) {
   const pv = b.drawn ? F.previewRound(b) : null;
   const exp = pv?.exposure ?? [];
   const enemies = b.enemies.map((e) => ({
-    n: e.n, kind: e.kind, name: enemyName(e.kind, e.n), pips: Math.max(0, e.pips), max: e.max, out: !!(e.out || e.fled), fled: !!e.fled, cover: e.cover,
+    n: e.n, kind: e.kind, name: enemyName(e.kind, e.n), pips: Math.max(0, e.pips), max: e.max, out: !!(e.out || e.fled), fled: !!e.fled, cover: e.cover, approaching: !!e.approaching,
     threats: (pv?.threats ?? []).filter((t) => t.enemy === e.n && !t.cancelled).map((t) => threatOf(b, t, exp)),
   }));
   const runners = b.runners.map((r) => {

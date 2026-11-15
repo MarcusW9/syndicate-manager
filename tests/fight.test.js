@@ -31,7 +31,7 @@ function fixture(type, who, { set = {}, risk = 'steady', threat = 3, site = type
   const crew = crewOf().filter((o) => who.includes(o.id)).sort((a, b) => who.indexOf(a.id) - who.indexOf(b.id));
   for (const o of crew) Object.assign(o.stats, set[o.id] ?? {});
   const b = F.buildFight({ type, diff: 14, threat, site, crew, approach: 'loud', risk, ...opts }, makeRng(3));
-  b.enemies = []; b.hiredTotal = 0;
+  b.enemies = []; b.hiredTotal = {};
   return b;
 }
 const R = (b, id) => b.runners.find((r) => r.id === id);
@@ -582,7 +582,7 @@ test('radio calls and the clocks escalate: backup arrives next round; the alarm 
 test('the hired break and run when too few are left', () => {
   const b = fixture('holdHack', [ids.static, ids.jax], { site: 'docks' });
   b.enemies = [foe(1, 'hired'), foe(2, 'hired', { out: true }), foe(3, 'hired', { out: true })];
-  b.hiredTotal = 3;
+  b.hiredTotal = { 0: 3 };
   draw(b, []);
   F.setOrder(b, 'jax', { duty: 'hold', target: null, fallback: null });
   const res = F.playRound(b, always(0.5));
@@ -1062,7 +1062,7 @@ test('standard force breaks like the hired: too few left and the rest run; a kin
   assert.ok(!F.breaks('corp') && !F.breaks('drone') && !F.breaks('enforcer'));
   const b = F.buildFight({ type: 'holdYard', diff: 12, threat: 5, site: 'docks', opposition: 'police', crew: crewOf().slice(0, 4), approach: 'loud' }, makeRng(2));
   const total = b.enemies.filter((e) => F.breaks(e.kind)).length;
-  assert.equal(b.hiredTotal, total, 'every body that can break is counted');
+  assert.deepEqual(b.hiredTotal, { 0: total }, 'every body that can break is counted, all in the starting group');
   const up = b.enemies.filter((e) => F.breaks(e.kind));
   for (const e of up.slice(0, up.length - 1)) e.out = true; // one left of the breaking sort: well under 40%
   b.orders = F.defaultOrders(b);

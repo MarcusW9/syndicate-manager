@@ -91,6 +91,7 @@ function enemyCard(esc, e) {
   const threats = e.threats.length ? `<ul class="fs-threats">${e.threats.map((t) => `<li class="fs-threat fs-threat--${t.kind}">${esc(t.text)}</li>`).join('')}</ul>` : '';
   return `<li class="fs-enemy ${e.out ? 'is-out' : ''}">
     <span class="fs-enemy__top"><strong>${esc(e.name)}</strong>${e.out ? `<small>${e.fled ? 'ran' : 'out'}</small>` : pipBar(esc, e.pips, e.max, pipsLabel(e.pips, e.max))}</span>
+    ${!e.out && e.approaching ? `<small class="fs-coming">${esc(lineText('view.approaching'))}</small>` : ''}
     ${e.out ? '' : threats}
   </li>`;
 }

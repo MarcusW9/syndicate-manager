@@ -130,7 +130,7 @@ test('the cover on the map is the rules\' cover, every unit, every round', () =>
           assert.equal(u.mark ?? b.spots.guards[u.spot].cover, e.cover, `${id} ${seed}: enemy ${e.n} in ${e.cover}`);
           assert.ok(!onSpot.guards.has(u.spot), 'one enemy a spot'); onSpot.guards.add(u.spot);
         }
-        assert.equal(u.stance, e.out ? 'down' : 'up');
+        assert.equal(u.stance, e.out ? 'down' : e.approaching ? 'approaching' : 'up'); // slice 3a: an arrival stands its first round approaching
         checked += 1;
       }
     }

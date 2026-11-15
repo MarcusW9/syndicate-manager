@@ -38,17 +38,17 @@ Both use the game's one roll, **d20 + stat ≥ 10 + difficulty**. A fight's diff
 The Heights send corp and drones; the Docks send hired, hired, enforcers (in rotation). The number at the start depends on the job's threat (1–5): 2, 2, 3, 3, 4. Each enemy shuffles its own deck and draws one card a round.
 
 ### A round, in order
-1. **Start** (`startRound`): reinforcements that were called arrive; on hold-and-extract, the pressure clock adds another enemy at round 3 and then every 2 rounds (alarms bring the next one a round earlier); a standby goes out to help with anyone down at the van; each enemy **draws and shows its threat** (the telegraph). A watched fight draws this ahead of time so you see what is coming before you give orders.
+1. **Start** (`startRound`): reinforcements that were called arrive; on hold-and-extract, the pressure clock adds another enemy at round 3 and then every 2 rounds (alarms bring the next one a round earlier); a job's recipe sends its waves on their round (`data/fights.js FIGHT_RECIPES`, their own budget, none written yet). **Everyone who arrives spends that round approaching** (slice 3-i): they can be shot at their cover, but they take no aimed shot and no flank that round (the card is spent), and they cannot run; a standby goes out to help with anyone down at the van; each enemy **draws and shows its threat** (the telegraph). A watched fight draws this ahead of time so you see what is coming before you give orders.
 2. **Threats shown** (`telegraph`):
    - **aim**: a shot at a runner. It goes at the protected runner 75% of the time (if there is one), else at the lowest-pips runner half the time, else anyone. Its chance is shown.
    - **flank**: a shot that, if not stopped, puts a runner in the open for the rest of the fight.
-   - **alarm**: a radio call that speeds the clock. **backup**: a radio call that sends another enemy (at most 2 extras in a fight). Both are stopped by a **jam** or by killing their source.
+   - **alarm**: a radio call that speeds the clock. **backup**: a radio call that sends another enemy (at most 2 extras in a fight, `b.maxExtra`; a recipe may set its own). Both are stopped by a **jam** or by killing their source.
 3. **Orders become actions** (`resolveOrders`): see below.
 4. **The van** (hold-and-extract, last round of its wait): the van's call-in or the risk level decides whether to hold it.
 5. **Overwatch** shoots first, one attack a round (one at the van).
 6. **Each runner acts** in the fixed order: protectors first, then (while boarding) boarders, then the rest by seat.
 7. **Threats resolve** against everyone's cover, hunkering and armour.
-8. The hired may break; the **medic's aura** heals; **bleeding** is rolled; progress, the van and the clocks move on; **end checks** run.
+8. The hired and the standard force may break, **each group on its own** (the starting enemies, each round's batch of arrivals, each pressure arrival, each wave): a group with under 40% of its breaking kinds still up runs, except anyone in their approach round; a lone arrival never runs; the **medic's aura** heals; **bleeding** is rolled; progress, the van and the clocks move on; **end checks** run.
 
 ### The numbers
 | What | Rule |

@@ -100,13 +100,13 @@ export function startFight(state, am, tpl, inc, id, zone, diff, able, { ambush =
   const ow = overwatchOf(overwatchOp(state, am), am.overwatch, zone);
   const rng = nextRng(state);
   const b = Fight.buildFight({
-    type, diff: Fight.fightDiff(diff), threat: am.threat ?? tpl.threat, site: tpl.district, opposition: tpl.opposition ?? null, crew: able, approach: am.approach,
+    type, diff: Fight.fightDiff(diff), threat: am.threat ?? tpl.threat, site: tpl.district, opposition: tpl.opposition ?? null, job: tpl.id, crew: able, approach: am.approach,
     overwatch: ow, wheels: wheels ? { id: wheels.id, handle: wheels.handle, value: effectiveStat(wheels, 'piloting', { approach: am.approach }).value } : null,
     standbyOp: sb, risk: ['cautious', 'steady', 'committed'].includes(am.orders) ? am.orders : 'steady',
     watched: am.callIn !== 'never' && !(am.away && !am.away.command),
   }, rng);
   // A passed roll on a loud run's first guard (mission.js): that guard is put down quietly, and the rest get no shot in round 1.
-  if (ambush) { b.ambush = true; if (b.enemies.length > 1 && Fight.breaks(b.enemies.at(-1).kind)) b.hiredTotal -= 1; if (b.enemies.length > 1) b.enemies.pop(); }
+  if (ambush) { b.ambush = true; if (b.enemies.length > 1 && Fight.breaks(b.enemies.at(-1).kind)) b.hiredTotal[0] -= 1; if (b.enemies.length > 1) b.enemies.pop(); }
   b.auto = false;
   b.startLines = [];
   b.spots = fightStage(tpl.district, am, zone, able.length);

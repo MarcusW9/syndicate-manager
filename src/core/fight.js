@@ -12,7 +12,9 @@
 // A fight (am.battle with engine: 2):
 //   { engine: 2, type, stage, round, diff, deadline, drawn, end,
 //     goal: { work, protect: opId|null, vanRound, vanLeaves }, clock, nextPressure, extras, arriving: [kind],
-//     enemies: [{ n, kind, pips, max, absorb, cover, out, fled, deck, di }],
+//     maxExtra (the reactive reinforcements' cap), recipe: { waves: [{ round, kind?, count }] }|null (waves still to come),
+//     hiredTotal: { [group]: n } (bodies that can break, per group), nextGroup,
+//     enemies: [{ n, kind, pips, max, absorb, cover, out, fled, deck, di, approaching, group }],
 //     runners: [{ id, handle, role, seat, pips, max, absorb, ap, strong, jammer, healer, medic, cover,
 //                 down, withdrawn, dead, aboard, stable, fightOn, downRound, left, stats }],
 //     threats: [{ id, kind, enemy, target, shown, hit, shieldedBy, cancelled }]  (this round's draw),
@@ -22,7 +24,7 @@
 // Ids: a runner's id is a string (the operative's), an enemy's n a number. "Lowest id" in a tie is the
 // lowest seat (crew order).
 
-import { FIGHT, ENEMIES, ENEMY_HIT, SITE_ENEMIES, COUNT_BY_THREAT, OPPOSITION, CLOCKS, FIGHTS, THREATS } from '../data/fights.js';
+import { FIGHT, ENEMIES, ENEMY_HIT, SITE_ENEMIES, COUNT_BY_THREAT, OPPOSITION, CLOCKS, FIGHTS, THREATS, FIGHT_RECIPES } from '../data/fights.js';
 import { DILEMMAS } from '../data/dilemmas.js';
 import { lineText, kindWord, enemyName, nameList } from './fighttext.js';
 import { effectiveStat } from './crew.js';
@@ -83,16 +85,23 @@ const shuffle = (a, rng) => { for (let i = a.length - 1; i > 0; i--) { const j =
 /** Who the clocks send: the job's force's grunt when it has an opposition, else the district's first kind. */
 const reinforceKind = (b) => OPPOSITION[b.opposition]?.grunt ?? SITE_ENEMIES[b.site]?.[0] ?? 'hired';
 
-/** Does this kind break and run when too few of its sort are left? (hired guns and the standard force; `hiredTotal` counts them all, the name kept for saved fights.) */
+/** Does this kind break and run when too few of its sort are left? (hired guns and the standard force; `hiredTotal` counts them per group, the name kept for saved fights.) */
 export const breaks = (kind) => ENEMIES[kind]?.fleeBelow != null;
 
-function newEnemy(b, kind, rng) {
+/**
+ * A new enemy. arriving: it came in during the fight (a backup call, the alarm or pressure clock, a wave) and spends
+ * its first round approaching (3a): it can be attacked at its cover, but its aim and flank cards are spent unplayed,
+ * and it cannot flee that round. group: who it breaks with (3c): 0 for the starting enemies, a new number for each
+ * round's batch of arrivals, each pressure arrival and each wave (b.nextGroup).
+ */
+function newEnemy(b, kind, rng, { arriving = false, group = 0 } = {}) {
   const def = ENEMIES[kind];
-  const e = { n: b.enemies.length + 1, kind, pips: def.pips, max: def.pips, absorb: def.absorb ?? 0, cover: def.cover, out: false, fled: false, deck: shuffle([...def.deck], rng), di: 0 };
+  const e = { n: b.enemies.length + 1, kind, pips: def.pips, max: def.pips, absorb: def.absorb ?? 0, cover: def.cover, out: false, fled: false, deck: shuffle([...def.deck], rng), di: 0, approaching: arriving, group };
   b.enemies.push(e);
-  if (breaks(kind)) b.hiredTotal += 1;
+  if (breaks(kind)) b.hiredTotal[group] = (b.hiredTotal[group] ?? 0) + 1;
   return e;
 }
+const newGroup = (b) => { b.nextGroup = (b.nextGroup ?? 1) + 1; return b.nextGroup - 1; };
 
 /**
  * Build a fight. type: 'holdHack' | 'holdExtract' | 'holdYard'. diff: the fight's base difficulty (the job's typical
@@ -102,17 +111,21 @@ function newEnemy(b, kind, rng) {
  * the van. rng: the run's stream (the enemies' decks are shuffled from it). Orders start as the crew's
  * defaults, visible and editable.
  */
-export function buildFight({ type, diff, threat = 3, site = 'docks', opposition = null, crew, approach, overwatch = null, wheels = null, standbyOp = null, risk = 'steady', watched = false }, rng) {
+export function buildFight({ type, diff, threat = 3, site = 'docks', opposition = null, job = null, crew, approach, overwatch = null, wheels = null, standbyOp = null, risk = 'steady', watched = false }, rng) {
   const def = FIGHTS[type];
   const b = {
     engine: 2, type, stage: 0, round: 0, diff, deadline: type === 'holdHack' ? FIGHT.deadline.holdHack : null, drawn: false, end: null,
     goal: { work: 0, protect: null, vanRound: FIGHT.vanRound, vanLeaves: null },
-    clock: CLOCKS.alarm.startsAt, nextPressure: CLOCKS.pressure.firstRound, extras: 0, arriving: [], hiredTotal: 0,
+    clock: CLOCKS.alarm.startsAt, nextPressure: CLOCKS.pressure.firstRound, extras: 0, arriving: [], hiredTotal: {}, nextGroup: 1,
     enemies: [], runners: crew.map((op, i) => runnerOf(op, approach, i)), threats: [],
     orders: {}, risk: { level: risk }, vanHold: null, enemyReinforce: def.enemyReinforce, friendlyReinforce: def.friendlyReinforce,
     overwatch: overwatch ? { ...overwatch, vanShots: 0 } : null, wheels, standby: null, standbyOut: false, vanUsed: false,
     heat: 0, pipsLost: 0, left: [], dilemmasFired: {}, watched, site, opposition: OPPOSITION[opposition] ? opposition : null,
   };
+  // 3d: the job's recipe (data/fights.js FIGHT_RECIPES): its authored waves (their own budget) and the cap on reactive reinforcements.
+  const recipe = FIGHT_RECIPES[job] ?? null;
+  b.maxExtra = recipe?.maxExtraEnemies ?? def.maxExtraEnemies ?? FIGHT.maxExtraEnemies;
+  b.recipe = recipe?.waves?.length ? { waves: recipe.waves.map((w) => ({ ...w })) } : null;
   if (standbyOp) b.standby = runnerOf(standbyOp, approach, b.runners.length);
   if (type === 'holdHack') {
     const tech = [...b.runners].sort((x, y) => (y.role === 'tech') - (x.role === 'tech') || sv(y, 'tech') - sv(x, 'tech') || bySeat(x, y))[0];
@@ -231,7 +244,7 @@ function draw(b, e, rng) {
   for (let tries = 0; tries < 8; tries++) {
     if (e.di >= e.deck.length) { shuffle(e.deck, rng); e.di = 0; }
     const kind = e.deck[e.di++];
-    if (kind === 'backup' && (!b.enemyReinforce || b.extras >= FIGHT.maxExtraEnemies)) continue; // nothing left to send
+    if (kind === 'backup' && (!b.enemyReinforce || b.extras >= b.maxExtra)) continue; // nothing left to send
     return kind;
   }
   return 'aim';
@@ -245,6 +258,10 @@ export function telegraph(b, rng) {
   b.threats = [];
   for (const e of enemiesUp(b)) {
     const kind = draw(b, e, rng);
+    // 3a: an enemy in its approach round draws as normal (its deck moves on), but a drawn aim or flank is spent unplayed:
+    // no threat, and no target roll either (the target roll is never drawn for an approaching enemy, whatever the card).
+    // Radio cards (backup, alarm) are played as normal.
+    if (e.approaching && THREATS[kind].target === 'runner') continue;
     let target = null;
     if (THREATS[kind].target === 'runner') {
       const up = standing(b);
@@ -281,7 +298,8 @@ function enemyOrder(b, list, priority) {
     return priority.map((p) => (p === 'protected' ? (t && b.goal.protect && t.target === b.goal.protect ? 0 : 1)
       : p === 'radio' ? (t && RADIO(t) ? 0 : 1)
         : p === 'low' ? (t && lowest && t.target === lowest.id ? 0 : 1)
-          : p === 'exposed' ? -shotValue(t) : 1));
+          : p === 'exposed' ? -shotValue(t)
+            : p === 'approaching' ? (e.approaching ? 0 : 1) : 1));
   };
   return [...list].sort((x, y) => {
     const kx = key(x); const ky = key(y);
@@ -579,12 +597,24 @@ export function startRound(b, rng) {
   const say = (kind, key, slots = {}, extra = {}) => lines.push({ kind, key, slots, ...extra, text: lineText(key, slots) });
   b.round += 1;
   for (const r of b.runners) if (r.stayPips != null && r.pips > riskThreshold(b, r)) r.stayPips = null; // healed past their point: asked afresh next time
-  for (const kind of b.arriving.splice(0)) { const e = newEnemy(b, kind, rng); say('arrive', 'arrive', { kind: kindWord(e.kind), n: e.n }); }
-  if ((b.type === 'holdExtract' || b.type === 'holdYard') && b.round >= b.nextPressure && b.extras < FIGHT.maxExtraEnemies) {
+  // Arrivals come in approaching (3a); this round's batch of called-in arrivals is one group, a pressure arrival another, each wave another (3c).
+  const batch = b.arriving.splice(0);
+  if (batch.length) { const group = newGroup(b); for (const kind of batch) { const e = newEnemy(b, kind, rng, { arriving: true, group }); say('arrive', 'arrive', { kind: kindWord(e.kind), n: e.n }); } }
+  if ((b.type === 'holdExtract' || b.type === 'holdYard') && b.round >= b.nextPressure && b.extras < b.maxExtra) {
     b.extras += 1; b.nextPressure += CLOCKS.pressure.every;
-    const e = newEnemy(b, reinforceKind(b), rng);
+    const e = newEnemy(b, reinforceKind(b), rng, { arriving: true, group: newGroup(b) });
     say('arrive', 'pressure', { kind: kindWord(e.kind), n: e.n });
   }
+  // 3d: the recipe's waves due this round (their own budget: they never count towards b.extras). A wave with no kind sends who the clocks send.
+  if (b.recipe) {
+    for (const w of b.recipe.waves.filter((x) => x.round <= b.round)) {
+      const group = newGroup(b);
+      for (let i = 0; i < w.count; i++) { const e = newEnemy(b, w.kind ?? reinforceKind(b), rng, { arriving: true, group }); say('arrive', 'wave', { kind: kindWord(e.kind), n: e.n }); }
+    }
+    b.recipe.waves = b.recipe.waves.filter((x) => x.round > b.round);
+    if (!b.recipe.waves.length) b.recipe = null;
+  }
+  for (const e of b.enemies) if (e.approaching && !e.out && !e.fled) say('approach', 'approach', { enemy: enemyName(e.kind, e.n) }, { enemy: e.n });
   if (b.standby && !b.standbyOut && boardingStage(b) && outsideDown(b).length) {
     b.standbyOut = true; b.runners.push(b.standby);
     say('standby', 'standbyOut', { who: b.standby.handle });
@@ -755,14 +785,18 @@ export function playRound(b, rng) {
       const v = runner(b, t.target);
       if (v && present(v)) { v.cover = 'open'; say('shot', 'flanked', { enemy: E(e.n), who: v.handle }, { target: v.id, enemy: e.n }); }
     } else if (t.kind === 'backup') {
-      if (b.extras < FIGHT.maxExtraEnemies) { b.extras += 1; b.arriving.push(e.kind); say('radio', 'backupCalled', { enemy: E(e.n) }, { enemy: e.n }); }
+      if (b.extras < b.maxExtra) { b.extras += 1; b.arriving.push(e.kind); say('radio', 'backupCalled', { enemy: E(e.n) }, { enemy: e.n }); }
     } else if (t.kind === 'alarm') alarms += 1;
   }
   for (const r of b.runners) if (r.leaving && !r.dead && !r.down) { r.withdrawn = true; withdrawn.push(r.id); say('withdraw', 'withdrew', { who: r.handle }, { actor: r.id }); }
   for (const r of b.runners) { r.leaving = false; r.ordered = false; }
-  // The hired and the standard force break and run when too few of them are left (side-wide, one threshold: hired's).
-  const hiredUp = enemiesUp(b).filter((e) => breaks(e.kind));
-  if (hiredUp.length && hiredUp.length / b.hiredTotal < ENEMIES.hired.fleeBelow) { for (const e of hiredUp) { e.fled = true; fled.push(e.n); } say('flee', 'enemyFled'); }
+  // 3c: the hired and the standard force break and run per group, when too few of that group are left (hired's threshold).
+  // An enemy in its approach round never runs (this check comes before `approaching` is cleared below). A lone arrival never runs.
+  for (const [g, total] of Object.entries(b.hiredTotal)) {
+    const up = enemiesUp(b).filter((e) => breaks(e.kind) && (e.group ?? 0) === Number(g));
+    const going = up.filter((e) => !e.approaching);
+    if (going.length && total > 0 && up.length / total < ENEMIES.hired.fleeBelow) { for (const e of going) { e.fled = true; fled.push(e.n); } say('flee', 'enemyFled'); }
+  }
 
   // The medic's aura: while a medic stands in the fight, the most hurt standing runner regains a pip a
   // round and downed teammates don't bleed. Always on, whatever the medic does; no action.
@@ -787,7 +821,7 @@ export function playRound(b, rng) {
   for (const c of carries) if (c.by.aboard) { c.t.aboard = true; say('van', 'carriedInVan', { target: c.t.handle }, { target: c.t.id }); }
   if (b.type === 'holdHack') {
     b.clock -= CLOCKS.alarm.tickPerRound + alarms;
-    if (b.clock <= 0) { if (b.extras < FIGHT.maxExtraEnemies) { b.extras += 1; b.arriving.push(reinforceKind(b)); say('clock', 'alarmClock'); } b.clock = CLOCKS.alarm.resetTo; }
+    if (b.clock <= 0) { if (b.extras < b.maxExtra) { b.extras += 1; b.arriving.push(reinforceKind(b)); say('clock', 'alarmClock'); } b.clock = CLOCKS.alarm.resetTo; }
   } else {
     b.nextPressure -= alarms * CLOCKS.pressure.alarmBringsForward;
     if (b.type === 'holdExtract' && b.stage === 0 && b.round >= b.goal.vanRound) { b.stage = 1; b.goal.vanLeaves = b.round + FIGHT.vanWait; say('van', 'vanIn', { leaves: b.goal.vanLeaves }); }
@@ -797,6 +831,7 @@ export function playRound(b, rng) {
   result.unanswered = b.threats.filter((t) => !t.cancelled && !t.shieldedBy && (t.kind === 'aim' || RADIO(t))).map((t) => ({ threat: t.id, target: t.target }));
   b.drawn = false;
   checkEnd(b, rng, say);
+  for (const e of b.enemies) e.approaching = false; // 3a: the approach round is over (after the flee check, which skips them)
   expireOverride(b);
   result.ended = b.end;
   // The heat since the last round was reported, including the early van, which startRound adds before playRound (core/runfight.js calls it first).
@@ -954,7 +989,7 @@ export function oddsKey(b0, runs = FIGHT.oddsRuns) {
     b0.enemies.map((e) => [e.kind, e.pips, e.cover, e.deck, e.approaching ?? false, e.group ?? 0]),
     b0.runners.map((r) => [r.id, r.pips, r.max, r.absorb, r.ap, r.strong, r.jammer, r.healer, Object.values(r.stats).map((s) => s.value), r.overdrive ?? null]),
     b0.orders, b0.overwatch && [b0.overwatch.value, b0.overwatch.damage, b0.overwatch.left], !!b0.wheels, !!b0.standby,
-    b0.showcaseEligible ?? null, b0.maxExtra ?? null, b0.recipe ?? null, runs]);
+    b0.showcaseEligible ?? null, b0.maxExtra ?? null, b0.recipe ?? null, b0.hiredTotal ?? null, runs]);
 }
 
 const oddsCache = new Map();

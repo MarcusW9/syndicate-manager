@@ -32,6 +32,7 @@ import { nextRng } from '../core/random.js';
 import { refreshFreelancers } from '../core/freelance.js';
 import { GEAR, makeItem, rollPerks } from '../core/gear.js';
 import { specialLook } from '../core/fightmap.js';
+import { FIGHT, FIGHTS } from '../data/fights.js';
 import { CELLS, TIERS } from '../data/gear.js';
 import { trimInbox } from '../core/inbox.js';
 import { seedRivals, offerGapFor } from '../core/rivals.js';
@@ -944,6 +945,22 @@ function migrate(state) {
       r.quietSince ??= state.day; // nobody already at a house is looked at for a quiet name (a save seeded afresh above keeps 0)
     }
     state.version = 72;
+  }
+  if (state.version === 72) {
+    // v73: slice 3-i of watchable combat (DESIGN.md 2026-11-15). An engine-2 fight in progress gets the defaults: every enemy
+    // in group 0 and not approaching, `hiredTotal` per group ({ 0: n }), the reinforcement cap from data, no recipe waves
+    // (a fight already going keeps the fight it had).
+    for (const am of [state.activeMission, ...(state.awayJobs ?? []).map((j) => j.mission)]) {
+      const b = am?.battle;
+      if (b?.engine !== 2) continue;
+      for (const e of b.enemies ?? []) { e.group ??= 0; e.approaching ??= false; }
+      if (typeof b.hiredTotal === 'number') b.hiredTotal = { 0: b.hiredTotal };
+      b.hiredTotal ??= {};
+      b.nextGroup ??= 1;
+      b.maxExtra ??= FIGHTS[b.type]?.maxExtraEnemies ?? FIGHT.maxExtraEnemies;
+      b.recipe ??= null;
+    }
+    state.version = 73;
   }
   return state;
 }
