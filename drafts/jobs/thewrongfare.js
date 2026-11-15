@@ -8,6 +8,7 @@ reinforcement cap: 2
 
 // HELD BACK (2026-11-15): wired and simmed, the fight broke the declared bars (best team: left behind 44%
 // on steady, over 15%; a death in 32.5% on committed, over 8%). See docs/sims/newjobs-2026-11-15.md.
+// Re-simmed the same day with OPPOSITION extra 0: still over (left behind 62% on steady, a death in 26.0% on committed).
 // Owner to choose a lever, then add it again with /add-job.
 
 // The Wrong Fare: an anonymous taxi driver hires the crew after security

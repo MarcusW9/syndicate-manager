@@ -74,10 +74,10 @@ export const SITE_ENEMIES = { heights: ['corp', 'drone'], docks: ['hired', 'hire
 // How many enemies a fight starts with, by the job's threat 1-5: the difficulty dial.
 export const COUNT_BY_THREAT = [0, 2, 2, 3, 3, 4];
 // A job's optional `opposition` (data/missions/*.js): who stands against the crew. The fight keeps the district's own kind as
-// the one leader and fills the rest with this force's grunts, `extra` more bodies than the count above (1: sims/standard-force-2026-11-15.md; 2 made Warehouse Lift a 65% win on steady). A job without one plays as before.
+// the one leader and fills the rest with this force's grunts, `extra` more bodies than the count above (0 since 2026-11-15, owner: with 1, Warehouse Lift broke both safety bars once the gate sim fought its police, sims/newjobs-2026-11-15.md; #176 had set 1 from strong made-up crews, sims/standard-force-2026-11-15.md). A job without one plays as before.
 export const OPPOSITION = {
-  police: { grunt: 'police', extra: 1 },
-  corporate: { grunt: 'secforce', extra: 1 },
+  police: { grunt: 'police', extra: 0 },
+  corporate: { grunt: 'secforce', extra: 0 },
 };
 
 // The threats an enemy's deck can draw. `answers` are the responses that stop one; `radio` ones are
