@@ -22,6 +22,7 @@ Read the smallest thing that answers the question: grep for a file name or topic
 | Changing the save shape | `docs/ARCHITECTURE.md` section 8, the newest blocks of `migrate` in `src/save/save.js`, `SAVE_VERSION` in `core/state.js` |
 | Tests, sims, helpers | `CODEMAP.md` "Tests and scripts"; `docs/ARCHITECTURE.md` section 10 |
 | Fights (both engines) | `docs/BATTLES.md` |
+| A fight's waves (a job's fight recipe) | `docs/fight-recipe-template.md`, then `FIGHT_RECIPES` in `src/data/fights.js` |
 | A job, crisis or beat (content) | `src/data/missions/<job>.js`, then `core/validate.js` and `core/jobcheck.js` for the rules it must meet (`node scripts/check-job.mjs <file>`) |
 | Planning read, risk numbers | `core/squad.js`, `core/risk.js` |
 | The other tongs (rivals, free names, scouting, buyouts, rival offers) | `docs/RIVAL-TONGS.md` |

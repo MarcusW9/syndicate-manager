@@ -129,7 +129,7 @@ export const PRIORITY_WORDS = ['protected', 'radio', 'low', 'exposed', 'approach
 // fight's `extras`). kind: an ENEMIES kind; left out, a wave sends who the clocks send (core/fight.js reinforceKind: the
 // job's opposition's grunt, else the district's first kind; owner, 2026-11-15). maxExtraEnemies: the cap on backup calls,
 // the alarm clock and the pressure clock, else FIGHT.maxExtraEnemies. Which jobs get waves is the owner's to write
-// (the handoff's content question 2): none yet.
+// (the handoff's content question 2): none yet. The format and a checklist: docs/fight-recipe-template.md.
 export const FIGHT_RECIPES = {};
 export const DUTIES = ['attack', 'protect', 'support', 'hold', 'push', 'withdraw'];
 export const RISK_LEVELS = ['cautious', 'steady', 'committed'];
