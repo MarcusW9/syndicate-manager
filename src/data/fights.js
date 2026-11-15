@@ -60,13 +60,25 @@ export const ENEMIES = {
   corp: { pips: 2, cover: 'half', deck: ['aim', 'backup', 'aim', 'flank'] },
   drone: { pips: 1, cover: 'open', deck: ['aim', 'alarm'], absorb: 1, jamTakesOut: true },
   enforcer: { pips: 2, cover: 'half', deck: ['aim', 'aim', 'flank'] },
+  // Standard force (prototype, 2026-11-15): the rank and file of a job's `opposition`. One pip behind one plate of armour,
+  // so a plain hit only cracks the plate and a second one drops them; they come in numbers. The two kinds are the same body in
+  // a different uniform (names and looks are placeholders, not canon).
+  // fleeBelow marks a kind that breaks; the threshold itself is hired's (core/fight.js `breaks`).
+  police: { pips: 1, cover: 'half', deck: ['aim', 'aim', 'alarm'], absorb: 1, fleeBelow: 0.4 },
+  secforce: { pips: 1, cover: 'half', deck: ['aim', 'aim', 'backup'], absorb: 1, fleeBelow: 0.4 },
 };
 // Pips a shot of each kind takes (2 is the most any shot does).
-export const ENEMY_HIT = { hired: 1, drone: 1, corp: 2, enforcer: 2 };
+export const ENEMY_HIT = { hired: 1, drone: 1, corp: 2, enforcer: 2, police: 1, secforce: 1 };
 // Who a site (a district id, data/incidents.js ZONES aside: names.js districts) sends, in rotation by slot.
 export const SITE_ENEMIES = { heights: ['corp', 'drone'], docks: ['hired', 'hired', 'enforcer'] };
 // How many enemies a fight starts with, by the job's threat 1-5: the difficulty dial.
 export const COUNT_BY_THREAT = [0, 2, 2, 3, 3, 4];
+// A job's optional `opposition` (data/missions/*.js): who stands against the crew. The fight keeps the district's own kind as
+// the one leader and fills the rest with this force's grunts, `extra` more bodies than the count above (1: sims/standard-force-2026-11-15.md; 2 made Warehouse Lift a 65% win on steady). A job without one plays as before.
+export const OPPOSITION = {
+  police: { grunt: 'police', extra: 1 },
+  corporate: { grunt: 'secforce', extra: 1 },
+};
 
 // The threats an enemy's deck can draw. `answers` are the responses that stop one; `radio` ones are
 // stopped by a jam or by attacking their source.

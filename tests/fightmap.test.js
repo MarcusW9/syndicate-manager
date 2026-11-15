@@ -145,7 +145,7 @@ test('a unit keeps its spot while its cover holds', () => {
     for (let i = 1; i < all.length; i++) {
       const b0 = all[i - 1].activeMission.battle; const b1 = all[i].activeMission.battle;
       const l0 = layoutFight(b0).units; const l1 = layoutFight(b1).units;
-      const same = (r0, r1) => r0 && r1 && r0.cover === r1.cover && !r0.down && !r1.down && !r0.aboard && !r1.aboard;
+      const same = (r0, r1) => r0 && r1 && r0.cover === r1.cover && !r0.down && !r1.down && !r0.aboard && !r1.aboard && !r0.withdrawn && !r1.withdrawn && !r0.boarding && !r1.boarding;
       // Nobody's cover changed between the two rounds: everyone stays put.
       if (b0.runners.every((r) => same(r, b1.runners.find((x) => x.id === r.id))) && b0.enemies.length === b1.enemies.length) {
         for (const r of b0.runners) assert.deepEqual(l1[r.id].at, l0[r.id].at, `${r.handle} stays`);

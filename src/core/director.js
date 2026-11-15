@@ -16,7 +16,7 @@ import { lineText } from './fighttext.js';
 
 // Routine: the back and forth that fills a round. Anything not listed is notable (something changed); showcase lines
 // (Slice 4) carry a `showcase` field or a showcase* kind.
-const ROUTINE = new Set(['attackHit', 'attackMiss', 'attackGone', 'overwatchHit', 'overwatchMiss', 'shotMiss', 'jamFail', 'aura', 'hunker']);
+const ROUTINE = new Set(['attackHit', 'attackCrack', 'attackMiss', 'attackGone', 'overwatchHit', 'overwatchCrack', 'overwatchMiss', 'shotMiss', 'jamFail', 'aura', 'hunker']);
 const SHOWCASE_KINDS = new Set(['showcaseStart', 'showcaseEnd']);
 
 export const newMemory = () => ({ defeats: {}, shields: {}, lowPipRounds: {}, spotted: {} });

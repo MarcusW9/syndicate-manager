@@ -2308,6 +2308,14 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 @media (prefers-reduced-motion: no-preference) {
   .fs-foe.is-struck { animation: sp-struck-shake 0.32s linear; }
 }
+/* Standard force (2026-11-15, placeholder looks): the uniform is a tint on the face; the plate is an arc round the ring that splits and falls away when a shot cracks it (fightstage.js plate/crack). */
+.fs-foe--police .fs-foe__bg { fill: #10243f; } .fs-foe--police .fs-foe__tint { fill: #4f8dff; opacity: 0.3; }
+.fs-foe--secforce .fs-foe__bg { fill: #3a2e10; } .fs-foe--secforce .fs-foe__tint { fill: #d9a441; opacity: 0.3; }
+.fs-plate { fill: none; stroke: var(--accent-2); stroke-width: 1.6; stroke-linecap: round; pointer-events: none; }
+.fs-plate.is-cracking { stroke: #fff; stroke-dasharray: 3 2; animation: fs-plate-crack 0.52s ease-out forwards; }
+@keyframes fs-plate-crack { 0% { opacity: 1; transform: scale(1); } 40% { opacity: 1; transform: scale(1.12); } 100% { opacity: 0; transform: scale(1.35); } }
+.sp-flash--crack { fill: #fff; stroke: var(--accent-2); stroke-width: 1; }
+.fs-float.is-cracked { fill: var(--accent-2); }
 .fs-pips rect { fill: #2a303b; } .fs-pips rect.is-on { fill: var(--accent-2); } .fs-foe .fs-pips rect.is-on { fill: var(--accent); }
 .sp-token.fs-hunker > *:not(.fs-pips) { transform: scale(1.05) translateY(1px); }
 .siteplan.is-fight .sp-token.fs-hunker .sp-face__ring { stroke-dasharray: 2 1.2; }

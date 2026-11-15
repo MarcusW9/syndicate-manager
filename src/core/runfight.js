@@ -38,7 +38,7 @@ export const fightTypeOf = (templateId) => FIGHT_JOBS[templateId] ?? null;
 
 /** Everyone's health in the shape the feed, the plan and the call-in card read (enemies are "guards", pips are hp). Kept small: every round of a fight is saved in the report. */
 export const fightSnapshot = (b) => ({
-  guards: b.enemies.map((e) => ({ n: e.n, hp: Math.max(0, e.pips), max: e.max, out: e.out || e.fled })),
+  guards: b.enemies.map((e) => ({ n: e.n, hp: Math.max(0, e.pips), max: e.max, out: e.out || e.fled, ...(e.absorb > 0 ? { plate: e.absorb } : {}) })),
   runners: b.runners.map((r) => ({ id: r.id, handle: r.handle, hp: r.pips, max: r.max, down: r.down || r.dead })),
 });
 /**
@@ -69,7 +69,7 @@ const CUE = { attack: 'shoot', shot: 'guard', overwatch: 'overwatch', stabilise:
 // Only what the feed, the plan and the report read, so a year of saved reports stays small.
 const feedLine = (l) => ({
   kind: CUE[l.kind] ?? 'note', rule: l.kind, key: l.key ?? null, slots: l.slots ?? {}, text: l.text, actor: l.actor ? { id: l.actor, handle: l.actor } : null, guard: l.enemy ?? null, targetId: l.targetId ?? (typeof l.target === 'string' ? l.target : null),
-  ...(l.burst ? { burst: true } : {}),
+  ...(l.burst ? { burst: true } : {}), ...(l.cracked ? { cracked: true } : {}),
   success: l.success ?? null, damage: l.damage ?? 0, heal: l.heal ?? 0, kit: l.kit ?? null, dropped: !!l.dropped, ...(l.roll ? { die: l.roll.die, need: l.roll.need, value: l.roll.value } : {}),
   ...(l.order ? { order: l.order, from: l.from } : {}),
 });
@@ -100,13 +100,13 @@ export function startFight(state, am, tpl, inc, id, zone, diff, able, { ambush =
   const ow = overwatchOf(overwatchOp(state, am), am.overwatch, zone);
   const rng = nextRng(state);
   const b = Fight.buildFight({
-    type, diff: Fight.fightDiff(diff), threat: am.threat ?? tpl.threat, site: tpl.district, crew: able, approach: am.approach,
+    type, diff: Fight.fightDiff(diff), threat: am.threat ?? tpl.threat, site: tpl.district, opposition: tpl.opposition ?? null, crew: able, approach: am.approach,
     overwatch: ow, wheels: wheels ? { id: wheels.id, handle: wheels.handle, value: effectiveStat(wheels, 'piloting', { approach: am.approach }).value } : null,
     standbyOp: sb, risk: ['cautious', 'steady', 'committed'].includes(am.orders) ? am.orders : 'steady',
     watched: am.callIn !== 'never' && !(am.away && !am.away.command),
   }, rng);
   // A passed roll on a loud run's first guard (mission.js): that guard is put down quietly, and the rest get no shot in round 1.
-  if (ambush) { b.ambush = true; if (b.enemies.length > 1 && b.enemies.at(-1).kind === 'hired') b.hiredTotal -= 1; if (b.enemies.length > 1) b.enemies.pop(); }
+  if (ambush) { b.ambush = true; if (b.enemies.length > 1 && Fight.breaks(b.enemies.at(-1).kind)) b.hiredTotal -= 1; if (b.enemies.length > 1) b.enemies.pop(); }
   b.auto = false;
   b.startLines = [];
   b.spots = fightStage(tpl.district, am, zone, able.length);

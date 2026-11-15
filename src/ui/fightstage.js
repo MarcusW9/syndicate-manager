@@ -142,11 +142,11 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
       const to = enemyId(l.guard);
       if (sp && sp.look !== 'ping' && units[from] && units[to]) push({ do: 'camera', focus: [from, to] });
       const fly = sp ? MS.fire * sp.mv.slow : MS.fire;
-      push({ do: 'fire', from, to, hit: !!l.success, fell: !!l.dropped, damage: l.damage ?? 0, wide, ...(sp ? { burst: true, look: sp.look } : {}), dur: ms(fly * (sp ? cut : 1)) });
+      push({ do: 'fire', from, to, hit: !!l.success && (l.damage ?? 0) > 0, cracked: !!l.cracked, fell: !!l.dropped, damage: l.damage ?? 0, wide, ...(sp ? { burst: true, look: sp.look } : {}), dur: ms(fly * (sp ? cut : 1)) });
       adv(fly + (sp ? sp.mv.gap : MS.gap), sp ? cut : 1);
       if (sp) sp.from = to;
     } else if (rule === 'overwatch' && l.guard != null) {
-      push({ do: 'fire', from: 'perch', to: enemyId(l.guard), hit: !!l.success, fell: !!l.dropped, damage: l.damage ?? 0, wide, dur: ms(MS.fire * 1.4) });
+      push({ do: 'fire', from: 'perch', to: enemyId(l.guard), hit: !!l.success && (l.damage ?? 0) > 0, cracked: !!l.cracked, fell: !!l.dropped, damage: l.damage ?? 0, wide, dur: ms(MS.fire * 1.4) });
       adv(MS.fire * 1.4 + MS.gap);
     } else if (rule === 'shot' && l.key === 'flanked') {
       push({ do: 'flank', id: l.targetId, by: enemyId(l.guard), dur: ms(MS.flank) });
@@ -331,7 +331,7 @@ export function createStage(svg, deps) {
   function foeToken(id, u, seed) {
     const look = (preview()?.knots ? (preview().knots.includes(u.kind) ? { bodies: [4, 6], rotor: u.kind === 'drone' } : null) : ENEMY_LOOKS[u.kind]);
     if (look?.bodies) return knotToken(id, u, seed, look);
-    const g = node('g', { class: 'sp-token fs-foe', 'data-unit': id });
+    const g = node('g', { class: `sp-token fs-foe${u.kind ? ` fs-foe--${u.kind}` : ''}`, 'data-unit': id });
     g.append(node('circle', { r: 6.5, class: 'fs-foe__bg' }));
     const face = node('g', { class: 'sp-face', 'clip-path': 'url(#sp-face-clip)' });
     face.innerHTML = portrait({ id: `foe-${seed}-${u.n}`, name: `${u.kind ?? 'foe'} ${u.n}`, age: 26 + ((seed + u.n * 7) % 20) }, { size: 13 }).replace('<svg ', '<svg x="-6.5" y="-6.5" ');
@@ -339,6 +339,21 @@ export function createStage(svg, deps) {
     tokens.append(g);
     foes.set(id, g);
     return g;
+  }
+  // A plate (2026-11-15): an enemy with armour left wears an arc round its ring; a shot that takes it off splits the arc and the arc
+  // falls away (`crack`), then the pip goes. Plates are drawn from the round's snapshot (`plate`: armour left) and nothing else.
+  function plate(id, n) {
+    const g = foes.get(id);
+    if (!g) return;
+    const has = g.querySelector(':scope > .fs-plate');
+    if (n > 0 && !has) g.append(node('path', { class: 'fs-plate', d: 'M-8.6 -3 A9.2 9.2 0 0 1 8.6 -3 M-8.6 3 A9.2 9.2 0 0 0 8.6 3' }));
+    else if (!(n > 0) && has && !has.classList.contains('is-cracking')) has.remove();
+  }
+  function crack(g) {
+    const p = g?.querySelector?.(':scope > .fs-plate');
+    if (!p) return;
+    p.classList.add('is-cracking');
+    setTimeout(() => p.remove(), deps.reduced() ? 0 : 520);
   }
   function pips(id, hp, max) {
     const g = host(id);
@@ -384,7 +399,7 @@ export function createStage(svg, deps) {
   const flash = (at, cls) => { if (!at) return; const c = node('circle', { class: `sp-flash ${cls}`, cx: at[0], cy: at[1], r: 5 }); fx.append(c); setTimeout(() => c.remove(), 460); };
   function struck(g) { if (!g) return; g.classList.remove('is-struck'); void g.getBoundingClientRect(); g.classList.add('is-struck'); setTimeout(() => g.classList.remove('is-struck'), 420); }
   function tracer(a, b, s) {
-    const end = s.hit || s.absorbed ? b : [b[0] + s.wide[0] * 22, b[1] + s.wide[1] * 22];
+    const end = s.hit || s.absorbed || s.cracked ? b : [b[0] + s.wide[0] * 22, b[1] + s.wide[1] * 22];
     const l = node('line', { class: `fs-tracer ${s.foe ? 'is-foe' : ''} ${s.burst ? 'is-burst' : ''}`, x1: a[0], y1: a[1], x2: end[0], y2: end[1] });
     fx.append(l);
     flash(a, 'fs-muzzle');
@@ -398,7 +413,7 @@ export function createStage(svg, deps) {
   const gone = (el, ms) => { fx.append(el); setTimeout(() => el.remove(), ms); return el; };
   const toward = (a, b, k) => { const d = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1; return [a[0] + ((b[0] - a[0]) / d) * k, a[1] + ((b[1] - a[1]) / d) * k]; };
   /** Where an attack lands: on the target, or wide as the dice had it. */
-  const landing = (b, s) => (s.hit || s.absorbed ? b : [b[0] + s.wide[0] * 22, b[1] + s.wide[1] * 22]);
+  const landing = (b, s) => (s.hit || s.absorbed || s.cracked ? b : [b[0] + s.wide[0] * 22, b[1] + s.wide[1] * 22]);
   // Ricochet: the round is a bright dot flying from the last landing to this one, with its trace, and a spark where it bounces.
   function ricochet(a, b, s) {
     const end = landing(b, s);
@@ -477,11 +492,15 @@ export function createStage(svg, deps) {
         else tracer(a, b, s);
         setTimeout(() => {
           const g = host(s.to);
-          if (s.hit) { struck(g); flash(b, 'sp-flash--hit'); }
+          // Armour crack (2026-11-15): the plate breaks first (a flash, a Cracked float, the arc splits), then, if the shot got through, the pip goes and the token is struck.
+          if (s.cracked) {
+            crack(g); flash(b, 'sp-flash--crack'); float(b, word('stage.cracked'), 'is-cracked');
+            if (s.hit || s.fell) setTimeout(() => { struck(g); flash(b, 'sp-flash--hit'); }, deps.reduced() ? 0 : 280);
+          } else if (s.hit) { struck(g); flash(b, 'sp-flash--hit'); }
           else if (s.absorbed) { flash(b, 'sp-flash--zap'); float(b, word('stage.absorbed'), 'is-absorbed'); }
           else flash([b[0] + s.wide[0] * 22, b[1] + s.wide[1] * 22], 'sp-flash--miss');
           if (s.fell) { setStance(s.to, s.dead ? 'dead' : 'down'); drawn[s.to] = { ...drawn[s.to], stance: s.dead ? 'dead' : 'down' }; body(b, s.to); float(b, word(s.to.startsWith('e:') ? 'stage.out' : 'stage.down'), 'is-down'); }
-          else if (s.hit) float(b, word('stage.hit'), 'is-hit');
+          else if (s.hit) setTimeout(() => float(b, word('stage.hit'), 'is-hit'), s.cracked && !deps.reduced() ? 280 : 0);
         }, s.dur);
         break;
       }
@@ -518,7 +537,7 @@ export function createStage(svg, deps) {
   /** Health as the event has it (pips), after the round. */
   function health(cue) {
     for (const r of cue.runners ?? []) pips(r.id, Math.max(0, r.hp), r.max);
-    for (const g of cue.guards ?? []) pips(enemyId(g.n), Math.max(0, g.hp), g.max);
+    for (const g of cue.guards ?? []) { pips(enemyId(g.n), Math.max(0, g.hp), g.max); plate(enemyId(g.n), g.plate ?? 0); }
   }
 
   return {

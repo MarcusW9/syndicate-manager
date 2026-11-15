@@ -13,11 +13,15 @@ export const FIGHT_TEXT = {
   'kind.corp': 'security guard',
   'kind.drone': 'drone',
   'kind.enforcer': 'enforcer',
+  'kind.police': 'police officer',
+  'kind.secforce': 'corporate security',
   // The same, plural (the plan's "likely enemies" line)
   'kind.hired.plural': 'hired guns',
   'kind.corp.plural': 'security guards',
   'kind.drone.plural': 'drones',
   'kind.enforcer.plural': 'enforcers',
+  'kind.police.plural': 'police officers',
+  'kind.secforce.plural': 'corporate security',
   // The director's spotlights (DRAFT sentences so the keys read; the owner writes the wording, content question 1; Slice 1). Slots: {who}, {target}, {n}, {round}.
   'director.streak': '{who} drops {n} in two rounds.',
   'director.shieldWall': '{who} covers {target} again.',
@@ -36,6 +40,7 @@ export const FIGHT_TEXT = {
   'stage.down': 'Down',
   'stage.out': 'Out',
   'stage.absorbed': 'Armour',
+  'stage.cracked': 'Cracked',
   'stage.flanked': 'Flanked',
   'stage.special': '{who} cuts loose.',
   // A special move's title over the map (data/fightLooks.js SPECIAL_MOVES; draft text, the owner's to write).
@@ -51,10 +56,13 @@ export const FIGHT_TEXT = {
   'vanIn': 'The getaway van pulls in: the planned way out. Everyone makes for it, and it leaves at the end of round {leaves}.',
   'vanCantWait': 'The driver cannot wait; {outside} still outside.',
   'vanHeld': 'The van holds for {rounds} more rounds.',
+  'overwatchCrack': "{who} takes a covering shot and cracks {enemy}'s armour.",
   'overwatchHit': '{who} takes a covering shot and catches {enemy}.',
   'overwatchMiss': '{who} takes a covering shot and misses {enemy}.',
   'overwatchOut': '{who} takes a covering shot and puts {enemy} out of the fight.',
   'attackHit': '{who} gets a hit in on {enemy}.',
+  // Placeholder wording (owner writes the final): a shot that only cracks a plate, no pip lost yet.
+  'attackCrack': "{who} cracks {enemy}'s armour.",
   'attackOut': '{who} puts {enemy} out of the fight.',
   'attackMiss': '{who} fires, but {enemy} stays clear.',
   'attackGone': '{who} finds the target already down.',
