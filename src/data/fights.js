@@ -122,6 +122,7 @@ export const FIGHT_JOBS = {
   warehouse: 'holdExtract', protection: 'holdYard',
   dead_air: 'holdExtract', still_connected: 'holdHack', not_for_sale: 'holdExtract', one_more_song: 'holdHack',
   still_clocked_in: 'holdHack', the_last_collection: 'holdExtract',
+  the_wrong_fare: 'holdHack',
 };
 
 // The priority words an order's tie-breaks may use (spec 12; the grammar is core/fight.js enemyOrder).
@@ -141,6 +142,7 @@ export const FIGHT_RECIPES = {
   },
   still_clocked_in: { maxExtraEnemies: 1, waves: [{ round: 3, kind: 'secforce', count: 2 }] }, // the patrol the records terminal's access alert brings
   the_last_collection: { maxExtraEnemies: 1, waves: [{ round: 4, kind: 'hired', count: 2 }] }, // a second collection crew answers the call
+  the_wrong_fare: { waves: [{ round: 2, count: 2, kind: 'secforce' }] }, // the vehicle checkpoint sends a response pair to the stopped taxi
 };
 export const DUTIES = ['attack', 'protect', 'support', 'hold', 'push', 'withdraw'];
 export const RISK_LEVELS = ['cautious', 'steady', 'committed'];

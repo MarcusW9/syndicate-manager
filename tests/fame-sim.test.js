@@ -27,6 +27,11 @@
 // week 52 is now ¥62,820; with them ¥63,660 (+1.3%). The band is unchanged.
 // Again 2026-11-07, when Madam Rao's own six prep jobs replaced the stand-ins (threat 2, ¥3,200-4,000
 // each, against ¥1,400-2,500): ¥73,900 without the payoffs, ¥75,000 with them (+1.5%).
+//
+// Re-baselined 2026-11-15 (docs/design/2026-11.md, The Wrong Fare): the new walk-in job pays ¥6,500 and
+// the median at week 52 with the payoffs is now ¥84,040. The baseline is set to 82,800 (84,040 less the
+// payoffs' +1.5%); that is derived, not measured with the payoffs off. The sim buys nothing, so this is
+// mostly unspent cash, and the owner expects more to spend on later.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -35,7 +40,7 @@ import { cpus } from 'node:os';
 
 const SEEDS = Array.from({ length: 60 }, (_, i) => i + 1);
 const WEEKS = 78;
-const CASH52_BEFORE_PAYOFFS = 73900; // median cash at week 52 without slice 4's payoffs, same 60 runs, with heists and Rao's own prep jobs (2026-11-07; 62820 with stand-in prep; was 43570 with the jobs added 2026-11-04, 39750 before them)
+const CASH52_BEFORE_PAYOFFS = 82800; // re-baselined 2026-11-15 for The Wrong Fare (was 73900); derived, not measured: the with-payoffs median 84040 less the +1.5% the payoffs added in the last measured set. Earlier: median cash at week 52 without slice 4's payoffs, same 60 runs, with heists and Rao's own prep jobs (2026-11-07; 62820 with stand-in prep; was 43570 with the jobs added 2026-11-04, 39750 before them)
 const median = (a) => { const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
 
 function playAll() {

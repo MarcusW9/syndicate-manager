@@ -2,7 +2,6 @@
 
 Generated text waiting to go into `src/data/`. Not imported by the game. Delete each file once its content has shipped.
 
-- `jobs/thewrongfare.js`: The Wrong Fare (walk-in, Glass Heights), held back from `/add-job` on 2026-11-15: its fight broke the declared bars (`docs/sims/newjobs-2026-11-15.md`). Owner picks a lever, then `/add-job` it again.
 - `SPEC-battle-orders.md`: the battle rework as one spec (2026-11-10): threats, goals and orders, the owner's brief merged with both amendments and the agreed clarifications; suppression removed; six duties, shield, reserved damage, interruptible hack, authored dilemmas, save v61. Not built: the numbers sheet, the open decisions (section 25) and the validation gate come first.
 - `PLAN-battle-slices.md`: the build plan for the battle rework (2026-11-11): four slices (the engine and endurance at save v61; the screens; the sims on the real code with call-ins; left behind), principles, and the owner's writing pauses.
 - `HANDOFF-battle-rework.md`: a paste-ready prompt for the session that builds slice 1.
