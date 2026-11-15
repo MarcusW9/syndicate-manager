@@ -42,7 +42,7 @@ export const CLIENTS = [
     district: 'nightMarket',
     affiliation: null,
     desc: 'Lends money to half the Night Market from a sari shop. Generous until you\'re late.',
-    jobs: ['ledger', 'chrome', 'casino', 'kidnap', 'courier', 'paid_in_full', 'house_advantage', 'fitting_room', 'quiet_table', 'kit_return'],
+    jobs: ['ledger', 'chrome', 'casino', 'kidnap', 'courier', 'paid_in_full', 'house_advantage', 'fitting_room', 'quiet_table', 'kit_return', 'the_last_collection'],
   },
   {
     id: 'okonkwo',
@@ -68,6 +68,6 @@ export const CLIENTS = [
     district: 'heights',
     affiliation: 'the Underterrace maintenance cooperative', // deals with Veridian-Apex's estate contractors; doesn't work for them
     desc: 'Tse Yuk-lan, a former maintenance forewoman who still keeps the cooperative\'s keys at the Underterrace. Contractor disputes, equipment recovery, missing records, workers caught between employers: the infrastructure beneath corporate comfort.',
-    jobs: [],
+    jobs: ['still_clocked_in'],
   },
 ];
