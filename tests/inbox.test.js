@@ -16,8 +16,9 @@ const { importSave } = await import('../src/save/save.js');
 // depends on which jobs land in the seed's last month, so a change to the job pool could tip it (seed 1 to 297k on 2026-11-14,
 // seed 2 to 296k with four new fight jobs on 2026-11-15, while ten seeds averaged 265k). Since 2026-11-15 the test plays SEEDS
 // and holds their AVERAGE under SAVE_BUDGET and every one under SAVE_CEILING. Measured 2026-11-15, seeds 1-5: 251k, 296k, 311k,
-// 269k, 242k (average 274k; main before the four jobs: 248k).
-const SAVE_BUDGET = 290_000;
+// 269k, 242k (average 274k; main before the four jobs: 248k). Back to 270k the same day once reports stored fight lines lean
+// (core/report.js reportEvent): seeds 1-5 then 239k, 265k, 262k, 254k, 242k (average 252k).
+const SAVE_BUDGET = 270_000;
 const SAVE_CEILING = 350_000;
 const SEEDS = [1, 2, 3, 4, 5];
 

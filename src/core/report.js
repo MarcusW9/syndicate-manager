@@ -8,6 +8,22 @@ import { PARTNER } from '../data/partner.js';
 
 export const REPORT_LOGS_KEPT = 20; // reports that keep their full log; older ones keep the summary
 
+// What a stored fight line keeps: what the report's log draws (ui/messages.js renderFullLog: the sentence, its tone from
+// kind, success and damage, and rollDetail's dice). The rest (the text's key and slots, who and whom, heal, kit) is for
+// the live fight view, which reads the run's own events, never the report (2026-11-15: a fight report was 30% bigger).
+const LINE_KEEPS = ['kind', 'text', 'success', 'damage', 'die', 'need', 'value', 'stat', 'notes'];
+const leanLine = (l) => Object.fromEntries(LINE_KEEPS.filter((k) => l[k] != null && l[k] !== 0).map((k) => [k, l[k]]));
+
+/**
+ * A run's event as the report stores it. A fight's event drops the live view's staging (the map, the director's beats,
+ * both sides' pips) and keeps its lines lean; every other event is kept as it is.
+ */
+export function reportEvent(e) {
+  if (e.kind !== 'battle') return e;
+  const { stage, beats, guards, runners, ...rest } = e;
+  return rest.lines ? { ...rest, lines: rest.lines.map(leanLine) } : rest;
+}
+
 const hash = (str) => { let h = 0; for (const ch of str) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; };
 const INJURY_WEIGHT = { light: 2, serious: 4, critical: 6 };
 const statName = (s) => s[0].toUpperCase() + s.slice(1);
