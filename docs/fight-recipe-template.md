@@ -75,6 +75,14 @@ export const FIGHT_RECIPES = {
 };
 ```
 
+## A new job built around waves
+
+New fight jobs are drafted with `docs/new-job-prompt.md` (its optional `/* FIGHT */` block: the fight type, the opposition, the
+waves with a story reason for each) and added with `/add-job`, which turns the block into a `FIGHT_JOBS` entry, the job's
+`opposition` and a `FIGHT_RECIPES` entry in this format. Prefer new jobs for wave-heavy fights; waves on the five existing jobs
+change fights players already know (owner, 2026-11-15). Only the Heights and the Docks have their own enemy kinds
+(`SITE_ENEMIES`); a fight job in another district gets the Docks' mix unless its waves and opposition name kinds.
+
 ## Adding one (checklist)
 
 1. Add the job's block to `FIGHT_RECIPES` in `src/data/fights.js`.

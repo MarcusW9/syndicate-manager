@@ -307,12 +307,42 @@ they must survive repeating.
 - The same kind of work in several districts is one file per district (a Docks courier
   run and a Night Market courier run).
 
+FIGHT JOBS (optional; only if the PITCH says "fight: yes"). Most jobs leave this out. A fight
+job plays its fight on the live map with orders, and may have WAVES: groups of enemies that
+arrive on a set round. Give the job's story a reason for each wave (a tip-off, a shift
+change, a second crew). Put this comment block as the FIRST thing in the file, above the
+job's own header comment, filled in; no code, only the comment:
+
+```js
+/* FIGHT
+type: holdHack | holdExtract | holdYard
+  holdHack: hold while the tech works; it ends when the work is done or at round 7.
+  holdExtract: hold until the van comes at round 3, then board; it leaves about round 7.
+  holdYard: no van; won when every enemy is down or has run.
+opposition: police | corporate | none
+  police or corporate: one leader plus armoured grunts who come in numbers.
+waves: (none, or one line each, in round order)
+  round 3: 3 hired, because <the story's reason>
+  round 5: 2 (no kind: the job's opposition, else the district's usual enemy), because <reason>
+  kinds: hired, corp, drone, enforcer, police, secforce
+reinforcement cap: (optional; how many backup calls and clock arrivals at most, default 2)
+*/
+```
+
+Limits: a holdHack wave at round 7 or later never comes; a holdExtract wave after about round
+7 comes too late (rounds 4-6 land while the crew boards, the hardest moment); in holdYard every
+wave makes the fight longer. Hired, drones, police and secforce are 1 pip (police and
+secforce wear a plate the first plain hit only cracks); corp and enforcers are 2 pips and hit
+for 2. Arrivals spend their first round coming in: they can be shot, but don't shoot back that
+round. Three waves at most; a fight job is threat 3 or more.
+
 PITCH
 Client: [Auntie Fung / Mr. Szeto / the Ferryman / Madam Rao / Ruth Okonkwo / Doc Siu /
 Mrs. Ip / walk-in]
 District: [Old Town / the Docks / the Night Market / Glass Heights / the Basin]
 Tier: [rookie / threat 2 / 3 / 4 / 5] [routine: yes / no]
 Idea: [one or two sentences: what the client wants and what makes it interesting]
+Fight: [no / yes: the fight type, who stands against the crew, and the waves you have in mind]
 ````
 
 ## What Claude does with the file
@@ -322,4 +352,5 @@ Idea: [one or two sentences: what the client wants and what makes it interesting
 - Adds its id to the client's `jobs` in `src/data/clients.js`. Walk-in jobs need no client; Doc Siu's and Mrs. Ip's are rookie work, offered by Auntie Fung or as walk-ins.
 - Runs the tests: `core/validate.js` checks every crisis has an exit and every choice has its lines.
 - Routine work (`routine: true`): the checker warns if it's past threat 2, a crew of 2 or 2 days. Until the board treats routine work specially, it is offered like any other job of its tier.
+- A fight job (the `/* FIGHT */` block): adds the job to `FIGHT_JOBS`, its `opposition` to the job, and its waves to `FIGHT_RECIPES` in `src/data/fights.js` (the format: `docs/fight-recipe-template.md`), then runs the fight sims before and after. That is a balance change, so it takes a stronger model than Sonnet and gets a DESIGN.md row.
 - Adds a changelog entry (newest file in `docs/changelog/`). New canon in the job (a person, a place) also gets a line in `WORLD.md` and a DESIGN.md row.
