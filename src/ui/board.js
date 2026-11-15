@@ -80,6 +80,7 @@ function invItems(op, prefer = null) {
  * "+N" for the rest (the board's container query hides .is-more); wider, the whole grid and names.
  */
 function inventory(ui, op, prefer) {
+  const { esc } = ui;
   const items = invItems(op, prefer);
   let cells = 0;
   let first = 0;
@@ -88,7 +89,7 @@ function inventory(ui, op, prefer) {
     const inFirst = cells + w <= 2;
     if (inFirst) first += 1;
     cells += w;
-    return `<span class="inv__it ${w === 2 ? 'is-long' : ''} ${inFirst ? '' : 'is-more'}">${gearArt(it, { carrier: op, bare: true })}<span class="inv__name">${ui.esc(itemTitle(it))}</span></span>`;
+    return `<span class="inv__it ${w === 2 ? 'is-long' : ''} ${inFirst ? '' : 'is-more'}" role="button" tabindex="0" data-action="board-gear" data-id="${esc(op.id)}" data-uid="${esc(it.uid)}" aria-label="${esc(itemTitle(it))} on ${esc(op.handle)}: tap for its details">${gearArt(it, { carrier: op, bare: true })}<span class="inv__name">${ui.esc(itemTitle(it))}</span></span>`;
   }).join('');
   const total = Math.max(4, cells + (cells % 2));
   const blanks = Array.from({ length: total - cells }, (_, k) => `<span class="inv__cell ${cells + k < 2 ? '' : 'is-more'}"></span>`).join('');

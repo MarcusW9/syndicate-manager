@@ -37,6 +37,7 @@ export const V = {
   tongsView: null, // City › Tongs: null (the list), a tong's id or `name:<id>` (a name's profile) (ui/tongs.js)
   hallPage: null, // a hall's own page (2026-11-07), by district: from Tong › Halls, a district page or a raid card; always on Tong
   gearSlot: null, // the place being filled on a runner's page: 'armour', 'implant:0', 'bag:2,1'
+  gearFor: null, // the runner whose gear sheet is open from the planning board (else the open runner's page)
   bagPick: null, // the bag item picked up on a runner's page, to move or take off
   newGameSlot: null, // slot number while picking a difficulty
   plan: null, // { jobId, crew: [...ids], approach, orders, callIn, overwatch: id|null, kit, wheels: id|null, standby: id|null } (core/mission.js startMission)
@@ -97,7 +98,7 @@ export function restoreView(v) {
   if (V.openRecruitId && !(state.recruits ?? []).some((r) => r.id === V.openRecruitId)) V.openRecruitId = null;
   if (V.plan && !state.jobs.some((j) => j.id === V.plan.jobId)) V.plan = null;
   if (V.clientPage && !CLIENTS.some((c) => c.id === V.clientPage)) V.clientPage = null;
-  V.gearSlot = null; V.bagPick = null; V.pickSlot = null;
+  V.gearSlot = null; V.gearFor = null; V.bagPick = null; V.pickSlot = null;
 }
 
 /** Back with nothing to go back to (a direct link, a fresh load): the root of the page's home tab, no page opened. */

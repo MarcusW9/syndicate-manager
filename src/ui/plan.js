@@ -23,13 +23,14 @@ import { handsOffAllowed, ORDERS } from '../core/autorun.js';
 import { planRead, planTries, leanPicks as leanPicksRaw } from '../core/squad.js';
 import { renderBoard, renderPicker, renderCoverage } from './board.js';
 import { kitsFor } from '../core/gear.js';
+import { renderGearSheet } from './gear.js';
 import { intelFor } from '../core/sidetasks.js';
 import { mentoring } from '../core/development.js';
 import { freelancerAsCrew, MAX_FREELANCERS_PER_JOB, shareOf } from '../core/freelance.js';
 import { renderJobs, rivalRemark, definingHandle, namedHandle, fillNamed, knownPicks } from './jobs.js';
 import { canWork, ask } from './boardwork.js';
 import { renderCallIns } from './jobscreen.js';
-import { esc, statName, riskBadge, riskWord, districtName, daysLeft, hallLabel, face, statusChip } from './shared.js';
+import { gearUi, esc, statName, riskBadge, riskWord, districtName, daysLeft, hallLabel, face, statusChip } from './shared.js';
 import { state, backLabel, V } from './view.js';
 
 const threatDots = (n) => '●'.repeat(n) + '○'.repeat(5 - n);
@@ -284,6 +285,7 @@ export function renderPlan() {
       </div>
     </section>
 
+    ${V.gearFor && V.gearSlot ? renderGearSheet(gearUi, state, people.find((o) => o.id === V.gearFor), V.gearSlot) : ''}
     ${V.pickSlot ? renderPicker(boardUi, { plan: V.plan, tpl: t, threat: v.threat, slot: V.pickSlot, people: pickerPeople(), freelancersFull: freelancersFull(), fit: pickerFit(t, v.threat), sortBy: V.pickSort, jossId: jossFor(V.pickSlot), overRead: V.pickSlot === 'over' ? overReadFor() : null }) : ''}`;
 }
 const boardUi = { esc, face: (op, size) => face(op, size), riskBadge: (l) => riskBadge(l), riskWord, statusChip: (a) => statusChip(a), keyStats: (op, tpl, threat) => keyStatsFor(op, tpl, threat) };
