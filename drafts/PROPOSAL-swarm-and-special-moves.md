@@ -132,8 +132,23 @@ What follows from it:
   (`data/fightLooks.js`, `ui/fightstage.js`). Zones (close, mid, far, with terrain) are a later slice if terrain needs it;
   real coordinates in engine 2 are not planned (Claude's estimate: a rework of the rules, odds and preview, for little
   over zones in a game watched mostly hands-off).
-- **Power shows.** A built star should visibly carry a fight against numbers: bursts, chains and spreads each get one
-  short, distinct log line and a drawn effect. The safety bars and the death rule do not move.
+- **Power shows, by contrast.** A built star should visibly carry a fight against numbers while weaker runners struggle:
+  bursts, chains and spreads each get one short, distinct log line and a drawn effect. Power reads only next to someone
+  weaker, so enemies scale with the builds (2.6.4). The safety bars and the death rule do not move.
+
+Three conditions (owner agreed, 2026-11-16):
+- **Watching keeps its stakes.** The planning read prices the fight, so the fight needs real variance, and a handful of
+  high-stakes calls stay during it (death's door, holding the van, the tech under fire) even as routine orders fade.
+- **Fights stay short and quick to watch.** A fast or skip pace (pace never changes outcomes) and variety in the enemy mix
+  keep the fiftieth fight watchable.
+- **Choices before the run are real trade-offs.** No build answers every job: jobs vary their enemy mix and terrain, and
+  the best runners cost something to send (fatigue, injury, wages, heat).
+
+**The effect library stays large (owner).** Variety across a career is what keeps the fiftieth fight fresh: different
+runners, builds and enemy mixes bring different effects. What must hold is per fight, not library size: a squad carries
+a few effects, and every effect is distinct on screen (its own look and log line). Effects that would look or read the same
+merge into one (`drafts/PROPOSAL-combat-builds.md` 4 already allows this). Each effect costs rules, a look, a log line and
+a sim, so the library grows a few effects a slice, not all at once.
 
 ## 3. Order of work (each its own PR; sims before and after, `npm test` green, CHANGELOG, DESIGN row)
 
