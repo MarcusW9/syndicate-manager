@@ -1,4 +1,4 @@
-# Handoff · 2026-11-13
+# Handoff · 2026-11-16
 
 Now and next, on one screen. Read `CLAUDE.md` first; its rules are not repeated here. The why for anything below is in the decision log (`docs/design/2026-11.md`, grep the topic); what shipped is in `docs/changelog/`. Older session histories, build-order notes and backlog detail: `docs/handoff-archive.md` (grep it, don't read it).
 
@@ -12,16 +12,18 @@ Now and next, on one screen. Read `CLAUDE.md` first; its rules are not repeated 
 
 ## Next
 
-1. **Session-cost restructure (2026-11-13): all four steps done.** The review is `drafts/REVIEW-2026-11-13.md` (nothing fixed; four findings rated high for the iOS wrapper: silent save failures and the storage limit, synchronous `save.js`, `confirm()` dialogs, exporting a save). The owner picks what to fix. Also open, ask first: splitting `ui/art.js` (146 KB) and `ui/styles.css` (204 KB), and `onClick` in `ui/actions.js` (one 28 KB `switch`).
-2. **The other tongs, deeper:** E0-E3 are built (E3 save v72, branch `claude/tongs-stale-reads-e3`); E4 (contested offers, regard with teeth) is next: (`drafts/PROPOSAL-tong-depth.md`, the owner took every call in section 9 as proposed).
-3. **Battles:** the owner's open items are in `drafts/OWNER-ITEMS-battle.md` (the slice 3 verdict, wording to rewrite, the Special actions button). Not built: slice 4, left behind (rescue job, ransom, the 7-day wait; `drafts/PLAN-battle-slices.md`), then the formal playtest and what follows it ("After the slices" there). Watchable combat's slices 3-5 (Overdrive, showcases) wait behind a playtest (`drafts/HANDOFF-watchable-combat.md`).
-4. **Owner's writing:** `drafts/writing-tasks.md` (task 14 is the E3 tong wording, first pass in `src/data/rivals.js`; A2: Mr. Szeto's heist and its six prep jobs is task 12; the oath ceremony goes through `add-lore`). Hall part names: `drafts/BRIEF-hall-compounds.md`.
-5. **Later, ask first:** back-room roles, leadership and judgment as stats, piloting, medical (`drafts/PROPOSAL-*.md`); the locked districts (the Silt first); everything under "Parked" in the archive.
-6. **The iOS app, not scheduled:** scoped in `PLAN-IOS.md` (wrapper, saves, privacy, App Store checks, analytics); seven decisions are open with the owner at its top. Its Phase 1, the phone audit on the web build, can be done any time.
+The agreed order (owner, 2026-11-16): **the save fix, then builds, then the playtest.** Everything else is parked until then.
+
+1. **A failed save is never silent: built** (branch `claude/save-failures`; the brief `drafts/BRIEF-save-failures.md` can go once it merges). The banner's "Not saved yet" line, for a game whose first save fails, is Claude's draft for the owner.
+2. **Builds slice 3-ii-a, the first combo on screen:** `drafts/HANDOFF-builds-3iia.md` (Ricochet and the Cytotoxic Vector, given in data; the synthetic tag as the first counter). An Opus session. The frame is `drafts/PROPOSAL-swarm-and-special-moves.md` 2.6-2.7 and the owner's ideation `drafts/PROPOSAL-combat-builds.md`. Next slices: earning by offer and slots, Contagious, the planning read's tags.
+3. **Reconcile medical, piloting and leadership with the build frame** before any is built (owner, 2026-11-16): map each `drafts/PROPOSAL-*.md` onto the build axes and roles; what does not fit stays standalone. A docs pass, alongside 3-ii-a.
+4. **The playtest** after 3-ii-a (`drafts/PLAN-battle-slices.md` "After the slices"), on the fight the owner wants.
+5. **Parked until then:** the other tongs' E4 (`drafts/PROPOSAL-tong-depth.md`), battle slice 4 (left behind, rescue, ransom), the iOS wrapper (`PLAN-IOS.md`; review findings 2-4) and the rest of `drafts/REVIEW-2026-11-13.md`, the locked districts, everything under "Parked" in the archive.
+6. **Owner's writing, any time:** `drafts/writing-tasks.md`; battle items in `drafts/OWNER-ITEMS-battle.md`; hall part names in `drafts/BRIEF-hall-compounds.md`.
 
 ## Open branches
 
-No open PRs. The remote holds 100+ old `claude/*` session branches; all the ones checked are squash-merged leftovers (their commits look "ahead" of `main` only because of the squash). Deleting them is the owner's call.
+The builds docs PR may be open (branch `claude/combat-builds-ideation`). The remote holds 100+ old `claude/*` session branches; all the ones checked are squash-merged leftovers (their commits look "ahead" of `main` only because of the squash). Deleting them is the owner's call.
 
 ## Agreed rules still live
 
