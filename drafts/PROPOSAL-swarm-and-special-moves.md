@@ -1,6 +1,6 @@
 # Proposal: the swarm feel, and the crew's answers to it (special moves, area attacks, the swarm drone)
 
-Status: **direction agreed by the owner (2026-11-15); nothing here is built.** Each part below is its own slice and PR, with the
+Status: **direction agreed by the owner (2026-11-15); nothing here is built.** Section 2.6 (the build system and how fights scale with it) added the same day from the owner's vision; its caps are left open on purpose (2.6.5). Each part below is its own slice and PR, with the
 owner's calls first where marked. Design row: `docs/design/2026-11.md`, 2026-11-15, "the swarm feel comes from the crew's
 multi-target tools".
 
@@ -63,9 +63,58 @@ enemies. Until then, a job gets at most light waves (the two jobs added on 2026-
 - Once the crew has the tools: jobs built around swarms (drafted with `docs/new-job-prompt.md`'s Fight section, wired by
   `/add-job`), and second waves for the two jobs that lost them. The safety bars do not change.
 
+### 2.6 The build system, and how fights scale with it (owner's vision, 2026-11-15)
+
+The aim: a runner's build is something the player puts together and enjoys watching work. Think of a roguelite like Hades,
+where boons combine: a runner's stats lean them one way, what they earn and what they carry push that further, and the right
+combination produces an effect that is fun to watch, a contagion spreading through a swarm and wiping it out.
+
+**2.6.1 Four layers.**
+
+| Layer | What it gives | Where it lives |
+| --- | --- | --- |
+| Base stats and specialisation | The lean: which direction suits a runner (an eye for range or overwatch, the mix that suits a blade) | `core/development.js STATS`, `core/specialisations.js` |
+| Traits and perks (earned) | Passive bonuses that change how effects behave | `data/earnedTraits.js`, `core/earned.js` |
+| Moves (earned, or arrived with) | The active burst, the showcase | 2.1 and 2.2 |
+| Gear (found, rolled) | What a hit carries | `data/gearPerks.js` (Spread, Contagion, 2.3) |
+
+The owner's example combines all four: a trait that gives bonus damage over time, the luck of a contagion weapon that spreads
+it, and a move that marks several enemies at once.
+
+**2.6.2 A shared effect vocabulary, so combinations emerge.** The pieces never name each other. Each hooks into a small common
+set of words, and the combinations come from the rules, not from hand-written pairs:
+- effects: mark (damage over time), spread, stun or jam, break (a group's nerve);
+- triggers: on hit, on kill, on a mark's tick, on a group breaking.
+
+A gear perk says "on kill, the mark jumps"; a trait says "a marked enemy loses one more pip a tick"; a move says "hit up to 4,
+each hit marks". Each is data in `src/data/`; `core/fight.js` reads them. This vocabulary comes before the first move, so the
+moves are written in it.
+
+**2.6.3 Earned by offer, not handed out.** At a milestone a runner is offered two or three pieces, weighted by their stats,
+weapon and what they already hold, and the player picks one. The roguelite luck sits in what is offered and what gear drops.
+Runners persist, so a build grows over a career, not one run. Recruits can arrive with a piece, which seeds a direction.
+Limited slots (a move and a few traits, say) force a choice, so two blade runners can end up different. A few rare pieces are
+offered only when two conditions both hold (a contagion weapon and a damage-over-time trait, say): the jackpot moments.
+
+**2.6.4 Scaling: fights grow with the tools.** Today's fights are tuned for crews with no builds: a few enemies, one attack
+each. Built as written on top of that, these pieces would be overpowered (owner). So:
+- **Power that grows with the number of enemies, not raw damage.** Most pieces pay off only against numbers: a move needs 3 or
+  more enemies up, Spread a second enemy in the group, Contagion someone to jump to. Against today's 3 or 4 enemies they add a
+  little; against a swarm they decide it. Swarms are where builds shine, and today's jobs stay as they are.
+- **Enemy pressure rises as tools arrive.** Each slice gives the crew a tool, then gives the enemies the problem it answers:
+  the swarm drone, swarm jobs, the waves that were cut (section 3).
+- **Sims that test builds.** `scripts/sim-gate-teams.mjs` fights crews with no builds. It gains a second team, a plausible
+  built crew at each gate. Each slice checks both: crews without builds still pass today's bars, and built crews beat swarms
+  by a margin that feels good without trivialising the old jobs. The safety bars and the death rule do not change.
+
+**2.6.5 Caps: left open on purpose (owner).** The owner will not fix the caps up front (slot counts, how far marks stack, how
+far a spread reaches, how often a move fires) and will judge them by feel as the slices land. Each slice ships with
+conservative placeholder numbers in `src/data/` (one place per number, named, easy to change), the sims report what they do,
+and the owner tunes from play. Nothing hard-codes a cap in `core/`.
+
 ## 3. Order of work (each its own PR; sims before and after, `npm test` green, CHANGELOG, DESIGN row)
 
-1. **Special moves, the rules (slice 3-ii, reshaped).** The move as data; who has one (earned, or arrived with); one use per
+1. **The effect vocabulary and special moves, the rules (slice 3-ii, reshaped).** The effect words and triggers (2.6.2) first, then the move as data in them; who has one (earned, or arrived with); one use per
    fight; the trigger (auto, or on my call); the burst in `playRound` with sequential retargeting that never takes another
    attacker's reserved enemy; the odds and preview; the record (`burst` lines the stage already draws). Save change. The round
    screen gains the "on my call" switch and the order.
@@ -82,8 +131,12 @@ owner's to write.
 
 ## 5. Open for the owner (before each slice; do not guess)
 
-- **Moves:** how each is earned (a count of fights with that archetype? a milestone? a trainer, like a specialisation offer from
-  Joss?); how often a recruit arrives with one, and at which tier; whether a runner can hold several and picks one to carry.
+- **Moves and the build (reshaped by 2.6):** the effect words and triggers to start with; what milestone brings an offer and
+  how many pieces it shows; how offers are weighted (stats, weapon, what the runner holds); how often a recruit arrives with a
+  piece, and at which tier; whether a runner holds one move or several; the first rare two-condition pieces, if any.
+- **The tuning target for swarm jobs:** a crew with no build (builds are a bonus) or the expected build at each gate (builds
+  matter). Suggested: the expected build for swarm jobs, no build for today's jobs.
+- **Caps:** not now (owner, 2.6.5). Placeholders ship with each slice; the owner tunes by feel.
 - **The list of moves** and their names (Blade Dance, Ricochet, Reflex Overdrive, Quickburst, more?), each move's target count
   and condition.
 - **Contagion's numbers** (pips a round, how far it spreads), and which gear can roll Spread and Contagion.
