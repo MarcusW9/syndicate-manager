@@ -40,17 +40,23 @@ That a built runner is satisfying to watch and visibly carries a fight against n
    jobs, corporate security) against the same team with no build; the built team against a drone-heavy fight (the
    counter). The safety bars and the death rule do not move.
 
-## Open for the owner (ask first, multiple choice)
+## The owner's calls (2026-11-16)
 
-- The tick: **1 pip every round (owner, 2026-11-16)**, chosen because it reads best when watched. It lasts **until the target
-  dies** (owner, 2026-11-16). Still open: whether a strong hit infects harder. Note: most enemies
-  have 1 pip (hired, drone, police, secforce; corp and enforcer have 2), so on them a tick is a delayed kill. If damage
-  over time needs room to show, the owner's options are doubling pip counts or adding health beside pips (owner: leave
-  it and see how it works); that is its own balance change with its own
-  sims, decided after this slice's sims, not inside it.
-- Ricochet's targets (3, or one per enemy group up to 4?) and its condition (3 or more enemies up, round 2 or later?).
-- Who carries it in the test roster and the sims (the best combat runner, or a rifle archetype?).
-- The wording of every new line.
+- **The tick:** 1 pip every round (it reads best when watched), lasting until the target dies. A strong hit infects the
+  same as any hit (it already does 2 pips). Most enemies have 1 pip (hired, drone, police, secforce; corp and enforcer
+  have 2), so on them a tick is a delayed kill. If damage over time needs room to show, the owner's options are doubling
+  pip counts or adding health beside pips (owner: leave it and see how it works); that is its own balance change with its
+  own sims, decided after this slice's sims, not inside it.
+- **Ricochet's reach:** up to 3 enemies a burst.
+- **When it fires:** by itself, once a fight, as soon as 2 or more enemies are up, in any round. It will fire in almost
+  every fight; the sims say whether that is too strong (report how often it fires and what it changes).
+- **Who carries it:** the best combat runner (the one the planning read already picks to shoot), in the test roster and
+  the sims' built team.
+
+## Still open
+
+- The wording of every new line (bounce, infection, tick, immunity): draft text in `data/fightText.js` keys, marked for
+  the owner (`drafts/writing-tasks.md`).
 
 ## Not in this slice
 

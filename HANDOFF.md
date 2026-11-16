@@ -12,18 +12,17 @@ Now and next, on one screen. Read `CLAUDE.md` first; its rules are not repeated 
 
 ## Next
 
-The agreed order (owner, 2026-11-16): **the save fix, then builds, then the playtest.** Everything else is parked until then.
+The agreed order (owner, 2026-11-16): **the save fix (done, #185), then builds, then the playtest.** Everything else is parked until then.
 
-1. **A failed save is never silent: built** (branch `claude/save-failures`; the brief `drafts/BRIEF-save-failures.md` can go once it merges). The banner's "Not saved yet" line, for a game whose first save fails, is Claude's draft for the owner.
-2. **Builds slice 3-ii-a, the first combo on screen:** `drafts/HANDOFF-builds-3iia.md` (Ricochet and the Cytotoxic Vector, given in data; the synthetic tag as the first counter). An Opus session. The frame is `drafts/PROPOSAL-swarm-and-special-moves.md` 2.6-2.7 and the owner's ideation `drafts/PROPOSAL-combat-builds.md`. Next slices: earning by offer and slots, Contagious, the planning read's tags.
-3. **Reconcile medical, piloting and leadership with the build frame** before any is built (owner, 2026-11-16): map each `drafts/PROPOSAL-*.md` onto the build axes and roles; what does not fit stays standalone. A docs pass, alongside 3-ii-a.
-4. **The playtest** after 3-ii-a (`drafts/PLAN-battle-slices.md` "After the slices"), on the fight the owner wants.
-5. **Parked until then:** the other tongs' E4 (`drafts/PROPOSAL-tong-depth.md`), battle slice 4 (left behind, rescue, ransom), the iOS wrapper (`PLAN-IOS.md`; review findings 2-4) and the rest of `drafts/REVIEW-2026-11-13.md`, the locked districts, everything under "Parked" in the archive.
-6. **Owner's writing, any time:** `drafts/writing-tasks.md`; battle items in `drafts/OWNER-ITEMS-battle.md`; hall part names in `drafts/BRIEF-hall-compounds.md`.
+1. **Builds slice 3-ii-a, the first combo on screen (the owner's calls are in; ready for an Opus session):** `drafts/HANDOFF-builds-3iia.md` (Ricochet and the Cytotoxic Vector, given in data; the synthetic tag as the first counter). An Opus session. The frame is `drafts/PROPOSAL-swarm-and-special-moves.md` 2.6-2.7 and the owner's ideation `drafts/PROPOSAL-combat-builds.md`. Next slices: earning by offer and slots, Contagious, the planning read's tags.
+2. **Reconcile medical, piloting and leadership with the build frame** before any is built (owner, 2026-11-16): map each `drafts/PROPOSAL-*.md` onto the build axes and roles; what does not fit stays standalone. A docs pass, alongside 3-ii-a.
+3. **The playtest** after 3-ii-a (`drafts/PLAN-battle-slices.md` "After the slices"), on the fight the owner wants.
+4. **Parked until then:** the other tongs' E4 (`drafts/PROPOSAL-tong-depth.md`), battle slice 4 (left behind, rescue, ransom), the iOS wrapper (`PLAN-IOS.md`; review findings 2-4) and the rest of `drafts/REVIEW-2026-11-13.md`, the locked districts, everything under "Parked" in the archive.
+5. **Owner's writing, any time:** the save banner's "Not saved yet" line (Claude's draft); `drafts/writing-tasks.md`; battle items in `drafts/OWNER-ITEMS-battle.md`; hall part names in `drafts/BRIEF-hall-compounds.md`.
 
 ## Open branches
 
-The builds docs PR may be open (branch `claude/combat-builds-ideation`). The remote holds 100+ old `claude/*` session branches; all the ones checked are squash-merged leftovers (their commits look "ahead" of `main` only because of the squash). Deleting them is the owner's call.
+No open PRs. The remote holds 100+ old `claude/*` session branches; all the ones checked are squash-merged leftovers (their commits look "ahead" of `main` only because of the squash). Deleting them is the owner's call.
 
 ## Agreed rules still live
 
