@@ -24,7 +24,8 @@ import { gearPlace } from './gear.js';
 import { buyGear, buyOffer, itemName, sellPrice, sellGear, equip, unequip } from '../core/gear.js';
 import { togglePause, toggleSpeed, showLatest, paceChanged, closeFinale } from './watch.js';
 import { sideTaskById, sendOnSideTask } from '../core/sidetasks.js';
-import { setPref, getPref, saveGame, exportSave, getActiveSlot, loadGame, unreadableSave, setActiveSlot, listSlots, deleteSlot, restoreUnreadable, exportUnreadable, discardUnreadable, loadBackup, importSave } from '../save/save.js';
+import { markRead } from '../core/inbox.js';
+import { setPref, getPref, exportSave, getActiveSlot, loadGame, unreadableSave, setActiveSlot, listSlots, deleteSlot, restoreUnreadable, exportUnreadable, discardUnreadable, loadBackup, importSave } from '../save/save.js';
 import { FOUNDERS_TO_PICK, hire, haggle, passRecruit } from '../core/recruits.js';
 import { findCard, sendScout, sendWatch, signCard } from '../core/dossier.js';
 import { homeOf, homeSub, rootOf } from './nav.js';
@@ -107,7 +108,7 @@ export function onClick(e) {
       const msg = state.inbox.find((m) => m.id === id);
       // A hands-off report you haven't read plays out once: you didn't watch that job.
       if (msg?.type === 'report' && !msg.read && msg.timeline?.orders) V.playReportId = id;
-      if (msg && !msg.read) { msg.read = true; saveGame(state); }
+      if (msg && !msg.read) return setState(markRead(state, id));
       break;
     }
     // The reader's ‹ › (2026-11-12): the next or previous message in the list as shown, without going back to it.
@@ -118,7 +119,7 @@ export function onClick(e) {
       V.openMessageId = m.id;
       V.scrollDue = null;
       if (m.type === 'report' && !m.read && m.timeline?.orders) V.playReportId = m.id;
-      if (!m.read) { m.read = true; saveGame(state); }
+      if (!m.read) return setState(markRead(state, m.id));
       break;
     }
     // Back puts the view you came from back (ui/nav.js): its tab, page, filters, plan and scroll. With nothing to
@@ -298,12 +299,9 @@ export function onClick(e) {
     case 'buzz-pickup': V.buzzStage = 'open'; break;
     case 'buzz-later': buzzLater.add(id); V.buzzStage = null; break;
     case 'buzz-in': case 'buzz-think': {
-      const msg = state.inbox.find((m) => m.id === id);
-      if (msg) msg.read = true;
       V.buzzStage = null;
       nav.clear(); if (action === 'buzz-in') { V.screen = 'jobs'; V.plan = null; V.sidePlan = null; } else { V.screen = 'inbox'; V.openMessageId = id; }
-      saveGame(state);
-      break;
+      return setState(markRead(state, id));
     }
     case 'inbox-filter': V.inboxUnread = id === 'unread'; break;
     case 'joss-fold': V.jossFoldedDay = V.jossFoldedDay === state.day ? null : state.day; break;
@@ -415,15 +413,14 @@ export function onClick(e) {
     case 'raid-open': remember(action, id); goHome('district'); V.tongsView = null; V.cityDistrict = id; V.raidCardDue = id; break;
     case 'raid-pay': return setState(payOffRaid(state, id)); // pay the police off before the day (core/raids.js)
     // A raid at the door, answered from Ops: its call is a message on Today.
-    case 'raid-answer': { remember(action, id); V.screen = homeOf('message'); V.openMessageId = id; const m = state.inbox.find((x) => x.id === id); if (m && !m.read) { m.read = true; saveGame(state); } break; }
+    case 'raid-answer': { remember(action, id); V.screen = homeOf('message'); V.openMessageId = id; return setState(markRead(state, id)); }
     case 'let-run': nav.clear(); V.screen = 'city'; V.cityTab = 'map'; V.cityDistrict = null; return setState(letThemRun(state));
     case 'take-command': return setState(takeCommand(state));
     case 'sendoff-close': t.remove(); return;
     case 'export':
-      state.lastBackupDay = state.day;
-      saveGame(state);
+      setState({ ...state, lastBackupDay: state.day });
       exportSave(state);
-      break;
+      return;
     case 'import':
       if (confirm(`Load a save file into slot ${getActiveSlot()}? The game in this slot will be replaced.`)) { V.importInput.value = ''; V.importInput.click(); } // cleared, so the same file can be picked again
       break;

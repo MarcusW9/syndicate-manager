@@ -31,6 +31,12 @@ export function isActionable(state, m) {
   return false;
 }
 
+/** The message marked read. A new state; the inbox's other messages are shared. */
+export function markRead(state, id) {
+  if (!state.inbox?.some((m) => m.id === id && !m.read)) return state;
+  return { ...state, inbox: state.inbox.map((m) => (m.id === id ? { ...m, read: true } : m)) };
+}
+
 /** Drop old news from the inbox; keep anything actionable. Mutates and returns state. */
 export function trimInbox(state) {
   if (!Array.isArray(state.inbox)) return state;

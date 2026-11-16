@@ -14,7 +14,7 @@ Now and next, on one screen. Read `CLAUDE.md` first; its rules are not repeated 
 
 The agreed order (owner, 2026-11-16): **the save fix, then builds, then the playtest.** Everything else is parked until then.
 
-1. **A failed save is never silent:** `drafts/BRIEF-save-failures.md` (review finding 1, with 12 and half of 7). Small, one PR. Two calls with the owner first (backups per slot, the banner's wording).
+1. **A failed save is never silent: built** (branch `claude/save-failures`; the brief `drafts/BRIEF-save-failures.md` can go once it merges). The banner's "Not saved yet" line, for a game whose first save fails, is Claude's draft for the owner.
 2. **Builds slice 3-ii-a, the first combo on screen:** `drafts/HANDOFF-builds-3iia.md` (Ricochet and the Cytotoxic Vector, given in data; the synthetic tag as the first counter). An Opus session. The frame is `drafts/PROPOSAL-swarm-and-special-moves.md` 2.6-2.7 and the owner's ideation `drafts/PROPOSAL-combat-builds.md`. Next slices: earning by offer and slots, Contagious, the planning read's tags.
 3. **Reconcile medical, piloting and leadership with the build frame** before any is built (owner, 2026-11-16): map each `drafts/PROPOSAL-*.md` onto the build axes and roles; what does not fit stays standalone. A docs pass, alongside 3-ii-a.
 4. **The playtest** after 3-ii-a (`drafts/PLAN-battle-slices.md` "After the slices"), on the fight the owner wants.
