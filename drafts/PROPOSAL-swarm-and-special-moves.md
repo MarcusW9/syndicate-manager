@@ -115,6 +115,26 @@ far a spread reaches, how often a move fires) and will judge them by feel as the
 conservative placeholder numbers in `src/data/` (one place per number, named, easy to change), the sims report what they do,
 and the owner tunes from play. Nothing hard-codes a cap in `core/`.
 
+### 2.7 What matters most: watching, power, and the choices before the run (owner, 2026-11-16)
+
+The owner's priorities for everything in section 2: **fights are enjoyable to watch, and the strong runners feel
+powerful.** Most fights are watched or hands-off; the player enjoys their crew fighting. **The choices that matter are the
+ones made before the run**: who goes, their builds and gear, and the counters picked for what the job will throw at them.
+
+What follows from it:
+- **Before the run.** The planning read shows what a build answers: the job's enemy mix and tags (swarm, machines,
+  chromed, a boss) and its site's terrain tags, so picking the crew and their builds is the decision. The coverage read
+  (`fightOddsFor`) already prices a squad; it should also say why ("no answer to a drone swarm").
+- **Moves fire by themselves first.** 2.2's "on my call" stays possible but is secondary; the automatic trigger and the
+  default orders must play builds well, since that is how most fights are seen.
+- **Positioning stays abstract in the rules** (groups, cover, tags on the fight; no coordinates). The stage shows it:
+  pulls, knockbacks, marks hopping, a chain of pops are drawn from what the rules did, as the special looks already are
+  (`data/fightLooks.js`, `ui/fightstage.js`). Zones (close, mid, far, with terrain) are a later slice if terrain needs it;
+  real coordinates in engine 2 are not planned (Claude's estimate: a rework of the rules, odds and preview, for little
+  over zones in a game watched mostly hands-off).
+- **Power shows.** A built star should visibly carry a fight against numbers: bursts, chains and spreads each get one
+  short, distinct log line and a drawn effect. The safety bars and the death rule do not move.
+
 ## 3. Order of work (each its own PR; sims before and after, `npm test` green, CHANGELOG, DESIGN row)
 
 1. **The effect vocabulary and special moves, the rules (slice 3-ii, reshaped).** The effect words and triggers (2.6.2) first, then the move as data in them; who has one (earned, or arrived with); one use per
