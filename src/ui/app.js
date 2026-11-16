@@ -16,7 +16,7 @@ import { takeFightChange } from './fightscreen.js';
 import { autoStep } from '../core/autorun.js';
 import { fitGearArt } from './board.js';
 import { isWatching, syncWatch, justFinished, stopWatch, mountWatch } from './watch.js';
-import { saveGame, unreadableSave, backupDue } from '../save/save.js';
+import { saveGame, unreadableSave, backupDue, saveTrouble } from '../save/save.js';
 import { renderLeadName } from './tongs.js';
 import { tabBadges, tabOf } from './nav.js';
 import { onClick, onImportFile } from './actions.js';
@@ -84,7 +84,9 @@ function heatStat() {
 export function render() {
   // A running job's watch screen updates in place, so its animations and timer carry on (ui/watch.js).
   const am = state.activeMission;
-  if (am && isWatching(root, am)) return syncWatch(state);
+  // ...unless saving has just started or stopped failing: then the whole page is drawn, so the banner shows or goes.
+  if (am && isWatching(root, am) && troubleKey() === drawnTrouble) return syncWatch(state);
+  drawnTrouble = troubleKey();
   const finishing = justFinished(am); // the job ended on this step: walk out, then the end card
   stopWatch();
   // Every render replaces the page, so put keyboard focus back on the same control if it survives.
@@ -130,7 +132,7 @@ export function render() {
       <button class="nav__btn nav__btn--save ${V.screen === 'settings' ? 'is-active' : ''}" data-action="nav" data-id="settings" aria-pressed="${V.screen === 'settings'}">Save</button>
     </nav>
 
-    <main class="main ${wide ? 'main--wide' : ''} ${!state.activeMission && V.screen === 'jobs' && V.plan ? 'main--split' : ''}">${state.activeMission ? renderMission() : `${keptBanner()}${renderScreen()}`}</main>
+    <main class="main ${wide ? 'main--wide' : ''} ${!state.activeMission && V.screen === 'jobs' && V.plan ? 'main--split' : ''}">${saveBanner()}${state.activeMission ? renderMission() : `${keptBanner()}${renderScreen()}`}</main>
     ${dock ? `<div class="dock">${renderContinue(blocked, resting, unread, 'dock__continue')}</div>` : ''}
     ${cue ? renderDayCue(cue) : ''}
     ${leaving ? renderSendOff(leaving) : ''}
@@ -294,6 +296,21 @@ function renderScreen() {
   if (V.screen === 'lore') return renderLore();
   if (V.screen === 'settings') return renderSettings();
   return '';
+}
+
+// --- a save that failed ---------------------------------------------------
+// Saving has failed (save/save.js saveTrouble): on every screen, a job included, until a save goes through
+// (drafts/BRIEF-save-failures.md; wording C, owner, 2026-11-16, draft until the owner writes it).
+let drawnTrouble = null;
+const troubleKey = () => JSON.stringify(saveTrouble());
+function saveBanner() {
+  const t = saveTrouble();
+  if (!t) return '';
+  const text = t.sinceDay != null
+    ? `<strong>Not saved since day ${t.sinceDay}.</strong> If you close the game, you lose everything after that.`
+    : '<strong>Not saved yet.</strong> If you close the game, you lose this game.';
+  const open = state.activeMission ? '' : '<button class="btn" data-action="nav" data-id="settings">Open Save</button>';
+  return `<div class="banner banner--danger" role="alert"><span>${text}</span>${open}</div>`;
 }
 
 // --- inbox -------------------------------------------------------------

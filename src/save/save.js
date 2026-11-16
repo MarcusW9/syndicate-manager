@@ -6,6 +6,7 @@
 //   syndicate-active-slot          '1' | '2' | '3'
 //   syndicate-slot-N               the save in slot N
 //   syndicate-slot-N-backup        automatic weekly backup of slot N (not for Ironman)
+//   syndicate-slot-N-backup-meta   { day, seed } of that backup, so a save can check it without parsing it
 //   syndicate-slot-N-unreadable    a save in slot N that couldn't be opened, kept aside with its backup
 //   syndicate-ironman-progress     { [ironmanId]: highest save counter seen }
 //   syndicate-save-v1              legacy single save, moved into slot 1 on first load
@@ -141,25 +142,62 @@ function checkIronman(state) {
 
 // --- save / load ---------------------------------------------------------
 
-/** Save to the active slot. Also keeps the weekly backup fresh (not for Ironman). */
+// --- whether saving works --------------------------------------------------
+// A failed write (storage full, private browsing, blocked site data) used to pass unnoticed: play went on and nothing
+// was kept (review 2026-11-13, finding 1). saveGame now reports it, and the UI shows saveTrouble() as a banner on every
+// screen until a save goes through (drafts/BRIEF-save-failures.md). In memory only: never part of a save.
+let failing = false;
+let lastSavedDay = null; // the day of the last save that was written, or that was loaded
+
+/** Null while saving works; else { sinceDay }: the day of the last good save (null if this game was never saved). */
+export function saveTrouble() {
+  return failing ? { sinceDay: lastSavedDay } : null;
+}
+
+// The weekly backup's day and seed, kept beside it in a small key, so a save need not read and parse the whole backup
+// (about 270,000 characters on a year-old save) to compare two numbers (review finding 7). In storage, not memory, so
+// it stays right when storage changes under the game (another tab, cleared site data). A backup written before this
+// key existed is read once and the key written then.
+const backupMetaKey = (n) => `syndicate-slot-${n}-backup-meta`;
+function backupInfo(slot) {
+  const meta = readJson(backupMetaKey(slot));
+  if (meta) return meta;
+  const b = readJson(backupKey(slot));
+  if (!b) return null;
+  const info = { day: b.day, seed: b.seed };
+  storageSet(backupMetaKey(slot), JSON.stringify(info));
+  return info;
+}
+
+/** Save to the active slot. Also keeps the weekly backup fresh (not for Ironman). False if any write failed. */
 export function saveGame(state) {
   const slot = getActiveSlot();
   recordIronman(state);
-  const ok = storageSet(slotKey(slot), JSON.stringify(state));
+  let ok = storageSet(slotKey(slot), JSON.stringify(state));
   if (state.difficulty !== 'ironman') {
     const week = Math.floor((state.day - 1) / 7);
-    const backup = readJson(backupKey(slot));
+    const backup = backupInfo(slot);
     if (!backup || Math.floor((backup.day - 1) / 7) < week || backup.seed !== state.seed) {
-      storageSet(backupKey(slot), JSON.stringify(state));
+      const wrote = storageSet(backupKey(slot), JSON.stringify(state));
+      if (wrote) storageSet(backupMetaKey(slot), JSON.stringify({ day: state.day, seed: state.seed }));
+      else storageRemove(backupMetaKey(slot)); // what is stored now is unknown: read the backup next time
+      ok = ok && wrote;
     }
   }
+  failing = !ok;
+  if (ok) lastSavedDay = state.day;
   return ok;
 }
 
 export function loadGame(slot = getActiveSlot()) {
   const raw = storageGet(slotKey(slot));
   if (!raw) return null;
-  try { return migrate(JSON.parse(raw)); } catch (err) { keepUnreadable(slot, raw, err); return null; }
+  try {
+    const state = migrate(JSON.parse(raw));
+    failing = false;
+    lastSavedDay = state.day;
+    return state;
+  } catch (err) { keepUnreadable(slot, raw, err); return null; }
 }
 
 // --- unreadable saves: kept aside, never lost -----------------------------
@@ -199,6 +237,7 @@ export function restoreUnreadable(slot = getActiveSlot()) {
   const state = migrate(JSON.parse(kept.raw));
   checkIronman(state);
   if (kept.backupRaw) storageSet(backupKey(slot), kept.backupRaw);
+  storageRemove(backupMetaKey(slot));
   storageRemove(unreadableKey(slot));
   return state;
 }
@@ -222,6 +261,7 @@ export function discardUnreadable(slot = getActiveSlot()) {
 export function deleteSlot(slot) {
   storageRemove(slotKey(slot));
   storageRemove(backupKey(slot));
+  storageRemove(backupMetaKey(slot));
 }
 
 /** Kept for older callers: deletes the active slot. */
