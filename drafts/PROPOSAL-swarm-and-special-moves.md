@@ -65,6 +65,9 @@ enemies. Until then, a job gets at most light waves (the two jobs added on 2026-
 
 ### 2.6 The build system, and how fights scale with it (owner's vision, 2026-11-15)
 
+The owner's ideation for this section (archetypes, axes, the effect library, reactions, combo fantasies, guardrails, open
+questions) is in `drafts/PROPOSAL-combat-builds.md` (2026-11-16): read it with this section.
+
 The aim: a runner's build is something the player puts together and enjoys watching work. Think of a roguelite like Hades,
 where boons combine: a runner's stats lean them one way, what they earn and what they carry push that further, and the right
 combination produces an effect that is fun to watch, a contagion spreading through a swarm and wiping it out.
