@@ -161,6 +161,11 @@ a sim, so the library grows a few effects a slice, not all at once.
 4. **Swarm jobs**, and the second waves back.
 5. **Role abilities.**
 
+**Cut smaller (owner, 2026-11-16):** step 1 starts with **3-ii-a**, the first combo on screen: Ricochet and the Cytotoxic Vector
+(damage over time that does not spread by itself), given in data, with the synthetic tag as the first counter
+(`drafts/HANDOFF-builds-3iia.md`). Earning by offer and slots, Contagious (2.3's Contagion, the spread on a death) and the
+planning read's tags follow as their own slices.
+
 ## 4. Invariants (unchanged)
 
 Shown equals used; previews never draw or change the fight; pace never changes outcomes; units are the rules' units; cosmetic
