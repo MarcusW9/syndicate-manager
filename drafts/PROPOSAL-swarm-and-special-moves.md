@@ -65,6 +65,9 @@ enemies. Until then, a job gets at most light waves (the two jobs added on 2026-
 
 ### 2.6 The build system, and how fights scale with it (owner's vision, 2026-11-15)
 
+The owner's ideation for this section (archetypes, axes, the effect library, reactions, combo fantasies, guardrails, open
+questions) is in `drafts/PROPOSAL-combat-builds.md` (2026-11-16): read it with this section.
+
 The aim: a runner's build is something the player puts together and enjoys watching work. Think of a roguelite like Hades,
 where boons combine: a runner's stats lean them one way, what they earn and what they carry push that further, and the right
 combination produces an effect that is fun to watch, a contagion spreading through a swarm and wiping it out.
@@ -112,6 +115,41 @@ far a spread reaches, how often a move fires) and will judge them by feel as the
 conservative placeholder numbers in `src/data/` (one place per number, named, easy to change), the sims report what they do,
 and the owner tunes from play. Nothing hard-codes a cap in `core/`.
 
+### 2.7 What matters most: watching, power, and the choices before the run (owner, 2026-11-16)
+
+The owner's priorities for everything in section 2: **fights are enjoyable to watch, and the strong runners feel
+powerful.** Most fights are watched or hands-off; the player enjoys their crew fighting. **The choices that matter are the
+ones made before the run**: who goes, their builds and gear, and the counters picked for what the job will throw at them.
+
+What follows from it:
+- **Before the run.** The planning read shows what a build answers: the job's enemy mix and tags (swarm, machines,
+  chromed, a boss) and its site's terrain tags, so picking the crew and their builds is the decision. The coverage read
+  (`fightOddsFor`) already prices a squad; it should also say why ("no answer to a drone swarm").
+- **Moves fire by themselves first.** 2.2's "on my call" stays possible but is secondary; the automatic trigger and the
+  default orders must play builds well, since that is how most fights are seen.
+- **Positioning stays abstract in the rules** (groups, cover, tags on the fight; no coordinates). The stage shows it:
+  pulls, knockbacks, marks hopping, a chain of pops are drawn from what the rules did, as the special looks already are
+  (`data/fightLooks.js`, `ui/fightstage.js`). Zones (close, mid, far, with terrain) are a later slice if terrain needs it;
+  real coordinates in engine 2 are not planned (Claude's estimate: a rework of the rules, odds and preview, for little
+  over zones in a game watched mostly hands-off).
+- **Power shows, by contrast.** A built star should visibly carry a fight against numbers while weaker runners struggle:
+  bursts, chains and spreads each get one short, distinct log line and a drawn effect. Power reads only next to someone
+  weaker, so enemies scale with the builds (2.6.4). The safety bars and the death rule do not move.
+
+Three conditions (owner agreed, 2026-11-16):
+- **Watching keeps its stakes.** The planning read prices the fight, so the fight needs real variance, and a handful of
+  high-stakes calls stay during it (death's door, holding the van, the tech under fire) even as routine orders fade.
+- **Fights stay short and quick to watch.** A fast or skip pace (pace never changes outcomes) and variety in the enemy mix
+  keep the fiftieth fight watchable.
+- **Choices before the run are real trade-offs.** No build answers every job: jobs vary their enemy mix and terrain, and
+  the best runners cost something to send (fatigue, injury, wages, heat).
+
+**The effect library stays large (owner).** Variety across a career is what keeps the fiftieth fight fresh: different
+runners, builds and enemy mixes bring different effects. What must hold is per fight, not library size: a squad carries
+a few effects, and every effect is distinct on screen (its own look and log line). Effects that would look or read the same
+merge into one (`drafts/PROPOSAL-combat-builds.md` 4 already allows this). Each effect costs rules, a look, a log line and
+a sim, so the library grows a few effects a slice, not all at once.
+
 ## 3. Order of work (each its own PR; sims before and after, `npm test` green, CHANGELOG, DESIGN row)
 
 1. **The effect vocabulary and special moves, the rules (slice 3-ii, reshaped).** The effect words and triggers (2.6.2) first, then the move as data in them; who has one (earned, or arrived with); one use per
@@ -122,6 +160,11 @@ and the owner tunes from play. Nothing hard-codes a cap in `core/`.
 3. **The swarm drone.**
 4. **Swarm jobs**, and the second waves back.
 5. **Role abilities.**
+
+**Cut smaller (owner, 2026-11-16):** step 1 starts with **3-ii-a**, the first combo on screen: Ricochet and the Cytotoxic Vector
+(damage over time that does not spread by itself), given in data, with the synthetic tag as the first counter
+(`drafts/HANDOFF-builds-3iia.md`). Earning by offer and slots, Contagious (2.3's Contagion, the spread on a death) and the
+planning read's tags follow as their own slices.
 
 ## 4. Invariants (unchanged)
 
