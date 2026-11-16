@@ -70,6 +70,17 @@ export const FIGHT_TEXT = {
   'attackOut': '{who} puts {enemy} out of the fight.',
   'attackMiss': '{who} fires, but {enemy} stays clear.',
   'attackGone': '{who} finds the target already down.',
+  // Slice 3-ii-a, builds (DRAFT TEXT, the owner's to write; drafts/writing-tasks.md). One short, distinct line each: a bounce of a move
+  // (Ricochet; a run of them is drawn as the move's look), an infection ({word} is the payload's short word, "Vector"), a tick, an
+  // immunity (said once for each body that shrugs it off).
+  'bounceHit': '{who}\'s round bounces into {enemy}.',
+  'bounceCrack': "{who}'s round bounces off {enemy}'s armour.",
+  'bounceOut': '{who}\'s round bounces and drops {enemy}.',
+  'bounceMiss': '{who}\'s round skips past {enemy}.',
+  'infect': '{enemy} is infected with the {word}.',
+  'tick': 'The {word} eats at {enemy}.',
+  'tickOut': 'The {word} drops {enemy}.',
+  'immune': '{enemy} is a machine: the {word} does nothing.',
   'jamOk': '{who} blocks the signal.',
   'jamFail': '{who} cannot block the signal.',
   'stabilise': '{who} steadies {target}, who is holding on.',
@@ -100,6 +111,8 @@ export const FIGHT_TEXT = {
   'threat.alarm': '{enemy} moves to raise the alarm.',
   // Intent wording (what an order will do; {why} is the order behind it, filled by the screen)
   'intent.attack': '{who} attacks {enemy} ({why}).',
+  'intent.burst': '{who} fires the Ricochet: {enemies} ({why}).', // draft text, the owner\'s to write
+  'ticks': 'The {word} will cost {enemies} a pip.', // the round screen: who the vector takes at the round\'s end (draft text)
   'intent.shield': '{who} shields {target} ({why}).',
   'intent.patch': '{who} patches up {target} ({why}).',
   'intent.stabilise': '{who} stabilises {target} ({why}).',

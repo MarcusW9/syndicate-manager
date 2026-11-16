@@ -158,7 +158,7 @@ test('a fight saved before v73 gets the defaults on load: group 0, not approachi
   s.version = 72;
   const loaded = await S.importSave({ text: async () => JSON.stringify(s) });
   assert.equal(loaded.version, SAVE_VERSION);
-  assert.equal(SAVE_VERSION, 73);
+  assert.ok(SAVE_VERSION >= 73); // was `=== 73` until builds 3-ii-a bumped it to 74 (tests/builds.test.js has the v74 test)
   const lb = loaded.activeMission.battle;
   assert.deepEqual(lb.hiredTotal, { 0: 2 });
   assert.ok(lb.enemies.every((e) => e.group === 0 && e.approaching === false));

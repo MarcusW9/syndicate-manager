@@ -38,7 +38,7 @@ export const fightTypeOf = (templateId) => FIGHT_JOBS[templateId] ?? null;
 
 /** Everyone's health in the shape the feed, the plan and the call-in card read (enemies are "guards", pips are hp). Kept small: every round of a fight is saved in the report. */
 export const fightSnapshot = (b) => ({
-  guards: b.enemies.map((e) => ({ n: e.n, hp: Math.max(0, e.pips), max: e.max, out: e.out || e.fled, ...(e.absorb > 0 ? { plate: e.absorb } : {}) })),
+  guards: b.enemies.map((e) => ({ n: e.n, hp: Math.max(0, e.pips), max: e.max, out: e.out || e.fled, ...(e.absorb > 0 ? { plate: e.absorb } : {}), ...(e.infected && !e.out && !e.fled ? { infected: true } : {}) })),
   runners: b.runners.map((r) => ({ id: r.id, handle: r.handle, hp: r.pips, max: r.max, down: r.down || r.dead })),
 });
 /**

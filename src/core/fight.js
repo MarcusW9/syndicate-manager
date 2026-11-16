@@ -14,9 +14,9 @@
 //     goal: { work, protect: opId|null, vanRound, vanLeaves }, clock, nextPressure, extras, arriving: [kind],
 //     maxExtra (the reactive reinforcements' cap), recipe: { waves: [{ round, kind?, count }] }|null (waves still to come),
 //     hiredTotal: { [group]: n } (bodies that can break, per group), nextGroup,
-//     enemies: [{ n, kind, pips, max, absorb, cover, out, fled, deck, di, approaching, group }],
+//     enemies: [{ n, kind, pips, max, absorb, cover, out, fled, deck, di, approaching, group, infected: { tick, left|null, by, round, payload }|null }],
 //     runners: [{ id, handle, role, seat, pips, max, absorb, ap, strong, jammer, healer, medic, cover,
-//                 down, withdrawn, dead, aboard, stable, fightOn, downRound, left, stats }],
+//                 down, withdrawn, dead, aboard, stable, fightOn, downRound, left, stats, build: { move, payload }|null, moved }],
 //     threats: [{ id, kind, enemy, target, shown, hit, shieldedBy, cancelled }]  (this round's draw),
 //     orders: { [opId]: ORDER }, risk: { level }, vanHold: bool|null,
 //     overwatch, wheels, standby, standbyOut, heat, dilemmasFired }
@@ -25,6 +25,8 @@
 // lowest seat (crew order).
 
 import { FIGHT, ENEMIES, ENEMY_HIT, SITE_ENEMIES, COUNT_BY_THREAT, OPPOSITION, CLOCKS, FIGHTS, THREATS, FIGHT_RECIPES } from '../data/fights.js';
+import { MOVES, PAYLOADS } from '../data/builds.js';
+import { buildOf, immuneTo } from './builds.js';
 import { DILEMMAS } from '../data/dilemmas.js';
 import { lineText, kindWord, enemyName, nameList } from './fighttext.js';
 import { effectiveStat } from './crew.js';
@@ -64,10 +66,12 @@ export function runnerOf(op, approach, seat = 0) {
   const hurt = op.condition?.injury === 'light' ? FIGHT.lightWoundPips : 0;
   const w = weaponOf(op);
   const a = armourOf(op);
+  const build = buildOf(op);
   return {
     id: op.id, handle: op.handle, role: op.role, seat, pips: Math.max(1, max - hurt), max,
     absorb: absorbOf(a.value), armourName: a.name, weapon: w.name, ap: (w.pierce ?? 0) > 0, strong: strongMargin(w.damage),
-    look: specialLook(op), // the stage's special-move look (data/fightLooks.js); picture only, no rule reads it
+    look: MOVES[build?.move]?.look ?? specialLook(op), // the stage's special-move look (data/fightLooks.js); picture only, no rule reads it
+    build, moved: false, // slice 3-ii-a: { move, payload } from data/builds.js or null (op.build); `moved`: the move's use this fight is spent
     jammer: canJam(op), healer: op.role === 'medic' || patchBonus(op, { perks: false }) > 0, medic: op.role === 'medic', // a kit makes a healer; a suture-strip perk only helps one
     cover: FIGHT.startCover, down: false, withdrawn: false, dead: false, aboard: false, stable: false, fightOn: false, downRound: null, left: false,
     stats: Object.fromEntries(FIGHT_STATS.map((s) => [s, effectiveStat(op, s, { approach })])),
@@ -96,7 +100,7 @@ export const breaks = (kind) => ENEMIES[kind]?.fleeBelow != null;
  */
 function newEnemy(b, kind, rng, { arriving = false, group = 0 } = {}) {
   const def = ENEMIES[kind];
-  const e = { n: b.enemies.length + 1, kind, pips: def.pips, max: def.pips, absorb: def.absorb ?? 0, cover: def.cover, out: false, fled: false, deck: shuffle([...def.deck], rng), di: 0, approaching: arriving, group };
+  const e = { n: b.enemies.length + 1, kind, pips: def.pips, max: def.pips, absorb: def.absorb ?? 0, cover: def.cover, out: false, fled: false, deck: shuffle([...def.deck], rng), di: 0, approaching: arriving, group, infected: null };
   b.enemies.push(e);
   if (breaks(kind)) b.hiredTotal[group] = (b.hiredTotal[group] ?? 0) + 1;
   return e;
@@ -308,6 +312,13 @@ function enemyOrder(b, list, priority) {
   });
 }
 
+/** The runner's move if it is ready to fire by itself now: they have one, a use left, and enough enemies up (data/builds.js MOVES `when`). Else null. */
+export function moveReady(b, r) {
+  const mv = MOVES[r.build?.move];
+  if (!mv || (r.moved ? 1 : 0) >= mv.uses || enemiesUp(b).length < mv.when.enemies) return null;
+  return mv;
+}
+
 function tryDuty(b, r, duty, target, priority, res) {
   switch (duty) {
     case 'withdraw': return { kind: 'withdraw' };
@@ -325,6 +336,16 @@ function tryDuty(b, r, duty, target, priority, res) {
       const list = enemyOrder(b, enemiesUp(b).filter((e) => !covered(e, res)), priority);
       const e = (typeof target === 'number' && list.find((x) => x.n === target)) || list[0];
       if (!e) return null;
+      // Slice 3-ii-a: a move that is ready fires by itself (2.2): one attack on each of the first `reach` enemies in the rules' order,
+      // the chosen one first, none that another attacker has reserved. It waits until it has as many free targets as its condition asks.
+      const mv = moveReady(b, r);
+      const free = mv ? list.filter((x) => !res.damage[x.n]?.length) : []; // reserved = anyone has already planned an attack on it (a plain attack may still share a two-pip body; a bounce never does)
+      if (mv && free.length >= mv.when.enemies) {
+        const first = free.find((x) => x === e) ?? free[0];
+        const hit = [first, ...free.filter((x) => x !== first)].slice(0, mv.reach);
+        for (const x of hit) (res.damage[x.n] ??= []).push(r.ap);
+        return { kind: 'burst', move: mv.id, enemy: first.n, enemies: hit.map((x) => x.n) };
+      }
       (res.damage[e.n] ??= []).push(r.ap);
       return { kind: 'attack', enemy: e.n };
     }
@@ -441,6 +462,11 @@ function overwatchTarget(b, actions, res) {
 /** Whether overwatch may fire this round (a use left; at the van, only overwatchUsesAtVan shots). */
 const overwatchReady = (b) => b.overwatch && b.overwatch.left > 0 && (!boardingStage(b) || b.overwatch.vanShots < FIGHT.overwatchUsesAtVan);
 
+// --- infection (slice 3-ii-a) ----------------------------------------------------------------------
+
+/** The infected enemies that lose pips at the end of this round: up, and infected in an earlier round (the first tick is the round after the hit). The preview and the round read the same list. */
+export const ticksDue = (b) => enemiesUp(b).filter((e) => e.infected && b.round > e.infected.round);
+
 // --- the preview -----------------------------------------------------------------------------------
 
 /**
@@ -467,7 +493,8 @@ export function previewRound(b) {
     round: b.round, stage: b.stage,
     threats: b.threats.map((t) => ({ ...t, chance: exp.find((x) => x.id === t.id)?.chance ?? t.shown })),
     exposure: exp,
-    actions: actions.map((a) => ({ who: a.r.id, kind: a.kind, target: a.target ?? a.for ?? a.enemy ?? null, from: a.from, duty: a.order.duty, fallback: a.order.fallback?.duty ?? null })),
+    actions: actions.map((a) => ({ who: a.r.id, kind: a.kind, target: a.target ?? a.for ?? a.enemy ?? null, ...(a.enemies ? { targets: a.enemies } : {}), ...(['attack', 'burst'].includes(a.kind) && PAYLOADS[a.r.build?.payload] ? { carries: a.r.build.payload } : {}), from: a.from, duty: a.order.duty, fallback: a.order.fallback?.duty ?? null })),
+    ticks: ticksDue(b).map((e) => ({ enemy: e.n, pips: e.infected.tick, left: e.pips, rounds: e.infected.left })),
     overwatch: ow ? { enemy: ow.n } : null,
     ifNothing: parts.map((p) => ({ ...p, text: lineText(p.key, { n: p.n }) })),
     thresholds: Object.fromEntries(b.runners.map((r) => [r.id, riskThreshold(b, r)])),
@@ -704,21 +731,40 @@ export function playRound(b, rng) {
     }
   }
 
+  // A runner's attack on an enemy: the roll, the damage, and what the hit carries. `burst`: one bounce of a move (its own lines, flagged
+  // so the stage draws the run of them as the move's look). A bounce on someone already gone is skipped (the overwatch may have got there).
+  const strike = (r, n, named, burst) => {
+    const e = b.enemies.find((x) => x.n === n);
+    const k = (key) => (burst ? key.replace('attack', 'bounce') : key);
+    const flag = burst ? { burst: true } : {};
+    if (e.out || e.fled) { if (!burst) say('attack', 'attackGone', { who: r.handle }, { ...named, enemy: e.n, success: false, damage: 0 }); return; }
+    const x = roll(sv(r, 'combat'), b.diff + FIGHT.attackStep + FIGHT.cover[e.cover], r.strong);
+    if (!x.ok) { say('attack', k('attackMiss'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: false, damage: 0, roll: rollOf(x) }); return; }
+    let dmg = x.strong ? FIGHT.strongHit : FIGHT.hit;
+    const cracked = e.absorb > 0 && !r.ap; // the plate took a hit: a plain shot only cracks it (damage 0), a strong one cracks it and drops a pip
+    if (cracked) { e.absorb -= 1; dmg -= 1; }
+    e.pips -= dmg;
+    if (e.pips <= 0) { e.out = true; defeated.push({ by: r.id, enemy: e.n, how: burst ? 'burst' : 'attack' }); say('attack', k('attackOut'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, dropped: true, roll: rollOf(x), strong: x.strong, cracked }); return; }
+    say('attack', dmg === 0 ? k('attackCrack') : k('attackHit'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, roll: rollOf(x), left: e.pips, cracked });
+    // What the hit carries (data/builds.js PAYLOADS): a landed hit that leaves the target up infects it, unless the target shrugs it off
+    // (a tag the payload is immune to; said once a body). An infected body is not infected again.
+    const pay = PAYLOADS[r.build?.payload];
+    if (!pay?.dot) return;
+    if (immuneTo(e.kind, pay.id)) { if (!e.shrugged) { e.shrugged = true; say('immune', 'immune', { who: r.handle, enemy: E(e.n), word: pay.word }, { ...named, ...flag, enemy: e.n }); } return; }
+    if (e.infected) return;
+    e.infected = { tick: pay.dot.tick, left: pay.dot.rounds, by: r.id, round: b.round, payload: pay.id };
+    say('infect', 'infect', { who: r.handle, enemy: E(e.n), word: pay.word }, { ...named, ...flag, enemy: e.n, payload: pay.id });
+  };
+
   const boards = []; const carries = []; let workBy = null;
   for (const a of actions) {
     const r = a.r; const named = { actor: r.id, order: a.order.duty, from: a.from };
     switch (a.kind) {
-      case 'attack': {
-        const e = b.enemies.find((x) => x.n === a.enemy);
-        if (e.out || e.fled) { say('attack', 'attackGone', { who: r.handle }, { ...named, enemy: e.n, success: false, damage: 0 }); break; }
-        const x = roll(sv(r, 'combat'), b.diff + FIGHT.attackStep + FIGHT.cover[e.cover], r.strong);
-        if (!x.ok) { say('attack', 'attackMiss', { who: r.handle, enemy: E(e.n) }, { ...named, enemy: e.n, success: false, damage: 0, roll: rollOf(x) }); break; }
-        let dmg = x.strong ? FIGHT.strongHit : FIGHT.hit;
-        const cracked = e.absorb > 0 && !r.ap; // the plate took a hit: a plain shot only cracks it (damage 0), a strong one cracks it and drops a pip
-        if (cracked) { e.absorb -= 1; dmg -= 1; }
-        e.pips -= dmg;
-        if (e.pips <= 0) { e.out = true; defeated.push({ by: r.id, enemy: e.n, how: 'attack' }); say('attack', 'attackOut', { who: r.handle, enemy: E(e.n) }, { ...named, enemy: e.n, success: true, damage: dmg, dropped: true, roll: rollOf(x), strong: x.strong, cracked }); }
-        else say('attack', dmg === 0 ? 'attackCrack' : 'attackHit', { who: r.handle, enemy: E(e.n) }, { ...named, enemy: e.n, success: true, damage: dmg, roll: rollOf(x), left: e.pips, cracked });
+      case 'attack': strike(r, a.enemy, named, false); break;
+      case 'burst': {
+        // The runner's move (Ricochet): one attack on each target in the rules' order, each from where the last landed. Spent for the fight.
+        r.moved = true;
+        for (const n of a.enemies) strike(r, n, named, true);
         break;
       }
       case 'jam': {
@@ -790,6 +836,15 @@ export function playRound(b, rng) {
   }
   for (const r of b.runners) if (r.leaving && !r.dead && !r.down) { r.withdrawn = true; withdrawn.push(r.id); say('withdraw', 'withdrew', { who: r.handle }, { actor: r.id }); }
   for (const r of b.runners) { r.leaving = false; r.ordered = false; }
+  // Slice 3-ii-a: the vector's tick, at the round's end and before the groups' flee checks, so a tick is a loss like any other. An enemy
+  // infected this round starts losing pips next round (ticksDue). Past the payload's last round the infection ends.
+  for (const e of ticksDue(b)) {
+    const inf = e.infected;
+    e.pips -= inf.tick;
+    if (inf.left != null && (inf.left -= 1) <= 0) e.infected = null;
+    if (e.pips <= 0) { e.out = true; e.infected = null; defeated.push({ by: inf.by, enemy: e.n, how: 'vector' }); say('tick', 'tickOut', { enemy: E(e.n), word: PAYLOADS[inf.payload]?.word ?? 'Vector' }, { enemy: e.n, damage: inf.tick, dropped: true }); }
+    else say('tick', 'tick', { enemy: E(e.n), word: PAYLOADS[inf.payload]?.word ?? 'Vector' }, { enemy: e.n, damage: inf.tick, left: e.pips });
+  }
   // 3c: the hired and the standard force break and run per group, when too few of that group are left (hired's threshold).
   // An enemy in its approach round never runs (this check comes before `approaching` is cleared below). A lone arrival never runs.
   for (const [g, total] of Object.entries(b.hiredTotal)) {
@@ -986,8 +1041,8 @@ export function vanOdds(b0, runs = FIGHT.oddsRuns) {
  */
 export function oddsKey(b0, runs = FIGHT.oddsRuns) {
   return JSON.stringify([b0.type, b0.diff, b0.risk, b0.goal,
-    b0.enemies.map((e) => [e.kind, e.pips, e.cover, e.deck, e.approaching ?? false, e.group ?? 0]),
-    b0.runners.map((r) => [r.id, r.pips, r.max, r.absorb, r.ap, r.strong, r.jammer, r.healer, Object.values(r.stats).map((s) => s.value), r.overdrive ?? null]),
+    b0.enemies.map((e) => [e.kind, e.pips, e.cover, e.deck, e.approaching ?? false, e.group ?? 0, e.infected ?? null]),
+    b0.runners.map((r) => [r.id, r.pips, r.max, r.absorb, r.ap, r.strong, r.jammer, r.healer, Object.values(r.stats).map((s) => s.value), r.overdrive ?? null, r.build ?? null, r.moved ?? false]),
     b0.orders, b0.overwatch && [b0.overwatch.value, b0.overwatch.damage, b0.overwatch.left], !!b0.wheels, !!b0.standby,
     b0.showcaseEligible ?? null, b0.maxExtra ?? null, b0.recipe ?? null, b0.hiredTotal ?? null, runs]);
 }

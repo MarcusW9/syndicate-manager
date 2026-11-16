@@ -52,6 +52,7 @@ function whyOf(b, a, o) {
 function intentOf(b, r, a, o) {
   const slots = { who: r.handle, why: whyOf(b, a, o) };
   if (a.kind === 'attack') slots.enemy = nameOfEnemy(b, a.target);
+  if (a.kind === 'burst') slots.enemies = nameList((a.targets ?? []).map((n) => nameOfEnemy(b, n)));
   if (['shield', 'patch', 'stabilise', 'carry'].includes(a.kind)) slots.target = handleOf(b, a.target);
   const key = `intent.${a.kind}`;
   return { kind: a.kind, from: a.from, text: lineText(key, slots) };
@@ -91,7 +92,7 @@ export function roundView(b) {
   const pv = b.drawn ? F.previewRound(b) : null;
   const exp = pv?.exposure ?? [];
   const enemies = b.enemies.map((e) => ({
-    n: e.n, kind: e.kind, name: enemyName(e.kind, e.n), pips: Math.max(0, e.pips), max: e.max, out: !!(e.out || e.fled), fled: !!e.fled, cover: e.cover, approaching: !!e.approaching,
+    n: e.n, kind: e.kind, name: enemyName(e.kind, e.n), infected: !!e.infected && !e.out && !e.fled, pips: Math.max(0, e.pips), max: e.max, out: !!(e.out || e.fled), fled: !!e.fled, cover: e.cover, approaching: !!e.approaching,
     threats: (pv?.threats ?? []).filter((t) => t.enemy === e.n && !t.cancelled).map((t) => threatOf(b, t, exp)),
   }));
   const runners = b.runners.map((r) => {
@@ -108,6 +109,8 @@ export function roundView(b) {
   });
   return {
     round: b.round, drawn: !!pv, type: b.type, stage: b.stage, goal: goalOf(b), risk: b.risk.level,
+    ticks: (pv?.ticks ?? []).map((t) => ({ enemy: t.enemy, name: nameOfEnemy(b, t.enemy), pips: t.pips })),
+    ticksLine: pv?.ticks?.length ? lineText('ticks', { word: 'Vector', enemies: nameList(pv.ticks.map((t) => nameOfEnemy(b, t.enemy))) }) : null,
     enemies, runners, ifNothing: pv?.ifNothing ?? [], overwatch: pv?.overwatch ?? null, doors: pv?.doors ?? null,
     threatLines: enemies.flatMap((e) => e.threats.map((t) => t.text)),
     vanLine: boarding(b) ? { leaves: b.goal.vanLeaves, round: b.round } : null,

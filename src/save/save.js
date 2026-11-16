@@ -1002,5 +1002,17 @@ function migrate(state) {
     }
     state.version = 73;
   }
+  if (state.version === 73) {
+    // v74: builds slice 3-ii-a (DESIGN.md 2026-11-16). An engine-2 fight in progress gets the defaults: no enemy infected, no runner
+    // with a build or a spent move (a fight already going keeps the fight it had). Nothing else is stored: a build lives on the
+    // operative as `build`, which no real operative has yet (the sims and tests give it).
+    for (const am of [state.activeMission, ...(state.awayJobs ?? []).map((j) => j.mission)]) {
+      const b = am?.battle;
+      if (b?.engine !== 2) continue;
+      for (const e of b.enemies ?? []) e.infected ??= null;
+      for (const r of [...(b.runners ?? []), ...(b.standby ? [b.standby] : [])]) { r.build ??= null; r.moved ??= false; }
+    }
+    state.version = 74;
+  }
   return state;
 }

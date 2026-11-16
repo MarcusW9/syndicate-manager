@@ -349,6 +349,14 @@ export function createStage(svg, deps) {
     if (n > 0 && !has) g.append(node('path', { class: 'fs-plate', d: 'M-8.6 -3 A9.2 9.2 0 0 1 8.6 -3 M-8.6 3 A9.2 9.2 0 0 0 8.6 3' }));
     else if (!(n > 0) && has && !has.classList.contains('is-cracking')) has.remove();
   }
+  // The vector (slice 3-ii-a): an infected enemy wears a pulsing green ring until it falls. Drawn from the round's snapshot (`infected`) and nothing else.
+  function infect(id, on) {
+    const g = foes.get(id);
+    if (!g) return;
+    const has = g.querySelector(':scope > .fs-infect');
+    if (on && !has) g.append(node('circle', { r: 9.4, class: 'fs-infect' }));
+    else if (!on && has) has.remove();
+  }
   function crack(g) {
     const p = g?.querySelector?.(':scope > .fs-plate');
     if (!p) return;
@@ -537,7 +545,7 @@ export function createStage(svg, deps) {
   /** Health as the event has it (pips), after the round. */
   function health(cue) {
     for (const r of cue.runners ?? []) pips(r.id, Math.max(0, r.hp), r.max);
-    for (const g of cue.guards ?? []) { pips(enemyId(g.n), Math.max(0, g.hp), g.max); plate(enemyId(g.n), g.plate ?? 0); }
+    for (const g of cue.guards ?? []) { pips(enemyId(g.n), Math.max(0, g.hp), g.max); plate(enemyId(g.n), g.plate ?? 0); infect(enemyId(g.n), !!g.infected && !g.out); }
   }
 
   return {
