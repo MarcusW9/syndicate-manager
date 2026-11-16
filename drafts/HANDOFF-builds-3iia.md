@@ -42,7 +42,11 @@ That a built runner is satisfying to watch and visibly carries a fight against n
 
 ## Open for the owner (ask first, multiple choice)
 
-- The tick: one pip a round for 2 rounds, or 1 for 3? Does a strong hit infect harder?
+- The tick: **1 pip every round (owner, 2026-11-16)**, chosen because it reads best when watched. Still open: how long
+  it lasts (until the target dies, or a set number of rounds) and whether a strong hit infects harder. Note: most enemies
+  have 1 pip (hired, drone, police, secforce; corp and enforcer have 2), so on them a tick is a delayed kill. If damage
+  over time needs room to show, the owner's option is to double pip counts; that is its own balance change with its own
+  sims, decided after this slice's sims, not inside it.
 - Ricochet's targets (3, or one per enemy group up to 4?) and its condition (3 or more enemies up, round 2 or later?).
 - Who carries it in the test roster and the sims (the best combat runner, or a rifle archetype?).
 - The wording of every new line.

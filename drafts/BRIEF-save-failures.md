@@ -29,9 +29,8 @@ The first step in the order agreed on 2026-11-16 (save fix, then builds, then th
 
 ## Open for the owner (before building)
 
-- **Backups per slot.** Keep a weekly backup in every slot (today; about half of each slot's size), keep one only for the
-  active slot, or keep them only when space allows. Suggested: keep today's behaviour and see whether the banner ever
-  fires; the inbox (finding 8) is the bigger lever if space gets tight.
+- **Backups per slot: decided (owner, 2026-11-16): keep today's behaviour** (a weekly backup in every slot). The banner
+  shows whether it is ever needed; the inbox (finding 8) is the bigger lever if space gets tight.
 - **The banner's wording** (draft until written).
 
 ## Not in this slice
