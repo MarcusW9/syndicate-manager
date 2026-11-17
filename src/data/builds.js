@@ -30,7 +30,7 @@ export const MOVES = {
 //        `tick` pips lost at the end of each round (before the groups' flee checks, so a tick counts like any other loss), for
 //        `rounds` rounds (null: until the target dies; owner, 2026-11-16). It does not spread by itself; a re-hit does not stack
 //        and does not renew (the first infection stands).
-//   spread: when an infected enemy goes down (a hit, a tick or the overwatch), the infection jumps to one other enemy of its group that is up,
+//   spread: when an infected enemy goes down (a hit, a tick or the overwatch), or when the killing hit itself carries it (a one-pip enemy never lives to be infected), the infection jumps to one other enemy of its group that is up,
 //           not already infected and not immune; the jump is not a hit, so a plate does not stop it. The new infection starts with `rounds` in full
 //           and ticks from the next round (Contagion, slice 3-iii, 2026-11-17; draft numbers).
 //   immune: enemy tags (data/fights.js ENEMIES `foeTags`) that shrug it off.

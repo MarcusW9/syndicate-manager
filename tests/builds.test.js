@@ -284,3 +284,20 @@ test('Contagion: wording for the jump, three variants, and a draft piece in data
   assert.ok(p.spread && p.slot === 'payload' && p.dot.rounds === 2 && p.immune.includes('synthetic') && p.desc && p.offer);
   assert.ok(immuneTo('drone', 'contagion') && !immuneTo('hired', 'contagion'));
 });
+
+test('Contagion: the killing hit counts, so a one-pip enemy that dies to it still passes it on; the Vector and a machine do not', () => {
+  const play = (payload, kinds) => {
+    const b = fixture(['jax', 'mei', 'wing'], kinds, { build: null });
+    for (const r of b.runners) r.build = { move: null, payload };
+    return { b, r: F.playRound(b, mid) };
+  };
+  const { b, r } = play('contagion', ['hired', 'hired', 'hired', 'hired']);
+  const felled = r.defeated.filter((d) => d.how === 'attack').map((d) => d.enemy);
+  assert.ok(felled.length >= 1, 'a hit dropped a one-pip enemy');
+  assert.ok(r.lines.some((l) => l.key === 'spread' && felled.includes(l.from)), 'and the infection jumped from it');
+  assert.ok(b.enemies.some((e) => !e.out && e.infected?.payload === 'contagion'), 'a survivor carries it into next round');
+  const c = play('cytotoxic', ['hired', 'hired', 'hired', 'hired']);
+  assert.ok(!c.r.lines.some((l) => l.key === 'spread'), 'the Cytotoxic Vector has nothing to pass on from a kill');
+  const d = play('contagion', ['drone', 'drone', 'drone', 'drone']);
+  assert.ok(!d.r.lines.some((l) => l.key === 'spread'), 'a machine is never infected, so nothing jumps from it');
+});

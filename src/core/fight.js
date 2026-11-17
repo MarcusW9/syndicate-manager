@@ -757,6 +757,11 @@ export function playRound(b, rng) {
     }
   }
 
+  // The hit that drops an enemy counts as carrying the payload in (2026-11-17): a spreading payload (Contagion) on the killing hit infects the one it
+  // kills for an instant, so it jumps at once, even from a one-pip enemy that never lives to be infected. A machine shrugs it off; a hit that only
+  // cracks a plate does not kill, so it never gets here.
+  const carried = (r, e) => { const pay = PAYLOADS[r.build?.payload]; return pay?.spread && !immuneTo(e.kind, pay.id) ? { payload: pay.id, by: r.id } : null; };
+
   // A runner's attack on an enemy: the roll, the damage, and what the hit carries. `burst`: one bounce of a move (its own lines, flagged
   // so the stage draws the run of them as the move's look). A bounce on someone already gone is skipped (the overwatch may have got there).
   const strike = (r, n, named, burst) => {
@@ -771,7 +776,7 @@ export function playRound(b, rng) {
     const cracked = e.absorb > 0 && !r.ap; // the plate took a hit: a plain shot only cracks it (damage 0), a strong one cracks it and drops a pip
     if (cracked) { e.absorb -= 1; dmg -= 1; }
     e.pips -= dmg;
-    if (e.pips <= 0) { e.out = true; defeated.push({ by: r.id, enemy: e.n, how: burst ? 'burst' : 'attack' }); say('attack', k('attackOut'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, dropped: true, roll: rollOf(x), strong: x.strong, cracked }); spreadFrom(e); return; }
+    if (e.pips <= 0) { e.out = true; defeated.push({ by: r.id, enemy: e.n, how: burst ? 'burst' : 'attack' }); say('attack', k('attackOut'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, dropped: true, roll: rollOf(x), strong: x.strong, cracked }); spreadFrom(e, carried(r, e) ?? e.infected); return; }
     say('attack', dmg === 0 ? k('attackCrack') : k('attackHit'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, roll: rollOf(x), left: e.pips, cracked });
     // What the hit carries (data/builds.js PAYLOADS): a hit that gets past the plate and leaves the target up infects it, unless the target shrugs it off
     // (a tag the payload is immune to; said once a body). An infected body is not infected again.
