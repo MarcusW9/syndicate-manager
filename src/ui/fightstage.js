@@ -354,7 +354,7 @@ export function createStage(svg, deps) {
     const g = foes.get(id);
     if (!g) return;
     const has = g.querySelector(':scope > .fs-infect');
-    if (on && !has) g.append(node('circle', { r: 9.4, class: 'fs-infect' }));
+    if (on && !has) g.append(node('circle', { r: 10.4, class: 'fs-infect' }));
     else if (!on && has) has.remove();
   }
   function crack(g) {
