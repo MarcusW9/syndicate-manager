@@ -17,7 +17,8 @@ import { itemName } from '../core/gear.js';
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
 import { earnedText } from '../core/earned.js';
 import { specOf } from '../core/specialisations.js';
-import { buildPieces } from '../core/builds.js';
+import { SPECIALISATIONS } from '../core/specialisations.js';
+import { buildPieces, pieceById } from '../core/builds.js';
 import { STARTING_ROSTER_CAP, canHire, signingFee } from '../core/recruits.js';
 import { changesSince, primaryStat, progressShare, declineChance, ageRate, potentialRead, scoutFor } from '../core/development.js';
 import { leadNames, renderGoneElsewhere } from './tongs.js';
@@ -295,6 +296,7 @@ export function renderOperative() {
       <p class="body muted">${esc(op.origin)}</p>
       ${op.freelance ? '' : renderHome(op)}
 
+      ${renderOffers(op)}
       ${specOf(op) ? `
       <h2>Specialisation</h2>
       <ul class="chips">
@@ -384,4 +386,19 @@ function synergies(op) {
         return `<li><button class="synergy${on ? ' is-open' : ''}" data-action="trait-tip" data-id="${esc(`${op.id}|s:${mate.id}`)}" aria-expanded="${on}" aria-label="Synergy with ${esc(mate.handle)}">${face(mate, 'sm')}<span>${esc(mate.handle)}</span></button></li>`;
       }).join('')}</ul>
       ${open ? `<div class="tipcard" role="note"><strong>Synergy with ${esc(open.mate.handle)}</strong><p>${esc(earnedText(state, open.e))}</p><p class="muted small">${open.mate.cause ? `${esc(open.mate.handle)} is gone. ` : ''}For good · since day ${open.e.day}</p>${open.mate.cause ? '' : `<button class="btn btn--ghost" data-action="open-op" data-id="${esc(open.mate.id)}">${esc(open.mate.handle)}'s page →</button>`}</div>` : ''}`;
+}
+
+/** Offers waiting for this runner (a specialisation or a build piece Joss put in the mail), decided here as well as in the message (owner, 2026-11-17). */
+function renderOffers(op) {
+  const open = (state.inbox ?? []).filter((m) => ['spec', 'build'].includes(m.kind) && !m.resolved && m.payload?.opId === op.id);
+  if (!open.length) return '';
+  const what = (m, id) => (m.kind === 'spec' ? SPECIALISATIONS[id] : pieceById(id));
+  return `
+      <h2>Offers</h2>
+      ${open.map((m) => `
+      <div class="riskcard">
+        ${m.payload.ids.map((id) => `<p><strong>${esc(what(m, id)?.name ?? id)}</strong> · ${esc(what(m, id)?.desc ?? '')}</p>`).join('')}
+        <p class="muted small">${m.kind === 'spec' ? 'One specialisation each, for good.' : 'One move and one payload each, for good.'} "Not yet" and Joss asks again in two weeks.</p>
+        <div class="stack">${m.options.map((o) => `<button class="btn ${o.id === 'later' ? 'btn--ghost' : 'btn--primary'}" data-action="decide" data-id="${esc(m.id)}" data-option="${esc(o.id)}">${esc(o.label)}</button>`).join('')}</div>
+      </div>`).join('')}`;
 }

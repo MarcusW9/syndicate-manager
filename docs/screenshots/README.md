@@ -22,6 +22,7 @@ Then add a row to the top of the table below and commit the folder with the chan
 
 | Date | Version | Commit | What's new on screen | Folder |
 | --- | --- | --- | --- | --- |
+| 2026-11-17 | Offers on the crew sheet | (this change) | Design-session capture, not a full set: a runner's page with an Offers section (a build piece waiting, Take / Not yet), 1180 wide (`01`). | `2026-11-17-crew-offers` |
 | 2026-11-17 | Hall raids on the new battle engine | (this change) | Design-session capture, not a full set: a raid on the Docks hall as an engine-2 fight (Holding the hall, raiders at the door, round cap and turret in the goal line, orders by duty), 1180 wide (`01`). | `2026-11-17-raid-engine2` |
 | 2026-11-16 | A failed save is never silent | (this change) | Design-session capture, not a full set: Today with the new red banner after a save failed ("Not saved since day 1.", Open Save), at 390 and 360 wide, 2x. Captured with Playwright by making storage refuse writes after the founder pick; the standard set can't reach it, and no other screen changes. | [2026-11-16-save-failed-banner](2026-11-16-save-failed-banner/) |
 | 2026-11-15 | Standard force and the armour crack (prototype) | (this change) | Design-session capture, not a full set: Warehouse Lift's fight with police officers (blue tint, one pip, a plate arc each) and a crew shot cracking a plate (`01`-`03`). The rest of the game is unchanged. | `2026-11-15-standard-force` |
