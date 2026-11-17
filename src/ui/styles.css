@@ -2600,3 +2600,68 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 @keyframes fs-pip-gain { 0% { fill: #fff; transform: scale(1.8); } 40% { fill: #5fe0a5; transform: scale(1.3); } 100% { transform: scale(1); } }
 .fs-pips rect { transform-box: fill-box; transform-origin: center; }
 @media (prefers-reduced-motion: reduce) { .fs-aura, .fs-pips.is-gain rect.is-on { animation: none; } .fs-orb { transition: none !important; } }
+
+/* The Contagion jump (2026-11-17): a green arc draws itself from the fallen body to the new host, an orb leaps along it, and where it lands the ring flares and the bit of the chain is shown as a hop. */
+.fs-hop { fill: none; stroke: #8dff6a; stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; pointer-events: none; filter: drop-shadow(0 0 3px #8dff6a) drop-shadow(0 0 7px #5fe0a5); animation: fs-hop-draw 620ms ease-out forwards; }
+@keyframes fs-hop-draw { 0% { stroke-dashoffset: 100; opacity: 1; } 55% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+.fs-hopper { fill: #e8ffd6; pointer-events: none; filter: drop-shadow(0 0 3px #8dff6a) drop-shadow(0 0 7px #8dff6a); }
+.fs-spore { fill: #8dff6a; pointer-events: none; transform-box: fill-box; transform-origin: center; animation: fs-spore 0.7s ease-out forwards; }
+@keyframes fs-spore { from { transform: translate(0, 0) scale(1); opacity: 0.9; } to { transform: translate(var(--dx, 0px), var(--dy, -8px)) scale(0.3); opacity: 0; } }
+.sp-flash--spread { fill: #8dff6a; }
+.sp-token > circle.fs-infect.is-flare { animation: fs-infect-flare 0.7s ease-out 1, fs-infect-pulse 1.2s ease-in-out 0.7s infinite; }
+@keyframes fs-infect-flare { 0% { transform: scale(0.4); opacity: 0; stroke-width: 5; } 30% { transform: scale(1.7); opacity: 1; stroke-width: 3.4; } 60% { transform: scale(0.95); opacity: 1; } 100% { transform: scale(1); opacity: 0.7; stroke-width: 2.4; } }
+.sp-token > circle.fs-infect { transform-box: fill-box; transform-origin: center; }
+.sp-ring--spread { stroke: #8dff6a; }
+
+/* The infection tick (2026-11-17): green drops run off the host and the pip it loses flashes green; a host that falls to the tick pops in a green ring. */
+.fs-drip { fill: #8dff6a; pointer-events: none; transform-box: fill-box; transform-origin: center; filter: drop-shadow(0 0 2px #8dff6a); animation: fs-drip 0.62s ease-in forwards; }
+@keyframes fs-drip { 0% { transform: translateY(-3px) scale(0.6); opacity: 0; } 25% { opacity: 1; } 100% { transform: translateY(9px) scale(1); opacity: 0; } }
+.fs-pips rect.is-tickloss { animation: fs-pip-tick 0.7s ease-out; }
+@keyframes fs-pip-tick { 0% { fill: #8dff6a; transform: scale(1.9); } 50% { fill: #8dff6a; transform: scale(1.2); } 100% { transform: scale(1); } }
+.fs-pop { fill: none; stroke: #8dff6a; stroke-width: 2; pointer-events: none; transform-box: fill-box; transform-origin: center; filter: drop-shadow(0 0 3px #8dff6a); animation: fs-pop 0.55s ease-out forwards; }
+@keyframes fs-pop { from { transform: scale(0.5); opacity: 1; } to { transform: scale(2.6); opacity: 0; } }
+.sp-flash--tick { fill: #8dff6a; }
+.fs-float.is-tick { fill: #8dff6a; }
+
+/* The shield (2026-11-17): a soft blue-white dome over who is covered and an arc to them from the protector; it flares when a shot lands on the protector in their place. */
+.fs-dome__field { fill: rgba(190, 225, 255, 0.16); stroke: #cfe8ff; stroke-width: 1.3; stroke-dasharray: 5 3; pointer-events: none; transform-box: fill-box; transform-origin: center; filter: drop-shadow(0 0 3px #9fd0ff) drop-shadow(0 0 8px #9fd0ff); animation: fs-dome-rise 0.42s ease-out both, fs-dome-hum 1.4s ease-in-out 0.42s infinite; }
+@keyframes fs-dome-rise { from { transform: scale(0.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes fs-dome-hum { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; } }
+.fs-dome__arc { fill: none; stroke: #e8f4ff; stroke-width: 1.3; stroke-linecap: round; stroke-dasharray: 60; stroke-dashoffset: 60; pointer-events: none; filter: drop-shadow(0 0 3px #9fd0ff); animation: fs-hop-draw-keep 0.5s ease-out forwards; }
+@keyframes fs-hop-draw-keep { from { stroke-dashoffset: 60; } to { stroke-dashoffset: 0; } }
+.fs-dome.is-flare .fs-dome__field { animation: fs-dome-flare 0.5s ease-out 1, fs-dome-hum 1.4s ease-in-out 0.5s infinite; }
+@keyframes fs-dome-flare { 0% { fill: rgba(255, 255, 255, 0.7); transform: scale(1); } 35% { fill: rgba(255, 255, 255, 0.55); transform: scale(1.35); } 100% { fill: rgba(190, 225, 255, 0.16); transform: scale(1); } }
+.fs-dome.is-end .fs-dome__field, .fs-dome.is-end .fs-dome__arc { animation: fs-dome-fade 0.32s ease-in forwards; }
+@keyframes fs-dome-fade { to { opacity: 0; transform: scale(1.25); } }
+.sp-flash--shield { fill: #e8f4ff; }
+
+/* Jam (2026-11-17): a broken signal arc from the tech to each caller, with static where it lands; a failed jam is a flicker at the tech. */
+.fs-jamarc { fill: none; stroke: var(--accent-2); stroke-width: 1.3; stroke-linecap: square; stroke-dasharray: 3 2.4 1 2.4; pointer-events: none; filter: drop-shadow(0 0 3px var(--accent-2)); animation: fs-jam-flicker 0.7s steps(1) forwards; }
+@keyframes fs-jam-flicker { 0% { opacity: 1; } 12% { opacity: 0.25; } 24% { opacity: 1; } 38% { opacity: 0.4; } 52% { opacity: 1; } 78% { opacity: 0.6; } 100% { opacity: 0; } }
+.fs-static { fill: none; stroke: var(--accent-2); stroke-width: 1.1; stroke-dasharray: 1.6 1.4; pointer-events: none; transform-box: fill-box; transform-origin: center; animation: fs-static 0.6s steps(6) forwards; }
+@keyframes fs-static { from { transform: scale(0.6) rotate(0deg); opacity: 1; } to { transform: scale(1.8) rotate(60deg); opacity: 0; } }
+.fs-ping.is-fail { stroke: var(--danger); stroke-dasharray: 2 1.5; animation: fs-jam-fail 0.7s steps(1) forwards; }
+@keyframes fs-jam-fail { 0% { opacity: 1; transform: scale(0.8); } 15% { opacity: 0.1; } 30% { opacity: 1; transform: scale(1.4); } 45% { opacity: 0.1; } 60% { opacity: 0.9; transform: scale(1.9); } 80% { opacity: 0.2; } 100% { opacity: 0; transform: scale(2.2); } }
+.fs-float.is-jam { fill: var(--accent-2); } .fs-float.is-jamfail { fill: var(--danger); }
+
+/* The way out (2026-11-17): the hack is done and the alarm goes up: red rings pulse out of the door, the map's edge flashes red, and the caption says so. */
+.fs-alarm-ring { fill: none; stroke: #ff4d5e; stroke-width: 2; pointer-events: none; transform-box: fill-box; transform-origin: center; filter: drop-shadow(0 0 4px #ff4d5e) drop-shadow(0 0 9px #ff4d5e); animation: fs-alarm-ring 0.9s ease-out forwards; }
+@keyframes fs-alarm-ring { from { transform: scale(0.3); opacity: 1; } to { transform: scale(3.4); opacity: 0; } }
+.fs-alarm-core { fill: #ff4d5e; pointer-events: none; transform-box: fill-box; transform-origin: center; animation: fs-alarm-core 0.9s ease-in-out 2 both; }
+@keyframes fs-alarm-core { 0%, 100% { opacity: 0.15; transform: scale(0.7); } 50% { opacity: 0.95; transform: scale(1.3); } }
+.watch__map.fs-alarm::after { content: ''; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 28px 6px rgba(255, 77, 94, 0.55); animation: fs-alarm-wash 0.9s ease-in-out 2; z-index: 2; }
+@keyframes fs-alarm-wash { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+.watch__caption[data-tier="alarm"] { color: #ff8a98; }
+.sp-flash--alarm { fill: #ff4d5e; }
+
+/* The medic's hands on the way out (2026-11-17): the aura glow, then a soft green pulse that sweeps out and lands a ring and a + on each runner reached. */
+.fs-groupwave { fill: rgba(95, 224, 165, 0.1); stroke: #8dffc4; stroke-width: 1.4; pointer-events: none; transform-box: fill-box; transform-origin: center; filter: drop-shadow(0 0 4px #5fe0a5); animation: fs-groupwave 0.8s ease-out forwards; }
+@keyframes fs-groupwave { from { transform: scale(0.08); opacity: 1; } to { transform: scale(1); opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .fs-hop, .fs-spore, .fs-drip, .fs-pop, .fs-dome__field, .fs-dome__arc, .fs-jamarc, .fs-static, .fs-ping.is-fail, .fs-alarm-ring, .fs-alarm-core, .fs-groupwave, .fs-pips rect.is-tickloss, .sp-token > circle.fs-infect.is-flare { animation: none; }
+  .fs-hop, .fs-spore, .fs-drip, .fs-pop, .fs-jamarc, .fs-static, .fs-alarm-ring, .fs-alarm-core, .fs-groupwave { display: none; }
+  .fs-dome__arc { stroke-dashoffset: 0; }
+  .watch__map.fs-alarm::after { animation: none; opacity: 0.6; }
+  .fs-hopper { transition: none !important; }
+}
