@@ -1,4 +1,4 @@
-# Handoff · 2026-11-16
+# Handoff · 2026-11-17
 
 Now and next, on one screen. Read `CLAUDE.md` first; its rules are not repeated here. The why for anything below is in the decision log (`docs/design/2026-11.md`, grep the topic); what shipped is in `docs/changelog/`. Older session histories, build-order notes and backlog detail: `docs/handoff-archive.md` (grep it, don't read it).
 
@@ -6,15 +6,15 @@ Now and next, on one screen. Read `CLAUDE.md` first; its rules are not repeated 
 
 ## State
 
-- **`main`:** gear tiers, drops and perks (Custom, Premium) are merged (Apex, #171, is merged too). Next for loot: nothing agreed. PRs are squash-merged, one per feature, and the owner merges. No PR is open (2026-11-13).
+- **`main`:** everything up to #193 (gear tiers, Apex, builds 3-ii-a/b, the offer on the crew sheet, hall raids on engine 2). **One PR is open from `claude/awesome-cerf-p09fsh`** (2026-11-17, the owner merges): the planning read's build advice (Joss, closed to start), the Contagion Vector, hack jobs ending with a fight out (save v76), the medic's hands on the way out, the medic's aura drawn on the stage, and the sims behind them (`docs/sims/vectors-*`, `wayout-*`). PRs are squash-merged, one per feature.
 - **Built and in the game:** the tong (halls with compounds, posts and forecourts, heat per district, police and gang raids, heists slice A1, the other tongs C0-C5 with the Anchor's Book, retirement, loyalty, rival offers, the oath); the navigation rework (`docs/SCREENS.md`); the battle rework slices 1-3 (Engine 2, `core/fight.js`, on five jobs; raids and every other fight stay on Engine 1, `docs/BATTLES.md`); watchable combat slices 0-1 and the live battle view steps 1-3 (fights play on the job's own map); job maps in hard light.
-- **Tests:** 1044 passing (2026-11-14). `npm run test:fast` while working; `npm test` before every push (it takes several minutes).
+- **Tests:** 1176 passing (2026-11-17). `npm run test:fast` while working; `npm test` before every push (it takes several minutes).
 
 ## Next
 
 The agreed order (owner, 2026-11-16): **the save fix (done, #185), then builds, then the playtest.** Everything else is parked until then.
 
-1. **Builds 3-ii-b, earning by offer (2026-11-17, save v75): built; the owner plays it all at once** (a runner qualifies after four jobs together: the offer is in the inbox). Builds slice 3-ii-a, the first combo on screen: merged (#187, 2026-11-16, save v74) (`docs/sims/gate-teams-2026-11-16-builds-3iia.md`; the owner's calls after the sims are in: an agnostic Ricochet, no infection through a cracked plate, drones need no stronger counter, wording written). The brief: `drafts/HANDOFF-builds-3iia.md` (Ricochet and the Cytotoxic Vector, given in data; the synthetic tag as the first counter). An Opus session. The frame is `drafts/PROPOSAL-swarm-and-special-moves.md` 2.6-2.7 and the owner's ideation `drafts/PROPOSAL-combat-builds.md`. Next slices: Contagious, the planning read's tags and "why" (it should say a Ricochet carrier is needed on protect), an "on my call" switch, more pieces (which also makes offers weighted and three-wide), recruits arriving with a piece, **and make the offer easier to find (owner, 2026-11-17: it only showed up in the inbox): a note or button on the runner's crew sheet when a piece is on offer, not just the message.** Also open from the same playtest: tune shots that miss too often (a streak softener, or a miss that still does something; `FIGHT.aimFloor`) and move kidnap to Engine 2.
+1. **The next chunk that needs no owner call: the visual pass.** Brief: `drafts/HANDOFF-visual-pass.md` (glow-and-travel effects for the Contagion jump, the infection tick, shield, jam and the way-out beat, built like the medic's aura; plus two small test gaps). UI only, no rule changes, so it can run unattended; the owner reviews captures. **Waiting on the owner (do not decide for them):** the way out's injury cost (the medic's roll is not the limit; options 1 and 2 in the chat of 2026-11-17: any healer counts, or a downed medic is steadied; or lighter injuries), `FIGHT.wayOutShare` (0.5, the agreed default was 1), the Contagion/Vector trade-off (Contagion is now better in a crowd), the planning read's "protect needs a Ricochet carrier" line (left out), the wording drafts (`drafts/writing-tasks.md`), and whether drones count as armoured. Also open: more pieces and recruits arriving with a piece (need wording and balance calls), an "on my call" switch (parked), tune shots that miss too often, move kidnap to Engine 2.
 2. **Reconcile medical, piloting and leadership with the build frame** before any is built (owner, 2026-11-16): map each `drafts/PROPOSAL-*.md` onto the build axes and roles; what does not fit stays standalone. A docs pass, alongside 3-ii-a.
 3. **The playtest** after 3-ii-a (`drafts/PLAN-battle-slices.md` "After the slices"), on the fight the owner wants.
 4. **Parked until then:** the other tongs' E4 (`drafts/PROPOSAL-tong-depth.md`), battle slice 4 (left behind, rescue, ransom), the iOS wrapper (`PLAN-IOS.md`; review findings 2-4) and the rest of `drafts/REVIEW-2026-11-13.md`, the locked districts, everything under "Parked" in the archive.
@@ -22,7 +22,7 @@ The agreed order (owner, 2026-11-16): **the save fix (done, #185), then builds, 
 
 ## Open branches
 
-No open PRs. The remote holds 100+ old `claude/*` session branches; all the ones checked are squash-merged leftovers (their commits look "ahead" of `main` only because of the squash). Deleting them is the owner's call.
+One open PR (see State). The remote holds 100+ old `claude/*` session branches; all the ones checked are squash-merged leftovers (their commits look "ahead" of `main` only because of the squash). Deleting them is the owner's call.
 
 ## Agreed rules still live
 
