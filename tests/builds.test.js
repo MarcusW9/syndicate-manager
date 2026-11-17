@@ -279,6 +279,8 @@ test('Contagion: the Cytotoxic Vector does not jump; machines, the already infec
 test('Contagion: wording for the jump, three variants, and a draft piece in data the offers can reach', () => {
   assert.ok(FIGHT_TEXT.spread && FIGHT_TEXT_VARIANTS.spread.length === 3);
   const p = PAYLOADS.contagion;
+  assert.equal(p.name, 'Contagion Vector');
+  assert.equal(p.family, PAYLOADS.cytotoxic.family, 'a variation of the Cytotoxic Vector: one family, one slot');
   assert.ok(p.spread && p.slot === 'payload' && p.dot.rounds === 2 && p.immune.includes('synthetic') && p.desc && p.offer);
   assert.ok(immuneTo('drone', 'contagion') && !immuneTo('hired', 'contagion'));
 });
