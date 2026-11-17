@@ -128,11 +128,11 @@ Only residents at home heal at the Clinic's speed, not runners out on a job. Wit
 
 **How to size it.** `scripts/sim-wayout.mjs` already reports recovery days a fight for hack jobs (17.4 on data_pull with the way out and the medic's hands, against 8.3 before it). The target is to bring a hall with a level-2 Clinic and a doctor back to the pre-way-out cost, and to leave the unbuilt tong where it is, so the Clinic is a reason to build, not a tax on not building. The sim needs the day tick's healing added to the measure (it now counts days only at the fight's end).
 
-**Open questions for the owner**
-- Route A, B or both for the doctor?
-- Should the doctor also act in the fight (on the job) if they are sent out, or never, so the post is a real trade-off against a runner's job?
-- Clinic cost and levels: are three levels enough, or should the top level need something else (a surgeon, a Cyber doc in the tong)?
-- Does a retiring medic who becomes the doctor still reach the Hall of Legends when they finally leave, with a line about the Clinic?
+**The owner's calls (2026-11-17)**
+- **Where the doctor comes from: both routes.** A tong's own retiring medic can stay on (Route A), and a veteran from outside can be hired (Route B).
+- **The doctor does not go out on jobs, for now.** Going out is a possibility for later, not built; the post stays a real trade-off against a runner's job.
+- **Three Clinic levels are enough.**
+- **A doctor can still become a Legend.** A retired medic who stays on as the doctor can be named a Legend while they hold the post, and reach the Hall of Legends when they finally leave, with a line about the Clinic.
 
 ## Rules we keep
 
