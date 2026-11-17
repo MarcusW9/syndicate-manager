@@ -137,6 +137,9 @@ test('holding: a fight on the hall map, whoever is home against the raiders; nob
     s = resolveDecision(s, callOf(s).id, 'hold');
     assert.ok(s.activeMission?.raid, 'the raid is the job on screen');
     assert.equal(s.activeMission.battle.foe, 'the Wet Sleeve');
+    assert.equal(s.activeMission.battle.engine, 2, 'a raid plays on the new engine (core/fight.js holdHall)');
+    assert.equal(s.activeMission.battle.type, 'holdHall');
+    assert.equal(s.activeMission.battle.cap, 3, 'the door holds at the round cap');
     assert.ok(s.activeMission.battle.spots?.crew?.length, 'they stand on the hall map\'s spots');
     s = fight(s, { door: 'out', standoff: seed % 2 ? 'press' : 'out' });
     assert.ok(s.activeMission.done);

@@ -52,12 +52,17 @@ function targetFor(b, r) {
 /** The player's orders for Go (core/runbattle.js runBattle): only those given; the rest is the crew's call. */
 export const takeOrders = () => { const o = draft.orders; draft = { key: null, sel: null, target: null, orders: {} }; return o; };
 
+/** A runner with an order is locked (greyed out) until you tap Change on them, so a stray tap can't rewrite it. */
+const locked = (id) => !!draft.orders[id] && draft.edit !== id;
+
 /** A tap on the panel or the map (app.js): pick a runner, pick a guard, give or clear an order. */
 export function fightTap(am, action, { id, kind, target } = {}) {
   const b = am?.battle;
   if (!b) return;
   current(am);
   if (action === 'fight-sel') { draft.sel = id; draft.target = null; draft.aim = null; return; }
+  if (action === 'fight-edit') { if (draft.orders[draft.sel]) draft.edit = draft.sel; return; }
+  if (['fight-target', 'fight-order'].includes(action) && locked(draft.sel)) return;
   if (action === 'fight-target') {
     draft.target = Number(id);
     // Picking the guard for the shot, flank or talk you just chose (phone): that's the order.
@@ -66,7 +71,7 @@ export function fightTap(am, action, { id, kind, target } = {}) {
   }
   if (action === 'fight-more') { draft.menu = !draft.menu; return; }
   if (action === 'fight-log') { logOpen = !logOpen; return; }
-  if (action === 'fight-clear') { delete draft.orders[id ?? draft.sel]; return; }
+  if (action === 'fight-clear') { delete draft.orders[id ?? draft.sel]; draft.edit = null; return; }
   if (action === 'fight-pull-ask') { draft.pullAsk = true; return; }
   if (action === 'fight-pull-no') { draft.pullAsk = false; return; }
   if (action === 'fight-rules') { rulesOpen = !rulesOpen; return; }
@@ -84,6 +89,7 @@ export function fightTap(am, action, { id, kind, target } = {}) {
 
 /** Give the picked runner an order (the crew's own pick hands it back to them), then go on to the next. */
 function give(b, kind, t) {
+  draft.edit = null;
   const opt = ordersFor(b, draft.sel).find((o) => o.kind === kind && String(o.target ?? '') === String(t ?? ''));
   if (!opt) return;
   if (opt.auto) delete draft.orders[draft.sel];
@@ -149,7 +155,7 @@ export function renderFightOrders(state, esc, face = () => '') {
     const tag = r.down ? `<span class="ffo-tag is-down">${r.stable ? 'Stable' : 'Down'}</span>`
       : o ? `<button class="ffo-tag is-set" data-action="fight-clear" data-id="${esc(r.id)}" aria-label="${esc(`${r.handle}: ${orderWord(b, o)}. Tap to leave it to the crew`)}"><small>You</small> ${esc(short(orderWord(b, o)))} <span aria-hidden="true">✕</span></button>`
       : `<span class="ffo-tag"><small>Crew</small> ${esc(short(orderWord(b, auto)))}</span>`;
-    return `<div class="ffo-row ${r.id === draft.sel ? 'is-on' : ''} ${r.down ? 'is-down' : ''}">
+    return `<div class="ffo-row ${r.id === draft.sel ? 'is-on' : ''} ${o ? 'is-set' : ''} ${r.down ? 'is-down' : ''}">
       <button class="ffo-who" data-action="fight-sel" data-id="${esc(r.id)}" ${r.down ? 'disabled' : ''} aria-pressed="${r.id === draft.sel}">
         ${face(r.id)}
         <span class="ffo-who__main">
@@ -170,7 +176,8 @@ export function renderFightOrders(state, esc, face = () => '') {
     const pick = (o) => (mine ? same(mine, o) : false);
     const g = b.guards.find((x) => x.n === n);
     // name, the big number (blank when nothing rolls), what it does in a line, the crew's pick badge.
-    const btn = (o, label, note, odds = pct(o.chance)) => `<button class="ffo-act ${pick(o) ? 'is-on' : ''} ${!mine && same(auto, o) ? 'is-call' : ''} ${draft.aim === o.kind ? 'is-aim' : ''}" data-action="fight-order" data-kind="${o.kind}" data-target="${esc(o.target ?? '')}" aria-pressed="${pick(o)}">
+    const lock = locked(sel.id);
+    const btn = (o, label, note, odds = pct(o.chance)) => `<button ${lock ? 'disabled' : ''} class="ffo-act ${pick(o) ? 'is-on' : ''} ${!mine && same(auto, o) ? 'is-call' : ''} ${draft.aim === o.kind ? 'is-aim' : ''}" data-action="fight-order" data-kind="${o.kind}" data-target="${esc(o.target ?? '')}" aria-pressed="${pick(o)}">
         <b>${esc(label)}${o.auto ? ' <i>crew\'s pick</i>' : ''}</b><em>${odds}</em><span>${esc(note)}</span></button>`;
     const of = (kind, t = undefined) => opts.find((o) => o.kind === kind && (t === undefined || o.target === t));
     const list = [];
@@ -198,11 +205,12 @@ export function renderFightOrders(state, esc, face = () => '') {
     const guards = b.guards.map((x) => {
       const s = of(aimKind ?? 'shoot', x.n);
       return x.out ? `<span class="ffo-target is-out">Guard ${x.n} <span>down</span></span>`
-        : `<button class="ffo-target ${x.n === n ? 'is-on' : ''}" data-action="fight-target" data-id="${x.n}" aria-pressed="${x.n === n}">Guard ${x.n}${s ? ` <em>${pct(s.chance)}</em>` : ''} <span>${x.hp}/${x.max} · ${esc(COVER_WORD[coverNow(x)])}${x.armour ? ` · armour ${x.armour}` : ''}</span></button>`;
+        : `<button ${lock ? 'disabled' : ''} class="ffo-target ${x.n === n ? 'is-on' : ''}" data-action="fight-target" data-id="${x.n}" aria-pressed="${x.n === n}">Guard ${x.n}${s ? ` <em>${pct(s.chance)}</em>` : ''} <span>${x.hp}/${x.max} · ${esc(COVER_WORD[coverNow(x)])}${x.armour ? ` · armour ${x.armour}` : ''}</span></button>`;
     }).join('');
     const threats = aimedAt(sel.id).map((i) => `${guardName(b, i.guard)} aims at them: ${pct(guardHitChance(b, sel))} · ${hitFor(b.guards.find((x) => x.n === i.guard).damage, sel.armour)} damage`);
     tray = `
-      <div class="ffo-tray">
+      <div class="ffo-tray ${lock ? 'is-locked' : ''}">
+        ${lock ? `<p class="ffo-locked"><span>Order set: <b>${esc(orderWord(b, mine))}</b></span> <button class="btn btn--ghost" data-action="fight-edit">Change</button></p>` : ''}
         <p class="ffo-tray__who"><strong>${esc(sel.handle)}</strong> <span>${esc(kitWord(sel))}</span></p>
         ${threats.length ? `<p class="ffo-threat">${threats.map(esc).join('<br>')}</p>` : ''}
         <div class="ffo-targets ${aimKind ? 'is-aiming' : ''}" role="group" aria-label="Which ${foeWord(b)}">${aimKind ? `<p class="ffo-aimq">${{ shoot: 'Shoot', flank: 'Flank', talk: 'Talk down' }[aimKind]} which ${foeWord(b)}? <span>Tap one here or on the map.</span></p>` : ''}${guards}</div>

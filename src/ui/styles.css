@@ -1072,6 +1072,7 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .wf-note { margin: 0; font-size: 0.82rem; padding-left: 12px; }
 .wf-kind { font-size: 0.64rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
 .wf-setup { margin: 0; font-size: 0.86rem; color: #b4bacb; line-height: 1.45; }
+.wf-cost { color: #ff5470; font-weight: 700; }
 .wf-det { margin: 0; font-size: 0.84rem; color: #c9cdd8; line-height: 1.45; }
 .wf-why { margin: 0; font-size: 0.78rem; color: var(--accent-2); }
 /* New moments slide in; each headline lands a beat after the one before (slower when paced, quicker at Faster). */
@@ -1413,6 +1414,11 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .ffo-target { min-height: var(--tap, 44px); padding: 4px 10px; border: 1px solid #4a2230; background: #160d12; color: #ff8a98; font: 700 0.8rem var(--display); letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; text-align: left; }
 .ffo-target em { font-style: normal; color: var(--text); margin-left: 4px; }
 .ffo-target span { display: block; font: 500 0.7rem system-ui, sans-serif; letter-spacing: 0; text-transform: none; color: var(--muted); }
+.ffo-row.is-set .ffo-who { opacity: 0.55; }
+.ffo-tray.is-locked .ffo-acts, .ffo-tray.is-locked .ffo-targets { opacity: 0.4; filter: grayscale(1); }
+.ffo-tray.is-locked button:disabled { cursor: default; }
+.ffo-locked { margin: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 0.8rem; color: var(--muted); }
+.ffo-locked b { color: var(--warn); font-weight: 600; }
 .ffo-target.is-on { border-color: var(--warn); color: var(--warn); }
 .ffo-target.is-out { display: inline-flex; flex-direction: column; justify-content: center; opacity: 0.4; cursor: default; }
 .ffo-acts { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 6px; }
