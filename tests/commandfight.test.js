@@ -125,7 +125,7 @@ test('giving orders is worth it: a plain player is never worse than hands-off on
 test('a run takes the player\'s orders, and a v27 save mid-fight upgrades and carries on', async () => {
   let s = createNewGame({ seed: 4, startCrew: 'fresh' });
   s.jobs = [];
-  addOffer(s, 'low_water');
+  addOffer(s, 'paid_in_full');
   s = M.startMission(s, s.jobs[0].id, s.crew.slice(0, 4).map((o) => o.id), 'loud');
   for (let g = 0; g < 200 && !(s.activeMission.battle && M.currentStep(s.activeMission)?.type === 'battle' && !s.activeMission.pending); g++) {
     if (s.activeMission.done) break;
@@ -152,7 +152,7 @@ test('a run takes the player\'s orders, and a v27 save mid-fight upgrades and ca
 function docksFight(seed = 4) {
   let s = createNewGame({ seed, startCrew: 'fresh' });
   s.jobs = [];
-  addOffer(s, 'low_water');
+  addOffer(s, 'paid_in_full');
   s = M.startMission(s, s.jobs[0].id, s.crew.slice(0, 4).map((o) => o.id), 'loud', { callIn: 'every' });
   for (let g = 0; g < 200 && !s.activeMission.done && !s.activeMission.battle; g++) {
     const next = autoStep(s);
@@ -210,7 +210,7 @@ test('a live fight waits for orders each round; Auto leaves the rest to the crew
 
 test('shown equals used: the planning read works each fight out on the spots the run will stand on', () => {
   let differs = 0;
-  for (const [job, seed] of [['wrong_horse', 3], ['kidnap', 5], ['warehouse', 4], ['casino', 2], ['data_pull', 6]]) {
+  for (const [job, seed] of [['borrowed_glory', 3], ['paid_in_full', 5], ['warehouse', 4], ['house_advantage', 2], ['data_pull', 6]]) {
     let s = createNewGame({ seed, startCrew: 'fresh' });
     s.jobs = [];
     addOffer(s, job);

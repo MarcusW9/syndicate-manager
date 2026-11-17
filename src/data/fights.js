@@ -20,6 +20,9 @@ export const FIGHT = {
   absorb: { none: 0, street: 1, pro: 2 }, droneAbsorb: 1,
   // Runner actions: d20 + stat >= 10 + base + step (+ the target's cover for attacks).
   // Boarding and carrying need no roll (2026-11-13): a boarder spends the round in the open and takes a door slot.
+  // Bad luck softener (owner, 2026-11-17): each shot a runner misses in a row lines the next one up, +missBonus to the roll, up to missBonusCap;
+  // a hit resets it. Per fight, kept on the runner (`misses`).
+  missBonus: 2, missBonusCap: 6,
   attackStep: -2, jamStep: 0, patchStep: 0, stabiliseStep: 2, overwatchStep: -1,
   hit: 1, strongHit: 2,
   // A runner's hit is strong (2 pips) on this margin over the roll's need, by their sidearm's damage
@@ -131,6 +134,10 @@ export const FIGHT_JOBS = {
   dead_air: 'holdExtract', still_connected: 'holdHack', not_for_sale: 'holdExtract', one_more_song: 'holdHack',
   still_clocked_in: 'holdHack', the_last_collection: 'holdExtract',
   the_wrong_fare: 'holdHack',
+  // The fourteen jobs with a fight in their own crises, moved to engine 2 together (owner, 2026-11-17): no recipes, the district's own force.
+  kidnap: 'holdExtract', casino: 'holdHack', clinic: 'holdYard', ledger: 'holdExtract', container409: 'holdExtract', chrome: 'holdHack',
+  low_water: 'holdExtract', mooring_watch: 'holdYard', count_against_paper: 'holdHack', quarter_to_two: 'holdExtract',
+  manual_handling: 'holdExtract', favourite: 'holdYard', last_ticket: 'holdExtract', wrong_horse: 'holdHack',
 };
 
 // The priority words an order's tie-breaks may use (spec 12; the grammar is core/fight.js enemyOrder).

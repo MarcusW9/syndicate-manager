@@ -32,7 +32,10 @@ const DATE = process.argv[4] ?? new Date().toISOString().slice(0, 10);
 const JOB_DIFF = { data_scrub: 11, data_pull: 14, quiet_hours: 14, protection: 14, warehouse: 16,
   // the /add-job fight jobs (2026-11-15): their roll target (core/risk.js rollTarget), rounded
   dead_air: 16, still_connected: 16, not_for_sale: 16, one_more_song: 14,
-  still_clocked_in: 14, the_last_collection: 16, the_wrong_fare: 14 };
+  still_clocked_in: 14, the_last_collection: 16, the_wrong_fare: 14,
+  // the fourteen jobs moved to engine 2 together (2026-11-17)
+  kidnap: 16, casino: 11, clinic: 6, ledger: 6, container409: 6, chrome: 6, low_water: 14, mooring_watch: 11, count_against_paper: 11,
+  quarter_to_two: 11, manual_handling: 11, favourite: 11, last_ticket: 11, wrong_horse: 14 };
 // Declared before the run (owner's targets, drafts/OWNER-ITEMS-battle.md): for the best team at the gate, someone
 // left behind in at most 15% of steady extractions, and a death in about 1 in 25 committed fights (at most 8%).
 const TARGET = { left: 0.15, dead: 0.08 };
