@@ -67,9 +67,9 @@ const GROWS = { attack: 'combat', jam: 'tech', stabilise: 'medical', patch: 'med
 // A line's kind as the plan's animation knows it; everything else is a note it ignores.
 const CUE = { attack: 'shoot', shot: 'guard', overwatch: 'overwatch', stabilise: 'stabilise', patch: 'patch', turret: 'turret' };
 // Only what the feed, the plan and the report read, so a year of saved reports stays small.
-const feedLine = (l) => ({
+export const feedLine = (l) => ({
   kind: CUE[l.kind] ?? 'note', rule: l.kind, key: l.key ?? null, slots: l.slots ?? {}, text: l.text, actor: l.actor ? { id: l.actor, handle: l.actor } : null, guard: l.enemy ?? null, targetId: l.targetId ?? (typeof l.target === 'string' ? l.target : null),
-  ...(l.burst ? { burst: true } : {}), ...(l.cracked ? { cracked: true } : {}), ...(l.at ? { at: l.at } : {}),
+  ...(l.burst ? { burst: true } : {}), ...(l.jumpFrom != null ? { jumpFrom: l.jumpFrom } : {}), ...(l.callers?.length ? { callers: l.callers } : {}), ...(l.targets?.length ? { targets: l.targets } : {}), ...(l.shieldedBy ? { shieldedBy: l.shieldedBy } : {}), ...(l.cracked ? { cracked: true } : {}), ...(l.at ? { at: l.at } : {}),
   success: l.success ?? null, damage: l.damage ?? 0, heal: l.heal ?? 0, kit: l.kit ?? null, dropped: !!l.dropped, ...(l.left != null && l.max ? { left: l.left, max: l.max } : {}), ...(l.roll ? { die: l.roll.die, need: l.roll.need, value: l.roll.value } : {}),
   ...(l.order ? { order: l.order, from: l.from } : {}),
 });

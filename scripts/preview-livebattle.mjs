@@ -32,6 +32,7 @@ const rounds = Number(flag('rounds', '3'));
 const wide = bool('wide');
 const reduced = bool('reduced');
 const special = flag('special');
+const effect = flag('effect'); // --effect spread|tick|shield|jam|wayout: forge that effect's lines onto each round (ui/fightstage.js forceEffect) and keep frames while it is on screen
 const aura = bool('aura'); // --aura: poll while a round plays and keep a frame for each stage of the medic's aura (glow, orb, landing)
 const knots = flag('knots');
 const foes = Number(flag('foes', '0'));
@@ -82,7 +83,7 @@ await page.addInitScript(([state, watch]) => {
   localStorage.setItem('syndicate-slot-1', state);
   localStorage.setItem('syndicate-pref-fight-watch', watch ? '1' : '0');
 }, [JSON.stringify(save), pace === 'watch']);
-if (special || knots) await page.addInitScript((p) => { window.__stagePreview = p; }, { ...(special ? { special } : {}), ...(knots ? { knots: knots === 'none' ? [] : knots.split(',') } : {}) });
+if (special || knots || effect) await page.addInitScript((p) => { window.__stagePreview = p; }, { ...(effect ? { effect } : {}), ...(special ? { special } : {}), ...(knots ? { knots: knots === 'none' ? [] : knots.split(',') } : {}) });
 if (throttle > 1) { const cdp = await page.context().newCDPSession(page); await cdp.send('Emulation.setCPUThrottlingRate', { rate: throttle }); }
 let n = 0;
 const shot = async (name) => { const f = join(out, `${String(++n).padStart(2, '0')}-${name}.png`); await page.screenshot({ path: f }); console.log(f); };
@@ -102,7 +103,14 @@ try {
       if (!(await next.count())) { const p = page.locator('[data-action="pending"]:not([data-id="out"])').filter({ visible: true }).first(); if (await p.count()) { await p.click(); continue; } break; }
       await next.click();
     }
-    if (aura) {
+    if (effect) {
+      const sel = { spread: '.fs-hop, .fs-hopper, .sp-flash--spread', tick: '.fs-drip, .fs-pop, .is-tickloss, .sp-flash--tick', shield: '.fs-dome', jam: '.fs-jamarc, .fs-static, .fs-ping', wayout: '.fs-alarm-ring, .fs-groupwave, .fs-aura' }[effect];
+      let k = 0;
+      for (let t = 0; t < 6000 && k < 8; t += 130) {
+        await page.waitForTimeout(130);
+        if (await page.evaluate((q) => !!document.querySelector(q), sel)) { await shot(`round-${r}-${effect}-${++k}`); if (effect === 'wayout' && k === 1) console.log('door:', await page.evaluate(() => [...document.querySelectorAll('.fs-alarm-ring')].map((e) => [e.getAttribute('cx'), e.getAttribute('cy')]))); }
+      }
+    } else if (aura) {
       // Frames only while the aura is on screen, at most 8 a round, to see the glow grow and flash, the orb cross and the pip fill.
       let k = 0;
       for (let t = 0; t < 6000 && k < 8; t += 90) {

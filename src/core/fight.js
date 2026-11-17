@@ -721,7 +721,7 @@ export function playRound(b, rng) {
     const t = enemiesUp(b).find((x) => x.n !== e.n && (x.group ?? 0) === (e.group ?? 0) && !x.infected && !immuneTo(x.kind, pay.id));
     if (!t) return;
     t.infected = { tick: pay.dot.tick, left: pay.dot.rounds, by: inf.by, round: b.round, payload: pay.id };
-    say('spread', 'spread', { enemy: E(e.n), to: E(t.n), word: pay.word }, { enemy: t.n, from: e.n, payload: pay.id });
+    say('spread', 'spread', { enemy: E(e.n), to: E(t.n), word: pay.word }, { enemy: t.n, from: e.n, jumpFrom: e.n, payload: pay.id });
   };
 
   const E = (n) => enemyName(b.enemies.find((x) => x.n === n).kind, n);
@@ -841,7 +841,7 @@ export function playRound(b, rng) {
         for (const t of b.threats) if (RADIO(t)) t.cancelled = true;
         const drone = enemiesUp(b).find((e) => ENEMIES[e.kind].jamTakesOut);
         if (drone) { drone.out = true; defeated.push({ by: r.id, enemy: drone.n, how: 'jam' }); }
-        say('jam', 'jamOk', { who: r.handle }, { ...named, roll: rollOf(x), droppedEnemy: drone?.n ?? null });
+        say('jam', 'jamOk', { who: r.handle }, { ...named, roll: rollOf(x), droppedEnemy: drone?.n ?? null, callers: b.threats.filter((t) => RADIO(t)).map((t) => t.enemy) });
         break;
       }
       case 'stabilise': {
@@ -910,8 +910,8 @@ export function playRound(b, rng) {
     const inf = e.infected;
     e.pips -= inf.tick;
     if (inf.left != null && (inf.left -= 1) <= 0) e.infected = null;
-    if (e.pips <= 0) { e.out = true; e.infected = null; defeated.push({ by: inf.by, enemy: e.n, how: 'vector' }); say('tick', 'tickOut', { enemy: E(e.n), word: PAYLOADS[inf.payload]?.word ?? 'Vector' }, { enemy: e.n, damage: inf.tick, dropped: true }); spreadFrom(e, inf); }
-    else say('tick', 'tick', { enemy: E(e.n), word: PAYLOADS[inf.payload]?.word ?? 'Vector' }, { enemy: e.n, damage: inf.tick, left: e.pips });
+    if (e.pips <= 0) { e.out = true; e.infected = null; defeated.push({ by: inf.by, enemy: e.n, how: 'vector' }); say('tick', 'tickOut', { enemy: E(e.n), word: PAYLOADS[inf.payload]?.word ?? 'Vector' }, { enemy: e.n, damage: inf.tick, dropped: true, left: 0, max: e.max }); spreadFrom(e, inf); }
+    else say('tick', 'tick', { enemy: E(e.n), word: PAYLOADS[inf.payload]?.word ?? 'Vector' }, { enemy: e.n, damage: inf.tick, left: e.pips, max: e.max });
   }
   // 3c: the hired and the standard force break and run per group, when too few of that group are left (hired's threshold).
   // An enemy in its approach round never runs (this check comes before `approaching` is cleared below). A lone arrival never runs.

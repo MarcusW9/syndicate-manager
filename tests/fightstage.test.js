@@ -307,3 +307,115 @@ test('the medic\'s aura is drawn: every aura line is one aura step (the medic, t
   }
   assert.ok(auras > 0, 'some fight in the sample had a medic heal someone');
 });
+
+// --- the visual pass (2026-11-17): the effects that draw what the rules already did -----------------------------------
+/** A round cue from the sample with its lines replaced: the stage draws whatever lines it is given, so each effect can be shown on its own. */
+function forged(lines, mutate = null) {
+  const f = fights.find((x) => x.cues.some((c) => c.phase === 'round' && Object.values(c.stage.units).filter((u) => u.side === 'enemy').length >= 2 && Object.values(c.stage.units).filter((u) => u.side === 'crew').length >= 2));
+  const base = f.cues.find((c) => c.phase === 'round' && Object.values(c.stage.units).filter((u) => u.side === 'enemy').length >= 2);
+  const cue = structuredClone(base);
+  cue.lines = lines.map((l) => ({ kind: 'note', actor: null, targetId: null, guard: null, success: null, damage: 0, heal: 0, kit: null, dropped: false, text: '', ...l }));
+  cue.beats = [];
+  if (mutate) mutate(cue);
+  const ens = Object.entries(cue.stage.units).filter(([, u]) => u.side === 'enemy').map(([id]) => Number(id.slice(2)));
+  const crew = Object.entries(cue.stage.units).filter(([, u]) => u.side === 'crew').map(([id]) => id);
+  const prev = Object.fromEntries(Object.entries(cue.stage.units).map(([id, u]) => [id, { at: u.at, stance: u.stance }]));
+  return { cue, prev, ens, crew };
+}
+const stepsOf = (cue, prev, pace = 'watch', opts = {}) => stageScript(prev, cue, { pace, ...opts }).steps;
+
+test('the Contagion jump is drawn: one spread step a spread line, from the body that fell to the new host, and a chain is one hop a round', () => {
+  const { cue, prev, ens } = forged([]);
+  const [a, b] = ens;
+  cue.lines = [{ kind: 'note', rule: 'spread', key: 'spread', guard: b, jumpFrom: a, text: '' }];
+  for (const pace of ['watch', 'fast']) {
+    const hops = stepsOf(cue, prev, pace).filter((s) => s.do === 'spread');
+    assert.equal(hops.length, 1, 'one hop');
+    assert.deepEqual([hops[0].from, hops[0].to], [`e:${a}`, `e:${b}`]);
+    assert.ok(hops[0].dur > 0);
+  }
+  assert.equal(stepsOf(cue, prev, 'resolve').find((s) => s.do === 'spread').dur, 0, 'Resolve cuts it');
+  assert.equal(stepsOf(cue, prev, 'watch', { reduced: true }).find((s) => s.do === 'spread').dur, 0, 'reduced motion cuts it');
+  const none = { ...cue, lines: [{ ...cue.lines[0], jumpFrom: null }] };
+  assert.equal(stepsOf(none, prev).filter((s) => s.do === 'spread').length, 0, 'a line without its source draws no arc');
+});
+
+test('the infection tick is drawn: a tick step with the pip it leaves, and a tickOut that falls the host', () => {
+  const { cue, prev, ens } = forged([]);
+  const [a, b] = ens;
+  cue.lines = [
+    { kind: 'note', rule: 'tick', key: 'tick', guard: a, damage: 1, left: 2, max: 3 },
+    { kind: 'note', rule: 'tick', key: 'tickOut', guard: b, damage: 1, dropped: true, left: 0, max: 1 },
+  ];
+  const ticks = stepsOf(cue, prev).filter((s) => s.do === 'tick');
+  assert.equal(ticks.length, 2);
+  assert.deepEqual(ticks.map((s) => [s.to, s.fell, s.left, s.max]), [[`e:${a}`, false, 2, 3], [`e:${b}`, true, 0, 1]]);
+  assert.ok(ticks[1].dur > ticks[0].dur, 'the pop is a longer beat');
+  for (const sc of [stepsOf(cue, prev, 'resolve'), stepsOf(cue, prev, 'watch', { reduced: true })]) assert.ok(sc.filter((s) => s.do === 'tick').every((s) => s.dur === 0));
+});
+
+test('the shield is drawn: a dome for each shield order, held over the exchange and let go at its end; a shielded shot flags the dome to flare', () => {
+  const { cue, prev, ens, crew } = forged([]);
+  const [prot, patient] = crew;
+  cue.stage.units[prot].act = { kind: 'shield', target: patient };
+  cue.lines = [{ kind: 'guard', rule: 'shot', key: 'shotHit', guard: ens[0], targetId: prot, damage: 1, shieldedBy: prot }];
+  const steps = stepsOf(cue, prev);
+  const dome = steps.filter((s) => s.do === 'dome');
+  assert.equal(dome.length, 1);
+  assert.deepEqual([dome[0].id, dome[0].to], [prot, patient]);
+  const end = steps.findIndex((s) => s.do === 'domeEnd');
+  assert.ok(end > steps.findIndex((s) => s.do === 'fire'), 'the dome stands until the shot has been drawn');
+  assert.ok(steps.find((s) => s.do === 'fire').shield, 'the shot the shield takes is flagged');
+  assert.equal(stepsOf(cue, prev, 'resolve').find((s) => s.do === 'dome').dur, 0);
+  cue.stage.units[prot].act = null;
+  assert.equal(stepsOf(cue, prev).filter((s) => s.do === 'dome' || s.do === 'domeEnd').length, 0, 'no shield order, no dome');
+});
+
+test('jam is drawn: a take sends the broken signal to each caller; a fail is a flicker and sends none', () => {
+  const { cue, prev, ens, crew } = forged([]);
+  cue.lines = [{ kind: 'note', rule: 'jam', key: 'jamOk', actor: crew[0], callers: [ens[0], ens[1]] }, { kind: 'note', rule: 'jam', key: 'jamFail', actor: crew[0] }];
+  const [ok, fail] = stepsOf(cue, prev).filter((s) => s.do === 'ping');
+  assert.deepEqual([ok.ok, ok.targets], [true, [`e:${ens[0]}`, `e:${ens[1]}`]]);
+  assert.deepEqual([fail.ok, fail.targets], [false, []]);
+  assert.ok(ok.dur > fail.dur, 'a take is a longer beat than a flicker');
+  assert.ok(stepsOf(cue, prev, 'resolve').filter((s) => s.do === 'ping').every((s) => s.dur === 0));
+});
+
+test('the way out is drawn: an alarm step at the door, once, and the patch is a group pulse over everyone reached', () => {
+  const { cue, prev, crew } = forged([]);
+  cue.lines = [{ kind: 'note', rule: 'wayOut', key: 'wayOut' }, { kind: 'patch', rule: 'patch', key: 'wayOutPatch', actor: crew[0], targets: [crew[0], crew[1]] }, { kind: 'stabilise', rule: 'stabilise', key: 'stabiliseWayOut', actor: crew[0], targetId: crew[1], success: true }];
+  const steps = stepsOf(cue, prev);
+  const alarm = steps.filter((s) => s.do === 'alarm');
+  assert.equal(alarm.length, 1);
+  assert.ok(Array.isArray(alarm[0].at) && alarm[0].dur > 0);
+  const patch = steps.filter((s) => s.do === 'patch');
+  assert.equal(patch.length, 1);
+  assert.deepEqual(patch[0].targets, [crew[0], crew[1]]);
+  assert.equal(steps.filter((s) => s.do === 'aura').length, 1, 'a runner steadied on the way out gets the aura picture');
+  for (const sc of [stepsOf(cue, prev, 'resolve'), stepsOf(cue, prev, 'watch', { reduced: true })]) assert.ok(sc.filter((s) => ['alarm', 'patch', 'aura'].includes(s.do)).every((s) => s.dur === 0));
+});
+
+test('the new lines reach the stage from the rules: the spread, the tick, the jam, the shielded shot and the patch keep their fields through runfight and the feed', async () => {
+  const F = await import('../src/core/fight.js');
+  const { feedLine } = await import('../src/core/runfight.js');
+  const { makeRng } = await import('../src/core/rng.js');
+  const { ENEMIES } = await import('../src/data/fights.js');
+  const crew = createNewGame({ seed: 1 }).crew.slice(0, 3);
+  const b = F.buildFight({ type: 'holdYard', diff: 14, threat: 3, site: 'docks', crew, approach: 'loud', risk: 'steady' }, makeRng(3));
+  const foe = (n) => ({ n, kind: 'hired', pips: 1, max: 1, absorb: 0, cover: ENEMIES.hired.cover, out: false, fled: false, deck: ['aim'], di: 0, approaching: false, group: 0, infected: null });
+  b.enemies = [foe(1), foe(2), foe(3)];
+  b.enemies[0].infected = { tick: 1, left: 2, by: crew[0].id, round: 0, payload: 'contagion' };
+  for (const r of b.runners) r.stats.combat.value = -50;
+  const r = F.playRound(b, () => 0.5);
+  const lines = r.lines.map(feedLine);
+  const ev = { kind: 'battle', phase: 'round', round: 1, text: '', lines, guards: [], runners: [], stage: forged([]).cue.stage, beats: [] };
+  const cue = feedItems([ev]).map((x) => x.cue?.battle).find(Boolean);
+  const hop = cue.lines.find((l) => l.key === 'spread');
+  assert.ok(hop && hop.jumpFrom === 1 && hop.guard != null, 'the spread names the body it left and the new host');
+  const tick = cue.lines.find((l) => l.key === 'tickOut');
+  assert.ok(tick && tick.left === 0 && tick.max === 1 && tick.guard === 1, 'the tick carries the pip it leaves');
+  const probe = (l) => feedItems([{ ...ev, lines: [feedLine(l)] }]).map((x) => x.cue?.battle).find(Boolean).lines[0];
+  assert.deepEqual(probe({ kind: 'jam', key: 'jamOk', actor: 'jax', callers: [2] }).callers, [2]);
+  assert.equal(probe({ kind: 'shot', key: 'shotHit', enemy: 1, targetId: 'jax', shieldedBy: 'jax' }).shieldedBy, 'jax');
+  assert.deepEqual(probe({ kind: 'patch', key: 'wayOutPatch', actor: 'jax', targets: ['jax', 'mei'] }).targets, ['jax', 'mei']);
+});
