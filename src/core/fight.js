@@ -34,6 +34,7 @@ import { weaponOf, armourOf } from './battle.js';
 import { patchBonus, counted } from './gear.js';
 import { specialLook, layoutFight, enemyUnit } from './fightmap.js';
 import { d20, makeRng, hash } from './rng.js';
+import { copier } from './copy.js';
 
 export { FIGHT };
 
@@ -1125,67 +1126,25 @@ export function stepTallies(tallies, k) {
 }
 
 /**
- * A copy of a fight for a play that throws it away (the odds' and the van read's fights; 2026-11-17, the speed pass): the same
- * as structuredClone(b), shared references included (a crew's orders share their priority list), only quicker. It copies plain
- * objects and dense arrays itself; on anything else (a Map, a class, a sparse array, a function) it hands the whole fight to
- * structuredClone, so the answer, or the error, is always structuredClone's.
- * The parts no round ever writes into are kept, not copied (KEPT): each order (b.orders' entries: an order that changes is
- * replaced whole) and each runner's stats and build. A copy shares them with `b`, so a fight played on it plays exactly as on
- * structuredClone's; tests/copyfight.test.js freezes them and plays fights to keep that true.
+ * A copy of a fight for a play that throws it away (the odds' and the van read's fights; 2026-11-17, the speed pass): what
+ * structuredClone(b) gives (core/copy.js copier), only quicker. The parts no round ever writes into are kept, not copied
+ * (KEPT): each order (b.orders' entries: an order that changes is replaced whole) and each runner's stats and build. A copy
+ * shares them with `b`, so a fight played on it plays exactly as on structuredClone's; tests/copyfight.test.js freezes them
+ * and plays fights to keep that true.
  */
 export const copyFight = (b) => copierFor(b)();
 
 /**
  * copyFight for many copies of one fight that does not change between them (a tally's b0, the van read's fight): the kept
- * parts are found and checked once. Returns a function that makes a copy of `b` as it was.
+ * parts are found once. Returns a function that makes a copy of `b` as it was.
  */
-export function copierFor(b) {
-  const seed = new Map();
-  try { for (const x of KEPT(b)) keep(x, seed); } catch (e) { if (e === NOT_PLAIN) return () => structuredClone(b); throw e; }
-  return () => {
-    try { return copyTree(b, new Map(seed)); } catch (e) { if (e === NOT_PLAIN) return structuredClone(b); throw e; }
-  };
-}
+export const copierFor = (b) => copier(b, KEPT(b));
+
 /** The parts of a fight that no round writes into (see copyFight). */
 export const KEPT = (b) => [
   ...(b.orders && typeof b.orders === 'object' ? Object.values(b.orders) : []),
   ...(Array.isArray(b.runners) ? b.runners.flatMap((r) => (r && typeof r === 'object' ? [r.stats, r.build] : [])) : []),
 ];
-/** Mark x and everything in it as its own copy (checked plain, as copyTree would). */
-function keep(x, seen) {
-  if (typeof x !== 'object' || x === null) { if (typeof x === 'function' || typeof x === 'symbol') throw NOT_PLAIN; return; }
-  if (seen.has(x)) return;
-  const proto = Object.getPrototypeOf(x);
-  if (proto !== Object.prototype && proto !== Array.prototype) throw NOT_PLAIN;
-  if (Array.isArray(x)) { let own = 0; for (const k in x) own += 1; if (own !== x.length) throw NOT_PLAIN; }
-  seen.set(x, x);
-  for (const k in x) keep(x[k], seen);
-}
-const NOT_PLAIN = Symbol('not plain');
-function copyTree(x, seen) {
-  if (typeof x !== 'object' || x === null) {
-    if (typeof x === 'function' || typeof x === 'symbol') throw NOT_PLAIN;
-    return x;
-  }
-  let c = seen.get(x);
-  if (c) return c;
-  if (Array.isArray(x)) {
-    if (Object.getPrototypeOf(x) !== Array.prototype) throw NOT_PLAIN;
-    const n = x.length;
-    c = new Array(n);
-    seen.set(x, c);
-    let own = 0;
-    for (const k in x) own += 1; // an extra key or a hole: not a plain dense array
-    if (own !== n) throw NOT_PLAIN;
-    for (let i = 0; i < n; i++) c[i] = copyTree(x[i], seen);
-    return c;
-  }
-  if (Object.getPrototypeOf(x) !== Object.prototype) throw NOT_PLAIN;
-  c = {};
-  seen.set(x, c);
-  for (const k in x) c[k] = copyTree(x[k], seen);
-  return c;
-}
 
 /** Play a whole fight on its orders, round by round, until it ends (hands-off: the risk level answers the van). */
 export function playFight(b, rng, maxRounds = 30) {
