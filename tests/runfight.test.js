@@ -75,7 +75,9 @@ test('the five jobs play their fights on engine 2, hands-off, start to finish; e
     }
   }
   for (const id of FIVE) { assert.ok(seen[`${id}:2`] > 0, `${id} played engine-2 fights (${seen[`${id}:2`]})`); assert.equal(seen[`${id}:1`], undefined, `${id} never engine 1`); }
-  for (const id of ['exit_interview', 'low_water', 'kidnap']) { assert.equal(seen[`${id}:2`], undefined, `${id} stays on engine 1`); }
+  for (const id of ['low_water', 'kidnap']) { assert.equal(seen[`${id}:1`], undefined, `${id} never engine 1 (moved to engine 2, 2026-11-17)`); }
+  assert.ok(seen['kidnap:2'] > 0, 'kidnap played engine-2 fights');
+  assert.equal(seen['exit_interview:2'], undefined, 'a job not in FIGHT_JOBS stays on engine 1');
   assert.ok(seen['exit_interview:1'] > 5);
 });
 

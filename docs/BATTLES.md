@@ -6,7 +6,7 @@ Checked against the code on 2026-11-13 (`src/core/fight.js`, `runfight.js`, `bat
 
 | | Engine 2 (the new fights) | Engine 1 (the old fights) |
 | --- | --- | --- |
-| Plays | Five jobs only: `data_pull`, `data_scrub`, `quiet_hours` (**hold the hack**) and `warehouse`, `protection` (**hold and extract**). `FIGHT_JOBS` in `data/fights.js`. | Every other fight, and every raid on a hall. |
+| Plays | The jobs in `FIGHT_JOBS` (26 by 2026-11-17; started as five: `data_pull`, `data_scrub`, `quiet_hours`, `warehouse`, `protection`). `FIGHT_JOBS` in `data/fights.js`. | Every other fight, and every raid on a hall. |
 | Health | **Pips**: one per 2 endurance, at least 3. | **HP**: 10 + cool ÷ 4. |
 | Player's input | A standing **order** for each runner, a crew-wide **risk level**, and call-ins. | A one-off order per runner each round (shoot, flank, hunker, move, patch, talk, lights). |
 | Code | `core/fight.js` (rules), `core/runfight.js` (the run's side), `core/fightview.js` (what the screen reads) | `core/battle.js` (rules), `core/runbattle.js` (the run's side) |
