@@ -1072,6 +1072,7 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .wf-note { margin: 0; font-size: 0.82rem; padding-left: 12px; }
 .wf-kind { font-size: 0.64rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
 .wf-setup { margin: 0; font-size: 0.86rem; color: #b4bacb; line-height: 1.45; }
+.wf-cost { color: #ff5470; font-weight: 700; }
 .wf-det { margin: 0; font-size: 0.84rem; color: #c9cdd8; line-height: 1.45; }
 .wf-why { margin: 0; font-size: 0.78rem; color: var(--accent-2); }
 /* New moments slide in; each headline lands a beat after the one before (slower when paced, quicker at Faster). */
