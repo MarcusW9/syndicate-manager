@@ -361,7 +361,7 @@ test('a v68 save upgrades: no pieces found yet, and ones already listed are kept
   delete s.apexFound;
   const loaded = await importSave({ text: async () => JSON.stringify(s) });
   assert.equal(loaded.version, SAVE_VERSION);
-  assert.equal(SAVE_VERSION, 73);
+  assert.ok(SAVE_VERSION >= 73); // was `=== 73` until builds 3-ii-a bumped it to 74
   assert.deepEqual(loaded.apexFound, []);
   const t = createNewGame({ seed: 71 });
   t.apexFound = ['lastword'];

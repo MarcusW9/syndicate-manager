@@ -179,3 +179,59 @@ export const FIGHT_TEXT = {
   'callin.cost': 'Heat +{heat}',
   'callin.pullBackCost': 'No pay. Heat +{heat}, reputation −{rep}.',
 };
+
+// Slice 3-ii-a, builds (the owner's wording, 2026-11-17): several variants a line. core/fighttext.js `lineText` picks one by a stable hash of the key
+// and its slots (never the fight's rng, so a replay reads the same); the first is the default in FIGHT_TEXT above. Every variant uses the same slots.
+export const FIGHT_TEXT_VARIANTS = {
+  'bounceHit': [
+    "{who}'s round ricochets and rips into {enemy}.",
+    "{who}'s round ricochets and slams into {enemy}.",
+    "{who}'s round ricochets and hammers {enemy}.",
+  ],
+  'bounceCrack': [
+    "{who}'s round ricochets and splits {enemy}'s armour.",
+    "{who}'s round ricochets and buckles {enemy}'s armour.",
+    "{who}'s round ricochets and splinters a plate on {enemy}'s armour.",
+  ],
+  'bounceOut': [
+    "{who}'s round ricochets and knocks {enemy} flat.",
+    "{who}'s round ricochets and sends {enemy} crashing down.",
+    "{who}'s round ricochets and drops {enemy} hard.",
+  ],
+  'bounceMiss': [
+    "{who}'s round ricochets just wide of {enemy}.",
+    "{who}'s round ricochets past {enemy} without connecting.",
+    "{who}'s round ricochets clear of {enemy}.",
+  ],
+  'infect': [
+    'The {word} gets its hooks into {enemy}.',
+    'The {word} takes root in {enemy}.',
+    'The {word} begins spreading inside {enemy}.',
+  ],
+  'tick': [
+    'The {word} rips through {enemy}.',
+    'The {word} ravages {enemy}.',
+    'The {word} eats into {enemy}.',
+  ],
+  'tickOut': [
+    'The {word} brings {enemy} crashing down.',
+    'The {word} ravages {enemy} until they collapse.',
+    'The {word} tears through {enemy}, dropping them.',
+  ],
+  'immune': [
+    '{enemy} is a machine: the {word} finds no living tissue.',
+    '{enemy} is a machine: the {word} cannot take hold.',
+    '{enemy} is a machine: the {word} has no flesh to attack.',
+  ],
+  'intent.burst': [
+    '{who} lines up a Ricochet through {enemies} ({why}).',
+    '{who} sets up a Ricochet to tear through {enemies} ({why}).',
+    '{who} prepares to rip through {enemies} with the Ricochet ({why}).',
+  ],
+  'ticks': [
+    'The {word} will strip a pip from {enemies} at the end of the round.',
+    'At the end of the round, the {word} will take a pip from {enemies}.',
+    '{enemies} will lose a pip to the {word} at the end of the round.',
+  ],
+};
+for (const [key, list] of Object.entries(FIGHT_TEXT_VARIANTS)) FIGHT_TEXT[key] = list[0];

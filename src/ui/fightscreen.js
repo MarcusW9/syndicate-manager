@@ -181,7 +181,7 @@ export function renderFightRound(state, esc, face = () => '') {
       <ul class="fs-list">${v.enemies.map((e) => enemyCard(esc, e)).join('')}</ul>
       <h4 class="fs-h">Crew</h4>
       <ul class="fs-list">${v.runners.map((r) => runnerRow(esc, face, r, { edited: labelOf(r.id), sel: d.panel && r.id === d.sel, panel: d.panel })).join('')}</ul>
-      <div class="fs-ifnothing" aria-label="If nothing changes"><b>If nothing changes</b>${v.ifNothing.map((x) => `<p>${esc(x.text)}</p>`).join('')}</div>
+      <div class="fs-ifnothing" aria-label="If nothing changes"><b>If nothing changes</b>${v.ifNothing.map((x) => `<p>${esc(x.text)}</p>`).join('')}${v.ticksLine ? `<p class="fs-ticks">${esc(v.ticksLine)}</p>` : ''}</div>
       ${riskPicker(esc, b, d)}
       ${d.panel ? orderPanel(esc, b, v, d) : ''}
       ${lastRound(esc, am)}

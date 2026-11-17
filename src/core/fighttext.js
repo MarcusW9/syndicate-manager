@@ -4,7 +4,8 @@
 // Slots are {name}. A plural switch reads {n:one|many}: it prints "one" when the slot is 1, else "many"
 // ("{n} {n:shot|shots}"). A line starts with a capital, so a slot at the start can be lowercase.
 
-import { FIGHT_TEXT } from '../data/fightText.js';
+import { FIGHT_TEXT, FIGHT_TEXT_VARIANTS } from '../data/fightText.js';
+import { hash } from './rng.js';
 
 const fillText = (text, slots) => text
   .replace(/\{(\w+):([^|}]*)\|([^}]*)\}/g, (_, k, one, many) => (Number(slots[k]) === 1 ? one : many))
@@ -12,7 +13,16 @@ const fillText = (text, slots) => text
 const capital = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /** A line or threat as text: its key's wording with its slots. An unknown key reads as the key. */
-export const lineText = (key, slots = {}) => (FIGHT_TEXT[key] ? capital(fillText(FIGHT_TEXT[key], slots)) : key);
+export const lineText = (key, slots = {}) => {
+  const text = wording(key, slots);
+  return text ? capital(fillText(text, slots)) : key;
+};
+
+/** A key's wording: its one text, or, where the owner wrote variants, one picked by a stable hash of the key and slots (cosmetic, never the fight's rng). */
+function wording(key, slots) {
+  const v = FIGHT_TEXT_VARIANTS[key];
+  return v?.length > 1 ? v[hash(key, JSON.stringify(slots)) % v.length] : FIGHT_TEXT[key];
+}
 
 /** An enemy's kind as a word ("security guard" for corp); an unknown kind reads as itself. */
 export const kindWord = (kind) => FIGHT_TEXT[`kind.${kind}`] ?? kind;

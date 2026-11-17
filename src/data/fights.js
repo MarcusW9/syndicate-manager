@@ -58,7 +58,7 @@ export const FIGHT = {
 export const ENEMIES = {
   hired: { pips: 1, cover: 'half', deck: ['aim', 'aim', 'alarm'], fleeBelow: 0.4 },
   corp: { pips: 2, cover: 'half', deck: ['aim', 'backup', 'aim', 'flank'] },
-  drone: { pips: 1, cover: 'open', deck: ['aim', 'alarm'], absorb: 1, jamTakesOut: true },
+  drone: { pips: 1, cover: 'open', deck: ['aim', 'alarm'], absorb: 1, jamTakesOut: true, foeTags: ['synthetic'] },
   enforcer: { pips: 2, cover: 'half', deck: ['aim', 'aim', 'flank'] },
   // Standard force (prototype, 2026-11-15): the rank and file of a job's `opposition`. One pip behind one plate of armour,
   // so a plain hit only cracks the plate and a second one drops them; they come in numbers. The two kinds are the same body in
@@ -67,6 +67,8 @@ export const ENEMIES = {
   police: { pips: 1, cover: 'half', deck: ['aim', 'aim', 'alarm'], absorb: 1, fleeBelow: 0.4 },
   secforce: { pips: 1, cover: 'half', deck: ['aim', 'aim', 'backup'], absorb: 1, fleeBelow: 0.4 },
 };
+// Enemy tags (slice 3-ii-a, 2026-11-16): `foeTags` on a kind above. A payload that lists a tag in its `immune` (data/builds.js)
+// does nothing to a body that has it. 'synthetic' is the first: machines, which the Cytotoxic Vector cannot touch.
 // Pips a shot of each kind takes (2 is the most any shot does).
 export const ENEMY_HIT = { hired: 1, drone: 1, corp: 2, enforcer: 2, police: 1, secforce: 1 };
 // Who a site (a district id, data/incidents.js ZONES aside: names.js districts) sends, in rotation by slot.
