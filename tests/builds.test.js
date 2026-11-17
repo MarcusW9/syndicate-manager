@@ -302,6 +302,43 @@ test('Contagion: the killing hit counts, so a one-pip enemy that dies to it stil
   assert.ok(!d.r.lines.some((l) => l.key === 'spread'), 'a machine is never infected, so nothing jumps from it');
 });
 
+test('Contagion: an infected enemy felled by a shot, or by overwatch, hands the infection on (not only the tick)', () => {
+  // A crew with no build at all: the infection the enemy already carries is the only thing that can jump.
+  const shot = fixture(['jax', 'mei', 'wing'], ['hired', 'hired', 'hired'], { build: null });
+  sick(shot, 1, 'contagion', { round: 0 });
+  const r = F.playRound(shot, mid);
+  const felled = r.defeated.filter((d) => d.how === 'attack' && d.enemy === 1);
+  assert.equal(felled.length, 1, 'a crew shot dropped the sick one-pip enemy');
+  const jump = r.lines.find((l) => l.key === 'spread' && l.from === 1);
+  assert.ok(jump, 'and the infection jumped on from the shot kill');
+  assert.ok(r.lines.findIndex((l) => l.key === 'spread') > r.lines.findIndex((l) => l.key === 'attackOut'), 'said after the fall');
+  assert.equal(shot.enemies.find((e) => e.n === jump.enemy).infected.payload, 'contagion', 'the new host carries the vector');
+
+  const ow = fixture(['jax', 'wing'], ['hired', 'hired', 'hired'], { build: null });
+  butts(ow); // no crew shot lands: only overwatch fires
+  ow.overwatch = { id: 'jax', handle: 'Jax', kit: 'rifle', name: 'Rifle', stat: 'combat', value: 40, damage: 0, left: 2, vanShots: 0, heat: 0, neural: 0 };
+  sick(ow, 3, 'contagion', { round: 0 }); // the crew's plans cover enemies 1 and 2, so overwatch takes the third
+  const o = F.playRound(ow, mid);
+  const out = o.lines.find((l) => l.key === 'overwatchOut' && l.enemy === 3);
+  assert.ok(out, 'overwatch put the sick enemy down');
+  const hop = o.lines.find((l) => l.key === 'spread' && l.from === 3);
+  assert.ok(hop, 'and it handed the infection on');
+  assert.ok(o.lines.indexOf(hop) > o.lines.indexOf(out), 'said after the fall');
+  assert.ok(ow.enemies.find((e) => e.n === hop.enemy).infected, 'the new host is infected');
+});
+
+test('the planning read names the Contagion Vector, and a drone is still one it cannot hurt', async () => {
+  const { buildRead } = await import('../src/core/fightview.js');
+  const withKinds = (kinds) => fixture(['jax', 'mei', 'wing'], kinds, { build: { move: null, payload: 'contagion' } });
+  const fits = buildRead(withKinds(['hired', 'hired', 'hired']));
+  assert.ok(fits.advice.includes('Contagion Vector'), `the advice names it: ${fits.advice}`);
+  assert.ok(fits.answers[0].text.includes('Contagion Vector') && fits.answers[0].tags.includes('Contagion Vector'), 'and so does the breakdown');
+  const drones = buildRead(withKinds(['drone', 'drone']));
+  assert.ok(/can't hurt/.test(drones.advice) && drones.advice.includes('Contagion Vector'), `a drone is still can't hurt: ${drones.advice}`);
+  assert.ok(/no effect on/.test(drones.answers[0].text), 'the breakdown says it has no effect on them');
+  assert.ok(drones.threats.some((t) => /machines/i.test(t.text)), 'and the threat list says machines');
+});
+
 test('the save: a v75 hack fight in progress still ends with the hack; one built now carries its way out', async () => {
   const S = await import('../src/save/save.js');
   const { SAVE_VERSION } = await import('../src/core/state.js');
