@@ -112,7 +112,7 @@ test('every loud run has a fight (the first danger incident), a stealth run only
   let quiet = 0;
   let quietFights = 0;
   for (let seed = 1; seed <= 300; seed++) {
-    const am = autoRun(begin(seed, 'container409', seed % 2 ? 'loud' : 'stealth', { n: 3 }), 'committed').activeMission;
+    const am = autoRun(begin(seed, 'cable', seed % 2 ? 'loud' : 'stealth', { n: 3 }), 'committed').activeMission;
     const fought = am.events.some((e) => e.kind === 'battle' && e.phase === 'start');
     if (seed % 2) { loud++; if (fought) loudFights++; } else { quiet++; if (fought) quietFights++; }
   }
@@ -205,7 +205,7 @@ test('keeping on fighting is the only way anyone dies; a later exit still saves 
   let fought = 0;
   let died = 0;
   for (let seed = 1; seed <= 3000; seed++) {
-    const s = begin(seed, seed % 2 ? 'exit_interview' : 'container409', APPROACHES[seed % 4], { n: 1 + (seed % 3) });
+    const s = begin(seed, seed % 2 ? 'exit_interview' : 'cable', APPROACHES[seed % 4], { n: 1 + (seed % 3) });
     const { state, pushed } = playMission(s, randomPolicy(seed));
     const am = state.activeMission;
     if (am.events.some((e) => e.kind === 'decision' && e.push)) fought++;
@@ -270,7 +270,7 @@ test('the orders in a fight: Cautious pulls back once someone is hurt, Steady on
 
 test('the planning read quotes the fight from the run\'s own round function', () => {
   const s = createNewGame({ seed: 4, startCrew: 'fresh' });
-  const tpl = templateById('container409'); // rookie work: a fight this crew can win sometimes
+  const tpl = templateById('cable'); // rookie work: a fight this crew can win sometimes
   const crew = s.crew.slice(0, 3);
   // A quiet approach: the fight is only the roll's and the save's miss, odds straight from battleOdds.
   const { rows } = coverage(tpl, crew, 'stealth');

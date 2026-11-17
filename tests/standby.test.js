@@ -50,7 +50,7 @@ function toPending(s, kind) {
 test('Wheels and standby are crew of your own, one place each', () => {
   const s = createNewGame({ seed: 4, startCrew: 'fresh' });
   s.jobs = [];
-  addOffer(s, 'container409');
+  addOffer(s, 'courier');
   const [a, b, c, d] = s.crew.map((o) => o.id);
   arm(s, c, 'rifle');
   const job = s.jobs[0].id;
@@ -64,7 +64,7 @@ test('Wheels and standby are crew of your own, one place each', () => {
 test('Wheels takes every piloting roll from the van, and the read says so', () => {
   let checked = 0;
   for (let seed = 1; seed <= 60 && checked < 10; seed++) {
-    let s = begin(seed, 'container409', APPROACH_IDS[seed % 4], { wheels: true });
+    let s = begin(seed, 'courier', APPROACH_IDS[seed % 4], { wheels: true });
     s = toCrisis(s);
     const odds = M.crisisOdds(s) ?? [];
     for (const o of odds.filter((x) => x.roller && x.choice.stat === 'piloting')) {
@@ -80,7 +80,7 @@ test('Wheels takes every piloting roll from the van, and the read says so', () =
 test('standby at max alert: they join the team, the alert stays up, and the next call has no standby', () => {
   let seen = 0;
   for (let seed = 1; seed <= 400 && seen < 6; seed++) {
-    let s = toPending(begin(seed, 'low_water', APPROACH_IDS[seed % 4], { n: 1, standby: true }), 'alert');
+    let s = toPending(begin(seed, 'courier', APPROACH_IDS[seed % 4], { n: 1, standby: true }), 'alert');
     if (s.activeMission.pending?.kind !== 'alert') continue;
     const view = M.describePending(s);
     assert.ok(view.choices.some((c) => c.id === 'standby'), 'standby is offered');
@@ -104,7 +104,7 @@ test('a rescue: standby gets the wounded out and takes their place', () => {
   // Badly hurt after a fight, or down in one (slice 6): standby can go in either way.
   for (let seed = 1; seed <= 800 && seen < 5; seed++) {
     const kind = seed % 2 ? 'door' : 'injury';
-    let s = toPending(begin(seed, 'low_water', APPROACH_IDS[seed % 4], { n: 2, standby: true }), kind);
+    let s = toPending(begin(seed, 'courier', APPROACH_IDS[seed % 4], { n: 2, standby: true }), kind);
     if (s.activeMission.pending?.kind !== kind) continue;
     const patient = s.activeMission.pending.opId;
     assert.ok(M.describePending(s).choices.some((c) => c.id === 'rescue'));
@@ -123,7 +123,7 @@ test('a rescue: standby gets the wounded out and takes their place', () => {
 test('once standby is in, a failed save gets a second try from them, never more', () => {
   let second = 0;
   for (let seed = 1; seed <= 300; seed++) {
-    const s = begin(seed, 'low_water', 'loud', { n: 2, standby: true });
+    const s = begin(seed, 'courier', 'loud', { n: 2, standby: true });
     // Committed: on Steady orders a lost fight ends the job before standby meets another incident (slice 6).
     const am = autoRun(s, 'committed').activeMission;
     const ev = am.events;
@@ -152,7 +152,7 @@ test('the orders: Cautious never calls standby; Steady and Committed do while th
 test('nobody dies without "push on", and every exit brings everyone home, with Wheels and standby', () => {
   const rookieJobs = MISSIONS.filter((m) => m.rookie).map((m) => m.id);
   for (let seed = 1; seed <= 1500; seed++) {
-    const s = begin(seed, seed % 3 ? rookieJobs[seed % rookieJobs.length] : 'low_water', APPROACH_IDS[seed % 4], { n: 1 + (seed % 2), wheels: seed % 2 === 0, standby: true });
+    const s = begin(seed, seed % 3 ? rookieJobs[seed % rookieJobs.length] : 'courier', APPROACH_IDS[seed % 4], { n: 1 + (seed % 2), wheels: seed % 2 === 0, standby: true });
     const policy = { ...randomPolicy(seed), critical: (o) => (o.includes('extract') ? 'extract' : o[0]) };
     const { state, pushed } = playMission(s, policy);
     if (!pushed) assert.deepEqual(state.activeMission.result.deaths, [], `seed ${seed}`);
@@ -173,7 +173,7 @@ test('the spotted penalty goes once the alert is maxed: nothing left to hide', (
 test('Wheels and standby are on the job: away on a hands-off run, tired and in the history after', () => {
   const s = createNewGame({ seed: 6, startCrew: 'fresh' });
   s.jobs = [];
-  addOffer(s, 'container409');
+  addOffer(s, 'courier');
   const [a, b, c, d] = s.crew.map((o) => o.id);
   const away = sendOff(s, s.jobs[0].id, [a, b], 'stealth', 'steady', { wheels: c, standby: d });
   for (const id of [c, d]) assert.ok(away.crew.find((o) => o.id === id).condition.awayUntil > s.day, `${id} is away`);
@@ -181,12 +181,12 @@ test('Wheels and standby are on the job: away on a hands-off run, tired and in t
   for (const id of [c, d]) {
     const op = live.crew.find((o) => o.id === id);
     assert.ok(op.condition.fatigue > s.crew.find((o) => o.id === id).condition.fatigue, `${id} is tired`);
-    assert.ok(op.history.some((h) => /Container 409/.test(h))); // a milestone line may follow it
+    assert.ok(op.history.some((h) => /Data Courier Run/.test(h))); // a milestone line may follow it
   }
 });
 
 test('a v21 save upgrades: a job in progress gets no Wheels or standby, and finishes', async () => {
-  let s = structuredClone(begin(12, 'container409', 'tech'));
+  let s = structuredClone(begin(12, 'courier', 'tech'));
   delete s.activeMission.wheels;
   delete s.activeMission.standby;
   s.version = 21;
