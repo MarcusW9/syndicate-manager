@@ -12,26 +12,28 @@ const page = await browser.newPage({ viewport: { width: 390, height: 844 }, devi
 const html = (variant) => `
 <section class="panel"><section class="fs fs--plan">
   <p class="fs-title">The fight</p>
-  <p class="fs-planline">Hold the yard, then get everyone aboard. Mid risk.</p>
-  <p class="fs-muted">Likely enemies: hired guns, enforcers, drones.</p>
+  <p class="fs-planline">Your crew has to hold the yard until the van arrives, then get everyone aboard. The risk is medium.</p>
+  <p class="fs-muted">Expect hired guns, an enforcer and some drones.</p>
 
-  <h4 class="fs-h">What it throws</h4>
-  <ul class="chips">
-    <li class="chip"><strong>Groups</strong><span>4 hired guns arrive together</span></li>
-    <li class="chip"><strong>Machines</strong><span>3 drones: shrug off infection</span></li>
-    <li class="chip"><strong>Armoured</strong><span>1 enforcer in a plate</span></li>
+  <h4 class="fs-h">What you'll be up against</h4>
+  <ul class="fs-list">
+    <li class="fs-runner"><span class="fs-runner__top"><strong>A group of four hired guns</strong></span><span class="fs-order">They arrive together, so a crew that can only hit one enemy at a time will struggle.</span></li>
+    <li class="fs-runner"><span class="fs-runner__top"><strong>Three drones</strong></span><span class="fs-order">Drones are machines. Poisons and infections have no effect on them.</span></li>
+    <li class="fs-runner"><span class="fs-runner__top"><strong>One armoured enforcer</strong></span><span class="fs-order">Their plate blocks ordinary hits until it cracks.</span></li>
   </ul>
 
-  <h4 class="fs-h">What your squad answers</h4>
+  <h4 class="fs-h">What your squad can do about it</h4>
   <ul class="fs-list">
     <li class="fs-runner"><span class="fs-runner__top"><strong>Hotwire</strong><em class="fs-tag">Ricochet</em><em class="fs-tag">Cytotoxic Vector</em></span>
-      <span class="fs-order">${variant === 'gap' ? 'Answers: groups (bounces to 3). Not machines.' : 'Answers: groups (bounces to 3), armour (infection past the plate). Not machines.'}</span></li>
-    <li class="fs-runner"><span class="fs-runner__top"><strong>Viper</strong></span><span class="fs-order">No build. Plain shots.</span></li>
+      <span class="fs-order">${variant === 'gap'
+        ? 'Ricochet bounces their shot to up to three enemies, which suits the hired guns. Their infection works on the enforcer but not on the drones.'
+        : 'Ricochet bounces their shot to up to three enemies, which suits the hired guns. Their infection can get past the enforcer\'s plate.'}</span></li>
+    <li class="fs-runner"><span class="fs-runner__top"><strong>Viper</strong></span><span class="fs-order">Viper has no build yet, so they shoot one enemy at a time.</span></li>
   </ul>
   <ul class="fs-gaps">
     ${variant === 'gap'
-      ? '<li>Nobody here can answer the 3 drones: the Vector will not take on machines, and Viper has no jammer.</li><li>Protect (the van) wants a Ricochet carrier on the door: Hotwire is the only one, and she cannot be in both places.</li>'
-      : '<li>Covered: the groups (Ricochet) and the plate (Vector). Drones fall to plain shots.</li>'}
+      ? '<li>Nobody in this squad has a good answer to the three drones. Hotwire\'s infection does nothing to machines, and Viper can\'t jam them. A tech who can jam drones would help.</li><li>If you also want to protect the van, someone with Ricochet needs to stand at the door. Hotwire is the only one who has it, so she can\'t cover both the door and the yard.</li>'
+      : '<li>This squad has an answer for each part of the fight: Ricochet for the hired guns and the infection for the enforcer. The drones are weak enough to shoot down the ordinary way.</li>'}
   </ul>
 </section></section>`;
 try {
