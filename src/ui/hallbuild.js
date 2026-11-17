@@ -179,11 +179,13 @@ export function buildGrid(state, view, esc, art = false) {
   const inside = scope && scope !== 'compound' ? scope : null;
   const inScope = (k) => { if (!scope) return true; const pt = partAt(site, ...k.split(',').map(Number)); return inside ? pt?.id === inside : !pt?.inside; };
   const onPosts = scope === 'compound' && view.tab !== 'defence';
+  const pickedPost = PIECES[view.piece]?.kind === 'post' ? PIECES[view.piece] : null;
   const slots = onPosts ? postSlots(hall, site).map((x) => {
     const built = x.built;
     const on = view.slot === x.id || (built && view.picked === built.id);
     const [px, py] = x.at;
-    return `<g class="bslot ${built ? 'is-built' : ''} ${on ? 'is-on' : ''}" data-action="build-slot" data-id="${esc(x.id)}" role="button" tabindex="0" aria-label="${esc(`${x.name}: ${built ? PIECES[built.piece].name : 'nothing built'}`)}"><rect class="bslot__hit" x="${px - 14}" y="${py - 14}" width="28" height="28"/>${built ? '' : `<rect class="bslot__box" x="${px - 8}" y="${py - 8}" width="16" height="16"/><text class="bslot__plus" x="${px}" y="${py + 4}" text-anchor="middle">+</text>`}</g>`;
+    const fits = !pickedPost || built || pickedPost.where === x.kind; // a picked post fades the places it can't go
+    return `<g class="bslot ${built ? 'is-built' : ''} ${on ? 'is-on' : ''} ${fits ? '' : 'is-off'}" data-action="build-slot" data-id="${esc(x.id)}" role="button" tabindex="0" aria-label="${esc(`${x.name}: ${built ? PIECES[built.piece].name : 'nothing built'}`)}"><rect class="bslot__hit" x="${px - 14}" y="${py - 14}" width="28" height="28"/>${built ? '' : `<rect class="bslot__box" x="${px - 8}" y="${py - 8}" width="16" height="16"/><text class="bslot__plus" x="${px}" y="${py + 4}" text-anchor="middle">+</text>`}</g>`;
   }).join('') : '';
   const cells = onPosts ? '' : [...free].filter(inScope).map((k) => {
     const [x, y] = k.split(',').map(Number);
@@ -280,8 +282,10 @@ export function buildPalette(state, view, ui, { all = false } = {}) {
   const compound = view.scope === 'compound';
   const tab = compound ? (view.tab === 'defence' ? 'defence' : 'post') : scoped ? 'room' : all && (view.tab ?? 'all') === 'all' ? 'all' : view.tab === 'room' ? 'room' : 'defence';
   const tabs = compound ? [['post', 'Posts'], ['defence', 'Forecourt']] : all && !scoped ? TABS : TABS.filter(([k]) => k !== 'all');
+  // With a place picked on the plan, the posts that can't go there fade out (and can't be picked).
+  const slotKind = compound && tab === 'post' && view.slot ? postSlots(state.halls?.find((h) => h.district === view.district), hallMap(view.district)).find((x) => x.id === view.slot)?.kind : null;
   const tiles = Object.entries(PIECES).filter(([, p]) => tab === 'all' || p.kind === tab).map(([id, p]) => `
-      <button class="btile ${view.piece === id ? 'is-on' : ''}" data-action="build-piece" data-id="${esc(id)}" aria-pressed="${view.piece === id}">
+      <button class="btile ${view.piece === id ? 'is-on' : ''}" ${slotKind && p.where !== slotKind ? 'disabled' : ''} data-action="build-piece" data-id="${esc(id)}" aria-pressed="${view.piece === id}">
         ${icon(id)}<strong>${esc(p.name)}</strong><span class="btile__what"><span class="btile__price">${money(p.cost)}</span> · ${p.kind === 'post' ? '' : `${p.size[0]} × ${p.size[1]} · `}${esc(p.what)}</span>
       </button>`).join('');
   return `

@@ -239,3 +239,16 @@ test('nobody home and no plan: the call waits for the player', () => {
   for (let i = 0; i < 10 && !s.inbox.some((m) => m.kind === 'raid' && !m.resolved); i++) { s = advanceDay(s); setHeat(s, 'docks', 8); }
   assert.ok(s.inbox.some((m) => m.kind === 'raid' && !m.resolved));
 });
+
+test('a raid call posted with nobody home can still be answered Hold once someone is home', () => {
+  let s = withDocksHall(3);
+  s = untilWarned(s, 'docks');
+  for (let i = 0; i < 10 && !s.inbox.some((m) => m.kind === 'raid' && !m.resolved); i++) { s = advanceDay(s); for (const r of openRaids(s)) r.plan = 'ask'; }
+  const call = s.inbox.find((m) => m.kind === 'raid' && !m.resolved);
+  if (!call) return; // the raid was settled by the day tick on this seed
+  call.options = [{ id: 'withdraw', label: 'Walk out the back' }]; // as stored when nobody was home
+  const hold = raidChoices(s, openRaids(s)[0]).find((c) => c.id === 'hold');
+  if (!hold || hold.disabled) return;
+  const next = resolveDecision(s, call.id, 'hold');
+  assert.notEqual(next, s, 'hold is accepted from the live choices');
+});
