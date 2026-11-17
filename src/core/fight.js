@@ -71,7 +71,7 @@ export function runnerOf(op, approach, seat = 0) {
     id: op.id, handle: op.handle, role: op.role, seat, pips: Math.max(1, max - hurt), max,
     absorb: absorbOf(a.value), armourName: a.name, weapon: w.name, ap: (w.pierce ?? 0) > 0, strong: strongMargin(w.damage),
     look: MOVES[build?.move]?.look ?? specialLook(op), // the stage's special-move look (data/fightLooks.js); picture only, no rule reads it
-    build, moved: false, // slice 3-ii-a: { move, payload } from data/builds.js or null (op.build); `moved`: the move's use this fight is spent
+    build, moved: false, misses: 0, // slice 3-ii-a: { move, payload } from data/builds.js or null (op.build); `moved`: the move's use this fight is spent
     jammer: canJam(op), healer: op.role === 'medic' || patchBonus(op, { perks: false }) > 0, medic: op.role === 'medic', // a kit makes a healer; a suture-strip perk only helps one
     cover: FIGHT.startCover, down: false, withdrawn: false, dead: false, aboard: false, stable: false, fightOn: false, downRound: null, left: false,
     stats: Object.fromEntries(FIGHT_STATS.map((s) => [s, effectiveStat(op, s, { approach })])),
@@ -742,7 +742,8 @@ export function playRound(b, rng) {
     const k = (key) => (burst ? key.replace('attack', 'bounce') : key);
     const flag = burst ? { burst: true } : {};
     if (e.out || e.fled) { if (!burst) say('attack', 'attackGone', { who: r.handle }, { ...named, enemy: e.n, success: false, damage: 0 }); return; }
-    const x = roll(sv(r, 'combat'), b.diff + FIGHT.attackStep + FIGHT.cover[e.cover], r.strong);
+    const x = roll(sv(r, 'combat') + Math.min(FIGHT.missBonusCap, (r.misses ?? 0) * FIGHT.missBonus), b.diff + FIGHT.attackStep + FIGHT.cover[e.cover], r.strong);
+    r.misses = x.ok ? 0 : (r.misses ?? 0) + 1;
     if (!x.ok) { say('attack', k('attackMiss'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: false, damage: 0, roll: rollOf(x) }); return; }
     let dmg = x.strong ? FIGHT.strongHit : FIGHT.hit;
     const cracked = e.absorb > 0 && !r.ap; // the plate took a hit: a plain shot only cracks it (damage 0), a strong one cracks it and drops a pip
@@ -1053,7 +1054,7 @@ export function vanOdds(b0, runs = FIGHT.oddsRuns) {
 export function oddsKey(b0, runs = FIGHT.oddsRuns) {
   return JSON.stringify([b0.type, b0.diff, b0.risk, b0.goal,
     b0.enemies.map((e) => [e.kind, e.pips, e.cover, e.deck, e.approaching ?? false, e.group ?? 0, e.infected ?? null]),
-    b0.runners.map((r) => [r.id, r.pips, r.max, r.absorb, r.ap, r.strong, r.jammer, r.healer, Object.values(r.stats).map((s) => s.value), r.overdrive ?? null, r.build ?? null, r.moved ?? false]),
+    b0.runners.map((r) => [r.id, r.pips, r.max, r.absorb, r.ap, r.strong, r.jammer, r.healer, Object.values(r.stats).map((s) => s.value), r.overdrive ?? null, r.build ?? null, r.moved ?? false, r.misses ?? 0]),
     b0.orders, b0.overwatch && [b0.overwatch.value, b0.overwatch.damage, b0.overwatch.left], !!b0.wheels, !!b0.standby,
     b0.showcaseEligible ?? null, b0.maxExtra ?? null, b0.recipe ?? null, b0.hiredTotal ?? null, runs]);
 }

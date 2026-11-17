@@ -1070,3 +1070,21 @@ test('standard force breaks like the hired: too few left and the rest run; a kin
   const r = F.playRound(b, always(0.5));
   assert.ok(up.at(-1).fled || up.at(-1).out, 'the last one ran (or fell)');
 });
+
+test('a miss lines up the next shot: +missBonus per miss in a row, capped, reset by a hit', () => {
+  const play = (misses) => {
+    const b = fixture('holdExtract', [ids.jax], { set: { jax: { combat: 8 } } });
+    b.enemies = [foe(1, 'corp')];
+    draw(b, []);
+    R(b, 'jax').misses = misses;
+    const res = F.playRound(b, always(0.5)); // d20 = 11
+    return { res, r: R(b, 'jax') };
+  };
+  const base = play(0);
+  assert.ok(base.res.lines.some((l) => l.key === 'attackMiss'), 'a middling roll misses with no streak');
+  assert.equal(base.r.misses, 1, 'and the miss is counted');
+  const lined = play(Math.ceil(2 / FIGHT.missBonus));
+  assert.ok(lined.res.lines.some((l) => l.key === 'attackHit' || l.key === 'attackOut' || l.key === 'attackCrack'), 'the same roll lands after a streak');
+  assert.equal(lined.r.misses, 0, 'a hit resets the streak');
+  assert.ok(FIGHT.missBonusCap >= FIGHT.missBonus, 'the cap is at least one step');
+});

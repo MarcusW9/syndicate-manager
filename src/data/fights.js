@@ -20,6 +20,9 @@ export const FIGHT = {
   absorb: { none: 0, street: 1, pro: 2 }, droneAbsorb: 1,
   // Runner actions: d20 + stat >= 10 + base + step (+ the target's cover for attacks).
   // Boarding and carrying need no roll (2026-11-13): a boarder spends the round in the open and takes a door slot.
+  // Bad luck softener (owner, 2026-11-17): each shot a runner misses in a row lines the next one up, +missBonus to the roll, up to missBonusCap;
+  // a hit resets it. Per fight, kept on the runner (`misses`).
+  missBonus: 2, missBonusCap: 6,
   attackStep: -2, jamStep: 0, patchStep: 0, stabiliseStep: 2, overwatchStep: -1,
   hit: 1, strongHit: 2,
   // A runner's hit is strong (2 pips) on this margin over the roll's need, by their sidearm's damage
