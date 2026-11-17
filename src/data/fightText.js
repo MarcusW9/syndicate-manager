@@ -79,6 +79,8 @@ export const FIGHT_TEXT = {
   'jamOk': '{who} blocks the signal.',
   'jamFail': '{who} cannot block the signal.',
   'stabilise': '{who} steadies {target}, who is holding on.',
+  'wayOutPatch': '{who} patches up the crew before they leave.',
+  'stabiliseWayOut': '{who} gets to {target} before the crew leaves, and steadies them.',
   'stabiliseFail': '{who} cannot get {target} stable.',
   'patch': '{who} gets {target} in better shape.',
   'patchFail': '{who} cannot get {target} patched up.',

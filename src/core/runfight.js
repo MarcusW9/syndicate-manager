@@ -70,7 +70,7 @@ const CUE = { attack: 'shoot', shot: 'guard', overwatch: 'overwatch', stabilise:
 const feedLine = (l) => ({
   kind: CUE[l.kind] ?? 'note', rule: l.kind, key: l.key ?? null, slots: l.slots ?? {}, text: l.text, actor: l.actor ? { id: l.actor, handle: l.actor } : null, guard: l.enemy ?? null, targetId: l.targetId ?? (typeof l.target === 'string' ? l.target : null),
   ...(l.burst ? { burst: true } : {}), ...(l.cracked ? { cracked: true } : {}), ...(l.at ? { at: l.at } : {}),
-  success: l.success ?? null, damage: l.damage ?? 0, heal: l.heal ?? 0, kit: l.kit ?? null, dropped: !!l.dropped, ...(l.roll ? { die: l.roll.die, need: l.roll.need, value: l.roll.value } : {}),
+  success: l.success ?? null, damage: l.damage ?? 0, heal: l.heal ?? 0, kit: l.kit ?? null, dropped: !!l.dropped, ...(l.left != null && l.max ? { left: l.left, max: l.max } : {}), ...(l.roll ? { die: l.roll.die, need: l.roll.need, value: l.roll.value } : {}),
   ...(l.order ? { order: l.order, from: l.from } : {}),
 });
 
@@ -206,7 +206,7 @@ function afterRound(state, am) {
   // Death's door: someone went down and the crew would pull back. A watched crew asks first (the player's call;
   // the death rule); a hands-off one pulls back on its own, as hands-off crews always have.
   if (end.result === 'extracted' && am.callIn !== 'never') {
-    const downed = b.runners.find((x) => x.down && !x.dead && !x.fightOn);
+    const downed = b.runners.find((x) => x.down && !x.dead && !x.fightOn && !(x.stable && b.type === 'holdHack' && b.stage === 1)); // on the way out a runner the medic has steadied is not at death's door
     if (downed) { b.end = null; am.pending = { kind: 'door', opId: downed.id, day: state.day }; return state; }
   }
   // On the way out the hack is already done: breaking off keeps the objective (and the pay), at the cost of whoever is down.

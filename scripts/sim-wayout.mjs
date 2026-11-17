@@ -88,6 +88,8 @@ const subsets = (list, k) => (k === 0 ? [[]] : list.flatMap((x, i) => subsets(li
 const P = (x) => `${Math.round(x * 100)}%`;
 const rosters = [];
 for (let seed = 1; seed <= SEEDS; seed++) { rosters.push({ seed, snaps: grow(seed) }); process.stderr.write(`grown ${seed}/${SEEDS}\r`); }
+if (process.env.HEAL) FIGHT.wayOutTreatHeal = Number(process.env.HEAL);
+if (process.env.TREAT) FIGHT.wayOutTreatStep = Number(process.env.TREAT);
 const SHARES = (process.env.SHARES ?? '0,0.34,0.5,0.67,1').split(',').map(Number);
 const ARMS = [['no build', null], ['Ricochet + Contagion', { move: 'ricochet', payload: 'contagion' }]];
 const out = [];
@@ -115,12 +117,12 @@ for (const job of GATES_FOR) {
   L();
   L(`## ${job} (${teams.length} teams)`);
   L();
-  L('| Way-out share | Build | Fights | Job done | Clean win | Downs a fight | A death | Rounds |');
-  L('| --- | --- | --- | --- | --- | --- | --- | --- |');
+  L('| Way-out share | Build | Fights | Job done | Clean win | Downs a fight | A death | Rounds | Recovery days a fight |');
+  L('| --- | --- | --- | --- | --- | --- | --- | --- | --- |');
   for (const share of SHARES) for (const [label, build] of ARMS) {
     FIGHT.wayOutShare = share;
-    const a = { n: 0, done: 0, won: 0, down: 0, dead: 0, rounds: 0 };
-    const g = { med: { n: 0, done: 0, down: 0 }, none: { n: 0, done: 0, down: 0 } };
+    const a = { n: 0, done: 0, won: 0, down: 0, dead: 0, rounds: 0, days: 0 };
+    const g = { med: { n: 0, done: 0, down: 0, days: 0 }, none: { n: 0, done: 0, down: 0, days: 0 } };
     for (const t of teams) for (let i = 0; i < FIGHTS; i++) {
       const crew = build ? withBuild(t.best, build) : t.best;
       const b = Fight.buildFight({ ...base, crew, watched: true }, makeRng(hash('gb', job, t.seed * 1000 + i)));
@@ -135,13 +137,16 @@ for (const job of GATES_FOR) {
         Fight.playRound(b, rng);
         for (const r of b.runners) if (r.down || r.dead) ever.add(r.id);
       }
-      const grp = g[t.best.some((o) => o.role === 'medic') ? 'med' : 'none']; grp.n++; grp.done += Fight.objectiveDone(b); grp.down += ever.size;
+      const grp = g[t.best.some((o) => o.role === 'medic') ? 'med' : 'none']; grp.n++;
+      let days = 0; for (const o of Fight.outcomeOf(b)) { const x = b.runners.find((r) => r.id === o.id); if (o.dead) continue; if (o.down) { days += x.stable ? 0 : 21; (globalThis.PARTS ??= {})[x.stable ? 'downStable' : 'downUnstable'] = (globalThis.PARTS[x.stable ? 'downStable' : 'downUnstable'] ?? 0) + 1; } else { const d = { none: 0, light: 3, serious: 14, critical: 14 }[o.injury] ?? 0; days += d; (globalThis.PARTS ??= {})['standing_' + o.injury] = (globalThis.PARTS['standing_' + o.injury] ?? 0) + 1; } } a.days += days; grp.days += days;
+      grp.n += 0; grp.done += Fight.objectiveDone(b); grp.down += ever.size;
       a.n++; a.done += Fight.objectiveDone(b); a.won += b.end?.result === 'won'; a.down += ever.size; a.dead += b.runners.some((x) => x.dead); a.rounds += b.round;
     }
-    if (process.env.MEDIC) L(`| ${share} | ${label}: with a medic (${g.med.n} fights) | | ${P(g.med.done / Math.max(1, g.med.n))} | | ${(g.med.down / Math.max(1, g.med.n)).toFixed(2)} | | |\n| ${share} | ${label}: no medic (${g.none.n} fights) | | ${P(g.none.done / Math.max(1, g.none.n))} | | ${(g.none.down / Math.max(1, g.none.n)).toFixed(2)} | | |`);
-    L(`| ${share === 0 ? '0 (before)' : share} | ${label} | ${a.n} | ${P(a.done / a.n)} | ${P(a.won / a.n)} | ${(a.down / a.n).toFixed(2)} | ${P(a.dead / a.n)} | ${(a.rounds / a.n).toFixed(1)} |`);
+    if (process.env.MEDIC) L(`| ${share} | ${label}: with a medic (${g.med.n} fights) | | ${P(g.med.done / Math.max(1, g.med.n))} | | ${(g.med.down / Math.max(1, g.med.n)).toFixed(2)} | | | ${(g.med.days / Math.max(1, g.med.n)).toFixed(1)} |\n| ${share} | ${label}: no medic (${g.none.n} fights) | | ${P(g.none.done / Math.max(1, g.none.n))} | | ${(g.none.down / Math.max(1, g.none.n)).toFixed(2)} | | | ${(g.none.days / Math.max(1, g.none.n)).toFixed(1)} |`);
+    L(`| ${share === 0 ? '0 (before)' : share} | ${label} | ${a.n} | ${P(a.done / a.n)} | ${P(a.won / a.n)} | ${(a.down / a.n).toFixed(2)} | ${P(a.dead / a.n)} | ${(a.rounds / a.n).toFixed(1)} | ${(a.days / a.n).toFixed(1)} |`);
   }
 }
+if (process.env.PARTS) console.error(JSON.stringify(globalThis.PARTS));
 FIGHT.wayOutShare = 1;
 writeFileSync(new URL(`../docs/sims/wayout-${DATE}.md`, import.meta.url), out.join('\n') + '\n');
 console.log(out.join('\n'));

@@ -2581,3 +2581,22 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .timeline__results li.loot--apex .apex__history { font-weight: 400; }
 /* An empty cell on the board opens the gear sheet (2026-11-17). */
 .inv__cell--add { cursor: pointer; } .inv__cell--add:hover, .inv__cell--add:focus-visible { box-shadow: inset 0 0 0 1px var(--accent-2); }
+
+/* The medic's aura (2026-11-17): a green glow grows round the medic and flashes, an orb crosses to the patient, a +1 floats and the pip fills. */
+.fs-aura { fill: rgba(95, 224, 165, 0.24); stroke: #8dffc4; stroke-width: 2.2; pointer-events: none; transform-box: fill-box; transform-origin: center; filter: drop-shadow(0 0 4px #5fe0a5) drop-shadow(0 0 9px #5fe0a5); animation: fs-aura-grow 660ms linear both; }
+.fs-aura--late { stroke-width: 1.4; fill: none; }
+@keyframes fs-aura-grow {
+  0% { transform: scale(0.5); opacity: 0; }
+  22% { transform: scale(1.05); opacity: 1; }
+  36% { transform: scale(0.95); opacity: 0.45; }
+  52% { transform: scale(1.75); opacity: 1; }
+  68% { transform: scale(1.5); opacity: 0.6; }
+  100% { transform: scale(2.9); opacity: 0; }
+}
+.fs-orb { fill: #c9ffe3; pointer-events: none; filter: drop-shadow(0 0 3px #5fe0a5) drop-shadow(0 0 6px #5fe0a5); }
+.sp-flash--heal { fill: #5fe0a5; }
+.fs-float.is-heal { fill: #5fe0a5; }
+.fs-pips.is-gain rect.is-on { animation: fs-pip-gain 0.8s ease-out; }
+@keyframes fs-pip-gain { 0% { fill: #fff; transform: scale(1.8); } 40% { fill: #5fe0a5; transform: scale(1.3); } 100% { transform: scale(1); } }
+.fs-pips rect { transform-box: fill-box; transform-origin: center; }
+@media (prefers-reduced-motion: reduce) { .fs-aura, .fs-pips.is-gain rect.is-on { animation: none; } .fs-orb { transition: none !important; } }

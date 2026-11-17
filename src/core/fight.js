@@ -927,7 +927,7 @@ export function playRound(b, rng) {
   if (aura) {
     const hurt = standing(b).filter((r) => r.pips < r.max).sort((x, y) => x.pips / x.max - y.pips / y.max || bySeat(x, y))[0];
     const medic = b.runners.find((r) => r.medic && present(r));
-    if (hurt) { hurt.pips += FIGHT.medicAura.heal; say('aura', 'aura', { who: medic.handle, target: hurt.handle }, { actor: medic.id, target: hurt.id }); }
+    if (hurt) { hurt.pips += FIGHT.medicAura.heal; say('aura', 'aura', { who: medic.handle, target: hurt.handle }, { actor: medic.id, target: hurt.id, targetId: hurt.id, left: hurt.pips, max: hurt.max }); } // targetId, left and max are what the stage draws (the medic's glow, the orb, the pip filling)
   }
   // Bleeding out: only on committed (or a runner pushed on by hand); from the second round after going down.
   if (!aura) {
@@ -978,9 +978,24 @@ function finish(b, result, key, slots = {}) { b.end = { result, key, text: lineT
 /** The end checks of a round (spec 15), in the sim's order; sets b.end. Draws only for a runner left behind down on committed. */
 function checkEnd(b, rng, say) {
   const prot = b.goal.protect ? runner(b, b.goal.protect) : null;
+  // The medic's hands on the way out (2026-11-17): before the crew leaves a hack's way out, a healer still standing gets one stabilise roll for each runner who is down, so
+  // a runner a medic reaches does not come home with the serious injury. Without a healer standing nothing changes. The roll is the stabilise action's own.
+  const treatWayOut = () => {
+    const healer = b.runners.filter((x) => x.healer && present(x)).sort((x, y) => sv(y, 'medical') - sv(x, 'medical') || bySeat(x, y))[0];
+    const hurt = healer ? standing(b).filter((x) => x.pips < x.max) : [];
+    for (const x of hurt) x.pips = Math.min(x.max, x.pips + FIGHT.wayOutTreatHeal);
+    if (hurt.length) say('patch', 'wayOutPatch', { who: healer.handle, n: hurt.length }, { actor: healer.id, targets: hurt.map((x) => x.id), heal: FIGHT.wayOutTreatHeal });
+    for (const t of b.runners.filter((x) => x.down && !x.stable && !x.dead && !x.withdrawn)) {
+      const medic = b.runners.filter((x) => x.healer && present(x)).sort((x, y) => sv(y, 'medical') - sv(x, 'medical') || bySeat(x, y))[0];
+      if (!medic) return;
+      const value = sv(medic, 'medical'); const die = d20(rng); const need = 10 + b.diff + FIGHT.wayOutTreatStep; const ok = die + value >= need;
+      if (ok) t.stable = true;
+      say('stabilise', ok ? 'stabiliseWayOut' : 'stabiliseFail', { who: medic.handle, target: t.handle }, { actor: medic.id, target: t.id, targetId: t.id, success: ok, roll: { die, need, value, success: ok } });
+    }
+  };
   if (b.type === 'holdHack' && b.goal.work >= FIGHT.workNeeded && !b.wayOut) return finish(b, 'won', 'end.won');
   // The way out: won by rout, every enemy out or fled and none on the way (as the yard is).
-  if (b.type === 'holdHack' && b.stage === 1 && !enemiesUp(b).length && !b.arriving.length) return finish(b, 'won', 'end.wayOutWon');
+  if (b.type === 'holdHack' && b.stage === 1 && !enemiesUp(b).length && !b.arriving.length) { treatWayOut(); return finish(b, 'won', 'end.wayOutWon'); }
   // The yard: won by rout, every enemy out or fled and none on the way (the pressure clock may still bring more before then).
   if (b.type === 'holdYard' && !enemiesUp(b).length && !b.arriving.length) return finish(b, 'won', 'end.routed');
   // The hall: won by rout, or held when the raiders back off at the round cap with the door still ours.
@@ -995,7 +1010,10 @@ function checkEnd(b, rng, say) {
   if (prot && techMatters && prot.withdrawn) return finish(b, 'abandoned', 'end.abandoned', { who: prot.handle });
   const outside = outsideDown(b);
   // Someone down whom nobody has chosen to fight on for pulls the crew back (a watched crew is asked first, runfight.js); a runner already pushed on for does not.
-  if (!boardingStage(b) && !committed(b) && b.runners.some((r) => r.down && !r.dead && !r.fightOn)) return finish(b, 'extracted', b.type === 'holdHack' && b.stage === 1 ? 'end.wayOutPulled' : 'end.extracted');
+  if (!boardingStage(b) && !committed(b) && b.runners.some((r) => r.down && !r.dead && !r.fightOn)) {
+    if (b.type === 'holdHack' && b.stage === 1) { treatWayOut(); return finish(b, 'extracted', 'end.wayOutPulled'); }
+    return finish(b, 'extracted', 'end.extracted');
+  }
   const leave = (who) => {
     // Left behind: standing or down, they are missing (spec 8). On committed a runner left down may not make it.
     for (const r of who) { r.left = true; b.left.push(r.id); }

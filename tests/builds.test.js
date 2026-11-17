@@ -321,3 +321,40 @@ test('the save: a v75 hack fight in progress still ends with the hack; one built
   F.startRound(lb, makeRng(1)); F.playRound(lb, mid);
   assert.equal(lb.end.result, 'won', 'the hack still ends it');
 });
+
+test('the medic\'s hands on the way out: a healer standing steadies the runner the round left alone and patches the hurt before the crew leaves; without one nothing changes', () => {
+  const run = (withMedic) => {
+    const b = fixture(['jax', 'mei', 'wing', 'cherry'], ['hired'], { build: null });
+    b.type = 'holdHack'; b.wayOut = ['hired']; b.stage = 1; b.arriving = []; b.clock = 99; b.goal.work = 4; b.round = 4;
+    for (const r of b.runners) { r.healer = false; r.medic = false; }
+    const [d1, d2, hurt, medic] = b.runners;
+    for (const d of [d1, d2]) { d.down = true; d.pips = 0; d.downRound = 3; }
+    hurt.max = 6; hurt.pips = 3; // above the point where a steady crew pulls out, and the aura heals only the most hurt
+    if (withMedic) { medic.healer = true; medic.medic = true; medic.stats.medical.value = 40; }
+    const r = F.playRound(b, mid);
+    return { b, r, downed: [d1, d2], hurt, hurtBefore: 3 };
+  };
+  const m = run(true);
+  assert.equal(m.b.end?.key, 'end.wayOutPulled', 'someone is down on steady: the crew breaks off');
+  assert.ok(m.downed.every((d) => d.stable), 'the medic reached both: one in the round, the other as the crew left');
+  assert.equal(m.r.lines.filter((l) => l.key === 'stabiliseWayOut').length, 1, 'the one the round left alone');
+  assert.ok(m.r.lines.some((l) => l.key === 'wayOutPatch'));
+  assert.ok(m.hurt.pips > m.hurtBefore + 1, 'a hurt runner who was up is healed by the aura and patched on the way out');
+  const n = run(false);
+  assert.ok(n.downed.every((d) => !d.stable), 'nobody to reach them');
+  assert.ok(!n.r.lines.some((l) => l.key === 'stabiliseWayOut' || l.key === 'wayOutPatch'));
+});
+
+test('the medic\'s aura line carries the patient and the pip it filled, for the stage', () => {
+  const b = fixture(['jax', 'mei', 'wing'], ['hired'], { build: null });
+  b.type = 'holdHack';
+  for (const r of b.runners) { r.healer = false; r.medic = false; }
+  b.runners[0].medic = true; b.runners[0].healer = true;
+  b.runners[1].pips = b.runners[1].max - 1;
+  const r = F.playRound(b, mid);
+  const l = r.lines.find((x) => x.key === 'aura');
+  assert.ok(l, 'the aura fired');
+  assert.equal(l.targetId, l.target);
+  assert.equal(l.left, b.runners.find((x) => x.id === l.targetId).pips);
+  assert.equal(l.max, b.runners.find((x) => x.id === l.targetId).max);
+});
