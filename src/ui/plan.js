@@ -275,7 +275,7 @@ export function renderPlan() {
       </div>
 
       <div class="plangrid__risk">
-      ${cov.fight2 ? renderFightPlan(esc, cov.fight2, ['cautious', 'steady', 'committed'].includes(V.plan.orders) ? V.plan.orders : 'steady') : ''}
+      ${cov.fight2 ? renderFightPlan(esc, cov.fight2, ['cautious', 'steady', 'committed'].includes(V.plan.orders) ? V.plan.orders : 'steady', { adviceOpen: V.fightAdviceOpen }) : ''}
       ${renderMeet(cov, owOp, was)}
       </div>
 

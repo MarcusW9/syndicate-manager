@@ -558,3 +558,5 @@ lines until it gets its own; a test keeps every district complete.
 - **The radio option ("Hit the caller")** is still offered when no radio call is shown (the dilemma can fire on two shots at the tech). Its text says "if one is shown". Owner: offer it only with a call, as the jam now is?
 - The 360px checks were run on the captures in `docs/screenshots/2026-11-11-battle-orders/` (round, one-pip threat, tech under fire, death's door, van with someone outside, plan block): no horizontal overflow and no tap under 44px at 360 and 390 wide. They were checked on those still captures, not played through on a device.
 
+
+- **Planning read, build advice (2026-11-17).** Claude's draft wording is in `data/fightText.js` under `build.*` (Joss's one line: `build.advice.*`; the breakdown: `build.threat.*`, `build.answer.*`, `build.why.*`, `build.counter.*`). It was written for newcomers: full sentences, each term explained. Rewrite in the game's own voice; keep it plain. Add a `build.why.<tag>` and `build.counter.<tag>` for every new enemy tag.

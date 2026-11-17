@@ -22,5 +22,6 @@ Then add a row to the top of the table below and commit the folder with the chan
 
 | Date | Version | Commit | What's new on screen | Folder |
 | --- | --- | --- | --- | --- |
+| 2026-11-17 | Joss's build advice | (this change) | Design-session capture (`scripts/capture-plan-build-advice.mjs`): the plan screen's fight block with Joss's advice closed (`01-advice-closed.png`) and opened (`02-advice-open.png`). The bar over the middle is the sticky plan bar in an element capture. | `2026-11-17-plan-build-advice` |
 | 2026-11-17 | Offer flag on Crew | (this change) | Design-session capture (`scripts/capture-crew-offer-flag.mjs`): the Crew tab count and the Offer tag on a roster row (`01-roster-offer-flag.png`), and the Offers panel at the top of the runner's page (`02-runner-offer-on-top.png`). | `2026-11-17-crew-offer-flag` |
 | 2026-11-17 | Roster filter, board gear cells | (this change) | The standard set. New on screen: Crew › Roster has the All / Ready / Away or hurt chips above the list (`18-crew.png`), and the squad board's empty cells under each runner are now tappable (`12-planning-crew-picked.png`, `09-squad-board.png`). The gear sheet they open is not in the set (it needs a staged stash). | `2026-11-17-gear-board-roster-filter-engine2` |

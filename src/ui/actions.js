@@ -309,6 +309,7 @@ export function onClick(e) {
     case 'inbox-filter': V.inboxUnread = id === 'unread'; break;
     case 'joss-fold': V.jossFoldedDay = V.jossFoldedDay === state.day ? null : state.day; break;
     case 'next-up': V.upcomingDue = true; break;
+    case 'fight-advice': V.fightAdviceOpen = !V.fightAdviceOpen; break;
     case 'board-rules': V.boardRulesOpen = !V.boardRulesOpen; break;
     // The squad board (ui/board.js): tap a card, pick who goes there; anyone already placed swaps.
     case 'info': if (openInfo.has(id)) openInfo.delete(id); else openInfo.add(id); break;

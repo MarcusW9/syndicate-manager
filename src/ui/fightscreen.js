@@ -11,6 +11,8 @@ import { lineText } from '../core/fighttext.js';
 import { describePending } from '../core/mission.js';
 import { FIGHT } from '../data/fights.js';
 import { getPref } from '../save/save.js';
+import { jossIcon } from './art.js';
+import { NAMES } from '../config/names.js';
 
 let draft = { key: null, sel: null, orders: {}, risk: null, panel: false, pullAsk: false };
 
@@ -236,7 +238,7 @@ export function renderFightCallIn(state, esc, face = () => '') {
  * who can jam, each runner's order and pull-out threshold, the risk picker and the chance of losing someone.
  * args are buildFight's (type, diff, threat, site, crew, approach, overwatch, wheels); risk is the plan's starting level.
  */
-export function renderFightPlan(esc, args, risk) {
+export function renderFightPlan(esc, args, risk, { adviceOpen = false } = {}) {
   const p = planView(args, risk);
   const extract = p.type === 'holdExtract';
   return `
@@ -244,6 +246,7 @@ export function renderFightPlan(esc, args, risk) {
       <p class="fs-title">The fight</p>
       <p class="fs-planline">${esc(p.line)}</p>
       <p class="fs-muted">${esc(p.kindsLine)}</p>
+      ${p.build ? buildAdvice(esc, p.build, adviceOpen) : ''}
       ${p.gaps.length ? `<ul class="fs-gaps">${p.gaps.map((g) => `<li>${esc(g)}</li>`).join('')}</ul>` : ''}
       ${p.jam ? `<p class="fs-muted">${esc(p.jam)}</p>` : ''}
       <h4 class="fs-h">Orders${extract ? ' (hold, then board)' : ''}</h4>
@@ -257,4 +260,22 @@ export function renderFightPlan(esc, args, risk) {
       <p class="fs-riskdesc">${esc(riskWords(risk).description)}</p>
       <p class="fs-loss"><b>${esc(p.loss[risk])}</b></p>
     </section>`;
+}
+
+/**
+ * Joss's advice on the squad's builds (builds slice 3-iii, 2026-11-17): one line, closed to start; a tap opens what the fight throws
+ * and what each build can do about it. Same fold pattern as Joss on Today (`.joss`); the view's `V.fightAdviceOpen` is UI-only.
+ */
+function buildAdvice(esc, bld, open) {
+  return `
+      <button class="joss joss--advice" data-action="fight-advice" aria-expanded="${open}">
+        <span class="joss__badge">${jossIcon({ mood: 'neutral', size: 32 })}</span>
+        <span class="joss__body"><span class="joss__name">${esc(NAMES.partner)}</span><span class="joss__line">${esc(bld.advice)}</span></span>
+        <span class="joss__fold" aria-hidden="true">${open ? '▾' : '▸'}</span>
+      </button>
+      ${open ? `
+      <h4 class="fs-h">What you'll be up against</h4>
+      <ul class="fs-list">${bld.threats.map((t) => `<li class="fs-runner"><span class="fs-runner__top"><strong>${esc(t.title)}</strong></span><span class="fs-order">${esc(t.text)}</span></li>`).join('')}</ul>
+      <h4 class="fs-h">What your squad can do about it</h4>
+      <ul class="fs-list">${bld.answers.map((a) => `<li class="fs-runner"><span class="fs-runner__top"><strong>${esc(a.handle)}</strong>${a.tags.map((t) => `<em class="fs-tag">${esc(t)}</em>`).join('')}</span><span class="fs-order">${esc(a.text)}</span></li>`).join('')}</ul>` : ''}`;
 }
