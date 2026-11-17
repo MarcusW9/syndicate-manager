@@ -75,6 +75,7 @@ function threatOf(b, t, exp) {
 
 /** Where the objective stands: the goal track and the clocks, as plain numbers (the screen draws them). */
 function goalOf(b) {
+  if (b.type === 'holdHack' && b.stage === 1) return { type: 'wayOut', round: b.round, up: b.enemies.filter((e) => !e.out && !e.fled).length, coming: b.arriving.length };
   if (b.type === 'holdHack') {
     const tech = b.goal.protect ? handleOf(b, b.goal.protect) : null;
     return { type: 'hack', work: b.goal.work, needed: FIGHT.workNeeded, alarm: b.clock, deadline: b.deadline, tech, round: b.round };
@@ -133,7 +134,7 @@ export function orderChoices(b, r) {
   duties.push({ duty: 'protect', label: 'Protect', targets: [{ id: null, label: b.goal.protect && b.goal.protect !== r.id ? `${handleOf(b, b.goal.protect)} (the tech)` : 'The weakest' }, ...others.filter((x) => x.id !== b.goal.protect)] });
   duties.push({ duty: 'support', label: 'Support', targets: [] });
   duties.push({ duty: 'hold', label: 'Hold', targets: [] });
-  if (b.type === 'holdHack' ? r.id === b.goal.protect : b.stage === 1) duties.push({ duty: 'push', label: b.type === 'holdHack' ? 'Work the hack' : 'Board the van', targets: [] });
+  if (b.type === 'holdHack' ? r.id === b.goal.protect && b.stage === 0 : b.stage === 1) duties.push({ duty: 'push', label: b.type === 'holdHack' ? 'Work the hack' : 'Board the van', targets: [] });
   duties.push({ duty: 'withdraw', label: 'Pull out', targets: [] });
   return duties;
 }

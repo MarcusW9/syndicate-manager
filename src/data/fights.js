@@ -49,6 +49,7 @@ export const FIGHT = {
   partingShotFloor: 1, retreat: { heat: 1, rep: 2 }, press: { alert: 1, heat: 1 },
   deadline: { holdHack: 7 }, // holdExtract ends when the van leaves
   workNeeded: 4,
+  wayOutShare: 0.5, // the way out of a hack (2026-11-17): the share of the opening force's count (rounded up, at least one) that comes in when the work is done. The owner's default was 1 (the same again); 0.67 and up tipped a hands-off year of play (tests/inbox.test.js), so it is half. docs/sims/wayout-2026-11-17.md
   // The director (Slice 1): how long a beat holds at playback (ms; a hint only), and how many spotlights a pace plays as spotlights
   // (the rest play as notable; Resolve plays none but still lists them). Applied by the UI, never by core.
   beatMs: { routine: 600, notable: 1200, spotlight: 2200, showcase: 3000 },

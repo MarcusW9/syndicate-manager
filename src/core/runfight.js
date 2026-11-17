@@ -209,7 +209,8 @@ function afterRound(state, am) {
     const downed = b.runners.find((x) => x.down && !x.dead && !x.fightOn);
     if (downed) { b.end = null; am.pending = { kind: 'door', opId: downed.id, day: state.day }; return state; }
   }
-  if (GOES_ON.has(end.result)) return endFight(state, am);
+  // On the way out the hack is already done: breaking off keeps the objective (and the pay), at the cost of whoever is down.
+  if (GOES_ON.has(end.result) || (end.result === 'extracted' && b.type === 'holdHack' && b.stage === 1)) return endFight(state, am);
   return retreatFight(state, am, { text: end.text, choice: 'They pull back', why: `${end.text}.` });
 }
 
@@ -365,6 +366,13 @@ export function resolveFightDecision(state, am, choice, view) {
   const b = am.battle;
   const why = takeWhy(am);
   // Pulling back at a call-in: the cause line is the fight's own (someone down, or the crew pulled back).
+  // On the way out of a hack the work is done: pulling back at death's door breaks off with the objective (and the pay), as a crew that is never called in does.
+  if (choice.exit && am.pending.kind === 'door' && b.type === 'holdHack' && b.stage === 1) {
+    record(am, { kind: 'decision', text: view.text, choice: choice.label, why, report: '', choiceCost: {} });
+    am.pending = null;
+    b.end = { result: 'extracted', key: 'end.wayOutPulled', text: lineText('end.wayOutPulled'), slots: {} };
+    return endFight(state, am);
+  }
   if (choice.exit) return retreatFight(state, am, { text: view.text, choice: choice.label, why, cause: lineText(am.pending.kind === 'door' ? 'end.extracted' : 'end.pulledBack') });
   if (am.pending.kind === 'door') {
     // Keep fighting with them down: the push-on rule (they could die, am.untreated), and they bleed in the fight.

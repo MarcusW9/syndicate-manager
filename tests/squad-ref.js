@@ -11,7 +11,7 @@ import { jobView } from '../src/core/jobs.js';
 import { intelFor } from '../src/core/sidetasks.js';
 import { WATCHED_PENALTY, watchedIn } from '../src/core/heat.js';
 import { overwatchOf, buildBattle, playRound } from '../src/core/battle.js';
-import { fightDiff, buildFight, playFight, oddsKey } from '../src/core/fight.js';
+import { fightDiff, buildFight, playFight, oddsKey, objectiveDone } from '../src/core/fight.js';
 import { makeRng, hash } from '../src/core/rng.js';
 import { BATTLE } from '../src/data/battle.js';
 import { FIGHT } from '../src/data/fights.js';
@@ -54,7 +54,7 @@ function fightOdds(b0, runs = FIGHT.oddsRuns) {
     const b = structuredClone(b0);
     b.showcaseSeed = hash('odds', i);
     playFight(b, makeRng(0x5eed + i * 7919));
-    if (b.end.result === 'won') n.win += 1;
+    if (objectiveDone(b)) n.win += 1; // the objective is done: won, or a hack broken off on the way out (2026-11-17)
     if (b.runners.some((r) => r.down || r.dead)) n.down += 1;
     if (b.runners.some((r) => r.dead)) n.dead += 1;
     if (b.left.length) n.left += 1;

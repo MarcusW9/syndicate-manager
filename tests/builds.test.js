@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { createNewGame } from '../src/core/state.js';
 import { makeRng } from '../src/core/rng.js';
 import * as F from '../src/core/fight.js';
-import { ENEMIES, ENEMY_HIT } from '../src/data/fights.js';
+import { ENEMIES, ENEMY_HIT, FIGHT } from '../src/data/fights.js';
 import { MOVES, PAYLOADS, GIVEN_BUILD } from '../src/data/builds.js';
 import { FIGHT_TEXT, FIGHT_TEXT_VARIANTS } from '../src/data/fightText.js';
 import { lineText } from '../src/core/fighttext.js';
@@ -300,4 +300,24 @@ test('Contagion: the killing hit counts, so a one-pip enemy that dies to it stil
   assert.ok(!c.r.lines.some((l) => l.key === 'spread'), 'the Cytotoxic Vector has nothing to pass on from a kill');
   const d = play('contagion', ['drone', 'drone', 'drone', 'drone']);
   assert.ok(!d.r.lines.some((l) => l.key === 'spread'), 'a machine is never infected, so nothing jumps from it');
+});
+
+test('the save: a v75 hack fight in progress still ends with the hack; one built now carries its way out', async () => {
+  const S = await import('../src/save/save.js');
+  const { SAVE_VERSION } = await import('../src/core/state.js');
+  assert.ok(SAVE_VERSION >= 76);
+  const fresh = F.buildFight({ type: 'holdHack', diff: 14, threat: 3, site: 'docks', crew: crewOf().slice(0, 3), approach: 'loud' }, makeRng(3));
+  assert.deepEqual(fresh.wayOut, fresh.enemies.map((e) => e.kind).slice(0, Math.max(1, Math.ceil(fresh.enemies.length * FIGHT.wayOutShare))), 'the way out is the share of the opening force, read when the fight is built');
+  const old = JSON.parse(JSON.stringify(fresh));
+  delete old.wayOut;
+  const s = createNewGame({ seed: 5 });
+  s.activeMission = { jobId: 'x', templateId: 'data_pull', battle: old, events: [], queue: [], step: 0, log: [] };
+  s.version = 75;
+  const loaded = await S.importSave({ text: async () => JSON.stringify(s) });
+  assert.equal(loaded.version, SAVE_VERSION);
+  assert.equal(loaded.activeMission.battle.wayOut, undefined, 'nothing is rewritten');
+  const lb = loaded.activeMission.battle;
+  lb.goal.work = 4; lb.enemies = []; lb.clock = 99;
+  F.startRound(lb, makeRng(1)); F.playRound(lb, mid);
+  assert.equal(lb.end.result, 'won', 'the hack still ends it');
 });

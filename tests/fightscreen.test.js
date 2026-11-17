@@ -227,7 +227,7 @@ test('Change orders: pick a runner and a duty, and Next round carries the change
   assert.ok(html.includes('(yours, next round)') && html.includes('from next round'));
   const change = takeFightChange(am);
   assert.equal(change.risk, 'committed');
-  assert.equal(change.orders[id].duty, 'hold');
+  assert.equal((change.orders[id].byStage?.[am.battle.stage] ?? change.orders[id]).duty, 'hold', 'the change is written into the stage the fight is in');
   const next = M.runBattle(s, change);
   const nb = next.activeMission.battle;
   assert.ok(nb, 'the fight goes on');

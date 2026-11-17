@@ -154,6 +154,8 @@ export function buildFight({ type, diff, threat = 3, site = 'docks', opposition 
     newEnemy(b, kinds[Math.floor(rng() * kinds.length)], rng);
     for (let i = 1; i < count + force.extra; i++) newEnemy(b, force.grunt, rng);
   } else for (let i = 0; i < count; i++) newEnemy(b, kinds[Math.floor(rng() * kinds.length)], rng);
+  // The way out (2026-11-17): when the hack is done the alarm brings the opening force's like again, and the fight is won only when they are beaten. A fight saved before this has no `wayOut` and still ends with the hack.
+  if (type === 'holdHack') b.wayOut = b.enemies.map((e) => e.kind).slice(0, Math.max(1, Math.ceil(b.enemies.length * FIGHT.wayOutShare)));
   b.orders = defaultOrders(b);
   // The showcase seed (0b): the build's last draw, so it moves no other roll. Showcase rolls are a pure hash of it.
   b.showcaseSeed = Math.floor(rng() * 2 ** 32);
@@ -184,10 +186,15 @@ export const bestProtector = (b) => toughest(b, b.runners.filter((r) => r.id !==
  */
 export function defaultOrderFor(b, r) {
   if (b.type === 'holdHack') {
-    if (r.id === b.goal.protect) return order('push', null, fb('hold'));
-    const guards = toughest(b, b.runners.filter((x) => x.id !== b.goal.protect)).slice(0, 2).map((x) => x.id);
-    if (guards.includes(r.id)) return order('protect', 'protected', fb('attack'));
-    return capableSupport(r) ? order('support', null, fb('protect', 'protected')) : order('attack', null, fb('protect', 'protected'));
+    // Stage 0 the hack, stage 1 the way out (everyone attacks: the work is done and nobody has anyone to cover).
+    const hack = (() => {
+      if (r.id === b.goal.protect) return order('push', null, fb('hold'));
+      const guards = toughest(b, b.runners.filter((x) => x.id !== b.goal.protect)).slice(0, 2).map((x) => x.id);
+      if (guards.includes(r.id)) return order('protect', 'protected', fb('attack'));
+      return capableSupport(r) ? order('support', null, fb('protect', 'protected')) : order('attack', null, fb('protect', 'protected'));
+    })();
+    hack.byStage = { 0: { ...hack, byStage: null }, 1: order('attack', null, fb('hold'), ['low', 'radio']) };
+    return hack;
   }
   const prot = bestProtector(b)?.id === r.id;
   const o = order('attack', null, fb('hold'), ['low', 'radio']);
@@ -933,6 +940,11 @@ export function playRound(b, rng) {
 
   // Progress, then the van, then the clocks.
   if (workBy && present(workBy)) { b.goal.work += 1; result.goalDelta = 1; }
+  // The hack is done: the alarm brings the opening force's like in again (they arrive together next round), and the way out begins. The work is finished, so the tech stops being the one to cover.
+  if (b.type === 'holdHack' && b.wayOut && b.stage === 0 && b.goal.work >= FIGHT.workNeeded) {
+    b.stage = 1; b.arriving.push(...b.wayOut);
+    say('wayOut', 'wayOut', { n: b.wayOut.length });
+  }
   for (const r of boards) if (!r.down && !r.dead) { r.aboard = true; say('van', 'inVan', { who: r.handle }, { actor: r.id }); result.goalDelta += 1; }
   for (const c of carries) if (c.by.aboard) { c.t.aboard = true; say('van', 'carriedInVan', { target: c.t.handle }, { target: c.t.id }); }
   if (b.type === 'holdHack') {
@@ -958,12 +970,17 @@ export function playRound(b, rng) {
 
 // --- the end ---------------------------------------------------------------------------------------
 
+/** The fight's objective is done: won, or (a hack) broken off on the way out, with the work already finished. The planning odds' `win` and the run's pay read the same thing. */
+export const objectiveDone = (b) => b.end?.result === 'won' || (b.end?.result === 'extracted' && b.type === 'holdHack' && b.stage === 1);
+
 function finish(b, result, key, slots = {}) { b.end = { result, key, text: lineText(key, slots), slots }; return b.end; }
 
 /** The end checks of a round (spec 15), in the sim's order; sets b.end. Draws only for a runner left behind down on committed. */
 function checkEnd(b, rng, say) {
   const prot = b.goal.protect ? runner(b, b.goal.protect) : null;
-  if (b.type === 'holdHack' && b.goal.work >= FIGHT.workNeeded) return finish(b, 'won', 'end.won');
+  if (b.type === 'holdHack' && b.goal.work >= FIGHT.workNeeded && !b.wayOut) return finish(b, 'won', 'end.won');
+  // The way out: won by rout, every enemy out or fled and none on the way (as the yard is).
+  if (b.type === 'holdHack' && b.stage === 1 && !enemiesUp(b).length && !b.arriving.length) return finish(b, 'won', 'end.wayOutWon');
   // The yard: won by rout, every enemy out or fled and none on the way (the pressure clock may still bring more before then).
   if (b.type === 'holdYard' && !enemiesUp(b).length && !b.arriving.length) return finish(b, 'won', 'end.routed');
   // The hall: won by rout, or held when the raiders back off at the round cap with the door still ours.
@@ -973,11 +990,12 @@ function checkEnd(b, rng, say) {
     const lost = b.runners.filter((r) => r.dead || r.withdrawn);
     return lost.length ? finish(b, 'lostRunner', 'end.lostRunner', { who: nameList(lost.map((r) => r.handle)) }) : finish(b, 'won', 'end.won');
   }
-  if (prot && (prot.down || prot.dead)) return finish(b, 'lost', 'end.lost', { who: prot.handle });
-  if (prot && prot.withdrawn) return finish(b, 'abandoned', 'end.abandoned', { who: prot.handle });
+  const techMatters = !(b.type === 'holdHack' && b.stage === 1); // on the way out the work is done: the tech is one of the crew
+  if (prot && techMatters && (prot.down || prot.dead)) return finish(b, 'lost', 'end.lost', { who: prot.handle });
+  if (prot && techMatters && prot.withdrawn) return finish(b, 'abandoned', 'end.abandoned', { who: prot.handle });
   const outside = outsideDown(b);
   // Someone down whom nobody has chosen to fight on for pulls the crew back (a watched crew is asked first, runfight.js); a runner already pushed on for does not.
-  if (!boardingStage(b) && !committed(b) && b.runners.some((r) => r.down && !r.dead && !r.fightOn)) return finish(b, 'extracted', 'end.extracted');
+  if (!boardingStage(b) && !committed(b) && b.runners.some((r) => r.down && !r.dead && !r.fightOn)) return finish(b, 'extracted', b.type === 'holdHack' && b.stage === 1 ? 'end.wayOutPulled' : 'end.extracted');
   const leave = (who) => {
     // Left behind: standing or down, they are missing (spec 8). On committed a runner left down may not make it.
     for (const r of who) { r.left = true; b.left.push(r.id); }
@@ -989,7 +1007,7 @@ function checkEnd(b, rng, say) {
   const someoneCanGoBack = boardingStage(b) && outside.length && b.runners.some((r) => r.aboard && !r.down && !r.dead);
   if (!standing(b).length && !someoneCanGoBack) return finish(b, 'gone', 'end.gone');
   if (boardingStage(b) && b.round >= b.goal.vanLeaves) return leave([...standing(b), ...outside]);
-  if (b.deadline && b.round >= b.deadline && b.type === 'holdHack') return finish(b, 'deadline', 'end.deadline');
+  if (b.deadline && b.round >= b.deadline && b.type === 'holdHack' && b.stage === 0) return finish(b, 'deadline', 'end.deadline');
   return null;
 }
 
@@ -1149,7 +1167,7 @@ export function stepTally(t, k = Infinity) {
     const b = structuredClone(b0);
     b.showcaseSeed = hash('odds', i); // reseeded, never drawn, and so not in the cache key
     playFight(b, makeRng(0x5eed + i * 7919));
-    if (b.end.result === 'won') n.win += 1;
+    if (objectiveDone(b)) n.win += 1;
     if (b.runners.some((r) => r.down || r.dead)) n.down += 1;
     if (b.runners.some((r) => r.dead)) n.dead += 1;
     if (b.left.length) n.left += 1;
