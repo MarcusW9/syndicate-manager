@@ -636,6 +636,12 @@ function expireOverride(b) {
 
 // --- one round -------------------------------------------------------------------------------------
 
+// A round's lines carry their wording for the feed. playFight keeps none of its rounds' lines (it returns the fight alone),
+// so while it plays the wording is left out (2026-11-17, the speed pass): the fight itself plays the same either way, as
+// lineText never draws and nothing in a round reads a line's text. b.end's text (finish) is always written.
+let wordless = false;
+const wordOf = (key, slots) => (wordless ? '' : lineText(key, slots));
+
 /**
  * Begin the next round: arrivals, the standby going out, someone climbing back out of the van, the van
  * special, then the telegraph (draws from rng). After this the previews and the call-in checks work.
@@ -643,7 +649,7 @@ function expireOverride(b) {
  */
 export function startRound(b, rng) {
   const lines = [];
-  const say = (kind, key, slots = {}, extra = {}) => lines.push({ kind, key, slots, ...extra, text: lineText(key, slots) });
+  const say = (kind, key, slots = {}, extra = {}) => lines.push({ kind, key, slots, ...extra, text: wordOf(key, slots) });
   b.round += 1;
   for (const r of b.runners) if (r.stayPips != null && r.pips > riskThreshold(b, r)) r.stayPips = null; // healed past their point: asked afresh next time
   // Arrivals come in approaching (3a); this round's batch of called-in arrivals is one group, a pressure arrival another, each wave another (3c).
@@ -694,9 +700,9 @@ function vanDecision(b) {
   const hold = b.vanHold ?? auto;
   if (hold && !b.vanHeld) {
     b.vanHeld = true; b.goal.vanLeaves += FIGHT.holdRounds; b.heat += FIGHT.holdHeat;
-    return { kind: 'van', key: 'vanHeld', heat: FIGHT.holdHeat, text: lineText('vanHeld', { rounds: FIGHT.holdRounds, outside }) };
+    return { kind: 'van', key: 'vanHeld', heat: FIGHT.holdHeat, text: wordOf('vanHeld', { rounds: FIGHT.holdRounds, outside }) };
   }
-  return { kind: 'van', key: 'vanCantWait', text: lineText('vanCantWait', { outside }) };
+  return { kind: 'van', key: 'vanCantWait', text: wordOf('vanCantWait', { outside }) };
 }
 
 /**
@@ -712,7 +718,7 @@ export function playRound(b, rng) {
   const defeated = []; const down = []; const fled = []; const withdrawn = [];
   const result = { lines, actions: [], unanswered: [], defeated, goalDelta: 0, down, fled, withdrawn, heat: 0, neural: 0, ended: null };
   if (!b.drawn) lines.push(...startRound(b, rng));
-  const say = (kind, key, slots = {}, extra = {}) => { const l = { kind, key, slots, ...extra, text: lineText(key, slots) }; lines.push(l); return l; };
+  const say = (kind, key, slots = {}, extra = {}) => { const l = { kind, key, slots, ...extra, text: wordOf(key, slots) }; lines.push(l); return l; };
   // Contagion (slice 3-iii, 2026-11-17): when an infected enemy goes down, a payload that `spread`s jumps to the first other enemy of its group that is
   // up, not infected and not immune (the rules' order, no roll). Not a hit, so a plate does not stop it; it starts in full and ticks next round.
   const spreadFrom = (e, inf = e.infected) => {
@@ -1105,9 +1111,46 @@ export function stepTallies(tallies, k) {
   return more;
 }
 
+/**
+ * A copy of a fight for a play that throws it away (the odds' and the van read's fights; 2026-11-17, the speed pass): the same
+ * as structuredClone(b), shared references included (a crew's orders share their priority list), only quicker. It copies plain
+ * objects and dense arrays itself; on anything else (a Map, a class, a sparse array, a function) it hands the whole fight to
+ * structuredClone, so the answer, or the error, is always structuredClone's.
+ */
+export function copyFight(b) {
+  try { return copyTree(b, new Map()); } catch (e) { if (e === NOT_PLAIN) return structuredClone(b); throw e; }
+}
+const NOT_PLAIN = Symbol('not plain');
+function copyTree(x, seen) {
+  if (typeof x !== 'object' || x === null) {
+    if (typeof x === 'function' || typeof x === 'symbol') throw NOT_PLAIN;
+    return x;
+  }
+  let c = seen.get(x);
+  if (c) return c;
+  if (Array.isArray(x)) {
+    if (Object.getPrototypeOf(x) !== Array.prototype) throw NOT_PLAIN;
+    const n = x.length;
+    c = new Array(n);
+    seen.set(x, c);
+    let own = 0;
+    for (const k in x) own += 1; // an extra key or a hole: not a plain dense array
+    if (own !== n) throw NOT_PLAIN;
+    for (let i = 0; i < n; i++) c[i] = copyTree(x[i], seen);
+    return c;
+  }
+  if (Object.getPrototypeOf(x) !== Object.prototype) throw NOT_PLAIN;
+  c = {};
+  seen.set(x, c);
+  for (const k in x) c[k] = copyTree(x[k], seen);
+  return c;
+}
+
 /** Play a whole fight on its orders, round by round, until it ends (hands-off: the risk level answers the van). */
 export function playFight(b, rng, maxRounds = 30) {
-  while (!b.end && b.round < maxRounds) playRound(b, rng);
+  const was = wordless;
+  wordless = true; // its rounds' lines are thrown away: no wording (see wordOf)
+  try { while (!b.end && b.round < maxRounds) playRound(b, rng); } finally { wordless = was; }
   if (!b.end) finish(b, 'deadline', 'end.deadline');
   return b;
 }
@@ -1122,7 +1165,7 @@ export function vanOdds(b0, runs = FIGHT.oddsRuns) {
   const read = (hold) => {
     let left = 0;
     for (let i = 0; i < runs; i++) {
-      const b = structuredClone(b0);
+      const b = copyFight(b0);
       b.showcaseSeed = hash('van', hold, i); // reseeded, never drawn: the odds streams do not move
       b.vanHold = hold;
       playFight(b, makeRng(0x7a11 + i * 7919));
@@ -1182,7 +1225,7 @@ export function stepTally(t, k = Infinity) {
   const { b0, n, runs } = t;
   for (const end = Math.min(runs, t.done + k); t.done < end; t.done++) {
     const i = t.done;
-    const b = structuredClone(b0);
+    const b = copyFight(b0);
     b.showcaseSeed = hash('odds', i); // reseeded, never drawn, and so not in the cache key
     playFight(b, makeRng(0x5eed + i * 7919));
     if (objectiveDone(b)) n.win += 1;
