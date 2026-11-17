@@ -227,3 +227,58 @@ test('the crew\'s default orders leave a runner with a move to attack, so it fir
     assert.equal(F.orderOf(plain, plain.runners.find((r) => r.id === 'jax')).duty, 'protect', `${type}: with no build the toughest still protects`);
   }
 });
+
+// --- Contagion (slice 3-iii, 2026-11-17): a payload that jumps when its host falls --------------------------------------------------
+const sick = (b, n, payload = 'contagion', o = {}) => { const e = b.enemies.find((x) => x.n === n); e.infected = { tick: 1, left: PAYLOADS[payload].dot.rounds, by: 'jax', round: 0, payload, ...o }; return e; };
+
+test('Contagion: when an infected enemy falls to its tick, the infection jumps to the first other enemy of its group, in full, and ticks from the next round', () => {
+  const b = fixture(['jax', 'mei', 'wing'], ['hired', 'hired', 'hired'], { build: { move: null, payload: 'contagion' } });
+  sick(b, 1); butts(b);
+  const r = F.playRound(b, mid);
+  assert.ok(b.enemies[0].out, 'the one pip is gone to the tick');
+  const jump = r.lines.find((l) => l.key === 'spread');
+  assert.ok(jump, 'the jump is said');
+  assert.equal(jump.from, 1); assert.equal(jump.enemy, 2);
+  assert.ok(r.lines.findIndex((l) => l.key === 'spread') > r.lines.findIndex((l) => l.key === 'tickOut'), 'said after the fall');
+  const t = b.enemies[1];
+  assert.deepEqual({ tick: t.infected.tick, left: t.infected.left, payload: t.infected.payload, by: t.infected.by }, { tick: 1, left: 2, payload: 'contagion', by: 'jax' });
+  assert.equal(t.infected.round, b.round, 'it starts this round, so its first tick is the next one');
+  assert.ok(!b.enemies[2].infected, 'one jump per fall');
+});
+
+test('Contagion: a chain runs one fall per round, and the infection burns out after its rounds', () => {
+  const b = fixture(['jax', 'mei', 'wing'], ['hired', 'hired', 'hired'], { build: { move: null, payload: 'contagion' } });
+  sick(b, 1); butts(b);
+  F.playRound(b, mid); F.playRound(b, mid);
+  assert.deepEqual(b.enemies.map((e) => e.out), [true, true, false], 'the jump kept the chain going');
+  assert.ok(b.enemies[2].infected, 'and handed it on again');
+  const c = fixture(['jax', 'mei', 'wing'], ['corp', 'corp'], { build: { move: null, payload: 'contagion' } });
+  sick(c, 1); butts(c);
+  F.playRound(c, mid); F.playRound(c, mid);
+  assert.ok(c.enemies[0].out, 'two pips, two ticks: down');
+  const d = fixture(['jax', 'mei', 'wing'], ['enforcer', 'enforcer'], { build: { move: null, payload: 'contagion' } });
+  Object.assign(d.enemies[0], { pips: 5, max: 5 }); sick(d, 1); butts(d);
+  F.playRound(d, mid); F.playRound(d, mid);
+  assert.equal(d.enemies[0].pips, 3);
+  assert.equal(d.enemies[0].infected, null, 'it burned out after two rounds: the cost of the shorter infection');
+});
+
+test('Contagion: the Cytotoxic Vector does not jump; machines, the already infected and another group are skipped; nobody to jump to says nothing', () => {
+  const cyto = fixture(['jax', 'mei', 'wing'], ['hired', 'hired'], { build: GIVEN_BUILD });
+  sick(cyto, 1, 'cytotoxic'); butts(cyto);
+  const rc = F.playRound(cyto, mid);
+  assert.ok(!rc.lines.some((l) => l.key === 'spread') && !cyto.enemies[1].infected);
+  const b = fixture(['jax', 'mei', 'wing'], ['hired', 'drone', 'hired', 'hired'], { build: { move: null, payload: 'contagion' } });
+  b.enemies[3].group = 5; // another group
+  sick(b, 1); sick(b, 3, 'contagion', { round: 9 }); butts(b);
+  const r = F.playRound(b, mid);
+  assert.ok(!r.lines.some((l) => l.key === 'spread'), 'the drone is immune, the third is already sick, the fourth is in another group');
+  assert.ok(!b.enemies[1].infected);
+});
+
+test('Contagion: wording for the jump, three variants, and a draft piece in data the offers can reach', () => {
+  assert.ok(FIGHT_TEXT.spread && FIGHT_TEXT_VARIANTS.spread.length === 3);
+  const p = PAYLOADS.contagion;
+  assert.ok(p.spread && p.slot === 'payload' && p.dot.rounds === 2 && p.immune.includes('synthetic') && p.desc && p.offer);
+  assert.ok(immuneTo('drone', 'contagion') && !immuneTo('hired', 'contagion'));
+});

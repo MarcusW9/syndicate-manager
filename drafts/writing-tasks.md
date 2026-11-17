@@ -560,3 +560,5 @@ lines until it gets its own; a test keeps every district complete.
 
 
 - **Planning read, build advice (2026-11-17).** Claude's draft wording is in `data/fightText.js` under `build.*` (Joss's one line: `build.advice.*`; the breakdown: `build.threat.*`, `build.answer.*`, `build.why.*`, `build.counter.*`). It was written for newcomers: full sentences, each term explained. Rewrite in the game's own voice; keep it plain. Add a `build.why.<tag>` and `build.counter.<tag>` for every new enemy tag.
+
+- **Contagion (2026-11-17, draft).** Claude's wording: the piece's `desc` and `offer` in `data/builds.js PAYLOADS.contagion`, and the three `spread` lines in `data/fightText.js`. Rewrite them. Also decide the name: "Contagion" is the proposal's word; the log says "The Contagion jumps to Drone 2".

@@ -706,6 +706,17 @@ export function playRound(b, rng) {
   const result = { lines, actions: [], unanswered: [], defeated, goalDelta: 0, down, fled, withdrawn, heat: 0, neural: 0, ended: null };
   if (!b.drawn) lines.push(...startRound(b, rng));
   const say = (kind, key, slots = {}, extra = {}) => { const l = { kind, key, slots, ...extra, text: lineText(key, slots) }; lines.push(l); return l; };
+  // Contagion (slice 3-iii, 2026-11-17): when an infected enemy goes down, a payload that `spread`s jumps to the first other enemy of its group that is
+  // up, not infected and not immune (the rules' order, no roll). Not a hit, so a plate does not stop it; it starts in full and ticks next round.
+  const spreadFrom = (e, inf = e.infected) => {
+    const pay = PAYLOADS[inf?.payload];
+    if (!pay?.spread) return;
+    const t = enemiesUp(b).find((x) => x.n !== e.n && (x.group ?? 0) === (e.group ?? 0) && !x.infected && !immuneTo(x.kind, pay.id));
+    if (!t) return;
+    t.infected = { tick: pay.dot.tick, left: pay.dot.rounds, by: inf.by, round: b.round, payload: pay.id };
+    say('spread', 'spread', { enemy: E(e.n), to: E(t.n), word: pay.word }, { enemy: t.n, from: e.n, payload: pay.id });
+  };
+
   const E = (n) => enemyName(b.enemies.find((x) => x.n === n).kind, n);
 
   const vl = vanDecision(b);
@@ -740,7 +751,7 @@ export function playRound(b, rng) {
         const cracked = e.absorb > 0;
         if (cracked) { e.absorb -= 1; dmg -= 1; }
         e.pips -= dmg;
-        if (e.pips <= 0) { e.out = true; defeated.push({ by: ow.id, enemy: e.n, how: 'overwatch' }); say('overwatch', 'overwatchOut', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, dropped: true, roll: rollOf(x), cracked }); }
+        if (e.pips <= 0) { e.out = true; defeated.push({ by: ow.id, enemy: e.n, how: 'overwatch' }); say('overwatch', 'overwatchOut', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, dropped: true, roll: rollOf(x), cracked }); spreadFrom(e); }
         else say('overwatch', dmg === 0 ? 'overwatchCrack' : 'overwatchHit', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, roll: rollOf(x), left: e.pips, cracked });
       }
     }
@@ -760,7 +771,7 @@ export function playRound(b, rng) {
     const cracked = e.absorb > 0 && !r.ap; // the plate took a hit: a plain shot only cracks it (damage 0), a strong one cracks it and drops a pip
     if (cracked) { e.absorb -= 1; dmg -= 1; }
     e.pips -= dmg;
-    if (e.pips <= 0) { e.out = true; defeated.push({ by: r.id, enemy: e.n, how: burst ? 'burst' : 'attack' }); say('attack', k('attackOut'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, dropped: true, roll: rollOf(x), strong: x.strong, cracked }); return; }
+    if (e.pips <= 0) { e.out = true; defeated.push({ by: r.id, enemy: e.n, how: burst ? 'burst' : 'attack' }); say('attack', k('attackOut'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, dropped: true, roll: rollOf(x), strong: x.strong, cracked }); spreadFrom(e); return; }
     say('attack', dmg === 0 ? k('attackCrack') : k('attackHit'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, roll: rollOf(x), left: e.pips, cracked });
     // What the hit carries (data/builds.js PAYLOADS): a hit that gets past the plate and leaves the target up infects it, unless the target shrugs it off
     // (a tag the payload is immune to; said once a body). An infected body is not infected again.
@@ -887,7 +898,7 @@ export function playRound(b, rng) {
     const inf = e.infected;
     e.pips -= inf.tick;
     if (inf.left != null && (inf.left -= 1) <= 0) e.infected = null;
-    if (e.pips <= 0) { e.out = true; e.infected = null; defeated.push({ by: inf.by, enemy: e.n, how: 'vector' }); say('tick', 'tickOut', { enemy: E(e.n), word: PAYLOADS[inf.payload]?.word ?? 'Vector' }, { enemy: e.n, damage: inf.tick, dropped: true }); }
+    if (e.pips <= 0) { e.out = true; e.infected = null; defeated.push({ by: inf.by, enemy: e.n, how: 'vector' }); say('tick', 'tickOut', { enemy: E(e.n), word: PAYLOADS[inf.payload]?.word ?? 'Vector' }, { enemy: e.n, damage: inf.tick, dropped: true }); spreadFrom(e, inf); }
     else say('tick', 'tick', { enemy: E(e.n), word: PAYLOADS[inf.payload]?.word ?? 'Vector' }, { enemy: e.n, damage: inf.tick, left: e.pips });
   }
   // 3c: the hired and the standard force break and run per group, when too few of that group are left (hired's threshold).

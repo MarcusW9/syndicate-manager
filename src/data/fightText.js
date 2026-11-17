@@ -231,6 +231,11 @@ export const FIGHT_TEXT_VARIANTS = {
     'The {word} takes root in {enemy}.',
     'The {word} begins spreading inside {enemy}.',
   ],
+  'spread': [
+    'As {enemy} falls, the {word} jumps to {to}.',
+    'The {word} leaves {enemy} and takes hold in {to}.',
+    'The {word} passes from {enemy} to {to}.',
+  ],
   'tick': [
     'The {word} rips through {enemy}.',
     'The {word} ravages {enemy}.',
