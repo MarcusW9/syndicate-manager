@@ -127,7 +127,7 @@ export function render() {
       ${navButton('inbox', 'Today', badges.inbox)}
       ${navButton('city', 'City')}
       ${navButton('tong', 'Tong')}
-      ${navButton('crew', 'Crew')}
+      ${navButton('crew', 'Crew', badges.crew)}
       ${navButton('jobs', 'Jobs', badges.jobs)}
       <button class="nav__btn nav__btn--save ${V.screen === 'settings' ? 'is-active' : ''}" data-action="nav" data-id="settings" aria-pressed="${V.screen === 'settings'}">Save</button>
     </nav>
@@ -268,7 +268,7 @@ export const FOUNDING_TABS = ['inbox', 'settings']; // the tab bar has no Save b
 function navButton(id, label, badge = null) {
   const off = state.founding && !FOUNDING_TABS.includes(id);
   const on = state.founding ? id === (V.screen === 'settings' ? 'settings' : 'inbox') : tabOf(V.screen) === id;
-  const pill = badge?.count && !off ? ` <span class="pill ${id === 'inbox' ? 'pill--new' : ''}" aria-label="${badge.count} ${badge.word}">${badge.count}</span>` : '';
+  const pill = badge?.count && !off ? ` <span class="pill ${id === 'inbox' || id === 'crew' ? 'pill--new' : ''}" aria-label="${badge.count} ${badge.word}">${badge.count}</span>` : '';
   return `<button class="nav__btn ${on ? 'is-active' : ''}" data-action="nav" data-id="${id}" ${off ? 'disabled' : ''}>${esc(label)}${pill}</button>`;
 }
 

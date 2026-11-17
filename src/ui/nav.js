@@ -56,9 +56,17 @@ export function attentionCount(state) {
   return state.inbox.filter((m) => !m.read || waiting(m)).length;
 }
 
-/** Tab id → { count, word } for the pill on its button; tabs with no entry show none. */
+/** Open offers Joss has put in the mail (a specialisation or a build piece), for one runner or for everyone. Decided on the runner's sheet or in the message (owner, 2026-11-17). */
+export const openOffers = (state, opId = null) => (state.inbox ?? [])
+  .filter((m) => ['spec', 'build'].includes(m.kind) && !m.resolved && m.payload?.opId && (opId === null || m.payload.opId === opId));
+
+/** Tab id → { count, word } for the pill on its button; tabs with no entry show none. Crew counts the runners with an offer waiting. */
 export function tabBadges(state) {
-  return { inbox: { count: attentionCount(state), word: 'waiting on you' }, jobs: { count: state.jobs.length, word: 'open' } };
+  return {
+    inbox: { count: attentionCount(state), word: 'waiting on you' },
+    crew: { count: new Set(openOffers(state).map((m) => m.payload.opId)).size, word: 'with an offer waiting' },
+    jobs: { count: state.jobs.length, word: 'open' },
+  };
 }
 
 /**

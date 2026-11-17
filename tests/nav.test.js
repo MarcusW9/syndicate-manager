@@ -196,8 +196,17 @@ test('the badge rule: attention counts once on Today; Ops and Tong show nothing;
   ], halls: [] };
   assert.equal(attentionCount(state), 3);
   const b = tabBadges(state);
-  assert.deepEqual(Object.keys(b).sort(), ['inbox', 'jobs']);
+  assert.deepEqual(Object.keys(b).sort(), ['crew', 'inbox', 'jobs']);
   assert.equal(b.jobs.count, 2);
+  assert.equal(b.crew.count, 0);
+  // Crew counts runners with an offer waiting (owner, 2026-11-17): two offers for one runner count once; a taken one counts none.
+  const withOffers = { ...state, inbox: [
+    { id: 'o1', kind: 'build', resolved: false, payload: { opId: 'x' } },
+    { id: 'o2', kind: 'spec', resolved: false, payload: { opId: 'x' } },
+    { id: 'o3', kind: 'build', resolved: false, payload: { opId: 'y' } },
+    { id: 'o4', kind: 'spec', resolved: true, payload: { opId: 'z' } },
+  ] };
+  assert.equal(tabBadges(withOffers).crew.count, 2);
   const app = await boot();
   assert.ok(!/data-id="city"[^>]*>City <span class="pill/.test(app.html()));
   assert.ok(!/data-id="tong"[^>]*>Tong <span class="pill/.test(app.html()));

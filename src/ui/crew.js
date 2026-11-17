@@ -21,6 +21,7 @@ import { SPECIALISATIONS } from '../core/specialisations.js';
 import { buildPieces, pieceById } from '../core/builds.js';
 import { STARTING_ROSTER_CAP, canHire, signingFee } from '../core/recruits.js';
 import { changesSince, primaryStat, progressShare, declineChance, ageRate, potentialRead, scoutFor } from '../core/development.js';
+import { openOffers } from './nav.js';
 import { leadNames, renderGoneElsewhere } from './tongs.js';
 import { esc, statName, face, statusChip, daysLeft, subTabs, infoButton, infoText, cityName, gearUi } from './shared.js';
 import { state, backLabel, V } from './view.js';
@@ -90,7 +91,7 @@ export function renderCrew() {
           <li>
             <button class="row crewrow" data-action="open-op" data-id="${esc(op.id)}">
               ${face(op)}
-              <span class="crewrow__name"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"</span>
+              <span class="crewrow__name"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"${openOffers(state, op.id).length ? ' <span class="pill pill--new">Offer</span>' : ''}</span>
               <span class="crewrow__info muted">${fameOf(op) === 'elite' ? `<span class="fame fame--elite">${esc(fameName('elite'))}</span> · ` : ''}${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age}</span>
               <span class="crewrow__status">${statusChip(availability(state, op))}</span>
               <span class="crewrow__scout">${scoutLine(op)}${growthMarker(op)}</span>
@@ -290,13 +291,13 @@ export function renderOperative() {
           ${marksText(op) ? `<p class="muted small">Marked: ${esc(marksText(op))}</p>` : ''}
         </div>
       </div>
+      ${renderOffers(op)}
       <div class="opgrid">
       <div class="opgrid__about">
       <p class="body">${esc(op.bio)}</p>
       <p class="body muted">${esc(op.origin)}</p>
       ${op.freelance ? '' : renderHome(op)}
 
-      ${renderOffers(op)}
       ${specOf(op) ? `
       <h2>Specialisation</h2>
       <ul class="chips">
@@ -390,7 +391,7 @@ function synergies(op) {
 
 /** Offers waiting for this runner (a specialisation or a build piece Joss put in the mail), decided here as well as in the message (owner, 2026-11-17). */
 function renderOffers(op) {
-  const open = (state.inbox ?? []).filter((m) => ['spec', 'build'].includes(m.kind) && !m.resolved && m.payload?.opId === op.id);
+  const open = openOffers(state, op.id);
   if (!open.length) return '';
   const what = (m, id) => (m.kind === 'spec' ? SPECIALISATIONS[id] : pieceById(id));
   return `
