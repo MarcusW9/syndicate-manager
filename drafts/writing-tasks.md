@@ -10,6 +10,7 @@ files. Rough lines are fine; anything off gets flagged, not silently changed.
 
 | # | Task | Needed for | Size | Source to paste |
 |---|---|---|---|---|
+| B2 | **Builds 3-ii-b wording (2026-11-17):** Joss's offer line and a one-line description for each piece (`offer` with `{op}`, `desc`) in `src/data/builds.js`; the offer message's subject (`could pick up a new trick` / `the {piece}`) and the "One move and one payload each, for good" note in `src/ui/messages.js renderBuildOffer`. Also the piece names (Ricochet, Cytotoxic Vector) if you want them changed. | Builds | 2 pieces + 2 lines | `src/data/builds.js` |
 | 1 | ~~Report lines for older crises~~ **Done 2026-10-26** (all 4 batches in the game) | Mission logs, auto-run, side tasks | — | — |
 | 2 | ~~Hand-written Container 409 mission log~~ **Done 2026-10-26: go** (see `mission-log-prototype.md`) | The go / no-go test for mission logs | — | — |
 | 3 | Action templates by stat and phase (any district) | Mission logs | ~85 templates | none |

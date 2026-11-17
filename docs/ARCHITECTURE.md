@@ -62,7 +62,7 @@ setState(next){ setGame(next); saveGame(state); render(); }
 //   milestones:[ids], highlights:[{id,day,text,weight}] (best 3), lowWeeks, wasElite, estimated},
 //   fame: 'unknown'|'known'|'respected'|'elite', standing: 0-100. None of these touch a roll, pay, heat or the risk read.
 // added lazily: earned: [{id, day, district?, client?, partner?, uses?}], track: {hidden counters},
-//               spec: {id, day}, specSnooze, freelance (flag)
+//               spec: {id, day}, specSnooze, build {move, payload}|null, buildAt (jobsWithCrew at the last piece taken), buildSnooze, freelance (flag)
 ```
 Morale and burnout exist and are written (in `finish`, `settleWeek`) but nothing reads morale; STATE-OF-PLAY says the owner agreed to cut them, main still has them.
 

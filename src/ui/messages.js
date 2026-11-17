@@ -10,6 +10,7 @@ import { CALL_IN } from '../core/mission.js';
 import { ORDERS } from '../core/autorun.js';
 import { ALERT_MAX } from '../core/incidents.js';
 import { SPECIALISATIONS } from '../core/specialisations.js';
+import { pieceById } from '../core/builds.js';
 import { tierTag, perkList, apexHistory } from './gear.js';
 import { raidWhere } from './raidcards.js';
 import { esc, face, districtName } from './shared.js';
@@ -46,6 +47,7 @@ export function renderMessage(m) {
       ${m.kind === 'renewal' ? renderRenewal(m) : ''}
       ${m.kind === 'heat' ? renderHeatNotice(m) : ''}
       ${m.kind === 'spec' ? renderSpecOffer(m) : ''}
+      ${m.kind === 'build' ? renderBuildOffer(m) : ''}
       ${m.kind === 'retirement' ? renderRetirement(m) : ''}
       ${m.kind === 'poach' ? renderPoach(m) : ''}
       ${m.kind === 'hall-offer' && !hallIn(state, m.payload.district) ? (canOpenHall(state, m.payload.district).ok ? `<button class="btn btn--primary" data-action="open-hall" data-id="${esc(m.payload.district)}">Open the hall · ${money(HALL_SITES[m.payload.district].deposit)}</button>` : `<p class="muted small">${esc(canOpenHall(state, m.payload.district).reason)}.</p>`) : ''}
@@ -273,6 +275,18 @@ function renderRetirement(m) {
         ${m.options.map((o) => `<button class="btn ${o.id === 'stay' ? 'btn--primary' : 'btn--ghost'}" data-action="decide" data-id="${esc(m.id)}" data-option="${esc(o.id)}">${esc(o.label)}</button>`).join('')}
       </div>
       <p class="muted small">No answer within a week and they stay on at the current wage.</p>`;
+}
+
+function renderBuildOffer(m) {
+  const p = m.payload;
+  return `
+      <div class="riskcard">
+        ${p.ids.map((id) => `<p><strong>${esc(pieceById(id).name)}</strong> · ${esc(pieceById(id).desc)}</p>`).join('')}
+        ${p.outcome ? `<p><strong>${esc(p.outcome)}</strong></p>` : '<p class="muted small">One move and one payload each, for good. "Not yet" and Joss asks again in two weeks.</p>'}
+      </div>
+      ${m.resolved ? '' : `<div class="stack">
+        ${m.options.map((o) => `<button class="btn ${o.id === 'later' ? 'btn--ghost' : 'btn--primary'}" data-action="decide" data-id="${esc(m.id)}" data-option="${esc(o.id)}">${esc(o.label)}</button>`).join('')}
+      </div>`}`;
 }
 
 function renderSpecOffer(m) {

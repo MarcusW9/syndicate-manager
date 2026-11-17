@@ -17,6 +17,7 @@ import { itemName } from '../core/gear.js';
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
 import { earnedText } from '../core/earned.js';
 import { specOf } from '../core/specialisations.js';
+import { buildPieces } from '../core/builds.js';
 import { STARTING_ROSTER_CAP, canHire, signingFee } from '../core/recruits.js';
 import { changesSince, primaryStat, progressShare, declineChance, ageRate, potentialRead, scoutFor } from '../core/development.js';
 import { leadNames, renderGoneElsewhere } from './tongs.js';
@@ -291,6 +292,9 @@ export function renderOperative() {
       <ul class="chips">
         <li class="chip chip--earned"><strong>${esc(specOf(op).name)}</strong><span>${esc(specOf(op).desc)}</span><span class="chip__when">Since day ${op.spec.day}</span></li>
       </ul>` : ''}
+      ${buildPieces(op).length ? `
+      <h2>Build</h2>
+      <ul class="chips">${buildPieces(op).map((b) => `<li class="chip chip--earned"><strong>${esc(b.name)}</strong><span>${esc(b.desc)}</span><span class="chip__when">${b.slot === 'move' ? 'Move' : 'Payload'}</span></li>`).join('')}</ul>` : ''}
       <h2>Traits</h2>
       ${traitChips(op.id, op.traits.map(bornChip))}
       ${earnedChips(op)}

@@ -49,6 +49,7 @@ import { startBattle, runBattle, resolveBattleDecision, guardsUp, guardCount, ha
 import { describeFightPending, fightChoices, fightSnapshot } from './runfight.js';
 export { runBattle, handOffFight, pullBack };
 import { noteOverwatchJob, checkSpecialisations } from './specialisations.js';
+import { checkBuildOffers } from './builds.js';
 import { noteJobMarks } from './marks.js';
 import { planIncidents, weaveIncidents, incidentById, incidentIn, incidentDifficulty, handlerFor, bestSave, standbySave, decisionChoices, ALERT_MAX, SERIOUS_CHANCE, SERIOUS_PER_ALERT, PATCH_MIN_MEDICAL, ZONES } from './incidents.js';
 import { openingResult } from './halls.js';
@@ -1018,6 +1019,7 @@ function finish(state) {
   const sniper = am.overwatch && survivors.find((o) => o.id === am.overwatch.id);
   if (sniper) noteOverwatchJob(sniper, am.overwatch.kit);
   checkSpecialisations(state);
+  checkBuildOffers(state); // a move or payload for someone with enough jobs behind them (slice 3-ii-b)
 
   // Clinic Hands (earned): once a job, gets a lightly hurt crewmate back a day sooner.
   const patched = [];
