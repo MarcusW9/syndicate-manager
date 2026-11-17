@@ -383,7 +383,7 @@ export function onClick(e) {
     case 'watch-latest': return showLatest();
     case 'pending': return setState(resolvePending(state, id));
     // Command fights (ui/fightorders.js): pick, target and order are the player's draft; the rest play the round.
-    case 'fight-sel': case 'fight-target': case 'fight-clear': case 'fight-order': case 'fight-pull-ask': case 'fight-pull-no': case 'fight-rules': case 'fight-more': case 'fight-log':
+    case 'fight-sel': case 'fight-edit': case 'fight-target': case 'fight-clear': case 'fight-order': case 'fight-pull-ask': case 'fight-pull-no': case 'fight-rules': case 'fight-more': case 'fight-log':
       fightTap(state.activeMission, action, { id, kind: t.dataset.kind, target: t.dataset.target });
       break;
     // Engine 2's screen (ui/fightscreen.js): the draft is an order or two and a risk level; Next round plays on them.

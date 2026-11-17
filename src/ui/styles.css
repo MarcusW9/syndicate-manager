@@ -1413,6 +1413,11 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .ffo-target { min-height: var(--tap, 44px); padding: 4px 10px; border: 1px solid #4a2230; background: #160d12; color: #ff8a98; font: 700 0.8rem var(--display); letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; text-align: left; }
 .ffo-target em { font-style: normal; color: var(--text); margin-left: 4px; }
 .ffo-target span { display: block; font: 500 0.7rem system-ui, sans-serif; letter-spacing: 0; text-transform: none; color: var(--muted); }
+.ffo-row.is-set .ffo-who { opacity: 0.55; }
+.ffo-tray.is-locked .ffo-acts, .ffo-tray.is-locked .ffo-targets { opacity: 0.4; filter: grayscale(1); }
+.ffo-tray.is-locked button:disabled { cursor: default; }
+.ffo-locked { margin: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 0.8rem; color: var(--muted); }
+.ffo-locked b { color: var(--warn); font-weight: 600; }
 .ffo-target.is-on { border-color: var(--warn); color: var(--warn); }
 .ffo-target.is-out { display: inline-flex; flex-direction: column; justify-content: center; opacity: 0.4; cursor: default; }
 .ffo-acts { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 6px; }
