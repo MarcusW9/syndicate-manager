@@ -54,8 +54,8 @@ The Heights send corp and drones; the Docks send hired, hired, enforcers (in rot
 A runner may carry a **move** and a **payload** (`data/builds.js`; given in data for now, not earned: the sims and tests put them on the best combat runner). Every number below is a named first value in that file.
 | Piece | Rule |
 | --- | --- |
-| **Ricochet** (move) | Fires by itself, once a fight, when the runner's order has them attack and 2 or more enemies are up and as many are free. One attack each (their own roll) on up to 3 enemies, the order's target first, never an enemy anyone has already planned an attack on. Its bounces are `bounce*` lines flagged `burst`; the stage draws the run as the ricochet look. |
-| **Cytotoxic Vector** (payload) | A landed hit infects the target if the hit leaves it up (a hit that only cracks a plate still infects). An infected enemy loses 1 pip at the end of each round, from the round after the hit, until it dies. It does not spread, stack or renew. |
+| **Ricochet** (move) | Fires by itself, once a fight, when the runner's order has them attack and 2 or more enemies are up. One attack each (their own roll) on up to 3 enemies in the rules' order, the order's target first. It is agnostic of the crew (owner, 2026-11-17): a bounce may land on an enemy a teammate is already shooting; if a planned target has fallen by then, its bounce goes to the next enemy up. Its bounces are `bounce*` lines flagged `burst`; the stage draws the run as the ricochet look. |
+| **Cytotoxic Vector** (payload) | A hit that gets past the plate and leaves the target up infects it (a hit that only cracks a plate does not). An infected enemy loses 1 pip at the end of each round, from the round after the hit, until it dies. It does not spread, stack or renew. |
 | **Tick order** | After the threats resolve and before the groups' flee checks, so a tick counts like any loss. The round preview lists who ticks (`ticks`) and the burst's targets. |
 | **Synthetic** | An enemy tag (`ENEMIES` `foeTags`; drone). The vector does nothing to it (one `immune` line a body). |
 

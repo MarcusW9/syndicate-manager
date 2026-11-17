@@ -7,7 +7,8 @@ import { makeRng } from '../src/core/rng.js';
 import * as F from '../src/core/fight.js';
 import { ENEMIES, ENEMY_HIT } from '../src/data/fights.js';
 import { MOVES, PAYLOADS, GIVEN_BUILD } from '../src/data/builds.js';
-import { FIGHT_TEXT } from '../src/data/fightText.js';
+import { FIGHT_TEXT, FIGHT_TEXT_VARIANTS } from '../src/data/fightText.js';
+import { lineText } from '../src/core/fighttext.js';
 import { buildOf, immuneTo, withBuild } from '../src/core/builds.js';
 
 const crewOf = () => createNewGame({ seed: 1 }).crew;
@@ -47,7 +48,7 @@ test('withBuild gives the build to the best combat runner and touches nobody els
 
 test('Ricochet fires by itself with 2 or more enemies up: up to 3 bounces, each a new enemy, once a fight', () => {
   const b = fixture(['jax', 'mei', 'wing'], ['hired', 'hired', 'hired', 'hired']);
-  const r1 = F.playRound(b, mid);
+  const r1 = F.playRound(b, mid); // the protector drops one first: the burst's bounce on it retargets to the one it had not planned on
   const bounces = r1.lines.filter((l) => l.key?.startsWith('bounce'));
   assert.equal(bounces.length, 3);
   assert.equal(new Set(bounces.map((l) => l.enemy)).size, 3);
@@ -68,22 +69,26 @@ test('it waits for 2 free enemies: one enemy up is an ordinary attack, and the m
   assert.equal(b.runners[0].moved, false);
 });
 
-test('a burst never takes an enemy another attacker has reserved', () => {
-  const b = fixture(['mei', 'jax', 'wing'], ['hired', 'hired', 'hired', 'hired'], { star: 'jax' }); // wing (the protector, fallback attack) and mei attack first and reserve one each
+test('Ricochet is agnostic of the crew (owner, 2026-11-17): it plans on an enemy a teammate is attacking, and a bounce on one already down retargets', () => {
+  const b = fixture(['mei', 'jax', 'wing'], ['hired', 'hired', 'hired', 'hired'], { star: 'jax' });
   F.startRound(b, mid);
-  const burst = F.resolveOrders(b).actions.find((a) => a.kind === 'burst');
-  const plain = F.resolveOrders(b).actions.filter((a) => a.kind === 'attack').map((a) => a.enemy);
-  assert.ok(burst, 'jax fires');
-  assert.ok(burst.enemies.every((n) => !plain.includes(n)), 'no overlap with the other attackers');
-  assert.equal(new Set([...plain, ...burst.enemies]).size, plain.length + burst.enemies.length);
+  const acts = F.resolveOrders(b).actions;
+  const burst = acts.find((a) => a.kind === 'burst');
+  const plain = acts.filter((a) => a.kind === 'attack').map((a) => a.enemy);
+  assert.ok(burst && burst.enemies.length === 3);
+  assert.ok(burst.enemies.some((n) => plain.includes(n)), 'it does not know or care who a teammate is shooting');
+  const r = F.playRound(b, mid);
+  const bounced = r.lines.filter((l) => l.key?.startsWith('bounce')).map((l) => l.enemy);
+  assert.equal(new Set(bounced).size, bounced.length, 'never twice at the same enemy in one burst');
+  assert.ok(bounced.length >= 2, 'a bounce whose target fell first went to another enemy up');
 });
 
 test('a landed hit infects, and the vector ticks from the next round, 1 pip a round, until the target dies', () => {
   const b = fixture(['jax', 'mei', 'wing'], ['corp', 'corp', 'corp', 'corp', 'corp'], { star: 'jax' });
   const r1 = F.playRound(b, mid);
   const infected = b.enemies.filter((e) => e.infected);
-  assert.equal(infected.length, 3, 'every bounce that landed infected a new target (the protector and mei took two of the five)');
-  assert.equal(r1.lines.filter((l) => l.key === 'infect').length, 3);
+  assert.ok(infected.length >= 2, 'bounces that landed and left their target up infected it');
+  assert.equal(r1.lines.filter((l) => l.key === 'infect').length, infected.length);
   assert.ok(!r1.lines.some((l) => l.key === 'tick' || l.key === 'tickOut'), 'no tick in the round of the hit');
   butts(b);
   const before = Object.fromEntries(b.enemies.map((e) => [e.n, e.pips]));
@@ -94,17 +99,20 @@ test('a landed hit infects, and the vector ticks from the next round, 1 pip a ro
   assert.ok(r2.defeated.some((d) => d.how === 'vector') || b.enemies.every((e) => e.out || e.pips < before[e.n]), 'the infected lose a pip');
 });
 
-test('the tick is exactly one pip and kills a plated body the hit only cracked; an infection does not spread or stack', () => {
-  const b = fixture(['jax', 'mei', 'wing'], ['police', 'police', 'police', 'police']);
-  const r1 = F.playRound(b, mid);
-  const cracked = r1.lines.filter((l) => l.key === 'bounceCrack');
-  assert.ok(cracked.length >= 1, 'a plated body takes a crack, not a pip');
-  const hit = b.enemies.filter((e) => e.infected);
-  assert.ok(hit.length >= 1, 'a hit that only cracks a plate still carries the vector');
+test('a hit that only cracks a plate infects nothing (owner, 2026-11-17); one that gets past it does, and ticks exactly one pip', () => {
+  const plated = fixture(['jax', 'mei', 'wing'], ['police', 'police', 'police', 'police']);
+  const r0 = F.playRound(plated, mid);
+  assert.ok(r0.lines.some((l) => l.key === 'bounceCrack'), 'a plated body takes a crack, not a pip');
+  assert.ok(plated.enemies.every((e) => !e.infected), 'the plate took the hit and the vector with it');
+  assert.ok(!r0.lines.some((l) => l.key === 'infect'));
+  const b = fixture(['jax', 'mei', 'wing'], ['corp', 'corp', 'corp', 'corp']);
+  F.playRound(b, mid);
+  const hit = b.enemies.filter((e) => e.infected && !e.out);
+  assert.ok(hit.length >= 1, 'a hit past the armour carries the vector');
   for (const e of hit) assert.equal(e.pips, 1);
   butts(b);
   const r2 = F.playRound(b, mid);
-  assert.ok(r2.defeated.filter((d) => d.how === 'vector').length >= 1, 'a delayed kill');
+  assert.ok(r2.defeated.filter((d) => d.how === 'vector').length >= 1, 'a delayed kill, exactly a pip');
   assert.ok(b.enemies.filter((e) => e.infected && !e.out).every((e) => e.infected.round === 1), 'not renewed or re-stacked');
 });
 
@@ -190,4 +198,19 @@ test('the save: a v73 fight in progress upgrades with no infection and no builds
   assert.equal(loaded.version, SAVE_VERSION);
   assert.ok(loaded.activeMission.battle.enemies.every((e) => e.infected === null));
   assert.ok(loaded.activeMission.battle.runners.every((r) => r.build === null && r.moved === false));
+});
+
+test('the owner\'s variants: each key has three, all the same slots, and the pick is stable and never the fight\'s rng', () => {
+  const slotsOf = (t) => [...t.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort().join();
+  for (const [key, list] of Object.entries(FIGHT_TEXT_VARIANTS)) {
+    assert.equal(list.length, 3, key);
+    assert.equal(new Set(list.map(slotsOf)).size, 1, `${key}: every variant takes the same slots`);
+    assert.equal(FIGHT_TEXT[key], list[0]);
+  }
+  const slots = { who: 'Jax', enemy: 'corp 2' };
+  assert.equal(lineText('bounceHit', slots), lineText('bounceHit', slots));
+  const seen = new Set();
+  for (let n = 1; n <= 30; n++) seen.add(lineText('bounceHit', { who: 'Jax', enemy: `corp ${n}` }));
+  assert.ok(seen.size > 1, 'the variants are used');
+  assert.ok(![...seen].some((t) => /\{\w+\}/.test(t)), 'no slot left unfilled');
 });

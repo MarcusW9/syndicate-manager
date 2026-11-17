@@ -336,13 +336,14 @@ function tryDuty(b, r, duty, target, priority, res) {
       const list = enemyOrder(b, enemiesUp(b).filter((e) => !covered(e, res)), priority);
       const e = (typeof target === 'number' && list.find((x) => x.n === target)) || list[0];
       if (!e) return null;
-      // Slice 3-ii-a: a move that is ready fires by itself (2.2): one attack on each of the first `reach` enemies in the rules' order,
-      // the chosen one first, none that another attacker has reserved. It waits until it has as many free targets as its condition asks.
+      // Slice 3-ii-a: a move that is ready fires by itself (2.2): one attack on each of the first `reach` enemies up, in the rules' order, the
+      // chosen one first. Ricochet is agnostic (owner, 2026-11-17): it knows nothing of what a teammate has planned, so a bounce may land
+      // on an enemy another runner is already shooting. Its own bounces are planned damage, so the attackers after it still skip what it covers.
       const mv = moveReady(b, r);
-      const free = mv ? list.filter((x) => !res.damage[x.n]?.length) : []; // reserved = anyone has already planned an attack on it (a plain attack may still share a two-pip body; a bounce never does)
-      if (mv && free.length >= mv.when.enemies) {
-        const first = free.find((x) => x === e) ?? free[0];
-        const hit = [first, ...free.filter((x) => x !== first)].slice(0, mv.reach);
+      if (mv) {
+        const up = enemyOrder(b, enemiesUp(b), priority);
+        const first = up.find((x) => x === e) ?? up[0];
+        const hit = [first, ...up.filter((x) => x !== first)].slice(0, mv.reach);
         for (const x of hit) (res.damage[x.n] ??= []).push(r.ap);
         return { kind: 'burst', move: mv.id, enemy: first.n, enemies: hit.map((x) => x.n) };
       }
@@ -746,12 +747,12 @@ export function playRound(b, rng) {
     e.pips -= dmg;
     if (e.pips <= 0) { e.out = true; defeated.push({ by: r.id, enemy: e.n, how: burst ? 'burst' : 'attack' }); say('attack', k('attackOut'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, dropped: true, roll: rollOf(x), strong: x.strong, cracked }); return; }
     say('attack', dmg === 0 ? k('attackCrack') : k('attackHit'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, roll: rollOf(x), left: e.pips, cracked });
-    // What the hit carries (data/builds.js PAYLOADS): a landed hit that leaves the target up infects it, unless the target shrugs it off
+    // What the hit carries (data/builds.js PAYLOADS): a hit that gets past the plate and leaves the target up infects it, unless the target shrugs it off
     // (a tag the payload is immune to; said once a body). An infected body is not infected again.
     const pay = PAYLOADS[r.build?.payload];
     if (!pay?.dot) return;
-    if (immuneTo(e.kind, pay.id)) { if (!e.shrugged) { e.shrugged = true; say('immune', 'immune', { who: r.handle, enemy: E(e.n), word: pay.word }, { ...named, ...flag, enemy: e.n }); } return; }
-    if (e.infected) return;
+    if (immuneTo(e.kind, pay.id)) { if (!e.shrugged) { e.shrugged = true; say('immune', 'immune', { who: r.handle, enemy: E(e.n), word: pay.word }, { ...named, ...flag, enemy: e.n }); } return; } // said on any landed hit, plate or not, so a drone's shrug is seen
+    if (dmg <= 0 || e.infected) return; // a hit that only cracks a plate carries nothing in (owner, 2026-11-17)
     e.infected = { tick: pay.dot.tick, left: pay.dot.rounds, by: r.id, round: b.round, payload: pay.id };
     say('infect', 'infect', { who: r.handle, enemy: E(e.n), word: pay.word }, { ...named, ...flag, enemy: e.n, payload: pay.id });
   };
@@ -763,8 +764,15 @@ export function playRound(b, rng) {
       case 'attack': strike(r, a.enemy, named, false); break;
       case 'burst': {
         // The runner's move (Ricochet): one attack on each target in the rules' order, each from where the last landed. Spent for the fight.
+        // Sequential retargeting: a planned target that has fallen since the plan (a teammate shot first) hands its bounce to the next enemy up.
         r.moved = true;
-        for (const n of a.enemies) strike(r, n, named, true);
+        const struck = new Set();
+        for (const n of a.enemies) {
+          const gone = (x) => x.out || x.fled;
+          const next = gone(b.enemies.find((x) => x.n === n)) ? enemiesUp(b).find((x) => !struck.has(x.n) && !a.enemies.includes(x.n))?.n : n;
+          if (next == null) continue;
+          struck.add(next); strike(r, next, named, true);
+        }
         break;
       }
       case 'jam': {

@@ -9,17 +9,17 @@
 // Names are drafts, the owner's to write (drafts/writing-tasks.md): "Ricochet", "Cytotoxic Vector" and the short log word "Vector".
 
 // Moves: a burst of attacks with sequential retargeting (2.1), fired by itself when its condition holds (2.2).
-//   reach: the most enemies one burst hits, one attack each, in the rules' order, never an enemy another attacker has reserved.
+//   reach: the most enemies one burst hits, one attack each, in the rules' order. It is agnostic of the rest of the crew (owner, 2026-11-17): a bounce may land on an enemy a teammate is already shooting.
 //   uses: how many times a fight (one: a runner's move is a showcase, not a rate of fire).
-//   when: the condition that fires it by itself, read at the start of the runner's action: `enemies` or more enemies up (and as many
-//         free to take: a burst of one is just an attack, so it waits). Any round.
+//   when: the condition that fires it by itself, read at the start of the runner's action: `enemies` or more enemies up. Any round.
 //   look: how the stage draws it (data/fightLooks.js SPECIAL_MOVES).
 export const MOVES = {
   ricochet: { id: 'ricochet', name: 'Ricochet', reach: 3, uses: 1, when: { enemies: 2 }, look: 'ricochet' },
 };
 
 // Payloads: what a landed hit carries.
-//   dot: damage over time. A landed hit infects the target (a hit that only cracks a plate still lands: the vector gets under it).
+//   dot: damage over time. A hit that gets past the plate (damage 1 or more) and leaves the target up infects it; a hit that only cracks a
+//        plate does not (owner, 2026-11-17).
 //        `tick` pips lost at the end of each round (before the groups' flee checks, so a tick counts like any other loss), for
 //        `rounds` rounds (null: until the target dies; owner, 2026-11-16). It does not spread by itself; a re-hit does not stack
 //        and does not renew (the first infection stands).

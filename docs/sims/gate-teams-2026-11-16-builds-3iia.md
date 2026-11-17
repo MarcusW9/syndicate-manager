@@ -89,53 +89,53 @@ Same teams, same seeds; each pair differs only by the build. "Fires" is the shar
 | Job | Risk | Team | Fights | Clean win | Someone left | Downs | A death | Fires (mean round) | Vector kills / defeats | Mean rounds |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | data_pull | steady | no build | 1440 | 73% | 0% | 0.39 | 0.0% | - | - | 3.7 |
-| data_pull | steady | **built** | 1440 | 76% | 0% | 0.33 | 0.0% | 53% (1.6) | 0.31 / 0.96 | 3.7 |
+| data_pull | steady | **built** | 1440 | 77% | 0% | 0.32 | 0.0% | 53% (1.6) | 0.32 / 1.02 | 3.7 |
 | data_pull | committed | no build | 1440 | 88% | 0% | 0.59 | 0.4% | - | - | 4.0 |
-| data_pull | committed | **built** | 1440 | 92% | 0% | 0.49 | 0.5% | 57% (1.8) | 0.32 / 1.03 | 4.0 |
+| data_pull | committed | **built** | 1440 | 91% | 0% | 0.49 | 0.4% | 57% (1.8) | 0.33 / 1.10 | 4.0 |
 | data_scrub | steady | no build | 1440 | 90% | 0% | 0.14 | 0.0% | - | - | 3.9 |
-| data_scrub | steady | **built** | 1440 | 91% | 0% | 0.13 | 0.0% | 18% (2.0) | 0.10 / 0.30 | 3.9 |
+| data_scrub | steady | **built** | 1440 | 90% | 0% | 0.14 | 0.0% | 18% (2.0) | 0.04 / 0.23 | 3.9 |
 | data_scrub | committed | no build | 1440 | 95% | 0% | 0.19 | 0.3% | - | - | 4.0 |
-| data_scrub | committed | **built** | 1440 | 96% | 0% | 0.17 | 0.3% | 18% (2.0) | 0.12 / 0.31 | 4.0 |
+| data_scrub | committed | **built** | 1440 | 96% | 0% | 0.18 | 0.3% | 18% (2.0) | 0.04 / 0.23 | 4.0 |
 | quiet_hours | steady | no build | 1440 | 78% | 0% | 0.28 | 0.0% | - | - | 3.7 |
-| quiet_hours | steady | **built** | 1440 | 81% | 0% | 0.23 | 0.0% | 43% (1.9) | 0.13 / 1.02 | 3.7 |
+| quiet_hours | steady | **built** | 1440 | 81% | 0% | 0.23 | 0.0% | 43% (1.9) | 0.14 / 1.06 | 3.7 |
 | quiet_hours | committed | no build | 1440 | 94% | 0% | 0.49 | 0.6% | - | - | 4.0 |
-| quiet_hours | committed | **built** | 1440 | 95% | 0% | 0.40 | 0.5% | 47% (2.0) | 0.17 / 1.16 | 4.0 |
+| quiet_hours | committed | **built** | 1440 | 95% | 0% | 0.40 | 0.6% | 47% (2.0) | 0.18 / 1.20 | 4.0 |
 | warehouse | steady | no build | 1440 | 85% | 10% | 0.51 | 0.0% | - | - | 5.3 |
-| warehouse | steady | **built** | 1440 | 90% | 4% | 0.25 | 0.0% | 77% (1.3) | 0.54 / 2.27 | 5.1 |
+| warehouse | steady | **built** | 1440 | 90% | 5% | 0.29 | 0.0% | 82% (1.2) | 0.06 / 1.95 | 5.2 |
 | warehouse | committed | no build | 1440 | 89% | 11% | 0.46 | 3.1% | - | - | 5.3 |
-| warehouse | committed | **built** | 1440 | 94% | 5% | 0.23 | 1.2% | 77% (1.3) | 0.55 / 2.32 | 5.2 |
+| warehouse | committed | **built** | 1440 | 93% | 6% | 0.29 | 1.8% | 83% (1.2) | 0.07 / 1.98 | 5.2 |
 | protection | steady | no build | 1440 | 74% | 0% | 0.26 | 0.0% | - | - | 4.7 |
-| protection | steady | **built** | 1440 | 83% | 0% | 0.17 | 0.0% | 80% (1.4) | 0.16 / 3.32 | 3.9 |
+| protection | steady | **built** | 1440 | 84% | 0% | 0.16 | 0.0% | 83% (1.4) | 0.16 / 3.29 | 3.7 |
 | protection | committed | no build | 1440 | 89% | 0% | 0.45 | 2.3% | - | - | 5.6 |
-| protection | committed | **built** | 1440 | 94% | 0% | 0.26 | 1.5% | 86% (1.7) | 0.18 / 3.80 | 4.6 |
+| protection | committed | **built** | 1440 | 95% | 0% | 0.25 | 1.2% | 88% (1.6) | 0.18 / 3.73 | 4.3 |
 | dead_air | steady | no build | 1440 | 80% | 8% | 0.45 | 0.0% | - | - | 5.0 |
-| dead_air | steady | **built** | 1440 | 85% | 4% | 0.26 | 0.0% | 77% (1.3) | 0.18 / 2.71 | 4.9 |
+| dead_air | steady | **built** | 1440 | 86% | 4% | 0.24 | 0.0% | 85% (1.2) | 0.20 / 2.77 | 4.9 |
 | dead_air | committed | no build | 1440 | 89% | 10% | 0.46 | 3.3% | - | - | 5.2 |
-| dead_air | committed | **built** | 1440 | 95% | 5% | 0.24 | 1.6% | 77% (1.3) | 0.19 / 2.82 | 5.1 |
+| dead_air | committed | **built** | 1440 | 95% | 5% | 0.23 | 1.7% | 85% (1.2) | 0.20 / 2.84 | 5.1 |
 | still_connected | steady | no build | 1440 | 83% | 0% | 0.27 | 0.0% | - | - | 3.9 |
-| still_connected | steady | **built** | 1440 | 87% | 0% | 0.21 | 0.0% | 42% (1.5) | 0.43 / 1.32 | 3.9 |
+| still_connected | steady | **built** | 1440 | 86% | 0% | 0.23 | 0.0% | 42% (1.4) | 0.05 / 1.02 | 3.9 |
 | still_connected | committed | no build | 1440 | 88% | 0% | 0.31 | 0.0% | - | - | 4.0 |
-| still_connected | committed | **built** | 1440 | 92% | 0% | 0.24 | 0.0% | 41% (1.5) | 0.45 / 1.32 | 4.0 |
+| still_connected | committed | **built** | 1440 | 91% | 0% | 0.25 | 0.0% | 41% (1.5) | 0.05 / 1.03 | 4.0 |
 | not_for_sale | steady | no build | 1440 | 82% | 7% | 0.42 | 0.0% | - | - | 5.0 |
-| not_for_sale | steady | **built** | 1440 | 87% | 3% | 0.24 | 0.0% | 78% (1.3) | 0.16 / 2.69 | 4.9 |
+| not_for_sale | steady | **built** | 1440 | 88% | 3% | 0.22 | 0.0% | 85% (1.2) | 0.18 / 2.74 | 5.0 |
 | not_for_sale | committed | no build | 1440 | 90% | 10% | 0.47 | 2.9% | - | - | 5.2 |
-| not_for_sale | committed | **built** | 1440 | 94% | 6% | 0.27 | 1.7% | 78% (1.3) | 0.18 / 2.78 | 5.1 |
+| not_for_sale | committed | **built** | 1440 | 94% | 5% | 0.25 | 1.5% | 85% (1.2) | 0.19 / 2.85 | 5.1 |
 | one_more_song | steady | no build | 1440 | 80% | 0% | 0.30 | 0.0% | - | - | 3.8 |
-| one_more_song | steady | **built** | 1440 | 84% | 0% | 0.25 | 0.0% | 38% (1.7) | 0.37 / 0.79 | 3.8 |
+| one_more_song | steady | **built** | 1440 | 82% | 0% | 0.27 | 0.0% | 38% (1.7) | 0.05 / 0.49 | 3.8 |
 | one_more_song | committed | no build | 1440 | 90% | 0% | 0.44 | 0.1% | - | - | 4.0 |
-| one_more_song | committed | **built** | 1440 | 91% | 0% | 0.40 | 0.3% | 39% (1.7) | 0.40 / 0.81 | 4.0 |
+| one_more_song | committed | **built** | 1440 | 90% | 0% | 0.42 | 0.2% | 39% (1.7) | 0.06 / 0.51 | 4.0 |
 | still_clocked_in | steady | no build | 1440 | 66% | 0% | 0.54 | 0.0% | - | - | 3.7 |
-| still_clocked_in | steady | **built** | 1440 | 71% | 0% | 0.49 | 0.0% | 30% (1.5) | 0.24 / 0.61 | 3.8 |
+| still_clocked_in | steady | **built** | 1440 | 70% | 0% | 0.51 | 0.0% | 30% (1.5) | 0.03 / 0.43 | 3.8 |
 | still_clocked_in | committed | no build | 1440 | 75% | 0% | 0.86 | 0.6% | - | - | 4.0 |
-| still_clocked_in | committed | **built** | 1440 | 78% | 0% | 0.78 | 0.7% | 30% (1.5) | 0.24 / 0.62 | 4.0 |
+| still_clocked_in | committed | **built** | 1440 | 77% | 0% | 0.80 | 0.6% | 30% (1.5) | 0.04 / 0.45 | 4.0 |
 | the_last_collection | steady | no build | 1440 | 76% | 10% | 0.60 | 0.0% | - | - | 5.1 |
-| the_last_collection | steady | **built** | 1440 | 83% | 7% | 0.40 | 0.0% | 72% (1.3) | 0.16 / 2.69 | 5.1 |
+| the_last_collection | steady | **built** | 1440 | 84% | 6% | 0.35 | 0.0% | 81% (1.2) | 0.16 / 2.76 | 5.1 |
 | the_last_collection | committed | no build | 1440 | 86% | 13% | 0.62 | 5.4% | - | - | 5.3 |
-| the_last_collection | committed | **built** | 1440 | 91% | 8% | 0.42 | 3.8% | 75% (1.3) | 0.17 / 2.71 | 5.2 |
+| the_last_collection | committed | **built** | 1440 | 92% | 8% | 0.37 | 3.1% | 84% (1.2) | 0.17 / 2.78 | 5.2 |
 | the_wrong_fare | steady | no build | 1440 | 63% | 0% | 0.55 | 0.0% | - | - | 3.8 |
-| the_wrong_fare | steady | **built** | 1440 | 69% | 0% | 0.46 | 0.0% | 43% (1.5) | 0.42 / 1.14 | 3.8 |
+| the_wrong_fare | steady | **built** | 1440 | 67% | 0% | 0.49 | 0.0% | 43% (1.5) | 0.07 / 0.83 | 3.8 |
 | the_wrong_fare | committed | no build | 1440 | 74% | 0% | 0.69 | 0.3% | - | - | 4.0 |
-| the_wrong_fare | committed | **built** | 1440 | 81% | 0% | 0.58 | 0.3% | 42% (1.5) | 0.43 / 1.25 | 4.0 |
+| the_wrong_fare | committed | **built** | 1440 | 78% | 0% | 0.62 | 0.2% | 42% (1.5) | 0.07 / 0.92 | 4.0 |
 
 ## The counter: the same fights with every enemy a drone (at least 5), steady, best team
 
@@ -148,22 +148,22 @@ Same teams, same seeds; each pair differs only by the build. "Fires" is the shar
 | quiet_hours | no build | 1440 | 73% | 0% | 0.17 | 0.0% | - | - | 3.4 |
 | quiet_hours | **built** | 1440 | 73% | 0% | 0.16 | 0.0% | 63% (2.0) | - | 3.4 |
 | warehouse | no build | 1440 | 61% | 9% | 0.72 | 0.0% | - | - | 4.6 |
-| warehouse | **built** | 1440 | 69% | 6% | 0.50 | 0.0% | 90% (1.3) | 0.02 / 2.41 | 4.6 |
+| warehouse | **built** | 1440 | 69% | 6% | 0.49 | 0.0% | 90% (1.3) | - | 4.6 |
 | protection | no build | 1440 | 44% | 0% | 0.55 | 0.0% | - | - | 6.3 |
-| protection | **built** | 1440 | 61% | 0% | 0.38 | 0.0% | 90% (1.4) | - | 6.3 |
+| protection | **built** | 1440 | 61% | 0% | 0.38 | 0.0% | 90% (1.4) | - | 6.4 |
 | dead_air | no build | 1440 | 60% | 9% | 0.73 | 0.0% | - | - | 4.5 |
-| dead_air | **built** | 1440 | 68% | 6% | 0.54 | 0.0% | 91% (1.3) | - | 4.5 |
+| dead_air | **built** | 1440 | 68% | 7% | 0.54 | 0.0% | 91% (1.3) | - | 4.5 |
 | still_connected | no build | 1440 | 77% | 0% | 0.19 | 0.0% | - | - | 3.7 |
-| still_connected | **built** | 1440 | 78% | 0% | 0.17 | 0.0% | 53% (1.7) | 0.00 / 1.32 | 3.7 |
+| still_connected | **built** | 1440 | 78% | 0% | 0.17 | 0.0% | 53% (1.7) | - | 3.7 |
 | not_for_sale | no build | 1440 | 60% | 10% | 0.74 | 0.0% | - | - | 4.6 |
-| not_for_sale | **built** | 1440 | 68% | 6% | 0.53 | 0.0% | 91% (1.3) | - | 4.6 |
+| not_for_sale | **built** | 1440 | 68% | 7% | 0.53 | 0.0% | 91% (1.3) | - | 4.6 |
 | one_more_song | no build | 1440 | 76% | 0% | 0.15 | 0.0% | - | - | 3.5 |
-| one_more_song | **built** | 1440 | 77% | 0% | 0.14 | 0.0% | 54% (2.0) | - | 3.5 |
+| one_more_song | **built** | 1440 | 78% | 0% | 0.14 | 0.0% | 54% (2.0) | - | 3.5 |
 | still_clocked_in | no build | 1440 | 69% | 0% | 0.30 | 0.0% | - | - | 3.5 |
 | still_clocked_in | **built** | 1440 | 71% | 0% | 0.28 | 0.0% | 45% (2.0) | - | 3.5 |
 | the_last_collection | no build | 1440 | 50% | 17% | 1.04 | 0.0% | - | - | 4.7 |
-| the_last_collection | **built** | 1440 | 59% | 12% | 0.80 | 0.0% | 89% (1.3) | - | 4.7 |
+| the_last_collection | **built** | 1440 | 60% | 12% | 0.78 | 0.0% | 89% (1.3) | - | 4.7 |
 | the_wrong_fare | no build | 1440 | 71% | 0% | 0.35 | 0.0% | - | - | 3.8 |
-| the_wrong_fare | **built** | 1440 | 71% | 0% | 0.34 | 0.0% | 58% (2.0) | 0.01 / 1.45 | 3.8 |
+| the_wrong_fare | **built** | 1440 | 71% | 0% | 0.34 | 0.0% | 58% (2.0) | - | 3.8 |
 
 Limits: the campaign player is the simple one of `sim-tong.mjs` (it does not train or pick for fights); one difficulty a job, the lower end of what its runs really start; hands-off defaults, so a player giving orders or bringing overwatch does better; the best team is the planning read's pick, which a player may not send.

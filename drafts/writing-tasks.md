@@ -10,7 +10,6 @@ files. Rough lines are fine; anything off gets flagged, not silently changed.
 
 | # | Task | Needed for | Size | Source to paste |
 |---|---|---|---|---|
-| B1 | **Builds 3-ii-a wording (2026-11-16):** the names Ricochet, Cytotoxic Vector (short word "Vector") and the nine draft lines in `src/data/fightText.js` marked "Slice 3-ii-a": `bounceHit`, `bounceCrack`, `bounceOut`, `bounceMiss`, `infect`, `tick`, `tickOut`, `immune`, plus `intent.burst` and `ticks` (round screen). Keep each short and distinct. | Builds | 11 lines | `src/data/fightText.js` |
 | 1 | ~~Report lines for older crises~~ **Done 2026-10-26** (all 4 batches in the game) | Mission logs, auto-run, side tasks | — | — |
 | 2 | ~~Hand-written Container 409 mission log~~ **Done 2026-10-26: go** (see `mission-log-prototype.md`) | The go / no-go test for mission logs | — | — |
 | 3 | Action templates by stat and phase (any district) | Mission logs | ~85 templates | none |
