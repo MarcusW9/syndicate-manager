@@ -30,15 +30,27 @@ export const MOVES = {
 //        `tick` pips lost at the end of each round (before the groups' flee checks, so a tick counts like any other loss), for
 //        `rounds` rounds (null: until the target dies; owner, 2026-11-16). It does not spread by itself; a re-hit does not stack
 //        and does not renew (the first infection stands).
+//   spread: when an infected enemy goes down (a hit, a tick or the overwatch), or when the killing hit itself carries it (a one-pip enemy never lives to be infected), the infection jumps to one other enemy of its group that is up,
+//           not already infected and not immune; the jump is not a hit, so a plate does not stop it. The new infection starts with `rounds` in full
+//           and ticks from the next round (Contagion, slice 3-iii, 2026-11-17; draft numbers).
 //   immune: enemy tags (data/fights.js ENEMIES `foeTags`) that shrug it off.
+//   family: payloads of one family are variations of the same thing and share the slot, so a runner picks one (the vectors: Cytotoxic holds on one target until it falls; Contagion burns out sooner but jumps).
 //   word: the short log word.
 //   Earning (slice 3-ii-b): slot 'payload', needs and the draft wording, as for a move.
 export const PAYLOADS = {
   cytotoxic: {
-    id: 'cytotoxic', name: 'Cytotoxic Vector', word: 'Vector', dot: { tick: 1, rounds: null }, immune: ['synthetic'],
+    id: 'cytotoxic', name: 'Cytotoxic Vector', family: 'vector', word: 'Vector', dot: { tick: 1, rounds: null }, immune: ['synthetic'],
     slot: 'payload', needs: {},
     desc: 'A hit that gets past the armour infects: the target loses a pip every round until it falls. Machines shrug it off.',
     offer: 'There is a chemist on the Basin side who sells something nasty for the rounds. {op} could carry it: slow, and it does not stop.',
+  },
+  // Contagion Vector (draft, 2026-11-17): the owner's bio weapon (PROPOSAL-swarm-and-special-moves.md 2.3), a variation of the Cytotoxic Vector (family 'vector'): the same slot, so a
+  // runner picks one. It trades staying power for reach: the infection burns out after `rounds` rounds, but it jumps when its host falls.
+  contagion: {
+    id: 'contagion', name: 'Contagion Vector', family: 'vector', word: 'Contagion', dot: { tick: 1, rounds: 2 }, spread: true, immune: ['synthetic'],
+    slot: 'payload', needs: { medical: 8 },
+    desc: 'A hit that gets past the armour infects: the target loses a pip a round for two rounds. When an infected enemy falls, the infection jumps to another in its group. Machines shrug it off.',
+    offer: 'The chemist has a second vector, a stranger one that passes from body to body. {op} has the steady hands to carry it. It burns out fast, but it will not stay in one place. It takes the same place as the other vector, so it is one or the other.',
   },
 };
 

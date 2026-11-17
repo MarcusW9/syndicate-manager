@@ -22,7 +22,7 @@ import { SPECIAL_MOVES, SPECIAL_FAST_CUT, SPECIAL_LOOK_DEFAULT, ENEMY_LOOKS } fr
 export const PACE_K = { watch: 1, fast: 0.6, resolve: 0 };
 export const PACES = ['fast', 'watch', 'resolve'];
 // Step lengths at Watch, in ms.
-const MS = { enter: 900, move: 600, lean: 320, fire: 240, gap: 160, heal: 450, ping: 450, flank: 450, settle: 600 };
+const MS = { enter: 900, move: 600, lean: 320, fire: 240, gap: 160, heal: 450, aura: 1100, ping: 450, flank: 450, settle: 600 };
 const HIDDEN = new Set(['aboard', 'gone', 'fled']);
 
 const mid = (a, b) => [Math.round((a[0] + b[0]) / 2), Math.round((a[1] + b[1]) / 2)];
@@ -156,8 +156,14 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
       push({ do: 'fire', from: enemyId(l.guard), to: l.targetId, hit: (l.damage ?? 0) > 0, absorbed: l.key === 'shotAbsorbed', fell, dead: l.key === 'shotDead', damage: l.damage ?? 0, wide, foe: true, dur: ms(MS.fire) });
       adv(MS.fire + MS.gap);
     } else if (['stabilise', 'patch', 'aura'].includes(rule) && l.targetId) {
-      push({ do: 'heal', id: l.targetId, by: l.actor, ok: rule === 'aura' || !!l.success, dur: ms(MS.heal) });
-      adv(MS.heal);
+      // A medic's help that lands (the aura, a patch, a stabilise) is one picture: the medic glows and flashes, an orb crosses to the patient, the pip fills. A miss is the red ring.
+      if (rule === 'aura' || l.success) {
+        push({ do: 'aura', id: l.actor, to: l.targetId, left: l.left, max: l.max, dur: ms(MS.aura) });
+        adv(MS.aura);
+      } else {
+        push({ do: 'heal', id: l.targetId, by: l.actor, ok: false, dur: ms(MS.heal) });
+        adv(MS.heal);
+      }
     } else if (rule === 'jam' && l.actor) {
       push({ do: 'ping', id: l.actor, ok: l.key === 'jamOk', dur: ms(MS.ping) });
       adv(MS.ping);
@@ -514,6 +520,26 @@ export function createStage(svg, deps) {
       }
       case 'flank': { const b = pos(s.id); flash(b, 'sp-flash--miss'); float(b, word('stage.flanked'), 'is-hit'); break; }
       case 'heal': { const b = pos(s.id); if (b) { const c = node('circle', { class: `sp-ring ${s.ok ? 'sp-ring--ok' : 'sp-ring--bad'}`, cx: b[0], cy: b[1], r: 9 }); fx.append(c); setTimeout(() => c.remove(), Math.max(400, s.dur)); } break; }
+      case 'aura': {
+        // The medic's aura (2026-11-17): a green glow grows round the medic and flashes, an orb crosses to the patient, and where it lands the ring bursts, a +1 floats and the pip fills.
+        const m = pos(s.id); const t = pos(s.to);
+        if (!t) break;
+        const land = () => { flash(t, 'sp-flash--heal'); float(t, '+', 'is-heal'); if (s.left != null && s.max) { pips(s.to, s.left, s.max); const bar = host(s.to)?.querySelector(':scope > .fs-pips'); if (bar) { bar.classList.add('is-gain'); setTimeout(() => bar.classList.remove('is-gain'), 800); } } };
+        if (!m || deps.reduced() || s.dur <= 0) { land(); break; }
+        const dur = Math.max(700, s.dur);
+        const glow = gone(node('circle', { class: 'fs-aura', cx: m[0], cy: m[1], r: 9 }), dur * 0.62);
+        glow.style.animationDuration = `${dur * 0.6}ms`;
+        const glow2 = gone(node('circle', { class: 'fs-aura fs-aura--late', cx: m[0], cy: m[1], r: 9 }), dur * 0.7); // a second ring a beat behind: the glow pulses
+        glow2.style.animationDuration = `${dur * 0.6}ms`; glow2.style.animationDelay = `${dur * 0.1}ms`;
+        if (s.to === s.id) { setTimeout(() => { gone(node('circle', { class: 'sp-ring sp-ring--ok', cx: t[0], cy: t[1], r: 9 }), 760); land(); }, dur * 0.55); break; } // healing themself: nothing crosses
+        setTimeout(() => {
+          const orb = gone(node('circle', { class: 'fs-orb', cx: m[0], cy: m[1], r: 2.2 }), dur * 0.45);
+          orb.style.transition = `transform ${dur * 0.3}ms ease-in`;
+          requestAnimationFrame(() => { orb.style.transform = `translate(${t[0] - m[0]}px, ${t[1] - m[1]}px)`; });
+        }, dur * 0.5);
+        setTimeout(() => { gone(node('circle', { class: 'sp-ring sp-ring--ok', cx: t[0], cy: t[1], r: 9 }), 760); land(); }, dur * 0.8);
+        break;
+      }
       case 'ping': { const b = pos(s.id); if (b) { const c = node('circle', { class: `fs-ping ${s.ok ? 'is-ok' : ''}`, cx: b[0], cy: b[1], r: 6 }); fx.append(c); setTimeout(() => c.remove(), Math.max(400, s.dur)); } break; }
       case 'fall': { const b = pos(s.id); setStance(s.id, s.dead ? 'dead' : 'down'); if (drawn[s.id]) drawn[s.id] = { ...drawn[s.id], stance: s.dead ? 'dead' : 'down' }; if (b) body(b, s.id); break; }
       case 'leave': { const g = host(s.id); put(g, s.at, s.dur); setTimeout(() => setStance(s.id, s.stance, true), s.dur); if (!s.id.startsWith('e:')) deps.pin(s.id, null); drawn[s.id] = { at: s.at, stance: s.stance }; break; }

@@ -13,6 +13,7 @@ import * as F from '../src/core/fight.js';
 import { roundView, planView, riskWords, RISK_ORDER, orderChoices, lossLine } from '../src/core/fightview.js';
 import { lineText, chanceWord, pipsWord } from '../src/core/fighttext.js';
 import { coverage } from '../src/core/squad.js';
+import { withBuild } from '../src/core/builds.js';
 import { FIGHT } from '../src/data/fights.js';
 import { renderFightRound, renderFightCallIn, renderFightPlan, fightScreenTap, takeFightChange } from '../src/ui/fightscreen.js';
 
@@ -148,6 +149,32 @@ test('the plan view: type line, likely enemies, gaps from the crew, orders and t
   assert.ok(g.gaps.some((x) => /No jammer/.test(x)), 'nobody can jam: radio calls can only be stopped by hitting the caller');
 });
 
+test('the planning read\'s build advice: none without a build; Joss warns when a payload is blocked and says why; closed to start, a tap opens the breakdown', () => {
+  const tpl = templateById('data_pull');
+  const crew = createNewGame({ seed: 3, startCrew: 'fresh' }).crew.slice(0, tpl.crewSize);
+  const cov = coverage(tpl, crew, 'loud', { threat: tpl.threat });
+  assert.equal(planView(cov.fight2, 'steady').build, null, 'no builds on the squad: nothing to advise on');
+  const built = withBuild(crew);
+  const at = (site) => planView({ ...cov.fight2, crew: built, site, threat: 5 }, 'steady').build;
+  const drones = at('heights');
+  assert.ok(drones, 'a squad with a build gets the read');
+  assert.match(drones.advice, /Cytotoxic Vector can't hurt the drones, because they are machines\. A tech who can jam them would help\./, 'the Vector is blocked by the machines tag, and Joss says what counters it');
+  assert.ok(drones.threats.some((t) => /drones/.test(t.title) && /machines/.test(t.text)));
+  assert.ok(drones.answers[0].tags.includes('Ricochet') && /no effect on the drones/.test(drones.answers[0].text));
+  const docks = at('docks');
+  assert.doesNotMatch(docks.advice, /can't hurt/, 'hired guns and enforcers carry no tags, so nothing is blocked');
+  assert.match(docks.advice, /Tap to see why/);
+  // The screen: the advice shows closed; the breakdown only once opened.
+  const args = { ...cov.fight2, crew: built, site: 'heights', threat: 5 };
+  const closed = renderFightPlan(esc, args, 'steady');
+  assert.match(closed, /data-action="fight-advice" aria-expanded="false"/);
+  assert.doesNotMatch(closed, /What you'll be up against/);
+  const open = renderFightPlan(esc, args, 'steady', { adviceOpen: true });
+  assert.match(open, /aria-expanded="true"/);
+  assert.match(open, /What you'll be up against/);
+  assert.match(open, /What your squad can do about it/);
+});
+
 test('changing a holdExtract runner\'s duty edits the stage they are in and keeps the switch to boarding', () => {
   const s = find('warehouse', (x) => inFight(x) && x.activeMission.battle.type === 'holdExtract' && x.activeMission.battle.stage === 0);
   assert.ok(s);
@@ -200,7 +227,7 @@ test('Change orders: pick a runner and a duty, and Next round carries the change
   assert.ok(html.includes('(yours, next round)') && html.includes('from next round'));
   const change = takeFightChange(am);
   assert.equal(change.risk, 'committed');
-  assert.equal(change.orders[id].duty, 'hold');
+  assert.equal((change.orders[id].byStage?.[am.battle.stage] ?? change.orders[id]).duty, 'hold', 'the change is written into the stage the fight is in');
   const next = M.runBattle(s, change);
   const nb = next.activeMission.battle;
   assert.ok(nb, 'the fight goes on');

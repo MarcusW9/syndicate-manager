@@ -293,3 +293,17 @@ test('ambient life is seeded, stays on its spot, and its fire never lands or inv
   }
   assert.ok(shots > 20, `${shots} ambient shots`);
 });
+
+test('the medic\'s aura is drawn: every aura line is one aura step (the medic, the patient, the pip it fills), and it is never a quiet ring', () => {
+  let auras = 0;
+  for (const f of fights) {
+    const lines = f.cues.flatMap((c) => (c.lines ?? []).filter((l) => l.kind === 'aura' || l.key === 'aura'));
+    for (const l of lines) assert.ok(l.actor && l.targetId && l.left != null && l.max, `${f.id} ${f.seed}: the aura line carries what the stage draws`);
+    const steps = play(f.cues, 'watch').flatMap((sc) => sc.steps.filter((s) => s.do === 'aura'));
+    assert.equal(steps.length, lines.length, `${f.id} ${f.seed}: one aura step a line`);
+    for (const s of steps) assert.ok(s.id && s.to && s.dur > 0);
+    auras += steps.length;
+    for (const sc of play(f.cues, 'resolve')) for (const s of sc.steps.filter((x) => x.do === 'aura')) assert.equal(s.dur, 0, 'Resolve cuts it');
+  }
+  assert.ok(auras > 0, 'some fight in the sample had a medic heal someone');
+});

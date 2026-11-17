@@ -1021,5 +1021,11 @@ function migrate(state) {
     for (const op of state.crew ?? []) { op.build ??= null; op.buildAt ??= null; op.buildSnooze ??= 0; }
     state.version = 75;
   }
+  if (state.version === 75) {
+    // v76: the way out of a hack (DESIGN.md 2026-11-17). A hack fight now carries `wayOut` (the kinds that come in when the work is done) and its
+    // orders a stage plan. A fight already in progress has neither and still ends with the hack, so nothing is rewritten: its run finishes
+    // the way it began, and the next fight is built with the way out.
+    state.version = 76;
+  }
   return state;
 }

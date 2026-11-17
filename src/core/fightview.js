@@ -8,7 +8,9 @@
 import * as F from './fight.js';
 import { makeRng } from './rng.js';
 import { FIGHT } from '../data/fights.js';
-import { SITE_ENEMIES } from '../data/fights.js';
+import { SITE_ENEMIES, ENEMIES } from '../data/fights.js';
+import { MOVES, PAYLOADS } from '../data/builds.js';
+import { immuneTo } from './builds.js';
 import { lineText, kindWord, kindPlural, enemyName, chanceWord, pipsWord, nameList } from './fighttext.js';
 
 const handleOf = (b, id) => b.runners.find((r) => r.id === id)?.handle ?? id;
@@ -73,6 +75,7 @@ function threatOf(b, t, exp) {
 
 /** Where the objective stands: the goal track and the clocks, as plain numbers (the screen draws them). */
 function goalOf(b) {
+  if (b.type === 'holdHack' && b.stage === 1) return { type: 'wayOut', round: b.round, up: b.enemies.filter((e) => !e.out && !e.fled).length, coming: b.arriving.length };
   if (b.type === 'holdHack') {
     const tech = b.goal.protect ? handleOf(b, b.goal.protect) : null;
     return { type: 'hack', work: b.goal.work, needed: FIGHT.workNeeded, alarm: b.clock, deadline: b.deadline, tech, round: b.round };
@@ -131,7 +134,7 @@ export function orderChoices(b, r) {
   duties.push({ duty: 'protect', label: 'Protect', targets: [{ id: null, label: b.goal.protect && b.goal.protect !== r.id ? `${handleOf(b, b.goal.protect)} (the tech)` : 'The weakest' }, ...others.filter((x) => x.id !== b.goal.protect)] });
   duties.push({ duty: 'support', label: 'Support', targets: [] });
   duties.push({ duty: 'hold', label: 'Hold', targets: [] });
-  if (b.type === 'holdHack' ? r.id === b.goal.protect : b.stage === 1) duties.push({ duty: 'push', label: b.type === 'holdHack' ? 'Work the hack' : 'Board the van', targets: [] });
+  if (b.type === 'holdHack' ? r.id === b.goal.protect && b.stage === 0 : b.stage === 1) duties.push({ duty: 'push', label: b.type === 'holdHack' ? 'Work the hack' : 'Board the van', targets: [] });
   duties.push({ duty: 'withdraw', label: 'Pull out', targets: [] });
   return duties;
 }
@@ -171,7 +174,58 @@ export function planView(args, risk = 'steady') {
     risk,
     odds,
     loss: Object.fromEntries(RISK_ORDER.map((level) => [level, lossLine(odds[level])])),
+    build: buildRead(b),
   };
+}
+
+/**
+ * The planning read's build advice (builds slice 3-iii, 2026-11-17): Joss's one line, and the breakdown behind it (what the
+ * fight throws, what each build can do about it). Read from the same sample fight and the same data the rules use (`foeTags`,
+ * `absorb`, a payload's `immune`, a move's `when`/`reach`), so the advice never disagrees with the fight. Null when nobody on
+ * the squad carries a build: there is nothing to advise on.
+ */
+export function buildRead(b) {
+  const built = b.runners.filter((r) => r.build && (r.build.move || r.build.payload));
+  if (!built.length) return null;
+  const names = (ids) => nameList(ids);
+  const kindCount = {};
+  for (const e of b.enemies) kindCount[e.kind] = (kindCount[e.kind] ?? 0) + 1;
+  const kinds = Object.keys(kindCount);
+  const plural = (list) => names(list.map(kindPlural));
+  const counted = (list) => names(list.map((k) => `${kindCount[k]} ${kindCount[k] === 1 ? kindWord(k) : kindPlural(k)}`));
+  const upAtOnce = b.enemies.length;
+  const threats = [];
+  if (upAtOnce >= 2) threats.push({ title: lineText('build.threat.group', { n: upAtOnce }), text: lineText('build.threat.group.text') });
+  const withTag = (tag) => kinds.filter((k) => (ENEMIES[k]?.foeTags ?? []).includes(tag));
+  const machines = withTag('synthetic');
+  if (machines.length) threats.push({ title: lineText('build.threat.synthetic', { kinds: counted(machines) }), text: lineText('build.threat.synthetic.text') });
+  const armoured = kinds.filter((k) => (ENEMIES[k]?.absorb ?? 0) > 0);
+  if (armoured.length) threats.push({ title: lineText('build.threat.armoured', { kinds: counted(armoured) }), text: lineText('build.threat.armoured.text') });
+
+  let blocked = null; let used = false;
+  const answers = built.map((r) => {
+    const m = MOVES[r.build.move]; const pl = PAYLOADS[r.build.payload];
+    const lines = [];
+    if (m) {
+      const ok = upAtOnce >= (m.when?.enemies ?? 1);
+      used = used || ok;
+      lines.push(ok ? lineText('build.answer.move.fits', { piece: m.name, reach: m.reach }) : lineText('build.answer.move.few', { piece: m.name, need: m.when?.enemies ?? 1 }));
+    }
+    if (pl) {
+      const no = kinds.filter((k) => immuneTo(k, pl.id)); const yes = kinds.filter((k) => !no.includes(k));
+      if (yes.length) { lines.push(lineText('build.answer.payload.works', { piece: pl.name, kinds: plural(yes) })); used = true; }
+      if (no.length) { lines.push(lineText('build.answer.payload.blocked', { piece: pl.name, kinds: plural(no) })); blocked = blocked ?? { r, pl, no }; }
+    }
+    return { id: r.id, handle: r.handle, tags: [m?.name, pl?.name].filter(Boolean), text: lines.join(' ') };
+  });
+  const who = nameList(built.map((r) => r.handle));
+  const pieces = nameList(built.flatMap((r) => [MOVES[r.build.move]?.name, PAYLOADS[r.build.payload]?.name]).filter(Boolean));
+  let advice;
+  if (blocked) {
+    const tag = (ENEMIES[blocked.no[0]]?.foeTags ?? []).find((t) => PAYLOADS[blocked.pl.id].immune.includes(t));
+    advice = lineText('build.advice.blocked', { who: blocked.r.handle, piece: blocked.pl.name, kinds: plural(blocked.no), why: lineText(`build.why.${tag}`).replace(/^./, (c) => c.toLowerCase()), counter: lineText(`build.counter.${tag}`) });
+  } else advice = lineText(used ? 'build.advice.fits' : 'build.advice.nothing', { who, pieces });
+  return { advice, threats, answers };
 }
 
 /** The chance of losing someone (dead or left behind) as a line; zero says so, as a forecast and not a promise. */

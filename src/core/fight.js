@@ -154,6 +154,8 @@ export function buildFight({ type, diff, threat = 3, site = 'docks', opposition 
     newEnemy(b, kinds[Math.floor(rng() * kinds.length)], rng);
     for (let i = 1; i < count + force.extra; i++) newEnemy(b, force.grunt, rng);
   } else for (let i = 0; i < count; i++) newEnemy(b, kinds[Math.floor(rng() * kinds.length)], rng);
+  // The way out (2026-11-17): when the hack is done the alarm brings the opening force's like again, and the fight is won only when they are beaten. A fight saved before this has no `wayOut` and still ends with the hack.
+  if (type === 'holdHack') b.wayOut = b.enemies.map((e) => e.kind).slice(0, Math.max(1, Math.ceil(b.enemies.length * FIGHT.wayOutShare)));
   b.orders = defaultOrders(b);
   // The showcase seed (0b): the build's last draw, so it moves no other roll. Showcase rolls are a pure hash of it.
   b.showcaseSeed = Math.floor(rng() * 2 ** 32);
@@ -184,10 +186,15 @@ export const bestProtector = (b) => toughest(b, b.runners.filter((r) => r.id !==
  */
 export function defaultOrderFor(b, r) {
   if (b.type === 'holdHack') {
-    if (r.id === b.goal.protect) return order('push', null, fb('hold'));
-    const guards = toughest(b, b.runners.filter((x) => x.id !== b.goal.protect)).slice(0, 2).map((x) => x.id);
-    if (guards.includes(r.id)) return order('protect', 'protected', fb('attack'));
-    return capableSupport(r) ? order('support', null, fb('protect', 'protected')) : order('attack', null, fb('protect', 'protected'));
+    // Stage 0 the hack, stage 1 the way out (everyone attacks: the work is done and nobody has anyone to cover).
+    const hack = (() => {
+      if (r.id === b.goal.protect) return order('push', null, fb('hold'));
+      const guards = toughest(b, b.runners.filter((x) => x.id !== b.goal.protect)).slice(0, 2).map((x) => x.id);
+      if (guards.includes(r.id)) return order('protect', 'protected', fb('attack'));
+      return capableSupport(r) ? order('support', null, fb('protect', 'protected')) : order('attack', null, fb('protect', 'protected'));
+    })();
+    hack.byStage = { 0: { ...hack, byStage: null }, 1: order('attack', null, fb('hold'), ['low', 'radio']) };
+    return hack;
   }
   const prot = bestProtector(b)?.id === r.id;
   const o = order('attack', null, fb('hold'), ['low', 'radio']);
@@ -706,6 +713,17 @@ export function playRound(b, rng) {
   const result = { lines, actions: [], unanswered: [], defeated, goalDelta: 0, down, fled, withdrawn, heat: 0, neural: 0, ended: null };
   if (!b.drawn) lines.push(...startRound(b, rng));
   const say = (kind, key, slots = {}, extra = {}) => { const l = { kind, key, slots, ...extra, text: lineText(key, slots) }; lines.push(l); return l; };
+  // Contagion (slice 3-iii, 2026-11-17): when an infected enemy goes down, a payload that `spread`s jumps to the first other enemy of its group that is
+  // up, not infected and not immune (the rules' order, no roll). Not a hit, so a plate does not stop it; it starts in full and ticks next round.
+  const spreadFrom = (e, inf = e.infected) => {
+    const pay = PAYLOADS[inf?.payload];
+    if (!pay?.spread) return;
+    const t = enemiesUp(b).find((x) => x.n !== e.n && (x.group ?? 0) === (e.group ?? 0) && !x.infected && !immuneTo(x.kind, pay.id));
+    if (!t) return;
+    t.infected = { tick: pay.dot.tick, left: pay.dot.rounds, by: inf.by, round: b.round, payload: pay.id };
+    say('spread', 'spread', { enemy: E(e.n), to: E(t.n), word: pay.word }, { enemy: t.n, from: e.n, payload: pay.id });
+  };
+
   const E = (n) => enemyName(b.enemies.find((x) => x.n === n).kind, n);
 
   const vl = vanDecision(b);
@@ -740,11 +758,16 @@ export function playRound(b, rng) {
         const cracked = e.absorb > 0;
         if (cracked) { e.absorb -= 1; dmg -= 1; }
         e.pips -= dmg;
-        if (e.pips <= 0) { e.out = true; defeated.push({ by: ow.id, enemy: e.n, how: 'overwatch' }); say('overwatch', 'overwatchOut', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, dropped: true, roll: rollOf(x), cracked }); }
+        if (e.pips <= 0) { e.out = true; defeated.push({ by: ow.id, enemy: e.n, how: 'overwatch' }); say('overwatch', 'overwatchOut', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, dropped: true, roll: rollOf(x), cracked }); spreadFrom(e); }
         else say('overwatch', dmg === 0 ? 'overwatchCrack' : 'overwatchHit', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, roll: rollOf(x), left: e.pips, cracked });
       }
     }
   }
+
+  // The hit that drops an enemy counts as carrying the payload in (2026-11-17): a spreading payload (Contagion) on the killing hit infects the one it
+  // kills for an instant, so it jumps at once, even from a one-pip enemy that never lives to be infected. A machine shrugs it off; a hit that only
+  // cracks a plate does not kill, so it never gets here.
+  const carried = (r, e) => { const pay = PAYLOADS[r.build?.payload]; return pay?.spread && !immuneTo(e.kind, pay.id) ? { payload: pay.id, by: r.id } : null; };
 
   // A runner's attack on an enemy: the roll, the damage, and what the hit carries. `burst`: one bounce of a move (its own lines, flagged
   // so the stage draws the run of them as the move's look). A bounce on someone already gone is skipped (the overwatch may have got there).
@@ -760,7 +783,7 @@ export function playRound(b, rng) {
     const cracked = e.absorb > 0 && !r.ap; // the plate took a hit: a plain shot only cracks it (damage 0), a strong one cracks it and drops a pip
     if (cracked) { e.absorb -= 1; dmg -= 1; }
     e.pips -= dmg;
-    if (e.pips <= 0) { e.out = true; defeated.push({ by: r.id, enemy: e.n, how: burst ? 'burst' : 'attack' }); say('attack', k('attackOut'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, dropped: true, roll: rollOf(x), strong: x.strong, cracked }); return; }
+    if (e.pips <= 0) { e.out = true; defeated.push({ by: r.id, enemy: e.n, how: burst ? 'burst' : 'attack' }); say('attack', k('attackOut'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, dropped: true, roll: rollOf(x), strong: x.strong, cracked }); spreadFrom(e, carried(r, e) ?? e.infected); return; }
     say('attack', dmg === 0 ? k('attackCrack') : k('attackHit'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, roll: rollOf(x), left: e.pips, cracked });
     // What the hit carries (data/builds.js PAYLOADS): a hit that gets past the plate and leaves the target up infects it, unless the target shrugs it off
     // (a tag the payload is immune to; said once a body). An infected body is not infected again.
@@ -887,7 +910,7 @@ export function playRound(b, rng) {
     const inf = e.infected;
     e.pips -= inf.tick;
     if (inf.left != null && (inf.left -= 1) <= 0) e.infected = null;
-    if (e.pips <= 0) { e.out = true; e.infected = null; defeated.push({ by: inf.by, enemy: e.n, how: 'vector' }); say('tick', 'tickOut', { enemy: E(e.n), word: PAYLOADS[inf.payload]?.word ?? 'Vector' }, { enemy: e.n, damage: inf.tick, dropped: true }); }
+    if (e.pips <= 0) { e.out = true; e.infected = null; defeated.push({ by: inf.by, enemy: e.n, how: 'vector' }); say('tick', 'tickOut', { enemy: E(e.n), word: PAYLOADS[inf.payload]?.word ?? 'Vector' }, { enemy: e.n, damage: inf.tick, dropped: true }); spreadFrom(e, inf); }
     else say('tick', 'tick', { enemy: E(e.n), word: PAYLOADS[inf.payload]?.word ?? 'Vector' }, { enemy: e.n, damage: inf.tick, left: e.pips });
   }
   // 3c: the hired and the standard force break and run per group, when too few of that group are left (hired's threshold).
@@ -904,7 +927,7 @@ export function playRound(b, rng) {
   if (aura) {
     const hurt = standing(b).filter((r) => r.pips < r.max).sort((x, y) => x.pips / x.max - y.pips / y.max || bySeat(x, y))[0];
     const medic = b.runners.find((r) => r.medic && present(r));
-    if (hurt) { hurt.pips += FIGHT.medicAura.heal; say('aura', 'aura', { who: medic.handle, target: hurt.handle }, { actor: medic.id, target: hurt.id }); }
+    if (hurt) { hurt.pips += FIGHT.medicAura.heal; say('aura', 'aura', { who: medic.handle, target: hurt.handle }, { actor: medic.id, target: hurt.id, targetId: hurt.id, left: hurt.pips, max: hurt.max }); } // targetId, left and max are what the stage draws (the medic's glow, the orb, the pip filling)
   }
   // Bleeding out: only on committed (or a runner pushed on by hand); from the second round after going down.
   if (!aura) {
@@ -917,6 +940,11 @@ export function playRound(b, rng) {
 
   // Progress, then the van, then the clocks.
   if (workBy && present(workBy)) { b.goal.work += 1; result.goalDelta = 1; }
+  // The hack is done: the alarm brings the opening force's like in again (they arrive together next round), and the way out begins. The work is finished, so the tech stops being the one to cover.
+  if (b.type === 'holdHack' && b.wayOut && b.stage === 0 && b.goal.work >= FIGHT.workNeeded) {
+    b.stage = 1; b.arriving.push(...b.wayOut);
+    say('wayOut', 'wayOut', { n: b.wayOut.length });
+  }
   for (const r of boards) if (!r.down && !r.dead) { r.aboard = true; say('van', 'inVan', { who: r.handle }, { actor: r.id }); result.goalDelta += 1; }
   for (const c of carries) if (c.by.aboard) { c.t.aboard = true; say('van', 'carriedInVan', { target: c.t.handle }, { target: c.t.id }); }
   if (b.type === 'holdHack') {
@@ -942,12 +970,32 @@ export function playRound(b, rng) {
 
 // --- the end ---------------------------------------------------------------------------------------
 
+/** The fight's objective is done: won, or (a hack) broken off on the way out, with the work already finished. The planning odds' `win` and the run's pay read the same thing. */
+export const objectiveDone = (b) => b.end?.result === 'won' || (b.end?.result === 'extracted' && b.type === 'holdHack' && b.stage === 1);
+
 function finish(b, result, key, slots = {}) { b.end = { result, key, text: lineText(key, slots), slots }; return b.end; }
 
 /** The end checks of a round (spec 15), in the sim's order; sets b.end. Draws only for a runner left behind down on committed. */
 function checkEnd(b, rng, say) {
   const prot = b.goal.protect ? runner(b, b.goal.protect) : null;
-  if (b.type === 'holdHack' && b.goal.work >= FIGHT.workNeeded) return finish(b, 'won', 'end.won');
+  // The medic's hands on the way out (2026-11-17): before the crew leaves a hack's way out, a healer still standing gets one stabilise roll for each runner who is down, so
+  // a runner a medic reaches does not come home with the serious injury. Without a healer standing nothing changes. The roll is the stabilise action's own.
+  const treatWayOut = () => {
+    const healer = b.runners.filter((x) => x.healer && present(x)).sort((x, y) => sv(y, 'medical') - sv(x, 'medical') || bySeat(x, y))[0];
+    const hurt = healer ? standing(b).filter((x) => x.pips < x.max) : [];
+    for (const x of hurt) x.pips = Math.min(x.max, x.pips + FIGHT.wayOutTreatHeal);
+    if (hurt.length) say('patch', 'wayOutPatch', { who: healer.handle, n: hurt.length }, { actor: healer.id, targets: hurt.map((x) => x.id), heal: FIGHT.wayOutTreatHeal });
+    for (const t of b.runners.filter((x) => x.down && !x.stable && !x.dead && !x.withdrawn)) {
+      const medic = b.runners.filter((x) => x.healer && present(x)).sort((x, y) => sv(y, 'medical') - sv(x, 'medical') || bySeat(x, y))[0];
+      if (!medic) return;
+      const value = sv(medic, 'medical'); const die = d20(rng); const need = 10 + b.diff + FIGHT.wayOutTreatStep; const ok = die + value >= need;
+      if (ok) t.stable = true;
+      say('stabilise', ok ? 'stabiliseWayOut' : 'stabiliseFail', { who: medic.handle, target: t.handle }, { actor: medic.id, target: t.id, targetId: t.id, success: ok, roll: { die, need, value, success: ok } });
+    }
+  };
+  if (b.type === 'holdHack' && b.goal.work >= FIGHT.workNeeded && !b.wayOut) return finish(b, 'won', 'end.won');
+  // The way out: won by rout, every enemy out or fled and none on the way (as the yard is).
+  if (b.type === 'holdHack' && b.stage === 1 && !enemiesUp(b).length && !b.arriving.length) { treatWayOut(); return finish(b, 'won', 'end.wayOutWon'); }
   // The yard: won by rout, every enemy out or fled and none on the way (the pressure clock may still bring more before then).
   if (b.type === 'holdYard' && !enemiesUp(b).length && !b.arriving.length) return finish(b, 'won', 'end.routed');
   // The hall: won by rout, or held when the raiders back off at the round cap with the door still ours.
@@ -957,11 +1005,15 @@ function checkEnd(b, rng, say) {
     const lost = b.runners.filter((r) => r.dead || r.withdrawn);
     return lost.length ? finish(b, 'lostRunner', 'end.lostRunner', { who: nameList(lost.map((r) => r.handle)) }) : finish(b, 'won', 'end.won');
   }
-  if (prot && (prot.down || prot.dead)) return finish(b, 'lost', 'end.lost', { who: prot.handle });
-  if (prot && prot.withdrawn) return finish(b, 'abandoned', 'end.abandoned', { who: prot.handle });
+  const techMatters = !(b.type === 'holdHack' && b.stage === 1); // on the way out the work is done: the tech is one of the crew
+  if (prot && techMatters && (prot.down || prot.dead)) return finish(b, 'lost', 'end.lost', { who: prot.handle });
+  if (prot && techMatters && prot.withdrawn) return finish(b, 'abandoned', 'end.abandoned', { who: prot.handle });
   const outside = outsideDown(b);
   // Someone down whom nobody has chosen to fight on for pulls the crew back (a watched crew is asked first, runfight.js); a runner already pushed on for does not.
-  if (!boardingStage(b) && !committed(b) && b.runners.some((r) => r.down && !r.dead && !r.fightOn)) return finish(b, 'extracted', 'end.extracted');
+  if (!boardingStage(b) && !committed(b) && b.runners.some((r) => r.down && !r.dead && !r.fightOn)) {
+    if (b.type === 'holdHack' && b.stage === 1) { treatWayOut(); return finish(b, 'extracted', 'end.wayOutPulled'); }
+    return finish(b, 'extracted', 'end.extracted');
+  }
   const leave = (who) => {
     // Left behind: standing or down, they are missing (spec 8). On committed a runner left down may not make it.
     for (const r of who) { r.left = true; b.left.push(r.id); }
@@ -973,7 +1025,7 @@ function checkEnd(b, rng, say) {
   const someoneCanGoBack = boardingStage(b) && outside.length && b.runners.some((r) => r.aboard && !r.down && !r.dead);
   if (!standing(b).length && !someoneCanGoBack) return finish(b, 'gone', 'end.gone');
   if (boardingStage(b) && b.round >= b.goal.vanLeaves) return leave([...standing(b), ...outside]);
-  if (b.deadline && b.round >= b.deadline && b.type === 'holdHack') return finish(b, 'deadline', 'end.deadline');
+  if (b.deadline && b.round >= b.deadline && b.type === 'holdHack' && b.stage === 0) return finish(b, 'deadline', 'end.deadline');
   return null;
 }
 
@@ -1133,7 +1185,7 @@ export function stepTally(t, k = Infinity) {
     const b = structuredClone(b0);
     b.showcaseSeed = hash('odds', i); // reseeded, never drawn, and so not in the cache key
     playFight(b, makeRng(0x5eed + i * 7919));
-    if (b.end.result === 'won') n.win += 1;
+    if (objectiveDone(b)) n.win += 1;
     if (b.runners.some((r) => r.down || r.dead)) n.down += 1;
     if (b.runners.some((r) => r.dead)) n.dead += 1;
     if (b.left.length) n.left += 1;

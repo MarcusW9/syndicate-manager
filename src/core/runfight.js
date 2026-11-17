@@ -70,7 +70,7 @@ const CUE = { attack: 'shoot', shot: 'guard', overwatch: 'overwatch', stabilise:
 const feedLine = (l) => ({
   kind: CUE[l.kind] ?? 'note', rule: l.kind, key: l.key ?? null, slots: l.slots ?? {}, text: l.text, actor: l.actor ? { id: l.actor, handle: l.actor } : null, guard: l.enemy ?? null, targetId: l.targetId ?? (typeof l.target === 'string' ? l.target : null),
   ...(l.burst ? { burst: true } : {}), ...(l.cracked ? { cracked: true } : {}), ...(l.at ? { at: l.at } : {}),
-  success: l.success ?? null, damage: l.damage ?? 0, heal: l.heal ?? 0, kit: l.kit ?? null, dropped: !!l.dropped, ...(l.roll ? { die: l.roll.die, need: l.roll.need, value: l.roll.value } : {}),
+  success: l.success ?? null, damage: l.damage ?? 0, heal: l.heal ?? 0, kit: l.kit ?? null, dropped: !!l.dropped, ...(l.left != null && l.max ? { left: l.left, max: l.max } : {}), ...(l.roll ? { die: l.roll.die, need: l.roll.need, value: l.roll.value } : {}),
   ...(l.order ? { order: l.order, from: l.from } : {}),
 });
 
@@ -206,10 +206,11 @@ function afterRound(state, am) {
   // Death's door: someone went down and the crew would pull back. A watched crew asks first (the player's call;
   // the death rule); a hands-off one pulls back on its own, as hands-off crews always have.
   if (end.result === 'extracted' && am.callIn !== 'never') {
-    const downed = b.runners.find((x) => x.down && !x.dead && !x.fightOn);
+    const downed = b.runners.find((x) => x.down && !x.dead && !x.fightOn && !(x.stable && b.type === 'holdHack' && b.stage === 1)); // on the way out a runner the medic has steadied is not at death's door
     if (downed) { b.end = null; am.pending = { kind: 'door', opId: downed.id, day: state.day }; return state; }
   }
-  if (GOES_ON.has(end.result)) return endFight(state, am);
+  // On the way out the hack is already done: breaking off keeps the objective (and the pay), at the cost of whoever is down.
+  if (GOES_ON.has(end.result) || (end.result === 'extracted' && b.type === 'holdHack' && b.stage === 1)) return endFight(state, am);
   return retreatFight(state, am, { text: end.text, choice: 'They pull back', why: `${end.text}.` });
 }
 
@@ -365,6 +366,13 @@ export function resolveFightDecision(state, am, choice, view) {
   const b = am.battle;
   const why = takeWhy(am);
   // Pulling back at a call-in: the cause line is the fight's own (someone down, or the crew pulled back).
+  // On the way out of a hack the work is done: pulling back at death's door breaks off with the objective (and the pay), as a crew that is never called in does.
+  if (choice.exit && am.pending.kind === 'door' && b.type === 'holdHack' && b.stage === 1) {
+    record(am, { kind: 'decision', text: view.text, choice: choice.label, why, report: '', choiceCost: {} });
+    am.pending = null;
+    b.end = { result: 'extracted', key: 'end.wayOutPulled', text: lineText('end.wayOutPulled'), slots: {} };
+    return endFight(state, am);
+  }
   if (choice.exit) return retreatFight(state, am, { text: view.text, choice: choice.label, why, cause: lineText(am.pending.kind === 'door' ? 'end.extracted' : 'end.pulledBack') });
   if (am.pending.kind === 'door') {
     // Keep fighting with them down: the push-on rule (they could die, am.untreated), and they bleed in the fight.

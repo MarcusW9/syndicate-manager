@@ -57,6 +57,7 @@ export const V = {
   clientOpen: false, // the plan's client background, shown on tap (owner, 2026-11-04: the same on every job they offer)
   planTryList: [], // the plan bar's "Try" changes as last drawn (core/squad.js planTries), applied by index
   ordersOpen: false, // the plan's How / Call me in / When they decide, folded to one line until tapped (2026-11-05)
+  fightAdviceOpen: false, // Joss's build advice on the plan screen, closed to start (2026-11-17)
   boardRulesOpen: false, // the squad board's rules line, behind an i
   briefOpen: true, // the open job's brief in full, or two lines and "Read more"
   readMemo: null, // the plan read as last drawn: { jobId, sig, rows: Map(row key → effective risk), level }

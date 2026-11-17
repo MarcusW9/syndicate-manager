@@ -2,7 +2,7 @@
 // game at phone width and plays rounds on the site map, taking a picture mid-round and after each round.
 //
 //   node scripts/preview-livebattle.mjs <out-dir> [--job warehouse] [--seed 1] [--pace watch|fast] [--rounds 3] [--wide] [--reduced]
-//        [--special ricochet|slash|ping] [--knots hired,drone|none] [--foes 10] [--crew 6] [--throttle 4] [--scale 2]
+//        [--aura] [--special ricochet|slash|ping] [--knots hired,drone|none] [--foes 10] [--crew 6] [--throttle 4] [--scale 2]
 //
 // --special forces a special move on each round's attacks (the rules side is not built; ui/fightstage.js forceSpecial),
 // with frames taken while it plays. --knots draws those enemy kinds as swarm knots instead of data/fightLooks.js's
@@ -32,6 +32,7 @@ const rounds = Number(flag('rounds', '3'));
 const wide = bool('wide');
 const reduced = bool('reduced');
 const special = flag('special');
+const aura = bool('aura'); // --aura: poll while a round plays and keep a frame for each stage of the medic's aura (glow, orb, landing)
 const knots = flag('knots');
 const foes = Number(flag('foes', '0'));
 const crewN = Number(flag('crew', '0'));
@@ -101,7 +102,14 @@ try {
       if (!(await next.count())) { const p = page.locator('[data-action="pending"]:not([data-id="out"])').filter({ visible: true }).first(); if (await p.count()) { await p.click(); continue; } break; }
       await next.click();
     }
-    if (special) {
+    if (aura) {
+      // Frames only while the aura is on screen, at most 8 a round, to see the glow grow and flash, the orb cross and the pip fill.
+      let k = 0;
+      for (let t = 0; t < 6000 && k < 8; t += 90) {
+        await page.waitForTimeout(90);
+        if (await page.evaluate(() => !!document.querySelector('.fs-aura, .fs-orb, .sp-flash--heal'))) await shot(`round-${r}-aura-${++k}`);
+      }
+    } else if (special) {
       await page.waitForTimeout(700); await shot(`round-${r}-special-title`);
       for (let k = 1; k <= 6; k++) { await page.waitForTimeout(260); await shot(`round-${r}-special-${k}`); }
     } else { await page.waitForTimeout(1300); await shot(`round-${r}-mid`); }

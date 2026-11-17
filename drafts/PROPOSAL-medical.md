@@ -15,7 +15,7 @@ Medical only acts today once someone is badly hurt, and careful play rarely gets
 5. **Triage after the job.** Proposed: whenever anyone took damage, the best medic on the job rolls once per wounded runner.
 6. **Neural comedown.** Proposed: after any job with tech or drone work, the medic rolls once to take neural load down.
 7. **Medic in the van.** Proposed: allowed. Triage and comedown work from the van; field dressing needs them inside.
-8. **Hall doctor.** Proposed: a role later (Phase 3); the Clinic room heals at half speed without one.
+8. **Hall doctor.** Proposed: a role later (Phase 3); the Clinic room heals at half speed without one. Owner (2026-11-17): the doctor can be a retired veteran medic, hired on through the retirement features, and the Clinic has levels; see "The base heals" below.
 9. **Gore level.** Proposed: specific and physical in reports ("a round through the forearm"), never lingering or graphic for its own sake.
 10. **Migration.** Owner (2026-11-07): old injuries become wounds that don't worsen (light → a minor broken arm, serious → a bad broken arm, not bleeding, which would worsen after the next job). Healing days carry over.
 
@@ -72,7 +72,7 @@ Medical only acts today once someone is badly hurt, and careful play rarely gets
 | Role | Kind | Unlocks | Does |
 | --- | --- | --- | --- |
 | Combat medic | Specialisation | 3 jobs carrying a trauma kit, medical 10, cool 8 | Field dressing twice a round; stabilise from any cover without moving |
-| Hall doctor | Executive (Phase 3) | Medical 14, leadership 10 | Staffs a hall's Clinic: healing speed from their medical; triage for everyone living there |
+| Hall doctor | Executive (Phase 3) | Medical 14, leadership 10, or a retiring medic who stays on (below) | Staffs a hall's Clinic: healing speed from their medical; triage for everyone living there |
 | Chrome surgeon | Executive (Phase 3) | Medical 14, tech 12, a cyber doc in the tong | Implants a further 10% cheaper; implants' neural floor halved |
 
 Older medics move into these, as older runners move into coaching.
@@ -87,7 +87,52 @@ Older medics move into these, as older runners move into coaching.
 | Triage | 1 roll per wounded runner, best medic on the job |
 | Comedown | −10 neural, −15 with a pro kit |
 | Clinic without a doctor | half speed |
+| Clinic levels, doctor, base treatment | draft numbers in "The base heals" below |
 | Combat medic | 2 dressings a round |
+
+## The base heals: the Clinic and the hall doctor (owner, 2026-11-17)
+
+Status: direction from the owner, numbers are Claude's drafts, nothing built. Parked behind builds and the playtest (HANDOFF.md).
+
+**The idea.** The medic's value should grow with the base, not stop at the fight. Two parts: a Clinic in the hall that can be built and improved to shorten healing, and a veteran medic who can be hired on as the hall's doctor through the retirement features, who also shortens healing.
+
+**What already exists to hang it on**
+- `drafts/PROPOSAL-hall-building.md` drafts a Clinic room (¥18,000, hall level 2; residents heal 2 days a day while at home). One per hall.
+- This proposal's Hall doctor role (above): a Clinic without a doctor heals at half speed.
+- Retirement is built (`core/retirement.js`, `data/retirement.js`): a runner past 52 active weeks may ask to stay one more season for a rise or go; `RETIREMENT_RESOLVER` handles it, and a worthy runner goes in the Hall of Legends.
+- The medic's hands on the way out of a hack (built 2026-11-17, `core/fight.js treatWayOut`): the field treatment that saves the serious injury. The base picks up what is left.
+
+**1. The Clinic, with levels (draft)**
+
+| Level | Cost | Heals at home | Needs |
+| --- | --- | --- | --- |
+| 1 | ¥18,000 | 2 days a day (the hall-building draft), half that without a doctor | hall level 2 |
+| 2 | ¥14,000 | 3 days a day | level 1 Clinic |
+| 3 | ¥20,000 | 4 days a day, and a runner home from a job with a serious injury starts it a day shorter | level 2 Clinic, a doctor |
+
+Only residents at home heal at the Clinic's speed, not runners out on a job. Without a doctor each level heals at half speed. A hall has one Clinic.
+
+**2. The retired veteran as the hall's doctor (draft)**
+- **Route A, your own medic.** When a medic (or anyone with medical 12 or more) asks to retire, the request gets a third answer beside Stay and Go: **Stay on as the hall's doctor.** They leave the roster for the job board (no more jobs), keep a smaller wage than a runner's, and staff the Clinic of the hall they live in. They stay in the cast, so their history and their name remain.
+- **Route B, a veteran from outside.** A retired medic from the city (a lead, or one of the "gone elsewhere" names, `docs/RIVAL-TONGS.md`) can be hired for the post for a signing fee. Owner to pick A, B or both.
+- **What the doctor does:** Clinic speed scales with their medical (draft: +1 day a day at medical 12, +2 at 16); triage for everyone living in that hall, one roll per wounded runner after each job (the triage this proposal already has); and base treatment (below). One doctor a hall; a second hall needs a second doctor.
+- **Loses them:** if the doctor dies or is poached (`core/mobility.js`), the Clinic drops to half speed until a replacement. This ties the role to the world rather than a flat upgrade.
+
+**3. Base treatment, the part that answers the way out (draft).** When a crew comes home, a hall doctor treats each runner who left a job with a serious injury: the injury days drop by their medical divided by 2 (a medical-12 doctor takes 6 days off a 21-day injury). It stacks with the medic's hands in the fight (the medic saves the serious injury; the doctor shortens what remains) and with the Clinic's speed.
+
+**Rules we keep**
+- No effect on the death rule: nobody dies because of a Clinic or a doctor, and nothing here makes a death more or less likely.
+- Shown equals used: the hall page and the plan screen's recovery read show the Clinic's level, the doctor and the days they take off, from the same function the day tick uses (`core/time.js`).
+- Randomness only through `core/rng.js`; the triage rolls hash their seed, so no other roll moves.
+- It is optional: a tong with no Clinic and no doctor plays as today.
+
+**How to size it.** `scripts/sim-wayout.mjs` already reports recovery days a fight for hack jobs (17.4 on data_pull with the way out and the medic's hands, against 8.3 before it). The target is to bring a hall with a level-2 Clinic and a doctor back to the pre-way-out cost, and to leave the unbuilt tong where it is, so the Clinic is a reason to build, not a tax on not building. The sim needs the day tick's healing added to the measure (it now counts days only at the fight's end).
+
+**The owner's calls (2026-11-17)**
+- **Where the doctor comes from: both routes.** A tong's own retiring medic can stay on (Route A), and a veteran from outside can be hired (Route B).
+- **The doctor does not go out on jobs, for now.** Going out is a possibility for later, not built; the post stays a real trade-off against a runner's job.
+- **Three Clinic levels are enough.**
+- **A doctor can still become a Legend.** A retired medic who stays on as the doctor can be named a Legend while they hold the post, and reach the Hall of Legends when they finally leave, with a line about the Clinic.
 
 ## Rules we keep
 
@@ -130,10 +175,10 @@ Older medics move into these, as older runners move into coaching.
 3. Field dressing and back up from down in fights.
 4. Combat medic specialisation.
 5. Rerun `sim-stats.mjs` medical rows at 300 seeds; tune wound frequency.
-6. Hall doctor and chrome surgeon with Phase 3's roles.
+6. Hall doctor and chrome surgeon with Phase 3's roles; the Clinic's levels, the doctor from retirement and base treatment ("The base heals"), sized with `sim-wayout.mjs`.
 
 ## Open questions
 
-- Should some wounds need a Clinic (or Doc Siu, for a fee) rather than a field medic?
+- Should some wounds need a Clinic (or Doc Siu, for a fee) rather than a field medic? (The Clinic's levels and the hall doctor are drafted in "The base heals".)
 - Do traits matter (Steady Hands better at field dressing; Scarred ignores minor penalties)?
 - Should freelance medics be cheaper to hire, so a small tong can cover the gap?

@@ -343,7 +343,14 @@ test('hack: progress only for rounds the technician worked and stood at the end;
 test('hack: four rounds of actual work win; the deadline fails it', () => {
   const b = fixture('holdHack', [ids.static, ids.jax]);
   for (let i = 0; i < FIGHT.workNeeded; i++) { assert.equal(b.end, null); draw(b, []); b.drawn = true; F.playRound(b, always(0.5)); b.round = i + 1; }
+  // The work is done, but the fight is not: the way out begins (2026-11-17), and it is won by rout.
+  assert.equal(b.end, null, 'finishing the hack no longer ends the fight');
+  assert.equal(b.stage, 1);
+  assert.deepEqual(b.arriving, b.wayOut, 'the opening force comes again');
+  b.arriving = []; b.clock = 99; for (const e of b.enemies) e.out = true; // (no alarm reinforcement this round)
+  draw(b, []); b.drawn = true; F.playRound(b, always(0.5));
   assert.equal(b.end.result, 'won');
+  assert.equal(b.end.key, 'end.wayOutWon');
   const c = fixture('holdHack', [ids.static, ids.jax]);
   F.setOrder(c, 'wing', { duty: 'hold', target: null, fallback: null }); // never works
   c.enemies = [];
@@ -696,7 +703,7 @@ test('fightOdds plays playRound on fixed seeds: the same read twice, and the sam
   const a = F.fightOdds(b, 40);
   assert.deepEqual(F.fightOdds(b, 40), a);
   let win = 0;
-  for (let i = 0; i < 40; i++) { const c = structuredClone(b); F.playFight(c, makeRng(0x5eed + i * 7919)); if (c.end.result === 'won') win += 1; }
+  for (let i = 0; i < 40; i++) { const c = structuredClone(b); F.playFight(c, makeRng(0x5eed + i * 7919)); if (F.objectiveDone(c)) win += 1; }
   assert.equal(a.win, win / 40);
   const worse = structuredClone(b); worse.enemies.push(foe(9, 'corp'), foe(10, 'corp'), foe(11, 'corp'));
   assert.ok(F.fightOdds(worse, 40).win < a.win, 'more enemies, worse odds');
@@ -755,12 +762,13 @@ test('dilemma options change real orders (the patch selectors), and "carry on" c
   assert.equal(JSON.stringify(b.orders), before);
   const changed = F.applyPatch(b, opts.cover.ordersPatch);
   assert.deepEqual(changed.sort(), ['cherry', 'jax', 'mei']);
-  for (const id of changed) assert.deepEqual([b.orders[id].duty, b.orders[id].target], ['protect', 'protected']);
+  const now = (id) => F.orderOf(b, b.runners.find((r) => r.id === id)); // orders carry a stage plan since the way out: read the one in force
+  for (const id of changed) assert.deepEqual([now(id).duty, now(id).target], ['protect', 'protected']);
   F.applyPatch(b, opts.radio.ordersPatch);
-  const attacker = changed.map((id) => b.orders[id]).find((o) => o.duty === 'attack');
+  const attacker = changed.map((id) => now(id)).find((o) => o.duty === 'attack');
   assert.equal(attacker.target, 1, 'the radio call comes from enemy 1');
   F.applyPatch(b, opts.jam.ordersPatch);
-  assert.deepEqual([b.orders.wing.duty, b.orders.wing.target], ['support', 1], 'the tech stops the call: no hack progress that round');
+  assert.deepEqual([now('wing').duty, now('wing').target], ['support', 1], 'the tech stops the call: no hack progress that round');
 });
 
 test('wording is placeholders in data: every key a line or dilemma uses has text, and no fixed names appear', () => {
@@ -904,12 +912,13 @@ test('an order the player sets after the call-in stands; the rest are restored',
 
 test('a fight that ends in the round is not given its old orders back', () => {
   const b = underFire(true);
+  delete b.wayOut; // a fight saved before the way out existed: the hack still ends it
   b.goal.work = FIGHT.workNeeded - 1; // the tech keeps working under cover: this round finishes the hack
   F.applyPatch(b, techOpts().cover.ordersPatch);
   F.playRound(b, always(0.999));
   assert.equal(b.end.result, 'won');
   assert.equal(b.override, undefined);
-  assert.equal(b.orders.jax.duty, 'protect', 'nothing is restored into a finished fight');
+  assert.equal(F.orderOf(b, b.runners.find((r) => r.id === 'jax')).duty, 'protect', 'nothing is restored into a finished fight');
 });
 
 test('the withdrawal rule still outranks a call-in order, and a restored order does not undo it', () => {

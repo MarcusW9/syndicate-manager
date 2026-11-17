@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { createNewGame } from '../src/core/state.js';
 import { makeRng } from '../src/core/rng.js';
 import * as F from '../src/core/fight.js';
-import { ENEMIES, ENEMY_HIT } from '../src/data/fights.js';
+import { ENEMIES, ENEMY_HIT, FIGHT } from '../src/data/fights.js';
 import { MOVES, PAYLOADS, GIVEN_BUILD } from '../src/data/builds.js';
 import { FIGHT_TEXT, FIGHT_TEXT_VARIANTS } from '../src/data/fightText.js';
 import { lineText } from '../src/core/fighttext.js';
@@ -226,4 +226,135 @@ test('the crew\'s default orders leave a runner with a move to attack, so it fir
     const plain = F.buildFight({ type, diff: 14, threat: 3, site: 'docks', crew, approach: 'loud' }, makeRng(3));
     assert.equal(F.orderOf(plain, plain.runners.find((r) => r.id === 'jax')).duty, 'protect', `${type}: with no build the toughest still protects`);
   }
+});
+
+// --- Contagion (slice 3-iii, 2026-11-17): a payload that jumps when its host falls --------------------------------------------------
+const sick = (b, n, payload = 'contagion', o = {}) => { const e = b.enemies.find((x) => x.n === n); e.infected = { tick: 1, left: PAYLOADS[payload].dot.rounds, by: 'jax', round: 0, payload, ...o }; return e; };
+
+test('Contagion: when an infected enemy falls to its tick, the infection jumps to the first other enemy of its group, in full, and ticks from the next round', () => {
+  const b = fixture(['jax', 'mei', 'wing'], ['hired', 'hired', 'hired'], { build: { move: null, payload: 'contagion' } });
+  sick(b, 1); butts(b);
+  const r = F.playRound(b, mid);
+  assert.ok(b.enemies[0].out, 'the one pip is gone to the tick');
+  const jump = r.lines.find((l) => l.key === 'spread');
+  assert.ok(jump, 'the jump is said');
+  assert.equal(jump.from, 1); assert.equal(jump.enemy, 2);
+  assert.ok(r.lines.findIndex((l) => l.key === 'spread') > r.lines.findIndex((l) => l.key === 'tickOut'), 'said after the fall');
+  const t = b.enemies[1];
+  assert.deepEqual({ tick: t.infected.tick, left: t.infected.left, payload: t.infected.payload, by: t.infected.by }, { tick: 1, left: 2, payload: 'contagion', by: 'jax' });
+  assert.equal(t.infected.round, b.round, 'it starts this round, so its first tick is the next one');
+  assert.ok(!b.enemies[2].infected, 'one jump per fall');
+});
+
+test('Contagion: a chain runs one fall per round, and the infection burns out after its rounds', () => {
+  const b = fixture(['jax', 'mei', 'wing'], ['hired', 'hired', 'hired'], { build: { move: null, payload: 'contagion' } });
+  sick(b, 1); butts(b);
+  F.playRound(b, mid); F.playRound(b, mid);
+  assert.deepEqual(b.enemies.map((e) => e.out), [true, true, false], 'the jump kept the chain going');
+  assert.ok(b.enemies[2].infected, 'and handed it on again');
+  const c = fixture(['jax', 'mei', 'wing'], ['corp', 'corp'], { build: { move: null, payload: 'contagion' } });
+  sick(c, 1); butts(c);
+  F.playRound(c, mid); F.playRound(c, mid);
+  assert.ok(c.enemies[0].out, 'two pips, two ticks: down');
+  const d = fixture(['jax', 'mei', 'wing'], ['enforcer', 'enforcer'], { build: { move: null, payload: 'contagion' } });
+  Object.assign(d.enemies[0], { pips: 5, max: 5 }); sick(d, 1); butts(d);
+  F.playRound(d, mid); F.playRound(d, mid);
+  assert.equal(d.enemies[0].pips, 3);
+  assert.equal(d.enemies[0].infected, null, 'it burned out after two rounds: the cost of the shorter infection');
+});
+
+test('Contagion: the Cytotoxic Vector does not jump; machines, the already infected and another group are skipped; nobody to jump to says nothing', () => {
+  const cyto = fixture(['jax', 'mei', 'wing'], ['hired', 'hired'], { build: GIVEN_BUILD });
+  sick(cyto, 1, 'cytotoxic'); butts(cyto);
+  const rc = F.playRound(cyto, mid);
+  assert.ok(!rc.lines.some((l) => l.key === 'spread') && !cyto.enemies[1].infected);
+  const b = fixture(['jax', 'mei', 'wing'], ['hired', 'drone', 'hired', 'hired'], { build: { move: null, payload: 'contagion' } });
+  b.enemies[3].group = 5; // another group
+  sick(b, 1); sick(b, 3, 'contagion', { round: 9 }); butts(b);
+  const r = F.playRound(b, mid);
+  assert.ok(!r.lines.some((l) => l.key === 'spread'), 'the drone is immune, the third is already sick, the fourth is in another group');
+  assert.ok(!b.enemies[1].infected);
+});
+
+test('Contagion: wording for the jump, three variants, and a draft piece in data the offers can reach', () => {
+  assert.ok(FIGHT_TEXT.spread && FIGHT_TEXT_VARIANTS.spread.length === 3);
+  const p = PAYLOADS.contagion;
+  assert.equal(p.name, 'Contagion Vector');
+  assert.equal(p.family, PAYLOADS.cytotoxic.family, 'a variation of the Cytotoxic Vector: one family, one slot');
+  assert.ok(p.spread && p.slot === 'payload' && p.dot.rounds === 2 && p.immune.includes('synthetic') && p.desc && p.offer);
+  assert.ok(immuneTo('drone', 'contagion') && !immuneTo('hired', 'contagion'));
+});
+
+test('Contagion: the killing hit counts, so a one-pip enemy that dies to it still passes it on; the Vector and a machine do not', () => {
+  const play = (payload, kinds) => {
+    const b = fixture(['jax', 'mei', 'wing'], kinds, { build: null });
+    for (const r of b.runners) r.build = { move: null, payload };
+    return { b, r: F.playRound(b, mid) };
+  };
+  const { b, r } = play('contagion', ['hired', 'hired', 'hired', 'hired']);
+  const felled = r.defeated.filter((d) => d.how === 'attack').map((d) => d.enemy);
+  assert.ok(felled.length >= 1, 'a hit dropped a one-pip enemy');
+  assert.ok(r.lines.some((l) => l.key === 'spread' && felled.includes(l.from)), 'and the infection jumped from it');
+  assert.ok(b.enemies.some((e) => !e.out && e.infected?.payload === 'contagion'), 'a survivor carries it into next round');
+  const c = play('cytotoxic', ['hired', 'hired', 'hired', 'hired']);
+  assert.ok(!c.r.lines.some((l) => l.key === 'spread'), 'the Cytotoxic Vector has nothing to pass on from a kill');
+  const d = play('contagion', ['drone', 'drone', 'drone', 'drone']);
+  assert.ok(!d.r.lines.some((l) => l.key === 'spread'), 'a machine is never infected, so nothing jumps from it');
+});
+
+test('the save: a v75 hack fight in progress still ends with the hack; one built now carries its way out', async () => {
+  const S = await import('../src/save/save.js');
+  const { SAVE_VERSION } = await import('../src/core/state.js');
+  assert.ok(SAVE_VERSION >= 76);
+  const fresh = F.buildFight({ type: 'holdHack', diff: 14, threat: 3, site: 'docks', crew: crewOf().slice(0, 3), approach: 'loud' }, makeRng(3));
+  assert.deepEqual(fresh.wayOut, fresh.enemies.map((e) => e.kind).slice(0, Math.max(1, Math.ceil(fresh.enemies.length * FIGHT.wayOutShare))), 'the way out is the share of the opening force, read when the fight is built');
+  const old = JSON.parse(JSON.stringify(fresh));
+  delete old.wayOut;
+  const s = createNewGame({ seed: 5 });
+  s.activeMission = { jobId: 'x', templateId: 'data_pull', battle: old, events: [], queue: [], step: 0, log: [] };
+  s.version = 75;
+  const loaded = await S.importSave({ text: async () => JSON.stringify(s) });
+  assert.equal(loaded.version, SAVE_VERSION);
+  assert.equal(loaded.activeMission.battle.wayOut, undefined, 'nothing is rewritten');
+  const lb = loaded.activeMission.battle;
+  lb.goal.work = 4; lb.enemies = []; lb.clock = 99;
+  F.startRound(lb, makeRng(1)); F.playRound(lb, mid);
+  assert.equal(lb.end.result, 'won', 'the hack still ends it');
+});
+
+test('the medic\'s hands on the way out: a healer standing steadies the runner the round left alone and patches the hurt before the crew leaves; without one nothing changes', () => {
+  const run = (withMedic) => {
+    const b = fixture(['jax', 'mei', 'wing', 'cherry'], ['hired'], { build: null });
+    b.type = 'holdHack'; b.wayOut = ['hired']; b.stage = 1; b.arriving = []; b.clock = 99; b.goal.work = 4; b.round = 4;
+    for (const r of b.runners) { r.healer = false; r.medic = false; }
+    const [d1, d2, hurt, medic] = b.runners;
+    for (const d of [d1, d2]) { d.down = true; d.pips = 0; d.downRound = 3; }
+    hurt.max = 6; hurt.pips = 3; // above the point where a steady crew pulls out, and the aura heals only the most hurt
+    if (withMedic) { medic.healer = true; medic.medic = true; medic.stats.medical.value = 40; }
+    const r = F.playRound(b, mid);
+    return { b, r, downed: [d1, d2], hurt, hurtBefore: 3 };
+  };
+  const m = run(true);
+  assert.equal(m.b.end?.key, 'end.wayOutPulled', 'someone is down on steady: the crew breaks off');
+  assert.ok(m.downed.every((d) => d.stable), 'the medic reached both: one in the round, the other as the crew left');
+  assert.equal(m.r.lines.filter((l) => l.key === 'stabiliseWayOut').length, 1, 'the one the round left alone');
+  assert.ok(m.r.lines.some((l) => l.key === 'wayOutPatch'));
+  assert.ok(m.hurt.pips > m.hurtBefore + 1, 'a hurt runner who was up is healed by the aura and patched on the way out');
+  const n = run(false);
+  assert.ok(n.downed.every((d) => !d.stable), 'nobody to reach them');
+  assert.ok(!n.r.lines.some((l) => l.key === 'stabiliseWayOut' || l.key === 'wayOutPatch'));
+});
+
+test('the medic\'s aura line carries the patient and the pip it filled, for the stage', () => {
+  const b = fixture(['jax', 'mei', 'wing'], ['hired'], { build: null });
+  b.type = 'holdHack';
+  for (const r of b.runners) { r.healer = false; r.medic = false; }
+  b.runners[0].medic = true; b.runners[0].healer = true;
+  b.runners[1].pips = b.runners[1].max - 1;
+  const r = F.playRound(b, mid);
+  const l = r.lines.find((x) => x.key === 'aura');
+  assert.ok(l, 'the aura fired');
+  assert.equal(l.targetId, l.target);
+  assert.equal(l.left, b.runners.find((x) => x.id === l.targetId).pips);
+  assert.equal(l.max, b.runners.find((x) => x.id === l.targetId).max);
 });
