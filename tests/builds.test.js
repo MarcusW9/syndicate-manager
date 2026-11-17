@@ -214,3 +214,16 @@ test('the owner\'s variants: each key has three, all the same slots, and the pic
   assert.ok(seen.size > 1, 'the variants are used');
   assert.ok(![...seen].some((t) => /\{\w+\}/.test(t)), 'no slot left unfilled');
 });
+
+test('the crew\'s default orders leave a runner with a move to attack, so it fires (hack jobs and extractions)', () => {
+  for (const type of ['holdHack', 'holdExtract']) {
+    const crew = crewOf().filter((o) => ['jax', 'mei', 'wing', 'teo'].includes(o.id));
+    crew.forEach((o) => Object.assign(o.stats, { combat: 15, cool: 40, endurance: o.id === 'jax' ? 40 : 8 })); // jax is by far the toughest
+    const withB = crew.map((o) => (o.id === 'jax' ? { ...o, build: GIVEN_BUILD } : o));
+    const b = F.buildFight({ type, diff: 14, threat: 3, site: 'docks', crew: withB, approach: 'loud' }, makeRng(3));
+    const star = b.runners.find((r) => r.id === 'jax');
+    assert.equal(F.orderOf(b, star).duty, 'attack', `${type}: the carrier attacks`);
+    const plain = F.buildFight({ type, diff: 14, threat: 3, site: 'docks', crew, approach: 'loud' }, makeRng(3));
+    assert.equal(F.orderOf(plain, plain.runners.find((r) => r.id === 'jax')).duty, 'protect', `${type}: with no build the toughest still protects`);
+  }
+});

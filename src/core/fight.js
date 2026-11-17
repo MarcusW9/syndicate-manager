@@ -155,7 +155,10 @@ const PRIORITY = ['protected', 'radio', 'low'];
 const order = (duty, target = null, fallback = null, priority = PRIORITY) => ({ duty, target, fallback, priority, byStage: null });
 const fb = (duty, target = null) => ({ duty, target });
 const capableSupport = (r) => r.medic || (r.jammer && sv(r, 'tech') >= sv(r, 'combat'));
-const toughest = (b, list) => [...list].sort((x, y) => (y.max + y.absorb) - (x.max + x.absorb) || bySeat(x, y));
+// Someone with a move still to use is left to attack when the crew's defaults pick protectors (2026-11-17): a protector shields instead of
+// attacking, so a Ricochet carrier on a protect order would never fire. They protect only when nobody else can.
+const hasMove = (r) => !!MOVES[r.build?.move] && !r.moved;
+const toughest = (b, list) => [...list].sort((x, y) => hasMove(x) - hasMove(y) || (y.max + y.absorb) - (x.max + x.absorb) || bySeat(x, y));
 
 /** The runner best placed to cover others (most pips plus armour, ties lowest seat), not the specialist. */
 export const bestProtector = (b) => toughest(b, b.runners.filter((r) => r.id !== b.goal.protect))[0] ?? null;
