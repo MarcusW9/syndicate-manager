@@ -63,6 +63,12 @@ export const FIGHT_TEXT = {
   'overwatchCrack': "{who} takes a covering shot and cracks {enemy}'s armour.",
   'overwatchHit': '{who} takes a covering shot and catches {enemy}.',
   'overwatchMiss': '{who} takes a covering shot and misses {enemy}.',
+  // The hall's own turret (a raid, holdHall): fires on its own at the nearest raider.
+  'turretMiss': "The turret's burst goes wide of {enemy}.",
+  'turretCrack': "The turret cracks {enemy}'s armour.",
+  'turretHit': 'The turret catches {enemy}.',
+  'turretOut': 'The turret puts {enemy} out of the fight.',
+  'turretDry': 'The turret clicks dry.',
   'overwatchOut': '{who} takes a covering shot and puts {enemy} out of the fight.',
   'attackHit': '{who} gets a hit in on {enemy}.',
   // Placeholder wording (owner writes the final): a shot that only cracks a plate, no pip lost yet.
@@ -118,6 +124,7 @@ export const FIGHT_TEXT = {
   'ifNothing.clear': 'No incoming shots or radio calls are shown this round.',
   // Ends (one cause line each, past tense)
   'end.won': 'The crew completed the objective.',
+  'end.held': 'They backed off down the stairs: the hall held.',
   'end.routed': 'The yard is theirs: every enemy is down or running.',
   'end.lost': 'The hack was lost when {who} could no longer keep it running.',
   'end.abandoned': '{who} pulled out, and the hack was abandoned.',

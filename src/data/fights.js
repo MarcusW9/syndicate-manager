@@ -1,7 +1,7 @@
 // Engine 2: the fights of the battle rework (drafts/SPEC-battle-orders.md, drafts/NUMBERS-battle-orders.md
 // section 13 is the single source for these numbers; spec section 30 says what is settled). Numbers
 // and content only; the rules live in core/fight.js. Engine 1 (data/battle.js, core/battle.js) keeps
-// running every fight that is not one of the five jobs below, and raids.
+// running every fight that is not one of the five jobs below. Raids play here too (type holdHall).
 //
 // Roll rule as everywhere: d20 + stat >= 10 + difficulty. A fight's `diff` is the job's typical roll
 // (the incident difficulty); `base` below means that. Every number is a first value, to be tuned in
@@ -110,6 +110,12 @@ export const FIGHTS = {
   holdYard: {
     goal: 'rout', stages: 1, clock: 'pressure', friendlyReinforce: true, enemyReinforce: true,
     overwatchKit: 'rifle',
+  },
+  // holdHall (2026-11-17): a raid on one of our halls. No van, no clocks, no reinforcements: the raiders come in at once. The hall holds by
+  // rout (every raider down or running) or by the round cap (they back off at `cap`, the door held), with the hall's turret firing on its own.
+  holdHall: {
+    goal: 'rout', stages: 1, clock: null, friendlyReinforce: false, enemyReinforce: false,
+    overwatchKit: null,
   },
   holdExtract: {
     goal: 'hold+board', stages: 2, clock: 'pressure', friendlyReinforce: true, enemyReinforce: true,

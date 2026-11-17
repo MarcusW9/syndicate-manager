@@ -6,7 +6,7 @@ Checked against the code on 2026-11-13 (`src/core/fight.js`, `runfight.js`, `bat
 
 | | Engine 2 (the new fights) | Engine 1 (the old fights) |
 | --- | --- | --- |
-| Plays | Five jobs only: `data_pull`, `data_scrub`, `quiet_hours` (**hold the hack**) and `warehouse`, `protection` (**hold and extract**). `FIGHT_JOBS` in `data/fights.js`. | Every other fight, and every raid on a hall. |
+| Plays | Five jobs only: `data_pull`, `data_scrub`, `quiet_hours` (**hold the hack**) and `warehouse`, `protection` (**hold and extract**). `FIGHT_JOBS` in `data/fights.js`; since 2026-11-17 also every raid on a hall (type `holdHall`, built by `core/raids.js startRaidFight`). | Every other fight (and a raid saved mid-fight before that date). |
 | Health | **Pips**: one per 2 endurance, at least 3. | **HP**: 10 + cool ÷ 4. |
 | Player's input | A standing **order** for each runner, a crew-wide **risk level**, and call-ins. | A one-off order per runner each round (shoot, flank, hunker, move, patch, talk, lights). |
 | Code | `core/fight.js` (rules), `core/runfight.js` (the run's side), `core/fightview.js` (what the screen reads) | `core/battle.js` (rules), `core/runbattle.js` (the run's side) |
@@ -152,7 +152,7 @@ An order change from a call-in lasts one resolved round, then the old orders com
 
 ## Engine 1
 
-Used for every fight not listed above, and for raids on the halls.
+Used for every fight not listed above (raids moved to engine 2 on 2026-11-17: `holdHall`, the raiders come in at once, no clocks or reinforcements, the hall's turret fires one burst a round on its own at the nearest raider, won by rout or held when they back off after round 3).
 
 - **Health**: HP = 10 + floor(cool ÷ 4). A light wound starts 3 down.
 - **Guards**: count is the incident's (1 or 2) plus more on bigger work (at most 4). HP by threat 1–5: 4, 4, 5, 5, 6; damage 2, 2, 3, 3, 3; armour only on threat 5 (1). Armour comes off every hit; a landed hit always does at least 1.

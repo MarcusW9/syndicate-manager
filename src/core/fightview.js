@@ -77,6 +77,7 @@ function goalOf(b) {
     const tech = b.goal.protect ? handleOf(b, b.goal.protect) : null;
     return { type: 'hack', work: b.goal.work, needed: FIGHT.workNeeded, alarm: b.clock, deadline: b.deadline, tech, round: b.round };
   }
+  if (b.type === 'holdHall') return { type: 'hall', round: b.round, cap: b.cap, up: b.enemies.filter((e) => !e.out && !e.fled).length, turret: b.turret ? b.turret.left : null };
   if (b.type === 'holdYard') return { type: 'yard', round: b.round, up: b.enemies.filter((e) => !e.out && !e.fled).length, coming: b.arriving.length };
   return { type: 'extract', stage: b.stage, vanRound: b.goal.vanRound, vanLeaves: b.goal.vanLeaves, round: b.round, held: !!b.vanHeld };
 }

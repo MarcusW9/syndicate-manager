@@ -153,7 +153,10 @@ export function layoutFight(b, spots = b?.spots) {
   for (const r of runners) {
     if (r.withdrawn && !r.dead) { units[r.id] = { at: spots.van, spot: null, side: null, cover: 'open', mark: null, derived: false, stance: 'gone' }; continue; }
     if (r.aboard) { units[r.id] = { at: spots.van, spot: null, side: null, cover: 'open', mark: null, derived: false, stance: 'aboard' }; continue; }
-    const p = place('crew', r.cover, r.seat);
+    // A runner on a hall's post (a raid, core/raids.js) holds that very spot while their cover is the post's.
+    const post = r.post && r.spot != null && spots.crew[r.spot]?.cover === r.cover && !taken.crew.has(r.spot) ? r.spot : null;
+    if (post != null) taken.crew.add(post);
+    const p = post != null ? { at: spots.crew[post].at, spot: post, side: 'crew', cover: r.cover, mark: null, derived: false } : place('crew', r.cover, r.seat);
     const stance = r.dead ? 'dead' : r.down ? 'down' : r.boarding ? 'boarding' : r.hunker ? 'hunker' : 'up';
     // Running for the van: out in the open, between their cover and the van (the rules: board and carry are shot at in the open).
     if (stance === 'boarding') units[r.id] = { ...p, at: lerp(p.at, spots.van, 0.5), cover: 'open', mark: null, stance, from: p.at };
