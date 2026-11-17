@@ -1014,5 +1014,12 @@ function migrate(state) {
     }
     state.version = 74;
   }
+  if (state.version === 74) {
+    // v75: builds slice 3-ii-b (DESIGN.md 2026-11-17). A runner may carry `build { move, payload }`, earned by Joss's offers: `buildAt` (their
+    // jobs with the crew when they last took a piece) and `buildSnooze` (a "not yet" waits until this day). Everyone on the roster starts with
+    // nothing and no wait; the first offer comes at the data's job count, so a veteran may be offered one the day the save loads.
+    for (const op of state.crew ?? []) { op.build ??= null; op.buildAt ??= null; op.buildSnooze ??= 0; }
+    state.version = 75;
+  }
   return state;
 }
