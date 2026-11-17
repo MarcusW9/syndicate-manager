@@ -444,6 +444,8 @@ function itemHtml(ui, item, animate) {
   // One line per moment: an icon and the headlines, so the run can be followed at a glance; tap
   // the line for the setup, the crew's reason, the detail and the dice (owner's feedback,
   // 2026-10-27: too much text; the reason and the detail lines weren't needed as it plays).
+  // What a miss costs (heat, alert, pay, reputation) stands out in red, so the core information is seen at a glance (owner, 2026-11-17).
+  const costs = (html) => html.replace(/\b(Heat|Alert|Reputation|Pay)\s[+\-−]\d+%?/g, '<b class="wf-cost">$&</b>');
   const last = item.results.at(-1)?.tone;
   const icon = (t) => ICON[t] ?? '·';
   const why = item.kind !== 'incident' ? item.results.find((r) => r.why)?.why : null;
@@ -459,7 +461,7 @@ function itemHtml(ui, item, animate) {
         ${why ? `<p class="wf-why">Crew's call: ${esc(why)}</p>` : ''}
         ${item.results.map((r) => `
         <div class="wf-res">
-          ${r.detail ? `<p class="wf-det">${esc(r.detail)}</p>` : ''}
+          ${r.detail ? `<p class="wf-det">${costs(esc(r.detail))}</p>` : ''}
           ${r.roll ? ui.dice(r.roll) : ''}
         </div>`).join('')}
       </div>

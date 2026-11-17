@@ -24,8 +24,12 @@ import { heatIn, setHeat } from './heat.js';
 import { hallIn, residents, hasRoom } from './halls.js';
 import { hashRng } from './rng.js';
 import { nextRng } from './random.js';
-import { buildBattle, planIntents, BATTLE } from './battle.js';
-import { spotsForJob } from './fightspots.js';
+import { BATTLE } from './battle.js';
+import { stageSpots, stageNeed } from './fightmap.js';
+import { pickSite } from '../data/sites.js';
+import { buildFight, fightDiff, startRound } from './fight.js';
+import { fightSnapshot, stageOf } from './runfight.js';
+import { COUNT_BY_THREAT } from '../data/fights.js';
 import { floorPieces, hallMap, waysIn, postSlots } from './hallbuild.js';
 import { rollTarget } from './risk.js';
 import { FOLLOW } from './piloting.js';
@@ -366,22 +370,29 @@ export function startRaidFight(state, raid) {
   // By the front gate (2026-11-12) our people stand on the hall's posts, then wherever there's cover.
   const posted = way.id === 'street' ? postAssignments(state, d, raid, ops).filter((a) => a.op) : [];
   const crew = [...posted.map((a) => a.op), ...ops.filter((o) => !posted.some((a) => a.op.id === o.id))];
-  let spots = spotsForJob(d, raid.id, tpl.id, 'inside', crew.length, floor);
+  let spots = stageSpots(pickSite(d, raid.id, tpl.id, floor), 'inside', stageNeed(crew.length));
   if (spots && posted.length) {
     const at = posted.map((a) => ({ at: a.at, cover: a.cover, ...(a.high ? { high: true } : {}), post: a.slot }));
     spots = { ...spots, crew: [...at, ...spots.crew.filter((x) => at.every((p) => Math.hypot(p.at[0] - x.at[0], p.at[1] - x.at[1]) >= 16))] };
   }
-  const b = buildBattle({
-    incident: 'raid', zone: 'inside', diff, threat, guards: RAID.raiders, crew, approach: 'loud',
-    spots,
-    turret: hallTurret(state, d), cap: BATTLE.rounds,
-  });
-  b.foe = raidBy(raid); // who they are, and what the battle lines call one of them (core/battle.js foeWord)
-  b.foeOne = raider(raid).one;
-  planIntents(b, nextRng(state));
+  // The raid plays on engine 2 (core/fight.js, holdHall; 2026-11-17): the raiders come in at once, the hall's turret fires on its own,
+  // and the door holds at the round cap. Fights saved on engine 1 before this finish there.
+  const gang = isGangRaid(raid);
+  const rng = nextRng(state);
+  const b = buildFight({
+    type: 'holdHall', diff: fightDiff(diff), threat, site: tpl.district, job: tpl.id, crew, approach: 'loud', risk: 'steady', watched: true,
+    raid: { kind: gang ? 'enforcer' : 'police', count: COUNT_BY_THREAT[Math.max(1, Math.min(5, Math.round(threat)))], cap: BATTLE.rounds, turret: hallTurret(state, d), foe: raidBy(raid), foeOne: raider(raid).one },
+  }, rng);
+  b.auto = false;
+  b.startLines = [];
+  b.spots = spots;
+  // Our people on the hall's posts (by the front gate) start there, in the cover and height the post gives (spots.crew leads with the posts).
+  b.runners.forEach((r, i) => { const sp = spots?.crew?.[i]; if (sp?.post) Object.assign(r, { post: sp.post, spot: i, cover: sp.cover, ...(sp.high ? { high: true } : {}) }); });
+  b.startLines.push(...startRound(b, nextRng(state))); // the first round's threats are drawn before the orders, as every fight does
+  const guardsN = b.enemies.length;
   // A way with a line of its own (the halls' lore, 2026-11-07) opens with it; else "<who> come ...".
-  const text = way.line ? `${way.line} ${raidWho(raid)}: ${b.guards.length} of them, against ${andNames(crew)}.`
-    : `${raidWho(raid)} ${way.say ?? 'come through the door'}: ${b.guards.length} of them, against ${andNames(crew)}.`;
+  const text = way.line ? `${way.line} ${raidWho(raid)}: ${guardsN} of them, against ${andNames(crew)}.`
+    : `${raidWho(raid)} ${way.say ?? 'come through the door'}: ${guardsN} of them, against ${andNames(crew)}.`;
   state.activeMission = {
     jobId: raid.id, templateId: tpl.id, raid: raid.id, build: floor, crewIds: crew.map((o) => o.id), approach: 'loud', days: 0, bribe: 0,
     overwatch: null, wheels: null, standby: null, callIn: 'every', orders: null,
@@ -391,9 +402,7 @@ export function startRaidFight(state, raid) {
     payCut: 0, extraHeat: 0, clientTrust: 0, watched: 0, startedDay: state.day,
     critical: null, stabiliseFailed: false, untreated: [],
     focusOp: null, aborted: false, done: false, result: null, growth: [], graduated: [], report: [text],
-    events: [{ kind: 'battle', phase: 'start', from: 'raid', zone: 'inside', text, report: text,
-      guards: b.guards.map((g) => ({ n: g.n, hp: g.hp, max: g.max, armour: g.armour, out: g.out, cover: g.cover, at: g.spot != null ? b.spots?.guards?.[g.spot]?.at ?? null : null })),
-      runners: b.runners.map((r) => ({ id: r.id, handle: r.handle, hp: r.hp, max: r.max, armour: r.armour, down: r.down, fightOn: r.fightOn, stable: r.stable, cover: r.cover, at: r.spot != null ? b.spots?.crew?.[r.spot]?.at ?? null : null })) }],
+    events: [{ kind: 'battle', phase: 'start', from: 'raid', zone: 'inside', text, report: text, ...fightSnapshot(b), stage: stageOf(b) }],
   };
   return state;
 }

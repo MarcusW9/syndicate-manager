@@ -32,7 +32,7 @@ import { lineText, kindWord, enemyName, nameList } from './fighttext.js';
 import { effectiveStat } from './crew.js';
 import { weaponOf, armourOf } from './battle.js';
 import { patchBonus, counted } from './gear.js';
-import { specialLook } from './fightmap.js';
+import { specialLook, layoutFight, enemyUnit } from './fightmap.js';
 import { d20, makeRng, hash } from './rng.js';
 
 export { FIGHT };
@@ -115,7 +115,7 @@ const newGroup = (b) => { b.nextGroup = (b.nextGroup ?? 1) + 1; return b.nextGro
  * the van. rng: the run's stream (the enemies' decks are shuffled from it). Orders start as the crew's
  * defaults, visible and editable.
  */
-export function buildFight({ type, diff, threat = 3, site = 'docks', opposition = null, job = null, crew, approach, overwatch = null, wheels = null, standbyOp = null, risk = 'steady', watched = false }, rng) {
+export function buildFight({ type, diff, threat = 3, site = 'docks', opposition = null, job = null, crew, approach, overwatch = null, wheels = null, standbyOp = null, risk = 'steady', watched = false, raid = null }, rng) {
   const def = FIGHTS[type];
   const b = {
     engine: 2, type, stage: 0, round: 0, diff, deadline: type === 'holdHack' ? FIGHT.deadline.holdHack : null, drawn: false, end: null,
@@ -126,6 +126,11 @@ export function buildFight({ type, diff, threat = 3, site = 'docks', opposition 
     overwatch: overwatch ? { ...overwatch, vanShots: 0 } : null, wheels, standby: null, standbyOut: false, vanUsed: false,
     heat: 0, pipsLost: 0, left: [], dilemmasFired: {}, watched, site, opposition: OPPOSITION[opposition] ? opposition : null,
   };
+  // A raid on a hall (holdHall): who comes and how many, the hall's turret, and the round the door holds at. raid: { kind, count, cap, turret, foe, foeOne }.
+  if (type === 'holdHall' && raid) {
+    b.cap = raid.cap ?? null; b.foe = raid.foe ?? null; b.foeOne = raid.foeOne ?? null;
+    b.turret = raid.turret ? { ...raid.turret } : null;
+  }
   // 3d: the job's recipe (data/fights.js FIGHT_RECIPES): its authored waves (their own budget) and the cap on reactive reinforcements.
   const recipe = FIGHT_RECIPES[job] ?? null;
   b.maxExtra = recipe?.maxExtraEnemies ?? def.maxExtraEnemies ?? FIGHT.maxExtraEnemies;
@@ -134,6 +139,12 @@ export function buildFight({ type, diff, threat = 3, site = 'docks', opposition 
   if (type === 'holdHack') {
     const tech = [...b.runners].sort((x, y) => (y.role === 'tech') - (x.role === 'tech') || sv(y, 'tech') - sv(x, 'tech') || bySeat(x, y))[0];
     b.goal.protect = tech?.id ?? null;
+  }
+  if (type === 'holdHall' && raid) {
+    for (let i = 0; i < raid.count; i++) newEnemy(b, raid.kind, rng);
+    b.orders = defaultOrders(b);
+    b.showcaseSeed = Math.floor(rng() * 2 ** 32);
+    return b;
   }
   const kinds = SITE_ENEMIES[site] ?? SITE_ENEMIES.docks;
   const count = COUNT_BY_THREAT[clamp(Math.round(threat), 1, 5)];
@@ -761,6 +772,28 @@ export function playRound(b, rng) {
     say('infect', 'infect', { who: r.handle, enemy: E(e.n), word: pay.word }, { ...named, ...flag, enemy: e.n, payload: pay.id });
   };
 
+  // A hall's own turret (a raid): fires on its own at the nearest raider, until it is dry.
+  const tu = b.turret;
+  if (tu && tu.left > 0 && enemiesUp(b).length) {
+    const lay = b.spots ? layoutFight(b) : null;
+    const pos = (e) => lay?.units?.[enemyUnit(e.n)]?.at ?? null;
+    const near = (e) => (tu.at && pos(e) ? Math.hypot(pos(e)[0] - tu.at[0], pos(e)[1] - tu.at[1]) : 0);
+    const e = [...enemiesUp(b)].sort((p, q) => near(p) - near(q) || p.n - q.n)[0];
+    tu.left -= 1;
+    const x = roll(tu.aim, b.diff + FIGHT.attackStep + FIGHT.cover[e.cover], strongMargin(tu.damage));
+    const meta = { actor: null, at: tu.at ?? null, enemy: e.n, left: tu.left };
+    if (!x.ok) say('turret', 'turretMiss', { enemy: E(e.n) }, { ...meta, success: false, damage: 0, roll: rollOf(x) });
+    else {
+      let dmg = x.strong ? FIGHT.strongHit : FIGHT.hit;
+      const cracked = e.absorb > 0;
+      if (cracked) { e.absorb -= 1; dmg -= 1; }
+      e.pips -= dmg;
+      if (e.pips <= 0) { e.out = true; defeated.push({ by: null, enemy: e.n, how: 'turret' }); say('turret', 'turretOut', { enemy: E(e.n) }, { ...meta, success: true, damage: dmg, dropped: true, roll: rollOf(x), cracked }); }
+      else say('turret', dmg === 0 ? 'turretCrack' : 'turretHit', { enemy: E(e.n) }, { ...meta, success: true, damage: dmg, roll: rollOf(x), enemy: e.n, cracked });
+    }
+    if (tu.left === 0) say('turret', 'turretDry', {}, { ...meta, success: null });
+  }
+
   const boards = []; const carries = []; let workBy = null;
   for (const a of actions) {
     const r = a.r; const named = { actor: r.id, order: a.order.duty, from: a.from };
@@ -917,6 +950,9 @@ function checkEnd(b, rng, say) {
   if (b.type === 'holdHack' && b.goal.work >= FIGHT.workNeeded) return finish(b, 'won', 'end.won');
   // The yard: won by rout, every enemy out or fled and none on the way (the pressure clock may still bring more before then).
   if (b.type === 'holdYard' && !enemiesUp(b).length && !b.arriving.length) return finish(b, 'won', 'end.routed');
+  // The hall: won by rout, or held when the raiders back off at the round cap with the door still ours.
+  if (b.type === 'holdHall' && !enemiesUp(b).length) return finish(b, 'won', 'end.routed');
+  if (b.type === 'holdHall' && b.cap && b.round >= b.cap && standing(b).length) return finish(b, 'held', 'end.held');
   if (boardingStage(b) && !standing(b).length && !outsideDown(b).length) {
     const lost = b.runners.filter((r) => r.dead || r.withdrawn);
     return lost.length ? finish(b, 'lostRunner', 'end.lostRunner', { who: nameList(lost.map((r) => r.handle)) }) : finish(b, 'won', 'end.won');

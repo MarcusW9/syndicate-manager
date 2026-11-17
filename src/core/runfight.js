@@ -31,7 +31,7 @@ import * as Fight from './fight.js';
 import { actors, overwatchOp, driver, standbyReady, opById, grow, record, takeWhy, addNeural } from './run.js';
 import { currentStep, advance, exitRun } from './mission.js';
 
-/** The fight type a job plays on engine 2, or null (every other job, and raids, stay on engine 1). */
+/** The fight type a job plays on engine 2, or null (every other job stays on engine 1; a raid builds its own holdHall fight, core/raids.js startRaidFight). */
 export const fightTypeOf = (templateId) => FIGHT_JOBS[templateId] ?? null;
 
 // --- what the feed and the plan read ---------------------------------------------------------------
@@ -65,11 +65,11 @@ export const enemiesLeft = (b) => (b.engine === 2 ? Fight.enemiesUp(b).length : 
 // Which stat a line grows, as a runner's incident does (core/runbattle.js).
 const GROWS = { attack: 'combat', jam: 'tech', stabilise: 'medical', patch: 'medical', board: 'cool', carry: 'cool' };
 // A line's kind as the plan's animation knows it; everything else is a note it ignores.
-const CUE = { attack: 'shoot', shot: 'guard', overwatch: 'overwatch', stabilise: 'stabilise', patch: 'patch' };
+const CUE = { attack: 'shoot', shot: 'guard', overwatch: 'overwatch', stabilise: 'stabilise', patch: 'patch', turret: 'turret' };
 // Only what the feed, the plan and the report read, so a year of saved reports stays small.
 const feedLine = (l) => ({
   kind: CUE[l.kind] ?? 'note', rule: l.kind, key: l.key ?? null, slots: l.slots ?? {}, text: l.text, actor: l.actor ? { id: l.actor, handle: l.actor } : null, guard: l.enemy ?? null, targetId: l.targetId ?? (typeof l.target === 'string' ? l.target : null),
-  ...(l.burst ? { burst: true } : {}), ...(l.cracked ? { cracked: true } : {}),
+  ...(l.burst ? { burst: true } : {}), ...(l.cracked ? { cracked: true } : {}), ...(l.at ? { at: l.at } : {}),
   success: l.success ?? null, damage: l.damage ?? 0, heal: l.heal ?? 0, kit: l.kit ?? null, dropped: !!l.dropped, ...(l.roll ? { die: l.roll.die, need: l.roll.need, value: l.roll.value } : {}),
   ...(l.order ? { order: l.order, from: l.from } : {}),
 });
@@ -196,7 +196,7 @@ function playOn(state, am, rng) {
 
 // A fight that ends this way leaves the run going (the objective done, or the van gone with those it could carry);
 // any other end is a pull back: the objective is lost, the crew comes home at the usual cost.
-const GOES_ON = new Set(['won', 'lostRunner', 'leftBehind']);
+const GOES_ON = new Set(['won', 'lostRunner', 'leftBehind', 'held']);
 
 /** What happens after a round: the fight goes on, ends, or (watched, someone at death's door) asks. */
 function afterRound(state, am) {
@@ -253,6 +253,7 @@ const hurtLine = (hurt, skipMissing = false) => hurt.filter((h) => !(skipMissing
 function endFight(state, am) {
   const b = am.battle;
   const hurt = fightInjuries(state, am, b);
+  if (b.end.result === 'held' && am.raid) am.pressed = true; // the raiders backed off at the cap: the door held (core/raids.js finishRaid)
   const text = b.end.text;
   const told = hurtLine(hurt, b.end.result === 'leftBehind'); // "The crew left X behind." already says who
   const report = `${text}${told ? ` ${told}.` : hurt.length ? '' : ' Nobody badly hurt.'}`;
@@ -286,7 +287,8 @@ function retreatFight(state, am, { text, choice, why, cause = text }) {
   am.repCut = (am.repCut ?? 0) + FIGHT.retreat.rep;
   record(am, { kind: 'battle', phase: 'retreat', text, cause, lines: [], hurt, forced: false, ...fightSnapshot(b), stage: stageOf(b) });
   am.battle = null;
-  const report = `The crew pulled back from the fight. ${text}.${hurt.length ? ` ${hurtLine(hurt)}.` : ''} No pay, heat +${FIGHT.retreat.heat}, reputation −${FIGHT.retreat.rep}.`;
+  const report = am.raid ? `The crew got out down the back stairs. ${text}.${hurt.length ? ` ${hurtLine(hurt)}.` : ''}` // a raid's costs are the hall's (core/raids.js)
+    : `The crew pulled back from the fight. ${text}.${hurt.length ? ` ${hurtLine(hurt)}.` : ''} No pay, heat +${FIGHT.retreat.heat}, reputation −${FIGHT.retreat.rep}.`;
   exitRun(state, am, { text, choice, why, report });
   return state;
 }
