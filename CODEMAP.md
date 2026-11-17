@@ -119,7 +119,7 @@ How battles work (both engines, every number, the death rule): `docs/BATTLES.md`
   - `ui/settings.js` Save (`renderSettings`) and a new game's founders (`renderFounding`)
   - Rules for these modules: a screen module never assigns `state` (taps go through `actions.js`, which calls `setState`); UI state is always `V.<name>`; nothing that runs while a module loads may use another screen module (only `shared.js` and `view.js`), because the screen modules import each other in a ring.
 - `ui/nav.js` navigation (2026-11-09: `HOMES`, the tab and sub-tab each kind of page opens on, `pageKind`, `rootOf`, `tabBadges`/`attentionCount` (Today's count, each event once; Jobs' open jobs), and the Back stack; view.js `viewNow`/`remember`/`restoreView`/`toRoot` use it, and every link to a page calls `remember` first. View state is UI-only and never saved)
-- `ui/board.js` the squad board and planning
+- `ui/board.js` the squad board and planning (an empty inventory cell, `board-gear-add`, opens `ui/gear.js renderAddSheet`)
 - `ui/watch.js` + `ui/siteplan.js` the live job (`ui/route.js` turns each site's route onto the grid with cut corners, for the plan and the mini maps; `ui/duel.js` the face-off over the map when a moment is one person's roll)
 - `ui/fightorders.js` command fights
 - `ui/fightstage.js` (engine 2's live map) also draws the standard force: `plate`/`crack` (an arc on a foe with armour left, split by a cracking shot, then the pip loss), `fs-foe--<kind>` uniform tints in `styles.css`

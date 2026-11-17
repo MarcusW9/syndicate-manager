@@ -141,6 +141,7 @@ export function onClick(e) {
     case 'open-armoury': remember(action, id); goHome('armoury'); V.hallPage = null; V.buildView = null; V.openOperativeId = null; V.openRecruitId = null; V.gearSlot = null; break;
     case 'tong-tab': V.tongTab = id; break;
     case 'crew-tab': V.crewTab = id; break;
+    case 'crew-filter': V.crewFilter = id; break;
     // Shortcuts to a sub-tab's home from another page (a link, not a tab choice: Back returns).
     case 'halls-open': remember(action, id); goHome('hall'); V.hallPage = null; V.buildView = null; break;
     case 'leads-open': remember(action, id); goHome('recruit'); V.openRecruitId = null; V.openOperativeId = null; break;
@@ -161,14 +162,16 @@ export function onClick(e) {
       break;
     }
     case 'gear-slot': V.gearSlot = id; break;
+    case 'board-gear-add': V.gearFor = id; V.gearSlot = 'add'; break;
     case 'board-gear': V.gearFor = id; V.gearSlot = `item:${t.dataset.uid}`; break;
     case 'close-gear': V.focusNext = V.gearFor ? null : { action: 'gear-slot', id: V.gearSlot }; V.gearSlot = null; V.gearFor = null; break;
     case 'equip': {
       // Into the place the sheet was opened for (core/gear.js equip): a socket, or a cell in the bag.
       const place = gearPlace(V.gearSlot);
       const target = place.kind === 'implant' ? { socket: place.socket } : place.kind === 'bag' ? { x: place.x, y: place.y } : null;
-      V.focusNext = place.kind === 'bag' ? null : { action: 'gear-slot', id: V.gearSlot }; V.gearSlot = null;
-      return setState(equip(state, id, V.openOperativeId, target));
+      V.focusNext = place.kind === 'bag' || place.kind === 'add' ? null : { action: 'gear-slot', id: V.gearSlot }; V.gearSlot = null;
+      const who = V.gearFor ?? V.openOperativeId; V.gearFor = null;
+      return setState(equip(state, id, who, target));
     }
     case 'unequip': V.focusNext = { action: 'gear-slot', id: V.gearSlot }; V.gearSlot = null; const who = V.gearFor ?? V.openOperativeId; V.gearFor = null; return setState(unequip(state, who, id));
     // The bag (the carry grid, 2026-11-06): tap an item to pick it up; a free cell moves it there,
