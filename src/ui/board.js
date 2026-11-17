@@ -92,7 +92,7 @@ function inventory(ui, op, prefer) {
     return `<span class="inv__it ${w === 2 ? 'is-long' : ''} ${inFirst ? '' : 'is-more'}" role="button" tabindex="0" data-action="board-gear" data-id="${esc(op.id)}" data-uid="${esc(it.uid)}" aria-label="${esc(itemTitle(it))} on ${esc(op.handle)}: tap for its details">${gearArt(it, { carrier: op, bare: true })}<span class="inv__name">${ui.esc(itemTitle(it))}</span></span>`;
   }).join('');
   const total = Math.max(4, cells + (cells % 2));
-  const blanks = Array.from({ length: total - cells }, (_, k) => `<span class="inv__cell ${cells + k < 2 ? '' : 'is-more'}"></span>`).join('');
+  const blanks = Array.from({ length: total - cells }, (_, k) => `<span class="inv__cell inv__cell--add ${cells + k < 2 ? '' : 'is-more'}" role="button" tabindex="0" data-action="board-gear-add" data-id="${esc(op.id)}" aria-label="Add gear to ${esc(op.handle)}"></span>`).join('');
   const more = items.length - first;
   return `<span class="inv">${html}${blanks}${more ? `<span class="inv__more" aria-label="${more} more carried">+${more}</span>` : ''}</span>`;
 }

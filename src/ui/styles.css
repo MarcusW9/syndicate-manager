@@ -2573,3 +2573,5 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .apex__flavour { color: var(--muted); font-style: italic; font-size: 0.85em; }
 .timeline__results li.loot--apex { margin-top: 4px; padding: 8px 10px 6px 12px; border: 1px solid var(--tier-gold); border-left-width: 4px; background: color-mix(in srgb, var(--tier-gold) 10%, var(--panel-2, var(--panel))); clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%); font-weight: 600; }
 .timeline__results li.loot--apex .apex__history { font-weight: 400; }
+/* An empty cell on the board opens the gear sheet (2026-11-17). */
+.inv__cell--add { cursor: pointer; } .inv__cell--add:hover, .inv__cell--add:focus-visible { box-shadow: inset 0 0 0 1px var(--accent-2); }

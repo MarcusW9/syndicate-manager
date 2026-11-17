@@ -4,7 +4,7 @@
 //
 // ui: helpers from app.js { esc, money, face, statusChip }.
 
-import { GEAR, SLOTS, TIERS, APEX_GEAR, perkById, perksOf, apexSwapOut, carried, itemName, itemTitle, buyPrice, sellPrice, canChangeGear, kitsFor, sidearmStats, placeOf, cellsOf, fitsAt, bagUsed } from '../core/gear.js';
+import { GEAR, SLOTS, TIERS, APEX_GEAR, perkById, perksOf, apexSwapOut, carried, itemName, itemTitle, buyPrice, sellPrice, canChangeGear, kitsFor, sidearmStats, placeOf, cellsOf, fitsAt, firstFit, bagUsed } from '../core/gear.js';
 import { BAG, SOCKETS, BASE_TIER } from '../data/gear.js';
 import { HAS_LOOKS, lookText } from '../core/looks.js';
 import { gearGlyph } from './icons.js';
@@ -203,6 +203,7 @@ export function renderLoadout(ui, state, op, { picked = null } = {}) {
 export function gearPlace(id) {
   const [kind, rest = ''] = String(id).split(':');
   if (kind === 'item') return { kind, uid: rest, title: 'Carried' };
+  if (kind === 'add') return { kind, title: 'Gear' }; // an empty cell on the squad board: anything from the stash that goes on them
   if (kind === 'implant') return { kind, socket: Number(rest), title: `Implant socket ${Number(rest) + 1}` };
   if (kind === 'bag') { const [x, y] = rest.split(',').map(Number); return { kind, x, y, title: 'Carried' }; }
   return { kind: 'armour', title: 'Armour' };
@@ -249,12 +250,42 @@ function renderItemSheet(ui, state, op, uid) {
     </div>`;
 }
 
+/**
+ * An empty cell on the squad board (owner, 2026-11-17): everything in the stash that can go on them, armour, implants
+ * and bag things together; picking one puts it where it fits (core/gear.js equip with no target).
+ */
+function renderAddSheet(ui, state, op) {
+  const { esc } = ui;
+  const g = op.gear ?? {};
+  const can = canChangeGear(state, op);
+  const fits = (item) => {
+    const where = placeOf(item.type);
+    if (where === 'bag') return !!firstFit(op, item);
+    if (where === 'implant') return (g.implants ?? []).length < SOCKETS && !(g.implants ?? []).some((i) => i.type === item.type);
+    return true; // armour swaps with what is worn
+  };
+  const stash = (state.stash ?? []).filter(fits);
+  return `
+    <div class="scrim" data-action="close-gear"></div>
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="Gear for ${esc(op.handle)}">
+      <div class="sheet__head">
+        <div><h2 class="sheet__title">Gear for ${esc(op.handle)}</h2>
+        <p class="muted small">${can.ok ? 'Anything in the stash that goes on them. Armour swaps with what they wear.' : `Their gear can't change while they're ${esc(can.reason)}.`}</p></div>
+        <button class="btn btn--ghost sheet__x" data-action="close-gear" aria-label="Close">✕</button>
+      </div>
+      <ul class="list list--plain gearlist">${stash.length ? stash.map((item) => itemRow(ui, item, { action: 'equip', label: 'Carry', disabled: !can.ok })).join('') : '<li class="muted small">Nothing in the stash that fits. Buy it in the armoury.</li>'}</ul>
+      <button class="btn btn--block" data-action="open-armoury">Go to the armoury</button>
+      <button class="btn btn--ghost btn--block" data-action="open-op" data-id="${esc(op.id)}">Open ${esc(op.handle)}'s page</button>
+    </div>`;
+}
+
 /** The sheet for one place: what's in the stash that goes there, what others carry, or take it off. */
 export function renderGearSheet(ui, state, op, slot) {
   const { esc } = ui;
   const place = gearPlace(slot);
   const g = op.gear ?? {};
   if (place.kind === 'item') return renderItemSheet(ui, state, op, place.uid);
+  if (place.kind === 'add') return renderAddSheet(ui, state, op);
   const current = place.kind === 'armour' ? g.armour ?? null : place.kind === 'implant' ? (g.implants ?? [])[place.socket] ?? null : null;
   const otherImplant = place.kind === 'implant' ? (g.implants ?? []).find((_, i) => i !== place.socket) : null;
   const fits = (item) => {

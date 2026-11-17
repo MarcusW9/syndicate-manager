@@ -74,10 +74,18 @@ export function renderCrew() {
   const cap = state.rosterCap ?? STARTING_ROSTER_CAP;
   const recruits = state.recruits ?? [];
   const tab = ['roster', 'leads', 'wall'].includes(V.crewTab) ? V.crewTab : 'roster';
+  // Roster filter (owner, 2026-11-17): everyone, only those who can go out now, or only those who can't.
+  const filter = ['ready', 'out'].includes(V.crewFilter) ? V.crewFilter : 'all';
+  const shown = state.crew.filter((op) => filter === 'all' || availability(state, op).ok === (filter === 'ready'));
+  const readyN = state.crew.filter((op) => availability(state, op).ok).length;
+  const chips = [['all', 'All', state.crew.length], ['ready', 'Ready', readyN], ['out', 'Away or hurt', state.crew.length - readyN]]
+    .map(([id, label, n]) => `<button class="fs-pace__chip ${filter === id ? 'is-on' : ''}" data-action="crew-filter" data-id="${id}" aria-pressed="${filter === id}">${label} ${n}</button>`).join('');
   const body = {
     roster: () => `
+      <div class="fs-pace crewfilter" role="group" aria-label="Filter the roster">${chips}</div>
+      ${shown.length ? '' : '<p class="muted small">Nobody matches.</p>'}
       <ul class="list list--cols">
-        ${state.crew.map((op) => `
+        ${shown.map((op) => `
           <li>
             <button class="row crewrow" data-action="open-op" data-id="${esc(op.id)}">
               ${face(op)}
