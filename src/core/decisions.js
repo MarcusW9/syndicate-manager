@@ -25,7 +25,8 @@ export const RESOLVERS = {
 export function resolveDecision(prev, msgId, optionId) {
   const msg = prev.inbox.find((m) => m.id === msgId);
   const resolver = msg && RESOLVERS[msg.kind];
-  if (!resolver || msg.resolved || !msg.options?.some((o) => o.id === optionId && !o.disabled)) return prev;
+  // A raid call's options are live (who is home changes after it is posted), and RAID_RESOLVER checks them itself.
+  if (!resolver || msg.resolved || (msg.kind !== 'raid' && !msg.options?.some((o) => o.id === optionId && !o.disabled))) return prev;
   const state = structuredClone(prev);
   resolver(state, state.inbox.find((m) => m.id === msgId), optionId);
   return state;

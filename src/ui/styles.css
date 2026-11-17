@@ -2277,6 +2277,7 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .sp-post { fill: #3a4352; stroke: var(--accent-2); stroke-width: 1.4; }
 
 .bslot { cursor: pointer; }
+.bslot.is-off { opacity: 0.25; }
 .bslot__hit { fill: rgba(61, 232, 216, 0); }
 .bslot__box { fill: rgba(61, 232, 216, 0.06); stroke: var(--accent-2); stroke-width: 1; stroke-dasharray: 2.5 2; }
 .bslot__plus { font: 700 11px var(--display, inherit); fill: var(--accent-2); pointer-events: none; }
