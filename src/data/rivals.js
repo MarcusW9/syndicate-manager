@@ -132,37 +132,59 @@ export const WATCH = {
   seenGrade: { S: 58, A: 50, B: 43, C: 34, D: 0 },
   markGap: 2, // the slate and our read must differ by this many grades or more
 };
-export const READ_AGE = { month: 'watched this month', season: 'watched last season', long: 'not watched in a long while' };
+export const READ_AGE = {
+  month: 'watched within the last month',
+  season: 'watched within the last six months',
+  long: 'not watched for six months or more',
+};
 export const HOUSE_STATE = { flush: 'Flush', steady: 'Steady', stretched: 'Stretched', selling: 'Selling' };
 export const HOUSE_UNKNOWN = '?';
 export const HOUSE_READ_TEXT = {
-  none: 'We only know what is said in the street: the head, and the names people repeat.',
-  roster: 'We have watched their door: the whole table, how they are doing, who they are after.',
-  inside: 'We know the house from the inside, and who in it is not settled.',
+  none: 'We have street talk: who leads them, and the names people mention.',
+  roster: 'We have a read on their runners, their finances and who they want to sign.',
+  inside: 'We have a closer read, including who might be ready to leave.',
 };
-export const OTHERS_LINE = 'and others we have not put a name to';
-export const QUIET_LINE = "one they don't talk about";
-export const UNSETTLED_LINE = 'Not settled there. They would come for less.';
+export const OTHERS_LINE = 'and runners we have not identified';
+export const QUIET_LINE = 'a runner they keep quiet about';
+export const UNSETTLED_LINE = 'Unsettled here. A lower offer could bring them over.';
 export const LOOKING = {
-  young: 'Looking for young hands, cheap.',
+  young: 'After young runners who will sign cheaply.',
   near: 'Looking for a name close to its own level.',
-  steady: 'Looking for steady, proven hands.',
-  local: 'Looking at its own district, one signing a season.',
-  any: 'Looking for anyone who fits.',
-  full: 'No room at the table.',
+  steady: 'After steady, proven runners.',
+  local: 'Recruits locally, one signing a season.',
+  any: 'Open to a runner who fits.',
+  full: 'No room for another runner.',
 };
-export const SLATE_TAG = { flatters: 'Flattered', sells_short: 'Sold short' };
-export const SLATE_MARK = { flatters: 'The slate flatters them.', sells_short: 'The slate sells them short.' };
-export const CHANGED_LINE = 'Changed since we looked.';
+export const SLATE_TAG = {
+  flatters: 'Overrated',
+  sells_short: 'Underrated',
+};
+export const SLATE_MARK = {
+  flatters: 'From what we have seen, the slate rates them too highly.',
+  sells_short: 'From what we have seen, the slate rates them too low.',
+};
+export const CHANGED_LINE = 'Things have changed since our last look.';
 export const WATCH_TEXT = {
   button: 'Watch this tong (three days)',
-  busy: 'Someone is already out watching them.',
-  none: 'Nobody is free to go and watch them.',
-  done: 'We know all there is to know of the inside.',
-  sent: { subject: '{op} is watching {name}', body: '{op} is out for three days, near the door of {name}, to see who comes and goes.' },
-  ok: { subject: '{op} is back: a look at {name}', body: '{op} came back with a look at {name}. It is on their page now.' },
-  miss: { subject: '{op} is back: nothing on {name}', body: '{op} could not get close enough to {name} to tell us anything. Another try would cost three more days.' },
-  gone: { subject: '{op} is back: {name} is gone', body: '{op} found nothing at the door of {name}. They have closed.' },
+  busy: 'We already have someone watching them.',
+  none: 'Nobody is free for three days.',
+  done: 'We have our clearest read for now.',
+  sent: {
+    subject: '{op} is watching {name}',
+    body: '{op} is spending three days watching {name}: who comes and goes, and what we can learn.',
+  },
+  ok: {
+    subject: '{op} is back from watching {name}',
+    body: '{op} brought back a clearer read on {name}. Their page has been updated.',
+  },
+  miss: {
+    subject: '{op} is back: no clearer read on {name}',
+    body: '{op} could not learn anything useful about {name}. Another attempt takes three days.',
+  },
+  gone: {
+    subject: '{op} is back: {name} has closed',
+    body: '{op} found that {name} has closed its front room. There is no tong left to watch.',
+  },
 };
 // What a profile says once a name has been watched (level 1): the habit of the house they came from.
 export const HABIT_NOTE = { workshop: 'Leans on the kit.', oldhouse: 'Has been there a long time.' };

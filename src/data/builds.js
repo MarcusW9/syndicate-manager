@@ -19,8 +19,8 @@ export const MOVES = {
   ricochet: {
     id: 'ricochet', name: 'Ricochet', reach: 3, uses: 1, when: { enemies: 2 }, look: 'ricochet',
     slot: 'move', needs: { combat: 10 },
-    desc: 'Once a fight, as soon as two or more enemies are up, one round bounces through up to three of them.',
-    offer: '{op} has the eye for a ricochet now: one round, three bodies. I know a range that teaches it.',
+    desc: 'Once per fight, automatically fires when at least two enemies are standing: one round ricochets through up to three targets.',
+    offer: '{op} has the eye for Ricochet: one round through several targets. We could make something of that.',
   },
 };
 
@@ -41,16 +41,16 @@ export const PAYLOADS = {
   cytotoxic: {
     id: 'cytotoxic', name: 'Cytotoxic Vector', family: 'vector', word: 'Vector', dot: { tick: 10, rounds: null }, immune: ['synthetic'],
     slot: 'payload', needs: {},
-    desc: 'A hit that gets past the armour infects: the target loses a pip every round until it falls. Machines shrug it off.',
-    offer: 'There is a chemist on the Basin side who sells something nasty for the rounds. {op} could carry it: slow, and it does not stop.',
+    desc: 'A damaging hit infects a surviving target, dealing 10 HP at each round’s end until they fall. Cracking armour alone does not infect. Does not stack or affect machines.',
+    offer: '{op} could carry Cytotoxic Vector. Get it past the armour and it keeps eating away until the target drops.',
   },
   // Contagion Vector (draft, 2026-11-17): the owner's bio weapon (PROPOSAL-swarm-and-special-moves.md 2.3), a variation of the Cytotoxic Vector (family 'vector'): the same slot, so a
   // runner picks one. It trades staying power for reach: the infection burns out after `rounds` rounds, but it jumps when its host falls.
   contagion: {
     id: 'contagion', name: 'Contagion Vector', family: 'vector', word: 'Contagion', dot: { tick: 10, rounds: 2 }, spread: true, immune: ['synthetic'],
     slot: 'payload', needs: { medical: 8 },
-    desc: 'A hit that gets past the armour infects: the target loses a pip a round for two rounds. When an infected enemy falls, the infection jumps to another in its group. Machines shrug it off.',
-    offer: 'The chemist has a second vector, a stranger one that passes from body to body. {op} has the steady hands to carry it. It burns out fast, but it will not stay in one place. It takes the same place as the other vector, so it is one or the other.',
+    desc: 'A damaging hit infects a surviving target: 10 HP at each round’s end for two rounds. When the host falls, or a carrying hit drops a target outright, it jumps to one uninfected enemy in the same group. The jump bypasses armour and starts dealing damage next round. Does not stack or affect machines.',
+    offer: '{op} could carry Contagion Vector. It burns out sooner, but jumps when the target drops. We choose this or Cytotoxic, not both.',
   },
 };
 

@@ -171,7 +171,7 @@ test('a quiet name is off the street, off the slate and off the file until a rul
     assert.equal(entry(), undefined, 'not on the file before we watch');
     watched(s, t, 1);
     assert.equal(entry().quiet, true, 'level 1 shows them as the one they do not talk about');
-    assert.match(renderTongs(s, t.id), /one they don(&#39;|')t talk about/);
+    assert.match(renderTongs(s, t.id), /a runner they keep quiet about/);
     assert.ok(!namesOnTheStreet(s).some((n) => n.name === pick.name), 'still not on the street');
     // Elite, or leaving: out in the open.
     pick.fame = 'elite'; quietStep(s, s.rivals);

@@ -283,7 +283,7 @@ function renderBuildOffer(m) {
       <div class="riskcard">
         ${p.ids.map((id) => `<p><button class="termlink" data-action="piece-tip" data-id="${esc(m.id)}|${esc(id)}" aria-expanded="${V.pieceTip === `${m.id}|${id}`}">${esc(pieceById(id).name)}</button></p>
         ${V.pieceTip === `${m.id}|${id}` ? `<div class="tipcard" role="note"><strong>${esc(pieceById(id).name)}</strong><p>${esc(pieceById(id).desc)}</p></div>` : ''}`).join('')}
-        ${p.outcome ? `<p><strong>${esc(p.outcome)}</strong></p>` : '<p class="muted small">Tap a name to see what it does. One move and one payload each, for good. "Not yet" and Joss asks again in two weeks.</p>'}
+        ${p.outcome ? `<p><strong>${esc(p.outcome)}</strong></p>` : '<p class="muted small">Tap a name for details. Each runner can choose one move and one payload; neither choice can be changed. Choose "Not yet" and Joss asks again in two weeks.</p>'}
       </div>
       ${m.resolved ? '' : `<div class="stack">
         ${m.options.map((o) => `<button class="btn ${o.id === 'later' ? 'btn--ghost' : 'btn--primary'}" data-action="decide" data-id="${esc(m.id)}" data-option="${esc(o.id)}">${esc(o.label)}</button>`).join('')}

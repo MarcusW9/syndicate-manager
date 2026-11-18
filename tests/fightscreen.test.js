@@ -141,7 +141,7 @@ test('the plan view: type line, likely enemies, gaps from the crew, orders and t
     assert.equal(p.loss[level], lossLine(o));
   }
   assert.equal(lossLine({ lost: 0 }), lineText('plan.lossChanceZero'));
-  assert.equal(lossLine({ lost: 0.04 }), 'Chance of losing someone: 4%');
+  assert.equal(lossLine({ lost: 0.04 }), 'Chance someone is killed or left behind: 4%');
   // A crew with no medic and no jammer gets those gaps; the planning read and the screen use the same crew.
   const bare = crew.map((o) => ({ ...o, role: 'muscle', gear: [], inventory: [] }));
   const g = planView({ ...cov.fight2, crew: bare }, 'steady');
@@ -158,12 +158,12 @@ test('the planning read\'s build advice: none without a build; Joss warns when a
   const at = (site) => planView({ ...cov.fight2, crew: built, site, threat: 5 }, 'steady').build;
   const drones = at('heights');
   assert.ok(drones, 'a squad with a build gets the read');
-  assert.match(drones.advice, /Cytotoxic Vector can't hurt the drones, because they are machines\. A tech who can jam them would help\./, 'the Vector is blocked by the machines tag, and Joss says what counters it');
-  assert.ok(drones.threats.some((t) => /drones/.test(t.title) && /machines/.test(t.text)));
-  assert.ok(drones.answers[0].tags.includes('Ricochet') && /no effect on the drones/.test(drones.answers[0].text));
+  assert.match(drones.advice, /Cytotoxic Vector cannot hurt the drones: they are machines\. Bring a tech who can jam them\./, 'the Vector is blocked by the machines tag, and Joss says what counters it');
+  assert.ok(drones.threats.some((t) => /drones/.test(t.title) && /machines/i.test(t.text)));
+  assert.ok(drones.answers[0].tags.includes('Ricochet') && /cannot affect the drones/.test(drones.answers[0].text));
   const docks = at('docks');
-  assert.doesNotMatch(docks.advice, /can't hurt/, 'hired guns and enforcers carry no tags, so nothing is blocked');
-  assert.match(docks.advice, /Tap to see why/);
+  assert.doesNotMatch(docks.advice, /cannot hurt/, 'hired guns and enforcers carry no tags, so nothing is blocked');
+  assert.match(docks.advice, /Tap for the breakdown/);
   // The screen: the advice shows closed; the breakdown only once opened.
   const args = { ...cov.fight2, crew: built, site: 'heights', threat: 5 };
   const closed = renderFightPlan(esc, args, 'steady');
@@ -251,10 +251,10 @@ test('call-ins: the van that cannot wait shows who is outside, both options with
   const s = find('warehouse', (x) => x.activeMission.pending?.id === 'vanCantWait', { to: 800 });
   assert.ok(s);
   const html = renderFightCallIn(s, esc, face);
-  assert.ok(html.includes('Outside:'), 'who is outside');
+  assert.ok(html.includes('Still outside:'), 'who is outside');
   assert.ok(html.includes('Leave on time') && html.includes('Hold the van'));
   assert.ok(!html.includes('Keep current orders'), 'the duplicate choice is gone');
-  assert.equal((html.match(/Chance anyone outside is left behind: \d+%\./g) ?? []).length, 2, 'the odds of leaving them, each way');
+  assert.equal((html.match(/Chance someone outside is left behind: \d+%\./g) ?? []).length, 2, 'the odds of leaving them, each way');
   assert.equal((html.match(/Heat \+1/g) ?? []).length, 2, 'the heat shows once on Hold and once on Pull back, never twice on Hold');
   const hold = html.slice(html.indexOf('Hold the van'), html.indexOf('Pull back'));
   assert.equal((hold.match(/Heat \+/g) ?? []).length, 1);
@@ -279,7 +279,7 @@ test('the plan screen\'s fight block: type line, enemies, gaps, orders, risk pic
   const cov = coverage(tpl, crew, 'loud', { threat: tpl.threat });
   const html = renderFightPlan(esc, cov.fight2, 'steady');
   for (const part of ['The fight', 'Extract: hold until the van arrives', 'Likely enemies', 'Orders', 'hold, then board', 'Pulls out at 20 HP or fewer', 'Cautious', 'Committed', 'data-action="orders"']) assert.ok(html.includes(part), part);
-  assert.match(html, /Chance of losing someone: \d+%|No chance of losing someone/);
+  assert.match(html, /Chance someone is killed or left behind: \d+%|No one is forecast to be killed or left behind/);
   assert.ok(!/\{\w+\}/.test(html));
   const c = renderFightPlan(esc, cov.fight2, 'committed');
   assert.ok(c.includes('Never pulls out on its own'), 'committed shows no threshold');
