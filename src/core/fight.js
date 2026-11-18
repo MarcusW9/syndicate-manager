@@ -28,12 +28,13 @@ import { FIGHT, ENEMIES, ENEMY_HIT, SITE_ENEMIES, COUNT_BY_THREAT, OPPOSITION, C
 import { MOVES, PAYLOADS } from '../data/builds.js';
 import { buildOf, immuneTo } from './builds.js';
 import { DILEMMAS } from '../data/dilemmas.js';
-import { lineText, kindWord, enemyName, nameList } from './fighttext.js';
+import { lineText, kindWord as kindWordOf, enemyName, nameList } from './fighttext.js';
 import { effectiveStat } from './crew.js';
 import { weaponOf, armourOf } from './battle.js';
 import { patchBonus, counted } from './gear.js';
 import { specialLook, layoutFight, enemyUnit } from './fightmap.js';
 import { d20, makeRng, hash } from './rng.js';
+import { copier } from './copy.js';
 
 export { FIGHT };
 
@@ -80,7 +81,16 @@ export function runnerOf(op, approach, seat = 0) {
 
 const sv = (r, s) => r.stats[s]?.value ?? 0;
 const bySeat = (a, b) => a.seat - b.seat;
-const lowestPips = (list) => [...list].sort((a, b) => a.pips - b.pips || bySeat(a, b))[0];
+/**
+ * The first of `list` by `cmp`: what `[...list].sort(cmp)[0]` gives (the sort is stable: of equal ones, the earliest), without
+ * sorting (2026-11-18, the speed pass). For the consistent comparators used here (numbers, no NaN). undefined for an empty list.
+ */
+function firstBy(list, cmp) {
+  let best;
+  for (let i = 0; i < list.length; i++) if (i === 0 || cmp(list[i], best) < 0) best = list[i];
+  return best;
+}
+const lowestPips = (list) => firstBy(list, (a, b) => a.pips - b.pips || bySeat(a, b));
 
 // --- building a fight -------------------------------------------------------------------------------
 
@@ -326,8 +336,9 @@ function enemyOrder(b, list, priority) {
           : p === 'exposed' ? -shotValue(t)
             : p === 'approaching' ? (e.approaching ? 0 : 1) : 1));
   };
+  const keys = new Map(list.map((e) => [e, key(e)])); // each enemy's key once (the same keys the comparisons read)
   return [...list].sort((x, y) => {
-    const kx = key(x); const ky = key(y);
+    const kx = keys.get(x); const ky = keys.get(y);
     for (let i = 0; i < kx.length; i++) if (kx[i] !== ky[i]) return kx[i] - ky[i];
     return x.n - y.n;
   });
@@ -381,7 +392,7 @@ function tryDuty(b, r, duty, target, priority, res) {
       const T = target === 'protected' ? b.goal.protect : target ?? (b.goal.protect && b.goal.protect !== r.id ? b.goal.protect : lowestPips(standing(b).filter((x) => x.id !== r.id))?.id);
       if (!T || T === r.id || !standing(b).some((x) => x.id === T)) return null;
       // Shield the worst shot on them (shown chance x pips) that no one has taken yet.
-      const shot = b.threats.filter((t) => t.kind === 'aim' && t.target === T && !res.shields.has(t.id)).sort((x, y) => shotValue(y) - shotValue(x) || x.enemy - y.enemy)[0];
+      const shot = firstBy(b.threats.filter((t) => t.kind === 'aim' && t.target === T && !res.shields.has(t.id)), (x, y) => shotValue(y) - shotValue(x) || x.enemy - y.enemy);
       if (shot) { res.shields.add(shot.id); return { kind: 'shield', threat: shot.id, for: T }; }
       const mate = runner(b, T);
       if (r.healer && mate.pips < mate.max && !res.patches.has(T)) { res.patches.add(T); return { kind: 'patch', target: T }; }
@@ -391,11 +402,11 @@ function tryDuty(b, r, duty, target, priority, res) {
       if (r.healer) {
         const bleeding = b.runners.find((x) => x.down && !x.stable && !x.aboard && !x.dead && !x.withdrawn && !res.patches.has(x.id));
         if (bleeding) { res.patches.add(bleeding.id); return { kind: 'stabilise', target: bleeding.id }; }
-        const hurt = standing(b).filter((x) => x.pips < x.max && !res.patches.has(x.id)).sort((x, y) => x.pips / x.max - y.pips / y.max || bySeat(x, y))[0];
+        const hurt = firstBy(standing(b).filter((x) => x.pips < x.max && !res.patches.has(x.id)), (x, y) => x.pips / x.max - y.pips / y.max || bySeat(x, y));
         if (hurt) { res.patches.add(hurt.id); return { kind: 'patch', target: hurt.id }; }
       }
       if (r.jammer && !res.jam && b.threats.some(RADIO)) { res.jam = true; return { kind: 'jam' }; }
-      const shot = b.threats.filter((t) => t.kind === 'aim' && t.target !== r.id && !res.shields.has(t.id)).sort((x, y) => shotValue(y) - shotValue(x) || x.enemy - y.enemy)[0];
+      const shot = firstBy(b.threats.filter((t) => t.kind === 'aim' && t.target !== r.id && !res.shields.has(t.id)), (x, y) => shotValue(y) - shotValue(x) || x.enemy - y.enemy);
       if (shot) { res.shields.add(shot.id); return { kind: 'shield', threat: shot.id, for: shot.target }; }
       return null;
     }
@@ -478,7 +489,7 @@ function overwatchTarget(b, actions, res) {
     return t && v && (['board', 'carry'].includes(kindOf.get(v.id)) || v.cover === 'open') ? shotValue(t) : 0;
   };
   const onProt = (e) => { const t = threatOf(e); return t && b.goal.protect && t.target === b.goal.protect ? 1 : 0; };
-  return [...up].sort((x, y) => exposed(y) - exposed(x) || onProt(y) - onProt(x) || x.n - y.n)[0] ?? null;
+  return firstBy(up, (x, y) => exposed(y) - exposed(x) || onProt(y) - onProt(x) || x.n - y.n) ?? null;
 }
 
 /** Whether overwatch may fire this round (a use left; at the van, only overwatchUsesAtVan shots). */
@@ -636,6 +647,14 @@ function expireOverride(b) {
 
 // --- one round -------------------------------------------------------------------------------------
 
+// A round's lines are for the feed. playFight keeps none of its rounds' lines (it returns the fight alone), so while it
+// plays they are not written at all (2026-11-18, the speed pass): `say` and the names made only for a line's slots do
+// nothing. The fight plays the same either way: wording never draws, no say's value is used and nothing in a round reads
+// its lines. b.end's text (finish) is always written.
+let wordless = false;
+const silent = () => {};
+const wordOf = (key, slots) => (wordless ? '' : lineText(key, slots));
+
 /**
  * Begin the next round: arrivals, the standby going out, someone climbing back out of the van, the van
  * special, then the telegraph (draws from rng). After this the previews and the call-in checks work.
@@ -643,7 +662,8 @@ function expireOverride(b) {
  */
 export function startRound(b, rng) {
   const lines = [];
-  const say = (kind, key, slots = {}, extra = {}) => lines.push({ kind, key, slots, ...extra, text: lineText(key, slots) });
+  const say = wordless ? silent : (kind, key, slots = {}, extra = {}) => lines.push({ kind, key, slots, ...extra, text: lineText(key, slots) });
+  const kindWord = wordless ? silent : kindWordOf;
   b.round += 1;
   for (const r of b.runners) if (r.stayPips != null && r.pips > riskThreshold(b, r)) r.stayPips = null; // healed past their point: asked afresh next time
   // Arrivals come in approaching (3a); this round's batch of called-in arrivals is one group, a pressure arrival another, each wave another (3c).
@@ -694,9 +714,9 @@ function vanDecision(b) {
   const hold = b.vanHold ?? auto;
   if (hold && !b.vanHeld) {
     b.vanHeld = true; b.goal.vanLeaves += FIGHT.holdRounds; b.heat += FIGHT.holdHeat;
-    return { kind: 'van', key: 'vanHeld', heat: FIGHT.holdHeat, text: lineText('vanHeld', { rounds: FIGHT.holdRounds, outside }) };
+    return { kind: 'van', key: 'vanHeld', heat: FIGHT.holdHeat, text: wordOf('vanHeld', { rounds: FIGHT.holdRounds, outside }) };
   }
-  return { kind: 'van', key: 'vanCantWait', text: lineText('vanCantWait', { outside }) };
+  return { kind: 'van', key: 'vanCantWait', text: wordOf('vanCantWait', { outside }) };
 }
 
 /**
@@ -712,7 +732,7 @@ export function playRound(b, rng) {
   const defeated = []; const down = []; const fled = []; const withdrawn = [];
   const result = { lines, actions: [], unanswered: [], defeated, goalDelta: 0, down, fled, withdrawn, heat: 0, neural: 0, ended: null };
   if (!b.drawn) lines.push(...startRound(b, rng));
-  const say = (kind, key, slots = {}, extra = {}) => { const l = { kind, key, slots, ...extra, text: lineText(key, slots) }; lines.push(l); return l; };
+  const say = wordless ? silent : (kind, key, slots = {}, extra = {}) => { const l = { kind, key, slots, ...extra, text: lineText(key, slots) }; lines.push(l); return l; };
   // Contagion (slice 3-iii, 2026-11-17): when an infected enemy goes down, a payload that `spread`s jumps to the first other enemy of its group that is
   // up, not infected and not immune (the rules' order, no roll). Not a hit, so a plate does not stop it; it starts in full and ticks next round.
   const spreadFrom = (e, inf = e.infected) => {
@@ -724,7 +744,7 @@ export function playRound(b, rng) {
     say('spread', 'spread', { enemy: E(e.n), to: E(t.n), word: pay.word }, { enemy: t.n, from: e.n, jumpFrom: e.n, payload: pay.id });
   };
 
-  const E = (n) => enemyName(b.enemies.find((x) => x.n === n).kind, n);
+  const E = wordless ? silent : (n) => enemyName(b.enemies.find((x) => x.n === n).kind, n); // a name for a line's slots only
 
   const vl = vanDecision(b);
   if (vl) lines.push(vl);
@@ -925,7 +945,7 @@ export function playRound(b, rng) {
   // round and downed teammates don't bleed. Always on, whatever the medic does; no action.
   const aura = b.runners.some((r) => r.medic && present(r));
   if (aura) {
-    const hurt = standing(b).filter((r) => r.pips < r.max).sort((x, y) => x.pips / x.max - y.pips / y.max || bySeat(x, y))[0];
+    const hurt = firstBy(standing(b).filter((r) => r.pips < r.max), (x, y) => x.pips / x.max - y.pips / y.max || bySeat(x, y));
     const medic = b.runners.find((r) => r.medic && present(r));
     if (hurt) { hurt.pips += FIGHT.medicAura.heal; say('aura', 'aura', { who: medic.handle, target: hurt.handle }, { actor: medic.id, target: hurt.id, targetId: hurt.id, left: hurt.pips, max: hurt.max }); } // targetId, left and max are what the stage draws (the medic's glow, the orb, the pip filling)
   }
@@ -1105,9 +1125,32 @@ export function stepTallies(tallies, k) {
   return more;
 }
 
+/**
+ * A copy of a fight for a play that throws it away (the odds' and the van read's fights; 2026-11-17, the speed pass): what
+ * structuredClone(b) gives (core/copy.js copier), only quicker. The parts no round ever writes into are kept, not copied
+ * (KEPT): each order (b.orders' entries: an order that changes is replaced whole) and each runner's stats and build. A copy
+ * shares them with `b`, so a fight played on it plays exactly as on structuredClone's; tests/copyfight.test.js freezes them
+ * and plays fights to keep that true.
+ */
+export const copyFight = (b) => copierFor(b)();
+
+/**
+ * copyFight for many copies of one fight that does not change between them (a tally's b0, the van read's fight): the kept
+ * parts are found once. Returns a function that makes a copy of `b` as it was.
+ */
+export const copierFor = (b) => copier(b, KEPT(b));
+
+/** The parts of a fight that no round writes into (see copyFight). */
+export const KEPT = (b) => [
+  ...(b.orders && typeof b.orders === 'object' ? Object.values(b.orders) : []),
+  ...(Array.isArray(b.runners) ? b.runners.flatMap((r) => (r && typeof r === 'object' ? [r.stats, r.build] : [])) : []),
+];
+
 /** Play a whole fight on its orders, round by round, until it ends (hands-off: the risk level answers the van). */
 export function playFight(b, rng, maxRounds = 30) {
-  while (!b.end && b.round < maxRounds) playRound(b, rng);
+  const was = wordless;
+  wordless = true; // its rounds' lines are thrown away: no wording (see wordOf)
+  try { while (!b.end && b.round < maxRounds) playRound(b, rng); } finally { wordless = was; }
   if (!b.end) finish(b, 'deadline', 'end.deadline');
   return b;
 }
@@ -1119,10 +1162,11 @@ export function playFight(b, rng, maxRounds = 30) {
  */
 export function vanOdds(b0, runs = FIGHT.oddsRuns) {
   const outside = [...standing(b0), ...outsideDown(b0)].map((r) => r.id);
+  const copy = copierFor(b0);
   const read = (hold) => {
     let left = 0;
     for (let i = 0; i < runs; i++) {
-      const b = structuredClone(b0);
+      const b = copy();
       b.showcaseSeed = hash('van', hold, i); // reseeded, never drawn: the odds streams do not move
       b.vanHold = hold;
       playFight(b, makeRng(0x7a11 + i * 7919));
@@ -1182,7 +1226,7 @@ export function stepTally(t, k = Infinity) {
   const { b0, n, runs } = t;
   for (const end = Math.min(runs, t.done + k); t.done < end; t.done++) {
     const i = t.done;
-    const b = structuredClone(b0);
+    const b = (t.copy ??= copierFor(b0))(); // b0 is the tally's own and never changes (fightTallies builds it; fightOdds plays it out at once)
     b.showcaseSeed = hash('odds', i); // reseeded, never drawn, and so not in the cache key
     playFight(b, makeRng(0x5eed + i * 7919));
     if (objectiveDone(b)) n.win += 1;

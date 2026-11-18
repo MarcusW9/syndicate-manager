@@ -27,6 +27,7 @@ import { ZONES, INCIDENTS } from '../data/incidents.js';
 import { carried, counted, itemName, itemTitle, overwatchKit, patchBonus, perkSum, perksOf, sidearmStats } from './gear.js';
 import { effectiveStat } from './crew.js';
 import { d20, makeRng } from './rng.js';
+import { copier } from './copy.js';
 
 export { BATTLE };
 
@@ -470,12 +471,19 @@ export function battleTally(args) {
   return t;
 }
 
+/**
+ * The parts of a battle no round writes into (the fight's spots, each runner's stats): the odds' copies share them with the
+ * tally's battle instead of copying them (core/copy.js copier). tests/copyfight.test.js freezes them and plays battles.
+ */
+export const BATTLE_KEPT = (b) => [b.spots, ...(Array.isArray(b.runners) ? b.runners.map((r) => r?.stats) : [])];
+
 /** Play up to `k` more of a battle tally's fights; the last one puts its answer in the cache. Returns the tally. */
 export function stepBattleTally(t, k = Infinity) {
   if (t.out) return t;
   const { b0, n } = t;
+  const copy = (t.copy ??= copier(b0, BATTLE_KEPT(b0))); // what structuredClone gives, quicker (core/copy.js); b0 is the tally's own and never changes
   for (const end = Math.min(t.runs, t.done + k); t.done < end; t.done++) {
-    const b = structuredClone(b0);
+    const b = copy();
     const rng = makeRng(0x5eed + t.done * 7919);
     let result = 'standoff';
     while (b.round < (b.cap ?? BATTLE.rounds)) {
