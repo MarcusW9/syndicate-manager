@@ -541,26 +541,31 @@ function inkPen(c) {
   const dot = (x, y, r = 0.5) => `<rect x="${x - r}" y="${y - r}" width="${2 * r}" height="${2 * r}" fill="${base}" opacity="0.5"/><rect x="${x - r * 0.7}" y="${y - r * 0.7}" width="${r * 1.4}" height="${r * 1.4}" fill="${c.light}" opacity="0.9"/>`;
   return { line, dot };
 }
-/** One tattoo design on the shadow-side cheek (L is the face's left edge). */
-function tattooArt(look, c, L) {
+/** One tattoo design on the shadow-side cheek. Drawn small round its own centre, then set on the cheek: squeezed and
+ *  tilted as the cheek turns away, faded towards the face's edge, and clipped to the head so it never leaves the face. */
+function tattooArt(look, c, { L, a, id }) {
   const { line, dot } = inkPen(c);
-  const x = L + 5.2, y = 34.4;   // the patch's centre
+  const ex = 32 - (a?.eyeGap ?? 4.6), ey = a?.eyeY ?? 29;
+  const cx = (L + ex) / 2 + 1.2, cy = ey + 6.6;           // low on the cheek: clear of the eye, the nose and the mouth
   const art = {
-    lantern: () => line(`M${x} ${y - 4}L${x + 3.4} ${y}L${x} ${y + 4}L${x - 3.4} ${y}Z`) + line(`M${x} ${y - 1.9}L${x + 1.7} ${y}L${x} ${y + 1.9}L${x - 1.7} ${y}Z`, 0.4) + dot(x, y, 0.5) + line(`M${x - 5} ${y}h1.2M${x + 3.8} ${y}h1.2`, 0.4),
-    bracket: () => line(`M${L + 1.6} ${y - 4}v-2.6h2.6`) + line(`M${L + 8.8} ${y + 4}v2.6h-2.6`) + line(`M${L + 3.2} ${y + 1}l3.4 -3.4M${L + 4.6} ${y + 2.4}l3.4 -3.4M${L + 6} ${y + 3.8}l2.6 -2.6`, 0.4) + dot(L + 2.4, y + 3.8, 0.45),
-    circuit: () => line(`M${L + 1.2} ${y - 3.6}h3.2l2 2v3.4l2 2h1.4`) + line(`M${L + 6.4} ${y - 1.6}h2.4`, 0.4) + dot(L + 1.2, y - 3.6, 0.55) + dot(L + 9, y + 1.8, 0.55) + dot(L + 9.2, y - 1.6, 0.4),
-    scales: () => [0, 1, 2].map((r) => [0, 1, 2].map((k) => line(`M${L + 2.6 + k * 2.8 + (r % 2) * 1.4} ${y - 3.2 + r * 2.4}l1.4 1.3l1.4 -1.3`, 0.4)).join('')).join(''),
-    steps: () => line(`M${L + 1.8} ${y + 4}v-2.2h2.2v-2.2h2.2v-2.2h2.2`) + line(`M${L + 3.4} ${y + 4}v-1h1.4v-1.4h1.4v-1.4h1.4`, 0.35) + dot(L + 8.4, y - 2.6, 0.5),
-    reticle: () => `<circle cx="${x}" cy="${y}" r="2.8" stroke="${mix(c.skin, '#0a1620', 0.62)}" stroke-width="1.1" opacity="0.5" fill="none"/><circle cx="${x}" cy="${y}" r="2.8" stroke="${c.light}" stroke-width="0.5" opacity="0.88" fill="none"/>` + line(`M${x} ${y - 4.8}v2M${x} ${y + 2.8}v2M${x - 4.8} ${y}h2M${x + 2.8} ${y}h2`, 0.45) + dot(x, y, 0.55),
+    lantern: () => line('M0 -4L3.4 0L0 4L-3.4 0Z') + line('M0 -1.9L1.7 0L0 1.9L-1.7 0Z', 0.45) + dot(0, 0, 0.55) + line('M-5.2 0h1.4M3.8 0h1.4', 0.45),
+    bracket: () => line('M-3.8 -3.4v-2.4h2.4') + line('M3.8 3.4v2.4h-2.4') + line('M-2.6 1.2l3.4 -3.4M-1 2.6l3.4 -3.4M0.6 4l2.4 -2.4', 0.45) + dot(-2.8, 3.4, 0.5),
+    circuit: () => line('M-4 -3h3l2 2v3l2 2h1.6') + line('M1 -1h2.4', 0.45) + dot(-4, -3, 0.6) + dot(4.4, 3, 0.6) + dot(3.6, -1, 0.45),
+    scales: () => [0, 1, 2].map((r) => [0, 1, 2].map((k) => line(`M${-4.2 + k * 2.8 + (r % 2) * 1.4} ${-2.8 + r * 2.4}l1.4 1.3l1.4 -1.3`, 0.45)).join('')).join(''),
+    steps: () => line('M-3.4 3.6v-2.2h2.2v-2.2h2.2v-2.2h2.2') + line('M-1.8 3.6v-1h1.4v-1.4h1.4v-1.4h1.4', 0.4) + dot(2.8, -3, 0.55),
+    reticle: () => `<circle r="2.7" stroke="${mix(c.skin, '#0a1620', 0.62)}" stroke-width="1.1" opacity="0.5" fill="none"/><circle r="2.7" stroke="${c.light}" stroke-width="0.5" opacity="0.88" fill="none"/>` + line('M0 -4.8v2M0 2.8v2M-4.8 0h2M2.8 0h2', 0.5) + dot(0, 0, 0.6),
   }[look];
-  return `<g fill="none" stroke-linejoin="miter" stroke-linecap="butt">${art ? art() : ''}</g>`;
+  const fade = `${id}kf`, mask = `${id}km`;
+  return `<defs><linearGradient id="${fade}" gradientUnits="userSpaceOnUse" x1="${L}" x2="${L + 4}" y1="0" y2="0"><stop offset="0" stop-color="#000"/><stop offset="1" stop-color="#fff"/></linearGradient>
+    <mask id="${mask}" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64"><rect width="64" height="64" fill="url(#${fade})"/></mask></defs>
+    <g clip-path="url(#${id}h)"><g mask="url(#${mask})"><g transform="translate(${cx} ${cy}) skewY(-9) scale(0.8 0.82)" fill="none" stroke-linejoin="miter" stroke-linecap="butt">${art ? art() : ''}</g></g></g>`;
 }
 
 /** Tattoos, barcodes and scars. Ink is a thin neon so it shows on every skin tone. */
-function markings(f, c, g, id, op, ink) {
+function markings(f, c, g, id, op, ink, a) {
   const w = g.w, L = 32 - w;
   switch (f.marking) {
-    case 'tattoo': return tattooArt(ink ?? tattooLook(op), c, L);
+    case 'tattoo': return tattooArt(ink ?? tattooLook(op), c, { L, a, id });
     // On the chin, centred, and kept inside the face (owner, 2026-10-29: it hung off the jaw).
     case 'barcode': return `<g fill="${mix(c.skin, '#05080c', 0.7)}" opacity="0.85" clip-path="url(#${id}h)">${[0, 0.9, 1.4, 2.5, 3, 3.8].map((dx, i) => `<rect x="${30.1 + dx}" y="${g.chin - 5.2}" width="${i % 2 ? 0.35 : 0.55}" height="3.2"/>`).join('')}</g>`;
     case 'scar': return `<path d="M${L + 2.5} 22 L${L + 4} 24 L${L + 3.2} 25.2 L${L + 5} 28" stroke="${mix(c.skin, '#ffd5d5', 0.35)}" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>`;
@@ -858,7 +863,7 @@ export function portrait(op, { size = 44, anatomy = true, wound = null, ink = nu
   ${eye(27.4, st.tired, c, st.expression)}${f.chrome === 'cybereye' || f.chrome === 'half' ? '' : eye(36.6, st.tired, c, st.expression)}
   ${browsAndMouth(st, c)}`}
   ${f.mask ? '' : a ? `<g transform="translate(0 ${(a.mouthY - 40).toFixed(2)})">${facialHairMarks(f, c, g, id)}</g>` : facialHairMarks(f, c, g, id)}
-  ${ink && f.marking !== 'tattoo' ? tattooArt(ink, c, 32 - w) : markings(f, c, g, id, op, ink)}
+  ${ink && f.marking !== 'tattoo' ? tattooArt(ink, c, { L: 32 - w, a, id }) : markings(f, c, g, id, op, ink, a)}
   ${a && tattooed && f.mask !== 'faceplate' ? crewMark(a, c) : ''}
   ${f.chrome === 'half' ? `<g clip-path="url(#${id}h)">${halfFacePlate(f, c, g)}</g>` : ''}
   ${f.mask ? maskMarks(f, c, g, st, id) : ''}
