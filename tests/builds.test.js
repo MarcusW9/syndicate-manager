@@ -334,8 +334,8 @@ test('the planning read names the Contagion Vector, and a drone is still one it 
   assert.ok(fits.advice.includes('Contagion Vector'), `the advice names it: ${fits.advice}`);
   assert.ok(fits.answers[0].text.includes('Contagion Vector') && fits.answers[0].tags.includes('Contagion Vector'), 'and so does the breakdown');
   const drones = buildRead(withKinds(['drone', 'drone']));
-  assert.ok(/can't hurt/.test(drones.advice) && drones.advice.includes('Contagion Vector'), `a drone is still can't hurt: ${drones.advice}`);
-  assert.ok(/no effect on/.test(drones.answers[0].text), 'the breakdown says it has no effect on them');
+  assert.ok(/cannot hurt/.test(drones.advice) && drones.advice.includes('Contagion Vector'), `a drone is still one it cannot hurt: ${drones.advice}`);
+  assert.ok(/cannot affect/.test(drones.answers[0].text), 'the breakdown says it cannot affect them');
   assert.ok(drones.threats.some((t) => /machines/i.test(t.text)), 'and the threat list says machines');
 });
 
