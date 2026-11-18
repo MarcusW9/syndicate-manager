@@ -1,6 +1,6 @@
 # Proposal: a weapon sets how hard a hit lands (engine 2)
 
-Status: draft, 2026-11-18. Nothing built. **The owner agreed the principle (2026-11-18): a gun's damage stat sets how hard its hit lands.** The six questions below are still open. Follows the HP move (`docs/BATTLES.md` top: step 1 x10, step 2 the display, then hit variance at ±2 HP, `FIGHT.hitSpread`). This is the next use of "the room HP gives".
+Status: draft, 2026-11-18. Nothing built. **The owner agreed the principle (2026-11-18): a gun's damage stat sets how hard its hit lands.** **Q2-Q6 decided 2026-11-18 (the recommended options); Q1 is open.** Follows the HP move (`docs/BATTLES.md` top: step 1 x10, step 2 the display, then hit variance at ±2 HP, `FIGHT.hitSpread`). This is the next use of "the room HP gives".
 
 ## The problem, from the code
 
