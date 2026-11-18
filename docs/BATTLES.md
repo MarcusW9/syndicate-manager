@@ -6,9 +6,9 @@ Checked against the code on 2026-11-13 (the way-out section: 2026-11-17) (`src/c
 
 Engine 2's health, hits, heals, ticks and pull-out points are in HP. Step 1 of the move from pips multiplied every amount by `FIGHT.hpUnit` (10), so the rules play exactly as before: where this file or an older note says a pip, read 10 HP. A plate still takes one plain hit (`FIGHT.plateHp`, 10). Pull-out points round up to a whole `hpUnit`. The screens still draw one bar segment per 10 HP (`fight.js hpUnits`, read by `fightview.js` and `runfight.js fightSnapshot`/`feedLine`). Engine 1 keeps its own HP. Save v77 converts a fight in progress.
 
-## Hit variance (2026-11-18)
+## Hit size and variance (2026-11-18, save v78)
 
-A hit that lands varies by up to `FIGHT.hitSpread` (2) HP either way (`fight.js spread`): crew attacks, overwatch and enemy shots (an enemy's is rolled when the threat is drawn, so the shown hit is the used one). A plate that is only cracked passes 0. Turret shots are unchanged.
+A weapon's damage sets what its hit takes off: `fight.js hitOf(damage)` = `FIGHT.hit` (10) + `hitPerDamage` (3) for each point above `hitBaseDamage` (2, unarmed), so 10 unarmed, 13 for the default sidearm, up to 28 at damage 8. A runner carries it as `r.hit` (from `runnerOf`); overwatch and the hall turret work it out from their own `damage`. A strong hit is `strongMult` (2) times the hit, on one margin for every weapon (`FIGHT.strongMargin`, 12). `landHit` lands a hit on an enemy: a plate (unless the hit pierces) takes `plateHp` (10) off one hit and the rest goes through, one plate a hit however big; then whatever got through wobbles by `hitSpreadShare` (0.15) of the hit's size, rounded (±2 at 10, ±3 at 20), never below 1. An enemy's shot wobbles the same way when it is drawn, so the shown hit is the used one. The planning rule that skips an enemy already covered (`covered`) adds up the planned hits' sizes the same way. Enemy shots and a runner's armour are as before. Why: `drafts/PROPOSAL-gear-hit-size.md`.
 
 ## The way out of a hack (2026-11-17)
 

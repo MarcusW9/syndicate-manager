@@ -1,6 +1,6 @@
 # Proposal: a weapon sets how hard a hit lands (engine 2)
 
-Status: draft, 2026-11-18. Nothing built. **The owner agreed the principle (2026-11-18): a gun's damage stat sets how hard its hit lands.** **Q2-Q6 decided 2026-11-18 (the recommended options); Q1 is open.** Follows the HP move (`docs/BATTLES.md` top: step 1 x10, step 2 the display, then hit variance at ±2 HP, `FIGHT.hitSpread`). This is the next use of "the room HP gives".
+Status: **step 1 built 2026-11-18** (save v78; `docs/BATTLES.md` "Hit size"). The owner agreed the principle, then Q1 (a) and Q2-Q6 as recommended; while building, the base moved from damage 3 to damage 2 (owner, 2026-11-18): with one strong margin at the unarmed odds, a damage-3 default sidearm would have hit no harder than bare hands and landed fewer strong hits than before. The numbers below are the built ones.
 
 ## The problem, from the code
 
@@ -16,29 +16,30 @@ What that means today:
 
 A hit's size comes from the weapon: a basic sidearm still hits for 10, each point of damage above it adds HP, a strong hit is still double. Plates take a flat 10 off a hit instead of eating the whole of a plain one. The ±2 spread becomes a share of the hit.
 
-## The numbers (draft)
+## The numbers (built)
 
-`hit(damage) = FIGHT.hit + FIGHT.hitPerDamage × max(0, damage − 3)`, with `hitPerDamage` 3; strong = 2 × hit; spread = round(hit × 0.15).
+`hit(damage) = FIGHT.hit + FIGHT.hitPerDamage × max(0, damage − 2)`, with `hitPerDamage` 3; strong = 2 × hit; spread = round(hit × 0.15).
 
 | Weapon damage | Example | Plain hit | Strong hit | Spread |
 | --- | --- | --- | --- | --- |
-| 2 | unarmed street piece, compact frame | 10 | 20 | ±2 |
-| 3 | heritage sidearm (the default) | 10 | 20 | ±2 |
-| 4 | revolver; Verified heritage | 13 | 26 | ±2 |
-| 5 | cannon; Verified revolver | 16 | 32 | ±2 |
-| 6 | Verified cannon | 19 | 38 | ±3 |
-| 7 | Premium cannon + hot loads | 22 | 44 | ±3 |
-| 8 | the top end today | 25 | 50 | ±4 |
+| 1-2 | unarmed street piece, compact frame | 10 | 20 | ±2 |
+| 3 | heritage sidearm (the default) | 13 | 26 | ±2 |
+| 4 | revolver; Verified heritage | 16 | 32 | ±2 |
+| 5 | cannon; Verified revolver | 19 | 38 | ±3 |
+| 6 | Verified cannon | 22 | 44 | ±3 |
+| 7 | Verified cannon + hot loads | 25 | 50 | ±4 |
+| 8 | the top end (7 + a Targeting overlay) | 28 | 56 | ±4 |
 
-**Damage 3 plays exactly as today** (the spread at 10 is the ±2 already shipped), so a crew on the default sidearm is unchanged and only better guns hit harder. Damage 2 hits the same size too; with Q1 (a) its strong hits come a little more often than now (margin 10, not 12), and damage 4-5 trade their better strong odds for bigger hits.
+**Unarmed (damage 2) plays as before**, and every starting runner is unarmed (`docs/sims/weapon-damage-2026-11-18.md`), so a new crew is unchanged; every point of damage above bare hands is worth 3 HP. The strong margin is one for everyone, 12 (the old unarmed margin): damage 3-5 land strong hits less often than they did, and hit harder on every hit.
 
 What the plain hit does to the bodies in the game now (no spread):
 
 | | hired, 10 HP | police / secforce, 10 HP + plate | corp / enforcer, 20 HP |
 | --- | --- | --- | --- |
-| damage 3 (10) | down | cracks the plate, 0 through (as today) | 2 hits |
-| damage 5 (16) | down | cracks, 6 through: 2 hits | 2 hits, 4 left |
-| damage 7 (22) | down | cracks, 12 through: **down in one** (today only a strong hit does this) | **down in one** |
+| damage 2 (10) | down | cracks the plate, 0 through (as before) | 2 hits |
+| damage 3 (13) | down | cracks, 3 through: 2 hits | 2 hits |
+| damage 5 (19) | down | cracks, 9 through: 2 hits | 2 hits, 1 left |
+| damage 6 (22) | down | cracks, 12 through: **down in one** (before, only a strong hit did this) | **down in one** |
 
 So the reward is real and it lands where it should: armoured and heavy bodies.
 
@@ -70,7 +71,7 @@ So the reward is real and it lands where it should: armoured and heavy bodies.
 
 Then the build vocabulary's trigger step (`drafts/PROPOSAL-build-vocabulary.md`), which now has bigger numbers to work with.
 
-## Questions for the owner (six)
+## Questions for the owner (all answered 2026-11-18: Q1 (a), Q2-Q6 as recommended)
 
 1. **Strong odds.** (a) Damage sets size only; one flat strong margin for everyone **(recommended)**, at 12, today's margin at damage 2: every starting runner is unarmed (damage 2, `docs/sims/weapon-damage-2026-11-18.md`), so 12 keeps a new crew's fights exactly as today; a margin of 10 would give every new crew more strong hits. Damage 3-5 then land strong hits less often than now but hit harder. (b) Damage sets size and still improves strong odds (big guns count twice). (c) Leave strong odds as they are, capped at 5.
 2. **How steep.** `hitPerDamage` (a) 3: top gun about 2.5× a basic one **(recommended)**; (b) 2: gentler, top gun 1.6×; (c) 5: steep, top gun 3.5×, big guns one-shot nearly anything until enemies scale.
