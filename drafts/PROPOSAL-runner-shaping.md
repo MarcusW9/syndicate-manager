@@ -1,6 +1,6 @@
 # Proposal: shaping a runner, in one place
 
-Status: draft, 2026-11-18, from the owner's chat. Step 1 (the read) is built; nothing else is. Supersedes the "piece vs role" split in `drafts/RECONCILE-medical-piloting-leadership.md`, which this replaces as the way medical, piloting and leadership abilities are earned.
+Status: direction agreed with the owner (2026-11-18, calls below). Step 1 (the read) is built; nothing else is. Supersedes the "piece vs role" split in `drafts/RECONCILE-medical-piloting-leadership.md`, which this replaces as the way medical, piloting and leadership abilities are earned.
 
 ## The owner's direction (2026-11-18)
 
@@ -24,33 +24,35 @@ The player meets these in four places (the runner page's trait rows, Joss's mess
 
 **1. Growth stays from the work.** It is the Football Manager heart of the game, and the pace sims, wages and the death rule's tuning assume it. The hidden ceiling stays, because it is what scouting is for.
 
-**2. Steering on top: a training focus.** The player picks one or two stats per runner, which take a larger share of the points they earn. Open: a nudge or a hard choice (below).
+**2. Steering on top: a training focus.** The player picks one or two stats per runner, which take a larger share of the points they earn: a nudge (owner's call 1).
 
 **3. One menu on the runner's page.** Everything they hold and everything gated by stats, in one list: born and earned traits, a specialisation, moves and payloads, and later the medic's, pilot's and leader's abilities. Each entry shows its stat minimums and how far the runner is from them.
 
 **4. Stat minimums are the gates.** Already how specialisations and build pieces work (`needs`). Medical, piloting and leadership abilities use the same field. The training focus decides which gates a runner moves towards.
 
-**5. Picks at milestones.** At graduation, veteran, or every few jobs, the player picks one entry they qualify for. This is today's Joss offer, moved into the menu. Whether Joss still offers 2-3 (roguelite luck) or the player sees everything they qualify for is open.
+**5. Picks at milestones.** At graduation, veteran, or every few jobs, the player picks one entry whose gates the runner has met, from the open menu (owner's call 2). This replaces Joss's offers.
 
 ## What stays apart
 
 - **Earned traits keep their hidden progress** (an agreed rule: "progress hidden until earned"). They show in the menu once held, never as something to aim for. Changing that is a separate call.
 - **Synergies** stay their own row: they are about two people, not one.
 
-## Open for the owner
+## The owner's calls (2026-11-18)
 
-1. **Steering strength:** a nudge (focus takes about 1.5 times the points) or a hard choice (all points go where you pick)? A nudge keeps the story and the tuning; a hard choice gives control and invites min-maxing. A sim should check that a nudge is felt at all, since most points come from crisis rolls on whatever stat the moment asks for.
-2. **One choice or two:** training focus and milestone picks, or only the picks? With 8-12 runners on a phone, two is a lot of admin.
-3. **Offered or open:** Joss offers 2-3 at a milestone, or the player sees the whole list they qualify for?
-4. **Specialisations and pieces:** do specialisations become entries like moves (one place, one rule), or stay their own kind?
-5. **Earned traits' hidden progress:** keep hidden, or show some as goals?
+1. **Steering is a nudge.** The player picks one or two focus stats per runner; they take a larger share (about 1.5 times, a first value to check with the pace sims) of the points the runner earns anyway. A sim must show the nudge is felt, since most points come from crisis rolls on whatever stat the moment asks for.
+2. **Picks come from an open menu, with gates.** The whole menu is always visible on the runner's page, every entry with its stat minimums. At a milestone the player picks any entry whose gates the runner has met. Joss's random offers go. What keeps two runners of one role apart is growth, not luck: hidden ceilings and the work they have done decide which gates they ever reach, and the nudge only steers within that. Scouting matters more, because you recruit for the build you want.
+3. **Specialisations become entries** like moves and payloads: one rule, a stat gate, taken at a pick. The "jobs on overwatch with the kit" requirement can stay as an extra gate (suggested: shown, since it is a requirement, not a story).
+4. **Earned traits keep their hidden progress.** They show in the menu once held, never as goals.
+5. **Training focus and picks both stay** (follows from 1 and 2).
+
+**Still open:** the milestones themselves (graduation, veteran, every few jobs: how often), how many abilities a runner holds (the caps, tuned by feel), and the menu's look. The open menu needs enough entries to make different paths (around 15-20); today it has 5 (two specialisations, one move, two payloads), so picks feel thin until medical, piloting, leadership and more moves add entries.
 
 ## Build order
 
 1. **The read** (built 2026-11-18): `core/abilities.js abilitiesOf(op)`: what a runner holds from all four systems, and the stat-gated entries for their open places with what each is missing. No screen, no save change. Tested against `eligiblePieces` so the read and the offers agree.
 2. **The menu on the runner's page** (UI; after the owner picks the look; phone width first; screenshots).
-3. **Training focus** (save change, sims for the pace), only if the owner wants it after question 1.
-4. **Milestone picks in the menu**, replacing the separate offer messages (save migration for open offers).
+3. **Training focus** (save change; the pace sims check the nudge is felt and the season pace holds).
+4. **Milestone picks from the open menu**, replacing Joss's offer messages for specialisations and pieces (save migration: open offers, `op.spec` into the held list).
 5. **Medical, piloting and leadership abilities** as entries with stat minimums, each from its own proposal.
 
 The agreed order still holds (builds, then the playtest): steps 2-5 wait for the playtest unless the owner moves them. The playtest question: do you ever look at a runner and wish you could steer them?
