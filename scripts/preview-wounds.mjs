@@ -21,6 +21,8 @@ try {
     const { sitePlanSvg, bindSitePlan, siteFor } = await import('/src/ui/siteplan.js');
     const s = createNewGame({ seed: 21, startCrew: 'fresh' });
     const team = s.crew.slice(0, 3);
+    team[0].condition = { ...team[0].condition, injury: 'light' };
+    team[1].condition = { ...team[1].condition, injury: 'serious' };
     const site = siteFor('oldTown', null, null);
     document.body.innerHTML = `<div id="m" style="width:1200px">${sitePlanSvg({ kit: 'rifle', site })}</div>`;
     const plan = bindSitePlan(document.querySelector('.siteplan'), { team, site, out: [] });
