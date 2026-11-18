@@ -14,15 +14,15 @@ mkdirSync(out, { recursive: true });
 const VARIANTS = [
   ['0-current', ''],
   ['1-cyan', `.panel{border:1px solid #3de8d8;box-shadow:inset 0 0 0 1px rgba(61,232,216,.25),inset 0 0 40px rgba(61,232,216,.06)}
-    .crewfilter__select{background:#12262a;color:#3de8d8;border:1px solid #3de8d8}`],
+    .crewfilter__select{background-color:#12262a;color:#3de8d8;border:1px solid #3de8d8}`],
   ['2-red', `.panel{border:1px solid #ff3d5f;box-shadow:inset 0 0 0 1px rgba(255,61,95,.25),inset 0 0 40px rgba(255,61,95,.07)}
-    .crewfilter__select{background:#2a1218;color:#ff7a92;border:1px solid #ff3d5f}`],
+    .crewfilter__select{background-color:#2a1218;color:#ff7a92;border:1px solid #ff3d5f}`],
   ['3-amber', `.panel{border:1px solid #f2d541;box-shadow:inset 0 0 0 1px rgba(242,213,65,.22),inset 0 0 40px rgba(242,213,65,.05)}
-    .crewfilter__select{background:#262210;color:#f2d541;border:1px solid #f2d541}`],
+    .crewfilter__select{background-color:#262210;color:#f2d541;border:1px solid #f2d541}`],
   ['4-violet', `.panel{border:1px solid #b98aff;box-shadow:inset 0 0 0 1px rgba(185,138,255,.25),inset 0 0 40px rgba(185,138,255,.07)}
-    .crewfilter__select{background:#1d1630;color:#d3b6ff;border:1px solid #b98aff}`],
+    .crewfilter__select{background-color:#1d1630;color:#d3b6ff;border:1px solid #b98aff}`],
   ['5-split', `.panel{border:1px solid #2a303b;border-top:2px solid #3de8d8;border-left:2px solid #ff3d5f;box-shadow:inset 0 0 40px rgba(61,232,216,.05)}
-    .crewfilter__select{background:#3de8d8;color:#0a0c0f;border:0}`],
+    .crewfilter__select{background-color:#3de8d8;color:#0a0c0f;border:0}`],
 ];
 
 const port = 5300 + Math.floor(Math.random() * 600);
