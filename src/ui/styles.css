@@ -1098,10 +1098,10 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .sp-token circle { stroke: #0b0d11; stroke-width: 1.5; }
 .sp-token text, .sp-enemy text, .sp-npc text, .sp-cam text { fill: #0b0d11; font-weight: 700; font-size: 6.5px; text-anchor: middle; dominant-baseline: central; }
 .sp-token.is-hit .sp-face__ring { stroke: var(--danger); stroke-opacity: 0.45; }
-.sp-token .sp-status circle { fill: #14181f; stroke: var(--danger); stroke-width: 0.9; }
-.sp-token .sp-status path { fill: none; stroke: var(--danger); stroke-width: 1; stroke-linecap: round; }
-.sp-token .sp-status.is-serious circle { fill: var(--danger); stroke: #0b0d11; }
-.sp-token .sp-status.is-serious path { stroke: #fff; }
+.sp-token .sp-status__box { fill: #14181f; stroke: var(--danger); stroke-width: 0.9; stroke-linejoin: miter; }
+.sp-token .sp-status__cross { fill: none; stroke: var(--danger); stroke-width: 1.1; stroke-linecap: butt; }
+.sp-token .sp-status.is-serious .sp-status__box { fill: var(--danger); stroke: #0b0d11; }
+.sp-token .sp-status.is-serious .sp-status__cross { stroke: #fff; }
 .sp-token.is-down circle { stroke: var(--danger); stroke-width: 2.5; opacity: 0.6; }
 .sp-token.is-cornered circle { stroke: var(--danger); stroke-width: 2; animation: sp-blink 0.5s steps(2) infinite; }
 .sp-enemy circle { fill: var(--danger); stroke: #0b0d11; stroke-width: 1.5; } .sp-enemy--patrol circle { fill: #c9772f; }
