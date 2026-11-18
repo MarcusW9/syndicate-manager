@@ -8,6 +8,14 @@ Status: draft for iteration, 2026-11-18. Nothing built. This is section 2.6.2 of
 
 So the fights earn their keep by **combinations the player builds and enjoys watching**, not by simulating a firefight in detail.
 
+## What makes it scale (2026-11-18)
+
+1. **A generic trigger step in `fight.js`, built first.** When a trigger fires, every piece listening for it runs its who and what. Ricochet and the Vectors move onto it, with tests that they behave exactly as before. After that, a piece made only of existing words is data, not engine code.
+2. **A combo sweep.** A script plays every pair of pieces against each enemy mix (armoured, swarm, synthetic) and flags outliers.
+3. **A speed budget.** The board replays many fights for its odds; the trigger step's cost a fight is measured and guarded by a test.
+4. **A fixed order** when several pieces fire on one trigger (seat order), and cosmetic rolls never shift a rules roll.
+5. **A proper `if` field** for conditions (has status, has tag, enemies up), and later words for scaling and positioning.
+
 ## The rule that makes combinations emerge
 
 **A piece is written only in vocabulary words, and never names another piece.** "On kill, your mark jumps" is allowed; "if the runner also has Ricochet, ..." is not. The combination comes from the rules reading the same words. This is already true of the built pieces: Ricochet (a delivery) and the Contagion Vector (a payload) never name each other, yet a bounce that kills an infected enemy makes the infection jump.
@@ -16,7 +24,7 @@ A piece is four short fields: **when** (a trigger), **who** (a target rule), **w
 
 ## Triggers (when)
 
-Written in the fight's own units (rounds, pips, plates, groups; `docs/BATTLES.md`).
+Written in the fight's own units (rounds, HP, plates, groups; `docs/BATTLES.md`). Engine 2 moves from pips to HP (owner, 2026-11-18): one old pip is 10 HP, so "loses a pip" below reads "loses 10 HP" until the numbers are retuned.
 
 | Word | Fires when | Built today? |
 | --- | --- | --- |
@@ -26,7 +34,7 @@ Written in the fight's own units (rounds, pips, plates, groups; `docs/BATTLES.md
 | `onTick` | a status ticks at the round's end | yes (the Vector's tick) |
 | `onBreak` | an enemy group flees (its share up falls below `fleeBelow`) | the flee exists; no piece reads it |
 | `onAllyDown` | a crewmate is downed | the event exists; no piece reads it |
-| `onHurt` | the runner themself loses a pip | the event exists; no piece reads it |
+| `onHurt` | the runner themself loses HP | the event exists; no piece reads it |
 | `roundStart` | the round begins, after arrivals and the telegraph | yes (moves check `when` there) |
 | `enemiesUp n` | at least n enemies are up (a condition, not an event) | yes (Ricochet's `when`) |
 
@@ -68,7 +76,7 @@ Each status has: a duration in rounds (or until it falls), whether it stacks (de
 | `apply <status>` | put a status on the who |
 | `spread <status>` | move or copy a status to `nextInGroup` (copy loses a step; see the guardrails) |
 | `extraHit` | one more attack on the who, rolled like any attack |
-| `pip ±n` | the who loses or regains pips |
+| `hp ±n` | the who loses or regains HP |
 | `crackPlate` | the who loses a plate without a roll |
 | `refreshUse` | a move gets a use back |
 
