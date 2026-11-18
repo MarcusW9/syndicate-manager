@@ -74,6 +74,20 @@ const fit = (x, y, w, h, fill) => ({ t: 'rect', cls: 'sp-fit', x, y, w, h, fill 
 /** A room's size in plan units at its turn: [w, h]. */
 const span = (size, rot) => (rot ? [size[1] * 30, size[0] * 30] : [size[0] * 30, size[1] * 30]);
 
+/** The bunk room's fittings: three cots in the beds' own look (a pillow, a blanket on a frame), the frame a little taller
+ *  than a bed for the bunk above, set in a row along the long side. */
+const bunkFits = (rx, ry, iw, ih) => {
+  const long = iw > ih, n = 3, gap = 4;
+  const run = ((long ? iw : ih) - 12 - gap * (n - 1)) / n, depth = (long ? ih : iw) - 12;
+  return [...Array(n).keys()].flatMap((i) => {
+    const a = 6 + i * (run + gap);
+    const bx = long ? rx + a : rx + 6, by = long ? ry + 6 : ry + a, bw = long ? run : depth, bh = long ? depth : run;
+    return long
+      ? [fit(bx, by, bw, bh, '#3a4352'), fit(bx + 1.5, by + 1.5, bw - 3, 9, '#8b9aab'), fit(bx + 1.5, by + 12, bw - 3, bh - 13.5, '#4a5566')]
+      : [fit(bx, by, bw, bh, '#3a4352'), fit(bx + 1.5, by + 1.5, 9, bh - 3, '#8b9aab'), fit(bx + 12, by + 1.5, bw - 13.5, bh - 3, '#4a5566')];
+  });
+};
+
 Object.assign(PIECES, {
   clinic: {
     name: 'Clinic', kind: 'room', cost: 18000, size: [2, 2], turns: false, needs: 2, one: true, what: 'heals ×2',
@@ -83,7 +97,7 @@ Object.assign(PIECES, {
   bunks: {
     name: 'Bunk room', kind: 'room', cost: 15000, size: [3, 2], turns: true, needs: 2, one: true, what: '+2 beds',
     about: 'Bunks two high along the wall. Two more beds in this hall, with no more rent.',
-    shapes: (x, y, rot) => { const [w, h] = span([3, 2], rot); return room(x, y, w, h, (rx, ry, iw, ih) => (iw > ih ? [0, 1, 2].map((i) => fit(rx + 6 + i * (iw - 12) / 3, ry + 6, (iw - 12) / 3 - 4, ih - 12, '#4a5566')) : [0, 1, 2].map((i) => fit(rx + 6, ry + 6 + i * (ih - 12) / 3, iw - 12, (ih - 12) / 3 - 4, '#4a5566')))); },
+    shapes: (x, y, rot) => { const [w, h] = span([3, 2], rot); return room(x, y, w, h, (rx, ry, iw, ih) => bunkFits(rx, ry, iw, ih)); },
   },
   canteen: {
     name: 'Canteen', kind: 'room', cost: 10000, size: [3, 2], turns: true, needs: 2, one: true, what: 'rest faster',

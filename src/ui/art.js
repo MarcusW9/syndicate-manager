@@ -332,10 +332,9 @@ function implantMarks(n, f, g, a, load) {
 
 /** The crew's mark: a small neon lantern (the city is Lantern Bay) under the shadow-side eye. */
 function crewMark(a, c) {
-  const x = 32 - a.eyeGap + 0.4, y = a.eyeY + 4.2;
-  return `<g stroke="${c.light}" stroke-width="0.4" fill="none" opacity="0.9" stroke-linecap="round">
-    <path d="M${x - 0.5} ${y - 1.4} h1 M${x - 0.5} ${y + 1.4} h1 M${x} ${y + 1.4} v0.9"/>
-    <rect x="${x - 0.85}" y="${y - 1.1}" width="1.7" height="2.2" rx="0.7"/></g>`;
+  const { line, dot } = inkPen(c);
+  const x = 32 - a.eyeGap + 0.4, y = a.eyeY + 4.4;
+  return `<g fill="none" stroke-linejoin="miter" stroke-linecap="butt">${line(`M${x - 1.2} ${y - 1.9}h2.4`, 0.4)}${line(`M${x} ${y - 2.6}v0.7`, 0.35)}${line(`M${x - 1.1} ${y - 1.6}h2.2l0.5 1.9l-0.5 1.9h-2.2l-0.5 -1.9Z`, 0.4)}${line(`M${x} ${y - 1.6}v3.8`, 0.25)}${line(`M${x} ${y + 2.2}v1.1`, 0.3)}${dot(x, y + 3.6, 0.35)}</g>`;
 }
 
 /**
@@ -531,11 +530,42 @@ function chromeMarks(f, load, w, tired, eyeAt = [36.6, 29]) {
   }
 }
 
+// Tattoos (2026-11-18): geometric line work (never tribal, ART.md), each drawn twice: a dark ink under the skin and a thin neon
+// line on it, so it reads on every skin tone and looks laid in, not scribbled. Square ends and mitred corners, like the UI.
+// Which design a runner wears is fixed by their id.
+export const TATTOO_LOOKS = ['lantern', 'bracket', 'circuit', 'scales', 'steps', 'reticle'];
+export const tattooLook = (op) => TATTOO_LOOKS[hash(`${op?.id ?? ''}|${op?.name ?? ''}|ink`) % TATTOO_LOOKS.length];
+function inkPen(c) {
+  const base = mix(c.skin, '#0a1620', 0.62);
+  const line = (d, w = 0.5) => `<path d="${d}" stroke="${base}" stroke-width="${w + 0.6}" opacity="0.5"/><path d="${d}" stroke="${c.light}" stroke-width="${w}" opacity="0.88"/>`;
+  const dot = (x, y, r = 0.5) => `<rect x="${x - r}" y="${y - r}" width="${2 * r}" height="${2 * r}" fill="${base}" opacity="0.5"/><rect x="${x - r * 0.7}" y="${y - r * 0.7}" width="${r * 1.4}" height="${r * 1.4}" fill="${c.light}" opacity="0.9"/>`;
+  return { line, dot };
+}
+/** One tattoo design on the shadow-side cheek. Drawn small round its own centre, then set on the cheek: squeezed and
+ *  tilted as the cheek turns away, faded towards the face's edge, and clipped to the head so it never leaves the face. */
+function tattooArt(look, c, { L, a, id }) {
+  const { line, dot } = inkPen(c);
+  const ex = 32 - (a?.eyeGap ?? 4.6), ey = a?.eyeY ?? 29;
+  const cx = (L + ex) / 2 + 1.2, cy = ey + 6.6;           // low on the cheek: clear of the eye, the nose and the mouth
+  const art = {
+    lantern: () => line('M0 -4L3.4 0L0 4L-3.4 0Z') + line('M0 -1.9L1.7 0L0 1.9L-1.7 0Z', 0.45) + dot(0, 0, 0.55) + line('M-5.2 0h1.4M3.8 0h1.4', 0.45),
+    bracket: () => line('M-3.8 -3.4v-2.4h2.4') + line('M3.8 3.4v2.4h-2.4') + line('M-2.6 1.2l3.4 -3.4M-1 2.6l3.4 -3.4M0.6 4l2.4 -2.4', 0.45) + dot(-2.8, 3.4, 0.5),
+    circuit: () => line('M-4 -3h3l2 2v3l2 2h1.6') + line('M1 -1h2.4', 0.45) + dot(-4, -3, 0.6) + dot(4.4, 3, 0.6) + dot(3.6, -1, 0.45),
+    scales: () => [0, 1, 2].map((r) => [0, 1, 2].map((k) => line(`M${-4.2 + k * 2.8 + (r % 2) * 1.4} ${-2.8 + r * 2.4}l1.4 1.3l1.4 -1.3`, 0.45)).join('')).join(''),
+    steps: () => line('M-3.4 3.6v-2.2h2.2v-2.2h2.2v-2.2h2.2') + line('M-1.8 3.6v-1h1.4v-1.4h1.4v-1.4h1.4', 0.4) + dot(2.8, -3, 0.55),
+    reticle: () => `<circle r="2.7" stroke="${mix(c.skin, '#0a1620', 0.62)}" stroke-width="1.1" opacity="0.5" fill="none"/><circle r="2.7" stroke="${c.light}" stroke-width="0.5" opacity="0.88" fill="none"/>` + line('M0 -4.8v2M0 2.8v2M-4.8 0h2M2.8 0h2', 0.5) + dot(0, 0, 0.6),
+  }[look];
+  const fade = `${id}kf`, mask = `${id}km`;
+  return `<defs><linearGradient id="${fade}" gradientUnits="userSpaceOnUse" x1="${L}" x2="${L + 4}" y1="0" y2="0"><stop offset="0" stop-color="#000"/><stop offset="1" stop-color="#fff"/></linearGradient>
+    <mask id="${mask}" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64"><rect width="64" height="64" fill="url(#${fade})"/></mask></defs>
+    <g clip-path="url(#${id}h)"><g mask="url(#${mask})"><g transform="translate(${cx} ${cy}) skewY(-9) scale(0.8 0.82)" fill="none" stroke-linejoin="miter" stroke-linecap="butt">${art ? art() : ''}</g></g></g>`;
+}
+
 /** Tattoos, barcodes and scars. Ink is a thin neon so it shows on every skin tone. */
-function markings(f, c, g, id) {
+function markings(f, c, g, id, op, ink, a) {
   const w = g.w, L = 32 - w;
   switch (f.marking) {
-    case 'tattoo': return `<g stroke="${c.light}" stroke-width="0.5" fill="none" opacity="0.75"><path d="M${L + 3} 31 L${L + 5.5} 35.5 L${L + 0.8} 35.5 Z"/><path d="M${L + 2.4} 37.3 h4 M${L + 3.2} 38.6 h2.4"/></g>`;
+    case 'tattoo': return tattooArt(ink ?? tattooLook(op), c, { L, a, id });
     // On the chin, centred, and kept inside the face (owner, 2026-10-29: it hung off the jaw).
     case 'barcode': return `<g fill="${mix(c.skin, '#05080c', 0.7)}" opacity="0.85" clip-path="url(#${id}h)">${[0, 0.9, 1.4, 2.5, 3, 3.8].map((dx, i) => `<rect x="${30.1 + dx}" y="${g.chin - 5.2}" width="${i % 2 ? 0.35 : 0.55}" height="3.2"/>`).join('')}</g>`;
     case 'scar': return `<path d="M${L + 2.5} 22 L${L + 4} 24 L${L + 3.2} 25.2 L${L + 5} 28" stroke="${mix(c.skin, '#ffd5d5', 0.35)}" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>`;
@@ -698,14 +728,54 @@ function glassesAt(a, c) {
   return `<g fill="${c.light}" fill-opacity="0.12" stroke="#0d0d0f" stroke-width="0.8"><rect x="${l}" y="${y}" width="${lw}" height="4.2" rx="1.2"/><rect x="${r}" y="${y}" width="${lw}" height="4.2" rx="1.2"/></g><path d="M${l + lw} ${y + 1.6} H${r}" stroke="#0d0d0f" stroke-width="0.8"/>`;
 }
 
-function injuryMarks(severity, w) {
-  const plaster = `<g transform="rotate(-32 ${32 + w * 0.55} 34)"><rect x="${32 + w * 0.55 - 3.5}" y="33" width="7" height="2.2" fill="#ece3d3"/></g>
-    <g transform="rotate(28 ${32 + w * 0.55} 34)"><rect x="${32 + w * 0.55 - 3.5}" y="33" width="7" height="2.2" fill="#ece3d3" opacity="0.9"/></g>`;
-  if (severity === 'light') return plaster;
-  // Serious or worse: a gauze band across the brow as well.
-  return `<path d="M${32 - w - 1} 21.5 Q32 18.5 ${32 + w + 1} 21 L${32 + w + 1} 24.8 Q32 22.3 ${32 - w - 1} 25.3 Z" fill="#efe8dc"/>
-    <path d="M${32 - w} 23.6 Q32 20.9 ${32 + w} 23.2" stroke="#cfc6b6" stroke-width="0.5" fill="none"/>
-    <circle cx="${32 + w * 0.45}" cy="22.4" r="1.1" fill="#b4473f" opacity="0.55"/>${plaster}`;
+// Wounds (2026-11-18): a few presets per severity, each drawn in the person's own skin tone. Which one a runner wears is
+// fixed by their id (the same person always shows the same wound); the game's state only says whether and how badly.
+// The shadow side of the face carries the bruises and cuts, the lit cheek the pads, so chrome on the lit side never clashes.
+export const WOUND_LOOKS = { light: ['plaster', 'browCut', 'blackEye', 'graze'], serious: ['gauzeBrow', 'cheekPad', 'splitLip'], critical: ['headWrap'] };
+const BLOOD = '#a3322b', DRIED = '#6e1f1c', GAUZE = '#efe8dc', PLASTER = '#ece3d3';
+/** The preset this runner wears at this severity: 'plaster', 'headWrap' ... (null for none). */
+export function woundLook(op, severity) {
+  const list = WOUND_LOOKS[severity === 'critical' ? 'critical' : severity === 'serious' ? 'serious' : severity === 'light' ? 'light' : ''];
+  return list ? list[hash(`${op?.id ?? ''}|${op?.name ?? ''}|wound`) % list.length] : null;
+}
+
+function injuryMarks(look, w, c, a) {
+  const ex = 32 - (a?.eyeGap ?? 4.6), ey = a?.eyeY ?? 29, ew = a?.eyeW ?? 2.1;   // the shadow-side eye
+  const px = 32 + w * 0.55, py = 34;                                                // the lit cheek
+  const mY = a?.mouthY ?? 40, mW = a?.mouthW ?? 3;
+  const bruise = mix(c.skin, '#5a2a6a', 0.5), rim = mix(c.skin, '#a8a040', 0.42);
+  const strip = (x, y, rot, len = 6, h = 1.9) => `<g transform="rotate(${rot} ${x} ${y})"><rect x="${x - len / 2}" y="${y - h / 2}" width="${len}" height="${h}" fill="${PLASTER}" stroke="#b9ae98" stroke-width="0.25"/><rect x="${x - 0.9}" y="${y - h / 2 + 0.3}" width="1.8" height="${h - 0.6}" fill="#d9ceb8"/></g>`;
+  const blackEye = (o = 0.6) => `<ellipse cx="${ex}" cy="${ey + 0.9}" rx="${ew + 2.9}" ry="3.1" fill="${rim}" opacity="${o * 0.45}"/><ellipse cx="${ex}" cy="${ey + 0.7}" rx="${ew + 1.8}" ry="2.2" fill="${bruise}" opacity="${o}"/><path d="M${ex - ew - 1.5} ${ey + 2.6} Q${ex} ${ey + 3.9} ${ex + ew + 1.5} ${ey + 2.6}" stroke="${mix(bruise, '#000', 0.3)}" stroke-width="0.35" fill="none" opacity="0.5"/>`;
+  const cut = (x, y) => `<path d="M${x - 2.8} ${y - 1.2} L${x + 2.6} ${y + 1.1}" stroke="${DRIED}" stroke-width="0.8" stroke-linecap="round"/><path d="M${x + 0.6} ${y + 0.3} Q${x + 1.4} ${y + 2.6} ${x + 0.8} ${y + 4.4}" stroke="${BLOOD}" stroke-width="0.5" fill="none" stroke-linecap="round" opacity="0.85"/><circle cx="${x + 0.8}" cy="${y + 4.6}" r="0.5" fill="${BLOOD}"/>`;
+  switch (look) {
+    case 'plaster': // a crossed plaster on the lit cheek
+      return strip(px, py, -32, 7.4, 2.3) + strip(px, py, 28, 7.4, 2.3);
+    case 'browCut': // a split brow held with two butterfly strips, a thread of blood
+      return `${cut(ex, ey - 4.1)}${strip(ex - 1.3, ey - 4.2, -65, 3.6, 1.2)}${strip(ex + 1.4, ey - 3.4, -65, 3.6, 1.2)}`;
+    case 'blackEye': // a swollen, bruised eye with a split cheek above it
+      return blackEye(0.62) + `<path d="M${ex - 1.2} ${ey + 3.4} l1.6 1.2" stroke="${DRIED}" stroke-width="0.5" stroke-linecap="round"/>`;
+    case 'graze': // a scrape on the lit cheek: raw skin, three scores, a few beads of blood
+      return `<ellipse cx="${px}" cy="${py - 0.5}" rx="3.6" ry="2.2" transform="rotate(-28 ${px} ${py})" fill="${mix(c.skin, '#d9667a', 0.5)}" opacity="0.6"/>
+        <g stroke="#b04a44" stroke-width="0.45" stroke-linecap="round" opacity="0.85" fill="none"><path d="M${px - 2.6} ${py + 0.4} l4.2 -2.3"/><path d="M${px - 2.2} ${py + 1.6} l4.4 -2.4"/><path d="M${px - 1.2} ${py + 2.3} l3.4 -1.8"/></g>
+        <g fill="${BLOOD}"><circle cx="${px + 1.4}" cy="${py - 1.5}" r="0.35"/><circle cx="${px - 1.5}" cy="${py + 0.9}" r="0.3"/><circle cx="${px + 0.2}" cy="${py + 2.3}" r="0.3"/></g>`;
+    case 'cheekPad': { // a small gauze pad taped low on the lit cheek (clear of the eye and the face's edge), a stain through it, the other eye bruised
+      const qx = px - 0.8, qy = py + 1.6;
+      return `${blackEye(0.5)}<rect x="${qx - 2.5}" y="${qy - 2.3}" width="5" height="4.6" fill="${GAUZE}" stroke="#b9ae98" stroke-width="0.3"/><path d="M${qx - 2.5} ${qy - 0.8}h5M${qx - 2.5} ${qy + 0.8}h5" stroke="#d6ccb9" stroke-width="0.22"/><circle cx="${qx + 0.4}" cy="${qy}" r="1" fill="${BLOOD}" opacity="0.5"/>${strip(qx, qy - 2.3, 0, 6.4, 1.1)}${strip(qx, qy + 2.3, 0, 6.4, 1.1)}`;
+    }
+    case 'splitLip': // a split, swollen lip, a bruised eye and a brow stitched shut
+      return `${blackEye(0.58)}<path d="M${32 + mW * 0.35} ${mY - 0.6} q0.5 1.6 -0.1 3.3" stroke="${DRIED}" stroke-width="0.7" fill="none" stroke-linecap="round"/><path d="M${32 + mW * 0.35 - 0.3} ${mY + 2.6} q-0.3 1.8 0.2 2.9" stroke="${BLOOD}" stroke-width="0.45" fill="none" stroke-linecap="round" opacity="0.85"/>${cut(ex, ey - 4.1)}<g stroke="#2a1b1a" stroke-width="0.35">${[-1.6, 0, 1.6].map((d) => `<path d="M${ex + d - 0.2} ${ey - 5.4 + d * 0.4}l0.9 2.4"/>`).join('')}</g>`;
+    case 'headWrap': // critical: a gauze wrap round the head, blood through it, the eye shut and dark
+    default:
+      return `${blackEye(0.7)}<path d="M${32 - w - 1} 20.4 Q32 17.2 ${32 + w + 1} 19.9 L${32 + w + 1} 25.4 Q32 22.6 ${32 - w - 1} 26 Z" fill="${GAUZE}"/>
+        <path d="M${32 - w} 22.6 Q32 19.8 ${32 + w} 22.2M${32 - w} 24.4 Q32 21.7 ${32 + w} 24" stroke="#cfc6b6" stroke-width="0.35" fill="none"/>
+        <path d="M${32 - w * 0.25} 18.2 Q${32 - w * 0.55} 21 ${32 - w * 0.3} 25" stroke="#cfc6b6" stroke-width="0.35" fill="none"/>
+        <ellipse cx="${32 + w * 0.4}" cy="22.4" rx="2.4" ry="2" fill="${BLOOD}" opacity="0.7"/><ellipse cx="${32 + w * 0.4}" cy="22.4" rx="1.1" ry="0.9" fill="${DRIED}" opacity="0.8"/>
+        <path d="M${32 + w * 0.4} 24.2 q0.5 2.4 -0.2 4.4" stroke="${BLOOD}" stroke-width="0.5" fill="none" stroke-linecap="round" opacity="0.85"/>`;
+    case 'gauzeBrow': // serious: a gauze band across the brow, a blood spot, and the plaster
+      return `<path d="M${32 - w - 1} 21.5 Q32 18.5 ${32 + w + 1} 21 L${32 + w + 1} 24.8 Q32 22.3 ${32 - w - 1} 25.3 Z" fill="${GAUZE}"/>
+        <path d="M${32 - w} 23.6 Q32 20.9 ${32 + w} 23.2" stroke="#cfc6b6" stroke-width="0.5" fill="none"/>
+        <circle cx="${32 + w * 0.45}" cy="22.4" r="1.5" fill="${BLOOD}" opacity="0.6"/>${strip(px, py, -32, 7.4, 2.3)}${strip(px, py, 28, 7.4, 2.3)}`;
+  }
 }
 
 /**
@@ -713,7 +783,7 @@ function injuryMarks(severity, w) {
  * tiredness (heavy lids, shadowed eyes) and neural load (the implant glows). Fallen
  * operatives are greyed by the frame (CSS), not here.
  */
-export function portrait(op, { size = 44, anatomy = true } = {}) {
+export function portrait(op, { size = 44, anatomy = true, wound = null, ink = null } = {}) {
   const f = faceOf(op);
   const st = stateOf(op);
   const severity = op.condition?.injury;
@@ -741,7 +811,7 @@ export function portrait(op, { size = 44, anatomy = true } = {}) {
   const fiberLines = hair.fiber ? [[L - 1.5, 54], [L + 1.2, 54], [R - 1.2, 54], [R + 1.5, 54]].map(([x, y]) =>
     `<path d="M${x} 36 V${y - 2}" stroke="${f.chromeColor}" stroke-width="0.5" opacity="0.7"/><circle cx="${x}" cy="${y - 1.6}" r="0.7" fill="${f.chromeColor}"/>`).join('') : '';
   // Undercut: the shaved side carries a geometric tattoo.
-  const shavedInk = hair.shaved ? `<path d="M${L - 0.2} 17.5 l2.4 2.4 l-2.4 2.4 M${L + 1.4} 23.6 h2.2" stroke="${c.light}" stroke-width="0.5" fill="none" opacity="0.7"/>` : '';
+  const shavedInk = hair.shaved ? (() => { const { line, dot } = inkPen(c); return `<g fill="none" stroke-linejoin="miter" stroke-linecap="butt">${line(`M${L + 1.2} 15.6V25.4`, 0.4)}${[16.6, 19.4, 22.2].map((y) => line(`M${L + 1.2} ${y}l2 1.4l-2 1.4`, 0.4)).join('')}${dot(L + 0.2, 26.3, 0.45)}</g>`; })() : '';
 
   return `<svg class="art portrait" viewBox="${PORTRAIT_FRAME}" width="${size}" height="${size}" aria-hidden="true" focusable="false">
   <defs>
@@ -793,7 +863,7 @@ export function portrait(op, { size = 44, anatomy = true } = {}) {
   ${eye(27.4, st.tired, c, st.expression)}${f.chrome === 'cybereye' || f.chrome === 'half' ? '' : eye(36.6, st.tired, c, st.expression)}
   ${browsAndMouth(st, c)}`}
   ${f.mask ? '' : a ? `<g transform="translate(0 ${(a.mouthY - 40).toFixed(2)})">${facialHairMarks(f, c, g, id)}</g>` : facialHairMarks(f, c, g, id)}
-  ${markings(f, c, g, id)}
+  ${ink && f.marking !== 'tattoo' ? tattooArt(ink, c, { L: 32 - w, a, id }) : markings(f, c, g, id, op, ink, a)}
   ${a && tattooed && f.mask !== 'faceplate' ? crewMark(a, c) : ''}
   ${f.chrome === 'half' ? `<g clip-path="url(#${id}h)">${halfFacePlate(f, c, g)}</g>` : ''}
   ${f.mask ? maskMarks(f, c, g, st, id) : ''}
@@ -812,7 +882,7 @@ export function portrait(op, { size = 44, anatomy = true } = {}) {
   ${f.visor ? `<path d="M${L - 1} 26.2 L${R + 1} 25.8 L${R + 0.6} 31.2 L${L - 0.6} 31.6 Z" fill="#0b0f14"/><path d="M${L - 0.4} 27.2 L${R + 0.4} 26.8" stroke="${c.light}" stroke-width="0.6" opacity="${st.tired ? 0.35 : 0.85}"/><path d="M${R - 7} 29.6 h2 M${R - 4.4} 29.6 h1" stroke="${c.light}" stroke-width="0.5" opacity="0.6"/>` : ''}
   ${f.mask === 'faceplate' ? '' : chromeMarks(f, st.load, w, st.tired, eyeAt)}
   ${a && implants && f.mask !== 'faceplate' ? implantMarks(implants, f, g, a, st.load) : ''}
-  ${st.injured && f.mask !== 'faceplate' ? injuryMarks(severity, w) : ''}
+  ${st.injured && f.mask !== 'faceplate' ? injuryMarks(wound ?? woundLook(op, severity), w, c, a) : ''}
 </svg>`;
 }
 

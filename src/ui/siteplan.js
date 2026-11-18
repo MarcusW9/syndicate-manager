@@ -158,6 +158,16 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
   const wait = (ms) => later(ms * speed());
   const slot = (i, pt) => [pt[0] + (i % 2) * 11 - 5, pt[1] + Math.floor(i / 2) * 11 - 5];
   const tok = (id) => tokens.querySelector(`[data-op="${CSS.escape(id)}"]`);
+  // A wound is a status badge on the token's top right, clear of the face: a small square with a cut corner and a cross (never a bright ring:
+  // that read as a power-up). A serious injury also gets the red ring (`is-down`).
+  const markHurt = (t, severity) => {
+    if (!t) return;
+    t.classList.add(severity === 'serious' ? 'is-down' : 'is-hit');
+    t.querySelector('.sp-status')?.remove();
+    const g = el('g', { class: `sp-status ${severity === 'serious' ? 'is-serious' : ''}`, transform: 'translate(5 -5)' });
+    g.append(el('path', { class: 'sp-status__box', d: 'M-3 -3H1.5L3 -1.5V3H-3Z' }), el('path', { class: 'sp-status__cross', d: 'M-1.4 0h2.8M0 -1.4v2.8' }));
+    t.append(g);
+  };
   const addToken = (op, at) => {
     const g = el('g', { class: 'sp-token', 'data-op': op.id });
     g.append(el('circle', { r: 6.5, fill: op.color ?? '#8b93a7' }), el('text', {}, initials(op)));
@@ -544,7 +554,7 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
         if (cue.save.success) foe?.classList.add('is-dead');
       } else if (foe) await flash(near(me, 4, -2));
       t?.classList.remove('is-cornered');
-      if (cue.hurt) t?.classList.add(cue.hurt === 'serious' ? 'is-down' : 'is-hit');
+      if (cue.hurt) markHurt(t, cue.hurt);
       else if (!cue.save?.success && cue.danger) await pulse(here, 900);
       cleanup();
     },
@@ -568,7 +578,7 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
       await wait(500);
     },
     /** Mark someone hurt (drawn on mount from the state). */
-    hurt(id, severity) { tok(id)?.classList.add(severity === 'serious' ? 'is-down' : 'is-hit'); },
+    hurt(id, severity) { markHurt(tok(id), severity); },
     alarm: (on) => { alarm.setAttribute('cx', here[0]); alarm.setAttribute('cy', here[1]); alarm.classList.toggle('is-on', on); },
     full: () => panTo('full'),
   };
