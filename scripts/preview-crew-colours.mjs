@@ -17,6 +17,10 @@ const VARIANTS = [
     .crewfilter__select{background-color:#12262a;color:#3de8d8;border:1px solid #3de8d8}`],
   ['2-red', `.panel{border:1px solid #ff3d5f;box-shadow:inset 0 0 0 1px rgba(255,61,95,.25),inset 0 0 40px rgba(255,61,95,.07)}
     .crewfilter__select{background-color:#2a1218;color:#ff7a92;border:1px solid #ff3d5f}`],
+  ['6-red-toned', `.panel{border:1px solid rgba(255,61,95,.5);box-shadow:inset 0 0 0 1px rgba(255,61,95,.1),inset 0 0 40px rgba(255,61,95,.04)}
+    .crewfilter__select{background-color:#2a1218;color:#ff7a92;border:1px solid #ff3d5f}`],
+  ['7-red-dropdown-cyan-outline', `.panel{border:1px solid rgba(61,232,216,.35);box-shadow:inset 0 0 40px rgba(61,232,216,.04)}
+    .crewfilter__select{background-color:#2a1218;color:#ff7a92;border:1px solid #ff3d5f}`],
   ['3-amber', `.panel{border:1px solid #f2d541;box-shadow:inset 0 0 0 1px rgba(242,213,65,.22),inset 0 0 40px rgba(242,213,65,.05)}
     .crewfilter__select{background-color:#262210;color:#f2d541;border:1px solid #f2d541}`],
   ['4-violet', `.panel{border:1px solid #b98aff;box-shadow:inset 0 0 0 1px rgba(185,138,255,.25),inset 0 0 40px rgba(185,138,255,.07)}
