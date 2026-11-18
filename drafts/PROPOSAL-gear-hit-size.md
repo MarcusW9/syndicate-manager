@@ -49,6 +49,9 @@ So the reward is real and it lands where it should: armoured and heavy bodies.
 3. **The spread scales.** `FIGHT.hitSpread` (2) becomes `FIGHT.hitSpreadShare` (0.15, rounded). Same at 10 HP, more swing on big guns.
 4. **Strong odds stop reading damage** (needs your call, Q1). Today damage gives a better chance of a strong hit. If damage also sets the hit's size, a big gun counts twice. Recommended: one flat margin (10, today's margin at damage 3), so damage means size and aim means accuracy.
 5. **The enemy side is unchanged** in this step: enemy shots stay as `ENEMY_HIT`, and a runner's armour still takes whole hits (Q3).
+6. **Plates are a count, one per hit.** A body with two plates (none exists yet; enemy toughness would add them) loses one plate to each hit that lands, 10 off that hit, the rest through. Against two plates and 20 HP: damage 3 needs 4 hits, damage 5 needs 3, damage 7 needs 2, a damage-3 piercing gun needs 2. Plates stay the piercing guns' problem to solve, size stays the big guns' (Q6).
+
+**Runner armour has the same cap (found 2026-11-18, fixed in the enemy-toughness step, not here).** `fight.js absorbOf` turns armour value into plates, at most 2 (`FIGHT.absorb.pro`), and each plate stops one enemy shot whole. A vest's value runs 1-3 (tier step, a skin weave), so anything above 2 is wasted, and the weave's "Takes 1 off every hit" is a whole plate here (true only in engine 1). The likely fix mirrors this proposal: each armour point takes a flat amount off every hit (about 3 HP a point). It belongs with enemy toughness, because against fixed 10 HP shots a flat soak is either nothing or nearly everything.
 
 ## What it does to the rest
 
@@ -67,12 +70,13 @@ So the reward is real and it lands where it should: armoured and heavy bodies.
 
 Then the build vocabulary's trigger step (`drafts/PROPOSAL-build-vocabulary.md`), which now has bigger numbers to work with.
 
-## Questions for the owner
+## Questions for the owner (six)
 
 1. **Strong odds.** (a) Damage sets size only; one flat strong margin for everyone **(recommended)**. (b) Damage sets size and still improves strong odds (big guns count twice). (c) Leave strong odds as they are, capped at 5.
 2. **How steep.** `hitPerDamage` (a) 3: top gun about 2.5× a basic one **(recommended)**; (b) 2: gentler, top gun 1.6×; (c) 5: steep, top gun 3.5×, big guns one-shot nearly anything until enemies scale.
 3. **Runner armour.** (a) Leave it taking whole hits until enemy toughness (step 3) **(recommended: one side at a time keeps the sims readable)**; (b) make it a flat soak now, to match enemy plates.
 4. **Turret and overwatch.** (a) Same formula from their own damage **(recommended)**; (b) leave them as today.
+6. **A big hit against several plates.** (a) One plate per hit, the rest through **(recommended: armour stays a separate problem from health, the stage shows one crack a hit)**; (b) the hit spends itself across plates (a 22 breaks two 10s and sends 2 through): big guns strip armour fast and multi-plate bodies stop meaning much.
 5. **Order.** (a) This, then enemy toughness, then the trigger step **(recommended)**; (b) the trigger step first, this after.
 
 ## Rejected
