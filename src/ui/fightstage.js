@@ -22,7 +22,7 @@ import { SPECIAL_MOVES, SPECIAL_FAST_CUT, SPECIAL_LOOK_DEFAULT, ENEMY_LOOKS } fr
 export const PACE_K = { watch: 1, fast: 0.6, resolve: 0 };
 export const PACES = ['fast', 'watch', 'resolve'];
 // Step lengths at Watch, in ms.
-const MS = { enter: 900, move: 600, lean: 320, fire: 240, gap: 160, heal: 450, aura: 1100, ping: 450, flank: 450, settle: 600 };
+const MS = { enter: 900, move: 600, lean: 320, fire: 240, gap: 160, heal: 450, aura: 1100, spread: 900, tick: 560, tickOut: 700, dome: 420, patch: 1100, alarm: 1200, jam: 650, ping: 450, flank: 450, settle: 600 };
 const HIDDEN = new Set(['aboard', 'gone', 'fled']);
 
 const mid = (a, b) => [Math.round((a[0] + b[0]) / 2), Math.round((a[1] + b[1]) / 2)];
@@ -81,10 +81,12 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
   adv(moved);
   // Orders in motion: a protector leans towards who they cover, a medic towards the patient (a gesture, not a new spot).
   let leant = false;
+  let domes = false; // a shield's dome stands over the exchange and goes at its end
   for (const [id, u] of Object.entries(units)) {
     const a = u.act;
     if (!a || !['shield', 'patch', 'stabilise'].includes(a.kind) || typeof a.target !== 'string' || !units[a.target]) continue;
     push({ do: 'lean', id, toward: a.target, kind: a.kind === 'shield' ? 'shield' : 'heal', dur: ms(MS.lean) });
+    if (a.kind === 'shield') { push({ do: 'dome', id, to: a.target, dur: ms(MS.dome) }); domes = true; }
     leant = true;
   }
   if (leant) adv(MS.lean);
@@ -153,7 +155,7 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
       adv(MS.flank);
     } else if (rule === 'shot' && l.guard != null && l.targetId) {
       const fell = l.key === 'shotDown' || l.key === 'shotDead';
-      push({ do: 'fire', from: enemyId(l.guard), to: l.targetId, hit: (l.damage ?? 0) > 0, absorbed: l.key === 'shotAbsorbed', fell, dead: l.key === 'shotDead', damage: l.damage ?? 0, wide, foe: true, dur: ms(MS.fire) });
+      push({ do: 'fire', from: enemyId(l.guard), to: l.targetId, hit: (l.damage ?? 0) > 0, absorbed: l.key === 'shotAbsorbed', ...(l.shieldedBy ? { shield: true } : {}), fell, dead: l.key === 'shotDead', damage: l.damage ?? 0, wide, foe: true, dur: ms(MS.fire) });
       adv(MS.fire + MS.gap);
     } else if (['stabilise', 'patch', 'aura'].includes(rule) && l.targetId) {
       // A medic's help that lands (the aura, a patch, a stabilise) is one picture: the medic glows and flashes, an orb crosses to the patient, the pip fills. A miss is the red ring.
@@ -165,8 +167,27 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
         adv(MS.heal);
       }
     } else if (rule === 'jam' && l.actor) {
-      push({ do: 'ping', id: l.actor, ok: l.key === 'jamOk', dur: ms(MS.ping) });
-      adv(MS.ping);
+      const ok = l.key === 'jamOk';
+      const callers = (l.callers ?? []).map(enemyId).filter((c) => units[c]);
+      push({ do: 'ping', id: l.actor, ok, targets: ok ? callers : [], dur: ms(ok && callers.length ? MS.jam : MS.ping) });
+      adv(ok && callers.length ? MS.jam : MS.ping);
+    } else if (rule === 'spread' && l.guard != null && l.jumpFrom != null && units[enemyId(l.guard)] && units[enemyId(l.jumpFrom)]) {
+      // The Contagion jumps: from the body that fell to the next host, one hop to a line.
+      push({ do: 'spread', from: enemyId(l.jumpFrom), to: enemyId(l.guard), dur: ms(MS.spread) });
+      adv(MS.spread);
+    } else if (rule === 'tick' && l.guard != null && units[enemyId(l.guard)]) {
+      const fell = l.key === 'tickOut';
+      push({ do: 'tick', to: enemyId(l.guard), fell, left: fell ? 0 : l.left, max: l.max, dur: ms(fell ? MS.tickOut : MS.tick) });
+      adv(fell ? MS.tickOut : MS.tick);
+    } else if (rule === 'wayOut') {
+      // The hack is done and the alarm is up: red rings at the door the arrivals will come in by.
+      const door = Object.values(units).find((u) => u.side === 'enemy' && u.entrance)?.entrance ?? stage.target ?? stage.van;
+      push({ do: 'alarm', at: door, dur: ms(MS.alarm) });
+      adv(MS.alarm);
+    } else if (rule === 'patch' && l.actor && !l.targetId && units[l.actor]) {
+      // The medic's hands on the way out: the aura, then a soft pulse over everyone reached.
+      push({ do: 'patch', id: l.actor, targets: (l.targets ?? []).filter((x) => units[x]), dur: ms(MS.patch) });
+      adv(MS.patch);
     } else if (rule === 'death' && l.targetId) {
       push({ do: 'fall', id: l.targetId, dead: true, dur: ms(MS.fire) });
       adv(MS.fire + MS.gap);
@@ -185,6 +206,7 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
     }
   });
 
+  if (domes) push({ do: 'domeEnd' });
   // 3. Settle: into the van, out of the fight, the fled run for their door.
   let settled = false;
   for (const [id, u] of Object.entries(units)) {
@@ -255,6 +277,36 @@ export function forceSpecial(cue, look) {
   c.lines = [...c.lines.slice(0, at).filter((l) => !hits.includes(l)), ...hits, ...c.lines.slice(at).filter((l) => !hits.includes(l))];
   c.beats = []; // the director's indices would point at moved lines
   if (c.stage?.units?.[star]) c.stage.units[star].look = look;
+  return c;
+}
+
+/** Preview only (scripts/preview-livebattle.mjs --effect): a copy of a round's cue with the lines of one effect forged onto its units, so the effect can be seen without arranging the rules for it. The stage draws it; no rule is touched. */
+export function forceEffect(cue, kind) {
+  const c = structuredClone(cue);
+  const units = c.stage?.units ?? {};
+  const foes = Object.keys(units).filter((id) => id.startsWith('e:')).map((id) => Number(id.slice(2)));
+  const crew = Object.keys(units).filter((id) => !id.startsWith('e:'));
+  if (foes.length < 2 || crew.length < 2) return cue;
+  const L = (l) => ({ kind: 'note', actor: null, targetId: null, guard: null, success: null, damage: 0, heal: 0, kit: null, dropped: false, text: '', ...l });
+  const guard = (n) => (c.guards ?? []).find((g) => g.n === n);
+  const [a, b] = foes;
+  const sick = (n, on) => { const g = guard(n); if (g) g.infected = on || undefined; };
+  c.beats = [];
+  if (kind === 'spread') {
+    c.lines = [L({ rule: 'tick', key: 'tickOut', guard: a, damage: 1, dropped: true, left: 0, max: 1 }), L({ rule: 'spread', key: 'spread', guard: b, jumpFrom: a })];
+    units[`e:${a}`].stance = 'down'; const g = guard(a); if (g) { g.out = true; g.hp = 0; g.infected = undefined; } sick(b, true);
+  } else if (kind === 'tick') {
+    const g = guard(a); const max = Math.max(3, g?.max ?? 3);
+    if (g) { g.max = max; g.hp = max - 1; g.infected = true; }
+    c.lines = [L({ rule: 'tick', key: 'tick', guard: a, damage: 1, left: max - 1, max })];
+  } else if (kind === 'shield') {
+    units[crew[1]].act = { kind: 'shield', target: crew[0] };
+    c.lines = [L({ kind: 'guard', rule: 'shot', key: 'shotMiss', guard: a, targetId: crew[1], damage: 0, shieldedBy: crew[1] })];
+  } else if (kind === 'jam') {
+    c.lines = [L({ rule: 'jam', key: 'jamFail', actor: crew[0] }), L({ rule: 'jam', key: 'jamOk', actor: crew[0], callers: [a, b] })];
+  } else if (kind === 'wayout') {
+    c.lines = [L({ rule: 'wayOut', key: 'wayOut' }), L({ kind: 'patch', rule: 'patch', key: 'wayOutPatch', actor: crew[0], targets: crew.slice(0, 3) }), L({ kind: 'stabilise', rule: 'stabilise', key: 'stabiliseWayOut', actor: crew[0], targetId: crew[1], success: true })];
+  }
   return c;
 }
 
@@ -378,6 +430,15 @@ export function createStage(svg, deps) {
     if (bar.childElementCount !== max) { bar.replaceChildren(...Array.from({ length: max }, (_, i) => node('rect', { x: -max * 2 + i * 4, y, width: 3, height: 2 }))); }
     [...bar.children].forEach((r, i) => r.classList.toggle('is-on', i < hp));
   }
+  /** The pip an infection took: lit one more moment in green as it goes out. */
+  function tickLoss(id, left, max) {
+    const g = host(id);
+    const bar = g?.querySelector(':scope > .fs-pips');
+    if (!bar) { pips(id, left, max); return; }
+    const before = [...bar.children].filter((r) => r.classList.contains('is-on')).length;
+    pips(id, left, max);
+    [...bar.children].slice(Math.max(0, left), before).forEach((r) => { r.classList.add('is-tickloss'); setTimeout(() => r.classList.remove('is-tickloss'), 800); });
+  }
   function setStance(id, stance, hidden = false) {
     const g = host(id);
     if (!g) return;
@@ -426,6 +487,12 @@ export function createStage(svg, deps) {
   const cinema = (on) => { mapBox?.classList.toggle('fs-letterbox', on); svg.classList.toggle('fs-slowmo', on); };
   const gone = (el, ms) => { fx.append(el); setTimeout(() => el.remove(), ms); return el; };
   const toward = (a, b, k) => { const d = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1; return [a[0] + ((b[0] - a[0]) / d) * k, a[1] + ((b[1] - a[1]) / d) * k]; };
+  const domeOf = new Map(); // protector id -> the dome's group, while the exchange plays
+  const clearDomes = () => { for (const g of domeOf.values()) g.remove(); domeOf.clear(); };
+  /** A curved path from a to b, bowing to one side (the arcs of the hop, the shield and the jam). */
+  const arcPath = (a, b, bow = 0.28) => { const m = mid(a, b); const dx = b[0] - a[0]; const dy = b[1] - a[1]; return { d: `M${a[0]} ${a[1]} Q${m[0] - dy * bow} ${m[1] + dx * bow} ${b[0]} ${b[1]}`, c: [m[0] - dy * bow, m[1] + dx * bow] }; };
+  /** A point on that arc (t 0..1), so an orb can follow it. */
+  const onArc = (a, c, b, t) => [(1 - t) * (1 - t) * a[0] + 2 * (1 - t) * t * c[0] + t * t * b[0], (1 - t) * (1 - t) * a[1] + 2 * (1 - t) * t * c[1] + t * t * b[1]];
   /** Where an attack lands: on the target, or wide as the dice had it. */
   const landing = (b, s) => (s.hit || s.absorbed || s.cracked ? b : [b[0] + s.wide[0] * 22, b[1] + s.wide[1] * 22]);
   // Ricochet: the round is a bright dot flying from the last landing to this one, with its trace, and a spark where it bounces.
@@ -506,6 +573,7 @@ export function createStage(svg, deps) {
         else tracer(a, b, s);
         setTimeout(() => {
           const g = host(s.to);
+          if (s.shield) { flash(b, 'sp-flash--shield'); const dm = domeOf.get(s.to); if (dm) { dm.classList.remove('is-flare'); void dm.getBoundingClientRect(); dm.classList.add('is-flare'); } } // the shield takes the shot: the dome flares
           // Armour crack (2026-11-15): the plate breaks first (a flash, a Cracked float, the arc splits), then, if the shot got through, the pip goes and the token is struck.
           if (s.cracked) {
             crack(g); flash(b, 'sp-flash--crack'); float(b, word('stage.cracked'), 'is-cracked');
@@ -540,7 +608,96 @@ export function createStage(svg, deps) {
         setTimeout(() => { gone(node('circle', { class: 'sp-ring sp-ring--ok', cx: t[0], cy: t[1], r: 9 }), 760); land(); }, dur * 0.8);
         break;
       }
-      case 'ping': { const b = pos(s.id); if (b) { const c = node('circle', { class: `fs-ping ${s.ok ? 'is-ok' : ''}`, cx: b[0], cy: b[1], r: 6 }); fx.append(c); setTimeout(() => c.remove(), Math.max(400, s.dur)); } break; }
+      case 'ping': {
+        const b = pos(s.id);
+        if (b) { const c = node('circle', { class: `fs-ping ${s.ok ? 'is-ok' : 'is-fail'}`, cx: b[0], cy: b[1], r: 6 }); fx.append(c); setTimeout(() => c.remove(), Math.max(400, s.dur)); }
+        if (!b || deps.reduced()) break;
+        if (!s.ok) { float(b, word('stage.jamFail'), 'is-jamfail'); break; } // a failed jam: the ring flickers and dies, no signal goes out
+        // A jam that takes: a broken signal arc from the tech to each caller, static where it lands.
+        for (const id of s.targets ?? []) {
+          const t = pos(id); if (!t) continue;
+          gone(node('path', { class: 'fs-jamarc', d: arcPath(b, t, 0.12).d }), 760);
+          setTimeout(() => { gone(node('circle', { class: 'fs-static', cx: t[0], cy: t[1], r: 8 }), 700); flash(t, 'sp-flash--zap'); float(t, word('stage.jammed'), 'is-jam'); }, s.dur * 0.45);
+        }
+        break;
+      }
+      case 'spread': {
+        // The Contagion jumps (2026-11-17): the infection leaves the body that fell and arcs to the next host, whose ring flares as it lands.
+        const a = pos(s.from); const t = pos(s.to);
+        if (!a || !t) break;
+        const land = () => { infect(s.to, true); const ring = host(s.to)?.querySelector(':scope > .fs-infect'); if (ring) { ring.classList.remove('is-flare'); void ring.getBoundingClientRect(); ring.classList.add('is-flare'); } if (!deps.reduced()) { flash(t, 'sp-flash--spread'); gone(node('circle', { class: 'sp-ring sp-ring--spread', cx: t[0], cy: t[1], r: 9 }), 760); } };
+        infect(s.from, false);
+        if (deps.reduced() || s.dur <= 0) { land(); break; }
+        const dur = Math.max(700, s.dur);
+        const { d, c } = arcPath(a, t, 0.3);
+        gone(node('path', { class: 'fs-hop', d, pathLength: 100 }), dur * 0.72);
+        for (let k = 0; k < 4; k++) setTimeout(() => { const sp = gone(node('circle', { class: 'fs-spore', cx: a[0], cy: a[1], r: 1.2 }), 720); sp.style.setProperty('--dx', `${(k - 1.5) * 4}px`); sp.style.setProperty('--dy', `${-4 - k * 2}px`); }, k * 60); // spores lift off the body
+        const orb = gone(node('circle', { class: 'fs-hopper', r: 2.4, cx: 0, cy: 0 }), dur * 0.7);
+        const path = [0, 0.2, 0.4, 0.6, 0.8, 1].map((u) => onArc(a, c, t, u));
+        if (orb.animate) orb.animate(path.map((p) => ({ transform: `translate(${p[0]}px, ${p[1]}px)` })), { duration: dur * 0.5, delay: dur * 0.1, easing: 'ease-in-out', fill: 'both' });
+        else put(orb, t, 0);
+        setTimeout(land, dur * 0.6);
+        break;
+      }
+      case 'tick': {
+        // The infection ticks (2026-11-17): green drops run off the host and the pip it loses flashes; a host that falls to it pops in a ring.
+        const b = pos(s.to);
+        if (!b) break;
+        const apply = () => {
+          if (s.max) tickLoss(s.to, s.left ?? 0, s.max);
+          if (s.fell) { setStance(s.to, 'down'); drawn[s.to] = { ...drawn[s.to], stance: 'down' }; body(b, s.to); infect(s.to, false); float(b, word('stage.out'), 'is-down'); }
+        };
+        if (deps.reduced() || s.dur <= 0) { apply(); break; }
+        for (let k = 0; k < 3; k++) setTimeout(() => gone(node('circle', { class: 'fs-drip', cx: b[0] - 3 + k * 3, cy: b[1] - 4 + (k % 2), r: 1.3 }), 700), k * 90);
+        const ring = host(s.to)?.querySelector(':scope > .fs-infect');
+        if (ring) { ring.classList.remove('is-flare'); void ring.getBoundingClientRect(); ring.classList.add('is-flare'); }
+        setTimeout(() => {
+          apply();
+          flash(b, 'sp-flash--tick');
+          if (s.fell) { gone(node('circle', { class: 'fs-pop', cx: b[0], cy: b[1], r: 8 }), 600); struck(host(s.to)); }
+          else float(b, '\u2212', 'is-tick');
+        }, s.dur * 0.45);
+        break;
+      }
+      case 'dome': {
+        // The shield (2026-11-17): a soft dome over who is covered and an arc to them from the protector, held over the exchange.
+        const a = pos(s.id); const t = pos(s.to);
+        if (!a || !t || s.dur <= 0 || deps.reduced()) break;
+        domeOf.get(s.id)?.remove();
+        const g = node('g', { class: 'fs-dome' });
+        g.append(node('circle', { class: 'fs-dome__field', cx: t[0], cy: t[1], r: 11 }), node('path', { class: 'fs-dome__arc', d: arcPath(a, t, 0.25).d, pathLength: 60 }));
+        fx.append(g); domeOf.set(s.id, g);
+        break;
+      }
+      case 'domeEnd': {
+        for (const g of domeOf.values()) { g.classList.add('is-end'); setTimeout(() => g.remove(), 340); }
+        domeOf.clear();
+        break;
+      }
+      case 'alarm': {
+        // The way out (2026-11-17): the alarm is up. Red rings pulse out of the door the arrivals use, the map's edge flashes, a caption says so.
+        const at = s.at;
+        if (!at) break;
+        deps.caption?.(word('stage.alarm'), 'alarm');
+        if (deps.reduced() || s.dur <= 0) break;
+        deps.frame([...Object.values(drawn).filter((d) => !HIDDEN.has(d.stance)).map((d) => d.at), at]); // the door in shot, so the rings are seen
+        for (let k = 0; k < 3; k++) setTimeout(() => gone(node('circle', { class: 'fs-alarm-ring', cx: at[0], cy: at[1], r: 6 }), 950), k * 260);
+        gone(node('circle', { class: 'fs-alarm-core', cx: at[0], cy: at[1], r: 3 }), 1900);
+        mapBox?.classList.add('fs-alarm'); setTimeout(() => mapBox?.classList.remove('fs-alarm'), 1900);
+        break;
+      }
+      case 'patch': {
+        // The medic's hands on the way out (2026-11-17): the aura's glow round the medic, then a soft pulse out over everyone reached.
+        const m = pos(s.id);
+        const land = () => { for (const id of s.targets ?? []) { const t = pos(id); if (t) { flash(t, 'sp-flash--heal'); float(t, '+', 'is-heal'); } } };
+        if (!m || deps.reduced() || s.dur <= 0) { land(); break; }
+        const dur = Math.max(800, s.dur);
+        const reach = Math.max(16, ...(s.targets ?? []).map((id) => pos(id)).filter(Boolean).map((t) => Math.hypot(t[0] - m[0], t[1] - m[1]) + 8));
+        const glow = gone(node('circle', { class: 'fs-aura', cx: m[0], cy: m[1], r: 9 }), dur * 0.62); glow.style.animationDuration = `${dur * 0.6}ms`;
+        setTimeout(() => { const w = gone(node('circle', { class: 'fs-groupwave', cx: m[0], cy: m[1], r: reach }), dur * 0.5); w.style.animationDuration = `${dur * 0.45}ms`; }, dur * 0.35);
+        (s.targets ?? []).forEach((id, k) => { const t = pos(id); if (t) setTimeout(() => { gone(node('circle', { class: 'sp-ring sp-ring--ok', cx: t[0], cy: t[1], r: 9 }), 760); flash(t, 'sp-flash--heal'); float(t, '+', 'is-heal'); }, dur * 0.6 + k * 90); });
+        break;
+      }
       case 'fall': { const b = pos(s.id); setStance(s.id, s.dead ? 'dead' : 'down'); if (drawn[s.id]) drawn[s.id] = { ...drawn[s.id], stance: s.dead ? 'dead' : 'down' }; if (b) body(b, s.id); break; }
       case 'leave': { const g = host(s.id); put(g, s.at, s.dur); setTimeout(() => setStance(s.id, s.stance, true), s.dur); if (!s.id.startsWith('e:')) deps.pin(s.id, null); drawn[s.id] = { at: s.at, stance: s.stance }; break; }
       case 'special': {
@@ -578,6 +735,7 @@ export function createStage(svg, deps) {
     /** Play an event's cue (start, round, retreat, end). Resolves when the round's picture is done. */
     async play(cue) {
       if (preview()?.special && cue.phase === 'round') cue = forceSpecial(cue, preview().special);
+      if (preview()?.effect && cue.phase === 'round') cue = forceEffect(cue, preview().effect);
       const me = ++playing;
       const stage = cue.stage;
       points = stage;
@@ -590,6 +748,7 @@ export function createStage(svg, deps) {
         for (const [id, u] of Object.entries(stage.units)) { const at = u.side === 'crew' ? deps.at(id) : null; if (at) drawn[id] = { at, stance: 'up' }; }
       }
       stopAmbient();
+      clearDomes();
       if (cue.phase === 'start') { clock = 0; deps.say?.(null); }
       const script = stageScript(drawn, cue, { pace, reduced: deps.reduced(), spent, clock });
       spent = script.spent;
@@ -628,6 +787,7 @@ export function createStage(svg, deps) {
     reset(full = true) {
       playing += 1;
       stopAmbient();
+      clearDomes();
       for (const g of foes.values()) g.remove();
       foes.clear();
       ground.replaceChildren();

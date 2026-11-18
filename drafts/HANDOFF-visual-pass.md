@@ -1,5 +1,19 @@
 # Handoff: the visual pass (the next chunk that needs no owner call)
 
+## Status, written at the end of the session (2026-11-17)
+
+**Done:** the two test gaps (a shot- or overwatch-felled infected enemy hands on Contagion; the planning read names the Contagion Vector and a drone is still "can't hurt"), and all six effects, UI only: the Contagion jump (`spread` step), the infection tick (`tick`), the shield dome (`dome`/`domeEnd`, flared by a shielded shot), jam (`ping` with `targets`, a flicker on a fail), the way-out alarm (`alarm`) and the medic's patch (`patch`; each stabilise already got the aura). Each has a test in `tests/fightstage.test.js`, CSS in `styles.css` (reduced-motion guards in the same block), a changelog line and a design-log row; captures are in `docs/screenshots/2026-11-17-visual-pass/`. Frame rate 60 a second at `--throttle 4`; every node added is removed (`gone`, `clearDomes`).
+
+**Things to know:**
+- The six effects went in **one commit**, not six (they share `fightstage.js`, `styles.css` and one test file); the two test gaps and the CSS were their own commits earlier.
+- Only the fields the steps needed were added to core lines (`jumpFrom`, `callers`, `targets`, `shieldedBy`, a tick's `left`/`max`), passed through `feedLine` (now exported) and `feed.js`. No rule, number or roll changed.
+- The shield flares on a **shielded shot** (`shieldedBy`), not `shotAbsorbed` (that is a runner's armour; a shielded shot is retargeted to the protector). The handoff's wording was off here.
+- The captures of spread, tick, jam, alarm and patch are **forged** by `--effect` (`forceEffect` writes the lines onto a real round), because the rules seldom produce them in the preview fights; the dome also showed up in a real round. A Contagion fight seen end to end in the browser is not checked. The alarm's door is at the map's edge, so its rings are partly clipped in the capture; the camera now takes the door in. The tick capture shows the flaring ring; the drip and pip flash are too quick for the screenshot loop to catch reliably.
+- The preview needs `npm install` and playwright linked into `node_modules` (not committed).
+
+**Left:** nothing of the six; eyes on a real Contagion/hack fight at Watch speed, and the wording of the three new stage texts (`stage.jammed` "Jammed", `stage.jamFail` "No lock", `stage.alarm` "The alarm is up") is mine, for the owner to change in `data/fightText.js`. No PR opened.
+
+
 Written 2026-11-17 for a session that runs while the owner sleeps. Read `CLAUDE.md`, then this. The owner's words: "everything we are doing in this animation should maximise the visual and enjoyment appeal." The model for every effect below is the medic's aura (built 2026-11-17): a glow, something that travels, a landing, a floating word, a pip filling. Read how it is done first: `ui/fightstage.js` (`stageScript`'s `aura` step; the `aura` case in the player; `gone`, `flash`, `float`, `pips`), `ui/styles.css` (search "The medic's aura"), `tests/fightstage.test.js` ("the medic's aura is drawn"), and the capture: `node scripts/preview-livebattle.mjs <dir> --job data_pull --seed 3 --rounds 6 --aura --scale 2`.
 
 ## The rule that makes this safe to run alone
