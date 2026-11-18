@@ -49,6 +49,7 @@ export const V = {
   sendOffCue: null, // the crew that just left (the send-off card); shown once, on the next render
   importInput: null, // the hidden save-file picker (see mountApp)
   focusNext: null, // { action, id }: the control to focus after the next render (going back to a list)
+  pieceTip: null, // 'messageId|pieceId': the build piece whose explanation is open in an offer
   traitTip: null, // 'pageId|key': the trait chip or synergy whose card is open (one at a time)
   raidCardDue: null, // scroll to this district's raid card after the next render (heat chip, Today, the map)
   scrollDue: null, // scroll to this after the next render (Back restores where you were)

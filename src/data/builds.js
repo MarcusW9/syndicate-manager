@@ -20,7 +20,7 @@ export const MOVES = {
     id: 'ricochet', name: 'Ricochet', reach: 3, uses: 1, when: { enemies: 2 }, look: 'ricochet',
     slot: 'move', needs: { combat: 10 },
     desc: 'Once a fight, as soon as two or more enemies are up, one round bounces through up to three of them.',
-    offer: '{op} has the eye for a bounce shot now: one round, three bodies. I know a range that teaches it.',
+    offer: '{op} has the eye for a ricochet now: one round, three bodies. I know a range that teaches it.',
   },
 };
 

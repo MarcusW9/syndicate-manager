@@ -41,6 +41,9 @@ export function mountApp(el, initialState) {
   root.addEventListener('input', (e) => {
     if (e.target.id === 'tongname') { if (V.tongNaming !== null) V.tongNaming = e.target.value; else V.foundingTongName = e.target.value; }
   });
+  root.addEventListener('change', (e) => {
+    if (e.target.id === 'crewfilter') { V.crewFilter = e.target.value; render(); }
+  });
   root.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && e.target.id === 'tongname' && V.tongNaming !== null) { e.preventDefault(); root.querySelector('[data-action="tong-name-save"]')?.click(); }
     if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('g[data-action]')) { e.preventDefault(); onClick(e); }

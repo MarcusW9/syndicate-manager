@@ -2676,3 +2676,9 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
   .watch__map.fs-alarm { animation: none; outline-color: rgba(255, 77, 94, 0.6); }
   .fs-hopper { transition: none !important; }
 }
+
+/* Offer piece names open an explanation; the roster filter is a dropdown (owner, 2026-11-18). */
+.termlink { background: none; border: 0; padding: 0; min-height: 44px; color: var(--text); font: 700 1rem var(--display); border-bottom: 1px dotted var(--accent-2); cursor: pointer; }
+.crewfilter { margin: 8px 0; }
+.crewfilter__label { display: flex; align-items: center; gap: 10px; font: 700 0.8rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.crewfilter__select { min-height: 44px; flex: 1; background: var(--panel-2); color: var(--text); border: 1px solid var(--line); padding: 0 12px; font: 700 0.9rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; }

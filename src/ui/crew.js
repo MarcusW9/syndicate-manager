@@ -80,11 +80,11 @@ export function renderCrew() {
   const filter = ['ready', 'out'].includes(V.crewFilter) ? V.crewFilter : 'all';
   const shown = state.crew.filter((op) => filter === 'all' || availability(state, op).ok === (filter === 'ready'));
   const readyN = state.crew.filter((op) => availability(state, op).ok).length;
-  const chips = [['all', 'All', state.crew.length], ['ready', 'Ready', readyN], ['out', 'Away or hurt', state.crew.length - readyN]]
-    .map(([id, label, n]) => `<button class="fs-pace__chip ${filter === id ? 'is-on' : ''}" data-action="crew-filter" data-id="${id}" aria-pressed="${filter === id}">${label} ${n}</button>`).join('');
+  const chips = `<label class="crewfilter__label">Show <select class="crewfilter__select" id="crewfilter" aria-label="Filter the roster">${[['all', 'All', state.crew.length], ['ready', 'Ready', readyN], ['out', 'Away or hurt', state.crew.length - readyN]]
+    .map(([id, label, n]) => `<option value="${id}"${filter === id ? ' selected' : ''}>${label} (${n})</option>`).join('')}</select></label>`;
   const body = {
     roster: () => `
-      <div class="fs-pace crewfilter" role="group" aria-label="Filter the roster">${chips}</div>
+      <div class="crewfilter">${chips}</div>
       ${shown.length ? '' : '<p class="muted small">Nobody matches.</p>'}
       <ul class="list list--cols">
         ${shown.map((op) => `
