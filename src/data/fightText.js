@@ -5,7 +5,7 @@
 //
 // Slots are {name}. {n:one|many} switches on a count ("{n} {n:shot|shots}"). A line starts with a capital whatever
 // its first slot. {enemy} is a kind word and its number ("security guard 2"); {kind} is the kind word alone.
-// Slots that carry their own unit (the screens fill them): {chance} "60%", {pips} "2 pips" / "1 pip".
+// Slots that carry their own unit (the screens fill them): {chance} "60%", {hp} "20 HP" (engine 2 counts in HP since 2026-11-18).
 
 export const FIGHT_TEXT = {
   // Enemy kind words (a single one; the feed adds its number)
@@ -105,7 +105,7 @@ export const FIGHT_TEXT = {
   'bleedOut': '{who} dies from their injuries.',
   'leftDead': '{who} is left behind and does not make it.',
   // Threat wording (a shown threat)
-  'threat.aim': '{enemy} aims at {who} ({chance}, {pips}).',
+  'threat.aim': '{enemy} aims at {who} ({chance}, {hp}).',
   'threat.flank': '{enemy} moves to flank {who}.',
   'threat.backup': '{enemy} prepares to call backup.',
   'threat.alarm': '{enemy} moves to raise the alarm.',
@@ -166,7 +166,7 @@ export const FIGHT_TEXT = {
   'callin.intentLead': 'The crew is set to:',
   'callin.outside': 'Outside: {outside}.',
   'callin.leaveOdds': 'Chance anyone outside is left behind: {chance}.',
-  // The plan screen (the fight block under the squad board). {chance} and {pips} elsewhere come with their units from the screens.
+  // The plan screen (the fight block under the squad board). {chance} and {hp} elsewhere come with their units from the screens.
   'plan.hack': 'Hack: {work} rounds of work; keep {tech} working. Then fight your way out.',
   'plan.yard': 'Hold the yard: put down or break every enemy. More keep coming, so win it fast.',
   'plan.extract': 'Extract: hold until the van arrives, then get everyone aboard.',
@@ -195,11 +195,11 @@ export const FIGHT_TEXT = {
   'build.answer.payload.blocked': '{piece} has no effect on the {kinds}.',
   'plan.lossChance': 'Chance of losing someone: {chance}',
   'plan.lossChanceZero': 'No chance of losing someone in this forecast.',
-  // The risk picker. Cautious rounds half up; steady is two pips; a death on cautious or steady only follows a call the player makes.
+  // The risk picker. Cautious rounds half up; steady a third, at least 10 HP; a death on cautious or steady only follows a call the player makes.
   'risk.cautious.label': 'Cautious',
-  'risk.cautious.description': 'Pulls out at half their pips or fewer (rounded up). A watched crew asks you first. Someone can still go down; a death only follows a call you make.',
+  'risk.cautious.description': 'Pulls out at half their HP or fewer (rounded up to a whole 10). A watched crew asks you first. Someone can still go down; a death only follows a call you make.',
   'risk.steady.label': 'Steady',
-  'risk.steady.description': 'Pulls out at a third of their pips or fewer (rounded up, at least 1). A watched crew asks you first. Someone can still go down; a death only follows a call you make.',
+  'risk.steady.description': 'Pulls out at a third of their HP or fewer (rounded up to a whole 10, at least 10). A watched crew asks you first. Someone can still go down; a death only follows a call you make.',
   'risk.committed.label': 'Committed',
   'risk.committed.description': 'Never pulls out on their own, even with someone down. Fighting on can cost a life.',
   // Buttons

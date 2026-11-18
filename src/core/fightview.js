@@ -11,7 +11,7 @@ import { FIGHT } from '../data/fights.js';
 import { SITE_ENEMIES, ENEMIES } from '../data/fights.js';
 import { MOVES, PAYLOADS } from '../data/builds.js';
 import { immuneTo } from './builds.js';
-import { lineText, kindWord, kindPlural, enemyName, chanceWord, pipsWord, nameList } from './fighttext.js';
+import { lineText, kindWord, kindPlural, enemyName, chanceWord, hpWord, nameList } from './fighttext.js';
 
 const handleOf = (b, id) => b.runners.find((r) => r.id === id)?.handle ?? id;
 const boarding = (b) => b.type === 'holdExtract' && b.stage === 1;
@@ -60,14 +60,14 @@ function intentOf(b, r, a, o) {
   return { kind: a.kind, from: a.from, text: lineText(key, slots) };
 }
 
-/** A threat as the screen shows it, with the chance and its damage in whole hpUnits (pips on the screen, until the HP display) (the line adds neither). */
+/** A threat as the screen shows it, with the chance and its damage in HP (the line adds neither). */
 function threatOf(b, t, exp) {
   const e = enemyOf(b, t.enemy);
   const enemy = nameOfEnemy(b, t.enemy);
   if (t.kind === 'aim') {
     const x = exp.find((y) => y.id === t.id); // a shielded shot is taken by its shield: their cover, their chance
     const who = handleOf(b, x?.target ?? t.target);
-    return { id: t.id, kind: 'aim', enemy: t.enemy, target: x?.target ?? t.target, shieldedBy: x?.shieldedBy ?? null, chance: t.chance, hit: t.hit, text: lineText('threat.aim', { enemy, who, chance: chanceWord(t.chance), pips: pipsWord(F.hpUnits(t.hit)) }), e };
+    return { id: t.id, kind: 'aim', enemy: t.enemy, target: x?.target ?? t.target, shieldedBy: x?.shieldedBy ?? null, chance: t.chance, hit: t.hit, text: lineText('threat.aim', { enemy, who, chance: chanceWord(t.chance), hp: hpWord(t.hit) }), e };
   }
   const slots = { enemy, who: t.target ? handleOf(b, t.target) : '' };
   return { id: t.id, kind: t.kind, enemy: t.enemy, target: t.target, text: lineText(`threat.${t.kind}`, slots), e };
@@ -96,7 +96,7 @@ export function roundView(b) {
   const pv = b.drawn ? F.previewRound(b) : null;
   const exp = pv?.exposure ?? [];
   const enemies = b.enemies.map((e) => ({
-    n: e.n, kind: e.kind, name: enemyName(e.kind, e.n), infected: !!e.infected && !e.out && !e.fled, pips: F.hpUnits(e.hp), max: F.hpUnits(e.max), out: !!(e.out || e.fled), fled: !!e.fled, cover: e.cover, approaching: !!e.approaching,
+    n: e.n, kind: e.kind, name: enemyName(e.kind, e.n), infected: !!e.infected && !e.out && !e.fled, pips: F.hpUnits(e.hp), max: F.hpUnits(e.max), hp: Math.max(0, e.hp), maxHp: e.max, out: !!(e.out || e.fled), fled: !!e.fled, cover: e.cover, approaching: !!e.approaching,
     threats: (pv?.threats ?? []).filter((t) => t.enemy === e.n && !t.cancelled).map((t) => threatOf(b, t, exp)),
   }));
   const runners = b.runners.map((r) => {
@@ -104,16 +104,16 @@ export function roundView(b) {
     const a = pv?.actions.find((x) => x.who === r.id);
     const shots = exp.filter((x) => x.target === r.id);
     return {
-      id: r.id, handle: r.handle, pips: F.hpUnits(r.hp), max: F.hpUnits(r.max), state: stateOf(r), cover: r.cover, protect: r.id === b.goal.protect, medic: !!r.medic, jammer: !!r.jammer,
+      id: r.id, handle: r.handle, pips: F.hpUnits(r.hp), max: F.hpUnits(r.max), hp: Math.max(0, r.hp), maxHp: r.max, state: stateOf(r), cover: r.cover, protect: r.id === b.goal.protect, medic: !!r.medic, jammer: !!r.jammer,
       order: o.duty, orderTarget: o.target, orderLabel: orderLabel(b, o),
       intent: a && F.standing(b).some((x) => x.id === r.id) ? intentOf(b, r, a, o) : null,
-      shots: shots.map((x) => ({ enemy: nameOfEnemy(b, x.enemy), chance: x.chance, text: chanceWord(x.chance), pips: F.hpUnits(x.hit), shielded: !!x.shieldedBy })),
-      threshold: F.hpUnits(pv?.thresholds[r.id] ?? F.riskThreshold(b, r)),
+      shots: shots.map((x) => ({ enemy: nameOfEnemy(b, x.enemy), chance: x.chance, text: chanceWord(x.chance), pips: F.hpUnits(x.hit), hp: x.hit, shielded: !!x.shieldedBy })),
+      threshold: F.hpUnits(pv?.thresholds[r.id] ?? F.riskThreshold(b, r)), thresholdHp: pv?.thresholds[r.id] ?? F.riskThreshold(b, r),
     };
   });
   return {
     round: b.round, drawn: !!pv, type: b.type, stage: b.stage, goal: goalOf(b), risk: b.risk.level,
-    ticks: (pv?.ticks ?? []).map((t) => ({ enemy: t.enemy, name: nameOfEnemy(b, t.enemy), pips: F.hpUnits(t.hp) })),
+    ticks: (pv?.ticks ?? []).map((t) => ({ enemy: t.enemy, name: nameOfEnemy(b, t.enemy), pips: F.hpUnits(t.hp), hp: t.hp })),
     ticksLine: pv?.ticks?.length ? lineText('ticks', { word: 'Vector', enemies: nameList(pv.ticks.map((t) => nameOfEnemy(b, t.enemy))) }) : null,
     enemies, runners, ifNothing: pv?.ifNothing ?? [], overwatch: pv?.overwatch ?? null, doors: pv?.doors ?? null,
     threatLines: enemies.flatMap((e) => e.threats.map((t) => t.text)),
@@ -167,9 +167,9 @@ export function planView(args, risk = 'steady') {
     gaps,
     jam: jammers.length ? lineText('plan.canJam', { who: nameList(jammers.map((j) => j.handle)) }) + (jammers.some((j) => j.tech) ? ` ${lineText('plan.techJamStops')}` : '') : '',
     runners: b.runners.map((r) => ({
-      id: r.id, handle: r.handle, pips: F.hpUnits(r.max), protect: r.id === b.goal.protect,
+      id: r.id, handle: r.handle, pips: F.hpUnits(r.max), hp: r.max, protect: r.id === b.goal.protect,
       orders: (b.type === 'holdExtract' ? [0, 1] : [stage]).map((st) => ({ stage: st, label: orderLabel({ ...b, stage: st }, F.orderOf({ ...b, stage: st }, r)) })),
-      threshold: F.hpUnits(F.riskThreshold(b, r)),
+      threshold: F.hpUnits(F.riskThreshold(b, r)), thresholdHp: F.riskThreshold(b, r),
     })),
     risk,
     odds,

@@ -953,7 +953,7 @@ export function playRound(b, rng) {
   if (aura) {
     const hurt = firstBy(standing(b).filter((r) => r.hp < r.max), (x, y) => x.hp / x.max - y.hp / y.max || bySeat(x, y));
     const medic = b.runners.find((r) => r.medic && present(r));
-    if (hurt) { hurt.hp += FIGHT.medicAura.heal; say('aura', 'aura', { who: medic.handle, target: hurt.handle }, { actor: medic.id, target: hurt.id, targetId: hurt.id, left: hurt.hp, max: hurt.max }); } // targetId, left and max are what the stage draws (the medic's glow, the orb, the pip filling)
+    if (hurt) { hurt.hp += FIGHT.medicAura.heal; say('aura', 'aura', { who: medic.handle, target: hurt.handle }, { actor: medic.id, target: hurt.id, targetId: hurt.id, left: hurt.hp, max: hurt.max, heal: FIGHT.medicAura.heal }); } // targetId, left and max are what the stage draws (the medic's glow, the orb, the pip filling)
   }
   // Bleeding out: only on committed (or a runner pushed on by hand); from the second round after going down.
   if (!aura) {

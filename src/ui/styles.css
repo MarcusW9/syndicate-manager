@@ -2224,6 +2224,12 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .fs-pips { display: inline-flex; gap: 1px; margin-left: auto; flex: none; }
 .fs-pips i { display: block; width: 8px; height: 10px; background: #262c38; }
 .fs-pips i.is-on { background: #5fe0a5; }
+/* HP (2026-11-18): the bar's segments are 10 HP each; the number beside it is the HP. */
+.fs-hp { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; flex: none; }
+.fs-hp .fs-pips { margin-left: 0; }
+.fs-hpnum { font: 700 13px/1 var(--display); font-variant-numeric: tabular-nums; color: var(--text); letter-spacing: 0.02em; }
+.fs-hpnum small { font-size: 11px; color: var(--muted); font-weight: 600; }
+.fs-enemy.is-out .fs-hpnum { display: none; }
 .fs-tag { font: 700 0.62rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; padding: 0 4px; border: 1px solid var(--accent-2); color: var(--accent-2); font-style: normal; }
 .fs-state, .fs-enemy small { color: var(--warn); font-size: 0.74rem; }
 .fs-threats { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
@@ -2350,6 +2356,7 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .fs-special { fill: none; stroke: var(--warn); stroke-width: 1.2; transform-box: fill-box; transform-origin: center; animation: fs-ping 0.8s ease-out forwards; }
 @keyframes fs-ping { from { transform: scale(0.6); opacity: 1; } to { transform: scale(3); opacity: 0; } }
 .fs-float { font: 700 5px var(--display); letter-spacing: 0.08em; text-transform: uppercase; text-anchor: middle; paint-order: stroke; stroke: #0b0d11; stroke-width: 1.4px; animation: fs-float 0.9s ease-out forwards; }
+.fs-float.is-num { font-size: 7px; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; } /* HP (2026-11-18): damage and healing as numbers */
 .fs-float.is-hit { fill: var(--danger); } .fs-float.is-down { fill: var(--accent); } .fs-float.is-absorbed { fill: var(--warn); }
 @keyframes fs-float { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-8px); opacity: 0; } }
 .watch__caption { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); max-width: calc(100% - 24px); padding: 4px 10px; font: 700 0.82rem var(--display); letter-spacing: 0.06em; color: var(--text); background: rgba(11, 13, 17, 0.9); border: 1px solid var(--line); border-left: 2px solid var(--warn); clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); pointer-events: none; }

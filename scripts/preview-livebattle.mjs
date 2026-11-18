@@ -104,7 +104,7 @@ try {
       await next.click();
     }
     if (effect) {
-      const sel = { spread: '.fs-hop, .fs-hopper, .sp-flash--spread', tick: '.fs-drip, .fs-pop, .is-tickloss, .sp-flash--tick', shield: '.fs-dome', jam: '.fs-jamarc, .fs-static, .fs-ping', wayout: '.fs-alarm-ring, .fs-groupwave, .fs-aura' }[effect];
+      const sel = { hp: '.fs-float.is-num', spread: '.fs-hop, .fs-hopper, .sp-flash--spread', tick: '.fs-drip, .fs-pop, .is-tickloss, .sp-flash--tick', shield: '.fs-dome', jam: '.fs-jamarc, .fs-static, .fs-ping', wayout: '.fs-alarm-ring, .fs-groupwave, .fs-aura' }[effect];
       let k = 0;
       for (let t = 0; t < 6000 && k < 8; t += 130) {
         await page.waitForTimeout(130);

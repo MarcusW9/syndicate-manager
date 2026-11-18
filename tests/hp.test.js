@@ -72,3 +72,20 @@ test('the save: a fight already in HP is left alone', async () => {
   const loaded = await S.importSave({ text: async () => JSON.stringify(s) });
   assert.deepEqual(loaded.activeMission.battle, JSON.parse(JSON.stringify(fresh)));
 });
+
+test('the display: the screens get the HP itself beside the segments, and the stage gets the damage and healing as numbers', async () => {
+  const { feedLine } = await import('../src/core/runfight.js');
+  const { roundView } = await import('../src/core/fightview.js');
+  const hit = feedLine({ kind: 'attack', key: 'attackHit', enemy: 1, actor: 'jax', success: true, damage: 20, left: 0, max: 20 });
+  assert.equal(hit.damage, 2, 'segments for the bar, as before');
+  assert.equal(hit.hpDamage, 20, 'and the HP for the number');
+  const heal = feedLine({ kind: 'aura', key: 'aura', actor: 'mei', targetId: 'jax', left: 40, max: 60, heal: 10 });
+  assert.equal(heal.hpHeal, 10);
+  assert.equal(feedLine({ kind: 'attack', key: 'attackMiss', enemy: 1, actor: 'jax', success: false, damage: 0 }).hpDamage, undefined, 'a miss carries no number');
+  const b = F.buildFight({ type: 'holdYard', diff: 12, threat: 2, site: 'docks', crew: crewOf().slice(0, 3), approach: 'loud' }, makeRng(3));
+  F.startRound(b, makeRng(4));
+  b.runners[0].hp -= 20;
+  const v = roundView(b);
+  for (const r of v.runners) { const x = b.runners.find((y) => y.id === r.id); assert.equal(r.hp, x.hp); assert.equal(r.maxHp, x.max); assert.equal(r.pips, F.hpUnits(x.hp)); }
+  for (const e of v.enemies) { const x = b.enemies.find((y) => y.n === e.n); assert.equal(e.hp, x.hp); assert.equal(e.maxHp, x.max); }
+});

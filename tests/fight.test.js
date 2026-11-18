@@ -798,7 +798,7 @@ test('wording is placeholders in data: every key a line or dilemma uses has text
 });
 
 test('wording keeps its slots: nothing a line needs is left unfilled, and every trade-off and kind word exists', () => {
-  const need = { arrive: ['kind', 'n'], pressure: ['kind', 'n'], vanEarly: ['round'], vanIn: ['leaves'], vanHeld: ['rounds'], vanCantWait: ['outside'], 'threat.aim': ['enemy', 'who', 'chance', 'pips'], 'end.lost': ['who'], 'end.abandoned': ['who'], 'end.leftBehind': ['who'], 'end.lostRunner': ['who'], shotDead: ['enemy', 'who'] };
+  const need = { arrive: ['kind', 'n'], pressure: ['kind', 'n'], vanEarly: ['round'], vanIn: ['leaves'], vanHeld: ['rounds'], vanCantWait: ['outside'], 'threat.aim': ['enemy', 'who', 'chance', 'hp'], 'end.lost': ['who'], 'end.abandoned': ['who'], 'end.leftBehind': ['who'], 'end.lostRunner': ['who'], shotDead: ['enemy', 'who'] };
   for (const [k, slots] of Object.entries(need)) for (const sl of slots) assert.ok(FIGHT_TEXT[k].includes(`{${sl}}`), `${k} keeps {${sl}}`);
   for (const kind of ['hired', 'corp', 'drone', 'enforcer']) assert.ok(FIGHT_TEXT[`kind.${kind}`], `a word for ${kind}`);
   for (const [id, d] of Object.entries(DILEMMAS)) for (const o of d.options) if (o.ordersPatch || o.vanWait || id === 'vanCantWait') assert.ok(FIGHT_TEXT[`dilemma.${id}.${o.id}.tradeoff`], `${id}.${o.id} says what it does`);

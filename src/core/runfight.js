@@ -70,7 +70,7 @@ const CUE = { attack: 'shoot', shot: 'guard', overwatch: 'overwatch', stabilise:
 export const feedLine = (l) => ({
   kind: CUE[l.kind] ?? 'note', rule: l.kind, key: l.key ?? null, slots: l.slots ?? {}, text: l.text, actor: l.actor ? { id: l.actor, handle: l.actor } : null, guard: l.enemy ?? null, targetId: l.targetId ?? (typeof l.target === 'string' ? l.target : null),
   ...(l.burst ? { burst: true } : {}), ...(l.jumpFrom != null ? { jumpFrom: l.jumpFrom } : {}), ...(l.callers?.length ? { callers: l.callers } : {}), ...(l.targets?.length ? { targets: l.targets } : {}), ...(l.shieldedBy ? { shieldedBy: l.shieldedBy } : {}), ...(l.cracked ? { cracked: true } : {}), ...(l.at ? { at: l.at } : {}),
-  success: l.success ?? null, damage: Fight.hpUnits(l.damage ?? 0), heal: Fight.hpUnits(l.heal ?? 0), kit: l.kit ?? null, dropped: !!l.dropped, ...(l.left != null && l.max ? { left: Fight.hpUnits(l.left), max: Fight.hpUnits(l.max) } : {}), ...(l.roll ? { die: l.roll.die, need: l.roll.need, value: l.roll.value } : {}),
+  success: l.success ?? null, damage: Fight.hpUnits(l.damage ?? 0), heal: Fight.hpUnits(l.heal ?? 0), ...(l.damage > 0 ? { hpDamage: l.damage } : {}), ...(l.heal > 0 ? { hpHeal: l.heal } : {}), kit: l.kit ?? null, dropped: !!l.dropped, ...(l.left != null && l.max ? { left: Fight.hpUnits(l.left), max: Fight.hpUnits(l.max) } : {}), ...(l.roll ? { die: l.roll.die, need: l.roll.need, value: l.roll.value } : {}),
   ...(l.order ? { order: l.order, from: l.from } : {}),
 });
 

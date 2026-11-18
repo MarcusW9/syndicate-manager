@@ -11,7 +11,7 @@ import { autoStep, needsPlayer } from '../src/core/autorun.js';
 import { makeRng } from '../src/core/rng.js';
 import * as F from '../src/core/fight.js';
 import { roundView, planView, riskWords, RISK_ORDER, orderChoices, lossLine } from '../src/core/fightview.js';
-import { lineText, chanceWord, pipsWord } from '../src/core/fighttext.js';
+import { lineText, chanceWord, hpWord } from '../src/core/fighttext.js';
 import { coverage } from '../src/core/squad.js';
 import { withBuild } from '../src/core/builds.js';
 import { FIGHT } from '../src/data/fights.js';
@@ -47,9 +47,9 @@ const waiting = (s) => inFight(s) && !s.activeMission.pending && s.activeMission
 test('chances and pips come with their units: "60%", "1 pip", "2 pips"', () => {
   assert.equal(chanceWord(0.6), '60%');
   assert.equal(chanceWord(0.9), '90%');
-  assert.equal(pipsWord(1), '1 pip');
-  assert.equal(pipsWord(2), '2 pips');
-  assert.equal(lineText('threat.aim', { enemy: 'drone 1', who: 'Jax', chance: chanceWord(0.9), pips: pipsWord(1) }), 'Drone 1 aims at Jax (90%, 1 pip).', 'the line adds neither unit');
+  assert.equal(hpWord(10), '10 HP');
+  assert.equal(hpWord(20), '20 HP');
+  assert.equal(lineText('threat.aim', { enemy: 'drone 1', who: 'Jax', chance: chanceWord(0.9), hp: hpWord(10) }), 'Drone 1 aims at Jax (90%, 10 HP).', 'the line adds neither unit');
 });
 
 // --- the view model reads the rules' own numbers ----------------------------------------------------
@@ -70,10 +70,10 @@ test('every chance the round screen shows is the one the round uses (previewRoun
     const kind = pv.actions.find((a) => a.who === runner.id)?.kind;
     const expect = F.aimChance(b, runner, { hunker: !x.shieldedBy && kind === 'hunker', open: !x.shieldedBy && (kind === 'board' || kind === 'carry') });
     assert.equal(t.chance, expect, 'and the preview is aimChance on the same stance the round uses');
-    assert.ok(t.text.includes(`(${chanceWord(t.chance)}, ${pipsWord(F.hpUnits(t.hit))})`), t.text);
+    assert.ok(t.text.includes(`(${chanceWord(t.chance)}, ${hpWord(t.hit)})`), t.text);
   }
-  assert.ok(lines.some((t) => t.hit === 10 && t.text.includes('1 pip)')), 'a one-pip threat reads 1 pip, not 1 pips');
-  assert.ok(!lines.some((t) => /1 pips/.test(t.text)));
+  assert.ok(lines.some((t) => t.hit === 10 && t.text.includes('10 HP)')), 'a 10-HP threat reads 10 HP');
+  assert.ok(!lines.some((t) => /pip/.test(t.text)), 'no line still says pips');
 });
 
 test('the round view never draws: nothing in it takes the run\'s stream, and it works before the round is drawn', () => {
@@ -106,7 +106,7 @@ test('the risk picker says what the rules do: cautious half rounded up, steady t
   const [c, st, co] = RISK_ORDER.map(riskWords);
   assert.match(c.description, /half/i);
   assert.match(c.description, /rounded up/i);
-  assert.match(st.description, /third of their pips/i, 'steady says a third');
+  assert.match(st.description, /third of their HP/i, 'steady says a third');
   assert.ok(FIGHT.risk.steady.pullDiv === 3 && FIGHT.risk.steady.minHp === 10, 'and the rule\'s numbers are those');
   assert.match(c.description + st.description, /asks you first/i, 'a watched crew asks first');
   assert.match(co.description, /never/i);
@@ -278,7 +278,7 @@ test('the plan screen\'s fight block: type line, enemies, gaps, orders, risk pic
   const crew = createNewGame({ seed: 5, startCrew: 'fresh' }).crew.slice(0, tpl.crewSize);
   const cov = coverage(tpl, crew, 'loud', { threat: tpl.threat });
   const html = renderFightPlan(esc, cov.fight2, 'steady');
-  for (const part of ['The fight', 'Extract: hold until the van arrives', 'Likely enemies', 'Orders', 'hold, then board', 'Pulls out at 2 pips or fewer', 'Cautious', 'Committed', 'data-action="orders"']) assert.ok(html.includes(part), part);
+  for (const part of ['The fight', 'Extract: hold until the van arrives', 'Likely enemies', 'Orders', 'hold, then board', 'Pulls out at 20 HP or fewer', 'Cautious', 'Committed', 'data-action="orders"']) assert.ok(html.includes(part), part);
   assert.match(html, /Chance of losing someone: \d+%|No chance of losing someone/);
   assert.ok(!/\{\w+\}/.test(html));
   const c = renderFightPlan(esc, cov.fight2, 'committed');
