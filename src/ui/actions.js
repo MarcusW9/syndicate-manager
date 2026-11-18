@@ -35,6 +35,7 @@ import { boardRead } from './jobs.js';
 import { cityName } from './shared.js';
 import { inboxView } from './today.js';
 import { state, nav, CONTINUE_REST_MS, remember, goHome, restoreView, toRoot, viewNow, setSub, briefSeen, buzzLater, openInfo, V } from './view.js';
+import { freshSeed } from './seed.js';
 
 // --- events ------------------------------------------------------------
 export function onClick(e) {
@@ -453,7 +454,7 @@ export function onClick(e) {
       V.newGameSlot = null;
       nav.clear(); V.screen = 'inbox'; V.plan = null; V.openMessageId = null; V.openOperativeId = null; V.openRecruitId = null;
       V.founderPick = [];
-      return setState(createNewGame({ difficulty, startCrew: 'pick' }));
+      return setState(createNewGame({ seed: freshSeed(), difficulty, startCrew: 'pick' }));
     }
     case 'slot-delete':
       if (confirm(`Delete the game in slot ${id}? This can't be undone.`)) deleteSlot(Number(id));

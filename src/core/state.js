@@ -31,6 +31,8 @@ const freshCondition = () => ({
 
 /** @returns {import('./types.js').GameState} */
 /**
+ * seed: the game's seed (every roll comes from it, through core/rng.js). The core never reads the clock for it: the game
+ * passes ui/seed.js freshSeed(); without one a game is seed 1, the same every time (2026-11-18, the purity pass).
  * startCrew: 'pick' (what every new game uses: six generated rookie candidates in a cheap
  * first safehouse, and the player picks three with chooseFounders before day 1 starts),
  * 'fresh' (five generated rookies, one per core role: the start before 2026-10-28, kept as
@@ -38,7 +40,7 @@ const freshCondition = () => ({
  * or 'classic' (the authored Lantern Bay Five: no longer offered in the game, kept as
  * the fixed crew the rule tests are written against).
  */
-export function createNewGame({ seed = Date.now() % 2147483647, difficulty = 'standard', startCrew = 'classic' } = {}) {
+export function createNewGame({ seed = 1, difficulty = 'standard', startCrew = 'classic' } = {}) {
   const crew = startCrew === 'fresh' || startCrew === 'pick' ? [] : STARTING_CREW.map((op) => prepareOperative({
     ...structuredClone(op),
     condition: freshCondition(),

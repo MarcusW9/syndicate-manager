@@ -7,8 +7,8 @@
 // Plays a fresh game at phone width (390x844, 2x), saves one PNG per
 // screen, then one desktop view (1440x900), into docs/screenshots/<date>-<slug>/. Drives the UI through the
 // data-action attributes, which every version so far has used, and skips any
-// screen an older version doesn't have. Math.random is seeded in the page so
-// reruns give the same crew and jobs.
+// screen an older version doesn't have. Math.random is seeded in the page and the
+// new game's seed is fixed (`?seed=`, `--seed`, default 21), so reruns give the same crew and jobs.
 //
 // Needs Playwright's Chromium: `npx playwright install chromium` once.
 
@@ -23,8 +23,9 @@ const args = process.argv.slice(2);
 const flag = (name) => { const i = args.indexOf(`--${name}`); return i >= 0 ? args.splice(i, 2)[1] : null; };
 const commit = flag('commit');
 let date = flag('date');
+const SEED = Number(flag('seed') ?? 21); // the new game's seed: the same game every run unless --seed says otherwise
 const slug = args[0];
-if (!slug) { console.error('Usage: npm run screenshots -- <slug> [--commit <sha>] [--date YYYY-MM-DD]'); process.exit(1); }
+if (!slug) { console.error('Usage: npm run screenshots -- <slug> [--commit <sha>] [--date YYYY-MM-DD] [--seed <n>]'); process.exit(1); }
 
 const git = (...a) => execFileSync('git', a, { cwd: repo, encoding: 'utf8' }).trim();
 if (!date) date = commit ? git('show', '-s', '--format=%ad', '--date=short', commit) : new Date().toISOString().slice(0, 10);
@@ -87,7 +88,8 @@ async function click(sel) {
 const top = () => page.evaluate(() => window.scrollTo(0, 0));
 
 try {
-  await page.goto(`http://localhost:${port}/`);
+  // ?seed= fixes the new game's seed in the dev build (ui/seed.js, 2026-11-18), so every run plays the same game; older versions ignore it.
+  await page.goto(`http://localhost:${port}/?seed=${SEED}`);
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await page.waitForSelector('#app *');

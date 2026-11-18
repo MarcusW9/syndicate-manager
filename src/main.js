@@ -10,6 +10,7 @@ import { HEISTS } from './data/heists.js';
 import { MISSIONS } from './data/missions.js';
 import { STARTING_CREW } from './data/operatives.js';
 import { mountApp } from './ui/app.js';
+import { freshSeed } from './ui/seed.js';
 
 if (import.meta.env.DEV) {
   const problems = [...validateMissions(MISSIONS), ...validateCrew(STARTING_CREW), ...validateHeists(HEISTS, MISSIONS)];
@@ -18,7 +19,7 @@ if (import.meta.env.DEV) {
 
 let state = loadGame();
 if (!state) {
-  state = createNewGame({ startCrew: 'pick' });
+  state = createNewGame({ seed: freshSeed(), startCrew: 'pick' });
   saveGame(state);
 }
 
