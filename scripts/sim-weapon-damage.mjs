@@ -47,6 +47,8 @@ const mix = {};
 for (const t of tiers) for (const [d, k] of Object.entries(byTier[t])) mix[d] = (mix[d] ?? 0) + (k / per) * (dropOdds[t] / 100);
 const pistolShare = LOOT.pool.standard.pistol / Object.values(LOOT.pool.standard).reduce((n, w) => n + w, 0);
 console.log(`\nA job's drop: ${pct(LOOT.chance, 1)} of jobs drop gear, ${pct(pistolShare, 1)} of drops are sidearms, so about one job in ${Math.round(1 / (LOOT.chance * pistolShare))} drops one.`);
+const perJob = LOOT.chance * pistolShare + (1 - LOOT.chance) * (LOOT.spareChance ?? 0);
+console.log(`With the spare piece (a Standard sidearm instead of scrap, ${pct(LOOT.spareChance ?? 0, 1)} of misses): about one job in ${(1 / perJob).toFixed(1)} gives a sidearm.`);
 console.log(`A dropped sidearm by damage: ${damages.map((d) => `${d}: ${pct(mix[d] ?? 0, 1)}`).join(', ')}.`);
 
 const s = createNewGame({ seed: 1, startCrew: 'fresh' });

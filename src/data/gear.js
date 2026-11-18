@@ -56,6 +56,9 @@ export const BASE_TIER = 'standard';
 export const LOOT = {
   chance: 0.35,
   scrap: 50,
+  // A spare piece (owner, 2026-11-18: sidearms dropped about one job in 13): when nothing drops, this share of the time the crew
+  // gets a Standard sidearm instead of the scrap cash (core/loot.js lootFor, a roll of its own). Sidearms then turn up about one job in 4.5.
+  spareChance: 0.25, spareType: 'pistol',
   pool: {
     standard: { pistol: 22, vest: 16, deck: 14, medkit: 14, picks: 14, rifle: 8, drone: 4, reflex: 4, cortex: 4 },
     verified: { pistol: 22, vest: 16, deck: 14, medkit: 14, picks: 14, rifle: 8, drone: 4, reflex: 4, cortex: 4 },

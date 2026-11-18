@@ -8,7 +8,7 @@ Now and next, on one screen. Read `CLAUDE.md` first; its rules are not repeated 
 
 - **`main`:** everything up to #199: #199 the purity pass (the core never reads the clock, a test keeps the layers apart; `createNewGame` takes a seed, `ui/seed.js`), #198 the handoffs; #195 the visual pass (the Contagion jump, the infection tick, the shield dome, jam, the way-out alarm, the medic's patch on the stage) and #197 the speed pass (the board's fight odds back to their pre-#194 speed, same outputs). Before them, everything up to #193 (gear tiers, Apex, builds 3-ii-a/b, the offer on the crew sheet, hall raids on engine 2). **#194 is merged (2026-11-18):** the planning read's build advice (Joss, closed to start), the Contagion Vector, hack jobs ending with a fight out (save v76), the medic's hands on the way out, the medic's aura drawn on the stage, and the sims behind them (`docs/sims/vectors-*`, `wayout-*`). PRs are squash-merged, one per feature.
 - **Built and in the game:** the tong (halls with compounds, posts and forecourts, heat per district, police and gang raids, heists slice A1, the other tongs C0-C5 with the Anchor's Book, retirement, loyalty, rival offers, the oath); the navigation rework (`docs/SCREENS.md`); the battle rework slices 1-3 (Engine 2, `core/fight.js`, on five jobs; raids and every other fight stay on Engine 1, `docs/BATTLES.md`); watchable combat slices 0-1 and the live battle view steps 1-3 (fights play on the job's own map); job maps in hard light.
-- **Tests:** 1207 passing (2026-11-18). `npm run test:fast` while working; `npm test` before every push (it takes several minutes).
+- **Tests:** 1208 passing (2026-11-18). `npm run test:fast` while working; `npm test` before every push (it takes several minutes).
 
 ## Next
 

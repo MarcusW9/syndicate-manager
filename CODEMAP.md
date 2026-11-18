@@ -95,7 +95,7 @@ How battles work (both engines, every number, the death rule): `docs/BATTLES.md`
   - `pricing.js` (wages)
   - `statuses.js` (timed statuses)
   - `tiered.js` (two-stage weighted picks)
-  - `loot.js` (gear drops on a completed main job: `lootFor` from `mission.js finish()`; an Apex roll picks a named piece not yet in `state.apexFound` (`data/apexGear.js`), or falls to Premium when all are found; tier first from `data/gear.js TIERS` odds, falls to the next live tier, then a weighted type from `LOOT.pool`; a miss is scrap cash; `hashRng` only, so no roll moves; a Custom or Premium drop's perks ride on the report line as `perks`)
+  - `loot.js` (gear drops on a completed main job: `lootFor` from `mission.js finish()`; when nothing drops, `LOOT.spareChance` of the time a spare Standard sidearm instead of scrap, from its own `hashRng` (2026-11-18); an Apex roll picks a named piece not yet in `state.apexFound` (`data/apexGear.js`), or falls to Premium when all are found; tier first from `data/gear.js TIERS` odds, falls to the next live tier, then a weighted type from `LOOT.pool`; a miss is scrap cash; `hashRng` only, so no roll moves; a Custom or Premium drop's perks ride on the report line as `perks`)
   - `marks.js` (career marks: scars, chrome, the crew's tattoo)
   - `looks.js` (gun looks)
   - `validate.js` (content validators, run at dev boot and in tests)
