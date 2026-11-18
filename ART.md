@@ -114,7 +114,7 @@ What the job leaves on a face, for good. `src/core/marks.js` records each one in
 | Hair colour | natural `#17171b #241c19 #3a291e #563820 #7f5428 #a37540`; 15% dyed `#ff4f7b #36d6c3 #a78bfa #f5b942 #7dd3fc`; grey `#b9bcc4` for 60% of those 45 or older |
 | Split-dye | 12% of people with hair: the left half in a second neon colour |
 | Chrome | temple port (3 in 7; the cheap street standard), circuit lines on the jaw, temple or nose bridge (2 in 7), cyber-eye lens on the lit side (1 in 7), synthetic-skin patch with a clean-cut seam (1 in 7). Chrome colour: cyan (half), red or amber. |
-| Markings | none (3 in 7), geometric neon tattoo, neck barcode, jagged street scar, clean cut |
+| Markings | none (3 in 7), geometric neon tattoo (one of six designs fixed by the runner's id, `art.js TATTOO_LOOKS`: nested diamond, corner brackets, circuit trace, scale pattern, stepped line, reticle), neck barcode, jagged street scar, clean cut. All ink is drawn twice, a dark ink under the skin and a thin neon line on top, with square ends and mitred corners; the undercut's shaved side carries stepped chevrons on a spine, and the crew's mark is a small hanging lantern under the shadow-side eye |
 | Eyewear | visor 5% (never with a cyber-eye); glasses 12% otherwise |
 | Other | stubble 12%, earring 25% (sodium gold), shirt in one of five dark colours |
 

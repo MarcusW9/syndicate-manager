@@ -217,3 +217,13 @@ test('wounds: every preset draws, differs from the others, and a runner always w
   }
   assert.equal(woundLook(op, 'healthy'), null);
 });
+
+test('tattoos: every design draws and differs, and a runner always wears the same one', async () => {
+  const { TATTOO_LOOKS, tattooLook } = await import('../src/ui/art.js');
+  const op = { id: 't1', name: 'Mei Chan', age: 24, condition: { fatigue: 0, morale: 60, neuralLoad: 0, burnout: 0, injury: 'healthy' } };
+  const drawn = TATTOO_LOOKS.map((ink) => withoutIds(portrait(op, { ink })));
+  assert.equal(new Set(drawn).size, TATTOO_LOOKS.length, 'each design is its own picture');
+  assert.ok(drawn.every((d) => d !== withoutIds(portrait(op))), 'inked differs from bare');
+  assert.equal(tattooLook(op), tattooLook({ ...op }));
+  assert.ok(TATTOO_LOOKS.includes(tattooLook(op)));
+});
