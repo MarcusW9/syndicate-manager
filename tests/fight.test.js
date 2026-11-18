@@ -24,7 +24,7 @@ const always = (v) => () => v;
 /** A seeded rng that counts its draws. */
 const counting = (seed) => { const r = makeRng(seed); const f = () => { f.n += 1; return r(); }; f.n = 0; return f; };
 
-const foe = (n, kind = 'corp', o = {}) => ({ n, kind, pips: ENEMIES[kind].pips, max: ENEMIES[kind].pips, absorb: ENEMIES[kind].absorb ?? 0, cover: ENEMIES[kind].cover, out: false, fled: false, deck: ['aim'], di: 0, ...o });
+const foe = (n, kind = 'corp', o = {}) => ({ n, kind, hp: ENEMIES[kind].hp, max: ENEMIES[kind].hp, absorb: ENEMIES[kind].absorb ?? 0, cover: ENEMIES[kind].cover, out: false, fled: false, deck: ['aim'], di: 0, ...o });
 
 /** A fight with the people named (ids from the authored crew), no enemies yet, nothing drawn. */
 function fixture(type, who, { set = {}, risk = 'steady', threat = 3, site = type === 'holdHack' ? 'heights' : 'docks', ...opts } = {}) {
@@ -53,18 +53,18 @@ const full = (o) => { o.stats.endurance = 20; return o; };
 // --- pips -------------------------------------------------------------------------------------------
 
 test('pips: one per two points of endurance, at least 3; cool changes nothing; a light wound starts 2 down', () => {
-  const at = (e) => F.maxPips({ stats: { endurance: e } });
-  assert.deepEqual([1, 6, 7, 8, 12, 13, 18, 19, 20].map(at), [3, 3, 3, 4, 6, 6, 9, 9, 10]);
+  const at = (e) => F.maxHp({ stats: { endurance: e } });
+  assert.deepEqual([1, 6, 7, 8, 12, 13, 18, 19, 20].map(at), [30, 30, 30, 40, 60, 60, 90, 90, 100]);
   const [jax] = crewOf().filter((o) => o.id === 'jax');
   const base = F.runnerOf(jax, 'loud').max;
   jax.stats.cool = 20;
   assert.equal(F.runnerOf(jax, 'loud').max, base, 'cool no longer changes pips');
-  assert.equal(base, F.maxPips(jax));
+  assert.equal(base, F.maxHp(jax));
   jax.condition.injury = 'light';
   const hurt = F.runnerOf(jax, 'loud');
-  assert.equal(hurt.pips, base - FIGHT.lightWoundPips);
+  assert.equal(hurt.hp, base - FIGHT.lightWoundHp);
   jax.stats.endurance = 1;
-  assert.equal(F.runnerOf(jax, 'loud').pips, 1, 'a light wound never starts a runner at 0');
+  assert.equal(F.runnerOf(jax, 'loud').hp, 10, 'a light wound never starts a runner at 0');
 });
 
 test('gear: a vest absorbs 1 or 2 hits, a sidearm sets the strong margin, pierce is ap', () => {
@@ -146,13 +146,13 @@ test('precedence: withdraw beats duty; the risk threshold beats duty; a stabilis
   const b = fixture('holdHack', [ids.static, ids.jax, ids.stitch], { risk: 'cautious', set: { jax: { endurance: 8 }, mei: { endurance: 8 }, wing: { endurance: 12 } } });
   b.enemies = [foe(1)];
   draw(b, [{ enemy: 1, kind: 'aim', target: 'wing' }]);
-  R(b, 'jax').pips = 2; // cautious: half of 4 pips, rounded up, is 2
-  assert.equal(F.riskThreshold(b, R(b, 'jax')), 2);
+  R(b, 'jax').hp = 20; // cautious: half of 40 HP, rounded up to a whole 10, is 20
+  assert.equal(F.riskThreshold(b, R(b, 'jax')), 20);
   const pv = F.previewRound(b);
   assert.equal(pv.actions.find((a) => a.who === 'jax').kind, 'withdraw');
   assert.equal(pv.actions.find((a) => a.who === 'jax').from, 'safety');
   // A hand-ordered withdraw is "duty".
-  R(b, 'jax').pips = 4;
+  R(b, 'jax').hp = 40;
   F.setOrder(b, 'jax', { duty: 'withdraw' });
   assert.equal(F.previewRound(b).actions.find((a) => a.who === 'jax').from, 'duty');
   // A medic with a bleeding teammate stabilises first, whatever their duty.
@@ -167,9 +167,9 @@ test('risk thresholds in pips: cautious half rounded up, steady a third rounded 
   const b = fixture('holdHack', [ids.static, ids.jax]);
   const r = R(b, 'jax');
   const at = (level, max) => { r.max = max; b.risk.level = level; return F.riskThreshold(b, r); };
-  assert.deepEqual([3, 4, 6, 7, 9, 12, 20].map((m) => at('cautious', m)), [2, 2, 3, 4, 5, 6, 10]);
-  assert.deepEqual([1, 3, 4, 6, 7, 9, 12, 20].map((m) => at('steady', m)), [1, 1, 2, 2, 3, 3, 4, 7], 'a 3-pip runner pulls out at 1, not after the first hit');
-  assert.deepEqual([3, 9, 20].map((m) => at('committed', m)), [0, 0, 0]);
+  assert.deepEqual([30, 40, 60, 70, 90, 120, 200].map((m) => at('cautious', m)), [20, 20, 30, 40, 50, 60, 100]);
+  assert.deepEqual([10, 30, 40, 60, 70, 90, 120, 200].map((m) => at('steady', m)), [10, 10, 20, 20, 30, 30, 40, 70], 'a 30-HP runner pulls out at 10, not after the first hit');
+  assert.deepEqual([30, 90, 200].map((m) => at('committed', m)), [0, 0, 0]);
 });
 
 test('the pull-out call: comes up for a runner at their point (not committed, not at the van), again when they lose another pip; keeping them in stops the safety pull-out', () => {
@@ -181,7 +181,7 @@ test('the pull-out call: comes up for a runner at their point (not committed, no
   };
   const b = mk();
   assert.deepEqual(F.dueDilemmas(b).map((d) => d.id), [], 'full pips: nothing');
-  R(b, 'jax').pips = 2; // max 6, a third is 2
+  R(b, 'jax').hp = 20; // max 60, a third is 20
   const due = F.dueDilemmas(b);
   assert.deepEqual(due.map((d) => d.id), ['pullOutPoint']);
   assert.deepEqual(due[0].subjects, ['jax']);
@@ -193,14 +193,14 @@ test('the pull-out call: comes up for a runner at their point (not committed, no
   F.keepIn(b, ['jax']);
   assert.notEqual(kinds(F.previewRound(b)).jax, 'withdraw');
   assert.deepEqual(F.dueDilemmas(b), []);
-  R(b, 'jax').pips = 1;
+  R(b, 'jax').hp = 10;
   assert.deepEqual(F.dueDilemmas(b).map((d) => d.id), ['pullOutPoint'], 'another pip lost: asked again');
   assert.equal(kinds(F.previewRound(b)).jax, 'withdraw', 'and the crew pulls them out unless told to keep them in');
   // Healed past their point: asked afresh next time.
-  R(b, 'jax').pips = 5; F.startRound(b, makeRng(1));
-  assert.equal(R(b, 'jax').stayPips, null);
+  R(b, 'jax').hp = 50; F.startRound(b, makeRng(1));
+  assert.equal(R(b, 'jax').stayHp, null);
   // Committed never pulls out, so never asks; the van stage pulls out by boarding, so it does not ask either.
-  const c = mk('committed'); R(c, 'jax').pips = 1;
+  const c = mk('committed'); R(c, 'jax').hp = 10;
   assert.deepEqual(F.dueDilemmas(c).filter((d) => d.id === 'pullOutPoint'), []);
 });
 
@@ -276,9 +276,9 @@ test('shield takes exactly one shot and it resolves against the protector\'s cov
   F.setOrder(b, 'wing', { duty: 'hold', target: null, fallback: null });
   const res = F.playRound(b, always(0));
   assert.equal(R(b, 'jax').absorb, 0, "the protector's vest took the redirected hit");
-  assert.equal(R(b, 'jax').pips, R(b, 'jax').max, 'not erased: it resolved, and the armour soaked it');
+  assert.equal(R(b, 'jax').hp, R(b, 'jax').max, 'not erased: it resolved, and the armour soaked it');
   assert.ok(res.lines.some((l) => l.key === 'shotAbsorbed'));
-  assert.equal(R(b, 'wing').pips, R(b, 'wing').max - 2 + 0, 'the other corp shot hit the tech for 2');
+  assert.equal(R(b, 'wing').hp, R(b, 'wing').max - 20 + 0, 'the other corp shot hit the tech for 20');
 });
 
 test('shown = used: the preview\'s shot chance is the chance the round rolls, hunker and boarding included', () => {
@@ -311,7 +311,7 @@ test('hunker never cancels a shot and cover never makes one impossible', () => {
   F.setOrder(b, 'jax', { duty: 'hold', target: null, fallback: null });
   assert.equal(F.previewRound(b).actions.find((a) => a.who === 'jax').kind, 'hunker');
   F.playRound(b, always(0)); // every shot hits
-  assert.ok(R(b, 'jax').pips < R(b, 'jax').max, 'hunkering did not stop the shot');
+  assert.ok(R(b, 'jax').hp < R(b, 'jax').max, 'hunkering did not stop the shot');
 });
 
 // --- the hack --------------------------------------------------------------------------------------------------
@@ -331,7 +331,7 @@ test('hack: progress only for rounds the technician worked and stood at the end;
   const c = fixture('holdHack', [ids.static, ids.jax], { set: { wing: { endurance: 6 } } });
   c.enemies = [foe(1, 'corp')];
   draw(c, [{ enemy: 1, kind: 'aim', target: 'wing' }]);
-  R(c, 'wing').pips = 1;
+  R(c, 'wing').hp = 1;
   F.setOrder(c, 'jax', { duty: 'hold', target: null, fallback: null });
   const res = F.playRound(c, always(0)); // the shot hits
   assert.equal(R(c, 'wing').down, true);
@@ -378,7 +378,7 @@ test('a runner going down on cautious or steady pulls the crew back; on committe
   for (const [risk, ended] of [['cautious', 'extracted'], ['steady', 'extracted'], ['committed', null]]) {
     const b = fixture('holdHack', [ids.static, ids.jax, ids.stitch], { risk });
     b.enemies = [foe(1, 'corp')];
-    R(b, 'jax').pips = 1;
+    R(b, 'jax').hp = 1;
     draw(b, [{ enemy: 1, kind: 'aim', target: 'jax' }]);
     F.setOrder(b, 'jax', { duty: 'hold', target: null, fallback: null });
     R(b, 'jax').cover = 'open';
@@ -431,15 +431,15 @@ test('vanRound: the driver brings the van exactly one round earlier, once, for +
 function atTheVan({ risk = 'steady', down = true, last = false } = {}) {
   const b = fixture('holdExtract', [ids.jax, ids.velvet, ids.stitch], { risk, set: { jax: { cool: 30 }, cherry: { cool: 30 }, mei: { cool: 30 } } });
   b.stage = 1; b.round = last ? 5 : 4; b.goal.vanLeaves = 5;
-  if (down) { const m = R(b, 'mei'); m.down = true; m.downRound = 3; m.pips = 0; }
+  if (down) { const m = R(b, 'mei'); m.down = true; m.downRound = 3; m.hp = 0; }
   return b;
 }
 
 test('boarding is contested: a cool roll each, door slots a round, the most hurt first, and boarders are in the open', () => {
   const b = atTheVan({ down: false });
   b.runners.push({ ...R(b, 'jax'), id: 'x1', handle: 'X1', seat: 3 }, { ...R(b, 'jax'), id: 'x2', handle: 'X2', seat: 4 });
-  for (const r of b.runners) { r.pips = r.max; }
-  R(b, 'x2').pips = 1; // the most hurt gets a slot first
+  for (const r of b.runners) { r.hp = r.max; }
+  R(b, 'x2').hp = 1; // the most hurt gets a slot first
   draw(b, []);
   for (const r of b.runners) F.setOrder(b, r.id, { duty: 'push', target: null, fallback: { duty: 'hold', target: null } });
   const pv = F.previewRound(b);
@@ -601,22 +601,22 @@ test('the hired break and run when too few are left', () => {
 
 test('the medic\'s aura: the most hurt standing runner gets a pip back a round, and downed teammates do not bleed', () => {
   const b = fixture('holdHack', [ids.static, ids.jax, ids.stitch], { risk: 'committed' });
-  R(b, 'jax').pips = 2; R(b, 'wing').pips = 2; R(b, 'jax').max = 6; R(b, 'wing').max = 3;
+  R(b, 'jax').hp = 20; R(b, 'wing').hp = 20; R(b, 'jax').max = 60; R(b, 'wing').max = 30;
   draw(b, []);
   F.setOrder(b, 'mei', { duty: 'hold', target: null, fallback: null }); // no patch: only the aura
   F.playRound(b, always(0.5));
-  assert.equal(R(b, 'jax').pips, 3, 'the most hurt by share (Jax 2/6) gets +1');
-  assert.equal(R(b, 'wing').pips, 2);
+  assert.equal(R(b, 'jax').hp, 30, 'the most hurt by share (Jax 20/60) gets +10');
+  assert.equal(R(b, 'wing').hp, 20);
   // A downed teammate does not bleed while the medic stands: even with a die that always says bleed.
   const c = fixture('holdHack', [ids.static, ids.jax, ids.stitch], { risk: 'committed' });
-  R(c, 'jax').down = true; R(c, 'jax').downRound = 0; R(c, 'jax').pips = 0;
+  R(c, 'jax').down = true; R(c, 'jax').downRound = 0; R(c, 'jax').hp = 0;
   c.round = 5; draw(c, []);
   F.setOrder(c, 'mei', { duty: 'hold', target: null, fallback: null });
   F.playRound(c, () => 0); // the stabilise roll is a 1 and fails; the bleed roll would kill
   assert.equal(R(c, 'jax').dead, false, 'the medic keeps them going');
   // Without a standing medic, a committed crew bleeds.
   const d = fixture('holdHack', [ids.static, ids.jax], { risk: 'committed' });
-  R(d, 'jax').down = true; R(d, 'jax').downRound = 0; R(d, 'jax').pips = 0;
+  R(d, 'jax').down = true; R(d, 'jax').downRound = 0; R(d, 'jax').hp = 0;
   d.round = 5; draw(d, []);
   F.playRound(d, always(0));
   assert.equal(R(d, 'jax').dead, true, 'bleeds out');
@@ -625,7 +625,7 @@ test('the medic\'s aura: the most hurt standing runner gets a pip back a round, 
 test('bleeding starts the second round after going down, and only on committed (or pushed on by hand)', () => {
   for (const [risk, fightOn, dies] of [['steady', false, false], ['cautious', false, false], ['committed', false, true], ['steady', true, true]]) {
     const b = fixture('holdHack', [ids.static, ids.jax], { risk });
-    R(b, 'jax').down = true; R(b, 'jax').pips = 0; R(b, 'jax').fightOn = fightOn; R(b, 'jax').downRound = 4;
+    R(b, 'jax').down = true; R(b, 'jax').hp = 0; R(b, 'jax').fightOn = fightOn; R(b, 'jax').downRound = 4;
     b.round = 5; draw(b, []);
     F.playRound(b, always(0));
     assert.equal(R(b, 'jax').dead, false, `${risk}: not in the grace round`);
@@ -639,7 +639,7 @@ test('a hand-ordered withdrawal can cost a life; a risk-driven one goes to death
   for (const [byHand, dead] of [[true, true], [false, false]]) {
     const b = fixture('holdHack', [ids.static, ids.jax, ids.stitch]);
     b.enemies = [foe(1, 'corp')];
-    R(b, 'jax').pips = 1;
+    R(b, 'jax').hp = 1;
     draw(b, [{ enemy: 1, kind: 'aim', target: 'jax' }]);
     if (byHand) F.setOrder(b, 'jax', { duty: 'withdraw' }); // else steady's 2-pip threshold pulls them out
     F.playRound(b, always(0));
@@ -685,15 +685,15 @@ test('left behind: missing, never dead unless committed and down; the van\'s hol
 // --- outcomes and the planning read -----------------------------------------------------------------------------
 
 test('pips left become the injury: light below half, serious below a quarter, down is critical', () => {
-  const r = { pips: 5, max: 10 };
-  assert.equal(F.injuryFromPips({ pips: 10, max: 10 }), 'none');
-  assert.equal(F.injuryFromPips(r), 'none');
-  assert.equal(F.injuryFromPips({ pips: 4, max: 10 }), 'light');
-  assert.equal(F.injuryFromPips({ pips: 2, max: 10 }), 'serious');
+  const r = { hp: 50, max: 100 };
+  assert.equal(F.injuryFromHp({ hp: 100, max: 100 }), 'none');
+  assert.equal(F.injuryFromHp(r), 'none');
+  assert.equal(F.injuryFromHp({ hp: 40, max: 100 }), 'light');
+  assert.equal(F.injuryFromHp({ hp: 20, max: 100 }), 'serious');
   const b = fixture('holdHack', [ids.static, ids.jax, ids.stitch]);
-  R(b, 'jax').down = true; R(b, 'jax').pips = 0;
+  R(b, 'jax').down = true; R(b, 'jax').hp = 0;
   R(b, 'mei').dead = true;
-  R(b, 'wing').pips = 1; R(b, 'wing').max = 6;
+  R(b, 'wing').hp = 1; R(b, 'wing').max = 6;
   const out = Object.fromEntries(F.outcomeOf(b).map((o) => [o.id, o.injury]));
   assert.deepEqual(out, { wing: 'serious', jax: 'critical', mei: 'dead' });
 });
@@ -726,7 +726,7 @@ test('dilemmas: techUnderFire holds on half pips with a radio call shown, not on
   assert.deepEqual(F.dueDilemmas(b), [], 'one shot, full pips: nothing');
   draw(b, [{ enemy: 1, kind: 'aim', target: 'wing' }, { enemy: 2, kind: 'aim', target: 'wing' }, { enemy: 3, kind: 'aim', target: 'wing' }]);
   assert.deepEqual(F.dueDilemmas(b), [], 'shots alone, even three, no longer call the crew in');
-  R(b, 'wing').pips = 3;
+  R(b, 'wing').hp = 30;
   draw(b, [{ enemy: 1, kind: 'aim', target: 'wing' }, { enemy: 2, kind: 'aim', target: 'wing' }]);
   assert.deepEqual(F.dueDilemmas(b), [], 'half pips but no radio call shown: nothing');
   draw(b, [{ enemy: 1, kind: 'backup' }, { enemy: 2, kind: 'aim', target: 'wing' }]);
@@ -735,7 +735,7 @@ test('dilemmas: techUnderFire holds on half pips with a radio call shown, not on
   assert.equal(due[0].id, 'techUnderFire');
   b.dilemmasFired[due[0].key] = true;
   assert.deepEqual(F.dueDilemmas(b), [], 'not again for the same situation');
-  R(b, 'wing').pips = 4;
+  R(b, 'wing').hp = 40;
   assert.deepEqual(F.dueDilemmas(b), [], 'revalidated: above half pips it no longer holds');
 });
 
@@ -817,7 +817,7 @@ test('wording keeps its slots: nothing a line needs is left unfilled, and every 
 test('heat is reported once, even when startRound ran first (the run calls it before playRound): the early van\'s +1 is not lost', () => {
   const b = fixture('holdExtract', [ids.jax, ids.stitch, ids.velvet], { wheels: { id: 'teo', handle: 'Wheels', value: 17 } });
   b.enemies = [foe(1, 'hired'), foe(2, 'hired')];
-  R(b, 'jax').pips = 1; // someone nearly down: the driver brings the van a round early
+  R(b, 'jax').hp = 1; // someone nearly down: the driver brings the van a round early
   const rng = makeRng(5);
   F.startRound(b, rng);
   assert.equal(b.vanUsed, true);
@@ -828,13 +828,13 @@ test('heat is reported once, even when startRound ran first (the run calls it be
 
 test('someone down whom nobody pushed on for pulls the crew back, even after another runner was pushed on for', () => {
   const b = fixture('holdHack', [ids.static, ids.jax, ids.stitch]);
-  R(b, 'jax').down = true; R(b, 'jax').fightOn = true; R(b, 'jax').downRound = 1; R(b, 'jax').pips = 0;
+  R(b, 'jax').down = true; R(b, 'jax').fightOn = true; R(b, 'jax').downRound = 1; R(b, 'jax').hp = 0;
   draw(b, []);
   F.playRound(b, always(0.5));
   assert.equal(b.end, null, 'the one pushed on for does not pull the crew back');
   const c = fixture('holdHack', [ids.static, ids.jax, ids.stitch]);
-  R(c, 'jax').down = true; R(c, 'jax').fightOn = true; R(c, 'jax').downRound = 1; R(c, 'jax').pips = 0;
-  R(c, 'mei').down = true; R(c, 'mei').downRound = 1; R(c, 'mei').pips = 0;
+  R(c, 'jax').down = true; R(c, 'jax').fightOn = true; R(c, 'jax').downRound = 1; R(c, 'jax').hp = 0;
+  R(c, 'mei').down = true; R(c, 'mei').downRound = 1; R(c, 'mei').hp = 0;
   draw(c, []);
   F.playRound(c, always(0.5));
   assert.equal(c.end.result, 'extracted', 'the second one down is the death\'s-door call');
@@ -843,7 +843,7 @@ test('someone down whom nobody pushed on for pulls the crew back, even after ano
 test('the van is held once: no second vanCantWait call-in for a hold that cannot happen', () => {
   const b = fixture('holdExtract', [ids.jax, ids.velvet, ids.stitch], { risk: 'steady' });
   b.stage = 1; b.round = 5; b.goal.vanLeaves = 5;
-  R(b, 'mei').down = true; R(b, 'mei').pips = 0; R(b, 'mei').downRound = 3;
+  R(b, 'mei').down = true; R(b, 'mei').hp = 0; R(b, 'mei').downRound = 3;
   draw(b, []);
   assert.equal(F.dueDilemmas(b).length, 1);
   b.vanHeld = true;
@@ -923,7 +923,7 @@ test('a fight that ends in the round is not given its old orders back', () => {
 
 test('the withdrawal rule still outranks a call-in order, and a restored order does not undo it', () => {
   const b = underFire(true);
-  R(b, 'jax').pips = 1; // under the steady threshold (2)
+  R(b, 'jax').hp = 1; // under the steady threshold (2)
   F.applyPatch(b, techOpts().cover.ordersPatch);
   assert.equal(kinds(F.previewRound(b)).jax, 'withdraw', 'a runner at the threshold still pulls out');
   F.playRound(b, always(0.999));
@@ -1048,8 +1048,8 @@ test('opposition: a job without one builds as before; one fills the fight with t
   const police = F.buildFight({ ...args, opposition: 'police' }, makeRng(7));
   assert.equal(police.enemies.length, COUNT_BY_THREAT[4] + OPPOSITION.police.extra);
   assert.ok(SITE_ENEMIES.docks.includes(police.enemies[0].kind));
-  assert.ok(police.enemies.slice(1).every((e) => e.kind === 'police' && e.pips === 1 && e.absorb === 1));
-  assert.equal(ENEMY_HIT.police, 1);
+  assert.ok(police.enemies.slice(1).every((e) => e.kind === 'police' && e.hp === 10 && e.absorb === 1));
+  assert.equal(ENEMY_HIT.police, 10);
   assert.ok(F.buildFight({ ...args, opposition: 'corporate' }, makeRng(7)).enemies.slice(1).every((e) => e.kind === 'secforce'));
 });
 

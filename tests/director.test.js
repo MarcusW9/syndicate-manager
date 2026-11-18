@@ -8,7 +8,7 @@ import { FIGHT } from '../src/data/fights.js';
 import { FIGHT_TEXT } from '../src/data/fightText.js';
 
 // A small fake fight: the director reads only runners, threats, goal, round, deadline and type.
-const runner = (id, o = {}) => ({ id, handle: id.toUpperCase(), pips: 3, max: 3, down: false, dead: false, ...o });
+const runner = (id, o = {}) => ({ id, handle: id.toUpperCase(), hp: 30, max: 30, down: false, dead: false, ...o });
 const mkB = (o = {}) => ({ type: 'holdHack', round: 2, deadline: 7, goal: { work: 0, protect: 'a' }, threats: [], runners: [runner('a'), runner('b'), runner('c')], ...o });
 const L = (key, o = {}) => ({ kind: o.kind ?? 'attack', key, slots: {}, text: key, ...o });
 const result = (o = {}) => ({ lines: [], actions: [], defeated: [], goalDelta: 0, ...o });
@@ -59,14 +59,14 @@ test('shield wall: the same protector shields the same runner 3 times', () => {
 });
 
 test('last stand: a runner at 1 pip acts 2 rounds running; healing or going down resets it', () => {
-  const b = mkB({ runners: [runner('a', { pips: 1 }), runner('b'), runner('c')] });
+  const b = mkB({ runners: [runner('a', { hp: 10 }), runner('b'), runner('c')] });
   const act = { lines: [L('attackHit', { actor: 'a' })], actions: [{ opId: 'a', action: 'attack' }] };
   let out = direct(b, result(act), null);
   assert.equal(out.beats.filter((x) => x.tier === 'spotlight').length, 0);
   b.round = 3;
   out = direct(b, result(act), out.memory);
   assert.deepEqual(out.beats.filter((x) => x.tier === 'spotlight').map((x) => x.key), ['director.lastStand']);
-  b.round = 4; b.runners[0].pips = 2;
+  b.round = 4; b.runners[0].hp = 20;
   out = direct(b, result(act), out.memory);
   assert.equal(out.memory.lowPipRounds.a, 0);
 });

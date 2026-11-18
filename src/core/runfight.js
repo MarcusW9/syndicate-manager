@@ -1,6 +1,6 @@
 // Engine 2 inside a run (battle rework slice 1c; drafts/SPEC-battle-orders.md sections 2, 10, 15, 16,
 // 30): starting one of the five jobs' fights, playing its rounds, the call-ins (death's door, the van,
-// the tech under fire), pulling back, and what pips left turn into. The rules of a round are in
+// the tech under fire), pulling back, and what HP left turn into. The rules of a round are in
 // core/fight.js; this is the run's side of it, as core/runbattle.js is for engine 1. Pure, on the cloned
 // state passed in. A cycle with core/mission.js on purpose: both are only called at run time.
 //
@@ -10,7 +10,7 @@
 //   - a call-in is am.pending { kind: 'dilemma', id, key, slots } (or 'door' at death's door), answered
 //     through describePending / resolvePending like every other call-in, and by the standing orders when
 //     the crew is hands-off (fightAnswer);
-//   - what a fight does to people is written back at its end (fightInjuries): injuries from pips, the
+//   - what a fight does to people is written back at its end (fightInjuries): injuries from HP, the
 //     dead (am.fightDead, finished in mission.js finish), and runners left behind (am.missing, slice 1:
 //     missing for FIGHT.missingDays, back with a serious injury; slice 4 builds the rescue and the ransom).
 
@@ -36,10 +36,10 @@ export const fightTypeOf = (templateId) => FIGHT_JOBS[templateId] ?? null;
 
 // --- what the feed and the plan read ---------------------------------------------------------------
 
-/** Everyone's health in the shape the feed, the plan and the call-in card read (enemies are "guards", pips are hp). Kept small: every round of a fight is saved in the report. */
+/** Everyone's health in the shape the feed, the plan and the call-in card read (enemies are "guards"; hp and max in whole hpUnits, the bar's segments, until the HP display). Kept small: every round of a fight is saved in the report. */
 export const fightSnapshot = (b) => ({
-  guards: b.enemies.map((e) => ({ n: e.n, hp: Math.max(0, e.pips), max: e.max, out: e.out || e.fled, ...(e.absorb > 0 ? { plate: e.absorb } : {}), ...(e.infected && !e.out && !e.fled ? { infected: true } : {}) })),
-  runners: b.runners.map((r) => ({ id: r.id, handle: r.handle, hp: r.pips, max: r.max, down: r.down || r.dead })),
+  guards: b.enemies.map((e) => ({ n: e.n, hp: Fight.hpUnits(e.hp), max: Fight.hpUnits(e.max), out: e.out || e.fled, ...(e.absorb > 0 ? { plate: e.absorb } : {}), ...(e.infected && !e.out && !e.fled ? { infected: true } : {}) })),
+  runners: b.runners.map((r) => ({ id: r.id, handle: r.handle, hp: Fight.hpUnits(r.hp), max: Fight.hpUnits(r.max), down: r.down || r.dead })),
 });
 /**
  * Where everyone stands on the site map, for the live battle view (ui/fightstage.js): core/fightmap.js layoutFight,
@@ -70,7 +70,7 @@ const CUE = { attack: 'shoot', shot: 'guard', overwatch: 'overwatch', stabilise:
 export const feedLine = (l) => ({
   kind: CUE[l.kind] ?? 'note', rule: l.kind, key: l.key ?? null, slots: l.slots ?? {}, text: l.text, actor: l.actor ? { id: l.actor, handle: l.actor } : null, guard: l.enemy ?? null, targetId: l.targetId ?? (typeof l.target === 'string' ? l.target : null),
   ...(l.burst ? { burst: true } : {}), ...(l.jumpFrom != null ? { jumpFrom: l.jumpFrom } : {}), ...(l.callers?.length ? { callers: l.callers } : {}), ...(l.targets?.length ? { targets: l.targets } : {}), ...(l.shieldedBy ? { shieldedBy: l.shieldedBy } : {}), ...(l.cracked ? { cracked: true } : {}), ...(l.at ? { at: l.at } : {}),
-  success: l.success ?? null, damage: l.damage ?? 0, heal: l.heal ?? 0, kit: l.kit ?? null, dropped: !!l.dropped, ...(l.left != null && l.max ? { left: l.left, max: l.max } : {}), ...(l.roll ? { die: l.roll.die, need: l.roll.need, value: l.roll.value } : {}),
+  success: l.success ?? null, damage: Fight.hpUnits(l.damage ?? 0), heal: Fight.hpUnits(l.heal ?? 0), kit: l.kit ?? null, dropped: !!l.dropped, ...(l.left != null && l.max ? { left: Fight.hpUnits(l.left), max: Fight.hpUnits(l.max) } : {}), ...(l.roll ? { die: l.roll.die, need: l.roll.need, value: l.roll.value } : {}),
   ...(l.order ? { order: l.order, from: l.from } : {}),
 });
 
@@ -216,7 +216,7 @@ function afterRound(state, am) {
 
 // --- the end ---------------------------------------------------------------------------------------
 
-/** Pips left become the injury the game tracks; the dead and the left-behind are noted for the run's finish. */
+/** HP left become the injury the game tracks; the dead and the left-behind are noted for the run's finish. */
 function fightInjuries(state, am, b) {
   const hurt = [];
   const out = (id) => { if (!(am.out ?? []).includes(id)) am.out = [...(am.out ?? []), id]; };

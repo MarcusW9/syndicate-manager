@@ -70,7 +70,7 @@ function grow(seed) {
 // Builds (slice 3-ii-a, 2026-11-16): the same teams again with the given build (data/builds.js GIVEN_BUILD) on their best combat runner, on the
 // same seeds so each pair differs only by the build. `drones` turns the fight into a drone-heavy one (every enemy a drone, at least 5).
 const droneSwarm = (b) => {
-  for (const e of b.enemies) { Object.assign(e, { kind: 'drone', pips: 1, max: 1, absorb: 1, cover: 'open', deck: ['aim', 'alarm'], di: 0 }); }
+  for (const e of b.enemies) { Object.assign(e, { kind: 'drone', hp: 10, max: 10, absorb: 1, cover: 'open', deck: ['aim', 'alarm'], di: 0 }); }
   b.hiredTotal = {};
   while (b.enemies.length < 5) b.enemies.push({ ...structuredClone(b.enemies[0]), n: b.enemies.length + 1, out: false, fled: false });
 };

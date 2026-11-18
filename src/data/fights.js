@@ -10,11 +10,13 @@
 export const FIGHT = {
   // A fight is played this much below the job's difficulty (core/fight.js fightDiff; 2026-11-13, sims/gate-teams-2026-11-13.md).
   ease: 2,
-  // Pips (spec 10a): pips = max(minPips, floor(endurance / endurancePerPip)); a light wound starts a fight 2 down.
-  endurancePerPip: 2, minPips: 3, lightWoundPips: 2,
+  // HP (2026-11-18, the move from pips: one old pip is hpUnit HP, and every amount below is in HP). hpUnit is also the size of a
+  // health-bar segment on the screens and the unit the pull-out points round to.
+  // HP (spec 10a): max(minHp, floor(endurance / endurancePerPip) x hpUnit); a light wound starts a fight lightWoundHp down.
+  hpUnit: 10, endurancePerPip: 2, minHp: 30, lightWoundHp: 20,
   // Shots: aimChance = clamp((11 + aimStep - (cool - base) - cover - (hunker ? hunkerStep : 0)) / 20, aimFloor, aimCeil);
   // hunker also raises cover one step. A runner making for the van is in the open. Damage comes from
-  // ENEMY_HIT; armour absorbs whole hits (absorb); a drone's own absorb is droneAbsorb; ap ignores it.
+  // ENEMY_HIT; armour absorbs whole hits (absorb: plates, each taking plateHp off one hit); a drone's own absorb is droneAbsorb; ap ignores it.
   aimStep: 2, aimFloor: 0.1, aimCeil: 0.9,
   cover: { open: 0, half: 2, full: 4 }, startCover: 'half', hunkerStep: 4,
   absorb: { none: 0, street: 1, pro: 2 }, droneAbsorb: 1,
@@ -24,18 +26,18 @@ export const FIGHT = {
   // a hit resets it. Per fight, kept on the runner (`misses`).
   missBonus: 2, missBonusCap: 6,
   attackStep: -2, jamStep: 0, patchStep: 0, stabiliseStep: 2, overwatchStep: -1,
-  hit: 1, strongHit: 2,
-  // A runner's hit is strong (2 pips) on this margin over the roll's need, by their sidearm's damage
+  hit: 10, strongHit: 20, plateHp: 10,
+  // A runner's hit is strong (strongHit) on this margin over the roll's need, by their sidearm's damage
   // (damage 2 or less reads as 2, 5 or more as 5): a harder-hitting gun is strong more often.
   strongMarginByDamage: { 2: 12, 3: 10, 4: 8, 5: 6 },
-  patchHeal: 1,
-  medicAura: { heal: 1, stopsBleeding: true }, // while a medic stands in the fight: the most hurt standing runner +1 a round
-  // Targeting: the chance a shot goes at the protected runner, then at the lowest-pips runner.
+  patchHeal: 10,
+  medicAura: { heal: 10, stopsBleeding: true }, // while a medic stands in the fight: the most hurt standing runner +heal a round
+  // Targeting: the chance a shot goes at the protected runner, then at the lowest-HP runner.
   targetFocus: 0.5, protectFocus: 0.75,
-  // Risk (spec 10): pull out at or below these pips at round start. Cautious: half of their pips, rounded up. Steady: a third of
-  // their pips, rounded up, at least minPips (owner, 2026-11-12: a flat 2 made a 3-pip runner leave after one hit; sims/pullout-2026-11-12.md).
+  // Risk (spec 10): pull out at or below these HP at round start. Cautious: half of their HP, rounded up to a whole hpUnit. Steady: a third of
+  // their HP, rounded up to a whole hpUnit, at least minHp (owner, 2026-11-12: a flat 2 made a 3-pip runner leave after one hit; sims/pullout-2026-11-12.md).
   // Committed never pulls out, fights on with someone down (bleeding, below) and presses past the deadline.
-  risk: { cautious: { pullAt: 'half' }, steady: { pullDiv: 3, minPips: 1 }, committed: { pullAt: 0, press: true, fightsOnWithDown: true } },
+  risk: { cautious: { pullAt: 'half' }, steady: { pullDiv: 3, minHp: 10 }, committed: { pullAt: 0, press: true, fightsOnWithDown: true } },
   // Bleeding (spec 10b; committed only): a downed runner not stabilised, carried or out of the fight
   // starts bleeding from the second round after going down; each round after, they die with bleedChance.
   bleedGrace: 2, bleedChance: 0.1, leftDownDeath: 0.1,
@@ -43,13 +45,13 @@ export const FIGHT = {
   vanRound: 3, vanEarlyHeat: 1, doorSlots: 3, vanWait: 4, holdRounds: 2, holdHeat: 1, overwatchUsesAtVan: 1,
   // Left behind (spec 8; the owner's numbers). Slice 4 builds the rescue, the ransom and the waiting.
   missingDays: 7, ransomWeeks: 3, missingDeath: 0.1,
-  // Injury from pips left (share of max); 0 pips = critical, as in engine 1.
+  // Injury from HP left (share of max); 0 HP = critical, as in engine 1.
   lightBelow: 0.5, seriousBelow: 0.25,
   // Ends.
   partingShotFloor: 1, retreat: { heat: 1, rep: 2 }, press: { alert: 1, heat: 1 },
   deadline: { holdHack: 7 }, // holdExtract ends when the van leaves
   workNeeded: 4,
-  wayOutTreatHeal: 1, // ... and the pips a healer standing at the end gives each runner who is up and hurt (pips become the injury: core/fight.js injuryFromPips)
+  wayOutTreatHeal: 10, // ... and the HP a healer standing at the end gives each runner who is up and hurt (HP become the injury: core/fight.js injuryFromHp)
   wayOutTreatStep: -4, // the medic's hands on the way out (2026-11-17): the stabilise roll's step for a healer treating the downed before the crew leaves (the plain stabilise action is +2: harder)
   wayOutShare: 0.5, // the way out of a hack (2026-11-17): the share of the opening force's count (rounded up, at least one) that comes in when the work is done. The owner's default was 1 (the same again); 0.67 and up tipped a hands-off year of play (tests/inbox.test.js), so it is half. docs/sims/wayout-2026-11-17.md
   // The director (Slice 1): how long a beat holds at playback (ms; a hint only), and how many spotlights a pace plays as spotlights
@@ -59,24 +61,24 @@ export const FIGHT = {
   maxExtraEnemies: 2, oddsRuns: 120,
 };
 
-// Enemies at their default toughness: pips, where they stand, and the deck their threats are drawn
+// Enemies at their default toughness: HP, where they stand, and the deck their threats are drawn
 // from (shuffled per enemy, seeded by the fight). Fleeing is side-wide (see fleeBelow).
 export const ENEMIES = {
-  hired: { pips: 1, cover: 'half', deck: ['aim', 'aim', 'alarm'], fleeBelow: 0.4 },
-  corp: { pips: 2, cover: 'half', deck: ['aim', 'backup', 'aim', 'flank'] },
-  drone: { pips: 1, cover: 'open', deck: ['aim', 'alarm'], absorb: 1, jamTakesOut: true, foeTags: ['synthetic'] },
-  enforcer: { pips: 2, cover: 'half', deck: ['aim', 'aim', 'flank'] },
-  // Standard force (prototype, 2026-11-15): the rank and file of a job's `opposition`. One pip behind one plate of armour,
+  hired: { hp: 10, cover: 'half', deck: ['aim', 'aim', 'alarm'], fleeBelow: 0.4 },
+  corp: { hp: 20, cover: 'half', deck: ['aim', 'backup', 'aim', 'flank'] },
+  drone: { hp: 10, cover: 'open', deck: ['aim', 'alarm'], absorb: 1, jamTakesOut: true, foeTags: ['synthetic'] },
+  enforcer: { hp: 20, cover: 'half', deck: ['aim', 'aim', 'flank'] },
+  // Standard force (prototype, 2026-11-15): the rank and file of a job's `opposition`. 10 HP behind one plate of armour,
   // so a plain hit only cracks the plate and a second one drops them; they come in numbers. The two kinds are the same body in
   // a different uniform (names and looks are placeholders, not canon).
   // fleeBelow marks a kind that breaks; the threshold itself is hired's (core/fight.js `breaks`).
-  police: { pips: 1, cover: 'half', deck: ['aim', 'aim', 'alarm'], absorb: 1, fleeBelow: 0.4 },
-  secforce: { pips: 1, cover: 'half', deck: ['aim', 'aim', 'backup'], absorb: 1, fleeBelow: 0.4 },
+  police: { hp: 10, cover: 'half', deck: ['aim', 'aim', 'alarm'], absorb: 1, fleeBelow: 0.4 },
+  secforce: { hp: 10, cover: 'half', deck: ['aim', 'aim', 'backup'], absorb: 1, fleeBelow: 0.4 },
 };
 // Enemy tags (slice 3-ii-a, 2026-11-16): `foeTags` on a kind above. A payload that lists a tag in its `immune` (data/builds.js)
 // does nothing to a body that has it. 'synthetic' is the first: machines, which the Cytotoxic Vector cannot touch.
-// Pips a shot of each kind takes (2 is the most any shot does).
-export const ENEMY_HIT = { hired: 1, drone: 1, corp: 2, enforcer: 2, police: 1, secforce: 1 };
+// HP a shot of each kind takes (20 is the most any shot does).
+export const ENEMY_HIT = { hired: 10, drone: 10, corp: 20, enforcer: 20, police: 10, secforce: 10 };
 // Who a site (a district id, data/incidents.js ZONES aside: names.js districts) sends, in rotation by slot.
 export const SITE_ENEMIES = { heights: ['corp', 'drone'], docks: ['hired', 'hired', 'enforcer'] };
 // How many enemies a fight starts with, by the job's threat 1-5: the difficulty dial.

@@ -210,7 +210,7 @@ test('the auto turret: one per hall from level 2, a defence piece; in a raid it 
   // The raid itself is an engine-2 fight (holdHall): the same turret fires in it, one burst a round, with its own lines.
   const f = structuredClone(st).activeMission.battle;
   assert.equal(f.engine, 2);
-  for (const e of f.enemies) { e.pips = 999; e.max = 999; }
+  for (const e of f.enemies) { e.hp = 999; e.max = 999; }
   const lines = [];
   for (let i = 0; i < 3; i++) lines.push(...Fight.playRound(f, makeRng(11 + i)).lines.filter((l) => l.kind === 'turret'));
   assert.ok(lines.length >= 3 && lines.every((l) => l.actor === null), 'the turret fires every round, nobody on it');

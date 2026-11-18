@@ -55,7 +55,7 @@ test('chances and pips come with their units: "60%", "1 pip", "2 pips"', () => {
 // --- the view model reads the rules' own numbers ----------------------------------------------------
 
 test('every chance the round screen shows is the one the round uses (previewRound / aimChance), and a one-pip threat reads "1 pip"', () => {
-  const s = find('data_pull', (x) => waiting(x) && x.activeMission.battle.threats.some((t) => t.kind === 'aim' && t.hit === 1), { to: 600 });
+  const s = find('data_pull', (x) => waiting(x) && x.activeMission.battle.threats.some((t) => t.kind === 'aim' && t.hit === 10), { to: 600 });
   assert.ok(s, 'a one-pip threat comes up');
   const b = s.activeMission.battle;
   const v = roundView(b);
@@ -70,9 +70,9 @@ test('every chance the round screen shows is the one the round uses (previewRoun
     const kind = pv.actions.find((a) => a.who === runner.id)?.kind;
     const expect = F.aimChance(b, runner, { hunker: !x.shieldedBy && kind === 'hunker', open: !x.shieldedBy && (kind === 'board' || kind === 'carry') });
     assert.equal(t.chance, expect, 'and the preview is aimChance on the same stance the round uses');
-    assert.ok(t.text.includes(`(${chanceWord(t.chance)}, ${pipsWord(t.hit)})`), t.text);
+    assert.ok(t.text.includes(`(${chanceWord(t.chance)}, ${pipsWord(F.hpUnits(t.hit))})`), t.text);
   }
-  assert.ok(lines.some((t) => t.hit === 1 && t.text.includes('1 pip)')), 'a one-pip threat reads 1 pip, not 1 pips');
+  assert.ok(lines.some((t) => t.hit === 10 && t.text.includes('1 pip)')), 'a one-pip threat reads 1 pip, not 1 pips');
   assert.ok(!lines.some((t) => /1 pips/.test(t.text)));
 });
 
@@ -107,7 +107,7 @@ test('the risk picker says what the rules do: cautious half rounded up, steady t
   assert.match(c.description, /half/i);
   assert.match(c.description, /rounded up/i);
   assert.match(st.description, /third of their pips/i, 'steady says a third');
-  assert.ok(FIGHT.risk.steady.pullDiv === 3 && FIGHT.risk.steady.minPips === 1, 'and the rule\'s numbers are those');
+  assert.ok(FIGHT.risk.steady.pullDiv === 3 && FIGHT.risk.steady.minHp === 10, 'and the rule\'s numbers are those');
   assert.match(c.description + st.description, /asks you first/i, 'a watched crew asks first');
   assert.match(co.description, /never/i);
   assert.match(co.description, /life/i);
@@ -118,10 +118,10 @@ test('the risk picker says what the rules do: cautious half rounded up, steady t
   const b = structuredClone(s.activeMission.battle);
   for (const level of RISK_ORDER) {
     b.risk.level = level;
-    for (const r of roundView(b).runners) assert.equal(r.threshold, F.riskThreshold(b, b.runners.find((x) => x.id === r.id)), level);
+    for (const r of roundView(b).runners) assert.equal(r.threshold, F.hpUnits(F.riskThreshold(b, b.runners.find((x) => x.id === r.id))), level);
   }
   b.risk.level = 'cautious';
-  assert.equal(roundView(b).runners[0].threshold, Math.ceil(b.runners[0].max / 2));
+  assert.equal(roundView(b).runners[0].threshold, Math.ceil(b.runners[0].max / FIGHT.hpUnit / 2));
 });
 
 test('the plan view: type line, likely enemies, gaps from the crew, orders and thresholds, and the chance of losing someone at each risk', () => {
@@ -133,7 +133,7 @@ test('the plan view: type line, likely enemies, gaps from the crew, orders and t
   assert.match(p.line, new RegExp(`${FIGHT.workNeeded} rounds`), 'the work rounds are the rule\'s number');
   assert.match(p.kindsLine, /security guards/);
   assert.equal(p.runners.length, crew.length);
-  assert.ok(p.runners.every((r) => r.threshold === Math.max(FIGHT.risk.steady.minPips, Math.ceil(r.pips / FIGHT.risk.steady.pullDiv))), 'each runner\'s point is a third of their own pips');
+  assert.ok(p.runners.every((r) => r.threshold === Math.max(FIGHT.risk.steady.minHp / FIGHT.hpUnit, Math.ceil(r.pips / FIGHT.risk.steady.pullDiv))), 'each runner\'s point is a third of their own pips');
   assert.deepEqual(Object.keys(p.loss), RISK_ORDER);
   for (const level of RISK_ORDER) {
     const o = p.odds[level];

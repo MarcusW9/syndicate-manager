@@ -122,7 +122,7 @@ const RADIO_DECKS = {
 function applySettings(dur, exp, deckStyle = 'normal') {
   FIGHT.aimStep = GATE.settings.exposure[exp];
   for (const [kind, [pips, absorb]] of Object.entries(GATE.settings.durability[dur])) {
-    ENEMIES[kind].pips = pips;
+    ENEMIES[kind].hp = pips * 10; // the durability table is in old pips (HP since 2026-11-18)
     if (absorb) ENEMIES[kind].absorb = absorb; else delete ENEMIES[kind].absorb;
     ENEMIES[kind].deck = [...(deckStyle === 'radio' ? RADIO_DECKS[kind] : ORIGINAL.enemies[kind].deck)];
   }
@@ -185,7 +185,7 @@ function takeCommand(b, plan) {
   const source = b.threats.find((t) => (t.kind === 'backup' || t.kind === 'alarm') && !t.cancelled)?.enemy ?? null;
   // 1. holdHack: the tech is hurt and shots at them are open: everyone else covers them this round.
   const openAtTech = pv.exposure.filter((x) => x.target === prot?.id && !x.shieldedBy).length;
-  if (b.type === 'holdHack' && prot && Fight.standing(b).includes(prot) && prot.pips <= Math.ceil(prot.max / 2) && openAtTech) {
+  if (b.type === 'holdHack' && prot && Fight.standing(b).includes(prot) && prot.hp <= Math.ceil(prot.max / 20) * 10 && openAtTech) {
     for (const r of others) Fight.setOrder(b, r.id, Fight.editOrder(b, r.id, { duty: 'protect', target: 'protected' }));
     return;
   }
@@ -220,7 +220,7 @@ function playOne({ enc, group, lineup, seed, plan, layer = false, risk = GATE.ri
     if (!b.drawn) Fight.startRound(b, rng);
     if (layer) takeCommand(b, plan);
     if (handWithdraw && b.round === 2) { // the player orders the most hurt runner (not the specialist) out by hand
-      const w = [...Fight.standing(b)].filter((r) => r.id !== b.goal.protect).sort((x, y) => x.pips - y.pips)[0];
+      const w = [...Fight.standing(b)].filter((r) => r.id !== b.goal.protect).sort((x, y) => x.hp - y.hp)[0];
       if (w) Fight.setOrder(b, w.id, ord('withdraw'));
     }
     for (const key of Object.keys(b.dilemmasFired)) if (!Fight.dilemmaHolds(b, key.split(':')[0])) delete b.dilemmasFired[key];

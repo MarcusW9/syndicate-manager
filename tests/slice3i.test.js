@@ -18,7 +18,7 @@ const S = await import('../src/save/save.js');
 
 const crewOf = (seed = 1) => createNewGame({ seed }).crew;
 const always = (v) => () => v;
-const foe = (n, kind = 'corp', o = {}) => ({ n, kind, pips: ENEMIES[kind].pips, max: ENEMIES[kind].pips, absorb: ENEMIES[kind].absorb ?? 0, cover: ENEMIES[kind].cover, out: false, fled: false, deck: ['aim'], di: 0, approaching: false, group: 0, ...o });
+const foe = (n, kind = 'corp', o = {}) => ({ n, kind, hp: ENEMIES[kind].hp, max: ENEMIES[kind].hp, absorb: ENEMIES[kind].absorb ?? 0, cover: ENEMIES[kind].cover, out: false, fled: false, deck: ['aim'], di: 0, approaching: false, group: 0, ...o });
 const build = (o = {}) => F.buildFight({ type: 'holdYard', diff: 12, threat: 3, site: 'docks', crew: crewOf().slice(0, 4), approach: 'loud', ...o }, makeRng(o.seed ?? 4));
 /** A recipe for one test only (FIGHT_RECIPES has no job of its own yet: the owner writes them). */
 function withRecipe(recipe, f) {

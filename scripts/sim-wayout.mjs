@@ -88,7 +88,7 @@ const subsets = (list, k) => (k === 0 ? [[]] : list.flatMap((x, i) => subsets(li
 const P = (x) => `${Math.round(x * 100)}%`;
 const rosters = [];
 for (let seed = 1; seed <= SEEDS; seed++) { rosters.push({ seed, snaps: grow(seed) }); process.stderr.write(`grown ${seed}/${SEEDS}\r`); }
-if (process.env.HEAL) FIGHT.wayOutTreatHeal = Number(process.env.HEAL);
+if (process.env.HEAL) FIGHT.wayOutTreatHeal = Number(process.env.HEAL); // in HP since 2026-11-18 (10 = the old 1 pip)
 if (process.env.TREAT) FIGHT.wayOutTreatStep = Number(process.env.TREAT);
 const SHARES = (process.env.SHARES ?? '0,0.34,0.5,0.67,1').split(',').map(Number);
 const ARMS = [['no build', null], ['Ricochet + Contagion', { move: 'ricochet', payload: 'contagion' }]];

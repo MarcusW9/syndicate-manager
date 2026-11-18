@@ -170,7 +170,7 @@ test('no fall-back lines yet: if the people on the posts are beaten they retreat
   s.raids = [raidOf(s)];
   startRaidFight(s, s.raids[0]);
   assert.ok(s.activeMission.battle.runners.every((r) => r.post), 'everyone on a post');
-  for (const r of s.activeMission.battle.runners) { r.pips = 0; r.down = true; } // beaten (engine 2: pips)
+  for (const r of s.activeMission.battle.runners) { r.hp = 0; r.down = true; } // beaten (engine 2: pips)
   const cash = s.cash;
   // Someone down calls the fight in (death's door): the answer is to pull back.
   for (let n = 0; s.activeMission && !s.activeMission.done && n < 20; n++) s = s.activeMission.pending ? resolvePending(s, 'out') : runBattle(s);

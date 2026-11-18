@@ -210,7 +210,7 @@ test('an answer is revalidated: if the situation no longer holds, it is discarde
   const b = s.activeMission.battle;
   const prot = b.runners.find((r) => r.id === b.goal.protect);
   // Make the situation pass: the tech is back at full pips and nothing is shot at them or called in.
-  prot.pips = prot.max;
+  prot.hp = prot.max;
   b.threats = b.threats.filter((t) => t.target !== prot.id && !['backup', 'alarm'].includes(t.kind));
   const before = JSON.stringify(b.orders);
   const next = M.resolvePending(s, 'cover');
@@ -294,7 +294,7 @@ test('left behind: missing for a week, back badly hurt (slice 1; the rescue and 
   b.risk.level = 'steady';
   b.enemies.forEach((e) => { e.out = true; });
   const [a, ...rest] = b.runners;
-  a.down = true; a.pips = 0; a.downRound = b.round; a.stable = true;
+  a.down = true; a.hp = 0; a.downRound = b.round; a.stable = true;
   for (const r of rest) r.aboard = true;
   const day = s.day;
   const done = autoRun(s, 'steady');
@@ -313,7 +313,7 @@ test('the missing week is counted from the day the job finishes, however long th
   b.stage = 1; b.goal.vanLeaves = b.round + 1; b.round += 1; b.drawn = false; b.risk.level = 'steady';
   b.enemies.forEach((e) => { e.out = true; });
   const [a, ...rest] = b.runners;
-  a.down = true; a.pips = 0; a.downRound = b.round; a.stable = true;
+  a.down = true; a.hp = 0; a.downRound = b.round; a.stable = true;
   for (const r of rest) r.aboard = true;
   s.day += 1; // the job runs on: it finishes a day after the fight
   const finishDay = s.day;
@@ -511,12 +511,12 @@ test('the pull-out call in a real run: who is at their point, pull out or keep t
   assert.match(v.text, /steady crew pulls out/);
   assert.ok(v.choices.filter((c) => c.id !== 'out').every((c) => c.tradeoff), 'each option says what it does');
   const who = am.pending.subjects;
-  assert.ok(who.length >= 1 && who.every((id) => am.battle.runners.find((r) => r.id === id).pips <= Math.max(1, Math.ceil(am.battle.runners.find((r) => r.id === id).max / 3))), 'only runners at their point');
+  assert.ok(who.length >= 1 && who.every((id) => am.battle.runners.find((r) => r.id === id).hp <= Math.max(10, Math.ceil(am.battle.runners.find((r) => r.id === id).max / 30) * 10)), 'only runners at their point');
   assert.equal(fightAnswer(am).id, 'pullOut', 'the standing orders (risk level) pull out');
   assert.equal(expiryAnswer(am.pending), 'pullOut');
   // Keep them in: they are still in the next round; they have a stay mark at their pips.
   const kept = M.resolvePending(s, 'stayIn');
-  for (const id of who) assert.equal(kept.activeMission.battle.runners.find((r) => r.id === id).stayPips, am.battle.runners.find((r) => r.id === id).pips);
+  for (const id of who) assert.equal(kept.activeMission.battle.runners.find((r) => r.id === id).stayHp, am.battle.runners.find((r) => r.id === id).hp);
   const played = M.runBattle(kept, {});
   const b = played.activeMission.battle;
   if (b && !played.activeMission.pending) for (const id of who) assert.equal(b.runners.find((r) => r.id === id).withdrawn, false, 'kept in, so they did not pull out');
