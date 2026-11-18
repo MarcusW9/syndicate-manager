@@ -179,7 +179,7 @@ test('a forced special move, in each of its three looks: the rules\' targets in 
           assert.equal(fires[0].from, star, 'the first attack starts from the star');
           for (let k = 1; k < fires.length; k++) assert.equal(fires[k].from, fires[k - 1].to, `${look}: each from where the last landed`);
         }
-        assert.deepEqual(fires.map((s) => [s.hit, s.fell]), burst.map((l) => [!!l.success, !!l.dropped]), 'hits and falls as the dice had them');
+        assert.deepEqual(fires.map((s) => [s.hit, s.fell]), burst.map((l) => [!!l.success && (l.damage ?? 0) > 0, !!l.dropped]), 'hits and falls as the dice had them (a hit that only cracks a plate is drawn as cracked, not as a hit)');
         const waves = sc.steps.filter((s) => s.do === 'wave');
         assert.equal(waves.length, look === 'ping' ? 1 : 0, 'only ping has a shockwave');
         if (waves.length) assert.ok(at(waves[0]) < at(fires[0]), 'the shockwave comes before the bolts');
@@ -298,9 +298,10 @@ test('the medic\'s aura is drawn: every aura line is one aura step (the medic, t
   let auras = 0;
   for (const f of fights) {
     const lines = f.cues.flatMap((c) => (c.lines ?? []).filter((l) => l.kind === 'aura' || l.key === 'aura'));
+    const patches = f.cues.flatMap((c) => (c.lines ?? []).filter((l) => ['stabilise', 'patch'].includes(l.rule) && l.targetId && l.success)).length; // a landed patch or stabilise is the same picture
     for (const l of lines) assert.ok(l.actor && l.targetId && l.left != null && l.max, `${f.id} ${f.seed}: the aura line carries what the stage draws`);
     const steps = play(f.cues, 'watch').flatMap((sc) => sc.steps.filter((s) => s.do === 'aura'));
-    assert.equal(steps.length, lines.length, `${f.id} ${f.seed}: one aura step a line`);
+    assert.equal(steps.length, lines.length + patches, `${f.id} ${f.seed}: one aura step a line (and a landed patch)`);
     for (const s of steps) assert.ok(s.id && s.to && s.dur > 0);
     auras += steps.length;
     for (const sc of play(f.cues, 'resolve')) for (const s of sc.steps.filter((x) => x.do === 'aura')) assert.equal(s.dur, 0, 'Resolve cuts it');

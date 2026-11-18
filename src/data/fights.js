@@ -27,6 +27,8 @@ export const FIGHT = {
   missBonus: 2, missBonusCap: 6,
   attackStep: -2, jamStep: 0, patchStep: 0, stabiliseStep: 2, overwatchStep: -1,
   hit: 10, strongHit: 20, plateHp: 10,
+  // Hit variance (2026-11-18, the room HP gives): a hit that lands, a crew's or an enemy's, is up to hitSpread HP either side of its base. A plate still takes a whole plain hit (0 through).
+  hitSpread: 2,
   // A runner's hit is strong (strongHit) on this margin over the roll's need, by their sidearm's damage
   // (damage 2 or less reads as 2, 5 or more as 5): a harder-hitting gun is strong more often.
   strongMarginByDamage: { 2: 12, 3: 10, 4: 8, 5: 6 },

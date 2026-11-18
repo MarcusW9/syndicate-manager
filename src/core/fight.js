@@ -48,6 +48,8 @@ const RADIO = (t) => THREATS[t.kind]?.radio === true;
 
 /** HP in a fight: hpUnit per two points of endurance, at least minHp (spec 10a; HP since 2026-11-18, one old pip = hpUnit). */
 export const maxHp = (op) => Math.max(FIGHT.minHp, Math.floor((op.stats?.endurance ?? 0) / FIGHT.endurancePerPip) * FIGHT.hpUnit);
+/** Hit variance (2026-11-18): a whole-HP wobble of up to +/-FIGHT.hitSpread on a hit that lands; one draw, none when the spread is 0. */
+const spread = (rng) => (FIGHT.hitSpread > 0 ? Math.floor(rng() * (2 * FIGHT.hitSpread + 1)) - FIGHT.hitSpread : 0);
 /** Whole hits of hpUnit it takes to cover this much HP (the planning and the old pip-count rules read in these). */
 const unitsOf = (hp) => Math.ceil(hp / FIGHT.hpUnit);
 /** HP as whole hpUnits, for the screens (health-bar segments, the old pip count); never read by a rule. */
@@ -314,7 +316,7 @@ export function telegraph(b, rng) {
     }
     if (THREATS[kind].target === 'runner' && !target) continue;
     const t = { id: `${b.round}.${e.n}`, kind, enemy: e.n, target, shieldedBy: null, cancelled: false, shown: null, hit: 0 };
-    if (kind === 'aim') { t.shown = aimChance(b, runner(b, target)); t.hit = ENEMY_HIT[e.kind]; }
+    if (kind === 'aim') { t.shown = aimChance(b, runner(b, target)); t.hit = ENEMY_HIT[e.kind] + spread(rng); }
     b.threats.push(t);
   }
   return b.threats;
@@ -783,6 +785,7 @@ export function playRound(b, rng) {
         let dmg = x.strong ? FIGHT.strongHit : FIGHT.hit;
         const cracked = e.absorb > 0;
         if (cracked) { e.absorb -= 1; dmg -= FIGHT.plateHp; }
+        if (dmg > 0) dmg += spread(rng);
         e.hp -= dmg;
         if (e.hp <= 0) { e.out = true; defeated.push({ by: ow.id, enemy: e.n, how: 'overwatch' }); say('overwatch', 'overwatchOut', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, dropped: true, roll: rollOf(x), cracked }); spreadFrom(e); }
         else say('overwatch', dmg === 0 ? 'overwatchCrack' : 'overwatchHit', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, roll: rollOf(x), left: e.hp, cracked });
@@ -808,6 +811,7 @@ export function playRound(b, rng) {
     let dmg = x.strong ? FIGHT.strongHit : FIGHT.hit;
     const cracked = e.absorb > 0 && !r.ap; // the plate took a hit: a plain shot only cracks it (damage 0), a strong one cracks it and takes the rest
     if (cracked) { e.absorb -= 1; dmg -= FIGHT.plateHp; }
+    if (dmg > 0) dmg += spread(rng);
     e.hp -= dmg;
     if (e.hp <= 0) { e.out = true; defeated.push({ by: r.id, enemy: e.n, how: burst ? 'burst' : 'attack' }); say('attack', k('attackOut'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, dropped: true, roll: rollOf(x), strong: x.strong, cracked }); spreadFrom(e, carried(r, e) ?? e.infected); return; }
     say('attack', dmg === 0 ? k('attackCrack') : k('attackHit'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, roll: rollOf(x), left: e.hp, cracked });
