@@ -14,16 +14,17 @@ import { pieceById } from '../core/builds.js';
 import { tierTag, perkList, apexHistory } from './gear.js';
 import { raidWhere } from './raidcards.js';
 import { esc, face, districtName } from './shared.js';
+import { cardNames } from '../core/rivals.js';
 import { state, backLabel, V } from './view.js';
 
 /**
  * Text with names turned into links, escaped: the crew (full names first, then handles) to their page,
- * and the named runners of the other tongs and the street (state.rivals.cards, full names only) to their
+ * and the named runners of the other tongs and the street (core/rivals.js cardNames, full names only) to their
  * recruitment page (owner, 2026-11-18: a scout's report names who they looked at). The fallen and
  * freelancers stay plain text; a crew name wins over a card with the same name.
  */
 export function crewLinks(text) {
-  const cards = (state.rivals?.cards ?? []).filter((c) => c.name).map((c) => [c.name, { action: 'lead-name', id: c.id }]);
+  const cards = cardNames(state).map((c) => [c.name, { action: 'lead-name', id: c.id }]);
   const crew = state.crew.flatMap((op) => [[op.name, op.id], [op.handle, op.id]]).filter(([n]) => n).map(([n, id]) => [n, { action: 'op-link', id }]);
   const byName = new Map([...cards, ...crew]);
   if (!byName.size || !text) return esc(text ?? '');
