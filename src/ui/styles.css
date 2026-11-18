@@ -2682,3 +2682,7 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .crewfilter { margin: 8px 0; }
 .crewfilter__label { display: flex; align-items: center; gap: 10px; font: 700 0.8rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 .crewfilter__select { appearance: none; -webkit-appearance: none; padding: 0 40px 0 12px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%233de8d8' stroke-width='2'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; min-height: 44px; flex: 1; background-color: var(--panel-2); color: var(--text); border: 1px solid var(--line); font: 700 0.9rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* Crew playtest colour (owner, 2026-11-18): a toned red edge on the Crew panel and a red filter dropdown, for a Hong Kong neon feel. Other screens keep the cyan look for now. */
+.panel--crew { border: 1px solid rgba(255, 61, 95, 0.5); box-shadow: inset 0 0 0 1px rgba(255, 61, 95, 0.1), inset 0 0 40px rgba(255, 61, 95, 0.04); }
+.crewfilter__select { background-color: #2a1218; color: #ff7a92; border-color: var(--accent); }

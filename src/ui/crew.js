@@ -124,7 +124,7 @@ export function renderCrew() {
       ${renderGoneElsewhere(state)}`,
   }[tab]();
   return `
-    <section class="panel">
+    <section class="panel panel--crew">
       <div class="crewhead">
         <h1>Crew</h1>
         <span class="muted">${state.crew.length}/${cap} beds</span>
