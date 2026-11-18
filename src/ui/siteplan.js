@@ -158,15 +158,15 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
   const wait = (ms) => later(ms * speed());
   const slot = (i, pt) => [pt[0] + (i % 2) * 11 - 5, pt[1] + Math.floor(i / 2) * 11 - 5];
   const tok = (id) => tokens.querySelector(`[data-op="${CSS.escape(id)}"]`);
-  // A wound shows as a faint red ring and a small plaster on the face (never a bright ring: it read as a power-up).
+  // A wound is a status badge on the token's top right, clear of the face: a small disc with a cross (never a bright ring:
+  // that read as a power-up). A serious injury also gets the red ring (`is-down`).
   const markHurt = (t, severity) => {
     if (!t) return;
     t.classList.add(severity === 'serious' ? 'is-down' : 'is-hit');
-    if (!t.querySelector('.sp-plaster')) {
-      const p = el('g', { class: 'sp-plaster', transform: 'translate(3.2 2.6) rotate(-35)' });
-      p.append(el('rect', { x: -3, y: -1.1, width: 6, height: 2.2, rx: 0.6 }), el('path', { d: 'M-0.8 -0.5v1M0.8 -0.5v1' }));
-      t.append(p);
-    }
+    t.querySelector('.sp-status')?.remove();
+    const g = el('g', { class: `sp-status ${severity === 'serious' ? 'is-serious' : ''}`, transform: 'translate(5 -5)' });
+    g.append(el('circle', { r: 3 }), el('path', { d: 'M-1.4 0h2.8M0 -1.4v2.8' }));
+    t.append(g);
   };
   const addToken = (op, at) => {
     const g = el('g', { class: 'sp-token', 'data-op': op.id });
