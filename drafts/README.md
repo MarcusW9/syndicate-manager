@@ -12,6 +12,7 @@ Generated text waiting to go into `src/data/`. Not imported by the game. Delete 
 - `earned-traits-backlog.md`: the owner's earned traits not built yet, and what each waits on.
 - `crisis-situations-review.md`: Claude's draft of each crisis's situations, for the owner to skim.
 - `PROPOSAL-piloting.md`: driving renamed piloting (vans, boats, drones), its value as time: a getaway step on every job, faster jobs, same-day hall moves, arrival rounds for the van, standby, raid support and backup (2026-11-07). Owner's calls first. Not built.
+- `RECONCILE-medical-piloting-leadership.md`: how medical, piloting and leadership map onto the build axes and roles, and the six questions for the owner (2026-11-18). A docs pass.
 - `PROPOSAL-medical.md`: medical as the support stat: named wounds, field dressing, triage and neural comedown after jobs, the combat medic, later hall doctors and chrome surgeons (2026-11-07). Owner's calls first. Not built.
 - `PROPOSAL-leadership.md`: leadership (visible) and judgment (hidden), the Leader slot on the squad board, and later the executive roles (2026-11-07). Owner's calls first. Not built.
 - `HANDOFF-builds-3iia.md`: the brief for builds slice 3-ii-a (2026-11-16): Ricochet and the Cytotoxic Vector given in data, the synthetic tag, the sims with a built team. Owner's calls first. Not built.
