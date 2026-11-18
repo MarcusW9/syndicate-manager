@@ -151,9 +151,9 @@ test('an Apex drop moves no roll in the shared stream', () => {
   let checked = 0;
   for (let seed = 1; seed <= 40 && checked < 5; seed++) {
     const on = forceApex(() => run(seed));
-    const chance = LOOT.chance;
-    LOOT.chance = 0;
-    let off; try { off = run(seed); } finally { LOOT.chance = chance; }
+    const chance = LOOT.chance; const spare = LOOT.spareChance;
+    LOOT.chance = 0; LOOT.spareChance = 0; // nothing drops at all, not even a spare piece
+    let off; try { off = run(seed); } finally { LOOT.chance = chance; LOOT.spareChance = spare; }
     if (on.activeMission.result.outcome !== 'completed') continue;
     checked++;
     assert.equal(on.rngCounter, off.rngCounter, 'the shared counter did not move');

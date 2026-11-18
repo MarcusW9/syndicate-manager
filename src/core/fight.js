@@ -48,6 +48,26 @@ const RADIO = (t) => THREATS[t.kind]?.radio === true;
 
 /** HP in a fight: hpUnit per two points of endurance, at least minHp (spec 10a; HP since 2026-11-18, one old pip = hpUnit). */
 export const maxHp = (op) => Math.max(FIGHT.minHp, Math.floor((op.stats?.endurance ?? 0) / FIGHT.endurancePerPip) * FIGHT.hpUnit);
+/** Hit variance (2026-11-18): a whole-HP wobble of up to round(size x FIGHT.hitSpreadShare) either way on a hit of this size; one draw, none when that is 0. */
+const spread = (rng, size) => {
+  const w = Math.round(size * FIGHT.hitSpreadShare);
+  return w > 0 ? Math.floor(rng() * (2 * w + 1)) - w : 0;
+};
+/** What a plain hit from a weapon of this damage takes off (2026-11-18): hit, plus hitPerDamage a point above hitBaseDamage. */
+export const hitOf = (damage) => FIGHT.hit + FIGHT.hitPerDamage * Math.max(0, Math.round(damage ?? 0) - FIGHT.hitBaseDamage);
+/**
+ * A hit that landed on an enemy (mutates e): its size (strong: strongMult times), one plate cracked unless it pierces (plateHp off,
+ * the rest through), then the wobble on whatever got through. Returns { dmg, cracked }. Crew attacks, overwatch and the turret.
+ */
+export function landHit(e, hit, strong, ap, rng) {
+  const size = strong ? hit * FIGHT.strongMult : hit;
+  const cracked = e.absorb > 0 && !ap;
+  let dmg = size;
+  if (cracked) { e.absorb -= 1; dmg = Math.max(0, size - FIGHT.plateHp); }
+  if (dmg > 0) dmg = Math.max(1, dmg + spread(rng, size));
+  e.hp -= dmg;
+  return { dmg, cracked };
+}
 /** Whole hits of hpUnit it takes to cover this much HP (the planning and the old pip-count rules read in these). */
 const unitsOf = (hp) => Math.ceil(hp / FIGHT.hpUnit);
 /** HP as whole hpUnits, for the screens (health-bar segments, the old pip count); never read by a rule. */
@@ -55,8 +75,8 @@ export const hpUnits = (hp) => unitsOf(Math.max(0, hp));
 /** HP rounded up to a whole hpUnit (the pull-out points). */
 const roundUpHp = (hp) => unitsOf(hp) * FIGHT.hpUnit;
 
-/** A runner's hit is strong on this margin, by their sidearm's damage (2 or less reads as 2, 5 or more as 5). */
-export const strongMargin = (damage) => FIGHT.strongMarginByDamage[clamp(Math.round(damage ?? 2), 2, 5)];
+/** The margin a hit is strong on: the same for every weapon since 2026-11-18 (damage sets the hit's size instead, hitOf). */
+export const strongMargin = () => FIGHT.strongMargin;
 
 /** Armour as hits absorbed a fight: a street vest 1, a pro vest 2 (data FIGHT.absorb). */
 const absorbOf = (armourValue) => (armourValue >= 2 ? FIGHT.absorb.pro : armourValue === 1 ? FIGHT.absorb.street : FIGHT.absorb.none);
@@ -76,7 +96,7 @@ export function runnerOf(op, approach, seat = 0) {
   const build = buildOf(op);
   return {
     id: op.id, handle: op.handle, role: op.role, seat, hp: Math.max(FIGHT.hpUnit, max - hurt), max,
-    absorb: absorbOf(a.value), armourName: a.name, weapon: w.name, ap: (w.pierce ?? 0) > 0, strong: strongMargin(w.damage),
+    absorb: absorbOf(a.value), armourName: a.name, weapon: w.name, ap: (w.pierce ?? 0) > 0, strong: strongMargin(), hit: hitOf(w.damage),
     look: MOVES[build?.move]?.look ?? specialLook(op), // the stage's special-move look (data/fightLooks.js); picture only, no rule reads it
     build, moved: false, misses: 0, // slice 3-ii-a: { move, payload } from data/builds.js or null (op.build); `moved`: the move's use this fight is spent
     jammer: canJam(op), healer: op.role === 'medic' || patchBonus(op, { perks: false }) > 0, medic: op.role === 'medic', // a kit makes a healer; a suture-strip perk only helps one
@@ -314,7 +334,7 @@ export function telegraph(b, rng) {
     }
     if (THREATS[kind].target === 'runner' && !target) continue;
     const t = { id: `${b.round}.${e.n}`, kind, enemy: e.n, target, shieldedBy: null, cancelled: false, shown: null, hit: 0 };
-    if (kind === 'aim') { t.shown = aimChance(b, runner(b, target)); t.hit = ENEMY_HIT[e.kind]; }
+    if (kind === 'aim') { t.shown = aimChance(b, runner(b, target)); t.hit = ENEMY_HIT[e.kind] + spread(rng, ENEMY_HIT[e.kind]); }
     b.threats.push(t);
   }
   return b.threats;
@@ -322,11 +342,17 @@ export function telegraph(b, rng) {
 
 // --- resolving orders into actions -----------------------------------------------------------------
 
-/** Planned damage that already covers an enemy's HP (and armour), counted in whole hits, means later attackers skip it. */
+/**
+ * Planned damage that already covers an enemy's HP (and armour) means later attackers skip it. Each plan is a plain hit
+ * { ap, hit }: a piercing one counts whole; the others crack the plates first, one each (plateHp off), the rest counts.
+ */
 function covered(e, res) {
-  const plans = res.damage[e.n] ?? [];
-  const ap = plans.filter((x) => x).length;
-  return ap >= unitsOf(e.hp) || plans.length >= unitsOf(e.hp) + e.absorb;
+  let plates = e.absorb; let total = 0;
+  for (const p of res.damage[e.n] ?? []) {
+    if (p.ap || plates === 0) total += p.hit;
+    else { plates -= 1; total += Math.max(0, p.hit - FIGHT.plateHp); }
+  }
+  return total >= e.hp;
 }
 
 const shotValue = (t) => (t && t.kind === 'aim' ? t.shown * t.hit : 0);
@@ -382,10 +408,10 @@ function tryDuty(b, r, duty, target, priority, res) {
         const up = enemyOrder(b, enemiesUp(b), priority);
         const first = up.find((x) => x === e) ?? up[0];
         const hit = [first, ...up.filter((x) => x !== first)].slice(0, mv.reach);
-        for (const x of hit) (res.damage[x.n] ??= []).push(r.ap);
+        for (const x of hit) (res.damage[x.n] ??= []).push({ ap: r.ap, hit: r.hit ?? FIGHT.hit });
         return { kind: 'burst', move: mv.id, enemy: first.n, enemies: hit.map((x) => x.n) };
       }
-      (res.damage[e.n] ??= []).push(r.ap);
+      (res.damage[e.n] ??= []).push({ ap: r.ap, hit: r.hit ?? FIGHT.hit });
       return { kind: 'attack', enemy: e.n };
     }
     case 'protect': {
@@ -777,13 +803,10 @@ export function playRound(b, rng) {
       const ow = b.overwatch;
       ow.left -= 1; if (boardingStage(b)) ow.vanShots += 1;
       b.heat += ow.heat ?? 0; result.neural += ow.neural ?? 0;
-      const x = roll(ow.value, b.diff + FIGHT.attackStep + FIGHT.overwatchStep + FIGHT.cover[e.cover], strongMargin(ow.damage));
+      const x = roll(ow.value, b.diff + FIGHT.attackStep + FIGHT.overwatchStep + FIGHT.cover[e.cover], strongMargin());
       if (!x.ok) say('overwatch', 'overwatchMiss', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: false, damage: 0, roll: rollOf(x) });
       else {
-        let dmg = x.strong ? FIGHT.strongHit : FIGHT.hit;
-        const cracked = e.absorb > 0;
-        if (cracked) { e.absorb -= 1; dmg -= FIGHT.plateHp; }
-        e.hp -= dmg;
+        const { dmg, cracked } = landHit(e, hitOf(ow.damage), x.strong, false, rng);
         if (e.hp <= 0) { e.out = true; defeated.push({ by: ow.id, enemy: e.n, how: 'overwatch' }); say('overwatch', 'overwatchOut', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, dropped: true, roll: rollOf(x), cracked }); spreadFrom(e); }
         else say('overwatch', dmg === 0 ? 'overwatchCrack' : 'overwatchHit', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, roll: rollOf(x), left: e.hp, cracked });
       }
@@ -805,10 +828,7 @@ export function playRound(b, rng) {
     const x = roll(sv(r, 'combat') + Math.min(FIGHT.missBonusCap, (r.misses ?? 0) * FIGHT.missBonus), b.diff + FIGHT.attackStep + FIGHT.cover[e.cover], r.strong);
     r.misses = x.ok ? 0 : (r.misses ?? 0) + 1;
     if (!x.ok) { say('attack', k('attackMiss'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: false, damage: 0, roll: rollOf(x) }); return; }
-    let dmg = x.strong ? FIGHT.strongHit : FIGHT.hit;
-    const cracked = e.absorb > 0 && !r.ap; // the plate took a hit: a plain shot only cracks it (damage 0), a strong one cracks it and takes the rest
-    if (cracked) { e.absorb -= 1; dmg -= FIGHT.plateHp; }
-    e.hp -= dmg;
+    const { dmg, cracked } = landHit(e, r.hit ?? FIGHT.hit, x.strong, r.ap, rng); // a plate takes plateHp off the hit: a base plain hit only cracks it
     if (e.hp <= 0) { e.out = true; defeated.push({ by: r.id, enemy: e.n, how: burst ? 'burst' : 'attack' }); say('attack', k('attackOut'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, dropped: true, roll: rollOf(x), strong: x.strong, cracked }); spreadFrom(e, carried(r, e) ?? e.infected); return; }
     say('attack', dmg === 0 ? k('attackCrack') : k('attackHit'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, roll: rollOf(x), left: e.hp, cracked });
     // What the hit carries (data/builds.js PAYLOADS): a hit that gets past the plate and leaves the target up infects it, unless the target shrugs it off
@@ -829,14 +849,11 @@ export function playRound(b, rng) {
     const near = (e) => (tu.at && pos(e) ? Math.hypot(pos(e)[0] - tu.at[0], pos(e)[1] - tu.at[1]) : 0);
     const e = [...enemiesUp(b)].sort((p, q) => near(p) - near(q) || p.n - q.n)[0];
     tu.left -= 1;
-    const x = roll(tu.aim, b.diff + FIGHT.attackStep + FIGHT.cover[e.cover], strongMargin(tu.damage));
+    const x = roll(tu.aim, b.diff + FIGHT.attackStep + FIGHT.cover[e.cover], strongMargin());
     const meta = { actor: null, at: tu.at ?? null, enemy: e.n, left: tu.left };
     if (!x.ok) say('turret', 'turretMiss', { enemy: E(e.n) }, { ...meta, success: false, damage: 0, roll: rollOf(x) });
     else {
-      let dmg = x.strong ? FIGHT.strongHit : FIGHT.hit;
-      const cracked = e.absorb > 0;
-      if (cracked) { e.absorb -= 1; dmg -= FIGHT.plateHp; }
-      e.hp -= dmg;
+      const { dmg, cracked } = landHit(e, hitOf(tu.damage), x.strong, false, rng);
       if (e.hp <= 0) { e.out = true; defeated.push({ by: null, enemy: e.n, how: 'turret' }); say('turret', 'turretOut', { enemy: E(e.n) }, { ...meta, success: true, damage: dmg, dropped: true, roll: rollOf(x), cracked }); }
       else say('turret', dmg === 0 ? 'turretCrack' : 'turretHit', { enemy: E(e.n) }, { ...meta, success: true, damage: dmg, roll: rollOf(x), enemy: e.n, cracked });
     }
@@ -1192,7 +1209,7 @@ export function vanOdds(b0, runs = FIGHT.oddsRuns) {
 export function oddsKey(b0, runs = FIGHT.oddsRuns) {
   return JSON.stringify([b0.type, b0.diff, b0.risk, b0.goal,
     b0.enemies.map((e) => [e.kind, e.hp, e.cover, e.deck, e.approaching ?? false, e.group ?? 0, e.infected ?? null]),
-    b0.runners.map((r) => [r.id, r.hp, r.max, r.absorb, r.ap, r.strong, r.jammer, r.healer, Object.values(r.stats).map((s) => s.value), r.overdrive ?? null, r.build ?? null, r.moved ?? false, r.misses ?? 0]),
+    b0.runners.map((r) => [r.id, r.hp, r.max, r.absorb, r.ap, r.strong, r.hit ?? null, r.jammer, r.healer, Object.values(r.stats).map((s) => s.value), r.overdrive ?? null, r.build ?? null, r.moved ?? false, r.misses ?? 0]),
     b0.orders, b0.overwatch && [b0.overwatch.value, b0.overwatch.damage, b0.overwatch.left], !!b0.wheels, !!b0.standby,
     b0.showcaseEligible ?? null, b0.maxExtra ?? null, b0.recipe ?? null, b0.hiredTotal ?? null, runs]);
 }

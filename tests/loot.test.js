@@ -195,3 +195,27 @@ test('a side task never drops gear and never fences scrap', async () => {
   assert.equal(done.stash.length, stash);
   assert.ok(!done.inbox.some((m) => /Gear from the job|No gear this time/.test(m.body ?? '')));
 });
+
+test('a spare piece: when nothing drops, about a quarter of the time a Standard sidearm instead of scrap, from a roll of its own', async () => {
+  const { lootFor } = await import('../src/core/loot.js');
+  const { createNewGame } = await import('../src/core/state.js');
+  const { LOOT } = await import('../src/data/gear.js');
+  let misses = 0; let spares = 0; let drops = 0;
+  for (let seed = 1; seed <= 2000; seed++) {
+    const s = createNewGame({ seed, startCrew: 'fresh' });
+    const cash = s.cash;
+    const line = lootFor(s, `job${seed}`);
+    if (line.spare) {
+      spares++; misses++;
+      const item = s.stash.at(-1);
+      assert.equal(item.type, LOOT.spareType);
+      assert.equal(item.tier, 'standard');
+      assert.equal(s.cash, cash, 'a spare piece replaces the scrap cash');
+      assert.match(line.text, /^Gear from the job/);
+    } else if (line.tier) drops++;
+    else { misses++; assert.equal(s.cash, cash + LOOT.scrap); }
+  }
+  const share = spares / misses;
+  assert.ok(Math.abs(share - LOOT.spareChance) < 0.04, `spare share of misses ${share.toFixed(3)}`);
+  assert.ok(Math.abs(drops / 2000 - LOOT.chance) < 0.04, `drops stay at LOOT.chance (${drops / 2000})`);
+});

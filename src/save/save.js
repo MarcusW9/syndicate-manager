@@ -39,6 +39,8 @@ import { trimInbox } from '../core/inbox.js';
 import { seedRivals, offerGapFor } from '../core/rivals.js';
 import { hashRng } from '../core/rng.js';
 import { fightStage } from '../core/runfight.js';
+import { hitOf } from '../core/fight.js';
+import { weaponOf } from '../core/battle.js';
 
 // The one-item-per-slot gear of saves before v45, for the migrations written against it.
 const slotLoadout = () => ({ weapon: null, armour: null, tool: null, implant: null });
@@ -1052,6 +1054,18 @@ function migrate(state) {
       }
     }
     state.version = 77;
+  }
+  if (state.version === 77) {
+    // v78: a weapon sets its hit's size and every hit is strong on one margin (DESIGN.md 2026-11-18). An engine-2 fight in progress
+    // gives each runner the hit of the weapon they carry (10 if they are no longer on the roster) and the one margin.
+    const b = state.activeMission?.battle;
+    if (b?.engine === 2) {
+      for (const r of b.runners ?? []) {
+        if (r.hit == null) { const op = (state.crew ?? []).find((o) => o.id === r.id); r.hit = op ? hitOf(weaponOf(op).damage) : FIGHT.hit; }
+        r.strong = FIGHT.strongMargin;
+      }
+    }
+    state.version = 78;
   }
   return state;
 }

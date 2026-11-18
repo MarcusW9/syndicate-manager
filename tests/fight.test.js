@@ -67,9 +67,9 @@ test('pips: one per two points of endurance, at least 3; cool changes nothing; a
   assert.equal(F.runnerOf(jax, 'loud').hp, 10, 'a light wound never starts a runner at 0');
 });
 
-test('gear: a vest absorbs 1 or 2 hits, a sidearm sets the strong margin, pierce is ap', () => {
-  assert.equal(F.strongMargin(1), 12);
-  assert.deepEqual([2, 3, 4, 5, 6].map(F.strongMargin), [12, 10, 8, 6, 6]);
+test('gear: a vest absorbs 1 or 2 hits, every weapon is strong on one margin (2026-11-18: damage sets the hit instead), pierce is ap', () => {
+  assert.equal(F.strongMargin(), FIGHT.strongMargin);
+  assert.equal(FIGHT.strongMargin, 12, 'the old margin at damage 2, what a starting runner carries');
   const [stitch] = crewOf().filter((o) => o.id === 'mei');
   assert.equal(F.runnerOf(stitch, 'loud').absorb, 0);
   stitch.gear = { armour: { uid: 'v', type: 'vest', tier: 'standard' }, implants: [], bag: [] };

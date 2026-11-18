@@ -26,10 +26,17 @@ export const FIGHT = {
   // a hit resets it. Per fight, kept on the runner (`misses`).
   missBonus: 2, missBonusCap: 6,
   attackStep: -2, jamStep: 0, patchStep: 0, stabiliseStep: 2, overwatchStep: -1,
-  hit: 10, strongHit: 20, plateHp: 10,
-  // A runner's hit is strong (strongHit) on this margin over the roll's need, by their sidearm's damage
-  // (damage 2 or less reads as 2, 5 or more as 5): a harder-hitting gun is strong more often.
-  strongMarginByDamage: { 2: 12, 3: 10, 4: 8, 5: 6 },
+  // Hit size (2026-11-18, owner; drafts/PROPOSAL-gear-hit-size.md): a weapon's damage sets what its hit takes off, hit + hitPerDamage
+  // for each point of damage above hitBaseDamage (2, unarmed: what every starting runner carries, so damage 2 or less hits for hit, 10; owner, 2026-11-18, after the damage-3 default sidearm hit no harder than bare hands); a strong hit is strongMult times that. Crew
+  // attacks, overwatch and the hall turret, each from its own damage (core/fight.js hitOf). A plate takes plateHp off one hit and
+  // the rest goes through; a hit breaks at most one plate. strongHit is the strong hit at the base damage (the screens' fixed numbers).
+  hit: 10, hitPerDamage: 3, hitBaseDamage: 2, strongMult: 2, strongHit: 20, plateHp: 10,
+  // Hit variance (2026-11-18): a hit that lands, a crew's or an enemy's, wobbles by up to hitSpreadShare of its size either way, rounded
+  // to whole HP (±2 at 10, ±3 at 20, ±4 at 25). The share of what gets past a plate wobbles too; a plain hit all soaked stays 0.
+  hitSpreadShare: 0.15,
+  // A hit is strong on this margin over the roll's need, the same for every weapon (owner, 2026-11-18, Q1: damage sets the hit's
+  // size, not its odds; 12 is the old margin at damage 2, what every starting runner carries, so a new crew's fights are unchanged).
+  strongMargin: 12,
   patchHeal: 10,
   medicAura: { heal: 10, stopsBleeding: true }, // while a medic stands in the fight: the most hurt standing runner +heal a round
   // Targeting: the chance a shot goes at the protected runner, then at the lowest-HP runner.

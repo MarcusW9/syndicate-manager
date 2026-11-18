@@ -75,6 +75,13 @@ export function rollDrop(rng, found = []) {
  */
 export function lootFor(state, jobKey) {
   const drop = rollDrop(hashRng(state.seed, 'loot', jobKey, state.day), state.apexFound ?? []);
+  // No drop: sometimes a spare Standard sidearm instead of scrap, from a roll of its own (so the drops above never moved).
+  if (!drop && hashRng(state.seed, 'spare', jobKey, state.day)() < LOOT.spareChance) {
+    const item = makeItem(state, LOOT.spareType, 'standard');
+    (state.stash ??= []).push(item);
+    const what = item.name ? `${item.name} (${itemName({ ...item, tier: null }).toLowerCase()})` : itemName({ ...item, tier: null });
+    return { tone: 'good', text: `Gear from the job: ${what}. A spare piece.`, tier: item.tier, spare: true };
+  }
   if (!drop) {
     state.cash += LOOT.scrap;
     return { tone: 'plain', text: `No gear this time. The crew fenced scrap for ${money(LOOT.scrap)}.` };
