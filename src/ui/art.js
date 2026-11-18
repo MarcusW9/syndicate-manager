@@ -698,14 +698,52 @@ function glassesAt(a, c) {
   return `<g fill="${c.light}" fill-opacity="0.12" stroke="#0d0d0f" stroke-width="0.8"><rect x="${l}" y="${y}" width="${lw}" height="4.2" rx="1.2"/><rect x="${r}" y="${y}" width="${lw}" height="4.2" rx="1.2"/></g><path d="M${l + lw} ${y + 1.6} H${r}" stroke="#0d0d0f" stroke-width="0.8"/>`;
 }
 
-function injuryMarks(severity, w) {
-  const plaster = `<g transform="rotate(-32 ${32 + w * 0.55} 34)"><rect x="${32 + w * 0.55 - 3.5}" y="33" width="7" height="2.2" fill="#ece3d3"/></g>
-    <g transform="rotate(28 ${32 + w * 0.55} 34)"><rect x="${32 + w * 0.55 - 3.5}" y="33" width="7" height="2.2" fill="#ece3d3" opacity="0.9"/></g>`;
-  if (severity === 'light') return plaster;
-  // Serious or worse: a gauze band across the brow as well.
-  return `<path d="M${32 - w - 1} 21.5 Q32 18.5 ${32 + w + 1} 21 L${32 + w + 1} 24.8 Q32 22.3 ${32 - w - 1} 25.3 Z" fill="#efe8dc"/>
-    <path d="M${32 - w} 23.6 Q32 20.9 ${32 + w} 23.2" stroke="#cfc6b6" stroke-width="0.5" fill="none"/>
-    <circle cx="${32 + w * 0.45}" cy="22.4" r="1.1" fill="#b4473f" opacity="0.55"/>${plaster}`;
+// Wounds (2026-11-18): a few presets per severity, each drawn in the person's own skin tone. Which one a runner wears is
+// fixed by their id (the same person always shows the same wound); the game's state only says whether and how badly.
+// The shadow side of the face carries the bruises and cuts, the lit cheek the pads, so chrome on the lit side never clashes.
+export const WOUND_LOOKS = { light: ['plaster', 'browCut', 'blackEye', 'graze'], serious: ['gauzeBrow', 'cheekPad', 'splitLip'], critical: ['headWrap'] };
+const BLOOD = '#a3322b', DRIED = '#6e1f1c', GAUZE = '#efe8dc', PLASTER = '#ece3d3';
+/** The preset this runner wears at this severity: 'plaster', 'headWrap' ... (null for none). */
+export function woundLook(op, severity) {
+  const list = WOUND_LOOKS[severity === 'critical' ? 'critical' : severity === 'serious' ? 'serious' : severity === 'light' ? 'light' : ''];
+  return list ? list[hash(`${op?.id ?? ''}|${op?.name ?? ''}|wound`) % list.length] : null;
+}
+
+function injuryMarks(look, w, c, a) {
+  const ex = 32 - (a?.eyeGap ?? 4.6), ey = a?.eyeY ?? 29, ew = a?.eyeW ?? 2.1;   // the shadow-side eye
+  const px = 32 + w * 0.55, py = 34;                                                // the lit cheek
+  const mY = a?.mouthY ?? 40, mW = a?.mouthW ?? 3;
+  const bruise = mix(c.skin, '#5a2a6a', 0.5), rim = mix(c.skin, '#a8a040', 0.42);
+  const strip = (x, y, rot, len = 6, h = 1.9) => `<g transform="rotate(${rot} ${x} ${y})"><rect x="${x - len / 2}" y="${y - h / 2}" width="${len}" height="${h}" fill="${PLASTER}" stroke="#b9ae98" stroke-width="0.25"/><rect x="${x - 0.9}" y="${y - h / 2 + 0.3}" width="1.8" height="${h - 0.6}" fill="#d9ceb8"/></g>`;
+  const blackEye = (o = 0.6) => `<ellipse cx="${ex}" cy="${ey + 0.9}" rx="${ew + 2.9}" ry="3.1" fill="${rim}" opacity="${o * 0.45}"/><ellipse cx="${ex}" cy="${ey + 0.7}" rx="${ew + 1.8}" ry="2.2" fill="${bruise}" opacity="${o}"/><path d="M${ex - ew - 1.5} ${ey + 2.6} Q${ex} ${ey + 3.9} ${ex + ew + 1.5} ${ey + 2.6}" stroke="${mix(bruise, '#000', 0.3)}" stroke-width="0.35" fill="none" opacity="0.5"/>`;
+  const cut = (x, y) => `<path d="M${x - 2.8} ${y - 1.2} L${x + 2.6} ${y + 1.1}" stroke="${DRIED}" stroke-width="0.8" stroke-linecap="round"/><path d="M${x + 0.6} ${y + 0.3} Q${x + 1.4} ${y + 2.6} ${x + 0.8} ${y + 4.4}" stroke="${BLOOD}" stroke-width="0.5" fill="none" stroke-linecap="round" opacity="0.85"/><circle cx="${x + 0.8}" cy="${y + 4.6}" r="0.5" fill="${BLOOD}"/>`;
+  switch (look) {
+    case 'plaster': // a crossed plaster on the lit cheek
+      return strip(px, py, -32, 7.4, 2.3) + strip(px, py, 28, 7.4, 2.3);
+    case 'browCut': // a split brow held with two butterfly strips, a thread of blood
+      return `${cut(ex, ey - 4.1)}${strip(ex - 1.3, ey - 4.2, -65, 3.6, 1.2)}${strip(ex + 1.4, ey - 3.4, -65, 3.6, 1.2)}`;
+    case 'blackEye': // a swollen, bruised eye with a split cheek above it
+      return blackEye(0.62) + `<path d="M${ex - 1.2} ${ey + 3.4} l1.6 1.2" stroke="${DRIED}" stroke-width="0.5" stroke-linecap="round"/>`;
+    case 'graze': // a scrape on the lit cheek: raw skin, three scores, a few beads of blood
+      return `<ellipse cx="${px}" cy="${py - 0.5}" rx="3.6" ry="2.2" transform="rotate(-28 ${px} ${py})" fill="${mix(c.skin, '#d9667a', 0.5)}" opacity="0.6"/>
+        <g stroke="#b04a44" stroke-width="0.45" stroke-linecap="round" opacity="0.85" fill="none"><path d="M${px - 2.6} ${py + 0.4} l4.2 -2.3"/><path d="M${px - 2.2} ${py + 1.6} l4.4 -2.4"/><path d="M${px - 1.2} ${py + 2.3} l3.4 -1.8"/></g>
+        <g fill="${BLOOD}"><circle cx="${px + 1.4}" cy="${py - 1.5}" r="0.35"/><circle cx="${px - 1.5}" cy="${py + 0.9}" r="0.3"/><circle cx="${px + 0.2}" cy="${py + 2.3}" r="0.3"/></g>`;
+    case 'cheekPad': // a gauze pad taped on the lit cheek, a stain coming through, the eye bruised
+      return `${blackEye(0.5)}<rect x="${px - 3.8}" y="${py - 3.4}" width="7.6" height="7.2" fill="${GAUZE}" stroke="#b9ae98" stroke-width="0.35"/><path d="M${px - 3.8} ${py - 1.4}h7.6M${px - 3.8} ${py + 0.6}h7.6M${px - 3.8} ${py + 2.6}h7.6" stroke="#d6ccb9" stroke-width="0.25"/><circle cx="${px + 0.6}" cy="${py + 0.4}" r="1.5" fill="${BLOOD}" opacity="0.5"/>${strip(px, py - 3.5, 0, 9, 1.4)}${strip(px, py + 3.7, 0, 9, 1.4)}`;
+    case 'splitLip': // a split, swollen lip, a bruised eye and a brow stitched shut
+      return `${blackEye(0.58)}<path d="M${32 + mW * 0.35} ${mY - 0.6} q0.5 1.6 -0.1 3.3" stroke="${DRIED}" stroke-width="0.7" fill="none" stroke-linecap="round"/><path d="M${32 + mW * 0.35 - 0.3} ${mY + 2.6} q-0.3 1.8 0.2 2.9" stroke="${BLOOD}" stroke-width="0.45" fill="none" stroke-linecap="round" opacity="0.85"/>${cut(ex, ey - 4.1)}<g stroke="#2a1b1a" stroke-width="0.35">${[-1.6, 0, 1.6].map((d) => `<path d="M${ex + d - 0.2} ${ey - 5.4 + d * 0.4}l0.9 2.4"/>`).join('')}</g>`;
+    case 'headWrap': // critical: a gauze wrap round the head, blood through it, the eye shut and dark
+    default:
+      return `${blackEye(0.7)}<path d="M${32 - w - 1} 20.4 Q32 17.2 ${32 + w + 1} 19.9 L${32 + w + 1} 25.4 Q32 22.6 ${32 - w - 1} 26 Z" fill="${GAUZE}"/>
+        <path d="M${32 - w} 22.6 Q32 19.8 ${32 + w} 22.2M${32 - w} 24.4 Q32 21.7 ${32 + w} 24" stroke="#cfc6b6" stroke-width="0.35" fill="none"/>
+        <path d="M${32 - w * 0.25} 18.2 Q${32 - w * 0.55} 21 ${32 - w * 0.3} 25" stroke="#cfc6b6" stroke-width="0.35" fill="none"/>
+        <ellipse cx="${32 + w * 0.4}" cy="22.4" rx="2.4" ry="2" fill="${BLOOD}" opacity="0.7"/><ellipse cx="${32 + w * 0.4}" cy="22.4" rx="1.1" ry="0.9" fill="${DRIED}" opacity="0.8"/>
+        <path d="M${32 + w * 0.4} 24.2 q0.5 2.4 -0.2 4.4" stroke="${BLOOD}" stroke-width="0.5" fill="none" stroke-linecap="round" opacity="0.85"/>`;
+    case 'gauzeBrow': // serious: a gauze band across the brow, a blood spot, and the plaster
+      return `<path d="M${32 - w - 1} 21.5 Q32 18.5 ${32 + w + 1} 21 L${32 + w + 1} 24.8 Q32 22.3 ${32 - w - 1} 25.3 Z" fill="${GAUZE}"/>
+        <path d="M${32 - w} 23.6 Q32 20.9 ${32 + w} 23.2" stroke="#cfc6b6" stroke-width="0.5" fill="none"/>
+        <circle cx="${32 + w * 0.45}" cy="22.4" r="1.5" fill="${BLOOD}" opacity="0.6"/>${strip(px, py, -32, 7.4, 2.3)}${strip(px, py, 28, 7.4, 2.3)}`;
+  }
 }
 
 /**
@@ -713,7 +751,7 @@ function injuryMarks(severity, w) {
  * tiredness (heavy lids, shadowed eyes) and neural load (the implant glows). Fallen
  * operatives are greyed by the frame (CSS), not here.
  */
-export function portrait(op, { size = 44, anatomy = true } = {}) {
+export function portrait(op, { size = 44, anatomy = true, wound = null } = {}) {
   const f = faceOf(op);
   const st = stateOf(op);
   const severity = op.condition?.injury;
@@ -812,7 +850,7 @@ export function portrait(op, { size = 44, anatomy = true } = {}) {
   ${f.visor ? `<path d="M${L - 1} 26.2 L${R + 1} 25.8 L${R + 0.6} 31.2 L${L - 0.6} 31.6 Z" fill="#0b0f14"/><path d="M${L - 0.4} 27.2 L${R + 0.4} 26.8" stroke="${c.light}" stroke-width="0.6" opacity="${st.tired ? 0.35 : 0.85}"/><path d="M${R - 7} 29.6 h2 M${R - 4.4} 29.6 h1" stroke="${c.light}" stroke-width="0.5" opacity="0.6"/>` : ''}
   ${f.mask === 'faceplate' ? '' : chromeMarks(f, st.load, w, st.tired, eyeAt)}
   ${a && implants && f.mask !== 'faceplate' ? implantMarks(implants, f, g, a, st.load) : ''}
-  ${st.injured && f.mask !== 'faceplate' ? injuryMarks(severity, w) : ''}
+  ${st.injured && f.mask !== 'faceplate' ? injuryMarks(wound ?? woundLook(op, severity), w, c, a) : ''}
 </svg>`;
 }
 

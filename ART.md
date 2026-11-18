@@ -134,8 +134,9 @@ What the job leaves on a face, for good. `src/core/marks.js` records each one in
 
 | What the game says | What the face shows |
 | --- | --- |
-| Light injury | a crossed plaster on the lit cheek |
-| Serious or critical injury | gauze band across the brow (small blood spot) plus the plaster |
+| Light injury | one of four presets, fixed by the runner's id (`art.js WOUND_LOOKS`): a crossed plaster on the lit cheek; a split brow held with butterfly strips; a bruised eye; a graze on the lit cheek (cuts and bruises go on the shadow side, pads on the lit cheek) |
+| Serious injury | one of three: a gauze band across the brow with a blood spot and the plaster; a taped gauze pad on the lit cheek with a bruised eye; a split lip with a bruised eye and a stitched brow |
+| Critical injury | a gauze wrap round the head with blood coming through, and a dark swollen eye |
 | Fatigue over 60 | heavy lids, shadowed eyes, flatter mouth, the city light dims |
 | Neural load | chrome glows brighter, with a halo above 40% |
 | Neural load over 70 or burnout 60+ | dead-eyed stare: flat lids, no catchlight |
