@@ -166,3 +166,54 @@
 - claude/youthful-hamilton-p1jxjp
 - live-battle-1-spots
 - live-battle-2-stage
+
+## Second pass: old branches, work already shipped via PRs (delete)
+
+- claude/awesome-cray-ucc03k
+- claude/awesome-keller-em47cb
+- claude/battle-1c-fixes
+- claude/battle-1c-wiring
+- claude/battle-pullout-and-sims
+- claude/battle-slice3-followups
+- claude/beautiful-hamilton-u67dt6
+- claude/beautiful-ride-s8eavu
+- claude/carry-grid-mock
+- claude/clever-fermat-9gq43t
+- claude/compassionate-sagan-v1f4pp
+- claude/compassionate-turing-kogvcv
+- claude/cool-mendel-ow69d6
+- claude/crisis-tags
+- claude/dreamy-davinci-gvgv4z
+- claude/eager-hypatia-aadwd0
+- claude/earned-traits
+- claude/eloquent-cray-iwxeee
+- claude/epic-babbage-etagin
+- claude/fervent-ride-qpze7j
+- claude/fervent-rubin-pvqu3j
+- claude/hall-build-1a
+- claude/hall-building-plan
+- claude/happy-cori-4ldygj
+- claude/hopeful-turing-p71xfo
+- claude/ideation-kit
+- claude/loud-fights
+- claude/modest-feynman-1brwft
+- claude/nifty-hamilton-e252g5-slice0b
+- claude/optimistic-fermi-vhdtwz
+- claude/pensive-pascal-kor55b
+- claude/practical-goodall-cozf6g
+- claude/relaxed-fermi-yixb26
+- claude/side-tasks
+- claude/traits-group-2
+- claude/wizardly-pascal-01b34d
+- claude/writing-task-7
+- claude/youthful-hamilton-p1jxjp
+- live-battle-1-spots
+- live-battle-2-stage
+
+## Second pass: keep, may hold unmerged work
+
+- claude/brave-clarke-eux927
+- claude/awesome-cerf-p09fsh
+- claude/hopeful-noether-me42zb
+- claude/vigilant-dijkstra-87smp8
+- claude/tongs-overreach-e2-v70
