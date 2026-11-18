@@ -158,6 +158,16 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
   const wait = (ms) => later(ms * speed());
   const slot = (i, pt) => [pt[0] + (i % 2) * 11 - 5, pt[1] + Math.floor(i / 2) * 11 - 5];
   const tok = (id) => tokens.querySelector(`[data-op="${CSS.escape(id)}"]`);
+  // A wound shows as a faint red ring and a small plaster on the face (never a bright ring: it read as a power-up).
+  const markHurt = (t, severity) => {
+    if (!t) return;
+    t.classList.add(severity === 'serious' ? 'is-down' : 'is-hit');
+    if (!t.querySelector('.sp-plaster')) {
+      const p = el('g', { class: 'sp-plaster', transform: 'translate(3.2 2.6) rotate(-35)' });
+      p.append(el('rect', { x: -3, y: -1.1, width: 6, height: 2.2, rx: 0.6 }), el('path', { d: 'M-0.8 -0.5v1M0.8 -0.5v1' }));
+      t.append(p);
+    }
+  };
   const addToken = (op, at) => {
     const g = el('g', { class: 'sp-token', 'data-op': op.id });
     g.append(el('circle', { r: 6.5, fill: op.color ?? '#8b93a7' }), el('text', {}, initials(op)));
@@ -544,7 +554,7 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
         if (cue.save.success) foe?.classList.add('is-dead');
       } else if (foe) await flash(near(me, 4, -2));
       t?.classList.remove('is-cornered');
-      if (cue.hurt) t?.classList.add(cue.hurt === 'serious' ? 'is-down' : 'is-hit');
+      if (cue.hurt) markHurt(t, cue.hurt);
       else if (!cue.save?.success && cue.danger) await pulse(here, 900);
       cleanup();
     },
@@ -568,7 +578,7 @@ export function bindSitePlan(svg, { team: inside, overwatch = null, wheels = nul
       await wait(500);
     },
     /** Mark someone hurt (drawn on mount from the state). */
-    hurt(id, severity) { tok(id)?.classList.add(severity === 'serious' ? 'is-down' : 'is-hit'); },
+    hurt(id, severity) { markHurt(tok(id), severity); },
     alarm: (on) => { alarm.setAttribute('cx', here[0]); alarm.setAttribute('cy', here[1]); alarm.classList.toggle('is-on', on); },
     full: () => panTo('full'),
   };
