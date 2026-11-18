@@ -18,6 +18,7 @@ import { backupBanner } from './app.js';
 import { renderMessage, crewLinks } from './messages.js';
 import { renderThreatLines, calls, raidCalls } from './raidcards.js';
 import { esc, pickLine, face, cityName, fillLine, andList, hallLabel } from './shared.js';
+import { needsYou } from './nav.js';
 import { state, backPlayed, V } from './view.js';
 
 /**
@@ -29,7 +30,7 @@ export function renderInbox() {
   const { shown, open, unreadOnly, unread } = inboxView();
   const filter = state.inbox.length ? `<div class="inboxfilter" role="group" aria-label="Show">
           <button class="qchip ${unreadOnly ? '' : 'is-on'}" data-action="inbox-filter" data-id="all" aria-pressed="${!unreadOnly}">All</button>
-          <button class="qchip ${unreadOnly ? 'is-on' : ''}" data-action="inbox-filter" data-id="unread" aria-pressed="${unreadOnly}" ${unread || unreadOnly ? '' : 'disabled'}>Unread${unread ? ` (${unread})` : ''}</button>
+          <button class="qchip ${unreadOnly ? 'is-on' : ''}" data-action="inbox-filter" data-id="unread" aria-pressed="${unreadOnly}" ${unread || unreadOnly ? '' : 'disabled'}>To do${unread ? ` (${unread})` : ''}</button>
         </div>` : '';
   const list = state.inbox.length ? `${filter}
         <ul class="list">
@@ -87,9 +88,10 @@ export function inboxView() {
   const open = state.inbox.find((m) => m.id === V.openMessageId);
   // All or only unread (playtest, 2026-11-07: find the old unread ones fast). The open message stays
   // in the list after it's been read, so it doesn't vanish from under the finger.
-  const unread = state.inbox.filter((m) => !m.read).length;
+  // "To do" is what the Today badge counts: unread, or read but still waiting on an answer (offers, calls).
+  const unread = state.inbox.filter((m) => needsYou(state, m)).length;
   const unreadOnly = V.inboxUnread && unread + (open && open.read ? 1 : 0) > 0;
-  const shown = unreadOnly ? state.inbox.filter((m) => !m.read || m === open) : state.inbox;
+  const shown = unreadOnly ? state.inbox.filter((m) => needsYou(state, m) || m === open) : state.inbox;
   return { shown, open, unreadOnly, unread };
 }
 

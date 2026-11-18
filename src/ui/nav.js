@@ -52,8 +52,13 @@ const NEEDS_THE_PLAYER = new Set(['hall-offer', 'raid-warning']);
  * Jobs show their own number; City and Tong show none.
  */
 export function attentionCount(state) {
-  const waiting = (m) => m.resolved === false || (m.blocking && !m.resolved) || (NEEDS_THE_PLAYER.has(m.kind) && isActionable(state, m));
-  return state.inbox.filter((m) => !m.read || waiting(m)).length;
+  return state.inbox.filter((m) => needsYou(state, m)).length;
+}
+
+/** One message that counts toward Today's badge: unread, or read but still waiting on an answer. Today's filter uses the same test. */
+export function needsYou(state, m) {
+  const waiting = m.resolved === false || (m.blocking && !m.resolved) || (NEEDS_THE_PLAYER.has(m.kind) && isActionable(state, m));
+  return !m.read || waiting;
 }
 
 /** Open offers Joss has put in the mail (a specialisation or a build piece), for one runner or for everyone. Decided on the runner's sheet or in the message (owner, 2026-11-17). */
