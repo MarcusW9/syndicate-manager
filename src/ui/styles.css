@@ -2238,6 +2238,7 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .fs-order { font-size: 0.86rem; } .fs-order small { color: var(--muted); font: 600 0.66rem var(--display); letter-spacing: 0.12em; text-transform: uppercase; }
 .fs-intent { font-size: 0.86rem; color: var(--text); line-height: 1.35; overflow-wrap: anywhere; }
 .fs-shots { color: #ff8a98; font-size: 0.78rem; } .fs-thr { color: var(--muted); font-size: 0.74rem; }
+.fs-hit { display: block; color: var(--muted); font-size: 0.78rem; }
 .fs-ifnothing { border-left: 2px solid var(--accent-2); padding: 2px 0 2px 10px; display: grid; gap: 2px; }
 .fs-ifnothing b { font: 700 0.72rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 .fs-ifnothing p { margin: 0; font-size: 0.86rem; line-height: 1.35; }

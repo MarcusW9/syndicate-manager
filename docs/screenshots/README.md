@@ -22,6 +22,7 @@ Then add a row to the top of the table below and commit the folder with the chan
 
 | Date | Version | Commit | What's new on screen | Folder |
 | --- | --- | --- | --- | --- |
+| 2026-11-18 | Show the hit | (this change) | The standard set, plus `47-fight-round-hit.png` (the fight's round screen, which the script can't reach: drawn from a real fight with runners at hit 10, 19 and 22). New on screen: each runner on the round screen has a line "Hits for 16, strong 32"; a sidearm's card reads "... damage 4 · hits for 16, strong 32 · ..." (armoury, gear sheet, operative gear). | `2026-11-18-hit-display` |
 | 2026-11-18 | Red edge on Crew (trial) | (this change) | The standard set. New on screen: the Crew panel has a toned red outline and the roster filter dropdown is red (`18-crew.png`); other screens unchanged. | `2026-11-18-crew-red-edge` |
 | 2026-11-18 | Crew colour mockups | (not shipped) | Design-session capture (`scripts/preview-crew-colours.mjs`, 1x desktop crops): five colour options for the roster's filter dropdown and the panel outline over the current look: cyan, red, amber, violet, and a split red/cyan edge with a solid cyan dropdown. Owner picks one. | `2026-11-18-crew-colour-mockups` |
 | 2026-11-18 | Roster filter is a dropdown | (this change) | The standard set. New on screen: the Crew roster's All / Ready / Away or hurt buttons are a "Show" dropdown (`18-crew.png`). The build offer's tap-for-explanation card isn't in the standard run (a fresh game has no offer). | `2026-11-18-ricochet-tip-roster-dropdown` |

@@ -57,6 +57,8 @@ export const FIGHT_TEXT = {
   'wave': '{kind} {n} comes in with the wave.',
   'approach': '{enemy} is still coming in.',
   'view.approaching': 'Coming in: no shot this round',
+  // Claude's draft (2026-11-18, owner to replace; drafts/writing-tasks.md "Small line: the hit"): a runner's hit, on the round screen and the weapon card.
+  'view.hit': 'Hits for {hit}, strong {strong}',
   'standbyOut': '{who} steps out to help.',
   'climbBack': '{who} climbs back out to reach {target}.',
   'vanEarly': 'The driver brings the van in early: it arrives at the end of round {round}. This is the planned way out, not a new threat.',
