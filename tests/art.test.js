@@ -204,3 +204,26 @@ test('sidearm looks: every frame, finish, mod and charm draws, the same every ti
   const op = { ...createNewGame({ seed: 3 }).crew[0], gear: {} };
   assert.equal(clean(portrait({ ...op, gear: { weapon: { uid: 'p', type: 'pistol', tier: 'standard', look: { frame: 'compact', finish: 'neon', glow: 'violet' } } } })), clean(portrait(op)));
 });
+
+test('wounds: every preset draws, differs from the others, and a runner always wears the same one', async () => {
+  const { WOUND_LOOKS, woundLook } = await import('../src/ui/art.js');
+  const op = { id: 'w1', name: 'Mei Chan', age: 24, condition: { fatigue: 0, morale: 60, neuralLoad: 0, burnout: 0, injury: 'serious' } };
+  const looks = Object.values(WOUND_LOOKS).flat();
+  const drawn = looks.map((wound) => withoutIds(portrait(op, { wound })));
+  assert.equal(new Set(drawn).size, looks.length, 'each preset is its own picture');
+  for (const sev of ['light', 'serious', 'critical']) {
+    assert.equal(woundLook(op, sev), woundLook({ ...op }, sev), 'stable per runner');
+    assert.ok(WOUND_LOOKS[sev].includes(woundLook(op, sev)));
+  }
+  assert.equal(woundLook(op, 'healthy'), null);
+});
+
+test('tattoos: every design draws and differs, and a runner always wears the same one', async () => {
+  const { TATTOO_LOOKS, tattooLook } = await import('../src/ui/art.js');
+  const op = { id: 't1', name: 'Mei Chan', age: 24, condition: { fatigue: 0, morale: 60, neuralLoad: 0, burnout: 0, injury: 'healthy' } };
+  const drawn = TATTOO_LOOKS.map((ink) => withoutIds(portrait(op, { ink })));
+  assert.equal(new Set(drawn).size, TATTOO_LOOKS.length, 'each design is its own picture');
+  assert.ok(drawn.every((d) => d !== withoutIds(portrait(op))), 'inked differs from bare');
+  assert.equal(tattooLook(op), tattooLook({ ...op }));
+  assert.ok(TATTOO_LOOKS.includes(tattooLook(op)));
+});

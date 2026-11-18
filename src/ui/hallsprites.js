@@ -13,7 +13,9 @@ const slab = (x, y, w, h, fill, edge = '#0b0d11') => `<rect x="${x}" y="${y}" wi
 const shell = (w, h, floor) => `${SH(w, h, 4)}<rect x="0" y="0" width="${w}" height="${h}" fill="#2e3646" stroke="#0b0d11" stroke-width="1"/><rect x="4" y="4" width="${w - 8}" height="${h - 8}" fill="${floor}"/><path d="M.6 ${h - .6}V.6H${w - .6}" fill="none" stroke="#7b8aa3" stroke-opacity=".5" stroke-width="1"/><rect x="-.5" y="${h / 2 - 6}" width="5" height="12" fill="#0b0d11"/><rect x="-.5" y="${h / 2 - 6}" width="2" height="12" fill="#3de8d8" opacity=".85"/>`;
 const sym = (id, w, h, body) => `<symbol id="hs-${id}" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" overflow="visible">${body}</symbol>`;
 
-const bunk = (x, y, w, h) => `${slab(x, y, w, h, '#4a5566')}${slab(x + 1.5, y + 1.5, 6, h - 3, '#aab6c6')}<rect x="${x + 9}" y="${y + 1.5}" width="${w - 10.5}" height="${h - 3}" fill="#3a4a66"/><rect x="${x + 9}" y="${y + 1.5}" width="${w - 10.5}" height="2" fill="#6f86b0" opacity=".6"/>`;
+/** A bunk drawn as the bed is (frame, a pillow, a blue blanket with its fold), in the bed's own proportions (about 1.5 to 1)
+ *  turned to stand against the wall: pillow at the head, a ladder rung at the foot for the bunk above. */
+const bunk = (x, y, w, h) => `${slab(x, y, w, h, '#3a4352')}${slab(x + 1.5, y + 1.5, w - 3, 10, '#d8e2ea')}<rect x="${x + 1.5}" y="${y + 13}" width="${w - 3}" height="${h - 14.5}" fill="#31507a"/><rect x="${x + 1.5}" y="${y + 13}" width="${w - 3}" height="2.4" fill="#5f88c0" opacity=".7"/><path d="M${x + 1.5} ${y + 13 + (h - 14.5) * 0.55}h${w - 3}" stroke="#1f3350" stroke-width=".8"/><path d="M${x + w / 2 - 3} ${y + h - 6}h6M${x + w / 2 - 3} ${y + h - 3}h6" stroke="#8b9aab" stroke-width=".9"/>`;
 
 const SYMBOLS = [
   // --- defences (one cell) ---
