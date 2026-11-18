@@ -14,8 +14,8 @@
 //     goal: { work, protect: opId|null, vanRound, vanLeaves }, clock, nextPressure, extras, arriving: [kind],
 //     maxExtra (the reactive reinforcements' cap), recipe: { waves: [{ round, kind?, count }] }|null (waves still to come),
 //     hiredTotal: { [group]: n } (bodies that can break, per group), nextGroup,
-//     enemies: [{ n, kind, pips, max, absorb, cover, out, fled, deck, di, approaching, group, infected: { tick, left|null, by, round, payload }|null }],
-//     runners: [{ id, handle, role, seat, pips, max, absorb, ap, strong, jammer, healer, medic, cover,
+//     enemies: [{ n, kind, hp, max, absorb, cover, out, fled, deck, di, approaching, group, infected: { tick, left|null, by, round, payload }|null }],
+//     runners: [{ id, handle, role, seat, hp, max, absorb, ap, strong, jammer, healer, medic, cover,
 //                 down, withdrawn, dead, aboard, stable, fightOn, downRound, left, stats, build: { move, payload }|null, moved }],
 //     threats: [{ id, kind, enemy, target, shown, hit, shieldedBy, cancelled }]  (this round's draw),
 //     orders: { [opId]: ORDER }, risk: { level }, vanHold: bool|null,
@@ -46,8 +46,14 @@ const RADIO = (t) => THREATS[t.kind]?.radio === true;
 
 // --- the runners -----------------------------------------------------------------------------------
 
-/** Pips in a fight: one per two points of endurance, at least minPips (spec 10a). */
-export const maxPips = (op) => Math.max(FIGHT.minPips, Math.floor((op.stats?.endurance ?? 0) / FIGHT.endurancePerPip));
+/** HP in a fight: hpUnit per two points of endurance, at least minHp (spec 10a; HP since 2026-11-18, one old pip = hpUnit). */
+export const maxHp = (op) => Math.max(FIGHT.minHp, Math.floor((op.stats?.endurance ?? 0) / FIGHT.endurancePerPip) * FIGHT.hpUnit);
+/** Whole hits of hpUnit it takes to cover this much HP (the planning and the old pip-count rules read in these). */
+const unitsOf = (hp) => Math.ceil(hp / FIGHT.hpUnit);
+/** HP as whole hpUnits, for the screens (health-bar segments, the old pip count); never read by a rule. */
+export const hpUnits = (hp) => unitsOf(Math.max(0, hp));
+/** HP rounded up to a whole hpUnit (the pull-out points). */
+const roundUpHp = (hp) => unitsOf(hp) * FIGHT.hpUnit;
 
 /** A runner's hit is strong on this margin, by their sidearm's damage (2 or less reads as 2, 5 or more as 5). */
 export const strongMargin = (damage) => FIGHT.strongMarginByDamage[clamp(Math.round(damage ?? 2), 2, 5)];
@@ -63,13 +69,13 @@ export const canJam = (op) => op.role === 'tech' || counted(op).some((i) => i.ty
 
 /** A runner as they enter a fight: their numbers, read once (gear, traits and the approach included). */
 export function runnerOf(op, approach, seat = 0) {
-  const max = maxPips(op);
-  const hurt = op.condition?.injury === 'light' ? FIGHT.lightWoundPips : 0;
+  const max = maxHp(op);
+  const hurt = op.condition?.injury === 'light' ? FIGHT.lightWoundHp : 0;
   const w = weaponOf(op);
   const a = armourOf(op);
   const build = buildOf(op);
   return {
-    id: op.id, handle: op.handle, role: op.role, seat, pips: Math.max(1, max - hurt), max,
+    id: op.id, handle: op.handle, role: op.role, seat, hp: Math.max(FIGHT.hpUnit, max - hurt), max,
     absorb: absorbOf(a.value), armourName: a.name, weapon: w.name, ap: (w.pierce ?? 0) > 0, strong: strongMargin(w.damage),
     look: MOVES[build?.move]?.look ?? specialLook(op), // the stage's special-move look (data/fightLooks.js); picture only, no rule reads it
     build, moved: false, misses: 0, // slice 3-ii-a: { move, payload } from data/builds.js or null (op.build); `moved`: the move's use this fight is spent
@@ -90,7 +96,7 @@ function firstBy(list, cmp) {
   for (let i = 0; i < list.length; i++) if (i === 0 || cmp(list[i], best) < 0) best = list[i];
   return best;
 }
-const lowestPips = (list) => firstBy(list, (a, b) => a.pips - b.pips || bySeat(a, b));
+const lowestHp = (list) => firstBy(list, (a, b) => a.hp - b.hp || bySeat(a, b));
 
 // --- building a fight -------------------------------------------------------------------------------
 
@@ -110,7 +116,7 @@ export const breaks = (kind) => ENEMIES[kind]?.fleeBelow != null;
  */
 function newEnemy(b, kind, rng, { arriving = false, group = 0 } = {}) {
   const def = ENEMIES[kind];
-  const e = { n: b.enemies.length + 1, kind, pips: def.pips, max: def.pips, absorb: def.absorb ?? 0, cover: def.cover, out: false, fled: false, deck: shuffle([...def.deck], rng), di: 0, approaching: arriving, group, infected: null };
+  const e = { n: b.enemies.length + 1, kind, hp: def.hp, max: def.hp, absorb: def.absorb ?? 0, cover: def.cover, out: false, fled: false, deck: shuffle([...def.deck], rng), di: 0, approaching: arriving, group, infected: null };
   b.enemies.push(e);
   if (breaks(kind)) b.hiredTotal[group] = (b.hiredTotal[group] ?? 0) + 1;
   return e;
@@ -134,7 +140,7 @@ export function buildFight({ type, diff, threat = 3, site = 'docks', opposition 
     enemies: [], runners: crew.map((op, i) => runnerOf(op, approach, i)), threats: [],
     orders: {}, risk: { level: risk }, vanHold: null, enemyReinforce: def.enemyReinforce, friendlyReinforce: def.friendlyReinforce,
     overwatch: overwatch ? { ...overwatch, vanShots: 0 } : null, wheels, standby: null, standbyOut: false, vanUsed: false,
-    heat: 0, pipsLost: 0, left: [], dilemmasFired: {}, watched, site, opposition: OPPOSITION[opposition] ? opposition : null,
+    heat: 0, hpLost: 0, left: [], dilemmasFired: {}, watched, site, opposition: OPPOSITION[opposition] ? opposition : null,
   };
   // A raid on a hall (holdHall): who comes and how many, the hall's turret, and the round the door holds at. raid: { kind, count, cap, turret, foe, foeOne }.
   if (type === 'holdHall' && raid) {
@@ -181,17 +187,17 @@ const capableSupport = (r) => r.medic || (r.jammer && sv(r, 'tech') >= sv(r, 'co
 // Someone with a move still to use is left to attack when the crew's defaults pick protectors (2026-11-17): a protector shields instead of
 // attacking, so a Ricochet carrier on a protect order would never fire. They protect only when nobody else can.
 const hasMove = (r) => !!MOVES[r.build?.move] && !r.moved;
-const toughest = (b, list) => [...list].sort((x, y) => hasMove(x) - hasMove(y) || (y.max + y.absorb) - (x.max + x.absorb) || bySeat(x, y));
+const toughest = (b, list) => [...list].sort((x, y) => hasMove(x) - hasMove(y) || (y.max + y.absorb * FIGHT.plateHp) - (x.max + x.absorb * FIGHT.plateHp) || bySeat(x, y));
 
-/** The runner best placed to cover others (most pips plus armour, ties lowest seat), not the specialist. */
+/** The runner best placed to cover others (most HP plus armour, ties lowest seat), not the specialist. */
 export const bestProtector = (b) => toughest(b, b.runners.filter((r) => r.id !== b.goal.protect))[0] ?? null;
 
 /**
  * The crew's own orders for one runner (spec section 12, settled 2026-11-11), built from the fight as it
  * is. holdHack: the technician works; the two toughest others protect the technician (fallback attack);
  * everyone else supports if a medic or a jammer with tech at least their combat, else attacks (fallback
- * protect the technician). holdExtract: hold stage, the best protector covers the lowest-pips runner
- * (fallback attack) and the rest attack, the lowest-pips runner's attackers first; board stage, the
+ * protect the technician). holdExtract: hold stage, the best protector covers the lowest-HP runner
+ * (fallback attack) and the rest attack, the lowest-HP runner's attackers first; board stage, the
  * protector covers (fallback board) and the rest board (fallback hold).
  */
 export function defaultOrderFor(b, r) {
@@ -235,19 +241,19 @@ const boardingStage = (b) => b.type === 'holdExtract' && b.stage === 1;
 const committed = (b) => b.risk.level === 'committed';
 const doorSlots = (b) => FIGHT.doorSlots + (b.standby && !b.standbyOut ? 1 : 0);
 
-/** Pips at or under which this runner pulls out at round start (cautious half rounded up, steady a third rounded up and at least 1, committed never). */
+/** HP at or under which this runner pulls out at round start (cautious half, steady a third and at least minHp, each rounded up to a whole hpUnit; committed never). */
 export function riskThreshold(b, r) {
   const level = b.risk.level;
-  return level === 'cautious' ? Math.ceil(r.max / 2) : level === 'steady' ? Math.max(FIGHT.risk.steady.minPips, Math.ceil(r.max / FIGHT.risk.steady.pullDiv)) : FIGHT.risk.committed.pullAt;
+  return level === 'cautious' ? roundUpHp(r.max / 2) : level === 'steady' ? Math.max(FIGHT.risk.steady.minHp, roundUpHp(r.max / FIGHT.risk.steady.pullDiv)) : FIGHT.risk.committed.pullAt;
 }
-/** A runner the player chose to keep in at their pull-out point stays in until they lose another pip (r.stayPips, set by keepIn). */
-const keptIn = (r) => r.stayPips != null && r.pips >= r.stayPips;
+/** A runner the player chose to keep in at their pull-out point stays in until they lose more HP (r.stayHp, set by keepIn). */
+const keptIn = (r) => r.stayHp != null && r.hp >= r.stayHp;
 /** Is this runner at the point where their risk level pulls them out, and not kept in? */
-export const atPullOut = (b, r) => r.pips <= riskThreshold(b, r) && !keptIn(r);
+export const atPullOut = (b, r) => r.hp <= riskThreshold(b, r) && !keptIn(r);
 /** The runners standing at their pull-out point (not while the van is there: pulling out then means boarding). */
 export const pullOutSubjects = (b) => (boardingStage(b) ? [] : standing(b).filter((r) => atPullOut(b, r)));
-/** The player's answer "keep them in": these runners fight on until they lose another pip. */
-export function keepIn(b, ids) { for (const r of b.runners) if (ids.includes(r.id)) r.stayPips = r.pips; }
+/** The player's answer "keep them in": these runners fight on until they lose more HP. */
+export function keepIn(b, ids) { for (const r of b.runners) if (ids.includes(r.id)) r.stayHp = r.hp; }
 
 // --- the incoming-shot formula ---------------------------------------------------------------------
 
@@ -303,7 +309,7 @@ export function telegraph(b, rng) {
       const prot = b.goal.protect && up.find((r) => r.id === b.goal.protect);
       if (!up.length) target = null;
       else if (prot && rng() < FIGHT.protectFocus) target = prot.id;
-      else if (rng() < FIGHT.targetFocus) target = lowestPips(up).id;
+      else if (rng() < FIGHT.targetFocus) target = lowestHp(up).id;
       else target = up[Math.floor(rng() * up.length)].id;
     }
     if (THREATS[kind].target === 'runner' && !target) continue;
@@ -316,18 +322,18 @@ export function telegraph(b, rng) {
 
 // --- resolving orders into actions -----------------------------------------------------------------
 
-/** Planned damage that already covers an enemy's pips (and armour) means later attackers skip it. */
+/** Planned damage that already covers an enemy's HP (and armour), counted in whole hits, means later attackers skip it. */
 function covered(e, res) {
   const plans = res.damage[e.n] ?? [];
   const ap = plans.filter((x) => x).length;
-  return ap >= e.pips || plans.length >= e.pips + e.absorb;
+  return ap >= unitsOf(e.hp) || plans.length >= unitsOf(e.hp) + e.absorb;
 }
 
 const shotValue = (t) => (t && t.kind === 'aim' ? t.shown * t.hit : 0);
 
 /** Enemies in the order an attacker takes them: by the priority words in turn, then lowest n. */
 function enemyOrder(b, list, priority) {
-  const lowest = lowestPips(standing(b));
+  const lowest = lowestHp(standing(b));
   const key = (e) => {
     const t = b.threats.find((x) => x.enemy === e.n);
     return priority.map((p) => (p === 'protected' ? (t && b.goal.protect && t.target === b.goal.protect ? 0 : 1)
@@ -389,20 +395,20 @@ function tryDuty(b, r, duty, target, priority, res) {
         if (!boardingStage(b) || res.doors >= doorSlots(b) || res.carried.has(downMate.id)) return null;
         res.doors += 1; res.carried.add(downMate.id); return { kind: 'carry', target: downMate.id };
       }
-      const T = target === 'protected' ? b.goal.protect : target ?? (b.goal.protect && b.goal.protect !== r.id ? b.goal.protect : lowestPips(standing(b).filter((x) => x.id !== r.id))?.id);
+      const T = target === 'protected' ? b.goal.protect : target ?? (b.goal.protect && b.goal.protect !== r.id ? b.goal.protect : lowestHp(standing(b).filter((x) => x.id !== r.id))?.id);
       if (!T || T === r.id || !standing(b).some((x) => x.id === T)) return null;
-      // Shield the worst shot on them (shown chance x pips) that no one has taken yet.
+      // Shield the worst shot on them (shown chance x HP) that no one has taken yet.
       const shot = firstBy(b.threats.filter((t) => t.kind === 'aim' && t.target === T && !res.shields.has(t.id)), (x, y) => shotValue(y) - shotValue(x) || x.enemy - y.enemy);
       if (shot) { res.shields.add(shot.id); return { kind: 'shield', threat: shot.id, for: T }; }
       const mate = runner(b, T);
-      if (r.healer && mate.pips < mate.max && !res.patches.has(T)) { res.patches.add(T); return { kind: 'patch', target: T }; }
+      if (r.healer && mate.hp < mate.max && !res.patches.has(T)) { res.patches.add(T); return { kind: 'patch', target: T }; }
       return null;
     }
     case 'support': {
       if (r.healer) {
         const bleeding = b.runners.find((x) => x.down && !x.stable && !x.aboard && !x.dead && !x.withdrawn && !res.patches.has(x.id));
         if (bleeding) { res.patches.add(bleeding.id); return { kind: 'stabilise', target: bleeding.id }; }
-        const hurt = firstBy(standing(b).filter((x) => x.pips < x.max && !res.patches.has(x.id)), (x, y) => x.pips / x.max - y.pips / y.max || bySeat(x, y));
+        const hurt = firstBy(standing(b).filter((x) => x.hp < x.max && !res.patches.has(x.id)), (x, y) => x.hp / x.max - y.hp / y.max || bySeat(x, y));
         if (hurt) { res.patches.add(hurt.id); return { kind: 'patch', target: hurt.id }; }
       }
       if (r.jammer && !res.jam && b.threats.some(RADIO)) { res.jam = true; return { kind: 'jam' }; }
@@ -439,7 +445,7 @@ export function resolveOrders(b) {
   // Protect duties first; while boarding, then boarders (the most hurt get the door slots), then the rest by seat.
   const safety = (r) => atPullOut(b, r);
   const group = (r) => (boarding && safety(r) ? -1 : orders.get(r.id).duty === 'protect' ? 0 : boarding && orders.get(r.id).duty === 'push' ? 1 : 2);
-  const queue = [...standing(b)].sort((x, y) => group(x) - group(y) || (group(x) === 1 ? x.pips - y.pips : 0) || bySeat(x, y));
+  const queue = [...standing(b)].sort((x, y) => group(x) - group(y) || (group(x) === 1 ? x.hp - y.hp : 0) || bySeat(x, y));
   const actions = [];
   for (const r of queue) {
     const ord = orders.get(r.id);
@@ -497,7 +503,7 @@ const overwatchReady = (b) => b.overwatch && b.overwatch.left > 0 && (!boardingS
 
 // --- infection (slice 3-ii-a) ----------------------------------------------------------------------
 
-/** The infected enemies that lose pips at the end of this round: up, and infected in an earlier round (the first tick is the round after the hit). The preview and the round read the same list. */
+/** The infected enemies that lose HP at the end of this round: up, and infected in an earlier round (the first tick is the round after the hit). The preview and the round read the same list. */
 export const ticksDue = (b) => enemiesUp(b).filter((e) => e.infected && b.round > e.infected.round);
 
 // --- the preview -----------------------------------------------------------------------------------
@@ -527,7 +533,7 @@ export function previewRound(b) {
     threats: b.threats.map((t) => ({ ...t, chance: exp.find((x) => x.id === t.id)?.chance ?? t.shown })),
     exposure: exp,
     actions: actions.map((a) => ({ who: a.r.id, kind: a.kind, target: a.target ?? a.for ?? a.enemy ?? null, ...(a.enemies ? { targets: a.enemies } : {}), ...(['attack', 'burst'].includes(a.kind) && PAYLOADS[a.r.build?.payload] ? { carries: a.r.build.payload } : {}), from: a.from, duty: a.order.duty, fallback: a.order.fallback?.duty ?? null })),
-    ticks: ticksDue(b).map((e) => ({ enemy: e.n, pips: e.infected.tick, left: e.pips, rounds: e.infected.left })),
+    ticks: ticksDue(b).map((e) => ({ enemy: e.n, hp: e.infected.tick, left: e.hp, rounds: e.infected.left })),
     overwatch: ow ? { enemy: ow.n } : null,
     ifNothing: parts.map((p) => ({ ...p, text: lineText(p.key, { n: p.n }) })),
     thresholds: Object.fromEntries(b.runners.map((r) => [r.id, riskThreshold(b, r)])),
@@ -549,8 +555,8 @@ function holds(b, cond) {
     if (k === 'radioShown') { if (b.threats.some((t) => RADIO(t) && !t.cancelled) !== v) return false; continue; }
     if (k === 'protectedCanJam') { if (!!(prot && present(prot) && prot.jammer) !== v) return false; continue; }
     if (!prot || !present(prot)) return false; // the rest are about the specialist
-    if (k === 'pipsAtMost' && !(prot.pips <= v)) return false;
-    if (k === 'pipsAtMostShare' && !(prot.pips <= prot.max * v)) return false;
+    if (k === 'hpAtMost' && !(prot.hp <= v)) return false;
+    if (k === 'hpAtMostShare' && !(prot.hp <= prot.max * v)) return false;
     if (k === 'shotsOnAtLeast' && !(b.threats.filter((t) => t.kind === 'aim' && t.target === prot.id).length >= v)) return false;
   }
   return true;
@@ -570,8 +576,8 @@ export function dueDilemmas(b) {
   for (const [id, d] of Object.entries(DILEMMAS)) {
     if (!d.fight.includes(b.type) || !holds(b, d.when)) continue;
     const subjects = id === 'vanCantWait' ? [...standing(b), ...outsideDown(b)].map((r) => r.id).sort() : id === 'pullOutPoint' ? pullOutSubjects(b).map((r) => r.id).sort() : [b.goal.protect];
-    // The pull-out call comes up again each time someone at their point loses another pip, so its key carries their pips.
-    const key = `${id}:${subjects.join(',')}${id === 'pullOutPoint' ? `:${subjects.map((s) => runner(b, s).pips).join(',')}` : ''}`;
+    // The pull-out call comes up again each time someone at their point loses more HP, so its key carries their HP.
+    const key = `${id}:${subjects.join(',')}${id === 'pullOutPoint' ? `:${subjects.map((s) => runner(b, s).hp).join(',')}` : ''}`;
     if (!b.dilemmasFired[key]) out.push({ id, key, subjects });
   }
   return out;
@@ -665,7 +671,7 @@ export function startRound(b, rng) {
   const say = wordless ? silent : (kind, key, slots = {}, extra = {}) => lines.push({ kind, key, slots, ...extra, text: lineText(key, slots) });
   const kindWord = wordless ? silent : kindWordOf;
   b.round += 1;
-  for (const r of b.runners) if (r.stayPips != null && r.pips > riskThreshold(b, r)) r.stayPips = null; // healed past their point: asked afresh next time
+  for (const r of b.runners) if (r.stayHp != null && r.hp > riskThreshold(b, r)) r.stayHp = null; // healed past their point: asked afresh next time
   // Arrivals come in approaching (3a); this round's batch of called-in arrivals is one group, a pressure arrival another, each wave another (3c).
   const batch = b.arriving.splice(0);
   if (batch.length) { const group = newGroup(b); for (const kind of batch) { const e = newEnemy(b, kind, rng, { arriving: true, group }); say('arrive', 'arrive', { kind: kindWord(e.kind), n: e.n }); } }
@@ -698,7 +704,7 @@ export function startRound(b, rng) {
   telegraph(b, rng);
   b.drawn = true;
   // The van special: the driver brings the van a round early when someone is nearly down or two or more of them are up. +1 heat.
-  if (b.type === 'holdExtract' && b.stage === 0 && b.wheels && !b.vanUsed && (standing(b).some((r) => r.pips <= 1) || (b.round >= 2 && enemiesUp(b).length >= 2))) {
+  if (b.type === 'holdExtract' && b.stage === 0 && b.wheels && !b.vanUsed && (standing(b).some((r) => r.hp <= FIGHT.hpUnit) || (b.round >= 2 && enemiesUp(b).length >= 2))) {
     b.vanUsed = true; b.heat += FIGHT.vanEarlyHeat; b.goal.vanRound = Math.max(b.round, b.goal.vanRound - 1);
     say('special', 'vanEarly', { round: b.goal.vanRound }, { heat: FIGHT.vanEarlyHeat });
   }
@@ -776,10 +782,10 @@ export function playRound(b, rng) {
       else {
         let dmg = x.strong ? FIGHT.strongHit : FIGHT.hit;
         const cracked = e.absorb > 0;
-        if (cracked) { e.absorb -= 1; dmg -= 1; }
-        e.pips -= dmg;
-        if (e.pips <= 0) { e.out = true; defeated.push({ by: ow.id, enemy: e.n, how: 'overwatch' }); say('overwatch', 'overwatchOut', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, dropped: true, roll: rollOf(x), cracked }); spreadFrom(e); }
-        else say('overwatch', dmg === 0 ? 'overwatchCrack' : 'overwatchHit', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, roll: rollOf(x), left: e.pips, cracked });
+        if (cracked) { e.absorb -= 1; dmg -= FIGHT.plateHp; }
+        e.hp -= dmg;
+        if (e.hp <= 0) { e.out = true; defeated.push({ by: ow.id, enemy: e.n, how: 'overwatch' }); say('overwatch', 'overwatchOut', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, dropped: true, roll: rollOf(x), cracked }); spreadFrom(e); }
+        else say('overwatch', dmg === 0 ? 'overwatchCrack' : 'overwatchHit', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, roll: rollOf(x), left: e.hp, cracked });
       }
     }
   }
@@ -800,11 +806,11 @@ export function playRound(b, rng) {
     r.misses = x.ok ? 0 : (r.misses ?? 0) + 1;
     if (!x.ok) { say('attack', k('attackMiss'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: false, damage: 0, roll: rollOf(x) }); return; }
     let dmg = x.strong ? FIGHT.strongHit : FIGHT.hit;
-    const cracked = e.absorb > 0 && !r.ap; // the plate took a hit: a plain shot only cracks it (damage 0), a strong one cracks it and drops a pip
-    if (cracked) { e.absorb -= 1; dmg -= 1; }
-    e.pips -= dmg;
-    if (e.pips <= 0) { e.out = true; defeated.push({ by: r.id, enemy: e.n, how: burst ? 'burst' : 'attack' }); say('attack', k('attackOut'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, dropped: true, roll: rollOf(x), strong: x.strong, cracked }); spreadFrom(e, carried(r, e) ?? e.infected); return; }
-    say('attack', dmg === 0 ? k('attackCrack') : k('attackHit'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, roll: rollOf(x), left: e.pips, cracked });
+    const cracked = e.absorb > 0 && !r.ap; // the plate took a hit: a plain shot only cracks it (damage 0), a strong one cracks it and takes the rest
+    if (cracked) { e.absorb -= 1; dmg -= FIGHT.plateHp; }
+    e.hp -= dmg;
+    if (e.hp <= 0) { e.out = true; defeated.push({ by: r.id, enemy: e.n, how: burst ? 'burst' : 'attack' }); say('attack', k('attackOut'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, dropped: true, roll: rollOf(x), strong: x.strong, cracked }); spreadFrom(e, carried(r, e) ?? e.infected); return; }
+    say('attack', dmg === 0 ? k('attackCrack') : k('attackHit'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, roll: rollOf(x), left: e.hp, cracked });
     // What the hit carries (data/builds.js PAYLOADS): a hit that gets past the plate and leaves the target up infects it, unless the target shrugs it off
     // (a tag the payload is immune to; said once a body). An infected body is not infected again.
     const pay = PAYLOADS[r.build?.payload];
@@ -829,9 +835,9 @@ export function playRound(b, rng) {
     else {
       let dmg = x.strong ? FIGHT.strongHit : FIGHT.hit;
       const cracked = e.absorb > 0;
-      if (cracked) { e.absorb -= 1; dmg -= 1; }
-      e.pips -= dmg;
-      if (e.pips <= 0) { e.out = true; defeated.push({ by: null, enemy: e.n, how: 'turret' }); say('turret', 'turretOut', { enemy: E(e.n) }, { ...meta, success: true, damage: dmg, dropped: true, roll: rollOf(x), cracked }); }
+      if (cracked) { e.absorb -= 1; dmg -= FIGHT.plateHp; }
+      e.hp -= dmg;
+      if (e.hp <= 0) { e.out = true; defeated.push({ by: null, enemy: e.n, how: 'turret' }); say('turret', 'turretOut', { enemy: E(e.n) }, { ...meta, success: true, damage: dmg, dropped: true, roll: rollOf(x), cracked }); }
       else say('turret', dmg === 0 ? 'turretCrack' : 'turretHit', { enemy: E(e.n) }, { ...meta, success: true, damage: dmg, roll: rollOf(x), enemy: e.n, cracked });
     }
     if (tu.left === 0) say('turret', 'turretDry', {}, { ...meta, success: null });
@@ -872,7 +878,7 @@ export function playRound(b, rng) {
       }
       case 'patch': {
         const x = roll(sv(r, 'medical'), b.diff + FIGHT.patchStep); const t = runner(b, a.target);
-        if (x.ok && !t.down) { t.pips = Math.min(t.max, t.pips + FIGHT.patchHeal); say('patch', 'patch', { who: r.handle, target: t.handle }, { ...named, roll: rollOf(x), target: t.id, targetId: t.id, success: true, heal: FIGHT.patchHeal }); }
+        if (x.ok && !t.down) { t.hp = Math.min(t.max, t.hp + FIGHT.patchHeal); say('patch', 'patch', { who: r.handle, target: t.handle }, { ...named, roll: rollOf(x), target: t.id, targetId: t.id, success: true, heal: FIGHT.patchHeal }); }
         else say('patch', 'patchFail', { who: r.handle, target: t.handle }, { ...named, roll: rollOf(x), target: t.id, targetId: t.id, success: false });
         break;
       }
@@ -909,12 +915,12 @@ export function playRound(b, rng) {
       const named = { actor: null, target: v.id, enemy: e.n, chance: c, shieldedBy: t.shieldedBy };
       if (!hit) { say('shot', 'shotMiss', slots, { ...named, targetId: v.id, success: false, damage: 0 }); continue; }
       if (v.absorb > 0) { v.absorb -= 1; say('shot', 'shotAbsorbed', slots, { ...named, targetId: v.id, success: false, damage: 0 }); continue; }
-      const dmg = Math.min(v.pips, t.hit); v.pips -= dmg; b.pipsLost += dmg;
-      if (v.pips <= 0) {
+      const dmg = Math.min(v.hp, t.hit); v.hp -= dmg; b.hpLost += dmg;
+      if (v.hp <= 0) {
         // A runner pulling out alone dies only when the player ordered that withdrawal by hand; otherwise death's door like anyone else.
         if (v.leaving && v.ordered) { v.dead = true; down.push(v.id); say('shot', 'shotDead', slots, { ...named, targetId: v.id, success: true, damage: dmg, dead: true }); }
         else { v.down = true; v.downRound = b.round; down.push(v.id); say('shot', 'shotDown', slots, { ...named, targetId: v.id, success: true, damage: dmg, down: true }); }
-      } else say('shot', 'shotHit', slots, { ...named, targetId: v.id, success: true, damage: dmg, left: v.pips });
+      } else say('shot', 'shotHit', slots, { ...named, targetId: v.id, success: true, damage: dmg, left: v.hp });
     } else if (t.kind === 'flank') {
       const v = runner(b, t.target);
       if (v && present(v)) { v.cover = 'open'; say('shot', 'flanked', { enemy: E(e.n), who: v.handle }, { target: v.id, enemy: e.n }); }
@@ -925,13 +931,13 @@ export function playRound(b, rng) {
   for (const r of b.runners) if (r.leaving && !r.dead && !r.down) { r.withdrawn = true; withdrawn.push(r.id); say('withdraw', 'withdrew', { who: r.handle }, { actor: r.id }); }
   for (const r of b.runners) { r.leaving = false; r.ordered = false; }
   // Slice 3-ii-a: the vector's tick, at the round's end and before the groups' flee checks, so a tick is a loss like any other. An enemy
-  // infected this round starts losing pips next round (ticksDue). Past the payload's last round the infection ends.
+  // infected this round starts losing HP next round (ticksDue). Past the payload's last round the infection ends.
   for (const e of ticksDue(b)) {
     const inf = e.infected;
-    e.pips -= inf.tick;
+    e.hp -= inf.tick;
     if (inf.left != null && (inf.left -= 1) <= 0) e.infected = null;
-    if (e.pips <= 0) { e.out = true; e.infected = null; defeated.push({ by: inf.by, enemy: e.n, how: 'vector' }); say('tick', 'tickOut', { enemy: E(e.n), word: PAYLOADS[inf.payload]?.word ?? 'Vector' }, { enemy: e.n, damage: inf.tick, dropped: true, left: 0, max: e.max }); spreadFrom(e, inf); }
-    else say('tick', 'tick', { enemy: E(e.n), word: PAYLOADS[inf.payload]?.word ?? 'Vector' }, { enemy: e.n, damage: inf.tick, left: e.pips, max: e.max });
+    if (e.hp <= 0) { e.out = true; e.infected = null; defeated.push({ by: inf.by, enemy: e.n, how: 'vector' }); say('tick', 'tickOut', { enemy: E(e.n), word: PAYLOADS[inf.payload]?.word ?? 'Vector' }, { enemy: e.n, damage: inf.tick, dropped: true, left: 0, max: e.max }); spreadFrom(e, inf); }
+    else say('tick', 'tick', { enemy: E(e.n), word: PAYLOADS[inf.payload]?.word ?? 'Vector' }, { enemy: e.n, damage: inf.tick, left: e.hp, max: e.max });
   }
   // 3c: the hired and the standard force break and run per group, when too few of that group are left (hired's threshold).
   // An enemy in its approach round never runs (this check comes before `approaching` is cleared below). A lone arrival never runs.
@@ -941,13 +947,13 @@ export function playRound(b, rng) {
     if (going.length && total > 0 && up.length / total < ENEMIES.hired.fleeBelow) { for (const e of going) { e.fled = true; fled.push(e.n); } say('flee', 'enemyFled'); }
   }
 
-  // The medic's aura: while a medic stands in the fight, the most hurt standing runner regains a pip a
+  // The medic's aura: while a medic stands in the fight, the most hurt standing runner regains medicAura.heal HP a
   // round and downed teammates don't bleed. Always on, whatever the medic does; no action.
   const aura = b.runners.some((r) => r.medic && present(r));
   if (aura) {
-    const hurt = firstBy(standing(b).filter((r) => r.pips < r.max), (x, y) => x.pips / x.max - y.pips / y.max || bySeat(x, y));
+    const hurt = firstBy(standing(b).filter((r) => r.hp < r.max), (x, y) => x.hp / x.max - y.hp / y.max || bySeat(x, y));
     const medic = b.runners.find((r) => r.medic && present(r));
-    if (hurt) { hurt.pips += FIGHT.medicAura.heal; say('aura', 'aura', { who: medic.handle, target: hurt.handle }, { actor: medic.id, target: hurt.id, targetId: hurt.id, left: hurt.pips, max: hurt.max }); } // targetId, left and max are what the stage draws (the medic's glow, the orb, the pip filling)
+    if (hurt) { hurt.hp += FIGHT.medicAura.heal; say('aura', 'aura', { who: medic.handle, target: hurt.handle }, { actor: medic.id, target: hurt.id, targetId: hurt.id, left: hurt.hp, max: hurt.max, heal: FIGHT.medicAura.heal }); } // targetId, left and max are what the stage draws (the medic's glow, the orb, the pip filling)
   }
   // Bleeding out: only on committed (or a runner pushed on by hand); from the second round after going down.
   if (!aura) {
@@ -1002,8 +1008,8 @@ function checkEnd(b, rng, say) {
   // a runner a medic reaches does not come home with the serious injury. Without a healer standing nothing changes. The roll is the stabilise action's own.
   const treatWayOut = () => {
     const healer = b.runners.filter((x) => x.healer && present(x)).sort((x, y) => sv(y, 'medical') - sv(x, 'medical') || bySeat(x, y))[0];
-    const hurt = healer ? standing(b).filter((x) => x.pips < x.max) : [];
-    for (const x of hurt) x.pips = Math.min(x.max, x.pips + FIGHT.wayOutTreatHeal);
+    const hurt = healer ? standing(b).filter((x) => x.hp < x.max) : [];
+    for (const x of hurt) x.hp = Math.min(x.max, x.hp + FIGHT.wayOutTreatHeal);
     if (hurt.length) say('patch', 'wayOutPatch', { who: healer.handle, n: hurt.length }, { actor: healer.id, targets: hurt.map((x) => x.id), heal: FIGHT.wayOutTreatHeal });
     for (const t of b.runners.filter((x) => x.down && !x.stable && !x.dead && !x.withdrawn)) {
       const medic = b.runners.filter((x) => x.healer && present(x)).sort((x, y) => sv(y, 'medical') - sv(x, 'medical') || bySeat(x, y))[0];
@@ -1055,21 +1061,21 @@ export function pullBack(b) {
   return b.end;
 }
 
-/** The injury pips left mean (none, light, serious) for someone still standing: light below half, serious below a quarter. */
-export function injuryFromPips(r) {
-  const share = r.pips / r.max;
+/** The injury HP left mean (none, light, serious) for someone still standing: light below half, serious below a quarter. */
+export function injuryFromHp(r) {
+  const share = r.hp / r.max;
   return share < FIGHT.seriousBelow ? 'serious' : share < FIGHT.lightBelow ? 'light' : 'none';
 }
 
 /**
- * What the fight did to each runner, for the run to write back: { id, pips, max, injury, dead, missing,
+ * What the fight did to each runner, for the run to write back: { id, hp, max, injury, dead, missing,
  * down }. A downed runner is critical (death's door, as in engine 1); a runner left behind is missing
  * (slice 4 builds the 7 days); a dead runner stays dead. Reads the fight; changes nothing.
  */
 export function outcomeOf(b) {
   return b.runners.map((r) => ({
-    id: r.id, pips: r.pips, max: r.max, dead: r.dead, missing: r.left && !r.dead, down: r.down && !r.dead,
-    injury: r.dead ? 'dead' : r.down ? 'critical' : injuryFromPips(r),
+    id: r.id, hp: r.hp, max: r.max, dead: r.dead, missing: r.left && !r.dead, down: r.down && !r.dead,
+    injury: r.dead ? 'dead' : r.down ? 'critical' : injuryFromHp(r),
   }));
 }
 
@@ -1185,8 +1191,8 @@ export function vanOdds(b0, runs = FIGHT.oddsRuns) {
  */
 export function oddsKey(b0, runs = FIGHT.oddsRuns) {
   return JSON.stringify([b0.type, b0.diff, b0.risk, b0.goal,
-    b0.enemies.map((e) => [e.kind, e.pips, e.cover, e.deck, e.approaching ?? false, e.group ?? 0, e.infected ?? null]),
-    b0.runners.map((r) => [r.id, r.pips, r.max, r.absorb, r.ap, r.strong, r.jammer, r.healer, Object.values(r.stats).map((s) => s.value), r.overdrive ?? null, r.build ?? null, r.moved ?? false, r.misses ?? 0]),
+    b0.enemies.map((e) => [e.kind, e.hp, e.cover, e.deck, e.approaching ?? false, e.group ?? 0, e.infected ?? null]),
+    b0.runners.map((r) => [r.id, r.hp, r.max, r.absorb, r.ap, r.strong, r.jammer, r.healer, Object.values(r.stats).map((s) => s.value), r.overdrive ?? null, r.build ?? null, r.moved ?? false, r.misses ?? 0]),
     b0.orders, b0.overwatch && [b0.overwatch.value, b0.overwatch.damage, b0.overwatch.left], !!b0.wheels, !!b0.standby,
     b0.showcaseEligible ?? null, b0.maxExtra ?? null, b0.recipe ?? null, b0.hiredTotal ?? null, runs]);
 }
@@ -1198,7 +1204,7 @@ const partial = new Map();
 
 /**
  * How a fight goes on its orders with this team, played FIGHT.oddsRuns times with the same round function on
- * fixed seeds: { win, down, dead, left } as shares (down: someone hit 0 pips; dead: someone died; left:
+ * fixed seeds: { win, down, dead, left } as shares (down: someone hit 0 HP; dead: someone died; left:
  * someone was left behind). The planning read shows these; shown = used.
  */
 export function fightOdds(b0, runs = FIGHT.oddsRuns) {

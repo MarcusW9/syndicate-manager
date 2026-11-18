@@ -86,7 +86,7 @@ const FIGHTS = Number(process.argv[3] ?? 60);
 const DATE = process.argv[4] ?? new Date().toISOString().slice(0, 10);
 const subsets = (list, k) => (k === 0 ? [[]] : list.flatMap((x, i) => subsets(list.slice(i + 1), k - 1).map((rest) => [x, ...rest])));
 const P = (x) => `${Math.round(x * 100)}%`;
-const add = (b, kinds) => { for (const k of kinds) { const d = ENEMIES[k]; b.enemies.push({ n: b.enemies.length + 1, kind: k, pips: d.pips, max: d.pips, absorb: d.absorb ?? 0, cover: d.cover, out: false, fled: false, deck: [...d.deck], di: 0, approaching: false, group: 0, infected: null }); } b.hiredTotal = { 0: b.enemies.filter((e) => ENEMIES[e.kind].fleeBelow != null).length }; };
+const add = (b, kinds) => { for (const k of kinds) { const d = ENEMIES[k]; b.enemies.push({ n: b.enemies.length + 1, kind: k, hp: d.hp, max: d.hp, absorb: d.absorb ?? 0, cover: d.cover, out: false, fled: false, deck: [...d.deck], di: 0, approaching: false, group: 0, infected: null }); } b.hiredTotal = { 0: b.enemies.filter((e) => ENEMIES[e.kind].fleeBelow != null).length }; };
 const SHAPES = {
   "the job's own": null,
   swarm: (b) => { b.enemies.length = 0; add(b, ['hired', 'hired', 'hired', 'hired', 'hired', 'hired']); },

@@ -402,9 +402,9 @@ test('the new lines reach the stage from the rules: the spread, the tick, the ja
   const { ENEMIES } = await import('../src/data/fights.js');
   const crew = createNewGame({ seed: 1 }).crew.slice(0, 3);
   const b = F.buildFight({ type: 'holdYard', diff: 14, threat: 3, site: 'docks', crew, approach: 'loud', risk: 'steady' }, makeRng(3));
-  const foe = (n) => ({ n, kind: 'hired', pips: 1, max: 1, absorb: 0, cover: ENEMIES.hired.cover, out: false, fled: false, deck: ['aim'], di: 0, approaching: false, group: 0, infected: null });
+  const foe = (n) => ({ n, kind: 'hired', hp: 10, max: 10, absorb: 0, cover: ENEMIES.hired.cover, out: false, fled: false, deck: ['aim'], di: 0, approaching: false, group: 0, infected: null });
   b.enemies = [foe(1), foe(2), foe(3)];
-  b.enemies[0].infected = { tick: 1, left: 2, by: crew[0].id, round: 0, payload: 'contagion' };
+  b.enemies[0].infected = { tick: 10, left: 2, by: crew[0].id, round: 0, payload: 'contagion' };
   for (const r of b.runners) r.stats.combat.value = -50;
   const r = F.playRound(b, () => 0.5);
   const lines = r.lines.map(feedLine);

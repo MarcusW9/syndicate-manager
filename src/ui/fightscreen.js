@@ -74,8 +74,10 @@ export function takeFightChange(am) {
 // --- small pieces ------------------------------------------------------------------------------------
 
 const word = (key, slots) => lineText(key, slots);
+// Health (HP since 2026-11-18): the bar's segments are 10 HP each (`pips`, `max` from the view), the number beside it the HP itself.
 const pipBar = (esc, pips, max, label) => `<span class="fs-pips" role="img" aria-label="${esc(label)}">${Array.from({ length: max }, (_, i) => `<i class="${i < pips ? 'is-on' : ''}"></i>`).join('')}</span>`;
-const pipsLabel = (pips, max) => `${pips} of ${max} pips`;
+const hpBar = (esc, x) => `<span class="fs-hp">${pipBar(esc, x.pips, x.max, `${x.hp} of ${x.maxHp} HP`)}<b class="fs-hpnum" aria-hidden="true">${x.hp}<small>/${x.maxHp}</small></b></span>`;
+const pullsOut = (hp) => (hp === 0 ? 'Never pulls out on its own' : `Pulls out at ${hp} HP or fewer`);
 
 /** The goal track and the clocks: "Hack ●●○○ · alarm 3 · deadline round 7", or the van's. */
 function goalLine(esc, g) {
@@ -94,7 +96,7 @@ const STATE_WORD = { down: 'down', stable: 'down, stable', dead: 'dead', out: 'p
 function enemyCard(esc, e) {
   const threats = e.threats.length ? `<ul class="fs-threats">${e.threats.map((t) => `<li class="fs-threat fs-threat--${t.kind}">${esc(t.text)}</li>`).join('')}</ul>` : '';
   return `<li class="fs-enemy ${e.out ? 'is-out' : ''}">
-    <span class="fs-enemy__top"><strong>${esc(e.name)}</strong>${e.out ? `<small>${e.fled ? 'ran' : 'out'}</small>` : pipBar(esc, e.pips, e.max, pipsLabel(e.pips, e.max))}</span>
+    <span class="fs-enemy__top"><strong>${esc(e.name)}</strong>${e.out ? `<small>${e.fled ? 'ran' : 'out'}</small>` : hpBar(esc, e)}</span>
     ${!e.out && e.approaching ? `<small class="fs-coming">${esc(lineText('view.approaching'))}</small>` : ''}
     ${e.out ? '' : threats}
   </li>`;
@@ -102,10 +104,10 @@ function enemyCard(esc, e) {
 
 function runnerRow(esc, face, r, { edited, sel, panel }) {
   const here = r.state === 'standing';
-  const thr = r.threshold === 0 ? 'Never pulls out on its own' : `Pulls out at ${r.threshold} ${r.threshold === 1 ? 'pip' : 'pips'} or fewer`;
+  const thr = pullsOut(r.thresholdHp);
   const shots = r.shots.length ? `<small class="fs-shots">${r.shots.length} ${r.shots.length === 1 ? 'shot' : 'shots'} on them · worst ${esc(r.shots.slice().sort((a, b) => b.chance - a.chance)[0].text)}${r.shots.some((s) => s.shielded) ? ' (shielded)' : ''}</small>` : '';
   return `<li class="fs-runner ${here ? '' : 'is-off'} ${sel ? 'is-sel' : ''}">
-    <span class="fs-runner__top">${face(r.id)}<strong>${esc(r.handle)}</strong>${r.protect ? '<em class="fs-tag">tech</em>' : ''}${r.state === 'standing' ? '' : `<small class="fs-state">${esc(STATE_WORD[r.state])}</small>`}${pipBar(esc, r.pips, r.max, pipsLabel(r.pips, r.max))}</span>
+    <span class="fs-runner__top">${face(r.id)}<strong>${esc(r.handle)}</strong>${r.protect ? '<em class="fs-tag">tech</em>' : ''}${r.state === 'standing' ? '' : `<small class="fs-state">${esc(STATE_WORD[r.state])}</small>`}${hpBar(esc, r)}</span>
     ${here ? `<span class="fs-order"><small>Order</small> ${edited ? `<b>${esc(edited)}</b> <small>(yours, next round)</small>` : esc(r.orderLabel)}</span>
     ${r.intent ? `<span class="fs-intent">${esc(r.intent.text)}</span>` : ''}
     ${shots}
@@ -208,7 +210,7 @@ export function renderFightCallIn(state, esc, face = () => '') {
   const standing = v.runners.filter((r) => r.state === 'standing');
   const intents = standing.filter((r) => r.intent).map((r) => `<li>${esc(r.intent.text)}</li>`).join('');
   const heading = p.kind === 'door' ? "The crew is calling in: someone is at death's door" : 'The crew is calling in';
-  const roster = `<ul class="fs-mini">${v.runners.map((r) => `<li class="${r.state === 'standing' ? '' : 'is-off'}">${esc(r.handle)} ${pipBar(esc, r.pips, r.max, pipsLabel(r.pips, r.max))}${r.state === 'standing' ? '' : ` <small>${esc(STATE_WORD[r.state])}</small>`}</li>`).join('')}</ul>`;
+  const roster = `<ul class="fs-mini">${v.runners.map((r) => `<li class="${r.state === 'standing' ? '' : 'is-off'}">${esc(r.handle)} ${hpBar(esc, r)}${r.state === 'standing' ? '' : ` <small>${esc(STATE_WORD[r.state])}</small>`}</li>`).join('')}</ul>`;
   const outside = view.outside?.length ? `<p class="fs-outside">${esc(word('callin.outside', { outside: view.outside.join(', ') }))}</p>` : '';
   const choice = (c) => {
     // Hold's heat is the cost; the trade-off line never repeats it. A door choice keeps its own cost line.
@@ -252,9 +254,9 @@ export function renderFightPlan(esc, args, risk, { adviceOpen = false } = {}) {
       ${p.jam ? `<p class="fs-muted">${esc(p.jam)}</p>` : ''}
       <h4 class="fs-h">Orders${extract ? ' (hold, then board)' : ''}</h4>
       <ul class="fs-list">${p.runners.map((r) => `<li class="fs-runner">
-        <span class="fs-runner__top"><strong>${esc(r.handle)}</strong>${r.protect ? '<em class="fs-tag">tech</em>' : ''}${pipBar(esc, r.pips, r.pips, `${r.pips} pips`)}</span>
+        <span class="fs-runner__top"><strong>${esc(r.handle)}</strong>${r.protect ? '<em class="fs-tag">tech</em>' : ''}${hpBar(esc, { pips: r.pips, max: r.pips, hp: r.hp, maxHp: r.hp })}</span>
         <span class="fs-order">${r.orders.map((o) => esc(o.label)).filter((x, i, a) => a.indexOf(x) === i || extract).join(extract ? ' → ' : '')}</span>
-        <small class="fs-thr">${r.threshold === 0 ? 'Never pulls out on its own' : `Pulls out at ${r.threshold} ${r.threshold === 1 ? 'pip' : 'pips'} or fewer`}</small>
+        <small class="fs-thr">${pullsOut(r.thresholdHp)}</small>
       </li>`).join('')}</ul>
       <h4 class="fs-h">If it goes badly</h4>
       <div class="fs-seg" role="group" aria-label="Risk">${RISK_ORDER.map((k) => `<button class="fs-segbtn ${risk === k ? 'is-on' : ''}" data-action="orders" data-id="${k}" aria-pressed="${risk === k}">${esc(riskWords(k).label)}</button>`).join('')}</div>

@@ -1027,5 +1027,31 @@ function migrate(state) {
     // the way it began, and the next fight is built with the way out.
     state.version = 76;
   }
+  if (state.version === 76) {
+    // v77: engine 2 moves from pips to HP (DESIGN.md 2026-11-18): one pip is FIGHT.hpUnit (10) HP. An engine-2 fight in progress is
+    // converted where it still counts in pips (a runner or an enemy with `pips`): health and max, a kept-in point, the HP lost, a
+    // vector's tick and the shots drawn; a pull-out call already answered keeps its key, which carries the runners' health.
+    const b = state.activeMission?.battle;
+    const old = b?.engine === 2 && [...(b.runners ?? []), ...(b.enemies ?? [])].some((x) => x.pips != null);
+    if (old) {
+      const U = 10;
+      for (const x of [...(b.runners ?? []), ...(b.enemies ?? [])]) {
+        if (x.pips != null) { x.hp = x.pips * U; delete x.pips; }
+        if (x.max != null) x.max *= U;
+        if (x.stayPips != null) x.stayHp = x.stayPips * U;
+        delete x.stayPips;
+        if (x.infected?.tick != null) x.infected.tick *= U;
+      }
+      if (b.pipsLost != null) { b.hpLost = b.pipsLost * U; delete b.pipsLost; }
+      for (const t of b.threats ?? []) if (t.hit != null) t.hit *= U;
+      if (b.dilemmasFired) {
+        b.dilemmasFired = Object.fromEntries(Object.entries(b.dilemmasFired).map(([k, v]) => {
+          const parts = k.split(':');
+          return [parts[0] === 'pullOutPoint' && parts.length > 2 ? [...parts.slice(0, -1), parts.at(-1).split(',').map((n) => String(Number(n) * U)).join(',')].join(':') : k, v];
+        }));
+      }
+    }
+    state.version = 77;
+  }
   return state;
 }

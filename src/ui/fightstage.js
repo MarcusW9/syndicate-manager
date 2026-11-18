@@ -144,23 +144,23 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
       const to = enemyId(l.guard);
       if (sp && sp.look !== 'ping' && units[from] && units[to]) push({ do: 'camera', focus: [from, to] });
       const fly = sp ? MS.fire * sp.mv.slow : MS.fire;
-      push({ do: 'fire', from, to, hit: !!l.success && (l.damage ?? 0) > 0, cracked: !!l.cracked, fell: !!l.dropped, damage: l.damage ?? 0, wide, ...(sp ? { burst: true, look: sp.look } : {}), dur: ms(fly * (sp ? cut : 1)) });
+      push({ do: 'fire', from, to, hit: !!l.success && (l.damage ?? 0) > 0, cracked: !!l.cracked, fell: !!l.dropped, damage: l.damage ?? 0, amount: l.hpDamage ?? 0, wide, ...(sp ? { burst: true, look: sp.look } : {}), dur: ms(fly * (sp ? cut : 1)) });
       adv(fly + (sp ? sp.mv.gap : MS.gap), sp ? cut : 1);
       if (sp) sp.from = to;
     } else if (rule === 'overwatch' && l.guard != null) {
-      push({ do: 'fire', from: 'perch', to: enemyId(l.guard), hit: !!l.success && (l.damage ?? 0) > 0, cracked: !!l.cracked, fell: !!l.dropped, damage: l.damage ?? 0, wide, dur: ms(MS.fire * 1.4) });
+      push({ do: 'fire', from: 'perch', to: enemyId(l.guard), hit: !!l.success && (l.damage ?? 0) > 0, cracked: !!l.cracked, fell: !!l.dropped, damage: l.damage ?? 0, amount: l.hpDamage ?? 0, wide, dur: ms(MS.fire * 1.4) });
       adv(MS.fire * 1.4 + MS.gap);
     } else if (rule === 'shot' && l.key === 'flanked') {
       push({ do: 'flank', id: l.targetId, by: enemyId(l.guard), dur: ms(MS.flank) });
       adv(MS.flank);
     } else if (rule === 'shot' && l.guard != null && l.targetId) {
       const fell = l.key === 'shotDown' || l.key === 'shotDead';
-      push({ do: 'fire', from: enemyId(l.guard), to: l.targetId, hit: (l.damage ?? 0) > 0, absorbed: l.key === 'shotAbsorbed', ...(l.shieldedBy ? { shield: true } : {}), fell, dead: l.key === 'shotDead', damage: l.damage ?? 0, wide, foe: true, dur: ms(MS.fire) });
+      push({ do: 'fire', from: enemyId(l.guard), to: l.targetId, hit: (l.damage ?? 0) > 0, absorbed: l.key === 'shotAbsorbed', ...(l.shieldedBy ? { shield: true } : {}), fell, dead: l.key === 'shotDead', damage: l.damage ?? 0, amount: l.hpDamage ?? 0, wide, foe: true, dur: ms(MS.fire) });
       adv(MS.fire + MS.gap);
     } else if (['stabilise', 'patch', 'aura'].includes(rule) && l.targetId) {
       // A medic's help that lands (the aura, a patch, a stabilise) is one picture: the medic glows and flashes, an orb crosses to the patient, the pip fills. A miss is the red ring.
       if (rule === 'aura' || l.success) {
-        push({ do: 'aura', id: l.actor, to: l.targetId, left: l.left, max: l.max, dur: ms(MS.aura) });
+        push({ do: 'aura', id: l.actor, to: l.targetId, left: l.left, max: l.max, amount: l.hpHeal ?? 0, dur: ms(MS.aura) });
         adv(MS.aura);
       } else {
         push({ do: 'heal', id: l.targetId, by: l.actor, ok: false, dur: ms(MS.heal) });
@@ -177,7 +177,7 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
       adv(MS.spread);
     } else if (rule === 'tick' && l.guard != null && units[enemyId(l.guard)]) {
       const fell = l.key === 'tickOut';
-      push({ do: 'tick', to: enemyId(l.guard), fell, left: fell ? 0 : l.left, max: l.max, dur: ms(fell ? MS.tickOut : MS.tick) });
+      push({ do: 'tick', to: enemyId(l.guard), fell, left: fell ? 0 : l.left, max: l.max, amount: l.hpDamage ?? 0, dur: ms(fell ? MS.tickOut : MS.tick) });
       adv(fell ? MS.tickOut : MS.tick);
     } else if (rule === 'wayOut') {
       // The hack is done and the alarm is up: red rings at the door the arrivals will come in by.
@@ -293,12 +293,12 @@ export function forceEffect(cue, kind) {
   const sick = (n, on) => { const g = guard(n); if (g) g.infected = on || undefined; };
   c.beats = [];
   if (kind === 'spread') {
-    c.lines = [L({ rule: 'tick', key: 'tickOut', guard: a, damage: 1, dropped: true, left: 0, max: 1 }), L({ rule: 'spread', key: 'spread', guard: b, jumpFrom: a })];
+    c.lines = [L({ rule: 'tick', key: 'tickOut', guard: a, damage: 1, hpDamage: 10, dropped: true, left: 0, max: 1 }), L({ rule: 'spread', key: 'spread', guard: b, jumpFrom: a })];
     units[`e:${a}`].stance = 'down'; const g = guard(a); if (g) { g.out = true; g.hp = 0; g.infected = undefined; } sick(b, true);
   } else if (kind === 'tick') {
     const g = guard(a); const max = Math.max(3, g?.max ?? 3);
     if (g) { g.max = max; g.hp = max - 1; g.infected = true; }
-    c.lines = [L({ rule: 'tick', key: 'tick', guard: a, damage: 1, left: max - 1, max })];
+    c.lines = [L({ rule: 'tick', key: 'tick', guard: a, damage: 1, hpDamage: 10, left: max - 1, max })];
   } else if (kind === 'shield') {
     units[crew[1]].act = { kind: 'shield', target: crew[0] };
     c.lines = [L({ kind: 'guard', rule: 'shot', key: 'shotMiss', guard: a, targetId: crew[1], damage: 0, shieldedBy: crew[1] })];
@@ -582,17 +582,17 @@ export function createStage(svg, deps) {
           else if (s.absorbed) { flash(b, 'sp-flash--zap'); float(b, word('stage.absorbed'), 'is-absorbed'); }
           else flash([b[0] + s.wide[0] * 22, b[1] + s.wide[1] * 22], 'sp-flash--miss');
           if (s.fell) { setStance(s.to, s.dead ? 'dead' : 'down'); drawn[s.to] = { ...drawn[s.to], stance: s.dead ? 'dead' : 'down' }; body(b, s.to); float(b, word(s.to.startsWith('e:') ? 'stage.out' : 'stage.down'), 'is-down'); }
-          else if (s.hit) setTimeout(() => float(b, word('stage.hit'), 'is-hit'), s.cracked && !deps.reduced() ? 280 : 0);
+          else if (s.hit) setTimeout(() => float(b, s.amount ? `\u2212${s.amount}` : word('stage.hit'), s.amount ? 'is-hit is-num' : 'is-hit'), s.cracked && !deps.reduced() ? 280 : 0); // HP (2026-11-18): the damage as a number
         }, s.dur);
         break;
       }
       case 'flank': { const b = pos(s.id); flash(b, 'sp-flash--miss'); float(b, word('stage.flanked'), 'is-hit'); break; }
       case 'heal': { const b = pos(s.id); if (b) { const c = node('circle', { class: `sp-ring ${s.ok ? 'sp-ring--ok' : 'sp-ring--bad'}`, cx: b[0], cy: b[1], r: 9 }); fx.append(c); setTimeout(() => c.remove(), Math.max(400, s.dur)); } break; }
       case 'aura': {
-        // The medic's aura (2026-11-17): a green glow grows round the medic and flashes, an orb crosses to the patient, and where it lands the ring bursts, a +1 floats and the pip fills.
+        // The medic's aura (2026-11-17): a green glow grows round the medic and flashes, an orb crosses to the patient, and where it lands the ring bursts, the HP healed floats (+10) and the segment fills.
         const m = pos(s.id); const t = pos(s.to);
         if (!t) break;
-        const land = () => { flash(t, 'sp-flash--heal'); float(t, '+', 'is-heal'); if (s.left != null && s.max) { pips(s.to, s.left, s.max); const bar = host(s.to)?.querySelector(':scope > .fs-pips'); if (bar) { bar.classList.add('is-gain'); setTimeout(() => bar.classList.remove('is-gain'), 800); } } };
+        const land = () => { flash(t, 'sp-flash--heal'); float(t, s.amount ? `+${s.amount}` : '+', s.amount ? 'is-heal is-num' : 'is-heal'); if (s.left != null && s.max) { pips(s.to, s.left, s.max); const bar = host(s.to)?.querySelector(':scope > .fs-pips'); if (bar) { bar.classList.add('is-gain'); setTimeout(() => bar.classList.remove('is-gain'), 800); } } };
         if (!m || deps.reduced() || s.dur <= 0) { land(); break; }
         const dur = Math.max(700, s.dur);
         const glow = gone(node('circle', { class: 'fs-aura', cx: m[0], cy: m[1], r: 9 }), dur * 0.62);
@@ -655,7 +655,7 @@ export function createStage(svg, deps) {
           apply();
           flash(b, 'sp-flash--tick');
           if (s.fell) { gone(node('circle', { class: 'fs-pop', cx: b[0], cy: b[1], r: 8 }), 600); struck(host(s.to)); }
-          else float(b, '\u2212', 'is-tick');
+          else float(b, s.amount ? `\u2212${s.amount}` : '\u2212', s.amount ? 'is-tick is-num' : 'is-tick');
         }, s.dur * 0.45);
         break;
       }

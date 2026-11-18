@@ -31,6 +31,7 @@ Read the smallest thing that answers the question: grep for a file name or topic
 | What is on which tab | `docs/SCREENS.md` "Tabs" and "Inside each screen" |
 | Any screen or style | `docs/UI-SKIN.md` (the token table, then the bullet for that screen), the newest `docs/screenshots/` set, `CODEMAP.md` "UI files" for the function that draws it |
 | Writing in-game text, lore, names | `WRITING_GUIDE.md`, `src/config/names.js`, and from `WORLD.md` only the context block at its end plus the one `##` section the text is about (the whole file only when changing canon); any change to canon goes through the `add-lore` skill (`.claude/skills/add-lore/`), which reads all of it |
+| How other games do it (stats vs traits, roguelite builds) | `docs/research/` (its README lists the topics) |
 | Why something was decided | Grep the topic in `docs/design/` (the decision log; index in `DESIGN.md`) |
 | What's next / what shipped | `HANDOFF.md` / grep `docs/changelog/` (never read a whole month) |
 

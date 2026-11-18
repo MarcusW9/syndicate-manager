@@ -12,7 +12,7 @@ import { lineText } from '../src/core/fighttext.js';
 import { buildOf, immuneTo, withBuild } from '../src/core/builds.js';
 
 const crewOf = () => createNewGame({ seed: 1 }).crew;
-const foe = (n, kind = 'corp', o = {}) => ({ n, kind, pips: ENEMIES[kind].pips, max: ENEMIES[kind].pips, absorb: ENEMIES[kind].absorb ?? 0, cover: ENEMIES[kind].cover, out: false, fled: false, deck: ['aim'], di: 0, approaching: false, group: 0, infected: null, ...o });
+const foe = (n, kind = 'corp', o = {}) => ({ n, kind, hp: ENEMIES[kind].hp, max: ENEMIES[kind].hp, absorb: ENEMIES[kind].absorb ?? 0, cover: ENEMIES[kind].cover, out: false, fled: false, deck: ['aim'], di: 0, approaching: false, group: 0, infected: null, ...o });
 /** A fight on the yard with the named runners; `star` carries the given build; combat 15 hits every time on a die of 11 and is never strong; cool 40 keeps every shot off. */
 function fixture(who, kinds, { build = GIVEN_BUILD, star = who[0], risk = 'steady' } = {}) {
   const crew = crewOf().filter((o) => who.includes(o.id)).sort((a, b) => who.indexOf(a.id) - who.indexOf(b.id));
@@ -91,12 +91,12 @@ test('a landed hit infects, and the vector ticks from the next round, 1 pip a ro
   assert.equal(r1.lines.filter((l) => l.key === 'infect').length, infected.length);
   assert.ok(!r1.lines.some((l) => l.key === 'tick' || l.key === 'tickOut'), 'no tick in the round of the hit');
   butts(b);
-  const before = Object.fromEntries(b.enemies.map((e) => [e.n, e.pips]));
+  const before = Object.fromEntries(b.enemies.map((e) => [e.n, e.hp]));
   const r2 = F.playRound(b, mid);
   const ticks = r2.lines.filter((l) => l.key === 'tick' || l.key === 'tickOut');
   assert.ok(ticks.length >= 1);
-  for (const l of ticks) assert.ok(!b.enemies.find((e) => e.n === l.enemy).infected || b.enemies.find((e) => e.n === l.enemy).pips === (l.left ?? 0));
-  assert.ok(r2.defeated.some((d) => d.how === 'vector') || b.enemies.every((e) => e.out || e.pips < before[e.n]), 'the infected lose a pip');
+  for (const l of ticks) assert.ok(!b.enemies.find((e) => e.n === l.enemy).infected || b.enemies.find((e) => e.n === l.enemy).hp === (l.left ?? 0));
+  assert.ok(r2.defeated.some((d) => d.how === 'vector') || b.enemies.every((e) => e.out || e.hp < before[e.n]), 'the infected lose a pip');
 });
 
 test('a hit that only cracks a plate infects nothing (owner, 2026-11-17); one that gets past it does, and ticks exactly one pip', () => {
@@ -109,7 +109,7 @@ test('a hit that only cracks a plate infects nothing (owner, 2026-11-17); one th
   F.playRound(b, mid);
   const hit = b.enemies.filter((e) => e.infected && !e.out);
   assert.ok(hit.length >= 1, 'a hit past the armour carries the vector');
-  for (const e of hit) assert.equal(e.pips, 1);
+  for (const e of hit) assert.equal(e.hp, 10);
   butts(b);
   const r2 = F.playRound(b, mid);
   assert.ok(r2.defeated.filter((d) => d.how === 'vector').length >= 1, 'a delayed kill, exactly a pip');
@@ -131,7 +131,7 @@ test('a tick counts toward the group flee check like any other loss', () => {
   const b = fixture(['jax', 'mei', 'wing'], ['hired', 'hired', 'hired', 'hired', 'hired', 'hired']);
   // Four of six are infected and one pip from going; the group breaks when fewer than 40% are up (two of six is a third).
   b.round = 3; b.drawn = false;
-  for (const e of b.enemies.slice(0, 4)) e.infected = { tick: 1, left: null, by: 'jax', round: 1, payload: 'cytotoxic' };
+  for (const e of b.enemies.slice(0, 4)) e.infected = { tick: 10, left: null, by: 'jax', round: 1, payload: 'cytotoxic' };
   b.runners[0].moved = true; // no burst: the vector alone does it
   butts(b);
   const r = F.playRound(b, mid);
@@ -229,7 +229,7 @@ test('the crew\'s default orders leave a runner with a move to attack, so it fir
 });
 
 // --- Contagion (slice 3-iii, 2026-11-17): a payload that jumps when its host falls --------------------------------------------------
-const sick = (b, n, payload = 'contagion', o = {}) => { const e = b.enemies.find((x) => x.n === n); e.infected = { tick: 1, left: PAYLOADS[payload].dot.rounds, by: 'jax', round: 0, payload, ...o }; return e; };
+const sick = (b, n, payload = 'contagion', o = {}) => { const e = b.enemies.find((x) => x.n === n); e.infected = { tick: 10, left: PAYLOADS[payload].dot.rounds, by: 'jax', round: 0, payload, ...o }; return e; };
 
 test('Contagion: when an infected enemy falls to its tick, the infection jumps to the first other enemy of its group, in full, and ticks from the next round', () => {
   const b = fixture(['jax', 'mei', 'wing'], ['hired', 'hired', 'hired'], { build: { move: null, payload: 'contagion' } });
@@ -241,7 +241,7 @@ test('Contagion: when an infected enemy falls to its tick, the infection jumps t
   assert.equal(jump.from, 1); assert.equal(jump.enemy, 2);
   assert.ok(r.lines.findIndex((l) => l.key === 'spread') > r.lines.findIndex((l) => l.key === 'tickOut'), 'said after the fall');
   const t = b.enemies[1];
-  assert.deepEqual({ tick: t.infected.tick, left: t.infected.left, payload: t.infected.payload, by: t.infected.by }, { tick: 1, left: 2, payload: 'contagion', by: 'jax' });
+  assert.deepEqual({ tick: t.infected.tick, left: t.infected.left, payload: t.infected.payload, by: t.infected.by }, { tick: 10, left: 2, payload: 'contagion', by: 'jax' });
   assert.equal(t.infected.round, b.round, 'it starts this round, so its first tick is the next one');
   assert.ok(!b.enemies[2].infected, 'one jump per fall');
 });
@@ -257,9 +257,9 @@ test('Contagion: a chain runs one fall per round, and the infection burns out af
   F.playRound(c, mid); F.playRound(c, mid);
   assert.ok(c.enemies[0].out, 'two pips, two ticks: down');
   const d = fixture(['jax', 'mei', 'wing'], ['enforcer', 'enforcer'], { build: { move: null, payload: 'contagion' } });
-  Object.assign(d.enemies[0], { pips: 5, max: 5 }); sick(d, 1); butts(d);
+  Object.assign(d.enemies[0], { hp: 50, max: 50 }); sick(d, 1); butts(d);
   F.playRound(d, mid); F.playRound(d, mid);
-  assert.equal(d.enemies[0].pips, 3);
+  assert.equal(d.enemies[0].hp, 30);
   assert.equal(d.enemies[0].infected, null, 'it burned out after two rounds: the cost of the shorter infection');
 });
 
@@ -365,8 +365,8 @@ test('the medic\'s hands on the way out: a healer standing steadies the runner t
     b.type = 'holdHack'; b.wayOut = ['hired']; b.stage = 1; b.arriving = []; b.clock = 99; b.goal.work = 4; b.round = 4;
     for (const r of b.runners) { r.healer = false; r.medic = false; }
     const [d1, d2, hurt, medic] = b.runners;
-    for (const d of [d1, d2]) { d.down = true; d.pips = 0; d.downRound = 3; }
-    hurt.max = 6; hurt.pips = 3; // above the point where a steady crew pulls out, and the aura heals only the most hurt
+    for (const d of [d1, d2]) { d.down = true; d.hp = 0; d.downRound = 3; }
+    hurt.max = 60; hurt.hp = 30; // above the point where a steady crew pulls out, and the aura heals only the most hurt
     if (withMedic) { medic.healer = true; medic.medic = true; medic.stats.medical.value = 40; }
     const r = F.playRound(b, mid);
     return { b, r, downed: [d1, d2], hurt, hurtBefore: 3 };
@@ -376,7 +376,7 @@ test('the medic\'s hands on the way out: a healer standing steadies the runner t
   assert.ok(m.downed.every((d) => d.stable), 'the medic reached both: one in the round, the other as the crew left');
   assert.equal(m.r.lines.filter((l) => l.key === 'stabiliseWayOut').length, 1, 'the one the round left alone');
   assert.ok(m.r.lines.some((l) => l.key === 'wayOutPatch'));
-  assert.ok(m.hurt.pips > m.hurtBefore + 1, 'a hurt runner who was up is healed by the aura and patched on the way out');
+  assert.ok(m.hurt.hp > m.hurtBefore + 10, 'a hurt runner who was up is healed by the aura and patched on the way out');
   const n = run(false);
   assert.ok(n.downed.every((d) => !d.stable), 'nobody to reach them');
   assert.ok(!n.r.lines.some((l) => l.key === 'stabiliseWayOut' || l.key === 'wayOutPatch'));
@@ -387,11 +387,11 @@ test('the medic\'s aura line carries the patient and the pip it filled, for the 
   b.type = 'holdHack';
   for (const r of b.runners) { r.healer = false; r.medic = false; }
   b.runners[0].medic = true; b.runners[0].healer = true;
-  b.runners[1].pips = b.runners[1].max - 1;
+  b.runners[1].hp = b.runners[1].max - 10;
   const r = F.playRound(b, mid);
   const l = r.lines.find((x) => x.key === 'aura');
   assert.ok(l, 'the aura fired');
   assert.equal(l.targetId, l.target);
-  assert.equal(l.left, b.runners.find((x) => x.id === l.targetId).pips);
+  assert.equal(l.left, b.runners.find((x) => x.id === l.targetId).hp);
   assert.equal(l.max, b.runners.find((x) => x.id === l.targetId).max);
 });

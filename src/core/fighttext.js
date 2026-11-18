@@ -39,5 +39,5 @@ export const nameList = (names) => (names.length < 2 ? names.join('') : `${names
 /** A chance as the screens show it, with its unit: 0.6 -> "60%". The threat line adds no unit of its own. */
 export const chanceWord = (c) => `${Math.round(c * 100)}%`;
 
-/** Pips with their unit and the right number: 1 -> "1 pip", 2 -> "2 pips". */
-export const pipsWord = (n) => `${n} ${n === 1 ? 'pip' : 'pips'}`;
+/** HP with its unit: 10 -> "10 HP" (engine 2 counts in HP since 2026-11-18). */
+export const hpWord = (n) => `${n} HP`;

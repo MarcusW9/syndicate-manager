@@ -6,7 +6,7 @@
 // when (the grammar, claude's plumbing; spec section 30):
 //   stage: n                       the fight is in this stage
 //   of: 'protected'                who the pip and shot conditions are about (the specialist)
-//   pipsAtMost: n | pipsAtMostShare: 0..1    their pips are at or under n, or that share of their max
+//   hpAtMost: n | hpAtMostShare: 0..1    their HP are at or under n, or that share of their max
 //   shotsOnAtLeast: n              this many aim threats are drawn at them
 //   radioShown: true               a backup or alarm threat is in this round's draw
 //   vanLastRound: true             the van leaves at the end of this round
@@ -25,8 +25,8 @@ export const DILEMMAS = {
   techUnderFire: {
     fight: ['holdHack'],
     // Owner, 2026-11-11 (narrowed after the slice 3 sim, where "two or more shots on the tech" came up in 82% of hacks):
-    // the tech at half pips or below with a radio call shown. A radio call is always shown, so Hit the caller always has a caller.
-    when: { of: 'protected', pipsAtMostShare: 0.5, radioShown: true },
+    // the tech at half HP or below with a radio call shown. A radio call is always shown, so Hit the caller always has a caller.
+    when: { of: 'protected', hpAtMostShare: 0.5, radioShown: true },
     options: [
       { id: 'cover', ordersPatch: { all: { duty: 'protect', target: 'protected' } } },
       { id: 'radio', ordersPatch: { bestAttacker: { duty: 'attack', target: 'backupSource' } } },
