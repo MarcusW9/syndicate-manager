@@ -92,6 +92,12 @@ const stateOf = (r) => (r.dead ? 'dead' : r.withdrawn ? 'out' : r.aboard ? 'aboa
  * The round screen's data. With the round drawn (b.drawn), the threats, intents, exposure and "if nothing" come
  * from previewRound; before that, only the roster and the goal. Never draws.
  */
+/** The end-of-round tick line: the HP each infected enemy will lose ({hp}, from the payload's tick), one sentence a tick size. */
+function ticksText(b, ticks) {
+  const sizes = [...new Set(ticks.map((t) => t.hp))];
+  return sizes.map((hp) => lineText('ticks', { word: 'Vector', hp: hpWord(hp), enemies: nameList(ticks.filter((t) => t.hp === hp).map((t) => nameOfEnemy(b, t.enemy))) })).join(' ');
+}
+
 export function roundView(b) {
   const pv = b.drawn ? F.previewRound(b) : null;
   const exp = pv?.exposure ?? [];
@@ -114,7 +120,7 @@ export function roundView(b) {
   return {
     round: b.round, drawn: !!pv, type: b.type, stage: b.stage, goal: goalOf(b), risk: b.risk.level,
     ticks: (pv?.ticks ?? []).map((t) => ({ enemy: t.enemy, name: nameOfEnemy(b, t.enemy), pips: F.hpUnits(t.hp), hp: t.hp })),
-    ticksLine: pv?.ticks?.length ? lineText('ticks', { word: 'Vector', enemies: nameList(pv.ticks.map((t) => nameOfEnemy(b, t.enemy))) }) : null,
+    ticksLine: pv?.ticks?.length ? ticksText(b, pv.ticks) : null,
     enemies, runners, ifNothing: pv?.ifNothing ?? [], overwatch: pv?.overwatch ?? null, doors: pv?.doors ?? null,
     threatLines: enemies.flatMap((e) => e.threats.map((t) => t.text)),
     vanLine: boarding(b) ? { leaves: b.goal.vanLeaves, round: b.round } : null,

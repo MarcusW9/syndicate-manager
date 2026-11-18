@@ -569,7 +569,7 @@ lines until it gets its own; a test keeps every district complete.
 
 When a job drops no gear and the crew gets a spare Standard sidearm instead of scrap, the report line is Claude's draft: `Gear from the job: {name} ({type}). A spare piece.` (`src/core/loot.js lootFor`). One sentence in the report voice; it should keep starting with "Gear from the job" (a test reads that).
 
-## HP wording checks (2026-11-18, from the owner's batch; not applied, need a call)
+## HP wording checks (2026-11-18, from the owner's batch): **all three applied the same day** (owner: "fix A B C"): last stand on 10 HP or less, "keeps fighting on almost nothing"; "Any more damage asks you again"; the tick lines take `{hp}` ("10 HP") from the payload's tick
 
 - **`director.lastStand`** ("{who} keeps fighting on one pip."): `core/director.js` fires it when a runner acts two rounds running on exactly 10 HP (`r.hp === FIGHT.hpUnit`). Since hit variance (#204), HP is rarely exactly 10, so it almost never fires. Proposed: change the trigger to 10 HP or less (a rule change, so a design-log row), and the line to "{who} keeps fighting on almost nothing." or "{who} keeps fighting on 10 HP or less."
 - **`dilemma.pullOutPoint.stayIn.tradeoff`** ("Losing another pip asks you again"): a runner kept in is asked again as soon as they lose any HP (`core/fight.js keptIn`: `r.hp >= r.stayHp`). Proposed: "{who} {n:stays|stay} in the fight. Any more damage asks you again; going down means a call to pull back or fight on."

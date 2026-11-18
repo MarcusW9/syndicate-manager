@@ -25,7 +25,7 @@ export const FIGHT_TEXT = {
   // The director's spotlights (DRAFT sentences so the keys read; the owner writes the wording, content question 1; Slice 1). Slots: {who}, {target}, {n}, {round}.
   'director.streak': '{who} drops {n} in two rounds.',
   'director.shieldWall': '{who} covers {target} again.',
-  'director.lastStand': '{who} keeps fighting on one pip.',
+  'director.lastStand': '{who} keeps fighting on almost nothing.',
   'director.clutchHack': '{who} finishes the job in round {round}.',
   'director.denied': '{who} cuts the radio: {n} calls go nowhere.',
   'director.carryHome': '{target} is carried home.',
@@ -154,7 +154,7 @@ export const FIGHT_TEXT = {
   'dilemma.pullOutPoint.pullOut': 'Pull {who} out',
   'dilemma.pullOutPoint.pullOut.tradeoff': '{who} {n:leaves|leave} the fight now.{techNote}',
   'dilemma.pullOutPoint.stayIn': 'Keep {who} in',
-  'dilemma.pullOutPoint.stayIn.tradeoff': '{who} {n:stays|stay} in the fight. Losing another pip asks you again; going down means a call to pull back or fight on.',
+  'dilemma.pullOutPoint.stayIn.tradeoff': '{who} {n:stays|stay} in the fight. Any more damage asks you again; going down means a call to pull back or fight on.',
   'dilemma.pullOutPoint.techNote': ' The hack is abandoned if the tech leaves.',
   'dilemma.vanCantWait.changed': 'The van is ready to leave; {outside} still outside.',
   'dilemma.vanCantWait.goNow': 'Leave on time',
@@ -265,9 +265,9 @@ export const FIGHT_TEXT_VARIANTS = {
     '{who} prepares to rip through {enemies} with the Ricochet ({why}).',
   ],
   'ticks': [
-    'The {word} will strip a pip from {enemies} at the end of the round.',
-    'At the end of the round, the {word} will take a pip from {enemies}.',
-    '{enemies} will lose a pip to the {word} at the end of the round.',
+    'The {word} will strip {hp} from {enemies} at the end of the round.',
+    'At the end of the round, the {word} will take {hp} from {enemies}.',
+    '{enemies} will lose {hp} to the {word} at the end of the round.',
   ],
 };
 for (const [key, list] of Object.entries(FIGHT_TEXT_VARIANTS)) FIGHT_TEXT[key] = list[0];

@@ -71,6 +71,18 @@ test('last stand: a runner at 1 pip acts 2 rounds running; healing or going down
   assert.equal(out.memory.lowPipRounds.a, 0);
 });
 
+test('last stand counts any HP at or under hpUnit (hit variance leaves odd numbers), never 0', () => {
+  const b = mkB({ runners: [runner('a', { hp: 7 }), runner('b'), runner('c')] });
+  const act = { lines: [L('attackHit', { actor: 'a' })], actions: [{ opId: 'a', action: 'attack' }] };
+  let out = direct(b, result(act), null);
+  b.round = 3;
+  out = direct(b, result(act), out.memory);
+  assert.deepEqual(out.beats.filter((x) => x.tier === 'spotlight').map((x) => x.key), ['director.lastStand'], '7 HP is a last stand');
+  b.runners[0].hp = 11;
+  out = direct(b, result(act), out.memory);
+  assert.equal(out.memory.lowPipRounds.a, 0, '11 HP is not');
+});
+
 test('clutch hack: the work completes at the deadline round minus one or later', () => {
   const early = mkB({ round: 4, goal: { work: FIGHT.workNeeded, protect: 'a' } });
   assert.equal(direct(early, result({ goalDelta: 1 }), null).beats.length, 0, 'a comfortable finish is not a clutch');

@@ -284,3 +284,16 @@ test('the plan screen\'s fight block: type line, enemies, gaps, orders, risk pic
   const c = renderFightPlan(esc, cov.fight2, 'committed');
   assert.ok(c.includes('Never pulls out on its own'), 'committed shows no threshold');
 });
+
+test('the tick line says the HP each infected enemy will lose, from the payload\'s own tick (no pips)', () => {
+  const s = find('data_pull', (x) => waiting(x) && x.activeMission.battle.enemies.some((e) => !e.out && !e.fled), { to: 600 });
+  assert.ok(s);
+  const b = structuredClone(s.activeMission.battle);
+  const e = b.enemies.find((x) => !x.out && !x.fled);
+  e.infected = { tick: 10, left: null, by: b.runners[0].id, round: b.round - 1, payload: 'cytotoxic' };
+  const v = roundView(b);
+  assert.ok(v.ticksLine, 'a tick is due');
+  assert.match(v.ticksLine, /10 HP/);
+  assert.doesNotMatch(v.ticksLine, /pip/);
+  assert.equal(F.previewRound(b).ticks.find((t) => t.enemy === e.n).hp, 10, 'the number is the rules\' own');
+});

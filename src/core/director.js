@@ -74,10 +74,10 @@ export function direct(b, roundResult, memory = null) {
     }
   }
 
-  // Last stand: a runner at 1 pip acts 2 or more rounds running.
+  // Last stand: a runner on hpUnit (10) HP or less acts 2 or more rounds running (2026-11-18: was exactly 10, which hit variance made rare).
   const acted = new Set((roundResult.actions ?? []).map((a) => a.opId));
   for (const r of b.runners) {
-    if (r.hp === FIGHT.hpUnit && !r.down && !r.dead && acted.has(r.id)) m.lowPipRounds[r.id] = (m.lowPipRounds[r.id] ?? 0) + 1;
+    if (r.hp > 0 && r.hp <= FIGHT.hpUnit && !r.down && !r.dead && acted.has(r.id)) m.lowPipRounds[r.id] = (m.lowPipRounds[r.id] ?? 0) + 1;
     else m.lowPipRounds[r.id] = 0;
     if (m.lowPipRounds[r.id] === 2) {
       let at = null;
