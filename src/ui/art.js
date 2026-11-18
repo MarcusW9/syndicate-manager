@@ -728,8 +728,10 @@ function injuryMarks(look, w, c, a) {
       return `<ellipse cx="${px}" cy="${py - 0.5}" rx="3.6" ry="2.2" transform="rotate(-28 ${px} ${py})" fill="${mix(c.skin, '#d9667a', 0.5)}" opacity="0.6"/>
         <g stroke="#b04a44" stroke-width="0.45" stroke-linecap="round" opacity="0.85" fill="none"><path d="M${px - 2.6} ${py + 0.4} l4.2 -2.3"/><path d="M${px - 2.2} ${py + 1.6} l4.4 -2.4"/><path d="M${px - 1.2} ${py + 2.3} l3.4 -1.8"/></g>
         <g fill="${BLOOD}"><circle cx="${px + 1.4}" cy="${py - 1.5}" r="0.35"/><circle cx="${px - 1.5}" cy="${py + 0.9}" r="0.3"/><circle cx="${px + 0.2}" cy="${py + 2.3}" r="0.3"/></g>`;
-    case 'cheekPad': // a gauze pad taped on the lit cheek, a stain coming through, the eye bruised
-      return `${blackEye(0.5)}<rect x="${px - 3.8}" y="${py - 3.4}" width="7.6" height="7.2" fill="${GAUZE}" stroke="#b9ae98" stroke-width="0.35"/><path d="M${px - 3.8} ${py - 1.4}h7.6M${px - 3.8} ${py + 0.6}h7.6M${px - 3.8} ${py + 2.6}h7.6" stroke="#d6ccb9" stroke-width="0.25"/><circle cx="${px + 0.6}" cy="${py + 0.4}" r="1.5" fill="${BLOOD}" opacity="0.5"/>${strip(px, py - 3.5, 0, 9, 1.4)}${strip(px, py + 3.7, 0, 9, 1.4)}`;
+    case 'cheekPad': { // a small gauze pad taped low on the lit cheek (clear of the eye and the face's edge), a stain through it, the other eye bruised
+      const qx = px - 0.8, qy = py + 1.6;
+      return `${blackEye(0.5)}<rect x="${qx - 2.5}" y="${qy - 2.3}" width="5" height="4.6" fill="${GAUZE}" stroke="#b9ae98" stroke-width="0.3"/><path d="M${qx - 2.5} ${qy - 0.8}h5M${qx - 2.5} ${qy + 0.8}h5" stroke="#d6ccb9" stroke-width="0.22"/><circle cx="${qx + 0.4}" cy="${qy}" r="1" fill="${BLOOD}" opacity="0.5"/>${strip(qx, qy - 2.3, 0, 6.4, 1.1)}${strip(qx, qy + 2.3, 0, 6.4, 1.1)}`;
+    }
     case 'splitLip': // a split, swollen lip, a bruised eye and a brow stitched shut
       return `${blackEye(0.58)}<path d="M${32 + mW * 0.35} ${mY - 0.6} q0.5 1.6 -0.1 3.3" stroke="${DRIED}" stroke-width="0.7" fill="none" stroke-linecap="round"/><path d="M${32 + mW * 0.35 - 0.3} ${mY + 2.6} q-0.3 1.8 0.2 2.9" stroke="${BLOOD}" stroke-width="0.45" fill="none" stroke-linecap="round" opacity="0.85"/>${cut(ex, ey - 4.1)}<g stroke="#2a1b1a" stroke-width="0.35">${[-1.6, 0, 1.6].map((d) => `<path d="M${ex + d - 0.2} ${ey - 5.4 + d * 0.4}l0.9 2.4"/>`).join('')}</g>`;
     case 'headWrap': // critical: a gauze wrap round the head, blood through it, the eye shut and dark
