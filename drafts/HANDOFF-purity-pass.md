@@ -1,5 +1,13 @@
 # Handoff: keep the core pure, and the UI honest about state (review items 12 and 13)
 
+## Status, 2026-11-18: done (branch `claude/speed-pass`, PR for the owner)
+
+- **Item 12:** already fixed; a sweep of `src/ui` found no other write into the state and no `saveGame` outside `setState` (the fight screens write only their drafts, `forceEffect` only its copy).
+- **Item 13:** `createNewGame` defaults to seed 1 (option (b): five test calls make a game without a seed); `main.js` and the new-game action pass `ui/seed.js freshSeed()` (the clock, or `?seed=` in the dev build). `npm run screenshots` passes `?seed=21` (`--seed <n>` to change it).
+- **Tests:** `tests/purity.test.js` (code read with comments and string text blanked; its stripper is checked to hide no code in `src` except the service worker's generated source, which is a string). Checked that it fails on a clock in `core/state.js`, a `saveGame` outside `setState` and an in-place write in `src/ui`.
+- **Screenshots twice:** 43 of 46 identical byte for byte; `01-first-load`, `15-crisis`, `26-desktop-planning` differ in a small patch each: a CSS animation (Joss's avatar, a success line's glow, an empty slot's pulse) caught at a slightly different moment. Same content; no clock read in the game.
+- **Saves:** the seed is stored in the state (`state.seed`) and never re-made on load, so old saves are untouched; the save tests pass.
+
 Written 2026-11-17 for a session that runs without the owner. Read `CLAUDE.md` first (the "Architecture (do not break)" block is the whole point), then `docs/ARCHITECTURE.md` section 1 ("Layering") and the "Update pattern" paragraph, then this. Source: `drafts/REVIEW-2026-11-13.md` items 12 and 13. Small chunk (an hour or two), no design calls, touches few files, so it can run beside the visual pass (it does not touch `fightstage.js` or `styles.css`).
 
 ## What is already true (re-check it, the review is four days old)
