@@ -47,7 +47,7 @@ So the reward is real and it lands where it should: armoured and heavy bodies.
 1. **Hit size from damage** (crew attacks, overwatch: rifle 5, drone 3, through the same function; the hall turret through its own `damage`). `runnerOf` stores the runner's `hit` beside `strong`; it is part of `oddsKey` through the runner.
 2. **Plates are a flat soak, not a whole hit.** `plateHp` (10) comes off one hit and the rest goes through. At damage 2-3 this is exactly today's rule (a plain 10 is all soaked, a strong 20 passes 10). Piercing still skips the plate.
 3. **The spread scales.** `FIGHT.hitSpread` (2) becomes `FIGHT.hitSpreadShare` (0.15, rounded). Same at 10 HP, more swing on big guns.
-4. **Strong odds stop reading damage** (needs your call, Q1). Today damage gives a better chance of a strong hit. If damage also sets the hit's size, a big gun counts twice. Recommended: one flat margin (10, today's margin at damage 3), so damage means size and aim means accuracy.
+4. **Strong odds stop reading damage** (needs your call, Q1). Today damage gives a better chance of a strong hit. If damage also sets the hit's size, a big gun counts twice. Recommended: one flat margin of 12 (today's at damage 2, what every starting runner has), so damage means size, aim means accuracy, and a new crew is unchanged.
 5. **The enemy side is unchanged** in this step: enemy shots stay as `ENEMY_HIT`, and a runner's armour still takes whole hits (Q3).
 6. **Plates are a count, one per hit.** A body with two plates (none exists yet; enemy toughness would add them) loses one plate to each hit that lands, 10 off that hit, the rest through. Against two plates and 20 HP: damage 3 needs 4 hits, damage 5 needs 3, damage 7 needs 2, a damage-3 piercing gun needs 2. Plates stay the piercing guns' problem to solve, size stays the big guns' (Q5).
 
@@ -63,7 +63,7 @@ So the reward is real and it lands where it should: armoured and heavy bodies.
 
 ## Steps
 
-0. **Measure first, no code change.** Weapon damage across real crews over a long run (`sim-growth` or `sim-early-game`, weeks 1/10/30): how many runners sit at 2-3 (no change) and how many at 6+ (the biggest change). Tells us how much the gate numbers can move.
+0. **Measure first, no code change.** Done 2026-11-18: `docs/sims/weapon-damage-2026-11-18.md` (every starting runner is damage 2; one job in 13 drops a sidearm, mostly 3-5; 6-7 about one in ten; the top a runner reaches is 8). Was: Weapon damage across real crews over a long run (`sim-growth` or `sim-early-game`, weeks 1/10/30): how many runners sit at 2-3 (no change) and how many at 6+ (the biggest change). Tells us how much the gate numbers can move.
 1. **The rule.** Parts 1-4 in `fight.js` and `data/fights.js`; save v78 adds `hit` to a fight in progress (`migrate` fills it from the runner's weapon, or 10). Tests: a damage-3 crew plays the same fights as before this change (same seeds, same outcomes); a damage-7 hit drops a plated grunt in one; a plate soaks flat. Re-run `sim-standard-force`, `sim-gate-teams`, `sim-battles`, `sim-vectors`, `sim-wayout`, before and after, in `docs/sims/`.
 2. **Show it.** The weapon card says the hit in HP ("hits for 16, strong 32") next to damage; the fight screen's runner line shows it. Wording is yours (`drafts/writing-tasks.md`).
 3. **Enemy toughness.** Enemy HP rises with the job's threat (and later the week or the tong's standing), which is also the "tougher swarm bodies" item. A separate proposal once step 1's sims are in, since it moves every gate number.
@@ -72,7 +72,7 @@ Then the build vocabulary's trigger step (`drafts/PROPOSAL-build-vocabulary.md`)
 
 ## Questions for the owner (six)
 
-1. **Strong odds.** (a) Damage sets size only; one flat strong margin for everyone **(recommended)**. (b) Damage sets size and still improves strong odds (big guns count twice). (c) Leave strong odds as they are, capped at 5.
+1. **Strong odds.** (a) Damage sets size only; one flat strong margin for everyone **(recommended)**, at 12, today's margin at damage 2: every starting runner is unarmed (damage 2, `docs/sims/weapon-damage-2026-11-18.md`), so 12 keeps a new crew's fights exactly as today; a margin of 10 would give every new crew more strong hits. Damage 3-5 then land strong hits less often than now but hit harder. (b) Damage sets size and still improves strong odds (big guns count twice). (c) Leave strong odds as they are, capped at 5.
 2. **How steep.** `hitPerDamage` (a) 3: top gun about 2.5× a basic one **(recommended)**; (b) 2: gentler, top gun 1.6×; (c) 5: steep, top gun 3.5×, big guns one-shot nearly anything until enemies scale.
 3. **Runner armour.** (a) Leave it taking whole hits until enemy toughness (step 3) **(recommended: one side at a time keeps the sims readable)**; (b) make it a flat soak now, to match enemy plates.
 4. **Turret and overwatch.** (a) Same formula from their own damage **(recommended)**; (b) leave them as today.
