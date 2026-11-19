@@ -2776,3 +2776,35 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 }
 @keyframes dropmenu-in { from { transform: translateY(-4px); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .dropmenu, .crewfilter__arrow { animation: none; transition: none; } }
+
+/* =====================================================================================
+   Theme: red channel (2026-11-19, Save › Look; `theme-red` on <html>, set by app.js render from
+   the device preference). Colours only, over the street-terminal skin: red is the frame
+   (ground tint, headings, rules, tabs), cyan stays for what is picked and for values.
+   ===================================================================================== */
+:root.theme-red { --bg: #0d0809; --panel: #140c0e; --panel-2: #1a1013; --line: #4a1e25; --muted: #7fb3ad; --accent-2: #5ef2e4; }
+.theme-red body {
+  background-image:
+    radial-gradient(ellipse at 50% 40%, rgba(120, 20, 35, 0.35), transparent 70%),
+    linear-gradient(rgba(255, 61, 95, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 61, 95, 0.035) 1px, transparent 1px);
+  background-size: auto, 32px 32px, 32px 32px;
+  background-attachment: fixed;
+}
+.theme-red h1, .theme-red h2 { color: #ff5a6e; }
+.theme-red h2::after, .theme-red .foldh2__line { background: linear-gradient(90deg, rgba(255, 61, 95, 0.5), transparent); }
+.theme-red .topbar { border-bottom: 1px solid var(--accent); background: rgba(13, 8, 9, 0.92); }
+.theme-red .topbar::after { display: none; }
+.theme-red .panel { border-color: #3a1820; }
+.theme-red .panel::after { background: var(--accent); }
+.theme-red .panel::before { background: linear-gradient(to bottom left, transparent calc(50% - 0.6px), var(--accent) 50%, transparent calc(50% + 0.6px)); }
+.theme-red .subtabs { border-bottom-color: var(--accent); }
+.theme-red .subtab { color: #c0606d; }
+.theme-red .subtab.is-on { color: var(--accent-2); box-shadow: inset 0 -2px 0 var(--accent-2); }
+.theme-red .row { background: #170d10; border-color: #3a1820; }
+.theme-red .row.is-read { background: transparent; }
+.theme-red .nav { background: rgba(13, 8, 9, 0.96); }
+.theme-red .nav__btn { color: #c0606d; }
+.theme-red .nav__btn.is-active { color: var(--accent-2); }
+.theme-red .jobcard__name { color: #ff8a98; }
+.theme-red .jobcard__pay { color: var(--accent-2); }
