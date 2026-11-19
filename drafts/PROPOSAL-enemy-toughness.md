@@ -1,6 +1,6 @@
 # Proposal: enemies grow with the job, and armour becomes a flat soak (engine 2)
 
-Status: **step 1 built 2026-11-18 (save v79), the owner agreed all the recommended answers; changed while building: HP only, no plate at threat 5 (HP and a plate together cost a damage-6 pro-vest crew 12 HP, target about 3; `docs/sims/enemy-toughness-2026-11-18-step1.md`). Steps 2-3 not built.** Originally: draft, nothing built. Step 3 of the agreed order (hit size → this → the build vocabulary's trigger step). Needs the owner's answers to the questions at the end. Numbers come from `scripts/sim-enemy-toughness.mjs` (new, measures only) and `docs/sims/enemy-toughness-2026-11-18-equip.md`.
+Status: **step 1 built 2026-11-18 (save v79), the owner agreed all the recommended answers; changed while building: HP only, no plate at threat 5 (HP and a plate together cost a damage-6 pro-vest crew 12 HP, target about 3; `docs/sims/enemy-toughness-2026-11-18-step1.md`). Threat 5 then halved to +5 HP by the owner, 2026-11-19. Steps 2-3 not built.** Originally: draft, nothing built. Step 3 of the agreed order (hit size → this → the build vocabulary's trigger step). Needs the owner's answers to the questions at the end. Numbers come from `scripts/sim-enemy-toughness.mjs` (new, measures only) and `docs/sims/enemy-toughness-2026-11-18-equip.md`.
 
 ## The problem, from the code and the sim
 

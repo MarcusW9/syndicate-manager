@@ -1,5 +1,5 @@
 // Enemy toughness, step 1 (DESIGN.md 2026-11-18, drafts/PROPOSAL-enemy-toughness.md): threat 1-3 enemies are as before, threat 4 is
-// +5 HP, threat 5 is +10 HP; arrivals match; a fight saved before has toughness 0. Run with: npm test
+// +5 HP, threat 5 is +5 HP; arrivals match; a fight saved before has toughness 0. Run with: npm test
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createNewGame } from '../src/core/state.js';
@@ -16,17 +16,17 @@ test('threat 1-3 enemies are exactly the kinds as defined', () => {
   }
 });
 
-test('threat 4 is +5 HP, threat 5 is +10 HP (no plate yet), on every body', () => {
+test('threat 4 is +5 HP, threat 5 is +5 HP (no plate yet), on every body', () => {
   for (const site of ['docks', 'heights']) for (const opp of [null, 'police']) {
     for (const e of build(4, site, opp).enemies) { assert.equal(e.max, ENEMIES[e.kind].hp + 5); assert.equal(e.hp, e.max); assert.equal(e.absorb, ENEMIES[e.kind].absorb ?? 0); }
-    for (const e of build(5, site, opp).enemies) { assert.equal(e.max, ENEMIES[e.kind].hp + 10); assert.equal(e.absorb, ENEMIES[e.kind].absorb ?? 0); }
+    for (const e of build(5, site, opp).enemies) { assert.equal(e.max, ENEMIES[e.kind].hp + 5); assert.equal(e.absorb, ENEMIES[e.kind].absorb ?? 0); }
   }
 });
 
 test('a threat-5 fight\'s later arrivals are as tough as its first bodies', () => {
   const b = build(5);
   const e = F.newEnemy(b, 'hired', makeRng(1), { arriving: true, group: 1 });
-  assert.equal(e.max, ENEMIES.hired.hp + 10); assert.equal(e.absorb, 0);
+  assert.equal(e.max, ENEMIES.hired.hp + 5); assert.equal(e.absorb, 0);
 });
 
 test('the odds key tells a tougher fight from a plain one', () => {

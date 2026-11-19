@@ -92,9 +92,9 @@ export const SITE_ENEMIES = { heights: ['corp', 'drone'], docks: ['hired', 'hire
 export const COUNT_BY_THREAT = [0, 2, 2, 3, 3, 4];
 // Enemy toughness (2026-11-18, drafts/PROPOSAL-enemy-toughness.md, step 1): by the job's threat 1-5, how many steps tougher every body
 // is: each step adds `hpStep` HP, and from `plateAtStep` steps up a body gets one more plate. Threat 1-3 are as before (the early
-// game, unarmed crews); threat 4 is +5 HP, threat 5 is +10 HP. No threat reaches plateAtStep yet: the first sim (docs/sims/enemy-toughness-2026-11-18-step1.md)
+// game, unarmed crews); threat 4 and 5 are +5 HP (threat 5 was +10 until the owner halved it, 2026-11-19). No threat reaches plateAtStep yet: the first sim (docs/sims/enemy-toughness-2026-11-18-step1.md)
 // found HP and a plate together far above the target, so plates wait for the week or standing steps. The index is the threat; 0 is unused.
-export const TOUGHNESS_BY_THREAT = [0, 0, 0, 0, 1, 2];
+export const TOUGHNESS_BY_THREAT = [0, 0, 0, 0, 1, 1];
 export const TOUGHNESS = { hpStep: 5, plateAtStep: 3 };
 // A job's optional `opposition` (data/missions/*.js): who stands against the crew. The fight keeps the district's own kind as
 // the one leader and fills the rest with this force's grunts, `extra` more bodies than the count above (0 since 2026-11-15, owner: with 1, Warehouse Lift broke both safety bars once the gate sim fought its police, sims/newjobs-2026-11-15.md; #176 had set 1 from strong made-up crews, sims/standard-force-2026-11-15.md). A job without one plays as before.
