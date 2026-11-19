@@ -78,7 +78,7 @@ export function checkBuildOffers(state) {
     if (!pieces.length) continue;
     state.inbox.unshift({
       id: `build-${op.id}-${state.day}`, type: 'crew', day: state.day,
-      subject: pieces.length > 1 ? `${op.handle} could learn a new trick` : `${op.handle} could pick up the ${pieces[0].name}`, // the one-piece subject awaits the owner's wording
+      subject: pieces.length > 1 ? `${op.handle} could learn a new trick` : `${op.handle} could pick up the ${pieces[0].name}`,
       body: pieces.map((p) => p.offer.replaceAll('{op}', op.handle)).join(' '),
       kind: 'build',
       options: [...pieces.map((p) => ({ id: p.id, label: `Take the ${p.name}` })), { id: 'later', label: 'Not yet' }],

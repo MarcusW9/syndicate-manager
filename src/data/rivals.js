@@ -149,7 +149,7 @@ export const QUIET_LINE = 'a runner they keep quiet about';
 export const UNSETTLED_LINE = 'Unsettled here. A lower offer could bring them over.';
 export const LOOKING = {
   young: 'After young runners who will sign cheaply.',
-  near: 'Looking for a name close to its own level.',
+  near: 'Looking for runners much like their own.',
   steady: 'After steady, proven runners.',
   local: 'Recruits locally, one signing a season.',
   any: 'Open to a runner who fits.',
