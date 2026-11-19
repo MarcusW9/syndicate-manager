@@ -74,9 +74,9 @@ export function takeFightChange(am) {
 // --- small pieces ------------------------------------------------------------------------------------
 
 const word = (key, slots) => lineText(key, slots);
-// Health (HP since 2026-11-18): the bar's segments are 10 HP each (`pips`, `max` from the view), the number beside it the HP itself.
-const pipBar = (esc, pips, max, label) => `<span class="fs-pips" role="img" aria-label="${esc(label)}">${Array.from({ length: max }, (_, i) => `<i class="${i < pips ? 'is-on' : ''}"></i>`).join('')}</span>`;
-const hpBar = (esc, x) => `<span class="fs-hp">${pipBar(esc, x.pips, x.max, `${x.hp} of ${x.maxHp} HP`)}<b class="fs-hpnum" aria-hidden="true">${x.hp}<small>/${x.maxHp}</small></b></span>`;
+// Health (HP since 2026-11-18): one continuous bar (2026-11-19, the owner's "one draining bar"; was a segment per 10 HP), the number beside it.
+const hpLine = (esc, hp, max, label) => { const f = max > 0 ? Math.max(0, Math.min(1, hp / max)) : 0; return `<span class="fs-hpline${f <= 0.25 ? ' is-crit' : f <= 0.5 ? ' is-low' : ''}" role="img" aria-label="${esc(label)}"><i style="width:${Math.round(f * 100)}%"></i></span>`; };
+const hpBar = (esc, x) => `<span class="fs-hp">${hpLine(esc, x.hp, x.maxHp, `${x.hp} of ${x.maxHp} HP`)}<b class="fs-hpnum" aria-hidden="true">${x.hp}<small>/${x.maxHp}</small></b></span>`;
 const pullsOut = (hp) => (hp === 0 ? 'Never pulls out on its own' : `Pulls out at ${hp} HP or fewer`);
 
 /** The goal track and the clocks: "Hack ●●○○ · alarm 3 · deadline round 7", or the van's. */

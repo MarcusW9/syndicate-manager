@@ -282,7 +282,7 @@ test('pips left become the injury at the fight\'s end, and the fight\'s snapshot
   assert.ok(hurt > 5, `${hurt} hurt in 60 fights`);
   const s = atFight(1, 'quiet_hours', 'never');
   const snap = fightSnapshot(s.activeMission.battle);
-  assert.deepEqual(Object.keys(snap.runners[0]).sort(), ['down', 'handle', 'hp', 'id', 'max']);
+  assert.deepEqual(Object.keys(snap.runners[0]).sort(), ['down', 'handle', 'hp', 'hpExact', 'id', 'max', 'maxExact']); // hpExact/maxExact: the HP itself, for the map's draining bar (2026-11-19)
 });
 
 test('left behind: missing for a week, back badly hurt (slice 1; the rescue and the ransom are slice 4)', () => {
@@ -608,4 +608,30 @@ test('a report keeps a fight lean: the lines the log draws, no staging, beats or
   assert.ok(checked >= 6, `checked ${checked} fight events`);
   const beat = { kind: 'beat', text: 'Fog off the water.', first: true };
   assert.equal(reportEvent(beat), beat, 'everything else is kept as it is');
+});
+
+// --- the fight log's wording (2026-11-19, the owner's Still Connected log) ----------------------------------------------------------
+
+test('a medic who treats themself is never named twice in a line', async () => {
+  const { lineText } = await import('../src/core/fighttext.js');
+  assert.equal(lineText('aura', { who: 'Ticket', target: 'Ticket' }), 'Ticket keeps themself steady enough to fight.');
+  assert.equal(lineText('patch', { who: 'Ticket', target: 'Ticket' }), 'Ticket patches up their own wounds.');
+  assert.equal(lineText('aura', { who: 'Ticket', target: 'Raster' }), 'Ticket keeps Raster steady enough to fight.');
+});
+
+test('a fight that ends in a pull-back says why once, with one full stop, across the fight card and the exit card', () => {
+  let checked = 0;
+  for (let seed = 1; seed <= 60 && checked < 6; seed++) for (const id of FIVE) {
+    const done = autoRun(begin(seed, id, 'loud', { opts: { callIn: 'never', orders: 'steady' } }), 'steady');
+    const am = done.activeMission;
+    const retreat = am.events.find((e) => e.kind === 'battle' && e.phase === 'retreat');
+    if (!retreat) continue;
+    const exit = am.events.find((e) => e.kind === 'exit');
+    const all = am.events.flatMap((e) => [e.text, e.why, e.report]).filter(Boolean);
+    assert.ok(!all.some((t) => /\.\./.test(t)), `no double full stop: ${all.find((t) => /\.\./.test(t))}`);
+    assert.notEqual(exit.text, retreat.text, 'the exit card does not repeat the fight card');
+    assert.equal(exit.why, null);
+    checked += 1;
+  }
+  assert.ok(checked >= 3, `${checked} pull-backs checked`);
 });

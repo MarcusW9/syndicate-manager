@@ -14,7 +14,10 @@ const capital = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /** A line or threat as text: its key's wording with its slots. An unknown key reads as the key. */
 export const lineText = (key, slots = {}) => {
-  const text = wording(key, slots);
+  // A line about someone doing something to themself (the medic patching their own wounds) reads its `.self` wording where there is one,
+  // never "Ticket keeps Ticket steady" (2026-11-19).
+  const self = slots.who != null && slots.who === slots.target && (FIGHT_TEXT[`${key}.self`] || FIGHT_TEXT_VARIANTS[`${key}.self`]) ? `${key}.self` : key;
+  const text = wording(self, slots);
   return text ? capital(fillText(text, slots)) : key;
 };
 

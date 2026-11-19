@@ -2222,6 +2222,10 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .fs-enemy strong, .fs-runner strong { font: 700 0.86rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; overflow-wrap: anywhere; min-width: 0; }
 .fs-runner__top .face { width: 28px; height: 28px; flex: none; }
 .fs-pips { display: inline-flex; gap: 1px; margin-left: auto; flex: none; }
+/* The cards' HP bar (2026-11-19): one continuous bar beside the number, the same colours as the map's. */
+.fs-hpline { position: relative; display: block; width: 56px; height: 8px; background: #262c38; flex: none; overflow: hidden; }
+.fs-hpline i { position: absolute; inset: 0 auto 0 0; background: #5fe0a5; }
+.fs-hpline.is-low i { background: #ffb02e; } .fs-hpline.is-crit i { background: #ff3b4e; }
 .fs-pips i { display: block; width: 8px; height: 10px; background: #262c38; }
 .fs-pips i.is-on { background: #5fe0a5; }
 /* HP (2026-11-18): the bar's segments are 10 HP each; the number beside it is the HP. */
@@ -2349,7 +2353,7 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .sp-flash--crack { fill: #fff; stroke: var(--accent-2); stroke-width: 1; }
 .fs-float.is-cracked { fill: var(--accent-2); }
 .fs-pips rect { fill: #2a303b; } .fs-pips rect.is-on { fill: var(--accent-2); } .fs-foe .fs-pips rect.is-on { fill: var(--accent); }
-.sp-token.fs-hunker > *:not(.fs-pips) { transform: scale(1.05) translateY(1px); }
+.sp-token.fs-hunker > *:not(.fs-pips):not(.fs-hpbar) { transform: scale(1.05) translateY(1px); }
 .siteplan.is-fight .sp-token.fs-hunker .sp-face__ring { stroke-dasharray: 2 1.2; }
 .sp-token.fs-down .sp-face, .sp-token.fs-dead .sp-face { filter: grayscale(1) brightness(0.55); }
 .sp-token.fs-dead .sp-face__ring { stroke: var(--danger) !important; }
@@ -2369,6 +2373,41 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 @keyframes fs-ping { from { transform: scale(0.6); opacity: 1; } to { transform: scale(3); opacity: 0; } }
 .fs-float { font: 700 5px var(--display); letter-spacing: 0.08em; text-transform: uppercase; text-anchor: middle; paint-order: stroke; stroke: #0b0d11; stroke-width: 1.4px; animation: fs-float 0.9s ease-out forwards; }
 .fs-float.is-num { font-size: 7px; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; } /* HP (2026-11-18): damage and healing as numbers */
+/* The map's HP bar (2026-11-19, the owner's "one draining bar"): a slim bar under each body; the fill scales to the HP left, the pale chunk
+   behind it is what was just lost, which holds a moment and then slides down (ui/fightstage.js pips). Amber at half, red at a quarter. */
+.fs-hpbar rect { transform-box: fill-box; transform-origin: left center; pointer-events: none; }
+.fs-hpbar__bg { fill: #1b2029; stroke: #0b0d11; stroke-width: 0.5px; }
+.fs-hpbar__ghost { fill: #f2f4f8; opacity: 0.85; transition: transform 0.5s ease-in; }
+.fs-hpbar__fill { fill: #5fe0a5; transition: transform 0.18s ease-out; }
+.fs-foe .fs-hpbar__fill { fill: var(--accent); }
+.fs-hpbar.is-low .fs-hpbar__fill { fill: #ffb02e; }
+.fs-hpbar.is-crit .fs-hpbar__fill { fill: #ff3b4e; }
+.fs-foe .fs-hpbar.is-low .fs-hpbar__fill, .fs-foe .fs-hpbar.is-crit .fs-hpbar__fill { fill: var(--accent); } /* an enemy's bar stays red: amber and red warn about the crew */
+.fs-hpbar.is-tickloss .fs-hpbar__ghost { fill: #8dff6a; }
+.fs-hpbar.is-burnloss .fs-hpbar__ghost { fill: #ff8a3d; }
+.fs-hpbar.is-gain .fs-hpbar__fill { animation: fs-bar-gain 0.8s ease-out; }
+@keyframes fs-bar-gain { 0% { fill: #eafff3; } 100% { fill: #5fe0a5; } }
+/* A hit's damage (2026-11-19): bigger than a word, a pop then a rise; a critical hit bigger, amber, with "!". */
+.fs-dmg { font: 800 9px var(--display); text-anchor: middle; font-variant-numeric: tabular-nums; fill: #ff4d5e; paint-order: stroke; stroke: #0b0d11; stroke-width: 1.8px; pointer-events: none; transform-box: fill-box; transform-origin: center bottom; animation: fs-dmg 1.15s ease-out forwards; }
+.fs-dmg.is-crit { font-size: 12px; fill: #ffd84d; }
+/* The knockout (2026-11-19, the owner's pick "A" of drafts/mockups/knockout.html): a white flash and shards (ui/fightstage.js knockout),
+   the face tips over and greys (a transition on the down class, so a body already down when the map is drawn just lies there), a bigger
+   OUT pops, and a red X stays across the face (setStance). */
+.fs-ko-flash { fill: #fff; pointer-events: none; transform-box: fill-box; transform-origin: center; animation: fs-ko-flash 0.42s ease-out forwards; }
+@keyframes fs-ko-flash { 0% { opacity: 0.95; transform: scale(0.7); } 100% { opacity: 0; transform: scale(1.7); } }
+.fs-ko-shardwrap { pointer-events: none; animation: fs-ko-shard 0.5s ease-out forwards; }
+.fs-ko-shard { fill: #fff; }
+@keyframes fs-ko-shard { 0% { transform: translate(0, 0); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)); opacity: 0; } }
+.sp-token.fs-foe:not(.fs-knot) .sp-face, .sp-token.fs-foe:not(.fs-knot) .fs-foe__tint { transform-box: view-box; transform-origin: 0 0; transition: transform 0.38s cubic-bezier(0.5, -0.4, 0.6, 1.3); }
+.sp-token.fs-foe.is-down:not(.fs-knot) .sp-face, .sp-token.fs-foe.is-down:not(.fs-knot) .fs-foe__tint { transform: rotate(78deg) translate(1.2px, -1.4px) scale(0.92); }
+.sp-token.fs-foe.is-down .fs-foe__ring { stroke: #5a6272 !important; }
+.fs-ko-x { fill: none; stroke: #ff4d5e; stroke-width: 1.7; stroke-linecap: square; pointer-events: none; paint-order: stroke; stroke-dasharray: 1; stroke-dashoffset: 1; animation: fs-ko-x 0.28s ease-out 0.25s forwards; filter: drop-shadow(0 0 1px #0b0d11); }
+@keyframes fs-ko-x { to { stroke-dashoffset: 0; } }
+.fs-float.is-ko { font-size: 7px; fill: #ff4d5e; animation: fs-ko-word 1.3s ease-out forwards; transform-box: fill-box; transform-origin: center; }
+@keyframes fs-ko-word { 0% { transform: scale(0.4); opacity: 0; } 15% { transform: scale(1.4); opacity: 1; } 28% { transform: scale(1); } 75% { opacity: 1; } 100% { transform: translateY(-6px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .sp-token.fs-foe .sp-face, .sp-token.fs-foe .fs-foe__tint { transition: none; } .fs-ko-x { animation: none; stroke-dashoffset: 0; } }
+@keyframes fs-dmg { 0% { transform: translateY(2px) scale(0.4); opacity: 0; } 14% { transform: translateY(-1px) scale(1.35); opacity: 1; } 28% { transform: translateY(-2px) scale(1); opacity: 1; } 75% { opacity: 1; } 100% { transform: translateY(-13px) scale(1); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .fs-hpbar rect { transition: none; } .fs-hpbar.is-gain .fs-hpbar__fill { animation: none; } }
 .fs-float.is-hit { fill: var(--danger); } .fs-float.is-down { fill: var(--accent); } .fs-float.is-absorbed { fill: var(--warn); }
 @keyframes fs-float { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-8px); opacity: 0; } }
 .watch__caption { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); max-width: calc(100% - 24px); padding: 4px 10px; font: 700 0.82rem var(--display); letter-spacing: 0.06em; color: var(--text); background: rgba(11, 13, 17, 0.9); border: 1px solid var(--line); border-left: 2px solid var(--warn); clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); pointer-events: none; }

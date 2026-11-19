@@ -40,8 +40,9 @@ export const fightTypeOf = (templateId) => FIGHT_JOBS[templateId] ?? null;
 // Part B's statuses a body wears (burning, marked, exposed, shaken), for the stage's rings; only while it is up, and only when it has one.
 const statusesOf = (e) => { if (e.out || e.fled) return {}; const st = Fight.STATUSES.filter((x) => x !== 'infected' && e[x]); return st.length ? { st } : {}; };
 export const fightSnapshot = (b) => ({
-  guards: b.enemies.map((e) => ({ n: e.n, hp: Fight.hpUnits(e.hp), max: Fight.hpUnits(e.max), out: e.out || e.fled, ...(e.absorb > 0 ? { plate: e.absorb } : {}), ...(e.infected && !e.out && !e.fled ? { infected: true } : {}), ...statusesOf(e) })),
-  runners: b.runners.map((r) => ({ id: r.id, handle: r.handle, hp: Fight.hpUnits(r.hp), max: Fight.hpUnits(r.max), down: r.down || r.dead })),
+  // hpExact/maxExact (2026-11-19): the HP itself, for the map's draining bar; hp/max stay in whole hpUnits for older readers and saved reports.
+  guards: b.enemies.map((e) => ({ n: e.n, hp: Fight.hpUnits(e.hp), max: Fight.hpUnits(e.max), hpExact: Math.max(0, e.hp), maxExact: e.max, out: e.out || e.fled, ...(e.absorb > 0 ? { plate: e.absorb } : {}), ...(e.infected && !e.out && !e.fled ? { infected: true } : {}), ...statusesOf(e) })),
+  runners: b.runners.map((r) => ({ id: r.id, handle: r.handle, hp: Fight.hpUnits(r.hp), max: Fight.hpUnits(r.max), hpExact: Math.max(0, r.hp), maxExact: r.max, down: r.down || r.dead })),
 });
 /**
  * Where everyone stands on the site map, for the live battle view (ui/fightstage.js): core/fightmap.js layoutFight,
@@ -72,7 +73,7 @@ const CUE = { attack: 'shoot', shot: 'guard', overwatch: 'overwatch', stabilise:
 export const feedLine = (l) => ({
   kind: CUE[l.kind] ?? 'note', rule: l.kind, key: l.key ?? null, slots: l.slots ?? {}, text: l.text, actor: l.actor ? { id: l.actor, handle: l.actor } : null, guard: l.enemy ?? null, targetId: l.targetId ?? (typeof l.target === 'string' ? l.target : null),
   ...(l.burst ? { burst: true } : {}), ...(l.jumpFrom != null ? { jumpFrom: l.jumpFrom } : {}), ...(l.callers?.length ? { callers: l.callers } : {}), ...(l.targets?.length ? { targets: l.targets } : {}), ...(l.shieldedBy ? { shieldedBy: l.shieldedBy } : {}), ...(l.cracked ? { cracked: true } : {}), ...(l.at ? { at: l.at } : {}),
-  success: l.success ?? null, damage: Fight.hpUnits(l.damage ?? 0), heal: Fight.hpUnits(l.heal ?? 0), ...(l.damage > 0 ? { hpDamage: l.damage } : {}), ...(l.heal > 0 ? { hpHeal: l.heal } : {}), kit: l.kit ?? null, dropped: !!l.dropped, ...(l.left != null && l.max ? { left: Fight.hpUnits(l.left), max: Fight.hpUnits(l.max) } : {}), ...(l.roll ? { die: l.roll.die, need: l.roll.need, value: l.roll.value } : {}),
+  success: l.success ?? null, damage: Fight.hpUnits(l.damage ?? 0), heal: Fight.hpUnits(l.heal ?? 0), ...(l.damage > 0 ? { hpDamage: l.damage } : {}), ...(l.heal > 0 ? { hpHeal: l.heal } : {}), ...(l.left != null ? { hpLeft: Math.max(0, l.left) } : {}), ...(l.strong ? { strong: true } : {}), kit: l.kit ?? null, dropped: !!l.dropped, ...(l.left != null && l.max ? { left: Fight.hpUnits(l.left), max: Fight.hpUnits(l.max) } : {}), ...(l.roll ? { die: l.roll.die, need: l.roll.need, value: l.roll.value } : {}),
   ...(l.order ? { order: l.order, from: l.from } : {}),
 });
 
@@ -213,7 +214,8 @@ function afterRound(state, am) {
   }
   // On the way out the hack is already done: breaking off keeps the objective (and the pay), at the cost of whoever is down.
   if (GOES_ON.has(end.result) || (end.result === 'extracted' && b.type === 'holdHack' && b.stage === 1)) return endFight(state, am);
-  return retreatFight(state, am, { text: end.text, choice: 'They pull back', why: `${end.text}.` });
+  // The fight card already says why (the retreat's text); the exit card adds only the call and the cost, never the same sentence again (2026-11-19).
+  return retreatFight(state, am, { text: end.text, choice: 'They pull back', why: null });
 }
 
 // --- the end ---------------------------------------------------------------------------------------
@@ -290,9 +292,11 @@ function retreatFight(state, am, { text, choice, why, cause = text }) {
   am.repCut = (am.repCut ?? 0) + FIGHT.retreat.rep;
   record(am, { kind: 'battle', phase: 'retreat', text, cause, lines: [], hurt, forced: false, ...fightSnapshot(b), stage: stageOf(b) });
   am.battle = null;
-  const report = am.raid ? `The crew got out down the back stairs. ${text}.${hurt.length ? ` ${hurtLine(hurt)}.` : ''}` // a raid's costs are the hall's (core/raids.js)
-    : `The crew pulled back from the fight. ${text}.${hurt.length ? ` ${hurtLine(hurt)}.` : ''} No pay, heat +${FIGHT.retreat.heat}, reputation −${FIGHT.retreat.rep}.`;
-  exitRun(state, am, { text, choice, why, report });
+  const said = `${text.replace(/[.!?]+$/, '')}.`; // one full stop, whether the line had one or not
+  const report = am.raid ? `The crew got out down the back stairs. ${said}${hurt.length ? ` ${hurtLine(hurt)}.` : ''}` // a raid's costs are the hall's (core/raids.js)
+    : `The crew pulled back from the fight. ${said}${hurt.length ? ` ${hurtLine(hurt)}.` : ''} No pay, heat +${FIGHT.retreat.heat}, reputation −${FIGHT.retreat.rep}.`;
+  // The exit card's own line: the fight card just above it already says `text`, so the exit says it only when it differs from why the fight ended.
+  exitRun(state, am, { text: text === cause ? null : text, choice, why, report });
   return state;
 }
 

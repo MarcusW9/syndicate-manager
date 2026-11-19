@@ -957,7 +957,7 @@ export function playRound(b, rng) {
     const landedHit = landHit(e, r.hit ?? FIGHT.hit, x.strong, r.ap || pz.used, rng); // a plate takes plateHp off the hit: a base plain hit only cracks it
     const { cracked } = landedHit; const dmg = extraOf(e, pz, landedHit.dmg);
     if (e.hp <= 0) { e.out = true; defeated.push({ by: r.id, enemy: e.n, how: burst ? 'burst' : 'attack' }); say('attack', k('attackOut'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, ...pz.line, enemy: e.n, success: true, damage: dmg, dropped: true, roll: rollOf(x), strong: x.strong, cracked }); fall(e, r); return; }
-    say('attack', dmg === 0 ? k('attackCrack') : k('attackHit'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, ...pz.line, enemy: e.n, success: true, damage: dmg, roll: rollOf(x), left: e.hp, cracked });
+    say('attack', dmg === 0 ? k('attackCrack') : k('attackHit'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, ...pz.line, enemy: e.n, success: true, damage: dmg, roll: rollOf(x), left: e.hp, cracked, strong: x.strong }); // strong: the stage shows a critical hit's number bigger (2026-11-19)
     landed(r, e, dmg, named, flag);
     if (cracked && dmg === 0) landed(r, e, dmg, named, flag, 'onCrack');
   };
