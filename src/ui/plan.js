@@ -245,7 +245,12 @@ export function renderPlan() {
         <p><strong>Client:</strong> ${clientLine(v)}${v.client ? ` <button class="infobtn" data-action="client-info" aria-expanded="${V.clientOpen}" aria-label="About ${esc(v.client.name)}">${V.clientOpen ? '×' : 'i'}</button>` : ''}</p>
         ${v.client && V.clientOpen ? `<p class="muted small">${esc(v.client.desc)}</p>` : ''}
         ${v.client ? `<button class="linkbtn" data-action="client-open" data-id="${esc(v.client.id)}">${esc(v.client.name)}'s page ›</button>` : ''}
-        ${v.threatDelta ? `<p class="muted small">Every roll on this job is ${Math.abs(v.threatDelta) === 1 ? 'one point' : `${Math.abs(v.threatDelta)} points`} ${v.threatDelta > 0 ? 'harder' : 'easier'} than usual.</p>` : ''}
+        ${v.threatDelta ? (() => { // two numbers (2026-11-19): what they meet moves with the threat (core/incidents.js), the job's own calls by the delta (core/mission.js rollDifficulty)
+          const met = Math.abs(Math.round(rollTarget({ ...t, threat: v.threat })) - Math.round(rollTarget(t)));
+          const calls = Math.abs(v.threatDelta);
+          const pts = (n) => (n === 1 ? 'one point' : `${n} points`);
+          return `<p class="muted small">${v.threatDelta > 0 ? 'Hotter' : 'Quieter'} than usual: what they'll meet is ${pts(met)} ${v.threatDelta > 0 ? 'harder' : 'easier'}, the job's own calls ${pts(calls)}.</p>`;
+        })() : ''}
         ${v.hinted ? '<p class="intel">Intel unreliable: something about this job may not be what you were told.</p>' : ''}
         ${rivalRemark(v)}
         ${definingHandle(v) ? `<p class="named">${esc(LEGEND_TEXT.plan.replace('{op}', definingHandle(v)))}</p>` : ''}

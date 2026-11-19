@@ -17,7 +17,7 @@ import { takeFightChange } from './fightscreen.js';
 import { autoStep } from '../core/autorun.js';
 import { fitGearArt } from './board.js';
 import { isWatching, syncWatch, justFinished, stopWatch, mountWatch } from './watch.js';
-import { saveGame, unreadableSave, backupDue, saveTrouble } from '../save/save.js';
+import { saveGame, unreadableSave, backupDue, saveTrouble, getPref } from '../save/save.js';
 import { renderLeadName } from './tongs.js';
 import { tabBadges, tabOf } from './nav.js';
 import { onClick, onImportFile } from './actions.js';
@@ -93,6 +93,8 @@ function heatStat() {
 
 // --- rendering ---------------------------------------------------------
 export function render() {
+  // The colour theme (Save › Look, 2026-11-19): a device preference, drawn as a class on <html> (styles.css "Theme: red channel").
+  document.documentElement?.classList.toggle('theme-red', getPref('theme-red'));
   // A running job's watch screen updates in place, so its animations and timer carry on (ui/watch.js).
   const am = state.activeMission;
   // ...unless saving has just started or stopped failing: then the whole page is drawn, so the banner shows or goes.

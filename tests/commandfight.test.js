@@ -13,6 +13,8 @@ import { testFight, commandOrders } from './play.js';
 import { feedItems } from '../src/core/feed.js';
 import { planRead, coverage } from '../src/core/squad.js';
 import { spotsForJob } from '../src/core/fightspots.js';
+import { pinToEngine1 } from './engine1.js';
+pinToEngine1('paid_in_full', 'borrowed_glory', 'house_advantage'); // these tests are of engine 1's rules (tests/engine1.js)
 import { templateById, jobView } from '../src/core/jobs.js';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };

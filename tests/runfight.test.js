@@ -16,6 +16,7 @@ import { fightOddsFor, optionAvailable } from '../src/core/fight.js';
 import { DILEMMAS } from '../src/data/dilemmas.js';
 import { fightSnapshot, fightView, fightAnswer, expiryAnswer } from '../src/core/runfight.js';
 import { FIGHT, FIGHT_JOBS } from '../src/data/fights.js';
+import { pinToEngine1 } from './engine1.js';
 import { feedItems } from '../src/core/feed.js';
 import { importSave } from '../src/save/save.js';
 import { summariseRun, reportEvent } from '../src/core/report.js';
@@ -23,7 +24,7 @@ import { FIGHT_TEXT } from '../src/data/fightText.js';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 
-const FIVE = Object.keys(FIGHT_JOBS);
+const FIVE = Object.keys(FIGHT_JOBS); // every job that plays on engine 2: the death rule's tests cover them all (was five, then 26, now every job)
 const APPROACHES = ['loud', 'stealth', 'tech', 'con'];
 
 function begin(seed, templateId, approach = 'loud', { n, opts } = {}) {
@@ -57,9 +58,9 @@ function atFight(seed, id, callIn = 'every', orders = 'steady') {
 
 // --- the five jobs, and everything else ---------------------------------------------------------------
 
-test('the five jobs play their fights on engine 2, hands-off, start to finish; every other job stays on engine 1', () => {
+test('the jobs play their fights on engine 2, hands-off, start to finish (the five, and a sample of the rest; all jobs since 2026-11-19)', () => {
   const seen = {};
-  for (const id of [...FIVE, 'exit_interview', 'low_water', 'kidnap']) {
+  for (const id of [...FIVE]) {
     for (let seed = 1; seed <= 14; seed++) for (const orders of ['cautious', 'steady', 'committed']) {
       let s = begin(seed, id, APPROACHES[seed % 4], { opts: { callIn: 'never', orders } });
       s.activeMission.orders = orders;
@@ -74,11 +75,9 @@ test('the five jobs play their fights on engine 2, hands-off, start to finish; e
       for (const e of engines) seen[`${id}:${e}`] = (seen[`${id}:${e}`] ?? 0) + 1;
     }
   }
-  for (const id of FIVE) { assert.ok(seen[`${id}:2`] > 0, `${id} played engine-2 fights (${seen[`${id}:2`]})`); assert.equal(seen[`${id}:1`], undefined, `${id} never engine 1`); }
-  for (const id of ['low_water', 'kidnap']) { assert.equal(seen[`${id}:1`], undefined, `${id} never engine 1 (moved to engine 2, 2026-11-17)`); }
+  for (const id of ['data_pull', 'data_scrub', 'quiet_hours', 'warehouse', 'protection']) { assert.ok(seen[`${id}:2`] > 0, `${id} played engine-2 fights (${seen[`${id}:2`]})`); }
+  for (const id of FIVE) assert.equal(seen[`${id}:1`], undefined, `${id} never engine 1`);
   assert.ok(seen['kidnap:2'] > 0, 'kidnap played engine-2 fights');
-  assert.equal(seen['exit_interview:2'], undefined, 'a job not in FIGHT_JOBS stays on engine 1');
-  assert.ok(seen['exit_interview:1'] > 5);
 });
 
 test('an engine-2 fight shows on the feed like any fight: a note when it starts, a card a round, a note when it ends', () => {
@@ -374,6 +373,8 @@ test('an away job\'s dilemma call-in is open until the end of the day it came in
 // --- compatibility ------------------------------------------------------------------------------------
 
 test('an engine-1 fight in progress (a v60 save tagged engine 1) finishes on the old code', async () => {
+  const was = FIGHT_JOBS.exit_interview; pinToEngine1('exit_interview'); // a job that has since moved: this test plays the old fight, then puts it back
+  try {
   let s = begin(3, 'exit_interview', 'loud', { opts: { callIn: 'never', orders: 'steady' } });
   s = until(s, inFight);
   assert.ok(s.activeMission.battle.guards, 'an engine-1 fight');
@@ -383,6 +384,7 @@ test('an engine-1 fight in progress (a v60 save tagged engine 1) finishes on the
   const done = autoRun(loaded, 'steady');
   assert.equal(done.activeMission.done, true);
   assert.ok(done.activeMission.events.some((e) => e.kind === 'battle' && e.phase === 'round' && e.lines.some((l) => l.kind === 'guard' || l.kind === 'shoot')));
+  } finally { FIGHT_JOBS.exit_interview = was; }
 });
 
 // --- review fixes (PR 129) ----------------------------------------------------------------------------------
