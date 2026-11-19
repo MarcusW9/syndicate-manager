@@ -32,3 +32,6 @@ The older engine's fights (`ui/fightorders.js`: pick a runner, give an order, Go
 
 ## The founding screen's bar (same day)
 It reuses the plan bar's styles, so the plan bar fix already took it from 82px to 58px with three founders picked (measured at 844x390 and 667x375). The one flaw left was a 6px gap under it where card text peeked through; the bar now sits flush at the bottom. The cards themselves are tall (a photo, a stat list and text, 3 across), so the screen is still about 3 screens long at 390px of height; a compact card is the next step if it matters.
+
+## The founder cards (same day)
+On a phone on its side the six founder cards are two across, each photo-left and details-right and about 135px tall (was a tall column, three across, so half of one card showed at 390px of height). Two full rows now show above the bar, the whole card is still the tap target, and the origin line is cut at three lines. Shots in `../2026-11-19-landscape-founding/` (`844-founding-0.png` is the top of the screen, where Joss and the tong name field still take about 230px; the cards are in `-cards`). Not done: folding Joss's line and the name field into fewer rows.
