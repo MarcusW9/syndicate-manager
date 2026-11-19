@@ -57,6 +57,24 @@ export const FIGHT_TEXT = {
   'wave': '{kind} {n} comes in with the wave.',
   'approach': '{enemy} is still coming in.',
   'view.approaching': 'Coming in: no shot this round',
+  // An enemy card's statuses (2026-11-19, Claude's drafts, the owner's to rewrite; drafts/writing-tasks.md). The label is always shown, the text
+  // opens on a tap. {hp}: the tick ("10 HP"); {n}: ticks left; {extra}: an exposed hit's extra HP; {word}: the payload's log word.
+  'view.status.infected': 'Infected · {hp} a round',
+  'view.status.infected.textRounds': 'The {word} takes {hp} at the end of each round, {n} more times.',
+  'view.status.jumps': 'If this enemy falls, it jumps to another in the same group.',
+  'view.status.infected.textFall': 'The {word} takes {hp} at the end of each round until this enemy falls.',
+  'view.status.infected.textLast': 'The {word} takes {hp} at the end of this round, then it burns out.',
+  'view.status.burning': 'Burning · {hp} a round',
+  'view.status.burning.textRounds': 'Takes {hp} at the end of each round, {n} more times. Fire never spreads.',
+  'view.status.burning.textFall': 'Takes {hp} at the end of each round until this enemy falls. Fire never spreads.',
+  'view.status.burning.textLast': 'Takes {hp} at the end of this round, then the fire goes out. Fire never spreads.',
+  'view.status.marked': 'Marked',
+  'view.status.marked.text': 'Called out for the crew. Does nothing by itself; some abilities do more against a marked enemy.',
+  'view.status.exposed': 'Exposed',
+  'view.status.exposed.text': 'The next hit it takes skips its armour plate.',
+  'view.status.exposed.textExtra': 'The next hit it takes skips its armour plate and deals {extra} more.',
+  'view.status.shaken': 'Shaken',
+  'view.status.shaken.text': 'Counts as already gone when its group decides whether to run.',
   // The owner's wording (2026-11-19): a runner's hit, on the round screen and the weapon card (there with its first letter lower-cased).
   'view.hit': 'Deals {hit} HP ({strong} on a critical hit)',
   // The owner's wording (2026-11-19): a vest's soak, on the armour card (first letter lower-cased there when it follows another line).

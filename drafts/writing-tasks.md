@@ -583,6 +583,7 @@ Still open as separate batches: director spotlights; live-view pace, stage marks
 
 ## Part B statuses and draft pieces (2026-11-19, Claude's drafts, owner to replace)
 - **The four draft pieces** in `src/data/builds.js` (`PAYLOADS.incendiary`, `spotter`, `breacher`, `rout`): `name`, log `word` (Fire, Mark, Breach, Fear), `desc` and `offer`. Rename freely. Joss offers them under these drafts since 2026-11-19 (owner: "keep the drafts for now").
+- **The enemy card's status lines** (2026-11-19) in `src/data/fightText.js`, `view.status.*`: each status's label ("Burning · {hp} a round") and the line a tap opens, with the endings for the last round and for "until it falls", and `view.status.jumps` for a strain that spreads.
 - **Their log lines** in `src/data/fightText.js` (three variants each, same slots): `burn`, `burnTick`, `burnOut` (`{enemy}`), `mark`, `expose` (`{who}`, `{enemy}`), `shake` (`{enemy}`).
 
 ## Small line: armour's soak (2026-11-19): **`view.soak` supplied and applied 2026-11-19** (owner: "Soaks {soak} HP from every hit; 1 HP minimum"). Was Claude's draft below

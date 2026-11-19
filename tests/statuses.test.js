@@ -180,3 +180,21 @@ test('the death rule holds with the new pieces: on cautious or steady nobody die
     assert.ok(!b.runners.some((r) => r.dead), `${type} seed ${seed}: a death on ${risk}`);
   }
 });
+
+test('an enemy card lists each status it carries, with the rules\' own numbers, and none once it is out', async () => {
+  const V = await import('../src/core/fightview.js');
+  const e = foe(1, 'police', { absorb: 1,
+    infected: { tick: 10, left: 2, by: 'jax', round: 0, payload: 'contagion' },
+    burning: { tick: 10, left: 1, by: 'jax', round: 0, payload: 'incendiary' },
+    marked: { by: 'jax', round: 0, payload: 'spotter' }, exposed: { by: 'jax', round: 0, payload: 'breacher' }, shaken: { by: 'jax', round: 0, payload: 'rout' } });
+  const v = V.statusesView(e);
+  assert.deepEqual(v.map((s) => s.st), ['infected', 'burning', 'marked', 'exposed', 'shaken']);
+  assert.match(v[0].label, /10 HP/); assert.match(v[0].text, /2 more times/); assert.match(v[0].text, /jumps/);
+  assert.match(v[1].text, /end of this round, then the fire goes out/); assert.doesNotMatch(v[1].text, /jumps/);
+  assert.match(v[3].text, /10 HP more/);
+  for (const s of v) assert.ok(s.label && s.text && !s.text.startsWith('view.'), s.st);
+  assert.deepEqual(V.statusesView({ ...e, out: true }), []);
+  const b = fight('incendiary');
+  F.playRound(b, () => 0.3);
+  assert.deepEqual(V.roundView(b).enemies.find((x) => x.n === 1).statuses.map((s) => s.st), ['burning']);
+});
