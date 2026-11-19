@@ -97,7 +97,7 @@ export const HEISTS = [
       {
         id: 'face',
         templates: ['access_window', 'relay_cover'],
-        line: 'Arrange a registered service identity for the crew’s lift access. The scanner needs to recognise someone it expects.',
+        line: 'Arrange a registered service visit for the crew’s lift access. The lift needs to expect the party.',
         effect: { drop: 'facial_scan' },
         shows: 'Service identity registered: facial-scan crisis cannot appear',
       },
