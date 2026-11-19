@@ -60,14 +60,15 @@ function intentOf(b, r, a, o) {
   return { kind: a.kind, from: a.from, text: lineText(key, slots) };
 }
 
-/** A threat as the screen shows it, with the chance and its damage in HP (the line adds neither). */
+/** A threat as the screen shows it, with the chance and its damage in HP after the target's soak (the line adds neither). */
 function threatOf(b, t, exp) {
   const e = enemyOf(b, t.enemy);
   const enemy = nameOfEnemy(b, t.enemy);
   if (t.kind === 'aim') {
     const x = exp.find((y) => y.id === t.id); // a shielded shot is taken by its shield: their cover, their chance
     const who = handleOf(b, x?.target ?? t.target);
-    return { id: t.id, kind: 'aim', enemy: t.enemy, target: x?.target ?? t.target, shieldedBy: x?.shieldedBy ?? null, chance: t.chance, hit: t.hit, text: lineText('threat.aim', { enemy, who, chance: chanceWord(t.chance), hp: hpWord(t.hit) }), e };
+    const lands = x?.lands ?? t.hit; // what it takes off whoever faces it, after their armour's soak (the shot rule's own landsOn)
+    return { id: t.id, kind: 'aim', enemy: t.enemy, target: x?.target ?? t.target, shieldedBy: x?.shieldedBy ?? null, chance: t.chance, hit: lands, text: lineText('threat.aim', { enemy, who, chance: chanceWord(t.chance), hp: hpWord(lands) }), e };
   }
   const slots = { enemy, who: t.target ? handleOf(b, t.target) : '' };
   return { id: t.id, kind: t.kind, enemy: t.enemy, target: t.target, text: lineText(`threat.${t.kind}`, slots), e };
@@ -114,7 +115,7 @@ export function roundView(b) {
       hit: r.hit ?? FIGHT.hit, strongHit: (r.hit ?? FIGHT.hit) * FIGHT.strongMult, hitLine: lineText('view.hit', { hit: r.hit ?? FIGHT.hit, strong: (r.hit ?? FIGHT.hit) * FIGHT.strongMult }),
       order: o.duty, orderTarget: o.target, orderLabel: orderLabel(b, o),
       intent: a && F.standing(b).some((x) => x.id === r.id) ? intentOf(b, r, a, o) : null,
-      shots: shots.map((x) => ({ enemy: nameOfEnemy(b, x.enemy), chance: x.chance, text: chanceWord(x.chance), pips: F.hpUnits(x.hit), hp: x.hit, shielded: !!x.shieldedBy })),
+      shots: shots.map((x) => ({ enemy: nameOfEnemy(b, x.enemy), chance: x.chance, text: chanceWord(x.chance), pips: F.hpUnits(x.lands), hp: x.lands, shielded: !!x.shieldedBy })),
       threshold: F.hpUnits(pv?.thresholds[r.id] ?? F.riskThreshold(b, r)), thresholdHp: pv?.thresholds[r.id] ?? F.riskThreshold(b, r),
     };
   });
@@ -162,7 +163,7 @@ export function planView(args, risk = 'steady') {
   const gaps = [];
   if (!jammers.length) gaps.push(lineText('plan.noJammer'));
   if (!b.runners.some((r) => r.medic)) gaps.push(lineText('plan.noMedic'));
-  if (tech && !tech.absorb) gaps.push(lineText('plan.noTechArmour', { tech: tech.handle }));
+  if (tech && !tech.soak) gaps.push(lineText('plan.noTechArmour', { tech: tech.handle }));
   const odds = {};
   for (const level of RISK_ORDER) odds[level] = F.fightOddsFor({ ...args, risk: level });
   const stage = 0;

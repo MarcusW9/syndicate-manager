@@ -1074,5 +1074,12 @@ function migrate(state) {
     if (b?.engine === 2 && b.toughness == null) b.toughness = 0;
     state.version = 79;
   }
+  if (state.version === 79) {
+    // v80: runner armour is a flat soak (DESIGN.md 2026-11-19). A fight in progress keeps the plates it was built with (absorb as it
+    // stands, soak 0), so it plays out under the old rule; the next fight reads the vest afresh.
+    const b = state.activeMission?.battle;
+    if (b?.engine === 2) for (const r of b.runners ?? []) if (r.soak == null) r.soak = 0;
+    state.version = 80;
+  }
   return state;
 }

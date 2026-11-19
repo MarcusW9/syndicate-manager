@@ -28,7 +28,7 @@ export const PERKS = {
   linked: { name: 'Linked controls', desc: 'Hooked into the wearer\'s own rig. Piloting +1.', weight: 2, effect: { bonus: { piloting: 1 } }, types: ['deck', 'cortex', 'picks'] },
   shockpad: { name: 'Shock padding', desc: 'Takes the worst out of a bad hit: a serious wound is 5 points less likely after an unsaved incident.', weight: 2, effect: { serious: 0.05 }, types: ['pistol', 'rifle', 'drone', 'deck', 'medkit', 'picks', 'reflex', 'cortex'] },
   sutures: { name: 'Suture strip', desc: 'Counts +1 towards the medical a teammate needs to patch a serious wound.', weight: 2, effect: { patch: 1 }, types: ['vest', 'drone', 'deck', 'picks', 'reflex', 'cortex'] },
-  weave: { name: 'Skin weave', desc: 'A weave under the skin. Takes 1 off every hit in a fight.', weight: 1, effect: { armour: 1 }, types: ['reflex', 'cortex'] },
+  weave: { name: 'Skin weave', desc: 'A weave under the skin. Takes 5 HP off every hit in a fight.', weight: 1, effect: { armour: 1 }, types: ['reflex', 'cortex'] },
   hardened: { name: 'Hardened rounds', desc: 'Their sidearm\'s hits get through some armour in a fight.', weight: 2, effect: { pierce: 1 }, types: ['pistol'] },
   overlay: { name: 'Targeting overlay', desc: 'Their hits do 1 more in a fight.', weight: 2, effect: { damage: 1 }, types: ['deck', 'reflex', 'cortex'] },
   magazine: { name: 'Spare magazine', desc: 'One more shot or drone action from overwatch.', weight: 2, effect: { uses: 1 }, types: ['rifle', 'drone'] },

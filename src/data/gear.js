@@ -79,7 +79,7 @@ export const GEAR = {
   },
   vest: {
     name: 'Armoured vest', slot: 'armour', price: 1200, serious: 0.1, armour: 1,
-    desc: 'Plates under a work jacket. Takes 1 off every hit in a fight.',
+    desc: 'Plates under a work jacket.',
   },
   drone: {
     name: 'Drone', slot: 'tool', price: 3000,

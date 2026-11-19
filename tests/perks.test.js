@@ -158,11 +158,11 @@ test('fight perks: armour, pierce and damage reach both engines', () => {
   // Engine 1 numbers on the runner as they enter the fight.
   const r = battleRunner(withKit('pistol:custom:hardened', 'vest:standard', 'reflex:custom:weave'), 'loud');
   assert.equal(r.pierce, 1); assert.equal(r.armour, 2);
-  // Engine 2: a piercing weapon, one more soak (a standard vest becomes a pro one), a healer.
+  // Engine 2: a piercing weapon, one more armour point (5 HP more soak, 2026-11-19), a healer.
   assert.equal(fightRunner(withKit('pistol:custom:hardened'), 'loud').ap, true);
   assert.equal(fightRunner(withKit('pistol:verified'), 'loud').ap, false);
-  assert.equal(fightRunner(withKit('vest:standard'), 'loud').absorb, 1);
-  assert.equal(fightRunner(withKit('vest:standard', 'reflex:custom:weave'), 'loud').absorb, 2);
+  assert.equal(fightRunner(withKit('vest:standard'), 'loud').soak, 5);
+  assert.equal(fightRunner(withKit('vest:standard', 'reflex:custom:weave'), 'loud').soak, 10, 'the weave adds a point: 5 HP more');
   assert.equal(fightRunner(withKit('vest:custom:sutures'), 'loud').healer, false, 'a suture strip does not make a healer of a runner');
   assert.equal(fightRunner(withKit('medkit:custom:padded'), 'loud').healer, true, 'a trauma kit still does');
 });
