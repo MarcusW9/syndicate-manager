@@ -135,6 +135,8 @@ export function onClick(e) {
     case 'swear-in': return setState(swearIn(state, id));
     // A crew member's name in a message: open their page, remembering the message to come back to.
     case 'piece-tip': V.pieceTip = V.pieceTip === id ? null : id; break;
+    case 'skill-tab': V.skillTab = id; V.skillOpen = null; break;
+    case 'skill-open': V.skillOpen = V.skillOpen === id ? null : id; break;
     case 'trait-tip': V.traitTip = V.traitTip === id ? null : id; break;
     // A runner's name or face anywhere (a message, a job board strip, a hall, a district card): their page, on Crew.
     case 'open-op': case 'op-link': remember(action, id); goHome('runner'); V.gearSlot = null; V.gearFor = null; V.openRecruitId = null; V.openOperativeId = id; V.bagPick = null; break;
