@@ -1157,7 +1157,8 @@ function checkEnd(b, rng, say) {
     for (const x of hurt) x.hp = Math.min(x.max, x.hp + FIGHT.wayOutTreatHeal);
     if (hurt.length) say('patch', 'wayOutPatch', { who: healer.handle, n: hurt.length }, { actor: healer.id, targets: hurt.map((x) => x.id), heal: FIGHT.wayOutTreatHeal });
     for (const t of b.runners.filter((x) => x.down && !x.stable && !x.dead && !x.withdrawn)) {
-      const medic = b.runners.filter((x) => x.healer && present(x)).sort((x, y) => sv(y, 'medical') - sv(x, 'medical') || bySeat(x, y))[0];
+      // A healer first; with none standing, anyone still on their feet steadies the downed on their own medical stat (2026-11-19).
+      const medic = healer ?? b.runners.filter((x) => present(x) && !x.down).sort((x, y) => sv(y, 'medical') - sv(x, 'medical') || bySeat(x, y))[0];
       if (!medic) return;
       const value = sv(medic, 'medical'); const die = d20(rng); const need = 10 + b.diff + FIGHT.wayOutTreatStep; const ok = die + value >= need;
       if (ok) t.stable = true;
