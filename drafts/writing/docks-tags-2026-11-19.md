@@ -15,7 +15,7 @@ the entry text is not changed. Read with `log-audit-2026-11-19.md` (what the log
 | Tag | Meaning |
 | --- | --- |
 | `cross` | someone can walk across it (stealth 1) |
-| `hide` | someone can settle out of sight in it (stealth 3 uses a place is not required; kept for later) |
+| `hide` | someone can settle out of sight in it (no template uses it yet; kept for later) |
 | `movable` | one runner can shift it by hand or shoulder (combat 1) |
 | `fastening` | a fixture a runner could force or work at (combat 4, stealth 4) |
 | `fixed` / `machine` / `vehicle` | not shifted by hand; a machine or vehicle also moves or is operated by someone |
@@ -199,7 +199,7 @@ Each of the three overlay sets is drawn **only when the faction is in the job**.
 | --- | --- | --- |
 | combat 1 | obstacle | 6 of 12 |
 | combat 2 | object | 5 of 10 |
-| stealth 1 | place | 9 of 12 with `cross` (3 `hide`-only places excluded) |
+| stealth 1 | place | 10 of 12 with `cross` (the generator's lee and the office shelter are `hide`-only) |
 | stealth 5 | sound | 4 of 10 |
 | cool 4 | sound | 5 of 10 |
 | driving 2 | watcher | 2 of 8 |
