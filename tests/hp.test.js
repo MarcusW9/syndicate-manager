@@ -18,7 +18,7 @@ test('every HP amount is a whole number of hpUnits, so the old pip rules hold ex
   for (const k of ['hit', 'strongHit', 'plateHp', 'patchHeal', 'wayOutTreatHeal', 'minHp', 'lightWoundHp']) assert.equal(FIGHT[k] % U, 0, k);
   assert.equal(FIGHT.medicAura.heal % U, 0);
   assert.equal(FIGHT.risk.steady.minHp % U, 0);
-  for (const p of Object.values(PAYLOADS)) assert.equal(p.dot.tick % U, 0, p.id);
+  for (const p of Object.values(PAYLOADS)) if (p.dot) assert.equal(p.dot.tick % U, 0, p.id); // the payloads that tick (part B's marks carry no dot)
   assert.equal(FIGHT.plateHp, FIGHT.hit, 'a plate takes one plain hit, as it did');
 });
 

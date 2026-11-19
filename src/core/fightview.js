@@ -93,10 +93,11 @@ const stateOf = (r) => (r.dead ? 'dead' : r.withdrawn ? 'out' : r.aboard ? 'aboa
  * The round screen's data. With the round drawn (b.drawn), the threats, intents, exposure and "if nothing" come
  * from previewRound; before that, only the roster and the goal. Never draws.
  */
-/** The end-of-round tick line: the HP each infected enemy will lose ({hp}, from the payload's tick), one sentence a tick size. */
+/** The end-of-round tick line: the HP each infected or burning enemy will lose ({hp}, from the payload's tick), one sentence a word and tick size
+ * ({word}: the payload's log word, "Vector", "Contagion", "Fire"). */
 function ticksText(b, ticks) {
-  const sizes = [...new Set(ticks.map((t) => t.hp))];
-  return sizes.map((hp) => lineText('ticks', { word: 'Vector', hp: hpWord(hp), enemies: nameList(ticks.filter((t) => t.hp === hp).map((t) => nameOfEnemy(b, t.enemy))) })).join(' ');
+  const groups = [...new Set(ticks.map((t) => `${t.word ?? 'Vector'}|${t.hp}`))];
+  return groups.map((g) => { const [word, hp] = [g.slice(0, g.lastIndexOf('|')), Number(g.slice(g.lastIndexOf('|') + 1))]; return lineText('ticks', { word, hp: hpWord(hp), enemies: nameList(ticks.filter((t) => (t.word ?? 'Vector') === word && t.hp === hp).map((t) => nameOfEnemy(b, t.enemy))) }); }).join(' ');
 }
 
 export function roundView(b) {
@@ -207,7 +208,7 @@ export function buildRead(b) {
   const withTag = (tag) => kinds.filter((k) => (ENEMIES[k]?.foeTags ?? []).includes(tag));
   const machines = withTag('synthetic');
   if (machines.length) threats.push({ title: lineText('build.threat.synthetic', { kinds: counted(machines) }), text: lineText('build.threat.synthetic.text') });
-  const armoured = kinds.filter((k) => (ENEMIES[k]?.absorb ?? 0) > 0);
+  const armoured = withTag('armoured');
   if (armoured.length) threats.push({ title: lineText('build.threat.armoured', { kinds: counted(armoured) }), text: lineText('build.threat.armoured.text') });
 
   let blocked = null; let used = false;

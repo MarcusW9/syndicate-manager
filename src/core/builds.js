@@ -32,7 +32,7 @@ export function withBuild(crew, build = GIVEN_BUILD) {
 // op.buildAt                  their jobsWithCrew when they last took a piece (null before the first)
 // op.buildSnooze              the day before which Joss won't ask again after a "not yet"
 // Modelled on core/specialisations.js: a Joss message with options, a resolver (decisions.js), a check after each job and each day.
-const PIECES = { ...MOVES, ...PAYLOADS };
+const PIECES = { ...MOVES, ...PAYLOADS }; // a `draft` piece (data/builds.js, part B) is never offered
 /** A piece by id ({ id, name, desc, slot, ... }), or null. */
 export const pieceById = (id) => PIECES[id] ?? null;
 
@@ -45,7 +45,7 @@ export function buildPieces(op) {
 /** The pieces Joss could offer them now: an empty slot, and the base stats for it. Not about timing (offerDue). */
 export function eligiblePieces(op) {
   const held = op.build ?? {};
-  return Object.values(PIECES).filter((p) => !PIECES[held[p.slot]] && Object.entries(p.needs ?? {}).every(([stat, n]) => (op.stats?.[stat] ?? 0) >= n));
+  return Object.values(PIECES).filter((p) => !p.draft && !PIECES[held[p.slot]] && Object.entries(p.needs ?? {}).every(([stat, n]) => (op.stats?.[stat] ?? 0) >= n));
 }
 
 /** Is it time to ask them? Enough jobs together (the first offer, then a gap after each piece taken) and not snoozed. */

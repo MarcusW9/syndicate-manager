@@ -28,7 +28,9 @@ Built as written: `scripts/sim-combos.mjs`, `tests/fightspeed.test.js` (ratio ab
 
 **Do not** change any piece, number or rule in part A; outliers are for the owner and part B.
 
-## Part B: new statuses and pieces (Opus, owner first)
+## Part B: new statuses and pieces (Opus, owner first) — first set BUILT 2026-11-19
+
+Built on the answers below (save v81): `docs/BATTLES.md` "The build vocabulary's first statuses", the design-log row of 2026-11-19, `tests/statuses.test.js`, the sweep before and after (`docs/sims/combos-2026-11-19-statuses-before.md`, `-statuses.md`). What is left for the owner is in `HANDOFF.md`.
 
 **The owner's answers, 2026-11-19 (the proposal's five questions are settled; do not ask them again):**
 

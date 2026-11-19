@@ -144,7 +144,7 @@ export function newEnemy(b, kind, rng, { arriving = false, group = 0 } = {}) {
   const def = ENEMIES[kind];
   const step = b.toughness ?? 0; // the job's threat made them tougher (2026-11-18): arrivals too
   const hp = def.hp + step * TOUGHNESS.hpStep;
-  const e = { n: b.enemies.length + 1, kind, hp, max: hp, absorb: (def.absorb ?? 0) + (step >= TOUGHNESS.plateAtStep ? 1 : 0), cover: def.cover, out: false, fled: false, deck: shuffle([...def.deck], rng), di: 0, approaching: arriving, group, infected: null };
+  const e = { n: b.enemies.length + 1, kind, hp, max: hp, absorb: (def.absorb ?? 0) + (step >= TOUGHNESS.plateAtStep ? 1 : 0), cover: def.cover, out: false, fled: false, deck: shuffle([...def.deck], rng), di: 0, approaching: arriving, group, infected: null, burning: null, marked: null, exposed: null, shaken: null };
   b.enemies.push(e);
   if (breaks(kind)) b.hiredTotal[group] = (b.hiredTotal[group] ?? 0) + 1;
   return e;
@@ -391,12 +391,22 @@ function enemyOrder(b, list, priority) {
 // A piece (data/builds.js `pieces`) is { when, if?, who, what } in the words below and never names another piece; when a trigger fires,
 // every piece listening for it runs, in a fixed order (the move's, then the payload's). Adding a piece made of these words is data only.
 export const VOCAB = {
-  when: ['onAttack', 'onHit', 'onKill'],
-  if: ['enemiesUp'],
+  when: ['onAttack', 'onHit', 'onCrack', 'onKill'],
+  if: ['enemiesUp', 'targetHas'],
   who: ['target', 'nextInGroup', 'nearest'],
   what: ['burst', 'apply', 'spread'],
-  status: ['infected'],
+  status: ['infected', 'burning', 'marked', 'exposed', 'shaken'],
 };
+// The statuses (part B, 2026-11-19, the owner's first set; drafts/HANDOFF-build-vocab-next.md). Each sits on an enemy as a field of its
+// name (e.infected, e.burning, ...) or null. What each does by itself, all here and in playRound:
+//   infected  loses the payload's dot.tick HP at each round's end (from the round after), for dot.rounds or until it falls
+//   burning   the same tick, its own payload's numbers; never spreads by itself (owner, 2026-11-19: a plain burn)
+//   marked    nothing: a mark other pieces read (`if: { targetHas: 'marked' }`)
+//   exposed   the next hit it takes from the crew or the overwatch ignores its plate; that hit uses it up
+//   shaken    counts as gone for its group's flee check (only bodies that break run; on the others it does nothing)
+// The guardrails are the engine's: a status never stacks or renews, an immune body shrugs it (once a body) and never passes it on.
+export const DOTS = ['infected', 'burning'];
+export const STATUSES = VOCAB.status;
 
 /** The pieces a runner carries that listen for `when`, in the fixed order (move, then payload): [{ piece, from }] (`from`: the move or payload). */
 // Each move's or payload's listeners for a trigger, read once (the data never changes in play; the planning odds replay many fights).
@@ -418,12 +428,17 @@ export const piecesOn = (r, when) => {
 };
 
 /** Does a piece's `if` hold now? (No condition always holds.) */
-export const pieceHolds = (b, cond) => !cond || !(cond.enemiesUp != null && enemiesUp(b).length < cond.enemiesUp);
+export const pieceHolds = (b, cond, e = null) => !cond || !((cond.enemiesUp != null && enemiesUp(b).length < cond.enemiesUp) || (cond.targetHas != null && !e?.[cond.targetHas]));
 
 /** A status as it sits on a body, made from the payload that carries it: `infected` takes the payload's `dot` (the first infection stands). */
-const STATUS = {
-  infected: (pay, by, round) => ({ tick: pay.dot.tick, left: pay.dot.rounds, by, round, payload: pay.id }),
-};
+const dot = (pay, by, round) => ({ tick: pay.dot.tick, left: pay.dot.rounds, by, round, payload: pay.id });
+const mark = (pay, by, round) => ({ by, round, payload: pay.id });
+const STATUS = { infected: dot, burning: dot, marked: mark, exposed: mark, shaken: mark };
+/** Whether a status would do anything on this body, so `nextInGroup` passes over one it would be wasted on (part B): an exposed body needs a
+ * plate left to skip; a shaken one must be a kind that breaks and runs. The others always act. */
+const canAct = (e, st) => (st === 'exposed' ? e.absorb > 0 : st === 'shaken' ? breaks(e.kind) : true);
+/** Each status's log line key (data/fightText.js). */
+const STATUS_LINE = { infected: 'infect', burning: 'burn', marked: 'mark', exposed: 'expose', shaken: 'shake' };
 
 /** How many enemies must be up for a move to fire by itself (its onAttack piece's `if`; 1 with no condition). The planning advice reads it. */
 export const moveNeedsUp = (mv) => (mv?.pieces ?? []).find((p) => p.when === 'onAttack')?.if?.enemiesUp ?? 1;
@@ -582,8 +597,9 @@ const overwatchReady = (b) => b.overwatch && b.overwatch.left > 0 && (!boardingS
 
 // --- infection (slice 3-ii-a) ----------------------------------------------------------------------
 
-/** The infected enemies that lose HP at the end of this round: up, and infected in an earlier round (the first tick is the round after the hit). The preview and the round read the same list. */
-export const ticksDue = (b) => enemiesUp(b).filter((e) => e.infected && b.round > e.infected.round);
+/** The ticks due at the end of this round, [{ e, st }]: each enemy up with a damage-over-time status (infected, then burning) put on in an earlier
+ * round (the first tick is the round after the hit). The preview and the round read the same list. */
+export const ticksDue = (b) => enemiesUp(b).flatMap((e) => DOTS.filter((st) => e[st] && b.round > e[st].round).map((st) => ({ e, st })));
 
 // --- the preview -----------------------------------------------------------------------------------
 
@@ -612,7 +628,7 @@ export function previewRound(b) {
     threats: b.threats.map((t) => ({ ...t, chance: exp.find((x) => x.id === t.id)?.chance ?? t.shown })),
     exposure: exp,
     actions: actions.map((a) => ({ who: a.r.id, kind: a.kind, target: a.target ?? a.for ?? a.enemy ?? null, ...(a.enemies ? { targets: a.enemies } : {}), ...(['attack', 'burst'].includes(a.kind) && PAYLOADS[a.r.build?.payload] ? { carries: a.r.build.payload } : {}), from: a.from, duty: a.order.duty, fallback: a.order.fallback?.duty ?? null })),
-    ticks: ticksDue(b).map((e) => ({ enemy: e.n, hp: e.infected.tick, left: e.hp, rounds: e.infected.left })),
+    ticks: ticksDue(b).map(({ e, st }) => ({ enemy: e.n, status: st, word: PAYLOADS[e[st].payload]?.word ?? 'Vector', hp: e[st].tick, left: e.hp, rounds: e[st].left })),
     overwatch: ow ? { enemy: ow.n } : null,
     ifNothing: parts.map((p) => ({ ...p, text: lineText(p.key, { n: p.n }) })),
     thresholds: Object.fromEntries(b.runners.map((r) => [r.id, riskThreshold(b, r)])),
@@ -822,7 +838,7 @@ export function playRound(b, rng) {
   // nextInGroup is Contagion's rule (slice 3-iii, 2026-11-17): the first other enemy of the group that is up, without the status and not immune.
   const whoOf = (rule, e, st, from) => {
     if (rule === 'target') return [e];
-    if (rule === 'nextInGroup') return enemiesUp(b).filter((x) => x.n !== e.n && (x.group ?? 0) === (e.group ?? 0) && !x[st] && !immuneTo(x.kind, from.id)).slice(0, 1);
+    if (rule === 'nextInGroup') return enemiesUp(b).filter((x) => x.n !== e.n && (x.group ?? 0) === (e.group ?? 0) && !x[st] && !immuneTo(x.kind, from.id) && canAct(x, st)).slice(0, 1);
     return [];
   };
   // onKill: an enemy went down (to `killer`'s attack or bounce, or to anything for a status it carried: the overwatch, a tick, another runner). The
@@ -830,26 +846,48 @@ export function playRound(b, rng) {
   // a status at most once, and an immune body never passes one on: so a Contagion carrier's killing hit makes the infection jump at once, even from
   // a body that never lived to be infected (2026-11-17), and otherwise the host's own infection jumps. A spread is not a hit: a plate does not stop it,
   // and the new status starts in full (ticking from the next round).
-  const fall = (e, killer, carried = [e.infected]) => {
+  const fall = (e, killer, carried = STATUSES.map((st) => e[st])) => {
     const sources = [];
     if (killer) for (const { piece, from } of piecesOn(killer, 'onKill')) sources.push({ piece, from, by: killer.id });
     for (const inf of carried) {
       const from = inf && PAYLOADS[inf.payload];
-      if (from) for (const piece of (from.pieces ?? []).filter((p) => p.when === 'onKill')) sources.push({ piece, from, by: inf.by });
+      // A carried status brings only its payload's onKill spread pieces (the Contagion jump), never its other onKill pieces: those are the killer's.
+      if (from && !sources.some((x) => x.from === from && x.carried)) for (const piece of (from.pieces ?? []).filter((p) => p.when === 'onKill' && p.what?.spread)) sources.push({ piece, from, by: inf.by, carried: true });
     }
     const spread = new Set();
     for (const { piece, from, by } of sources) {
+      if (!pieceHolds(b, piece.if, e)) continue;
       const st = piece.what?.spread;
-      if (!st || spread.has(st) || immuneTo(e.kind, from.id)) continue;
-      spread.add(st);
-      for (const t of whoOf(piece.who, e, st, from)) {
-        t[st] = STATUS[st](from, by, b.round);
-        say('spread', 'spread', { enemy: E(e.n), to: E(t.n), word: from.word }, { enemy: t.n, from: e.n, jumpFrom: e.n, payload: from.id });
+      if (st) {
+        if (spread.has(st) || immuneTo(e.kind, from.id)) continue;
+        spread.add(st);
+        for (const t of whoOf(piece.who, e, st, from)) {
+          t[st] = STATUS[st](from, by, b.round);
+          say('spread', 'spread', { enemy: E(e.n), to: E(t.n), word: from.word }, { enemy: t.n, from: e.n, jumpFrom: e.n, payload: from.id });
+        }
+        continue;
       }
+      // An onKill `apply` (a killer's piece: Rout's fear on the next of the group). Not a hit: a plate does not stop it.
+      const ap = piece.what?.apply;
+      if (ap) for (const t of whoOf(piece.who, e, ap, from)) put(t, ap, from, by, killer?.handle, { actor: by, from: e.n });
     }
+  };
+  // Put a status on a body: never on one that has it (no stacking, no renewing) or is immune to the payload; said with the status's own line.
+  const put = (t, st, from, by, who, extra) => {
+    if (t[st] || immuneTo(t.kind, from.id)) return;
+    t[st] = STATUS[st](from, by, b.round);
+    say(STATUS_LINE[st], STATUS_LINE[st], { who, enemy: E(t.n), word: from.word }, { ...extra, enemy: t.n, payload: from.id, status: st });
   };
 
   const E = wordless ? silent : (n) => enemyName(b.enemies.find((x) => x.n === n).kind, n); // a name for a line's slots only
+  // `exposed` (part B): the next landed hit on the body ignores its plate, and uses the status up. `line` flags the hit's line when a plate was
+  // actually skipped (the stage and the log say so); a body with no plate left just loses the status.
+  const pierce = (e, ap) => {
+    if (!e.exposed) return { used: false, line: {} };
+    const skipped = e.absorb > 0 && !ap;
+    e.exposed = null;
+    return { used: true, line: skipped ? { pierced: true } : {} };
+  };
 
   const vl = vanDecision(b);
   if (vl) lines.push(vl);
@@ -879,7 +917,8 @@ export function playRound(b, rng) {
       const x = roll(ow.value, b.diff + FIGHT.attackStep + FIGHT.overwatchStep + FIGHT.cover[e.cover], strongMargin());
       if (!x.ok) say('overwatch', 'overwatchMiss', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: false, damage: 0, roll: rollOf(x) });
       else {
-        const { dmg, cracked } = landHit(e, hitOf(ow.damage), x.strong, false, rng);
+        const pz = pierce(e, false);
+        const { dmg, cracked } = landHit(e, hitOf(ow.damage), x.strong, pz.used, rng);
         if (e.hp <= 0) { e.out = true; defeated.push({ by: ow.id, enemy: e.n, how: 'overwatch' }); say('overwatch', 'overwatchOut', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, dropped: true, roll: rollOf(x), cracked }); fall(e, null); }
         else say('overwatch', dmg === 0 ? 'overwatchCrack' : 'overwatchHit', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, roll: rollOf(x), left: e.hp, cracked });
       }
@@ -889,18 +928,14 @@ export function playRound(b, rng) {
   // onHit: a runner's hit landed and left the target up. Every status the hit carries (the runner's onHit `apply` pieces) meets the target's
   // tags first: an immune body shrugs it off, said once a body, on any landed hit, plate or not, so a drone's shrug is seen. Then, past the plate
   // only (a hit that only cracks one carries nothing in; owner, 2026-11-17), the status goes on, unless the body has it already.
-  const STATUS_LINE = { infected: 'infect' };
-  const landed = (r, e, dmg, named, flag) => {
-    for (const { piece, from } of piecesOn(r, 'onHit')) {
+  // onCrack (part B, 2026-11-19): the same, for an attack that only cracked a plate (no damage): its pieces go on whatever the plate.
+  const landed = (r, e, dmg, named, flag, when = 'onHit') => {
+    for (const { piece, from } of piecesOn(r, when)) {
       const st = piece.what?.apply;
-      if (!st) continue;
+      if (!st || !pieceHolds(b, piece.if, e)) continue;
       if (immuneTo(e.kind, from.id)) { if (!e.shrugged) { e.shrugged = true; say('immune', 'immune', { who: r.handle, enemy: E(e.n), word: from.word }, { ...named, ...flag, enemy: e.n }); } continue; }
-      if (dmg <= 0) continue;
-      for (const t of whoOf(piece.who, e, st, from)) {
-        if (t[st]) continue; // a status never stacks or renews
-        t[st] = STATUS[st](from, r.id, b.round);
-        say(STATUS_LINE[st], STATUS_LINE[st], { who: r.handle, enemy: E(t.n), word: from.word }, { ...named, ...flag, enemy: t.n, payload: from.id });
-      }
+      if (when === 'onHit' && dmg <= 0) continue;
+      for (const t of whoOf(piece.who, e, st, from)) put(t, st, from, r.id, r.handle, { ...named, ...flag });
     }
   };
 
@@ -914,10 +949,12 @@ export function playRound(b, rng) {
     const x = roll(sv(r, 'combat') + Math.min(FIGHT.missBonusCap, (r.misses ?? 0) * FIGHT.missBonus), b.diff + FIGHT.attackStep + FIGHT.cover[e.cover], r.strong);
     r.misses = x.ok ? 0 : (r.misses ?? 0) + 1;
     if (!x.ok) { say('attack', k('attackMiss'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: false, damage: 0, roll: rollOf(x) }); return; }
-    const { dmg, cracked } = landHit(e, r.hit ?? FIGHT.hit, x.strong, r.ap, rng); // a plate takes plateHp off the hit: a base plain hit only cracks it
-    if (e.hp <= 0) { e.out = true; defeated.push({ by: r.id, enemy: e.n, how: burst ? 'burst' : 'attack' }); say('attack', k('attackOut'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, dropped: true, roll: rollOf(x), strong: x.strong, cracked }); fall(e, r); return; }
-    say('attack', dmg === 0 ? k('attackCrack') : k('attackHit'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, roll: rollOf(x), left: e.hp, cracked });
+    const pz = pierce(e, r.ap);
+    const { dmg, cracked } = landHit(e, r.hit ?? FIGHT.hit, x.strong, r.ap || pz.used, rng); // a plate takes plateHp off the hit: a base plain hit only cracks it
+    if (e.hp <= 0) { e.out = true; defeated.push({ by: r.id, enemy: e.n, how: burst ? 'burst' : 'attack' }); say('attack', k('attackOut'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, ...pz.line, enemy: e.n, success: true, damage: dmg, dropped: true, roll: rollOf(x), strong: x.strong, cracked }); fall(e, r); return; }
+    say('attack', dmg === 0 ? k('attackCrack') : k('attackHit'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, ...pz.line, enemy: e.n, success: true, damage: dmg, roll: rollOf(x), left: e.hp, cracked });
     landed(r, e, dmg, named, flag);
+    if (cracked && dmg === 0) landed(r, e, dmg, named, flag, 'onCrack');
   };
 
   // A hall's own turret (a raid): fires on its own at the nearest raider, until it is dry.
@@ -1029,19 +1066,25 @@ export function playRound(b, rng) {
   for (const r of b.runners) { r.leaving = false; r.ordered = false; }
   // Slice 3-ii-a: the vector's tick, at the round's end and before the groups' flee checks, so a tick is a loss like any other. An enemy
   // infected this round starts losing HP next round (ticksDue). Past the payload's last round the infection ends.
-  for (const e of ticksDue(b)) {
-    const inf = e.infected;
+  // Part B: `burning` ticks the same way after the infection (its own line keys); a body the first tick dropped takes no second.
+  const TICK_LINE = { infected: ['tick', 'tickOut', 'vector'], burning: ['burnTick', 'burnOut', 'burn'] };
+  for (const { e, st } of ticksDue(b)) {
+    if (e.out) continue;
+    const inf = e[st];
+    const [onKey, outKey, how] = TICK_LINE[st];
     e.hp -= inf.tick;
-    if (inf.left != null && (inf.left -= 1) <= 0) e.infected = null;
-    if (e.hp <= 0) { e.out = true; e.infected = null; defeated.push({ by: inf.by, enemy: e.n, how: 'vector' }); say('tick', 'tickOut', { enemy: E(e.n), word: PAYLOADS[inf.payload]?.word ?? 'Vector' }, { enemy: e.n, damage: inf.tick, dropped: true, left: 0, max: e.max }); fall(e, null, [inf]); }
-    else say('tick', 'tick', { enemy: E(e.n), word: PAYLOADS[inf.payload]?.word ?? 'Vector' }, { enemy: e.n, damage: inf.tick, left: e.hp, max: e.max });
+    if (inf.left != null && (inf.left -= 1) <= 0) e[st] = null;
+    const word = PAYLOADS[inf.payload]?.word ?? 'Vector';
+    if (e.hp <= 0) { e.out = true; e[st] = null; defeated.push({ by: inf.by, enemy: e.n, how }); say('tick', outKey, { enemy: E(e.n), word }, { enemy: e.n, damage: inf.tick, dropped: true, left: 0, max: e.max, status: st }); fall(e, null, [inf, ...STATUSES.map((x) => e[x])]); }
+    else say('tick', onKey, { enemy: E(e.n), word }, { enemy: e.n, damage: inf.tick, left: e.hp, max: e.max, status: st });
   }
   // 3c: the hired and the standard force break and run per group, when too few of that group are left (hired's threshold).
   // An enemy in its approach round never runs (this check comes before `approaching` is cleared below). A lone arrival never runs.
   for (const [g, total] of Object.entries(b.hiredTotal)) {
     const up = enemiesUp(b).filter((e) => breaks(e.kind) && (e.group ?? 0) === Number(g));
     const going = up.filter((e) => !e.approaching);
-    if (going.length && total > 0 && up.length / total < ENEMIES.hired.fleeBelow) { for (const e of going) { e.fled = true; fled.push(e.n); } say('flee', 'enemyFled'); }
+    const holding = up.filter((e) => !e.shaken); // part B: a shaken body counts as gone for its group's nerve
+    if (going.length && total > 0 && holding.length / total < ENEMIES.hired.fleeBelow) { for (const e of going) { e.fled = true; fled.push(e.n); } say('flee', 'enemyFled'); }
   }
 
   // The medic's aura: while a medic stands in the fight, the most hurt standing runner regains medicAura.heal HP a
@@ -1288,7 +1331,7 @@ export function vanOdds(b0, runs = FIGHT.oddsRuns) {
  */
 export function oddsKey(b0, runs = FIGHT.oddsRuns) {
   return JSON.stringify([b0.type, b0.diff, b0.risk, b0.goal,
-    b0.enemies.map((e) => [e.kind, e.hp, e.max, e.absorb, e.cover, e.deck, e.approaching ?? false, e.group ?? 0, e.infected ?? null]),
+    b0.enemies.map((e) => [e.kind, e.hp, e.max, e.absorb, e.cover, e.deck, e.approaching ?? false, e.group ?? 0, ...STATUSES.map((st) => e[st] ?? null)]),
     b0.runners.map((r) => [r.id, r.hp, r.max, r.absorb, r.soak ?? 0, r.ap, r.strong, r.hit ?? null, r.jammer, r.healer, Object.values(r.stats).map((s) => s.value), r.overdrive ?? null, r.build ?? null, r.moved ?? false, r.misses ?? 0]),
     b0.orders, b0.overwatch && [b0.overwatch.value, b0.overwatch.damage, b0.overwatch.left], !!b0.wheels, !!b0.standby,
     b0.toughness ?? 0, b0.showcaseEligible ?? null, b0.maxExtra ?? null, b0.recipe ?? null, b0.hiredTotal ?? null, runs]);

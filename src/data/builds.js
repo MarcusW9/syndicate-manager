@@ -17,7 +17,8 @@
 //   who   'target' (the enemy the trigger was about), 'nextInGroup' (the first other enemy of its group that is up, without the status
 //         and not immune to it), 'nearest' (up to the move's `reach` enemies, in the rules' order)
 //   what  'burst' (one attack on each of the who), { apply: status } (put a status on), { spread: status } (copy it to the who)
-// Statuses so far: 'infected' (its numbers are the payload's `dot`; it ticks at the round's end, core/fight.js ticksDue). A status a body
+// Statuses: 'infected' (its numbers are the payload's `dot`; it ticks at the round's end, core/fight.js ticksDue); from part B (2026-11-19)
+// 'burning', 'marked', 'exposed' and 'shaken' (core/fight.js VOCAB says what each does), with 'onCrack' and the `if` word 'targetHas'. A status a body
 // carries brings its payload's onKill pieces with it, so it can jump whoever drops its host. The engine's guardrails: a status never
 // stacks or renews; an immune body shrugs it off (said once a body, on any landed hit that carries it) and never passes it on; a fall
 // spreads a status at most once (the killer's own piece first).
@@ -70,6 +71,49 @@ export const PAYLOADS = {
     offer: '{op} could carry Contagion Vector. It burns out sooner, but jumps when the target drops. We choose this or Cytotoxic, not both.',
   },
 };
+
+// Part B's first new statuses (2026-11-19; the owner's answers in drafts/HANDOFF-build-vocab-next.md: marked, exposed, shaken and a plain
+// burning). Four DRAFT payloads, one per status, written only in the vocabulary's words. `draft: true`: never offered to a runner
+// (core/builds.js eligiblePieces) until the owner has their names and wording and the menu for new pieces exists
+// (drafts/PROPOSAL-runner-shaping.md); the sims and the tests give them with withBuild. Every number is a first value. All four take the
+// payload slot, so the combinations between them (a spotter beside a breacher) are a two-runner job, as the proposal wanted.
+//   burning   Incendiary: a hit, or a shot that only cracks a plate, sets the body burning: `dot` like a vector, but it never jumps,
+//             and machines burn (no immune tags). The counter to plates and drones the Vectors lack.
+//   marked    Spotter's Eye: whatever it hits or cracks is marked. Does nothing by itself; Breacher and Rout read it.
+//   exposed   Breacher: a shot that only cracks a plate shows the crew how the next body of that group opens: it is exposed (its next hit
+//             taken ignores its plate). A hit on a marked body does the same.
+//   shaken    Rout: a kill shakes the next body of the group (it counts as gone when its group decides whether to run); a marked kill
+//             shakes one more. Only bodies that break run, so it does nothing to corp, enforcers or drones.
+Object.assign(PAYLOADS, {
+  incendiary: {
+    id: 'incendiary', name: 'Incendiary Rounds', family: 'fire', word: 'Fire', dot: { tick: 10, rounds: 2 }, immune: [], draft: true,
+    pieces: [{ when: 'onHit', who: 'target', what: { apply: 'burning' } }, { when: 'onCrack', who: 'target', what: { apply: 'burning' } }],
+    slot: 'payload', needs: { combat: 10 },
+    desc: 'A hit, or a shot that only cracks armour, sets the target burning: 10 HP at each round’s end for two rounds. Machines burn too. It does not spread or stack.',
+    offer: '{op} could load Incendiary Rounds. Even a shot the armour stops leaves them burning.',
+  },
+  spotter: {
+    id: 'spotter', name: 'Spotter’s Eye', family: 'mark', word: 'Mark', immune: [], draft: true,
+    pieces: [{ when: 'onHit', who: 'target', what: { apply: 'marked' } }, { when: 'onCrack', who: 'target', what: { apply: 'marked' } }],
+    slot: 'payload', needs: { cool: 10 },
+    desc: 'Whatever this runner hits or cracks is marked for the crew. A mark does nothing by itself; other pieces read it.',
+    offer: '{op} has a spotter’s eye. Whatever they hit, the rest of the crew will know about.',
+  },
+  breacher: {
+    id: 'breacher', name: 'Breacher', family: 'breach', word: 'Breach', immune: [], draft: true,
+    pieces: [{ when: 'onCrack', who: 'nextInGroup', what: { apply: 'exposed' } }, { when: 'onHit', if: { targetHas: 'marked' }, who: 'nextInGroup', what: { apply: 'exposed' } }],
+    slot: 'payload', needs: { tech: 10 },
+    desc: 'Cracking one plate shows how the next one opens: another enemy of the same group is exposed, and its next hit taken ignores its armour. A hit on a marked enemy does the same.',
+    offer: '{op} reads armour like a lock. One cracked plate and they know how the rest come apart.',
+  },
+  rout: {
+    id: 'rout', name: 'Rout', family: 'fear', word: 'Fear', immune: [], draft: true,
+    pieces: [{ when: 'onKill', who: 'nextInGroup', what: { apply: 'shaken' } }, { when: 'onKill', if: { targetHas: 'marked' }, who: 'nextInGroup', what: { apply: 'shaken' } }],
+    slot: 'payload', needs: { cool: 10 },
+    desc: 'Each kill shakes another enemy of the same group: shaken enemies count as already gone when their group decides whether to run. A marked kill shakes one more.',
+    offer: '{op} could make every drop count twice. Put one down and the next starts looking for the exit.',
+  },
+});
 
 // The offer (slice 3-ii-b, 2026-11-17; placeholders, the owner tunes them by feel, 2.6.5). A runner holds one move and one payload (a slot each).
 // Joss offers a piece for an empty slot once they have done `firstAtJobs` jobs with the crew, then again `everyJobs` jobs after the last one

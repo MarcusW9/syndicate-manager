@@ -53,7 +53,7 @@ const JOBS = [
 const swap = (kinds) => (b, rng) => { b.enemies.length = 0; b.hiredTotal = {}; for (const k of kinds) Fight.newEnemy(b, k, rng); };
 const MIXES = {
   "the job's own": () => {},
-  armoured: swap(['police', 'police', 'police', 'secforce', 'secforce', 'secforce']),
+  armoured: swap(['police', 'police', 'secforce', 'secforce', 'drone', 'drone']), // drones count as armoured too (owner, 2026-11-19)
   swarm: swap(['hired', 'hired', 'hired', 'hired', 'hired', 'hired']),
   synthetic: swap(['drone', 'drone', 'drone', 'drone', 'drone']),
   mixed: (b, rng) => { for (const k of ['drone', 'drone', 'corp', 'corp']) Fight.newEnemy(b, k, rng); },
@@ -66,10 +66,13 @@ const builds = moves.flatMap((move) => payloads.map((payload) => ({ move, payloa
 const noBuild = (b) => !b.move && !b.payload;
 const buildName = (b) => (noBuild(b) ? 'no build' : [b.move && MOVES[b.move].name, b.payload && PAYLOADS[b.payload].name].filter(Boolean).join(' + '));
 const COMBOS = [];
-for (let i = 0; i < builds.length; i++) for (let j = i; j < builds.length; j++) COMBOS.push({ a: builds[i], b: builds[j], label: j === i && noBuild(builds[i]) ? 'no build' : noBuild(builds[j]) ? buildName(builds[i]) : noBuild(builds[i]) ? buildName(builds[j]) : `${buildName(builds[i])} | ${buildName(builds[j])}` });
+for (let i = 0; i < builds.length; i++) for (let j = i; j < builds.length; j++) COMBOS.push({ a: builds[i], b: builds[j], label: j === i && noBuild(builds[i]) ? 'no build' : noBuild(builds[j]) ? buildName(builds[i]) : noBuild(builds[i]) ? buildName(builds[j]) : `${buildName(builds[i])} / ${buildName(builds[j])}` });
 COMBOS.sort((x, y) => (x.label === 'no build' ? -1 : y.label === 'no build' ? 1 : 0));
 const BASE_LABEL = 'no build';
 const PIECES = [...Object.values(MOVES), ...Object.values(PAYLOADS)].map((p) => p.id);
+// The pieces' own counts a fight: bounces, each status put on (read from the engine's list, so a new status gets a column), jumps and shrugs.
+const COUNTED = ['bounces', ...Fight.STATUSES, 'spreads', 'shrugs'];
+const COUNT_HEAD = { bounces: 'Bounces', spreads: 'Spreads', shrugs: 'Shrugs' };
 
 const given = (crew, combo) => {
   const [first, second] = bestTwo(crew);
@@ -81,15 +84,15 @@ function play(args, mix, seed, tag, held) {
   const b = Fight.buildFight({ ...args, watched: true }, makeRng(seed * 7 + tag));
   MIXES[mix](b, makeRng(seed * 13 + tag));
   const rng = makeRng(seed * 31 + tag);
-  const n = { bounces: 0, infects: 0, spreads: 0, shrugs: 0 };
+  const n = { bounces: 0, spreads: 0, shrugs: 0, ...Object.fromEntries(Fight.STATUSES.map((st) => [st, 0])) };
   const piece = Object.fromEntries(PIECES.map((p) => [p, 0]));
   while (!b.end && b.round < 30) {
     const rr = Fight.playRound(b, rng);
     for (const l of rr.lines) {
       const mine = held[l.actor] ?? [];
       if (l.burst && l.key.startsWith('bounce')) { n.bounces++; for (const p of mine) if (MOVES[p]) piece[p]++; }
-      else if (l.key === 'infect') { n.infects++; if (l.payload) piece[l.payload]++; }
       else if (l.key === 'spread') { n.spreads++; if (l.payload) piece[l.payload]++; }
+      else if (l.status && l.payload && l.key !== 'tick') { n[l.status]++; piece[l.payload]++; } // a status put on (Fight.STATUSES: infected, burning, ...)
       else if (l.key === 'immune') { n.shrugs++; for (const p of mine) if (PAYLOADS[p]) piece[p]++; }
     }
   }
@@ -110,7 +113,7 @@ let stopped = false;
 let fightsPlayed = 0;
 
 sweep: for (const risk of ALL_RISKS) for (const mix of Object.keys(MIXES)) for (const combo of COMBOS) {
-  const t = acc[`${risk}|${mix}|${combo.label}`] = { n: 0, won: 0, clean: 0, downs: 0, dead: 0, rounds: 0, hp: 0, bounces: 0, infects: 0, spreads: 0, shrugs: 0 };
+  const t = acc[`${risk}|${mix}|${combo.label}`] = { n: 0, won: 0, clean: 0, downs: 0, dead: 0, rounds: 0, hp: 0, ...COUNTED.map((k) => [k, 0]).reduce((o, [k, v]) => ({ ...o, [k]: v }), {}) };
   for (const job of JOBS) for (let c = 0; c < CREWS; c++) {
     const crew = given(crewOf(9000 + c, 4 + (c % 3)), combo);
     const held = Object.fromEntries(crew.filter((o) => o.build).map((o) => [o.id, [o.build.move, o.build.payload].filter(Boolean)]));
@@ -118,7 +121,7 @@ sweep: for (const risk of ALL_RISKS) for (const mix of Object.keys(MIXES)) for (
       const r = play({ ...job.args, crew, risk }, mix, c * 1000 + i + 1, JOBS.indexOf(job) + 1, held);
       fightsPlayed++;
       t.n++; t.won += r.won; t.clean += r.clean; t.downs += r.downs; t.dead += r.dead.length > 0; t.rounds += r.rounds; t.hp += r.hp;
-      for (const k of ['bounces', 'infects', 'spreads', 'shrugs']) t[k] += r[k];
+      for (const k of COUNTED) t[k] += r[k];
       if (risk === 'committed') for (const p of PIECES) pieceTotals[p][mix] += r.piece[p];
       if (r.dead.length && risk !== 'committed') {
         deaths.push({ risk, mix, build: combo.label, job: job.name, crew: c, fight: i, dead: r.dead });
@@ -136,7 +139,7 @@ L(`\`node scripts/sim-combos.mjs ${CREWS} ${FIGHTS} ${DATE}\`. Real fight code, 
 L();
 L(`- **Builds swept:** ${builds.length} (moves: ${moves.map((m) => (m ? MOVES[m].name : 'none')).join(', ')}; payloads: ${payloads.map((p) => (p ? PAYLOADS[p].name : 'none')).join(', ')}), so ${COMBOS.length} rows: the baseline, each build alone (on the best combat runner) and every unordered pair (the first build on the best, the second on the next best).`);
 L(`- **Crews:** ${CREWS} grown from the toughness sim's \`crewOf\` (4 to 6 runners), ${FIGHTS} fights a crew a job, on ${JOBS.length} jobs: ${JOBS.map((j) => j.name).join('; ')}. Every row plays the same seeds.`);
-L(`- **Mixes:** ${Object.keys(MIXES).join(', ')} (armoured: three police and three secforce, one plate each; swarm: six hired; synthetic: five drones, immune to the Vectors; mixed: the job's own plus two drones and two corp).`);
+L(`- **Mixes:** ${Object.keys(MIXES).join(', ')} (armoured: two police, two secforce and two drones, one plate each, as the owner counts drones armoured from 2026-11-19; swarm: six hired; synthetic: five drones, immune to the Vectors; mixed: the job's own plus two drones and two corp).`);
 L(`- **Thresholds:** far stronger = clean win more than ${Math.round(FAR_STRONGER * 100)} points above the no-build row on the same mix and risk; worse = more than ${Math.round(WORSE_BY * 100)} points below it. Clean win = won with nobody down.`);
 L(`- **Fights played:** ${fightsPlayed}${stopped ? ' (the sweep STOPPED early: see the deaths below)' : ''}.`);
 L();
@@ -183,17 +186,17 @@ L(`| Piece | ${Object.keys(MIXES).join(' | ')} |`);
 L(`| --- | ${Object.keys(MIXES).map(() => '---').join(' | ')} |`);
 for (const p of PIECES) L(`| ${(MOVES[p] ?? PAYLOADS[p]).name} | ${Object.keys(MIXES).map((m) => pieceTotals[p][m]).join(' | ')} |`);
 L();
-L('A count is the piece\'s own lines: a move\'s bounces, a payload\'s infects and spreads (and the shrugs a machine gives it).');
+L('A count is the piece\'s own lines: a move\'s bounces, a payload\'s statuses put on and spreads (and the shrugs an immune body gives it).');
 
 for (const risk of SHOWN_RISKS) for (const mix of Object.keys(MIXES)) {
   L();
   L(`## ${mix}, ${risk}`);
   L();
-  L('| Build | Fights | Win | Clean win | Downs a fight | A death | Rounds | HP lost | Bounces | Infects | Spreads | Shrugs |');
-  L('| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |');
+  L(`| Build | Fights | Win | Clean win | Downs a fight | A death | Rounds | HP lost | ${COUNTED.map((k) => COUNT_HEAD[k] ?? `Put ${k}`).join(' | ')} |`);
+  L(`| --- | --- | --- | --- | --- | --- | --- | --- | ${COUNTED.map(() => '---').join(' | ')} |`);
   for (const combo of COMBOS) {
     const t = acc[`${risk}|${mix}|${combo.label}`];
-    L(`| ${combo.label} | ${t.n} | ${P(t.won / t.n)} | ${P(t.clean / t.n)} | ${F2(t.downs / t.n)} | ${P(t.dead / t.n)} | ${(t.rounds / t.n).toFixed(1)} | ${Math.round(t.hp / t.n)} | ${F2(t.bounces / t.n)} | ${F2(t.infects / t.n)} | ${F2(t.spreads / t.n)} | ${F2(t.shrugs / t.n)} |`);
+    L(`| ${combo.label} | ${t.n} | ${P(t.won / t.n)} | ${P(t.clean / t.n)} | ${F2(t.downs / t.n)} | ${P(t.dead / t.n)} | ${(t.rounds / t.n).toFixed(1)} | ${Math.round(t.hp / t.n)} | ${COUNTED.map((k) => F2(t[k] / t.n)).join(' | ')} |`);
   }
 }
 writeFileSync(OUT, out.join('\n') + '\n');
