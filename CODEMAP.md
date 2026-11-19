@@ -137,6 +137,7 @@ How battles work (both engines, every number, the death rule): `docs/BATTLES.md`
 - `ui/tongs.js` (the other tongs: City › Tongs `renderTongs` with the ladder, Come and gone and house cards (E0), with Free names, a tong's page, a name's read-only profile (`nameProfile`, with View in Leads) and Names on the street; Crew › Leads' recruiting: `renderLeadName` (what scouting has shown via `readFor`, the price via `approachFor`, a scout picker and Sign) and `leadNames` (the Names group); and The Word's block for Monday's briefing; reads `rivalView` and the `dossier.js` readers only, wording from `data/rivals.js`; UI state `V.tongsView` and `V.leadName` in `view.js`)
 - `ui/gear.js` (`tierFrame`, the tier as the colour of an item's picture outline; `tierTag`, the coloured tier tag, drawn only where an item has no picture; `apexHistory`, a named piece's history line; `perkList`, an item's perks (or an Apex piece's unique perk) as tap-to-open lines under its row (a native `<details>`), also used by the report's loot line in `ui/messages.js`; the Armoury, Tong › Armoury, `renderArmoury` with `embedded`; a runner's loadout and the gear sheet)
 - `ui/art.js` (faces)
+- `ui/skillicons.js` (2026-11-19: `skillIcon(id, size, state)`, a drawn badge per move, payload and specialisation, coloured by family; `SKILL_COLOURS`, `SKILL_IDS`; styles `.skill` in `styles.css`; not on a screen yet)
 - `ui/icons.js`
 - `ui/styles.css` (the street-terminal skin is the second half).
 
