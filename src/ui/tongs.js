@@ -37,12 +37,13 @@ export function renderGoneElsewhere(state) {
   const gone = rivalView(state).gone;
   if (!gone.length) return '';
   return `<h2>Gone elsewhere</h2>
-    <ul class="list list--plain streetnames" aria-label="Gone elsewhere">${gone.map((n) => `
-      <li class="streetname">
+    <ul class="list list--plain streetnames" aria-label="Gone elsewhere">${gone.map((n) => {
+      const inner = `
         <span class="streetname__face">${faceOfCard(state, n.id, 32)}</span>
         <span class="streetname__who"><strong>${esc(n.name)}</strong></span>
-        <span class="small muted">${esc([n.role, FAME_LINE[n.fame], n.tong ?? 'between tongs'].filter(Boolean).join(' · '))}</span>
-      </li>`).join('')}</ul>`;
+        <span class="small muted">${esc([n.role, FAME_LINE[n.fame], n.tong ?? 'between tongs'].filter(Boolean).join(' · '))}</span>`;
+      return `<li class="streetname">${n.id ? `<button class="streetname__btn" data-action="tong-name" data-id="${esc(n.id)}" aria-label="${esc(n.name)}">${inner}</button>` : inner}</li>`;
+    }).join('')}</ul>`;
 }
 
 const MOVE_MARK = { up: ['▲', 'up'], down: ['▼', 'down'], new: ['NEW', 'new'], returns: ['BACK', 'new'] };
