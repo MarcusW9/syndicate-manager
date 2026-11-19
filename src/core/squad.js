@@ -3,7 +3,7 @@
 // shared crew rule), so the read on the board is the risk the crew actually meets.
 
 import { ZONE_POOLS, OFF_APPROACH } from '../data/incidents.js';
-import { incidentById, incidentDifficulty, handlerFor, bestSave } from './incidents.js';
+import { incidentById, incidentDifficulty, difficultyParts, handlerFor, bestSave } from './incidents.js';
 import { overwatchKit, kitsFor } from './gear.js';
 import { crewRoll, effectiveStat, APPROACHES } from './crew.js';
 import { successChance, riskLabel, rollTarget, assessJob } from './risk.js';
@@ -53,7 +53,8 @@ function coverRows(template, crew, approach, { threat = template.threat, overwat
   const rows = likelyIncidents(approach).map(({ id, zone, sometimes }) => {
     const inc = incidentById(id);
     const diff = incidentDifficulty(template, am, inc);
-    const base = { id, name: inc.name, zone, where: sometimes ? 'Sometimes, inside' : ZONE_NOTE[zone], danger: !!inc.danger, diff };
+    const parts = difficultyParts(template, am, inc, template.baseThreat ?? template.threat);
+    const base = { id, name: inc.name, zone, where: sometimes ? 'Sometimes, inside' : ZONE_NOTE[zone], danger: !!inc.danger, diff, parts };
     const h = crew.length ? handlerFor(crew, inc, diff, { approach, recommended: template.crewSize, intel }) : null;
     if (!h) return { base, zone, diff, h: null, fights: false };
     const save = inc.danger ? bestSave({ victim: h.roll.op, able: crew, overwatch: ow, overwatchOp: ow ? overwatch.op : null, zone, diff }) : null;
@@ -109,6 +110,19 @@ function coverRows(template, crew, approach, { threat = template.threat, overwat
   return { rows, fightArgs };
 }
 
+/** The lowest d20 that passes (core/risk.js successChance: a 1 always fails, a 20 always passes). */
+export const rollNeed = (value, diff) => Math.min(20, Math.max(2, 10 + diff - value));
+
+/** The stat that would lift this roll one risk level (the plan's "why", 2026-11-19): { value, level }, or null at low. */
+export function nextBand(value, diff) {
+  const now = RISK_ORDER.indexOf(riskLabel(successChance(value, diff)));
+  for (let v = value + 1; now > 0 && v <= value + 20; v++) {
+    const level = riskLabel(successChance(v, diff));
+    if (RISK_ORDER.indexOf(level) < now) return { value: v, level };
+  }
+  return null;
+}
+
 /** A coverage row as the planner shows it (its fight played). */
 function fullRow(r) {
   if (!r.h) return { ...r.base, handler: null, chance: 0, risk: 'extreme', withSave: null, effective: 'extreme', gap: true };
@@ -119,6 +133,7 @@ function fullRow(r) {
     ...r.base,
     handler: { op: h.roll.op, stat: h.stat, value: h.roll.value, notes: h.roll.notes },
     chance: h.chance, risk: riskLabel(h.chance),
+    need: rollNeed(h.roll.value, r.diff), better: nextBand(h.roll.value, r.diff),
     withSave: save ? { via: save.via, op: save.op, chance: save.chance } : null,
     fight: fight ? { ...fight, chance: r.missed, forced: r.forced } : null,
     effective: riskLabel(eff), gap: riskLabel(eff) === 'extreme',
@@ -266,7 +281,7 @@ export function bestLine(op, approach) {
 function readContext(state, job) {
   const v = jobView(state, job);
   return {
-    state, job, v, tpl: { ...v.tpl, threat: v.threat },
+    state, job, v, tpl: { ...v.tpl, threat: v.threat, baseThreat: v.tpl.threat },
     intel: intelFor(state, v.tpl.district, v.inside),
     watched: watchedIn(state, v.tpl.district) ? WATCHED_PENALTY : 0,
   };

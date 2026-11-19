@@ -8,7 +8,7 @@ import * as M from '../src/core/mission.js';
 import { addOffer, templateById } from '../src/core/jobs.js';
 import { crewRoll } from '../src/core/crew.js';
 import { autoStep, autoRun, needsPlayer, sendOff } from '../src/core/autorun.js';
-import { planIncidents, weaveIncidents, bestSave, incidentDifficulty, incidentById, OVERWATCH_KIT, ALERT_MAX } from '../src/core/incidents.js';
+import { planIncidents, weaveIncidents, bestSave, incidentDifficulty, difficultyParts, incidentById, OVERWATCH_KIT, ALERT_MAX } from '../src/core/incidents.js';
 import { APPROACHES } from '../src/data/approaches.js';
 import { INCIDENTS, ZONE_POOLS } from '../src/data/incidents.js';
 import { SITUATIONS } from '../src/data/situations.js';
@@ -314,4 +314,19 @@ test('a v20 save upgrades: social becomes con, and a job in progress keeps calli
   assert.equal(loaded.activeMission.alert, 0);
   const { state } = playMission(loaded, carefulPolicy);
   assert.equal(state.activeMission.done, true, 'and it finishes');
+});
+
+// The plan's "why" (2026-11-19): the difficulty shown in parts must add up to the one the run rolls against.
+test('difficultyParts add up to incidentDifficulty, hotter, quieter, rookie and alert alike', () => {
+  for (const tpl of MISSIONS) {
+    for (const delta of [-1, 0, 1]) {
+      const threat = Math.max(1, Math.min(5, tpl.threat + delta));
+      for (const alert of [0, 2]) {
+        for (const inc of Object.values(INCIDENTS)) {
+          const parts = difficultyParts(tpl, { threat, alert }, inc, tpl.threat);
+          assert.equal(parts.reduce((n, p) => n + p.value, 0), incidentDifficulty(tpl, { threat, alert }, inc), `${tpl.id} ${inc.name}`);
+        }
+      }
+    }
+  }
 });

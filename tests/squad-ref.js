@@ -2,7 +2,9 @@
 // checks the pruned search in src/core/squad.js (exact) gives the same approach, picks and level as this one. Never imported by
 // the game. Plays every candidate's fights in full, so it is slow; use it on a few states.
 import { ZONE_POOLS, OFF_APPROACH } from '../src/data/incidents.js';
-import { incidentById, incidentDifficulty, handlerFor, bestSave } from '../src/core/incidents.js';
+import { incidentById, incidentDifficulty, difficultyParts, handlerFor, bestSave } from '../src/core/incidents.js';
+// The rows' display fields (2026-11-19: the plan's "why") come from the game's own helpers; they don't steer the search.
+import { rollNeed, nextBand } from '../src/core/squad.js';
 import { overwatchKit, kitsFor } from '../src/core/gear.js';
 import { crewRoll, effectiveStat, APPROACHES } from '../src/core/crew.js';
 import { successChance, riskLabel, rollTarget, assessJob } from '../src/core/risk.js';
@@ -108,7 +110,7 @@ export function coverageRef(template, crew, approach, { threat = template.threat
   const rows = likelyIncidents(approach).map(({ id, zone, sometimes }) => {
     const inc = incidentById(id);
     const diff = incidentDifficulty(template, am, inc);
-    const base = { id, name: inc.name, zone, where: sometimes ? 'Sometimes, inside' : ZONE_NOTE[zone], danger: !!inc.danger, diff };
+    const base = { id, name: inc.name, zone, where: sometimes ? 'Sometimes, inside' : ZONE_NOTE[zone], danger: !!inc.danger, diff, parts: difficultyParts(template, am, inc, template.baseThreat ?? template.threat) };
     const h = crew.length ? handlerFor(crew, inc, diff, { approach, recommended: template.crewSize, intel }) : null;
     if (!h) return { ...base, handler: null, chance: 0, risk: 'extreme', withSave: null, effective: 'extreme', gap: true };
     const save = inc.danger ? bestSave({ victim: h.roll.op, able: crew, overwatch: ow, overwatchOp: ow ? overwatch.op : null, zone, diff }) : null;
@@ -136,6 +138,7 @@ export function coverageRef(template, crew, approach, { threat = template.threat
       ...base,
       handler: { op: h.roll.op, stat: h.stat, value: h.roll.value, notes: h.roll.notes },
       chance: h.chance, risk: riskLabel(h.chance),
+      need: rollNeed(h.roll.value, diff), better: nextBand(h.roll.value, diff),
       withSave: save ? { via: save.via, op: save.op, chance: save.chance } : null,
       fight: fight ? { ...fight, chance: missed, forced } : null,
       effective: riskLabel(eff), gap: riskLabel(eff) === 'extreme',
@@ -206,7 +209,7 @@ export function jossPicksRef(template, candidates, approach, { threat = template
  */
 export function planReadRef(state, job, { crew, approach, overwatch = null, kit = null, wheels = null }) {
   const v = jobView(state, job);
-  const tpl = { ...v.tpl, threat: v.threat };
+  const tpl = { ...v.tpl, threat: v.threat, baseThreat: v.tpl.threat };
   const intel = intelFor(state, v.tpl.district, v.inside);
   const read = assessJob(tpl, crew, approach, { watched: watchedIn(state, v.tpl.district) ? WATCHED_PENALTY : 0, intel, wheels });
   const owKit = overwatch && (kitsFor(overwatch).includes(kit) ? kit : kitsFor(overwatch)[0]);
@@ -226,7 +229,7 @@ export function planReadRef(state, job, { crew, approach, overwatch = null, kit 
  */
 export function leanPicksRef(state, job, approach) {
   const v = jobView(state, job);
-  const tpl = { ...v.tpl, threat: v.threat };
+  const tpl = { ...v.tpl, threat: v.threat, baseThreat: v.tpl.threat };
   const free = state.crew.filter((op) => availability(state, op).ok);
   const byId = (id) => free.find((o) => o.id === id) ?? null;
   const base = jossPicksRef(tpl, free, approach, { threat: v.threat });
