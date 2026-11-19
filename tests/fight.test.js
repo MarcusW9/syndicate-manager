@@ -2,6 +2,7 @@
 // own, wired to no job. The run's side (call-ins, the death rule's wiring, the five jobs finishing) is
 // slice 1c's tests. Run with: npm test
 
+import { MISSIONS } from '../src/data/missions.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createNewGame } from '../src/core/state.js';
@@ -110,7 +111,8 @@ test('holdExtract defaults are stage-aware: hold, then board', () => {
 
 test('the fight jobs name a fight type and exist, with the type and site the spec set', () => {
   // The five of spec section 30, then the jobs added with a /* FIGHT */ block (2026-11-15): the list grows on purpose.
-  assert.deepEqual(Object.keys(FIGHT_JOBS).sort(), ['casino', 'chrome', 'clinic', 'container409', 'count_against_paper', 'data_pull', 'data_scrub', 'dead_air', 'favourite', 'kidnap', 'last_ticket', 'ledger', 'low_water', 'manual_handling', 'mooring_watch', 'not_for_sale', 'one_more_song', 'protection', 'quarter_to_two', 'quiet_hours', 'still_clocked_in', 'still_connected', 'the_last_collection', 'the_wrong_fare', 'warehouse', 'wrong_horse']);
+  // Every job plays its fights on engine 2 (2026-11-19): the list is the whole of the missions, no more and no fewer.
+  assert.deepEqual(Object.keys(FIGHT_JOBS).sort(), MISSIONS.map((m) => m.id).sort());
   for (const [id, type] of Object.entries(FIGHT_JOBS)) {
     const t = templateById(id);
     assert.ok(t, `${id} exists`);

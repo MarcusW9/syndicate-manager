@@ -13,6 +13,8 @@ import { autoStep, autoRun, sendOff } from '../src/core/autorun.js';
 import { ordersDecision, ALERT_MAX } from '../src/core/incidents.js';
 import { APPROACHES } from '../src/data/approaches.js';
 import { MISSIONS } from '../src/data/missions.js';
+import { pinToEngine1 } from './engine1.js';
+pinToEngine1(...MISSIONS.filter((m) => m.rookie).map((m) => m.id), 'courier'); // these tests are of engine 1's rules (tests/engine1.js)
 import { playMission, toCrisis, randomPolicy, carefulPolicy, arm } from './play.js';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
