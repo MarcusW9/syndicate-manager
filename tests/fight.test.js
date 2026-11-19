@@ -67,15 +67,16 @@ test('pips: one per two points of endurance, at least 3; cool changes nothing; a
   assert.equal(F.runnerOf(jax, 'loud').hp, 10, 'a light wound never starts a runner at 0');
 });
 
-test('gear: a vest absorbs 1 or 2 hits, every weapon is strong on one margin (2026-11-18: damage sets the hit instead), pierce is ap', () => {
+test('gear: a vest soaks 5 HP a point off every shot (2026-11-19, was 1 or 2 whole hits), every weapon is strong on one margin (2026-11-18: damage sets the hit instead), pierce is ap', () => {
   assert.equal(F.strongMargin(), FIGHT.strongMargin);
   assert.equal(FIGHT.strongMargin, 12, 'the old margin at damage 2, what a starting runner carries');
   const [stitch] = crewOf().filter((o) => o.id === 'mei');
-  assert.equal(F.runnerOf(stitch, 'loud').absorb, 0);
+  assert.equal(F.runnerOf(stitch, 'loud').soak, 0);
   stitch.gear = { armour: { uid: 'v', type: 'vest', tier: 'standard' }, implants: [], bag: [] };
-  assert.equal(F.runnerOf(stitch, 'loud').absorb, 1);
+  assert.equal(F.runnerOf(stitch, 'loud').soak, 5);
   stitch.gear.armour.tier = 'verified';
-  assert.equal(F.runnerOf(stitch, 'loud').absorb, 2);
+  assert.equal(F.runnerOf(stitch, 'loud').soak, 10);
+  assert.equal(F.runnerOf(stitch, 'loud').absorb, 0, 'no plates on a runner any more');
   assert.equal(F.runnerOf(stitch, 'loud').ap, false);
 });
 
@@ -260,7 +261,7 @@ test('every action line names its order', () => {
 
 test('shield takes exactly one shot and it resolves against the protector\'s cover and armour', () => {
   const b = fixture('holdHack', [ids.static, ids.jax], { set: { jax: { endurance: 20, cool: 18 }, wing: { endurance: 20, cool: 6 } } });
-  R(b, 'jax').absorb = 1;
+  R(b, 'jax').soak = 6;
   b.enemies = [foe(1), foe(2)];
   draw(b, [{ enemy: 1, kind: 'aim', target: 'wing' }, { enemy: 2, kind: 'aim', target: 'wing' }]);
   F.setOrder(b, 'jax', { duty: 'protect', target: 'protected', fallback: null });
@@ -275,9 +276,9 @@ test('shield takes exactly one shot and it resolves against the protector\'s cov
   // Played with every shot hitting: the protector's vest takes theirs, the tech takes the other.
   F.setOrder(b, 'wing', { duty: 'hold', target: null, fallback: null });
   const res = F.playRound(b, always(0));
-  assert.equal(R(b, 'jax').absorb, 0, "the protector's vest took the redirected hit");
-  assert.equal(R(b, 'jax').hp, R(b, 'jax').max, 'not erased: it resolved, and the armour soaked it');
-  assert.ok(res.lines.some((l) => l.key === 'shotAbsorbed'));
+  assert.equal(shielded[0].lands, shielded[0].hit - 6, "shown after the protector's soak");
+  assert.equal(R(b, 'jax').hp, R(b, 'jax').max - (20 - 6), "not erased: it resolved, and the protector's vest soaked 6 of it");
+  assert.ok(res.lines.some((l) => l.key === 'shotHit' && l.target === 'jax' && l.soaked === 6));
   assert.equal(R(b, 'wing').hp, R(b, 'wing').max - 20 + 0, 'the other corp shot hit the tech for 20');
 });
 

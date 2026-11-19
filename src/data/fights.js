@@ -16,10 +16,13 @@ export const FIGHT = {
   hpUnit: 10, endurancePerPip: 2, minHp: 30, lightWoundHp: 20,
   // Shots: aimChance = clamp((11 + aimStep - (cool - base) - cover - (hunker ? hunkerStep : 0)) / 20, aimFloor, aimCeil);
   // hunker also raises cover one step. A runner making for the van is in the open. Damage comes from
-  // ENEMY_HIT; armour absorbs whole hits (absorb: plates, each taking plateHp off one hit); a drone's own absorb is droneAbsorb; ap ignores it.
+  // ENEMY_HIT. A runner's armour is a flat soak (2026-11-19, owner; drafts/PROPOSAL-enemy-toughness.md part 3): soakPerArmour HP off every
+  // enemy shot that lands, per armour point, at least soakMin through. soakShots: how many shots a soak is counted for when the crew's
+  // defaults pick the toughest protector. Enemies keep plates (their absorb; the drone's is droneAbsorb); ap ignores them.
   aimStep: 2, aimFloor: 0.1, aimCeil: 0.9,
   cover: { open: 0, half: 2, full: 4 }, startCover: 'half', hunkerStep: 4,
-  absorb: { none: 0, street: 1, pro: 2 }, droneAbsorb: 1,
+  soakPerArmour: 5, soakMin: 1, soakShots: 2,
+  droneAbsorb: 1,
   // Runner actions: d20 + stat >= 10 + base + step (+ the target's cover for attacks).
   // Boarding and carrying need no roll (2026-11-13): a boarder spends the round in the open and takes a door slot.
   // Bad luck softener (owner, 2026-11-17): each shot a runner misses in a row lines the next one up, +missBonus to the roll, up to missBonusCap;

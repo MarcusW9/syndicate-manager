@@ -15,7 +15,7 @@
 //     maxExtra (the reactive reinforcements' cap), recipe: { waves: [{ round, kind?, count }] }|null (waves still to come),
 //     hiredTotal: { [group]: n } (bodies that can break, per group), nextGroup,
 //     enemies: [{ n, kind, hp, max, absorb, cover, out, fled, deck, di, approaching, group, infected: { tick, left|null, by, round, payload }|null }],
-//     runners: [{ id, handle, role, seat, hp, max, absorb, ap, strong, jammer, healer, medic, cover,
+//     runners: [{ id, handle, role, seat, hp, max, absorb (plates: fights saved before v80 only), soak (HP off every enemy shot), ap, strong, jammer, healer, medic, cover,
 //                 down, withdrawn, dead, aboard, stable, fightOn, downRound, left, stats, build: { move, payload }|null, moved }],
 //     threats: [{ id, kind, enemy, target, shown, hit, shieldedBy, cancelled }]  (this round's draw),
 //     orders: { [opId]: ORDER }, risk: { level }, vanHold: bool|null,
@@ -78,8 +78,14 @@ const roundUpHp = (hp) => unitsOf(hp) * FIGHT.hpUnit;
 /** The margin a hit is strong on: the same for every weapon since 2026-11-18 (damage sets the hit's size instead, hitOf). */
 export const strongMargin = () => FIGHT.strongMargin;
 
-/** Armour as hits absorbed a fight: a street vest 1, a pro vest 2 (data FIGHT.absorb). */
-const absorbOf = (armourValue) => (armourValue >= 2 ? FIGHT.absorb.pro : armourValue === 1 ? FIGHT.absorb.street : FIGHT.absorb.none);
+/** Armour as a flat soak (2026-11-19, enemy toughness step 2): soakPerArmour HP off every enemy shot that lands, per armour point. */
+export const soakOf = (armourValue) => Math.max(0, Math.round(armourValue ?? 0)) * FIGHT.soakPerArmour;
+
+/**
+ * What an enemy shot of this size takes off this runner: the hit less their soak, at least soakMin while they soak anything.
+ * A fight saved before v80 has plates instead (`absorb`, soak 0): a plate still stops a whole shot there, in playRound.
+ */
+export const landsOn = (v, hit) => ((v?.soak ?? 0) > 0 ? Math.max(FIGHT.soakMin, hit - v.soak) : hit);
 
 /**
  * Anyone carrying a jammer may try to jam, with their tech (spec 9). The game has no jammer item yet:
@@ -96,7 +102,7 @@ export function runnerOf(op, approach, seat = 0) {
   const build = buildOf(op);
   return {
     id: op.id, handle: op.handle, role: op.role, seat, hp: Math.max(FIGHT.hpUnit, max - hurt), max,
-    absorb: absorbOf(a.value), armourName: a.name, weapon: w.name, ap: (w.pierce ?? 0) > 0, strong: strongMargin(), hit: hitOf(w.damage),
+    absorb: 0, soak: soakOf(a.value), armourName: a.name, weapon: w.name, ap: (w.pierce ?? 0) > 0, strong: strongMargin(), hit: hitOf(w.damage),
     look: MOVES[build?.move]?.look ?? specialLook(op), // the stage's special-move look (data/fightLooks.js); picture only, no rule reads it
     build, moved: false, misses: 0, // slice 3-ii-a: { move, payload } from data/builds.js or null (op.build); `moved`: the move's use this fight is spent
     jammer: canJam(op), healer: op.role === 'medic' || patchBonus(op, { perks: false }) > 0, medic: op.role === 'medic', // a kit makes a healer; a suture-strip perk only helps one
@@ -210,7 +216,9 @@ const capableSupport = (r) => r.medic || (r.jammer && sv(r, 'tech') >= sv(r, 'co
 // Someone with a move still to use is left to attack when the crew's defaults pick protectors (2026-11-17): a protector shields instead of
 // attacking, so a Ricochet carrier on a protect order would never fire. They protect only when nobody else can.
 const hasMove = (r) => !!MOVES[r.build?.move] && !r.moved;
-const toughest = (b, list) => [...list].sort((x, y) => hasMove(x) - hasMove(y) || (y.max + y.absorb * FIGHT.plateHp) - (x.max + x.absorb * FIGHT.plateHp) || bySeat(x, y));
+// Armour counts as HP: a plate (fights saved before v80) as plateHp, a soak as what it takes off FIGHT.soakShots shots.
+const guard = (r) => r.max + r.absorb * FIGHT.plateHp + (r.soak ?? 0) * FIGHT.soakShots;
+const toughest = (b, list) => [...list].sort((x, y) => hasMove(x) - hasMove(y) || guard(y) - guard(x) || bySeat(x, y));
 
 /** The runner best placed to cover others (most HP plus armour, ties lowest seat), not the specialist. */
 export const bestProtector = (b) => toughest(b, b.runners.filter((r) => r.id !== b.goal.protect))[0] ?? null;
@@ -358,7 +366,7 @@ function covered(e, res) {
   return total >= e.hp;
 }
 
-const shotValue = (t) => (t && t.kind === 'aim' ? t.shown * t.hit : 0);
+const shotValue = (t, b) => (t && t.kind === 'aim' ? t.shown * landsOn(runner(b, t.target), t.hit) : 0); // what it would take off its target, after their soak
 
 /** Enemies in the order an attacker takes them: by the priority words in turn, then lowest n. */
 function enemyOrder(b, list, priority) {
@@ -368,7 +376,7 @@ function enemyOrder(b, list, priority) {
     return priority.map((p) => (p === 'protected' ? (t && b.goal.protect && t.target === b.goal.protect ? 0 : 1)
       : p === 'radio' ? (t && RADIO(t) ? 0 : 1)
         : p === 'low' ? (t && lowest && t.target === lowest.id ? 0 : 1)
-          : p === 'exposed' ? -shotValue(t)
+          : p === 'exposed' ? -shotValue(t, b)
             : p === 'approaching' ? (e.approaching ? 0 : 1) : 1));
   };
   const keys = new Map(list.map((e) => [e, key(e)])); // each enemy's key once (the same keys the comparisons read)
@@ -427,7 +435,7 @@ function tryDuty(b, r, duty, target, priority, res) {
       const T = target === 'protected' ? b.goal.protect : target ?? (b.goal.protect && b.goal.protect !== r.id ? b.goal.protect : lowestHp(standing(b).filter((x) => x.id !== r.id))?.id);
       if (!T || T === r.id || !standing(b).some((x) => x.id === T)) return null;
       // Shield the worst shot on them (shown chance x HP) that no one has taken yet.
-      const shot = firstBy(b.threats.filter((t) => t.kind === 'aim' && t.target === T && !res.shields.has(t.id)), (x, y) => shotValue(y) - shotValue(x) || x.enemy - y.enemy);
+      const shot = firstBy(b.threats.filter((t) => t.kind === 'aim' && t.target === T && !res.shields.has(t.id)), (x, y) => shotValue(y, b) - shotValue(x, b) || x.enemy - y.enemy);
       if (shot) { res.shields.add(shot.id); return { kind: 'shield', threat: shot.id, for: T }; }
       const mate = runner(b, T);
       if (r.healer && mate.hp < mate.max && !res.patches.has(T)) { res.patches.add(T); return { kind: 'patch', target: T }; }
@@ -441,7 +449,7 @@ function tryDuty(b, r, duty, target, priority, res) {
         if (hurt) { res.patches.add(hurt.id); return { kind: 'patch', target: hurt.id }; }
       }
       if (r.jammer && !res.jam && b.threats.some(RADIO)) { res.jam = true; return { kind: 'jam' }; }
-      const shot = firstBy(b.threats.filter((t) => t.kind === 'aim' && t.target !== r.id && !res.shields.has(t.id)), (x, y) => shotValue(y) - shotValue(x) || x.enemy - y.enemy);
+      const shot = firstBy(b.threats.filter((t) => t.kind === 'aim' && t.target !== r.id && !res.shields.has(t.id)), (x, y) => shotValue(y, b) - shotValue(x, b) || x.enemy - y.enemy);
       if (shot) { res.shields.add(shot.id); return { kind: 'shield', threat: shot.id, for: shot.target }; }
       return null;
     }
@@ -501,7 +509,7 @@ export function resolveOrders(b) {
 /**
  * What each shot will face, given the actions: a runner making for the van is in the open, one who
  * hunkers is better covered, and a shielded shot is taken by its protector (against their own cover).
- * [{ id, enemy, target, shieldedBy, chance, hit }]. Pure; the round and previewRound both read it.
+ * [{ id, enemy, target, shieldedBy, chance, hit, lands }] (lands: what it takes off whoever faces it, after their soak). Pure; the round and previewRound both read it.
  */
 export function exposures(b, actions) {
   const kindOf = new Map(actions.map((a) => [a.r.id, a.kind]));
@@ -510,7 +518,7 @@ export function exposures(b, actions) {
     const v = shield ? shield.r : runner(b, t.target);
     const k = kindOf.get(v?.id);
     const chance = v ? aimChance(b, v, { hunker: !shield && k === 'hunker', open: !shield && (k === 'board' || k === 'carry') }) : 0;
-    return { id: t.id, enemy: t.enemy, target: v?.id ?? null, shieldedBy: shield?.r.id ?? null, chance, hit: t.hit };
+    return { id: t.id, enemy: t.enemy, target: v?.id ?? null, shieldedBy: shield?.r.id ?? null, chance, hit: t.hit, lands: landsOn(v, t.hit) };
   });
 }
 
@@ -521,7 +529,7 @@ function overwatchTarget(b, actions, res) {
   const threatOf = (e) => b.threats.find((t) => t.enemy === e.n && t.kind === 'aim');
   const exposed = (e) => {
     const t = threatOf(e); const v = t && runner(b, t.target);
-    return t && v && (['board', 'carry'].includes(kindOf.get(v.id)) || v.cover === 'open') ? shotValue(t) : 0;
+    return t && v && (['board', 'carry'].includes(kindOf.get(v.id)) || v.cover === 'open') ? shotValue(t, b) : 0;
   };
   const onProt = (e) => { const t = threatOf(e); return t && b.goal.protect && t.target === b.goal.protect ? 1 : 0; };
   return firstBy(up, (x, y) => exposed(y) - exposed(x) || onProt(y) - onProt(x) || x.n - y.n) ?? null;
@@ -628,7 +636,7 @@ export function applyPatch(b, patch) {
   const prot = b.goal.protect ? runner(b, b.goal.protect) : null;
   const up = standing(b);
   const notProt = up.filter((r) => r.id !== prot?.id);
-  const exp = b.drawn ? exposures(b, resolveOrders(b).actions).sort((x, y) => y.chance * y.hit - x.chance * x.hit || x.enemy - y.enemy) : [];
+  const exp = b.drawn ? exposures(b, resolveOrders(b).actions).sort((x, y) => y.chance * y.lands - x.chance * x.lands || x.enemy - y.enemy) : [];
   const pick = {
     all: () => notProt,
     protected: () => (prot && present(prot) ? [prot] : []),
@@ -934,8 +942,9 @@ export function playRound(b, rng) {
       const slots = { enemy: E(e.n), who: v.handle };
       const named = { actor: null, target: v.id, enemy: e.n, chance: c, shieldedBy: t.shieldedBy };
       if (!hit) { say('shot', 'shotMiss', slots, { ...named, targetId: v.id, success: false, damage: 0 }); continue; }
-      if (v.absorb > 0) { v.absorb -= 1; say('shot', 'shotAbsorbed', slots, { ...named, targetId: v.id, success: false, damage: 0 }); continue; }
-      const dmg = Math.min(v.hp, t.hit); v.hp -= dmg; b.hpLost += dmg;
+      if (v.absorb > 0) { v.absorb -= 1; say('shot', 'shotAbsorbed', slots, { ...named, targetId: v.id, success: false, damage: 0 }); continue; } // plates: fights saved before v80 only
+      const lands = landsOn(v, t.hit); const soaked = t.hit - lands; if (soaked > 0) named.soaked = soaked;
+      const dmg = Math.min(v.hp, lands); v.hp -= dmg; b.hpLost += dmg;
       if (v.hp <= 0) {
         // A runner pulling out alone dies only when the player ordered that withdrawal by hand; otherwise death's door like anyone else.
         if (v.leaving && v.ordered) { v.dead = true; down.push(v.id); say('shot', 'shotDead', slots, { ...named, targetId: v.id, success: true, damage: dmg, dead: true }); }
@@ -1212,7 +1221,7 @@ export function vanOdds(b0, runs = FIGHT.oddsRuns) {
 export function oddsKey(b0, runs = FIGHT.oddsRuns) {
   return JSON.stringify([b0.type, b0.diff, b0.risk, b0.goal,
     b0.enemies.map((e) => [e.kind, e.hp, e.max, e.absorb, e.cover, e.deck, e.approaching ?? false, e.group ?? 0, e.infected ?? null]),
-    b0.runners.map((r) => [r.id, r.hp, r.max, r.absorb, r.ap, r.strong, r.hit ?? null, r.jammer, r.healer, Object.values(r.stats).map((s) => s.value), r.overdrive ?? null, r.build ?? null, r.moved ?? false, r.misses ?? 0]),
+    b0.runners.map((r) => [r.id, r.hp, r.max, r.absorb, r.soak ?? 0, r.ap, r.strong, r.hit ?? null, r.jammer, r.healer, Object.values(r.stats).map((s) => s.value), r.overdrive ?? null, r.build ?? null, r.moved ?? false, r.misses ?? 0]),
     b0.orders, b0.overwatch && [b0.overwatch.value, b0.overwatch.damage, b0.overwatch.left], !!b0.wheels, !!b0.standby,
     b0.toughness ?? 0, b0.showcaseEligible ?? null, b0.maxExtra ?? null, b0.recipe ?? null, b0.hiredTotal ?? null, runs]);
 }

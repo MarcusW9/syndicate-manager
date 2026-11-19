@@ -1,5 +1,7 @@
 # Handoff: enemy toughness step 2, runner armour as a flat soak
 
+**Built 2026-11-19 (save v80) at 5 HP a point** (the owner's call after the sim: at 3 the soak was well under the old plates). What shipped: `docs/BATTLES.md` "Armour as a flat soak"; numbers: `docs/sims/armour-soak-2026-11-19.md`. Kept below for the record.
+
 Written 2026-11-19, after enemy toughness step 1 (save v79) and the hit display. Read `CLAUDE.md`, then `HANDOFF.md`, then `drafts/PROPOSAL-enemy-toughness.md` (part 3 and Q4), then this. **Best on Opus:** it is a rule change that has to be tuned against the death rule with sims; a Sonnet session can do the mechanical build once the numbers below are settled, but should not pick them.
 
 ## What is true now

@@ -6,7 +6,7 @@
 
 import { GEAR, SLOTS, TIERS, APEX_GEAR, perkById, perksOf, apexSwapOut, carried, itemName, itemTitle, buyPrice, sellPrice, canChangeGear, kitsFor, sidearmStats, placeOf, cellsOf, fitsAt, firstFit, bagUsed } from '../core/gear.js';
 import { BAG, SOCKETS, BASE_TIER } from '../data/gear.js';
-import { hitOf } from '../core/fight.js';
+import { hitOf, soakOf } from '../core/fight.js';
 import { lineText } from '../core/fighttext.js';
 import { FIGHT } from '../data/fights.js';
 import { HAS_LOOKS, lookText } from '../core/looks.js';
@@ -23,6 +23,7 @@ export function itemEffect(item) {
   if (s) return [`Aim ${s.aim >= 0 ? '+' : '−'}${Math.abs(s.aim)}`, `damage ${s.damage}`, lineText('view.hit', { hit: hitOf(s.damage), strong: hitOf(s.damage) * FIGHT.strongMult }).replace(/^./, (c) => c.toLowerCase()), s.pierce ? `pierces ${s.pierce}` : null, s.trait, s.quirk].filter(Boolean).join(' · ');
   const bonus = Object.entries(g.bonus ?? {}).map(([s, v]) => `${s} +${v + step}`);
   if (g.serious) bonus.push('fewer serious wounds');
+  if (g.armour) bonus.push(lineText('view.soak', { soak: soakOf(g.armour + step) }).replace(/^./, (c) => c.toLowerCase())); // armour as a flat soak (2026-11-19): the fight's own number
   return bonus.join(' · ').replace(/^./, (c) => c.toUpperCase());
 }
 

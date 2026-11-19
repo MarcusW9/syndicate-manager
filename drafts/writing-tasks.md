@@ -580,3 +580,12 @@ When a job drops no gear and the crew gets a spare Standard sidearm instead of s
 - **`FIGHT_TEXT_VARIANTS.ticks`** (three lines, "a pip"): the round screen's line (`core/fightview.js ticksLine`) passes only `{word}` and `{enemies}`; the tick's HP (`pv.ticks[].hp`, 10 today for both Vectors) is on hand but not passed. Proposed: pass `{hp}` from it and write the lines with "{hp} HP" (a small code change with a test), rather than fixing "10 HP" in the text.
 
 Still open as separate batches: director spotlights; live-view pace, stage marks and special-move titles; wave and approaching wording; other-tong habit and Anchor's Book draft wording; the mission-log, heist, trait and district-job writing.
+
+## Small line: armour's soak (2026-11-19, Claude's draft, owner to replace)
+
+Armour in the new fights now takes a flat amount off every shot that lands: 5 HP per armour point (owner, 2026-11-19; first agreed at 3), and at least 1 HP always gets through. Claude's draft wording:
+- On the armour card, after "Fewer serious wounds" (lower-cased there): `view.soak` in `data/fightText.js`, "Takes {soak} HP off every hit (at least 1 gets through)". `{soak}` comes from `core/fight.js soakOf`. Keep the number.
+- The vest's `desc` (`data/gear.js`): cut to "Plates under a work jacket." (the effect line above it now says the soak, with the tier's own number).
+- The skin weave's `desc` (`data/gearPerks.js`): "A weave under the skin. Takes 5 HP off every hit in a fight."
+- Not changed: `plan.noTechArmour` ("No armour on {tech}: nothing soaks a hit.") still reads true. The `shotAbsorbed` line ("but the armour takes it") now only plays in a fight saved before the change. A shot that lands carries `soaked` (the HP the armour took), in case the log or stage should say it.
+- Note: the older fights (raids and the other jobs, engine 1) still take 1 off every hit in their own smaller units. The vest's text describes the new fights.
