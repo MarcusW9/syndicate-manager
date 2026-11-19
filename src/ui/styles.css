@@ -2839,3 +2839,22 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
   .planbar__go { gap: 8px; }
   .planbar .btn { min-height: 44px; padding-block: 0; }
 }
+
+/* The live job on a phone on its side (landscape audit, 2026-11-19): the fight was one tall column, 4 screens long, with the map on top and
+   the orders and the Go bar below the fold. The side-by-side view that wide screens have (from 1100px) now applies here too: the map on the
+   left fills the height, the orders or the feed scroll on the right, and the order sheet's bar stays pinned at the bottom of its column. */
+@media (min-width: 640px) and (max-width: 1099px) and (max-height: 520px) {
+  .watch { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; margin-top: 4px; }
+  .watch .watch__live, .watch.is-calling .watch__live, .watch.is-done .watch__live { position: sticky; top: var(--live-top, 0px); }
+  .watch .watch__side { overflow-y: auto; max-height: calc(100svh - var(--live-top, 0px) - 56px); padding-right: 4px; overscroll-behavior: contain; }
+  .watch.is-fighting.is-calling .watch__side { min-height: 0; }
+  .watch .ffo { min-height: 0; }
+  .watch .watch__bar { grid-column: 1 / -1; }
+  #app.is-onjob .watch .siteplan, #app.is-onjob .watch.is-fighting .siteplan, #app.is-onjob .watch.is-fighting.is-calling .siteplan,
+  #app.is-onjob .watch.is-fighting.is-calling .siteplan.is-staged { height: max(180px, calc(100svh - var(--live-top, 0px) - 100px)); }
+  .watch__side .fs-bar { position: sticky; bottom: 0; background: var(--panel); padding-top: 6px; border-top: 1px solid var(--line); z-index: 1; grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr); align-items: stretch; }
+  .watch__side .fs-bar--confirm { grid-template-columns: 1fr 1fr; }
+  .watch__side .fs-bar__more .btn { padding: 2px 4px; font-size: 0.7rem; }
+  .watch__side .fs-pace { margin-bottom: 0; }
+  .watch.is-fighting .watch__callin { scroll-margin-top: 0; } /* the panel is its own scroller here, not the page */
+}
