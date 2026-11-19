@@ -1023,7 +1023,18 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
    is capped and wraps, so a long "→ low with …" can't squeeze the left one. */
 .cover__group { margin: 0; padding: 8px 12px 2px; border-top: 1px solid var(--line); font: 700 0.68rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 .cover__group:first-child { border-top: 0; }
-.cover__row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, max-content); gap: 1px 10px; padding: 6px 12px 8px; align-items: center; }
+/* A row is a <details> (2026-11-19): its summary is the line, a tap opens the sum behind the badge (.cover__why). */
+.cover__row { display: block; }
+.cover__sum { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, max-content); gap: 1px 10px; padding: 6px 12px 8px; align-items: center; min-height: var(--tap); cursor: pointer; list-style: none; }
+.cover__sum::-webkit-details-marker { display: none; }
+.cover__vs { color: var(--text); }
+.cover__cue { margin-top: 2px; font: 600 0.66rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-2); }
+.cover__cue::after { content: ' +'; }
+.cover__row[open] .cover__cue::after { content: ' \2212'; }
+.cover__why { margin: 0 12px 10px; padding: 6px 10px; border-left: 3px solid var(--accent-2); font-size: 0.78rem; color: var(--text); line-height: 1.4; }
+.cover__why p { margin: 0 0 4px; }
+.cover__why p:last-child { margin-bottom: 0; }
+.cover__hint { color: var(--accent-2); }
 .cover__row.is-gap { background: #1e1416; }
 .cover__name { margin: 0; font-weight: 600; font-size: 0.9rem; }
 .cover__danger { color: #ff8a98; font-size: 0.8rem; }

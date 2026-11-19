@@ -64,6 +64,21 @@ export function incidentDifficulty(tpl, am, inc) {
 }
 
 /**
+ * incidentDifficulty in parts, for the plan's "why" (2026-11-19): [{ label, value }] that add up to it exactly.
+ * baseThreat: the job's own threat before this offer's street talk made it hotter or quieter (core/jobs.js jobView).
+ */
+export function difficultyParts(tpl, am, inc, baseThreat = tpl.threat) {
+  const threat = am.threat ?? tpl.threat;
+  const usual = Math.round(rollTarget({ threat: baseThreat, rookie: tpl.rookie }));
+  const now = Math.round(rollTarget({ threat, rookie: tpl.rookie }));
+  const parts = [{ label: `threat ${baseThreat}${tpl.rookie ? ' rookie' : ''} job`, value: usual }];
+  if (now !== usual) parts.push({ label: now > usual ? 'hotter than usual' : 'quieter than usual', value: now - usual });
+  if (inc.diff) parts.push({ label: inc.diff > 0 ? 'a harder one' : 'an easier one', value: inc.diff });
+  if (am.alert) parts.push({ label: 'alert', value: am.alert });
+  return parts;
+}
+
+/**
  * Who handles an incident: whoever on the inside team has the best odds with any stat it allows,
  * by the shared crew rule (backup, short-handed, extra bodies, traits, intel). Returns
  * { roll: { op, value, notes }, stat, chance } or null if nobody can.
