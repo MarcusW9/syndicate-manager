@@ -40,10 +40,13 @@ for (const f of fightSet(false)) for (let i = 0; i < builds.length; i++) without
 const withAll = fightSet(true);
 assert.equal(without.length, withAll.length);
 
+// Each timed run plays the set PASSES times over: one run is only ~85 ms, so a scheduler pause or a collection landing in it could swing the ratio
+// (it read 1.58 once under the full suite's load, against 1.01-1.08 alone). A longer run makes a blip a smaller share of it.
+const PASSES = 4;
 function time(set) {
   const t0 = performance.now();
   let rounds = 0;
-  set.forEach((b0, i) => { const b = structuredClone(b0); F.playFight(b, makeRng(1000 + i)); rounds += b.round; });
+  for (let p = 0; p < PASSES; p++) set.forEach((b0, i) => { const b = structuredClone(b0); F.playFight(b, makeRng(1000 + i)); rounds += b.round; });
   return { ms: performance.now() - t0, rounds };
 }
 
