@@ -96,21 +96,21 @@ export const HEISTS = [
     prep: [
       {
         id: 'face',
-        templates: ['access_window', 'relay_cover'],
+        templates: ['expected_upstairs', 'the_replacement_visit'],
         line: 'Arrange a registered service visit for the crew’s lift access. The lift needs to expect the party.',
         effect: { drop: 'facial_scan' },
         shows: 'Service identity registered: facial-scan crisis cannot appear',
       },
       {
         id: 'power',
-        templates: ['relay_cover', 'access_window'],
+        templates: ['someone_at_the_controls', 'cover_the_late_shift'],
         line: 'Arrange cover at the backup-power controls. If the tower switches supply, someone needs to keep it from closing your route.',
         effect: { threat: -1 },
         shows: 'Backup-power cover arranged: danger one step lower',
       },
       {
         id: 'plans',
-        templates: ['data_pull', 'access_window'],
+        templates: ['the_current_copy', 'what_was_installed'],
         line: 'Get the current floor plans, including service routes and alterations. Szeto’s copy predates the owner’s last renovation.',
         effect: { intel: "the tower's current floor plans" },
         shows: 'Current floor plans secured: +1 on every finale roll',
