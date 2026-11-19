@@ -37,7 +37,7 @@ Read the smallest thing that answers the question: grep for a file name or topic
 
 ## iOS-ready rules
 - No information that only appears on hover. Tap/click to reveal.
-- Design at phone width first (360-430px), then widen.
+- Design at phone width first (360-430px), then widen. Landscape on a phone is expected to matter (design log, 2026-11-19): check a new screen at 844x390 too (`node scripts/audit-landscape.mjs` visits every main screen and ranks them; `docs/audits/2026-11-19-landscape-phone/`).
 - Tap targets at least 44px tall.
 - Respect safe areas (`env(safe-area-inset-*)`).
 - Randomness goes through `core/rng.js` (seeded), never `Math.random()` in core.
