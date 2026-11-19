@@ -76,17 +76,18 @@ export const FIGHT = {
 export const ENEMIES = {
   hired: { hp: 10, cover: 'half', deck: ['aim', 'aim', 'alarm'], fleeBelow: 0.4 },
   corp: { hp: 20, cover: 'half', deck: ['aim', 'backup', 'aim', 'flank'] },
-  drone: { hp: 10, cover: 'open', deck: ['aim', 'alarm'], absorb: 1, jamTakesOut: true, foeTags: ['synthetic'] },
+  drone: { hp: 10, cover: 'open', deck: ['aim', 'alarm'], absorb: 1, jamTakesOut: true, foeTags: ['synthetic', 'armoured'] },
   enforcer: { hp: 20, cover: 'half', deck: ['aim', 'aim', 'flank'] },
   // Standard force (prototype, 2026-11-15): the rank and file of a job's `opposition`. 10 HP behind one plate of armour,
   // so a plain hit only cracks the plate and a second one drops them; they come in numbers. The two kinds are the same body in
   // a different uniform (names and looks are placeholders, not canon).
   // fleeBelow marks a kind that breaks; the threshold itself is hired's (core/fight.js `breaks`).
-  police: { hp: 10, cover: 'half', deck: ['aim', 'aim', 'alarm'], absorb: 1, fleeBelow: 0.4 },
-  secforce: { hp: 10, cover: 'half', deck: ['aim', 'aim', 'backup'], absorb: 1, fleeBelow: 0.4 },
+  police: { hp: 10, cover: 'half', deck: ['aim', 'aim', 'alarm'], absorb: 1, fleeBelow: 0.4, foeTags: ['armoured'] },
+  secforce: { hp: 10, cover: 'half', deck: ['aim', 'aim', 'backup'], absorb: 1, fleeBelow: 0.4, foeTags: ['armoured'] },
 };
 // Enemy tags (slice 3-ii-a, 2026-11-16): `foeTags` on a kind above. A payload that lists a tag in its `immune` (data/builds.js)
-// does nothing to a body that has it. 'synthetic' is the first: machines, which the Cytotoxic Vector cannot touch.
+// does nothing to a body that has it. 'synthetic' is the first: machines, which the Cytotoxic Vector cannot touch. 'armoured' (2026-11-19):
+// a kind that starts behind a plate; drones count too (owner, 2026-11-19). No piece lists it as immune yet; the build read names it.
 // HP a shot of each kind takes (20 is the most any shot does).
 export const ENEMY_HIT = { hired: 10, drone: 10, corp: 20, enforcer: 20, police: 10, secforce: 10 };
 // Who a site (a district id, data/incidents.js ZONES aside: names.js districts) sends, in rotation by slot.

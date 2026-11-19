@@ -37,8 +37,10 @@ export const fightTypeOf = (templateId) => FIGHT_JOBS[templateId] ?? null;
 // --- what the feed and the plan read ---------------------------------------------------------------
 
 /** Everyone's health in the shape the feed, the plan and the call-in card read (enemies are "guards"; hp and max in whole hpUnits, the bar's segments, until the HP display). Kept small: every round of a fight is saved in the report. */
+// Part B's statuses a body wears (burning, marked, exposed, shaken), for the stage's rings; only while it is up, and only when it has one.
+const statusesOf = (e) => { if (e.out || e.fled) return {}; const st = Fight.STATUSES.filter((x) => x !== 'infected' && e[x]); return st.length ? { st } : {}; };
 export const fightSnapshot = (b) => ({
-  guards: b.enemies.map((e) => ({ n: e.n, hp: Fight.hpUnits(e.hp), max: Fight.hpUnits(e.max), out: e.out || e.fled, ...(e.absorb > 0 ? { plate: e.absorb } : {}), ...(e.infected && !e.out && !e.fled ? { infected: true } : {}) })),
+  guards: b.enemies.map((e) => ({ n: e.n, hp: Fight.hpUnits(e.hp), max: Fight.hpUnits(e.max), out: e.out || e.fled, ...(e.absorb > 0 ? { plate: e.absorb } : {}), ...(e.infected && !e.out && !e.fled ? { infected: true } : {}), ...statusesOf(e) })),
   runners: b.runners.map((r) => ({ id: r.id, handle: r.handle, hp: Fight.hpUnits(r.hp), max: Fight.hpUnits(r.max), down: r.down || r.dead })),
 });
 /**

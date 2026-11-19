@@ -176,8 +176,8 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
       push({ do: 'spread', from: enemyId(l.jumpFrom), to: enemyId(l.guard), dur: ms(MS.spread) });
       adv(MS.spread);
     } else if (rule === 'tick' && l.guard != null && units[enemyId(l.guard)]) {
-      const fell = l.key === 'tickOut';
-      push({ do: 'tick', to: enemyId(l.guard), fell, left: fell ? 0 : l.left, max: l.max, amount: l.hpDamage ?? 0, dur: ms(fell ? MS.tickOut : MS.tick) });
+      const fell = l.key === 'tickOut' || l.key === 'burnOut';
+      push({ do: 'tick', to: enemyId(l.guard), fell, burn: l.key === 'burnTick' || l.key === 'burnOut', left: fell ? 0 : l.left, max: l.max, amount: l.hpDamage ?? 0, dur: ms(fell ? MS.tickOut : MS.tick) });
       adv(fell ? MS.tickOut : MS.tick);
     } else if (rule === 'wayOut') {
       // The hack is done and the alarm is up: red rings at the door the arrivals will come in by.
@@ -299,6 +299,13 @@ export function forceEffect(cue, kind) {
     const g = guard(a); const max = Math.max(3, g?.max ?? 3);
     if (g) { g.max = max; g.hp = max - 1; g.infected = true; }
     c.lines = [L({ rule: 'tick', key: 'tick', guard: a, damage: 1, hpDamage: 10, left: max - 1, max })];
+  } else if (kind === 'statuses') {
+    // Part B (2026-11-19): every new status at once, one a body and the rest on the last body (so two can be seen together), the first one's burn ticking.
+    const list = ['burning', 'marked', 'exposed', 'shaken'];
+    foes.forEach((n, i) => { const g = guard(n); if (g && i < list.length) g.st = i === foes.length - 1 ? list.slice(i) : [list[i]]; });
+    const g = guard(a); const max = Math.max(3, g?.max ?? 3);
+    if (g) { g.max = max; g.hp = max - 1; }
+    c.lines = [L({ rule: 'tick', key: 'burnTick', guard: a, damage: 1, hpDamage: 10, left: max - 1, max })];
   } else if (kind === 'shield') {
     units[crew[1]].act = { kind: 'shield', target: crew[0] };
     c.lines = [L({ kind: 'guard', rule: 'shot', key: 'shotMiss', guard: a, targetId: crew[1], damage: 0, shieldedBy: crew[1] })];
@@ -414,6 +421,23 @@ export function createStage(svg, deps) {
     const has = g.querySelector(':scope > .fs-infect');
     if (on && !has) g.append(node('circle', { r: 10.4, class: 'fs-infect' }));
     else if (!on && has) has.remove();
+  }
+  // Part B's statuses (2026-11-19), drawn from the round's snapshot (`st`) and nothing else, one look each so they read apart at phone size:
+  // burning an orange flickering ring, marked a red crosshair, exposed a yellow broken plate, shaken a jittering violet dotted ring.
+  const STATUS_LOOK = {
+    burning: () => node('circle', { r: 11.8, class: 'fs-st fs-st--burning' }),
+    marked: () => node('path', { class: 'fs-st fs-st--marked', d: 'M0 -13.5 V-10 M0 13.5 V10 M-13.5 0 H-10 M13.5 0 H10' }),
+    exposed: () => node('path', { class: 'fs-st fs-st--exposed', d: 'M-10.4 -4 A11 11 0 0 1 -3 -10.6 M3 -10.6 A11 11 0 0 1 10.4 -4' }),
+    shaken: () => node('circle', { r: 13.2, class: 'fs-st fs-st--shaken' }),
+  };
+  function statuses(id, list = []) {
+    const g = foes.get(id);
+    if (!g) return;
+    for (const [st, make] of Object.entries(STATUS_LOOK)) {
+      const has = g.querySelector(`:scope > .fs-st--${st}`);
+      if (list.includes(st) && !has) g.append(make());
+      else if (!list.includes(st) && has) has.remove();
+    }
   }
   function crack(g) {
     const p = g?.querySelector?.(':scope > .fs-plate');
@@ -645,11 +669,11 @@ export function createStage(svg, deps) {
         if (!b) break;
         const apply = () => {
           if (s.max) tickLoss(s.to, s.left ?? 0, s.max);
-          if (s.fell) { setStance(s.to, 'down'); drawn[s.to] = { ...drawn[s.to], stance: 'down' }; body(b, s.to); infect(s.to, false); float(b, word('stage.out'), 'is-down'); }
+          if (s.fell) { setStance(s.to, 'down'); drawn[s.to] = { ...drawn[s.to], stance: 'down' }; body(b, s.to); infect(s.to, false); statuses(s.to, []); float(b, word('stage.out'), 'is-down'); }
         };
         if (deps.reduced() || s.dur <= 0) { apply(); break; }
-        for (let k = 0; k < 3; k++) setTimeout(() => gone(node('circle', { class: 'fs-drip', cx: b[0] - 3 + k * 3, cy: b[1] - 4 + (k % 2), r: 1.3 }), 700), k * 90);
-        const ring = host(s.to)?.querySelector(':scope > .fs-infect');
+        for (let k = 0; k < 3; k++) setTimeout(() => gone(node('circle', { class: s.burn ? 'fs-drip fs-drip--ember' : 'fs-drip', cx: b[0] - 3 + k * 3, cy: b[1] - 4 + (k % 2), r: 1.3 }), 700), k * 90);
+        const ring = host(s.to)?.querySelector(s.burn ? ':scope > .fs-st--burning' : ':scope > .fs-infect');
         if (ring) { ring.classList.remove('is-flare'); void ring.getBoundingClientRect(); ring.classList.add('is-flare'); }
         setTimeout(() => {
           apply();
@@ -728,7 +752,7 @@ export function createStage(svg, deps) {
   /** Health as the event has it (pips), after the round. */
   function health(cue) {
     for (const r of cue.runners ?? []) pips(r.id, Math.max(0, r.hp), r.max);
-    for (const g of cue.guards ?? []) { pips(enemyId(g.n), Math.max(0, g.hp), g.max); plate(enemyId(g.n), g.plate ?? 0); infect(enemyId(g.n), !!g.infected && !g.out); }
+    for (const g of cue.guards ?? []) { pips(enemyId(g.n), Math.max(0, g.hp), g.max); plate(enemyId(g.n), g.plate ?? 0); infect(enemyId(g.n), !!g.infected && !g.out); statuses(enemyId(g.n), g.out ? [] : g.st ?? []); }
   }
 
   return {

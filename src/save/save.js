@@ -1081,5 +1081,11 @@ function migrate(state) {
     if (b?.engine === 2) for (const r of b.runners ?? []) if (r.soak == null) r.soak = 0;
     state.version = 80;
   }
+  if (state.version === 80) {
+    // v81: the build vocabulary's first new statuses (DESIGN.md 2026-11-19, part B). An enemy in a fight in progress carries none of them.
+    const b = state.activeMission?.battle;
+    if (b?.engine === 2) for (const e of b.enemies ?? []) for (const st of ['burning', 'marked', 'exposed', 'shaken']) e[st] ??= null;
+    state.version = 81;
+  }
   return state;
 }

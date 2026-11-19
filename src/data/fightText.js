@@ -259,6 +259,37 @@ export const FIGHT_TEXT_VARIANTS = {
     'The {word} ravages {enemy} until they collapse.',
     'The {word} tears through {enemy}, dropping them.',
   ],
+  // Part B statuses (2026-11-19): Claude's drafts, the owner's to rewrite (drafts/writing-tasks.md).
+  'burn': [
+    '{enemy} catches fire.',
+    'The round sets {enemy} burning.',
+    'Flames take hold on {enemy}.',
+  ],
+  'burnTick': [
+    'The fire burns into {enemy}.',
+    '{enemy} burns.',
+    'The flames keep eating at {enemy}.',
+  ],
+  'burnOut': [
+    'The fire brings {enemy} down.',
+    '{enemy} burns until they drop.',
+    'The flames finish {enemy}.',
+  ],
+  'mark': [
+    '{who} marks {enemy} for the crew.',
+    '{who} calls out {enemy}.',
+    '{who} tags {enemy}.',
+  ],
+  'expose': [
+    '{who} spots the gap in {enemy}\'s armour.',
+    '{who} spots the weak seam in {enemy}\'s plate.',
+    '{who} shows the crew where {enemy}\'s plate opens.',
+  ],
+  'shake': [
+    '{enemy} sees that and starts looking for the exit.',
+    '{enemy} falters at the sight of it.',
+    '{enemy}\'s nerve goes.',
+  ],
   'immune': [
     '{enemy} is a machine: the {word} finds no living tissue.',
     '{enemy} is a machine: the {word} cannot take hold.',

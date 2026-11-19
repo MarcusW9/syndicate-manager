@@ -6,7 +6,7 @@ import { makeRng } from '../src/core/rng.js';
 import * as F from '../src/core/fight.js';
 import { resolveDecision } from '../src/core/decisions.js';
 import { BUILD_OFFER, MOVES, PAYLOADS } from '../src/data/builds.js';
-import { checkBuildOffers, offerDue, eligiblePieces, buildPieces, buildOf } from '../src/core/builds.js';
+import { checkBuildOffers, offerDue, eligiblePieces, buildPieces, buildOf, offerPick } from '../src/core/builds.js';
 
 const fresh = () => { const s = createNewGame({ seed: 1 }); s.day = 10; return s; };
 const jax = (s) => s.crew.find((o) => o.id === 'jax'); // muscle, combat 15
@@ -20,25 +20,32 @@ test('nobody is offered anything before the first milestone', () => {
   assert.equal(s.inbox.filter((m) => m.kind === 'build').length, 0);
 });
 
-test('at the milestone Joss offers every piece they qualify for, once, as a message with options and Not yet', () => {
+// Since the four part-B pieces joined (owner, 2026-11-19) there are more pieces than an offer shows (BUILD_OFFER.size): Joss shows that many
+// of the ones they qualify for, picked by offerPick (seeded by the runner and the day); before, he showed every one.
+test('at the milestone Joss offers the pieces they qualify for (up to the offer size), once, as a message with options and Not yet', () => {
   const s = fresh(); jax(s).jobsWithCrew = BUILD_OFFER.firstAtJobs;
+  const expected = offerPick(eligiblePieces(jax(s)), jax(s), s.day).map((p) => p.id);
+  assert.equal(expected.length, BUILD_OFFER.size);
   assert.deepEqual(checkBuildOffers(s).map((o) => o.id), ['jax']);
   const m = offerFor(s, 'jax');
-  assert.deepEqual(m.payload.ids.sort(), ['cytotoxic', 'ricochet']);
-  assert.deepEqual(m.options.map((o) => o.id).sort(), ['cytotoxic', 'later', 'ricochet']);
+  assert.deepEqual(m.payload.ids, expected);
+  assert.deepEqual(m.options.map((o) => o.id).sort(), [...expected, 'later'].sort());
   assert.equal(m.blocking, false);
   assert.deepEqual(checkBuildOffers(s), [], 'not again while one is open');
 });
 
-test('the stats gate a piece: a tech with combat 4 is offered the payload only', () => {
+test('the stats gate a piece: a tech with combat 4 is offered payloads only, each one they meet the needs of', () => {
   const s = fresh(); wing(s).jobsWithCrew = BUILD_OFFER.firstAtJobs;
-  assert.deepEqual(eligiblePieces(wing(s)).map((p) => p.id), ['cytotoxic']);
+  const ok = eligiblePieces(wing(s));
+  assert.ok(ok.length && ok.every((p) => p.slot === 'payload' && Object.entries(p.needs).every(([k, n]) => wing(s).stats[k] >= n)));
+  assert.ok(!ok.some((p) => p.id === 'ricochet' || p.id === 'incendiary'), 'combat 10 is out of reach');
   checkBuildOffers(s);
-  assert.deepEqual(offerFor(s, 'wing').payload.ids, ['cytotoxic']);
+  assert.ok(offerFor(s, 'wing').payload.ids.every((id) => ok.some((p) => p.id === id)));
 });
 
 test('taking a piece fills its slot, and the other slot is offered again only after the gap', () => {
   let s = fresh(); jax(s).jobsWithCrew = BUILD_OFFER.firstAtJobs;
+  while (!offerPick(eligiblePieces(jax(s)), jax(s), s.day).some((p) => p.id === 'ricochet')) s.day += 1; // a day whose offer has the move
   checkBuildOffers(s);
   s = resolveDecision(s, offerFor(s, 'jax').id, 'ricochet');
   assert.deepEqual(jax(s).build, { move: 'ricochet', payload: null });
@@ -48,9 +55,10 @@ test('taking a piece fills its slot, and the other slot is offered again only af
   assert.deepEqual(checkBuildOffers(s), [], 'not until the gap');
   jax(s).jobsWithCrew = BUILD_OFFER.firstAtJobs + BUILD_OFFER.everyJobs;
   checkBuildOffers(s);
-  assert.deepEqual(offerFor(s, 'jax').payload.ids, ['cytotoxic'], 'only the empty slot');
-  s = resolveDecision(s, offerFor(s, 'jax').id, 'cytotoxic');
-  assert.deepEqual(jax(s).build, { move: 'ricochet', payload: 'cytotoxic' });
+  assert.ok(offerFor(s, 'jax').payload.ids.every((id) => PAYLOADS[id]), 'only the empty slot');
+  const pay = offerFor(s, 'jax').payload.ids.includes('cytotoxic') ? 'cytotoxic' : offerFor(s, 'jax').payload.ids[0];
+  s = resolveDecision(s, offerFor(s, 'jax').id, pay);
+  assert.deepEqual(jax(s).build, { move: 'ricochet', payload: pay });
   jax(s).jobsWithCrew += 99; s.day += 99;
   assert.deepEqual(checkBuildOffers(s), [], 'both slots full: nothing left to offer');
 });

@@ -40,7 +40,7 @@ export function abilitiesOf(op) {
   if (!spec) for (const [id, def] of Object.entries(SPECIALISATIONS)) gate('spec', id, def);
   for (const slot of ['move', 'payload']) {
     if (pieces[slot][build[slot]]) continue;
-    for (const [id, def] of Object.entries(pieces[slot])) gate(slot, id, def);
+    for (const [id, def] of Object.entries(pieces[slot])) if (!def.draft) gate(slot, id, def); // a draft piece (part B) is not reachable yet
   }
   return { held, reachable };
 }

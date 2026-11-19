@@ -72,7 +72,7 @@ export function feedItems(events = [], { kit = null } = {}) {
       // Where each one stands (at, cover) so the map can put the fight on its spots and show the faces. An engine-2 fight
       // also carries its stage (core/runfight.js stageOf: everyone's place and stance) and the director's beats, for the
       // live battle view (ui/fightstage.js).
-      const state = { guards: (e.guards ?? []).map((g) => ({ n: g.n, hp: g.hp, max: g.max, armour: g.armour, out: g.out, at: g.at ?? null, cover: g.cover ?? null, ...(g.plate ? { plate: g.plate } : {}), ...(g.infected ? { infected: true } : {}) })), runners: (e.runners ?? []).map((r) => ({ id: r.id, handle: r.handle, hp: r.hp, max: r.max, armour: r.armour, down: r.down, at: r.at ?? null, cover: r.cover ?? null })) };
+      const state = { guards: (e.guards ?? []).map((g) => ({ n: g.n, hp: g.hp, max: g.max, armour: g.armour, out: g.out, at: g.at ?? null, cover: g.cover ?? null, ...(g.plate ? { plate: g.plate } : {}), ...(g.infected ? { infected: true } : {}), ...(g.st ? { st: g.st } : {}) })), runners: (e.runners ?? []).map((r) => ({ id: r.id, handle: r.handle, hp: r.hp, max: r.max, armour: r.armour, down: r.down, at: r.at ?? null, cover: r.cover ?? null })) };
       if (e.phase === 'start' || e.phase === 'end') {
         items.push({ type: 'note', text: e.phase === 'end' ? e.report ?? e.text : e.text, tone: e.phase === 'start' ? 'warn' : e.hurt?.length ? 'bad' : 'good', cue: { battle: { phase: e.phase, ...state, ...(e.stage ? { stage: e.stage } : {}) } } });
         continue;
