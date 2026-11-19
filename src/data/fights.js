@@ -93,7 +93,7 @@ export const ENEMY_HIT = { hired: 10, drone: 10, corp: 20, enforcer: 20, police:
 // Who a site (a district id, data/incidents.js ZONES aside: names.js districts) sends, in rotation by slot.
 export const SITE_ENEMIES = { heights: ['corp', 'drone'], docks: ['hired', 'hired', 'enforcer'] };
 // How many enemies a fight starts with, by the job's threat 1-5: the difficulty dial.
-export const COUNT_BY_THREAT = [0, 2, 2, 3, 3, 4];
+export const COUNT_BY_THREAT = [0, 1, 1, 3, 3, 4];
 // Enemy toughness (2026-11-18, drafts/PROPOSAL-enemy-toughness.md, step 1): by the job's threat 1-5, how many steps tougher every body
 // is: each step adds `hpStep` HP, and from `plateAtStep` steps up a body gets one more plate. Threat 1-3 are as before (the early
 // game, unarmed crews); threat 4 and 5 are +5 HP (threat 5 was +10 until the owner halved it, 2026-11-19). No threat reaches plateAtStep yet: the first sim (docs/sims/enemy-toughness-2026-11-18-step1.md)
@@ -160,6 +160,20 @@ export const FIGHT_JOBS = {
   kidnap: 'holdExtract', casino: 'holdHack', clinic: 'holdYard', ledger: 'holdExtract', container409: 'holdExtract', chrome: 'holdHack',
   low_water: 'holdExtract', mooring_watch: 'holdYard', count_against_paper: 'holdHack', quarter_to_two: 'holdExtract',
   manual_handling: 'holdExtract', favourite: 'holdYard', last_ticket: 'holdExtract', wrong_horse: 'holdHack',
+  // The other fifty-one jobs, moved the same way (owner, 2026-11-19): every job now plays its fights on engine 2. Type by what the job asks: technical work holds the hack, carrying or collecting gets it out, watching or keeping a place holds the yard.
+  cable: 'holdHack', eviction: 'holdHack', signal_walk: 'holdHack', house_advantage: 'holdHack', the_flat_doesnt_exist: 'holdHack',
+  the_guest_copy: 'holdHack', service_included: 'holdHack', someone_at_the_controls: 'holdHack', cover_the_late_shift: 'holdHack',
+  what_was_installed: 'holdHack', expected_upstairs: 'holdHack', the_replacement_visit: 'holdHack', after_the_applause: 'holdHack',
+  relay_cover: 'holdHack', a_steady_hand: 'holdHack',
+  courier: 'holdExtract', penthouse: 'holdExtract', herbal_run: 'holdExtract', delivery: 'holdExtract', paid_in_full: 'holdExtract',
+  second_hand_heart: 'holdExtract', borrowed_glory: 'holdExtract', exit_interview: 'holdExtract', cold_chain: 'holdExtract',
+  paper_collection: 'holdExtract', clean_sheets: 'holdExtract', crate_return: 'holdExtract', kit_return: 'holdExtract', landing_hands: 'holdExtract',
+  after_hours: 'holdExtract', rent_round: 'holdExtract', back_rent: 'holdExtract', an_old_account: 'holdExtract', the_current_copy: 'holdExtract',
+  last_sitting: 'holdExtract',
+  queue_duty: 'holdYard', shutter_watch: 'holdYard', fitting_room: 'holdYard', quiet_table: 'holdYard', race_night_door: 'holdYard',
+  inspection_hours: 'holdYard', closing_stack: 'holdYard', closing_sweep: 'holdYard', stable_turnover: 'holdYard', clear_the_ramp: 'holdYard',
+  eyes_on_the_seal: 'holdYard', access_window: 'holdYard', tack_ledger: 'holdYard', dry_shelf: 'holdYard', still_on_the_books: 'holdYard',
+  someone_to_cover: 'holdYard',
 };
 
 // The priority words an order's tie-breaks may use (spec 12; the grammar is core/fight.js enemyOrder).

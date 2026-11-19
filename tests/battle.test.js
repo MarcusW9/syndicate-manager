@@ -14,6 +14,8 @@ import { INCIDENTS } from '../src/data/incidents.js';
 import { makeRng } from '../src/core/rng.js';
 import { feedItems } from '../src/core/feed.js';
 import { playMission, randomPolicy, arm } from './play.js';
+import { pinToEngine1 } from './engine1.js';
+pinToEngine1('cable', 'exit_interview'); // these tests are of engine 1's rules (tests/engine1.js)
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
 const { importSave } = await import('../src/save/save.js');

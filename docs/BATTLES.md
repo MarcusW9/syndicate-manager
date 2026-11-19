@@ -45,4 +45,4 @@ A hack fight (type `holdHack`) has two stages. Stage 0 is the hack: the technici
 
 | | Engine 2 (the new fights) | Engine 1 (the old fights) |
 | --- | --- | --- |
-| Plays | The jobs in `FIGHT_JOBS` (26 by 2026-11-17; started as five: `data_pull`, `data_scrub`, `quiet_hours`, `warehouse`, `protection`), `data/fights.js`; and since 2026-11-17 every raid on a hall (type `holdHall`, built by `core/raids.js startRaidFight`). | Every other fight (and a raid saved mid-fight before that date). |
+| Plays | Every job, `FIGHT_JOBS` (all 77 since 2026-11-19; 26 by 2026-11-17; started as five: `data_pull`, `data_scrub`, `quiet_hours`, `warehouse`, `protection`), `data/fights.js`; and since 2026-11-17 every raid on a hall (type `holdHall`, built by `core/raids.js startRaidFight`). | Every other fight (and a raid saved mid-fight before that date). |
