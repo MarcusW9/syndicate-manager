@@ -213,3 +213,20 @@ draw rarely.
 1. The owner confirms the tag vocabulary and the pools (especially the "not catchable" and "not movable" calls).
 2. A small authoring pass on `data/sites.js`: give the Docks plot feature names the tags can match (crane, stacks, fence, gate, quay, water, pallets, van); today only a few are drawn.
 3. The code step (separate, owner's call): carry these tags in a data file and read them in the template selector, once the minor-check hook exists.
+
+## Decisions taken (owner: "go with your suggestions", 2026-11-19)
+
+1. **Callbacks use the zone, not a clock.** Slot `{time}` becomes `{where}` (the zone the earlier event happened in: "the way in", "inside", "the target", "the way out"; the run records it). Proposed lines, same six, for the owner to approve:
+   - The crew remembers {earlier} from {where}.
+   - {earlier} from {where} is still fresh in the crew's minds.
+   - The crew has not forgotten {earlier} from {where}.
+   - There is a quiet mention of {earlier} from {where}.
+   - The crew exchanges a look at the mention of {earlier} from {where}.
+   - Someone brings up {earlier} from {where}.
+   `{earlier}` uses the outcome-neutral labels above. A callback is drawn only when that event is recorded in this run.
+2. **Faction overlays are keyed to the job.** Red Lanterns: the job's `against: redLanterns`. Wet Sleeve: a job that carries the `police` situation. Aether-Harbour Logistics: held until a job can say which corporation is on site (a data field, not a mechanic); until then no AHL overlay line is drawn. Force templates never draw an overlay obstacle; overlay watchers are used only by social, cool and alert lines.
+3. **Small pools get more entries (proposed, to approve):**
+   - `lane` watchers (driving 2): "a yard marshal waving a truck forward", "a truck driver waiting with the window down", "a gate attendant beside the barrier arm". Pool becomes 5.
+   - `brief` sounds (stealth 5): "a pallet dropping onto the concrete", "a trailer door slamming shut", "a loading bell ringing once". Pool becomes 7.
+4. **Time, weather and track lines stay on HOLD.** Only the lines marked usable now are drawn, and `time` and `condition` lines run as colour only if the owner later approves that (the audit's recommendation).
+5. **Not changed:** the tag vocabulary and the "not catchable / not movable" calls stand as drafted unless the owner edits them.
