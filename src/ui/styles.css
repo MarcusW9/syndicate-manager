@@ -2839,6 +2839,7 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
   .planbar__why--more[aria-expanded="true"] { display: grid; }
   .planbar__go { gap: 8px; }
   .planbar .btn { min-height: 44px; padding-block: 0; }
+  .founding__bar { bottom: 0; } /* the founder pick's bar sits flush, so no card text peeks through under it */
 }
 
 /* The live job on a phone on its side (landscape audit, 2026-11-19): the fight was one tall column, 4 screens long, with the map on top and
