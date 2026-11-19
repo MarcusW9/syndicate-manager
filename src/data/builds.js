@@ -7,17 +7,32 @@
 // what a hit CARRIES. They never name each other; the combination comes from the rules.
 //
 // Names are drafts, the owner's to write (drafts/writing-tasks.md): "Ricochet", "Cytotoxic Vector" and the short log word "Vector".
+//
+// The build vocabulary (2026-11-19, drafts/PROPOSAL-build-vocabulary.md, the generic trigger step): what a piece does is written in
+// `pieces`, each { when, if?, who, what }, using only the words below, and never names another piece. core/fight.js runs every piece
+// listening for a trigger when it fires (`piecesOn`), in a fixed order (the move's, then the payload's). Words so far:
+//   when  'onAttack' (the runner's attack is chosen: a move's chance to fire), 'onHit' (a runner's attack lands past the plate and
+//         leaves the target up), 'onKill' (an enemy goes down: to the runner's attack or bounce, or, for a status already on it, to anything)
+//   if    { enemiesUp: n } (at least n enemies up)
+//   who   'target' (the enemy the trigger was about), 'nextInGroup' (the first other enemy of its group that is up, without the status
+//         and not immune to it), 'nearest' (up to the move's `reach` enemies, in the rules' order)
+//   what  'burst' (one attack on each of the who), { apply: status } (put a status on), { spread: status } (copy it to the who)
+// Statuses so far: 'infected' (its numbers are the payload's `dot`; it ticks at the round's end, core/fight.js ticksDue). A status a body
+// carries brings its payload's onKill pieces with it, so it can jump whoever drops its host. The engine's guardrails: a status never
+// stacks or renews; an immune body shrugs it off (said once a body, on any landed hit that carries it) and never passes it on; a fall
+// spreads a status at most once (the killer's own piece first).
 
 // Moves: a burst of attacks with sequential retargeting (2.1), fired by itself when its condition holds (2.2).
 //   reach: the most enemies one burst hits, one attack each, in the rules' order. It is agnostic of the rest of the crew (owner, 2026-11-17): a bounce may land on an enemy a teammate is already shooting.
 //   uses: how many times a fight (one: a runner's move is a showcase, not a rate of fire).
-//   when: the condition that fires it by itself, read at the start of the runner's action: `enemies` or more enemies up. Any round.
+//   pieces: when it fires by itself (onAttack, read at the start of the runner's action, any round, if its `if` holds) and what it does.
 //   look: how the stage draws it (data/fightLooks.js SPECIAL_MOVES).
 //   Earning (slice 3-ii-b): slot 'move'; needs: base stats (before gear and traits) a runner needs before Joss can offer it; desc and offer
 //   are draft wording, the owner's to write (drafts/writing-tasks.md).
 export const MOVES = {
   ricochet: {
-    id: 'ricochet', name: 'Ricochet', reach: 3, uses: 1, when: { enemies: 2 }, look: 'ricochet',
+    id: 'ricochet', name: 'Ricochet', reach: 3, uses: 1, look: 'ricochet',
+    pieces: [{ when: 'onAttack', if: { enemiesUp: 2 }, who: 'nearest', what: 'burst' }],
     slot: 'move', needs: { combat: 10 },
     desc: 'Once per fight, automatically fires when at least two enemies are standing: one round ricochets through up to three targets.',
     offer: '{op} has the eye for Ricochet: one round through several targets. We could make something of that.',
@@ -30,7 +45,7 @@ export const MOVES = {
 //        `tick` HP lost at the end of each round (before the groups' flee checks, so a tick counts like any other loss), for
 //        `rounds` rounds (null: until the target dies; owner, 2026-11-16). It does not spread by itself; a re-hit does not stack
 //        and does not renew (the first infection stands).
-//   spread: when an infected enemy goes down (a hit, a tick or the overwatch), or when the killing hit itself carries it (a one-pip enemy never lives to be infected), the infection jumps to one other enemy of its group that is up,
+//   the onKill spread piece (Contagion): when an infected enemy goes down (a hit, a tick or the overwatch), or when the killing hit itself carries it (a one-pip enemy never lives to be infected), the infection jumps to one other enemy of its group that is up,
 //           not already infected and not immune; the jump is not a hit, so a plate does not stop it. The new infection starts with `rounds` in full
 //           and ticks from the next round (Contagion, slice 3-iii, 2026-11-17; draft numbers).
 //   immune: enemy tags (data/fights.js ENEMIES `foeTags`) that shrug it off.
@@ -40,6 +55,7 @@ export const MOVES = {
 export const PAYLOADS = {
   cytotoxic: {
     id: 'cytotoxic', name: 'Cytotoxic Vector', family: 'vector', word: 'Vector', dot: { tick: 10, rounds: null }, immune: ['synthetic'],
+    pieces: [{ when: 'onHit', who: 'target', what: { apply: 'infected' } }],
     slot: 'payload', needs: {},
     desc: 'A damaging hit infects a surviving target, dealing 10 HP at each round’s end until they fall. Cracking armour alone does not infect. Does not stack or affect machines.',
     offer: '{op} could carry Cytotoxic Vector. Get it past the armour and it keeps eating away until the target drops.',
@@ -47,7 +63,8 @@ export const PAYLOADS = {
   // Contagion Vector (draft, 2026-11-17): the owner's bio weapon (PROPOSAL-swarm-and-special-moves.md 2.3), a variation of the Cytotoxic Vector (family 'vector'): the same slot, so a
   // runner picks one. It trades staying power for reach: the infection burns out after `rounds` rounds, but it jumps when its host falls.
   contagion: {
-    id: 'contagion', name: 'Contagion Vector', family: 'vector', word: 'Contagion', dot: { tick: 10, rounds: 2 }, spread: true, immune: ['synthetic'],
+    id: 'contagion', name: 'Contagion Vector', family: 'vector', word: 'Contagion', dot: { tick: 10, rounds: 2 }, immune: ['synthetic'],
+    pieces: [{ when: 'onHit', who: 'target', what: { apply: 'infected' } }, { when: 'onKill', who: 'nextInGroup', what: { spread: 'infected' } }],
     slot: 'payload', needs: { medical: 8 },
     desc: 'A damaging hit infects a surviving target: 10 HP at each round’s end for two rounds. When the host falls, or a carrying hit drops a target outright, it jumps to one uninfected enemy in the same group. The jump bypasses armour and starts dealing damage next round. Does not stack or affect machines.',
     offer: '{op} could carry Contagion Vector. It burns out sooner, but jumps when the target drops. We choose this or Cytotoxic, not both.',

@@ -281,7 +281,7 @@ test('Contagion: wording for the jump, three variants, and a draft piece in data
   const p = PAYLOADS.contagion;
   assert.equal(p.name, 'Contagion Vector');
   assert.equal(p.family, PAYLOADS.cytotoxic.family, 'a variation of the Cytotoxic Vector: one family, one slot');
-  assert.ok(p.spread && p.slot === 'payload' && p.dot.rounds === 2 && p.immune.includes('synthetic') && p.desc && p.offer);
+  assert.ok(p.pieces.some((x) => x.when === 'onKill' && x.what.spread === 'infected') && p.slot === 'payload' && p.dot.rounds === 2 && p.immune.includes('synthetic') && p.desc && p.offer);
   assert.ok(immuneTo('drone', 'contagion') && !immuneTo('hired', 'contagion'));
 });
 

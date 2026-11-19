@@ -387,11 +387,53 @@ function enemyOrder(b, list, priority) {
   });
 }
 
-/** The runner's move if it is ready to fire by itself now: they have one, a use left, and enough enemies up (data/builds.js MOVES `when`). Else null. */
+// --- the build vocabulary: the generic trigger step (2026-11-19, drafts/PROPOSAL-build-vocabulary.md) -----------------------------
+// A piece (data/builds.js `pieces`) is { when, if?, who, what } in the words below and never names another piece; when a trigger fires,
+// every piece listening for it runs, in a fixed order (the move's, then the payload's). Adding a piece made of these words is data only.
+export const VOCAB = {
+  when: ['onAttack', 'onHit', 'onKill'],
+  if: ['enemiesUp'],
+  who: ['target', 'nextInGroup', 'nearest'],
+  what: ['burst', 'apply', 'spread'],
+  status: ['infected'],
+};
+
+/** The pieces a runner carries that listen for `when`, in the fixed order (move, then payload): [{ piece, from }] (`from`: the move or payload). */
+// Each move's or payload's listeners for a trigger, read once (the data never changes in play; the planning odds replay many fights).
+const listening = new WeakMap();
+const listenersOf = (from, when) => {
+  let byWhen = listening.get(from);
+  if (!byWhen) listening.set(from, (byWhen = new Map()));
+  let list = byWhen.get(when);
+  if (!list) byWhen.set(when, (list = (from.pieces ?? []).filter((p) => p.when === when).map((piece) => ({ piece, from }))));
+  return list;
+};
+const NONE = Object.freeze([]);
+export const piecesOn = (r, when) => {
+  const mv = MOVES[r.build?.move]; const pay = PAYLOADS[r.build?.payload];
+  if (!mv && !pay) return NONE;
+  if (!mv) return listenersOf(pay, when);
+  if (!pay) return listenersOf(mv, when);
+  return [...listenersOf(mv, when), ...listenersOf(pay, when)];
+};
+
+/** Does a piece's `if` hold now? (No condition always holds.) */
+export const pieceHolds = (b, cond) => !cond || !(cond.enemiesUp != null && enemiesUp(b).length < cond.enemiesUp);
+
+/** A status as it sits on a body, made from the payload that carries it: `infected` takes the payload's `dot` (the first infection stands). */
+const STATUS = {
+  infected: (pay, by, round) => ({ tick: pay.dot.tick, left: pay.dot.rounds, by, round, payload: pay.id }),
+};
+
+/** How many enemies must be up for a move to fire by itself (its onAttack piece's `if`; 1 with no condition). The planning advice reads it. */
+export const moveNeedsUp = (mv) => (mv?.pieces ?? []).find((p) => p.when === 'onAttack')?.if?.enemiesUp ?? 1;
+
+/** The runner's move if it is ready to fire by itself now: they have one, a use left, and its onAttack piece's `if` holds. Else null. */
 export function moveReady(b, r) {
   const mv = MOVES[r.build?.move];
-  if (!mv || (r.moved ? 1 : 0) >= mv.uses || enemiesUp(b).length < mv.when.enemies) return null;
-  return mv;
+  if (!mv || (r.moved ? 1 : 0) >= mv.uses) return null;
+  const on = piecesOn(r, 'onAttack').find((x) => x.from === mv && x.piece.what === 'burst');
+  return on && pieceHolds(b, on.piece.if) ? mv : null;
 }
 
 function tryDuty(b, r, duty, target, priority, res) {
@@ -776,15 +818,35 @@ export function playRound(b, rng) {
   const result = { lines, actions: [], unanswered: [], defeated, goalDelta: 0, down, fled, withdrawn, heat: 0, neural: 0, ended: null };
   if (!b.drawn) lines.push(...startRound(b, rng));
   const say = wordless ? silent : (kind, key, slots = {}, extra = {}) => { const l = { kind, key, slots, ...extra, text: lineText(key, slots) }; lines.push(l); return l; };
-  // Contagion (slice 3-iii, 2026-11-17): when an infected enemy goes down, a payload that `spread`s jumps to the first other enemy of its group that is
-  // up, not infected and not immune (the rules' order, no roll). Not a hit, so a plate does not stop it; it starts in full and ticks next round.
-  const spreadFrom = (e, inf = e.infected) => {
-    const pay = PAYLOADS[inf?.payload];
-    if (!pay?.spread) return;
-    const t = enemiesUp(b).find((x) => x.n !== e.n && (x.group ?? 0) === (e.group ?? 0) && !x.infected && !immuneTo(x.kind, pay.id));
-    if (!t) return;
-    t.infected = { tick: pay.dot.tick, left: pay.dot.rounds, by: inf.by, round: b.round, payload: pay.id };
-    say('spread', 'spread', { enemy: E(e.n), to: E(t.n), word: pay.word }, { enemy: t.n, from: e.n, jumpFrom: e.n, payload: pay.id });
+  // The trigger step's target rules (`who`): the bodies a piece acts on. `st`: the status the piece carries, `from`: its payload.
+  // nextInGroup is Contagion's rule (slice 3-iii, 2026-11-17): the first other enemy of the group that is up, without the status and not immune.
+  const whoOf = (rule, e, st, from) => {
+    if (rule === 'target') return [e];
+    if (rule === 'nextInGroup') return enemiesUp(b).filter((x) => x.n !== e.n && (x.group ?? 0) === (e.group ?? 0) && !x[st] && !immuneTo(x.kind, from.id)).slice(0, 1);
+    return [];
+  };
+  // onKill: an enemy went down (to `killer`'s attack or bounce, or to anything for a status it carried: the overwatch, a tick, another runner). The
+  // listeners are the killer's own onKill pieces first, then those its statuses bring with them (the payload that put them on). A fall spreads
+  // a status at most once, and an immune body never passes one on: so a Contagion carrier's killing hit makes the infection jump at once, even from
+  // a body that never lived to be infected (2026-11-17), and otherwise the host's own infection jumps. A spread is not a hit: a plate does not stop it,
+  // and the new status starts in full (ticking from the next round).
+  const fall = (e, killer, carried = [e.infected]) => {
+    const sources = [];
+    if (killer) for (const { piece, from } of piecesOn(killer, 'onKill')) sources.push({ piece, from, by: killer.id });
+    for (const inf of carried) {
+      const from = inf && PAYLOADS[inf.payload];
+      if (from) for (const piece of (from.pieces ?? []).filter((p) => p.when === 'onKill')) sources.push({ piece, from, by: inf.by });
+    }
+    const spread = new Set();
+    for (const { piece, from, by } of sources) {
+      const st = piece.what?.spread;
+      if (!st || spread.has(st) || immuneTo(e.kind, from.id)) continue;
+      spread.add(st);
+      for (const t of whoOf(piece.who, e, st, from)) {
+        t[st] = STATUS[st](from, by, b.round);
+        say('spread', 'spread', { enemy: E(e.n), to: E(t.n), word: from.word }, { enemy: t.n, from: e.n, jumpFrom: e.n, payload: from.id });
+      }
+    }
   };
 
   const E = wordless ? silent : (n) => enemyName(b.enemies.find((x) => x.n === n).kind, n); // a name for a line's slots only
@@ -818,18 +880,31 @@ export function playRound(b, rng) {
       if (!x.ok) say('overwatch', 'overwatchMiss', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: false, damage: 0, roll: rollOf(x) });
       else {
         const { dmg, cracked } = landHit(e, hitOf(ow.damage), x.strong, false, rng);
-        if (e.hp <= 0) { e.out = true; defeated.push({ by: ow.id, enemy: e.n, how: 'overwatch' }); say('overwatch', 'overwatchOut', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, dropped: true, roll: rollOf(x), cracked }); spreadFrom(e); }
+        if (e.hp <= 0) { e.out = true; defeated.push({ by: ow.id, enemy: e.n, how: 'overwatch' }); say('overwatch', 'overwatchOut', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, dropped: true, roll: rollOf(x), cracked }); fall(e, null); }
         else say('overwatch', dmg === 0 ? 'overwatchCrack' : 'overwatchHit', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, roll: rollOf(x), left: e.hp, cracked });
       }
     }
   }
 
-  // The hit that drops an enemy counts as carrying the payload in (2026-11-17): a spreading payload (Contagion) on the killing hit infects the one it
-  // kills for an instant, so it jumps at once, even from a one-pip enemy that never lives to be infected. A machine shrugs it off; a hit that only
-  // cracks a plate does not kill, so it never gets here.
-  const carried = (r, e) => { const pay = PAYLOADS[r.build?.payload]; return pay?.spread && !immuneTo(e.kind, pay.id) ? { payload: pay.id, by: r.id } : null; };
+  // onHit: a runner's hit landed and left the target up. Every status the hit carries (the runner's onHit `apply` pieces) meets the target's
+  // tags first: an immune body shrugs it off, said once a body, on any landed hit, plate or not, so a drone's shrug is seen. Then, past the plate
+  // only (a hit that only cracks one carries nothing in; owner, 2026-11-17), the status goes on, unless the body has it already.
+  const STATUS_LINE = { infected: 'infect' };
+  const landed = (r, e, dmg, named, flag) => {
+    for (const { piece, from } of piecesOn(r, 'onHit')) {
+      const st = piece.what?.apply;
+      if (!st) continue;
+      if (immuneTo(e.kind, from.id)) { if (!e.shrugged) { e.shrugged = true; say('immune', 'immune', { who: r.handle, enemy: E(e.n), word: from.word }, { ...named, ...flag, enemy: e.n }); } continue; }
+      if (dmg <= 0) continue;
+      for (const t of whoOf(piece.who, e, st, from)) {
+        if (t[st]) continue; // a status never stacks or renews
+        t[st] = STATUS[st](from, r.id, b.round);
+        say(STATUS_LINE[st], STATUS_LINE[st], { who: r.handle, enemy: E(t.n), word: from.word }, { ...named, ...flag, enemy: t.n, payload: from.id });
+      }
+    }
+  };
 
-  // A runner's attack on an enemy: the roll, the damage, and what the hit carries. `burst`: one bounce of a move (its own lines, flagged
+  // A runner's attack on an enemy: the roll, the damage, and the triggers it fires (onKill, onHit). `burst`: one bounce of a move (its own lines, flagged
   // so the stage draws the run of them as the move's look). A bounce on someone already gone is skipped (the overwatch may have got there).
   const strike = (r, n, named, burst) => {
     const e = b.enemies.find((x) => x.n === n);
@@ -840,16 +915,9 @@ export function playRound(b, rng) {
     r.misses = x.ok ? 0 : (r.misses ?? 0) + 1;
     if (!x.ok) { say('attack', k('attackMiss'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: false, damage: 0, roll: rollOf(x) }); return; }
     const { dmg, cracked } = landHit(e, r.hit ?? FIGHT.hit, x.strong, r.ap, rng); // a plate takes plateHp off the hit: a base plain hit only cracks it
-    if (e.hp <= 0) { e.out = true; defeated.push({ by: r.id, enemy: e.n, how: burst ? 'burst' : 'attack' }); say('attack', k('attackOut'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, dropped: true, roll: rollOf(x), strong: x.strong, cracked }); spreadFrom(e, carried(r, e) ?? e.infected); return; }
+    if (e.hp <= 0) { e.out = true; defeated.push({ by: r.id, enemy: e.n, how: burst ? 'burst' : 'attack' }); say('attack', k('attackOut'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, dropped: true, roll: rollOf(x), strong: x.strong, cracked }); fall(e, r); return; }
     say('attack', dmg === 0 ? k('attackCrack') : k('attackHit'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: true, damage: dmg, roll: rollOf(x), left: e.hp, cracked });
-    // What the hit carries (data/builds.js PAYLOADS): a hit that gets past the plate and leaves the target up infects it, unless the target shrugs it off
-    // (a tag the payload is immune to; said once a body). An infected body is not infected again.
-    const pay = PAYLOADS[r.build?.payload];
-    if (!pay?.dot) return;
-    if (immuneTo(e.kind, pay.id)) { if (!e.shrugged) { e.shrugged = true; say('immune', 'immune', { who: r.handle, enemy: E(e.n), word: pay.word }, { ...named, ...flag, enemy: e.n }); } return; } // said on any landed hit, plate or not, so a drone's shrug is seen
-    if (dmg <= 0 || e.infected) return; // a hit that only cracks a plate carries nothing in (owner, 2026-11-17)
-    e.infected = { tick: pay.dot.tick, left: pay.dot.rounds, by: r.id, round: b.round, payload: pay.id };
-    say('infect', 'infect', { who: r.handle, enemy: E(e.n), word: pay.word }, { ...named, ...flag, enemy: e.n, payload: pay.id });
+    landed(r, e, dmg, named, flag);
   };
 
   // A hall's own turret (a raid): fires on its own at the nearest raider, until it is dry.
@@ -965,7 +1033,7 @@ export function playRound(b, rng) {
     const inf = e.infected;
     e.hp -= inf.tick;
     if (inf.left != null && (inf.left -= 1) <= 0) e.infected = null;
-    if (e.hp <= 0) { e.out = true; e.infected = null; defeated.push({ by: inf.by, enemy: e.n, how: 'vector' }); say('tick', 'tickOut', { enemy: E(e.n), word: PAYLOADS[inf.payload]?.word ?? 'Vector' }, { enemy: e.n, damage: inf.tick, dropped: true, left: 0, max: e.max }); spreadFrom(e, inf); }
+    if (e.hp <= 0) { e.out = true; e.infected = null; defeated.push({ by: inf.by, enemy: e.n, how: 'vector' }); say('tick', 'tickOut', { enemy: E(e.n), word: PAYLOADS[inf.payload]?.word ?? 'Vector' }, { enemy: e.n, damage: inf.tick, dropped: true, left: 0, max: e.max }); fall(e, null, [inf]); }
     else say('tick', 'tick', { enemy: E(e.n), word: PAYLOADS[inf.payload]?.word ?? 'Vector' }, { enemy: e.n, damage: inf.tick, left: e.hp, max: e.max });
   }
   // 3c: the hired and the standard force break and run per group, when too few of that group are left (hired's threshold).

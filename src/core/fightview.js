@@ -215,9 +215,9 @@ export function buildRead(b) {
     const m = MOVES[r.build.move]; const pl = PAYLOADS[r.build.payload];
     const lines = [];
     if (m) {
-      const ok = upAtOnce >= (m.when?.enemies ?? 1);
+      const ok = upAtOnce >= F.moveNeedsUp(m);
       used = used || ok;
-      lines.push(ok ? lineText('build.answer.move.fits', { piece: m.name, reach: m.reach }) : lineText('build.answer.move.few', { piece: m.name, need: m.when?.enemies ?? 1 }));
+      lines.push(ok ? lineText('build.answer.move.fits', { piece: m.name, reach: m.reach }) : lineText('build.answer.move.few', { piece: m.name, need: F.moveNeedsUp(m) }));
     }
     if (pl) {
       const no = kinds.filter((k) => immuneTo(k, pl.id)); const yes = kinds.filter((k) => !no.includes(k));
