@@ -1,6 +1,6 @@
 # Proposal: the build vocabulary (the words every piece is written in)
 
-Status: draft for iteration, 2026-11-18. Nothing built. This is section 2.6.2 of `PROPOSAL-swarm-and-special-moves.md` worked out: the small set of hooks that moves, payloads, traits, gear perks and the medic's, pilot's and leader's abilities are all written in, so they combine without naming each other. Read with `PROPOSAL-combat-builds.md` (the effect library and archetypes), `PROPOSAL-runner-shaping.md` (the one menu) and `docs/research/abilities-and-builds.md` (what other games and designers learned).
+Status: draft for iteration, 2026-11-18. **"What makes it scale" 1, the generic trigger step, built 2026-11-19** (no behaviour change; `docs/BATTLES.md` "The build vocabulary's trigger step"); its words so far are the ones the built pieces use. The rest, and the questions at the end, still open. This is section 2.6.2 of `PROPOSAL-swarm-and-special-moves.md` worked out: the small set of hooks that moves, payloads, traits, gear perks and the medic's, pilot's and leader's abilities are all written in, so they combine without naming each other. Read with `PROPOSAL-combat-builds.md` (the effect library and archetypes), `PROPOSAL-runner-shaping.md` (the one menu) and `docs/research/abilities-and-builds.md` (what other games and designers learned).
 
 ## The owner's aim (2026-11-18)
 
