@@ -150,6 +150,14 @@ export function renderSettings() {
 
       <h2>Look</h2>
       <div class="riskcard">
+        <p>Colours: <strong>${getPref('theme-red') ? 'red channel' : 'cyan'}</strong></p>
+        <p class="muted small">Cyan is the standard look. Red channel turns the frame red (headings, lines, tabs) and keeps cyan for what is picked and for money. Only changes how it looks, and is kept on this device, not in the save.</p>
+        <div class="segmented segmented--grid">
+          <button class="seg ${getPref('theme-red') ? '' : 'is-on'}" data-action="theme" data-id="cyan" aria-pressed="${!getPref('theme-red')}"><strong>Cyan</strong><span>Standard</span></button>
+          <button class="seg ${getPref('theme-red') ? 'is-on' : ''}" data-action="theme" data-id="red" aria-pressed="${getPref('theme-red')}"><strong>Red channel</strong><span>Red frame</span></button>
+        </div>
+      </div>
+      <div class="riskcard">
         <p>Hall art: <strong>${getPref('hallart') ? 'on' : 'off'}</strong></p>
         <p class="muted small">Draws the Old Town hall as a street-terminal picture, with tiles, walls and a sprite for everything built. Other halls keep the plain plan for now. Only changes how it looks, and is kept on this device, not in the save.</p>
         <button class="btn btn--block" data-action="toggle-hallart" aria-pressed="${getPref('hallart')}">${getPref('hallart') ? 'Turn hall art off' : 'Turn hall art on'}</button>
