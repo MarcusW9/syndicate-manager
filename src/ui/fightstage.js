@@ -144,23 +144,23 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
       const to = enemyId(l.guard);
       if (sp && sp.look !== 'ping' && units[from] && units[to]) push({ do: 'camera', focus: [from, to] });
       const fly = sp ? MS.fire * sp.mv.slow : MS.fire;
-      push({ do: 'fire', from, to, hit: !!l.success && (l.damage ?? 0) > 0, cracked: !!l.cracked, fell: !!l.dropped, damage: l.damage ?? 0, amount: l.hpDamage ?? 0, wide, ...(sp ? { burst: true, look: sp.look } : {}), dur: ms(fly * (sp ? cut : 1)) });
+      push({ do: 'fire', from, to, hit: !!l.success && (l.damage ?? 0) > 0, cracked: !!l.cracked, fell: !!l.dropped, damage: l.damage ?? 0, amount: l.hpDamage ?? 0, left: l.hpLeft ?? null, strong: !!l.strong, wide, ...(sp ? { burst: true, look: sp.look } : {}), dur: ms(fly * (sp ? cut : 1)) });
       adv(fly + (sp ? sp.mv.gap : MS.gap), sp ? cut : 1);
       if (sp) sp.from = to;
     } else if (rule === 'overwatch' && l.guard != null) {
-      push({ do: 'fire', from: 'perch', to: enemyId(l.guard), hit: !!l.success && (l.damage ?? 0) > 0, cracked: !!l.cracked, fell: !!l.dropped, damage: l.damage ?? 0, amount: l.hpDamage ?? 0, wide, dur: ms(MS.fire * 1.4) });
+      push({ do: 'fire', from: 'perch', to: enemyId(l.guard), hit: !!l.success && (l.damage ?? 0) > 0, cracked: !!l.cracked, fell: !!l.dropped, damage: l.damage ?? 0, amount: l.hpDamage ?? 0, left: l.hpLeft ?? null, strong: !!l.strong, wide, dur: ms(MS.fire * 1.4) });
       adv(MS.fire * 1.4 + MS.gap);
     } else if (rule === 'shot' && l.key === 'flanked') {
       push({ do: 'flank', id: l.targetId, by: enemyId(l.guard), dur: ms(MS.flank) });
       adv(MS.flank);
     } else if (rule === 'shot' && l.guard != null && l.targetId) {
       const fell = l.key === 'shotDown' || l.key === 'shotDead';
-      push({ do: 'fire', from: enemyId(l.guard), to: l.targetId, hit: (l.damage ?? 0) > 0, absorbed: l.key === 'shotAbsorbed', ...(l.shieldedBy ? { shield: true } : {}), fell, dead: l.key === 'shotDead', damage: l.damage ?? 0, amount: l.hpDamage ?? 0, wide, foe: true, dur: ms(MS.fire) });
+      push({ do: 'fire', from: enemyId(l.guard), to: l.targetId, hit: (l.damage ?? 0) > 0, absorbed: l.key === 'shotAbsorbed', ...(l.shieldedBy ? { shield: true } : {}), fell, dead: l.key === 'shotDead', damage: l.damage ?? 0, amount: l.hpDamage ?? 0, left: l.hpLeft ?? null, wide, foe: true, dur: ms(MS.fire) });
       adv(MS.fire + MS.gap);
     } else if (['stabilise', 'patch', 'aura'].includes(rule) && l.targetId) {
       // A medic's help that lands (the aura, a patch, a stabilise) is one picture: the medic glows and flashes, an orb crosses to the patient, the pip fills. A miss is the red ring.
       if (rule === 'aura' || l.success) {
-        push({ do: 'aura', id: l.actor, to: l.targetId, left: l.left, max: l.max, amount: l.hpHeal ?? 0, dur: ms(MS.aura) });
+        push({ do: 'aura', id: l.actor, to: l.targetId, left: l.hpLeft ?? l.left, leftExact: l.hpLeft != null, max: l.max, amount: l.hpHeal ?? 0, dur: ms(MS.aura) });
         adv(MS.aura);
       } else {
         push({ do: 'heal', id: l.targetId, by: l.actor, ok: false, dur: ms(MS.heal) });
@@ -177,7 +177,7 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
       adv(MS.spread);
     } else if (rule === 'tick' && l.guard != null && units[enemyId(l.guard)]) {
       const fell = l.key === 'tickOut' || l.key === 'burnOut';
-      push({ do: 'tick', to: enemyId(l.guard), fell, burn: l.key === 'burnTick' || l.key === 'burnOut', left: fell ? 0 : l.left, max: l.max, amount: l.hpDamage ?? 0, dur: ms(fell ? MS.tickOut : MS.tick) });
+      push({ do: 'tick', to: enemyId(l.guard), fell, burn: l.key === 'burnTick' || l.key === 'burnOut', left: fell ? 0 : l.hpLeft ?? l.left, leftExact: l.hpLeft != null, max: l.max, amount: l.hpDamage ?? 0, dur: ms(fell ? MS.tickOut : MS.tick) });
       adv(fell ? MS.tickOut : MS.tick);
     } else if (rule === 'wayOut') {
       // The hack is done and the alarm is up: red rings at the door the arrivals will come in by.
@@ -445,23 +445,42 @@ export function createStage(svg, deps) {
     p.classList.add('is-cracking');
     setTimeout(() => p.remove(), deps.reduced() ? 0 : 520);
   }
+  // Health on the map (2026-11-19, owner: "one draining bar"): one slim bar under each body, the fill the share of HP left. When HP drops
+  // the fill shrinks at once and a pale "lost" chunk holds where it was for a moment, then slides down to it; healing grows the fill. Amber
+  // at half, red at a quarter. `max` is remembered on the bar, so a hit that only knows the HP left (a line's hpLeft) can drain it.
+  const BAR_W = 14; const BAR_H = 1.8;
   function pips(id, hp, max) {
     const g = host(id);
-    if (!g || !max) return;
-    let bar = g.querySelector(':scope > .fs-pips');
-    if (!bar) { bar = node('g', { class: 'fs-pips' }); g.append(bar); }
-    const y = Number(g.dataset?.pipY ?? g.getAttribute('data-pip-y') ?? 8.5);
-    if (bar.childElementCount !== max) { bar.replaceChildren(...Array.from({ length: max }, (_, i) => node('rect', { x: -max * 2 + i * 4, y, width: 3, height: 2 }))); }
-    [...bar.children].forEach((r, i) => r.classList.toggle('is-on', i < hp));
+    if (!g) return;
+    let bar = g.querySelector(':scope > .fs-hpbar');
+    if (!bar) {
+      const y = Number(g.dataset?.pipY ?? g.getAttribute('data-pip-y') ?? 8.5);
+      const w = g.classList.contains('fs-knot') ? BAR_W + 4 : BAR_W;
+      const r = (cls) => node('rect', { class: cls, x: -w / 2, y, width: w, height: BAR_H });
+      bar = node('g', { class: 'fs-hpbar' });
+      bar.append(r('fs-hpbar__bg'), r('fs-hpbar__ghost'), r('fs-hpbar__fill'));
+      g.append(bar);
+    }
+    if (max) bar.dataset.max = String(max);
+    const m = Number(bar.dataset.max);
+    if (!m || hp == null) return;
+    const f = Math.max(0, Math.min(1, hp / m));
+    const was = bar.dataset.f == null ? f : Number(bar.dataset.f);
+    bar.dataset.f = String(f);
+    const fill = bar.querySelector('.fs-hpbar__fill'); const ghost = bar.querySelector('.fs-hpbar__ghost');
+    fill.style.transform = `scaleX(${f})`;
+    if (f >= was || deps.reduced()) ghost.style.transform = `scaleX(${f})`;
+    else { ghost.style.transform = `scaleX(${was})`; clearTimeout(bar._t); bar._t = setTimeout(() => { ghost.style.transform = `scaleX(${f})`; }, 450); }
+    bar.classList.toggle('is-low', f <= 0.5 && f > 0.25);
+    bar.classList.toggle('is-crit', f <= 0.25);
   }
-  /** The pip an infection took: lit one more moment in green as it goes out. */
-  function tickLoss(id, left, max) {
-    const g = host(id);
-    const bar = g?.querySelector(':scope > .fs-pips');
-    if (!bar) { pips(id, left, max); return; }
-    const before = [...bar.children].filter((r) => r.classList.contains('is-on')).length;
+  /** The HP a tick took: the bar drains as any loss does, and its lost chunk shows in the status's colour. */
+  function tickLoss(id, left, max, burn = false) {
     pips(id, left, max);
-    [...bar.children].slice(Math.max(0, left), before).forEach((r) => { r.classList.add('is-tickloss'); setTimeout(() => r.classList.remove('is-tickloss'), 800); });
+    const bar = host(id)?.querySelector(':scope > .fs-hpbar');
+    if (!bar) return;
+    const cls = burn ? 'is-burnloss' : 'is-tickloss';
+    bar.classList.add(cls); setTimeout(() => bar.classList.remove(cls), 800);
   }
   function setStance(id, stance, hidden = false) {
     const g = host(id);
@@ -488,6 +507,16 @@ export function createStage(svg, deps) {
       const w = u.mark === 'full' ? 16 : 13; const h = u.mark === 'full' ? 4.5 : 3.2;
       ground.append(node('rect', { class: `fs-barrier fs-barrier--${u.mark}`, x: -w / 2, y: -h / 2, width: w, height: h, transform: `translate(${x} ${y}) rotate(${(ang * 180) / Math.PI + 90})` }));
     }
+  }
+  // A hit's damage as a number (2026-11-19, owner: "the little digits coming off them"): bigger than a word, it pops, then rises and fades;
+  // successive numbers on one body step left and right so they never sit on top of each other.
+  let numSide = 1;
+  function damageNumber(at, amount, strong) {
+    if (!at || deps.reduced()) return;
+    numSide = -numSide;
+    const g = node('text', { class: `fs-dmg${strong ? ' is-crit' : ''}`, x: at[0] + numSide * 3, y: at[1] - 9 }, `\u2212${amount}${strong ? '!' : ''}`);
+    fx.append(g);
+    setTimeout(() => g.remove(), 1200);
   }
   function float(at, text, cls) {
     if (!at || deps.reduced()) return;
@@ -605,8 +634,13 @@ export function createStage(svg, deps) {
           } else if (s.hit) { struck(g); flash(b, 'sp-flash--hit'); }
           else if (s.absorbed) { flash(b, 'sp-flash--zap'); float(b, word('stage.absorbed'), 'is-absorbed'); }
           else flash([b[0] + s.wide[0] * 22, b[1] + s.wide[1] * 22], 'sp-flash--miss');
-          if (s.fell) { setStance(s.to, s.dead ? 'dead' : 'down'); drawn[s.to] = { ...drawn[s.to], stance: s.dead ? 'dead' : 'down' }; body(b, s.to); float(b, word(s.to.startsWith('e:') ? 'stage.out' : 'stage.down'), 'is-down'); }
-          else if (s.hit) setTimeout(() => float(b, s.amount ? `\u2212${s.amount}` : word('stage.hit'), s.amount ? 'is-hit is-num' : 'is-hit'), s.cracked && !deps.reduced() ? 280 : 0); // HP (2026-11-18): the damage as a number
+          // The bar drains as the hit lands (2026-11-19): to the HP the line says is left, or to nothing on a fall.
+          const late = s.cracked && !deps.reduced() ? 280 : 0;
+          if (s.fell) setTimeout(() => pips(s.to, 0, null), late); else if (s.hit && s.left != null) setTimeout(() => pips(s.to, s.left, null), late);
+          // The damage as a number (2026-11-18), on the killing hit too (2026-11-19), bigger and amber with a "!" on a critical hit.
+          if ((s.hit || s.fell) && s.amount) setTimeout(() => damageNumber(b, s.amount, s.strong), late);
+          if (s.fell) { setStance(s.to, s.dead ? 'dead' : 'down'); drawn[s.to] = { ...drawn[s.to], stance: s.dead ? 'dead' : 'down' }; body(b, s.to); setTimeout(() => float(b, word(s.to.startsWith('e:') ? 'stage.out' : 'stage.down'), 'is-down'), late + 220); }
+          else if (s.hit && !s.amount) setTimeout(() => float(b, word('stage.hit'), 'is-hit'), late);
         }, s.dur);
         break;
       }
@@ -616,7 +650,7 @@ export function createStage(svg, deps) {
         // The medic's aura (2026-11-17): a green glow grows round the medic and flashes, an orb crosses to the patient, and where it lands the ring bursts, the HP healed floats (+10) and the segment fills.
         const m = pos(s.id); const t = pos(s.to);
         if (!t) break;
-        const land = () => { flash(t, 'sp-flash--heal'); float(t, s.amount ? `+${s.amount}` : '+', s.amount ? 'is-heal is-num' : 'is-heal'); if (s.left != null && s.max) { pips(s.to, s.left, s.max); const bar = host(s.to)?.querySelector(':scope > .fs-pips'); if (bar) { bar.classList.add('is-gain'); setTimeout(() => bar.classList.remove('is-gain'), 800); } } };
+        const land = () => { flash(t, 'sp-flash--heal'); float(t, s.amount ? `+${s.amount}` : '+', s.amount ? 'is-heal is-num' : 'is-heal'); if (s.left != null) { pips(s.to, s.left, s.leftExact ? null : s.max); const bar = host(s.to)?.querySelector(':scope > .fs-hpbar'); if (bar) { bar.classList.add('is-gain'); setTimeout(() => bar.classList.remove('is-gain'), 800); } } };
         if (!m || deps.reduced() || s.dur <= 0) { land(); break; }
         const dur = Math.max(700, s.dur);
         const glow = gone(node('circle', { class: 'fs-aura', cx: m[0], cy: m[1], r: 9 }), dur * 0.62);
@@ -668,7 +702,7 @@ export function createStage(svg, deps) {
         const b = pos(s.to);
         if (!b) break;
         const apply = () => {
-          if (s.max) tickLoss(s.to, s.left ?? 0, s.max);
+          if (s.left != null || s.max) tickLoss(s.to, s.left ?? 0, s.leftExact ? null : s.max, s.burn);
           if (s.fell) { setStance(s.to, 'down'); drawn[s.to] = { ...drawn[s.to], stance: 'down' }; body(b, s.to); infect(s.to, false); statuses(s.to, []); float(b, word('stage.out'), 'is-down'); }
         };
         if (deps.reduced() || s.dur <= 0) { apply(); break; }
@@ -751,8 +785,9 @@ export function createStage(svg, deps) {
 
   /** Health as the event has it (pips), after the round. */
   function health(cue) {
-    for (const r of cue.runners ?? []) pips(r.id, Math.max(0, r.hp), r.max);
-    for (const g of cue.guards ?? []) { pips(enemyId(g.n), Math.max(0, g.hp), g.max); plate(enemyId(g.n), g.plate ?? 0); infect(enemyId(g.n), !!g.infected && !g.out); statuses(enemyId(g.n), g.out ? [] : g.st ?? []); }
+    // The exact HP where the cue has it (2026-11-19); a report saved before has only the whole hpUnits, which draw the same share.
+    for (const r of cue.runners ?? []) pips(r.id, Math.max(0, r.hpExact ?? r.hp), r.maxExact ?? r.max);
+    for (const g of cue.guards ?? []) { pips(enemyId(g.n), Math.max(0, g.hpExact ?? g.hp), g.maxExact ?? g.max); plate(enemyId(g.n), g.plate ?? 0); infect(enemyId(g.n), !!g.infected && !g.out); statuses(enemyId(g.n), g.out ? [] : g.st ?? []); }
   }
 
   return {
@@ -816,7 +851,7 @@ export function createStage(svg, deps) {
       foes.clear();
       ground.replaceChildren();
       cinema(false);
-      for (const id of Object.keys(drawn)) if (!id.startsWith('e:')) { deps.pin(id, null); setStance(id, null); deps.tok(id)?.querySelector(':scope > .fs-pips')?.remove(); }
+      for (const id of Object.keys(drawn)) if (!id.startsWith('e:')) { deps.pin(id, null); setStance(id, null); deps.tok(id)?.querySelector(':scope > .fs-hpbar')?.remove(); }
       drawn = {};
       if (full) { spent = 0; svg.classList.remove('is-staged'); }
     },

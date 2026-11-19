@@ -223,7 +223,7 @@ function renderFullLog(t) {
         </div>`,
     }[e.kind] ?? (() => `
         <div class="flog__step">
-          <p class="flog__crisis">${esc(e.text)}</p>
+          ${e.text ? `<p class="flog__crisis">${esc(e.text)}</p>` : ''}
           ${e.choice != null ? `<p class="flog__choice">${e.actor && !e.choice.startsWith(e.actor.handle) ? `<strong>${esc(e.actor.handle)}</strong> · ` : ''}${esc(e.choice)}</p>` : ''}
           ${e.why ? `<p class="flog__why">${esc(e.why)}</p>` : ''}
           ${e.report ? `<p class="flog__line ${e.kind === 'exit' ? 'tone--warn' : e.success === false ? 'tone--bad' : 'tone--good'}">${esc(e.report)}</p>` : ''}

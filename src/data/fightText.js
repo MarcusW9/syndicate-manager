@@ -109,7 +109,9 @@ export const FIGHT_TEXT = {
   'stabiliseWayOut': '{who} stabilises {target} before the crew moves out.',
   'stabiliseFail': '{who} cannot get {target} stable.',
   'patch': '{who} gets {target} in better shape.',
+  'patch.self': '{who} patches up their own wounds.', // Claude's draft, 2026-11-19 (the medic is the patient)
   'patchFail': '{who} cannot get {target} patched up.',
+  'patchFail.self': '{who} cannot patch up their own wounds.', // Claude's draft, 2026-11-19
   'board': '{who} breaks for the van.',
   'carry': '{who} gets {target} moving towards the van.',
   'inVan': '{who} is inside the van.',
@@ -125,6 +127,7 @@ export const FIGHT_TEXT = {
   'withdrew': '{who} pulls out of the fight.',
   'enemyFled': 'The remaining hired guns break and run.',
   'aura': '{who} keeps {target} steady enough to fight.',
+  'aura.self': '{who} keeps themself steady enough to fight.', // Claude's draft, 2026-11-19 (the medic is the patient)
   'bleedOut': '{who} dies from their injuries.',
   'leftDead': '{who} is left behind and does not make it.',
   // Threat wording (a shown threat)
