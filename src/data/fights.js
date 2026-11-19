@@ -93,7 +93,7 @@ export const ENEMY_HIT = { hired: 10, drone: 10, corp: 20, enforcer: 20, police:
 // Who a site (a district id, data/incidents.js ZONES aside: names.js districts) sends, in rotation by slot.
 export const SITE_ENEMIES = { heights: ['corp', 'drone'], docks: ['hired', 'hired', 'enforcer'] };
 // How many enemies a fight starts with, by the job's threat 1-5: the difficulty dial.
-export const COUNT_BY_THREAT = [0, 2, 2, 3, 3, 4];
+export const COUNT_BY_THREAT = [0, 1, 1, 3, 3, 4];
 // Enemy toughness (2026-11-18, drafts/PROPOSAL-enemy-toughness.md, step 1): by the job's threat 1-5, how many steps tougher every body
 // is: each step adds `hpStep` HP, and from `plateAtStep` steps up a body gets one more plate. Threat 1-3 are as before (the early
 // game, unarmed crews); threat 4 and 5 are +5 HP (threat 5 was +10 until the owner halved it, 2026-11-19). No threat reaches plateAtStep yet: the first sim (docs/sims/enemy-toughness-2026-11-18-step1.md)
