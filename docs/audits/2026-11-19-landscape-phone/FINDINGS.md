@@ -20,3 +20,6 @@ Read with `README.md` (the table) in this folder. Made 2026-11-19 from `node scr
 
 ## After the fix (same day)
 A phone on its side (640px and wider, 520px tall or less) now gets the desktop chrome, with the left rail narrowed to 64px and drawn as icons over small labels (owner: "icons like Football Manager Mobile"). The table is in `../2026-11-19-landscape-phone-after/`. At 844x390 the free height on most screens went from 195px (50%) to 321px (82%); the squad board from 177px (45%) to 231px (59%); at 667x375 from 180px to 306px. No screen scrolls sideways. Still open: the squad board's plan bar (95px), the founding screen's bar, and the fight screens (not reached by this script).
+
+## The plan bar (same day)
+On a phone on its side the plan bar is now one slim row: the risk word and the weakest reason on one line, buttons at the 44px minimum, 6px off the bottom. It was 95px; it is now 64px, so the squad board has 262px free at 844x390 (67%, up from 231px) and 195px at 667x375 (up from 185px). Opening "+1 more" grows it only while it is open. Table: `../2026-11-19-landscape-phone-after-planbar/`. Still open: the founding screen's bar (82px), and the fight screens.

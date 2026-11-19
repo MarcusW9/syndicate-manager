@@ -2827,3 +2827,15 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
   .nav__btn--save { font-size: 0.62rem; }
   .main { padding: 16px; }
 }
+
+/* The plan bar on a phone on its side (landscape audit, 2026-11-19): it held 95px of a 390px screen. One slim row instead: the risk word
+   and the weakest reason side by side on one line, the buttons at the tap minimum, and it sits 6px off the bottom, not 16. */
+@media (min-width: 640px) and (max-width: 1099px) and (max-height: 520px) {
+  .planbar { bottom: 6px; padding: 6px 10px; gap: 10px; margin-top: 8px; }
+  .planbar__read { display: flex; flex-wrap: wrap; align-items: center; column-gap: 10px; row-gap: 0; justify-items: initial; }
+  .planbar__why, .planbar__line { -webkit-line-clamp: 1; }
+  .planbar__why--more { display: flex; align-items: baseline; gap: 8px; min-height: 44px; }
+  .planbar__why--more[aria-expanded="true"] { display: grid; }
+  .planbar__go { gap: 8px; }
+  .planbar .btn { min-height: 44px; padding-block: 0; }
+}
