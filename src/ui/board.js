@@ -341,6 +341,28 @@ export function renderPicker(ui, { plan, tpl, threat, slot, people, freelancersF
 
 const RISKS = ['low', 'moderate', 'high', 'extreme'];
 
+/** A coverage row's "why" (2026-11-19): the difficulty in parts, the roll it takes, what the save and the fight do, and what would lift it. */
+function coverWhy(ui, r) {
+  const { esc, riskWord } = ui;
+  const sum = r.parts.map((p, i) => `${esc(p.label)} ${i && p.value > 0 ? '+' : ''}${p.value}`).join(' · ');
+  const lines = [`<p><strong>Difficulty ${r.diff}</strong>${r.parts.length > 1 ? `: ${sum}` : `, a ${esc(r.parts[0].label)}`}.</p>`];
+  if (!r.handler) {
+    lines.push('<p>Nobody inside has a stat this one takes. Bring someone who does.</p>');
+  } else {
+    const h = r.handler;
+    const notes = h.notes?.length ? ` (${h.notes.map(esc).join(', ')})` : '';
+    lines.push(`<p>${esc(h.op.handle)}'s ${esc(h.stat)} is ${h.value}${notes}. d20 + ${h.value} must reach ${10 + r.diff}: ${r.need >= 20 ? 'only a 20 does it' : `needs ${r.need} or more on the die`}. <strong>The roll: ${esc(riskWord(r.risk))}.</strong></p>`);
+    if (r.fight?.forced) lines.push(`<p>On a loud run it's a fight either way; a good roll means the crew gets the jump. <strong>With the fight: ${esc(riskWord(r.effective))}.</strong></p>`);
+    else if (r.withSave || r.fight) {
+      const save = r.withSave ? `If it fails, ${esc(r.withSave.op.handle)} gets a try at saving it. ` : '';
+      const fight = r.fight ? 'If nobody saves it, it turns into a fight. ' : '';
+      lines.push(`<p>${save}${fight}<strong>All told: ${esc(riskWord(r.effective))}.</strong></p>`);
+    }
+    if (r.better && r.effective !== 'low') lines.push(`<p class="cover__hint">${esc(h.stat[0].toUpperCase() + h.stat.slice(1))} ${r.better.value} would make the roll ${esc(riskWord(r.better.level))}.</p>`);
+  }
+  return `<div class="cover__why">${lines.join('')}</div>`;
+}
+
 /** The coverage read (core/squad.js coverage): what the crew will likely meet, who handles it, the gaps. */
 export function renderCoverage(ui, cov, { overwatch, approachName, standby = null, was = null }) {
   const { esc, riskBadge } = ui;
@@ -354,31 +376,35 @@ export function renderCoverage(ui, cov, { overwatch, approachName, standby = nul
           for (const r of cov.rows) { const g = groups.find((x) => x.where === r.where); if (g) g.rows.push(r); else groups.push({ where: r.where, rows: [r] }); }
           const row = (r) => {
             // What it was before the last change to the plan (2026-11-05), if it was there and moved
-            // (a new approach brings different encounters: those aren't tagged). The tag goes with the
-            // final risk: at the end of the "→" line when there is one, else under the badge.
+            // (a new approach brings different encounters: those aren't tagged).
             const before = was?.rows.get(was.key(r)) ?? null;
             const moved = before && before !== r.effective;
             const wasTag = moved ? `<span class="was was--${RISKS.indexOf(r.effective) < RISKS.indexOf(before) ? 'better' : 'worse'}">was ${esc(ui.riskWord(before))}</span>` : '';
-            const hasLower = (r.withSave || r.fight) && r.effective !== r.risk;
-            const lower = hasLower
+            // The badge is the risk to plan on (2026-11-19, owner: "what makes something a certain risk?"): the
+            // roll with its save and its fight counted. The roll alone goes in the line under it when it differs.
+            const differs = r.handler && (r.withSave || r.fight) && r.effective !== r.risk;
+            const rollLine = differs
               ? (() => {
-                // Plain words (owner, 2026-11-05: "Can't it just be Improved by (name)"): who makes it
-                // better if the roll fails; else what the fight does to it.
                 const better = RISKS.indexOf(r.effective) < RISKS.indexOf(r.risk);
-                // On a loud run every ⚠ is a fight anyway, so nobody steps in to save: the fight is what helps.
-                const why = better && r.withSave && !r.fight?.forced ? `improved by ${esc(r.withSave.op.handle)}`
-                  : better ? 'the crew can win the fight' : 'if it turns into a fight';
-                return `<span class="cover__with">→ ${esc(ui.riskWord(r.effective))}, ${why}${wasTag ? ` ${wasTag}` : ''}</span>`;
+                // On a loud run every ⚠ is a fight anyway: the roll only decides who gets the jump.
+                const why = r.fight?.forced ? 'it only decides who gets the jump'
+                  : better && r.withSave ? `${esc(r.withSave.op.handle)} can step in`
+                    : better ? 'the crew can win the fight' : 'worse if it turns into a fight';
+                return `<span class="cover__with">Roll alone: ${esc(ui.riskWord(r.risk))}, ${why}</span>`;
               })() : '';
             // "A loud run means a fight" is said once, under the read (2026-11-05), not on every row.
             const fight = r.fight && r.handler && r.fight.down >= 0.1 ? 'a fight could put someone down' : '';
-            return `
-          <div class="cover__row ${r.gap ? 'is-gap' : ''} ${moved && was.fresh ? 'is-flash' : ''}">
+            const head = `
             <p class="cover__name">${esc(r.name)}${r.danger ? ' <span class="cover__danger" role="img" aria-label="danger">⚠</span>' : ''}</p>
-            <p class="cover__who">${r.handler ? `${esc(r.handler.op.handle)} (${esc(r.handler.stat)} ${r.handler.value})` : 'nobody can'}${fight ? ` · ${esc(fight)}` : ''}</p>
-            <span class="cover__risk">${riskBadge(r.handler ? r.risk : 'extreme')}${hasLower ? '' : wasTag}</span>
-            ${lower}
-          </div>`;
+            <p class="cover__who">${r.handler ? `${esc(r.handler.op.handle)} (${esc(r.handler.stat)} ${r.handler.value}) · <span class="cover__vs">needs ${r.need}${r.need < 20 ? '+' : ''}</span>` : 'nobody can'}${fight ? ` · ${esc(fight)}` : ''}</p>
+            <span class="cover__risk">${riskBadge(r.effective)}${wasTag}<span class="cover__cue" aria-hidden="true">why</span></span>
+            ${rollLine}`;
+            // Tap the row for the sum behind the badge (no hover: a native <details>).
+            return `
+          <details class="cover__row ${r.gap ? 'is-gap' : ''} ${moved && was.fresh ? 'is-flash' : ''}">
+            <summary class="cover__sum">${head}</summary>
+            ${coverWhy(ui, r)}
+          </details>`;
           };
           return groups.map((g) => `<p class="cover__group">${esc(g.where)}</p>${g.rows.map(row).join('')}`).join('');
         })()}
