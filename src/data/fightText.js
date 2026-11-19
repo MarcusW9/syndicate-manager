@@ -59,9 +59,9 @@ export const FIGHT_TEXT = {
   'view.approaching': 'Coming in: no shot this round',
   // The owner's wording (2026-11-19): a runner's hit, on the round screen and the weapon card (there with its first letter lower-cased).
   'view.hit': 'Deals {hit} HP ({strong} on a critical hit)',
-  // Draft (Claude, 2026-11-19; the owner's to rewrite, drafts/writing-tasks.md): a vest's soak, on the armour card (first letter lower-cased
-  // there when it follows another line) and the weave's perk. {soak} comes from core/fight.js soakOf, never a separate sum.
-  'view.soak': 'Takes {soak} HP off every hit (at least 1 gets through)',
+  // The owner's wording (2026-11-19): a vest's soak, on the armour card (first letter lower-cased there when it follows another line).
+  // {soak} comes from core/fight.js soakOf, never a separate sum.
+  'view.soak': 'Soaks {soak} HP from every hit; 1 HP minimum',
   'standbyOut': '{who} steps out to help.',
   'climbBack': '{who} climbs back out to reach {target}.',
   'vanEarly': 'The driver brings the van in early: it arrives at the end of round {round}. This is the planned way out, not a new threat.',

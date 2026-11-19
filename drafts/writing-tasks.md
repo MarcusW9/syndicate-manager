@@ -581,7 +581,7 @@ When a job drops no gear and the crew gets a spare Standard sidearm instead of s
 
 Still open as separate batches: director spotlights; live-view pace, stage marks and special-move titles; wave and approaching wording; other-tong habit and Anchor's Book draft wording; the mission-log, heist, trait and district-job writing.
 
-## Small line: armour's soak (2026-11-19, Claude's draft, owner to replace)
+## Small line: armour's soak (2026-11-19): **`view.soak` supplied and applied 2026-11-19** (owner: "Soaks {soak} HP from every hit; 1 HP minimum"). Was Claude's draft below
 
 Armour in the new fights now takes a flat amount off every shot that lands: 5 HP per armour point (owner, 2026-11-19; first agreed at 3), and at least 1 HP always gets through. Claude's draft wording:
 - On the armour card, after "Fewer serious wounds" (lower-cased there): `view.soak` in `data/fightText.js`, "Takes {soak} HP off every hit (at least 1 gets through)". `{soak}` comes from `core/fight.js soakOf`. Keep the number.
