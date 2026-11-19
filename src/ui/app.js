@@ -41,12 +41,19 @@ export function mountApp(el, initialState) {
   root.addEventListener('input', (e) => {
     if (e.target.id === 'tongname') { if (V.tongNaming !== null) V.tongNaming = e.target.value; else V.foundingTongName = e.target.value; }
   });
-  root.addEventListener('change', (e) => {
-    if (e.target.id === 'crewfilter') { V.crewFilter = e.target.value; render(); }
-  });
   root.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && e.target.id === 'tongname' && V.tongNaming !== null) { e.preventDefault(); root.querySelector('[data-action="tong-name-save"]')?.click(); }
     if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('g[data-action]')) { e.preventDefault(); onClick(e); }
+    if (V.crewFilterOpen && e.target.closest?.('.dropmenu')) {
+      // The roster's drop menu: arrows move between its options, Tab or Escape closes it.
+      const opts = [...root.querySelectorAll('.dropmenu__opt')];
+      const at = opts.indexOf(e.target);
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); opts[(at + (e.key === 'ArrowDown' ? 1 : opts.length - 1)) % opts.length]?.focus(); }
+      else if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); opts[e.key === 'Home' ? 0 : opts.length - 1]?.focus(); }
+      else if (e.key === 'Tab' || e.key === 'Escape') { e.preventDefault(); V.crewFilterOpen = false; V.focusNext = { action: 'crew-filter-open' }; render(); }
+      return;
+    }
+    if (e.key === 'Escape' && V.crewFilterOpen) { V.crewFilterOpen = false; V.focusNext = { action: 'crew-filter-open' }; render(); return; }
     if (e.key === 'Escape' && V.pickSlot) { V.focusNext = { action: 'pick-slot', id: V.pickSlot }; V.pickSlot = null; render(); }
     else if (e.key === 'Escape' && V.screen === 'city' && V.cityTab === 'map' && V.cityDistrict && !state.activeMission) { V.cityDistrict = null; render(); }
   });
@@ -146,6 +153,7 @@ export function render() {
   warmBoard(); // Joss's board reads, in the background, so the Jobs tab opens fast
   fitGearArt(root); // the squad board's gear drawings fill their cells
   root.querySelector('.buzz__pick, .buzz [data-action="buzz-in"]')?.focus({ preventScroll: true }); // the call has the floor
+  if (V.crewFilterOpen) placeDropMenu();
   if (V.pickSlot) (root.querySelector('.sheet .cand.is-on') ?? root.querySelector('.sheet .cand:not([disabled])'))?.focus({ preventScroll: true });
   if (V.scrollDue !== null) { window.scrollTo?.(0, V.scrollDue); V.scrollDue = null; } // Back puts the scroll back; a new page starts at the top
   if (V.mapTo) { animateMap(root.querySelector('.citymap__view'), V.mapView, V.mapTo); V.mapView = V.mapTo; V.mapTo = null; }
@@ -164,6 +172,24 @@ export function render() {
     const back = same ? null : [...root.querySelectorAll('[data-action="back"]')].find(shown);
     (same ?? back)?.focus({ preventScroll: true });
   }
+}
+
+/**
+ * The roster's drop menu: on wide screens it sits under its button. The panel clips its children
+ * (the cut corner), so the menu is placed against the page instead, from the button's box; phones
+ * ignore these numbers and show it as a sheet (styles.css .dropmenu). The selected option takes focus.
+ */
+function placeDropMenu() {
+  const btn = root.querySelector('.crewfilter__btn');
+  const menu = root.querySelector('.dropmenu');
+  if (!btn || !menu) { V.crewFilterOpen = false; return; }
+  const b = btn.getBoundingClientRect();
+  menu.style.setProperty('--menu-top', `${b.bottom + 6}px`);
+  menu.style.setProperty('--menu-left', `${b.left}px`);
+  menu.style.setProperty('--menu-w', `${b.width}px`);
+  (menu.querySelector('.is-on') ?? menu.querySelector('.dropmenu__opt'))?.focus({ preventScroll: true });
+  // Pinned to the window, so a scroll would leave it behind its button: close it instead.
+  addEventListener('scroll', () => { if (V.crewFilterOpen) { V.crewFilterOpen = false; render(); } }, { once: true, passive: true });
 }
 
 /** Date, a bar that fills across the week, and how long until Sunday's bills. */

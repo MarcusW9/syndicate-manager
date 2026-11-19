@@ -31,6 +31,7 @@ export const V = {
   foundingTongName: '', // what's typed in the founder pick's name field
   tongTab: 'halls', // Tong's sub-tab: 'halls' | 'armoury' (ui/gear.js draws the Armoury)
   crewFilter: 'all', // the roster's filter: 'all' | 'ready' | 'out'
+  crewFilterOpen: false, // its drop menu is open
   crewTab: 'roster', // Crew's sub-tab: 'roster' | 'leads' | 'wall'
   hallInside: null, // inside one building of the open hall (a part's id), or null for the compound (2026-11-09; UI only, never saved)
   buildView: null, // the hall build screen, from a hall's page (ui/hallbuild.js): { district, cell, piece, rot, picked }

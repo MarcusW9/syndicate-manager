@@ -2680,10 +2680,31 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 
 /* Offer piece names open an explanation; the roster filter is a dropdown (owner, 2026-11-18). */
 .termlink { background: none; border: 0; padding: 0; min-height: 44px; color: var(--text); font: 700 1rem var(--display); border-bottom: 1px dotted var(--accent-2); cursor: pointer; }
-.crewfilter { margin: 8px 0; }
-.crewfilter__label { display: flex; align-items: center; gap: 10px; font: 700 0.8rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
-.crewfilter__select { appearance: none; -webkit-appearance: none; padding: 0 40px 0 12px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%233de8d8' stroke-width='2'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; min-height: 44px; flex: 1; background-color: var(--panel-2); color: var(--text); border: 1px solid var(--line); font: 700 0.9rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; }
-
-/* Crew playtest colour (owner, 2026-11-18): a toned red edge on the Crew panel and a red filter dropdown, for a Hong Kong neon feel. Other screens keep the cyan look for now. */
-.panel--crew { border: 1px solid rgba(255, 61, 95, 0.5); box-shadow: inset 0 0 0 1px rgba(255, 61, 95, 0.1), inset 0 0 40px rgba(255, 61, 95, 0.04); }
-.crewfilter__select { background-color: #2a1218; color: #ff7a92; border-color: var(--accent); }
+.crewfilter { margin: 8px 0; display: flex; align-items: center; gap: 10px; }
+.crewfilter__label { font: 700 0.8rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+/* The roster filter's button and its drop menu (owner, 2026-11-18): our own menu in place of the system picker.
+   The button and menu stay red (the trial colour); the Crew panel's red outline is gone. Phones: a sheet from the bottom.
+   600px and up: a menu under the button, placed by app.js placeDropMenu (--menu-top/left/w). */
+.crewfilter__btn { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: var(--tap, 44px); padding: 0 16px 0 12px; background: #2a1218; color: #ff7a92; border: 1px solid var(--accent); font: 700 0.9rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; text-align: left; cursor: pointer;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%); }
+.crewfilter__arrow { width: 12px; height: 8px; flex: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23ff7a92' stroke-width='2'/%3E%3C/svg%3E") no-repeat center; transition: transform 0.15s; }
+.crewfilter__btn[aria-expanded="true"] .crewfilter__arrow { transform: rotate(180deg); }
+.crewfilter__btn:focus-visible, .dropmenu__opt:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.dropmenu { position: fixed; left: 0; right: 0; bottom: 0; z-index: 21; display: grid; gap: 6px; background: #170c10; border-top: 1px solid var(--accent);
+  padding: 12px max(16px, env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); animation: sheet-up 0.2s ease-out; }
+.dropmenu__title { margin: 0 0 4px; font: 700 0.8rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.dropmenu__opt { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 0 14px; background: #221016; color: var(--text); border: 1px solid rgba(255, 61, 95, 0.35); font: 700 1rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; text-align: left; cursor: pointer; }
+.dropmenu__opt.is-on { background: #3a1520; color: #ff7a92; border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.dropmenu__n { color: var(--muted); font-weight: 600; }
+.dropmenu__opt.is-on .dropmenu__n { color: #ff7a92; }
+@media (hover: hover) { .dropmenu__opt:hover { background: #2e131b; } }
+@media (min-width: 600px) {
+  .scrim--menu { background: transparent; }
+  .dropmenu { left: var(--menu-left, 16px); right: auto; bottom: auto; top: var(--menu-top, 120px); width: var(--menu-w, 320px); max-width: calc(100vw - 32px); gap: 0; padding: 4px; border: 1px solid var(--accent); background: #170c10; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55); animation: dropmenu-in 0.12s ease-out; }
+  .dropmenu__title { display: none; }
+  .dropmenu__opt { min-height: 44px; border: 0; background: transparent; }
+  .dropmenu__opt.is-on { background: #3a1520; }
+}
+@keyframes dropmenu-in { from { transform: translateY(-4px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .dropmenu, .crewfilter__arrow { animation: none; transition: none; } }

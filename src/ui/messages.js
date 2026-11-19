@@ -14,22 +14,27 @@ import { pieceById } from '../core/builds.js';
 import { tierTag, perkList, apexHistory } from './gear.js';
 import { raidWhere } from './raidcards.js';
 import { esc, face, districtName } from './shared.js';
+import { cardNames } from '../core/rivals.js';
 import { state, backLabel, V } from './view.js';
 
 /**
- * Text with the crew's names (full names first, then handles) turned into links to their page,
- * escaped. Only people on the crew now: the fallen and freelancers stay plain text.
+ * Text with names turned into links, escaped: the crew (full names first, then handles) to their page,
+ * and the named runners of the other tongs and the street (core/rivals.js cardNames, full names only) to their
+ * recruitment page (owner, 2026-11-18: a scout's report names who they looked at). The fallen and
+ * freelancers stay plain text; a crew name wins over a card with the same name.
  */
 export function crewLinks(text) {
-  const names = state.crew.flatMap((op) => [[op.name, op.id], [op.handle, op.id]]).filter(([n]) => n).sort((a, b) => b[0].length - a[0].length);
-  if (!names.length || !text) return esc(text ?? '');
-  const byName = new Map(names);
-  const pattern = names.map(([n]) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+  const cards = cardNames(state).map((c) => [c.name, { action: 'lead-name', id: c.id }]);
+  const crew = state.crew.flatMap((op) => [[op.name, op.id], [op.handle, op.id]]).filter(([n]) => n).map(([n, id]) => [n, { action: 'op-link', id }]);
+  const byName = new Map([...cards, ...crew]);
+  if (!byName.size || !text) return esc(text ?? '');
+  const pattern = [...byName.keys()].sort((a, b) => b.length - a.length).map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
   const re = new RegExp(`(?<![\\p{L}\\p{N}])(${pattern})(?![\\p{L}\\p{N}])`, 'gu');
   let out = '';
   let last = 0;
   for (const m of text.matchAll(re)) {
-    out += esc(text.slice(last, m.index)) + `<button class="namelink" data-action="op-link" data-id="${esc(byName.get(m[1]))}">${esc(m[1])}</button>`;
+    const to = byName.get(m[1]);
+    out += esc(text.slice(last, m.index)) + `<button class="namelink" data-action="${to.action}" data-id="${esc(to.id)}">${esc(m[1])}</button>`;
     last = m.index + m[1].length;
   }
   return out + esc(text.slice(last));

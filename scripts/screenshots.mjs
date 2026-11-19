@@ -284,6 +284,15 @@ try {
       }
     }
   }
+  // The roster filter's own drop menu (2026-11-18): under its button on desktop, a sheet on phones. Skipped by versions without it.
+  if (await click('[data-action="nav"][data-id="crew"]') && (await click('[data-action="crew-tab"][data-id="roster"]'), true)) {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await top();
+    if (await click('[data-action="crew-filter-open"]')) { await shot('desktop-crew-filter'); await click('.dropmenu [data-action="crew-filter"][data-id="ready"]'); }
+    await page.setViewportSize({ width: 390, height: 844 });
+    await top();
+    if (await click('[data-action="crew-filter-open"]')) { await shot('crew-filter-sheet'); await page.keyboard.press('Escape'); }
+  }
 } finally {
   await browser.close();
   server.kill();
