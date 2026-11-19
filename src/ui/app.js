@@ -2,6 +2,7 @@
 // functions, re-renders. Tap/click only; nothing depends on hover.
 
 import { hottest, HEAT_MAX } from '../core/heat.js';
+import { navGlyph } from './icons.js';
 import { hallIn } from '../core/halls.js';
 import { openRaids } from '../core/raids.js';
 import { billDue } from '../core/week.js';
@@ -139,7 +140,7 @@ export function render() {
       ${navButton('tong', 'Tong')}
       ${navButton('crew', 'Crew', badges.crew)}
       ${navButton('jobs', 'Jobs', badges.jobs)}
-      <button class="nav__btn nav__btn--save ${V.screen === 'settings' ? 'is-active' : ''}" data-action="nav" data-id="settings" aria-pressed="${V.screen === 'settings'}">Save</button>
+      <button class="nav__btn nav__btn--save ${V.screen === 'settings' ? 'is-active' : ''}" data-action="nav" data-id="settings" aria-pressed="${V.screen === 'settings'}"><span class="nav__ico">${navGlyph('settings')}</span><span class="nav__lbl">Save</span></button>
     </nav>
 
     <main class="main ${wide ? 'main--wide' : ''} ${!state.activeMission && V.screen === 'jobs' && V.plan ? 'main--split' : ''}">${saveBanner()}${state.activeMission ? renderMission() : `${keptBanner()}${renderScreen()}`}</main>
@@ -298,7 +299,7 @@ function navButton(id, label, badge = null) {
   const off = state.founding && !FOUNDING_TABS.includes(id);
   const on = state.founding ? id === (V.screen === 'settings' ? 'settings' : 'inbox') : tabOf(V.screen) === id;
   const pill = badge?.count && !off ? ` <span class="pill ${id === 'inbox' || id === 'crew' ? 'pill--new' : ''}" aria-label="${badge.count} ${badge.word}">${badge.count}</span>` : '';
-  return `<button class="nav__btn ${on ? 'is-active' : ''}" data-action="nav" data-id="${id}" ${off ? 'disabled' : ''}>${esc(label)}${pill}</button>`;
+  return `<button class="nav__btn ${on ? 'is-active' : ''}" data-action="nav" data-id="${id}" ${off ? 'disabled' : ''}><span class="nav__ico">${navGlyph(id)}</span><span class="nav__lbl">${esc(label)}</span>${pill}</button>`;
 }
 
 function renderScreen() {

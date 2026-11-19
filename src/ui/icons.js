@@ -38,6 +38,13 @@ const PATHS = {
   rise: '<path d="M4 18l6-6 4 4 6-8M15 8h5v5"/>', // riding high
   pin: '<path d="M12 21s-6-6.2-6-11a6 6 0 0 1 12 0c0 4.8-6 11-6 11z"/><circle cx="12" cy="10" r="2"/>', // a district
   siren: '<path d="M7 18v-6a5 5 0 0 1 10 0v6M5 18h14v3H5zM12 3v2M4.5 6l1.4 1.4M19.5 6l-1.4 1.4"/>',
+  // The tab bar (2026-11-19): shown on their own in the narrow side rail of a phone on its side (styles.css `.nav__ico`).
+  n_today: '<path d="M4 13l2-7h12l2 7v6H4zM4 13h5l1 2h4l1-2h5"/>', // an inbox tray
+  n_city: '<path d="M3 20h18M5 20V9h4.500v11M9.500 20V4h5v16M14.500 20v-8H19v8"/>', // a skyline
+  n_tong: '<path d="M6 21V4M6 5h11l-2 4 2 4H6"/>', // a flag
+  n_crew: '<circle cx="9" cy="8" r="3"/><path d="M3 20c.6-3.4 3-5 6-5s5.400 1.600 6 5"/><circle cx="17" cy="9" r="2.400"/><path d="M16 14.500c2.600 0 4.400 1.400 5 4.500"/>', // two people
+  n_jobs: '<rect x="3" y="8" width="18" height="12" rx="1"/><path d="M9 8V5h6v3M3 13h18"/>', // a briefcase
+  n_save: '<path d="M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6"/>', // a disk
   battery: '<rect x="3" y="8" width="16" height="9" rx="1"/><path d="M21 11v3M6 11v3"/>', // burned out: nearly empty
 };
 
@@ -48,6 +55,10 @@ export const gearGlyph = (type, slot) => svg(PATHS[type] ? type : slot === 'impl
 
 /** A trait's icon (data/traits.js and data/earnedTraits.js `icon`), beside its name. */
 export const traitGlyph = (key) => svg(PATHS[key] ? key : 'star');
+
+/** A tab's icon (id: inbox, city, tong, crew, jobs or settings), drawn larger than the others for the tab rail. */
+const NAV = { inbox: 'n_today', city: 'n_city', tong: 'n_tong', crew: 'n_crew', jobs: 'n_jobs', settings: 'n_save' };
+export const navGlyph = (id) => svg(NAV[id] ?? 'star').replace('width="16" height="16"', 'width="24" height="24"');
 
 /** A stat's icon alone, to sit right before its word (the word carries the meaning). */
 export const statGlyph = (stat) => svg(stat);

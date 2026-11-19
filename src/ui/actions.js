@@ -34,7 +34,7 @@ import { wideHall, newBuildView } from './hallscreens.js';
 import { boardRead } from './jobs.js';
 import { cityName } from './shared.js';
 import { inboxView } from './today.js';
-import { state, nav, CONTINUE_REST_MS, remember, goHome, restoreView, toRoot, viewNow, setSub, briefSeen, buzzLater, openInfo, V } from './view.js';
+import { state, nav, CONTINUE_REST_MS, remember, goHome, restoreView, toRoot, viewNow, setSub, briefSeen, buzzLater, openInfo, V, WIDE_QUERY } from './view.js';
 import { freshSeed } from './seed.js';
 
 // --- events ------------------------------------------------------------
@@ -101,7 +101,7 @@ export function onClick(e) {
     case 'open-message': {
       // Wide screens show the list beside the message, so reading the next one must not jump to the top
       // (playtest, 2026-11-09). Narrow ones swap the list for the message, which does start at the top.
-      const sideBySide = V.screen === homeOf('message') && !!window.matchMedia?.('(min-width: 900px)').matches;
+      const sideBySide = V.screen === homeOf('message') && !!window.matchMedia?.(WIDE_QUERY).matches;
       remember(action, id);
       if (sideBySide) V.scrollDue = null;
       V.screen = homeOf('message');

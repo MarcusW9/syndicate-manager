@@ -11,6 +11,9 @@ export const setGame = (next) => (state = next);
 export let root;
 export const setRoot = (next) => (root = next);
 
+/** The wide layout's media query (the desktop chrome): 900px and up, or a phone on its side. Keep in step with the `@media` lists in styles.css. */
+export const WIDE_QUERY = '(min-width: 900px), (min-width: 640px) and (max-height: 520px)';
+
 export const V = {
   screen: 'inbox',
   cityDistrict: null, // the district picked on the City map (the map zooms onto it), or the district page open on City › Districts
