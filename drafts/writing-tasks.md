@@ -582,7 +582,7 @@ When a job drops no gear and the crew gets a spare Standard sidearm instead of s
 Still open as separate batches: director spotlights; live-view pace, stage marks and special-move titles; wave and approaching wording; other-tong habit and Anchor's Book draft wording; the mission-log, heist, trait and district-job writing.
 
 ## Part B statuses and draft pieces (2026-11-19, Claude's drafts, owner to replace)
-- **The four draft pieces** in `src/data/builds.js` (`PAYLOADS.incendiary`, `spotter`, `breacher`, `rout`): `name`, log `word` (Fire, Mark, Breach, Fear), `desc` and `offer`. Rename freely; they are not offered until you have.
+- **The four draft pieces** in `src/data/builds.js` (`PAYLOADS.incendiary`, `spotter`, `breacher`, `rout`): `name`, log `word` (Fire, Mark, Breach, Fear), `desc` and `offer`. Rename freely. Joss offers them under these drafts since 2026-11-19 (owner: "keep the drafts for now").
 - **Their log lines** in `src/data/fightText.js` (three variants each, same slots): `burn`, `burnTick`, `burnOut` (`{enemy}`), `mark`, `expose` (`{who}`, `{enemy}`), `shake` (`{enemy}`).
 
 ## Small line: armour's soak (2026-11-19): **`view.soak` supplied and applied 2026-11-19** (owner: "Soaks {soak} HP from every hit; 1 HP minimum"). Was Claude's draft below

@@ -880,14 +880,17 @@ export function playRound(b, rng) {
   };
 
   const E = wordless ? silent : (n) => enemyName(b.enemies.find((x) => x.n === n).kind, n); // a name for a line's slots only
-  // `exposed` (part B): the next landed hit on the body ignores its plate, and uses the status up. `line` flags the hit's line when a plate was
-  // actually skipped (the stage and the log say so); a body with no plate left just loses the status.
+  // `exposed` (part B): the next landed hit on the body ignores its plate and deals the payload's `expose.extra` HP more (owner, 2026-11-19),
+  // and uses the status up. `line` flags the hit's line when a plate was actually skipped (the stage and the log say so).
   const pierce = (e, ap) => {
-    if (!e.exposed) return { used: false, line: {} };
+    if (!e.exposed) return { used: false, extra: 0, line: {} };
     const skipped = e.absorb > 0 && !ap;
+    const extra = PAYLOADS[e.exposed.payload]?.expose?.extra ?? 0;
     e.exposed = null;
-    return { used: true, line: skipped ? { pierced: true } : {} };
+    return { used: true, extra, line: skipped ? { pierced: true } : {} };
   };
+  /** The exposed hit's extra HP, on a hit that landed (after the plate rule and the wobble, so it is never wobbled away). */
+  const extraOf = (e, pz, dmg) => { if (!pz.used || !pz.extra || dmg <= 0) return dmg; e.hp -= pz.extra; return dmg + pz.extra; };
 
   const vl = vanDecision(b);
   if (vl) lines.push(vl);
@@ -918,7 +921,8 @@ export function playRound(b, rng) {
       if (!x.ok) say('overwatch', 'overwatchMiss', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: false, damage: 0, roll: rollOf(x) });
       else {
         const pz = pierce(e, false);
-        const { dmg, cracked } = landHit(e, hitOf(ow.damage), x.strong, pz.used, rng);
+        const landedHit = landHit(e, hitOf(ow.damage), x.strong, pz.used, rng);
+        const { cracked } = landedHit; const dmg = extraOf(e, pz, landedHit.dmg);
         if (e.hp <= 0) { e.out = true; defeated.push({ by: ow.id, enemy: e.n, how: 'overwatch' }); say('overwatch', 'overwatchOut', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, dropped: true, roll: rollOf(x), cracked }); fall(e, null); }
         else say('overwatch', dmg === 0 ? 'overwatchCrack' : 'overwatchHit', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, roll: rollOf(x), left: e.hp, cracked });
       }
@@ -950,7 +954,8 @@ export function playRound(b, rng) {
     r.misses = x.ok ? 0 : (r.misses ?? 0) + 1;
     if (!x.ok) { say('attack', k('attackMiss'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: false, damage: 0, roll: rollOf(x) }); return; }
     const pz = pierce(e, r.ap);
-    const { dmg, cracked } = landHit(e, r.hit ?? FIGHT.hit, x.strong, r.ap || pz.used, rng); // a plate takes plateHp off the hit: a base plain hit only cracks it
+    const landedHit = landHit(e, r.hit ?? FIGHT.hit, x.strong, r.ap || pz.used, rng); // a plate takes plateHp off the hit: a base plain hit only cracks it
+    const { cracked } = landedHit; const dmg = extraOf(e, pz, landedHit.dmg);
     if (e.hp <= 0) { e.out = true; defeated.push({ by: r.id, enemy: e.n, how: burst ? 'burst' : 'attack' }); say('attack', k('attackOut'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, ...pz.line, enemy: e.n, success: true, damage: dmg, dropped: true, roll: rollOf(x), strong: x.strong, cracked }); fall(e, r); return; }
     say('attack', dmg === 0 ? k('attackCrack') : k('attackHit'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, ...pz.line, enemy: e.n, success: true, damage: dmg, roll: rollOf(x), left: e.hp, cracked });
     landed(r, e, dmg, named, flag);

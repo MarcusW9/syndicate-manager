@@ -3,6 +3,7 @@
 import { MOVES, PAYLOADS, GIVEN_BUILD, BUILD_OFFER } from '../data/builds.js';
 import { isFreelancer } from './freelance.js';
 import { ENEMIES } from '../data/fights.js';
+import { hashRng } from './rng.js';
 
 /** A runner's build as the fight reads it: { move, payload } with real ids, or null for no build. Unknown ids are dropped. */
 export function buildOf(op) {
@@ -57,12 +58,23 @@ export function offerDue(op, day) {
 
 const openOffer = (state, op) => state.inbox.some((m) => m.kind === 'build' && !m.resolved && m.payload.opId === op.id);
 
+/** The pieces an offer shows: all they qualify for when that is `size` or fewer; otherwise `size` of them picked on a stream seeded by the runner
+ * and the day (the same answer every time it is asked, never the run's own stream), kept in the library's order. Since the four part-B pieces
+ * joined (2026-11-19), there are more pieces than an offer shows. */
+export function offerPick(list, op, day) {
+  if (list.length <= BUILD_OFFER.size) return list;
+  const rng = hashRng('buildOffer', op.id, day);
+  const keyed = list.map((p) => ({ p, k: rng() }));
+  const chosen = new Set([...keyed].sort((a, b) => a.k - b.k).slice(0, BUILD_OFFER.size).map((x) => x.p));
+  return list.filter((p) => chosen.has(p));
+}
+
 /** Post Joss's offer for anyone due one with a piece to offer. Mutates state. Returns the people offered. */
 export function checkBuildOffers(state) {
   const offered = [];
   for (const op of state.crew) {
     if (!offerDue(op, state.day) || openOffer(state, op)) continue;
-    const pieces = eligiblePieces(op).slice(0, BUILD_OFFER.size);
+    const pieces = offerPick(eligiblePieces(op), op, state.day);
     if (!pieces.length) continue;
     state.inbox.unshift({
       id: `build-${op.id}-${state.day}`, type: 'crew', day: state.day,
