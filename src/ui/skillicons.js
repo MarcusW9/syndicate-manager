@@ -53,6 +53,7 @@ const ART = {
     <path class="s" d="M15 15l5 5M33 15l-5 5M15 33l5-5M33 33l-5-5"/>` },
 };
 
+export const SKILL_ART = ART;
 export const SKILL_IDS = Object.keys(ART);
 
 /**
