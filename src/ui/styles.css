@@ -2858,4 +2858,8 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
   .watch__side .fs-bar__more .btn { padding: 2px 4px; font-size: 0.7rem; }
   .watch__side .fs-pace { margin-bottom: 0; }
   .watch.is-fighting .watch__callin { scroll-margin-top: 0; } /* the panel is its own scroller here, not the page */
+  /* A command fight's Go bar: one line of label and one of detail (cut with … if it must) instead of three, so the orders keep the room. */
+  .ffo-bar, .ffo-confirm { padding: 6px 12px; }
+  .ffo-bar .ffo-go { min-height: 44px; padding-block: 2px; line-height: 1.15; }
+  .ffo-go small { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.64rem; }
 }

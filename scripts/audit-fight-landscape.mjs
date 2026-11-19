@@ -2,7 +2,8 @@
 // from scripts/preview-livebattle.mjs) at 844x390, 932x430 and 667x375, plus portrait 390x844 for comparison. For the fight's start (orders),
 // the first round playing and the round's end it records the bars, the free height, the map's height, whether the next action is on screen
 // without scrolling, sideways overflow and small tap targets. Changes nothing in the game.
-//   node scripts/audit-fight-landscape.mjs [out dir] [--job warehouse] [--seed 1]
+//   node scripts/audit-fight-landscape.mjs [out dir] [--job warehouse] [--seed 1] [--engine 1]
+// --engine 1 stages an old-engine command fight instead (ui/fightorders.js: pick a runner, give an order, Go), e.g. --job herbal_run.
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -18,6 +19,7 @@ const args = process.argv.slice(2);
 const flag = (name, d = null) => { const i = args.indexOf(`--${name}`); if (i < 0) return d; const v = args[i + 1]; args.splice(i, 2); return v; };
 const job = flag('job', 'warehouse');
 const seed = Number(flag('seed', '1'));
+const engine1 = flag('engine', '2') === '1';
 const repo = resolve(new URL('..', import.meta.url).pathname);
 const out = resolve(args[0] ?? join(repo, 'docs/audits/2026-11-19-landscape-fights'));
 mkdirSync(out, { recursive: true });
@@ -29,7 +31,7 @@ function atFight() {
     addOffer(s, job);
     s = M.startMission(s, s.jobs[0].id, s.crew.slice(0, templateById(job).crewSize).map((o) => o.id), 'loud', { callIn: 'every', orders: 'steady' });
     for (let g = 0; g < 400 && !s.activeMission.done; g++) {
-      if (s.activeMission.battle?.engine === 2 && M.currentStep(s.activeMission)?.type === 'battle') return s;
+      if ((s.activeMission.battle?.engine === 2) === !engine1 && s.activeMission.battle && M.currentStep(s.activeMission)?.type === 'battle') return s;
       const next = autoStep(s, { force: true });
       if (next === s) break;
       s = next;
@@ -85,12 +87,20 @@ try {
       rows.push({ size: `${w}x${h}`, name, file, ...m });
     };
     await page.goto(`http://localhost:${port}/`);
-    await page.waitForSelector('.watch', { timeout: 15000 });
+    await page.waitForSelector('.watch', { timeout: 15000 }).catch(async (e) => { await page.screenshot({ path: join(out, `${w}x${h}-no-watch.png`) }); console.error('no .watch:', (await page.locator('body').innerText()).slice(0, 300).replace(/\n+/g, ' | ')); throw e; });
     await page.waitForTimeout(1500);
     await record('fight start');
     if (process.env.SCROLL && w === 844) { const probe = () => page.evaluate(() => document.querySelector('.watch__side')?.scrollTop); await page.evaluate(() => { const s = document.querySelector('.watch__side'); s.scrollTop = 0; window.__log = []; s.addEventListener('scroll', () => window.__log.push([Math.round(performance.now()), s.scrollTop])); }); console.log('after reset', await probe()); await page.waitForTimeout(1500); console.log('later', await probe(), JSON.stringify(await page.evaluate(() => window.__log))); }
     if (process.env.SCROLL && w === 844) console.log('scroll', await page.evaluate(() => ({ y: scrollY, side: document.querySelector('.watch__side')?.scrollTop, sideH: document.querySelector('.watch__side')?.scrollHeight, live: document.querySelector('.watch__live')?.getBoundingClientRect().top })));
     if (process.env.DUMP && w === 844) console.log(await page.evaluate(() => { const lines = []; const walk = (e, d) => { if (d > 3) return; for (const c of e.children) { if (c.closest('svg') && c.tagName.toLowerCase() !== 'svg') continue; { const r = c.getBoundingClientRect(); if (r.height > 6) lines.push(`${'  '.repeat(d)}${c.tagName.toLowerCase()}.${String(c.getAttribute('class') ?? '').split(' ').join('.')} ${Math.round(r.left)},${Math.round(r.top)} ${Math.round(r.width)}x${Math.round(r.height)}`); walk(c, d + 1); } } }; walk(document.querySelector('.watch'), 0); return lines.join('\n'); }));
+    if (engine1) {
+      // A command fight: pick the first runner, give the first order, then Go.
+      const click = async (sel) => { const e = page.locator(sel).filter({ visible: true }).first(); if (!(await e.count()) || !(await e.isEnabled())) return false; await e.scrollIntoViewIfNeeded().catch(() => {}); const ok = await e.click({ timeout: 4000 }).then(() => true, () => false); await page.waitForTimeout(400); if (!ok) console.error(`${w}x${h}: could not click ${sel} (covered or off screen)`); return ok; };
+      if (await click('button[data-action="fight-sel"]')) { await record('a runner picked'); if (await click('button[data-action="fight-order"]')) await record('an order given'); }
+      if (await click('button[data-action="fight-go"]')) { await page.waitForTimeout(1500); await record('after Go'); }
+      await page.close();
+      continue;
+    }
     const next = page.locator('[data-action="fs-next"]').filter({ visible: true }).first();
     if (await next.count()) { await next.click(); await page.waitForTimeout(1300); await record('round playing'); await page.waitForTimeout(4500); await record('round ends'); }
     else console.error(`no fs-next at ${w}x${h}`);
