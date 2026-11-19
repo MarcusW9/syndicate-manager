@@ -18,7 +18,7 @@ export function itemEffect(item) {
   const g = GEAR[item.type];
   const step = TIERS[item.tier]?.step ?? 0;
   if (g.overwatch) return `Overwatch · ${g.overwatch.stat} ${g.overwatch.uses} ${item.type === 'rifle' ? 'shots' : 'actions'}${step ? ` · +${step}` : ''}`;
-  // A sidearm: its own strengths (frame and quirk): "Aim +2 · damage 2 · deals 10 HP (20 heavy) · light and accurate · true sights".
+  // A sidearm: its own strengths (frame and quirk): "Aim +2 · damage 2 · deals 10 HP (20 on a critical hit) · light and accurate · true sights".
   const s = sidearmStats(item);
   if (s) return [`Aim ${s.aim >= 0 ? '+' : '−'}${Math.abs(s.aim)}`, `damage ${s.damage}`, lineText('view.hit', { hit: hitOf(s.damage), strong: hitOf(s.damage) * FIGHT.strongMult }).replace(/^./, (c) => c.toLowerCase()), s.pierce ? `pierces ${s.pierce}` : null, s.trait, s.quirk].filter(Boolean).join(' · ');
   const bonus = Object.entries(g.bonus ?? {}).map(([s, v]) => `${s} +${v + step}`);

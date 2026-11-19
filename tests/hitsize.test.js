@@ -86,10 +86,10 @@ test('the hit is shown from hitOf: on the weapon card and under each runner on t
   const { itemEffect } = await import('../src/ui/gear.js');
   const { roundView } = await import('../src/core/fightview.js');
   const card = itemEffect({ uid: 'p', type: 'pistol', tier: 'verified', look: { frame: 'cannon' } });
-  assert.ok(card.includes('deals 22 HP (44 heavy)'), card);
+  assert.ok(card.includes('deals 22 HP (44 on a critical hit)'), card);
   const s = createNewGame({ seed: 2, startCrew: 'fresh' });
   const b = F.buildFight({ type: 'holdYard', diff: 10, threat: 2, site: 'docks', crew: s.crew.slice(0, 2), approach: 'loud' }, makeRng(5));
   b.runners[0].hit = 16;
   const r = roundView(b).runners[0];
-  assert.deepEqual([r.hit, r.strongHit, r.hitLine], [16, 32, 'Deals 16 HP (32 heavy)']);
+  assert.deepEqual([r.hit, r.strongHit, r.hitLine], [16, 32, 'Deals 16 HP (32 on a critical hit)']);
 });

@@ -58,7 +58,7 @@ export const FIGHT_TEXT = {
   'approach': '{enemy} is still coming in.',
   'view.approaching': 'Coming in: no shot this round',
   // The owner's wording (2026-11-19): a runner's hit, on the round screen and the weapon card (there with its first letter lower-cased).
-  'view.hit': 'Deals {hit} HP ({strong} heavy)',
+  'view.hit': 'Deals {hit} HP ({strong} on a critical hit)',
   'standbyOut': '{who} steps out to help.',
   'climbBack': '{who} climbs back out to reach {target}.',
   'vanEarly': 'The driver brings the van in early: it arrives at the end of round {round}. This is the planned way out, not a new threat.',

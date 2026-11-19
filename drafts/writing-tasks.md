@@ -565,7 +565,7 @@ lines until it gets its own; a test keeps every district complete.
 
 - **Supplied and applied 2026-11-18.** Was: **The way out of a hack (2026-11-17, draft).** Claude's wording in `data/fightText.js`: `wayOut` (the alarm), `end.wayOutWon`, `end.wayOutPulled`, `stabiliseWayOut`, `wayOutPatch`, and the plan line `plan.hack` ("Then fight your way out."). Rewrite in the game's voice.
 
-## Small line: the hit (2026-11-18): **supplied and applied 2026-11-19** (owner: "Deals {hit} HP ({strong} heavy)"). Was: Claude's draft "Hits for {hit}, strong {strong}"
+## Small line: the hit (2026-11-18): **supplied and applied 2026-11-19** (owner: "Deals {hit} HP ({strong} heavy)", changed the same day to "Deals {hit} HP ({strong} on a critical hit)"). Was: Claude's draft "Hits for {hit}, strong {strong}"
 
 A runner's hit in HP, drawn on the weapon card (after "damage N", lower-cased: "hits for 16, strong 32") and under each runner on the fight's round screen ("Hits for 16, strong 32"). One line, `view.hit` in `data/fightText.js`, with `{hit}` and `{strong}`; the numbers come from `core/fight.js hitOf`. Rewrite in the game's voice; keep both numbers (a test reads them).
 
