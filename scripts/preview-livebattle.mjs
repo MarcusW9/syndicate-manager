@@ -32,7 +32,7 @@ const rounds = Number(flag('rounds', '3'));
 const wide = bool('wide');
 const reduced = bool('reduced');
 const special = flag('special');
-const effect = flag('effect'); // --effect spread|tick|statuses|shield|jam|wayout: forge that effect's lines onto each round (ui/fightstage.js forceEffect) and keep frames while it is on screen
+const effect = flag('effect'); // --effect hp|ko|spread|tick|statuses|shield|jam|wayout: forge that effect's lines onto each round (ui/fightstage.js forceEffect) and keep frames while it is on screen
 const aura = bool('aura'); // --aura: poll while a round plays and keep a frame for each stage of the medic's aura (glow, orb, landing)
 const knots = flag('knots');
 const foes = Number(flag('foes', '0'));
@@ -104,7 +104,7 @@ try {
       await next.click();
     }
     if (effect) {
-      const sel = { hp: '.fs-float.is-num, .fs-dmg', spread: '.fs-hop, .fs-hopper, .sp-flash--spread', tick: '.fs-drip, .fs-pop, .is-tickloss, .sp-flash--tick', statuses: '.fs-st', shield: '.fs-dome', jam: '.fs-jamarc, .fs-static, .fs-ping', wayout: '.fs-alarm-ring, .fs-groupwave, .fs-aura' }[effect];
+      const sel = { hp: '.fs-float.is-num, .fs-dmg', ko: '.fs-ko-flash, .fs-ko-shardwrap, .fs-float.is-ko', spread: '.fs-hop, .fs-hopper, .sp-flash--spread', tick: '.fs-drip, .fs-pop, .is-tickloss, .sp-flash--tick', statuses: '.fs-st', shield: '.fs-dome', jam: '.fs-jamarc, .fs-static, .fs-ping', wayout: '.fs-alarm-ring, .fs-groupwave, .fs-aura' }[effect];
       let k = 0;
       for (let t = 0; t < 6000 && k < 8; t += 130) {
         await page.waitForTimeout(130);

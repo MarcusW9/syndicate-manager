@@ -488,6 +488,27 @@ export function createStage(svg, deps) {
     for (const s of ['up', 'hunker', 'down', 'dead', 'aboard', 'gone', 'fled', 'approaching']) g.classList.toggle(`fs-${s}`, stance === s);
     g.classList.toggle('is-down', stance === 'down' || stance === 'dead');
     g.classList.toggle('fs-hidden', hidden);
+    // A knocked-out enemy keeps a red X across its face for the rest of the fight (2026-11-19, the owner's pick "A"), however the map is redrawn.
+    if (g.classList.contains('fs-foe')) {
+      const out = stance === 'down' || stance === 'dead';
+      const x = g.querySelector(':scope > .fs-ko-x');
+      if (out && !x) { const r = g.classList.contains('fs-knot') ? 7 : 5; g.append(node('path', { class: 'fs-ko-x', pathLength: 1, d: `M${-r} ${-r} L${r} ${r} M${r} ${-r} L${-r} ${r}` })); }
+      else if (!out && x) x.remove();
+    }
+  }
+  /** The knockout itself (2026-11-19, the owner's pick "A" of drafts/mockups/knockout.html): a white flash and a burst of shards; the tip
+   * and the grey come from the token's down class (CSS), the X from setStance. Nothing moves with reduced motion; the X still shows. */
+  function knockout(at) {
+    if (!at || deps.reduced()) return;
+    gone(node('circle', { class: 'fs-ko-flash', cx: at[0], cy: at[1], r: 7 }), 460);
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2 + 0.2;
+      const shard = node('rect', { class: 'fs-ko-shard', x: at[0] - 0.5, y: at[1] - 1.4, width: 1, height: 2.8, transform: `rotate(${(a * 180) / Math.PI + 90} ${at[0]} ${at[1]})` });
+      shard.style.setProperty('--dx', `${Math.cos(a) * 11}px`); shard.style.setProperty('--dy', `${Math.sin(a) * 11}px`);
+      const wrap = node('g', { class: 'fs-ko-shardwrap' }); wrap.append(shard);
+      wrap.style.setProperty('--dx', `${Math.cos(a) * 11}px`); wrap.style.setProperty('--dy', `${Math.sin(a) * 11}px`);
+      gone(wrap, 520);
+    }
   }
   function body(at, id = null) {
     const big = id && host(id)?.classList.contains('fs-knot'); // a fallen knot leaves a wider mark
@@ -514,7 +535,7 @@ export function createStage(svg, deps) {
   function damageNumber(at, amount, strong) {
     if (!at || deps.reduced()) return;
     numSide = -numSide;
-    const g = node('text', { class: `fs-dmg${strong ? ' is-crit' : ''}`, x: at[0] + numSide * 3, y: at[1] - 9 }, `\u2212${amount}${strong ? '!' : ''}`);
+    const g = node('text', { class: `fs-dmg${strong ? ' is-crit' : ''}`, x: at[0] + numSide * 6, y: at[1] - (numSide > 0 ? 9 : 13) }, `\u2212${amount}${strong ? '!' : ''}`);
     fx.append(g);
     setTimeout(() => g.remove(), 1200);
   }
@@ -639,7 +660,7 @@ export function createStage(svg, deps) {
           if (s.fell) setTimeout(() => pips(s.to, 0, null), late); else if (s.hit && s.left != null) setTimeout(() => pips(s.to, s.left, null), late);
           // The damage as a number (2026-11-18), on the killing hit too (2026-11-19), bigger and amber with a "!" on a critical hit.
           if ((s.hit || s.fell) && s.amount) setTimeout(() => damageNumber(b, s.amount, s.strong), late);
-          if (s.fell) { setStance(s.to, s.dead ? 'dead' : 'down'); drawn[s.to] = { ...drawn[s.to], stance: s.dead ? 'dead' : 'down' }; body(b, s.to); setTimeout(() => float(b, word(s.to.startsWith('e:') ? 'stage.out' : 'stage.down'), 'is-down'), late + 220); }
+          if (s.fell) { const foe = s.to.startsWith('e:'); setTimeout(() => { if (foe) knockout(b); setStance(s.to, s.dead ? 'dead' : 'down'); }, late); drawn[s.to] = { ...drawn[s.to], stance: s.dead ? 'dead' : 'down' }; body(b, s.to); setTimeout(() => float(b, word(foe ? 'stage.out' : 'stage.down'), foe ? 'is-down is-ko' : 'is-down'), late + 220); }
           else if (s.hit && !s.amount) setTimeout(() => float(b, word('stage.hit'), 'is-hit'), late);
         }, s.dur);
         break;
@@ -703,7 +724,7 @@ export function createStage(svg, deps) {
         if (!b) break;
         const apply = () => {
           if (s.left != null || s.max) tickLoss(s.to, s.left ?? 0, s.leftExact ? null : s.max, s.burn);
-          if (s.fell) { setStance(s.to, 'down'); drawn[s.to] = { ...drawn[s.to], stance: 'down' }; body(b, s.to); infect(s.to, false); statuses(s.to, []); float(b, word('stage.out'), 'is-down'); }
+          if (s.fell) { knockout(b); setStance(s.to, 'down'); drawn[s.to] = { ...drawn[s.to], stance: 'down' }; body(b, s.to); infect(s.to, false); statuses(s.to, []); float(b, word('stage.out'), 'is-down is-ko'); }
         };
         if (deps.reduced() || s.dur <= 0) { apply(); break; }
         for (let k = 0; k < 3; k++) setTimeout(() => gone(node('circle', { class: s.burn ? 'fs-drip fs-drip--ember' : 'fs-drip', cx: b[0] - 3 + k * 3, cy: b[1] - 4 + (k % 2), r: 1.3 }), 700), k * 90);
@@ -756,7 +777,7 @@ export function createStage(svg, deps) {
         (s.targets ?? []).forEach((id, k) => { const t = pos(id); if (t) setTimeout(() => { gone(node('circle', { class: 'sp-ring sp-ring--ok', cx: t[0], cy: t[1], r: 9 }), 760); flash(t, 'sp-flash--heal'); float(t, '+', 'is-heal'); }, dur * 0.6 + k * 90); });
         break;
       }
-      case 'fall': { const b = pos(s.id); setStance(s.id, s.dead ? 'dead' : 'down'); if (drawn[s.id]) drawn[s.id] = { ...drawn[s.id], stance: s.dead ? 'dead' : 'down' }; if (b) body(b, s.id); break; }
+      case 'fall': { const b = pos(s.id); if (s.id.startsWith('e:')) knockout(b); setStance(s.id, s.dead ? 'dead' : 'down'); if (drawn[s.id]) drawn[s.id] = { ...drawn[s.id], stance: s.dead ? 'dead' : 'down' }; if (b) body(b, s.id); break; }
       case 'leave': { const g = host(s.id); put(g, s.at, s.dur); setTimeout(() => setStance(s.id, s.stance, true), s.dur); if (!s.id.startsWith('e:')) deps.pin(s.id, null); drawn[s.id] = { at: s.at, stance: s.stance }; break; }
       case 'special': {
         // Letterbox bars and slow motion while the move plays (not at Resolve or with reduced motion: there it cuts).
