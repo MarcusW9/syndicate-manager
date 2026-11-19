@@ -80,7 +80,7 @@ export function lootFor(state, jobKey) {
     const item = makeItem(state, LOOT.spareType, 'standard');
     (state.stash ??= []).push(item);
     const what = item.name ? `${item.name} (${itemName({ ...item, tier: null }).toLowerCase()})` : itemName({ ...item, tier: null });
-    return { tone: 'good', text: `Gear from the job: ${what}. A spare piece.`, tier: item.tier, spare: true };
+    return { tone: 'good', text: `Gear from the job: ${what}, a spare for the cupboard.`, tier: item.tier, spare: true };
   }
   if (!drop) {
     state.cash += LOOT.scrap;

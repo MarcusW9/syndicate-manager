@@ -408,7 +408,7 @@ function renderOffers(op) {
       ${open.map((m) => `
       <div class="riskcard">
         ${m.payload.ids.map((id) => `<p><strong>${esc(what(m, id)?.name ?? id)}</strong> · ${esc(what(m, id)?.desc ?? '')}</p>`).join('')}
-        <p class="muted small">${m.kind === 'spec' ? 'One specialisation each, for good.' : 'One move and one payload each, for good.'} "Not yet" and Joss asks again in two weeks.</p>
+        <p class="muted small">${m.kind === 'spec' ? 'One specialisation each, for good.' : 'One move and one payload per runner. Once learned, neither can be replaced.'} "Not yet" and Joss asks again in two weeks.</p>
         <div class="stack">${m.options.map((o) => `<button class="btn ${o.id === 'later' ? 'btn--ghost' : 'btn--primary'}" data-action="decide" data-id="${esc(m.id)}" data-option="${esc(o.id)}">${esc(o.label)}</button>`).join('')}</div>
       </div>`).join('')}`;
 }
