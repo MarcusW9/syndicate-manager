@@ -109,6 +109,7 @@ function runnerRow(esc, face, r, { edited, sel, panel }) {
   return `<li class="fs-runner ${here ? '' : 'is-off'} ${sel ? 'is-sel' : ''}">
     <span class="fs-runner__top">${face(r.id)}<strong>${esc(r.handle)}</strong>${r.protect ? '<em class="fs-tag">tech</em>' : ''}${r.state === 'standing' ? '' : `<small class="fs-state">${esc(STATE_WORD[r.state])}</small>`}${hpBar(esc, r)}</span>
     ${here ? `<span class="fs-order"><small>Order</small> ${edited ? `<b>${esc(edited)}</b> <small>(yours, next round)</small>` : esc(r.orderLabel)}</span>
+    <small class="fs-hit">${esc(r.hitLine)}</small>
     ${r.intent ? `<span class="fs-intent">${esc(r.intent.text)}</span>` : ''}
     ${shots}
     <small class="fs-thr">${thr}</small>` : ''}

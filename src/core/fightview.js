@@ -111,6 +111,7 @@ export function roundView(b) {
     const shots = exp.filter((x) => x.target === r.id);
     return {
       id: r.id, handle: r.handle, pips: F.hpUnits(r.hp), max: F.hpUnits(r.max), hp: Math.max(0, r.hp), maxHp: r.max, state: stateOf(r), cover: r.cover, protect: r.id === b.goal.protect, medic: !!r.medic, jammer: !!r.jammer,
+      hit: r.hit ?? FIGHT.hit, strongHit: (r.hit ?? FIGHT.hit) * FIGHT.strongMult, hitLine: lineText('view.hit', { hit: r.hit ?? FIGHT.hit, strong: (r.hit ?? FIGHT.hit) * FIGHT.strongMult }),
       order: o.duty, orderTarget: o.target, orderLabel: orderLabel(b, o),
       intent: a && F.standing(b).some((x) => x.id === r.id) ? intentOf(b, r, a, o) : null,
       shots: shots.map((x) => ({ enemy: nameOfEnemy(b, x.enemy), chance: x.chance, text: chanceWord(x.chance), pips: F.hpUnits(x.hit), hp: x.hit, shielded: !!x.shieldedBy })),

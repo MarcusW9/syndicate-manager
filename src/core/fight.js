@@ -24,7 +24,7 @@
 // Ids: a runner's id is a string (the operative's), an enemy's n a number. "Lowest id" in a tie is the
 // lowest seat (crew order).
 
-import { FIGHT, ENEMIES, ENEMY_HIT, SITE_ENEMIES, COUNT_BY_THREAT, OPPOSITION, CLOCKS, FIGHTS, THREATS, FIGHT_RECIPES } from '../data/fights.js';
+import { FIGHT, ENEMIES, ENEMY_HIT, SITE_ENEMIES, COUNT_BY_THREAT, TOUGHNESS_BY_THREAT, TOUGHNESS, OPPOSITION, CLOCKS, FIGHTS, THREATS, FIGHT_RECIPES } from '../data/fights.js';
 import { MOVES, PAYLOADS } from '../data/builds.js';
 import { buildOf, immuneTo } from './builds.js';
 import { DILEMMAS } from '../data/dilemmas.js';
@@ -134,9 +134,11 @@ export const breaks = (kind) => ENEMIES[kind]?.fleeBelow != null;
  * and it cannot flee that round. group: who it breaks with (3c): 0 for the starting enemies, a new number for each
  * round's batch of arrivals, each pressure arrival and each wave (b.nextGroup).
  */
-function newEnemy(b, kind, rng, { arriving = false, group = 0 } = {}) {
+export function newEnemy(b, kind, rng, { arriving = false, group = 0 } = {}) {
   const def = ENEMIES[kind];
-  const e = { n: b.enemies.length + 1, kind, hp: def.hp, max: def.hp, absorb: def.absorb ?? 0, cover: def.cover, out: false, fled: false, deck: shuffle([...def.deck], rng), di: 0, approaching: arriving, group, infected: null };
+  const step = b.toughness ?? 0; // the job's threat made them tougher (2026-11-18): arrivals too
+  const hp = def.hp + step * TOUGHNESS.hpStep;
+  const e = { n: b.enemies.length + 1, kind, hp, max: hp, absorb: (def.absorb ?? 0) + (step >= TOUGHNESS.plateAtStep ? 1 : 0), cover: def.cover, out: false, fled: false, deck: shuffle([...def.deck], rng), di: 0, approaching: arriving, group, infected: null };
   b.enemies.push(e);
   if (breaks(kind)) b.hiredTotal[group] = (b.hiredTotal[group] ?? 0) + 1;
   return e;
@@ -184,6 +186,7 @@ export function buildFight({ type, diff, threat = 3, site = 'docks', opposition 
   }
   const kinds = SITE_ENEMIES[site] ?? SITE_ENEMIES.docks;
   const count = COUNT_BY_THREAT[clamp(Math.round(threat), 1, 5)];
+  b.toughness = TOUGHNESS_BY_THREAT[clamp(Math.round(threat), 1, 5)];
   const force = OPPOSITION[opposition];
   if (force) {
     // The leader is the district's own kind; everyone else is the force's grunt, and there are more of them.
@@ -1208,10 +1211,10 @@ export function vanOdds(b0, runs = FIGHT.oddsRuns) {
  */
 export function oddsKey(b0, runs = FIGHT.oddsRuns) {
   return JSON.stringify([b0.type, b0.diff, b0.risk, b0.goal,
-    b0.enemies.map((e) => [e.kind, e.hp, e.cover, e.deck, e.approaching ?? false, e.group ?? 0, e.infected ?? null]),
+    b0.enemies.map((e) => [e.kind, e.hp, e.max, e.absorb, e.cover, e.deck, e.approaching ?? false, e.group ?? 0, e.infected ?? null]),
     b0.runners.map((r) => [r.id, r.hp, r.max, r.absorb, r.ap, r.strong, r.hit ?? null, r.jammer, r.healer, Object.values(r.stats).map((s) => s.value), r.overdrive ?? null, r.build ?? null, r.moved ?? false, r.misses ?? 0]),
     b0.orders, b0.overwatch && [b0.overwatch.value, b0.overwatch.damage, b0.overwatch.left], !!b0.wheels, !!b0.standby,
-    b0.showcaseEligible ?? null, b0.maxExtra ?? null, b0.recipe ?? null, b0.hiredTotal ?? null, runs]);
+    b0.toughness ?? 0, b0.showcaseEligible ?? null, b0.maxExtra ?? null, b0.recipe ?? null, b0.hiredTotal ?? null, runs]);
 }
 
 const oddsCache = new Map();

@@ -1067,5 +1067,12 @@ function migrate(state) {
     }
     state.version = 78;
   }
+  if (state.version === 78) {
+    // v79: enemies grow with the job's threat (DESIGN.md 2026-11-18). A fight in progress was built without it: toughness 0, so
+    // whoever arrives later is as tough as the ones already there.
+    const b = state.activeMission?.battle;
+    if (b?.engine === 2 && b.toughness == null) b.toughness = 0;
+    state.version = 79;
+  }
   return state;
 }

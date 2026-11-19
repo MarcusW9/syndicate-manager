@@ -394,7 +394,9 @@ test('a pushed-on runner a medic stabilises is no longer untreated (engine 1\'s 
   const pushed = M.resolvePending(s, 'fight');
   assert.ok(pushed.activeMission.untreated.includes(id));
   pushed.activeMission.battle.runners.find((r) => r.id === id).stable = true; // the medic got to them
-  const next = M.runBattle(pushed);
+  let next = M.runBattle(pushed);
+  // a call-in can come up before the round plays (tougher enemies, 2026-11-18, make the fight longer): take each call-in's first non-exit answer until a round has played
+  for (let i = 0; i < 4 && next.activeMission.pending?.kind === 'dilemma'; i++) next = M.runBattle(M.resolvePending(next, M.describePending(next).choices.find((c) => !c.exit).id));
   assert.ok(!next.activeMission.untreated.includes(id), 'out of the untreated list');
   assert.equal(next.crew.find((o) => o.id === id).condition.injury, 'serious');
 });

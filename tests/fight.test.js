@@ -1048,7 +1048,7 @@ test('opposition: a job without one builds as before; one fills the fight with t
   const police = F.buildFight({ ...args, opposition: 'police' }, makeRng(7));
   assert.equal(police.enemies.length, COUNT_BY_THREAT[4] + OPPOSITION.police.extra);
   assert.ok(SITE_ENEMIES.docks.includes(police.enemies[0].kind));
-  assert.ok(police.enemies.slice(1).every((e) => e.kind === 'police' && e.hp === 10 && e.absorb === 1));
+  assert.ok(police.enemies.slice(1).every((e) => e.kind === 'police' && e.hp === 15 && e.absorb === 1)); // threat 4: +5 HP (enemy toughness, 2026-11-18)
   assert.equal(ENEMY_HIT.police, 10);
   assert.ok(F.buildFight({ ...args, opposition: 'corporate' }, makeRng(7)).enemies.slice(1).every((e) => e.kind === 'secforce'));
 });

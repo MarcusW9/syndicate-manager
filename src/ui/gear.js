@@ -6,6 +6,9 @@
 
 import { GEAR, SLOTS, TIERS, APEX_GEAR, perkById, perksOf, apexSwapOut, carried, itemName, itemTitle, buyPrice, sellPrice, canChangeGear, kitsFor, sidearmStats, placeOf, cellsOf, fitsAt, firstFit, bagUsed } from '../core/gear.js';
 import { BAG, SOCKETS, BASE_TIER } from '../data/gear.js';
+import { hitOf } from '../core/fight.js';
+import { lineText } from '../core/fighttext.js';
+import { FIGHT } from '../data/fights.js';
 import { HAS_LOOKS, lookText } from '../core/looks.js';
 import { gearGlyph } from './icons.js';
 import { gearArt } from './art.js';
@@ -15,9 +18,9 @@ export function itemEffect(item) {
   const g = GEAR[item.type];
   const step = TIERS[item.tier]?.step ?? 0;
   if (g.overwatch) return `Overwatch · ${g.overwatch.stat} ${g.overwatch.uses} ${item.type === 'rifle' ? 'shots' : 'actions'}${step ? ` · +${step}` : ''}`;
-  // A sidearm: its own strengths (frame and quirk): "Aim +2 · damage 2 · light and accurate · true sights".
+  // A sidearm: its own strengths (frame and quirk): "Aim +2 · damage 2 · deals 10 HP (20 on a critical hit) · light and accurate · true sights".
   const s = sidearmStats(item);
-  if (s) return [`Aim ${s.aim >= 0 ? '+' : '−'}${Math.abs(s.aim)}`, `damage ${s.damage}`, s.pierce ? `pierces ${s.pierce}` : null, s.trait, s.quirk].filter(Boolean).join(' · ');
+  if (s) return [`Aim ${s.aim >= 0 ? '+' : '−'}${Math.abs(s.aim)}`, `damage ${s.damage}`, lineText('view.hit', { hit: hitOf(s.damage), strong: hitOf(s.damage) * FIGHT.strongMult }).replace(/^./, (c) => c.toLowerCase()), s.pierce ? `pierces ${s.pierce}` : null, s.trait, s.quirk].filter(Boolean).join(' · ');
   const bonus = Object.entries(g.bonus ?? {}).map(([s, v]) => `${s} +${v + step}`);
   if (g.serious) bonus.push('fewer serious wounds');
   return bonus.join(' · ').replace(/^./, (c) => c.toUpperCase());

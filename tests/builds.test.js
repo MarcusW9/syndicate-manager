@@ -166,7 +166,7 @@ test('shown equals used: the preview names the burst and the coming ticks, draws
 test('the odds play the build (a built crew is not priced as a plain one) and are deterministic', () => {
   const crew = crewOf().slice(0, 3);
   for (const o of crew) Object.assign(o.stats, { combat: 8, cool: 6 });
-  const args = { type: 'holdYard', diff: 12, threat: 5, site: 'docks', approach: 'loud', risk: 'steady' };
+  const args = { type: 'holdYard', diff: 12, threat: 4, site: 'docks', approach: 'loud', risk: 'steady' };
   const plain = F.fightOddsFor({ ...args, crew });
   const built = F.fightOddsFor({ ...args, crew: withBuild(crew) });
   assert.deepEqual(F.fightOddsFor({ ...args, crew: withBuild(crew) }), built);
