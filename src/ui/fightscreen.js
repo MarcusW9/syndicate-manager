@@ -93,11 +93,19 @@ function goalLine(esc, g) {
 
 const STATE_WORD = { down: 'down', stable: 'down, stable', dead: 'dead', out: 'pulled out', aboard: 'in the van' };
 
+/** An enemy's statuses (2026-11-19): one row each in the stage's colour, the label always shown, a tap opens what it does (a native <details>,
+ * as the gear's perks: no hover, each row a 44px target). */
+function statusRows(esc, e) {
+  if (!e.statuses?.length) return '';
+  return `<ul class="perks fs-statuses" aria-label="Statuses">${e.statuses.map((s) => `<li><details class="perk fs-status fs-status--${s.st}"><summary><span class="perk__name">${esc(s.label)}</span></summary><p class="perk__desc small">${esc(s.text)}</p></details></li>`).join('')}</ul>`;
+}
+
 function enemyCard(esc, e) {
   const threats = e.threats.length ? `<ul class="fs-threats">${e.threats.map((t) => `<li class="fs-threat fs-threat--${t.kind}">${esc(t.text)}</li>`).join('')}</ul>` : '';
   return `<li class="fs-enemy ${e.out ? 'is-out' : ''}">
     <span class="fs-enemy__top"><strong>${esc(e.name)}</strong>${e.out ? `<small>${e.fled ? 'ran' : 'out'}</small>` : hpBar(esc, e)}</span>
     ${!e.out && e.approaching ? `<small class="fs-coming">${esc(lineText('view.approaching'))}</small>` : ''}
+    ${statusRows(esc, e)}
     ${e.out ? '' : threats}
   </li>`;
 }

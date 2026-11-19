@@ -100,12 +100,28 @@ function ticksText(b, ticks) {
   return groups.map((g) => { const [word, hp] = [g.slice(0, g.lastIndexOf('|')), Number(g.slice(g.lastIndexOf('|') + 1))]; return lineText('ticks', { word, hp: hpWord(hp), enemies: nameList(ticks.filter((t) => (t.word ?? 'Vector') === word && t.hp === hp).map((t) => nameOfEnemy(b, t.enemy))) }); }).join(' ');
 }
 
+/** The statuses an enemy carries, for its card (2026-11-19): [{ st, label, text }] in the engine's order, only while it is up. `label` is the row's
+ * always-shown words (the status and its number); `text` is the line a tap opens. The numbers are the rules' own (the payload that put it on). */
+export function statusesView(e) {
+  if (e.out || e.fled) return [];
+  return F.STATUSES.filter((st) => e[st]).map((st) => {
+    const s = e[st]; const pay = PAYLOADS[s.payload];
+    const slots = { hp: hpWord(s.tick ?? 0), n: s.left ?? 0, extra: hpWord(pay?.expose?.extra ?? 0), word: pay?.word ?? '' };
+    const timed = s.left == null ? 'Fall' : s.left === 1 ? 'Last' : 'Rounds';
+    const extra = st === 'exposed' && pay?.expose?.extra ? 'Extra' : '';
+    const jumps = (pay?.pieces ?? []).some((p) => p.when === 'onKill' && p.what?.spread === st); // a strain that spreads says so (Contagion)
+    const text = lineText(`view.status.${st}.text${st === 'infected' || st === 'burning' ? timed : extra}`, slots) + (jumps ? ` ${lineText('view.status.jumps')}` : '');
+    return { st, label: lineText(`view.status.${st}`, slots), text };
+  });
+}
+
 export function roundView(b) {
   const pv = b.drawn ? F.previewRound(b) : null;
   const exp = pv?.exposure ?? [];
   const enemies = b.enemies.map((e) => ({
     n: e.n, kind: e.kind, name: enemyName(e.kind, e.n), infected: !!e.infected && !e.out && !e.fled, pips: F.hpUnits(e.hp), max: F.hpUnits(e.max), hp: Math.max(0, e.hp), maxHp: e.max, out: !!(e.out || e.fled), fled: !!e.fled, cover: e.cover, approaching: !!e.approaching,
     threats: (pv?.threats ?? []).filter((t) => t.enemy === e.n && !t.cancelled).map((t) => threatOf(b, t, exp)),
+    statuses: statusesView(e),
   }));
   const runners = b.runners.map((r) => {
     const o = F.orderOf(b, r);

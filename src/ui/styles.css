@@ -2587,6 +2587,13 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .perk[open] summary::after { content: '\2212'; }
 .perk__name { min-width: 0; overflow-wrap: anywhere; }
 .perk__desc { margin: 0; padding: 2px 8px 8px 11px; border-left: 3px solid var(--tc); color: var(--text); line-height: 1.35; }
+/* An enemy card's statuses (2026-11-19): the perk rows, each in its status's stage colour (ui/fightstage.js STATUS_LOOK, .fs-infect). */
+.fs-statuses { margin-top: 0; }
+.fs-status--infected { --tc: #8dff6a; }
+.fs-status--burning { --tc: #ff8a3d; }
+.fs-status--marked { --tc: #ff4d5e; }
+.fs-status--exposed { --tc: #ffd84d; }
+.fs-status--shaken { --tc: #b48cff; }
 .loadout__perks { --tc: var(--tier-blue); font-size: 0.72rem; color: var(--tc); line-height: 1.25; overflow-wrap: anywhere; }
 .bag__list li { min-width: 0; }
 .timeline__results .perks { margin-top: 4px; }
