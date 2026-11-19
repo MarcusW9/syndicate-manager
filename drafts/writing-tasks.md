@@ -581,7 +581,7 @@ When a job drops no gear and the crew gets a spare Standard sidearm instead of s
 
 Still open as separate batches: director spotlights; live-view pace, stage marks and special-move titles; wave and approaching wording; other-tong habit and Anchor's Book draft wording; the mission-log, heist, trait and district-job writing.
 
-## Part B statuses and draft pieces (2026-11-19, Claude's drafts, owner to replace)
+## Part B statuses and draft pieces (2026-11-19): **supplied and applied 2026-11-19** (owner's batch: the four pieces' `desc` and `offer`, the `view.status.*` lines, the six log keys and `immune`/`tick`/`tickOut`, and the neighbouring director, special-move and wave lines; names and log words kept). Was: Claude's drafts, owner to replace
 - **The four draft pieces** in `src/data/builds.js` (`PAYLOADS.incendiary`, `spotter`, `breacher`, `rout`): `name`, log `word` (Fire, Mark, Breach, Fear), `desc` and `offer`. Rename freely. Joss offers them under these drafts since 2026-11-19 (owner: "keep the drafts for now").
 - **A medic treating themself** (2026-11-19) in `src/data/fightText.js`: `aura.self`, `patch.self`, `patchFail.self` (read when `{who}` and `{target}` are the same person, `core/fighttext.js lineText`).
 - **The enemy card's status lines** (2026-11-19) in `src/data/fightText.js`, `view.status.*`: each status's label ("Burning · {hp} a round") and the line a tap opens, with the endings for the last round and for "until it falls", and `view.status.jumps` for a strain that spreads.

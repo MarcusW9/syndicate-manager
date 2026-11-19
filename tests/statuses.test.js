@@ -189,8 +189,8 @@ test('an enemy card lists each status it carries, with the rules\' own numbers, 
     marked: { by: 'jax', round: 0, payload: 'spotter' }, exposed: { by: 'jax', round: 0, payload: 'breacher' }, shaken: { by: 'jax', round: 0, payload: 'rout' } });
   const v = V.statusesView(e);
   assert.deepEqual(v.map((s) => s.st), ['infected', 'burning', 'marked', 'exposed', 'shaken']);
-  assert.match(v[0].label, /10 HP/); assert.match(v[0].text, /2 more times/); assert.match(v[0].text, /jumps/);
-  assert.match(v[1].text, /end of this round, then the fire goes out/); assert.doesNotMatch(v[1].text, /jumps/);
+  assert.match(v[0].label, /10 HP/); assert.match(v[0].text, /2 more times/); assert.match(v[0].text, /jump/);
+  assert.match(v[1].text, /this round's end, then the fire goes out/); assert.doesNotMatch(v[1].text, /jump/);
   assert.match(v[3].text, /10 HP more/);
   for (const s of v) assert.ok(s.label && s.text && !s.text.startsWith('view.'), s.st);
   assert.deepEqual(V.statusesView({ ...e, out: true }), []);
