@@ -482,6 +482,11 @@ export function tongsByTier(state) {
   return out;
 }
 
+/** Every named runner's name and card id, nothing hidden: for the ui to link a name in a message to their page (ui/messages.js crewLinks). */
+export function cardNames(state) {
+  return (state.rivals?.cards ?? []).filter((c) => c.name).map((c) => ({ name: c.name, id: c.id }));
+}
+
 /** 6-10 talked-about runners, unranked (sorted by name). The player's own crew can be among them. */
 export function namesOnTheStreet(state) {
   const r = state.rivals; if (!r) return [];

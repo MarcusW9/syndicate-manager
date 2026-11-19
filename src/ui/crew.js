@@ -80,8 +80,17 @@ export function renderCrew() {
   const filter = ['ready', 'out'].includes(V.crewFilter) ? V.crewFilter : 'all';
   const shown = state.crew.filter((op) => filter === 'all' || availability(state, op).ok === (filter === 'ready'));
   const readyN = state.crew.filter((op) => availability(state, op).ok).length;
-  const chips = `<label class="crewfilter__label">Show <select class="crewfilter__select" id="crewfilter" aria-label="Filter the roster">${[['all', 'All', state.crew.length], ['ready', 'Ready', readyN], ['out', 'Away or hurt', state.crew.length - readyN]]
-    .map(([id, label, n]) => `<option value="${id}"${filter === id ? ' selected' : ''}>${label} (${n})</option>`).join('')}</select></label>`;
+  // A drop menu of our own, not a <select> (owner, 2026-11-18: the system picker broke the look). Phones get it as a sheet from the bottom; wider screens under the button (styles.css).
+  const opts = [['all', 'All', state.crew.length], ['ready', 'Ready', readyN], ['out', 'Away or hurt', state.crew.length - readyN]];
+  const [, curLabel, curN] = opts.find(([id]) => id === filter);
+  const chips = `<span class="crewfilter__label" id="crewfilter-label">Show</span>
+      <button class="crewfilter__btn" data-action="crew-filter-open" aria-haspopup="listbox" aria-expanded="${!!V.crewFilterOpen}" aria-labelledby="crewfilter-label crewfilter-now"><span id="crewfilter-now">${curLabel} (${curN})</span><span class="crewfilter__arrow" aria-hidden="true"></span></button>`;
+  // Drawn outside the panel: the panel's cut corner (clip-path) would clip it, even fixed.
+  const menu = V.crewFilterOpen && tab === 'roster' ? `<div class="scrim scrim--menu" data-action="crew-filter-close"></div>
+      <div class="dropmenu" role="listbox" aria-label="Show on the roster">
+        <p class="dropmenu__title">Show</p>
+        ${opts.map(([id, label, n]) => `<button class="dropmenu__opt ${filter === id ? 'is-on' : ''}" role="option" aria-selected="${filter === id}" data-action="crew-filter" data-id="${id}"><span>${label}</span><span class="dropmenu__n">${n}</span></button>`).join('')}
+      </div>` : '';
   const body = {
     roster: () => `
       <div class="crewfilter">${chips}</div>
@@ -131,7 +140,7 @@ export function renderCrew() {
       </div>
       ${subTabs('Crew sections', 'crew-tab', [['roster', 'Roster'], ['leads', 'Leads', recruits.length], ['wall', 'Wall']], tab)}
       ${body}
-    </section>`;
+    </section>${menu}`;
 }
 
 export function renderRecruit() {

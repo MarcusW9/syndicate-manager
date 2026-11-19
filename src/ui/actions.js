@@ -143,7 +143,9 @@ export function onClick(e) {
     case 'open-armoury': remember(action, id); goHome('armoury'); V.hallPage = null; V.buildView = null; V.openOperativeId = null; V.openRecruitId = null; V.gearSlot = null; break;
     case 'tong-tab': V.tongTab = id; break;
     case 'crew-tab': V.crewTab = id; break;
-    case 'crew-filter': V.crewFilter = id; break;
+    case 'crew-filter': V.crewFilter = id; V.crewFilterOpen = false; V.focusNext = { action: 'crew-filter-open' }; break;
+    case 'crew-filter-open': V.crewFilterOpen = !V.crewFilterOpen; break;
+    case 'crew-filter-close': V.crewFilterOpen = false; V.focusNext = { action: 'crew-filter-open' }; break;
     // Shortcuts to a sub-tab's home from another page (a link, not a tab choice: Back returns).
     case 'halls-open': remember(action, id); goHome('hall'); V.hallPage = null; V.buildView = null; break;
     case 'leads-open': remember(action, id); goHome('recruit'); V.openRecruitId = null; V.openOperativeId = null; break;
