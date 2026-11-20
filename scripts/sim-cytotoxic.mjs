@@ -2,7 +2,7 @@
 // alone and with Ricochet? MEASURES ONLY: the variants below are added to PAYLOADS inside this script, never in the game's data, and the engine's
 // dot hooks they use (`dot.stack`, `dot.scale`, `dot.grow`, core/fight.js `put`) are switched off for every payload the game ships.
 //
-//   node scripts/sim-cytotoxic.mjs [crews=10] [fights a crew a job=20] [date]
+//   node scripts/sim-cytotoxic.mjs [crews=10] [fights a crew a job=20] [date] [scale]   (scale: round 1's tick variants; default: round 2's)
 //
 // Builds: no build; Ricochet alone; then for each vector (today's Cytotoxic, its five variants, and Contagion as the bar to beat): the vector
 // alone on the best combat runner, Ricochet + the vector on the best, and Ricochet + the vector on the best two. Same crews and seeds every row
@@ -22,14 +22,25 @@ const OUT = new URL(`../docs/sims/cytotoxic-${DATE}.md`, import.meta.url);
 
 // The variants (sim-only). Each is today's Cytotoxic with one change to its `dot`.
 const cyto = PAYLOADS.cytotoxic;
-const VARIANTS = {
+const crack = { when: 'onCrack', who: 'target', what: { apply: 'infected' } };
+// Round 1 (2026-11-20, docs/sims/cytotoxic-2026-11-20.md): stacking and bigger ticks (15, 20, by Medical, growing) moved clean wins 0 to 2 points.
+// Those variants are kept here, off by default (node scripts/sim-cytotoxic.mjs 20 40 <date> scale). Round 2: a new identity, not more damage.
+const SCALE = {
   cyto_stack: { name: 'Cyto: stacks x3', dot: { tick: 10, rounds: null, stack: 3 }, note: 'a fresh damaging hit on a body it ticks adds +10 a round, to 30' },
   cyto_15: { name: 'Cyto: tick 15', dot: { tick: 15, rounds: null }, note: 'a flat 15 HP a round' },
   cyto_20: { name: 'Cyto: tick 20', dot: { tick: 20, rounds: null }, note: 'a flat 20 HP a round' },
   cyto_med: { name: 'Cyto: by Medical', dot: { tick: 10, rounds: null, scale: { stat: 'medical', from: 6, step: 4, per: 5, cap: 20 } }, note: '10 HP at Medical 6-9, 15 at 10-13, 20 at 14+' },
   cyto_grow: { name: 'Cyto: grows +5', dot: { tick: 10, rounds: null, grow: { per: 5, cap: 30 } }, note: '10, then 15, 20 ... to 30, each tick' },
 };
-for (const [id, v] of Object.entries(VARIANTS)) PAYLOADS[id] = { ...cyto, id, name: v.name, dot: v.dot };
+const IDENTITY = {
+  cyto_20: SCALE.cyto_20,
+  cyto_armour: { name: 'Cyto: through armour', dot: { tick: 10, rounds: null }, extra: [crack], note: 'a hit that only cracks a plate infects too' },
+  cyto_weak_aim: { name: 'Cyto: weakens aim', dot: { tick: 10, rounds: null, weaken: { aim: 0.2 } }, note: 'an infected enemy is 20 points less likely to hit' },
+  cyto_weak_hit: { name: 'Cyto: weakens hits', dot: { tick: 10, rounds: null, weaken: { hitShare: 0.5 } }, note: 'an infected enemy hits for half' },
+  cyto_armour_weak: { name: 'Cyto: armour + weakens aim', dot: { tick: 10, rounds: null, weaken: { aim: 0.2 } }, extra: [crack], note: 'both: cracking infects, and the infected aim worse' },
+};
+const VARIANTS = process.argv[5] === 'scale' ? SCALE : IDENTITY;
+for (const [id, v] of Object.entries(VARIANTS)) PAYLOADS[id] = { ...cyto, id, name: v.name, dot: v.dot, pieces: [...cyto.pieces, ...(v.extra ?? [])] };
 const VECTORS = [['cytotoxic', 'Cyto: today', '10 HP a round until it falls (the game today)'], ...Object.entries(VARIANTS).map(([id, v]) => [id, v.name, v.note]), ['contagion', 'Contagion', '10 HP a round for 2 rounds; jumps when the host falls (the game today)']];
 
 const base = createNewGame({ seed: 1 }).crew;
@@ -113,6 +124,8 @@ const F1 = (x) => x.toFixed(1);
 const out = [];
 const L = (s = '') => out.push(s);
 L(`# Sim: how the Cytotoxic Vector should scale (${DATE})`);
+L();
+L(process.argv[5] === 'scale' ? 'Round 1: does a bigger tick help?' : 'Round 2: a new identity (through armour, or the infection weakens) instead of more damage. Round 1 (bigger ticks) is `docs/sims/cytotoxic-2026-11-20.md`.');
 L();
 L('Owner, 2026-11-20: Contagion matches or beats Cytotoxic everywhere, so Cytotoxic should scale to deal more damage over time. It has no spread, but paired with Ricochet (one round through up to three targets, once a fight) it might do better. Measurement only: the variants exist only inside `scripts/sim-cytotoxic.mjs`.');
 L();

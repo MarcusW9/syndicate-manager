@@ -1060,13 +1060,17 @@ export function playRound(b, rng) {
     if (t.kind === 'aim') {
       const v = runner(b, t.target);
       if (!v || v.down || v.dead || v.withdrawn || v.aboard) continue;
-      const c = aimChance(b, v, { hunker: v.hunker, open: v.boarding });
+      // Switched off (2026-11-20, the Cytotoxic sweep): a payload's `dot.weaken` ({ aim, hitShare }) takes `aim` off an infected shooter's chance
+      // and scales its hit. No payload in the game sets it; if one ever does, the telegraph and the preview must show it too (shown risk = used risk).
+      const wk = e.infected && PAYLOADS[e.infected.payload]?.dot?.weaken;
+      const c = Math.max(0, aimChance(b, v, { hunker: v.hunker, open: v.boarding }) - (wk?.aim ?? 0));
       const hit = rng() < c;
       const slots = { enemy: E(e.n), who: v.handle };
       const named = { actor: null, target: v.id, enemy: e.n, chance: c, shieldedBy: t.shieldedBy };
       if (!hit) { say('shot', 'shotMiss', slots, { ...named, targetId: v.id, success: false, damage: 0 }); continue; }
       if (v.absorb > 0) { v.absorb -= 1; say('shot', 'shotAbsorbed', slots, { ...named, targetId: v.id, success: false, damage: 0 }); continue; } // plates: fights saved before v80 only
-      const lands = landsOn(v, t.hit); const soaked = t.hit - lands; if (soaked > 0) named.soaked = soaked;
+      const tHit = wk?.hitShare != null ? Math.round(t.hit * wk.hitShare) : t.hit;
+      const lands = landsOn(v, tHit); const soaked = tHit - lands; if (soaked > 0) named.soaked = soaked;
       const dmg = Math.min(v.hp, lands); v.hp -= dmg; b.hpLost += dmg;
       if (v.hp <= 0) {
         // A runner pulling out alone dies only when the player ordered that withdrawal by hand; otherwise death's door like anyone else.
