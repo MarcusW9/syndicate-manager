@@ -873,9 +873,22 @@ export function playRound(b, rng) {
     }
   };
   // Put a status on a body: never on one that has it (no stacking, no renewing) or is immune to the payload; said with the status's own line.
+  // Three switched-off dot hooks (2026-11-20, the Cytotoxic sweep, scripts/sim-cytotoxic.mjs): no payload in the game sets them, so play is as
+  // before. `dot.stack` (n): a fresh hit from the same payload on a body it already ticks adds its base tick again, up to n times in all.
+  // `dot.scale` ({ stat, from, step, per, cap }): the tick grows `per` HP for each `step` points of the carrier's stat above `from`, to `cap`.
+  // `dot.grow` ({ per, cap }): the tick grows `per` HP after each tick, to `cap`. Measurement only until the owner picks one.
   const put = (t, st, from, by, who, extra) => {
-    if (t[st] || immuneTo(t.kind, from.id)) return;
+    if (immuneTo(t.kind, from.id)) return;
+    if (t[st]) {
+      const cur = t[st]; const n = from.dot?.stack;
+      if (!n || cur.payload !== from.id || (cur.stacks ?? 1) >= n) return;
+      cur.stacks = (cur.stacks ?? 1) + 1; cur.tick += from.dot.tick;
+      say(STATUS_LINE[st], STATUS_LINE[st], { who, enemy: E(t.n), word: from.word }, { ...extra, enemy: t.n, payload: from.id, status: st, stacked: cur.stacks });
+      return;
+    }
     t[st] = STATUS[st](from, by, b.round);
+    const sc = from.dot?.scale;
+    if (sc) { const r = b.runners.find((x) => x.id === by); const v = r ? sv(r, sc.stat) : 0; t[st].tick = Math.min(sc.cap, from.dot.tick + Math.max(0, Math.floor((v - sc.from) / sc.step)) * sc.per); }
     say(STATUS_LINE[st], STATUS_LINE[st], { who, enemy: E(t.n), word: from.word }, { ...extra, enemy: t.n, payload: from.id, status: st });
   };
 
@@ -1082,6 +1095,7 @@ export function playRound(b, rng) {
     const word = PAYLOADS[inf.payload]?.word ?? 'Vector';
     if (e.hp <= 0) { e.out = true; e[st] = null; defeated.push({ by: inf.by, enemy: e.n, how }); say('tick', outKey, { enemy: E(e.n), word }, { enemy: e.n, damage: inf.tick, dropped: true, left: 0, max: e.max, status: st }); fall(e, null, [inf, ...STATUSES.map((x) => e[x])]); }
     else say('tick', onKey, { enemy: E(e.n), word }, { enemy: e.n, damage: inf.tick, left: e.hp, max: e.max, status: st });
+    const gr = PAYLOADS[inf.payload]?.dot?.grow; if (gr) inf.tick = Math.min(gr.cap, inf.tick + gr.per); // switched off: see `put`
   }
   // 3c: the hired and the standard force break and run per group, when too few of that group are left (hired's threshold).
   // An enemy in its approach round never runs (this check comes before `approaching` is cleared below). A lone arrival never runs.
