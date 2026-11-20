@@ -29,4 +29,4 @@ Open `abilities/spotter.js`, fill the three variants, open `ability-lab.html`, p
 
 ## Still to do
 
-Decided and built (2026-11-20): Breacher (breaching charge) and the hack alarm (siren and the surge, no GET OUT message). Decided and built (2026-11-20): overwatch (glint, laser, crack for the rifle; drone strafe for the drone). No lab file yet: the van call, the patch pulse, new moves and payloads as they are written (`data/builds.js`). Statuses already have a look from 2026-11-19 (`docs/screenshots/2026-11-19-status-looks`).
+Decided and built (2026-11-20): Breacher (breaching charge) and the hack alarm (siren and the surge, no GET OUT message). Decided and built (2026-11-20): overwatch (glint, laser, crack for the rifle; drone strafe for the drone). In the lab, waiting for the owner's pick (2026-11-20): the van call (`abilities/van.js`: plate and countdown, clock ring and the hold, headlights and lifelines). No lab file yet: the patch pulse, new moves and payloads as they are written (`data/builds.js`). Statuses already have a look from 2026-11-19 (`docs/screenshots/2026-11-19-status-looks`).
