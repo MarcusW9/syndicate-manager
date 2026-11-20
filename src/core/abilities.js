@@ -52,9 +52,11 @@ const STATE_ORDER = { held: 0, ready: 1, locked: 2 };
  * on their page. A read only, like abilitiesOf.
  *   held   [{ slot, id }] what they hold now: slot 'move', 'payload' or 'spec', id or null.
  *   items  [{ slot, id, name, desc, needs, missing, state, full }] held first, then ready, then locked (a stable order inside each).
- *          state 'held' (theirs), 'ready' (their stats meet the gate and the place is open: Joss can offer it), 'locked' (a stat short,
- *          or `full`: the place is taken, and a move, payload or specialisation, once learned, is not replaced).
- * A draft piece (part B) is left out, as in abilitiesOf. A specialisation's jobs-on-overwatch count is hidden progress, so only its stat gate is read.
+ *          state 'held' (theirs), 'ready' (every gate met and the place open: they can learn it at a level-up, core/levelup.js),
+ *          'locked' (a gate short, or `full`: the place is taken, and a move, payload or specialisation, once learned, is not replaced).
+ *          A specialisation also carries `kit` { kit, need, have }: jobs on overwatch with its kit, a gate of its own (shown since the
+ *          level-ups, 2026-11-20: a requirement, not a story; owner's call 3 of 2026-11-18).
+ * A draft piece (part B) is left out, as in abilitiesOf.
  */
 export function skillMenu(op) {
   const build = op?.build ?? {};
@@ -68,7 +70,9 @@ export function skillMenu(op) {
       const missing = missingFor(op, needs);
       const held = have[slot] === id;
       const full = !held && have[slot] !== null;
-      items.push({ slot, id, name: def.name, desc: def.desc, needs, missing, full, state: held ? 'held' : !full && !missing.length ? 'ready' : 'locked' });
+      const kit = slot === 'spec' ? { kit: def.kit, need: def.jobs ?? 0, have: op?.track?.overwatch?.[def.kit] ?? 0 } : null;
+      const kitShort = kit ? kit.have < kit.need : false;
+      items.push({ slot, id, name: def.name, desc: def.desc, needs, missing, full, ...(kit ? { kit } : {}), state: held ? 'held' : !full && !missing.length && !kitShort ? 'ready' : 'locked' });
     }
   }
   items.sort((a, b) => STATE_ORDER[a.state] - STATE_ORDER[b.state]);

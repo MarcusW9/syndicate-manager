@@ -30,8 +30,7 @@ import { weeklyPoach } from './mobility.js';
 import { weeklyOath } from './oath.js';
 import { weeklyRivals } from './rivals.js';
 import { neuralFloor } from './gear.js';
-import { checkSpecialisations } from './specialisations.js';
-import { checkBuildOffers } from './builds.js';
+import { checkLevelUps } from './levelup.js';
 import { refreshArmoury } from './looks.js';
 import { homeOf, hasRoom } from './halls.js';
 import { ROOM_EFFECT } from '../data/hallBuild.js';
@@ -90,8 +89,7 @@ export function advanceDay(prev) {
   }
 
   dailyTraits(state); // scars set once a critical wound heals; idle spells end temporary traits
-  checkSpecialisations(state); // Joss asks again once a "not yet" has run out
-  checkBuildOffers(state);
+  checkLevelUps(state); // side tasks grow stats too, so a skill can come ready between jobs
 
   // Someone who was refused a raise asks again once they've cooled off.
   for (const op of state.crew) if (op.renewalAgain) checkRenewal(state, op);

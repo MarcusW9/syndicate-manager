@@ -8,6 +8,7 @@
 //     sub-tab, filters, the open page, an in-progress plan, scroll). Back puts that view back. It is
 //     navigation only: nothing here holds a copy of the game, so a page returned to shows the state now.
 
+import { levelUpOpen } from '../core/levelup.js';
 import { isActionable } from '../core/inbox.js';
 
 /**
@@ -61,15 +62,14 @@ export function needsYou(state, m) {
   return !m.read || waiting;
 }
 
-/** Open offers Joss has put in the mail (a specialisation or a build piece), for one runner or for everyone. Decided on the runner's sheet or in the message (owner, 2026-11-17). */
-export const openOffers = (state, opId = null) => (state.inbox ?? [])
-  .filter((m) => ['spec', 'build'].includes(m.kind) && !m.resolved && m.payload?.opId && (opId === null || m.payload.opId === opId));
+/** The runners with a level-up waiting for a pick (core/levelup.js; replaced Joss's open offers, 2026-11-20). Picked on the runner's page. */
+export const levelUpsWaiting = (state) => (state.crew ?? []).filter(levelUpOpen);
 
 /** Tab id → { count, word } for the pill on its button; tabs with no entry show none. Crew counts the runners with an offer waiting. */
 export function tabBadges(state) {
   return {
     inbox: { count: attentionCount(state), word: 'waiting on you' },
-    crew: { count: new Set(openOffers(state).map((m) => m.payload.opId)).size, word: 'with an offer waiting' },
+    crew: { count: levelUpsWaiting(state).length, word: 'with a level-up waiting' },
     jobs: { count: state.jobs.length, word: 'open' },
   };
 }

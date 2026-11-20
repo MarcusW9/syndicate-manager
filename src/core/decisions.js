@@ -4,8 +4,6 @@
 
 import { RENEWAL_RESOLVER } from './renewals.js';
 import { HEAT_RESOLVER } from './heat.js';
-import { SPEC_RESOLVER } from './specialisations.js';
-import { BUILD_RESOLVER } from './builds.js';
 import { RAID_RESOLVER } from './raids.js';
 import { RETIREMENT_RESOLVER } from './retirement.js';
 import { POACH_RESOLVER } from './mobility.js';
@@ -14,8 +12,6 @@ import { POACH_RESOLVER } from './mobility.js';
 export const RESOLVERS = {
   renewal: RENEWAL_RESOLVER,
   heat: HEAT_RESOLVER,
-  spec: SPEC_RESOLVER,
-  build: BUILD_RESOLVER,
   raid: RAID_RESOLVER,
   retirement: RETIREMENT_RESOLVER,
   poach: POACH_RESOLVER,

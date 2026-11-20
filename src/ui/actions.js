@@ -37,6 +37,7 @@ import { inboxView } from './today.js';
 import { state, nav, CONTINUE_REST_MS, remember, goHome, restoreView, toRoot, viewNow, setSub, briefSeen, buzzLater, openInfo, V, WIDE_QUERY } from './view.js';
 import { freshSeed } from './seed.js';
 import { toggleFocus } from '../core/development.js';
+import { learnSkill } from '../core/levelup.js';
 
 // --- events ------------------------------------------------------------
 export function onClick(e) {
@@ -138,6 +139,7 @@ export function onClick(e) {
     // A crew member's name in a message: open their page, remembering the message to come back to.
     case 'piece-tip': V.pieceTip = V.pieceTip === id ? null : id; break;
     case 'focus': return setState(toggleFocus(state, V.openOperativeId, id));
+    case 'learn': { const [slot, skill] = id.split('|'); V.skillOpen = null; return setState(learnSkill(state, V.openOperativeId, slot, skill)); }
     case 'skill-tab': V.skillTab = id; V.skillOpen = null; break;
     case 'skill-open': V.skillOpen = V.skillOpen === id ? null : id; break;
     case 'trait-tip': V.traitTip = V.traitTip === id ? null : id; break;

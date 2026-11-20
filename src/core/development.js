@@ -98,6 +98,8 @@ export function prepareOperative(op) {
   op.gear = op.gear ?? emptyLoadout();
   op.marks = op.marks ?? [];
   op.focus = Array.isArray(op.focus) ? op.focus : []; // training focus (v82)
+  op.pickAt = op.pickAt ?? null; // level-ups (v83, core/levelup.js)
+  op.levelUp = op.levelUp ?? null;
   return op;
 }
 

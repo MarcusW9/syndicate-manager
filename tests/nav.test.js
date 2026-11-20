@@ -199,14 +199,14 @@ test('the badge rule: attention counts once on Today; Ops and Tong show nothing;
   assert.deepEqual(Object.keys(b).sort(), ['crew', 'inbox', 'jobs']);
   assert.equal(b.jobs.count, 2);
   assert.equal(b.crew.count, 0);
-  // Crew counts runners with an offer waiting (owner, 2026-11-17): two offers for one runner count once; a taken one counts none.
-  const withOffers = { ...state, inbox: [
-    { id: 'o1', kind: 'build', resolved: false, payload: { opId: 'x' } },
-    { id: 'o2', kind: 'spec', resolved: false, payload: { opId: 'x' } },
-    { id: 'o3', kind: 'build', resolved: false, payload: { opId: 'y' } },
-    { id: 'o4', kind: 'spec', resolved: true, payload: { opId: 'z' } },
-  ] };
-  assert.equal(tabBadges(withOffers).crew.count, 2);
+  // Crew counts runners with a level-up waiting (2026-11-20; was open offers, owner 2026-11-17): announced and something still ready;
+  // a level-up with nothing left to learn, or one not announced, counts none.
+  const { createNewGame } = await import('../src/core/state.js');
+  const crew = createNewGame({ seed: 1 }).crew.slice(0, 4);
+  crew[0].levelUp = { day: 1 }; crew[1].levelUp = { day: 1 };
+  crew[2].levelUp = { day: 1 }; crew[2].build = { move: 'ricochet', payload: 'cytotoxic' }; crew[2].spec = { id: 'marksman', day: 1 };
+  assert.equal(tabBadges({ ...state, crew }).crew.count, 2);
+  assert.equal(tabBadges({ ...state, crew }).crew.word, 'with a level-up waiting');
   const app = await boot();
   assert.ok(!/data-id="city"[^>]*>City <span class="pill/.test(app.html()));
   assert.ok(!/data-id="tong"[^>]*>Tong <span class="pill/.test(app.html()));

@@ -1092,5 +1092,20 @@ function migrate(state) {
     for (const op of [...(state.crew ?? []), ...(state.recruits ?? [])]) if (!Array.isArray(op.focus)) op.focus = [];
     state.version = 82;
   }
+  if (state.version === 82) {
+    // v83: level-ups replace Joss's offers (DESIGN.md 2026-11-20, runner shaping step 4). The last pick counts from the last piece
+    // taken (a specialisation alone: from now); an offer still open in the mail is closed with a note, and the snoozes go.
+    for (const op of [...(state.crew ?? []), ...(state.recruits ?? [])]) {
+      op.pickAt ??= op.buildAt ?? (op.spec ? op.jobsWithCrew ?? 0 : null);
+      op.levelUp ??= null;
+      delete op.buildAt; delete op.buildSnooze; delete op.specSnooze;
+    }
+    for (const m of state.inbox ?? []) {
+      if (!['spec', 'build'].includes(m.kind) || m.resolved) continue;
+      m.resolved = true;
+      m.payload = { ...m.payload, outcome: 'Skills are learned at a level-up now: pick them on the runner\'s page, under Skills.' };
+    }
+    state.version = 83;
+  }
   return state;
 }

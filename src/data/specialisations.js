@@ -1,6 +1,7 @@
 // Specialisations (PLAN-CORE-LOOP.md, slice 5b; DESIGN.md 2026-10-27 and 2026-10-28). Content
 // only: the rules live in core/specialisations.js. Gear lets anyone try a role; doing it, with the
-// stats for it, brings an offer from Joss, and the player decides. One per person.
+// stats for it, makes it ready to learn at a level-up (core/levelup.js, 2026-11-20; was Joss's offer). One per person. `offer` is
+// Joss's line about it, shown when a ready one is opened on the skills list.
 //
 // kit: the overwatch kit it's about. needs: base stats (before gear and traits). jobs: jobs done
 // on overwatch with that kit. effect: what changes on overwatch with that kit:
@@ -23,4 +24,3 @@ export const SPECIALISATIONS = {
   },
 };
 
-export const SNOOZE_DAYS = 14; // "Not yet": Joss asks again after this

@@ -10,8 +10,8 @@ import assert from 'node:assert/strict';
 import { createNewGame, SAVE_VERSION } from '../src/core/state.js';
 import { makeRng } from '../src/core/rng.js';
 import * as F from '../src/core/fight.js';
-import { PAYLOADS, BUILD_OFFER } from '../src/data/builds.js';
-import { eligiblePieces, offerPick } from '../src/core/builds.js';
+import { PAYLOADS } from '../src/data/builds.js';
+import { eligiblePieces } from '../src/core/builds.js';
 
 const foe = (n, kind = 'hired', o = {}) => ({ n, kind, hp: 30, max: 30, absorb: 0, cover: 'open', out: false, fled: false, deck: ['aim'], di: 0, approaching: false, group: 0, infected: null, burning: null, marked: null, exposed: null, shaken: null, ...o });
 /** A small fixed fight: jax (the build, combat 30) attacks enemy 1; the others hold. */
@@ -36,22 +36,12 @@ test('the vocabulary knows the four new statuses, onCrack and targetHas', () => 
   assert.equal(F.pieceHolds(null, { targetHas: 'marked' }, { marked: {} }), true);
 });
 
-test('the four new pieces are offered like the others (owner, 2026-11-19); a piece marked draft never is', () => {
+test('the four new pieces are learnable like the others (owner, 2026-11-19); a piece marked draft never is', () => {
   const op = { id: 'x', stats: { combat: 30, cool: 30, tech: 30, medical: 30 }, build: null };
   const offered = eligiblePieces(op).map((p) => p.id);
   for (const id of ['incendiary', 'spotter', 'breacher', 'rout', 'cytotoxic']) assert.ok(offered.includes(id), id);
   PAYLOADS.testdraft = { id: 'testdraft', name: 'Test draft', slot: 'payload', needs: {}, draft: true, pieces: [] };
   try { assert.ok(!eligiblePieces(op).some((p) => p.id === 'testdraft')); } finally { delete PAYLOADS.testdraft; }
-});
-
-test('an offer shows at most BUILD_OFFER.size pieces, the same for a runner and day, and over the days every piece comes up', () => {
-  const op = { id: 'x', stats: { combat: 30, cool: 30, tech: 30, medical: 30 }, build: null };
-  const all = eligiblePieces(op);
-  assert.ok(all.length > BUILD_OFFER.size);
-  assert.deepEqual(offerPick(all, op, 40).map((p) => p.id), offerPick(all, op, 40).map((p) => p.id));
-  const seen = new Set();
-  for (let day = 0; day < 200; day++) { const pick = offerPick(all, op, day); assert.equal(pick.length, BUILD_OFFER.size); for (const p of pick) seen.add(p.id); }
-  assert.deepEqual([...seen].sort(), all.map((p) => p.id).sort());
 });
 
 test('burning: a hit sets it, it ticks from the next round, and it never jumps when its host falls', () => {
