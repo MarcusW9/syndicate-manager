@@ -1,0 +1,28 @@
+// Overwatch: a runner NOT in the fight, on a perch. Rifle: 2 shots, open ground only, heat +1. Drone: 3 actions, sees indoors, neural load.
+// One shot or action a round while uses last. Today the stage draws one slow tracer from the perch point. Picture only.
+(function () {
+  const { wait, tween, P, ring, sparks, float, shake, dmg, grow, fade, glow, bolt, orb, ease, el, label, spawn, moveTo, lerp } = Kit;
+  const PERCH = [180, 8], T = 'g3', Y = '#f2d541';
+  const perch = (u, uses = 2, total = 2) => { const g = el('g', { transform: `translate(${PERCH[0]} ${PERCH[1]})` }, u.fx0); el('path', { d: 'M-8 6L0 -6L8 6Z', fill: '#242a35', stroke: '#8b93a3' }, g); const pips = Array.from({ length: total }, (_, i) => el('circle', { cx: (i - (total - 1) / 2) * 8, cy: 14, r: 2.4, fill: i < uses ? Y : '#222', stroke: Y, 'stroke-width': .8 }, g)); el('text', { class: 'tag-svg', y: 24, style: 'font-size:7px' }, g).textContent = 'PERCH'; return { g, pips }; };
+  const hit = (u, id, n) => { const b = P(u, id); sparks(u, b, '#fff3b0', 8, 12); ring(u, b, '#ffd860', 20, 420, 2); dmg(u, id, n); float(u, b, '−' + n, '#ffb0b8'); shake(u, id, 260); };
+  Kit.ability({
+    id: 'overwatch', name: 'Overwatch (perch)',
+    rules: 'A runner off the map on a perch: one shot a round from a rifle (open ground only, 2 uses, heat +1) or one action from a drone (sees indoors, 3 uses, neural load). Fired from the perch point (fire step with from: perch).',
+    variants: [
+      { id: 'now', tag: 'Now', name: 'One slow tracer from the top edge', note: 'A single tracer, a little slower than a crew shot, from a point on the map’s top edge. Nothing says who it is, how many shots are left, or that it is not part of the crew.',
+        async play(u) { await wait(300); await bolt(u, PERCH, P(u, T), '#f5b942', 330); hit(u, T, 13); await wait(500); } },
+      { id: 'glint', tag: 'Proposal', name: 'Glint, laser, crack', note: 'A tower marker at the top edge with pips for shots left. A lens glint twinkles, a thin red laser sight draws to the target and holds a beat, then one fast tracer and a "crack" ring where it lands as a pip goes dark. The glint and laser are the tell: someone is watching.',
+        async play(u) { const pr = perch(u, 2, 2); await wait(400); glow(u, 'K', '#000', 1); const gl = el('g', { transform: `translate(${PERCH[0]} ${PERCH[1] + 1})` }, u.fx); el('path', { d: 'M0 -7V7M-7 0H7', stroke: '#fff', 'stroke-width': 1.4, 'stroke-linecap': 'round' }, gl); tween(520, (t) => { gl.setAttribute('transform', `translate(${PERCH[0]} ${PERCH[1] + 1}) scale(${Math.sin(t * Math.PI)}) rotate(${t * 90})`); }).then(() => gl.remove()); await wait(560);
+          const b = P(u, T); const las = await grow(u, PERCH, b, 420, { stroke: '#ff3d5f', 'stroke-width': .8, opacity: .8 }); await wait(520); await bolt(u, PERCH, b, '#fff3b0', 110, 2); fade(las, 150); hit(u, T, 13); ring(u, b, '#fff', 30, 520, 1.2); pr.pips[1].setAttribute('fill', '#222'); label(u, [PERCH[0] + 34, PERCH[1] + 2], 'KADE', Y); await wait(900); } },
+      { id: 'scope', tag: 'Proposal', name: 'Scope closes, delayed crack', note: 'A big scope ring appears over the target and tightens with tick marks while the tower tag reads "KADE · OVERWATCH". The shot is instant; the crack arrives a beat later (sound lags light), so the player reads "that was the sniper" without a laser. Quieter, and the scope is also a useful "this enemy is being watched" mark before the shot.',
+        async play(u) { const pr = perch(u, 2, 2); const b = P(u, T); const tag = label(u, [PERCH[0] + 6, PERCH[1] + 36], 'KADE · OVERWATCH', Y); await wait(450);
+          const sc = el('g', { transform: `translate(${b[0]} ${b[1]})` }, u.fx); const ringS = el('circle', { r: 26, fill: 'none', stroke: Y, 'stroke-width': 1.4 }, sc); const ticks = el('path', { d: 'M-34 0H-14M14 0H34M0 -34V-14M0 14V34', stroke: Y, 'stroke-width': 1.4 }, sc);
+          await tween(800, (t) => { ringS.setAttribute('r', 26 - 14 * t); ticks.setAttribute('transform', `scale(${1 - .4 * t})`); }, ease.out); await wait(250);
+          await bolt(u, PERCH, b, '#fff', 70, 1.8); const fl = el('circle', { cx: b[0], cy: b[1], r: 3, fill: '#fff' }, u.fx); tween(160, (t) => fl.style.opacity = 1 - t).then(() => fl.remove()); await wait(380); hit(u, T, 13); ring(u, b, '#fff', 34, 600, 1.4); pr.pips[1].setAttribute('fill', '#222'); fade(sc, 400); await wait(600); fade(tag, 400); } },
+      { id: 'drone', tag: 'Proposal', name: 'Drone strafe (drone kit)', note: 'For the drone kit: a small drone token leaves the perch on a dotted pilot link, hovers over the target and chatters three quick ticks of fire, then flies home. It can be inside, so it reads as "a drone is in the room". The link line is the pilot’s tether (neural load).',
+        async play(u) { const pr = perch(u, 3, 3); const b = P(u, T); const d = spawn(u, 'D', PERCH, 'crew'); d.g.querySelector('circle').setAttribute('r', 6); d.g.querySelector('text').style.fontSize = '6px'; const link = el('line', { x1: PERCH[0], y1: PERCH[1], x2: PERCH[0], y2: PERCH[1], stroke: '#3de8d8', 'stroke-width': .8, 'stroke-dasharray': '2 3' }, u.fx);
+          const upd = () => { link.setAttribute('x2', d.pos[0]); link.setAttribute('y2', d.pos[1]); }; const tick = tween(2600, upd); const hover = [b[0] - 14, b[1] - 20]; await moveTo(d, hover, 650, ease.out);
+          for (let i = 0; i < 3; i++) { await bolt(u, d.pos, [b[0] + (i - 1) * 3, b[1]], '#b8fff6', 90, 1.2); sparks(u, b, '#fff3b0', 4, 7, 220); dmg(u, T, 4); await wait(110); } float(u, b, '−12', '#ffb0b8'); shake(u, T, 260); pr.pips[2].setAttribute('fill', '#222'); await wait(300); await moveTo(d, PERCH, 600, ease.io); await tick; fade(link, 200); fade(d.g, 250); } },
+    ],
+  });
+})();
