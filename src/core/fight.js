@@ -306,6 +306,8 @@ export function aimChance(b, r, { hunker = false, open = false } = {}) {
  * planning read (squad.js) both come through here, so shown is used.
  */
 export const fightDiff = (jobDiff) => jobDiff - FIGHT.ease;
+/** The difficulty a crew attack rolls against (before its step and the cover): the fight's, with its climb above attackClimbFrom scaled by attackClimbShare. */
+export const attackDiff = (diff) => (FIGHT.attackClimbShare !== 1 && diff > FIGHT.attackClimbFrom ? Math.round(FIGHT.attackClimbFrom + FIGHT.attackClimbShare * (diff - FIGHT.attackClimbFrom)) : diff);
 
 /** A roll's chance, exactly as the round makes it (d20 + value >= 10 + diff). */
 export const rollChance = (value, diff) => clamp((11 + value - diff) / 20, 0, 1);
@@ -873,9 +875,22 @@ export function playRound(b, rng) {
     }
   };
   // Put a status on a body: never on one that has it (no stacking, no renewing) or is immune to the payload; said with the status's own line.
+  // Three switched-off dot hooks (2026-11-20, the Cytotoxic sweep, scripts/sim-cytotoxic.mjs): no payload in the game sets them, so play is as
+  // before. `dot.stack` (n): a fresh hit from the same payload on a body it already ticks adds its base tick again, up to n times in all.
+  // `dot.scale` ({ stat, from, step, per, cap }): the tick grows `per` HP for each `step` points of the carrier's stat above `from`, to `cap`.
+  // `dot.grow` ({ per, cap }): the tick grows `per` HP after each tick, to `cap`. Measurement only until the owner picks one.
   const put = (t, st, from, by, who, extra) => {
-    if (t[st] || immuneTo(t.kind, from.id)) return;
+    if (immuneTo(t.kind, from.id)) return;
+    if (t[st]) {
+      const cur = t[st]; const n = from.dot?.stack;
+      if (!n || cur.payload !== from.id || (cur.stacks ?? 1) >= n) return;
+      cur.stacks = (cur.stacks ?? 1) + 1; cur.tick += from.dot.tick;
+      say(STATUS_LINE[st], STATUS_LINE[st], { who, enemy: E(t.n), word: from.word }, { ...extra, enemy: t.n, payload: from.id, status: st, stacked: cur.stacks });
+      return;
+    }
     t[st] = STATUS[st](from, by, b.round);
+    const sc = from.dot?.scale;
+    if (sc) { const r = b.runners.find((x) => x.id === by); const v = r ? sv(r, sc.stat) : 0; t[st].tick = Math.min(sc.cap, from.dot.tick + Math.max(0, Math.floor((v - sc.from) / sc.step)) * sc.per); }
     say(STATUS_LINE[st], STATUS_LINE[st], { who, enemy: E(t.n), word: from.word }, { ...extra, enemy: t.n, payload: from.id, status: st });
   };
 
@@ -917,7 +932,7 @@ export function playRound(b, rng) {
       const ow = b.overwatch;
       ow.left -= 1; if (boardingStage(b)) ow.vanShots += 1;
       b.heat += ow.heat ?? 0; result.neural += ow.neural ?? 0;
-      const x = roll(ow.value, b.diff + FIGHT.attackStep + FIGHT.overwatchStep + FIGHT.cover[e.cover], strongMargin());
+      const x = roll(ow.value, attackDiff(b.diff) + FIGHT.attackStep + FIGHT.overwatchStep + FIGHT.cover[e.cover], strongMargin());
       if (!x.ok) say('overwatch', 'overwatchMiss', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: false, damage: 0, roll: rollOf(x) });
       else {
         const pz = pierce(e, false);
@@ -950,7 +965,7 @@ export function playRound(b, rng) {
     const k = (key) => (burst ? key.replace('attack', 'bounce') : key);
     const flag = burst ? { burst: true } : {};
     if (e.out || e.fled) { if (!burst) say('attack', 'attackGone', { who: r.handle }, { ...named, enemy: e.n, success: false, damage: 0 }); return; }
-    const x = roll(sv(r, 'combat') + Math.min(FIGHT.missBonusCap, (r.misses ?? 0) * FIGHT.missBonus), b.diff + FIGHT.attackStep + FIGHT.cover[e.cover], r.strong);
+    const x = roll(sv(r, 'combat') + Math.min(FIGHT.missBonusCap, (r.misses ?? 0) * FIGHT.missBonus), attackDiff(b.diff) + FIGHT.attackStep + FIGHT.cover[e.cover], r.strong);
     r.misses = x.ok ? 0 : (r.misses ?? 0) + 1;
     if (!x.ok) { say('attack', k('attackMiss'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: false, damage: 0, roll: rollOf(x) }); return; }
     const pz = pierce(e, r.ap);
@@ -970,7 +985,7 @@ export function playRound(b, rng) {
     const near = (e) => (tu.at && pos(e) ? Math.hypot(pos(e)[0] - tu.at[0], pos(e)[1] - tu.at[1]) : 0);
     const e = [...enemiesUp(b)].sort((p, q) => near(p) - near(q) || p.n - q.n)[0];
     tu.left -= 1;
-    const x = roll(tu.aim, b.diff + FIGHT.attackStep + FIGHT.cover[e.cover], strongMargin());
+    const x = roll(tu.aim, attackDiff(b.diff) + FIGHT.attackStep + FIGHT.cover[e.cover], strongMargin());
     const meta = { actor: null, at: tu.at ?? null, enemy: e.n, left: tu.left };
     if (!x.ok) say('turret', 'turretMiss', { enemy: E(e.n) }, { ...meta, success: false, damage: 0, roll: rollOf(x) });
     else {
@@ -1047,13 +1062,17 @@ export function playRound(b, rng) {
     if (t.kind === 'aim') {
       const v = runner(b, t.target);
       if (!v || v.down || v.dead || v.withdrawn || v.aboard) continue;
-      const c = aimChance(b, v, { hunker: v.hunker, open: v.boarding });
+      // Switched off (2026-11-20, the Cytotoxic sweep): a payload's `dot.weaken` ({ aim, hitShare }) takes `aim` off an infected shooter's chance
+      // and scales its hit. No payload in the game sets it; if one ever does, the telegraph and the preview must show it too (shown risk = used risk).
+      const wk = e.infected && PAYLOADS[e.infected.payload]?.dot?.weaken;
+      const c = Math.max(0, aimChance(b, v, { hunker: v.hunker, open: v.boarding }) - (wk?.aim ?? 0));
       const hit = rng() < c;
       const slots = { enemy: E(e.n), who: v.handle };
       const named = { actor: null, target: v.id, enemy: e.n, chance: c, shieldedBy: t.shieldedBy };
       if (!hit) { say('shot', 'shotMiss', slots, { ...named, targetId: v.id, success: false, damage: 0 }); continue; }
       if (v.absorb > 0) { v.absorb -= 1; say('shot', 'shotAbsorbed', slots, { ...named, targetId: v.id, success: false, damage: 0 }); continue; } // plates: fights saved before v80 only
-      const lands = landsOn(v, t.hit); const soaked = t.hit - lands; if (soaked > 0) named.soaked = soaked;
+      const tHit = wk?.hitShare != null ? Math.round(t.hit * wk.hitShare) : t.hit;
+      const lands = landsOn(v, tHit); const soaked = tHit - lands; if (soaked > 0) named.soaked = soaked;
       const dmg = Math.min(v.hp, lands); v.hp -= dmg; b.hpLost += dmg;
       if (v.hp <= 0) {
         // A runner pulling out alone dies only when the player ordered that withdrawal by hand; otherwise death's door like anyone else.
@@ -1082,6 +1101,7 @@ export function playRound(b, rng) {
     const word = PAYLOADS[inf.payload]?.word ?? 'Vector';
     if (e.hp <= 0) { e.out = true; e[st] = null; defeated.push({ by: inf.by, enemy: e.n, how }); say('tick', outKey, { enemy: E(e.n), word }, { enemy: e.n, damage: inf.tick, dropped: true, left: 0, max: e.max, status: st }); fall(e, null, [inf, ...STATUSES.map((x) => e[x])]); }
     else say('tick', onKey, { enemy: E(e.n), word }, { enemy: e.n, damage: inf.tick, left: e.hp, max: e.max, status: st });
+    const gr = PAYLOADS[inf.payload]?.dot?.grow; if (gr) inf.tick = Math.min(gr.cap, inf.tick + gr.per); // switched off: see `put`
   }
   // 3c: the hired and the standard force break and run per group, when too few of that group are left (hired's threshold).
   // An enemy in its approach round never runs (this check comes before `approaching` is cleared below). A lone arrival never runs.

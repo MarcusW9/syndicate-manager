@@ -42,7 +42,7 @@ export const MOVES = {
 
 // Payloads: what a landed hit carries.
 //   dot: damage over time. A hit that gets past the plate (damage 1 or more) and leaves the target up infects it; a hit that only cracks a
-//        plate does not (owner, 2026-11-17).
+//        plate does not (owner, 2026-11-17), unless the payload also carries an onCrack piece (Cytotoxic does, 2026-11-20).
 //        `tick` HP lost at the end of each round (before the groups' flee checks, so a tick counts like any other loss), for
 //        `rounds` rounds (null: until the target dies; owner, 2026-11-16). It does not spread by itself; a re-hit does not stack
 //        and does not renew (the first infection stands).
@@ -56,9 +56,11 @@ export const MOVES = {
 export const PAYLOADS = {
   cytotoxic: {
     id: 'cytotoxic', name: 'Cytotoxic Vector', family: 'vector', word: 'Vector', dot: { tick: 10, rounds: null }, immune: ['synthetic'],
-    pieces: [{ when: 'onHit', who: 'target', what: { apply: 'infected' } }],
+    // Through armour (owner, 2026-11-20; docs/sims/cytotoxic-2026-11-20-identity.md): a hit that only cracks a plate infects too (the onCrack
+    // piece), so Cytotoxic is the answer to plates and Contagion to crowds. Supersedes the 2026-11-17 rule for this payload only.
+    pieces: [{ when: 'onHit', who: 'target', what: { apply: 'infected' } }, { when: 'onCrack', who: 'target', what: { apply: 'infected' } }],
     slot: 'payload', needs: {},
-    desc: 'A damaging hit infects a surviving target, dealing 10 HP at each round’s end until they fall. Cracking armour alone does not infect. Does not stack or affect machines.',
+    desc: 'A hit infects a surviving target, even one that only cracks their armour, dealing 10 HP at each round’s end until they fall. Does not stack or affect machines.',
     offer: '{op} could carry Cytotoxic Vector. Get it past the armour and it keeps eating away until the target drops.',
   },
   // Contagion Vector (draft, 2026-11-17): the owner's bio weapon (PROPOSAL-swarm-and-special-moves.md 2.3), a variation of the Cytotoxic Vector (family 'vector'): the same slot, so a
