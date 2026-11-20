@@ -22,7 +22,7 @@ import { SPECIAL_MOVES, SPECIAL_FAST_CUT, SPECIAL_LOOK_DEFAULT, ENEMY_LOOKS } fr
 export const PACE_K = { watch: 1, fast: 0.6, resolve: 0 };
 export const PACES = ['fast', 'watch', 'resolve'];
 // Step lengths at Watch, in ms.
-const MS = { enter: 900, move: 600, lean: 320, fire: 240, gap: 160, heal: 450, aura: 1100, spread: 900, tick: 560, tickOut: 700, dome: 420, patch: 1100, alarm: 1800, jam: 650, ping: 450, flank: 450, settle: 600 };
+const MS = { enter: 900, move: 600, lean: 320, fire: 240, gap: 160, heal: 450, aura: 1100, spread: 900, tick: 560, tickOut: 700, dome: 420, patch: 1100, alarm: 1800, rifleOw: 1600, droneOw: 2300, jam: 650, ping: 450, flank: 450, settle: 600 };
 const HIDDEN = new Set(['aboard', 'gone', 'fled']);
 
 const mid = (a, b) => [Math.round((a[0] + b[0]) / 2), Math.round((a[1] + b[1]) / 2)];
@@ -148,8 +148,10 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
       adv(fly + (sp ? sp.mv.gap : MS.gap), sp ? cut : 1);
       if (sp) sp.from = to;
     } else if (rule === 'overwatch' && l.guard != null) {
-      push({ do: 'fire', from: 'perch', to: enemyId(l.guard), hit: !!l.success && (l.damage ?? 0) > 0, cracked: !!l.cracked, fell: !!l.dropped, damage: l.damage ?? 0, amount: l.hpDamage ?? 0, left: l.hpLeft ?? null, strong: !!l.strong, wide, dur: ms(MS.fire * 1.4) });
-      adv(MS.fire * 1.4 + MS.gap);
+      // Overwatch (owner, 2026-11-20): the rifle's glint, laser and crack, or the drone's strafe; the pips at the perch are the uses left. The hit lands at `hitAt`.
+      const drone = l.kit === 'drone'; const owMs = drone ? MS.droneOw : MS.rifleOw;
+      push({ do: 'fire', from: 'perch', to: enemyId(l.guard), hit: !!l.success && (l.damage ?? 0) > 0, cracked: !!l.cracked, fell: !!l.dropped, pierced: !!l.pierced, damage: l.damage ?? 0, amount: l.hpDamage ?? 0, left: l.hpLeft ?? null, strong: !!l.strong, wide, kit: l.kit ?? null, uses: l.owLeft ?? null, of: l.owUses ?? null, hitAt: ms(owMs * (drone ? 0.62 : 0.96)), dur: ms(owMs) });
+      adv(owMs + MS.gap);
     } else if (rule === 'shot' && l.key === 'flanked') {
       push({ do: 'flank', id: l.targetId, by: enemyId(l.guard), dur: ms(MS.flank) });
       adv(MS.flank);
@@ -311,6 +313,11 @@ export function forceEffect(cue, kind) {
     const g = guard(a); const max = Math.max(3, g?.max ?? 3);
     if (g) { g.st = ['exposed']; g.max = max; g.hp = max - 2; }
     c.lines = [L({ kind: 'crew', rule: 'attack', key: 'attackHit', actor: crew[0], guard: a, success: true, damage: 2, hpDamage: 20, hpLeft: (max - 2) * 10, pierced: true })];
+  } else if (kind === 'overwatch' || kind === 'drone') {
+    // Overwatch (2026-11-20): one shot from the perch, the rifle's or the drone's.
+    const g = guard(a); const max = Math.max(3, g?.max ?? 3);
+    if (g) { g.max = max; g.hp = max - 1; }
+    c.lines = [L({ kind: 'overwatch', rule: 'overwatch', key: 'overwatchHit', actor: crew[0], guard: a, success: true, damage: 1, hpDamage: 10, hpLeft: (max - 1) * 10, kit: kind === 'drone' ? 'drone' : 'rifle', owLeft: kind === 'drone' ? 2 : 1, owUses: kind === 'drone' ? 3 : 2 })];
   } else if (kind === 'shield') {
     units[crew[1]].act = { kind: 'shield', target: crew[0] };
     c.lines = [L({ kind: 'guard', rule: 'shot', key: 'shotMiss', guard: a, targetId: crew[1], damage: 0, shieldedBy: crew[1] })];
@@ -675,6 +682,32 @@ export function createStage(svg, deps) {
     for (const [d, dx, dy, rot] of halves) { const g = gone(node('g', { transform: `translate(${b[0]} ${b[1]})` }), 650); const sh = node('path', { class: 'fs-shard', d }); sh.style.setProperty('--dx', dx); sh.style.setProperty('--dy', dy); sh.style.setProperty('--rot', rot); g.append(sh); }
     float(b, word('stage.pierced'), 'is-hit');
   }
+  // Overwatch (owner, 2026-11-20), off the map on the perch. Rifle: a lens glint, a thin red laser that holds a beat, then one fast tracer and a crack ring. Drone: a small drone flies out on a
+  // dotted pilot link, hovers over the target, chatters three ticks of fire and flies home. The perch shows pips for the uses left. All of it runs inside the step's `dur`.
+  function overwatch(a, b, s) {
+    const end = landing(b, s); const k = s.dur / (s.kit === 'drone' ? MS.droneOw : MS.rifleOw) || 1; const T = (x) => x * k; // k: this pace's share of the Watch length
+    const total = s.of ?? 2; const left = s.uses ?? 0;
+    const mark = gone(node('g', { class: 'fs-perch', transform: `translate(${a[0]} ${a[1]})` }), s.dur + 600);
+    mark.append(node('path', { d: 'M-7 5 L0 -5 L7 5Z', class: 'fs-perch__tower' }));
+    const pips = Array.from({ length: total }, (_, i) => node('circle', { class: `fs-perch__pip${i < left + 1 ? ' is-on' : ''}`, cx: (i - (total - 1) / 2) * 7, cy: 11, r: 2.2 }));
+    mark.append(...pips);
+    setTimeout(() => pips[left]?.classList.remove('is-on'), s.hitAt);
+    if (s.kit === 'drone') {
+      const d = gone(node('g', { class: 'fs-drone' }), s.dur + 100); d.append(node('circle', { r: 3.6, class: 'fs-drone__body' }), node('path', { d: 'M-5 -5L5 5M5 -5L-5 5', class: 'fs-drone__rotor' }));
+      const link = gone(node('line', { class: 'fs-drone__link', x1: a[0], y1: a[1], x2: a[0], y2: a[1] }), s.dur + 100);
+      const hover = [b[0] - 14, b[1] - 20]; const t0 = performance.now();
+      const at = (t) => (t < 0.28 ? lerp2(a, hover, 1 - Math.pow(1 - t / 0.28, 3)) : t < 0.62 ? hover : lerp2(hover, a, t > 0.95 ? 1 : (1 - Math.cos(((t - 0.62) / 0.33) * Math.PI)) / 2));
+      const step = (now) => { if (!d.isConnected) return; const t = Math.min(1, (now - t0) / s.dur); const p = at(t); d.setAttribute('transform', `translate(${p[0]} ${p[1]})`); link.setAttribute('x2', p[0]); link.setAttribute('y2', p[1]); if (t < 1) requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+      for (let i = 0; i < 3; i++) setTimeout(() => { gone(node('line', { class: 'fs-bolt', x1: hover[0], y1: hover[1], x2: end[0] + (i - 1) * 3, y2: end[1] }), 180); flash(end, 'fs-spark'); }, s.dur * (0.3 + i * 0.1));
+      return;
+    }
+    const glint = gone(node('g', { transform: `translate(${a[0]} ${a[1]})` }), T(560) + 100); glint.append(node('path', { class: 'fs-glint', d: 'M0 -7V7M-7 0H7' }));
+    glint.firstChild.style.animationDuration = `${T(560)}ms`;
+    setTimeout(() => { const l = gone(node('line', { class: 'fs-laser', x1: a[0], y1: a[1], x2: end[0], y2: end[1], pathLength: 100 }), T(1000)); l.style.animationDuration = `${T(420)}ms`; }, T(560));
+    setTimeout(() => { gone(node('line', { class: 'fs-tracer is-burst', x1: a[0], y1: a[1], x2: end[0], y2: end[1] }), 220); gone(node('circle', { class: 'fs-crack', cx: end[0], cy: end[1], r: 4 }), 700); }, s.hitAt - 40);
+  }
+  const lerp2 = (p, q, t) => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t];
   const ensure = (id, u, seed) => (id.startsWith('e:') ? foes.get(id) ?? foeToken(id, u, seed) : deps.tok(id));
 
   /** Run one step (the script says what and where). */
@@ -723,7 +756,8 @@ export function createStage(svg, deps) {
       case 'fire': {
         const a = pos(s.from); const b = pos(s.to);
         if (!a || !b) break;
-        if (s.look === 'ricochet') ricochet(a, b, s);
+        if (s.from === 'perch' && s.dur > 0 && !deps.reduced()) overwatch(a, b, s);
+        else if (s.look === 'ricochet') ricochet(a, b, s);
         else if (s.look === 'slash') slash(a, b, s);
         else if (s.look === 'ping') bolt(a, b, s);
         else tracer(a, b, s);
@@ -744,7 +778,7 @@ export function createStage(svg, deps) {
           if ((s.hit || s.fell) && s.amount) setTimeout(() => damageNumber(b, s.amount, s.strong), late);
           if (s.fell) { const foe = s.to.startsWith('e:'); setTimeout(() => { if (foe) knockout(b); setStance(s.to, s.dead ? 'dead' : 'down'); }, late); drawn[s.to] = { ...drawn[s.to], stance: s.dead ? 'dead' : 'down' }; body(b, s.to); setTimeout(() => float(b, word(foe ? 'stage.out' : 'stage.down'), foe ? 'is-down is-ko' : 'is-down'), late + 220); }
           else if (s.hit && !s.amount) setTimeout(() => float(b, word('stage.hit'), 'is-hit'), late);
-        }, s.dur);
+        }, s.hitAt ?? s.dur);
         break;
       }
       case 'flank': { const b = pos(s.id); flash(b, 'sp-flash--miss'); float(b, word('stage.flanked'), 'is-hit'); break; }

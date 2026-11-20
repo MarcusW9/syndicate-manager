@@ -8,6 +8,7 @@
   Kit.ability({
     id: 'overwatch', name: 'Overwatch (perch)',
     rules: 'A runner off the map on a perch: one shot a round from a rifle (open ground only, 2 uses, heat +1) or one action from a drone (sees indoors, 3 uses, neural load). Fired from the perch point (fire step with from: perch).',
+    decided: "Glint, laser, crack for the rifle and the drone strafe for the drone kit (owner, 2026-11-20). Built in fightstage.js overwatch().",
     variants: [
       { id: 'now', tag: 'Now', name: 'One slow tracer from the top edge', note: 'A single tracer, a little slower than a crew shot, from a point on the map’s top edge. Nothing says who it is, how many shots are left, or that it is not part of the crew.',
         async play(u) { await wait(300); await bolt(u, PERCH, P(u, T), '#f5b942', 330); hit(u, T, 13); await wait(500); } },

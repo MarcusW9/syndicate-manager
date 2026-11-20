@@ -26,6 +26,7 @@
 
 import { FIGHT, ENEMIES, ENEMY_HIT, SITE_ENEMIES, COUNT_BY_THREAT, TOUGHNESS_BY_THREAT, TOUGHNESS, OPPOSITION, CLOCKS, FIGHTS, THREATS, FIGHT_RECIPES } from '../data/fights.js';
 import { MOVES, PAYLOADS } from '../data/builds.js';
+import { GEAR } from '../data/gear.js';
 import { buildOf, immuneTo } from './builds.js';
 import { DILEMMAS } from '../data/dilemmas.js';
 import { lineText, kindWord as kindWordOf, enemyName, nameList } from './fighttext.js';
@@ -931,15 +932,16 @@ export function playRound(b, rng) {
     if (e) {
       const ow = b.overwatch;
       ow.left -= 1; if (boardingStage(b)) ow.vanShots += 1;
+      const owx = { owLeft: ow.left, owUses: GEAR[ow.kit]?.overwatch?.uses ?? null }; // for the stage's perch pips (picture only)
       b.heat += ow.heat ?? 0; result.neural += ow.neural ?? 0;
       const x = roll(ow.value, attackDiff(b.diff) + FIGHT.attackStep + FIGHT.overwatchStep + FIGHT.cover[e.cover], strongMargin());
-      if (!x.ok) say('overwatch', 'overwatchMiss', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: false, damage: 0, roll: rollOf(x) });
+      if (!x.ok) say('overwatch', 'overwatchMiss', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, ...owx, success: false, damage: 0, roll: rollOf(x) });
       else {
         const pz = pierce(e, false);
         const landedHit = landHit(e, hitOf(ow.damage), x.strong, pz.used, rng);
         const { cracked } = landedHit; const dmg = extraOf(e, pz, landedHit.dmg);
-        if (e.hp <= 0) { e.out = true; defeated.push({ by: ow.id, enemy: e.n, how: 'overwatch' }); say('overwatch', 'overwatchOut', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, dropped: true, roll: rollOf(x), cracked }); fall(e, null); }
-        else say('overwatch', dmg === 0 ? 'overwatchCrack' : 'overwatchHit', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: true, damage: dmg, roll: rollOf(x), left: e.hp, cracked });
+        if (e.hp <= 0) { e.out = true; defeated.push({ by: ow.id, enemy: e.n, how: 'overwatch' }); say('overwatch', 'overwatchOut', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, ...owx, success: true, damage: dmg, dropped: true, roll: rollOf(x), cracked }); fall(e, null); }
+        else say('overwatch', dmg === 0 ? 'overwatchCrack' : 'overwatchHit', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, ...owx, success: true, damage: dmg, roll: rollOf(x), left: e.hp, cracked });
       }
     }
   }
