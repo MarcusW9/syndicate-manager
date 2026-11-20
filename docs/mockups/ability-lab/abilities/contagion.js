@@ -5,6 +5,7 @@
   Kit.ability({
     id: 'contagion', name: 'Contagion jump',
     rules: 'When an infected enemy falls, the infection jumps to the first other enemy of its group that is up, not infected and not immune (spreadFrom in fight.js; spread step in fightstage.js).',
+    decided: "Spore burst. Built in the spread step.",
     variants: [
       { id: 'now', tag: 'Now', name: 'Arc and orb', note: 'A green arc and orb from the fallen body to the new host; the host’s ring flares.',
         async play(u) { const a = P(u, 'g3'), b = P(u, 'g4'); const r = inf(u, 'g3'); await wait(400); dmg(u, 'g3', 40); u.tok.g3.g.style.opacity = .3; await orb(u, a, b, 800, { fill: '#4ade80' }, .3); inf(u, 'g4'); ring(u, b, '#4ade80', 22, 450); await wait(500); } },

@@ -144,7 +144,7 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
       const to = enemyId(l.guard);
       if (sp && sp.look !== 'ping' && units[from] && units[to]) push({ do: 'camera', focus: [from, to] });
       const fly = sp ? MS.fire * sp.mv.slow : MS.fire;
-      push({ do: 'fire', from, to, hit: !!l.success && (l.damage ?? 0) > 0, cracked: !!l.cracked, fell: !!l.dropped, damage: l.damage ?? 0, amount: l.hpDamage ?? 0, left: l.hpLeft ?? null, strong: !!l.strong, wide, ...(sp ? { burst: true, look: sp.look } : {}), dur: ms(fly * (sp ? cut : 1)) });
+      push({ do: 'fire', from, to, hit: !!l.success && (l.damage ?? 0) > 0, cracked: !!l.cracked, fell: !!l.dropped, damage: l.damage ?? 0, amount: l.hpDamage ?? 0, left: l.hpLeft ?? null, strong: !!l.strong, wide, ...(sp ? { burst: true, look: sp.look, star: sp.star } : {}), dur: ms(fly * (sp ? cut : 1)) });
       adv(fly + (sp ? sp.mv.gap : MS.gap), sp ? cut : 1);
       if (sp) sp.from = to;
     } else if (rule === 'overwatch' && l.guard != null) {
@@ -425,10 +425,22 @@ export function createStage(svg, deps) {
   // Part B's statuses (2026-11-19), drawn from the round's snapshot (`st`) and nothing else, one look each so they read apart at phone size:
   // burning an orange flickering ring, marked a red crosshair, exposed a yellow broken plate, shaken a jittering violet dotted ring.
   const STATUS_LOOK = {
-    burning: () => node('circle', { r: 11.8, class: 'fs-st fs-st--burning' }),
-    marked: () => node('path', { class: 'fs-st fs-st--marked', d: 'M0 -13.5 V-10 M0 13.5 V10 M-13.5 0 H-10 M13.5 0 H10' }),
+    burning: () => { // a ring with embers that keep rising off it (owner, 2026-11-20)
+      const g = node('g', { class: 'fs-st fs-st--burning' });
+      g.append(node('circle', { r: 11.8 }), ...[-5, 0, 5].map((dx, i) => { const e = node('circle', { class: 'fs-ember', r: 1.4, cx: dx, cy: 6 }); e.style.setProperty('--dx', `${dx * 0.5}px`); e.style.animationDelay = `${i * 0.4}s`; return e; }));
+      return g;
+    },
+    marked: () => { // the reticle locks on, then stays as a crosshair with a diamond tag (owner, 2026-11-20)
+      const g = node('g', { class: 'fs-st fs-st--marked is-lock' });
+      g.append(node('path', { d: 'M0 -13.5 V-10 M0 13.5 V10 M-13.5 0 H-10 M13.5 0 H10' }), node('path', { class: 'fs-mark-dia', d: 'M0 -21 L3.5 -17.5 L0 -14 L-3.5 -17.5Z' }));
+      return g;
+    },
     exposed: () => node('path', { class: 'fs-st fs-st--exposed', d: 'M-10.4 -4 A11 11 0 0 1 -3 -10.6 M3 -10.6 A11 11 0 0 1 10.4 -4' }),
-    shaken: () => node('circle', { r: 13.2, class: 'fs-st fs-st--shaken' }),
+    shaken: () => { // trembling ring and a bang over the head (owner, 2026-11-20)
+      const g = node('g', { class: 'fs-st fs-st--shaken' });
+      g.append(node('circle', { r: 13.2 }), node('text', { class: 'fs-bang', x: 0, y: -15 }, '!'));
+      return g;
+    },
   };
   function statuses(id, list = []) {
     const g = foes.get(id);
@@ -562,7 +574,7 @@ export function createStage(svg, deps) {
   const gone = (el, ms) => { fx.append(el); setTimeout(() => el.remove(), ms); return el; };
   const toward = (a, b, k) => { const d = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1; return [a[0] + ((b[0] - a[0]) / d) * k, a[1] + ((b[1] - a[1]) / d) * k]; };
   const domeOf = new Map(); // protector id -> the dome's group, while the exchange plays
-  const clearDomes = () => { for (const g of domeOf.values()) g.remove(); domeOf.clear(); };
+  const clearDomes = () => { for (const g of domeOf.values()) { g.remove(); if (g._back) put(host(g._back), drawn[g._back]?.at, 0); } domeOf.clear(); };
   /** A curved path from a to b, bowing to one side (the arcs of the hop, the shield and the jam). */
   const arcPath = (a, b, bow = 0.28) => { const m = mid(a, b); const dx = b[0] - a[0]; const dy = b[1] - a[1]; return { d: `M${a[0]} ${a[1]} Q${m[0] - dy * bow} ${m[1] + dx * bow} ${b[0]} ${b[1]}`, c: [m[0] - dy * bow, m[1] + dx * bow] }; };
   /** A point on that arc (t 0..1), so an orb can follow it. */
@@ -618,6 +630,9 @@ export function createStage(svg, deps) {
   // Slash: afterimages of the star along the dash (the star's own token stays on its spot), and an arc where the blade lands.
   function slash(a, b, s) {
     const end = landing(b, s);
+    // The star's own token runs to each target (owner, 2026-11-20, superseding 'only the ghost travels') and goes home at specialEnd.
+    const runner = s.star && host(s.star);
+    if (runner && s.dur > 0 && !deps.reduced()) put(runner, toward(end, a, 7), s.dur * 0.85);
     const ang = (Math.atan2(end[1] - a[1], end[0] - a[0]) * 180) / Math.PI;
     for (let k = 1; k <= 3; k++) {
       const at = [a[0] + (end[0] - a[0]) * (k / 3.4), a[1] + (end[1] - a[1]) * (k / 3.4)];
@@ -628,7 +643,19 @@ export function createStage(svg, deps) {
   // Ping: a quick thin bolt from the star.
   function bolt(a, b, s) {
     const end = landing(b, s);
-    gone(node('line', { class: 'fs-bolt', x1: a[0], y1: a[1], x2: end[0], y2: end[1] }), Math.max(160, s.dur + 120));
+    if (deps.reduced() || s.dur <= 0) { gone(node('line', { class: 'fs-bolt', x1: a[0], y1: a[1], x2: end[0], y2: end[1] }), 200); return; }
+    // Lightning (owner, 2026-11-20): a jagged bolt that re-jags a few times as it holds, with a fork. Seeded, so a replay looks the same.
+    const dx = end[0] - a[0]; const dy = end[1] - a[1]; const len = Math.hypot(dx, dy) || 1; const nx = -dy / len; const ny = dx / len;
+    const jag = (f) => {
+      const pts = [a];
+      for (let i = 1; i < 8; i++) { const o = (hash01(a[0] + f, end[0], end[1] + i, 'zig') - 0.5) * 12; pts.push([a[0] + (dx * i) / 8 + nx * o, a[1] + (dy * i) / 8 + ny * o]); }
+      pts.push(end);
+      const f3 = pts[3]; const fork = [f3[0] + nx * 9 + (dx / len) * 8, f3[1] + ny * 9 + (dy / len) * 8];
+      return `M${pts.map((p) => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join('L')}M${f3[0].toFixed(1)} ${f3[1].toFixed(1)}L${fork[0].toFixed(1)} ${fork[1].toFixed(1)}`;
+    };
+    const path = gone(node('path', { class: 'fs-lightning', d: jag(0) }), Math.max(260, s.dur + 200));
+    for (let f = 1; f <= 3; f++) setTimeout(() => path.setAttribute('d', jag(f)), f * 70);
+    flash(a, 'fs-spark');
   }
 
   const ensure = (id, u, seed) => (id.startsWith('e:') ? foes.get(id) ?? foeToken(id, u, seed) : deps.tok(id));
@@ -717,12 +744,9 @@ export function createStage(svg, deps) {
         const glow2 = gone(node('circle', { class: 'fs-aura fs-aura--late', cx: m[0], cy: m[1], r: 9 }), dur * 0.7); // a second ring a beat behind: the glow pulses
         glow2.style.animationDuration = `${dur * 0.6}ms`; glow2.style.animationDelay = `${dur * 0.1}ms`;
         if (s.to === s.id) { setTimeout(() => { gone(node('circle', { class: 'sp-ring sp-ring--ok', cx: t[0], cy: t[1], r: 9 }), 760); land(); }, dur * 0.55); break; } // healing themself: nothing crosses
-        setTimeout(() => {
-          const orb = gone(node('circle', { class: 'fs-orb', cx: m[0], cy: m[1], r: 2.2 }), dur * 0.45);
-          orb.style.transition = `transform ${dur * 0.3}ms ease-in`;
-          requestAnimationFrame(() => { orb.style.transform = `translate(${t[0] - m[0]}px, ${t[1] - m[1]}px)`; });
-        }, dur * 0.5);
-        setTimeout(() => { gone(node('circle', { class: 'sp-ring sp-ring--ok', cx: t[0], cy: t[1], r: 9 }), 760); land(); }, dur * 0.8);
+        // A healing pulse (owner, 2026-11-20): a green ring spreads from the medic to the patient, who gets the ring and plus signs rising.
+        setTimeout(() => { const w = gone(node('circle', { class: 'fs-groupwave', cx: m[0], cy: m[1], r: Math.hypot(t[0] - m[0], t[1] - m[1]) + 8 }), dur * 0.55); w.style.animationDuration = `${dur * 0.5}ms`; }, dur * 0.4);
+        setTimeout(() => { gone(node('circle', { class: 'sp-ring sp-ring--ok', cx: t[0], cy: t[1], r: 9 }), 760); land(); for (let k = 0; k < 3; k++) setTimeout(() => float([t[0] + (k - 1) * 7, t[1] + (k % 2) * 4], '+', 'is-heal'), k * 90); }, dur * 0.8);
         break;
       }
       case 'ping': {
@@ -746,14 +770,17 @@ export function createStage(svg, deps) {
         infect(s.from, false);
         if (deps.reduced() || s.dur <= 0) { land(); break; }
         const dur = Math.max(700, s.dur);
-        const { d, c } = arcPath(a, t, 0.3);
-        gone(node('path', { class: 'fs-hop', d, pathLength: 100 }), dur * 0.72);
-        for (let k = 0; k < 4; k++) setTimeout(() => { const sp = gone(node('circle', { class: 'fs-spore', cx: a[0], cy: a[1], r: 1.2 }), 720); sp.style.setProperty('--dx', `${(k - 1.5) * 4}px`); sp.style.setProperty('--dy', `${-4 - k * 2}px`); }, k * 60); // spores lift off the body
-        const orb = gone(node('circle', { class: 'fs-hopper', r: 2.4, cx: 0, cy: 0 }), dur * 0.7);
-        const path = [0, 0.2, 0.4, 0.6, 0.8, 1].map((u) => onArc(a, c, t, u));
-        if (orb.animate) orb.animate(path.map((p) => ({ transform: `translate(${p[0]}px, ${p[1]}px)` })), { duration: dur * 0.5, delay: dur * 0.1, easing: 'ease-in-out', fill: 'both' });
-        else put(orb, t, 0);
-        setTimeout(land, dur * 0.6);
+        // Spores (owner, 2026-11-20): the body bursts into a cloud that drifts over to the new host, each on its own arc.
+        for (let k = 0; k < 6; k++) setTimeout(() => { const sp = gone(node('circle', { class: 'fs-spore', cx: a[0], cy: a[1], r: 1.2 }), 720); sp.style.setProperty('--dx', `${(k - 2.5) * 4}px`); sp.style.setProperty('--dy', `${-4 - k * 2}px`); }, k * 40);
+        for (let k = 0; k < 9; k++) {
+          const h = hash01(a[0], t[0], t[1] + k, 'spore'); const tj = [t[0] + (hash01(a[1], t[0], k, 'sx') - 0.5) * 16, t[1] + (hash01(a[0], t[1], k, 'sy') - 0.5) * 16];
+          const { c } = arcPath(a, tj, (h - 0.5) * 0.9);
+          const sp = gone(node('circle', { class: 'fs-hopper', r: 1.3 + h * 1.3, cx: 0, cy: 0 }), dur * 0.9);
+          const path = [0, 0.2, 0.4, 0.6, 0.8, 1].map((u) => onArc(a, c, tj, u));
+          if (sp.animate) sp.animate(path.map((p) => ({ transform: `translate(${p[0]}px, ${p[1]}px)` })), { duration: dur * (0.4 + h * 0.15), delay: dur * (0.08 + k * 0.03), easing: 'ease-in-out', fill: 'both' });
+          else put(sp, tj, 0);
+        }
+        setTimeout(land, dur * 0.7);
         break;
       }
       case 'tick': {
@@ -765,7 +792,8 @@ export function createStage(svg, deps) {
           if (s.fell) { knockout(b); setStance(s.to, 'down'); drawn[s.to] = { ...drawn[s.to], stance: 'down' }; body(b, s.to); infect(s.to, false); statuses(s.to, []); float(b, word('stage.out'), 'is-down is-ko'); }
         };
         if (deps.reduced() || s.dur <= 0) { apply(); break; }
-        for (let k = 0; k < 3; k++) setTimeout(() => gone(node('circle', { class: s.burn ? 'fs-drip fs-drip--ember' : 'fs-drip', cx: b[0] - 3 + k * 3, cy: b[1] - 4 + (k % 2), r: 1.3 }), 700), k * 90);
+        if (s.burn) for (let k = 0; k < 8; k++) setTimeout(() => { const e = gone(node('circle', { class: 'fs-ember fs-ember--burst', cx: b[0] - 6 + k * 1.7, cy: b[1] + 3, r: 1.6 }), 800); e.style.setProperty('--dx', `${(k - 3.5) * 1.6}px`); }, k * 70);
+        else for (let k = 0; k < 3; k++) setTimeout(() => gone(node('circle', { class: s.burn ? 'fs-drip fs-drip--ember' : 'fs-drip', cx: b[0] - 3 + k * 3, cy: b[1] - 4 + (k % 2), r: 1.3 }), 700), k * 90);
         const ring = host(s.to)?.querySelector(s.burn ? ':scope > .fs-st--burning' : ':scope > .fs-infect');
         if (ring) { ring.classList.remove('is-flare'); void ring.getBoundingClientRect(); ring.classList.add('is-flare'); }
         setTimeout(() => {
@@ -777,17 +805,24 @@ export function createStage(svg, deps) {
         break;
       }
       case 'dome': {
-        // The shield (2026-11-17): a soft dome over who is covered and an arc to them from the protector, held over the exchange.
+        // The shield (2026-11-17), as a plate (owner, 2026-11-20): the protector steps in front of who is covered, toward the enemy line,
+        // and a bright plate holds in front of them over the exchange; it flares when the shot lands and they step back at domeEnd.
         const a = pos(s.id); const t = pos(s.to);
         if (!a || !t || s.dur <= 0 || deps.reduced()) break;
         domeOf.get(s.id)?.remove();
-        const g = node('g', { class: 'fs-dome' });
-        g.append(node('circle', { class: 'fs-dome__field', cx: t[0], cy: t[1], r: 11 }), node('path', { class: 'fs-dome__arc', d: arcPath(a, t, 0.25).d, pathLength: 60 }));
+        const hostiles = Object.entries(drawn).filter(([id, d]) => id.startsWith('e:') && !HIDDEN.has(d.stance)).map(([, d]) => d.at);
+        const cx = hostiles.length ? hostiles.reduce((n, p) => n + p[0], 0) / hostiles.length : t[0] + 1; const cy = hostiles.length ? hostiles.reduce((n, p) => n + p[1], 0) / hostiles.length : t[1];
+        const front = toward(t, [cx, cy], 1); const ux = front[0] - t[0]; const uy = front[1] - t[1];
+        const deg = (Math.atan2(uy, ux) * 180) / Math.PI;
+        if (s.id !== s.to) put(host(s.id), [t[0] + ux * 9, t[1] + uy * 9], s.dur);
+        const g = node('g', { class: 'fs-dome', transform: `translate(${t[0] + ux * 19} ${t[1] + uy * 19}) rotate(${deg})` });
+        g.append(node('path', { class: 'fs-dome__plate', d: 'M0 -11 Q8 0 0 11' }));
+        g._back = s.id;
         fx.append(g); domeOf.set(s.id, g);
         break;
       }
       case 'domeEnd': {
-        for (const g of domeOf.values()) { g.classList.add('is-end'); setTimeout(() => g.remove(), 340); }
+        for (const g of domeOf.values()) { g.classList.add('is-end'); setTimeout(() => g.remove(), 340); if (g._back) put(host(g._back), drawn[g._back]?.at, 300); }
         domeOf.clear();
         break;
       }
@@ -816,14 +851,14 @@ export function createStage(svg, deps) {
         break;
       }
       case 'fall': { const b = pos(s.id); if (s.id.startsWith('e:')) knockout(b); setStance(s.id, s.dead ? 'dead' : 'down'); if (drawn[s.id]) drawn[s.id] = { ...drawn[s.id], stance: s.dead ? 'dead' : 'down' }; if (b) body(b, s.id); break; }
-      case 'leave': { const g = host(s.id); put(g, s.at, s.dur); setTimeout(() => setStance(s.id, s.stance, true), s.dur); if (!s.id.startsWith('e:')) deps.pin(s.id, null); drawn[s.id] = { at: s.at, stance: s.stance }; break; }
+      case 'leave': { const g = host(s.id); const from = pos(s.id); if (s.id.startsWith('e:') && from && !deps.reduced() && s.dur > 0) for (let k = 0; k < 5; k++) setTimeout(() => gone(node('circle', { class: 'fs-dust', cx: from[0] + (s.at[0] - from[0]) * (k / 5), cy: from[1] + (s.at[1] - from[1]) * (k / 5) + 5, r: 2.2 }), 500), (s.dur * k) / 6); // the fled kick up dust on the run
+        put(g, s.at, s.dur); setTimeout(() => setStance(s.id, s.stance, true), s.dur); if (!s.id.startsWith('e:')) deps.pin(s.id, null); drawn[s.id] = { at: s.at, stance: s.stance }; break; }
       case 'special': {
         // Letterbox bars and slow motion while the move plays (not at Resolve or with reduced motion: there it cuts).
         const b = pos(s.id);
         if (b) gone(node('circle', { class: 'fs-special', cx: b[0], cy: b[1], r: 8 }), Math.max(600, s.dur));
         if (s.dur > 0 && !deps.reduced()) { cinema(true); spot([s.id, ...(s.targets ?? [])]); }
         ricoClear();
-        if (s.look === 'slash' && b && s.dur > 0) { const t = pos(s.targets?.[0]); if (t) put(host(s.id), toward(b, t, 4), s.dur / 2); } // a lunge; the star stays in their cover
         deps.caption?.(word(s.key, s.slots), 'special');
         break;
       }

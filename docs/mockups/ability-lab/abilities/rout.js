@@ -4,6 +4,7 @@
   Kit.ability({
     id: 'rout', name: 'Rout (Fear)',
     rules: 'A hit shakes the target (shaken in core/fight.js); at the round’s end a shaken enemy may break and flee (the shaken flee check).',
+    decided: "Tremble (violet ring with a bang over the head); the fled kick up dust on the run. Built.",
     variants: [
       { id: 'now', tag: 'Now', name: 'Shaken tint', note: 'A shake and a tint; the flee is a plain fade out.',
         async play(u) { await bolt(u, P(u, 'V'), P(u, 'g4'), '#c084fc', 220); await shake(u, 'g4', 500); const g = u.tok.g4.g; g.style.transition = 'opacity .5s'; g.style.opacity = 0; await wait(600); } },

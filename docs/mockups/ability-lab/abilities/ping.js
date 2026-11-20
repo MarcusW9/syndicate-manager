@@ -6,6 +6,7 @@
   Kit.ability({
     id: 'ping', name: 'Ping',
     rules: 'A tech’s special: hits up to 3 enemies in the rules’ order, each its own attack roll, all from the star (data/fightLooks.js ping).',
+    decided: "Shockwave, then jagged lightning bolts (fs-lightning) instead of straight lines. Built.",
     variants: [
       { id: 'now', tag: 'Now', name: 'Shockwave + thin bolts', note: 'One ring, then quick thin bolts from the star.',
         async play(u, svg) { bars(svg, true, 'JOSS · PING'); ring(u, P(u, 'J'), '#3de8d8', 230, 650, 1.2); await wait(700); for (let i = 0; i < 3; i++) { await bolt(u, P(u, 'J'), P(u, T[i]), '#b8fff6', 140, 1.2); hurt(u, i); await wait(70); } await wait(600); bars(svg, false); } },

@@ -5,6 +5,7 @@
   Kit.ability({
     id: 'incendiary', name: 'Incendiary rounds',
     rules: 'A hit that gets past the plate sets the target burning: −10 HP at the round’s end, for 2 rounds (burning in core/fight.js; tick step in fightstage.js).',
+    decided: "Rising embers on the burning status and a burst at each tick. Built.",
     variants: [
       { id: 'now', tag: 'Now', name: 'Flame ring + tick', note: 'An orange ring on the target, a drip and a pip loss at each tick.',
         async play(u) { const t = P(u, 'g3'); await bolt(u, P(u, 'V'), t, '#ffb040', 220); ring(u, t, '#ff6a2a', 20, 500, 2); for (let i = 0; i < 2; i++) { await wait(500); ring(u, t, '#ff6a2a', 16, 400); dmg(u, 'g3', 10); float(u, t, '−10', '#ff9a4a'); } await wait(300); } },

@@ -2966,3 +2966,20 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .levelup strong { font: 700 0.85rem var(--display, inherit); text-transform: uppercase; letter-spacing: 0.1em; color: var(--warn); }
 .levelup span { font-size: 0.9rem; }
 .skillrow__learn { margin-top: 8px; }
+
+/* Ability looks chosen in the Ability Lab (2026-11-20, docs/mockups/ABILITY-MOCKUPS.md). */
+.fs-lightning { fill: none; stroke: #c9fff8; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; filter: drop-shadow(0 0 2px #3de8d8) drop-shadow(0 0 5px #3de8d8); }
+.fs-dome__plate { fill: none; stroke: #cfe8ff; stroke-width: 3.2; stroke-linecap: round; pointer-events: none; transform-box: fill-box; transform-origin: center; filter: drop-shadow(0 0 3px #9fd0ff); animation: fs-dome-rise 0.3s ease-out both, fs-dome-hum 1.4s ease-in-out 0.3s infinite; }
+.fs-dome.is-flare .fs-dome__plate { animation: fs-plate-flare 0.5s ease-out 1, fs-dome-hum 1.4s ease-in-out 0.5s infinite; }
+@keyframes fs-plate-flare { 0% { stroke: #fff; stroke-width: 5.5; transform: scale(1); } 35% { stroke: #fff; transform: scale(1.25); } 100% { stroke: #cfe8ff; stroke-width: 3.2; transform: scale(1); } }
+.fs-dome.is-end .fs-dome__plate { animation: fs-dome-fade 0.32s ease-in forwards; }
+.sp-token > .fs-st--burning .fs-ember, .fs-ember { fill: #ffb040; stroke: none; opacity: 0; pointer-events: none; filter: drop-shadow(0 0 2px #ff6a2a); transform-box: fill-box; transform-origin: center; animation: fs-ember-rise 1.2s ease-out infinite; }
+.fs-ember--burst { animation: fs-ember-rise 0.8s ease-out forwards; }
+@keyframes fs-ember-rise { 0% { transform: translate(0, 0) scale(1); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(var(--dx, 0px), -17px) scale(0.3); opacity: 0; } }
+.sp-token > .fs-st--marked.is-lock { animation: fs-lock 0.45s ease-out 1; }
+@keyframes fs-lock { from { transform: rotate(90deg) scale(2.1); opacity: 0; } to { transform: none; opacity: 1; } }
+.sp-token > .fs-st--marked .fs-mark-dia { fill: #ff4d5e; stroke: none; }
+.sp-token > .fs-st--shaken .fs-bang { fill: #c9a8ff; stroke: none; font: 700 7px Rajdhani, sans-serif; text-anchor: middle; }
+.fs-dust { fill: #7b8394; pointer-events: none; transform-box: fill-box; transform-origin: center; animation: fs-dust 0.5s ease-out forwards; }
+@keyframes fs-dust { from { transform: scale(0.6); opacity: 0.8; } to { transform: scale(2.2); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .fs-lightning, .fs-dome__plate, .fs-ember, .fs-dust, .sp-token > .fs-st--marked.is-lock { animation: none; } .fs-dust { display: none; } .fs-ember { opacity: 0; } }

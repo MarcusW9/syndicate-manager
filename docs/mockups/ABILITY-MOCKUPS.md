@@ -15,7 +15,7 @@ Rules for a good mockup: same scene on every card so looks compare fairly; each 
 
 - `docs/mockups/ability-lab/ability-lab.html` the page. Open it in a browser, or publish the folder as an artifact (`publish_files`, all files, `index.html` = a copy of `ability-lab.html`).
 - `docs/mockups/ability-lab/kit.js` the shared helpers (`tween`, `ring`, `sparks`, `bolt`, `grow`, `orb`, `glow`, `float`, `bars`, `focus`, the standard scene, the picks panel). Add a helper here when two abilities want it.
-- `docs/mockups/ability-lab/abilities/<id>.js` one file per ability, one `Kit.ability({ id, name, rules, variants })` call. Done so far: ricochet (decided: comet), slash, ping, shield, aura, jam, incendiary, contagion, mark, rout.
+- `docs/mockups/ability-lab/abilities/<id>.js` one file per ability, one `Kit.ability({ id, name, rules, variants })` call. Done and decided (all built, 2026-11-20): ricochet, slash, ping, shield, aura, jam, incendiary, contagion, mark, rout. Each file's `decided:` says what shipped.
 - `scripts/new-ability-mockup.mjs <id> "<Name>" "<rules line>"` scaffolds a new ability file (a Now card and two blank proposals) and adds it to the page.
 - `docs/mockups/2026-11-20-fight-readability.html` the first, one-off version (fight pacing plus ricochet), kept as the record.
 

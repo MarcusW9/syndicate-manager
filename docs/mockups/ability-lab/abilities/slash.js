@@ -6,6 +6,7 @@
   Kit.ability({
     id: 'slash', name: 'Slash',
     rules: 'A melee-style special: hits up to 3 enemies in the rules’ order, each its own attack roll. The star stays in cover; only the picture travels (data/fightLooks.js slash).',
+    decided: "Ghost dash + arc, and the star's own token runs to each target and goes home (owner, 2026-11-20). Built in fightstage.js slash().",
     variants: [
       { id: 'now', tag: 'Now', name: 'Ghost dash + arc', note: 'Three faint afterimages along each dash, a small arc where the blade lands.',
         async play(u, svg) { bars(svg, true, 'KADE · STRIKE'); let from = P(u, 'K'); await wait(700);

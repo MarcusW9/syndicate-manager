@@ -4,6 +4,7 @@
   Kit.ability({
     id: 'mark', name: 'Mark (Spotter’s Eye)',
     rules: 'A hit marks the target (marked in core/fight.js); the crew’s next shots at it are easier/stronger until it clears.',
+    decided: "Reticle lock (slams on, then a crosshair with a diamond tag). Built; the converging lines from shooters are not built yet.",
     variants: [
       { id: 'now', tag: 'Now', name: 'Marker ring', note: 'A marker ring on the target (the status look from 2026-11-19).',
         async play(u) { await bolt(u, P(u, 'V'), P(u, 'g1'), '#f2d541', 220); const p = P(u, 'g1'); el('circle', { cx: p[0], cy: p[1], r: 14, fill: 'none', stroke: '#f2d541', 'stroke-width': 1.6 }, u.fx); await wait(900); } },

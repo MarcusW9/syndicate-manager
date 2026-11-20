@@ -4,6 +4,7 @@
   Kit.ability({
     id: 'shield', name: 'Shield (protect)',
     rules: 'A protector covers an ally: a shot at the ally is taken by the protector’s plates (shieldedBy / dome in fightstage.js).',
+    decided: "Step in front: the plate. Built in the dome step.",
     variants: [
       { id: 'now', tag: 'Now', name: 'Dome over the exchange', note: 'A plain dome around the protector, flared when the shot lands.',
         async play(u) { const M = P(u, 'M'); const d = el('circle', { cx: M[0], cy: M[1], r: 18, fill: 'rgba(61,232,216,.12)', stroke: '#3de8d8', 'stroke-width': 1.4 }, u.fx); await wait(400); await bolt(u, P(u, 'g3'), M, '#ff8a98', 300); ring(u, M, '#3de8d8', 26, 400); float(u, M, 'ABSORBED', '#3de8d8'); await wait(500); fade(d, 400); } },

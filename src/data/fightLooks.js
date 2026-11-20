@@ -34,7 +34,7 @@ export const SPECIAL_LOOK_DEFAULT = 'ricochet';
 export const SPECIAL_MOVES = {
   ricochet: { title: 'stage.special.ricochet', lead: 900, slow: 2.6, gap: 300, after: 900 },
   slash: { title: 'stage.special.slash', lead: 900, slow: 1.8, gap: 180, after: 600 },
-  ping: { title: 'stage.special.ping', lead: 700, wave: 650, slow: 0.9, gap: 70, after: 600 },
+  ping: { title: 'stage.special.ping', lead: 700, wave: 650, slow: 1.3, gap: 110, after: 600 },
 };
 export const SPECIAL_FAST_CUT = 0.6; // Fast plays a special move at this share of its Watch length (on top of the pace's own rate)
 

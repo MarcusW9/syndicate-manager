@@ -5,6 +5,7 @@
   Kit.ability({
     id: 'jam', name: 'Jam',
     rules: 'A tech who can jam cuts an enemy’s radio call so no reinforcements arrive (dilemma option; ping step with targets in fightstage.js).',
+    decided: "Now is fine: no change.",
     variants: [
       { id: 'now', tag: 'Now', name: 'Ping with broken signal', note: 'A ping ring from the tech; the caller’s ring flickers.',
         async play(u) { ring(u, P(u, 'J'), '#3de8d8', 200, 650, 1.2); await wait(650); ring(u, P(u, 'g3'), '#ff8a98', 18, 400); float(u, P(u, 'g3'), 'JAMMED', '#3de8d8'); await wait(500); } },

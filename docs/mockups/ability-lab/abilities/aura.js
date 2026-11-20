@@ -4,6 +4,7 @@
   Kit.ability({
     id: 'aura', name: 'Aura / heal', scene: { hurt: { V: 0.35, M: 0.55 } },
     rules: 'A medic’s help that lands: the patient’s HP rises; a miss is a red ring (aura step in fightstage.js).',
+    decided: "Healing pulse. Built in the aura step.",
     variants: [
       { id: 'now', tag: 'Now', name: 'Orb to the patient', note: 'The medic glows, an orb arcs to the patient, the bar fills.',
         async play(u) { glow(u, 'J', '#4ade80', 700); await wait(300); await orb(u, P(u, 'J'), P(u, 'V'), 650, { fill: '#4ade80' }); ring(u, P(u, 'V'), '#4ade80', 18, 420); heal(u, 'V', 14); float(u, P(u, 'V'), '+14', '#4ade80'); await wait(500); } },
