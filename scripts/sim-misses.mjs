@@ -1,6 +1,7 @@
 // How often do the crew's shots miss? (owner, 2026-11-20: "shots that miss too often": measure first, then propose.) MEASURES ONLY.
 //
 //   node scripts/sim-misses.mjs [seeds=6] [fights a job=20] [date]
+//   SAVE_ROSTERS=<file> also writes the grown rosters (JSON), for scripts/sim-heights-extracts.mjs.
 //   SHARE=0.5 BONUS=3 CAP=9 node scripts/sim-misses.mjs ...   (a variant: FIGHT.attackClimbShare, missBonus, missBonusCap for this run only)
 //
 // Rosters are grown through a real campaign (scripts/sim-wayout.mjs's way) and snapshotted the day reputation reaches each job gate. Every job in
@@ -114,6 +115,7 @@ function play(args, seed, tag, t) {
 
 const rosters = [];
 for (let seed = 1; seed <= SEEDS; seed++) { rosters.push({ seed, snaps: grow(seed) }); process.stderr.write(`grown ${seed}/${SEEDS}\r`); }
+if (process.env.SAVE_ROSTERS) writeFileSync(process.env.SAVE_ROSTERS, JSON.stringify(rosters)); // for scripts/sim-heights-extracts.mjs
 const RISKS = ['cautious', 'steady', 'committed'];
 const byJob = {}; const byThreat = {}; const byCombat = {}; const all = Object.fromEntries(RISKS.map((r) => [r, fresh()]));
 const merge = (into, t) => { for (const k of Object.keys(t)) into[k] += t[k]; };
@@ -152,6 +154,7 @@ L(`\`node scripts/sim-misses.mjs ${SEEDS} ${FIGHTS} ${DATE}\`. Measurement only:
 L();
 L('- **Miss:** the roll failed. **Crack:** the roll passed but a plate took it all (no HP off). **Hit:** HP came off.');
 L(`- **Roll chance:** the average chance the rolls had, the bad-luck softener included (+${FIGHT.missBonus} a miss in a row, to +${FIGHT.missBonusCap}). Today's rule: d20 + combat (+ softener) against 10 + difficulty ${FIGHT.attackStep} + cover (half ${FIGHT.cover.half}, full ${FIGHT.cover.full}).`);
+L('- **Won** counts only fights won to the end. A hack the crew breaks off on the way out keeps the job and the pay, so hacks succeed far more often than this column says (threat 3: 81%; `docs/sims/heights-extracts-2026-11-20.md`).');
 L('- **Rounds with nothing landed:** rounds in which the crew fired at least once and took no HP off anyone.');
 L();
 L('## Overall');
