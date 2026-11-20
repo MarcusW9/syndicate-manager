@@ -202,9 +202,12 @@ export function startMission(prev, jobId, crewIds, approach, opts = {}) {
   }
   // Incidents: the way in, inside, the target (core/incidents.js).
   queue.splice(0, queue.length, ...weaveIncidents(queue, planIncidents(rng, approach, view.threat)));
-  // A twist lands somewhere in the middle of the job, never before the first beat.
+  // A twist lands somewhere in the middle of the job, never before the first beat. An `early` twist
+  // (found at the door, e.g. a bad headcount) lands right after the first beat; the roll is still
+  // spent, so no other roll moves.
   if (job.twist) {
-    const at = 1 + Math.floor(rng() * (queue.length - 1));
+    const roll = 1 + Math.floor(rng() * (queue.length - 1));
+    const at = twistById(job.twist)?.early ? 1 : roll;
     queue.splice(at, 0, { type: 'crisis', id: job.twist, twist: true });
   }
 
@@ -1097,6 +1100,7 @@ function finish(state) {
     ...legendLines,
     ...promotedOps.map((o) => ({ tone: 'good', text: `${o.handle} is a veteran now.` })),
     ...patched.map((p) => ({ tone: 'good', text: `${p.medic.handle} patched up ${p.patient.handle} (Clinic Hands): back a day sooner.` })),
+    ...(client && am.abortedOnTwist && twistById(am.twist)?.abortWord ? [{ tone: 'plain', text: twistById(am.twist).abortWord.replace('{client}', client.name) }] : []),
     ...(client && trustChange ? [{ tone: trustChange > 0 ? 'good' : 'bad', text: `${client.name} ${trustChange > 0 ? 'thinks more of you' : 'is unhappy with you'} (trust ${trustChange > 0 ? '+' : ''}${trustChange}).` }] : []),
     ...(opened ? [opened] : []),
     ...heistLines,

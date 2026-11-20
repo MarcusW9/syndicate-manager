@@ -207,6 +207,17 @@ test('the pull-out call: comes up for a runner at their point (not committed, no
   assert.deepEqual(F.dueDilemmas(c).filter((d) => d.id === 'pullOutPoint'), []);
 });
 
+test('a cautious crew is not asked at its pull-out point: it just pulls the runner out (owner, 2026-11-20)', () => {
+  const b = fixture('holdHack', [ids.static, ids.jax, ids.stitch], { risk: 'cautious', set: { jax: { endurance: 12 }, wing: { endurance: 12 }, mei: { endurance: 12 } } });
+  b.enemies = [foe(1), foe(2)];
+  draw(b, []);
+  R(b, 'jax').hp = 20; // under half of 60
+  assert.deepEqual(F.dueDilemmas(b).filter((d) => d.id === 'pullOutPoint'), [], 'no call-in on cautious');
+  assert.equal(kinds(F.previewRound(b)).jax, 'withdraw', 'the safety rule still pulls them out');
+  F.setRisk(b, 'steady'); R(b, 'jax').hp = 14; // steady's point is a quarter: 15
+  assert.deepEqual(F.dueDilemmas(b).map((d) => d.id), ['pullOutPoint'], 'steady is still asked');
+});
+
 test('a useless duty falls back, then hunkers; never an impossible action', () => {
   const b = fixture('holdHack', [ids.static, ids.jax, ids.velvet]);
   draw(b, []); // nothing to shoot, no shots
