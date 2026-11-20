@@ -99,12 +99,19 @@ test('a landed hit infects, and the vector ticks from the next round, 1 pip a ro
   assert.ok(r2.defeated.some((d) => d.how === 'vector') || b.enemies.every((e) => e.out || e.hp < before[e.n]), 'the infected lose a pip');
 });
 
-test('a hit that only cracks a plate infects nothing (owner, 2026-11-17); one that gets past it does, and ticks exactly one pip', () => {
-  const plated = fixture(['jax', 'mei', 'wing'], ['police', 'police', 'police', 'police']);
+test('a crack: Contagion needs a damaging hit (owner, 2026-11-17), Cytotoxic infects through the plate (owner, 2026-11-20); past the plate it ticks exactly one pip', () => {
+  const plated = fixture(['jax', 'mei', 'wing'], ['police', 'police', 'police', 'police'], { build: { move: 'ricochet', payload: 'contagion' } });
   const r0 = F.playRound(plated, mid);
   assert.ok(r0.lines.some((l) => l.key === 'bounceCrack'), 'a plated body takes a crack, not a pip');
-  assert.ok(plated.enemies.every((e) => !e.infected), 'the plate took the hit and the vector with it');
+  const jumped = new Set(r0.lines.filter((l) => l.key === 'spread').map((l) => l.enemy));
+  assert.ok(plated.enemies.every((e) => !e.infected || jumped.has(e.n)), 'a crack carries no Contagion in; only a jump (not a hit) passes the plate');
   assert.ok(!r0.lines.some((l) => l.key === 'infect'));
+  const cyto = fixture(['jax', 'mei', 'wing'], ['police', 'police', 'police', 'police']);
+  const c0 = F.playRound(cyto, mid);
+  const cracked = new Set(c0.lines.filter((l) => l.key === 'bounceCrack').map((l) => l.enemy));
+  assert.ok(cracked.size >= 1);
+  for (const n of cracked) { const e = cyto.enemies.find((x) => x.n === n); assert.ok(e.out || e.infected?.payload === 'cytotoxic', 'a cracked body carries the Cytotoxic'); }
+  assert.ok(c0.lines.some((l) => l.key === 'infect'));
   const b = fixture(['jax', 'mei', 'wing'], ['corp', 'corp', 'corp', 'corp']);
   F.playRound(b, mid);
   const hit = b.enemies.filter((e) => e.infected && !e.out);

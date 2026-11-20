@@ -214,7 +214,7 @@ export const FIGHT_TEXT = {
   'build.threat.synthetic': '{kinds}',
   'build.threat.synthetic.text': 'Machines: neither Vector can infect them.',
   'build.threat.armoured': '{kinds} in armour',
-  'build.threat.armoured.text': 'Cracking a plate does not infect. A carrying hit must deal damage; a Contagion jump bypasses armour.',
+  'build.threat.armoured.text': 'Cytotoxic infects even when a hit only cracks a plate. A Contagion hit must deal damage, but its jump bypasses armour.',
   'build.answer.move.fits': '{piece} can reach up to {reach} enemies. This fight has enough targets.',
   'build.answer.move.few': '{piece} needs at least {need} enemies standing together. There may not be enough.',
   'build.answer.payload.works': '{piece} can affect the {kinds}.',
