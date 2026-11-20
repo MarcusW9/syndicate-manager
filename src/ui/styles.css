@@ -2457,8 +2457,20 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .watch__map::before { top: 0; } .watch__map::after { bottom: 0; }
 .watch__map.fs-letterbox::before, .watch__map.fs-letterbox::after { height: 40px; }
 .watch__map.fs-letterbox .watch__caption[data-tier="special"] { top: 5px; bottom: auto; z-index: 3; width: max-content; }
-.fs-round { fill: #fff; }
+.fs-round { fill: #fff; filter: drop-shadow(0 0 2px #ffe680) drop-shadow(0 0 4px #ffb040); }
 .fs-spark { fill: #fff3b0; }
+/* The spotlight (2026-11-20): during a special move everyone but the star and the targets dims. */
+.fs-spotlit .sp-token:not(.is-lit) { filter: brightness(0.45) saturate(0.6); }
+.fs-spotlit .sp-token.is-lit { filter: drop-shadow(0 0 3px var(--warn)); }
+/* The ricochet comet (2026-11-20): a trail that stays and dims, sparks, an impact ring, a numbered badge, then the route glows and fades. */
+.fs-trail { stroke: #ffd860; stroke-width: 1.6; stroke-linecap: round; filter: drop-shadow(0 0 2px #ffb040); transition: opacity 0.5s; }
+.fs-trail.is-old { opacity: 0.55; }
+.fs-trail.is-route { stroke: #fff3b0; opacity: 1; }
+.fs-trail.is-gone { opacity: 0; }
+.fs-sparkle { stroke: #fff3b0; stroke-width: 1; stroke-linecap: round; animation: fs-ghost 0.38s ease-out forwards; }
+.fs-impact { fill: none; stroke: #ffd860; stroke-width: 1.6; transform-box: fill-box; transform-origin: center; animation: fs-impact 0.5s ease-out forwards; }
+@keyframes fs-impact { from { transform: scale(0.5); opacity: 1; } to { transform: scale(5); opacity: 0; } }
+.fs-badge { transition: opacity 0.5s; } .fs-badge circle { fill: var(--warn); } .fs-badge text { fill: #0b0d11; font: 700 6.5px Rajdhani, sans-serif; text-anchor: middle; dominant-baseline: central; } .fs-badge.is-gone { opacity: 0; }
 .fs-ghost { fill: rgba(61, 232, 216, 0.18); stroke: var(--accent-2); stroke-width: 1.4; opacity: 0.75; animation: fs-ghost 0.36s ease-out forwards; }
 @keyframes fs-ghost { to { opacity: 0; } }
 .fs-slash { fill: none; stroke: #fff; stroke-width: 1.6; stroke-linecap: round; animation: fs-ghost 0.42s ease-in forwards; }
@@ -2467,8 +2479,8 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 @keyframes fs-wave { from { transform: scale(0.08); opacity: 1; } to { transform: scale(1); opacity: 0; } }
 .watch__strip[data-tier="special"], .watch__log li[data-tier="special"] { border-left-color: var(--warn); color: var(--warn); }
 @media (prefers-reduced-motion: reduce) {
-  .fs-ping, .fs-special, .fs-float, .fs-ghost, .fs-slash, .fs-wave { animation: none; }
-  .fs-float, .fs-ghost, .fs-wave { display: none; }
+  .fs-ping, .fs-special, .fs-float, .fs-ghost, .fs-slash, .fs-wave, .fs-impact, .fs-sparkle { animation: none; }
+  .fs-float, .fs-ghost, .fs-wave, .fs-impact, .fs-sparkle { display: none; }
   .watch__map::before, .watch__map::after { transition: none; }
 }
 

@@ -194,7 +194,7 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
     }
     if (special && !lines[i + 1]?.burst) { // the special move is over: a hold (Watch only), the bars go, the camera pulls back
       adv(special.mv.after, pace === 'fast' ? 0 : 1);
-      push({ do: 'specialEnd', id: special.star, look: special.look });
+      push({ do: 'specialEnd', id: special.star, look: special.look, hold: pace === 'fast' ? 0 : special.mv.after });
       push({ do: 'camera', focus: null });
       special = null;
     }
@@ -569,13 +569,51 @@ export function createStage(svg, deps) {
   const onArc = (a, c, b, t) => [(1 - t) * (1 - t) * a[0] + 2 * (1 - t) * t * c[0] + t * t * b[0], (1 - t) * (1 - t) * a[1] + 2 * (1 - t) * t * c[1] + t * t * b[1]];
   /** Where an attack lands: on the target, or wide as the dice had it. */
   const landing = (b, s) => (s.hit || s.absorbed || s.cracked ? b : [b[0] + s.wide[0] * 22, b[1] + s.wide[1] * 22]);
-  // Ricochet: the round is a bright dot flying from the last landing to this one, with its trace, and a spark where it bounces.
+  // The spotlight (2026-11-20, owner: ordinary shots stay quick, only a special move gets the beat): the star and the
+  // targets keep their colour, everyone else dims, until the move ends.
+  let lit = [];
+  const spot = (ids) => { unspot(); lit = ids.map((id) => host(id)).filter(Boolean); lit.forEach((g) => g.classList.add('is-lit')); svg.classList.add('fs-spotlit'); };
+  function unspot() { lit.forEach((g) => g.classList.remove('is-lit')); lit = []; svg.classList.remove('fs-spotlit'); }
+  // Ricochet, the comet (owner's pick from docs/mockups/2026-11-20-fight-readability.html): a glowing head that speeds into
+  // each landing, a trail that stays and dims, a ring and sparks and a numbered badge at each landing, and at the end the
+  // whole route glows for a hold and fades. `rico` holds the move's trail and badges until `ricoEnd`.
+  let rico = { n: 0, trails: [], badges: [] };
+  function ricoClear() { rico.trails.forEach((l) => l.remove()); rico.badges.forEach((g) => g.remove()); rico = { n: 0, trails: [], badges: [] }; }
+  function ricoEnd(hold) {
+    const { trails, badges } = rico; rico = { n: 0, trails: [], badges: [] };
+    trails.forEach((l) => l.classList.add('is-route'));
+    setTimeout(() => { trails.forEach((l) => l.classList.add('is-gone')); badges.forEach((g) => g.classList.add('is-gone')); }, Math.max(0, hold));
+    setTimeout(() => { trails.forEach((l) => l.remove()); badges.forEach((g) => g.remove()); }, Math.max(0, hold) + 520);
+  }
+  const sparks = (at, n = 8, len = 13) => { for (let k = 0; k < n; k++) { const a = (Math.PI * 2 * k) / n + hash01(at[0], at[1], k) * 0.5; gone(node('line', { class: 'fs-sparkle', x1: at[0] + Math.cos(a) * 3, y1: at[1] + Math.sin(a) * 3, x2: at[0] + Math.cos(a) * (3 + len), y2: at[1] + Math.sin(a) * (3 + len) }), 380); } };
   function ricochet(a, b, s) {
     const end = landing(b, s);
-    gone(node('line', { class: 'fs-tracer is-burst', x1: a[0], y1: a[1], x2: end[0], y2: end[1] }), s.dur + 260);
-    const dot = gone(node('circle', { class: 'fs-round', r: 1.6 }), s.dur + 40);
-    put(dot, a, 0); void dot.getBoundingClientRect(); put(dot, end, s.dur);
-    setTimeout(() => flash(end, 'fs-spark'), s.dur);
+    const n = (rico.n += 1);
+    const trail = node('line', { class: 'fs-trail', x1: a[0], y1: a[1], x2: a[0], y2: a[1] });
+    fx.append(trail); rico.trails.forEach((l) => l.classList.add('is-old')); rico.trails.push(trail);
+    const dot = node('circle', { class: 'fs-round', r: 2.4 });
+    fx.append(dot);
+    const land = () => {
+      dot.remove();
+      trail.setAttribute('x2', end[0]); trail.setAttribute('y2', end[1]);
+      gone(node('circle', { class: 'fs-impact', cx: end[0], cy: end[1], r: 4 }), 520);
+      sparks(end);
+      if (s.hit || s.cracked || s.absorbed) {
+        const g = node('g', { class: 'fs-badge', transform: `translate(${end[0] + 11} ${end[1] - 11})` });
+        g.append(node('circle', { r: 5.5 }), node('text', {}, String(n)));
+        fx.append(g); rico.badges.push(g);
+      }
+    };
+    if (s.dur <= 0 || deps.reduced()) { land(); return; }
+    const t0 = performance.now();
+    const step = (now) => {
+      if (!dot.isConnected) return;
+      const k = Math.min(1, (now - t0) / s.dur); const e = k * k * (1.4 - 0.4 * k); // speeds into the landing, as a round does
+      const x = a[0] + (end[0] - a[0]) * e; const y = a[1] + (end[1] - a[1]) * e;
+      dot.setAttribute('cx', x); dot.setAttribute('cy', y); trail.setAttribute('x2', x); trail.setAttribute('y2', y);
+      if (k < 1) requestAnimationFrame(step); else land();
+    };
+    requestAnimationFrame(step);
   }
   // Slash: afterimages of the star along the dash (the star's own token stays on its spot), and an arc where the blade lands.
   function slash(a, b, s) {
@@ -783,7 +821,8 @@ export function createStage(svg, deps) {
         // Letterbox bars and slow motion while the move plays (not at Resolve or with reduced motion: there it cuts).
         const b = pos(s.id);
         if (b) gone(node('circle', { class: 'fs-special', cx: b[0], cy: b[1], r: 8 }), Math.max(600, s.dur));
-        if (s.dur > 0 && !deps.reduced()) cinema(true);
+        if (s.dur > 0 && !deps.reduced()) { cinema(true); spot([s.id, ...(s.targets ?? [])]); }
+        ricoClear();
         if (s.look === 'slash' && b && s.dur > 0) { const t = pos(s.targets?.[0]); if (t) put(host(s.id), toward(b, t, 4), s.dur / 2); } // a lunge; the star stays in their cover
         deps.caption?.(word(s.key, s.slots), 'special');
         break;
@@ -796,7 +835,7 @@ export function createStage(svg, deps) {
         c.style.animationDuration = `${Math.max(1, s.dur)}ms`;
         break;
       }
-      case 'specialEnd': cinema(false); put(host(s.id), drawn[s.id]?.at, 260); break;
+      case 'specialEnd': cinema(false); unspot(); if (s.look === 'ricochet') ricoEnd(s.hold ?? 900); else ricoClear(); put(host(s.id), drawn[s.id]?.at, 260); break;
       case 'caption': deps.caption?.(word(s.key, s.slots), s.tier); break;
       case 'say': deps.say?.({ when: clockText(s.round, s.clock), tier: s.tier, text: s.key ? `${word(s.key, s.slots)} ${s.texts.join(' ')}` : s.texts.join(' ') }); break;
       case 'camera': if (!deps.reduced() && deps.pace() !== 'resolve') look(s.focus); break;
@@ -828,7 +867,7 @@ export function createStage(svg, deps) {
         for (const [id, u] of Object.entries(stage.units)) { const at = u.side === 'crew' ? deps.at(id) : null; if (at) drawn[id] = { at, stance: 'up' }; }
       }
       stopAmbient();
-      clearDomes();
+      clearDomes(); unspot(); ricoClear();
       if (cue.phase === 'start') { clock = 0; deps.say?.(null); }
       const script = stageScript(drawn, cue, { pace, reduced: deps.reduced(), spent, clock });
       spent = script.spent;
@@ -867,7 +906,7 @@ export function createStage(svg, deps) {
     reset(full = true) {
       playing += 1;
       stopAmbient();
-      clearDomes();
+      clearDomes(); unspot(); ricoClear();
       for (const g of foes.values()) g.remove();
       foes.clear();
       ground.replaceChildren();

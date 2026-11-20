@@ -29,6 +29,7 @@ Read the smallest thing that answers the question: grep for a file name or topic
 | Traits, growth, specialisations | `data/earnedTraits.js`, `core/earned.js`, `core/development.js` |
 | Side tasks, hands-off runs | `core/sidetasks.js`, `core/autorun.js` |
 | What is on which tab | `docs/SCREENS.md` "Tabs" and "Inside each screen" |
+| How an ability or status should look in a fight (mockups, comparing looks) | `docs/mockups/ABILITY-MOCKUPS.md` (the Ability Lab; `/mockup-ability`) |
 | Any screen or style | `docs/UI-SKIN.md` (the token table, then the bullet for that screen), the newest `docs/screenshots/` set, `CODEMAP.md` "UI files" for the function that draws it |
 | Writing in-game text, lore, names | `WRITING_GUIDE.md`, `src/config/names.js`, and from `WORLD.md` only the context block at its end plus the one `##` section the text is about (the whole file only when changing canon); any change to canon goes through the `add-lore` skill (`.claude/skills/add-lore/`), which reads all of it |
 | How other games do it (stats vs traits, roguelite builds) | `docs/research/` (its README lists the topics) |

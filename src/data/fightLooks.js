@@ -32,7 +32,7 @@ export const SPECIAL_LOOK_DEFAULT = 'ricochet';
 //             on its spot (owner, 2026-11-14: the rules keep the star in their cover, so only the ghost travels).
 //   ping:     a shockwave from the star, then rapid bolts from the star to each target in the rules' order.
 export const SPECIAL_MOVES = {
-  ricochet: { title: 'stage.special.ricochet', lead: 900, slow: 2.2, gap: 240, after: 600 },
+  ricochet: { title: 'stage.special.ricochet', lead: 900, slow: 2.6, gap: 300, after: 900 },
   slash: { title: 'stage.special.slash', lead: 900, slow: 1.8, gap: 180, after: 600 },
   ping: { title: 'stage.special.ping', lead: 700, wave: 650, slow: 0.9, gap: 70, after: 600 },
 };
