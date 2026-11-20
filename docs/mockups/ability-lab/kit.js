@@ -61,6 +61,12 @@
   function bars(svg, on, title = '') { let b = svg.querySelector('.lb'); if (!b) b = el('g', { class: 'lb' }, svg); b.innerHTML = ''; if (!on) return; const t = el('rect', { x: 0, y: 0, width: 360, height: 0, fill: '#000' }, b), m = el('rect', { x: 0, y: 230, width: 360, height: 0, fill: '#000' }, b); tween(300, (e) => { t.setAttribute('height', 20 * e); m.setAttribute('y', 230 - 20 * e); m.setAttribute('height', 20 * e); }); el('text', { class: 'tag-svg', x: 180, y: 14, style: 'font-size:11px;fill:#f2d541' }, b).textContent = title; }
   const dim = (u, on) => u.svg.querySelectorAll('.cover').forEach((c) => (c.style.opacity = on ? 0.4 : 1));
 
+  // An extra token (an arrival): Kit.spawn(u, 'E', [x, y], 'foe') adds it to the scene and returns { g, pos }, movable with Kit.moveTo.
+  function spawn(u, label, at, cls = 'foe') { const g = el('g', { class: 'tok ' + cls, transform: `translate(${at[0]} ${at[1]})` }, u.fx0.parentNode.insertBefore(el('g', {}), u.fx)); el('circle', { class: 'b', r: 10 }, g); el('text', {}, g).textContent = label; return { g, pos: at }; }
+  const moveTo = (o, to, ms, e = ease.io) => { const from = o.pos; o.pos = to; return tween(ms, (t) => { const p = lerp(from, to, t); o.g.setAttribute('transform', `translate(${p[0]} ${p[1]})`); }, e); };
+  // An armour plate on a foe: two arcs round the token (the same shape the game draws). Returns the group; plate.split() cracks it open.
+  function plate(u, id, color = '#3de8d8') { const [x, y] = P(u, id); const g = el('g', { transform: `translate(${x} ${y})` }, u.fx); const top = el('path', { d: 'M-12 -4A12.5 12.5 0 0 1 12 -4', fill: 'none', stroke: color, 'stroke-width': 2, 'stroke-linecap': 'round' }, g), bot = el('path', { d: 'M-12 4A12.5 12.5 0 0 0 12 4', fill: 'none', stroke: color, 'stroke-width': 2, 'stroke-linecap': 'round' }, g); g.top = top; g.bot = bot; return g; }
+
   // ---- the lab: registry, cards, picks ----
   const abilities = [];
   const ability = (a) => abilities.push(a);
@@ -100,5 +106,5 @@
     copy.onclick = () => { try { navigator.clipboard.writeText(out.textContent); copy.textContent = 'Copied'; } catch (e) { copy.textContent = 'Select the text above'; } };
     summary();
   }
-  window.Kit = { el, st, wait, tapWait, ease, tween, lerp, arcPt, scene, P, setHp, dmg, heal, focus, use, float, label, ring, sparks, shake, bolt, grow, fade, orb, glow, bars, dim, gone, NAME, COL, ability, render, abilities, CREW, FOES };
+  window.Kit = { spawn, moveTo, plate, el, st, wait, tapWait, ease, tween, lerp, arcPt, scene, P, setHp, dmg, heal, focus, use, float, label, ring, sparks, shake, bolt, grow, fade, orb, glow, bars, dim, gone, NAME, COL, ability, render, abilities, CREW, FOES };
 })();

@@ -29,4 +29,4 @@ Open `abilities/spotter.js`, fill the three variants, open `ability-lab.html`, p
 
 ## Still to do
 
-Abilities with no lab file yet: Breacher (exposed), overwatch, the van call, the hack alarm and way-out, the patch pulse, new moves and payloads as they are written (`data/builds.js`). Statuses already have a look from 2026-11-19 (`docs/screenshots/2026-11-19-status-looks`).
+In the lab, waiting for the owner's pick (2026-11-20): Breacher (exposed) and the hack alarm (`abilities/breacher.js`, `abilities/alarm.js`). No lab file yet: overwatch, the van call, the patch pulse, new moves and payloads as they are written (`data/builds.js`). Statuses already have a look from 2026-11-19 (`docs/screenshots/2026-11-19-status-looks`).
