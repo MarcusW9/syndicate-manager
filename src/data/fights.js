@@ -27,10 +27,11 @@ export const FIGHT = {
   // Boarding and carrying need no roll (2026-11-13): a boarder spends the round in the open and takes a door slot.
   // Bad luck softener (owner, 2026-11-17): each shot a runner misses in a row lines the next one up, +missBonus to the roll, up to missBonusCap;
   // a hit resets it. Per fight, kept on the runner (`misses`).
-  missBonus: 2, missBonusCap: 6,
-  // The crew's shots and the job's difficulty (2026-11-20, docs/sims/misses-2026-11-20.md): above attackClimbFrom, a crew attack feels only this share
-  // of the difficulty's climb (1: all of it, as before). Being swept; 1 until the owner picks.
-  attackClimbShare: 1, attackClimbFrom: 6,
+  missBonus: 3, missBonusCap: 9, // +3 a miss to +9 since 2026-11-20 (was +2 to +6; owner, docs/sims/misses-2026-11-20-v5-twothirds-softener.md)
+  // The crew's shots and the job's difficulty (owner, 2026-11-20; docs/sims/misses-2026-11-20.md and -v5-twothirds-softener.md): above attackClimbFrom,
+  // a crew attack (a runner's, a bounce, the overwatch, a turret) feels only this share of the difficulty's climb (1: all of it, as before), so
+  // shots at threats 4-5 miss about 30% of the time instead of about half. Enemy shots are unchanged.
+  attackClimbShare: 0.67, attackClimbFrom: 6,
   attackStep: -2, jamStep: 0, patchStep: 0, stabiliseStep: 2, overwatchStep: -1,
   // Hit size (2026-11-18, owner; drafts/PROPOSAL-gear-hit-size.md): a weapon's damage sets what its hit takes off, hit + hitPerDamage
   // for each point of damage above hitBaseDamage (2, unarmed: what every starting runner carries, so damage 2 or less hits for hit, 10; owner, 2026-11-18, after the damage-3 default sidearm hit no harder than bare hands); a strong hit is strongMult times that. Crew

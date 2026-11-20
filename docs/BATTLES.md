@@ -2,6 +2,10 @@
 
 Checked against the code on 2026-11-13 (the way-out section: 2026-11-17) (`src/core/fight.js`, `runfight.js`, `battle.js`, `data/fights.js`, `data/dilemmas.js`, `data/battle.js`). The code and the data files win if this ever disagrees; fix this file when they change. Why each rule is what it is: `DESIGN.md` decision log (`docs/design/2026-11.md`, rows from 2026-11-10 on) and `drafts/SPEC-battle-orders.md` (section 30 is what was settled). Where things live: `CODEMAP.md`.
 
+## The crew's shots and a job's difficulty (2026-11-20)
+
+A crew attack (a runner's shot, a Ricochet bounce, the overwatch, a turret) rolls against `attackDiff(b.diff)` (`core/fight.js`): above `FIGHT.attackClimbFrom` (6) it feels only `FIGHT.attackClimbShare` (0.67) of the difficulty's climb. Before, it felt all of it, and difficulty climbs 2.5 a threat level, faster than runners' combat grows, so shots at threats 4-5 missed about half the time while enemies landed about 70% of theirs. The bad-luck softener is +3 a miss in a row, to +9 (was +2 to +6). Steady, hands-off: misses 10 / 29 / 31 / 29 / 33% at threats 1-5 (were 11 / 34 / 39 / 47 / 53%); a run of 3+ misses in 3-4% of high-threat fights (was 19-25%); enemy shots unchanged; no deaths on cautious or steady; committed fights with a death 3.1% to 2.2%. `scripts/sim-misses.mjs`, `docs/sims/misses-2026-11-20*.md` (v0 is the old rules, v5 these).
+
 ## Engine 2 counts in HP (2026-11-18)
 
 Engine 2's health, hits, heals, ticks and pull-out points are in HP. Step 1 of the move from pips multiplied every amount by `FIGHT.hpUnit` (10), so the rules play exactly as before: where this file or an older note says a pip, read 10 HP. A plate still takes one plain hit (`FIGHT.plateHp`, 10). Pull-out points round up to a whole `hpUnit`. The screens still draw one bar segment per 10 HP (`fight.js hpUnits`, read by `fightview.js` and `runfight.js fightSnapshot`/`feedLine`). Engine 1 keeps its own HP. Save v77 converts a fight in progress.

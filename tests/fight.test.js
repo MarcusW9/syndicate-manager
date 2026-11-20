@@ -1084,8 +1084,8 @@ test('standard force breaks like the hired: too few left and the rest run; a kin
 });
 
 test('a miss lines up the next shot: +missBonus per miss in a row, capped, reset by a hit', () => {
-  const play = (misses) => {
-    const b = fixture('holdExtract', [ids.jax], { set: { jax: { combat: 8 } } });
+  const play = (misses) => { // combat 5 (was 8 before the crew's shots were flattened, 2026-11-20): a d20 of 11 still just misses with no streak
+    const b = fixture('holdExtract', [ids.jax], { set: { jax: { combat: 5 } } });
     b.enemies = [foe(1, 'corp')];
     draw(b, []);
     R(b, 'jax').misses = misses;
