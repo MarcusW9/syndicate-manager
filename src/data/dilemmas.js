@@ -12,6 +12,7 @@
 //   vanLastRound: true             the van leaves at the end of this round
 //   outsideAtLeast: n              this many runners are outside (standing or down)
 //   atPullOut: true                someone standing is at the pull-out point of the crew's risk level (cautious, steady) and not kept in; never while the van is there
+//   riskNot: 'cautious'            the crew's risk level is not this one
 //   any: [ ...conditions ]         at least one of these holds; all other keys must hold too
 // ordersPatch selectors: all, others, protected, exposed, bestAttacker, bestProtector, backupSource
 //   (a patch is { selector: { duty, target } }; targets may be 'protected', 'backupSource', 'exposed').
@@ -45,9 +46,10 @@ export const DILEMMAS = {
   },
   // The crew's pull-out point (owner, 2026-11-12: "make it a notified choice"): a watched player is told when a runner reaches the point
   // where their risk level pulls them out, and chooses. Hands-off crews pull out, as the risk level says. Asked again if they lose another pip.
+  // Not asked on cautious (owner, 2026-11-20): a cautious crew just pulls out at its point (resolveOrders), so the call only cost a tap.
   pullOutPoint: {
     fight: ['holdHack', 'holdExtract', 'holdYard'],
-    when: { atPullOut: true },
+    when: { atPullOut: true, riskNot: 'cautious' },
     options: [
       { id: 'pullOut', ordersPatch: null },
       { id: 'stayIn', ordersPatch: null, keepIn: true },
