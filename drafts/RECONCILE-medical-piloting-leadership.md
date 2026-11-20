@@ -1,6 +1,6 @@
 # Reconcile: medical, piloting and leadership with the build frame
 
-Status: a docs pass (2026-11-18), nothing built, nothing decided. It answers the owner's ask of 2026-11-16: map each of `PROPOSAL-medical.md`, `PROPOSAL-piloting.md` and `PROPOSAL-leadership.md` onto the build axes and roles, and say what does not fit and stays standalone. Every "owner's call" below is a question, not a ruling. When the owner answers, log the answers in `docs/design/` and fold them into the three proposals.
+Status: a docs pass (2026-11-18); the owner answered its six questions on 2026-11-20 ("The owner's answers", below; decision log). Nothing built. It answers the owner's ask of 2026-11-16: map each of `PROPOSAL-medical.md`, `PROPOSAL-piloting.md` and `PROPOSAL-leadership.md` onto the build axes and roles, and say what does not fit and stays standalone. Every "owner's call" below is a question, not a ruling. When the owner answers, log the answers in `docs/design/` and fold them into the three proposals.
 
 ## The frame, as built and as drafted
 
@@ -67,7 +67,16 @@ Status: a docs pass (2026-11-18), nothing built, nothing decided. It answers the
 3. **Roles come together, as swarm step 5.** The medic's actions, the Leader slot and the Wheels/Standby arrivals are all board roles. Doing them as one pass (which roles, what each does to a group) avoids three separate board changes. The leadership proposal's Leader slot is the only one that needs a new board slot.
 4. **Standalone work can go any time after the playtest,** each with its own save migration: wounds and triage, leadership and judgment as stats, the getaway-adjacent piloting steps, the Clinic and the hall doctor. They should not be bundled with builds.
 
-## Questions for the owner
+## The owner's answers (2026-11-20)
+
+1. **Healing is rare covers effect pieces only; the medic is exempt.** Patch, stabilise, field dressing and back up from down are the medic's job, limited by having a medic on the job and their orders. Nano-reconstruct and the like stay jackpots.
+2. **Fuel/cost is not a build axis.** Neural load stays a condition bar, and chrome shock stays a wound. No skill costs fuel.
+3. **Drones (the owner's own answer):** Drone Jockey stays the overwatch specialisation. Piloting also gives a **passive drone skill**: the runner fights with **a drone as a follower, another battler in the fight**, and **its stats and strengths come from the drone bought for them** (the gear). This is not a move: it doesn't take the move slot or deliver a payload. Open for its own proposal: whether it is a fourth kind of entry on the skills list (passive) or takes a place, its piloting gate, how the gear's stats map to a battler (HP, hit, armour), what the drone does each round, what happens when it falls, and the planning read (the drone must be inside `fight.js`, so the board's odds replay it).
+4. **The roles are built together** (swarm step 5): the medic's actions, the Leader slot and the Wheels/Standby arrivals in one pass, with one board change and one sim sweep.
+5. **A runner in a role place keeps their move and payload, and they fire when the runner is in the fight:** the inside team, and a Wheels or Standby once they arrive mid-fight. Not from overwatch or the van. No change to board places.
+6. **The Clinic has levels, and a doctor is a bonus.** Today's Clinic (¥18,000, heals 2 days a day at home) is level 1 at full speed. Levels 2 and 3 follow the medical proposal (¥14,000 for 3 days a day; ¥20,000 for 4 days a day, where a serious injury starts a day shorter, and level 3 needs a doctor). A doctor adds speed on top (draft: +1 day a day at medical 12, +2 at 16). There is no half-speed penalty without one.
+
+## Questions for the owner (answered above, 2026-11-20)
 
 1. Is "healing is rare" a rule for effect pieces only, with the medic's role action exempt?
 2. Is fuel/cost (neural load, chrome strain) a real build axis, or does it stay a wound and a stat?

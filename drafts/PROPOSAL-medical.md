@@ -177,6 +177,12 @@ Only residents at home heal at the Clinic's speed, not runners out on a job. Wit
 5. Rerun `sim-stats.mjs` medical rows at 300 seeds; tune wound frequency.
 6. Hall doctor and chrome surgeon with Phase 3's roles; the Clinic's levels, the doctor from retirement and base treatment ("The base heals"), sized with `sim-wayout.mjs`.
 
+## Settled 2026-11-20 (reconcile, `drafts/RECONCILE-medical-piloting-leadership.md`)
+
+- The medic's patch, stabilise, field dressing and back up from down are exempt from "healing is rare" (that guardrail is for effect pieces).
+- Neural load stays a condition bar and chrome shock stays a wound: not a build axis.
+- The Clinic: today's room is level 1 at full speed; levels 2 and 3 as in "The base heals"; **a doctor is a bonus on top, with no half speed without one** (supersedes the half-speed lines above).
+
 ## Open questions
 
 - Should some wounds need a Clinic (or Doc Siu, for a fee) rather than a field medic? (The Clinic's levels and the hall doctor are drafted in "The base heals".)

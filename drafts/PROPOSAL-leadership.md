@@ -27,6 +27,11 @@ Two new attributes. **Leadership** (visible) lifts the rest of the crew and deci
 9. ~~Veteran calm~~: dropped (owner, 2026-11-07). There is no such rule to retire.
 10. **Stat count.** Owner (2026-11-07): driving (as piloting) and medical both stay; leadership is added, judgment maybe. Eight or nine attributes, and the sim checks nothing dominates.
 
+## Settled 2026-11-20 (reconcile, `drafts/RECONCILE-medical-piloting-leadership.md`)
+
+- The Leader slot is built with the medic's actions and the Wheels/Standby arrivals as one roles pass (swarm step 5).
+- A runner in the Leader slot keeps their move and payload, and they fire if the runner is in the fight.
+
 ## Leadership
 
 **On the job**

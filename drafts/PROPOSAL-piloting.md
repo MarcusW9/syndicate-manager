@@ -129,6 +129,12 @@ The +3 driving rise in injuries (+1.1) and heat (+1.9) at 300 seeds is taken as 
 5. Raid support and backup calls with the arrival table.
 6. Boats, with the Silt.
 
+## Settled 2026-11-20 (reconcile, `drafts/RECONCILE-medical-piloting-leadership.md`)
+
+- **Drone Jockey stays the overwatch specialisation.** Piloting also gives a **passive drone skill: a drone follows the runner into the fight as another battler, with stats and strengths from the drone bought for them.** It is not a move. It needs its own proposal: where it sits on the skills list, its gate, gear stats to battler, what it does each round, when it falls, and the planning read.
+- A Wheels or Standby who arrives mid-fight uses their move and payload from then on.
+- The arrivals are built with the medic's actions and the Leader slot as one roles pass (swarm step 5).
+
 ## Open questions
 
 - Should vehicles be gear (a van, a bike, a boat) with their own tiers?
