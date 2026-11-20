@@ -7,6 +7,7 @@
   Kit.ability({
     id: 'breacher', name: 'Breacher',
     rules: 'An armour crack (or a hit on a marked enemy) exposes the next armoured enemy in that group. Its next hit ignores the plate, deals 10 HP extra and uses the exposure up (exposed in core/fight.js).',
+    decided: "Breaching charge. Built: a blinking charge on the exposed plate; the next hit sets it off (flash, plate halves fly, 'Pierced').",
     variants: [
       { id: 'now', tag: 'Now', name: 'Broken yellow arc', note: 'The status look from 2026-11-19: a yellow broken-plate arc on the exposed enemy. Nothing shows where it came from or what it does.',
         async play(u) { const p1 = plate(u, 'g3'), p2 = plate(u, 'g4'); await bolt(u, P(u, 'K'), P(u, 'g3'), '#fff3b0', 220); p1.top.setAttribute('stroke', '#f55'); sparks(u, P(u, 'g3'), '#fff', 6, 8); await wait(400); fade(p1, 300);

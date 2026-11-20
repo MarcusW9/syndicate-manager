@@ -10,6 +10,7 @@
   Kit.ability({
     id: 'alarm', name: 'Hack alarm (the way out)',
     rules: 'When the technician’s work is done the alarm brings in half the opening force again, as one group, and the fight changes from covering the hacker to a rout and a fighting retreat (b.wayOut, stage 0 to 1 in core/fight.js; alarm step in fightstage.js).',
+    decided: "Siren and the surge, without the GET OUT message (owner, 2026-11-20). Built: longer siren pulse on the map edge, door rings, '+N arriving' at the door.",
     variants: [
       { id: 'now', tag: 'Now', name: 'Red rings at the door', note: 'Three red rings pulse out of the door, the map edge flashes once, a caption says so. The arrivals then just appear next round.',
         async play(u, svg) { setup(u); const h = hackbar(u); await tween(900, (t) => h.f.setAttribute('width', 28 * t)); h.g.remove(); for (let i = 0; i < 3; i++) { ring(u, DOOR, '#ff3d5f', 30, 950, 1.6); await wait(260); } await edgeFlash(u, 1, 600); await wait(500); } },

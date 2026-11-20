@@ -44,6 +44,8 @@ export const FIGHT_TEXT = {
   'stage.jammed': 'Jammed',
   'stage.jamFail': 'No lock',
   'stage.alarm': 'The alarm is up',
+  'stage.arriving': '+{n} arriving',
+  'stage.pierced': 'Pierced',
   'stage.flanked': 'Flanked',
   'stage.special': '{who} cuts loose.',
   // A special move's title over the map (data/fightLooks.js SPECIAL_MOVES; draft text, the owner's to write).

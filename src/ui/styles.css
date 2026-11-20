@@ -2743,9 +2743,9 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 /* The way out (2026-11-17): the hack is done and the alarm goes up: red rings pulse out of the door, the map's edge flashes red, and the caption says so. */
 .fs-alarm-ring { fill: none; stroke: #ff4d5e; stroke-width: 2; pointer-events: none; transform-box: fill-box; transform-origin: center; filter: drop-shadow(0 0 4px #ff4d5e) drop-shadow(0 0 9px #ff4d5e); animation: fs-alarm-ring 0.9s ease-out forwards; }
 @keyframes fs-alarm-ring { from { transform: scale(0.3); opacity: 1; } to { transform: scale(3.4); opacity: 0; } }
-.fs-alarm-core { fill: #ff4d5e; pointer-events: none; transform-box: fill-box; transform-origin: center; animation: fs-alarm-core 0.9s ease-in-out 2 both; }
+.fs-alarm-core { fill: #ff4d5e; pointer-events: none; transform-box: fill-box; transform-origin: center; animation: fs-alarm-core 0.45s ease-in-out 4 both; }
 @keyframes fs-alarm-core { 0%, 100% { opacity: 0.15; transform: scale(0.7); } 50% { opacity: 0.95; transform: scale(1.3); } }
-.watch__map.fs-alarm { outline: 3px solid rgba(255, 77, 94, 0); outline-offset: -3px; animation: fs-alarm-wash 0.9s ease-in-out 2; }
+.watch__map.fs-alarm { outline: 4px solid rgba(255, 77, 94, 0); outline-offset: -4px; animation: fs-alarm-wash 0.45s ease-in-out 4; }
 @keyframes fs-alarm-wash { 0%, 100% { outline-color: rgba(255, 77, 94, 0); } 50% { outline-color: rgba(255, 77, 94, 0.9); } }
 .watch__caption[data-tier="alarm"] { color: #ff8a98; }
 .sp-flash--alarm { fill: #ff4d5e; }
@@ -2983,3 +2983,13 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .fs-dust { fill: #7b8394; pointer-events: none; transform-box: fill-box; transform-origin: center; animation: fs-dust 0.5s ease-out forwards; }
 @keyframes fs-dust { from { transform: scale(0.6); opacity: 0.8; } to { transform: scale(2.2); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .fs-lightning, .fs-dome__plate, .fs-ember, .fs-dust, .sp-token > .fs-st--marked.is-lock { animation: none; } .fs-dust { display: none; } .fs-ember { opacity: 0; } }
+
+/* Breacher (2026-11-20): the charge on an exposed plate blinks; a hit that ignores the plate sets it off. */
+.sp-token > .fs-st--exposed .fs-charge { fill: #2a2f3a; stroke: #ffd84d; stroke-width: 0.8; }
+.sp-token > .fs-st--exposed .fs-charge__led { fill: #ff3d5f; stroke: none; animation: fs-charge-blink 0.8s steps(2) infinite; }
+@keyframes fs-charge-blink { 0% { opacity: 1; } 50% { opacity: 0.15; } }
+.sp-flash--breach { fill: #fff3b0; }
+.fs-pop--breach { stroke: #ffd84d; }
+.fs-shard { fill: none; stroke: #ffd84d; stroke-width: 2.2; stroke-linecap: round; pointer-events: none; filter: drop-shadow(0 0 3px #ffb040); animation: fs-shard 0.6s ease-out forwards; }
+@keyframes fs-shard { from { transform: translate(0, 0) rotate(0); opacity: 1; } to { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .fs-shard, .sp-token > .fs-st--exposed .fs-charge__led { animation: none; } .fs-shard { display: none; } }

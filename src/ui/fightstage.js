@@ -22,7 +22,7 @@ import { SPECIAL_MOVES, SPECIAL_FAST_CUT, SPECIAL_LOOK_DEFAULT, ENEMY_LOOKS } fr
 export const PACE_K = { watch: 1, fast: 0.6, resolve: 0 };
 export const PACES = ['fast', 'watch', 'resolve'];
 // Step lengths at Watch, in ms.
-const MS = { enter: 900, move: 600, lean: 320, fire: 240, gap: 160, heal: 450, aura: 1100, spread: 900, tick: 560, tickOut: 700, dome: 420, patch: 1100, alarm: 1200, jam: 650, ping: 450, flank: 450, settle: 600 };
+const MS = { enter: 900, move: 600, lean: 320, fire: 240, gap: 160, heal: 450, aura: 1100, spread: 900, tick: 560, tickOut: 700, dome: 420, patch: 1100, alarm: 1800, jam: 650, ping: 450, flank: 450, settle: 600 };
 const HIDDEN = new Set(['aboard', 'gone', 'fled']);
 
 const mid = (a, b) => [Math.round((a[0] + b[0]) / 2), Math.round((a[1] + b[1]) / 2)];
@@ -144,7 +144,7 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
       const to = enemyId(l.guard);
       if (sp && sp.look !== 'ping' && units[from] && units[to]) push({ do: 'camera', focus: [from, to] });
       const fly = sp ? MS.fire * sp.mv.slow : MS.fire;
-      push({ do: 'fire', from, to, hit: !!l.success && (l.damage ?? 0) > 0, cracked: !!l.cracked, fell: !!l.dropped, damage: l.damage ?? 0, amount: l.hpDamage ?? 0, left: l.hpLeft ?? null, strong: !!l.strong, wide, ...(sp ? { burst: true, look: sp.look, star: sp.star } : {}), dur: ms(fly * (sp ? cut : 1)) });
+      push({ do: 'fire', from, to, hit: !!l.success && (l.damage ?? 0) > 0, cracked: !!l.cracked, fell: !!l.dropped, pierced: !!l.pierced, damage: l.damage ?? 0, amount: l.hpDamage ?? 0, left: l.hpLeft ?? null, strong: !!l.strong, wide, ...(sp ? { burst: true, look: sp.look, star: sp.star } : {}), dur: ms(fly * (sp ? cut : 1)) });
       adv(fly + (sp ? sp.mv.gap : MS.gap), sp ? cut : 1);
       if (sp) sp.from = to;
     } else if (rule === 'overwatch' && l.guard != null) {
@@ -182,7 +182,7 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
     } else if (rule === 'wayOut') {
       // The hack is done and the alarm is up: red rings at the door the arrivals will come in by.
       const door = Object.values(units).find((u) => u.side === 'enemy' && u.entrance)?.entrance ?? stage.target ?? stage.van;
-      push({ do: 'alarm', at: door, dur: ms(MS.alarm) });
+      push({ do: 'alarm', at: door, count: l.slots?.n ?? null, dur: ms(MS.alarm) });
       adv(MS.alarm);
     } else if (rule === 'patch' && l.actor && !l.targetId && units[l.actor]) {
       // The medic's hands on the way out: the aura, then a soft pulse over everyone reached.
@@ -306,6 +306,11 @@ export function forceEffect(cue, kind) {
     const g = guard(a); const max = Math.max(3, g?.max ?? 3);
     if (g) { g.max = max; g.hp = max - 1; }
     c.lines = [L({ rule: 'tick', key: 'burnTick', guard: a, damage: 1, hpDamage: 10, left: max - 1, max })];
+  } else if (kind === 'breach') {
+    // The breaching charge (2026-11-20): one body exposed, then a crew shot that ignores its plate.
+    const g = guard(a); const max = Math.max(3, g?.max ?? 3);
+    if (g) { g.st = ['exposed']; g.max = max; g.hp = max - 2; }
+    c.lines = [L({ kind: 'crew', rule: 'attack', key: 'attackHit', actor: crew[0], guard: a, success: true, damage: 2, hpDamage: 20, hpLeft: (max - 2) * 10, pierced: true })];
   } else if (kind === 'shield') {
     units[crew[1]].act = { kind: 'shield', target: crew[0] };
     c.lines = [L({ kind: 'guard', rule: 'shot', key: 'shotMiss', guard: a, targetId: crew[1], damage: 0, shieldedBy: crew[1] })];
@@ -435,7 +440,11 @@ export function createStage(svg, deps) {
       g.append(node('path', { d: 'M0 -13.5 V-10 M0 13.5 V10 M-13.5 0 H-10 M13.5 0 H10' }), node('path', { class: 'fs-mark-dia', d: 'M0 -21 L3.5 -17.5 L0 -14 L-3.5 -17.5Z' }));
       return g;
     },
-    exposed: () => node('path', { class: 'fs-st fs-st--exposed', d: 'M-10.4 -4 A11 11 0 0 1 -3 -10.6 M3 -10.6 A11 11 0 0 1 10.4 -4' }),
+    exposed: () => { // the broken plate with a breaching charge clamped on, its light blinking (owner, 2026-11-20); the next hit sets it off (`blast`)
+      const g = node('g', { class: 'fs-st fs-st--exposed' });
+      g.append(node('path', { d: 'M-10.4 -4 A11 11 0 0 1 -3 -10.6 M3 -10.6 A11 11 0 0 1 10.4 -4' }), node('rect', { class: 'fs-charge', x: -12.5, y: -11, width: 5, height: 4 }), node('circle', { class: 'fs-charge__led', cx: -10, cy: -12.4, r: 1.1 }));
+      return g;
+    },
     shaken: () => { // trembling ring and a bang over the head (owner, 2026-11-20)
       const g = node('g', { class: 'fs-st fs-st--shaken' });
       g.append(node('circle', { r: 13.2 }), node('text', { class: 'fs-bang', x: 0, y: -15 }, '!'));
@@ -658,6 +667,14 @@ export function createStage(svg, deps) {
     flash(a, 'fs-spark');
   }
 
+  // The breaching charge goes off (owner, 2026-11-20): a hit on an exposed enemy ignored its plate. A flash, the plate's two halves fly apart, a word.
+  function blast(b) {
+    if (deps.reduced()) return;
+    flash(b, 'sp-flash--breach'); gone(node('circle', { class: 'fs-pop fs-pop--breach', cx: b[0], cy: b[1], r: 8 }), 600);
+    const halves = [['M-9 -4 A9.6 9.6 0 0 1 9 -4', '7px', '-13px', '40deg'], ['M-9 4 A9.6 9.6 0 0 0 9 4', '-7px', '13px', '-40deg']];
+    for (const [d, dx, dy, rot] of halves) { const g = gone(node('g', { transform: `translate(${b[0]} ${b[1]})` }), 650); const sh = node('path', { class: 'fs-shard', d }); sh.style.setProperty('--dx', dx); sh.style.setProperty('--dy', dy); sh.style.setProperty('--rot', rot); g.append(sh); }
+    float(b, word('stage.pierced'), 'is-hit');
+  }
   const ensure = (id, u, seed) => (id.startsWith('e:') ? foes.get(id) ?? foeToken(id, u, seed) : deps.tok(id));
 
   /** Run one step (the script says what and where). */
@@ -717,7 +734,7 @@ export function createStage(svg, deps) {
           if (s.cracked) {
             crack(g); flash(b, 'sp-flash--crack'); float(b, word('stage.cracked'), 'is-cracked');
             if (s.hit || s.fell) setTimeout(() => { struck(g); flash(b, 'sp-flash--hit'); }, deps.reduced() ? 0 : 280);
-          } else if (s.hit) { struck(g); flash(b, 'sp-flash--hit'); }
+          } else if (s.hit) { struck(g); flash(b, 'sp-flash--hit'); if (s.pierced) blast(b); }
           else if (s.absorbed) { flash(b, 'sp-flash--zap'); float(b, word('stage.absorbed'), 'is-absorbed'); }
           else flash([b[0] + s.wide[0] * 22, b[1] + s.wide[1] * 22], 'sp-flash--miss');
           // The bar drains as the hit lands (2026-11-19): to the HP the line says is left, or to nothing on a fall.
@@ -833,8 +850,10 @@ export function createStage(svg, deps) {
         deps.caption?.(word('stage.alarm'), 'alarm');
         if (deps.reduced() || s.dur <= 0) break;
         deps.frame([...Object.values(drawn).filter((d) => !HIDDEN.has(d.stance)).map((d) => d.at), at]); // the door in shot, so the rings are seen
-        for (let k = 0; k < 3; k++) setTimeout(() => gone(node('circle', { class: 'fs-alarm-ring', cx: at[0], cy: at[1], r: 6 }), 950), k * 260);
+        // The siren and the surge (owner, 2026-11-20): the rings keep coming and the map's edge pulses like a siren for the whole step; the door says how many are coming.
+        for (let k = 0; k < 5; k++) setTimeout(() => gone(node('circle', { class: 'fs-alarm-ring', cx: at[0], cy: at[1], r: 6 }), 950), k * 300);
         gone(node('circle', { class: 'fs-alarm-core', cx: at[0], cy: at[1], r: 3 }), 1900);
+        if (s.count) setTimeout(() => float([at[0] - 22, at[1] + 14], word('stage.arriving', { n: s.count }), 'is-hit'), 500);
         mapBox?.classList.add('fs-alarm'); setTimeout(() => mapBox?.classList.remove('fs-alarm'), 1900);
         break;
       }
