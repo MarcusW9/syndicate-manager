@@ -306,6 +306,8 @@ export function aimChance(b, r, { hunker = false, open = false } = {}) {
  * planning read (squad.js) both come through here, so shown is used.
  */
 export const fightDiff = (jobDiff) => jobDiff - FIGHT.ease;
+/** The difficulty a crew attack rolls against (before its step and the cover): the fight's, with its climb above attackClimbFrom scaled by attackClimbShare. */
+export const attackDiff = (diff) => (FIGHT.attackClimbShare !== 1 && diff > FIGHT.attackClimbFrom ? Math.round(FIGHT.attackClimbFrom + FIGHT.attackClimbShare * (diff - FIGHT.attackClimbFrom)) : diff);
 
 /** A roll's chance, exactly as the round makes it (d20 + value >= 10 + diff). */
 export const rollChance = (value, diff) => clamp((11 + value - diff) / 20, 0, 1);
@@ -930,7 +932,7 @@ export function playRound(b, rng) {
       const ow = b.overwatch;
       ow.left -= 1; if (boardingStage(b)) ow.vanShots += 1;
       b.heat += ow.heat ?? 0; result.neural += ow.neural ?? 0;
-      const x = roll(ow.value, b.diff + FIGHT.attackStep + FIGHT.overwatchStep + FIGHT.cover[e.cover], strongMargin());
+      const x = roll(ow.value, attackDiff(b.diff) + FIGHT.attackStep + FIGHT.overwatchStep + FIGHT.cover[e.cover], strongMargin());
       if (!x.ok) say('overwatch', 'overwatchMiss', { who: ow.handle, enemy: E(e.n) }, { actor: ow.id, enemy: e.n, kit: ow.kit, success: false, damage: 0, roll: rollOf(x) });
       else {
         const pz = pierce(e, false);
@@ -963,7 +965,7 @@ export function playRound(b, rng) {
     const k = (key) => (burst ? key.replace('attack', 'bounce') : key);
     const flag = burst ? { burst: true } : {};
     if (e.out || e.fled) { if (!burst) say('attack', 'attackGone', { who: r.handle }, { ...named, enemy: e.n, success: false, damage: 0 }); return; }
-    const x = roll(sv(r, 'combat') + Math.min(FIGHT.missBonusCap, (r.misses ?? 0) * FIGHT.missBonus), b.diff + FIGHT.attackStep + FIGHT.cover[e.cover], r.strong);
+    const x = roll(sv(r, 'combat') + Math.min(FIGHT.missBonusCap, (r.misses ?? 0) * FIGHT.missBonus), attackDiff(b.diff) + FIGHT.attackStep + FIGHT.cover[e.cover], r.strong);
     r.misses = x.ok ? 0 : (r.misses ?? 0) + 1;
     if (!x.ok) { say('attack', k('attackMiss'), { who: r.handle, enemy: E(e.n) }, { ...named, ...flag, enemy: e.n, success: false, damage: 0, roll: rollOf(x) }); return; }
     const pz = pierce(e, r.ap);
@@ -983,7 +985,7 @@ export function playRound(b, rng) {
     const near = (e) => (tu.at && pos(e) ? Math.hypot(pos(e)[0] - tu.at[0], pos(e)[1] - tu.at[1]) : 0);
     const e = [...enemiesUp(b)].sort((p, q) => near(p) - near(q) || p.n - q.n)[0];
     tu.left -= 1;
-    const x = roll(tu.aim, b.diff + FIGHT.attackStep + FIGHT.cover[e.cover], strongMargin());
+    const x = roll(tu.aim, attackDiff(b.diff) + FIGHT.attackStep + FIGHT.cover[e.cover], strongMargin());
     const meta = { actor: null, at: tu.at ?? null, enemy: e.n, left: tu.left };
     if (!x.ok) say('turret', 'turretMiss', { enemy: E(e.n) }, { ...meta, success: false, damage: 0, roll: rollOf(x) });
     else {
