@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fight readability + ricochet mockups (2026-11-20)</title>
+<style>
+:root{--bg:#0a0c0f;--panel:#12151b;--line:#2a303b;--text:#e9ecf1;--mute:#8b93a3;--red:#ff3d5f;--cy:#3de8d8;--yel:#f2d541}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,sans-serif;padding:12px;max-width:460px;margin:auto}
+h1{font:700 20px Rajdhani,system-ui;letter-spacing:.06em;text-transform:uppercase;margin:6px 0}
+h2{font:700 16px Rajdhani,system-ui;letter-spacing:.08em;text-transform:uppercase;color:var(--cy);margin:26px 0 4px}
+p{color:var(--mute);margin:4px 0 8px}
+.card{background:var(--panel);border:1px solid var(--line);clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);padding:10px;margin:10px 0}
+.card h3{margin:0 0 2px;font:700 15px Rajdhani,system-ui;letter-spacing:.05em;text-transform:uppercase}
+.tag{font-size:11px;color:var(--yel);text-transform:uppercase;letter-spacing:.08em}
+button{min-height:44px;padding:0 16px;background:#1b2029;color:var(--text);border:1px solid var(--cy);font:600 14px Rajdhani,system-ui;letter-spacing:.08em;text-transform:uppercase}
+button:active{background:#243}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}
+svg{width:100%;display:block;background:#0e1218;border:1px solid var(--line);touch-action:manipulation}
+.strip{display:flex;gap:4px;margin-bottom:6px;min-height:34px}
+.chip{flex:1;border:1px solid var(--line);padding:3px 4px;font-size:11px;color:var(--mute);background:#0e1218;text-align:center;transition:.15s;white-space:nowrap;overflow:hidden}
+.chip.on{border-color:var(--yel);color:#fff;background:#2a2610;transform:translateY(-2px)}
+.chip.done{color:#cfd5e0}
+.chip.hit{border-bottom:3px solid var(--red)} .chip.miss{border-bottom:3px solid #666}
+.say{min-height:20px;font-size:13px;color:#fff;margin:4px 0 0}
+.note{font-size:12px;color:var(--mute);border-left:2px solid var(--line);padding-left:8px;margin-top:6px}
+label{font-size:13px;color:var(--mute)}
+input[type=range]{width:130px}
+.ctl{position:sticky;top:0;background:var(--bg);padding:6px 0;z-index:5;border-bottom:1px solid var(--line)}
+/* svg bits */
+.tok circle.b{stroke-width:1.6}
+.crew circle.b{fill:#143a3a;stroke:var(--cy)} .foe circle.b{fill:#3a1420;stroke:var(--red)}
+.tok text{font:700 8px Rajdhani,system-ui;fill:#fff;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.cover{fill:#242a35;stroke:#3a4252;stroke-width:1}
+.tag-svg{font:700 8.5px Rajdhani,system-ui;fill:#fff;text-anchor:middle;paint-order:stroke;stroke:#000;stroke-width:3px;letter-spacing:.04em}
+.float{font:700 11px Rajdhani,system-ui;text-anchor:middle;paint-order:stroke;stroke:#000;stroke-width:3px}
+</style></head><body>
+<h1>Fight readability + ricochet</h1>
+<p>Mockups for the two playtest notes. Everything here is plain SVG on the game's own skin. Nothing is wired into the game yet. Tap Play on each card.</p>
+
+<div class="ctl row">
+  <label>Slow-down <input id="slow" type="range" min="0.5" max="2.5" step="0.1" value="1"> <span id="slowv">1.0×</span></label>
+  <label><input id="tapstep" type="checkbox"> Tap map to step</label>
+</div>
+
+<h2>A · Who just did what</h2>
+<p>Same five shots in the same order on every card. Today a shot lasts about a quarter of a second and nothing says who fired.</p>
+
+<div class="card"><span class="tag">Now</span><h3>0 · Current pace</h3>
+<svg id="a0" viewBox="0 0 360 230"></svg>
+<div class="row"><button data-play="a0">Play</button></div>
+<div class="note">Tracers only. The eye has to guess the shooter.</div></div>
+
+<div class="card"><span class="tag">Proposal 1</span><h3>1 · Spotlight beat</h3>
+<svg id="a1" viewBox="0 0 360 230"></svg>
+<div class="say" id="a1say">&nbsp;</div>
+<div class="row"><button data-play="a1">Play</button></div>
+<div class="note">Each action gets a beat. The rest of the map dims, and the actor gets a ring and a name tag with the move. The shot flies. The result floats up and holds (HIT −12 or MISS). About 1.5s per action. Tap-to-step suits this one.</div></div>
+
+<div class="card"><span class="tag">Proposal 2</span><h3>2 · Order strip + light spotlight</h3>
+<div class="strip" id="a2strip"></div>
+<svg id="a2" viewBox="0 0 360 230"></svg>
+<div class="say" id="a2say">&nbsp;</div>
+<div class="row"><button data-play="a2">Play</button></div>
+<div class="note">A strip above the map lists the round's actions in order. The current chip lifts and finished ones keep a red (hit) or grey (miss) underline. A plain sentence under the map says what happened. The map only gets a ring on the actor, so it stays quicker (about 1s per action). On the real screen the strip would sit in the commentary slot the stage already feeds (<code>watch.js commentary</code>).</div></div>
+
+<h2>B · Ricochet</h2>
+<p>Today: a white dot on a straight line, a spark on landing. Ten crates deep in a round, you can't tell where it has been. Same three targets on every card.</p>
+
+<div class="card"><span class="tag">Now</span><h3>0 · Current ricochet</h3>
+<svg id="b0" viewBox="0 0 360 230"></svg>
+<div class="row"><button data-play="b0">Play</button></div></div>
+
+<div class="card"><span class="tag">Proposal 1</span><h3>1 · Comet trail + numbered impacts</h3>
+<svg id="b1" viewBox="0 0 360 230"></svg>
+<div class="row"><button data-play="b1">Play</button></div>
+<div class="note">A glowing head with a long fading trail. Each landing gets a hit-stop (the target freezes for a beat), a shock ring, sparks, a numbered badge (1, 2, 3) and the damage float. After the last hit the whole route glows for a second so you can read the path.</div></div>
+
+<div class="card"><span class="tag">Proposal 2</span><h3>2 · Plot the route, then fire</h3>
+<svg id="b2" viewBox="0 0 360 230"></svg>
+<div class="row"><button data-play="b2">Play</button></div>
+<div class="note">Targets lock on one at a time with a reticle and a number, joined by a dashed route. Then the round runs it. Each leg turns solid as it's flown. You know what will happen before it does. This is the most legible and the longest (about 4.5s).</div></div>
+
+<div class="card"><span class="tag">Proposal 3</span><h3>3 · Cover kiss</h3>
+<svg id="b3" viewBox="0 0 360 230"></svg>
+<div class="row"><button data-play="b3">Play</button></div>
+<div class="note">The round actually ricochets: it clips the edge of a bit of cover on the way to a target, with a spark and a tink ring at the kink, so the angled path looks physical. Reads as "a ricochet" at a glance even with the sound off. Costs a kink point per leg (staging picks the nearest cover edge, picture only).</div></div>
+
+<h2>My pick</h2>
+<p><b style="color:#fff">A:</b> 1 for shots that matter (hits that crack plates, falls, specials), 2's strip for ordinary ones. Add the tap-to-step toggle to the Watch pace. <b style="color:#fff">B:</b> 1 as the default, with 3's cover kink if you want it to feel more physical. 2 is great but long, so I'd keep it for a showcase beat only.</p>
+
+<script>
+const NS='http://www.w3.org/2000/svg';
+const $=s=>document.querySelector(s);
+const el=(n,a={},p)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(p)p.append(e);return e};
+let S=1,STEP=false;
+$('#slow').oninput=e=>{S=+e.target.value;$('#slowv').textContent=S.toFixed(1)+'×'};
+$('#tapstep').onchange=e=>STEP=e.target.checked;
+const wait=ms=>new Promise(r=>setTimeout(r,ms*S));
+const tapWait=svg=>STEP?new Promise(r=>{const h=()=>{svg.removeEventListener('click',h);r()};svg.addEventListener('click',h)}):Promise.resolve();
+const ease={io:t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2,out:t=>1-Math.pow(1-t,3),lin:t=>t};
+const tween=(ms,fn,e=ease.lin)=>new Promise(res=>{const t0=performance.now(),d=ms*S;const f=now=>{const t=Math.min(1,(now-t0)/d);fn(e(t),t);t<1?requestAnimationFrame(f):res()};requestAnimationFrame(f)});
+const lerp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
+
+const CREW={K:[50,178,'Kade'],M:[100,204,'Mara'],J:[38,122,'Joss'],V:[112,152,'Vex']};
+const FOES={g1:[272,52,'A'],g2:[312,104,'B'],g3:[250,112,'C'],g4:[300,164,'D']};
+const COVER=[[168,92,10,52],[206,158,44,10],[228,60,10,36]];
+const NAME={g1:'Guard A',g2:'Guard B',g3:'Guard C',g4:'Guard D',K:'Kade',M:'Mara',J:'Joss',V:'Vex'};
+
+function scene(svg){
+  svg.innerHTML='';
+  const u={};
+  const back=el('g',{},svg);
+  for(const c of COVER)el('rect',{class:'cover',x:c[0],y:c[1],width:c[2],height:c[3]},back);
+  const fx0=el('g',{},svg), toks=el('g',{},svg), fx=el('g',{},svg);
+  const mk=(id,[x,y,l],cls)=>{const g=el('g',{class:'tok '+cls,transform:`translate(${x} ${y})`},toks);el('circle',{class:'b',r:10},g);el('text',{},g).textContent=l[0];
+    const bar=el('rect',{x:-9,y:13,width:18,height:2.5,fill:'#222'},g);const hp=el('rect',{x:-9,y:13,width:18,height:2.5,fill:cls==='crew'?'#3de8d8':'#ff3d5f'},g);
+    u[id]={g,pos:[x,y],hp,cls,hpv:1};};
+  for(const k in CREW)mk(k,CREW[k],'crew');
+  for(const k in FOES)mk(k,FOES[k],'foe');
+  u.fx=fx;u.fx0=fx0;
+  return u;
+}
+const P=(u,id)=>u[id].pos;
+const focus=(u,ids)=>{for(const k in u){if(!u[k].g)continue;u[k].g.style.transition='opacity .2s';u[k].g.style.opacity=!ids||ids.includes(k)?1:.3}};
+const dimCover=(svg,on)=>{svg.querySelectorAll('.cover').forEach(c=>c.style.opacity=on?.4:1)};
+function float(u,at,text,color){const t=el('text',{class:'float',x:at[0],y:at[1]-14,fill:color},u.fx);t.textContent=text;
+  tween(900,(e)=>{t.setAttribute('y',at[1]-14-e*10);t.style.opacity=1-Math.max(0,(e-.7)/.3)}).then(()=>t.remove())}
+function dmg(u,id,v){const o=u[id];o.hpv=Math.max(0,o.hpv-v/40);o.hp.setAttribute('width',18*o.hpv)}
+function ring(u,at,color,r1=16,ms=420,w=2){const c=el('circle',{cx:at[0],cy:at[1],r:3,fill:'none',stroke:color,'stroke-width':w},u.fx);
+  tween(ms,e=>{c.setAttribute('r',3+(r1-3)*e);c.style.opacity=1-e}).then(()=>c.remove())}
+function sparks(u,at,color,n=6,len=10,ms=360){for(let i=0;i<n;i++){const a=Math.PI*2*i/n+Math.random()*.5;const l=el('line',{stroke:color,'stroke-width':1.4,'stroke-linecap':'round'},u.fx);
+  tween(ms,e=>{const r0=3+len*e*.4,r1=3+len*e;l.setAttribute('x1',at[0]+Math.cos(a)*r0);l.setAttribute('y1',at[1]+Math.sin(a)*r0);l.setAttribute('x2',at[0]+Math.cos(a)*r1);l.setAttribute('y2',at[1]+Math.sin(a)*r1);l.style.opacity=1-e},ease.out).then(()=>l.remove())}}
+function shake(u,id,ms=300){const o=u[id];const [x,y]=o.pos;return tween(ms,e=>{const k=(1-e)*3*Math.sin(e*40);o.g.setAttribute('transform',`translate(${x+k} ${y})`)}).then(()=>o.g.setAttribute('transform',`translate(${x} ${y})`))}
+function bolt(u,a,b,color,ms,w=1.4){const l=el('line',{x1:a[0],y1:a[1],x2:a[0],y2:a[1],stroke:color,'stroke-width':w,'stroke-linecap':'round'},u.fx);
+  return tween(ms,e=>{const h=lerp(a,b,e),t=lerp(a,b,Math.max(0,e-.35));l.setAttribute('x1',t[0]);l.setAttribute('y1',t[1]);l.setAttribute('x2',h[0]);l.setAttribute('y2',h[1])}).then(()=>l.remove())}
+
+// the round's five actions (who, move, target, hit, damage)
+const ACTS=[
+  {who:'K',mv:'Aimed shot',to:'g1',hit:1,d:12},
+  {who:'g3',mv:'Suppress',to:'V',hit:0,d:0},
+  {who:'M',mv:'Burst',to:'g3',hit:1,d:8},
+  {who:'g2',mv:'Snap shot',to:'J',hit:1,d:7},
+  {who:'J',mv:'Cover fire',to:'g2',hit:0,d:0},
+];
+const COL=id=>CREW[id]?'#3de8d8':'#ff8a98';
+const miss=(b)=>[b[0]+(Math.random()>.5?1:-1)*22,b[1]-18];
+
+async function a0(){const svg=$('#a0'),u=scene(svg);
+  for(const a of ACTS){const A=P(u,a.who),B=P(u,a.to);await bolt(u,A,a.hit?B:miss(B),COL(a.who),240);
+    if(a.hit){sparks(u,B,'#fff',4,6,250);dmg(u,a.to,a.d)}await wait(160)}}
+
+async function a1(){const svg=$('#a1'),u=scene(svg),say=$('#a1say');say.innerHTML='&nbsp;';
+  for(const a of ACTS){const A=P(u,a.who),B=P(u,a.to),c=COL(a.who);
+    focus(u,[a.who]);dimCover(svg,true);
+    const r=el('circle',{cx:A[0],cy:A[1],r:14,fill:'none',stroke:c,'stroke-width':2},u.fx);
+    const t=el('text',{class:'tag-svg',x:A[0],y:A[1]-18},u.fx);t.textContent=`${NAME[a.who]} · ${a.mv}`;
+    say.textContent=`${NAME[a.who]} — ${a.mv} on ${NAME[a.to]}…`;
+    tween(450,e=>{r.setAttribute('r',20-6*e);r.style.opacity=.4+.6*e},ease.out);
+    await wait(500);await tapWait(svg);
+    focus(u,[a.who,a.to]);
+    const tr=el('circle',{cx:B[0],cy:B[1],r:14,fill:'none',stroke:'#fff','stroke-dasharray':'3 3','stroke-width':1.2},u.fx);
+    await bolt(u,A,a.hit?B:miss(B),c,320,1.8);
+    if(a.hit){sparks(u,B,'#fff',6,9);ring(u,B,'#ff3d5f',18);shake(u,a.to);dmg(u,a.to,a.d);float(u,B,'HIT −'+a.d,'#ff8a98');say.textContent=`${NAME[a.who]} — ${a.mv} hits ${NAME[a.to]}, −${a.d}.`}
+    else{float(u,miss(B),'MISS','#aab');say.textContent=`${NAME[a.who]} — ${a.mv} goes wide of ${NAME[a.to]}.`}
+    await wait(650);await tapWait(svg);
+    r.remove();t.remove();tr.remove();focus(u,null);dimCover(svg,false);await wait(120)}
+  say.textContent='Round over.'}
+
+async function a2(){const svg=$('#a2'),u=scene(svg),say=$('#a2say'),strip=$('#a2strip');
+  strip.innerHTML='';const chips=ACTS.map(a=>{const c=document.createElement('div');c.className='chip';c.textContent=`${NAME[a.who].split(' ')[0].replace('Guard','G')} → ${NAME[a.to].replace('Guard ','G')}`;
+    c.style.borderTopColor=CREW[a.who]?'#3de8d8':'#ff3d5f';c.style.borderTopWidth='3px';strip.append(c);return c});
+  say.innerHTML='&nbsp;';
+  for(let i=0;i<ACTS.length;i++){const a=ACTS[i],A=P(u,a.who),B=P(u,a.to),c=COL(a.who);
+    chips.forEach((k,j)=>k.classList.toggle('on',j===i));
+    say.textContent=`${NAME[a.who]} fires at ${NAME[a.to]}…`;
+    const r=el('circle',{cx:A[0],cy:A[1],r:15,fill:'none',stroke:c,'stroke-width':2},u.fx);
+    tween(300,e=>r.style.opacity=e);await wait(380);await tapWait(svg);
+    await bolt(u,A,a.hit?B:miss(B),c,300,1.6);
+    if(a.hit){sparks(u,B,'#fff',5,8);shake(u,a.to,240);dmg(u,a.to,a.d);float(u,B,'−'+a.d,'#ff8a98');say.textContent=`${NAME[a.who]} hits ${NAME[a.to]} for ${a.d}.`}
+    else{float(u,miss(B),'miss','#aab');say.textContent=`${NAME[a.who]} misses ${NAME[a.to]}.`}
+    chips[i].classList.remove('on');chips[i].classList.add('done',a.hit?'hit':'miss');
+    await wait(520);await tapWait(svg);r.remove()}
+  say.textContent='Round over.'}
+
+// ---- ricochet ----
+const RT=['g3','g1','g2'], RD=[9,12,8];
+const BG=u=>{u.fx0.innerHTML=''};
+function star(u,col='#f2d541'){const A=P(u,'K');return el('circle',{cx:A[0],cy:A[1],r:14,fill:'none',stroke:col,'stroke-width':2},u.fx)}
+function bars(svg,on){let b=svg.querySelector('.lb');if(!b){b=el('g',{class:'lb'},svg)}b.innerHTML='';
+  if(on){el('rect',{x:0,y:0,width:360,height:0,fill:'#000'},b);el('rect',{x:0,y:230,width:360,height:0,fill:'#000'},b);
+    const [t,m]=b.children;tween(300,e=>{t.setAttribute('height',20*e);m.setAttribute('y',230-20*e);m.setAttribute('height',20*e)});
+    const tt=el('text',{class:'tag-svg',x:180,y:14,style:'font-size:11px;fill:#f2d541'},b);tt.textContent='KADE · RICOCHET'}}
+const pts=[ ];
+
+async function b0(){const svg=$('#b0'),u=scene(svg);let from=P(u,'K');
+  for(let i=0;i<3;i++){const to=P(u,RT[i]);const l=el('line',{x1:from[0],y1:from[1],x2:to[0],y2:to[1],stroke:'#fff3b0','stroke-width':1.6},u.fx);
+    const d=el('circle',{r:1.6,fill:'#fff'},u.fx);await tween(530,e=>{const p=lerp(from,to,e);d.setAttribute('cx',p[0]);d.setAttribute('cy',p[1])});
+    d.remove();sparks(u,to,'#fff3b0',4,5,250);dmg(u,RT[i],RD[i]);setTimeout(()=>l.remove(),260);from=to;await wait(240)}}
+
+async function b1(){const svg=$('#b1'),u=scene(svg);bars(svg,true);const route=[P(u,'K'),...RT.map(k=>P(u,k))];
+  const ring0=star(u);await wait(750);
+  const defs=el('defs',{},svg);
+  const trailG=el('g',{},u.fx);const trails=[];
+  const head=el('circle',{r:2.8,fill:'#fff',style:'filter:drop-shadow(0 0 4px #ffe680) drop-shadow(0 0 8px #ffb040)'},u.fx);
+  for(let i=0;i<3;i++){const a=route[i],b=route[i+1];
+    const tl=el('line',{x1:a[0],y1:a[1],x2:a[0],y2:a[1],stroke:'#ffd860','stroke-width':2.4,'stroke-linecap':'round',style:'filter:drop-shadow(0 0 3px #ffb040)'},trailG);trails.push(tl);
+    // accelerate into the target, as a round does
+    await tween(620,e=>{const h=lerp(a,b,e);head.setAttribute('cx',h[0]);head.setAttribute('cy',h[1]);tl.setAttribute('x2',h[0]);tl.setAttribute('y2',h[1])},t=>t*t*(1.4-.4*t));
+    // hit-stop
+    const id=RT[i];sparks(u,b,'#fff3b0',8,13);ring(u,b,'#ffd860',22,480,2.4);dmg(u,id,RD[i]);float(u,b,'−'+RD[i],'#ffb0b8');
+    const badge=el('g',{},u.fx);el('circle',{cx:b[0]+12,cy:b[1]-12,r:6.5,fill:'#f2d541'},badge);const nt=el('text',{class:'tag-svg',x:b[0]+12,y:b[1]-11.5,style:'fill:#000;stroke:none;font-size:9px;dominant-baseline:central'},badge);nt.textContent=i+1;
+    shake(u,id,260);
+    // older trail dims
+    trails.forEach((t,j)=>{if(j<i+1)t.style.opacity=j===i?1:.55});
+    await wait(i<2?300:200)}
+  head.remove();
+  // route glow
+  for(const t of trails){t.setAttribute('stroke','#fff3b0');t.style.opacity=1}
+  await wait(900);trails.forEach(t=>tween(500,e=>t.style.opacity=1-e));await wait(520);bars(svg,false)}
+
+async function b2(){const svg=$('#b2'),u=scene(svg);bars(svg,true);const route=[P(u,'K'),...RT.map(k=>P(u,k))];
+  star(u);await wait(600);
+  const dash=[];const marks=[];
+  for(let i=0;i<3;i++){const a=route[i],b=route[i+1];
+    const l=el('line',{x1:a[0],y1:a[1],x2:a[0],y2:a[1],stroke:'#f2d541','stroke-width':1.2,'stroke-dasharray':'4 4',opacity:.7},u.fx);dash.push(l);
+    await tween(330,e=>{const h=lerp(a,b,e);l.setAttribute('x2',h[0]);l.setAttribute('y2',h[1])},ease.out);
+    const g=el('g',{transform:`translate(${b[0]} ${b[1]})`},u.fx);
+    const rt=el('g',{},g);el('circle',{r:15,fill:'none',stroke:'#f2d541','stroke-width':1.4,'stroke-dasharray':'6 4'},rt);el('path',{d:'M-19 0H-12M12 0H19M0 -19V-12M0 12V19',stroke:'#f2d541','stroke-width':1.4},rt);
+    const n=el('text',{class:'tag-svg',x:15,y:-15,style:'font-size:10px;fill:#f2d541'},g);n.textContent=i+1;marks.push({g,rt});
+    tween(360,e=>{rt.setAttribute('transform',`rotate(${(1-e)*120}) scale(${1+(1-e)*.7})`);g.style.opacity=e},ease.out);
+    await wait(200)}
+  await wait(380);
+  const head=el('circle',{r:2.6,fill:'#fff',style:'filter:drop-shadow(0 0 4px #ffe680)'},u.fx);
+  for(let i=0;i<3;i++){const a=route[i],b=route[i+1];const l=dash[i];
+    await tween(560,e=>{const h=lerp(a,b,e);head.setAttribute('cx',h[0]);head.setAttribute('cy',h[1])},ease.io);
+    l.setAttribute('stroke','#fff3b0');l.setAttribute('stroke-dasharray','');l.setAttribute('stroke-width',2.2);l.setAttribute('opacity',1);
+    sparks(u,b,'#fff3b0',8,12);ring(u,b,'#ffd860',22,460,2.2);dmg(u,RT[i],RD[i]);float(u,b,'−'+RD[i],'#ffb0b8');shake(u,RT[i],240);
+    tween(300,e=>{marks[i].rt.setAttribute('transform',`scale(${1-e*.5})`);marks[i].g.style.opacity=1-e*.6});
+    await wait(260)}
+  head.remove();await wait(700);bars(svg,false)}
+
+async function b3(){const svg=$('#b3'),u=scene(svg);bars(svg,true);
+  const T=RT.map(k=>P(u,k));
+  const route=[P(u,'K'),[168,112],T[0],[236,78],T[1],T[2]]; // kinks at the cover edge, then each target
+  const kink=new Set([1,3]);star(u);await wait(700);
+  const head=el('circle',{r:2.6,fill:'#fff',style:'filter:drop-shadow(0 0 4px #ffe680) drop-shadow(0 0 8px #ffb040)'},u.fx);
+  const trail=[];let hitN=0;
+  for(let i=0;i<route.length-1;i++){const a=route[i],b=route[i+1];
+    const tl=el('line',{x1:a[0],y1:a[1],x2:a[0],y2:a[1],stroke:'#ffd860','stroke-width':2,'stroke-linecap':'round',style:'filter:drop-shadow(0 0 3px #ffb040)'},u.fx);trail.push(tl);
+    await tween(kink.has(i+1)?380:520,e=>{const h=lerp(a,b,e);head.setAttribute('cx',h[0]);head.setAttribute('cy',h[1]);tl.setAttribute('x2',h[0]);tl.setAttribute('y2',h[1])});
+    if(kink.has(i+1)){ // clip the cover: a small tink, the cover edge flares, the path kinks
+      sparks(u,b,'#fff',6,8,300);ring(u,b,'#f2d541',10,300,1.4);
+      const f=el('circle',{cx:b[0],cy:b[1],r:4,fill:'#fff',opacity:.9},u.fx);tween(240,e=>f.style.opacity=.9*(1-e)).then(()=>f.remove());
+      svg.querySelectorAll('.cover').forEach(c=>{const x=+c.getAttribute('x'),y=+c.getAttribute('y');if(b[0]>=x-3&&b[0]<=x+(+c.getAttribute('width'))+3&&b[1]>=y-3&&b[1]<=y+(+c.getAttribute('height'))+3){c.style.stroke='#f2d541';setTimeout(()=>c.style.stroke='',360*S)}});
+      await wait(60)}
+    else{const id=RT[hitN];sparks(u,b,'#fff3b0',8,13);ring(u,b,'#ffd860',22,460,2.4);dmg(u,id,RD[hitN]);float(u,b,'−'+RD[hitN],'#ffb0b8');shake(u,id,260);hitN++;trail.forEach((t,j)=>t.style.opacity=j===trail.length-1?1:.5);await wait(260)}
+  }
+  head.remove();trail.forEach(t=>{t.setAttribute('stroke','#fff3b0');t.style.opacity=1});
+  await wait(900);trail.forEach(t=>tween(500,e=>t.style.opacity=1-e));await wait(520);bars(svg,false)}
+
+const FN={a0,a1,a2,b0,b1,b2,b3};
+const busy={};
+document.querySelectorAll('[data-play]').forEach(b=>b.onclick=async()=>{const k=b.dataset.play;if(busy[k])return;busy[k]=1;b.disabled=true;
+  try{await FN[k]()}finally{busy[k]=0;b.disabled=false}});
+for(const k in FN){scene($('#'+k))}
+window.__FN=FN;
+</script></body></html>
