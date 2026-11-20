@@ -198,6 +198,9 @@ export const FIGHT_RECIPES = {
   still_clocked_in: { maxExtraEnemies: 1, waves: [{ round: 3, kind: 'secforce', count: 2 }] }, // the patrol the records terminal's access alert brings
   the_last_collection: { maxExtraEnemies: 1, waves: [{ round: 4, kind: 'hired', count: 2 }] }, // a second collection crew answers the call
   the_wrong_fare: { waves: [{ round: 2, count: 2, kind: 'secforce' }] }, // the vehicle checkpoint sends a response pair to the stopped taxi
+  // The Heights extracts (owner, 2026-11-20; docs/sims/heights-extracts-2026-11-20.md): corp backup calls left runners behind far past the
+  // ~15% target on steady. One backup group at most on the two threat 3-4 jobs, none on penthouse (threat 5).
+  the_current_copy: { maxExtraEnemies: 1 }, exit_interview: { maxExtraEnemies: 1 }, penthouse: { maxExtraEnemies: 0 },
 };
 export const DUTIES = ['attack', 'protect', 'support', 'hold', 'push', 'withdraw'];
 export const RISK_LEVELS = ['cautious', 'steady', 'committed'];

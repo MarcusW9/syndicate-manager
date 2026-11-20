@@ -35,3 +35,8 @@ penthouse (threat 5, crew 4)
   hack                       cautious: done  30% left   0% downs 0.88 | steady: done  42% left   0% downs 1.01 | committed: done  15% left   0% downs 3.23 dead  20%
   yard                       cautious: done  14% left   0% downs 0.93 | steady: done  14% left   0% downs 0.95 | committed: done  39% left   0% downs 2.77 dead  15%
 ```
+
+
+## Picked (owner, 2026-11-20)
+
+At most 1 backup on the_current_copy and exit_interview, none on penthouse (`FIGHT_RECIPES`). The "extract (today)" rows above are the rules before; the matching capped rows are the rules now.
