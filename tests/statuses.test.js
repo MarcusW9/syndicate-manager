@@ -7,7 +7,7 @@
 // Run with: npm test
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createNewGame } from '../src/core/state.js';
+import { createNewGame, SAVE_VERSION } from '../src/core/state.js';
 import { makeRng } from '../src/core/rng.js';
 import * as F from '../src/core/fight.js';
 import { PAYLOADS, BUILD_OFFER } from '../src/data/builds.js';
@@ -163,7 +163,7 @@ test('the save: v81 gives every enemy of a fight in progress none of the new sta
   s.activeMission = { jobId: 'x', templateId: 'warehouse', battle: b, events: [], queue: [], step: 0, log: [] };
   s.version = 80;
   const loaded = await S.importSave({ text: async () => JSON.stringify(s) });
-  assert.equal(loaded.version, 81);
+  assert.equal(loaded.version, SAVE_VERSION);
   for (const e of loaded.activeMission.battle.enemies) for (const st of ['burning', 'marked', 'exposed', 'shaken']) assert.equal(e[st], null, st);
 });
 

@@ -1087,5 +1087,10 @@ function migrate(state) {
     if (b?.engine === 2) for (const e of b.enemies ?? []) for (const st of ['burning', 'marked', 'exposed', 'shaken']) e[st] ??= null;
     state.version = 81;
   }
+  if (state.version === 81) {
+    // v82: a training focus per runner (DESIGN.md 2026-11-20, runner shaping step 3). Nobody has one yet.
+    for (const op of [...(state.crew ?? []), ...(state.recruits ?? [])]) if (!Array.isArray(op.focus)) op.focus = [];
+    state.version = 82;
+  }
   return state;
 }

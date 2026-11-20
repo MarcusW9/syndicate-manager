@@ -19,7 +19,7 @@ import { earnedText } from '../core/earned.js';
 import { SPECIALISATIONS } from '../core/specialisations.js';
 import { pieceById } from '../core/builds.js';
 import { STARTING_ROSTER_CAP, canHire, signingFee } from '../core/recruits.js';
-import { changesSince, primaryStat, progressShare, declineChance, ageRate, potentialRead, scoutFor } from '../core/development.js';
+import { changesSince, primaryStat, progressShare, declineChance, ageRate, potentialRead, scoutFor, focusOf, FOCUS, STATS } from '../core/development.js';
 import { openOffers } from './nav.js';
 import { leadNames, renderGoneElsewhere } from './tongs.js';
 import { renderSkills } from './skills.js';
@@ -199,6 +199,22 @@ export function renderRecruit() {
     </section>`;
 }
 
+/**
+ * Training focus (core/development.js FOCUS): tap up to two stats; a share of what the runner learns
+ * elsewhere goes to them. Growth still comes from the work, and the hidden ceiling still holds.
+ */
+function renderFocus(op) {
+  const on = focusOf(op);
+  const share = Math.round(FOCUS.divert * 100);
+  return `<p class="focuspick__head">Training focus</p>
+      <div class="focuspick" role="group" aria-label="Training focus, up to ${FOCUS.max} stats">
+        ${STATS.filter((k) => op.stats[k] !== undefined).map((k) => `<button class="seg ${on.includes(k) ? 'is-on' : ''}" data-action="focus" data-id="${esc(k)}" aria-pressed="${on.includes(k)}">${statGlyph(k)}<span>${esc(statName(k))}</span></button>`).join('')}
+      </div>
+      <p class="muted small">${on.length
+        ? `${esc(on.map(statName).join(' and '))}: ${share}% of what ${esc(op.handle)} learns in other stats goes here. They still learn from the work, and nobody grows past what they have in them.`
+        : `Pick up to ${FOCUS.max}. ${share}% of what ${esc(op.handle)} learns in other stats would go to them instead.`}</p>`;
+}
+
 /** Plain-words growth rate for an age (see core/development.js). */
 function growthNote(age) {
   if (declineChance(age)) return 'Past 40: slipping a little every season.';
@@ -329,6 +345,7 @@ export function renderOperative() {
         <p>${esc(potentialRead(op, scoutFor(state.crew, op.role, op.id)?.handle))}</p>
         <p class="muted small">${esc(growthNote(op.age))} Green and red numbers are this season's change; "career" is since joining. The thin bar under each stat fills towards the next point.</p>
       </div>
+      ${op.freelance ? '' : renderFocus(op)}
 
       <h2>Condition</h2>
       ${bar('Fatigue', c.fatigue)}${bar('Morale', c.morale)}${bar('Neural load', c.neuralLoad)}${bar('Burnout', c.burnout)}
