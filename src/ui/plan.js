@@ -31,7 +31,7 @@ import { renderJobs, rivalRemark, definingHandle, namedHandle, fillNamed, knownP
 import { canWork, ask } from './boardwork.js';
 import { renderCallIns } from './jobscreen.js';
 import { gearUi, esc, statName, riskBadge, riskWord, districtName, daysLeft, hallLabel, face, statusChip } from './shared.js';
-import { state, backLabel, V } from './view.js';
+import { state, backLabel, V, WIDE_QUERY } from './view.js';
 
 const threatDots = (n) => '●'.repeat(n) + '○'.repeat(5 - n);
 /** Threat with a marker when this offer is above or below the job's usual level. */
@@ -389,7 +389,7 @@ function heistPlanLine(job) {
  *  not essential, and long on a phone). Folded by default on phones, open on wider screens; the
  *  choice holds for the session. Folded, the heading still flags any gap nobody can cover. */
 function renderMeet(cov, owOp, was = null) {
-  if (V.meetHidden === null) V.meetHidden = !matchMedia('(min-width: 900px)').matches;
+  if (V.meetHidden === null) V.meetHidden = !matchMedia(WIDE_QUERY).matches;
   const gaps = cov.rows.filter((r) => r.gap).length;
   // Folded, the heading still says how many encounters changed with the last change to the plan.
   const moved = was ? cov.rows.filter((r) => was.rows.has(was.key(r)) && was.rows.get(was.key(r)) !== r.effective).length : 0;

@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createNewGame } from '../src/core/state.js';
-import { abilitiesOf, missingFor } from '../src/core/abilities.js';
+import { abilitiesOf, missingFor, skillMenu } from '../src/core/abilities.js';
 import { eligiblePieces } from '../src/core/builds.js';
 import { SPECIALISATIONS } from '../src/data/specialisations.js';
 
@@ -53,4 +53,24 @@ test('the read changes nothing', () => {
   const before = structuredClone(op);
   abilitiesOf(op);
   assert.deepEqual(op, before);
+});
+
+test('skillMenu lists every skill once, held first, with the state of each', () => {
+  const op = runner({ stats: { combat: 12, cool: 9, tech: 7, medical: 8, piloting: 4 }, build: { move: 'ricochet', payload: 'contagion' } });
+  const m = skillMenu(op);
+  assert.deepEqual(m.held, [{ slot: 'move', id: 'ricochet' }, { slot: 'payload', id: 'contagion' }, { slot: 'spec', id: null }]);
+  const byId = Object.fromEntries(m.items.map((i) => [i.id, i]));
+  assert.equal(byId.ricochet.state, 'held');
+  assert.equal(byId.contagion.state, 'held');
+  assert.equal(byId.cytotoxic.state, 'locked'); // the payload place is taken
+  assert.equal(byId.cytotoxic.full, true);
+  assert.equal(byId.marksman.state, 'ready'); // combat 10 and cool 8 are met, the specialisation place is open
+  assert.equal(byId.droneJockey.state, 'locked');
+  assert.deepEqual(byId.droneJockey.missing, [{ stat: 'piloting', need: 10, have: 4 }]);
+  assert.deepEqual(m.items.map((i) => i.state), [...m.items.map((i) => i.state)].sort((a, b) => ({ held: 0, ready: 1, locked: 2 }[a] - { held: 0, ready: 1, locked: 2 }[b])));
+});
+
+test('skillMenu with nothing held: everything is ready or short, nothing is full', () => {
+  const m = skillMenu(runner({ stats: { combat: 20, cool: 20, tech: 20, medical: 20, piloting: 20 } }));
+  assert.ok(m.items.every((i) => i.state === 'ready' && !i.full));
 });

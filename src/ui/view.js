@@ -11,6 +11,9 @@ export const setGame = (next) => (state = next);
 export let root;
 export const setRoot = (next) => (root = next);
 
+/** The wide layout's media query (the desktop chrome): 900px and up, or a phone on its side. Keep in step with the `@media` lists in styles.css. */
+export const WIDE_QUERY = '(min-width: 900px), (min-width: 640px) and (max-height: 520px)';
+
 export const V = {
   screen: 'inbox',
   cityDistrict: null, // the district picked on the City map (the map zooms onto it), or the district page open on City › Districts
@@ -51,6 +54,8 @@ export const V = {
   importInput: null, // the hidden save-file picker (see mountApp)
   focusNext: null, // { action, id }: the control to focus after the next render (going back to a list)
   pieceTip: null, // 'messageId|pieceId': the build piece whose explanation is open in an offer
+  skillTab: 'all', // the skills list's filter on a runner's page: 'all' | 'held' | 'ready' | 'locked'
+  skillOpen: null, // 'opId|skillId': the skill row whose full text is open (one at a time)
   traitTip: null, // 'pageId|key': the trait chip or synergy whose card is open (one at a time)
   raidCardDue: null, // scroll to this district's raid card after the next render (heat chip, Today, the map)
   scrollDue: null, // scroll to this after the next render (Back restores where you were)

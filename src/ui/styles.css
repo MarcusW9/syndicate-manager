@@ -130,7 +130,10 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .tag--crisis { color: var(--danger); }
 
 /* Inbox: one pane at a time on phones, list and message side by side when wide. */
-@media (max-width: 899px) {
+/* "Wide" layout (the desktop chrome: left rail, Continue in the top bar) is a width of 900px and up, OR a phone on its side: 640px
+   and wider but no taller than 520px (landscape-phone audit, 2026-11-19). "Narrow" is the exact opposite, written without `not` so iOS 16
+   reads it: 639px and under, or 899px and under that is taller than 520px. JS asks the same thing through WIDE_QUERY in ui/view.js. */
+@media (max-width: 899px) and (min-height: 520.1px), (max-width: 639px) {
   .inbox.has-open .inbox__side, .inbox.has-open .upcoming--strip, .inbox .inbox__detail.is-quiet { display: none; }
   .inbox { display: grid; gap: 12px; }
   .reader__btn[data-action="msg-close"] { display: none; } /* the message's own Back button does that on a phone */
@@ -176,7 +179,7 @@ button.joss { width: 100%; min-height: var(--tap); padding: 0; border: 0; backgr
 .nextup__go { color: var(--muted); }
 .nextup.is-short { border-left-color: var(--danger); }
 .nextup.is-short .nextup__text { color: #ff8a8a; }
-@media (min-width: 900px) { .nextup { display: none; } }
+@media (min-width: 900px), (min-width: 640px) and (max-height: 520px) { .nextup { display: none; } }
 .joss__badge { flex: 0 0 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--accent-2); background: #14262a; }
 /* Joss blinks now and then, and their antenna light breathes. Still for reduced motion. */
 .joss-eyes { transform-box: fill-box; transform-origin: center; animation: joss-blink 6s infinite; }
@@ -308,7 +311,7 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .meter__value { text-align: right; color: var(--muted); }
 
 /* Wider screens: sidebar nav */
-@media (min-width: 900px) {
+@media (min-width: 900px), (min-width: 640px) and (max-height: 520px) {
   #app { grid-template-columns: 200px 1fr; grid-template-rows: auto 1fr; }
   .topbar { grid-column: 1 / -1; flex-wrap: nowrap; }
   .topbar__when { flex: 0 0 auto; }
@@ -463,7 +466,7 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .tone--milestone { color: var(--accent-2, #36d6c3); font-weight: 600; }
 
 
-@media (min-width: 900px) {
+@media (min-width: 900px), (min-width: 640px) and (max-height: 520px) {
   .segmented { grid-template-columns: repeat(3, 1fr); }
 }
 
@@ -565,7 +568,7 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .qchip:disabled { opacity: 0.45; cursor: default; }
 .inboxfilter { display: grid; grid-template-columns: repeat(2, minmax(0, 120px)); gap: 6px; margin: 12px 0 8px; }
 .risk--none { background: #262b36; color: var(--muted); }
-@media (min-width: 900px) { .planbar { bottom: 16px; } }
+@media (min-width: 900px), (min-width: 640px) and (max-height: 520px) { .planbar { bottom: 16px; } }
 
 /* A stat measured against the job in hand. */
 .fit { font-weight: 600; white-space: nowrap; }
@@ -671,7 +674,7 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .cm-label.is-locked .cm-label__name { font-size: 10px; color: var(--muted); }
 .cm-label__raid { position: absolute; left: -1px; bottom: calc(100% + 3px); padding: 1px 5px; border: 1px solid var(--danger); background: #2a1218; color: var(--danger); font-size: 10px; font-weight: 700; letter-spacing: 0.12em; }
 .cm-label .map-talk { position: absolute; left: calc(100% + 4px); top: 5px; width: 6px; height: 6px; background: var(--warn); }
-@media (min-width: 900px) { .cm-label__name { font-size: 13px; } .cm-label__sub { font-size: 11px; } }
+@media (min-width: 900px), (min-width: 640px) and (max-height: 520px) { .cm-label__name { font-size: 13px; } .cm-label__sub { font-size: 11px; } }
 .cm-raid { fill: none; stroke: var(--danger); stroke-width: 1.4; pointer-events: none; }
 .cm-raid--pulse { transform-box: fill-box; transform-origin: center; animation: cm-ring 2.2s ease-out infinite; }
 .cm-call { fill: none; stroke: var(--warn); stroke-width: 1.4; pointer-events: none; }
@@ -703,7 +706,7 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .subtab { min-height: var(--tap); padding: 0 4px; background: none; border: 0; color: var(--muted); font: inherit; font-family: var(--display, inherit); font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; cursor: pointer; }
 .subtab.is-on { color: var(--accent-2); box-shadow: inset 0 -2px 0 var(--accent-2); }
 .citymap__hint { margin-top: 8px; }
-@media (max-width: 899px) { .citymap__hint { display: none; } }
+@media (max-width: 899px) and (min-height: 520.1px), (max-width: 639px) { .citymap__hint { display: none; } }
 .citycard { scroll-margin-top: 88px; }
 /* The map tab fits one screen: the map shrinks to what's left after the header, tabs,
    legend and (on phones) the Continue dock and tab bar, but never below a readable size.
@@ -712,8 +715,8 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
    (owner, iPad, 2026-10-29). The dvh lines are the fallback for browsers without svh. */
 .citymap__view { max-width: calc(max(300px, 100dvh - 400px) * 330 / 290); max-width: calc(max(300px, 100svh - 400px) * 330 / 290); }
 /* Ops has no section tabs (2026-11-06), so the map takes that room back. */
-@media (min-width: 600px) and (max-width: 899px) { .citymap__view { max-width: calc(max(360px, 100dvh - 340px) * 330 / 290); max-width: calc(max(360px, 100svh - 340px) * 330 / 290); } }
-@media (min-width: 900px) { .citymap__view { max-width: calc(max(400px, 100dvh - 290px) * 330 / 290); max-width: calc(max(400px, 100svh - 290px) * 330 / 290); } }
+@media (min-width: 600px) and (max-width: 899px) and (min-height: 520.1px), (min-width: 600px) and (max-width: 639px) { .citymap__view { max-width: calc(max(360px, 100dvh - 340px) * 330 / 290); max-width: calc(max(360px, 100svh - 340px) * 330 / 290); } }
+@media (min-width: 900px), (min-width: 640px) and (max-height: 520px) { .citymap__view { max-width: calc(max(400px, 100dvh - 290px) * 330 / 290); max-width: calc(max(400px, 100svh - 290px) * 330 / 290); } }
 .citycard ul { margin-top: 0; }
 .citydetails { border: 1px solid var(--line); border-radius: var(--radius); padding: 0 12px; margin-bottom: 6px; }
 .citydetails summary { min-height: var(--tap); display: flex; align-items: center; cursor: pointer; font-weight: 600; }
@@ -835,7 +838,7 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .nav { background: rgba(10, 12, 15, 0.96); }
 .nav__btn { text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.95rem; font-weight: 600; }
 /* Five tabs across a phone (Ops joined 2026-11-06): a little tighter so TODAY with its count fits 78px. */
-@media (max-width: 899px) { .nav__btn { letter-spacing: 0.06em; font-size: 0.88rem; padding: 0 2px; } }
+@media (max-width: 899px) and (min-height: 520.1px), (max-width: 639px) { .nav__btn { letter-spacing: 0.06em; font-size: 0.88rem; padding: 0 2px; } }
 @media (max-width: 399px) { .nav__btn { letter-spacing: 0.02em; font-size: 0.82rem; } .nav__btn .pill { padding: 1px 4px; min-width: 16px; } }
 .nav__btn.is-active { color: var(--text); }
 .nav__btn.is-active::before { content: '■ '; color: var(--accent); font-size: 0.6em; vertical-align: 0.15em; }
@@ -1075,7 +1078,7 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .watch__bar { position: sticky; bottom: 56px; z-index: 1; display: flex; gap: 8px; justify-content: flex-end; padding: 8px 0; background: var(--bg); border-top: 1px solid var(--line); }
 .watch__btn { min-height: var(--tap); padding: 0 16px; border: 1px solid var(--line); border-radius: var(--radius); }
 .watch__btn[aria-pressed="true"] { border-color: var(--warn); color: var(--warn); }
-@media (min-width: 900px) { .watch__bar { bottom: 0; } }
+@media (min-width: 900px), (min-width: 640px) and (max-height: 520px) { .watch__bar { bottom: 0; } }
 .wf-brief { margin: 0; color: var(--muted); line-height: 1.55; }
 .wf-phase { margin: 6px 0 0; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-2); display: flex; gap: 8px; align-items: center; }
 .wf-phase::after { content: ""; flex: 1; height: 1px; background: var(--line); }
@@ -1268,7 +1271,7 @@ p > .infobtn { display: inline-grid; vertical-align: 2px; margin-left: 4px; }
    A long item (rifle, sidearm, drone, deck) takes 3×1 cells and fills them, a compact one 1×1; the
    empty cells beside it show as faint grid. The same 3-cell strip in a row and in a gear tile. */
 .gearrow { --cell: 40px; }
-@media (min-width: 900px) { .gearrow { --cell: 48px; } }
+@media (min-width: 900px), (min-width: 640px) and (max-height: 520px) { .gearrow { --cell: 48px; } }
 .gearrow__art { display: flex; width: calc(var(--cell) * 3); height: var(--cell); background-color: #0b0d11;
   background-image: linear-gradient(90deg, transparent calc(100% - 1px), #232a35 calc(100% - 1px)); background-size: var(--cell) 100%; outline: 1px solid #232a35; outline-offset: -1px; }
 .gearrow__art svg { display: block; width: 100%; height: 100%; }
@@ -1532,7 +1535,7 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
   #app.is-onjob .siteplan { height: min(40svh, 360px); }
   #app.is-onjob .watch.is-fighting .siteplan { height: min(48svh, 440px); }
 }
-@media (min-width: 900px) {
+@media (min-width: 900px), (min-width: 640px) and (max-height: 520px) {
   #app.is-onjob { grid-template-columns: 1fr; }
   #app.is-onjob .main { grid-column: 1; }
   #app.is-onjob .main--wide { max-width: 1440px; }
@@ -1623,12 +1626,12 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .savebtn { flex: 0 0 auto; min-width: 44px; min-height: 44px; display: inline-grid; place-items: center; grid-auto-flow: column; padding: 0 6px; margin: -6px -6px -6px 0; background: none; border: 1px solid transparent; color: var(--muted); font: inherit; font-size: 1.1rem; cursor: pointer; }
 .savebtn.is-active { color: var(--text); border-color: var(--accent); }
 .savebtn__word { display: none; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; margin-left: 4px; }
-@media (min-width: 900px) { .savebtn__word { display: inline; } }
+@media (min-width: 900px), (min-width: 640px) and (max-height: 520px) { .savebtn__word { display: inline; } }
 /* Save at the foot of the sidebar on wide screens (owner, 2026-11-06: too close to Continue up
    top); phones keep the ☰ in the top bar, where Continue is down in the dock. The sidebar sticks
    under the top bar so Save stays in reach on a long page. */
 .nav__btn--save { display: none; }
-@media (min-width: 900px) {
+@media (min-width: 900px), (min-width: 640px) and (max-height: 520px) {
   .topbar .savebtn { display: none; }
   .nav { display: flex; flex-direction: column; position: sticky; top: 72px; align-self: start; height: calc(100dvh - 72px); height: calc(100svh - 72px); }
   .nav__btn { flex: 0 0 auto; }
@@ -1637,12 +1640,12 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 /* The top bar's heat names the hottest district and opens it on Ops. */
 .stat--heat { background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; min-height: 44px; display: inline-flex; align-items: center; gap: 6px; }
 /* The top bar on a phone: tighter gaps so date, stats and ☰ fit 360-430px without a sideways scroll (it ran to 415px at 390). */
-@media (max-width: 899px) { .topbar { padding: 12px; column-gap: 8px; } .topbar__when { min-width: 0; } .topbar__stats { column-gap: 8px; } .savebtn { margin-right: -4px; } }
+@media (max-width: 899px) and (min-height: 520.1px), (max-width: 639px) { .topbar { padding: 12px; column-gap: 8px; } .topbar__when { min-width: 0; } .topbar__stats { column-gap: 8px; } .savebtn { margin-right: -4px; } }
 /* The week's seven squares narrow with the date column rather than spill into the heat. */
-@media (max-width: 899px) { .week { grid-template-columns: repeat(7, minmax(5px, 14px)); max-width: 100%; } }
+@media (max-width: 899px) and (min-height: 520.1px), (max-width: 639px) { .week { grid-template-columns: repeat(7, minmax(5px, 14px)); max-width: 100%; } }
 @media (max-width: 379px) { .topbar { padding: 12px 10px; column-gap: 4px; } .topbar__stats { column-gap: 6px; } }
 /* On a phone the top bar has no room for the name: the tap still opens the hottest district. */
-@media (max-width: 899px) { .stat__where { display: none; } }
+@media (max-width: 899px) and (min-height: 520.1px), (max-width: 639px) { .stat__where { display: none; } }
 .stat--heat:hover .stat__label, .stat--heat:focus-visible .stat__label { color: var(--accent-2); }
 
 /* Back today (2026-11-04): faces home again, a result stamp, Joss's line and the report. */
@@ -1794,7 +1797,7 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .pfold summary { min-height: var(--tap, 44px); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); font-family: var(--display); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.85rem; }
 .pfold[open] { padding-bottom: 10px; }
 .picker__table { display: none; }
-@media (min-width: 900px) {
+@media (min-width: 900px), (min-width: 640px) and (max-height: 520px) {
   .sheet--picker > * { max-width: 920px; }
   .picker__cards { display: none; }
   .picker__table { display: block; }
@@ -1817,7 +1820,7 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
    can bring a raid; the tong's rank on the Ops heading instead. */
 .topbar__stats { display: flex; align-items: center; gap: 10px; }
 .stat--cash { display: inline-grid; justify-items: end; line-height: 1.15; }
-@media (min-width: 900px) { .stat--cash { display: inline; } }
+@media (min-width: 900px), (min-width: 640px) and (max-height: 520px) { .stat--cash { display: inline; } }
 .heatchip { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 10px; background: rgba(242, 181, 68, 0.08); border: 1px solid #f2b544; color: #f2b544;
   font-family: var(--display); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; cursor: pointer; }
 .heatchip b { font-size: 1.05rem; }
@@ -1969,7 +1972,7 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .duel.is-lose .duel__side--foe { transform: translateX(-8px) scale(1.06); }
 @keyframes duel-shake { 0%, 100% { transform: translate(-50%, -50%); } 20% { transform: translate(calc(-50% - 7px), -50%); } 40% { transform: translate(calc(-50% + 6px), calc(-50% + 2px)); } 60% { transform: translate(calc(-50% - 4px), -50%); } 80% { transform: translate(calc(-50% + 2px), -50%); } }
 .duel.is-crit .duel__stamp::after { content: " · 20"; }
-@media (min-width: 900px) { .duel { width: min(600px, calc(100% - 32px)); gap: 16px; padding: 18px 20px 56px; } .duel__face { width: 96px; height: 96px; } .duel__vs { font-size: 2rem; } .duel__die { width: 52px; height: 52px; font-size: 1.5rem; } .duel__stat { font-size: 0.8rem; } .duel__sum { font-size: 0.95rem; } .duel__side b { font-size: 1.1rem; } .duel__stamp { font-size: 1.2rem; bottom: 14px; } .duel__glyph { width: 66px; height: 66px; } }
+@media (min-width: 900px), (min-width: 640px) and (max-height: 520px) { .duel { width: min(600px, calc(100% - 32px)); gap: 16px; padding: 18px 20px 56px; } .duel__face { width: 96px; height: 96px; } .duel__vs { font-size: 2rem; } .duel__die { width: 52px; height: 52px; font-size: 1.5rem; } .duel__stat { font-size: 0.8rem; } .duel__sum { font-size: 0.95rem; } .duel__side b { font-size: 1.1rem; } .duel__stamp { font-size: 1.2rem; bottom: 14px; } .duel__glyph { width: 66px; height: 66px; } }
 @media (max-width: 480px) { .duel { gap: 4px; padding: 10px 8px 44px; } .duel__face { width: 52px; height: 52px; } .duel__vs { font-size: 1.2rem; } .duel__side b { font-size: 0.78rem; } }
 @media (prefers-reduced-motion: reduce) { .duel, .duel__side, .duel.is-in .duel__side--me, .duel.is-in .duel__side--foe, .duel.is-rolling .duel__die, .duel.is-lose, .duel.is-landed .duel__stamp, .duel::after { animation: none !important; transition: none; } .duel.is-landed .duel__stamp { opacity: 1; transform: translate(-50%, 0) rotate(-4deg); } }
 
@@ -2427,6 +2430,7 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .fs-pace__chip { min-height: 44px; background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); font: 700 0.8rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; }
 .fs-pace__chip + .fs-pace__chip { border-left: 0; }
 .fs-pace__chip.is-on { color: var(--accent-2); background: #12262a; border-color: var(--accent-2); }
+.fs-pace__chip + .fs-pace__chip.is-on { border-left: 1px solid var(--accent-2); margin-left: -1px; position: relative; z-index: 1; } /* the chips share their borders; the picked one keeps all four sides */
 .fs-pace__note { margin: 0 0 6px; font-size: 0.78rem; color: var(--muted); }
 .fs-ambient { stroke: var(--warn); stroke-width: 0.45; opacity: 0.35; stroke-linecap: round; } .fs-ambient.is-foe { stroke: #ff8a98; }
 .watch__strip { margin: 0; padding: 6px 10px; min-height: 44px; display: flex; align-items: center; font-size: 0.86rem; line-height: 1.3; background: var(--panel-2); border: 1px solid var(--line); border-left: 2px solid var(--accent-2); }
@@ -2777,6 +2781,134 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 @keyframes dropmenu-in { from { transform: translateY(-4px); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .dropmenu, .crewfilter__arrow { animation: none; transition: none; } }
 
+/* Gone elsewhere: the whole row opens that person's page. */
+.streetname:has(.streetname__btn) { padding: 0; }
+.streetname__btn { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: auto 1fr; column-gap: 10px; align-items: center; padding: 8px 12px; min-height: 44px; width: 100%; }
+.streetname__btn .streetname__face { grid-row: span 3; }
+.streetname__btn > span:not(.streetname__face) { grid-column: 2; }
+.streetname__btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* The skills list on a runner's page (ui/skills.js). The badge's plate, light and shadow are drawn in ui/skillicons.js; here only
+   the glow, the grey for what a runner cannot have yet, and the list around it. */
+.skillbadge { display: block; flex: none; filter: drop-shadow(0 0 3px color-mix(in srgb, var(--sk) 55%, transparent)); }
+.skillrow--ready .skillbadge { filter: none; }
+.skillrow--locked .skillbadge { filter: grayscale(1) brightness(.62); }
+.skillbadge--empty path:first-child { fill: none; stroke: var(--line); stroke-width: 1.6; stroke-dasharray: 3 3; }
+.skillbadge--empty path:last-child { fill: none; stroke: var(--line); stroke-width: 2.4; stroke-linecap: round; }
+.skillslots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 6px 0 10px; }
+.skillslot { display: grid; grid-template-rows: 14px 56px 2.4em; align-content: start; justify-items: center; gap: 4px; padding: 8px 4px; background: var(--panel-2); border: 1px solid var(--line); text-align: center; font-size: 13px; line-height: 1.15; }
+.skillslot small { color: var(--muted); letter-spacing: .1em; font-size: 10px; text-transform: uppercase; }
+.skillslot--empty span { color: var(--muted); }
+.skilllist { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+.skillrow { background: var(--panel-2); border: 1px solid var(--line); }
+.skillrow.is-open { border-color: var(--accent-2); }
+.skillrow__btn { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 10px; align-items: start; width: 100%; min-height: 44px; padding: 8px; }
+.skillrow__btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.skillrow__main { display: grid; gap: 3px; min-width: 0; }
+.skillrow__main strong { font-size: 16px; }
+.skillrow__main small { color: var(--muted); }
+.skillrow__gates { display: flex; flex-wrap: wrap; gap: 4px; }
+.gate { font-size: 11px; font-weight: 600; padding: 1px 6px; border: 1px solid; }
+.gate--ok { color: #4fd67e; border-color: #2d6b45; }
+.gate--no { color: #ff7a7a; border-color: #7a3030; }
+.skillpill { align-self: start; margin-top: 2px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; padding: 2px 7px; }
+.skillpill--held { background: var(--accent-2); color: var(--bg); }
+.skillpill--ready { background: var(--warn); color: var(--bg); }
+.skillpill--locked { background: var(--line); color: var(--muted); }
+.skillrow__more { padding: 0 10px 10px; font-size: 14px; }
+.skillrow__more p { margin: 4px 0 0; }
+
+/* A phone on its side (landscape audit, 2026-11-19): the wide layout's left rail leaves a panel only about 600px wide, so the City map
+   and its card share it without a 340px floor on the card or a 400px floor on the map. */
+@media (min-width: 640px) and (max-width: 1099px) and (max-height: 520px) {
+  .cols2--map { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+  .citymap__view { max-width: 100%; }
+}
+
+/* The tab rail on a phone on its side (the owner, 2026-11-19: "icons like Football Manager Mobile"): 64px wide, an icon over a small label,
+   instead of the 200px text rail. The icon is hidden everywhere else (the bottom bar and the desktop rail stay text). */
+.nav__ico { display: none; }
+@media (min-width: 640px) and (max-width: 1099px) and (max-height: 520px) {
+  #app { grid-template-columns: 64px 1fr; }
+  .nav__btn { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 2px; min-height: 46px; text-align: center; letter-spacing: 0.04em; font-size: 0.62rem; }
+  .nav__ico { display: block; line-height: 0; }
+  .nav__ico .icon { width: 24px; height: 24px; }
+  .nav__btn.is-active::before { content: none; }
+  .nav__btn.is-active { box-shadow: inset 3px 0 0 var(--accent); }
+  .nav__btn .pill { position: absolute; top: 3px; right: 6px; padding: 0 4px; min-width: 16px; font-size: 0.6rem; line-height: 1.5; }
+  .nav__btn--save { font-size: 0.62rem; }
+  .main { padding: 16px; }
+}
+
+/* The plan bar on a phone on its side (landscape audit, 2026-11-19): it held 95px of a 390px screen. One slim row instead: the risk word
+   and the weakest reason side by side on one line, the buttons at the tap minimum, and it sits 6px off the bottom, not 16. */
+@media (min-width: 640px) and (max-width: 1099px) and (max-height: 520px) {
+  .planbar { bottom: 6px; padding: 6px 10px; gap: 10px; margin-top: 8px; }
+  .planbar__read { display: flex; flex-wrap: wrap; align-items: center; column-gap: 10px; row-gap: 0; justify-items: initial; }
+  .planbar__why, .planbar__line { -webkit-line-clamp: 1; }
+  .planbar__why--more { display: flex; align-items: baseline; gap: 8px; min-height: 44px; }
+  .planbar__why--more[aria-expanded="true"] { display: grid; }
+  .planbar__go { gap: 8px; }
+  .planbar .btn { min-height: 44px; padding-block: 0; }
+  .founding__bar { bottom: 0; } /* the founder pick's bar sits flush, so no card text peeks through under it */
+}
+
+/* The live job on a phone on its side (landscape audit, 2026-11-19): the fight was one tall column, 4 screens long, with the map on top and
+   the orders and the Go bar below the fold. The side-by-side view that wide screens have (from 1100px) now applies here too: the map on the
+   left fills the height, the orders or the feed scroll on the right, and the order sheet's bar stays pinned at the bottom of its column. */
+@media (min-width: 640px) and (max-width: 1099px) and (max-height: 520px) {
+  .watch { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; margin-top: 4px; }
+  .watch .watch__live, .watch.is-calling .watch__live, .watch.is-done .watch__live { position: sticky; top: var(--live-top, 0px); }
+  .watch .watch__side { overflow-y: auto; max-height: calc(100svh - var(--live-top, 0px) - 56px); padding-right: 4px; overscroll-behavior: contain; }
+  .watch.is-fighting.is-calling .watch__side { min-height: 0; }
+  .watch .ffo { min-height: 0; }
+  .watch .watch__bar { grid-column: 1 / -1; }
+  #app.is-onjob .watch .siteplan, #app.is-onjob .watch.is-fighting .siteplan, #app.is-onjob .watch.is-fighting.is-calling .siteplan,
+  #app.is-onjob .watch.is-fighting.is-calling .siteplan.is-staged { height: max(180px, calc(100svh - var(--live-top, 0px) - 100px)); }
+  .watch__side .fs-bar { position: sticky; bottom: 0; background: var(--panel); padding-top: 6px; border-top: 1px solid var(--line); z-index: 1; grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr); align-items: stretch; }
+  .watch__side .fs-bar--confirm { grid-template-columns: 1fr 1fr; }
+  .watch__side .fs-bar__more .btn { padding: 2px 4px; font-size: 0.7rem; }
+  .watch__side .fs-pace { margin-bottom: 0; }
+  .watch.is-fighting .watch__callin { scroll-margin-top: 0; } /* the panel is its own scroller here, not the page */
+  /* A command fight's Go bar: one line of label and one of detail (cut with … if it must) instead of three, so the orders keep the room. */
+  .ffo-bar, .ffo-confirm { padding: 6px 12px; }
+  .ffo-bar .ffo-go { min-height: 44px; padding-block: 2px; line-height: 1.15; }
+  .ffo-go small { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.64rem; }
+}
+
+/* The founder pick on a phone on its side (landscape audit, 2026-11-19): a card was a tall column (photo, stat list, text) three across, so
+   only half of one showed at 390px tall. Two across instead, each card photo-left, details-right and about 130px tall; the whole card is
+   still the tap target. */
+@media (min-width: 640px) and (max-width: 1099px) and (max-height: 520px) {
+  .founders { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+  .founder { grid-template-rows: none; grid-template-columns: 88px minmax(0, 1fr); gap: 10px; padding: 8px; align-items: start; }
+  .founder__file { width: 88px; margin: 0; }
+  .founder__about { gap: 3px; }
+  .founder__stats { display: flex; flex-wrap: wrap; gap: 0 10px; font-size: 0.68rem; }
+  .founder__stats b { font-size: 0.85rem; }
+  .founder__line { font-size: 0.78rem; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .founder__traits, .founder__wage { font-size: 0.7rem; }
+}
+
+/* The finale (the result and the team) on a phone on its side (landscape audit, 2026-11-19): one tall column ran past the 390px screen, the
+   stamp cut off at the top and the Continue button below the fold. Two columns instead: the stamp and the pay on the left, the team on the
+   right, the buttons across the bottom. */
+@media (min-width: 640px) and (max-width: 1099px) and (max-height: 520px) {
+  .finale { padding: 8px max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left)); }
+  .finale__card { width: min(720px, 100%); grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); column-gap: 16px; row-gap: 6px; padding: 12px 16px 12px; align-items: center; }
+  .finale__card > .finale__kicker, .finale__card > .finale__stamp, .finale__card > .finale__title, .finale__card > .finale__pay { grid-column: 1; }
+  .finale__card > .finale__team { grid-column: 2; grid-row: 1 / span 3; margin: 0; align-self: center; }
+  .finale__card > .finale__line { grid-column: 2; grid-row: 4; }
+  .finale__card > .finale__btns { grid-column: 1 / -1; margin-top: 4px; }
+  .finale__stamp { margin: 2px 0; }
+  .finale__title { margin: 4px 0; }
+  .finale__op { padding: 6px 4px 6px; }
+  /* The face-off sits over a map only about 300px wide here, so it takes the same small size it has on a phone held upright. */
+  .duel { gap: 4px; padding: 10px 8px 44px; }
+  .duel__face { width: 52px; height: 52px; }
+  .duel__vs { font-size: 1.2rem; }
+  .duel__side b { font-size: 0.78rem; }
+}
 /* =====================================================================================
    Theme: red channel (2026-11-19, Save › Look; `theme-red` on <html>, set by app.js render from
    the device preference). Colours only, over the street-terminal skin: red is the frame

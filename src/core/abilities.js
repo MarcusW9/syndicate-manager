@@ -44,3 +44,33 @@ export function abilitiesOf(op) {
   }
   return { held, reachable };
 }
+
+const STATE_ORDER = { held: 0, ready: 1, locked: 2 };
+
+/**
+ * The skills menu (2026-11-19): every move, payload and specialisation in the game, whether the runner holds it or not, for the list
+ * on their page. A read only, like abilitiesOf.
+ *   held   [{ slot, id }] what they hold now: slot 'move', 'payload' or 'spec', id or null.
+ *   items  [{ slot, id, name, desc, needs, missing, state, full }] held first, then ready, then locked (a stable order inside each).
+ *          state 'held' (theirs), 'ready' (their stats meet the gate and the place is open: Joss can offer it), 'locked' (a stat short,
+ *          or `full`: the place is taken, and a move, payload or specialisation, once learned, is not replaced).
+ * A draft piece (part B) is left out, as in abilitiesOf. A specialisation's jobs-on-overwatch count is hidden progress, so only its stat gate is read.
+ */
+export function skillMenu(op) {
+  const build = op?.build ?? {};
+  const have = { move: build.move ?? null, payload: build.payload ?? null, spec: op?.spec?.id ?? null };
+  const sources = { move: MOVES, payload: PAYLOADS, spec: SPECIALISATIONS };
+  const items = [];
+  for (const slot of ['move', 'payload', 'spec']) {
+    for (const [id, def] of Object.entries(sources[slot])) {
+      if (def.draft) continue;
+      const needs = { ...(def.needs ?? {}) };
+      const missing = missingFor(op, needs);
+      const held = have[slot] === id;
+      const full = !held && have[slot] !== null;
+      items.push({ slot, id, name: def.name, desc: def.desc, needs, missing, full, state: held ? 'held' : !full && !missing.length ? 'ready' : 'locked' });
+    }
+  }
+  items.sort((a, b) => STATE_ORDER[a.state] - STATE_ORDER[b.state]);
+  return { held: ['move', 'payload', 'spec'].map((slot) => ({ slot, id: have[slot] })), items };
+}

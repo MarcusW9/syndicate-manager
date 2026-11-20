@@ -16,13 +16,13 @@ import { renderLoadout, renderGearSheet } from './gear.js';
 import { itemName } from '../core/gear.js';
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
 import { earnedText } from '../core/earned.js';
-import { specOf } from '../core/specialisations.js';
 import { SPECIALISATIONS } from '../core/specialisations.js';
-import { buildPieces, pieceById } from '../core/builds.js';
+import { pieceById } from '../core/builds.js';
 import { STARTING_ROSTER_CAP, canHire, signingFee } from '../core/recruits.js';
 import { changesSince, primaryStat, progressShare, declineChance, ageRate, potentialRead, scoutFor } from '../core/development.js';
 import { openOffers } from './nav.js';
 import { leadNames, renderGoneElsewhere } from './tongs.js';
+import { renderSkills } from './skills.js';
 import { esc, statName, face, statusChip, daysLeft, subTabs, infoButton, infoText, cityName, gearUi } from './shared.js';
 import { state, backLabel, V } from './view.js';
 
@@ -307,14 +307,7 @@ export function renderOperative() {
       <p class="body muted">${esc(op.origin)}</p>
       ${op.freelance ? '' : renderHome(op)}
 
-      ${specOf(op) ? `
-      <h2>Specialisation</h2>
-      <ul class="chips">
-        <li class="chip chip--earned"><strong>${esc(specOf(op).name)}</strong><span>${esc(specOf(op).desc)}</span><span class="chip__when">Since day ${op.spec.day}</span></li>
-      </ul>` : ''}
-      ${buildPieces(op).length ? `
-      <h2>Build</h2>
-      <ul class="chips">${buildPieces(op).map((b) => `<li class="chip chip--earned"><strong>${esc(b.name)}</strong><span>${esc(b.desc)}</span><span class="chip__when">${b.slot === 'move' ? 'Move' : 'Payload'}</span></li>`).join('')}</ul>` : ''}
+      ${renderSkills(op)}
       <h2>Traits</h2>
       ${traitChips(op.id, op.traits.map(bornChip))}
       ${earnedChips(op)}

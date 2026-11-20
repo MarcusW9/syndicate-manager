@@ -423,6 +423,7 @@ function callIn(state) {
   if (first) {
     first.focus({ preventScroll: true });
     slot.scrollIntoView?.({ block: 'start' });
+    slot.closest('.watch__side')?.scrollTo?.(0, 0); // where the side is its own scroller (wide, or a phone on its side), the question starts at its top
   }
 }
 
