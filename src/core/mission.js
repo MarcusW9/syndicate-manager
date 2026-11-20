@@ -48,8 +48,8 @@ import { FIGHT } from '../data/fights.js';
 import { startBattle, runBattle, resolveBattleDecision, guardsUp, guardCount, handOffFight, pullBack } from './runbattle.js';
 import { describeFightPending, fightChoices, fightSnapshot } from './runfight.js';
 export { runBattle, handOffFight, pullBack };
-import { noteOverwatchJob, checkSpecialisations } from './specialisations.js';
-import { checkBuildOffers } from './builds.js';
+import { noteOverwatchJob } from './specialisations.js';
+import { checkLevelUps } from './levelup.js';
 import { noteJobMarks } from './marks.js';
 import { planIncidents, weaveIncidents, incidentById, incidentIn, incidentDifficulty, handlerFor, bestSave, standbySave, decisionChoices, ALERT_MAX, SERIOUS_CHANCE, SERIOUS_PER_ALERT, PATCH_MIN_MEDICAL, ZONES } from './incidents.js';
 import { openingResult } from './halls.js';
@@ -1015,11 +1015,11 @@ function finish(state) {
   // Growth can mean a pay rise: graduation or main stat +2 since the last deal (core/renewals.js).
   for (const op of survivors) if (!isFreelancer(op)) checkRenewal(state, op, graduatedOps.includes(op));
 
-  // A job on overwatch counts towards a specialisation; Joss offers one once the stats are there too.
+  // A job on overwatch counts towards a specialisation (a gate of its own). Then a level-up for anyone with the jobs behind them and
+  // a skill ready (core/levelup.js; replaced Joss's offers, 2026-11-20).
   const sniper = am.overwatch && survivors.find((o) => o.id === am.overwatch.id);
   if (sniper) noteOverwatchJob(sniper, am.overwatch.kit);
-  checkSpecialisations(state);
-  checkBuildOffers(state); // a move or payload for someone with enough jobs behind them (slice 3-ii-b)
+  checkLevelUps(state);
 
   // Clinic Hands (earned): once a job, gets a lightly hurt crewmate back a day sooner.
   const patched = [];

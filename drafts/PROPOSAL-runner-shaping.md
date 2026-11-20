@@ -1,6 +1,6 @@
 # Proposal: shaping a runner, in one place
 
-Status: direction agreed with the owner (2026-11-18, calls below). Step 1 (the read) is built; nothing else is. Supersedes the "piece vs role" split in `drafts/RECONCILE-medical-piloting-leadership.md`, which this replaces as the way medical, piloting and leadership abilities are earned.
+Status: direction agreed with the owner (2026-11-18, calls below). Step 1 (the read) is built; step 2 (the menu) shipped as the Skills list (#215); step 3 (training focus) is built (2026-11-20, save v82, 15% moved, `docs/sims/focus-2026-11-20.md`). Owner, 2026-11-20: keep three slots. Step 4 (picks) is built as **level-ups** (2026-11-20, save v83): a runner levels up when a skill is ready (gates met, place open, a specialisation's overwatch jobs done) and they have 4 jobs with the crew, then 4 after each pick; the player picks any ready skill on their page. Next: step 5. Supersedes the "piece vs role" split in `drafts/RECONCILE-medical-piloting-leadership.md`, which this replaces as the way medical, piloting and leadership abilities are earned.
 
 ## The owner's direction (2026-11-18)
 

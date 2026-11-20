@@ -11,16 +11,18 @@ import { playMission, carefulPolicy } from './play.js';
 const ROLE_PRIMARY = { muscle: 'combat', driver: 'piloting', tech: 'tech', face: 'social', medic: 'medical', infiltrator: 'stealth' };
 
 /** A rookie with main stat `start` and ceiling `ceiling`. */
-export function makeRookie({ role = 'infiltrator', age = 20, start = 11, ceiling = 17 } = {}) {
+/** focus: the training focus (core/development.js FOCUS); room: extra ceilings for other stats, e.g. { combat: 14 }. */
+export function makeRookie({ role = 'infiltrator', age = 20, start = 11, ceiling = 17, focus = [], room = {} } = {}) {
   const main = ROLE_PRIMARY[role];
   const stats = Object.fromEntries(STATS.map((s) => [s, 7]));
   stats[main] = start;
   const potential = Object.fromEntries(STATS.map((s) => [s, 9]));
   potential[main] = ceiling;
+  Object.assign(potential, room);
   return prepareOperative({
     id: 'rookie', name: 'Test Rookie', handle: 'Kid', age, role, tier: 'rookie', stats, potential,
     traits: [], wage: 450, condition: { fatigue: 0, morale: 60, neuralLoad: 0, burnout: 0, injury: 'healthy', injuryDays: 0 },
-    trust: {}, history: [], bio: '', origin: '',
+    trust: {}, history: [], bio: '', origin: '', focus,
   });
 }
 

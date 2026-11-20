@@ -1,6 +1,6 @@
-// Specialisations (PLAN-CORE-LOOP.md, slice 5b): jobs on overwatch with the stats for it bring an
-// offer from Joss; the player takes it or says "not yet"; one each. Marksman and Drone Jockey
-// change what their kit does from overwatch. Run with: npm test
+// Specialisations (PLAN-CORE-LOOP.md, slice 5b): jobs on overwatch with the stats for it make one ready; since 2026-11-20 it is
+// learned at a level-up (tests/levelup.test.js), not by Joss's offer. One each. Marksman and Drone Jockey change what their kit does
+// from overwatch. Run with: npm test
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -8,13 +8,13 @@ import { createNewGame } from '../src/core/state.js';
 import * as M from '../src/core/mission.js';
 import { addOffer } from '../src/core/jobs.js';
 import { advanceDay } from '../src/core/time.js';
-import { resolveDecision } from '../src/core/decisions.js';
 import { overwatchKit, baseKit } from '../src/core/gear.js';
-import { eligible, checkSpecialisations, noteOverwatchJob, specOf, SPECIALISATIONS } from '../src/core/specialisations.js';
-import { SNOOZE_DAYS } from '../src/data/specialisations.js';
+import { noteOverwatchJob, SPECIALISATIONS } from '../src/core/specialisations.js';
+import { skillMenu } from '../src/core/abilities.js';
 import { playMission, carefulPolicy, arm } from './play.js';
 
-const offers = (s) => s.inbox.filter((m) => m.kind === 'spec');
+/** The specialisations ready for them (the skills list's Ready rows): stats and jobs on overwatch both. */
+const eligible = (op) => skillMenu(op).items.filter((i) => i.slot === 'spec' && i.state === 'ready').map((i) => i.id);
 
 /** A fresh crew; crew[2] can shoot and stay calm, crew[3] flies drones. */
 function crew(seed = 5) {
@@ -24,7 +24,7 @@ function crew(seed = 5) {
   return s;
 }
 
-test('no offer without both the stats and the jobs', () => {
+test('not ready without both the stats and the jobs', () => {
   const s = crew();
   const [, , shooter, , weak] = s.crew;
   assert.deepEqual(eligible(shooter), []);
@@ -37,39 +37,6 @@ test('no offer without both the stats and the jobs', () => {
   weak.stats.combat = 6; weak.stats.cool = 4;
   for (let i = 0; i < 5; i++) noteOverwatchJob(weak, 'rifle');
   assert.deepEqual(eligible(weak), [], 'jobs without the stats: no Marksman');
-});
-
-test('Joss offers it once; "Not yet" puts it off for two weeks, then he asks again; taking it is for good', () => {
-  let s = crew();
-  const id = s.crew[2].id;
-  for (let i = 0; i < 3; i++) noteOverwatchJob(s.crew[2], 'rifle');
-  checkSpecialisations(s);
-  checkSpecialisations(s);
-  assert.equal(offers(s).length, 1, 'one offer at a time');
-  const msg = offers(s)[0];
-  assert.deepEqual(msg.options.map((o) => o.id), ['marksman', 'later']);
-  assert.equal(msg.blocking, false, 'it doesn\'t stop the days');
-  s = resolveDecision(s, msg.id, 'later');
-  assert.equal(offers(s)[0].resolved, true);
-  for (let d = 1; d < SNOOZE_DAYS; d++) s = advanceDay(s);
-  assert.equal(offers(s).length, 1, 'quiet while it\'s put off');
-  s = advanceDay(s);
-  assert.equal(offers(s).length, 2, 'asked again');
-  s = resolveDecision(s, offers(s)[0].id, 'marksman');
-  const op = s.crew.find((o) => o.id === id);
-  assert.equal(specOf(op).id, 'marksman');
-  assert.match(op.history.at(-1), /Marksman/);
-  for (let d = 0; d < SNOOZE_DAYS + 2; d++) s = advanceDay(s);
-  assert.equal(offers(s).length, 2, 'one each: no more offers');
-});
-
-test('someone who qualifies for both is offered both in one message', () => {
-  const s = crew();
-  const op = s.crew[2];
-  op.stats.piloting = 12;
-  for (let i = 0; i < 3; i++) { noteOverwatchJob(op, 'rifle'); noteOverwatchJob(op, 'drone'); }
-  checkSpecialisations(s);
-  assert.deepEqual(offers(s)[0].options.map((o) => o.id), ['marksman', 'droneJockey', 'later']);
 });
 
 test('a Marksman: one more shot, +1, and a miss costs no heat; only with a rifle', () => {
@@ -116,7 +83,7 @@ test('on a real run: a Marksman starts with an extra shot, and missed shots add 
   assert.ok(missed >= 1, `saw ${missed} misses`);
 });
 
-test('three jobs on overwatch with a rifle, with the stats, and Joss makes the offer after the third', () => {
+test('three jobs on overwatch with a rifle, with the stats, and Marksman is ready after the third', () => {
   let s = crew(8);
   const ow = s.crew[2];
   arm(s, ow.id, 'rifle');
@@ -131,6 +98,6 @@ test('three jobs on overwatch with a rifle, with the stats, and Joss makes the o
     me.stats.combat = Math.max(me.stats.combat, 11); me.stats.cool = Math.max(me.stats.cool, 9);
     me.condition.injury = 'healthy'; me.condition.injuryDays = 0; me.condition.fatigue = 0;
     assert.equal(me.track.overwatch.rifle, job);
-    assert.equal(offers(s).length, job < 3 ? 0 : 1, `after job ${job}`);
+    assert.deepEqual(eligible(me), job < 3 ? [] : ['marksman'], `after job ${job}`);
   }
 });

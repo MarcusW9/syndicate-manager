@@ -55,7 +55,7 @@ setState(next){ setGame(next); saveGame(state); render(); }
   trust: {},            // op→op; nothing reads it
   history: [strings], progress, startStats, growthLog, status: [{id, until}],
   jobsWithCrew, contractMainStat, lastNoticeDay, renewalAgain,
-  gear: {armour, implants: [≤2], bag: [{item, x, y}]} (the carry grid, v45; was {weapon, armour, tool, implant}), marks: [{kind: 'scar'|'implant'|'tattoo', day}],
+  gear: {armour, implants: [≤2], bag: [{item, x, y}]} (the carry grid, v45; was {weapon, armour, tool, implant}), marks: [{kind: 'scar'|'implant'|'tattoo', day}], pickAt, levelUp: {day}|null (level-ups, v83: `core/levelup.js`), focus: [stat, ≤2] (training focus, v82: `FOCUS.divert` of points earned elsewhere move to these, `development.js focusSplit`),
   hall /*the district whose hall they sleep in (core/halls.js); freelancers have none*/ }
 // renown (2026-11), written once a job finishes: record: {jobs, atLevel, wins, clean, flawless, fights, fightsWon, carries, carriesByStat,
 //   broughtHome, criticalsSurvived, unscathed, bigScores, seriousInjuries, cleanStreak, bestCleanStreak, with:{opId:n}, activeWeeks, lastJobDay,
@@ -172,8 +172,10 @@ Seeded and saved. `makeRng(seed)` is mulberry32 (`core/rng.js`). `nextRng(state)
 
 Format: JSON of the state in `localStorage`. Keys: `syndicate-active-slot`, `syndicate-slot-N`, `…-backup` (weekly), `…-unreadable`, `syndicate-ironman-progress`, legacy `syndicate-save-v1`. `storageGet/Set/Remove` are the only storage calls (swap for iOS). `saveGame` writes slot + weekly backup (not in Ironman). `loadGame` migrates; on failure `keepUnreadable` and returns null. `exportSave` downloads JSON; `importSave(file)` migrates then `checkIronman`; `loadBackup`.
 
-**Versioning:** `SAVE_VERSION` 79 in `core/state.js` (v73-v76 are described in the `migrate` blocks of `save.js`). What each version added, newest first (one per line; grep `v52:`):
+**Versioning:** `SAVE_VERSION` 83 in `core/state.js` (v73-v76 and v80-v81 are described in the `migrate` blocks of `save.js`). What each version added, newest first (one per line; grep `v52:`):
 
+- v83: level-ups replace Joss's offers: every runner gets `pickAt` (from `buildAt`; a specialisation alone, from now) and `levelUp: null`; `buildAt`, `buildSnooze` and `specSnooze` go; an open `spec` or `build` offer is closed with a note (`core/levelup.js`).
+- v82: training focus: every runner and recruit gets `focus: []` (`core/development.js FOCUS`).
 - v79: enemy toughness (`b.toughness`, the threat's HP step): an engine-2 fight in progress gets toughness 0, so later arrivals match the ones already there.
 - v78: a weapon sets hit size: an engine-2 fight in progress gets each runner's `hit` from their weapon and the one strong margin.
 - v77: engine 2 moves from pips to HP (one pip = `FIGHT.hpUnit`, 10 HP): an engine-2 fight in progress still in pips (a runner or enemy with `pips`) gets `hp`, `max`, `stayHp`, `hpLost`, a vector's `tick` and each drawn shot's `hit` x10, and an answered pull-out call's key carries HP. A fight already in HP is left alone.

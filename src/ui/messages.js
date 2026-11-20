@@ -53,6 +53,7 @@ export function renderMessage(m) {
       ${m.kind === 'heat' ? renderHeatNotice(m) : ''}
       ${m.kind === 'spec' ? renderSpecOffer(m) : ''}
       ${m.kind === 'build' ? renderBuildOffer(m) : ''}
+      ${m.kind === 'levelup' ? (m.payload?.learned ? `<p><strong>Learned ${esc(m.payload.learned)}.</strong></p>` : state.crew.some((o) => o.id === m.payload?.opId) ? `<button class="btn btn--primary" data-action="open-op" data-id="${esc(m.payload.opId)}">Pick a skill on their page</button>` : '') : ''}
       ${m.kind === 'retirement' ? renderRetirement(m) : ''}
       ${m.kind === 'poach' ? renderPoach(m) : ''}
       ${m.kind === 'hall-offer' && !hallIn(state, m.payload.district) ? (canOpenHall(state, m.payload.district).ok ? `<button class="btn btn--primary" data-action="open-hall" data-id="${esc(m.payload.district)}">Open the hall · ${money(HALL_SITES[m.payload.district].deposit)}</button>` : `<p class="muted small">${esc(canOpenHall(state, m.payload.district).reason)}.</p>`) : ''}

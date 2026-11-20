@@ -58,6 +58,13 @@ export function pointCost(value, ceiling) {
 
 export const ageRate = (age) => (age < 25 ? 1.5 : age < 35 ? 1 : 0.5);
 
+// Training focus (save v82; drafts/PROPOSAL-runner-shaping.md step 3; owner's call 2026-11-18: a nudge).
+// The player marks up to `max` stats per runner (op.focus). Growth still comes from the work: a share
+// `divert` of every point earned in a stat outside the focus moves to the focus stats instead (split
+// evenly), so the total a runner earns does not change, only where it lands. Tuned with
+// scripts/sim-focus.mjs.
+export const FOCUS = { max: 2, divert: 0.15 };
+
 export const primaryStat = (op) => ROLE_PROFILES[op.role]?.primary ?? 'cool';
 
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
@@ -90,6 +97,9 @@ export function prepareOperative(op) {
   op.renewalAgain = op.renewalAgain ?? false;
   op.gear = op.gear ?? emptyLoadout();
   op.marks = op.marks ?? [];
+  op.focus = Array.isArray(op.focus) ? op.focus : []; // training focus (v82)
+  op.pickAt = op.pickAt ?? null; // level-ups (v83, core/levelup.js)
+  op.levelUp = op.levelUp ?? null;
   return op;
 }
 
@@ -227,6 +237,38 @@ export function progressShare(op, stat) {
   return Math.max(0, Math.min(1, (op.progress?.[stat] ?? 0) / cost));
 }
 
+/** A runner's training focus: up to FOCUS.max known stats, in STATS order. */
+export function focusOf(op) {
+  const picked = Array.isArray(op?.focus) ? op.focus : [];
+  return STATS.filter((s) => picked.includes(s)).slice(0, FOCUS.max);
+}
+
+/**
+ * Where points earned in `stat` land, as [[stat, points]]. Points in a focus stat stay there; points
+ * elsewhere give FOCUS.divert of themselves to the focus stats that can still grow, split evenly.
+ */
+export function focusSplit(op, stat, points) {
+  const to = focusOf(op).filter((s) => s !== stat && op.stats[s] !== undefined && op.stats[s] < MAX_STAT);
+  if (!to.length || focusOf(op).includes(stat) || points <= 0) return [[stat, points]];
+  const moved = points * FOCUS.divert;
+  return [[stat, points - moved], ...to.map((s) => [s, moved / to.length])];
+}
+
+/** Set a runner's training focus (the player's pick on their page). Returns new state; unknown stats are dropped. */
+export function setFocus(state, opId, stats) {
+  const focus = STATS.filter((s) => (stats ?? []).includes(s)).slice(0, FOCUS.max);
+  return { ...state, crew: state.crew.map((op) => (op.id === opId ? { ...op, focus } : op)) };
+}
+
+/** Add or remove one stat from a runner's focus; adding past the cap drops the oldest pick. Returns new state. */
+export function toggleFocus(state, opId, stat) {
+  const op = state.crew.find((o) => o.id === opId);
+  if (!op || !STATS.includes(stat)) return state;
+  const now = Array.isArray(op.focus) ? op.focus.filter((s) => STATS.includes(s)) : [];
+  const next = now.includes(stat) ? now.filter((s) => s !== stat) : [...now, stat].slice(-FOCUS.max);
+  return { ...state, crew: state.crew.map((o) => (o.id === opId ? { ...o, focus: next } : o)) };
+}
+
 /**
  * Grow one stat from raw points right now (age and mentoring applied).
  * Mutates op; returns { events: [{ opId, handle, stat, from, to, wall }], graduated }.
@@ -235,13 +277,14 @@ export function progressShare(op, stat) {
 export function gainXp(op, crew, stat, raw, day) {
   prepareOperative(op);
   const rate = ageRate(op.age) * (mentorsOf(op, crew).length ? MENTOR_RATE : 1);
-  const from = op.stats[stat];
   const events = [];
-  if (growStat(op, stat, raw * rate)) {
-    logChange(op, stat, from, op.stats[stat], day);
-    const ceiling = op.potential?.[stat] ?? 0;
-    const wall = stat === primaryStat(op) && from < ceiling && op.stats[stat] >= ceiling;
-    events.push({ opId: op.id, handle: op.handle, stat, from, to: op.stats[stat], ...(wall ? { wall: true } : {}) });
+  for (const [s, points] of focusSplit(op, stat, raw * rate)) {
+    const from = op.stats[s];
+    if (!growStat(op, s, points)) continue;
+    logChange(op, s, from, op.stats[s], day);
+    const ceiling = op.potential?.[s] ?? 0;
+    const wall = s === primaryStat(op) && from < ceiling && op.stats[s] >= ceiling;
+    events.push({ opId: op.id, handle: op.handle, stat: s, from, to: op.stats[s], ...(wall ? { wall: true } : {}) });
   }
   let graduated = false;
   if (op.tier === 'rookie' && op.stats[primaryStat(op)] >= GRADUATE_AT) {

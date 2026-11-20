@@ -2940,3 +2940,17 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .theme-red .nav__btn.is-active { color: var(--accent-2); }
 .theme-red .jobcard__name { color: #ff8a98; }
 .theme-red .jobcard__pay { color: var(--accent-2); }
+
+/* Training focus on a runner's page (2026-11-20, ui/crew.js renderFocus): eight stats, two picked. Icon over the word so
+   ENDURANCE fits four across at 360. */
+.focuspick__head { margin: 14px 0 4px; font: 700 0.8rem var(--display, inherit); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.focuspick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0 0 6px; }
+.focuspick .seg { min-height: var(--tap); padding: 6px 2px; justify-items: center; align-content: center; text-align: center; gap: 3px; color: var(--muted); }
+.focuspick .seg span { color: inherit; font: 700 0.7rem var(--display, inherit); text-transform: uppercase; letter-spacing: 0.02em; white-space: nowrap; }
+.focuspick .seg.is-on { color: var(--accent-2); }
+
+/* Level-up banner on the Skills list (2026-11-20, ui/skills.js; core/levelup.js). Sodium gold, the Ready pill's colour. */
+.levelup { display: grid; gap: 2px; margin: 4px 0 10px; padding: 10px 12px; border: 1px solid var(--warn); background: color-mix(in srgb, var(--warn) 10%, transparent); clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%); }
+.levelup strong { font: 700 0.85rem var(--display, inherit); text-transform: uppercase; letter-spacing: 0.1em; color: var(--warn); }
+.levelup span { font-size: 0.9rem; }
+.skillrow__learn { margin-top: 8px; }

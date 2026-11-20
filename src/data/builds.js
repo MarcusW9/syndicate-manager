@@ -117,10 +117,11 @@ Object.assign(PAYLOADS, {
   },
 });
 
-// The offer (slice 3-ii-b, 2026-11-17; placeholders, the owner tunes them by feel, 2.6.5). A runner holds one move and one payload (a slot each).
-// Joss offers a piece for an empty slot once they have done `firstAtJobs` jobs with the crew, then again `everyJobs` jobs after the last one
-// they took, and shows up to `size` pieces they qualify for (all there are, until the library grows); "Not yet" waits `snoozeDays`.
-export const BUILD_OFFER = { firstAtJobs: 4, everyJobs: 4, size: 3, snoozeDays: 14 };
+// Level-ups (save v83, 2026-11-20; drafts/PROPOSAL-runner-shaping.md step 4). They replaced Joss's offers (slice 3-ii-b, 2026-11-17,
+// `BUILD_OFFER`), keeping its rhythm so the pace holds: a runner levels up when a skill is ready for them (its stat gates met, its
+// place open, and for a specialisation its jobs on overwatch done) and they have `firstAtJobs` jobs with the crew, then `everyJobs`
+// more after each pick. The player then picks any ready skill on their page (core/levelup.js).
+export const LEVEL_UP = { firstAtJobs: 4, everyJobs: 4 };
 
 // The build the sims and the tests give (drafts/HANDOFF-builds-3iia.md: "given, not earned"). core/builds.js `withBuild` puts it on
 // the best combat runner of a crew. Not read by the game itself.

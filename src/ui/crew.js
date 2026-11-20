@@ -16,11 +16,9 @@ import { renderLoadout, renderGearSheet } from './gear.js';
 import { itemName } from '../core/gear.js';
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
 import { earnedText } from '../core/earned.js';
-import { SPECIALISATIONS } from '../core/specialisations.js';
-import { pieceById } from '../core/builds.js';
 import { STARTING_ROSTER_CAP, canHire, signingFee } from '../core/recruits.js';
-import { changesSince, primaryStat, progressShare, declineChance, ageRate, potentialRead, scoutFor } from '../core/development.js';
-import { openOffers } from './nav.js';
+import { changesSince, primaryStat, progressShare, declineChance, ageRate, potentialRead, scoutFor, focusOf, FOCUS, STATS } from '../core/development.js';
+import { levelUpOpen } from '../core/levelup.js';
 import { leadNames, renderGoneElsewhere } from './tongs.js';
 import { renderSkills } from './skills.js';
 import { esc, statName, face, statusChip, daysLeft, subTabs, infoButton, infoText, cityName, gearUi } from './shared.js';
@@ -100,7 +98,7 @@ export function renderCrew() {
           <li>
             <button class="row crewrow" data-action="open-op" data-id="${esc(op.id)}">
               ${face(op)}
-              <span class="crewrow__name"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"${openOffers(state, op.id).length ? ' <span class="pill pill--new">Offer</span>' : ''}</span>
+              <span class="crewrow__name"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"${levelUpOpen(op) ? ' <span class="pill pill--new">Level up</span>' : ''}</span>
               <span class="crewrow__info muted">${fameOf(op) === 'elite' ? `<span class="fame fame--elite">${esc(fameName('elite'))}</span> · ` : ''}${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age}</span>
               <span class="crewrow__status">${statusChip(availability(state, op))}</span>
               <span class="crewrow__scout">${scoutLine(op)}${growthMarker(op)}</span>
@@ -197,6 +195,22 @@ export function renderRecruit() {
       </div>
       </div>
     </section>`;
+}
+
+/**
+ * Training focus (core/development.js FOCUS): tap up to two stats; a share of what the runner learns
+ * elsewhere goes to them. Growth still comes from the work, and the hidden ceiling still holds.
+ */
+function renderFocus(op) {
+  const on = focusOf(op);
+  const share = Math.round(FOCUS.divert * 100);
+  return `<p class="focuspick__head">Training focus</p>
+      <div class="focuspick" role="group" aria-label="Training focus, up to ${FOCUS.max} stats">
+        ${STATS.filter((k) => op.stats[k] !== undefined).map((k) => `<button class="seg ${on.includes(k) ? 'is-on' : ''}" data-action="focus" data-id="${esc(k)}" aria-pressed="${on.includes(k)}">${statGlyph(k)}<span>${esc(statName(k))}</span></button>`).join('')}
+      </div>
+      <p class="muted small">${on.length
+        ? `${esc(on.map(statName).join(' and '))}: ${share}% of what ${esc(op.handle)} learns in other stats goes here. They still learn from the work, and nobody grows past what they have in them.`
+        : `Pick up to ${FOCUS.max}. ${share}% of what ${esc(op.handle)} learns in other stats would go to them instead.`}</p>`;
 }
 
 /** Plain-words growth rate for an age (see core/development.js). */
@@ -300,7 +314,6 @@ export function renderOperative() {
           ${marksText(op) ? `<p class="muted small">Marked: ${esc(marksText(op))}</p>` : ''}
         </div>
       </div>
-      ${renderOffers(op)}
       <div class="opgrid">
       <div class="opgrid__about">
       <p class="body">${esc(op.bio)}</p>
@@ -329,6 +342,7 @@ export function renderOperative() {
         <p>${esc(potentialRead(op, scoutFor(state.crew, op.role, op.id)?.handle))}</p>
         <p class="muted small">${esc(growthNote(op.age))} Green and red numbers are this season's change; "career" is since joining. The thin bar under each stat fills towards the next point.</p>
       </div>
+      ${op.freelance ? '' : renderFocus(op)}
 
       <h2>Condition</h2>
       ${bar('Fatigue', c.fatigue)}${bar('Morale', c.morale)}${bar('Neural load', c.neuralLoad)}${bar('Burnout', c.burnout)}
@@ -391,17 +405,3 @@ function synergies(op) {
       ${open ? `<div class="tipcard" role="note"><strong>Synergy with ${esc(open.mate.handle)}</strong><p>${esc(earnedText(state, open.e))}</p><p class="muted small">${open.mate.cause ? `${esc(open.mate.handle)} is gone. ` : ''}For good · since day ${open.e.day}</p>${open.mate.cause ? '' : `<button class="btn btn--ghost" data-action="open-op" data-id="${esc(open.mate.id)}">${esc(open.mate.handle)}'s page →</button>`}</div>` : ''}`;
 }
 
-/** Offers waiting for this runner (a specialisation or a build piece Joss put in the mail), decided here as well as in the message (owner, 2026-11-17). */
-function renderOffers(op) {
-  const open = openOffers(state, op.id);
-  if (!open.length) return '';
-  const what = (m, id) => (m.kind === 'spec' ? SPECIALISATIONS[id] : pieceById(id));
-  return `
-      <h2>Offers</h2>
-      ${open.map((m) => `
-      <div class="riskcard">
-        ${m.payload.ids.map((id) => `<p><strong>${esc(what(m, id)?.name ?? id)}</strong> · ${esc(what(m, id)?.desc ?? '')}</p>`).join('')}
-        <p class="muted small">${m.kind === 'spec' ? 'One specialisation each, for good.' : 'One move and one payload per runner. Once learned, neither can be replaced.'} "Not yet" and Joss asks again in two weeks.</p>
-        <div class="stack">${m.options.map((o) => `<button class="btn ${o.id === 'later' ? 'btn--ghost' : 'btn--primary'}" data-action="decide" data-id="${esc(m.id)}" data-option="${esc(o.id)}">${esc(o.label)}</button>`).join('')}</div>
-      </div>`).join('')}`;
-}
