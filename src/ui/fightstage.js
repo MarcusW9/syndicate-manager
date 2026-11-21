@@ -22,7 +22,7 @@ import { SPECIAL_MOVES, SPECIAL_FAST_CUT, SPECIAL_LOOK_DEFAULT, ENEMY_LOOKS } fr
 export const PACE_K = { watch: 1, fast: 0.6, resolve: 0 };
 export const PACES = ['fast', 'watch', 'resolve'];
 // Step lengths at Watch, in ms.
-const MS = { enter: 900, move: 600, lean: 320, fire: 240, gap: 160, heal: 450, aura: 1100, spread: 900, tick: 560, tickOut: 700, dome: 420, patch: 1100, alarm: 1800, rifleOw: 1600, droneOw: 2300, van: 900, jam: 650, ping: 450, flank: 450, settle: 600 };
+const MS = { enter: 900, move: 600, lean: 320, fire: 240, gap: 160, heal: 450, aura: 1100, spread: 900, tick: 560, tickOut: 700, dome: 420, patch: 1100, alarm: 1800, rifleOw: 1600, droneOw: 2300, van: 900, patchTag: 1500, jam: 650, ping: 450, flank: 450, settle: 600 };
 const HIDDEN = new Set(['aboard', 'gone', 'fled']);
 
 const mid = (a, b) => [Math.round((a[0] + b[0]) / 2), Math.round((a[1] + b[1]) / 2)];
@@ -168,6 +168,8 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
         push({ do: 'heal', id: l.targetId, by: l.actor, ok: false, dur: ms(MS.heal) });
         adv(MS.heal);
       }
+      // The way-out stabilise gets a tag with the roll's result (owner, 2026-11-21).
+      if (l.key === 'stabiliseWayOut' || l.key === 'stabiliseFail') push({ do: 'tag', to: l.targetId, big: word(l.key === 'stabiliseWayOut' ? 'stage.stabilised' : 'stage.stabFailed'), small: null, tone: l.key === 'stabiliseWayOut' ? 'good' : 'bad', dur: 0 });
     } else if (rule === 'jam' && l.actor) {
       const ok = l.key === 'jamOk';
       const callers = (l.callers ?? []).map(enemyId).filter((c) => units[c]);
@@ -194,8 +196,11 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
       adv(MS.alarm);
     } else if (rule === 'patch' && l.actor && !l.targetId && units[l.actor]) {
       // The medic's hands on the way out: the aura, then a soft pulse over everyone reached.
-      push({ do: 'patch', id: l.actor, targets: (l.targets ?? []).filter((x) => units[x]), dur: ms(MS.patch) });
-      adv(MS.patch);
+      // Triage tags (owner, 2026-11-21): data links fan out from the medic and a tag lands on each runner with what they got and where they stand.
+      const tg = (l.targets ?? []).filter((x) => units[x]);
+      const share = Object.fromEntries(tg.map((id) => { const r = (cue.runners ?? []).find((q) => q.id === id); return [id, r ? (r.hpExact ?? r.hp) / ((r.maxExact ?? r.max) || 1) : 1]; }));
+      push({ do: 'patch', id: l.actor, targets: tg, amount: l.hpHeal ?? null, share, dur: ms(MS.patchTag) });
+      adv(MS.patchTag);
     } else if (rule === 'death' && l.targetId) {
       push({ do: 'fall', id: l.targetId, dead: true, dur: ms(MS.fire) });
       adv(MS.fire + MS.gap);
@@ -333,8 +338,12 @@ export function forceEffect(cue, kind) {
     // The van's clock ring (2026-11-20): round 1 it pulls in (four rounds), one boards; round 2 it is held two more; round 3 someone is left outside.
     const r = c.round ?? 1; const V = (key, slots = {}, extra = {}) => L({ kind: 'van', rule: 'van', key, slots, ...extra });
     c.lines = r <= 1 ? [V('vanIn', { leaves: r + 4 }), V('inVan', {}, { actor: crew[0] })] : r === 2 ? [V('inVan', {}, { actor: crew[1] }), V('vanHeld', { rounds: 2, outside: 1 })] : [V('vanCantWait', { outside: 1 })];
+  } else if (kind === 'patch') {
+    // Triage tags (2026-11-21): the medic's patch over three runners (one still low), and a stabilise that takes and one that does not.
+    const low = (c.runners ?? []).find((r) => r.id === crew[1]); if (low) { low.hpExact = Math.round((low.maxExact ?? 30) * 0.3); }
+    c.lines = [L({ kind: 'patch', rule: 'patch', key: 'wayOutPatch', actor: crew[0], targets: crew.slice(0, 3), hpHeal: 10 }), L({ kind: 'stabilise', rule: 'stabilise', key: 'stabiliseWayOut', actor: crew[0], targetId: crew[2], success: true }), L({ kind: 'stabilise', rule: 'stabilise', key: 'stabiliseFail', actor: crew[0], targetId: crew[3] ?? crew[1], success: false })];
   } else if (kind === 'wayout') {
-    c.lines = [L({ rule: 'wayOut', key: 'wayOut' }), L({ kind: 'patch', rule: 'patch', key: 'wayOutPatch', actor: crew[0], targets: crew.slice(0, 3) }), L({ kind: 'stabilise', rule: 'stabilise', key: 'stabiliseWayOut', actor: crew[0], targetId: crew[1], success: true })];
+    c.lines = [L({ rule: 'wayOut', key: 'wayOut' }), L({ kind: 'patch', rule: 'patch', key: 'wayOutPatch', actor: crew[0], targets: crew.slice(0, 3), hpHeal: 10 }), L({ kind: 'stabilise', rule: 'stabilise', key: 'stabiliseWayOut', actor: crew[0], targetId: crew[1], success: true })];
   }
   return c;
 }
@@ -780,6 +789,16 @@ export function createStage(svg, deps) {
     vanLabel(word('stage.vanGone'), vanFx.g.classList.contains('is-bad') ? 'is-bad' : 'is-held');
     setTimeout(() => vanClose(), deps.reduced() ? 0 : 1000);
   }
+  // A cyberpunk tag over a runner (owner, 2026-11-21): a cut-corner plate with an accent bar, a bright figure and a small status word, that glitches in,
+  // holds and fades. tone: good (green), warn (amber), bad (red).
+  function tag(at, big, small, tone = 'good', lift = 0) {
+    const len = Math.max(String(big).length * 4.4, String(small ?? '').length * 3.3); const w = Math.max(24, 12 + len); const h = small ? 15 : 10;
+    const spot = gone(node('g', { transform: `translate(${at[0] - w / 2} ${at[1] - 24 - h - lift})` }), PACE_K.watch * MS.patchTag + 900); // the glitch animates the inner group, so the position survives
+    const g = node('g', { class: `fs-tag fs-tag--${tone}` }); spot.append(g);
+    g.append(node('path', { class: 'fs-tag__plate', d: `M0 0H${w - 4}L${w} 4V${h}H4L0 ${h - 4}Z` }), node('path', { class: 'fs-tag__bar', d: `M0 0V${h - 4}` }), node('path', { class: 'fs-tag__lead', d: `M${w / 2 - 2} ${h}L${w / 2} ${h + 3}L${w / 2 + 2} ${h}` }));
+    g.append(node('text', { class: 'fs-tag__big', x: w / 2 + 1, y: small ? 6.6 : 7.4 }, String(big)));
+    if (small) g.append(node('text', { class: 'fs-tag__small', x: w / 2 + 1, y: 12.4 }, small));
+  }
   const ensure = (id, u, seed) => (id.startsWith('e:') ? foes.get(id) ?? foeToken(id, u, seed) : deps.tok(id));
 
   /** Run one step (the script says what and where). */
@@ -965,17 +984,18 @@ export function createStage(svg, deps) {
         break;
       }
       case 'patch': {
-        // The medic's hands on the way out (2026-11-17): the aura's glow round the medic, then a soft pulse out over everyone reached.
+        // The medic's hands on the way out, as triage tags (owner, 2026-11-21): the aura's glow round the medic, a data link to each runner reached with
+        // packets running down it, and a tag on each: what they got and whether they are STABLE or STILL HURT.
         const m = pos(s.id);
-        const land = () => { for (const id of s.targets ?? []) { const t = pos(id); if (t) { flash(t, 'sp-flash--heal'); float(t, '+', 'is-heal'); } } };
-        if (!m || deps.reduced() || s.dur <= 0) { land(); break; }
-        const dur = Math.max(800, s.dur);
-        const reach = Math.max(16, ...(s.targets ?? []).map((id) => pos(id)).filter(Boolean).map((t) => Math.hypot(t[0] - m[0], t[1] - m[1]) + 8));
-        const glow = gone(node('circle', { class: 'fs-aura', cx: m[0], cy: m[1], r: 9 }), dur * 0.62); glow.style.animationDuration = `${dur * 0.6}ms`;
-        setTimeout(() => { const w = gone(node('circle', { class: 'fs-groupwave', cx: m[0], cy: m[1], r: reach }), dur * 0.5); w.style.animationDuration = `${dur * 0.45}ms`; }, dur * 0.35);
-        (s.targets ?? []).forEach((id, k) => { const t = pos(id); if (t) setTimeout(() => { gone(node('circle', { class: 'sp-ring sp-ring--ok', cx: t[0], cy: t[1], r: 9 }), 760); flash(t, 'sp-flash--heal'); float(t, '+', 'is-heal'); }, dur * 0.6 + k * 90); });
+        const tags = () => (s.targets ?? []).forEach((id, k) => { const t = pos(id); if (!t) return; const hurt = (s.share?.[id] ?? 1) < 0.6; setTimeout(() => { flash(t, 'sp-flash--heal'); tag(t, s.amount ? `+${s.amount}` : '+', word(hurt ? 'stage.patchHurt' : 'stage.patchStable'), hurt ? 'warn' : 'good', (k % 3) * 14); }, deps.reduced() || s.dur <= 0 ? 0 : s.dur * 0.3 + k * 130); });
+        if (!m || deps.reduced() || s.dur <= 0) { tags(); break; }
+        const dur = Math.max(900, s.dur);
+        const glow = gone(node('circle', { class: 'fs-aura', cx: m[0], cy: m[1], r: 9 }), dur * 0.42); glow.style.animationDuration = `${dur * 0.4}ms`;
+        (s.targets ?? []).forEach((id, k) => { const t = pos(id); if (!t) return; setTimeout(() => { const l = gone(node('path', { class: 'fs-tether', d: `M${m[0]} ${m[1]}L${t[0]} ${t[1]}`, pathLength: 100 }), dur * 0.7); l.style.animationDuration = `${dur * 0.18}ms, 0.5s`; }, dur * 0.12 + k * 90); });
+        tags();
         break;
       }
+      case 'tag': { const t = pos(s.to); if (t) tag(t, s.big, s.small, s.tone); break; }
       case 'fall': { const b = pos(s.id); if (s.id.startsWith('e:')) knockout(b); setStance(s.id, s.dead ? 'dead' : 'down'); if (drawn[s.id]) drawn[s.id] = { ...drawn[s.id], stance: s.dead ? 'dead' : 'down' }; if (b) body(b, s.id); break; }
       case 'leave': { const g = host(s.id); const from = pos(s.id); if (s.id.startsWith('e:') && from && !deps.reduced() && s.dur > 0) for (let k = 0; k < 5; k++) setTimeout(() => gone(node('circle', { class: 'fs-dust', cx: from[0] + (s.at[0] - from[0]) * (k / 5), cy: from[1] + (s.at[1] - from[1]) * (k / 5) + 5, r: 2.2 }), 500), (s.dur * k) / 6); // the fled kick up dust on the run
         put(g, s.at, s.dur); setTimeout(() => setStance(s.id, s.stance, true), s.dur); if (!s.id.startsWith('e:')) deps.pin(s.id, null); drawn[s.id] = { at: s.at, stance: s.stance }; break; }

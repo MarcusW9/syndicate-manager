@@ -7,6 +7,7 @@
   Kit.ability({
     id: 'patch', name: 'Patch pulse (way out)', scene: { hurt: { K: .5, M: .35, V: .08 } },
     rules: 'When a hack’s way out ends, the healer still standing heals everyone hurt a fixed amount and rolls to stabilise each downed runner (treatWayOut in core/fight.js; patch step in fightstage.js).',
+    decided: "Triage tags, made more cyberpunk (owner, 2026-11-21): cut-corner tags with an accent bar and a glitch-in, data links with packets running down them from the medic, and tags for the way-out stabilise. Built in fightstage.js (the patch step, tag()).",
     variants: [
       { id: 'now', tag: 'Now', name: 'Glow, wave, plus signs', note: 'The medic glows, a soft wave spreads, each runner reached gets a ring and a "+". The downed runner’s stabilise roll is a separate green or red ring.',
         async play(u) { glow(u, M, G, 900); await wait(350); const J = P(u, M); const w = el('circle', { cx: J[0], cy: J[1], r: 4, fill: 'rgba(74,222,128,.10)', stroke: G, 'stroke-width': 1.4 }, u.fx); tween(700, (t) => { w.setAttribute('r', 4 + 100 * t); w.style.opacity = 1 - t; }).then(() => w.remove()); await wait(350); for (const [id, n] of HURT) { ring(u, P(u, id), G, 16, 400); float(u, P(u, id), '+', G); bar(u, id, n); await wait(90); } ring(u, P(u, DOWN), G, 16, 400); await wait(600); } },

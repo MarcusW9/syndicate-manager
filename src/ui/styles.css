@@ -3029,3 +3029,16 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 @keyframes fs-van-out { 0% { opacity: 1; } 30% { opacity: 0.4; } 45% { opacity: 1; } 100% { opacity: 0; } }
 .sp-flash--van { fill: var(--warn); }
 @media (prefers-reduced-motion: reduce) { .fs-van__scan, .fs-van__seg.is-low, .fs-van.is-glitch .fs-van__ghost, .fs-van.is-leaving { animation: none; } }
+
+/* Triage tags (2026-11-21, Ability Lab pick, owner: "a bit more cyberpunk"): data links from the medic and a cut-corner tag on each runner. */
+.fs-tether { fill: none; stroke: #5fe0a5; stroke-width: 1; stroke-dasharray: 2 3; stroke-linecap: round; opacity: 0.85; pointer-events: none; filter: drop-shadow(0 0 2px #5fe0a5); animation: fs-tether-flow 0.5s linear infinite; }
+@keyframes fs-tether-flow { to { stroke-dashoffset: -10; } }
+.fs-tag { pointer-events: none; animation: fs-tag-life 2.4s steps(1, end) forwards; }
+.fs-tag__plate { fill: rgba(8, 12, 15, 0.9); stroke: #5fe0a5; stroke-width: 0.9; filter: drop-shadow(0 0 3px #5fe0a5); }
+.fs-tag__bar { stroke: #5fe0a5; stroke-width: 2.4; } .fs-tag__lead { fill: none; stroke: #5fe0a5; stroke-width: 0.9; }
+.fs-tag__big { fill: #d8ffe9; font: 700 6.6px Rajdhani, sans-serif; letter-spacing: 0.1em; text-anchor: middle; }
+.fs-tag__small { fill: #5fe0a5; font: 700 4.6px Rajdhani, sans-serif; letter-spacing: 0.2em; text-anchor: middle; }
+.fs-tag--warn .fs-tag__plate, .fs-tag--warn .fs-tag__bar, .fs-tag--warn .fs-tag__lead { stroke: var(--warn); } .fs-tag--warn .fs-tag__plate { filter: drop-shadow(0 0 3px var(--warn)); } .fs-tag--warn .fs-tag__small { fill: var(--warn); } .fs-tag--warn .fs-tag__big { fill: #fff3b0; }
+.fs-tag--bad .fs-tag__plate, .fs-tag--bad .fs-tag__bar, .fs-tag--bad .fs-tag__lead { stroke: var(--accent); } .fs-tag--bad .fs-tag__plate { filter: drop-shadow(0 0 3px var(--accent)); } .fs-tag--bad .fs-tag__big { fill: #ffd0d6; }
+@keyframes fs-tag-life { 0% { opacity: 0; } 6% { opacity: 1; transform: translateX(-1.5px); } 12% { opacity: 0.2; } 18% { opacity: 1; transform: translateX(1px); } 24% { transform: none; } 80% { opacity: 1; } 90% { opacity: 0.5; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .fs-tether { animation: none; } .fs-tag { animation: none; } }
