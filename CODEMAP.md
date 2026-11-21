@@ -90,7 +90,7 @@ How battles work (both engines, every number, the death rule): `docs/BATTLES.md`
   - `report.js` (the report summary; `reportEvent`: what a stored report keeps of each event, fights lean)
   - `feed.js` (a run's events as watch cards)
   - `upcoming.js` (Today's list).
-  - `book.js` (C5, 2026-11-09): the Anchor's Book, a monthly slate of letter grades from public fame, form and age plus a lasting bias (never the hidden rating): `publishBook` is called at the end of `weeklyRivals`, `bookView` is what the UI reads; flavour only, no roll reads it. Audit with `node scripts/sim-book.mjs`.
+  - `book.js` (C5, 2026-11-09): the Anchor's Book, a monthly slate of letter grades from public fame, form and age plus a lasting bias (never the hidden rating): `publishBook` is called at the end of `weeklyRivals` (its Joss note also names, from Street rank, up to three slated people we could get: `slateLeads`, 2026-11-21), `bookView` is what the UI reads; flavour only, no roll reads it. Audit with `node scripts/sim-book.mjs`.
 - Smaller helpers: `decisions.js` (blocking decision messages: `RESOLVERS` by kind)
   - `inbox.js` (`markRead(state, id)`, a new state with the message read, 2026-11-16; keeps the inbox bounded, save v46: `trimInbox` in the day tick drops old news, read after `INBOX_KEEP.weeks`, unread after `unreadWeeks`, never more than `max`; `isActionable` keeps anything still waiting on the player)
   - `money.js` (formatting)

@@ -15,7 +15,9 @@ import { ratingOf } from './rating.js';
 import { fameOf } from './fame.js';
 import { recordOf } from './record.js';
 import { isQuiet } from './houses.js';
-import { slateMark } from './reads.js';
+import { slateMark, isUnsettled } from './reads.js';
+import { rankForHalls } from './tong.js';
+import { TONG_RANKS } from '../data/tong.js';
 
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 const slug = (name) => name.toLowerCase().replace(/&/g, '').replace(/[^a-z]+/g, '-').replace(/^-|-$/g, '');
@@ -150,6 +152,8 @@ export function publishBook(state) {
     else if (e.move === 'up') lines.push(fill(BOOK_TEXT.joss.up, { op: op.handle }));
   }
   for (const id of watch) { const op = ours.get(id); if (op) lines.push(fill(BOOK_TEXT.joss.watch, { op: op.handle })); }
+  const leads = slateLeads(state, entries, watch);
+  if (leads.length) lines.push(...leads.map((l) => fill(BOOK_TEXT.joss[l.why], l)), BOOK_TEXT.joss.leadsOutro);
   if (lines.length) {
     state.inbox.unshift({
       id: `book-${absMonth}`, type: 'crew', day: state.day, subject: BOOK_TEXT.joss.subject,
@@ -157,6 +161,41 @@ export function publishBook(state) {
     });
   }
   return state;
+}
+
+// --- Names we could get (2026-11-21: the slate-day note; DESIGN.md "the tongs' world, playable first") ---
+
+const rankIndex = (id) => TONG_RANKS.findIndex((k) => k.id === id);
+
+/**
+ * Up to BOOK.leadsMax people on this slate we could actually go after, for Joss's note: loose names first (free, or in a
+ * selling house's sale, at most BOOK.leadsLooseMax), then names we know are unsettled, then rival names the elders have
+ * down as one to watch. Never ours, never a house's head, never a quiet name (the slate leaves those off). From Street rank
+ * (the same gate as rival offers, D3). Reads only what the player could see; no roll. [{ why, name, grade, tong }].
+ */
+export function slateLeads(state, entries, watch) {
+  const r = state.rivals;
+  if (!r || rankIndex(rankForHalls((state.halls ?? []).length).id) < rankIndex(BOOK.leadsMinRank)) return [];
+  const ours = new Set((state.crew ?? []).map((o) => o.runnerId ?? o.id));
+  const cards = new Map((r.cards ?? []).map((c) => [c.runnerId ?? c.id, c]));
+  const active = new Map(r.tongs.filter((t) => t.status === 'active').map((t) => [t.id, t]));
+  const grades = new Map(entries.map((e) => [e.runnerId, e.grade]));
+  const sale = new Set(r.sale?.cardIds ?? []);
+  const gettable = (id) => { const c = cards.get(id); return c && !ours.has(id) && !isQuiet(c) && !(c.tongId && active.get(c.tongId)?.headId === c.id) ? c : null; };
+  const out = []; const used = new Set();
+  const add = (id, why, tongId) => {
+    const c = gettable(id); if (!c || used.has(id) || out.length >= BOOK.leadsMax) return;
+    used.add(id); out.push({ why, name: c.name, grade: grades.get(id) ?? '', tong: active.get(tongId ?? c.tongId)?.name ?? '' });
+  };
+  for (const e of entries) { // best grade first
+    if (out.filter((l) => l.why === 'free' || l.why === 'sale').length >= BOOK.leadsLooseMax) break;
+    const c = gettable(e.runnerId); if (!c) continue;
+    if (sale.has(c.id) && active.has(r.sale.tongId)) add(e.runnerId, 'sale', r.sale.tongId);
+    else if (!c.tongId) add(e.runnerId, 'free');
+  }
+  for (const e of entries) { const c = gettable(e.runnerId); if (c?.tongId && active.has(c.tongId) && isUnsettled(state, c)) add(e.runnerId, 'unsettled'); }
+  for (const id of watch) { const c = gettable(id); if (c?.tongId && active.has(c.tongId)) add(id, 'rising'); }
+  return out;
 }
 
 // --- The view (the only thing the UI reads) ---
