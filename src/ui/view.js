@@ -54,6 +54,7 @@ export const V = {
   importInput: null, // the hidden save-file picker (see mountApp)
   focusNext: null, // { action, id }: the control to focus after the next render (going back to a list)
   pieceTip: null, // 'messageId|pieceId': the build piece whose explanation is open in an offer
+  stashOpen: null, // the stash item whose sheet is open on Tong › Armoury › Stash (2026-11-21)
   armouryTab: 'stash', // Tong › Armoury's sub-tab (2026-11-21): 'stash' | 'carried' | 'shop'
   opTab: 'overview', // a runner's page tab (2026-11-21): 'overview' | 'skills' | 'gear' | 'career'; kept across runners
   skillTab: 'all', // the skills list's filter on a runner's page: 'all' | 'held' | 'ready' | 'locked'

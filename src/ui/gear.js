@@ -144,10 +144,10 @@ export function renderArmoury(ui, state) {
   const tabs = ui.subTabs ? ui.subTabs('Armoury sections', 'armoury-tab', [['stash', 'Stash', stash.length], ['carried', 'Carried', worn], ['shop', 'Shop']], tab) : '';
   const body = {
     stash: () => `
-      <p class="muted small">Nobody is carrying these. Put one on someone from their page (Crew, then Gear), or sell it.</p>
+      <p class="muted small">Nobody is carrying these. Tap one to give it to someone or sell it.</p>
       ${groups.length ? groups.map(([k, name, list]) => `
         <h3 class="gear__slot">${esc(name)} <span class="muted">· ${list.length}</span></h3>
-        <ul class="list list--plain gearlist">${list.map((item) => itemRow(ui, item, { action: 'sell', label: `Sell ${money(sellPrice(item))}` })).join('')}</ul>`).join('')
+        <ul class="list list--plain stashlist">${list.map((item) => stashRow(ui, item)).join('')}</ul>`).join('')
         : '<p class="muted small">The stash is empty. What you buy, find or take off someone waits here.</p>'}`,
     carried: () => `
       <p class="muted small">Gear stays on whoever carries it, job after job. Tap someone to change what they carry.</p>
@@ -183,7 +183,57 @@ export function renderArmoury(ui, state) {
       <h1>Armoury</h1>`}
       ${tabs}
       <div class="armoury__body armoury__body--${tab}">${body}</div>
-    </section>`;
+    </section>
+    ${tab === 'stash' && ui.stashOpen ? stashSheet(ui, state, ui.stashOpen) : ''}`;
+}
+
+/** A stash item as one short row (owner's pick A, 2026-11-21): picture, name, the key line; its tier on the left edge. Tap: the sheet. */
+function stashRow(ui, item) {
+  const { esc } = ui;
+  const perks = perksOf(item).length;
+  return `<li><button class="row stashrow stashrow--${(TIERS[item.tier] ?? TIERS[BASE_TIER]).colour}" data-action="stash-open" data-id="${esc(item.uid)}" aria-label="${esc(itemTitle(item))}: ${esc(itemEffect(item))}. Tap to give it to someone or sell it.">
+    ${thumb(item)}
+    <span class="stashrow__main"><strong class="stashrow__name">${esc(itemTitle(item))}</strong>
+      <span class="stashrow__eff small">${esc(itemEffect(item))}${perks ? ` · ${perks} perk${perks > 1 ? 's' : ''}` : ''}</span></span>
+    <span class="stashrow__go" aria-hidden="true">›</span>
+  </button></li>`;
+}
+
+/** Who could take this item now, and what it would do (armour swaps with what they wear). */
+function takers(state, item) {
+  const where = placeOf(item.type);
+  return state.crew.filter((op) => !op.freelance).map((op) => {
+    const g = op.gear ?? {};
+    const can = canChangeGear(state, op);
+    let fit = { ok: true, note: '' };
+    if (!can.ok) fit = { ok: false, note: `${can.reason}` };
+    else if (where === 'bag' && !firstFit(op, item)) fit = { ok: false, note: 'no room in their bag' };
+    else if (where === 'implant' && ((g.implants ?? []).length >= SOCKETS || (g.implants ?? []).some((i) => i.type === item.type))) fit = { ok: false, note: (g.implants ?? []).some((i) => i.type === item.type) ? 'already has one' : 'no free socket' };
+    else if (where === 'armour' && g.armour) fit = { ok: true, note: `swaps for their ${itemTitle(g.armour).toLowerCase()}` };
+    return { op, ...fit };
+  }).sort((a, b) => b.ok - a.ok);
+}
+
+/** The stash item's sheet: the full look and perks, Give to… (anyone it fits), and Sell. */
+function stashSheet(ui, state, uid) {
+  const { esc, money } = ui;
+  const item = (state.stash ?? []).find((i) => i.uid === uid);
+  if (!item) return '';
+  const who = takers(state, item);
+  return `
+    <div class="scrim" data-action="stash-close"></div>
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(itemTitle(item))}">
+      <div class="sheet__head">
+        <div><h2 class="sheet__title">${esc(itemTitle(item))}</h2></div>
+        <button class="btn btn--ghost sheet__x" data-action="stash-close" aria-label="Close">✕</button>
+      </div>
+      <ul class="list list--plain gearlist">${itemRow(ui, item, {})}</ul>
+      <button class="btn btn--ghost btn--block" data-action="sell" data-id="${esc(item.uid)}">Sell for ${esc(money(sellPrice(item)))}</button>
+      <h3 class="sheet__group">Give to <span>it goes on them now</span></h3>
+      <ul class="list list--plain givelist">${who.map(({ op, ok, note }) => `<li><button class="row giverow" data-action="stash-give" data-id="${esc(`${item.uid}|${op.id}`)}" ${ok ? '' : 'disabled'}>
+        ${ui.face ? ui.face(op, 'sm') : ''}<span class="row__main"><strong>${esc(op.handle)}</strong> <span class="muted small">${esc(op.role)}</span>${note ? `<br><span class="small ${ok ? 'muted' : 'giverow__no'}">${esc(note)}</span>` : ''}</span>
+        <span class="row__meta small">${ok ? 'Give' : ''}</span></button></li>`).join('')}</ul>
+    </div>`;
 }
 
 /** One worn tile (armour, or an implant socket): its drawing, name and effect, or empty. */

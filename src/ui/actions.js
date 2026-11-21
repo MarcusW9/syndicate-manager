@@ -145,7 +145,10 @@ export function onClick(e) {
     case 'skill-open': V.skillOpen = V.skillOpen === id ? null : id; break;
     case 'trait-tip': V.traitTip = V.traitTip === id ? null : id; break;
     // A runner's name or face anywhere (a message, a job board strip, a hall, a district card): their page, on Crew.
-    case 'armoury-tab': V.armouryTab = id; break;
+    case 'armoury-tab': V.armouryTab = id; V.stashOpen = null; break;
+    case 'stash-open': V.stashOpen = id; break;
+    case 'stash-close': V.focusNext = { action: 'stash-open', id: V.stashOpen }; V.stashOpen = null; break;
+    case 'stash-give': { const [uid, opId] = id.split('|'); V.stashOpen = null; return setState(equip(state, uid, opId, null)); }
     case 'op-tab': V.opTab = id; V.gearSlot = null; V.bagPick = null; break;
     case 'open-op': case 'op-link': remember(action, id); goHome('runner'); if (t.dataset.tab) V.opTab = t.dataset.tab; V.gearSlot = null; V.gearFor = null; V.openRecruitId = null; V.openOperativeId = id; V.bagPick = null; break;
     // Gear (ui/gear.js, core/gear.js): the armoury, and a runner's slots.
@@ -172,7 +175,7 @@ export function onClick(e) {
     case 'buy-offer': return setState(buyOffer(state, id));
     case 'sell': {
       const item = (state.stash ?? []).find((i) => i.uid === id);
-      if (item && confirm(`Sell the ${item.name ?? itemName(item).toLowerCase()} for ${money(sellPrice(item))}?`)) return setState(sellGear(state, id));
+      if (item && confirm(`Sell the ${item.name ?? itemName(item).toLowerCase()} for ${money(sellPrice(item))}?`)) { V.stashOpen = null; return setState(sellGear(state, id)); }
       break;
     }
     case 'gear-slot': V.gearSlot = id; break;

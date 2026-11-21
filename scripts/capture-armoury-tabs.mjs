@@ -1,4 +1,5 @@
-// Capture (2026-11-21, the armoury in sub-tabs): Tong › Armoury's Stash (by kind, best first), Carried (a row
+// Capture (2026-11-21, the armoury in sub-tabs): Tong › Armoury's Stash (short rows by kind, best first, and an
+// item's sheet), Carried (a row
 // per runner) and Shop, with a stash like the owner's playtest (a dozen pieces across kinds and tiers), at
 // 390x844 (full page), 844x390 and 1440x900. Run: node scripts/capture-armoury-tabs.mjs <out dir>
 import { createNewGame } from '../src/core/state.js';
@@ -34,6 +35,12 @@ try {
       await vis(p, `[data-action="armoury-tab"][data-id="${tab}"]`).click();
       await p.waitForTimeout(250);
       await p.screenshot({ path: `${out}/0${i + 1}-${tag}-${tab}.png`, fullPage: tag !== 'landscape' });
+      if (tab === 'stash') { // a stash item's sheet: the full look, Give to, Sell (2026-11-21)
+        await vis(p, '[data-action="stash-open"]').click();
+        await p.waitForTimeout(250);
+        await p.screenshot({ path: `${out}/01b-${tag}-stash-item.png` });
+        await vis(p, '.sheet [data-action="stash-close"]').click();
+      }
     }
     await p.close();
   }
