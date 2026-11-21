@@ -103,13 +103,14 @@ test("a name's page shows no stats until they are scouted, and never more than t
   const s = withOffer(5);
   const card = findCard(s, s.rivals.offer.cardId);
   const cold = renderLeadName(s, readFor(s, card).id);
-  assert.doesNotMatch(cold, /namestats/);
+  assert.equal((cold.match(/stat--unknown/g) ?? []).length, 8, 'every stat is a ? before a trip');
   assert.match(cold, new RegExp(SCOUT_LEVEL_TEXT.none.slice(0, 20)));
   assert.match(cold, /about ¥/, 'the wage is a guess before a trip');
   for (const level of [1, 2, 3]) {
     const t = structuredClone(s); t.rivals.scouted = { [card.id]: level };
     const html = renderLeadName(t, readFor(t, card).id);
-    assert.match(html, /namestats/);
+    assert.doesNotMatch(html, /stat--unknown/, 'the stats are shown from the first trip');
+    assert.equal(level >= 2, !/tchip--unknown/.test(html), 'traits show from the second trip');
     const band = readFor(t, card).potential;
     const safe = POTENTIAL_TEXT[band].split("'").at(-1).slice(0, 14); // the page escapes apostrophes
     assert.ok(html.includes(safe), `${band}: ${POTENTIAL_TEXT[band]}`);

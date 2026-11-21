@@ -214,7 +214,7 @@ export function readFor(state, card) {
   const tong = tongOf(state.rivals, card.tongId);
   const from = tongOf(state.rivals, card.fromTong);
   const read = readOf(state, card);
-  const out = { id: slug(card.name), name: card.name, role: card.role, fame: card.fame, word: ratingWord(cardRating(card), card), home: card.home, tong: tong?.name ?? null, from: from?.name ?? null, head: !!tong && tong.headId === card.id, level: ['none', 'seen', 'sharper', 'full'][level], stats: null, potential: null };
+  const out = { id: slug(card.name), name: card.name, role: card.role, fame: card.fame, word: ratingWord(cardRating(card), card), home: card.home, tong: tong?.name ?? null, from: from?.name ?? null, head: !!tong && tong.headId === card.id, level: ['none', 'seen', 'sharper', 'full'][level], stats: null, potential: null, traits: null };
   out.note = null;
   // E3: how old our read is (a word), whether they have changed since we looked, whether the house has told us they are unsettled, and the slate against what we saw.
   out.age = ageOf(state, read); out.changed = changedSince(card, read); out.unsettled = isUnsettled(state, card);
@@ -223,6 +223,7 @@ export function readFor(state, card) {
     const house = tong ?? from;
     out.note = house?.habit === 'workshop' || house?.habit === 'oldhouse' ? house.habit : null; // E1: what a watched name's house says about them
     out.stats = { ...d.stats };
+    if (level >= 2) out.traits = [...(d.traits ?? [])]; // 'sharper' and up: their born traits (same ones they would sign with)
     out.potential = potentialBand({ ...d, scoutError: scoutErrorAt(state, card, level) });
   }
   return out;

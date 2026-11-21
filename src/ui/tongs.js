@@ -8,6 +8,8 @@ import { readFor, approachFor, findCard, scoutLevel } from '../core/dossier.js';
 import { availability } from '../core/crew.js';
 import { dossierOf } from '../core/dossier.js';
 import { portrait } from './art.js';
+import { statGlyph, traitGlyph } from './icons.js';
+import { TRAITS } from '../data/traits.js';
 import { money } from '../core/money.js';
 import { TONG_RANKS } from '../data/tong.js';
 import { NAMES } from '../config/names.js';
@@ -228,18 +230,31 @@ function freeNamesBlock(state, view) {
 function nameHead(state, card, r) {
   const slate = bookLine(state, card.runnerId ?? card.id);
   return `<div class="namehead">${faceOfCard(state, card.id, 104)}<div><h1 class="cityhead">${esc(r.name)}</h1>
-    <p class="small">${esc([r.role, FAME_LINE[r.fame], r.tong ? `with ${r.tong}` : r.from ? `lately of ${r.from}` : 'between tongs'].join(' · '))}. ${esc(fill(RATING_WORDS[r.word] ?? '', { role: r.role, home: inText(r.home) }).replace(/^./, (c) => c.toUpperCase()))}.</p>${slate ? `<button class="linkbtn" data-action="tong-page" data-id="book">${esc(slate)} ›</button>` : ''}</div></div>`;
+    <p class="small">${esc([r.role, card.age, FAME_LINE[r.fame], r.tong ? `with ${r.tong}` : r.from ? `lately of ${r.from}` : 'between tongs'].join(' · '))}. ${esc(fill(RATING_WORDS[r.word] ?? '', { role: r.role, home: inText(r.home) }).replace(/^./, (c) => c.toUpperCase()))}.</p>${slate ? `<button class="linkbtn" data-action="tong-page" data-id="book">${esc(slate)} ›</button>` : ''}</div></div>`;
 }
 
-/** What scouting has shown so far (the same words wherever a name is read). */
+/** A stat tile like our own crew's page (`.stats`); an unknown one is a dashed `?` until a scouting trip shows it. */
+const statTile = (k, v) => `<div${v == null ? ' class="stat--unknown"' : ''}><dt class="iconword">${statGlyph(k)}${esc(k)}</dt><dd>${v == null ? '?' : v}</dd></div>`;
+/** A slot (skill, gear) we can't see until they are ours: a dashed `?`. */
+const unknownSlot = (label) => `<div class="slot--unknown"><span class="small muted">${esc(label)}</span><b>?</b></div>`;
+
+/**
+ * What scouting has shown so far, laid out like our own crew's page: stats, traits, development, skills and gear,
+ * with a `?` wherever we have not seen it yet. A trip unlocks stats (a first look), then traits and a sharper read.
+ */
 function nameKnow(r) {
-  const stats = r.stats ? `<p class="small namestats">${STAT_ORDER.map((k) => `${k} <strong>${r.stats[k]}</strong>`).join(' · ')}</p>` : '';
-  const potential = r.potential ? `<p class="small">${esc(POTENTIAL_TEXT[r.potential])}</p>` : '';
+  const known = r.stats ? STAT_ORDER.length : 0;
+  const stats = `<h2>Stats</h2><dl class="stats">${STAT_ORDER.map((k) => statTile(k, r.stats ? r.stats[k] : null)).join('')}</dl>
+    <p class="small muted">${known ? `${known} of ${STAT_ORDER.length} stats seen.` : 'Stats: a scouting trip shows them.'}</p>`;
+  const traits = `<h2>Traits</h2>${r.traits ? (r.traits.length ? `<ul class="tchips">${r.traits.map((t) => `<li><span class="tchip tchip--born">${traitGlyph(TRAITS[t]?.icon)}<span>${esc(TRAITS[t]?.name ?? t)}</span></span></li>`).join('')}</ul>` : '<p class="muted small">None.</p>') : `<ul class="tchips"><li><span class="tchip tchip--unknown">?</span></li><li><span class="tchip tchip--unknown">?</span></li></ul><p class="small muted">A second look shows their traits.</p>`}`;
+  const potential = `<h2>Development</h2><p class="small">${r.potential ? esc(POTENTIAL_TEXT[r.potential]) : '?'}</p>`;
   const note = r.note ? `<p class="small">${esc(HABIT_NOTE[r.note])}</p>` : '';
   const slate = r.slate ? `<p class="small slatemark slatemark--${esc(r.slate)}">${esc(SLATE_MARK[r.slate])}</p>` : '';
   const unsettled = r.unsettled ? `<p class="small">${esc(UNSETTLED_LINE)}</p>` : '';
   const old = r.age ? `<p class="small muted">${esc(READ_AGE[r.age].replace(/^./, (c) => c.toUpperCase()))}.${r.changed ? ` ${esc(CHANGED_LINE)}` : ''}</p>` : '';
-  return `<h2>What we know</h2>${stats}${potential}${note}${slate}${unsettled}<p class="small muted">${esc(SCOUT_LEVEL_TEXT[r.level])}</p>${old}`;
+  const gear = `<h2>Skills</h2><div class="nameslots">${['Move', 'Payload', 'Spec'].map(unknownSlot).join('')}</div>
+    <h2>Gear</h2><div class="nameslots">${['Armour', 'Implant 1', 'Implant 2'].map(unknownSlot).join('')}</div><p class="small muted">Skills and gear show once they are ours.</p>`;
+  return `<div class="nameknow"><h2>What we know</h2>${stats}${traits}${potential}${note}${slate}${unsettled}<p class="small muted">${esc(SCOUT_LEVEL_TEXT[r.level])}</p>${old}${gear}</div>`;
 }
 
 const goneCard = (back) => `<section class="panel tongs"><button class="linkbtn" data-action="back">‹ ${esc(back)}</button><h1 class="cityhead">Gone</h1><p class="small muted">${esc(SIGN_REASON.gone)}</p></section>`;

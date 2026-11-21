@@ -3043,3 +3043,11 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .fs-tag--bad .fs-tag__plate, .fs-tag--bad .fs-tag__bar, .fs-tag--bad .fs-tag__lead { stroke: var(--accent); } .fs-tag--bad .fs-tag__plate { filter: drop-shadow(0 0 3px var(--accent)); } .fs-tag--bad .fs-tag__big { fill: #ffd0d6; }
 @keyframes fs-tag-life { 0% { opacity: 0; } 6% { opacity: 1; transform: translateX(-1.5px); } 12% { opacity: 0.2; } 18% { opacity: 1; transform: translateX(1px); } 24% { transform: none; } 80% { opacity: 1; } 90% { opacity: 0.5; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .fs-tether { animation: none; } .fs-tag { animation: none; } }
+
+/* A scouted name, laid out like our own crew's page (2026-11-21): `?` for what we have not seen. */
+.nameknow .stats div.stat--unknown { border-style: dashed; }
+.nameknow .stats div.stat--unknown dd { color: var(--muted); opacity: 0.6; }
+.tchip--unknown { border-style: dashed; color: var(--muted); min-width: 44px; justify-content: center; }
+.nameslots { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+.slot--unknown { border: 1px dashed var(--line); min-height: 64px; padding: 8px 10px; display: flex; flex-direction: column; justify-content: space-between; }
+.slot--unknown b { font-size: 1.4rem; color: var(--muted); opacity: 0.6; }
