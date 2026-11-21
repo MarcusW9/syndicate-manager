@@ -1,0 +1,174 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mockup: the hall page, three ways</title>
+<style>
+:root{--bg:#0a0c0f;--panel:#12151b;--panel2:#171c25;--line:#2a303b;--text:#e9ecf1;--muted:#8a93a6;--red:#ff3d5f;--cy:#3de8d8;--warn:#f2d541}
+*{box-sizing:border-box}body{margin:0;background:#06080a;color:var(--text);font:15px system-ui,sans-serif;padding:20px}
+.wrap{max-width:1400px;margin:0 auto}
+.title{font:700 30px Rajdhani,'Arial Narrow',sans-serif;letter-spacing:.05em;text-transform:uppercase;margin:0}
+.cap{color:var(--muted);font-size:14px;margin:4px 0 18px;max-width:900px}
+.opt{margin:34px 0 0}.opt>h2{font:700 22px Rajdhani,sans-serif;letter-spacing:.08em;text-transform:uppercase;margin:0;color:var(--warn)}
+.opt>p{color:var(--muted);max-width:900px;margin:4px 0 14px;font-size:14px}
+.row{margin-top:32px;display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+.ph{width:390px;background:var(--bg);border:1px solid var(--line);padding:0 0 14px;position:relative}
+.ph .lbl{position:absolute;top:-22px;left:0;font:600 11px Rajdhani,sans-serif;letter-spacing:.18em;color:var(--muted);text-transform:uppercase}
+.top{display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--line);font:600 12px Rajdhani;letter-spacing:.12em;color:var(--muted);background:var(--panel)}
+.top b{color:var(--text)}
+.pad{padding:12px 14px}
+.back{color:var(--cy);font-weight:600;font-size:14px;display:block;margin-bottom:8px}
+h1{font:700 24px Rajdhani,sans-serif;letter-spacing:.05em;text-transform:uppercase;margin:0}
+.sub{color:var(--muted);font-size:13px}
+.tag{display:inline-block;font:700 11px Rajdhani;letter-spacing:.14em;padding:1px 7px;border:1px solid var(--warn);color:var(--warn);vertical-align:middle;margin-left:6px}
+.head{display:flex;gap:12px;align-items:center}
+.lm{width:52px;height:52px;background:linear-gradient(135deg,#3a3320,#1b1f28);flex:none;clip-path:polygon(0 0,86% 0,100% 14%,100% 100%,0 100%);display:grid;place-items:center;font-size:24px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px}
+.st{background:var(--panel);border:1px solid var(--line);padding:6px 8px}
+.st .k{font:600 10px Rajdhani;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+.st .v{font:700 20px Rajdhani}.st .v.w{color:var(--warn)}.st .v.r{color:var(--red)}
+h3{font:600 12px Rajdhani,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--cy);margin:16px 0 8px;display:flex;gap:10px;align-items:center}
+h3:after{content:"";flex:1;height:1px;background:var(--line)}
+.crew{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.crew li{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);padding:6px 8px;min-height:44px}
+.av{width:30px;height:30px;background:linear-gradient(135deg,#2b3a40,#4a3a52);flex:none;clip-path:polygon(0 0,80% 0,100% 20%,100% 100%,0 100%)}
+.crew b{font-weight:700}.crew .r{color:var(--muted);font-size:12px}
+.crew .s{margin-left:auto;font:700 11px Rajdhani;letter-spacing:.08em;padding:2px 7px;background:#10312f;color:var(--cy);white-space:nowrap}
+.crew .s.bad{background:#3a1119;color:#ff7a90}.crew .s.ok{background:#1b2a1f;color:#7fd99a}
+.card{background:var(--panel);border:1px solid var(--line);clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%);padding:10px 12px;margin-top:8px}
+.card.raid{border-left:3px solid var(--red);background:#1a1216}
+.card .t{font:700 16px Rajdhani;letter-spacing:.04em}.card.raid .t{color:#ff6b82}
+.card p{margin:3px 0 0;font-size:13px;color:var(--muted)}
+.btn{display:block;text-align:center;border:1px solid var(--line);background:#1b212b;padding:11px;margin-top:8px;font:700 13px Rajdhani;letter-spacing:.12em;text-transform:uppercase;min-height:44px;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%)}
+.btn.p{border-color:var(--cy);color:var(--cy)}
+.fold{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel);border:1px solid var(--line);padding:10px 12px;margin-top:6px;min-height:52px;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
+.fold b{font:700 15px Rajdhani;letter-spacing:.1em;text-transform:uppercase;display:block}
+.fold span{color:var(--muted);font-size:12.5px}.fold i{font-style:normal;color:var(--cy);font-size:18px}
+.fold.hot{border-left:3px solid var(--warn)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.tile{background:var(--panel);border:1px solid var(--line);padding:12px;min-height:104px;clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,0 100%);display:flex;flex-direction:column;justify-content:space-between}
+.tile b{font:700 16px Rajdhani;letter-spacing:.1em;text-transform:uppercase}
+.tile .big{font:700 26px Rajdhani}.tile span{color:var(--muted);font-size:12.5px}.tile .go{color:var(--cy);font-size:12px;font-weight:700;letter-spacing:.1em}
+.tile.hot{border-color:var(--warn)}
+.tabs{display:flex;border-bottom:1px solid var(--line);margin:12px 0 0}
+.tabs div{flex:1;text-align:center;padding:11px 4px;font:700 13px Rajdhani;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);min-height:44px}
+.tabs .on{color:var(--cy);box-shadow:inset 0 -2px 0 var(--cy)}
+.map{height:210px;background:#0d1117;border:1px solid var(--line);position:relative;margin-top:8px;overflow:hidden;background-image:linear-gradient(#141a22 1px,transparent 1px),linear-gradient(90deg,#141a22 1px,transparent 1px);background-size:20px 20px}
+.map .b{position:absolute;border:1px solid #3a4352;background:#141a22;font:600 10px Rajdhani;letter-spacing:.14em;color:var(--muted);padding:3px 6px}
+.map .nx{border:1px dashed var(--cy);color:var(--cy);background:rgba(61,232,216,.05)}
+.cost{display:flex;justify-content:space-between;gap:10px;margin-top:6px}
+.cost>div{flex:1;background:var(--panel);border:1px solid var(--line);padding:10px}
+.cost b{display:block;font:700 22px Rajdhani;color:var(--warn)}.cost span{font-size:12.5px;color:var(--muted)}
+.note{margin-top:20px;padding:12px 14px;border:1px dashed var(--line);color:var(--muted);font-size:13.5px;max-width:900px}
+.note b{color:var(--text)}
+</style></head><body><div class="wrap">
+<h1 class="title">The hall page, three ways</h1>
+<p class="cap">All three show the Old Town hall from your screenshot (8 of 8 beds, five back in 3 days, two back tomorrow, Vector injured). Phone width, in the current skin. The raid card is drawn in as if a raid were warned on this hall; it is hidden otherwise.</p>
+
+<!-- ===================== A ===================== -->
+<div class="opt"><h2>A · One page, status first, everything else folded</h2>
+<p>Same single page, but it opens with the answers (beds, who is out, rent, heat), then the raid if one is coming, then who lives here. The map and the shop are behind three folded rows. Least change to how the game is built.</p>
+<div class="row">
+<div class="ph"><span class="lbl">A · opens like this</span>
+<div class="top"><span>FRI · WK 43</span><b>¥39,100</b></div><div class="pad">
+<span class="back">‹ Halls</span>
+<div class="head"><div class="lm">🏚</div><div><h1>Old Town hall<span class="tag">HOME</span></h1><div class="sub">the damp room above a noodle shop</div></div></div>
+<div class="stats"><div class="st"><div class="k">Beds</div><div class="v w">8/8</div></div><div class="st"><div class="k">Out</div><div class="v">7</div></div><div class="st"><div class="k">Hurt</div><div class="v r">1</div></div><div class="st"><div class="k">Rent</div><div class="v">¥1.5k</div></div></div>
+<div class="card raid"><div class="t">● Police raid · Old Town hall</div><p>Mon · in 3 days · plan is optional</p><div class="btn p" style="margin-top:8px">Hold the hall · Siphon, Sensor back Mon</div><div class="btn">Clear out</div></div>
+<h3>Who sleeps here · 8/8</h3>
+<ul class="crew">
+<li><span class="av"></span><span><b>Cortex</b> <span class="r">rookie medic</span></span><span class="s">3 DAYS</span></li>
+<li><span class="av"></span><span><b>Grid</b> <span class="r">rookie muscle</span></span><span class="s">3 DAYS</span></li>
+<li><span class="av"></span><span><b>Siphon</b> <span class="r">veteran face</span></span><span class="s">TOMORROW</span></li>
+<li><span class="av"></span><span><b>Vector</b> <span class="r">veteran face</span></span><span class="s bad">INJURED · 9D</span></li>
+<li><span class="r" style="padding:6px 2px">+ 4 more ›</span></li></ul>
+<h3>Manage</h3>
+<div class="fold"><div><b>Rooms &amp; map</b><span>1 room · 8 beds · open the floor plan</span></div><i>›</i></div>
+<div class="fold"><div><b>Defences</b><span>0 built · 3 more cut a raid by 1</span></div><i>›</i></div>
+<div class="fold hot"><div><b>Grow the hall</b><span>Expand ¥20,000 · Buy ¥39,000</span></div><i>›</i></div>
+</div></div>
+</div></div>
+
+<!-- ===================== B ===================== -->
+<div class="opt"><h2>B · A short hub, with a page each for Crew, Rooms, Defences and Grow</h2>
+<p>The hall page becomes a dashboard of four tiles, each with one number and where it leads. Nothing on it needs scrolling. Every tile opens a small page that does one job. The map and the build tools live only on the Rooms and Defences pages.</p>
+<div class="row">
+<div class="ph"><span class="lbl">B · the hub</span>
+<div class="top"><span>FRI · WK 43</span><b>¥39,100</b></div><div class="pad">
+<span class="back">‹ Halls</span>
+<div class="head"><div class="lm">🏚</div><div><h1>Old Town hall<span class="tag">HOME</span></h1><div class="sub">Level 1 · ¥1,500/wk · heat 0/10</div></div></div>
+<div class="card raid"><div class="t">● Police raid · in 3 days</div><p>Siphon, Sensor due back Mon. Hold or clear out, or leave it.</p><div class="btn p" style="margin-top:8px">Raid plan ›</div></div>
+<div class="tiles">
+<div class="tile"><b>Crew</b><div class="big">8/8</div><span>1 hurt · 7 back by Mon</span><span class="go">OPEN ›</span></div>
+<div class="tile"><b>Rooms</b><div class="big">1</div><span>room built · 8 beds</span><span class="go">OPEN ›</span></div>
+<div class="tile"><b>Defences</b><div class="big">0</div><span>3 more cut a raid by 1</span><span class="go">OPEN ›</span></div>
+<div class="tile hot"><b>Grow</b><div class="big" style="color:var(--warn)">+2 beds</div><span>Expand ¥20,000</span><span class="go">OPEN ›</span></div>
+</div></div></div>
+
+<div class="ph"><span class="lbl">B · Crew page</span>
+<div class="top"><span>FRI · WK 43</span><b>¥39,100</b></div><div class="pad">
+<span class="back">‹ Old Town hall</span><h1>Who sleeps here</h1><div class="sub">8 of 8 beds · no free bed to move anyone in</div>
+<h3>At home now · 0</h3><div class="sub">Nobody. Everyone is out.</div>
+<h3>Out · back soon · 7</h3>
+<ul class="crew">
+<li><span class="av"></span><span><b>Siphon</b> <span class="r">veteran face</span></span><span class="s">TOMORROW</span></li>
+<li><span class="av"></span><span><b>Sensor</b> <span class="r">veteran muscle</span></span><span class="s">TOMORROW</span></li>
+<li><span class="av"></span><span><b>Cortex</b> <span class="r">rookie medic</span></span><span class="s">3 DAYS</span></li>
+<li><span class="av"></span><span><b>Grid</b> <span class="r">rookie muscle</span></span><span class="s">3 DAYS</span></li>
+<li><span class="av"></span><span><b>+ 3 more</b></span><span class="s">3 DAYS</span></li></ul>
+<h3>Hurt · 1</h3>
+<ul class="crew"><li><span class="av"></span><span><b>Vector</b> <span class="r">veteran face</span></span><span class="s bad">SERIOUS · 9D</span></li></ul>
+</div></div>
+
+<div class="ph"><span class="lbl">B · Grow page</span>
+<div class="top"><span>FRI · WK 43</span><b>¥39,100</b></div><div class="pad">
+<span class="back">‹ Old Town hall</span><h1>Grow the hall</h1><div class="sub">Your cash: ¥39,100</div>
+<h3>Expand</h3>
+<div class="card"><div class="t">Take the flat</div><p>+2 beds. Rent goes up ¥1,000 a week.</p><div class="cost"><div><b>¥20,000</b><span>once</span></div><div><b style="color:var(--text)">+¥1,000</b><span>per week</span></div></div><div class="btn p">Expand</div></div>
+<h3>Buy the place</h3>
+<div class="card"><div class="t">No more rent</div><p>Saves ¥1,500 a week. Pays for itself in about 26 weeks.</p><div class="cost"><div><b>¥39,000</b><span>once</span></div><div><b style="color:var(--text)">¥0</b><span>rent after</span></div></div><div class="btn">Buy the place</div></div>
+</div></div>
+</div></div>
+
+<!-- ===================== C ===================== -->
+<div class="opt"><h2>C · Tabs on the hall page, like a runner's page</h2>
+<p>One hall page with a short header and four tabs: Overview · Crew · Build · Grow. It matches how the runner page works (one header, tabs kept across visits), so there is nothing new to learn. The map only appears on the Build tab.</p>
+<div class="row">
+<div class="ph"><span class="lbl">C · Overview tab</span>
+<div class="top"><span>FRI · WK 43</span><b>¥39,100</b></div><div class="pad">
+<span class="back">‹ Halls</span>
+<div class="head"><div class="lm">🏚</div><div><h1>Old Town hall<span class="tag">HOME</span></h1><div class="sub">Level 1 · ¥1,500/wk · heat 0/10</div></div></div>
+<div class="tabs"><div class="on">Overview</div><div>Crew</div><div>Build</div><div>Grow</div></div>
+<div class="card raid"><div class="t">● Police raid · Mon</div><p>in 3 days · plan is optional</p><div class="btn p" style="margin-top:8px">Hold the hall · Siphon, Sensor back Mon</div><div class="btn">Clear out</div></div>
+<div class="stats"><div class="st"><div class="k">Beds</div><div class="v w">8/8</div></div><div class="st"><div class="k">Home</div><div class="v">0</div></div><div class="st"><div class="k">Hurt</div><div class="v r">1</div></div><div class="st"><div class="k">Defence</div><div class="v">0</div></div></div>
+<h3>Rooms</h3><div class="card" style="margin-top:0"><div class="t">Bunk room</div><p>8 in · 1 room built</p></div>
+<h3>Next step</h3><div class="card" style="margin-top:0"><div class="t">Build 3 defences</div><p>Cuts a raid's threat by 1.</p></div>
+</div></div>
+
+<div class="ph"><span class="lbl">C · Crew tab</span>
+<div class="top"><span>FRI · WK 43</span><b>¥39,100</b></div><div class="pad">
+<span class="back">‹ Halls</span>
+<div class="head"><div class="lm">🏚</div><div><h1>Old Town hall<span class="tag">HOME</span></h1><div class="sub">Level 1 · ¥1,500/wk · heat 0/10</div></div></div>
+<div class="tabs"><div>Overview</div><div class="on">Crew</div><div>Build</div><div>Grow</div></div>
+<h3>8/8 beds</h3>
+<ul class="crew">
+<li><span class="av"></span><span><b>Siphon</b> <span class="r">veteran face</span></span><span class="s">TOMORROW</span></li>
+<li><span class="av"></span><span><b>Sensor</b> <span class="r">veteran muscle</span></span><span class="s">TOMORROW</span></li>
+<li><span class="av"></span><span><b>Cortex</b> <span class="r">rookie medic</span></span><span class="s">3 DAYS</span></li>
+<li><span class="av"></span><span><b>Grid</b> <span class="r">rookie muscle</span></span><span class="s">3 DAYS</span></li>
+<li><span class="av"></span><span><b>Dim Sum</b> <span class="r">veteran tech</span></span><span class="s">3 DAYS</span></li>
+<li><span class="av"></span><span><b>Vector</b> <span class="r">veteran face</span></span><span class="s bad">SERIOUS · 9D</span></li></ul>
+<div class="btn">Move someone in · 0 free beds</div>
+</div></div>
+
+<div class="ph"><span class="lbl">C · Build tab (the map lives here)</span>
+<div class="top"><span>FRI · WK 43</span><b>¥39,100</b></div><div class="pad">
+<span class="back">‹ Halls</span>
+<div class="head"><div class="lm">🏚</div><div><h1>Old Town hall<span class="tag">HOME</span></h1><div class="sub">Level 1 · ¥1,500/wk · heat 0/10</div></div></div>
+<div class="tabs"><div>Overview</div><div>Crew</div><div class="on" style="">Build</div><div>Grow</div></div>
+<div class="sub" style="margin-top:10px">Tap a building for its rooms, or the yard for defences.</div>
+<div class="map"><div class="b" style="left:14px;top:14px;width:150px;height:70px">BACK ROOM</div><div class="b" style="left:14px;top:112px;width:150px;height:84px">ROOM · 8 IN</div><div class="b nx" style="left:200px;top:112px;width:160px;height:84px">FLAT · EXPAND</div><div class="b" style="left:200px;top:14px;width:80px;height:70px">YARD</div></div>
+<div class="fold" style="margin-top:10px"><div><b>Defences</b><span>0 built · 3 more cut a raid by 1</span></div><i>›</i></div>
+<div class="fold"><div><b>Posts</b><span>who stands where in a raid</span></div><i>›</i></div>
+</div></div>
+</div></div>
+
+<div class="note"><b>My pick: C, with B's Grow page folded in as the Grow tab.</b> It splits the page the same way B does, but it keeps one hall page and the tabs you already have on a runner's page. B is the right choice if you would rather open a short dashboard first and go deeper only when you need to. A is the smallest change and still leaves the map and the shop one scroll away.</div>
+</div></body></html>
