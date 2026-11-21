@@ -246,12 +246,15 @@ test('the gear sheet offers a second Apex piece as a swap and says what goes bac
   assert.ok(next.stash.some((i) => i.name === 'Generator Coat' || itemTitle(i).includes('Generator Coat')));
 });
 
-test('the Armoury row and the gear sheet show the history and the unique perk (name always, line on a tap)', () => {
+// 2026-11-21: stash rows are short (the owner's pick A); the history and the perk moved to the item's sheet, a tap away.
+test('the Armoury stash item and the gear sheet show the history and the unique perk (name always, line on a tap)', () => {
   const s = fresh(2);
   const item = makeApex(s, 'meterghost');
   s.stash.push(item);
-  const html = renderArmoury(ui, s);
-  assert.ok(html.includes(APEX_GEAR.meterghost.history), 'history in the row');
+  const row = renderArmoury(ui, s);
+  assert.ok(row.includes('stashrow--gold'), 'the row carries its tier on its edge');
+  const html = renderArmoury({ ...ui, stashOpen: item.uid }, s);
+  assert.ok(html.includes(APEX_GEAR.meterghost.history), 'history in the item\'s sheet');
   assert.ok(html.includes('Borrowed serial') && html.includes(APEX_GEAR.meterghost.perk.desc));
   assert.ok(html.includes('<details') && html.includes('perks--gold') && html.includes('tierframe--gold'));
   const list = perkList(item);

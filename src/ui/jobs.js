@@ -18,6 +18,7 @@ import { jobRead, readKey, keptRead } from '../core/squad.js';
 import { canWork, ask } from './boardwork.js';
 import { intelFor, SIDE_TRUST, sideReward, sideTaskById, sideOdds, sidePitch, sideCost } from '../core/sidetasks.js';
 import { ROLL_STATS } from '../core/development.js';
+import { contractsOf, contractOdds, slotTotal, postsOut, kindOf, CONTRACT } from '../core/contracts.js';
 import { clientRival } from '../core/rivals.js';
 import { clientRivalLine } from '../data/rivals.js';
 import { esc, infoButton, infoHtml, cityName, face, statName, riskWord, subTabs, infoText, districtName, statusChip, riskBadge, daysLeft } from './shared.js';
@@ -239,7 +240,7 @@ export function renderJobs(tab = V.jobsTab) {
       ${renderRunners()}
       ${jobs.length ? `<ul class="list list--cols jobslist">${jobs.map(jobCard).join('')}</ul>` : '<p class="muted">No work on the board. New work comes in through the week.</p>'}`,
     heists: () => renderHeist() || '<p class="muted">No heist on right now.</p>',
-    side: () => renderSideBoard(),
+    side: () => renderPosts() + renderSideBoard(),
     clients: () => renderClientList(),
   }[which]();
   return `
@@ -281,8 +282,93 @@ function renderSideBoard() {
 `;
 }
 
+// --- security posts (core/contracts.js, 2026-11-21) -------------------------------------------
+const clientOf = (id) => CLIENTS.find((c) => c.id === id)?.name ?? 'A client';
+
+/** Posts this week (a client pays per runner kept on a post) and the posts running now. */
+function renderPosts() {
+  const offers = contractsOf(state).offers;
+  const out = postsOut(state);
+  const ops = (ids) => ids.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean);
+  return `
+      <h2>Posts</h2>
+      <div class="infoline"><p class="muted small">Clients pay by the week for runners kept on a post.</p>${infoButton('posts', 'About posts')}</div>
+      ${infoText('posts', `Guard a door, escort a courier, watch a stall row. The runners are away for the days shown and the pay builds day by day, paid on Sunday. Most days are quiet; if the post is hit they call you: hold it, or give it up and come home. Posts teach a little but earn no fame. You can pull runners off early (trust ${CONTRACT.trust.pullOff}). New posts every Monday.`)}
+      ${out.length ? `<ul class="list postsout" aria-label="On a post now">
+        ${out.map((p) => {
+          const last = p.log.at(-1);
+          return `<li class="ctpost">
+            <div class="ctpost__top"><strong>${esc(p.name)}</strong><span class="ctpost__faces">${ops(p.crewIds).map((o) => face(o, 'sm')).join('')}</span></div>
+            <p class="small muted">${esc(districtName(p.district))} · until ${esc(calendar(p.endDay).weekday)} · ${money(p.owed)} so far</p>
+            ${last ? `<p class="small ctpost__log ctpost__log--${esc(last.tone)}">${esc(last.text)}</p>` : '<p class="small muted">First day on the post.</p>'}
+            <button class="btn btn--ghost btn--small" data-action="pull-post" data-id="${esc(p.id)}">Pull them off (trust ${CONTRACT.trust.pullOff})</button>
+          </li>`;
+        }).join('')}
+      </ul>` : ''}
+      ${offers.length ? `<ul class="list list--cols sidelist">
+        ${offers.map((o) => `
+          <li>
+            <button class="row siderow" data-action="open-post" data-id="${esc(o.id)}">
+              <strong class="siderow__reward siderow__reward--money">${money(slotTotal(o))} a runner</strong>
+              <span class="siderow__meta">${o.days}d · ${crewIcons(o.slots)}</span>
+              <span class="siderow__sub">${esc(kindOf(o).name)} · ${esc(clientOf(o.clientId))} · ${esc(districtName(o.district))} · ${kindOf(o).stats.map(statIcon).join('')}</span>
+            </button>
+          </li>`).join('')}
+      </ul>` : '<p class="muted small">No posts left this week. More on Monday.</p>'}`;
+}
+
+/** Putting runners on a post: the slots across the top, then whoever is free, the best fit first. */
+function renderPostPlan() {
+  const o = contractsOf(state).offers.find((x) => x.id === V.sidePlan.postId);
+  if (!o) { V.sidePlan = null; return renderJobs(); }
+  const k = kindOf(o);
+  const picked = V.sidePlan.crew.map((id) => state.crew.find((op) => op.id === id)).filter(Boolean);
+  const odds = picked.length ? contractOdds(state, o, V.sidePlan.crew) : null;
+  const fit = (op) => k.stats.reduce((n, st) => n + (op.stats[st] ?? 0), 0);
+  const bench = state.crew.filter((op) => !op.freelance && !V.sidePlan.crew.includes(op.id)).sort((a, b) => fit(b) - fit(a));
+  const slots = Array.from({ length: o.slots }, (_, i) => picked[i] ?? null);
+  return `
+    <section class="panel postplan">
+      <button class="btn btn--ghost" data-action="back">← ${esc(backLabel())}</button>
+      <h1>${esc(k.name)}: ${esc(clientOf(o.clientId))}</h1>
+      <p class="muted">${esc(districtName(o.district))} · ${o.days} day${o.days > 1 ? 's' : ''} away · up to ${o.slots}</p>
+      <p class="body">${esc(o.post)}</p>
+      <div class="riskcard">
+        <p><strong>Pay:</strong> ${money(slotTotal(o))} a runner for the post, ${money(slotTotal(o) * Math.max(1, picked.length))} with ${Math.max(1, picked.length)} on it, paid on Sunday as it builds.</p>
+        <p><strong>If it is hit:</strong> they call you. Hold it (a runner can be badly hurt, the post lost) or give it up (everyone home).</p>
+        <p class="muted small">${esc(k.blurb)} Kept on ${k.stats.map(statName).join(' and ')}. A little experience; no fame.</p>
+      </div>
+      <h2>On the post</h2>
+      <div class="slotchips postslots">
+        ${slots.map((op, i) => (op
+    ? `<button class="slotchip slotchip--on" data-action="post-remove" data-id="${esc(op.id)}" aria-label="${esc(op.handle)} on the post. Tap to take them off.">${face(op, 'sm')}<b>${esc(op.handle)}</b><small>${k.stats.map((st) => `${statName(st)} ${op.stats[st]}`).join(' · ')}</small></button>`
+    : `<div class="slotchip" aria-label="Slot ${i + 1}: empty"><b>+ Slot ${i + 1}</b><small>${i === 0 ? 'Pick below' : 'Optional'}</small></div>`)).join('')}
+      </div>
+      <h2>Free to send</h2>
+      <ul class="list postbench">
+        ${bench.map((op) => {
+          const a = availability(state, op);
+          const full = picked.length >= o.slots;
+          return `<li><button class="row postpick" data-action="post-add" data-id="${esc(op.id)}" ${a.ok && !full ? '' : 'disabled'}>
+              ${face(op, 'sm')}
+              <span class="row__main"><strong>${esc(op.handle)}</strong> <span class="muted">${esc(op.role)} · ${money(op.wage)}/wk</span><br><span class="small">${k.stats.map((st) => `${statName(st)} ${op.stats[st]}`).join(' · ')}</span></span>
+              <span class="row__meta">${a.ok ? (full ? '<span class="muted small">Slots full</span>' : '<span class="small">Add</span>') : statusChip(a)}</span>
+            </button></li>`;
+        }).join('')}
+      </ul>
+    </section>
+    <div class="planbar">
+      <div class="planbar__read">
+        ${odds ? riskBadge(odds.risk) : '<span class="risk risk--none">nobody yet</span>'}
+        <span class="planbar__why">${esc(odds ? `Each day ${Math.round(odds.chance * 100)}% to go quietly · ${odds.reads.map((r) => `${statName(r.stat)} ${r.value}`).join(', ')}` : `Pick up to ${o.slots}`)}</span>
+      </div>
+      <button class="btn btn--primary" data-action="take-post" ${picked.length ? '' : 'disabled'}>${picked.length ? `Put ${picked.length} on it` : 'Pick someone'}</button>
+    </div>`;
+}
+
 /** Planning a side task: who goes, how likely it goes well, what it gives and costs. */
 export function renderSidePlan() {
+  if (V.sidePlan.postId) return renderPostPlan();
   const t = sideTaskById(V.sidePlan.taskId);
   if (!t || !(state.sideBoard ?? []).includes(t.id)) { V.sidePlan = null; return renderJobs(); }
   const odds = V.sidePlan.crew.length ? sideOdds(state, t, V.sidePlan.crew) : null;

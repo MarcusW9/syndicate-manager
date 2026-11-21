@@ -11,7 +11,7 @@ import { money } from '../core/money.js';
 import { CALL_IN, describeCritical, describePending, currentStep, describeCrisis, fillBrief } from '../core/mission.js';
 import { renderFightOrders } from './fightorders.js';
 import { renderFightCallIn, renderFightRound } from './fightscreen.js';
-import { ORDERS, handsOffAllowed, needsPlayer } from '../core/autorun.js';
+import { ORDERS, decide, handsOffAllowed, needsPlayer } from '../core/autorun.js';
 import { dayDone } from '../core/away.js';
 import { OVERWATCH_KIT } from '../core/incidents.js';
 import { renderWatch } from './watch.js';
@@ -34,7 +34,7 @@ export function renderCallIns(t, days = t.days) {
   if (!V.ordersOpen) {
     return `${head}
       <button class="orderline" data-action="toggle-orders" aria-expanded="false">${esc(summary)} <b>Change</b></button>
-      ${lead && callIn === 'risky' ? `<p class="lead small"><strong>${esc(lead.handle)} leads</strong> (${esc(lead.fame)}): they take one risky call themselves before calling you.</p>` : ''}`;
+      ${lead && callIn === 'risky' ? `<p class="lead small"><strong>${esc(lead.handle)} leads</strong> (${esc(lead.fame)}): they take one risky call themselves before calling you (never a twist: those are yours).</p>` : ''}`;
   }
   return `${head}
       <div id="plan-orders">
@@ -48,7 +48,7 @@ export function renderCallIns(t, days = t.days) {
         ${Object.entries(CALL_IN).map(([k, c]) => `
           <button class="seg ${callIn === k ? 'is-on' : ''}" data-action="callin" data-id="${k}" aria-pressed="${callIn === k}"><strong>${esc(c.name)}</strong><span>${esc(c.desc)}</span></button>`).join('')}
       </div>
-      ${lead && callIn === 'risky' ? `<p class="lead small"><strong>${esc(lead.handle)} leads</strong> (${esc(lead.fame)}): they take one risky call themselves before calling you.</p>` : ''}
+      ${lead && callIn === 'risky' ? `<p class="lead small"><strong>${esc(lead.handle)} leads</strong> (${esc(lead.fame)}): they take one risky call themselves before calling you (never a twist: those are yours).</p>` : ''}
       ${callIn === 'every' ? '' : `
       <h3 class="orders__h">When they decide themselves</h3>
       <p class="muted small">Their orders decide each call they don't bring to you. They never push on with a critical wound: at worst, they pull out.</p>
@@ -113,11 +113,12 @@ export function renderMission() {
   let result = '';
   if (am.done) {
     const r = am.result;
-    const title = r.outcome === 'loss' ? 'Someone didn\'t come home' : r.outcome === 'aborted' ? (am.raid ? 'Pulled back' : 'Job aborted') : am.raid ? 'Hall held' : 'Job done';
+    const title = r.outcome === 'loss' ? 'Someone didn\'t come home' : r.outcome === 'aborted' ? (am.raid || am.post ? 'Pulled back' : 'Job aborted') : am.raid ? 'Hall held' : am.post ? 'Post held' : 'Job done';
     result = `
       <div class="resultcard resultcard--${esc(r.outcome)}">
         <h2>${esc(title)}</h2>
-        ${am.raid ? '' : `<p>Paid ${money(r.pay)} · Heat +${r.heatGain}</p>`}
+        ${am.raid || am.post ? '' : `<p>Paid ${money(r.pay)} · Heat +${r.heatGain}</p>`}
+        ${am.post && r.post ? `<p>${esc(r.post)}</p>` : ''}
         ${r.injuries.length ? `<p>Injured: ${esc(r.injuries.join(', '))}</p>` : '<p>Nobody hurt.</p>'}
         ${r.deaths.length ? `<p><strong>Lost: ${esc(r.deaths.join(', '))}.</strong> Their names go on the wall.</p>` : ''}
         ${levelUpCards(r)}
@@ -147,11 +148,12 @@ function renderFinale(s) {
   const events = am.events ?? [];
   const SEV = ['light', 'serious', 'critical'];
   const ids = [...am.crewIds, am.overwatch?.id, am.wheels, am.standby?.joined ? null : am.standby?.id].filter(Boolean);
-  const raid = !!am.raid; // a raid on a hall pays nothing, so it is held or given up, not "done" (2026-11-20)
-  const title = { completed: raid ? 'Hall held' : 'Job done', aborted: raid ? 'Pulled back' : 'Walked away', loss: "Someone didn't come home" }[r.outcome] ?? 'Job over';
+  const raid = !!am.raid || !!am.post; // a raid on a hall, or a hit post (2026-11-21), pays nothing now, so it is held or given up, not "done" (2026-11-20)
+  const place = am.post ? 'Post' : 'Hall';
+  const title = { completed: raid ? `${place} held` : 'Job done', aborted: raid ? 'Pulled back' : 'Walked away', loss: "Someone didn't come home" }[r.outcome] ?? 'Job over';
   // The result stacked in block capitals like a chop, one word group a line (2026-11-10).
   const zh = { completed: raid ? '守住' : '搞掂', aborted: raid ? '撤退' : '收手' }[r.outcome] ?? '搞掂'; // Cantonese: sorted, hands off; held, pulled back
-  const lines = { completed: raid ? ['Hall', 'Held'] : ['Job', 'Done'], aborted: raid ? ['Pulled', 'Back'] : ['Walked', 'Away'] }[r.outcome] ?? ['Job', 'Over'];
+  const lines = { completed: raid ? [place, 'Held'] : ['Job', 'Done'], aborted: raid ? ['Pulled', 'Back'] : ['Walked', 'Away'] }[r.outcome] ?? ['Job', 'Over'];
   // A death is never stamped (2026-11-10): that outcome gets a plain, quiet title instead of a chop.
   const heading = r.outcome === 'loss'
     ? `<h2 class="finale__title">${esc(title)}</h2>`
@@ -184,6 +186,7 @@ function renderFinale(s) {
         ${raid ? '' : `<p class="finale__pay"><span data-count="${r.pay}" data-fmt="${esc(NAMES.currency)}">${esc(money(r.pay))}</span><span class="finale__heat">Heat +${r.heatGain}</span></p>`}
         <ul class="finale__team">${team}</ul>
         ${r.client && r.trustChange ? `<p class="finale__line">${esc(r.client)}: trust ${r.trustChange > 0 ? '+' : ''}${r.trustChange}</p>` : ''}
+        ${am.post && r.post ? `<p class="finale__line">${esc(r.post)}</p>` : ''}
         <div class="finale__btns">
           <button class="btn btn--ghost" data-action="finale-close">See the report</button>
           <button class="btn btn--primary finale__go" data-action="close-mission">Back to the safehouse</button>
@@ -296,10 +299,12 @@ function renderCallIn(s) {
   if (am.battle && currentStep(am)?.type === 'battle' && needsPlayer(s)) return renderFightOrders(s, esc, (id) => { const op = s.crew.find((o) => o.id === id); return op ? face(op, 'sm') : ''; });
   if (currentStep(am)?.type === 'crisis' && needsPlayer(s)) {
     const v = describeCrisis(s);
+    const lean = v.choices.find((c) => c.id === decide(s, am.orders ?? 'steady').id);
     return `
       <div class="crisis">
-        <p class="crisis__title">The crew is calling in</p>
+        <p class="crisis__title">The crew is calling in${currentStep(am).twist ? ': a twist' : ''}</p>
         <p>${esc(v.text)}</p>
+        ${lean ? `<p class="small muted">Left to their orders, they would: <strong>${esc(lean.label)}</strong>.</p>` : ''}
         <div class="choices">${v.choices.map((c) => choiceButton(c, 'choose')).join('')}</div>
       </div>`;
   }

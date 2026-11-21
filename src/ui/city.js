@@ -52,7 +52,7 @@ function crewsOnMap(key) {
   const away = crewsOut(state).filter((c) => c.district === key).sort((a, b) => b.waiting - a.waiting)
     .map((c) => { const o = ops(c.crewIds); return { ops: o, call: c.waiting, side: false, from: from(o), progress: c.beats ? c.beatsDone / c.beats : 0.5 }; });
   const am = state.activeMission;
-  const live = am && !am.done && !am.raid && templateById(am.templateId)?.district === key ? [{ ops: ops(am.crewIds), call: false, side: false, from: from(ops(am.crewIds)) }] : [];
+  const live = am && !am.done && !am.raid && !am.post && templateById(am.templateId)?.district === key ? [{ ops: ops(am.crewIds), call: false, side: false, from: from(ops(am.crewIds)) }] : [];
   const side = sideTasksOut(state).filter((t) => t.district === key).map((t) => { const o = ops(t.crewIds); return { ops: o, call: false, side: true, from: from(o) }; });
   return [...away, ...live, ...side].filter((c) => c.ops.length).slice(0, 3);
 }

@@ -214,7 +214,7 @@ export function renderTong() {
         <button class="iconbtn" data-action="tong-rename" aria-label="Rename the tong" title="Rename">✎</button></p>`}
       <p class="small tongstanding">${esc(standing)}</p>
       ${subTabs('Tong sections', 'tong-tab', [['halls', 'Halls'], ['armoury', 'Armoury']], tab)}
-      ${tab === 'halls' ? renderHalls() : renderArmoury({ ...gearUi, embedded: true }, state)}
+      ${tab === 'halls' ? renderHalls() : renderArmoury({ ...gearUi, embedded: true, tab: V.armouryTab, stashOpen: V.stashOpen, subTabs, face }, state)}
     </section>`;
 }
 const totalBeds = () => (state.halls ?? []).reduce((n, h) => n + bedsOf(h), 0);

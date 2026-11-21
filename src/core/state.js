@@ -11,11 +11,12 @@ import { prepareOperative } from './development.js';
 import { refreshFreelancers } from './freelance.js';
 import { ECONOMY } from '../data/economy.js';
 import { refreshSideBoard } from './sidetasks.js';
+import { refreshContracts } from './contracts.js';
 import { refreshArmoury } from './looks.js';
 import { seedRivals } from './rivals.js';
 import { cleanTongName, tongNameProblem } from './tongname.js';
 
-export const SAVE_VERSION = 83;
+export const SAVE_VERSION = 85;
 
 // A rookie crew's first board: small work only.
 export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];
@@ -90,6 +91,7 @@ export function createNewGame({ seed = 1, difficulty = 'standard', startCrew = '
     raids: [], // raids on our halls, warned and waiting (core/raids.js; police v40, gangs v41)
     grudges: { redLanterns: 0, silverFan: 0 }, // each gang's grudge against us, 0-10 (core/gangs.js, save v41)
     sideBoard: [], sideOut: [], intel: {}, // side tasks (core/sidetasks.js)
+    contracts: { offers: [], active: [], seq: 0 }, // security posts (core/contracts.js, save v84)
     recruits: [],
     freelancers: [],
     recruitSeq: 0,
@@ -125,6 +127,7 @@ export function createNewGame({ seed = 1, difficulty = 'standard', startCrew = '
   syncHalls(state);
   refreshFreelancers(state);
   refreshSideBoard(state);
+  refreshContracts(state); // the first security posts (core/contracts.js)
   refreshArmoury(state);
   state.rivals = seedRivals(state); // hashRng only: no roll moves (core/rivals.js)
   state.dayStartCash = state.cash;

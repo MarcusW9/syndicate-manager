@@ -87,8 +87,8 @@ export const TWISTS = [
     text: 'Something the client didn\'t mention: a safe, an unlocked office, a second crate. Nobody would know if you took it.',
     choices: [
       { id: 'take', label: 'Take it', kind: 'push', stat: 'stealth', difficulty: 12, successCost: { payCut: -0.5 },
-        success: 'It comes with you. The job pays half as much again.', failure: 'It was alarmed.', failureInjury: 'light', failureCost: { heat: 2 },
-        report: { success: 'The crew took the unexpected extra score and carried it out with the original objective. The job paid half as much again. Pay +50%.', failure: 'The unexpected score was alarmed. Someone was hurt getting clear. Heat +2.' } },
+        success: 'It comes with you.', failure: 'It was alarmed.', failureInjury: 'light', failureCost: { heat: 2 },
+        report: { success: 'The crew took the unexpected extra score and carried it out with the original objective. Pay +50%.', failure: 'The unexpected score was alarmed. Someone was hurt getting clear. Heat +2.' } },
       { id: 'leave', label: 'Leave it: stick to the job', kind: 'adapt', stat: 'cool', sure: true, difficulty: 0,
         success: 'Discipline. The client will hear you played it straight.', failure: '', failureInjury: 'none',
         report: { success: 'The crew left the unexpected score untouched and completed the job they had been hired to do.' } },

@@ -11,6 +11,7 @@
 // can put someone at death's door, never dead: only "keep fighting" (the push on of a fight)
 // leaves them dying, and any exit after that still brings them home.
 
+import { finishPost } from './contracts.js';
 import { jobGrudge, addGrudge, grudgeOf, GANGS } from './gangs.js';
 import { finishRaid, followHome } from './raids.js';
 import { crewLead } from './lead.js';
@@ -70,7 +71,7 @@ const rollDifficulty = (am, choice) => choice.difficulty + (am.threatDelta ?? 0)
 /** Call-in rules (who decides at a crisis): the player every time, only when it's risky, or never (hands-off). */
 export const CALL_IN = {
   every: { name: 'Every crisis', desc: 'You make every call.' },
-  risky: { name: 'When it\'s risky', desc: 'They call you when their best option is less than even odds. Otherwise their orders decide.' },
+  risky: { name: 'When it\'s risky', desc: 'They call you when their best option is less than even odds, and at every twist. Otherwise their orders decide.' },
   never: { name: 'Never', desc: 'Their orders decide everything. A critical wound: they pull out.' },
 };
 export const RISKY_BELOW = 0.5;
@@ -897,6 +898,7 @@ function finish(state) {
   const am = state.activeMission;
   if (am.done) return;
   if (am.raid) { finishRaid(state); return; } // a raid on a hall ends its own way (core/raids.js)
+  if (am.post) { finishPost(state); return; } // a hit security post ends its own way (core/contracts.js)
   const tpl = templateById(am.templateId);
   const crew = crewOf(state, am);
   const medic = findRole(crew.filter((o) => !am.untreated.includes(o.id)), 'medic');

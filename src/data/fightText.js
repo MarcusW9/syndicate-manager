@@ -92,6 +92,7 @@ export const FIGHT_TEXT = {
   // {soak} comes from core/fight.js soakOf, never a separate sum.
   'view.soak': 'Soaks {soak} HP from every hit; 1 HP minimum',
   'standbyOut': '{who} steps out to help.',
+  'reinforceIn': '{who} gets there and joins the fight.',
   'climbBack': '{who} climbs back out to reach {target}.',
   'vanEarly': 'The driver brings the van in early: it arrives at the end of round {round}. This is the planned way out, not a new threat.',
   'vanIn': 'The getaway van pulls in: the planned way out. Everyone makes for it, and it leaves at the end of round {leaves}.',

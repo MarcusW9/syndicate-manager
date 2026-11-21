@@ -54,6 +54,9 @@ export const V = {
   importInput: null, // the hidden save-file picker (see mountApp)
   focusNext: null, // { action, id }: the control to focus after the next render (going back to a list)
   pieceTip: null, // 'messageId|pieceId': the build piece whose explanation is open in an offer
+  stashOpen: null, // the stash item whose sheet is open on Tong › Armoury › Stash (2026-11-21)
+  armouryTab: 'stash', // Tong › Armoury's sub-tab (2026-11-21): 'stash' | 'carried' | 'shop'
+  opTab: 'overview', // a runner's page tab (2026-11-21): 'overview' | 'skills' | 'gear' | 'career'; kept across runners
   skillTab: 'all', // the skills list's filter on a runner's page: 'all' | 'held' | 'ready' | 'locked'
   skillOpen: null, // 'opId|skillId': the skill row whose full text is open (one at a time)
   traitTip: null, // 'pageId|key': the trait chip or synergy whose card is open (one at a time)
@@ -90,7 +93,7 @@ export const buzzLater = new Set(); // calls let ring out this session: they rin
 // --- navigation (ui/nav.js) --------------------------------------------
 /** The view as it is now: everything Back has to put back. Plan objects are kept by reference (the plan is UI, not game state). */
 export function viewNow() {
-  return { screen: V.screen, openMessageId: V.openMessageId, openOperativeId: V.openOperativeId, openRecruitId: V.openRecruitId, leadName: V.leadName, tongTab: V.tongTab, crewTab: V.crewTab, jobsTab: V.jobsTab, hallPage: V.hallPage, buildView: V.buildView, tongsView: V.tongsView, cityDistrict: V.cityDistrict, cityTab: V.cityTab, loreTab: V.loreTab, clientPage: V.clientPage, inboxUnread: V.inboxUnread, plan: V.plan, sidePlan: V.sidePlan };
+  return { armouryTab: V.armouryTab, opTab: V.opTab, screen: V.screen, openMessageId: V.openMessageId, openOperativeId: V.openOperativeId, openRecruitId: V.openRecruitId, leadName: V.leadName, tongTab: V.tongTab, crewTab: V.crewTab, jobsTab: V.jobsTab, hallPage: V.hallPage, buildView: V.buildView, tongsView: V.tongsView, cityDistrict: V.cityDistrict, cityTab: V.cityTab, loreTab: V.loreTab, clientPage: V.clientPage, inboxUnread: V.inboxUnread, plan: V.plan, sidePlan: V.sidePlan };
 }
 
 /** A link to a page: remember this view (and the control that was tapped) so Back can return to it. */
@@ -101,7 +104,7 @@ export function remember(action, id) {
 
 /** Put a remembered view back. Pages that have gone since (a lead hired, a job taken) fall back to their list. */
 export function restoreView(v) {
-  ({ screen: V.screen, openMessageId: V.openMessageId, openOperativeId: V.openOperativeId, openRecruitId: V.openRecruitId, leadName: V.leadName, tongTab: V.tongTab, crewTab: V.crewTab, jobsTab: V.jobsTab, hallPage: V.hallPage, buildView: V.buildView, tongsView: V.tongsView, cityDistrict: V.cityDistrict, cityTab: V.cityTab, loreTab: V.loreTab, clientPage: V.clientPage, inboxUnread: V.inboxUnread, plan: V.plan, sidePlan: V.sidePlan } = v);
+  ({ armouryTab: V.armouryTab = 'stash', opTab: V.opTab = 'overview', screen: V.screen, openMessageId: V.openMessageId, openOperativeId: V.openOperativeId, openRecruitId: V.openRecruitId, leadName: V.leadName, tongTab: V.tongTab, crewTab: V.crewTab, jobsTab: V.jobsTab, hallPage: V.hallPage, buildView: V.buildView, tongsView: V.tongsView, cityDistrict: V.cityDistrict, cityTab: V.cityTab, loreTab: V.loreTab, clientPage: V.clientPage, inboxUnread: V.inboxUnread, plan: V.plan, sidePlan: V.sidePlan } = v);
   if (V.openMessageId && !state.inbox.some((m) => m.id === V.openMessageId)) V.openMessageId = null;
   if (V.openOperativeId && ![...state.crew, ...state.memorial].some((o) => o.id === V.openOperativeId)) V.openOperativeId = null;
   if (V.openRecruitId && !(state.recruits ?? []).some((r) => r.id === V.openRecruitId)) V.openRecruitId = null;

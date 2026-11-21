@@ -95,6 +95,26 @@ test('a Respected-or-above runner leads, and takes exactly one risky call before
   assert.ok(!leadTakes(s), "'every crisis' means every crisis: the lead stands aside");
 });
 
+test('a twist always calls you under "when it\'s risky": the lead and the odds never take it', () => {
+  let s = createNewGame({ seed: 1, startCrew: 'fresh' });
+  s.crew[0].fame = 'elite';
+  s.jobs = [];
+  addOffer(s, 'warehouse');
+  s.jobs[0].twist = 'twist_rival_crew';
+  s = M.startMission(s, s.jobs[0].id, s.crew.slice(0, 3).map((o) => o.id), 'stealth', { callIn: 'risky', orders: 'cautious' });
+  const am = s.activeMission;
+  assert.ok(am.lead?.calls > 0, 'the crew has a lead with a call in hand');
+  const ordinary = am.queue.findIndex((q) => q.type === 'crisis' && !q.twist);
+  am.step = ordinary; // skip the walk: stand at the first ordinary crisis, then at the twist
+  assert.ok(M.currentStep(am).type === 'crisis' && !M.currentStep(am).twist);
+  am.step = am.queue.findIndex((q) => q.twist);
+  assert.ok(M.currentStep(am).twist, 'standing at the twist');
+  assert.ok(needsPlayer(s), 'the twist comes to you, whatever the odds');
+  assert.ok(!leadTakes(s), 'the lead does not take it');
+  am.callIn = 'never';
+  assert.ok(!needsPlayer(s), 'hands-off still decides it by orders');
+});
+
 test("a big tong's extra offers lean to routine work; the first three a week don't change", () => {
   const big = createNewGame({ seed: 73, startCrew: 'fresh' });
   big.reputation = 30;

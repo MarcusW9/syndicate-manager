@@ -1,5 +1,6 @@
 // Every tap in the game: onClick finds the [data-action] under the tap and switches on it.
 // The one place UI state (V) and the game state change in answer to the player.
+import { contractsOf, takeContract, pullOff, toggleHelp } from '../core/contracts.js';
 import { nextHallExpansion, expandHall, openHall, hallIn, buyPrice, buyHall, moveToHall } from '../core/halls.js';
 import { raidOn, cycleRaidPost, setRaidPlan, markRaidCallSeen, payOffRaid } from '../core/raids.js';
 import { HALL_SITES } from '../data/halls.js';
@@ -144,10 +145,15 @@ export function onClick(e) {
     case 'skill-open': V.skillOpen = V.skillOpen === id ? null : id; break;
     case 'trait-tip': V.traitTip = V.traitTip === id ? null : id; break;
     // A runner's name or face anywhere (a message, a job board strip, a hall, a district card): their page, on Crew.
-    case 'open-op': case 'op-link': remember(action, id); goHome('runner'); V.gearSlot = null; V.gearFor = null; V.openRecruitId = null; V.openOperativeId = id; V.bagPick = null; break;
+    case 'armoury-tab': V.armouryTab = id; V.stashOpen = null; break;
+    case 'stash-open': V.stashOpen = id; break;
+    case 'stash-close': V.focusNext = { action: 'stash-open', id: V.stashOpen }; V.stashOpen = null; break;
+    case 'stash-give': { const [uid, opId] = id.split('|'); V.stashOpen = null; return setState(equip(state, uid, opId, null)); }
+    case 'op-tab': V.opTab = id; V.gearSlot = null; V.bagPick = null; break;
+    case 'open-op': case 'op-link': remember(action, id); goHome('runner'); if (t.dataset.tab) V.opTab = t.dataset.tab; V.gearSlot = null; V.gearFor = null; V.openRecruitId = null; V.openOperativeId = id; V.bagPick = null; break;
     // Gear (ui/gear.js, core/gear.js): the armoury, and a runner's slots.
     // The Armoury is a sub-tab of Tong; the squad board's link to it keeps the plan (Back returns to it).
-    case 'open-armoury': remember(action, id); goHome('armoury'); V.hallPage = null; V.buildView = null; V.openOperativeId = null; V.openRecruitId = null; V.gearSlot = null; break;
+    case 'open-armoury': remember(action, id); goHome('armoury'); if (t.dataset.tab) V.armouryTab = t.dataset.tab; V.hallPage = null; V.buildView = null; V.openOperativeId = null; V.openRecruitId = null; V.gearSlot = null; break;
     case 'tong-tab': V.tongTab = id; break;
     case 'crew-tab': V.crewTab = id; break;
     case 'crew-filter': V.crewFilter = id; V.crewFilterOpen = false; V.focusNext = { action: 'crew-filter-open' }; break;
@@ -169,7 +175,7 @@ export function onClick(e) {
     case 'buy-offer': return setState(buyOffer(state, id));
     case 'sell': {
       const item = (state.stash ?? []).find((i) => i.uid === id);
-      if (item && confirm(`Sell the ${item.name ?? itemName(item).toLowerCase()} for ${money(sellPrice(item))}?`)) return setState(sellGear(state, id));
+      if (item && confirm(`Sell the ${item.name ?? itemName(item).toLowerCase()} for ${money(sellPrice(item))}?`)) { V.stashOpen = null; return setState(sellGear(state, id)); }
       break;
     }
     case 'gear-slot': V.gearSlot = id; break;
@@ -357,6 +363,23 @@ export function onClick(e) {
     case 'mode': V.plan.mode = id; break; // send them away, or watch live (DESIGN.md 2026-11-04)
     case 'kit': V.plan.kit = id; break;
     case 'open-side': if (!V.sidePlan) remember(action, id); goHome('sidePlan'); V.sidePlan = { taskId: id, crew: [] }; break;
+    // Security posts (core/contracts.js, 2026-11-21): planned on the side plan's home, with slots.
+    case 'open-post': if (!V.sidePlan) remember(action, id); goHome('sidePlan'); V.sidePlan = { postId: id, crew: [] }; break;
+    case 'post-add': {
+      const o = contractsOf(state).offers.find((x) => x.id === V.sidePlan?.postId);
+      if (o && !V.sidePlan.crew.includes(id) && V.sidePlan.crew.length < o.slots) V.sidePlan.crew = [...V.sidePlan.crew, id];
+      break;
+    }
+    case 'post-remove': if (V.sidePlan) V.sidePlan.crew = V.sidePlan.crew.filter((x) => x !== id); break;
+    case 'take-post': {
+      const next = takeContract(state, V.sidePlan.postId, V.sidePlan.crew);
+      V.sidePlan = null;
+      nav.clear();
+      V.screen = 'jobs'; V.jobsTab = 'side';
+      return setState(next);
+    }
+    case 'pull-post': return setState(pullOff(state, id));
+    case 'post-help': { const [msgId, opId] = id.split('|'); return setState(toggleHelp(state, msgId, opId)); }
     case 'toggle-side-crew': {
       const task = sideTaskById(V.sidePlan.taskId);
       if (V.sidePlan.crew.includes(id)) V.sidePlan.crew = V.sidePlan.crew.filter((x) => x !== id);

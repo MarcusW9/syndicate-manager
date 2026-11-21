@@ -225,18 +225,18 @@ function bar(label, value) {
 }
 
 /** A runner's record (core/record.js): what they've done on the job, behind a tap. */
-function renderRecord(op) {
+function renderRecord(op, { open = false } = {}) {
   const r = recordOf(op);
-  if (!r.jobs) return '';
+  if (!r.jobs && !r.fights) return '';
   const nameOf = (id) => state.crew.find((x) => x.id === id)?.handle ?? state.memorial.find((x) => x.id === id)?.handle ?? null;
   const top = Object.entries(r.with).filter(([id]) => nameOf(id)).sort((a, b) => b[1] - a[1])[0];
   const stat = (label, n) => `<div class="recstat"><span class="recstat__n">${n}</span><span class="muted small">${esc(label)}</span></div>`;
-  return `<details class="flog record">
+  return `<details class="flog record" ${open ? 'open' : ''}>
     <summary><h2 class="record__title">Record</h2></summary>
     <div class="recgrid">
       ${stat('jobs', r.jobs)}${stat('at their level', r.atLevel)}${stat('completed', r.wins)}
       ${stat('clean', r.clean)}${stat('flawless', r.flawless)}${stat('best clean streak', r.bestCleanStreak)}
-      ${stat('carries', r.carries)}${stat('fights won', r.fightsWon)}${stat('brought home', r.broughtHome)}
+      ${stat('carries', r.carries)}${stat('fights', r.fights)}${stat('fights won', r.fightsWon)}${stat('brought home', r.broughtHome)}
       ${stat('unscathed', r.unscathed)}${stat('big scores', r.bigScores)}${stat('active weeks', r.activeWeeks)}
     </div>
     ${r.highlights?.length ? `<ul class="list list--plain highlights">${r.highlights.map((h) => `<li>${esc(h.text)}</li>`).join('')}</ul>` : ''}
@@ -295,6 +295,61 @@ function renderHome(op) {
       }).join('')}</div>` : ''}`;
 }
 
+// A runner's page in four tabs (owner, 2026-11-21): the header stays above them. The tab is kept across
+// runners (V.opTab) and put back by Back; a link can open a tab (data-tab on open-op).
+const OP_TABS = [['overview', 'Overview'], ['skills', 'Skills'], ['gear', 'Gear'], ['career', 'Career']];
+const opTabOf = () => (OP_TABS.some(([k]) => k === V.opTab) ? V.opTab : 'overview');
+const opTabs = (op) => subTabs(`${op.handle}'s page`, 'op-tab', OP_TABS, opTabOf());
+
+function renderOpTab(op, nameOf) {
+  const c = op.condition;
+  const tab = opTabOf();
+  if (tab === 'skills') return `<div class="optab optab--skills">${renderSkills(op)}</div>`;
+  if (tab === 'gear') return `<div class="optab optab--gear">${renderLoadout(gearUi, state, op, { picked: V.bagPick })}</div>`;
+  if (tab === 'career') {
+    return `<div class="optab optab--career">
+      ${renderPath(op)}
+      ${renderRecord(op, { open: true }) || '<p class="muted">No jobs or fights yet: the record starts with the first.</p>'}
+      <h2>Trust</h2>
+      <ul class="list list--plain">
+        ${Object.entries(op.trust).map(([id, v]) => `<li>${esc(nameOf(id))}: ${v > 0 ? '+' : ''}${v}</li>`).join('') || '<li class="muted">No strong feelings yet.</li>'}
+      </ul>
+      ${op.history.length ? `<h2>History</h2><ul class="list list--plain ophistory">${[...op.history].reverse().map((h) => `<li class="muted">${esc(h)}</li>`).join('')}</ul>` : ''}
+    </div>`;
+  }
+  return `
+      <div class="opgrid">
+      <div class="opgrid__about">
+      <p class="body">${esc(op.bio)}</p>
+      <p class="body muted">${esc(op.origin)}</p>
+      ${op.freelance ? '' : renderHome(op)}
+      <h2>Traits</h2>
+      ${traitChips(op.id, op.traits.map(bornChip))}
+      ${earnedChips(op)}
+      ${synergies(op)}
+      </div>
+
+      <div class="opgrid__stats">
+      <h2>Stats</h2>
+      <dl class="stats">
+        ${Object.keys(op.stats).map((k) => statCell(op, k, { growth: true })).join('')}
+      </dl>
+      </div>
+
+      <div class="opgrid__dev">
+      <h2>Development</h2>
+      <div class="riskcard">
+        <p>${esc(potentialRead(op, scoutFor(state.crew, op.role, op.id)?.handle))}</p>
+        <p class="muted small">${esc(growthNote(op.age))} Green and red numbers are this season's change; "career" is since joining. The thin bar under each stat fills towards the next point.</p>
+      </div>
+      ${op.freelance ? '' : renderFocus(op)}
+
+      <h2>Condition</h2>
+      ${bar('Fatigue', c.fatigue)}${bar('Morale', c.morale)}${bar('Neural load', c.neuralLoad)}${bar('Burnout', c.burnout)}
+      </div>
+      </div>`;
+}
+
 export function renderOperative() {
   const op = state.crew.find((x) => x.id === V.openOperativeId);
   if (!op) return renderCrew();
@@ -314,51 +369,8 @@ export function renderOperative() {
           ${marksText(op) ? `<p class="muted small">Marked: ${esc(marksText(op))}</p>` : ''}
         </div>
       </div>
-      <div class="opgrid">
-      <div class="opgrid__about">
-      <p class="body">${esc(op.bio)}</p>
-      <p class="body muted">${esc(op.origin)}</p>
-      ${op.freelance ? '' : renderHome(op)}
-
-      ${renderSkills(op)}
-      <h2>Traits</h2>
-      ${traitChips(op.id, op.traits.map(bornChip))}
-      ${earnedChips(op)}
-      ${synergies(op)}
-      </div>
-
-      <div class="opgrid__stats">
-      <h2>Stats</h2>
-      <dl class="stats">
-        ${Object.keys(op.stats).map((k) => statCell(op, k, { growth: true })).join('')}
-      </dl>
-      ${renderLoadout(gearUi, state, op, { picked: V.bagPick })}
-
-      </div>
-
-      <div class="opgrid__dev">
-      <h2>Development</h2>
-      <div class="riskcard">
-        <p>${esc(potentialRead(op, scoutFor(state.crew, op.role, op.id)?.handle))}</p>
-        <p class="muted small">${esc(growthNote(op.age))} Green and red numbers are this season's change; "career" is since joining. The thin bar under each stat fills towards the next point.</p>
-      </div>
-      ${op.freelance ? '' : renderFocus(op)}
-
-      <h2>Condition</h2>
-      ${bar('Fatigue', c.fatigue)}${bar('Morale', c.morale)}${bar('Neural load', c.neuralLoad)}${bar('Burnout', c.burnout)}
-      </div>
-
-      <div class="opgrid__past">
-      <h2>Trust</h2>
-      <ul class="list list--plain">
-        ${Object.entries(op.trust).map(([id, v]) => `<li>${esc(nameOf(id))}: ${v > 0 ? '+' : ''}${v}</li>`).join('') || '<li class="muted">No strong feelings yet.</li>'}
-      </ul>
-
-      ${renderPath(op)}
-      ${renderRecord(op)}
-      ${op.history.length ? `<h2>History</h2><ul class="list list--plain">${op.history.slice(-8).reverse().map((h) => `<li class="muted">${esc(h)}</li>`).join('')}</ul>` : ''}
-      </div>
-      </div>
+      ${opTabs(op)}
+      ${renderOpTab(op, nameOf)}
     </section>
     ${V.gearSlot ? renderGearSheet(gearUi, state, op, V.gearSlot) : ''}`;
 }

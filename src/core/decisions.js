@@ -7,6 +7,7 @@ import { HEAT_RESOLVER } from './heat.js';
 import { RAID_RESOLVER } from './raids.js';
 import { RETIREMENT_RESOLVER } from './retirement.js';
 import { POACH_RESOLVER } from './mobility.js';
+import { CONTRACT_RESOLVER } from './contracts.js';
 
 /** kind -> (state, msg, optionId) => void. Mutates the (cloned) state; leaves msg.resolved to decide. */
 export const RESOLVERS = {
@@ -15,6 +16,7 @@ export const RESOLVERS = {
   raid: RAID_RESOLVER,
   retirement: RETIREMENT_RESOLVER,
   poach: POACH_RESOLVER,
+  contract: CONTRACT_RESOLVER, // a security post that is hit (core/contracts.js)
 };
 
 /** Resolve one option on a decision message. Returns a new state; unknown ids or kinds change nothing. */

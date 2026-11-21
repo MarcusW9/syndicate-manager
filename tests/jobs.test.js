@@ -206,6 +206,7 @@ test('job gates: games started before them keep an open board', () => {
 test('the board adds 3 new jobs a week, the first routine and the rest not, and holds up to 5', async () => {
   const { MAX_OFFERS, NEW_PER_WEEK } = await import('../src/core/jobs.js');
   const s = createNewGame({ seed: 13, startCrew: 'fresh' });
+  s.crew = s.crew.slice(0, 3); // the base board: three runners (more runners, more work: below)
   s.jobs = [];
   postJobs(s);
   assert.equal(s.jobs.length, NEW_PER_WEEK);
@@ -243,6 +244,7 @@ test('a finished job earns REP_PER_THREAT per threat level; an abort costs ABORT
 test('new work trickles in: one job in each part of the week, never all on one day', async () => {
   const { arrivalDays, ARRIVAL_WINDOWS } = await import('../src/core/jobs.js');
   let s = createNewGame({ seed: 14, startCrew: 'fresh' });
+  s.crew = s.crew.slice(0, 3); // three runners: three arrivals, one in each window
   const arrivals = new Map(); // day -> new offers that day
   let seq = s.jobSeq;
   for (let d = 0; d < 7 * 20; d++) {
@@ -283,25 +285,28 @@ test('a gated board still gets small work every week', () => {
 });
 
 // 2026-11-04 (the tong direction): a bigger tong gets more work, and jobs take a range of days.
-test('the board grows with the roster: three a week up to five runners, then more', async () => {
+test('the board grows with the roster: three a week up to five runners, then one more per two past four (retuned 2026-11-21)', async () => {
   const { arrivalsPerWeek, maxOffers, arrivalWindows, arrivalDays, MAX_OFFERS, ARRIVAL_WINDOWS } = await import('../src/core/jobs.js');
   const s = createNewGame({ seed: 61, startCrew: 'fresh' });
-  assert.equal(arrivalsPerWeek(s), 3);
+  assert.equal(arrivalsPerWeek(s), 3, 'five runners: still the base three');
+  const six = structuredClone(s);
+  six.crew.push({ ...structuredClone(s.crew[0]), id: 'x6' });
+  assert.equal(arrivalsPerWeek(six), 4, 'six runners: one more');
   assert.equal(maxOffers(s), MAX_OFFERS);
   assert.deepEqual(arrivalWindows(3), ARRIVAL_WINDOWS, 'three arrivals: the same windows as before');
   const big = structuredClone(s);
   while (big.crew.length < 15) big.crew.push({ ...structuredClone(s.crew[0]), id: `x${big.crew.length}` });
-  assert.equal(arrivalsPerWeek(big), 7);
-  assert.equal(maxOffers(big), 9);
+  assert.equal(arrivalsPerWeek(big), 8, 'fifteen runners: three plus one per two past four');
+  assert.equal(maxOffers(big), 10);
   for (const k of [1, 3, 5, 7, 9, 12]) {
     const w = arrivalWindows(k);
     assert.equal(w.length, k);
     assert.ok(w.every((x) => x.length && x.every((d) => d >= 0 && d <= 6)), `k=${k}: every window inside the week`);
   }
   const monday = 8;
-  assert.equal(arrivalDays(big, monday).length, 7);
+  assert.equal(arrivalDays(big, monday).length, 8);
   const freelancer = structuredClone(big);
-  for (const o of freelancer.crew.slice(5)) o.freelance = true;
+  for (const o of freelancer.crew.slice(3)) o.freelance = true;
   assert.equal(arrivalsPerWeek(freelancer), 3, 'freelancers do not count');
 });
 

@@ -99,6 +99,37 @@ export function recordJob(state, am, { threat, outcome, heatGain, deaths }) {
 }
 
 /**
+ * A fight that isn't a job (a hit security post, core/contracts.js; owner 2026-11-21): only the fight
+ * counters move (fights, fights won, crewmates brought home, criticals survived, serious injuries).
+ * Jobs, at-level jobs, wins and the last job's day stay as they were, so fame, standing and active
+ * weeks are untouched. Everyone who stood in the fight counts, the help included. Mutates.
+ */
+export function recordFight(state, am, { deaths = [] } = {}) {
+  const dead = new Set(deaths.map((d) => d.id));
+  const events = am.events ?? [];
+  const fought = new Map();
+  for (const e of events.filter((x) => x.kind === 'battle' && (x.phase === 'end' || x.phase === 'retreat'))) {
+    for (const r of e.runners ?? []) {
+      const f = fought.get(r.id) ?? { n: 0, won: 0 };
+      f.n += 1; if (e.phase === 'end' && e.how === 'won') f.won += 1;
+      fought.set(r.id, f);
+    }
+  }
+  const stabilised = events.filter((e) => e.kind === 'critical' && e.action === 'stabilise' && e.success);
+  const patients = new Set(events.filter((e) => e.kind === 'critical').map((e) => e.patient));
+  for (const op of am.crewIds.map((id) => state.crew.find((o) => o.id === id)).filter((o) => o && !isFreelancer(o))) {
+    const f = fought.get(op.id);
+    if (!f) continue; // help that never got there
+    const r = ensureRecord(op);
+    r.fights += f.n;
+    r.fightsWon += f.won;
+    r.broughtHome += stabilised.filter((e) => e.actor?.id === op.id).length;
+    if (patients.has(op.handle) && !dead.has(op.id)) r.criticalsSurvived += 1;
+    if (!dead.has(op.id) && (op.condition.injury === 'serious' || op.condition.injury === 'critical')) r.seriousInjuries += 1;
+  }
+}
+
+/**
  * Did they work since last Sunday's settle? Sunday settles at the start of the day (time.js
  * advanceDay), before any job that day, so last Sunday's jobs (day - 7) belong to this week.
  * (Until 2026-11-03 this was day - 6, which lost every job finished on a Sunday, live or a
