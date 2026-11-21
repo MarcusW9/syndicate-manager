@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { createNewGame } from '../src/core/state.js';
 import { advanceDay } from '../src/core/time.js';
 import { weeklyRivals, rivalView } from '../src/core/rivals.js';
-import { sendScout, scoutLevel, findCard, readFor, signCard, dossierOf, SCOUT_DAYS } from '../src/core/dossier.js';
+import { sendScout, scoutLevel, findCard, readFor, signCard, dossierOf, SCOUT_DAYS, scoutProgress } from '../src/core/dossier.js';
 import { sideTasksOut } from '../src/core/sidetasks.js';
 import { availability } from '../src/core/crew.js';
 import * as tongsUi from '../src/ui/tongs.js';
@@ -103,13 +103,14 @@ test("a name's page shows no stats until they are scouted, and never more than t
   const s = withOffer(5);
   const card = findCard(s, s.rivals.offer.cardId);
   const cold = renderLeadName(s, readFor(s, card).id);
-  assert.doesNotMatch(cold, /namestats/);
+  assert.equal((cold.match(/stat--unknown/g) ?? []).length, 8, 'every stat is a ? before a trip');
   assert.match(cold, new RegExp(SCOUT_LEVEL_TEXT.none.slice(0, 20)));
   assert.match(cold, /about ¥/, 'the wage is a guess before a trip');
   for (const level of [1, 2, 3]) {
     const t = structuredClone(s); t.rivals.scouted = { [card.id]: level };
     const html = renderLeadName(t, readFor(t, card).id);
-    assert.match(html, /namestats/);
+    assert.doesNotMatch(html, /stat--unknown/, 'the stats are shown from the first trip');
+    assert.equal(level >= 2, !/tchip--unknown/.test(html), 'traits show from the second trip');
     const band = readFor(t, card).potential;
     const safe = POTENTIAL_TEXT[band].split("'").at(-1).slice(0, 14); // the page escapes apostrophes
     assert.ok(html.includes(safe), `${band}: ${POTENTIAL_TEXT[band]}`);
@@ -192,4 +193,17 @@ test('free names, name pages, a tong\'s names and Names on the street all carry 
   const op = signedState.crew.at(-1);
   assert.equal(op.handle, dossierOf(s, card).handle);
   assert.equal(op.color, dossierOf(s, card).color);
+});
+
+test('a scout trip under way shows the day of the trip, on the name page and in the Names list', () => {
+  const s = withOffer(8);
+  const card = findCard(s, s.rivals.offer.cardId);
+  const id = readFor(s, card).id;
+  assert.equal(scoutProgress(s, id), null);
+  const t = sendScout(s, id, s.crew[0].id);
+  assert.deepEqual({ day: scoutProgress(t, id).day, of: scoutProgress(t, id).of }, { day: 1, of: 2 });
+  assert.match(renderLeadName(t, id), /Day 1 of 2/);
+  t.day += 1;
+  assert.equal(scoutProgress(t, id).day, 2);
+  assert.match(renderLeadName(t, id), /Day 2 of 2/);
 });

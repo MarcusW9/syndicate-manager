@@ -478,6 +478,7 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .ophead__who { flex: 1 1 auto; min-width: 0; }
 .ophead__line { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; margin-top: 8px; }
 .ophead__line .famebadge { margin: 0; line-height: 1.6; }
+.ophead__oath { margin-top: 14px; }
 .ophead__status { margin-left: auto; }
 .fallen { display: flex; gap: 10px; align-items: center; }
 
@@ -2457,8 +2458,20 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .watch__map::before { top: 0; } .watch__map::after { bottom: 0; }
 .watch__map.fs-letterbox::before, .watch__map.fs-letterbox::after { height: 40px; }
 .watch__map.fs-letterbox .watch__caption[data-tier="special"] { top: 5px; bottom: auto; z-index: 3; width: max-content; }
-.fs-round { fill: #fff; }
+.fs-round { fill: #fff; filter: drop-shadow(0 0 2px #ffe680) drop-shadow(0 0 4px #ffb040); }
 .fs-spark { fill: #fff3b0; }
+/* The spotlight (2026-11-20): during a special move everyone but the star and the targets dims. */
+.fs-spotlit .sp-token:not(.is-lit) { filter: brightness(0.45) saturate(0.6); }
+.fs-spotlit .sp-token.is-lit { filter: drop-shadow(0 0 3px var(--warn)); }
+/* The ricochet comet (2026-11-20): a trail that stays and dims, sparks, an impact ring, a numbered badge, then the route glows and fades. */
+.fs-trail { stroke: #ffd860; stroke-width: 1.6; stroke-linecap: round; filter: drop-shadow(0 0 2px #ffb040); transition: opacity 0.5s; }
+.fs-trail.is-old { opacity: 0.55; }
+.fs-trail.is-route { stroke: #fff3b0; opacity: 1; }
+.fs-trail.is-gone { opacity: 0; }
+.fs-sparkle { stroke: #fff3b0; stroke-width: 1; stroke-linecap: round; animation: fs-ghost 0.38s ease-out forwards; }
+.fs-impact { fill: none; stroke: #ffd860; stroke-width: 1.6; transform-box: fill-box; transform-origin: center; animation: fs-impact 0.5s ease-out forwards; }
+@keyframes fs-impact { from { transform: scale(0.5); opacity: 1; } to { transform: scale(5); opacity: 0; } }
+.fs-badge { transition: opacity 0.5s; } .fs-badge circle { fill: var(--warn); } .fs-badge text { fill: #0b0d11; font: 700 6.5px Rajdhani, sans-serif; text-anchor: middle; dominant-baseline: central; } .fs-badge.is-gone { opacity: 0; }
 .fs-ghost { fill: rgba(61, 232, 216, 0.18); stroke: var(--accent-2); stroke-width: 1.4; opacity: 0.75; animation: fs-ghost 0.36s ease-out forwards; }
 @keyframes fs-ghost { to { opacity: 0; } }
 .fs-slash { fill: none; stroke: #fff; stroke-width: 1.6; stroke-linecap: round; animation: fs-ghost 0.42s ease-in forwards; }
@@ -2467,8 +2480,8 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 @keyframes fs-wave { from { transform: scale(0.08); opacity: 1; } to { transform: scale(1); opacity: 0; } }
 .watch__strip[data-tier="special"], .watch__log li[data-tier="special"] { border-left-color: var(--warn); color: var(--warn); }
 @media (prefers-reduced-motion: reduce) {
-  .fs-ping, .fs-special, .fs-float, .fs-ghost, .fs-slash, .fs-wave { animation: none; }
-  .fs-float, .fs-ghost, .fs-wave { display: none; }
+  .fs-ping, .fs-special, .fs-float, .fs-ghost, .fs-slash, .fs-wave, .fs-impact, .fs-sparkle { animation: none; }
+  .fs-float, .fs-ghost, .fs-wave, .fs-impact, .fs-sparkle { display: none; }
   .watch__map::before, .watch__map::after { transition: none; }
 }
 
@@ -2731,9 +2744,9 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 /* The way out (2026-11-17): the hack is done and the alarm goes up: red rings pulse out of the door, the map's edge flashes red, and the caption says so. */
 .fs-alarm-ring { fill: none; stroke: #ff4d5e; stroke-width: 2; pointer-events: none; transform-box: fill-box; transform-origin: center; filter: drop-shadow(0 0 4px #ff4d5e) drop-shadow(0 0 9px #ff4d5e); animation: fs-alarm-ring 0.9s ease-out forwards; }
 @keyframes fs-alarm-ring { from { transform: scale(0.3); opacity: 1; } to { transform: scale(3.4); opacity: 0; } }
-.fs-alarm-core { fill: #ff4d5e; pointer-events: none; transform-box: fill-box; transform-origin: center; animation: fs-alarm-core 0.9s ease-in-out 2 both; }
+.fs-alarm-core { fill: #ff4d5e; pointer-events: none; transform-box: fill-box; transform-origin: center; animation: fs-alarm-core 0.45s ease-in-out 4 both; }
 @keyframes fs-alarm-core { 0%, 100% { opacity: 0.15; transform: scale(0.7); } 50% { opacity: 0.95; transform: scale(1.3); } }
-.watch__map.fs-alarm { outline: 3px solid rgba(255, 77, 94, 0); outline-offset: -3px; animation: fs-alarm-wash 0.9s ease-in-out 2; }
+.watch__map.fs-alarm { outline: 4px solid rgba(255, 77, 94, 0); outline-offset: -4px; animation: fs-alarm-wash 0.45s ease-in-out 4; }
 @keyframes fs-alarm-wash { 0%, 100% { outline-color: rgba(255, 77, 94, 0); } 50% { outline-color: rgba(255, 77, 94, 0.9); } }
 .watch__caption[data-tier="alarm"] { color: #ff8a98; }
 .sp-flash--alarm { fill: #ff4d5e; }
@@ -2954,3 +2967,92 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .levelup strong { font: 700 0.85rem var(--display, inherit); text-transform: uppercase; letter-spacing: 0.1em; color: var(--warn); }
 .levelup span { font-size: 0.9rem; }
 .skillrow__learn { margin-top: 8px; }
+
+/* Ability looks chosen in the Ability Lab (2026-11-20, docs/mockups/ABILITY-MOCKUPS.md). */
+.fs-lightning { fill: none; stroke: #c9fff8; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; filter: drop-shadow(0 0 2px #3de8d8) drop-shadow(0 0 5px #3de8d8); }
+.fs-dome__plate { fill: none; stroke: #cfe8ff; stroke-width: 3.2; stroke-linecap: round; pointer-events: none; transform-box: fill-box; transform-origin: center; filter: drop-shadow(0 0 3px #9fd0ff); animation: fs-dome-rise 0.3s ease-out both, fs-dome-hum 1.4s ease-in-out 0.3s infinite; }
+.fs-dome.is-flare .fs-dome__plate { animation: fs-plate-flare 0.5s ease-out 1, fs-dome-hum 1.4s ease-in-out 0.5s infinite; }
+@keyframes fs-plate-flare { 0% { stroke: #fff; stroke-width: 5.5; transform: scale(1); } 35% { stroke: #fff; transform: scale(1.25); } 100% { stroke: #cfe8ff; stroke-width: 3.2; transform: scale(1); } }
+.fs-dome.is-end .fs-dome__plate { animation: fs-dome-fade 0.32s ease-in forwards; }
+.sp-token > .fs-st--burning .fs-ember, .fs-ember { fill: #ffb040; stroke: none; opacity: 0; pointer-events: none; filter: drop-shadow(0 0 2px #ff6a2a); transform-box: fill-box; transform-origin: center; animation: fs-ember-rise 1.2s ease-out infinite; }
+.fs-ember--burst { animation: fs-ember-rise 0.8s ease-out forwards; }
+@keyframes fs-ember-rise { 0% { transform: translate(0, 0) scale(1); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(var(--dx, 0px), -17px) scale(0.3); opacity: 0; } }
+.sp-token > .fs-st--marked.is-lock { animation: fs-lock 0.45s ease-out 1; }
+@keyframes fs-lock { from { transform: rotate(90deg) scale(2.1); opacity: 0; } to { transform: none; opacity: 1; } }
+.sp-token > .fs-st--marked .fs-mark-dia { fill: #ff4d5e; stroke: none; }
+.sp-token > .fs-st--shaken .fs-bang { fill: #c9a8ff; stroke: none; font: 700 7px Rajdhani, sans-serif; text-anchor: middle; }
+.fs-dust { fill: #7b8394; pointer-events: none; transform-box: fill-box; transform-origin: center; animation: fs-dust 0.5s ease-out forwards; }
+@keyframes fs-dust { from { transform: scale(0.6); opacity: 0.8; } to { transform: scale(2.2); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .fs-lightning, .fs-dome__plate, .fs-ember, .fs-dust, .sp-token > .fs-st--marked.is-lock { animation: none; } .fs-dust { display: none; } .fs-ember { opacity: 0; } }
+
+/* Breacher (2026-11-20): the charge on an exposed plate blinks; a hit that ignores the plate sets it off. */
+.sp-token > .fs-st--exposed .fs-charge { fill: #2a2f3a; stroke: #ffd84d; stroke-width: 0.8; }
+.sp-token > .fs-st--exposed .fs-charge__led { fill: #ff3d5f; stroke: none; animation: fs-charge-blink 0.8s steps(2) infinite; }
+@keyframes fs-charge-blink { 0% { opacity: 1; } 50% { opacity: 0.15; } }
+.sp-flash--breach { fill: #fff3b0; }
+.fs-pop--breach { stroke: #ffd84d; }
+.fs-shard { fill: none; stroke: #ffd84d; stroke-width: 2.2; stroke-linecap: round; pointer-events: none; filter: drop-shadow(0 0 3px #ffb040); animation: fs-shard 0.6s ease-out forwards; }
+@keyframes fs-shard { from { transform: translate(0, 0) rotate(0); opacity: 1; } to { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .fs-shard, .sp-token > .fs-st--exposed .fs-charge__led { animation: none; } .fs-shard { display: none; } }
+
+/* Overwatch (2026-11-20, Ability Lab picks): the perch's pips, the rifle's glint and laser and crack, the drone's strafe. */
+.fs-perch__tower { fill: #242a35; stroke: #8b93a3; stroke-width: 1; pointer-events: none; }
+.fs-perch__pip { fill: #1a1d24; stroke: var(--warn); stroke-width: 0.8; pointer-events: none; } .fs-perch__pip.is-on { fill: var(--warn); }
+.fs-glint { fill: none; stroke: #fff; stroke-width: 1.4; stroke-linecap: round; pointer-events: none; transform-box: fill-box; transform-origin: center; animation: fs-glint 0.56s ease-in-out forwards; }
+@keyframes fs-glint { 0% { transform: scale(0) rotate(0); opacity: 0; } 50% { transform: scale(1) rotate(45deg); opacity: 1; } 100% { transform: scale(0) rotate(90deg); opacity: 0; } }
+.fs-laser { stroke: #ff3d5f; stroke-width: 0.8; opacity: 0.85; stroke-dasharray: 100; stroke-dashoffset: 100; pointer-events: none; filter: drop-shadow(0 0 2px #ff3d5f); animation: fs-laser 0.42s ease-out forwards; }
+@keyframes fs-laser { to { stroke-dashoffset: 0; } }
+.fs-crack { fill: none; stroke: #fff; stroke-width: 1.2; pointer-events: none; transform-box: fill-box; transform-origin: center; animation: fs-crack 0.6s ease-out forwards; }
+@keyframes fs-crack { from { transform: scale(0.5); opacity: 1; } to { transform: scale(7); opacity: 0; } }
+.fs-drone__body { fill: #143a3a; stroke: var(--accent-2); stroke-width: 1.2; } .fs-drone__rotor { stroke: #8fe; stroke-width: 0.8; fill: none; } .fs-drone { pointer-events: none; }
+.fs-drone__link { stroke: var(--accent-2); stroke-width: 0.8; stroke-dasharray: 2 3; pointer-events: none; opacity: 0.8; }
+@media (prefers-reduced-motion: reduce) { .fs-glint, .fs-laser, .fs-crack { animation: none; } .fs-glint, .fs-crack { display: none; } .fs-laser { stroke-dashoffset: 0; } }
+
+/* The van's clock ring (2026-11-20, Ability Lab pick "clock ring and the hold", owner: "a bit more cyberpunky"): a segmented HUD ring. */
+.fs-van { pointer-events: none; }
+.fs-van__seg { fill: none; stroke: var(--accent-2); stroke-width: 3.4; stroke-linecap: butt; filter: drop-shadow(0 0 2.5px var(--accent-2)); transition: stroke 0.3s, opacity 0.3s; }
+.fs-van__seg.is-spent { stroke: #2a303b; filter: none; opacity: 0.8; }
+.fs-van__seg.is-low { stroke: var(--accent); filter: drop-shadow(0 0 3px var(--accent)); animation: fs-van-low 0.5s steps(2) infinite; }
+@keyframes fs-van-low { 50% { opacity: 0.35; } }
+.fs-van__scan { fill: none; stroke: var(--accent-2); stroke-width: 0.8; stroke-dasharray: 1.4 3.2; opacity: 0.8; transform-box: fill-box; transform-origin: center; animation: fs-van-spin 9s linear infinite; }
+@keyframes fs-van-spin { to { transform: rotate(360deg); } }
+.fs-van__brackets { fill: none; stroke: var(--accent-2); stroke-width: 1.2; opacity: 0.85; }
+.fs-van.is-bad .fs-van__brackets, .fs-van.is-bad .fs-van__scan { stroke: var(--accent); }
+.fs-van__label, .fs-van__ghost { font: 700 7.5px Rajdhani, sans-serif; letter-spacing: 0.12em; text-anchor: middle; paint-order: stroke; }
+.fs-van__label { fill: var(--accent-2); stroke: #05080b; stroke-width: 2.4px; }
+.fs-van__label.is-held { fill: var(--warn); } .fs-van__label.is-bad { fill: var(--accent); }
+.fs-van__ghost { stroke: none; opacity: 0; } .fs-van__ghost--a { fill: #ff3d5f; } .fs-van__ghost--b { fill: #3de8d8; }
+.fs-van.is-glitch .fs-van__ghost--a { animation: fs-van-glitch-a 0.32s steps(4) 1; } .fs-van.is-glitch .fs-van__ghost--b { animation: fs-van-glitch-b 0.32s steps(4) 1; }
+@keyframes fs-van-glitch-a { 0%, 100% { opacity: 0; transform: translate(0, 0); } 25% { opacity: 0.9; transform: translate(-1.6px, 0.4px); } 60% { opacity: 0.7; transform: translate(1.2px, -0.4px); } }
+@keyframes fs-van-glitch-b { 0%, 100% { opacity: 0; transform: translate(0, 0); } 30% { opacity: 0.9; transform: translate(1.6px, -0.4px); } 70% { opacity: 0.7; transform: translate(-1.2px, 0.4px); } }
+.fs-van__pip { fill: #12161c; stroke: var(--accent-2); stroke-width: 0.7; } .fs-van__pip.is-on { fill: var(--accent-2); filter: drop-shadow(0 0 2px var(--accent-2)); }
+.fs-van.is-leaving { animation: fs-van-out 1.1s ease-in forwards; }
+@keyframes fs-van-out { 0% { opacity: 1; } 30% { opacity: 0.4; } 45% { opacity: 1; } 100% { opacity: 0; } }
+.sp-flash--van { fill: var(--warn); }
+@media (prefers-reduced-motion: reduce) { .fs-van__scan, .fs-van__seg.is-low, .fs-van.is-glitch .fs-van__ghost, .fs-van.is-leaving { animation: none; } }
+
+/* Triage tags (2026-11-21, Ability Lab pick, owner: "a bit more cyberpunk"): data links from the medic and a cut-corner tag on each runner. */
+.fs-tether { fill: none; stroke: #5fe0a5; stroke-width: 1; stroke-dasharray: 2 3; stroke-linecap: round; opacity: 0.85; pointer-events: none; filter: drop-shadow(0 0 2px #5fe0a5); animation: fs-tether-flow 0.5s linear infinite; }
+@keyframes fs-tether-flow { to { stroke-dashoffset: -10; } }
+.fs-tag { pointer-events: none; animation: fs-tag-life 2.4s steps(1, end) forwards; }
+.fs-tag__plate { fill: rgba(8, 12, 15, 0.9); stroke: #5fe0a5; stroke-width: 0.9; filter: drop-shadow(0 0 3px #5fe0a5); }
+.fs-tag__bar { stroke: #5fe0a5; stroke-width: 2.4; } .fs-tag__lead { fill: none; stroke: #5fe0a5; stroke-width: 0.9; }
+.fs-tag__big { fill: #d8ffe9; font: 700 6.6px Rajdhani, sans-serif; letter-spacing: 0.1em; text-anchor: middle; }
+.fs-tag__small { fill: #5fe0a5; font: 700 4.6px Rajdhani, sans-serif; letter-spacing: 0.2em; text-anchor: middle; }
+.fs-tag--warn .fs-tag__plate, .fs-tag--warn .fs-tag__bar, .fs-tag--warn .fs-tag__lead { stroke: var(--warn); } .fs-tag--warn .fs-tag__plate { filter: drop-shadow(0 0 3px var(--warn)); } .fs-tag--warn .fs-tag__small { fill: var(--warn); } .fs-tag--warn .fs-tag__big { fill: #fff3b0; }
+.fs-tag--bad .fs-tag__plate, .fs-tag--bad .fs-tag__bar, .fs-tag--bad .fs-tag__lead { stroke: var(--accent); } .fs-tag--bad .fs-tag__plate { filter: drop-shadow(0 0 3px var(--accent)); } .fs-tag--bad .fs-tag__big { fill: #ffd0d6; }
+@keyframes fs-tag-life { 0% { opacity: 0; } 6% { opacity: 1; transform: translateX(-1.5px); } 12% { opacity: 0.2; } 18% { opacity: 1; transform: translateX(1px); } 24% { transform: none; } 80% { opacity: 1; } 90% { opacity: 0.5; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .fs-tether { animation: none; } .fs-tag { animation: none; } }
+
+/* A scouted name, laid out like our own crew's page (2026-11-21): `?` for what we have not seen. */
+.nameknow .stats div.stat--unknown { border-style: dashed; }
+.nameknow .stats div.stat--unknown dd { color: var(--muted); opacity: 0.6; }
+.tchip--unknown { border-style: dashed; color: var(--muted); min-width: 44px; justify-content: center; }
+.nameslots { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+.slot--unknown { border: 1px dashed var(--line); min-height: 64px; padding: 8px 10px; display: flex; flex-direction: column; justify-content: space-between; }
+.slot--unknown b { font-size: 1.4rem; color: var(--muted); opacity: 0.6; }
+.scoutbar { display: grid; gap: 6px; margin: 10px 0; }
+.scoutbar__track { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; }
+.scoutbar__track i { height: 6px; background: var(--line); }
+.scoutbar__track i.is-done { background: var(--accent-2); }
+.scoutbar__track i.is-now { background: var(--accent-2); opacity: 0.45; }
