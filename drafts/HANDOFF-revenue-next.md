@@ -43,13 +43,15 @@ line here is in `docs/design/2026-11.md` (grep the topic).
 4. **Expeditions** (the bigger new thing): a crew goes out for 3 to 7 days **to get something specific** (owner, 2026-11-21: "they should be working towards a goal"). See "Expeditions have a goal" below. Needs a save version (`state.expeditions`, or a kind of side task).
 5. **Where it shows:** Today's crew-out cards (one line each), a full log on tap, and the report when they're back.
 
-**Questions for the owner before building (recommended answer first):**
-1. Start with the log on what exists (hands-off jobs and side tasks), then expeditions as a second step? (Recommended: yes. The log is useful at once, and expeditions reuse it.)
-2. Expeditions: in-game days, not real-time timers? (Recommended: in-game days, already in the decision log. Real time could come with iOS.)
-3. Who writes the line pools: Claude drafts, the owner marks, as with the posts?
-4. Should expeditions earn fame? (Recommended: no, as with posts, so the Elite timing holds; fights on them count in the fight record.)
-5. Does a failed expedition still bring something back? (Recommended: yes, part of the goal or the finds along the way, so a bad roll still pays a little.)
-6. Which goal is the pilot? (Recommended: heist prep. It is the most useful now and leads into the multi-map heist.)
+**The owner's answers (2026-11-21):**
+1. Order: the log on hands-off jobs and side tasks first, expeditions second. **Yes.**
+2. In-game days, not real-time timers. **Yes** (decision log).
+3. Line pools: Claude wrote a prompt the owner (or any chat) uses to draft them, `docs/log-lines-prompt.md`; Claude drafts, the owner marks. The format there is the one the engine reads.
+4. Expeditions earn no fame; their fights count in the fight record. **Yes.**
+5. A failed expedition still brings something back (finds on the way, part of the goal). **Yes.**
+6. Goals: **a weapon first**, then cash and recruits. **Heist prep is not an expedition goal**: heist prep is a normal job and, like the other jobs, gets the longer log-style play (multi-map, below).
+
+**The log is a procedural story, not a random line a day** (owner asked). Day 1 names a contact or a place and the engine remembers it; middle days are beats (lead, dead end, snag, find, quiet) and callbacks to what day 1 named; then a turn, sometimes a call (a fight), and a close (met, partial, failed). Each beat rolls on a stat and `{who}` is the crew member best at it, so pools are split by stat. A goal file gives the shape of the hunt, a district file the people and places. Spelled out in `docs/log-lines-prompt.md`; the engine keeps the trip's facts (`contact`, `place`) on the trip's state and seeds every pick with `hashRng`.
 
 ### Expeditions have a goal (owner, 2026-11-21)
 
@@ -57,12 +59,10 @@ Not a wander with no target. The player picks a goal when sending the crew; each
 
 **Expeditions are their own thing, not jobs (owner, 2026-11-21).** A job is work for a client on the board: it pays cash, earns fame and client trust, is planned on the squad board and can be watched. An expedition is work for our own tong: the player sends a crew, no client, no pay, no fame; the reward is the goal itself. Always hands-off, read as a log; a fight calls you in as on a post. Own state and own screen entry (not an offer on the board).
 
-**Open: heist prep overlaps.** Heists already have prep jobs (`heistOnly`, `data/heists.js`). Options: an expedition is a slower, hands-off route to the same prep next to the prep jobs (recommended: it gives the same result as one prep job, takes longer, risks less); expeditions replace prep jobs; or heist prep is not an expedition goal.
-
-Goals the owner picked:
-- **Heist prep:** a guard rota, a keycard, a way in, for a coming finale. Plugs into what the finale already carries (`heists.js`: `job.threatDelta`, `inside`, `drop`).
-- **Find a recruit:** turn up a lead of a wanted type (a medic, a driver). Ends as a name in Crew › Leads (`dossier.js`, `ui/tongs.js leadNames`).
-- **Get one piece of gear:** track down a named item, not a random find (`data/` gear tables, the stash).
+Goals the owner picked (in build order):
+- **A weapon (first):** track down a named weapon, not a random find (gear tables in `data/`, the stash).
+- **Cash:** a debt, a stash, a skim, a quick score; small-time, not a heist.
+- **A recruit:** turn up a lead of a wanted type (a medic, a driver). Ends as a name in Crew › Leads (`dossier.js`, `ui/tongs.js leadNames`).
 
 Not picked for now: a deeper read on a rival (scouting and Watch a tong already do it), a contact in a district.
 
