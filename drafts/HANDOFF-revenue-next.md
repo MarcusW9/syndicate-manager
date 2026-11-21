@@ -62,28 +62,24 @@ Goals the owner picked:
 
 Not picked for now: a deeper read on a rival (scouting and Watch a tong already do it), a contact in a district.
 
-### Client jobs that move: intel, setup and investigation (owner, 2026-11-21)
-
-The owner also wants contracts from clients that are standard cyberpunk work, not only guarding:
-- **Intel jobs:** a client wants something found out.
-- **Setup jobs:** a client wants something stolen and we do the setup (get the way in, the codes, the timing) for their crew, or the theft itself.
-- **Investigations that move:** the job is not one place. The crew follows leads: break in somewhere, find what points to the next place, get information out of someone, and sometimes the lead is wrong and costs a day. The next step is not known at the start. (Owner: interrogation was only an example of the genre's "you need to find out the next step" missions.)
-
-**Who the clients are (owner, 2026-11-21):** anyone, as long as it fits the lore, the corps included now and then. `WORLD.md` already has the hooks: AHL hires small crews for corporate espionage and drops them when they leave a trail; Ruth Okonkwo brokers the contracts the megacorps pretend don't exist; neighbourhood powers (Auntie Fung, Madam Rao, Mr. Szeto, the Ferryman), the factions and the foreign firms all have reasons to hire a crew. Names and new clients go through the `add-lore` skill. A corp job could pay more and carry its own catch (a disposable crew, a trail that brings heat).
-
-How this fits the order: these are where the adventure log and multi-map operations meet. A lead-to-lead job is the log between places plus a map (or a beat) at each place. Build order to propose to the owner: (a) the goal-driven expedition on the log first, (b) client intel and setup jobs as offers that use the same goal-and-progress step, hands-off, (c) the investigation chain as the first multi-map job, alongside or instead of the heist pilot. Things to settle with the owner then: where the offers show (the board, Jobs › Side next to the posts, or a client's own line), and how many stops a chain has (recommended: 2 to 4, the next stop rolled from what was found, with a wrong lead now and then). Each step is a beat, a crisis (every crisis keeps an abort or extract) or a fight, whichever fits it.
-
 **Check before shipping:** the income sim with expeditions (`scripts/sim-crew-income.mjs`, add an option like `posts`), the fame sim and the save-size test (`tests/inbox.test.js`: logs grow saves, so cap each log, e.g. the last 10 lines).
 
-## After that: multi-map operations
+## After that: multi-map operations (the new format for jobs)
 
-**The idea (owner, 2026-11-21):** a long job moves through several maps. Street, then the building's front, then a big map of the inside, then out the back into an alley, and on to another place. Between maps the log covers travel and setting up ("Day 2, 03:10: Raster lifts a keycard"). Ordinary jobs keep arrive, do it, leave.
+**The idea (owner, 2026-11-21):** not a new kind of contract. It is the new way the board's jobs play. They stay jobs from clients (`data/clients.js`: the neighbourhood powers, Ruth Okonkwo for the corps' off-books work, and more as the lore allows, via `add-lore`). The difference is that a job moves: street, then the building's front, then a big map of the inside, then out the back into an alley, and on to another place. Between places the log covers travel and setting up ("Day 2, 03:10: Raster lifts a keycard").
+
+The cyberpunk shapes the owner means, all as jobs:
+- **Intel:** the client wants something found out.
+- **Setup:** the client wants something stolen and we prepare it (the way in, the codes, the timing), or do the theft.
+- **Lead-following:** break in somewhere, find what points to the next place, get information out of someone, and sometimes the lead is wrong and costs time. The next step is not known at the start. (Interrogation was only an example, not a mechanic to build.)
+
+Each stop is a beat, a crisis (every crisis keeps an abort or extract) or a fight, whichever fits. Short jobs can stay as they are (arrive, do it, leave); which jobs move is the owner's call per job.
 
 **Where to start:**
 - Heists (`core/heists.js`, `data/heists.js`): prep jobs and a finale already exist. Pilot one finale as three maps.
 - A job's run is a queue of beats, zones, incidents, crises and battles (`core/mission.js startMission`), and its site comes from `data/sites.js pickSite(district, jobId, templateId)` with zones `in`, `inside` and `target`. A multi-map job needs a site per stage and a stage step in the queue that swaps the map (the watch screen, `ui/watch.js` and `ui/siteplan.js`, draws one site per run today).
 - The fight engine takes `spots` per fight (`fightmap.js stageSpots`), so a fight on any stage's map already works (the posts use the target zone of a district site).
-- **First question for the owner:** which heist is the pilot, and what are its three places? Or pilot on an investigation chain instead (see "Client jobs that move" above).
+- **First question for the owner:** which heist is the pilot, and what are its three places? Or pilot on a lead-following job instead. How many stops (recommended: 2 to 4, the next rolled from what was found, a wrong lead now and then)?
 
 ## Last: hall businesses ("conglomerate")
 
