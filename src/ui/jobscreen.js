@@ -11,7 +11,7 @@ import { money } from '../core/money.js';
 import { CALL_IN, describeCritical, describePending, currentStep, describeCrisis, fillBrief } from '../core/mission.js';
 import { renderFightOrders } from './fightorders.js';
 import { renderFightCallIn, renderFightRound } from './fightscreen.js';
-import { ORDERS, handsOffAllowed, needsPlayer } from '../core/autorun.js';
+import { ORDERS, decide, handsOffAllowed, needsPlayer } from '../core/autorun.js';
 import { dayDone } from '../core/away.js';
 import { OVERWATCH_KIT } from '../core/incidents.js';
 import { renderWatch } from './watch.js';
@@ -34,7 +34,7 @@ export function renderCallIns(t, days = t.days) {
   if (!V.ordersOpen) {
     return `${head}
       <button class="orderline" data-action="toggle-orders" aria-expanded="false">${esc(summary)} <b>Change</b></button>
-      ${lead && callIn === 'risky' ? `<p class="lead small"><strong>${esc(lead.handle)} leads</strong> (${esc(lead.fame)}): they take one risky call themselves before calling you.</p>` : ''}`;
+      ${lead && callIn === 'risky' ? `<p class="lead small"><strong>${esc(lead.handle)} leads</strong> (${esc(lead.fame)}): they take one risky call themselves before calling you (never a twist: those are yours).</p>` : ''}`;
   }
   return `${head}
       <div id="plan-orders">
@@ -48,7 +48,7 @@ export function renderCallIns(t, days = t.days) {
         ${Object.entries(CALL_IN).map(([k, c]) => `
           <button class="seg ${callIn === k ? 'is-on' : ''}" data-action="callin" data-id="${k}" aria-pressed="${callIn === k}"><strong>${esc(c.name)}</strong><span>${esc(c.desc)}</span></button>`).join('')}
       </div>
-      ${lead && callIn === 'risky' ? `<p class="lead small"><strong>${esc(lead.handle)} leads</strong> (${esc(lead.fame)}): they take one risky call themselves before calling you.</p>` : ''}
+      ${lead && callIn === 'risky' ? `<p class="lead small"><strong>${esc(lead.handle)} leads</strong> (${esc(lead.fame)}): they take one risky call themselves before calling you (never a twist: those are yours).</p>` : ''}
       ${callIn === 'every' ? '' : `
       <h3 class="orders__h">When they decide themselves</h3>
       <p class="muted small">Their orders decide each call they don't bring to you. They never push on with a critical wound: at worst, they pull out.</p>
@@ -296,10 +296,12 @@ function renderCallIn(s) {
   if (am.battle && currentStep(am)?.type === 'battle' && needsPlayer(s)) return renderFightOrders(s, esc, (id) => { const op = s.crew.find((o) => o.id === id); return op ? face(op, 'sm') : ''; });
   if (currentStep(am)?.type === 'crisis' && needsPlayer(s)) {
     const v = describeCrisis(s);
+    const lean = v.choices.find((c) => c.id === decide(s, am.orders ?? 'steady').id);
     return `
       <div class="crisis">
-        <p class="crisis__title">The crew is calling in</p>
+        <p class="crisis__title">The crew is calling in${currentStep(am).twist ? ': a twist' : ''}</p>
         <p>${esc(v.text)}</p>
+        ${lean ? `<p class="small muted">Left to their orders, they would: <strong>${esc(lean.label)}</strong>.</p>` : ''}
         <div class="choices">${v.choices.map((c) => choiceButton(c, 'choose')).join('')}</div>
       </div>`;
   }

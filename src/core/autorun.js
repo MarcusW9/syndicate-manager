@@ -82,7 +82,7 @@ export function decide(state, ordersId) {
 /**
  * Does the run wait for the player now? A critical always does on a live run (the player's call;
  * the death rule). A crisis or a decision does unless the call-in rule says the crew decides:
- * 'every' calls you at every crisis; 'risky' when the best roll on offer is under even odds;
+ * 'every' calls you at every crisis; 'risky' when the best roll on offer is under even odds, or at any twist;
  * 'never' never (hands-off).
  */
 export function needsPlayer(state) {
@@ -104,6 +104,7 @@ export function needsPlayer(state) {
 function wouldCall(state) {
   const am = state.activeMission;
   if (am.callIn !== 'risky') return true;
+  if (currentStep(am)?.twist) return true; // a twist is the job changing under them: always yours, never the odds' or the lead's (owner, 2026-11-21)
   const tries = (crisisOdds(state) ?? []).filter((o) => !o.exit);
   return !tries.length || Math.max(...tries.map((o) => o.chance)) < RISKY_BELOW;
 }
@@ -112,7 +113,7 @@ function wouldCall(state) {
 export function leadTakes(state) {
   const am = state.activeMission;
   return am.callIn === 'risky' && (am.lead?.calls ?? 0) > 0 && !am.critical && !am.pending && !am.done && !dayDone(am)
-    && currentStep(am)?.type === 'crisis' && wouldCall(state);
+    && currentStep(am)?.type === 'crisis' && !currentStep(am).twist && wouldCall(state);
 }
 
 // --- away jobs, day by day (core/away.js) ----------------------------------
