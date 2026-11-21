@@ -228,7 +228,7 @@ function freeNamesBlock(state, view) {
 function nameHead(state, card, r) {
   const slate = bookLine(state, card.runnerId ?? card.id);
   return `<div class="namehead">${faceOfCard(state, card.id, 104)}<div><h1 class="cityhead">${esc(r.name)}</h1>
-    <p class="small">${esc([r.role, FAME_LINE[r.fame], r.tong ? `with ${r.tong}` : r.from ? `lately of ${r.from}` : 'between tongs'].join(' · '))}. ${esc(fill(RATING_WORDS[r.word] ?? '', { role: r.role, home: inText(r.home) }).replace(/^./, (c) => c.toUpperCase()))}.</p>${slate ? `<p class="small muted">${esc(slate)}</p>` : ''}</div></div>`;
+    <p class="small">${esc([r.role, FAME_LINE[r.fame], r.tong ? `with ${r.tong}` : r.from ? `lately of ${r.from}` : 'between tongs'].join(' · '))}. ${esc(fill(RATING_WORDS[r.word] ?? '', { role: r.role, home: inText(r.home) }).replace(/^./, (c) => c.toUpperCase()))}.</p>${slate ? `<button class="linkbtn" data-action="tong-page" data-id="book">${esc(slate)} ›</button>` : ''}</div></div>`;
 }
 
 /** What scouting has shown so far (the same words wherever a name is read). */
