@@ -32,7 +32,8 @@ import { nextRng } from './random.js';
 import { HOME_HALL } from '../data/halls.js';
 import { COUNT_BY_THREAT, FIGHT } from '../data/fights.js';
 import { INJURY_DAYS } from './crew.js';
-import { recordSummary } from './record.js';
+import { recordSummary, recordFight } from './record.js';
+import { checkMilestones } from './milestones.js';
 import { pickSite } from '../data/sites.js';
 import { stageSpots, stageNeed } from './fightmap.js';
 import { buildFight, fightDiff, startRound } from './fight.js';
@@ -386,6 +387,7 @@ export function finishPost(state) {
     setInjury(op, 'serious');
     op.condition.injuryDays = FIGHT.missingDays + INJURY_DAYS.serious;
   }
+  recordFight(state, am, { deaths }); // the fight counters only: no fame, standing or active week (owner, 2026-11-21)
   for (const op of deaths) {
     state.crew = state.crew.filter((o) => o.id !== op.id);
     state.memorial.push({ id: op.id, name: op.name, handle: op.handle, role: op.role, color: op.color, age: op.age, marks: op.marks ?? [], day: state.day, cause: `Died on a post for ${clientName(c?.clientId)}`, record: recordSummary(op) });
@@ -420,8 +422,10 @@ export function finishPost(state) {
     c.log.push({ day: state.day, tone: am.aborted ? 'warn' : deaths.length ? 'bad' : 'good', text: line, fight: true });
     am.report.push(line);
   }
+  const milestones = checkMilestones(state, survivors); // ten fights won, a crewmate kept alive (core/milestones.js)
+  for (const m of milestones) am.report.push(m.text);
   const outcome = deaths.length ? 'loss' : am.aborted ? 'aborted' : 'completed';
-  am.result = { report: am.report ?? [], outcome, pay: 0, heatGain: 0, injuries, deaths: deaths.map((d) => d.handle), freelance: [], growth: [], graduated: [], client: null, trustChange: 0, post: line ?? null };
+  am.result = { milestones, report: am.report ?? [], outcome, pay: 0, heatGain: 0, injuries, deaths: deaths.map((d) => d.handle), freelance: [], growth: [], graduated: [], client: null, trustChange: 0, post: line ?? null };
   am.done = true;
 }
 

@@ -142,6 +142,34 @@ test('let them fight it: steady orders kill nobody; the post goes on or is given
   assert.ok(held > 0, 'some posts are held');
 });
 
+test('a post fight counts in the fight record of everyone who stood in it, and never in jobs, fame or active weeks', () => {
+  let checked = 0;
+  for (let seed = 1; seed <= 6; seed++) {
+    let { s, offer, msg } = hitPost(seed);
+    const c = contractsOf(s).active.find((x) => x.id === offer.id);
+    const h = helpers(s, c)[0].op.id;
+    s = toggleHelp(s, msg.id, h);
+    const ids = [...c.crewIds, h];
+    const before = Object.fromEntries(ids.map((id) => { const o = s.crew.find((x) => x.id === id); return [id, { r: structuredClone(o.record ?? null), fame: o.fame ?? null, standing: o.standing ?? null }]; }));
+    s = resolveDecision(s, msg.id, 'auto');
+    for (const id of ids) {
+      const op = s.crew.find((o) => o.id === id);
+      if (!op) continue;
+      const was = before[id].r;
+      const r = op.record;
+      assert.equal(op.fame ?? null, before[id].fame, 'no fame');
+      assert.equal(op.standing ?? null, before[id].standing, 'no standing');
+      if (!r) continue; // help that never reached the fight has no fight to count
+      assert.equal(r.jobs, was?.jobs ?? 0, 'not a job');
+      assert.equal(r.atLevel, was?.atLevel ?? 0);
+      assert.equal(r.lastJobDay, was?.lastJobDay ?? 0, 'no active week');
+      assert.ok(r.fights >= (was?.fights ?? 0) + 1, 'the fight counts');
+      checked += 1;
+    }
+  }
+  assert.ok(checked >= 6, `fight records checked: ${checked}`);
+});
+
 test('watch the fight: it opens on screen, and help joins on its round', () => {
   let { s, offer, msg } = hitPost(3);
   const c = contractsOf(s).active.find((x) => x.id === offer.id);
