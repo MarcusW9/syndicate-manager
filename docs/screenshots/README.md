@@ -22,6 +22,7 @@ Then add a row to the top of the table below and commit the folder with the chan
 
 | Date | Version | Commit | What's new on screen | Folder |
 | --- | --- | --- | --- | --- |
+| 2026-11-21 | The hall page in tabs (design-session capture) | (this change) | `docs/mockups/2026-11-21-hall-page.html` (the three options mocked). Then `node scripts/capture-hall-tabs.mjs <dir>` with a raid warned and two runners due back, at 390x844 (full page), 844x390 and 1440x900: Overview, Crew, Build, Grow | `2026-11-21-hall-page-tabs` |
 | 2026-11-21 | Short stash rows (design-session capture) | (this change) | `00`: the three options mocked (A built). Then `node scripts/capture-armoury-tabs.mjs <dir>`: the Stash as short rows (`01`) and an item's sheet with Sell and Give to (`01b`), at 390x844, 844x390 and 1440x900, 1x. | [2026-11-21-stash-rows](2026-11-21-stash-rows/) |
 | 2026-11-21 | The armoury in sub-tabs (design-session capture) | (this change) | `node scripts/capture-armoury-tabs.mjs <dir>` with a thirteen-piece stash like the owner's playtest: Stash (grouped, best first), Carried (a row per runner) and Shop at 390x844 and 1440x900 (full page) and 844x390, 1x. | [2026-11-21-armoury-tabs](2026-11-21-armoury-tabs/) |
 | 2026-11-21 | A runner's page in tabs (design-session capture) | (this change) | `node scripts/capture-runner-tabs.mjs <dir>` after ten careful weeks (seed 21): Overview, Skills, Gear and Career at 390x844 (full page), 844x390 and 1440x900, 1x. | [2026-11-21-runner-tabs](2026-11-21-runner-tabs/) |

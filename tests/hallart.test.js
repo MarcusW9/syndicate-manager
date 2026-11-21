@@ -69,7 +69,10 @@ import { boot } from './nav-harness.js';
 test('on a phone a locked part can be tapped on the compound and shows its Expand', async () => {
   const app = await boot();
   app.click('hall-page', 'oldTown');
-  assert.match(app.html(), /data-action="hall-building" data-id="room"/, 'the compound opens first');
+  assert.match(app.html(), /data-action="hall-tab" data-id="build"/, 'the hall page has its tabs (2026-11-21)');
+  assert.doesNotMatch(app.html(), /data-action="hall-building"/, 'it opens on Overview: the plan is only on Build');
+  app.click('hall-tab', 'build');
+  assert.match(app.html(), /data-action="hall-building" data-id="room"/, 'Build shows the compound');
   assert.match(app.html(), /data-action="build-part" data-id="flat"/, 'a locked part is tappable on a phone');
   app.click('build-part', 'flat');
   assert.match(app.html(), /bsheet/);

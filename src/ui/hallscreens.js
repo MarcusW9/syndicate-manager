@@ -1,7 +1,7 @@
 // Tong: the halls list, a hall's own page (compound, raid card, posts), and the tab's header.
 import { heatIn } from '../core/heat.js';
 import { hallIn, residents, bedsOf, canOpenHall, nextHallExpansion, buyPrice, canMove, freeBeds } from '../core/halls.js';
-import { openRaids, defenceCut, raidOn, defencesIn, hallShut, raidThreat, postAssignments } from '../core/raids.js';
+import { openRaids, defenceCut, raidOn, defencesIn, defenders, hallShut, raidThreat, postAssignments } from '../core/raids.js';
 import { HALL_SITES, HOME_HALL } from '../data/halls.js';
 import { rankOf } from '../core/tong.js';
 import { TONG_RANKS, TONG_EXPLAINER } from '../data/tong.js';
@@ -139,33 +139,42 @@ export function renderHallPage(d) {
           <p class="muted small">${esc(HALL_SITES[d]?.place ?? '')}</p></div>
         </div>
         <p class="small">Level ${h.level} · ${h.owned ? 'no rent' : `${money(h.rent)}/wk`} · heat ${heatIn(state, d)}/10${hallShut(state, d) ? ` · <span class="citycard__shut">shut after a raid until day ${h.shutUntil}</span>` : ''}${live ? ` · <span class="citycard__raid">raid ${esc(raidWhen(raid))}</span>` : ''}</p>`;
-  return `
-    <section class="panel hallpage ${wide ? 'is-wide' : ''} ${bld ? 'is-inside' : ''} ${view && !bld ? 'is-building' : ''}">
-      ${art ? SPRITE_SHEET : ''}
-      <div class="hallpage__cols">
-      <div class="hallpage__map">
-        ${head}
-        ${planBox}
-        ${planKey(state, d, { building: !!view, compound: !bld, inside: !!bld })}
-        ${buildNote}
-        ${bld ? '' : cards}
-      </div>
-      <div class="hallpage__side">
-        ${hallThreat(d, raid, !bld)}${bld ? '' : postsPanel(d, raid)}
-        <h2>${bld ? 'Sleeps in this building' : 'Who sleeps here'} <span class="muted small">${bld ? `${bld.who.length}/${bld.beds} beds` : `${who.length}/${bedsOf(h)} beds`}</span></h2>
-        ${facesOf(bld ? bld.who : who, bld ? bld.beds : bedsOf(h))}
-        ${movein}
+  // Four tabs (owner, 2026-11-21, option C of the mockups): Overview · Crew · Build · Grow. Inside a building,
+  // or while building defences in place, the page is the old Build view and has no tabs.
+  const tab = bld || view ? 'build' : HALL_TABS.some(([k]) => k === V.hallTab) ? V.hallTab : 'overview';
+  const tabs = bld ? '' : subTabs('Hall sections', 'hall-tab', HALL_TABS, tab);
+  const hurt = who.filter((op) => !['healthy', 'light'].includes(op.condition.injury ?? 'healthy')).length;
+  const rooms = buildings.flatMap((b) => b.rooms);
+  const stat = (k, v, cls = '') => `<div class="hallstat"><span class="hallstat__k">${k}</span><span class="hallstat__v ${cls}">${v}</span></div>`;
+  const overview = `${hallThreat(d, raid, true)}${postsPanel(d, raid)}
+        <div class="hallstats">${stat('Beds', `${who.length}/${bedsOf(h)}`, free ? '' : 'is-warn')}${stat('Home', defenders(state, d).length)}${stat('Hurt', hurt, hurt ? 'is-bad' : '')}${stat('Defences', nDef)}</div>
+        <h2>Rooms <span class="muted small">${rooms.length ? `${rooms.length} built` : 'none yet'}</span></h2>
+        <p class="small">${rooms.length ? esc(rooms.join(', ')) : 'No rooms built. Open a building on the Build tab to add one.'}</p>
+        <h2>Defences <span class="muted small">${nDef} ${nDef === 1 ? 'piece' : 'pieces'}</span></h2>
+        <p class="small bdef">${defenceLine(state, d)}</p>`;
+  const crewTab = `<h2>Who sleeps here <span class="muted small">${who.length}/${bedsOf(h)} beds</span></h2>${facesOf(who, bedsOf(h))}${movein}`;
+  const growTab = `<h2>Grow the hall <span class="muted small">cash ${money(state.cash)}</span></h2>${place}`;
+  const buildMap = `${planBox}${planKey(state, d, { building: !!view, compound: !bld, inside: !!bld })}${buildNote}${bld ? '' : cards}`;
+  const buildSide = `${bld ? `<h2>Sleeps in this building <span class="muted small">${bld.who.length}/${bld.beds} beds</span></h2>${facesOf(bld.who, bld.beds)}${movein}` : postsPanel(d, raid)}
         ${view
     ? `<h2>${bld ? 'Build rooms here' : 'Build defences'} <span class="muted small">floor ${floorUsed(h)}/${floorOf(h)}</span></h2>${buildSheet(state, view, ui)}${buildPalette(state, view, ui)}`
     : `${mine && V.buildView.part ? buildSheet(state, V.buildView, ui) : ''}`}
         ${bld || view ? '' : `<h2>Defences <span class="muted small">${nDef} ${nDef === 1 ? 'piece' : 'pieces'}</span></h2>
-        <p class="small bdef">${defenceLine(state, d)}</p>`}
-        ${view ? '' : `<h2>Grow the hall</h2>${place}`}
-        ${bld || view ? '' : `<h2>Outside</h2><ul class="secs">${outside}</ul>`}
-      </div>
+        <p class="small bdef">${defenceLine(state, d)}</p><h2>Outside</h2><ul class="secs">${outside}</ul>`}`;
+  return `
+    <section class="panel hallpage ${wide ? 'is-wide' : ''} ${bld ? 'is-inside' : ''} ${view && !bld ? 'is-building' : ''}">
+      ${art ? SPRITE_SHEET : ''}
+      ${head}
+      ${tabs}
+      <div class="hallpage__cols ${tab === 'build' ? 'is-build' : 'is-single'}">
+      ${tab === 'build'
+    ? `<div class="hallpage__map">${buildMap}</div><div class="hallpage__side">${buildSide}</div>`
+    : `<div class="hallpage__tab">${tab === 'crew' ? crewTab : tab === 'grow' ? growTab : overview}</div>`}
       </div>
     </section>`;
 }
+
+const HALL_TABS = [['overview', 'Overview'], ['crew', 'Crew'], ['build', 'Build'], ['grow', 'Grow']];
 
 /**
  * The hall page's raid card (2026-11-09): the same Threats card as on City and Today (`threatItem`), plus

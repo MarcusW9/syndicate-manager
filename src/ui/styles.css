@@ -3092,3 +3092,13 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .scoutbar__track i { height: 6px; background: var(--line); }
 .scoutbar__track i.is-done { background: var(--accent-2); }
 .scoutbar__track i.is-now { background: var(--accent-2); opacity: 0.45; }
+
+/* Hall page tabs (2026-11-21): Overview · Crew · Build · Grow; the map is only on Build. */
+.hallpage .subtabs { margin: 10px 0 8px; }
+.hallpage__cols.is-single { grid-template-columns: minmax(0, 1fr); max-width: 640px; }
+.hallstats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 12px; }
+.hallstat { background: var(--panel-2, var(--panel)); border: 1px solid var(--line); padding: 6px 8px; display: grid; gap: 2px; }
+.hallstat__k { font-family: var(--display, inherit); font-weight: 600; font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.hallstat__v { font-family: var(--display, inherit); font-weight: 700; font-size: 1.3rem; }
+.hallstat__v.is-warn { color: #f2d541; }
+.hallstat__v.is-bad { color: #ff3d5f; }
