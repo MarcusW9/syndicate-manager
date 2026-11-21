@@ -2,7 +2,7 @@
 // the Threats list (Today, City and a hall's page draw from here).
 import { heatIn } from '../core/heat.js';
 import { grudgeOf, GRUDGE, grudgeWord, GANGS } from '../core/gangs.js';
-import { raidWho, isGangRaid, openRaids, raidBy, canBuyOff, defenders, raidPrice, withdrawCost } from '../core/raids.js';
+import { raidWho, isGangRaid, openRaids, raidBy, canBuyOff, defenders, dueBack, raidPrice, withdrawCost } from '../core/raids.js';
 import { RAID_CALL } from '../data/raids.js';
 import { NAMES } from '../config/names.js';
 import { portrait } from './art.js';
@@ -108,22 +108,23 @@ export function renderThreats(raids) {
 /** One raid's Threats card: also on the hall's own page (`onHall` leaves out the link back to it; `note` adds a line). */
 export function threatItem(r, { onHall = false, note = '' } = {}) {
         const home = defenders(state, r.district);
+        const back = r.called ? [] : dueBack(state, r); // out now, due home by the raid day
         const call = state.inbox.find((m) => m.kind === 'raid' && !m.resolved && m.payload?.raidId === r.id);
         const price = raidPrice(state, r);
         const buy = canBuyOff(state, r) && !r.answer && !r.called;
         const cost = withdrawCost(state, r.district);
         const paid = r.answer === 'paid';
         const plans = [
-          ['hold', 'Hold the hall', home.length ? 'A fight at the door. Someone could get hurt.' : 'Nobody is home to hold it.', !home.length],
+          ['hold', 'Hold the hall', home.length ? 'A fight at the door. Someone could get hurt.' : back.length ? `${back.map((b) => b.op.handle).join(', ')} due back ${calendar(Math.max(...back.map((b) => b.day))).weekday.slice(0, 3)}. If they are home, a fight at the door.` : 'Nobody is home to hold it.', !home.length && !back.length],
           ['clear', 'Clear out', `Hall empty and shut a week. We lose what is kept there (${money(cost.kept)}) and ${money(cost.repairs)} in repairs.`, false],
         ];
         return `
         <li class="crewsout__job is-raid threat" id="threat-${esc(r.district)}">
           <div class="threat__top">${hallMark(r.district, { raid: !paid })}<div><p class="threat__head"><span class="crewsout__light" aria-hidden="true"></span><strong>${esc(raidHeadline(r))}</strong></p>
-          <p class="threat__meta muted small">${esc(raidDate(r))} · ${esc(raidCause(r))}${paid || r.called ? '' : ' · decide before the raid'}</p></div></div>
+          <p class="threat__meta muted small">${esc(raidDate(r))} · ${esc(raidCause(r))}${paid || r.called ? '' : ' · plan is optional'}</p></div></div>
           <div class="threat__home">
             <p class="threat__label small">At the hall (${home.length})</p>
-            <div class="threat__faces">${home.length ? home.map((op) => face(op, 'sm')).join('') : '<span class="muted small">Nobody home</span>'}</div>
+            <div class="threat__faces">${home.length ? home.map((op) => face(op, 'sm')).join('') : '<span class="muted small">Nobody home</span>'}${back.length ? `<span class="muted small">Due back:</span>${back.map((b) => face(b.op, 'sm')).join('')}` : ''}</div>
           </div>
           ${note}
           ${paid ? `<p class="small">${isGangRaid(r) ? 'Settled' : 'Paid off'} (${money(r.paid)}). Nobody will come.</p>`
@@ -131,7 +132,7 @@ export function threatItem(r, { onHall = false, note = '' } = {}) {
             : `<div class="threat__plans" role="group" aria-label="Your plan for the raid">
               ${plans.map(([id, label, text, off]) => `<button class="planbtn ${r.plan === id ? 'is-on' : ''}" data-action="raid-plan" data-id="${esc(r.id)}|${id}" aria-pressed="${r.plan === id}" ${off ? 'disabled' : ''}><strong>${label}</strong><span>${esc(text)}</span></button>`).join('')}
             </div>
-            <p class="muted small">${r.plan ? 'Plan set. You can change it until the raid.' : 'No plan: whoever is home holds the hall.'} ${isGangRaid(r) ? `${esc(raidWho(r))} would take a settlement.` : canBuyOff(state, r) ? `${esc(raidWho(r))} are on the take.` : `${esc(raidWho(r))} cannot be bought.`}</p>`}
+            <p class="muted small">${r.plan ? 'Plan set. You can change it until the raid.' : 'No plan: whoever is home on the day holds the hall.'} ${isGangRaid(r) ? `${esc(raidWho(r))} would take a settlement.` : canBuyOff(state, r) ? `${esc(raidWho(r))} are on the take.` : `${esc(raidWho(r))} cannot be bought.`}</p>`}
           <div class="crewsout__foot">
             ${call ? `<button class="btn btn--primary" data-action="raid-answer" data-id="${esc(call.id)}">Answer the door</button>` : ''}
             ${buy ? `<button class="btn" data-action="raid-pay" data-id="${esc(r.id)}" ${state.cash < price ? 'disabled' : ''}>${isGangRaid(r) ? 'Settle' : 'Pay them off'} · ${money(price)}</button>` : ''}

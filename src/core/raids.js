@@ -101,6 +101,23 @@ export function defenders(state, district) {
     && ['healthy', 'light'].includes(op.condition.injury ?? 'healthy'));
 }
 
+/**
+ * Residents who are out now but due back by the raid's day (a job, a side task or a trip that ends on or before it),
+ * and on their feet. Not a promise (a job can send someone home hurt): the plan card says "due back".
+ * Returns [{ op, day }] with the day each is back.
+ */
+export function dueBack(state, raid) {
+  const home = new Set(defenders(state, raid.district).map((o) => o.id));
+  const back = new Map();
+  const note = (id, day) => { if (id && day <= raid.day) back.set(id, Math.max(back.get(id) ?? 0, day)); };
+  for (const j of state.awayJobs ?? []) for (const id of [...j.mission.crewIds, j.mission.overwatch?.id, j.mission.wheels, j.mission.standby?.id]) note(id, j.returnDay);
+  for (const t of state.sideOut ?? []) for (const id of t.crewIds ?? []) note(id, t.returnDay);
+  return residents(state, raid.district)
+    .filter((op) => !home.has(op.id) && back.has(op.id) && !state.activeMission?.crewIds?.includes(op.id)
+      && ['healthy', 'light'].includes(op.condition.injury ?? 'healthy'))
+    .map((op) => ({ op, day: back.get(op.id) }));
+}
+
 /** The raiders' strength: the hotter the district, the more of them and the harder they are. */
 const baseThreat = (state, district, raid) => (isGangRaid(raid)
   ? Math.max(1, Math.min(4, grudgeOf(state, raid.by) - 4)) // a gang's: grudge 6: 2 … grudge 8+: 4

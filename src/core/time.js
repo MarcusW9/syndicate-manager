@@ -117,8 +117,9 @@ export function advanceDay(prev) {
 
   returnSideTasks(state); // side tasks whose crew is back today resolve
   tickContracts(state); // runners on a post play their day; a hit post calls in (core/contracts.js)
-  checkRaids(state); // a raid due today knocks; a hot district with a hall may draw a warning (core/raids.js)
-  return advanceAway(state); // crews out take today's share; one that needs a call waits (core/away.js)
+  const after = advanceAway(state); // crews out take today's share; one that needs a call waits (core/away.js)
+  checkRaids(after); // a raid due today knocks (after the crews due back are home); a hot district with a hall may draw a warning (core/raids.js)
+  return after;
 }
 
 /** Season turn: everyone a year older; past 40, stats start to slip. */
