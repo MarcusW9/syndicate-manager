@@ -22,7 +22,7 @@ import { SPECIAL_MOVES, SPECIAL_FAST_CUT, SPECIAL_LOOK_DEFAULT, ENEMY_LOOKS } fr
 export const PACE_K = { watch: 1, fast: 0.6, resolve: 0 };
 export const PACES = ['fast', 'watch', 'resolve'];
 // Step lengths at Watch, in ms.
-const MS = { enter: 900, move: 600, lean: 320, fire: 240, gap: 160, heal: 450, aura: 1100, spread: 900, tick: 560, tickOut: 700, dome: 420, patch: 1100, alarm: 1800, rifleOw: 1600, droneOw: 2300, jam: 650, ping: 450, flank: 450, settle: 600 };
+const MS = { enter: 900, move: 600, lean: 320, fire: 240, gap: 160, heal: 450, aura: 1100, spread: 900, tick: 560, tickOut: 700, dome: 420, patch: 1100, alarm: 1800, rifleOw: 1600, droneOw: 2300, van: 900, jam: 650, ping: 450, flank: 450, settle: 600 };
 const HIDDEN = new Set(['aboard', 'gone', 'fled']);
 
 const mid = (a, b) => [Math.round((a[0] + b[0]) / 2), Math.round((a[1] + b[1]) / 2)];
@@ -181,6 +181,12 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
       const fell = l.key === 'tickOut' || l.key === 'burnOut';
       push({ do: 'tick', to: enemyId(l.guard), fell, burn: l.key === 'burnTick' || l.key === 'burnOut', left: fell ? 0 : l.hpLeft ?? l.left, leftExact: l.hpLeft != null, max: l.max, amount: l.hpDamage ?? 0, dur: ms(fell ? MS.tickOut : MS.tick) });
       adv(fell ? MS.tickOut : MS.tick);
+    } else if (rule === 'van' && ['vanIn', 'vanHeld', 'vanCantWait', 'inVan', 'carriedInVan'].includes(l.key)) {
+      // The van's clock ring (owner, 2026-11-20): it opens when the van pulls in, holds, says who is left, and counts who boards.
+      const mode = { vanIn: 'in', vanHeld: 'held', vanCantWait: 'cant' }[l.key] ?? 'board';
+      const round = cue.round ?? stage.round;
+      push({ do: 'van', mode, round, leaves: l.slots?.leaves ?? null, rounds: l.slots?.rounds ?? null, outside: l.slots?.outside ?? null, crew: Object.values(units).filter((u) => u.side === 'crew').length, dur: ms(mode === 'board' ? 0 : MS.van) });
+      if (mode !== 'board') adv(MS.van);
     } else if (rule === 'wayOut') {
       // The hack is done and the alarm is up: red rings at the door the arrivals will come in by.
       const door = Object.values(units).find((u) => u.side === 'enemy' && u.entrance)?.entrance ?? stage.target ?? stage.van;
@@ -323,6 +329,10 @@ export function forceEffect(cue, kind) {
     c.lines = [L({ kind: 'guard', rule: 'shot', key: 'shotMiss', guard: a, targetId: crew[1], damage: 0, shieldedBy: crew[1] })];
   } else if (kind === 'jam') {
     c.lines = [L({ rule: 'jam', key: 'jamFail', actor: crew[0] }), L({ rule: 'jam', key: 'jamOk', actor: crew[0], callers: [a, b] })];
+  } else if (kind === 'van') {
+    // The van's clock ring (2026-11-20): round 1 it pulls in (four rounds), one boards; round 2 it is held two more; round 3 someone is left outside.
+    const r = c.round ?? 1; const V = (key, slots = {}, extra = {}) => L({ kind: 'van', rule: 'van', key, slots, ...extra });
+    c.lines = r <= 1 ? [V('vanIn', { leaves: r + 4 }), V('inVan', {}, { actor: crew[0] })] : r === 2 ? [V('inVan', {}, { actor: crew[1] }), V('vanHeld', { rounds: 2, outside: 1 })] : [V('vanCantWait', { outside: 1 })];
   } else if (kind === 'wayout') {
     c.lines = [L({ rule: 'wayOut', key: 'wayOut' }), L({ kind: 'patch', rule: 'patch', key: 'wayOutPatch', actor: crew[0], targets: crew.slice(0, 3) }), L({ kind: 'stabilise', rule: 'stabilise', key: 'stabiliseWayOut', actor: crew[0], targetId: crew[1], success: true })];
   }
@@ -708,6 +718,68 @@ export function createStage(svg, deps) {
     setTimeout(() => { gone(node('line', { class: 'fs-tracer is-burst', x1: a[0], y1: a[1], x2: end[0], y2: end[1] }), 220); gone(node('circle', { class: 'fs-crack', cx: end[0], cy: end[1], r: 4 }), 700); }, s.hitAt - 40);
   }
   const lerp2 = (p, q, t) => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t];
+  // The van's clock ring (owner, 2026-11-20: "a bit more cyberpunk"): a segmented HUD ring round the van point, one segment a round until it leaves,
+  // targeting brackets, a slow scan ring, a glitching label (T-3) and a square pip for each runner aboard. A hold adds segments; a van that goes with
+  // someone outside says so in red. Opened by the van line, ticked by each round, gone when the van is (or the fight resets).
+  let vanFx = null; // { g, at, total, leaves, boarded, segs, pips, label, ghostA, ghostB }
+  const SEG_R = 21;
+  const arcSeg = (i, n) => { const gap = 0.16; const a0 = -Math.PI / 2 + (i / n) * Math.PI * 2 + gap / 2; const a1 = -Math.PI / 2 + ((i + 1) / n) * Math.PI * 2 - gap / 2; return `M${(Math.cos(a0) * SEG_R).toFixed(2)} ${(Math.sin(a0) * SEG_R).toFixed(2)}A${SEG_R} ${SEG_R} 0 0 1 ${(Math.cos(a1) * SEG_R).toFixed(2)} ${(Math.sin(a1) * SEG_R).toFixed(2)}`; };
+  function vanBuild(total) {
+    const v = vanFx; v.segs.forEach((e) => e.remove()); v.segs = Array.from({ length: total }, (_, i) => { const e = node('path', { class: 'fs-van__seg', d: arcSeg(i, total) }); v.g.append(e); return e; });
+    v.total = total;
+  }
+  function vanLabel(text, tone = '') {
+    const v = vanFx; if (!v) return;
+    for (const t of [v.label, v.ghostA, v.ghostB]) t.textContent = text;
+    v.label.setAttribute('class', `fs-van__label ${tone}`);
+    v.g.classList.remove('is-glitch'); void v.g.getBoundingClientRect(); v.g.classList.add('is-glitch');
+  }
+  function vanPaint(remaining) {
+    const v = vanFx; if (!v) return;
+    v.segs.forEach((e, i) => { const lit = i < remaining; e.classList.toggle('is-spent', !lit); e.classList.toggle('is-low', lit && remaining <= 1); });
+  }
+  function vanClose(now = false) {
+    const v = vanFx; if (!v) return; vanFx = null;
+    if (now || deps.reduced()) { v.g.remove(); return; }
+    v.g.classList.add('is-leaving'); setTimeout(() => v.g.remove(), 1100);
+  }
+  function vanRun(s) {
+    const at = pos('van') ?? points?.van; if (!at) return;
+    if (s.mode === 'in') {
+      vanClose(true);
+      const g = node('g', { class: 'fs-van', transform: `translate(${at[0]} ${at[1]})` });
+      g.append(node('circle', { class: 'fs-van__scan', r: 26 }), node('path', { class: 'fs-van__brackets', d: 'M-28 -22V-28H-22M22 -28H28V-22M28 22V28H22M-22 28H-28V22' }));
+      const ghostA = node('text', { class: 'fs-van__ghost fs-van__ghost--a', x: 0, y: -33 }, ''); const ghostB = node('text', { class: 'fs-van__ghost fs-van__ghost--b', x: 0, y: -33 }, ''); const label = node('text', { class: 'fs-van__label', x: 0, y: -33 }, '');
+      g.append(ghostA, ghostB, label);
+      const nPips = Math.max(1, s.crew ?? 4); const pips = Array.from({ length: nPips }, (_, i) => { const e = node('rect', { class: 'fs-van__pip', x: (i - (nPips - 1) / 2) * 6 - 2, y: 31, width: 4, height: 4 }); g.append(e); return e; });
+      fx.append(g);
+      vanFx = { g, at, total: 0, leaves: s.leaves ?? s.round + 4, boarded: 0, segs: [], pips, label, ghostA, ghostB };
+      vanBuild(Math.max(1, vanFx.leaves - s.round)); vanPaint(vanFx.total);
+      vanLabel(`${word('stage.van')} T\u2212${vanFx.total}`);
+    } else if (vanFx && s.mode === 'held') {
+      vanFx.leaves += s.rounds ?? 2; const remaining = Math.max(1, vanFx.leaves - (vanFx.round ?? s.round));
+      vanFx.round = s.round; vanBuild(vanFx.leaves - s.round); vanPaint(vanFx.leaves - s.round);
+      vanLabel(word('stage.vanHeld', { n: s.rounds ?? 2 }), 'is-held'); flash(at, 'sp-flash--van');
+    } else if (vanFx && s.mode === 'cant') {
+      vanLabel(`${word('stage.vanLeft')} ${s.outside ?? ''}`.trim(), 'is-bad'); vanFx.g.classList.add('is-bad');
+    } else if (vanFx && s.mode === 'board') {
+      const e = vanFx.pips[vanFx.boarded]; vanFx.boarded += 1; e?.classList.add('is-on');
+    }
+  }
+  /** A new round while the van's ring is up: one segment burns off; the last says it is leaving. */
+  function vanTick(round) {
+    const v = vanFx; if (!v) return;
+    const remaining = v.leaves - round;
+    if (remaining < 0) { vanClose(); return; }
+    vanPaint(remaining);
+    vanLabel(remaining === 0 ? word('stage.vanLeaving') : `${word('stage.van')} T\u2212${remaining}`, remaining <= 1 ? 'is-bad' : '');
+  }
+  /** The fight is over: the van has gone (or the crew has), so the ring says so and goes. */
+  function vanEnd() {
+    if (!vanFx) return;
+    vanLabel(word('stage.vanGone'), vanFx.g.classList.contains('is-bad') ? 'is-bad' : 'is-held');
+    setTimeout(() => vanClose(), deps.reduced() ? 0 : 1000);
+  }
   const ensure = (id, u, seed) => (id.startsWith('e:') ? foes.get(id) ?? foeToken(id, u, seed) : deps.tok(id));
 
   /** Run one step (the script says what and where). */
@@ -877,6 +949,7 @@ export function createStage(svg, deps) {
         domeOf.clear();
         break;
       }
+      case 'van': vanRun(s); break;
       case 'alarm': {
         // The way out (2026-11-17): the alarm is up. Red rings pulse out of the door the arrivals use, the map's edge flashes, a caption says so.
         const at = s.at;
@@ -956,6 +1029,8 @@ export function createStage(svg, deps) {
       }
       stopAmbient();
       clearDomes(); unspot(); ricoClear();
+      if (cue.phase === 'round' && vanFx) vanTick(cue.round ?? stage.round);
+      if ((cue.phase === 'end' || cue.phase === 'retreat') && vanFx) vanEnd();
       if (cue.phase === 'start') { clock = 0; deps.say?.(null); }
       const script = stageScript(drawn, cue, { pace, reduced: deps.reduced(), spent, clock });
       spent = script.spent;
@@ -994,7 +1069,7 @@ export function createStage(svg, deps) {
     reset(full = true) {
       playing += 1;
       stopAmbient();
-      clearDomes(); unspot(); ricoClear();
+      clearDomes(); unspot(); ricoClear(); vanClose(true);
       for (const g of foes.values()) g.remove();
       foes.clear();
       ground.replaceChildren();
