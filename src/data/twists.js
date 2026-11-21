@@ -7,8 +7,13 @@ export const TWISTS = [
   {
     id: 'twist_more_guards',
     situations: ['fight', 'entry'],
-    name: 'The client lied',
-    text: 'There are twice as many guards as the client said. Somebody either didn\'t know or didn\'t want you to.',
+    // Renamed from "The client lied" (2026-11-20): clients come back, and nothing here proves a lie.
+    // `early`: found at the door, so the crew pulls out before they are deep in (core/mission.js).
+    // `abortWord`: what the client says afterwards, in the report (core/mission.js finish).
+    name: 'More guards than briefed',
+    early: true,
+    abortWord: '{client} admits the headcount was theirs to get right, and sends half the fee for the wasted night.',
+    text: 'There are twice as many guards as the brief said. Somebody\'s information was out of date, or somebody kept it back.',
     choices: [
       { id: 'adapt', label: 'Slow down and work around them', kind: 'adapt', stat: 'stealth', difficulty: 12, cost: { payCut: 0.1 },
         success: 'It takes twice as long, but nobody sees you.', failure: 'A guard rounds the corner at the wrong moment.', failureInjury: 'light', failureCost: { heat: 1 },
@@ -16,9 +21,9 @@ export const TWISTS = [
       { id: 'push', label: 'Push on as planned', kind: 'push', stat: 'combat', difficulty: 14,
         success: 'Fast and violent, and it works.', failure: 'You walk straight into them.', failureInjury: 'serious',
         report: { success: 'The crew hit the extra guards before they could organise. It was fast, violent and enough to keep the job moving.', failure: 'The crew pushed ahead as originally planned and walked directly into the extra guards. Someone was badly hurt.' } },
-      { id: 'abort', label: 'Abort: this isn\'t the job you were sold', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1 },
-        success: 'You walk away. The client can explain themselves later.', failure: '', failureInjury: 'none',
-        report: { success: 'The crew found twice as many guards as the client had described and walked away. The client would have to explain the missing intelligence later.' } },
+      { id: 'abort', label: 'Abort: this isn\'t the job you were sold', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 0.5 },
+        success: 'You walk away. The client can explain themselves, and pay for the night.', failure: '', failureInjury: 'none',
+        report: { success: 'The crew found twice as many guards as the brief had described and walked away at the door. The client owed them for the bad count, and paid half.' } },
     ],
   },
   {

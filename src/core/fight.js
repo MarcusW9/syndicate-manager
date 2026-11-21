@@ -650,6 +650,7 @@ function holds(b, cond) {
     if (k === 'vanLastRound') { if ((b.round === b.goal.vanLeaves && boardingStage(b) && !b.vanHeld) !== v) return false; continue; }
     if (k === 'outsideAtLeast') { if (standing(b).length + outsideDown(b).length < v) return false; continue; }
     if (k === 'atPullOut') { if ((pullOutSubjects(b).length > 0) !== v) return false; continue; }
+    if (k === 'riskNot') { if (b.risk.level === v) return false; continue; } // not at this risk level (a cautious crew's pull-out is not asked)
     if (k === 'radioShown') { if (b.threats.some((t) => RADIO(t) && !t.cancelled) !== v) return false; continue; }
     if (k === 'protectedCanJam') { if (!!(prot && present(prot) && prot.jammer) !== v) return false; continue; }
     if (!prot || !present(prot)) return false; // the rest are about the specialist
