@@ -36,6 +36,7 @@ export const V = {
   crewFilter: 'all', // the roster's filter: 'all' | 'ready' | 'out'
   crewFilterOpen: false, // its drop menu is open
   crewTab: 'roster', // Crew's sub-tab: 'roster' | 'leads' | 'wall'
+  hallTab: 'overview', // a hall page's tab (2026-11-21): 'overview' | 'crew' | 'build' | 'grow'; kept across halls
   hallInside: null, // inside one building of the open hall (a part's id), or null for the compound (2026-11-09; UI only, never saved)
   buildView: null, // the hall build screen, from a hall's page (ui/hallbuild.js): { district, cell, piece, rot, picked }
   bookFilter: 'all', // the Anchor's slate's filter: 'all' | 'ours' | 'free' | a tong id (ui/tongs.js)
@@ -93,7 +94,7 @@ export const buzzLater = new Set(); // calls let ring out this session: they rin
 // --- navigation (ui/nav.js) --------------------------------------------
 /** The view as it is now: everything Back has to put back. Plan objects are kept by reference (the plan is UI, not game state). */
 export function viewNow() {
-  return { armouryTab: V.armouryTab, opTab: V.opTab, screen: V.screen, openMessageId: V.openMessageId, openOperativeId: V.openOperativeId, openRecruitId: V.openRecruitId, leadName: V.leadName, tongTab: V.tongTab, crewTab: V.crewTab, jobsTab: V.jobsTab, hallPage: V.hallPage, buildView: V.buildView, tongsView: V.tongsView, cityDistrict: V.cityDistrict, cityTab: V.cityTab, loreTab: V.loreTab, clientPage: V.clientPage, inboxUnread: V.inboxUnread, plan: V.plan, sidePlan: V.sidePlan };
+  return { armouryTab: V.armouryTab, opTab: V.opTab, hallTab: V.hallTab, screen: V.screen, openMessageId: V.openMessageId, openOperativeId: V.openOperativeId, openRecruitId: V.openRecruitId, leadName: V.leadName, tongTab: V.tongTab, crewTab: V.crewTab, jobsTab: V.jobsTab, hallPage: V.hallPage, buildView: V.buildView, tongsView: V.tongsView, cityDistrict: V.cityDistrict, cityTab: V.cityTab, loreTab: V.loreTab, clientPage: V.clientPage, inboxUnread: V.inboxUnread, plan: V.plan, sidePlan: V.sidePlan };
 }
 
 /** A link to a page: remember this view (and the control that was tapped) so Back can return to it. */
@@ -104,7 +105,7 @@ export function remember(action, id) {
 
 /** Put a remembered view back. Pages that have gone since (a lead hired, a job taken) fall back to their list. */
 export function restoreView(v) {
-  ({ armouryTab: V.armouryTab = 'stash', opTab: V.opTab = 'overview', screen: V.screen, openMessageId: V.openMessageId, openOperativeId: V.openOperativeId, openRecruitId: V.openRecruitId, leadName: V.leadName, tongTab: V.tongTab, crewTab: V.crewTab, jobsTab: V.jobsTab, hallPage: V.hallPage, buildView: V.buildView, tongsView: V.tongsView, cityDistrict: V.cityDistrict, cityTab: V.cityTab, loreTab: V.loreTab, clientPage: V.clientPage, inboxUnread: V.inboxUnread, plan: V.plan, sidePlan: V.sidePlan } = v);
+  ({ armouryTab: V.armouryTab = 'stash', opTab: V.opTab = 'overview', hallTab: V.hallTab = 'overview', screen: V.screen, openMessageId: V.openMessageId, openOperativeId: V.openOperativeId, openRecruitId: V.openRecruitId, leadName: V.leadName, tongTab: V.tongTab, crewTab: V.crewTab, jobsTab: V.jobsTab, hallPage: V.hallPage, buildView: V.buildView, tongsView: V.tongsView, cityDistrict: V.cityDistrict, cityTab: V.cityTab, loreTab: V.loreTab, clientPage: V.clientPage, inboxUnread: V.inboxUnread, plan: V.plan, sidePlan: V.sidePlan } = v);
   if (V.openMessageId && !state.inbox.some((m) => m.id === V.openMessageId)) V.openMessageId = null;
   if (V.openOperativeId && ![...state.crew, ...state.memorial].some((o) => o.id === V.openOperativeId)) V.openOperativeId = null;
   if (V.openRecruitId && !(state.recruits ?? []).some((r) => r.id === V.openRecruitId)) V.openRecruitId = null;

@@ -12,7 +12,7 @@ import { setHeat, heatIn } from '../src/core/heat.js';
 import { resolveDecision } from '../src/core/decisions.js';
 import { runBattle, pullBack } from '../src/core/runbattle.js';
 import { resolvePending, closeMission, describePending } from '../src/core/mission.js';
-import { openRaids, raidChoices, payOffRaid, setRaidPlan, raidPrice, defenders, hallShut, checkRaids } from '../src/core/raids.js';
+import { openRaids, raidChoices, payOffRaid, setRaidPlan, raidPrice, defenders, hallShut, checkRaids, dueBack } from '../src/core/raids.js';
 import { RAID } from '../src/data/raids.js';
 import { hallIn, canMove } from '../src/core/halls.js';
 import { playWeeks } from './play.js';
@@ -254,4 +254,17 @@ test('a raid call posted with nobody home can still be answered Hold once someon
   if (!hold || hold.disabled) return;
   const next = resolveDecision(s, call.id, 'hold');
   assert.notEqual(next, s, 'hold is accepted from the live choices');
+});
+
+test('a crew due back by the raid day counts as due back (2026-11-21)', () => {
+  let s = untilWarned(withDocksHall(2), 'docks');
+  const raid = openRaids(s)[0];
+  const [a, b] = defenders(s, 'docks');
+  s.sideOut = [{ taskId: 'x', crewIds: [a.id], returnDay: raid.day - 1 }, { taskId: 'y', crewIds: [b.id], returnDay: raid.day + 2 }];
+  a.condition.awayUntil = raid.day - 1;
+  b.condition.awayUntil = raid.day + 2;
+  assert.equal(defenders(s, 'docks').length, 0, 'nobody is home today');
+  const back = dueBack(s, raid);
+  assert.deepEqual(back.map((x) => x.op.id), [a.id], 'only the one back in time is due');
+  assert.equal(back[0].day, raid.day - 1);
 });

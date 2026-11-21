@@ -52,7 +52,8 @@ export function onClick(e) {
   if (action.startsWith('build-') && action !== 'build-hall' && !V.buildView && V.hallPage && (wideHall() || V.hallInside || action === 'build-part')) V.buildView = { ...newBuildView(V.hallPage, V.hallInside ?? 'compound'), on: action !== 'build-part' };
 
   switch (action) {
-    case 'hall-building': V.hallInside = id; V.buildView = null; break;
+    case 'hall-tab': V.hallTab = id; V.hallInside = null; V.buildView = null; break;
+    case 'hall-building': V.hallTab = 'build'; V.hallInside = id; V.buildView = null; break;
     case 'hall-compound': V.hallInside = null; V.buildView = null; break;
     case 'build-done': V.buildView = null; break;
     case 'toggle-hallart': setPref('hallart', !getPref('hallart')); break;
@@ -243,8 +244,8 @@ export function onClick(e) {
     }
     // Building up a hall (ui/hallbuild.js, core/hallbuild.js).
     // A hall's page opens on its home tab whichever tab the link was on (ui/nav.js HOMES).
-    case 'hall-page': remember(action, id); goHome('hall'); V.hallPage = id; V.openOperativeId = null; V.openRecruitId = null; V.buildView = null; break;
-    case 'build-hall': if (wideHall()) { V.hallPage = id; V.buildView = { ...newBuildView(id, V.hallInside ?? 'compound'), on: true }; break; } remember(action, id); goHome('hallBuild'); V.hallPage = id; V.hallInside = null; V.openOperativeId = null; V.buildView = { ...newBuildView(id, 'compound'), screen: true }; break;
+    case 'hall-page': remember(action, id); goHome('hall'); V.hallTab = 'overview'; V.hallPage = id; V.openOperativeId = null; V.openRecruitId = null; V.buildView = null; break;
+    case 'build-hall': V.hallTab = 'build'; if (wideHall()) { V.hallPage = id; V.buildView = { ...newBuildView(id, V.hallInside ?? 'compound'), on: true }; break; } remember(action, id); goHome('hallBuild'); V.hallPage = id; V.hallInside = null; V.openOperativeId = null; V.buildView = { ...newBuildView(id, 'compound'), screen: true }; break;
     case 'build-cell': {
       const [x, y] = id.split(',').map(Number);
       const hall = hallIn(state, V.buildView.district);
