@@ -22,7 +22,7 @@ import { SPECIAL_MOVES, SPECIAL_FAST_CUT, SPECIAL_LOOK_DEFAULT, ENEMY_LOOKS } fr
 export const PACE_K = { watch: 1, fast: 0.6, resolve: 0 };
 export const PACES = ['fast', 'watch', 'resolve'];
 // Step lengths at Watch, in ms.
-const MS = { enter: 900, move: 600, lean: 320, fire: 240, gap: 160, heal: 450, aura: 1100, spread: 900, tick: 560, tickOut: 700, dome: 420, patch: 1100, alarm: 1200, jam: 650, ping: 450, flank: 450, settle: 600 };
+const MS = { enter: 900, move: 600, lean: 320, fire: 240, gap: 160, heal: 450, aura: 1100, spread: 900, tick: 560, tickOut: 700, dome: 420, patch: 1100, alarm: 1800, rifleOw: 1600, droneOw: 2300, van: 900, patchTag: 1500, jam: 650, ping: 450, flank: 450, settle: 600 };
 const HIDDEN = new Set(['aboard', 'gone', 'fled']);
 
 const mid = (a, b) => [Math.round((a[0] + b[0]) / 2), Math.round((a[1] + b[1]) / 2)];
@@ -144,12 +144,14 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
       const to = enemyId(l.guard);
       if (sp && sp.look !== 'ping' && units[from] && units[to]) push({ do: 'camera', focus: [from, to] });
       const fly = sp ? MS.fire * sp.mv.slow : MS.fire;
-      push({ do: 'fire', from, to, hit: !!l.success && (l.damage ?? 0) > 0, cracked: !!l.cracked, fell: !!l.dropped, damage: l.damage ?? 0, amount: l.hpDamage ?? 0, left: l.hpLeft ?? null, strong: !!l.strong, wide, ...(sp ? { burst: true, look: sp.look } : {}), dur: ms(fly * (sp ? cut : 1)) });
+      push({ do: 'fire', from, to, hit: !!l.success && (l.damage ?? 0) > 0, cracked: !!l.cracked, fell: !!l.dropped, pierced: !!l.pierced, damage: l.damage ?? 0, amount: l.hpDamage ?? 0, left: l.hpLeft ?? null, strong: !!l.strong, wide, ...(sp ? { burst: true, look: sp.look, star: sp.star } : {}), dur: ms(fly * (sp ? cut : 1)) });
       adv(fly + (sp ? sp.mv.gap : MS.gap), sp ? cut : 1);
       if (sp) sp.from = to;
     } else if (rule === 'overwatch' && l.guard != null) {
-      push({ do: 'fire', from: 'perch', to: enemyId(l.guard), hit: !!l.success && (l.damage ?? 0) > 0, cracked: !!l.cracked, fell: !!l.dropped, damage: l.damage ?? 0, amount: l.hpDamage ?? 0, left: l.hpLeft ?? null, strong: !!l.strong, wide, dur: ms(MS.fire * 1.4) });
-      adv(MS.fire * 1.4 + MS.gap);
+      // Overwatch (owner, 2026-11-20): the rifle's glint, laser and crack, or the drone's strafe; the pips at the perch are the uses left. The hit lands at `hitAt`.
+      const drone = l.kit === 'drone'; const owMs = drone ? MS.droneOw : MS.rifleOw;
+      push({ do: 'fire', from: 'perch', to: enemyId(l.guard), hit: !!l.success && (l.damage ?? 0) > 0, cracked: !!l.cracked, fell: !!l.dropped, pierced: !!l.pierced, damage: l.damage ?? 0, amount: l.hpDamage ?? 0, left: l.hpLeft ?? null, strong: !!l.strong, wide, kit: l.kit ?? null, uses: l.owLeft ?? null, of: l.owUses ?? null, hitAt: ms(owMs * (drone ? 0.62 : 0.96)), dur: ms(owMs) });
+      adv(owMs + MS.gap);
     } else if (rule === 'shot' && l.key === 'flanked') {
       push({ do: 'flank', id: l.targetId, by: enemyId(l.guard), dur: ms(MS.flank) });
       adv(MS.flank);
@@ -166,6 +168,8 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
         push({ do: 'heal', id: l.targetId, by: l.actor, ok: false, dur: ms(MS.heal) });
         adv(MS.heal);
       }
+      // The way-out stabilise gets a tag with the roll's result (owner, 2026-11-21).
+      if (l.key === 'stabiliseWayOut' || l.key === 'stabiliseFail') push({ do: 'tag', to: l.targetId, big: word(l.key === 'stabiliseWayOut' ? 'stage.stabilised' : 'stage.stabFailed'), small: null, tone: l.key === 'stabiliseWayOut' ? 'good' : 'bad', dur: 0 });
     } else if (rule === 'jam' && l.actor) {
       const ok = l.key === 'jamOk';
       const callers = (l.callers ?? []).map(enemyId).filter((c) => units[c]);
@@ -179,22 +183,31 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
       const fell = l.key === 'tickOut' || l.key === 'burnOut';
       push({ do: 'tick', to: enemyId(l.guard), fell, burn: l.key === 'burnTick' || l.key === 'burnOut', left: fell ? 0 : l.hpLeft ?? l.left, leftExact: l.hpLeft != null, max: l.max, amount: l.hpDamage ?? 0, dur: ms(fell ? MS.tickOut : MS.tick) });
       adv(fell ? MS.tickOut : MS.tick);
+    } else if (rule === 'van' && ['vanIn', 'vanHeld', 'vanCantWait', 'inVan', 'carriedInVan'].includes(l.key)) {
+      // The van's clock ring (owner, 2026-11-20): it opens when the van pulls in, holds, says who is left, and counts who boards.
+      const mode = { vanIn: 'in', vanHeld: 'held', vanCantWait: 'cant' }[l.key] ?? 'board';
+      const round = cue.round ?? stage.round;
+      push({ do: 'van', mode, round, leaves: l.slots?.leaves ?? null, rounds: l.slots?.rounds ?? null, outside: l.slots?.outside ?? null, crew: Object.values(units).filter((u) => u.side === 'crew').length, dur: ms(mode === 'board' ? 0 : MS.van) });
+      if (mode !== 'board') adv(MS.van);
     } else if (rule === 'wayOut') {
       // The hack is done and the alarm is up: red rings at the door the arrivals will come in by.
       const door = Object.values(units).find((u) => u.side === 'enemy' && u.entrance)?.entrance ?? stage.target ?? stage.van;
-      push({ do: 'alarm', at: door, dur: ms(MS.alarm) });
+      push({ do: 'alarm', at: door, count: l.slots?.n ?? null, dur: ms(MS.alarm) });
       adv(MS.alarm);
     } else if (rule === 'patch' && l.actor && !l.targetId && units[l.actor]) {
       // The medic's hands on the way out: the aura, then a soft pulse over everyone reached.
-      push({ do: 'patch', id: l.actor, targets: (l.targets ?? []).filter((x) => units[x]), dur: ms(MS.patch) });
-      adv(MS.patch);
+      // Triage tags (owner, 2026-11-21): data links fan out from the medic and a tag lands on each runner with what they got and where they stand.
+      const tg = (l.targets ?? []).filter((x) => units[x]);
+      const share = Object.fromEntries(tg.map((id) => { const r = (cue.runners ?? []).find((q) => q.id === id); return [id, r ? (r.hpExact ?? r.hp) / ((r.maxExact ?? r.max) || 1) : 1]; }));
+      push({ do: 'patch', id: l.actor, targets: tg, amount: l.hpHeal ?? null, share, dur: ms(MS.patchTag) });
+      adv(MS.patchTag);
     } else if (rule === 'death' && l.targetId) {
       push({ do: 'fall', id: l.targetId, dead: true, dur: ms(MS.fire) });
       adv(MS.fire + MS.gap);
     }
     if (special && !lines[i + 1]?.burst) { // the special move is over: a hold (Watch only), the bars go, the camera pulls back
       adv(special.mv.after, pace === 'fast' ? 0 : 1);
-      push({ do: 'specialEnd', id: special.star, look: special.look });
+      push({ do: 'specialEnd', id: special.star, look: special.look, hold: pace === 'fast' ? 0 : special.mv.after });
       push({ do: 'camera', focus: null });
       special = null;
     }
@@ -306,13 +319,31 @@ export function forceEffect(cue, kind) {
     const g = guard(a); const max = Math.max(3, g?.max ?? 3);
     if (g) { g.max = max; g.hp = max - 1; }
     c.lines = [L({ rule: 'tick', key: 'burnTick', guard: a, damage: 1, hpDamage: 10, left: max - 1, max })];
+  } else if (kind === 'breach') {
+    // The breaching charge (2026-11-20): one body exposed, then a crew shot that ignores its plate.
+    const g = guard(a); const max = Math.max(3, g?.max ?? 3);
+    if (g) { g.st = ['exposed']; g.max = max; g.hp = max - 2; }
+    c.lines = [L({ kind: 'crew', rule: 'attack', key: 'attackHit', actor: crew[0], guard: a, success: true, damage: 2, hpDamage: 20, hpLeft: (max - 2) * 10, pierced: true })];
+  } else if (kind === 'overwatch' || kind === 'drone') {
+    // Overwatch (2026-11-20): one shot from the perch, the rifle's or the drone's.
+    const g = guard(a); const max = Math.max(3, g?.max ?? 3);
+    if (g) { g.max = max; g.hp = max - 1; }
+    c.lines = [L({ kind: 'overwatch', rule: 'overwatch', key: 'overwatchHit', actor: crew[0], guard: a, success: true, damage: 1, hpDamage: 10, hpLeft: (max - 1) * 10, kit: kind === 'drone' ? 'drone' : 'rifle', owLeft: kind === 'drone' ? 2 : 1, owUses: kind === 'drone' ? 3 : 2 })];
   } else if (kind === 'shield') {
     units[crew[1]].act = { kind: 'shield', target: crew[0] };
     c.lines = [L({ kind: 'guard', rule: 'shot', key: 'shotMiss', guard: a, targetId: crew[1], damage: 0, shieldedBy: crew[1] })];
   } else if (kind === 'jam') {
     c.lines = [L({ rule: 'jam', key: 'jamFail', actor: crew[0] }), L({ rule: 'jam', key: 'jamOk', actor: crew[0], callers: [a, b] })];
+  } else if (kind === 'van') {
+    // The van's clock ring (2026-11-20): round 1 it pulls in (four rounds), one boards; round 2 it is held two more; round 3 someone is left outside.
+    const r = c.round ?? 1; const V = (key, slots = {}, extra = {}) => L({ kind: 'van', rule: 'van', key, slots, ...extra });
+    c.lines = r <= 1 ? [V('vanIn', { leaves: r + 4 }), V('inVan', {}, { actor: crew[0] })] : r === 2 ? [V('inVan', {}, { actor: crew[1] }), V('vanHeld', { rounds: 2, outside: 1 })] : [V('vanCantWait', { outside: 1 })];
+  } else if (kind === 'patch') {
+    // Triage tags (2026-11-21): the medic's patch over three runners (one still low), and a stabilise that takes and one that does not.
+    const low = (c.runners ?? []).find((r) => r.id === crew[1]); if (low) { low.hpExact = Math.round((low.maxExact ?? 30) * 0.3); }
+    c.lines = [L({ kind: 'patch', rule: 'patch', key: 'wayOutPatch', actor: crew[0], targets: crew.slice(0, 3), hpHeal: 10 }), L({ kind: 'stabilise', rule: 'stabilise', key: 'stabiliseWayOut', actor: crew[0], targetId: crew[2], success: true }), L({ kind: 'stabilise', rule: 'stabilise', key: 'stabiliseFail', actor: crew[0], targetId: crew[3] ?? crew[1], success: false })];
   } else if (kind === 'wayout') {
-    c.lines = [L({ rule: 'wayOut', key: 'wayOut' }), L({ kind: 'patch', rule: 'patch', key: 'wayOutPatch', actor: crew[0], targets: crew.slice(0, 3) }), L({ kind: 'stabilise', rule: 'stabilise', key: 'stabiliseWayOut', actor: crew[0], targetId: crew[1], success: true })];
+    c.lines = [L({ rule: 'wayOut', key: 'wayOut' }), L({ kind: 'patch', rule: 'patch', key: 'wayOutPatch', actor: crew[0], targets: crew.slice(0, 3), hpHeal: 10 }), L({ kind: 'stabilise', rule: 'stabilise', key: 'stabiliseWayOut', actor: crew[0], targetId: crew[1], success: true })];
   }
   return c;
 }
@@ -425,10 +456,26 @@ export function createStage(svg, deps) {
   // Part B's statuses (2026-11-19), drawn from the round's snapshot (`st`) and nothing else, one look each so they read apart at phone size:
   // burning an orange flickering ring, marked a red crosshair, exposed a yellow broken plate, shaken a jittering violet dotted ring.
   const STATUS_LOOK = {
-    burning: () => node('circle', { r: 11.8, class: 'fs-st fs-st--burning' }),
-    marked: () => node('path', { class: 'fs-st fs-st--marked', d: 'M0 -13.5 V-10 M0 13.5 V10 M-13.5 0 H-10 M13.5 0 H10' }),
-    exposed: () => node('path', { class: 'fs-st fs-st--exposed', d: 'M-10.4 -4 A11 11 0 0 1 -3 -10.6 M3 -10.6 A11 11 0 0 1 10.4 -4' }),
-    shaken: () => node('circle', { r: 13.2, class: 'fs-st fs-st--shaken' }),
+    burning: () => { // a ring with embers that keep rising off it (owner, 2026-11-20)
+      const g = node('g', { class: 'fs-st fs-st--burning' });
+      g.append(node('circle', { r: 11.8 }), ...[-5, 0, 5].map((dx, i) => { const e = node('circle', { class: 'fs-ember', r: 1.4, cx: dx, cy: 6 }); e.style.setProperty('--dx', `${dx * 0.5}px`); e.style.animationDelay = `${i * 0.4}s`; return e; }));
+      return g;
+    },
+    marked: () => { // the reticle locks on, then stays as a crosshair with a diamond tag (owner, 2026-11-20)
+      const g = node('g', { class: 'fs-st fs-st--marked is-lock' });
+      g.append(node('path', { d: 'M0 -13.5 V-10 M0 13.5 V10 M-13.5 0 H-10 M13.5 0 H10' }), node('path', { class: 'fs-mark-dia', d: 'M0 -21 L3.5 -17.5 L0 -14 L-3.5 -17.5Z' }));
+      return g;
+    },
+    exposed: () => { // the broken plate with a breaching charge clamped on, its light blinking (owner, 2026-11-20); the next hit sets it off (`blast`)
+      const g = node('g', { class: 'fs-st fs-st--exposed' });
+      g.append(node('path', { d: 'M-10.4 -4 A11 11 0 0 1 -3 -10.6 M3 -10.6 A11 11 0 0 1 10.4 -4' }), node('rect', { class: 'fs-charge', x: -12.5, y: -11, width: 5, height: 4 }), node('circle', { class: 'fs-charge__led', cx: -10, cy: -12.4, r: 1.1 }));
+      return g;
+    },
+    shaken: () => { // trembling ring and a bang over the head (owner, 2026-11-20)
+      const g = node('g', { class: 'fs-st fs-st--shaken' });
+      g.append(node('circle', { r: 13.2 }), node('text', { class: 'fs-bang', x: 0, y: -15 }, '!'));
+      return g;
+    },
   };
   function statuses(id, list = []) {
     const g = foes.get(id);
@@ -562,24 +609,65 @@ export function createStage(svg, deps) {
   const gone = (el, ms) => { fx.append(el); setTimeout(() => el.remove(), ms); return el; };
   const toward = (a, b, k) => { const d = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1; return [a[0] + ((b[0] - a[0]) / d) * k, a[1] + ((b[1] - a[1]) / d) * k]; };
   const domeOf = new Map(); // protector id -> the dome's group, while the exchange plays
-  const clearDomes = () => { for (const g of domeOf.values()) g.remove(); domeOf.clear(); };
+  const clearDomes = () => { for (const g of domeOf.values()) { g.remove(); if (g._back) put(host(g._back), drawn[g._back]?.at, 0); } domeOf.clear(); };
   /** A curved path from a to b, bowing to one side (the arcs of the hop, the shield and the jam). */
   const arcPath = (a, b, bow = 0.28) => { const m = mid(a, b); const dx = b[0] - a[0]; const dy = b[1] - a[1]; return { d: `M${a[0]} ${a[1]} Q${m[0] - dy * bow} ${m[1] + dx * bow} ${b[0]} ${b[1]}`, c: [m[0] - dy * bow, m[1] + dx * bow] }; };
   /** A point on that arc (t 0..1), so an orb can follow it. */
   const onArc = (a, c, b, t) => [(1 - t) * (1 - t) * a[0] + 2 * (1 - t) * t * c[0] + t * t * b[0], (1 - t) * (1 - t) * a[1] + 2 * (1 - t) * t * c[1] + t * t * b[1]];
   /** Where an attack lands: on the target, or wide as the dice had it. */
   const landing = (b, s) => (s.hit || s.absorbed || s.cracked ? b : [b[0] + s.wide[0] * 22, b[1] + s.wide[1] * 22]);
-  // Ricochet: the round is a bright dot flying from the last landing to this one, with its trace, and a spark where it bounces.
+  // The spotlight (2026-11-20, owner: ordinary shots stay quick, only a special move gets the beat): the star and the
+  // targets keep their colour, everyone else dims, until the move ends.
+  let lit = [];
+  const spot = (ids) => { unspot(); lit = ids.map((id) => host(id)).filter(Boolean); lit.forEach((g) => g.classList.add('is-lit')); svg.classList.add('fs-spotlit'); };
+  function unspot() { lit.forEach((g) => g.classList.remove('is-lit')); lit = []; svg.classList.remove('fs-spotlit'); }
+  // Ricochet, the comet (owner's pick from docs/mockups/2026-11-20-fight-readability.html): a glowing head that speeds into
+  // each landing, a trail that stays and dims, a ring and sparks and a numbered badge at each landing, and at the end the
+  // whole route glows for a hold and fades. `rico` holds the move's trail and badges until `ricoEnd`.
+  let rico = { n: 0, trails: [], badges: [] };
+  function ricoClear() { rico.trails.forEach((l) => l.remove()); rico.badges.forEach((g) => g.remove()); rico = { n: 0, trails: [], badges: [] }; }
+  function ricoEnd(hold) {
+    const { trails, badges } = rico; rico = { n: 0, trails: [], badges: [] };
+    trails.forEach((l) => l.classList.add('is-route'));
+    setTimeout(() => { trails.forEach((l) => l.classList.add('is-gone')); badges.forEach((g) => g.classList.add('is-gone')); }, Math.max(0, hold));
+    setTimeout(() => { trails.forEach((l) => l.remove()); badges.forEach((g) => g.remove()); }, Math.max(0, hold) + 520);
+  }
+  const sparks = (at, n = 8, len = 13) => { for (let k = 0; k < n; k++) { const a = (Math.PI * 2 * k) / n + hash01(at[0], at[1], k) * 0.5; gone(node('line', { class: 'fs-sparkle', x1: at[0] + Math.cos(a) * 3, y1: at[1] + Math.sin(a) * 3, x2: at[0] + Math.cos(a) * (3 + len), y2: at[1] + Math.sin(a) * (3 + len) }), 380); } };
   function ricochet(a, b, s) {
     const end = landing(b, s);
-    gone(node('line', { class: 'fs-tracer is-burst', x1: a[0], y1: a[1], x2: end[0], y2: end[1] }), s.dur + 260);
-    const dot = gone(node('circle', { class: 'fs-round', r: 1.6 }), s.dur + 40);
-    put(dot, a, 0); void dot.getBoundingClientRect(); put(dot, end, s.dur);
-    setTimeout(() => flash(end, 'fs-spark'), s.dur);
+    const n = (rico.n += 1);
+    const trail = node('line', { class: 'fs-trail', x1: a[0], y1: a[1], x2: a[0], y2: a[1] });
+    fx.append(trail); rico.trails.forEach((l) => l.classList.add('is-old')); rico.trails.push(trail);
+    const dot = node('circle', { class: 'fs-round', r: 2.4 });
+    fx.append(dot);
+    const land = () => {
+      dot.remove();
+      trail.setAttribute('x2', end[0]); trail.setAttribute('y2', end[1]);
+      gone(node('circle', { class: 'fs-impact', cx: end[0], cy: end[1], r: 4 }), 520);
+      sparks(end);
+      if (s.hit || s.cracked || s.absorbed) {
+        const g = node('g', { class: 'fs-badge', transform: `translate(${end[0] + 11} ${end[1] - 11})` });
+        g.append(node('circle', { r: 5.5 }), node('text', {}, String(n)));
+        fx.append(g); rico.badges.push(g);
+      }
+    };
+    if (s.dur <= 0 || deps.reduced()) { land(); return; }
+    const t0 = performance.now();
+    const step = (now) => {
+      if (!dot.isConnected) return;
+      const k = Math.min(1, (now - t0) / s.dur); const e = k * k * (1.4 - 0.4 * k); // speeds into the landing, as a round does
+      const x = a[0] + (end[0] - a[0]) * e; const y = a[1] + (end[1] - a[1]) * e;
+      dot.setAttribute('cx', x); dot.setAttribute('cy', y); trail.setAttribute('x2', x); trail.setAttribute('y2', y);
+      if (k < 1) requestAnimationFrame(step); else land();
+    };
+    requestAnimationFrame(step);
   }
   // Slash: afterimages of the star along the dash (the star's own token stays on its spot), and an arc where the blade lands.
   function slash(a, b, s) {
     const end = landing(b, s);
+    // The star's own token runs to each target (owner, 2026-11-20, superseding 'only the ghost travels') and goes home at specialEnd.
+    const runner = s.star && host(s.star);
+    if (runner && s.dur > 0 && !deps.reduced()) put(runner, toward(end, a, 7), s.dur * 0.85);
     const ang = (Math.atan2(end[1] - a[1], end[0] - a[0]) * 180) / Math.PI;
     for (let k = 1; k <= 3; k++) {
       const at = [a[0] + (end[0] - a[0]) * (k / 3.4), a[1] + (end[1] - a[1]) * (k / 3.4)];
@@ -590,9 +678,127 @@ export function createStage(svg, deps) {
   // Ping: a quick thin bolt from the star.
   function bolt(a, b, s) {
     const end = landing(b, s);
-    gone(node('line', { class: 'fs-bolt', x1: a[0], y1: a[1], x2: end[0], y2: end[1] }), Math.max(160, s.dur + 120));
+    if (deps.reduced() || s.dur <= 0) { gone(node('line', { class: 'fs-bolt', x1: a[0], y1: a[1], x2: end[0], y2: end[1] }), 200); return; }
+    // Lightning (owner, 2026-11-20): a jagged bolt that re-jags a few times as it holds, with a fork. Seeded, so a replay looks the same.
+    const dx = end[0] - a[0]; const dy = end[1] - a[1]; const len = Math.hypot(dx, dy) || 1; const nx = -dy / len; const ny = dx / len;
+    const jag = (f) => {
+      const pts = [a];
+      for (let i = 1; i < 8; i++) { const o = (hash01(a[0] + f, end[0], end[1] + i, 'zig') - 0.5) * 12; pts.push([a[0] + (dx * i) / 8 + nx * o, a[1] + (dy * i) / 8 + ny * o]); }
+      pts.push(end);
+      const f3 = pts[3]; const fork = [f3[0] + nx * 9 + (dx / len) * 8, f3[1] + ny * 9 + (dy / len) * 8];
+      return `M${pts.map((p) => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join('L')}M${f3[0].toFixed(1)} ${f3[1].toFixed(1)}L${fork[0].toFixed(1)} ${fork[1].toFixed(1)}`;
+    };
+    const path = gone(node('path', { class: 'fs-lightning', d: jag(0) }), Math.max(260, s.dur + 200));
+    for (let f = 1; f <= 3; f++) setTimeout(() => path.setAttribute('d', jag(f)), f * 70);
+    flash(a, 'fs-spark');
   }
 
+  // The breaching charge goes off (owner, 2026-11-20): a hit on an exposed enemy ignored its plate. A flash, the plate's two halves fly apart, a word.
+  function blast(b) {
+    if (deps.reduced()) return;
+    flash(b, 'sp-flash--breach'); gone(node('circle', { class: 'fs-pop fs-pop--breach', cx: b[0], cy: b[1], r: 8 }), 600);
+    const halves = [['M-9 -4 A9.6 9.6 0 0 1 9 -4', '7px', '-13px', '40deg'], ['M-9 4 A9.6 9.6 0 0 0 9 4', '-7px', '13px', '-40deg']];
+    for (const [d, dx, dy, rot] of halves) { const g = gone(node('g', { transform: `translate(${b[0]} ${b[1]})` }), 650); const sh = node('path', { class: 'fs-shard', d }); sh.style.setProperty('--dx', dx); sh.style.setProperty('--dy', dy); sh.style.setProperty('--rot', rot); g.append(sh); }
+    float(b, word('stage.pierced'), 'is-hit');
+  }
+  // Overwatch (owner, 2026-11-20), off the map on the perch. Rifle: a lens glint, a thin red laser that holds a beat, then one fast tracer and a crack ring. Drone: a small drone flies out on a
+  // dotted pilot link, hovers over the target, chatters three ticks of fire and flies home. The perch shows pips for the uses left. All of it runs inside the step's `dur`.
+  function overwatch(a, b, s) {
+    const end = landing(b, s); const k = s.dur / (s.kit === 'drone' ? MS.droneOw : MS.rifleOw) || 1; const T = (x) => x * k; // k: this pace's share of the Watch length
+    const total = s.of ?? 2; const left = s.uses ?? 0;
+    const mark = gone(node('g', { class: 'fs-perch', transform: `translate(${a[0]} ${a[1]})` }), s.dur + 600);
+    mark.append(node('path', { d: 'M-7 5 L0 -5 L7 5Z', class: 'fs-perch__tower' }));
+    const pips = Array.from({ length: total }, (_, i) => node('circle', { class: `fs-perch__pip${i < left + 1 ? ' is-on' : ''}`, cx: (i - (total - 1) / 2) * 7, cy: 11, r: 2.2 }));
+    mark.append(...pips);
+    setTimeout(() => pips[left]?.classList.remove('is-on'), s.hitAt);
+    if (s.kit === 'drone') {
+      const d = gone(node('g', { class: 'fs-drone' }), s.dur + 100); d.append(node('circle', { r: 3.6, class: 'fs-drone__body' }), node('path', { d: 'M-5 -5L5 5M5 -5L-5 5', class: 'fs-drone__rotor' }));
+      const link = gone(node('line', { class: 'fs-drone__link', x1: a[0], y1: a[1], x2: a[0], y2: a[1] }), s.dur + 100);
+      const hover = [b[0] - 14, b[1] - 20]; const t0 = performance.now();
+      const at = (t) => (t < 0.28 ? lerp2(a, hover, 1 - Math.pow(1 - t / 0.28, 3)) : t < 0.62 ? hover : lerp2(hover, a, t > 0.95 ? 1 : (1 - Math.cos(((t - 0.62) / 0.33) * Math.PI)) / 2));
+      const step = (now) => { if (!d.isConnected) return; const t = Math.min(1, (now - t0) / s.dur); const p = at(t); d.setAttribute('transform', `translate(${p[0]} ${p[1]})`); link.setAttribute('x2', p[0]); link.setAttribute('y2', p[1]); if (t < 1) requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+      for (let i = 0; i < 3; i++) setTimeout(() => { gone(node('line', { class: 'fs-bolt', x1: hover[0], y1: hover[1], x2: end[0] + (i - 1) * 3, y2: end[1] }), 180); flash(end, 'fs-spark'); }, s.dur * (0.3 + i * 0.1));
+      return;
+    }
+    const glint = gone(node('g', { transform: `translate(${a[0]} ${a[1]})` }), T(560) + 100); glint.append(node('path', { class: 'fs-glint', d: 'M0 -7V7M-7 0H7' }));
+    glint.firstChild.style.animationDuration = `${T(560)}ms`;
+    setTimeout(() => { const l = gone(node('line', { class: 'fs-laser', x1: a[0], y1: a[1], x2: end[0], y2: end[1], pathLength: 100 }), T(1000)); l.style.animationDuration = `${T(420)}ms`; }, T(560));
+    setTimeout(() => { gone(node('line', { class: 'fs-tracer is-burst', x1: a[0], y1: a[1], x2: end[0], y2: end[1] }), 220); gone(node('circle', { class: 'fs-crack', cx: end[0], cy: end[1], r: 4 }), 700); }, s.hitAt - 40);
+  }
+  const lerp2 = (p, q, t) => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t];
+  // The van's clock ring (owner, 2026-11-20: "a bit more cyberpunk"): a segmented HUD ring round the van point, one segment a round until it leaves,
+  // targeting brackets, a slow scan ring, a glitching label (T-3) and a square pip for each runner aboard. A hold adds segments; a van that goes with
+  // someone outside says so in red. Opened by the van line, ticked by each round, gone when the van is (or the fight resets).
+  let vanFx = null; // { g, at, total, leaves, boarded, segs, pips, label, ghostA, ghostB }
+  const SEG_R = 21;
+  const arcSeg = (i, n) => { const gap = 0.16; const a0 = -Math.PI / 2 + (i / n) * Math.PI * 2 + gap / 2; const a1 = -Math.PI / 2 + ((i + 1) / n) * Math.PI * 2 - gap / 2; return `M${(Math.cos(a0) * SEG_R).toFixed(2)} ${(Math.sin(a0) * SEG_R).toFixed(2)}A${SEG_R} ${SEG_R} 0 0 1 ${(Math.cos(a1) * SEG_R).toFixed(2)} ${(Math.sin(a1) * SEG_R).toFixed(2)}`; };
+  function vanBuild(total) {
+    const v = vanFx; v.segs.forEach((e) => e.remove()); v.segs = Array.from({ length: total }, (_, i) => { const e = node('path', { class: 'fs-van__seg', d: arcSeg(i, total) }); v.g.append(e); return e; });
+    v.total = total;
+  }
+  function vanLabel(text, tone = '') {
+    const v = vanFx; if (!v) return;
+    for (const t of [v.label, v.ghostA, v.ghostB]) t.textContent = text;
+    v.label.setAttribute('class', `fs-van__label ${tone}`);
+    v.g.classList.remove('is-glitch'); void v.g.getBoundingClientRect(); v.g.classList.add('is-glitch');
+  }
+  function vanPaint(remaining) {
+    const v = vanFx; if (!v) return;
+    v.segs.forEach((e, i) => { const lit = i < remaining; e.classList.toggle('is-spent', !lit); e.classList.toggle('is-low', lit && remaining <= 1); });
+  }
+  function vanClose(now = false) {
+    const v = vanFx; if (!v) return; vanFx = null;
+    if (now || deps.reduced()) { v.g.remove(); return; }
+    v.g.classList.add('is-leaving'); setTimeout(() => v.g.remove(), 1100);
+  }
+  function vanRun(s) {
+    const at = pos('van') ?? points?.van; if (!at) return;
+    if (s.mode === 'in') {
+      vanClose(true);
+      const g = node('g', { class: 'fs-van', transform: `translate(${at[0]} ${at[1]})` });
+      g.append(node('circle', { class: 'fs-van__scan', r: 26 }), node('path', { class: 'fs-van__brackets', d: 'M-28 -22V-28H-22M22 -28H28V-22M28 22V28H22M-22 28H-28V22' }));
+      const ghostA = node('text', { class: 'fs-van__ghost fs-van__ghost--a', x: 0, y: -33 }, ''); const ghostB = node('text', { class: 'fs-van__ghost fs-van__ghost--b', x: 0, y: -33 }, ''); const label = node('text', { class: 'fs-van__label', x: 0, y: -33 }, '');
+      g.append(ghostA, ghostB, label);
+      const nPips = Math.max(1, s.crew ?? 4); const pips = Array.from({ length: nPips }, (_, i) => { const e = node('rect', { class: 'fs-van__pip', x: (i - (nPips - 1) / 2) * 6 - 2, y: 31, width: 4, height: 4 }); g.append(e); return e; });
+      fx.append(g);
+      vanFx = { g, at, total: 0, leaves: s.leaves ?? s.round + 4, boarded: 0, segs: [], pips, label, ghostA, ghostB };
+      vanBuild(Math.max(1, vanFx.leaves - s.round)); vanPaint(vanFx.total);
+      vanLabel(`${word('stage.van')} T\u2212${vanFx.total}`);
+    } else if (vanFx && s.mode === 'held') {
+      vanFx.leaves += s.rounds ?? 2; const remaining = Math.max(1, vanFx.leaves - (vanFx.round ?? s.round));
+      vanFx.round = s.round; vanBuild(vanFx.leaves - s.round); vanPaint(vanFx.leaves - s.round);
+      vanLabel(word('stage.vanHeld', { n: s.rounds ?? 2 }), 'is-held'); flash(at, 'sp-flash--van');
+    } else if (vanFx && s.mode === 'cant') {
+      vanLabel(`${word('stage.vanLeft')} ${s.outside ?? ''}`.trim(), 'is-bad'); vanFx.g.classList.add('is-bad');
+    } else if (vanFx && s.mode === 'board') {
+      const e = vanFx.pips[vanFx.boarded]; vanFx.boarded += 1; e?.classList.add('is-on');
+    }
+  }
+  /** A new round while the van's ring is up: one segment burns off; the last says it is leaving. */
+  function vanTick(round) {
+    const v = vanFx; if (!v) return;
+    const remaining = v.leaves - round;
+    if (remaining < 0) { vanClose(); return; }
+    vanPaint(remaining);
+    vanLabel(remaining === 0 ? word('stage.vanLeaving') : `${word('stage.van')} T\u2212${remaining}`, remaining <= 1 ? 'is-bad' : '');
+  }
+  /** The fight is over: the van has gone (or the crew has), so the ring says so and goes. */
+  function vanEnd() {
+    if (!vanFx) return;
+    vanLabel(word('stage.vanGone'), vanFx.g.classList.contains('is-bad') ? 'is-bad' : 'is-held');
+    setTimeout(() => vanClose(), deps.reduced() ? 0 : 1000);
+  }
+  // A cyberpunk tag over a runner (owner, 2026-11-21): a cut-corner plate with an accent bar, a bright figure and a small status word, that glitches in,
+  // holds and fades. tone: good (green), warn (amber), bad (red).
+  function tag(at, big, small, tone = 'good', lift = 0) {
+    const len = Math.max(String(big).length * 4.4, String(small ?? '').length * 3.3); const w = Math.max(24, 12 + len); const h = small ? 15 : 10;
+    const spot = gone(node('g', { transform: `translate(${at[0] - w / 2} ${at[1] - 24 - h - lift})` }), PACE_K.watch * MS.patchTag + 900); // the glitch animates the inner group, so the position survives
+    const g = node('g', { class: `fs-tag fs-tag--${tone}` }); spot.append(g);
+    g.append(node('path', { class: 'fs-tag__plate', d: `M0 0H${w - 4}L${w} 4V${h}H4L0 ${h - 4}Z` }), node('path', { class: 'fs-tag__bar', d: `M0 0V${h - 4}` }), node('path', { class: 'fs-tag__lead', d: `M${w / 2 - 2} ${h}L${w / 2} ${h + 3}L${w / 2 + 2} ${h}` }));
+    g.append(node('text', { class: 'fs-tag__big', x: w / 2 + 1, y: small ? 6.6 : 7.4 }, String(big)));
+    if (small) g.append(node('text', { class: 'fs-tag__small', x: w / 2 + 1, y: 12.4 }, small));
+  }
   const ensure = (id, u, seed) => (id.startsWith('e:') ? foes.get(id) ?? foeToken(id, u, seed) : deps.tok(id));
 
   /** Run one step (the script says what and where). */
@@ -641,7 +847,8 @@ export function createStage(svg, deps) {
       case 'fire': {
         const a = pos(s.from); const b = pos(s.to);
         if (!a || !b) break;
-        if (s.look === 'ricochet') ricochet(a, b, s);
+        if (s.from === 'perch' && s.dur > 0 && !deps.reduced()) overwatch(a, b, s);
+        else if (s.look === 'ricochet') ricochet(a, b, s);
         else if (s.look === 'slash') slash(a, b, s);
         else if (s.look === 'ping') bolt(a, b, s);
         else tracer(a, b, s);
@@ -652,7 +859,7 @@ export function createStage(svg, deps) {
           if (s.cracked) {
             crack(g); flash(b, 'sp-flash--crack'); float(b, word('stage.cracked'), 'is-cracked');
             if (s.hit || s.fell) setTimeout(() => { struck(g); flash(b, 'sp-flash--hit'); }, deps.reduced() ? 0 : 280);
-          } else if (s.hit) { struck(g); flash(b, 'sp-flash--hit'); }
+          } else if (s.hit) { struck(g); flash(b, 'sp-flash--hit'); if (s.pierced) blast(b); }
           else if (s.absorbed) { flash(b, 'sp-flash--zap'); float(b, word('stage.absorbed'), 'is-absorbed'); }
           else flash([b[0] + s.wide[0] * 22, b[1] + s.wide[1] * 22], 'sp-flash--miss');
           // The bar drains as the hit lands (2026-11-19): to the HP the line says is left, or to nothing on a fall.
@@ -662,7 +869,7 @@ export function createStage(svg, deps) {
           if ((s.hit || s.fell) && s.amount) setTimeout(() => damageNumber(b, s.amount, s.strong), late);
           if (s.fell) { const foe = s.to.startsWith('e:'); setTimeout(() => { if (foe) knockout(b); setStance(s.to, s.dead ? 'dead' : 'down'); }, late); drawn[s.to] = { ...drawn[s.to], stance: s.dead ? 'dead' : 'down' }; body(b, s.to); setTimeout(() => float(b, word(foe ? 'stage.out' : 'stage.down'), foe ? 'is-down is-ko' : 'is-down'), late + 220); }
           else if (s.hit && !s.amount) setTimeout(() => float(b, word('stage.hit'), 'is-hit'), late);
-        }, s.dur);
+        }, s.hitAt ?? s.dur);
         break;
       }
       case 'flank': { const b = pos(s.id); flash(b, 'sp-flash--miss'); float(b, word('stage.flanked'), 'is-hit'); break; }
@@ -679,12 +886,9 @@ export function createStage(svg, deps) {
         const glow2 = gone(node('circle', { class: 'fs-aura fs-aura--late', cx: m[0], cy: m[1], r: 9 }), dur * 0.7); // a second ring a beat behind: the glow pulses
         glow2.style.animationDuration = `${dur * 0.6}ms`; glow2.style.animationDelay = `${dur * 0.1}ms`;
         if (s.to === s.id) { setTimeout(() => { gone(node('circle', { class: 'sp-ring sp-ring--ok', cx: t[0], cy: t[1], r: 9 }), 760); land(); }, dur * 0.55); break; } // healing themself: nothing crosses
-        setTimeout(() => {
-          const orb = gone(node('circle', { class: 'fs-orb', cx: m[0], cy: m[1], r: 2.2 }), dur * 0.45);
-          orb.style.transition = `transform ${dur * 0.3}ms ease-in`;
-          requestAnimationFrame(() => { orb.style.transform = `translate(${t[0] - m[0]}px, ${t[1] - m[1]}px)`; });
-        }, dur * 0.5);
-        setTimeout(() => { gone(node('circle', { class: 'sp-ring sp-ring--ok', cx: t[0], cy: t[1], r: 9 }), 760); land(); }, dur * 0.8);
+        // A healing pulse (owner, 2026-11-20): a green ring spreads from the medic to the patient, who gets the ring and plus signs rising.
+        setTimeout(() => { const w = gone(node('circle', { class: 'fs-groupwave', cx: m[0], cy: m[1], r: Math.hypot(t[0] - m[0], t[1] - m[1]) + 8 }), dur * 0.55); w.style.animationDuration = `${dur * 0.5}ms`; }, dur * 0.4);
+        setTimeout(() => { gone(node('circle', { class: 'sp-ring sp-ring--ok', cx: t[0], cy: t[1], r: 9 }), 760); land(); for (let k = 0; k < 3; k++) setTimeout(() => float([t[0] + (k - 1) * 7, t[1] + (k % 2) * 4], '+', 'is-heal'), k * 90); }, dur * 0.8);
         break;
       }
       case 'ping': {
@@ -708,14 +912,17 @@ export function createStage(svg, deps) {
         infect(s.from, false);
         if (deps.reduced() || s.dur <= 0) { land(); break; }
         const dur = Math.max(700, s.dur);
-        const { d, c } = arcPath(a, t, 0.3);
-        gone(node('path', { class: 'fs-hop', d, pathLength: 100 }), dur * 0.72);
-        for (let k = 0; k < 4; k++) setTimeout(() => { const sp = gone(node('circle', { class: 'fs-spore', cx: a[0], cy: a[1], r: 1.2 }), 720); sp.style.setProperty('--dx', `${(k - 1.5) * 4}px`); sp.style.setProperty('--dy', `${-4 - k * 2}px`); }, k * 60); // spores lift off the body
-        const orb = gone(node('circle', { class: 'fs-hopper', r: 2.4, cx: 0, cy: 0 }), dur * 0.7);
-        const path = [0, 0.2, 0.4, 0.6, 0.8, 1].map((u) => onArc(a, c, t, u));
-        if (orb.animate) orb.animate(path.map((p) => ({ transform: `translate(${p[0]}px, ${p[1]}px)` })), { duration: dur * 0.5, delay: dur * 0.1, easing: 'ease-in-out', fill: 'both' });
-        else put(orb, t, 0);
-        setTimeout(land, dur * 0.6);
+        // Spores (owner, 2026-11-20): the body bursts into a cloud that drifts over to the new host, each on its own arc.
+        for (let k = 0; k < 6; k++) setTimeout(() => { const sp = gone(node('circle', { class: 'fs-spore', cx: a[0], cy: a[1], r: 1.2 }), 720); sp.style.setProperty('--dx', `${(k - 2.5) * 4}px`); sp.style.setProperty('--dy', `${-4 - k * 2}px`); }, k * 40);
+        for (let k = 0; k < 9; k++) {
+          const h = hash01(a[0], t[0], t[1] + k, 'spore'); const tj = [t[0] + (hash01(a[1], t[0], k, 'sx') - 0.5) * 16, t[1] + (hash01(a[0], t[1], k, 'sy') - 0.5) * 16];
+          const { c } = arcPath(a, tj, (h - 0.5) * 0.9);
+          const sp = gone(node('circle', { class: 'fs-hopper', r: 1.3 + h * 1.3, cx: 0, cy: 0 }), dur * 0.9);
+          const path = [0, 0.2, 0.4, 0.6, 0.8, 1].map((u) => onArc(a, c, tj, u));
+          if (sp.animate) sp.animate(path.map((p) => ({ transform: `translate(${p[0]}px, ${p[1]}px)` })), { duration: dur * (0.4 + h * 0.15), delay: dur * (0.08 + k * 0.03), easing: 'ease-in-out', fill: 'both' });
+          else put(sp, tj, 0);
+        }
+        setTimeout(land, dur * 0.7);
         break;
       }
       case 'tick': {
@@ -727,7 +934,8 @@ export function createStage(svg, deps) {
           if (s.fell) { knockout(b); setStance(s.to, 'down'); drawn[s.to] = { ...drawn[s.to], stance: 'down' }; body(b, s.to); infect(s.to, false); statuses(s.to, []); float(b, word('stage.out'), 'is-down is-ko'); }
         };
         if (deps.reduced() || s.dur <= 0) { apply(); break; }
-        for (let k = 0; k < 3; k++) setTimeout(() => gone(node('circle', { class: s.burn ? 'fs-drip fs-drip--ember' : 'fs-drip', cx: b[0] - 3 + k * 3, cy: b[1] - 4 + (k % 2), r: 1.3 }), 700), k * 90);
+        if (s.burn) for (let k = 0; k < 8; k++) setTimeout(() => { const e = gone(node('circle', { class: 'fs-ember fs-ember--burst', cx: b[0] - 6 + k * 1.7, cy: b[1] + 3, r: 1.6 }), 800); e.style.setProperty('--dx', `${(k - 3.5) * 1.6}px`); }, k * 70);
+        else for (let k = 0; k < 3; k++) setTimeout(() => gone(node('circle', { class: s.burn ? 'fs-drip fs-drip--ember' : 'fs-drip', cx: b[0] - 3 + k * 3, cy: b[1] - 4 + (k % 2), r: 1.3 }), 700), k * 90);
         const ring = host(s.to)?.querySelector(s.burn ? ':scope > .fs-st--burning' : ':scope > .fs-infect');
         if (ring) { ring.classList.remove('is-flare'); void ring.getBoundingClientRect(); ring.classList.add('is-flare'); }
         setTimeout(() => {
@@ -739,20 +947,28 @@ export function createStage(svg, deps) {
         break;
       }
       case 'dome': {
-        // The shield (2026-11-17): a soft dome over who is covered and an arc to them from the protector, held over the exchange.
+        // The shield (2026-11-17), as a plate (owner, 2026-11-20): the protector steps in front of who is covered, toward the enemy line,
+        // and a bright plate holds in front of them over the exchange; it flares when the shot lands and they step back at domeEnd.
         const a = pos(s.id); const t = pos(s.to);
         if (!a || !t || s.dur <= 0 || deps.reduced()) break;
         domeOf.get(s.id)?.remove();
-        const g = node('g', { class: 'fs-dome' });
-        g.append(node('circle', { class: 'fs-dome__field', cx: t[0], cy: t[1], r: 11 }), node('path', { class: 'fs-dome__arc', d: arcPath(a, t, 0.25).d, pathLength: 60 }));
+        const hostiles = Object.entries(drawn).filter(([id, d]) => id.startsWith('e:') && !HIDDEN.has(d.stance)).map(([, d]) => d.at);
+        const cx = hostiles.length ? hostiles.reduce((n, p) => n + p[0], 0) / hostiles.length : t[0] + 1; const cy = hostiles.length ? hostiles.reduce((n, p) => n + p[1], 0) / hostiles.length : t[1];
+        const front = toward(t, [cx, cy], 1); const ux = front[0] - t[0]; const uy = front[1] - t[1];
+        const deg = (Math.atan2(uy, ux) * 180) / Math.PI;
+        if (s.id !== s.to) put(host(s.id), [t[0] + ux * 9, t[1] + uy * 9], s.dur);
+        const g = node('g', { class: 'fs-dome', transform: `translate(${t[0] + ux * 19} ${t[1] + uy * 19}) rotate(${deg})` });
+        g.append(node('path', { class: 'fs-dome__plate', d: 'M0 -11 Q8 0 0 11' }));
+        g._back = s.id;
         fx.append(g); domeOf.set(s.id, g);
         break;
       }
       case 'domeEnd': {
-        for (const g of domeOf.values()) { g.classList.add('is-end'); setTimeout(() => g.remove(), 340); }
+        for (const g of domeOf.values()) { g.classList.add('is-end'); setTimeout(() => g.remove(), 340); if (g._back) put(host(g._back), drawn[g._back]?.at, 300); }
         domeOf.clear();
         break;
       }
+      case 'van': vanRun(s); break;
       case 'alarm': {
         // The way out (2026-11-17): the alarm is up. Red rings pulse out of the door the arrivals use, the map's edge flashes, a caption says so.
         const at = s.at;
@@ -760,31 +976,35 @@ export function createStage(svg, deps) {
         deps.caption?.(word('stage.alarm'), 'alarm');
         if (deps.reduced() || s.dur <= 0) break;
         deps.frame([...Object.values(drawn).filter((d) => !HIDDEN.has(d.stance)).map((d) => d.at), at]); // the door in shot, so the rings are seen
-        for (let k = 0; k < 3; k++) setTimeout(() => gone(node('circle', { class: 'fs-alarm-ring', cx: at[0], cy: at[1], r: 6 }), 950), k * 260);
+        // The siren and the surge (owner, 2026-11-20): the rings keep coming and the map's edge pulses like a siren for the whole step; the door says how many are coming.
+        for (let k = 0; k < 5; k++) setTimeout(() => gone(node('circle', { class: 'fs-alarm-ring', cx: at[0], cy: at[1], r: 6 }), 950), k * 300);
         gone(node('circle', { class: 'fs-alarm-core', cx: at[0], cy: at[1], r: 3 }), 1900);
+        if (s.count) setTimeout(() => float([at[0] - 22, at[1] + 14], word('stage.arriving', { n: s.count }), 'is-hit'), 500);
         mapBox?.classList.add('fs-alarm'); setTimeout(() => mapBox?.classList.remove('fs-alarm'), 1900);
         break;
       }
       case 'patch': {
-        // The medic's hands on the way out (2026-11-17): the aura's glow round the medic, then a soft pulse out over everyone reached.
+        // The medic's hands on the way out, as triage tags (owner, 2026-11-21): the aura's glow round the medic, a data link to each runner reached with
+        // packets running down it, and a tag on each: what they got and whether they are STABLE or STILL HURT.
         const m = pos(s.id);
-        const land = () => { for (const id of s.targets ?? []) { const t = pos(id); if (t) { flash(t, 'sp-flash--heal'); float(t, '+', 'is-heal'); } } };
-        if (!m || deps.reduced() || s.dur <= 0) { land(); break; }
-        const dur = Math.max(800, s.dur);
-        const reach = Math.max(16, ...(s.targets ?? []).map((id) => pos(id)).filter(Boolean).map((t) => Math.hypot(t[0] - m[0], t[1] - m[1]) + 8));
-        const glow = gone(node('circle', { class: 'fs-aura', cx: m[0], cy: m[1], r: 9 }), dur * 0.62); glow.style.animationDuration = `${dur * 0.6}ms`;
-        setTimeout(() => { const w = gone(node('circle', { class: 'fs-groupwave', cx: m[0], cy: m[1], r: reach }), dur * 0.5); w.style.animationDuration = `${dur * 0.45}ms`; }, dur * 0.35);
-        (s.targets ?? []).forEach((id, k) => { const t = pos(id); if (t) setTimeout(() => { gone(node('circle', { class: 'sp-ring sp-ring--ok', cx: t[0], cy: t[1], r: 9 }), 760); flash(t, 'sp-flash--heal'); float(t, '+', 'is-heal'); }, dur * 0.6 + k * 90); });
+        const tags = () => (s.targets ?? []).forEach((id, k) => { const t = pos(id); if (!t) return; const hurt = (s.share?.[id] ?? 1) < 0.6; setTimeout(() => { flash(t, 'sp-flash--heal'); tag(t, s.amount ? `+${s.amount}` : '+', word(hurt ? 'stage.patchHurt' : 'stage.patchStable'), hurt ? 'warn' : 'good', (k % 3) * 14); }, deps.reduced() || s.dur <= 0 ? 0 : s.dur * 0.3 + k * 130); });
+        if (!m || deps.reduced() || s.dur <= 0) { tags(); break; }
+        const dur = Math.max(900, s.dur);
+        const glow = gone(node('circle', { class: 'fs-aura', cx: m[0], cy: m[1], r: 9 }), dur * 0.42); glow.style.animationDuration = `${dur * 0.4}ms`;
+        (s.targets ?? []).forEach((id, k) => { const t = pos(id); if (!t) return; setTimeout(() => { const l = gone(node('path', { class: 'fs-tether', d: `M${m[0]} ${m[1]}L${t[0]} ${t[1]}`, pathLength: 100 }), dur * 0.7); l.style.animationDuration = `${dur * 0.18}ms, 0.5s`; }, dur * 0.12 + k * 90); });
+        tags();
         break;
       }
+      case 'tag': { const t = pos(s.to); if (t) tag(t, s.big, s.small, s.tone); break; }
       case 'fall': { const b = pos(s.id); if (s.id.startsWith('e:')) knockout(b); setStance(s.id, s.dead ? 'dead' : 'down'); if (drawn[s.id]) drawn[s.id] = { ...drawn[s.id], stance: s.dead ? 'dead' : 'down' }; if (b) body(b, s.id); break; }
-      case 'leave': { const g = host(s.id); put(g, s.at, s.dur); setTimeout(() => setStance(s.id, s.stance, true), s.dur); if (!s.id.startsWith('e:')) deps.pin(s.id, null); drawn[s.id] = { at: s.at, stance: s.stance }; break; }
+      case 'leave': { const g = host(s.id); const from = pos(s.id); if (s.id.startsWith('e:') && from && !deps.reduced() && s.dur > 0) for (let k = 0; k < 5; k++) setTimeout(() => gone(node('circle', { class: 'fs-dust', cx: from[0] + (s.at[0] - from[0]) * (k / 5), cy: from[1] + (s.at[1] - from[1]) * (k / 5) + 5, r: 2.2 }), 500), (s.dur * k) / 6); // the fled kick up dust on the run
+        put(g, s.at, s.dur); setTimeout(() => setStance(s.id, s.stance, true), s.dur); if (!s.id.startsWith('e:')) deps.pin(s.id, null); drawn[s.id] = { at: s.at, stance: s.stance }; break; }
       case 'special': {
         // Letterbox bars and slow motion while the move plays (not at Resolve or with reduced motion: there it cuts).
         const b = pos(s.id);
         if (b) gone(node('circle', { class: 'fs-special', cx: b[0], cy: b[1], r: 8 }), Math.max(600, s.dur));
-        if (s.dur > 0 && !deps.reduced()) cinema(true);
-        if (s.look === 'slash' && b && s.dur > 0) { const t = pos(s.targets?.[0]); if (t) put(host(s.id), toward(b, t, 4), s.dur / 2); } // a lunge; the star stays in their cover
+        if (s.dur > 0 && !deps.reduced()) { cinema(true); spot([s.id, ...(s.targets ?? [])]); }
+        ricoClear();
         deps.caption?.(word(s.key, s.slots), 'special');
         break;
       }
@@ -796,7 +1016,7 @@ export function createStage(svg, deps) {
         c.style.animationDuration = `${Math.max(1, s.dur)}ms`;
         break;
       }
-      case 'specialEnd': cinema(false); put(host(s.id), drawn[s.id]?.at, 260); break;
+      case 'specialEnd': cinema(false); unspot(); if (s.look === 'ricochet') ricoEnd(s.hold ?? 900); else ricoClear(); put(host(s.id), drawn[s.id]?.at, 260); break;
       case 'caption': deps.caption?.(word(s.key, s.slots), s.tier); break;
       case 'say': deps.say?.({ when: clockText(s.round, s.clock), tier: s.tier, text: s.key ? `${word(s.key, s.slots)} ${s.texts.join(' ')}` : s.texts.join(' ') }); break;
       case 'camera': if (!deps.reduced() && deps.pace() !== 'resolve') look(s.focus); break;
@@ -828,7 +1048,9 @@ export function createStage(svg, deps) {
         for (const [id, u] of Object.entries(stage.units)) { const at = u.side === 'crew' ? deps.at(id) : null; if (at) drawn[id] = { at, stance: 'up' }; }
       }
       stopAmbient();
-      clearDomes();
+      clearDomes(); unspot(); ricoClear();
+      if (cue.phase === 'round' && vanFx) vanTick(cue.round ?? stage.round);
+      if ((cue.phase === 'end' || cue.phase === 'retreat') && vanFx) vanEnd();
       if (cue.phase === 'start') { clock = 0; deps.say?.(null); }
       const script = stageScript(drawn, cue, { pace, reduced: deps.reduced(), spent, clock });
       spent = script.spent;
@@ -867,7 +1089,7 @@ export function createStage(svg, deps) {
     reset(full = true) {
       playing += 1;
       stopAmbient();
-      clearDomes();
+      clearDomes(); unspot(); ricoClear(); vanClose(true);
       for (const g of foes.values()) g.remove();
       foes.clear();
       ground.replaceChildren();
