@@ -40,27 +40,50 @@ line here is in `docs/design/2026-11.md` (grep the topic).
 1. **One log generator** (`core/advlog.js` or in `contracts.js` made generic): given the crew, the place (district), the kind of work and the day's roll, pick a line from a pool keyed by kind and outcome, filled with who did it. Seeded `hashRng(seed, kind, id, day)` so no other roll moves.
 2. **Hands-off jobs get a day log:** every day out writes a line (not only beats), so a three-day job reads as three days. Show the last line on Today's card and the whole log in the report.
 3. **Side tasks get days:** a two-day task writes a line a day, and the result is the last line.
-4. **Expeditions** (the bigger new thing): a crew goes into the city for 3 to 7 days with no target. Each day rolls a few events on their stats and gear (cash found, a contact, intel on a district, a gear find, a scrape or injury, now and then a fight that calls you in like a hit post). They come back with what they found. No death unless the player accepted the shown risk (the fights follow the same rules). Needs a save version (`state.expeditions`, or a kind of side task).
+4. **Expeditions** (the bigger new thing): a crew goes out for 3 to 7 days **to get something specific** (owner, 2026-11-21: "they should be working towards a goal"). See "Expeditions have a goal" below. Needs a save version (`state.expeditions`, or a kind of side task).
 5. **Where it shows:** Today's crew-out cards (one line each), a full log on tap, and the report when they're back.
 
-**Questions for the owner before building (recommended answer first):**
-1. Start with the log on what exists (hands-off jobs and side tasks), then expeditions as a second step? (Recommended: yes. The log is useful at once, and expeditions reuse it.)
-2. Expeditions: in-game days, not real-time timers? (Recommended: in-game days. Real time could come with iOS.)
-3. Expeditions pay in what: cash, gear, intel, recruit leads, or a mix by where they go? (Recommended: a mix, and the district decides the lean, e.g. the Docks for gear, the Night Market for contacts.)
-4. Who writes the line pools: Claude drafts, the owner marks, as with the posts?
-5. Should expeditions earn fame? (Recommended: no, as with posts, so the Elite timing holds; fights on them count in the fight record.)
+**The owner's answers (2026-11-21):**
+1. Order: the log on hands-off jobs and side tasks first, expeditions second. **Yes.**
+2. In-game days, not real-time timers. **Yes** (decision log).
+3. Line pools: Claude wrote a prompt the owner (or any chat) uses to draft them, `docs/log-lines-prompt.md`; Claude drafts, the owner marks. The format there is the one the engine reads.
+4. Expeditions earn no fame; their fights count in the fight record. **Yes.**
+5. A failed expedition still brings something back (finds on the way, part of the goal). **Yes.**
+6. Goals: **a weapon first**, then cash and recruits. **Heist prep is not an expedition goal**: heist prep is a normal job and, like the other jobs, gets the longer log-style play (multi-map, below).
+
+**The log is a procedural story, not a random line a day** (owner asked). Day 1 names a contact or a place and the engine remembers it; middle days are beats (lead, dead end, snag, find, quiet) and callbacks to what day 1 named; then a turn, sometimes a call (a fight), and a close (met, partial, failed). Each beat rolls on a stat and `{who}` is the crew member best at it, so pools are split by stat. A goal file gives the shape of the hunt, a district file the people and places. Spelled out in `docs/log-lines-prompt.md`; the engine keeps the trip's facts (`contact`, `place`) on the trip's state and seeds every pick with `hashRng`.
+
+### Expeditions have a goal (owner, 2026-11-21)
+
+Not a wander with no target. The player picks a goal when sending the crew; each day rolls progress towards it on the crew's stats and gear, and the log tells how it goes ("Day 2: Raster's contact at the depot went quiet"). Finds along the way (cash, a scrape, a fight that calls you in) are extras. They come back with the goal met, partly met or failed. Pull out early any time, everyone safe. The goal sets the length and which stats count.
+
+**Expeditions are their own thing, not jobs (owner, 2026-11-21).** A job is work for a client on the board: it pays cash, earns fame and client trust, is planned on the squad board and can be watched. An expedition is work for our own tong: the player sends a crew, no client, no pay, no fame; the reward is the goal itself. Always hands-off, read as a log; a fight calls you in as on a post. Own state and own screen entry (not an offer on the board).
+
+Goals the owner picked (in build order):
+- **A weapon (first):** track down a named weapon, not a random find (gear tables in `data/`, the stash).
+- **Cash:** a debt, a stash, a skim, a quick score; small-time, not a heist.
+- **A recruit:** turn up a lead of a wanted type (a medic, a driver). Ends as a name in Crew › Leads (`dossier.js`, `ui/tongs.js leadNames`).
+
+Not picked for now: a deeper read on a rival (scouting and Watch a tong already do it), a contact in a district.
 
 **Check before shipping:** the income sim with expeditions (`scripts/sim-crew-income.mjs`, add an option like `posts`), the fame sim and the save-size test (`tests/inbox.test.js`: logs grow saves, so cap each log, e.g. the last 10 lines).
 
-## After that: multi-map operations
+## After that: multi-map operations (the new format for jobs)
 
-**The idea (owner, 2026-11-21):** a long job moves through several maps. Street, then the building's front, then a big map of the inside, then out the back into an alley, and on to another place. Between maps the log covers travel and setting up ("Day 2, 03:10: Raster lifts a keycard"). Ordinary jobs keep arrive, do it, leave.
+**The idea (owner, 2026-11-21):** not a new kind of contract. It is the new way the board's jobs play. They stay jobs from clients (`data/clients.js`: the neighbourhood powers, Ruth Okonkwo for the corps' off-books work, and more as the lore allows, via `add-lore`). The difference is that a job moves: street, then the building's front, then a big map of the inside, then out the back into an alley, and on to another place. Between places the log covers travel and setting up ("Day 2, 03:10: Raster lifts a keycard").
+
+The cyberpunk shapes the owner means, all as jobs:
+- **Intel:** the client wants something found out.
+- **Setup:** the client wants something stolen and we prepare it (the way in, the codes, the timing), or do the theft.
+- **Lead-following:** break in somewhere, find what points to the next place, get information out of someone, and sometimes the lead is wrong and costs time. The next step is not known at the start. (Interrogation was only an example, not a mechanic to build.)
+
+Each stop is a beat, a crisis (every crisis keeps an abort or extract) or a fight, whichever fits. Short jobs can stay as they are (arrive, do it, leave); which jobs move is the owner's call per job.
 
 **Where to start:**
 - Heists (`core/heists.js`, `data/heists.js`): prep jobs and a finale already exist. Pilot one finale as three maps.
 - A job's run is a queue of beats, zones, incidents, crises and battles (`core/mission.js startMission`), and its site comes from `data/sites.js pickSite(district, jobId, templateId)` with zones `in`, `inside` and `target`. A multi-map job needs a site per stage and a stage step in the queue that swaps the map (the watch screen, `ui/watch.js` and `ui/siteplan.js`, draws one site per run today).
 - The fight engine takes `spots` per fight (`fightmap.js stageSpots`), so a fight on any stage's map already works (the posts use the target zone of a district site).
-- **First question for the owner:** which heist is the pilot, and what are its three places?
+- **First question for the owner:** which heist is the pilot, and what are its three places? Or pilot on a lead-following job instead. How many stops (recommended: 2 to 4, the next rolled from what was found, a wrong lead now and then)?
 
 ## Last: hall businesses ("conglomerate")
 

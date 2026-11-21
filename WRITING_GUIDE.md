@@ -2,7 +2,7 @@
 
 You don't need to write code. Write ideas in plain English using the templates below, paste them into a chat, and they'll be converted into game data, checked by the tests, and shipped. Rough notes are fine; anything you leave out gets filled in sensibly and flagged.
 
-To skip the conversion entirely, use `docs/new-job-prompt.md` in any chat: it writes a whole job in the game's own format, ready to add in a session with `/add-job` (Sonnet is enough).
+To skip the conversion entirely, use `docs/new-job-prompt.md` in any chat: it writes a whole job in the game's own format, ready to add in a session with `/add-job` (Sonnet is enough). For the lines a crew sends home while away (expeditions, hands-off jobs), use `docs/log-lines-prompt.md`.
 
 The most useful thing you can write is **crises**: they're where the drama is, and every job needs 6.
 
