@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { createNewGame } from '../src/core/state.js';
 import { advanceDay } from '../src/core/time.js';
 import { weeklyRivals, rivalView } from '../src/core/rivals.js';
-import { sendScout, scoutLevel, findCard, readFor, signCard, dossierOf, SCOUT_DAYS } from '../src/core/dossier.js';
+import { sendScout, scoutLevel, findCard, readFor, signCard, dossierOf, SCOUT_DAYS, scoutProgress } from '../src/core/dossier.js';
 import { sideTasksOut } from '../src/core/sidetasks.js';
 import { availability } from '../src/core/crew.js';
 import * as tongsUi from '../src/ui/tongs.js';
@@ -193,4 +193,17 @@ test('free names, name pages, a tong\'s names and Names on the street all carry 
   const op = signedState.crew.at(-1);
   assert.equal(op.handle, dossierOf(s, card).handle);
   assert.equal(op.color, dossierOf(s, card).color);
+});
+
+test('a scout trip under way shows the day of the trip, on the name page and in the Names list', () => {
+  const s = withOffer(8);
+  const card = findCard(s, s.rivals.offer.cardId);
+  const id = readFor(s, card).id;
+  assert.equal(scoutProgress(s, id), null);
+  const t = sendScout(s, id, s.crew[0].id);
+  assert.deepEqual({ day: scoutProgress(t, id).day, of: scoutProgress(t, id).of }, { day: 1, of: 2 });
+  assert.match(renderLeadName(t, id), /Day 1 of 2/);
+  t.day += 1;
+  assert.equal(scoutProgress(t, id).day, 2);
+  assert.match(renderLeadName(t, id), /Day 2 of 2/);
 });

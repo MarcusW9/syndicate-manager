@@ -3051,3 +3051,8 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .nameslots { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
 .slot--unknown { border: 1px dashed var(--line); min-height: 64px; padding: 8px 10px; display: flex; flex-direction: column; justify-content: space-between; }
 .slot--unknown b { font-size: 1.4rem; color: var(--muted); opacity: 0.6; }
+.scoutbar { display: grid; gap: 6px; margin: 10px 0; }
+.scoutbar__track { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; }
+.scoutbar__track i { height: 6px; background: var(--line); }
+.scoutbar__track i.is-done { background: var(--accent-2); }
+.scoutbar__track i.is-now { background: var(--accent-2); opacity: 0.45; }

@@ -141,6 +141,16 @@ export function scoutTrip(prev, ref, opId) {
   return state;
 }
 
+/** A scout trip under way on a name: who is out, and which day of the trip it is ({ handle, day, of }); null when nobody is. */
+export function scoutProgress(state, ref) {
+  const card = findCard(state, ref);
+  const out = card && (state.sideOut ?? []).find((s) => s.scout === card.id);
+  if (!out) return null;
+  const op = state.crew.find((o) => o.id === out.crewIds?.[0]);
+  const day = Math.min(SCOUT_DAYS, Math.max(1, state.day - (out.returnDay - SCOUT_DAYS) + 1));
+  return { handle: op?.handle ?? 'Someone', day, of: SCOUT_DAYS };
+}
+
 /**
  * Send someone to watch a name for two days: a side task (the scout is away, `state.sideOut` carries it,
  * and core/sidetasks.js hands it to `resolveScout` when they're back). One scout per name at a time.

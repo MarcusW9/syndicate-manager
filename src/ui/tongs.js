@@ -4,7 +4,7 @@
 // only: word keys in, wording from data/rivals.js out. No numbers, no order beyond tier.
 import { rivalView } from '../core/rivals.js';
 import { bookView, bookGrade } from '../core/book.js';
-import { readFor, approachFor, findCard, scoutLevel } from '../core/dossier.js';
+import { readFor, approachFor, findCard, scoutLevel, scoutProgress } from '../core/dossier.js';
 import { availability } from '../core/crew.js';
 import { dossierOf } from '../core/dossier.js';
 import { portrait } from './art.js';
@@ -235,6 +235,13 @@ function nameHead(state, card, r) {
 
 /** A stat tile like our own crew's page (`.stats`); an unknown one is a dashed `?` until a scouting trip shows it. */
 const statTile = (k, v) => `<div${v == null ? ' class="stat--unknown"' : ''}><dt class="iconword">${statGlyph(k)}${esc(k)}</dt><dd>${v == null ? '?' : v}</dd></div>`;
+/** A little bar for a scouting trip under way: "Day 1 of 2", filled as the days pass. */
+function scoutBar(state, ref) {
+  const p = scoutProgress(state, ref);
+  if (!p) return '';
+  return `<div class="scoutbar" role="progressbar" aria-valuemin="0" aria-valuemax="${p.of}" aria-valuenow="${p.day - 1}" aria-label="${esc(p.handle)} scouting: day ${p.day} of ${p.of}"><span class="small">${esc(p.handle)} is scouting · <strong>Day ${p.day} of ${p.of}</strong></span><span class="scoutbar__track">${Array.from({ length: p.of }, (_, i) => `<i class="${i < p.day - 1 ? 'is-done' : i === p.day - 1 ? 'is-now' : ''}"></i>`).join('')}</span></div>`;
+}
+
 /** A slot (skill, gear) we can't see until they are ours: a dashed `?`. */
 const unknownSlot = (label) => `<div class="slot--unknown"><span class="small muted">${esc(label)}</span><b>?</b></div>`;
 
@@ -293,7 +300,7 @@ export function renderLeadName(state, slugId, back = 'Leads') {
       <div><dt>All in, today</dt><dd>${money(a.total)}</dd></div></dl>`;
   const free = state.crew.filter((o) => !o.freelance && o.condition?.injury !== 'dead' && availability(state, o).ok);
   const scout = a.reason === 'head' ? '' : r.level === 'full' ? '<p class="small muted">We have the full picture.</p>'
-    : out ? '<p class="small muted">Someone is already out watching them.</p>'
+    : out ? scoutBar(state, card.id)
     : free.length ? `<h2>Send someone to watch them (two days)</h2><div class="namebtns">${free.map((o) => `<button class="btn" data-action="scout-send" data-id="${esc(`${r.id}|${o.id}`)}">${esc(o.handle)}</button>`).join('')}</div>`
     : '<p class="small muted">Nobody is free to go and watch them.</p>';
   return `<section class="panel tongs namepage">
@@ -320,11 +327,11 @@ export function leadNames(state) {
   const watching = [...view.tiers.flatMap((t) => t.tongs.flatMap((g) => g.names)), ...view.names.filter((n) => !n.own)]
     .map((n) => findCard(state, n.id)).filter((c) => c && c.id !== o?.id && !saleIds.includes(c.id) && !seen.has(c.id) && seen.add(c.id) && (scoutLevel(state, c) > 0 || out.includes(c.id)))
     .map((c) => readFor(state, c));
-  const row = (n, tail) => `<li><button class="tongcard" data-action="lead-name" data-id="${esc(n.id)}" data-style="${n.tong ? 'tong' : 'free'}">
+  const row = (n, tail) => { const sp = scoutProgress(state, n.id); return `<li><button class="tongcard" data-action="lead-name" data-id="${esc(n.id)}" data-style="${n.tong ? 'tong' : 'free'}">
     ${faceOfCard(state, n.id)}
     <span class="tongcard__what"><span class="tongcard__name">${esc(n.name)}</span>
       <span class="small muted">${esc([n.role, FAME_LINE[n.fame], n.tong ?? (n.from ? `lately of ${n.from}` : 'between tongs')].join(' · '))}</span></span>
-    <span class="tongcard__go">${tail} ›</span></button></li>`;
+    <span class="tongcard__go">${sp ? `Day ${sp.day}/${sp.of}` : tail} ›</span></button></li>`; };
   const rows = [...(o ? [row(o, 'Free name')] : []), ...sale.map((n) => row(n, n.listed ? SCREEN_TEXT.saleListed : SCREEN_TEXT.sale)), ...watching.map((n) => row(n, 'Scouted'))];
   return rows.length ? `<h2>Names</h2><p class="muted small">Free names, and anyone in another tong we have an eye on. A name from the street can be opened from City › Tongs.</p><ul class="list list--plain tongs__list">${rows.join('')}</ul>` : '';
 }
