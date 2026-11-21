@@ -40,15 +40,36 @@ line here is in `docs/design/2026-11.md` (grep the topic).
 1. **One log generator** (`core/advlog.js` or in `contracts.js` made generic): given the crew, the place (district), the kind of work and the day's roll, pick a line from a pool keyed by kind and outcome, filled with who did it. Seeded `hashRng(seed, kind, id, day)` so no other roll moves.
 2. **Hands-off jobs get a day log:** every day out writes a line (not only beats), so a three-day job reads as three days. Show the last line on Today's card and the whole log in the report.
 3. **Side tasks get days:** a two-day task writes a line a day, and the result is the last line.
-4. **Expeditions** (the bigger new thing): a crew goes into the city for 3 to 7 days with no target. Each day rolls a few events on their stats and gear (cash found, a contact, intel on a district, a gear find, a scrape or injury, now and then a fight that calls you in like a hit post). They come back with what they found. No death unless the player accepted the shown risk (the fights follow the same rules). Needs a save version (`state.expeditions`, or a kind of side task).
+4. **Expeditions** (the bigger new thing): a crew goes out for 3 to 7 days **to get something specific** (owner, 2026-11-21: "they should be working towards a goal"). See "Expeditions have a goal" below. Needs a save version (`state.expeditions`, or a kind of side task).
 5. **Where it shows:** Today's crew-out cards (one line each), a full log on tap, and the report when they're back.
 
 **Questions for the owner before building (recommended answer first):**
 1. Start with the log on what exists (hands-off jobs and side tasks), then expeditions as a second step? (Recommended: yes. The log is useful at once, and expeditions reuse it.)
-2. Expeditions: in-game days, not real-time timers? (Recommended: in-game days. Real time could come with iOS.)
-3. Expeditions pay in what: cash, gear, intel, recruit leads, or a mix by where they go? (Recommended: a mix, and the district decides the lean, e.g. the Docks for gear, the Night Market for contacts.)
-4. Who writes the line pools: Claude drafts, the owner marks, as with the posts?
-5. Should expeditions earn fame? (Recommended: no, as with posts, so the Elite timing holds; fights on them count in the fight record.)
+2. Expeditions: in-game days, not real-time timers? (Recommended: in-game days, already in the decision log. Real time could come with iOS.)
+3. Who writes the line pools: Claude drafts, the owner marks, as with the posts?
+4. Should expeditions earn fame? (Recommended: no, as with posts, so the Elite timing holds; fights on them count in the fight record.)
+5. Does a failed expedition still bring something back? (Recommended: yes, part of the goal or the finds along the way, so a bad roll still pays a little.)
+6. Which goal is the pilot? (Recommended: heist prep. It is the most useful now and leads into the multi-map heist.)
+
+### Expeditions have a goal (owner, 2026-11-21)
+
+Not a wander with no target. The player picks a goal when sending the crew; each day rolls progress towards it on the crew's stats and gear, and the log tells how it goes ("Day 2: Raster's contact at the depot went quiet"). Finds along the way (cash, a scrape, a fight that calls you in) are extras. They come back with the goal met, partly met or failed. Pull out early any time, everyone safe. The goal sets the length and which stats count.
+
+Goals the owner picked:
+- **Heist prep:** a guard rota, a keycard, a way in, for a coming finale. Plugs into what the finale already carries (`heists.js`: `job.threatDelta`, `inside`, `drop`).
+- **Find a recruit:** turn up a lead of a wanted type (a medic, a driver). Ends as a name in Crew › Leads (`dossier.js`, `ui/tongs.js leadNames`).
+- **Get one piece of gear:** track down a named item, not a random find (`data/` gear tables, the stash).
+
+Not picked for now: a deeper read on a rival (scouting and Watch a tong already do it), a contact in a district.
+
+### Client jobs that move: intel, setup and investigation (owner, 2026-11-21)
+
+The owner also wants contracts from clients that are standard cyberpunk work, not only guarding:
+- **Intel jobs:** a client wants something found out.
+- **Setup jobs:** a client wants something stolen and we do the setup (get the way in, the codes, the timing) for their crew, or the theft itself.
+- **Investigations that move:** break in somewhere, find out you need to go somewhere else, interrogate someone, follow the lead to the next place. The crew moves between areas and the next step is not known at the start.
+
+How this fits the order: these are where the adventure log and multi-map operations meet. A lead-to-lead job is the log between places plus a map (or a beat) at each place. Build order to propose to the owner: (a) the goal-driven expedition on the log first, (b) client intel and setup jobs as offers that use the same goal-and-progress step, hands-off, (c) the investigation chain as the first multi-map job, alongside or instead of the heist pilot. Things to settle with the owner then: does a client job come from the board, from the posts' clients (Jobs › Side) or from a named contact; does an interrogation run as a crisis with choices (every crisis keeps an abort or extract) or as a fight; how many stops a chain has (recommended: 2 to 4, the next stop rolled from what was found).
 
 **Check before shipping:** the income sim with expeditions (`scripts/sim-crew-income.mjs`, add an option like `posts`), the fame sim and the save-size test (`tests/inbox.test.js`: logs grow saves, so cap each log, e.g. the last 10 lines).
 
@@ -60,7 +81,7 @@ line here is in `docs/design/2026-11.md` (grep the topic).
 - Heists (`core/heists.js`, `data/heists.js`): prep jobs and a finale already exist. Pilot one finale as three maps.
 - A job's run is a queue of beats, zones, incidents, crises and battles (`core/mission.js startMission`), and its site comes from `data/sites.js pickSite(district, jobId, templateId)` with zones `in`, `inside` and `target`. A multi-map job needs a site per stage and a stage step in the queue that swaps the map (the watch screen, `ui/watch.js` and `ui/siteplan.js`, draws one site per run today).
 - The fight engine takes `spots` per fight (`fightmap.js stageSpots`), so a fight on any stage's map already works (the posts use the target zone of a district site).
-- **First question for the owner:** which heist is the pilot, and what are its three places?
+- **First question for the owner:** which heist is the pilot, and what are its three places? Or pilot on an investigation chain instead (see "Client jobs that move" above).
 
 ## Last: hall businesses ("conglomerate")
 
