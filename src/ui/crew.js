@@ -309,7 +309,7 @@ export function renderOperative() {
           <h1>${esc(op.name)} <span class="muted">"${esc(op.handle)}"</span></h1>
           <p class="muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age} · ${money(op.wage)}/week</p>
           <div class="ophead__line">${fameBadge(op)}<span class="ophead__status">${statusChip(availability(state, op))}</span></div>
-          ${isSworn(op) ? '<p class="muted small"><strong>Sworn</strong> since day ' + op.sworn + '. A lasting place in the tong.</p>' : oathRead(state, op).ok ? `<button class="btn btn--primary" data-action="swear-in" data-id="${esc(op.id)}">Hold the ceremony · ${money(oathRead(state, op).cost)}</button>` : oathEligible(op) ? `<p class="muted small">Could be sworn. ${esc(oathRead(state, op).reason)}</p>` : ''}
+          ${isSworn(op) ? '<p class="muted small"><strong>Sworn</strong> since day ' + op.sworn + '. A lasting place in the tong.</p>' : oathRead(state, op).ok ? `<button class="btn btn--primary ophead__oath" data-action="swear-in" data-id="${esc(op.id)}">Hold the ceremony · ${money(oathRead(state, op).cost)}</button>` : oathEligible(op) ? `<p class="muted small">Could be sworn. ${esc(oathRead(state, op).reason)}</p>` : ''}
           ${op.record?.highlights?.[0] ? `<p class="muted small ophead__hl">${esc(op.record.highlights[0].text)}</p>` : ''}
           ${marksText(op) ? `<p class="muted small">Marked: ${esc(marksText(op))}</p>` : ''}
         </div>
