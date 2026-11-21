@@ -325,7 +325,7 @@ export function leadNames(state) {
     <span class="tongcard__what"><span class="tongcard__name">${esc(n.name)}</span>
       <span class="small muted">${esc([n.role, FAME_LINE[n.fame], n.tong ?? (n.from ? `lately of ${n.from}` : 'between tongs')].join(' · '))}</span></span>
     <span class="tongcard__go">${tail} ›</span></button></li>`;
-  const rows = [...(o ? [row(o, 'Free name')] : []), ...sale.map((n) => row(n, n.listed ? SCREEN_TEXT.saleListed : SCREEN_TEXT.sale)), ...watching.map((n) => row(n, 'Watching'))];
+  const rows = [...(o ? [row(o, 'Free name')] : []), ...sale.map((n) => row(n, n.listed ? SCREEN_TEXT.saleListed : SCREEN_TEXT.sale)), ...watching.map((n) => row(n, 'Scouted'))];
   return rows.length ? `<h2>Names</h2><p class="muted small">Free names, and anyone in another tong we have an eye on. A name from the street can be opened from City › Tongs.</p><ul class="list list--plain tongs__list">${rows.join('')}</ul>` : '';
 }
 
