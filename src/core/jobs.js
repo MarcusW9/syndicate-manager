@@ -27,16 +27,16 @@ export const MAX_OFFERS = 5;
 export const ARRIVAL_WINDOWS = [[0, 1], [2, 3], [4, 5, 6]];
 export const NEW_PER_WEEK = ARRIVAL_WINDOWS.length;
 
-// A bigger tong gets more work (DESIGN.md 2026-11-04, the tong direction): one more offer a week
+// A bigger tong gets more work (DESIGN.md 2026-11-04, the tong direction; retuned 2026-11-21): one more offer a week
 // for every `per` runners past `over`, and the board holds `room` more than a week's arrivals.
 // Exported as one object so scripts/sim-tong.mjs can compare settings.
 // routine: of the extra offers past the usual three a week, the share that are routine work.
-export const ARRIVALS = { over: 5, per: 2.5, room: 2, routine: 0.75 };
+export const ARRIVALS = { over: 4, per: 2, room: 2, routine: 0.75 }; // 2026-11-21: was over 5, per 2.5 (docs/sims/crew-income-2026-11-21.md)
 
 /** The tong's own runners (not freelancers, not the dead): what the board's size follows. */
 const rosterSize = (state) => state.crew.filter((o) => !o.freelance && o.condition?.injury !== 'dead').length;
 
-/** How many new offers come in a week: three, plus one for every few runners past five. */
+/** How many new offers come in a week: three, plus one for every two runners past four. */
 export const arrivalsPerWeek = (state) => NEW_PER_WEEK + Math.floor(Math.max(0, rosterSize(state) - ARRIVALS.over) / ARRIVALS.per);
 
 /** How many offers the board holds. */

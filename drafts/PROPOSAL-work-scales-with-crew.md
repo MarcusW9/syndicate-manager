@@ -39,3 +39,7 @@ Not checked: whether the live UI makes it easy to send two crews out in a day (i
 3. Ship 1 and 2 (numbers only, no save change), then design 3 as its own step.
 
 Owner's call: 3 as a next feature, and the net-margin target in step 2.
+
+## Outcome (2026-11-21)
+
+Owner: run the sim and pick. Built: `ARRIVALS` over 5 -> 4, per 2.5 -> 2, routine unchanged (it barely moved the numbers). over 3, per 2 would also fix the five-person band but gives the fame sim's five-person crew more jobs (three Elites by week 52, target one or two) and a 2% bigger save: the owner's call. Tables in `docs/sims/crew-income-2026-11-21.md`. Standing contracts (option 3) are still open.

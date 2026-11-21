@@ -11,3 +11,21 @@
 | 14 | 13-26 | 9,360 | 10,150 | -790 | 6 | 9.0 | 0.0 |
 
 Reading: income is flat from 3 to 7 crew (about 3 jobs a week, the board runs dry: open offers fall to 0.1) while the bill rises with every hire, so a 5-7 person crew loses money. Gross only grows once the crew is large enough for two jobs at once (10+), and even at 14 the net is negative. Roughly half to two thirds of a big crew is idle every day. Caveat: extras are generated "pro" tier, so their wages run higher than an organically grown crew's.
+
+## Board settings compared (same day)
+
+`node scripts/sim-crew-income.mjs 10 <sizes> "<ARRIVALS overrides>"`, weeks 13-26, margin = net over the bill:
+
+| ARRIVALS | 3 crew | 5 crew | 7 crew | 10 crew | 14 crew |
+| --- | --- | --- | --- | --- | --- |
+| over 5, per 2.5, routine 0.75 (old) | +53% | -2% | -33% | -6% | |
+| over 5, per 2.5, routine 0.4 | +53% | -2% | -33% | -3% | |
+| over 3, per 1.5, routine 0.75 | +53% | +44% | +48% | +54% | |
+| over 3, per 1.5, routine 0.4 | +53% | +48% | +36% | +75% | |
+| over 3, per 2, routine 0.4 | +53% | +48% | +36% | +31% | +33% |
+| over 3, per 2, routine 0.75 | +53% | +44% | +48% | +25% | +30% |
+| **over 4, per 2, routine 0.75 (chosen)** | +53% | -2% | +7% | +25% | +30% |
+| over 5, per 1.5, routine 0.75 | +53% | -2% | +7% | +25% | +47% |
+| over 5, per 1, routine 0.75 | +53% | -2% | +48% | +61% | +109% |
+
+The routine share barely matters; the number of offers per runner is the lever. First pick: over 3, per 2, the setting nearest the target band (+20-40% for 5-10 crew). It failed two tests: the fame sim plays a five-person crew, which got a fourth offer a week, so the median run had three Elites by week 52 (target one or two), and a year's save went 2% over budget. Chosen instead: over 4, per 2, which leaves one to five runners exactly as before and lifts six and up. The five-person band stays at break-even; moving it needs the owner to move the Elite target, or another source of money (standing contracts).

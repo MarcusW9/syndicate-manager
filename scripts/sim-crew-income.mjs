@@ -4,17 +4,20 @@
 // plus rent, net, jobs done, idle crew (free at day's end) and open offers left on the board.
 // Weeks 1-4, 5-12 and 13-26 are shown apart, as income depends on reputation gates.
 //
-//   node scripts/sim-crew-income.mjs [seeds=20] [sizes=3,5,7,10,14]
+//   node scripts/sim-crew-income.mjs [seeds=20] [sizes=3,5,7,10,14] [arrivals, e.g. over=3,per=1.5,routine=0.4]
+// The third argument overrides core/jobs.js ARRIVALS for this run (to compare settings).
 import { createNewGame } from '../src/core/state.js';
 import { generateRecruit, recruitToOperative } from '../src/core/recruits.js';
 import * as M from '../src/core/mission.js';
 import { advanceDay, calendar, weeklyBill } from '../src/core/time.js';
-import { templateById } from '../src/core/jobs.js';
+import { templateById, ARRIVALS } from '../src/core/jobs.js';
 import { availability } from '../src/core/crew.js';
 import { autoFounders, playMission, carefulPolicy } from '../tests/play.js';
 
 const SEEDS = Number(process.argv[2] ?? 20);
 const SIZES = (process.argv[3] ?? '3,5,7,10,14').split(',').map(Number);
+for (const kv of (process.argv[4] ?? '').split(',').filter(Boolean)) { const [k, v] = kv.split('='); ARRIVALS[k] = Number(v); }
+console.log(`ARRIVALS ${JSON.stringify(ARRIVALS)}`);
 const median = (a) => [...a].sort((x, y) => x - y)[Math.floor(a.length / 2)] ?? 0;
 const WEEKS = 26;
 
@@ -60,7 +63,7 @@ for (const size of SIZES) {
     const ws = runs.flatMap((r) => r.weeks.slice(a, b));
     const m = (k) => Math.round(median(ws.map((w) => w[k])));
     const gross = m('gross'), bill = m('bill');
-    return `gross ¥${gross} · bill ¥${bill} · net ¥${gross - bill} · jobs ${m('jobs')} · idle/day ${(median(ws.map((w) => w.idle)) / 7).toFixed(1)} · open ${(median(ws.map((w) => w.open)) / 7).toFixed(1)}`;
+    return `margin ${Math.round(((gross - bill) / bill) * 100)}% · gross ¥${gross} · bill ¥${bill} · net ¥${gross - bill} · jobs ${m('jobs')} · idle/day ${(median(ws.map((w) => w.idle)) / 7).toFixed(1)} · open ${(median(ws.map((w) => w.open)) / 7).toFixed(1)}`;
   };
   console.log(`crew ${size} (rep wk26 ${median(runs.map((r) => r.rep))})`);
   console.log(`  wk1-4   ${band(0, 4)}`);
