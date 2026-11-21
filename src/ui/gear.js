@@ -277,8 +277,8 @@ function renderAddSheet(ui, state, op) {
         <p class="muted small">${can.ok ? 'Anything in the stash that goes on them. Armour swaps with what they wear.' : `Their gear can't change while they're ${esc(can.reason)}.`}</p></div>
         <button class="btn btn--ghost sheet__x" data-action="close-gear" aria-label="Close">✕</button>
       </div>
-      <ul class="list list--plain gearlist">${stash.length ? stash.map((item) => itemRow(ui, item, { action: 'equip', label: 'Carry', disabled: !can.ok })).join('') : '<li class="muted small">Nothing in the stash that fits. Buy it in the armoury.</li>'}</ul>
       <button class="btn btn--block" data-action="open-armoury">Go to the armoury</button>
+      <ul class="list list--plain gearlist">${stash.length ? stash.map((item) => itemRow(ui, item, { action: 'equip', label: 'Carry', disabled: !can.ok })).join('') : '<li class="muted small">Nothing in the stash that fits. Buy it in the armoury.</li>'}</ul>
       <button class="btn btn--ghost btn--block" data-action="open-op" data-id="${esc(op.id)}">Open ${esc(op.handle)}'s page</button>
     </div>`;
 }
@@ -316,11 +316,11 @@ export function renderGearSheet(ui, state, op, slot) {
         ${current ? perkList(current) : ''}</div>
         <button class="btn btn--ghost sheet__x" data-action="close-gear" aria-label="Close">✕</button>
       </div>
+      <button class="btn btn--block" data-action="open-armoury">Go to the armoury</button>
       ${swapOut ? apexConflict(esc, swapOut) : ''}
       <ul class="list list--plain gearlist">${stash.length ? stash.map((item) => itemRow(ui, item, { action: 'equip', ...apexBlock(esc, op, item, current, place.kind === 'bag' ? 'Pack' : 'Carry') })).join('') : `<li class="muted small">Nothing in the stash ${place.kind === 'bag' ? 'fits here' : 'for this'}. Buy it in the armoury.</li>`}</ul>
-      ${others.length ? `<h3 class="sheet__group">Carried by others <span>takes it off them</span></h3>
+      ${others.length ? `<details class="sheet__others"><summary class="sheet__group">Carried by others (${others.length}) <span>takes it off them</span></summary>
       <ul class="list list--plain gearlist">${others.map(({ item, o }) => itemRow(ui, item, { action: 'equip', carrier: o, ...apexBlock(esc, op, item, current, `From ${o.handle}`, !canChangeGear(state, o).ok) })).join('')}</ul>` : ''}
       ${current ? `<button class="btn btn--ghost btn--block" data-action="unequip" data-id="${esc(current.uid)}">Put it back in the stash</button>` : ''}
-      <button class="btn btn--block" data-action="open-armoury">Go to the armoury</button>
     </div>`;
 }
