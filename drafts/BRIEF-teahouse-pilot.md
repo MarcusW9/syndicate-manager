@@ -1,6 +1,6 @@
 # Brief: slate day at the teahouse (recruiting as a place you go) (2026-11-21)
 
-**Status: drafted, not agreed.** Owner direction (2026-11-21): flesh out the world of the other tongs, hiring from them, building and cultivating a squad. **Playable first, lore after.** If the pilot plays well, the lore pass is queued in `HANDOFF.md` (Parked). Nothing here changes canon: scenes run on what a house *is* in the game (style, habit, story, regard), and use the head the game generated.
+**Status: held (owner, 2026-11-21), superseded for now by Joss's slate-day leads (`slateLeads`, `core/book.js`; decision log 2026-11-21). Revisit only if that proves too thin in the playtest; the three questions at the end have Claude's suggested answers in the session of 2026-11-21 (paid tea at about a rookie's day wage; instant sign allowed with the risk shown; every slate day).** Was: drafted, not agreed. Owner direction (2026-11-21): flesh out the world of the other tongs, hiring from them, building and cultivating a squad. **Playable first, lore after.** If the pilot plays well, the lore pass is queued in `HANDOFF.md` (Parked). Nothing here changes canon: scenes run on what a house *is* in the game (style, habit, story, regard), and use the head the game generated.
 
 ## What it is
 

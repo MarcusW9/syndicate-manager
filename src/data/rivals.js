@@ -360,6 +360,7 @@ export const BOOK = {
   fameSkew: { unknown: 0, known: 0, respected: 1, elite: 3, legend: 3 }, // and the better known, the more
   wobble: 3, // a monthly +/- (hashRng 'book:' + absMonth + ':' + runnerId)
   watchMax: 5, prospectAge: 24, goneMax: 3,
+  leadsMax: 3, leadsLooseMax: 2, leadsMinRank: 'street', // Joss's slate-day note names up to three people we could get (2026-11-21), from Street rank (as D3)
 };
 
 export const BOOK_TEXT = {
@@ -371,6 +372,12 @@ export const BOOK_TEXT = {
     up: '{op} moved up.',
     top: '{op} is chalked S. Expect people to start asking about them.',
     watch: 'The elders have {op} down as one to watch.',
+    // 2026-11-21: names on the slate we could actually get (Claude's first pass, in drafts/writing-tasks.md for the owner).
+    free: '{name} is chalked {grade} and nobody holds their papers.',
+    sale: '{name} is chalked {grade}, and {tong} is letting names go.',
+    unsettled: "{name} is chalked {grade} and isn't happy at {tong}.",
+    rising: 'The elders have {name} at {tong} down as one to watch.',
+    leadsOutro: 'Tap a name to see what we know of them.',
   },
   // Added to a rival's offer when the runner was on the slate (wording only: the odds do not read the Book).
   poachNote: 'The slate put a target on them.',
