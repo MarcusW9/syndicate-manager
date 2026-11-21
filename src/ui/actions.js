@@ -1,6 +1,6 @@
 // Every tap in the game: onClick finds the [data-action] under the tap and switches on it.
 // The one place UI state (V) and the game state change in answer to the player.
-import { contractsOf, takeContract, pullOff } from '../core/contracts.js';
+import { contractsOf, takeContract, pullOff, toggleHelp } from '../core/contracts.js';
 import { nextHallExpansion, expandHall, openHall, hallIn, buyPrice, buyHall, moveToHall } from '../core/halls.js';
 import { raidOn, cycleRaidPost, setRaidPlan, markRaidCallSeen, payOffRaid } from '../core/raids.js';
 import { HALL_SITES } from '../data/halls.js';
@@ -374,6 +374,7 @@ export function onClick(e) {
       return setState(next);
     }
     case 'pull-post': return setState(pullOff(state, id));
+    case 'post-help': { const [msgId, opId] = id.split('|'); return setState(toggleHelp(state, msgId, opId)); }
     case 'toggle-side-crew': {
       const task = sideTaskById(V.sidePlan.taskId);
       if (V.sidePlan.crew.includes(id)) V.sidePlan.crew = V.sidePlan.crew.filter((x) => x !== id);

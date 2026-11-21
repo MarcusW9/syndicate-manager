@@ -4,6 +4,7 @@
 // threat +/-1, and sometimes a hidden twist (usually hinted on the board).
 
 import { raidTemplate } from '../data/raids.js';
+import { postTemplate } from '../data/contracts.js';
 import { MISSIONS, RETIRED_MISSIONS } from '../data/missions.js';
 import { TWISTS } from '../data/twists.js';
 import { CLIENTS } from '../data/clients.js';
@@ -15,7 +16,7 @@ import { callingClients, trustOf, trustPay } from './clients.js';
 import { rumourFor } from './rumours.js';
 
 // A raid on a hall runs as a job of its own ('raid:<district>', data/raids.js), never on the board.
-export const templateById = (id) => MISSIONS.find((m) => m.id === id) ?? (String(id).startsWith('raid:') ? raidTemplate(id.slice(5)) : RETIRED_MISSIONS.find((m) => m.id === id));
+export const templateById = (id) => MISSIONS.find((m) => m.id === id) ?? (String(id).startsWith('raid:') ? raidTemplate(id.slice(5)) : String(id).startsWith('post:') ? postTemplate(...String(id).slice(5).split(':')) : RETIRED_MISSIONS.find((m) => m.id === id));
 export const twistById = (id) => TWISTS.find((t) => t.id === id) ?? null;
 
 // A busier board of smaller work (PLAN-PROGRESSION.md step 0: rookies need ~3 jobs a week).

@@ -1,5 +1,6 @@
 // An open message: reports (summary, timeline, full log) and the decisions that arrive as messages
 // (renewal, a rival's offer, retirement, a specialisation, a raid warning or call, the heat notice).
+import { contractsOf, helpers, HELP, CONTRACT } from '../core/contracts.js';
 import { heatChoices, heatIn, WATCHED_PENALTY } from '../core/heat.js';
 import { hallIn, canOpenHall } from '../core/halls.js';
 import { raidChoices, raidPrice, canBuyOff, isGangRaid } from '../core/raids.js';
@@ -13,7 +14,7 @@ import { SPECIALISATIONS } from '../core/specialisations.js';
 import { pieceById } from '../core/builds.js';
 import { tierTag, perkList, apexHistory } from './gear.js';
 import { raidWhere } from './raidcards.js';
-import { esc, face, districtName } from './shared.js';
+import { esc, face, districtName, riskBadge } from './shared.js';
 import { cardNames } from '../core/rivals.js';
 import { state, backLabel, V } from './view.js';
 
@@ -274,12 +275,39 @@ function renderPoach(m) {
 }
 
 /** A long-serving runner asks to retire (core/retirement.js): stay one more season, or let them go. */
-/** A security post that is hit (core/contracts.js): hold it, odds shown, or give it up and come home. */
+/**
+ * A security post that is hit (core/contracts.js, 2026-11-21): who is there against how many, anyone free to send
+ * (each with the round they would arrive), then watch the fight, let them fight it, or give it up.
+ */
 function renderContractCall(m) {
   if (m.resolved) return m.payload?.outcome ? `<p><strong>${esc(m.payload.outcome)}</strong></p>` : '';
+  const c = contractsOf(state).active.find((x) => x.id === m.payload?.contractId);
+  if (!c) return '';
+  const ours = c.crewIds.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean);
+  const help = m.payload.help ?? [];
+  const them = m.payload.enemies ?? 3;
+  const n = ours.length + help.length;
+  const risk = n > them ? 'low' : n === them ? 'moderate' : n === them - 1 ? 'high' : 'extreme';
+  const free = helpers(state, c);
+  const word = (k) => ['nobody', 'one', 'two', 'three', 'four', 'five'][k] ?? String(k);
   return `
+      <div class="postcall">
+        <p class="postcall__vs">${ours.map((o) => face(o, 'sm')).join('')}${help.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean).map((o) => `<span class="postcall__help">${face(o, 'sm')}</span>`).join('')}<span class="muted small">against</span><span class="postcall__them">${them}</span></p>
+        <p class="small">${riskBadge(risk)} ${esc(`${word(ours.length)[0].toUpperCase()}${word(ours.length).slice(1)} of ours on the post${help.length ? `, ${word(help.length)} on the way` : ''}, against ${word(them)}.`)}</p>
+        <h3 class="sheet__group">Send help <span>up to ${HELP.max}, anyone free</span></h3>
+        ${free.length ? `<ul class="list postcall__list">${free.map(({ op, round }) => {
+          const on = help.includes(op.id);
+          const full = !on && help.length >= HELP.max;
+          return `<li><button class="row pick ${on ? 'is-on' : ''}" data-action="post-help" data-id="${esc(m.id)}|${esc(op.id)}" aria-pressed="${on}" ${full ? 'disabled' : ''}>
+            ${face(op, 'sm')}<span class="row__main"><strong>${esc(op.handle)}</strong> <span class="muted small">${esc(op.role)} · combat ${op.stats.combat}</span></span>
+            <span class="row__meta small">${on ? 'Sending · ' : ''}round ${round}</span></button></li>`;
+        }).join('')}</ul><p class="muted small">Whoever goes is out today: no job for them. They go home after the fight.</p>` : '<p class="muted small">Nobody free to send.</p>'}
+      </div>
       <div class="stack">
-        ${m.options.map((o) => `<button class="btn ${o.id === 'give' ? 'btn--ghost' : 'btn--primary'}" data-action="decide" data-id="${esc(m.id)}" data-option="${esc(o.id)}">${esc(o.label)}</button>`).join('')}
+        <button class="btn btn--primary" data-action="decide" data-id="${esc(m.id)}" data-option="fight" ${state.activeMission ? 'disabled' : ''}>Watch the fight</button>
+        <button class="btn" data-action="decide" data-id="${esc(m.id)}" data-option="auto" ${state.activeMission ? 'disabled' : ''}>Let them fight it <span class="muted small">(steady orders, a report back)</span></button>
+        <button class="btn btn--ghost" data-action="decide" data-id="${esc(m.id)}" data-option="give">Give it up and come home</button>
+        <p class="muted small">Give it up: everyone home unhurt, the pay so far kept, trust ${CONTRACT.trust.gaveUp}. In the fight, cautious and steady never lose anyone without asking you.</p>
       </div>`;
 }
 

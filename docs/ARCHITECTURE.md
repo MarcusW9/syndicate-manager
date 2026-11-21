@@ -172,8 +172,9 @@ Seeded and saved. `makeRng(seed)` is mulberry32 (`core/rng.js`). `nextRng(state)
 
 Format: JSON of the state in `localStorage`. Keys: `syndicate-active-slot`, `syndicate-slot-N`, `…-backup` (weekly), `…-unreadable`, `syndicate-ironman-progress`, legacy `syndicate-save-v1`. `storageGet/Set/Remove` are the only storage calls (swap for iOS). `saveGame` writes slot + weekly backup (not in Ironman). `loadGame` migrates; on failure `keepUnreadable` and returns null. `exportSave` downloads JSON; `importSave(file)` migrates then `checkIronman`; `loadBackup`.
 
-**Versioning:** `SAVE_VERSION` 84 in `core/state.js` (v73-v76 and v80-v81 are described in the `migrate` blocks of `save.js`). What each version added, newest first (one per line; grep `v52:`):
+**Versioning:** `SAVE_VERSION` 85 in `core/state.js` (v73-v76 and v80-v81 are described in the `migrate` blocks of `save.js`). What each version added, newest first (one per line; grep `v52:`):
 
+- v85: a hit post is a fight: an open `kind: 'contract'` call gets the options fight / auto / give and `payload.help: []`. A post's fight is an `activeMission` with `post` (the contract id), `postCrew`, `help`, on a `post:<district>:<kind>` template; its battle may carry `reinforce: [{ runner, round, in }]`.
 - v84: security contracts: `state.contracts` `{ offers, active, seq }` (`core/contracts.js`; an active post `{ id, kind, clientId, district, slots, days, slotPay, post, crewIds, startDay, endDay, owed, log, ended }`); an older save gets an empty one and its first offers on Monday.
 - v83: level-ups replace Joss's offers: every runner gets `pickAt` (from `buildAt`; a specialisation alone, from now) and `levelUp: null`; `buildAt`, `buildSnooze` and `specSnooze` go; an open `spec` or `build` offer is closed with a note (`core/levelup.js`).
 - v82: training focus: every runner and recruit gets `focus: []` (`core/development.js FOCUS`).

@@ -267,7 +267,7 @@ function endFight(state, am) {
   am.report = [...(am.report ?? []), report];
   am.battle = null;
   const serious = hurt.find((h) => h.severity === 'serious');
-  if (serious && !am.raid) am.pending = { kind: 'injury', opId: serious.id };
+  if (serious && !am.raid && !am.post) am.pending = { kind: 'injury', opId: serious.id }; // a raid or a post is over when its fight is
   if (am.alertDue || (am.alert >= ALERT_MAX && !am.wentLoud)) {
     if (am.pending) am.alertDue = true;
     else { delete am.alertDue; am.pending = { kind: 'alert' }; }
@@ -294,6 +294,7 @@ function retreatFight(state, am, { text, choice, why, cause = text }) {
   am.battle = null;
   const said = `${text.replace(/[.!?]+$/, '')}.`; // one full stop, whether the line had one or not
   const report = am.raid ? `The crew got out down the back stairs. ${said}${hurt.length ? ` ${hurtLine(hurt)}.` : ''}` // a raid's costs are the hall's (core/raids.js)
+    : am.post ? `The crew pulled back off the post. ${said}${hurt.length ? ` ${hurtLine(hurt)}.` : ''}` // a post's costs are the post's (core/contracts.js finishPost)
     : `The crew pulled back from the fight. ${said}${hurt.length ? ` ${hurtLine(hurt)}.` : ''} No pay, heat +${FIGHT.retreat.heat}, reputation −${FIGHT.retreat.rep}.`;
   // The exit card's own line: the fight card just above it already says `text`, so the exit says it only when it differs from why the fight ended.
   exitRun(state, am, { text: text === cause ? null : text, choice, why, report });

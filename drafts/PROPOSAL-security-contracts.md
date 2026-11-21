@@ -53,3 +53,5 @@ Hall businesses move to last. Owner: a runner does not run a noodle bar or a cho
 ## Outcome (2026-11-21)
 
 Built (steps 1, 2 and 4): `core/contracts.js`, `data/contracts.js`, save v84, Jobs › Side posts and the post plan, the hit post as a decision message. Slot pay set at ¥450-700 (80% of the draft) after the income sim. Not yet: ambush fights on a small map (step 3), Today crew-out cards for posts. Posts live under Side, not a fifth sub-tab.
+
+Step 3 built the same day (save v85): a hit post is an engine-2 fight (watch it, let them fight it, or give it up), with help sent from anyone free, arriving on round 2, 3 or 4 by distance (owner's call: anyone free, not only the same district). Still open: Today's crew-out cards for posts.

@@ -160,7 +160,7 @@ const newGroup = (b) => { b.nextGroup = (b.nextGroup ?? 1) + 1; return b.nextGro
  * the van. rng: the run's stream (the enemies' decks are shuffled from it). Orders start as the crew's
  * defaults, visible and editable.
  */
-export function buildFight({ type, diff, threat = 3, site = 'docks', opposition = null, job = null, crew, approach, overwatch = null, wheels = null, standbyOp = null, risk = 'steady', watched = false, raid = null }, rng) {
+export function buildFight({ type, diff, threat = 3, site = 'docks', opposition = null, job = null, crew, approach, overwatch = null, wheels = null, standbyOp = null, risk = 'steady', watched = false, raid = null, reinforce = null }, rng) {
   const def = FIGHTS[type];
   const b = {
     engine: 2, type, stage: 0, round: 0, diff, deadline: type === 'holdHack' ? FIGHT.deadline.holdHack : null, drawn: false, end: null,
@@ -181,6 +181,8 @@ export function buildFight({ type, diff, threat = 3, site = 'docks', opposition 
   b.maxExtra = recipe?.maxExtraEnemies ?? def.maxExtraEnemies ?? FIGHT.maxExtraEnemies;
   b.recipe = recipe?.waves?.length ? { waves: recipe.waves.map((w) => ({ ...w })) } : null;
   if (standbyOp) b.standby = runnerOf(standbyOp, approach, b.runners.length);
+  // Help sent to a hit post (core/contracts.js, 2026-11-21): each joins at the start of their round.
+  if (reinforce?.length) b.reinforce = reinforce.map(({ op, round }, i) => ({ runner: runnerOf(op, approach, b.runners.length + i), round }));
   if (type === 'holdHack') {
     const tech = [...b.runners].sort((x, y) => (y.role === 'tech') - (x.role === 'tech') || sv(y, 'tech') - sv(x, 'tech') || bySeat(x, y))[0];
     b.goal.protect = tech?.id ?? null;
@@ -789,6 +791,10 @@ export function startRound(b, rng) {
     if (!b.recipe.waves.length) b.recipe = null;
   }
   for (const e of b.enemies) if (e.approaching && !e.out && !e.fled) say('approach', 'approach', { enemy: enemyName(e.kind, e.n) }, { enemy: e.n });
+  for (const h of (b.reinforce ?? []).filter((x) => x.round <= b.round && !x.in)) {
+    h.in = true; b.runners.push(h.runner);
+    say('standby', 'reinforceIn', { who: h.runner.handle });
+  }
   if (b.standby && !b.standbyOut && boardingStage(b) && outsideDown(b).length) {
     b.standbyOut = true; b.runners.push(b.standby);
     say('standby', 'standbyOut', { who: b.standby.handle });

@@ -11,6 +11,7 @@
 // can put someone at death's door, never dead: only "keep fighting" (the push on of a fight)
 // leaves them dying, and any exit after that still brings them home.
 
+import { finishPost } from './contracts.js';
 import { jobGrudge, addGrudge, grudgeOf, GANGS } from './gangs.js';
 import { finishRaid, followHome } from './raids.js';
 import { crewLead } from './lead.js';
@@ -897,6 +898,7 @@ function finish(state) {
   const am = state.activeMission;
   if (am.done) return;
   if (am.raid) { finishRaid(state); return; } // a raid on a hall ends its own way (core/raids.js)
+  if (am.post) { finishPost(state); return; } // a hit security post ends its own way (core/contracts.js)
   const tpl = templateById(am.templateId);
   const crew = crewOf(state, am);
   const medic = findRole(crew.filter((o) => !am.untreated.includes(o.id)), 'medic');

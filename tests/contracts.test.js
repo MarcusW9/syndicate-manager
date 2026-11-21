@@ -1,13 +1,14 @@
 // Security contracts (core/contracts.js; owner, 2026-11-21; drafts/PROPOSAL-security-contracts.md).
-// The promises: posts pay on Sunday, give experience but no fame or standing, never kill anyone,
-// giving up a hit post always brings everyone home, pulling off keeps the pay so far, and a v83
+// The promises: posts pay on Sunday, give experience but no fame or standing, a hit post is a fight
+// that kills nobody on steady orders, giving up a hit post always brings everyone home, pulling off keeps the pay so far, and a v83
 // save upgrades with an empty contracts list.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createNewGame, SAVE_VERSION } from '../src/core/state.js';
 import { advanceDay, calendar } from '../src/core/time.js';
 import { resolveDecision } from '../src/core/decisions.js';
-import { CONTRACT, takeContract, pullOff, contractsOf, contractFor, contractOdds, slotTotal, postsOut } from '../src/core/contracts.js';
+import { CONTRACT, HELP, takeContract, pullOff, contractsOf, contractFor, contractOdds, slotTotal, postsOut, helpers, toggleHelp, helpArrival } from '../src/core/contracts.js';
+import { autoStep } from '../src/core/autorun.js';
 import { CONTRACT_KINDS } from '../src/data/contracts.js';
 import { trustOf } from '../src/core/clients.js';
 import { availability } from '../src/core/crew.js';
@@ -81,39 +82,103 @@ test('a post pays on Sunday, builds trust, gives experience and no fame or stand
   if (ended) assert.ok(trustOf(s, offer.clientId) >= trust0, 'a post done builds trust');
 });
 
-test('a hit post never kills anyone; giving it up brings everyone home unhurt; holding pays or hurts', () => {
+/** Put two on a post and have it hit on the first day (the day roll forced to an incident). */
+function hitPost(seed, kind = 'guard') {
+  let s = fresh(seed);
+  const offer = contractsOf(s).offers.find((o) => o.kind === kind);
+  const ids = free(s).slice(0, Math.min(2, offer.slots)).map((o) => o.id);
+  s = takeContract(s, offer.id, ids);
   const was = CONTRACT.difficulty;
-  CONTRACT.difficulty = 40; // every day a hit
-  try {
-    let holds = { held: 0, lost: 0 };
-    for (const answer of ['give', 'hold']) {
-      for (let seed = 1; seed <= 12; seed++) {
-        let s = fresh(seed);
-        const offer = contractsOf(s).offers[seed % 3];
-        const ids = free(s).slice(0, offer.slots).map((o) => o.id);
-        s = takeContract(s, offer.id, ids);
-        const injuries = ids.map((id) => s.crew.find((o) => o.id === id).condition.injury);
-        s = advanceDay(s);
-        const m = call(s);
-        assert.ok(m, 'the hit post calls in');
-        assert.ok(m.blocking && m.options.some((o) => o.id === 'give') && m.options.some((o) => o.id === 'hold'), 'an out and a stand, both shown');
-        s = resolveDecision(s, m.id, answer);
-        const c = contractsOf(s).active.find((x) => x.id === offer.id);
-        for (const [i, id] of ids.entries()) {
-          const op = s.crew.find((o) => o.id === id);
-          assert.ok(op, 'nobody is lost');
-          assert.notEqual(op.condition.injury, 'dead');
-          if (answer === 'give') {
-            assert.equal(op.condition.injury, injuries[i], 'giving it up hurts nobody');
-            assert.ok(availability(s, op).ok || op.condition.fatigue > 85, 'home today');
-          }
-        }
-        if (answer === 'give') assert.equal(c.ended?.how, 'gaveUp');
-        if (answer === 'hold') holds[c.ended?.how === 'lost' ? 'lost' : 'held'] += 1;
-      }
+  CONTRACT.difficulty = 40;
+  try { s = advanceDay(s); } finally { CONTRACT.difficulty = was; }
+  return { s, offer, ids, msg: call(s) };
+}
+
+test('a hit post calls in with three answers: watch the fight, let them fight it, give it up', () => {
+  const { msg } = hitPost(1);
+  assert.ok(msg?.blocking, 'the day stops');
+  assert.deepEqual(msg.options.map((o) => o.id), ['fight', 'auto', 'give']);
+  assert.ok(msg.payload.enemies >= 1);
+});
+
+test('giving up a hit post brings everyone home unhurt', () => {
+  for (let seed = 1; seed <= 8; seed++) {
+    let { s, offer, ids, msg } = hitPost(seed, ['guard', 'escort', 'watch'][seed % 3]);
+    const injuries = ids.map((id) => s.crew.find((o) => o.id === id).condition.injury);
+    s = resolveDecision(s, msg.id, 'give');
+    assert.equal(contractsOf(s).active.find((x) => x.id === offer.id).ended?.how, 'gaveUp');
+    ids.forEach((id, i) => {
+      const op = s.crew.find((o) => o.id === id);
+      assert.equal(op.condition.injury, injuries[i], 'unhurt');
+      assert.ok(!(op.condition.awayUntil > s.day), 'home today');
+    });
+    assert.equal(s.activeMission ?? null, null);
+  }
+});
+
+test('let them fight it: steady orders kill nobody; the post goes on or is given up; help goes home', () => {
+  let held = 0;
+  for (let seed = 1; seed <= 30; seed++) {
+    let { s, offer, ids, msg } = hitPost(seed, ['guard', 'escort', 'watch'][seed % 3]);
+    const c0 = contractsOf(s).active.find((x) => x.id === offer.id);
+    const help = helpers(s, c0)[0]?.op.id;
+    if (help && seed % 2) s = toggleHelp(s, msg.id, help);
+    const sent = seed % 2 && help ? [help] : [];
+    const crewBefore = s.crew.length;
+    s = resolveDecision(s, msg.id, 'auto');
+    assert.equal(s.activeMission ?? null, null, 'fought and closed');
+    assert.equal(s.crew.length, crewBefore, `seed ${seed}: nobody died on steady`);
+    const c = contractsOf(s).active.find((x) => x.id === offer.id);
+    assert.ok(!c.ended || ['gaveUp', 'empty', 'done'].includes(c.ended.how), `ended ${c.ended?.how}`);
+    if (!c.ended) held += 1;
+    for (const id of sent) {
+      assert.ok(!c.crewIds.includes(id), 'help does not join the post');
+      assert.ok(!availability(s, s.crew.find((o) => o.id === id)).ok, 'help was out today: no job');
     }
-    assert.ok(holds.lost > 0, 'at this difficulty a stand can fail');
-  } finally { CONTRACT.difficulty = was; }
+    for (const id of c.crewIds) assert.ok(!['serious', 'critical'].includes(s.crew.find((o) => o.id === id).condition.injury), 'nobody badly hurt stays on');
+    assert.ok(c.log.at(-1).fight, 'the fight is in the post\'s log');
+    for (const id of ids) assert.ok(s.crew.find((o) => o.id === id), 'still on the crew');
+  }
+  assert.ok(held > 0, 'some posts are held');
+});
+
+test('watch the fight: it opens on screen, and help joins on its round', () => {
+  let { s, offer, msg } = hitPost(3);
+  const c = contractsOf(s).active.find((x) => x.id === offer.id);
+  const h = helpers(s, c)[0];
+  s = toggleHelp(s, msg.id, h.op.id);
+  s = resolveDecision(s, msg.id, 'fight');
+  const am = s.activeMission;
+  assert.ok(am?.post === offer.id && am.battle?.engine === 2, 'an engine-2 fight on screen');
+  assert.ok(!am.battle.runners.some((r) => r.id === h.op.id), 'help is not there yet');
+  assert.equal(h.round, helpArrival(h.op, offer.district));
+  for (let g = 0; g < 40 && !s.activeMission.done && (s.activeMission.battle?.round ?? 99) < h.round; g++) s = autoStep(s, { force: true });
+  const b = s.activeMission.battle;
+  if (b) assert.ok(b.runners.some((r) => r.id === h.op.id), `help joined by round ${h.round}`);
+});
+
+test('help arrives sooner from the same district, later across town, latest to or from the Heights', () => {
+  const op = (hall) => ({ hall });
+  assert.equal(helpArrival(op('oldTown'), 'oldTown'), HELP.sameDistrict);
+  assert.equal(helpArrival(op('oldTown'), 'docks'), HELP.across);
+  assert.equal(helpArrival(op('oldTown'), 'heights'), HELP.heights);
+  assert.equal(helpArrival(op('heights'), 'docks'), HELP.heights);
+  assert.ok(HELP.sameDistrict < HELP.across && HELP.across < HELP.heights);
+});
+
+test('a v84 save with an open post call gets the new answers', async () => {
+  const { s, msg } = hitPost(4);
+  const old = structuredClone(s);
+  const m = old.inbox.find((x) => x.id === msg.id);
+  m.options = [{ id: 'hold', label: 'Hold the post (60%, mid)' }, { id: 'give', label: 'Give it up and come home' }];
+  delete m.payload.help;
+  old.version = 84;
+  const text = JSON.stringify(old);
+  const loaded = await S.importSave({ text: async () => text });
+  const lm = loaded.inbox.find((x) => x.id === msg.id);
+  assert.deepEqual(lm.options.map((o) => o.id), ['fight', 'auto', 'give']);
+  assert.deepEqual(lm.payload.help, []);
+  assert.equal(loaded.version, SAVE_VERSION);
 });
 
 test('pulling runners off keeps the pay so far, costs a little trust, and frees them today', () => {
@@ -133,7 +198,7 @@ test('pulling runners off keeps the pay so far, costs a little trust, and frees 
   for (const id of ids) assert.ok(!(t.crew.find((o) => o.id === id).condition.awayUntil > t.day), 'free today');
 });
 
-test('a v83 save upgrades with an empty contracts list', async () => {
+test('a v83 save upgrades with an empty contracts list (and on to the current version)', async () => {
   const s = fresh(6);
   delete s.contracts;
   s.version = 83;

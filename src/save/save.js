@@ -1113,5 +1113,15 @@ function migrate(state) {
     state.contracts ??= { offers: [], active: [], seq: 0 };
     state.version = 84;
   }
+  if (state.version === 84) {
+    // v85: a hit post is a fight (DESIGN.md 2026-11-21). A call still open gets the new answers (watch it, let them
+    // fight it, give it up) and an empty help list; a fight in progress has none (posts had no fights before this).
+    for (const m of state.inbox ?? []) {
+      if (m.kind !== 'contract' || m.resolved) continue;
+      m.options = [{ id: 'fight', label: 'Watch the fight' }, { id: 'auto', label: 'Let them fight it' }, { id: 'give', label: 'Give it up and come home' }];
+      m.payload = { ...m.payload, help: m.payload?.help ?? [] };
+    }
+    state.version = 85;
+  }
   return state;
 }

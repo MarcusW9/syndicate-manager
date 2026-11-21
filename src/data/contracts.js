@@ -100,3 +100,10 @@ export const INCIDENT_LINES = {
   lost: 'They could not hold it. {who} came home hurt and the post is gone.',
   gaveUp: 'They gave it up and walked away. Everyone came home; {client} is not pleased.',
 };
+
+/** A post's fight as a run (core/contracts.js startPostFight): never on the board. id `post:<district>:<kind>`. */
+export const postTemplate = (district, kind = 'guard') => ({
+  id: `post:${district}:${kind}`, post: true, district, name: `${CONTRACT_KINDS[kind]?.name ?? 'Guard'} post`, threat: 2, pay: 0, heat: 0, days: 0, crewSize: 2,
+  keyStats: CONTRACT_KINDS[kind]?.stats ?? ['combat', 'cool'], beats: ['The post is hit.'], crises: [],
+  brief: 'The post is hit, and whoever is on it is holding it.',
+});

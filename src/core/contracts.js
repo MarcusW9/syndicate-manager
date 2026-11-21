@@ -28,6 +28,19 @@ import { adjustTrust } from './clients.js';
 import { addHeat } from './heat.js';
 import { money } from './money.js';
 import { noteInjury } from './earned.js';
+import { nextRng } from './random.js';
+import { HOME_HALL } from '../data/halls.js';
+import { COUNT_BY_THREAT, FIGHT } from '../data/fights.js';
+import { INJURY_DAYS } from './crew.js';
+import { recordSummary } from './record.js';
+import { pickSite } from '../data/sites.js';
+import { stageSpots, stageNeed } from './fightmap.js';
+import { buildFight, fightDiff, startRound } from './fight.js';
+import { fightSnapshot, stageOf } from './runfight.js';
+import { rollTarget } from './risk.js';
+import { autoRun } from './autorun.js';
+import { closeMission } from './mission.js';
+import { postTemplate } from '../data/contracts.js';
 
 export const CONTRACT = {
   boardSize: 3, // offers up each week (Monday), gone by Sunday
@@ -39,6 +52,7 @@ export const CONTRACT = {
   tip: 0.15, // a good day's bonus: this share of a slot's week
   heldBonus: 0.5, // holding a hit post: this share of a slot's week, per runner
   trust: { week: 2, pullOff: -3, gaveUp: -3, lost: -5, held: 2 },
+  fightThreat: 3, // a hit post's fight: this plus the district's POST_THREAT (Old Town 3: three attackers)
 };
 
 const round50 = (n) => Math.round(n / 50) * 50;
@@ -207,61 +221,208 @@ function playDay(state, c) {
   c.log.push({ day: state.day, tone: 'plain', text: fill(pick(rng, k.quiet), vars) });
 }
 
-/** The post is hit: a blocking call. Hold it (the odds shown) or give it up (everyone home). */
+/**
+ * The post is hit: a blocking call (owner, 2026-11-21: ambush fights). Watch the fight (engine 2 on
+ * the district's map, the player's orders), let them fight it (steady orders, a report), or give it
+ * up (everyone home). Anyone free can be sent to help; they arrive a few rounds in (helpArrival).
+ */
 function callIn(state, c, crew, vars) {
   const k = kindOf(c);
-  const stat = k.stats[0];
-  const roll = crewRoll(crew, stat, { recommended: c.slots, job: { side: true, solo: crew.length === 1, district: c.district } });
+  const roll = crewRoll(crew, k.stats[0], { recommended: c.slots, job: { side: true, solo: crew.length === 1, district: c.district } });
   const chance = successChance(roll.value, postDifficulty(c) + 2);
-  const text = fill(k.incident, vars);
+  const threat = postThreat(c);
+  const n = COUNT_BY_THREAT[Math.max(1, Math.min(5, threat))];
+  const text = fill(k.incident, { ...vars, n: countWord(n) });
   c.log.push({ day: state.day, tone: 'bad', text });
   for (const op of crew) op.condition.awayUntil = Math.max(op.condition.awayUntil ?? 0, state.day + 1); // still out until the call is answered
   state.inbox.unshift({
     id: `ct-call-${c.id}-${state.day}`, type: 'job', day: state.day, kind: 'contract',
     subject: `${k.name} post for ${clientName(c.clientId)}: they are calling in`,
-    body: `${text} Hold the post: ${roll.op.handle} leads on ${stat} (${roll.value}), ${Math.round(chance * 100)}% to hold. If it goes wrong, ${roll.op.handle} is badly hurt and the post is lost (no pay this week, trust ${CONTRACT.trust.lost}). Give it up: everyone comes home now, the pay so far is kept, trust ${CONTRACT.trust.gaveUp}.`,
+    body: text,
     options: [
-      { id: 'hold', label: `Hold the post (${Math.round(chance * 100)}%, ${riskLabel(chance)})` },
+      { id: 'fight', label: 'Watch the fight' },
+      { id: 'auto', label: 'Let them fight it' },
       { id: 'give', label: 'Give it up and come home' },
     ],
-    payload: { contractId: c.id, stat, leadId: roll.op.id, chance },
+    payload: { contractId: c.id, stat: k.stats[0], leadId: roll.op.id, chance, risk: riskLabel(chance), enemies: n, help: [] },
     blocking: true, read: false,
   });
+}
+
+const countWord = (n) => ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six'][n] ?? String(n);
+
+/** The fight's threat on a post: CONTRACT.fightThreat plus the district's (data/contracts.js POST_THREAT), at most 5. */
+export const postThreat = (c) => Math.max(1, Math.min(5, CONTRACT.fightThreat + (POST_THREAT[c.district] ?? 1)));
+
+/** Where a runner lives (their hall's district). */
+const homeDistrict = (op) => op.hall ?? HOME_HALL;
+
+/** The round help from this runner reaches a post in this district: 2 from the same district, 3 across town, 4 to or from the Heights. */
+export function helpArrival(op, district) {
+  const from = homeDistrict(op);
+  if (from === district) return HELP.sameDistrict;
+  return from === 'heights' || district === 'heights' ? HELP.heights : HELP.across;
+}
+export const HELP = { max: 2, sameDistrict: 2, across: 3, heights: 4 };
+
+/** Who could be sent to help a hit post: anyone free (not on a post, not away, not hurt badly), with the round they'd arrive. */
+export function helpers(state, c) {
+  return state.crew.filter((op) => !op.freelance && !c.crewIds.includes(op.id) && availability(state, op).ok)
+    .map((op) => ({ op, round: helpArrival(op, c.district) }))
+    .sort((a, b) => a.round - b.round || (b.op.stats.combat ?? 0) - (a.op.stats.combat ?? 0));
+}
+
+/** Pick or unpick a runner to send to a hit post (at most HELP.max). Returns a new state. */
+export function toggleHelp(prev, msgId, opId) {
+  const m0 = prev.inbox.find((m) => m.id === msgId && m.kind === 'contract' && !m.resolved);
+  if (!m0) return prev;
+  const state = structuredClone(prev);
+  const m = state.inbox.find((x) => x.id === msgId);
+  const c = contractsOf(state).active.find((x) => x.id === m.payload.contractId);
+  if (!c) return prev;
+  const help = m.payload.help ?? [];
+  if (help.includes(opId)) m.payload.help = help.filter((id) => id !== opId);
+  else if (help.length < HELP.max && helpers(state, c).some((h) => h.op.id === opId)) m.payload.help = [...help, opId];
+  else return prev;
+  return state;
 }
 
 /** Decision messages (core/decisions.js): the player's answer to a hit post. Mutates. */
 export function CONTRACT_RESOLVER(state, msg, optionId) {
   const c = contractsOf(state).active.find((x) => x.id === msg.payload?.contractId);
   if (!c || c.ended) { msg.resolved = true; msg.blocking = false; return; }
-  const vars = { client: clientName(c.clientId) };
-  const crew = c.crewIds.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean);
+  if (optionId === 'hold') optionId = 'auto'; // a call saved before the fights (save v84) had "Hold the post": the crew fights it
   if (optionId === 'give') {
     endContract(state, c, 'gaveUp');
     const t = adjustTrust(state, c.clientId, CONTRACT.trust.gaveUp);
-    msg.payload.outcome = `${fill(INCIDENT_LINES.gaveUp, vars)}${t ? ` Trust ${t}.` : ''}`;
-  } else if (optionId === 'hold') {
-    const roll = crewRoll(crew, msg.payload.stat, { recommended: c.slots, job: { side: true, solo: crew.length === 1, district: c.district } });
-    const die = d20(hashRng(state.seed, 'contract-hold', c.id, state.day));
-    const held = die + roll.value >= 10 + postDifficulty(c) + 2;
-    if (held) {
-      const bonus = round50(c.slotPay * CONTRACT.heldBonus * crew.length);
-      c.owed += bonus;
-      const t = adjustTrust(state, c.clientId, CONTRACT.trust.held);
-      msg.payload.outcome = `${fill(INCIDENT_LINES.held, vars)} +${money(bonus)}.${t ? ` Trust +${t}.` : ''}`;
-      if (state.day >= c.endDay) finish(state, c);
-    } else {
-      const hurt = roll.op;
-      setInjury(hurt, worsenInjury(hurt.condition.injury, 'serious'));
-      noteInjury(state, hurt, hurt.condition.injury);
-      c.owed = 0; // the post is lost: no pay this week
-      endContract(state, c, 'lost');
-      const t = adjustTrust(state, c.clientId, CONTRACT.trust.lost);
-      msg.payload.outcome = `${fill(INCIDENT_LINES.lost, { ...vars, who: hurt.handle })} ${hurt.handle}: ${hurt.condition.injury} injury.${t ? ` Trust ${t}.` : ''}`;
-    }
-  } else return;
-  c.log.push({ day: state.day, tone: c.ended?.how === 'lost' ? 'bad' : optionId === 'hold' ? 'good' : 'warn', text: msg.payload.outcome });
+    msg.payload.outcome = `${fill(INCIDENT_LINES.gaveUp, { client: clientName(c.clientId) })}${t ? ` Trust ${t}.` : ''}`;
+    c.log.push({ day: state.day, tone: 'warn', text: msg.payload.outcome });
+    msg.resolved = true;
+    msg.blocking = false;
+    return;
+  }
+  if (optionId !== 'fight' && optionId !== 'auto') return;
+  if (state.activeMission) return; // one fight on screen at a time: finish the one in hand first
+  const help = (msg.payload.help ?? []).filter((id) => helpers(state, c).some((h) => h.op.id === id));
   msg.resolved = true;
   msg.blocking = false;
+  msg.payload.outcome = optionId === 'fight' ? 'You took the call: the fight is on screen.' : 'They fought it on steady orders.';
+  startPostFight(state, c, help, { auto: optionId === 'auto' });
+  if (optionId === 'auto') {
+    const done = closeMission(autoRun(state, 'steady'));
+    for (const key of Object.keys(state)) delete state[key];
+    Object.assign(state, done);
+  }
+}
+
+/**
+ * The hit post as a fight (engine 2, holdYard: rout them) on the district's map, at the client's
+ * place. The post's crew starts in cover; help arrives on its round. Mutates the (cloned) state.
+ */
+export function startPostFight(state, c, helpIds = [], { auto = false } = {}) {
+  const tpl = postTemplate(c.district, c.kind);
+  const crew = c.crewIds.map((id) => state.crew.find((o) => o.id === id)).filter((o) => o && o.condition.injury !== 'critical');
+  const help = helpIds.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean);
+  const threat = postThreat(c);
+  const site = pickSite(c.district, c.id, tpl.id);
+  const spots = stageSpots(site, 'target', stageNeed(crew.length + help.length));
+  const b = buildFight({
+    type: 'holdYard', diff: fightDiff(Math.round(rollTarget({ threat }))), threat, site: c.district, job: null, crew, approach: 'loud', risk: 'steady', watched: !auto,
+    reinforce: help.map((op) => ({ op, round: helpArrival(op, c.district) })),
+  }, nextRng(state));
+  b.auto = auto;
+  b.startLines = [];
+  b.spots = spots;
+  b.startLines.push(...startRound(b, nextRng(state)));
+  for (const op of help) op.condition.awayUntil = Math.max(op.condition.awayUntil ?? 0, state.day + 1); // out on the call: no job today
+  const k = kindOf(c);
+  const text = `${fill(k.incident, { who: crew[0]?.handle ?? 'The crew', client: clientName(c.clientId), n: countWord(b.enemies.length) })}${help.length ? ` ${help.map((op) => `${op.handle} is on the way (round ${helpArrival(op, c.district)})`).join('; ')}.` : ''}`;
+  state.activeMission = {
+    jobId: c.id, templateId: tpl.id, post: c.id, postCrew: crew.map((o) => o.id), help: help.map((o) => o.id),
+    crewIds: [...crew, ...help].map((o) => o.id), approach: 'loud', days: 0, bribe: 0,
+    overwatch: null, wheels: null, standby: null, callIn: auto ? 'never' : 'every', orders: auto ? 'steady' : null,
+    alert: 0, out: [], pending: null, wentLoud: true, battle: b, fought: true,
+    pay: 0, threat, threatDelta: 0, clientId: c.clientId, twist: null, askedFor: null, lead: null,
+    queue: [{ type: 'battle' }], step: 0, log: [{ kind: 'bad', text }],
+    payCut: 0, extraHeat: 0, clientTrust: 0, watched: 0, startedDay: state.day, zone: 'target',
+    critical: null, stabiliseFailed: false, untreated: [],
+    focusOp: null, aborted: false, done: false, result: null, growth: [], graduated: [], report: [text],
+    events: [{ kind: 'battle', phase: 'start', from: 'post', zone: 'target', text, report: text, ...fightSnapshot(b), stage: stageOf(b) }],
+  };
+  return state;
+}
+
+/**
+ * The end of a post's fight (called by mission.js finish). Deaths only as any engine-2 fight allows
+ * (committed, or pushing on at death's door); a pull-back is an exit and saves everyone. Won: the post
+ * goes on with a bonus and trust, anyone badly hurt goes home. Pulled back: the post ends, pay so far
+ * kept. Help goes home either way. No fame, standing or record (posts earn none). Mutates.
+ */
+export function finishPost(state) {
+  const am = state.activeMission;
+  const c = contractsOf(state).active.find((x) => x.id === am.post);
+  const crew = am.crewIds.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean);
+  const medic = crew.some((o) => o.role === 'medic' && !am.untreated.includes(o.id));
+  const deaths = [];
+  for (const id of am.fightDead ?? []) {
+    const op = state.crew.find((o) => o.id === id);
+    if (op && !deaths.includes(op)) { deaths.push(op); am.report.push(`${op.name} "${op.handle}" died in the fight.`); }
+  }
+  for (const id of am.untreated) {
+    const op = state.crew.find((o) => o.id === id);
+    if (!op || deaths.includes(op)) continue;
+    const chance = state.difficulty === 'story' || am.aborted ? 1 : 0.35 + (medic ? 0.3 : 0);
+    if (nextRng(state)() < chance) {
+      setInjury(op, 'serious');
+      op.condition.injuryDays = 21;
+      am.report.push(`${op.handle} pulled through. Barely.`);
+    } else { deaths.push(op); am.report.push(`${op.name} "${op.handle}" died of their wounds.`); }
+  }
+  for (const m of am.missing ?? []) {
+    const op = state.crew.find((o) => o.id === m.id);
+    if (!op || deaths.includes(op)) continue;
+    op.condition.awayUntil = state.day + FIGHT.missingDays;
+    op.condition.missing = { since: state.day, until: state.day + FIGHT.missingDays };
+    setInjury(op, 'serious');
+    op.condition.injuryDays = FIGHT.missingDays + INJURY_DAYS.serious;
+  }
+  for (const op of deaths) {
+    state.crew = state.crew.filter((o) => o.id !== op.id);
+    state.memorial.push({ id: op.id, name: op.name, handle: op.handle, role: op.role, color: op.color, age: op.age, marks: op.marks ?? [], day: state.day, cause: `Died on a post for ${clientName(c?.clientId)}`, record: recordSummary(op) });
+  }
+  if (deaths.length) for (const op of state.crew) op.condition.morale = Math.max(0, op.condition.morale - 15);
+  const survivors = crew.filter((o) => !deaths.includes(o));
+  const injuries = survivors.filter((o) => o.condition.injury !== 'healthy').map((o) => `${o.handle} (${o.condition.injury}, ${o.condition.injuryDays}d)`);
+  for (const op of survivors) {
+    op.condition.fatigue = Math.min(100, op.condition.fatigue + 10);
+    op.history.push(`Day ${state.day}: ${am.aborted ? 'pulled back from' : 'held'} a post for ${clientName(c?.clientId)}`);
+    if ((am.help ?? []).includes(op.id)) op.condition.awayUntil = Math.max(op.condition.awayUntil ?? 0, state.day + 1); // help goes home; no job today
+  }
+  let line;
+  if (c && !c.ended) {
+    // Anyone badly hurt, missing or dead comes off the post; the rest stay on it.
+    const fit = (id) => { const op = state.crew.find((o) => o.id === id); return op && !op.condition.missing && !['serious', 'critical'].includes(op.condition.injury); };
+    const off = c.crewIds.filter((id) => !fit(id));
+    for (const id of off) { const op = state.crew.find((o) => o.id === id); if (op && !op.condition.missing) op.condition.awayUntil = state.day; }
+    c.crewIds = c.crewIds.filter(fit);
+    if (am.aborted) {
+      endContract(state, c, 'gaveUp');
+      const t = adjustTrust(state, c.clientId, CONTRACT.trust.gaveUp);
+      line = `Pulled back and gave up the post. The pay so far is kept.${t ? ` Trust ${t}.` : ''}`;
+    } else {
+      const bonus = round50(c.slotPay * CONTRACT.heldBonus * Math.max(1, am.postCrew.length));
+      c.owed += bonus;
+      const t = adjustTrust(state, c.clientId, CONTRACT.trust.held);
+      line = `${fill(INCIDENT_LINES.held, { client: clientName(c.clientId) })} +${money(bonus)}.${t ? ` Trust +${t}.` : ''}${off.length ? ` Off the post, hurt: ${off.map((id) => state.crew.find((o) => o.id === id)?.handle ?? 'one of ours').join(', ')}.` : ''}`;
+      if (!c.crewIds.length) { endContract(state, c, 'empty'); line += ' Nobody is fit to keep it: the post is over, the pay so far kept.'; }
+      else if (state.day >= c.endDay) finish(state, c);
+    }
+    c.log.push({ day: state.day, tone: am.aborted ? 'warn' : deaths.length ? 'bad' : 'good', text: line, fight: true });
+    am.report.push(line);
+  }
+  const outcome = deaths.length ? 'loss' : am.aborted ? 'aborted' : 'completed';
+  am.result = { report: am.report ?? [], outcome, pay: 0, heatGain: 0, injuries, deaths: deaths.map((d) => d.handle), freelance: [], growth: [], graduated: [], client: null, trustChange: 0, post: line ?? null };
+  am.done = true;
 }
 
 /** A post run to its end: trust for the work, a report. Mutates. */

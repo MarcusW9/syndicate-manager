@@ -2,6 +2,10 @@
 
 Checked against the code on 2026-11-13 (the way-out section: 2026-11-17) (`src/core/fight.js`, `runfight.js`, `battle.js`, `data/fights.js`, `data/dilemmas.js`, `data/battle.js`). The code and the data files win if this ever disagrees; fix this file when they change. Why each rule is what it is: `DESIGN.md` decision log (`docs/design/2026-11.md`, rows from 2026-11-10 on) and `drafts/SPEC-battle-orders.md` (section 30 is what was settled). Where things live: `CODEMAP.md`.
 
+
+## A hit post's fight and help that arrives (2026-11-21, save v85)
+
+A security post that is hit (`core/contracts.js`) can be fought: `holdYard` (rout them) on the district's map at the client's place, threat `CONTRACT.fightThreat` 3 plus the district's `POST_THREAT`, risk steady to start. Help is anyone free, at most two: `buildFight({ reinforce: [{ op, round }] })` keeps them on `b.reinforce`, and `startRound` pushes each into `b.runners` at the start of its round with the line `reinforceIn` (kind `standby`, so the stage runs them in like the standby). Round 2 from a hall in the same district, 3 across town, 4 to or from the Heights. `finishPost` ends it like `finishRaid`, plus `fightDead` and `missing`; deaths only as any engine-2 fight allows.
 ## The crew's shots and a job's difficulty (2026-11-20)
 
 A crew attack (a runner's shot, a Ricochet bounce, the overwatch, a turret) rolls against `attackDiff(b.diff)` (`core/fight.js`): above `FIGHT.attackClimbFrom` (6) it feels only `FIGHT.attackClimbShare` (0.67) of the difficulty's climb. Before, it felt all of it, and difficulty climbs 2.5 a threat level, faster than runners' combat grows, so shots at threats 4-5 missed about half the time while enemies landed about 70% of theirs. The bad-luck softener is +3 a miss in a row, to +9 (was +2 to +6). Steady, hands-off: misses 10 / 29 / 31 / 29 / 33% at threats 1-5 (were 11 / 34 / 39 / 47 / 53%); a run of 3+ misses in 3-4% of high-threat fights (was 19-25%); enemy shots unchanged; no deaths on cautious or steady; committed fights with a death 3.1% to 2.2%. `scripts/sim-misses.mjs`, `docs/sims/misses-2026-11-20*.md` (v0 is the old rules, v5 these).
