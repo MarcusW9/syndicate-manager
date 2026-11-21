@@ -82,7 +82,7 @@ function itemRow(ui, item, { action, label, sub = '', disabled = false, id = ite
         ${apexHistory(item)}
         ${lookText(item) ? `<span class="gearrow__sub muted small">${item.name ? `${esc(itemName(item))} · ` : ''}${esc(lookText(item))}</span>` : ''}
         ${sub ? `<span class="gearrow__sub ${item.apex ? 'apex__swap' : 'muted'} small">${sub}</span>` : ''}</span>
-      ${action ? `<button class="btn gearrow__btn" data-action="${action}" data-id="${esc(id)}" ${item.tier ? `data-tier="${esc(item.tier)}"` : ''} ${disabled ? 'disabled' : ''}>${esc(label)}</button>` : ''}
+      ${action ? `<button class="btn gearrow__btn" data-action="${action}" data-id="${esc(id)}" ${action === 'open-op' ? 'data-tab="gear"' : ''} ${item.tier ? `data-tier="${esc(item.tier)}"` : ''} ${disabled ? 'disabled' : ''}>${esc(label)}</button>` : ''}
       ${perkList(item)}
     </li>`;
 }
@@ -250,7 +250,7 @@ function renderItemSheet(ui, state, op, uid) {
       </div>
       ${item ? `<ul class="list list--plain gearlist">${itemRow(ui, item, { carrier: op })}</ul>` : ''}
       ${item && can.ok ? `<button class="btn btn--ghost btn--block" data-action="unequip" data-id="${esc(item.uid)}">Put it back in the stash</button>` : ''}
-      <button class="btn btn--block" data-action="open-op" data-id="${esc(op.id)}">Open ${esc(op.handle)}'s page</button>
+      <button class="btn btn--block" data-action="open-op" data-tab="gear" data-id="${esc(op.id)}">Open ${esc(op.handle)}'s page</button>
     </div>`;
 }
 
@@ -279,7 +279,7 @@ function renderAddSheet(ui, state, op) {
       </div>
       <button class="btn btn--block" data-action="open-armoury">Go to the armoury</button>
       <ul class="list list--plain gearlist">${stash.length ? stash.map((item) => itemRow(ui, item, { action: 'equip', label: 'Carry', disabled: !can.ok })).join('') : '<li class="muted small">Nothing in the stash that fits. Buy it in the armoury.</li>'}</ul>
-      <button class="btn btn--ghost btn--block" data-action="open-op" data-id="${esc(op.id)}">Open ${esc(op.handle)}'s page</button>
+      <button class="btn btn--ghost btn--block" data-action="open-op" data-tab="gear" data-id="${esc(op.id)}">Open ${esc(op.handle)}'s page</button>
     </div>`;
 }
 

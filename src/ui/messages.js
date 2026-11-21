@@ -54,7 +54,7 @@ export function renderMessage(m) {
       ${m.kind === 'heat' ? renderHeatNotice(m) : ''}
       ${m.kind === 'spec' ? renderSpecOffer(m) : ''}
       ${m.kind === 'build' ? renderBuildOffer(m) : ''}
-      ${m.kind === 'levelup' ? (m.payload?.learned ? `<p><strong>Learned ${esc(m.payload.learned)}.</strong></p>` : state.crew.some((o) => o.id === m.payload?.opId) ? `<button class="btn btn--primary" data-action="open-op" data-id="${esc(m.payload.opId)}">Pick a skill on their page</button>` : '') : ''}
+      ${m.kind === 'levelup' ? (m.payload?.learned ? `<p><strong>Learned ${esc(m.payload.learned)}.</strong></p>` : state.crew.some((o) => o.id === m.payload?.opId) ? `<button class="btn btn--primary" data-action="open-op" data-tab="skills" data-id="${esc(m.payload.opId)}">Pick a skill on their page</button>` : '') : ''}
       ${m.kind === 'retirement' ? renderRetirement(m) : ''}
       ${m.kind === 'contract' ? renderContractCall(m) : ''}
       ${m.kind === 'poach' ? renderPoach(m) : ''}

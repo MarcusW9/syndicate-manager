@@ -327,11 +327,10 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
   .week__note { flex: 1 1 100%; }
   .topbar__stats { display: flex; gap: 14px; flex: 1 1 auto; }
   .stat--cash .stat__label, .tier__word { display: inline; }
-  .opgrid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; align-items: start; grid-template-areas: "about stats" "about dev" "past dev"; }
+  .opgrid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; align-items: start; grid-template-areas: "about stats" "about dev"; /* the past moved to the Career tab, 2026-11-21 */ }
   .opgrid__about { grid-area: about; }
   .opgrid__stats { grid-area: stats; }
   .opgrid__dev { grid-area: dev; }
-  .opgrid__past { grid-area: past; }
   /* Desktop: use the width. Lists of cards run two or three across; paired sections sit side by side. */
   .list--cols { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 8px; }
   .cols2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 28px; align-items: start; }
