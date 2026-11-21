@@ -29,3 +29,14 @@ Reading: income is flat from 3 to 7 crew (about 3 jobs a week, the board runs dr
 | over 5, per 1, routine 0.75 | +53% | -2% | +48% | +61% | +109% |
 
 The routine share barely matters; the number of offers per runner is the lever. First pick: over 3, per 2, the setting nearest the target band (+20-40% for 5-10 crew). It failed two tests: the fame sim plays a five-person crew, which got a fourth offer a week, so the median run had three Elites by week 52 (target one or two), and a year's save went 2% over budget. Chosen instead: over 4, per 2, which leaves one to five runners exactly as before and lifts six and up. The five-person band stays at break-even; moving it needs the owner to move the Elite target, or another source of money (standing contracts).
+
+## With security posts (same day, board at over 4, per 2)
+
+`node scripts/sim-crew-income.mjs 10 3,5,7,10 "" posts` (and `POST_PAY=0.8`): after the day's jobs, idle runners (cheapest first, at most two a post) take this week's posts; a hit post is given up. Margin over the bill:
+
+| Slot pay | Weeks | 3 crew | 5 crew | 7 crew | 10 crew |
+| --- | --- | --- | --- | --- | --- |
+| first draft (¥550-850) | 1-4 / 5-12 / 13-26 | +49% / +32% / +37% | +39% / +27% / +50% | +26% / +32% / +47% | +39% / +35% / +64% |
+| **80% (¥450-700, chosen)** | 1-4 / 5-12 / 13-26 | +40% / +24% / +27% | +30% / +15% / +38% | +20% / +22% / +38% | +27% / +26% / +57% |
+
+Chosen: 80%. Five to seven runners now sit in the +20-40% band most of the year. The sim's player posts everyone it can, so a three-person crew gives up about one job a week to posts (2 jobs a week late on, against 3): a real player would choose. The ten-person late figure is mostly the board and reputation (+25% without posts).

@@ -1107,5 +1107,11 @@ function migrate(state) {
     }
     state.version = 83;
   }
+  if (state.version === 83) {
+    // v84: security contracts (DESIGN.md 2026-11-21, drafts/PROPOSAL-security-contracts.md). Nobody is on a post yet;
+    // the first offers go up next Monday.
+    state.contracts ??= { offers: [], active: [], seq: 0 };
+    state.version = 84;
+  }
   return state;
 }

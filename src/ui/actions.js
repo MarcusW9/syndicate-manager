@@ -1,5 +1,6 @@
 // Every tap in the game: onClick finds the [data-action] under the tap and switches on it.
 // The one place UI state (V) and the game state change in answer to the player.
+import { contractsOf, takeContract, pullOff } from '../core/contracts.js';
 import { nextHallExpansion, expandHall, openHall, hallIn, buyPrice, buyHall, moveToHall } from '../core/halls.js';
 import { raidOn, cycleRaidPost, setRaidPlan, markRaidCallSeen, payOffRaid } from '../core/raids.js';
 import { HALL_SITES } from '../data/halls.js';
@@ -357,6 +358,22 @@ export function onClick(e) {
     case 'mode': V.plan.mode = id; break; // send them away, or watch live (DESIGN.md 2026-11-04)
     case 'kit': V.plan.kit = id; break;
     case 'open-side': if (!V.sidePlan) remember(action, id); goHome('sidePlan'); V.sidePlan = { taskId: id, crew: [] }; break;
+    // Security posts (core/contracts.js, 2026-11-21): planned on the side plan's home, with slots.
+    case 'open-post': if (!V.sidePlan) remember(action, id); goHome('sidePlan'); V.sidePlan = { postId: id, crew: [] }; break;
+    case 'post-add': {
+      const o = contractsOf(state).offers.find((x) => x.id === V.sidePlan?.postId);
+      if (o && !V.sidePlan.crew.includes(id) && V.sidePlan.crew.length < o.slots) V.sidePlan.crew = [...V.sidePlan.crew, id];
+      break;
+    }
+    case 'post-remove': if (V.sidePlan) V.sidePlan.crew = V.sidePlan.crew.filter((x) => x !== id); break;
+    case 'take-post': {
+      const next = takeContract(state, V.sidePlan.postId, V.sidePlan.crew);
+      V.sidePlan = null;
+      nav.clear();
+      V.screen = 'jobs'; V.jobsTab = 'side';
+      return setState(next);
+    }
+    case 'pull-post': return setState(pullOff(state, id));
     case 'toggle-side-crew': {
       const task = sideTaskById(V.sidePlan.taskId);
       if (V.sidePlan.crew.includes(id)) V.sidePlan.crew = V.sidePlan.crew.filter((x) => x !== id);

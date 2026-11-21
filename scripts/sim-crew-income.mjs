@@ -5,7 +5,9 @@
 // Weeks 1-4, 5-12 and 13-26 are shown apart, as income depends on reputation gates.
 //
 //   node scripts/sim-crew-income.mjs [seeds=20] [sizes=3,5,7,10,14] [arrivals, e.g. over=3,per=1.5,routine=0.4]
-// The third argument overrides core/jobs.js ARRIVALS for this run (to compare settings).
+// The third argument overrides core/jobs.js ARRIVALS for this run (to compare settings); pass '' to keep them.
+// A fourth argument 'posts' has idle runners take this week's security posts (core/contracts.js), cheapest
+// first, answering a hit post by giving it up; their pay counts in gross.
 import { createNewGame } from '../src/core/state.js';
 import { generateRecruit, recruitToOperative } from '../src/core/recruits.js';
 import * as M from '../src/core/mission.js';
@@ -13,6 +15,13 @@ import { advanceDay, calendar, weeklyBill } from '../src/core/time.js';
 import { templateById, ARRIVALS } from '../src/core/jobs.js';
 import { availability } from '../src/core/crew.js';
 import { autoFounders, playMission, carefulPolicy } from '../tests/play.js';
+import { contractsOf, takeContract } from '../src/core/contracts.js';
+import { SLOT_PAY } from '../src/data/contracts.js';
+import { resolveDecision } from '../src/core/decisions.js';
+
+const POSTS = process.argv[5] === 'posts';
+const POST_PAY = Number(process.env.POST_PAY ?? 1); // POST_PAY=0.8 scales every district's slot pay (to compare)
+for (const d of Object.keys(SLOT_PAY)) SLOT_PAY[d] = Math.round(SLOT_PAY[d] * POST_PAY / 50) * 50;
 
 const SEEDS = Number(process.argv[2] ?? 20);
 const SIZES = (process.argv[3] ?? '3,5,7,10,14').split(',').map(Number);
@@ -47,10 +56,19 @@ function run(size, seed) {
       w.gross += s.cash - before;
       w.jobs++;
     }
+    if (POSTS) {
+      for (const o of [...contractsOf(s).offers]) {
+        const free = s.crew.filter((op) => availability(s, op).ok).sort((a, b) => a.wage - b.wage);
+        if (!free.length) break;
+        s = takeContract(s, o.id, free.slice(0, Math.min(o.slots, 2)).map((op) => op.id));
+      }
+    }
     w.idle += s.crew.filter((op) => availability(s, op).ok).length;
     w.open += s.jobs.length;
     if (calendar(s.day).weekday === 'Sun') w.bill = weeklyBill(s).total;
     s = advanceDay(s);
+    for (let m = s.inbox.find((x) => x.kind === 'contract' && !x.resolved); m; m = s.inbox.find((x) => x.kind === 'contract' && !x.resolved)) s = resolveDecision(s, m.id, 'give');
+    if (calendar(s.day).weekday === 'Sun' && day + 1 < WEEKS * 7) weeks[Math.floor((day + 1) / 7)].gross += s.inbox.find((m) => m.kind === 'week')?.payload?.posts?.total ?? 0;
     s.cash = Math.max(s.cash, 1e6 - 1e5); // keep everyone solvent; income is read from mission pay only
     if (s.cash > 1e6) s.cash = 1e6;
   }

@@ -49,3 +49,7 @@ The daily log lines are the first use of the adventure log (step two of the four
 ## Later, not part of this
 
 Hall businesses move to last. Owner: a runner does not run a noodle bar or a chop shop; it may belong to a later "conglomerate" layer where the tong builds real businesses. Kept as an idea only.
+
+## Outcome (2026-11-21)
+
+Built (steps 1, 2 and 4): `core/contracts.js`, `data/contracts.js`, save v84, Jobs › Side posts and the post plan, the hit post as a decision message. Slot pay set at ¥450-700 (80% of the draft) after the income sim. Not yet: ambush fights on a small map (step 3), Today crew-out cards for posts. Posts live under Side, not a fifth sub-tab.

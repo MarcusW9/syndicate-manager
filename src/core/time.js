@@ -1,5 +1,6 @@
 // Calendar and the daily tick. Pure logic: takes state, returns new state.
 
+import { refreshContracts, tickContracts, payContracts } from './contracts.js';
 import { fadeGrudges } from './gangs.js';
 import { checkRaids } from './raids.js';
 import { introduceHalls } from './halls.js';
@@ -103,6 +104,7 @@ export function advanceDay(prev) {
   if (calendar(state.day).isMonday) driftTrust(state); // clients drift back towards neutral
   if (calendar(state.day).isMonday) refreshFreelancers(state);
   if (calendar(state.day).isMonday) refreshSideBoard(state); // a fresh board of side tasks
+  if (calendar(state.day).isMonday) refreshContracts(state); // this week's security posts (core/contracts.js)
   if (calendar(state.day).isMonday) refreshArmoury(state); // new rifles in the armoury
   if (calendar(state.day).isMonday) rollRumour(state);
   if (calendar(state.day).isMonday) introduceHalls(state); // a contact offers a place once we're welcome (core/halls.js)
@@ -114,6 +116,7 @@ export function advanceDay(prev) {
   state.recruits = (state.recruits ?? []).filter((r) => r.expiresDay >= state.day);
 
   returnSideTasks(state); // side tasks whose crew is back today resolve
+  tickContracts(state); // runners on a post play their day; a hit post calls in (core/contracts.js)
   checkRaids(state); // a raid due today knocks; a hot district with a hall may draw a warning (core/raids.js)
   return advanceAway(state); // crews out take today's share; one that needs a call waits (core/away.js)
 }
@@ -140,6 +143,7 @@ export function weeklyBill(state) {
 
 function settleWeek(state) {
   const brokered = brokerWeek(state); // the work boards' week, before the bills (core/broker.js)
+  const posts = payContracts(state); // the security posts' pay, before the bills (core/contracts.js)
   const summary = weekSummary(state); // the week's jobs and money, before the bills (core/week.js)
   const { wages, total } = weeklyBill(state);
   state.cash -= total;
@@ -167,8 +171,9 @@ function settleWeek(state) {
     subject: broke ? 'You missed payments this week' : `Week ${calendar(state.day).week}, season ${calendar(state.day).season} settled: ${summary.net >= 0 ? '+' : '−'}${money(Math.abs(summary.net))} after the bills`,
     body: `${summary.lines.join(' ')} Wages ${money(wages)}, rent ${money(state.rent)}. Paid ${money(total)}. Cash now ${money(state.cash)}.` + heatLine +
       (brokered.lines.length ? ` Work boards: ${brokered.lines.join(' ')}` : '') +
+      (posts.lines.length ? ` Posts: ${posts.lines.join(' ')}` : '') +
       (broke ? ' The crew noticed. Morale will drop until you are back in the black.' : ''),
-    kind: 'week', payload: { lines: summary.lines, net: summary.net, paid: total, wages, rent: state.rent, cash: state.cash, broker: brokered.lines.length ? brokered : null },
+    kind: 'week', payload: { lines: summary.lines, net: summary.net, paid: total, wages, rent: state.rent, cash: state.cash, broker: brokered.lines.length ? brokered : null, posts: posts.lines.length ? posts : null },
     blocking: false,
     read: false,
   });

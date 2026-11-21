@@ -22,6 +22,7 @@ Then add a row to the top of the table below and commit the folder with the chan
 
 | Date | Version | Commit | What's new on screen | Folder |
 | --- | --- | --- | --- | --- |
+| 2026-11-21 | Security posts (design-session capture) | (this change) | `node scripts/capture-posts.mjs <dir>` at 390x844 (full page) and 844x390, 1x: Jobs › Side with three posts; a post's plan with two runners in its slots; a guard post running with its log line; a hit post on Today and its call with Hold the post and Give it up. | [2026-11-21-security-posts](2026-11-21-security-posts/) |
 | 2026-11-21 | Triage tags (design-session capture) | (this change) | A frame from `node scripts/preview-livebattle.mjs <dir> --effect patch`: data links from the medic and three tags (two STABLE, one STILL HURT). | [2026-11-21-triage-tags](2026-11-21-triage-tags/) |
 | 2026-11-21 | The van's clock ring (design-session capture) | (this change) | Frames from `node scripts/preview-livebattle.mjs <dir> --effect van --rounds 3`: the segmented ring, brackets and glitch label opening round the van point (`01`), and a later round (`02`). The preview forges the same round each time, so the label does not count down there. | [2026-11-21-van-ring](2026-11-21-van-ring/) |
 | 2026-11-20 | Overwatch looks (design-session capture) | (this change) | Frames from `node scripts/preview-livebattle.mjs <dir> --effect overwatch` and `--effect drone`: the rifle's laser drawing to its target (`01`), the drone on its pilot link (`02`). | [2026-11-20-overwatch](2026-11-20-overwatch/) |

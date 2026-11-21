@@ -3042,3 +3042,19 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .fs-tag--bad .fs-tag__plate, .fs-tag--bad .fs-tag__bar, .fs-tag--bad .fs-tag__lead { stroke: var(--accent); } .fs-tag--bad .fs-tag__plate { filter: drop-shadow(0 0 3px var(--accent)); } .fs-tag--bad .fs-tag__big { fill: #ffd0d6; }
 @keyframes fs-tag-life { 0% { opacity: 0; } 6% { opacity: 1; transform: translateX(-1.5px); } 12% { opacity: 0.2; } 18% { opacity: 1; transform: translateX(1px); } 24% { transform: none; } 80% { opacity: 1; } 90% { opacity: 0.5; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .fs-tether { animation: none; } .fs-tag { animation: none; } }
+
+/* Security posts (Jobs › Side, 2026-11-21; ui/jobs.js renderPosts, renderPostPlan). Borrow the
+   crews-out card's left light and the squad board's dashed slot chips. */
+.postsout { display: grid; gap: 8px; margin-bottom: 12px; }
+.postsout > li.ctpost { border-left: 2px solid var(--accent-2); background: var(--panel-2, var(--panel)); padding: 8px 12px; display: grid; grid-template-columns: 1fr; gap: 4px; }
+.ctpost__top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.ctpost__faces { display: flex; gap: 4px; }
+.ctpost__log--good { color: #5fe0a5; }
+.ctpost__log--warn { color: var(--warn); }
+.ctpost__log--bad { color: var(--danger); }
+.ctpost .btn--small { justify-self: start; min-height: var(--tap, 44px); }
+.postslots { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.postslots .slotchip { cursor: default; }
+.postslots .slotchip--on { cursor: pointer; border-style: solid; border-color: var(--accent-2); color: var(--text); grid-template-columns: auto 1fr; column-gap: 8px; }
+.postslots .slotchip--on .face, .postslots .slotchip--on > :first-child { grid-row: span 2; }
+.row.postpick { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; width: 100%; text-align: left; min-height: var(--tap, 44px); }

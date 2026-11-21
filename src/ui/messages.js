@@ -42,7 +42,7 @@ export function crewLinks(text) {
 
 export function renderMessage(m) {
   // The welcome message points a new player at their first job.
-  const jobLink = (m.type === 'job' || m.id === 'welcome') && state.jobs.length ? `<button class="btn" data-action="nav" data-id="jobs">Open the job board</button>`
+  const jobLink = (m.type === 'job' || m.id === 'welcome') && m.kind !== 'contract' && state.jobs.length ? `<button class="btn" data-action="nav" data-id="jobs">Open the job board</button>`
     : m.type === 'scout' && (state.recruits ?? []).length ? `<button class="btn" data-action="leads-open">See the leads</button>` : '';
   return `
       <button class="btn btn--ghost inbox__back" data-action="back">← ${esc(backLabel())}</button>
@@ -55,6 +55,7 @@ export function renderMessage(m) {
       ${m.kind === 'build' ? renderBuildOffer(m) : ''}
       ${m.kind === 'levelup' ? (m.payload?.learned ? `<p><strong>Learned ${esc(m.payload.learned)}.</strong></p>` : state.crew.some((o) => o.id === m.payload?.opId) ? `<button class="btn btn--primary" data-action="open-op" data-id="${esc(m.payload.opId)}">Pick a skill on their page</button>` : '') : ''}
       ${m.kind === 'retirement' ? renderRetirement(m) : ''}
+      ${m.kind === 'contract' ? renderContractCall(m) : ''}
       ${m.kind === 'poach' ? renderPoach(m) : ''}
       ${m.kind === 'hall-offer' && !hallIn(state, m.payload.district) ? (canOpenHall(state, m.payload.district).ok ? `<button class="btn btn--primary" data-action="open-hall" data-id="${esc(m.payload.district)}">Open the hall · ${money(HALL_SITES[m.payload.district].deposit)}</button>` : `<p class="muted small">${esc(canOpenHall(state, m.payload.district).reason)}.</p>`) : ''}
       ${m.kind === 'callin' && !m.resolved ? `<button class="btn btn--primary" data-action="take-call" data-id="${esc(m.payload.jobId)}">Take the call</button>` : ''}
@@ -273,6 +274,15 @@ function renderPoach(m) {
 }
 
 /** A long-serving runner asks to retire (core/retirement.js): stay one more season, or let them go. */
+/** A security post that is hit (core/contracts.js): hold it, odds shown, or give it up and come home. */
+function renderContractCall(m) {
+  if (m.resolved) return m.payload?.outcome ? `<p><strong>${esc(m.payload.outcome)}</strong></p>` : '';
+  return `
+      <div class="stack">
+        ${m.options.map((o) => `<button class="btn ${o.id === 'give' ? 'btn--ghost' : 'btn--primary'}" data-action="decide" data-id="${esc(m.id)}" data-option="${esc(o.id)}">${esc(o.label)}</button>`).join('')}
+      </div>`;
+}
+
 function renderRetirement(m) {
   if (m.resolved) return m.payload.outcome ? `<p><strong>${esc(m.payload.outcome)}</strong></p>` : '';
   const lapsed = state.day > m.payload.expiresDay;
