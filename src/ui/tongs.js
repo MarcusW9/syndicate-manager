@@ -4,10 +4,12 @@
 // only: word keys in, wording from data/rivals.js out. No numbers, no order beyond tier.
 import { rivalView } from '../core/rivals.js';
 import { bookView, bookGrade } from '../core/book.js';
-import { readFor, approachFor, findCard, scoutLevel } from '../core/dossier.js';
+import { readFor, approachFor, findCard, scoutLevel, scoutProgress } from '../core/dossier.js';
 import { availability } from '../core/crew.js';
 import { dossierOf } from '../core/dossier.js';
 import { portrait } from './art.js';
+import { statGlyph, traitGlyph } from './icons.js';
+import { TRAITS } from '../data/traits.js';
 import { money } from '../core/money.js';
 import { TONG_RANKS } from '../data/tong.js';
 import { NAMES } from '../config/names.js';
@@ -228,18 +230,38 @@ function freeNamesBlock(state, view) {
 function nameHead(state, card, r) {
   const slate = bookLine(state, card.runnerId ?? card.id);
   return `<div class="namehead">${faceOfCard(state, card.id, 104)}<div><h1 class="cityhead">${esc(r.name)}</h1>
-    <p class="small">${esc([r.role, FAME_LINE[r.fame], r.tong ? `with ${r.tong}` : r.from ? `lately of ${r.from}` : 'between tongs'].join(' · '))}. ${esc(fill(RATING_WORDS[r.word] ?? '', { role: r.role, home: inText(r.home) }).replace(/^./, (c) => c.toUpperCase()))}.</p>${slate ? `<p class="small muted">${esc(slate)}</p>` : ''}</div></div>`;
+    <p class="small">${esc([r.role, card.age, FAME_LINE[r.fame], r.tong ? `with ${r.tong}` : r.from ? `lately of ${r.from}` : 'between tongs'].join(' · '))}. ${esc(fill(RATING_WORDS[r.word] ?? '', { role: r.role, home: inText(r.home) }).replace(/^./, (c) => c.toUpperCase()))}.</p>${slate ? `<button class="linkbtn" data-action="tong-page" data-id="book">${esc(slate)} ›</button>` : ''}</div></div>`;
 }
 
-/** What scouting has shown so far (the same words wherever a name is read). */
+/** A stat tile like our own crew's page (`.stats`); an unknown one is a dashed `?` until a scouting trip shows it. */
+const statTile = (k, v) => `<div${v == null ? ' class="stat--unknown"' : ''}><dt class="iconword">${statGlyph(k)}${esc(k)}</dt><dd>${v == null ? '?' : v}</dd></div>`;
+/** A little bar for a scouting trip under way: "Day 1 of 2", filled as the days pass. */
+function scoutBar(state, ref) {
+  const p = scoutProgress(state, ref);
+  if (!p) return '';
+  return `<div class="scoutbar" role="progressbar" aria-valuemin="0" aria-valuemax="${p.of}" aria-valuenow="${p.day - 1}" aria-label="${esc(p.handle)} scouting: day ${p.day} of ${p.of}"><span class="small">${esc(p.handle)} is scouting · <strong>Day ${p.day} of ${p.of}</strong></span><span class="scoutbar__track">${Array.from({ length: p.of }, (_, i) => `<i class="${i < p.day - 1 ? 'is-done' : i === p.day - 1 ? 'is-now' : ''}"></i>`).join('')}</span></div>`;
+}
+
+/** A slot (skill, gear) we can't see until they are ours: a dashed `?`. */
+const unknownSlot = (label) => `<div class="slot--unknown"><span class="small muted">${esc(label)}</span><b>?</b></div>`;
+
+/**
+ * What scouting has shown so far, laid out like our own crew's page: stats, traits, development, skills and gear,
+ * with a `?` wherever we have not seen it yet. A trip unlocks stats (a first look), then traits and a sharper read.
+ */
 function nameKnow(r) {
-  const stats = r.stats ? `<p class="small namestats">${STAT_ORDER.map((k) => `${k} <strong>${r.stats[k]}</strong>`).join(' · ')}</p>` : '';
-  const potential = r.potential ? `<p class="small">${esc(POTENTIAL_TEXT[r.potential])}</p>` : '';
+  const known = r.stats ? STAT_ORDER.length : 0;
+  const stats = `<h2>Stats</h2><dl class="stats">${STAT_ORDER.map((k) => statTile(k, r.stats ? r.stats[k] : null)).join('')}</dl>
+    <p class="small muted">${known ? `${known} of ${STAT_ORDER.length} stats seen.` : 'Stats: a scouting trip shows them.'}</p>`;
+  const traits = `<h2>Traits</h2>${r.traits ? (r.traits.length ? `<ul class="tchips">${r.traits.map((t) => `<li><span class="tchip tchip--born">${traitGlyph(TRAITS[t]?.icon)}<span>${esc(TRAITS[t]?.name ?? t)}</span></span></li>`).join('')}</ul>` : '<p class="muted small">None.</p>') : `<ul class="tchips"><li><span class="tchip tchip--unknown">?</span></li><li><span class="tchip tchip--unknown">?</span></li></ul><p class="small muted">A second look shows their traits.</p>`}`;
+  const potential = `<h2>Development</h2><p class="small">${r.potential ? esc(POTENTIAL_TEXT[r.potential]) : '?'}</p>`;
   const note = r.note ? `<p class="small">${esc(HABIT_NOTE[r.note])}</p>` : '';
   const slate = r.slate ? `<p class="small slatemark slatemark--${esc(r.slate)}">${esc(SLATE_MARK[r.slate])}</p>` : '';
   const unsettled = r.unsettled ? `<p class="small">${esc(UNSETTLED_LINE)}</p>` : '';
   const old = r.age ? `<p class="small muted">${esc(READ_AGE[r.age].replace(/^./, (c) => c.toUpperCase()))}.${r.changed ? ` ${esc(CHANGED_LINE)}` : ''}</p>` : '';
-  return `<h2>What we know</h2>${stats}${potential}${note}${slate}${unsettled}<p class="small muted">${esc(SCOUT_LEVEL_TEXT[r.level])}</p>${old}`;
+  const gear = `<h2>Skills</h2><div class="nameslots">${['Move', 'Payload', 'Spec'].map(unknownSlot).join('')}</div>
+    <h2>Gear</h2><div class="nameslots">${['Armour', 'Implant 1', 'Implant 2'].map(unknownSlot).join('')}</div><p class="small muted">Skills and gear show once they are ours.</p>`;
+  return `<div class="nameknow"><h2>What we know</h2>${stats}${traits}${potential}${note}${slate}${unsettled}<p class="small muted">${esc(SCOUT_LEVEL_TEXT[r.level])}</p>${old}${gear}</div>`;
 }
 
 const goneCard = (back) => `<section class="panel tongs"><button class="linkbtn" data-action="back">‹ ${esc(back)}</button><h1 class="cityhead">Gone</h1><p class="small muted">${esc(SIGN_REASON.gone)}</p></section>`;
@@ -278,7 +300,7 @@ export function renderLeadName(state, slugId, back = 'Leads') {
       <div><dt>All in, today</dt><dd>${money(a.total)}</dd></div></dl>`;
   const free = state.crew.filter((o) => !o.freelance && o.condition?.injury !== 'dead' && availability(state, o).ok);
   const scout = a.reason === 'head' ? '' : r.level === 'full' ? '<p class="small muted">We have the full picture.</p>'
-    : out ? '<p class="small muted">Someone is already out watching them.</p>'
+    : out ? scoutBar(state, card.id)
     : free.length ? `<h2>Send someone to watch them (two days)</h2><div class="namebtns">${free.map((o) => `<button class="btn" data-action="scout-send" data-id="${esc(`${r.id}|${o.id}`)}">${esc(o.handle)}</button>`).join('')}</div>`
     : '<p class="small muted">Nobody is free to go and watch them.</p>';
   return `<section class="panel tongs namepage">
@@ -305,12 +327,12 @@ export function leadNames(state) {
   const watching = [...view.tiers.flatMap((t) => t.tongs.flatMap((g) => g.names)), ...view.names.filter((n) => !n.own)]
     .map((n) => findCard(state, n.id)).filter((c) => c && c.id !== o?.id && !saleIds.includes(c.id) && !seen.has(c.id) && seen.add(c.id) && (scoutLevel(state, c) > 0 || out.includes(c.id)))
     .map((c) => readFor(state, c));
-  const row = (n, tail) => `<li><button class="tongcard" data-action="lead-name" data-id="${esc(n.id)}" data-style="${n.tong ? 'tong' : 'free'}">
+  const row = (n, tail) => { const sp = scoutProgress(state, n.id); return `<li><button class="tongcard" data-action="lead-name" data-id="${esc(n.id)}" data-style="${n.tong ? 'tong' : 'free'}">
     ${faceOfCard(state, n.id)}
     <span class="tongcard__what"><span class="tongcard__name">${esc(n.name)}</span>
       <span class="small muted">${esc([n.role, FAME_LINE[n.fame], n.tong ?? (n.from ? `lately of ${n.from}` : 'between tongs')].join(' · '))}</span></span>
-    <span class="tongcard__go">${tail} ›</span></button></li>`;
-  const rows = [...(o ? [row(o, 'Free name')] : []), ...sale.map((n) => row(n, n.listed ? SCREEN_TEXT.saleListed : SCREEN_TEXT.sale)), ...watching.map((n) => row(n, 'Watching'))];
+    <span class="tongcard__go">${sp ? `Day ${sp.day}/${sp.of}` : tail} ›</span></button></li>`; };
+  const rows = [...(o ? [row(o, 'Free name')] : []), ...sale.map((n) => row(n, n.listed ? SCREEN_TEXT.saleListed : SCREEN_TEXT.sale)), ...watching.map((n) => row(n, 'Scouted'))];
   return rows.length ? `<h2>Names</h2><p class="muted small">Free names, and anyone in another tong we have an eye on. A name from the street can be opened from City › Tongs.</p><ul class="list list--plain tongs__list">${rows.join('')}</ul>` : '';
 }
 

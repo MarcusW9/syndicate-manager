@@ -1,0 +1,65 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mockup: a scouted name, laid out like our own crew</title>
+<style>
+:root{--bg:#0a0c0f;--panel:#12151b;--line:#2a303b;--text:#e9ecf1;--muted:#8a93a6;--accent:#ff3d5f;--cy:#3de8d8;--warn:#f2d541}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px system-ui,sans-serif;padding:16px}
+.wrap{max-width:980px;margin:0 auto}.cap{color:var(--muted);font-size:13px;margin:0 0 12px}
+h1{font:700 30px Rajdhani,Arial Narrow,sans-serif;letter-spacing:.04em;margin:0;text-transform:uppercase}
+h2{font:600 15px Rajdhani,sans-serif;letter-spacing:.2em;color:var(--cy);text-transform:uppercase;margin:26px 0 10px;display:flex;gap:12px;align-items:center}
+h2:after{content:"";flex:1;height:1px;background:var(--line)}
+.head{display:flex;gap:16px}.face{width:96px;height:96px;background:linear-gradient(135deg,#3a2a30,#6a2a3a);clip-path:polygon(0 0,90% 0,100% 10%,100% 100%,0 100%);display:grid;place-items:center;font-size:40px}
+.muted{color:var(--muted)}.small{font-size:14px}
+.chip{display:inline-block;font:700 12px Rajdhani,sans-serif;letter-spacing:.12em;padding:2px 8px;background:var(--warn);color:#000;margin-right:6px}
+a.link{color:var(--cy);text-decoration:none;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.stat{background:var(--panel);border:1px solid var(--line);padding:8px 10px}
+.stat .k{font:600 12px Rajdhani,sans-serif;letter-spacing:.15em;color:var(--muted);text-transform:uppercase}
+.stat .v{font:700 28px Rajdhani,sans-serif}.stat .bar{height:3px;background:#222a33;margin-top:6px}.stat .bar i{display:block;height:100%;background:var(--cy)}
+.stat.q{border-style:dashed}.stat.q .v{color:#4a5262}.stat.q .bar i{width:0}
+.stat.q .how{font-size:11px;color:var(--muted)}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.slot{border:1px dashed var(--line);min-height:70px;display:grid;place-items:center;color:#4a5262;font:700 22px Rajdhani;background:var(--panel)}
+.slot small{font:600 11px Rajdhani;letter-spacing:.15em;color:var(--muted);display:block;text-align:center}
+.slot.known{border-style:solid;color:var(--text);font-size:15px}
+.price{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.price div{background:var(--panel);border:1px solid var(--line);padding:8px 10px}.price b{display:block;font:700 22px Rajdhani}
+.btn{display:block;width:100%;padding:16px;margin-top:14px;background:var(--accent);color:#fff;border:0;font:700 17px Rajdhani;letter-spacing:.14em;text-transform:uppercase;clip-path:polygon(0 0,100% 0,100% 70%,98% 100%,0 100%)}
+.btn.g{background:transparent;border:1px solid var(--cy);color:var(--cy);clip-path:none;margin:6px 0 0;padding:12px}
+.meter{font:600 12px Rajdhani;letter-spacing:.15em;color:var(--cy);margin-top:6px}
+.legend{border:1px solid var(--line);padding:10px;margin-top:22px;background:#0e1116;font-size:13px;color:var(--muted)}
+</style></head><body><div class="wrap">
+<p class="cap">Mockup (not built): a scouted name, laid out like our own crew's page. Lena Novak after one scouting trip. <b>?</b> = not known yet; scouting fills them in. Ruled boxes = known, dashed = hidden.</p>
+<a class="link" href="#">‹ Leads</a>
+<div class="head" style="margin-top:10px"><div class="face">🙂</div><div>
+<h1>Lena Novak</h1>
+<div class="muted" style="font-size:20px">face · 29 · ¥850/wk <span class="small">(what they want)</span></div>
+<div style="margin-top:6px"><span class="chip">RESPECTED</span><span class="muted small">· BL HOLDINGS · </span><a class="link small" href="#">ANCHOR'S SLATE C ›</a></div>
+<div class="meter">SCOUTED · 3 OF 8 STATS · READ 2 DAYS OLD</div></div></div>
+<p>Steady, and trusted with real work. <span class="muted">Background: ? (a second trip tells us)</span></p>
+
+<h2>Stats</h2>
+<div class="grid">
+<div class="stat"><div class="k">Combat</div><div class="v">2</div><div class="bar"><i style="width:15%"></i></div></div>
+<div class="stat"><div class="k">Stealth</div><div class="v">6</div><div class="bar"><i style="width:40%"></i></div></div>
+<div class="stat"><div class="k">Tech</div><div class="v">6</div><div class="bar"><i style="width:40%"></i></div></div>
+<div class="stat q"><div class="k">Social</div><div class="v">?</div><div class="bar"><i></i></div><div class="how">watch them work a room</div></div>
+<div class="stat q"><div class="k">Medical</div><div class="v">?</div><div class="bar"><i></i></div></div>
+<div class="stat q"><div class="k">Cool</div><div class="v">?</div><div class="bar"><i></i></div></div>
+<div class="stat q"><div class="k">Piloting</div><div class="v">?</div><div class="bar"><i></i></div></div>
+<div class="stat q"><div class="k">Endurance</div><div class="v">?</div><div class="bar"><i></i></div></div>
+</div>
+<p class="small muted">Potential: ? &nbsp;·&nbsp; "They've hit their wall" unlocks at the second trip.</p>
+
+<h2>Skills</h2>
+<div class="slots"><div class="slot known"><div><small>MOVE</small>Ricochet</div></div><div class="slot"><div><small>PAYLOAD</small>?</div></div><div class="slot"><div><small>SPEC</small>?</div></div></div>
+
+<h2>Gear</h2>
+<div class="slots"><div class="slot"><div><small>ARMOUR</small>?</div></div><div class="slot"><div><small>IMPLANT 1</small>?</div></div><div class="slot"><div><small>IMPLANT 2</small>?</div></div></div>
+
+<h2>What it would take</h2>
+<div class="price"><div><span class="muted small">THEY WANT</span><b>¥850 / wk</b></div><div><span class="muted small">SIGNING FEE</span><b>¥850</b></div><div><span class="muted small">BUYOUT TO BL HOLDINGS</span><b>¥5,050</b></div><div><span class="muted small">ALL IN, TODAY</span><b>¥5,900</b></div></div>
+<button class="btn">Sign Lena Novak · ¥5,900</button>
+<h2>Learn more</h2>
+<button class="btn g">Send someone to watch them · two days</button>
+<div class="legend">Each trip unlocks more boxes, so the <b>?</b>s are the reason to scout. In the Names list the tag changes from "Watching" to "Scouted · 3/8".</div>
+</div></body></html>

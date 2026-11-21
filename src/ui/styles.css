@@ -477,6 +477,7 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .ophead__who { flex: 1 1 auto; min-width: 0; }
 .ophead__line { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; margin-top: 8px; }
 .ophead__line .famebadge { margin: 0; line-height: 1.6; }
+.ophead__oath { margin-top: 14px; }
 .ophead__status { margin-left: auto; }
 .fallen { display: flex; gap: 10px; align-items: center; }
 
@@ -3079,3 +3080,15 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .stashrow__go { color: var(--muted); font-size: 1.2rem; }
 .row.giverow { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; width: 100%; text-align: left; min-height: var(--tap, 44px); }
 .giverow__no { color: var(--warn); }
+/* A scouted name, laid out like our own crew's page (2026-11-21): `?` for what we have not seen. */
+.nameknow .stats div.stat--unknown { border-style: dashed; }
+.nameknow .stats div.stat--unknown dd { color: var(--muted); opacity: 0.6; }
+.tchip--unknown { border-style: dashed; color: var(--muted); min-width: 44px; justify-content: center; }
+.nameslots { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+.slot--unknown { border: 1px dashed var(--line); min-height: 64px; padding: 8px 10px; display: flex; flex-direction: column; justify-content: space-between; }
+.slot--unknown b { font-size: 1.4rem; color: var(--muted); opacity: 0.6; }
+.scoutbar { display: grid; gap: 6px; margin: 10px 0; }
+.scoutbar__track { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; }
+.scoutbar__track i { height: 6px; background: var(--line); }
+.scoutbar__track i.is-done { background: var(--accent-2); }
+.scoutbar__track i.is-now { background: var(--accent-2); opacity: 0.45; }
