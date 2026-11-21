@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { createNewGame, SAVE_VERSION } from '../src/core/state.js';
 import { weeklyRivals, mondayWord } from '../src/core/rivals.js';
-import { publishBook, bookView, bookGrade, bookDue, bookMonth, monthOfSeason, assignGrades, bookCandidates, baseScore } from '../src/core/book.js';
+import { publishBook, slateLeads, bookView, bookGrade, bookDue, bookMonth, monthOfSeason, assignGrades, bookCandidates, baseScore } from '../src/core/book.js';
 import { ratingOf } from '../src/core/rating.js';
 import { fameOf } from '../src/core/fame.js';
 import { poachChance } from '../src/core/mobility.js';
@@ -155,6 +155,60 @@ test('Joss writes once when one of ours is on the move, and a poach note appears
   assert.ok(msgs.length <= 1);
   assert.ok(bookGrade(s, op.runnerId ?? op.id), 'an Elite of ours is chalked');
   for (const line of Object.values(BOOK_TEXT.joss)) assert.doesNotMatch(line, /\d/);
+});
+
+// 2026-11-21: Joss's slate-day note names people we could get (DESIGN.md "the tongs' world, playable first").
+const streetGame = (seed) => { const s = game(seed); s.halls.push({ ...s.halls[0], district: 'docks' }); return s; };
+
+test('slate leads: from Street rank only; never ours, a head or a quiet name; at most three; reads no roll', () => {
+  let named = 0;
+  for (const seed of [3, 11, 21, 33, 47]) {
+    const s = weeks(streetGame(seed), 12);
+    const book = s.rivals.book;
+    const before = s.rngCounter;
+    const leads = slateLeads(s, book.entries, book.watch);
+    assert.equal(s.rngCounter, before, 'no roll');
+    assert.ok(leads.length <= BOOK.leadsMax);
+    assert.ok(leads.filter((l) => l.why === 'free' || l.why === 'sale').length <= BOOK.leadsLooseMax);
+    const heads = new Set(s.rivals.tongs.filter((t) => t.status === 'active').map((t) => t.headId));
+    const ours = new Set(s.crew.map((o) => o.name));
+    for (const l of leads) {
+      const card = s.rivals.cards.find((c) => c.name === l.name);
+      assert.ok(card, 'a lead is a real card');
+      assert.ok(!heads.has(card.id), 'never a head');
+      assert.ok(!ours.has(l.name), 'never ours');
+      if (l.why === 'free') assert.equal(card.tongId ?? null, null);
+      if (l.why !== 'rising') assert.ok(l.grade, 'a slated name carries its grade');
+    }
+    named += leads.length;
+    const small = weeks(game(seed), 12);
+    assert.deepEqual(slateLeads(small, small.rivals.book.entries, small.rivals.book.watch), [], 'a one-hall tong hears no leads');
+  }
+  assert.ok(named > 0, 'some seeds name somebody');
+});
+
+test('slate leads: Joss names them in the slate message, and their names link (they are cards)', () => {
+  let found = false;
+  for (const seed of [3, 11, 21, 33, 47]) {
+    const s = weeks(streetGame(seed), 12);
+    const msg = s.inbox.find((m) => m.id === 'book-' + s.rivals.book.absMonth);
+    const leads = slateLeads(s, s.rivals.book.entries, s.rivals.book.watch);
+    if (!leads.length) continue;
+    found = true;
+    assert.ok(msg, 'leads alone are enough for Joss to write');
+    for (const l of leads) assert.ok(msg.body.includes(l.name));
+    assert.ok(msg.body.includes(BOOK_TEXT.joss.leadsOutro));
+  }
+  assert.ok(found);
+});
+
+test('slate leads touch only the message: cash, heat, halls, cards and regard are the same with or without them', () => {
+  const run = (max) => { const keep = BOOK.leadsMax; BOOK.leadsMax = max; try { return weeks(streetGame(21), 16); } finally { BOOK.leadsMax = keep; } };
+  const a = run(3), b = run(0);
+  assert.equal(a.cash, b.cash); assert.equal(a.rngCounter, b.rngCounter);
+  assert.deepEqual(a.halls, b.halls);
+  assert.deepEqual(a.rivals.cards, b.rivals.cards);
+  assert.deepEqual(a.rivals.tongs.map((t) => t.regard), b.rivals.tongs.map((t) => t.regard));
 });
 
 test('the lore is in step: the prompt copy and WORLD.md say the Anchor keeps a book, and not in the Silt', () => {
