@@ -55,6 +55,10 @@ line here is in `docs/design/2026-11.md` (grep the topic).
 
 Not a wander with no target. The player picks a goal when sending the crew; each day rolls progress towards it on the crew's stats and gear, and the log tells how it goes ("Day 2: Raster's contact at the depot went quiet"). Finds along the way (cash, a scrape, a fight that calls you in) are extras. They come back with the goal met, partly met or failed. Pull out early any time, everyone safe. The goal sets the length and which stats count.
 
+**Expeditions are their own thing, not jobs (owner, 2026-11-21).** A job is work for a client on the board: it pays cash, earns fame and client trust, is planned on the squad board and can be watched. An expedition is work for our own tong: the player sends a crew, no client, no pay, no fame; the reward is the goal itself. Always hands-off, read as a log; a fight calls you in as on a post. Own state and own screen entry (not an offer on the board).
+
+**Open: heist prep overlaps.** Heists already have prep jobs (`heistOnly`, `data/heists.js`). Options: an expedition is a slower, hands-off route to the same prep next to the prep jobs (recommended: it gives the same result as one prep job, takes longer, risks less); expeditions replace prep jobs; or heist prep is not an expedition goal.
+
 Goals the owner picked:
 - **Heist prep:** a guard rota, a keycard, a way in, for a coming finale. Plugs into what the finale already carries (`heists.js`: `job.threatDelta`, `inside`, `drop`).
 - **Find a recruit:** turn up a lead of a wanted type (a medic, a driver). Ends as a name in Crew › Leads (`dossier.js`, `ui/tongs.js leadNames`).
