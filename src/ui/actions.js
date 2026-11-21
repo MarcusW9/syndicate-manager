@@ -145,11 +145,12 @@ export function onClick(e) {
     case 'skill-open': V.skillOpen = V.skillOpen === id ? null : id; break;
     case 'trait-tip': V.traitTip = V.traitTip === id ? null : id; break;
     // A runner's name or face anywhere (a message, a job board strip, a hall, a district card): their page, on Crew.
+    case 'armoury-tab': V.armouryTab = id; break;
     case 'op-tab': V.opTab = id; V.gearSlot = null; V.bagPick = null; break;
     case 'open-op': case 'op-link': remember(action, id); goHome('runner'); if (t.dataset.tab) V.opTab = t.dataset.tab; V.gearSlot = null; V.gearFor = null; V.openRecruitId = null; V.openOperativeId = id; V.bagPick = null; break;
     // Gear (ui/gear.js, core/gear.js): the armoury, and a runner's slots.
     // The Armoury is a sub-tab of Tong; the squad board's link to it keeps the plan (Back returns to it).
-    case 'open-armoury': remember(action, id); goHome('armoury'); V.hallPage = null; V.buildView = null; V.openOperativeId = null; V.openRecruitId = null; V.gearSlot = null; break;
+    case 'open-armoury': remember(action, id); goHome('armoury'); if (t.dataset.tab) V.armouryTab = t.dataset.tab; V.hallPage = null; V.buildView = null; V.openOperativeId = null; V.openRecruitId = null; V.gearSlot = null; break;
     case 'tong-tab': V.tongTab = id; break;
     case 'crew-tab': V.crewTab = id; break;
     case 'crew-filter': V.crewFilter = id; V.crewFilterOpen = false; V.focusNext = { action: 'crew-filter-open' }; break;

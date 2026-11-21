@@ -115,29 +115,56 @@ function offerRow(ui, state, offer) {
     </li>`;
 }
 
-/** The armoury: the stash (sell, or put it on someone from their page) and what's for sale. */
+// The armoury's groups for the stash (2026-11-21): guns split by kind, then the slots.
+const STASH_GROUPS = [
+  ['rifles', 'Rifles', (i) => i.type === 'rifle'],
+  ['sidearms', 'Sidearms', (i) => i.type === 'pistol'],
+  ['armour', 'Armour', (i) => GEAR[i.type]?.slot === 'armour'],
+  ['tools', 'Tools and kit', (i) => !['rifle', 'pistol'].includes(i.type) && ['weapon', 'tool'].includes(GEAR[i.type]?.slot)],
+  ['implants', 'Implants', (i) => GEAR[i.type]?.slot === 'implant'],
+];
+const TIER_ORDER = Object.keys(TIERS);
+const bestFirst = (a, b) => TIER_ORDER.indexOf(b.tier ?? BASE_TIER) - TIER_ORDER.indexOf(a.tier ?? BASE_TIER) || sellPrice(b) - sellPrice(a);
+export const ARMOURY_TABS = ['stash', 'carried', 'shop'];
+
+/**
+ * The armoury (owner, 2026-11-21: sub-tabs). Stash: what nobody carries, by kind, best first (sell it, or
+ * put it on someone from their page). Carried: each runner and what they have on them (their Gear tab
+ * one tap away). Shop: this week's guns, then the rest by slot. ui.tab picks the sub-tab.
+ */
 export function renderArmoury(ui, state) {
   const { esc, money } = ui;
   const stash = state.stash ?? [];
-  const worn = state.crew.flatMap((op) => carried(op).map((item) => ({ item, op })));
-  const forSale = Object.keys(GEAR).filter((type) => !HAS_LOOKS[type]); // guns come from the weekly shelf
-  const offers = state.armoury?.offers ?? [];
-  const bySlot = (list, slotOf) => Object.entries(SLOTS).map(([slot, s]) => [s.name, list.filter((x) => slotOf(x) === slot)]).filter(([, l]) => l.length);
-  // On Tong › Armoury the tab's own header and sub-tabs frame it (ui.embedded); alone it keeps a heading.
-  return `
-    <section class="${ui.embedded ? 'armoury' : 'panel'}">
-      ${ui.embedded ? '' : `<button class="btn btn--ghost" data-action="back">← ${ui.esc(ui.backLabel ?? 'Crew')}</button>
-      <h1>Armoury</h1>`}
-      <p class="muted small">Gear stays on whoever carries it, job after job. Put it on someone from their page on the Crew screen. Overwatch needs a rifle or a drone.</p>
-      <div class="cols2">
-      <div>
-      <h2>In the stash (${stash.length})</h2>
-      ${stash.length ? `<ul class="list list--plain gearlist">${stash.map((item) => itemRow(ui, item, { action: 'sell', label: `Sell ${money(sellPrice(item))}` })).join('')}</ul>`
-        : '<p class="muted small">Nothing here. What you buy waits here until someone carries it.</p>'}
-      ${worn.length ? `<h2>Carried</h2><ul class="list list--plain gearlist">${worn.map(({ item, op }) => itemRow(ui, item, { action: 'open-op', label: op.handle, id: op.id, carrier: op })).join('')}</ul>` : ''}
-      </div>
-      <div>
-      <h2>Buy <span class="muted small">· ${money(state.cash)} in hand</span></h2>
+  const crew = state.crew.filter((op) => carried(op).length);
+  const worn = crew.reduce((n, op) => n + carried(op).length, 0);
+  const tab = ARMOURY_TABS.includes(ui.tab) ? ui.tab : 'stash';
+  const groups = STASH_GROUPS.map(([k, name, test]) => [k, name, stash.filter(test).sort(bestFirst)]).filter(([, , l]) => l.length);
+  const other = stash.filter((i) => !STASH_GROUPS.some(([, , test]) => test(i)));
+  if (other.length) groups.push(['other', 'Other', other.sort(bestFirst)]);
+  const tabs = ui.subTabs ? ui.subTabs('Armoury sections', 'armoury-tab', [['stash', 'Stash', stash.length], ['carried', 'Carried', worn], ['shop', 'Shop']], tab) : '';
+  const body = {
+    stash: () => `
+      <p class="muted small">Nobody is carrying these. Put one on someone from their page (Crew, then Gear), or sell it.</p>
+      ${groups.length ? groups.map(([k, name, list]) => `
+        <h3 class="gear__slot">${esc(name)} <span class="muted">· ${list.length}</span></h3>
+        <ul class="list list--plain gearlist">${list.map((item) => itemRow(ui, item, { action: 'sell', label: `Sell ${money(sellPrice(item))}` })).join('')}</ul>`).join('')
+        : '<p class="muted small">The stash is empty. What you buy, find or take off someone waits here.</p>'}`,
+    carried: () => `
+      <p class="muted small">Gear stays on whoever carries it, job after job. Tap someone to change what they carry.</p>
+      ${crew.length ? `<ul class="list list--plain carriedlist">${crew.map((op) => `
+        <li><button class="row carriedrow" data-action="open-op" data-tab="gear" data-id="${esc(op.id)}">
+          ${ui.face ? ui.face(op, 'sm') : ''}
+          <span class="row__main"><strong>${esc(op.handle)}</strong> <span class="muted small">${esc(op.role)}</span><br>
+            <span class="small">${carried(op).map((i) => esc(itemTitle(i))).join(' · ')}</span></span>
+          <span class="row__meta small">Gear ›</span></button></li>`).join('')}</ul>`
+        : '<p class="muted small">Nobody is carrying anything yet.</p>'}
+      ${state.crew.length > crew.length ? `<p class="muted small">Carrying nothing: ${state.crew.filter((op) => !carried(op).length).map((op) => esc(op.handle)).join(', ')}.</p>` : ''}`,
+    shop: () => {
+      const forSale = Object.keys(GEAR).filter((type) => !HAS_LOOKS[type]); // guns come from the weekly shelf
+      const offers = state.armoury?.offers ?? [];
+      const bySlot = (list, slotOf) => Object.entries(SLOTS).map(([slot, s]) => [s.name, list.filter((x) => slotOf(x) === slot)]).filter(([, l]) => l.length);
+      return `
+      <p class="muted small">${money(state.cash)} in hand. Overwatch needs a rifle or a drone.</p>
       ${[['rifle', "This week's rifles"], ['pistol', "This week's sidearms"]].map(([type, title]) => {
         const shelf = offers.filter((o) => o.type === type);
         return `<h3 class="gear__slot">${title}</h3>
@@ -146,9 +173,16 @@ export function renderArmoury(ui, state) {
       <p class="muted small">New guns come in every Monday, each one different.</p>
       ${bySlot(forSale, (type) => GEAR[type].slot).map(([name, list]) => `
         <h3 class="gear__slot">${esc(name)}</h3>
-        <ul class="list list--plain gearlist">${list.map((type) => buyRow(ui, state, type)).join('')}</ul>`).join('')}
-      </div>
-      </div>
+        <ul class="list list--plain gearlist">${list.map((type) => buyRow(ui, state, type)).join('')}</ul>`).join('')}`;
+    },
+  }[tab]();
+  // On Tong › Armoury the tab's own header and sub-tabs frame it (ui.embedded); alone it keeps a heading.
+  return `
+    <section class="${ui.embedded ? 'armoury' : 'panel'}">
+      ${ui.embedded ? '' : `<button class="btn btn--ghost" data-action="back">← ${ui.esc(ui.backLabel ?? 'Crew')}</button>
+      <h1>Armoury</h1>`}
+      ${tabs}
+      <div class="armoury__body armoury__body--${tab}">${body}</div>
     </section>`;
 }
 
@@ -277,7 +311,7 @@ function renderAddSheet(ui, state, op) {
         <p class="muted small">${can.ok ? 'Anything in the stash that goes on them. Armour swaps with what they wear.' : `Their gear can't change while they're ${esc(can.reason)}.`}</p></div>
         <button class="btn btn--ghost sheet__x" data-action="close-gear" aria-label="Close">✕</button>
       </div>
-      <button class="btn btn--block" data-action="open-armoury">Go to the armoury</button>
+      <button class="btn btn--block" data-action="open-armoury" data-tab="${stash.length ? 'stash' : 'shop'}">Go to the armoury</button>
       <ul class="list list--plain gearlist">${stash.length ? stash.map((item) => itemRow(ui, item, { action: 'equip', label: 'Carry', disabled: !can.ok })).join('') : '<li class="muted small">Nothing in the stash that fits. Buy it in the armoury.</li>'}</ul>
       <button class="btn btn--ghost btn--block" data-action="open-op" data-tab="gear" data-id="${esc(op.id)}">Open ${esc(op.handle)}'s page</button>
     </div>`;
@@ -316,7 +350,7 @@ export function renderGearSheet(ui, state, op, slot) {
         ${current ? perkList(current) : ''}</div>
         <button class="btn btn--ghost sheet__x" data-action="close-gear" aria-label="Close">✕</button>
       </div>
-      <button class="btn btn--block" data-action="open-armoury">Go to the armoury</button>
+      <button class="btn btn--block" data-action="open-armoury" data-tab="${stash.length ? 'stash' : 'shop'}">Go to the armoury</button>
       ${swapOut ? apexConflict(esc, swapOut) : ''}
       <ul class="list list--plain gearlist">${stash.length ? stash.map((item) => itemRow(ui, item, { action: 'equip', ...apexBlock(esc, op, item, current, place.kind === 'bag' ? 'Pack' : 'Carry') })).join('') : `<li class="muted small">Nothing in the stash ${place.kind === 'bag' ? 'fits here' : 'for this'}. Buy it in the armoury.</li>`}</ul>
       ${others.length ? `<details class="sheet__others"><summary class="sheet__group">Carried by others (${others.length}) <span>takes it off them</span></summary>

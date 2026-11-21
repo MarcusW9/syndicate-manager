@@ -214,7 +214,7 @@ export function renderBoard(ui, { plan, tpl, people, crewSize, approachName = ''
             ];
             const filled = slots.filter((x) => x.op);
             const chip = (x) => (x.off
-              ? `<div class="slotchip is-off"><b>Overwatch</b><small>needs a rifle or a drone</small><button class="slotchip__link" data-action="open-armoury">Armoury →</button></div>`
+              ? `<div class="slotchip is-off"><b>Overwatch</b><small>needs a rifle or a drone</small><button class="slotchip__link" data-action="open-armoury" data-tab="shop">Armoury →</button></div>`
               : `<button class="slotchip" data-action="pick-slot" data-id="${x.slot}" aria-label="${esc(x.name)}: empty, optional. ${esc(x.hint)}. Tap to assign."><b>+ ${esc(x.name)}</b><small>${esc(x.hint)}</small></button>`);
             return `${filled.length ? `<div class="pcols">${filled.map((x) => x.card).join('')}</div>` : ''}
           <div class="slotchips">${slots.filter((x) => !x.op).map(chip).join('')}</div>`;
