@@ -205,4 +205,9 @@ export default {
       '{item} stayed somewhere in {district}. The crew came back tired, carrying only what the hunt turned up.', // fixed: "scraped" (rule 12: injuries are reported by the game)
     ],
   },
+
+  // needs: personality pools (prompt, 2026-11-22), and a quote from {who} in about one line in four.
+  asides: { superstitious: [], money: [], warm: [], hot: [], wary: [], curious: [] },
+  pair: [],
+  joss: { day: [], met: [], failed: [] },
 };

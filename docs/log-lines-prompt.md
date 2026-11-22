@@ -20,6 +20,11 @@ The lines are procedural stories, not a random line a day. The engine builds eac
 5. **Call**: now and then a fight breaks out and the player is called in (as on a security post). One line that sets up the fight.
 6. **Close**: they come home. **met** (got it), **partial** (got some of it), **failed** (came back with only what they found on the way). Nobody dies on a log line; the worst a line can do is a scrape.
 
+**Personality** comes from three extra pools, so the log sounds like this crew and not any crew:
+- **asides**: a second sentence the game adds to about one day in three, picked by the temperament of `{who}` (the tags on every runner's bio: superstitious, money, warm, hot, wary, calm, cold, charming, curious, chrome, haunted). A superstitious runner won't take the fourth-floor meeting; a money one haggles the informant down and is pleased about it all evening.
+- **pair**: a day about two of the crew together (`{who}` and `{other}`): arguing about the route, covering for each other, a running joke.
+- **joss**: Joss at home, reading the day's report and adding a line now and then (warm, practical, occasionally dry; they keep the numbers).
+
 Who does what: each beat is rolled on one stat, and `{who}` is the crew member who is best at it. That's why pools are split by stat: a social crew talks its way to the weapon, a stealth crew lifts it. Every pool has an `any` list as a fallback.
 
 The district gives the people and places (`{contact}`, `{place}`); the goal gives the shape of the hunt. So one weapon file plus five district files gives five different-feeling hunts.
@@ -207,9 +212,13 @@ Don't invent other slots.
 
 RULES
 1. One or two short sentences per line. It is read on a phone, one line at a time.
-2. Plain, dry, specific. Concrete things (a noodle stall, a wet stairwell, a broken lift),
-   not mood words. No exclamation marks. British spelling.
-3. Past tense, as a report of the day ("{who} found...", "Nobody showed.").
+2. Specific and human. The game's tone is gritty but warm: loyalty and dark humour, with
+   trouble arriving as events, not as the mood. Concrete things (a noodle stall, a wet
+   stairwell, a broken lift) beat mood words. Dry is one flavour, not the only one: let
+   the crew be funny, petty, kind, scared, smug. No exclamation marks. British spelling.
+3. Past tense, as a report of the day ("{who} found...", "Nobody showed."). The crew may
+   speak: a short quote from {who} is welcome, about one line in four
+   ("{who} says the dumplings alone were worth the trip.").
 4. Never name a crew member; use {who} and {other}. Never give anyone a gender through a slot
    (no he/she for {who}, {other} or {contact}: write around it, or use "they" sparingly).
 5. Nobody dies in a line. The worst a snag does is a scrape or a bruise. Fights only start in
@@ -230,6 +239,8 @@ RULES
     log repeats the same name. "It", "the case" and "the gun" are fine once it's been named.
 14. Gear named in a line must be in the CONTEXT (a heat veil, a lens blinder) and must not
     assume {who} carries it unless the line still reads right if they don't.
+15. The day lines carry the plot; personality lives mostly in quotes, asides, pair and joss.
+    A good log reads like messages from people you know, not a police report.
 
 FORMAT — GOAL file (weapon, cash or recruit)
 ```js
@@ -247,6 +258,12 @@ export default {
   turn:            { good: [/* 3+ */], rough: [/* 3+ */] },
   call:            [/* 3+: a fight starts; end on "calling it in" or similar */],
   close:           { met: [/* 3+ */], partial: [/* 3+ */], failed: [/* 3+ */] },
+  // Personality. Asides are ONE sentence that can follow any day line of this goal; key by
+  // temperament tag (superstitious, money, warm, hot, wary, calm, cold, charming, curious,
+  // chrome, haunted). 2+ for at least six tags.
+  asides:          { superstitious: [], money: [], warm: [], hot: [], wary: [], curious: [] },
+  pair:            [/* 4+: a middle day about {who} and {other} together; it may also move the hunt on a little */],
+  joss:            { day: [/* 4+: Joss's comment on a day, starts "Joss:" */], met: [/* 2+ */], failed: [/* 2+ */] },
 };
 ```
 Stat lists may be empty when a stat doesn't fit the goal; aim for at least two lines in each
