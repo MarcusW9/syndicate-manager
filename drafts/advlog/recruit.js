@@ -1,5 +1,6 @@
 // Log lines: recruit. The owner's draft (2026-11-22, docs/log-lines-prompt.md), as pasted.
-// Review notes in the session; moves to src/data/advlog/ when the log engine is built.
+// Fixes from review marked "// fixed:". Most asides are still reflections, not moments (prompt rule 16): redo them.
+// moves to src/data/advlog/ when the log engine is built.
 export default {
   goal: 'recruit',
 
@@ -96,10 +97,12 @@ export default {
       "{who} caught a shoulder on a low doorframe while checking an address. The bruise was less impressive than the noise.",
       "A meeting change added another fare to the day's costs.",
       "The room booked for a conversation had been double-booked. Finding somewhere private cost extra.",
-    ],
-    combat: [
       "A former employer took {who}'s questions as an attempt to poach staff. The crew's name attracted unwelcome attention.",
       "A heavy door swung shut while {who} held it for a visitor. The resulting bruise earned a very apologetic cup of tea.",
+    ],
+    combat: [ // fixed: the two lines here weren't about combat; moved to any, and two muscle lines in their place
+      "A bouncer at the meeting spot decided {who} looked like trouble and said so with a shoulder. The bruise lasted longer than the argument.",
+      "{who} was asked to prove they could handle themselves before anyone would talk. The proof cost a sleeve and some pride.",
     ],
     stealth: [
       "A caretaker noticed the crew checking a meeting entrance. The quiet enquiry became a public discussion.",
@@ -204,7 +207,7 @@ export default {
       "The crew secured a name for {leadShort}, but no meeting. The fixer had someone to approach, not an appointment.",
       "{who} brought home a checked name. {leadShort} hadn't agreed to talk yet.",
       "The search put a name to {leadShort}. Arranging a conversation remained unfinished.",
-      "There was a real name in the ledger now, but no meeting beside it. That was as far as the approach had gone.",
+      "There was a real name in Joss's notes now, but no meeting beside it. That was as far as the approach had gone.", // fixed: the ledger is the oath (WORLD.md)
     ],
     failed: [
       "The crew closed the search without a usable name or meeting. Only the finds along the way remained.",
@@ -225,7 +228,7 @@ export default {
     ],
     warm: [
       "{who} kept remembering what it felt like to be the person considering a strange crew.",
-      "The report from {who} made room for people's worries without turning them into weaknesses.",
+      "{who} bought the contact's nephew a sugar cane drink and heard the whole family history for it.", // fixed: a moment, not a reflection
     ],
     hot: [
       "{who} had very little patience for people discussing workers as though they owned them.",
@@ -236,11 +239,11 @@ export default {
       "An easy answer made {who} want to check the question again.",
     ],
     calm: [
-      "{who} treated hesitation as something people were allowed to have.",
+      "{who} let the silence run until the other side filled it.", // fixed: a moment, not a reflection
       "The report from {who} left room for an answer that wasn't yes.",
     ],
     cold: [
-      "{who} kept a recommendation separate from a reference that had actually been checked.",
+      "{who} checked the reference with three people the reference didn't know about.", // fixed: a moment, not a reflection
       "A good story hadn't persuaded {who} to skip the ordinary questions.",
     ],
     charming: [
@@ -285,7 +288,7 @@ export default {
       "Joss: \"Good. No name in the sworn ledger until they choose to write it.\"",
     ],
     failed: [
-      "Joss: \"No introduction this time. That doesn't make the next person a replacement for a stranger.\"",
+      "Joss: \"No introduction this time. Whoever we find next won't know they were second choice.\"", // fixed: the old line didn't parse
       "Joss: \"I've closed the search. We won't turn an unanswered message into an obligation.\"",
       "Joss: \"Nothing confirmed. Better an empty space than a name we haven't checked.\"",
     ],

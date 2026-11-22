@@ -41,7 +41,7 @@ export default {
     "An empty container rang every time the wind caught its loose door. Nothing else interrupted the wait.",
     "The crew watched a crane operator eat lunch high above the yard. The lunch break ended; theirs didn't.",
     "A dockside radio repeated the same weather bulletin between freight announcements. Nobody had news for the crew.",
-    "Someone had put a plastic stool beneath the departure display. {who} watched it remain occupied through three shifts of waiting.",
+    "Someone had put a plastic stool beneath the departure display. {who} watched three different people claim it.", // fixed: smoother end
   ],
 
   snag: [
