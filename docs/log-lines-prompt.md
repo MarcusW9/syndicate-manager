@@ -314,5 +314,6 @@ export default {
 The job's own beats and crises tell the night itself; these lines fill the days before it.
 Write for this job's place and client, not for any job.
 
-REQUEST:
-GOAL: weapon
+REQUEST (replace this line with ONE of: GOAL: weapon / GOAL: cash / GOAL: recruit /
+DISTRICT: <name> / JOB DAYS: <job>, and add any notes below it):
+GOAL: cash
