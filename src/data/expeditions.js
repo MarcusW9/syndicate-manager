@@ -25,8 +25,8 @@ export const GOALS = {
 export const GOAL_ORDER = ['weapon', 'cash', 'recruit'];
 
 // Only districts with a log file of their own (people and places) for now (owner's call left open in the
-// handoff; DESIGN.md 2026-11-22). Old Town and Glass Heights joined with their files (2026-11-22); the Basin joins when its is written.
-export const EXPEDITION_DISTRICTS = ['oldTown', 'docks', 'nightMarket', 'heights'];
+// handoff; DESIGN.md 2026-11-22). All five open districts have one (2026-11-22); a locked district joins when it has a file.
+export const EXPEDITION_DISTRICTS = ['oldTown', 'docks', 'nightMarket', 'heights', 'basin'];
 
 export const EXPEDITION = {
   maxCrew: 3,
