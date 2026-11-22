@@ -143,12 +143,19 @@ export function renderArmoury(ui, state) {
   if (other.length) groups.push(['other', 'Other', other.sort(bestFirst)]);
   const tabs = ui.subTabs ? ui.subTabs('Armoury sections', 'armoury-tab', [['stash', 'Stash', stash.length], ['carried', 'Carried', worn], ['shop', 'Shop']], tab) : '';
   const body = {
-    stash: () => `
-      <p class="muted small">Nobody is carrying these. Tap one to give it to someone or sell it.</p>
+    stash: () => {
+      const pick = ui.sellPick; // sell mode (option C, 2026-11-22): rows become ticks, a bar sells them all
+      return `
+      <div class="stashhead">
+        <p class="muted small">${pick ? 'Tick what to sell.' : 'Nobody is carrying these. Tap one to give it to someone or sell it.'}</p>
+        ${stash.length ? `<button class="btn btn--ghost btn--small" data-action="sell-mode">${pick ? 'Done' : 'Sell…'}</button>` : ''}
+      </div>
       ${groups.length ? groups.map(([k, name, list]) => `
         <h3 class="gear__slot">${esc(name)} <span class="muted">· ${list.length}</span></h3>
-        <ul class="list list--plain stashlist">${list.map((item) => stashRow(ui, item)).join('')}</ul>`).join('')
-        : '<p class="muted small">The stash is empty. What you buy, find or take off someone waits here.</p>'}`,
+        <ul class="list list--plain stashlist">${list.map((item) => (pick ? stashTick(ui, item, pick.includes(item.uid)) : stashRow(ui, item))).join('')}</ul>`).join('')
+        : '<p class="muted small">The stash is empty. What you buy, find or take off someone waits here.</p>'}
+      ${pick ? sellBar(ui, stash.filter((i) => pick.includes(i.uid))) : ''}`;
+    },
     carried: () => `
       <p class="muted small">Gear stays on whoever carries it, job after job. Tap someone to change what they carry.</p>
       ${crew.length ? `<ul class="list list--plain carriedlist">${crew.map((op) => `
@@ -197,6 +204,28 @@ function stashRow(ui, item) {
       <span class="stashrow__eff small">${esc(itemEffect(item))}${perks ? ` · ${perks} perk${perks > 1 ? 's' : ''}` : ''}</span></span>
     <span class="stashrow__go" aria-hidden="true">›</span>
   </button></li>`;
+}
+
+/** A stash row in sell mode: a tick, the picture, name and key line, and what the fence pays. */
+function stashTick(ui, item, on) {
+  const { esc, money } = ui;
+  return `<li><button class="row stashrow stashrow--tick stashrow--${(TIERS[item.tier] ?? TIERS[BASE_TIER]).colour} ${on ? 'is-on' : ''}" data-action="sell-tick" data-id="${esc(item.uid)}" aria-pressed="${on}" aria-label="${esc(itemTitle(item))}, sells for ${esc(money(sellPrice(item)))}. ${on ? 'Ticked' : 'Tap to tick'}.">
+    <span class="stashrow__box" aria-hidden="true">${on ? '✓' : ''}</span>
+    ${thumb(item)}
+    <span class="stashrow__main"><strong class="stashrow__name">${esc(itemTitle(item))}</strong>
+      <span class="stashrow__eff small">${esc(itemEffect(item))}</span></span>
+    <span class="stashrow__price small">${esc(money(sellPrice(item)))}</span>
+  </button></li>`;
+}
+
+/** The sell bar under the stash in sell mode: how many are ticked and Sell them for the total. */
+function sellBar(ui, picked) {
+  const { money } = ui;
+  const total = picked.reduce((n, i) => n + sellPrice(i), 0);
+  return `<div class="planbar sellbar">
+      <div class="planbar__read"><span class="planbar__why">${picked.length ? `${picked.length} picked` : 'Nothing ticked yet'}</span></div>
+      <button class="btn btn--primary" data-action="sell-picked" ${picked.length ? '' : 'disabled'}>${picked.length ? `Sell ${picked.length} · ${money(total)}` : 'Sell'}</button>
+    </div>`;
 }
 
 /** Who could take this item now, and what it would do (armour swaps with what they wear). */

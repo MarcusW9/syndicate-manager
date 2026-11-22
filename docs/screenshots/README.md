@@ -22,6 +22,7 @@ Then add a row to the top of the table below and commit the folder with the chan
 
 | Date | Version | Commit | What's new on screen | Folder |
 | --- | --- | --- | --- | --- |
+| 2026-11-22 | Sell several at once; posts on Today (design-session capture) | (this change) | `node scripts/capture-sell-mode.mjs <dir>` at 390x844 and 1440x900 (full page) and 844x390, 1x: Today with two runners on a post on their own line (`01`); the stash in sell mode with two ticked and the sell bar (`02`). | [2026-11-22-sell-mode](2026-11-22-sell-mode/) |
 | 2026-11-22 | The Basin in the log (design-session capture) | (this change) | `node scripts/capture-expeditions.mjs <dir>`, the plan only: Where offers all five open districts, wrapping to a second row on a phone (390x844 full page and 844x390, 1x). | [2026-11-22-basin-log](2026-11-22-basin-log/) |
 | 2026-11-22 | Glass Heights in the log (design-session capture) | (this change) | `node scripts/capture-expeditions.mjs <dir>`, the plan only: Where now offers four districts across (390x844 full page and 844x390, 1x). | [2026-11-22-heights-log](2026-11-22-heights-log/) |
 | 2026-11-22 | Old Town in the log (design-session capture) | (this change) | `node scripts/capture-expeditions.mjs <dir>`, the plan only: Where now offers Old Town, the Docks and the Night Market, three across (390x844 full page and 844x390, 1x). | [2026-11-22-old-town-log](2026-11-22-old-town-log/) |

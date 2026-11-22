@@ -14,6 +14,7 @@ import { money } from '../core/money.js';
 import { crewsOut } from '../core/away.js';
 import { sideTasksOut } from '../core/sidetasks.js';
 import { expeditionsOut } from '../core/expeditions.js';
+import { postsOut } from '../core/contracts.js';
 import { renderWord } from './tongs.js';
 import { backupBanner } from './app.js';
 import { renderMessage, crewLinks } from './messages.js';
@@ -141,16 +142,27 @@ function renderWeekBrief() {
     </div>`;
 }
 
-/** Today's one line about the crews out; they're followed on Ops, the command centre (2026-11-05; its own tab 2026-11-06). */
+/**
+ * Today's line about the crews out; they're followed on City (2026-11-05; its own tab 2026-11-06). Runners on a
+ * security post get a line of their own, to Jobs › Side where posts are kept (2026-11-22).
+ */
 function renderOutLine() {
   const jobs = crewsOut(state).length + sideTasksOut(state).length + expeditionsOut(state).length;
-  if (!jobs) return '';
+  const posts = postsOut(state);
+  const onPosts = new Set(posts.flatMap((p) => p.crewIds)).size;
+  if (!jobs && !posts.length) return '';
   const n = calls() - raidCalls().length;
-  return `<button class="outnow ${n ? 'is-call' : ''}" data-action="goto" data-id="city:map">
+  const postCall = state.inbox.some((m) => m.kind === 'contract' && !m.resolved);
+  return `${jobs ? `<button class="outnow ${n ? 'is-call' : ''}" data-action="goto" data-id="city:map">
       <span class="outnow__light" aria-hidden="true"></span>
       <span>${jobs} ${jobs === 1 ? 'crew' : 'crews'} out${n ? ` · <strong>${n} ${n === 1 ? 'call' : 'calls'} waiting</strong>` : ''}</span>
       <span class="outnow__go">City ›</span>
-    </button>`;
+    </button>` : ''}
+    ${posts.length ? `<button class="outnow outnow--posts ${postCall ? 'is-call' : ''}" data-action="goto" data-id="jobs:side">
+      <span class="outnow__light" aria-hidden="true"></span>
+      <span>${onPosts} on ${posts.length === 1 ? 'a post' : `${posts.length} posts`}${postCall ? ' · <strong>a post is calling</strong>' : ''}</span>
+      <span class="outnow__go">Side ›</span>
+    </button>` : ''}`;
 }
 
 /** Crews out on jobs: where each is, what they did today, and a call waiting (core/away.js). */

@@ -15,7 +15,7 @@ import { esc, hallLabel, fillLine, face } from './shared.js';
 import { state } from './view.js';
 
 /** Crews waiting on a call from the player. */
-export const calls = () => (state.awayJobs ?? []).filter((j) => j.waiting).length + raidCalls().length;
+export const calls = () => (state.awayJobs ?? []).filter((j) => j.waiting).length + (state.expeditions?.active ?? []).filter((e) => e.waiting).length + raidCalls().length; // expeditions' calls since 2026-11-22
 /** Raids at the door now, waiting on the player's call (core/raids.js). */
 export const raidCalls = () => state.inbox.filter((m) => m.kind === 'raid' && !m.resolved);
 

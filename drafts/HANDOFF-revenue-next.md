@@ -51,9 +51,10 @@ Slice 1 as built: job days write a line every day out (also on beat days, the ca
 ## Loose ends from the posts work (small, any time)
 
 - **Owner's writing:** the post text in `src/data/contracts.js` is Claude's draft (posts, quiet/good/rough lines, incidents, `INCIDENT_LINES`). Add it to `drafts/writing-tasks.md` if the owner wants it in the usual pipeline.
-- **Posts on Today:** Today's out line (`ui/today.js renderOutLine`) counts crews on jobs and side tasks, not posts. Add posts to the count with a link to Jobs › Side, or give them their own crew-out card (`renderCrewsOut`).
-- **Stash sell mode** (option C in `docs/screenshots/2026-11-21-stash-rows/00-mockup-options.png`): tick several items and sell them in one go. Builds on `ui/gear.js stashRow`.
-- **Five-person crews still break even.** Fixing it with more offers moves the fame sim's Elite target (`tests/fame-sim.test.js`, one or two by week 52). That is the owner's call; posts already lift it to about +15-38%.
+- **Done 2026-11-22:** posts on Today (their own out line, to Jobs › Side) and the stash sell mode (option C); five-person crews dropped (expeditions lift them, owner agreed).
+- ~~**Posts on Today:**~~ Today's out line (`ui/today.js renderOutLine`) counts crews on jobs and side tasks, not posts. Add posts to the count with a link to Jobs › Side, or give them their own crew-out card (`renderCrewsOut`).
+- ~~**Stash sell mode**~~ (option C in `docs/screenshots/2026-11-21-stash-rows/00-mockup-options.png`): tick several items and sell them in one go. Builds on `ui/gear.js stashRow`.
+- ~~**Five-person crews still break even.**~~ Fixing it with more offers moves the fame sim's Elite target (`tests/fame-sim.test.js`, one or two by week 52). That is the owner's call; posts already lift it to about +15-38%.
 
 ## Next: the adventure log
 

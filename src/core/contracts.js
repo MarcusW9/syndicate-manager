@@ -132,7 +132,7 @@ export function takeContract(prev, offerId, crewIds) {
   ct.active.push({ ...offer, crewIds: [...crewIds], startDay: state.day, endDay, owed: 0, log: [], ended: null });
   state.inbox.unshift({
     id: `ct-sent-${offer.id}`, type: 'job', day: state.day,
-    subject: `${names(crew)} ${crew.length > 1 ? 'are' : 'is'} on a ${kindOf(offer).name.toLowerCase()} post for ${clientName(offer.clientId)}`,
+    subject: `${names(crew)} ${crew.length > 1 ? 'are' : 'is'} on ${/^[aeiou]/i.test(kindOf(offer).name) ? 'an' : 'a'} ${kindOf(offer).name.toLowerCase()} post for ${clientName(offer.clientId)}`,
     body: `${offer.post} Until day ${endDay}. ${money(offer.slotPay)} a runner a week${kindOf(offer).payShape !== 1 ? ' (an escort pays half as much again for the days)' : ''}, paid on Sunday.`,
     blocking: false, read: true,
   });
