@@ -48,6 +48,7 @@ function dayLines(s, am, fromEvent, logLine = null) {
  * Once per day: a job waiting on a call doesn't write the same day twice.
  */
 function writeLog(s, am, d) {
+  if (templateById(am.templateId).trail) return null; // a trail job's stops are its log (core/trail.js)
   am.advlog ??= { facts: startFacts(s.seed, am.jobId, templateById(am.templateId).district), log: [] };
   if (am.advlog.log.some((l) => l.day === d)) return am.advlog.log.find((l) => l.day === d);
   const line = jobDayLine({ seed: s.seed, tripId: am.jobId, day: d, crew: crewOf(s, am), district: templateById(am.templateId).district, facts: am.advlog.facts });
@@ -93,7 +94,10 @@ export function advanceAway(prev) {
     const days = am.days ?? templateById(am.templateId).days;
     const d = s.day - (am.startedDay ?? s.day);
     if (d < 1) { keep.push(j); continue; }
-    am.away.beats = Math.max(am.away.beats, beatsByDay(templateById(am.templateId).beats.length, days, d));
+    // A trail job (core/trail.js) follows its trail on the days before the last and plays the night on the last:
+    // its day's share stops at the night's first beat, which only joins the queue when the trail gets there.
+    const tplNow = templateById(am.templateId);
+    am.away.beats = Math.max(am.away.beats, tplNow.trail ? (d >= days ? tplNow.beats.length : 0) : beatsByDay(tplNow.beats.length, days, d));
     am.away.day = d;
     const logLine = writeLog(s, am, d);
     const from = (am.events ?? []).length;

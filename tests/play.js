@@ -77,6 +77,8 @@ export function playMission(state, policy) {
       s = M.runIncident(s);
     } else if (type === 'battle') {
       s = M.runBattle(s);
+    } else if (type === 'stop' || type === 'clue') {
+      s = M.followTrail(s); // a trail job's stops (core/trail.js)
     } else {
       const choices = M.describeCrisis(s).choices.filter((c) => c.available);
       s = M.chooseOption(s, policy.crisis(choices, guard).id);

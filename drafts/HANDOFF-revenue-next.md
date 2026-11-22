@@ -101,7 +101,7 @@ Not picked for now: a deeper read on a rival (scouting and Watch a tong already 
 
 ## After that: multi-map operations (the new format for jobs)
 
-**2026-11-22: the owner picked a lead-following job as the pilot.** The proposal is `drafts/PROPOSAL-lead-following.md`; build once the owner answers its four questions.
+**2026-11-22: the owner picked a lead-following job as the pilot, a client rescue: Kidnap Rescue rebuilt as a trail. Built (save v88, `core/trail.js`).** Next: the owner plays it and marks the trail text in `src/data/missions/kidnap.js` (Claude's draft); a STOPS section in `docs/new-job-prompt.md` so the owner can write trails; the hostage as a carried non-runner in the extraction; then more trail jobs (Mrs. Ip, Madam Rao, Ruth Okonkwo).
 
 **The idea (owner, 2026-11-21):** not a new kind of contract. It is the new way the board's jobs play. They stay jobs from clients (`data/clients.js`: the neighbourhood powers, Ruth Okonkwo for the corps' off-books work, and more as the lore allows, via `add-lore`). The difference is that a job moves: street, then the building's front, then a big map of the inside, then out the back into an alley, and on to another place. Between places the log covers travel and setting up ("Day 2, 03:10: Raster lifts a keycard").
 

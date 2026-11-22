@@ -15,7 +15,7 @@
 
 import { templateById } from './jobs.js';
 import { fightAnswer } from './runfight.js';
-import { crisisOdds, chooseOption, revealBeat, resolveCritical, currentStep, startMission, enterZone, runIncident, runBattle, resolvePending, describePending, RISKY_BELOW } from './mission.js';
+import { crisisOdds, chooseOption, revealBeat, resolveCritical, currentStep, startMission, enterZone, runIncident, runBattle, followTrail, resolvePending, describePending, RISKY_BELOW } from './mission.js';
 import { ordersDecision } from './incidents.js';
 
 const pct = (n) => `${Math.round(n * 100)}%`;
@@ -165,6 +165,7 @@ export function autoStep(prev, { force = false } = {}) {
   if (type === 'zone') return enterZone(s);
   if (type === 'incident') return runIncident(s);
   if (type === 'battle') return runBattle(s);
+  if (type === 'stop' || type === 'clue') return followTrail(s); // a trail's stops (core/trail.js)
   if (type === 'crisis') {
     const led = leadTakes(s);
     const { id, why } = decide(s, orders);

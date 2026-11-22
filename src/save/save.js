@@ -1134,5 +1134,10 @@ function migrate(state) {
     state.expeditions ??= { active: [], seq: 0 };
     state.version = 87;
   }
+  if (state.version === 87) {
+    // v88: a job can follow a trail (core/trail.js; DESIGN.md 2026-11-22): a run may carry `trail` and `finale`. A run
+    // saved before has neither and plays on as it was built (its queue holds no stops), so nothing to change.
+    state.version = 88;
+  }
   return state;
 }

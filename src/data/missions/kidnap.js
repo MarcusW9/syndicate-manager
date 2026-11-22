@@ -1,4 +1,8 @@
 // Kidnap rescue: get a hostage out alive. Aborting means leaving them behind.
+// Since 2026-11-22 it follows a trail (the multi-map pilot, drafts/PROPOSAL-lead-following.md): by day the crew goes
+// from where he was taken to whoever knows where he's held (2 to 4 stops, each a crisis on its own map, the next
+// picked by how it went: a strong result can skip a stop, a failure can send them to a wrong lead); that night, the
+// rescue as before. The trail's text is Claude's draft for the owner to mark.
 
 /** @type {import('../../core/types.js').MissionTemplate} */
 export const KIDNAP = {
@@ -10,7 +14,29 @@ export const KIDNAP = {
   days: 2,
   crewSize: 4,
   keyStats: ['combat', 'stealth', 'medical'],
-  brief: 'A shipping heiress\'s accountant was snatched off the street. He\'s being held above a closed-down cha chaan teng in Old Town. Bring him back breathing.',
+  brief: 'A shipping heiress\'s accountant was snatched off a street in Old Town this morning. Nobody knows where they\'ve taken him. Start where he was taken, follow it, and bring him back breathing.',
+  // The trail by day (core/trail.js; Claude's draft for the owner to mark). Each stop: where, when, the line the crew
+  // arrives on, its crisis (below, marked trail: true so the night's draw never takes it), and where it can lead.
+  // skip: where a strong result leads instead (straight to the night). wrong: dead ends a failure can send them to;
+  // each leads back to the stop it stood in for. held: the night, which plays the beats and crises as before.
+  trail: {
+    start: 'taken',
+    stops: {
+      taken: { district: 'oldTown', time: '11:20', place: 'the street where he was taken', crisis: 'trail_witness', next: ['lockup', 'backroom', 'courier'], skip: 'held',
+        arrive: 'The street where he was taken: a shutter half up, his handset under a parked handcart, and a stallholder who saw a grey van and won\'t say so in front of the street.' },
+      lockup: { district: 'docks', time: '15:40', place: 'a rented lock-up behind the weighbridge', crisis: 'trail_lockup', next: ['held'],
+        arrive: 'The van\'s plate led to a rented lock-up behind the Docks weighbridge. The van is inside, the engine still warm. The man who rents out the space is pretending to sleep in a forklift cab.' },
+      backroom: { district: 'nightMarket', time: '16:30', place: 'a mahjong parlour\'s back room', crisis: 'trail_backroom', next: ['held'],
+        arrive: 'A number from his handset belongs to a mahjong parlour in the Night Market. The back room\'s door has a minder, and the tea upstairs costs more than the games.' },
+      courier: { district: 'oldTown', time: '15:10', place: 'a courier\'s door at the top of a rusted stairwell', crisis: 'trail_courier', next: ['held'],
+        arrive: 'Someone has been ordering food for two to a building nobody lives in. The courier who carries it up lives at the top of a rusted stairwell; the order slips are pinned to her door.' },
+      wrong_van: { district: 'docks', time: '13:50', place: 'a fish wholesaler\'s yard', crisis: 'trail_wrong_van', wrong: true,
+        arrive: 'A grey van in a Docks yard: the right make, nearly the right plate. It smells of fish, which nobody mentioned.' },
+      wrong_flat: { district: 'nightMarket', time: '14:20', place: 'a flat above a handset stall', crisis: 'trail_wrong_flat', wrong: true,
+        arrive: 'His handset\'s last signal came from a flat above a handset stall. The woman who answers the door is holding a handset very like his.' },
+    },
+    held: { time: '02:40', arrive: 'Everything points to the same place: a closed-down cha chaan teng in Old Town. They wait for the street to empty.' },
+  },
   beats: [
     'The cha chaan teng\'s shutters are down, but there\'s light on the second floor. {driver} parks two streets away.',
     'Up the back stairs, past crates of condensed milk. Somebody upstairs is watching football too loudly.',
@@ -112,6 +138,106 @@ export const KIDNAP = {
         { id: 'abort', label: 'Abort: scatter, everyone on foot', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -10 },
           success: 'Five people walk away in five directions. The police find the hostage.', failure: '', failureInjury: 'none',
           report: { success: 'The crew scattered in five directions, leaving the police to find the hostage.' } },
+      ],
+    },
+    // --- the trail by day (trail: true: only the trail's stops draw these) -----------------------------
+    {
+      id: 'trail_witness', trail: true,
+      situations: ['crowd'],
+      text: 'The stallholder saw the van and the men who took him. She keeps glancing at the tea shop across the road, where someone is watching her back.',
+      choices: [
+        { id: 'lean', label: '{op} leans on her, quietly and fast', kind: 'push', stat: 'social', difficulty: 11,
+          success: 'She gives them the plate and the way it turned before she can think better of it.', failure: 'She clams up, and the man in the tea shop gets up to make a call.', failureInjury: 'none', failureCost: { heat: 1 },
+          report: { success: '{op} got the van\'s plate out of a frightened stallholder.', failure: 'The stallholder clammed up and somebody across the road made a call. Heat +1.' } },
+        { id: 'lunch', label: '{face} buys her lunch and lets her talk', kind: 'adapt', stat: 'social', difficulty: 9, requires: { kind: 'role', value: 'face' },
+          success: 'Over noodles she remembers the van, half the plate, and which way it turned.', failure: 'Lunch, a long story about her nephew, and nothing useful.', failureInjury: 'none',
+          report: { success: '{face} bought the stallholder lunch and came away with half a plate and a direction.', failure: '{face} sat through lunch and a story about a nephew and learned nothing.' } },
+        { id: 'handset', label: '{tech} cracks his dropped handset', kind: 'adapt', stat: 'tech', difficulty: 10, requires: { kind: 'role', value: 'tech' },
+          success: 'His last location, and a number he called twice that morning.', failure: 'The handset wipes itself on the third try.', failureInjury: 'none',
+          report: { success: '{tech} opened the accountant\'s handset: a last location and a number called twice.', failure: 'The accountant\'s handset wiped itself before {tech} got in.' } },
+        { id: 'abort', label: 'Abort: tell the client the trail is cold', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -15 },
+          success: 'You leave the street. The handcart owner picks up the handset and pockets it.', failure: '', failureInjury: 'none',
+          report: { success: 'The crew told the client the trail was cold and walked away.' } },
+      ],
+    },
+    {
+      id: 'trail_lockup', trail: true,
+      situations: ['entry', 'fight'],
+      text: 'The van is here; he isn\'t. There\'s a zip tie on the floor, a parking ticket on the dash, and the forklift driver who rented them the space.',
+      choices: [
+        { id: 'search', label: '{op} turns the van over', kind: 'push', stat: 'tech', difficulty: 11,
+          success: 'The dash camera still has the last trip on it: up the hill into Old Town, and a stop outside a closed cha chaan teng.', failure: 'Nothing but receipts, and a dock patrol rolls past slowly.', failureInjury: 'none', failureCost: { heat: 1 },
+          report: { success: '{op} pulled the van\'s last trip off its dash camera.', failure: '{op} found only receipts in the van while a dock patrol took an interest. Heat +1.' } },
+        { id: 'driver', label: '{op} has a word with the forklift driver', kind: 'push', stat: 'combat', difficulty: 10,
+          success: 'He remembers the men asking where to buy food for two in Old Town at night.', failure: 'He comes out of the cab with a tyre iron, and makes the crew earn it.', failureInjury: 'light',
+          report: { success: '{op} leaned on the forklift driver until he remembered what the men had asked.', failure: 'The forklift driver came out swinging a tyre iron; someone was hurt.' } },
+        { id: 'abort', label: 'Abort: leave the van and call it off', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -15 },
+          success: 'You leave the lock-up as you found it, warm engine and all.', failure: '', failureInjury: 'none',
+          report: { success: 'The crew left the lock-up and called the job off.' } },
+      ],
+    },
+    {
+      id: 'trail_backroom', trail: true,
+      situations: ['crowd', 'threat'],
+      text: 'The man who arranged the snatch is in the back room, playing. He\'s loud, he\'s winning, and two of his friends are watching the stairs.',
+      choices: [
+        { id: 'sit', label: '{face} takes a seat at his table', kind: 'adapt', stat: 'social', difficulty: 11, requires: { kind: 'role', value: 'face' },
+          success: 'Three hands in, he\'s bragging about the old cha chaan teng where his boys are minding a guest.', failure: 'He clocks {face} for a tong runner and folds early.', failureInjury: 'none', failureCost: { heat: 1 },
+          report: { success: '{face} sat in on the game until the man bragged about where his guest was.', failure: 'The man at the table took {face} for a tong runner and left. Heat +1.' } },
+        { id: 'tail', label: 'Wait for him to leave, and follow', kind: 'push', stat: 'stealth', difficulty: 10,
+          success: 'He walks across town to check on his guest. The crew are a street behind all the way.', failure: 'He spots the tail at the market gate and loses it in the crowd.', failureInjury: 'none',
+          report: { success: 'The crew followed the man from the back room to where his guest was held.', failure: 'The man from the back room spotted the tail and lost it in the market.' } },
+        { id: 'abort', label: 'Abort: two minders is two too many', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -15 },
+          success: 'You leave him to his game.', failure: '', failureInjury: 'none',
+          report: { success: 'The crew left the back room and called the job off.' } },
+      ],
+    },
+    {
+      id: 'trail_courier', trail: true,
+      situations: ['law'],
+      text: 'The courier took food up to the guest twice. She\'s scared of the men who paid her, and more scared of the police asking.',
+      choices: [
+        { id: 'promise', label: '{face} promises her she was never here', kind: 'adapt', stat: 'social', difficulty: 10, requires: { kind: 'role', value: 'face' },
+          success: 'She draws the building on the back of an order slip: the back stairs, the second floor, where the guard sits.', failure: 'She shuts the door and calls someone.', failureInjury: 'none', failureCost: { heat: 1 },
+          report: { success: '{face} got the courier to draw the building on an order slip.', failure: 'The courier shut the door on {face} and called someone. Heat +1.' } },
+        { id: 'slips', label: '{op} reads the order slips on her door', kind: 'push', stat: 'stealth', difficulty: 10,
+          success: 'The same address three days running, and a note: second floor, knock twice.', failure: 'She opens the door halfway through the reading.', failureInjury: 'none', failureCost: { heat: 1 },
+          report: { success: '{op} read the address off the courier\'s order slips.', failure: 'The courier caught {op} reading her door. Heat +1.' } },
+        { id: 'abort', label: 'Abort: leave her out of it', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -15 },
+          success: 'You go back down the stairs and leave her alone.', failure: '', failureInjury: 'none',
+          report: { success: 'The crew left the courier alone and called the job off.' } },
+      ],
+    },
+    {
+      id: 'trail_wrong_van', trail: true,
+      situations: ['law'],
+      text: 'The van belongs to a fish wholesaler who has never kidnapped anyone, and would like to know why the crew is in his van.',
+      choices: [
+        { id: 'sorry', label: '{face} apologises, at length', kind: 'adapt', stat: 'social', difficulty: 9, requires: { kind: 'role', value: 'face' },
+          success: 'He accepts. He also saw another grey van this morning, the one with the dented door.', failure: 'He calls yard security anyway.', failureInjury: 'none', failureCost: { heat: 1 },
+          report: { success: '{face} talked the wholesaler round; he had seen the other grey van.', failure: 'The wholesaler called yard security on the crew. Heat +1.' } },
+        { id: 'walk', label: 'Walk off before it gets loud', kind: 'push', stat: 'cool', difficulty: 9,
+          success: 'Nobody follows. The afternoon is gone, but the trail isn\'t.', failure: 'Yard security takes photographs of everyone.', failureInjury: 'none', failureCost: { heat: 1 },
+          report: { success: 'The crew walked out of the wrong yard without trouble.', failure: 'Yard security photographed the crew leaving the wrong van. Heat +1.' } },
+        { id: 'abort', label: 'Abort: the trail\'s gone cold', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -15 },
+          success: 'You give up on the afternoon and the job.', failure: '', failureInjury: 'none',
+          report: { success: 'After the wrong van, the crew called the job off.' } },
+      ],
+    },
+    {
+      id: 'trail_wrong_flat', trail: true,
+      situations: ['crowd'],
+      text: 'The woman bought his handset second-hand at the market an hour ago. She is very frightened of the crew in her doorway.',
+      choices: [
+        { id: 'calm', label: '{face} calms her down and asks who sold it', kind: 'adapt', stat: 'social', difficulty: 9, requires: { kind: 'role', value: 'face' },
+          success: 'The stall that sold it remembers who brought it in, and where they went next.', failure: 'She screams. The whole landing comes out to look.', failureInjury: 'none', failureCost: { heat: 1 },
+          report: { success: '{face} calmed the woman with the handset and got the name of the stall that sold it.', failure: 'The woman screamed and the landing came out to look. Heat +1.' } },
+        { id: 'leave', label: 'Apologise and go', kind: 'push', stat: 'cool', difficulty: 9,
+          success: 'Back down the stairs, and back on the trail from the stall below.', failure: 'Someone on the landing films the crew leaving.', failureInjury: 'none', failureCost: { heat: 1 },
+          report: { success: 'The crew left the wrong flat quietly.', failure: 'A neighbour filmed the crew leaving the wrong flat. Heat +1.' } },
+        { id: 'abort', label: 'Abort: the trail\'s gone cold', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -15 },
+          success: 'You give up on the afternoon and the job.', failure: '', failureInjury: 'none',
+          report: { success: 'After the wrong flat, the crew called the job off.' } },
       ],
     },
   ],
