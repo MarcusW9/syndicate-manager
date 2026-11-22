@@ -101,6 +101,8 @@ Not picked for now: a deeper read on a rival (scouting and Watch a tong already 
 
 ## After that: multi-map operations (the new format for jobs)
 
+**2026-11-22: the owner picked a lead-following job as the pilot.** The proposal is `drafts/PROPOSAL-lead-following.md`; build once the owner answers its four questions.
+
 **The idea (owner, 2026-11-21):** not a new kind of contract. It is the new way the board's jobs play. They stay jobs from clients (`data/clients.js`: the neighbourhood powers, Ruth Okonkwo for the corps' off-books work, and more as the lore allows, via `add-lore`). The difference is that a job moves: street, then the building's front, then a big map of the inside, then out the back into an alley, and on to another place. Between places the log covers travel and setting up ("Day 2, 03:10: Raster lifts a keycard").
 
 The cyberpunk shapes the owner means, all as jobs:
