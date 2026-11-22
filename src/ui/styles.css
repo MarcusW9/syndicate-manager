@@ -3124,3 +3124,13 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 /* Five sub-tabs (Jobs, since expeditions 2026-11-22) share one row instead of wrapping the fifth. */
 .subtabs:has(> :nth-child(5)) { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .subtabs:has(> :nth-child(5)) .subtab { padding-left: 2px; padding-right: 2px; letter-spacing: 0.02em; }
+
+/* The armoury's sell mode (option C, 2026-11-22): a tick box at the row's left, the fence's price at its right, a bar to sell them all. */
+.stashhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.stashhead .btn { min-height: var(--tap); flex: 0 0 auto; }
+.row.stashrow--tick { grid-template-columns: 28px 72px 1fr auto; }
+.stashrow__box { width: 24px; height: 24px; display: grid; place-items: center; border: 1px solid var(--line); color: var(--accent-2); font-weight: 700; }
+.stashrow--tick.is-on { background: rgba(94, 234, 212, 0.06); }
+.stashrow--tick.is-on .stashrow__box { border-color: var(--accent-2); }
+.stashrow__price { color: var(--text); font-weight: 600; white-space: nowrap; }
+.sellbar { margin-top: 12px; }

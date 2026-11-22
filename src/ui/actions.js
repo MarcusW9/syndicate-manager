@@ -24,7 +24,7 @@ import { takeCall, letThemRun, takeCommand } from '../core/away.js';
 import { assignSlot, planKit } from './board.js';
 import { leanPicks } from './plan.js';
 import { gearPlace } from './gear.js';
-import { buyGear, buyOffer, itemName, sellPrice, sellGear, equip, unequip } from '../core/gear.js';
+import { buyGear, buyOffer, itemName, sellPrice, sellGear, sellMany, equip, unequip } from '../core/gear.js';
 import { togglePause, toggleSpeed, showLatest, paceChanged, closeFinale } from './watch.js';
 import { sideTaskById, sendOnSideTask } from '../core/sidetasks.js';
 import { markRead } from '../core/inbox.js';
@@ -148,7 +148,19 @@ export function onClick(e) {
     case 'skill-open': V.skillOpen = V.skillOpen === id ? null : id; break;
     case 'trait-tip': V.traitTip = V.traitTip === id ? null : id; break;
     // A runner's name or face anywhere (a message, a job board strip, a hall, a district card): their page, on Crew.
-    case 'armoury-tab': V.armouryTab = id; V.stashOpen = null; break;
+    case 'armoury-tab': V.armouryTab = id; V.stashOpen = null; V.sellPick = null; break;
+    // Sell mode (option C, 2026-11-22): tick several stash items and sell them in one go.
+    case 'sell-mode': V.sellPick = V.sellPick ? null : []; V.stashOpen = null; break;
+    case 'sell-tick': if (V.sellPick) V.sellPick = V.sellPick.includes(id) ? V.sellPick.filter((x) => x !== id) : [...V.sellPick, id]; break;
+    case 'sell-picked': {
+      const items = (state.stash ?? []).filter((i) => (V.sellPick ?? []).includes(i.uid));
+      if (!items.length) break;
+      const total = items.reduce((n, i) => n + sellPrice(i), 0);
+      if (!confirm(`Sell ${items.length === 1 ? `the ${items[0].name ?? itemName(items[0]).toLowerCase()}` : `${items.length} pieces`} for ${money(total)}?`)) break;
+      const uids = items.map((i) => i.uid);
+      V.sellPick = null;
+      return setState(sellMany(state, uids));
+    }
     case 'stash-open': V.stashOpen = id; break;
     case 'stash-close': V.focusNext = { action: 'stash-open', id: V.stashOpen }; V.stashOpen = null; break;
     case 'stash-give': { const [uid, opId] = id.split('|'); V.stashOpen = null; return setState(equip(state, uid, opId, null)); }

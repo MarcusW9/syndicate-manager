@@ -10,6 +10,7 @@ import { advanceDay, isBlocked } from '../src/core/time.js';
 import { chooseOption, crisisOdds, describePending, resolvePending, resolveCritical, closeMission, currentStep } from '../src/core/mission.js';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+import { handOffFight } from '../src/core/runbattle.js';
 const { importSave } = await import('../src/save/save.js');
 
 /** A fresh game with one offer of this job, sent away with the first n crew. */
@@ -30,6 +31,8 @@ function answerCarefully(s) {
     const out = v.choices.find((c) => c.exit) ?? v.choices.find((c) => !c.push) ?? v.choices[0];
     return resolvePending(s, out.id);
   }
+  // A fight under command waits for orders: a careful player hands it to the crew (the fight screen's Auto, runbattle.js handOffFight).
+  if (currentStep(am)?.type === 'battle' && am.battle && !am.battle.auto) return handOffFight(s);
   if (currentStep(am)?.type === 'crisis') {
     const odds = crisisOdds(s);
     const pick = odds.filter((o) => !o.exit).sort((a, b) => b.chance - a.chance)[0];

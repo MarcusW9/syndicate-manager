@@ -41,6 +41,7 @@ export function feedItems(events = [], { kit = null } = {}) {
     close();
     if (e.kind === 'zone') items.push({ type: 'phase', zone: e.zone, title: e.text });
     else if (e.kind === 'beat') items.push({ type: 'beat', text: e.text });
+    else if (e.kind === 'stop') items.push({ type: 'stop', title: e.place ? `${e.text.split('. ')[0]} · ${e.place}` : e.held ? `${e.text.split('. ')[0]} · the night` : e.text.split('. ')[0] }, { type: 'beat', text: e.text.split('. ').slice(1).join('. ') }); // a trail's stop (core/trail.js): a heading with the time and the place, then its line
     else if (e.kind === 'twist') items.push({ type: 'note', text: `Twist: ${e.text}`, tone: 'warn' });
     else if (e.kind === 'getaway') items.push({ type: 'note', text: e.text, tone: e.tail ? 'bad' : e.shed ? 'good' : 'warn' });
     else if (e.kind === 'aftermath') items.push({ type: 'note', text: e.text, tone: e.death ? 'bad' : 'good' });

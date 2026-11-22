@@ -13,6 +13,7 @@
 // 2026-10-28). Its own smooth scrolling never counts as you scrolling away (2026-11-03: it
 // sometimes stopped following when a new moment arrived mid-scroll).
 
+import { runPlace } from '../core/trail.js';
 import { feedItems } from '../core/feed.js';
 import { needsPlayer } from '../core/autorun.js';
 import { ALERT_MAX, OVERWATCH_KIT, ZONES } from '../core/incidents.js';
@@ -50,7 +51,7 @@ export function renderWatch(ui, state, end = '') {
   return `
     <div class="watch ${done ? 'is-done' : ''}" data-mission="${ui.esc(am.jobId)}">
       <div class="watch__live">
-        <div class="watch__map">${sitePlanSvg({ kit: am.overwatch?.kit ?? null, site: siteFor(templateById(am.templateId)?.district, am.jobId, am.templateId, am.build) })}
+        <div class="watch__map">${sitePlanSvg({ kit: am.overwatch?.kit ?? null, site: placeSite(am) })}
           <span class="watch__phase" aria-live="polite"></span>
           <span class="watch__caption" aria-live="polite" hidden></span>
           <span class="watch__alert" role="img"></span>
@@ -75,14 +76,17 @@ export function renderWatch(ui, state, end = '') {
 }
 
 /** Is this page already showing this job's watch? Then app.js syncs instead of re-rendering. */
-export const isWatching = (root, am) => !!live && !am.done && live.key === am.jobId && root.contains(live.el);
+// A trail job (core/trail.js) changes map at each stop: the stop is part of the key, so a new stop mounts the watch afresh on its map.
+const watchKey = (am) => `${am.jobId}|${am.trail?.at ?? ''}`;
+const placeSite = (am) => { const p = runPlace(am, templateById(am.templateId)); return siteFor(p.district, p.key, am.templateId, am.build); };
+export const isWatching = (root, am) => !!live && !am.done && live.key === watchKey(am) && root.contains(live.el);
 
 /**
  * The job on screen has just finished (this render is its last step): where its map last was, so
  * the redraw can walk the crew out from there instead of snapping them to the van. Call before stopWatch.
  */
 export function justFinished(am) {
-  return live && am?.done && live.key === am.jobId ? { zone: live.zone ?? am.zone } : null;
+  return live && am?.done && live.key === watchKey(am) ? { zone: live.zone ?? am.zone } : null;
 }
 
 /** Stop the clock (the job ended, or the page changed). */
@@ -107,7 +111,7 @@ export function mountWatch(el, state, { onAuto, onFightNext = null, ui, finishin
   const plan = bindSitePlan(el.querySelector('.siteplan'), {
     // a finished job stays where the crew ended up (am.zone)
     team, overwatch: ow?.op ? ow : null, zone: from ?? am.zone ?? 'start',
-    speed: () => speed, site: siteFor(templateById(am.templateId)?.district, am.jobId, am.templateId, am.build),
+    speed: () => speed, site: placeSite(am),
     wheels: am.wheels ? opsOf(state, [am.wheels])[0] : null,
     standby: am.standby && !am.standby.joined ? opsOf(state, [am.standby.id])[0] : null,
     out: opsOf(state, out),
@@ -116,7 +120,7 @@ export function mountWatch(el, state, { onAuto, onFightNext = null, ui, finishin
     say: (entry) => commentary(el, entry),
   });
   live?.unlisten?.();
-  live = { key: am.jobId, el, plan, shown: 0, timer: null, chain: Promise.resolve(), onAuto, onFightNext, ui, callKey: null, unseen: 0, pinned: true, autoUntil: 0, state, fastTimer: null };
+  live = { key: watchKey(am), el, plan, shown: 0, timer: null, chain: Promise.resolve(), onAuto, onFightNext, ui, callKey: null, unseen: 0, pinned: true, autoUntil: 0, state, fastTimer: null };
   // Following: pinned to the newest moment until the reader scrolls. Scroll events while our own
   // scroll is still moving don't count; a wheel, a touch or a key means the reader took over.
   const me = live;
@@ -384,7 +388,7 @@ function tally(state) {
   const pips = el.querySelector('.watch__alert');
   pips.innerHTML = `Alert ${Array.from({ length: ALERT_MAX }, (_, i) => `<i class="${i < alert ? 'is-on' : ''}"></i>`).join('')}`;
   pips.setAttribute('aria-label', `Alert ${alert} of ${ALERT_MAX}${am.wentLoud ? ', gone loud' : ''}`);
-  el.querySelector('.watch__phase').textContent = am.raid ? 'Holding the hall' : am.post ? 'Holding the post' : am.expedition ? 'The deal went wrong' : am.wentLoud ? 'Gone loud' : ZONES[am.zone]?.name ?? 'Getting there';
+  el.querySelector('.watch__phase').textContent = am.trail && am.trail.at && am.trail.at !== 'held' ? 'On the trail' : am.raid ? 'Holding the hall' : am.post ? 'Holding the post' : am.expedition ? 'The deal went wrong' : am.wentLoud ? 'Gone loud' : ZONES[am.zone]?.name ?? 'Getting there';
   pips.style.display = am.raid || am.post || am.expedition ? 'none' : ''; // a raid has no alarm to raise: they're already here
   const events = am.events ?? [];
   const saves = events.filter((e) => e.kind === 'save' && e.success && e.via !== 'patch').length;
@@ -439,6 +443,7 @@ function itemHtml(ui, item, animate) {
   const { esc } = ui;
   const n = animate ? 'is-new' : '';
   if (item.type === 'phase') return `<h3 class="wf-phase ${n}">${esc(item.title)}</h3>`;
+  if (item.type === 'stop') return `<h3 class="wf-phase wf-stop ${n}">${esc(item.title)}</h3>`; // a trail's stop (core/trail.js)
   if (item.type === 'beat') return `<p class="wf-beat ${n}">${esc(item.text)}</p>`;
   if (item.type === 'note') return `<p class="wf-note tone--${TONE[item.tone] ?? 'plain'} ${n}">${esc(item.text)}</p>`;
   // One line per moment: an icon and the headlines, so the run can be followed at a glance; tap

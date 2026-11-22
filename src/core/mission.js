@@ -11,6 +11,7 @@
 // can put someone at death's door, never dead: only "keep fighting" (the push on of a fight)
 // leaves them dying, and any exit after that still brings them home.
 
+import { stopOf, nextStop } from './trail.js';
 import { finishPost } from './contracts.js';
 import { finishExpeditionFight } from './expeditions.js';
 import { jobGrudge, addGrudge, grudgeOf, GANGS } from './gangs.js';
@@ -182,7 +183,7 @@ export function startMission(prev, jobId, crewIds, approach, opts = {}) {
   const ap = APPROACHES[approach];
   const weight = (c) => { const sit = c.situations ?? []; return sit.some((x) => ap.favours?.includes(x)) ? 2 : sit.some((x) => ap.avoids?.includes(x)) ? 0.5 : 1; };
   // A heist finale's prep can take a crisis out of the draw (core/heists.js job.drop; shown on its plan).
-  const pool = tpl.crises.filter((c) => !view.drop.includes(c.id)).map((c) => ({ c, key: rng() ** (1 / weight(c)) })).sort((a, b) => b.key - a.key).map((x) => x.c);
+  const pool = tpl.crises.filter((c) => !c.trail && !view.drop.includes(c.id)).map((c) => ({ c, key: rng() ** (1 / weight(c)) })).sort((a, b) => b.key - a.key).map((x) => x.c);
   // Street talk about a district crisis makes it likely to come up (drawn first most of the time).
   const talk = view.rumour?.crisis ? pool.findIndex((c) => c.id === view.rumour.crisis) : -1;
   if (talk > 0 && rng() < RUMOUR_CRISIS_CHANCE) [pool[0], pool[talk]] = [pool[talk], pool[0]];
@@ -222,7 +223,11 @@ export function startMission(prev, jobId, crewIds, approach, opts = {}) {
   const days = Math.max(1, (job.days ?? tpl.days) + (ap.days ?? 0)); // the offer's days (core/jobs.js daysRange)
   const bribe = (ap.bribePerThreat ?? 0) * view.threat;
   state.cash -= bribe;
+  // A job that follows a trail (core/trail.js) plays its stops first; the night's queue waits until the trail gets there.
+  const trail = tpl.trail ? { at: null, path: [], wrongUsed: false, then: null } : null;
+  const finale = tpl.trail ? queue.splice(0, queue.length, { type: 'stop', id: tpl.trail.start }) : null;
   state.activeMission = {
+    ...(trail ? { trail, finale } : {}),
     jobId, templateId: tpl.id, crewIds, approach, days, bribe,
     overwatch: ow ? { id: ow.id, kit: ow.kit, left: overwatchKit(owOp, ow.kit).uses } : null,
     wheels: wheels ?? null, standby: standby ? { id: standby, used: false } : null,
@@ -240,6 +245,51 @@ export function startMission(prev, jobId, crewIds, approach, opts = {}) {
     focusOp: null, aborted: false, done: false, result: null, growth: [], graduated: [], report: [],
     events: [], // the run as recorded facts, for the report's full log (save v16)
   };
+  return state;
+}
+
+// --- the trail (core/trail.js) ---------------------------------------------
+
+/**
+ * A trail's step: arriving at a stop (its line, then its crisis and a clue step queued behind it), or the clue
+ * (how the stop's crisis went picks the next stop; at `held` the night's queue follows). Never needs the player.
+ */
+export function followTrail(prev) {
+  const am0 = prev.activeMission;
+  const step = currentStep(am0);
+  if (!am0?.trail || am0.critical || am0.pending || !['stop', 'clue'].includes(step?.type)) return prev;
+  const state = structuredClone(prev);
+  const am = state.activeMission;
+  const tpl = templateById(am.templateId);
+  if (step.type === 'stop') {
+    const s = stopOf(tpl, step.id);
+    am.trail.at = step.id;
+    am.trail.path.push(step.id);
+    const text = fill(`${s.time}. ${s.arrive}`, state, am);
+    am.log.push({ kind: 'beat', text });
+    record(am, { kind: 'stop', stop: step.id, district: s.district, place: s.place ?? null, wrong: !!s.wrong, text, report: text });
+    am.report = [...(am.report ?? []), text];
+    am.queue.splice(am.step + 1, 0, { type: 'crisis', id: s.crisis, stop: step.id }, { type: 'clue', id: step.id });
+    advance(state);
+    return state;
+  }
+  // The clue: the stop's crisis as rolled (a sure choice counts as a plain success).
+  const from = am.events.map((e) => e.kind).lastIndexOf('stop');
+  const rolled = am.events.slice(from).reverse().find((e) => (e.kind === 'roll' || e.kind === 'sure') && !e.incident);
+  const result = rolled ? { success: rolled.success !== false, margin: rolled.die == null ? 0 : rolled.die + rolled.value - rolled.need } : null;
+  const go = nextStop(state.seed, am.jobId, tpl, am.trail, step.id, result);
+  if (go.wrong) { am.trail.wrongUsed = true; am.trail.then = go.then; }
+  if (go.next === 'held') {
+    const h = stopOf(tpl, 'held');
+    const text = fill(`${h.time}. ${h.arrive}`, state, am);
+    am.trail.at = 'held';
+    am.log.push({ kind: 'beat', text });
+    record(am, { kind: 'stop', stop: 'held', district: tpl.district, text, report: text, held: true });
+    am.report = [...(am.report ?? []), text];
+    am.queue.splice(am.step + 1, 0, ...(am.finale ?? []));
+    am.finale = null;
+  } else am.queue.splice(am.step + 1, 0, { type: 'stop', id: go.next });
+  advance(state);
   return state;
 }
 

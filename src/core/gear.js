@@ -323,6 +323,16 @@ export function sellGear(prev, uid) {
   return state;
 }
 
+/** Sell several stash items in one go (the armoury's sell mode, 2026-11-22). Items not in the stash are skipped. */
+export function sellMany(prev, uids) {
+  const sold = (prev.stash ?? []).filter((i) => uids.includes(i.uid));
+  if (!sold.length) return prev;
+  const state = structuredClone(prev);
+  state.stash = state.stash.filter((i) => !uids.includes(i.uid));
+  state.cash += sold.reduce((n, i) => n + sellPrice(i), 0);
+  return state;
+}
+
 /** Find an item wherever it is: { item, owner (op or null) } or null. */
 function locate(state, uid) {
   const inStash = (state.stash ?? []).find((i) => i.uid === uid);

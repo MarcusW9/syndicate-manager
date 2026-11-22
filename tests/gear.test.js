@@ -13,7 +13,7 @@ import { jossPicks } from '../src/core/squad.js';
 import { templateById } from '../src/core/jobs.js';
 import { advanceDay } from '../src/core/time.js';
 import { generateRecruit, hire } from '../src/core/recruits.js';
-import { buyGear, sellGear, equip, unequip, priceOf, sellPrice, kitsFor, overwatchKit, seriousGuard, GEAR, carried, emptyLoadout, gearMods, neuralFloor, bagUsed } from '../src/core/gear.js';
+import { buyGear, sellGear, sellMany, equip, unequip, priceOf, sellPrice, kitsFor, overwatchKit, seriousGuard, GEAR, carried, emptyLoadout, gearMods, neuralFloor, bagUsed } from '../src/core/gear.js';
 import { playMission, carefulPolicy, arm } from './play.js';
 
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
@@ -243,4 +243,16 @@ test('a v44 save upgrades: the weapon and tool go in the bag, the implant in a s
   assert.deepEqual(a.gear.bag.map((x) => [x.item.uid, x.x, x.y]), [['o1', 0, 0], ['o2', 3, 0]], 'a compact tool beside the rifle');
   assert.deepEqual(b.gear.bag.map((x) => [x.item.uid, x.x, x.y]), [['o6', 0, 0], ['o3', 0, 1]], 'a long tool on the next row');
   assert.deepEqual(c.gear, emptyLoadout());
+});
+
+test('sell mode: several stash items sold in one go pay what each would alone; nothing else moves', () => {
+  let s = createNewGame({ seed: 3, startCrew: 'fresh' });
+  for (const type of ['vest', 'medkit', 'pistol']) s = buyGear(s, type);
+  const [a, b, c] = s.stash;
+  const cash = s.cash;
+  const after = sellMany(s, [a.uid, c.uid, 'nope']);
+  assert.equal(after.cash, cash + sellPrice(a) + sellPrice(c));
+  assert.deepEqual(after.stash.map((i) => i.uid), [b.uid]);
+  assert.equal(sellMany(s, []), s, 'nothing picked: no change');
+  assert.equal(sellMany(s, ['nope']), s);
 });

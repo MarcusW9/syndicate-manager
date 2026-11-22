@@ -51,9 +51,10 @@ Slice 1 as built: job days write a line every day out (also on beat days, the ca
 ## Loose ends from the posts work (small, any time)
 
 - **Owner's writing:** the post text in `src/data/contracts.js` is Claude's draft (posts, quiet/good/rough lines, incidents, `INCIDENT_LINES`). Add it to `drafts/writing-tasks.md` if the owner wants it in the usual pipeline.
-- **Posts on Today:** Today's out line (`ui/today.js renderOutLine`) counts crews on jobs and side tasks, not posts. Add posts to the count with a link to Jobs › Side, or give them their own crew-out card (`renderCrewsOut`).
-- **Stash sell mode** (option C in `docs/screenshots/2026-11-21-stash-rows/00-mockup-options.png`): tick several items and sell them in one go. Builds on `ui/gear.js stashRow`.
-- **Five-person crews still break even.** Fixing it with more offers moves the fame sim's Elite target (`tests/fame-sim.test.js`, one or two by week 52). That is the owner's call; posts already lift it to about +15-38%.
+- **Done 2026-11-22:** posts on Today (their own out line, to Jobs › Side) and the stash sell mode (option C); five-person crews dropped (expeditions lift them, owner agreed).
+- ~~**Posts on Today:**~~ Today's out line (`ui/today.js renderOutLine`) counts crews on jobs and side tasks, not posts. Add posts to the count with a link to Jobs › Side, or give them their own crew-out card (`renderCrewsOut`).
+- ~~**Stash sell mode**~~ (option C in `docs/screenshots/2026-11-21-stash-rows/00-mockup-options.png`): tick several items and sell them in one go. Builds on `ui/gear.js stashRow`.
+- ~~**Five-person crews still break even.**~~ Fixing it with more offers moves the fame sim's Elite target (`tests/fame-sim.test.js`, one or two by week 52). That is the owner's call; posts already lift it to about +15-38%.
 
 ## Next: the adventure log
 
@@ -99,6 +100,8 @@ Not picked for now: a deeper read on a rival (scouting and Watch a tong already 
 **Check before shipping:** the income sim with expeditions (`scripts/sim-crew-income.mjs`, add an option like `posts`), the fame sim and the save-size test (`tests/inbox.test.js`: logs grow saves, so cap each log, e.g. the last 10 lines).
 
 ## After that: multi-map operations (the new format for jobs)
+
+**2026-11-22: the owner picked a lead-following job as the pilot, a client rescue: Kidnap Rescue rebuilt as a trail. Built (save v88, `core/trail.js`).** Next: the owner plays it and marks the trail text in `src/data/missions/kidnap.js` (Claude's draft); a STOPS section in `docs/new-job-prompt.md` so the owner can write trails; the hostage as a carried non-runner in the extraction; then more trail jobs (Mrs. Ip, Madam Rao, Ruth Okonkwo).
 
 **The idea (owner, 2026-11-21):** not a new kind of contract. It is the new way the board's jobs play. They stay jobs from clients (`data/clients.js`: the neighbourhood powers, Ruth Okonkwo for the corps' off-books work, and more as the lore allows, via `add-lore`). The difference is that a job moves: street, then the building's front, then a big map of the inside, then out the back into an alley, and on to another place. Between places the log covers travel and setting up ("Day 2, 03:10: Raster lifts a keycard").
 
