@@ -89,8 +89,10 @@ buyouts). Police: Harbour Police 4th Precinct, the "Wet Sleeve" unit (corrupt; f
 crews at "neural-load checks"; a hot district brings a raid on a tong's hall, and only
 the Wet Sleeve, on its own patch, will sell one off). A gang with a grudge against a tong
 raids its hall on the gang's own turf and expects a settlement; the Brass Anchor never
-raids. Institution: Lantern Bay Racing Association (racing, licensed betting, old and
-well connected; fears race fixing above all). Wildcard: Ghost Circuit (data liberators in Old Town's
+raids. Institution: Lantern Bay Racing Association (racing and the city's licensed-gambling
+monopoly, defended hard through lawyers, landlords and suppliers; its money funds clinics,
+training and storm relief; independent, no megacorp owns it, deep in the MDA; fears race
+fixing above all; hires tongs as contractors). Wildcard: Ghost Circuit (data liberators in Old Town's
 drainage tunnels and bomb shelters). Foreign firms (below the megacorps, Glass Heights
 tenants): Morrow & Venn (old merchant-finance house from Bellweather: shipping credit,
 insurance, estates; Venn House) and Hang Yuen Systems (industrial automation from Lin
@@ -119,6 +121,15 @@ CLIENTS (local powers a small crew can reach, below the corps):
   Forewoman Tse (Tse Yuk-lan, the Underterrace maintenance cooperative in Glass Heights;
   contractor disputes, lost records, maintenance access; not Veridian-Apex, not Szeto;
   asks Still on the Books). A client's trust is personal, not their faction's.
+- Smaller recurring clients inside institutions (2026-11-22): their trust is their own,
+  never their employer's protection. Association (the Basin): Leung Mei-sum (community
+  services), Yip Ka-chun (racing integrity), Chan Wing-kei (licensing and commercial
+  protection). Lau Ching-yee (Morrow & Venn marine claims surveyor); Dr. Cheng Hoi-yan
+  (Veridian-Apex neural-device aftercare); Mok Wai-lun (Hoi-Sing restoration
+  coordinator, Old Town); Sze Nga-kit (AHL subcontractor accounts, Docks); Yuen Siu-ping
+  (Red Lanterns freight-yard steward; no tribute or grudge cancelled); Inspector Fong
+  Pak-lam (Wet Sleeve, 4th Precinct; corrupt, dislikes some corruption; no immunity, no
+  raid call-offs). Judge the request, not the employer.
 STREET CAST (rookie work): Doc Siu (Old Town; ex-surgeon, unlicensed clinic under
 Tenement Block 9, dry praise); Meena D'Sa (Rao's seamstress and counterkeeper); Tang Wai-chiu (Silver Fan
 collector, third-floor parlour); Uncle Tariq (remittance booth, Pearl Haven House, backed
@@ -146,6 +157,11 @@ Anchor Society stands beside the ladder, not on it; its elders keep a book of ru
 chalked once a month on a slate at the Anchor's teahouse in Old Town (never the Silt): the
 elders' opinion, not the truth, and it grades people, never tongs. The Word is hedged street talk, never
 results, ranks or numbers.
+TONGS AS WORK (2026-11-22): running is a respectable career; a tong (elsewhere, a guild)
+is the alternative to a lifelong corporate post: less security, more independence and a
+say in the work. Tongs range from three people in a damp room to great halls that outlast
+their stars; size, fame and decency don't rise together, and registration doesn't make a
+tong honest. Lantern Bay's fame is local: recognised at a food stall, claimed by a street.
 TONGS: runners swear in at the founding room above the noodle shop, regardless of their hall, by drinking tea poured by the fixer, writing their own name in the tong's ledger before the crew and altar, and leaving an offering; the ceremony has no recitation, blood, numbers or ranks, sworn names remain after departure, and long-serving runners are remembered on the wall beside the altar (the Hall of Legends), with a crew member writing each name and Joss checking the spelling.
 TONE: gritty but human. Warmth, loyalty and dark humour are the baseline; darker
 moments arrive as events. All characters 18+. Entries 1–2 sentences, phone-readable.
