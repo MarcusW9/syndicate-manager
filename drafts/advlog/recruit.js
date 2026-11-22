@@ -1,296 +1,281 @@
-// Log lines: recruit. The owner's draft (2026-11-22, docs/log-lines-prompt.md), as pasted.
-// Fixes from review marked "// fixed:". Most asides are still reflections, not moments (prompt rule 16): redo them.
-// moves to src/data/advlog/ when the log engine is built.
+// Log lines: recruit. The owner's drafts (2026-11-22): the Night Market version as the base, made
+// district-free, with the best of the first draft and the review's fixes. Night Market-only lines
+// moved to nightMarket.js. Asides still lean to reflections: give them a moments pass (prompt rule 16).
 export default {
   goal: 'recruit',
-
   open: {
     any: [
-      "{contact}, {contactWhat}, had heard of {lead}. {who} went to ask whether an introduction was possible.",
-      "A tip about {lead} brought the crew to {place}. They started by asking who could pass on a message.",
-      "{who} asked around {place} about {lead}. Someone recognised the description but wanted to know why.",
-      "The search began with {contact}, {contactWhat}, who knew of {lead} and refused to hand out an address.",
-      "Someone had recommended {lead} without supplying a name. The crew took the description to {place}.",
-      "A message from {contact}, {contactWhat}, mentioned {lead}. The crew went to hear the part that hadn't fitted on the handset.",
-      "Word put {lead} somewhere near {place}. {who} went looking for an introduction, not a doorstep surprise.",
-      "The crew approached {contact}, {contactWhat}, about {lead}. The opening question was whether they were looking for work.",
+      '{contact}, {contactWhat}, had heard of {lead}. {who} asked whether a message could get through.',
+      'Word of {lead} brought the crew to {place}. The introduction apparently began with buying lunch.',
+      '{who} started at {place}, asking about {lead} between the lunch rush and the washing-up.',
+      'The search began with {contact}, {contactWhat}, who knew of {lead} but wanted to know what sort of tong was asking.',
+      'Someone had recommended {lead} over a noisy counter. The crew took the description to {place} before the details got any thinner.',
+      'A note from {contact}, {contactWhat}, mentioned {lead}. Underneath was written: \'Ask properly. Don\'t just turn up.\'',
+      'The crew followed word of {lead} to {place}. Somebody there had offered to make an introduction.',
+      'An enquiry about {lead} reached {contact}, {contactWhat}. {who} went along with a number to pass on and no expectation of an address.',
     ],
     social: [
-      "{who} asked {contact}, {contactWhat}, to pass a message to {lead}. No address required.",
-      "A meal at {place} turned up word of {lead}. The crew asked who could introduce them properly.",
+      '{who} asked {contact}, {contactWhat}, about {lead} while helping clear the empty bowls. The answer came without the usual audience.',
+      'A conversation at {place} turned towards {lead}. {who} asked who could introduce the tong without making it sound like a collection.',
     ],
     tech: [
-      "{who} found an old work notice from {lead}. A public reply address pointed towards {place}.",
-      "A public repair thread mentioned {lead} and a meeting at {place}. The crew asked the organiser to forward an enquiry.",
+      '{who} found an old work notice from {lead} on a local message board. Its replies pointed towards {place}.',
+      'A public repair discussion mentioned {lead} and {contact}, {contactWhat}. The crew asked for a message to be forwarded.',
     ],
     stealth: [
-      "{who} checked {place} before asking about {lead}. It seemed better to approach without a crowd listening.",
-      "The crew visited {place} quietly after hearing about {lead}. Nobody needed the whole street knowing someone might change jobs.",
+      '{who} checked {place} after hearing about {lead}. There was somewhere to ask questions without the next table listening.',
+      'The crew approached {contact}, {contactWhat}, quietly about {lead}. Changing work was nobody else\'s evening entertainment.',
     ],
   },
-
   lead: {
     any: [
-      "{who} found somebody willing to forward the tong's details. They promised an introduction, not an endorsement.",
-      "A former colleague recognised the description and offered to pass on a message.",
-      "The reply asked what sort of work the tong actually did. The crew sent a plain answer.",
-      "Someone supplied a name to go with the description. The crew checked the spelling before sending anything.",
-      "An enquiry reached the right person. They wanted to know whether the fixer would discuss terms directly.",
-      "A mutual acquaintance agreed to make contact. The crew left a number and stopped asking for private details.",
-      "The conversation moved from whether there was work to what the work involved.",
-      "A reference checked out. The person giving it mentioned patience before mentioning skill.",
-      "The crew received a question about sleeping arrangements. Somebody was considering the offer seriously enough to ask.",
-      "A message asked who would cover implant downtime. {who} sent it to the fixer rather than improvise a promise.",
+      'A stallholder recognised the description and offered to pass on the tong\'s number after closing.',
+      '{who} found someone who had worked alongside the person they wanted. The reference included a warning about terrible singing.',
+      'The invitation reached the right handset. A reply asked what a normal week with the tong looked like.',
+      'Someone supplied a name and corrected the pronunciation twice. The crew practised before sending the message.',
+      'A former colleague agreed to make the introduction. \'Don\'t do the speech about opportunity. Just say what you pay.\'',
+      'The reply asked whether the tong expected people to work through neural load. {who} sent the question to the fixer.',
+      'A counterkeeper remembered who had collected the last repair order. That gave the crew someone useful to ask.',
+      'The enquiry moved from a public board to a direct message. Somebody wanted to know more without the whole street commenting.',
+      'An acquaintance offered to arrange a short conversation between shifts. The crew asked what time actually meant between shifts.',
+      'The person forwarding messages asked for the fixer\'s name. This time it was going on an invitation, not another list of questions.',
     ],
     combat: [
-      "{who} asked a former training partner about working habits. The answer was useful and refreshingly short on boasts.",
-      "A reference described someone who knew when not to draw. {who} asked for an introduction.",
+      '{who} checked a reference with a former door guard. The useful part concerned restraint, not the story about the broken table.',
+      'A clinic attendant remembered someone keeping a frightened customer calm during a security scare. {who} asked whether an introduction was possible.',
     ],
     stealth: [
-      "{who} found a quiet way to leave the invitation without advertising anyone's interest in changing work.",
-      "The crew checked the suggested meeting spot from the public lane. There was room to talk without an audience.",
+      '{who} found a quiet moment to leave the invitation while the nearby collectors were occupied elsewhere.',
+      'The proposed meeting corner was overlooked by a busy gambling room. {who} suggested a less public table and got an agreement.',
     ],
     tech: [
-      "{who} recovered a working public contact address from an old service listing. The enquiry received a reply.",
-      "An expired work profile linked to a current noticeboard account. {who} asked its owner to forward the invitation.",
+      '{who} traced a public work notice to an active account. Its owner agreed to forward the enquiry.',
+      'A repair stall still had permission to contact its former subcontractor. The owner sent the tong\'s message while the crew waited.',
     ],
     social: [
-      "{who} answered questions about the tong without turning the conversation into a sales pitch. Another message followed.",
-      "A wary acquaintance agreed to introduce the crew after {who} explained what the invitation didn't require.",
+      '{who} answered questions over noodles without promising an easy life. The next reply asked when the fixer was available.',
+      'A suspicious acquaintance softened after hearing the crew describe an ordinary working day. \'That sounds more believable than exciting.\'',
     ],
     piloting: [
-      "{who} found the public stop named in the reply. The proposed meeting was practical, not just polite.",
-      "A former driver knew which dispatch desk could forward a message. {who} reached it before the shift changed.",
+      '{who} found the dispatch counter where a message could be left between delivery runs. The clerk confirmed it would reach the right person.',
+      'A delivery driver recognised the description from the late rounds. {who} arranged for an invitation to travel with the next collection slip.',
     ],
     medical: [
-      "{who} asked about rest and neural load before discussing availability. The reply became noticeably less guarded.",
-      "A clinic worker agreed to pass on the invitation without sharing patient details. {who} left the fixer's number.",
+      '{who} asked about rest arrangements before availability. The intermediary stopped giving rehearsed answers and offered an introduction.',
+      'A clinic worker agreed to forward the invitation without sharing patient details. {who} left a number and kept the conversation brief.',
     ],
     cool: [
-      "The reply was blunt about previous employers. {who} answered the actual questions and left the anger alone.",
-      "An intermediary tested the crew with a long silence. {who} waited instead of filling it with promises.",
+      'The reply listed several reasons not to trust a tong. {who} answered the questions underneath them.',
+      'An intermediary let the silence stretch over three rounds of mahjong downstairs. {who} waited and got permission to send a message.',
     ],
   },
-
   deadEnd: {
     any: [
-      "The description fitted two people. Neither was the person the crew wanted.",
-      "A promising address belonged to a former employer. Nobody there could forward a message.",
-      "The work notice was old enough to have changed hands with the handset.",
-      "Someone had mistaken a wish to leave work early for a wish to leave the job.",
-      "The supposed introduction led to somebody selling access to a list. The crew declined.",
+      'The description fitted someone who had moved on months ago. The stallholder still spoke about them in the present tense.',
+      'A promising introduction led to someone looking for customers, not work. The crew received a very thorough price list.',
+      'The note had been pinned over an older note. Everyone had been reading the wrong telephone number.',
+      'Someone had confused leaving a shift with leaving an employer. \'Understandable ambition,\' {who} said.',
+      'The person behind the recommendation admitted to knowing only a nickname. Three different people answered to it.',
     ],
     social: [
-      "{who} heard plenty about a remarkable worker. Nobody telling the stories had actually met them.",
-      "An acquaintance had exaggerated the interest in tong work. There was no invitation to pass on.",
+      '{who} heard an excellent account of someone\'s abilities. The storyteller eventually admitted it had come from a customer of a customer.',
+      'A broker promised an introduction after supper. Supper ended, the stools went up, and the introduction remained theoretical.',
     ],
     tech: [
-      "The contact account had been abandoned. Its automatic reply was more enthusiastic than its owner.",
-      "{who} checked the profile behind the recommendation. It belonged to a recruiter advertising an empty roster.",
+      'The work profile was still active because a stall kept reposting old adverts. Nobody had checked the replies.',
+      '{who} recovered the missing contact details. They belonged to the shop that had printed the notice.',
+      'The contact account had been abandoned. Its automatic reply was more enthusiastic than its owner.',
     ],
   },
-
   snag: {
     any: [
-      "A broker wanted a fee before forwarding the invitation. The crew paid for the message, not a promise of acceptance.",
-      "Someone repeated the enquiry within earshot of an employer. Keeping the approach discreet became harder.",
-      "{who} caught a shoulder on a low doorframe while checking an address. The bruise was less impressive than the noise.",
-      "A meeting change added another fare to the day's costs.",
-      "The room booked for a conversation had been double-booked. Finding somewhere private cost extra.",
-      "A former employer took {who}'s questions as an attempt to poach staff. The crew's name attracted unwelcome attention.",
-      "A heavy door swung shut while {who} held it for a visitor. The resulting bruise earned a very apologetic cup of tea.",
+      'A broker charged a forwarding fee that hadn\'t been mentioned over the handset. The crew paid to keep the enquiry moving.',
+      '{who} scraped a knuckle on a broken stool while making room at a counter. The owner produced a dressing from beside the till.',
+      'A changed appointment meant paying for a private table elsewhere. The original table had become a birthday dinner.',
+      'The Wet Sleeve took an interest in the crew\'s questions. A cash payment shortened the discussion.',
+      'A former employer heard the enquiry and began asking which tong was taking staff. The crew\'s name travelled further than intended.',
     ],
-    combat: [ // fixed: the two lines here weren't about combat; moved to any, and two muscle lines in their place
-      "A bouncer at the meeting spot decided {who} looked like trouble and said so with a shoulder. The bruise lasted longer than the argument.",
-      "{who} was asked to prove they could handle themselves before anyone would talk. The proof cost a sleeve and some pride.",
+    combat: [
+      'A bouncer at the meeting spot decided {who} looked like trouble and said so with a shoulder. The bruise lasted longer than the argument.',
+      '{who} was asked to prove they could handle themselves before anyone would talk. The proof cost a sleeve and some pride.',
+      '{who} caught a falling stack of stools before it reached the table. The resulting bruise earned an apology and no discount.',
     ],
     stealth: [
-      "A caretaker noticed the crew checking a meeting entrance. The quiet enquiry became a public discussion.",
-      "{who} stepped on a loose stair tread. A scraped shin and a loud complaint from downstairs followed.",
+      'A watcher noticed the crew checking a meeting spot. The quiet approach stopped being quiet.',
+      '{who} caught a shin on a crate tucked beneath an awning. The scrape was small; the crate received a detailed review.',
     ],
     piloting: [
-      "The crew's transport was clamped while a conversation ran long. The release fee was not negotiable.",
-      "{who} clipped a loading barrier while turning out of a narrow lane. The repair added to the bill.",
+      'The delivery lane closed while the crew were inside. Getting their transport released cost a storage fee.',
+      '{who} scraped a barrier while reversing out of a crowded loading bay. The owner wanted the repair paid in cash.',
     ],
   },
-
   find: {
     cash: [
-      "A shopkeeper paid {cash} for delivering a forgotten document pouch along the crew's route.",
-      "{who} helped return a hired trolley before the next charge began. Its grateful borrower paid {cash}.",
-      "A courier offered {cash} for carrying a sealed parcel to the next staffed desk.",
+      'A stallholder paid {cash} for taking a forgotten order to the correct counter.',
+      '{who} helped carry a returned delivery down the street before closing. The supplier paid {cash}.',
+      'A courier offered {cash} for covering a short collection while a trolley wheel was repaired.',
     ],
     gear: [
-      "A workshop clearing old stock offered the crew a pouch of serviceable spare parts.",
-      "{who} found an unwanted weapon sling in a box of discarded fittings. The owner said to take it.",
-      "A repairer gave the crew a sealed cleaning kit left over from a cancelled order.",
+      'A repair stall clearing a shelf offered the crew a pouch of usable implant parts.',
+      '{who} found a serviceable pistol holster among a trader\'s unwanted fittings. The trader waved it away with the empty packaging.',
+      'A clinic technician gave the crew a spare trauma bag after replacing its worn strap.',
     ],
     rumour: [
-      "Someone mentioned a small cash job that might suit the tong later. The crew noted who to ask.",
-      "A counter conversation turned up word of surplus equipment due for sale. Nobody had checked the details yet.",
+      'A stallholder mentioned surplus equipment due for sale after a shop move. The crew noted who to ask later.',
+      'Someone in the supper queue knew of a paid collection nobody had taken yet. It remained a tip, not an arrangement.',
     ],
   },
-
   quiet: {
     any: [
-      "No reply arrived. The crew left the invitation alone rather than turn it into pressure.",
-      "{who} waited through the agreed contact window. The handset stayed quiet.",
-      "The message remained unanswered. Nobody sent a second version with more adjectives.",
-      "A long afternoon passed between enquiries. The crew learned which bench stayed dry.",
-      "Nothing changed on the contact board. Someone had corrected the spelling on a noodle advert.",
-      "The crew kept the day clear for a conversation that didn't happen. No explanation arrived either.",
+      'No reply arrived. {who} watched a cook fold dumplings with increasingly unreasonable speed.',
+      'The crew waited beneath an awning while the same holo-ad restarted every few minutes. Nobody learned anything new.',
+      'A promised call never came. The mahjong room upstairs supplied enough noise to suggest several other people were having a day.',
+      'Nothing changed on the message board. Someone had added a moustache to an implant advert.',
+      'The invitation stayed unanswered. \'We could try looking less available,\' {who} suggested from the same stool.',
     ],
   },
-
   callbackContact: {
     lead: [
-      "{contact} had passed on the invitation. The reply asked for a clearer description of the tong's work.",
-      "A note from {contact} supplied a name and permission to use it when making contact.",
-      "{who} checked back with {contact}. An introduction was possible if the crew kept the meeting small.",
+      '{contact} had passed on the invitation. The reply asked whether the fixer would meet somewhere outside the tong\'s hall.',
+      'A message from {contact} supplied a name and permission to mention the introduction.',
+      '{who} checked in with {contact}. A short conversation could be arranged once the evening rush eased.',
     ],
     deadEnd: [
-      "{contact} had confused two people with similar work histories. The introduction went nowhere.",
-      "The message through {contact} reached an old handset. Nobody knew who had it now.",
+      '{contact} had mixed up two people who used the same repair stall. Neither introduction reached the person the crew wanted.',
+      'The message through {contact} reached an abandoned account. There was no current number to try.',
     ],
     snag: [
-      "{contact} mentioned the enquiry too freely. An employer started asking who was recruiting.",
-      "A forwarding fee appeared when the crew spoke to {contact}. Keeping the introduction alive cost cash.",
+      '{contact} discussed the enquiry within earshot of a collector. The crew\'s recruitment plans became street gossip.',
+      'A message-handling fee appeared when {who} spoke to {contact}. Paying it kept the introduction available.',
     ],
   },
-
   callbackPlace: {
     lead: [
-      "{who} returned to {place} and found someone authorised to forward the invitation.",
-      "A message had been left for the crew at {place}. It asked when the fixer could talk.",
-      "The next visit to {place} produced a mutual acquaintance willing to make the introduction.",
+      '{who} returned to {place} and found a reply tucked behind the counter. It asked what the tong expected from a new runner.',
+      'Someone at {place} recognised the description and offered to pass on the invitation after work.',
+      'The next visit to {place} produced a mutual acquaintance willing to introduce the fixer.',
     ],
     deadEnd: [
-      "The notice at {place} belonged to somebody else with a similar name. The crew checked and crossed it off.",
-      "Nobody at {place} could place the description. The original tip had stretched a passing resemblance.",
+      'The recommendation at {place} had been copied from an old notice. Nobody knew whether its subject still worked nearby.',
+      'A second enquiry at {place} exposed a misunderstanding. The person being recommended wanted a repair job done, not a new employer.',
     ],
     snag: [
-      "The crew's questions at {place} attracted an employer's attention. Discretion became harder to maintain.",
-      "{who} slipped on a wet step at {place}. A bruised knee made the stairs less appealing.",
+      'A collector at {place} started asking why the tong was recruiting nearby. The crew\'s questions became harder to keep discreet.',
+      '{who} slipped on wet paving at {place}. A bruised knee made the nearest stool suddenly attractive.',
     ],
   },
-
   turn: {
     good: [
-      "{leadShort} replied directly. They wanted to hear from the fixer before deciding anything.",
-      "The introduction reached {leadShort}, who asked for a choice of meeting times.",
-      "A conversation with {leadShort} moved beyond the message chain. The tong sounded worth discussing.",
-      "{leadShort} asked where a quiet meeting could happen. Nobody had agreed to join, but the invitation was being considered.",
+      '{leadShort} replied directly and asked when the fixer could talk. No intermediary needed to improve the wording.',
+      'The invitation reached {leadShort}, who suggested somewhere quiet enough to hear the answers.',
+      'A message from {leadShort} asked about pay, downtime and the people already in the tong. The conversation was within reach.',
+      '{leadShort} wanted to hear the offer in person. The crew had a chance to arrange it without anyone charging for another introduction.',
     ],
     rough: [
-      "{leadShort} answered, but wanted a previous promise explained before considering another employer.",
-      "The invitation reached {leadShort}. An intermediary then claimed a fee for any meeting that followed.",
-      "{leadShort} was willing to hear more, provided the crew stopped letting other people speak on their behalf.",
-      "A possible meeting with {leadShort} came with difficult questions about pay, downtime and who carried the risk.",
+      '{leadShort} answered, but wanted an old story about the tong explained before considering a meeting.',
+      'An intermediary claimed a fee just as {leadShort} became willing to talk. Nobody had mentioned owning the conversation before.',
+      '{leadShort} was interested enough to ask difficult questions and unimpressed by the answers passed through other people.',
+      'A possible meeting with {leadShort} came with one condition: no promises the fixer hadn\'t personally agreed to keep.',
     ],
   },
-
   call: [
-    "An intermediary demanded payment for letting the crew leave and swung at {who}. The crew called it in.",
-    "Someone mistook the enquiry for a debt collection and pulled a weapon. A shot broke the window, and they're calling it in.",
-    "A group claiming to control local hiring blocked the stairs. The first shove sent a chair over, and the crew called it in.",
-    "The meeting room door opened on people demanding the crew's handsets. Someone threw a punch, and they're calling it in.",
+    'A broker demanded payment for letting the crew leave and swung a stool at {who}. The crew called it in.',
+    'A group claiming to control local hiring blocked the passage. Someone threw a punch, and they\'re calling it in.',
+    'The conversation stopped when armed collectors forced through the curtain. A shot broke the counter light, and the crew called it in.',
+    'Someone mistook the enquiry for an attempt to collect a debt and lunged across the table. The crew backed towards the doorway and called it in.',
   ],
-
   close: {
     met: [
-      "{leadShort} agreed to meet the fixer. The crew brought the arrangement home without calling it a recruitment.",
-      "The search ended with {leadShort} willing to sit down and discuss the tong. Joining remained their decision.",
-      "{who} passed on the agreed meeting details. {leadShort} was ready to hear the fixer out.",
-      "The invitation was accepted for a conversation, not an oath. {leadShort} would meet the fixer.",
+      '{leadShort} agreed to meet the fixer. The crew brought the details home without calling it a new recruit.',
+      'The search ended with {leadShort} willing to discuss joining. The decision still belonged to the person coming through the door.',
+      '{who} passed on the agreed meeting details. \'A conversation. Don\'t start assigning a bed.\'',
+      'The invitation was accepted for a meeting, not an oath. {leadShort} would hear the fixer out.',
     ],
     partial: [
-      "The crew secured a name for {leadShort}, but no meeting. The fixer had someone to approach, not an appointment.",
-      "{who} brought home a checked name. {leadShort} hadn't agreed to talk yet.",
-      "The search put a name to {leadShort}. Arranging a conversation remained unfinished.",
-      "There was a real name in Joss's notes now, but no meeting beside it. That was as far as the approach had gone.", // fixed: the ledger is the oath (WORLD.md)
+      'The crew brought home a checked name for {leadShort}, but no meeting. The introduction still needed work.',
+      'There was a real name in the notes now. {leadShort} hadn\'t agreed to talk.',
+      '{who} put the confirmed name beside the original description. The space for a meeting stayed blank.',
+      'The search identified {leadShort} without securing a conversation. That was progress, not a recruitment.',
     ],
     failed: [
-      "The crew closed the search without a usable name or meeting. Only the finds along the way remained.",
-      "No introduction held up. The expedition ended with whatever the crew had found en route.",
-      "{who} brought the search notes home without a confirmed identity. The side finds were all the run produced.",
-      "The approach went nowhere. Joss logged the finds separately and left the recruitment entry empty.",
+      'The crew closed the search without a usable name or meeting. Only the finds along the way remained.',
+      'No introduction held up. The expedition produced whatever the crew had found between enquiries.',
+      '{who} brought the search notes home without a confirmed identity. The side finds were all there was to log.',
+      'The approach went nowhere. Joss recorded the finds separately and left the recruitment entry empty.',
     ],
   },
-
   asides: {
     superstitious: [
-      "{who} considered a good introduction something worth leaving tea out for.",
-      "The number four still troubled {who}, even when it appeared in an otherwise reasonable address.",
+      '{who} considered a proper introduction worth more than a lucky number, though having both seemed sensible.',
+      'A note from {who} asked whether mentioning the tong\'s altar made the invitation reassuring or ominous.',
     ],
     money: [
-      "{who} wanted any future colleague to ask about pay before asking about glory.",
-      "A margin note from {who} said that 'like a family' was not a wage figure.",
+      '{who} wanted any prospective colleague to ask about wages before asking about reputation.',
+      'The phrase \'a share of future success\' had received a firm underline in {who}\'s notes.',
     ],
     warm: [
-      "{who} kept remembering what it felt like to be the person considering a strange crew.",
-      "{who} bought the contact's nephew a sugar cane drink and heard the whole family history for it.", // fixed: a moment, not a reflection
+      '{who} bought the contact\'s nephew a sugar cane drink and heard the whole family history for it.',
+      'A margin note from {who} said to ask about food preferences before choosing anywhere for a meeting.',
     ],
     hot: [
-      "{who} had very little patience for people discussing workers as though they owned them.",
-      "The phrase 'excellent exposure' had not improved {who}'s opinion of anyone.",
+      '{who} had little patience for anyone who described changing employers as betrayal.',
+      'The report from {who} contained a strongly worded opinion about charging people to introduce themselves.',
     ],
     wary: [
-      "{who} preferred a cautious question to an enthusiastic promise.",
-      "An easy answer made {who} want to check the question again.",
+      '{who} preferred an awkward question to an answer that arrived too easily.',
+      'A cautious reply would have reassured {who} more than an immediate yes.',
     ],
     calm: [
-      "{who} let the silence run until the other side filled it.", // fixed: a moment, not a reflection
-      "The report from {who} left room for an answer that wasn't yes.",
+      '{who} let the silence run until the other side filled it.',
+      'The notes from {who} left room for an answer that wasn\'t the one the tong wanted.',
     ],
     cold: [
-      "{who} checked the reference with three people the reference didn't know about.", // fixed: a moment, not a reflection
-      "A good story hadn't persuaded {who} to skip the ordinary questions.",
+      '{who} checked the reference with three people the reference didn\'t know about.',
+      '{who} kept recommendations in one column and checked facts in another.',
     ],
     charming: [
-      "{who} insisted that an invitation should sound like somewhere a person might want to go.",
-      "The report from {who} remembered names more carefully than titles.",
+      '{who} insisted that recruitment should sound less like arranging a dental appointment.',
+      'The report from {who} included a reminder that remembering someone\'s name was not an advanced technique.',
     ],
     curious: [
-      "{who} wanted to know what made someone stay with a crew after the exciting part wore off.",
-      "A note from {who} asked whether everyone remembered their own recruitment more kindly than it happened.",
+      '{who} wondered which detail about the tong would sound strangest to somebody new.',
+      'A question in {who}\'s notes asked what people wished they had known before joining their previous crews.',
     ],
     chrome: [
-      "{who} considered questions about implant downtime a sign of sense, not fragility.",
-      "The report from {who} underlined that a person was not the hardware fitted to them.",
+      '{who} considered questions about implant downtime evidence of experience, not a lack of commitment.',
+      'The report from {who} underlined that useful hardware did not tell anyone whether its owner was good company.',
     ],
     haunted: [
-      "{who} disliked the phrase 'a fresh start' when it sounded like an instruction to forget.",
-      "The word 'loyalty' had made {who} quieter until somebody explained what they meant by it.",
+      '{who} disliked invitations that sounded as though a person was expected to leave their old life at the door.',
+      'The word \'family\' had made {who} pause longer than the rest of the recruitment pitch.',
     ],
   },
-
   pair: [
-    "{who} and {other} rehearsed describing the tong. The version without heroic exaggeration took considerably less time.",
-    "A wait between enquiries became a debate between {who} and {other} about who had made the worse first impression.",
-    "{who} checked the names while {other} checked the numbers. They caught a mistake before sending the invitation.",
-    "The crew paused while {who} and {other} argued over whether mentioning the safehouse kettle helped or hurt recruitment.",
-    "{who} asked {other} what would have made joining easier. The answer was practical enough to write down.",
-    "A quiet afternoon gave {who} and {other} time to agree on one thing: nobody should promise that the stairs were manageable.",
+    '{who} and {other} rehearsed describing the tong over tea. Each removed a detail the other had thought sounded welcoming.',
+    'A wait between enquiries became an argument about which of {who} and {other} had looked more suspicious when joining.',
+    '{who} checked the names while {other} checked the numbers. They caught a mistake before sending the invitation.',
+    'The crew paused while {who} and {other} debated whether mentioning the stairs counted as honesty or sabotage.',
+    '{who} asked {other} what would have made joining easier. The answer began with better directions and became unexpectedly thoughtful.',
+    'A quiet stretch gave {who} and {other} time to agree on a recruitment rule: nobody got described as \'the sensible one\' without being present.',
+    'The crew paused while {who} and {other} argued over whether mentioning the safehouse kettle helped or hurt recruitment.',
   ],
-
   joss: {
     day: [
-      "Joss: \"An invitation isn't a summons. We can afford to remember that.\"",
-      "Joss: \"Tell them what we're actually like. They'll find out about the kettle eventually.\"",
-      "Joss: \"I've kept the questions with the report. Don't promise answers we haven't agreed.\"",
-      "Joss: \"We need another person, not a description that looks good on the board.\"",
-      "Joss: \"Take your time with the names. Being remembered correctly is a reasonable place to start.\"",
-      "Joss: \"I've logged what we know. The rest can wait until someone chooses to tell us.\"",
+      'Joss: "Tell them what we\'re actually like. They can discover the kettle\'s personality in their own time."',
+      'Joss: "I\'ve kept their questions with the report. Let\'s answer those before inventing a welcome speech."',
+      'Joss: "We need another person, not a list of abilities that agrees with us."',
+      'Joss: "An unanswered message is still unanswered. We don\'t need to make it mean anything else yet."',
     ],
     met: [
-      "Joss: \"A meeting, then. I'll make sure we have clean cups, not a welcome speech.\"",
-      "Joss: \"They've agreed to talk. We should probably let them do some of it.\"",
-      "Joss: \"Good. No name in the sworn ledger until they choose to write it.\"",
+      'Joss: "A meeting, then. I\'ll remind everyone that listening is allowed."',
+      'Joss: "Good. Clean cups, clear terms, no one telling the embarrassing story before they\'ve sat down."',
+      'Joss: "They\'re coming to talk. The ledger can wait until they choose to write in it."',
+      'Joss: "Good. No name in the sworn ledger until they choose to write it."',
     ],
     failed: [
-      "Joss: \"No introduction this time. Whoever we find next won't know they were second choice.\"", // fixed: the old line didn't parse
-      "Joss: \"I've closed the search. We won't turn an unanswered message into an obligation.\"",
-      "Joss: \"Nothing confirmed. Better an empty space than a name we haven't checked.\"",
+      'Joss: "I\'ve closed the search. No confirmed name, no invented explanation."',
+      'Joss: "We didn\'t get an introduction. That isn\'t a verdict on us or on someone we haven\'t met."',
+      'Joss: "The finds are logged separately. We\'ll start the next search from what we actually know."',
     ],
   },
 };
