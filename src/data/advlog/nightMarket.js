@@ -1,5 +1,5 @@
 // Log lines: the Night Market. The owner's draft (2026-11-22), as pasted; it covers the two lines
-// split out of the recruit and cash drafts. Moves to src/data/advlog/ when the log engine is built.
+// split out of the recruit and cash drafts. In use since slice 1 (2026-11-22): core/advlog.js reads contacts, places and quiet.
 export default {
   district: 'nightMarket',
 

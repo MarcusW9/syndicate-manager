@@ -1117,6 +1117,8 @@ function finish(state) {
     back: { crewIds: [...am.crewIds, am.overwatch?.id, am.wheels, am.standby?.joined ? null : am.standby?.id].filter(Boolean), pay, away: !!am.away, templateId: am.templateId },
     timeline: {
       result: outcome, steps, outcome: results,
+      // A hands-off job's days out, a line a day (the adventure log, core/advlog.js); none on a job played live.
+      ...(am.advlog?.log?.length ? { days: am.advlog.log.map(({ day, text }) => ({ day, text })) } : {}),
       // The full log and its summary (save v16). Hands-off runs also name their orders.
       // A fight's staging (the map, the director's beats, both sides' pips) is for the live view only: the report keeps
       // lean lines (core/report.js reportEvent), so a fight job's report weighs about what any other job's does.

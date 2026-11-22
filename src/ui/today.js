@@ -176,6 +176,7 @@ export function renderCrewsOut(out = crewsOut(state)) {
             <div class="crewsout__text">
               <p class="crewsout__phase small"><strong>${esc(c.phase)}</strong> · ${esc(STATUS[c.status])}</p>
               ${c.lines.map((l) => `<p class="small">${c.day ? `Day ${c.day}: ` : ''}${crewLinks(l)}</p>`).join('')}
+              ${logDetails(c.log)}
             </div>
           </div>
           <div class="crewsout__foot">
@@ -185,6 +186,18 @@ export function renderCrewsOut(out = crewsOut(state)) {
         </li>`;
       }).join('')}
     </ul>`;
+}
+
+/**
+ * A crew's log so far (the adventure log, core/advlog.js), folded under its card: tap to read every
+ * day (iOS rules: no hover). Nothing until there are two days to read.
+ */
+export function logDetails(log = []) {
+  if (log.length < 2) return '';
+  return `<details class="advlog">
+      <summary class="small">The log · ${log.length} days</summary>
+      <ol class="advlog__days">${log.map((l) => `<li class="small"><span class="advlog__day">Day ${l.day}</span> ${crewLinks(l.text)}</li>`).join('')}</ol>
+    </details>`;
 }
 
 /** A district under a crew: tap to light it on the map and show only what's happening there. */

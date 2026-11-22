@@ -17,6 +17,7 @@
 //
 // Randomness: hashRng from the seed, the contract and the day, so no other roll moves.
 
+import { asideFor, capLog } from './advlog.js';
 import { CONTRACT_KINDS, SLOT_PAY, POST_THREAT, INCIDENT_LINES } from '../data/contracts.js';
 import { CLIENTS } from '../data/clients.js';
 import { NAMES } from '../config/names.js';
@@ -156,7 +157,7 @@ export function pullOff(prev, contractId) {
   if (state.inbox.some((m) => m.kind === 'contract' && !m.resolved && m.payload?.contractId === contractId)) return prev; // answer the call first
   endContract(state, c, 'pulled');
   const t = adjustTrust(state, c.clientId, CONTRACT.trust.pullOff);
-  c.log.push({ day: state.day, tone: 'warn', text: `Pulled off the post early.${t ? ` ${clientName(c.clientId)}: trust ${t}.` : ''}` });
+  logPost(c, { day: state.day, tone: 'warn', text: `Pulled off the post early.${t ? ` ${clientName(c.clientId)}: trust ${t}.` : ''}` });
   return state;
 }
 
@@ -180,6 +181,12 @@ export function tickContracts(state) {
   }
 }
 
+/** A post's day log keeps its last LOG_KEEP lines (core/advlog.js). */
+function logPost(c, entry) {
+  c.log.push(entry);
+  capLog(c.log);
+}
+
 function playDay(state, c) {
   const crew = c.crewIds.map((id) => state.crew.find((o) => o.id === id)).filter((o) => o && o.condition.injury !== 'dead');
   if (!crew.length) { endContract(state, c, 'empty'); return; }
@@ -191,6 +198,7 @@ function playDay(state, c) {
   const margin = die + roll.value - (10 + postDifficulty(c));
   const vars = { who: roll.op.handle, client: clientName(c.clientId), n: 3 + Math.floor(rng() * 3) };
   c.owed += dayPay(c);
+  const aside = asideFor(state.seed, c.id, state.day, roll.op); // the adventure log's personality (core/advlog.js), its own hash
 
   for (const op of crew) {
     gainXp(op, crew, stat, CONTRACT.xpPerDay, state.day);
@@ -210,16 +218,16 @@ function playDay(state, c) {
       addHeat(state, c.district, 1);
       extra.push(`Heat +1 in ${districtText(c.district)}.`);
     }
-    c.log.push({ day: state.day, tone: 'warn', text: [text, ...extra].join(' ') });
+    logPost(c, { day: state.day, tone: 'warn', text: [text + aside, ...extra].join(' ') });
     return;
   }
   if (margin >= CONTRACT.goodMargin) {
     const tip = round50(c.slotPay * CONTRACT.tip);
     c.owed += tip;
-    c.log.push({ day: state.day, tone: 'good', text: `${fill(pick(rng, k.good), vars)} +${money(tip)}.` });
+    logPost(c, { day: state.day, tone: 'good', text: `${fill(pick(rng, k.good), vars)}${aside} +${money(tip)}.` });
     return;
   }
-  c.log.push({ day: state.day, tone: 'plain', text: fill(pick(rng, k.quiet), vars) });
+  logPost(c, { day: state.day, tone: 'plain', text: fill(pick(rng, k.quiet), vars) + aside });
 }
 
 /**
@@ -234,7 +242,7 @@ function callIn(state, c, crew, vars) {
   const threat = postThreat(c);
   const n = COUNT_BY_THREAT[Math.max(1, Math.min(5, threat))];
   const text = fill(k.incident, { ...vars, n: countWord(n) });
-  c.log.push({ day: state.day, tone: 'bad', text });
+  logPost(c, { day: state.day, tone: 'bad', text });
   for (const op of crew) op.condition.awayUntil = Math.max(op.condition.awayUntil ?? 0, state.day + 1); // still out until the call is answered
   state.inbox.unshift({
     id: `ct-call-${c.id}-${state.day}`, type: 'job', day: state.day, kind: 'contract',
@@ -297,7 +305,7 @@ export function CONTRACT_RESOLVER(state, msg, optionId) {
     endContract(state, c, 'gaveUp');
     const t = adjustTrust(state, c.clientId, CONTRACT.trust.gaveUp);
     msg.payload.outcome = `${fill(INCIDENT_LINES.gaveUp, { client: clientName(c.clientId) })}${t ? ` Trust ${t}.` : ''}`;
-    c.log.push({ day: state.day, tone: 'warn', text: msg.payload.outcome });
+    logPost(c, { day: state.day, tone: 'warn', text: msg.payload.outcome });
     msg.resolved = true;
     msg.blocking = false;
     return;
@@ -419,7 +427,7 @@ export function finishPost(state) {
       if (!c.crewIds.length) { endContract(state, c, 'empty'); line += ' Nobody is fit to keep it: the post is over, the pay so far kept.'; }
       else if (state.day >= c.endDay) finish(state, c);
     }
-    c.log.push({ day: state.day, tone: am.aborted ? 'warn' : deaths.length ? 'bad' : 'good', text: line, fight: true });
+    logPost(c, { day: state.day, tone: am.aborted ? 'warn' : deaths.length ? 'bad' : 'good', text: line, fight: true });
     am.report.push(line);
   }
   const milestones = checkMilestones(state, survivors); // ten fights won, a crewmate kept alive (core/milestones.js)

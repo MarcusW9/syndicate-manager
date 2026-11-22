@@ -23,6 +23,7 @@ import { money } from './money.js';
 import { pick, makeRng } from './rng.js';
 import { noteInjury, earn } from './earned.js';
 import { resolveScout, resolveWatch, findCard } from './dossier.js';
+import { sideDayLine, startFacts, capLog } from './advlog.js';
 
 export const SIDE_BOARD_SIZE = 5;
 export const SIDE_DIFFICULTY = 6; // rookie-job level: a 9 in the stat needs a 7 on the die
@@ -97,7 +98,7 @@ export function sendOnSideTask(prev, taskId, crewIds) {
   const returnDay = state.day + task.days;
   for (const id of crewIds) state.crew.find((o) => o.id === id).condition.awayUntil = returnDay;
   state.sideBoard = state.sideBoard.filter((id) => id !== taskId);
-  state.sideOut = [...(state.sideOut ?? []), { taskId, crewIds, returnDay }];
+  state.sideOut = [...(state.sideOut ?? []), { taskId, crewIds, returnDay, log: [] }];
   const who = crew.map((o) => o.handle).join(' and ');
   state.inbox.unshift({
     id: `side-sent-${taskId}-${state.day}`, type: 'job', day: state.day,
@@ -118,15 +119,35 @@ export function intelFor(state, district, inside = null) {
   return inside ? { bonus: INTEL_BONUS, source: inside } : null;
 }
 
-/** Daily: side tasks whose crew is back today resolve and report. Mutates the (cloned) state. */
+/**
+ * Daily: side tasks whose crew is back today resolve and report; those still out write the day's
+ * log line (the adventure log, core/advlog.js). Mutates the (cloned) state.
+ */
 export function returnSideTasks(state) {
+  for (const s of state.sideOut ?? []) if (s.returnDay > state.day && s.taskId) logSideDay(state, s);
   const due = (state.sideOut ?? []).filter((s) => s.returnDay <= state.day);
   if (!due.length) return;
   state.sideOut = state.sideOut.filter((s) => s.returnDay > state.day);
   for (const s of due) (s.scout ? resolveScout(state, s) : s.house ? resolveWatch(state, s) : resolve(state, s));
 }
 
-function resolve(state, { taskId, crewIds }) {
+/** The id a side task's log is seeded on: the task and the day it went out. */
+const tripOf = (task, s) => `side:${task.id}:${s.returnDay - task.days}`;
+
+/** A day out on a side task before its last: one log line on the entry (s.log, capped). */
+function logSideDay(state, s) {
+  const task = sideTaskById(s.taskId);
+  const crew = s.crewIds.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean);
+  if (!task || !crew.length) return;
+  const day = task.days - (s.returnDay - state.day);
+  s.log ??= [];
+  if (day < 1 || s.log.some((l) => l.day === day)) return;
+  s.facts ??= startFacts(state.seed, tripOf(task, s), task.district);
+  const line = sideDayLine({ seed: state.seed, tripId: tripOf(task, s), day, crew, district: task.district, facts: s.facts, purpose: task.purpose });
+  if (line) { s.log.push(line); capLog(s.log); }
+}
+
+function resolve(state, { taskId, crewIds, log = [] }) {
   const task = sideTaskById(taskId);
   const crew = crewIds.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean);
   if (!task || !crew.length) return;
@@ -193,6 +214,8 @@ function resolve(state, { taskId, crewIds }) {
     body: [line, ...results.map((r) => r.text)].join(' '),
     timeline: {
       result: success ? 'completed' : 'setback', steps: [line], outcome: results,
+      // The days out, a line a day; the result is the last line (the adventure log, core/advlog.js).
+      ...(log.length ? { days: capLog([...log.map(({ day, text }) => ({ day, text })), { day: task.days, text: line }]) } : {}),
       side: { taskId, actor: roll.op.handle, stat: task.stat, value: roll.value, notes: roll.notes, die, need, success },
     },
     blocking: false, read: false,
@@ -205,5 +228,5 @@ export function sideTasksOut(state) {
     ? { returnDay: s.returnDay, name: `Watch ${s.houseName ?? 'a tong'}`, district: state.rivals?.tongs.find((t) => t.id === s.house)?.home ?? null, crewIds: s.crewIds }
     : s.scout
     ? { returnDay: s.returnDay, name: `Scout ${findCard(state, s.scout)?.name ?? 'a name'}`, district: findCard(state, s.scout)?.home ?? null, crewIds: s.crewIds }
-    : { returnDay: s.returnDay, name: sideTaskById(s.taskId)?.name ?? s.taskId, district: sideTaskById(s.taskId)?.district ?? null, crewIds: s.crewIds }));
+    : { returnDay: s.returnDay, name: sideTaskById(s.taskId)?.name ?? s.taskId, district: sideTaskById(s.taskId)?.district ?? null, crewIds: s.crewIds, log: s.log ?? [] }));
 }

@@ -1123,5 +1123,11 @@ function migrate(state) {
     }
     state.version = 85;
   }
+  if (state.version === 85) {
+    // v86: the adventure log, slice 1 (DESIGN.md 2026-11-22). Side tasks out keep a day log (sidetasks.js
+    // logSideDay); a hands-off job's (am.advlog) and its facts start on its next day out (away.js writeLog).
+    for (const s of state.sideOut ?? []) if (s.taskId) s.log ??= [];
+    state.version = 86;
+  }
   return state;
 }

@@ -1,5 +1,5 @@
 // Log lines: the Docks. The owner's draft (2026-11-22, docs/log-lines-prompt.md), as pasted.
-// Moves to src/data/advlog/ when the log engine is built.
+// In use since slice 1 (2026-11-22): core/advlog.js reads contacts, places and quiet.
 export default {
   district: 'docks',
 

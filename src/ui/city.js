@@ -22,7 +22,8 @@ import { sideTasksOut } from '../core/sidetasks.js';
 import { renderTongs } from './tongs.js';
 import { renderThreats, grudgeGauge, raidWhen } from './raidcards.js';
 import { cityName, esc, face, districtName, daysLeft, rootBack, subTabs } from './shared.js';
-import { whereButton, renderCrewsOut } from './today.js';
+import { whereButton, renderCrewsOut, logDetails } from './today.js';
+import { crewLinks } from './messages.js';
 import { state, root, canGoBack, backLabel, V } from './view.js';
 
 /** Jobs on the board right now, by district. */
@@ -100,6 +101,7 @@ function renderOps() {
             <p class="crewsout__head"><strong>${esc(t.name)}</strong> <span class="muted small">side work · back ${esc(calendar(t.returnDay).weekday)}</span></p>
             <span class="crewsout__faces">${ops.map((op) => face(op, 'sm')).join('')}</span>
           </div>
+          ${t.log?.length ? `<div class="crewsout__text"><p class="small">Day ${t.log.at(-1).day}: ${crewLinks(t.log.at(-1).text)}</p>${logDetails(t.log)}</div>` : ''}
           ${t.district ? `<div class="crewsout__foot">${whereButton(t.district)}</div>` : ''}
         </li>`;
       }).join('')}
