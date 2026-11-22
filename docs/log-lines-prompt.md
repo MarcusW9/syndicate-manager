@@ -150,13 +150,13 @@ CLIENTS (local powers a small crew can reach, below the corps):
   contractor disputes, lost records, maintenance access; not Veridian-Apex, not Szeto;
   asks Still on the Books). A client's trust is personal, not their faction's.
 - Smaller recurring clients inside institutions (2026-11-22): their trust is their own,
-  never their employer's protection. Association (the Basin): Leung Mei-sum (community
+  never their employer's protection. Association (the Basin): Hui Lai-sum (community
   services), Yip Ka-chun (racing integrity), Chan Wing-kei (licensing and commercial
-  protection). Lau Ching-yee (Morrow & Venn marine claims surveyor); Dr. Cheng Hoi-yan
+  protection). Lau Ching-yee (Morrow & Venn marine claims surveyor); Dr. Choi Pui-ling
   (Veridian-Apex neural-device aftercare); Mok Wai-lun (Hoi-Sing restoration
-  coordinator, Old Town); Sze Nga-kit (AHL subcontractor accounts, Docks); Yuen Siu-ping
-  (Red Lanterns freight-yard steward; no tribute or grudge cancelled); Inspector Fong
-  Pak-lam (Wet Sleeve, 4th Precinct; corrupt, dislikes some corruption; no immunity, no
+  coordinator, Old Town); Kwan Yiu-kit (AHL subcontractor accounts, Docks); Lui Shuk-ping
+  (Red Lanterns freight-yard steward; no tribute or grudge cancelled); Inspector Cheuk
+  Tak-fai (Wet Sleeve, 4th Precinct; corrupt, dislikes some corruption; no immunity, no
   raid call-offs). Judge the request, not the employer.
 STREET CAST (rookie work): Doc Siu (Old Town; ex-surgeon, unlicensed clinic under
 Tenement Block 9, dry praise); Meena D'Sa (Rao's seamstress and counterkeeper); Tang Wai-chiu (Silver Fan

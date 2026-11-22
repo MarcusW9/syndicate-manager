@@ -185,7 +185,7 @@ The distinction is easier to discuss after someone else has made the decision.
 
 #### The neighbours it cannot remove
 
-The Silver Fan Circle runs the bets, loans and collections the Association refuses or cannot control. Its collectors are barred from official premises. They wait outside, where a losing punter still has to pass them.
+The Silver Fan Circle runs the bets, loans and collections the Association refuses or cannot control. Its collectors are barred from official premises. They wait outside, where a losing punter still has to pass them, and in the Undercroft below, which the Association does not count as its premises.
 
 The Association pursues illegal bookmakers, but the Undercroft survives. A raid can close a room more easily than it can remove the demand for credit or a private wager.
 
@@ -207,10 +207,10 @@ A letterhead establishes who is asking. It does not establish that they are righ
 
 Three recurring contacts represent different parts of the institution. Their trust is personal: helping one does not buy the cooperation of the others, unrestricted course access or the Association's protection.
 
-#### Leung Mei-sum
+#### Hui Lai-sum
 *The Basin · Association Community Services*
 
-Mei-sum carries a reused document wallet and a lunch container she rarely opens on time. She knows which relief centre has a working freezer and which grant recipient needs help completing a form rather than another reminder.
+Lai-sum carries a reused document wallet and a pencil she keeps losing behind her ear. She knows which relief centre has a working freezer and which grant recipient needs help completing a form rather than another reminder.
 
 She believes the Association should be judged by what reaches people.
 
@@ -266,7 +266,7 @@ He rarely discusses what it might cost senior management.
 
 #### One institution, different loyalties
 
-Mei-sum may consider a betting-room closure disastrous for a neighbourhood project. Wing-kei may consider it essential. Ka-chun may need a witness neither wants questioned that week.
+Lai-sum may consider a betting-room closure disastrous for a neighbourhood project. Wing-kei may consider it essential. Ka-chun may need a witness neither wants questioned that week.
 
 They can disagree without any of them secretly serving another faction.
 
@@ -555,7 +555,7 @@ Neither promise is always kept. Corporate workers are not fools for choosing sec
 
 Running is recognised as a serious profession. Joining a good tong can be a respectable career choice, not a last resort or something a family must be ashamed of.
 
-People join for different reasons: money, skilled work, independence, friendship, ambition or the chance to become very good at something difficult. Some leave corporate careers deliberately. Others train towards tong work from the beginning.
+People join for different reasons: money, skilled work, independence, friendship, ambition or the chance to become very good at something difficult. Some leave corporate careers deliberately. Others train towards tong work from the start of their working lives.
 
 A family can worry about the danger while proudly telling the neighbours which hall accepted their daughter. A former colleague can envy a runner's freedom without wanting the uncertainty. Someone can be pleased with their career and still complain about the hours.
 
@@ -825,10 +825,10 @@ She investigates shipping losses: spoiled freight, damaged machinery, missing co
 > "Photograph it before anyone helpfully tidies up."
 > "My client has told me what would be convenient. Now I need to know what happened."
 
-#### Dr. Cheng Hoi-yan
+#### Dr. Choi Pui-ling
 *Glass Heights · Veridian-Apex neural-device aftercare*
 
-Hoi-yan rolls her sleeves above the wrist before examining old hardware. She explains a repair before touching the patient and becomes noticeably less patient when a manager describes an obsolete implant as an obsolete customer.
+Pui-ling rolls her sleeves above the wrist before examining old hardware. She explains a repair before touching the patient and becomes noticeably less patient when a manager describes an obsolete implant as an obsolete customer.
 
 She handles cases that fall between current products, expired support agreements and people who still need the equipment inside them.
 
@@ -840,7 +840,7 @@ She handles cases that fall between current products, expired support agreements
 
 **Her limits:** no involuntary procedures, concealed testing or treating a patient as a convenient source of hardware. She will still demand the return of company equipment when she believes keeping it creates a genuine safety risk.
 
-**Ties:** Veridian-Apex's aftercare services and the people maintaining its older implants. Pang Man-ki handles clinic appointments and accounts; Hoi-yan handles technical and clinical problems. Neither can simply overrule the other's department.
+**Ties:** Veridian-Apex's aftercare services and the people maintaining its older implants. Pang Man-ki handles clinic appointments and accounts; Pui-ling handles technical and clinical problems. Neither can simply overrule the other's department.
 
 **Her briefings:**
 > "It stopped being supported. It did not stop being inside someone."
@@ -867,16 +867,16 @@ He keeps the lights on for a company that has made darkness profitable.
 > "You can argue about the account after we stop the wall getting hot."
 > "I need access to the meter room. Not a fight outside it."
 
-#### Sze Nga-kit
+#### Kwan Yiu-kit
 *The Docks · Aether-Harbour Logistics subcontractor accounts*
 
-Nga-kit carries a cheap calculator despite having three company devices. When a haulier disputes a payment, he works through the figures with them instead of pointing at the portal.
+Yiu-kit carries a cheap calculator despite having three company devices. When a haulier disputes a payment, he works through the figures with them instead of pointing at the portal.
 
 His department sits between AHL and the smaller firms that keep its freight moving. Everyone above him wants lower costs. Everyone below him wants to be paid.
 
 **What the street knows:** he can explain why a payment stopped and sometimes get it moving again. He cannot make an invented delivery become a real one.
 
-**What he doesn't say:** a procurement manager has been steering contracts towards favoured operators and charging other suppliers to remain eligible. Nga-kit approved questionable invoices after the manager promised to release months of legitimate payments. The evidence he wants recovered implicates him too.
+**What he doesn't say:** a procurement manager has been steering contracts towards favoured operators and charging other suppliers to remain eligible. Yiu-kit approved questionable invoices after the manager promised to release months of legitimate payments. The evidence he wants recovered implicates him too.
 
 **His work:** finding subcontractors who have stopped answering, recovering delivery records, tracing impounded vehicles and securing evidence before an internal review loses interest.
 
@@ -888,10 +888,10 @@ His department sits between AHL and the smaller firms that keep its freight movi
 > "The driver delivered it. The system disagrees. Guess which one has been paid."
 > "If this reaches my manager before it reaches the review, we have both wasted our money."
 
-#### Yuen Siu-ping
+#### Lui Shuk-ping
 *The Docks · Red Lanterns freight-yard steward*
 
-Siu-ping keeps a folding chair outside a yard office and remembers which drivers have already paid. She dislikes arguments that block the road and enforcers who collect the same toll twice.
+Shuk-ping keeps a folding chair outside a yard office and remembers which drivers have already paid. She dislikes arguments that block the road and enforcers who collect the same toll twice.
 
 Her orderliness should not be mistaken for innocence. The toll is still protection money.
 
@@ -909,16 +909,16 @@ Her orderliness should not be mistaken for innocence. The toll is still protecti
 > "He paid at the gate. If somebody charged him again, bring me the receipt."
 > "I said find out whose money it is. Don't spend any while you're deciding."
 
-#### Inspector Fong Pak-lam
+#### Inspector Cheuk Tak-fai
 *The Docks · Municipal Harbour Police, 4th Precinct*
 
-Fong turns his handset face down before ordering tea. He remembers names, asks after injuries and never offers to put anything important in writing.
+Cheuk turns his handset face down before ordering tea. He remembers names, asks after injuries and never offers to put anything important in writing.
 
 He is a corrupt officer with a genuine dislike of certain kinds of corruption. The distinction is clear to him and less reassuring to everyone else.
 
 **What the street knows:** he takes money. He also occasionally returns confiscated property that other officers would have sold.
 
-**What he doesn't say:** a rival officer is running a private racket through confiscated goods, and some of the missing property passed through a store Fong signed for. He did not organise the theft. He accepted payment not to inspect it.
+**What he doesn't say:** a rival officer is running a private racket through confiscated goods, and some of the missing property passed through a store Cheuk signed for. He did not organise the theft. He accepted payment not to inspect it.
 
 **His work:** locating seized equipment that never reached evidence storage, finding intermediaries selling police property and arranging conversations with witnesses who will not enter a station.
 
@@ -934,11 +934,11 @@ Hiring the crew does not make them police contractors with official powers. His 
 
 ### Personal trust, institutional interests
 
-The Association's Leung Mei-sum, Yip Ka-chun and Chan Wing-kei offer three further routes into institutional work: community services, racing integrity and commercial protection. Their dossiers sit under "The Racing Association: the city's respectable money."
+The Association's Hui Lai-sum, Yip Ka-chun and Chan Wing-kei offer three further routes into institutional work: community services, racing integrity and commercial protection. Their dossiers sit under "The Racing Association: the city's respectable money."
 
 A community-services contract may be more humane than a corporate collection. An Association monopoly-enforcement job may be less defensible than a Red Lantern steward recovering a driver's stolen vehicle. The crew has to judge the request, not just the employer.
 
-A client can value the tong while remaining loyal to an organisation that harms it elsewhere. Siu-ping cannot promise peace with the Red Lanterns. Fong cannot make the precinct safe. Hoi-yan cannot turn a personal arrangement into company healthcare cover.
+A client can value the tong while remaining loyal to an organisation that harms it elsewhere. Shuk-ping cannot promise peace with the Red Lanterns. Cheuk cannot make the precinct safe. Pui-ling cannot turn a personal arrangement into company healthcare cover.
 
 Nor does moving against a colleague automatically make someone a reformer. They may want a better organisation, a better position within it or one dangerous problem removed.
 
@@ -1214,13 +1214,13 @@ CLIENTS (local powers a small crew can reach, below the corps):
   contractor disputes, lost records, maintenance access; not Veridian-Apex, not Szeto;
   asks Still on the Books). A client's trust is personal, not their faction's.
 - Smaller recurring clients inside institutions (2026-11-22): their trust is their own,
-  never their employer's protection. Association (the Basin): Leung Mei-sum (community
+  never their employer's protection. Association (the Basin): Hui Lai-sum (community
   services), Yip Ka-chun (racing integrity), Chan Wing-kei (licensing and commercial
-  protection). Lau Ching-yee (Morrow & Venn marine claims surveyor); Dr. Cheng Hoi-yan
+  protection). Lau Ching-yee (Morrow & Venn marine claims surveyor); Dr. Choi Pui-ling
   (Veridian-Apex neural-device aftercare); Mok Wai-lun (Hoi-Sing restoration
-  coordinator, Old Town); Sze Nga-kit (AHL subcontractor accounts, Docks); Yuen Siu-ping
-  (Red Lanterns freight-yard steward; no tribute or grudge cancelled); Inspector Fong
-  Pak-lam (Wet Sleeve, 4th Precinct; corrupt, dislikes some corruption; no immunity, no
+  coordinator, Old Town); Kwan Yiu-kit (AHL subcontractor accounts, Docks); Lui Shuk-ping
+  (Red Lanterns freight-yard steward; no tribute or grudge cancelled); Inspector Cheuk
+  Tak-fai (Wet Sleeve, 4th Precinct; corrupt, dislikes some corruption; no immunity, no
   raid call-offs). Judge the request, not the employer.
 STREET CAST (rookie work): Doc Siu (Old Town; ex-surgeon, unlicensed clinic under
 Tenement Block 9, dry praise); Meena D'Sa (Rao's seamstress and counterkeeper); Tang Wai-chiu (Silver Fan
