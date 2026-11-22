@@ -177,6 +177,100 @@ export const CAST = {
       disappoint: ['You promised a time you knew we could not make.', 'Find another courier. One who does not read the terms.'],
     },
   },
+  // Racing Association contacts (WORLD.md, 2026-11-22, "Association clients"). Greets open
+  // with their canon briefings; the rest are draft lines for the owner to edit.
+  hui: {
+    name: 'Hui Lai-sum',
+    district: 'basin',
+    desc: 'Racing Association community-services officer. A reused document wallet, a pencil she keeps losing behind her ear, and a working knowledge of which relief centre still has a freezer that holds temperature.',
+    lines: {
+      greet: ['I need the refrigerators working. You can explain whose fault it was afterwards.', 'They\'ve already filled in the form. Go and see what they need.', 'The grant paid for a repair. I\'d like to see the repair.'],
+      approve: ['The meals went out on time. That\'s the report I care about.', 'You asked them what they needed. Thank you.', 'I\'ll come and look at it myself tomorrow, but I believe you.'],
+      disappoint: ['A form is finished. A kitchen is not.', 'I won\'t trade residents\' details for anybody\'s favour, including yours.'],
+    },
+  },
+  yip: {
+    name: 'Yip Ka-chun',
+    district: 'basin',
+    desc: 'Racing Association integrity investigator at Lantern Course. Listens without interrupting, then asks the question the briefing avoided; takes a stable hand\'s word as seriously as an owner\'s.',
+    lines: {
+      greet: ['I didn\'t ask whether he\'s important. I asked who let him through.', 'Bring back what you find. Not what you think will help my case.', 'Mak keeps the stable passes. Start with his list, not your theory.'],
+      approve: ['Untouched and in the bag. That will hold up.', 'You noted what didn\'t fit. Most people tidy it away.', 'The horse is fine. That matters more than the case.'],
+      disappoint: ['You improved the evidence. Now it\'s worthless.', 'A famous name doesn\'t make it true, and neither does yours.'],
+    },
+  },
+  chan: {
+    name: 'Chan Wing-kei',
+    district: 'basin',
+    desc: 'Racing Association licensing and commercial-protection officer. Courteous, punctual and precise about deadlines; his notices are worth reading.',
+    lines: {
+      greet: ['They have had three notices and two extensions. Please don\'t mistake their surprise for a lack of warning.', 'You are collecting the equipment listed. If the list is wrong, call me before touching anything.', 'Nobody is to be touched. The equipment is the matter.'],
+      approve: ['Collected as listed, with a signature. Thank you.', 'The record is complete. The rest is for the lawyers.', 'You kept to the list. That is all the Association asks.'],
+      disappoint: ['That was not on the list, and now it is my problem.', 'Intimidation is not among the services we contract for.'],
+    },
+  },
+  // Clients across the lines (WORLD.md, 2026-11-22): smaller recurring clients inside
+  // institutions. Greets open with their canon briefings; the rest are drafts.
+  lau: {
+    name: 'Lau Ching-yee',
+    district: 'heights',
+    desc: 'Morrow & Venn marine claims surveyor. Practical shoes, a waterproof document case, and the habit of asking whether anyone was hurt before she asks what the cargo was worth.',
+    lines: {
+      greet: ['Photograph it before anyone helpfully tidies up.', 'My client has told me what would be convenient. Now I need to know what happened.', 'Who unloaded it, and was anyone hurt?'],
+      approve: ['Witnessed, photographed and still where it fell. Thank you.', 'That account matches the damage. Good.', 'Whatever the settlement, the report will be right.'],
+      disappoint: ['You told them the claim was settled. It is not.', 'I pay for evidence, not for the answer you thought I wanted.'],
+    },
+  },
+  choi: {
+    name: 'Dr. Choi Pui-ling',
+    district: 'heights',
+    desc: 'Veridian-Apex neural-device aftercare doctor. Rolls her sleeves above the wrist before examining old hardware and explains a repair before she touches anyone.',
+    lines: {
+      greet: ['It stopped being supported. It did not stop being inside someone.', 'Bring the whole unit. The part you think is rubbish may be the part I need.', 'Tell me who is wearing it before you tell me what it is worth.'],
+      approve: ['Complete, and nobody hurt getting it. Thank you.', 'That one can still be made safe. Good.', 'They agreed to see me. That is harder than the retrieval.'],
+      disappoint: ['A patient is not a parts bin.', 'You brought half of it. The other half is still in someone\'s neck.'],
+    },
+  },
+  mok: {
+    name: 'Mok Wai-lun',
+    district: 'oldTown',
+    desc: 'Hoi-Sing Grid & Cable restoration coordinator for Old Town. Eats standing beside a dispatch screen, moving repair teams between faults that all became urgent before breakfast.',
+    lines: {
+      greet: ['You can argue about the account after we stop the wall getting hot.', 'I need access to the meter room. Not a fight outside it.', 'The street floods first at the bottom. Start there.'],
+      approve: ['Crew in, fault fixed, nobody shouting. That\'s a good shift.', 'The supplies are back. I can plan the week again.', 'The lights are on. Don\'t ask what the bill says.'],
+      disappoint: ['You made a live cupboard somebody else\'s problem.', 'I lost a shift to this. The street loses a night.'],
+    },
+  },
+  kwan: {
+    name: 'Kwan Yiu-kit',
+    district: 'docks',
+    desc: 'Aether-Harbour Logistics subcontractor-accounts clerk. Carries a cheap calculator despite three company devices, and works through a haulier\'s figures with them instead of pointing at the portal.',
+    lines: {
+      greet: ['The driver delivered it. The system disagrees. Guess which one has been paid.', 'If this reaches my manager before it reaches the review, we have both wasted our money.', 'Bring me the delivery record, not the story about it.'],
+      approve: ['The numbers agree now. That almost never happens.', 'The review has it. Good. Don\'t tell me what else you read.', 'They\'ll be paid this month. Thank you.'],
+      disappoint: ['I can\'t make an invented delivery real, and neither can you.', 'My manager has your name now. That was the one thing.'],
+    },
+  },
+  lui: {
+    name: 'Lui Shuk-ping',
+    district: 'docks',
+    desc: 'Red Lanterns freight-yard steward. Keeps a folding chair outside a yard office, remembers which drivers have already paid, and dislikes anyone who collects the same toll twice.',
+    lines: {
+      greet: ['He paid at the gate. If somebody charged him again, bring me the receipt.', 'I said find out whose money it is. Don\'t spend any while you\'re deciding.', 'The yard workers have nothing to do with it. Leave them that way.'],
+      approve: ['Receipt, driver and freight, all where they belong.', 'Good. Now the toll gets paid once, to me.', 'You found where it went. I\'ll handle who took it.'],
+      disappoint: ['You blocked my road to settle an argument.', 'Working for me doesn\'t cancel what you owe the Lanterns.'],
+    },
+  },
+  cheuk: {
+    name: 'Inspector Cheuk Tak-fai',
+    district: 'docks',
+    desc: 'Harbour Police inspector, 4th Precinct. Turns his handset face down before ordering tea, remembers names, asks after injuries and never offers to put anything important in writing.',
+    lines: {
+      greet: ['If I could send officers, I wouldn\'t be buying you tea.', 'You haven\'t been hired by the police. Remember that before you try opening a door with my name.', 'Nothing in writing. Drink your tea.'],
+      approve: ['It\'s back where it should have been. We never spoke.', 'Quiet, and nobody hurt. Good.', 'I owe you a tea. Don\'t mistake it for anything else.'],
+      disappoint: ['You used my name at a door. That was the one thing.', 'My goodwill isn\'t immunity. You\'ve just found out.'],
+    },
+  },
   // The owner's hall lore (2026-11-07): the Underterrace's contact, named by Claude (WORLD.md "The tong's halls").
   tse: {
     name: 'Forewoman Tse',

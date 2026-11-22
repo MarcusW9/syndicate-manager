@@ -37,7 +37,7 @@ Rumours are street talk: the game never confirms them (no supernatural, and no p
 - **Municipal Harbour Police, 4th Precinct (the "Wet Sleeve" unit), the Docks and the Night Market borders.** Wants steady protection money, low paperwork and no internal-affairs audits. Earns from cuts of Red Lantern smuggling, shaking down night boats and selling confiscated gear. Small crews are walking cash machines: stopped for "neural-load checks" and fined unless they pay in cash or intel. When a district runs hot, the precinct sends a raid through the door of any tong's hall there; only the Wet Sleeve, on its own patch, will sell one off, and never cheaply. Old Town's patrol pairs take small bribes but can't call off a raid, and the Basin's Association security and Glass Heights' Veridian-Apex guards can't be bought at all. *Rumour:* the commander's office has a back door straight into a Red Lantern warehouse.
 
 **Institutions**
-- **The Lantern Bay Racing Association, the Basin.** Officially independent: old, wealthy, deep inside the Municipal District Administration and ferociously protective of its name. Runs the racing, licensed betting, the big legal pools, horse registration, jockey licensing and the vets, and presents itself as one of the few things in Lantern Bay that belongs to the whole city, which is roughly true. Wants punters to keep believing a horse can genuinely win or lose, because the betting economy dies the day they stop. Small crews are deniable help when it needs a scandal found, or buried, before race night. *Rumour:* somebody has already crossed the line, and a horse has won a big race running on software.
+- **The Lantern Bay Racing Association, the Basin.** Officially independent: old, wealthy, deep inside the Municipal District Administration and ferociously protective of its name. Runs the racing, licensed betting, the big legal pools, horse registration, jockey licensing and the vets, and presents itself as one of the few things in Lantern Bay that belongs to the whole city, which is roughly true. Wants punters to keep believing a horse can genuinely win or lose, because the betting economy dies the day they stop. Small crews are deniable help when it needs a scandal found, or buried, before race night. *Rumour:* somebody has already crossed the line, and a horse has won a big race running on software. What its money pays for, its monopoly and its three recurring contacts: "The Racing Association: the city's respectable money", below.
 
 **Wildcard**
 - **The Ghost Circuit, Old Town** (drainage tunnels and abandoned bomb shelters). Wants free city data streams and free, unmonitored neural-load cleansing for street workers. Earns from siphoned corporate data, black-market firmware flashing and decrypted city security bypasses. Small crews are possible allies, or beta-testers for their glitchy home-made neural scrubbers. *Rumour:* they're led by a collective mind formed when five dockworkers' implants fused during the 2052 blackout.
@@ -110,6 +110,171 @@ Visiting specialists live in serviced accommodation while local subcontractors h
 Bellweather and Lin Sau exist beyond the playable city. For now, one is a distant western port and the other an inland manufacturing metropolis; their countries, borders and wider histories remain undefined. So does **Porto Clara**, a casino island a ferry ride down the coast, where the city's gamblers go when Lantern Bay's tables aren't enough.
 
 Local Cantonese names retain Cantonese romanisation. Foreign firms may carry inherited surnames or established brands; Hang Yuen Systems and Lin Sau use Cantonese-rendered names in Lantern Bay's narration, without establishing how people in their home market pronounce them.
+
+### The Racing Association: the city's respectable money
+
+Owner's lore, 2026-11-22.
+
+The Lantern Bay Racing Association runs the races, administers licensed gambling and pays for things the Municipal District Administration keeps promising to provide.
+
+Its name appears above clinic doors, on vocational certificates and on the vans delivering meals after a storm. At Lantern Course, its staff settle disputed tickets, inspect the horses and help tired punters find the last tram. Elsewhere, its lawyers are closing a betting room whose owner cannot afford another month of proceedings.
+
+These are not separate faces concealing a secret organisation. They are the same institution, spending the same money.
+
+#### More than the course
+
+The Association grew around Lantern Course and became one of the city's enduring civic institutions. It runs racing, horse registration, jockey licensing, veterinary oversight and the big legal betting pools. It also holds the exclusive authority to operate or authorise licensed gambling in Lantern Bay.
+
+It is independent, wealthy and deeply connected to the Municipal District Administration. Corporate owners sponsor races, entertain clients in the Glass Galleries and seek places on its committees, but no megacorp owns it.
+
+The Association presents itself as something that belongs to the whole city. Enough people have benefited from its work for that claim to mean something.
+
+#### What the betting pays for
+
+Association funding supports neighbourhood clinics, rehabilitation services, vocational training, public recreation facilities and emergency relief. Some services bear its name; others are run by independent community organisations receiving grants.
+
+During storms, its kitchens prepare meals, its buildings become relief centres and its maintenance teams move equipment through streets where ordinary deliveries have stopped. It has vehicles, stores and people accustomed to working through the night.
+
+It funds confidential gambling counselling, debt advice and arrangements through which customers can exclude themselves from Association betting. Staff take those services seriously. So do people whose households have needed them.
+
+The contradiction is not lost on anyone. A clinic can do excellent work with money somebody else could not afford to lose.
+
+#### A good place to work
+
+An Association post is a respectable career. Its qualifications carry weight, its facilities are maintained and its employees can build a working life outside the megacorps.
+
+Stable hands, cleaners, technicians, clerks, vets and community workers have reasons to be proud of the institution. Many stay because they believe in the work, not because they have nowhere else to go.
+
+It usually pays what it owes and does what it promises. In Lantern Bay, that earns loyalty.
+
+It also produces a particular kind of institutional pride. Someone who has spent twenty years keeping a clinic open may hear criticism of the Association as criticism of every person who depends on it. Senior management knows how useful that feeling can be.
+
+#### The monopoly
+
+The Association's position is that gambling will happen whether it is regulated or not. Better that it be supervised, customers have somewhere to complain and the proceeds support the city rather than disappear into private pockets.
+
+There is truth in this. There is also an extremely valuable monopoly.
+
+It defends that monopoly with an iron fist, usually inside a well-cut legal sleeve. Unauthorised operators face injunctions, licence objections, payment restrictions, equipment seizures and pressure on landlords and suppliers. The Association can afford to continue a dispute long after a small operator has run out of money.
+
+Its officers prefer documented action. When that fails, an intermediary may offer a final settlement, a landlord may suddenly reconsider an arrangement, or a tong may receive a carefully worded recovery contract.
+
+The Association does not need to order a beating to ruin someone's livelihood. Its people generally consider that an important distinction. The person losing the livelihood may not.
+
+#### The line around the horse
+
+The Association's commitment to honest racing is real. If people stop believing a horse can genuinely win or lose, the betting economy loses its foundation.
+
+Integrity staff investigate compromised telemetry, unauthorised stable access, coercion of jockeys, illegal treatments and equipment that might influence an animal's performance. Wealthy owners can have entries suspended. Important donors can be asked questions they would rather not answer.
+
+Horse welfare matters beyond its commercial value. Stable staff, vets and inspectors include people who will risk their careers rather than approve an animal they believe should not run.
+
+That seriousness can become severity. An innocent contractor may lose months of work during an investigation. A junior employee who admits one mistake can find themselves answering for failures several departments would prefer not to discuss.
+
+The Association is capable of finding the truth. It is also capable of deciding too early who ought to carry it.
+
+#### The compromises
+
+The Association is not secretly rotten from top to bottom. Its failings are more ordinary, and often defended as necessary.
+
+A donor receives patience an ordinary applicant would not. A damaging report waits until after a major meeting. A community organisation discovers that supporting a rival gambling proposal has complicated its next grant application.
+
+Sometimes misconduct is investigated properly. Sometimes a quiet resignation is accepted because a public case would damage confidence. Sometimes protecting the institution means protecting its services; sometimes it means protecting the people currently in charge.
+
+The distinction is easier to discuss after someone else has made the decision.
+
+#### The neighbours it cannot remove
+
+The Silver Fan Circle runs the bets, loans and collections the Association refuses or cannot control. Its collectors are barred from official premises. They wait outside, where a losing punter still has to pass them, and in the Undercroft below, which the Association does not count as its premises.
+
+The Association pursues illegal bookmakers, but the Undercroft survives. A raid can close a room more easily than it can remove the demand for credit or a private wager.
+
+The Hei Lok is a particular irritation. Its owners argue that licences written for premises on the ground do not cover a gambling floor hanging above it. The Association wants the loophole closed and the tables brought under its authority or stopped. Hei Lok Leisure considers this a large institution trying to extinguish a small competitor.
+
+Hoi-Sing supplies essential power and data infrastructure. Veridian-Apex supplies valuable veterinary expertise. Neither relationship entitles the supplier to write the rules, though both companies occasionally need reminding.
+
+Mr. Szeto's interest in the land beneath Lantern Course is understood perfectly. The Association intends to remain there.
+
+#### Hiring a tong
+
+The Association recognises tongs as professional contractors. A small hall can reach a reluctant witness, recover equipment or resolve a difficult collection without sending a department's worth of staff.
+
+Some contracts are straightforward public service. Others protect racing integrity. Others defend commercial privileges that the person briefing the crew considers inseparable from the public good.
+
+A letterhead establishes who is asking. It does not establish that they are right.
+
+### Association clients
+
+Three recurring contacts represent different parts of the institution. Their trust is personal: helping one does not buy the cooperation of the others, unrestricted course access or the Association's protection.
+
+Their spoken lines live in `src/data/cast.js` (`{hui}`, `{yip}`, `{chan}`).
+
+#### Hui Lai-sum
+*The Basin · Association Community Services*
+
+Lai-sum carries a reused document wallet and a pencil she keeps losing behind her ear. She knows which relief centre has a working freezer and which grant recipient needs help completing a form rather than another reminder.
+
+She believes the Association should be judged by what reaches people.
+
+**What the street knows:** she follows up. If a funded repair is unfinished, she comes to look at it herself.
+
+**What she doesn't say:** she has kept an effective community kitchen operating under an old approval while its replacement application stalls. The meals are served and the spending is genuine, but the arrangement would not survive a hostile audit.
+
+**Her work:** missing relief supplies, disrupted meal deliveries, community equipment recovery and contractors abandoning funded repairs.
+
+**Her limits:** she cannot grant racing access or settle licensing disputes. She will not hand over residents' private information to repay a favour.
+
+**Her briefings:**
+> "I need the refrigerators working. You can explain whose fault it was afterwards."
+> "They've already filled in the form. Go and see what they need."
+
+#### Yip Ka-chun
+*The Basin · Association Racing Integrity*
+
+Ka-chun listens without interrupting, then asks the question the briefing avoided. He takes a stable hand's account seriously and treats an owner's indignation as something to record, not obey.
+
+He loves racing enough to investigate people who make it possible.
+
+**What the street knows:** a famous name will not get an unexplained device past him. Neither will a familiar face.
+
+**What he doesn't say:** he once accepted a quiet resignation instead of pursuing a difficult case. He believed removing the person protected the sport. A similar incident now suggests the problem moved elsewhere.
+
+**His work:** locating reluctant witnesses, recovering compromised telemetry, tracing unauthorised stable equipment and preserving evidence before it disappears into a departmental dispute.
+
+**His limits:** he will not certify a result he believes is false or accept cruelty to a horse as the price of gathering evidence. He expects the crew to preserve evidence, not improve it.
+
+**Ties:** Mak Chi-on, the stable-access official, reports to Integrity on stable passes; Ka-chun's questions usually start with Mak's paper list.
+
+**His briefings:**
+> "I didn't ask whether he's important. I asked who let him through."
+> "Bring back what you find. Not what you think will help my case."
+
+#### Chan Wing-kei
+*The Basin · Association Licensing and Commercial Protection*
+
+Wing-kei is courteous, punctual and precise about deadlines. He remembers which community facilities depend on Association revenue and can explain what a successful challenge to its monopoly might cost them.
+
+He rarely discusses what it might cost senior management.
+
+**What the street knows:** his notices are worth reading. Ignoring one does not make the next less expensive.
+
+**What he doesn't say:** he has continued enforcement cases after a workable settlement was available because accepting it would encourage others to challenge the Association. He regards that as protecting the institution, not making an example of someone.
+
+**His work:** unauthorised betting equipment, disputed collections, missing licence records and negotiations with operators who have exhausted the official extensions.
+
+**His limits:** no fabricated evidence and no physical intimidation. Those limits do not make every contract he offers proportionate or fair.
+
+**His briefings:**
+> "They have had three notices and two extensions. Please don't mistake their surprise for a lack of warning."
+> "You are collecting the equipment listed. If the list is wrong, call me before touching anything."
+
+#### One institution, different loyalties
+
+Lai-sum may consider a betting-room closure disastrous for a neighbourhood project. Wing-kei may consider it essential. Ka-chun may need a witness neither wants questioned that week.
+
+They can disagree without any of them secretly serving another faction.
+
+A crew can restore a clinic's equipment, expose a wealthy cheat and refuse a disproportionate collection. All three decisions can involve the Association, and none settles the crew's relationship with everyone inside it.
 
 ## Geography and districts
 Layout (canon, 2026-10-25): the harbour splits the city. The island holds Iron Peak on the summit, Glass Heights on the ridge below, the Basin in a bowl between the ridge's lower slopes and Old Town, and Old Town and the Night Market down to the water. The Amber Reach is the crossing over the harbour. The mainland side holds the Docks and, out on the mudflats, the Silt.
@@ -219,7 +384,7 @@ The crew's fee is agreed in ¥, usually cash when discretion matters. Expense co
 
 Not every job needs a clean victory. Sometimes the sensible ending is a witnessed handover, a written refusal, a cancelled collection or bringing back half of what was requested. A quiet, incomplete result is better than becoming the explanation for somebody else's misconduct.
 
-There are only seven recurring clients, and the newest two (Mrs. Ip and Forewoman Tse) are small ones. The people here may call again, remember a kindness or warn the crew away from a bad collection, but they do not become permanent patrons simply because their names are known.
+There are seven main recurring clients, and the newest two (Mrs. Ip and Forewoman Tse) are small ones; beside them stand the smaller recurring clients who work inside institutions ("Clients across the lines" and the Racing Association's three contacts). The people here may call again, remember a kindness or warn the crew away from a bad collection, but they do not become permanent patrons simply because their names are known.
 
 Someone who buys the crew dinner on Sunday may refuse to recognise them in a lobby on Monday. Both moments can be sincere.
 
@@ -372,6 +537,86 @@ Owner's lore, 2026-11-08. Lantern Bay has other tongs: peers, not gangs. Each is
 - **The Anchor's Book (owner's lore, 2026-11-09).** The Brass Anchor Society keeps a book of the city's runners. On the first Monday of each month the elders chalk grades for them on a slate at the Anchor's teahouse in Old Town (not in the Silt), and the street comes to read it. It grades people, never tongs, and it is the elders' opinion, not the truth: it flatters a show-off, misses a quiet one, and the elders argue over it over their tea. Being on the slate gets you noticed. Nobody keeps the figures; the slate is wiped and chalked again next month.
 - **The Word.** The street's talk, never a scoreboard: unsigned, hedged ("word is", "they're saying"), never confirmed. It tells you who took what work, whose name is travelling and who has gone quiet; it never gives results, ranks or numbers. Joss reads it out on Mondays, in short plain lines.
 
+## Tongs: work, ambition and institutions
+
+Owner's lore, 2026-11-22.
+
+In Lantern Bay they are called tongs. In other countries and regions, similar organisations are often called guilds. Their customs differ, but they offer a recognisable alternative to corporate employment: skilled people working under a shared name, taking contracts, training recruits and building something that belongs to the association rather than a corporate parent.
+
+They are increasingly recognised as formal institutions in their own right. The best have become enduring establishments, with generations of experience, respected training and commitments that survive changes of leadership. Others are three people in a damp room, a borrowed van and a fixer who insists payment is coming on Friday. Both are tongs.
+
+### Two promises
+
+The largest corporations offer long, stable careers, sometimes signing people into arrangements intended to last an entire working life. Training, accommodation, healthcare and advancement can all come with the job. For someone supporting a household or managing expensive implants, that security is real.
+
+So is the cost. Housing follows the posting, treatment follows the employment account, and another promotion means another stretch of being available whenever the company needs you. People can spend their lives well provided for without feeling that much of their time belongs to them.
+
+A tong offers a different promise: learn your work, earn your place and build a name alongside people who know what you contribute. There may be less certainty, but there can be more independence, a stronger sense of belonging and a meaningful say in the work.
+
+Neither promise is always kept. Corporate workers are not fools for choosing security, and a tong's independence does not automatically extend to everyone it employs.
+
+### A career worth wanting
+
+Running is recognised as a serious profession. Joining a good tong can be a respectable career choice, not a last resort or something a family must be ashamed of.
+
+People join for different reasons: money, skilled work, independence, friendship, ambition or the chance to become very good at something difficult. Some leave corporate careers deliberately. Others train towards tong work from the start of their working lives.
+
+A family can worry about the danger while proudly telling the neighbours which hall accepted their daughter. A former colleague can envy a runner's freedom without wanting the uncertainty. Someone can be pleased with their career and still complain about the hours.
+
+Not every runner wants fame. Regular work, fair pay and a crew worth trusting can be enough.
+
+### The names people grow up knowing
+
+The most accomplished runners attract admiration. Young people copy their jackets, argue about who is overrated and imagine being accepted by the halls whose names they know.
+
+In some countries, leading guilds have the public profile of major sporting teams or entertainment groups. Their prominent members appear in interviews, attract endorsements and develop devoted followings. Joining a celebrated guild can be an ambition people spend years preparing for.
+
+Lantern Bay's admiration is often more local. A runner might be recognised at a food stall, asked for a photograph or proudly claimed by the street where they grew up. A name can mean something across the harbour without being famous abroad.
+
+Public attention, professional standing and the Brass Anchor elders' opinion are different things. A charismatic runner may become the face everyone remembers while quieter colleagues are more highly regarded by people who know the work.
+
+### From back rooms to great halls
+
+Small tongs look towards larger ones in different ways. Some study their methods, hope to earn their respect or dream of becoming their equals. Others resent their influence or believe success has made them forget how ordinary crews live.
+
+A rising tong may copy a famous hall's clothes and manner long before it can match its standards. Another may quietly adopt its training practices and never mention where they came from.
+
+The greatest tongs are institutions because they can outlast their stars. They train successors, preserve knowledge, settle obligations and remain dependable after a respected fixer dies or a celebrated runner retires.
+
+Their reputation reaches beyond the people they employ. Families trust their training. Clients trust their commitments. Former members carry habits learned there into other halls.
+
+The Brass Anchor Society is Lantern Bay's old example of institutional standing, not a celebrity guild and not a competitor on the tong ladder. Its authority comes from history, relationships and the weight people give its judgement.
+
+### A name is not a guarantee
+
+Size, fame and decency do not rise together.
+
+A small hall can be principled, competent and deeply trusted by its neighbours. Another can be a reckless outfit that withholds pay and treats every recruit as replaceable. An established tong can offer an excellent working life without anyone outside its district knowing its name.
+
+Some famous guilds are as good as people hope. Others live on old achievements, conceal exploitation behind loyalty or sell a glamorous image their own members barely recognise.
+
+There are still grimy halls, crooked fixers, dangerous amateurs and associations that are little more than a respectable name over a racket. Registration does not make them honest. Neither does an altar, a long history or a photograph of someone famous in the front room.
+
+A tong can become everything its founders wanted to escape. Belonging becomes an excuse for unpaid work. Loyalty becomes a reason nobody is allowed to leave. The fixer starts calling every sacrifice necessary and stops making any themselves.
+
+### Behind the glamour
+
+People see the successful crew, the distinctive equipment and the runner whose name is travelling. They see less of the preparation, maintenance, recovery and ordinary contracts that keep a hall solvent.
+
+The work demands discipline. Confidence does not replace training, and being accepted by a respected tong is the beginning of a career, not proof that someone has already earned one.
+
+The danger is real. So are the pride, friendships and opportunities. Runners do not have to be secretly miserable for the public image to leave things out.
+
+### What a small tong might become
+
+The room above the noodle shop is not merely somewhere to endure until the crew can afford better rooms. It can be the founding room of an institution people will one day hope to join.
+
+That future is not guaranteed by money or reputation alone. It depends on what the tong teaches, which promises it keeps, how it treats people who cannot work and whether someone can leave without becoming an enemy.
+
+Some fixers want a famous name. Some want a prosperous business. Some want a hall that will still be worth belonging to after they are gone.
+
+Those ambitions can coexist. They can also pull a tong apart.
+
 ## Tech and neural load
 Street implants are cheap, second-hand and always glitching; Glass Heights wears smooth luxury hardware. Pushing implants too hard brings on neural load: migraines, memory stutter, emotional deadness. Street crews treat it not with corporate therapy patches but with bitter herbal infusions from Auntie Fung's shop, damp cloths and downtime in dim mahjong parlours. The megacorps own the infrastructure; working people treat tech like a rusty outboard motor, duct-taped, prayed over and kept running out of stubbornness.
 
@@ -396,7 +641,7 @@ Guns are ordinary kit for anyone who works for money: second-hand pistols in wai
 
 ## The clients
 
-Narrative dossiers for the recurring clients: the five big ones, then two small ones promoted from the street (2026-11-07). Who they are, what the street knows, what they hide, and how their story unfolds as the crew's trust with them reaches 60, 75 and 90 (or falls below 20). The trust arcs and introductions are canon but not built yet. When they become in-game messages, trim each moment to 2–4 short lines for the phone.
+Narrative dossiers for the recurring clients: the five big ones, then two small ones promoted from the street (2026-11-07), then the smaller clients who work inside institutions (2026-11-22; the Association's three are under the Racing Association). Who they are, what the street knows, what they hide, and how their story unfolds as the crew's trust with them reaches 60, 75 and 90 (or falls below 20). The trust arcs and introductions are canon but not built yet. When they become in-game messages, trim each moment to 2–4 short lines for the phone.
 
 ### Auntie Fung (Fung Wai-han)
 *Old Town · Brass Anchor Society*
@@ -553,6 +798,158 @@ Promoted with the Underterrace (owner, 2026-11-07). The cooperative's representa
 
 **Trust, standing and access are three things.** A client's trust is "do I trust this crew with another job?"; a faction's view of the tong is its own; a hall opens when the crew has earned the introduction and met the occupancy conditions. Where someone works is not who they work for: two clients may one day belong to the same faction and still disagree about the crew.
 
+### Clients across the lines
+
+Owner's lore, 2026-11-22.
+
+Not every client is an independent neighbourhood power. Some work inside institutions the crew distrusts, taking responsibility for one small part of an organisation they cannot control.
+
+Their contracts may be authorised company work, a personal arrangement or an attempt to move against a colleague. A familiar letterhead does not establish which. Neither does paying from a personal account.
+
+These are smaller recurring clients, not faction leaders. Their trust belongs to them: helping one does not buy unrestricted access, protection from their colleagues or forgiveness for the tong's other work.
+
+Their spoken lines live in `src/data/cast.js` (`{lau}`, `{choi}`, `{mok}`, `{kwan}`, `{lui}`, `{cheuk}`).
+
+#### Lau Ching-yee
+*Glass Heights · Morrow & Venn marine claims surveyor*
+
+Ching-yee arrives in practical shoes carrying a waterproof document case. Before discussing the value of damaged cargo, she asks who unloaded it and whether anyone was hurt. Then she photographs everything, including the things her client would prefer her to overlook.
+
+She investigates shipping losses: spoiled freight, damaged machinery, missing consignments and arguments over when somebody else became responsible. She is employed to establish liability, not to make every injured party whole.
+
+**What the street knows:** her reports can make an insurer pay. They can also establish that a claimant has been lying. She reads a dockworker's account as carefully as a shipping director's.
+
+**What she doesn't say:** she signed an early report blaming poor handling for a machinery failure. New evidence suggests a defective component. Reopening the claim would expose a valuable supplier and the mistake she made by accepting its explanation.
+
+**Her work:** recovering damaged equipment before disposal, locating former cargo handlers, arranging witnessed inspections and finding consignments that several companies insist are somebody else's responsibility.
+
+**Her limits:** she pays for evidence, not a preferred conclusion. She cannot promise that a correct finding will produce a fair settlement, and will not let the crew describe a disputed claim as established ownership.
+
+**Ties:** Morrow & Venn and Venn House; AHL shipments and Docks subcontractors. Edith Pryce handles estates, not her claims. Working for the same firm does not make their instructions interchangeable.
+
+**Her briefings:**
+> "Photograph it before anyone helpfully tidies up."
+> "My client has told me what would be convenient. Now I need to know what happened."
+
+#### Dr. Choi Pui-ling
+*Glass Heights · Veridian-Apex neural-device aftercare*
+
+Pui-ling rolls her sleeves above the wrist before examining old hardware. She explains a repair before touching the patient and becomes noticeably less patient when a manager describes an obsolete implant as an obsolete customer.
+
+She handles cases that fall between current products, expired support agreements and people who still need the equipment inside them.
+
+**What the street knows:** she understands the old dockworker implants. Understanding them does not give her authority to provide free treatment.
+
+**What she doesn't say:** she has retained usable components marked for destruction. Some have reached independent repairers without authorisation, and she cannot account for every one. She believes the parts helped people; she does not know that all of them were safely fitted.
+
+**Her work:** retrieving old diagnostic units, finding discontinued parts, recovering improperly discarded devices and reaching former patients who no longer trust company contact.
+
+**Her limits:** no involuntary procedures, concealed testing or treating a patient as a convenient source of hardware. She will still demand the return of company equipment when she believes keeping it creates a genuine safety risk.
+
+**Ties:** Veridian-Apex's aftercare services and the people maintaining its older implants. Pang Man-ki handles clinic appointments and accounts; Pui-ling handles technical and clinical problems. Neither can simply overrule the other's department.
+
+**Her briefings:**
+> "It stopped being supported. It did not stop being inside someone."
+> "Bring the whole unit. The part you think is rubbish may be the part I need."
+
+#### Mok Wai-lun
+*Old Town · Hoi-Sing Grid & Cable restoration coordinator*
+
+Wai-lun eats standing beside a dispatch screen, moving repair teams between faults that all became urgent before breakfast. He knows which streets flood first and which manager will demand a written explanation for sending a crew there.
+
+He keeps the lights on for a company that has made darkness profitable.
+
+**What the street knows:** he can get a dangerous fault taken seriously. He cannot erase a bill or promise that a repaired connection will remain affordable.
+
+**What he doesn't say:** he has diverted spare equipment from a corporate service reserve to residential repairs. The equipment is installed and working. The inventory still says it is in storage, and the next emergency may require stock he no longer has.
+
+**His work:** recovering missing repair supplies, locating abandoned contractor equipment, escorting technicians into disputed premises and resolving access problems before another shift is lost.
+
+**His limits:** he will not endanger a live network to embarrass management. He will report a dangerous illegal connection even when the household using it has no good alternative.
+
+**Ties:** Hoi-Sing's repair teams and contractors. Ho Sze-lam supervises field work; Wai-lun coordinates restoration resources. They need each other, but a fault omitted from a field report is a fault Wai-lun cannot plan around.
+
+**His briefings:**
+> "You can argue about the account after we stop the wall getting hot."
+> "I need access to the meter room. Not a fight outside it."
+
+#### Kwan Yiu-kit
+*The Docks · Aether-Harbour Logistics subcontractor accounts*
+
+Yiu-kit carries a cheap calculator despite having three company devices. When a haulier disputes a payment, he works through the figures with them instead of pointing at the portal.
+
+His department sits between AHL and the smaller firms that keep its freight moving. Everyone above him wants lower costs. Everyone below him wants to be paid.
+
+**What the street knows:** he can explain why a payment stopped and sometimes get it moving again. He cannot make an invented delivery become a real one.
+
+**What he doesn't say:** a procurement manager has been steering contracts towards favoured operators and charging other suppliers to remain eligible. Yiu-kit approved questionable invoices after the manager promised to release months of legitimate payments. The evidence he wants recovered implicates him too.
+
+**His work:** finding subcontractors who have stopped answering, recovering delivery records, tracing impounded vehicles and securing evidence before an internal review loses interest.
+
+**His limits:** he cannot promise corporate protection. He wants the procurement racket exposed, but would prefer the crew not to discover how often he agreed to cooperate.
+
+**Ties:** AHL's ordinary freight business, supplier accounts and Docks subcontractors. His work is separate from Ruth Okonkwo's deniable operations; knowing one does not establish an introduction to the other.
+
+**His briefings:**
+> "The driver delivered it. The system disagrees. Guess which one has been paid."
+> "If this reaches my manager before it reaches the review, we have both wasted our money."
+
+#### Lui Shuk-ping
+*The Docks · Red Lanterns freight-yard steward*
+
+Shuk-ping keeps a folding chair outside a yard office and remembers which drivers have already paid. She dislikes arguments that block the road and enforcers who collect the same toll twice.
+
+Her orderliness should not be mistaken for innocence. The toll is still protection money.
+
+**What the street knows:** a receipt she recognises is usually honoured. Someone collecting without her approval has a problem.
+
+**What she doesn't say:** she helped a younger Red Lantern officer establish himself because she expected him to remain dependent on her. Now he runs a private collection racket and recruits people she cannot control. Stopping him would protect drivers and restore her authority. She sees no reason those motives should conflict.
+
+**Her work:** recovering stolen freight, locating missing drivers, settling disputed collections and finding proof that another Lantern has been taking money off the books.
+
+**Her limits:** no attacks on uninvolved yard workers. She will protect a driver from an unauthorised collector, then expect the authorised toll paid in full.
+
+**Ties:** the Red Lanterns' road and freight interests. Her contracts are not faction settlements: working for her does not cancel tribute, erase a grudge or prevent other Lanterns acting against the tong.
+
+**Her briefings:**
+> "He paid at the gate. If somebody charged him again, bring me the receipt."
+> "I said find out whose money it is. Don't spend any while you're deciding."
+
+#### Inspector Cheuk Tak-fai
+*The Docks · Municipal Harbour Police, 4th Precinct*
+
+Cheuk turns his handset face down before ordering tea. He remembers names, asks after injuries and never offers to put anything important in writing.
+
+He is a corrupt officer with a genuine dislike of certain kinds of corruption. The distinction is clear to him and less reassuring to everyone else.
+
+**What the street knows:** he takes money. He also occasionally returns confiscated property that other officers would have sold.
+
+**What he doesn't say:** a rival officer is running a private racket through confiscated goods, and some of the missing property passed through a store Cheuk signed for. He did not organise the theft. He accepted payment not to inspect it.
+
+**His work:** locating seized equipment that never reached evidence storage, finding intermediaries selling police property and arranging conversations with witnesses who will not enter a station.
+
+**His limits:** he will not authorise violence against witnesses or manufacture a criminal charge for the crew. He will omit facts, protect himself and let someone else take more than their share of the blame.
+
+**Ties:** the Wet Sleeve and its confiscation records, informants and internal rivalries. He wants his rival stopped without bringing an internal-affairs investigation down on the whole precinct.
+
+Hiring the crew does not make them police contractors with official powers. His goodwill is not immunity, and it does not change the existing rules for calling off a Wet Sleeve raid.
+
+**His briefings:**
+> "If I could send officers, I wouldn't be buying you tea."
+> "You haven't been hired by the police. Remember that before you try opening a door with my name."
+
+### Personal trust, institutional interests
+
+The Association's Hui Lai-sum, Yip Ka-chun and Chan Wing-kei offer three further routes into institutional work: community services, racing integrity and commercial protection. Their dossiers sit under "The Racing Association: the city's respectable money."
+
+A community-services contract may be more humane than a corporate collection. An Association monopoly-enforcement job may be less defensible than a Red Lantern steward recovering a driver's stolen vehicle. The crew has to judge the request, not just the employer.
+
+A client can value the tong while remaining loyal to an organisation that harms it elsewhere. Shuk-ping cannot promise peace with the Red Lanterns. Cheuk cannot make the precinct safe. Pui-ling cannot turn a personal arrangement into company healthcare cover.
+
+Nor does moving against a colleague automatically make someone a reformer. They may want a better organisation, a better position within it or one dangerous problem removed.
+
+Sometimes the crew knows which. Sometimes the next contract makes it clearer.
+
 ## Street characters
 
 Smaller people a new crew meets on rookie work (2026-10-25). Their spoken lines live in `src/data/cast.js`, so any job can use them.
@@ -567,7 +964,7 @@ Smaller people a new crew meets on rookie work (2026-10-25). Their spoken lines 
 - **Uncle Tariq** (Amber Reach): the remittance booth at Pearl Haven House; his dossier is under Pearl Haven House, above.
 - **Pang Man-ki** (Glass Heights). Veridian-Apex clinic administrator. Finds an appointment when a corporate account is attached; an old Veridian-Apex implant doesn't entitle its owner to affordable treatment. Secret: she wants a transfer out of patient administration before an audit finds the appointments she moved between billing categories. Her full entry is under "Glass Heights people", below.
 - **Ho Sze-lam** (Old Town). Hoi-Sing Grid & Cable field supervisor. Knows which meters have been repaired past their life, but records a disconnection if that's the order on his screen. Secret: he leaves intermittent faults out of his reports so his section doesn't look badly maintained. Auntie Fung and the Brass Anchor know him by his thermos.
-- **Mak Chi-on** (the Basin). Racing Association stable-access official, checks passes against a paper list despite the scanner on his wrist, and treats unexplained stable access as possible race-fixing. Secret: he once waved a familiar contractor through without checking a replacement pass, and fears admitting it would undermine every inspection he has signed since.
+- **Mak Chi-on** (the Basin). Racing Association stable-access official, checks passes against a paper list despite the scanner on his wrist, and treats unexplained stable access as possible race-fixing. Reports to Yip Ka-chun's Racing Integrity on stable passes. Secret: he once waved a familiar contractor through without checking a replacement pass, and fears admitting it would undermine every inspection he has signed since.
 - **The old radio man on Block 9's roof.** The last tenant Mr. Szeto wants out, broadcasting pirate radio from a tin shack full of tapes. Block 9 is Doc Siu's building.
 - **The Ferryman's habits:** he chews betel nut as well as the clove cigarettes, and he runs a private line to the Silt under Pier 12.
 
@@ -790,8 +1187,10 @@ buyouts). Police: Harbour Police 4th Precinct, the "Wet Sleeve" unit (corrupt; f
 crews at "neural-load checks"; a hot district brings a raid on a tong's hall, and only
 the Wet Sleeve, on its own patch, will sell one off). A gang with a grudge against a tong
 raids its hall on the gang's own turf and expects a settlement; the Brass Anchor never
-raids. Institution: Lantern Bay Racing Association (racing, licensed betting, old and
-well connected; fears race fixing above all). Wildcard: Ghost Circuit (data liberators in Old Town's
+raids. Institution: Lantern Bay Racing Association (racing and the city's licensed-gambling
+monopoly, defended hard through lawyers, landlords and suppliers; its money funds clinics,
+training and storm relief; independent, no megacorp owns it, deep in the MDA; fears race
+fixing above all; hires tongs as contractors). Wildcard: Ghost Circuit (data liberators in Old Town's
 drainage tunnels and bomb shelters). Foreign firms (below the megacorps, Glass Heights
 tenants): Morrow & Venn (old merchant-finance house from Bellweather: shipping credit,
 insurance, estates; Venn House) and Hang Yuen Systems (industrial automation from Lin
@@ -820,6 +1219,15 @@ CLIENTS (local powers a small crew can reach, below the corps):
   Forewoman Tse (Tse Yuk-lan, the Underterrace maintenance cooperative in Glass Heights;
   contractor disputes, lost records, maintenance access; not Veridian-Apex, not Szeto;
   asks Still on the Books). A client's trust is personal, not their faction's.
+- Smaller recurring clients inside institutions (2026-11-22): their trust is their own,
+  never their employer's protection. Association (the Basin): Hui Lai-sum (community
+  services), Yip Ka-chun (racing integrity), Chan Wing-kei (licensing and commercial
+  protection). Lau Ching-yee (Morrow & Venn marine claims surveyor); Dr. Choi Pui-ling
+  (Veridian-Apex neural-device aftercare); Mok Wai-lun (Hoi-Sing restoration
+  coordinator, Old Town); Kwan Yiu-kit (AHL subcontractor accounts, Docks); Lui Shuk-ping
+  (Red Lanterns freight-yard steward; no tribute or grudge cancelled); Inspector Cheuk
+  Tak-fai (Wet Sleeve, 4th Precinct; corrupt, dislikes some corruption; no immunity, no
+  raid call-offs). Judge the request, not the employer.
 STREET CAST (rookie work): Doc Siu (Old Town; ex-surgeon, unlicensed clinic under
 Tenement Block 9, dry praise); Meena D'Sa (Rao's seamstress and counterkeeper); Tang Wai-chiu (Silver Fan
 collector, third-floor parlour); Uncle Tariq (remittance booth, Pearl Haven House, backed
@@ -847,6 +1255,11 @@ Anchor Society stands beside the ladder, not on it; its elders keep a book of ru
 chalked once a month on a slate at the Anchor's teahouse in Old Town (never the Silt): the
 elders' opinion, not the truth, and it grades people, never tongs. The Word is hedged street talk, never
 results, ranks or numbers.
+TONGS AS WORK (2026-11-22): running is a respectable career; a tong (elsewhere, a guild)
+is the alternative to a lifelong corporate post: less security, more independence and a
+say in the work. Tongs range from three people in a damp room to great halls that outlast
+their stars; size, fame and decency don't rise together, and registration doesn't make a
+tong honest. Lantern Bay's fame is local: recognised at a food stall, claimed by a street.
 TONGS: runners swear in at the founding room above the noodle shop, regardless of their hall, by drinking tea poured by the fixer, writing their own name in the tong's ledger before the crew and altar, and leaving an offering; the ceremony has no recitation, blood, numbers or ranks, sworn names remain after departure, and long-serving runners are remembered on the wall beside the altar (the Hall of Legends), with a crew member writing each name and Joss checking the spelling.
 TONE: gritty but human. Warmth, loyalty and dark humour are the baseline; darker
 moments arrive as events. All characters 18+. Entries 1–2 sentences, phone-readable.
