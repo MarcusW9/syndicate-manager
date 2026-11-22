@@ -2,7 +2,7 @@
 
 Use this to draft the lines a crew sends back while they are away: on an **expedition** (our own tong's errand: a weapon, cash or a recruit), on a **hands-off job**, or in a **district** (the people and places any log can draw on). The result is one JavaScript data file. It goes in during a Claude Code session (Sonnet is enough): one file under `src/data/advlog/`, one import, a test run.
 
-Status (2026-11-21): the log engine is not built yet (`drafts/HANDOFF-revenue-next.md`, "Next: the adventure log"). The format below is what the build session works to; if it has to change, change it here too.
+Status (2026-11-22): slice 1 of the log engine is built (`core/advlog.js`): hands-off jobs read the JOB DAYS pools (generic, `src/data/advlog/jobDays.js`, until a job has its own file), side tasks `sideDays.js`, and the district files `docks.js` and `nightMarket.js` give people and places. The goal files (`drafts/advlog/weapon.js`, `cash.js`, `recruit.js`) wait for expeditions (slice 2). The engine reads exactly the format below; if it has to change, change it here too. What the engine does with a file: a line whose slot it can't fill is skipped (no `{other}` on a crew of one, no `{place}` in a district with no file); `{contact}` alone is only used once a line has introduced them with `{contactWhat}`; job-day snags cost nothing, so write them as delays or scares.
 
 ## How the log tells a story
 
@@ -312,7 +312,11 @@ export default {
   casing:  { any: [/* 4+ */], stealth: [], tech: [], social: [] },  // learning the place
   setup:   { any: [/* 4+ */], tech: [], piloting: [], social: [] }, // getting what the night needs
   waiting: { any: [/* 3+ */] },                                      // the right night hasn't come
-  snag:    { any: [/* 3+ */] },                                      // a small thing went wrong
+  snag:    { any: [/* 3+ */] },                                      // a small thing went wrong: a delay or a scare, never money or a wound
+  // Optional personality, as in a GOAL file; where a job has none, the generic job-days file's are used.
+  asides:  { superstitious: [], money: [], warm: [], hot: [], wary: [], calm: [] },
+  pair:    [/* {who} and {other} on one of the days */],
+  joss:    { day: [/* "Joss: ..." */] },
 };
 ```
 The job's own beats and crises tell the night itself; these lines fill the days before it.

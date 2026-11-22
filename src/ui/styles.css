@@ -3102,3 +3102,16 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .hallstat__v { font-family: var(--display, inherit); font-weight: 700; font-size: 1.3rem; }
 .hallstat__v.is-warn { color: #f2d541; }
 .hallstat__v.is-bad { color: #ff3d5f; }
+
+/* The adventure log (2026-11-22, core/advlog.js): a crew's days out, folded under its card (a tap opens
+   it, native <details>) and listed above a report's timeline. Day numbers in the display face. */
+.advlog { margin-top: 4px; }
+.advlog > summary { min-height: var(--tap); display: flex; align-items: center; gap: 8px; cursor: pointer; list-style: none; font: 600 0.78rem/1.25 var(--display, inherit); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.advlog > summary::-webkit-details-marker { display: none; }
+.advlog > summary::after { content: '+'; margin-left: auto; padding-right: 4px; font-weight: 400; }
+.advlog[open] > summary::after { content: '\2212'; }
+.advlog__days { list-style: none; margin: 0 0 6px; padding: 0 0 0 10px; border-left: 2px solid var(--line); display: grid; gap: 6px; }
+.advlog__days li { margin: 0; }
+.advlog__day { font: 700 0.72rem/1 var(--display, inherit); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+.advlog--report { margin: 10px 0 12px; }
+.advlog__head { font: 700 0.8rem/1.2 var(--display, inherit); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }

@@ -111,6 +111,7 @@ function renderReportTimeline(m) {
     <div class="report ${play ? 'report--play' : ''}" ${play ? `data-action="skip-report" style="--step:${STEP}s; --end:${(steps.length + 1) * STEP + 0.6}s"` : ''}>
       ${reportCrew(m)}
       ${renderReportSummary(m.timeline)}
+      ${renderDaysOut(m.timeline?.days, steps)}
       <ol class="timeline">
         ${steps.map((text, i) => `<li class="timeline__item" style="--i:${i}"><span class="timeline__node" aria-hidden="true">${i + 1}</span><p class="timeline__text">${crewLinks(text)}</p></li>`).join('')}
         ${outcome.length ? `<li class="timeline__item timeline__item--end timeline__item--${esc(result ?? 'plain')}" style="--i:${steps.length}">
@@ -121,6 +122,19 @@ function renderReportTimeline(m) {
       </ol>
       ${m.timeline?.side ? rollDetail(m.timeline.side) : ''}
       ${renderFullLog(m.timeline)}
+    </div>`;
+}
+
+/**
+ * A hands-off job's or side task's days out, a line a day (the adventure log, core/advlog.js), above
+ * the timeline. A side task's last day is its result, already the timeline's step: not said twice.
+ */
+function renderDaysOut(days, steps = []) {
+  const list = (days ?? []).filter((d) => !steps.includes(d.text));
+  if (!list.length) return '';
+  return `<div class="advlog advlog--report">
+      <h3 class="advlog__head">The days out</h3>
+      <ol class="advlog__days">${list.map((d) => `<li class="small"><span class="advlog__day">Day ${d.day}</span> ${crewLinks(d.text)}</li>`).join('')}</ol>
     </div>`;
 }
 

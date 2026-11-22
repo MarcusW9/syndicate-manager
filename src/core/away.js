@@ -20,21 +20,41 @@ import { autoStep, needsPlayer, dayDone, beatsByDay } from './autorun.js';
 
 export { dayDone };
 import { QUIET_LINES } from '../data/away.js';
+import { jobDayLine, startFacts, capLog } from './advlog.js';
 
 const crewOf = (s, am) => [...am.crewIds, am.overwatch?.id, am.wheels, am.standby?.id].filter(Boolean).map((id) => s.crew.find((o) => o.id === id)).filter(Boolean);
 const names = (ops) => (ops.length > 1 ? `${ops.slice(0, -1).map((o) => o.handle).join(', ')} and ${ops.at(-1).handle}` : ops[0]?.handle ?? 'The crew');
 const firstSentence = (text = '') => (/^.*?[.!?](?=\s|$)/.exec(text)?.[0] ?? text);
 
-/** One or two lines for what the crew did today (Today's "crews out" list); quiet when nothing happened. */
-function dayLines(s, am, fromEvent) {
+/**
+ * One or two lines for what the crew did today (the crew-out card): the day's log line (core/advlog.js)
+ * first, then what the job's own story said (a report or a beat); a quiet placeholder if there's neither.
+ */
+function dayLines(s, am, fromEvent, logLine = null) {
   const today = (am.events ?? []).slice(fromEvent);
   const said = today.filter((e) => e.report).map((e) => e.report);
-  if (said.length) return { lines: said.slice(-2), quiet: false };
   const beat = today.filter((e) => e.kind === 'beat').at(-1);
-  if (beat) return { lines: [firstSentence(beat.text)], quiet: false };
+  const story = said.length ? said.slice(-2) : beat ? [firstSentence(beat.text)] : [];
+  if (logLine) return { lines: [logLine.text, ...story.slice(-1)], quiet: !story.length };
+  if (story.length) return { lines: story, quiet: false };
   const lead = crewOf(s, am)[0];
   const line = QUIET_LINES[(s.day + am.jobId.length) % QUIET_LINES.length];
   return { lines: [line.replace('{lead}', lead?.handle ?? 'The crew')], quiet: true };
+}
+
+/**
+ * The day's log line for a crew out (the adventure log, slice 1): one a day, kept on the job's own
+ * state (am.advlog: the trip's facts and its last LOG_KEEP lines) so the report can show the days out.
+ * Once per day: a job waiting on a call doesn't write the same day twice.
+ */
+function writeLog(s, am, d) {
+  am.advlog ??= { facts: startFacts(s.seed, am.jobId, templateById(am.templateId).district), log: [] };
+  if (am.advlog.log.some((l) => l.day === d)) return am.advlog.log.find((l) => l.day === d);
+  const line = jobDayLine({ seed: s.seed, tripId: am.jobId, day: d, crew: crewOf(s, am), district: templateById(am.templateId).district, facts: am.advlog.facts });
+  if (!line) return null;
+  am.advlog.log.push(line);
+  capLog(am.advlog.log);
+  return line;
 }
 
 /** The blocking message that asks the player to take a crew's call. */
@@ -75,6 +95,7 @@ export function advanceAway(prev) {
     if (d < 1) { keep.push(j); continue; }
     am.away.beats = Math.max(am.away.beats, beatsByDay(templateById(am.templateId).beats.length, days, d));
     am.away.day = d;
+    const logLine = writeLog(s, am, d);
     const from = (am.events ?? []).length;
     s.activeMission = am;
     for (let guard = 0; guard < 200; guard++) {
@@ -92,7 +113,7 @@ export function advanceAway(prev) {
       continue;
     }
     j.mission = now;
-    j.today = { day: s.day, ...dayLines(s, now, from) };
+    j.today = { day: s.day, ...dayLines(s, now, from, logLine) };
     if (!dayDone(now)) { // it stopped for the player, not for the night
       j.waiting = true;
       s.inbox.unshift(callMessage(s, now));
@@ -167,6 +188,7 @@ export function crewsOut(s) {
       phase: phaseOf(am),
       status: j.waiting ? 'call' : hurt ? 'hurt' : today?.quiet ? 'low' : 'on',
       lines: today?.lines ?? [], waiting: !!j.waiting,
+      log: am.advlog?.log ?? [], // the days out so far (core/advlog.js), for the card's full log on tap
       // Where they are on the job's site, for the card's mini map (ui/minimap.js).
       templateId: am.templateId, zone: am.zone ?? 'start', inside: am.crewIds.length, overwatch: !!am.overwatch, wheels: !!am.wheels,
     };
