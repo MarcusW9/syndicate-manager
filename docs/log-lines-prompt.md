@@ -15,10 +15,15 @@ The lines are procedural stories, not a random line a day. The engine builds eac
    - **snag**: something goes against them (a small cost: cash, a scrape, heat);
    - **find**: an extra on the side (a little cash, a part, a rumour);
    - **quiet**: waiting, watching, nothing happens.
-3. **Callback** lines are middle-day lines that bring back what the open line named ("{contact} wasn't at the stall today"). They are what make a trip read as one story, not seven unrelated days.
+3. **Callback** lines are middle-day lines that bring back what the open line named ("{contact} wasn't at the stall today"). They are what make a trip read as one story, not seven unrelated days. A callback is still a beat: each one is filed as a lead, a dead end or a snag, so the game knows what the day did.
 4. **Turn**: the day the goal comes within reach, good or rough.
 5. **Call**: now and then a fight breaks out and the player is called in (as on a security post). One line that sets up the fight.
 6. **Close**: they come home. **met** (got it), **partial** (got some of it), **failed** (came back with only what they found on the way). Nobody dies on a log line; the worst a line can do is a scrape.
+
+**Personality** comes from three extra pools, so the log sounds like this crew and not any crew:
+- **asides**: a second sentence the game adds to about one day in three, picked by the temperament of `{who}` (the tags on every runner's bio: superstitious, money, warm, hot, wary, calm, cold, charming, curious, chrome, haunted). A superstitious runner won't take the fourth-floor meeting; a money one haggles the informant down and is pleased about it all evening.
+- **pair**: a day about two of the crew together (`{who}` and `{other}`): arguing about the route, covering for each other, a running joke.
+- **joss**: Joss at home, reading the day's report and adding a line now and then (warm, practical, occasionally dry; they keep the numbers).
 
 Who does what: each beat is rolled on one stat, and `{who}` is the crew member who is best at it. That's why pools are split by stat: a social crew talks its way to the weapon, a stealth crew lifts it. Every pool has an `any` list as a fallback.
 
@@ -189,24 +194,31 @@ called in), and a CLOSE line: met, partial or failed. Each beat is rolled on one
 {who} is the crew member best at it, so pools are split by stat. Stats: combat, stealth,
 tech, social, piloting, medical, cool (no endurance pools). Every pool also has "any".
 
-SLOTS (write them exactly; the game fills them):
-  {who}       the crew member the day's roll was on
-  {other}     another crew member (only if the crew has two or more; use sparingly)
-  {contact}   a person, as a district file writes them ("Old Lam, who sells scrap off a cart")
-              — after first mention the game shortens it to the name ("Old Lam")
-  {place}     a place in the district ("the ferry pier at Sai Wan")
-  {district}  the district as it reads mid-sentence ("the Docks")
-  {item}      the weapon hunted (weapon file only), e.g. "a Kestrel-9 carbine"
-  {cash}      an amount, already formatted ("¥1,200")
-  {lead}      a recruit's description (recruit file only), e.g. "a medic who walked out of a corp clinic"
-  {day}       the day number, for the rare line that wants it ("Day 3.")
+SLOTS (write them exactly; the game fills them, and capitalises a slot that starts a sentence):
+  {who}          the crew member the day's roll was on
+  {other}        another crew member (only if the crew has two or more; use sparingly)
+  {contact}      a person's name only ("Old Lam")
+  {contactWhat}  who they are, with "a" ("a scrap dealer with a cart"); use it once, in the
+                 OPEN line, as "{contact}, {contactWhat}," or "{contactWhat} called {contact}"
+  {place}        a place in the district, with "the" ("the ferry pier at Sai Wan")
+  {district}     the district as it reads mid-sentence ("the Docks")
+  {itemFull}     the weapon hunted, first mention, with "a" ("a Kestrel-9 carbine"); OPEN only
+  {item}         the weapon after that, short, with "the" ("the Kestrel-9")
+  {cash}         an amount, already formatted ("¥1,200")
+  {lead}         a recruit's description (recruit file only), with "a"
+                 ("a medic who walked out of a corp clinic"); {leadShort} after that ("the medic")
+  {day}          the day number, for the rare line that wants it ("Day 3.")
 Don't invent other slots.
 
 RULES
 1. One or two short sentences per line. It is read on a phone, one line at a time.
-2. Plain, dry, specific. Concrete things (a noodle stall, a wet stairwell, a broken lift),
-   not mood words. No exclamation marks. British spelling.
-3. Past tense, as a report of the day ("{who} found...", "Nobody showed.").
+2. Specific and human. The game's tone is gritty but warm: loyalty and dark humour, with
+   trouble arriving as events, not as the mood. Concrete things (a noodle stall, a wet
+   stairwell, a broken lift) beat mood words. Dry is one flavour, not the only one: let
+   the crew be funny, petty, kind, scared, smug. No exclamation marks. British spelling.
+3. Past tense, as a report of the day ("{who} found...", "Nobody showed."). The crew may
+   speak: a short quote from {who} is welcome, about one line in four
+   ("{who} says the dumplings alone were worth the trip.").
 4. Never name a crew member; use {who} and {other}. Never give anyone a gender through a slot
    (no he/she for {who}, {other} or {contact}: write around it, or use "they" sparingly).
 5. Nobody dies in a line. The worst a snag does is a scrape or a bruise. Fights only start in
@@ -218,6 +230,27 @@ RULES
 9. CALLBACK lines must use {contact} or {place}, and must still read right whether day 1
    named a person or a place: write callbacks for each (callbackContact, callbackPlace).
 10. Vary the openings: no more than two lines in a pool start the same way.
+11. Middle days are not the end of the trip. Lines before CLOSE never say the crew "came back"
+    or "came home"; they report the day.
+12. A line says only what its beat does. A find line names what was found (cash lines use
+    {cash}); a lead line moves the hunt on; a quiet line changes nothing. Only snag lines hurt
+    anyone, and CLOSE lines never mention injuries (the game reports those itself).
+13. Don't lean on {item} in every line: about half the middle-day lines at most, or a week of
+    log repeats the same name. "It", "the case" and "the gun" are fine once it's been named.
+14. Gear named in a line must be in the CONTEXT (a heat veil, a lens blinder) and must not
+    assume {who} carries it unless the line still reads right if they don't.
+15. The day lines carry the plot; personality lives mostly in quotes, asides, pair and joss.
+    A good log reads like messages from people you know, not a police report.
+
+TONE EXAMPLES (the owner liked the mix: keep this variety; most days plain, some days funny,
+a quote now and then, Joss rarely)
+  plain:       The case was the right size. What was inside wasn't {item}. The day went with it.
+  detail:      The case was the right size. Inside was a karaoke machine, still plugged in. The day went with it.
+  quote:       Nobody useful showed. {who} got so bored they started rating the noodle stalls. "Two stars. Both of them."
+  dark humour: Two people decided {who} looked easy to push around. The furniture lost, {who} won, and the stall owner sent us the bill.
+  aside:       (superstitious) {who} blames the black cat that sat on the van at noon, and won't hear otherwise.
+  pair:        {who} and {other} argued about the route for an hour. {who} was right, and hasn't stopped saying so.
+  joss:        Joss: "Logged, oiled, and not to be fired indoors. I mean it."
 
 FORMAT — GOAL file (weapon, cash or recruit)
 ```js
@@ -228,17 +261,26 @@ export default {
   lead:            { any: [/* 6+ */], combat: [], stealth: [], tech: [], social: [], piloting: [], cool: [] },
   deadEnd:         { any: [/* 5+ */], social: [], tech: [] },
   snag:            { any: [/* 5+ */], combat: [], stealth: [], piloting: [] },
-  find:            { any: [/* 4+, use {cash} in some */] },
+  find:            { cash: [/* 3+, each uses {cash} */], gear: [/* 3+: parts, ammo, a spare piece */], rumour: [/* 2+: a tip for later */] },
   quiet:           { any: [/* 4+ */] },
-  callbackContact: { any: [/* 4+, each uses {contact} */] },
-  callbackPlace:   { any: [/* 4+, each uses {place} */] },
+  callbackContact: { lead: [/* 3+ */], deadEnd: [/* 2+ */], snag: [/* 2+ */] },  // each uses {contact}
+  callbackPlace:   { lead: [/* 3+ */], deadEnd: [/* 2+ */], snag: [/* 2+ */] },  // each uses {place}
   turn:            { good: [/* 3+ */], rough: [/* 3+ */] },
   call:            [/* 3+: a fight starts; end on "calling it in" or similar */],
   close:           { met: [/* 3+ */], partial: [/* 3+ */], failed: [/* 3+ */] },
+  // Personality. Asides are ONE sentence that can follow any day line of this goal; key by
+  // temperament tag (superstitious, money, warm, hot, wary, calm, cold, charming, curious,
+  // chrome, haunted). 2+ for at least six tags.
+  asides:          { superstitious: [], money: [], warm: [], hot: [], wary: [], curious: [] },
+  pair:            [/* 4+: a middle day about {who} and {other} together; it may also move the hunt on a little */],
+  joss:            { day: [/* 4+: Joss's comment on a day, starts "Joss:" */], met: [/* 2+ */], failed: [/* 2+ */] },
 };
 ```
 Stat lists may be empty when a stat doesn't fit the goal; aim for at least two lines in each
-list you fill. A weapon hunt is about finding who has it and getting it off them (buy, trade,
+list you fill. What CLOSE gives back, so the lines match it: met = the goal; partial = a weapon hunt
+brings parts or a lesser piece, a cash run part of the sum, a recruit hunt a name but no
+meeting yet; failed = only the finds from the way.
+A weapon hunt is about finding who has it and getting it off them (buy, trade,
 lift, win). A cash run is about a debt, a stash, a skim or a quick score — small-time, not a
 heist. A recruit hunt is about hearing of someone, finding them, and getting a conversation;
 {lead} is who they're after, and close.met ends with the person willing to meet the fixer.
@@ -248,7 +290,7 @@ FORMAT — DISTRICT file
 // Log lines: <district>. Draft for the owner to mark.
 export default {
   district: 'docks', // oldTown, docks, nightMarket, heights, basin
-  contacts: [/* 8+: "Name, who <does what>" — mixed ages, backgrounds and communities */],
+  contacts: [/* 8+: { name: 'Old Lam', what: 'a scrap dealer with a cart' } — mixed ages, backgrounds and communities */],
   places:   [/* 8+: specific places, each a short noun phrase */],
   quiet:    [/* 4+: a quiet day that could only happen in this district */],
   snag:     [/* 3+: a district-flavoured small trouble */],

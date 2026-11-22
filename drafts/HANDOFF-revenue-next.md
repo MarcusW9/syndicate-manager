@@ -53,6 +53,8 @@ line here is in `docs/design/2026-11.md` (grep the topic).
 
 **The log is a procedural story, not a random line a day** (owner asked). Day 1 names a contact or a place and the engine remembers it; middle days are beats (lead, dead end, snag, find, quiet) and callbacks to what day 1 named; then a turn, sometimes a call (a fight), and a close (met, partial, failed). Each beat rolls on a stat and `{who}` is the crew member best at it, so pools are split by stat. A goal file gives the shape of the hunt, a district file the people and places. Spelled out in `docs/log-lines-prompt.md`; the engine keeps the trip's facts (`contact`, `place`) on the trip's state and seeds every pick with `hashRng`.
 
+**Personality in the log (owner, 2026-11-22: "too dry").** Pools for asides keyed by the runner's temperament tags, pair days ({who} and {other}) and Joss's comments; quotes allowed in day lines. Runners don't store their tags: `recruits.js` builds `bio` from a TEMPERAMENTS and a HABITS entry (`data/recruitPools.js`). The engine can recover the tags by matching the bio's two sentences against those lists (no save change; founders and older saves included), or store `op.tags` with a save version. Recommended: match first, store only if a bio can change.
+
 ### Expeditions have a goal (owner, 2026-11-21)
 
 Not a wander with no target. The player picks a goal when sending the crew; each day rolls progress towards it on the crew's stats and gear, and the log tells how it goes ("Day 2: Raster's contact at the depot went quiet"). Finds along the way (cash, a scrape, a fight that calls you in) are extras. They come back with the goal met, partly met or failed. Pull out early any time, everyone safe. The goal sets the length and which stats count.
