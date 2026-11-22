@@ -51,7 +51,7 @@ test('who can go: our own free runners, one to three, to a district with a file'
   assert.ok(canSend(s, 'weapon', 'docks', ids.slice(0, 3)).ok);
   assert.ok(!canSend(s, 'weapon', 'docks', ids.slice(0, EXPEDITION.maxCrew + 1)).ok);
   assert.ok(!canSend(s, 'weapon', 'docks', []).ok);
-  assert.ok(!canSend(s, 'weapon', 'oldTown', ids.slice(0, 1)).ok, 'no district file yet');
+  assert.ok(!canSend(s, 'weapon', 'amberReach', ids.slice(0, 1)).ok, 'a locked district, no file yet');
   assert.ok(!canSend(s, 'heist', 'docks', ids.slice(0, 1)).ok);
   const sent = sendExpedition(s, { goal: 'cash', district: 'docks', crewIds: ids.slice(0, 2) });
   for (const id of ids.slice(0, 2)) assert.ok(!availability(sent, sent.crew.find((o) => o.id === id)).ok, 'away');

@@ -42,7 +42,7 @@ export function renderExpeditions() {
   return `
       <h2>Expeditions</h2>
       <div class="infoline"><p class="muted small">Our own errands: send a crew after something the tong wants.</p>${infoButton('expeditions', 'About expeditions')}</div>
-      ${infoText('expeditions', `A crew goes out for a few days after one thing: a weapon, cash or a recruit. Nobody pays for it and it earns no fame: what they bring back is the point. They send a line home every day. If a deal goes wrong they call you: watch the fight, let them fight it, or pull out. You can pull them out any day; everyone comes home and keeps what they found. Up to ${EXPEDITION.maxCrew} go; for now the Docks and the Night Market.`)}
+      ${infoText('expeditions', `A crew goes out for a few days after one thing: a weapon, cash or a recruit. Nobody pays for it and it earns no fame: what they bring back is the point. They send a line home every day. If a deal goes wrong they call you: watch the fight, let them fight it, or pull out. You can pull them out any day; everyone comes home and keeps what they found. Up to ${EXPEDITION.maxCrew} go, to any open district.`)}
       ${out.length ? `<ul class="crewsout" aria-label="Out on an expedition">${out.map((x) => expeditionCard(x)).join('')}</ul>` : ''}
       <ul class="list list--cols sidelist">
         ${GOAL_ORDER.map((id) => {
