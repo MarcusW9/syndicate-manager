@@ -16,13 +16,14 @@ import SIDE_DAYS from '../data/advlog/sideDays.js';
 import DOCKS from '../data/advlog/docks.js';
 import NIGHT_MARKET from '../data/advlog/nightMarket.js';
 import OLD_TOWN from '../data/advlog/oldTown.js';
+import HEIGHTS from '../data/advlog/heights.js';
 import WEAPON from '../data/advlog/weapon.js';
 import WEAPON_SHARED from '../data/advlog/weaponShared.js';
 import CASH from '../data/advlog/cash.js';
 import RECRUIT from '../data/advlog/recruit.js';
 
-/** The district files (people, places, quiet days, snags). Glass Heights and the Basin have none yet. */
-export const DISTRICT_LINES = { docks: DOCKS, nightMarket: NIGHT_MARKET, oldTown: OLD_TOWN };
+/** The district files (people, places, quiet days, snags). The Basin has none yet. */
+export const DISTRICT_LINES = { docks: DOCKS, nightMarket: NIGHT_MARKET, oldTown: OLD_TOWN, heights: HEIGHTS };
 
 /** Two drafts of one file as one: lists under the same key joined (weapon.js and weaponShared.js). */
 export function joinPools(a, b) {
