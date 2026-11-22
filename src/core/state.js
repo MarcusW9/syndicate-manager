@@ -16,7 +16,7 @@ import { refreshArmoury } from './looks.js';
 import { seedRivals } from './rivals.js';
 import { cleanTongName, tongNameProblem } from './tongname.js';
 
-export const SAVE_VERSION = 86;
+export const SAVE_VERSION = 87;
 
 // A rookie crew's first board: small work only.
 export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];
@@ -92,6 +92,7 @@ export function createNewGame({ seed = 1, difficulty = 'standard', startCrew = '
     grudges: { redLanterns: 0, silverFan: 0 }, // each gang's grudge against us, 0-10 (core/gangs.js, save v41)
     sideBoard: [], sideOut: [], intel: {}, // side tasks (core/sidetasks.js)
     contracts: { offers: [], active: [], seq: 0 }, // security posts (core/contracts.js, save v84)
+    expeditions: { active: [], seq: 0 }, // our own errands (core/expeditions.js, save v87)
     recruits: [],
     freelancers: [],
     recruitSeq: 0,

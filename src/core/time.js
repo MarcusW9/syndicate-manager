@@ -22,6 +22,7 @@ import { money } from './money.js';
 import { advanceAway } from './away.js';
 import { weekSummary, weekStartOf } from './week.js';
 import { refreshSideBoard, returnSideTasks } from './sidetasks.js';
+import { tickExpeditions } from './expeditions.js';
 import { dailyTraits } from './earned.js';
 import { weeklyRecord } from './record.js';
 import { weeklyLoyalty } from './loyalty.js';
@@ -117,6 +118,7 @@ export function advanceDay(prev) {
 
   returnSideTasks(state); // side tasks whose crew is back today resolve
   tickContracts(state); // runners on a post play their day; a hit post calls in (core/contracts.js)
+  tickExpeditions(state); // crews on an expedition play their day; a deal gone wrong calls in (core/expeditions.js)
   const after = advanceAway(state); // crews out take today's share; one that needs a call waits (core/away.js)
   checkRaids(after); // a raid due today knocks (after the crews due back are home); a hot district with a hall may draw a warning (core/raids.js)
   return after;

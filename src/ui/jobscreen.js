@@ -113,12 +113,12 @@ export function renderMission() {
   let result = '';
   if (am.done) {
     const r = am.result;
-    const title = r.outcome === 'loss' ? 'Someone didn\'t come home' : r.outcome === 'aborted' ? (am.raid || am.post ? 'Pulled back' : 'Job aborted') : am.raid ? 'Hall held' : am.post ? 'Post held' : 'Job done';
+    const title = r.outcome === 'loss' ? 'Someone didn\'t come home' : r.outcome === 'aborted' ? (am.raid || am.post || am.expedition ? 'Pulled back' : 'Job aborted') : am.raid ? 'Hall held' : am.post ? 'Post held' : am.expedition ? 'Fight won' : 'Job done';
     result = `
       <div class="resultcard resultcard--${esc(r.outcome)}">
         <h2>${esc(title)}</h2>
-        ${am.raid || am.post ? '' : `<p>Paid ${money(r.pay)} · Heat +${r.heatGain}</p>`}
-        ${am.post && r.post ? `<p>${esc(r.post)}</p>` : ''}
+        ${am.raid || am.post || am.expedition ? '' : `<p>Paid ${money(r.pay)} · Heat +${r.heatGain}</p>`}
+        ${(am.post || am.expedition) && r.post ? `<p>${esc(r.post)}</p>` : ''}
         ${r.injuries.length ? `<p>Injured: ${esc(r.injuries.join(', '))}</p>` : '<p>Nobody hurt.</p>'}
         ${r.deaths.length ? `<p><strong>Lost: ${esc(r.deaths.join(', '))}.</strong> Their names go on the wall.</p>` : ''}
         ${levelUpCards(r)}
@@ -148,8 +148,8 @@ function renderFinale(s) {
   const events = am.events ?? [];
   const SEV = ['light', 'serious', 'critical'];
   const ids = [...am.crewIds, am.overwatch?.id, am.wheels, am.standby?.joined ? null : am.standby?.id].filter(Boolean);
-  const raid = !!am.raid || !!am.post; // a raid on a hall, or a hit post (2026-11-21), pays nothing now, so it is held or given up, not "done" (2026-11-20)
-  const place = am.post ? 'Post' : 'Hall';
+  const raid = !!am.raid || !!am.post || !!am.expedition; // a raid on a hall, or a hit post (2026-11-21), pays nothing now, so it is held or given up, not "done" (2026-11-20)
+  const place = am.post ? 'Post' : am.expedition ? 'Ground' : 'Hall'; // an expedition's fight: ground held
   const title = { completed: raid ? `${place} held` : 'Job done', aborted: raid ? 'Pulled back' : 'Walked away', loss: "Someone didn't come home" }[r.outcome] ?? 'Job over';
   // The result stacked in block capitals like a chop, one word group a line (2026-11-10).
   const zh = { completed: raid ? '守住' : '搞掂', aborted: raid ? '撤退' : '收手' }[r.outcome] ?? '搞掂'; // Cantonese: sorted, hands off; held, pulled back
@@ -186,7 +186,7 @@ function renderFinale(s) {
         ${raid ? '' : `<p class="finale__pay"><span data-count="${r.pay}" data-fmt="${esc(NAMES.currency)}">${esc(money(r.pay))}</span><span class="finale__heat">Heat +${r.heatGain}</span></p>`}
         <ul class="finale__team">${team}</ul>
         ${r.client && r.trustChange ? `<p class="finale__line">${esc(r.client)}: trust ${r.trustChange > 0 ? '+' : ''}${r.trustChange}</p>` : ''}
-        ${am.post && r.post ? `<p class="finale__line">${esc(r.post)}</p>` : ''}
+        ${(am.post || am.expedition) && r.post ? `<p class="finale__line">${esc(r.post)}</p>` : ''}
         <div class="finale__btns">
           <button class="btn btn--ghost" data-action="finale-close">See the report</button>
           <button class="btn btn--primary finale__go" data-action="close-mission">Back to the safehouse</button>

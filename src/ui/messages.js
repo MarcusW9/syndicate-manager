@@ -1,6 +1,7 @@
 // An open message: reports (summary, timeline, full log) and the decisions that arrive as messages
 // (renewal, a rival's offer, retirement, a specialisation, a raid warning or call, the heat notice).
 import { contractsOf, helpers, HELP, CONTRACT } from '../core/contracts.js';
+import { expeditionById } from '../core/expeditions.js';
 import { heatChoices, heatIn, WATCHED_PENALTY } from '../core/heat.js';
 import { hallIn, canOpenHall } from '../core/halls.js';
 import { raidChoices, raidPrice, canBuyOff, isGangRaid } from '../core/raids.js';
@@ -57,6 +58,7 @@ export function renderMessage(m) {
       ${m.kind === 'levelup' ? (m.payload?.learned ? `<p><strong>Learned ${esc(m.payload.learned)}.</strong></p>` : state.crew.some((o) => o.id === m.payload?.opId) ? `<button class="btn btn--primary" data-action="open-op" data-tab="skills" data-id="${esc(m.payload.opId)}">Pick a skill on their page</button>` : '') : ''}
       ${m.kind === 'retirement' ? renderRetirement(m) : ''}
       ${m.kind === 'contract' ? renderContractCall(m) : ''}
+      ${m.kind === 'expedition' ? renderExpeditionCall(m) : ''}
       ${m.kind === 'poach' ? renderPoach(m) : ''}
       ${m.kind === 'hall-offer' && !hallIn(state, m.payload.district) ? (canOpenHall(state, m.payload.district).ok ? `<button class="btn btn--primary" data-action="open-hall" data-id="${esc(m.payload.district)}">Open the hall · ${money(HALL_SITES[m.payload.district].deposit)}</button>` : `<p class="muted small">${esc(canOpenHall(state, m.payload.district).reason)}.</p>`) : ''}
       ${m.kind === 'callin' && !m.resolved ? `<button class="btn btn--primary" data-action="take-call" data-id="${esc(m.payload.jobId)}">Take the call</button>` : ''}
@@ -102,7 +104,7 @@ function renderReportTimeline(m) {
     steps = at < 0 ? lines : lines.slice(0, at);
     outcome = at < 0 ? [] : lines.slice(at).map((text) => ({ tone: 'plain', text }));
   }
-  const end = { completed: ['✓', 'Job done'], aborted: ['↩', 'Aborted'], loss: ['✕', 'Someone didn\'t come home'], setback: ['✗', 'Went badly'] }[result] ?? ['■', 'How it ended'];
+  const end = m.timeline?.expedition ? { completed: ['✓', 'Got it'], aborted: ['◐', 'Part of it'], setback: ['✗', 'Came back without it'] }[result] ?? ['■', 'Back home'] : { completed: ['✓', 'Job done'], aborted: ['↩', 'Aborted'], loss: ['✕', 'Someone didn\'t come home'], setback: ['✗', 'Went badly'] }[result] ?? ['■', 'How it ended'];
   // Played once: each step lands in turn down the rail, then the result, then Joss and the summary.
   const play = m.id === V.playReportId;
   if (play) V.playReportId = null;
@@ -155,7 +157,7 @@ function reportCrew(m) {
     const lost = mine.length - won;
     const hurt = events.filter((e) => e.injury?.id === id).map((e) => e.injury.severity).sort((a, b) => SEV.indexOf(b) - SEV.indexOf(a))[0];
     const gone = !state.crew.some((o) => o.id === id);
-    const line = gone ? 'Lost' : mine.length ? `${won} ✓${lost ? ` · ${lost} ✗` : ''}` : 'Backed them up';
+    const line = gone ? 'Lost' : mine.length ? `${won} ✓${lost ? ` · ${lost} ✗` : ''}` : m.timeline?.expedition ? 'On the trip' : 'Backed them up';
     return `<button class="rcrew__op ${gone ? 'is-lost' : hurt ? 'is-hurt' : ''}" data-action="op-link" data-id="${esc(id)}" ${gone ? 'disabled' : ''}>
         ${face(op, 'sm')}<strong>${esc(op.handle)}</strong><span>${esc(line)}</span>${hurt && !gone ? `<span class="rcrew__hurt">${esc(hurt)} wound</span>` : ''}</button>`;
   }).join('');
@@ -322,6 +324,27 @@ function renderContractCall(m) {
         <button class="btn" data-action="decide" data-id="${esc(m.id)}" data-option="auto" ${state.activeMission ? 'disabled' : ''}>Let them fight it <span class="muted small">(steady orders, a report back)</span></button>
         <button class="btn btn--ghost" data-action="decide" data-id="${esc(m.id)}" data-option="give">Give it up and come home</button>
         <p class="muted small">Give it up: everyone home unhurt, the pay so far kept, trust ${CONTRACT.trust.gaveUp}. In the fight, cautious and steady never lose anyone without asking you.</p>
+      </div>`;
+}
+
+/** An expedition's deal gone wrong (core/expeditions.js): ours against theirs, then watch it, let them fight it, or pull out. */
+function renderExpeditionCall(m) {
+  if (m.resolved) return m.payload?.outcome ? `<p><strong>${esc(m.payload.outcome)}</strong></p>` : '';
+  const e = expeditionById(state, m.payload?.expeditionId);
+  if (!e) return '';
+  const ours = e.crewIds.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean);
+  const them = m.payload.enemies ?? 3;
+  const risk = ours.length > them ? 'low' : ours.length === them ? 'moderate' : ours.length === them - 1 ? 'high' : 'extreme';
+  return `
+      <div class="postcall">
+        <p class="postcall__vs">${ours.map((o) => face(o, 'sm')).join('')}<span class="muted small">against</span><span class="postcall__them">${them}</span></p>
+        <p class="small">${riskBadge(risk)} ${esc(`${ours.length} of ours against ${them}.`)}</p>
+      </div>
+      <div class="stack">
+        <button class="btn btn--primary" data-action="decide" data-id="${esc(m.id)}" data-option="fight" ${state.activeMission ? 'disabled' : ''}>Watch the fight</button>
+        <button class="btn" data-action="decide" data-id="${esc(m.id)}" data-option="auto" ${state.activeMission ? 'disabled' : ''}>Let them fight it <span class="muted small">(steady orders, a report back)</span></button>
+        <button class="btn btn--ghost" data-action="decide" data-id="${esc(m.id)}" data-option="give">Pull out and come home</button>
+        <p class="muted small">Pull out: everyone home unhurt with what they found; the goal partly met at best. Win the fight and the deal goes through. Cautious and steady never lose anyone without asking you.</p>
       </div>`;
 }
 

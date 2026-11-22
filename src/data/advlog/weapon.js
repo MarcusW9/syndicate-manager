@@ -1,7 +1,7 @@
 // Log lines: weapon. The owner's draft (2026-11-22, from docs/log-lines-prompt.md), put into the
 // prompt's second format by Claude. Changes from the owner's text are marked "// fixed:"; gaps
 // to fill are marked "// needs". Lines marked "// v2" come from the owner's second draft (2026-11-22),
-// the best of it sorted into this format. Moves to src/data/advlog/ when the log engine is built.
+// the best of it sorted into this format. In use since expeditions (slice 2), joined with weaponShared.js.
 export default {
   goal: 'weapon',
 

@@ -20,6 +20,7 @@ import { intelFor, SIDE_TRUST, sideReward, sideTaskById, sideOdds, sidePitch, si
 import { ROLL_STATS } from '../core/development.js';
 import { contractsOf, contractOdds, slotTotal, postsOut, kindOf, CONTRACT } from '../core/contracts.js';
 import { clientRival } from '../core/rivals.js';
+import { renderExpeditions, renderExpeditionPlan } from './expeditions.js';
 import { clientRivalLine } from '../data/rivals.js';
 import { esc, infoButton, infoHtml, cityName, face, statName, riskWord, subTabs, infoText, districtName, statusChip, riskBadge, daysLeft } from './shared.js';
 import { state, backLabel, V } from './view.js';
@@ -232,7 +233,7 @@ function jobCard(j) {
 
 /** Jobs: what work there is. Sub-tabs Board · Heists · Side · Clients. `tab` overrides the sub-tab (the list beside a plan). */
 export function renderJobs(tab = V.jobsTab) {
-  const which = ['board', 'heists', 'side', 'clients'].includes(tab) ? tab : 'board';
+  const which = ['board', 'heists', 'side', 'expeditions', 'clients'].includes(tab) ? tab : 'board';
   const jobs = boardOrder();
   const body = {
     board: () => `${streetTalk()}
@@ -241,12 +242,13 @@ export function renderJobs(tab = V.jobsTab) {
       ${jobs.length ? `<ul class="list list--cols jobslist">${jobs.map(jobCard).join('')}</ul>` : '<p class="muted">No work on the board. New work comes in through the week.</p>'}`,
     heists: () => renderHeist() || '<p class="muted">No heist on right now.</p>',
     side: () => renderPosts() + renderSideBoard(),
+    expeditions: () => renderExpeditions(),
     clients: () => renderClientList(),
   }[which]();
   return `
     <section class="panel jobsboard">
       <h1>Jobs</h1>
-      ${subTabs('Jobs sections', 'jobs-tab', [['board', 'Board'], ['heists', 'Heists'], ['side', 'Side'], ['clients', 'Clients']], which)}
+      ${subTabs('Jobs sections', 'jobs-tab', [['board', 'Board'], ['heists', 'Heists'], ['side', 'Side'], ['expeditions', 'Trips'], ['clients', 'Clients']], which)}
       ${body}
     </section>`;
 }
@@ -369,6 +371,7 @@ function renderPostPlan() {
 /** Planning a side task: who goes, how likely it goes well, what it gives and costs. */
 export function renderSidePlan() {
   if (V.sidePlan.postId) return renderPostPlan();
+  if (V.sidePlan.expGoal) return renderExpeditionPlan();
   const t = sideTaskById(V.sidePlan.taskId);
   if (!t || !(state.sideBoard ?? []).includes(t.id)) { V.sidePlan = null; return renderJobs(); }
   const odds = V.sidePlan.crew.length ? sideOdds(state, t, V.sidePlan.crew) : null;

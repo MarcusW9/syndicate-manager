@@ -13,6 +13,7 @@ import { alerts, upcoming } from '../core/upcoming.js';
 import { money } from '../core/money.js';
 import { crewsOut } from '../core/away.js';
 import { sideTasksOut } from '../core/sidetasks.js';
+import { expeditionsOut } from '../core/expeditions.js';
 import { renderWord } from './tongs.js';
 import { backupBanner } from './app.js';
 import { renderMessage, crewLinks } from './messages.js';
@@ -142,7 +143,7 @@ function renderWeekBrief() {
 
 /** Today's one line about the crews out; they're followed on Ops, the command centre (2026-11-05; its own tab 2026-11-06). */
 function renderOutLine() {
-  const jobs = crewsOut(state).length + sideTasksOut(state).length;
+  const jobs = crewsOut(state).length + sideTasksOut(state).length + expeditionsOut(state).length;
   if (!jobs) return '';
   const n = calls() - raidCalls().length;
   return `<button class="outnow ${n ? 'is-call' : ''}" data-action="goto" data-id="city:map">

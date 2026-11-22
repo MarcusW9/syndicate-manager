@@ -37,7 +37,7 @@ setState(next){ setGame(next); saveGame(state); render(); }
   heatNoticeDay: null, heatWatched: false /*or a district*/, rumour: null, reputation: 0, jobGates: false,
   rank: 'backroom' /*the tong's rank, data/tong.js*/, weekStart: null /*{day, cash, reputation}*/, rent: 4000, difficulty,
   crew, stash: [], inbox: [welcome], memorial: [], jobs: [], jobSeq: 0, rngCounter: 0, activeMission: null,
-  awayJobs: [], sideBoard: [], sideOut: [], intel: {}, contracts: { offers: [], active: [], seq: 0 } /*security posts, v84*/, recruits: [], freelancers: [], recruitSeq: 0,
+  awayJobs: [], sideBoard: [], sideOut: [], intel: {}, contracts: { offers: [], active: [], seq: 0 } /*security posts, v84*/, expeditions: { active: [], seq: 0 } /*v87*/, recruits: [], freelancers: [], recruitSeq: 0,
   rosterCap: 8 /*all halls' beds*/, halls: [] /*{district, beds, rent, level, opened, owned (v44), shutUntil?, build: [{id, piece, x, y, rot, day}]}; home hall set at start*/, hallOffers: [], openings: {} /*each district's opening favour (core/halls.js), v43*/, heists: {} /*heists taken on (core/heists.js), v47*/, rivals: null /*the other tongs { tongs, cards, word, seq } (core/rivals.js), v51*/,
   raids: [] /*raids on the halls: police v40, gangs v41 (raid.by)*/, grudges: { redLanterns: 0, silverFan: 0 } /*v41*/,
   clients: {}, founding: null }
@@ -174,6 +174,8 @@ Format: JSON of the state in `localStorage`. Keys: `syndicate-active-slot`, `syn
 
 **Versioning:** `SAVE_VERSION` 85 in `core/state.js` (v73-v76 and v80-v81 are described in the `migrate` blocks of `save.js`). What each version added, newest first (one per line; grep `v52:`):
 
+- v87: expeditions: `state.expeditions` `{ active, seq }` (`core/expeditions.js`; a trip `{ id, goal, district, crewIds, startDay, days, endDay, progress, prize: { item | cash | recruit }, facts, log, finds, spent?, waiting }`); an expedition's fight is an `activeMission` with `expedition` (the trip id) and template `exp:<district>:<goal>`. Older saves get an empty one.
+- v86: the adventure log: a side task out keeps `log` (and `facts`); a hands-off job's mission keeps `advlog: { facts, log }` (`core/advlog.js`); reports may carry `timeline.days`.
 - v85: a hit post is a fight: an open `kind: 'contract'` call gets the options fight / auto / give and `payload.help: []`. A post's fight is an `activeMission` with `post` (the contract id), `postCrew`, `help`, on a `post:<district>:<kind>` template; its battle may carry `reinforce: [{ runner, round, in }]`.
 - v84: security contracts: `state.contracts` `{ offers, active, seq }` (`core/contracts.js`; an active post `{ id, kind, clientId, district, slots, days, slotPay, post, crewIds, startDay, endDay, owed, log, ended }`); an older save gets an empty one and its first offers on Monday.
 - v83: level-ups replace Joss's offers: every runner gets `pickAt` (from `buildAt`; a specialisation alone, from now) and `levelUp: null`; `buildAt`, `buildSnooze` and `specSnooze` go; an open `spec` or `build` offer is closed with a note (`core/levelup.js`).

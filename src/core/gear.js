@@ -244,6 +244,7 @@ export function canChangeGear(state, op) {
   const handsOff = (state.awayJobs ?? []).some(({ mission: m }) => [...m.crewIds, m.overwatch?.id, m.wheels, m.standby?.id].includes(op.id));
   if (handsOff) return { ok: false, reason: 'out on a job' };
   if ((state.sideOut ?? []).some((t) => t.crewIds.includes(op.id))) return { ok: false, reason: 'out on a side task' };
+  if ((state.expeditions?.active ?? []).some((e) => e.crewIds.includes(op.id))) return { ok: false, reason: 'out on an expedition' };
   return { ok: true, reason: '' };
 }
 
