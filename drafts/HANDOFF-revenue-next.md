@@ -4,6 +4,32 @@ For the next session. What is done, what is next in the owner's order, where it 
 and the questions to put to the owner before building. Read `CLAUDE.md` first. The why for every
 line here is in `docs/design/2026-11.md` (grep the topic).
 
+## Start here (2026-11-22): build the adventure log
+
+**Model:** Opus. Everything below the owner has already answered; build, don't re-ask. Read `CLAUDE.md`, then this section, then `docs/log-lines-prompt.md` ("How the log tells a story", slots and rules: the engine must read exactly that format).
+
+**The line files are written** (the owner's drafts, Claude's review fixes marked `// fixed:`, gaps `// needs`), in `drafts/advlog/`:
+- goals: `weapon.js`, `recruit.js`, `cash.js` (district-free by decision: a line that fits one district only lives in that district's file);
+- districts: `docks.js`, `nightMarket.js` (contacts `{ name, what }`, places with "the", quiet, snag). Old Town, Glass Heights and the Basin have none yet: fall back to the generic pools and a neutral `{place}` / `{contact}` (or keep expeditions to the two written districts at first, the owner's call).
+- Move them to `src/data/advlog/` as they become used; leave `// needs` gaps (empty lists are fine, the picker skips them).
+
+**Slice 1: the log on what exists (no expeditions yet).**
+1. `core/advlog.js`: one generator. Given the crew, district, kind, day and the trip's state, it picks the day's beat and line. Seed every pick with `hashRng(seed, 'advlog', tripId, day)` (`core/rng.js`) so no other roll moves. Keep the trip's facts (`contact`, `place`, which named on day 1) on the trip's state. Fill slots, capitalise a slot that starts a sentence, use `{itemFull}` / `{contactWhat}` / `{lead}` only where the format says.
+2. `{who}` is the crew member best at the beat's stat; asides (about one day in three) by `{who}`'s temperament tags. Runners do not store tags: recover them by matching the two sentences of `op.bio` against `TEMPERAMENTS` and `HABITS` in `data/recruitPools.js` (no save change; founders included). Pair days need two or more crew. Joss lines rarely.
+3. **Hands-off jobs** (`core/away.js`): `dayLines` (line 29) shows a beat's text or a `QUIET_LINES` placeholder (`data/away.js`). Give each day out a log line from the JOB DAYS format (`casing`, `setup`, `waiting`, `snag`); no job has a job-days file yet, so start with generic job-days pools (Claude drafts a small set; the owner marks) and keep beats and crises as they are. Show the latest line on Today's crew-out card (`ui/today.js renderCrewsOut`, line 156) and the whole log in the report.
+4. **Side tasks** (`core/sidetasks.js`, `sendOnSideTask` / `returnSideTasks`): a two-day task writes a line a day; the result is the last line.
+5. **Posts** already keep a day log (`core/contracts.js`, `c.log`, lines 213-237). Leave their pools in `data/contracts.js`, but write their days through the same generator if it fits without changing their rolls.
+6. Cap every log (the last 10 lines) and check the save-size test (`tests/inbox.test.js`).
+
+**Slice 2: expeditions** (after slice 1 is merged and played).
+- Their own system, not jobs: the player sends a crew from a screen of its own (not the board) with a goal, **a weapon first**, then cash, then a recruit. In-game days, 3 to 7, the goal sets the length and which stats count. No client, no pay, **no fame**; fights on them count in the fight record.
+- Each day rolls progress on the crew's stats and gear and writes the log (open, beats and callbacks, turn, close). A **call** is a fight that calls the player in, as on a hit post (`contracts.js startPostFight` / `finishPost`, engine 2). Pull out early any time, everyone safe. No death unless the player accepted the shown risk (the fight rules already handle it).
+- Close: **met** (the weapon, the sum, a recruit lead in Crew › Leads via `dossier.js`), **partial** (parts or a lesser piece / part of the sum / a name with no meeting), **failed** (only the finds). Finds pay out as they happen (cash, gear, a rumour).
+- Needs a save version (now `SAVE_VERSION = 85`, `core/state.js`) and a migration in `save/save.js`; `state.expeditions` with the trip's state and log.
+- Check: the income sim with expeditions (`scripts/sim-crew-income.mjs`, an option like `posts`), the fame sim, the save tests.
+
+**Every slice ships with** (CLAUDE.md): `npm test`, a design-log row, a changelog entry, CODEMAP lines for new files, `docs/SCREENS.md` if a screen changes, and screenshots (`npm run screenshots -- <slug>`) with a README row.
+
 ## Done (PR #226, branch `claude/vigilant-meitner-7qty6d`)
 
 - Income sim by crew size (`scripts/sim-crew-income.mjs`; report `docs/sims/crew-income-2026-11-21.md`).

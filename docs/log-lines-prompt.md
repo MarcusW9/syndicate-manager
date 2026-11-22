@@ -241,6 +241,10 @@ RULES
     assume {who} carries it unless the line still reads right if they don't.
 15. The day lines carry the plot; personality lives mostly in quotes, asides, pair and joss.
     A good log reads like messages from people you know, not a police report.
+16. Personality through moments, not reflections. Show what someone did or said ("{who}
+    blames the black cat that sat on the van at noon"), not what they believe or value
+    ("{who} preferred a cautious question to an enthusiastic promise"). These are criminals
+    on an errand, not an HR policy: no line should sound like a lesson or a principle.
 
 TONE EXAMPLES (the owner liked the mix: keep this variety; most days plain, some days funny,
 a quote now and then, Joss rarely)
@@ -314,5 +318,6 @@ export default {
 The job's own beats and crises tell the night itself; these lines fill the days before it.
 Write for this job's place and client, not for any job.
 
-REQUEST:
-GOAL: weapon
+REQUEST (replace this line with ONE of: GOAL: weapon / GOAL: cash / GOAL: recruit /
+DISTRICT: <name> / JOB DAYS: <job>, and add any notes below it):
+GOAL: cash
