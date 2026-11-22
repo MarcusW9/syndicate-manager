@@ -207,6 +207,8 @@ A letterhead establishes who is asking. It does not establish that they are righ
 
 Three recurring contacts represent different parts of the institution. Their trust is personal: helping one does not buy the cooperation of the others, unrestricted course access or the Association's protection.
 
+Their spoken lines live in `src/data/cast.js` (`{hui}`, `{yip}`, `{chan}`).
+
 #### Hui Lai-sum
 *The Basin · Association Community Services*
 
@@ -240,6 +242,8 @@ He loves racing enough to investigate people who make it possible.
 **His work:** locating reluctant witnesses, recovering compromised telemetry, tracing unauthorised stable equipment and preserving evidence before it disappears into a departmental dispute.
 
 **His limits:** he will not certify a result he believes is false or accept cruelty to a horse as the price of gathering evidence. He expects the crew to preserve evidence, not improve it.
+
+**Ties:** Mak Chi-on, the stable-access official, reports to Integrity on stable passes; Ka-chun's questions usually start with Mak's paper list.
 
 **His briefings:**
 > "I didn't ask whether he's important. I asked who let him through."
@@ -804,6 +808,8 @@ Their contracts may be authorised company work, a personal arrangement or an att
 
 These are smaller recurring clients, not faction leaders. Their trust belongs to them: helping one does not buy unrestricted access, protection from their colleagues or forgiveness for the tong's other work.
 
+Their spoken lines live in `src/data/cast.js` (`{lau}`, `{choi}`, `{mok}`, `{kwan}`, `{lui}`, `{cheuk}`).
+
 #### Lau Ching-yee
 *Glass Heights · Morrow & Venn marine claims surveyor*
 
@@ -958,7 +964,7 @@ Smaller people a new crew meets on rookie work (2026-10-25). Their spoken lines 
 - **Uncle Tariq** (Amber Reach): the remittance booth at Pearl Haven House; his dossier is under Pearl Haven House, above.
 - **Pang Man-ki** (Glass Heights). Veridian-Apex clinic administrator. Finds an appointment when a corporate account is attached; an old Veridian-Apex implant doesn't entitle its owner to affordable treatment. Secret: she wants a transfer out of patient administration before an audit finds the appointments she moved between billing categories. Her full entry is under "Glass Heights people", below.
 - **Ho Sze-lam** (Old Town). Hoi-Sing Grid & Cable field supervisor. Knows which meters have been repaired past their life, but records a disconnection if that's the order on his screen. Secret: he leaves intermittent faults out of his reports so his section doesn't look badly maintained. Auntie Fung and the Brass Anchor know him by his thermos.
-- **Mak Chi-on** (the Basin). Racing Association stable-access official, checks passes against a paper list despite the scanner on his wrist, and treats unexplained stable access as possible race-fixing. Secret: he once waved a familiar contractor through without checking a replacement pass, and fears admitting it would undermine every inspection he has signed since.
+- **Mak Chi-on** (the Basin). Racing Association stable-access official, checks passes against a paper list despite the scanner on his wrist, and treats unexplained stable access as possible race-fixing. Reports to Yip Ka-chun's Racing Integrity on stable passes. Secret: he once waved a familiar contractor through without checking a replacement pass, and fears admitting it would undermine every inspection he has signed since.
 - **The old radio man on Block 9's roof.** The last tenant Mr. Szeto wants out, broadcasting pirate radio from a tin shack full of tapes. Block 9 is Doc Siu's building.
 - **The Ferryman's habits:** he chews betel nut as well as the clove cigarettes, and he runs a private line to the Silt under Pier 12.
 
