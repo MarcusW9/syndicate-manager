@@ -242,6 +242,16 @@ RULES
 15. The day lines carry the plot; personality lives mostly in quotes, asides, pair and joss.
     A good log reads like messages from people you know, not a police report.
 
+TONE EXAMPLES (the owner liked the mix: keep this variety; most days plain, some days funny,
+a quote now and then, Joss rarely)
+  plain:       The case was the right size. What was inside wasn't {item}. The day went with it.
+  detail:      The case was the right size. Inside was a karaoke machine, still plugged in. The day went with it.
+  quote:       Nobody useful showed. {who} got so bored they started rating the noodle stalls. "Two stars. Both of them."
+  dark humour: Two people decided {who} looked easy to push around. The furniture lost, {who} won, and the stall owner sent us the bill.
+  aside:       (superstitious) {who} blames the black cat that sat on the van at noon, and won't hear otherwise.
+  pair:        {who} and {other} argued about the route for an hour. {who} was right, and hasn't stopped saying so.
+  joss:        Joss: "Logged, oiled, and not to be fired indoors. I mean it."
+
 FORMAT — GOAL file (weapon, cash or recruit)
 ```js
 // Log lines: <goal>. Draft for the owner to mark.

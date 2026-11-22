@@ -52,6 +52,8 @@ export default {
     social: [
       '{who} let the conversation wander until somebody mentioned {item} without being asked. That gave the crew somewhere useful to look.',
       'A seller wanted reassurance before giving up a name. {who} talked long enough to get it.',
+      'A seller wanted reassurance first. {who} sat through photos of all forty grandchildren and got a name.',
+      'A seller wanted reassurance first. {who}: "I know more about her divorce than her lawyer does. But we have a name."',
       '{who} traded a small favour for a better introduction. The next person had actually seen {item}.',
     ],
     piloting: [
@@ -72,6 +74,8 @@ export default {
       'A promising address turned out to have been empty for weeks. Nothing there moved the hunt forward.',
       'Someone had mistaken a similar weapon for {item}. {who} checked it anyway and lost the day.',
       'The trail ended at a locked shop and a neighbour who knew nothing useful.',
+      'The case was the right size. Inside was a karaoke machine, still plugged in. The day went with it.',
+      'The case was the right size. What was inside wasn\'t {item}. {who} says it was "a very nice umbrella" and would like that noted.',
     ],
     social: [
       '{who} spent half the day listening to somebody who claimed to know the seller. They knew stories, not the seller.',
@@ -94,6 +98,8 @@ export default {
     combat: [
       'A discussion over the price got physical before anybody drew a weapon. {who} left bruised, with the lead intact.', // fixed: fewer {item}
       'Two people decided {who} looked easier to push around than expected. Nobody reached for a gun, but the furniture suffered.',
+      'Two people decided {who} looked easy to push around. The furniture lost, {who} won, and the stall owner sent us the bill.',
+      'Two people decided {who} looked easy to push around. {who}\'s report, in full: "They started it. The chair finished it."',
     ],
     stealth: [
       'A camera caught more of {who} than they meant it to. They left before anyone came to check.', // fixed: no longer assumes a heat veil (rule 14)
@@ -124,6 +130,8 @@ export default {
   quiet: {
     any: [
       'Nobody useful showed. {who} watched the street until dark and learned nothing new.', // fixed: "came back" (rule 11)
+      'Nobody useful showed. {who} watched the street until dark and now knows every pigeon on it by sight.',
+      'Nobody useful showed. {who} got so bored they started rating the noodle stalls. "Two stars. Both of them."',
       'The crew waited on a promised meeting that never happened. No trouble, no progress.',
       '{who} spent the day checking the same names twice. Nothing moved.',
       'The trail stayed cold. Nobody spent anything, nobody got hurt, nobody learned anything.', // fixed: "came back" (rule 11)
@@ -189,6 +197,8 @@ export default {
     met: [
       'The crew came home with {item}. Joss checked the numbers; nobody paid more than they agreed to.',
       '{item} made it back wrapped in an old cloth and smelling faintly of machine oil. Job done.',
+      '{item} made it back wrapped in somebody\'s good tablecloth. Nobody\'s admitting whose.',
+      '{item} made it back smelling of machine oil. {who} has carried it round the safehouse all evening like a new baby.',
       'The seller took the deal. The crew brought {item} home and put it on the table.',
       '{who} got {item} out cleanly. It was waiting at the safehouse by the time everyone came in.',
     ],
@@ -206,8 +216,21 @@ export default {
     ],
   },
 
-  // needs: personality pools (prompt, 2026-11-22), and a quote from {who} in about one line in four.
-  asides: { superstitious: [], money: [], warm: [], hot: [], wary: [], curious: [] },
-  pair: [],
-  joss: { day: [], met: [], failed: [] },
+  // Personality (prompt, 2026-11-22). Claude's variations the owner liked; needs more in each.
+  asides: {
+    superstitious: ['{who} blames the black cat that sat on the van at noon, and won\'t hear otherwise.'],
+    hot: ['{who} told somebody exactly what they thought of them, in two languages.'],
+    warm: ['{who} also came away with a bag of egg tarts and an invitation to somebody\'s birthday.'],
+    calm: ['{who} finished their tea first, as always.'],
+    money: [], wary: [], curious: [],
+  },
+  pair: [
+    '{who} and {other} argued about the route for an hour. {who} was right, and hasn\'t stopped saying so.', // owner's pick
+    '{other} kept watch while {who} worked the seller, then ate both their lunches. The lead was good; the lunch dispute continues.',
+  ],
+  joss: {
+    day: ['Joss: "Logged as surveillance. It was mostly noodles."'],
+    met: ['Joss: "Logged, oiled, and not to be fired indoors. I mean it."'],
+    failed: [],
+  },
 };
