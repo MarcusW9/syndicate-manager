@@ -1,6 +1,8 @@
 // Every tap in the game: onClick finds the [data-action] under the tap and switches on it.
 // The one place UI state (V) and the game state change in answer to the player.
 import { contractsOf, takeContract, pullOff, toggleHelp } from '../core/contracts.js';
+import { sendExpedition, pullOutExpedition } from '../core/expeditions.js';
+import { EXPEDITION, EXPEDITION_DISTRICTS } from '../data/expeditions.js';
 import { nextHallExpansion, expandHall, openHall, hallIn, buyPrice, buyHall, moveToHall } from '../core/halls.js';
 import { raidOn, cycleRaidPost, setRaidPlan, markRaidCallSeen, payOffRaid } from '../core/raids.js';
 import { HALL_SITES } from '../data/halls.js';
@@ -380,6 +382,21 @@ export function onClick(e) {
       return setState(next);
     }
     case 'pull-post': return setState(pullOff(state, id));
+    // Expeditions (core/expeditions.js, slice 2): planned on the side plan's home too.
+    case 'exp-open': if (!V.sidePlan) remember(action, id); goHome('sidePlan'); V.sidePlan = { expGoal: id, district: EXPEDITION_DISTRICTS[0], crew: [] }; break;
+    case 'exp-district': if (V.sidePlan?.expGoal && EXPEDITION_DISTRICTS.includes(id)) V.sidePlan.district = id; break;
+    case 'exp-add': if (V.sidePlan?.expGoal && !V.sidePlan.crew.includes(id) && V.sidePlan.crew.length < EXPEDITION.maxCrew) V.sidePlan.crew = [...V.sidePlan.crew, id]; break;
+    case 'exp-remove': if (V.sidePlan?.expGoal) V.sidePlan.crew = V.sidePlan.crew.filter((x) => x !== id); break;
+    case 'exp-send': {
+      const p = V.sidePlan;
+      const next = sendExpedition(state, { goal: p.expGoal, district: p.district, crewIds: p.crew });
+      if (next === state) break;
+      V.sidePlan = null;
+      nav.clear();
+      V.screen = 'jobs'; V.jobsTab = 'expeditions';
+      return setState(next);
+    }
+    case 'exp-pull': return setState(pullOutExpedition(state, id));
     case 'post-help': { const [msgId, opId] = id.split('|'); return setState(toggleHelp(state, msgId, opId)); }
     case 'toggle-side-crew': {
       const task = sideTaskById(V.sidePlan.taskId);

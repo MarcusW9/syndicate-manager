@@ -1129,5 +1129,10 @@ function migrate(state) {
     for (const s of state.sideOut ?? []) if (s.taskId) s.log ??= [];
     state.version = 86;
   }
+  if (state.version === 86) {
+    // v87: expeditions (the adventure log, slice 2; DESIGN.md 2026-11-22). Nobody is out on one yet.
+    state.expeditions ??= { active: [], seq: 0 };
+    state.version = 87;
+  }
   return state;
 }

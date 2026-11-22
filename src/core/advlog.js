@@ -15,9 +15,25 @@ import JOB_DAYS from '../data/advlog/jobDays.js';
 import SIDE_DAYS from '../data/advlog/sideDays.js';
 import DOCKS from '../data/advlog/docks.js';
 import NIGHT_MARKET from '../data/advlog/nightMarket.js';
+import WEAPON from '../data/advlog/weapon.js';
+import WEAPON_SHARED from '../data/advlog/weaponShared.js';
+import CASH from '../data/advlog/cash.js';
+import RECRUIT from '../data/advlog/recruit.js';
 
 /** The district files (people, places, quiet days). Old Town, Glass Heights and the Basin have none yet. */
 export const DISTRICT_LINES = { docks: DOCKS, nightMarket: NIGHT_MARKET };
+
+/** Two drafts of one file as one: lists under the same key joined (weapon.js and weaponShared.js). */
+export function joinPools(a, b) {
+  if (Array.isArray(a) || Array.isArray(b)) return [...(a ?? []), ...(b ?? [])];
+  if (typeof a !== 'object' || typeof b !== 'object' || !a || !b) return a ?? b;
+  const out = {};
+  for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) out[k] = joinPools(a[k], b[k]);
+  return out;
+}
+
+/** The goal files (expeditions, slice 2). */
+export const GOAL_LINES = { weapon: joinPools(WEAPON, WEAPON_SHARED), cash: CASH, recruit: RECRUIT };
 
 export const LOG_KEEP = 10; // a log keeps its last ten lines (HANDOFF slice 1, item 6)
 export const ASIDE_CHANCE = 1 / 3;
@@ -70,6 +86,14 @@ export function fillLine(line, vars) {
   });
 }
 
+// A trip doesn't say the same line twice while it has others: the facts keep a short note of what was said.
+const SEEN_KEEP = 16;
+const noteOf = (line) => line.slice(0, 32);
+const unseen = (facts, list) => { const f = list.filter((l) => !(facts?.seen ?? []).includes(noteOf(l))); return f.length ? f : list; };
+function see(facts, line) {
+  if (!facts) return;
+  facts.seen = [...(facts.seen ?? []), noteOf(line)].slice(-SEEN_KEEP);
+}
 const pickFrom = (rng, list) => list[Math.floor(rng() * list.length)];
 const best = (crew, stat) => crew.reduce((a, o) => ((o.stats?.[stat] ?? 0) > (a.stats?.[stat] ?? 0) ? o : a), crew[0]);
 
@@ -126,7 +150,8 @@ export function writeDay(ctx) {
 
   let kind = 'line'; let stat = null; let who = lead; let lines = [];
   const pairs = other && ctx.pairOk !== false ? fit(p.pair) : [];
-  const quiet = ctx.quiet ? fit(DISTRICT_LINES[ctx.district]?.quiet) : [];
+  // The district's own lines may stand in a share of the time: its quiet days, or (expeditions) its snags.
+  const quiet = ctx.quiet ? fit(DISTRICT_LINES[ctx.district]?.[ctx.local ?? 'quiet']) : [];
   const roll = rng();
   if (pairs.length && roll < PAIR_CHANCE) { kind = 'pair'; lines = pairs; }
   else if (quiet.length && roll < PAIR_CHANCE + ctx.quiet) { kind = 'quiet'; lines = quiet; }
@@ -141,15 +166,24 @@ export function writeDay(ctx) {
     } else lines = fit(pool.any);
   }
   if (!lines.length) return null;
-  const line = pickFrom(rng, lines);
+  const line = pickFrom(rng, unseen(ctx.facts, lines));
+  see(ctx.facts, line);
   if (/\{contactWhat\}/.test(line)) ctx.facts.met = true;
+  if (/\{place\}/.test(line)) ctx.facts.placed = true; // a place callback needs one named first
   let text = fillLine(line, ctxv.vars);
 
   // Personality: an aside by {who}'s temperament about one day in three, or rarely a word from Joss.
   const tags = tagsOf(who).filter((t) => fit(p.asides?.[t]).length);
   const extra = rng();
-  if (kind !== 'pair' && tags.length && extra < ASIDE_CHANCE) text += ` ${fillLine(pickFrom(rng, fit(p.asides[pickFrom(rng, tags)])), ctxv.vars)}`;
-  else if (fit(p.joss?.day).length && extra > 1 - JOSS_CHANCE) text += ` ${pickFrom(rng, fit(p.joss.day))}`;
+  if (ctx.aside !== false && kind !== 'pair' && tags.length && extra < ASIDE_CHANCE) {
+    const a = pickFrom(rng, unseen(ctx.facts, fit(p.asides[pickFrom(rng, tags)])));
+    see(ctx.facts, a);
+    text += ` ${fillLine(a, ctxv.vars)}`;
+  } else if (ctx.joss !== false && fit(p.joss?.day).length && extra > 1 - JOSS_CHANCE) {
+    const j = pickFrom(rng, unseen(ctx.facts, fit(p.joss.day)));
+    see(ctx.facts, j);
+    text += ` ${j}`;
+  }
   return { text, stat, whoId: who.id, kind };
 }
 
@@ -186,4 +220,30 @@ export function jobDayLine({ seed, tripId, day, crew, district, facts }) {
 export function sideDayLine({ seed, tripId, day, crew, district, facts, purpose }) {
   const out = writeDay({ seed, tripId, day, crew, district, facts, pool: { any: [...(SIDE_DAYS[purpose] ?? []), ...SIDE_DAYS.any] }, quiet: 0.2, pairOk: true, personality: { ...JOB_DAYS, joss: null } });
   return out && { day, text: out.text };
+}
+
+/** A list from a goal file by path ("find.cash", "close.met", "call"); a plain list is treated as "any". */
+const poolAt = (file, path) => path.split('.').reduce((o, k) => o?.[k], file);
+
+/**
+ * An expedition's line for a day (core/expeditions.js): the beat's pool in the goal file (by stat where
+ * it has lists by stat), {item}/{cash}/{lead} in extra, the district's snags or quiet days a share of the
+ * time, the goal file's asides, pair days (only where allowed) and Joss. Returns { text, whoId, kind } or null.
+ * A callback (callbackContact.*, callbackPlace.*) is only asked for once its contact or place was named.
+ */
+export function goalLine({ seed, tripId, day, crew, district, facts, goal, beat, extra = {}, pairOk = false, local = null, joss = true, aside = true, key = '' }) {
+  const file = GOAL_LINES[goal];
+  const pool = poolAt(file, beat);
+  if (!pool) return null;
+  return writeDay({
+    seed, tripId: `${tripId}${key}`, day, crew, district, facts, pool, extra, pairOk, joss, aside,
+    quiet: local ? 0.3 : 0, local, personality: file,
+  });
+}
+
+/** Joss's word on how a trip ended (goal file joss.met / joss.failed), about half the time: '' or ' <line>'. */
+export function jossClose(seed, tripId, goal, met) {
+  const list = GOAL_LINES[goal]?.joss?.[met ? 'met' : 'failed'] ?? [];
+  const rng = hashRng(seed, 'advlog', tripId, 'joss');
+  return list.length && rng() < 0.5 ? ` ${pickFrom(rng, list)}` : '';
 }

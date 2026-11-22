@@ -7,7 +7,9 @@
 //   node scripts/sim-crew-income.mjs [seeds=20] [sizes=3,5,7,10,14] [arrivals, e.g. over=3,per=1.5,routine=0.4]
 // The third argument overrides core/jobs.js ARRIVALS for this run (to compare settings); pass '' to keep them.
 // A fourth argument 'posts' has idle runners take this week's security posts (core/contracts.js), cheapest
-// first, answering a hit post by giving it up; their pay counts in gross.
+// first, answering a hit post by giving it up; their pay counts in gross. 'expeditions' (or 'posts,expeditions')
+// sends whoever is still free, two at a time, on cash runs to the Docks (core/expeditions.js), answering a call by
+// pulling out; the sum brought home counts in gross (finds and snags too), and the weeks show runs and their outcomes.
 import { createNewGame } from '../src/core/state.js';
 import { generateRecruit, recruitToOperative } from '../src/core/recruits.js';
 import * as M from '../src/core/mission.js';
@@ -18,8 +20,11 @@ import { autoFounders, playMission, carefulPolicy } from '../tests/play.js';
 import { contractsOf, takeContract } from '../src/core/contracts.js';
 import { SLOT_PAY } from '../src/data/contracts.js';
 import { resolveDecision } from '../src/core/decisions.js';
+import { sendExpedition } from '../src/core/expeditions.js';
 
-const POSTS = process.argv[5] === 'posts';
+const EXTRA = (process.argv[5] ?? '').split(',');
+const POSTS = EXTRA.includes('posts');
+const EXPEDITIONS = EXTRA.includes('expeditions');
 const POST_PAY = Number(process.env.POST_PAY ?? 1); // POST_PAY=0.8 scales every district's slot pay (to compare)
 for (const d of Object.keys(SLOT_PAY)) SLOT_PAY[d] = Math.round(SLOT_PAY[d] * POST_PAY / 50) * 50;
 
@@ -39,7 +44,7 @@ function run(size, seed) {
     s.crew.push(recruitToOperative(r, { condition: structuredClone(s.crew[0].condition), history: [] }));
   }
   s.cash = 1e6;
-  const weeks = Array.from({ length: WEEKS }, () => ({ gross: 0, jobs: 0, idle: 0, open: 0, bill: 0 }));
+  const weeks = Array.from({ length: WEEKS }, () => ({ gross: 0, jobs: 0, idle: 0, open: 0, bill: 0, trips: 0, met: 0 }));
   for (let day = 0; day < WEEKS * 7; day++) {
     const w = weeks[Math.floor(day / 7)];
     for (let guard = 0; guard < 10 && calendar(s.day).weekday !== 'Sun'; guard++) {
@@ -63,10 +68,24 @@ function run(size, seed) {
         s = takeContract(s, o.id, free.slice(0, Math.min(o.slots, 2)).map((op) => op.id));
       }
     }
+    if (EXPEDITIONS) {
+      for (let free = s.crew.filter((op) => availability(s, op).ok); free.length >= 2; free = s.crew.filter((op) => availability(s, op).ok)) {
+        const next = sendExpedition(s, { goal: 'cash', district: 'docks', crewIds: free.slice(0, 2).map((op) => op.id) });
+        if (next === s) break;
+        s = next;
+      }
+    }
     w.idle += s.crew.filter((op) => availability(s, op).ok).length;
     w.open += s.jobs.length;
     if (calendar(s.day).weekday === 'Sun') w.bill = weeklyBill(s).total;
+    const cashBefore = s.cash;
+    const billToday = calendar(s.day + 1).weekday === 'Sun';
     s = advanceDay(s);
+    for (let m = s.inbox.find((x) => x.kind === 'expedition' && !x.resolved); m; m = s.inbox.find((x) => x.kind === 'expedition' && !x.resolved)) s = resolveDecision(s, m.id, 'give');
+    if (EXPEDITIONS) {
+      for (const r of s.inbox.filter((m) => m.timeline?.expedition && m.day === s.day)) { w.trips++; if (r.timeline.expedition.outcome === 'met') w.met++; }
+      if (!billToday) w.gross += s.cash - cashBefore; // the sums, finds and snags of the day (no bills on other days)
+    }
     for (let m = s.inbox.find((x) => x.kind === 'contract' && !x.resolved); m; m = s.inbox.find((x) => x.kind === 'contract' && !x.resolved)) s = resolveDecision(s, m.id, 'give');
     if (calendar(s.day).weekday === 'Sun' && day + 1 < WEEKS * 7) weeks[Math.floor((day + 1) / 7)].gross += s.inbox.find((m) => m.kind === 'week')?.payload?.posts?.total ?? 0;
     s.cash = Math.max(s.cash, 1e6 - 1e5); // keep everyone solvent; income is read from mission pay only
@@ -81,7 +100,7 @@ for (const size of SIZES) {
     const ws = runs.flatMap((r) => r.weeks.slice(a, b));
     const m = (k) => Math.round(median(ws.map((w) => w[k])));
     const gross = m('gross'), bill = m('bill');
-    return `margin ${Math.round(((gross - bill) / bill) * 100)}% · gross ¥${gross} · bill ¥${bill} · net ¥${gross - bill} · jobs ${m('jobs')} · idle/day ${(median(ws.map((w) => w.idle)) / 7).toFixed(1)} · open ${(median(ws.map((w) => w.open)) / 7).toFixed(1)}`;
+    return `margin ${Math.round(((gross - bill) / bill) * 100)}% · gross ¥${gross} · bill ¥${bill} · net ¥${gross - bill} · jobs ${m('jobs')} · idle/day ${(median(ws.map((w) => w.idle)) / 7).toFixed(1)} · open ${(median(ws.map((w) => w.open)) / 7).toFixed(1)}${EXPEDITIONS ? ` · trips ${(ws.reduce((n, w) => n + w.trips, 0) / runs.length / (b - a)).toFixed(1)}/wk (met ${Math.round((100 * ws.reduce((n, w) => n + w.met, 0)) / Math.max(1, ws.reduce((n, w) => n + w.trips, 0)))}%)` : ''}`;
   };
   console.log(`crew ${size} (rep wk26 ${median(runs.map((r) => r.rep))})`);
   console.log(`  wk1-4   ${band(0, 4)}`);

@@ -24,6 +24,8 @@ import { renderThreats, grudgeGauge, raidWhen } from './raidcards.js';
 import { cityName, esc, face, districtName, daysLeft, rootBack, subTabs } from './shared.js';
 import { whereButton, renderCrewsOut, logDetails } from './today.js';
 import { crewLinks } from './messages.js';
+import { expeditionsOut } from '../core/expeditions.js';
+import { expeditionCard } from './expeditions.js';
 import { state, root, canGoBack, backLabel, V } from './view.js';
 
 /** Jobs on the board right now, by district. */
@@ -53,7 +55,7 @@ function crewsOnMap(key) {
   const away = crewsOut(state).filter((c) => c.district === key).sort((a, b) => b.waiting - a.waiting)
     .map((c) => { const o = ops(c.crewIds); return { ops: o, call: c.waiting, side: false, from: from(o), progress: c.beats ? c.beatsDone / c.beats : 0.5 }; });
   const am = state.activeMission;
-  const live = am && !am.done && !am.raid && !am.post && templateById(am.templateId)?.district === key ? [{ ops: ops(am.crewIds), call: false, side: false, from: from(ops(am.crewIds)) }] : [];
+  const live = am && !am.done && !am.raid && !am.post && !am.expedition && templateById(am.templateId)?.district === key ? [{ ops: ops(am.crewIds), call: false, side: false, from: from(ops(am.crewIds)) }] : [];
   const side = sideTasksOut(state).filter((t) => t.district === key).map((t) => { const o = ops(t.crewIds); return { ops: o, call: false, side: true, from: from(o) }; });
   return [...away, ...live, ...side].filter((c) => c.ops.length).slice(0, 3);
 }
@@ -88,8 +90,9 @@ function renderOps() {
   const f = V.cityDistrict;
   const jobs = crewsOut(state).filter((c) => !f || c.district === f).sort((a, b) => b.waiting - a.waiting);
   const side = sideTasksOut(state).filter((t) => !f || t.district === f);
+  const trips = expeditionsOut(state).filter((x) => !f || x.district === f);
   const raids = openRaids(state).filter((r) => !f || r.district === f);
-  const any = crewsOut(state).length + sideTasksOut(state).length;
+  const any = crewsOut(state).length + sideTasksOut(state).length + expeditionsOut(state).length;
   const sideList = side.length ? `
     <ul class="crewsout" aria-label="Side work out">
       ${side.map((t) => {
@@ -112,7 +115,7 @@ function renderOps() {
         <h2>Out now</h2>
         ${f ? `<button class="linkbtn" data-action="city-whole">${esc(cityName(f))} only · show all</button>` : ''}
       </div>
-      ${jobs.length || side.length ? `${renderCrewsOut(jobs)}${sideList}`
+      ${jobs.length || side.length || trips.length ? `${renderCrewsOut(jobs)}${trips.length ? `<ul class="crewsout" aria-label="Out on an expedition">${trips.map((x) => expeditionCard(x, { where: true })).join('')}</ul>` : ''}${sideList}`
         : `<p class="muted small">${any ? `Nobody of ours is out in ${esc(cityName(f))}.` : 'Nobody is out. Crews you send away are followed here, day by day.'}</p>
            ${any ? '' : '<button class="btn" data-action="nav" data-id="jobs">Find work</button>'}`}
     </div>`;
@@ -144,7 +147,7 @@ function citySummary() {
   const inText = (k) => NAMES.districtsInText?.[k] ?? cityName(k);
   const noWork = open.filter((k) => !jobsIn(k).length && r?.district !== k).map(inText);
   // Your people at home, hall by hall: who's in, who's hurt (the ones out are in Out now).
-  const outIds = new Set([...(state.awayJobs ?? []).flatMap((j) => j.mission.crewIds), ...sideTasksOut(state).flatMap((t) => t.crewIds)]);
+  const outIds = new Set([...(state.awayJobs ?? []).flatMap((j) => j.mission.crewIds), ...sideTasksOut(state).flatMap((t) => t.crewIds), ...expeditionsOut(state).flatMap((x) => x.crewIds)]);
   const halls = (state.halls ?? []).map((h) => {
     const who = residents(state, h.district).filter((o) => !outIds.has(o.id));
     const hurt = who.filter((o) => o.condition?.injury && o.condition.injury !== 'healthy').length;
