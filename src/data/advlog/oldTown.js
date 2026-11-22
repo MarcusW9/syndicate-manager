@@ -1,0 +1,65 @@
+// Log lines: Old Town. The owner's draft (2026-11-22, docs/log-lines-prompt.md), as pasted. Every named
+// place and custom is canon (WORLD.md Old Town and Street characters). Read by core/advlog.js (DISTRICT_LINES).
+export default {
+  district: 'oldTown',
+
+  contacts: [
+    { name: 'Yip Sau-lin', what: 'a tea-shop counterkeeper who remembered orders better than names' },
+    { name: 'Chan Wing-sum', what: 'a retired lift mechanic with a folding chair outside the workshop' },
+    { name: 'Farah Qureshi', what: 'a handset repairer who kept customers waiting while they tested the repair' },
+    { name: 'Celina Ramos', what: 'a laundry counterkeeper who knew the block by its work uniforms' },
+    { name: 'Lau Pak-cheung', what: 'a second-hand case dealer who measured everything with string' },
+    { name: 'Adjoa Mensah', what: 'a parcel-shop owner who made senders read the address back' },
+    { name: 'Tong Mei-suen', what: 'a hardware-shop assistant saving to buy the retiring owner out' },
+    { name: 'Nalin Perera', what: 'a generator repairer with a thermos strapped to the tool trolley' },
+    { name: 'Leung Siu-ping', what: 'a mahjong-parlour attendant who kept the lost property in biscuit tins' },
+    { name: 'Cheng Wai-kit', what: 'a handcart courier who charged by the staircase rather than the distance' },
+    { name: 'Marta Vale', what: 'a watch repairer who rented half a counter in a herbal shop' },
+    { name: 'Lo Yuk-chun', what: 'a tenement caretaker who kept spare keys in labelled tea tins' },
+  ],
+
+  places: [
+    'the rusted iron stairwell of Tenement Block 9',
+    'the public landing beside the Red Incense Shrine',
+    'the covered tea tables on Alley 4',
+    'the handset repair counter beneath the tenement stairs',
+    'the laundry collection window under the dripping balconies',
+    'the second-hand case stall beside the tram stop',
+    'the parcel counter behind the herbal shop',
+    'the hardware shop with drawer handles tied on with string',
+    'the generator workshop below the washing lines',
+    'the mahjong-parlour entrance above the shutter repair shop',
+    'the handcart shelter beside the hillside tram stop',
+    'the watch repair counter inside the herbal shop',
+    'the public bench above the drainage-tunnel steps',
+    'the dai pai dong beneath the patched green awning',
+  ],
+
+  quiet: [
+    "{who} waited beneath Block 9's stairs while washing dripped into a row of buckets. Nobody came asking for us.",
+    "The tea-shop tables filled with people comparing old electricity bills. Our handset stayed quiet.",
+    "Mahjong tiles clacked above the waiting spot all afternoon. We heard every argument through the ceiling and nothing useful through the door.",
+    "Rain drove us under a herbal shop's awning. The owner brought the drying roots inside and left us room to stand.",
+    "A Hoi-Sing announcement kept repeating from a speaker with a torn cone. {who} waited through enough versions to learn which words were missing.",
+    "We sat beside the Red Incense Shrine while neighbours replaced the rain covers over the offerings. Nobody we were waiting for appeared.",
+    "The old radio man on Block 9's roof played the same recording twice. {who} noticed; the appointment remained unconfirmed.",
+    "Under the dai pai dong awning, a cook shelled peas between orders. We waited until the bowl was full.",
+    "Laundry hid most of the opposite landing. {who} watched the gap between two work shirts; nobody used the door.",
+    "The tram-stop bench stayed damp even after the rain stopped. We waited standing up.",
+    "At midnight, cups of bitter tea appeared on the doorsteps along the lane. Our message still had no reply.",
+    "Somebody upstairs practised a mahjong shuffle on an empty table. {who} listened from the landing until the corridor lights switched to night mode.",
+  ],
+
+  snag: [
+    "A passing handcart caught our tea-shop table and tipped the pot. We paid for the broken cups before moving on.",
+    "{who} caught a palm on a rusted stair rail in Block 9. A shallow scrape needed cleaning before we carried on.",
+    "The hillside tram stopped below our destination with a Hoi-Sing fault notice on its doors. We paid a shared-van fare for the rest of the climb.",
+    "Water from a tenement balcony soaked the papers {who} was carrying. The parcel shop charged to print fresh copies.",
+    "A patrol pair took an interest in us beside an unlicensed generator. A small cash payment ended the conversation.",
+    "The tea-shop owner needed the waiting table for lunch customers. We bought another pot to keep the seats.",
+    "{who} slipped on wet joss-paper ash beside a doorstep. A bruised knee made the stairs less appealing.",
+    "A handcart courier wanted a separate stair fee after seeing the slope. We paid rather than leave the load in the rain.",
+    "The mahjong-parlour attendant charged a table minimum while we waited downstairs. Apparently the downstairs chairs counted too.",
+    "A loose awning hook tore the cover on our bag. The laundry counter charged a little to stitch it before the rain got in.",
+  ],
+};

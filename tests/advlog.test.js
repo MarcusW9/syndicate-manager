@@ -61,10 +61,10 @@ test('the contact is introduced once, with who they are, before a line names the
     const next = writeDay({ seed: 1, tripId: `t${t}`, day: 2, crew, district: 'docks', facts, pool, personality: {} });
     assert.ok(next.text.endsWith(`asked ${facts.contact} again.`), next.text);
   }
-  // Where a district has no people (Old Town, so far), lines that need one are skipped.
-  const facts = startFacts(1, 'o', 'oldTown');
+  // Where a district has no people (the Basin, so far), lines that need one are skipped.
+  const facts = startFacts(1, 'o', 'basin');
   for (let day = 1; day < 20; day++) {
-    const l = jobDayLine({ seed: 1, tripId: 'o', day, crew, district: 'oldTown', facts });
+    const l = jobDayLine({ seed: 1, tripId: 'o', day, crew, district: 'basin', facts });
     assert.ok(l && !l.text.includes('{') && !l.text.includes('undefined'), l?.text);
   }
 });

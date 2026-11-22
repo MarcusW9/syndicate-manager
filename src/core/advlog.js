@@ -15,13 +15,14 @@ import JOB_DAYS from '../data/advlog/jobDays.js';
 import SIDE_DAYS from '../data/advlog/sideDays.js';
 import DOCKS from '../data/advlog/docks.js';
 import NIGHT_MARKET from '../data/advlog/nightMarket.js';
+import OLD_TOWN from '../data/advlog/oldTown.js';
 import WEAPON from '../data/advlog/weapon.js';
 import WEAPON_SHARED from '../data/advlog/weaponShared.js';
 import CASH from '../data/advlog/cash.js';
 import RECRUIT from '../data/advlog/recruit.js';
 
-/** The district files (people, places, quiet days). Old Town, Glass Heights and the Basin have none yet. */
-export const DISTRICT_LINES = { docks: DOCKS, nightMarket: NIGHT_MARKET };
+/** The district files (people, places, quiet days, snags). Glass Heights and the Basin have none yet. */
+export const DISTRICT_LINES = { docks: DOCKS, nightMarket: NIGHT_MARKET, oldTown: OLD_TOWN };
 
 /** Two drafts of one file as one: lists under the same key joined (weapon.js and weaponShared.js). */
 export function joinPools(a, b) {
@@ -173,14 +174,16 @@ export function writeDay(ctx) {
   let text = fillLine(line, ctxv.vars);
 
   // Personality: an aside by {who}'s temperament about one day in three, or rarely a word from Joss.
-  const tags = tagsOf(who).filter((t) => fit(p.asides?.[t]).length);
+  // Asides and Joss are extras: once a trip has used them all, it goes without rather than repeat one.
+  const fresh = (list) => list.filter((l) => !(ctx.facts?.seen ?? []).includes(noteOf(l)));
+  const tags = tagsOf(who).filter((t) => fresh(fit(p.asides?.[t])).length);
   const extra = rng();
   if (ctx.aside !== false && kind !== 'pair' && tags.length && extra < ASIDE_CHANCE) {
-    const a = pickFrom(rng, unseen(ctx.facts, fit(p.asides[pickFrom(rng, tags)])));
+    const a = pickFrom(rng, fresh(fit(p.asides[pickFrom(rng, tags)])));
     see(ctx.facts, a);
     text += ` ${fillLine(a, ctxv.vars)}`;
-  } else if (ctx.joss !== false && fit(p.joss?.day).length && extra > 1 - JOSS_CHANCE) {
-    const j = pickFrom(rng, unseen(ctx.facts, fit(p.joss.day)));
+  } else if (ctx.joss !== false && fresh(fit(p.joss?.day)).length && extra > 1 - JOSS_CHANCE) {
+    const j = pickFrom(rng, fresh(fit(p.joss.day)));
     see(ctx.facts, j);
     text += ` ${j}`;
   }
