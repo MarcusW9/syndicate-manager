@@ -17,7 +17,7 @@ import { itemName } from '../core/gear.js';
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
 import { earnedText } from '../core/earned.js';
 import { STARTING_ROSTER_CAP, canHire, signingFee } from '../core/recruits.js';
-import { changesSince, primaryStat, progressShare, declineChance, ageRate, potentialRead, scoutFor, focusOf, FOCUS, STATS } from '../core/development.js';
+import { changesSince, primaryStat, progressShare, declineChance, ageRate, potentialRead, scoutFor, focusOf, FOCUS, STATS, ROLL_STATS } from '../core/development.js';
 import { levelUpOpen } from '../core/levelup.js';
 import { leadNames, renderGoneElsewhere } from './tongs.js';
 import { renderSkills } from './skills.js';
@@ -32,20 +32,30 @@ const signed = (n) => `${n > 0 ? '+' : '−'}${Math.abs(n)}`;
 /** This season's net change per stat (rises and age decline), from the growth log. */
 const seasonChanges = (op) => changesSince(op, seasonStartDay(state.day));
 
-/** Crew-list one-liner: their best (main) stat. The scout's read of their potential and their highlight are on their own page (2026-11-08, owner). */
-function scoutLine(op) {
+/** Short labels for the crew list's stat strip (2026-11-23): the full names are on the runner's page. */
+const STAT_SHORT = { combat: 'CMB', stealth: 'STL', tech: 'TEC', social: 'SOC', piloting: 'PIL', medical: 'MED', cool: 'COOL', endurance: 'END' };
+
+/**
+ * Crew-list stat strip (2026-11-23, owner): three boxes, the role's main stat first and then the
+ * two highest others, each with this season's net change. Replaced the one-liner and the "▲ every
+ * gain" marker, which wrapped as runners grew. The full picture is on the runner's page.
+ */
+function statStrip(op) {
   const main = primaryStat(op);
-  return `<span class="scoutline"><span class="iconword">${statGlyph(main)}${esc(statName(main))} ${ratedStat(op, main)}</span></span>`;
+  const rest = ROLL_STATS.filter((k) => k !== main).sort((a, b) => ratedStat(op, b) - ratedStat(op, a)).slice(0, 2);
+  const net = seasonChanges(op);
+  return `<span class="statstrip">${[main, ...rest].map((k) => {
+    const n = net[k] ?? 0;
+    const change = n ? `<span class="statstrip__chg ${n < 0 ? 'is-down' : ''}">${signed(n)}</span>` : '';
+    return `<span class="statstrip__cell" role="img" aria-label="${esc(statName(k))} ${ratedStat(op, k)}${n ? `, ${signed(n)} this season` : ''}"><span class="statstrip__k">${STAT_SHORT[k]}</span><span class="statstrip__v">${ratedStat(op, k)}${change}</span></span>`;
+  }).join('')}</span>`;
 }
 
-/** Crew-list marker: "▲ Tech +2, Combat +1 ▼ Piloting −1" for this season. */
-function growthMarker(op) {
-  const net = Object.entries(seasonChanges(op));
-  const up = net.filter(([, n]) => n > 0).map(([k, n]) => `${statName(k)} ${signed(n)}`);
-  const down = net.filter(([, n]) => n < 0).map(([k, n]) => `${statName(k)} ${signed(n)}`);
-  return (up.length ? `<span class="marker">▲ ${esc(up.join(', '))}</span>` : '') +
-    (down.length ? `<span class="marker is-down">▼ ${esc(down.join(', '))}</span>` : '');
-}
+/** The level-up tab on a crew-list portrait (2026-11-23, owner; replaced the "Level up" pill). The Crew tab's badge counts them in words. */
+const LEVELUP_CHEVRON = '<svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true" focusable="false"><path d="M2 9.5 7 4.5l5 5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square"/></svg>';
+const rowFace = (op) => (levelUpOpen(op)
+  ? `<span class="crewrow__face">${face(op)}<span class="lvltab" role="img" aria-label="Level up waiting">${LEVELUP_CHEVRON}</span></span>`
+  : face(op));
 
 /**
  * One stat on a stats panel: the number used on jobs (with trait bonuses), the bonus,
@@ -97,11 +107,11 @@ export function renderCrew() {
         ${shown.map((op) => `
           <li>
             <button class="row crewrow" data-action="open-op" data-id="${esc(op.id)}">
-              ${face(op)}
-              <span class="crewrow__name"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"${levelUpOpen(op) ? ' <span class="pill pill--new">Level up</span>' : ''}</span>
+              ${rowFace(op)}
+              <span class="crewrow__name"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"</span>
               <span class="crewrow__info muted">${fameOf(op) === 'elite' ? `<span class="fame fame--elite">${esc(fameName('elite'))}</span> · ` : ''}${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age}</span>
               <span class="crewrow__status">${statusChip(availability(state, op))}</span>
-              <span class="crewrow__scout">${scoutLine(op)}${growthMarker(op)}</span>
+              <span class="crewrow__scout">${statStrip(op)}</span>
               <span class="crewrow__bars">${conditionBars(op)}</span>
             </button>
           </li>`).join('')}
