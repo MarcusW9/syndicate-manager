@@ -152,9 +152,10 @@ CLIENTS (local powers a small crew can reach, below the corps):
 - Smaller recurring clients inside institutions (2026-11-22): their trust is their own,
   never their employer's protection. Association (the Basin): Hui Lai-sum (community
   services), Yip Ka-chun (racing integrity), Chan Wing-kei (licensing and commercial
-  protection). Lau Ching-yee (Morrow & Venn marine claims surveyor); Dr. Choi Pui-ling
-  (Veridian-Apex neural-device aftercare); Mok Wai-lun (Hoi-Sing restoration
-  coordinator, Old Town); Kwan Yiu-kit (AHL subcontractor accounts, Docks); Lui Shuk-ping
+  protection). Lau Ching-yee (Morrow & Venn marine claims surveyor; calls with work);
+  Dr. Choi Pui-ling (Veridian-Apex neural-device aftercare); Mok Wai-lun (Hoi-Sing
+  restoration coordinator, Old Town); Kwan Yiu-kit (AHL subcontractor accounts, Docks;
+  calls with work); Lui Shuk-ping
   (Red Lanterns freight-yard steward; no tribute or grudge cancelled); Inspector Cheuk
   Tak-fai (Wet Sleeve, 4th Precinct; corrupt, dislikes some corruption; no immunity, no
   raid call-offs). Judge the request, not the employer.

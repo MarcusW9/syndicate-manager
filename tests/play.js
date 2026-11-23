@@ -96,12 +96,15 @@ export function playMission(state, policy) {
  */
 export const mayLoseSomeone = (templateId, orders) => orders === 'committed' && templateId in FIGHT_JOBS;
 
+/** A crisis's way out: 'abort' or 'extract', as core/mission.js EXIT_KINDS (a job may use either, 2026-11-23). */
+export const isExit = (c) => c.kind === 'abort' || c.kind === 'extract';
+
 export const randomPolicy = (seed) => ({
   critical: (opts, g) => opts[(seed + g) % opts.length],
   pending: (opts, g) => opts[(seed + g) % opts.length],
   crisis: (choices, g) => {
-    if (seed % 5 === 0) return choices.find((c) => c.kind === 'abort') ?? choices[0];
-    const go = choices.filter((c) => c.kind !== 'abort');
+    if (seed % 5 === 0) return choices.find(isExit) ?? choices[0];
+    const go = choices.filter((c) => !isExit(c));
     return go.length ? go[(seed + g) % go.length] : choices[0];
   },
 });
@@ -112,8 +115,8 @@ export const carefulPolicy = {
   critical: (opts) => (opts.includes('stabilise') ? 'stabilise' : 'extract'),
   pending: (opts) => (opts.includes('keep') ? 'keep' : 'out'), // carry on without the wounded; walk away when blown
   crisis: (choices) => {
-    const go = choices.filter((c) => c.kind !== 'abort').sort((a, b) => (RANK[a.risk] ?? 9) - (RANK[b.risk] ?? 9));
-    return go[0] && (RANK[go[0].risk] ?? 9) <= 2 ? go[0] : choices.find((c) => c.kind === 'abort');
+    const go = choices.filter((c) => !isExit(c)).sort((a, b) => (RANK[a.risk] ?? 9) - (RANK[b.risk] ?? 9));
+    return go[0] && (RANK[go[0].risk] ?? 9) <= 2 ? go[0] : choices.find(isExit);
   },
 };
 

@@ -159,6 +159,8 @@ export const FIGHT_JOBS = {
   warehouse: 'holdExtract', protection: 'holdYard',
   dead_air: 'holdExtract', still_connected: 'holdHack', not_for_sale: 'holdExtract', one_more_song: 'holdHack',
   still_clocked_in: 'holdHack', the_last_collection: 'holdExtract',
+  // 2026-11-23 (/add-job): inquiries and inspections, technical or records work, so they hold the hack. No recipes.
+  salt_in_the_seals: 'holdHack', signed_for_the_shift: 'holdHack', the_demonstration_passed: 'holdHack', the_last_call_out: 'holdHack',
   the_wrong_fare: 'holdHack',
   // The fourteen jobs with a fight in their own crises, moved to engine 2 together (owner, 2026-11-17): no recipes, the district's own force.
   kidnap: 'holdExtract', casino: 'holdHack', clinic: 'holdYard', ledger: 'holdExtract', container409: 'holdExtract', chrome: 'holdHack',
