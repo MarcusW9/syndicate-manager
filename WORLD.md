@@ -384,7 +384,7 @@ The crew's fee is agreed in ¥, usually cash when discretion matters. Expense co
 
 Not every job needs a clean victory. Sometimes the sensible ending is a witnessed handover, a written refusal, a cancelled collection or bringing back half of what was requested. A quiet, incomplete result is better than becoming the explanation for somebody else's misconduct.
 
-There are seven main recurring clients, and the newest two (Mrs. Ip and Forewoman Tse) are small ones; beside them stand the smaller recurring clients who work inside institutions ("Clients across the lines" and the Racing Association's three contacts). The people here may call again, remember a kindness or warn the crew away from a bad collection, but they do not become permanent patrons simply because their names are known.
+There are seven main recurring clients, and the newest two (Mrs. Ip and Forewoman Tse) are small ones; beside them stand the smaller recurring clients who work inside institutions ("Clients across the lines" and the Racing Association's three contacts). Two of those, Lau Ching-yee and Kwan Yiu-kit, now call with work of their own (2026-11-23); that makes them regular callers, not patrons. The people here may call again, remember a kindness or warn the crew away from a bad collection, but they do not become permanent patrons simply because their names are known.
 
 Someone who buys the crew dinner on Sunday may refuse to recognise them in a lobby on Monday. Both moments can be sincere.
 
@@ -641,7 +641,7 @@ Guns are ordinary kit for anyone who works for money: second-hand pistols in wai
 
 ## The clients
 
-Narrative dossiers for the recurring clients: the five big ones, then two small ones promoted from the street (2026-11-07), then the smaller clients who work inside institutions (2026-11-22; the Association's three are under the Racing Association). Who they are, what the street knows, what they hide, and how their story unfolds as the crew's trust with them reaches 60, 75 and 90 (or falls below 20). The trust arcs and introductions are canon but not built yet. When they become in-game messages, trim each moment to 2–4 short lines for the phone.
+Narrative dossiers for the recurring clients: the five big ones, then two small ones promoted from the street (2026-11-07), then the smaller clients who work inside institutions (2026-11-22; the Association's three are under the Racing Association; Lau and Kwan call with work since 2026-11-23). Who they are, what the street knows, what they hide, and how their story unfolds as the crew's trust with them reaches 60, 75 and 90 (or falls below 20). The trust arcs and introductions are canon but not built yet. When they become in-game messages, trim each moment to 2–4 short lines for the phone.
 
 ### Auntie Fung (Fung Wai-han)
 *Old Town · Brass Anchor Society*
@@ -823,6 +823,8 @@ She investigates shipping losses: spoiled freight, damaged machinery, missing co
 
 **Her work:** recovering damaged equipment before disposal, locating former cargo handlers, arranging witnessed inspections and finding consignments that several companies insist are somebody else's responsibility.
 
+**She calls with work** (2026-11-23): *Salt in the Seals*, tracing seawater damage through the Docks before a disputed cargo is disposed of. She pays for the evidence, whatever it shows.
+
 **Her limits:** she pays for evidence, not a preferred conclusion. She cannot promise that a correct finding will produce a fair settlement, and will not let the crew describe a disputed claim as established ownership.
 
 **Ties:** Morrow & Venn and Venn House; AHL shipments and Docks subcontractors. Edith Pryce handles estates, not her claims. Working for the same firm does not make their instructions interchangeable.
@@ -885,6 +887,8 @@ His department sits between AHL and the smaller firms that keep its freight movi
 **What he doesn't say:** a procurement manager has been steering contracts towards favoured operators and charging other suppliers to remain eligible. Yiu-kit approved questionable invoices after the manager promised to release months of legitimate payments. The evidence he wants recovered implicates him too.
 
 **His work:** finding subcontractors who have stopped answering, recovering delivery records, tracing impounded vehicles and securing evidence before an internal review loses interest.
+
+**He calls with work** (2026-11-23): *Signed for the Shift*, a Docks subcontractor's wage sheet marked paid when it wasn't. He wants proof, not an excuse; the work buys no introduction to Ruth Okonkwo.
 
 **His limits:** he cannot promise corporate protection. He wants the procurement racket exposed, but would prefer the crew not to discover how often he agreed to cooperate.
 
@@ -1222,9 +1226,10 @@ CLIENTS (local powers a small crew can reach, below the corps):
 - Smaller recurring clients inside institutions (2026-11-22): their trust is their own,
   never their employer's protection. Association (the Basin): Hui Lai-sum (community
   services), Yip Ka-chun (racing integrity), Chan Wing-kei (licensing and commercial
-  protection). Lau Ching-yee (Morrow & Venn marine claims surveyor); Dr. Choi Pui-ling
-  (Veridian-Apex neural-device aftercare); Mok Wai-lun (Hoi-Sing restoration
-  coordinator, Old Town); Kwan Yiu-kit (AHL subcontractor accounts, Docks); Lui Shuk-ping
+  protection). Lau Ching-yee (Morrow & Venn marine claims surveyor; calls with work);
+  Dr. Choi Pui-ling (Veridian-Apex neural-device aftercare); Mok Wai-lun (Hoi-Sing
+  restoration coordinator, Old Town); Kwan Yiu-kit (AHL subcontractor accounts, Docks;
+  calls with work); Lui Shuk-ping
   (Red Lanterns freight-yard steward; no tribute or grudge cancelled); Inspector Cheuk
   Tak-fai (Wet Sleeve, 4th Precinct; corrupt, dislikes some corruption; no immunity, no
   raid call-offs). Judge the request, not the employer.
