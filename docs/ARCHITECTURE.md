@@ -174,6 +174,7 @@ Format: JSON of the state in `localStorage`. Keys: `syndicate-active-slot`, `syn
 
 **Versioning:** `SAVE_VERSION` 85 in `core/state.js` (v73-v76 and v80-v81 are described in the `migrate` blocks of `save.js`). What each version added, newest first (one per line; grep `v52:`):
 
+- v89: "trail" renamed (`core/multimap.js`): a run's `trail` is `maps: { at, path, wrongUsed, then }`, the last map is `finale` (was `held`) in it, in its queue and in its stop events (`finale: true`, was `held: true`). A job's template key is `maps`, its stop crises `stop: true`.
 - v88: a job can follow a trail (`core/trail.js`): a run may carry `trail: { at, path, wrongUsed, then }` and `finale` (the night's queue, spliced in when the trail reaches `held`), and its queue holds `{ type: 'stop' }` and `{ type: 'clue' }` steps. A run saved before has neither and plays on as built.
 - v87: expeditions: `state.expeditions` `{ active, seq }` (`core/expeditions.js`; a trip `{ id, goal, district, crewIds, startDay, days, endDay, progress, prize: { item | cash | recruit }, facts, log, finds, spent?, waiting }`); an expedition's fight is an `activeMission` with `expedition` (the trip id) and template `exp:<district>:<goal>`. Older saves get an empty one.
 - v86: the adventure log: a side task out keeps `log` (and `facts`); a hands-off job's mission keeps `advlog: { facts, log }` (`core/advlog.js`); reports may carry `timeline.days`.

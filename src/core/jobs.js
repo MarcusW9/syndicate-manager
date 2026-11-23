@@ -99,6 +99,10 @@ export const HINT_IF_TWIST = 0.8; // a real twist is hinted 80% of the time
 export const HINT_IF_CLEAN = 0.1; // a clean job is wrongly hinted 10% of the time
 
 const round50 = (n) => Math.round(n / 50) * 50;
+// A multi-map job (core/multimap.js) comes up this many times as often as another job from the same client,
+// so a crew that has unlocked one sees it every few weeks (owner, 2026-11-23).
+export const MULTI_MAP_WEIGHT = 8;
+const offerWeight = (id) => (templateById(id)?.maps ? MULTI_MAP_WEIGHT : 1);
 const weighted = (rng, items) => {
   let r = rng() * items.reduce((n, i) => n + i.weight, 0);
   for (const i of items) { r -= i.weight; if (r < 0) return i; }
@@ -252,9 +256,10 @@ export function postJobs(state, count = NEW_PER_WEEK, { slot = 0, routineOnly = 
       addOffer(state, pick(rng, walkIns).id, { rng, clientId: null });
     } else if (clients.length) {
       const client = weighted(rng, clients);
-      addOffer(state, pick(rng, client.jobs.filter(regular)), { rng, clientId: client.id });
+      const id = weighted(rng, client.jobs.filter(regular).map((j) => ({ id: j, weight: offerWeight(j) }))).id;
+      addOffer(state, id, { rng, clientId: client.id });
     } else {
-      addOffer(state, pick(rng, open).id, { rng, clientId: null }); // nobody will call: walk-in work
+      addOffer(state, weighted(rng, open.map((m) => ({ id: m.id, weight: offerWeight(m.id) }))).id, { rng, clientId: null }); // nobody will call: walk-in work
     }
     added += 1;
   }

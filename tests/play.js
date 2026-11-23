@@ -78,7 +78,7 @@ export function playMission(state, policy) {
     } else if (type === 'battle') {
       s = M.runBattle(s);
     } else if (type === 'stop' || type === 'clue') {
-      s = M.followTrail(s); // a trail job's stops (core/trail.js)
+      s = M.followStops(s); // a multi-map job's stops (core/multimap.js)
     } else {
       const choices = M.describeCrisis(s).choices.filter((c) => c.available);
       s = M.chooseOption(s, policy.crisis(choices, guard).id);

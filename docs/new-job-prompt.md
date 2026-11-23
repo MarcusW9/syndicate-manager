@@ -323,6 +323,38 @@ they must survive repeating.
 - The same kind of work in several districts is one file per district (a Docks courier
   run and a Night Market courier run).
 
+MULTI-MAP JOBS (optional; only if the PITCH says "maps: yes"). The crew goes to 2 or 3
+places, each on its own map with one crisis there, before the job's own beats and crises
+play at the last place (the FINALE). Use it when the story moves: a robbery in three
+places, a run of drops, someone to track down. Add a `maps` block after `brief`:
+
+```js
+  maps: {
+    start: 'first',              // the stop the job starts at
+    heading: 'Making the drops', // optional: the watch's heading between maps (default "On the move")
+    stops: {
+      first: { district: 'docks', time: '10:15', place: 'a fish market\'s cold room', crisis: 'cold_room',
+        next: ['second'], arrive: 'The line the crew arrives on (one or two sentences).' },
+      second: { district: 'nightMarket', time: '14:40', place: 'a tailor\'s back door', crisis: 'back_door',
+        next: ['finale'], arrive: '...' },
+    },
+    finale: { time: '23:30', place: 'the night', arrive: 'The line before the job\'s own beats begin.' },
+  },
+```
+
+- Each stop names a crisis from the job's own `crises`, written like any other but marked
+  `stop: true` and with no `after` or `order` (it plays at its stop), and an abort as always. These
+  stop crises come on top of the job's six; the six play at the finale, in the job's own
+  district, as usual.
+- The route: one `next` per stop makes it the same every time. Several `next` (e.g.
+  ['lockup', 'backroom']) pick one of them, so the job plays differently each time. The last
+  stop leads to 'finale'. At most 3 stops on any route before the finale.
+- Optional, for a job about following leads: `skip: 'finale'` on a stop lets a very strong
+  result go straight to the finale; a stop with `wrong: true` (and no `next`) is a dead end a
+  failed stop can send the crew to once, before they get back on track.
+- Times run forward through the day; the finale is usually that night. Give the job
+  `days: 2` (the stops on the first day, the finale on the second), threat 3 or more.
+
 FIGHT JOBS (optional; only if the PITCH says "fight: yes"). Most jobs leave this out. A fight
 job plays its fight on the live map with orders, and may have WAVES: groups of enemies that
 arrive on a set round. Give the job's story a reason for each wave (a tip-off, a shift
@@ -359,6 +391,7 @@ District: [Old Town / the Docks / the Night Market / Glass Heights / the Basin]
 Tier: [rookie / threat 2 / 3 / 4 / 5] [routine: yes / no]
 Idea: [one or two sentences: what the client wants and what makes it interesting]
 Fight: [no / yes: the fight type, who stands against the crew, and the waves you have in mind]
+Maps: [no / yes: the places the crew goes before the finale, and whether the route is fixed or branches]
 ````
 
 ## What Claude does with the file
@@ -369,4 +402,5 @@ Fight: [no / yes: the fight type, who stands against the crew, and the waves you
 - Runs the tests: `core/validate.js` checks every crisis has an exit and every choice has its lines.
 - Routine work (`routine: true`): the checker warns if it's past threat 2, a crew of 2 or 2 days. Until the board treats routine work specially, it is offered like any other job of its tier.
 - A fight job (the `/* FIGHT */` block): adds the job to `FIGHT_JOBS`, its `opposition` to the job, and its waves to `FIGHT_RECIPES` in `src/data/fights.js` (the format: `docs/fight-recipe-template.md`), then runs the fight sims before and after. That is a balance change, so it takes a stronger model than Sonnet and gets a DESIGN.md row.
+- A multi-map job (a `maps` block): the checker runs `validateMaps` on it (every stop's crisis exists and is marked `stop: true`, every route reaches the finale within 4 stops, every stop has a district, time and arrival line). The engine is `core/multimap.js`; the real example is `src/data/missions/kidnap.js`.
 - Adds a changelog entry (newest file in `docs/changelog/`). New canon in the job (a person, a place) also gets a line in `WORLD.md` and a DESIGN.md row.
