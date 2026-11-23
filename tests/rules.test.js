@@ -11,7 +11,7 @@ import { MISSIONS } from '../src/data/missions.js';
 import { STARTING_CREW } from '../src/data/operatives.js';
 import { validateMissions, validateCrew } from '../src/core/validate.js';
 import { templateById, addOffer } from '../src/core/jobs.js';
-import { playMission, randomPolicy, playWeeks } from './play.js';
+import { playMission, randomPolicy, playWeeks, isExit } from './play.js';
 
 // Saves load through save.js, which touches browser storage; test the migration via a stub.
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
@@ -38,7 +38,7 @@ test('nobody ever dies unless the player chose "push on" (3,000 random missions)
 });
 
 test('aborting always brings everyone home', () => {
-  const abortAll = { critical: () => 'extract', crisis: (c) => c.find((x) => x.kind === 'abort') };
+  const abortAll = { critical: () => 'extract', crisis: (c) => c.find(isExit) };
   for (let seed = 1; seed <= 300; seed++) {
     let s = createNewGame({ seed });
     const job = s.jobs[seed % s.jobs.length];
@@ -116,7 +116,7 @@ test('heat cools by 2 every Sunday, with or without a job, and never leaves 0-10
   s = advanceDay(s); // Monday: take a real job this week
   const job = s.jobs[0];
   s = M.startMission(s, job.id, s.crew.slice(0, templateById(job.templateId).crewSize).map((o) => o.id), 'stealth');
-  s = M.closeMission(playMission(s, { critical: () => 'extract', crisis: (c) => c.find((x) => x.kind === 'abort') }).state);
+  s = M.closeMission(playMission(s, { critical: () => 'extract', crisis: (c) => c.find(isExit) }).state);
   setHeat(s, 'oldTown', 3);
   for (let i = 0; i < 6; i++) s = advanceDay(s);
   assert.equal(s.heat, 1, 'week with a job cools the same');

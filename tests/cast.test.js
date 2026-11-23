@@ -95,7 +95,8 @@ test('crises keep story order: never before their `after` beat, sorted by `order
     for (let seed = 1; seed <= 60; seed++) {
       const s = createNewGame({ seed, startCrew: 'fresh' });
       s.jobs = []; addOffer(s, tpl.id);
-      const { queue } = M.startMission(s, s.jobs[0].id, s.crew.slice(0, tpl.crewSize).map((o) => o.id), 'stealth').activeMission;
+      const am = M.startMission(s, s.jobs[0].id, s.crew.slice(0, tpl.crewSize).map((o) => o.id), 'stealth').activeMission;
+      const queue = am.finale ?? am.queue; // a multi-map job's own beats and crises wait in its finale (core/multimap.js)
       let lastBeat = -1, lastOrder = -Infinity;
       for (const step of queue) {
         if (step.type === 'beat') { lastBeat = step.index; continue; }

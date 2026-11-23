@@ -68,6 +68,24 @@ export const CLIENTS = [
     district: 'heights',
     affiliation: 'the Underterrace maintenance cooperative', // deals with Veridian-Apex's estate contractors; doesn't work for them
     desc: 'Tse Yuk-lan, a former maintenance forewoman who still keeps the cooperative\'s keys at the Underterrace. Contractor disputes, equipment recovery, missing records, workers caught between employers: the infrastructure beneath corporate comfort.',
-    jobs: ['still_clocked_in'],
+    jobs: ['still_clocked_in', 'the_demonstration_passed', 'the_last_call_out'],
+  },
+  // Smaller clients who work inside institutions (WORLD.md "Clients across the lines"), promoted to the board with
+  // their first jobs (owner, 2026-11-23). Their trust is their own, not their employer's.
+  {
+    id: 'lau',
+    name: 'Lau Ching-yee',
+    district: 'heights',
+    affiliation: 'Morrow & Venn', // a marine claims surveyor for the firm; her trust is not the firm's
+    desc: 'Marine claims surveyor for Morrow & Venn. Spoiled freight, damaged machinery and arguments over who was responsible when. She pays for evidence, not a preferred conclusion, and asks whether anyone was hurt before what the cargo was worth.',
+    jobs: ['salt_in_the_seals'],
+  },
+  {
+    id: 'kwan',
+    name: 'Kwan Yiu-kit',
+    district: 'docks',
+    affiliation: 'Aether-Harbour Logistics', // subcontractor accounts, the ordinary freight side; not Ruth Okonkwo's arm
+    desc: 'Subcontractor-accounts clerk at Aether-Harbour Logistics, between the company and the small firms that keep its freight moving. Stopped payments, missing delivery records, hauliers who want to be paid. Carries a cheap calculator despite three company devices.',
+    jobs: ['signed_for_the_shift'],
   },
 ];
