@@ -107,7 +107,7 @@ export const SALT_IN_THE_SEALS = {
       id: 'salt_receiving_record',
       stop: true,
       situations: ['law', 'threat'],
-      text: 'The warehouse manager offers a clean typed receiving summary. The original shift sheet includes a handwritten note about wet floor coverings, but also names workers on unrelated deliveries. The manager refuses a photograph of the whole page.',
+      text: 'The warehouse manager offers a clean typed receiving summary. The original shift sheet has a handwritten note about wet floor coverings, but also names workers on unrelated deliveries. The manager refuses a photograph of the whole page.',
       choices: [
         {
           id: 'limited_receiving_copy',
@@ -266,7 +266,7 @@ export const SALT_IN_THE_SEALS = {
       situations: ['law', 'threat'],
       after: 1,
       order: 1,
-      text: 'A receiving worker privately admits signing the cartons in before checking their undersides. The worker remembers a wet loading apron, but cannot say whether the cartons touched it. The manager wants the signature treated as proof they arrived dry.',
+      text: 'A receiving worker privately admits signing the cartons in before checking their undersides. They remember a wet loading apron, but not whether the cartons touched it. The manager wants the signature treated as proof they arrived dry.',
       choices: [
         {
           id: 'approve_limited_correction',
@@ -425,7 +425,7 @@ export const SALT_IN_THE_SEALS = {
       situations: ['law', 'threat'],
       after: 3,
       order: 1,
-      text: 'The warehouse wants the concealed refrigeration fault listed as the cause of the whole loss. The operator wants it omitted. Lau asks for a report that separates the admitted lie, the observed water damage and any cause the evidence cannot settle.',
+      text: 'The warehouse wants the hidden refrigeration fault listed as the cause of the whole loss; the operator wants it omitted. Lau wants a report that separates the admitted lie, the observed water damage and any cause the evidence can’t settle.',
       choices: [
         {
           id: 'separate_causes_and_gaps',

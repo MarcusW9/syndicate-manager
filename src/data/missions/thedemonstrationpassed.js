@@ -26,7 +26,7 @@ export const THE_DEMONSTRATION_PASSED = {
       situations: ['corp-tech', 'law'],
       after: 0,
       order: -1,
-      text: 'The contractor offers a ten-minute repeat of the showroom test. Tse wants the controller watched through an ordinary pump cycle, including the pause that usually brings the fault. The contractor says the crew can witness the approved test or propose a replacement.',
+      text: 'The contractor offers a ten-minute repeat of the showroom test. Tse wants the controller watched through an ordinary pump cycle, including the pause that brings the fault. The crew can witness the approved test or propose another.',
       choices: [
         {
           id: 'write_working_test',
@@ -79,7 +79,7 @@ export const THE_DEMONSTRATION_PASSED = {
       situations: ['law', 'threat'],
       after: 0,
       order: 0,
-      text: 'A contractor’s note blames an overnight worker for changing a setting. Tse says the worker followed a handset instruction from the installation team. The worker will show the message, but does not want a private handset copied into a company report.',
+      text: 'A contractor’s note blames an overnight worker for changing a setting. Tse says they followed the installation team’s handset instruction. The worker will show the message, but won’t have a private handset copied into a company report.',
       choices: [
         {
           id: 'limited_witness_statement',
@@ -132,7 +132,7 @@ export const THE_DEMONSTRATION_PASSED = {
       situations: ['corp-tech', 'law'],
       after: 1,
       order: 0,
-      text: '{kwok} confirms that the demonstration used a steady sensor signal. The installed system receives intermittent readings during the pump pause. She will explain the difference, but refuses to sign a claim that the controller itself is defective without testing it.',
+      text: '{kwok} confirms the demonstration used a steady sensor signal; the installed system gets intermittent readings during the pump pause. She’ll explain the difference, but won’t sign that the controller itself is defective without testing it.',
       choices: [
         {
           id: 'compare_recorded_inputs',
