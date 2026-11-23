@@ -219,16 +219,20 @@ const page = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewp
   .stills { display: grid; grid-template-columns: 1fr; gap: 12px; max-width: 1400px; margin-top: 24px; }
   @media (min-width: 900px) { .stills { grid-template-columns: repeat(3, 1fr); } }
   .stills figcaption { font: 12px monospace; color: #8a93a6; margin-bottom: 4px; }
+  .stage.close .sp-label { font-size: 3.6px; stroke-width: 1.2px; }
+  .stage.close .sp-wall { stroke-width: 1.1; }
+  .stage.close .sp-building { stroke-width: .8; }
+  .controls { margin: 10px 0; display: flex; gap: 8px; } .controls button.on { background: #3ee6d4; color: #050608; }
   .controls { margin: 10px 0; } .controls button { font: inherit; color: #3ee6d4; background: none; border: 1px solid #3ee6d4; padding: 10px 16px; min-height: 44px; cursor: pointer; }
 </style></head><body>
 <h1>Inside, in the dark · mockup</h1>
 <p class="lede">No street, no outside: the whole map is one floor. Every room is dark until the crew walks in. An open door gives a glimpse of the room beyond, and a hallway lights only where they've walked. At the stairs the map changes to the floor above. The floors are generated, the same from the same seed.</p>
-<div class="stage" id="stage">
+<div class="stage close" id="stage">
   ${svgs.map((s, i) => `<div class="floor ${i === 0 ? 'on' : ''}" data-floor="${i}">${s}<div class="tag">${FLOORS[i].title.toUpperCase()}</div></div>`).join('')}
   <div class="stamp" id="stamp">UP TO 1/F</div>
 </div>
 <div class="feed" id="feed"></div>
-<div class="controls"><button id="replay">Play again</button></div>
+<div class="controls"><button id="replay">Play again</button><button id="close" class="on">Close camera</button><button id="whole">Whole floor</button></div>
 <script>
 const FLOORS = ${JSON.stringify(data)};
 const NS = 'http://www.w3.org/2000/svg';
@@ -255,8 +259,8 @@ function setup(i) {
   const torch = el('circle', { r: 26, fill: 'url(#dkt' + i + ')', style: 'mix-blend-mode:screen' }, layer);
   const tg = el('radialGradient', { id: 'dkt' + i }, defs);
   el('stop', { offset: 0, 'stop-color': '#f2d27a', 'stop-opacity': .28 }, tg); el('stop', { offset: 1, 'stop-color': '#f2d27a', 'stop-opacity': 0 }, tg);
-  const walked = el('polyline', { fill: 'none', stroke: '#3ee6d4', 'stroke-width': 1.6, 'stroke-opacity': .55, 'stroke-dasharray': '3 3' }, layer);
-  const crew = [0, 1, 2].map((k) => el('circle', { r: 3.4, fill: ['#3ee6d4', '#ff5fa2', '#f2d541'][k], stroke: '#050608', 'stroke-width': 1 }, layer));
+  const walked = el('polyline', { fill: 'none', stroke: '#3ee6d4', 'stroke-width': 0.9, 'stroke-opacity': .55, 'stroke-dasharray': '2 2' }, layer);
+  const crew = [0, 1, 2].map((k) => el('circle', { r: 2.4, fill: ['#3ee6d4', '#ff5fa2', '#f2d541'][k], stroke: '#050608', 'stroke-width': 1 }, layer));
   return { f, rooms, trail, glimpses, torch, walked, crew, seen: new Set(), glimpsed: new Set(), lastTrail: null };
 }
 
@@ -276,7 +280,7 @@ const LINES = [
 ];
 function step(S, d) {
   const p = along(S.f.route, d);
-  S.crew.forEach((c, k) => { const q = along(S.f.route, Math.max(0, d - k * 9)); c.setAttribute('cx', q[0]); c.setAttribute('cy', q[1]); });
+  S.crew.forEach((c, k) => { const q = along(S.f.route, Math.max(0, d - k * 6)); c.setAttribute('cx', q[0]); c.setAttribute('cy', q[1]); });
   S.torch.setAttribute('cx', p[0]); S.torch.setAttribute('cy', p[1]);
   const pts = []; for (let x = 0; x <= d; x += 4) pts.push(along(S.f.route, x)); pts.push(p);
   S.walked.setAttribute('points', pts.map((q) => q.join(',')).join(' '));
@@ -293,6 +297,18 @@ function step(S, d) {
   return p;
 }
 
+// the camera: close on the crew (a room or so on screen), eased; or the whole floor
+const VIEW = { w: 132, h: 88 };
+let close = true, cam = null;
+function aim(i, p, snap) {
+  const svg = document.querySelector('[data-floor="' + i + '"] svg');
+  if (!close) { svg.setAttribute('viewBox', '0 0 360 240'); return; }
+  if (!cam || snap) cam = [...p];
+  cam[0] += (p[0] - cam[0]) * 0.08; cam[1] += (p[1] - cam[1]) * 0.08;
+  if (snap) cam = [...p];
+  const v = [Math.min(Math.max(cam[0], 6 + VIEW.w / 2), 354 - VIEW.w / 2), Math.min(Math.max(cam[1], 6 + VIEW.h / 2), 234 - VIEW.h / 2)];
+  svg.setAttribute('viewBox', (v[0] - VIEW.w / 2) + ' ' + (v[1] - VIEW.h / 2) + ' ' + VIEW.w + ' ' + VIEW.h);
+}
 let run = 0;
 async function play() {
   const me = ++run;
@@ -305,7 +321,7 @@ async function play() {
       const tick = (now) => {
         if (me !== run) return;
         const d = Math.min(T, ((now - t0) / 1000) * SPEED);
-        const p = step(S, d);
+        const p = step(S, d); aim(i, p, d === 0);
         // a line when they step into a named room
         const svg = document.querySelector('[data-floor="' + i + '"] svg');
         for (const [name, text] of LINES) {
@@ -326,9 +342,14 @@ window.jumpTo = (i, share) => {
   run++;
   document.querySelectorAll('.floor').forEach((x) => x.classList.toggle('on', +x.dataset.floor === i));
   const S = setup(i); const T = total(S.f.route);
-  for (let d = 0; d <= T * share; d += 2) step(S, d);
+  let p; for (let d = 0; d <= T * share; d += 2) p = step(S, d);
+  aim(i, p, true);
 };
 document.getElementById('replay').onclick = play;
+const mode = (c) => { close = c; document.getElementById('stage').classList.toggle('close', c); document.getElementById('close').classList.toggle('on', c); document.getElementById('whole').classList.toggle('on', !c); cam = null; play(); };
+document.getElementById('close').onclick = () => mode(true);
+document.getElementById('whole').onclick = () => mode(false);
+window.setClose = (c) => { close = c; document.getElementById('stage').classList.toggle('close', c); };
 if (!location.hash.includes('still')) play();
 </script>
 </body></html>`;
@@ -338,7 +359,8 @@ writeFileSync(`${out}.html`, page);
 const browser = await chromium.launch();
 const pg = await browser.newPage({ viewport: { width: 800, height: 900 }, deviceScaleFactor: 1 });
 await pg.goto(`file://${out}.html#still`);
-const shots = [[0, 0.12, '01-ground-in'], [0, 0.6, '02-ground-half'], [0, 1, '03-ground-stairs'], [1, 0.4, '04-upstairs-hall'], [1, 1, '05-upstairs-found']];
+const shots = [[0, 0.12, '01-ground-in'], [0, 0.45, '02-ground-half'], [0, 1, '03-ground-stairs'], [1, 0.4, '04-upstairs-hall'], [1, 1, '05-upstairs-found']];
+await pg.evaluate(() => window.setClose(true));
 for (const [i, s, name] of shots) {
   await pg.evaluate(([i, s]) => window.jumpTo(i, s), [i, s]);
   await pg.waitForTimeout(900);
