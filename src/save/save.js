@@ -1139,5 +1139,18 @@ function migrate(state) {
     // saved before has neither and plays on as it was built (its queue holds no stops), so nothing to change.
     state.version = 88;
   }
+  if (state.version === 88) {
+    // v89: "trail" renamed (core/multimap.js; DESIGN.md 2026-11-23): a run's `trail` is now `maps`, and the last map is
+    // `finale`, not `held` (its position, its path, the stop a wrong lead returns to, the run's stop events).
+    const fin = (id) => (id === 'held' ? 'finale' : id);
+    for (const am of [state.activeMission, ...(state.awayJobs ?? []).map((j) => j.mission)]) {
+      if (!am?.trail) continue;
+      am.maps = { ...am.trail, at: am.trail.at == null ? null : fin(am.trail.at), path: (am.trail.path ?? []).map(fin), then: am.trail.then == null ? null : fin(am.trail.then) };
+      delete am.trail;
+      for (const q of am.queue ?? []) if (q.type === 'stop' || q.type === 'clue') q.id = fin(q.id);
+      for (const e of am.events ?? []) if (e.kind === 'stop' && e.held) { e.stop = 'finale'; e.finale = true; e.place ??= 'the night'; delete e.held; }
+    }
+    state.version = 89;
+  }
   return state;
 }

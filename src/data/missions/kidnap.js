@@ -1,8 +1,8 @@
 // Kidnap rescue: get a hostage out alive. Aborting means leaving them behind.
-// Since 2026-11-22 it follows a trail (the multi-map pilot, drafts/PROPOSAL-lead-following.md): by day the crew goes
-// from where he was taken to whoever knows where he's held (2 to 4 stops, each a crisis on its own map, the next
-// picked by how it went: a strong result can skip a stop, a failure can send them to a wrong lead); that night, the
-// rescue as before. The trail's text is Claude's draft for the owner to mark.
+// Since 2026-11-22 it is a multi-map job (core/multimap.js; the pilot, drafts/PROPOSAL-lead-following.md): by day
+// the crew goes from where he was taken to whoever knows where he's held (2 to 4 stops, each a crisis on its own map,
+// the next picked by how it went: a strong result can skip a stop, a failure can send them to a wrong lead); that
+// night, the rescue as before. The stops' text is Claude's draft for the owner to mark.
 
 /** @type {import('../../core/types.js').MissionTemplate} */
 export const KIDNAP = {
@@ -15,27 +15,28 @@ export const KIDNAP = {
   crewSize: 4,
   keyStats: ['combat', 'stealth', 'medical'],
   brief: 'A shipping heiress\'s accountant was snatched off a street in Old Town this morning. Nobody knows where they\'ve taken him. Start where he was taken, follow it, and bring him back breathing.',
-  // The trail by day (core/trail.js; Claude's draft for the owner to mark). Each stop: where, when, the line the crew
-  // arrives on, its crisis (below, marked trail: true so the night's draw never takes it), and where it can lead.
-  // skip: where a strong result leads instead (straight to the night). wrong: dead ends a failure can send them to;
-  // each leads back to the stop it stood in for. held: the night, which plays the beats and crises as before.
-  trail: {
+  // The stops by day (core/multimap.js; Claude's draft for the owner to mark). Each stop: where, when, the line the
+  // crew arrives on, its crisis (below, marked stop: true so the night's draw never takes it), and where it can lead.
+  // skip: where a strong result leads instead (straight to the finale). wrong: dead ends a failure can send them to;
+  // each leads back to the stop it stood in for. finale: the night, which plays the beats and crises as before.
+  maps: {
     start: 'taken',
+    heading: 'On the trail', // the watch's heading between maps (core/multimap.js DEFAULT_HEADING otherwise)
     stops: {
-      taken: { district: 'oldTown', time: '11:20', place: 'the street where he was taken', crisis: 'trail_witness', next: ['lockup', 'backroom', 'courier'], skip: 'held',
+      taken: { district: 'oldTown', time: '11:20', place: 'the street where he was taken', crisis: 'trail_witness', next: ['lockup', 'backroom', 'courier'], skip: 'finale',
         arrive: 'The street where he was taken: a shutter half up, his handset under a parked handcart, and a stallholder who saw a grey van and won\'t say so in front of the street.' },
-      lockup: { district: 'docks', time: '15:40', place: 'a rented lock-up behind the weighbridge', crisis: 'trail_lockup', next: ['held'],
+      lockup: { district: 'docks', time: '15:40', place: 'a rented lock-up behind the weighbridge', crisis: 'trail_lockup', next: ['finale'],
         arrive: 'The van\'s plate led to a rented lock-up behind the Docks weighbridge. The van is inside, the engine still warm. The man who rents out the space is pretending to sleep in a forklift cab.' },
-      backroom: { district: 'nightMarket', time: '16:30', place: 'a mahjong parlour\'s back room', crisis: 'trail_backroom', next: ['held'],
+      backroom: { district: 'nightMarket', time: '16:30', place: 'a mahjong parlour\'s back room', crisis: 'trail_backroom', next: ['finale'],
         arrive: 'A number from his handset belongs to a mahjong parlour in the Night Market. The back room\'s door has a minder, and the tea upstairs costs more than the games.' },
-      courier: { district: 'oldTown', time: '15:10', place: 'a courier\'s door at the top of a rusted stairwell', crisis: 'trail_courier', next: ['held'],
+      courier: { district: 'oldTown', time: '15:10', place: 'a courier\'s door at the top of a rusted stairwell', crisis: 'trail_courier', next: ['finale'],
         arrive: 'Someone has been ordering food for two to a building nobody lives in. The courier who carries it up lives at the top of a rusted stairwell; the order slips are pinned to her door.' },
       wrong_van: { district: 'docks', time: '13:50', place: 'a fish wholesaler\'s yard', crisis: 'trail_wrong_van', wrong: true,
         arrive: 'A grey van in a Docks yard: the right make, nearly the right plate. It smells of fish, which nobody mentioned.' },
       wrong_flat: { district: 'nightMarket', time: '14:20', place: 'a flat above a handset stall', crisis: 'trail_wrong_flat', wrong: true,
         arrive: 'His handset\'s last signal came from a flat above a handset stall. The woman who answers the door is holding a handset very like his.' },
     },
-    held: { time: '02:40', arrive: 'Everything points to the same place: a closed-down cha chaan teng in Old Town. They wait for the street to empty.' },
+    finale: { time: '02:40', place: 'the night', arrive: 'Everything points to the same place: a closed-down cha chaan teng in Old Town. They wait for the street to empty.' },
   },
   beats: [
     'The cha chaan teng\'s shutters are down, but there\'s light on the second floor. {driver} parks two streets away.',
@@ -140,9 +141,9 @@ export const KIDNAP = {
           report: { success: 'The crew scattered in five directions, leaving the police to find the hostage.' } },
       ],
     },
-    // --- the trail by day (trail: true: only the trail's stops draw these) -----------------------------
+    // --- the stops by day (stop: true: only the stops draw these) -----------------------------
     {
-      id: 'trail_witness', trail: true,
+      id: 'trail_witness', stop: true,
       situations: ['crowd'],
       text: 'The stallholder saw the van and the men who took him. She keeps glancing at the tea shop across the road, where someone is watching her back.',
       choices: [
@@ -161,7 +162,7 @@ export const KIDNAP = {
       ],
     },
     {
-      id: 'trail_lockup', trail: true,
+      id: 'trail_lockup', stop: true,
       situations: ['entry', 'fight'],
       text: 'The van is here; he isn\'t. There\'s a zip tie on the floor, a parking ticket on the dash, and the forklift driver who rented them the space.',
       choices: [
@@ -177,7 +178,7 @@ export const KIDNAP = {
       ],
     },
     {
-      id: 'trail_backroom', trail: true,
+      id: 'trail_backroom', stop: true,
       situations: ['crowd', 'threat'],
       text: 'The man who arranged the snatch is in the back room, playing. He\'s loud, he\'s winning, and two of his friends are watching the stairs.',
       choices: [
@@ -193,7 +194,7 @@ export const KIDNAP = {
       ],
     },
     {
-      id: 'trail_courier', trail: true,
+      id: 'trail_courier', stop: true,
       situations: ['law'],
       text: 'The courier took food up to the guest twice. She\'s scared of the men who paid her, and more scared of the police asking.',
       choices: [
@@ -209,7 +210,7 @@ export const KIDNAP = {
       ],
     },
     {
-      id: 'trail_wrong_van', trail: true,
+      id: 'trail_wrong_van', stop: true,
       situations: ['law'],
       text: 'The van belongs to a fish wholesaler who has never kidnapped anyone, and would like to know why the crew is in his van.',
       choices: [
@@ -225,7 +226,7 @@ export const KIDNAP = {
       ],
     },
     {
-      id: 'trail_wrong_flat', trail: true,
+      id: 'trail_wrong_flat', stop: true,
       situations: ['crowd'],
       text: 'The woman bought his handset second-hand at the market an hour ago. She is very frightened of the crew in her doorway.',
       choices: [

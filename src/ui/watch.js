@@ -13,7 +13,7 @@
 // 2026-10-28). Its own smooth scrolling never counts as you scrolling away (2026-11-03: it
 // sometimes stopped following when a new moment arrived mid-scroll).
 
-import { runPlace } from '../core/trail.js';
+import { runPlace, DEFAULT_HEADING } from '../core/multimap.js';
 import { feedItems } from '../core/feed.js';
 import { needsPlayer } from '../core/autorun.js';
 import { ALERT_MAX, OVERWATCH_KIT, ZONES } from '../core/incidents.js';
@@ -76,8 +76,8 @@ export function renderWatch(ui, state, end = '') {
 }
 
 /** Is this page already showing this job's watch? Then app.js syncs instead of re-rendering. */
-// A trail job (core/trail.js) changes map at each stop: the stop is part of the key, so a new stop mounts the watch afresh on its map.
-const watchKey = (am) => `${am.jobId}|${am.trail?.at ?? ''}`;
+// A multi-map job (core/multimap.js) changes map at each stop: the stop is part of the key, so a new stop mounts the watch afresh on its map.
+const watchKey = (am) => `${am.jobId}|${am.maps?.at ?? ''}`;
 const placeSite = (am) => { const p = runPlace(am, templateById(am.templateId)); return siteFor(p.district, p.key, am.templateId, am.build); };
 export const isWatching = (root, am) => !!live && !am.done && live.key === watchKey(am) && root.contains(live.el);
 
@@ -388,7 +388,7 @@ function tally(state) {
   const pips = el.querySelector('.watch__alert');
   pips.innerHTML = `Alert ${Array.from({ length: ALERT_MAX }, (_, i) => `<i class="${i < alert ? 'is-on' : ''}"></i>`).join('')}`;
   pips.setAttribute('aria-label', `Alert ${alert} of ${ALERT_MAX}${am.wentLoud ? ', gone loud' : ''}`);
-  el.querySelector('.watch__phase').textContent = am.trail && am.trail.at && am.trail.at !== 'held' ? 'On the trail' : am.raid ? 'Holding the hall' : am.post ? 'Holding the post' : am.expedition ? 'The deal went wrong' : am.wentLoud ? 'Gone loud' : ZONES[am.zone]?.name ?? 'Getting there';
+  el.querySelector('.watch__phase').textContent = am.maps && am.maps.at && am.maps.at !== 'finale' ? (templateById(am.templateId)?.maps?.heading ?? DEFAULT_HEADING) : am.raid ? 'Holding the hall' : am.post ? 'Holding the post' : am.expedition ? 'The deal went wrong' : am.wentLoud ? 'Gone loud' : ZONES[am.zone]?.name ?? 'Getting there';
   pips.style.display = am.raid || am.post || am.expedition ? 'none' : ''; // a raid has no alarm to raise: they're already here
   const events = am.events ?? [];
   const saves = events.filter((e) => e.kind === 'save' && e.success && e.via !== 'patch').length;
@@ -443,7 +443,7 @@ function itemHtml(ui, item, animate) {
   const { esc } = ui;
   const n = animate ? 'is-new' : '';
   if (item.type === 'phase') return `<h3 class="wf-phase ${n}">${esc(item.title)}</h3>`;
-  if (item.type === 'stop') return `<h3 class="wf-phase wf-stop ${n}">${esc(item.title)}</h3>`; // a trail's stop (core/trail.js)
+  if (item.type === 'stop') return `<h3 class="wf-phase wf-stop ${n}">${esc(item.title)}</h3>`; // a multi-map job's stop (core/multimap.js)
   if (item.type === 'beat') return `<p class="wf-beat ${n}">${esc(item.text)}</p>`;
   if (item.type === 'note') return `<p class="wf-note tone--${TONE[item.tone] ?? 'plain'} ${n}">${esc(item.text)}</p>`;
   // One line per moment: an icon and the headlines, so the run can be followed at a glance; tap

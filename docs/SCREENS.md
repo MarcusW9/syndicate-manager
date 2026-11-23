@@ -79,7 +79,7 @@ Section names are the headings in the code. "(x)" marks something that shows onl
 
 **Save** (`renderSettings`): New game in slot n (difficulty), Slots (Play / New / Delete), Backups (export and import).
 
-**Watch** (`renderMission`, `ui/watch.js`): site map with the crew moving on it, the feed beside it (phones stack them), crisis choices, the face-off (`ui/duel.js`), command-fight orders (`ui/fightorders.js` for engine 1; `ui/fightscreen.js` for the five engine-2 jobs: the round screen, the call-in cards), call-ins from away crews, finale and direct-buzz screens, the end card, then the report in the feed. A job that follows a trail (Kidnap Rescue, `core/trail.js`) changes map at each stop; the header reads On the trail, and the feed heads each stop with its time and place.
+**Watch** (`renderMission`, `ui/watch.js`): site map with the crew moving on it, the feed beside it (phones stack them), crisis choices, the face-off (`ui/duel.js`), command-fight orders (`ui/fightorders.js` for engine 1; `ui/fightscreen.js` for the five engine-2 jobs: the round screen, the call-in cards), call-ins from away crews, finale and direct-buzz screens, the end card, then the report in the feed. A multi-map job (Kidnap Rescue, `core/multimap.js`) changes map at each stop; the header reads the job's `maps.heading` (On the trail for Kidnap Rescue, On the move by default), and the feed heads each stop with its time and place.
 
 ## Moves (one line per move, newest first)
 

@@ -9,7 +9,7 @@ import { ROLE_PROFILES } from '../data/recruitPools.js';
 import { CAST } from '../data/cast.js';
 import { SITUATIONS } from '../data/situations.js';
 import { NAMES } from '../config/names.js';
-import { validateTrail } from './validate.js';
+import { validateMaps } from './validate.js';
 
 const ROLES = Object.keys(ROLE_PROFILES);
 const KINDS = new Set(['push', 'adapt', 'abort', 'extract', 'stabilise']);
@@ -93,20 +93,20 @@ export function checkJob(job, { others = [], takenCrises = [] } = {}) {
     if (job.days > 2) warnings.push(`a routine job takes 1-2 days, not ${job.days}`);
   }
 
-  // A trail job (core/trail.js) has its stops' crises too (trail: true): the six are the night's.
-  const crises = (job.crises ?? []).filter((c) => !c.trail);
+  // A multi-map job (core/multimap.js) has its stops' crises too (stop: true): the six are the finale's.
+  const crises = (job.crises ?? []).filter((c) => !c.stop);
   // Six of its own; a job can get by on three, as the shared pool fills the draw (older rookie jobs).
   if (crises.length < 3 || crises.length > 6) errors.push(`${crises.length} crises (6)`);
   else if (crises.length < 6) warnings.push(`${crises.length} crises of its own (6: with fewer, the shared ones repeat sooner)`);
   const crisisIds = new Set();
-  for (const c of job.crises ?? []) { // every crisis is checked, the trail's too
+  for (const c of job.crises ?? []) { // every crisis is checked, the stops' too
     if (crisisIds.has(c.id)) errors.push(`crisis id "${c.id}" is used twice`);
     if (takenCrises.includes(c.id)) errors.push(`crisis id "${c.id}" is already used by another job's crisis or a twist`);
     crisisIds.add(c.id);
     if (!c.text) errors.push(`${c.id}: no text`);
     for (const s of c.situations ?? []) if (!SITUATIONS[s]) errors.push(`${c.id}: unknown situation "${s}"`);
-    if (c.after == null && !c.trail) warnings.push(`${c.id}: no "after" (it can come up before the first beat)`);
-    else if (!c.trail && !(c.after >= 0 && c.after <= job.beats.length - 2)) errors.push(`${c.id}: after ${c.after} must be 0-${job.beats.length - 2}`);
+    if (c.after == null && !c.stop) warnings.push(`${c.id}: no "after" (it can come up before the first beat)`);
+    else if (!c.stop && !(c.after >= 0 && c.after <= job.beats.length - 2)) errors.push(`${c.id}: after ${c.after} must be 0-${job.beats.length - 2}`);
     if (c.focusRole && !ROLES.includes(c.focusRole)) errors.push(`${c.id}: focusRole "${c.focusRole}" isn't a role`);
 
     const choices = c.choices ?? [];
@@ -167,6 +167,7 @@ export function checkJob(job, { others = [], takenCrises = [] } = {}) {
     const max = where.endsWith(': label') ? MAX_LABEL : where === 'brief' ? MAX_BRIEF : MAX_LINE;
     if (text.length > max) warnings.push(`${where}: ${text.length} characters (keep it under ${max} for a phone)`);
   }
-  if (job.trail) errors.push(...validateTrail(job)); // a trail job (core/trail.js): its stops, leads and crises
+  if (job.maps) errors.push(...validateMaps(job)); // a multi-map job (core/multimap.js): its stops, routes and crises
+  if (job.trail || (job.crises ?? []).some((c) => c.trail)) errors.push('"trail" was renamed on 2026-11-23: the job\'s `maps`, and a stop\'s crisis is marked stop: true');
   return { errors, warnings };
 }

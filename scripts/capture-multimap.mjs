@@ -1,7 +1,7 @@
-// Capture (2026-11-22, a job that follows a trail: Kidnap Rescue rebuilt, core/trail.js): the watch screen at the
-// trail's second stop (its own map, the stop headings in the feed, the stop's crisis waiting for a call), and the
-// report of a rescue whose trail took a wrong lead. 390x844 (full page) and 844x390, 1x.
-// Run: node scripts/capture-trail.mjs <out dir>
+// Capture (2026-11-22, the multi-map pilot: Kidnap Rescue rebuilt, core/multimap.js): the watch screen at the
+// route's second stop (its own map, the stop headings in the feed, the stop's crisis waiting for a call), and the
+// report of a rescue whose route took a wrong lead. 390x844 (full page) and 844x390, 1x.
+// Run: node scripts/capture-multimap.mjs <out dir>
 import { createNewGame } from '../src/core/state.js';
 import { addOffer } from '../src/core/jobs.js';
 import * as M from '../src/core/mission.js';
@@ -27,14 +27,14 @@ for (let seed = 1; seed < 60 && !live; seed++) {
   for (let g = 0; g < 40 && !s.activeMission.done; g++) {
     const am = s.activeMission;
     const step = M.currentStep(am);
-    if (step?.type === 'crisis' && am.trail.path.length === 2 && am.trail.at !== 'held') { live = s; break; }
+    if (step?.type === 'crisis' && am.maps.path.length === 2 && am.maps.at !== 'finale') { live = s; break; }
     if (step?.type === 'crisis') { const odds = M.crisisOdds(s).filter((o) => !o.exit).sort((a, b) => b.chance - a.chance); s = M.chooseOption(s, odds[0].choice.id); continue; }
     const next = autoStep(s, { force: true });
     if (next === s) break;
     s = next;
   }
 }
-// A finished rescue whose trail took a wrong lead, closed into its report.
+// A finished rescue whose route took a wrong lead, closed into its report.
 let report = null;
 for (let seed = 1; seed < 200 && !report; seed++) {
   const s = autoRun(game(seed), 'steady');
@@ -57,13 +57,13 @@ try {
     const p = await b.newPage({ viewport: vp, deviceScaleFactor: 1 });
     await load(p, live);
     await p.waitForTimeout(4000);
-    await p.screenshot({ path: `${out}/01-${tag}-trail-stop.png`, fullPage: tag === 'phone' });
+    await p.screenshot({ path: `${out}/01-${tag}-maps-stop.png`, fullPage: tag === 'phone' });
     await load(p, report.state);
     const later = p.getByText('Decide later').filter({ visible: true }); // the rescue's heat can bring a raid warning: put it off
     if (await later.count()) { await later.first().click(); await p.waitForTimeout(300); }
     await vis(p, `[data-action="open-message"][data-id="${report.id}"]`).click({ timeout: 5000 });
     await p.waitForTimeout(6000);
-    await p.screenshot({ path: `${out}/02-${tag}-trail-report.png`, fullPage: tag === 'phone' });
+    await p.screenshot({ path: `${out}/02-${tag}-maps-report.png`, fullPage: tag === 'phone' });
     await p.close();
   }
 } finally {

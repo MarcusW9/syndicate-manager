@@ -18,40 +18,42 @@ export function validateMissions(missions) {
         if (m.rookie && !ch.sure && !EXIT_KINDS.has(ch.kind) && !ch.report?.failure) problems.push(`${m.id}/${c.id}/${ch.id}: no failure report line`);
       }
     }
-    if (m.trail) problems.push(...validateTrail(m));
+    if (m.maps) problems.push(...validateMaps(m));
+    if (m.trail) problems.push(`${m.id}: "trail" was renamed "maps" on 2026-11-23 (and a stop's crisis is marked stop: true)`);
   }
   return problems;
 }
 
 /**
- * A trail (core/trail.js; the multi-map pilot): its start and every lead exist, each stop has a district, a time,
- * an arrival line and a crisis of the job's marked trail: true, the night (`held`) is reachable from the start,
- * every stop is reachable, a wrong lead has no leads of its own, and no route needs more than 4 stops.
+ * A multi-map job's `maps` (core/multimap.js): its start and every next stop exist, each stop has a district, a time,
+ * an arrival line and a crisis of the job's marked stop: true, the finale has a time and an arrival line, every stop
+ * is reachable from the start, a wrong lead has no next stop of its own, and no route needs more than 4 stops.
  */
-export function validateTrail(m) {
-  const t = m.trail;
+export function validateMaps(m) {
+  const t = m.maps;
   const out = [];
   const stops = t.stops ?? {};
   const ids = Object.keys(stops);
-  if (!stops[t.start]) out.push(`${m.id}: trail starts at an unknown stop ${t.start}`);
-  if (!t.held?.time || !t.held?.arrive) out.push(`${m.id}: the trail's night (held) needs a time and an arrival line`);
+  if (!stops[t.start]) out.push(`${m.id}: maps start at an unknown stop ${t.start}`);
+  if (!t.finale?.time || !t.finale?.arrive) out.push(`${m.id}: the maps' finale needs a time and an arrival line`);
   for (const [id, s] of Object.entries(stops)) {
-    if (!s.district || !s.time || !s.arrive) out.push(`${m.id}/trail/${id}: needs a district, a time and an arrival line`);
+    if (id === 'finale') { out.push(`${m.id}/maps/finale: "finale" is the last map's name, not a stop's`); continue; }
+    if (!s.district || !s.time || !s.arrive) out.push(`${m.id}/maps/${id}: needs a district, a time and an arrival line`);
     const c = (m.crises ?? []).find((x) => x.id === s.crisis);
-    if (!c) out.push(`${m.id}/trail/${id}: no crisis ${s.crisis}`);
-    else if (!c.trail) out.push(`${m.id}/trail/${id}: its crisis ${s.crisis} must be marked trail: true`);
-    if (s.wrong && (s.next || s.skip)) out.push(`${m.id}/trail/${id}: a wrong lead leads back by itself (no next or skip)`);
-    for (const n of [...(s.next ?? []), ...(s.skip ? [s.skip] : [])]) if (n !== 'held' && !stops[n]) out.push(`${m.id}/trail/${id}: leads to an unknown stop ${n}`);
-    if (!s.wrong && !(s.next ?? []).length) out.push(`${m.id}/trail/${id}: leads nowhere`);
+    if (!c) out.push(`${m.id}/maps/${id}: no crisis ${s.crisis}`);
+    else if (!c.stop) out.push(`${m.id}/maps/${id}: its crisis ${s.crisis} must be marked stop: true`);
+    if (s.wrong && (s.next || s.skip)) out.push(`${m.id}/maps/${id}: a wrong lead leads back by itself (no next or skip)`);
+    for (const n of [...(s.next ?? []), ...(s.skip ? [s.skip] : [])]) if (n !== 'finale' && !stops[n]) out.push(`${m.id}/maps/${id}: leads to an unknown stop ${n}`);
+    if (!s.wrong && !(s.next ?? []).length) out.push(`${m.id}/maps/${id}: leads nowhere (next: ['finale'] for the last stop)`);
   }
-  // Every route from the start reaches the night within 4 stops (3 before it, a wrong lead included).
+  // Every route from the start reaches the finale within 4 stops (3 before it, a wrong lead included).
   const real = (id) => !stops[id]?.wrong;
-  const depth = (id, seen = []) => (id === 'held' ? 0 : seen.includes(id) ? Infinity : 1 + Math.max(...(stops[id]?.next ?? ['held']).map((n) => depth(n, [...seen, id]))));
+  const depth = (id, seen = []) => (id === 'finale' ? 0 : seen.includes(id) ? Infinity : 1 + Math.max(...(stops[id]?.next ?? ['finale']).map((n) => depth(n, [...seen, id]))));
   const wrongs = ids.filter((id) => !real(id)).length ? 1 : 0;
-  if (stops[t.start] && depth(t.start) + wrongs > 3) out.push(`${m.id}: a trail route needs more than 4 stops`);
+  if (stops[t.start] && depth(t.start) + wrongs > 3) out.push(`${m.id}: a route needs more than 4 stops (a wrong lead counts as one)`);
   const reach = new Set([t.start]);
   for (let grew = true; grew;) { grew = false; for (const id of [...reach]) for (const n of stops[id]?.next ?? []) if (!reach.has(n)) { reach.add(n); grew = true; } }
-  for (const id of ids.filter(real)) if (!reach.has(id)) out.push(`${m.id}/trail/${id}: no route reaches this stop`);
+  for (const id of ids.filter(real)) if (!reach.has(id)) out.push(`${m.id}/maps/${id}: no route reaches this stop`);
   return out;
 }
 

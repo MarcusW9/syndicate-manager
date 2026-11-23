@@ -99,10 +99,10 @@ export const HINT_IF_TWIST = 0.8; // a real twist is hinted 80% of the time
 export const HINT_IF_CLEAN = 0.1; // a clean job is wrongly hinted 10% of the time
 
 const round50 = (n) => Math.round(n / 50) * 50;
-// A job that follows a trail (the multi-map pilot, core/trail.js) comes up this many times as often as
-// another job from the same client, so a crew that has unlocked it sees it every few weeks (owner, 2026-11-23).
-export const TRAIL_WEIGHT = 8;
-const offerWeight = (id) => (templateById(id)?.trail ? TRAIL_WEIGHT : 1);
+// A multi-map job (core/multimap.js) comes up this many times as often as another job from the same client,
+// so a crew that has unlocked one sees it every few weeks (owner, 2026-11-23).
+export const MULTI_MAP_WEIGHT = 8;
+const offerWeight = (id) => (templateById(id)?.maps ? MULTI_MAP_WEIGHT : 1);
 const weighted = (rng, items) => {
   let r = rng() * items.reduce((n, i) => n + i.weight, 0);
   for (const i of items) { r -= i.weight; if (r < 0) return i; }
