@@ -203,7 +203,9 @@ test('at most two temporary traits: a third replaces the oldest; lasting ones ar
   const temps = op.earned.filter((e) => EARNED_TRAITS[e.id].kind === 'temporary').map((e) => e.id);
   assert.deepEqual(temps, ['riding_high', 'second_wind']);
   assert.ok(has(op, 'ghost_driver'));
-  assert.ok(s.inbox.some((m) => m.subject === `${op.handle}: no longer Shaky`));
+  const line = s.inbox.find((m) => m.kind === 'crewnotes').payload.lines.find((l) => l.subject === `${op.handle}: no longer Shaky`);
+  assert.ok(line, 'the fade joins the day\'s crew updates');
+  assert.match(line.body, /Second Wind has pushed out Shaky/, 'it names what took its place');
 });
 
 test('progress is hidden: nothing says anything until a trait is earned, then Joss explains and history records it', () => {
