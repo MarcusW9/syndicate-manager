@@ -208,7 +208,7 @@ function renderFullLog(t) {
   const zoned = events.some((e) => e.kind === 'zone');
   let onJob = false;
   const items = events.map((e, i) => {
-    if (e.kind === 'stop') { onJob = true; return `<h3 class="flog__phase">${esc(e.text.split('. ')[0])}${e.place ? ` · ${esc(e.place)}` : e.held ? ' · the night' : ''}</h3><p class="flog__beat">${esc(e.text.split('. ').slice(1).join('. '))}</p>`; } // a trail's stop (core/trail.js)
+    if (e.kind === 'stop') { onJob = true; return `<h3 class="flog__phase">${esc(e.text.split('. ')[0])}${e.place ? ` · ${esc(e.place)}` : e.held ? ' · the night' : ''}</h3><p class="flog__beat">${esc(e.text.split('. ').slice(1).join('. '))}</p>`; } // a multi-map job's stop (core/multimap.js)
     let head = '';
     if (zoned) head = e.kind === 'beat' && e.first ? '<h3 class="flog__phase">Getting there</h3>' : '';
     else if (e.kind === 'beat' && e.first) head = '<h3 class="flog__phase">Approach</h3>';

@@ -17,8 +17,11 @@ const { importSave } = await import('../src/save/save.js');
 // seed 2 to 296k with four new fight jobs on 2026-11-15, while ten seeds averaged 265k). Since 2026-11-15 the test plays SEEDS
 // and holds their AVERAGE under SAVE_BUDGET and every one under SAVE_CEILING. Measured 2026-11-15, seeds 1-5: 251k, 296k, 311k,
 // 269k, 242k (average 274k; main before the four jobs: 248k). Back to 270k the same day once reports stored fight lines lean
-// (core/report.js reportEvent): seeds 1-5 then 239k, 265k, 262k, 254k, 242k (average 252k).
-const SAVE_BUDGET = 270_000;
+// (core/report.js reportEvent): seeds 1-5 then 239k, 265k, 262k, 254k, 242k (average 252k). 290k since 2026-11-23 (owner):
+// the first multi-map jobs from their own clients (Lau, Kwan) carry two extra crises a report, about twice a usual report,
+// and come up often; seeds 1-5 then 246k, 295k, 295k, 259k, 294k (average 278k; main before them 249k). The save is bounded
+// by REPORT_LOGS_KEPT full logs (core/report.js), not by how long the game runs, nor by how many jobs exist.
+const SAVE_BUDGET = 290_000;
 const SAVE_CEILING = 350_000;
 const SEEDS = [1, 2, 3, 4, 5];
 

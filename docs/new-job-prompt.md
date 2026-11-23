@@ -124,9 +124,10 @@ CLIENTS (local powers a small crew can reach, below the corps):
 - Smaller recurring clients inside institutions (2026-11-22): their trust is their own,
   never their employer's protection. Association (the Basin): Hui Lai-sum (community
   services), Yip Ka-chun (racing integrity), Chan Wing-kei (licensing and commercial
-  protection). Lau Ching-yee (Morrow & Venn marine claims surveyor); Dr. Choi Pui-ling
-  (Veridian-Apex neural-device aftercare); Mok Wai-lun (Hoi-Sing restoration
-  coordinator, Old Town); Kwan Yiu-kit (AHL subcontractor accounts, Docks); Lui Shuk-ping
+  protection). Lau Ching-yee (Morrow & Venn marine claims surveyor; calls with work);
+  Dr. Choi Pui-ling (Veridian-Apex neural-device aftercare); Mok Wai-lun (Hoi-Sing
+  restoration coordinator, Old Town); Kwan Yiu-kit (AHL subcontractor accounts, Docks;
+  calls with work); Lui Shuk-ping
   (Red Lanterns freight-yard steward; no tribute or grudge cancelled); Inspector Cheuk
   Tak-fai (Wet Sleeve, 4th Precinct; corrupt, dislikes some corruption; no immunity, no
   raid call-offs). Judge the request, not the employer.
@@ -386,7 +387,7 @@ round. Three waves at most; a fight job is threat 3 or more.
 
 PITCH
 Client: [Auntie Fung / Mr. Szeto / the Ferryman / Madam Rao / Ruth Okonkwo / Doc Siu /
-Mrs. Ip / walk-in]
+Mrs. Ip / Forewoman Tse / Lau Ching-yee / Kwan Yiu-kit / walk-in]
 District: [Old Town / the Docks / the Night Market / Glass Heights / the Basin]
 Tier: [rookie / threat 2 / 3 / 4 / 5] [routine: yes / no]
 Idea: [one or two sentences: what the client wants and what makes it interesting]
@@ -398,7 +399,7 @@ Maps: [no / yes: the places the crew goes before the finale, and whether the rou
 
 - Runs `node scripts/check-job.mjs <file>` on it first (`core/jobcheck.js`): errors (a crisis with no way out, an unknown token like `{fung}`, a retired name, a clashing id) get fixed; warnings (difficulty or pay outside the tier, long lines, a role named but not required) get a look.
 - Saves it as `src/data/missions/<name>.js`, imports it in `src/data/missions.js` and adds it to `MISSIONS`.
-- Adds its id to the client's `jobs` in `src/data/clients.js`. Walk-in jobs need no client; Doc Siu's and Mrs. Ip's are rookie work, offered by Auntie Fung or as walk-ins.
+- Adds its id to the client's `jobs` in `src/data/clients.js` (ids: `fung`, `szeto`, `ferryman`, `rao`, `okonkwo`, `ip`, `tse`, `lau`, `kwan`). Walk-in jobs need no client; Doc Siu's and Mrs. Ip's are rookie work, offered by Auntie Fung or as walk-ins.
 - Runs the tests: `core/validate.js` checks every crisis has an exit and every choice has its lines.
 - Routine work (`routine: true`): the checker warns if it's past threat 2, a crew of 2 or 2 days. Until the board treats routine work specially, it is offered like any other job of its tier.
 - A fight job (the `/* FIGHT */` block): adds the job to `FIGHT_JOBS`, its `opposition` to the job, and its waves to `FIGHT_RECIPES` in `src/data/fights.js` (the format: `docs/fight-recipe-template.md`), then runs the fight sims before and after. That is a balance change, so it takes a stronger model than Sonnet and gets a DESIGN.md row.
