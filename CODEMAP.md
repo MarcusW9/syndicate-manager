@@ -58,7 +58,7 @@ How battles work (both engines, every number, the death rule): `docs/BATTLES.md`
   - `development.js` `promoteVeteran` (pro to veteran at `VETERAN_AT`) is called in `finish()` beside graduation. Fame's payoffs (slice 4): named offers in `jobs.js` (`nameAnOffer` from `tickJobs`, `namedBonus` in `finish()`), the fame pay ask in `fame.js` `fameRaise` (through `renewals.js` `postPayAsk`), better leads in `recruits.js` `recruitQualities`; their rolls are hashes (`rng.js` `hash`/`hashRng`), so no other roll moves.
 - World:
   - `heat.js` (heat per district: `heatIn`, `addHeat`, `coolHeat`, `hottest`, `watchedIn`; `state.heat` is the hottest)
-  - `jobs.js` (board, offers; the board grows with the roster, `arrivalsPerWeek`/`maxOffers`, and each offer rolls its days, `daysRange`, pay +`EXTRA_DAY_PAY` a day; `scripts/sim-tong.mjs` measures a player running every crew)
+  - `jobs.js` (board, offers; the board grows with the roster, `arrivalsPerWeek`/`maxOffers`, and each offer rolls its days, `daysRange`, pay +`EXTRA_DAY_PAY` a day; a job with a `trail` is dealt `TRAIL_WEIGHT` times as often as a client's other jobs, 2026-11-23; `scripts/sim-tong.mjs` measures a player running every crew)
   - `clients.js`
   - `heat.js`
   - `rumours.js`
