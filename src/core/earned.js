@@ -91,7 +91,7 @@ export function earn(state, op, id, extra = {}) {
   const def = EARNED_TRAITS[id];
   if (def.kind === 'temporary') {
     const temps = (op.earned ?? []).filter((e) => EARNED_TRAITS[e.id].kind === 'temporary');
-    if (temps.length >= MAX_TEMPORARY) fade(state, op, temps[0], 'makes room');
+    if (temps.length >= MAX_TEMPORARY) fade(state, op, temps[0], 'makes room', id);
   }
   const entry = { id, day: state.day, ...extra };
   op.earned = [...(op.earned ?? []), entry];
@@ -150,16 +150,24 @@ function becomeHothead(state, op) {
   });
 }
 
-/** A trait fades. Mutates the (cloned) state. */
-export function fade(state, op, entry, why = '') {
+/**
+ * A trait fades. Its note joins the day's crew updates (owner, 2026-11-23), and says why: the reason
+ * it passed, or (making room) which newer trait pushed it out. Mutates the (cloned) state.
+ */
+export function fade(state, op, entry, why = '', newId = null) {
   op.earned = (op.earned ?? []).filter((e) => e !== entry);
   const name = EARNED_TRAITS[entry.id].name;
   op.history.push(`Day ${state.day}: no longer ${name}${why ? ` (${why})` : ''}.`);
-  state.inbox.unshift({
-    id: `faded-${op.id}-${entry.id}-${state.day}`, type: 'crew', day: state.day,
-    subject: `${op.handle}: no longer ${name}`,
-    body: why === 'makes room' ? `Something newer has taken its place.` : `That's passed. ${op.handle} is back to their usual self on that front.`,
-    blocking: false, read: false,
+  const about = entry.district ? ` (${districtText(entry.district)})` : entry.client ? ` (${clientName(entry.client)})` : '';
+  const body = why === 'makes room' && newId
+    ? `${op.handle} carries two passing traits at most, and ${EARNED_TRAITS[newId].name} has pushed out ${name}, the older one.`
+    : why ? `${op.handle} is back to their usual self on that front: ${why}.`
+      : `That's passed. ${op.handle} is back to their usual self on that front.`;
+  crewNote(state, {
+    key: `faded:${entry.id}:${op.id}:${entry.district ?? entry.client ?? entry.partner ?? ''}`,
+    who: [op.id],
+    subject: `${op.handle}: no longer ${name}${about}`,
+    body,
   });
 }
 
