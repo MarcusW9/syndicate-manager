@@ -26,8 +26,9 @@ test('every {slot} in job text is a role, a district slot or a cast line that ex
     for (const t of texts(m)) {
       for (const [, key, sub] of t.matchAll(/\{(\w+)(?::(\w+))?\}/g)) {
         if (ROLES.includes(key) || key === 'district' || key === 'faction') { assert.equal(sub, undefined, `${m.id}: ${key}:${sub}`); continue; }
-        // The engine fills these two from the run's rival tong (core/rivals.js rivalForJob), in the twist pool only (C2).
-        if ((key === 'rivalTong' || key === 'rival') && m.id === 'twists') { assert.equal(sub, undefined); continue; }
+        // The engine fills these from the run's rival tong (core/rivals.js rivalForJob, C2) and the job's
+        // target gang (ambushers, 2026-11-23), in the twist pool only.
+        if ((key === 'rivalTong' || key === 'rival' || key === 'ambushers') && m.id === 'twists') { assert.equal(sub, undefined); continue; }
         assert.ok(CAST[key], `${m.id}: unknown slot {${key}} in "${t}"`);
         if (sub) assert.ok(CAST[key].lines?.[sub]?.length, `${m.id}: ${key} has no "${sub}" lines`);
       }
@@ -73,6 +74,14 @@ test('the after-action message is a timeline: each crisis in order, then the out
     for (const o of outcome) assert.ok(['good', 'bad', 'warn', 'plain', 'milestone'].includes(o.tone), `seed ${seed}: tone ${o.tone}`);
     assert.equal(msg.body, [...steps, ...outcome.map((o) => o.text)].join(' '), `seed ${seed}: preview text matches`);
   }
+});
+
+test("an 'Ambush at the drop' twist names the gang the job hurts, or nameless toughs", () => {
+  const s = createNewGame({ seed: 2, startCrew: 'fresh' });
+  const text = TWISTS.find((t) => t.name === 'Ambush at the drop').text;
+  assert.match(M.fill(text, s, { templateId: 'house_advantage', step: 0, jobId: 'x', crewIds: [] }), /^Silver Fan collectors are waiting/);
+  const other = MISSIONS.find((m) => !m.against);
+  assert.match(M.fill(text, s, { templateId: other.id, step: 0, jobId: 'x', crewIds: [] }), /^A few street toughs are waiting/);
 });
 
 test('briefs fill their cast and district slots before a crew is picked', () => {

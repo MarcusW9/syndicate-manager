@@ -27,20 +27,24 @@ export const TWISTS = [
     ],
   },
   {
-    id: 'twist_double_cross',
+    id: 'twist_double_cross', // old id kept so saves with this twist on a job need no migration
     situations: ['threat', 'fight'],
-    name: 'Double-cross',
-    text: 'At the handover, the client\'s people try to take everything without paying. Hands are already inside jackets.',
+    // Was "Double-cross" (the client's own people at the handover); changed 2026-11-23: clients come
+    // back, and nothing followed a betrayal. {ambushers} is the gang the job hurts (its `against`,
+    // data/gangs.js `who`), or "a few street toughs" on a job against no gang (core/mission.js fill).
+    name: 'Ambush at the drop',
+    abortWord: '{client} hears the goods were taken on the way to the handover, and doesn\'t blame the crew.',
+    text: '{ambushers} are waiting on the way to the handover. Word of the job got out, and they want what the crew is carrying. Hands are already inside jackets.',
     choices: [
-      { id: 'talk', label: '{face} reminds them who they\'re dealing with', kind: 'adapt', stat: 'social', difficulty: 13,
-        success: 'A calm voice and a long stare. They decide to pay after all.', failure: 'They laugh. Then the shoving starts.', failureInjury: 'light', failureCost: { payCut: 0.5 },
-        report: { success: '{face} reminded the client\'s people who they were dealing with. After a long stare, they produced the agreed payment.', failure: 'The client\'s people laughed at {face}\'s warning. The handover became a fight, someone was hurt, and half the payment was lost. Pay -50%.' } },
+      { id: 'talk', label: '{face} tells them who they\'re dealing with', kind: 'adapt', stat: 'social', difficulty: 13,
+        success: 'A calm voice and a long stare. They decide the goods aren\'t worth it.', failure: 'They laugh. Then the shoving starts.', failureInjury: 'light', failureCost: { payCut: 0.5 },
+        report: { success: '{ambushers} were waiting on the way to the handover. {face} told them who they were dealing with, and after a long stare they stepped aside.', failure: '{ambushers} were waiting on the way to the handover and laughed at {face}\'s warning. It became a fight, someone was hurt, and half the goods were lost. Pay -50%.' } },
       { id: 'force', label: '{muscle} makes the first move', kind: 'push', stat: 'combat', difficulty: 13, cost: { heat: 1 },
-        success: 'Over in seconds. You leave with the goods and the money.', failure: 'They were ready for it.', failureInjury: 'serious',
-        report: { success: '{muscle} moved before the client\'s people could draw. The confrontation ended quickly, and the crew left with the goods and payment. Heat +1.', failure: '{muscle} made the first move, but the client\'s people were ready. Someone was badly hurt in the confrontation. Heat +1.' } },
-      { id: 'abort', label: 'Abort: hand it over and leave', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1 },
-        success: 'You walk away with nothing. The crew will remember who did this.', failure: '', failureInjury: 'none',
-        report: { success: 'The crew handed over the goods rather than risk a fight. They walked away safely, but received no payment.' } },
+        success: 'Over in seconds. The crew walks on to the handover with the goods.', failure: 'They were ready for it.', failureInjury: 'serious',
+        report: { success: '{ambushers} were waiting on the way to the handover. {muscle} moved before they could draw, and the crew delivered the goods. Heat +1.', failure: '{ambushers} were waiting on the way to the handover. {muscle} made the first move, but they were ready, and someone was badly hurt. Heat +1.' } },
+      { id: 'abort', label: 'Abort: drop the goods and go', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1 },
+        success: 'You set the bag down and back away. Nobody follows.', failure: '', failureInjury: 'none',
+        report: { success: '{ambushers} were waiting on the way to the handover. The crew dropped the goods rather than risk a fight and walked away safely, with no payment.' } },
     ],
   },
   {

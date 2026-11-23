@@ -10,7 +10,8 @@ import { CAST } from '../src/data/cast.js';
 
 const ROLES = ['driver', 'tech', 'face', 'muscle', 'medic', 'infiltrator'];
 // rivalTong and rival: the other tong a 'Rival crew' twist names (core/rivals.js rivalForJob, C2); filled by mission.js fill.
-const SLOTS = new Set(['op', 'district', 'faction', 'rivalTong', 'rival', ...ROLES, ...Object.keys(CAST)]);
+// ambushers: the job's target gang in 'Ambush at the drop' (2026-11-23).
+const SLOTS = new Set(['op', 'district', 'faction', 'rivalTong', 'rival', 'ambushers', ...ROLES, ...Object.keys(CAST)]);
 
 /** Every choice needs a success line; a choice that can fail needs a failure line too. */
 const missing = (crises) => crises.flatMap((c) => c.choices.flatMap((ch) => [

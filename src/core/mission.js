@@ -98,6 +98,11 @@ export function fill(text, state, am) {
     // The other tong a 'Rival crew' twist names (core/rivals.js rivalForJob); anonymous in a save without rivals.
     if (key === 'rivalTong') return am.rival?.tong ?? (offset === 0 || /[.!?:]["']?\s+$/.test(whole.slice(0, offset)) ? 'Another crew' : 'another crew');
     if (key === 'rival') return am.rival?.name ?? 'one of their people';
+    // Who an 'Ambush at the drop' twist meets: the gang the job hurts (its `against`), else a few nameless toughs.
+    if (key === 'ambushers') {
+      const who = GANGS[templateById(am.templateId)?.against]?.who ?? 'a few street toughs';
+      return offset === 0 || /[.!?:]["']?\s+$/.test(whole.slice(0, offset)) ? who[0].toUpperCase() + who.slice(1) : who;
+    }
     const op = key === 'op' ? opById(state, am.focusOp) : crew.find((o) => o.role === key);
     if (op) return op.handle;
     const startsSentence = offset === 0 || /[.!?:]["']?\s+$/.test(whole.slice(0, offset));
@@ -1154,7 +1159,7 @@ function finish(state) {
     ...legendLines,
     ...promotedOps.map((o) => ({ tone: 'good', text: `${o.handle} is a veteran now.` })),
     ...patched.map((p) => ({ tone: 'good', text: `${p.medic.handle} patched up ${p.patient.handle} (Clinic Hands): back a day sooner.` })),
-    ...(client && am.abortedOnTwist && twistById(am.twist)?.abortWord ? [{ tone: 'plain', text: twistById(am.twist).abortWord.replace('{client}', client.name) }] : []),
+    ...(client && am.abortedOnTwist && twistById(am.twist)?.abortWord ? [{ tone: 'plain', text: fill(twistById(am.twist).abortWord.replace('{client}', client.name), state, am) }] : []),
     ...(client && trustChange ? [{ tone: trustChange > 0 ? 'good' : 'bad', text: `${client.name} ${trustChange > 0 ? 'thinks more of you' : 'is unhappy with you'} (trust ${trustChange > 0 ? '+' : ''}${trustChange}).` }] : []),
     ...(opened ? [opened] : []),
     ...heistLines,
