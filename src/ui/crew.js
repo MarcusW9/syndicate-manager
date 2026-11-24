@@ -106,11 +106,21 @@ export function renderCrew() {
   const recruits = state.recruits ?? [];
   const tab = ['roster', 'leads', 'wall'].includes(V.crewTab) ? V.crewTab : 'roster';
   // Roster filter (owner, 2026-11-17): everyone, only those who can go out now, or only those who can't.
-  const filter = ['ready', 'out'].includes(V.crewFilter) ? V.crewFilter : 'all';
-  const shown = state.crew.filter((op) => filter === 'all' || availability(state, op).ok === (filter === 'ready'));
-  const readyN = state.crew.filter((op) => availability(state, op).ok).length;
+  // 2026-11-24 (owner): also who has a level-up waiting, and who is Renowned (fame is off the card, as in
+  // Football Manager's squad list; it is on the runner's page). Level-ups come first in every view.
+  const FILTERS = {
+    all: () => true,
+    levelup: (op) => levelUpOpen(op),
+    ready: (op) => availability(state, op).ok,
+    out: (op) => !availability(state, op).ok,
+    renowned: (op) => fameOf(op) === 'elite',
+  };
+  const filter = FILTERS[V.crewFilter] ? V.crewFilter : 'all';
+  const lvlFirst = (list) => [...list.filter(levelUpOpen), ...list.filter((op) => !levelUpOpen(op))];
+  const shown = lvlFirst(state.crew.filter(FILTERS[filter]));
+  const count = (id) => state.crew.filter(FILTERS[id]).length;
   // A drop menu of our own, not a <select> (owner, 2026-11-18: the system picker broke the look). Phones get it as a sheet from the bottom; wider screens under the button (styles.css).
-  const opts = [['all', 'All', state.crew.length], ['ready', 'Ready', readyN], ['out', 'Away or hurt', state.crew.length - readyN]];
+  const opts = [['all', 'All'], ['levelup', 'Level up waiting'], ['ready', 'Ready'], ['out', 'Away or hurt'], ['renowned', fameName('elite')]].map(([id, label]) => [id, label, count(id)]);
   const [, curLabel, curN] = opts.find(([id]) => id === filter);
   const chips = `<span class="crewfilter__label" id="crewfilter-label">Show</span>
       <button class="crewfilter__btn" data-action="crew-filter-open" aria-haspopup="listbox" aria-expanded="${!!V.crewFilterOpen}" aria-labelledby="crewfilter-label crewfilter-now"><span id="crewfilter-now">${curLabel} (${curN})</span><span class="crewfilter__arrow" aria-hidden="true"></span></button>`;
@@ -131,8 +141,8 @@ export function renderCrew() {
               <button class="crewrow__open" data-action="open-op" data-id="${esc(op.id)}" aria-label="${esc(`${op.name} "${op.handle}": open their page`)}"></button>
               ${rowFace(op)}
               <span class="crewrow__name"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"</span>
-              <span class="crewrow__info muted">${fameOf(op) === 'elite' ? `<span class="fame fame--elite">${esc(fameName('elite'))}</span> · ` : ''}${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age}</span>
-              <span class="crewrow__status">${statusChip(availability(state, op))}</span>
+              <span class="crewrow__info muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age}</span>
+              <span class="crewrow__status">${statusChip(availability(state, op), { short: true })}</span>
               <span class="crewrow__scout">${statStrip(op)}</span>
               <span class="crewrow__bars">${conditionBars(op)}</span>
             </div>
@@ -297,17 +307,17 @@ function renderPath(op) {
   const pct = (n) => Math.round(n * 100);
   const meter = (label, n) => `<div class="meter pathbar"><span class="meter__label">${label}</span><span class="meter__track"><span class="meter__fill" style="width:${pct(n)}%"></span></span><span class="meter__value">${pct(n)}%</span></div>`;
   const e = FAME_RULES.elite;
-  const numbers = p.conditions.map((c) => `${c.label}: ${c.value} (Elite ${c.elite}, Legend ${c.legend})`).join('; ');
+  const numbers = p.conditions.map((c) => `${c.label}: ${c.value} (Renowned ${c.elite}, Legend ${c.legend})`).join('; ');
   const todo = legend.checks.filter((x) => !x.met).map((x) => x.label);
   const info = `Their path is the one their record is furthest along. ${p.name}: ${numbers}. `
-    + (elite ? '' : `Elite also needs ${e.activeWeeks} active weeks, ${e.atLevel} jobs at their level and standing ${e.standing} (how the street rates them now: good work at their level raises it, the bench wears it down). `)
+    + (elite ? '' : `Renowned also needs ${e.activeWeeks} active weeks, ${e.atLevel} jobs at their level and standing ${e.standing} (how the street rates them now: good work at their level raises it, the bench wears it down). `)
     + (legend.ready ? 'They meet every Legend condition.' : `Still to come for Legend: ${todo.join(', ')}.`)
     + ' Fame never changes a roll, pay or heat.';
   return `<h2>Path</h2>
     <div class="riskcard pathcard">
       <div class="infoline"><p><strong class="pathcard__name">${esc(p.name)}</strong> <span class="muted small">${esc(p.line)}</span></p>${infoButton(`path-${op.id}`, `About ${op.handle}'s path`)}</div>
       ${infoText(`path-${op.id}`, info)}
-      ${elite ? '' : meter('To Elite', p.toElite)}
+      ${elite ? '' : meter('To Renowned', p.toElite)}
       ${meter('To Legend', p.toLegend)}
       ${op.legend ? `<p class="pathcard__ready">A Legend since day ${op.legend.day}.</p>` : legend.ready ? `<p class="pathcard__ready">${op.legendCall?.offerId ? 'The city is asking: their defining job is up.' : 'Ready for their moment.'}</p>` : ''}
       ${elite ? `<p class="muted small">Standing ${standingOf(op)}: ${esc(standingWord(op))}.</p>` : ''}

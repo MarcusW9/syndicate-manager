@@ -591,7 +591,9 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .minibar--morale .minibar__track span { background: var(--accent-2); }
 /* Crew row: name and codename on one line; the status chip sits beside the short role line
    and the bars beside the scout line, so a long status never makes one card taller. */
-.crewrow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "face name name" "face info status" "face scout bars"; column-gap: 12px; row-gap: 2px; align-items: center; }
+/* 2026-11-24 (owner): the status sits above the bars, so the name and role line have the full width. */
+.crewrow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "face name name" "face info info" "face scout status" "face scout bars"; column-gap: 12px; row-gap: 2px; align-items: center; }
+.crewrow__status { align-self: end; }
 .crewrow > .face { grid-area: face; align-self: center; }
 /* Level-up tab on the portrait (2026-11-23): the "ready" green, cut corner like the panels. */
 .crewrow__face { grid-area: face; align-self: center; position: relative; display: block; line-height: 0; }

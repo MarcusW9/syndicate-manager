@@ -96,7 +96,7 @@ export function legendProgress(op) {
   const lifer = paths.find((p) => p.id === 'lifer');
   const pathMet = paths.find((p) => p.legendMet) ?? null;
   const checks = [
-    { label: 'Elite', met: fameOf(op) === 'elite' },
+    { label: 'Renowned', met: fameOf(op) === 'elite' },
     { label: 'a veteran', met: op.tier === l.tier },
     { label: `${l.activeWeeks} active weeks`, met: r.activeWeeks >= l.activeWeeks },
     { label: `${l.atLevel} jobs at their level`, met: r.atLevel >= l.atLevel || lifer.legendMet },
@@ -129,7 +129,7 @@ function stepFame(state, op) {
   op.history.push(`Day ${state.day}: ${fill(back ? FAME_HISTORY.eliteBack : FAME_HISTORY.elite, vars)}`);
   if (r) {
     r.lowWeeks = 0;
-    if (!back) addHighlight(r, { id: 'elite', day: state.day, text: `${op.handle} became Elite: a ${path.name}.`, weight: ELITE_HIGHLIGHT_WEIGHT });
+    if (!back) addHighlight(r, { id: 'elite', day: state.day, text: `${op.handle} became Renowned: a ${path.name}.`, weight: ELITE_HIGHLIGHT_WEIGHT });
   }
   state.inbox.unshift({
     id: `elite-${op.id}-${state.day}`, type: 'crew', day: state.day,
@@ -191,7 +191,7 @@ export function afterJobFame(state, people, { outcome, facts, milestones, retrea
     op.fame = fameOf(op);
     op.standing = clampStanding(standingOf(op) + jobStanding({ outcome, atLevel: f.atLevel, carries: f.carries, milestones: earned, retreat, seriousInjury: hurt }));
     const rose = stepFame(state, op);
-    if (rose === 'elite') lines.push({ opId: op.id, fame: rose, text: `${op.handle} is Elite now (${(elitePath(op) ?? pathOf(op)).name}).` });
+    if (rose === 'elite') lines.push({ opId: op.id, fame: rose, text: `${op.handle} is Renowned now (${(elitePath(op) ?? pathOf(op)).name}).` });
   }
   return lines;
 }

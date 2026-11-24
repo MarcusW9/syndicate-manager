@@ -20,14 +20,14 @@ for (const seed of workerData.seeds) {
   for (const m of state.inbox) if (!sent.has(m.id)) sent.set(m.id, m);
   const all = [...sent.values()];
   const firsts = (what) => state.crew.flatMap((op) => op.history.map((h) => dayIn(h, what)).filter((d) => d != null));
-  const eliteDays = firsts('Elite \\(');
+  const eliteDays = firsts('Renowned \\(');
   const vetDays = firsts('became a veteran');
   out.push({
     seed, deaths,
     firstElite: eliteDays.length ? weekOf(Math.min(...eliteDays)) : null,
     elitesAtEnd: state.crew.filter((o) => o.fame === 'elite').length,
-    elitesBy52: state.crew.filter((o) => o.history.some((h) => { const d = dayIn(h, 'Elite \\('); return d != null && d <= 52 * 7; })).length,
-    lapses: state.crew.reduce((n, o) => n + o.history.filter((h) => h.includes('lost Elite')).length, 0),
+    elitesBy52: state.crew.filter((o) => o.history.some((h) => { const d = dayIn(h, 'Renowned \\('); return d != null && d <= 52 * 7; })).length,
+    lapses: state.crew.reduce((n, o) => n + o.history.filter((h) => h.includes('no longer Renowned')).length, 0),
     firstVeteran: vetDays.length ? weekOf(Math.min(...vetDays)) : null,
     veterans: state.crew.filter((o) => o.tier === 'veteran').length,
     cash: state.cash,

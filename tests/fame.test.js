@@ -66,7 +66,7 @@ test('becoming Elite sends a message, writes history and a highlight', () => {
   weeklyFame(s);
   assert.equal(a.fame, 'elite');
   assert.ok(s.inbox.some((m) => m.id.startsWith(`elite-${a.id}`) && m.subject.includes(a.handle)));
-  assert.ok(a.history.some((h) => h.includes('Elite (Ghost)')));
+  assert.ok(a.history.some((h) => h.includes('Renowned (Ghost)')));
   assert.equal(a.record.highlights[0].weight, 80);
 });
 
@@ -85,12 +85,12 @@ test('Elite lapses only after two Sundays in a row under 20, and can be won back
   assert.equal(op().fame, 'respected');
   assert.equal(op().record.wasElite, true);
   assert.ok(s.inbox.some((m) => m.id.startsWith(`elite-lost-${id}`)));
-  assert.ok(op().history.some((h) => h.includes('lost Elite')));
+  assert.ok(op().history.some((h) => h.includes('no longer Renowned')));
   // Back in the work and rated again: Elite returns, with its own message.
   op().standing = 70; op().record.lastJobDay = s.day + 3;
   s = toSunday(s);
   assert.equal(op().fame, 'elite');
-  assert.ok(s.inbox.some((m) => m.subject.includes('Elite again')));
+  assert.ok(s.inbox.some((m) => m.subject.includes('Renowned again')));
 });
 
 test('standing: each change as specified', () => {
