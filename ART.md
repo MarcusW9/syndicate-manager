@@ -181,15 +181,15 @@ A gun **only glows when something on it lights up** (marked `glows: true` in the
 
 The crew's bootleg AI (`WORLD.md`, "Joss"). They/them.
 
-- **Current design:** a **cracked second-hand handset**: dark body `#1b1f28` with a cyan outline `#36d6c3`, a screen `#0f2a2c` with a hairline crack across one corner, a strip of sodium-yellow tape across the lower left, a bent antenna top right with a pink-red light that breathes (`#ff4f7b`), a round home button.
+- **Current design:** the **Old Town Lantern**, Joss's on-screen avatar. A round Chinese paper lantern in warm vermilion, with amber-lit ribs, a strip of yellow repair tape, and a cable tassel. The face stays cyan against a dark centre. The larger drawing (`jossIcon`, 64 px and up) adds a soft warm halo and two extra ribs; the 32 px badge leaves them out. This is how Joss appears on comms, not a change to the handset and salvaged relay boards they run on.
 - **Face on the screen:** cyan strokes (2.4 wide, round caps): two short eye strokes and a mouth. Four moods:
   - **neutral:** straight eyes, flat mouth.
   - **happy:** arched eyes, smile (quiet days, first day).
   - **worried:** brows angled up, frown (bills short, broke, crew hurt).
   - **smug:** one eye squinting, crooked smile (Sunday, bills paid).
 - **Frame on Today:** a hexagon "comms channel" badge with a cyan tint, labelled "JOSS · ONLINE".
-- **Motion:** blinks every 6 seconds; antenna light breathes every 3; both stop for reduced motion.
-- **Still open:** the final design. The owner hasn't committed yet; options tested were the handset, a round droid and a relay box. Any redesign should stay specific to the canon (the cracked handset and salvaged relay boards under the safehouse sink), not a generic robot.
+- **Motion:** blinks every 6 seconds; the light at the end of the cable breathes every 3; both stop for reduced motion.
+- **Earlier looks:** the handset, round droid and relay box remain in `jossIcon` for comparison.
 
 ---
 
@@ -264,7 +264,7 @@ the cheek / gauze across the brow].
 - **Madam Rao:** Night Market moneylender in a silk shop. Medium brown skin, black hair pulled back, gold earrings, a saffron-and-crimson silk sari border at the shoulder. Sodium-yellow light. Expression: a warm smile that's the dangerous part.
 - **Ruth Okonkwo:** off-books broker for Aether-Harbour. Deep brown skin, short natural hair, grey suit, plain earrings. Violet light. Expression: flat, watchful, gives nothing away. Chrome: a thin circuit line at the temple.
 - **Doc Siu:** ex-hospital surgeon, unlicensed clinic under Tenement Block 9. Light olive skin, hair scraped back, a cigarette, surgical mask pulled under the chin. Cyan light. Expression: dry, unimpressed.
-- **Joss:** not a face. A cracked second-hand smartphone with tape on one corner and a bent antenna, a simple line-drawn face glowing cyan on its screen, dark background, the same flat-vector style.
+- **Joss:** a round vermilion Chinese paper lantern with amber ribs and a wire tassel, a strip of repair tape, and a simple cyan face against a dark centre. Warm light comes through the paper.
 
 ### 3. For an illustrator (commissioning a parts kit)
 
@@ -291,4 +291,4 @@ the cheek / gauze across the brow].
 >
 > **Must:** work on every skin tone from very light to very deep; adult proportions (all characters are 18+); no "tribal" tattoo designs; readable at 48px.
 >
-> **Also wanted, separately:** finished portraits of 6 named characters (see "Named cast" in ART.md), and Joss, the crew's AI, drawn as a cracked handset.
+> **Also wanted, separately:** finished portraits of 6 named characters (see "Named cast" in ART.md), and Joss, the crew's AI, drawn as the warm Old Town Lantern.
