@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Today on a tablet: mockups (2026-11-24)</title>
+<style>
+:root{--bg:#0a0c0f;--panel:#12151b;--panel-2:#161a21;--line:#2a303b;--text:#e9ecf1;--muted:#8a93a6;--accent:#ff3d5f;--accent-2:#3de8d8;--warn:#f2d541;--danger:#ff4a4a;--display:'Rajdhani','Barlow Condensed','Arial Narrow',system-ui,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:#050607;color:var(--text);font:15px/1.35 system-ui,-apple-system,sans-serif;padding:24px}
+h1.page{font:700 22px var(--display);letter-spacing:.08em;margin:0 0 6px}
+.note{color:var(--muted);max-width:1000px;margin:0 0 28px}
+.frame{width:1000px;height:690px;background:var(--bg);border:1px solid #333;display:grid;grid-template-rows:64px 1fr;overflow:hidden;position:relative;margin-bottom:10px}
+.cap{max-width:1000px;margin:0 0 40px;color:#c9ced8}.cap b{color:var(--accent-2);font-family:var(--display);letter-spacing:.1em}
+.top{display:flex;align-items:center;gap:20px;padding:0 16px;border-bottom:1px solid var(--line)}
+.when{font:700 17px var(--display);letter-spacing:.1em}.when small{display:block;font-size:10px;color:var(--muted);letter-spacing:.12em}
+.cash{font:600 15px var(--display);margin-left:auto}.cash i{font-style:normal;color:var(--muted);font-size:10px;letter-spacing:.12em;margin-right:6px}
+.heat{border:1px solid var(--warn);color:var(--warn);font:700 12px var(--display);letter-spacing:.14em;padding:8px 10px}
+.cont{margin-left:auto;background:var(--accent);color:#fff;font:700 15px var(--display);letter-spacing:.12em;padding:6px 16px;clip-path:polygon(0 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%)}
+.cont small{display:block;font-size:10px;font-weight:600}
+.body{display:grid;min-height:0}
+.rail{border-right:1px solid var(--line);display:flex;flex-direction:column;padding-top:8px}
+.rail a{display:flex;align-items:center;gap:8px;min-height:48px;padding:0 18px;font:600 14px var(--display);letter-spacing:.12em;color:var(--muted);position:relative}
+.rail a.on{color:var(--text);box-shadow:inset 3px 0 0 var(--accent)}
+.rail .save{margin-top:auto;border-top:1px solid var(--line)}
+.pill{background:var(--accent-2);color:#000;font:700 11px var(--display);padding:0 5px}.pill.g{background:#333;color:#ddd}
+.rail--ico a{flex-direction:column;justify-content:center;gap:2px;padding:4px 2px;font-size:9.5px;letter-spacing:.04em;min-height:56px}
+.rail--ico .ico{width:22px;height:22px;border:1.6px solid currentColor;clip-path:polygon(0 0,75% 0,100% 25%,100% 100%,0 100%)}
+.rail--ico .pill{position:absolute;top:4px;right:8px;font-size:9px}
+.main{padding:14px;display:grid;gap:12px;min-height:0;overflow:hidden;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--line);padding:12px 14px;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%);position:relative}
+.panel::before{content:'';position:absolute;top:0;left:0;width:40px;height:2px;background:var(--accent-2)}
+h2{font:700 12px var(--display);letter-spacing:.16em;color:var(--accent-2);margin:0 0 8px}
+h3{font:700 20px var(--display);letter-spacing:.08em;margin:0 0 8px}
+.card{border:1px solid var(--line);border-left:3px solid var(--accent-2);padding:8px 10px;margin-bottom:8px;background:var(--panel-2);font-size:13px}
+.card.red{border-left-color:var(--danger)}.card.red b{color:var(--danger)}
+.card.yel{border:1px solid var(--warn);color:var(--warn);font:700 11px var(--display);letter-spacing:.1em;text-transform:uppercase}
+.card.cy{border:1px solid var(--accent-2)}
+.go{float:right;color:var(--accent-2);font:700 11px var(--display);letter-spacing:.14em}
+.joss{display:flex;gap:10px;align-items:center;margin-bottom:8px;font-size:13px}.joss .face{width:30px;height:30px;border:1.5px solid var(--accent-2);flex:none}
+.joss b{color:var(--accent-2);font:700 11px var(--display);letter-spacing:.16em;display:block}
+.chips{display:flex;gap:6px;margin:6px 0 8px}.chips span{flex:1;border:1px solid var(--line);text-align:center;font:700 11px var(--display);letter-spacing:.12em;padding:9px 0;color:var(--muted)}.chips .on{border-color:var(--accent-2);color:var(--accent-2);background:rgba(61,232,216,.08)}
+.row{display:grid;grid-template-columns:auto auto 1fr auto;gap:8px;align-items:center;border:1px solid var(--line);border-left:3px solid var(--accent-2);padding:7px 10px;margin-bottom:6px;font-size:13px;background:var(--panel-2)}
+.row .dot{width:6px;height:6px;background:var(--accent-2);transform:rotate(45deg)}
+.tag{border:1px solid var(--accent-2);color:var(--accent-2);font:700 10px var(--display);letter-spacing:.12em;padding:2px 6px}
+.tag.r{border-color:var(--danger);color:var(--danger)}.tag.p{border-color:#b48cff;color:#b48cff}
+.row p{margin:0;font-weight:600}.row p span{display:block;font-weight:400;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .d{color:var(--muted);font-size:11px;text-align:right}.row .d b{color:var(--text);display:block}
+.row.read{border-left-color:var(--line)}.row.read p{font-weight:400}
+.up{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:13px}.up b{display:block;font:700 12px var(--display);letter-spacing:.14em;color:var(--accent-2)}.up .t b{color:var(--accent)}.up i{color:var(--muted);font-style:normal}
+.wk{display:grid;grid-template-columns:repeat(4,1fr);font-size:11px;color:var(--muted);letter-spacing:.08em}.wk b{display:block;color:var(--text);font-size:15px}
+.word{border-left:2px solid var(--accent-2);padding-left:10px;margin-top:10px;font-size:13px}
+.status{display:flex;flex-direction:column;gap:0;font-size:13px}
+.status div{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);min-height:44px}
+.status div:last-child{border-bottom:0}.status .k{font:700 10px var(--display);letter-spacing:.14em;width:62px;flex:none}
+.status .go{margin-left:auto}
+.alerts{display:flex;align-items:center;gap:10px;border:1px solid var(--danger);background:rgba(255,74,74,.07);padding:0 10px;min-height:44px;margin-bottom:8px;font-size:13px}
+.alerts .n{background:var(--danger);color:#000;font:700 11px var(--display);padding:1px 6px}
+.alerts .more{margin-left:auto;color:var(--muted);font:700 11px var(--display);letter-spacing:.12em}
+.scrim{position:absolute;inset:64px 0 0 0;background:rgba(0,0,0,.55)}
+.drawer{position:absolute;top:64px;bottom:0;left:0;width:210px;background:#0d1014;border-right:1px solid var(--accent-2);display:flex;flex-direction:column;padding-top:8px;box-shadow:8px 0 30px rgba(0,0,0,.6)}
+.drawer a{display:flex;align-items:center;gap:12px;min-height:50px;padding:0 18px;font:600 14px var(--display);letter-spacing:.12em;color:var(--muted)}
+.drawer a.on{color:var(--text);box-shadow:inset 3px 0 0 var(--accent)}.drawer .ico{width:20px;height:20px;border:1.6px solid currentColor;clip-path:polygon(0 0,75% 0,100% 25%,100% 100%,0 100%)}
+.drawer .save{margin-top:auto;border-top:1px solid var(--line)}
+.burger{font:700 18px var(--display);color:var(--muted);min-height:48px;display:grid;place-items:center;border-bottom:1px solid var(--line);margin:-8px 0 4px}
+.fold{color:var(--muted);font:700 10px var(--display);letter-spacing:.14em;margin:4px 0 8px}
+.ann{position:absolute;background:var(--warn);color:#000;font:700 11px var(--display);letter-spacing:.06em;padding:3px 7px;border-radius:2px}
+</style></head><body>
+<h1 class="page">TODAY ON A TABLET · MOCKUPS</h1>
+<p class="note">iPad on its side (1000×690, your screenshot's size). Same day in every frame: a raid tomorrow, two hurt, a crew back, two crews out, 21 to do. Yellow tags are notes for us, not part of the design.</p>
+<div id="out"></div>
+<script>
+const topbar=`<div class="top"><div class="when">TUE · WK 28<small>¥6,750 DUE SUN</small></div><div class="cash" style="margin-left:40px"><i>CASH</i>¥44,470</div><div class="heat">HEAT NIGHT MARKET 3</div><div class="cont">CONTINUE → WED<small>19 UNREAD · 4 JOBS OPEN</small></div></div>`;
+const tabs=[['TODAY','21',''],['CITY','',''],['TONG','',''],['CREW','1',''],['JOBS','4','g']];
+const rail=`<nav class="rail">${tabs.map(([t,n,c],i)=>`<a class="${i?'':'on'}">${t} ${n?`<span class="pill ${c}">${n}</span>`:''}</a>`).join('')}<a class="save">SAVE</a></nav>`;
+const icoRail=(burger)=>`<nav class="rail rail--ico">${burger?'<div class="burger">☰</div>':''}${tabs.map(([t,n,c],i)=>`<a class="${i?'':'on'}"><span class="ico"></span>${t}${n?`<span class="pill ${c}">${n}</span>`:''}</a>`).join('')}<a class="save"><span class="ico"></span>SAVE</a></nav>`;
+const msgs=[['JOB','','New job: Shutter Watch','Auntie Fung has work for the tong'],['JOB','','Ruth Okonkwo has a favour to ask','Ruth Okonkwo could put us in touch'],['RUMOUR','p','Street talk: broker feud','Two data brokers are feuding over'],['RAID','r','The police are coming to Old Town','Wednesday. Hold the hall or clear out'],['REPORT','','Closing Stack completed','They\'re back safe, money in'],['CREW','p','Pigeon is hurt','Out for 4 days'],['JOB','','Last call: Still Clocked In','The offer ends Sunday']];
+const list=(n,read=0)=>`<div class="chips"><span>ALL</span><span class="on">TO DO (21)</span></div>`+msgs.slice(0,n).map((m,i)=>`<div class="row ${i>=n-read?'read':''}"><span class="dot"></span><span class="tag ${m[1]}">${m[0]}</span><p>${m[2]}<span>${m[3]}…</span></p><span class="d"><b>Mon</b>Day 190</span></div>`).join('');
+const raid=`<div class="card red"><span class="go">THREATS ›</span><b>Raid tomorrow · Police raid · Old Town hall</b><br><span style="color:var(--muted)">Wed · plan: hold the hall</span></div>`;
+const joss=(t)=>`<div class="joss"><span class="face"></span><div><b>JOSS · ONLINE</b>${t}</div></div>`;
+const hurt=`<div class="card yel">Sensor (hurt) and Pigeon (hurt) can't work today. The rest of us can cover ›</div>`;
+const back=`<div class="card cy"><span class="go">REPORT</span><b>Closing Stack ✓ <span style="color:var(--accent-2)">¥1,100</span></b><br><span style="color:var(--muted)">They're back safe, money in.</span></div>`;
+const out=`<div class="card"><span class="go">CITY ›</span>● 2 crews out</div>`;
+const upcoming=`<section class="panel"><h2>COMING UP</h2><div class="up"><div class="t"><b>TOMORROW</b>Raid on the Old Town hall<br><i>+4 more</i></div><div><b>SUN</b>Last day for Still Clocked In<br><i>+1 more</i></div><div><b>MON</b>New freelancers and street talk</div></div></section>`;
+const week=`<section class="panel"><h2>WEEK 28</h2><div class="wk"><div>CASH<b>¥44,470</b></div><div>DUE SUN<b>¥6,750</b></div><div>FREE<b>1/9</b></div><div>JOBS<b>4</b></div></div><div class="word"><b style="color:var(--accent-2);font:700 11px var(--display);letter-spacing:.16em">THE WORD</b><br>Nobody has seen Hook Hand on a job in a while.</div></section>`;
+const status=`<section class="panel"><h2>THE CREW TODAY</h2><div class="status">
+<div><span class="k" style="color:var(--accent-2)">BACK</span><span><b>Closing Stack</b> ✓ ¥1,100</span><span class="go">REPORT</span></div>
+<div><span class="k" style="color:var(--accent-2)">OUT</span><span>2 crews out · no calls</span><span class="go">CITY ›</span></div>
+<div><span class="k" style="color:var(--warn)">HURT</span><span>Sensor, Pigeon · rest of us cover</span><span class="go">CREW ›</span></div></div></section>`;
+const ann=(x,y,t)=>`<span class="ann" style="left:${x}px;top:${y}px">${t}</span>`;
+const F=[
+ {name:'NOW',body:`<div class="body" style="grid-template-columns:165px 1fr">${rail}<div class="main" style="grid-template-columns:310px 1fr"><section class="panel"><h3>TODAY</h3>${raid}${joss('We\'re short-handed today. We\'ll fi…')}${hurt}${back}${out}${list(2)}</section><div style="display:grid;gap:12px">${upcoming}${week}</div></div></div>`+ann(240,600,'messages start here, 75% down')+ann(700,470,'empty')+ann(10,400,'165px of words'),
+  cap:'<b>NOW.</b> The 200px word rail leaves the message column only ~310px wide, so every card above the list wraps to two or three lines. Six blocks sit above the list. The right half is half empty.'},
+ {name:'A',body:`<div class="body" style="grid-template-columns:68px 1fr">${icoRail()}<div class="main" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)"><section class="panel"><h3>TODAY</h3>${raid}${joss('We\'re short-handed today. We\'ll find a way.')}${hurt}${back}${out}${list(3)}</section><div style="display:grid;gap:12px">${upcoming}${week}</div></div></div>`+ann(80,610,'one more row, and nothing wraps'),
+  cap:'<b>A · ICON RAIL ONLY.</b> The phone-on-its-side rail (64px, icon over word) on tablets too, so below ~1100px wide. The list column grows ~130px so the cards above it are one or two lines, not three. Cheapest change; helps, but the stack above the list is still six deep, so a busy day still buries the messages.'},
+ {name:'B',body:`<div class="body" style="grid-template-columns:68px 1fr">${icoRail()}<div class="main" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)"><section class="panel"><h3>TODAY</h3>${joss('We\'re short-handed today. We\'ll find a way.')}<div class="alerts"><span class="n">3</span><span><b style="color:var(--danger)">Raid tomorrow</b> · Old Town hall</span><span class="more">+2 ▾</span></div>${list(7,3)}</section><div style="display:grid;gap:12px">${status}${upcoming}</div></div></div>`+ann(300,212,'every alert in one line, tap to open')+ann(700,236,'status moves to the empty side'),
+  cap:'<b>B · TWO LANES (my pick).</b> Icon rail, and Today split by kind: the left is <i>things to answer</i> (Joss, one alert bar that holds the raid and any other warning and opens on a tap, then the messages); the right is <i>how things stand</i> (back, out, hurt as one compact panel, then Coming up, then the reader when a message is open). Messages start a third of the way down even on a heavy day. The yellow shouting banner becomes a calm HURT row.'},
+ {name:'C',body:`<div class="body" style="grid-template-columns:68px 1fr">${icoRail(1)}<div class="main" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)"><section class="panel"><h3>TODAY</h3>${joss('We\'re short-handed today.')}<div class="alerts"><span class="n">3</span><span><b style="color:var(--danger)">Raid tomorrow</b> · Old Town hall</span><span class="more">+2 ▾</span></div>${list(7,3)}</section><div style="display:grid;gap:12px">${status}${upcoming}</div></div></div><div class="scrim"></div><div class="drawer"><div class="burger" style="justify-content:start;padding-left:22px">✕</div>${tabs.map(([t,n,c],i)=>`<a class="${i?'':'on'}"><span class="ico"></span>${t} ${n?`<span class="pill ${c}">${n}</span>`:''}</a>`).join('')}<a class="save"><span class="ico"></span>SAVE</a></div>`+ann(230,100,'☰ opens the full rail over the page'),
+  cap:'<b>C · B, PLUS A RAIL THAT EXPANDS.</b> Your idea: the slim rail with a ☰ on top that slides the full word rail over the page (it does not push the page). Honest view: with only five tabs and labels under the icons, the expanded rail shows nothing new, so I would skip it unless the tab list grows. Shown so you can judge.'},
+];
+document.getElementById('out').innerHTML=F.map(f=>`<div class="frame" id="f${f.name}">${topbar}${f.body}</div><p class="cap">${f.cap}</p>`).join('');
+</script></body></html>
