@@ -31,7 +31,7 @@ try {
   await click('[data-action="nav"][data-id="crew"]');
   await page.evaluate(() => window.scrollTo(0, 0));
   await shot('roster-offer-flag');
-  await click('[data-action="open-op"]:has(.lvltab)');
+  await click('.crewrow:has(.lvltab) [data-action="open-op"]');
   await page.evaluate(() => window.scrollTo(0, 0));
   await shot('runner-offer-on-top');
 } finally { await browser.close(); server.kill(); }

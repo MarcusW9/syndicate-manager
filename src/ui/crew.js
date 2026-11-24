@@ -35,20 +35,41 @@ const seasonChanges = (op) => changesSince(op, seasonStartDay(state.day));
 /** Short labels for the crew list's stat strip (2026-11-23): the full names are on the runner's page. */
 const STAT_SHORT = { combat: 'CMB', stealth: 'STL', tech: 'TEC', social: 'SOC', piloting: 'PIL', medical: 'MED', cool: 'COOL', endurance: 'END' };
 
+/** "a medic", "an infiltrator", "muscle": the role as the explanation under the stat strip says it. */
+const asRole = (role) => (role === 'muscle' ? 'muscle' : `${/^[aeiou]/.test(role) ? 'an' : 'a'} ${role}`);
+
+/** What a tapped box in the stat strip says (2026-11-24, owner): the stat in full, this season's change, what it is to them. */
+function stripExplain(op, k, main) {
+  const v = ratedStat(op, k);
+  const n = seasonChanges(op)[k] ?? 0;
+  const change = n > 0 ? `<span class="statexplain__up">up ${n} this season</span> (was ${v - n})`
+    : n < 0 ? `<span class="statexplain__down">down ${-n} this season</span> (was ${v - n})` : 'no change this season';
+  const bonus = traitMods(op)[k] ?? 0;
+  const what = k === main ? `Their main stat, as ${asRole(op.role)}: it decides most of what they do on a job.` : `One of their two best after ${statName(main)}.`;
+  return `<div class="statexplain" id="statexplain-${esc(op.id)}" role="status">
+    <p><strong>${esc(statName(k).toUpperCase())} ${v}</strong> · ${change}</p>
+    <p class="muted small">${what}${bonus ? ` Includes ${signed(bonus)} from traits.` : ''}${n < 0 ? ' Age takes a little each season past 40.' : ''} Their page has every stat.</p>
+  </div>`;
+}
+
 /**
  * Crew-list stat strip (2026-11-23, owner): three boxes, the role's main stat first and then the
  * two highest others, each with this season's net change. Replaced the one-liner and the "▲ every
  * gain" marker, which wrapped as runners grew. The full picture is on the runner's page.
+ * Each box is a button (2026-11-24, owner): a tap opens a line under the strip saying what it shows
+ * (`stripExplain`, `V.statTip`); tap it again to close.
  */
 function statStrip(op) {
   const main = primaryStat(op);
   const rest = ROLL_STATS.filter((k) => k !== main).sort((a, b) => ratedStat(op, b) - ratedStat(op, a)).slice(0, 2);
   const net = seasonChanges(op);
+  const open = [main, ...rest].find((k) => V.statTip === `${op.id}|${k}`);
   return `<span class="statstrip">${[main, ...rest].map((k) => {
     const n = net[k] ?? 0;
+    const on = k === open;
     const change = n ? `<span class="statstrip__chg ${n < 0 ? 'is-down' : ''}">${signed(n)}</span>` : '';
-    return `<span class="statstrip__cell" role="img" aria-label="${esc(statName(k))} ${ratedStat(op, k)}${n ? `, ${signed(n)} this season` : ''}"><span class="statstrip__k">${STAT_SHORT[k]}</span><span class="statstrip__v">${ratedStat(op, k)}${change}</span></span>`;
-  }).join('')}</span>`;
+    return `<button class="statstrip__cell ${on ? 'is-on' : ''}" data-action="stat-tip" data-id="${esc(`${op.id}|${k}`)}" aria-expanded="${on}" aria-controls="statexplain-${esc(op.id)}" aria-label="${esc(statName(k))} ${ratedStat(op, k)}${n ? `, ${signed(n)} this season` : ''}"><span class="statstrip__k">${STAT_SHORT[k]}</span><span class="statstrip__v">${ratedStat(op, k)}${change}</span></button>`;
+  }).join('')}</span>${open ? stripExplain(op, open, main) : ''}`;
 }
 
 /** The level-up tab on a crew-list portrait (2026-11-23, owner; replaced the "Level up" pill). The Crew tab's badge counts them in words. */
@@ -106,14 +127,15 @@ export function renderCrew() {
       <ul class="list list--cols">
         ${shown.map((op) => `
           <li>
-            <button class="row crewrow" data-action="open-op" data-id="${esc(op.id)}">
+            <div class="row crewrow">
+              <button class="crewrow__open" data-action="open-op" data-id="${esc(op.id)}" aria-label="${esc(`${op.name} "${op.handle}": open their page`)}"></button>
               ${rowFace(op)}
               <span class="crewrow__name"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"</span>
               <span class="crewrow__info muted">${fameOf(op) === 'elite' ? `<span class="fame fame--elite">${esc(fameName('elite'))}</span> · ` : ''}${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age}</span>
               <span class="crewrow__status">${statusChip(availability(state, op))}</span>
               <span class="crewrow__scout">${statStrip(op)}</span>
               <span class="crewrow__bars">${conditionBars(op)}</span>
-            </button>
+            </div>
           </li>`).join('')}
       </ul>`,
     leads: () => `
