@@ -616,6 +616,17 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .statstrip__v { font-family: var(--display, inherit); font-weight: 700; font-size: 1rem; color: var(--text); white-space: nowrap; }
 .statstrip__chg { margin-left: 4px; font-size: 0.8rem; color: #5fe0a5; }
 .statstrip__chg.is-down { color: var(--danger); }
+/* A lead's row on the Leads tab (2026-11-24): the same strip under the name, the main stat against our best in the role. */
+.row.leadrow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "face main meta" "face strip strip"; column-gap: 12px; row-gap: 6px; align-items: center; }
+.leadrow > .face { grid-area: face; }
+.leadrow > .row__main { grid-area: main; }
+.leadrow > .row__meta { grid-area: meta; align-self: start; text-align: right; }
+.leadrow__strip { grid-area: strip; }
+.leadrow .statstrip__cell { cursor: inherit; }
+.statstrip__vs { display: block; margin-top: 4px; font-size: 0.78rem; font-weight: 600; line-height: 1.3; color: var(--muted); }
+.statstrip__vs.is-up { color: #5fe0a5; }
+.statstrip__vs.is-down { color: var(--danger); }
+.statstrip__vs.is-new { color: var(--accent-2); }
 /* A season's first week, before a runner changes (2026-11-24): last season's figures in grey, labelled. */
 .statstrip__chg.is-last { color: var(--muted); }
 .statstrip__note { display: block; margin-top: 3px; font-family: var(--display, inherit); font-weight: 600; font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
