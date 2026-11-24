@@ -359,6 +359,11 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
   .inbox__back { display: none; }
   .inbox__empty { margin: 0; }
 }
+/* A phone on its side (2026-11-24): the stack is only ~240px tall and Coming up alone fills it, so an open message got no
+   room and the strip lay over its buttons. An open message takes the whole stack, as on a phone held upright; ✕ brings the strip back. */
+@media (min-width: 640px) and (max-height: 520px) {
+  .inbox.has-open .upcoming--strip { display: none; }
+}
 
 /* --- Jobs, planning and missions --- */
 .threat { letter-spacing: 1px; color: var(--warn); }
