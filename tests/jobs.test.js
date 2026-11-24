@@ -315,29 +315,34 @@ test('the board grows with the roster: three a week up to five runners, then one
 });
 
 test('an offer takes a range of days; longer pays more; rookie work keeps its days', async () => {
-  const { addOffer, jobView, daysRange, templateById, EXTRA_DAY_PAY } = await import('../src/core/jobs.js');
+  const { addOffer, jobView, daysRange, templateById, baseDays, isLongJob, LONG_JOB_DAYS, LONG_JOB_DAY_PAY, EXTRA_DAY_PAY, MAX_JOB_DAYS } = await import('../src/core/jobs.js');
   const { MISSIONS } = await import('../src/data/missions.js');
   for (const m of MISSIONS) {
     const [lo, hi] = daysRange(m);
-    assert.equal(lo, m.days, m.id);
-    assert.ok(hi >= lo && hi <= 4, m.id);
+    assert.equal(lo, baseDays(m), m.id);
+    assert.ok(hi >= lo && hi <= MAX_JOB_DAYS, m.id);
     if (m.rookie) assert.equal(hi, lo, `${m.id}: rookie work as written`);
+    if (m.rookie || m.routine) assert.equal(lo, m.days, `${m.id}: quick work keeps its days`);
+    // Longer jobs (owner, 2026-11-24): harder work takes at least its threat in days.
+    if (isLongJob(m)) assert.ok(lo >= LONG_JOB_DAYS[m.threat], `${m.id}: threat ${m.threat} runs at least ${LONG_JOB_DAYS[m.threat]} days`);
   }
   const s = createNewGame({ seed: 62, startCrew: 'fresh' });
   s.jobs = [];
   const seen = new Set();
+  const tpl = templateById('penthouse');
   for (let i = 0; i < 60; i++) addOffer(s, 'penthouse', { rng: () => 0.5 });
   for (const job of s.jobs) {
     seen.add(job.days);
     const v = jobView(s, job);
     assert.equal(v.days, job.days);
-    const base = Math.round(templateById('penthouse').pay * (1 + EXTRA_DAY_PAY * (job.days - 3)) * job.payMult / 50) * 50;
-    assert.equal(v.pay, base, 'each extra day adds EXTRA_DAY_PAY of the pay');
+    const gained = baseDays(tpl) - tpl.days;
+    const base = Math.round(tpl.pay * (1 + LONG_JOB_DAY_PAY * gained) * (1 + EXTRA_DAY_PAY * (job.days - baseDays(tpl))) * job.payMult / 50) * 50;
+    assert.equal(v.pay, base, 'each day a long job gains pays LONG_JOB_DAY_PAY; each extra day EXTRA_DAY_PAY');
   }
-  assert.deepEqual([...seen].sort(), [3, 4], 'threat 5: three or four days (capped at 4)');
+  assert.deepEqual([...seen].sort(), [5, 6], 'threat 5: five or six days');
   s.jobs = [];
   addOffer(s, 'penthouse');
-  assert.equal(s.jobs[0].days, 3, 'a plain offer keeps the template days');
+  assert.equal(s.jobs[0].days, 5, 'a plain offer keeps the base days');
 });
 
 // Twists that fit the lore (2026-11-24): no twist on routine work, 'Unexpected score' only on a

@@ -361,6 +361,18 @@ function takeOff(op, uid) {
  * the same implant, or either person can't change their gear today. A second Apex piece swaps the
  * runner's first one out to the stash (apexSwapOut).
  */
+/** Mark stash items seen (their sheet opened, or Today's line dismissed): no more NEW tag. Returns a new state, or prev if none was new. */
+export function markSeen(prev, uids = null) {
+  const hit = (prev.stash ?? []).filter((i) => i.unseen && (!uids || uids.includes(i.uid)));
+  if (!hit.length) return prev;
+  const state = structuredClone(prev);
+  for (const i of state.stash) if (i.unseen && (!uids || uids.includes(i.uid))) delete i.unseen;
+  return state;
+}
+
+/** Stash items not yet seen, newest first (Today's "New in the stash" line). */
+export const unseenGear = (state) => (state.stash ?? []).filter((i) => i.unseen).reverse();
+
 export function equip(prev, uid, opId, target = null) {
   const state = structuredClone(prev);
   const op = state.crew.find((o) => o.id === opId);
@@ -369,6 +381,7 @@ export function equip(prev, uid, opId, target = null) {
   if (found.owner && found.owner !== op && !canChangeGear(state, found.owner).ok) return prev;
   op.gear = { ...emptyLoadout(), ...(op.gear ?? {}) };
   const item = found.item;
+  delete item.unseen; // given to someone: it has been seen (the stash's NEW tag, 2026-11-24)
   const where = placeOf(item.type);
   // At most one Apex piece on a runner: a second swaps the first out to the stash (what an armour or socket swap pushes off does not count).
   const pushed = where === 'armour' ? op.gear.armour : where === 'implant' ? (op.gear.implants ?? [])[target?.socket ?? (op.gear.implants.length < SOCKETS ? op.gear.implants.length : -1)] : null;

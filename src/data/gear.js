@@ -59,6 +59,21 @@ export const LOOT = {
   // A spare piece (owner, 2026-11-18: sidearms dropped about one job in 13): when nothing drops, this share of the time the crew
   // gets a Standard sidearm instead of the scrap cash (core/loot.js lootFor, a roll of its own). Sidearms then turn up about one job in 4.5.
   spareChance: 0.25, spareType: 'pistol',
+  // Better gear on harder work (owner, 2026-11-24, drafts/PROPOSAL-rewards-visibility.md D1): a job's threat picks the
+  // tier odds (percent, Standard takes the rest), replacing TIERS[t].drop for main jobs. The drop chance stays `chance`.
+  // Threat 3 is about the old odds; threat 1 rarely drops better than Verified, threat 5 often does.
+  byThreat: {
+    1: { verified: 20, custom: 4, premium: 1, apex: 0 },
+    2: { verified: 26, custom: 8, premium: 3, apex: 0.5 },
+    3: { verified: 28, custom: 10, premium: 4, apex: 1 },
+    4: { verified: 30, custom: 18, premium: 8, apex: 3 },
+    5: { verified: 28, custom: 24, premium: 14, apex: 5 },
+  },
+  // A heist finale always leaves something, and nothing below this tier (owner, 2026-11-24, Q5a).
+  heistFloor: 'custom',
+  // A won fight at home or on a post (a held hall raid, a held hit post): what the attackers leave behind (Q5b).
+  // chance of anything; tier odds as above (Standard the rest); a type from its own pool.
+  taken: { chance: 0.5, tiers: { verified: 25 }, pool: { pistol: 40, vest: 22, medkit: 14, picks: 12, rifle: 12 } },
   pool: {
     standard: { pistol: 22, vest: 16, deck: 14, medkit: 14, picks: 14, rifle: 8, drone: 4, reflex: 4, cortex: 4 },
     verified: { pistol: 22, vest: 16, deck: 14, medkit: 14, picks: 14, rifle: 8, drone: 4, reflex: 4, cortex: 4 },

@@ -22,6 +22,12 @@ function sent(seed, templateId, callIn, { approach = 'stealth', n } = {}) {
   return sendOff(s, s.jobs[0].id, s.crew.slice(0, size).map((o) => o.id), approach, 'steady', { callIn });
 }
 
+/** Days pass until the crew calls (a long job's quiet days come first, 2026-11-24), or it is back. */
+function untilCall(s, most = 6) {
+  for (let d = 0; d < most && !s.inbox.some((m) => m.kind === 'callin' && !m.resolved) && s.awayJobs.length; d++) s = advanceDay(s);
+  return s;
+}
+
 /** Answer whatever the job on screen is calling about the careful way: exits first, extract at a critical. */
 function answerCarefully(s) {
   const am = s.activeMission;
@@ -65,14 +71,14 @@ test('a job spreads its beats over its days, quiet days first, all of it by the 
 
 test('a three-day job sent hands-off plays a share each day and reports on the last', () => {
   for (let seed = 1; seed <= 20; seed++) {
-    let s = sent(seed, 'warehouse', 'never'); // threat 4, two days, +1 for stealth
+    let s = sent(seed, 'warehouse', 'never'); // threat 4: four days as a long job (2026-11-24), +1 for stealth
     const back = s.awayJobs[0].returnDay;
-    assert.equal(back, s.day + 3);
+    assert.equal(back, s.day + 5);
     s = advanceDay(s);
     if (!s.awayJobs.length) continue; // they walked away on day one: the report is in, which is fine
     const [out] = crewsOut(s);
     assert.equal(out.day, 1);
-    assert.equal(out.days, 3);
+    assert.equal(out.days, 5);
     assert.ok(out.lines.length >= 1, 'Today says what they did');
     assert.ok(!s.inbox.some((m) => m.type === 'report'), 'no report yet');
     assert.ok(!isBlocked(s), 'a hands-off crew never stops the clock');
@@ -87,7 +93,7 @@ test('a three-day job sent hands-off plays a share each day and reports on the l
 test('a crew calling in waits, stops the clock and asks for a call; taking it puts the job on screen', () => {
   let found = 0;
   for (let seed = 1; seed <= 30 && found < 5; seed++) {
-    let s = advanceDay(sent(seed, 'warehouse', 'every'));
+    let s = untilCall(sent(seed, 'warehouse', 'every'));
     const call = s.inbox.find((m) => m.kind === 'callin' && !m.resolved);
     if (!call) continue;
     found++;
@@ -109,7 +115,7 @@ test('a crew calling in waits, stops the clock and asks for a call; taking it pu
 test('after the call, the job plays to the end of the day and can be handed back; it carries on tomorrow', () => {
   let handed = 0;
   for (let seed = 1; seed <= 30 && handed < 3; seed++) {
-    let s = advanceDay(sent(seed, 'penthouse', 'every')); // four days on stealth
+    let s = untilCall(sent(seed, 'penthouse', 'every')); // six days on stealth (a long job, 2026-11-24)
     const call = s.inbox.find((m) => m.kind === 'callin' && !m.resolved);
     if (!call) continue;
     s = takeCall(s, call.payload.jobId);
@@ -131,7 +137,7 @@ test('after the call, the job plays to the end of the day and can be handed back
 
 test('taking command plays the rest now, and the job ends on screen', () => {
   for (let seed = 1; seed <= 30; seed++) {
-    let s = advanceDay(sent(seed, 'penthouse', 'every'));
+    let s = untilCall(sent(seed, 'penthouse', 'every'));
     const call = s.inbox.find((m) => m.kind === 'callin' && !m.resolved);
     if (!call) continue;
     s = takeCommand(takeCall(s, call.payload.jobId));
@@ -208,10 +214,11 @@ test('a crew out says its phase, its progress through the beats and its status',
   [c] = crewsOut(s);
   if (c) {
     assert.equal(c.day, 1);
-    assert.ok(c.beatsDone >= 1, 'a beat told on day one');
+    // A long job (2026-11-24) may spend day one casing: its beats come as beatsByDay spreads them.
+    assert.ok(c.beatsDone >= beatsByDay(c.beats, c.days, 1), "day one's share of the beats told");
     assert.ok(['on', 'hurt', 'low'].includes(c.status));
   }
-  const calling = Array.from({ length: 30 }, (_, i) => advanceDay(sent(i + 1, 'warehouse', 'every'))).find((x) => x.awayJobs[0]?.waiting);
+  const calling = Array.from({ length: 30 }, (_, i) => untilCall(sent(i + 1, 'warehouse', 'every'))).find((x) => x.awayJobs[0]?.waiting);
   assert.equal(crewsOut(calling)[0].status, 'call');
 });
 

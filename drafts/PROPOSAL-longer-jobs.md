@@ -1,6 +1,6 @@
 # Proposal: harder jobs run like expeditions
 
-Status: **direction agreed, details open (2026-11-24).** Nothing built. Questions Q1-Q6 at the end, recommended option first.
+Status: **built 2026-11-24** (owner: 1a 2a 3a 4a 5a 6a, "build them together"; save v90; decision log of that date, `CODEMAP.md` `prep.js`). Next: the owner marks the prep stops' text (`drafts/writing-tasks.md`), more district stops, hand-written routes for heists and threat 4-5 jobs, then stakes at home. Was: direction agreed, details open (2026-11-24).
 
 ## What the owner said
 

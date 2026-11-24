@@ -1,6 +1,6 @@
 # Proposal: rewards after a run you can see
 
-Status: **draft, nothing built (2026-11-24).** The owner asked whether weapons and good rewards after runs still happen ("right now it's not very visible"). They do; this proposal is about making them felt. Questions Q1-Q6 at the end, recommended option first. Numbers marked *draft* need a sim before they ship.
+Status: **built 2026-11-24** with the recommended answers (owner: "build them together" with longer jobs; all three slices at once; save v90; decision log of that date). Not built: a mark on the board's job cards (every threat can drop Custom), named spoils written into jobs (C2), the extra roll for a clean job (E3), a full-screen reveal for Apex. Was: draft, nothing built (2026-11-24).
 
 ## What happens today, from the code
 
