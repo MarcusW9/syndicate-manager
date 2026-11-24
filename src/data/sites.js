@@ -67,25 +67,20 @@ const GENERIC = {
 
 
 
-// The Night Market: through the market gate, down lanes of stalls in the crowd, to the back room of
-// a mahjong parlour. Overwatch on the footbridge over the market.
+// The Night Market: in through a gate, down lanes of stalls in the crowd, to the job's door. Overwatch
+// on the footbridge over the market. A plot (2026-11-24): two ways in, three layouts of stalls, three
+// doors (the mahjong parlour's back room, a tea house, a pawn shop). A lane runs clear through every
+// layout (x 88-118 up the west side, y 138 across, x 236-266 down the east side) so every route fits.
 const NIGHT_MARKET = {
   name: 'a night market',
   // The city's tech dotted round (ui/siteprops.js): decoration only, never cover, never on the route.
   props: [
     { kind: 'holo', x: 18, y: 18, w: 56, h: 16, c: '#ff3d5f' }, { kind: 'drone', x: 96, y: 34, c: '#ff3d5f' },
-    { kind: 'car', x: 132, y: 216, c: '#b48cff' }, { kind: 'car', x: 300, y: 218 },
+    { kind: 'car', x: 132, y: 216, c: '#b48cff' }, { kind: 'car', x: 190, y: 218 },
     { kind: 'billboard', x: 274, y: 44, w: 18, h: 6, c: '#b48cff' }, { kind: 'vending', x: 6, y: 180, c: '#f2d541' },
-    { kind: 'junction', x: 250, y: 190 }, { kind: 'vent', x: 228, y: 196 },
+    { kind: 'junction', x: 160, y: 194 }, { kind: 'vent', x: 228, y: 196 },
   ],
-  aria: 'Site plan of a night market: the gate and the van, lanes of stalls with crowds, a mahjong parlour with a back room, and a footbridge for overwatch',
-  points: { van: [40, 224], perch: [196, 26], target: [318, 72] },
-  paths: {
-    in: [[40, 224], [92, 224], [92, 196]],
-    inside: [[92, 196], [92, 138], [180, 138], [240, 120]],
-    target: [[240, 120], [266, 120], [300, 110], [318, 72]],
-    out: [[318, 72], [300, 110], [266, 120], [240, 120], [180, 138], [92, 138], [92, 196], [92, 224], [40, 224]],
-  },
+  aria: 'Site plan of a night market',
   // How it's lit (ui/siteart.js): paving slabs, and the stalls' neon falling across the lanes and the
   // wet road from the right, in hard-edged planes (signal red, sodium, violet).
   paving: true,
@@ -97,34 +92,138 @@ const NIGHT_MARKET = {
     { points: [[150, 213], [180, 213], [166, 239], [136, 239]], color: '#3de8d8', op: 0.07 },
     { points: [[250, 213], [320, 213], [306, 239], [236, 239]], color: '#f2b544', op: 0.07 },
   ],
-  views: { in: [0, 112, 192, 128], inside: [10, 40, 270, 180], target: [180, 20, 180, 120] },
-  posts: { in: [112, 184], inside: [228, 138], target: [300, 118] },
-  sight: { rifle: [[196, 26], [16, 80], [16, 198], [262, 198], [262, 40]], drone: [[196, 26], [6, 14], [6, 206], [354, 206], [354, 14]] },
+  perch: [196, 26],
+  hub: [180, 138],
+  drone: [[196, 26], [6, 14], [6, 206], [354, 206], [354, 14]],
   shapes: [
     ...ROAD,
-    { t: 'line', cls: 'sp-gatepost', x1: 80, y1: 192, x2: 80, y2: 204 },
-    { t: 'line', cls: 'sp-gatepost', x1: 104, y1: 192, x2: 104, y2: 204 },
-    { t: 'line', cls: 'sp-neon', x1: 78, y1: 190, x2: 106, y2: 190 },
-    { t: 'row', cls: 'sp-stall', x: 22, y: 152, w: 18, h: 12, step: 24, n: 10, skip: [3], tones: STALL_TONES },
-    { t: 'row', cls: 'sp-stall', x: 22, y: 112, w: 18, h: 12, step: 24, n: 10, skip: [3], tones: STALL_TONES, shift: 1 },
-    { t: 'row', cls: 'sp-stall', x: 22, y: 72, w: 18, h: 12, step: 24, n: 9, tones: STALL_TONES, shift: 2 },
-    { t: 'row', cls: 'sp-crowd', x: 30, y: 134, w: 3, h: 3, step: 17, n: 13, skip: [4], tones: ['#5f6878'] },
-    { t: 'row', cls: 'sp-crowd', x: 38, y: 96, w: 3, h: 3, step: 21, n: 10, tones: ['#5f6878'] },
-    { t: 'row', cls: 'sp-crowd', x: 26, y: 176, w: 3, h: 3, step: 19, n: 12, skip: [3, 4], tones: ['#5f6878'] },
     { t: 'rect', cls: 'sp-bridge', x: 140, y: 21, w: 112, h: 10 },
-    { t: 'rect', cls: 'sp-building', x: 268, y: 40, w: 80, h: 110 },
-    { t: 'rect', cls: 'sp-door', x: 265, y: 114, w: 5, h: 12 },
-    { t: 'rect', cls: 'sp-room', x: 296, y: 48, w: 44, h: 46 },
-    { t: 'rect', cls: 'sp-sign', x: 274, y: 140, w: 40, h: 5, fill: '#b48cff' },
-    // Cover for fights (core/fightspots.js, 2026-10-30): a cart and crates by the gate and the back room, a mahjong table inside.
-    { t: 'rect', cls: 'sp-cover', x: 50, y: 196, w: 24, h: 10, fill: CONTAINER_TONES[3] },
-    { t: 'rect', cls: 'sp-cover', x: 22, y: 200, w: 14, h: 10, fill: CONTAINER_TONES[1] },
-    { t: 'rect', cls: 'sp-cover', x: 258, y: 138, w: 12, h: 10, fill: CONTAINER_TONES[2] },
-    { t: 'rect', cls: 'sp-desk', x: 306, y: 122, w: 16, h: 10 },
   ],
-  labels: [
-    { x: 110, y: 206, text: 'MARKET GATE' }, { x: 22, y: 66, text: 'STALLS' },
-    { x: 268, y: 34, text: 'BACK ROOM', hi: true }, { x: 150, y: 16, text: 'FOOTBRIDGE' }, { x: 8, y: 236, text: 'VAN' },
+  labels: [{ x: 150, y: 16, text: 'FOOTBRIDGE' }],
+  approaches: [
+    {
+      id: 'gate', aria: 'the van at the market gate',
+      van: [40, 224], in: [[40, 224], [92, 224], [92, 196]], inside: [[92, 196], [92, 138], [180, 138]],
+      views: { in: [0, 112, 192, 128], inside: [10, 40, 270, 180] },
+      posts: { in: [112, 184], inside: [228, 138] },
+      shapes: [
+        { t: 'line', cls: 'sp-gatepost', x1: 80, y1: 192, x2: 80, y2: 204 },
+        { t: 'line', cls: 'sp-gatepost', x1: 104, y1: 192, x2: 104, y2: 204 },
+        { t: 'line', cls: 'sp-neon', x1: 78, y1: 190, x2: 106, y2: 190 },
+        // A cart and crates by the gate: cover for a fight there (core/fightspots.js).
+        { t: 'rect', cls: 'sp-cover', x: 50, y: 196, w: 24, h: 10, fill: CONTAINER_TONES[3] },
+        { t: 'rect', cls: 'sp-cover', x: 22, y: 200, w: 14, h: 10, fill: CONTAINER_TONES[1] },
+      ],
+      labels: [{ x: 110, y: 206, text: 'MARKET GATE' }, { x: 8, y: 236, text: 'VAN' }],
+    },
+    {
+      id: 'side-lane', aria: 'the van at the far end of the road and a side lane in by the noodle bars',
+      van: [316, 224], in: [[316, 224], [250, 224], [250, 198]], inside: [[250, 198], [250, 150], [200, 138], [180, 138]],
+      views: { in: [189, 126, 171, 114], inside: [100, 60, 255, 170] },
+      posts: { in: [270, 186], inside: [214, 144] },
+      shapes: [
+        { t: 'line', cls: 'sp-gatepost', x1: 238, y1: 192, x2: 238, y2: 204 },
+        { t: 'line', cls: 'sp-gatepost', x1: 262, y1: 192, x2: 262, y2: 204 },
+        { t: 'line', cls: 'sp-neon', x1: 236, y1: 190, x2: 264, y2: 190 },
+        // Gas bottles and a noodle trolley at the lane's mouth.
+        { t: 'rect', cls: 'sp-cover', x: 266, y: 198, w: 18, h: 10, fill: CONTAINER_TONES[3] },
+        { t: 'rect', cls: 'sp-cover', x: 206, y: 198, w: 14, h: 10, fill: CONTAINER_TONES[0] },
+      ],
+      labels: [{ x: 178, y: 190, text: 'SIDE LANE' }, { x: 292, y: 236, text: 'VAN' }],
+    },
+  ],
+  covers: [
+    {
+      id: 'stalls', aria: 'lanes of stalls in the crowd',
+      shapes: [
+        { t: 'row', cls: 'sp-stall', x: 22, y: 152, w: 18, h: 12, step: 24, n: 9, skip: [3], tones: STALL_TONES },
+        { t: 'row', cls: 'sp-stall', x: 22, y: 112, w: 18, h: 12, step: 24, n: 9, skip: [3], tones: STALL_TONES, shift: 1 },
+        { t: 'row', cls: 'sp-stall', x: 22, y: 72, w: 18, h: 12, step: 24, n: 9, skip: [3], tones: STALL_TONES, shift: 2 },
+        { t: 'row', cls: 'sp-crowd', x: 30, y: 134, w: 3, h: 3, step: 17, n: 13, skip: [4], tones: ['#5f6878'] },
+        { t: 'row', cls: 'sp-crowd', x: 38, y: 96, w: 3, h: 3, step: 21, n: 10, tones: ['#5f6878'] },
+        { t: 'row', cls: 'sp-crowd', x: 26, y: 176, w: 3, h: 3, step: 19, n: 12, skip: [3, 4], tones: ['#5f6878'] },
+        // A hawker's cart and crates between the lanes.
+        { t: 'rect', cls: 'sp-cover', x: 128, y: 166, w: 24, h: 9, fill: CONTAINER_TONES[3] },
+        { t: 'rect', cls: 'sp-cover', x: 196, y: 92, w: 14, h: 10, fill: CONTAINER_TONES[2] },
+      ],
+      labels: [{ x: 150, y: 66, text: 'STALLS' }],
+    },
+    {
+      id: 'food-court', aria: 'a food court of plastic tables under strings of lamps',
+      shapes: [
+        { t: 'row', cls: 'sp-stall', x: 22, y: 152, w: 18, h: 12, step: 24, n: 9, skip: [3], tones: STALL_TONES, shift: 3 },
+        { t: 'row', cls: 'sp-stall', x: 22, y: 72, w: 18, h: 12, step: 24, n: 9, skip: [3], tones: STALL_TONES, shift: 1 },
+        // Tables and stools in the open middle: cover for a fight (core/fightspots.js).
+        { t: 'row', cls: 'sp-cover', x: 128, y: 100, w: 20, h: 10, step: 30, n: 3, tones: CONTAINER_TONES, shift: 1 },
+        { t: 'row', cls: 'sp-cover', x: 128, y: 164, w: 20, h: 10, step: 30, n: 2, tones: CONTAINER_TONES, shift: 2 },
+        { t: 'poly', cls: 'sp-laundry', points: [[120, 90], [170, 96], [230, 88]] },
+        { t: 'poly', cls: 'sp-laundry', points: [[120, 182], [170, 188], [230, 180]] },
+        { t: 'row', cls: 'sp-crowd', x: 124, y: 126, w: 3, h: 3, step: 15, n: 8, tones: ['#5f6878'] },
+        { t: 'row', cls: 'sp-crowd', x: 30, y: 134, w: 3, h: 3, step: 19, n: 4, tones: ['#5f6878'] },
+      ],
+      labels: [{ x: 150, y: 66, text: 'FOOD COURT' }],
+    },
+    {
+      id: 'closing', aria: 'stalls closing for the night, shutters half down and carts in the lane',
+      shapes: [
+        { t: 'row', cls: 'sp-stall', x: 22, y: 112, w: 18, h: 12, step: 24, n: 9, skip: [3, 5, 6], tones: ['#3a4150', '#ff3d5f', '#3a4150', '#f2d541'] },
+        { t: 'row', cls: 'sp-stall', x: 22, y: 72, w: 18, h: 12, step: 24, n: 9, skip: [3, 7], tones: ['#3a4150', '#3de8d8', '#3a4150', '#b48cff'], shift: 2 },
+        { t: 'row', cls: 'sp-stall', x: 22, y: 152, w: 18, h: 12, step: 24, n: 5, skip: [3], tones: ['#3a4150', '#f2d541', '#3a4150', '#ff3d5f'] },
+        { t: 'row', cls: 'sp-crowd', x: 40, y: 100, w: 3, h: 3, step: 41, n: 3, tones: ['#5f6878'] },
+        // Carts and trikes left in the lane, stacks of folded awnings.
+        { t: 'rect', cls: 'sp-cover', x: 150, y: 160, w: 26, h: 10, fill: CONTAINER_TONES[3] },
+        { t: 'rect', cls: 'sp-cover', x: 190, y: 90, w: 24, h: 9, fill: CONTAINER_TONES[1] },
+        { t: 'rect', cls: 'sp-cover', x: 138, y: 100, w: 14, h: 10, fill: CONTAINER_TONES[2] },
+        { t: 'rect', cls: 'sp-cover', x: 210, y: 170, w: 16, h: 10, fill: CONTAINER_TONES[0] },
+      ],
+      labels: [{ x: 150, y: 66, text: 'CLOSING UP' }],
+    },
+  ],
+  targets: [
+    {
+      id: 'parlour', aria: 'a mahjong parlour with a back room',
+      point: [318, 72], path: [[180, 138], [240, 120], [266, 120], [300, 110], [318, 72]], view: [180, 20, 180, 120],
+      post: [300, 118],
+      rifle: [[196, 26], [16, 80], [16, 198], [262, 198], [262, 40]],
+      shapes: [
+        { t: 'rect', cls: 'sp-building', x: 268, y: 40, w: 80, h: 110 },
+        { t: 'rect', cls: 'sp-door', x: 265, y: 114, w: 5, h: 12 },
+        { t: 'rect', cls: 'sp-room', x: 296, y: 48, w: 44, h: 46 },
+        { t: 'rect', cls: 'sp-sign', x: 274, y: 140, w: 40, h: 5, fill: '#b48cff' },
+        { t: 'rect', cls: 'sp-cover', x: 258, y: 138, w: 12, h: 10, fill: CONTAINER_TONES[2] },
+        // A mahjong table inside: cover for a fight (core/fightspots.js).
+        { t: 'rect', cls: 'sp-desk', x: 306, y: 122, w: 16, h: 10 },
+      ],
+      labels: [{ x: 268, y: 34, text: 'BACK ROOM', hi: true }],
+    },
+    {
+      id: 'tea-house', aria: 'a tea house at the top of the west lane',
+      point: [70, 52], path: [[180, 138], [103, 138], [103, 78], [103, 52], [70, 52]], view: [0, 20, 210, 140],
+      post: [112, 110],
+      rifle: [[196, 26], [16, 80], [16, 198], [262, 198], [262, 40]],
+      shapes: [
+        { t: 'rect', cls: 'sp-building', x: 30, y: 36, w: 80, h: 32 },
+        { t: 'rect', cls: 'sp-door', x: 97, y: 65, w: 12, h: 5 },
+        { t: 'rect', cls: 'sp-room', x: 38, y: 42, w: 40, h: 20 },
+        { t: 'rect', cls: 'sp-sign', x: 40, y: 70, w: 30, h: 4, fill: '#3de8d8' },
+        { t: 'rect', cls: 'sp-desk', x: 82, y: 44, w: 16, h: 8 },
+      ],
+      labels: [{ x: 78, y: 30, text: 'TEA HOUSE', hi: true }],
+    },
+    {
+      id: 'pawn-shop', aria: 'a pawn shop at the market\'s lower corner',
+      point: [318, 180], path: [[180, 138], [240, 146], [270, 180], [300, 180], [318, 180]], view: [180, 90, 180, 120],
+      post: [276, 198],
+      rifle: [[196, 26], [16, 80], [16, 198], [262, 198], [262, 40]],
+      shapes: [
+        { t: 'rect', cls: 'sp-building', x: 290, y: 158, w: 58, h: 46 },
+        { t: 'rect', cls: 'sp-door', x: 287, y: 174, w: 5, h: 12 },
+        { t: 'rect', cls: 'sp-room', x: 308, y: 164, w: 32, h: 20 },
+        { t: 'rect', cls: 'sp-sign', x: 296, y: 206, w: 34, h: 4, fill: '#f2d541' },
+        { t: 'rect', cls: 'sp-desk', x: 298, y: 190, w: 20, h: 8 },
+      ],
+      labels: [{ x: 290, y: 152, text: 'PAWN SHOP', hi: true }],
+    },
   ],
 };
 
@@ -789,7 +888,7 @@ export const HALLS = {
 };
 
 /** Districts drawn as parts, by key. */
-export const PLOTS = { docks: DOCKS, oldTown: OLD_TOWN };
+export const PLOTS = { docks: DOCKS, oldTown: OLD_TOWN, nightMarket: NIGHT_MARKET };
 
 /** A choice of parts as a site, the same shape as a plain site. */
 export function assemble(plot, approach, cover, target) {
@@ -823,7 +922,7 @@ const usual = (plot) => assemble(plot, plot.approaches[0], plot.covers[0], targe
 
 /** Site plans by district key (data/districts.js); `generic` for anywhere without one. A district
  * drawn as parts is here as its first approach, cover and usual target. */
-export const SITES = { generic: GENERIC, docks: usual(DOCKS), oldTown: usual(OLD_TOWN), nightMarket: NIGHT_MARKET, heights: HEIGHTS, basin: BASIN };
+export const SITES = { generic: GENERIC, docks: usual(DOCKS), oldTown: usual(OLD_TOWN), nightMarket: usual(NIGHT_MARKET), heights: HEIGHTS, basin: BASIN };
 
 /** Every site there can be, for the tests and the preview: [{ key, variant, site }], every combination of parts. */
 export const allSites = () => Object.entries(SITES).flatMap(([key, base]) => {

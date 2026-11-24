@@ -13,7 +13,7 @@
 // 2026-10-28). Its own smooth scrolling never counts as you scrolling away (2026-11-03: it
 // sometimes stopped following when a new moment arrived mid-scroll).
 
-import { runPlace, DEFAULT_HEADING } from '../core/multimap.js';
+import { runPlace, stopOf, DEFAULT_HEADING } from '../core/multimap.js';
 import { feedItems } from '../core/feed.js';
 import { needsPlayer } from '../core/autorun.js';
 import { ALERT_MAX, OVERWATCH_KIT, ZONES } from '../core/incidents.js';
@@ -38,6 +38,7 @@ const FAST = 0.35;
 // pass quickly, failures and saves linger, call-ins wait for you.
 const PACE = { phase: 1000, beat: 2000, note: 1300, card: 1300, result: 1000, bad: 700 };
 
+let lastKey = null; // the key of the watch before this one, so a new stop of the same job can fade in (mountWatch)
 let live = null; // { key, el, plan, shown, timer, chain, onAuto, ui, callKey, unseen }
 let paused = false;
 let speed = 1;
@@ -91,10 +92,33 @@ export function justFinished(am) {
 
 /** Stop the clock (the job ended, or the page changed). */
 export function stopWatch() {
+  if (live) lastKey = live.key;
   if (live?.timer) clearTimeout(live.timer);
   if (live?.fastTimer) clearTimeout(live.fastTimer);
   live?.unlisten?.();
   live = null;
+}
+
+/**
+ * A multi-map job's new stop: the map fades in from black under a card with the time and the place,
+ * so the crew's step from one map to the next reads as a journey, not a jump (2026-11-24). Only when
+ * the watch before this one was the same job's earlier stop.
+ */
+function travelCard(el, am, before) {
+  const at = am.maps?.at;
+  if (!at || !before || before === watchKey(am) || before.split('|')[0] !== am.jobId || am.done) return;
+  const tpl = templateById(am.templateId);
+  if (!tpl?.maps) return;
+  const stop = stopOf(tpl, at);
+  const card = document.createElement('div');
+  card.className = 'watch__travel';
+  card.setAttribute('role', 'status');
+  card.innerHTML = `<b class="watch__travel-time">${stop.time ?? ''}</b><span class="watch__travel-place">${stop.place ?? ''}</span>`;
+  const map = el.querySelector('.watch__map');
+  if (!map) return;
+  map.append(card);
+  card.addEventListener('animationend', () => card.remove(), { once: true });
+  setTimeout(() => card.remove(), 3000); // reduced motion or no animation: never leave it up
 }
 
 /**
@@ -120,6 +144,7 @@ export function mountWatch(el, state, { onAuto, onFightNext = null, ui, finishin
     say: (entry) => commentary(el, entry),
   });
   live?.unlisten?.();
+  travelCard(el, am, lastKey);
   live = { key: watchKey(am), el, plan, shown: 0, timer: null, chain: Promise.resolve(), onAuto, onFightNext, ui, callKey: null, unseen: 0, pinned: true, autoUntil: 0, state, fastTimer: null };
   // Following: pinned to the newest moment until the reader scrolls. Scroll events while our own
   // scroll is still moving don't count; a wheel, a touch or a key means the reader took over.
