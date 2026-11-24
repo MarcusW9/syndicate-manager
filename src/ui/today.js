@@ -8,7 +8,7 @@ import { jossIcon } from './art.js';
 import { crewOutMap } from './minimap.js';
 import { siteFor } from './siteplan.js';
 import { calendar } from '../core/time.js';
-import { templateById } from '../core/jobs.js';
+import { templateById, jobView } from '../core/jobs.js';
 import { alerts, upcoming } from '../core/upcoming.js';
 import { money } from '../core/money.js';
 import { crewsOut } from '../core/away.js';
@@ -21,7 +21,7 @@ import { renderMessage, crewLinks } from './messages.js';
 import { renderThreatLines, calls, raidCalls } from './raidcards.js';
 import { esc, pickLine, face, cityName, fillLine, andList, hallLabel, gearUi } from './shared.js';
 import { newGearLine } from './gear.js';
-import { needsYou } from './nav.js';
+import { needsYou, isDecision } from './nav.js';
 import { state, backPlayed, V } from './view.js';
 
 /**
@@ -223,7 +223,8 @@ export const whereButton = (d) => `<button class="linkbtn crewsout__where ${V.ci
  * voice. Alerts only appear when something needs the player, and each taps through to
  * where it's dealt with. Lines change day to day but stay put across re-renders.
  */
-function renderBriefing() {
+/** Joss's read of the day: the alerts (core/upcoming.js) in Joss's words, the mood, the opener and the face. Shared by the inbox and the desk. */
+function jossDay() {
   // Several jobs ending today read as one line, not a stack of them.
   const raw = alerts(state);
   const lastJobs = raw.filter((a) => a.kind === 'job-last');
@@ -249,6 +250,11 @@ function renderBriefing() {
     : has('bills-short') ? 'short' : has('crew-out') ? 'hurt' : c.isSunday ? 'sunday' : c.isMonday ? 'monday' : 'quiet';
   const opener = pickLine(PARTNER.moods[mood], `${state.day}-${mood}`);
   const face = { broke: 'worried', short: 'worried', hurt: 'worried', sunday: 'smug', first: 'happy', quiet: 'happy' }[mood] ?? 'neutral';
+  return { list, line, opener, face };
+}
+
+function renderBriefing() {
+  const { list, line, opener, face } = jossDay();
   // Open at the start of each day; a tap folds it to one line for the rest of the day. The alerts
   // under it never fold: they are what needs the player.
   const folded = V.jossFoldedDay === state.day;
@@ -356,4 +362,158 @@ function renderUpcoming(where, open = null) {
       <ul class="upcoming__days">${days.map(cell).join('')}
       </ul>
     </section>`;
+}
+
+// --- The desk (Today's new layout, 2026-11-24; the classic inbox above stays behind Save › Look) ------
+// From first principles a message is a decision or news. Decisions (ui/nav.js isDecision) are cards with
+// their answer on them; news is a log by day that never counts as unread. Joss opens the day in a bubble.
+
+const NUMBER_WORDS = ['Nothing', 'One thing', 'Two things', 'Three things', 'Four things', 'Five things', 'Six things', 'Seven things', 'Eight things', 'Nine things'];
+const wantYou = (n) => (n ? `${NUMBER_WORDS[n] ?? `${n} things`} ${n === 1 ? 'wants' : 'want'} you.` : 'Nothing needs you.');
+
+/** The answer a decision card offers: what tapping it does, in words. Every one opens the message, which holds the full choice. */
+function answerLabel(m) {
+  if (m.type === 'report') return 'Read the report';
+  switch (m.kind) {
+    case 'callin': return 'Take the call';
+    case 'contract': return 'Answer the post';
+    case 'expedition': return 'Answer them';
+    case 'renewal': return 'Talk terms';
+    case 'hall-offer': case 'opening': return 'Look at the offer';
+    case 'raid-warning': return 'See the raid';
+    default: return m.blocking ? 'Decide' : 'Open';
+  }
+}
+
+/** A decision message as a card: what it is, when, a line of it, and its answer. A crew's report shows their faces and the result. */
+function deskCard(m) {
+  const back = m.type === 'report' && m.back?.away;
+  const ops = back ? m.back.crewIds.map((id) => state.crew.find((o) => o.id === id) ?? state.memorial.find((o) => o.id === id)).filter(Boolean) : [];
+  const result = m.timeline?.result ?? 'completed';
+  const STAMP = { completed: (p) => `✓ ${money(p)}`, aborted: () => '↩ Walked away', setback: (p) => `✗ ${money(p)}`, loss: () => '✕ Someone lost' };
+  const urgent = m.blocking || m.kind === 'raid-warning';
+  const when = m.day === state.day ? 'Today' : calendar(m.day).weekday;
+  return `
+    <li class="dcard ${urgent ? 'is-urgent' : ''} ${back ? `is-back is-${esc(result)}` : ''}">
+      <div class="dcard__head">
+        ${ops.length ? `<span class="back__faces">${ops.map((op, i) => `<span class="back__face" style="--i:${i}">${face(op, 'sm')}</span>`).join('')}</span>` : ''}
+        <p class="dcard__title"><strong>${esc(back ? `${templateById(m.back.templateId)?.name ?? 'Job'} is back` : m.subject)}</strong>${back ? ` <span class="back__stamp">${esc((STAMP[result] ?? STAMP.completed)(m.back.pay))}</span>` : ''}</p>
+        <span class="dcard__when">${esc(when)}</span>
+      </div>
+      ${m.body && !back ? `<p class="dcard__line">${esc(m.body)}</p>` : back ? `<p class="dcard__line">${esc(pickLine(PARTNER.back[result] ?? PARTNER.back.completed, `${m.id}-back`))}</p>` : ''}
+      <div class="dcard__answers"><button class="btn ${urgent ? 'btn--primary' : ''}" data-action="open-message" data-id="${esc(m.id)}">${esc(answerLabel(m))}</button></div>
+    </li>`;
+}
+
+/** Jobs worth a card today: new on the board today, or ending today or tomorrow. The rest wait on the Board. */
+function deskJobs() {
+  const shown = state.jobs.filter((j) => j.offeredDay === state.day || j.expiresDay <= state.day + 1)
+    .sort((a, b) => a.expiresDay - b.expiresDay);
+  return { shown, rest: state.jobs.length - shown.length };
+}
+
+function deskJobCard(j) {
+  const v = jobView(state, j);
+  const ends = j.expiresDay === state.day ? 'Last day' : j.expiresDay === state.day + 1 ? 'Ends tomorrow' : 'New';
+  return `
+    <li class="dcard dcard--job ${j.expiresDay === state.day ? 'is-last' : ''}">
+      <div class="dcard__head">
+        <p class="dcard__title"><strong>${esc(v.tpl.name)}</strong> <span class="dcard__pay">${money(v.pay)}</span></p>
+        <span class="dcard__when">${esc(ends)}</span>
+      </div>
+      <p class="dcard__line">${esc(v.client?.name ?? 'Walk-in job')}${v.days > 1 ? ` · ${v.days} days` : ''}</p>
+      <div class="dcard__answers"><button class="btn" data-action="open-job" data-id="${esc(j.id)}">Plan it</button></div>
+    </li>`;
+}
+
+/** The crew today: who is out (the existing Out lines), who can't work and why, and how many are free. */
+function deskCrew(list) {
+  const b = mondayBrief(state);
+  const hurt = list.find((a) => a.kind === 'crew-out');
+  return `
+    <section class="panel deskcrew" aria-label="The crew today">
+      <h2>The crew today</h2>
+      ${renderOutLine()}
+      ${hurt ? `<button class="deskcrew__row" data-action="nav" data-id="crew"><span class="deskcrew__k is-warn">Can't work</span><span class="deskcrew__v">${esc(andList(hurt.why ?? hurt.names))}</span><span class="deskcrew__go">Crew ›</span></button>` : ''}
+      <button class="deskcrew__row" data-action="nav" data-id="crew"><span class="deskcrew__k">Free</span><span class="deskcrew__v">${b.roster.free} of ${b.roster.total}</span><span class="deskcrew__go">Crew ›</span></button>
+    </section>`;
+}
+
+/** News: every message that isn't a decision, by day, newest first; three days unless the player asks for all. The Word heads it. */
+function deskNews() {
+  const news = state.inbox.filter((m) => !isDecision(state, m));
+  const days = [...new Set(news.map((m) => m.day))].sort((a, b) => b - a);
+  const keep = V.deskAllNews ? days : days.slice(0, 3);
+  const older = news.filter((m) => !keep.includes(m.day)).length;
+  const dayName = (d) => (d === state.day ? 'Today' : d === state.day - 1 ? 'Yesterday' : `${calendar(d).weekday} · Day ${d}`);
+  return `
+    <section class="panel desknews" aria-label="What happened">
+      <h2>What happened</h2>
+      ${renderWord(state)}
+      ${keep.length ? keep.map((d) => `
+        <p class="desknews__day">${esc(dayName(d))}</p>
+        <ul class="desknews__list">${news.filter((m) => m.day === d).map((m) => `
+          <li><button class="desknews__line ${m.read ? '' : 'is-new'} ${m.id === V.openMessageId ? 'is-open' : ''}" data-action="open-message" data-id="${esc(m.id)}">
+            <span class="row__tag tag--${esc(m.type)}">${esc(m.type)}</span><span class="desknews__text">${esc(m.subject)}</span>
+          </button></li>`).join('')}
+        </ul>`).join('') : '<p class="muted small">Nothing yet.</p>'}
+      ${older || V.deskAllNews ? `<button class="btn btn--ghost btn--block desknews__more" data-action="desk-news-all">${V.deskAllNews ? 'Only the last three days' : `Older news (${older})`}</button>` : ''}
+    </section>`;
+}
+
+/** Today as the desk: Joss's line, what needs you (each with its answer), then the crew, Coming up and the news. */
+export function renderDesk() {
+  const { open, shown } = inboxView();
+  const { list, line, opener, face: mood } = jossDay();
+  const decisions = state.inbox.filter((m) => isDecision(state, m));
+  const { shown: jobs, rest } = deskJobs();
+  // Joss's own alerts that are not a message: short of the bills, broke, a last day for a lead or a job. Decisions are cards
+  // already, and who can't work is in the crew panel.
+  const notes = list.filter((a) => a.kind !== 'decision' && a.kind !== 'crew-out' && a.kind !== 'job-last' && a.kind !== 'jobs-last');
+  const count = decisions.length + notes.length;
+  const gear = newGearLine(gearUi, state);
+  const folded = V.jossFoldedDay === state.day;
+  const at = open ? shown.indexOf(open) : -1;
+  const reader = open ? `
+        <section class="panel inbox__detail">
+          <div class="reader__head">
+            <span class="reader__where">${open && isDecision(state, open) ? 'Needs you' : 'News'}</span>
+            <button class="reader__btn" data-action="msg-step" data-id="-1" aria-label="Newer message" ${at <= 0 ? 'disabled' : ''}>‹</button>
+            <button class="reader__btn" data-action="msg-step" data-id="1" aria-label="Older message" ${at < 0 || at >= shown.length - 1 ? 'disabled' : ''}>›</button>
+            <button class="reader__btn" data-action="msg-close" aria-label="Close message">✕</button>
+          </div>
+          <div class="reader__body">${renderMessage(open)}</div>
+        </section>` : '';
+  return `
+    ${backupBanner()}
+    <div class="inbox inbox--desk ${open ? 'has-open' : ''}">
+      <div class="inbox__side">
+        <section class="panel inbox__list desk">
+          <h1 class="sr-only">Today</h1>
+          <button class="jossbub ${folded ? 'is-folded' : ''}" data-action="joss-fold" aria-expanded="${!folded}">
+            <span class="jossbub__face">${jossIcon({ mood, size: 32 })}</span>
+            <span class="jossbub__text">
+              <span class="jossbub__name">${esc(NAMES.partner)} <span class="jossbub__fold" aria-hidden="true">${esc(calendar(state.day).weekday)} · ${folded ? '▸' : '▾'}</span></span>
+              <span class="jossbub__line">${esc(opener)} ${esc(wantYou(count))}</span>
+            </span>
+          </button>
+          ${renderThreatLines()}
+          <h2 class="desk__h">Needs you${count ? ` · ${count}` : ''}</h2>
+          ${notes.length ? `<ul class="alerts">${notes.map((a) => {
+            const [text, action, id] = line(a) ?? [];
+            return text ? `<li><button class="alert alert--${a.tone}" data-action="${action}" data-id="${esc(id)}">${esc(text)} <span aria-hidden="true">›</span></button></li>` : '';
+          }).join('')}</ul>` : ''}
+          ${gear}
+          ${decisions.length ? `<ul class="dcards">${decisions.map(deskCard).join('')}</ul>` : ''}
+          ${!count && !gear ? '<p class="muted desk__clear">A clear desk.</p>' : ''}
+          ${jobs.length || rest ? `<h2 class="desk__h">On the board${state.jobs.length ? ` · ${state.jobs.length}` : ''}</h2>` : ''}
+          ${jobs.length ? `<ul class="dcards">${jobs.map(deskJobCard).join('')}</ul>` : ''}
+          ${rest ? `<button class="deskpile" data-action="goto" data-id="jobs:board">${jobs.length ? `${rest} more` : `${rest} ${rest === 1 ? 'job' : 'jobs'}`} on the board · Jobs ›</button>` : ''}
+        </section>
+      </div>
+      <div class="inbox__stack">
+        ${renderUpcoming('upcoming--strip', open)}
+        ${open ? reader : `${deskCrew(list)}${deskNews()}`}
+      </div>
+    </div>`;
 }

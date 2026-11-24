@@ -158,6 +158,14 @@ export function renderSettings() {
         </div>
       </div>
       <div class="riskcard">
+        <p>Today: <strong>${getPref('today-classic') ? 'classic inbox' : 'the desk'}</strong></p>
+        <p class="muted small">The desk shows what needs you as cards with their answer on them, and the rest as a log of the day's news. The classic inbox lists every message as mail. Only changes how Today looks, and is kept on this device, not in the save.</p>
+        <div class="segmented segmented--grid">
+          <button class="seg ${getPref('today-classic') ? '' : 'is-on'}" data-action="today-layout" data-id="desk" aria-pressed="${!getPref('today-classic')}"><strong>The desk</strong><span>New</span></button>
+          <button class="seg ${getPref('today-classic') ? 'is-on' : ''}" data-action="today-layout" data-id="classic" aria-pressed="${getPref('today-classic')}"><strong>Classic inbox</strong><span>Every message</span></button>
+        </div>
+      </div>
+      <div class="riskcard">
         <p>Hall art: <strong>${getPref('hallart') ? 'on' : 'off'}</strong></p>
         <p class="muted small">Draws the Old Town hall as a street-terminal picture, with tiles, walls and a sprite for everything built. Other halls keep the plain plan for now. Only changes how it looks, and is kept on this device, not in the save.</p>
         <button class="btn btn--block" data-action="toggle-hallart" aria-pressed="${getPref('hallart')}">${getPref('hallart') ? 'Turn hall art off' : 'Turn hall art on'}</button>

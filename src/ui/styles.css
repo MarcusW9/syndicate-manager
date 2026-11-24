@@ -3231,3 +3231,72 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .routeplan__day { color: var(--accent-2); font: 700 0.75rem/1.6 var(--display); letter-spacing: 0.1em; text-transform: uppercase; }
 .routeplan__list li.is-job { color: var(--text); font-weight: 600; }
 .spoilsline { margin: 6px 0; padding: 4px 10px; border-left: 2px solid var(--tier-blue); }
+
+/* ---------------------------------------------------------------------------------------------------------
+   Today as the desk (2026-11-24, docs/mockups/2026-11-24-today-tablet.html frame K). The classic inbox stays
+   behind Save › Look ("today-classic"); html.desk is set when the desk is on.
+   Left: Joss's bubble, Needs you (decision cards with their answer), On the board. Right: Coming up, the crew
+   today, What happened (the news log). A message opened takes the right column, as the reader did.
+   --------------------------------------------------------------------------------------------------------- */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.jossbub { display: flex; gap: 10px; align-items: flex-start; width: 100%; min-height: var(--tap); margin: 0 0 12px; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.jossbub__face { flex: none; line-height: 0; margin-top: 2px; }
+.jossbub__text { flex: 1; min-width: 0; padding: 8px 12px; border: 1px solid var(--line); background: var(--panel-2, var(--panel)); clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); }
+.jossbub__name { display: flex; font-family: var(--display, inherit); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-2); }
+.jossbub__fold { margin-left: auto; color: var(--muted); letter-spacing: 0.1em; }
+.jossbub__line { display: block; margin-top: 2px; }
+.jossbub.is-folded .jossbub__line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
+.desk__h { margin: 14px 0 8px; font-size: 0.8rem; color: var(--muted); }
+.desk__h::after { display: none; }
+.desk .desk__h:first-of-type { margin-top: 4px; }
+.desk__clear { margin: 0 0 8px; }
+.dcards { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 8px; }
+.dcard { padding: 10px 12px; border: 1px solid var(--line); border-left: 3px solid var(--accent-2); background: var(--panel-2, var(--panel)); }
+.dcard.is-urgent, .dcard.is-last { border-left-color: var(--danger); }
+.dcard.is-back.is-setback, .dcard.is-back.is-loss { border-left-color: var(--warn); }
+.dcard__head { display: flex; align-items: center; gap: 10px; }
+.dcard__title { flex: 1; min-width: 0; margin: 0; }
+.dcard__when { flex: none; align-self: flex-start; font-family: var(--display, inherit); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.dcard.is-last .dcard__when, .dcard.is-urgent .dcard__when { color: var(--danger); }
+.dcard__pay { color: var(--accent-2); font-weight: 600; }
+.dcard__line { margin: 2px 0 0; color: var(--muted); font-size: 0.9rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.dcard__answers { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.dcard__answers .btn { min-height: var(--tap); }
+@media (max-width: 639px) { .dcard__answers .btn { flex: 1; } }
+.deskpile { width: 100%; min-height: var(--tap); border: 1px dashed var(--line); background: none; color: var(--muted); font-family: var(--display, inherit); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; }
+.deskcrew .outnow { margin: 0 0 8px; }
+.deskcrew__row { display: flex; align-items: center; gap: 10px; width: 100%; min-height: var(--tap); padding: 6px 0; border: 0; border-top: 1px solid var(--line); background: none; color: var(--text); font: inherit; font-size: 0.92rem; text-align: left; cursor: pointer; }
+.deskcrew__k { flex: 0 0 84px; font-family: var(--display, inherit); font-weight: 700; font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.deskcrew__k.is-warn { color: var(--warn); }
+.deskcrew__v { flex: 1; min-width: 0; }
+.deskcrew__go { flex: none; color: var(--accent-2); font-family: var(--display, inherit); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; }
+.desknews .theword { margin: 0 0 10px; }
+.desknews__day { margin: 12px 0 4px; font-family: var(--display, inherit); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-2); }
+.desknews__list { list-style: none; margin: 0; padding: 0; }
+.desknews__line { display: flex; align-items: center; gap: 10px; width: 100%; min-height: var(--tap); padding: 4px 0; border: 0; border-bottom: 1px solid var(--line); background: none; color: #c9ced8; font: inherit; font-size: 0.9rem; text-align: left; cursor: pointer; }
+.desknews__line .row__tag { flex: none; }
+.desknews__text { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.desknews__line.is-new { color: var(--text); font-weight: 600; }
+.desknews__line.is-open { background: rgba(61, 232, 216, 0.06); }
+.desknews__more { margin-top: 8px; }
+@media (min-width: 900px), (min-width: 640px) and (max-height: 520px) {
+  .inbox--desk { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+  /* With no message open the right column is three panels that scroll with the page; open, it is the sticky reader as before. */
+  .inbox--desk:not(.has-open) .inbox__stack { position: static; max-height: none; grid-template-rows: none; }
+}
+/* The slim rail on tablets (the owner, 2026-11-24: "the same sidebar as on phone, smaller"): the 64px icon rail the phone on its side
+   already has, from 900 to 1199px wide, while the desk is on. The classic inbox keeps the 200px word rail. */
+@media (min-width: 900px) and (max-width: 1199px) and (min-height: 520.1px) {
+  html.desk #app { grid-template-columns: 64px 1fr; }
+  html.desk .nav__btn { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 2px; min-height: 56px; text-align: center; letter-spacing: 0.04em; font-size: 0.62rem; }
+  html.desk .nav__ico { display: block; line-height: 0; }
+  html.desk .nav__ico .icon { width: 24px; height: 24px; }
+  html.desk .nav__btn.is-active::before { content: none; }
+  html.desk .nav__btn.is-active { box-shadow: inset 3px 0 0 var(--accent); }
+  html.desk .nav__btn .pill { position: absolute; top: 4px; right: 6px; padding: 0 4px; min-width: 16px; font-size: 0.6rem; line-height: 1.5; }
+  html.desk .nav__btn--save { font-size: 0.62rem; }
+  html.desk .main { padding: 16px; }
+}
+.deskcrew h2, .desknews h2 { margin-top: 0; }
+/* On the desk Joss's alerts read as sentences, not the shouted capitals of the classic inbox (the owner's screenshot, 2026-11-24). */
+.desk .alert { text-transform: none; letter-spacing: 0; font-size: 0.95rem; }
