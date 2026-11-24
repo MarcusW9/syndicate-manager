@@ -25,11 +25,11 @@ try {
     const shot = async (name) => { await page.waitForTimeout(150); await page.screenshot({ path: join(out, `${String(++n).padStart(2, '0')}-${name}-${w < 500 ? 'phone' : 'desktop'}.png`) }); };
     // The caption holds for 2.6 s: a watcher in the page tells the script the moment it shows, and the script shoots then.
     let got = false;
-    await page.exposeFunction('__captionShown', async () => { if (got) return; got = true; await shot('clutch-caption'); });
+    await page.exposeFunction('__captionShown', async () => { if (got) return; got = true; await page.waitForTimeout(450); await shot('clutch-caption'); });
     await page.addInitScript(() => {
       new MutationObserver(() => {
         const c = document.querySelector('.watch__caption');
-        if (c && !c.hidden && /clutch/i.test(c.textContent)) window.__captionShown();
+        if (c && !c.hidden && c.dataset.tier === 'clutch') window.__captionShown();
       }).observe(document, { subtree: true, childList: true, attributes: true, characterData: true });
     });
     await page.goto(`http://localhost:${port}/`);

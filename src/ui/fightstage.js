@@ -1018,7 +1018,14 @@ export function createStage(svg, deps) {
         break;
       }
       case 'specialEnd': cinema(false); unspot(); if (s.look === 'ricochet') ricoEnd(s.hold ?? 900); else ricoClear(); put(host(s.id), drawn[s.id]?.at, 260); break;
-      case 'caption': deps.caption?.(word(s.key, s.slots), s.tier); break;
+      case 'caption': {
+        // A clutch finish gets the showcase's weight: the big gold plate on whoever did it, and a bigger caption (tier 'clutch').
+        const clutch = isClutch(s.key);
+        deps.caption?.(word(s.key, s.slots), clutch ? 'clutch' : s.tier);
+        const at = clutch ? pos(s.focus?.[0]) : null;
+        if (at) tag(at, 'CLUTCH', `${String(s.slots?.who ?? '').toUpperCase()} · ${s.key === 'director.clutchBurn' ? 'FIRE' : 'HACK'}`, 'warn', 4);
+        break;
+      }
       case 'say': deps.say?.({ when: clockText(s.round, s.clock), tier: s.tier, text: s.key ? `${word(s.key, s.slots)} ${s.texts.join(' ')}` : s.texts.join(' ') }); break;
       case 'camera': if (!deps.reduced() && deps.pace() !== 'resolve') look(s.focus); break;
       default: break;
