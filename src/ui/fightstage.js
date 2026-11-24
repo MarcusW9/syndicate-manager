@@ -15,6 +15,7 @@
 import { hash01 } from '../core/rng.js';
 import { FIGHT } from '../data/fights.js';
 import { lineText } from '../core/fighttext.js';
+import { isClutch } from '../core/director.js';
 import { portrait } from './art.js';
 import { SPECIAL_MOVES, SPECIAL_FAST_CUT, SPECIAL_LOOK_DEFAULT, ENEMY_LOOKS } from '../data/fightLooks.js';
 
@@ -101,7 +102,7 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
   for (const b of cue.beats ?? []) {
     if (!b.lines?.length) continue;
     let tier = b.tier;
-    if (tier === 'spotlight') { if (budget >= cap) tier = 'notable'; else budget += 1; }
+    if (tier === 'spotlight' && !isClutch(b.key)) { if (budget >= cap) tier = 'notable'; else budget += 1; }
     beatAfter.set(Math.max(...b.lines), { ...b, tier, holdMs: tier === 'notable' && b.tier === 'spotlight' ? FIGHT.beatMs.notable : b.holdMs });
   }
   const beatAt = new Map();

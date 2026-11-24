@@ -27,6 +27,8 @@ export const FIGHT_TEXT = {
   'director.shieldWall': '{who} covers {target} again.',
   'director.lastStand': '{who} keeps fighting on almost nothing.',
   'director.clutchHack': '{who} finishes the hack in round {round}.',
+  'director.clutchBurn': 'CLUTCH. {who}\'s fire finishes it with the crew on the ropes.',
+  'director.clutchVector': 'CLUTCH. {who}\'s hack finishes it with the crew on the ropes.',
   'director.denied': '{who} stops {n} radio calls.',
   'director.carryHome': '{target} is carried out.',
   // The live battle view (DRAFT wording so the keys read; the owner writes the final text). The pace chips, and the short
