@@ -124,12 +124,12 @@ try {
     await load(p, watched);
     await tap(p, '[data-action="nav"][data-id="inbox"]'); await p.waitForTimeout(300);
     await p.screenshot({ path: `${out}/06-watched-job-calls-at-a-stop-${tag}.png` });
-    await p.locator('[data-action="open-message"]').filter({ visible: true, hasText: /day 1/ }).first().click({ timeout: 5000 }).catch(() => console.log(`${tag}: the call message is not in view`)); await p.waitForTimeout(500);
+    await p.locator('[data-action="open-message"]').filter({ visible: true, hasText: /day 1/ }).first().evaluate((el) => el.click()); await p.waitForTimeout(500); // the list row may sit below the fold in landscape
     await p.screenshot({ path: `${out}/06b-watched-job-call-message-${tag}.png` });
     const take = p.locator('[data-action="take-call"]').filter({ visible: true }).first();
     if (await take.count()) {
-      // At 844x390 the sticky Coming up strip sits over the reader's button (a layout issue older than this change): press it directly.
-      await take.evaluate((el) => el.click()); await p.waitForTimeout(2500);
+      // A real tap (2026-11-24): at 844x390 the Coming up strip once covered this button; a blocked tap fails the capture.
+      await take.click({ timeout: 5000 }); await p.waitForTimeout(2500);
       await p.screenshot({ path: `${out}/07-watched-job-at-the-stop-${tag}.png` });
     }
     await p.close();
