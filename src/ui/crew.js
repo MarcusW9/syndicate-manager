@@ -86,6 +86,23 @@ function statStrip(op) {
   }).join('')}</span>${last && Object.keys(net).length ? '<span class="statstrip__note">Last season</span>' : ''}${open ? stripExplain(op, open, main) : ''}`;
 }
 
+/**
+ * A lead's stat strip on the Leads tab (2026-11-24, owner): the same three boxes as a crew card (main stat,
+ * then the two highest), with no change figures, and the main stat set against our best in that role:
+ * "+2 vs Jax", "−7 vs Jax", "level with Jax", or "none on crew" when we have nobody in the role.
+ * The boxes are part of the lead's row (it opens their page), not buttons of their own.
+ */
+function leadStrip(r) {
+  const main = primaryStat(r);
+  const rest = ROLL_STATS.filter((k) => k !== main).sort((a, b) => ratedStat(r, b) - ratedStat(r, a)).slice(0, 2);
+  const best = state.crew.filter((o) => o.role === r.role && !o.freelance).sort((a, b) => ratedStat(b, main) - ratedStat(a, main))[0];
+  const d = best ? ratedStat(r, main) - ratedStat(best, main) : 0;
+  const vs = !best ? ['none on crew', 'is-new', `no ${r.role} on the crew`]
+    : d === 0 ? [`level with ${best.handle}`, '', `level with ${best.handle}`]
+      : [`${signed(d)} vs ${best.handle}`, d > 0 ? 'is-up' : 'is-down', `${signed(d)} against ${best.handle}`];
+  return `<span class="statstrip">${[main, ...rest].map((k, i) => `<span class="statstrip__cell" role="img" aria-label="${esc(statName(k))} ${ratedStat(r, k)}${i === 0 ? `, ${esc(vs[2])}` : ''}"><span class="statstrip__k">${STAT_SHORT[k]}</span><span class="statstrip__v">${ratedStat(r, k)}</span>${i === 0 ? `<span class="statstrip__vs ${vs[1]}">${esc(vs[0])}</span>` : ''}</span>`).join('')}</span>`;
+}
+
 /** The level-up tab on a crew-list portrait (2026-11-23, owner; replaced the "Level up" pill). The Crew tab's badge counts them in words. */
 const LEVELUP_CHEVRON = '<svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true" focusable="false"><path d="M2 9.5 7 4.5l5 5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square"/></svg>';
 const rowFace = (op) => (levelUpOpen(op)
@@ -168,10 +185,11 @@ export function renderCrew() {
       ${recruits.length ? `<ul class="list">
         ${recruits.map((r) => `
           <li>
-            <button class="row" data-action="open-recruit" data-id="${esc(r.id)}">
+            <button class="row leadrow" data-action="open-recruit" data-id="${esc(r.id)}">
               ${face(r)}
               <span class="row__main"><strong>${esc(r.name)}</strong> "${esc(r.handle)}"<br><span class="muted">${esc(r.quality)} ${esc(r.role)} · ${r.age}</span></span>
               <span class="row__meta"><strong>${money(r.wage)}</strong>/wk<br>${daysLeft(r.expiresDay)}</span>
+              <span class="leadrow__strip">${leadStrip(r)}</span>
             </button>
           </li>`).join('')}
       </ul>` : '<p class="muted small">No leads right now. Scouts report every Wednesday.</p>'}
