@@ -80,6 +80,16 @@ h3{font:700 20px var(--display);letter-spacing:.08em;margin:0 0 8px}
 .col h2 .n{color:var(--muted);margin-left:6px}
 .kcard{border:1px solid var(--line);background:var(--panel-2);padding:8px 10px;margin-bottom:8px;font-size:13px;border-left:3px solid var(--accent-2)}.kcard.r{border-left-color:var(--danger)}.kcard.y{border-left-color:var(--warn)}.kcard b{display:block}.kcard span{color:var(--muted)}
 .pile{border:1px dashed var(--line);color:var(--muted);padding:10px;text-align:center;font:700 11px var(--display);letter-spacing:.14em}
+
+.jb{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px}.jb .face{width:34px;height:34px;border:1.5px solid var(--accent-2);flex:none;margin-top:2px}
+.jb .t{flex:1;background:var(--panel-2);border:1px solid var(--line);padding:8px 12px;font-size:14px;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%)}
+.jb .t b{display:block;color:var(--accent-2);font:700 11px var(--display);letter-spacing:.16em;margin-bottom:2px}.jb .t b i{font-style:normal;color:var(--muted);float:right}
+.jb.old .t{opacity:.55;font-size:13px}.earlier{color:var(--muted);font:700 10px var(--display);letter-spacing:.14em;margin:0 0 6px 44px}
+.sec{font:700 11px var(--display);letter-spacing:.16em;color:var(--muted);margin:4px 0 8px}
+.phone{width:390px;height:844px;background:var(--bg);border:1px solid #333;display:grid;grid-template-rows:58px 1fr 56px;overflow:hidden;position:relative;margin-bottom:10px}
+.phone .top{padding:0 12px;gap:10px}.phone .when{font-size:15px}.phone .cont{display:none}
+.phone .pm{padding:10px;overflow:hidden;display:flex;flex-direction:column;gap:0}
+.phone .act .btn{flex:1}
 </style></head><body>
 <h1 class="page">TODAY ON A TABLET · MOCKUPS</h1>
 <p class="note">iPad on its side (1000×690, your screenshot's size). Same day in every frame: a raid tomorrow, two hurt, a crew back, two crews out, 21 to do. Yellow tags are notes for us, not part of the design.</p>
@@ -142,6 +152,38 @@ const F=[
  {name:'J',body:`<div class="body" style="grid-template-columns:68px 1fr">${icoRail()}<div class="main" style="grid-template-columns:repeat(3,minmax(0,1fr))"><section class="panel col"><h2>NEEDS YOU<span class="n">5</span></h2><div class="kcard r"><b>Raid tomorrow</b><span>Old Town hall · hold or clear</span></div><div class="kcard"><b>Shutter Watch</b><span>Auntie Fung · ends Mon</span></div><div class="kcard"><b>Ruth's favour</b><span>ends Mon</span></div><div class="kcard"><b>Closing Stack report</b><span>¥1,100</span></div><div class="kcard"><b>Still Clocked In</b><span>ends Sun</span></div></section><section class="panel col"><h2>THE CREW</h2><div class="kcard"><b>Back · Closing Stack</b><span>everyone home</span></div><div class="kcard"><b>Out · 2 crews</b><span>Basin yards day 2 · Docks day 1</span></div><div class="kcard y"><b>Hurt · Sensor, Pigeon</b><span>4 days · 2 days</span></div><div class="kcard"><b>Free · 1 of 9</b><span>Static</span></div>${joss('We\'re short-handed today.')}</section><section class="panel col"><h2>THIS WEEK</h2><div class="kcard r"><b>Wed</b><span>Raid, Old Town</span></div><div class="kcard"><b>Sun</b><span>Bills ¥6,750 · Still Clocked In ends</span></div><div class="kcard"><b>Mon</b><span>Freelancers, street talk</span></div><div class="pile">NEWS · 16 ›</div></section></div></div>`+ann(80,640,'three questions, one column each'),
   cap:'<b>J · A BOARD OF THREE QUESTIONS.</b> What needs me · how is the crew · what is coming. Each a column of short cards; news goes into one pile. The most "manager game" of them and the easiest to scan in a glance; the narrowest columns, so it only works from tablet width up. A phone would show the three as swipeable pages.'},
 
+
+ {name:'K',noTop:1,body:`<div class="top"><div class="when">TUE · WK 28<small>¥6,750 DUE SUN</small></div><div class="cash" style="margin-left:40px"><i>CASH</i>¥44,470</div><div class="heat">HEAT NIGHT MARKET 3</div><div class="cont">CONTINUE → WED<small>5 WAITING · 4 JOBS OPEN</small></div></div><div class="body" style="grid-template-columns:68px 1fr"><nav class="rail rail--ico">${tabs.map(([t,n,c],i)=>`<a class="${i?'':'on'}"><span class="ico"></span>${t}${n?`<span class="pill ${c}">${i?n:5}</span>`:''}</a>`).join('')}<a class="save"><span class="ico"></span>SAVE</a></nav><div class="main" style="grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)"><section class="panel">
+<p class="earlier">▴ EARLIER FROM JOSS (2)</p>
+<div class="jb"><span class="face"></span><div class="t"><b>JOSS <i>TUE · ▾</i></b>Short-handed today: Sensor and Pigeon are hurt, and the police hit Old Town tomorrow. Five things want you.</div></div>
+<div class="sec">NEEDS YOU · 5</div>
+<div class="act r"><div class="h"><b>Police raid on the Old Town hall</b><span class="when">TOMORROW</span></div><div class="s">They come Wednesday. Hold it or clear out.</div><div class="btns"><span class="btn r">PLAN THE DEFENCE</span><span class="btn q">CLEAR OUT</span></div></div>
+<div class="act"><div class="h"><b>Shutter Watch</b><span class="when">ENDS MON</span></div><div class="s">Auntie Fung · ¥2,400 · 2 days · steady</div><div class="btns"><span class="btn p">PLAN IT</span><span class="btn q">PASS</span></div></div>
+<div class="act"><div class="h"><b>Ruth Okonkwo has a favour to ask</b><span class="when">ENDS MON</span></div><div class="s">She could put us in touch with the dock unions.</div><div class="btns"><span class="btn">HEAR HER OUT</span><span class="btn q">NOT NOW</span></div></div>
+<div class="act"><div class="h"><b>Closing Stack is back</b><span class="when">TODAY</span></div><div class="s">✓ ¥1,100 · everyone home · one find for the stash</div><div class="btns"><span class="btn">READ THE REPORT</span></div></div>
+<div class="pile">+1 MORE · STILL CLOCKED IN ENDS SUN</div></section>
+<div style="display:grid;gap:12px">${upcoming}<section class="panel"><h2>THE CREW TODAY</h2><div class="status">
+<div><span class="k" style="color:var(--accent-2)">OUT</span><span>2 crews · no calls</span><span class="go">CITY ›</span></div>
+<div><span class="k" style="color:var(--warn)">HURT</span><span>Sensor 4d · Pigeon 2d</span><span class="go">CREW ›</span></div>
+<div><span class="k" style="color:var(--text)">FREE</span><span>1 of 9 · Static</span><span class="go">CREW ›</span></div></div></section>
+<section class="panel"><h2>WHAT HAPPENED</h2><div class="log"><div class="day">TODAY</div><div class="l"><i>WORD</i>Two data brokers are feuding over a client list.</div><div class="l"><i>OUT</i>Hook Hand's crew cased the Basin yards.</div><div class="day">MONDAY</div><div class="l"><i>WORD</i>Nobody has seen Hook Hand on a job in a while.</div></div></section></div></div></div>`+ann(470,4,'21 unread becomes 5 waiting')+ann(330,96,'Joss opens the day, in a chat bubble')+ann(760,380,'Free moves here; Week card gone'),
+  cap:'<b>K · THE COMBINATION (TABLET).</b> Slim rail. Joss opens the day in a chat bubble that sums it up and folds on a tap; older Joss lines sit above it ("Earlier from Joss"). Under it, only what needs you, each with its answer on the card. On the right: Coming up, the crew (out, hurt, free), and the news log, where The Word now lives. No Week card: cash and the bill are in the top bar; "short of Sunday" would arrive as a Needs-you card when it is true.'},
+
 ];
 document.getElementById('out').innerHTML=F.map(f=>`<div class="frame" id="f${f.name}">${f.noTop?'':topbar}${f.body}</div><p class="cap">${f.cap}</p>`).join('');
+
+document.getElementById('out').insertAdjacentHTML('beforeend',`<div class="phone" id="fKP"><div class="top"><div class="when">TUE · WK 28<small>¥6,750 DUE SUN</small></div><div class="cash"><i>CASH</i>¥44,470</div><div class="heat" style="padding:6px 8px">HEAT 3</div></div>
+<div class="pm"><p class="earlier" style="margin-left:0">▴ EARLIER FROM JOSS (2)</p>
+<div class="jb"><span class="face"></span><div class="t"><b>JOSS <i>TUE · ▾</i></b>Short-handed today: Sensor and Pigeon are hurt, and the police hit Old Town tomorrow. Five things want you.</div></div>
+<div class="sec">NEEDS YOU · 5</div>
+<div class="act r"><div class="h"><b>Police raid, Old Town hall</b><span class="when">TOMORROW</span></div><div class="s">They come Wednesday. Hold it or clear out.</div><div class="btns"><span class="btn r">PLAN THE DEFENCE</span><span class="btn q">CLEAR OUT</span></div></div>
+<div class="act"><div class="h"><b>Shutter Watch</b><span class="when">ENDS MON</span></div><div class="s">Auntie Fung · ¥2,400 · 2 days · steady</div><div class="btns"><span class="btn p">PLAN IT</span><span class="btn q">PASS</span></div></div>
+<div class="act"><div class="h"><b>Ruth Okonkwo's favour</b><span class="when">ENDS MON</span></div><div class="s">She could put us in touch with the dock unions.</div><div class="btns"><span class="btn">HEAR HER OUT</span><span class="btn q">NOT NOW</span></div></div>
+<div class="act"><div class="h"><b>Closing Stack is back</b><span class="when">TODAY</span></div><div class="s">✓ ¥1,100 · everyone home</div><div class="btns"><span class="btn">READ THE REPORT</span></div></div>
+<div class="pile" style="margin-bottom:8px">+1 MORE</div>
+<div class="status" style="border:1px solid var(--line);padding:0 10px;background:var(--panel)"><div><span class="k" style="color:var(--accent-2)">OUT</span><span>2 crews</span><span class="go">CITY ›</span></div></div>
+</div>
+<nav class="btab">${tabs.map(([t,n,c],i)=>`<a class="${i?'':'on'}"><span class="ico"></span>${t}${n?`<span class="pill ${c}">${i?n:5}</span>`:''}</a>`).join('')}</nav>
+<span class="ann" style="left:200px;top:760px">crew, coming up, news: scroll down</span></div>
+<p class="cap"><b>K · ON A PHONE.</b> The same order in one column: Joss, Needs you, then (on scroll) the crew, Coming up and the news log. Continue stays in its dock above the tab bar, as now (left out here).</p>`);
 </script></body></html>
