@@ -34,7 +34,7 @@ I would keep **Guard**, **Escort** and **Watch**: they scan quickly as a set. Op
 | 58 · `escort.quiet[2]` | {who} changed cars at the halfway point. Nobody noticed. | {who} swapped cars halfway through the run. It didn't draw a look. |
 | 61 · `escort.good[0]` | {who} found a shortcut through a car park nobody watches. {client} was impressed. | {who} spotted a shorter route and got there with time to spare. {client} thanked them for it. |
 | 62 · `escort.good[1]` | The package arrived early, and {client} rounded up the fee. | The package made it ahead of schedule. {client} paid a little extra. |
-| 65 · `escort.rough[0]` | A bike tailed them for six blocks. {who} lost it, and clipped a kerb doing it. | A bike followed for six blocks. {who} shook it, but the car came back with a scraped wheel. |
+| 65 · `escort.rough[0]` | A bike tailed them for six blocks. {who} lost it, and clipped a kerb doing it. | A bike stayed with them for six blocks. {who} clipped a kerb getting rid of it. |
 | 66 · `escort.rough[1]` | A checkpoint went up on the route. {who} talked them through it, but the street noticed. | {who} got the crew past an unexpected checkpoint, but not without attracting attention. |
 | 68 · `escort.incident` | A van boxed them in at a junction, {n} doors opening at once. {who} has the package and is calling it in. | A van has them boxed in and {n} people are getting out. {who} still has the package and is calling us. |
 | 71 · `watch.name` | Watch | Keep the Peace |
@@ -148,6 +148,8 @@ Job-day snags are delays or scares only. Side-day lines report what the crew did
 
 ## 3. Expeditions and adventure logs
 
+For every trip snag, including contact and place callbacks, keep the same injury trigger as the current line. If it matches `HURT` in `src/core/expeditions.js`, the alternative must still match it. If it doesn't, don't add a matching word: the snag should still cost cash.
+
 ### `src/data/expeditions.js`
 
 | Line · key | Current | Alternative |
@@ -210,7 +212,7 @@ Job-day snags are delays or scares only. Side-day lines report what the crew did
 | 64 | {who} let the conversation wander until somebody mentioned {item} without being asked. That gave the crew somewhere useful to look. | {who} kept the conversation going until someone brought up {item} on their own. We left knowing where to look next. |
 | 65 | A seller wanted reassurance before giving up a name. {who} talked long enough to get it. | The seller needed to know who they were dealing with. {who} talked it through and came away with a name. |
 | 66 | A seller wanted reassurance first. {who} sat through photos of all forty grandchildren and got a name. | The seller took some warming up, so {who} looked at photos of all forty grandchildren. Then we got a name. |
-| 67 | A seller wanted reassurance first. {who}: "I know more about her divorce than her lawyer does. But we have a name." | The seller needed some reassurance, and {who} listened long enough to earn a name: "If you need to know about the divorce, I've got the whole thing." |
+| 67 | A seller wanted reassurance first. {who}: "I know more about her divorce than her lawyer does. But we have a name." | The seller took a while to warm up. {who}: "We got a name, and I know more about her divorce than her lawyer does." |
 | 68 | {who} traded a small favour for a better introduction. The next person had actually seen {item}. | A small favour from {who} got us introduced to someone who'd seen {item} for themselves. |
 | 69 | The owner of a borrowed trolley remembered exactly who had failed to return it. The case had gone with them. | The trolley never came back, so its owner hadn't forgotten who borrowed it. That was the person who'd taken the case. |
 | 72 | {who} followed a delivery van through {district} until it stopped somewhere that matched the rumour. | {who} stayed behind a delivery van across {district}. Where it stopped fit what we'd heard. |
@@ -245,7 +247,7 @@ Job-day snags are delays or scares only. Side-day lines report what the crew did
 | 119 | Another buyer had heard the same rumour. The seller became much less flexible about the price. | The rumour brought in a second buyer. The seller stopped talking about a lower price. |
 | 122 | A discussion over the price got physical before anybody drew a weapon. {who} left bruised, with the lead intact. | The price argument turned into a scuffle, though nobody drew a gun. {who} left with a bruise and the same lead. |
 | 123 | Two people decided {who} looked easier to push around than expected. Nobody reached for a gun, but the furniture suffered. | Two people tried to shove {who} around. No gun came out, but the chairs didn't all make it. |
-| 124 | Two people decided {who} looked easy to push around. The furniture lost, {who} won, and the stall owner sent us the bill. | Two people tried their luck with {who} and didn't get far. The stall owner put the broken furniture on {who}'s tab. |
+| 124 | Two people decided {who} looked easy to push around. The furniture lost, {who} won, and the stall owner sent us the bill. | {who} won the scuffle. The stall owner sent us the bill for the furniture. |
 | 125 | Two people decided {who} looked easy to push around. {who}'s report, in full: "They started it. The chair finished it." | Two people picked a quarrel with {who}. {who} sent one sentence back: "It wasn't the chair that started it, but that's what they'll remember." |
 | 128 | A camera caught more of {who} than they meant it to. They left before anyone came to check. | The camera got a better look at {who} than we'd wanted. They were gone by the time anyone came to look. |
 | 129 | {who} slipped through the wrong door and met the person holding the keys. Getting back out cost the crew a little cash. | The wrong door put {who} face to face with the keyholder. It cost us a little to get out again. |
@@ -383,7 +385,7 @@ Job-day snags are delays or scares only. Side-day lines report what the crew did
 | 101 | {who} caught a sleeve on a service-door alarm. We left before anyone arrived, but the building logged the visit. | A service-door alarm snagged {who}'s sleeve. We were gone before anyone showed, but our visit was on record. |
 | 102 | A camera turned towards {who} at the wrong moment. The watch desk circulated a still before we cleared the corridor. | The camera was facing {who} at exactly the wrong time. The watch desk had sent a picture round before we'd left the corridor. |
 | 105 | The collection address had nowhere to stop. {who} found the vehicle ticketed after a circuit on foot. | There was no place to stop at the pickup address. By the time {who} got back from looking on foot, there was a ticket on the vehicle. |
-| 106 | {who} took the low access ramp and scraped the vehicle's underside. The repair ate into our spending money. | The low ramp scraped the bottom of the vehicle when {who} took it. We had less to spend after paying for the repair. |
+| 106 | {who} took the low access ramp and damaged the underside of the vehicle. The repair ate into our spending money. | The vehicle bottomed out when {who} took the low ramp. We had less to spend after paying for the repair. |
 | 112 | {who} helped a stallholder shift a jammed shutter. They paid {cash} for the trouble. | A stallholder couldn't get the shutter to move. They gave {who} {cash} for helping free it. |
 | 113 | A workshop needed a sealed parcel carried round the corner. {who} earned {cash} while the seller kept us waiting. | While we waited for the seller, {who} made {cash} taking a workshop's sealed parcel round the corner. |
 | 114 | {who} spotted a duplicate charge on a delivery receipt. The dispatcher refunded {cash} in cash. | A charge appeared twice on the delivery receipt. When {who} pointed it out, the dispatcher handed back {cash}. |
@@ -475,8 +477,6 @@ Job-day snags are delays or scares only. Side-day lines report what the crew did
 
 ### `src/data/advlog/cash.js`
 
-Line 107 describes a repair bill, but “scraped” in the current text makes the game classify it as an injury. This alternative keeps the repair bill and avoids that accidental trigger.
-
 | Line | Current | Alternative |
 | --- | --- | --- |
 | 7 | {contact}, {contactWhat}, knew of money the tong could earn with a little legwork. {who} asked how much legwork 'a little' covered. | {contact}, {contactWhat}, knew a way for the tong to make some money. “How much running around?” {who} asked. |
@@ -537,7 +537,7 @@ Line 107 describes a repair bill, but “scraped” in the current text makes th
 | 102 | A watcher noticed the crew checking the handover point. Keeping the collection discreet became harder. | Someone keeping watch saw the crew check the meeting spot. The handover wasn't going to be as quiet now. |
 | 103 | {who} caught a shin on a crate beneath an awning. The scrape was small; the opinion of the crate was not. | Under the awning, {who} scraped a shin on a crate and had a few words for it. |
 | 106 | The crew's transport was clamped while a meeting ran long. The release fee came out of their pocket. | The meeting took long enough for the crew's transport to get clamped. They paid to get it released. |
-| 107 | {who} scraped a loading barrier while reversing through the delivery lane. Its owner wanted the repair paid before anyone left. | Backing up in the delivery lane, {who} clipped a barrier. The owner made the crew pay for the damage before they left. |
+| 107 | {who} reversed into a barrier in the delivery lane. The owner wanted the damage paid for before anyone left. | Backing up in the delivery lane, {who} clipped a barrier. The owner made the crew pay for the damage before they left. |
 | 112 | A stallholder paid {cash} for taking a forgotten order to the correct counter. | For taking an order that had been left behind to the right counter, the crew got {cash} from a stallholder. |
 | 113 | {who} helped carry a returned delivery down the street before closing. The supplier paid {cash}. | The supplier gave {who} {cash} for helping carry a returned order down the street before closing. |
 | 114 | A courier offered {cash} for covering a short collection while a trolley wheel was repaired. | While a trolley wheel was being fixed, the crew covered a quick pickup for a courier and got {cash} for it. |
@@ -692,7 +692,7 @@ Line 107 describes a repair bill, but “scraped” in the current text makes th
 | 104 | A watcher noticed the crew checking a meeting spot. The quiet approach stopped being quiet. | Someone had been watching the meeting spot and saw the crew looking it over. So much for keeping the visit to ourselves. |
 | 105 | {who} caught a shin on a crate tucked beneath an awning. The scrape was small; the crate received a detailed review. | There was a crate under the awning that {who} didn't see until it scraped their shin. The crate got an earful. |
 | 108 | The delivery lane closed while the crew were inside. Getting their transport released cost a storage fee. | While we were indoors, the delivery lane closed. We couldn't get our transport back without paying for storage. |
-| 109 | {who} scraped a barrier while reversing out of a crowded loading bay. The owner wanted the repair paid in cash. | The loading bay was packed, and {who} scraped a barrier backing out. The owner asked for cash for the damage. |
+| 109 | {who} backed into a barrier in a crowded loading bay. The owner wanted cash for the damage. | The loading bay was packed, and {who} hit a barrier backing out. The owner asked for cash for the damage. |
 | 114 | A stallholder paid {cash} for taking a forgotten order to the correct counter. | A stallholder handed over {cash} after the crew dropped a forgotten order at the counter it was meant for. |
 | 115 | {who} helped carry a returned delivery down the street before closing. The supplier paid {cash}. | The supplier gave {who} {cash} for helping lug a returned order down the street before the shutters came down. |
 | 116 | A courier offered {cash} for covering a short collection while a trolley wheel was repaired. | With a trolley wheel off for repair, a courier paid the crew {cash} to make a nearby pickup. |
@@ -1166,7 +1166,7 @@ Contact names and the Late Counter place label are retained verbatim: no support
 | 46 | The Late Counter owner put covered meals aside for the laboratory shift. Our handset stayed quiet beside the cutlery pot. | At the Late Counter, covered meals were set aside for the laboratory shift. Nothing came through on the handset beside the cutlery. |
 | 47 | Above the Service Steps shrine, a cleaner straightened the incense tin before heading upstairs. We waited on the bench opposite. | From the bench opposite, we watched a cleaner straighten the incense tin at the Service Steps shrine and head up. We stayed where we were. |
 | 48 | The executive windows went dark while lights stayed on in the laboratories. We still had no reply. | The executive floors went dark before the labs did. There was still nothing back from anyone upstairs. |
-| 49 | A receptionist answered every external call with 'Apex Ridge' and gave directions to Glass Heights between calls. Nobody called for us. | ‘Apex Ridge’ on the phone, Glass Heights when someone asked for directions in person. We heard reception do both all afternoon without a call for us. |
+| 49 | A receptionist answered every external call with 'Apex Ridge' and gave directions to Glass Heights between calls. Nobody called for us. | Reception said "Apex Ridge" on the phone and "Glass Heights" to walk-ins. Nobody called for us. |
 | 50 | The public arcade filled with people waiting for the rain to ease before walking downhill. {who} kept watching the agreed entrance. | Everyone in the public arcade seemed to be waiting for the rain to let up. {who} kept an eye on the entrance instead of the weather. |
 | 51 | A visiting engineer rehearsed the same explanation over tea at the Transfer Lounge. Our appointment time passed without confirmation. | The visiting engineer at the Transfer Lounge got another rehearsal in over the tea. Our meeting time came and went without a word. |
 | 55 | Our collection reference covered the parcel but not the loading bay. We paid for it to be brought down to the public counter. | Our reference got us the parcel but didn’t get us into the loading bay. Bringing it down to the public counter cost extra. |
