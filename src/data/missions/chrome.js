@@ -7,6 +7,7 @@
 export const CHROME = {
   id: 'chrome',
   name: 'Counterfeit Chrome',
+  breakIn: true,
   district: 'nightMarket',
   against: 'silverFan', // the job hurts this gang: finishing it adds to their grudge (core/gangs.js)
   threat: 1,

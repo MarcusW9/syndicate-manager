@@ -95,6 +95,7 @@ export function fill(text, state, am) {
     }
     if (key === 'district') return NAMES.districtsInText[district] ?? 'the city';
     if (key === 'faction') return DISTRICTS[district]?.faction ?? 'the local crew';
+    if (key === 'law') return DISTRICTS[district]?.law ?? 'Harbour Police';
     // The other tong a 'Rival crew' twist names (core/rivals.js rivalForJob); anonymous in a save without rivals.
     if (key === 'rivalTong') return am.rival?.tong ?? (offset === 0 || /[.!?:]["']?\s+$/.test(whole.slice(0, offset)) ? 'Another crew' : 'another crew');
     if (key === 'rival') return am.rival?.name ?? 'one of their people';

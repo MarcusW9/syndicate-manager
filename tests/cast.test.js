@@ -28,7 +28,7 @@ test('every {slot} in job text is a role, a district slot or a cast line that ex
         if (ROLES.includes(key) || key === 'district' || key === 'faction') { assert.equal(sub, undefined, `${m.id}: ${key}:${sub}`); continue; }
         // The engine fills these from the run's rival tong (core/rivals.js rivalForJob, C2) and the job's
         // target gang (ambushers, 2026-11-23), in the twist pool only.
-        if ((key === 'rivalTong' || key === 'rival' || key === 'ambushers') && m.id === 'twists') { assert.equal(sub, undefined); continue; }
+        if ((key === 'rivalTong' || key === 'rival' || key === 'ambushers' || key === 'law') && m.id === 'twists') { assert.equal(sub, undefined); continue; }
         assert.ok(CAST[key], `${m.id}: unknown slot {${key}} in "${t}"`);
         if (sub) assert.ok(CAST[key].lines?.[sub]?.length, `${m.id}: ${key} has no "${sub}" lines`);
       }

@@ -58,6 +58,10 @@ test('offers vary pay by up to 25% and threat by at most 1, staying on the 1-5 s
 
 test('about 1 in 4 jobs has a twist; the hint is usually right but not always', () => {
   const s = offers(4000, 2);
+  // Routine work never has a twist or a hint (2026-11-24); the rate is over the other jobs.
+  const routine = s.jobs.filter((j) => templateById(j.templateId).routine);
+  assert.ok(routine.every((j) => !j.twist && !j.hinted), 'routine work: no twist, no hint');
+  s.jobs = s.jobs.filter((j) => !templateById(j.templateId).routine);
   const twisted = s.jobs.filter((j) => j.twist);
   const rate = twisted.length / s.jobs.length;
   assert.ok(Math.abs(rate - TWIST_CHANCE) < 0.04, `twist rate ${rate}`);
@@ -77,7 +81,7 @@ test('a twist shows up during the job and is announced', () => {
   assert.ok(s.activeMission.queue.some((q) => q.twist && q.id === 'twist_tipoff'));
   assert.notEqual(s.activeMission.queue[0].twist, true, 'never before the first beat');
   const { state } = playMission(s, carefulPolicy);
-  assert.ok(state.activeMission.log.some((e) => e.kind === 'twist' && e.text.includes('Police tip-off')) || state.activeMission.aborted);
+  assert.ok(state.activeMission.log.some((e) => e.kind === 'twist' && e.text.includes('Tip-off')) || state.activeMission.aborted);
 });
 
 test('a hotter job makes every roll harder; a quieter one easier', () => {
@@ -334,4 +338,28 @@ test('an offer takes a range of days; longer pays more; rookie work keeps its da
   s.jobs = [];
   addOffer(s, 'penthouse');
   assert.equal(s.jobs[0].days, 3, 'a plain offer keeps the template days');
+});
+
+// Twists that fit the lore (2026-11-24): no twist on routine work, 'Unexpected score' only on a
+// break-in, and a tip-off names whoever holds the district's streets.
+test('routine work never has a twist, and only a break-in turns up an unexpected score', () => {
+  const s = createNewGame({ seed: 5 });
+  s.jobs = [];
+  const rng = makeRng(11);
+  const routine = MISSIONS.filter((m) => m.routine).map((m) => m.id);
+  const quiet = MISSIONS.filter((m) => !m.routine && !m.breakIn).map((m) => m.id);
+  const breakIns = MISSIONS.filter((m) => m.breakIn).map((m) => m.id);
+  assert.ok(breakIns.length > 0, 'some jobs are break-ins');
+  const twistsOf = (ids) => { const out = []; for (let i = 0; i < 400; i++) { addOffer(s, ids[i % ids.length], { rng }); out.push(s.jobs.at(-1).twist); } return out; };
+  assert.ok(twistsOf(routine).every((t) => t === null), 'routine work has no twist');
+  const q = twistsOf(quiet);
+  assert.ok(q.some(Boolean) && !q.includes('twist_bonus'), 'other jobs still get twists, but never a safe to take');
+  assert.ok(twistsOf(breakIns).includes('twist_bonus'), 'a break-in can turn up an unexpected score');
+});
+
+test('a tip-off names Veridian-Apex security in Glass Heights and the Harbour Police in the Docks', () => {
+  const s = createNewGame({ seed: 5 });
+  const at = (id) => M.fill('{law} at both ends of the street.', s, { templateId: id, step: 0, jobId: 'x', crewIds: [] });
+  assert.match(at(MISSIONS.find((m) => m.district === 'heights').id), /^Veridian-Apex security/);
+  assert.match(at(MISSIONS.find((m) => m.district === 'docks').id), /^Harbour Police/);
 });

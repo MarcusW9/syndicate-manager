@@ -5,6 +5,7 @@
 export const CASINO = {
   id: 'casino',
   name: 'Casino Con',
+  breakIn: true,
   district: 'nightMarket',
   threat: 2,
   pay: 4500,

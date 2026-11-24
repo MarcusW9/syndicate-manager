@@ -120,8 +120,13 @@ export function addOffer(state, templateId, { rng = null, clientId = null } = {}
     const r = rng();
     threatDelta = r < 0.25 ? -1 : r < 0.75 ? 0 : 1;
     if (tpl.threat + threatDelta < 1 || tpl.threat + threatDelta > 5) threatDelta = 0;
-    twist = rng() < TWIST_CHANCE ? pick(rng, TWISTS).id : null;
+    // Routine work never has a twist, and 'Unexpected score' only turns up on a break-in (2026-11-24).
+    // The rolls are still made, so no other roll moves.
+    const pool = TWISTS.filter((t) => !t.breakInOnly || tpl.breakIn);
+    twist = rng() < TWIST_CHANCE ? pick(rng, pool).id : null;
+    if (tpl.routine) twist = null;
     hinted = rng() < (twist ? HINT_IF_TWIST : HINT_IF_CLEAN);
+    if (tpl.routine) hinted = false; // no twist can be there, so no hint either
   }
   // Its days roll from a hash of the seed and the offer, so no other roll moves.
   const [lo, hi] = daysRange(tpl);
