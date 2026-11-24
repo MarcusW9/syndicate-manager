@@ -10,8 +10,8 @@
 // districts: null fits anywhere; otherwise the districts it fits. stats: what its choices roll, so a job whose key
 // stats match draws it more often. {law}, {faction}, {district} and {op} fill as in any crisis (core/mission.js fill).
 //
-// Claude's first draft (2026-11-24), for the owner to mark: drafts/writing-tasks.md "Prep stops". Thirty stops: eight
-// anywhere, two for the Docks, five each for Old Town, the Night Market, Glass Heights and the Basin.
+// Claude's first draft (2026-11-24), for the owner to mark: drafts/writing-tasks.md "Prep stops". Thirty-three stops: eight
+// anywhere, five each for the Docks, Old Town, the Night Market, Glass Heights and the Basin.
 
 const abort = (id, success) => ({
   id, label: 'Abort: walk away from the job', kind: 'abort', stat: 'cool', difficulty: 0,
@@ -240,6 +240,72 @@ export const PREP_STOPS = [
           failureInjury: 'light', failureCost: { alert: 1 },
           report: { success: '{op} cleared the crane landing: the job gets easier.', failure: 'A shoving match on the crane stairs. The job starts on alert.' } },
         abort('crane_abort', 'The crew climbs back down and lets the job go.'),
+      ],
+    },
+  },
+  {
+    id: 'prep_docks_bonded', districts: ['docks'], stats: ['tech', 'social'],
+    time: '08:40', place: 'the shipping-paper kiosk opposite the bonded stores',
+    arrive: 'In the morning rush, the crew queues at the shipping-paper kiosk opposite the bonded stores, where the place’s paperwork is translated and stamped.',
+    crisis: {
+      id: 'prep_docks_bonded', stop: true, situations: ['law'],
+      text: 'The place’s manifest for the week is on the translator’s desk, drying under a lamp because it came in wet. A Harbour Police customs officer is two places behind the crew in the queue.',
+      choices: [
+        { id: 'bonded_scan', label: 'Photograph the manifest while she stamps someone else’s', kind: 'push', stat: 'tech', difficulty: 13, successCost: { dropCrisis: 1 },
+          success: '{op} angles a handset over the counter and has every page by the time the stamp comes down. It shows what is moving and when.',
+          failure: 'The flash goes off. The translator looks up, and so does the officer.',
+          failureInjury: 'none', failureCost: { alert: 1 },
+          report: { success: '{op} copied the place’s manifest: one less problem on the job.', failure: 'A flash at the kiosk caught a customs officer’s eye. The job starts on alert.' } },
+        { id: 'bonded_wet', label: 'Bring in wet papers of your own and wait beside hers', kind: 'adapt', stat: 'social', difficulty: 12, cost: { payCut: 0.05 }, successCost: { dropCrisis: 1 },
+          success: '{op} pays the extra for wet documents and gets a stool beside the lamp. Half an hour of drying is half an hour of reading.',
+          failure: 'She puts the crew’s papers on the other desk, away from the lamp and the manifest.',
+          failureInjury: 'none', failureCost: { alert: 1 },
+          report: { success: '{op} read the place’s manifest while waiting: one less problem on the job. Pay -5%.', failure: 'The kiosk kept the crew away from the manifest. The job starts on alert. Pay -5%.' } },
+        abort('bonded_abort', 'The crew leaves the queue and lets the job go.'),
+      ],
+    },
+  },
+  {
+    id: 'prep_docks_ferry', districts: ['docks'], stats: ['piloting', 'stealth'],
+    time: '21:20', place: 'the rope shop facing the diesel ferry queue',
+    arrive: 'After dark, the crew is at the rope shop by the diesel ferry queue, looking at the water route to the place.',
+    crisis: {
+      id: 'prep_docks_ferry', stop: true, situations: ['escape'],
+      text: 'A sampan owner will run the crew round to the place’s pier by water, but only if they take it out tonight to show they can handle the swell. A Red Lantern launch is idling at the end of the ferry pier.',
+      choices: [
+        { id: 'ferry_run', label: 'Take the sampan round in the dark', kind: 'push', stat: 'piloting', difficulty: 13, successCost: { ease: 1 },
+          success: '{op} brings it round under the pier lights and back without the launch turning its head. The owner rents it for the night of the job.',
+          failure: 'A wave slaps the hull loud under the pier, and the launch’s spotlight swings over to look.',
+          failureInjury: 'light', failureCost: { alert: 1 },
+          report: { success: '{op} proved the water route to the place: the job gets easier.', failure: 'The Red Lantern launch saw the crew on the water. The job starts on alert.' } },
+        { id: 'ferry_rope', label: 'Watch the launch’s rounds from the rope shop instead', kind: 'adapt', stat: 'stealth', difficulty: 12, successCost: { ease: 1 },
+          success: '{op} buys rope slowly for an hour and counts the launch’s rounds. It sits at the ferry pier for twenty minutes in every hour.',
+          failure: 'The rope seller asks why the crew keeps looking at the water. Someone on the launch looks back.',
+          failureInjury: 'none', failureCost: { alert: 1 },
+          report: { success: '{op} timed the Red Lantern launch’s rounds: the job gets easier.', failure: 'The crew was noticed watching the launch. The job starts on alert.' } },
+        abort('ferry_abort', 'The crew joins the ferry queue and lets the job go.'),
+      ],
+    },
+  },
+  {
+    id: 'prep_docks_clinic', districts: ['docks'], stats: ['medical', 'cool'],
+    time: '16:30', place: 'the clinic waiting room above the marine supply shop',
+    arrive: 'Between shifts, the crew sits in the clinic above the marine supply shop, where the place’s dockworkers get patched up.',
+    crisis: {
+      id: 'prep_docks_clinic', stop: true, situations: ['injury'],
+      text: 'A forklift driver from the place is waiting with a crushed hand wrapped in a rag. The nurse is with someone else, and he is getting paler.',
+      choices: [
+        { id: 'dockclinic_help', label: 'Clean and splint his hand while he waits', kind: 'adapt', stat: 'medical', difficulty: 12, successCost: { ease: 1 },
+          success: '{op} has the hand splinted before the nurse is free. He talks the whole time to keep his mind off it: which bay is unlocked at night, and why.',
+          failure: 'The hand is worse than it looked. The nurse takes over, and she wants to know who the crew are.',
+          failureInjury: 'none', failureCost: { alert: 1 },
+          report: { success: '{op} splinted a driver’s hand and learned which bay is unlocked: the job gets easier.', failure: 'The clinic nurse asked who the crew were. The job starts on alert.' } },
+        { id: 'dockclinic_wait', label: 'Wait with him and let him talk', kind: 'push', stat: 'cool', difficulty: 13, successCost: { ease: 1 },
+          success: '{op} sits beside him and says very little. He fills the silence with everything that is wrong with the place, including its night locks.',
+          failure: 'He is in too much pain to say anything useful.',
+          failureInjury: 'none', failureCost: { alert: 1 },
+          report: { success: '{op} heard about the place’s night locks: the job gets easier.', failure: 'Nothing useful came out of the clinic. The job starts on alert.' } },
+        abort('dockclinic_abort', 'The crew leaves the waiting room and lets the job go.'),
       ],
     },
   },
