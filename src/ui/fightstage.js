@@ -15,6 +15,7 @@
 import { hash01 } from '../core/rng.js';
 import { FIGHT } from '../data/fights.js';
 import { lineText } from '../core/fighttext.js';
+import { isClutch } from '../core/director.js';
 import { portrait } from './art.js';
 import { SPECIAL_MOVES, SPECIAL_FAST_CUT, SPECIAL_LOOK_DEFAULT, ENEMY_LOOKS } from '../data/fightLooks.js';
 
@@ -22,6 +23,7 @@ import { SPECIAL_MOVES, SPECIAL_FAST_CUT, SPECIAL_LOOK_DEFAULT, ENEMY_LOOKS } fr
 export const PACE_K = { watch: 1, fast: 0.6, resolve: 0 };
 export const PACES = ['fast', 'watch', 'resolve'];
 // Step lengths at Watch, in ms.
+const CLUTCH_SLOW = 2.6; // a clutch finish's last kill plays this many times slower (0.7 s becomes about 1.8 s)
 const MS = { enter: 900, move: 600, lean: 320, fire: 240, gap: 160, heal: 450, aura: 1100, spread: 900, tick: 560, tickOut: 700, dome: 420, patch: 1100, alarm: 1800, rifleOw: 1600, droneOw: 2300, van: 900, patchTag: 1500, jam: 650, ping: 450, flank: 450, settle: 600 };
 const HIDDEN = new Set(['aboard', 'gone', 'fled']);
 
@@ -101,7 +103,7 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
   for (const b of cue.beats ?? []) {
     if (!b.lines?.length) continue;
     let tier = b.tier;
-    if (tier === 'spotlight') { if (budget >= cap) tier = 'notable'; else budget += 1; }
+    if (tier === 'spotlight' && !isClutch(b.key)) { if (budget >= cap) tier = 'notable'; else budget += 1; }
     beatAfter.set(Math.max(...b.lines), { ...b, tier, holdMs: tier === 'notable' && b.tier === 'spotlight' ? FIGHT.beatMs.notable : b.holdMs });
   }
   const beatAt = new Map();
@@ -181,8 +183,11 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
       adv(MS.spread);
     } else if (rule === 'tick' && l.guard != null && units[enemyId(l.guard)]) {
       const fell = l.key === 'tickOut' || l.key === 'burnOut';
-      push({ do: 'tick', to: enemyId(l.guard), fell, burn: l.key === 'burnTick' || l.key === 'burnOut', left: fell ? 0 : l.hpLeft ?? l.left, leftExact: l.hpLeft != null, max: l.max, amount: l.hpDamage ?? 0, dur: ms(fell ? MS.tickOut : MS.tick) });
-      adv(fell ? MS.tickOut : MS.tick);
+      // A clutch finish: the kill that wins the fight plays slowed (CLUTCH_SLOW times as long) with the camera already pushed in on its runner.
+      const slow = fell && isClutch(beatAt.get(i)?.key) ? CLUTCH_SLOW : 1;
+      const len = (fell ? MS.tickOut : MS.tick) * slow;
+      push({ do: 'tick', to: enemyId(l.guard), fell, burn: l.key === 'burnTick' || l.key === 'burnOut', left: fell ? 0 : l.hpLeft ?? l.left, leftExact: l.hpLeft != null, max: l.max, amount: l.hpDamage ?? 0, dur: ms(len) });
+      adv(len);
     } else if (rule === 'van' && ['vanIn', 'vanHeld', 'vanCantWait', 'inVan', 'carriedInVan'].includes(l.key)) {
       // The van's clock ring (owner, 2026-11-20): it opens when the van pulls in, holds, says who is left, and counts who boards.
       const mode = { vanIn: 'in', vanHeld: 'held', vanCantWait: 'cant' }[l.key] ?? 'board';
@@ -1017,7 +1022,14 @@ export function createStage(svg, deps) {
         break;
       }
       case 'specialEnd': cinema(false); unspot(); if (s.look === 'ricochet') ricoEnd(s.hold ?? 900); else ricoClear(); put(host(s.id), drawn[s.id]?.at, 260); break;
-      case 'caption': deps.caption?.(word(s.key, s.slots), s.tier); break;
+      case 'caption': {
+        // A clutch finish gets the showcase's weight: the big gold plate on whoever did it, and a bigger caption (tier 'clutch').
+        const clutch = isClutch(s.key);
+        deps.caption?.(word(s.key, s.slots), clutch ? 'clutch' : s.tier);
+        const at = clutch ? pos(s.focus?.[0]) : null;
+        if (at) tag(at, 'CLUTCH', `${String(s.slots?.who ?? '').toUpperCase()} · ${s.key === 'director.clutchBurn' ? 'FIRE' : 'HACK'}`, 'warn', 4);
+        break;
+      }
       case 'say': deps.say?.({ when: clockText(s.round, s.clock), tier: s.tier, text: s.key ? `${word(s.key, s.slots)} ${s.texts.join(' ')}` : s.texts.join(' ') }); break;
       case 'camera': if (!deps.reduced() && deps.pace() !== 'resolve') look(s.focus); break;
       default: break;

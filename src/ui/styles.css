@@ -2480,6 +2480,9 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .fs-float.is-hit { fill: var(--danger); } .fs-float.is-down { fill: var(--accent); } .fs-float.is-absorbed { fill: var(--warn); }
 @keyframes fs-float { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-8px); opacity: 0; } }
 .watch__caption { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); max-width: calc(100% - 24px); padding: 4px 10px; font: 700 0.82rem var(--display); letter-spacing: 0.06em; color: var(--text); background: rgba(11, 13, 17, 0.9); border: 1px solid var(--line); border-left: 2px solid var(--warn); clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); pointer-events: none; }
+.watch__caption[data-tier="clutch"] { bottom: auto; top: 14px; z-index: 3; width: max-content; padding: 6px 14px; font-size: 0.95rem; letter-spacing: 0.1em; text-transform: uppercase; text-align: center; color: #fff3b0; background: rgba(24, 17, 0, 0.94); border: 1px solid var(--warn); border-left-width: 4px; box-shadow: 0 0 18px rgba(255, 190, 40, 0.35); text-shadow: 0 0 8px rgba(255, 190, 40, 0.6); animation: watch-clutch-in 0.4s ease-out; }
+@keyframes watch-clutch-in { 0% { opacity: 0; transform: translateX(-50%) scale(1.25); } 100% { opacity: 1; transform: translateX(-50%) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .watch__caption[data-tier="clutch"] { animation: none; } }
 .watch__caption[data-tier="special"] { border-left-color: var(--accent); color: var(--warn); }
 .fs-pace { display: grid; grid-template-columns: repeat(3, 1fr); margin: 0 0 6px; }
 .fs-pace__chip { min-height: 44px; background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); font: 700 0.8rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; }
