@@ -16,6 +16,7 @@
 // state.raids (save v40): [{ id, district, by, warnedDay, day, answer, outcome, done }]. answer:
 // null, 'paid' (before the day), 'hold', 'withdraw', 'pay'. hall.shutUntil: the day it opens again.
 
+import { takenFor } from './loot.js';
 import { RAID, RAID_POLICE, raidTemplate } from '../data/raids.js';
 import { HALL_BUILD, PIECES, ROOM_EFFECT, TURRET } from '../data/hallBuild.js';
 import { HOME_HALL } from '../data/halls.js';
@@ -472,9 +473,11 @@ export function finishRaid(state) {
       state.reputation = Math.round(Math.min(100, (state.reputation ?? 0) + RAID.holdRep) * 10) / 10;
       // Beating a gang's men keeps their grudge where it is; the hall's quiet spell buys the time.
       const after = gang ? `${cap(GANGS[raid.by].name)} still have their grudge (${grudgeOf(state, raid.by)}/10), but they'll think twice for a while` : `Heat in ${inText(d)} ${before} → ${heatIn(state, d)}/10`;
+      const taken = takenFor(state, `raid:${raid.id}`); // what the attackers left behind (core/loot.js, 2026-11-24)
+      if (taken) am.report.push(taken.text);
       closeRaid(state, raid, 'held', {
         subject: `We held ${hallName(d)}`,
-        body: `${am.pressed ? 'They backed off down the stairs, for now.' : 'They went back down the stairs and didn\'t come up again.'} ${injuries.length ? `Hurt: ${injuries.join(', ')}.` : 'Nobody hurt.'} ${deaths.length ? `${deaths.map((o) => o.handle).join(', ')} died.` : ''} ${after}; the district hears we held (reputation +${RAID.holdRep}).`.replace(/\s+/g, ' ').trim(),
+        body: `${taken ? `${taken.text} ` : ''}${am.pressed ? 'They backed off down the stairs, for now.' : 'They went back down the stairs and didn\'t come up again.'} ${injuries.length ? `Hurt: ${injuries.join(', ')}.` : 'Nobody hurt.'} ${deaths.length ? `${deaths.map((o) => o.handle).join(', ')} died.` : ''} ${after}; the district hears we held (reputation +${RAID.holdRep}).`.replace(/\s+/g, ' ').trim(),
       });
     }
   }

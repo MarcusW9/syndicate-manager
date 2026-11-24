@@ -1152,5 +1152,12 @@ function migrate(state) {
     }
     state.version = 89;
   }
+  if (state.version === 89) {
+    // v90: longer jobs and rewards you can see (DESIGN.md 2026-11-24). New offers can carry `prep` (core/prep.js) and a
+    // run `route`; stash items dropped from now on carry `unseen` and `from`. Offers already on the board keep the days
+    // and pay they were made with and have no prep stops; a run in progress plays on as it was built; gear already in
+    // the stash counts as seen. Nothing to change.
+    state.version = 90;
+  }
   return state;
 }

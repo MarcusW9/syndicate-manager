@@ -15,6 +15,7 @@ import { NAMED_OFFER, NAMED_TEXT } from '../data/fame.js';
 import { nextRng } from './random.js';
 import { callingClients, trustOf, trustPay } from './clients.js';
 import { rumourFor } from './rumours.js';
+import { pickPrep } from './prep.js';
 
 // A raid on a hall runs as a job of its own ('raid:<district>', data/raids.js), never on the board.
 export const templateById = (id) => MISSIONS.find((m) => m.id === id) ?? (String(id).startsWith('raid:') ? raidTemplate(id.slice(5)) : String(id).startsWith('post:') ? postTemplate(...String(id).slice(5).split(':')) : String(id).startsWith('exp:') ? expeditionTemplate(...String(id).slice(4).split(':')) : RETIRED_MISSIONS.find((m) => m.id === id));
@@ -63,14 +64,37 @@ export function arrivalDays(state, day) {
 // How long a job takes (DESIGN.md 2026-11-04): each offer rolls its days in the template's range,
 // and every day past the template's own adds EXTRA_DAY_PAY of its pay (the crew is tied up longer).
 // Rookie work stays as written; bigger jobs can run a day longer, threat 3 and up two.
+//
+// Longer jobs (owner, 2026-11-24, drafts/PROPOSAL-longer-jobs.md): harder work runs like an expedition. A job that
+// is not rookie, routine or heist-prep work takes at least its threat in days (LONG_JOB_DAYS), the offer can add one,
+// and each day it gains over the days it was written with pays LONG_JOB_DAY_PAY of its pay (the income sim,
+// scripts/sim-longer-jobs.mjs: +50% keeps a 5-7 crew's margin where it was). The days between hold its prep stops
+// (core/prep.js) and a log line each day (core/advlog.js).
 export const EXTRA_DAY_PAY = 0.05;
-export const MAX_JOB_DAYS = 4;
+export const MAX_JOB_DAYS = 6;
+export const LONG_JOB_DAYS = { 2: 2, 3: 3, 4: 4, 5: 5 };
+export const LONG_JOB_DAY_PAY = 0.5;
+
+/** Does this template run long (several days, with prep stops)? Rookie, routine and heist-prep work stays quick. */
+export const isLongJob = (tpl) => Boolean(tpl && !tpl.rookie && !tpl.routine && !tpl.heistOnly && LONG_JOB_DAYS[tpl.threat]);
+
+/** The days a template's offers start from: as written, or its threat in days for a long job. */
+export const baseDays = (tpl) => (isLongJob(tpl) ? Math.max(tpl.days, LONG_JOB_DAYS[tpl.threat]) : tpl.days);
 
 /** [shortest, longest] days an offer of this template can take. */
 export function daysRange(tpl) {
   if (tpl.daysRange) return tpl.daysRange;
   if (tpl.rookie) return [tpl.days, tpl.days];
-  return [tpl.days, Math.min(MAX_JOB_DAYS, tpl.days + (tpl.threat >= 3 ? 2 : 1))];
+  const base = baseDays(tpl);
+  if (isLongJob(tpl)) return [base, Math.min(MAX_JOB_DAYS, base + 1)];
+  return [base, Math.min(4, base + (tpl.threat >= 3 ? 2 : 1))];
+}
+
+/** An offer's pay before its pay roll and trust: the written pay, raised for the days it gained by running long and for extra days. */
+export function payForDays(tpl, days) {
+  const base = baseDays(tpl);
+  const gained = Math.max(0, Math.min(days, base) - tpl.days);
+  return tpl.pay * (1 + LONG_JOB_DAY_PAY * gained) * (1 + EXTRA_DAY_PAY * Math.max(0, days - base));
 }
 
 // Reputation needed before a job of this (template) threat is offered; rookie jobs are
@@ -130,9 +154,12 @@ export function addOffer(state, templateId, { rng = null, clientId = null } = {}
   }
   // Its days roll from a hash of the seed and the offer, so no other roll moves.
   const [lo, hi] = daysRange(tpl);
-  const days = rng ? lo + Math.floor(hashRng(state.seed, 'job-days', n)() * (hi - lo + 1)) : tpl.days;
+  const days = rng ? lo + Math.floor(hashRng(state.seed, 'job-days', n)() * (hi - lo + 1)) : baseDays(tpl);
+  // A long job's prep stops (core/prep.js), picked now so the board can show the route. Like a twist, they are a
+  // variation: a plain offer (the opening board) has none.
+  const prep = rng && isLongJob(tpl) ? pickPrep(state.seed, `job-${n}`, tpl, days) : [];
   state.jobs.push({
-    id: `job-${n}`, templateId, clientId: client, days,
+    id: `job-${n}`, templateId, clientId: client, days, ...(prep.length ? { prep } : {}),
     payMult: Math.round(payMult * 100) / 100, threatDelta, twist, hinted,
     offeredDay: state.day, expiresDay: state.day + 6,
   });
@@ -152,7 +179,8 @@ export function jobView(state, job) {
     client: CLIENTS.find((c) => c.id === job.clientId) ?? null,
     trust,
     days,
-    pay: round50(tpl.pay * (1 + EXTRA_DAY_PAY * (days - tpl.days)) * (job.payMult ?? 1) * (trust == null ? 1 : trustPay(trust))),
+    // A heist finale names its own price (core/heists.js finaleFields, as a share of the written pay); other work by its days.
+    pay: round50((job.heist ? tpl.pay : payForDays(tpl, days)) * (job.payMult ?? 1) * (trust == null ? 1 : trustPay(trust))),
     threat: tpl.threat + delta,
     threatDelta: delta,
     hinted: Boolean(job.hinted),
@@ -164,6 +192,7 @@ export function jobView(state, job) {
     heistStep: job.heistStep ?? null,
     drop: job.drop ?? [],
     inside: job.inside ?? null,
+    prep: job.prep ?? [], // a long job's prep stops (core/prep.js)
   };
 }
 

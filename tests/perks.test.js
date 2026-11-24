@@ -210,7 +210,7 @@ function run(seed, templateId) {
 test('a drop of a Custom or Premium item lands in the stash with its perks, and the report line names them', () => {
   const seen = { custom: 0, premium: 0 };
   for (let seed = 1; seed <= 400 && (seen.custom < 2 || seen.premium < 2); seed++) {
-    const { start, done, report } = run(seed, 'clinic');
+    const { start, done, report } = run(seed, 'data_pull'); // threat 3: about the old odds (odds by threat, 2026-11-24)
     const line = report?.timeline?.outcome.find((o) => /^Gear from the job/.test(o.text));
     if (!line || !['custom', 'premium'].includes(line.tier)) continue;
     const item = done.stash.at(-1);

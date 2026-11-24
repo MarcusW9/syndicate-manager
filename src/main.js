@@ -5,7 +5,8 @@ import '@fontsource/rajdhani/latin-700.css';
 import './ui/styles.css';
 import { createNewGame } from './core/state.js';
 import { loadGame, saveGame } from './save/save.js';
-import { validateMissions, validateCrew, validateHeists } from './core/validate.js';
+import { validateMissions, validateCrew, validateHeists, validatePrepStops } from './core/validate.js';
+import { PREP_STOPS } from './data/prepStops.js';
 import { HEISTS } from './data/heists.js';
 import { MISSIONS } from './data/missions.js';
 import { STARTING_CREW } from './data/operatives.js';
@@ -13,7 +14,7 @@ import { mountApp } from './ui/app.js';
 import { freshSeed } from './ui/seed.js';
 
 if (import.meta.env.DEV) {
-  const problems = [...validateMissions(MISSIONS), ...validateCrew(STARTING_CREW), ...validateHeists(HEISTS, MISSIONS)];
+  const problems = [...validateMissions(MISSIONS), ...validateCrew(STARTING_CREW), ...validateHeists(HEISTS, MISSIONS), ...validatePrepStops(PREP_STOPS)];
   if (problems.length) console.error('Content problems:\n' + problems.join('\n'));
 }
 

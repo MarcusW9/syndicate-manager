@@ -13,7 +13,8 @@ import { ORDERS } from '../core/autorun.js';
 import { ALERT_MAX } from '../core/incidents.js';
 import { SPECIALISATIONS } from '../core/specialisations.js';
 import { pieceById } from '../core/builds.js';
-import { tierTag, perkList, apexHistory } from './gear.js';
+import { tierTag, perkList, apexHistory, spoilsCard } from './gear.js';
+import { TIERS } from '../data/gear.js';
 import { raidWhere } from './raidcards.js';
 import { esc, face, districtName, riskBadge } from './shared.js';
 import { cardNames } from '../core/rivals.js';
@@ -112,6 +113,7 @@ function renderReportTimeline(m) {
   return `
     <div class="report ${play ? 'report--play' : ''}" ${play ? `data-action="skip-report" style="--step:${STEP}s; --end:${(steps.length + 1) * STEP + 0.6}s"` : ''}>
       ${reportCrew(m)}
+      ${reportSpoils(m)}
       ${renderReportSummary(m.timeline)}
       ${renderDaysOut(m.timeline?.days, steps)}
       <ol class="timeline">
@@ -165,6 +167,13 @@ function reportCrew(m) {
 }
 
 /** Joss's opener and what the run came down to (core/report.js). Headings with nothing behind them are left out. */
+/** The spoils card at the top of a job's report (2026-11-24): its loot line's item when it is Verified or better. */
+const SPOILS_FROM = (TIERS.verified?.step ?? 1);
+function reportSpoils(m) {
+  const line = (m.timeline?.outcome ?? []).find((o) => o.uid && (TIERS[o.tier]?.step ?? 0) >= SPOILS_FROM);
+  return line ? spoilsCard({ esc }, state, line) : '';
+}
+
 function renderReportSummary(t) {
   const sum = t?.summary;
   if (!sum) return '';

@@ -57,6 +57,31 @@ export function validateMaps(m) {
   return out;
 }
 
+/**
+ * The shared prep stops (data/prepStops.js, 2026-11-24): each is checked as a crisis (an exit, failure text, report
+ * lines) and also: its crisis is marked stop: true and shares its id, ids are unique, a failure costs at most a light
+ * injury (prep never kills or maims), and its effects are only the three the run knows (ease, dropCrisis, alert).
+ */
+const PREP_COST_KEYS = new Set(['payCut', 'heat', 'clientTrust', 'cash', 'ease', 'dropCrisis', 'alert']);
+export function validatePrepStops(stops) {
+  const out = [];
+  const ids = new Set();
+  for (const p of stops) {
+    if (ids.has(p.id)) out.push(`${p.id}: duplicate prep stop id`);
+    ids.add(p.id);
+    if (!p.time || !p.place || !p.arrive) out.push(`${p.id}: needs a time, a place and an arrival line`);
+    if (!p.stats?.length) out.push(`${p.id}: needs the stats its choices roll`);
+    const c = p.crisis;
+    if (!c || c.id !== p.id || !c.stop) { out.push(`${p.id}: its crisis must share its id and be marked stop: true`); continue; }
+    out.push(...validateMissions([{ id: `prep/${p.id}`, beats: ['-'], crises: [c], rookie: true }]));
+    for (const ch of c.choices) {
+      if (!['none', 'light', undefined].includes(ch.failureInjury)) out.push(`${p.id}/${ch.id}: a prep stop costs at most a light injury`);
+      for (const k of Object.keys({ ...ch.cost, ...ch.successCost, ...ch.failureCost })) if (!PREP_COST_KEYS.has(k)) out.push(`${p.id}/${ch.id}: unknown effect ${k}`);
+    }
+  }
+  return out;
+}
+
 export function validateCrew(crew) {
   const problems = [];
   for (const op of crew) {

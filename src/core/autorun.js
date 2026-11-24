@@ -89,6 +89,8 @@ export function needsPlayer(state) {
   const am = state.activeMission;
   if (!am || am.done) return false;
   if (dayDone(am)) return true; // an away job has done today's share: it waits for tomorrow (or for you to hand it back)
+  // A long job you chose to watch (2026-11-24, watchOff): the crew calls you at each stop and at the job itself, on its day.
+  if (am.watch && am.away && !am.away.command && currentStep(am)?.type === 'stop' && am.away.calledAt !== am.step) return true;
   if (am.callIn === 'never') return false;
   if (am.critical || am.pending) return true;
   // Command fights (2026-10-30): a fight waits for your orders each round, unless you left it to the
@@ -126,6 +128,12 @@ export function beatsByDay(beats, days, d) {
 
 /** Queue position where an away job's work stops today: its next unreached beat, or the end. */
 function stopIndex(am) {
+  // A route's stops: once today's share of them is played (core/away.js am.away.stops), the next stop waits.
+  // The job itself (the `finale` stop) waits for the last day.
+  if (am.maps && am.maps.at !== 'finale') {
+    const at = am.queue.findIndex((q, i) => i >= am.step && q.type === 'stop');
+    if (at >= 0 && ((am.queue[at].id === 'finale' && am.away.last === false) || am.maps.path.length >= (am.away.stops ?? Infinity))) return at;
+  }
   const beats = templateById(am.templateId).beats.length;
   if (am.away.beats >= beats) return am.queue.length;
   const at = am.queue.findIndex((q) => q.type === 'beat' && q.index === am.away.beats);
@@ -222,6 +230,30 @@ export function sendOff(prev, jobId, crewIds, approach, ordersId, opts = {}) {
     body: `Sent on ${ORDERS[am.orders].name} orders${am.callIn === 'never' ? ', and they won\'t call' : am.callIn === 'every' ? ', calling you at every crisis' : ', calling you when it gets risky'}. The report comes back ${days === 1 ? 'tomorrow' : `in ${days} days`}, when they do.`,
     blocking: false, read: true,
   });
+  return s;
+}
+
+/**
+ * Can this offer be watched day by day? A job with a route (its own maps, or prep stops: core/prep.js) over more than
+ * one day, that can be sent off (owner, 2026-11-24, Q2: you're called in to each stop on its day).
+ */
+export function watchByDay(state, job) {
+  const tpl = job && templateById(job.templateId);
+  return Boolean(tpl && handsOffAllowed(tpl) && (tpl.maps || job.prep?.length) && (job.days ?? tpl.days) > 1);
+}
+
+/**
+ * Watch a long job day by day: the crew goes out as on a hands-off job, calling you at every crisis, and at each stop
+ * and the job itself (am.watch, needsPlayer). Between calls their orders decide nothing a call would. Returns the new state.
+ */
+export function watchOff(prev, jobId, crewIds, approach, ordersId, opts = {}) {
+  if (!watchByDay(prev, prev.jobs.find((j) => j.id === jobId))) return prev;
+  const s = sendOff(prev, jobId, crewIds, approach, ordersId, { ...opts, callIn: 'every' });
+  if (s === prev) return prev;
+  const out = s.awayJobs.at(-1);
+  out.mission.watch = true;
+  const sent = s.inbox.find((m) => m.id === `sent-${jobId}`);
+  if (sent) sent.body = `You're watching this one: they'll call you at each stop, and for the job itself on its day. The report comes back in ${out.mission.days} days.`;
   return s;
 }
 

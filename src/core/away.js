@@ -21,6 +21,7 @@ import { autoStep, needsPlayer, dayDone, beatsByDay } from './autorun.js';
 export { dayDone };
 import { QUIET_LINES } from '../data/away.js';
 import { jobDayLine, startFacts, capLog } from './advlog.js';
+import { mapsOf, MULTI_MAP } from './multimap.js';
 
 const crewOf = (s, am) => [...am.crewIds, am.overwatch?.id, am.wheels, am.standby?.id].filter(Boolean).map((id) => s.crew.find((o) => o.id === id)).filter(Boolean);
 const names = (ops) => (ops.length > 1 ? `${ops.slice(0, -1).map((o) => o.handle).join(', ')} and ${ops.at(-1).handle}` : ops[0]?.handle ?? 'The crew');
@@ -61,6 +62,16 @@ function writeLog(s, am, d) {
 /** The blocking message that asks the player to take a crew's call. */
 function callMessage(s, am) {
   const tpl = templateById(am.templateId);
+  const step = am.queue?.[am.step];
+  if (am.watch && step?.type === 'stop') { // a watched long job reaching a stop, or the job itself (2026-11-24)
+    const place = step.id === 'finale' ? null : mapsOf(tpl, am)?.stops?.[step.id]?.place;
+    return {
+      id: `callin-${am.jobId}-${s.day}-${am.step}`, type: 'job', kind: 'callin', day: s.day,
+      subject: `${tpl.name}: day ${am.away?.day ?? 1}`,
+      body: place ? `${names(crewOf(s, am))} ${am.crewIds.length > 1 ? 'are' : 'is'} at ${place}. You asked to watch this one.` : `${names(crewOf(s, am))} ${am.crewIds.length > 1 ? 'are' : 'is'} ready to do the job. You asked to watch this one.`,
+      blocking: true, resolved: false, read: false, payload: { jobId: am.jobId },
+    };
+  }
   return {
     id: `callin-${am.jobId}-${s.day}-${am.step}`, type: 'job', kind: 'callin', day: s.day,
     subject: `We need a call: ${tpl.name}`,
@@ -96,8 +107,11 @@ export function advanceAway(prev) {
     if (d < 1) { keep.push(j); continue; }
     // A multi-map job (core/multimap.js) plays its stops on the days before the last and its finale on the last:
     // its day's share stops at the finale's first beat, which only joins the queue when the route gets there.
+    // One stop a day (2026-11-24, long jobs): a stop past today's share waits for tomorrow; any left play on the last day.
     const tplNow = templateById(am.templateId);
-    am.away.beats = Math.max(am.away.beats, tplNow.maps ? (d >= days ? tplNow.beats.length : 0) : beatsByDay(tplNow.beats.length, days, d));
+    const routed = !!mapsOf(tplNow, am);
+    am.away.beats = Math.max(am.away.beats, routed ? (d >= days ? tplNow.beats.length : 0) : beatsByDay(tplNow.beats.length, days, d));
+    if (routed) { am.away.stops = d >= days ? MULTI_MAP.maxStops + 1 : d; am.away.last = d >= days; } // the job itself waits for the last day
     am.away.day = d;
     const logLine = writeLog(s, am, d);
     const from = (am.events ?? []).length;
@@ -135,7 +149,8 @@ export function takeCall(prev, jobId) {
   const s = structuredClone(prev);
   const job = s.awayJobs.find((x) => x.mission.jobId === jobId);
   s.awayJobs = s.awayJobs.filter((x) => x !== job);
-  s.activeMission = { ...job.mission, away: { ...job.mission.away, returnDay: job.returnDay } };
+  // calledAt: the step the call was taken at, so a watched job's stop doesn't call again once you're on the line.
+  s.activeMission = { ...job.mission, away: { ...job.mission.away, returnDay: job.returnDay, calledAt: job.mission.step } };
   for (const m of s.inbox) if (m.kind === 'callin' && m.payload?.jobId === jobId) { m.resolved = true; m.read = true; }
   return s;
 }

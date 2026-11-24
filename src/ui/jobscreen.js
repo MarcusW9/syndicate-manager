@@ -11,7 +11,7 @@ import { money } from '../core/money.js';
 import { CALL_IN, describeCritical, describePending, currentStep, describeCrisis, fillBrief } from '../core/mission.js';
 import { renderFightOrders } from './fightorders.js';
 import { renderFightCallIn, renderFightRound } from './fightscreen.js';
-import { ORDERS, decide, handsOffAllowed, needsPlayer } from '../core/autorun.js';
+import { ORDERS, decide, handsOffAllowed, needsPlayer, watchByDay } from '../core/autorun.js';
 import { dayDone } from '../core/away.js';
 import { OVERWATCH_KIT } from '../core/incidents.js';
 import { renderWatch } from './watch.js';
@@ -26,7 +26,9 @@ export function renderCallIns(t, days = t.days) {
   const lead = crewLead(V.plan.crew.map((id) => state.crew.find((o) => o.id === id)));
   const canSend = handsOffAllowed(t);
   const mode = canSend && V.plan.mode !== 'live' ? 'away' : 'live';
-  const modes = { away: ['Send them', `They go and do it over ${days === 1 ? 'the day' : `${days} days`}. Today shows what they did; they call when it's beyond their orders.`], live: ['Watch live', 'You watch the whole job now, on the map.'] };
+  const byDay = watchByDay(state, state.jobs.find((j) => j.id === V.plan.jobId));
+  const modes = { away: ['Send them', `They go and do it over ${days === 1 ? 'the day' : `${days} days`}. Today shows what they did; they call when it's beyond their orders.`],
+    live: byDay ? ['Watch each stop', `They go over ${days} days. They call you to each stop and to the job itself on its day, and you watch it on the map.`] : ['Watch live', 'You watch the whole job now, on the map.'] };
   // Folded to one line until tapped (2026-11-05): most players set these once and leave them.
   const summary = [canSend ? modes[mode][0] : 'Watch live (this one can\'t be sent off)', `call me in: ${CALL_IN[callIn].name.toLowerCase()}`, callIn === 'every' ? '' : `${ORDERS[orders].name.toLowerCase()} on their own`].filter(Boolean).join(' · ');
   const head = `<h2 class="foldh2"><button class="foldh2__btn" data-action="toggle-orders" aria-expanded="${V.ordersOpen}" aria-controls="plan-orders">
@@ -268,7 +270,7 @@ function renderCallIn(s) {
     return `
       <div class="crisis" data-callin="day-done">
         <p class="crisis__title">That's day ${am.away.day ?? 1} of ${days} done</p>
-        <p>They'll pick it up again tomorrow, and call if they need us. Or stay on the line with them and play the rest now.</p>
+        <p>${am.watch ? 'They\'ll call you to the next stop on its day. Or stay on the line with them and play the rest now.' : 'They\'ll pick it up again tomorrow, and call if they need us. Or stay on the line with them and play the rest now.'}</p>
         <div class="stack">
           <button class="btn btn--primary" data-action="let-run">Let them carry on</button>
           <button class="btn btn--ghost" data-action="take-command">Take command: play the rest now</button>

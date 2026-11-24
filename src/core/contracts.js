@@ -17,6 +17,7 @@
 //
 // Randomness: hashRng from the seed, the contract and the day, so no other roll moves.
 
+import { takenFor } from './loot.js';
 import { asideFor, capLog } from './advlog.js';
 import { CONTRACT_KINDS, SLOT_PAY, POST_THREAT, INCIDENT_LINES } from '../data/contracts.js';
 import { CLIENTS } from '../data/clients.js';
@@ -423,7 +424,8 @@ export function finishPost(state) {
       const bonus = round50(c.slotPay * CONTRACT.heldBonus * Math.max(1, am.postCrew.length));
       c.owed += bonus;
       const t = adjustTrust(state, c.clientId, CONTRACT.trust.held);
-      line = `${fill(INCIDENT_LINES.held, { client: clientName(c.clientId) })} +${money(bonus)}.${t ? ` Trust +${t}.` : ''}${off.length ? ` Off the post, hurt: ${off.map((id) => state.crew.find((o) => o.id === id)?.handle ?? 'one of ours').join(', ')}.` : ''}`;
+      const taken = takenFor(state, `post:${c.id}:${am.jobId}`); // what the attackers left behind (core/loot.js, 2026-11-24)
+      line = `${fill(INCIDENT_LINES.held, { client: clientName(c.clientId) })} +${money(bonus)}.${t ? ` Trust +${t}.` : ''}${taken ? ` ${taken.text}` : ''}${off.length ? ` Off the post, hurt: ${off.map((id) => state.crew.find((o) => o.id === id)?.handle ?? 'one of ours').join(', ')}.` : ''}`;
       if (!c.crewIds.length) { endContract(state, c, 'empty'); line += ' Nobody is fit to keep it: the post is over, the pay so far kept.'; }
       else if (state.day >= c.endDay) finish(state, c);
     }

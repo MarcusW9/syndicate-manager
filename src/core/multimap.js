@@ -23,13 +23,23 @@ export const MULTI_MAP = {
 /** The heading the watch shows while the crew is between maps (the finale shows the job's own). */
 export const DEFAULT_HEADING = 'On the move';
 
-export const stopOf = (tpl, id) => (id === 'finale' ? { ...tpl.maps.finale, district: tpl.district, id } : { ...tpl.maps.stops[id], id });
+/**
+ * The route a run follows: the template's own `maps`, else the prep route the run was built with (core/prep.js,
+ * `am.route`, 2026-11-24). Every reader of a run's stops goes through this.
+ */
+export const mapsOf = (tpl, am) => tpl?.maps ?? am?.route ?? null;
+
+export const stopOf = (tpl, id, am) => {
+  const maps = mapsOf(tpl, am);
+  return id === 'finale' ? { ...maps.finale, district: tpl.district, id } : { ...maps.stops[id], id };
+};
 
 /** The map a run is on now: a stop's district (and its own site key), else the job's. */
 export function runPlace(am, tpl) {
   const at = am?.maps?.at;
-  if (!tpl?.maps || !at || at === 'finale') return { district: tpl?.district, key: am?.jobId };
-  return { district: tpl.maps.stops[at]?.district ?? tpl.district, key: `${am.jobId}:${at}` };
+  const maps = mapsOf(tpl, am);
+  if (!maps || !at || at === 'finale') return { district: tpl?.district, key: am?.jobId };
+  return { district: maps.stops[at]?.district ?? tpl.district, key: `${am.jobId}:${at}` };
 }
 
 /**
@@ -37,8 +47,8 @@ export function runPlace(am, tpl) {
  * route: the run's `am.maps` ({ path, wrongUsed, then }). Returns { next, wrong, then } (wrong: this is a wrong
  * lead, and `then` is where it leads back to).
  */
-export function nextStop(seed, jobId, tpl, route, stopId, result) {
-  const s = tpl.maps.stops[stopId];
+export function nextStop(seed, jobId, tpl, route, stopId, result, maps = tpl.maps) {
+  const s = maps.stops[stopId];
   if (s.wrong) return { next: route.then ?? 'finale', wrong: false };
   const rng = hashRng(seed, 'trail', jobId, stopId); // the key keeps its pilot name so a saved run's route stays the same
   const options = (s.next ?? ['finale']).filter((id) => id === 'finale' || !route.path.includes(id));
@@ -46,7 +56,7 @@ export function nextStop(seed, jobId, tpl, route, stopId, result) {
   const ok = result ? result.success !== false : true;
   const room = route.path.length < MULTI_MAP.maxStops - 1; // a wrong lead still leaves the finale within maxStops
   if (ok && s.skip && (result?.margin ?? 0) >= MULTI_MAP.skipMargin) return { next: s.skip, wrong: false };
-  const wrongs = Object.entries(tpl.maps.stops).filter(([, x]) => x.wrong).map(([id]) => id);
+  const wrongs = Object.entries(maps.stops).filter(([, x]) => x.wrong).map(([id]) => id);
   const r = rng();
   if (!ok && !route.wrongUsed && room && wrongs.length && pick !== 'finale' && r < MULTI_MAP.wrongChance) {
     return { next: wrongs[Math.floor(rng() * wrongs.length)], wrong: true, then: pick };
