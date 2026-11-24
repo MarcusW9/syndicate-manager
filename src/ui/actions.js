@@ -166,7 +166,7 @@ export function onClick(e) {
     case 'stash-close': V.focusNext = { action: 'stash-open', id: V.stashOpen }; V.stashOpen = null; break;
     case 'stash-give': { const [uid, opId] = id.split('|'); V.stashOpen = null; return setState(equip(state, uid, opId, null)); }
     case 'op-tab': V.opTab = id; V.gearSlot = null; V.bagPick = null; break;
-    case 'open-op': case 'op-link': remember(action, id); goHome('runner'); if (t.dataset.tab) V.opTab = t.dataset.tab; V.gearSlot = null; V.gearFor = null; V.openRecruitId = null; V.openOperativeId = id; V.bagPick = null; break;
+    case 'open-op': case 'op-link': remember(action, id); goHome('runner'); if (t.dataset.tab) V.opTab = t.dataset.tab; V.gearSlot = null; V.gearFor = null; V.openRecruitId = null; V.leadName = null; V.openOperativeId = id; V.bagPick = null; break;
     // Gear (ui/gear.js, core/gear.js): the armoury, and a runner's slots.
     // The Armoury is a sub-tab of Tong; the squad board's link to it keeps the plan (Back returns to it).
     case 'open-armoury': remember(action, id); goHome('armoury'); if (t.dataset.tab) V.armouryTab = t.dataset.tab; V.hallPage = null; V.buildView = null; V.openOperativeId = null; V.openRecruitId = null; V.gearSlot = null; break;
