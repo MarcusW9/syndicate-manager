@@ -103,7 +103,7 @@ export default {
     ],
     piloting: [
       "The collection address had nowhere to stop. {who} found the vehicle ticketed after a circuit on foot.",
-      "{who} took the low access ramp and scraped the vehicle's underside. The repair ate into our spending money.",
+      "{who} took the low access ramp and damaged the underside of the vehicle. The repair ate into our spending money.",
     ],
   },
 

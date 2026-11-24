@@ -27,6 +27,9 @@ export function tierOf(line) {
   return ROUTINE.has(line.key) ? 'routine' : 'notable';
 }
 
+const DOT_KILL = { burn: 'clutchBurn', vector: 'clutchVector' };
+/** A clutch finish plays whatever the spotlight budget says: it is the moment the fight is won. */
+export const isClutch = (key) => key === 'director.clutchBurn' || key === 'director.clutchVector';
 const RADIO_KINDS = new Set(['backup', 'alarm']);
 // A spotlight does not repeat for the same runner within this many rounds.
 const QUIET_ROUNDS = 3;
@@ -92,6 +95,18 @@ export function direct(b, roundResult, memory = null) {
     spot('clutchHack', tech, 'clutchHack', { who: handle(tech), round }, null);
   }
 
+  // Clutch finish: the crew was on the ropes (someone down, or a runner on hpUnit HP or less) and a damage-over-time (fire or
+  // a vector) a runner put on an enemy drops the last one. The kill is the fight's win, so it is never cut by the budget.
+  const lastKill = (roundResult.defeated ?? []).at(-1);
+  if (roundResult.ended?.result === 'won' && lastKill && DOT_KILL[lastKill.how] && b.runners.some((r) => r.id === lastKill.by)) {
+    const trouble = b.runners.some((r) => r.down || r.dead || (r.hp > 0 && r.hp <= FIGHT.hpUnit && !r.withdrawn));
+    if (trouble) {
+      let at = null;
+      lines.forEach((l, i) => { if (l.kind === 'tick' && l.dropped && l.enemy === lastKill.enemy) at = i; });
+      spot('clutchFinish', lastKill.by, DOT_KILL[lastKill.how], { who: handle(lastKill.by) }, at, false);
+    }
+  }
+
   // Denied: a jam cancels 2 or more radio threats.
   const jam = lines.findIndex((l) => l.key === 'jamOk');
   const cancelled = (b.threats ?? []).filter((t) => t.cancelled && RADIO_KINDS.has(t.kind)).length;
@@ -131,7 +146,7 @@ export function direct(b, roundResult, memory = null) {
 export function playable(beats, pace) {
   let left = FIGHT.spotlightBudget[pace] ?? 0;
   return beats.map((x) => {
-    if (x.tier !== 'spotlight') return x;
+    if (x.tier !== 'spotlight' || isClutch(x.key)) return x;
     if (left > 0) { left -= 1; return x; }
     return { ...x, tier: 'notable', holdMs: FIGHT.beatMs.notable };
   });

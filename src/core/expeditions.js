@@ -46,7 +46,7 @@ const names = (ops) => (ops.length > 1 ? `${ops.slice(0, -1).map((o) => o.handle
 const between = (rng, [lo, hi]) => Math.round((lo + rng() * (hi - lo)) / 50) * 50;
 const weightedKey = (r, table) => { let acc = 0; for (const [k, w] of Object.entries(table)) { acc += w; if (r < acc) return k; } return Object.keys(table).at(-1); };
 // A snag line that says someone got hurt costs a light injury; any other snag costs a little cash.
-const HURT = /\b(scrape|scraped|bruise|bruised|bruises|knuckle|shin|hip|wrist|finger|palm|plaster|dressing|cut)\b/i;
+export const HURT = /\b(scrape|scraped|bruise|bruised|bruises|knuckle|shin|hip|wrist|finger|palm|plaster|dressing|cut)\b/i;
 
 export const expeditionsOf = (state) => state.expeditions ?? { active: [], seq: 0 };
 export const expeditionById = (state, id) => expeditionsOf(state).active.find((e) => e.id === id) ?? null;

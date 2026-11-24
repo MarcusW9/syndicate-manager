@@ -10,7 +10,7 @@ import { createNewGame, SAVE_VERSION } from '../src/core/state.js';
 import { advanceDay } from '../src/core/time.js';
 import { resolveDecision } from '../src/core/decisions.js';
 import { availability } from '../src/core/crew.js';
-import { sendExpedition, canSend, expeditionsOut, expeditionOdds, pullOutExpedition, expeditionById } from '../src/core/expeditions.js';
+import { sendExpedition, canSend, expeditionsOut, expeditionOdds, pullOutExpedition, expeditionById, HURT } from '../src/core/expeditions.js';
 import { GOALS, EXPEDITION, EXPEDITION_DISTRICTS } from '../src/data/expeditions.js';
 import { GOAL_LINES, DISTRICT_LINES } from '../src/core/advlog.js';
 
@@ -35,6 +35,19 @@ function trip(seed, goal, { n = 2, district = 'docks', answer = 'give' } = {}) {
 
 const SLOTS = new Set(['who', 'other', 'contact', 'contactWhat', 'place', 'district', 'itemFull', 'item', 'cash', 'lead', 'leadShort', 'day']);
 const allLines = (x) => (typeof x === 'string' ? [x] : Array.isArray(x) ? x.flatMap(allLines) : x && typeof x === 'object' ? Object.values(x).flatMap(allLines) : []);
+
+test('trip snags that describe payment without injury cost cash, not an injury', () => {
+  const payment = /\b(?:paid|pay(?:s|ing|ments?)?|fees?|charg(?:e[ds]?|ing)|repair(?:s|ed|ing)?|cost(?:s|ing)?)\b/i;
+  // Don't use HURT itself to decide whether a payment line also describes an injury.
+  const bodilyHarm = /\b(?:injur(?:y|ies|ed)|wound(?:s|ed)?|bleeding|(?:scrap(?:ed?|ing)|bruis(?:ed?|ing)|cut) (?:a|their) (?:arm|leg|hand|knuckle|shin|hip|wrist|finger|palm|ankle))\b/i;
+  const misclassified = [];
+  for (const [id, file] of Object.entries({ ...GOAL_LINES, ...DISTRICT_LINES })) {
+    for (const line of allLines([file.snag, file.callbackContact?.snag, file.callbackPlace?.snag])) {
+      if (payment.test(line) && !bodilyHarm.test(line) && HURT.test(line)) misclassified.push(`${id}: ${line}`);
+    }
+  }
+  assert.deepEqual(misclassified, []);
+});
 
 test('the goal files name only the prompt\'s slots, and every district offered has people and places', () => {
   for (const [goal, file] of Object.entries(GOAL_LINES)) {
