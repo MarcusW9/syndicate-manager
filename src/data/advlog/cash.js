@@ -104,7 +104,7 @@ export default {
     ],
     piloting: [
       'The crew\'s transport was clamped while a meeting ran long. The release fee came out of their pocket.',
-      '{who} scraped a loading barrier while reversing through the delivery lane. Its owner wanted the repair paid before anyone left.',
+      '{who} reversed into a barrier in the delivery lane. The owner wanted the damage paid for before anyone left.',
     ],
   },
   find: {
