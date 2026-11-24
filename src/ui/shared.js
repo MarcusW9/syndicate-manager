@@ -14,12 +14,14 @@ export const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', 
 export const riskWord = (level) => (level === 'moderate' ? 'mid' : level);
 export const riskBadge = (level) => `<span class="risk risk--${esc(level)}">${esc(level === 'safe' || level === 'certain' ? level : `${riskWord(level)} risk`)}</span>`;
 /** Availability as a coloured chip: green ready, amber usable but worse off, red can't go, teal away on a job. */
-export function statusChip(a) {
+/** `short` (the crew list, owner 2026-11-24): a serious or critical wound reads "injured · 5d"; the runner's page keeps the full words. */
+export function statusChip(a, { short = false } = {}) {
   const tone = a.ok ? (a.reason === 'ready' ? 'ready' : 'worn') : a.reason.startsWith('away') ? 'away' : 'out';
   const back = /^away until day (\d+)$/.exec(a.reason);
   const n = back ? Number(back[1]) - state.day : 0;
   // The teal "away" colour already says they're out; the words say when they're back.
-  const text = back ? (n <= 1 ? 'back tomorrow' : `back in ${n} days`) : a.reason;
+  const hurt = short && /^(serious|critical) injury, (\d+)d$/.exec(a.reason);
+  const text = back ? (n <= 1 ? 'back tomorrow' : `back in ${n} days`) : hurt ? `injured · ${hurt[2]}d` : a.reason;
   return `<span class="status status--${tone}">${esc(text)}</span>`;
 }
 /** How long something on offer lasts: it's still there on its last day. */

@@ -173,6 +173,7 @@ export function onClick(e) {
     case 'crew-tab': V.crewTab = id; break;
     case 'crew-filter': V.crewFilter = id; V.crewFilterOpen = false; V.focusNext = { action: 'crew-filter-open' }; break;
     case 'crew-filter-open': V.crewFilterOpen = !V.crewFilterOpen; break;
+    case 'stat-tip': V.statTip = V.statTip === id ? null : id; V.focusNext = { action: 'stat-tip', id }; break;
     case 'crew-filter-close': V.crewFilterOpen = false; V.focusNext = { action: 'crew-filter-open' }; break;
     // Shortcuts to a sub-tab's home from another page (a link, not a tab choice: Back returns).
     case 'halls-open': remember(action, id); goHome('hall'); V.hallPage = null; V.buildView = null; break;

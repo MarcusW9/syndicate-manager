@@ -17,7 +17,7 @@ import { itemName } from '../core/gear.js';
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
 import { earnedText } from '../core/earned.js';
 import { STARTING_ROSTER_CAP, canHire, signingFee } from '../core/recruits.js';
-import { changesSince, primaryStat, progressShare, declineChance, ageRate, potentialRead, scoutFor, focusOf, FOCUS, STATS } from '../core/development.js';
+import { changesSince, primaryStat, progressShare, declineChance, ageRate, potentialRead, scoutFor, focusOf, FOCUS, STATS, ROLL_STATS } from '../core/development.js';
 import { levelUpOpen } from '../core/levelup.js';
 import { leadNames, renderGoneElsewhere } from './tongs.js';
 import { renderSkills } from './skills.js';
@@ -32,20 +32,65 @@ const signed = (n) => `${n > 0 ? '+' : '−'}${Math.abs(n)}`;
 /** This season's net change per stat (rises and age decline), from the growth log. */
 const seasonChanges = (op) => changesSince(op, seasonStartDay(state.day));
 
-/** Crew-list one-liner: their best (main) stat. The scout's read of their potential and their highlight are on their own page (2026-11-08, owner). */
-function scoutLine(op) {
-  const main = primaryStat(op);
-  return `<span class="scoutline"><span class="iconword">${statGlyph(main)}${esc(statName(main))} ${ratedStat(op, main)}</span></span>`;
+/** Short labels for the crew list's stat strip (2026-11-23): the full names are on the runner's page. */
+const STAT_SHORT = { combat: 'CMB', stealth: 'STL', tech: 'TEC', social: 'SOC', piloting: 'PIL', medical: 'MED', cool: 'COOL', endurance: 'END' };
+
+/**
+ * What the stat strip counts (2026-11-24, owner): this season's changes; but in a season's first week,
+ * a runner with none yet shows last season's, in grey, so the list doesn't go plain the day a season turns.
+ */
+const FRESH_SEASON_DAYS = 7;
+function stripChanges(op) {
+  const start = seasonStartDay(state.day);
+  const now = seasonChanges(op);
+  if (Object.keys(now).length || start === 1 || state.day - start >= FRESH_SEASON_DAYS) return { net: now, last: false };
+  return { net: changesSince(op, seasonStartDay(start - 1)), last: true };
 }
 
-/** Crew-list marker: "▲ Tech +2, Combat +1 ▼ Piloting −1" for this season. */
-function growthMarker(op) {
-  const net = Object.entries(seasonChanges(op));
-  const up = net.filter(([, n]) => n > 0).map(([k, n]) => `${statName(k)} ${signed(n)}`);
-  const down = net.filter(([, n]) => n < 0).map(([k, n]) => `${statName(k)} ${signed(n)}`);
-  return (up.length ? `<span class="marker">▲ ${esc(up.join(', '))}</span>` : '') +
-    (down.length ? `<span class="marker is-down">▼ ${esc(down.join(', '))}</span>` : '');
+/** "a medic", "an infiltrator", "muscle": the role as the explanation under the stat strip says it. */
+const asRole = (role) => (role === 'muscle' ? 'muscle' : `${/^[aeiou]/.test(role) ? 'an' : 'a'} ${role}`);
+
+/** What a tapped box in the stat strip says (2026-11-24, owner): the stat in full, this season's change, what it is to them. */
+function stripExplain(op, k, main) {
+  const v = ratedStat(op, k);
+  const { net, last } = stripChanges(op);
+  const n = net[k] ?? 0;
+  const when = last ? 'last season' : 'this season';
+  const change = n > 0 ? `<span class="statexplain__up">up ${n} ${when}</span> (was ${v - n})`
+    : n < 0 ? `<span class="statexplain__down">down ${-n} ${when}</span> (was ${v - n})` : `no change ${when}`;
+  const bonus = traitMods(op)[k] ?? 0;
+  const what = k === main ? `Their main stat, as ${asRole(op.role)}: it decides most of what they do on a job.` : `One of their two best after ${statName(main)}.`;
+  return `<div class="statexplain" id="statexplain-${esc(op.id)}" role="status">
+    <p><strong>${esc(statName(k).toUpperCase())} ${v}</strong> · ${change}</p>
+    <p class="muted small">${what}${bonus ? ` Includes ${signed(bonus)} from traits.` : ''}${n < 0 ? ' Age takes a little each season past 40.' : ''} ${last ? ' A new season has just begun: until they change this season, the strip shows last season\'s, in grey.' : ''} Their page has every stat.</p>
+  </div>`;
 }
+
+/**
+ * Crew-list stat strip (2026-11-23, owner): three boxes, the role's main stat first and then the
+ * two highest others, each with this season's net change. Replaced the one-liner and the "▲ every
+ * gain" marker, which wrapped as runners grew. The full picture is on the runner's page.
+ * Each box is a button (2026-11-24, owner): a tap opens a line under the strip saying what it shows
+ * (`stripExplain`, `V.statTip`); tap it again to close.
+ */
+function statStrip(op) {
+  const main = primaryStat(op);
+  const rest = ROLL_STATS.filter((k) => k !== main).sort((a, b) => ratedStat(op, b) - ratedStat(op, a)).slice(0, 2);
+  const { net, last } = stripChanges(op);
+  const open = [main, ...rest].find((k) => V.statTip === `${op.id}|${k}`);
+  return `<span class="statstrip">${[main, ...rest].map((k) => {
+    const n = net[k] ?? 0;
+    const on = k === open;
+    const change = n ? `<span class="statstrip__chg ${n < 0 ? 'is-down' : ''} ${last ? 'is-last' : ''}">${signed(n)}</span>` : '';
+    return `<button class="statstrip__cell ${on ? 'is-on' : ''}" data-action="stat-tip" data-id="${esc(`${op.id}|${k}`)}" aria-expanded="${on}" aria-controls="statexplain-${esc(op.id)}" aria-label="${esc(statName(k))} ${ratedStat(op, k)}${n ? `, ${signed(n)} ${last ? 'last' : 'this'} season` : ''}"><span class="statstrip__k">${STAT_SHORT[k]}</span><span class="statstrip__v">${ratedStat(op, k)}${change}</span></button>`;
+  }).join('')}</span>${last && Object.keys(net).length ? '<span class="statstrip__note">Last season</span>' : ''}${open ? stripExplain(op, open, main) : ''}`;
+}
+
+/** The level-up tab on a crew-list portrait (2026-11-23, owner; replaced the "Level up" pill). The Crew tab's badge counts them in words. */
+const LEVELUP_CHEVRON = '<svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true" focusable="false"><path d="M2 9.5 7 4.5l5 5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square"/></svg>';
+const rowFace = (op) => (levelUpOpen(op)
+  ? `<span class="crewrow__face">${face(op)}<span class="lvltab" role="img" aria-label="Level up waiting">${LEVELUP_CHEVRON}</span></span>`
+  : face(op));
 
 /**
  * One stat on a stats panel: the number used on jobs (with trait bonuses), the bonus,
@@ -75,11 +120,21 @@ export function renderCrew() {
   const recruits = state.recruits ?? [];
   const tab = ['roster', 'leads', 'wall'].includes(V.crewTab) ? V.crewTab : 'roster';
   // Roster filter (owner, 2026-11-17): everyone, only those who can go out now, or only those who can't.
-  const filter = ['ready', 'out'].includes(V.crewFilter) ? V.crewFilter : 'all';
-  const shown = state.crew.filter((op) => filter === 'all' || availability(state, op).ok === (filter === 'ready'));
-  const readyN = state.crew.filter((op) => availability(state, op).ok).length;
+  // 2026-11-24 (owner): also who has a level-up waiting, and who is Renowned (fame is off the card, as in
+  // Football Manager's squad list; it is on the runner's page). Level-ups come first in every view.
+  const FILTERS = {
+    all: () => true,
+    levelup: (op) => levelUpOpen(op),
+    ready: (op) => availability(state, op).ok,
+    out: (op) => !availability(state, op).ok,
+    renowned: (op) => fameOf(op) === 'elite',
+  };
+  const filter = FILTERS[V.crewFilter] ? V.crewFilter : 'all';
+  const lvlFirst = (list) => [...list.filter(levelUpOpen), ...list.filter((op) => !levelUpOpen(op))];
+  const shown = lvlFirst(state.crew.filter(FILTERS[filter]));
+  const count = (id) => state.crew.filter(FILTERS[id]).length;
   // A drop menu of our own, not a <select> (owner, 2026-11-18: the system picker broke the look). Phones get it as a sheet from the bottom; wider screens under the button (styles.css).
-  const opts = [['all', 'All', state.crew.length], ['ready', 'Ready', readyN], ['out', 'Away or hurt', state.crew.length - readyN]];
+  const opts = [['all', 'All'], ['levelup', 'Level up waiting'], ['ready', 'Ready'], ['out', 'Away or hurt'], ['renowned', fameName('elite')]].map(([id, label]) => [id, label, count(id)]);
   const [, curLabel, curN] = opts.find(([id]) => id === filter);
   const chips = `<span class="crewfilter__label" id="crewfilter-label">Show</span>
       <button class="crewfilter__btn" data-action="crew-filter-open" aria-haspopup="listbox" aria-expanded="${!!V.crewFilterOpen}" aria-labelledby="crewfilter-label crewfilter-now"><span id="crewfilter-now">${curLabel} (${curN})</span><span class="crewfilter__arrow" aria-hidden="true"></span></button>`;
@@ -96,14 +151,16 @@ export function renderCrew() {
       <ul class="list list--cols">
         ${shown.map((op) => `
           <li>
-            <button class="row crewrow" data-action="open-op" data-id="${esc(op.id)}">
-              ${face(op)}
-              <span class="crewrow__name"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"${levelUpOpen(op) ? ' <span class="pill pill--new">Level up</span>' : ''}</span>
-              <span class="crewrow__info muted">${fameOf(op) === 'elite' ? `<span class="fame fame--elite">${esc(fameName('elite'))}</span> · ` : ''}${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age}</span>
-              <span class="crewrow__status">${statusChip(availability(state, op))}</span>
-              <span class="crewrow__scout">${scoutLine(op)}${growthMarker(op)}</span>
+            <div class="row crewrow">
+              <button class="crewrow__open" data-action="open-op" data-id="${esc(op.id)}" aria-label="${esc(`${op.name} "${op.handle}": open their page`)}"></button>
+              <span class="crewrow__hit" data-action="open-op" data-id="${esc(op.id)}" aria-hidden="true"></span>
+              ${rowFace(op)}
+              <span class="crewrow__name"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"</span>
+              <span class="crewrow__info muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age}</span>
+              <span class="crewrow__status">${statusChip(availability(state, op), { short: true })}</span>
+              <span class="crewrow__scout">${statStrip(op)}</span>
               <span class="crewrow__bars">${conditionBars(op)}</span>
-            </button>
+            </div>
           </li>`).join('')}
       </ul>`,
     leads: () => `
@@ -265,17 +322,17 @@ function renderPath(op) {
   const pct = (n) => Math.round(n * 100);
   const meter = (label, n) => `<div class="meter pathbar"><span class="meter__label">${label}</span><span class="meter__track"><span class="meter__fill" style="width:${pct(n)}%"></span></span><span class="meter__value">${pct(n)}%</span></div>`;
   const e = FAME_RULES.elite;
-  const numbers = p.conditions.map((c) => `${c.label}: ${c.value} (Elite ${c.elite}, Legend ${c.legend})`).join('; ');
+  const numbers = p.conditions.map((c) => `${c.label}: ${c.value} (Renowned ${c.elite}, Legend ${c.legend})`).join('; ');
   const todo = legend.checks.filter((x) => !x.met).map((x) => x.label);
   const info = `Their path is the one their record is furthest along. ${p.name}: ${numbers}. `
-    + (elite ? '' : `Elite also needs ${e.activeWeeks} active weeks, ${e.atLevel} jobs at their level and standing ${e.standing} (how the street rates them now: good work at their level raises it, the bench wears it down). `)
+    + (elite ? '' : `Renowned also needs ${e.activeWeeks} active weeks, ${e.atLevel} jobs at their level and standing ${e.standing} (how the street rates them now: good work at their level raises it, the bench wears it down). `)
     + (legend.ready ? 'They meet every Legend condition.' : `Still to come for Legend: ${todo.join(', ')}.`)
     + ' Fame never changes a roll, pay or heat.';
   return `<h2>Path</h2>
     <div class="riskcard pathcard">
       <div class="infoline"><p><strong class="pathcard__name">${esc(p.name)}</strong> <span class="muted small">${esc(p.line)}</span></p>${infoButton(`path-${op.id}`, `About ${op.handle}'s path`)}</div>
       ${infoText(`path-${op.id}`, info)}
-      ${elite ? '' : meter('To Elite', p.toElite)}
+      ${elite ? '' : meter('To Renowned', p.toElite)}
       ${meter('To Legend', p.toLegend)}
       ${op.legend ? `<p class="pathcard__ready">A Legend since day ${op.legend.day}.</p>` : legend.ready ? `<p class="pathcard__ready">${op.legendCall?.offerId ? 'The city is asking: their defining job is up.' : 'Ready for their moment.'}</p>` : ''}
       ${elite ? `<p class="muted small">Standing ${standingOf(op)}: ${esc(standingWord(op))}.</p>` : ''}

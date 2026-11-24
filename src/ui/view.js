@@ -34,6 +34,7 @@ export const V = {
   foundingTongName: '', // what's typed in the founder pick's name field
   tongTab: 'halls', // Tong's sub-tab: 'halls' | 'armoury' (ui/gear.js draws the Armoury)
   crewFilter: 'all', // the roster's filter: 'all' | 'ready' | 'out'
+  statTip: null, // the crew list's tapped stat box, '<opId>|<stat>' (2026-11-24)
   crewFilterOpen: false, // its drop menu is open
   crewTab: 'roster', // Crew's sub-tab: 'roster' | 'leads' | 'wall'
   hallTab: 'overview', // a hall page's tab (2026-11-21): 'overview' | 'crew' | 'build' | 'grow'; kept across halls

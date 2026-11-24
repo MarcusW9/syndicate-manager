@@ -41,6 +41,6 @@ export const RETIRE_REPLY = {
 /** Lines on the Hall of Legends wall, by fame; the generic one fits anyone. */
 export const HALL_EPITAPH = {
   legend: 'Legend. The street still tells it, and gets it wrong.',
-  elite: 'Elite, for as long as it counted.',
+  elite: 'Renowned, for as long as it counted.',
   generic: 'Stayed long enough to be missed.',
 };

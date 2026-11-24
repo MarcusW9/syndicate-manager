@@ -60,7 +60,7 @@ setState(next){ setGame(next); saveGame(state); render(); }
 // renown (2026-11), written once a job finishes: record: {jobs, atLevel, wins, clean, flawless, fights, fightsWon, carries, carriesByStat,
 //   broughtHome, criticalsSurvived, unscathed, bigScores, seriousInjuries, cleanStreak, bestCleanStreak, with:{opId:n}, activeWeeks, lastJobDay,
 //   milestones:[ids], highlights:[{id,day,text,weight}] (best 3), lowWeeks, wasElite, estimated},
-//   fame: 'unknown'|'known'|'respected'|'elite', standing: 0-100. None of these touch a roll, pay, heat or the risk read.
+//   fame: 'unknown'|'known'|'respected'|'elite' (shown as Renowned since 2026-11-24), standing: 0-100. None of these touch a roll, pay, heat or the risk read.
 // added lazily: earned: [{id, day, district?, client?, partner?, uses?}], track: {hidden counters},
 //               spec: {id, day}, specSnooze, build {move, payload}|null, buildAt (jobsWithCrew at the last piece taken), buildSnooze, freelance (flag)
 ```

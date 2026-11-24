@@ -45,7 +45,7 @@ try {
   await page.evaluate(() => window.scrollTo(0, 0));
   await shot('offer-taken');
   await click('[data-action="nav"][data-id="crew"]');
-  await click('[data-action="open-op"]:has-text("muscle")');
+  await click('.crewrow:has-text("muscle") [data-action="open-op"]');
   await page.evaluate(() => window.scrollTo(0, 0));
   await shot('career-page');
   await click('[data-action="nav"][data-id="jobs"]');

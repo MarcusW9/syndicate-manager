@@ -591,8 +591,40 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .minibar--morale .minibar__track span { background: var(--accent-2); }
 /* Crew row: name and codename on one line; the status chip sits beside the short role line
    and the bars beside the scout line, so a long status never makes one card taller. */
-.crewrow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "face name name" "face info status" "face scout bars"; column-gap: 12px; row-gap: 2px; align-items: center; }
+/* 2026-11-24 (owner): the status sits above the bars, so the name and role line have the full width. */
+.crewrow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "face name name" "face info info" "face scout status" "face scout bars"; column-gap: 12px; row-gap: 2px; align-items: center; }
+.crewrow__status { align-self: end; }
 .crewrow > .face { grid-area: face; align-self: center; }
+/* Level-up tab on the portrait (2026-11-23): the "ready" green, cut corner like the panels. */
+.crewrow__face { grid-area: face; align-self: center; position: relative; display: block; line-height: 0; }
+.lvltab { position: absolute; right: -6px; bottom: -6px; width: 22px; height: 22px; display: grid; place-items: center; background: #5fe0a5; color: #06211a;
+  clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 0 100%); }
+/* Crew-list stat strip (2026-11-23): main stat, then the two highest, each with this season's change. */
+.statstrip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; max-width: 260px; margin-top: 2px; }
+.statstrip__cell { display: flex; flex-direction: column; padding: 2px 6px; border: 1px solid var(--line); background: #0d1016; line-height: 1.15; }
+.statstrip__k { font-family: var(--display, inherit); font-weight: 700; font-size: 0.66rem; letter-spacing: 0.1em; color: var(--muted); }
+.statstrip__v { font-family: var(--display, inherit); font-weight: 700; font-size: 1rem; color: var(--text); white-space: nowrap; }
+.statstrip__chg { margin-left: 4px; font-size: 0.8rem; color: #5fe0a5; }
+.statstrip__chg.is-down { color: var(--danger); }
+/* A season's first week, before a runner changes (2026-11-24): last season's figures in grey, labelled. */
+.statstrip__chg.is-last { color: var(--muted); }
+.statstrip__note { display: block; margin-top: 3px; font-family: var(--display, inherit); font-weight: 600; font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+/* The card opens with a button over its name and role rows, so the strip's boxes can be buttons of their own
+   (2026-11-24); a hit area behind the whole card opens it from anywhere else. The button covers the top rows
+   so its middle is the name, not a stat box: a tap there (or a test's click) opens the page. */
+.crewrow { position: relative; cursor: default; align-content: start; }
+.crewrow__open { grid-row: 1 / 3; grid-column: 1 / -1; align-self: stretch; z-index: 1; width: auto; min-height: 0; margin: -10px -12px 0; padding: 0; border: 0; background: none; cursor: pointer; }
+.crewrow__hit { position: absolute; inset: 0; z-index: 0; cursor: pointer; }
+.crewrow > :not(.crewrow__open):not(.crewrow__hit) { position: relative; z-index: 2; pointer-events: none; }
+.crewrow > .crewrow__face { position: relative; }
+.statstrip__cell { min-height: var(--tap); justify-content: center; font: inherit; text-align: left; color: inherit; cursor: pointer; pointer-events: auto; }
+.statstrip__cell.is-on { border-color: var(--accent-2); box-shadow: inset 0 0 0 1px var(--accent-2); }
+.statexplain { margin-top: 6px; padding: 8px 10px; border-left: 2px solid var(--accent-2); background: #0d1016; font-size: 0.85rem; line-height: 1.4; pointer-events: auto; }
+.statexplain p { margin: 0; }
+.statexplain p + p { margin-top: 2px; }
+.statexplain strong { font-family: var(--display, inherit); letter-spacing: 0.06em; }
+.statexplain__up { color: #5fe0a5; font-weight: 700; }
+.statexplain__down { color: var(--danger); font-weight: 700; }
 .crewrow__name { grid-area: name; line-height: 1.3; }
 .crewrow__info { grid-area: info; line-height: 1.3; }
 .crewrow__status { grid-area: status; justify-self: end; }
@@ -608,6 +640,8 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 /* Cards side by side keep the same height. */
 .list--cols > li { display: flex; }
 .list--cols > li > .row { height: 100%; }
+/* While a stat line is open (2026-11-24), only that card grows: its neighbours keep their own height. */
+.list--cols:has(.statexplain) > li { align-self: start; }
 
 .sizebadge { display: inline-block; margin: 0 0 8px; padding: 6px 10px; border-radius: var(--radius); font-size: 0.85rem; font-weight: 600; background: #262b36; color: var(--text); }
 .sizebadge--full { background: #173328; color: #5fe0a5; }
